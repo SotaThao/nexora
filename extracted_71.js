@@ -1,0 +1,2 @@
+const node = await figma.getNodeByIdAsync("37:508");
+return { parentId: node.parent.id, parentName: node.parent.name, children: node.parent.children.map(c => ({ id: c.id, name: c.name, type: c.type })) };

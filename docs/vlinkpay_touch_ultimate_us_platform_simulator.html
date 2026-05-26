@@ -1,0 +1,1784 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VLinkPay Touch - US Division Platform Simulator</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts: Inter & Playfair Display -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            serif: ['Playfair Display', 'serif'],
+          },
+          colors: {
+            luxuryBlack: '#050505',      /* Obsidian Deep Black */
+            luxuryCoal: '#11100d',       /* Deep Charcoal Slate */
+            luxuryBronze: '#8c6d31',     /* Muted Metallic Bronze */
+            luxuryGold: '#d4af37',       /* 24K Polished Gold */
+            luxuryGoldLight: '#f3e5ab',  /* Shimmering Champagne */
+            luxuryGoldDark: '#aa7c11',   /* Burnished Antique Gold */
+            luxuryAmber: '#ffbf00',      /* Golden Amber Glow */
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background: #050505;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+    
+    /* Elegant gold aura background gradient */
+    .gold-aura-bg {
+      background: 
+        radial-gradient(circle at 10% 15%, rgba(212, 175, 55, 0.08), transparent 35%),
+        radial-gradient(circle at 90% 85%, rgba(140, 109, 49, 0.1), transparent 40%),
+        linear-gradient(180deg, #050505 0%, #11100d 50%, #030302 100%);
+    }
+
+    /* Metallic luxury glass panels */
+    .gold-panel {
+      background: rgba(17, 16, 13, 0.85);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid rgba(212, 175, 55, 0.18);
+    }
+
+    .gold-card {
+      background: linear-gradient(135deg, #1a160e 0%, #080705 100%);
+      border: 1px solid rgba(212, 175, 55, 0.25);
+    }
+
+    .gold-input {
+      background: rgba(8, 7, 5, 0.9);
+      border: 1px solid rgba(212, 175, 55, 0.22);
+      color: #fff;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .gold-input:focus {
+      background: rgba(22, 18, 12, 0.95);
+      border-color: #d4af37;
+      box-shadow: 0 0 15px rgba(212, 175, 55, 0.35);
+      outline: none;
+    }
+
+    /* Elegant shimmer effect on buttons */
+    .gold-shimmer-btn {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .gold-shimmer-btn::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 50%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transform: skewX(-20deg);
+      animation: goldShine 5s infinite ease-in-out;
+    }
+
+    @keyframes goldShine {
+      0% { left: -100%; }
+      35% { left: 100%; }
+      100% { left: 100%; }
+    }
+
+    .gold-text-gradient {
+      background: linear-gradient(135deg, #f3e5ab 0%, #d4af37 50%, #aa7c11 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* High-end custom scrollbar */
+    .gold-scroll::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .gold-scroll::-webkit-scrollbar-track {
+      background: rgba(17, 15, 12, 0.3);
+    }
+    .gold-scroll::-webkit-scrollbar-thumb {
+      background: #d4af37;
+      border-radius: 99px;
+    }
+    
+    /* Phone Mockup Screen Shine */
+    .phone-shine::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,0.03) 45%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 55%, transparent 60%);
+      pointer-events: none;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body class="text-white selection:bg-luxuryGold selection:text-black">
+
+  <div class="gold-aura-bg min-h-screen flex flex-col justify-between relative">
+    
+    <!-- Toast Notification Overlay -->
+    <div id="toast-notif" class="fixed top-6 left-1/2 -translate-x-1/2 z-50 gold-panel px-6 py-4 rounded-xl flex items-center gap-3 transition-all duration-500 transform translate-y-[-150px] opacity-0 pointer-events-none shadow-2xl shadow-luxuryGold/20">
+      <span class="text-luxuryGold text-xl" id="toast-icon">✨</span>
+      <span id="toast-msg" class="text-sm font-semibold tracking-wide"></span>
+    </div>
+
+    <!-- MAIN BRAND HEADER -->
+    <header class="w-full max-w-7xl mx-auto px-6 py-5 flex items-center justify-between z-20 relative border-b border-luxuryGold/15">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-gradient-to-tr from-luxuryGold to-luxuryGoldLight flex items-center justify-center font-serif text-2xl font-bold shadow-lg shadow-luxuryGold/20 text-black">V</div>
+        <div>
+          <span class="text-lg font-bold tracking-widest uppercase font-serif block">
+            VLinkPay <span class="gold-text-gradient font-sans font-black">TOUCH</span>
+          </span>
+          <span class="block text-[8px] uppercase tracking-[0.25em] text-luxuryBronze font-bold">NFC Smart Card & Merchant Portal</span>
+        </div>
+      </div>
+      
+      <!-- Live Screen Switcher Bar (Desktop) -->
+      <nav class="hidden md:flex items-center gap-1.5 bg-black/80 border border-luxuryGold/20 rounded-full p-1.5">
+        <button onclick="switchView('landing')" id="nav-landing" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 bg-luxuryGold text-black shadow-lg">1. Landing Page</button>
+        <button onclick="switchView('customer-tap')" id="nav-customer-tap" class="px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 text-slate-400 hover:text-white">2. Customer Phone</button>
+        <button onclick="switchView('payment-sheet')" id="nav-payment-sheet" class="px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 text-slate-400 hover:text-white">3. iOS Payment</button>
+        <button onclick="switchView('merchant-dash')" id="nav-merchant-dash" class="px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 text-slate-400 hover:text-white">4. Owner Dashboard</button>
+        <button onclick="switchView('staff-wallet')" id="nav-staff-wallet" class="px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 text-slate-400 hover:text-white">5. Staff Wallet</button>
+      </nav>
+
+      <!-- Location Hub Control & Guided Tour Button -->
+      <div class="flex items-center gap-3">
+        <button onclick="startGuidedTour()" class="px-3 py-1.5 rounded-lg border border-luxuryGold/45 bg-luxuryGold/10 text-luxuryGold font-extrabold text-[10px] uppercase tracking-wider hover:bg-luxuryGold hover:text-black transition duration-300 flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Xem Hướng Dẫn
+        </button>
+        <select id="locationSelector" class="bg-black border border-luxuryGold/25 text-luxuryGoldLight text-[10px] rounded py-1 px-2.5 font-bold focus:outline-none">
+          <option value="sf">Golden Hour Spa (SF)</option>
+          <option value="hou">Cali Nails Spa (Houston)</option>
+          <option value="sj">Artisan Nails (San Jose)</option>
+        </select>
+      </div>
+    </header>
+
+    <!-- MOBILE NAVIGATION TAB PILLS (SWIPEABLE MENU ON MOBILE VIEWPORT) -->
+    <div class="block md:hidden px-4 py-3 border-b border-luxuryGold/10 bg-black/60 overflow-x-auto gold-scroll whitespace-nowrap scroll-smooth">
+      <div class="flex gap-2">
+        <button onclick="switchView('landing')" id="mob-nav-landing" class="px-4 py-2 rounded-full text-[11px] font-bold transition-all duration-300 bg-luxuryGold text-black shadow-md">1. Landing Page</button>
+        <button onclick="switchView('customer-tap')" id="mob-nav-customer-tap" class="px-4 py-2 rounded-full text-[11px] font-bold transition-all duration-300 bg-white/5 text-slate-400 border border-white/5">2. Customer Phone</button>
+        <button onclick="switchView('payment-sheet')" id="mob-nav-payment-sheet" class="px-4 py-2 rounded-full text-[11px] font-bold transition-all duration-300 bg-white/5 text-slate-400 border border-white/5">3. iOS Payment</button>
+        <button onclick="switchView('merchant-dash')" id="mob-nav-merchant-dash" class="px-4 py-2 rounded-full text-[11px] font-bold transition-all duration-300 bg-white/5 text-slate-400 border border-white/5">4. Owner Dashboard</button>
+        <button onclick="switchView('staff-wallet')" id="mob-nav-staff-wallet" class="px-4 py-2 rounded-full text-[11px] font-bold transition-all duration-300 bg-white/5 text-slate-400 border border-white/5">5. Staff Wallet</button>
+      </div>
+    </div>
+
+    <!-- MAIN BODY COMPARTMENT -->
+    <main class="w-full max-w-7xl mx-auto px-4 md:px-6 py-8 flex-1 z-10 relative">
+      
+      <!-- INTERACTIVE GUIDED TOUR POPUP BOARD -->
+      <div id="tour-popup" class="hidden fixed bottom-6 right-6 z-50 gold-panel p-6 rounded-2xl max-w-sm border-2 border-luxuryGold shadow-2xl transition-all duration-300">
+        <div class="flex justify-between items-start mb-2">
+          <span class="text-luxuryGold text-xs uppercase font-extrabold tracking-widest block flex items-center gap-1">
+            <svg class="w-4.5 h-4.5 text-luxuryGold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+            VLinkPay Guided Tour
+          </span>
+          <button onclick="stopGuidedTour()" class="text-slate-400 hover:text-white text-sm">✕</button>
+        </div>
+        <p id="tour-text" class="text-xs text-slate-300 leading-relaxed mb-4">
+          Chào mừng anh! Trình hướng dẫn này sẽ dẫn anh qua quy trình hoạt động từng bước của hệ sinh thái VLinkPay.
+        </p>
+        <div class="flex justify-between items-center">
+          <span id="tour-step-badge" class="text-[9px] font-mono text-luxuryBronze font-bold">BƯỚC 1/5</span>
+          <button onclick="nextGuidedTourStep()" class="gold-shimmer-btn px-4 py-2 bg-gradient-to-r from-luxuryGold to-luxuryGoldDark text-black text-[10px] font-black uppercase rounded-lg shadow-md flex items-center gap-1">
+            Bước tiếp theo 
+            <svg class="w-3 h-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ========================================================= -->
+      <!-- VIEW 1: PREMIUM MARKETING LANDING PAGE (B2B MERCHANT PITCH) -->
+      <!-- ========================================================= -->
+      <section id="view-landing" class="space-y-16 animate-fade-in block">
+        <!-- Optimized Hero Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center pt-4">
+          <div class="lg:col-span-7 space-y-6">
+            <span class="px-3.5 py-1.5 rounded-full bg-luxuryGold/10 text-luxuryGold text-[11px] uppercase font-black border border-luxuryGold/35 tracking-wider inline-flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-luxuryGold animate-pulse"></span> 
+              THE NEW US SALON STANDARD — THẾ HỆ MỚI 2026
+            </span>
+            <h1 class="text-3xl md:text-5xl lg:text-6xl font-serif font-extrabold tracking-tight leading-[1.2] text-white">
+              Tăng <span class="gold-text-gradient">5-Star Reviews</span> &<br/>
+              Bảo Toàn <span class="gold-text-gradient">100% Tiền Tip</span> Thợ
+            </h1>
+            <p class="text-sm md:text-base text-slate-300 max-w-2xl leading-relaxed">
+              Tấm đặt bàn mạ vàng 24K sang trọng, tích hợp chip NFC và mã QR cho các tiệm Nails, Hair Spa và quán Café tại Mỹ. Giúp chủ tiệm triệt tiêu phí quẹt thẻ cho tiền Tip và ngăn chặn đánh giá tiêu cực trên Google Maps & Yelp.
+            </p>
+
+            <!-- B2B Trust Metrics Panel -->
+            <div class="grid grid-cols-3 gap-4 border-y border-luxuryGold/15 py-5 my-6 bg-luxuryCoal/40 p-4 rounded-xl">
+              <div>
+                <span class="block text-xl md:text-2xl font-black font-mono text-luxuryGold">+$2,400</span>
+                <span class="block text-[10px] text-slate-400 uppercase font-bold mt-1">Thu nhập Tip/Thợ/Năm</span>
+              </div>
+              <div class="border-x border-luxuryGold/10 px-4">
+                <span class="block text-xl md:text-2xl font-black font-mono text-emerald-400">0% SWIPE</span>
+                <span class="block text-[10px] text-slate-400 uppercase font-bold mt-1">Phí giao dịch tiền Tip</span>
+              </div>
+              <div>
+                <span class="block text-xl md:text-2xl font-black font-mono text-luxuryAmber">98% 5-STAR</span>
+                <span class="block text-[10px] text-slate-400 uppercase font-bold mt-1">Lọc chặn reviews xấu</span>
+              </div>
+            </div>
+
+            <!-- Optimized CTAs with minimal secure badges -->
+            <div class="space-y-4 pt-2">
+              <div class="flex flex-wrap gap-4">
+                <button onclick="switchView('merchant-dash')" class="gold-shimmer-btn px-7 py-4 bg-gradient-to-r from-luxuryGold to-luxuryGoldDark text-black text-xs font-black uppercase tracking-wider rounded-lg shadow-xl shadow-luxuryGold/20 transform hover:-translate-y-0.5 transition duration-300 flex items-center gap-1.5">
+                  <svg class="w-4.5 h-4.5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                  Bảng Điều Khiển Chủ Tiệm
+                </button>
+                <button onclick="switchView('customer-tap')" class="px-7 py-4 border border-luxuryGold/40 bg-white/5 text-white hover:bg-white/10 text-xs font-bold uppercase tracking-wider rounded-lg transition-all flex items-center gap-1.5">
+                  <svg class="w-4.5 h-4.5 text-luxuryGold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                  Thử Chạm Điện Thoại Khách
+                </button>
+              </div>
+              <div class="flex flex-wrap items-center gap-3 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                <span>Tương thích gốc:</span>
+                <span class="flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5 text-slate-400" fill="currentColor" viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-.96.04-2.13.64-2.82 1.45-.6.69-1.12 1.83-.98 2.94 1.07.08 2.16-.52 2.81-1.33z"/></svg>
+                  Apple Pay
+                </span>
+                <span>•</span>
+                <span class="flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                  Venmo
+                </span>
+                <span>•</span>
+                <span class="flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                  Credit Card
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Optimized 3D Luxury Stand Preview Card -->
+          <div class="lg:col-span-5 flex justify-center">
+            <div class="gold-panel p-8 rounded-[32px] border-2 border-luxuryGold/35 w-full max-w-sm text-center relative overflow-hidden bg-gradient-to-b from-luxuryCoal/95 to-black shadow-2xl">
+              <!-- Holographic ambient lights -->
+              <div class="absolute -top-12 -left-12 w-32 h-32 bg-luxuryGold/15 rounded-full filter blur-2xl animate-pulse"></div>
+              <div class="absolute -bottom-12 -right-12 w-32 h-32 bg-luxuryAmber/15 rounded-full filter blur-2xl"></div>
+              
+              <span class="text-[9px] uppercase tracking-widest text-luxuryGold font-extrabold block mb-4">Mẫu Thiết Kế Bàn Quầy Cao Cấp</span>
+              
+              <!-- Refined acrylic stand mockup -->
+              <div class="w-52 h-72 bg-gradient-to-b from-[#1c1810] via-[#0c0a06] to-black rounded-2xl mx-auto flex flex-col justify-between p-6 text-white border-2 border-luxuryGold/60 shadow-2xl relative transform hover:scale-105 transition-all duration-300">
+                <!-- Glossy light reflection line -->
+                <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent rounded-2xl pointer-events-none"></div>
+                <div class="w-16 h-1 bg-luxuryGold/40 rounded-full mx-auto"></div>
+                
+                <div>
+                  <h3 class="font-serif font-black text-xs tracking-widest uppercase text-center text-luxuryGoldLight">TAP PHONE HERE</h3>
+                  <p class="text-[7.5px] uppercase tracking-wider text-slate-400 font-bold mt-1">To Leave Tip & Review</p>
+                </div>
+                
+                <!-- Gold NFC Target Node -->
+                <div class="w-24 h-24 rounded-full border-2 border-dashed border-luxuryGold/55 flex items-center justify-center mx-auto my-3 relative bg-luxuryGold/5">
+                  <div class="absolute inset-1.5 rounded-full bg-gradient-to-tr from-luxuryGold to-luxuryGoldLight p-1 flex items-center justify-center shadow-lg shadow-luxuryGold/30">
+                    <svg class="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"/></svg>
+                  </div>
+                </div>
+
+                <div class="flex justify-between items-center text-[7.5px] font-black border-t border-luxuryGold/20 pt-2.5 text-luxuryGoldLight">
+                  <span>GOOGLE & YELP</span>
+                  <span>APPLE PAY / VENMO</span>
+                </div>
+              </div>
+              
+              <h4 class="font-serif text-lg font-bold mt-6 text-white">Bảng Acrylic Mạ Vàng 24K</h4>
+              <p class="text-[11px] text-slate-400 mt-1 max-w-[250px] mx-auto">Chất liệu Acrylic mờ cao cấp kết hợp khung kim loại bóng bẩy, là điểm nhấn thẩm mỹ hoàn hảo cho bàn quầy salon.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3 Killer Benefits Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-10">
+          <div class="gold-panel p-6 rounded-2xl border border-luxuryGold/15">
+            <div class="w-12 h-12 rounded-xl bg-luxuryGold/10 flex items-center justify-center text-luxuryGold text-xl mb-4">
+              <svg class="w-6 h-6 text-luxuryGold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            </div>
+            <h3 class="font-serif text-lg font-bold text-white mb-2">Chặn Đứng Đánh Giá Xấu</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              Bộ lọc thông minh chuyển hướng đánh giá tiêu cực (1-3 sao) về form đóng góp nội bộ cho chủ tiệm xử lý, chỉ chuyển hướng đánh giá xuất sắc (4-5 sao) trực tiếp lên Google Maps hoặc Yelp để bảo vệ uy tín thương hiệu.
+            </p>
+          </div>
+          <div class="gold-panel p-6 rounded-2xl border border-luxuryGold/15">
+            <div class="w-12 h-12 rounded-xl bg-emerald-400/10 flex items-center justify-center text-emerald-400 text-xl mb-4">
+              <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <h3 class="font-serif text-lg font-bold text-white mb-2">Tiết Kiệm Phí Giao Dịch</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              Cơ chế liên kết ví cá nhân giúp tiền Tip của khách chảy trực tiếp về tài khoản Venmo, Cash App của thợ với phí 0%, giúp chủ tiệm không phải gánh 3.5% phí quẹt thẻ cho phần tiền Tip của nhân viên hàng năm.
+            </p>
+          </div>
+          <div class="gold-panel p-6 rounded-2xl border border-luxuryGold/15">
+            <div class="w-12 h-12 rounded-xl bg-luxuryAmber/10 flex items-center justify-center text-luxuryAmber text-xl mb-4">
+              <svg class="w-6 h-6 text-luxuryAmber" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
+            </div>
+            <h3 class="font-serif text-lg font-bold text-white mb-2">Lưu Apple Wallet Tiện Lợi</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              Khách hàng không cần tải thêm ứng dụng lạ. Thẻ tích điểm hoặc thẻ thành viên được lưu trực tiếp vào ứng dụng ví mặc định trên iPhone/Android chỉ bằng một cú nhấp chuột duy nhất.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- VIEW 2: CUSTOMER PHONE WEB PORTAL (THE INSTANT TAP SCREEN) -->
+      <!-- ========================================================= -->
+      <section id="view-customer-tap" class="hidden max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 items-start animate-fade-in">
+        
+        <!-- LEFT 4 COLS: CONTROL TABS FOR 4 TIP FLOWS -->
+        <div class="md:col-span-4 space-y-4">
+          <div class="gold-panel p-5 rounded-2xl space-y-3">
+            <span class="text-[9px] uppercase tracking-wider text-luxuryGold font-extrabold block flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-luxuryGold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+              Tùy chọn Quy trình hiển thị
+            </span>
+            <h3 class="font-serif text-base font-bold text-white">4 Quy trình Tip phù hợp</h3>
+            <p class="text-[10px] text-slate-400 leading-relaxed mb-4">Chuyển đổi các cơ chế hiển thị màn hình của khách để phù hợp nhất với mô hình cửa hàng của bạn:</p>
+            
+            <div class="space-y-2.5">
+              <button onclick="setTipFlowStrategy('percent')" id="flow-btn-percent" class="w-full text-left p-3 rounded-xl border border-luxuryGold text-xs font-bold transition duration-300 bg-luxuryGold/10 text-luxuryGoldLight">
+                <span class="block text-[11px] font-black uppercase">Quy Trình 1: Phần Trăm (%)</span>
+                <span class="block text-[8.5px] text-slate-400 font-normal mt-0.5">Hiện 15%, 18%, 20% nhân hóa đơn lớn (Nails/Spa)</span>
+              </button>
+              <button onclick="setTipFlowStrategy('staff')" id="flow-btn-staff" class="w-full text-left p-3 rounded-xl border border-luxuryGold/10 text-xs font-bold transition duration-300 text-slate-300 hover:border-luxuryGold/30">
+                <span class="block text-[11px] font-black uppercase">Quy Trình 2: Chọn Thợ Đích Danh</span>
+                <span class="block text-[8.5px] text-slate-400 font-normal mt-0.5">Thợ nhận tiền thẳng vào Venmo/Cash App cá nhân</span>
+              </button>
+              <button onclick="setTipFlowStrategy('fixed')" id="flow-btn-fixed" class="w-full text-left p-3 rounded-xl border border-luxuryGold/10 text-xs font-bold transition duration-300 text-slate-300 hover:border-luxuryGold/30">
+                <span class="block text-[11px] font-black uppercase">Quy Trình 3: Số tiền mặt ($) cố định</span>
+                <span class="block text-[8.5px] text-slate-400 font-normal mt-0.5">Hiện nút $2, $5, $10 cho hóa đơn nhỏ (Cafe)</span>
+              </button>
+              <button onclick="setTipFlowStrategy('split')" id="flow-btn-split" class="w-full text-left p-3 rounded-xl border border-luxuryGold/10 text-xs font-bold transition duration-300 text-slate-300 hover:border-luxuryGold/30">
+                <span class="block text-[11px] font-black uppercase">Quy Trình 4: Chia Tip Thợ Phụ</span>
+                <span class="block text-[8.5px] text-slate-400 font-normal mt-0.5">Tự động chia đôi tỷ lệ cho Thợ Chính & Thợ Phụ</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick interactive tap simulation controller -->
+          <div class="gold-panel p-5 rounded-2xl border border-luxuryGold/20 text-center space-y-3">
+            <h4 class="text-xs font-serif font-bold text-white flex items-center justify-center gap-1.5">
+              <svg class="w-4 h-4 text-luxuryGold animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              Trạm Giả Lập Sóng NFC
+            </h4>
+            <p class="text-[9.5px] text-slate-400">Đặt thông số trước rồi bấm nút giả lập chạm điện thoại vào thẻ cứng:</p>
+            <button onclick="triggerPhysicalNFCTap()" class="gold-shimmer-btn w-full py-2.5 bg-gradient-to-r from-luxuryGold to-luxuryGoldDark text-black text-[10px] font-black uppercase tracking-wider rounded-lg shadow-md flex items-center justify-center gap-1.5">
+              <svg class="w-4.5 h-4.5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"/></svg>
+              GIẢ LẬP ĐIỆN THOẠI CHẠM VÀO
+            </button>
+          </div>
+        </div>
+
+        <!-- RIGHT 8 COLS: INTERACTIVE PHONE MOCKUP -->
+        <div class="md:col-span-8 flex justify-center">
+          <div class="gold-panel rounded-[42px] border border-luxuryGold/35 overflow-hidden shadow-2xl phone-shine relative w-full max-w-sm">
+            
+            <!-- Simulated Top Notch Status Bar -->
+            <div class="bg-black py-2.5 px-6 flex justify-between items-center text-[10px] text-slate-400 border-b border-luxuryGold/10">
+              <span class="font-bold text-luxuryGoldLight flex items-center gap-1">
+                <svg class="w-3 h-3 text-luxuryGold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                pay.vlinkpay.com
+              </span>
+              <div class="flex items-center gap-1.5 font-mono">
+                <span>9:41</span>
+                <svg class="w-3 h-3 text-slate-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9v-2h2v2zm0-4H9V7h2v5z"/></svg>
+              </div>
+            </div>
+
+            <!-- Phone Inner Web Content with completely polished COPYWRITING -->
+            <div class="p-5 space-y-5 bg-gradient-to-b from-[#11100d] to-[#050505] text-center min-h-[580px] flex flex-col justify-between">
+              <div>
+                <!-- Store Brand Meta -->
+                <span id="cust-branch-tag" class="text-[9px] uppercase tracking-[0.2em] text-luxuryGold font-extrabold block mb-1">Golden Hour Spa (SF)</span>
+                <h2 id="cust-branch-title" class="text-xl font-serif font-black text-white">Golden Hour Spa</h2>
+                <p id="cust-branch-subtitle" class="text-[9.5px] text-slate-400 mt-1.5 leading-relaxed">
+                  Please select your artist and rate our service to support our team. Your tips directly empower our staff!
+                </p>
+                
+                <!-- DYNAMIC WORKSPACE PORTAL -->
+                <div class="mt-5 text-left space-y-4">
+                  <!-- Section A: Choose Artist -->
+                  <div id="cust-section-staff-selector" class="space-y-2">
+                    <label class="block text-[8.5px] uppercase tracking-wider text-slate-400 font-extrabold flex items-center gap-1">
+                      <svg class="w-3 h-3 text-luxuryGold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                      1. SELECT ARTIST (Chọn thợ phục vụ):
+                    </label>
+                    <div class="grid grid-cols-2 gap-1.5" id="cust-staff-grid">
+                      <!-- Generated Dynamically by JS -->
+                    </div>
+                  </div>
+
+                  <!-- Section B: Tip Calculation Area -->
+                  <div class="space-y-2.5">
+                    <label class="block text-[8.5px] uppercase tracking-wider text-slate-400 font-extrabold flex items-center gap-1">
+                      <svg class="w-3 h-3 text-luxuryGold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 11h.01M12 14h.01M15 11h.01M12 7h.01M15 7h.01M12 17h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                      2. SELECT TIP AMOUNT (Chọn tiền Tip):
+                    </label>
+                    
+                    <!-- Bill amount input -->
+                    <div id="cust-bill-wrapper" class="flex gap-2 items-center bg-black/60 border border-luxuryGold/20 rounded-xl p-2.5">
+                      <span class="text-[9px] text-slate-400 font-bold uppercase">Bill Amount ($):</span>
+                      <input type="number" id="cust-bill-input" value="100" oninput="recalcCustTip()" class="bg-transparent border-none text-right font-mono text-white text-xs font-bold w-full focus:outline-none focus:ring-0">
+                    </div>
+
+                    <!-- Layout 1: Percent Grid -->
+                    <div id="cust-tip-percent-grid" class="grid grid-cols-4 gap-1.5 text-center text-[11px] font-bold">
+                      <button onclick="setCustTipRate(15)" id="tip-r-15" class="py-2 rounded-xl border border-luxuryGold/15 bg-black/40 text-slate-300">15%</button>
+                      <button onclick="setCustTipRate(18)" id="tip-r-18" class="py-2 rounded-xl border border-luxuryGold/15 bg-black/40 text-slate-300">18%</button>
+                      <button onclick="setCustTipRate(20)" id="tip-r-20" class="py-2 rounded-xl border border-luxuryGold/35 bg-luxuryGold/15 text-luxuryGoldLight">20%</button>
+                      <button onclick="setCustTipRate(25)" id="tip-r-25" class="py-2 rounded-xl border border-luxuryGold/15 bg-black/40 text-slate-300">25%</button>
+                    </div>
+
+                    <!-- Layout 2: Fixed Cash Grid -->
+                    <div id="cust-tip-fixed-grid" class="hidden grid grid-cols-4 gap-1.5 text-center text-[11px] font-bold">
+                      <button onclick="setCustFixedTip(2)" id="tip-f-2" class="py-2 rounded-xl border border-luxuryGold/15 bg-black/40 text-slate-300">$2</button>
+                      <button onclick="setCustFixedTip(5)" id="tip-f-5" class="py-2 rounded-xl border border-luxuryGold/35 bg-luxuryGold/15 text-luxuryGoldLight">$5</button>
+                      <button onclick="setCustFixedTip(10)" id="tip-f-10" class="py-2 rounded-xl border border-luxuryGold/15 bg-black/40 text-slate-300">$10</button>
+                      <button onclick="setCustFixedTip(15)" id="tip-f-15" class="py-2 rounded-xl border border-luxuryGold/15 bg-black/40 text-slate-300">$15</button>
+                    </div>
+
+                    <!-- Display Calculated Tip box -->
+                    <div class="flex justify-between items-center bg-luxuryGold/5 border border-luxuryGold/15 rounded-xl p-3 mt-1.5">
+                      <div>
+                        <span class="text-[10px] text-slate-400 font-medium block">Total Tip:</span>
+                        <span id="cust-split-footnote" class="text-[7.5px] text-slate-500 font-bold block mt-0.5"></span>
+                      </div>
+                      <span class="text-base font-black font-mono text-luxuryAmber" id="cust-calculated-tip">$20.00</span>
+                    </div>
+                  </div>
+
+                  <!-- Google Reviews & Yelp Rating System -->
+                  <div class="p-3 bg-black/40 border border-luxuryGold/10 rounded-xl text-center space-y-2">
+                    <label class="block text-[8.5px] uppercase tracking-wider text-slate-400 font-extrabold flex items-center justify-center gap-1">
+                      <svg class="w-3 h-3 text-luxuryGold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.907c.961 0 1.35 1.258.588 1.81l-3.97 2.89a1 1 0 00-.364 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.11l-3.971-2.89a1 1 0 00-1.178 0l-3.97 2.89c-.783.57-1.838-.197-1.538-1.11l1.518-4.674a1 1 0 00-.364-1.118l-3.97-2.89c-.762-.551-.372-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                      3. RATE OUR SERVICE (Đánh giá dịch vụ):
+                    </label>
+                    <div class="flex justify-center gap-1.5 text-xl" id="star-rating-holder">
+                      <button onclick="setCustRating(1)" class="text-slate-600 hover:text-luxuryAmber transition">★</button>
+                      <button onclick="setCustRating(2)" class="text-slate-600 hover:text-luxuryAmber transition">★</button>
+                      <button onclick="setCustRating(3)" class="text-slate-600 hover:text-luxuryAmber transition">★</button>
+                      <button onclick="setCustRating(4)" class="text-slate-600 hover:text-luxuryAmber transition">★</button>
+                      <button onclick="setCustRating(5)" class="text-luxuryAmber hover:text-luxuryAmber transition">★</button>
+                    </div>
+                    
+                    <!-- Star-Conditional Platform Selection Menu -->
+                    <div id="platform-select-menu" class="space-y-1.5 pt-1.5 border-t border-luxuryGold/10">
+                      <p id="rating-feedback-msg" class="text-[9px] text-emerald-400 font-bold italic">Excellent! Please share your review on Google or Yelp:</p>
+                      <div class="flex gap-2 justify-center pt-1" id="review-platform-buttons">
+                        <button onclick="selectReviewPlatform('Google')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-[9px] font-bold">
+                          <svg class="w-3 h-3 text-emerald-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12.24 10.285V13.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.866-3.577-7.866-8s3.536-8 7.866-8c2.46 0 4.105 1.025 5.047 1.926l2.427-2.334C17.955 2.192 15.34 1 12.24 1 5.92 1 1 5.92 1 12s4.92 11 11.24 11c6.59 0 11-4.63 11-11.19 0-.75-.08-1.33-.2-1.9H12.24z"/></svg>
+                          Google Review
+                        </button>
+                        <button onclick="selectReviewPlatform('Yelp')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-rose-400 border border-red-500/20 text-[9px] font-bold">
+                          <svg class="w-3 h-3 text-rose-400" fill="currentColor" viewBox="0 0 24 24"><path d="M11.96 15.48c-.08-.34-.14-.7-.14-1.07V12.1h2.23c.37 0 .73.06 1.07.14.34.08.67.22.96.42l1.58-1.58c-.53-.53-1.18-.93-1.9-1.18-.72-.25-1.48-.38-2.27-.38H11.2V7.29c0-.79-.13-1.55-.38-2.27s-.65-1.37-1.18-1.9l-1.58 1.58c.2.29.34.62.42.96.08.34.14.7.14 1.07v2.23H6.39c-.37 0-.73-.06-1.07-.14a3.1 3.1 0 01-.96-.42l-1.58 1.58c.53.53 1.18.93 1.9 1.18.72.25 1.48.38 2.27.38h2.23V19.4c0 .79.13 1.55.38 2.27s.65 1.37 1.18 1.9l1.58-1.58c-.2-.29-.34-.62-.42-.96-.08-.34-.14-.7-.14-1.07v-2.23h2.23c.37 0 .73.06 1.07.14.34.08.67.22.96.42l1.58-1.58a4.13 4.13 0 00-1.9-1.18c-.72-.25-1.48-.38-2.27-.38z"/></svg>
+                          Yelp Review
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- Checkout Payment Buttons -->
+              <div class="space-y-2 pt-3 border-t border-luxuryGold/10">
+                <button onclick="triggerPayment('Apple Pay')" class="gold-shimmer-btn w-full py-3 bg-gradient-to-r from-luxuryGold to-luxuryGoldDark text-black text-xs font-extrabold uppercase rounded-xl tracking-wider shadow-lg flex items-center justify-center gap-2">
+                  <svg class="w-4 h-4 text-black" fill="currentColor" viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93 			.99-3.06-.96.04-2.13.64-2.82 1.45-.6.69-1.12 1.83-.98 2.94 1.07.08 2.16-.52 2.81-1.33z"/></svg>
+                  Pay with Apple Pay
+                </button>
+                <button onclick="triggerPayment('Venmo')" class="w-full py-3 bg-sky-600/10 hover:bg-sky-600/20 text-sky-400 border border-sky-500/20 text-xs font-bold uppercase rounded-xl tracking-wider flex items-center justify-center gap-2">
+                  <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                  Pay via Venmo App
+                </button>
+                <p class="text-[7.5px] text-slate-500 italic">No app download required. Secure transactions powered by VLinkPay.</p>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- VIEW 3: SIMULATED iOS APPLE PAY SHEET & SUCCESS SCREENS -->
+      <!-- ========================================================= -->
+      <section id="view-payment-sheet" class="hidden max-w-lg mx-auto space-y-6 animate-fade-in">
+        <div class="gold-panel rounded-[36px] border border-luxuryGold/35 overflow-hidden shadow-2xl phone-shine relative min-h-[600px] bg-black flex flex-col justify-end">
+          
+          <!-- Simulated Top Notch Status Bar -->
+          <div class="bg-black py-2.5 px-6 flex justify-between items-center text-[10px] text-slate-400 absolute top-0 left-0 right-0 z-20">
+            <span class="font-bold text-luxuryGoldLight"> Pay Wallet</span>
+            <div class="flex items-center gap-1.5 font-mono">
+              <span>9:41</span>
+            </div>
+          </div>
+
+          <!-- Static Background behind Apple Pay Sheet -->
+          <div class="p-6 text-center absolute top-20 left-0 right-0 z-0 space-y-3 opacity-30">
+            <div class="w-16 h-16 rounded-full bg-luxuryGold/20 mx-auto flex items-center justify-center text-3xl text-luxuryGold">
+              <svg class="w-8 h-8 text-luxuryGold animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.2 8H18c-.447 0-.8.353-.8.8V12"/></svg>
+            </div>
+            <h3 class="font-serif font-bold text-xl text-white">Waiting for authentication</h3>
+            <p class="text-xs text-slate-400">Please confirm Apple Pay Payment Sheet</p>
+          </div>
+
+          <!-- Bottom Slide Up Sheet: Simulated iOS Apple Pay Interface -->
+          <div class="bg-[#1c1c1e] rounded-t-[30px] p-6 z-10 relative border-t border-white/10 space-y-5 shadow-2xl">
+            <div class="w-12 h-1 bg-white/20 rounded-full mx-auto mb-2"></div>
+            
+            <div class="flex justify-between items-center text-xs border-b border-white/5 pb-3">
+              <span class="text-slate-400 font-bold uppercase flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93 			.99-3.06-.96.04-2.13.64-2.82 1.45-.6.69-1.12 1.83-.98 2.94 1.07.08 2.16-.52 2.81-1.33z"/></svg>
+                Apple Pay
+              </span>
+              <button onclick="switchView('customer-tap')" class="text-slate-400 hover:text-white">Cancel</button>
+            </div>
+
+            <!-- Mock Card Detail -->
+            <div class="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-6 rounded-md bg-gradient-to-r from-blue-600 to-indigo-700 p-1 text-[8px] font-bold flex flex-col justify-between text-white shadow-md">
+                  <span>VISA</span>
+                  <span class="text-right font-mono">•••• 4242</span>
+                </div>
+                <div>
+                  <span class="block text-xs font-bold text-white">Chase Sapphire Preferred</span>
+                  <span class="block text-[10px] text-slate-400">Selected Credit Card</span>
+                </div>
+              </div>
+              <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </div>
+
+            <!-- Transaction Breakdowns -->
+            <div class="space-y-2.5 text-xs text-slate-300 border-b border-white/5 pb-4">
+              <div class="flex justify-between">
+                <span>Merchant:</span>
+                <span class="text-white font-bold" id="pay-sheet-merchant">Golden Hour Spa</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Technician recipient:</span>
+                <span class="text-white font-bold" id="pay-sheet-staff">Jessica (Nails)</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Routing Mode:</span>
+                <span class="text-luxuryGold font-extrabold uppercase text-[10px]" id="pay-sheet-mode">Direct (Venmo)</span>
+              </div>
+              <div class="flex justify-between text-sm pt-2 border-t border-white/5 font-extrabold text-white">
+                <span>Total Payment:</span>
+                <span class="text-luxuryAmber font-mono text-base" id="pay-sheet-total">$20.00</span>
+              </div>
+            </div>
+
+            <!-- Simulated Face ID Prompt Trigger -->
+            <div class="text-center space-y-4 pt-2">
+              <div class="w-14 h-14 rounded-full bg-sky-500/10 border border-sky-400/30 flex items-center justify-center mx-auto text-sky-400 text-2xl animate-pulse cursor-pointer" onclick="processPaymentSuccess()">
+                <svg class="w-8 h-8 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+              </div>
+              <div>
+                <span class="block text-[11px] text-slate-400 font-semibold uppercase tracking-wider">Double Click to Pay with Face ID</span>
+                <span class="block text-[8px] text-slate-500 italic mt-1">Or click the secure shield icon above to simulate payment authorization</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- VIEW 4: MERCHANT COMMAND DASHBOARD (OWNER INTERFACES) -->
+      <!-- ========================================================= -->
+      <section id="view-merchant-dash" class="hidden space-y-8 animate-fade-in">
+        
+        <!-- Welcome Banner block -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-luxuryCoal via-black to-luxuryCoal p-6 rounded-2xl border border-luxuryGold/20 shadow-xl">
+          <div>
+            <span class="text-[9px] font-bold text-luxuryGold uppercase tracking-widest block mb-1">Cơ chế VLinkPay Touch Control</span>
+            <h1 class="text-2xl md:text-3xl font-serif font-black tracking-tight" id="dash-merchant-title">Golden Hour Spa</h1>
+            <p class="text-xs text-slate-400 mt-1">Quản lý các chi nhánh, cấu hình hoa hồng nhận hộ, đối soát công nợ thợ và chống reviews xấu.</p>
+          </div>
+          
+          <!-- Slider config fee -->
+          <div class="gold-panel p-3.5 rounded-xl border border-luxuryGold/20 flex items-center gap-4">
+            <div>
+              <span class="block text-[8px] text-slate-400 font-bold uppercase">Phí thương lượng nhận hộ</span>
+              <span class="text-lg font-black text-luxuryGold" id="dash-fee-rate-badge">5.0%</span>
+            </div>
+            <input type="range" id="dash-fee-slider" min="1" max="10" step="0.5" value="5" oninput="updateNegotiatedFeeSlider()" class="w-20 accent-luxuryGold bg-slate-800 rounded-lg appearance-none h-1.5">
+          </div>
+        </div>
+
+        <!-- 4 Stat widgets -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Widget 1 -->
+          <div class="gold-panel p-5 rounded-2xl relative overflow-hidden group hover:border-luxuryGold/35 transition duration-300">
+            <div class="flex justify-between items-start mb-3">
+              <div class="w-9 h-9 bg-luxuryGold/10 rounded-lg flex items-center justify-center text-luxuryGold">
+                <svg class="w-5 h-5 text-luxuryGold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </div>
+              <span class="text-[9px] font-extrabold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">+ 15%</span>
+            </div>
+            <span class="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">Tổng Tip Nhận (Gross)</span>
+            <span class="text-2xl font-black font-mono mt-1 block tracking-tight text-white" id="stat-gross-tips">$1,450.00</span>
+            <span class="block text-[8px] text-slate-500 mt-1">Tổng dòng tiền tip qua bảng đặt quầy</span>
+          </div>
+
+          <!-- Widget 2 -->
+          <div class="gold-panel p-5 rounded-2xl relative overflow-hidden group hover:border-luxuryGold/35 transition duration-300">
+            <div class="flex justify-between items-start mb-3">
+              <div class="w-9 h-9 bg-sky-500/10 rounded-lg flex items-center justify-center text-sky-400">
+                <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              </div>
+              <span class="text-[9px] font-extrabold text-sky-400 bg-sky-400/10 px-2 py-0.5 rounded-full">Phí 0%</span>
+            </div>
+            <span class="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">Tip Trực Tiếp (Direct Wallet)</span>
+            <span class="text-2xl font-black font-mono mt-1 block tracking-tight text-sky-400" id="stat-direct-tips">$820.00</span>
+            <span class="block text-[8px] text-slate-500 mt-1">Chuyển thẳng về Venmo/Cash App thợ</span>
+          </div>
+
+          <!-- Widget 3 -->
+          <div class="gold-panel p-5 rounded-2xl relative overflow-hidden group hover:border-luxuryGold/35 transition duration-300">
+            <div class="flex justify-between items-start mb-3">
+              <div class="w-9 h-9 bg-luxuryAmber/10 rounded-lg flex items-center justify-center text-luxuryAmber">
+                <svg class="w-5 h-5 text-luxuryAmber" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+              </div>
+              <span class="text-[9px] font-extrabold text-luxuryGold bg-luxuryGold/10 px-2 py-0.5 rounded-full" id="stat-handled-count">3 thợ nhận hộ</span>
+            </div>
+            <span class="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">Nhận Hộ Qua Tiệm (Store Handled)</span>
+            <span class="text-2xl font-black font-mono mt-1 block tracking-tight text-luxuryAmber" id="stat-handled-tips">$630.00</span>
+            <span class="block text-[8px] text-slate-500 mt-1">Chảy về tài khoản cổng của chủ tiệm</span>
+          </div>
+
+          <!-- Widget 4 -->
+          <div class="gold-panel p-5 rounded-2xl relative overflow-hidden group hover:border-luxuryGold/35 transition duration-300">
+            <div class="flex justify-between items-start mb-3">
+              <div class="w-9 h-9 bg-emerald-500/10 rounded-lg flex items-center justify-center text-emerald-400">
+                <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+              </div>
+              <span class="text-[9px] font-extrabold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full" id="stat-pnl-pct-badge">5.0% Fee</span>
+            </div>
+            <span class="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">Doanh Thu Thu Thương Lượng</span>
+            <span class="text-2xl font-black font-mono mt-1 block tracking-tight text-emerald-400" id="stat-store-revenue">$31.50</span>
+            <span class="block text-[8px] text-slate-500 mt-1">Bù đắp phí thẻ và phí quản trị hệ thống</span>
+          </div>
+        </div>
+
+        <!-- Main Ledger Grid for Staff -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          <!-- LEFT 8 COLS: STAFF DEBT SETTLEMENT & CONFLICT CONTROL -->
+          <div class="lg:col-span-8 space-y-6">
+            <div class="gold-panel rounded-3xl p-6">
+              <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-luxuryGold/15 mb-6">
+                <div>
+                  <h3 class="font-serif font-bold text-lg text-luxuryGold flex items-center gap-2">
+                    <svg class="w-5 h-5 text-luxuryGold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                    Bảng Kết Toán Tiền Tip & Công Nợ Thợ (Staff Ledger)
+                  </h3>
+                  <p class="text-[10px] text-slate-400">Xem danh sách thợ, thay đổi cơ chế định tuyến nhận tiền, và thực hiện chi trả Cash.</p>
+                </div>
+                <button onclick="payoutAllStoreBalances()" class="gold-shimmer-btn px-4 py-2 bg-gradient-to-r from-luxuryGold to-luxuryGoldDark text-black text-[10px] font-extrabold uppercase tracking-wider rounded-lg shadow-md">
+                  Chi Trả Nhanh Toàn Bộ Nhận Hộ
+                </button>
+              </div>
+
+              <!-- Table list -->
+              <div class="overflow-x-auto gold-scroll">
+                <table class="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr class="border-b border-luxuryGold/10 text-[9px] text-slate-400 uppercase tracking-widest">
+                      <th class="py-3 px-4 font-bold">Tên Thợ (Technician)</th>
+                      <th class="py-3 px-4 font-bold">Routing Method</th>
+                      <th class="py-3 px-4 font-bold text-right">Tổng Tip</th>
+                      <th class="py-3 px-4 font-bold text-right">Khấu Trừ</th>
+                      <th class="py-3 px-4 font-bold text-right">Thực Nhận</th>
+                      <th class="py-3 px-4 font-bold text-center">Hành Động</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dash-staff-table-body" class="divide-y divide-white/5 text-[11px]">
+                    <!-- Generated Dynamically by JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Recent Live Transaction stream -->
+            <div class="gold-panel rounded-3xl p-6">
+              <div class="flex justify-between items-center pb-4 border-b border-luxuryGold/15 mb-4">
+                <div>
+                  <h4 class="font-serif font-bold text-base text-luxuryGoldLight flex items-center gap-1.5">
+                    <svg class="w-5 h-5 text-luxuryGold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Nhật Ký Quẹt Thẻ / NFC Gần Đây
+                  </h4>
+                  <p class="text-[10px] text-slate-400">Dòng giao dịch và phản hồi Google/Yelp thời gian thực gửi từ điện thoại khách hàng</p>
+                </div>
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              </div>
+              <div class="space-y-2.5 max-h-56 overflow-y-auto gold-scroll pr-2" id="dash-tx-feed">
+                <!-- Generated Dynamically by JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT 4 COLS: DYNAMIC SIMULATOR CONTROL DECK -->
+          <div class="lg:col-span-4 space-y-6">
+            
+            <!-- Quick Simulator Launcher tools -->
+            <div class="gold-panel p-6 rounded-3xl border border-luxuryGold/25 space-y-4">
+              <div class="text-center pb-2 border-b border-luxuryGold/10">
+                <span class="px-2.5 py-1 rounded bg-luxuryGold/10 text-luxuryGold text-[8.5px] uppercase font-bold border border-luxuryGold/30 tracking-widest inline-block mb-1.5">Interactive Control</span>
+                <h4 class="font-serif font-bold text-base text-white">Bắn Giao Dịch Tip Giả Lập</h4>
+                <p class="text-[10px] text-slate-400 mt-0.5">Mô phỏng tức thì một khách hàng chạm NFC, chọn thợ và bấm Tip tiền để xem dòng tiền hoạt động.</p>
+              </div>
+
+              <!-- Quick simulator setup field -->
+              <div class="space-y-3.5 text-xs text-slate-300">
+                <div>
+                  <label class="block text-[8px] uppercase tracking-wider text-slate-400 font-bold mb-1">1. Chọn thợ muốn giả lập Tip:</label>
+                  <select id="quick-sim-staff-select" class="bg-black border border-luxuryGold/20 rounded p-1.5 w-full text-white text-xs">
+                    <!-- Options Dynamically Populated -->
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[8px] uppercase tracking-wider text-slate-400 font-bold mb-1">2. Nhập tiền bill giả định ($):</label>
+                  <input type="number" id="quick-sim-bill" value="120" class="bg-black border border-luxuryGold/20 rounded p-1.5 w-full text-white font-mono text-xs">
+                </div>
+                <div>
+                  <label class="block text-[8px] uppercase tracking-wider text-slate-400 font-bold mb-1">3. Mức Tip (%):</label>
+                  <div class="grid grid-cols-3 gap-1.5 text-center font-bold">
+                    <button onclick="setQuickSimTipRate(15)" id="q-sim-r-15" class="py-1 rounded border border-luxuryGold/15 bg-black/40 text-[10px]">15%</button>
+                    <button onclick="setQuickSimTipRate(20)" id="q-sim-r-20" class="py-1 rounded border border-luxuryGold/35 bg-luxuryGold/10 text-luxuryGoldLight text-[10px]">20%</button>
+                    <button onclick="setQuickSimTipRate(25)" id="q-sim-r-25" class="py-1 rounded border border-luxuryGold/15 bg-black/40 text-[10px]">25%</button>
+                  </div>
+                </div>
+                <div class="flex justify-between items-center text-[11px] pt-1.5 border-t border-white/5">
+                  <span>Tính toán tiền Tip:</span>
+                  <span class="text-luxuryAmber font-black font-mono" id="quick-sim-calc-tip-text">$24.00</span>
+                </div>
+                <button onclick="executeQuickSimulation()" class="gold-shimmer-btn w-full py-2.5 bg-gradient-to-r from-luxuryGold to-luxuryGoldDark text-black text-[10px] font-black uppercase rounded-lg shadow-md tracking-wider flex items-center justify-center gap-1">
+                  <svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"/></svg>
+                  Bấm Chạm & Gửi Tiền Tip
+                </button>
+              </div>
+            </div>
+
+            <!-- Review Feedback Streamer -->
+            <div class="gold-panel p-5 rounded-3xl border border-luxuryGold/10 space-y-4">
+              <h4 class="font-serif font-bold text-xs text-luxuryGold flex items-center gap-1.5">
+                <svg class="w-4.5 h-4.5 text-luxuryGold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.907c.961 0 1.35 1.258.588 1.81l-3.97 2.89a1 1 0 00-.364 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.11l-3.971-2.89a1 1 0 00-1.178 0l-3.97 2.89c-.783.57-1.838-.197-1.538-1.11l1.518-4.674a1 1 0 00-.364-1.118l-3.97-2.89c-.762-.551-.372-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                Nhật Ký Góp Ý & Đánh Giá Gần Đây
+              </h4>
+              <div class="space-y-3 max-h-52 overflow-y-auto gold-scroll pr-2" id="dash-review-stream">
+                <!-- Generated Dynamically by JS -->
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- VIEW 5: STAFF WALLET LEDGER (TECHNICIAN PORTAL VIEWS) -->
+      <!-- ========================================================= -->
+      <section id="view-staff-wallet" class="hidden max-w-lg mx-auto space-y-6 animate-fade-in">
+        
+        <!-- Mock Phone interface for Nail tech wallet -->
+        <div class="gold-panel rounded-[36px] border border-luxuryGold/35 overflow-hidden shadow-2xl phone-shine relative bg-black">
+          
+          <!-- Notch -->
+          <div class="bg-black py-2.5 px-6 flex justify-between items-center text-[10px] text-slate-400 border-b border-luxuryGold/10">
+            <span class="font-bold text-luxuryGoldLight flex items-center gap-1">
+              <svg class="w-3.5 h-3.5 text-luxuryGold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+              wallet.vlinkpay.com
+            </span>
+            <div class="flex items-center gap-1.5 font-mono">
+              <span>12:30</span>
+            </div>
+          </div>
+
+          <!-- Staff Wallet Content screen -->
+          <div class="p-6 space-y-6 bg-gradient-to-b from-luxuryCoal to-black min-h-[580px] flex flex-col justify-between">
+            <div>
+              <!-- Selector to switch which staff is viewing their wallet -->
+              <div class="flex items-center justify-between border-b border-luxuryGold/15 pb-4">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-10 h-10 rounded-full bg-luxuryGold/10 border border-luxuryGold/30 flex items-center justify-center font-bold text-luxuryGold font-serif text-lg" id="staff-w-avatar">J</div>
+                  <div class="text-left">
+                    <select id="staff-wallet-person-select" onchange="switchActiveStaffWallet()" class="bg-black/60 border border-luxuryGold/15 rounded text-[11px] py-1 px-2 text-white font-bold focus:outline-none">
+                      <!-- Populated via JS -->
+                    </select>
+                    <span class="block text-[8px] uppercase text-slate-400 font-bold tracking-wider mt-0.5" id="staff-w-mode">Routing: Direct (Venmo)</span>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-[8px] font-black uppercase rounded border border-emerald-500/20">Online</span>
+              </div>
+
+              <!-- Main Wallet Balance Widgets -->
+              <div class="mt-6 p-5 bg-gradient-to-tr from-[#1f190d] to-black rounded-2xl border border-luxuryGold/20 text-center space-y-3 shadow-lg">
+                <span class="block text-[9px] uppercase tracking-widest text-slate-400 font-bold">Số dư tiền Tip tích lũy</span>
+                <span class="text-3xl font-black font-mono text-luxuryGold block" id="staff-w-gross-total">$0.00</span>
+                <div class="grid grid-cols-2 gap-2 border-t border-white/5 pt-3 text-xs">
+                  <div class="text-left border-r border-white/5 pr-2">
+                    <span class="block text-[8px] text-slate-400 uppercase font-bold">Thực Nhận (Net)</span>
+                    <span class="font-bold text-emerald-400 font-mono text-[11px]" id="staff-w-net-owed">$0.00</span>
+                  </div>
+                  <div class="text-right pl-2">
+                    <span class="block text-[8px] text-slate-400 uppercase font-bold">Đã Chi Trả</span>
+                    <span class="font-bold text-slate-300 font-mono text-[11px]" id="staff-w-paid-out">$0.00</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Personal Transaction history logs -->
+              <div class="mt-6 text-left space-y-2">
+                <span class="block text-[9px] uppercase tracking-wider text-slate-400 font-bold">Lịch sử nhận Tip cá nhân:</span>
+                <div class="space-y-2 max-h-48 overflow-y-auto gold-scroll pr-1" id="staff-w-tx-list">
+                  <!-- Dynamically Rendered -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Cash out CTA or Settings footnote -->
+            <div class="pt-4 border-t border-luxuryGold/15 text-center">
+              <button onclick="requestStaffCashout()" class="w-full py-3 bg-luxuryGold hover:bg-luxuryGoldDark text-black font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition duration-300" id="staff-w-cashout-btn">
+                Gửi Yêu Cầu Rút Cash (Store)
+              </button>
+              <p class="text-[7px] text-slate-500 italic mt-2">Dòng tiền Direct tự động chuyển khoản về ứng dụng liên kết tức thì.</p>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- FOOTER BAR -->
+    <footer class="w-full border-t border-luxuryGold/15 bg-black z-20 relative">
+      <div class="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+        <div>
+          <span class="font-serif font-bold text-white text-sm">VLinkPay Touch - United States</span>
+          <p class="mt-0.5 text-[10px]">Premium smart table stands and micro-payment solutions optimized for US Nail & Hair Spa Merchants.</p>
+        </div>
+        <span class="text-slate-600 text-[10px]">© 2026 VLinkPay Inc. All Rights Reserved. US Patent Pending.</span>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    
+    // Global database representing branches
+    const database = {
+      sf: {
+        branchId: 'sf',
+        storeName: "Golden Hour Spa",
+        location: "San Francisco, CA",
+        feeRate: 5.0,
+        staff: [
+          { id: 101, name: "Jessica (Nails)", mode: "direct", info: "@jessica-nail-sf", grossTip: 420.00, paidOut: 0.00 },
+          { id: 102, name: "Helen (Facial)", mode: "store", info: "Nhận hộ qua Tiệm", grossTip: 310.00, paidOut: 120.00 },
+          { id: 103, name: "Danny (Hair)", mode: "store", info: "Nhận hộ qua Tiệm", grossTip: 240.00, paidOut: 0.00 },
+          { id: 104, name: "Michael (Massage)", mode: "direct", info: "@michael-cash-sf", grossTip: 400.00, paidOut: 0.00 },
+          { id: 105, name: "Chloe (Assistant)", mode: "store", info: "Nhận hộ qua Tiệm", grossTip: 80.00, paidOut: 50.00 }
+        ],
+        transactions: [
+          { id: 501, time: "18:42", client: "Emily Johnson", staffId: 101, staffName: "Jessica (Nails)", amount: 20.00, mode: "direct", app: "Venmo" },
+          { id: 502, time: "17:15", client: "Sophia Miller", staffId: 102, staffName: "Helen (Facial)", amount: 15.00, mode: "store", app: "Apple Pay" },
+          { id: 503, time: "16:30", client: "Amanda Clark", staffId: 105, staffName: "Chloe (Assistant)", amount: 8.00, mode: "store", app: "Apple Pay" },
+          { id: 504, time: "14:10", client: "Olivia Brown", staffId: 104, staffName: "Michael (Massage)", amount: 25.00, mode: "direct", app: "Apple Pay" }
+        ],
+        reviews: [
+          { name: "Sophia Miller", stars: 5, platform: "Google", msg: "Outstanding nail designs, fast checkout with NFC tap!", date: "Today" },
+          { name: "John Doe", stars: 2, platform: "Yelp", msg: "Loved the nails but wait time was quite long", date: "Yesterday" }
+        ]
+      },
+      hou: {
+        branchId: 'hou',
+        storeName: "Cali Nails Spa",
+        location: "Houston Heights, TX",
+        feeRate: 4.5,
+        staff: [
+          { id: 201, name: "Ashley V.", mode: "direct", info: "@ashley-nails-hou", grossTip: 510.00, paidOut: 0.00 },
+          { id: 202, name: "Vivian Trinh", mode: "store", info: "Nhận hộ qua Tiệm", grossTip: 450.00, paidOut: 0.00 },
+          { id: 203, name: "Danny Le", mode: "store", info: "Nhận hộ qua Tiệm", grossTip: 290.00, paidOut: 50.00 },
+          { id: 204, name: "Kayla (Nails)", mode: "direct", info: "@kayla-beauty-hou", grossTip: 180.00, paidOut: 0.00 }
+        ],
+        transactions: [
+          { id: 601, time: "18:20", client: "Madison Davis", staffId: 202, staffName: "Vivian Trinh", amount: 30.00, mode: "store", app: "Apple Pay" },
+          { id: 602, time: "16:05", client: "Sarah Higgins", staffId: 201, staffName: "Ashley V.", amount: 22.00, mode: "direct", app: "Venmo" }
+        ],
+        reviews: [
+          { name: "Madison Davis", stars: 5, platform: "Google", msg: "Vivian is a sweet artist, loved my acrylic set!", date: "Today" }
+        ]
+      },
+      sj: {
+        branchId: 'sj',
+        storeName: "Artisan Nails & Lounge",
+        location: "San Jose Midtown, CA",
+        feeRate: 6.0,
+        staff: [
+          { id: 301, name: "Isabella Ortiz", mode: "direct", info: "@isabella-royal-sj", grossTip: 680.00, paidOut: 0.00 },
+          { id: 302, name: "Mateo Silva", mode: "store", info: "Nhận hộ qua Tiệm", grossTip: 520.00, paidOut: 100.00 },
+          { id: 303, name: "Emma Smith", mode: "store", info: "Nhận hộ qua Tiệm", grossTip: 390.00, paidOut: 0.00 }
+        ],
+        transactions: [
+          { id: 701, time: "17:55", client: "Elena Rostova", staffId: 302, staffName: "Mateo Silva", amount: 45.00, mode: "store", app: "Apple Pay" },
+          { id: 702, time: "15:22", client: "Gabriela Diaz", staffId: 301, staffName: "Isabella Ortiz", amount: 35.00, mode: "direct", app: "Venmo" }
+        ],
+        reviews: [
+          { name: "Elena Rostova", stars: 5, platform: "Yelp", msg: "Perfect relaxation, Mateo is very delicate", date: "Today" }
+        ]
+      }
+    };
+
+    // SYSTEM STATE RUNNER
+    let activeBranchKey = 'sf';
+    let currentBranch = database[activeBranchKey];
+    let selectedCustStaffId = 101;
+    let custTipRatePct = 20;
+    let custFixedTipAmt = 5;
+    let selectedCustRatingStars = 5;
+    let activeTipFlowStrategy = 'percent'; // 'percent', 'staff', 'fixed', 'split'
+    let selectedReviewPlatform = 'Google'; // 'Google', 'Yelp'
+    
+    // Quick Sim State variables
+    let quickSimSelectedStaffId = 101;
+    let quickSimTipRatePct = 20;
+
+    // Toast Alert notification system
+    function showNotification(msg, icon = "✨") {
+      const toast = document.getElementById("toast-notif");
+      const msgLabel = document.getElementById("toast-msg");
+      const iconLabel = document.getElementById("toast-icon");
+      
+      msgLabel.innerText = msg;
+      iconLabel.innerText = icon;
+      
+      toast.classList.remove("opacity-0", "translate-y-[-150px]", "pointer-events-none");
+      toast.classList.add("opacity-100", "translate-y-0");
+
+      setTimeout(() => {
+        toast.classList.remove("opacity-100", "translate-y-0");
+        toast.classList.add("opacity-0", "translate-y-[-150px]", "pointer-events-none");
+      }, 4000);
+    }
+
+
+    // Core Screen Navigator Switcher supporting Desktop & Mobile Swipe Menus
+    function switchView(viewName) {
+      const views = ['landing', 'customer-tap', 'payment-sheet', 'merchant-dash', 'staff-wallet'];
+      views.forEach((v) => {
+        const block = document.getElementById(`view-${v}`);
+        
+        // Desktop Switcher
+        const navBtn = document.getElementById(`nav-${v}`);
+        // Mobile Tab Strip Switcher
+        const mobNavBtn = document.getElementById(`mob-nav-${v}`);
+        
+        if (v === viewName) {
+          block.classList.remove("hidden");
+          block.classList.add("block");
+          
+          if (navBtn) {
+            navBtn.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 bg-luxuryGold text-black shadow-lg";
+          }
+          if (mobNavBtn) {
+            mobNavBtn.className = "px-4 py-2 rounded-full text-[11px] font-bold transition-all duration-300 bg-luxuryGold text-black shadow-md";
+          }
+        } else {
+          block.classList.add("hidden");
+          block.classList.remove("block");
+          
+          if (navBtn) {
+            navBtn.className = "px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 text-slate-400 hover:text-white";
+          }
+          if (mobNavBtn) {
+            mobNavBtn.className = "px-4 py-2 rounded-full text-[11px] font-bold transition-all duration-300 bg-white/5 text-slate-400 border border-white/5";
+          }
+        }
+      });
+
+      // Handle custom scroll jump smoothly
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Branch selector dynamic change
+    function onBranchSelectorChanged() {
+      const selector = document.getElementById("locationSelector");
+      activeBranchKey = selector.value;
+      currentBranch = database[activeBranchKey];
+
+      // Reset configurations
+      document.getElementById("dash-fee-slider").value = currentBranch.feeRate;
+      document.getElementById("dash-fee-rate-badge").innerText = `${currentBranch.feeRate.toFixed(1)}%`;
+      document.getElementById("dash-merchant-title").innerText = `${currentBranch.storeName} (${currentBranch.location})`;
+
+      // Auto assign default staff in selected branch
+      selectedCustStaffId = currentBranch.staff[0].id;
+      quickSimSelectedStaffId = currentBranch.staff[0].id;
+
+      // Redraw UI
+      redrawUnifiedSimulator();
+      showNotification(`Đã chuyển sang chi nhánh: ${currentBranch.storeName}!`, "🏦");
+    }
+
+
+    // REDRAW AND GRAPHICS GENERATOR SYSTEM
+    function redrawUnifiedSimulator() {
+      // 1. Redraw Merchant stats
+      let grossTotal = 0;
+      let directTotal = 0;
+      let storeHandledTotal = 0;
+      let storeRevenueTotal = 0;
+      let storeHandledStaffCount = 0;
+
+      const ledgerBody = document.getElementById("dash-staff-table-body");
+      ledgerBody.innerHTML = "";
+
+      currentBranch.staff.forEach((staff) => {
+        grossTotal += staff.grossTip;
+        let routeBadge = "";
+        let actionBtn = "";
+        let storeFeeDeduction = 0;
+        let netOwedToStaff = 0;
+
+        if (staff.mode === "direct") {
+          directTotal += staff.grossTip;
+          netOwedToStaff = staff.grossTip;
+          routeBadge = `
+            <div>
+              <span class="text-sky-400 font-bold block text-[10px] flex items-center gap-1">
+                <svg class="w-3 h-3 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                Direct Link
+              </span>
+              <span class="text-[9px] text-slate-500 font-mono">${staff.info}</span>
+            </div>
+          `;
+          actionBtn = `<span class="px-2 py-0.5 bg-white/5 rounded text-[8.5px] text-slate-500 font-bold uppercase">Direct Payout</span>`;
+        } else {
+          storeHandledTotal += staff.grossTip;
+          storeHandledStaffCount++;
+          storeFeeDeduction = (staff.grossTip * (currentBranch.feeRate / 100));
+          storeRevenueTotal += storeFeeDeduction;
+          netOwedToStaff = staff.grossTip - storeFeeDeduction - staff.paidOut;
+
+          routeBadge = `
+            <div>
+              <span class="text-luxuryAmber font-bold block text-[10px] flex items-center gap-1">
+                <svg class="w-3 h-3 text-luxuryAmber" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                Store Handled
+              </span>
+              <span class="text-[9px] text-slate-500">Nhận hộ qua Tiệm</span>
+            </div>
+          `;
+
+          if (netOwedToStaff > 0) {
+            actionBtn = `
+              <button onclick="payoutSingleStaff(${staff.id})" class="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded font-bold uppercase text-[9px]">
+                Chi Cash
+              </button>
+            `;
+          } else {
+            actionBtn = `<span class="px-2.5 py-1 bg-slate-800 text-emerald-400 rounded text-[9px] font-bold uppercase">✓ Xong</span>`;
+          }
+        }
+
+        const tableRow = `
+          <tr class="hover:bg-luxuryCoal/40 transition">
+            <td class="py-3 px-4 flex items-center gap-2">
+              <div class="w-7 h-7 bg-luxuryGold/10 rounded-full border border-luxuryGold/20 flex items-center justify-center font-bold text-luxuryGold font-serif text-[10px]">
+                ${staff.name.charAt(0)}
+              </div>
+              <span class="font-bold text-white">${staff.name}</span>
+            </td>
+            <td class="py-3 px-4">${routeBadge}</td>
+            <td class="py-3 px-4 text-right font-mono font-bold">$${staff.grossTip.toFixed(2)}</td>
+            <td class="py-3 px-4 text-right font-mono text-rose-400">-$${storeFeeDeduction.toFixed(2)}</td>
+            <td class="py-3 px-4 text-right font-mono text-emerald-400 font-extrabold">$${netOwedToStaff.toFixed(2)}</td>
+            <td class="py-3 px-4 text-center">${actionBtn}</td>
+          </tr>
+        `;
+        ledgerBody.insertAdjacentHTML('beforeend', tableRow);
+      });
+
+      // Assign Stats
+      document.getElementById("stat-gross-tips").innerText = `$${grossTotal.toFixed(2)}`;
+      document.getElementById("stat-direct-tips").innerText = `$${directTotal.toFixed(2)}`;
+      document.getElementById("stat-handled-tips").innerText = `$${storeHandledTotal.toFixed(2)}`;
+      document.getElementById("stat-store-revenue").innerText = `$${storeRevenueTotal.toFixed(2)}`;
+      document.getElementById("stat-pnl-pct-badge").innerText = `${currentBranch.feeRate.toFixed(1)}% Fee`;
+      document.getElementById("stat-handled-count").innerText = `${storeHandledStaffCount} thợ nhận hộ`;
+
+      // 2. Redraw TX Logs
+      const txContainer = document.getElementById("dash-tx-feed");
+      txContainer.innerHTML = "";
+
+      currentBranch.transactions.forEach((tx) => {
+        let logoBadge = `
+          <div class="w-8 h-8 rounded-lg bg-luxuryGold/10 text-luxuryGoldLight flex items-center justify-center text-xs font-bold">
+            <svg class="w-4 h-4 text-luxuryGold" fill="currentColor" viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93 			.99-3.06-.96.04-2.13.64-2.82 1.45-.6.69-1.12 1.83-.98 2.94 1.07.08 2.16-.52 2.81-1.33z"/></svg>
+          </div>`;
+        if (tx.app === "Venmo") {
+          logoBadge = `
+            <div class="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center text-xs font-bold">
+              <svg class="w-4 h-4 text-sky-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+            </div>`;
+        }
+
+        const txRow = `
+          <div class="flex items-center justify-between p-3 rounded-xl bg-black/50 border border-luxuryGold/5 text-xs">
+            <div class="flex items-center gap-3">
+              ${logoBadge}
+              <div>
+                <span class="block text-[11px] font-extrabold text-white">${tx.client} -> ${tx.staffName}</span>
+                <span class="block text-[8.5px] text-slate-500">Lúc ${tx.time} | Giao thức: ${tx.app}</span>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="block font-mono font-extrabold text-luxuryAmber">+$${tx.amount.toFixed(2)}</span>
+              <span class="block text-[8px] uppercase tracking-wider font-extrabold text-luxuryGold">${tx.mode === 'direct' ? 'Trực Tiếp' : 'Nhận Hộ'}</span>
+            </div>
+          </div>
+        `;
+        txContainer.insertAdjacentHTML('beforeend', txRow);
+      });
+
+      // 3. Redraw customer portal screens
+      document.getElementById("cust-branch-tag").innerText = `${currentBranch.storeName} (${currentBranch.location})`;
+      document.getElementById("cust-branch-title").innerText = currentBranch.storeName;
+
+      const custStaffContainer = document.getElementById("cust-staff-grid");
+      custStaffContainer.innerHTML = "";
+
+      currentBranch.staff.forEach((staff) => {
+        const isSelected = (staff.id === selectedCustStaffId);
+        const activeClass = isSelected 
+          ? "border-luxuryGold bg-luxuryGold/10 text-luxuryGoldLight shadow-lg shadow-luxuryGold/5" 
+          : "border-luxuryGold/10 bg-black/40 text-slate-300 hover:border-luxuryGold/30";
+
+        const card = `
+          <button onclick="setCustSelectedStaff(${staff.id})" class="p-2.5 rounded-xl border text-left flex items-center gap-2 transition duration-300 w-full ${activeClass}">
+            <div class="w-7 h-7 rounded-full bg-luxuryGold/20 flex items-center justify-center text-luxuryGold font-serif font-black text-[10px]">
+              ${staff.name.charAt(0)}
+            </div>
+            <div class="overflow-hidden">
+              <span class="block text-[10px] font-bold truncate text-white">${staff.name}</span>
+              <span class="block text-[8px] text-slate-500 truncate capitalize">${staff.mode === 'direct' ? 'Direct Route' : 'Store Handled'}</span>
+            </div>
+          </button>
+        `;
+        custStaffContainer.insertAdjacentHTML('beforeend', card);
+      });
+
+      // Calculate Customer tip view
+      recalcCustTip();
+
+      // 4. Redraw review stars
+      const reviewContainer = document.getElementById("dash-review-stream");
+      reviewContainer.innerHTML = "";
+
+      currentBranch.reviews.forEach((rev) => {
+        let starsStr = "★".repeat(rev.stars) + "☆".repeat(5 - rev.stars);
+        const isNegative = (rev.stars <= 3);
+        const starColor = isNegative ? 'text-rose-400' : 'text-luxuryAmber';
+        
+        let platformLabel = "";
+        if (!isNegative) {
+          const platColor = rev.platform === 'Google' ? 'bg-emerald-400/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+          platformLabel = `<span class="ml-2 px-1.5 py-0.5 rounded ${platColor} text-[7px] font-bold uppercase border">
+            <i class="align-middle"></i> Đã đẩy ${rev.platform}
+          </span>`;
+        } else {
+          platformLabel = `<span class="ml-2 px-1.5 py-0.5 rounded bg-rose-400/10 text-rose-400 text-[7px] font-bold uppercase border border-rose-500/20">
+            ⚠ Góp ý nội bộ
+          </span>`;
+        }
+
+        const card = `
+          <div class="p-3 bg-black/50 border border-luxuryGold/5 rounded-xl text-xs space-y-1">
+            <div class="flex justify-between items-center">
+              <span class="font-extrabold text-white">${rev.name} ${platformLabel}</span>
+              <span class="text-[8px] text-slate-500">${rev.date}</span>
+            </div>
+            <div class="${starColor} font-mono leading-none">${starsStr}</div>
+            <p class="text-[10px] text-slate-400 italic font-medium leading-relaxed">"${rev.msg}"</p>
+          </div>
+        `;
+        reviewContainer.insertAdjacentHTML('beforeend', card);
+      });
+
+      // 5. Redraw quick simulator launcher options
+      const simSelect = document.getElementById("quick-sim-staff-select");
+      simSelect.innerHTML = "";
+      currentBranch.staff.forEach((staff) => {
+        const opt = document.createElement("option");
+        opt.value = staff.id;
+        opt.innerText = `${staff.name} (${staff.mode === 'direct' ? 'Direct' : 'Store'})`;
+        simSelect.appendChild(opt);
+      });
+      simSelect.value = quickSimSelectedStaffId;
+      recalcQuickSimTipText();
+
+      // 6. Redraw staff wallet views
+      populateStaffWalletSelectors();
+    }
+
+    // Dynamic fee update on slider
+    function updateNegotiatedFeeSlider() {
+      const sliderVal = parseFloat(document.getElementById("dash-fee-slider").value);
+      currentBranch.feeRate = sliderVal;
+      document.getElementById("dash-fee-rate-badge").innerText = `${sliderVal.toFixed(1)}%`;
+      document.getElementById("stat-pnl-pct-badge").innerText = `${sliderVal.toFixed(1)}% Fee`;
+      
+      redrawUnifiedSimulator();
+    }
+
+    // Select staff on customer portal view
+    function setCustSelectedStaff(staffId) {
+      selectedCustStaffId = staffId;
+      redrawUnifiedSimulator();
+    }
+
+    // Set Customer Tip Rate (Strategy 1 & 4)
+    function setCustTipRate(pct) {
+      custTipRatePct = pct;
+      const rates = [15, 18, 20, 25];
+      rates.forEach((r) => {
+        const btn = document.getElementById(`tip-r-${r}`);
+        if (btn) {
+          if (r === pct) {
+            btn.className = "py-2 rounded-xl border border-luxuryGold/35 bg-luxuryGold/15 text-luxuryGoldLight";
+          } else {
+            btn.className = "py-2 rounded-xl border border-luxuryGold/15 bg-black/40 text-slate-300";
+          }
+        }
+      });
+      recalcCustTip();
+    }
+
+    // Set Fixed Cash Tip (Strategy 3)
+    function setCustFixedTip(amt) {
+      custFixedTipAmt = amt;
+      const fixedAmts = [2, 5, 10, 15];
+      fixedAmts.forEach((fa) => {
+        const btn = document.getElementById(`tip-f-${fa}`);
+        if (btn) {
+          if (fa === amt) {
+            btn.className = "py-2 rounded-xl border border-luxuryGold/35 bg-luxuryGold/15 text-luxuryGoldLight";
+          } else {
+            btn.className = "py-2 rounded-xl border border-luxuryGold/15 bg-black/40 text-slate-300";
+          }
+        }
+      });
+      recalcCustTip();
+    }
+
+    // Configures active UI displays according to the 4 Tip-Flow strategies
+    function setTipFlowStrategy(strategy) {
+      activeTipFlowStrategy = strategy;
+      
+      const strategies = ['percent', 'staff', 'fixed', 'split'];
+      strategies.forEach((s) => {
+        const btn = document.getElementById(`flow-btn-${s}`);
+        if (s === strategy) {
+          btn.className = "w-full text-left p-3 rounded-xl border border-luxuryGold text-xs font-bold transition duration-300 bg-luxuryGold/10 text-luxuryGoldLight";
+        } else {
+          btn.className = "w-full text-left p-3 rounded-xl border border-luxuryGold/10 text-xs font-bold transition duration-300 text-slate-300 hover:border-luxuryGold/30";
+        }
+      });
+
+      const percentGrid = document.getElementById("cust-tip-percent-grid");
+      const fixedGrid = document.getElementById("cust-tip-fixed-grid");
+      const staffSelector = document.getElementById("cust-section-staff-selector");
+      const billInputWrapper = document.getElementById("cust-bill-wrapper");
+      const splitFootnote = document.getElementById("cust-split-footnote");
+
+      percentGrid.classList.add("hidden");
+      fixedGrid.classList.add("hidden");
+      staffSelector.classList.remove("hidden");
+      billInputWrapper.classList.remove("hidden");
+      splitFootnote.innerText = "";
+
+      if (strategy === 'percent') {
+        percentGrid.classList.remove("hidden");
+      } else if (strategy === 'staff') {
+        percentGrid.classList.remove("hidden");
+        showNotification("Cơ chế chọn thợ trực tiếp: Tiền đi thẳng 100% về Venmo cá nhân thợ!", "👤");
+      } else if (strategy === 'fixed') {
+        fixedGrid.classList.remove("hidden");
+        billInputWrapper.classList.add("hidden");
+        showNotification("Cơ chế hóa đơn nhỏ: Tiền Tip cố định $2, $5, $10 phù hợp quán Cafe.", "☕️");
+      } else if (strategy === 'split') {
+        percentGrid.classList.remove("hidden");
+        splitFootnote.innerText = "Tự động chia: 70% Thợ chính | 30% Thợ phụ";
+        showNotification("Cơ chế chia đều: Tự động phân bổ tỷ lệ Tip cho Thợ chính & Thợ phụ.", "✂️");
+      }
+
+      recalcCustTip();
+    }
+
+    // Live customer tip calculator
+    function recalcCustTip() {
+      const billVal = parseFloat(document.getElementById("cust-bill-input").value) || 0;
+      let calculatedVal = 0;
+
+      if (activeTipFlowStrategy === 'fixed') {
+        calculatedVal = custFixedTipAmt;
+      } else {
+        calculatedVal = billVal * (custTipRatePct / 100);
+      }
+
+      document.getElementById("cust-calculated-tip").innerText = `$${calculatedVal.toFixed(2)}`;
+    }
+
+
+    // Rating star handler on customer screen
+    function setCustRating(stars) {
+      selectedCustRatingStars = stars;
+      const container = document.getElementById("star-rating-holder");
+      const buttons = container.getElementsByTagName("button");
+      
+      for (let i = 0; i < 5; i++) {
+        if (i < stars) {
+          buttons[i].className = "text-luxuryAmber hover:text-luxuryAmber transition";
+        } else {
+          buttons[i].className = "text-slate-600 hover:text-luxuryAmber transition";
+        }
+      }
+
+      const feedback = document.getElementById("rating-feedback-msg");
+      const platformMenu = document.getElementById("platform-select-menu");
+      const platBtns = document.getElementById("review-platform-buttons");
+
+      if (stars <= 3) {
+        feedback.innerText = "Góp ý của bạn sẽ được gửi ẩn riêng cho chủ tiệm xử lý. Chân thành cảm ơn!";
+        feedback.className = "text-[9px] text-rose-400 italic mt-1 font-semibold";
+        platBtns.classList.add("hidden");
+      } else {
+        feedback.innerText = "Excellent! Please share your review on Google or Yelp:";
+        feedback.className = "text-[9px] text-emerald-400 font-bold italic mt-1";
+        platBtns.classList.remove("hidden");
+      }
+    }
+
+    // Custom review platform toggle
+    function selectReviewPlatform(platform) {
+      selectedReviewPlatform = platform;
+      showNotification(`Đã liên kết đánh giá của bạn với ${platform}!`, "🌐");
+    }
+
+    // Trigger Physical NFC Tap simulating customers touching their phones
+    function triggerPhysicalNFCTap() {
+      switchView('customer-tap');
+      showNotification(`Gửi luồng truyền phát NFC... Điện thoại tự động nhận diện node: ${currentBranch.storeName}!`, "📡");
+    }
+
+    // Trigger Payment CTA
+    function triggerPayment(gateway) {
+      const billVal = parseFloat(document.getElementById("cust-bill-input").value) || 0;
+      let calculatedVal = 0;
+
+      if (activeTipFlowStrategy === 'fixed') {
+        calculatedVal = custFixedTipAmt;
+      } else {
+        calculatedVal = billVal * (custTipRatePct / 100);
+      }
+
+      if (calculatedVal <= 0 && activeTipFlowStrategy !== 'fixed') {
+        showNotification("Vui lòng nhập giá trị hóa đơn hợp lệ để tiếp tục!", "⚠️");
+        return;
+      }
+
+      const staffObj = currentBranch.staff.find(s => s.id === selectedCustStaffId);
+
+      // Populate Payment Sheet
+      document.getElementById("pay-sheet-merchant").innerText = currentBranch.storeName;
+      document.getElementById("pay-sheet-staff").innerText = staffObj.name;
+      document.getElementById("pay-sheet-total").innerText = `$${calculatedVal.toFixed(2)}`;
+      
+      let routingText = "";
+      if (activeTipFlowStrategy === 'split') {
+        routingText = `Split (70% thợ chính / 30% thợ phụ)`;
+      } else {
+        routingText = staffObj.mode === 'direct' ? `Direct Wallet (Venmo/0% fee)` : `Store Handled (${currentBranch.feeRate}% fee)`;
+      }
+      document.getElementById("pay-sheet-mode").innerText = routingText;
+
+      switchView('payment-sheet');
+      showNotification("Khởi tạo tiến trình thanh toán Apple Pay bảo mật...", "");
+    }
+
+
+    // Authentication Success
+    function processPaymentSuccess() {
+      const billVal = parseFloat(document.getElementById("cust-bill-input").value) || 0;
+      let calculatedVal = 0;
+
+      if (activeTipFlowStrategy === 'fixed') {
+        calculatedVal = custFixedTipAmt;
+      } else {
+        calculatedVal = billVal * (custTipRatePct / 100);
+      }
+
+      const staffObj = currentBranch.staff.find(s => s.id === selectedCustStaffId);
+
+      // Inject transaction stats based on active flow strategy
+      if (activeTipFlowStrategy === 'split') {
+        const mainTech = staffObj;
+        const helperTech = currentBranch.staff.find(s => s.id !== staffObj.id && s.mode === 'store') || currentBranch.staff[0];
+        
+        mainTech.grossTip += (calculatedVal * 0.7);
+        helperTech.grossTip += (calculatedVal * 0.3);
+      } else {
+        staffObj.grossTip += calculatedVal;
+      }
+
+      // Add to Ledger Transaction logs
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      
+      const randClients = ["Jessica Watson", "Clara Oswald", "Elena Diaz", "Anna Smith", "Olivia Brown"];
+      const clientMock = randClients[Math.floor(Math.random() * randClients.length)];
+
+      currentBranch.transactions.unshift({
+        id: Date.now(),
+        time: timeStr,
+        client: clientMock,
+        staffId: staffObj.id,
+        staffName: staffObj.name,
+        amount: calculatedVal,
+        mode: activeTipFlowStrategy === 'split' ? 'store' : staffObj.mode,
+        app: "Apple Pay"
+      });
+
+      // Handle Stars review injection
+      let reviewText = `Great experience at ${currentBranch.storeName}. Tap and pay was incredibly seamless!`;
+      if (selectedCustRatingStars <= 3) {
+        reviewText = "Quality service, but the wait time could be improved next time.";
+      }
+
+      currentBranch.reviews.unshift({
+        name: clientMock,
+        stars: selectedCustRatingStars,
+        platform: selectedReviewPlatform,
+        msg: reviewText,
+        date: "Just Now"
+      });
+
+      // Rerender all
+      redrawUnifiedSimulator();
+      
+      const routingMsg = staffObj.mode === 'direct' 
+        ? `Tiền Tip chảy thẳng về ví thợ!` 
+        : `Ghi nợ hộ qua tài khoản Tiệm thành công.`;
+
+      showNotification(`Thanh toán thành công $${calculatedVal.toFixed(2)} Tip! ${routingMsg}`, "🏆");
+      
+      // Jump back to merchant dashboard
+      setTimeout(() => {
+        switchView('merchant-dash');
+      }, 1500);
+    }
+
+    // Individual Cash Payout by Owner
+    function payoutSingleStaff(staffId) {
+      const staff = currentBranch.staff.find(s => s.id === staffId);
+      if (!staff) return;
+
+      const storeFee = (staff.grossTip * (currentBranch.feeRate / 100));
+      const netOwed = staff.grossTip - storeFee - staff.paidOut;
+
+      if (netOwed <= 0) {
+        showNotification(`Nhân viên ${staff.name} không có số dư cần thanh toán!`, "⚠️");
+        return;
+      }
+
+      staff.paidOut += netOwed;
+      redrawUnifiedSimulator();
+      showNotification(`Đã chi trả $${netOwed.toFixed(2)} tiền mặt (Cash Payout) cho thợ ${staff.name}! (Đã khấu trừ ${currentBranch.feeRate}% phí)`, "💰");
+    }
+
+    // Payout all store handled balances
+    function payoutAllStoreBalances() {
+      let totalAmountPaid = 0;
+      let count = 0;
+
+      currentBranch.staff.forEach((staff) => {
+        if (staff.mode === "store") {
+          const storeFee = (staff.grossTip * (currentBranch.feeRate / 100));
+          const netOwed = staff.grossTip - storeFee - staff.paidOut;
+
+          if (netOwed > 0) {
+            staff.paidOut += netOwed;
+            totalAmountPaid += netOwed;
+            count++;
+          }
+        }
+      });
+
+      if (count === 0) {
+        showNotification("Không có số dư thợ nhận hộ nào cần thanh toán!", "⚠️");
+        return;
+      }
+
+      redrawUnifiedSimulator();
+      showNotification(`Tất toán thành công! Đã chi $${totalAmountPaid.toFixed(2)} Cash cho ${count} thợ nhận hộ.`, "🏆");
+    }
+
+    // Quick Simulator inputs change
+    document.getElementById("quick-sim-bill").addEventListener("input", recalcQuickSimTipText);
+    
+    function setQuickSimTipRate(pct) {
+      quickSimTipRatePct = pct;
+      const rates = [15, 20, 25];
+      rates.forEach((r) => {
+        const btn = document.getElementById(`q-sim-r-${r}`);
+        if (r === pct) {
+          btn.className = "py-1 rounded border border-luxuryGold/35 bg-luxuryGold/10 text-luxuryGoldLight text-[10px]";
+        } else {
+          btn.className = "py-1 rounded border border-luxuryGold/15 bg-black/40 text-[10px]";
+        }
+      });
+      recalcQuickSimTipText();
+    }
+
+    function recalcQuickSimTipText() {
+      const bill = parseFloat(document.getElementById("quick-sim-bill").value) || 0;
+      const tipVal = bill * (quickSimTipRatePct / 100);
+      document.getElementById("quick-sim-calc-tip-text").innerText = `$${tipVal.toFixed(2)}`;
+    }
+
+    // Execute Simulated customer action
+    function executeQuickSimulation() {
+      const bill = parseFloat(document.getElementById("quick-sim-bill").value) || 0;
+      if (bill <= 0) {
+        showNotification("Vui lòng nhập giá trị hóa đơn giả lập hợp lệ!", "⚠️");
+        return;
+      }
+
+      const calculatedTip = bill * (quickSimTipRatePct / 100);
+      const staffSelector = document.getElementById("quick-sim-staff-select");
+      const targetStaffId = parseInt(staffSelector.value);
+      const staffObj = currentBranch.staff.find(s => s.id === targetStaffId);
+
+      // Add to Ledger Transaction logs
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      
+      const randClients = ["Jessica Watson", "Clara Oswald", "Elena Diaz", "Anna Smith", "Olivia Brown"];
+      const clientMock = randClients[Math.floor(Math.random() * randClients.length)];
+
+      staffObj.grossTip += calculatedTip;
+
+      currentBranch.transactions.unshift({
+        id: Date.now(),
+        time: timeStr,
+        client: clientMock,
+        staffId: staffObj.id,
+        staffName: staffObj.name,
+        amount: calculatedTip,
+        mode: staffObj.mode,
+        app: "Apple Pay"
+      });
+
+      // Add positive review
+      currentBranch.reviews.unshift({
+        name: clientMock,
+        stars: 5,
+        platform: "Google",
+        msg: `Trải nghiệm dịch vụ tuyệt vời tại ${currentBranch.storeName}. Quá tiện lợi!`,
+        date: "Just Now"
+      });
+
+      redrawUnifiedSimulator();
+      
+      const routingMsg = staffObj.mode === 'direct' 
+        ? `Tiền chảy trực tiếp về ví thợ ${staffObj.info}.` 
+        : `Lưu nợ nhận hộ qua tài khoản Tiệm thành công.`;
+
+      showNotification(`Giả lập thành công: Khách ${clientMock} đã Tip $${calculatedTip.toFixed(2)} cho ${staffObj.name}! ${routingMsg}`, "💸");
+    }
+
+    // Populate wallet selectors dynamically based on staff of active branch
+    function populateStaffWalletSelectors() {
+      const selector = document.getElementById("staff-wallet-person-select");
+      const currentSelected = selector.value;
+      selector.innerHTML = "";
+
+      currentBranch.staff.forEach((staff) => {
+        const opt = document.createElement("option");
+        opt.value = staff.id;
+        opt.innerText = staff.name;
+        selector.appendChild(opt);
+      });
+
+      // Keep selection if exists, otherwise fallback to first thợ
+      const exists = currentBranch.staff.some(s => s.id === parseInt(currentSelected));
+      if (exists) {
+        selector.value = currentSelected;
+      } else {
+        selector.value = currentBranch.staff[0].id;
+      }
+
+      switchActiveStaffWallet();
+    }
+
+    // Switch details on individual Nail tech wallet view
+    function switchActiveStaffWallet() {
+      const staffId = parseInt(document.getElementById("staff-wallet-person-select").value);
+      const staff = currentBranch.staff.find(s => s.id === staffId);
+      if (!staff) return;
+
+      document.getElementById("staff-w-avatar").innerText = staff.name.charAt(0);
+      document.getElementById("staff-w-mode").innerText = staff.mode === 'direct' ? `Routing: Direct Link (${staff.info})` : `Routing: Store Handled (Tiệm nhận hộ)`;
+
+      const storeFee = staff.mode === 'direct' ? 0 : (staff.grossTip * (currentBranch.feeRate / 100));
+      const netOwed = staff.grossTip - storeFee - staff.paidOut;
+
+      document.getElementById("staff-w-gross-total").innerText = `$${staff.grossTip.toFixed(2)}`;
+      document.getElementById("staff-w-net-owed").innerText = `$${netOwed.toFixed(2)}`;
+      document.getElementById("staff-w-paid-out").innerText = `$${staff.paidOut.toFixed(2)}`;
+
+      // Payout Cash request button toggle based on routing
+      const cashoutBtn = document.getElementById("staff-w-cashout-btn");
+      if (staff.mode === 'direct') {
+        cashoutBtn.innerText = "Tự Động Chuyển Khoản Trực Tiếp";
+        cashoutBtn.className = "w-full py-3 bg-slate-800 text-slate-500 font-bold text-xs uppercase rounded-xl cursor-not-allowed";
+        cashoutBtn.disabled = true;
+      } else {
+        if (netOwed > 0) {
+          cashoutBtn.innerText = `Yêu Cầu Rút $${netOwed.toFixed(2)} Cash (Nhận Hộ)`;
+          cashoutBtn.className = "w-full py-3 bg-luxuryGold hover:bg-luxuryGoldDark text-black font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition duration-300";
+          cashoutBtn.disabled = false;
+        } else {
+          cashoutBtn.innerText = "Số Dư Hiện Tại Bằng $0";
+          cashoutBtn.className = "w-full py-3 bg-slate-800 text-emerald-400 font-bold text-xs uppercase rounded-xl cursor-not-allowed";
+          cashoutBtn.disabled = true;
+        }
+      }
+
+      // Populate specific technician tx list
+      const txList = document.getElementById("staff-w-tx-list");
+      txList.innerHTML = "";
+
+      const specificTxs = currentBranch.transactions.filter(t => t.staffId === staff.id);
+      if (specificTxs.length === 0) {
+        txList.innerHTML = `<p class="text-[10px] text-slate-500 text-center py-4">Chưa ghi nhận giao dịch Tip tuần này.</p>`;
+      } else {
+        specificTxs.forEach((tx) => {
+          const row = `
+            <div class="flex items-center justify-between p-2.5 bg-black/60 border border-white/5 rounded-xl text-xs">
+              <div>
+                <span class="block text-[10px] font-bold text-white">${tx.client}</span>
+                <span class="block text-[8px] text-slate-500">Lúc ${tx.time} | Cổng ${tx.app}</span>
+              </div>
+              <span class="font-mono font-extrabold text-luxuryAmber">+$${tx.amount.toFixed(2)}</span>
+            </div>
+          `;
+          txList.insertAdjacentHTML('beforeend', row);
+        });
+      }
+    }
+
+    // Staff clicks cash-out request button
+    function requestStaffCashout() {
+      const staffId = parseInt(document.getElementById("staff-wallet-person-select").value);
+      const staff = currentBranch.staff.find(s => s.id === staffId);
+      if (!staff) return;
+
+      const storeFee = (staff.grossTip * (currentBranch.feeRate / 100));
+      const netOwed = staff.grossTip - storeFee - staff.paidOut;
+
+      showNotification(`Yêu cầu rút $${netOwed.toFixed(2)} tiền mặt đã được gửi đến Bảng Quản Trị của Chủ tiệm thành công!`, "💰");
+    }
+
+    // ==========================================
+    // GUIDED TOUR SYSTEM IMPLEMENTATION
+    // ==========================================
+    let currentTourStep = 0;
+    const tourSteps = [
+      {
+        view: 'landing',
+        text: "Chào mừng anh! Bước 1: Hãy xem tấm bảng Acrylic mạ vàng đặt quầy sang trọng của VLinkPay tại màn hình B2B Landing Page này.",
+        badge: "BƯỚC 1/5 - QUẢNG BÁ SẢN PHẨM"
+      },
+      {
+        view: 'customer-tap',
+        text: "Bước 2: Khi khách hàng dùng điện thoại chạm vào bảng NFC, màn hình này sẽ hiện ra tức thì giúp khách chọn thợ, nhập bill và tự tính tiền Tip.",
+        badge: "BƯỚC 2/5 - ĐIỆN THOẠI KHÁCH"
+      },
+      {
+        view: 'payment-sheet',
+        text: "Bước 3: Khách bấm 'Apple Pay', hệ thống sẽ tự động gọi thẻ Apple Wallet lên. Chỉ cần quét FaceID để thanh toán tiền Tip mượt mà mà không cần tải app.",
+        badge: "BƯỚC 3/5 - iOS APPLE PAY SHEET"
+      },
+      {
+        view: 'merchant-dash',
+        text: "Bước 4: Tại Bảng Quản Trị này, chủ tiệm có thể cấu hình chiết khấu %, xem đối soát công nợ thợ và chặn reviews Google/Yelp xấu tự động.",
+        badge: "BƯỚC 4/5 - BẢNG ĐIỀU KHIỂN CHỦ"
+      },
+      {
+        view: 'staff-wallet',
+        text: "Bước 5: Thợ làm có thể đăng nhập vào Ví cá nhân này để chủ động xem tổng thu nhập Tip, và gửi yêu cầu xin rút Cash tiện lợi.",
+        badge: "BƯỚC 5/5 - VÍ CÁ NHÂN THỢ"
+      }
+    ];
+
+    function startGuidedTour() {
+      currentTourStep = 0;
+      document.getElementById("tour-popup").classList.remove("hidden");
+      applyTourStep();
+    }
+
+    function stopGuidedTour() {
+      document.getElementById("tour-popup").classList.add("hidden");
+    }
+
+    function nextGuidedTourStep() {
+      currentTourStep++;
+      if (currentTourStep >= tourSteps.length) {
+        currentTourStep = 0;
+        stopGuidedTour();
+        showNotification("Hoàn thành chương trình trải nghiệm hướng dẫn VLinkPay!", "🏆");
+        return;
+      }
+      applyTourStep();
+    }
+
+    function applyTourStep() {
+      const step = tourSteps[currentTourStep];
+      switchView(step.view);
+      document.getElementById("tour-text").innerText = step.text;
+      document.getElementById("tour-step-badge").innerText = step.badge;
+    }
+
+    // Initialization processes on load
+    window.onload = function () {
+      document.getElementById("locationSelector").addEventListener("change", onBranchSelectorChanged);
+      redrawUnifiedSimulator();
+    }
+  </script>
+</body>
+</html>

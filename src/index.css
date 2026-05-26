@@ -1,0 +1,194 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Premium scrollbar for the application */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+}
+::-webkit-scrollbar-thumb {
+  background: #32D7FF;
+  border-radius: 99px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #d4af37;
+}
+
+/* Glassmorphism Classes */
+.glass-light {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(231, 234, 240, 0.5);
+}
+
+.glass-dark {
+  background: rgba(17, 16, 13, 0.85);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid rgba(212, 175, 55, 0.18);
+}
+
+/* Flox & Nexora Design System Component Styles */
+@layer components {
+  .nexora-card {
+    @apply rounded-xl border border-nexoraBorder bg-nexoraSurface shadow-nexora-card;
+  }
+
+  .nexora-icon-button {
+    @apply inline-flex h-10 w-10 items-center justify-center rounded-lg text-nexoraText transition hover:bg-nexoraSurfaceMuted;
+  }
+
+  .nexora-primary-button {
+    @apply inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-5 text-sm font-bold text-white shadow-nexora-soft transition hover:bg-nexoraBrandDark;
+  }
+
+  .nexora-search-input {
+    @apply h-11 w-full rounded-full border border-transparent bg-nexoraSurfaceMuted pl-12 pr-4 text-sm text-nexoraText outline-none placeholder:text-nexoraSubtle focus:border-nexoraBrand;
+  }
+
+  .nexora-sidebar-panel {
+    @apply rounded-xl border border-white/10 bg-white/5;
+  }
+
+  /* 1. Ghost Button */
+  .btn-ghost {
+    background-color: transparent;
+    color: #0B1C30; /* Nexora Ink Blue */
+    border: 1px solid #e2e8f0; /* Flox Slate Gray */
+    border-radius: 6px; /* flox-buttons */
+    padding: 4px 6px;
+    font-family: 'GeistSans', 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+  }
+  .btn-ghost:hover {
+    background-color: rgba(226, 232, 240, 0.2);
+    color: #050505;
+  }
+  .dark .btn-ghost {
+    color: #ffffff;
+    border-color: rgba(212, 175, 55, 0.18); /* Nexora Gold with opacity */
+  }
+  .dark .btn-ghost:hover {
+    background-color: rgba(212, 175, 55, 0.08);
+  }
+
+  /* 2. Outline Ghost Button */
+  .btn-outline-ghost {
+    background-color: transparent;
+    color: #1b1b1b; /* Anthracite */
+    border: 1px solid #f3f3f3; /* Light Fog */
+    border-radius: 12px; /* flox-cards radius */
+    padding: 12px 25px;
+    font-family: 'GeistSans', 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+  }
+  .btn-outline-ghost:hover {
+    background-color: rgba(243, 243, 243, 0.4);
+    border-color: #e2e8f0;
+  }
+  .dark .btn-outline-ghost {
+    color: #d4af37; /* Nexora Gold */
+    border-color: rgba(212, 175, 55, 0.18);
+  }
+  .dark .btn-outline-ghost:hover {
+    background-color: rgba(212, 175, 55, 0.05);
+    border-color: #d4af37;
+  }
+
+  /* 3. Primary Action Button */
+  .btn-primary-action {
+    background-color: #0c0c0c; /* Obsidian Black */
+    color: #ffffff;
+    border: 1px solid #f3f3f3;
+    border-radius: 12px;
+    padding: 12px 25px;
+    font-family: 'GeistSans', 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: rgba(255, 255, 255, 0.2) 0px -2px 1px 0px inset, rgba(255, 255, 255, 0.1) 0px 4px 16px 0px inset, rgba(0, 0, 0, 0.08) 0px 6px 16px 0px;
+    transition: all 0.2s ease-in-out;
+  }
+  .btn-primary-action:hover {
+    background-color: #000000;
+    opacity: 0.95;
+  }
+  .dark .btn-primary-action {
+    background-color: #d4af37; /* Nexora Gold */
+    color: #050505; /* Obsidian Black */
+    border-color: #aa7c11;
+    box-shadow: none;
+  }
+  .dark .btn-primary-action:hover {
+    background-color: #f3e5ab;
+    opacity: 1;
+  }
+
+  /* 4. Gradient Call-to-Action Button */
+  .btn-gradient-cta {
+    background: linear-gradient(92deg, #d4af37 -9.21%, #32D7FF 104.14%); /* Nexora Gold-Cyan Gradient */
+    color: #ffffff;
+    border-radius: 12px;
+    padding: 12px 25px;
+    font-family: 'GeistSans', 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    transition: opacity 0.2s ease-in-out;
+  }
+  .btn-gradient-cta:hover {
+    opacity: 0.9;
+  }
+
+  /* 5. Elevated Card */
+  .card-elevated {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: rgba(0, 0, 0, 0.04) 0px 2px 8px 0px, rgba(0, 0, 0, 0.08) 0px 8px 24px 0px, rgba(0, 0, 0, 0.12) 0px 16px 48px 0px;
+  }
+  .dark .card-elevated {
+    background-color: #11100d; /* Nexora Coal */
+    border: 1px solid rgba(212, 175, 55, 0.18);
+    box-shadow: none;
+  }
+
+  /* 6. Code Block Card */
+  .card-code-block {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    font-family: 'GeistMono', 'Fira Code', monospace;
+    box-shadow: rgba(0, 0, 0, 0.04) 0px 2px 8px 0px, rgba(0, 0, 0, 0.08) 0px 8px 24px 0px, rgba(0, 0, 0, 0.12) 0px 16px 48px 0px;
+  }
+  .dark .card-code-block {
+    background-color: #11100d; /* Nexora Coal */
+    border: 1px solid rgba(212, 175, 55, 0.18);
+    color: #32D7FF; /* Cyan text */
+    box-shadow: none;
+  }
+
+  /* 7. Bordered List Item */
+  .bordered-list-item {
+    background-color: transparent;
+    border-bottom: 1px solid #e2e8f0;
+    color: #020817;
+    padding: 12px 0;
+    transition: all 0.2s ease;
+  }
+  .bordered-list-item:last-child {
+    border-bottom: none;
+  }
+  .dark .bordered-list-item {
+    border-color: rgba(212, 175, 55, 0.18);
+    color: #ffffff;
+  }
+}
