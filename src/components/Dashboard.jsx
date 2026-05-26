@@ -27,6 +27,7 @@ import {
   Sun,
   Trash2,
   TrendingUp,
+  Upload,
   Users,
   Wallet,
   X
@@ -431,9 +432,13 @@ function StaffView({ staff, onAdd, onEdit, onDelete, onQr, onToggle }) {
           return (
             <div key={member.id} className="grid grid-cols-1 gap-3 border-b border-nexoraRule px-5 py-4 text-sm last:border-0 lg:grid-cols-[2fr_1.1fr_1.6fr_1fr_118px] lg:items-center">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-50 text-sm font-extrabold text-rose-600">
-                  {member.nickname.charAt(0)}
-                </div>
+                {member.avatar ? (
+                  <img src={member.avatar} alt="" className="h-10 w-10 rounded-full object-cover" />
+                ) : (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-50 text-sm font-extrabold text-rose-600">
+                    {member.nickname.charAt(0)}
+                  </div>
+                )}
                 <div>
                   <div className="font-extrabold text-nexoraText">{member.fullName}</div>
                   <div className="text-xs text-nexoraMuted">{member.position}</div>
@@ -626,6 +631,17 @@ function ComingSoon({ activeMenu, onBack }) {
 function StaffModal({ open, editing, form, errors, setForm, onClose, onSave }) {
   if (!open) return null
 
+  const handleAvatarChange = (event) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      setForm({ ...form, avatar: reader.result })
+    }
+    reader.readAsDataURL(file)
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-nexoraText/70 p-4 backdrop-blur-sm">
       <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl">
@@ -636,6 +652,34 @@ function StaffModal({ open, editing, form, errors, setForm, onClose, onSave }) {
           </IconButton>
         </div>
         <div className="mt-5 space-y-4">
+          <div>
+            <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">Avatar</label>
+            <div className="mt-2 flex items-center gap-4">
+              {form.avatar ? (
+                <img src={form.avatar} alt="" className="h-16 w-16 rounded-full object-cover ring-1 ring-nexoraBorder" />
+              ) : (
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-nexoraCanvas text-lg font-extrabold text-nexoraBrand ring-1 ring-nexoraBorder">
+                  {(form.nickname || form.fullName || 'N').charAt(0)}
+                </div>
+              )}
+              <div className="flex flex-wrap gap-2">
+                <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-nexoraBorder px-3 text-xs font-bold text-nexoraText transition hover:bg-nexoraCanvas">
+                  <Upload className="h-4 w-4 text-nexoraBrand" />
+                  Upload photo
+                  <input type="file" accept="image/*" className="sr-only" onChange={handleAvatarChange} />
+                </label>
+                {form.avatar && (
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, avatar: '' })}
+                    className="h-9 rounded-lg border border-nexoraBorder px-3 text-xs font-bold text-nexoraMuted transition hover:bg-nexoraCanvas"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
           <div>
             <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">Full name *</label>
             <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} placeholder="Mia Tran" />
@@ -735,6 +779,7 @@ export default function Dashboard({ setupData }) {
     fullName: '',
     nickname: '',
     position: 'Nail Tech',
+    avatar: '',
     venmo: '',
     cashapp: '',
     zelle: '',
@@ -750,6 +795,7 @@ export default function Dashboard({ setupData }) {
         fullName: member.fullName,
         nickname: member.nickname,
         position: member.position,
+        avatar: member.avatar || '',
         isActive: true,
         paymentAccounts: {
           venmo: member.paymentAccounts?.venmo || '',
@@ -773,7 +819,7 @@ export default function Dashboard({ setupData }) {
   }), [])
 
   const resetStaffForm = () => {
-    setStaffForm({ fullName: '', nickname: '', position: 'Nail Tech', venmo: '', cashapp: '', zelle: '', vlinkpay: '' })
+    setStaffForm({ fullName: '', nickname: '', position: 'Nail Tech', avatar: '', venmo: '', cashapp: '', zelle: '', vlinkpay: '' })
     setEditingStaffId(null)
     setErrors({})
   }
@@ -789,6 +835,7 @@ export default function Dashboard({ setupData }) {
       fullName: member.fullName,
       nickname: member.nickname,
       position: member.position,
+      avatar: member.avatar || '',
       venmo: member.paymentAccounts.venmo,
       cashapp: member.paymentAccounts.cashapp,
       zelle: member.paymentAccounts.zelle,
@@ -819,6 +866,7 @@ export default function Dashboard({ setupData }) {
       fullName: staffForm.fullName.trim(),
       nickname: staffForm.nickname.trim(),
       position: staffForm.position.trim() || 'Nail Tech',
+      avatar: staffForm.avatar || '',
       paymentAccounts: {
         venmo: staffForm.venmo.trim(),
         cashapp: staffForm.cashapp.trim(),
