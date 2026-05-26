@@ -87,7 +87,7 @@ export default function App() {
           <div className="absolute bottom-1/4 right-1/4 w-[450px] h-[450px] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(50,215,255,0.04)] via-transparent to-transparent blur-3xl pointer-events-none"></div>
 
           <div className="w-full max-w-md glass-dark rounded-2xl p-8 border border-[rgba(212,175,55,0.18)] shadow-2xl relative overflow-hidden flex flex-col justify-between">
-            {/* VLinkPay branding logo */}
+            {/* VLINKPAY branding logo */}
             <div className="text-center mb-8">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-luxuryGold to-luxuryGoldDark flex items-center justify-center mx-auto shadow-lg shadow-[rgba(212,175,55,0.15)] mb-3">
                 <span className="font-serif font-black text-black text-2xl">N</span>
@@ -102,14 +102,14 @@ export default function App() {
               <div className="py-12 flex flex-col items-center justify-center space-y-4">
                 <div className="w-10 h-10 border-4 border-luxuryGold/20 border-t-luxuryGold rounded-full animate-spin"></div>
                 <p className="text-xs text-luxuryGold font-semibold uppercase tracking-wider animate-pulse">
-                  Connecting to VLinkPay SSO...
+                  Connecting to VLINKPAY SSO...
                 </p>
               </div>
             ) : (
               <div className="space-y-5">
                 <div className="p-3 rounded-lg bg-[rgba(212,175,55,0.04)] border border-luxuryGold/20 text-[11px] text-[rgba(243,229,171,0.8)] leading-relaxed">
                   <ShieldCheck className="w-4 h-4 text-luxuryGold inline mr-1.5 shrink-0" />
-                  <strong>VLinkPay SSO Integration:</strong> Bạn sẽ sử dụng tài khoản doanh nghiệp đã đăng ký tại hệ thống thanh toán VLinkPay để đăng nhập nhanh.
+                  <strong>VLINKPAY SSO Integration:</strong> Bạn sẽ sử dụng tài khoản doanh nghiệp đã đăng ký tại hệ thống thanh toán VLINKPAY để đăng nhập nhanh.
                 </div>
 
                 {loginError && (
@@ -152,7 +152,7 @@ export default function App() {
                   onClick={() => handleSsoLogin()}
                   className="w-full py-2.5 bg-gradient-to-r from-luxuryGold via-luxuryGoldLight to-luxuryGoldDark hover:opacity-90 transition-opacity text-black font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_14px_rgba(212,175,55,0.2)]"
                 >
-                  <LogIn className="w-4 h-4 stroke-[3px]" /> Đăng nhập qua VLinkPay SSO
+                  <LogIn className="w-4 h-4 stroke-[3px]" /> Đăng nhập qua VLINKPAY SSO
                 </button>
 
                 <div className="relative py-2 text-center">
@@ -230,7 +230,7 @@ export default function App() {
             )}
             
             <span className="text-[9px] text-neutral-600 font-medium tracking-wide mt-6 block text-center uppercase">
-              VLinkPay OAuth 2.0 Security Compliance
+              VLINKPAY OAuth 2.0 Security Compliance
             </span>
           </div>
         </div>

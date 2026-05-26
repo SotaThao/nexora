@@ -236,7 +236,7 @@ export default function SetupWizard({ onComplete }) {
     const hasVlinkpay = newStaff.vlinkpay.trim() !== ''
     
     if (!hasVenmo && !hasCashapp && !hasZelle && !hasVlinkpay) {
-      staffErrors.staffPayment = 'Yêu cầu: Phải liên kết ít nhất 1 ví nhận tiền (Venmo, Cash App, Zelle, hoặc VLinkPay).'
+      staffErrors.staffPayment = 'Yêu cầu: Phải liên kết ít nhất 1 ví nhận tiền (Venmo, Cash App, Zelle, hoặc VLINKPAY).'
     }
 
     if (Object.keys(staffErrors).length > 0) {
@@ -384,7 +384,7 @@ export default function SetupWizard({ onComplete }) {
               <h1 className="font-serif text-2xl font-bold tracking-wide">
                 NEXORA <span className="text-luxuryGold font-sans text-xs tracking-widest font-black uppercase bg-luxuryGold/10 px-2 py-0.5 rounded border border-luxuryGold/30 ml-2">TOUCH</span>
               </h1>
-              <p className="text-xs text-[rgba(243,229,171,0.6)] font-light">By VLinkPay Technologies</p>
+              <p className="text-xs text-[rgba(243,229,171,0.6)] font-light">By VLINKPAY Technologies</p>
             </div>
           </div>
           
@@ -825,10 +825,10 @@ export default function SetupWizard({ onComplete }) {
 
                       <div>
                         <div className="relative">
-                          <span className="absolute left-2.5 top-2.5 text-[10px] text-neutral-500 font-bold">VLinkPay</span>
+                          <span className="absolute left-2.5 top-2.5 text-[10px] text-neutral-500 font-bold">VLINKPAY</span>
                           <input 
                             type="text"
-                            placeholder="ID VLinkPay"
+                            placeholder="ID VLINKPAY"
                             className="w-full bg-luxuryBlack border border-luxuryGold/18 focus:border-luxuryGold focus:ring-1 focus:ring-luxuryGold/30 rounded-flox-inputs pl-16 pr-2 py-2 text-xs text-white focus:outline-none placeholder-neutral-600"
                             value={newStaff.vlinkpay}
                             onChange={(e) => setNewStaff({ ...newStaff, vlinkpay: e.target.value })}
@@ -887,7 +887,7 @@ export default function SetupWizard({ onComplete }) {
                                 {staff.paymentAccounts.venmo && <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-neutral-800 text-blue-400">Venmo</span>}
                                 {staff.paymentAccounts.cashapp && <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-neutral-800 text-green-400">CashApp</span>}
                                 {staff.paymentAccounts.zelle && <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-neutral-800 text-purple-400">Zelle</span>}
-                                {staff.paymentAccounts.vlinkpay && <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-neutral-800 text-cyan-400">VLinkPay</span>}
+                                {staff.paymentAccounts.vlinkpay && <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-neutral-800 text-cyan-400">VLINKPAY</span>}
                               </div>
                             </div>
                           </div>
@@ -1059,7 +1059,7 @@ export default function SetupWizard({ onComplete }) {
                       {/* Brand Footer */}
                       <div className="space-y-1">
                         <div className="text-[7px] text-neutral-400 font-semibold flex items-center justify-center gap-1">
-                          <ShieldCheck className="w-2.5 h-2.5 text-luxuryGold" /> Secure Tip Redirects via VLinkPay
+                          <ShieldCheck className="w-2.5 h-2.5 text-luxuryGold" /> Secure Tip Redirects via VLINKPAY
                         </div>
                         <div className="text-[6px] text-neutral-600 font-mono">nexora.vlinkpay.com/touch/{businessInfo.name.toLowerCase().replace(/\s+/g, '-')}</div>
                       </div>
@@ -1161,7 +1161,7 @@ export default function SetupWizard({ onComplete }) {
 
         {/* Footer info */}
         <footer className="text-center text-neutral-600 text-xs py-4 border-t border-luxuryGold/18 mt-8">
-          &copy; {new Date().getFullYear()} Nexora Touch by VLinkPay. All rights reserved. Secured and compliant tip redirects.
+          &copy; {new Date().getFullYear()} Nexora Touch by VLINKPAY. All rights reserved. Secured and compliant tip redirects.
         </footer>
 
       </div>

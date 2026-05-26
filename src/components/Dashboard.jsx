@@ -70,11 +70,11 @@ const INITIAL_STAFF = [
 
 const INITIAL_TRANSACTIONS = [
   { id: 'TX-2042', dateTime: '2026-05-25 14:32', amount: 28, staffName: 'Mia T.', staffId: '1', touchpoint: 'Manicure Station 03', paymentMethod: 'Venmo', status: 'Success' },
-  { id: 'TX-2041', dateTime: '2026-05-25 13:10', amount: 35, staffName: 'Vivian L.', staffId: '2', touchpoint: 'Front Desk', paymentMethod: 'VLinkPay', status: 'Success' },
+  { id: 'TX-2041', dateTime: '2026-05-25 13:10', amount: 35, staffName: 'Vivian L.', staffId: '2', touchpoint: 'Front Desk', paymentMethod: 'VLINKPAY', status: 'Success' },
   { id: 'TX-2040', dateTime: '2026-05-25 11:05', amount: 22, staffName: 'Ashley P.', staffId: '3', touchpoint: 'Pedicure Chair 02', paymentMethod: 'Cash App', status: 'Success' },
   { id: 'TX-2039', dateTime: '2026-05-24 17:45', amount: 30, staffName: 'Vivian L.', staffId: '2', touchpoint: 'Manicure Station 01', paymentMethod: 'Zelle', status: 'Success' },
   { id: 'TX-2038', dateTime: '2026-05-24 15:20', amount: 18, staffName: 'Mia T.', staffId: '1', touchpoint: 'Receipt QR', paymentMethod: 'Venmo', status: 'Success' },
-  { id: 'TX-2037', dateTime: '2026-05-23 10:15', amount: 24, staffName: 'Ashley P.', staffId: '3', touchpoint: 'VIP Pedicure Room', paymentMethod: 'VLinkPay', status: 'Success' }
+  { id: 'TX-2037', dateTime: '2026-05-23 10:15', amount: 24, staffName: 'Ashley P.', staffId: '3', touchpoint: 'VIP Pedicure Room', paymentMethod: 'VLINKPAY', status: 'Success' }
 ]
 
 const INITIAL_REVIEWS = [
@@ -132,7 +132,7 @@ function formatCurrency(value) {
 function walletLabels(accounts) {
   return Object.entries(accounts)
     .filter(([, value]) => value)
-    .map(([key]) => ({ venmo: 'Venmo', cashapp: 'Cash App', zelle: 'Zelle', vlinkpay: 'VLinkPay' }[key]))
+    .map(([key]) => ({ venmo: 'Venmo', cashapp: 'Cash App', zelle: 'Zelle', vlinkpay: 'VLINKPAY' }[key]))
 }
 
 function slugify(value) {
@@ -702,7 +702,7 @@ function StaffModal({ open, editing, form, errors, setForm, onClose, onSave }) {
               <input className="h-9 rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand" value={form.venmo} onChange={(event) => setForm({ ...form, venmo: event.target.value })} placeholder="Venmo @handle" />
               <input className="h-9 rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand" value={form.cashapp} onChange={(event) => setForm({ ...form, cashapp: event.target.value })} placeholder="Cash App $cashtag" />
               <input className="h-9 rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand" value={form.zelle} onChange={(event) => setForm({ ...form, zelle: event.target.value })} placeholder="Zelle phone/email" />
-              <input className="h-9 rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand" value={form.vlinkpay} onChange={(event) => setForm({ ...form, vlinkpay: event.target.value })} placeholder="VLinkPay ID" />
+              <input className="h-9 rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand" value={form.vlinkpay} onChange={(event) => setForm({ ...form, vlinkpay: event.target.value })} placeholder="VLINKPAY ID" />
             </div>
             {errors.payment && <p className="mt-2 flex items-center gap-1 text-xs font-bold text-rose-600"><AlertTriangle className="h-3.5 w-3.5" />{errors.payment}</p>}
           </div>
@@ -748,7 +748,7 @@ function QrModal({ target, businessName, onClose }) {
           </div>
           <div className="flex items-center gap-1 text-[8px] font-bold text-slate-300">
             <Scissors className="h-3 w-3 text-rose-200" />
-            Secure redirect by VLinkPay
+            Secure redirect by VLINKPAY
           </div>
         </div>
         <p className="mt-4 rounded-lg bg-nexoraCanvas px-3 py-2 text-[10px] font-mono text-nexoraMuted">
