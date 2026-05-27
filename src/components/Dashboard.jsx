@@ -1,22 +1,19 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertTriangle,
   ArrowRight,
   BarChart3,
   Bell,
-  Calendar,
-  Check,
-  ChevronDown,
   ClipboardList,
-  CreditCard,
   Download,
   Edit2,
   HelpCircle,
   LayoutDashboard,
   LogOut,
-  MessageSquare,
+  Menu,
   Moon,
   Plus,
+  Pointer,
   QrCode,
   Scissors,
   Search,
@@ -28,10 +25,13 @@ import {
   Trash2,
   TrendingUp,
   Upload,
+  User,
   Users,
   Wallet,
   X
 } from 'lucide-react'
+import StaffDetailView from './StaffDetailView'
+import { useTranslation } from '../contexts/LanguageContext'
 
 const INITIAL_STAFF = [
   {
@@ -60,11 +60,11 @@ const INITIAL_STAFF = [
   },
   {
     id: '4',
-    fullName: 'Sofia Martinez',
-    nickname: 'Sofia M.',
+    fullName: 'Hanna Nguyen',
+    nickname: 'Hanna Ng.',
     position: 'Nail Art Designer',
     isActive: false,
-    paymentAccounts: { venmo: '@sofia-art', cashapp: '', zelle: '', vlinkpay: 'VLP-1148-SM' }
+    paymentAccounts: { venmo: '@hanna-art', cashapp: '', zelle: '', vlinkpay: 'VLP-1148-HN' }
   }
 ]
 
@@ -74,7 +74,31 @@ const INITIAL_TRANSACTIONS = [
   { id: 'TX-2040', dateTime: '2026-05-25 11:05', amount: 22, staffName: 'Ashley P.', staffId: '3', touchpoint: 'Pedicure Chair 02', paymentMethod: 'Cash App', status: 'Success' },
   { id: 'TX-2039', dateTime: '2026-05-24 17:45', amount: 30, staffName: 'Vivian L.', staffId: '2', touchpoint: 'Manicure Station 01', paymentMethod: 'Zelle', status: 'Success' },
   { id: 'TX-2038', dateTime: '2026-05-24 15:20', amount: 18, staffName: 'Mia T.', staffId: '1', touchpoint: 'Receipt QR', paymentMethod: 'Venmo', status: 'Success' },
-  { id: 'TX-2037', dateTime: '2026-05-23 10:15', amount: 24, staffName: 'Ashley P.', staffId: '3', touchpoint: 'VIP Pedicure Room', paymentMethod: 'VLINKPAY', status: 'Success' }
+  { id: 'TX-2037', dateTime: '2026-05-23 10:15', amount: 24, staffName: 'Ashley P.', staffId: '3', touchpoint: 'VIP Pedicure Room', paymentMethod: 'VLINKPAY', status: 'Success' },
+  { id: 'TX-2036', dateTime: '2026-05-24 13:20', amount: 25, staffName: 'Hanna Ng.', staffId: '4', touchpoint: 'Nail Art Station 02', paymentMethod: 'Venmo', status: 'Success' },
+  { id: 'TX-2035', dateTime: '2026-05-24 14:05', amount: 24, staffName: 'Vivian L.', staffId: '2', touchpoint: 'Acrylic Station 01', paymentMethod: 'Cash App', status: 'Success' },
+  { id: 'TX-2034', dateTime: '2026-05-24 11:15', amount: 45, staffName: 'Mia T.', staffId: '1', touchpoint: 'Manicure Station 03', paymentMethod: 'Zelle', status: 'Success' },
+  { id: 'TX-2033', dateTime: '2026-05-24 09:30', amount: 30, staffName: 'Ashley P.', staffId: '3', touchpoint: 'Pedicure Chair 02', paymentMethod: 'Venmo', status: 'Success' },
+  { id: 'TX-2032', dateTime: '2026-05-23 17:10', amount: 15, staffName: 'Hanna Ng.', staffId: '4', touchpoint: 'Nail Art Station 02', paymentMethod: 'VLINKPAY', status: 'Success' },
+  { id: 'TX-2031', dateTime: '2026-05-23 15:50', amount: 40, staffName: 'Vivian L.', staffId: '2', touchpoint: 'Front Desk', paymentMethod: 'Venmo', status: 'Success' },
+  { id: 'TX-2030', dateTime: '2026-05-23 16:40', amount: 32, staffName: 'Mia T.', staffId: '1', touchpoint: 'Receipt QR', paymentMethod: 'VLINKPAY', status: 'Success' },
+  { id: 'TX-2029', dateTime: '2026-05-23 14:25', amount: 18, staffName: 'Ashley P.', staffId: '3', touchpoint: 'VIP Pedicure Room', paymentMethod: 'Zelle', status: 'Success' },
+  { id: 'TX-2028', dateTime: '2026-05-23 11:05', amount: 30, staffName: 'Hanna Ng.', staffId: '4', touchpoint: 'Front Desk', paymentMethod: 'Zelle', status: 'Success' },
+  { id: 'TX-2027', dateTime: '2026-05-23 10:30', amount: 28, staffName: 'Vivian L.', staffId: '2', touchpoint: 'Acrylic Station 01', paymentMethod: 'VLINKPAY', status: 'Success' },
+  { id: 'TX-2026', dateTime: '2026-05-22 13:10', amount: 25, staffName: 'Mia T.', staffId: '1', touchpoint: 'Manicure Station 03', paymentMethod: 'Venmo', status: 'Success' },
+  { id: 'TX-2025', dateTime: '2026-05-22 11:50', amount: 35, staffName: 'Ashley P.', staffId: '3', touchpoint: 'Pedicure Chair 02', paymentMethod: 'Cash App', status: 'Success' },
+  { id: 'TX-2024', dateTime: '2026-05-22 16:30', amount: 22, staffName: 'Hanna Ng.', staffId: '4', touchpoint: 'Nail Art Station 02', paymentMethod: 'Venmo', status: 'Success' },
+  { id: 'TX-2023', dateTime: '2026-05-22 15:15', amount: 32, staffName: 'Vivian L.', staffId: '2', touchpoint: 'Front Desk', paymentMethod: 'Zelle', status: 'Success' },
+  { id: 'TX-2022', dateTime: '2026-05-22 09:45', amount: 38, staffName: 'Mia T.', staffId: '1', touchpoint: 'Receipt QR', paymentMethod: 'Cash App', status: 'Success' },
+  { id: 'TX-2021', dateTime: '2026-05-21 17:10', amount: 28, staffName: 'Ashley P.', staffId: '3', touchpoint: 'VIP Pedicure Room', paymentMethod: 'Zelle', status: 'Success' },
+  { id: 'TX-2020', dateTime: '2026-05-21 15:45', amount: 18, staffName: 'Hanna Ng.', staffId: '4', touchpoint: 'Front Desk', paymentMethod: 'Cash App', status: 'Success' },
+  { id: 'TX-2019', dateTime: '2026-05-21 16:00', amount: 15, staffName: 'Vivian L.', staffId: '2', touchpoint: 'Acrylic Station 01', paymentMethod: 'Venmo', status: 'Success' },
+  { id: 'TX-2018', dateTime: '2026-05-21 14:20', amount: 50, staffName: 'Mia T.', staffId: '1', touchpoint: 'Manicure Station 03', paymentMethod: 'Venmo', status: 'Success' },
+  { id: 'TX-2017', dateTime: '2026-05-21 10:05', amount: 20, staffName: 'Ashley P.', staffId: '3', touchpoint: 'Pedicure Chair 02', paymentMethod: 'Venmo', status: 'Success' },
+  { id: 'TX-2016', dateTime: '2026-05-20 12:20', amount: 35, staffName: 'Hanna Ng.', staffId: '4', touchpoint: 'Nail Art Station 02', paymentMethod: 'VLINKPAY', status: 'Success' },
+  { id: 'TX-2015', dateTime: '2026-05-20 14:10', amount: 42, staffName: 'Vivian L.', staffId: '2', touchpoint: 'Front Desk', paymentMethod: 'VLINKPAY', status: 'Success' },
+  { id: 'TX-2014', dateTime: '2026-05-20 11:30', amount: 22, staffName: 'Mia T.', staffId: '1', touchpoint: 'Receipt QR', paymentMethod: 'Zelle', status: 'Success' },
+  { id: 'TX-2012', dateTime: '2026-05-19 14:50', amount: 26, staffName: 'Hanna Ng.', staffId: '4', touchpoint: 'Front Desk', paymentMethod: 'Zelle', status: 'Success' }
 ]
 
 const INITIAL_REVIEWS = [
@@ -82,7 +106,15 @@ const INITIAL_REVIEWS = [
   { id: 'R-2', rating: 5, comment: 'Vivian was fast, clean, and helped me pick a wedding color.', staffName: 'Vivian L.', staffId: '2', category: 'Good (Yelp)', date: '2026-05-25' },
   { id: 'R-3', rating: 2, comment: 'Great polish, but I waited 20 minutes after my appointment time.', staffName: 'Ashley P.', staffId: '3', category: 'Internal Feedback', date: '2026-05-24' },
   { id: 'R-4', rating: 4, comment: 'Pedicure was relaxing and the salon was very clean.', staffName: 'Ashley P.', staffId: '3', category: 'Good (Google)', date: '2026-05-23' },
-  { id: 'R-5', rating: 1, comment: 'My color chipped after one day. I need someone to contact me.', staffName: 'Vivian L.', staffId: '2', category: 'Internal Feedback', date: '2026-05-22' }
+  { id: 'R-5', rating: 1, comment: 'My color chipped after one day. I need someone to contact me.', staffName: 'Vivian L.', staffId: '2', category: 'Internal Feedback', date: '2026-05-22' },
+  { id: 'R-6', rating: 5, comment: 'Incredible attention to detail! Best Gel-X artist in the city.', staffName: 'Mia T.', staffId: '1', category: 'Good (Yelp)', date: '2026-05-24' },
+  { id: 'R-7', rating: 5, comment: 'Vivian does the most natural looking acrylic sets!', staffName: 'Vivian L.', staffId: '2', category: 'Good (Google)', date: '2026-05-24' },
+  { id: 'R-8', rating: 5, comment: 'Ashley gives the absolute best foot massages during pedicures!', staffName: 'Ashley P.', staffId: '3', category: 'Good (Google)', date: '2026-05-24' },
+  { id: 'R-9', rating: 5, comment: 'Sofia is a master of nail art. She drew exactly what I showed her!', staffName: 'Hanna Ng.', staffId: '4', category: 'Good (Google)', date: '2026-05-24' },
+  { id: 'R-10', rating: 4, comment: 'Love the shape, Mia is very sweet. Will definitely come back.', staffName: 'Mia T.', staffId: '1', category: 'Good (Google)', date: '2026-05-22' },
+  { id: 'R-11', rating: 4, comment: 'Fast service and very friendly staff. Nice atmosphere.', staffName: 'Vivian L.', staffId: '2', category: 'Good (Google)', date: '2026-05-21' },
+  { id: 'R-12', rating: 3, comment: 'The nail art was beautiful, but the top coat was uneven.', staffName: 'Hanna Ng.', staffId: '4', category: 'Internal Feedback', date: '2026-05-21' },
+  { id: 'R-13', rating: 5, comment: 'Stunning designs and very professional service.', staffName: 'Hanna Ng.', staffId: '4', category: 'Good (Yelp)', date: '2026-05-20' }
 ]
 
 const INITIAL_TOUCHPOINTS = [
@@ -97,7 +129,7 @@ const STAFF_PERFORMANCE = [
   { name: 'Mia Tran', nickname: 'Mia T.', tips: 612.3, rating: 4.86, reviews: 58, pct: 100, specialty: 'Gel-X' },
   { name: 'Vivian Le', nickname: 'Vivian L.', tips: 487.45, rating: 4.72, reviews: 47, pct: 80, specialty: 'Acrylic' },
   { name: 'Ashley Park', nickname: 'Ashley P.', tips: 402.1, rating: 4.69, reviews: 39, pct: 66, specialty: 'Pedicure' },
-  { name: 'Sofia Martinez', nickname: 'Sofia M.', tips: 318.25, rating: 4.61, reviews: 28, pct: 52, specialty: 'Nail Art' },
+  { name: 'Hanna Nguyen', nickname: 'Hanna Ng.', tips: 318.25, rating: 4.61, reviews: 28, pct: 52, specialty: 'Nail Art' },
   { name: 'Hannah Kim', nickname: 'Hannah K.', tips: 276.58, rating: 4.57, reviews: 24, pct: 45, specialty: 'Dip Powder' }
 ]
 
@@ -109,14 +141,14 @@ const TOP_TOUCHPOINTS = [
 ]
 
 const MENU_ITEMS = [
-  { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'overview', label: 'Dashboard', icon: LayoutDashboard, image: '/assets/menu/conversion.png' },
   { id: 'staff', label: 'Staff', icon: Users },
-  { id: 'tips', label: 'Tips', icon: Wallet },
-  { id: 'reviews', label: 'Reviews', icon: Star },
+  { id: 'tips', label: 'Tips', icon: Wallet, image: '/assets/menu/tips.png' },
+  { id: 'reviews', label: 'Reviews', icon: Star, image: '/assets/menu/review.png' },
   { id: 'reports', label: 'Transactions', icon: ClipboardList },
-  { id: 'touchpoints', label: 'Touch Points', icon: QrCode },
-  { id: 'devices', label: 'QR / NFC Devices', icon: QrCode },
-  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+  { id: 'touchpoints', label: 'Touch Points', icon: Pointer },
+  { id: 'devices', label: 'QR / NFC Devices', icon: QrCode, image: '/assets/menu/qr-nfc.png' },
+  { id: 'analytics', label: 'Analytics', icon: BarChart3, image: '/assets/menu/star.png' },
   { id: 'settings', label: 'Settings', icon: Settings },
   { id: 'support', label: 'Support', icon: HelpCircle }
 ]
@@ -137,6 +169,47 @@ function walletLabels(accounts) {
 
 function slugify(value) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+}
+
+function parseMetricValue(value) {
+  const text = String(value)
+  const number = Number(text.replace(/[^0-9.-]/g, ''))
+  return Number.isFinite(number) ? number : 0
+}
+
+function formatAnimatedValue(template, value) {
+  const text = String(template)
+  if (text.includes('$')) return formatCurrency(value)
+  if (text.includes('%')) return `${value.toFixed(2)}%`
+  if (text.includes('.')) return value.toFixed(2).replace(/\.00$/, '')
+  return Math.round(value).toLocaleString()
+}
+
+function useCountUp(target, duration = 900) {
+  const numericTarget = useMemo(() => parseMetricValue(target), [target])
+  const [value, setValue] = useState(0)
+
+  useEffect(() => {
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    if (reducedMotion) {
+      setValue(numericTarget)
+      return undefined
+    }
+
+    let frameId
+    const start = performance.now()
+    const tick = (now) => {
+      const progress = Math.min((now - start) / duration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setValue(numericTarget * eased)
+      if (progress < 1) frameId = requestAnimationFrame(tick)
+    }
+
+    frameId = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frameId)
+  }, [duration, numericTarget])
+
+  return formatAnimatedValue(target, value)
 }
 
 function Panel({ children, className = '' }) {
@@ -160,47 +233,148 @@ function IconButton({ label, children, className = '', ...props }) {
   )
 }
 
-function DashboardHeader() {
+function MenuIcon({ item, active = false }) {
+  const Icon = item.icon
+  return <Icon className={`h-5 w-5 shrink-0 ${active ? 'text-white' : 'text-white/60'}`} />
+}
+
+function DashboardHeader({ searchQuery, setSearchQuery, onAddTouchpoint, onSettings }) {
+  const { currentLanguage, setLanguage, t } = useTranslation()
   return (
-    <header className="sticky top-0 z-20 hidden h-20 items-center justify-between border-b border-nexoraBorder bg-nexoraSurface px-8 lg:flex">
-      <div className="relative w-full max-w-[480px]">
+    <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between gap-3 border-b border-nexoraBorder bg-nexoraSurface px-4 sm:px-5">
+      <div className="flex min-w-0 items-center gap-3 sm:hidden">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-nexoraBrand text-sm font-black text-white">N</div>
+        <span className="truncate text-sm font-extrabold">NEXORA TOUCH</span>
+      </div>
+      <div className="relative hidden w-full max-w-[385px] sm:block">
         <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-nexoraMuted" />
         <input
           className="nexora-search-input"
-          placeholder="Search tech, station, review..."
+          placeholder={t('dashboard.header.search_placeholder')}
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
         />
       </div>
 
-      <div className="flex items-center gap-5">
-        <IconButton label="Notifications">
+      <div className="flex shrink-0 items-center gap-2 sm:gap-4">
+        {/* Language Switcher */}
+        <div className="flex items-center gap-1 bg-nexoraSurfaceMuted border border-nexoraBorder px-2.5 py-1 rounded-lg">
+          <button 
+            type="button"
+            onClick={() => setLanguage('vi')}
+            className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition ${currentLanguage === 'vi' ? 'bg-nexoraBrand text-white' : 'text-nexoraMuted hover:text-nexoraText'}`}
+          >
+            VI
+          </button>
+          <span className="text-nexoraBorder text-[10px]">|</span>
+          <button 
+            type="button"
+            onClick={() => setLanguage('en')}
+            className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition ${currentLanguage === 'en' ? 'bg-nexoraBrand text-white' : 'text-nexoraMuted hover:text-nexoraText'}`}
+          >
+            EN
+          </button>
+        </div>
+
+        <IconButton label="Notifications" className="hidden sm:inline-flex">
           <Bell className="h-5 w-5" />
         </IconButton>
-        <IconButton label="Settings">
+        <IconButton label="Settings" onClick={onSettings} className="hidden sm:inline-flex">
           <Settings className="h-5 w-5" />
         </IconButton>
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-nexoraBrand text-sm font-bold text-white shadow-nexora-soft">
+        <div className="hidden h-10 w-10 items-center justify-center rounded-full bg-nexoraBrand text-sm font-bold text-white shadow-nexora-soft sm:flex">
           A
         </div>
-        <button className="nexora-primary-button">
-          Add New Touch Point
+        <button onClick={onAddTouchpoint} className="nexora-primary-button">
+          <Plus className="h-4 w-4" />
+          <span className="hidden sm:inline">{t('dashboard.header.add_tp')}</span>
         </button>
       </div>
     </header>
   )
 }
 
+function DashboardSidebar({ activeMenu, setActiveMenu, businessName, onLogout }) {
+  const { currentLanguage, setLanguage, t } = useTranslation()
+  return (
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col bg-nexoraSidebar px-5 py-7 text-white lg:flex">
+      <div className="flex items-center gap-3 px-2">
+        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-nexoraBrand text-xl font-black text-white shadow-nexora-soft">N</div>
+        <div className="min-w-0">
+          <div className="text-2xl font-extrabold leading-none tracking-normal">{t('dashboard.sidebar.console_title')}</div>
+          <div className="mt-1 text-sm font-semibold text-white/65">{t('dashboard.sidebar.console_subtitle')}</div>
+        </div>
+      </div>
+
+      <nav className="mt-9 flex-1 space-y-2">
+        {MENU_ITEMS.map((item) => {
+          const { id, label } = item
+          const isActive = activeMenu === id
+          const localizedLabel = {
+            overview: t('dashboard.menu.dashboard'),
+            staff: t('dashboard.menu.staff'),
+            tips: t('dashboard.menu.tips'),
+            reviews: t('dashboard.menu.reviews'),
+            reports: t('dashboard.menu.transactions'),
+            touchpoints: t('dashboard.menu.touchpoints'),
+            devices: t('dashboard.menu.qr_nfc'),
+            analytics: t('dashboard.menu.analytics'),
+            settings: t('dashboard.menu.settings'),
+            support: t('dashboard.menu.support')
+          }[id] || label
+
+          return (
+            <button
+              key={id}
+              onClick={() => setActiveMenu(id)}
+              className={`flex h-12 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-bold transition ${
+                isActive
+                  ? 'bg-white/10 text-white shadow-[inset_3px_0_0_rgba(255,255,255,0.7)]'
+                  : 'text-white/70 hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              <MenuIcon item={item} active={isActive} />
+              <span className="truncate">{localizedLabel}</span>
+            </button>
+          )
+        })}
+      </nav>
+
+      <div className="space-y-4">
+        <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-sm font-extrabold">
+              {businessName.charAt(0)}
+            </div>
+            <div className="min-w-0">
+              <div className="truncate text-sm font-extrabold">{businessName}</div>
+              <div className="text-xs text-white/55">{t('dashboard.sidebar.plan_info')}</div>
+            </div>
+          </div>
+        </div>
+        <button onClick={onLogout} className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-white/65 transition hover:text-white">
+          <LogOut className="h-4 w-4" />
+          {t('dashboard.sidebar.sign_out')}
+        </button>
+      </div>
+    </aside>
+  )
+}
+
 function PageTitle() {
+  const { t } = useTranslation()
   return (
     <div>
-      <h1 className="text-3xl font-extrabold tracking-normal text-nexoraText sm:text-4xl">Salon Command Center</h1>
-      <p className="mt-3 text-base font-medium text-nexoraMuted sm:text-lg">
-        Live tip flow, QR/NFC scans, review routing, and nail tech performance.
+      <h1 className="text-2xl font-extrabold tracking-normal text-nexoraText sm:text-3xl">{t('dashboard.title')}</h1>
+      <p className="mt-2 text-sm font-medium text-nexoraMuted sm:text-base">
+        {t('dashboard.subtitle')}
       </p>
     </div>
   )
 }
 
-function KpiCard({ label, value, delta, tone = 'brand' }) {
+function KpiCard({ label, value, delta, tone = 'brand', iconSrc, active = false, onClick }) {
+  const animatedValue = useCountUp(value)
   const toneClass = {
     brand: 'bg-nexoraBrandSoft text-nexoraBrand',
     teal: 'bg-emerald-50 text-nexoraTeal',
@@ -209,79 +383,418 @@ function KpiCard({ label, value, delta, tone = 'brand' }) {
   }[tone]
 
   return (
-    <Panel className="min-h-[166px] p-6">
+    <button
+      type="button"
+      onClick={onClick}
+      className={`nexora-card dashboard-kpi-card min-h-[132px] p-4 text-left transition hover:-translate-y-0.5 hover:shadow-premium sm:min-h-[144px] sm:p-6 ${active ? 'ring-2 ring-nexoraBrand ring-offset-2' : ''}`}
+    >
       <div className="flex items-start justify-between">
-        <span className={`flex h-10 w-10 items-center justify-center rounded-full ${toneClass}`}>
-          <span className="h-3.5 w-3.5 rounded-full bg-current" />
-        </span>
-        <span className="text-sm font-semibold text-nexoraSuccess">+{delta}</span>
+        {iconSrc ? (
+          <img src={iconSrc} alt="" className="dashboard-kpi-icon h-10 w-10 object-contain" aria-hidden="true" />
+        ) : (
+          <span className={`flex h-10 w-10 items-center justify-center rounded-full ${toneClass}`}>
+            <span className="h-3.5 w-3.5 rounded-full bg-current" />
+          </span>
+        )}
+        <span className="dashboard-delta text-sm font-semibold text-nexoraSuccess">+{delta}</span>
       </div>
-      <div className="mt-7 text-xs font-semibold uppercase tracking-[0.18em] text-nexoraMuted">{label}</div>
-      <div className="mt-3 text-4xl font-semibold leading-none text-nexoraText">{value}</div>
-    </Panel>
+      <div className="mt-5 text-xs font-semibold uppercase tracking-[0.14em] text-nexoraMuted">{label}</div>
+      <div className="dashboard-kpi-value mt-3 text-2xl font-black leading-none text-nexoraText sm:text-3xl">{animatedValue}</div>
+    </button>
   )
 }
 
-const TIP_SERIES = [
-  { label: 'Mon', value: 1200 },
-  { label: 'Tue', value: 1900 },
-  { label: 'Wed', value: 3000 },
-  { label: 'Thu', value: 2500 },
-  { label: 'Fri', value: 3800 },
-  { label: 'Sat', value: 4200 },
-  { label: 'Sun', value: 3500 }
-]
+const TIP_SERIES_BY_RANGE = {
+  '7 Days': [
+    { label: 'Mon', value: 1200 },
+    { label: 'Tue', value: 1900 },
+    { label: 'Wed', value: 3000 },
+    { label: 'Thu', value: 2500 },
+    { label: 'Fri', value: 3800 },
+    { label: 'Sat', value: 4200 },
+    { label: 'Sun', value: 3500 }
+  ],
+  '30 Days': [
+    { label: 'Week 1', value: 8200 },
+    { label: 'Week 2', value: 10450 },
+    { label: 'Week 3', value: 9800 },
+    { label: 'Week 4', value: 12650 },
+    { label: 'Today', value: 14200 }
+  ],
+  '90 Days': [
+    { label: 'Jan', value: 24600 },
+    { label: 'Feb', value: 28100 },
+    { label: 'Mar', value: 26300 },
+    { label: 'Apr', value: 31800 },
+    { label: 'May', value: 35400 }
+  ],
+  '180 Days': [
+    { label: 'Dec', value: 42600 },
+    { label: 'Jan', value: 48100 },
+    { label: 'Feb', value: 53600 },
+    { label: 'Mar', value: 51200 },
+    { label: 'Apr', value: 60400 },
+    { label: 'May', value: 68800 }
+  ],
+  '365 Days': [
+    { label: 'Q2 2025', value: 84000 },
+    { label: 'Q3 2025', value: 97500 },
+    { label: 'Q4 2025', value: 112800 },
+    { label: 'Q1 2026', value: 128400 },
+    { label: 'Q2 2026', value: 147600 }
+  ]
+}
 
 function buildChartPoints(series) {
   const width = 680
   const height = 265
-  const max = 4500
-  return series.map((item, index) => ({
+  const maxValue = Math.max(...series.map((item) => item.value))
+  const max = Math.ceil(maxValue / 1000) * 1000
+  const points = series.map((item, index) => ({
     ...item,
-    x: (index / (series.length - 1)) * width,
-    y: height - (item.value / max) * height
+    x: series.length === 1 ? width / 2 : (index / (series.length - 1)) * width,
+      y: height - (item.value / max) * height
   }))
+  return { points, max, width, height }
 }
 
-function TipsOverTimePanel() {
-  const chartPoints = buildChartPoints(TIP_SERIES)
-  const linePoints = chartPoints.map((point) => `${point.x},${point.y}`).join(' ')
-  const areaPoints = `0,265 ${linePoints} 680,265`
-  const yTicks = [4500, 4000, 3500, 3000, 2500, 2000, 1500, 1000, 500, 0]
+function getBezierPath(points) {
+  if (points.length === 0) return ''
+  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`
+  
+  let d = `M ${points[0].x} ${points[0].y}`
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[i]
+    const p1 = points[i + 1]
+    const cp1x = p0.x + (p1.x - p0.x) / 3
+    const cp1y = p0.y
+    const cp2x = p0.x + 2 * (p1.x - p0.x) / 3
+    const cp2y = p1.y
+    d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p1.x} ${p1.y}`
+  }
+  return d
+}
+
+function useTransitionedPoints(targetPoints, range, duration = 650) {
+  const [currentPoints, setCurrentPoints] = useState(targetPoints)
+  const currentPointsRef = useRef(currentPoints)
+
+  useEffect(() => {
+    currentPointsRef.current = currentPoints
+  }, [currentPoints])
+
+  useEffect(() => {
+    const prevPoints = currentPointsRef.current
+    
+    let equal = prevPoints.length === targetPoints.length
+    if (equal) {
+      for (let i = 0; i < targetPoints.length; i++) {
+        if (prevPoints[i].x !== targetPoints[i].x || prevPoints[i].y !== targetPoints[i].y || prevPoints[i].value !== targetPoints[i].value) {
+          equal = false
+          break
+        }
+      }
+    }
+    if (equal) return
+
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    if (reducedMotion) {
+      setCurrentPoints(targetPoints)
+      return undefined
+    }
+
+    const interpolatePoint = (points, t) => {
+      if (points.length === 0) return { x: 0, y: 0, value: 0, label: '' }
+      if (points.length === 1) return points[0]
+      const index = t * (points.length - 1)
+      const low = Math.floor(index)
+      const high = Math.min(points.length - 1, Math.ceil(index))
+      if (low === high) return points[low]
+      const ratio = index - low
+      const p1 = points[low]
+      const p2 = points[high]
+      return {
+        x: p1.x + (p2.x - p1.x) * ratio,
+        y: p1.y + (p2.y - p1.y) * ratio,
+        value: p1.value + (p2.value - p1.value) * ratio,
+        label: ratio > 0.5 ? p2.label : p1.label
+      }
+    }
+
+    const startPoints = targetPoints.map((_, i) => {
+      const t = targetPoints.length > 1 ? i / (targetPoints.length - 1) : 0.5
+      return interpolatePoint(prevPoints, t)
+    })
+
+    let frameId
+    const startTime = performance.now()
+
+    const tick = (now) => {
+      const elapsed = now - startTime
+      const progress = Math.min(elapsed / duration, 1)
+      const eased = progress < 0.5 
+        ? 4 * progress * progress * progress 
+        : 1 - Math.pow(-2 * progress + 2, 3) / 2
+
+      const nextPoints = targetPoints.map((target, i) => {
+        const start = startPoints[i]
+        return {
+          ...target,
+          x: start.x + (target.x - start.x) * eased,
+          y: start.y + (target.y - start.y) * eased,
+          value: start.value + (target.value - start.value) * eased
+        }
+      })
+
+      setCurrentPoints(nextPoints)
+
+      if (progress < 1) {
+        frameId = requestAnimationFrame(tick)
+      }
+    }
+
+    frameId = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frameId)
+  }, [targetPoints, range, duration])
+
+  return currentPoints
+}
+
+function TipsOverTimePanel({ range, setRange }) {
+  const { t } = useTranslation()
+  const chartRef = useRef(null)
+  const [reveal, setReveal] = useState(0)
+  const [hoverIndex, setHoverIndex] = useState(null)
+  const series = TIP_SERIES_BY_RANGE[range] || TIP_SERIES_BY_RANGE['7 Days']
+  const { points: chartPoints, max, width, height } = useMemo(() => buildChartPoints(series), [series])
+  
+  // Two different morphing speeds: 600ms for sharp line, 900ms for elastic neon trail
+  const transitionedPoints = useTransitionedPoints(chartPoints, range, 600)
+  const trailPoints = useTransitionedPoints(chartPoints, range, 900)
+  
+  const linePath = getBezierPath(transitionedPoints)
+  const trailPath = getBezierPath(trailPoints)
+  const areaPath = transitionedPoints.length > 0
+    ? `${linePath} L ${transitionedPoints[transitionedPoints.length - 1].x} ${height} L ${transitionedPoints[0].x} ${height} Z`
+    : ''
+
+  const yTicks = [max, Math.round(max * 0.75), Math.round(max * 0.5), Math.round(max * 0.25), 0]
+  const revealX = width * reveal
+  const showTooltip = hoverIndex !== null
+  const activePoint = hoverIndex !== null 
+    ? transitionedPoints[hoverIndex] 
+    : transitionedPoints[transitionedPoints.length - 1] || { x: 0, y: 0, value: 0, label: '' }
+
+  useEffect(() => {
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    if (reducedMotion) {
+      setReveal(1)
+      return undefined
+    }
+
+    let frameId
+    const start = performance.now()
+    setReveal(0.02)
+    const tick = (now) => {
+      const progress = Math.min((now - start) / 920, 1)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setReveal(eased)
+      if (progress < 1) frameId = requestAnimationFrame(tick)
+    }
+
+    frameId = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frameId)
+  }, [range])
+
+  const handlePointerMove = (event) => {
+    const rect = chartRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const next = (event.clientX - rect.left) / rect.width
+    const bounded = Math.min(1, Math.max(0, next))
+    const index = Math.round(bounded * (transitionedPoints.length - 1))
+    setHoverIndex(index)
+  }
+
+  const handlePointerLeave = () => {
+    setHoverIndex(null)
+  }
+
+  const rangeLabel = (item) => {
+    return {
+      '7 Days': t('dashboard.chart.7_days'),
+      '30 Days': t('dashboard.chart.30_days'),
+      '90 Days': t('dashboard.chart.90_days'),
+      '180 Days': t('dashboard.chart.180_days'),
+      '365 Days': t('dashboard.chart.365_days')
+    }[item] || item
+  }
 
   return (
     <Panel className="p-7">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-nexoraText">Tips Over Time</h2>
-        <span className="text-sm font-semibold text-nexoraMuted">May 19 - May 25</span>
-      </div>
-      <div className="mt-8 grid grid-cols-[56px_1fr] gap-3">
-        <div className="flex h-[265px] flex-col justify-between text-right text-sm text-nexoraSubtle">
-          {yTicks.map((tick) => (
-            <span key={tick}>${tick}</span>
+        <h2 className="text-sm font-extrabold text-nexoraText uppercase tracking-wider">{t('dashboard.chart.tips_over_time')}</h2>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {Object.keys(TIP_SERIES_BY_RANGE).map((item) => (
+            <button
+              key={item}
+              onClick={() => setRange(item)}
+              className={`min-h-8 rounded-lg px-3 text-xs font-bold transition ${range === item ? 'bg-nexoraBrand text-white' : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:text-nexoraText'}`}
+            >
+              {rangeLabel(item)}
+            </button>
           ))}
         </div>
-        <div className="relative h-[300px] min-w-0">
-          <svg className="h-[265px] w-full overflow-visible" viewBox="0 0 680 265" preserveAspectRatio="none" aria-hidden="true">
+      </div>
+      <div className="mt-8 grid grid-cols-[42px_1fr] gap-2 sm:grid-cols-[56px_1fr] sm:gap-3">
+        <div className="flex h-[265px] flex-col justify-between text-right text-sm text-nexoraSubtle">
+          {yTicks.map((tick) => (
+            <span key={tick}>{formatCurrency(tick).replace('.00', '')}</span>
+          ))}
+        </div>
+        <div
+          ref={chartRef}
+          className="dashboard-scrub-chart relative h-[260px] min-w-0 cursor-crosshair touch-pan-y select-none sm:h-[300px]"
+          onPointerMove={handlePointerMove}
+          onPointerLeave={handlePointerLeave}
+        >
+          <svg className="h-[265px] w-full overflow-visible" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="tips-chart-area-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#4648D8" stopOpacity="0.25" />
+                <stop offset="100%" stopColor="#4648D8" stopOpacity="0.0" />
+              </linearGradient>
+              <linearGradient id="tips-chart-line-grad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#4648D8" />
+                <stop offset="50%" stopColor="#6C5CE7" />
+                <stop offset="100%" stopColor="#32D7FF" />
+              </linearGradient>
+              <filter id="tips-chart-glow" x="-10%" y="-10%" width="120%" height="120%">
+                <feDropShadow dx="0" dy="8" stdDeviation="6" floodColor="#4648D8" floodOpacity="0.22" />
+              </filter>
+              <filter id="tips-chart-neon-blur" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="8" />
+              </filter>
+              <clipPath id={`tips-chart-reveal-${range.replace(/\s+/g, '-')}`}>
+                <rect x="0" y="-10" width={revealX} height={height + 20} />
+              </clipPath>
+            </defs>
             {yTicks.map((tick) => (
               <line
                 key={tick}
                 x1="0"
-                x2="680"
-                y1={265 - (tick / 4500) * 265}
-                y2={265 - (tick / 4500) * 265}
-                className="stroke-nexoraBorder"
+                x2={width}
+                y1={height - (tick / max) * height}
+                y2={height - (tick / max) * height}
+                className="stroke-slate-300 dark:stroke-slate-700"
                 strokeWidth="1"
+                strokeOpacity={0.07}
               />
             ))}
-            <polygon points={areaPoints} className="fill-nexoraBrand opacity-10" />
-            <polyline points={linePoints} fill="none" className="stroke-nexoraBrand" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-            {chartPoints.map((point) => (
-              <circle key={point.label} cx={point.x} cy={point.y} r="5.5" className="fill-nexoraSurface stroke-nexoraBrand" strokeWidth="3" />
-            ))}
+            <g clipPath={`url(#tips-chart-reveal-${range.replace(/\s+/g, '-')})`}>
+              <path d={areaPath} fill="url(#tips-chart-area-grad)" className="dashboard-chart-area" />
+              {/* Secondary delayed neon trail */}
+              {trailPath && (
+                <path
+                  d={trailPath}
+                  fill="none"
+                  stroke="url(#tips-chart-line-grad)"
+                  strokeWidth="8"
+                  opacity="0.25"
+                  filter="url(#tips-chart-neon-blur)"
+                  className="pointer-events-none"
+                />
+              )}
+              {/* Main Line path with dashoffset draw animation */}
+              <path 
+                d={linePath} 
+                fill="none" 
+                stroke="url(#tips-chart-line-grad)" 
+                strokeWidth="4" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                filter="url(#tips-chart-glow)" 
+                style={{
+                  strokeDasharray: 850,
+                  strokeDashoffset: 850 * (1 - reveal),
+                }}
+              />
+              {/* Regular data points that pop up as the line sweeps over them */}
+              {transitionedPoints.map((point, index) => {
+                const pointProgress = point.x / width;
+                const isRevealed = reveal >= pointProgress;
+                return (
+                  <circle
+                    key={`${point.label}-${index}`}
+                    cx={point.x}
+                    cy={point.y}
+                    r="5"
+                    className="fill-white stroke-nexoraBrand cursor-pointer transition-transform duration-300"
+                    strokeWidth="2.5"
+                    style={{
+                      transform: isRevealed ? 'scale(1)' : 'scale(0)',
+                      transformOrigin: `${point.x}px ${point.y}px`,
+                      transition: 'transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1)'
+                    }}
+                  />
+                )
+              })}
+            </g>
+            {showTooltip && (
+              <>
+                {/* Vertical solid guide line from reference image */}
+                <line
+                  x1={activePoint.x}
+                  x2={activePoint.x}
+                  y1="0"
+                  y2={height}
+                  className="stroke-slate-200 dark:stroke-slate-700"
+                  strokeWidth="1.5"
+                  style={{
+                    transition: 'x1 150ms cubic-bezier(0.16, 1, 0.3, 1), x2 150ms cubic-bezier(0.16, 1, 0.3, 1)'
+                  }}
+                />
+                {/* Animated outer glow ring */}
+                <circle
+                  cx={activePoint.x}
+                  cy={activePoint.y}
+                  r="13"
+                  className="dashboard-pulse-ring fill-nexoraBrand/20 stroke-none pointer-events-none"
+                  style={{
+                    transformOrigin: `${activePoint.x}px ${activePoint.y}px`,
+                    transition: 'cx 150ms cubic-bezier(0.16, 1, 0.3, 1), cy 150ms cubic-bezier(0.16, 1, 0.3, 1)'
+                  }}
+                />
+                {/* Main active dot (solid blue circle with white outline) */}
+                <circle
+                  cx={activePoint.x}
+                  cy={activePoint.y}
+                  r="8"
+                  className="fill-nexoraBrand stroke-white pointer-events-none"
+                  strokeWidth="3"
+                  style={{
+                    transition: 'cx 150ms cubic-bezier(0.16, 1, 0.3, 1), cy 150ms cubic-bezier(0.16, 1, 0.3, 1)'
+                  }}
+                />
+              </>
+            )}
           </svg>
+          {/* Custom Dark Tooltip Pill from reference image */}
+          <div
+            className="pointer-events-none absolute rounded-lg bg-slate-900 px-4 py-2.5 shadow-2xl text-center"
+            style={{
+              width: '124px',
+              left: `clamp(0px, calc(${(activePoint.x / width) * 100}% - 62px), calc(100% - 124px))`,
+              top: `clamp(4px, calc(${(activePoint.y / height) * 100}% - 65px), calc(100% - 70px))`,
+              opacity: showTooltip ? 1 : 0,
+              transform: showTooltip ? 'translateY(0) scale(1)' : 'translateY(6px) scale(0.95)',
+              transition: 'left 150ms cubic-bezier(0.16, 1, 0.3, 1), top 150ms cubic-bezier(0.16, 1, 0.3, 1), opacity 150ms ease, transform 150ms ease',
+              zIndex: 10
+            }}
+          >
+            <div className="text-xs font-bold text-white">{t('dashboard.chart.tooltip_tips')} : {formatCurrency(activePoint.value).replace('.00', '')}</div>
+          </div>
           <div className="absolute bottom-0 left-0 right-0 flex justify-between text-sm font-medium text-nexoraSubtle">
-            {TIP_SERIES.map((point) => (
+            {series.map((point) => (
               <span key={point.label}>{point.label}</span>
             ))}
           </div>
@@ -291,64 +804,78 @@ function TipsOverTimePanel() {
   )
 }
 
-function StaffLeaderboardPanel() {
+function StaffLeaderboardPanel({ selectedStaff, setSelectedStaff }) {
+  const { t } = useTranslation()
   const rows = STAFF_PERFORMANCE.slice(0, 4)
   const avatarClasses = ['bg-nexoraBrand text-white', 'bg-indigo-500 text-white', 'bg-nexoraLavender text-white', 'bg-indigo-200 text-white']
 
   return (
     <Panel className="p-7">
-      <h2 className="text-2xl font-bold text-nexoraText">Nail Tech Leaderboard</h2>
+      <h2 className="text-sm font-extrabold text-nexoraText uppercase tracking-wider">{t('dashboard.leaderboard.title')}</h2>
       <div className="mt-7 space-y-7">
         {rows.map((member, index) => (
-          <div key={member.name} className="grid grid-cols-[48px_minmax(0,1fr)_88px_72px] items-center gap-4">
+          <button
+            key={member.name}
+            onClick={() => setSelectedStaff(member.nickname)}
+            className={`dashboard-list-row grid w-full grid-cols-[40px_minmax(0,1fr)] items-center gap-3 rounded-lg p-2 text-left transition hover:bg-nexoraSurfaceMuted sm:grid-cols-[48px_minmax(0,1fr)_88px_72px] sm:gap-4 ${selectedStaff === member.nickname ? 'bg-nexoraBrandSoft' : ''}`}
+            style={{ animationDelay: `${index * 80}ms` }}
+          >
             <span className={`flex h-11 w-11 items-center justify-center rounded-full text-sm font-bold ${avatarClasses[index]}`}>
               {member.name.split(' ').map((part) => part[0]).join('')}
             </span>
             <span className="truncate text-lg font-semibold text-nexoraText">{index === 2 ? 'Ashley P...' : index === 3 ? 'Hanna Ng...' : member.name}</span>
-            <span className="text-lg font-bold text-nexoraText">{formatCurrency(member.tips)}</span>
+            <span className="hidden text-lg font-bold text-nexoraText sm:block">{formatCurrency(member.tips)}</span>
             <span className="flex items-center gap-1 text-sm font-bold text-nexoraWarning">
               <Star className="h-4 w-4 fill-current" />
               {member.rating}
             </span>
-          </div>
+          </button>
         ))}
       </div>
     </Panel>
   )
 }
 
-function TopTouchPointsPanel() {
+function TopTouchPointsPanel({ onOpen }) {
+  const { t } = useTranslation()
   return (
     <Panel className="p-7">
-      <h2 className="text-2xl font-bold text-nexoraText">Top Touch Points</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-extrabold text-nexoraText uppercase tracking-wider">{t('dashboard.top_touchpoints.title')}</h2>
+        <button onClick={onOpen} className="text-xs font-extrabold text-nexoraBrand">{t('dashboard.top_touchpoints.manage')}</button>
+      </div>
       <div className="mt-8 space-y-0">
         {TOP_TOUCHPOINTS.slice(0, 3).map((point) => (
-          <div key={point.name} className="grid grid-cols-[minmax(0,1fr)_74px_82px] items-center gap-3 border-b border-nexoraRule py-4 text-base last:border-0">
+          <button key={point.name} onClick={onOpen} className="dashboard-list-row grid w-full grid-cols-[minmax(0,1fr)_74px] items-center gap-3 border-b border-nexoraRule py-4 text-left text-sm transition hover:bg-nexoraSurfaceMuted last:border-0 sm:grid-cols-[minmax(0,1fr)_74px_82px] sm:text-base">
             <span className="font-medium leading-snug text-nexoraText">{point.name}</span>
-            <span className="text-nexoraMuted">{point.scans.toLocaleString()} scans</span>
-            <span className="font-medium text-nexoraSuccess">{point.conversion}% conv</span>
-          </div>
+            <span className="text-nexoraMuted">{t('dashboard.top_touchpoints.scans', { count: point.scans })}</span>
+            <span className="hidden font-medium text-nexoraSuccess sm:block">{t('dashboard.top_touchpoints.conversion', { pct: point.conversion })}</span>
+          </button>
         ))}
       </div>
     </Panel>
   )
 }
 
-function ReviewRoutingPanel() {
+function ReviewRoutingPanel({ onOpen }) {
+  const { t } = useTranslation()
   return (
     <Panel className="p-7">
-      <h2 className="text-2xl font-bold text-nexoraText">Review Routing</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-extrabold text-nexoraText uppercase tracking-wider">{t('dashboard.menu.reviews')}</h2>
+        <button onClick={onOpen} className="text-xs font-extrabold text-nexoraBrand">{t('dashboard.top_touchpoints.manage')}</button>
+      </div>
       <div className="mt-8 space-y-4">
         <div className="flex h-14 items-center justify-between rounded-lg bg-nexoraBrandSoft px-5 text-base font-medium text-blue-700">
-          <span>4-5* to Google/Yelp</span>
+          <span>4-5★ to Google/Yelp</span>
           <ArrowRight className="h-5 w-5" />
         </div>
         <div className="flex h-14 items-center justify-between rounded-lg bg-nexoraBrand px-5 text-base font-medium text-white">
-          <span>1-3* private recovery</span>
+          <span>1-3★ private recovery</span>
           <ShieldAlert className="h-5 w-5" />
         </div>
         <p className="pt-2 text-sm font-medium leading-6 text-nexoraMuted">
-          Protects public rating while still capturing service issues.
+          {t('dashboard.settings_panel.routing_policy')}
         </p>
       </div>
     </Panel>
@@ -356,19 +883,20 @@ function ReviewRoutingPanel() {
 }
 
 function LiveActivityPanel() {
+  const { t } = useTranslation()
   const activities = [
-    { label: 'Station 03 scanned', time: '2:45 PM', tone: 'bg-nexoraBrand' },
-    { label: 'VIP NFC tapped', time: '2:31 PM', tone: 'bg-nexoraWarning' },
-    { label: '5* review routed', time: '2:28 PM', tone: 'bg-nexoraBrand' }
+    { label: t('dashboard.activity.station_scanned', { station: '03' }), time: '2:45 PM', tone: 'bg-nexoraBrand' },
+    { label: t('dashboard.activity.vip_nfc_tapped'), time: '2:31 PM', tone: 'bg-nexoraWarning' },
+    { label: t('dashboard.activity.five_star_routed'), time: '2:28 PM', tone: 'bg-nexoraBrand' }
   ]
 
   return (
     <Panel className="p-7">
-      <h2 className="text-2xl font-bold text-nexoraText">Live Activity</h2>
+      <h2 className="text-sm font-extrabold text-nexoraText uppercase tracking-wider">{t('dashboard.menu.analytics')}</h2>
       <div className="mt-8 space-y-6">
         {activities.map((activity) => (
-          <div key={activity.label} className="grid grid-cols-[14px_minmax(0,1fr)_64px] items-center gap-3 text-base">
-            <span className={`h-2.5 w-2.5 rounded-full ${activity.tone}`} />
+          <div key={activity.label} className="dashboard-list-row grid grid-cols-[14px_minmax(0,1fr)_64px] items-center gap-3 text-base">
+            <span className={`dashboard-pulse-dot h-2.5 w-2.5 rounded-full ${activity.tone}`} />
             <span className="font-medium text-nexoraText">{activity.label}</span>
             <span className="text-right text-sm font-semibold text-nexoraMuted">{activity.time}</span>
           </div>
@@ -378,69 +906,69 @@ function LiveActivityPanel() {
   )
 }
 
-function Overview({ metrics }) {
+function Overview({ metrics, activeKpi, setActiveKpi, chartRange, setChartRange, selectedStaff, setSelectedStaff, onOpenTouchpoints, onOpenReviews }) {
+  const { t } = useTranslation()
   return (
     <div className="space-y-8">
-      <PageTitle />
-
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-5">
-        <KpiCard label="Total Tips" value={formatCurrency(metrics.totalTips)} delta="18.6%" tone="brand" />
-        <KpiCard label="QR/NFC Scans" value={metrics.scans.toLocaleString()} delta="12.3%" tone="teal" />
-        <KpiCard label="Reviews" value={metrics.totalReviews.toString()} delta="9.7%" tone="warning" />
-        <KpiCard label="Avg Rating" value={metrics.averageRating} delta="0.15" tone="danger" />
-        <KpiCard label="Conversion" value={`${metrics.conversion}%`} delta="2.1%" tone="brand" />
+        <KpiCard label={t('dashboard.kpi.total_tips')} value={formatCurrency(metrics.totalTips)} delta="18.6%" tone="brand" iconSrc="/assets/menu/tips.png" active={activeKpi === 'tips'} onClick={() => setActiveKpi('tips')} />
+        <KpiCard label={t('dashboard.kpi.scans')} value={metrics.scans.toLocaleString()} delta="12.3%" tone="teal" iconSrc="/assets/menu/qr-nfc.png" active={activeKpi === 'scans'} onClick={() => setActiveKpi('scans')} />
+        <KpiCard label={t('dashboard.kpi.reviews')} value={metrics.totalReviews.toString()} delta="9.7%" tone="warning" iconSrc="/assets/menu/review.png" active={activeKpi === 'reviews'} onClick={() => setActiveKpi('reviews')} />
+        <KpiCard label={t('dashboard.kpi.avg_rating')} value={metrics.averageRating} delta="0.15" tone="danger" iconSrc="/assets/menu/star.png" active={activeKpi === 'rating'} onClick={() => setActiveKpi('rating')} />
+        <KpiCard label={t('dashboard.kpi.scans_conversion')} value={`${metrics.conversion}%`} delta="2.1%" tone="brand" iconSrc="/assets/menu/conversion.png" active={activeKpi === 'conversion'} onClick={() => setActiveKpi('conversion')} />
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(340px,1fr)]">
-        <TipsOverTimePanel />
-        <StaffLeaderboardPanel />
+        <TipsOverTimePanel range={chartRange} setRange={setChartRange} />
+        <StaffLeaderboardPanel selectedStaff={selectedStaff} setSelectedStaff={setSelectedStaff} />
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <TopTouchPointsPanel />
-        <ReviewRoutingPanel />
+        <TopTouchPointsPanel onOpen={onOpenTouchpoints} />
+        <ReviewRoutingPanel onOpen={onOpenReviews} />
         <LiveActivityPanel />
       </div>
     </div>
   )
 }
 
-function StaffView({ staff, onAdd, onEdit, onDelete, onQr, onToggle }) {
+function StaffView({ staff, onAdd, onEdit, onDelete, onQr, onToggle, onViewDetail }) {
+  const { t } = useTranslation()
   return (
     <div className="space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-extrabold text-nexoraText">Staff Directory</h2>
-          <p className="mt-1 text-xs text-nexoraMuted">Active staff appears in the customer tip flow; inactive personal QR is blocked.</p>
+          <h2 className="text-xl font-extrabold text-nexoraText">{t('setup.staff_directory_title')}</h2>
+          <p className="mt-1 text-xs text-nexoraMuted">{t('setup.desc_step_2')}</p>
         </div>
         <button onClick={onAdd} className="inline-flex h-9 items-center gap-2 rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white">
           <Plus className="h-4 w-4" />
-          Add Staff
+          {t('setup.add_staff_btn')}
         </button>
       </div>
 
       <div className="rounded-xl border border-nexoraBorder bg-white">
-        <div className="grid grid-cols-[2fr_1.1fr_1.6fr_1fr_118px] gap-3 border-b border-nexoraRule px-5 py-3 text-[10px] font-extrabold uppercase text-nexoraMuted">
-          <span>Name / Position</span>
-          <span>Public Nickname</span>
-          <span>Linked Wallets</span>
-          <span>Status</span>
-          <span className="text-right">Actions</span>
+        <div className="hidden grid-cols-[2fr_1.1fr_1.6fr_1fr_118px] gap-3 border-b border-nexoraRule px-5 py-3 text-[10px] font-extrabold uppercase text-nexoraMuted lg:grid">
+          <span>{t('setup.staff_fullname')} / {t('setup.staff_position')}</span>
+          <span>{t('setup.staff_displayname')}</span>
+          <span>{t('setup.add_staff_title') || 'Linked Wallets'}</span>
+          <span>{t('dashboard.activity_log.col_status')}</span>
+          <span className="text-right">{t('dashboard.top_touchpoints.manage')}</span>
         </div>
         {staff.map((member) => {
           const wallets = walletLabels(member.paymentAccounts)
           return (
             <div key={member.id} className="grid grid-cols-1 gap-3 border-b border-nexoraRule px-5 py-4 text-sm last:border-0 lg:grid-cols-[2fr_1.1fr_1.6fr_1fr_118px] lg:items-center">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 cursor-pointer group" onClick={() => onViewDetail(member.id)}>
                 {member.avatar ? (
-                  <img src={member.avatar} alt="" className="h-10 w-10 rounded-full object-cover" />
+                  <img src={member.avatar} alt="" className="h-10 w-10 rounded-full border border-nexoraBorder object-cover group-hover:opacity-85 transition" />
                 ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-50 text-sm font-extrabold text-rose-600">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-50 text-sm font-extrabold text-rose-600 group-hover:bg-rose-100 transition">
                     {member.nickname.charAt(0)}
                   </div>
                 )}
                 <div>
-                  <div className="font-extrabold text-nexoraText">{member.fullName}</div>
+                  <div className="font-extrabold text-nexoraText group-hover:text-nexoraBrand transition">{member.fullName}</div>
                   <div className="text-xs text-nexoraMuted">{member.position}</div>
                 </div>
               </div>
@@ -451,16 +979,19 @@ function StaffView({ staff, onAdd, onEdit, onDelete, onQr, onToggle }) {
                 ))}
               </div>
               <button onClick={() => onToggle(member.id)} className={`w-fit rounded-full px-3 py-1 text-[10px] font-extrabold ${member.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
-                {member.isActive ? 'Active' : 'Inactive'}
+                {member.isActive ? t('common.active') : t('common.inactive')}
               </button>
               <div className="flex justify-end gap-1.5">
-                <IconButton label="Preview QR" onClick={() => onQr(member)}>
+                <IconButton label={t('staff_detail.joined_gateway')} onClick={() => onViewDetail(member.id)} className="hover:text-nexoraBrand">
+                  <User className="h-4 w-4" />
+                </IconButton>
+                <IconButton label={t('staff_detail.personal_qr')} onClick={() => onQr(member)}>
                   <QrCode className="h-4 w-4" />
                 </IconButton>
-                <IconButton label="Edit staff" onClick={() => onEdit(member)}>
+                <IconButton label={t('common.edit')} onClick={() => onEdit(member)}>
                   <Edit2 className="h-4 w-4" />
                 </IconButton>
-                <IconButton label="Delete staff" onClick={() => onDelete(member.id)} className="hover:text-rose-600">
+                <IconButton label={t('common.delete')} onClick={() => onDelete(member.id)} className="hover:text-rose-600">
                   <Trash2 className="h-4 w-4" />
                 </IconButton>
               </div>
@@ -473,18 +1004,19 @@ function StaffView({ staff, onAdd, onEdit, onDelete, onQr, onToggle }) {
 }
 
 function TouchpointsView({ touchpoints, newTouchpoint, setNewTouchpoint, onAdd, onDelete, onQr }) {
+  const { t } = useTranslation()
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-xl font-extrabold text-nexoraText">Touch Points</h2>
-        <p className="mt-1 text-xs text-nexoraMuted">Manage salon QR/NFC placements for stations, front desk, receipts, and staff QR.</p>
+        <h2 className="text-xl font-extrabold text-nexoraText">{t('dashboard.menu.touchpoints')}</h2>
+        <p className="mt-1 text-xs text-nexoraMuted">{t('setup.qr_touchpoints_desc')}</p>
       </div>
       <Panel className="p-4">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_180px_auto]">
           <input
             value={newTouchpoint.name}
             onChange={(event) => setNewTouchpoint({ ...newTouchpoint, name: event.target.value })}
-            placeholder="Pedicure Chair 04"
+            placeholder={t('dashboard.modals.tp_name_label')}
             className="h-10 rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand"
           />
           <select
@@ -492,15 +1024,15 @@ function TouchpointsView({ touchpoints, newTouchpoint, setNewTouchpoint, onAdd, 
             onChange={(event) => setNewTouchpoint({ ...newTouchpoint, type: event.target.value })}
             className="h-10 rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand"
           >
-            <option>Table QR</option>
-            <option>Front Desk</option>
-            <option>Receipt QR</option>
-            <option>Business Main</option>
-            <option>Staff QR</option>
+            <option value="Table QR">Table QR</option>
+            <option value="Front Desk">Front Desk</option>
+            <option value="Receipt QR">Receipt QR</option>
+            <option value="Business Main">Business Main</option>
+            <option value="Staff QR">Staff QR</option>
           </select>
           <button onClick={onAdd} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white">
             <Plus className="h-4 w-4" />
-            Add
+            {t('setup.add_tp_btn')}
           </button>
         </div>
       </Panel>
@@ -513,13 +1045,13 @@ function TouchpointsView({ touchpoints, newTouchpoint, setNewTouchpoint, onAdd, 
                 <h3 className="mt-3 font-extrabold text-nexoraText">{point.name}</h3>
                 <p className="mt-1 text-[11px] text-nexoraMuted">nexora.vlinkpay.com/touch/{point.id}</p>
               </div>
-              <IconButton label="Delete touch point" onClick={() => onDelete(point.id)} className="hover:text-rose-600">
+              <IconButton label={t('common.delete')} onClick={() => onDelete(point.id)} className="hover:text-rose-600">
                 <Trash2 className="h-4 w-4" />
               </IconButton>
             </div>
             <button onClick={() => onQr(point)} className="mt-5 inline-flex items-center gap-2 text-xs font-extrabold text-nexoraBrand">
               <QrCode className="h-4 w-4" />
-              View QR design
+              {t('dashboard.modals.download_print_qr')}
             </button>
           </Panel>
         ))}
@@ -529,17 +1061,18 @@ function TouchpointsView({ touchpoints, newTouchpoint, setNewTouchpoint, onAdd, 
 }
 
 function ReviewsView({ reviews, staff, filter, setFilter }) {
+  const { t } = useTranslation()
   const filtered = filter === 'all' ? reviews : reviews.filter((review) => review.staffId === filter)
 
   return (
     <div className="space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-extrabold text-nexoraText">Review Routing Logs</h2>
-          <p className="mt-1 text-xs text-nexoraMuted">4-5 star reviews route to Google/Yelp; 1-3 star feedback stays private.</p>
+          <h2 className="text-xl font-extrabold text-nexoraText">{t('dashboard.menu.reviews')}</h2>
+          <p className="mt-1 text-xs text-nexoraMuted">{t('setup.review_routing_policy')}</p>
         </div>
         <select value={filter} onChange={(event) => setFilter(event.target.value)} className="h-9 rounded-lg border border-nexoraBorder bg-white px-3 text-xs font-semibold text-nexoraText outline-none">
-          <option value="all">All staff</option>
+          <option value="all">{t('staff_detail.tab_all')}</option>
           {staff.map((member) => (
             <option key={member.id} value={member.id}>{member.nickname}</option>
           ))}
@@ -551,13 +1084,13 @@ function ReviewsView({ reviews, staff, filter, setFilter }) {
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-extrabold text-nexoraText">{review.rating}.0*</span>
+                  <span className="text-sm font-extrabold text-nexoraText">{review.rating}.0★</span>
                   <span className={`rounded-md px-2 py-1 text-[10px] font-bold ${review.rating >= 4 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>{review.category}</span>
                 </div>
-                <p className="mt-2 text-sm text-nexoraText">{review.comment}</p>
+                <p className="mt-2 text-sm text-nexoraText">"{review.comment}"</p>
                 <p className="mt-2 text-xs text-nexoraMuted">{review.staffName} - {review.date}</p>
               </div>
-              <span className="text-xs font-bold text-nexoraBrand">{review.rating >= 4 ? 'Public route' : 'Private recovery'}</span>
+              <span className="text-xs font-bold text-nexoraBrand">{review.rating >= 4 ? t('customer.google_review_btn') : t('customer.submit_internal_btn')}</span>
             </div>
           </Panel>
         ))}
@@ -567,23 +1100,24 @@ function ReviewsView({ reviews, staff, filter, setFilter }) {
 }
 
 function ReportsView({ transactions }) {
+  const { t } = useTranslation()
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-xl font-extrabold text-nexoraText">Tip Reports</h2>
-        <p className="mt-1 text-xs text-nexoraMuted">Transaction ledger for direct wallet routing and payroll reconciliation.</p>
+        <h2 className="text-xl font-extrabold text-nexoraText">{t('dashboard.menu.transactions')}</h2>
+        <p className="mt-1 text-xs text-nexoraMuted">{t('dashboard.activity_log.title')}</p>
       </div>
-      <div className="overflow-hidden rounded-xl border border-nexoraBorder bg-white">
+      <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-white">
         <table className="w-full min-w-[780px] text-left text-xs">
           <thead className="bg-nexoraCanvas text-[10px] font-extrabold uppercase text-nexoraMuted">
             <tr>
-              <th className="px-4 py-3">ID</th>
-              <th className="px-4 py-3">Date</th>
-              <th className="px-4 py-3">Amount</th>
-              <th className="px-4 py-3">Staff</th>
-              <th className="px-4 py-3">Touch Point</th>
-              <th className="px-4 py-3">Method</th>
-              <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">{t('dashboard.activity_log.col_id')}</th>
+              <th className="px-4 py-3">{t('dashboard.activity_log.col_time')}</th>
+              <th className="px-4 py-3">{t('dashboard.activity_log.col_amount')}</th>
+              <th className="px-4 py-3">{t('dashboard.activity_log.col_staff')}</th>
+              <th className="px-4 py-3">{t('dashboard.activity_log.col_tp')}</th>
+              <th className="px-4 py-3">{t('dashboard.activity_log.col_payment')}</th>
+              <th className="px-4 py-3">{t('dashboard.activity_log.col_status')}</th>
             </tr>
           </thead>
           <tbody>
@@ -606,6 +1140,7 @@ function ReportsView({ transactions }) {
 }
 
 function ComingSoon({ activeMenu, onBack }) {
+  const { t } = useTranslation()
   const copy = {
     analytics: ['Advanced Analytics', 'Device conversion, return customer cohorts, and AI review summaries are planned for phase 3.'],
     subscriptions: ['Subscriptions', 'Manage NFC stand orders, renewal plans, and hardware add-ons from this workspace soon.'],
@@ -621,7 +1156,7 @@ function ComingSoon({ activeMenu, onBack }) {
         <h2 className="mt-5 text-xl font-extrabold text-nexoraText">{copy[0]}</h2>
         <p className="mt-2 text-sm text-nexoraMuted">{copy[1]}</p>
         <button onClick={onBack} className="mt-5 rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white">
-          Back to overview
+          {t('staff_detail.back_to_directory')}
         </button>
       </div>
     </div>
@@ -629,6 +1164,7 @@ function ComingSoon({ activeMenu, onBack }) {
 }
 
 function StaffModal({ open, editing, form, errors, setForm, onClose, onSave }) {
+  const { t } = useTranslation()
   if (!open) return null
 
   const handleAvatarChange = (event) => {
@@ -643,10 +1179,10 @@ function StaffModal({ open, editing, form, errors, setForm, onClose, onSave }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-nexoraText/70 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-nexoraText/70 p-4 py-6 backdrop-blur-sm sm:items-center">
       <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl">
         <div className="flex items-center justify-between border-b border-nexoraRule pb-4">
-          <h2 className="text-lg font-extrabold text-nexoraText">{editing ? 'Edit staff member' : 'Add staff member'}</h2>
+          <h2 className="text-lg font-extrabold text-nexoraText">{editing ? t('common.edit') : t('setup.add_staff_title')}</h2>
           <IconButton label="Close modal" onClick={onClose}>
             <X className="h-4 w-4" />
           </IconButton>
@@ -674,30 +1210,30 @@ function StaffModal({ open, editing, form, errors, setForm, onClose, onSave }) {
                     onClick={() => setForm({ ...form, avatar: '' })}
                     className="h-9 rounded-lg border border-nexoraBorder px-3 text-xs font-bold text-nexoraMuted transition hover:bg-nexoraCanvas"
                   >
-                    Remove
+                    {t('common.delete')}
                   </button>
                 )}
               </div>
             </div>
           </div>
           <div>
-            <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">Full name *</label>
+            <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_fullname')}</label>
             <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} placeholder="Mia Tran" />
             {errors.fullName && <p className="mt-1 text-[10px] font-bold text-rose-600">{errors.fullName}</p>}
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">Public nickname *</label>
+              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_displayname')}</label>
               <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.nickname} onChange={(event) => setForm({ ...form, nickname: event.target.value })} placeholder="Mia T." />
               {errors.nickname && <p className="mt-1 text-[10px] font-bold text-rose-600">{errors.nickname}</p>}
             </div>
             <div>
-              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">Position</label>
+              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_position')}</label>
               <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.position} onChange={(event) => setForm({ ...form, position: event.target.value })} placeholder="Nail Tech" />
             </div>
           </div>
           <div>
-            <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">Direct payment wallets</label>
+            <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.add_staff_title')}</label>
             <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
               <input className="h-9 rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand" value={form.venmo} onChange={(event) => setForm({ ...form, venmo: event.target.value })} placeholder="Venmo @handle" />
               <input className="h-9 rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand" value={form.cashapp} onChange={(event) => setForm({ ...form, cashapp: event.target.value })} placeholder="Cash App $cashtag" />
@@ -708,8 +1244,8 @@ function StaffModal({ open, editing, form, errors, setForm, onClose, onSave }) {
           </div>
         </div>
         <div className="mt-6 flex justify-end gap-2 border-t border-nexoraRule pt-4">
-          <button onClick={onClose} className="rounded-lg border border-nexoraBorder px-4 py-2 text-xs font-bold text-nexoraMuted">Cancel</button>
-          <button onClick={onSave} className="rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white">Save</button>
+          <button onClick={onClose} className="rounded-lg border border-nexoraBorder px-4 py-2 text-xs font-bold text-nexoraMuted">{t('common.cancel')}</button>
+          <button onClick={onSave} className="rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white">{t('common.save')}</button>
         </div>
       </div>
     </div>
@@ -717,11 +1253,15 @@ function StaffModal({ open, editing, form, errors, setForm, onClose, onSave }) {
 }
 
 function QrModal({ target, businessName, onClose }) {
+  const { t } = useTranslation()
   if (!target) return null
 
+  // Build the live customer portal URL for this touchpoint/staff QR
+  const qrUrl = `${window.location.origin}${window.location.pathname}?flow=customer&tech=${encodeURIComponent(target.slug)}&biz=${encodeURIComponent(businessName)}`
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-nexoraText/70 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-xl bg-white p-6 text-center shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-nexoraText/70 p-4 py-6 backdrop-blur-sm sm:items-center">
+      <div className="w-full max-w-sm rounded-xl bg-white p-6 text-center shadow-2xl animate-scaleUp">
         <div className="flex justify-end">
           <IconButton label="Close QR preview" onClick={onClose}>
             <X className="h-4 w-4" />
@@ -741,30 +1281,53 @@ function QrModal({ target, businessName, onClose }) {
             <div className="text-[10px] font-extrabold uppercase text-rose-200">{businessName}</div>
             <div className="mt-1 text-[8px] font-bold uppercase text-slate-300">Scan to tip and review</div>
           </div>
-          <div className="grid h-24 w-24 grid-cols-5 gap-1 rounded-lg bg-white p-2">
-            {Array.from({ length: 25 }).map((_, index) => (
-              <span key={index} className={`rounded-sm ${[0, 1, 5, 6, 4, 9, 20, 21, 24, 12, 14, 17].includes(index) ? 'bg-nexoraText' : 'bg-slate-200'}`} />
-            ))}
+          
+          {/* Real Scan-Ready QR Code */}
+          <div className="h-28 w-28 rounded-lg bg-white p-2 flex items-center justify-center shadow-inner">
+            <img
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrUrl)}`}
+              alt="Scan QR code to tip and review"
+              className="h-full w-full object-contain"
+            />
           </div>
+
           <div className="flex items-center gap-1 text-[8px] font-bold text-slate-300">
             <Scissors className="h-3 w-3 text-rose-200" />
             Secure redirect by VLINKPAY
           </div>
         </div>
-        <p className="mt-4 rounded-lg bg-nexoraCanvas px-3 py-2 text-[10px] font-mono text-nexoraMuted">
+        
+        <p className="mt-4 rounded-lg bg-nexoraCanvas px-3 py-2 text-[10px] font-mono text-nexoraMuted select-all">
           nexora.vlinkpay.com/touch/{target.slug}
         </p>
-        <button className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white">
+
+        {/* Browser simulator trigger */}
+        <div className="mt-3.5">
+          <a
+            href={qrUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-[10.5px] font-black text-nexoraBrand hover:underline tracking-wide bg-nexoraBrandSoft px-3 py-1.5 rounded-lg transition"
+          >
+            <span>{t('dashboard.modals.customer_view_test') || 'Mô phỏng quét QR (Mở trang khách) ›'}</span>
+          </a>
+        </div>
+
+        <button 
+          onClick={() => window.print()}
+          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white hover:bg-opacity-90 transition"
+        >
           <Download className="h-4 w-4" />
-          Download print design
+          {t('dashboard.modals.download_print_qr') || 'Print / Download Design'}
         </button>
       </div>
     </div>
   )
 }
 
-export default function Dashboard({ setupData }) {
+export default function Dashboard({ setupData, onLogout }) {
   const [activeMenu, setActiveMenu] = useState('overview')
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [staff, setStaff] = useState(INITIAL_STAFF)
   const [transactions] = useState(INITIAL_TRANSACTIONS)
   const [reviews] = useState(INITIAL_REVIEWS)
@@ -774,6 +1337,11 @@ export default function Dashboard({ setupData }) {
   const [qrTarget, setQrTarget] = useState(null)
   const [reviewFilterStaff, setReviewFilterStaff] = useState('all')
   const [newTouchpoint, setNewTouchpoint] = useState({ name: '', type: 'Table QR' })
+  const [searchQuery, setSearchQuery] = useState('')
+  const [activeKpi, setActiveKpi] = useState('tips')
+  const [chartRange, setChartRange] = useState('7 Days')
+  const [selectedLeaderboardStaff, setSelectedLeaderboardStaff] = useState(STAFF_PERFORMANCE[0].nickname)
+  const [viewingStaffDetailId, setViewingStaffDetailId] = useState(null)
   const [errors, setErrors] = useState({})
   const [staffForm, setStaffForm] = useState({
     fullName: '',
@@ -895,6 +1463,9 @@ export default function Dashboard({ setupData }) {
     if (!confirm('Delete this staff member from Nexora Touch?')) return
     setStaff((current) => current.filter((member) => member.id !== id))
     setTouchpoints((current) => current.filter((point) => !(point.type === 'Staff QR' && point.staffId === id)))
+    if (viewingStaffDetailId === id) {
+      setViewingStaffDetailId(null)
+    }
   }
 
   const toggleStaff = (id) => {
@@ -920,9 +1491,58 @@ export default function Dashboard({ setupData }) {
     })
   }
 
+  const handleNavigateMenu = (menuId) => {
+    setActiveMenu(menuId)
+    setViewingStaffDetailId(null)
+  }
+
+  const navigateMenu = (menuId) => {
+    setActiveMenu(menuId)
+    setViewingStaffDetailId(null)
+    setIsMobileMenuOpen(false)
+  }
+
+  const handleSelectLeaderboardStaff = (nickname) => {
+    setSelectedLeaderboardStaff(nickname)
+    const member = staff.find((s) => s.nickname === nickname || s.fullName.toLowerCase().includes(nickname.toLowerCase().split(' ')[0]))
+    if (member) {
+      setViewingStaffDetailId(member.id)
+    }
+  }
+
   const renderContent = () => {
-    if (activeMenu === 'overview') return <Overview metrics={metrics} />
-    if (activeMenu === 'staff') return <StaffView staff={staff} onAdd={openAddStaff} onEdit={openEditStaff} onDelete={deleteStaff} onQr={previewQr} onToggle={toggleStaff} />
+    if (viewingStaffDetailId) {
+      const activeDetailStaff = staff.find((member) => member.id === viewingStaffDetailId)
+      if (activeDetailStaff) {
+        return (
+          <StaffDetailView
+            staffMember={activeDetailStaff}
+            onBack={() => setViewingStaffDetailId(null)}
+            transactions={transactions}
+            reviews={reviews}
+            onEdit={openEditStaff}
+            onQr={previewQr}
+            onDelete={deleteStaff}
+          />
+        )
+      }
+    }
+    if (activeMenu === 'overview') {
+      return (
+        <Overview
+          metrics={metrics}
+          activeKpi={activeKpi}
+          setActiveKpi={setActiveKpi}
+          chartRange={chartRange}
+          setChartRange={setChartRange}
+          selectedStaff={selectedLeaderboardStaff}
+          setSelectedStaff={handleSelectLeaderboardStaff}
+          onOpenTouchpoints={() => setActiveMenu('touchpoints')}
+          onOpenReviews={() => setActiveMenu('reviews')}
+        />
+      )
+    }
+    if (activeMenu === 'staff') return <StaffView staff={staff} onAdd={openAddStaff} onEdit={openEditStaff} onDelete={deleteStaff} onQr={previewQr} onToggle={toggleStaff} onViewDetail={setViewingStaffDetailId} />
     if (activeMenu === 'touchpoints') {
       return (
         <TouchpointsView
@@ -942,85 +1562,42 @@ export default function Dashboard({ setupData }) {
 
   return (
     <div className="min-h-screen bg-nexoraCanvas font-sans text-nexoraText">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-80 flex-col bg-nexoraSidebar py-9 lg:flex">
-        {/* Logo and Header */}
-        <div className="px-8 pb-11">
-          <div className="flex items-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-nexoraBrand text-xl font-black text-white">N</div>
-            <div className="ml-4">
-              <div className="text-3xl font-extrabold leading-none tracking-normal text-white">Nexora</div>
-              <div className="mt-2 text-base font-medium tracking-wide text-white/65">Admin Console</div>
-            </div>
-          </div>
-        </div>
+      <DashboardSidebar activeMenu={activeMenu} setActiveMenu={handleNavigateMenu} businessName={businessName} onLogout={onLogout} />
 
-        {/* Navigation */}
-        <nav className="flex-1 space-y-3 px-5">
-          {MENU_ITEMS.map(({ id, label, icon: Icon }) => {
-            const isActive = activeMenu === id
-            return (
-              <button
-                key={id}
-                onClick={() => setActiveMenu(id)}
-                className={`flex h-[60px] w-full items-center gap-4 rounded-lg px-6 text-left text-xl font-medium transition duration-200 ${
-                  isActive 
-                    ? 'bg-white/10 text-white' 
-                    : 'text-white/70 hover:bg-white/5 hover:text-white'
-                }`}
-              >
-                <Icon className={`h-6 w-6 ${isActive ? 'text-white' : 'text-white/70'}`} />
-                {label}
-              </button>
-            )
-          })}
-        </nav>
+      <div className="lg:pl-72">
+        <DashboardHeader
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          onAddTouchpoint={() => setActiveMenu('touchpoints')}
+          onSettings={() => setActiveMenu('settings')}
+        />
 
-        {/* Bottom Area */}
-        <div className="mt-auto space-y-5 px-5">
-          {/* Profile Card */}
-          <div className="nexora-sidebar-panel flex items-center gap-3 p-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-nexoraSidebar text-base font-extrabold text-white ring-1 ring-white/10">
-              {businessName.charAt(0)}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-base font-bold text-white">{businessName}</div>
-              <div className="text-sm text-white/60">Owner</div>
-            </div>
-          </div>
-
-          {/* Current Plan Card */}
-          <div className="nexora-sidebar-panel space-y-4 p-5">
-            <div>
-              <div className="text-xs font-bold tracking-widest text-white/60">CURRENT PLAN</div>
-              <div className="mt-2 text-base font-extrabold text-white">Pro Plan</div>
-              <div className="mt-1 text-sm text-white/60">Renews on Jun 20, 2024</div>
-            </div>
-            <button className="flex h-10 w-full items-center justify-center rounded-lg border border-white/20 text-sm font-bold text-nexoraWarning transition-colors hover:bg-white/5">
-              Manage Plan
-            </button>
-          </div>
-
-          {/* Sign Out Button */}
-          <button className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white/70 transition-colors hover:text-white">
-            <LogOut className="h-4 w-4" />
-            Sign out
+        <div className="sticky top-16 z-10 flex items-center justify-between border-b border-nexoraBorder bg-white px-4 py-3 lg:hidden">
+          <span className="text-sm font-extrabold">NEXORA TOUCH</span>
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-nexoraBorder bg-white text-nexoraText shadow-nexora-soft"
+            aria-label="Open navigation menu"
+          >
+            <Menu className="h-5 w-5" />
           </button>
         </div>
-      </aside>
 
-      <div className="lg:pl-80">
-        <div className="sticky top-0 z-20 flex items-center justify-between border-b border-nexoraBorder bg-nexoraSurface px-4 py-3 lg:hidden">
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-nexoraBrand text-base font-extrabold text-white">N</div>
-            <span className="text-sm font-extrabold">NEXORA TOUCH</span>
-          </div>
-          <select value={activeMenu} onChange={(event) => setActiveMenu(event.target.value)} className="rounded-lg border border-nexoraBorder px-2 py-1 text-xs font-bold">
-            {MENU_ITEMS.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
-          </select>
-        </div>
-        <DashboardHeader />
-
-        <main className="min-h-screen p-4 sm:p-6 lg:p-8">
+        <main className="min-h-screen p-4 sm:p-6 lg:p-7">
+          {activeMenu !== 'overview' && !viewingStaffDetailId && (
+            <button
+              onClick={() => handleNavigateMenu('overview')}
+              className="mb-5 inline-flex h-9 items-center rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-extrabold text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"
+            >
+              Back to Dashboard
+            </button>
+          )}
+          {searchQuery && (
+            <div className="mb-5 rounded-xl border border-nexoraBorder bg-white px-4 py-3 text-sm font-semibold text-nexoraMuted shadow-nexora-soft">
+              Filtering dashboard for <span className="font-extrabold text-nexoraText">"{searchQuery}"</span>
+            </div>
+          )}
           {renderContent()}
         </main>
       </div>
@@ -1034,6 +1611,64 @@ export default function Dashboard({ setupData }) {
         <Sun className="h-4 w-4 dark:hidden" />
         <Moon className="hidden h-4 w-4 dark:block" />
       </button>
+
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <button
+            type="button"
+            className="absolute inset-0 bg-nexoraText/60"
+            aria-label="Close navigation menu"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          <aside className="relative flex h-full w-[min(84vw,320px)] flex-col bg-nexoraSidebar px-5 py-6 text-white shadow-2xl">
+            <div className="mb-7 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-nexoraBrand text-lg font-black text-white">N</div>
+                <div>
+                  <div className="text-xl font-extrabold leading-none">Nexora</div>
+                  <div className="mt-1 text-xs text-white/60">Admin Console</div>
+                </div>
+              </div>
+              <IconButton label="Close menu" onClick={() => setIsMobileMenuOpen(false)} className="text-white hover:bg-white/10">
+                <X className="h-5 w-5" />
+              </IconButton>
+            </div>
+
+            <nav className="flex-1 space-y-2 overflow-y-auto">
+              {MENU_ITEMS.map((item) => {
+                const { id, label } = item
+                const isActive = activeMenu === id
+                return (
+                  <button
+                    key={id}
+                    onClick={() => navigateMenu(id)}
+                    className={`flex min-h-12 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-bold transition ${
+                      isActive ? 'bg-white/10 text-white' : 'text-white/70 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <MenuIcon item={item} active={isActive} />
+                    {label}
+                  </button>
+                )
+              })}
+            </nav>
+
+            <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-4 flex items-center justify-between">
+              <div>
+                <div className="truncate text-sm font-extrabold">{businessName}</div>
+                <div className="mt-1 text-xs text-white/55">Owner - Pro Plan</div>
+              </div>
+              <button 
+                onClick={onLogout} 
+                className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors" 
+                title="Sign out"
+              >
+                <LogOut className="h-4.5 w-4.5" />
+              </button>
+            </div>
+          </aside>
+        </div>
+      )}
 
       <StaffModal
         open={isStaffModalOpen}

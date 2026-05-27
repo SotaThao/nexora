@@ -15,7 +15,13 @@
   border-radius: 99px;
 }
 
-.dark ::-webkit-scrollbar-thumb {
+.dark ::-webkit-scrollbar-thumb,
+.bg-luxuryBlack ::-webkit-scrollbar-thumb,
+.bg-neutral-950 ::-webkit-scrollbar-thumb,
+[class*="bg-luxuryBlack"] ::-webkit-scrollbar-thumb,
+[class*="bg-neutral-950"] ::-webkit-scrollbar-thumb,
+[class*="bg-luxuryBlack"]::-webkit-scrollbar-thumb,
+[class*="bg-neutral-950"]::-webkit-scrollbar-thumb {
   background: #d4af37;
 }
 

@@ -1,1 +1,0 @@
-return figma.currentPage.children.map(c => ({ id: c.id, name: c.name, type: c.type, x: c.x, y: c.y, width: c.width, height: c.height }));

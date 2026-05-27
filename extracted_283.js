@@ -1,1 +1,0 @@
-console.log("SELECTION:", figma.currentPage.selection.map(n => n.name + " (" + n.id + ")"));
