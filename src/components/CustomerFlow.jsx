@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react'
-import { Star, CheckCircle, Wallet, ArrowRight, ShieldCheck, Heart, Search, Users } from 'lucide-react'
+import { Star, CheckCircle, Wallet, ArrowRight, ShieldCheck, Heart, Search, Users, Check } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
 
 const WalletLogos = {
@@ -77,7 +77,7 @@ export default function CustomerFlow() {
       techSlug.toLowerCase().includes(s.fullName.toLowerCase().split(' ')[0])
     )
     
-    return (matched && matched.isActive !== false) ? matched : null
+    return (matched && matched.isActive !== false && matched.showInTipsFlow !== false) ? matched : null
   }, [setupData, techSlug])
 
   // Get review destination links
@@ -195,9 +195,15 @@ export default function CustomerFlow() {
 
   const activeTipAmount = selectedTip === 'custom' ? Number(customTip) || 0 : selectedTip
 
-  // Handlers
   const handleNextToPayment = (e) => {
     e.preventDefault()
+    if (selectedTip === 'custom') {
+      const val = Number(customTip)
+      if (isNaN(val) || val <= 0) {
+        alert(t('customer.invalid_tip') || 'Please enter a valid tip amount greater than 0.')
+        return
+      }
+    }
     setStep('payment')
   }
 
@@ -210,11 +216,79 @@ export default function CustomerFlow() {
     setTimeout(() => {
       setIsProcessing(false)
       setStep('success_payment')
+
+      // Save simulated transaction to localStorage
+      const txId = `TX-${Math.floor(2000 + Math.random() * 1000)}`
+      const touchpointStr = techSlug 
+        ? (techSlug.startsWith('staff/') ? 'Staff Personal QR' : (setupData?.touchPoints?.find(tp => techSlug.includes(tp.id))?.name || 'QR Touchpoint'))
+        : 'Lobby Welcome QR'
+      
+      const newTx = {
+        id: txId,
+        dateTime: new Date().toISOString().replace('T', ' ').substring(0, 16),
+        amount: activeTipAmount,
+        staffName: selectedStaffMember.nickname,
+        staffId: selectedStaffMember.id,
+        touchpoint: touchpointStr,
+        paymentMethod: walletName,
+        status: 'Success'
+      }
+
+      try {
+        const existingTx = JSON.parse(localStorage.getItem('nexora_transactions') || '[]')
+        localStorage.setItem('nexora_transactions', JSON.stringify([newTx, ...existingTx]))
+
+        // Create a corresponding notification object
+        const newNotification = {
+          id: `noti-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+          type: 'tip_success',
+          title: `New Tip Received ($${Number(activeTipAmount).toFixed(2)})`,
+          message: `${selectedStaffMember.nickname} received $${Number(activeTipAmount).toFixed(2)} tip via ${walletName} at ${touchpointStr}.`,
+          time: 'Just now',
+          read: false,
+          linkTab: 'reports'
+        }
+        const existingNotis = JSON.parse(localStorage.getItem('nexora_notifications') || '[]')
+        localStorage.setItem('nexora_notifications', JSON.stringify([newNotification, ...existingNotis]))
+      } catch (e) {
+        console.error('Error saving transaction/notification', e)
+      }
     }, 1800)
   }
 
   const handleSubmitFeedback = () => {
     setStep('success_feedback')
+
+    const cleanComment = comment.trim()
+    const newReview = {
+      id: `R-${Date.now()}`,
+      rating: rating,
+      comment: cleanComment || (rating >= 4 ? 'Good service' : 'Needs improvement'),
+      staffName: selectedStaffMember.nickname,
+      staffId: selectedStaffMember.id,
+      category: rating >= 4 ? 'Good (Google)' : 'Internal Feedback',
+      date: new Date().toISOString().substring(0, 10)
+    }
+
+    try {
+      const existingReviews = JSON.parse(localStorage.getItem('nexora_reviews') || '[]')
+      localStorage.setItem('nexora_reviews', JSON.stringify([newReview, ...existingReviews]))
+
+      // Add notification for feedback
+      const newNotification = {
+        id: `noti-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+        type: rating >= 4 ? 'review_good' : 'feedback_alert',
+        title: rating >= 4 ? `New Review (${rating}★)` : `New Internal Feedback (${rating}★)`,
+        message: `Customer left feedback for ${selectedStaffMember.nickname}: "${cleanComment.substring(0, 50)}${cleanComment.length > 50 ? '...' : ''}"`,
+        time: 'Just now',
+        read: false,
+        linkTab: 'reviews'
+      }
+      const existingNotis = JSON.parse(localStorage.getItem('nexora_notifications') || '[]')
+      localStorage.setItem('nexora_notifications', JSON.stringify([newNotification, ...existingNotis]))
+    } catch (e) {
+      console.error('Error saving review/notification', e)
+    }
   }
 
   const handleReset = () => {
@@ -334,7 +408,7 @@ export default function CustomerFlow() {
 
           {/* STEP 1: RATING & TIP FORM */}
           {step === 'form' && (
-            <form onSubmit={handleNextToPayment} className="space-y-6 animate-fadeIn">
+            <form noValidate onSubmit={handleNextToPayment} className="space-y-6 animate-fadeIn">
               {/* Tech details */}
               <div className="flex items-center gap-4 bg-nexoraCanvas p-4 rounded-xl border border-nexoraBorder/50">
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-[#2B59FF] to-[#8E4DF8] text-lg font-black text-white shrink-0 shadow-md">
@@ -495,7 +569,7 @@ export default function CustomerFlow() {
                 ].map(wallet => {
                    const accountVal = selectedStaffMember.paymentAccounts[wallet.key]
                   // Zelle fallback if empty
-                  const isAvailable = wallet.key === 'vlinkpay' || wallet.key === 'zelle' || accountVal
+                  const isAvailable = wallet.key === 'vlinkpay' || accountVal
 
                   return (
                     <button
@@ -564,31 +638,37 @@ export default function CustomerFlow() {
                 </div>
 
                 {rating >= 4 ? (
-                  <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl space-y-3">
-                    <p className="text-xs text-emerald-800 font-semibold leading-relaxed">
-                      {t('customer.rating_good_text', { rating: rating })}
-                    </p>
-                    <div className="flex gap-2">
-                      <a
-                        href={reviewLinks.googleReview}
-                        target="_blank"
-                        rel="noreferrer"
-                        onClick={handleSubmitFeedback}
-                        className="flex-1 py-2.5 bg-white hover:bg-nexoraCanvas text-nexoraText text-xs font-bold rounded-lg border border-nexoraBorder shadow-sm flex items-center justify-center gap-1.5"
-                      >
-                        {t('customer.google_review_btn')}
-                      </a>
-                      <a
-                        href={reviewLinks.yelpReview}
-                        target="_blank"
-                        rel="noreferrer"
-                        onClick={handleSubmitFeedback}
-                        className="flex-1 py-2.5 bg-white hover:bg-nexoraCanvas text-nexoraText text-xs font-bold rounded-lg border border-nexoraBorder shadow-sm flex items-center justify-center gap-1.5"
-                      >
-                        {t('customer.yelp_review_btn')}
-                      </a>
+                  (reviewLinks.googleReview || reviewLinks.yelpReview) && (
+                    <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl space-y-3 animate-fadeIn">
+                      <p className="text-xs text-emerald-800 font-semibold leading-relaxed">
+                        {t('customer.rating_good_text', { rating: rating })}
+                      </p>
+                      <div className="flex gap-2">
+                        {reviewLinks.googleReview && (
+                          <a
+                            href={reviewLinks.googleReview}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={handleSubmitFeedback}
+                            className="flex-1 py-2.5 bg-white hover:bg-nexoraCanvas text-nexoraText text-xs font-bold rounded-lg border border-nexoraBorder shadow-sm flex items-center justify-center gap-1.5"
+                          >
+                            {t('customer.google_review_btn')}
+                          </a>
+                        )}
+                        {reviewLinks.yelpReview && (
+                          <a
+                            href={reviewLinks.yelpReview}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={handleSubmitFeedback}
+                            className="flex-1 py-2.5 bg-white hover:bg-nexoraCanvas text-nexoraText text-xs font-bold rounded-lg border border-nexoraBorder shadow-sm flex items-center justify-center gap-1.5"
+                          >
+                            {t('customer.yelp_review_btn')}
+                          </a>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )
                 ) : (
                   <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl space-y-3">
                     <p className="text-xs text-amber-800 font-semibold leading-relaxed">
@@ -603,30 +683,69 @@ export default function CustomerFlow() {
                   </div>
                 )}
               </div>
+              
+              <div className="pt-4 border-t border-nexoraBorder">
+                <button
+                  type="button"
+                  onClick={handleSubmitFeedback}
+                  className="w-full py-2.5 bg-nexoraCanvas hover:bg-nexoraSurfaceMuted transition text-nexoraMuted font-bold text-xs uppercase tracking-wider rounded-lg border border-nexoraBorder"
+                >
+                  {t('customer.done')}
+                </button>
+              </div>
             </div>
           )}
 
-          {/* STEP 4: FINAL SUCCESS FEEDBACK */}
+          {/* STEP 4: FINAL SUCCESS FEEDBACK (Tip Success Screen) */}
           {step === 'success_feedback' && (
-            <div className="text-center space-y-6 animate-fadeIn">
-              <div className="flex justify-center">
-                <div className="h-16 w-16 bg-nexoraBrand/10 text-nexoraBrand rounded-full flex items-center justify-center animate-bounce">
-                  <Heart className="h-8 w-8 fill-current" />
-                </div>
-              </div>
+            <div className="text-center space-y-6 animate-fadeIn py-4 flex flex-col items-center">
+              {activeTipAmount > 0 && selectedStaffMember ? (
+                <>
+                  <div className="h-20 w-20 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/20 mb-2">
+                    <Check className="h-10 w-10 text-white stroke-[4]" />
+                  </div>
 
-              <div className="space-y-2">
-                <h3 className="font-extrabold text-xl text-nexoraText">{t('customer.final_success_title')}</h3>
-                <p className="text-sm text-nexoraMuted leading-relaxed">
-                  {t('customer.final_success_desc')}
-                </p>
-              </div>
+                  <div className="space-y-3">
+                    <h3 className="font-extrabold text-2xl text-nexoraText tracking-tight">
+                      {t('customer.tip_success_title')}
+                    </h3>
+                    <p className="text-sm text-nexoraMuted font-medium px-4 leading-relaxed">
+                      {t('customer.tip_success_prefix')}
+                      <span className="font-extrabold text-nexoraBrand">
+                        {`$${Number(activeTipAmount).toFixed(2)}`}
+                      </span>
+                      {t('customer.tip_success_sent')}
+                      <span className="font-bold text-nexoraText">
+                        {selectedStaffMember.fullName.split(' ')[0]}
+                      </span>
+                      .
+                    </p>
+                    <p className="text-xs text-nexoraSubtle font-semibold tracking-wide pt-1 uppercase">
+                      {t('customer.tip_success_sub')}
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="h-16 w-16 bg-nexoraBrand/10 text-nexoraBrand rounded-full flex items-center justify-center animate-bounce">
+                    <Heart className="h-8 w-8 fill-current" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <h3 className="font-extrabold text-xl text-nexoraText">{t('customer.final_success_title')}</h3>
+                    <p className="text-sm text-nexoraMuted leading-relaxed">
+                      {t('customer.final_success_desc')}
+                    </p>
+                  </div>
+                </>
+              )}
 
               <button
+                type="button"
                 onClick={handleReset}
-                className="w-full py-3 bg-nexoraCanvas border border-nexoraBorder hover:bg-nexoraSurfaceMuted transition text-nexoraText font-extrabold text-xs uppercase tracking-wider rounded-lg"
+                className="w-full mt-4 py-3.5 bg-gradient-to-r from-nexoraBrand to-indigo-600 hover:opacity-95 active:scale-[0.98] transition-all text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-indigo-600/25 flex items-center justify-center"
               >
-                {t('customer.send_new_btn')}
+                {t('customer.done')}
               </button>
             </div>
           )}

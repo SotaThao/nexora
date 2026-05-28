@@ -169,6 +169,11 @@
       "search_placeholder": "Tìm thợ, bàn ghế, review...",
       "add_tp": "Thêm Điểm Chạm"
     },
+    "notifications": {
+      "title": "Thông báo",
+      "mark_all_read": "Đọc tất cả",
+      "empty": "Không có thông báo mới."
+    },
     "title": "Trung Tâm Điều Hành Cửa Hàng",
     "subtitle": "Theo dõi dòng tiền típ trực tiếp, lượt quét QR/NFC, định tuyến review và hiệu suất thợ.",
     "kpi": {
@@ -308,6 +313,12 @@
     "final_success_title": "Cảm Ơn Sự Ủng Hộ!",
     "final_success_desc": "Ý kiến đánh giá và khoản tiền típ của bạn sẽ giúp đội ngũ kỹ thuật viên của chúng tôi hoàn thiện mỗi ngày. Chúc bạn một ngày tốt lành!",
     "send_new_btn": "Gửi Thêm Lượt Mới",
+    "tip_success_title": "Cảm ơn bạn!",
+    "tip_success_prefix": "Khoản tiền típ ",
+    "tip_success_sent": " của bạn đã được gửi tới ",
+    "tip_success_sub": "Chúng tôi rất trân trọng bạn!",
+     "done": "Hoàn tất",
+    "invalid_tip": "Vui lòng nhập số tiền típ hợp lệ lớn hơn 0.",
     "secure_footer": "Cổng kết nối SSL chuyển hướng an toàn",
     "copyright": "© 2026 NEXORA TOUCH. Bản quyền thuộc về VLINKPAY.",
     "tags_positive": {

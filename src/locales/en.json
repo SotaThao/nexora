@@ -169,6 +169,11 @@
       "search_placeholder": "Search tech, station, review...",
       "add_tp": "Add New Touch Point"
     },
+    "notifications": {
+      "title": "Notifications",
+      "mark_all_read": "Mark all read",
+      "empty": "No new notifications."
+    },
     "title": "Salon Command Center",
     "subtitle": "Live tip flow, QR/NFC scans, review routing, and nail tech performance.",
     "kpi": {
@@ -308,6 +313,12 @@
     "final_success_title": "Thank You for Your Support!",
     "final_success_desc": "Your feedback and tip will help our technicians improve every day. Have a great day!",
     "send_new_btn": "Send New Submission",
+    "tip_success_title": "Thank You!",
+    "tip_success_prefix": "Your tip of ",
+    "tip_success_sent": " has been sent to ",
+    "tip_success_sub": "We appreciate you!",
+     "done": "Done",
+    "invalid_tip": "Please enter a valid tip amount greater than 0.",
     "secure_footer": "Secure SSL Redirect Gateway",
     "copyright": "© 2026 NEXORA TOUCH. All rights reserved by VLINKPAY.",
     "tags_positive": {

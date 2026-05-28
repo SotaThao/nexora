@@ -24,6 +24,23 @@ function formatCurrency(value) {
   }).format(value)
 }
 
+// Helper to render text with styled star rating symbols (★) in luxuryGold and 4px space
+function renderTextWithGoldStars(text) {
+  if (!text) return null
+  const parts = text.split('★')
+  return parts.map((part, index) => {
+    if (index === parts.length - 1) {
+      return part
+    }
+    return (
+      <span key={index}>
+        {part}
+        <span className="text-luxuryGold ml-flox-4 inline-block font-normal">★</span>
+      </span>
+    )
+  })
+}
+
 export default function StaffDetailView({
   staffMember,
   onBack,
@@ -579,7 +596,7 @@ export default function StaffDetailView({
                     : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
                 }`}
               >
-                {tab.label}
+                {renderTextWithGoldStars(tab.label)}
               </button>
             ))}
           </div>
