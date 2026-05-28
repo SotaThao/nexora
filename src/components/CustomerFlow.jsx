@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { Star, CheckCircle, Wallet, ArrowRight, ShieldCheck, Heart } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
 
@@ -59,8 +59,93 @@ export default function CustomerFlow() {
   const [customTip, setCustomTip] = useState('')
   const [rating, setRating] = useState(5) // default 5 stars
   const [comment, setComment] = useState('')
+  const [selectedTags, setSelectedTags] = useState([])
   const [selectedWallet, setSelectedWallet] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
+
+  const positiveTagKeys = ['friendly', 'professional', 'meticulous', 'clean', 'art', 'fast', 'gentle']
+  const negativeTagKeys = ['slow', 'rushed', 'careless', 'unfriendly', 'hygiene', 'wrong_design', 'rough']
+
+  // Sync selected tags state when customer manually edits comment
+  useEffect(() => {
+    if (!comment) {
+      setSelectedTags([])
+      return
+    }
+    const isPositive = rating >= 4
+    const activeKeys = isPositive ? positiveTagKeys : negativeTagKeys
+    
+    const nextSelected = activeKeys.filter(key => {
+      const tagText = isPositive 
+        ? t(`customer.tags_positive.${key}`) 
+        : t(`customer.tags_negative.${key}`)
+      return comment.toLowerCase().includes(tagText.toLowerCase())
+    })
+    
+    if (JSON.stringify(nextSelected) !== JSON.stringify(selectedTags)) {
+      setSelectedTags(nextSelected)
+    }
+  }, [comment, rating, t])
+
+  const handleTagToggle = (key) => {
+    const isPositive = rating >= 4
+    const tagText = isPositive 
+      ? t(`customer.tags_positive.${key}`) 
+      : t(`customer.tags_negative.${key}`)
+
+    setSelectedTags((prev) => {
+      const isSelected = prev.includes(key)
+      let nextTags = []
+      let newComment = comment.trim()
+
+      if (isSelected) {
+        nextTags = prev.filter(k => k !== key)
+        const escapedText = tagText.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
+        const regexes = [
+          new RegExp(`,\\s*${escapedText}`, 'gi'),
+          new RegExp(`${escapedText},\\s*`, 'gi'),
+          new RegExp(`^${escapedText}$`, 'gi'),
+          new RegExp(escapedText, 'gi')
+        ]
+        
+        for (const regex of regexes) {
+          if (regex.test(newComment)) {
+            newComment = newComment.replace(regex, '').trim()
+            break
+          }
+        }
+        
+        newComment = newComment
+          .replace(/,\s*,/g, ', ')
+          .replace(/^,\s*|,\s*$/g, '')
+          .trim()
+      } else {
+        nextTags = [...prev, key]
+        if (newComment === '') {
+          newComment = tagText
+        } else {
+          if (/[.,!]$/.test(newComment)) {
+            newComment = `${newComment} ${tagText}`
+          } else {
+            newComment = `${newComment}, ${tagText}`
+          }
+        }
+      }
+
+      setComment(newComment)
+      return nextTags
+    })
+  }
+
+  const handleRatingChange = (newRating) => {
+    const wasPositive = rating >= 4
+    const isPositive = newRating >= 4
+    if (wasPositive !== isPositive) {
+      setComment('')
+      setSelectedTags([])
+    }
+    setRating(newRating)
+  }
 
   const activeTipAmount = selectedTip === 'custom' ? Number(customTip) || 0 : selectedTip
 
@@ -92,6 +177,7 @@ export default function CustomerFlow() {
     setCustomTip('')
     setRating(5)
     setComment('')
+    setSelectedTags([])
     setSelectedWallet('')
   }
 
@@ -196,7 +282,7 @@ export default function CustomerFlow() {
                     <button
                       key={val}
                       type="button"
-                      onClick={() => setRating(val)}
+                      onClick={() => handleRatingChange(val)}
                       className="p-1 hover:scale-110 transition"
                     >
                       <Star 
@@ -208,6 +294,35 @@ export default function CustomerFlow() {
                       />
                     </button>
                   ))}
+                </div>
+              </div>
+
+              {/* Quick Comment Chips */}
+              <div className="space-y-2.5 animate-fadeIn">
+                <label className="block text-[10px] font-bold text-rose-300 uppercase tracking-widest">
+                  {rating >= 4 ? t('customer.quick_tags_positive_label') : t('customer.quick_tags_negative_label')}
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {(rating >= 4 ? positiveTagKeys : negativeTagKeys).map((key) => {
+                    const tagText = rating >= 4 
+                      ? t(`customer.tags_positive.${key}`) 
+                      : t(`customer.tags_negative.${key}`)
+                    const isSelected = selectedTags.includes(key)
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => handleTagToggle(key)}
+                        className={`text-xs px-3 py-1.5 rounded-full border transition-all duration-200 active:scale-95 font-medium ${
+                          isSelected
+                            ? 'bg-rose-600/20 text-rose-200 border-rose-500/50 shadow-sm shadow-rose-500/10'
+                            : 'bg-neutral-800/60 hover:bg-neutral-700/80 text-neutral-300 border-white/5'
+                        }`}
+                      >
+                        {tagText}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
 

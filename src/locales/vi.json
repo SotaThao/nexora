@@ -299,6 +299,26 @@
     "final_success_desc": "Ý kiến đánh giá và khoản tiền típ của bạn sẽ giúp đội ngũ kỹ thuật viên của chúng tôi hoàn thiện mỗi ngày. Chúc bạn một ngày tốt lành!",
     "send_new_btn": "Gửi Thêm Lượt Mới",
     "secure_footer": "Cổng kết nối SSL chuyển hướng an toàn",
-    "copyright": "© 2026 NEXORA TOUCH. Bản quyền thuộc về VLINKPAY."
+    "copyright": "© 2026 NEXORA TOUCH. Bản quyền thuộc về VLINKPAY.",
+    "tags_positive": {
+      "friendly": "Thân thiện & Vui vẻ",
+      "professional": "Rất chuyên nghiệp",
+      "meticulous": "Tỉ mỉ & Khéo léo",
+      "clean": "Sạch sẽ & Vệ sinh",
+      "art": "Vẽ móng cực đẹp",
+      "fast": "Nhanh chóng & Gọn gàng",
+      "gentle": "Nhẹ nhàng & Dễ chịu"
+    },
+    "tags_negative": {
+      "slow": "Chờ đợi hơi lâu",
+      "rushed": "Làm hơi vội vã",
+      "careless": "Chưa tỉ mỉ lắm",
+      "unfriendly": "Thái độ chưa tốt",
+      "hygiene": "Cần vệ sinh hơn",
+      "wrong_design": "Không giống mẫu yêu cầu",
+      "rough": "Làm hơi mạnh tay"
+    },
+    "quick_tags_positive_label": "Chọn nhanh lời khen",
+    "quick_tags_negative_label": "Góp ý nhanh vấn đề"
   }
 }

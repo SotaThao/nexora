@@ -299,6 +299,26 @@
     "final_success_desc": "Your feedback and tip will help our technicians improve every day. Have a great day!",
     "send_new_btn": "Send New Submission",
     "secure_footer": "Secure SSL Redirect Gateway",
-    "copyright": "© 2026 NEXORA TOUCH. All rights reserved by VLINKPAY."
+    "copyright": "© 2026 NEXORA TOUCH. All rights reserved by VLINKPAY.",
+    "tags_positive": {
+      "friendly": "Friendly & Welcoming",
+      "professional": "Highly Professional",
+      "meticulous": "Very Meticulous",
+      "clean": "Clean & Sterile",
+      "art": "Stunning Nail Art",
+      "fast": "Fast & Efficient",
+      "gentle": "Gentle & Careful"
+    },
+    "tags_negative": {
+      "slow": "Long Wait Time",
+      "rushed": "Too Rushed",
+      "careless": "Less Attention to Detail",
+      "unfriendly": "Unfriendly Attitude",
+      "hygiene": "Needs Better Hygiene",
+      "wrong_design": "Not What I Asked For",
+      "rough": "A Bit Rough"
+    },
+    "quick_tags_positive_label": "Tap to add compliments",
+    "quick_tags_negative_label": "What could be improved?"
   }
 }
