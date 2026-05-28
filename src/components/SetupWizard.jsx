@@ -3,7 +3,7 @@ import {
   Sparkles, Building2, Link2, Users, QrCode, Download, 
   ArrowRight, ArrowLeft, Upload, Plus, Trash2, CheckCircle2, 
   AlertTriangle, Mail, Phone, Globe, Wallet, ShieldCheck, 
-  MapPin, Clock, Check, Eye, LogIn
+  MapPin, Clock, Check, Eye, LogIn, Scissors
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
 
@@ -32,6 +32,7 @@ const DEMO_STAFF = [
     nickname: 'Mia T.',
     position: 'Gel-X Artist',
     avatar: '',
+    showInTipsFlow: true,
     paymentAccounts: {
       venmo: '@mia-nails',
       cashapp: '$miaglow',
@@ -45,6 +46,7 @@ const DEMO_STAFF = [
     nickname: 'Vivian L.',
     position: 'Acrylic Specialist',
     avatar: '',
+    showInTipsFlow: true,
     paymentAccounts: {
       venmo: '',
       cashapp: '$vivianle',
@@ -58,6 +60,7 @@ const DEMO_STAFF = [
     nickname: 'Ashley P.',
     position: 'Pedicure Lead',
     avatar: '',
+    showInTipsFlow: true,
     paymentAccounts: {
       venmo: '@ashley-pedi',
       cashapp: '',
@@ -71,6 +74,7 @@ const DEMO_STAFF = [
     nickname: 'Hanna Ng.',
     position: 'Nail Art Designer',
     avatar: '',
+    showInTipsFlow: true,
     paymentAccounts: {
       venmo: '@hanna-art',
       cashapp: '',
@@ -252,6 +256,7 @@ export default function SetupWizard({ onComplete, onBackToLogin }) {
       nickname: newStaff.nickname.trim(),
       position: newStaff.position,
       avatar: newStaff.avatar,
+      showInTipsFlow: true,
       paymentAccounts: {
         venmo: newStaff.venmo.trim(),
         cashapp: newStaff.cashapp.trim(),
@@ -374,9 +379,7 @@ export default function SetupWizard({ onComplete, onBackToLogin }) {
         {/* Header */}
         <header className="flex flex-col md:flex-row md:items-center justify-between border-b border-neutral-800 pb-6 mb-8 gap-4">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="w-10 h-10 rounded-flox-cards bg-gradient-to-br from-luxuryGold to-luxuryGoldDark flex items-center justify-center shadow-lg shadow-[rgba(212,175,55,0.2)]">
-              <span className="font-serif font-black text-black text-xl">N</span>
-            </div>
+            <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="w-10 h-10 shrink-0 object-contain shadow-lg shadow-[rgba(212,175,55,0.2)]" />
             <div className="min-w-0">
               <h1 className="font-serif text-xl font-bold tracking-wide sm:text-2xl">
                 NEXORA <span className="ml-1 inline-flex align-middle text-luxuryGold font-sans text-xs tracking-widest font-black uppercase bg-luxuryGold/10 px-2 py-0.5 rounded border border-neutral-800 sm:ml-2">TOUCH</span>
@@ -1022,7 +1025,7 @@ export default function SetupWizard({ onComplete, onBackToLogin }) {
                         className="w-full flex items-center justify-between p-3.5 rounded-xl border border-neutral-800 bg-neutral-900 hover:bg-neutral-800/80 transition text-left"
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <span className="h-8 w-8 rounded-lg bg-neutral-800 flex items-center justify-center shrink-0"><Download className="h-4.5 w-4.5 text-luxuryGold" /></span>
+                          <span className="h-8 w-8 rounded-lg bg-neutral-800 flex items-center justify-center shrink-0"><Download className="h-[18px] w-[18px] text-luxuryGold" /></span>
                           <div className="min-w-0">
                             <div className="text-xs font-bold text-white truncate">{t('setup.download_btn')}</div>
                             <div className="text-[10px] text-neutral-500 truncate sm:whitespace-normal">{t('setup.download_explain')}</div>
@@ -1069,7 +1072,7 @@ export default function SetupWizard({ onComplete, onBackToLogin }) {
                   onClick={handleCompleteSetup}
                   className="min-h-11 w-full justify-center px-8 py-3 rounded-flox-buttons bg-gradient-to-r from-luxuryGold via-luxuryGoldLight to-luxuryGoldDark text-black font-extrabold text-sm flex items-center gap-2 transition-all shadow-[0_8px_25px_rgba(212,175,55,0.4)] hover:scale-[1.02] sm:w-auto"
                 >
-                  {t('setup.launch_dashboard_btn')} <ArrowRight className="w-4.5 h-4.5 stroke-[3px]" />
+                  {t('setup.launch_dashboard_btn')} <ArrowRight className="w-[18px] h-[18px] stroke-[3px]" />
                 </button>
               )}
             </div>
@@ -1082,6 +1085,41 @@ export default function SetupWizard({ onComplete, onBackToLogin }) {
           &copy; {new Date().getFullYear()} Nexora Touch by VLINKPAY. All rights reserved. Secured and compliant tip redirects.
         </footer>
 
+      </div>
+
+      {/* Print-only container to match Dashboard's QrModal layout exactly on print */}
+      <div className="print-only-container qr-modal-backdrop">
+        <div className="qr-modal-container">
+          <h2 className="qr-print-title">Business QR - Lobby</h2>
+          <p className="qr-print-subtitle">{t('customer.step_form_title') || 'Scan to Tip & Review'}</p>
+          
+          <div className="qr-print-card">
+            <div className="qr-print-card-strip" />
+            <div>
+              <div className="qr-print-biz-name">{businessInfo.name || 'Your Salon'}</div>
+              <div className="qr-print-scan-text">SCAN TO TIP AND REVIEW</div>
+            </div>
+            
+            <div className="qr-print-qr-wrapper">
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
+                  `${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Golden Glow Nail Spa & Salon')}`
+                )}`}
+                alt="Scan QR code to tip and review"
+                className="qr-print-qr-image"
+              />
+            </div>
+
+            <div className="flex items-center gap-1 text-[8px] font-bold text-nexoraSubtle qr-print-footer">
+              <Scissors className="h-3 w-3 text-nexoraBrand" />
+              Secure redirect by VLINKPAY
+            </div>
+          </div>
+          
+          <p className="qr-print-url">
+            nexora.vlinkpay.com/touch/tp-main
+          </p>
+        </div>
       </div>
     </div>
   )

@@ -212,17 +212,28 @@ export default function StaffDetailView({
             )}
 
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-xl font-extrabold text-nexoraText sm:text-2xl">{staffMember.fullName}</h1>
-                <span
-                  className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider ${
-                    staffMember.isActive
-                      ? 'bg-emerald-50 text-emerald-700'
-                      : 'bg-rose-50 text-rose-700'
-                  }`}
-                >
-                  {staffMember.isActive ? t('common.active') : t('common.inactive')}
-                </span>
+                <div className="flex gap-1">
+                  <span
+                    className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider ${
+                      staffMember.isActive
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : 'bg-rose-50 text-rose-700'
+                    }`}
+                  >
+                    {staffMember.isActive ? t('common.active') : t('common.inactive')}
+                  </span>
+                  <span
+                    className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider ${
+                      staffMember.showInTipsFlow !== false
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'bg-slate-100 text-slate-600'
+                    }`}
+                  >
+                    {staffMember.showInTipsFlow !== false ? (t('common.show_in_tips') || 'Hiện trong tips') : (t('common.hide_in_tips') || 'Ẩn trong tips')}
+                  </span>
+                </div>
               </div>
               <p className="text-xs font-semibold text-nexoraMuted">{stats.specialty || staffMember.position}</p>
               <div className="mt-1 flex items-center gap-1 text-[11px] text-nexoraSubtle">
@@ -323,63 +334,51 @@ export default function StaffDetailView({
                 onPointerMove={handlePointerMove}
                 onPointerLeave={handlePointerLeave}
               >
-                <svg
-                  className="w-full overflow-visible"
-                  viewBox={`0 0 ${svgMetrics.width} ${svgMetrics.height}`}
-                  preserveAspectRatio="none"
-                  height="160"
-                >
-                  <defs>
-                    <linearGradient id="staff-chart-grad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#4648D8" stopOpacity="0.2" />
-                      <stop offset="100%" stopColor="#4648D8" stopOpacity="0.0" />
-                    </linearGradient>
-                    <linearGradient id="staff-line-grad" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="#4648D8" />
-                      <stop offset="100%" stopColor="#32D7FF" />
-                    </linearGradient>
-                  </defs>
+                <div className="relative h-[150px] w-full">
+                  <svg
+                    className="h-full w-full overflow-visible"
+                    viewBox={`0 0 ${svgMetrics.width} ${svgMetrics.height}`}
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                  >
+                    <defs>
+                      <linearGradient id="staff-chart-grad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#4648D8" stopOpacity="0.2" />
+                        <stop offset="100%" stopColor="#4648D8" stopOpacity="0.0" />
+                      </linearGradient>
+                      <linearGradient id="staff-line-grad" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor="#4648D8" />
+                        <stop offset="100%" stopColor="#32D7FF" />
+                      </linearGradient>
+                    </defs>
 
-                  {/* Horizontal grid lines */}
-                  {[0.25, 0.5, 0.75, 1].map((ratio) => (
-                    <line
-                      key={ratio}
-                      x1="0"
-                      x2={svgMetrics.width}
-                      y1={svgMetrics.height * (1 - ratio)}
-                      y2={svgMetrics.height * (1 - ratio)}
-                      className="stroke-slate-100"
-                      strokeWidth="1.5"
+                    {/* Horizontal grid lines */}
+                    {[0.25, 0.5, 0.75, 1].map((ratio) => (
+                      <line
+                        key={ratio}
+                        x1="0"
+                        x2={svgMetrics.width}
+                        y1={svgMetrics.height * (1 - ratio)}
+                        y2={svgMetrics.height * (1 - ratio)}
+                        className="stroke-slate-100"
+                        strokeWidth="1.5"
+                      />
+                    ))}
+
+                    {/* Area fill */}
+                    <path d={svgMetrics.areaPath} fill="url(#staff-chart-grad)" />
+
+                    {/* Bezier Line */}
+                    <path
+                      d={svgMetrics.path}
+                      fill="none"
+                      stroke="url(#staff-line-grad)"
+                      strokeWidth="3.5"
+                      strokeLinecap="round"
                     />
-                  ))}
 
-                  {/* Area fill */}
-                  <path d={svgMetrics.areaPath} fill="url(#staff-chart-grad)" />
-
-                  {/* Bezier Line */}
-                  <path
-                    d={svgMetrics.path}
-                    fill="none"
-                    stroke="url(#staff-line-grad)"
-                    strokeWidth="3.5"
-                    strokeLinecap="round"
-                  />
-
-                  {/* Circles */}
-                  {svgMetrics.points.map((pt, i) => (
-                    <circle
-                      key={i}
-                      cx={pt.x}
-                      cy={pt.y}
-                      r="4.5"
-                      className="fill-white stroke-nexoraBrand"
-                      strokeWidth="2.5"
-                    />
-                  ))}
-
-                  {/* Active Scrubber elements */}
-                  {activePoint && (
-                    <>
+                    {/* Active Scrubber guide line */}
+                    {activePoint && (
                       <line
                         x1={activePoint.x}
                         x2={activePoint.x}
@@ -388,35 +387,60 @@ export default function StaffDetailView({
                         className="stroke-slate-300"
                         strokeWidth="1.5"
                       />
-                      <circle
-                        cx={activePoint.x}
-                        cy={activePoint.y}
-                        r="8"
-                        className="fill-nexoraBrand/10 stroke-none animate-ping"
+                    )}
+                  </svg>
+
+                  {/* Regular data points (rendered as HTML to prevent distortion) */}
+                  {svgMetrics.points.map((pt, i) => (
+                    <div
+                      key={i}
+                      className="pointer-events-none absolute h-2.5 w-2.5 rounded-full border-[2.5px] border-nexoraBrand bg-white shadow-sm"
+                      style={{
+                        left: `calc(${(pt.x / svgMetrics.width) * 100}% - 5px)`,
+                        top: `calc(${(pt.y / svgMetrics.height) * 100}% - 5px)`,
+                        zIndex: 8
+                      }}
+                    />
+                  ))}
+
+                  {/* Active Scrubber elements (rendered as HTML to prevent distortion) */}
+                  {activePoint && (
+                    <>
+                      {/* Pulsing ring */}
+                      <div
+                        className="pointer-events-none absolute h-4 w-4 rounded-full bg-nexoraBrand/10 animate-ping"
+                        style={{
+                          left: `calc(${(activePoint.x / svgMetrics.width) * 100}% - 8px)`,
+                          top: `calc(${(activePoint.y / svgMetrics.height) * 100}% - 8px)`,
+                          zIndex: 9
+                        }}
                       />
-                      <circle
-                        cx={activePoint.x}
-                        cy={activePoint.y}
-                        r="6.5"
-                        className="fill-nexoraBrand stroke-white"
-                        strokeWidth="2.5"
+                      {/* Main active dot */}
+                      <div
+                        className="pointer-events-none absolute h-[13px] w-[13px] rounded-full border-[2.5px] border-white bg-nexoraBrand shadow-md"
+                        style={{
+                          left: `calc(${(activePoint.x / svgMetrics.width) * 100}% - 6.5px)`,
+                          top: `calc(${(activePoint.y / svgMetrics.height) * 100}% - 6.5px)`,
+                          zIndex: 10
+                        }}
                       />
                     </>
                   )}
-                </svg>
 
-                {/* Scrubber Tooltip */}
-                {activePoint && (
-                  <div
-                    className="absolute bg-slate-900 text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg pointer-events-none transition-all duration-75"
-                    style={{
-                      left: `clamp(0px, calc(${(activePoint.x / svgMetrics.width) * 100}% - 40px), calc(100% - 80px))`,
-                      top: `${activePoint.y - 38}px`
-                    }}
-                  >
-                    {t('staff_detail.tooltip_tips')} {formatCurrency(activePoint.value)}
-                  </div>
-                )}
+                  {/* Scrubber Tooltip */}
+                  {activePoint && (
+                    <div
+                      className="absolute bg-slate-900 text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg pointer-events-none transition-all duration-75"
+                      style={{
+                        left: `clamp(0px, calc(${(activePoint.x / svgMetrics.width) * 100}% - 40px), calc(100% - 80px))`,
+                        top: `calc(${(activePoint.y / svgMetrics.height) * 100}% - 38px)`,
+                        zIndex: 11
+                      }}
+                    >
+                      {t('staff_detail.tooltip_tips')} {formatCurrency(activePoint.value)}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="flex justify-between text-[11px] font-semibold text-nexoraSubtle">
@@ -584,7 +608,7 @@ export default function StaffDetailView({
                     <span
                       className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded ${
                         rev.rating >= 4
-                          ? 'bg-emerald-50 text-emerald-700'
+                          ? 'bg-amber-50 text-amber-700'
                           : 'bg-rose-50 text-rose-700'
                       }`}
                     >

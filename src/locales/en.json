@@ -18,6 +18,9 @@
     "inactive_status": "Inactive",
     "yes": "Yes",
     "no": "No",
+    "tips_flow": "Tips Flow",
+    "show_in_tips": "Show in Tips",
+    "hide_in_tips": "Hide in Tips",
     "days": {
       "mon": "Mon",
       "tue": "Tue",
@@ -75,6 +78,7 @@
     "title_step_2": "Step 2: Staff Management & QR Touchpoints",
     "desc_step_2": "Add your technicians. The system automatically generates corresponding QR codes to place at tables or share.",
     "add_staff_title": "Add New Staff Member",
+    "linked_wallets": "Linked Payment Wallets",
     "staff_fullname": "Full Name (Internal) *",
     "staff_fullname_placeholder": "e.g., Mia Tran",
     "staff_displayname": "Display Name (Customer-facing) *",
@@ -89,6 +93,8 @@
     "wallet_cashapp_placeholder": "$cashtag",
     "wallet_vlinkpay": "VLINKPAY ID (Optional)",
     "add_staff_btn": "Add Technician",
+    "show_in_tips_flow": "Show in Tips Flow",
+    "show_in_tips_flow_desc": "If disabled, this staff member won't appear in the general salon QR code staff list.",
     "staff_directory_title": "Technicians Directory",
     "total_staff_count": "Total crew: {count} active",
     "staff_directory_empty": "No technicians added yet. Please fill the form on the left.",
@@ -142,8 +148,8 @@
       "five_star_routed": "5★ review routed"
     },
     "sidebar": {
-      "console_title": "Nexora",
-      "console_subtitle": "Admin Console",
+      "console_title": "NEXORA",
+      "console_subtitle": "by VLINKPAY",
       "plan_info": "Owner - Pro Plan",
       "sign_out": "Sign out"
     },
@@ -272,6 +278,10 @@
   },
   "customer": {
     "header_subtitle": "Nexora Touch Secure Gate",
+    "select_staff_title": "Select Staff Member",
+    "select_staff_subtitle": "Who served you today?",
+    "search_staff_placeholder": "Search by name or position...",
+    "no_staff_found": "No staff members found.",
     "step_form_title": "Tip & Review",
     "select_tip_label": "Select tip amount (USD)",
     "custom_tip_placeholder": "Enter custom tip...",
