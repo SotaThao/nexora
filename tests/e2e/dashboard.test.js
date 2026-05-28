@@ -6,10 +6,11 @@ describe('Nexora Touch E2E Test Suite (CloakBrowser)', () => {
   let page;
 
   beforeAll(async () => {
-    // Launch stealth Chromium using CloakBrowser in headed mode for visual demo
+    // Launch stealth Chromium using CloakBrowser
+    const isCI = !!process.env.CI;
     browser = await launch({
-      headless: false,
-      slowMo: 1000, // 1 second delay between steps so it's easy to watch
+      headless: isCI,
+      slowMo: isCI ? 0 : 1000, // 1 second delay between steps locally so it's easy to watch
     });
     page = await browser.newPage();
   });
