@@ -11,7 +11,9 @@ import {
   Star,
   Trash2,
   TrendingUp,
-  Wallet
+  Wallet,
+  Phone,
+  Mail
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
 
@@ -253,8 +255,20 @@ export default function StaffDetailView({
                 </div>
               </div>
               <p className="text-xs font-semibold text-nexoraMuted">{stats.specialty || staffMember.position}</p>
-              <div className="mt-1 flex items-center gap-1 text-[11px] text-nexoraSubtle">
-                <Calendar className="h-3.5 w-3.5 text-brandCyan" /> {t('staff_detail.joined_gateway')}
+              <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-nexoraSubtle">
+                <div className="flex items-center gap-1">
+                  <Calendar className="h-3.5 w-3.5 text-brandCyan" /> {t('staff_detail.joined_gateway')}
+                </div>
+                {staffMember.phone && (
+                  <div className="flex items-center gap-1">
+                    <Phone className="h-3.5 w-3.5 text-brandCyan" /> {staffMember.phone}
+                  </div>
+                )}
+                {staffMember.email && (
+                  <div className="flex items-center gap-1">
+                    <Mail className="h-3.5 w-3.5 text-brandCyan" /> {staffMember.email}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -480,7 +494,15 @@ export default function StaffDetailView({
 
           <div className="space-y-3">
             {Object.entries(staffMember.paymentAccounts || {}).map(([key, value]) => {
-              const label = { venmo: 'Venmo', cashapp: 'Cash App', zelle: 'Zelle', vlinkpay: 'VLINKPAY' }[key]
+              const label = {
+                venmo: 'Venmo',
+                cashapp: 'Cash App',
+                zelle: 'Zelle',
+                vlinkpay: 'VLINKPAY',
+                paypal: 'PayPal',
+                bankwire: 'Bank Wire',
+                applecash: 'Apple Cash'
+              }[key] || key
               const isConfigured = Boolean(value)
               const isCopied = copiedWallet === key
 

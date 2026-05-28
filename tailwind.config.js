@@ -51,8 +51,8 @@ export default {
         nexoraLavender: '#A8A9F3',
       },
       fontFamily: {
-        sans: ['GeistSans', 'Inter', 'sans-serif'],
-        serif: ['Playfair Display', 'serif'],
+        sans: ['Inter', 'sans-serif'],
+        serif: ['Inter', 'sans-serif'],
         mono: ['GeistMono', 'Fira Code', 'monospace'],
       },
       fontSize: {

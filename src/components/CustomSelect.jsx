@@ -9,7 +9,8 @@ export default function CustomSelect({
   buttonClass = '',
   optionsClass = '',
   placeholder = 'Select option...',
-  size = 'md'
+  size = 'md',
+  disabled = false
 }) {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef(null)
@@ -33,13 +34,25 @@ export default function CustomSelect({
 
   const isSmall = size === 'sm'
 
+  const borderClassStr = buttonClass.includes('border-') ? '' : 'border-nexoraBorder'
+  const bgClassStr = buttonClass.includes('bg-') ? '' : 'bg-white'
+  const hasTextColor = /\btext-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|black|white|brand)\b/.test(buttonClass)
+  const textClassStr = hasTextColor ? '' : 'text-nexoraText'
+  const focusBorderClassStr = buttonClass.includes('focus:border-') ? '' : 'focus:border-nexoraBrand'
+  const focusRingClassStr = buttonClass.includes('focus:ring-') ? '' : 'focus:ring-1 focus:ring-nexoraBrand/20'
+  const hasFontWeight = buttonClass.includes('font-')
+  const fontWeightClass = hasFontWeight ? '' : (isSmall ? 'font-semibold' : '')
+
   return (
     <div className={`relative w-full ${className}`} ref={dropdownRef}>
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between border border-nexoraBorder rounded-lg text-nexoraText bg-white focus:outline-none transition-all cursor-pointer select-none text-left focus:border-nexoraBrand focus:ring-1 focus:ring-nexoraBrand/20
-          ${isSmall ? 'h-9 px-3 text-xs font-semibold' : 'min-h-[42px] px-4 py-2.5 text-sm'}
+        disabled={disabled}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        className={`w-full flex items-center justify-between border ${borderClassStr} ${textClassStr} ${bgClassStr} focus:outline-none transition-all select-none text-left ${focusBorderClassStr} ${focusRingClassStr}
+          ${isSmall ? 'h-9 px-3 text-xs rounded' : 'min-h-[42px] px-4 py-2.5 text-sm rounded-lg'}
+          ${fontWeightClass}
+          ${disabled ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : 'cursor-pointer'}
           ${buttonClass}`}
       >
         <span className="truncate">
