@@ -550,7 +550,9 @@ function DashboardHeader({
           >
             <Bell className="h-5 w-5" />
             {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white animate-pulse" />
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center text-[9px] font-black text-white bg-red-500 ring-2 ring-white shadow-sm">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
             )}
           </IconButton>
 
@@ -595,9 +597,6 @@ function DashboardHeader({
                           isUnread ? 'bg-nexoraBrandSoft/40' : 'bg-white'
                         }`}
                       >
-                        {isUnread && (
-                          <span className="absolute left-1.5 top-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-red-500" />
-                        )}
                         <span className={`flex h-8 w-8 items-center justify-center rounded-lg shrink-0 ${iconColor} ${
                           !isUnread ? 'opacity-60' : ''
                         }`}>
