@@ -34,6 +34,24 @@ import {
 } from 'lucide-react'
 import StaffDetailView from './StaffDetailView'
 import { useTranslation } from '../contexts/LanguageContext'
+import CustomSelect from './CustomSelect'
+
+// Helper to render text with styled star rating symbols (★) in luxuryGold and 4px space
+function renderTextWithGoldStars(text) {
+  if (!text) return null
+  const parts = text.split('★')
+  return parts.map((part, index) => {
+    if (index === parts.length - 1) {
+      return part
+    }
+    return (
+      <span key={index}>
+        {part}
+        <span className="text-luxuryGold ml-flox-4 inline-block font-normal">★</span>
+      </span>
+    )
+  })
+}
 
 const WalletLogos = {
   venmo: (
@@ -265,22 +283,242 @@ function MenuIcon({ item, active = false }) {
   return <Icon className={`h-5 w-5 shrink-0 ${active ? 'text-white' : 'text-white/60'}`} />
 }
 
-function DashboardHeader({ searchQuery, setSearchQuery, onAddTouchpoint, onSettings }) {
+function DashboardHeader({ 
+  searchQuery, 
+  setSearchQuery, 
+  onAddTouchpoint, 
+  onSettings,
+  notifications,
+  setNotifications,
+  isNotiDropdownOpen,
+  setIsNotiDropdownOpen,
+  onNavigateMenu,
+  staff,
+  transactions,
+  reviews,
+  touchpoints,
+  onViewStaffDetail
+}) {
   const { currentLanguage, setLanguage, t } = useTranslation()
+  const dropdownRef = useRef(null)
+  const searchRef = useRef(null)
+  const [isSearchFocused, setIsSearchFocused] = useState(false)
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsNotiDropdownOpen(false)
+      }
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setIsSearchFocused(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [setIsNotiDropdownOpen, setIsSearchFocused])
+
+  const unreadCount = notifications ? notifications.filter((n) => !n.read).length : 0
+
+  const handleMarkAllAsRead = () => {
+    const updated = notifications.map((n) => ({ ...n, read: true }))
+    setNotifications(updated)
+    localStorage.setItem('nexora_notifications', JSON.stringify(updated))
+  }
+
+  const handleNotificationClick = (item) => {
+    const updated = notifications.map((n) => n.id === item.id ? { ...n, read: true } : n)
+    setNotifications(updated)
+    localStorage.setItem('nexora_notifications', JSON.stringify(updated))
+    setIsNotiDropdownOpen(false)
+    if (item.linkTab) {
+      onNavigateMenu(item.linkTab)
+    }
+  }
+
+  // Calculate search suggestions
+  const suggestions = useMemo(() => {
+    const query = searchQuery.toLowerCase().trim()
+    if (!query) return null
+
+    const matchedStaff = (staff || []).filter(s => 
+      s.fullName.toLowerCase().includes(query) ||
+      s.nickname.toLowerCase().includes(query) ||
+      s.position.toLowerCase().includes(query)
+    ).slice(0, 3)
+
+    const matchedTxs = (transactions || []).filter(tx => 
+      tx.id.toLowerCase().includes(query) ||
+      tx.staffName.toLowerCase().includes(query) ||
+      tx.touchpoint.toLowerCase().includes(query) ||
+      String(tx.amount).includes(query)
+    ).slice(0, 3)
+
+    const matchedReviews = (reviews || []).filter(r => 
+      r.comment.toLowerCase().includes(query) ||
+      r.staffName.toLowerCase().includes(query) ||
+      String(r.rating).includes(query)
+    ).slice(0, 3)
+
+    const matchedTps = (touchpoints || []).filter(tp => 
+      tp.name.toLowerCase().includes(query) ||
+      tp.type.toLowerCase().includes(query)
+    ).slice(0, 3)
+
+    const totalCount = matchedStaff.length + matchedTxs.length + matchedReviews.length + matchedTps.length
+
+    return {
+      staff: matchedStaff,
+      transactions: matchedTxs,
+      reviews: matchedReviews,
+      touchpoints: matchedTps,
+      totalCount
+    }
+  }, [searchQuery, staff, transactions, reviews, touchpoints])
+
   return (
     <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between gap-3 border-b border-nexoraBorder bg-nexoraSurface px-4 sm:px-5">
       <div className="flex min-w-0 items-center gap-3 sm:hidden">
         <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-9 w-9 shrink-0 object-contain" />
         <span className="truncate text-sm font-extrabold">NEXORA TOUCH</span>
       </div>
-      <div className="relative hidden w-full max-w-[385px] sm:block">
+
+      {/* Search Input with Suggestions Dropdown */}
+      <div className="relative hidden w-full max-w-[385px] sm:block" ref={searchRef}>
         <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-nexoraMuted" />
         <input
           className="nexora-search-input"
           placeholder={t('dashboard.header.search_placeholder')}
           value={searchQuery}
-          onChange={(event) => setSearchQuery(event.target.value)}
+          onChange={(event) => {
+            setSearchQuery(event.target.value)
+            setIsSearchFocused(true)
+          }}
+          onFocus={() => setIsSearchFocused(true)}
         />
+
+        {isSearchFocused && searchQuery.trim() !== '' && (
+          <div className="absolute left-0 right-0 mt-2 max-h-[380px] overflow-y-auto rounded-xl border border-nexoraBorder bg-white shadow-2xl z-50 py-2 divide-y divide-nexoraBorder animate-fadeIn">
+            
+            {/* Staff Group */}
+            {suggestions?.staff?.length > 0 && (
+              <div className="py-2">
+                <div className="px-4 py-1 text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
+                  Staff / Kỹ thuật viên
+                </div>
+                {suggestions.staff.map(member => (
+                  <button
+                    key={member.id}
+                    type="button"
+                    onClick={() => {
+                      onViewStaffDetail(member.id)
+                      onNavigateMenu('staff')
+                      setIsSearchFocused(false)
+                      setSearchQuery('')
+                    }}
+                    className="w-full text-left px-4 py-2 hover:bg-nexoraCanvas flex items-center justify-between text-xs transition"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Users className="h-3.5 w-3.5 text-nexoraBrand shrink-0" />
+                      <span className="font-bold text-nexoraText">{member.fullName}</span>
+                      <span className="text-[10px] text-nexoraMuted">({member.position})</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-nexoraBrand uppercase tracking-wider">Xem Chi Tiết ›</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Transactions Group */}
+            {suggestions?.transactions?.length > 0 && (
+              <div className="py-2">
+                <div className="px-4 py-1 text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
+                  Transactions / Giao dịch
+                </div>
+                {suggestions.transactions.map(tx => (
+                  <button
+                    key={tx.id}
+                    type="button"
+                    onClick={() => {
+                      onNavigateMenu('reports')
+                      setIsSearchFocused(false)
+                      setSearchQuery('')
+                    }}
+                    className="w-full text-left px-4 py-2 hover:bg-nexoraCanvas flex items-center justify-between text-xs transition"
+                  >
+                    <div className="flex items-center gap-2">
+                      <ClipboardList className="h-3.5 w-3.5 text-nexoraBrand shrink-0" />
+                      <span className="font-bold text-nexoraText">{tx.id}</span>
+                      <span className="text-[10px] text-nexoraMuted">({tx.staffName} - ${tx.amount})</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-nexoraBrand uppercase tracking-wider">Xem GD ›</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Reviews Group */}
+            {suggestions?.reviews?.length > 0 && (
+              <div className="py-2">
+                <div className="px-4 py-1 text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
+                  Reviews / Đánh giá
+                </div>
+                {suggestions.reviews.map(rev => (
+                  <button
+                    key={rev.id}
+                    type="button"
+                    onClick={() => {
+                      onNavigateMenu('reviews')
+                      setIsSearchFocused(false)
+                      setSearchQuery('')
+                    }}
+                    className="w-full text-left px-4 py-2 hover:bg-nexoraCanvas flex items-center justify-between text-xs transition"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500 shrink-0" />
+                      <span className="font-bold text-nexoraText">{rev.rating}★</span>
+                      <span className="text-[10px] text-nexoraMuted truncate">"{rev.comment}"</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-nexoraBrand uppercase tracking-wider shrink-0 ml-2">Xem ›</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Touchpoints Group */}
+            {suggestions?.touchpoints?.length > 0 && (
+              <div className="py-2">
+                <div className="px-4 py-1 text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
+                  Touchpoints / Điểm chạm
+                </div>
+                {suggestions.touchpoints.map(tp => (
+                  <button
+                    key={tp.id}
+                    type="button"
+                    onClick={() => {
+                      onNavigateMenu('touchpoints')
+                      setIsSearchFocused(false)
+                      setSearchQuery('')
+                    }}
+                    className="w-full text-left px-4 py-2 hover:bg-nexoraCanvas flex items-center justify-between text-xs transition"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Pointer className="h-3.5 w-3.5 text-nexoraBrand shrink-0" />
+                      <span className="font-bold text-nexoraText">{tp.name}</span>
+                      <span className="text-[10px] text-nexoraMuted">({tp.type})</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-nexoraBrand uppercase tracking-wider">Xem ›</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {suggestions?.totalCount === 0 && (
+              <div className="py-6 text-center text-xs text-nexoraSubtle">
+                Không tìm thấy kết quả nào trùng khớp.
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex shrink-0 items-center gap-2 sm:gap-4">
@@ -303,9 +541,97 @@ function DashboardHeader({ searchQuery, setSearchQuery, onAddTouchpoint, onSetti
           </button>
         </div>
 
-        <IconButton label="Notifications" className="hidden sm:inline-flex">
-          <Bell className="h-5 w-5" />
-        </IconButton>
+        {/* Notifications Icon and Dropdown */}
+        <div className="relative hidden sm:inline-flex" ref={dropdownRef}>
+          <IconButton 
+            label="Notifications" 
+            onClick={() => setIsNotiDropdownOpen(!isNotiDropdownOpen)} 
+            className="relative"
+          >
+            <Bell className="h-5 w-5" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white animate-pulse" />
+            )}
+          </IconButton>
+
+          {isNotiDropdownOpen && (
+            <div className="absolute right-0 mt-12 w-80 max-h-[460px] flex flex-col rounded-xl border border-nexoraBorder bg-white shadow-2xl z-50 animate-fadeIn overflow-hidden">
+              <div className="flex items-center justify-between border-b border-nexoraBorder px-4 py-3 bg-nexoraSurfaceMuted">
+                <span className="text-xs font-black uppercase text-nexoraText tracking-wider">
+                  {t('dashboard.notifications.title') || 'Thông báo'} ({unreadCount})
+                </span>
+                {unreadCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleMarkAllAsRead}
+                    className="text-[10px] font-bold text-nexoraBrand hover:underline"
+                  >
+                    {t('dashboard.notifications.mark_all_read') || 'Đọc tất cả'}
+                  </button>
+                )}
+              </div>
+              <div className="flex-grow overflow-y-auto max-h-[380px] divide-y divide-nexoraBorder">
+                {notifications && notifications.length > 0 ? (
+                  notifications.map((item) => {
+                    const IconComponent = {
+                      tip_success: Wallet,
+                      feedback_alert: AlertTriangle,
+                      review_good: Star
+                    }[item.type] || Bell
+
+                    const iconColor = {
+                      tip_success: 'bg-emerald-500 text-white',
+                      feedback_alert: 'bg-amber-500 text-white',
+                      review_good: 'bg-luxuryGold text-white'
+                    }[item.type] || 'bg-nexoraBrand text-white'
+
+                    const isUnread = !item.read
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => handleNotificationClick(item)}
+                        className={`w-full text-left p-3.5 hover:bg-nexoraCanvas transition-colors flex gap-3 items-start border-b border-nexoraBorder/50 last:border-0 relative ${
+                          isUnread ? 'bg-nexoraBrandSoft/40' : 'bg-white'
+                        }`}
+                      >
+                        {isUnread && (
+                          <span className="absolute left-1.5 top-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-red-500" />
+                        )}
+                        <span className={`flex h-8 w-8 items-center justify-center rounded-lg shrink-0 ${iconColor} ${
+                          !isUnread ? 'opacity-60' : ''
+                        }`}>
+                          <IconComponent className="h-4 w-4" />
+                        </span>
+                        <div className="flex-grow min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className={`text-xs truncate ${
+                              isUnread ? 'font-extrabold text-nexoraText' : 'font-bold text-nexoraMuted'
+                            }`}>
+                              {item.title}
+                            </span>
+                            <span className="text-[10px] text-nexoraSubtle shrink-0 font-medium">{item.time}</span>
+                          </div>
+                          <p className={`text-[11px] leading-normal mt-1 break-words ${
+                            isUnread ? 'font-semibold text-nexoraText' : 'font-medium text-nexoraMuted'
+                          }`}>
+                            {item.message}
+                          </p>
+                        </div>
+                      </button>
+                    )
+                  })
+                ) : (
+                  <div className="py-12 text-center text-nexoraSubtle flex flex-col items-center justify-center">
+                    <Bell className="h-8 w-8 text-nexoraBorder mb-2" />
+                    <p className="text-xs font-semibold">{t('dashboard.notifications.empty') || 'Không có thông báo mới.'}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
         <IconButton label="Settings" onClick={onSettings} className="hidden sm:inline-flex">
           <Settings className="h-5 w-5" />
         </IconButton>
@@ -894,11 +1220,11 @@ function ReviewRoutingPanel({ onOpen }) {
       </div>
       <div className="mt-8 space-y-4">
         <div className="flex h-14 items-center justify-between rounded-lg bg-nexoraBrandSoft px-5 text-base font-medium text-blue-700">
-          <span>4-5★ to Google/Yelp</span>
+          <span>4-5<span className="text-luxuryGold ml-flox-4 inline-block font-normal">★</span> to Google/Yelp</span>
           <ArrowRight className="h-5 w-5" />
         </div>
         <div className="flex h-14 items-center justify-between rounded-lg bg-nexoraBrand px-5 text-base font-medium text-white">
-          <span>1-3★ private recovery</span>
+          <span>1-3<span className="text-luxuryGold ml-flox-4 inline-block font-normal">★</span> private recovery</span>
           <ShieldAlert className="h-5 w-5" />
         </div>
         <p className="pt-2 text-sm font-medium leading-6 text-nexoraMuted">
@@ -1067,17 +1393,18 @@ function TouchpointsView({ touchpoints, newTouchpoint, setNewTouchpoint, onAdd, 
             placeholder={t('dashboard.modals.tp_name_label')}
             className="h-10 rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand"
           />
-          <select
+          <CustomSelect
+            buttonClass="h-10 text-sm focus:border-nexoraBrand"
             value={newTouchpoint.type}
             onChange={(event) => setNewTouchpoint({ ...newTouchpoint, type: event.target.value })}
-            className="h-10 rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand"
-          >
-            <option value="Table QR">Table QR</option>
-            <option value="Front Desk">Front Desk</option>
-            <option value="Receipt QR">Receipt QR</option>
-            <option value="Business Main">Business Main</option>
-            <option value="Staff QR">Staff QR</option>
-          </select>
+            options={[
+              { value: 'Table QR', label: 'Table QR' },
+              { value: 'Front Desk', label: 'Front Desk' },
+              { value: 'Receipt QR', label: 'Receipt QR' },
+              { value: 'Business Main', label: 'Business Main' },
+              { value: 'Staff QR', label: 'Staff QR' }
+            ]}
+          />
           <button onClick={onAdd} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white">
             <Plus className="h-4 w-4" />
             {t('setup.add_tp_btn')}
@@ -1117,14 +1444,19 @@ function ReviewsView({ reviews, staff, filter, setFilter }) {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-extrabold text-nexoraText">{t('dashboard.menu.reviews')}</h2>
-          <p className="mt-1 text-xs text-nexoraMuted">{t('setup.review_routing_policy')}</p>
+          <p className="mt-1 text-xs text-nexoraMuted">{renderTextWithGoldStars(t('setup.review_routing_policy'))}</p>
         </div>
-        <select value={filter} onChange={(event) => setFilter(event.target.value)} className="h-9 rounded-lg border border-nexoraBorder bg-white px-3 text-xs font-semibold text-nexoraText outline-none">
-          <option value="all">{t('staff_detail.tab_all')}</option>
-          {staff.map((member) => (
-            <option key={member.id} value={member.id}>{member.nickname}</option>
-          ))}
-        </select>
+        <CustomSelect
+          size="sm"
+          className="w-40 font-semibold"
+          buttonClass="h-9 px-3 text-xs"
+          value={filter}
+          onChange={(event) => setFilter(event.target.value)}
+          options={[
+            { value: 'all', label: t('staff_detail.tab_all') },
+            ...staff.map((member) => ({ value: member.id, label: member.nickname }))
+          ]}
+        />
       </div>
       <div className="space-y-3">
         {filtered.map((review) => (
@@ -1443,8 +1775,46 @@ export default function Dashboard({ setupData, onLogout }) {
   const [activeMenu, setActiveMenu] = useState('overview')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [staff, setStaff] = useState(INITIAL_STAFF)
-  const [transactions] = useState(INITIAL_TRANSACTIONS)
-  const [reviews] = useState(INITIAL_REVIEWS)
+
+  const [transactions, setTransactions] = useState(() => {
+    try {
+      const saved = localStorage.getItem('nexora_transactions')
+      if (saved) return JSON.parse(saved)
+    } catch (e) {
+      console.error(e)
+    }
+    localStorage.setItem('nexora_transactions', JSON.stringify(INITIAL_TRANSACTIONS))
+    return INITIAL_TRANSACTIONS
+  })
+
+  const [reviews, setReviews] = useState(() => {
+    try {
+      const saved = localStorage.getItem('nexora_reviews')
+      if (saved) return JSON.parse(saved)
+    } catch (e) {
+      console.error(e)
+    }
+    localStorage.setItem('nexora_reviews', JSON.stringify(INITIAL_REVIEWS))
+    return INITIAL_REVIEWS
+  })
+
+  const [notifications, setNotifications] = useState(() => {
+    try {
+      const saved = localStorage.getItem('nexora_notifications')
+      if (saved) return JSON.parse(saved)
+    } catch (e) {
+      console.error(e)
+    }
+    const initial = [
+      { id: '1', type: 'feedback_alert', title: 'New Internal Feedback (2★)', message: 'Customer left feedback for Ashley P. at Pedicure Chair 02: "Great polish, but I waited 20 minutes after my appointment time."', time: '10 mins ago', read: false, linkTab: 'reviews' },
+      { id: '2', type: 'tip_success', title: 'New Tip Received ($28.00)', message: 'Mia Tran received $28.00 tip via Venmo at Manicure Station 03.', time: '25 mins ago', read: true, linkTab: 'reports' },
+      { id: '3', type: 'feedback_alert', title: 'New Internal Feedback (1★)', message: 'Customer left feedback for Vivian L. at Front Desk: "My color chipped after one day. I need someone to contact me."', time: '1 day ago', read: true, linkTab: 'reviews' }
+    ]
+    localStorage.setItem('nexora_notifications', JSON.stringify(initial))
+    return initial
+  })
+
+  const [isNotiDropdownOpen, setIsNotiDropdownOpen] = useState(false)
   const [touchpoints, setTouchpoints] = useState(INITIAL_TOUCHPOINTS)
   const [isStaffModalOpen, setIsStaffModalOpen] = useState(false)
   const [editingStaffId, setEditingStaffId] = useState(null)
@@ -1508,6 +1878,70 @@ export default function Dashboard({ setupData, onLogout }) {
       }
     }
   }, [staff, touchpoints])
+
+  // Listen for storage events (e.g. from customer flow tipping)
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      try {
+        if (e.key === 'nexora_transactions' && e.newValue) {
+          setTransactions(JSON.parse(e.newValue))
+        } else if (e.key === 'nexora_reviews' && e.newValue) {
+          setReviews(JSON.parse(e.newValue))
+        } else if (e.key === 'nexora_notifications' && e.newValue) {
+          setNotifications(JSON.parse(e.newValue))
+        }
+      } catch (err) {
+        console.error('Error parsing synced storage key', e.key, err)
+      }
+    }
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [])
+
+  // Filter lists based on searchQuery
+  const filteredStaff = useMemo(() => {
+    if (!searchQuery) return staff
+    const query = searchQuery.toLowerCase().trim()
+    return staff.filter(member => 
+      member.fullName.toLowerCase().includes(query) ||
+      member.nickname.toLowerCase().includes(query) ||
+      member.position.toLowerCase().includes(query)
+    )
+  }, [staff, searchQuery])
+
+  const filteredTouchpoints = useMemo(() => {
+    if (!searchQuery) return touchpoints
+    const query = searchQuery.toLowerCase().trim()
+    return touchpoints.filter(point => 
+      point.name.toLowerCase().includes(query) ||
+      point.type.toLowerCase().includes(query) ||
+      (point.staffName && point.staffName.toLowerCase().includes(query))
+    )
+  }, [touchpoints, searchQuery])
+
+  const filteredReviews = useMemo(() => {
+    if (!searchQuery) return reviews
+    const query = searchQuery.toLowerCase().trim()
+    return reviews.filter(rev => 
+      rev.comment.toLowerCase().includes(query) ||
+      rev.staffName.toLowerCase().includes(query) ||
+      rev.category.toLowerCase().includes(query) ||
+      String(rev.rating).includes(query)
+    )
+  }, [reviews, searchQuery])
+
+  const filteredTransactions = useMemo(() => {
+    if (!searchQuery) return transactions
+    const query = searchQuery.toLowerCase().trim()
+    return transactions.filter(tx => 
+      tx.id.toLowerCase().includes(query) ||
+      tx.staffName.toLowerCase().includes(query) ||
+      tx.touchpoint.toLowerCase().includes(query) ||
+      tx.paymentMethod.toLowerCase().includes(query) ||
+      tx.status.toLowerCase().includes(query) ||
+      String(tx.amount).includes(query)
+    )
+  }, [transactions, searchQuery])
 
   const metrics = useMemo(() => ({
     totalTips: 2742.68,
@@ -1679,11 +2113,11 @@ export default function Dashboard({ setupData, onLogout }) {
         />
       )
     }
-    if (activeMenu === 'staff') return <StaffView staff={staff} onAdd={openAddStaff} onEdit={openEditStaff} onDelete={deleteStaff} onQr={previewQr} onToggle={toggleStaff} onToggleTipsFlow={toggleStaffTipsFlow} onViewDetail={setViewingStaffDetailId} />
+    if (activeMenu === 'staff') return <StaffView staff={filteredStaff} onAdd={openAddStaff} onEdit={openEditStaff} onDelete={deleteStaff} onQr={previewQr} onToggle={toggleStaff} onToggleTipsFlow={toggleStaffTipsFlow} onViewDetail={setViewingStaffDetailId} />
     if (activeMenu === 'touchpoints') {
       return (
         <TouchpointsView
-          touchpoints={touchpoints}
+          touchpoints={filteredTouchpoints}
           newTouchpoint={newTouchpoint}
           setNewTouchpoint={setNewTouchpoint}
           onAdd={addTouchpoint}
@@ -1692,8 +2126,8 @@ export default function Dashboard({ setupData, onLogout }) {
         />
       )
     }
-    if (activeMenu === 'reviews') return <ReviewsView reviews={reviews} staff={staff} filter={reviewFilterStaff} setFilter={setReviewFilterStaff} />
-    if (activeMenu === 'reports') return <ReportsView transactions={transactions} />
+    if (activeMenu === 'reviews') return <ReviewsView reviews={filteredReviews} staff={staff} filter={reviewFilterStaff} setFilter={setReviewFilterStaff} />
+    if (activeMenu === 'reports') return <ReportsView transactions={filteredTransactions} />
     return <ComingSoon activeMenu={activeMenu} onBack={() => setActiveMenu('overview')} />
   }
 
@@ -1707,6 +2141,16 @@ export default function Dashboard({ setupData, onLogout }) {
           setSearchQuery={setSearchQuery}
           onAddTouchpoint={() => setActiveMenu('touchpoints')}
           onSettings={() => setActiveMenu('settings')}
+          notifications={notifications}
+          setNotifications={setNotifications}
+          isNotiDropdownOpen={isNotiDropdownOpen}
+          setIsNotiDropdownOpen={setIsNotiDropdownOpen}
+          onNavigateMenu={handleNavigateMenu}
+          staff={staff}
+          transactions={transactions}
+          reviews={reviews}
+          touchpoints={touchpoints}
+          onViewStaffDetail={setViewingStaffDetailId}
         />
 
         <div className="sticky top-16 z-10 flex items-center justify-between border-b border-nexoraBorder bg-white px-4 py-3 lg:hidden">
@@ -1729,11 +2173,6 @@ export default function Dashboard({ setupData, onLogout }) {
             >
               Back to Dashboard
             </button>
-          )}
-          {searchQuery && (
-            <div className="mb-5 rounded-xl border border-nexoraBorder bg-white px-4 py-3 text-sm font-semibold text-nexoraMuted shadow-nexora-soft">
-              Filtering dashboard for <span className="font-extrabold text-nexoraText">"{searchQuery}"</span>
-            </div>
           )}
           {renderContent()}
         </main>
