@@ -41,12 +41,31 @@ describe('Nexora Touch E2E Test Suite (CloakBrowser)', () => {
     // Navigate directly to the customer portal URL for technician Mia Tran
     await page.goto('http://localhost:3000/?flow=customer&tech=staff/mia-t&biz=Golden+Glow+Nail+Spa');
 
-    // Wait for the customer portal page to load
-    await page.waitForSelector('text=Tip & Review');
+    // Wait for the customer portal page to load (Tip amount selection)
+    await page.waitForSelector('text=Add a Tip');
 
     // Select $15 tip
     const tipBtn = page.locator('button:has-text("$15")');
     await tipBtn.click();
+
+    // Click "Next" button to go to payment method selection
+    const nextBtn = page.locator('button:has-text("Next"), button:has-text("Tiếp theo")');
+    await nextBtn.click();
+
+    // Select payment method - Venmo
+    await page.waitForSelector('text=How would you like to pay?');
+    const venmoBtn = page.locator('button:has-text("Venmo")');
+    await venmoBtn.click();
+
+    // Wait for payment processing and verification routing success screen
+    await page.waitForSelector('text=Thank You!');
+
+    // Click Done to proceed to Leave Review step
+    const doneBtn = page.locator('button:has-text("Done"), button:has-text("Hoàn tất")');
+    await doneBtn.click();
+
+    // Now on Leave Review page - wait for title
+    await page.waitForSelector('text=How was your experience?');
 
     // Select 5 stars rating (click the 5th star button)
     const starBtns = page.locator('button:has(svg.lucide-star)');
@@ -59,66 +78,67 @@ describe('Nexora Touch E2E Test Suite (CloakBrowser)', () => {
     }
 
     // Type comment
-    await page.fill('textarea[placeholder*="feedback"]', 'Excellent service by Mia!');
+    await page.fill('textarea[placeholder*="nails"]', 'Excellent service by Mia!');
 
-    // Click "Proceed to Payment" button
-    const payBtn = page.locator('button:has-text("Proceed to Payment"), button:has-text("Thanh toán")');
-    await payBtn.click();
+    // Submit review
+    const submitBtn = page.locator('button:has-text("Submit Review")');
+    await submitBtn.click();
 
-    // Select payment method - Venmo
-    await page.waitForSelector('text=Select Payment');
-    const venmoBtn = page.locator('button:has-text("Pay via Venmo"), button:has-text("Venmo")');
-    await venmoBtn.click();
-
-    // Wait for payment processing and verification routing success screen
-    await page.waitForSelector('text=Payment Successful');
-
-    // Check that Google review button is visible (since rating was 5★)
-    const googleBtn = page.locator('a:has-text("Review on Google"), a:has-text("Đánh giá Google")');
+    // Now on Google/Yelp routing screen - verify Google review button is visible (since rating was 5★)
+    await page.waitForSelector('text=If you loved your experience');
+    const googleBtn = page.locator('a:has-text("Review us on Google"), a:has-text("Đánh giá Google")');
     expect(await googleBtn.isVisible()).toBe(true);
-
-    // Verify the negative private feedback button is NOT visible
-    const privateFeedbackBtn = page.locator('button:has-text("Submit Secure Feedback"), button:has-text("Gửi Góp Ý Bảo Mật")');
-    expect(await privateFeedbackBtn.isVisible()).toBe(false);
   });
 
   it('Flow 3: Customer Flow - Scenario B (Negative 2★ Review)', async () => {
     // Navigate directly to the customer portal URL
     await page.goto('http://localhost:3000/?flow=customer&tech=staff/mia-t&biz=Golden+Glow+Nail+Spa');
 
-    // Wait for the customer portal page to load
-    await page.waitForSelector('text=Tip & Review');
+    // Wait for the customer portal page to load (Tip amount selection)
+    await page.waitForSelector('text=Add a Tip');
 
     // Select $5 tip
     const tipBtn = page.locator('button:has-text("$5")');
     await tipBtn.click();
+
+    // Click "Next" button to go to payment method selection
+    const nextBtn = page.locator('button:has-text("Next"), button:has-text("Tiếp theo")');
+    await nextBtn.click();
+
+    // Select payment method - Venmo
+    await page.waitForSelector('text=How would you like to pay?');
+    const venmoBtn = page.locator('button:has-text("Venmo")');
+    await venmoBtn.click();
+
+    // Wait for success screen
+    await page.waitForSelector('text=Thank You!');
+
+    // Click Done to proceed to Leave Review step
+    const doneBtn = page.locator('button:has-text("Done"), button:has-text("Hoàn tất")');
+    await doneBtn.click();
+
+    // Now on Leave Review page - wait for title
+    await page.waitForSelector('text=How was your experience?');
 
     // Select 2 stars rating (click the 2nd star button)
     const starBtns = page.locator('button:has(svg.lucide-star)');
     await starBtns.nth(1).click();
 
     // Type comment
-    await page.fill('textarea[placeholder*="feedback"]', 'The service was very rushed.');
+    await page.fill('textarea[placeholder*="nails"]', 'The service was very rushed.');
 
-    // Click "Proceed to Payment"
-    const payBtn = page.locator('button:has-text("Proceed to Payment"), button:has-text("Thanh toán")');
-    await payBtn.click();
+    // Submit review
+    const submitBtn = page.locator('button:has-text("Submit Review")');
+    await submitBtn.click();
 
-    // Select payment method - Venmo
-    await page.waitForSelector('text=Select Payment');
-    const venmoBtn = page.locator('button:has-text("Pay via Venmo"), button:has-text("Venmo")');
-    await venmoBtn.click();
+    // Should transition directly to Final Done screen (Google routing is bypassed for low ratings)
+    await page.waitForSelector('text=Thank You!');
+    const finalMsg = page.locator('p:has-text("Thank you for your support!")');
+    expect(await finalMsg.isVisible()).toBe(true);
 
-    // Wait for success screen
-    await page.waitForSelector('text=Payment Successful');
-
-    // Verify that Google review button is HIDDEN
-    const googleBtn = page.locator('a:has-text("Review on Google"), a:has-text("Đánh giá Google")');
+    // Verify that Google/Yelp buttons are NOT on the page
+    const googleBtn = page.locator('a:has-text("Review us on Google")');
     expect(await googleBtn.isVisible()).toBe(false);
-
-    // Verify that private secure feedback button is VISIBLE (since rating was 2★)
-    const privateFeedbackBtn = page.locator('button:has-text("Submit Secure Feedback"), button:has-text("Gửi Góp Ý Bảo Mật")');
-    expect(await privateFeedbackBtn.isVisible()).toBe(true);
   });
 
   it('Flow 4: Customer Flow - Edge Case: Store QR (Select Staff Member & Search)', async () => {
@@ -126,19 +146,29 @@ describe('Nexora Touch E2E Test Suite (CloakBrowser)', () => {
     await page.goto('http://localhost:3000/?flow=customer&biz=Golden+Glow+Nail+Spa');
 
     // Wait for the staff selection screen to render
-    await page.waitForSelector('text=Select Staff Member');
+    await page.waitForSelector('text=Choose your service provider');
 
     // Search for "Mia"
     await page.fill('input[placeholder*="Search"]', 'Mia');
 
     // Click "Mia Tran" from the list
     const miaCard = page.locator('button:has-text("Mia Tran")');
+    await miaCard.waitFor({ state: 'visible' });
     await miaCard.click();
 
-    // Verify it navigates to the "Tip & Review" form step for Mia Tran
-    await page.waitForSelector('text=Tip & Review');
+    // Give React state a moment to toggle selection and enable the Next button
+    await page.waitForTimeout(500);
+
+    // Click "Next" button to proceed to tipping screen
+    const nextBtn = page.locator('button:has-text("Next"), button:has-text("Tiếp theo")');
+    await nextBtn.waitFor({ state: 'visible' });
+    await nextBtn.click();
+
+    // Verify it navigates to the tip selection step for Mia Tran
+    await page.waitForSelector('text=Add a Tip');
     const content = await page.textContent('body');
-    expect(content).toContain('Mia Tran');
+    expect(content).toContain('Mia T.');
+
   });
 
   it('Flow 5: Customer Flow - Edge Case: Inactive/Disabled Staff Filtering', async () => {
@@ -146,7 +176,7 @@ describe('Nexora Touch E2E Test Suite (CloakBrowser)', () => {
     await page.goto('http://localhost:3000/?flow=customer&biz=Golden+Glow+Nail+Spa');
 
     // Wait for the staff selection screen to render
-    await page.waitForSelector('text=Select Staff Member');
+    await page.waitForSelector('text=Choose your service provider');
 
     // Search for "Hanna" (Hanna Nguyen is inactive by default in CustomerFlow.jsx)
     await page.fill('input[placeholder*="Search"]', 'Hanna');
@@ -162,14 +192,14 @@ describe('Nexora Touch E2E Test Suite (CloakBrowser)', () => {
     await page.goto('http://localhost:3000/?flow=customer&tech=staff/mia-t&biz=Golden+Glow+Nail+Spa');
 
     // Wait for the customer portal page to load
-    await page.waitForSelector('text=Tip & Review');
+    await page.waitForSelector('text=Add a Tip');
 
-    // Select Custom tip
-    const customTipBtn = page.locator('button:has-text("Custom")');
+    // Select Custom tip ("Other" button)
+    const customTipBtn = page.locator('button:has-text("Other"), button:has-text("Khác")');
     await customTipBtn.click();
 
     // Type invalid tip - e.g. 0
-    await page.fill('input[placeholder*="custom tip"]', '0');
+    await page.fill('input[placeholder*="0.00"]', '0');
 
     // Listen for alert dialog
     let alertMsg = '';
@@ -178,8 +208,8 @@ describe('Nexora Touch E2E Test Suite (CloakBrowser)', () => {
       await dialog.accept();
     });
 
-    // Click "Proceed to Payment"
-    const payBtn = page.locator('button:has-text("Proceed to Payment"), button:has-text("Thanh toán")');
+    // Click Next
+    const payBtn = page.locator('button:has-text("Next"), button:has-text("Tiếp theo")');
     await payBtn.click();
 
     // Small delay to let dialog fire

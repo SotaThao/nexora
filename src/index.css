@@ -69,7 +69,7 @@
     border: 1px solid #e2e8f0; /* Flox Slate Gray */
     border-radius: 6px; /* flox-buttons */
     padding: 4px 6px;
-    font-family: 'GeistSans', 'Inter', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: 14px;
     font-weight: 500;
     transition: all 0.2s ease-in-out;
@@ -93,7 +93,7 @@
     border: 1px solid #f3f3f3; /* Light Fog */
     border-radius: 12px; /* flox-cards radius */
     padding: 12px 25px;
-    font-family: 'GeistSans', 'Inter', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: 14px;
     font-weight: 500;
     transition: all 0.2s ease-in-out;
@@ -118,7 +118,7 @@
     border: 1px solid #f3f3f3;
     border-radius: 12px;
     padding: 12px 25px;
-    font-family: 'GeistSans', 'Inter', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: 14px;
     font-weight: 600;
     box-shadow: rgba(255, 255, 255, 0.2) 0px -2px 1px 0px inset, rgba(255, 255, 255, 0.1) 0px 4px 16px 0px inset, rgba(0, 0, 0, 0.08) 0px 6px 16px 0px;
@@ -145,7 +145,7 @@
     color: #ffffff;
     border-radius: 12px;
     padding: 12px 25px;
-    font-family: 'GeistSans', 'Inter', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: 14px;
     font-weight: 600;
     transition: opacity 0.2s ease-in-out;
@@ -234,6 +234,11 @@
     font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
   }
 
+  @page {
+    size: portrait;
+    margin: 0.5in;
+  }
+
   /* Target backdrop to fill print page and center content */
   .qr-modal-backdrop {
     position: absolute !important;
@@ -255,12 +260,12 @@
   /* Target modal container inside backdrop */
   .qr-modal-container {
     width: 100% !important;
-    max-width: 600px !important;
+    max-width: 100% !important;
     background: #ffffff !important;
     border: none !important;
     box-shadow: none !important;
     margin: 0 auto !important;
-    padding: 30px !important;
+    padding: 0 !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
@@ -268,40 +273,29 @@
     text-align: center !important;
   }
 
-  /* Title: "Personal QR - Mia T." */
-  .qr-print-title {
-    font-size: 28pt !important;
-    font-weight: 800 !important;
-    color: #0f172a !important;
-    margin: 0 0 6pt 0 !important;
-    text-align: center !important;
-    display: block !important;
+  /* Hide headers, subtitles, and URLs outside the card during print */
+  .qr-print-title,
+  .qr-print-subtitle,
+  .qr-print-url {
+    display: none !important;
   }
 
-  /* Subtitle: "Gel-X Artist" */
-  .qr-print-subtitle {
-    font-size: 15pt !important;
-    font-weight: 500 !important;
-    color: #475569 !important;
-    margin: 0 0 28pt 0 !important;
-    text-align: center !important;
-    display: block !important;
-  }
-
-  /* Card wrapper */
+  /* Card wrapper - set to standard 4x6 inches */
   .qr-print-card {
-    width: 440px !important;
-    height: 640px !important;
+    width: 4.0in !important;
+    height: 6.0in !important;
     background: #ffffff !important;
-    border: 2px solid #e2e8f0 !important;
-    border-radius: 36px !important;
-    padding: 36px !important;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+    border: 1.5px dashed #cbd5e1 !important; /* Guide for scissors/cutting */
+    border-radius: 0.25in !important;
+    padding: 0.3in 0.35in !important;
+    box-shadow: none !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
     justify-content: space-between !important;
     margin: 0 auto !important;
+    box-sizing: border-box !important;
+    page-break-inside: avoid !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -311,63 +305,63 @@
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 8px !important;
-    margin-top: 10px !important;
+    gap: 6px !important;
+    margin-top: 0 !important;
   }
 
   .qr-print-brand-logo {
-    width: 32px !important;
-    height: 32px !important;
+    width: 26pt !important;
+    height: 26pt !important;
   }
 
   .qr-print-brand-text {
-    font-size: 14pt !important;
+    font-size: 11pt !important;
     font-weight: 900 !important;
-    letter-spacing: 1px !important;
-    color: #0f172a !important;
+    letter-spacing: 0.5px !important;
+    color: #020617 !important;
   }
 
-  /* Hide top gradient strip */
+  /* Hide top gradient strip if present */
   .qr-print-card-strip {
     display: none !important;
   }
 
-  /* Business Name: "GOLDEN GLOW NAIL SPA & SALON" */
+  /* QR Owner Name (Primary Title) */
   .qr-print-biz-name {
-    font-size: 18pt !important;
-    font-weight: 800 !important;
-    color: #2b59ff !important;
+    font-size: 15pt !important;
+    font-weight: 850 !important;
+    color: #1e3a8a !important; /* Premium navy */
     text-transform: uppercase !important;
     text-align: center !important;
-    margin-top: 15px !important;
-    letter-spacing: 0.5px !important;
-    line-height: 1.3 !important;
+    margin-top: 10pt !important;
+    letter-spacing: 0.25px !important;
+    line-height: 1.25 !important;
   }
 
-  /* Scan instruction: "SCAN TO TIP AND REVIEW" */
-  .qr-print-scan-text {
-    font-size: 12pt !important;
-    font-weight: 700 !important;
+  /* Salon Info (Secondary text) */
+  .qr-print-staff-info {
+    font-size: 9.5pt !important;
+    font-weight: 550 !important;
     color: #475569 !important;
-    text-transform: uppercase !important;
     text-align: center !important;
-    margin-top: 10px !important;
-    letter-spacing: 0.5px !important;
+    margin-top: 3pt !important;
+    line-height: 1.25 !important;
   }
 
   /* QR Code Wrapper */
   .qr-print-qr-wrapper {
-    width: 260px !important;
-    height: 260px !important;
+    width: 2.1in !important;
+    height: 2.1in !important;
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
-    border-radius: 24px !important;
-    padding: 20px !important;
+    border-radius: 0.15in !important;
+    padding: 0.12in !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
-    margin: 20px 0 !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+    margin: 8pt 0 !important;
+    box-sizing: border-box !important;
   }
 
   .qr-print-qr-image {
@@ -376,35 +370,33 @@
     object-fit: contain !important;
   }
 
+  /* Subtitle / Scan Instruction text: "SCAN TO TIP & REVIEW" */
+  .qr-print-scan-text {
+    font-size: 10.5pt !important;
+    font-weight: 750 !important;
+    color: #334155 !important;
+    text-transform: uppercase !important;
+    text-align: center !important;
+    letter-spacing: 0.5px !important;
+    line-height: 1.3 !important;
+  }
+
   /* Card Footer: Scissor icon & Secure redirect text */
   .qr-print-footer {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 8px !important;
-    font-size: 12pt !important;
+    gap: 4px !important;
+    font-size: 7.5pt !important;
     font-weight: 700 !important;
-    color: #1e293b !important;
-    margin-bottom: 10px !important;
+    color: #64748b !important;
+    margin-top: 4pt !important;
   }
 
   .qr-print-footer svg {
-    width: 18px !important;
-    height: 18px !important;
+    width: 10pt !important;
+    height: 10pt !important;
     color: #2b59ff !important;
     display: inline-block !important;
-  }
-
-  /* URL text below card: "nexora.vlinkpay.com/touch/staff/mia-t" */
-  .qr-print-url {
-    font-size: 13pt !important;
-    font-family: monospace !important;
-    color: #64748b !important;
-    background: transparent !important;
-    border: none !important;
-    margin-top: 30px !important;
-    padding: 0 !important;
-    text-align: center !important;
-    display: block !important;
   }
 }

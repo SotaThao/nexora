@@ -12,22 +12,58 @@ describe('CustomerFlow Component Unit Tests', () => {
       </LanguageProvider>
     );
 
-    // Verify header of customer flow
-    expect(screen.getByText(/Secure Gate/i)).toBeInTheDocument();
-
     // Select a staff member first
     const staffBtn = screen.getByText('Mia Tran');
     expect(staffBtn).toBeInTheDocument();
     fireEvent.click(staffBtn);
 
-    // Find the Proceed to Payment button
-    const payBtn = screen.getByRole('button', { name: /Proceed to Payment/i });
-    expect(payBtn).toBeInTheDocument();
+    // Click Next to advance from select_staff to tip_amount
+    const nextBtn1 = screen.getByRole('button', { name: /Next/i });
+    expect(nextBtn1).toBeInTheDocument();
+    fireEvent.click(nextBtn1);
 
-    // Click Proceed to Payment
-    fireEvent.click(payBtn);
+    // Click Next to advance from tip_amount to payment
+    const nextBtn2 = screen.getByRole('button', { name: /Next/i });
+    expect(nextBtn2).toBeInTheDocument();
+    fireEvent.click(nextBtn2);
 
     // Verify we are now on the payment gateway selection step
-    expect(screen.getByText(/Select Payment Gateway/i)).toBeInTheDocument();
+    expect(screen.getByText(/How would you like to pay\?/i)).toBeInTheDocument();
+  });
+
+  it('blocks the flow and shows warning when the scanned touchpoint is inactive', () => {
+    // Setup localStorage mock data
+    const mockSetup = {
+      businessInfo: { name: 'Golden Glow Nail Spa', industry: 'Nail Salon' },
+      staffList: [],
+      touchPoints: [
+        { id: 'tp-mani-1', name: 'Manicure Station 01', type: 'Table QR', isActive: false }
+      ]
+    };
+    localStorage.setItem('nexora_merchant_setup', JSON.stringify(mockSetup));
+
+    // Mock window.location
+    const originalLocation = window.location;
+    delete window.location;
+    window.location = {
+      ...originalLocation,
+      search: '?tech=tp/tp-mani-1&biz=Golden%20Glow%20Nail%20Spa',
+      origin: 'http://localhost:3000',
+      pathname: '/'
+    };
+
+    render(
+      <LanguageProvider>
+        <CustomerFlow />
+      </LanguageProvider>
+    );
+
+    // Verify warning is displayed
+    expect(screen.getByText(/Station Inactive/i)).toBeInTheDocument();
+    expect(screen.getByText(/This QR touchpoint is currently disabled by the owner./i)).toBeInTheDocument();
+
+    // Clean up
+    localStorage.removeItem('nexora_merchant_setup');
+    window.location = originalLocation;
   });
 });

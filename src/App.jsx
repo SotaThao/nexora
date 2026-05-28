@@ -2,21 +2,59 @@ import React, { useState, useEffect } from 'react'
 import SetupWizard from './components/SetupWizard'
 import Dashboard from './components/Dashboard'
 import CustomerFlow from './components/CustomerFlow'
-import { Sparkles, ShieldCheck, LogIn, Lock, Mail, RefreshCw, Layers } from 'lucide-react'
+import RegisterWizard from './components/RegisterWizard'
+import { 
+  Sparkles, ShieldCheck, LogIn, Lock, Mail, RefreshCw, 
+  Layers, Users, ShieldAlert, CheckCircle2, ChevronRight, Activity
+} from 'lucide-react'
 import { useTranslation } from './contexts/LanguageContext'
+
+// Mock SSO Account Details
+const MOCK_SSO_KYB_PROFILE = {
+  name: 'VLINK Nail Spa',
+  industry: 'Nail Salon',
+  address: '789 Broadway, New York, NY 10003',
+  phone: '+1 (212) 555-0199',
+  website: 'https://vlinknailstudio.com',
+  logo: null,
+  paymentAccounts: {
+    venmo: '@vlinknail',
+    cashapp: '$vlinknail',
+    zelle: 'pay@vlinknailstudio.com',
+    vlinkpay: 'VLP-7721-VN'
+  },
+  email: 'sso_with_kyb@gmail.com'
+}
+
+const MOCK_SSO_NO_KYB_EMAIL = 'sso_no_kyb@gmail.com'
 
 export default function App() {
   const { currentLanguage, setLanguage, t } = useTranslation()
-  const [view, setView] = useState('login') // 'login' | 'onboarding' | 'dashboard'
+  const [view, setView] = useState('login') // 'login' | 'register-wizard' | 'onboarding' | 'dashboard' | 'customer'
   const [isLoading, setIsLoading] = useState(false)
   const [setupData, setSetupData] = useState(null)
+  const [hasKyb, setHasKyb] = useState(true)
+  const [preKybView, setPreKybView] = useState('onboarding')
   
   // Login simulated form state
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loginError, setLoginError] = useState('')
 
-  // Check if onboarding completed previously or if URL is a QR scan
+  // Prefill details passed from login session to Onboarding SetupWizard
+  const [ssoPrefillData, setSsoPrefillData] = useState(null)
+  // Email passed from SSO redirect to RegisterWizard
+  const [registerEmail, setRegisterEmail] = useState('')
+
+  // List of pending accounts from localStorage to display in simulation controls
+  const [pendingAccounts, setPendingAccounts] = useState([])
+
+  // KYB Verification deep linking state and modal control
+  const [showKybModal, setShowKybModal] = useState(false)
+  const [initialDashboardMenu, setInitialDashboardMenu] = useState('overview')
+  const [initialSettingsTab, setInitialSettingsTab] = useState('profile')
+
+  // Load setup data or customer flow on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get('flow') === 'customer') {
@@ -29,43 +67,193 @@ export default function App() {
       try {
         const parsed = JSON.parse(savedSetup)
         setSetupData(parsed)
+        sessionStorage.setItem('nexora_merchant_setup', savedSetup)
       } catch (e) {
         console.error('Error parsing setup details', e)
       }
     }
+
+    const savedProfile = localStorage.getItem('nexora_profile_settings')
+    if (savedProfile) {
+      sessionStorage.setItem('nexora_profile_settings', savedProfile)
+    }
+
+    // Load pending/registered accounts
+    loadPendingAccounts()
   }, [])
 
-  // Action: Handle SSO Login submit
-  const handleSsoLogin = (prefillData = null) => {
+  const loadPendingAccounts = () => {
+    const accs = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
+    setPendingAccounts(accs)
+  }
+
+  // Action: Handle manual login submit or SSO login
+  const handleLoginSubmit = (ssoType = null) => {
     setIsLoading(true)
     setLoginError('')
     
     // Simulate API delay
     setTimeout(() => {
       setIsLoading(false)
+      loadPendingAccounts()
       
-      if (prefillData) {
-        // Direct prefill
-        setSetupData(prefillData)
-        localStorage.setItem('nexora_merchant_setup', JSON.stringify(prefillData))
-        setView('dashboard')
-        return
-      }
+      const targetEmail = ssoType ? (ssoType === 'sso_with_kyb' ? 'sso_with_kyb@gmail.com' : 'sso_no_kyb@gmail.com') : email.trim().toLowerCase()
+      const targetPassword = ssoType ? '••••••••' : password
 
-      if (!email.trim() || !password.trim()) {
+      if (!targetEmail || !targetPassword) {
         setLoginError(t('login.login_error_missing'))
         return
       }
 
-      // Successful simulated login.
-      // If setupData is already present, go directly to Dashboard. Otherwise go to SetupWizard.
-      const savedSetup = localStorage.getItem('nexora_merchant_setup')
-      if (savedSetup) {
-        setView('dashboard')
-      } else {
+      // SCENARIO 1: SSO WITH KYB
+      if (targetEmail === 'sso_with_kyb@gmail.com') {
+        setSsoPrefillData(MOCK_SSO_KYB_PROFILE)
+        localStorage.removeItem('nexora_merchant_setup')
+        setSetupData(null)
         setView('onboarding')
+        return
+      }
+
+      // SCENARIO 2: SSO WITHOUT KYB
+      if (targetEmail === 'sso_no_kyb@gmail.com') {
+        const allAccounts = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
+        const matched = allAccounts.find(acc => acc.email === targetEmail)
+        
+        const isAlreadyVerified = !!(matched && matched.isVerified)
+        setHasKyb(isAlreadyVerified)
+        
+        const kybProfile = {
+          name: isAlreadyVerified ? matched.kybDetails.legalName : 'Golden Glow Nails',
+          industry: isAlreadyVerified ? (matched.kybDetails.businessType === 'LLC' ? 'Nail Salon' : 'Khác') : 'Nail Salon',
+          address: isAlreadyVerified ? 'VLINKPAY Merchant Registered Location' : '123 Beauty Lane, San Jose, CA 95112',
+          phone: isAlreadyVerified ? '+1 (555) VLP-KYB1' : '+1 (408) 555-0123',
+          website: 'https://goldenglownails.com',
+          logo: null,
+          paymentAccounts: {
+            venmo: '',
+            cashapp: '',
+            zelle: '',
+            vlinkpay: isAlreadyVerified && matched.kybDetails.bankAccount ? `VLP-${matched.kybDetails.bankAccount.slice(-4)}` : ''
+          },
+          email: targetEmail,
+          reviewLinks: {
+            googleReview: isAlreadyVerified ? 'https://google.com' : '',
+            yelpReview: isAlreadyVerified ? 'https://yelp.com' : '',
+            facebookReview: '',
+            feedbackEmail: targetEmail
+          }
+        }
+        setSsoPrefillData(kybProfile)
+        
+        localStorage.removeItem('nexora_merchant_setup')
+        localStorage.removeItem('nexora_profile_settings')
+        setSetupData(null)
+        setView('dashboard')
+        return
+      }
+
+      // SCENARIO 3: CHECK MANUALLY REGISTERED ACCOUNTS
+      const allAccounts = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
+      const matchedAccount = allAccounts.find(acc => acc.email === targetEmail)
+      
+      if (matchedAccount) {
+        if (matchedAccount.password !== targetPassword) {
+          setLoginError(currentLanguage === 'vi' ? 'Mật khẩu không chính xác.' : 'Incorrect password.')
+          return
+        }
+
+        const isAlreadyVerified = !!matchedAccount.isVerified
+        setHasKyb(isAlreadyVerified)
+
+        const kybProfile = {
+          name: isAlreadyVerified ? matchedAccount.kybDetails.legalName : '',
+          industry: isAlreadyVerified ? (matchedAccount.kybDetails.businessType === 'LLC' ? 'Nail Salon' : 'Khác') : '',
+          address: isAlreadyVerified ? 'VLINKPAY Merchant Registered Location' : '',
+          phone: isAlreadyVerified ? '+1 (555) VLP-KYB1' : '',
+          website: '',
+          logo: null,
+          paymentAccounts: {
+            venmo: '',
+            cashapp: '',
+            zelle: '',
+            vlinkpay: isAlreadyVerified && matchedAccount.kybDetails.bankAccount ? `VLP-${matchedAccount.kybDetails.bankAccount.slice(-4)}` : ''
+          },
+          email: matchedAccount.email,
+          reviewLinks: {
+            googleReview: isAlreadyVerified ? 'https://google.com' : '',
+            yelpReview: isAlreadyVerified ? 'https://yelp.com' : '',
+            facebookReview: '',
+            feedbackEmail: matchedAccount.email
+          }
+        }
+        setSsoPrefillData(kybProfile)
+
+        const savedSetup = localStorage.getItem('nexora_merchant_setup')
+        if (savedSetup) {
+          setView('dashboard')
+        } else {
+          setView('onboarding')
+        }
+        return
+      }
+
+      // Fallback for simple demo logs (non-SSO, non-registered)
+      if (targetEmail.includes('@') && targetPassword.length >= 6) {
+        const savedSetup = localStorage.getItem('nexora_merchant_setup')
+        if (savedSetup) {
+          setView('dashboard')
+        } else {
+          setView('onboarding')
+        }
+      } else {
+        setLoginError(currentLanguage === 'vi' 
+          ? 'Email hoặc mật khẩu không hợp lệ. Vui lòng nhập email đúng định dạng và mật khẩu từ 6 ký tự, hoặc sử dụng bảng điều khiển kịch bản ở bên phải.' 
+          : 'Invalid credentials. Please enter a valid email and 6+ character password, or use the Simulation Panel on the right.'
+        )
       }
     }, 1200)
+  }
+
+  // Trigger Simulation Scenario directly
+  const triggerSimulation = (scenario) => {
+    setLoginError('')
+    if (scenario === 'sso_with_kyb') {
+      localStorage.removeItem('nexora_merchant_setup')
+      setSetupData(null)
+      setEmail('sso_with_kyb@gmail.com')
+      setPassword('••••••••')
+      handleLoginSubmit('sso_with_kyb')
+    } else if (scenario === 'sso_no_kyb') {
+      setEmail('sso_no_kyb@gmail.com')
+      setPassword('••••••••')
+      handleLoginSubmit('sso_no_kyb')
+    } else if (scenario === 'new_register') {
+      setEmail('')
+      setPassword('')
+      setRegisterEmail('')
+      setView('register-wizard')
+    }
+  }
+
+  // Instantly toggle verification status of an account in the simulations listing
+  const toggleAccountVerification = (emailAddress) => {
+    const accs = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
+    const updated = accs.map(acc => {
+      if (acc.email === emailAddress) {
+        return { ...acc, isVerified: !acc.isVerified }
+      }
+      return acc
+    })
+    localStorage.setItem('nexora_pending_accounts', JSON.stringify(updated))
+    loadPendingAccounts()
+  }
+
+  // Delete simulated account
+  const deleteSimulatedAccount = (emailAddress) => {
+    const accs = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
+    const updated = accs.filter(acc => acc.email !== emailAddress)
+    localStorage.setItem('nexora_pending_accounts', JSON.stringify(updated))
+    loadPendingAccounts()
   }
 
   // Action: Complete onboarding wizard
@@ -79,14 +267,83 @@ export default function App() {
     if (confirm(t('login.reset_confirm'))) {
       localStorage.removeItem('nexora_merchant_setup')
       setSetupData(null)
+      setHasKyb(true)
       setView('login')
     }
+  }
+
+  const handleRegisterAndLogin = (registeredEmail) => {
+    setRegisterEmail(registeredEmail)
+    setHasKyb(false)
+    localStorage.removeItem('nexora_merchant_setup')
+    localStorage.removeItem('nexora_profile_settings')
+    setSetupData(null)
+    setSsoPrefillData({
+      email: registeredEmail,
+      name: '',
+      industry: '',
+      address: '',
+      phone: '',
+      website: '',
+      logo: null,
+      paymentAccounts: {
+        venmo: '',
+        cashapp: '',
+        zelle: '',
+        vlinkpay: ''
+      },
+      reviewLinks: {
+        googleReview: '',
+        yelpReview: '',
+        facebookReview: '',
+        feedbackEmail: registeredEmail
+      }
+    })
+    setView('dashboard')
+  }
+
+  const handleKybSuccess = (emailAddress) => {
+    setHasKyb(true)
+    const accs = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
+    const matched = accs.find(acc => acc.email === emailAddress)
+    if (matched && matched.kybDetails) {
+      const kybProfile = {
+        name: matched.kybDetails.legalName,
+        industry: matched.kybDetails.businessType === 'LLC' ? 'Nail Salon' : 'Khác',
+        address: 'VLINKPAY Merchant Registered Location',
+        phone: '+1 (555) VLP-KYB1',
+        website: '',
+        logo: null,
+        paymentAccounts: {
+          venmo: '',
+          cashapp: '',
+          zelle: '',
+          vlinkpay: matched.kybDetails.bankAccount ? `VLP-${matched.kybDetails.bankAccount.slice(-4)}` : 'VLINKPAY-ID'
+        },
+        email: matched.email,
+        reviewLinks: {
+          googleReview: 'https://google.com',
+          yelpReview: 'https://yelp.com',
+          facebookReview: '',
+          feedbackEmail: matched.email
+        }
+      }
+      setSsoPrefillData(kybProfile)
+    }
+    setView(preKybView)
+    loadPendingAccounts()
+  }
+
+  const handleKybRequired = () => {
+    setPreKybView(view)
+    setRegisterEmail(ssoPrefillData?.email || '')
+    setShowKybModal(true)
   }
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-[#0B1C30] font-sans antialiased">
       
-      {/* 1. LOGIN SSO SCREEN */}
+      {/* 1. LOGIN SSO SCREEN (With Grid layout for Simulation Controller) */}
       {view === 'login' && (
         <div className="min-h-dvh flex items-center justify-center bg-nexoraCanvas relative overflow-x-hidden overflow-y-auto text-nexoraText px-4 py-6 sm:py-10 selection:bg-nexoraBrandSoft selection:text-nexoraBrand">
           {/* Soft background decorations */}
@@ -110,182 +367,350 @@ export default function App() {
             </button>
           </div>
 
-          <div className="w-full max-w-md bg-white rounded-2xl p-5 sm:p-8 border border-nexoraBorder shadow-premium relative overflow-hidden flex flex-col justify-between">
-            {/* VLINKPAY branding logo */}
-            <div className="text-center mb-8">
-              <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="w-12 h-12 mx-auto object-contain mb-3" />
-              <h2 className="font-serif text-xl font-bold tracking-wide sm:text-2xl">
-                NEXORA <span className="ml-1.5 inline-flex align-middle text-nexoraBrand font-sans text-xs tracking-widest font-black uppercase bg-nexoraBrand/10 px-2 py-0.5 rounded border border-nexoraBrand/30">TOUCH</span>
-              </h2>
-              <p className="text-xs text-nexoraMuted mt-1">{t('login.gateway_sub')}</p>
+          <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch relative z-10">
+            
+            {/* Left Column: Login Card */}
+            <div className="lg:col-span-7 bg-white rounded-2xl p-5 sm:p-8 border border-nexoraBorder shadow-premium flex flex-col justify-between relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(70,72,216,0.03)] via-transparent to-transparent rounded-full pointer-events-none"></div>
+
+              {/* VLINKPAY branding logo */}
+              <div className="text-center mb-6">
+                <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="w-12 h-12 mx-auto object-contain mb-3" />
+                <h2 className="font-sans text-xl font-bold tracking-wide sm:text-2xl">
+                  NEXORA <span className="ml-1.5 inline-flex align-middle text-nexoraBrand font-sans text-xs tracking-widest font-black uppercase bg-nexoraBrand/10 px-2 py-0.5 rounded border border-nexoraBrand/30">TOUCH</span>
+                </h2>
+                <p className="text-xs text-nexoraMuted mt-1">{t('login.gateway_sub')}</p>
+              </div>
+
+              {isLoading ? (
+                <div className="py-16 flex flex-col items-center justify-center space-y-4">
+                  <div className="w-10 h-10 border-4 border-nexoraBrand/20 border-t-nexoraBrand rounded-full animate-spin"></div>
+                  <p className="text-xs text-nexoraBrand font-semibold uppercase tracking-wider animate-pulse">
+                    {t('login.connecting_sso')}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-5">
+                  <div className="p-3 rounded-lg bg-nexoraBrandSoft/40 border border-nexoraBrandSoft text-[11px] text-nexoraText leading-relaxed">
+                    <ShieldCheck className="w-4 h-4 text-nexoraBrand inline mr-1.5 shrink-0" />
+                    <strong>{t('login.sso_integration_title')}</strong> {t('login.sso_integration_desc')}
+                  </div>
+
+                  {loginError && (
+                    <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
+                      {loginError}
+                    </div>
+                  )}
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">{t('login.email_label')}</label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-3 w-4 h-4 text-nexoraSubtle" />
+                        <input 
+                          type="email"
+                          placeholder={t('login.email_placeholder')}
+                          className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg pl-10 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">{t('login.password_label')}</label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-3 w-4 h-4 text-nexoraSubtle" />
+                        <input 
+                          type="password"
+                          placeholder={t('login.password_placeholder')}
+                          className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg pl-10 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={() => handleLoginSubmit()}
+                    className="w-full min-h-11 py-2.5 bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] hover:opacity-90 transition-opacity text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_14px_rgba(43,89,255,0.25)]"
+                  >
+                    <LogIn className="w-4 h-4 stroke-[3px]" /> {t('login.login_btn')}
+                  </button>
+
+                  <div className="relative py-2 text-center">
+                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-nexoraBorder"></div></div>
+                    <span className="relative bg-white px-3 text-[10px] text-nexoraSubtle font-bold uppercase tracking-wider">{t('login.or_try_demo')}</span>
+                  </div>
+
+                  {/* Quick login / registration options */}
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <button 
+                      onClick={() => triggerSimulation('new_register')}
+                      className="min-h-11 py-2 border border-nexoraBorder hover:border-nexoraBorder/80 bg-nexoraCanvas text-nexoraText text-xs font-semibold rounded-lg transition-all"
+                    >
+                      {t('login.register_btn')}
+                    </button>
+
+                    <button 
+                      onClick={() => {
+                        // Prefill and login directly to Dashboard
+                        const demoSetup = {
+                          businessInfo: {
+                            name: 'Golden Glow Nail Spa & Salon',
+                            industry: 'Nail Salon',
+                            address: '1088 Gold Coast Hwy, Palm Beach, QLD 4221',
+                            phone: '+1 (555) 789-2026',
+                            website: 'https://goldenglownails.com',
+                            logo: null,
+                            paymentAccounts: {
+                              venmo: '@goldenglow-spa',
+                              cashapp: '$goldenglownails',
+                              zelle: 'payment@goldenglownails.com',
+                              vlinkpay: 'VLP-8893-GG'
+                            }
+                          },
+                          reviewLinks: {
+                            googleReview: 'https://g.page/r/cGoldenGlowNails/review',
+                            yelpReview: 'https://www.yelp.com/biz/golden-glow-nails-palm-beach',
+                            facebookReview: 'https://www.facebook.com/goldenglownails/reviews',
+                            feedbackEmail: 'manager@goldenglownails.com'
+                          },
+                          staffList: [
+                            {
+                              id: '1',
+                              fullName: 'Mia Tran',
+                              nickname: 'Mia T.',
+                              position: 'Gel-X Artist',
+                              avatar: '',
+                              isActive: true,
+                              showInTipsFlow: true,
+                              paymentAccounts: { venmo: '@mia-nails', cashapp: '$miaglow', zelle: 'mia.tran@gmail.com', vlinkpay: '' }
+                            },
+                            {
+                              id: '2',
+                              fullName: 'Vivian Le',
+                              nickname: 'Vivian L.',
+                              position: 'Acrylic Specialist',
+                              avatar: '',
+                              isActive: true,
+                              showInTipsFlow: true,
+                              paymentAccounts: { venmo: '', cashapp: '$vivianle', zelle: '407-555-0199', vlinkpay: 'VLP-8893-VL' }
+                            },
+                            {
+                              id: '3',
+                              fullName: 'Ashley Park',
+                              nickname: 'Ashley P.',
+                              position: 'Pedicure Lead',
+                              avatar: '',
+                              isActive: true,
+                              showInTipsFlow: true,
+                              paymentAccounts: { venmo: '@ashley-pedi', cashapp: '', zelle: 'ashley@glownails.com', vlinkpay: '' }
+                            },
+                            {
+                              id: '4',
+                              fullName: 'Hanna Nguyen',
+                              nickname: 'Hanna Ng.',
+                              position: 'Nail Art Designer',
+                              avatar: '',
+                              isActive: false,
+                              showInTipsFlow: true,
+                              paymentAccounts: { venmo: '@hanna-art', cashapp: '', zelle: '', vlinkpay: 'VLP-1148-HN' }
+                            }
+                          ],
+                          touchPoints: [
+                            { id: 'tp-main', name: 'Business Main Lobby QR', type: 'Business Main' },
+                            { id: 'tp-front', name: 'Reception Front Desk', type: 'Front Desk' },
+                            { id: 'tp-t1', name: 'Service Chair 01', type: 'Table QR' },
+                            { id: 'tp-t2', name: 'Service Chair 02', type: 'Table QR' },
+                          ]
+                        }
+                        localStorage.setItem('nexora_merchant_setup', JSON.stringify(demoSetup))
+                        sessionStorage.setItem('nexora_merchant_setup', JSON.stringify(demoSetup))
+                        setSetupData(demoSetup)
+                        setView('dashboard')
+                      }}
+                      className="min-h-11 py-2 border border-nexoraBrand/20 hover:border-nexoraBrand text-nexoraBrand bg-nexoraBrandSoft/40 hover:bg-nexoraBrandSoft text-xs font-semibold rounded-lg flex items-center justify-center gap-1 transition-all"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-nexoraBrand" /> {t('login.enter_dashboard_btn')}
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              <span className="text-[9px] text-nexoraSubtle font-medium tracking-wide mt-6 block text-center uppercase">
+                {t('login.sso_security_footer')}
+              </span>
             </div>
 
-            {isLoading ? (
-              <div className="py-12 flex flex-col items-center justify-center space-y-4">
-                <div className="w-10 h-10 border-4 border-nexoraBrand/20 border-t-nexoraBrand rounded-full animate-spin"></div>
-                <p className="text-xs text-nexoraBrand font-semibold uppercase tracking-wider animate-pulse">
-                  {t('login.connecting_sso')}
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-5">
-                <div className="p-3 rounded-lg bg-nexoraBrandSoft/40 border border-nexoraBrandSoft text-[11px] text-nexoraText leading-relaxed">
-                  <ShieldCheck className="w-4 h-4 text-nexoraBrand inline mr-1.5 shrink-0" />
-                  <strong>{t('login.sso_integration_title')}</strong> {t('login.sso_integration_desc')}
+            {/* Right Column: Simulation Controller Card */}
+            <div className="lg:col-span-5 bg-white rounded-2xl p-5 sm:p-8 border border-nexoraBorder shadow-premium flex flex-col justify-between relative overflow-hidden">
+              <div className="space-y-4">
+                <div className="border-b border-nexoraBorder pb-3">
+                  <h3 className="text-sm font-extrabold text-nexoraText flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-nexoraBrand" />
+                    {currentLanguage === 'vi' ? 'TRÌNH GIẢ LẬP KỊCH BẢN' : 'SIMULATION FLOW CONTROLLER'}
+                  </h3>
+                  <p className="text-[10px] text-nexoraSubtle mt-1">
+                    {currentLanguage === 'vi'
+                      ? 'Chọn kịch bản để kiểm tra phân luồng Onboarding và đăng ký (Flow 1 & 2):'
+                      : 'Trigger simulation cases to test the onboarding and register branches (Flow 1 & 2):'
+                    }
+                  </p>
                 </div>
 
-                {loginError && (
-                  <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
-                    {loginError}
+                <div className="space-y-2.5">
+                  {/* Scenario 1: SSO with KYB */}
+                  <button 
+                    onClick={() => triggerSimulation('sso_with_kyb')}
+                    className="w-full text-left p-3 rounded-xl border border-nexoraBorder hover:border-nexoraBrand bg-slate-50 hover:bg-nexoraBrandSoft/10 transition flex items-start gap-3 group"
+                  >
+                    <span className="h-6 w-6 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center font-bold text-xs text-indigo-600 shrink-0">1</span>
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-slate-800 group-hover:text-nexoraBrand flex items-center gap-1.5">
+                        {currentLanguage === 'vi' ? 'Đã có KYB (SSO)' : 'Already has KYB (SSO)'}
+                        <ChevronRight className="w-3 h-3 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                      </div>
+                      <p className="text-[9px] text-slate-500 mt-0.5">
+                        {currentLanguage === 'vi'
+                          ? 'Đăng nhập SSO -> Tự điền Step 1 và vào flow setup thợ & QR/NFC như cũ.'
+                          : 'SSO Login -> Auto-fills Step 1 and enters the staff & QR/NFC setup flow (as before).'
+                        }
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* Scenario 2: SSO without KYB */}
+                  <button 
+                    onClick={() => triggerSimulation('sso_no_kyb')}
+                    className="w-full text-left p-3 rounded-xl border border-nexoraBorder hover:border-nexoraBrand bg-slate-50 hover:bg-nexoraBrandSoft/10 transition flex items-start gap-3 group"
+                  >
+                    <span className="h-6 w-6 rounded-lg bg-pink-50 border border-pink-100 flex items-center justify-center font-bold text-xs text-pink-600 shrink-0">2</span>
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-slate-800 group-hover:text-nexoraBrand flex items-center gap-1.5">
+                        {currentLanguage === 'vi' ? 'Chưa có KYB (SSO)' : 'No KYB yet (SSO)'}
+                        <ChevronRight className="w-3 h-3 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                      </div>
+                      <p className="text-[9px] text-slate-500 mt-0.5">
+                        {currentLanguage === 'vi'
+                          ? 'Đăng nhập SSO chưa KYB -> Vào trực tiếp Setup/Dashboard dưới dạng chưa KYB. Yêu cầu KYB khi setup thợ/QR.'
+                          : 'SSO Login without KYB -> Enters Setup/Dashboard directly as unverified. Prompts for KYB when setting up staff/QR.'
+                        }
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* Scenario 3: New Register */}
+                  <button 
+                    onClick={() => triggerSimulation('new_register')}
+                    className="w-full text-left p-3 rounded-xl border border-nexoraBorder hover:border-nexoraBrand bg-slate-50 hover:bg-nexoraBrandSoft/10 transition flex items-start gap-3 group"
+                  >
+                    <span className="h-6 w-6 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center font-bold text-xs text-emerald-600 shrink-0">3</span>
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-slate-800 group-hover:text-nexoraBrand flex items-center gap-1.5">
+                        {currentLanguage === 'vi' ? 'Chưa có tài khoản (Đăng ký mới)' : 'No Account (New Register)'}
+                        <ChevronRight className="w-3 h-3 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                      </div>
+                      <p className="text-[9px] text-slate-500 mt-0.5">
+                        {currentLanguage === 'vi'
+                          ? 'Đăng ký mới -> Hiển thị Step 1 đăng ký mới, đăng nhập trực tiếp sau khi hoàn tất dưới dạng chưa KYB.'
+                          : 'New Register -> Shows Step 1, logs in directly after completion as a no-KYB account.'
+                        }
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Real Registered Database Simulation inside UI */}
+              <div className="pt-4 border-t border-slate-100 mt-4 space-y-2 flex-grow flex flex-col justify-end">
+                <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-wider">
+                  {currentLanguage === 'vi' ? 'CƠ SỞ DỮ LIỆU TÀI KHOẢN GIẢ LẬP' : 'SIMULATED ACCOUNTS DATABASE'}
+                </h4>
+                
+                {pendingAccounts.length === 0 ? (
+                  <div className="p-3 border border-dashed border-slate-200 rounded-xl text-center text-[10px] text-slate-400">
+                    {currentLanguage === 'vi' ? 'Chưa có tài khoản đăng ký tùy chỉnh' : 'No custom registered accounts yet'}
+                  </div>
+                ) : (
+                  <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
+                    {pendingAccounts.map((acc, index) => (
+                      <div key={index} className="p-2 border border-slate-200 rounded-lg bg-slate-50 flex items-center justify-between gap-2 text-[10px]">
+                        <div className="min-w-0">
+                          <div className="font-mono font-bold truncate text-slate-700 max-w-[130px]">{acc.email}</div>
+                          <div className="text-[9px] flex items-center gap-1 mt-0.5">
+                            <span className="font-semibold">{currentLanguage === 'vi' ? 'Mật khẩu:' : 'Pass:'} {acc.password}</span>
+                            <span>•</span>
+                            <span className={acc.isVerified ? 'text-emerald-600 font-bold' : 'text-yellow-600 font-bold'}>
+                              {acc.isVerified ? 'Verified' : 'Pending'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button 
+                            onClick={() => toggleAccountVerification(acc.email)}
+                            className={`px-1.5 py-0.5 rounded text-[8px] font-extrabold transition-all border
+                              ${acc.isVerified 
+                                ? 'bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100' 
+                                : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'}`}
+                            title={acc.isVerified ? "Simulate Revoke" : "Simulate Verify"}
+                          >
+                            {acc.isVerified ? 'REVOKE' : 'VERIFY'}
+                          </button>
+                          <button 
+                            onClick={() => deleteSimulatedAccount(acc.email)}
+                            className="p-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded border border-red-200"
+                            title="Delete"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">{t('login.email_label')}</label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-3 w-4 h-4 text-nexoraSubtle" />
-                      <input 
-                        type="email"
-                        placeholder={t('login.email_placeholder')}
-                        className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg pl-10 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">{t('login.password_label')}</label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-3 w-4 h-4 text-nexoraSubtle" />
-                      <input 
-                        type="password"
-                        placeholder={t('login.password_placeholder')}
-                        className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg pl-10 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <button 
-                  onClick={() => handleSsoLogin()}
-                    className="w-full min-h-11 py-2.5 bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] hover:opacity-90 transition-opacity text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_14px_rgba(43,89,255,0.25)]"
-                >
-                  <LogIn className="w-4 h-4 stroke-[3px]" /> {t('login.login_btn')}
-                </button>
-
-                <div className="relative py-2 text-center">
-                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-nexoraBorder"></div></div>
-                  <span className="relative bg-white px-3 text-[10px] text-nexoraSubtle font-bold uppercase tracking-wider">{t('login.or_try_demo')}</span>
-                </div>
-
-                {/* Quick login button with prefilled demo data */}
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <button 
-                    onClick={() => {
-                      localStorage.removeItem('nexora_merchant_setup')
-                      setSetupData(null)
-                      setView('onboarding')
-                    }}
-                    className="min-h-11 py-2 border border-nexoraBorder hover:border-nexoraBorder/80 bg-nexoraCanvas text-nexoraText text-xs font-semibold rounded-lg transition-all"
-                  >
-                    {t('login.register_btn')}
-                  </button>
-
-                  <button 
-                    onClick={() => {
-                      // Prefill and login directly to Dashboard
-                      const demoSetup = {
-                        businessInfo: {
-                          name: 'Golden Glow Nail Spa & Salon',
-                          industry: 'Nail Salon',
-                          address: '1088 Gold Coast Hwy, Palm Beach, QLD 4221',
-                          phone: '+1 (555) 789-2026',
-                          website: 'https://goldenglownails.com',
-                          timezone: 'US/Eastern',
-                          logo: null
-                        },
-                        reviewLinks: {
-                          googleReview: 'https://g.page/r/cGoldenGlowNails/review',
-                          yelpReview: 'https://www.yelp.com/biz/golden-glow-nails-palm-beach',
-                          facebookReview: 'https://www.facebook.com/goldenglownails/reviews',
-                          feedbackEmail: 'manager@goldenglownails.com'
-                        },
-                        staffList: [
-                          {
-                            id: '1',
-                            fullName: 'Mia Tran',
-                            nickname: 'Mia T.',
-                            position: 'Gel-X Artist',
-                            avatar: '',
-                            isActive: true,
-                            showInTipsFlow: true,
-                            paymentAccounts: { venmo: '@mia-nails', cashapp: '$miaglow', zelle: 'mia.tran@gmail.com', vlinkpay: '' }
-                          },
-                          {
-                            id: '2',
-                            fullName: 'Vivian Le',
-                            nickname: 'Vivian L.',
-                            position: 'Acrylic Specialist',
-                            avatar: '',
-                            isActive: true,
-                            showInTipsFlow: true,
-                            paymentAccounts: { venmo: '', cashapp: '$vivianle', zelle: '407-555-0199', vlinkpay: 'VLP-8893-VL' }
-                          },
-                          {
-                            id: '3',
-                            fullName: 'Ashley Park',
-                            nickname: 'Ashley P.',
-                            position: 'Pedicure Lead',
-                            avatar: '',
-                            isActive: true,
-                            showInTipsFlow: true,
-                            paymentAccounts: { venmo: '@ashley-pedi', cashapp: '', zelle: 'ashley@glownails.com', vlinkpay: '' }
-                          },
-                          {
-                            id: '4',
-                            fullName: 'Hanna Nguyen',
-                            nickname: 'Hanna Ng.',
-                            position: 'Nail Art Designer',
-                            avatar: '',
-                            isActive: false,
-                            showInTipsFlow: true,
-                            paymentAccounts: { venmo: '@hanna-art', cashapp: '', zelle: '', vlinkpay: 'VLP-1148-HN' }
-                          }
-                        ],
-                        touchPoints: [
-                          { id: 'tp-main', name: 'Business Main Lobby QR', type: 'Business Main' },
-                          { id: 'tp-front', name: 'Reception Front Desk', type: 'Front Desk' },
-                          { id: 'tp-t1', name: 'Service Chair 01', type: 'Table QR' },
-                          { id: 'tp-t2', name: 'Service Chair 02', type: 'Table QR' },
-                        ]
-                      }
-                      handleSsoLogin(demoSetup)
-                    }}
-                    className="min-h-11 py-2 border border-nexoraBrand/20 hover:border-nexoraBrand text-nexoraBrand bg-nexoraBrandSoft/40 hover:bg-nexoraBrandSoft text-xs font-semibold rounded-lg flex items-center justify-center gap-1 transition-all"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-nexoraBrand" /> {t('login.enter_dashboard_btn')}
-                  </button>
-                </div>
               </div>
-            )}
-            
-            <span className="text-[9px] text-nexoraSubtle font-medium tracking-wide mt-6 block text-center uppercase">
-              {t('login.sso_security_footer')}
-            </span>
+            </div>
+
           </div>
         </div>
       )}
 
-      {/* 2. ONBOARDING SETUP WIZARD */}
-      {view === 'onboarding' && (
-        <SetupWizard onComplete={handleWizardComplete} onBackToLogin={() => setView('login')} />
+      {/* 2. REGISTRATION & KYB FLOW (Flow 2) */}
+      {view === 'register-wizard' && (
+        <RegisterWizard 
+          ssoEmail={registerEmail} 
+          onBackToLogin={() => {
+            if (ssoPrefillData?.email) {
+              setView(preKybView)
+            } else {
+              setView('login')
+            }
+          }} 
+          onRegisterSuccess={() => {
+            setView('login')
+            loadPendingAccounts()
+          }}
+          onRegisterAndLogin={handleRegisterAndLogin}
+          onKybSuccess={handleKybSuccess}
+          isRedirectedFromSession={!!(ssoPrefillData?.email)}
+        />
       )}
 
-      {/* 3. OWNER DASHBOARD */}
+      {/* 3. ONBOARDING SETUP WIZARD (Flow 1 / Prefillable) */}
+      {view === 'onboarding' && (
+        <SetupWizard 
+          initialBusinessInfo={ssoPrefillData}
+          hasKyb={hasKyb}
+          onKybRequired={handleKybRequired}
+          onComplete={handleWizardComplete} 
+          onBackToLogin={() => setView('login')} 
+        />
+      )}
+
+      {/* 4. OWNER DASHBOARD */}
       {view === 'dashboard' && (
         <div className="relative">
           {/* Quick debug reset onboarding button */}
@@ -297,13 +722,73 @@ export default function App() {
             <RefreshCw className="w-4 h-4" />
           </button>
           
-          <Dashboard setupData={setupData} onLogout={() => setView('login')} />
+          <Dashboard 
+            setupData={setupData} 
+            hasKyb={hasKyb}
+            userEmail={ssoPrefillData?.email || registerEmail}
+            onKybRequired={handleKybRequired}
+            onKybSuccess={handleKybSuccess}
+            initialMenu={initialDashboardMenu}
+            initialSettingsTab={initialSettingsTab}
+            onLogout={() => setView('login')} 
+          />
         </div>
       )}
 
-      {/* 4. CUSTOMER TIPPING & REVIEW FLOW SIMULATION */}
+      {/* 5. CUSTOMER TIPPING & REVIEW FLOW SIMULATION */}
       {view === 'customer' && (
         <CustomerFlow />
+      )}
+
+      {/* KYB Verification Required Custom Modal */}
+      {showKybModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-slate-100 max-w-md w-full shadow-2xl p-6 relative overflow-hidden animate-scaleIn text-center space-y-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-500 mx-auto shrink-0 shadow-sm">
+              <ShieldAlert className="h-6 w-6" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-base font-black text-slate-800 uppercase tracking-wider">
+                {currentLanguage === 'vi' ? 'Yêu cầu xác thực KYB' : 'KYB Verification Required'}
+              </h3>
+              <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                {currentLanguage === 'vi'
+                  ? 'Tính năng này yêu cầu hồ sơ doanh nghiệp đã được xác thực KYB bởi VLINKPAY. Nhấp vào nút bên dưới để chuyển hướng đến trang Cài đặt > KYB để gửi thông tin doanh nghiệp của bạn.'
+                  : 'This feature requires your business profile to be KYB verified by VLINKPAY. Click below to navigate to Settings > KYB tab and submit your compliance information.'}
+              </p>
+            </div>
+            <div className="pt-2 flex flex-col sm:flex-row gap-2.5 justify-center">
+              <button
+                type="button"
+                onClick={() => setShowKybModal(false)}
+                className="px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider rounded-lg transition-all"
+              >
+                {currentLanguage === 'vi' ? 'Hủy bỏ' : 'Cancel'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowKybModal(false)
+                  if (view === 'onboarding') {
+                    const savedSetup = localStorage.getItem('nexora_merchant_setup')
+                    if (savedSetup) {
+                      setSetupData(JSON.parse(savedSetup))
+                    }
+                    setInitialDashboardMenu('settings')
+                    setInitialSettingsTab('kyb')
+                    setView('dashboard')
+                  } else if (view === 'dashboard') {
+                    setInitialDashboardMenu('settings')
+                    setInitialSettingsTab('kyb')
+                  }
+                }}
+                className="px-5 py-2.5 bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] hover:opacity-90 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-md transition-all animate-pulse"
+              >
+                {currentLanguage === 'vi' ? 'Xác thực ngay' : 'Verify Now'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>

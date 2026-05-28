@@ -8,3 +8,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 extracted_scripts/
+extracted_*
+*.test
+.test
+

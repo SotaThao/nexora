@@ -2,23 +2,32 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertTriangle,
   ArrowRight,
+  Calendar,
   BarChart3,
   Bell,
+  Camera,
   ClipboardList,
   Download,
   Edit2,
+  ExternalLink,
+  Filter,
+  FolderOpen,
   HelpCircle,
   LayoutDashboard,
+  Lock,
   LogOut,
   Menu,
   Moon,
   Plus,
   Pointer,
   QrCode,
+  RotateCcw,
   Scissors,
   Search,
   Settings,
   ShieldAlert,
+  ShieldCheck,
+  SlidersHorizontal,
   Sparkles,
   Star,
   Sun,
@@ -30,11 +39,15 @@ import {
   Wallet,
   Eye,
   EyeOff,
-  X
+  X,
+  ChevronUp,
+  ChevronDown,
+  Check
 } from 'lucide-react'
 import StaffDetailView from './StaffDetailView'
 import { useTranslation } from '../contexts/LanguageContext'
 import CustomSelect from './CustomSelect'
+import SettingsView from './SettingsView'
 
 // Helper to render text with styled star rating symbols (★) in luxuryGold and 4px space
 function renderTextWithGoldStars(text) {
@@ -69,9 +82,98 @@ const WalletLogos = {
       <path d="M13.559 24h-2.841a.483.483 0 0 1-.483-.483v-2.765H5.638a.667.667 0 0 1-.666-.666v-2.234a.67.67 0 0 1 .142-.412l8.139-10.382h-7.25a.667.667 0 0 1-.667-.667V3.914c0-.367.299-.666.666-.666h4.23V.483c0-.266.217-.483.483-.483h2.841c.266 0 .483.217.483.483v2.765h4.323c.367 0 .666.299.666.666v2.137a.67.67 0 0 1-.141.41l-8.19 10.481h7.665c.367 0 .666.299.666.666v2.477a.667.667 0 0 1-.666.667h-4.32v2.765a.483.483 0 0 1-.483.483Z" />
     </svg>
   ),
+  paypal: (
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-[#003087]" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20.09 6.85c-.45 2.24-1.93 7.82-2.18 8.87-.24 1.05-1.12 1.77-2.22 1.77h-3.32l-.96 6.02c-.08.5-.52.87-1.03.87H6.22c-.65 0-1.13-.59-.99-1.22L8.53 5.4c.14-.63.7-.1 1.33-.1h5.8c2.81 0 4.88 1.48 4.43 3.7.22-1.07.13-2.15-.36-3.05z" />
+      <path d="M16.92 3.85c-.45 2.24-1.93 7.82-2.18 8.87-.24 1.05-1.12 1.77-2.22 1.77h-3.32l-.96 6.02c-.08.5-.52.87-1.03.87H3.06c-.65 0-1.13-.59-.99-1.22L5.37 2.4c.14-.63.7-1.1 1.33-1.1h5.8c2.81 0 4.88 1.48 4.43 3.7.22-1.07.13-2.15-.36-3.05z" opacity="0.6" />
+    </svg>
+  ),
+  bankwire: (
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-[#475569]" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2L1 7v2h22V7L12 2zm0 18H3v-8h3v8h3v-8h3v8h3v-8h3v8h3v-8h3v8h3v-8h3v8h-3zm-11 2h22v2H1v-2z" />
+    </svg>
+  ),
+  applecash: (
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-black" xmlns="http://www.w3.org/2000/svg">
+      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83zM15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.22.67-2.94 1.51-.62.73-1.16 1.87-1.02 2.98 1.11.09 2.25-.56 2.97-1.43z" />
+    </svg>
+  ),
   vlinkpay: (
     <img src="/assets/vlinkpay-logo.png" alt="VLINKPAY Logo" className="h-[18px] w-[18px] object-contain" />
   )
+}
+
+const DEFAULT_PAYOUT_CONFIGS = {
+  zelle: { enabled: false, value: '', qrCode: '', accountName: '' },
+  bankwire: { enabled: false, value: '', qrCode: '', accountName: '' },
+  paypal: { enabled: false, value: '', qrCode: '', accountName: '' },
+  venmo: { enabled: false, value: '', qrCode: '', accountName: '' },
+  cashapp: { enabled: false, value: '', qrCode: '', accountName: '' },
+  applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
+}
+
+const getPayoutConfigsFromMember = (member) => {
+  const configs = {
+    zelle: { enabled: false, value: '', qrCode: '', accountName: '' },
+    bankwire: { enabled: false, value: '', qrCode: '', accountName: '' },
+    paypal: { enabled: false, value: '', qrCode: '', accountName: '' },
+    venmo: { enabled: false, value: '', qrCode: '', accountName: '' },
+    cashapp: { enabled: false, value: '', qrCode: '', accountName: '' },
+    applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
+  }
+  const accounts = member.paymentAccounts || {}
+  const memberConfigs = member.payoutConfigs || {}
+  
+  if (accounts.zelle || memberConfigs.zelle?.value) {
+    configs.zelle = {
+      enabled: memberConfigs.zelle ? memberConfigs.zelle.enabled : true,
+      value: accounts.zelle || memberConfigs.zelle?.value || '',
+      qrCode: memberConfigs.zelle?.qrCode || '',
+      accountName: memberConfigs.zelle?.accountName || member.fullName || ''
+    }
+  }
+  if (accounts.bankwire || memberConfigs.bankwire?.value) {
+    configs.bankwire = {
+      enabled: memberConfigs.bankwire ? memberConfigs.bankwire.enabled : true,
+      value: accounts.bankwire || memberConfigs.bankwire?.value || '',
+      qrCode: memberConfigs.bankwire?.qrCode || '',
+      accountName: memberConfigs.bankwire?.accountName || member.fullName || ''
+    }
+  }
+  if (accounts.paypal || memberConfigs.paypal?.value) {
+    configs.paypal = {
+      enabled: memberConfigs.paypal ? memberConfigs.paypal.enabled : true,
+      value: accounts.paypal || memberConfigs.paypal?.value || '',
+      qrCode: memberConfigs.paypal?.qrCode || '',
+      accountName: memberConfigs.paypal?.accountName || member.fullName || ''
+    }
+  }
+  if (accounts.venmo || memberConfigs.venmo?.value) {
+    configs.venmo = {
+      enabled: memberConfigs.venmo ? memberConfigs.venmo.enabled : true,
+      value: accounts.venmo || memberConfigs.venmo?.value || '',
+      qrCode: memberConfigs.venmo?.qrCode || '',
+      accountName: memberConfigs.venmo?.accountName || member.fullName || ''
+    }
+  }
+  if (accounts.cashapp || memberConfigs.cashapp?.value) {
+    configs.cashapp = {
+      enabled: memberConfigs.cashapp ? memberConfigs.cashapp.enabled : true,
+      value: accounts.cashapp || memberConfigs.cashapp?.value || '',
+      qrCode: memberConfigs.cashapp?.qrCode || '',
+      accountName: memberConfigs.cashapp?.accountName || member.fullName || ''
+    }
+  }
+  if (accounts.applecash || memberConfigs.applecash?.value) {
+    configs.applecash = {
+      enabled: memberConfigs.applecash ? memberConfigs.applecash.enabled : true,
+      value: accounts.applecash || memberConfigs.applecash?.value || '',
+      qrCode: memberConfigs.applecash?.qrCode || '',
+      accountName: memberConfigs.applecash?.accountName || member.fullName || ''
+    }
+  }
+  
+  return configs
 }
 
 const INITIAL_STAFF = [
@@ -82,6 +184,8 @@ const INITIAL_STAFF = [
     position: 'Gel-X Artist',
     isActive: true,
     showInTipsFlow: true,
+    phone: '407-555-0123',
+    email: 'mia.tran@gmail.com',
     paymentAccounts: { venmo: '@mia-nails', cashapp: '$miaglow', zelle: 'mia.tran@gmail.com', vlinkpay: '' }
   },
   {
@@ -91,6 +195,8 @@ const INITIAL_STAFF = [
     position: 'Acrylic Specialist',
     isActive: true,
     showInTipsFlow: true,
+    phone: '407-555-0199',
+    email: 'vivian.le@gmail.com',
     paymentAccounts: { venmo: '', cashapp: '$vivianle', zelle: '407-555-0199', vlinkpay: 'VLP-8893-VL' }
   },
   {
@@ -100,6 +206,8 @@ const INITIAL_STAFF = [
     position: 'Pedicure Lead',
     isActive: true,
     showInTipsFlow: true,
+    phone: '407-555-0155',
+    email: 'ashley@glownails.com',
     paymentAccounts: { venmo: '@ashley-pedi', cashapp: '', zelle: 'ashley@glownails.com', vlinkpay: '' }
   },
   {
@@ -109,6 +217,8 @@ const INITIAL_STAFF = [
     position: 'Nail Art Designer',
     isActive: false,
     showInTipsFlow: true,
+    phone: '407-555-0144',
+    email: 'hanna.art@gmail.com',
     paymentAccounts: { venmo: '@hanna-art', cashapp: '', zelle: '', vlinkpay: 'VLP-1148-HN' }
   }
 ]
@@ -163,11 +273,15 @@ const INITIAL_REVIEWS = [
 ]
 
 const INITIAL_TOUCHPOINTS = [
-  { id: 'tp-main', name: 'Lobby Welcome QR', type: 'Business Main' },
-  { id: 'tp-front', name: 'Front Desk Checkout', type: 'Front Desk' },
-  { id: 'tp-mani-1', name: 'Manicure Station 01', type: 'Table QR' },
-  { id: 'tp-pedi-2', name: 'Pedicure Chair 02', type: 'Table QR' },
-  { id: 'tp-receipt', name: 'Receipt Bottom QR', type: 'Receipt QR' }
+  { id: 'tp-main', name: 'Lobby Welcome QR', type: 'Business Main', isActive: true, scans: 245 },
+  { id: 'tp-front', name: 'Front Desk', type: 'Front Desk', isActive: true, scans: 842 },
+  { id: 'tp-mani-1', name: 'Manicure Station 01', type: 'Table QR', isActive: true, scans: 1102 },
+  { id: 'tp-mani-3', name: 'Manicure Station 03', type: 'Table QR', isActive: true, scans: 748 },
+  { id: 'tp-pedi-2', name: 'Pedicure Chair 02', type: 'Table QR', isActive: true, scans: 636 },
+  { id: 'tp-receipt', name: 'Receipt QR', type: 'Receipt QR', isActive: true, scans: 436 },
+  { id: 'tp-vip', name: 'VIP Pedicure Room', type: 'Business Main', isActive: true, scans: 312 },
+  { id: 'tp-nail-2', name: 'Nail Art Station 02', type: 'Table QR', isActive: true, scans: 195 },
+  { id: 'tp-acrylic-1', name: 'Acrylic Station 01', type: 'Table QR', isActive: true, scans: 280 }
 ]
 
 const STAFF_PERFORMANCE = [
@@ -197,6 +311,8 @@ const MENU_ITEMS = [
   { id: 'settings', label: 'Settings', icon: Settings },
   { id: 'support', label: 'Support', icon: HelpCircle }
 ]
+
+const visibleMenuItems = MENU_ITEMS
 
 function formatCurrency(value) {
   return new Intl.NumberFormat('en-US', {
@@ -287,7 +403,10 @@ function DashboardHeader({
   searchQuery, 
   setSearchQuery, 
   onAddTouchpoint, 
-  onSettings,
+  profile,
+  businessName,
+  onNavigateSettingsTab,
+  onLogout,
   notifications,
   setNotifications,
   isNotiDropdownOpen,
@@ -302,7 +421,9 @@ function DashboardHeader({
   const { currentLanguage, setLanguage, t } = useTranslation()
   const dropdownRef = useRef(null)
   const searchRef = useRef(null)
+  const headerDropdownRef = useRef(null)
   const [isSearchFocused, setIsSearchFocused] = useState(false)
+  const [isHeaderDropdownOpen, setIsHeaderDropdownOpen] = useState(false)
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -312,10 +433,13 @@ function DashboardHeader({
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setIsSearchFocused(false)
       }
+      if (headerDropdownRef.current && !headerDropdownRef.current.contains(event.target)) {
+        setIsHeaderDropdownOpen(false)
+      }
     }
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [setIsNotiDropdownOpen, setIsSearchFocused])
+  }, [setIsNotiDropdownOpen, setIsSearchFocused, setIsHeaderDropdownOpen])
 
   const unreadCount = notifications ? notifications.filter((n) => !n.read).length : 0
 
@@ -631,11 +755,71 @@ function DashboardHeader({
           )}
         </div>
 
-        <IconButton label="Settings" onClick={onSettings} className="hidden sm:inline-flex">
-          <Settings className="h-5 w-5" />
-        </IconButton>
-        <div className="hidden h-10 w-10 items-center justify-center rounded-full bg-nexoraBrand text-sm font-bold text-white shadow-nexora-soft sm:flex">
-          A
+        {/* Profile Dropdown */}
+        <div className="relative hidden sm:inline-flex" ref={headerDropdownRef}>
+          <button
+            type="button"
+            onClick={() => setIsHeaderDropdownOpen(!isHeaderDropdownOpen)}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-nexoraBorder overflow-hidden shadow-nexora-soft transition hover:opacity-90 focus:outline-none"
+            aria-label="Profile menu"
+            title="Profile menu"
+            id="header-profile-menu-btn"
+          >
+            {profile.avatar ? (
+              <img src={profile.avatar} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-nexoraBrand text-sm font-bold text-white">
+                {profile.fullName ? profile.fullName.charAt(0) : 'A'}
+              </div>
+            )}
+          </button>
+
+          {isHeaderDropdownOpen && (
+            <div 
+              className="absolute right-0 mt-12 w-64 rounded-xl border border-nexoraBorder bg-white shadow-2xl z-50 py-2 divide-y divide-nexoraRule animate-fadeIn"
+              id="header-profile-dropdown"
+            >
+              <div className="px-4 py-2.5">
+                <div className="text-xs font-black text-nexoraText truncate">{profile.fullName || businessName}</div>
+                <div className="text-[10px] text-nexoraMuted truncate mt-0.5">{profile.email}</div>
+              </div>
+              <div className="py-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onNavigateSettingsTab('profile')
+                    setIsHeaderDropdownOpen(false)
+                  }}
+                  className="flex w-full items-center px-4 py-2 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition text-left"
+                >
+                  {t('dashboard.menu.business_setting') || 'Business Setting'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onNavigateSettingsTab('kyb')
+                    setIsHeaderDropdownOpen(false)
+                  }}
+                  className="flex w-full items-center px-4 py-2 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition text-left"
+                >
+                  {t('dashboard.menu.kyb') || 'KYB Verification'}
+                </button>
+              </div>
+              <div className="py-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsHeaderDropdownOpen(false)
+                    onLogout()
+                  }}
+                  className="flex w-full items-center px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 transition text-left"
+                >
+                  <LogOut className="h-3.5 w-3.5 mr-2 shrink-0" />
+                  {t('dashboard.sidebar.sign_out') || 'Sign out'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
         <button onClick={onAddTouchpoint} className="nexora-primary-button">
           <Plus className="h-4 w-4" />
@@ -646,10 +830,23 @@ function DashboardHeader({
   )
 }
 
-function DashboardSidebar({ activeMenu, setActiveMenu, businessName, onLogout }) {
+function DashboardSidebar({ 
+  activeMenu, 
+  setActiveMenu, 
+  businessName, 
+  profile, 
+  settingsTab, 
+  setSettingsTab, 
+  isProfileExpanded, 
+  setIsProfileExpanded, 
+  hasKyb = true, 
+  onLogout 
+}) {
   const { currentLanguage, setLanguage, t } = useTranslation()
+
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col bg-nexoraSidebar px-5 py-7 text-white lg:flex">
+      {/* Logo block */}
       <div className="flex items-center gap-3 px-2">
         <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-12 w-12 shrink-0 object-contain shadow-nexora-soft" />
         <div className="min-w-0">
@@ -658,8 +855,96 @@ function DashboardSidebar({ activeMenu, setActiveMenu, businessName, onLogout })
         </div>
       </div>
 
-      <nav className="mt-9 flex-1 space-y-2">
-        {MENU_ITEMS.map((item) => {
+      {/* Expandable Profile Card */}
+      <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-4 shrink-0">
+        <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsProfileExpanded(!isProfileExpanded)}>
+          <div className="flex items-center gap-3 min-w-0">
+            {profile.avatar ? (
+              <img src={profile.avatar} alt="" className="h-10 w-10 rounded-full border border-white/10 object-cover" />
+            ) : (
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-sm font-extrabold">
+                {profile.fullName ? profile.fullName.charAt(0) : businessName.charAt(0)}
+              </div>
+            )}
+            <div className="min-w-0">
+              <div className="truncate text-xs font-black text-white/50 uppercase tracking-wider">{businessName}</div>
+              <div className="flex items-center gap-1 min-w-0 mt-0.5">
+                <div className="truncate text-sm font-bold text-white">{profile.fullName || businessName}</div>
+              </div>
+              <div className="text-[10px] text-white/40 truncate mt-0.5">{profile.email}</div>
+            </div>
+          </div>
+          <div className="text-white/70 hover:text-white transition ml-2">
+            {isProfileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </div>
+        </div>
+
+        {/* Submenu links */}
+        {isProfileExpanded && (
+          <div className="mt-3.5 pt-3 border-t border-white/5 space-y-1 animate-fadeIn">
+            <button
+              onClick={() => {
+                setActiveMenu('settings')
+                setSettingsTab('profile')
+              }}
+              className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
+                activeMenu === 'settings' && settingsTab === 'profile'
+                  ? 'bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] text-white shadow-sm'
+                  : 'text-white/60 hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === 'settings' && settingsTab === 'profile' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+              <span>{t('dashboard.menu.business_setting') || 'Business Setting'}</span>
+            </button>
+            <button
+              onClick={() => {
+                setActiveMenu('settings')
+                setSettingsTab('kyb')
+              }}
+              className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
+                activeMenu === 'settings' && settingsTab === 'kyb'
+                  ? 'bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] text-white shadow-sm'
+                  : 'text-white/60 hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === 'settings' && settingsTab === 'kyb' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+              <span>{t('dashboard.menu.kyb') || 'KYB Verification'}</span>
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Card 2: Current Plan & Manage Plan */}
+      <div className="mt-3 rounded-xl border border-white/10 bg-white/5 p-4 shrink-0">
+        <div className="text-[10px] font-extrabold uppercase tracking-wider text-white/45">
+          {t('dashboard.sidebar.current_plan_header') || 'CURRENT PLAN'}
+        </div>
+        {hasKyb ? (
+          <>
+            <div className="mt-1 text-sm font-black text-white">
+              {t('dashboard.sidebar.plan_name') || 'Pro Plan'}
+            </div>
+            <div className="mt-1 text-xs text-white/55">
+              {t('dashboard.sidebar.renews_text') || 'Renews on Jun 20, 2024'}
+            </div>
+          </>
+        ) : (
+          <div className="mt-1 text-xs font-semibold text-rose-400">
+            {t('dashboard.sidebar.no_plan') || 'No current plan'}
+          </div>
+        )}
+        <button 
+          type="button"
+          onClick={() => setActiveMenu('subscriptions')}
+          className="mt-3.5 w-full rounded-lg border border-white/15 py-1.5 text-center text-xs font-bold text-luxuryGold hover:bg-white/5 hover:border-white/25 transition-all"
+        >
+          {t('dashboard.sidebar.manage_plan') || 'Manage Plan'}
+        </button>
+      </div>
+
+      {/* Navigation Menu */}
+      <nav className="mt-6 flex-1 space-y-1.5 overflow-y-auto pr-1">
+        {visibleMenuItems.map((item) => {
           const { id, label } = item
           const isActive = activeMenu === id
           const localizedLabel = {
@@ -671,7 +956,6 @@ function DashboardSidebar({ activeMenu, setActiveMenu, businessName, onLogout })
             touchpoints: t('dashboard.menu.touchpoints'),
             devices: t('dashboard.menu.qr_nfc'),
             analytics: t('dashboard.menu.analytics'),
-            settings: t('dashboard.menu.settings'),
             support: t('dashboard.menu.support')
           }[id] || label
 
@@ -692,19 +976,9 @@ function DashboardSidebar({ activeMenu, setActiveMenu, businessName, onLogout })
         })}
       </nav>
 
-      <div className="space-y-4">
-        <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-sm font-extrabold">
-              {businessName.charAt(0)}
-            </div>
-            <div className="min-w-0">
-              <div className="truncate text-sm font-extrabold">{businessName}</div>
-              <div className="text-xs text-white/55">{t('dashboard.sidebar.plan_info')}</div>
-            </div>
-          </div>
-        </div>
-        <button onClick={onLogout} className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-white/65 transition hover:text-white">
+      {/* Bottom Sign Out */}
+      <div className="mt-auto pt-4 border-t border-white/10 shrink-0">
+        <button onClick={onLogout} className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-white/65 transition hover:text-white w-full">
           <LogOut className="h-4 w-4" />
           {t('dashboard.sidebar.sign_out')}
         </button>
@@ -725,33 +999,34 @@ function PageTitle() {
   )
 }
 
-function KpiCard({ label, value, delta, tone = 'brand', iconSrc, active = false, onClick }) {
+function KpiCard({ label, value, delta, active = false, onClick }) {
   const animatedValue = useCountUp(value)
-  const toneClass = {
-    brand: 'bg-nexoraBrandSoft text-nexoraBrand',
-    teal: 'bg-emerald-50 text-nexoraTeal',
-    warning: 'bg-amber-50 text-nexoraWarning',
-    danger: 'bg-red-50 text-nexoraDanger'
-  }[tone]
+  const { t } = useTranslation()
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`nexora-card dashboard-kpi-card min-h-[132px] p-4 text-left transition hover:-translate-y-0.5 hover:shadow-premium sm:min-h-[144px] sm:p-6 ${active ? 'ring-2 ring-nexoraBrand ring-offset-2' : ''}`}
+      className={`nexora-card p-5 text-left transition hover:-translate-y-0.5 hover:shadow-premium flex flex-col justify-between min-h-[140px] focus:outline-none ${
+        active 
+          ? 'border-nexoraBrand ring-1 ring-nexoraBrand bg-nexoraSurface' 
+          : 'border-nexoraBorder bg-nexoraSurface'
+      }`}
     >
-      <div className="flex items-start justify-between">
-        {iconSrc ? (
-          <img src={iconSrc} alt="" className="dashboard-kpi-icon h-10 w-10 object-contain" aria-hidden="true" />
-        ) : (
-          <span className={`flex h-10 w-10 items-center justify-center rounded-full ${toneClass}`}>
-            <span className="h-3.5 w-3.5 rounded-full bg-current" />
-          </span>
-        )}
-        <span className="dashboard-delta text-sm font-semibold text-nexoraSuccess">+{delta}</span>
+      <div>
+        <div className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
+          {label}
+        </div>
+        <div className="mt-2 text-2xl font-black text-nexoraText tracking-tight">
+          {animatedValue}
+        </div>
       </div>
-      <div className="mt-5 text-xs font-semibold uppercase tracking-[0.14em] text-nexoraMuted">{label}</div>
-      <div className="dashboard-kpi-value mt-3 text-2xl font-black leading-none text-nexoraText sm:text-3xl">{animatedValue}</div>
+      <div className="mt-4 flex items-center gap-1.5 text-xs font-bold text-emerald-600">
+        <span>▲ {delta}</span>
+        <span className="text-nexoraSubtle/80 font-semibold uppercase tracking-wider text-[10px]">
+          {t('dashboard.kpi.vs_last_week') || 'vs last week'}
+        </span>
+      </div>
     </button>
   )
 }
@@ -800,8 +1075,11 @@ const TIP_SERIES_BY_RANGE = {
 function buildChartPoints(series) {
   const width = 680
   const height = 265
+  if (!series || series.length === 0) {
+    return { points: [], max: 0, width, height }
+  }
   const maxValue = Math.max(...series.map((item) => item.value))
-  const max = Math.ceil(maxValue / 1000) * 1000
+  const max = maxValue === 0 ? 1000 : Math.ceil(maxValue / 1000) * 1000
   const points = series.map((item, index) => ({
     ...item,
     x: series.length === 1 ? width / 2 : (index / (series.length - 1)) * width,
@@ -912,12 +1190,12 @@ function useTransitionedPoints(targetPoints, range, duration = 650) {
   return currentPoints
 }
 
-function TipsOverTimePanel({ range, setRange }) {
+function TipsOverTimePanel({ range, setRange, hasKyb = true }) {
   const { t } = useTranslation()
   const chartRef = useRef(null)
   const [reveal, setReveal] = useState(0)
   const [hoverIndex, setHoverIndex] = useState(null)
-  const series = TIP_SERIES_BY_RANGE[range] || TIP_SERIES_BY_RANGE['7 Days']
+  const series = hasKyb ? (TIP_SERIES_BY_RANGE[range] || TIP_SERIES_BY_RANGE['7 Days']) : []
   const { points: chartPoints, max, width, height } = useMemo(() => buildChartPoints(series), [series])
   
   // Two different morphing speeds: 600ms for sharp line, 900ms for elastic neon trail
@@ -959,6 +1237,7 @@ function TipsOverTimePanel({ range, setRange }) {
   }, [range])
 
   const handlePointerMove = (event) => {
+    if (transitionedPoints.length === 0) return
     const rect = chartRef.current?.getBoundingClientRect()
     if (!rect) return
     const next = (event.clientX - rect.left) / rect.width
@@ -999,8 +1278,8 @@ function TipsOverTimePanel({ range, setRange }) {
       </div>
       <div className="mt-8 grid grid-cols-[42px_1fr] gap-2 sm:grid-cols-[56px_1fr] sm:gap-3">
         <div className="flex h-[235px] sm:h-[270px] flex-col justify-between text-right text-sm text-nexoraSubtle">
-          {yTicks.map((tick) => (
-            <span key={tick}>{formatCurrency(tick).replace('.00', '')}</span>
+          {yTicks.map((tick, index) => (
+            <span key={`${tick}-${index}`}>{formatCurrency(tick).replace('.00', '')}</span>
           ))}
         </div>
         <div
@@ -1031,18 +1310,21 @@ function TipsOverTimePanel({ range, setRange }) {
                   <rect x="0" y="-10" width={revealX} height={height + 20} />
                 </clipPath>
               </defs>
-              {yTicks.map((tick) => (
-                <line
-                  key={tick}
-                  x1="0"
-                  x2={width}
-                  y1={height - (tick / max) * height}
-                  y2={height - (tick / max) * height}
-                  className="stroke-slate-300 dark:stroke-slate-700"
-                  strokeWidth="1"
-                  strokeOpacity={0.07}
-                />
-              ))}
+              {yTicks.map((tick, index) => {
+                const yVal = max === 0 ? height : height - (tick / max) * height
+                return (
+                  <line
+                    key={`${tick}-${index}`}
+                    x1="0"
+                    x2={width}
+                    y1={yVal}
+                    y2={yVal}
+                    className="stroke-slate-300 dark:stroke-slate-700"
+                    strokeWidth="1"
+                    strokeOpacity={0.07}
+                  />
+                )
+              })}
               <g clipPath={`url(#tips-chart-reveal-${range.replace(/\s+/g, '-')})`}>
                 <path d={areaPath} fill="url(#tips-chart-area-grad)" className="dashboard-chart-area" />
                 {/* Secondary delayed neon trail */}
@@ -1156,9 +1438,9 @@ function TipsOverTimePanel({ range, setRange }) {
   )
 }
 
-function StaffLeaderboardPanel({ selectedStaff, setSelectedStaff }) {
+function StaffLeaderboardPanel({ selectedStaff, setSelectedStaff, hasKyb = true }) {
   const { t } = useTranslation()
-  const rows = STAFF_PERFORMANCE.slice(0, 4)
+  const rows = hasKyb ? STAFF_PERFORMANCE.slice(0, 4) : []
   const avatarClasses = ['bg-nexoraBrand text-white', 'bg-indigo-500 text-white', 'bg-nexoraLavender text-white', 'bg-indigo-200 text-white']
 
   return (
@@ -1258,27 +1540,372 @@ function LiveActivityPanel() {
   )
 }
 
-function Overview({ metrics, activeKpi, setActiveKpi, chartRange, setChartRange, selectedStaff, setSelectedStaff, onOpenTouchpoints, onOpenReviews }) {
-  const { t } = useTranslation()
+function renderStars(rating) {
+  const stars = []
+  for (let i = 1; i <= 5; i++) {
+    const fillPercentage = Math.max(0, Math.min(1, rating - i + 1))
+    stars.push(
+      <div key={i} className="relative inline-block h-4 w-4 text-gray-200">
+        <Star className="absolute top-0 left-0 h-4 w-4 text-amber-400 opacity-30" />
+        {fillPercentage > 0 && (
+          <div 
+            className="absolute top-0 left-0 overflow-hidden h-4 text-amber-400" 
+            style={{ width: `${fillPercentage * 100}%` }}
+          >
+            <Star className="h-4 w-4 fill-current text-amber-400" />
+          </div>
+        )}
+      </div>
+    )
+  }
+  return <div className="flex gap-0.5">{stars}</div>
+}
+
+function Overview({ 
+  metrics, 
+  activeKpi, 
+  setActiveKpi, 
+  chartRange, 
+  setChartRange, 
+  selectedStaff, 
+  setSelectedStaff, 
+  onOpenTouchpoints, 
+  onOpenReviews, 
+  businessName, 
+  previewQr, 
+  hasKyb = true 
+}) {
+  const { currentLanguage, t } = useTranslation()
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const dropdownRef = useRef(null)
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const dateRangeOptions = [
+    { value: '7 Days', label: currentLanguage === 'vi' ? '20 thg 5 - 26 thg 5, 2024' : 'May 20 - May 26, 2024' },
+    { value: '30 Days', label: currentLanguage === 'vi' ? '27 thg 4 - 26 thg 5, 2024' : 'Apr 27 - May 26, 2024' },
+    { value: '90 Days', label: currentLanguage === 'vi' ? '27 thg 2 - 26 thg 5, 2024' : 'Feb 27 - May 26, 2024' },
+    { value: '180 Days', label: currentLanguage === 'vi' ? '28 thg 11, 2023 - 26 thg 5, 2024' : 'Nov 28, 2023 - May 26, 2024' },
+    { value: '365 Days', label: currentLanguage === 'vi' ? '27 thg 5, 2023 - 26 thg 5, 2024' : 'May 27, 2023 - May 26, 2024' }
+  ]
+
+  const selectedOption = dateRangeOptions.find((opt) => opt.value === chartRange) || dateRangeOptions[0]
+
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-5">
-        <KpiCard label={t('dashboard.kpi.total_tips')} value={formatCurrency(metrics.totalTips)} delta="18.6%" tone="brand" iconSrc="/assets/menu/tips.png" active={activeKpi === 'tips'} onClick={() => setActiveKpi('tips')} />
-        <KpiCard label={t('dashboard.kpi.scans')} value={metrics.scans.toLocaleString()} delta="12.3%" tone="teal" iconSrc="/assets/menu/qr-nfc.png" active={activeKpi === 'scans'} onClick={() => setActiveKpi('scans')} />
-        <KpiCard label={t('dashboard.kpi.reviews')} value={metrics.totalReviews.toString()} delta="9.7%" tone="warning" iconSrc="/assets/menu/review.png" active={activeKpi === 'reviews'} onClick={() => setActiveKpi('reviews')} />
-        <KpiCard label={t('dashboard.kpi.avg_rating')} value={metrics.averageRating} delta="0.15" tone="danger" iconSrc="/assets/menu/star.png" active={activeKpi === 'rating'} onClick={() => setActiveKpi('rating')} />
-        <KpiCard label={t('dashboard.kpi.scans_conversion')} value={`${metrics.conversion}%`} delta="2.1%" tone="brand" iconSrc="/assets/menu/conversion.png" active={activeKpi === 'conversion'} onClick={() => setActiveKpi('conversion')} />
+      {/* Header Overview Row */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between" ref={dropdownRef}>
+        <h1 className="text-xl font-extrabold tracking-tight text-nexoraText uppercase">
+          {t('dashboard.overview_title') || 'Dashboard Overview'}
+        </h1>
+        <div className="relative">
+          <button 
+            type="button"
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="inline-flex h-10 items-center justify-between gap-3 rounded-lg border border-nexoraBorder bg-white px-4 py-2 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-nexoraMuted" />
+              <span>{selectedOption.label}</span>
+            </div>
+            <span className="text-nexoraMuted">▼</span>
+          </button>
+          
+          {isDropdownOpen && (
+            <div className="absolute right-0 mt-1 z-30 w-64 rounded-lg border border-nexoraBorder bg-white py-1 shadow-lg">
+              {dateRangeOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => {
+                    setChartRange(opt.value)
+                    setIsDropdownOpen(false)
+                  }}
+                  className={`flex w-full items-center justify-between px-4 py-2.5 text-left text-xs font-bold transition hover:bg-nexoraSurfaceMuted ${
+                    chartRange === opt.value ? 'text-nexoraBrand bg-nexoraCanvas' : 'text-nexoraText'
+                  }`}
+                >
+                  <span>{opt.label}</span>
+                  <span className="text-[10px] text-nexoraMuted uppercase tracking-wider">{opt.value}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
+      {/* KPI Cards Grid */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard 
+          label={t('dashboard.kpi.total_tips')} 
+          value={formatCurrency(metrics.totalTips)} 
+          delta="18.5%" 
+          active={activeKpi === 'tips'} 
+          onClick={() => setActiveKpi('tips')} 
+        />
+        <KpiCard 
+          label={t('dashboard.kpi.total_transactions')} 
+          value={metrics.totalTransactions.toString()} 
+          delta="16.7%" 
+          active={activeKpi === 'transactions'} 
+          onClick={() => setActiveKpi('transactions')} 
+        />
+        <KpiCard 
+          label={t('dashboard.kpi.avg_tip')} 
+          value={formatCurrency(metrics.averageTip)} 
+          delta="9.3%" 
+          active={activeKpi === 'avg_tip'} 
+          onClick={() => setActiveKpi('avg_tip')} 
+        />
+        <KpiCard 
+          label={t('dashboard.kpi.total_reviews')} 
+          value={metrics.totalReviews.toString()} 
+          delta="20.4%" 
+          active={activeKpi === 'reviews'} 
+          onClick={() => setActiveKpi('reviews')} 
+        />
+      </div>
+
+      {/* Panels Grid */}
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(340px,1fr)]">
-        <TipsOverTimePanel range={chartRange} setRange={setChartRange} />
-        <StaffLeaderboardPanel selectedStaff={selectedStaff} setSelectedStaff={setSelectedStaff} />
+        <TipsOverTimePanel range={chartRange} setRange={setChartRange} hasKyb={hasKyb} />
+        <StaffLeaderboardPanel selectedStaff={selectedStaff} setSelectedStaff={setSelectedStaff} hasKyb={hasKyb} />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <TopTouchPointsPanel onOpen={onOpenTouchpoints} />
-        <ReviewRoutingPanel onOpen={onOpenReviews} />
-        <LiveActivityPanel />
+      {/* Master Gateways Panel */}
+      <Panel className="p-7">
+        <h2 className="text-sm font-extrabold text-nexoraText uppercase tracking-wider">
+          {t('dashboard.master_gateway.title') || 'Master QR & NFC Gateways'}
+        </h2>
+        <p className="mt-1 text-xs text-nexoraMuted">
+          {t('dashboard.master_gateway.subtitle') || 'Quick access welcome points for direct customer engagement.'}
+        </p>
+        
+        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
+          {/* Master QR section */}
+          <div className="rounded-xl border border-nexoraBorder bg-nexoraCanvas p-5 flex flex-col md:flex-row justify-between gap-5">
+            <div className="flex-grow flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-nexoraBrandSoft text-nexoraBrand">
+                    <QrCode className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-nexoraText">
+                      {t('dashboard.master_gateway.qr_title') || 'Master Store QR'}
+                    </h3>
+                    <p className="text-[10px] text-nexoraMuted">
+                      {t('dashboard.master_gateway.qr_desc') || 'Lobby entrance / general pool tips'}
+                    </p>
+                  </div>
+                </div>
+                <p className="mt-4 text-xs leading-normal text-nexoraMuted">
+                  {t('dashboard.master_gateway.qr_body') || 'Place this QR code at the reception desk. Customers scan to choose their technician and submit reviews.'}
+                </p>
+              </div>
+              
+              <div className="mt-6 flex flex-wrap gap-2">
+                <button 
+                  type="button"
+                  onClick={() => previewQr({ name: 'Master Welcome QR', subtitle: 'Store Main Portal', slug: 'general', isActive: true })}
+                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-white border border-nexoraBorder px-4 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition cursor-pointer"
+                >
+                  <Eye className="h-4 w-4" />
+                  {t('dashboard.master_gateway.btn_open') || 'Open QR'}
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => {
+                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&data=${encodeURIComponent(
+                      `${window.location.origin}${window.location.pathname}?flow=customer&tech=general&biz=${encodeURIComponent(businessName)}`
+                    )}`
+                    const link = document.createElement('a')
+                    link.href = qrUrl
+                    link.download = 'master-qr.png'
+                    link.target = '_blank'
+                    link.click()
+                  }}
+                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white hover:bg-nexoraBrandDark transition cursor-pointer"
+                >
+                  <Download className="h-4 w-4" />
+                  {t('dashboard.master_gateway.btn_download') || 'Download QR'}
+                </button>
+              </div>
+            </div>
+            
+            {/* Visual QR mockup thumbnail */}
+            <div 
+              onClick={() => previewQr({ name: 'Master Welcome QR', subtitle: 'Store Main Portal', slug: 'general', isActive: true })}
+              className="flex-shrink-0 mx-auto md:mx-0 w-28 h-28 rounded-lg bg-white border border-nexoraBorder/80 p-2 flex items-center justify-center shadow-sm relative overflow-hidden cursor-pointer hover:border-nexoraBrand transition select-none group"
+            >
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
+                  `${window.location.origin}${window.location.pathname}?flow=customer&tech=general&biz=${encodeURIComponent(businessName)}`
+                )}`}
+                alt="Master QR Code Preview"
+                className="h-full w-full object-contain group-hover:scale-105 transition duration-200"
+              />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white">
+                <Eye className="h-5 w-5" />
+              </div>
+            </div>
+          </div>
+          
+          {/* Master NFC section */}
+          <div className="rounded-xl border border-nexoraBorder bg-nexoraCanvas p-5 flex flex-col md:flex-row justify-between gap-5">
+            <div className="flex-grow flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-nexoraBrandSoft text-nexoraBrand">
+                    <Sparkles className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-nexoraText">
+                      {t('dashboard.master_gateway.nfc_title') || 'Master NFC Tag'}
+                    </h3>
+                    <p className="text-[10px] text-nexoraMuted">
+                      {t('dashboard.master_gateway.nfc_desc') || 'Contactless desk pucks / smart signs'}
+                    </p>
+                  </div>
+                </div>
+                <p className="mt-4 text-xs leading-normal text-nexoraMuted">
+                  {t('dashboard.master_gateway.nfc_body') || 'Write the customer portal link to physical NFC tags. Customers tap their smartphones to pay tips and write reviews instantly.'}
+                </p>
+              </div>
+              
+              <div className="mt-6 flex flex-wrap gap-2">
+                <button 
+                  type="button"
+                  onClick={() => {
+                    const nfcUrl = `${window.location.origin}${window.location.pathname}?flow=customer&tech=general&biz=${encodeURIComponent(businessName)}`
+                    navigator.clipboard.writeText(nfcUrl)
+                    alert('Copied NFC redirect link to clipboard!')
+                  }}
+                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-white border border-nexoraBorder px-4 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition cursor-pointer"
+                >
+                  <Pointer className="h-4 w-4" />
+                  {t('dashboard.master_gateway.btn_copy_link') || 'Copy Link'}
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => {
+                    const slugify = (str) => str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+                    const configData = {
+                      version: "1.0",
+                      platform: "nexora-touch",
+                      businessName: businessName,
+                      gatewayUrl: `${window.location.origin}${window.location.pathname}?flow=customer&tech=general&biz=${encodeURIComponent(businessName)}`,
+                      nfcTagId: "master-nfc-general"
+                    }
+                    const blob = new Blob([JSON.stringify(configData, null, 2)], { type: 'application/json' })
+                    const url = URL.createObjectURL(blob)
+                    const link = document.createElement('a')
+                    link.href = url
+                    link.download = `${slugify(businessName)}-nfc-config.json`
+                    link.click()
+                    URL.revokeObjectURL(url)
+                  }}
+                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white hover:bg-nexoraBrandDark transition cursor-pointer"
+                >
+                  <Download className="h-4 w-4" />
+                  {t('dashboard.master_gateway.btn_download_config') || 'Download Config'}
+                </button>
+              </div>
+            </div>
+            
+            {/* Visual NFC puck mockup */}
+            <div className="flex-shrink-0 mx-auto md:mx-0 w-28 h-28 rounded-lg bg-white border border-nexoraBorder/80 p-3 flex flex-col items-center justify-center shadow-sm relative overflow-hidden select-none">
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-400/10 to-amber-500/20 border border-dashed border-amber-500/40 flex items-center justify-center animate-pulse">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-500 text-white shadow-md">
+                  <Sparkles className="h-[18px] w-[18px]" />
+                </span>
+              </div>
+              <div className="text-[9px] font-black uppercase text-amber-600 tracking-widest mt-2 animate-pulse">
+                NFC Active
+              </div>
+            </div>
+          </div>
+        </div>
+      </Panel>
+
+      {/* Review KPI Cards (Bottom Grid) */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Google Reviews */}
+        <Panel className="p-5 flex flex-col justify-between min-h-[140px] hover:shadow-premium transition">
+          <div>
+            <div className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
+              {t('dashboard.review_kpi.google_reviews')}
+            </div>
+            <div className="mt-2 text-2xl font-black text-nexoraText tracking-tight">
+              {metrics.googleRating}
+            </div>
+          </div>
+          <div className="mt-4 space-y-1">
+            {renderStars(metrics.googleRating)}
+            <div className="text-xs text-nexoraMuted mt-0.5">
+              {t('dashboard.review_kpi.reviews_count', { count: metrics.googleReviews })}
+            </div>
+          </div>
+        </Panel>
+
+        {/* Yelp Reviews */}
+        <Panel className="p-5 flex flex-col justify-between min-h-[140px] hover:shadow-premium transition">
+          <div>
+            <div className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
+              {t('dashboard.review_kpi.yelp_reviews')}
+            </div>
+            <div className="mt-2 text-2xl font-black text-nexoraText tracking-tight">
+              {metrics.yelpRating}
+            </div>
+          </div>
+          <div className="mt-4 space-y-1">
+            {renderStars(metrics.yelpRating)}
+            <div className="text-xs text-nexoraMuted mt-0.5">
+              {t('dashboard.review_kpi.reviews_count', { count: metrics.yelpReviews })}
+            </div>
+          </div>
+        </Panel>
+
+        {/* Response Rate */}
+        <Panel className="p-5 flex flex-col justify-between min-h-[140px] hover:shadow-premium transition">
+          <div>
+            <div className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
+              {t('dashboard.review_kpi.response_rate')}
+            </div>
+            <div className="mt-2 text-2xl font-black text-nexoraText tracking-tight">
+              {metrics.responseRate}%
+            </div>
+          </div>
+          <div className="mt-4 flex items-center gap-1.5 text-xs font-bold text-emerald-600">
+            <span>{t('dashboard.review_kpi.great') || 'Great!'}</span>
+          </div>
+        </Panel>
+
+        {/* Returning Customers */}
+        <Panel className="p-5 flex flex-col justify-between min-h-[140px] hover:shadow-premium transition">
+          <div>
+            <div className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
+              {t('dashboard.review_kpi.returning_customers')}
+            </div>
+            <div className="mt-2 text-2xl font-black text-nexoraText tracking-tight">
+              {metrics.returningCustomers}%
+            </div>
+          </div>
+          <div className="mt-4 flex items-center gap-1.5 text-xs font-bold text-emerald-600">
+            <span>▲ {metrics.returningCustomersDelta}%</span>
+            <span className="text-nexoraMuted font-semibold">
+              {t('dashboard.kpi.vs_last_week') || 'vs last week'}
+            </span>
+          </div>
+        </Panel>
       </div>
     </div>
   )
@@ -1376,8 +2003,10 @@ function StaffView({ staff, onAdd, onEdit, onDelete, onQr, onToggle, onToggleTip
   )
 }
 
-function TouchpointsView({ touchpoints, newTouchpoint, setNewTouchpoint, onAdd, onDelete, onQr }) {
+function TouchpointsView({ touchpoints, newTouchpoint, setNewTouchpoint, onAdd, onDelete, onQr, onToggleStatus, transactions, businessName }) {
   const { t } = useTranslation()
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null)
+
   return (
     <div className="space-y-5">
       <div>
@@ -1410,82 +2039,582 @@ function TouchpointsView({ touchpoints, newTouchpoint, setNewTouchpoint, onAdd, 
           </button>
         </div>
       </Panel>
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {touchpoints.map((point) => (
-          <Panel key={point.id} className="p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <span className="rounded-md bg-nexoraCanvas px-2 py-1 text-[10px] font-bold uppercase text-nexoraBrand">{point.type}</span>
-                <h3 className="mt-3 font-extrabold text-nexoraText">{point.name}</h3>
-                <p className="mt-1 text-[11px] text-nexoraMuted">nexora.vlinkpay.com/touch/{point.id}</p>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {touchpoints.map((point) => {
+          const isPointActive = point.isActive !== false
+          const qrUrl = `${window.location.origin}${window.location.pathname}?tech=tp/${point.id}&biz=${encodeURIComponent(businessName)}`
+          
+          // Calculate dynamic revenue
+          const revenue = transactions
+            .filter((tx) => tx.status === 'Success' && (tx.touchpoint === point.name || tx.touchpoint === point.id))
+            .reduce((sum, tx) => sum + (tx.amount || 0), 0)
+
+          return (
+            <Panel key={point.id} className="p-3.5 flex gap-4 hover:shadow-premium transition-all duration-300 group border border-nexoraBorder relative overflow-hidden min-h-[145px]">
+              {/* Subtle top decoration strip */}
+              <div className={`absolute top-0 left-0 right-0 h-1 transition-colors ${isPointActive ? 'bg-gradient-to-r from-nexoraBrand to-indigo-600' : 'bg-slate-300'}`} />
+              
+              {/* Left Column: QR Code Box */}
+              <div 
+                onClick={() => isPointActive && onQr(point)}
+                className="relative w-[115px] h-[115px] rounded-xl bg-white border border-nexoraBorder/60 p-2 flex items-center justify-center shadow-sm cursor-pointer hover:border-nexoraBrand transition-all hover:scale-[1.03] active:scale-95 group/qr select-none overflow-hidden shrink-0 self-center"
+                title={t('dashboard.modals.download_print_qr')}
+              >
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrUrl)}`}
+                  alt="Scan QR"
+                  className={`h-full w-full object-contain transition-opacity duration-200 ${isPointActive ? 'opacity-100' : 'opacity-30 filter grayscale'}`}
+                />
+                {!isPointActive && (
+                  <div className="absolute inset-0 bg-slate-900/60 flex flex-col items-center justify-center text-white text-[9px] font-black uppercase tracking-wider p-1 text-center">
+                    <ShieldAlert className="h-4 w-4 text-amber-400 mb-0.5 animate-pulse" />
+                    <span>Disabled</span>
+                  </div>
+                )}
+                {isPointActive && (
+                  <div className="absolute inset-0 bg-nexoraBrand/80 opacity-0 group-hover/qr:opacity-100 flex flex-col items-center justify-center text-white text-[9px] font-black uppercase tracking-wider transition-opacity p-1 text-center">
+                    <QrCode className="h-4 w-4 mb-0.5" />
+                    <span>Preview</span>
+                  </div>
+                )}
               </div>
-              <IconButton label={t('common.delete')} onClick={() => onDelete(point.id)} className="hover:text-rose-600">
-                <Trash2 className="h-4 w-4" />
-              </IconButton>
+
+              {/* Right Column: Details */}
+              <div className="flex-grow flex flex-col justify-between min-w-0 py-0.5">
+                {/* Top Section: Title & Delete Button */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="font-extrabold text-sm text-nexoraText leading-snug truncate" title={point.name}>
+                      {point.name}
+                    </h3>
+                    <IconButton 
+                      label={t('common.delete')} 
+                      onClick={() => setDeleteConfirmId(point.id)} 
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition shrink-0"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </IconButton>
+                  </div>
+                  <p className="text-[9.5px] font-mono text-nexoraSubtle select-all truncate">
+                    nexora.vlinkpay.com/touch/{point.id}
+                  </p>
+                </div>
+
+                {/* Middle Section: Active / Inactive Toggle */}
+                <div className="flex items-center gap-2 mt-1.5">
+                  <button
+                    onClick={() => onToggleStatus(point.id)}
+                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      isPointActive ? 'bg-nexoraBrand' : 'bg-slate-200'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        isPointActive ? 'translate-x-4' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                  <span className={`text-[10px] font-extrabold uppercase tracking-wider ${isPointActive ? 'text-emerald-600' : 'text-slate-400'}`}>
+                    {isPointActive ? t('dashboard.touchpoint_stats.active') || 'Active' : t('dashboard.touchpoint_stats.inactive') || 'Inactive'}
+                  </span>
+                </div>
+
+                {/* Bottom Section: Compact Metrics */}
+                <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-nexoraMuted">
+                  <div>
+                    {t('dashboard.touchpoint_stats.scans') || 'Scans'}: <span className="font-black text-nexoraText">{point.scans || 0}</span>
+                  </div>
+                  <div>
+                    {t('dashboard.touchpoint_stats.revenue') || 'Revenue'}: <span className="font-black text-nexoraSuccess">${revenue.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            </Panel>
+          )
+        })}
+      </div>
+
+      {/* Custom Delete Confirmation Modal */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl animate-scaleUp">
+            <h3 className="text-base font-extrabold text-slate-800">
+              {t('dashboard.touchpoint_stats.delete_confirm_title') || 'Confirm Delete'}
+            </h3>
+            <p className="mt-2.5 text-xs text-slate-500 leading-normal">
+              {t('dashboard.touchpoint_stats.delete_confirm') || 'Are you sure you want to delete this touch point? This action cannot be undone.'}
+            </p>
+            <div className="mt-5 flex justify-end gap-2 border-t border-slate-100 pt-3">
+              <button
+                onClick={() => setDeleteConfirmId(null)}
+                className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50 transition"
+              >
+                {t('common.cancel') || 'Cancel'}
+              </button>
+              <button
+                onClick={() => {
+                  onDelete(deleteConfirmId)
+                  setDeleteConfirmId(null)
+                }}
+                className="rounded-lg bg-red-600 px-4 py-2 text-xs font-bold text-white hover:bg-red-700 transition"
+              >
+                {t('common.delete') || 'Delete'}
+              </button>
             </div>
-            <button onClick={() => onQr(point)} className="mt-5 inline-flex items-center gap-2 text-xs font-extrabold text-nexoraBrand">
-              <QrCode className="h-4 w-4" />
-              {t('dashboard.modals.download_print_qr')}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ReviewsView({ reviews, staff, filter, setFilter, setupData }) {
+  const { t } = useTranslation()
+  const [sourceFilter, setSourceFilter] = useState('all')
+
+  const reviewLinks = useMemo(() => {
+    const defaultLinks = {
+      googleReview: 'https://g.page/r/cGoldenGlowNails/review',
+      yelpReview: 'https://www.yelp.com/biz/golden-glow-nails-palm-beach',
+      feedbackEmail: 'manager@goldenglownails.com'
+    }
+    return setupData?.reviewLinks || defaultLinks
+  }, [setupData])
+
+  const filtered = useMemo(() => {
+    return reviews.filter((review) => {
+      // 1. Staff Filter
+      const matchesStaff = filter === 'all' || review.staffId === filter
+
+      // 2. Source / Rating Filter
+      let matchesSource = true
+      if (sourceFilter === 'google') {
+        matchesSource = review.category?.toLowerCase().includes('google')
+      } else if (sourceFilter === 'yelp') {
+        matchesSource = review.category?.toLowerCase().includes('yelp')
+      } else if (sourceFilter === 'low_stars') {
+        matchesSource = review.rating <= 3
+      }
+
+      return matchesStaff && matchesSource
+    })
+  }, [reviews, filter, sourceFilter])
+
+  return (
+    <div className="space-y-5">
+      {/* Page Header */}
+      <div className="pb-4 border-b border-nexoraBorder">
+        <h2 className="text-xl font-extrabold text-nexoraText">{t('dashboard.menu.reviews')}</h2>
+        <p className="mt-1 text-xs text-nexoraMuted">{renderTextWithGoldStars(t('setup.review_routing_policy'))}</p>
+      </div>
+
+      {/* Filter Toolbar */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-white p-3 rounded-xl border border-nexoraBorder/60 shadow-sm">
+        {/* Source & Rating Filters (Left) */}
+        <div className="flex flex-wrap gap-1.5">
+          {[
+            { id: 'all', label: t('staff_detail.tab_all') || 'All' },
+            { id: 'google', label: t('dashboard.review_kpi.google_reviews') || 'Google' },
+            { id: 'yelp', label: t('dashboard.review_kpi.yelp_reviews') || 'Yelp' },
+            { id: 'low_stars', label: t('dashboard.review_kpi.low_stars_filter') || '3★ or below' }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setSourceFilter(tab.id)}
+              className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold uppercase transition cursor-pointer select-none ${
+                sourceFilter === tab.id
+                  ? 'bg-nexoraBrand text-white shadow-sm'
+                  : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
+              }`}
+            >
+              {tab.label}
             </button>
+          ))}
+        </div>
+
+        {/* Technician Dropdown Filter (Right) */}
+        <div className="w-full sm:w-48 shrink-0">
+          <CustomSelect
+            size="sm"
+            className="font-semibold"
+            buttonClass="h-9 px-3 text-xs"
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
+            options={[
+              { value: 'all', label: t('staff_detail.tab_all') },
+              ...staff.map((member) => ({ value: member.id, label: member.nickname }))
+            ]}
+          />
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        {filtered.length === 0 ? (
+          <Panel className="p-8 text-center text-nexoraMuted font-medium text-xs">
+            {t('staff_detail.no_reviews_matching') || 'No reviews matching the filter criteria.'}
           </Panel>
-        ))}
+        ) : (
+          filtered.map((review) => {
+            const isGoogle = review.category?.toLowerCase().includes('google')
+            const isYelp = review.category?.toLowerCase().includes('yelp')
+            const isInternal = !isGoogle && !isYelp
+
+            return (
+              <Panel key={review.id} className="p-4 hover:shadow-premium transition-shadow duration-200">
+                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {/* Star rating rendering */}
+                      <div className="flex items-center gap-0.5 text-amber-500">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-3.5 w-3.5 ${
+                              i < review.rating ? 'fill-current' : 'text-slate-200'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-xs font-extrabold text-nexoraWarning">{review.rating}.0★</span>
+                    </div>
+                    <p className="text-sm text-nexoraText">"{review.comment}"</p>
+                    <p className="text-xs text-nexoraMuted">{review.staffName} - {review.date}</p>
+                  </div>
+
+                  {/* Redirecting Logo Badges / Internal tag */}
+                  <div className="self-end sm:self-start shrink-0">
+                    {isGoogle && (
+                      <a
+                        href={reviewLinks.googleReview}
+                        target="_blank"
+                        rel="noreferrer"
+                        title={t('common.view_on_google') || 'View on Google'}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-2.5 py-1.5 hover:bg-slate-50 transition shadow-sm hover:scale-[1.03] duration-150 cursor-pointer"
+                      >
+                        <svg viewBox="0 0 24 24" className="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05" />
+                          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335" />
+                        </svg>
+                        <span className="text-[10px] font-black uppercase text-nexoraText tracking-wider">{t('dashboard.review_kpi.google_reviews') || 'Google'}</span>
+                        <ExternalLink className="h-3 w-3 text-nexoraMuted" />
+                      </a>
+                    )}
+                    {isYelp && (
+                      <a
+                        href={reviewLinks.yelpReview}
+                        target="_blank"
+                        rel="noreferrer"
+                        title={t('common.view_on_yelp') || 'View on Yelp'}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-2.5 py-1.5 hover:bg-slate-50 transition shadow-sm hover:scale-[1.03] duration-150 cursor-pointer"
+                      >
+                        <svg viewBox="0 0 24 24" className="h-4 w-4 fill-[#D32323]" xmlns="http://www.w3.org/2000/svg">
+                          <path d="m7.6885 15.1415-3.6715.8483c-.3769.0871-.755.183-1.1452.155-.2611-.0188-.5122-.0414-.7606-.213a1.179 1.179 0 0 1-.331-.3594c-.3486-.5519-.3656-1.3661-.3697-2.0004a6.2874 6.2874 0 0 1 .3314-2.0642 1.857 1.857 0 0 1 .1073-.2474 2.3426 2.3426 0 0 1 .1255-.2165 2.4572 2.4572 0 0 1 .1563-.1975 1.1736 1.1736 0 0 1 .399-.2831 1.082 1.082 0 0 1 .4592-.0837c.2355.0016.5139.052.91.1734.0555.0191.1237.0382.1856.0572.3277.1013.7048.2404 1.1499.3987.6863.2404 1.3663.487 2.0463.7397l1.2117.4423c.2217.0807.4363.18.6412.297.174.0984.3273.2298.4512.387a1.217 1.217 0 0 1 .192.4309 1.2205 1.2205 0 0 1-.872 1.4522c-.0468.0151-.0852.0239-.1085.0293l-1.105.2553-.0031-.001zM18.8208 7.565a1.8506 1.8506 0 0 0-.2042-.1754 2.4082 2.4082 0 0 0-.2077-.1394 2.3607 2.3607 0 0 0-.2269-.109 1.1705 1.1705 0 0 0-.482-.0796 1.0862 1.0862 0 0 0-.4498.1263c-.2107.1048-.4388.2732-.742.5551-.042.0417-.0947.0886-.142.133-.2502.2351-.5286.5252-.8599.863a114.6363 114.6363 0 0 0-1.5166 1.5629l-.8962.9293a4.1897 4.1897 0 0 0-.4466.5483 1.541 1.541 0 0 0-.2364.5459 1.2199 1.2199 0 0 0 .0107.4518l.0046.02a1.218 1.218 0 0 0 1.4184.923 1.162 1.162 0 0 0 .1105-.0213l4.7781-1.104c.3766-.087.7587-.1667 1.097-.3631.2269-.1316.4428-.262.5909-.5252a1.1793 1.1793 0 0 0 .1405-.4683c.0733-.6512-.2668-1.3908-.5403-1.963a6.2792 6.2792 0 0 0-1.2001-1.7103zM8.9703.0754a8.6724 8.6724 0 0 0-.83.1564c-.2754.066-.548.1383-.8146.2236-.868.2844-2.0884.8063-2.295 1.8065-.1165.5655.1595 1.1439.3737 1.66.2595.6254.614 1.1889.9373 1.7777.8543 1.5545 1.7245 3.0993 2.5922 4.6457.259.4617.5416 1.0464 1.043 1.2856a1.058 1.058 0 0 0 .1013.0383c.2248.0851.4699.1016.7041.0471a4.3015 4.3015 0 0 0 .0418-.0097 1.2136 1.2136 0 0 0 .5658-.3397 1.1033 1.1033 0 0 0 .079-.0822c.3463-.435.3454-1.0833.3764-1.6134.1042-1.771.2139-3.5423.3009-5.3142.0332-.6712.1055-1.3333.0655-2.0096-.0328-.5579-.0368-1.1984-.3891-1.6563-.6218-.8073-1.9476-.741-2.8523-.6158zm2.084 15.9505a1.1053 1.1053 0 0 0-1.2306-.4145 1.1398 1.1398 0 0 0-.1526.0633 1.4806 1.4806 0 0 0-.2171.1354c-.1992.1475-.3668.3392-.5196.5315-.0386.049-.074.1143-.12.1562l-.7686 1.0573a113.9168 113.9168 0 0 0-1.2913 1.789c-.278.3895-.5184.7184-.7083 1.0094-.036.0547-.0734.116-.1075.1647-.2277.3522-.3566.6092-.4228.8381a1.0945 1.0945 0 0 0-.046.4721c.0211.1655.0768.3246.1635.467.046.0715.0957.1406.1487.207a2.334 2.334 0 0 0 .1754.1825 1.843 1.843 0 0 0 .2108.1732c.5304.369 1.1112.6342 1.722.8391a6.0958 6.0958 0 0 0 1.5716.3004c.091.0046.1821.0025.2728-.006a2.3878 2.3878 0 0 0 .2506-.0351 2.3862 2.3862 0 0 0 .2447-.071 1.1927 1.1927 0 0 0 .4175-.2658c.1127-.113.1994-.249.2541-.3989.0889-.2214.1473-.5026.1857-.92.0034-.0593.0118-.1305.0177-.1958.0304-.3463.0443-.7531.0666-1.2315.0375-.7357.067-1.4681.0903-2.2026 0 0 .0495-1.3053.0494-1.306.0113-.3008.002-.6342-.0814-.9336a1.396 1.396 0 0 0-.1756-.4054zm8.6754 2.0439c-.1605-.176-.3878-.3514-.7462-.5682-.0518-.0288-.1124-.0674-.1684-.1009-.2985-.1795-.658-.3684-1.078-.5965a120.7615 120.7615 0 0 0-1.9427-1.042l-1.1515-.6107c-.0597-.0175-.1203-.0607-.1766-.0878-.2212-.1058-.4558-.2045-.6992-.2498a1.4915 1.4915 0 0 0-.2545-.0265 1.1527 1.1527 0 0 0-.1648.01 1.1077 1.1077 0 0 0-.9227.9133 1.4186 1.4186 0 0 0 .0159.439c.0563.3065.1932.6096.3346.875l.615 1.1526c.3422.65.6884 1.2963 1.0435 1.9406.229.4202.4196.7799.5982 1.078.0338.056.0721.1163.1011.1682.2173.3584.392.584.569.7458.1146.1107.252.195.4026.247.1583.0525.326.071.4919.0546a2.368 2.368 0 0 0 .251-.0435c.0817-.022.1622-.048.241-.0784a1.863 1.863 0 0 0 .2475-.1143 6.1018 6.1018 0 0 0 1.2818-.9597c.4596-.4522.8659-.9454 1.182-1.51.044-.08.0819-.163.1138-.2483a2.49 2.49 0 0 0 .0773-.2411c.0186-.083.033-.1669.0429-.2513a1.188 1.188 0 0 0-.0565-.491 1.0933 1.0933 0 0 0-.248-.4041z"/>
+                        </svg>
+                        <span className="text-[10px] font-black uppercase text-nexoraText tracking-wider">{t('dashboard.review_kpi.yelp_reviews') || 'Yelp'}</span>
+                        <ExternalLink className="h-3 w-3 text-nexoraMuted" />
+                      </a>
+                    )}
+                    {isInternal && (
+                      <span className="inline-flex items-center gap-1.5 rounded-lg bg-rose-50 border border-rose-100 text-rose-700 px-2.5 py-1.5 text-[10px] font-extrabold uppercase select-none">
+                        <Lock className="h-3 w-3" />
+                        {t('staff_detail.private_recovery') || 'Internal Feedback'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </Panel>
+            )
+          })
+        )}
       </div>
     </div>
   )
 }
 
-function ReviewsView({ reviews, staff, filter, setFilter }) {
+function ReportsView({ transactions, staff = [], touchpoints = [] }) {
   const { t } = useTranslation()
-  const filtered = filter === 'all' ? reviews : reviews.filter((review) => review.staffId === filter)
+
+  // Filter States
+  const [dateRangePreset, setDateRangePreset] = useState('all')
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const [minAmount, setMinAmount] = useState('')
+  const [maxAmount, setMaxAmount] = useState('')
+  const [selectedStaff, setSelectedStaff] = useState('all')
+  const [selectedTouchpoint, setSelectedTouchpoint] = useState('all')
+  const [selectedPayment, setSelectedPayment] = useState('all')
+  const [selectedStatus, setSelectedStatus] = useState('all')
+
+  const resetFilters = () => {
+    setDateRangePreset('all')
+    setStartDate('')
+    setEndDate('')
+    setMinAmount('')
+    setMaxAmount('')
+    setSelectedStaff('all')
+    setSelectedTouchpoint('all')
+    setSelectedPayment('all')
+    setSelectedStatus('all')
+  }
+
+  // Filter logic
+  const filtered = useMemo(() => {
+    return transactions.filter(tx => {
+      // 1. Date filter
+      if (dateRangePreset !== 'all') {
+        const txDateStr = tx.dateTime.split(' ')[0]
+        
+        if (dateRangePreset === 'today') {
+          const todayStr = new Date().toISOString().split('T')[0]
+          if (txDateStr !== todayStr) return false
+        } else if (dateRangePreset === 'yesterday') {
+          const yesterday = new Date()
+          yesterday.setDate(yesterday.getDate() - 1)
+          const yesterdayStr = yesterday.toISOString().split('T')[0]
+          if (txDateStr !== yesterdayStr) return false
+        } else if (dateRangePreset === '7days') {
+          const limit = new Date()
+          limit.setDate(limit.getDate() - 7)
+          const limitStr = limit.toISOString().split('T')[0]
+          if (txDateStr < limitStr) return false
+        } else if (dateRangePreset === '30days') {
+          const limit = new Date()
+          limit.setDate(limit.getDate() - 30)
+          const limitStr = limit.toISOString().split('T')[0]
+          if (txDateStr < limitStr) return false
+        } else if (dateRangePreset === 'custom') {
+          if (startDate && txDateStr < startDate) return false
+          if (endDate && txDateStr > endDate) return false
+        }
+      }
+
+      // 2. Amount filter
+      if (minAmount && tx.amount < parseFloat(minAmount)) return false
+      if (maxAmount && tx.amount > parseFloat(maxAmount)) return false
+
+      // 3. Staff filter
+      if (selectedStaff !== 'all' && tx.staffName !== selectedStaff) return false
+
+      // 4. Touchpoint filter
+      if (selectedTouchpoint !== 'all' && tx.touchpoint !== selectedTouchpoint) return false
+
+      // 5. Payment method filter
+      if (selectedPayment !== 'all' && tx.paymentMethod.toLowerCase() !== selectedPayment.toLowerCase()) return false
+
+      // 6. Status filter
+      if (selectedStatus !== 'all' && tx.status.toLowerCase() !== selectedStatus.toLowerCase()) return false
+
+      return true
+    })
+  }, [transactions, dateRangePreset, startDate, endDate, minAmount, maxAmount, selectedStaff, selectedTouchpoint, selectedPayment, selectedStatus])
+
+  // Options memoization
+  const staffOptions = useMemo(() => {
+    return [
+      { value: 'all', label: t('dashboard.activity_log.all_staff') || 'All Staff' },
+      ...(staff || []).map(member => ({ value: member.nickname, label: member.nickname }))
+    ]
+  }, [staff, t])
+
+  const touchpointOptions = useMemo(() => {
+    const uniqueFromTx = Array.from(new Set(transactions.map(tx => tx.touchpoint)))
+    const uniquePoints = Array.from(new Set([
+      ...(touchpoints || []).map(tp => tp.name),
+      ...uniqueFromTx
+    ])).filter(Boolean)
+
+    return [
+      { value: 'all', label: t('dashboard.activity_log.all_touchpoints') || 'All Touch Points' },
+      ...uniquePoints.map(name => ({ value: name, label: name }))
+    ]
+  }, [touchpoints, transactions, t])
+
+  const paymentOptions = [
+    { value: 'all', label: t('dashboard.activity_log.all_payments') || 'All Payment Methods' },
+    { value: 'Venmo', label: 'Venmo' },
+    { value: 'Cash App', label: 'Cash App' },
+    { value: 'Zelle', label: 'Zelle' },
+    { value: 'VLINKPAY', label: 'VLINKPAY' }
+  ]
+
+  const statusOptions = [
+    { value: 'all', label: t('dashboard.activity_log.all_statuses') || 'All Statuses' },
+    { value: 'Success', label: 'Success' },
+    { value: 'Pending', label: 'Pending' },
+    { value: 'Failed', label: 'Failed' }
+  ]
+
+  const datePresetOptions = [
+    { value: 'all', label: t('dashboard.activity_log.preset_all') || 'All Time' },
+    { value: 'today', label: t('dashboard.activity_log.preset_today') || 'Today' },
+    { value: 'yesterday', label: t('dashboard.activity_log.preset_yesterday') || 'Yesterday' },
+    { value: '7days', label: t('dashboard.activity_log.preset_7days') || 'Last 7 Days' },
+    { value: '30days', label: t('dashboard.activity_log.preset_30days') || 'Last 30 Days' },
+    { value: 'custom', label: t('dashboard.activity_log.preset_custom') || 'Custom Range' }
+  ]
+
+  const statusColorClass = (status) => {
+    if (status?.toLowerCase() === 'success') return 'text-emerald-600 font-semibold'
+    if (status?.toLowerCase() === 'failed') return 'text-rose-600 font-semibold'
+    return 'text-amber-600 font-semibold'
+  }
 
   return (
     <div className="space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-extrabold text-nexoraText">{t('dashboard.menu.reviews')}</h2>
-          <p className="mt-1 text-xs text-nexoraMuted">{renderTextWithGoldStars(t('setup.review_routing_policy'))}</p>
+          <h2 className="text-xl font-extrabold text-nexoraText">{t('dashboard.menu.transactions')}</h2>
+          <p className="mt-1 text-xs text-nexoraMuted">{t('dashboard.activity_log.title')}</p>
         </div>
-        <CustomSelect
-          size="sm"
-          className="w-40 font-semibold"
-          buttonClass="h-9 px-3 text-xs"
-          value={filter}
-          onChange={(event) => setFilter(event.target.value)}
-          options={[
-            { value: 'all', label: t('staff_detail.tab_all') },
-            ...staff.map((member) => ({ value: member.id, label: member.nickname }))
-          ]}
-        />
       </div>
-      <div className="space-y-3">
-        {filtered.map((review) => (
-          <Panel key={review.id} className="p-4">
-            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-extrabold text-nexoraWarning">{review.rating}.0★</span>
-                  <span className={`rounded-md px-2 py-1 text-[10px] font-bold ${review.rating >= 4 ? 'bg-amber-50 text-amber-700' : 'bg-rose-50 text-rose-700'}`}>{review.category}</span>
-                </div>
-                <p className="mt-2 text-sm text-nexoraText">"{review.comment}"</p>
-                <p className="mt-2 text-xs text-nexoraMuted">{review.staffName} - {review.date}</p>
-              </div>
-              <span className="text-xs font-bold text-nexoraBrand">{review.rating >= 4 ? t('customer.google_review_btn') : t('customer.submit_internal_btn')}</span>
-            </div>
-          </Panel>
-        ))}
-      </div>
-    </div>
-  )
-}
 
-function ReportsView({ transactions }) {
-  const { t } = useTranslation()
-  return (
-    <div className="space-y-5">
-      <div>
-        <h2 className="text-xl font-extrabold text-nexoraText">{t('dashboard.menu.transactions')}</h2>
-        <p className="mt-1 text-xs text-nexoraMuted">{t('dashboard.activity_log.title')}</p>
+      <div className="rounded-xl border border-nexoraBorder bg-white p-4 shadow-sm space-y-4">
+        <div className="flex items-center justify-between border-b border-nexoraRule pb-3">
+          <div className="flex items-center gap-2">
+            <SlidersHorizontal className="h-4 w-4 text-nexoraBrand" />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-nexoraText">
+              {t('dashboard.activity_log.filter_title') || 'Filters'}
+            </h3>
+          </div>
+          <button
+            onClick={resetFilters}
+            className="flex items-center gap-1.5 text-xs font-bold text-nexoraMuted hover:text-nexoraBrand transition-colors cursor-pointer select-none"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            {t('dashboard.activity_log.filter_reset') || 'Reset'}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+          {/* Date Preset */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
+              {t('dashboard.activity_log.filter_date') || 'Date'}
+            </label>
+            <CustomSelect
+              size="sm"
+              value={dateRangePreset}
+              onChange={(e) => setDateRangePreset(e.target.value)}
+              options={datePresetOptions}
+            />
+          </div>
+
+          {/* Amount range */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
+              {t('dashboard.activity_log.filter_amount') || 'Amount'}
+            </label>
+            <div className="flex items-center gap-1.5">
+              <div className="relative w-full">
+                <span className="absolute left-2 top-[8.5px] text-[10px] font-bold text-nexoraSubtle">$</span>
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="Min"
+                  value={minAmount}
+                  onChange={(e) => setMinAmount(e.target.value)}
+                  className="h-9 w-full rounded-lg border border-nexoraBorder pl-5 pr-1 text-xs outline-none focus:border-nexoraBrand focus:ring-1 focus:ring-nexoraBrand/20 text-nexoraText bg-white transition-all"
+                />
+              </div>
+              <span className="text-nexoraSubtle text-xs">-</span>
+              <div className="relative w-full">
+                <span className="absolute left-2 top-[8.5px] text-[10px] font-bold text-nexoraSubtle">$</span>
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="Max"
+                  value={maxAmount}
+                  onChange={(e) => setMaxAmount(e.target.value)}
+                  className="h-9 w-full rounded-lg border border-nexoraBorder pl-5 pr-1 text-xs outline-none focus:border-nexoraBrand focus:ring-1 focus:ring-nexoraBrand/20 text-nexoraText bg-white transition-all"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Staff */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
+              {t('dashboard.activity_log.filter_staff') || 'Staff'}
+            </label>
+            <CustomSelect
+              size="sm"
+              value={selectedStaff}
+              onChange={(e) => setSelectedStaff(e.target.value)}
+              options={staffOptions}
+            />
+          </div>
+
+          {/* Touch Point */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
+              {t('dashboard.activity_log.filter_tp') || 'Touch Point'}
+            </label>
+            <CustomSelect
+              size="sm"
+              value={selectedTouchpoint}
+              onChange={(e) => setSelectedTouchpoint(e.target.value)}
+              options={touchpointOptions}
+            />
+          </div>
+
+          {/* Payment Method */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
+              {t('dashboard.activity_log.filter_payment') || 'Payment method'}
+            </label>
+            <CustomSelect
+              size="sm"
+              value={selectedPayment}
+              onChange={(e) => setSelectedPayment(e.target.value)}
+              options={paymentOptions}
+            />
+          </div>
+
+          {/* Status */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
+              {t('dashboard.activity_log.filter_status') || 'Status'}
+            </label>
+            <CustomSelect
+              size="sm"
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              options={statusOptions}
+            />
+          </div>
+        </div>
+
+        {/* Custom date range selection */}
+        {dateRangePreset === 'custom' && (
+          <div className="flex flex-wrap items-center gap-4 pt-3 border-t border-dashed border-nexoraRule transition-all">
+            <div className="flex items-center gap-2">
+              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
+                {t('dashboard.activity_log.start_date') || 'Start Date'}
+              </label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="h-8 rounded-lg border border-nexoraBorder px-2.5 text-xs outline-none focus:border-nexoraBrand focus:ring-1 focus:ring-nexoraBrand/20 text-nexoraText bg-white transition-all"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">
+                {t('dashboard.activity_log.end_date') || 'End Date'}
+              </label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="h-8 rounded-lg border border-nexoraBorder px-2.5 text-xs outline-none focus:border-nexoraBrand focus:ring-1 focus:ring-nexoraBrand/20 text-nexoraText bg-white transition-all"
+              />
+            </div>
+          </div>
+        )}
       </div>
+
       <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-white">
         <table className="w-full min-w-[780px] text-left text-xs">
           <thead className="bg-nexoraCanvas text-[10px] font-extrabold uppercase text-nexoraMuted">
@@ -1500,17 +2629,25 @@ function ReportsView({ transactions }) {
             </tr>
           </thead>
           <tbody>
-            {transactions.map((tx) => (
-              <tr key={tx.id} className="border-t border-nexoraRule">
-                <td className="px-4 py-3 font-bold text-nexoraText">{tx.id}</td>
-                <td className="px-4 py-3 text-nexoraMuted">{tx.dateTime}</td>
-                <td className="px-4 py-3 font-extrabold text-nexoraText">{formatCurrency(tx.amount)}</td>
-                <td className="px-4 py-3">{tx.staffName}</td>
-                <td className="px-4 py-3">{tx.touchpoint}</td>
-                <td className="px-4 py-3">{tx.paymentMethod}</td>
-                <td className="px-4 py-3 text-emerald-600">{tx.status}</td>
+            {filtered.length === 0 ? (
+              <tr>
+                <td colSpan="7" className="px-4 py-8 text-center text-nexoraMuted font-medium">
+                  {t('dashboard.activity_log.empty_activity') || 'No transactions matched the criteria.'}
+                </td>
               </tr>
-            ))}
+            ) : (
+              filtered.map((tx) => (
+                <tr key={tx.id} className="border-t border-nexoraRule">
+                  <td className="px-4 py-3 font-bold text-nexoraText">{tx.id}</td>
+                  <td className="px-4 py-3 text-nexoraMuted">{tx.dateTime}</td>
+                  <td className="px-4 py-3 font-extrabold text-nexoraText">{formatCurrency(tx.amount)}</td>
+                  <td className="px-4 py-3">{tx.staffName}</td>
+                  <td className="px-4 py-3">{tx.touchpoint}</td>
+                  <td className="px-4 py-3">{tx.paymentMethod}</td>
+                  <td className={`px-4 py-3 ${statusColorClass(tx.status)}`}>{tx.status}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
@@ -1544,6 +2681,10 @@ function ComingSoon({ activeMenu, onBack }) {
 
 function StaffModal({ open, editing, form, errors, setForm, onClose, onSave }) {
   const { t } = useTranslation()
+  const [payoutSetupOpen, setPayoutSetupOpen] = useState(false)
+  const [payoutSetupWallet, setPayoutSetupWallet] = useState('venmo')
+  const [tempPayoutValues, setTempPayoutValues] = useState({ value: '', qrCode: '', accountName: '' })
+
   if (!open) return null
 
   const handleAvatarChange = (event) => {
@@ -1555,6 +2696,62 @@ function StaffModal({ open, editing, form, errors, setForm, onClose, onSave }) {
       setForm({ ...form, avatar: reader.result })
     }
     reader.readAsDataURL(file)
+  }
+
+  const handleToggleWallet = (walletKey) => {
+    const configs = form.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
+    const config = configs[walletKey] || { enabled: false, value: '', qrCode: '' }
+    
+    if (config.enabled) {
+      setForm({
+        ...form,
+        payoutConfigs: {
+          ...configs,
+          [walletKey]: { ...config, enabled: false }
+        }
+      })
+    } else {
+      if (config.value?.trim()) {
+        setForm({
+          ...form,
+          payoutConfigs: {
+            ...configs,
+            [walletKey]: { ...config, enabled: true }
+          }
+        })
+      } else {
+        openPayoutSetup(walletKey)
+      }
+    }
+  }
+
+  const openPayoutSetup = (walletKey) => {
+    const configs = form.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
+    const config = configs[walletKey] || { enabled: false, value: '', qrCode: '' }
+    setTempPayoutValues({
+      value: config.value || '',
+      qrCode: config.qrCode || '',
+      accountName: config.accountName || form.fullName || ''
+    })
+    setPayoutSetupWallet(walletKey)
+    setPayoutSetupOpen(true)
+  }
+
+  const handlePayoutSubmit = (value, qrCode, accountName) => {
+    const configs = form.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
+    setForm({
+      ...form,
+      payoutConfigs: {
+        ...configs,
+        [payoutSetupWallet]: {
+          enabled: true,
+          value: value.trim(),
+          qrCode: qrCode,
+          accountName: accountName.trim()
+        }
+      }
+    })
+    setPayoutSetupOpen(false)
   }
 
   return (
@@ -1611,52 +2808,82 @@ function StaffModal({ open, editing, form, errors, setForm, onClose, onSave }) {
               <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.position} onChange={(event) => setForm({ ...form, position: event.target.value })} placeholder="Nail Tech" />
             </div>
           </div>
+          
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_phone') || 'Phone Number'}</label>
+              <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.phone || ''} onChange={(event) => setForm({ ...form, phone: event.target.value })} placeholder={t('setup.staff_phone_placeholder') || 'e.g., 407-555-0123'} />
+              {errors.phone && <p className="mt-1 text-[10px] font-bold text-rose-600">{errors.phone}</p>}
+            </div>
+            <div>
+              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_email') || 'Email Address'}</label>
+              <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.email || ''} onChange={(event) => setForm({ ...form, email: event.target.value })} placeholder={t('setup.staff_email_placeholder') || 'e.g., mia.tran@gmail.com'} />
+              {errors.email && <p className="mt-1 text-[10px] font-bold text-rose-600">{errors.email}</p>}
+            </div>
+          </div>
           <div>
-            <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.linked_wallets') || 'Linked Payment Wallets'}</label>
-            <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="relative">
-                <span className="absolute left-3 top-[9px] flex items-center justify-center pointer-events-none">
-                  {WalletLogos.venmo}
-                </span>
-                <input 
-                  className="h-9 w-full rounded-lg border border-nexoraBorder pl-9 pr-3 text-xs outline-none focus:border-nexoraBrand" 
-                  value={form.venmo} 
-                  onChange={(event) => setForm({ ...form, venmo: event.target.value })} 
-                  placeholder="Venmo @handle" 
-                />
+            <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.payout_methods') || 'Payout Methods'}</label>
+            <div className="mt-2 space-y-4">
+              <div className="divide-y divide-slate-100 rounded-xl border border-nexoraBorder bg-white px-4">
+                {[
+                  { name: 'Zelle', key: 'zelle' },
+                  { name: 'Bank Wire', key: 'bankwire' },
+                  { name: 'PayPal', key: 'paypal' },
+                  { name: 'Venmo', key: 'venmo' },
+                  { name: 'Cash App', key: 'cashapp' },
+                  { name: 'Apple Cash', key: 'applecash' }
+                ].map((wallet) => {
+                  const config = (form.payoutConfigs && form.payoutConfigs[wallet.key]) || { enabled: false, value: '', qrCode: '' }
+                  
+                  return (
+                    <div key={wallet.key} className="flex items-center justify-between py-3">
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleWallet(wallet.key)}
+                          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                            config.enabled ? 'bg-amber-600' : 'bg-slate-200'
+                          }`}
+                        >
+                          <span
+                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                              config.enabled ? 'translate-x-5' : 'translate-x-0'
+                            }`}
+                          />
+                        </button>
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-50 shrink-0">
+                            {WalletLogos[wallet.key]}
+                          </span>
+                          <span className="text-xs font-bold text-slate-700">{wallet.name}</span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => openPayoutSetup(wallet.key)}
+                        className="flex items-center gap-1 text-[11px] font-bold text-amber-600 hover:text-amber-700 transition"
+                      >
+                        <Edit2 className="h-3 w-3 stroke-[2.5]" />
+                        <span>{t('setup.payout_account') || 'Payout account'}</span>
+                      </button>
+                    </div>
+                  )
+                })}
               </div>
-              <div className="relative">
-                <span className="absolute left-3 top-[9px] flex items-center justify-center pointer-events-none">
-                  {WalletLogos.cashapp}
-                </span>
-                <input 
-                  className="h-9 w-full rounded-lg border border-nexoraBorder pl-9 pr-3 text-xs outline-none focus:border-nexoraBrand" 
-                  value={form.cashapp} 
-                  onChange={(event) => setForm({ ...form, cashapp: event.target.value })} 
-                  placeholder="Cash App $cashtag" 
-                />
-              </div>
-              <div className="relative">
-                <span className="absolute left-3 top-[9px] flex items-center justify-center pointer-events-none">
-                  {WalletLogos.zelle}
-                </span>
-                <input 
-                  className="h-9 w-full rounded-lg border border-nexoraBorder pl-9 pr-3 text-xs outline-none focus:border-nexoraBrand" 
-                  value={form.zelle} 
-                  onChange={(event) => setForm({ ...form, zelle: event.target.value })} 
-                  placeholder="Zelle phone/email" 
-                />
-              </div>
-              <div className="relative">
-                <span className="absolute left-3 top-[9px] flex items-center justify-center pointer-events-none">
-                  {WalletLogos.vlinkpay}
-                </span>
-                <input 
-                  className="h-9 w-full rounded-lg border border-nexoraBorder pl-9 pr-3 text-xs outline-none focus:border-nexoraBrand" 
-                  value={form.vlinkpay} 
-                  onChange={(event) => setForm({ ...form, vlinkpay: event.target.value })} 
-                  placeholder="VLINKPAY ID" 
-                />
+
+              <div>
+                <label className="text-[9px] font-extrabold uppercase text-nexoraMuted mb-1 block">VLINKPAY ID</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-[9px] flex items-center justify-center pointer-events-none">
+                    {WalletLogos.vlinkpay}
+                  </span>
+                  <input 
+                    className="h-9 w-full rounded-lg border border-nexoraBorder pl-9 pr-3 text-xs outline-none focus:border-nexoraBrand" 
+                    value={form.vlinkpay || ''} 
+                    onChange={(event) => setForm({ ...form, vlinkpay: event.target.value })} 
+                    placeholder="VLINKPAY ID" 
+                  />
+                </div>
               </div>
             </div>
             {errors.payment && <p className="mt-2 flex items-center gap-1 text-xs font-bold text-rose-600"><AlertTriangle className="h-3.5 w-3.5" />{errors.payment}</p>}
@@ -1686,6 +2913,16 @@ function StaffModal({ open, editing, form, errors, setForm, onClose, onSave }) {
           <button onClick={onSave} className="rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white">{t('common.save')}</button>
         </div>
       </div>
+
+      <PayoutSetupModal
+        open={payoutSetupOpen}
+        walletKey={payoutSetupWallet}
+        staffName={form.fullName}
+        initialValue={tempPayoutValues.value}
+        initialQrCode={tempPayoutValues.qrCode}
+        onClose={() => setPayoutSetupOpen(false)}
+        onSubmit={handlePayoutSubmit}
+      />
     </div>
   )
 }
@@ -1696,6 +2933,10 @@ function QrModal({ target, businessName, onClose }) {
 
   // Build the live customer portal URL for this touchpoint/staff QR
   const qrUrl = `${window.location.origin}${window.location.pathname}?flow=customer&tech=${encodeURIComponent(target.slug)}&biz=${encodeURIComponent(businessName)}`
+
+  const isStaff = target.slug?.startsWith('staff/')
+  const displayName = isStaff ? target.name.replace('Personal QR - ', '') : ''
+  const displayRole = isStaff ? target.subtitle : ''
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-nexoraText/70 p-4 py-6 backdrop-blur-sm sm:items-center qr-modal-backdrop">
@@ -1720,10 +2961,13 @@ function QrModal({ target, businessName, onClose }) {
             <span className="text-[8px] font-black tracking-wider text-slate-800 qr-print-brand-text">NEXORA</span>
           </div>
 
-          <div className="h-1 w-14 rounded-full bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] qr-print-card-strip" />
-          <div>
-            <div className="text-[10px] font-extrabold uppercase text-nexoraBrand qr-print-biz-name">{businessName}</div>
-            <div className="mt-1 text-[8px] font-bold uppercase text-nexoraMuted qr-print-scan-text">Scan to tip and review</div>
+          <div className="w-full text-center">
+            <div className="text-[10px] font-extrabold uppercase text-nexoraBrand tracking-wide qr-print-biz-name mx-auto">
+              {isStaff ? displayName : (target.name || 'Master QR')}
+            </div>
+            <div className="text-[7.5px] font-bold text-nexoraMuted qr-print-staff-info mx-auto">
+              {businessName} {isStaff && displayRole ? `• ${displayRole}` : ''}
+            </div>
           </div>
           
           {/* Real Scan-Ready QR Code */}
@@ -1735,9 +2979,13 @@ function QrModal({ target, businessName, onClose }) {
             />
           </div>
 
-          <div className="flex items-center gap-1 text-[8px] font-bold text-nexoraSubtle qr-print-footer">
-            <Scissors className="h-3 w-3 text-nexoraBrand" />
-            Secure redirect by VLINKPAY
+          <div className="text-[8px] font-extrabold uppercase text-nexoraMuted tracking-wider qr-print-scan-text leading-tight mx-auto">
+            {t('customer.scan_to_tip_review') || 'Scan to Tip & Review'}
+          </div>
+
+          <div className="flex items-center gap-1 text-[7.5px] font-bold text-nexoraSubtle qr-print-footer">
+            <ShieldCheck className="h-2.5 w-2.5 text-nexoraBrand shrink-0" />
+            <span>Secure redirect by VLINKPAY</span>
           </div>
         </div>
         
@@ -1750,7 +2998,7 @@ function QrModal({ target, businessName, onClose }) {
           <a
             href={qrUrl}
             target="_blank"
-            rel="noreferrer"
+            rel="opener"
             className="inline-flex items-center gap-1 text-[10.5px] font-black text-nexoraBrand hover:underline tracking-wide bg-nexoraBrandSoft px-3 py-1.5 rounded-lg transition"
           >
             <span>{t('dashboard.modals.customer_view_test') || 'Mô phỏng quét QR (Mở trang khách) ›'}</span>
@@ -1769,13 +3017,82 @@ function QrModal({ target, businessName, onClose }) {
   )
 }
 
-export default function Dashboard({ setupData, onLogout }) {
+export default function Dashboard({ 
+  setupData, 
+  hasKyb = true, 
+  userEmail = '', 
+  onKybRequired, 
+  onKybSuccess, 
+  initialMenu = 'overview', 
+  initialSettingsTab = 'profile', 
+  onLogout 
+}) {
   const { t } = useTranslation()
-  const [activeMenu, setActiveMenu] = useState('overview')
+  const [activeMenu, setActiveMenu] = useState(initialMenu)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [staff, setStaff] = useState(INITIAL_STAFF)
+  const [staff, setStaff] = useState(() => 
+    INITIAL_STAFF.map(member => ({
+      ...member,
+      payoutConfigs: getPayoutConfigsFromMember(member)
+    }))
+  )
+
+  const [profile, setProfile] = useState(() => {
+    try {
+      const saved = localStorage.getItem('nexora_profile_settings')
+      if (saved) return JSON.parse(saved)
+    } catch (e) {
+      console.error(e)
+    }
+    // Fallback if not saved yet
+    const setupDataStr = localStorage.getItem('nexora_merchant_setup')
+    let parsedSetup = null
+    if (setupDataStr) {
+      try {
+        parsedSetup = JSON.parse(setupDataStr)
+      } catch (err) {}
+    }
+    const storeInfo = setupData?.businessInfo || parsedSetup?.businessInfo
+    const reviewInfo = setupData?.reviewLinks || parsedSetup?.reviewLinks
+    return {
+      fullName: storeInfo?.ownerName || (hasKyb ? 'Elena Rostova' : ''),
+      email: storeInfo?.businessEmail || userEmail || (hasKyb ? 'owner@goldenglownails.com' : ''),
+      avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200&h=200',
+      businessName: storeInfo?.name || (hasKyb ? 'Golden Glow Nail Spa & Salon' : ''),
+      businessPhone: storeInfo?.phone || '',
+      businessWebsite: storeInfo?.website || '',
+      street: storeInfo?.address || '',
+      googleReview: reviewInfo?.googleReview || '',
+      yelpReview: reviewInfo?.yelpReview || '',
+      paymentAccounts: storeInfo?.paymentAccounts || {
+        zelle: '',
+        bankwire: '',
+        paypal: '',
+        venmo: '',
+        cashapp: '',
+        applecash: '',
+        vlinkpay: ''
+      }
+    }
+  })
+
+  const [settingsTab, setSettingsTab] = useState(initialSettingsTab)
+  const [isProfileExpanded, setIsProfileExpanded] = useState(false)
+
+  useEffect(() => {
+    if (initialMenu) {
+      setActiveMenu(initialMenu)
+    }
+  }, [initialMenu])
+
+  useEffect(() => {
+    if (initialSettingsTab) {
+      setSettingsTab(initialSettingsTab)
+    }
+  }, [initialSettingsTab])
 
   const [transactions, setTransactions] = useState(() => {
+    if (!hasKyb) return []
     try {
       const saved = localStorage.getItem('nexora_transactions')
       if (saved) return JSON.parse(saved)
@@ -1787,6 +3104,7 @@ export default function Dashboard({ setupData, onLogout }) {
   })
 
   const [reviews, setReviews] = useState(() => {
+    if (!hasKyb) return []
     try {
       const saved = localStorage.getItem('nexora_reviews')
       if (saved) return JSON.parse(saved)
@@ -1798,6 +3116,7 @@ export default function Dashboard({ setupData, onLogout }) {
   })
 
   const [notifications, setNotifications] = useState(() => {
+    if (!hasKyb) return []
     try {
       const saved = localStorage.getItem('nexora_notifications')
       if (saved) return JSON.parse(saved)
@@ -1831,14 +3150,36 @@ export default function Dashboard({ setupData, onLogout }) {
     nickname: '',
     position: 'Nail Tech',
     avatar: '',
+    phone: '',
+    email: '',
     venmo: '',
     cashapp: '',
     zelle: '',
     vlinkpay: '',
-    showInTipsFlow: true
+    showInTipsFlow: true,
+    payoutConfigs: { ...DEFAULT_PAYOUT_CONFIGS }
   })
 
-  const businessName = setupData?.businessInfo?.name || 'Golden Glow Nail Spa'
+  const businessName = profile?.businessName || setupData?.businessInfo?.name || 'Golden Glow Nail Spa'
+
+  // Initialize sessionStorage with initial profile and setupData on mount
+  useEffect(() => {
+    if (profile) {
+      const sessionProfile = sessionStorage.getItem('nexora_profile_settings')
+      if (!sessionProfile) {
+        sessionStorage.setItem('nexora_profile_settings', JSON.stringify(profile))
+      }
+    }
+  }, [profile])
+
+  useEffect(() => {
+    if (setupData) {
+      const sessionSetup = sessionStorage.getItem('nexora_merchant_setup')
+      if (!sessionSetup) {
+        sessionStorage.setItem('nexora_merchant_setup', JSON.stringify(setupData))
+      }
+    }
+  }, [setupData])
 
   useEffect(() => {
     if (setupData?.staffList?.length) {
@@ -1848,14 +3189,20 @@ export default function Dashboard({ setupData, onLogout }) {
         nickname: member.nickname,
         position: member.position,
         avatar: member.avatar || '',
+        phone: member.phone || '',
+        email: member.email || '',
         isActive: member.isActive !== undefined ? member.isActive : true,
         showInTipsFlow: member.showInTipsFlow !== undefined ? member.showInTipsFlow : true,
         paymentAccounts: {
           venmo: member.paymentAccounts?.venmo || '',
           cashapp: member.paymentAccounts?.cashapp || '',
           zelle: member.paymentAccounts?.zelle || '',
-          vlinkpay: member.paymentAccounts?.vlinkpay || ''
-        }
+          vlinkpay: member.paymentAccounts?.vlinkpay || '',
+          paypal: member.paymentAccounts?.paypal || '',
+          bankwire: member.paymentAccounts?.bankwire || '',
+          applecash: member.paymentAccounts?.applecash || ''
+        },
+        payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member)
       })))
     }
     if (setupData?.touchPoints?.length) {
@@ -1863,42 +3210,123 @@ export default function Dashboard({ setupData, onLogout }) {
     }
   }, [setupData])
 
-  // Sync edits in dashboard to localStorage so simulator/customer flow gets the updates
+  // Sync edits in dashboard to storage so simulator/customer flow gets the updates
   useEffect(() => {
-    const saved = localStorage.getItem('nexora_merchant_setup')
+    const saved = localStorage.getItem('nexora_merchant_setup') || sessionStorage.getItem('nexora_merchant_setup')
+    let parsed = null
     if (saved) {
       try {
-        const parsed = JSON.parse(saved)
-        parsed.staffList = staff
-        parsed.touchPoints = touchpoints
-        localStorage.setItem('nexora_merchant_setup', JSON.stringify(parsed))
-      } catch (e) {
-        console.error(e)
-      }
+        parsed = JSON.parse(saved)
+      } catch (e) {}
     }
-  }, [staff, touchpoints])
+    if (!parsed && setupData) {
+      parsed = { ...setupData }
+    }
+    if (parsed) {
+      parsed.staffList = staff
+      parsed.touchPoints = touchpoints
+      localStorage.setItem('nexora_merchant_setup', JSON.stringify(parsed))
+      sessionStorage.setItem('nexora_merchant_setup', JSON.stringify(parsed))
+    }
+  }, [staff, touchpoints, setupData])
 
-  // Listen for storage events (e.g. from customer flow tipping)
+  // Listen for storage events (e.g. from customer flow tipping or settings edits)
   useEffect(() => {
     const handleStorageChange = (e) => {
       try {
+        if (!e || !e.key) {
+          const val = localStorage.getItem('nexora_profile_settings') || sessionStorage.getItem('nexora_profile_settings')
+          if (val) setProfile(JSON.parse(val))
+          
+          const txs = localStorage.getItem('nexora_transactions')
+          if (txs) setTransactions(JSON.parse(txs))
+
+          const revs = localStorage.getItem('nexora_reviews')
+          if (revs) setReviews(JSON.parse(revs))
+
+          const notis = localStorage.getItem('nexora_notifications')
+          if (notis) setNotifications(JSON.parse(notis))
+          return
+        }
+
         if (e.key === 'nexora_transactions' && e.newValue) {
           setTransactions(JSON.parse(e.newValue))
         } else if (e.key === 'nexora_reviews' && e.newValue) {
           setReviews(JSON.parse(e.newValue))
         } else if (e.key === 'nexora_notifications' && e.newValue) {
           setNotifications(JSON.parse(e.newValue))
+        } else if (e.key === 'nexora_profile_settings') {
+          const val = e.newValue || localStorage.getItem('nexora_profile_settings') || sessionStorage.getItem('nexora_profile_settings')
+          if (val) {
+            setProfile(JSON.parse(val))
+          }
         }
       } catch (err) {
-        console.error('Error parsing synced storage key', e.key, err)
+        console.error('Error parsing synced storage key', e?.key, err)
       }
     }
     window.addEventListener('storage', handleStorageChange)
     return () => window.removeEventListener('storage', handleStorageChange)
   }, [])
 
+  // Handle profile reset or load when hasKyb changes
+  useEffect(() => {
+    const saved = localStorage.getItem('nexora_profile_settings')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (!hasKyb) {
+          parsed.fullName = ''
+          parsed.email = userEmail || ''
+          parsed.businessName = ''
+          parsed.paymentAccounts = {
+            zelle: '',
+            bankwire: '',
+            paypal: '',
+            venmo: '',
+            cashapp: '',
+            applecash: '',
+            vlinkpay: ''
+          }
+        }
+        setProfile(parsed)
+      } catch (err) {}
+    } else {
+      const setupDataStr = localStorage.getItem('nexora_merchant_setup')
+      let parsedSetup = null
+      if (setupDataStr) {
+        try {
+          parsedSetup = JSON.parse(setupDataStr)
+        } catch (err) {}
+      }
+      const storeInfo = setupData?.businessInfo || parsedSetup?.businessInfo
+      const reviewInfo = setupData?.reviewLinks || parsedSetup?.reviewLinks
+      setProfile({
+        fullName: storeInfo?.ownerName || (hasKyb ? 'Elena Rostova' : ''),
+        email: storeInfo?.businessEmail || userEmail || (hasKyb ? 'owner@goldenglownails.com' : ''),
+        avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200&h=200',
+        businessName: storeInfo?.name || (hasKyb ? 'Golden Glow Nail Spa & Salon' : ''),
+        businessPhone: storeInfo?.phone || '',
+        businessWebsite: storeInfo?.website || '',
+        street: storeInfo?.address || '',
+        googleReview: reviewInfo?.googleReview || '',
+        yelpReview: reviewInfo?.yelpReview || '',
+        paymentAccounts: storeInfo?.paymentAccounts || {
+          zelle: '',
+          bankwire: '',
+          paypal: '',
+          venmo: '',
+          cashapp: '',
+          applecash: '',
+          vlinkpay: ''
+        }
+      })
+    }
+  }, [hasKyb, userEmail, setupData])
+
   // Filter lists based on searchQuery
   const filteredStaff = useMemo(() => {
+    if (!hasKyb) return []
     if (!searchQuery) return staff
     const query = searchQuery.toLowerCase().trim()
     return staff.filter(member => 
@@ -1906,9 +3334,10 @@ export default function Dashboard({ setupData, onLogout }) {
       member.nickname.toLowerCase().includes(query) ||
       member.position.toLowerCase().includes(query)
     )
-  }, [staff, searchQuery])
+  }, [staff, searchQuery, hasKyb])
 
   const filteredTouchpoints = useMemo(() => {
+    if (!hasKyb) return []
     if (!searchQuery) return touchpoints
     const query = searchQuery.toLowerCase().trim()
     return touchpoints.filter(point => 
@@ -1916,7 +3345,7 @@ export default function Dashboard({ setupData, onLogout }) {
       point.type.toLowerCase().includes(query) ||
       (point.staffName && point.staffName.toLowerCase().includes(query))
     )
-  }, [touchpoints, searchQuery])
+  }, [touchpoints, searchQuery, hasKyb])
 
   const filteredReviews = useMemo(() => {
     if (!searchQuery) return reviews
@@ -1942,16 +3371,52 @@ export default function Dashboard({ setupData, onLogout }) {
     )
   }, [transactions, searchQuery])
 
-  const metrics = useMemo(() => ({
-    totalTips: 2742.68,
-    scans: 4892,
-    totalReviews: 312,
-    averageRating: '4.68',
-    conversion: '21.74'
-  }), [])
+  const metrics = useMemo(() => {
+    if (!hasKyb) {
+      return {
+        totalTips: 0.00,
+        totalTransactions: 0,
+        averageTip: 0.00,
+        totalReviews: 0,
+        googleRating: 0.0,
+        googleReviews: 0,
+        yelpRating: 0.0,
+        yelpReviews: 0,
+        responseRate: 0,
+        returningCustomers: 0,
+        returningCustomersDelta: 0
+      }
+    }
+    return {
+      totalTips: 4785.00,
+      totalTransactions: 312,
+      averageTip: 15.34,
+      totalReviews: 128,
+      googleRating: 4.8,
+      googleReviews: 96,
+      yelpRating: 4.5,
+      yelpReviews: 32,
+      responseRate: 68,
+      returningCustomers: 68,
+      returningCustomersDelta: 12
+    }
+  }, [hasKyb])
 
   const resetStaffForm = () => {
-    setStaffForm({ fullName: '', nickname: '', position: 'Nail Tech', avatar: '', venmo: '', cashapp: '', zelle: '', vlinkpay: '', showInTipsFlow: true })
+    setStaffForm({
+      fullName: '',
+      nickname: '',
+      position: 'Nail Tech',
+      avatar: '',
+      phone: '',
+      email: '',
+      venmo: '',
+      cashapp: '',
+      zelle: '',
+      vlinkpay: '',
+      showInTipsFlow: true,
+      payoutConfigs: { ...DEFAULT_PAYOUT_CONFIGS }
+    })
     setEditingStaffId(null)
     setErrors({})
   }
@@ -1968,11 +3433,14 @@ export default function Dashboard({ setupData, onLogout }) {
       nickname: member.nickname,
       position: member.position,
       avatar: member.avatar || '',
-      venmo: member.paymentAccounts.venmo,
-      cashapp: member.paymentAccounts.cashapp,
-      zelle: member.paymentAccounts.zelle,
-      vlinkpay: member.paymentAccounts.vlinkpay,
-      showInTipsFlow: member.showInTipsFlow !== false
+      phone: member.phone || '',
+      email: member.email || '',
+      venmo: member.paymentAccounts?.venmo || '',
+      cashapp: member.paymentAccounts?.cashapp || '',
+      zelle: member.paymentAccounts?.zelle || '',
+      vlinkpay: member.paymentAccounts?.vlinkpay || '',
+      showInTipsFlow: member.showInTipsFlow !== false,
+      payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member)
     })
     setErrors({})
     setIsStaffModalOpen(true)
@@ -1987,9 +3455,16 @@ export default function Dashboard({ setupData, onLogout }) {
     const nextErrors = {}
     if (!staffForm.fullName.trim()) nextErrors.fullName = 'Full name is required.'
     if (!staffForm.nickname.trim()) nextErrors.nickname = 'Public nickname is required.'
-    if (!staffForm.venmo.trim() && !staffForm.cashapp.trim() && !staffForm.zelle.trim() && !staffForm.vlinkpay.trim()) {
+    if (staffForm.email?.trim() && !/\S+@\S+\.\S+/.test(staffForm.email.trim())) {
+      nextErrors.email = t('setup.errors.staff_email_invalid') || 'Invalid email address format.'
+    }
+    
+    const configs = staffForm.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
+    const hasAnyActive = Object.values(configs).some(c => c.enabled && c.value.trim() !== '')
+    if (!hasAnyActive && !staffForm.vlinkpay.trim()) {
       nextErrors.payment = 'Add at least one direct payment wallet.'
     }
+    
     if (Object.keys(nextErrors).length) {
       setErrors(nextErrors)
       return
@@ -2000,13 +3475,19 @@ export default function Dashboard({ setupData, onLogout }) {
       nickname: staffForm.nickname.trim(),
       position: staffForm.position.trim() || 'Nail Tech',
       avatar: staffForm.avatar || '',
+      phone: staffForm.phone.trim(),
+      email: staffForm.email.trim(),
       showInTipsFlow: staffForm.showInTipsFlow !== false,
       paymentAccounts: {
-        venmo: staffForm.venmo.trim(),
-        cashapp: staffForm.cashapp.trim(),
-        zelle: staffForm.zelle.trim(),
-        vlinkpay: staffForm.vlinkpay.trim()
-      }
+        venmo: configs.venmo?.enabled ? configs.venmo.value.trim() : '',
+        cashapp: configs.cashapp?.enabled ? configs.cashapp.value.trim() : '',
+        zelle: configs.zelle?.enabled ? configs.zelle.value.trim() : '',
+        vlinkpay: staffForm.vlinkpay.trim(),
+        paypal: configs.paypal?.enabled ? configs.paypal.value.trim() : '',
+        bankwire: configs.bankwire?.enabled ? configs.bankwire.value.trim() : '',
+        applecash: configs.applecash?.enabled ? configs.applecash.value.trim() : ''
+      },
+      payoutConfigs: configs
     }
 
     if (editingStaffId) {
@@ -2047,16 +3528,22 @@ export default function Dashboard({ setupData, onLogout }) {
     setTouchpoints((current) => [...current, {
       id: `tp-${Date.now()}`,
       name: newTouchpoint.name.trim(),
-      type: newTouchpoint.type
+      type: newTouchpoint.type,
+      isActive: true,
+      scans: 0
     }])
     setNewTouchpoint({ ...newTouchpoint, name: '' })
+  }
+
+  const toggleTouchpointStatus = (id) => {
+    setTouchpoints((current) => current.map((point) => point.id === id ? { ...point, isActive: point.isActive === false ? true : false } : point))
   }
 
   const previewQr = (target) => {
     setQrTarget({
       name: target.name || `Personal QR - ${target.nickname}`,
       subtitle: target.position || target.type || 'Staff QR',
-      slug: target.nickname ? `staff/${slugify(target.nickname)}` : `tp/${slugify(target.name)}`,
+      slug: target.nickname ? `staff/${slugify(target.nickname)}` : `tp/${target.id}`,
       isActive: target.isActive !== undefined ? target.isActive : true
     })
   }
@@ -2109,6 +3596,9 @@ export default function Dashboard({ setupData, onLogout }) {
           setSelectedStaff={handleSelectLeaderboardStaff}
           onOpenTouchpoints={() => setActiveMenu('touchpoints')}
           onOpenReviews={() => setActiveMenu('reviews')}
+          businessName={businessName}
+          previewQr={previewQr}
+          hasKyb={hasKyb}
         />
       )
     }
@@ -2122,24 +3612,65 @@ export default function Dashboard({ setupData, onLogout }) {
           onAdd={addTouchpoint}
           onDelete={(id) => setTouchpoints((current) => current.filter((point) => point.id !== id))}
           onQr={previewQr}
+          onToggleStatus={toggleTouchpointStatus}
+          transactions={transactions}
+          businessName={businessName}
         />
       )
     }
-    if (activeMenu === 'reviews') return <ReviewsView reviews={filteredReviews} staff={staff} filter={reviewFilterStaff} setFilter={setReviewFilterStaff} />
-    if (activeMenu === 'reports') return <ReportsView transactions={filteredTransactions} />
+    if (activeMenu === 'reviews') return (
+      <ReviewsView
+        reviews={filteredReviews}
+        staff={staff}
+        filter={reviewFilterStaff}
+        setFilter={setReviewFilterStaff}
+        setupData={setupData}
+      />
+    )
+    if (activeMenu === 'reports') return <ReportsView transactions={filteredTransactions} staff={staff} touchpoints={touchpoints} />
+    if (activeMenu === 'settings') {
+      return (
+        <SettingsView
+          setupData={setupData}
+          hasKyb={hasKyb}
+          userEmail={userEmail}
+          onKybRequired={onKybRequired}
+          initialTab={settingsTab}
+          onTabChange={setSettingsTab}
+          onKybSuccess={onKybSuccess}
+        />
+      )
+    }
     return <ComingSoon activeMenu={activeMenu} onBack={() => setActiveMenu('overview')} />
   }
 
   return (
     <div className="min-h-screen bg-nexoraCanvas font-sans text-nexoraText">
-      <DashboardSidebar activeMenu={activeMenu} setActiveMenu={handleNavigateMenu} businessName={businessName} onLogout={onLogout} />
+      <DashboardSidebar 
+        activeMenu={activeMenu} 
+        setActiveMenu={handleNavigateMenu} 
+        businessName={businessName} 
+        profile={profile}
+        settingsTab={settingsTab}
+        setSettingsTab={setSettingsTab}
+        isProfileExpanded={isProfileExpanded}
+        setIsProfileExpanded={setIsProfileExpanded}
+        hasKyb={hasKyb}
+        onLogout={onLogout} 
+      />
 
       <div className="lg:pl-72">
         <DashboardHeader
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           onAddTouchpoint={() => setActiveMenu('touchpoints')}
-          onSettings={() => setActiveMenu('settings')}
+          profile={profile}
+          businessName={businessName}
+          onNavigateSettingsTab={(tab) => {
+            setActiveMenu('settings')
+            setSettingsTab(tab)
+          }}
+          onLogout={onLogout}
           notifications={notifications}
           setNotifications={setNotifications}
           isNotiDropdownOpen={isNotiDropdownOpen}
@@ -2196,7 +3727,7 @@ export default function Dashboard({ setupData, onLogout }) {
             onClick={() => setIsMobileMenuOpen(false)}
           />
           <aside className="relative flex h-full w-[min(84vw,320px)] flex-col bg-nexoraSidebar px-5 py-6 text-white shadow-2xl">
-            <div className="mb-7 flex items-center justify-between">
+            <div className="mb-6 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-10 w-10 object-contain" />
                 <div>
@@ -2209,38 +3740,138 @@ export default function Dashboard({ setupData, onLogout }) {
               </IconButton>
             </div>
 
-            <nav className="flex-1 space-y-2 overflow-y-auto">
-              {MENU_ITEMS.map((item) => {
+            {/* Expandable Profile Card for Mobile */}
+            <div className="mb-4 rounded-xl border border-white/10 bg-white/5 p-4 shrink-0">
+              <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsProfileExpanded(!isProfileExpanded)}>
+                <div className="flex items-center gap-3 min-w-0">
+                  {profile.avatar ? (
+                    <img src={profile.avatar} alt="" className="h-9 w-9 rounded-full border border-white/10 object-cover" />
+                  ) : (
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-xs font-extrabold">
+                      {profile.fullName ? profile.fullName.charAt(0) : businessName.charAt(0)}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <div className="truncate text-xs font-black text-white/50 uppercase tracking-wider">{businessName}</div>
+                    <div className="flex items-center gap-1 min-w-0 mt-0.5">
+                      <div className="truncate text-xs font-bold text-white">{profile.fullName || businessName}</div>
+                    </div>
+                    <div className="text-[10px] text-white/40 truncate mt-0.5">{profile.email}</div>
+                  </div>
+                </div>
+                <div className="text-white/70 hover:text-white transition ml-2">
+                  {isProfileExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                </div>
+              </div>
+
+              {/* Submenu links */}
+              {isProfileExpanded && (
+                <div className="mt-3 pt-2.5 border-t border-white/5 space-y-1 animate-fadeIn">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveMenu('settings')
+                      setSettingsTab('profile')
+                      setIsMobileMenuOpen(false)
+                    }}
+                    className={`flex h-8 w-full items-center gap-2.5 rounded-lg px-2 text-left text-xs font-bold transition ${
+                      activeMenu === 'settings' && settingsTab === 'profile'
+                        ? 'bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] text-white shadow-sm'
+                        : 'text-white/60 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === 'settings' && settingsTab === 'profile' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+                    <span>{t('dashboard.menu.business_setting') || 'Business Setting'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveMenu('settings')
+                      setSettingsTab('kyb')
+                      setIsMobileMenuOpen(false)
+                    }}
+                    className={`flex h-8 w-full items-center gap-2.5 rounded-lg px-2 text-left text-xs font-bold transition ${
+                      activeMenu === 'settings' && settingsTab === 'kyb'
+                        ? 'bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] text-white shadow-sm'
+                        : 'text-white/60 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === 'settings' && settingsTab === 'kyb' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+                    <span>{t('dashboard.menu.kyb') || 'KYB Verification'}</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Card 2: Current Plan & Manage Plan (Mobile) */}
+            <div className="mb-4 rounded-xl border border-white/10 bg-white/5 p-3.5 shrink-0">
+              <div className="text-[9px] font-extrabold uppercase tracking-wider text-white/45">
+                {t('dashboard.sidebar.current_plan_header') || 'CURRENT PLAN'}
+              </div>
+              {hasKyb ? (
+                <>
+                  <div className="mt-0.5 text-xs font-black text-white">
+                    {t('dashboard.sidebar.plan_name') || 'Pro Plan'}
+                  </div>
+                  <div className="mt-0.5 text-[10px] text-white/55">
+                    {t('dashboard.sidebar.renews_text') || 'Renews on Jun 20, 2024'}
+                  </div>
+                </>
+              ) : (
+                <div className="mt-0.5 text-[10px] font-semibold text-rose-400">
+                  {t('dashboard.sidebar.no_plan') || 'No current plan'}
+                </div>
+              )}
+              <button 
+                type="button"
+                onClick={() => navigateMenu('subscriptions')}
+                className="mt-2.5 w-full rounded-lg border border-white/15 py-1 text-center text-[10.5px] font-bold text-luxuryGold hover:bg-white/5 hover:border-white/25 transition-all"
+              >
+                {t('dashboard.sidebar.manage_plan') || 'Manage Plan'}
+              </button>
+            </div>
+
+            <nav className="flex-1 space-y-1.5 overflow-y-auto pr-1">
+              {MENU_ITEMS.filter((item) => item.id !== 'settings').map((item) => {
                 const { id, label } = item
                 const isActive = activeMenu === id
+                const localizedLabel = {
+                  overview: t('dashboard.menu.dashboard'),
+                  staff: t('dashboard.menu.staff'),
+                  tips: t('dashboard.menu.tips'),
+                  reviews: t('dashboard.menu.reviews'),
+                  reports: t('dashboard.menu.transactions'),
+                  touchpoints: t('dashboard.menu.touchpoints'),
+                  devices: t('dashboard.menu.qr_nfc'),
+                  analytics: t('dashboard.menu.analytics'),
+                  support: t('dashboard.menu.support')
+                }[id] || label
+
                 return (
                   <button
                     key={id}
                     onClick={() => navigateMenu(id)}
-                    className={`flex min-h-12 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-bold transition ${
+                    className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-bold transition ${
                       isActive
                         ? 'bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] text-white shadow-lg shadow-[#2B59FF]/20'
                         : 'text-white/70 hover:bg-white/5 hover:text-white'
                     }`}
                   >
                     <MenuIcon item={item} active={isActive} />
-                    {label}
+                    {localizedLabel}
                   </button>
                 )
               })}
             </nav>
 
-            <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-4 flex items-center justify-between">
-              <div>
-                <div className="truncate text-sm font-extrabold">{businessName}</div>
-                <div className="mt-1 text-xs text-white/55">Owner - Pro Plan</div>
-              </div>
+            <div className="mt-auto pt-4 border-t border-white/10 shrink-0">
               <button 
                 onClick={onLogout} 
-                className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors" 
+                className="flex items-center gap-2 px-3 py-2.5 text-sm font-bold text-white/65 transition hover:text-white w-full" 
                 title="Sign out"
               >
-                <LogOut className="h-[18px] w-[18px]" />
+                <LogOut className="h-4 w-4" />
+                <span>{t('dashboard.sidebar.sign_out')}</span>
               </button>
             </div>
           </aside>
@@ -2260,3 +3891,206 @@ export default function Dashboard({ setupData, onLogout }) {
     </div>
   )
 }
+
+function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrCode, onClose, onSubmit }) {
+  const { t } = useTranslation()
+  const [value, setValue] = useState(initialValue || '')
+  const [qrCode, setQrCode] = useState(initialQrCode || '')
+  const [accountName, setAccountName] = useState(staffName || '')
+  const [isCapturing, setIsCapturing] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    setValue(initialValue || '')
+    setQrCode(initialQrCode || '')
+    setAccountName(staffName || '')
+    setError('')
+  }, [open, walletKey, initialValue, initialQrCode, staffName])
+
+  if (!open) return null
+
+  const walletNames = {
+    zelle: 'Zelle',
+    bankwire: 'Bank Wire',
+    paypal: 'PayPal',
+    venmo: 'Venmo',
+    cashapp: 'Cash App',
+    applecash: 'Apple Cash'
+  }
+
+  const walletFields = {
+    zelle: 'email/phone',
+    bankwire: 'details',
+    paypal: 'email',
+    venmo: '@username',
+    cashapp: '$cashtag',
+    applecash: 'phone number'
+  }
+
+  const walletPlaceholders = {
+    zelle: 'Enter Zelle email/phone...',
+    bankwire: 'Account & Routing numbers',
+    paypal: 'email@paypal.com',
+    venmo: '@username-venmo',
+    cashapp: '$cashtag',
+    applecash: 'Enter phone number...'
+  }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      setQrCode(reader.result)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleTakePhoto = () => {
+    setIsCapturing(true)
+    setTimeout(() => {
+      const mockQr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+        value || 'nexora-mock-payout'
+      )}`
+      setQrCode(mockQr)
+      setIsCapturing(false)
+    }, 800)
+  }
+
+  const handleClearQr = () => {
+    setQrCode('')
+  }
+
+  const handleSubmit = () => {
+    if (!value.trim()) {
+      setError(t('setup.errors.field_required') || 'This field is required.')
+      return
+    }
+    onSubmit(value, qrCode, accountName)
+  }
+
+  const brandStyles = {
+    venmo: { text: 'venmo', color: 'text-[#008CFF]', fontClass: 'font-black italic text-lg tracking-tight' },
+    cashapp: { text: 'cash app', color: 'text-[#00D632]', fontClass: 'font-extrabold text-lg tracking-tighter' },
+    zelle: { text: 'zelle', color: 'text-[#7414CA]', fontClass: 'font-black text-lg' },
+    paypal: { text: 'PayPal', color: 'text-[#003087]', fontClass: 'font-black italic text-lg' },
+    applecash: { text: 'Apple Cash', color: 'text-black', fontClass: 'font-black text-lg tracking-tight' },
+    bankwire: { text: 'Bank Wire', color: 'text-[#475569]', fontClass: 'font-bold uppercase text-xs tracking-widest' }
+  }[walletKey] || { text: walletKey, color: 'text-slate-800', fontClass: 'font-bold' }
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl animate-scaleUp">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <h3 className="text-base font-extrabold text-slate-800">
+            {t('setup.setup_wallet_title', { wallet: walletNames[walletKey] }) || `Set up ${walletNames[walletKey]} account`}
+          </h3>
+          <button onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="mt-4 space-y-4">
+          <div>
+            <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
+              {t('setup.payout_input_label', { wallet: walletNames[walletKey], field: walletFields[walletKey] }) || `Your ${walletNames[walletKey]} ${walletFields[walletKey]} *`}
+            </label>
+            <input
+              type="text"
+              value={value}
+              onChange={(e) => {
+                setValue(e.target.value)
+                setError('')
+              }}
+              placeholder={walletPlaceholders[walletKey]}
+              className={`mt-1.5 h-10 w-full rounded-lg border px-3 text-sm font-semibold outline-none focus:ring-1 focus:ring-nexoraBrand transition-all ${
+                error ? 'border-rose-500 focus:border-rose-500' : 'border-slate-200 focus:border-nexoraBrand'
+              }`}
+            />
+            {error && <p className="mt-1 text-[10px] font-bold text-rose-500">{error}</p>}
+          </div>
+
+          <div>
+            <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-2">
+              {t('setup.qr_code_optional') || 'QR Code (optional)'}
+            </label>
+
+            {isCapturing ? (
+              <div className="flex h-44 w-full flex-col items-center justify-center rounded-xl border border-slate-200 bg-slate-50">
+                <div className="h-6 w-6 border-2 border-nexoraBrand/20 border-t-nexoraBrand rounded-full animate-spin"></div>
+                <span className="mt-2 text-xs font-semibold text-slate-500">{t('setup.taking_photo') || 'Taking photo...'}</span>
+              </div>
+            ) : qrCode ? (
+              <div className="relative flex flex-col items-center rounded-xl border border-slate-200 bg-white p-4.5 shadow-sm">
+                <button
+                  type="button"
+                  onClick={handleClearQr}
+                  className="absolute right-2 top-2 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+                  title="Remove image"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+                <div className="text-center">
+                  <div className="text-sm font-extrabold text-slate-800">{accountName}</div>
+                  <div className="text-[10px] font-semibold text-slate-400 mt-0.5">{value}</div>
+                </div>
+                <div className="my-3 flex h-28 w-28 items-center justify-center border border-slate-100 bg-white p-1 rounded-lg">
+                  <img src={qrCode} alt="Payout QR Code" className="h-full w-full object-contain" />
+                </div>
+                <div className={`${brandStyles.color} ${brandStyles.fontClass}`}>
+                  {brandStyles.text}
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={handleTakePhoto}
+                  className="flex flex-col items-center justify-center py-5 border border-dashed border-slate-200 hover:border-nexoraBrand rounded-xl bg-slate-50 hover:bg-slate-50/50 transition gap-1.5"
+                >
+                  <Camera className="w-5 h-5 text-nexoraBrand" />
+                  <span className="text-[11px] font-bold text-slate-600">{t('setup.take_photo') || 'Take photo'}</span>
+                </button>
+                <label
+                  className="flex flex-col items-center justify-center py-5 border border-dashed border-slate-200 hover:border-nexoraBrand rounded-xl bg-slate-50 hover:bg-slate-50/50 transition gap-1.5 cursor-pointer"
+                >
+                  <FolderOpen className="w-5 h-5 text-nexoraBrand" />
+                  <span className="text-[11px] font-bold text-slate-600">{t('setup.choose_file') || 'Choose file'}</span>
+                  <input type="file" accept="image/*" className="sr-only" onChange={handleFileChange} />
+                </label>
+              </div>
+            )}
+            {!qrCode && (
+              <p className="mt-2 text-[10px] text-slate-400 leading-normal">
+                {t('setup.uploader_hint') || 'You can either take a photo or upload from your device. Accepted formats: JPG, PNG, JPEG. Max size: 5MB per file.'}
+              </p>
+            )}
+          </div>
+
+          <div className="rounded-lg bg-blue-50/50 border border-blue-100 p-3 text-[10.5px] leading-relaxed text-blue-800 flex gap-2">
+            <AlertTriangle className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
+            <span>
+              {t('setup.payout_warning') || 'Please enter the correct receiving account information. This will be used to receive payments.'}
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-5 flex justify-end gap-2 border-t border-slate-100 pt-3">
+          <button
+            onClick={onClose}
+            className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50 transition"
+          >
+            {t('setup.close') || 'Close'}
+          </button>
+          <button
+            onClick={handleSubmit}
+            className="rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white hover:opacity-90 shadow-sm transition"
+          >
+            {t('setup.submit') || 'Submit'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
