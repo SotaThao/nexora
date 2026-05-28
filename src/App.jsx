@@ -88,69 +88,67 @@ export default function App() {
       
       {/* 1. LOGIN SSO SCREEN */}
       {view === 'login' && (
-        <div className="min-h-dvh flex items-center justify-center bg-luxuryBlack relative overflow-x-hidden overflow-y-auto text-white px-4 py-6 sm:py-10 selection:bg-luxuryGold selection:text-black">
-          {/* Neon background decorations */}
-          <div className="absolute top-1/4 left-1/4 h-56 w-56 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(212,175,55,0.06)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-96 sm:w-96"></div>
-          <div className="absolute bottom-1/4 right-1/4 h-64 w-64 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(50,215,255,0.04)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-[450px] sm:w-[450px]"></div>
+        <div className="min-h-dvh flex items-center justify-center bg-nexoraCanvas relative overflow-x-hidden overflow-y-auto text-nexoraText px-4 py-6 sm:py-10 selection:bg-nexoraBrandSoft selection:text-nexoraBrand">
+          {/* Soft background decorations */}
+          <div className="absolute top-1/4 left-1/4 h-56 w-56 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(66,72,216,0.05)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-96 sm:w-96"></div>
+          <div className="absolute bottom-1/4 right-1/4 h-64 w-64 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(43,89,255,0.03)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-[450px] sm:w-[450px]"></div>
 
           {/* Language Switcher */}
-          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-neutral-900/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-neutral-850">
+          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-nexoraBorder shadow-sm">
             <button 
               onClick={() => setLanguage('vi')}
-              className={`text-xs font-bold px-2 py-0.5 rounded transition ${currentLanguage === 'vi' ? 'bg-luxuryGold text-black' : 'text-neutral-400 hover:text-white'}`}
+              className={`text-xs font-bold px-2 py-0.5 rounded transition ${currentLanguage === 'vi' ? 'bg-nexoraBrand text-white' : 'text-nexoraSubtle hover:text-nexoraText'}`}
             >
               VI
             </button>
-            <span className="text-neutral-700 text-xs">|</span>
+            <span className="text-nexoraBorder text-xs">|</span>
             <button 
               onClick={() => setLanguage('en')}
-              className={`text-xs font-bold px-2 py-0.5 rounded transition ${currentLanguage === 'en' ? 'bg-luxuryGold text-black' : 'text-neutral-400 hover:text-white'}`}
+              className={`text-xs font-bold px-2 py-0.5 rounded transition ${currentLanguage === 'en' ? 'bg-nexoraBrand text-white' : 'text-nexoraSubtle hover:text-nexoraText'}`}
             >
               EN
             </button>
           </div>
 
-          <div className="w-full max-w-md glass-dark rounded-2xl p-5 sm:p-8 border border-[rgba(212,175,55,0.18)] shadow-2xl relative overflow-hidden flex flex-col justify-between">
+          <div className="w-full max-w-md bg-white rounded-2xl p-5 sm:p-8 border border-nexoraBorder shadow-premium relative overflow-hidden flex flex-col justify-between">
             {/* VLINKPAY branding logo */}
             <div className="text-center mb-8">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-luxuryGold to-luxuryGoldDark flex items-center justify-center mx-auto shadow-lg shadow-[rgba(212,175,55,0.15)] mb-3">
-                <span className="font-serif font-black text-black text-2xl">N</span>
-              </div>
+              <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="w-12 h-12 mx-auto object-contain mb-3" />
               <h2 className="font-serif text-xl font-bold tracking-wide sm:text-2xl">
-                NEXORA <span className="ml-1.5 inline-flex align-middle text-luxuryGold font-sans text-xs tracking-widest font-black uppercase bg-luxuryGold/10 px-2 py-0.5 rounded border border-luxuryGold/30">TOUCH</span>
+                NEXORA <span className="ml-1.5 inline-flex align-middle text-nexoraBrand font-sans text-xs tracking-widest font-black uppercase bg-nexoraBrand/10 px-2 py-0.5 rounded border border-nexoraBrand/30">TOUCH</span>
               </h2>
-              <p className="text-xs text-neutral-400 mt-1">{t('login.gateway_sub')}</p>
+              <p className="text-xs text-nexoraMuted mt-1">{t('login.gateway_sub')}</p>
             </div>
 
             {isLoading ? (
               <div className="py-12 flex flex-col items-center justify-center space-y-4">
-                <div className="w-10 h-10 border-4 border-luxuryGold/20 border-t-luxuryGold rounded-full animate-spin"></div>
-                <p className="text-xs text-luxuryGold font-semibold uppercase tracking-wider animate-pulse">
+                <div className="w-10 h-10 border-4 border-nexoraBrand/20 border-t-nexoraBrand rounded-full animate-spin"></div>
+                <p className="text-xs text-nexoraBrand font-semibold uppercase tracking-wider animate-pulse">
                   {t('login.connecting_sso')}
                 </p>
               </div>
             ) : (
               <div className="space-y-5">
-                <div className="p-3 rounded-lg bg-[rgba(212,175,55,0.04)] border border-luxuryGold/20 text-[11px] text-[rgba(243,229,171,0.8)] leading-relaxed">
-                  <ShieldCheck className="w-4 h-4 text-luxuryGold inline mr-1.5 shrink-0" />
+                <div className="p-3 rounded-lg bg-nexoraBrandSoft/40 border border-nexoraBrandSoft text-[11px] text-nexoraText leading-relaxed">
+                  <ShieldCheck className="w-4 h-4 text-nexoraBrand inline mr-1.5 shrink-0" />
                   <strong>{t('login.sso_integration_title')}</strong> {t('login.sso_integration_desc')}
                 </div>
 
                 {loginError && (
-                  <div className="p-3 rounded-lg bg-red-950/40 border border-red-500/20 text-xs text-red-200">
+                  <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
                     {loginError}
                   </div>
                 )}
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-[10px] font-bold text-luxuryGoldLight uppercase tracking-wider mb-2">{t('login.email_label')}</label>
+                    <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">{t('login.email_label')}</label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-3 w-4 h-4 text-neutral-500" />
+                      <Mail className="absolute left-3 top-3 w-4 h-4 text-nexoraSubtle" />
                       <input 
                         type="email"
                         placeholder={t('login.email_placeholder')}
-                        className="w-full bg-neutral-900 border border-neutral-800 focus:border-luxuryGold rounded-lg pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none placeholder-neutral-600 transition-colors"
+                        className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg pl-10 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                       />
@@ -158,13 +156,13 @@ export default function App() {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-luxuryGoldLight uppercase tracking-wider mb-2">{t('login.password_label')}</label>
+                    <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">{t('login.password_label')}</label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-3 w-4 h-4 text-neutral-500" />
+                      <Lock className="absolute left-3 top-3 w-4 h-4 text-nexoraSubtle" />
                       <input 
                         type="password"
                         placeholder={t('login.password_placeholder')}
-                        className="w-full bg-neutral-900 border border-neutral-800 focus:border-luxuryGold rounded-lg pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none placeholder-neutral-600 transition-colors"
+                        className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg pl-10 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                       />
@@ -174,14 +172,14 @@ export default function App() {
 
                 <button 
                   onClick={() => handleSsoLogin()}
-                    className="w-full min-h-11 py-2.5 bg-gradient-to-r from-luxuryGold via-luxuryGoldLight to-luxuryGoldDark hover:opacity-90 transition-opacity text-black font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_14px_rgba(212,175,55,0.2)]"
+                    className="w-full min-h-11 py-2.5 bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] hover:opacity-90 transition-opacity text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_14px_rgba(43,89,255,0.25)]"
                 >
                   <LogIn className="w-4 h-4 stroke-[3px]" /> {t('login.login_btn')}
                 </button>
 
                 <div className="relative py-2 text-center">
-                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-neutral-800"></div></div>
-                  <span className="relative bg-luxuryBlack px-3 text-[10px] text-neutral-500 font-bold uppercase tracking-wider">{t('login.or_try_demo')}</span>
+                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-nexoraBorder"></div></div>
+                  <span className="relative bg-white px-3 text-[10px] text-nexoraSubtle font-bold uppercase tracking-wider">{t('login.or_try_demo')}</span>
                 </div>
 
                 {/* Quick login button with prefilled demo data */}
@@ -192,7 +190,7 @@ export default function App() {
                       setSetupData(null)
                       setView('onboarding')
                     }}
-                    className="min-h-11 py-2 border border-neutral-800 hover:border-neutral-700 bg-neutral-950 text-neutral-300 text-xs font-semibold rounded-lg transition-all"
+                    className="min-h-11 py-2 border border-nexoraBorder hover:border-nexoraBorder/80 bg-nexoraCanvas text-nexoraText text-xs font-semibold rounded-lg transition-all"
                   >
                     {t('login.register_btn')}
                   </button>
@@ -224,6 +222,7 @@ export default function App() {
                             position: 'Gel-X Artist',
                             avatar: '',
                             isActive: true,
+                            showInTipsFlow: true,
                             paymentAccounts: { venmo: '@mia-nails', cashapp: '$miaglow', zelle: 'mia.tran@gmail.com', vlinkpay: '' }
                           },
                           {
@@ -233,6 +232,7 @@ export default function App() {
                             position: 'Acrylic Specialist',
                             avatar: '',
                             isActive: true,
+                            showInTipsFlow: true,
                             paymentAccounts: { venmo: '', cashapp: '$vivianle', zelle: '407-555-0199', vlinkpay: 'VLP-8893-VL' }
                           },
                           {
@@ -242,6 +242,7 @@ export default function App() {
                             position: 'Pedicure Lead',
                             avatar: '',
                             isActive: true,
+                            showInTipsFlow: true,
                             paymentAccounts: { venmo: '@ashley-pedi', cashapp: '', zelle: 'ashley@glownails.com', vlinkpay: '' }
                           },
                           {
@@ -251,6 +252,7 @@ export default function App() {
                             position: 'Nail Art Designer',
                             avatar: '',
                             isActive: false,
+                            showInTipsFlow: true,
                             paymentAccounts: { venmo: '@hanna-art', cashapp: '', zelle: '', vlinkpay: 'VLP-1148-HN' }
                           }
                         ],
@@ -263,15 +265,15 @@ export default function App() {
                       }
                       handleSsoLogin(demoSetup)
                     }}
-                    className="min-h-11 py-2 border border-luxuryGold/20 hover:border-luxuryGold text-luxuryGold bg-luxuryGold/5 hover:bg-luxuryGold/10 text-xs font-semibold rounded-lg flex items-center justify-center gap-1 transition-all"
+                    className="min-h-11 py-2 border border-nexoraBrand/20 hover:border-nexoraBrand text-nexoraBrand bg-nexoraBrandSoft/40 hover:bg-nexoraBrandSoft text-xs font-semibold rounded-lg flex items-center justify-center gap-1 transition-all"
                   >
-                    <Sparkles className="w-3.5 h-3.5 text-luxuryGold" /> {t('login.enter_dashboard_btn')}
+                    <Sparkles className="w-3.5 h-3.5 text-nexoraBrand" /> {t('login.enter_dashboard_btn')}
                   </button>
                 </div>
               </div>
             )}
             
-            <span className="text-[9px] text-neutral-600 font-medium tracking-wide mt-6 block text-center uppercase">
+            <span className="text-[9px] text-nexoraSubtle font-medium tracking-wide mt-6 block text-center uppercase">
               {t('login.sso_security_footer')}
             </span>
           </div>

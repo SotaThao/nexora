@@ -28,10 +28,33 @@ import {
   User,
   Users,
   Wallet,
+  Eye,
+  EyeOff,
   X
 } from 'lucide-react'
 import StaffDetailView from './StaffDetailView'
 import { useTranslation } from '../contexts/LanguageContext'
+
+const WalletLogos = {
+  venmo: (
+    <svg viewBox="0 0 448 512" className="h-[18px] w-[18px] fill-[#008CFF]" xmlns="http://www.w3.org/2000/svg">
+      <path d="M381.4 105.3c11 18.1 15.9 36.7 15.9 60.3 0 75.1-64.1 172.7-116.2 241.2h-118.8l-47.6-285 104.1-9.9 25.3 202.8c23.5-38.4 52.6-98.7 52.6-139.7 0-22.5-3.9-37.8-9.9-50.4z" />
+    </svg>
+  ),
+  cashapp: (
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-[#00D632]" xmlns="http://www.w3.org/2000/svg">
+      <path d="M23.59 3.475a5.1 5.1 0 00-3.05-3.05c-1.31-.42-2.5-.42-4.92-.42H8.36c-2.4 0-3.61 0-4.9.4a5.1 5.1 0 00-3.05 3.06C0 4.765 0 5.965 0 8.365v7.27c0 2.41 0 3.6.4 4.9a5.1 5.1 0 003.05 3.05c1.3.41 2.5.41 4.9.41h7.28c2.41 0 3.61 0 4.9-.4a5.1 5.1 0 003.06-3.06c.41-1.3.41-2.5.41-4.9v-7.25c0-2.41 0-3.61-.41-4.91zm-6.17 4.63l-.93.93a.5.5 0 01-.67.01 5 5 0 00-3.22-1.18c-.97 0-1.94.32-1.94 1.21 0 .9 1.04 1.2 2.24 1.65 2.1.7 3.84 1.58 3.84 3.64 0 2.24-1.74 3.78-4.58 3.95l-.26 1.2a.49.49 0 01-.48.39H9.63l-.09-.01a.5.5 0 01-.38-.59l.28-1.27a6.54 6.54 0 01-2.88-1.57v-.01a.48.48 0 010-.68l1-.97a.49.49 0 01.67 0c.91.86 2.13 1.34 3.39 1.32 1.3 0 2.17-.55 2.17-1.42 0-.87-.88-1.1-2.54-1.72-1.76-.63-3.43-1.52-3.43-3.6 0-2.42 2.01-3.6 4.39-3.71l.25-1.23a.48.48 0 01.48-.38h1.78l.1.01c.26.06.43.31.37.57l-.27 1.37c.9.3 1.75.77 2.48 1.39l.02.02c.19.2.19.5 0 .68z" />
+    </svg>
+  ),
+  zelle: (
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-[#7414CA]" xmlns="http://www.w3.org/2000/svg">
+      <path d="M13.559 24h-2.841a.483.483 0 0 1-.483-.483v-2.765H5.638a.667.667 0 0 1-.666-.666v-2.234a.67.67 0 0 1 .142-.412l8.139-10.382h-7.25a.667.667 0 0 1-.667-.667V3.914c0-.367.299-.666.666-.666h4.23V.483c0-.266.217-.483.483-.483h2.841c.266 0 .483.217.483.483v2.765h4.323c.367 0 .666.299.666.666v2.137a.67.67 0 0 1-.141.41l-8.19 10.481h7.665c.367 0 .666.299.666.666v2.477a.667.667 0 0 1-.666.667h-4.32v2.765a.483.483 0 0 1-.483.483Z" />
+    </svg>
+  ),
+  vlinkpay: (
+    <img src="/assets/vlinkpay-logo.png" alt="VLINKPAY Logo" className="h-[18px] w-[18px] object-contain" />
+  )
+}
 
 const INITIAL_STAFF = [
   {
@@ -40,6 +63,7 @@ const INITIAL_STAFF = [
     nickname: 'Mia T.',
     position: 'Gel-X Artist',
     isActive: true,
+    showInTipsFlow: true,
     paymentAccounts: { venmo: '@mia-nails', cashapp: '$miaglow', zelle: 'mia.tran@gmail.com', vlinkpay: '' }
   },
   {
@@ -48,6 +72,7 @@ const INITIAL_STAFF = [
     nickname: 'Vivian L.',
     position: 'Acrylic Specialist',
     isActive: true,
+    showInTipsFlow: true,
     paymentAccounts: { venmo: '', cashapp: '$vivianle', zelle: '407-555-0199', vlinkpay: 'VLP-8893-VL' }
   },
   {
@@ -56,6 +81,7 @@ const INITIAL_STAFF = [
     nickname: 'Ashley P.',
     position: 'Pedicure Lead',
     isActive: true,
+    showInTipsFlow: true,
     paymentAccounts: { venmo: '@ashley-pedi', cashapp: '', zelle: 'ashley@glownails.com', vlinkpay: '' }
   },
   {
@@ -64,6 +90,7 @@ const INITIAL_STAFF = [
     nickname: 'Hanna Ng.',
     position: 'Nail Art Designer',
     isActive: false,
+    showInTipsFlow: true,
     paymentAccounts: { venmo: '@hanna-art', cashapp: '', zelle: '', vlinkpay: 'VLP-1148-HN' }
   }
 ]
@@ -243,7 +270,7 @@ function DashboardHeader({ searchQuery, setSearchQuery, onAddTouchpoint, onSetti
   return (
     <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between gap-3 border-b border-nexoraBorder bg-nexoraSurface px-4 sm:px-5">
       <div className="flex min-w-0 items-center gap-3 sm:hidden">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-nexoraBrand text-sm font-black text-white">N</div>
+        <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-9 w-9 shrink-0 object-contain" />
         <span className="truncate text-sm font-extrabold">NEXORA TOUCH</span>
       </div>
       <div className="relative hidden w-full max-w-[385px] sm:block">
@@ -299,7 +326,7 @@ function DashboardSidebar({ activeMenu, setActiveMenu, businessName, onLogout })
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col bg-nexoraSidebar px-5 py-7 text-white lg:flex">
       <div className="flex items-center gap-3 px-2">
-        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-nexoraBrand text-xl font-black text-white shadow-nexora-soft">N</div>
+        <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-12 w-12 shrink-0 object-contain shadow-nexora-soft" />
         <div className="min-w-0">
           <div className="text-2xl font-extrabold leading-none tracking-normal">{t('dashboard.sidebar.console_title')}</div>
           <div className="mt-1 text-sm font-semibold text-white/65">{t('dashboard.sidebar.console_subtitle')}</div>
@@ -329,7 +356,7 @@ function DashboardSidebar({ activeMenu, setActiveMenu, businessName, onLogout })
               onClick={() => setActiveMenu(id)}
               className={`flex h-12 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-bold transition ${
                 isActive
-                  ? 'bg-white/10 text-white shadow-[inset_3px_0_0_rgba(255,255,255,0.7)]'
+                  ? 'bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] text-white shadow-lg shadow-[#2B59FF]/20'
                   : 'text-white/70 hover:bg-white/5 hover:text-white'
               }`}
             >
@@ -646,7 +673,7 @@ function TipsOverTimePanel({ range, setRange }) {
         </div>
       </div>
       <div className="mt-8 grid grid-cols-[42px_1fr] gap-2 sm:grid-cols-[56px_1fr] sm:gap-3">
-        <div className="flex h-[265px] flex-col justify-between text-right text-sm text-nexoraSubtle">
+        <div className="flex h-[235px] sm:h-[270px] flex-col justify-between text-right text-sm text-nexoraSubtle">
           {yTicks.map((tick) => (
             <span key={tick}>{formatCurrency(tick).replace('.00', '')}</span>
           ))}
@@ -657,141 +684,141 @@ function TipsOverTimePanel({ range, setRange }) {
           onPointerMove={handlePointerMove}
           onPointerLeave={handlePointerLeave}
         >
-          <svg className="h-[265px] w-full overflow-visible" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" aria-hidden="true">
-            <defs>
-              <linearGradient id="tips-chart-area-grad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#4648D8" stopOpacity="0.25" />
-                <stop offset="100%" stopColor="#4648D8" stopOpacity="0.0" />
-              </linearGradient>
-              <linearGradient id="tips-chart-line-grad" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="#4648D8" />
-                <stop offset="50%" stopColor="#6C5CE7" />
-                <stop offset="100%" stopColor="#32D7FF" />
-              </linearGradient>
-              <filter id="tips-chart-glow" x="-10%" y="-10%" width="120%" height="120%">
-                <feDropShadow dx="0" dy="8" stdDeviation="6" floodColor="#4648D8" floodOpacity="0.22" />
-              </filter>
-              <filter id="tips-chart-neon-blur" x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur stdDeviation="8" />
-              </filter>
-              <clipPath id={`tips-chart-reveal-${range.replace(/\s+/g, '-')}`}>
-                <rect x="0" y="-10" width={revealX} height={height + 20} />
-              </clipPath>
-            </defs>
-            {yTicks.map((tick) => (
-              <line
-                key={tick}
-                x1="0"
-                x2={width}
-                y1={height - (tick / max) * height}
-                y2={height - (tick / max) * height}
-                className="stroke-slate-300 dark:stroke-slate-700"
-                strokeWidth="1"
-                strokeOpacity={0.07}
-              />
-            ))}
-            <g clipPath={`url(#tips-chart-reveal-${range.replace(/\s+/g, '-')})`}>
-              <path d={areaPath} fill="url(#tips-chart-area-grad)" className="dashboard-chart-area" />
-              {/* Secondary delayed neon trail */}
-              {trailPath && (
-                <path
-                  d={trailPath}
-                  fill="none"
-                  stroke="url(#tips-chart-line-grad)"
-                  strokeWidth="8"
-                  opacity="0.25"
-                  filter="url(#tips-chart-neon-blur)"
-                  className="pointer-events-none"
+          <div className="relative h-[235px] w-full sm:h-[270px]">
+            <svg className="h-full w-full overflow-visible" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="tips-chart-area-grad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#4648D8" stopOpacity="0.25" />
+                  <stop offset="100%" stopColor="#4648D8" stopOpacity="0.0" />
+                </linearGradient>
+                <linearGradient id="tips-chart-line-grad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#4648D8" />
+                  <stop offset="50%" stopColor="#6C5CE7" />
+                  <stop offset="100%" stopColor="#32D7FF" />
+                </linearGradient>
+                <filter id="tips-chart-glow" x="-10%" y="-10%" width="120%" height="120%">
+                  <feDropShadow dx="0" dy="8" stdDeviation="6" floodColor="#4648D8" floodOpacity="0.22" />
+                </filter>
+                <filter id="tips-chart-neon-blur" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="8" />
+                </filter>
+                <clipPath id={`tips-chart-reveal-${range.replace(/\s+/g, '-')}`}>
+                  <rect x="0" y="-10" width={revealX} height={height + 20} />
+                </clipPath>
+              </defs>
+              {yTicks.map((tick) => (
+                <line
+                  key={tick}
+                  x1="0"
+                  x2={width}
+                  y1={height - (tick / max) * height}
+                  y2={height - (tick / max) * height}
+                  className="stroke-slate-300 dark:stroke-slate-700"
+                  strokeWidth="1"
+                  strokeOpacity={0.07}
                 />
-              )}
-              {/* Main Line path with dashoffset draw animation */}
-              <path 
-                d={linePath} 
-                fill="none" 
-                stroke="url(#tips-chart-line-grad)" 
-                strokeWidth="4" 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                filter="url(#tips-chart-glow)" 
-                style={{
-                  strokeDasharray: 850,
-                  strokeDashoffset: 850 * (1 - reveal),
-                }}
-              />
-              {/* Regular data points that pop up as the line sweeps over them */}
-              {transitionedPoints.map((point, index) => {
-                const pointProgress = point.x / width;
-                const isRevealed = reveal >= pointProgress;
-                return (
-                  <circle
-                    key={`${point.label}-${index}`}
-                    cx={point.x}
-                    cy={point.y}
-                    r="5"
-                    className="fill-white stroke-nexoraBrand cursor-pointer transition-transform duration-300"
-                    strokeWidth="2.5"
+              ))}
+              <g clipPath={`url(#tips-chart-reveal-${range.replace(/\s+/g, '-')})`}>
+                <path d={areaPath} fill="url(#tips-chart-area-grad)" className="dashboard-chart-area" />
+                {/* Secondary delayed neon trail */}
+                {trailPath && (
+                  <path
+                    d={trailPath}
+                    fill="none"
+                    stroke="url(#tips-chart-line-grad)"
+                    strokeWidth="8"
+                    opacity="0.25"
+                    filter="url(#tips-chart-neon-blur)"
+                    className="pointer-events-none"
+                  />
+                )}
+                {/* Main Line path with dashoffset draw animation */}
+                <path 
+                  d={linePath} 
+                  fill="none" 
+                  stroke="url(#tips-chart-line-grad)" 
+                  strokeWidth="4" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  filter="url(#tips-chart-glow)" 
+                  style={{
+                    strokeDasharray: 850,
+                    strokeDashoffset: 850 * (1 - reveal),
+                  }}
+                />
+              </g>
+              {showTooltip && (
+                <>
+                  {/* Vertical solid guide line from reference image */}
+                  <line
+                    x1={activePoint.x}
+                    x2={activePoint.x}
+                    y1="0"
+                    y2={height}
+                    className="stroke-slate-200 dark:stroke-slate-700"
+                    strokeWidth="1.5"
                     style={{
-                      transform: isRevealed ? 'scale(1)' : 'scale(0)',
-                      transformOrigin: `${point.x}px ${point.y}px`,
-                      transition: 'transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1)'
+                      transition: 'x1 150ms cubic-bezier(0.16, 1, 0.3, 1), x2 150ms cubic-bezier(0.16, 1, 0.3, 1)'
                     }}
                   />
-                )
-              })}
-            </g>
+                </>
+              )}
+            </svg>
+
+            {/* Regular data points that pop up as the line sweeps over them (rendered as HTML to prevent distortion) */}
+            {transitionedPoints.map((point, index) => {
+              const pointProgress = point.x / width;
+              const isRevealed = reveal >= pointProgress;
+              return (
+                <div
+                  key={`${point.label}-${index}`}
+                  className="pointer-events-none absolute h-2.5 w-2.5 rounded-full border-[2.5px] border-nexoraBrand bg-white shadow-sm transition-transform duration-300"
+                  style={{
+                    left: `calc(${(point.x / width) * 100}% - 5px)`,
+                    top: `calc(${(point.y / height) * 100}% - 5px)`,
+                    transform: isRevealed ? 'scale(1)' : 'scale(0)',
+                    transition: 'transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+                    zIndex: 8
+                  }}
+                />
+              )
+            })}
+
+            {/* Active tooltip dots (rendered as HTML to prevent distortion) */}
             {showTooltip && (
-              <>
-                {/* Vertical solid guide line from reference image */}
-                <line
-                  x1={activePoint.x}
-                  x2={activePoint.x}
-                  y1="0"
-                  y2={height}
-                  className="stroke-slate-200 dark:stroke-slate-700"
-                  strokeWidth="1.5"
-                  style={{
-                    transition: 'x1 150ms cubic-bezier(0.16, 1, 0.3, 1), x2 150ms cubic-bezier(0.16, 1, 0.3, 1)'
-                  }}
-                />
+              <div
+                className="pointer-events-none absolute flex items-center justify-center"
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  left: `calc(${(activePoint.x / width) * 100}% - 16px)`,
+                  top: `calc(${(activePoint.y / height) * 100}% - 16px)`,
+                  transition: 'left 150ms cubic-bezier(0.16, 1, 0.3, 1), top 150ms cubic-bezier(0.16, 1, 0.3, 1)',
+                  zIndex: 9
+                }}
+              >
                 {/* Animated outer glow ring */}
-                <circle
-                  cx={activePoint.x}
-                  cy={activePoint.y}
-                  r="13"
-                  className="dashboard-pulse-ring fill-nexoraBrand/20 stroke-none pointer-events-none"
-                  style={{
-                    transformOrigin: `${activePoint.x}px ${activePoint.y}px`,
-                    transition: 'cx 150ms cubic-bezier(0.16, 1, 0.3, 1), cy 150ms cubic-bezier(0.16, 1, 0.3, 1)'
-                  }}
-                />
+                <div className="absolute h-6.5 w-6.5 rounded-full bg-nexoraBrand/20" />
                 {/* Main active dot (solid blue circle with white outline) */}
-                <circle
-                  cx={activePoint.x}
-                  cy={activePoint.y}
-                  r="8"
-                  className="fill-nexoraBrand stroke-white pointer-events-none"
-                  strokeWidth="3"
-                  style={{
-                    transition: 'cx 150ms cubic-bezier(0.16, 1, 0.3, 1), cy 150ms cubic-bezier(0.16, 1, 0.3, 1)'
-                  }}
-                />
-              </>
+                <div className="h-4 w-4 rounded-full border-[3px] border-white bg-nexoraBrand shadow-md" />
+              </div>
             )}
-          </svg>
-          {/* Custom Dark Tooltip Pill from reference image */}
-          <div
-            className="pointer-events-none absolute rounded-lg bg-slate-900 px-4 py-2.5 shadow-2xl text-center"
-            style={{
-              width: '124px',
-              left: `clamp(0px, calc(${(activePoint.x / width) * 100}% - 62px), calc(100% - 124px))`,
-              top: `clamp(4px, calc(${(activePoint.y / height) * 100}% - 65px), calc(100% - 70px))`,
-              opacity: showTooltip ? 1 : 0,
-              transform: showTooltip ? 'translateY(0) scale(1)' : 'translateY(6px) scale(0.95)',
-              transition: 'left 150ms cubic-bezier(0.16, 1, 0.3, 1), top 150ms cubic-bezier(0.16, 1, 0.3, 1), opacity 150ms ease, transform 150ms ease',
-              zIndex: 10
-            }}
-          >
-            <div className="text-xs font-bold text-white">{t('dashboard.chart.tooltip_tips')} : {formatCurrency(activePoint.value).replace('.00', '')}</div>
+
+            {/* Custom Dark Tooltip Pill from reference image */}
+            <div
+              className="pointer-events-none absolute rounded-lg bg-slate-900 px-4 py-2.5 shadow-2xl text-center"
+              style={{
+                width: '124px',
+                left: `clamp(0px, calc(${(activePoint.x / width) * 100}% - 62px), calc(100% - 124px))`,
+                top: `clamp(4px, calc(${(activePoint.y / height) * 100}% - 65px), calc(100% - 70px))`,
+                opacity: showTooltip ? 1 : 0,
+                transform: showTooltip ? 'translateY(0) scale(1)' : 'translateY(6px) scale(0.95)',
+                transition: 'left 150ms cubic-bezier(0.16, 1, 0.3, 1), top 150ms cubic-bezier(0.16, 1, 0.3, 1), opacity 150ms ease, transform 150ms ease',
+                zIndex: 10
+              }}
+            >
+              <div className="text-xs font-bold text-white">{t('dashboard.chart.tooltip_tips')} : {formatCurrency(activePoint.value).replace('.00', '')}</div>
+            </div>
           </div>
           <div className="absolute bottom-0 left-0 right-0 flex justify-between text-sm font-medium text-nexoraSubtle">
             {series.map((point) => (
@@ -932,7 +959,7 @@ function Overview({ metrics, activeKpi, setActiveKpi, chartRange, setChartRange,
   )
 }
 
-function StaffView({ staff, onAdd, onEdit, onDelete, onQr, onToggle, onViewDetail }) {
+function StaffView({ staff, onAdd, onEdit, onDelete, onQr, onToggle, onToggleTipsFlow, onViewDetail }) {
   const { t } = useTranslation()
   return (
     <div className="space-y-5">
@@ -948,17 +975,18 @@ function StaffView({ staff, onAdd, onEdit, onDelete, onQr, onToggle, onViewDetai
       </div>
 
       <div className="rounded-xl border border-nexoraBorder bg-white">
-        <div className="hidden grid-cols-[2fr_1.1fr_1.6fr_1fr_118px] gap-3 border-b border-nexoraRule px-5 py-3 text-[10px] font-extrabold uppercase text-nexoraMuted lg:grid">
+        <div className="hidden grid-cols-[1.8fr_1fr_1.4fr_1fr_1.1fr_118px] gap-3 border-b border-nexoraRule px-5 py-3 text-[10px] font-extrabold uppercase text-nexoraMuted lg:grid">
           <span>{t('setup.staff_fullname')} / {t('setup.staff_position')}</span>
           <span>{t('setup.staff_displayname')}</span>
           <span>{t('setup.add_staff_title') || 'Linked Wallets'}</span>
           <span>{t('dashboard.activity_log.col_status')}</span>
+          <span>{t('common.tips_flow') || 'Tips Flow'}</span>
           <span className="text-right">{t('dashboard.top_touchpoints.manage')}</span>
         </div>
         {staff.map((member) => {
           const wallets = walletLabels(member.paymentAccounts)
           return (
-            <div key={member.id} className="grid grid-cols-1 gap-3 border-b border-nexoraRule px-5 py-4 text-sm last:border-0 lg:grid-cols-[2fr_1.1fr_1.6fr_1fr_118px] lg:items-center">
+            <div key={member.id} className="grid grid-cols-1 gap-3 border-b border-nexoraRule px-5 py-4 text-sm last:border-0 lg:grid-cols-[1.8fr_1fr_1.4fr_1fr_1.1fr_118px] lg:items-center">
               <div className="flex items-center gap-3 cursor-pointer group" onClick={() => onViewDetail(member.id)}>
                 {member.avatar ? (
                   <img src={member.avatar} alt="" className="h-10 w-10 rounded-full border border-nexoraBorder object-cover group-hover:opacity-85 transition" />
@@ -980,6 +1008,26 @@ function StaffView({ staff, onAdd, onEdit, onDelete, onQr, onToggle, onViewDetai
               </div>
               <button onClick={() => onToggle(member.id)} className={`w-fit rounded-full px-3 py-1 text-[10px] font-extrabold ${member.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
                 {member.isActive ? t('common.active') : t('common.inactive')}
+              </button>
+              <button 
+                onClick={() => onToggleTipsFlow(member.id)} 
+                className={`w-fit rounded-full px-3 py-1 text-[10px] font-extrabold flex items-center gap-1 transition-all ${
+                  member.showInTipsFlow !== false 
+                    ? 'bg-blue-50 text-blue-700 hover:bg-blue-100' 
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {member.showInTipsFlow !== false ? (
+                  <>
+                    <Eye className="h-3 w-3" />
+                    {t('common.show_in_tips') || 'Hiện'}
+                  </>
+                ) : (
+                  <>
+                    <EyeOff className="h-3 w-3" />
+                    {t('common.hide_in_tips') || 'Ẩn'}
+                  </>
+                )}
               </button>
               <div className="flex justify-end gap-1.5">
                 <IconButton label={t('staff_detail.joined_gateway')} onClick={() => onViewDetail(member.id)} className="hover:text-nexoraBrand">
@@ -1084,8 +1132,8 @@ function ReviewsView({ reviews, staff, filter, setFilter }) {
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-extrabold text-nexoraText">{review.rating}.0★</span>
-                  <span className={`rounded-md px-2 py-1 text-[10px] font-bold ${review.rating >= 4 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>{review.category}</span>
+                  <span className="text-sm font-extrabold text-nexoraWarning">{review.rating}.0★</span>
+                  <span className={`rounded-md px-2 py-1 text-[10px] font-bold ${review.rating >= 4 ? 'bg-amber-50 text-amber-700' : 'bg-rose-50 text-rose-700'}`}>{review.category}</span>
                 </div>
                 <p className="mt-2 text-sm text-nexoraText">"{review.comment}"</p>
                 <p className="mt-2 text-xs text-nexoraMuted">{review.staffName} - {review.date}</p>
@@ -1233,14 +1281,73 @@ function StaffModal({ open, editing, form, errors, setForm, onClose, onSave }) {
             </div>
           </div>
           <div>
-            <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.add_staff_title')}</label>
+            <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.linked_wallets') || 'Linked Payment Wallets'}</label>
             <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <input className="h-9 rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand" value={form.venmo} onChange={(event) => setForm({ ...form, venmo: event.target.value })} placeholder="Venmo @handle" />
-              <input className="h-9 rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand" value={form.cashapp} onChange={(event) => setForm({ ...form, cashapp: event.target.value })} placeholder="Cash App $cashtag" />
-              <input className="h-9 rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand" value={form.zelle} onChange={(event) => setForm({ ...form, zelle: event.target.value })} placeholder="Zelle phone/email" />
-              <input className="h-9 rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand" value={form.vlinkpay} onChange={(event) => setForm({ ...form, vlinkpay: event.target.value })} placeholder="VLINKPAY ID" />
+              <div className="relative">
+                <span className="absolute left-3 top-[9px] flex items-center justify-center pointer-events-none">
+                  {WalletLogos.venmo}
+                </span>
+                <input 
+                  className="h-9 w-full rounded-lg border border-nexoraBorder pl-9 pr-3 text-xs outline-none focus:border-nexoraBrand" 
+                  value={form.venmo} 
+                  onChange={(event) => setForm({ ...form, venmo: event.target.value })} 
+                  placeholder="Venmo @handle" 
+                />
+              </div>
+              <div className="relative">
+                <span className="absolute left-3 top-[9px] flex items-center justify-center pointer-events-none">
+                  {WalletLogos.cashapp}
+                </span>
+                <input 
+                  className="h-9 w-full rounded-lg border border-nexoraBorder pl-9 pr-3 text-xs outline-none focus:border-nexoraBrand" 
+                  value={form.cashapp} 
+                  onChange={(event) => setForm({ ...form, cashapp: event.target.value })} 
+                  placeholder="Cash App $cashtag" 
+                />
+              </div>
+              <div className="relative">
+                <span className="absolute left-3 top-[9px] flex items-center justify-center pointer-events-none">
+                  {WalletLogos.zelle}
+                </span>
+                <input 
+                  className="h-9 w-full rounded-lg border border-nexoraBorder pl-9 pr-3 text-xs outline-none focus:border-nexoraBrand" 
+                  value={form.zelle} 
+                  onChange={(event) => setForm({ ...form, zelle: event.target.value })} 
+                  placeholder="Zelle phone/email" 
+                />
+              </div>
+              <div className="relative">
+                <span className="absolute left-3 top-[9px] flex items-center justify-center pointer-events-none">
+                  {WalletLogos.vlinkpay}
+                </span>
+                <input 
+                  className="h-9 w-full rounded-lg border border-nexoraBorder pl-9 pr-3 text-xs outline-none focus:border-nexoraBrand" 
+                  value={form.vlinkpay} 
+                  onChange={(event) => setForm({ ...form, vlinkpay: event.target.value })} 
+                  placeholder="VLINKPAY ID" 
+                />
+              </div>
             </div>
             {errors.payment && <p className="mt-2 flex items-center gap-1 text-xs font-bold text-rose-600"><AlertTriangle className="h-3.5 w-3.5" />{errors.payment}</p>}
+          </div>
+          <div className="flex items-center justify-between rounded-lg border border-nexoraBorder bg-nexoraCanvas p-3.5 mt-4">
+            <div>
+              <label className="text-xs font-extrabold text-nexoraText block">{t('setup.show_in_tips_flow') || 'Show in Tips Flow'}</label>
+              <p className="text-[10px] text-nexoraMuted leading-relaxed mt-0.5">{t('setup.show_in_tips_flow_desc') || 'If disabled, this staff member won\'t appear in the general QR code staff list.'}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setForm({ ...form, showInTipsFlow: !form.showInTipsFlow })}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                form.showInTipsFlow ? 'bg-nexoraBrand' : 'bg-slate-300'
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  form.showInTipsFlow ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
           </div>
         </div>
         <div className="mt-6 flex justify-end gap-2 border-t border-nexoraRule pt-4">
@@ -1260,49 +1367,55 @@ function QrModal({ target, businessName, onClose }) {
   const qrUrl = `${window.location.origin}${window.location.pathname}?flow=customer&tech=${encodeURIComponent(target.slug)}&biz=${encodeURIComponent(businessName)}`
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-nexoraText/70 p-4 py-6 backdrop-blur-sm sm:items-center">
-      <div className="w-full max-w-sm rounded-xl bg-white p-6 text-center shadow-2xl animate-scaleUp">
-        <div className="flex justify-end">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-nexoraText/70 p-4 py-6 backdrop-blur-sm sm:items-center qr-modal-backdrop">
+      <div className="w-full max-w-sm rounded-xl bg-white p-6 text-center shadow-2xl animate-scaleUp qr-modal-container">
+        <div className="flex justify-end no-print">
           <IconButton label="Close QR preview" onClick={onClose}>
             <X className="h-4 w-4" />
           </IconButton>
         </div>
-        <h2 className="mt-1 text-lg font-extrabold text-nexoraText">{target.name}</h2>
-        <p className="text-xs text-nexoraMuted">{target.subtitle}</p>
+        <h2 className="mt-1 text-lg font-extrabold text-nexoraText qr-print-title">{target.name}</h2>
+        <p className="text-xs text-nexoraMuted qr-print-subtitle">{target.subtitle}</p>
         {!target.isActive && (
-          <div className="mt-3 flex items-center justify-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-[10px] font-bold text-amber-700">
+          <div className="mt-3 flex items-center justify-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-[10px] font-bold text-amber-700 no-print">
             <ShieldAlert className="h-3.5 w-3.5" />
             This personal QR is blocked while the staff member is inactive.
           </div>
         )}
-        <div className="mx-auto mt-5 flex aspect-[2/3] w-44 flex-col items-center justify-between rounded-2xl bg-nexoraText p-4 text-white shadow-xl">
-          <div className="h-1 w-14 rounded-full bg-rose-300" />
+        <div className="mx-auto mt-5 flex aspect-[2/3] w-44 flex-col items-center justify-between rounded-2xl bg-nexoraCanvas border border-nexoraBorder/80 p-4 text-nexoraText shadow-md qr-print-card">
+          {/* Nexora Branding Header inside Card */}
+          <div className="flex items-center gap-1 justify-center qr-print-brand-header">
+            <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-3.5 w-3.5 object-contain qr-print-brand-logo" />
+            <span className="text-[8px] font-black tracking-wider text-slate-800 qr-print-brand-text">NEXORA</span>
+          </div>
+
+          <div className="h-1 w-14 rounded-full bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] qr-print-card-strip" />
           <div>
-            <div className="text-[10px] font-extrabold uppercase text-rose-200">{businessName}</div>
-            <div className="mt-1 text-[8px] font-bold uppercase text-slate-300">Scan to tip and review</div>
+            <div className="text-[10px] font-extrabold uppercase text-nexoraBrand qr-print-biz-name">{businessName}</div>
+            <div className="mt-1 text-[8px] font-bold uppercase text-nexoraMuted qr-print-scan-text">Scan to tip and review</div>
           </div>
           
           {/* Real Scan-Ready QR Code */}
-          <div className="h-28 w-28 rounded-lg bg-white p-2 flex items-center justify-center shadow-inner">
+          <div className="h-28 w-28 rounded-lg bg-white border border-nexoraBorder/60 p-2 flex items-center justify-center shadow-inner qr-print-qr-wrapper">
             <img
               src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrUrl)}`}
               alt="Scan QR code to tip and review"
-              className="h-full w-full object-contain"
+              className="h-full w-full object-contain qr-print-qr-image"
             />
           </div>
 
-          <div className="flex items-center gap-1 text-[8px] font-bold text-slate-300">
-            <Scissors className="h-3 w-3 text-rose-200" />
+          <div className="flex items-center gap-1 text-[8px] font-bold text-nexoraSubtle qr-print-footer">
+            <Scissors className="h-3 w-3 text-nexoraBrand" />
             Secure redirect by VLINKPAY
           </div>
         </div>
         
-        <p className="mt-4 rounded-lg bg-nexoraCanvas px-3 py-2 text-[10px] font-mono text-nexoraMuted select-all">
+        <p className="mt-4 rounded-lg bg-nexoraCanvas px-3 py-2 text-[10px] font-mono text-nexoraMuted select-all qr-print-url">
           nexora.vlinkpay.com/touch/{target.slug}
         </p>
 
         {/* Browser simulator trigger */}
-        <div className="mt-3.5">
+        <div className="mt-3.5 no-print">
           <a
             href={qrUrl}
             target="_blank"
@@ -1315,7 +1428,7 @@ function QrModal({ target, businessName, onClose }) {
 
         <button 
           onClick={() => window.print()}
-          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white hover:bg-opacity-90 transition"
+          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white hover:bg-opacity-90 transition no-print"
         >
           <Download className="h-4 w-4" />
           {t('dashboard.modals.download_print_qr') || 'Print / Download Design'}
@@ -1326,6 +1439,7 @@ function QrModal({ target, businessName, onClose }) {
 }
 
 export default function Dashboard({ setupData, onLogout }) {
+  const { t } = useTranslation()
   const [activeMenu, setActiveMenu] = useState('overview')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [staff, setStaff] = useState(INITIAL_STAFF)
@@ -1351,7 +1465,8 @@ export default function Dashboard({ setupData, onLogout }) {
     venmo: '',
     cashapp: '',
     zelle: '',
-    vlinkpay: ''
+    vlinkpay: '',
+    showInTipsFlow: true
   })
 
   const businessName = setupData?.businessInfo?.name || 'Golden Glow Nail Spa'
@@ -1364,7 +1479,8 @@ export default function Dashboard({ setupData, onLogout }) {
         nickname: member.nickname,
         position: member.position,
         avatar: member.avatar || '',
-        isActive: true,
+        isActive: member.isActive !== undefined ? member.isActive : true,
+        showInTipsFlow: member.showInTipsFlow !== undefined ? member.showInTipsFlow : true,
         paymentAccounts: {
           venmo: member.paymentAccounts?.venmo || '',
           cashapp: member.paymentAccounts?.cashapp || '',
@@ -1378,6 +1494,21 @@ export default function Dashboard({ setupData, onLogout }) {
     }
   }, [setupData])
 
+  // Sync edits in dashboard to localStorage so simulator/customer flow gets the updates
+  useEffect(() => {
+    const saved = localStorage.getItem('nexora_merchant_setup')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        parsed.staffList = staff
+        parsed.touchPoints = touchpoints
+        localStorage.setItem('nexora_merchant_setup', JSON.stringify(parsed))
+      } catch (e) {
+        console.error(e)
+      }
+    }
+  }, [staff, touchpoints])
+
   const metrics = useMemo(() => ({
     totalTips: 2742.68,
     scans: 4892,
@@ -1387,7 +1518,7 @@ export default function Dashboard({ setupData, onLogout }) {
   }), [])
 
   const resetStaffForm = () => {
-    setStaffForm({ fullName: '', nickname: '', position: 'Nail Tech', avatar: '', venmo: '', cashapp: '', zelle: '', vlinkpay: '' })
+    setStaffForm({ fullName: '', nickname: '', position: 'Nail Tech', avatar: '', venmo: '', cashapp: '', zelle: '', vlinkpay: '', showInTipsFlow: true })
     setEditingStaffId(null)
     setErrors({})
   }
@@ -1407,7 +1538,8 @@ export default function Dashboard({ setupData, onLogout }) {
       venmo: member.paymentAccounts.venmo,
       cashapp: member.paymentAccounts.cashapp,
       zelle: member.paymentAccounts.zelle,
-      vlinkpay: member.paymentAccounts.vlinkpay
+      vlinkpay: member.paymentAccounts.vlinkpay,
+      showInTipsFlow: member.showInTipsFlow !== false
     })
     setErrors({})
     setIsStaffModalOpen(true)
@@ -1435,6 +1567,7 @@ export default function Dashboard({ setupData, onLogout }) {
       nickname: staffForm.nickname.trim(),
       position: staffForm.position.trim() || 'Nail Tech',
       avatar: staffForm.avatar || '',
+      showInTipsFlow: staffForm.showInTipsFlow !== false,
       paymentAccounts: {
         venmo: staffForm.venmo.trim(),
         cashapp: staffForm.cashapp.trim(),
@@ -1446,7 +1579,7 @@ export default function Dashboard({ setupData, onLogout }) {
     if (editingStaffId) {
       setStaff((current) => current.map((member) => member.id === editingStaffId ? { ...member, ...payload } : member))
     } else {
-      const newMember = { id: Date.now().toString(), isActive: true, ...payload }
+      const newMember = { id: Date.now().toString(), isActive: true, showInTipsFlow: true, ...payload }
       setStaff((current) => [...current, newMember])
       setTouchpoints((current) => [...current, {
         id: `tp-staff-${newMember.id}`,
@@ -1470,6 +1603,10 @@ export default function Dashboard({ setupData, onLogout }) {
 
   const toggleStaff = (id) => {
     setStaff((current) => current.map((member) => member.id === id ? { ...member, isActive: !member.isActive } : member))
+  }
+
+  const toggleStaffTipsFlow = (id) => {
+    setStaff((current) => current.map((member) => member.id === id ? { ...member, showInTipsFlow: member.showInTipsFlow === false ? true : false } : member))
   }
 
   const addTouchpoint = () => {
@@ -1542,7 +1679,7 @@ export default function Dashboard({ setupData, onLogout }) {
         />
       )
     }
-    if (activeMenu === 'staff') return <StaffView staff={staff} onAdd={openAddStaff} onEdit={openEditStaff} onDelete={deleteStaff} onQr={previewQr} onToggle={toggleStaff} onViewDetail={setViewingStaffDetailId} />
+    if (activeMenu === 'staff') return <StaffView staff={staff} onAdd={openAddStaff} onEdit={openEditStaff} onDelete={deleteStaff} onQr={previewQr} onToggle={toggleStaff} onToggleTipsFlow={toggleStaffTipsFlow} onViewDetail={setViewingStaffDetailId} />
     if (activeMenu === 'touchpoints') {
       return (
         <TouchpointsView
@@ -1623,10 +1760,10 @@ export default function Dashboard({ setupData, onLogout }) {
           <aside className="relative flex h-full w-[min(84vw,320px)] flex-col bg-nexoraSidebar px-5 py-6 text-white shadow-2xl">
             <div className="mb-7 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-nexoraBrand text-lg font-black text-white">N</div>
+                <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-10 w-10 object-contain" />
                 <div>
-                  <div className="text-xl font-extrabold leading-none">Nexora</div>
-                  <div className="mt-1 text-xs text-white/60">Admin Console</div>
+                  <div className="text-xl font-extrabold leading-none">{t('dashboard.sidebar.console_title')}</div>
+                  <div className="mt-1 text-xs text-white/60">{t('dashboard.sidebar.console_subtitle')}</div>
                 </div>
               </div>
               <IconButton label="Close menu" onClick={() => setIsMobileMenuOpen(false)} className="text-white hover:bg-white/10">
@@ -1643,7 +1780,9 @@ export default function Dashboard({ setupData, onLogout }) {
                     key={id}
                     onClick={() => navigateMenu(id)}
                     className={`flex min-h-12 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-bold transition ${
-                      isActive ? 'bg-white/10 text-white' : 'text-white/70 hover:bg-white/5 hover:text-white'
+                      isActive
+                        ? 'bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] text-white shadow-lg shadow-[#2B59FF]/20'
+                        : 'text-white/70 hover:bg-white/5 hover:text-white'
                     }`}
                   >
                     <MenuIcon item={item} active={isActive} />
@@ -1663,7 +1802,7 @@ export default function Dashboard({ setupData, onLogout }) {
                 className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors" 
                 title="Sign out"
               >
-                <LogOut className="h-4.5 w-4.5" />
+                <LogOut className="h-[18px] w-[18px]" />
               </button>
             </div>
           </aside>

@@ -18,6 +18,9 @@
     "inactive_status": "Ngừng hoạt động",
     "yes": "Có",
     "no": "Không",
+    "tips_flow": "Tips Flow",
+    "show_in_tips": "Hiện trong Tips",
+    "hide_in_tips": "Ẩn trong Tips",
     "days": {
       "mon": "Th 2",
       "tue": "Th 3",
@@ -75,6 +78,7 @@
     "title_step_2": "Bước 2: Quản Lý Nhân Viên & Điểm Chạm QR",
     "desc_step_2": "Thêm thợ của bạn. Hệ thống sẽ tự động phát sinh mã QR tương ứng để dán tại ghế hoặc chia sẻ.",
     "add_staff_title": "Thêm Nhân Viên Mới",
+    "linked_wallets": "Ví Nhận Tiền Liên Kết",
     "staff_fullname": "Họ Tên Đầy Đủ (Nội bộ) *",
     "staff_fullname_placeholder": "Ví dụ: Mia Tran",
     "staff_displayname": "Tên Hiển Thị (Màn hình khách) *",
@@ -89,6 +93,8 @@
     "wallet_cashapp_placeholder": "$cashtag",
     "wallet_vlinkpay": "VLINKPAY ID (Tùy chọn)",
     "add_staff_btn": "Thêm Nhân Viên",
+    "show_in_tips_flow": "Hiển thị trong Tips Flow",
+    "show_in_tips_flow_desc": "Nếu tắt, nhân viên này sẽ không hiển thị trong danh sách nhân viên của mã QR tổng.",
     "staff_directory_title": "Danh Sách Kỹ Thuật Viên",
     "total_staff_count": "Tổng số nhân sự: {count}",
     "staff_directory_empty": "Chưa có nhân viên nào được thêm. Vui lòng thêm phía bên trái.",
@@ -142,8 +148,8 @@
       "five_star_routed": "Đánh giá 5★ định tuyến"
     },
     "sidebar": {
-      "console_title": "Nexora",
-      "console_subtitle": "Admin Console",
+      "console_title": "NEXORA",
+      "console_subtitle": "by VLINKPAY",
       "plan_info": "Chủ sở hữu - Gói Pro",
       "sign_out": "Đăng xuất"
     },
@@ -272,6 +278,10 @@
   },
   "customer": {
     "header_subtitle": "Cổng Kết Nối Thanh Toán An Toàn Nexora",
+    "select_staff_title": "Chọn nhân viên",
+    "select_staff_subtitle": "Ai là người đã phục vụ bạn hôm nay?",
+    "search_staff_placeholder": "Tìm theo tên hoặc vị trí...",
+    "no_staff_found": "Không tìm thấy nhân viên.",
     "step_form_title": "Típ & Đánh Giá",
     "select_tip_label": "Chọn số tiền típ (USD)",
     "custom_tip_placeholder": "Nhập số tiền típ...",

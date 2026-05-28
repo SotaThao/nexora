@@ -63,6 +63,7 @@ export default {
         'flox-display': ['76px', { lineHeight: '1', letterSpacing: '-0.046em' }],
       },
       spacing: {
+        '4.5': '1.125rem',
         'flox-4': '4px',
         'flox-8': '8px',
         'flox-12': '12px',
