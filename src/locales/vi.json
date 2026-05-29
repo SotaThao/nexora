@@ -15,6 +15,7 @@
     "error": "Lỗi",
     "success": "Thành công",
     "active_status": "Hoạt động",
+    "export": "Xuất Excel",
     "inactive_status": "Ngừng hoạt động",
     "yes": "Có",
     "no": "Không",
@@ -70,10 +71,10 @@
     "logo_hint": "Logo vuông (Max 2MB)",
     "review_routing_title": "Review Routing (Định tuyến review)",
     "review_routing_policy": "Châm ngôn: Khách hài lòng (4-5★) được đưa thẳng sang Google/Yelp. Khách chưa hài lòng (1-3★) sẽ được định tuyến gửi biểu mẫu đóng góp kín về Email quản trị dưới đây để xử lý kín.",
-    "google_review_link": "Google Review Link *",
-    "yelp_review_link": "Yelp Review Link *",
+    "google_review_link": "Google Review Link (Tùy chọn)",
+    "yelp_review_link": "Yelp Review Link (Tùy chọn)",
     "facebook_link": "Facebook Link (Tùy chọn)",
-    "feedback_email": "Email Nhận Góp Ý Kín (1-3★) *",
+    "feedback_email": "Email Nhận Góp Ý Kín (1-3★) (Tùy chọn)",
     
     "title_step_2": "Bước 2: Quản Lý Nhân Viên & Điểm Chạm QR",
     "desc_step_2": "Thêm thợ của bạn. Hệ thống sẽ tự động phát sinh mã QR tương ứng để dán tại ghế hoặc chia sẻ.",
@@ -183,12 +184,12 @@
       "tips": "Tiền Típ",
       "reviews": "Đánh Giá",
       "transactions": "Giao Dịch",
-      "touchpoints": "Điểm Chạm QR",
+      "touchpoints": "Quản Lý Điểm Chạm",
       "qr_nfc": "Thiết bị QR / NFC",
       "analytics": "Phân Tích",
       "settings": "Cài Đặt",
       "business_setting": "Cài đặt doanh nghiệp",
-      "kyb": "Xác thực KYB",
+      "kyb": "Xác minh Doanh nghiệp",
       "support": "Hỗ Trợ"
     },
     "header": {
@@ -324,7 +325,154 @@
       "inactive_warning_title": "Điểm chạm ngưng hoạt động",
       "inactive_warning_desc": "Điểm chạm QR này hiện đang tạm dừng hoạt động bởi cửa hàng.",
       "delete_confirm_title": "Xác nhận xóa",
-      "delete_confirm": "Bạn có chắc chắn muốn xóa điểm chạm này? Thao tác này không thể hoàn tác."
+      "delete_confirm": "Bạn có chắc chắn muốn xóa điểm chạm này? Thao tác này không thể hoàn tác.",
+      "total_touchpoints": "Tổng Điểm Chạm",
+      "active_nfc": "Trạm NFC Đang Hoạt Động",
+      "total_scans": "Tổng Lượt Quét",
+      "device_issues": "Sự Cố Thiết Bị"
+    },
+    "touchpoints": {
+      "tabs": {
+        "stations": "Điểm Chạm QR",
+        "devices": "Thiết Bị Vật Lý"
+      }
+    },
+    "devices": {
+      "subtitle": "Quản lý các trạm đứng salon vật lý, mã đặt bàn và điểm chạm thông minh.",
+      "add_btn": "Thêm Thiết Bị Mới",
+      "location": "Vị trí",
+      "scans": "Lượt quét",
+      "last_scan": "Lần quét cuối",
+      "add_modal_title": "Đăng Ký Phần Cứng QR / NFC",
+      "id_label": "ID Thiết Bị / Serial (Yêu cầu)",
+      "type_label": "Loại Phần Cứng Thiết Bị",
+      "location_label": "Vị Trí Lắp Đặt (Yêu cầu)",
+      "delete_confirm": "Bạn có chắc chắn muốn hủy đăng ký thiết bị này? Thao tác này sẽ ngắt liên kết quét.",
+      "export_success": "Đã xuất danh mục thiết bị ra bảng tính thành công!",
+      "kpi": {
+        "qr_devices": "Thiết Bị QR",
+        "nfc_devices": "Thiết Bị NFC",
+        "active_nfc": "NFC Hoạt Động",
+        "device_issues": "Sự Cố Thiết Bị"
+      }
+    },
+    "support": {
+      "subtitle": "Nhận hỗ trợ về các thiết bị QR/NFC hoặc cấu hình tài khoản của bạn.",
+      "kpi": {
+        "open_tickets": "Yêu Cầu Đang Mở",
+        "resolved_tickets": "Đã Giải Quyết",
+        "avg_response": "Phản Hồi TB",
+        "system_status": "Trạng Thái Hệ Thống"
+      },
+      "form": {
+        "title": "Gửi Yêu Cầu Hỗ Trợ",
+        "subject_label": "Tiêu đề",
+        "subject_placeholder": "Ví dụ: Thiết bị NFC không phản hồi",
+        "description_label": "Mô tả sự cố",
+        "description_placeholder": "Cung cấp thông tin chi tiết về sự cố bạn đang gặp phải...",
+        "submit_btn": "Gửi Yêu Cầu",
+        "success_msg": "Yêu cầu đã được gửi thành công! Đội ngũ của chúng tôi sẽ liên hệ với bạn sớm nhất có thể.",
+        "error_msg": "Vui lòng điền đầy đủ các thông tin."
+      },
+      "faq": {
+        "title": "Câu Hỏi Thường Gặp",
+        "q1": "Làm thế nào để tạo mã QR?",
+        "a1": "Truy cập tab Quản Lý Điểm Chạm, nhấp vào \"+ Thêm Điểm Chạm\", nhập tên trạm và gán cho nhân viên nếu cần. Mã QR được tạo ngay lập tức và có thể in hoặc mô phỏng.",
+        "q2": "Tiền típ trực tiếp hoạt động thế nào?",
+        "a2": "Các điểm chạm Nexora chuyển tiếp tiền típ trực tiếp đến địa chỉ Venmo, Zelle, Cash App hoặc VLINKPAY được liên kết của kỹ thuật viên. Tiền sẽ chuyển thẳng vào tài khoản của họ mà không có độ trễ xử lý hoặc sự can thiệp từ chủ tiệm.",
+        "q3": "Làm thế nào để thiết lập Ví VLINKPAY?",
+        "a3": "Điều hướng đến Cài đặt -> tab Hồ sơ, cuộn xuống Phương thức nhận tiền và nhập định danh Ví VLINKPAY của bạn. Sau khi được xác minh, khách hàng sẽ thấy VLINKPAY dưới dạng tùy chọn típ trực tiếp.",
+        "q4": "Làm thế nào để đặt mua đế dựng NFC?",
+        "a4": "Bạn có thể đặt mua đế dựng bằng gỗ NFC khắc laser tùy chỉnh hoặc thẻ đặt bàn trực tiếp từ tab Quản lý Gói / Đăng ký, hoặc liên hệ với đội ngũ hỗ trợ của chúng tôi cùng với số lượng trạm salon của bạn."
+      }
+    },
+    "tips": {
+      "description": "Quản lý doanh thu típ, thống kê tiết kiệm phí và giao dịch trực tiếp.",
+      "tabs": {
+        "overview": "Tổng quan",
+        "savings": "Tiết kiệm phí",
+        "transactions": "Giao dịch típ",
+        "payouts": "Ví nhận thợ"
+      },
+      "kpi": {
+        "total_revenue": "Tổng Doanh Thu Típ",
+        "direct_p2p": "Típ Trực Tiếp (P2P)",
+        "card_tips": "Típ Qua Thẻ",
+        "crypto_tips": "Típ Crypto",
+        "total_tips_circle": "Tổng Típ"
+      },
+      "charts": {
+        "weekly_title": "Biểu Đồ Tiền Típ Tuần Này",
+        "method_split": "Tỷ Lệ Phương Thức Típ"
+      },
+      "savings": {
+        "direct_routed": "Típ Trực Tiếp Routed",
+        "direct_routed_sub": "Tránh cổng thẻ",
+        "fees_avoided": "Phí Xử Lý Tránh Được",
+        "fees_avoided_sub": "Ước tính mức 3% phí thẻ",
+        "active_payouts": "Số Thợ Nhận Trực Tiếp",
+        "active_payouts_sub": "Nhận trực tiếp tức thời",
+        "duration_label": "Thời Gian Nhận Típ",
+        "duration_value": "Tức Thời",
+        "duration_sub": "Không giữ tiền, không phí ẩn",
+        "calculator_title": "Tính Phí Tiết Kiệm Ước Tính",
+        "monthly_volume": "Doanh số típ tháng ($)",
+        "card_fee_avg": "Mức phí quẹt thẻ trung bình (%)",
+        "est_savings": "Ước tính số tiền tiết kiệm:",
+        "est_savings_annual_prefix": "Tiết kiệm khoảng",
+        "est_savings_annual_suffix": "mỗi năm.",
+        "per_month": "/tháng",
+        "recent_payouts": "Giao Dịch Trực Tiếp Gần Đây",
+        "col_time": "Thời gian",
+        "col_staff": "Nhân viên",
+        "col_amount": "Số tiền",
+        "col_method": "Ví gửi",
+        "col_status": "Trạng thái",
+        "status_success": "Thành công"
+      },
+      "ledger": {
+        "title": "Nhật Ký Típ Doanh Nghiệp",
+        "search_placeholder": "Tìm thợ, khách hàng, trạm...",
+        "col_id": "Mã GD",
+        "col_time": "Ngày & Giờ",
+        "col_staff": "Nhân viên",
+        "col_tp": "Điểm chạm",
+        "col_amount": "Số tiền",
+        "col_method": "Hình thức",
+        "col_status": "Trạng thái",
+        "status_success": "Hoàn thành",
+        "status_pending": "Đang chờ",
+        "empty": "Không tìm thấy giao dịch nào phù hợp."
+      },
+      "payouts": {
+        "title": "Hồ Sơ Thanh Toán Tích Lũy Thợ",
+        "col_staff": "Tên thợ",
+        "col_method": "Cổng nhận chính",
+        "col_amount": "Tích lũy đã nhận",
+        "col_status": "Trạng thái giải ngân",
+        "col_activity": "Hoạt động cuối",
+        "status_direct": "Trả trực tiếp (P2P)"
+      }
+    },
+    "analytics": {
+      "description": "Xem số liệu phân tích chuyên sâu về doanh thu típ, hiệu suất thợ và điểm chạm.",
+      "kpi": {
+        "total_volume": "Tổng Doanh Số",
+        "transactions_count": "Số Giao Dịch",
+        "transactions_unit": "GD",
+        "avg_tip": "Típ Trung Bình",
+        "fees_avoided": "Phí Xử Lý Tránh Được"
+      },
+      "charts": {
+        "daily_revenue": "Biểu Đồ Doanh Thu Theo Ngày",
+        "wallet_share": "Phần Trăm Theo Ví"
+      },
+      "leaderboards": {
+        "staff": "Bảng Xếp Hạng Nhân Viên",
+        "touchpoints": "Hiệu Suất Điểm Chạm QR",
+        "tips_count_label": "lượt nhận típ",
+        "scans_count_label": "lượt quét"
+      }
     }
   },
   "staff_detail": {

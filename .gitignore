@@ -11,4 +11,8 @@ extracted_scripts/
 extracted_*
 *.test
 .test
+scratch/
+.cursor/
+.agents/
+
 

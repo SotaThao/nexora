@@ -93,14 +93,73 @@ describe('Dashboard Component Unit Tests', () => {
     );
 
     // Navigate to touchpoints tab
-    const touchpointsMenuBtn = screen.getByRole('button', { name: /Touch Points/i });
+    const touchpointsMenuBtn = screen.getByRole('button', { name: /Touchpoint Manager|Quản Lý Điểm Chạm/i });
     fireEvent.click(touchpointsMenuBtn);
 
     // Verify touchpoint card details
     expect(screen.getByText('Manicure Station 01')).toBeInTheDocument();
     expect(screen.getAllByText('Table QR').length).toBeGreaterThan(0);
-    expect(screen.getByText('1102')).toBeInTheDocument(); // scans
-    expect(screen.getByText(/Active/i)).toBeInTheDocument(); // active status
+    expect(screen.getAllByText('1102').length).toBeGreaterThan(0); // scans or KPI total scans
+    expect(screen.getAllByText(/Active/i).length).toBeGreaterThan(0); // active status or active KPI card
+  });
+
+  it('verifies the Touchpoint Manager KPIs, linked device label, and Link Device action', () => {
+    const mockSetup = {
+      businessInfo: {
+        name: 'Golden Glow Nail Spa',
+        industry: 'Nail Salon',
+      },
+      staffList: [],
+      touchPoints: [
+        { id: 'tp-front', name: 'Front Desk', type: 'Front Desk', deviceId: 'NFC-001', isActive: true, scans: 100 },
+        { id: 'tp-mani-1', name: 'Manicure Station 01', type: 'Table QR', isActive: true, scans: 50 }
+      ],
+    };
+
+    render(
+      <LanguageProvider>
+        <Dashboard setupData={mockSetup} onLogout={vi.fn()} />
+      </LanguageProvider>
+    );
+
+    // Navigate to touchpoints tab
+    const touchpointsMenuBtn = screen.getByRole('button', { name: /Touchpoint Manager|Quản Lý Điểm Chạm/i });
+    fireEvent.click(touchpointsMenuBtn);
+
+    // 1. Verify KPIs
+    const totalTouchpointsHeader = screen.getByText('Total Touchpoints');
+    expect(totalTouchpointsHeader.closest('div').textContent).toContain('2');
+
+    const activeNfcHeader = screen.getByText('Active NFC Stands');
+    expect(activeNfcHeader.closest('div').textContent).toContain('1');
+
+    const totalScansHeader = screen.getByText('Total Scans');
+    expect(totalScansHeader.closest('div').textContent).toContain('150');
+
+    expect(screen.getByText('Device Issues')).toBeInTheDocument();
+
+    // 2. Verify Linked Device Labels
+    expect(screen.getByText('NFC-001')).toBeInTheDocument();
+    expect(screen.getByText(/Only Paper QR/i)).toBeInTheDocument();
+
+    // 3. Verify Link Device Action
+    const linkButtons = screen.getAllByRole('button', { name: /Link Device|Edit Link/i });
+    const manicureLinkBtn = linkButtons.find(btn => btn.textContent.includes('Link Device'));
+    expect(manicureLinkBtn).toBeInTheDocument();
+    
+    fireEvent.click(manicureLinkBtn);
+
+    // Enter a new device ID: NFC-102
+    const input = screen.getByPlaceholderText('Device ID (e.g. NFC-105)');
+    fireEvent.change(input, { target: { value: 'NFC-102' } });
+
+    // Click confirm (Check icon button)
+    const confirmBtn = screen.getByTitle('Confirm');
+    fireEvent.click(confirmBtn);
+
+    // Verify it calls the state callback and displays the new device ID
+    expect(screen.getByText('NFC-102')).toBeInTheDocument();
+    expect(activeNfcHeader.closest('div').textContent).toContain('2'); // active NFC stands KPI count is updated
   });
 
   it('renders zeroed/empty dashboard when hasKyb is false', () => {
@@ -141,7 +200,7 @@ describe('Dashboard Component Unit Tests', () => {
     expect(screen.queryByText('John Doe')).not.toBeInTheDocument();
 
     // Navigate to touchpoints tab
-    const touchpointsMenuBtn = screen.getByRole('button', { name: /Touch Points/i });
+    const touchpointsMenuBtn = screen.getByRole('button', { name: /Touchpoint Manager|Quản Lý Điểm Chạm/i });
     fireEvent.click(touchpointsMenuBtn);
     expect(screen.queryByText('Manicure Station 01')).not.toBeInTheDocument();
   });
@@ -209,7 +268,7 @@ describe('Dashboard Component Unit Tests', () => {
 
     // Submenu links should now be visible
     expect(screen.getByRole('button', { name: /Business Setting/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /KYB Verification/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Business Verification/i })).toBeInTheDocument();
 
     // Re-render with hasKyb = false to verify "No current plan" displays
     rerender(
@@ -221,5 +280,35 @@ describe('Dashboard Component Unit Tests', () => {
     expect(screen.queryByText('Renews on Jun 20, 2024')).not.toBeInTheDocument();
     // It should render no plan text
     expect(screen.getByText(/No Plan yet/i)).toBeInTheDocument();
+  });
+
+  it('displays KYB Warning Modal when gated feature is clicked and verificationStatus !== "kyb_approved"', () => {
+    render(
+      <LanguageProvider>
+        <Dashboard setupData={mockSetupData} verificationStatus="basic" onLogout={vi.fn()} />
+      </LanguageProvider>
+    );
+
+    // Gated tab "Tips" is clicked
+    const navigation = screen.getByRole('navigation');
+    const tipsBtn = within(navigation).getByRole('button', { name: /Tips|Tiền Típ/i });
+    fireEvent.click(tipsBtn);
+
+    // Verify warning modal is displayed
+    expect(screen.getByText(/KYB Verification Required/i)).toBeInTheDocument();
+
+    // Verify clicking Cancel closes the modal
+    const cancelBtn = screen.getByRole('button', { name: /Cancel|Hủy bỏ/i });
+    fireEvent.click(cancelBtn);
+    expect(screen.queryByText(/KYB Verification Required/i)).not.toBeInTheDocument();
+
+    // Click tips again and verify we can click Verify Now
+    fireEvent.click(tipsBtn);
+    const verifyNowBtn = screen.getByRole('button', { name: /Verify Now|Xác thực ngay/i });
+    fireEvent.click(verifyNowBtn);
+
+    // Verification modal closes and navigates to settings -> kyb tab
+    expect(screen.queryByText(/KYB Verification Required/i)).not.toBeInTheDocument();
+    expect(screen.getByText('Settings Configuration')).toBeInTheDocument();
   });
 });

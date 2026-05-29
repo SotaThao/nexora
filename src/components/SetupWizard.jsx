@@ -3,7 +3,7 @@ import {
   Sparkles, Building2, Link2, Users, QrCode, Download, 
   ArrowRight, ArrowLeft, Upload, Plus, Trash2, CheckCircle2, 
   AlertTriangle, Mail, Phone, Globe, Wallet, ShieldCheck, 
-  MapPin, Clock, Check, Eye, LogIn, Scissors, Edit2, Camera, FolderOpen, X
+  MapPin, Clock, Check, Eye, LogIn, Scissors, Edit2, Camera, FolderOpen, X, HelpCircle
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
 import CustomSelect from './CustomSelect'
@@ -225,7 +225,14 @@ const getPayoutConfigsFromMember = (member) => {
   return configs
 }
 
-export default function SetupWizard({ onComplete, onBackToLogin, initialBusinessInfo, hasKyb = true, onKybRequired }) {
+export default function SetupWizard({ 
+  onComplete, 
+  onBackToLogin, 
+  initialBusinessInfo, 
+  verificationStatus = 'kyb_approved',
+  hasKyb = verificationStatus === 'kyb_approved', 
+  onKybRequired 
+}) {
   const { currentLanguage, setLanguage, t } = useTranslation()
   const [currentStep, setCurrentStep] = useState(1) // 1, 2, 3
   const isSsoLocked = !!initialBusinessInfo
@@ -284,6 +291,9 @@ export default function SetupWizard({ onComplete, onBackToLogin, initialBusiness
 
   // Validation errors
   const [errors, setErrors] = useState({})
+  
+  // Merchant consent checkbox
+  const [isConsentChecked, setIsConsentChecked] = useState(false)
 
   // Prefill demo data helper
   const prefillDemo = () => {
@@ -346,26 +356,20 @@ export default function SetupWizard({ onComplete, onBackToLogin, initialBusiness
         newErrors.storePayment = t('setup.errors.store_payment_required')
       }
       
-      // Review Links validation
-      if (!reviewLinks.googleReview.trim()) {
-        newErrors.googleReview = t('setup.errors.google_required')
-      } else if (!reviewLinks.googleReview.startsWith('http')) {
+      // Review Links validation (Optional)
+      if (reviewLinks.googleReview && reviewLinks.googleReview.trim() && !reviewLinks.googleReview.startsWith('http')) {
         newErrors.googleReview = t('setup.errors.url_protocol')
       }
       
-      if (!reviewLinks.yelpReview.trim()) {
-        newErrors.yelpReview = t('setup.errors.yelp_required')
-      } else if (!reviewLinks.yelpReview.startsWith('http')) {
+      if (reviewLinks.yelpReview && reviewLinks.yelpReview.trim() && !reviewLinks.yelpReview.startsWith('http')) {
         newErrors.yelpReview = t('setup.errors.url_protocol')
       }
       
-      if (reviewLinks.facebookReview && !reviewLinks.facebookReview.startsWith('http')) {
+      if (reviewLinks.facebookReview && reviewLinks.facebookReview.trim() && !reviewLinks.facebookReview.startsWith('http')) {
         newErrors.facebookReview = t('setup.errors.url_invalid')
       }
 
-      if (!reviewLinks.feedbackEmail.trim()) {
-        newErrors.feedbackEmail = t('setup.errors.email_required')
-      } else if (!/\S+@\S+\.\S+/.test(reviewLinks.feedbackEmail)) {
+      if (reviewLinks.feedbackEmail && reviewLinks.feedbackEmail.trim() && !/\S+@\S+\.\S+/.test(reviewLinks.feedbackEmail)) {
         newErrors.feedbackEmail = t('setup.errors.email_invalid')
       }
     }
@@ -381,28 +385,6 @@ export default function SetupWizard({ onComplete, onBackToLogin, initialBusiness
   }
 
   const handleNext = () => {
-    if (!hasKyb && currentStep === 1) {
-      // Save current setup details as a shell profile in localStorage
-      const data = {
-        businessInfo,
-        reviewLinks,
-        staffList: [],
-        touchPoints: []
-      }
-      localStorage.setItem('nexora_merchant_setup', JSON.stringify(data))
-      sessionStorage.setItem('nexora_merchant_setup', JSON.stringify(data))
-
-      if (onKybRequired) {
-        onKybRequired()
-      } else {
-        alert(currentLanguage === 'vi' 
-          ? 'Xác thực KYB là bắt buộc để sử dụng chức năng này. Hệ thống sẽ chuyển hướng bạn sang cổng xác thực VLINKPAY.' 
-          : 'KYB verification is required to use this feature. Redirecting to the VLINKPAY portal.'
-        )
-      }
-      return
-    }
-
     if (validateStep()) {
       // Auto-populate default business touchpoints on moving from Step 1 to Step 2 if empty
       if (currentStep === 1 && touchPoints.length === 0) {
@@ -718,27 +700,6 @@ export default function SetupWizard({ onComplete, onBackToLogin, initialBusiness
                           : 'bg-white border-nexoraBorder text-nexoraSubtle'
                       }`}
                     onClick={() => {
-                      if (step > 1 && !hasKyb) {
-                        // Save current setup details as a shell profile in localStorage
-                        const data = {
-                          businessInfo,
-                          reviewLinks,
-                          staffList: [],
-                          touchPoints: []
-                        }
-                        localStorage.setItem('nexora_merchant_setup', JSON.stringify(data))
-                        sessionStorage.setItem('nexora_merchant_setup', JSON.stringify(data))
-
-                        if (onKybRequired) {
-                          onKybRequired()
-                        } else {
-                          alert(currentLanguage === 'vi' 
-                            ? 'Xác thực KYB là bắt buộc để sử dụng chức năng này. Hệ thống sẽ chuyển hướng bạn sang cổng xác thực VLINKPAY.' 
-                            : 'KYB verification is required to use this feature. Redirecting to the VLINKPAY portal.'
-                          )
-                        }
-                        return
-                      }
                       if (step <= currentStep || (step > currentStep && validateStep())) {
                         setCurrentStep(step)
                       }
@@ -817,7 +778,18 @@ export default function SetupWizard({ onComplete, onBackToLogin, initialBusiness
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">{t('setup.store_name')}</label>
+                        <label className="flex items-center text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
+                          <span>{t('setup.store_name')}</span>
+                          <div className="relative group inline-block ml-1.5 align-middle normal-case font-normal text-nexoraSubtle">
+                            <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
+                              {currentLanguage === 'vi' 
+                                ? 'Nhập tên hợp pháp hoặc tên công khai của cửa hàng/salon của bạn sẽ hiển thị trên màn hình thanh toán của khách hàng.'
+                                : 'Enter the legal or public name of your store/salon as it will appear on customer payment screens.'}
+                              <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
+                            </div>
+                          </div>
+                        </label>
                         <input 
                           type="text"
                           disabled={isSsoLocked}
@@ -855,7 +827,18 @@ export default function SetupWizard({ onComplete, onBackToLogin, initialBusiness
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">{t('setup.store_address')}</label>
+                      <label className="flex items-center text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
+                        <span>{t('setup.store_address')}</span>
+                        <div className="relative group inline-block ml-1.5 align-middle normal-case font-normal text-nexoraSubtle">
+                          <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
+                            {currentLanguage === 'vi'
+                              ? 'Cung cấp địa chỉ thực của cửa hàng. Được sử dụng để bản địa hóa và xác minh.'
+                              : 'Provide the physical location of your store. Used for localization and verification purposes.'}
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
+                          </div>
+                        </div>
+                      </label>
                       <div className="relative">
                         <MapPin className="absolute left-3.5 top-3.5 w-4 h-4 text-nexoraSubtle" />
                         <input 
@@ -1277,7 +1260,18 @@ export default function SetupWizard({ onComplete, onBackToLogin, initialBusiness
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-1">{t('setup.tp_name')}</label>
+                          <label className="flex items-center text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-1">
+                            <span>{t('setup.tp_name')}</span>
+                            <div className="relative group inline-block ml-1.5 align-middle normal-case font-normal text-nexoraSubtle">
+                              <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
+                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
+                                {currentLanguage === 'vi'
+                                  ? 'Đặt tên cho điểm chạm cụ thể này (ví dụ: Bàn 1, Ghế 3) để theo dõi vị trí nhận tiền tip và phản hồi.'
+                                  : 'Name this specific touch point (e.g., Table 1, Station 3) to track tips and feedback location-wise.'}
+                                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
+                              </div>
+                            </div>
+                          </label>
                           <input 
                             type="text"
                             placeholder={t('setup.tp_name_placeholder')}
@@ -1435,6 +1429,23 @@ export default function SetupWizard({ onComplete, onBackToLogin, initialBusiness
                         <span className="text-xs text-nexoraSubtle font-bold shrink-0 whitespace-nowrap ml-4">Print ›</span>
                       </button>
                     </div>
+
+                    {/* Merchant Consent Checkbox */}
+                    <div className="pt-4 border-t border-nexoraRule">
+                      <label className="flex items-start gap-3 cursor-pointer select-none p-2 rounded-lg hover:bg-slate-50 transition-colors min-h-[44px]">
+                        <input
+                          type="checkbox"
+                          className="mt-1 h-5 w-5 rounded border-nexoraBorder text-nexoraBrand focus:ring-nexoraBrand cursor-pointer shrink-0"
+                          checked={isConsentChecked}
+                          onChange={(e) => setIsConsentChecked(e.target.checked)}
+                        />
+                        <span className="text-xs text-nexoraMuted leading-relaxed">
+                          {currentLanguage === 'vi'
+                            ? 'Tôi đồng ý với Điều khoản dịch vụ người bán của VLINKPAY, yêu cầu báo cáo thuế IRS 1099-K và chính sách thẩm định của doanh nghiệp. Tôi xác nhận rằng tất cả thông tin đăng ký là chính xác.'
+                            : 'I hereby consent to the VLINKPAY Merchant Terms of Service, IRS 1099-K tax reporting requirements, and corporate compliance underwriting policies. I certify that all registration and business details provided are true and accurate.'}
+                        </span>
+                      </label>
+                    </div>
                   </div>
 
                 </div>
@@ -1471,7 +1482,12 @@ export default function SetupWizard({ onComplete, onBackToLogin, initialBusiness
               ) : (
                 <button 
                   onClick={handleCompleteSetup}
-                  className="min-h-11 w-full justify-center px-8 py-3 rounded-flox-buttons bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] hover:opacity-90 transition-opacity text-white font-extrabold text-sm flex items-center gap-2 transition-all shadow-[0_8px_25px_rgba(43,89,255,0.3)] sm:w-auto"
+                  disabled={!isConsentChecked}
+                  className={`min-h-11 w-full justify-center px-8 py-3 rounded-flox-buttons text-white font-extrabold text-sm flex items-center gap-2 transition-all sm:w-auto
+                    ${!isConsentChecked 
+                      ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' 
+                      : 'bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] hover:opacity-90 transition-opacity shadow-[0_8px_25px_rgba(43,89,255,0.3)]'
+                    }`}
                 >
                   {t('setup.launch_dashboard_btn')} <ArrowRight className="w-[18px] h-[18px] stroke-[3px]" />
                 </button>

@@ -14,7 +14,8 @@ import {
   FileText,
   Landmark,
   Wallet,
-  Globe
+  Globe,
+  HelpCircle
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
 import CustomSelect from './CustomSelect'
@@ -109,7 +110,16 @@ const payoutMethodsList = [
   { key: 'applecash', label: 'Apple Cash', placeholder: 'Enter Apple Cash phone number...' }
 ]
 
-export default function SettingsView({ setupData, hasKyb = true, userEmail, onKybRequired, initialTab = 'profile', onTabChange, onKybSuccess }) {
+export default function SettingsView({ 
+  setupData, 
+  hasKyb = true, 
+  userEmail, 
+  onKybRequired, 
+  initialTab = 'profile', 
+  onTabChange, 
+  onKybSuccess,
+  verificationStatus = hasKyb ? 'kyb_approved' : 'basic'
+}) {
   const { t, currentLanguage } = useTranslation()
   const [activeTab, setActiveTab] = useState(initialTab) // profile | kyb
   
@@ -136,6 +146,11 @@ export default function SettingsView({ setupData, hasKyb = true, userEmail, onKy
   })
   const [isSubmittingKyb, setIsSubmittingKyb] = useState(false)
   const [kybErrors, setKybErrors] = useState({})
+  const [showPortal, setShowPortal] = useState(verificationStatus !== 'kyb_approved' && verificationStatus !== 'verified_pro')
+
+  useEffect(() => {
+    setShowPortal(verificationStatus !== 'kyb_approved' && verificationStatus !== 'verified_pro')
+  }, [verificationStatus])
 
   const handleKybSubmit = (e) => {
     e.preventDefault()
@@ -164,6 +179,7 @@ export default function SettingsView({ setupData, hasKyb = true, userEmail, onKy
       if (onKybSuccess) {
         onKybSuccess(targetEmail)
       }
+      setShowPortal(false)
       setProfile(prev => ({
         ...prev,
         businessName: kybData.legalName,
@@ -505,9 +521,135 @@ export default function SettingsView({ setupData, hasKyb = true, userEmail, onKy
     }
   }
 
+  const getStatusCardDetails = () => {
+    switch (verificationStatus) {
+      case 'basic':
+        return {
+          bgClass: 'bg-blue-50/70 border-blue-200 text-blue-900',
+          icon: ShieldAlert,
+          iconBg: 'bg-blue-500',
+          title: currentLanguage === 'vi' ? 'HỒ SƠ CƠ BẢN' : 'BASIC ACCOUNT STATUS',
+          description: currentLanguage === 'vi'
+            ? 'Hồ sơ của bạn chỉ hoạt động cho nhận tiền típ trực tiếp P2P (Venmo, Cash App, Zelle) và đánh giá của khách hàng. Các tính năng xử lý tài chính nâng cao (Ví VLINKPAY, Xử lý Thẻ Tín Dụng, Merchant ATM) đã bị Khóa.'
+            : 'Your profile is active only for direct P2P tipping (Venmo, Cash App, direct Zelle) and customer reviews. Advanced financial processing features (VLINKPAY Wallet, Credit Card processing, Merchant ATM) are Gated.',
+          ctaText: currentLanguage === 'vi' ? 'Hoàn tất Xác minh Doanh nghiệp' : 'Complete Business Verification',
+          ctaAction: () => setShowPortal(prev => !prev)
+        }
+      case 'lite_pending':
+        return {
+          bgClass: 'bg-amber-50/70 border-amber-200 text-amber-900',
+          icon: ShieldAlert,
+          iconBg: 'bg-amber-500',
+          title: currentLanguage === 'vi' ? 'ĐANG CHỜ XÁC MINH LITE' : 'LITE VERIFICATION PENDING REVIEW',
+          description: currentLanguage === 'vi'
+            ? 'Lite Verification đang chờ xem duyệt.'
+            : 'Lite Verification Pending review.',
+          ctaText: null
+        }
+      case 'verified_lite':
+        return {
+          bgClass: 'bg-emerald-50/70 border-emerald-200 text-emerald-900',
+          icon: ShieldCheck,
+          iconBg: 'bg-emerald-500',
+          title: currentLanguage === 'vi' ? 'ĐÃ XÁC THỰC LITE' : 'VERIFIED LITE',
+          description: currentLanguage === 'vi'
+            ? 'Đã xác thực Lite. Bật nhận tiền típ P2P. Hoàn thành KYB đầy đủ để mở khóa xử lý thẻ tín dụng.'
+            : 'Verified Lite. P2P tipping enabled. Complete full KYB to unlock credit card processing.',
+          ctaText: currentLanguage === 'vi' ? 'Hoàn tất Xác minh Doanh nghiệp' : 'Complete Business Verification',
+          ctaAction: () => setShowPortal(prev => !prev)
+        }
+      case 'kyb_required':
+        return {
+          bgClass: 'bg-orange-50/70 border-orange-200 text-orange-900',
+          icon: ShieldAlert,
+          iconBg: 'bg-orange-500',
+          title: currentLanguage === 'vi' ? 'YÊU CẦU XÁC MINH DOANH NGHIỆP' : 'BUSINESS VERIFICATION REQUIRED',
+          description: currentLanguage === 'vi'
+            ? 'Yêu cầu Xác minh Doanh nghiệp. Bạn phải xác minh doanh nghiệp của mình để kích hoạt xử lý thẻ.'
+            : 'Business Verification Required. You must verify your business to enable card processing.',
+          ctaText: currentLanguage === 'vi' ? 'Hoàn tất Xác minh Doanh nghiệp' : 'Complete Business Verification',
+          ctaAction: () => setShowPortal(prev => !prev)
+        }
+      case 'kyb_pending':
+        return {
+          bgClass: 'bg-indigo-50/70 border-indigo-200 text-indigo-900',
+          icon: ShieldAlert,
+          iconBg: 'bg-indigo-500',
+          title: currentLanguage === 'vi' ? 'ĐANG CHỜ XÁC MINH DOANH NGHIỆP' : 'BUSINESS VERIFICATION PENDING',
+          description: currentLanguage === 'vi'
+            ? 'Xác minh doanh nghiệp đang chờ xử lý. Ban tuân thủ VLINKPAY đang xem xét chi tiết của bạn.'
+            : 'Business Verification Pending. VLINKPAY Compliance is reviewing your details.',
+          ctaText: null
+        }
+      case 'kyb_approved':
+      case 'verified_pro':
+        return {
+          bgClass: 'bg-emerald-50/70 border-emerald-200 text-emerald-900',
+          icon: ShieldCheck,
+          iconBg: 'bg-emerald-500',
+          title: currentLanguage === 'vi' ? 'Hồ sơ doanh nghiệp đã xác minh (Phê duyệt KYB)' : 'BUSINESS PROFILE VERIFIED (KYB APPROVED)',
+          description: currentLanguage === 'vi'
+            ? 'Chúc mừng! Hồ sơ doanh nghiệp của bạn đã được VLINKPAY xác minh đầy đủ. Không giới hạn hạn mức xử lý thẻ tín dụng và tính năng Merchant ATM hoạt động.'
+            : 'Business Profile Verified (KYB Approved).',
+          subText: 'Verified Date: May 20, 2026 • Certificate ID: VLP-KYB-99812A',
+          ctaText: null
+        }
+      case 'suspended':
+        return {
+          bgClass: 'bg-red-50/70 border-red-200 text-red-900',
+          icon: ShieldAlert,
+          iconBg: 'bg-red-500',
+          title: currentLanguage === 'vi' ? 'TÀI KHOẢN BỊ ĐÌNH CHỈ' : 'ACCOUNT SUSPENDED',
+          description: currentLanguage === 'vi'
+            ? 'Tài khoản bị đình chỉ. Vui lòng liên hệ bộ phận hỗ trợ.'
+            : 'Account Suspended. Please contact support.',
+          ctaText: null
+        }
+      case 'pro_pending':
+        return {
+          bgClass: 'bg-blue-50/70 border-blue-200 text-blue-900',
+          icon: ShieldAlert,
+          iconBg: 'bg-blue-500',
+          title: currentLanguage === 'vi' ? 'ĐANG CHỜ PHÊ DUYỆT PRO' : 'PRO VERIFICATION PENDING REVIEW',
+          description: currentLanguage === 'vi'
+            ? 'Hồ sơ nâng cấp Pro đang được thẩm định.'
+            : 'Your Pro Verification upgrade is currently pending review.',
+          ctaText: null
+        }
+      case 'kyb_rejected':
+        return {
+          bgClass: 'bg-rose-50/70 border-rose-200 text-rose-900',
+          icon: ShieldAlert,
+          iconBg: 'bg-rose-500',
+          title: currentLanguage === 'vi' ? 'BỊ TỪ CHỐI XÁC THỰC' : 'VERIFICATION REJECTED BY COMPLIANCE',
+          description: currentLanguage === 'vi'
+            ? 'Hồ sơ xác thực doanh nghiệp của bạn đã bị từ chối.'
+            : 'Your business verification application was rejected by Compliance.',
+          ctaText: currentLanguage === 'vi' ? 'Nộp lại thông tin xác minh' : 'Re-submit Verification',
+          ctaAction: () => setShowPortal(prev => !prev)
+        }
+      case 'under_review':
+        return {
+          bgClass: 'bg-amber-50/70 border-amber-200 text-amber-900',
+          icon: ShieldAlert,
+          iconBg: 'bg-amber-500',
+          title: currentLanguage === 'vi' ? 'CẦN BỔ SUNG HỒ SƠ' : 'UNDER REVIEW - INFO REQUESTED',
+          description: currentLanguage === 'vi'
+            ? 'Hồ sơ đang được xem xét.'
+            : 'Under Review. Additional compliance documentation has been requested.',
+          ctaText: currentLanguage === 'vi' ? 'Tải lên tài liệu bổ sung' : 'Upload Additional Documents',
+          ctaAction: () => setShowPortal(prev => !prev)
+        }
+      default:
+        return null;
+    }
+  }
+
+  const cardDetails = getStatusCardDetails()
+
   const tabs = [
     { id: 'profile', label: currentLanguage === 'vi' ? 'Hồ sơ' : 'Profile' },
-    { id: 'kyb', label: currentLanguage === 'vi' ? 'Xác thực KYB' : 'KYB' }
+    { id: 'kyb', label: currentLanguage === 'vi' ? 'Xác minh Doanh nghiệp' : 'Business Verification' }
   ]
 
   return (
@@ -739,7 +881,18 @@ export default function SettingsView({ setupData, hasKyb = true, userEmail, onKy
                 {isEditingBasic ? (
                   <form onSubmit={saveBasic} className="space-y-4">
                     <div>
-                      <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">Full Name</label>
+                      <label className="flex items-center text-[10px] font-extrabold uppercase text-nexoraMuted gap-1">
+                        <span>Full Name</span>
+                        <div className="relative group inline-block normal-case font-normal text-nexoraSubtle">
+                          <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
+                            {currentLanguage === 'vi'
+                              ? 'Nhập đầy đủ họ và tên hợp pháp của bạn như trên giấy tờ tùy thân.'
+                              : 'Specify your full legal name as it appears on your official government identification documents.'}
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
+                          </div>
+                        </div>
+                      </label>
                       <input
                         type="text"
                         required
@@ -749,7 +902,18 @@ export default function SettingsView({ setupData, hasKyb = true, userEmail, onKy
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">Date of Birth</label>
+                      <label className="flex items-center text-[10px] font-extrabold uppercase text-nexoraMuted gap-1">
+                        <span>Date of Birth</span>
+                        <div className="relative group inline-block normal-case font-normal text-nexoraSubtle">
+                          <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
+                            {currentLanguage === 'vi'
+                              ? 'Ngày sinh của bạn (phải từ 18 tuổi trở lên để xác thực).'
+                              : 'Required for identity verification purposes (must be 18 years or older).'}
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
+                          </div>
+                        </div>
+                      </label>
                       <input
                         type="date"
                         required
@@ -759,7 +923,18 @@ export default function SettingsView({ setupData, hasKyb = true, userEmail, onKy
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">Phone Number</label>
+                      <label className="flex items-center text-[10px] font-extrabold uppercase text-nexoraMuted gap-1">
+                        <span>Phone Number</span>
+                        <div className="relative group inline-block normal-case font-normal text-nexoraSubtle">
+                          <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
+                            {currentLanguage === 'vi'
+                              ? 'Số điện thoại chính để nhận thông báo và xác minh tài khoản.'
+                              : 'Primary phone contact for administrative account alerts and verification updates.'}
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
+                          </div>
+                        </div>
+                      </label>
                       <input
                         type="text"
                         required
@@ -824,7 +999,18 @@ export default function SettingsView({ setupData, hasKyb = true, userEmail, onKy
                 {isEditingAddress ? (
                   <form onSubmit={saveAddress} className="space-y-4">
                     <div>
-                      <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">Street Address</label>
+                      <label className="flex items-center text-[10px] font-extrabold uppercase text-nexoraMuted gap-1">
+                        <span>Street Address</span>
+                        <div className="relative group inline-block normal-case font-normal text-nexoraSubtle">
+                          <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
+                            {currentLanguage === 'vi'
+                              ? 'Cung cấp địa chỉ thực của cửa hàng. Được sử dụng để bản địa hóa và xác minh.'
+                              : 'Provide the physical location of your store. Used for localization and verification purposes.'}
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
+                          </div>
+                        </div>
+                      </label>
                       <input
                         type="text"
                         required
@@ -940,7 +1126,18 @@ export default function SettingsView({ setupData, hasKyb = true, userEmail, onKy
                 {isEditingBusiness ? (
                   <form onSubmit={saveBusiness} className="space-y-4">
                     <div>
-                      <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">Business Name</label>
+                      <label className="flex items-center text-[10px] font-extrabold uppercase text-nexoraMuted gap-1">
+                        <span>Business Name</span>
+                        <div className="relative group inline-block normal-case font-normal text-nexoraSubtle">
+                          <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
+                            {currentLanguage === 'vi'
+                              ? 'Nhập tên hợp pháp hoặc tên công khai của cửa hàng/salon của bạn sẽ hiển thị trên màn hình thanh toán của khách hàng.'
+                              : 'Enter the legal or public name of your store/salon as it will appear on customer payment screens.'}
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
+                          </div>
+                        </div>
+                      </label>
                       <input
                         type="text"
                         required
@@ -1153,176 +1350,44 @@ export default function SettingsView({ setupData, hasKyb = true, userEmail, onKy
         {activeTab === 'kyb' && (
           <div className="space-y-6 animate-fadeIn">
             
-            {/* KYB Status Header Banner */}
-            {hasKyb && (
-              <div className="rounded-xl border p-5 sm:p-6 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4 shadow-nexora-soft bg-emerald-50/70 border-emerald-200 text-emerald-900">
+            {/* Status Card */}
+            {cardDetails && (
+              <div className={`rounded-xl border p-5 sm:p-6 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4 shadow-nexora-soft ${cardDetails.bgClass}`}>
                 <div className="flex gap-4 items-start text-center sm:text-left flex-col sm:flex-row">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl shrink-0 shadow-sm bg-emerald-500 text-white">
-                    <ShieldCheck className="h-6 w-6" />
+                  <span className={`flex h-12 w-12 items-center justify-center rounded-2xl shrink-0 shadow-sm text-white ${cardDetails.iconBg}`}>
+                    <cardDetails.icon className="h-6 w-6" />
                   </span>
                   
                   <div className="space-y-1">
                     <h3 className="text-sm font-black uppercase tracking-wider">
-                      {currentLanguage === 'vi' ? 'HỒ SƠ DOANH NGHIỆP ĐÃ ĐƯỢC XÁC THỰC (KYB APPROVED)' : 'BUSINESS PROFILE VERIFIED (KYB APPROVED)'}
+                      {cardDetails.title}
                     </h3>
                     <p className="text-xs font-semibold opacity-85 leading-relaxed max-w-2xl">
-                      {currentLanguage === 'vi' 
-                        ? 'Chúc mừng! Hồ sơ doanh nghiệp của bạn đã được VLINKPAY xác minh đầy đủ để xử lý giao dịch. Các giới hạn rút tiền và thanh toán trực tiếp đã được gỡ bỏ.'
-                        : 'Congratulations! Your business entity has been fully vetted and certified by VLINKPAY Compliance. General payout limits and instant settlement pathways are fully active.'}
+                      {cardDetails.description}
                     </p>
-                    <div className="text-[10px] font-bold bg-white/50 border border-emerald-200/50 inline-block px-2.5 py-0.5 rounded mt-2">
-                      Verified Date: May 20, 2026 • Certificate ID: VLP-KYB-99812A
-                    </div>
+                    {cardDetails.subText && (
+                      <div className="text-[10px] font-bold bg-white/50 border border-emerald-200/50 inline-block px-2.5 py-0.5 rounded mt-2">
+                        {cardDetails.subText}
+                      </div>
+                    )}
                   </div>
                 </div>
+
+                {cardDetails.ctaText && (
+                  <button
+                    type="button"
+                    onClick={cardDetails.ctaAction}
+                    className="shrink-0 rounded-lg bg-nexoraBrand hover:bg-nexoraBrandDark text-white px-4 py-2.5 text-xs font-bold transition shadow-sm animate-pulse"
+                  >
+                    {showPortal ? (currentLanguage === 'vi' ? 'Đóng Form' : 'Close Form') : cardDetails.ctaText}
+                  </button>
+                )}
               </div>
             )}
 
-            {hasKyb ? (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
-                {/* Card 1: Registered Company Dossier (2/3 width) */}
-                <div className="lg:col-span-2 rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 space-y-4 animate-fadeIn">
-                  <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-2">
-                    <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
-                      <Building2 className="h-4 w-4 text-slate-600" />
-                      {currentLanguage === 'vi' ? 'Hồ sơ pháp lý công ty' : 'Registered Company Dossier'}
-                    </h4>
-                  </div>
-
-                  <div className="space-y-3.5 text-xs">
-                    <div className="flex flex-col py-1.5 border-b border-slate-50 gap-1">
-                      <span className="text-nexoraMuted font-semibold">Legal Company Name</span>
-                      <span className="text-nexoraText font-extrabold">{profile.businessName}</span>
-                    </div>
-                    <div className="flex flex-col py-1.5 border-b border-slate-50 gap-1">
-                      <span className="text-nexoraMuted font-semibold">Tax ID / EIN</span>
-                      <span className="font-mono text-nexoraText font-extrabold">{hasKyb ? 'XX-XXX9832' : 'Pending Verification'}</span>
-                    </div>
-                    <div className="flex flex-col py-1.5 border-b border-slate-50 gap-1">
-                      <span className="text-nexoraMuted font-semibold">Business Entity Type</span>
-                      <span className="text-nexoraText font-extrabold">LLC (Limited Liability Co.)</span>
-                    </div>
-                    <div className="flex flex-col py-1.5 border-b border-slate-50 gap-1">
-                      <span className="text-nexoraMuted font-semibold">Authorized Representative</span>
-                      <span className="text-nexoraText font-extrabold">{profile.fullName}</span>
-                    </div>
-                    <div className="flex flex-col py-1.5 border-b border-slate-50 gap-1">
-                      <span className="text-nexoraMuted font-semibold">Industry classification (MCC)</span>
-                      <span className="text-nexoraText font-extrabold">7230 - Nails & Beauty</span>
-                    </div>
-                    <div className="flex flex-col py-1.5 border-b border-slate-50 gap-1">
-                      <span className="text-nexoraMuted font-semibold">Corporate Address</span>
-                      <span className="text-nexoraText font-extrabold truncate" title={profile.street}>{profile.street}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Card 2: Settlement Account Info (1/3 width) */}
-                <div className="lg:col-span-1 rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 flex flex-col justify-between">
-                  <div>
-                    <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
-                      <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
-                        <Landmark className="h-4 w-4 text-emerald-600" />
-                        {currentLanguage === 'vi' ? 'Tài khoản thanh toán nhận tiền' : 'Settlement Account Details'}
-                      </h4>
-                    </div>
-
-                    <div className="space-y-4 text-xs">
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 gap-1">
-                        <span className="text-nexoraMuted font-semibold">Bank Institution</span>
-                        <span className="text-nexoraText font-extrabold">{hasKyb ? 'Chase Bank, N.A.' : 'N/A'}</span>
-                      </div>
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                        <span className="text-nexoraMuted font-semibold">Routing (ABA)</span>
-                        <span className="font-mono text-nexoraText font-extrabold">{hasKyb ? '021000021' : 'N/A'}</span>
-                      </div>
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                        <span className="text-nexoraMuted font-semibold">Account Number</span>
-                        <span className="font-mono text-nexoraText font-extrabold">{hasKyb ? '•••• 9832' : 'N/A'}</span>
-                      </div>
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                        <span className="text-nexoraMuted font-semibold">Payout frequency</span>
-                        <span className="text-emerald-600 font-extrabold">Instant Settlement (24/7)</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {hasKyb ? (
-                    <button
-                      type="button"
-                      onClick={() => showToast(currentLanguage === 'vi' ? 'Để thay đổi tài khoản nhận vui lòng liên hệ hỗ trợ.' : 'To modify receiving targets, contact client support.')}
-                      className="w-full mt-5 rounded-lg border border-slate-200 py-2 text-center text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
-                    >
-                      Change Settlement Target
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={onKybRequired}
-                      className="w-full mt-5 rounded-lg bg-nexoraBrand text-white py-2 text-center text-xs font-bold hover:bg-nexoraBrandDark transition"
-                    >
-                      Link Settlement Bank
-                    </button>
-                  )}
-                </div>
-
-                {/* Card 3: Uploaded Compliance Documents (full width) */}
-                <div className="lg:col-span-3 rounded-xl border border-nexoraBorder bg-white shadow-sm p-6">
-                  <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
-                    <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-blue-500" />
-                      {currentLanguage === 'vi' ? 'Hồ sơ tài liệu xác thực' : 'Uploaded Compliance Documents'}
-                    </h4>
-                  </div>
-
-                  {hasKyb ? (
-                    <div className="divide-y divide-slate-100">
-                      <div className="flex items-center justify-between py-3.5 text-xs">
-                        <div className="flex items-center gap-3">
-                          <span className="h-9 w-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">PDF</span>
-                          <div>
-                            <p className="font-extrabold text-slate-800 truncate max-w-[120px] sm:max-w-[150px]">Articles_of_Organization_LLC.pdf</p>
-                            <p className="text-[10px] text-slate-400">1.4 MB • Verified & Uploaded</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-black uppercase rounded">Verified</span>
-                          <button className="p-1.5 border border-slate-200 hover:bg-slate-50 rounded text-slate-500 transition" title="Download">
-                            <Download className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between py-3.5 text-xs">
-                        <div className="flex items-center gap-3">
-                          <span className="h-9 w-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">PDF</span>
-                          <div>
-                            <p className="font-extrabold text-slate-800 truncate max-w-[120px] sm:max-w-[150px]">IRS_EIN_Tax_Confirmation_Letter.pdf</p>
-                            <p className="text-[10px] text-slate-400">680 KB • Verified & Uploaded</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-black uppercase rounded">Verified</span>
-                          <button className="p-1.5 border border-slate-200 hover:bg-slate-50 rounded text-slate-500 transition" title="Download">
-                            <Download className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="py-8 text-center text-slate-400">
-                      <FileText className="h-10 w-10 text-slate-200 mx-auto mb-2" />
-                      <p className="text-xs font-semibold">No compliance documents submitted yet.</p>
-                      <p className="text-[10px] text-slate-400 mt-0.5">Documents uploaded during compliance registration will display here.</p>
-                    </div>
-                  )}
-                </div>
-
-              </div>
-            ) : (
+            {showPortal && verificationStatus !== 'kyb_approved' ? (
               /* Simulated browser window border with Secure Iframe */
-              <div className="border border-slate-300 rounded-xl overflow-hidden shadow-md bg-[#EDF2F7]">
+              <div className="border border-slate-300 rounded-xl overflow-hidden shadow-md bg-[#EDF2F7] animate-fadeIn">
                 {/* Browser bar */}
                 <div className="bg-slate-200 border-b border-slate-300 px-4 py-2 flex items-center gap-2">
                   <div className="flex gap-1.5">
@@ -1487,7 +1552,14 @@ export default function SettingsView({ setupData, hasKyb = true, userEmail, onKy
                       </div>
                     </div>
 
-                    <div className="pt-4 flex items-center justify-end">
+                    <div className="pt-4 flex items-center justify-end gap-3">
+                      <button 
+                        type="button"
+                        onClick={() => setShowPortal(false)}
+                        className="px-4 py-2.5 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs uppercase tracking-wider rounded transition"
+                      >
+                        {currentLanguage === 'vi' ? 'Hủy' : 'Cancel'}
+                      </button>
                       <button 
                         type="submit"
                         className="px-6 py-2.5 bg-[#2B59FF] hover:bg-blue-700 text-white font-extrabold text-xs uppercase tracking-wider rounded flex items-center gap-1.5 transition shadow-sm"
@@ -1498,7 +1570,198 @@ export default function SettingsView({ setupData, hasKyb = true, userEmail, onKy
                   </form>
                 </div>
               </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
+                
+                {/* Card 1: Registered Company Dossier (2/3 width) */}
+                <div className="lg:col-span-2 rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 space-y-4">
+                  <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-2">
+                    <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
+                      <Building2 className="h-4 w-4 text-slate-600" />
+                      {currentLanguage === 'vi' ? 'Hồ sơ pháp lý công ty' : 'Registered Company Dossier'}
+                    </h4>
+                  </div>
+
+                  <div className="space-y-3.5 text-xs">
+                    <div className="flex flex-col py-1.5 border-b border-slate-50 gap-1">
+                      <span className="text-nexoraMuted font-semibold">Legal Company Name</span>
+                      <span className="text-nexoraText font-extrabold">{profile.businessName || 'Pending Submission'}</span>
+                    </div>
+                    <div className="flex flex-col py-1.5 border-b border-slate-50 gap-1">
+                      <span className="text-nexoraMuted font-semibold">Tax ID / EIN</span>
+                      <span className="font-mono text-nexoraText font-extrabold">
+                        {verificationStatus === 'kyb_approved' ? 'XX-XXX9832' : (verificationStatus === 'verified_lite' ? 'XX-XXX4192' : 'Pending Verification')}
+                      </span>
+                    </div>
+                    <div className="flex flex-col py-1.5 border-b border-slate-50 gap-1">
+                      <span className="text-nexoraMuted font-semibold">Business Entity Type</span>
+                      <span className="text-nexoraText font-extrabold">LLC (Limited Liability Co.)</span>
+                    </div>
+                    <div className="flex flex-col py-1.5 border-b border-slate-50 gap-1">
+                      <span className="text-nexoraMuted font-semibold">Authorized Representative</span>
+                      <span className="text-nexoraText font-extrabold">{profile.fullName}</span>
+                    </div>
+                    <div className="flex flex-col py-1.5 border-b border-slate-50 gap-1">
+                      <span className="text-nexoraMuted font-semibold">Industry classification (MCC)</span>
+                      <span className="text-nexoraText font-extrabold">7230 - Nails & Beauty</span>
+                    </div>
+                    <div className="flex flex-col py-1.5 border-b border-slate-50 gap-1">
+                      <span className="text-nexoraMuted font-semibold">Corporate Address</span>
+                      <span className="text-nexoraText font-extrabold truncate" title={profile.street}>{profile.street || 'Pending'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card 2: Settlement Account Info (1/3 width) */}
+                <div className="lg:col-span-1 rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
+                      <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
+                        <Landmark className="h-4 w-4 text-emerald-600" />
+                        {currentLanguage === 'vi' ? 'Tài khoản thanh toán nhận tiền' : 'Settlement Account Details'}
+                      </h4>
+                    </div>
+
+                    <div className="space-y-4 text-xs">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 gap-1">
+                        <span className="text-nexoraMuted font-semibold">Bank Institution</span>
+                        <span className="text-nexoraText font-extrabold">{(verificationStatus === 'kyb_approved' || verificationStatus === 'verified_lite') ? 'Chase Bank, N.A.' : 'N/A'}</span>
+                      </div>
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
+                        <span className="text-nexoraMuted font-semibold">Routing (ABA)</span>
+                        <span className="font-mono text-nexoraText font-extrabold">{(verificationStatus === 'kyb_approved' || verificationStatus === 'verified_lite') ? '021000021' : 'N/A'}</span>
+                      </div>
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
+                        <span className="text-nexoraMuted font-semibold">Account Number</span>
+                        <span className="font-mono text-nexoraText font-extrabold">{(verificationStatus === 'kyb_approved' || verificationStatus === 'verified_lite') ? '•••• 9832' : 'N/A'}</span>
+                      </div>
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
+                        <span className="text-nexoraMuted font-semibold">Payout frequency</span>
+                        <span className="text-emerald-600 font-extrabold">
+                          {verificationStatus === 'kyb_approved' ? 'Instant Settlement (24/7)' : (verificationStatus === 'verified_lite' ? 'Next-Day ACH Settlement' : 'N/A')}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {verificationStatus === 'kyb_approved' ? (
+                    <button
+                      type="button"
+                      onClick={() => showToast(currentLanguage === 'vi' ? 'Để thay đổi tài khoản nhận vui lòng liên hệ hỗ trợ.' : 'To modify receiving targets, contact client support.')}
+                      className="w-full mt-5 rounded-lg border border-slate-200 py-2 text-center text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
+                    >
+                      Change Settlement Target
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setShowPortal(true)}
+                      disabled={verificationStatus === 'lite_pending' || verificationStatus === 'pro_pending'}
+                      className={`w-full mt-5 rounded-lg py-2 text-center text-xs font-bold transition text-white
+                        ${(verificationStatus === 'lite_pending' || verificationStatus === 'pro_pending')
+                          ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                          : 'bg-nexoraBrand hover:bg-nexoraBrandDark'
+                        }`}
+                    >
+                      {currentLanguage === 'vi' ? 'Liên kết Ngân hàng Thanh toán' : 'Link Settlement Bank'}
+                    </button>
+                  )}
+                </div>
+
+                {/* Card 3: Uploaded Compliance Documents (full width) */}
+                <div className="lg:col-span-3 rounded-xl border border-nexoraBorder bg-white shadow-sm p-6">
+                  <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
+                    <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-blue-500" />
+                      {currentLanguage === 'vi' ? 'Hồ sơ tài liệu xác thực' : 'Uploaded Compliance Documents'}
+                    </h4>
+                  </div>
+
+                  {(verificationStatus === 'kyb_approved' || verificationStatus === 'verified_lite') ? (
+                    <div className="divide-y divide-slate-100">
+                      <div className="flex items-center justify-between py-3.5 text-xs">
+                        <div className="flex items-center gap-3">
+                          <span className="h-9 w-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">PDF</span>
+                          <div>
+                            <p className="font-extrabold text-slate-800 truncate max-w-[120px] sm:max-w-[150px]">Articles_of_Organization_LLC.pdf</p>
+                            <p className="text-[10px] text-slate-400">1.4 MB • Verified & Uploaded</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-black uppercase rounded">Verified</span>
+                          <button className="p-1.5 border border-slate-200 hover:bg-slate-50 rounded text-slate-500 transition" title="Download">
+                            <Download className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between py-3.5 text-xs">
+                        <div className="flex items-center gap-3">
+                          <span className="h-9 w-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">PDF</span>
+                          <div>
+                            <p className="font-extrabold text-slate-800 truncate max-w-[120px] sm:max-w-[150px]">IRS_EIN_Tax_Confirmation_Letter.pdf</p>
+                            <p className="text-[10px] text-slate-400">680 KB • Verified & Uploaded</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-black uppercase rounded">Verified</span>
+                          <button className="p-1.5 border border-slate-200 hover:bg-slate-50 rounded text-slate-500 transition" title="Download">
+                            <Download className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="py-8 text-center text-slate-400">
+                      <FileText className="h-10 w-10 text-slate-200 mx-auto mb-2" />
+                      <p className="text-xs font-semibold">No compliance documents submitted yet.</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">Documents uploaded during compliance registration will display here.</p>
+                    </div>
+                  )}
+                </div>
+
+              </div>
             )}
+
+            {/* Legal Disclosures */}
+            <div className="rounded-xl border border-nexoraBorder bg-slate-50 p-6 space-y-4 text-xs mt-6 text-nexoraMuted select-text">
+              <h5 className="font-bold text-nexoraText uppercase tracking-wider border-b border-slate-200 pb-2">
+                {currentLanguage === 'vi' ? 'Công bố pháp lý & Điều khoản' : 'Legal Disclosures & Terms'}
+              </h5>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-1">
+                  <h6 className="font-extrabold text-slate-700">
+                    {currentLanguage === 'vi' ? '1. Báo cáo thu nhập IRS' : '1. IRS Income Reporting'}
+                  </h6>
+                  <p className="leading-relaxed text-[11px]">
+                    {currentLanguage === 'vi'
+                      ? 'Theo quy định 1099-K của IRS, thu nhập từ tiền típ được xử lý qua các cổng này phải báo cáo thuế hàng năm.'
+                      : 'Under 1099-K regulations, tipping income processed through these gateways is subject to annual IRS reporting.'}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <h6 className="font-extrabold text-slate-700">
+                    {currentLanguage === 'vi' ? '2. Tuyên bố miễn trừ tiết kiệm' : '2. Savings Disclaimer'}
+                  </h6>
+                  <p className="leading-relaxed text-[11px]">
+                    {currentLanguage === 'vi'
+                      ? 'Mức tiết kiệm chi phí xử lý ước tính được tính toán so với phí đại lý tiêu chuẩn ngành và không được bảo đảm.'
+                      : 'Estimated processing savings are calculated relative to industry standard merchant processing fees and are not guaranteed.'}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <h6 className="font-extrabold text-slate-700">
+                    {currentLanguage === 'vi' ? '3. Điều khoản dịch vụ' : '3. Terms of Service'}
+                  </h6>
+                  <p className="leading-relaxed text-[11px]">
+                    {currentLanguage === 'vi'
+                      ? 'Việc sử dụng dịch vụ đồng nghĩa với việc đồng ý với các điều khoản tuân thủ doanh nghiệp và chính sách thẩm định của VLINKPAY.'
+                      : 'Usage constitutes agreement with VLINKPAY corporate compliance terms and underwriting policies.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
           </div>
         )}
 
