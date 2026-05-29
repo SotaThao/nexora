@@ -48,6 +48,11 @@ import StaffDetailView from './StaffDetailView'
 import { useTranslation } from '../contexts/LanguageContext'
 import CustomSelect from './CustomSelect'
 import SettingsView from './SettingsView'
+import TipsView from './TipsView'
+import TouchpointsView from './TouchpointsView'
+import DevicesView from './DevicesView'
+import AnalyticsView from './AnalyticsView'
+import SupportView from './SupportView'
 
 // Helper to render text with styled star rating symbols (★) in luxuryGold and 4px space
 function renderTextWithGoldStars(text) {
@@ -274,14 +279,22 @@ const INITIAL_REVIEWS = [
 
 const INITIAL_TOUCHPOINTS = [
   { id: 'tp-main', name: 'Lobby Welcome QR', type: 'Business Main', isActive: true, scans: 245 },
-  { id: 'tp-front', name: 'Front Desk', type: 'Front Desk', isActive: true, scans: 842 },
+  { id: 'tp-front', name: 'Front Desk', type: 'Front Desk', deviceId: 'NFC-001', isActive: true, scans: 842 },
   { id: 'tp-mani-1', name: 'Manicure Station 01', type: 'Table QR', isActive: true, scans: 1102 },
   { id: 'tp-mani-3', name: 'Manicure Station 03', type: 'Table QR', isActive: true, scans: 748 },
   { id: 'tp-pedi-2', name: 'Pedicure Chair 02', type: 'Table QR', isActive: true, scans: 636 },
   { id: 'tp-receipt', name: 'Receipt QR', type: 'Receipt QR', isActive: true, scans: 436 },
-  { id: 'tp-vip', name: 'VIP Pedicure Room', type: 'Business Main', isActive: true, scans: 312 },
+  { id: 'tp-vip', name: 'VIP Pedicure Room', type: 'Business Main', deviceId: 'NFC-VIP', isActive: true, scans: 312 },
   { id: 'tp-nail-2', name: 'Nail Art Station 02', type: 'Table QR', isActive: true, scans: 195 },
   { id: 'tp-acrylic-1', name: 'Acrylic Station 01', type: 'Table QR', isActive: true, scans: 280 }
+]
+
+const INITIAL_DEVICES = [
+  { id: '1', deviceId: 'NFC-001', type: 'NFC Stand', location: 'Front Desk', isActive: true, lastScan: 'Today', scans: 142 },
+  { id: '2', deviceId: 'QR-Table-01', type: 'QR Card', location: 'Table 01', isActive: true, lastScan: 'Today', scans: 95 },
+  { id: '3', deviceId: 'NFC-002', type: 'NFC Stand', location: 'Table 02', isActive: true, lastScan: 'Yesterday', scans: 88 },
+  { id: '4', deviceId: 'QR-Table-03', type: 'QR Card', location: 'Table 03', isActive: false, lastScan: 'N/A', scans: 0 },
+  { id: '5', deviceId: 'NFC-Sticker-01', type: 'NFC Sticker', location: 'Mirror 01', isActive: true, lastScan: 'Today', scans: 210 }
 ]
 
 const STAFF_PERFORMANCE = [
@@ -306,7 +319,6 @@ const MENU_ITEMS = [
   { id: 'reviews', label: 'Reviews', icon: Star, image: '/assets/menu/review.png' },
   { id: 'reports', label: 'Transactions', icon: ClipboardList },
   { id: 'touchpoints', label: 'Touch Points', icon: Pointer },
-  { id: 'devices', label: 'QR / NFC Devices', icon: QrCode, image: '/assets/menu/qr-nfc.png' },
   { id: 'analytics', label: 'Analytics', icon: BarChart3, image: '/assets/menu/star.png' },
   { id: 'settings', label: 'Settings', icon: Settings },
   { id: 'support', label: 'Support', icon: HelpCircle }
@@ -802,7 +814,7 @@ function DashboardHeader({
                   }}
                   className="flex w-full items-center px-4 py-2 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition text-left"
                 >
-                  {t('dashboard.menu.kyb') || 'KYB Verification'}
+                  {t('dashboard.menu.kyb') || 'Business Verification'}
                 </button>
               </div>
               <div className="py-1">
@@ -840,6 +852,8 @@ function DashboardSidebar({
   isProfileExpanded, 
   setIsProfileExpanded, 
   hasKyb = true, 
+  verificationStatus = 'kyb_approved',
+  onBlockedFeatureClick,
   onLogout 
 }) {
   const { currentLanguage, setLanguage, t } = useTranslation()
@@ -908,7 +922,7 @@ function DashboardSidebar({
               }`}
             >
               <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === 'settings' && settingsTab === 'kyb' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
-              <span>{t('dashboard.menu.kyb') || 'KYB Verification'}</span>
+              <span>{t('dashboard.menu.kyb') || 'Business Verification'}</span>
             </button>
           </div>
         )}
@@ -962,7 +976,13 @@ function DashboardSidebar({
           return (
             <button
               key={id}
-              onClick={() => setActiveMenu(id)}
+              onClick={() => {
+                if (verificationStatus !== 'kyb_approved' && (id === 'tips' || id === 'devices')) {
+                  if (onBlockedFeatureClick) onBlockedFeatureClick()
+                } else {
+                  setActiveMenu(id)
+                }
+              }}
               className={`flex h-12 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-bold transition ${
                 isActive
                   ? 'bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] text-white shadow-lg shadow-[#2B59FF]/20'
@@ -2003,171 +2023,6 @@ function StaffView({ staff, onAdd, onEdit, onDelete, onQr, onToggle, onToggleTip
   )
 }
 
-function TouchpointsView({ touchpoints, newTouchpoint, setNewTouchpoint, onAdd, onDelete, onQr, onToggleStatus, transactions, businessName }) {
-  const { t } = useTranslation()
-  const [deleteConfirmId, setDeleteConfirmId] = useState(null)
-
-  return (
-    <div className="space-y-5">
-      <div>
-        <h2 className="text-xl font-extrabold text-nexoraText">{t('dashboard.menu.touchpoints')}</h2>
-        <p className="mt-1 text-xs text-nexoraMuted">{t('setup.qr_touchpoints_desc')}</p>
-      </div>
-      <Panel className="p-4">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_180px_auto]">
-          <input
-            value={newTouchpoint.name}
-            onChange={(event) => setNewTouchpoint({ ...newTouchpoint, name: event.target.value })}
-            placeholder={t('dashboard.modals.tp_name_label')}
-            className="h-10 rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand"
-          />
-          <CustomSelect
-            buttonClass="h-10 text-sm focus:border-nexoraBrand"
-            value={newTouchpoint.type}
-            onChange={(event) => setNewTouchpoint({ ...newTouchpoint, type: event.target.value })}
-            options={[
-              { value: 'Table QR', label: 'Table QR' },
-              { value: 'Front Desk', label: 'Front Desk' },
-              { value: 'Receipt QR', label: 'Receipt QR' },
-              { value: 'Business Main', label: 'Business Main' },
-              { value: 'Staff QR', label: 'Staff QR' }
-            ]}
-          />
-          <button onClick={onAdd} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white">
-            <Plus className="h-4 w-4" />
-            {t('setup.add_tp_btn')}
-          </button>
-        </div>
-      </Panel>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {touchpoints.map((point) => {
-          const isPointActive = point.isActive !== false
-          const qrUrl = `${window.location.origin}${window.location.pathname}?tech=tp/${point.id}&biz=${encodeURIComponent(businessName)}`
-          
-          // Calculate dynamic revenue
-          const revenue = transactions
-            .filter((tx) => tx.status === 'Success' && (tx.touchpoint === point.name || tx.touchpoint === point.id))
-            .reduce((sum, tx) => sum + (tx.amount || 0), 0)
-
-          return (
-            <Panel key={point.id} className="p-3.5 flex gap-4 hover:shadow-premium transition-all duration-300 group border border-nexoraBorder relative overflow-hidden min-h-[145px]">
-              {/* Subtle top decoration strip */}
-              <div className={`absolute top-0 left-0 right-0 h-1 transition-colors ${isPointActive ? 'bg-gradient-to-r from-nexoraBrand to-indigo-600' : 'bg-slate-300'}`} />
-              
-              {/* Left Column: QR Code Box */}
-              <div 
-                onClick={() => isPointActive && onQr(point)}
-                className="relative w-[115px] h-[115px] rounded-xl bg-white border border-nexoraBorder/60 p-2 flex items-center justify-center shadow-sm cursor-pointer hover:border-nexoraBrand transition-all hover:scale-[1.03] active:scale-95 group/qr select-none overflow-hidden shrink-0 self-center"
-                title={t('dashboard.modals.download_print_qr')}
-              >
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrUrl)}`}
-                  alt="Scan QR"
-                  className={`h-full w-full object-contain transition-opacity duration-200 ${isPointActive ? 'opacity-100' : 'opacity-30 filter grayscale'}`}
-                />
-                {!isPointActive && (
-                  <div className="absolute inset-0 bg-slate-900/60 flex flex-col items-center justify-center text-white text-[9px] font-black uppercase tracking-wider p-1 text-center">
-                    <ShieldAlert className="h-4 w-4 text-amber-400 mb-0.5 animate-pulse" />
-                    <span>Disabled</span>
-                  </div>
-                )}
-                {isPointActive && (
-                  <div className="absolute inset-0 bg-nexoraBrand/80 opacity-0 group-hover/qr:opacity-100 flex flex-col items-center justify-center text-white text-[9px] font-black uppercase tracking-wider transition-opacity p-1 text-center">
-                    <QrCode className="h-4 w-4 mb-0.5" />
-                    <span>Preview</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Right Column: Details */}
-              <div className="flex-grow flex flex-col justify-between min-w-0 py-0.5">
-                {/* Top Section: Title & Delete Button */}
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="font-extrabold text-sm text-nexoraText leading-snug truncate" title={point.name}>
-                      {point.name}
-                    </h3>
-                    <IconButton 
-                      label={t('common.delete')} 
-                      onClick={() => setDeleteConfirmId(point.id)} 
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition shrink-0"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </IconButton>
-                  </div>
-                  <p className="text-[9.5px] font-mono text-nexoraSubtle select-all truncate">
-                    nexora.vlinkpay.com/touch/{point.id}
-                  </p>
-                </div>
-
-                {/* Middle Section: Active / Inactive Toggle */}
-                <div className="flex items-center gap-2 mt-1.5">
-                  <button
-                    onClick={() => onToggleStatus(point.id)}
-                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                      isPointActive ? 'bg-nexoraBrand' : 'bg-slate-200'
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                        isPointActive ? 'translate-x-4' : 'translate-x-0'
-                      }`}
-                    />
-                  </button>
-                  <span className={`text-[10px] font-extrabold uppercase tracking-wider ${isPointActive ? 'text-emerald-600' : 'text-slate-400'}`}>
-                    {isPointActive ? t('dashboard.touchpoint_stats.active') || 'Active' : t('dashboard.touchpoint_stats.inactive') || 'Inactive'}
-                  </span>
-                </div>
-
-                {/* Bottom Section: Compact Metrics */}
-                <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-nexoraMuted">
-                  <div>
-                    {t('dashboard.touchpoint_stats.scans') || 'Scans'}: <span className="font-black text-nexoraText">{point.scans || 0}</span>
-                  </div>
-                  <div>
-                    {t('dashboard.touchpoint_stats.revenue') || 'Revenue'}: <span className="font-black text-nexoraSuccess">${revenue.toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
-            </Panel>
-          )
-        })}
-      </div>
-
-      {/* Custom Delete Confirmation Modal */}
-      {deleteConfirmId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl animate-scaleUp">
-            <h3 className="text-base font-extrabold text-slate-800">
-              {t('dashboard.touchpoint_stats.delete_confirm_title') || 'Confirm Delete'}
-            </h3>
-            <p className="mt-2.5 text-xs text-slate-500 leading-normal">
-              {t('dashboard.touchpoint_stats.delete_confirm') || 'Are you sure you want to delete this touch point? This action cannot be undone.'}
-            </p>
-            <div className="mt-5 flex justify-end gap-2 border-t border-slate-100 pt-3">
-              <button
-                onClick={() => setDeleteConfirmId(null)}
-                className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50 transition"
-              >
-                {t('common.cancel') || 'Cancel'}
-              </button>
-              <button
-                onClick={() => {
-                  onDelete(deleteConfirmId)
-                  setDeleteConfirmId(null)
-                }}
-                className="rounded-lg bg-red-600 px-4 py-2 text-xs font-bold text-white hover:bg-red-700 transition"
-              >
-                {t('common.delete') || 'Delete'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
 function ReviewsView({ reviews, staff, filter, setFilter, setupData }) {
   const { t } = useTranslation()
   const [sourceFilter, setSourceFilter] = useState('all')
@@ -2679,7 +2534,17 @@ function ComingSoon({ activeMenu, onBack }) {
   )
 }
 
-function StaffModal({ open, editing, form, errors, setForm, onClose, onSave }) {
+function StaffModal({ 
+  open, 
+  editing, 
+  form, 
+  errors, 
+  setForm, 
+  verificationStatus = 'kyb_approved',
+  onBlockedFeatureClick,
+  onClose, 
+  onSave 
+}) {
   const { t } = useTranslation()
   const [payoutSetupOpen, setPayoutSetupOpen] = useState(false)
   const [payoutSetupWallet, setPayoutSetupWallet] = useState('venmo')
@@ -2699,6 +2564,10 @@ function StaffModal({ open, editing, form, errors, setForm, onClose, onSave }) {
   }
 
   const handleToggleWallet = (walletKey) => {
+    if (verificationStatus !== 'kyb_approved') {
+      if (onBlockedFeatureClick) onBlockedFeatureClick()
+      return
+    }
     const configs = form.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
     const config = configs[walletKey] || { enabled: false, value: '', qrCode: '' }
     
@@ -2726,6 +2595,10 @@ function StaffModal({ open, editing, form, errors, setForm, onClose, onSave }) {
   }
 
   const openPayoutSetup = (walletKey) => {
+    if (verificationStatus !== 'kyb_approved') {
+      if (onBlockedFeatureClick) onBlockedFeatureClick()
+      return
+    }
     const configs = form.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
     const config = configs[walletKey] || { enabled: false, value: '', qrCode: '' }
     setTempPayoutValues({
@@ -2756,156 +2629,177 @@ function StaffModal({ open, editing, form, errors, setForm, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-nexoraText/70 p-4 py-6 backdrop-blur-sm sm:items-center">
-      <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl">
+      <div className="w-full max-w-lg md:max-w-3xl lg:max-w-4xl rounded-xl bg-white p-6 shadow-2xl transition-all">
         <div className="flex items-center justify-between border-b border-nexoraRule pb-4">
           <h2 className="text-lg font-extrabold text-nexoraText">{editing ? t('common.edit') : t('setup.add_staff_title')}</h2>
           <IconButton label="Close modal" onClick={onClose}>
             <X className="h-4 w-4" />
           </IconButton>
         </div>
-        <div className="mt-5 space-y-4">
-          <div>
-            <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">Avatar</label>
-            <div className="mt-2 flex items-center gap-4">
-              {form.avatar ? (
-                <img src={form.avatar} alt="" className="h-16 w-16 rounded-full object-cover ring-1 ring-nexoraBorder" />
-              ) : (
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-nexoraCanvas text-lg font-extrabold text-nexoraBrand ring-1 ring-nexoraBorder">
-                  {(form.nickname || form.fullName || 'N').charAt(0)}
-                </div>
-              )}
-              <div className="flex flex-wrap gap-2">
-                <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-nexoraBorder px-3 text-xs font-bold text-nexoraText transition hover:bg-nexoraCanvas">
-                  <Upload className="h-4 w-4 text-nexoraBrand" />
-                  Upload photo
-                  <input type="file" accept="image/*" className="sr-only" onChange={handleAvatarChange} />
-                </label>
-                {form.avatar && (
-                  <button
-                    type="button"
-                    onClick={() => setForm({ ...form, avatar: '' })}
-                    className="h-9 rounded-lg border border-nexoraBorder px-3 text-xs font-bold text-nexoraMuted transition hover:bg-nexoraCanvas"
-                  >
-                    {t('common.delete')}
-                  </button>
+        <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          {/* Left Column: Basic Info */}
+          <div className="space-y-4">
+            <div>
+              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">Avatar</label>
+              <div className="mt-2 flex items-center gap-4">
+                {form.avatar ? (
+                  <img src={form.avatar} alt="" className="h-16 w-16 rounded-full object-cover ring-1 ring-nexoraBorder" />
+                ) : (
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-nexoraCanvas text-lg font-extrabold text-nexoraBrand ring-1 ring-nexoraBorder">
+                    {(form.nickname || form.fullName || 'N').charAt(0)}
+                  </div>
                 )}
+                <div className="flex flex-wrap gap-2">
+                  <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-nexoraBorder px-3 text-xs font-bold text-nexoraText transition hover:bg-nexoraCanvas">
+                    <Upload className="h-4 w-4 text-nexoraBrand" />
+                    Upload photo
+                    <input type="file" accept="image/*" className="sr-only" onChange={handleAvatarChange} />
+                  </label>
+                  {form.avatar && (
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, avatar: '' })}
+                      className="h-9 rounded-lg border border-nexoraBorder px-3 text-xs font-bold text-nexoraMuted transition hover:bg-nexoraCanvas"
+                    >
+                      {t('common.delete')}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-          <div>
-            <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_fullname')}</label>
-            <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} placeholder="Mia Tran" />
-            {errors.fullName && <p className="mt-1 text-[10px] font-bold text-rose-600">{errors.fullName}</p>}
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_displayname')}</label>
-              <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.nickname} onChange={(event) => setForm({ ...form, nickname: event.target.value })} placeholder="Mia T." />
-              {errors.nickname && <p className="mt-1 text-[10px] font-bold text-rose-600">{errors.nickname}</p>}
+              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_fullname')}</label>
+              <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} placeholder="Mia Tran" />
+              {errors.fullName && <p className="mt-1 text-[10px] font-bold text-rose-600">{errors.fullName}</p>}
             </div>
-            <div>
-              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_position')}</label>
-              <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.position} onChange={(event) => setForm({ ...form, position: event.target.value })} placeholder="Nail Tech" />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_displayname')}</label>
+                <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.nickname} onChange={(event) => setForm({ ...form, nickname: event.target.value })} placeholder="Mia T." />
+                {errors.nickname && <p className="mt-1 text-[10px] font-bold text-rose-600">{errors.nickname}</p>}
+              </div>
+              <div>
+                <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_position')}</label>
+                <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.position} onChange={(event) => setForm({ ...form, position: event.target.value })} placeholder="Nail Tech" />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_phone') || 'Phone Number'}</label>
+                <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.phone || ''} onChange={(event) => setForm({ ...form, phone: event.target.value })} placeholder={t('setup.staff_phone_placeholder') || 'e.g., 407-555-0123'} />
+                {errors.phone && <p className="mt-1 text-[10px] font-bold text-rose-600">{errors.phone}</p>}
+              </div>
+              <div>
+                <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_email') || 'Email Address'}</label>
+                <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.email || ''} onChange={(event) => setForm({ ...form, email: event.target.value })} placeholder={t('setup.staff_email_placeholder') || 'e.g., mia.tran@gmail.com'} />
+                {errors.email && <p className="mt-1 text-[10px] font-bold text-rose-600">{errors.email}</p>}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg border border-nexoraBorder bg-nexoraCanvas p-3.5 mt-2">
+              <div>
+                <label className="text-xs font-extrabold text-nexoraText block">{t('setup.show_in_tips_flow') || 'Show in Tips Flow'}</label>
+                <p className="text-[10px] text-nexoraMuted leading-relaxed mt-0.5">{t('setup.show_in_tips_flow_desc') || 'If disabled, this staff member won\'t appear in the general QR code staff list.'}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, showInTipsFlow: !form.showInTipsFlow })}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  form.showInTipsFlow ? 'bg-nexoraBrand' : 'bg-slate-300'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    form.showInTipsFlow ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
             </div>
           </div>
-          
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+          {/* Right Column: Payout Configurations */}
+          <div className="space-y-4">
             <div>
-              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_phone') || 'Phone Number'}</label>
-              <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.phone || ''} onChange={(event) => setForm({ ...form, phone: event.target.value })} placeholder={t('setup.staff_phone_placeholder') || 'e.g., 407-555-0123'} />
-              {errors.phone && <p className="mt-1 text-[10px] font-bold text-rose-600">{errors.phone}</p>}
-            </div>
-            <div>
-              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_email') || 'Email Address'}</label>
-              <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.email || ''} onChange={(event) => setForm({ ...form, email: event.target.value })} placeholder={t('setup.staff_email_placeholder') || 'e.g., mia.tran@gmail.com'} />
-              {errors.email && <p className="mt-1 text-[10px] font-bold text-rose-600">{errors.email}</p>}
-            </div>
-          </div>
-          <div>
-            <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.payout_methods') || 'Payout Methods'}</label>
-            <div className="mt-2 space-y-4">
-              <div className="divide-y divide-slate-100 rounded-xl border border-nexoraBorder bg-white px-4">
-                {[
-                  { name: 'Zelle', key: 'zelle' },
-                  { name: 'Bank Wire', key: 'bankwire' },
-                  { name: 'PayPal', key: 'paypal' },
-                  { name: 'Venmo', key: 'venmo' },
-                  { name: 'Cash App', key: 'cashapp' },
-                  { name: 'Apple Cash', key: 'applecash' }
-                ].map((wallet) => {
-                  const config = (form.payoutConfigs && form.payoutConfigs[wallet.key]) || { enabled: false, value: '', qrCode: '' }
-                  
-                  return (
-                    <div key={wallet.key} className="flex items-center justify-between py-3">
-                      <div className="flex items-center gap-3">
+              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.payout_methods') || 'Payout Methods'}</label>
+              <div className="mt-2 space-y-4">
+                <div className="divide-y divide-slate-100 rounded-xl border border-nexoraBorder bg-white px-4">
+                  {[
+                    { name: 'Zelle', key: 'zelle' },
+                    { name: 'Bank Wire', key: 'bankwire' },
+                    { name: 'PayPal', key: 'paypal' },
+                    { name: 'Venmo', key: 'venmo' },
+                    { name: 'Cash App', key: 'cashapp' },
+                    { name: 'Apple Cash', key: 'applecash' }
+                  ].map((wallet) => {
+                    const config = (form.payoutConfigs && form.payoutConfigs[wallet.key]) || { enabled: false, value: '', qrCode: '' }
+                    
+                    return (
+                      <div key={wallet.key} className="flex items-center justify-between py-3">
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleWallet(wallet.key)}
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                              config.enabled ? 'bg-amber-600' : 'bg-slate-200'
+                            }`}
+                          >
+                            <span
+                              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                                config.enabled ? 'translate-x-5' : 'translate-x-0'
+                              }`}
+                            />
+                          </button>
+                          <div className="flex items-center gap-2">
+                            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-50 shrink-0">
+                              {WalletLogos[wallet.key]}
+                            </span>
+                            <span className="text-xs font-bold text-slate-700">{wallet.name}</span>
+                          </div>
+                        </div>
                         <button
                           type="button"
-                          onClick={() => handleToggleWallet(wallet.key)}
-                          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                            config.enabled ? 'bg-amber-600' : 'bg-slate-200'
-                          }`}
+                          onClick={() => openPayoutSetup(wallet.key)}
+                          className="flex items-center gap-1 text-[11px] font-bold text-amber-600 hover:text-amber-700 transition"
                         >
-                          <span
-                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                              config.enabled ? 'translate-x-5' : 'translate-x-0'
-                            }`}
-                          />
+                          <Edit2 className="h-3 w-3 stroke-[2.5]" />
+                          <span>{t('setup.payout_account') || 'Payout account'}</span>
                         </button>
-                        <div className="flex items-center gap-2">
-                          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-50 shrink-0">
-                            {WalletLogos[wallet.key]}
-                          </span>
-                          <span className="text-xs font-bold text-slate-700">{wallet.name}</span>
-                        </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => openPayoutSetup(wallet.key)}
-                        className="flex items-center gap-1 text-[11px] font-bold text-amber-600 hover:text-amber-700 transition"
-                      >
-                        <Edit2 className="h-3 w-3 stroke-[2.5]" />
-                        <span>{t('setup.payout_account') || 'Payout account'}</span>
-                      </button>
-                    </div>
-                  )
-                })}
-              </div>
+                    )
+                  })}
+                </div>
 
-              <div>
-                <label className="text-[9px] font-extrabold uppercase text-nexoraMuted mb-1 block">VLINKPAY ID</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-[9px] flex items-center justify-center pointer-events-none">
-                    {WalletLogos.vlinkpay}
-                  </span>
-                  <input 
-                    className="h-9 w-full rounded-lg border border-nexoraBorder pl-9 pr-3 text-xs outline-none focus:border-nexoraBrand" 
-                    value={form.vlinkpay || ''} 
-                    onChange={(event) => setForm({ ...form, vlinkpay: event.target.value })} 
-                    placeholder="VLINKPAY ID" 
-                  />
+                <div>
+                  <label className="text-[9px] font-extrabold uppercase text-nexoraMuted mb-1 block">VLINKPAY ID</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-[9px] flex items-center justify-center pointer-events-none">
+                      {WalletLogos.vlinkpay}
+                    </span>
+                    <input 
+                      className="h-9 w-full rounded-lg border border-nexoraBorder pl-9 pr-3 text-xs outline-none focus:border-nexoraBrand" 
+                      value={form.vlinkpay || ''} 
+                      onClick={(e) => {
+                        if (verificationStatus !== 'kyb_approved') {
+                          e.preventDefault()
+                          e.target.blur()
+                          if (onBlockedFeatureClick) onBlockedFeatureClick()
+                        }
+                      }}
+                      onChange={(event) => {
+                        if (verificationStatus !== 'kyb_approved') {
+                          if (onBlockedFeatureClick) onBlockedFeatureClick()
+                          return
+                        }
+                        setForm({ ...form, vlinkpay: event.target.value })
+                      }} 
+                      placeholder="VLINKPAY ID" 
+                    />
+                  </div>
                 </div>
               </div>
+              {errors.payment && <p className="mt-2 flex items-center gap-1 text-xs font-bold text-rose-600"><AlertTriangle className="h-3.5 w-3.5" />{errors.payment}</p>}
             </div>
-            {errors.payment && <p className="mt-2 flex items-center gap-1 text-xs font-bold text-rose-600"><AlertTriangle className="h-3.5 w-3.5" />{errors.payment}</p>}
-          </div>
-          <div className="flex items-center justify-between rounded-lg border border-nexoraBorder bg-nexoraCanvas p-3.5 mt-4">
-            <div>
-              <label className="text-xs font-extrabold text-nexoraText block">{t('setup.show_in_tips_flow') || 'Show in Tips Flow'}</label>
-              <p className="text-[10px] text-nexoraMuted leading-relaxed mt-0.5">{t('setup.show_in_tips_flow_desc') || 'If disabled, this staff member won\'t appear in the general QR code staff list.'}</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setForm({ ...form, showInTipsFlow: !form.showInTipsFlow })}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                form.showInTipsFlow ? 'bg-nexoraBrand' : 'bg-slate-300'
-              }`}
-            >
-              <span
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                  form.showInTipsFlow ? 'translate-x-5' : 'translate-x-0'
-                }`}
-              />
-            </button>
           </div>
         </div>
         <div className="mt-6 flex justify-end gap-2 border-t border-nexoraRule pt-4">
@@ -3019,7 +2913,8 @@ function QrModal({ target, businessName, onClose }) {
 
 export default function Dashboard({ 
   setupData, 
-  hasKyb = true, 
+  verificationStatus = 'kyb_approved',
+  hasKyb = verificationStatus === 'kyb_approved', 
   userEmail = '', 
   onKybRequired, 
   onKybSuccess, 
@@ -3027,7 +2922,8 @@ export default function Dashboard({
   initialSettingsTab = 'profile', 
   onLogout 
 }) {
-  const { t } = useTranslation()
+  const { currentLanguage, t } = useTranslation()
+  const [showKybWarningModal, setShowKybWarningModal] = useState(false)
   const [activeMenu, setActiveMenu] = useState(initialMenu)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [staff, setStaff] = useState(() => 
@@ -3134,6 +3030,7 @@ export default function Dashboard({
 
   const [isNotiDropdownOpen, setIsNotiDropdownOpen] = useState(false)
   const [touchpoints, setTouchpoints] = useState(INITIAL_TOUCHPOINTS)
+  const [devices, setDevices] = useState(INITIAL_DEVICES)
   const [isStaffModalOpen, setIsStaffModalOpen] = useState(false)
   const [editingStaffId, setEditingStaffId] = useState(null)
   const [qrTarget, setQrTarget] = useState(null)
@@ -3523,20 +3420,60 @@ export default function Dashboard({
     setStaff((current) => current.map((member) => member.id === id ? { ...member, showInTipsFlow: member.showInTipsFlow === false ? true : false } : member))
   }
 
-  const addTouchpoint = () => {
-    if (!newTouchpoint.name.trim()) return
+  const addTouchpoint = (name, type, deviceId) => {
+    const finalName = typeof name === 'string' ? name.trim() : (newTouchpoint.name || '').trim()
+    const finalType = typeof type === 'string' ? type : (newTouchpoint.type || 'Table QR')
+    const finalDeviceId = typeof deviceId === 'string' ? deviceId.trim() : ''
+
+    if (!finalName) return
     setTouchpoints((current) => [...current, {
       id: `tp-${Date.now()}`,
-      name: newTouchpoint.name.trim(),
-      type: newTouchpoint.type,
+      name: finalName,
+      type: finalType,
+      deviceId: finalDeviceId || undefined,
       isActive: true,
       scans: 0
     }])
-    setNewTouchpoint({ ...newTouchpoint, name: '' })
+    setNewTouchpoint({ name: '', type: 'Table QR' })
+  }
+
+  const linkDevice = (id, deviceId) => {
+    setTouchpoints((current) =>
+      current.map((point) =>
+        point.id === id ? { ...point, deviceId: deviceId.trim() || undefined } : point
+      )
+    )
   }
 
   const toggleTouchpointStatus = (id) => {
     setTouchpoints((current) => current.map((point) => point.id === id ? { ...point, isActive: point.isActive === false ? true : false } : point))
+  }
+
+  const handleAddDevice = (newDevice) => {
+    setDevices((current) => [
+      ...current,
+      {
+        id: 'dev-' + Date.now(),
+        deviceId: newDevice.deviceId,
+        type: newDevice.type,
+        location: newDevice.location,
+        isActive: true,
+        lastScan: 'N/A',
+        scans: 0
+      }
+    ])
+  }
+
+  const handleDeleteDevice = (id) => {
+    setDevices((current) => current.filter((dev) => dev.id !== id))
+  }
+
+  const handleToggleDeviceStatus = (id) => {
+    setDevices((current) =>
+      current.map((dev) =>
+        dev.id === id ? { ...dev, isActive: !dev.isActive } : dev
+      )
+    )
   }
 
   const previewQr = (target) => {
@@ -3613,8 +3550,13 @@ export default function Dashboard({
           onDelete={(id) => setTouchpoints((current) => current.filter((point) => point.id !== id))}
           onQr={previewQr}
           onToggleStatus={toggleTouchpointStatus}
+          onLinkDevice={linkDevice}
           transactions={transactions}
           businessName={businessName}
+          devices={devices}
+          onAddDevice={handleAddDevice}
+          onDeleteDevice={handleDeleteDevice}
+          onToggleDeviceStatus={handleToggleDeviceStatus}
         />
       )
     }
@@ -3627,18 +3569,35 @@ export default function Dashboard({
         setupData={setupData}
       />
     )
+    if (activeMenu === 'tips') return <TipsView transactions={transactions} staff={staff} />
     if (activeMenu === 'reports') return <ReportsView transactions={filteredTransactions} staff={staff} touchpoints={touchpoints} />
     if (activeMenu === 'settings') {
       return (
         <SettingsView
           setupData={setupData}
           hasKyb={hasKyb}
+          verificationStatus={verificationStatus}
+          onBlockedFeatureClick={() => setShowKybWarningModal(true)}
           userEmail={userEmail}
           onKybRequired={onKybRequired}
           initialTab={settingsTab}
           onTabChange={setSettingsTab}
           onKybSuccess={onKybSuccess}
         />
+      )
+    }
+    if (activeMenu === 'analytics') {
+      return (
+        <AnalyticsView
+          transactions={transactions}
+          staff={staff}
+          touchpoints={touchpoints}
+        />
+      )
+    }
+    if (activeMenu === 'support') {
+      return (
+        <SupportView />
       )
     }
     return <ComingSoon activeMenu={activeMenu} onBack={() => setActiveMenu('overview')} />
@@ -3656,6 +3615,8 @@ export default function Dashboard({
         isProfileExpanded={isProfileExpanded}
         setIsProfileExpanded={setIsProfileExpanded}
         hasKyb={hasKyb}
+        verificationStatus={verificationStatus}
+        onBlockedFeatureClick={() => setShowKybWarningModal(true)}
         onLogout={onLogout} 
       />
 
@@ -3797,7 +3758,7 @@ export default function Dashboard({
                     }`}
                   >
                     <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === 'settings' && settingsTab === 'kyb' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
-                    <span>{t('dashboard.menu.kyb') || 'KYB Verification'}</span>
+                    <span>{t('dashboard.menu.kyb') || 'Business Verification'}</span>
                   </button>
                 </div>
               )}
@@ -3850,7 +3811,13 @@ export default function Dashboard({
                 return (
                   <button
                     key={id}
-                    onClick={() => navigateMenu(id)}
+                    onClick={() => {
+                      if (verificationStatus !== 'kyb_approved' && (id === 'tips' || id === 'devices')) {
+                        setShowKybWarningModal(true)
+                      } else {
+                        navigateMenu(id)
+                      }
+                    }}
                     className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-bold transition ${
                       isActive
                         ? 'bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] text-white shadow-lg shadow-[#2B59FF]/20'
@@ -3884,10 +3851,54 @@ export default function Dashboard({
         form={staffForm}
         errors={errors}
         setForm={setStaffForm}
+        verificationStatus={verificationStatus}
+        onBlockedFeatureClick={() => setShowKybWarningModal(true)}
         onClose={closeStaffModal}
         onSave={saveStaff}
       />
       <QrModal target={qrTarget} businessName={businessName} onClose={() => setQrTarget(null)} />
+
+      {/* KYB Verification Warning Modal for gated features */}
+      {showKybWarningModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-nexoraBorder max-w-md w-full shadow-2xl p-6 relative overflow-hidden animate-scaleUp text-center space-y-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-nexoraWarning/10 text-nexoraWarning mx-auto shrink-0 shadow-sm">
+              <ShieldAlert className="h-6 w-6" />
+            </div>
+            <div className="space-y-1.5">
+              <h3 className="text-base font-black text-nexoraText uppercase tracking-wider">
+                {currentLanguage === 'vi' ? 'Yêu cầu xác thực KYB' : 'KYB Verification Required'}
+              </h3>
+              <p className="text-xs text-nexoraSubtle font-medium leading-relaxed">
+                {currentLanguage === 'vi'
+                  ? 'Tính năng này yêu cầu hồ sơ doanh nghiệp đã được xác thực KYB bởi VLINKPAY. Nhấp vào nút bên dưới để chuyển hướng đến trang Cài đặt > KYB để gửi thông tin doanh nghiệp của bạn.'
+                  : 'This feature requires your business profile to be KYB verified by VLINKPAY. Click below to navigate to Settings > KYB tab and submit your compliance information.'}
+              </p>
+            </div>
+            <div className="pt-2 flex flex-col sm:flex-row gap-2.5 justify-center">
+              <button
+                type="button"
+                onClick={() => setShowKybWarningModal(false)}
+                className="px-5 py-2.5 border border-nexoraBorder hover:bg-nexoraCanvas text-nexoraSubtle text-xs font-bold uppercase tracking-wider rounded-lg transition-all"
+              >
+                {currentLanguage === 'vi' ? 'Hủy bỏ' : 'Cancel'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowKybWarningModal(false)
+                  setActiveMenu('settings')
+                  setSettingsTab('kyb')
+                  setIsMobileMenuOpen(false)
+                }}
+                className="px-5 py-2.5 bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] hover:opacity-90 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-md transition-all animate-pulse"
+              >
+                {currentLanguage === 'vi' ? 'Xác thực ngay' : 'Verify Now'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

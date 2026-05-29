@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "start-server-and-test dev http://localhost:3000 \"vitest run --config vitest.e2e.config.js\""
+    "test:e2e": "start-server-and-test dev http://localhost:3000 \"vitest run --config vitest.e2e.config.js\"",
+    "lint:tokens": "node .agents/skills/feature-focused-tester/scripts/verify-tokens.cjs",
+    "test:impact": "node .agents/skills/feature-focused-tester/scripts/detect-changes.cjs"
   },
   "dependencies": {
     "lucide-react": "^0.344.0",

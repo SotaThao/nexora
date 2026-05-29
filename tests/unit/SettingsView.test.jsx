@@ -75,7 +75,7 @@ describe('SettingsView Component Unit Tests', () => {
     const kybTab = screen.getByRole('button', { name: /^KYB$/i })
     fireEvent.click(kybTab)
 
-    expect(screen.getByText(/BUSINESS PROFILE VERIFIED/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/BUSINESS PROFILE VERIFIED/i)[0]).toBeInTheDocument()
     expect(screen.getByText(/Registered Company Dossier/i)).toBeInTheDocument()
     expect(screen.getByText(/Chase Bank, N.A./i)).toBeInTheDocument()
   })
@@ -163,5 +163,47 @@ describe('SettingsView Component Unit Tests', () => {
     // Shown edit buttons
     expect(screen.getByRole('button', { name: /Edit Review Links/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Edit Venmo Payout Account/i })).toBeInTheDocument()
+  })
+
+  it('renders correct status card for kyb_required, kyb_pending, and suspended', () => {
+    // 1. Test kyb_required
+    const { rerender } = render(
+      <LanguageProvider>
+        <SettingsView verificationStatus="kyb_required" initialTab="kyb" />
+      </LanguageProvider>
+    )
+    expect(screen.getAllByText(/BUSINESS VERIFICATION REQUIRED/i).length).toBeGreaterThan(0)
+    expect(screen.getByText(/You must verify your business to enable card processing/i)).toBeInTheDocument()
+
+    // 2. Test kyb_pending
+    rerender(
+      <LanguageProvider>
+        <SettingsView verificationStatus="kyb_pending" initialTab="kyb" />
+      </LanguageProvider>
+    )
+    expect(screen.getAllByText(/BUSINESS VERIFICATION PENDING/i).length).toBeGreaterThan(0)
+    expect(screen.getByText(/VLINKPAY Compliance is reviewing your details/i)).toBeInTheDocument()
+
+    // 3. Test suspended
+    rerender(
+      <LanguageProvider>
+        <SettingsView verificationStatus="suspended" initialTab="kyb" />
+      </LanguageProvider>
+    )
+    expect(screen.getAllByText(/ACCOUNT SUSPENDED/i).length).toBeGreaterThan(0)
+    expect(screen.getByText(/Please contact support/i)).toBeInTheDocument()
+  })
+
+  it('renders legal disclosures section on the KYB tab', () => {
+    render(
+      <LanguageProvider>
+        <SettingsView verificationStatus="basic" initialTab="kyb" />
+      </LanguageProvider>
+    )
+
+    // Legal disclosures check
+    expect(screen.getByText(/Legal Disclosures & Terms/i)).toBeInTheDocument()
+    expect(screen.getByText(/IRS Income Reporting/i)).toBeInTheDocument()
+    expect(screen.getByText(/Savings Disclaimer/i)).toBeInTheDocument()
   })
 })

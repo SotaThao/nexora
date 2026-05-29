@@ -15,6 +15,7 @@
     "error": "Error",
     "success": "Success",
     "active_status": "Active",
+    "export": "Export",
     "inactive_status": "Inactive",
     "yes": "Yes",
     "no": "No",
@@ -70,10 +71,10 @@
     "logo_hint": "Square image (Max 2MB)",
     "review_routing_title": "Review Routing",
     "review_routing_policy": "Policy: Satisfied customers (4-5★) are routed directly to Google/Yelp. Dissatisfied customers (1-3★) are routed to submit private feedback to the administrator email below for resolution.",
-    "google_review_link": "Google Review Link *",
-    "yelp_review_link": "Yelp Review Link *",
+    "google_review_link": "Google Review Link (Optional)",
+    "yelp_review_link": "Yelp Review Link (Optional)",
     "facebook_link": "Facebook Link (Optional)",
-    "feedback_email": "Private Feedback Email (1-3★) *",
+    "feedback_email": "Private Feedback Email (1-3★) (Optional)",
     
     "title_step_2": "Step 2: Staff Management & QR Touchpoints",
     "desc_step_2": "Add your technicians. The system automatically generates corresponding QR codes to place at tables or share.",
@@ -183,12 +184,12 @@
       "tips": "Tips",
       "reviews": "Reviews",
       "transactions": "Transactions",
-      "touchpoints": "Touch Points",
+      "touchpoints": "Touchpoint Manager",
       "qr_nfc": "QR / NFC Devices",
       "analytics": "Analytics",
       "settings": "Settings",
       "business_setting": "Business Setting",
-      "kyb": "KYB Verification",
+      "kyb": "Business Verification",
       "support": "Support"
     },
     "header": {
@@ -324,7 +325,154 @@
       "inactive_warning_title": "Station Inactive",
       "inactive_warning_desc": "This QR touchpoint is currently disabled by the owner.",
       "delete_confirm_title": "Confirm Delete",
-      "delete_confirm": "Are you sure you want to delete this touch point? This action cannot be undone."
+      "delete_confirm": "Are you sure you want to delete this touch point? This action cannot be undone.",
+      "total_touchpoints": "Total Touchpoints",
+      "active_nfc": "Active NFC Stands",
+      "total_scans": "Total Scans",
+      "device_issues": "Device Issues"
+    },
+    "touchpoints": {
+      "tabs": {
+        "stations": "QR Stations",
+        "devices": "Hardware Devices"
+      }
+    },
+    "devices": {
+      "subtitle": "Manage physical salon stands, tabletop codes, and smart taps.",
+      "add_btn": "Add New Device",
+      "location": "Location",
+      "scans": "Scans",
+      "last_scan": "Last Scan",
+      "add_modal_title": "Register QR / NFC Hardware",
+      "id_label": "Device ID / Serial (Required)",
+      "type_label": "Device Hardware Type",
+      "location_label": "Location Placement (Required)",
+      "delete_confirm": "Are you sure you want to unregister this device? This will unlink it from active scans.",
+      "export_success": "Device directory successfully exported to spreadsheet!",
+      "kpi": {
+        "qr_devices": "QR Devices",
+        "nfc_devices": "NFC Devices",
+        "active_nfc": "Active NFC",
+        "device_issues": "Device Issues"
+      }
+    },
+    "support": {
+      "subtitle": "Get assistance with your QR/NFC terminals or account configuration.",
+      "kpi": {
+        "open_tickets": "Open Tickets",
+        "resolved_tickets": "Resolved",
+        "avg_response": "Avg Response",
+        "system_status": "System Status"
+      },
+      "form": {
+        "title": "Submit Support Ticket",
+        "subject_label": "Subject",
+        "subject_placeholder": "e.g., NFC Terminal not responding",
+        "description_label": "Describe Issue",
+        "description_placeholder": "Provide details about the issue you are experiencing...",
+        "submit_btn": "Submit Ticket",
+        "success_msg": "Ticket submitted successfully! Our team will contact you shortly.",
+        "error_msg": "Please fill in all fields."
+      },
+      "faq": {
+        "title": "Frequently Asked Questions",
+        "q1": "How to generate QR codes?",
+        "a1": "Go to the Touchpoint Manager tab, click \"+ Add New Touch Point\", enter the station name, and assign a staff member if needed. The QR code is generated instantly and can be printed or simulated.",
+        "q2": "How direct tips work?",
+        "a2": "Nexora touch points route tips directly to the technician's connected Venmo, Zelle, Cash App, or VLINKPAY address. Funds go straight to their account without processing delays or owner intervention.",
+        "q3": "How to set up VLINKPAY Wallet?",
+        "a3": "Navigate to Settings -> Profile tab, scroll down to Payout Methods, and enter your VLINKPAY Wallet identifier. Once verified, customers will see VLINKPAY as a direct tipping option.",
+        "q4": "How to order NFC stands?",
+        "a4": "You can order custom laser-engraved NFC wooden stands or tabletop cards directly from the Manage Plan / Subscriptions tab, or by contacting our support team with your salon station count."
+      }
+    },
+    "tips": {
+      "description": "Manage tip revenue, direct savings statistics, and peer-to-peer payouts.",
+      "tabs": {
+        "overview": "Overview",
+        "savings": "Direct Savings",
+        "transactions": "Tip Transactions",
+        "payouts": "Staff Payouts"
+      },
+      "kpi": {
+        "total_revenue": "Total Tip Revenue",
+        "direct_p2p": "Direct P2P Tips",
+        "card_tips": "Card Tips",
+        "crypto_tips": "Crypto Tips",
+        "total_tips_circle": "Total Tips"
+      },
+      "charts": {
+        "weekly_title": "Weekly Tips Trend",
+        "method_split": "Payment Method Split"
+      },
+      "savings": {
+        "direct_routed": "Direct Tips Routed",
+        "direct_routed_sub": "Bypasses card processing",
+        "fees_avoided": "Processing Fees Avoided",
+        "fees_avoided_sub": "Estimated at 3% card fee",
+        "active_payouts": "Active Direct Receivers",
+        "active_payouts_sub": "Receiving instantly P2P",
+        "duration_label": "Payout Duration",
+        "duration_value": "Instant",
+        "duration_sub": "No hold times or hidden fees",
+        "calculator_title": "Estimated Direct Savings Calculator",
+        "monthly_volume": "Monthly Tip Volume ($)",
+        "card_fee_avg": "Average Credit Card Processing Fee (%)",
+        "est_savings": "Estimated savings amount:",
+        "est_savings_annual_prefix": "Saves approximately",
+        "est_savings_annual_suffix": "each year.",
+        "per_month": "/month",
+        "recent_payouts": "Recent Direct Payouts",
+        "col_time": "Time",
+        "col_staff": "Technician",
+        "col_amount": "Amount",
+        "col_method": "Wallet",
+        "col_status": "Status",
+        "status_success": "Success"
+      },
+      "ledger": {
+        "title": "Enterprise Tip Ledger",
+        "search_placeholder": "Search tech, client, station...",
+        "col_id": "Tx ID",
+        "col_time": "Date & Time",
+        "col_staff": "Technician",
+        "col_tp": "Touch Point",
+        "col_amount": "Amount",
+        "col_method": "Method",
+        "col_status": "Status",
+        "status_success": "Success",
+        "status_pending": "Pending",
+        "empty": "No matching transactions found."
+      },
+      "payouts": {
+        "title": "Staff Cumulative Payout Ledger",
+        "col_staff": "Technician Name",
+        "col_method": "Primary Wallet",
+        "col_amount": "Cumulative Paid",
+        "col_status": "Payout Channel",
+        "col_activity": "Last Activity",
+        "status_direct": "Paid P2P"
+      }
+    },
+    "analytics": {
+      "description": "View in-depth analytics on tipping volume, staff rankings, and touchpoint performance.",
+      "kpi": {
+        "total_volume": "Total Volume",
+        "transactions_count": "Transactions",
+        "transactions_unit": "Tx",
+        "avg_tip": "Average Tip",
+        "fees_avoided": "Processing Fees Avoided"
+      },
+      "charts": {
+        "daily_revenue": "Daily Revenue Trend",
+        "wallet_share": "Wallet Share percentage"
+      },
+      "leaderboards": {
+        "staff": "Nail Tech Leaderboard",
+        "touchpoints": "QR Touchpoint Performance",
+        "tips_count_label": "tips received",
+        "scans_count_label": "scans logged"
+      }
     }
   },
   "staff_detail": {

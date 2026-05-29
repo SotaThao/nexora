@@ -26,6 +26,9 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install chromium --with-deps
 
+      - name: Lint Design Tokens
+        run: npm run lint:tokens
+
       - name: Run Unit Tests
         run: npm run test
 

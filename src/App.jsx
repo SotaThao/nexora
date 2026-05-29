@@ -33,7 +33,8 @@ export default function App() {
   const [view, setView] = useState('login') // 'login' | 'register-wizard' | 'onboarding' | 'dashboard' | 'customer'
   const [isLoading, setIsLoading] = useState(false)
   const [setupData, setSetupData] = useState(null)
-  const [hasKyb, setHasKyb] = useState(true)
+  const [verificationStatus, setVerificationStatus] = useState('kyb_approved')
+  const [simStatus, setSimStatus] = useState('basic')
   const [preKybView, setPreKybView] = useState('onboarding')
   
   // Login simulated form state
@@ -88,7 +89,7 @@ export default function App() {
   }
 
   // Action: Handle manual login submit or SSO login
-  const handleLoginSubmit = (ssoType = null) => {
+  const handleLoginSubmit = (ssoType = null, simulatedStatus = null) => {
     setIsLoading(true)
     setLoginError('')
     
@@ -110,6 +111,7 @@ export default function App() {
         setSsoPrefillData(MOCK_SSO_KYB_PROFILE)
         localStorage.removeItem('nexora_merchant_setup')
         setSetupData(null)
+        setVerificationStatus('kyb_approved')
         setView('onboarding')
         return
       }
@@ -119,8 +121,9 @@ export default function App() {
         const allAccounts = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
         const matched = allAccounts.find(acc => acc.email === targetEmail)
         
-        const isAlreadyVerified = !!(matched && matched.isVerified)
-        setHasKyb(isAlreadyVerified)
+        const activeStatus = simulatedStatus || matched?.verificationStatus || (matched?.isVerified ? 'kyb_approved' : 'basic')
+        setVerificationStatus(activeStatus)
+        const isAlreadyVerified = activeStatus === 'kyb_approved'
         
         const kybProfile = {
           name: isAlreadyVerified ? matched.kybDetails.legalName : 'Golden Glow Nails',
@@ -162,8 +165,9 @@ export default function App() {
           return
         }
 
-        const isAlreadyVerified = !!matchedAccount.isVerified
-        setHasKyb(isAlreadyVerified)
+        const activeStatus = matchedAccount.verificationStatus || (matchedAccount.isVerified ? 'kyb_approved' : 'basic')
+        setVerificationStatus(activeStatus)
+        const isAlreadyVerified = activeStatus === 'kyb_approved'
 
         const kybProfile = {
           name: isAlreadyVerified ? matchedAccount.kybDetails.legalName : '',
@@ -215,7 +219,7 @@ export default function App() {
   }
 
   // Trigger Simulation Scenario directly
-  const triggerSimulation = (scenario) => {
+  const triggerSimulation = (scenario, status = null) => {
     setLoginError('')
     if (scenario === 'sso_with_kyb') {
       localStorage.removeItem('nexora_merchant_setup')
@@ -226,7 +230,7 @@ export default function App() {
     } else if (scenario === 'sso_no_kyb') {
       setEmail('sso_no_kyb@gmail.com')
       setPassword('••••••••')
-      handleLoginSubmit('sso_no_kyb')
+      handleLoginSubmit('sso_no_kyb', status || simStatus)
     } else if (scenario === 'new_register') {
       setEmail('')
       setPassword('')
@@ -238,9 +242,18 @@ export default function App() {
   // Instantly toggle verification status of an account in the simulations listing
   const toggleAccountVerification = (emailAddress) => {
     const accs = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
+    const statuses = ['basic', 'lite_pending', 'verified_lite', 'kyb_required', 'kyb_pending', 'kyb_approved', 'suspended']
     const updated = accs.map(acc => {
       if (acc.email === emailAddress) {
-        return { ...acc, isVerified: !acc.isVerified }
+        const currentStatus = acc.verificationStatus || (acc.isVerified ? 'kyb_approved' : 'basic')
+        const currentIndex = statuses.indexOf(currentStatus)
+        const nextIndex = (currentIndex + 1) % statuses.length
+        const nextStatus = statuses[nextIndex]
+        return { 
+          ...acc, 
+          verificationStatus: nextStatus,
+          isVerified: nextStatus === 'kyb_approved'
+        }
       }
       return acc
     })
@@ -267,14 +280,14 @@ export default function App() {
     if (confirm(t('login.reset_confirm'))) {
       localStorage.removeItem('nexora_merchant_setup')
       setSetupData(null)
-      setHasKyb(true)
+      setVerificationStatus('kyb_approved')
       setView('login')
     }
   }
 
   const handleRegisterAndLogin = (registeredEmail) => {
     setRegisterEmail(registeredEmail)
-    setHasKyb(false)
+    setVerificationStatus('basic')
     localStorage.removeItem('nexora_merchant_setup')
     localStorage.removeItem('nexora_profile_settings')
     setSetupData(null)
@@ -303,7 +316,7 @@ export default function App() {
   }
 
   const handleKybSuccess = (emailAddress) => {
-    setHasKyb(true)
+    setVerificationStatus('kyb_approved')
     const accs = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
     const matched = accs.find(acc => acc.email === emailAddress)
     if (matched && matched.kybDetails) {
@@ -582,24 +595,41 @@ export default function App() {
                   </button>
 
                   {/* Scenario 2: SSO without KYB */}
-                  <button 
-                    onClick={() => triggerSimulation('sso_no_kyb')}
-                    className="w-full text-left p-3 rounded-xl border border-nexoraBorder hover:border-nexoraBrand bg-slate-50 hover:bg-nexoraBrandSoft/10 transition flex items-start gap-3 group"
-                  >
-                    <span className="h-6 w-6 rounded-lg bg-pink-50 border border-pink-100 flex items-center justify-center font-bold text-xs text-pink-600 shrink-0">2</span>
-                    <div className="min-w-0">
-                      <div className="text-xs font-bold text-slate-800 group-hover:text-nexoraBrand flex items-center gap-1.5">
-                        {currentLanguage === 'vi' ? 'Chưa có KYB (SSO)' : 'No KYB yet (SSO)'}
-                        <ChevronRight className="w-3 h-3 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                  <div className="flex flex-col gap-1.5 p-3 rounded-xl border border-nexoraBorder bg-slate-50">
+                    <div className="flex items-start gap-3">
+                      <span className="h-6 w-6 rounded-lg bg-pink-50 border border-pink-100 flex items-center justify-center font-bold text-xs text-pink-600 shrink-0">2</span>
+                      <div className="min-w-0 flex-grow">
+                        <div className="text-xs font-bold text-slate-800 flex items-center justify-between">
+                          <span>{currentLanguage === 'vi' ? 'Chưa có KYB (SSO)' : 'No KYB yet (SSO)'}</span>
+                          <button 
+                            onClick={() => triggerSimulation('sso_no_kyb', simStatus)}
+                            className="px-2 py-0.5 bg-nexoraBrand text-white rounded text-[9px] font-bold uppercase hover:bg-opacity-95"
+                          >
+                            {currentLanguage === 'vi' ? 'Đăng nhập' : 'Login'}
+                          </button>
+                        </div>
+                        <p className="text-[9px] text-slate-500 mt-0.5">
+                          {currentLanguage === 'vi'
+                            ? 'Chọn trạng thái để bắt đầu luồng tương ứng:'
+                            : 'Select verification status to initiate the flow:'}
+                        </p>
+                        
+                        <select 
+                          value={simStatus} 
+                          onChange={(e) => setSimStatus(e.target.value)}
+                          className="mt-2 w-full bg-white border border-nexoraBorder rounded px-2 py-1 text-xs text-slate-700 outline-none focus:border-nexoraBrand"
+                        >
+                          <option value="basic">basic (unverified)</option>
+                          <option value="lite_pending">lite_pending</option>
+                          <option value="verified_lite">verified_lite</option>
+                          <option value="kyb_required">kyb_required</option>
+                          <option value="kyb_pending">kyb_pending</option>
+                          <option value="kyb_approved">kyb_approved (verified)</option>
+                          <option value="suspended">suspended</option>
+                        </select>
                       </div>
-                      <p className="text-[9px] text-slate-500 mt-0.5">
-                        {currentLanguage === 'vi'
-                          ? 'Đăng nhập SSO chưa KYB -> Vào trực tiếp Setup/Dashboard dưới dạng chưa KYB. Yêu cầu KYB khi setup thợ/QR.'
-                          : 'SSO Login without KYB -> Enters Setup/Dashboard directly as unverified. Prompts for KYB when setting up staff/QR.'
-                        }
-                      </p>
                     </div>
-                  </button>
+                  </div>
 
                   {/* Scenario 3: New Register */}
                   <button 
@@ -639,11 +669,11 @@ export default function App() {
                       <div key={index} className="p-2 border border-slate-200 rounded-lg bg-slate-50 flex items-center justify-between gap-2 text-[10px]">
                         <div className="min-w-0">
                           <div className="font-mono font-bold truncate text-slate-700 max-w-[130px]">{acc.email}</div>
-                          <div className="text-[9px] flex items-center gap-1 mt-0.5">
+                          <div className="text-[9px] flex flex-wrap items-center gap-1 mt-0.5">
                             <span className="font-semibold">{currentLanguage === 'vi' ? 'Mật khẩu:' : 'Pass:'} {acc.password}</span>
                             <span>•</span>
-                            <span className={acc.isVerified ? 'text-emerald-600 font-bold' : 'text-yellow-600 font-bold'}>
-                              {acc.isVerified ? 'Verified' : 'Pending'}
+                            <span className="font-bold text-indigo-600">
+                              {acc.verificationStatus || (acc.isVerified ? 'kyb_approved' : 'basic')}
                             </span>
                           </div>
                         </div>
@@ -651,13 +681,10 @@ export default function App() {
                         <div className="flex items-center gap-1 shrink-0">
                           <button 
                             onClick={() => toggleAccountVerification(acc.email)}
-                            className={`px-1.5 py-0.5 rounded text-[8px] font-extrabold transition-all border
-                              ${acc.isVerified 
-                                ? 'bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100' 
-                                : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'}`}
-                            title={acc.isVerified ? "Simulate Revoke" : "Simulate Verify"}
+                            className="px-1.5 py-0.5 rounded text-[8px] font-extrabold transition-all border bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200"
+                            title="Cycle verification status"
                           >
-                            {acc.isVerified ? 'REVOKE' : 'VERIFY'}
+                            CYCLE
                           </button>
                           <button 
                             onClick={() => deleteSimulatedAccount(acc.email)}
@@ -703,7 +730,8 @@ export default function App() {
       {view === 'onboarding' && (
         <SetupWizard 
           initialBusinessInfo={ssoPrefillData}
-          hasKyb={hasKyb}
+          verificationStatus={verificationStatus}
+          hasKyb={verificationStatus === 'kyb_approved'}
           onKybRequired={handleKybRequired}
           onComplete={handleWizardComplete} 
           onBackToLogin={() => setView('login')} 
@@ -724,7 +752,8 @@ export default function App() {
           
           <Dashboard 
             setupData={setupData} 
-            hasKyb={hasKyb}
+            verificationStatus={verificationStatus}
+            hasKyb={verificationStatus === 'kyb_approved'}
             userEmail={ssoPrefillData?.email || registerEmail}
             onKybRequired={handleKybRequired}
             onKybSuccess={handleKybSuccess}

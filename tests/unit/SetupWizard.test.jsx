@@ -84,7 +84,7 @@ describe('SetupWizard Component Unit Tests', () => {
     expect(googleInput).not.toBeDisabled();
   });
 
-  it('blocks step navigation and triggers onKybRequired when hasKyb is false', () => {
+  it('allows step navigation and does not block/trigger onKybRequired when hasKyb is false', () => {
     const onKybRequiredMock = vi.fn();
     render(
       <LanguageProvider>
@@ -97,9 +97,14 @@ describe('SetupWizard Component Unit Tests', () => {
       </LanguageProvider>
     );
 
+    // Prefill demo data first so step 1 validation passes
+    const prefillBtn = screen.getByRole('button', { name: /Prefill Demo Data/i });
+    fireEvent.click(prefillBtn);
+
     const nextBtn = screen.getByRole('button', { name: /Next|Tiếp theo/i });
     fireEvent.click(nextBtn);
 
-    expect(onKybRequiredMock).toHaveBeenCalledTimes(1);
+    expect(onKybRequiredMock).not.toHaveBeenCalled();
+    expect(screen.getByText(/Add New Staff Member|Thêm Nhân Viên Mới/i)).toBeInTheDocument();
   });
 });
