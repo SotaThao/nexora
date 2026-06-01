@@ -1566,22 +1566,13 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
           applecash: currentLanguage === 'vi' ? 'Nhập số điện thoại...' : 'Enter phone number...'
         }
 
-        const brandStyles = {
-          venmo: { text: 'venmo', color: 'text-[#008CFF]', fontClass: 'font-black italic text-lg tracking-tight' },
-          cashapp: { text: 'cash app', color: 'text-[#00D632]', fontClass: 'font-extrabold text-lg tracking-tighter' },
-          zelle: { text: 'zelle', color: 'text-[#7414CA]', fontClass: 'font-black text-lg' },
-          paypal: { text: 'PayPal', color: 'text-[#003087]', fontClass: 'font-black italic text-lg' },
-          applecash: { text: 'Apple Cash', color: 'text-black', fontClass: 'font-black text-lg tracking-tight' },
-          bankwire: { text: 'Bank Wire', color: 'text-[#475569]', fontClass: 'font-bold uppercase text-xs tracking-widest' }
-        }[editingMethod] || { text: editingMethod, color: 'text-slate-800', fontClass: 'font-bold' }
-
         return (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl border border-slate-100 max-w-sm w-full shadow-2xl p-6 relative overflow-hidden animate-scaleUp text-left space-y-4">
+            <div className="bg-white rounded-3xl border border-slate-100 max-w-sm w-full shadow-2xl p-6 relative overflow-hidden animate-scaleUp text-left space-y-4.5">
               
               {/* Header */}
-              <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-                <span className="h-8 w-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
+              <div className="flex items-center gap-3.5 border-b border-slate-100 pb-3">
+                <span className="h-11 w-11 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 shadow-sm">
                   {PayoutLogos[editingMethod]}
                 </span>
                 <div>
@@ -1590,7 +1581,7 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
                       ? `CẤU HÌNH ${walletNames[editingMethod]?.toUpperCase()}`
                       : `CONFIGURE ${walletNames[editingMethod]?.toUpperCase()}`}
                   </h3>
-                  <p className="text-[10px] text-slate-400">
+                  <p className="text-[10px] text-slate-400 font-medium">
                     {currentLanguage === 'vi' ? 'Chỉ định thông tin tài khoản nhận tiền' : 'Specify receiving target identifier'}
                   </p>
                 </div>
@@ -1600,7 +1591,7 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
               <form onSubmit={savePayoutAccount} className="space-y-4">
                 {/* Account Identifier Input */}
                 <div>
-                  <label className="block text-[9px] font-extrabold uppercase tracking-wider text-slate-500 mb-1.5">
+                  <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
                     {currentLanguage === 'vi'
                       ? `${walletNames[editingMethod]} ${walletFields[editingMethod]} của bạn *`
                       : `Your ${walletNames[editingMethod]} ${walletFields[editingMethod]} *`}
@@ -1613,8 +1604,8 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
                       setModalError('')
                     }}
                     placeholder={walletPlaceholders[editingMethod]}
-                    className={`mt-1.5 h-10 w-full rounded-lg border px-3 text-sm font-semibold outline-none focus:ring-1 focus:ring-nexoraBrand transition-all ${
-                      modalError ? 'border-rose-500 focus:border-rose-500' : 'border-slate-200 focus:border-nexoraBrand'
+                    className={`w-full bg-slate-50 border border-slate-200 focus:border-nexoraBrand focus:ring-2 focus:ring-[#4648D8]/20 focus:bg-white rounded-xl px-3.5 h-11 text-xs text-slate-800 focus:outline-none transition-all ${
+                      modalError ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20' : ''
                     }`}
                   />
                   {modalError && <p className="mt-1 text-[10px] font-bold text-rose-500">{modalError}</p>}
@@ -1622,7 +1613,7 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
 
                 {/* QR Code Optional Upload */}
                 <div>
-                  <label className="block text-[9px] font-extrabold uppercase tracking-wider text-slate-500 mb-2">
+                  <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
                     {currentLanguage === 'vi' ? 'MÃ QR (TÙY CHỌN)' : 'QR CODE (OPTIONAL)'}
                   </label>
 
@@ -1650,9 +1641,6 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
                       <div className="my-3 flex h-28 w-28 items-center justify-center border border-slate-100 bg-white p-1 rounded-lg">
                         <img src={editQrCode} alt="Payout QR Code" className="h-full w-full object-contain" />
                       </div>
-                      <div className={`${brandStyles.color} ${brandStyles.fontClass}`}>
-                        {brandStyles.text}
-                      </div>
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-3">
@@ -1677,14 +1665,6 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
                       </label>
                     </div>
                   )}
-
-                  {!editQrCode && (
-                    <p className="mt-2 text-[9px] text-slate-400 leading-normal">
-                      {currentLanguage === 'vi'
-                        ? 'Bạn có thể chụp hình bằng camera hoặc chọn ảnh từ thiết bị. Định dạng: JPG, PNG, JPEG. Tối đa: 5MB.'
-                        : 'You can either take a photo or upload from your device. Accepted formats: JPG, PNG, JPEG. Max size: 5MB.'}
-                    </p>
-                  )}
                 </div>
 
                 {/* Warning box */}
@@ -1698,19 +1678,19 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
                 </div>
 
                 {/* Footer Action Buttons */}
-                <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
+                <div className="flex justify-end gap-2.5 pt-2.5 border-t border-slate-100">
                   <button
                     type="button"
                     onClick={() => setEditingMethod(null)}
-                    className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-500 text-[10px] font-bold uppercase tracking-wider rounded transition"
+                    className="px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider rounded-lg transition"
                   >
                     {currentLanguage === 'vi' ? 'HỦY' : 'CANCEL'}
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-nexoraBrand hover:opacity-95 text-white text-[10px] font-bold uppercase tracking-wider rounded shadow-sm transition"
+                    className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm transition"
                   >
-                    {currentLanguage === 'vi' ? 'LƯU' : 'SAVE'}
+                    {currentLanguage === 'vi' ? 'LƯU LẠI' : 'SAVE'}
                   </button>
                 </div>
               </form>

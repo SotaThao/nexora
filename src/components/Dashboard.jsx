@@ -66,1159 +66,35 @@ import DevicesView from './DevicesView'
 import AnalyticsView from './AnalyticsView'
 import SupportView from './SupportView'
 
-// Helper to render text with styled star rating symbols (★) in luxuryGold and 4px space
-function renderTextWithGoldStars(text) {
-  if (!text) return null
-  const parts = text.split('★')
-  return parts.map((part, index) => {
-    if (index === parts.length - 1) {
-      return part
-    }
-    return (
-      <span key={index}>
-        {part}
-        <span className="text-luxuryGold ml-flox-4 inline-block font-normal">★</span>
-      </span>
-    )
-  })
-}
-
-const WalletLogos = {
-  venmo: (
-    <svg viewBox="0 0 448 512" className="h-[18px] w-[18px] fill-[#008CFF]" xmlns="http://www.w3.org/2000/svg">
-      <path d="M381.4 105.3c11 18.1 15.9 36.7 15.9 60.3 0 75.1-64.1 172.7-116.2 241.2h-118.8l-47.6-285 104.1-9.9 25.3 202.8c23.5-38.4 52.6-98.7 52.6-139.7 0-22.5-3.9-37.8-9.9-50.4z" />
-    </svg>
-  ),
-  cashapp: (
-    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-[#00D632]" xmlns="http://www.w3.org/2000/svg">
-      <path d="M23.59 3.475a5.1 5.1 0 00-3.05-3.05c-1.31-.42-2.5-.42-4.92-.42H8.36c-2.4 0-3.61 0-4.9.4a5.1 5.1 0 00-3.05 3.06C0 4.765 0 5.965 0 8.365v7.27c0 2.41 0 3.6.4 4.9a5.1 5.1 0 003.05 3.05c1.3.41 2.5.41 4.9.41h7.28c2.41 0 3.61 0 4.9-.4a5.1 5.1 0 003.06-3.06c.41-1.3.41-2.5.41-4.9v-7.25c0-2.41 0-3.61-.41-4.91zm-6.17 4.63l-.93.93a.5.5 0 01-.67.01 5 5 0 00-3.22-1.18c-.97 0-1.94.32-1.94 1.21 0 .9 1.04 1.2 2.24 1.65 2.1.7 3.84 1.58 3.84 3.64 0 2.24-1.74 3.78-4.58 3.95l-.26 1.2a.49.49 0 01-.48.39H9.63l-.09-.01a.5.5 0 01-.38-.59l.28-1.27a6.54 6.54 0 01-2.88-1.57v-.01a.48.48 0 010-.68l1-.97a.49.49 0 01.67 0c.91.86 2.13 1.34 3.39 1.32 1.3 0 2.17-.55 2.17-1.42 0-.87-.88-1.1-2.54-1.72-1.76-.63-3.43-1.52-3.43-3.6 0-2.42 2.01-3.6 4.39-3.71l.25-1.23a.48.48 0 01.48-.38h1.78l.1.01c.26.06.43.31.37.57l-.27 1.37c.9.3 1.75.77 2.48 1.39l.02.02c.19.2.19.5 0 .68z" />
-    </svg>
-  ),
-  zelle: (
-    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-[#7414CA]" xmlns="http://www.w3.org/2000/svg">
-      <path d="M13.559 24h-2.841a.483.483 0 0 1-.483-.483v-2.765H5.638a.667.667 0 0 1-.666-.666v-2.234a.67.67 0 0 1 .142-.412l8.139-10.382h-7.25a.667.667 0 0 1-.667-.667V3.914c0-.367.299-.666.666-.666h4.23V.483c0-.266.217-.483.483-.483h2.841c.266 0 .483.217.483.483v2.765h4.323c.367 0 .666.299.666.666v2.137a.67.67 0 0 1-.141.41l-8.19 10.481h7.665c.367 0 .666.299.666.666v2.477a.667.667 0 0 1-.666.667h-4.32v2.765a.483.483 0 0 1-.483.483Z" />
-    </svg>
-  ),
-  paypal: (
-    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-[#003087]" xmlns="http://www.w3.org/2000/svg">
-      <path d="M20.09 6.85c-.45 2.24-1.93 7.82-2.18 8.87-.24 1.05-1.12 1.77-2.22 1.77h-3.32l-.96 6.02c-.08.5-.52.87-1.03.87H6.22c-.65 0-1.13-.59-.99-1.22L8.53 5.4c.14-.63.7-.1 1.33-.1h5.8c2.81 0 4.88 1.48 4.43 3.7.22-1.07.13-2.15-.36-3.05z" />
-      <path d="M16.92 3.85c-.45 2.24-1.93 7.82-2.18 8.87-.24 1.05-1.12 1.77-2.22 1.77h-3.32l-.96 6.02c-.08.5-.52.87-1.03.87H3.06c-.65 0-1.13-.59-.99-1.22L5.37 2.4c.14-.63.7-1.1 1.33-1.1h5.8c2.81 0 4.88 1.48 4.43 3.7.22-1.07.13-2.15-.36-3.05z" opacity="0.6" />
-    </svg>
-  ),
-  bankwire: (
-    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-[#475569]" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 2L1 7v2h22V7L12 2zm0 18H3v-8h3v8h3v-8h3v8h3v-8h3v8h3v-8h3v8h3v-8h3v8h-3zm-11 2h22v2H1v-2z" />
-    </svg>
-  ),
-  applecash: (
-    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-black" xmlns="http://www.w3.org/2000/svg">
-      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83zM15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.22.67-2.94 1.51-.62.73-1.16 1.87-1.02 2.98 1.11.09 2.25-.56 2.97-1.43z" />
-    </svg>
-  ),
-  vlinkpay: (
-    <img src="/assets/vlinkpay-logo.png" alt="VLINKPAY Logo" className="h-[18px] w-[18px] object-contain" />
-  )
-}
-
-const DEFAULT_PAYOUT_CONFIGS = {
-  zelle: { enabled: false, value: '', qrCode: '', accountName: '' },
-  bankwire: { enabled: false, value: '', qrCode: '', accountName: '' },
-  paypal: { enabled: false, value: '', qrCode: '', accountName: '' },
-  venmo: { enabled: false, value: '', qrCode: '', accountName: '' },
-  cashapp: { enabled: false, value: '', qrCode: '', accountName: '' },
-  applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
-}
-
-const getPayoutConfigsFromMember = (member) => {
-  const configs = {
-    zelle: { enabled: false, value: '', qrCode: '', accountName: '' },
-    bankwire: { enabled: false, value: '', qrCode: '', accountName: '' },
-    paypal: { enabled: false, value: '', qrCode: '', accountName: '' },
-    venmo: { enabled: false, value: '', qrCode: '', accountName: '' },
-    cashapp: { enabled: false, value: '', qrCode: '', accountName: '' },
-    applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
-  }
-  const accounts = member.paymentAccounts || {}
-  const memberConfigs = member.payoutConfigs || {}
-  
-  if (accounts.zelle || memberConfigs.zelle?.value) {
-    configs.zelle = {
-      enabled: memberConfigs.zelle ? memberConfigs.zelle.enabled : true,
-      value: accounts.zelle || memberConfigs.zelle?.value || '',
-      qrCode: memberConfigs.zelle?.qrCode || '',
-      accountName: memberConfigs.zelle?.accountName || member.fullName || ''
-    }
-  }
-  if (accounts.bankwire || memberConfigs.bankwire?.value) {
-    configs.bankwire = {
-      enabled: memberConfigs.bankwire ? memberConfigs.bankwire.enabled : true,
-      value: accounts.bankwire || memberConfigs.bankwire?.value || '',
-      qrCode: memberConfigs.bankwire?.qrCode || '',
-      accountName: memberConfigs.bankwire?.accountName || member.fullName || ''
-    }
-  }
-  if (accounts.paypal || memberConfigs.paypal?.value) {
-    configs.paypal = {
-      enabled: memberConfigs.paypal ? memberConfigs.paypal.enabled : true,
-      value: accounts.paypal || memberConfigs.paypal?.value || '',
-      qrCode: memberConfigs.paypal?.qrCode || '',
-      accountName: memberConfigs.paypal?.accountName || member.fullName || ''
-    }
-  }
-  if (accounts.venmo || memberConfigs.venmo?.value) {
-    configs.venmo = {
-      enabled: memberConfigs.venmo ? memberConfigs.venmo.enabled : true,
-      value: accounts.venmo || memberConfigs.venmo?.value || '',
-      qrCode: memberConfigs.venmo?.qrCode || '',
-      accountName: memberConfigs.venmo?.accountName || member.fullName || ''
-    }
-  }
-  if (accounts.cashapp || memberConfigs.cashapp?.value) {
-    configs.cashapp = {
-      enabled: memberConfigs.cashapp ? memberConfigs.cashapp.enabled : true,
-      value: accounts.cashapp || memberConfigs.cashapp?.value || '',
-      qrCode: memberConfigs.cashapp?.qrCode || '',
-      accountName: memberConfigs.cashapp?.accountName || member.fullName || ''
-    }
-  }
-  if (accounts.applecash || memberConfigs.applecash?.value) {
-    configs.applecash = {
-      enabled: memberConfigs.applecash ? memberConfigs.applecash.enabled : true,
-      value: accounts.applecash || memberConfigs.applecash?.value || '',
-      qrCode: memberConfigs.applecash?.qrCode || '',
-      accountName: memberConfigs.applecash?.accountName || member.fullName || ''
-    }
-  }
-  
-  return configs
-}
-const MOCK_NEXORA_STAFF_PROFILES = {
-  'NEX-STAFF-ANNA0921': {
-    fullName: 'Anna Nguyen',
-    nickname: 'Anna N.',
-    phone: '(713) 555-1234',
-    email: 'anna@example.com',
-    position: 'Nail Technician',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200&h=200',
-    vlinkpayId: 'VLP-0921-ANNA',
-    payoutConfigs: {
-      zelle: { enabled: true, value: '(713) 555-1234', qrCode: '', accountName: 'Anna Nguyen' },
-      cashapp: { enabled: true, value: '$annanais', qrCode: '', accountName: 'Anna Nguyen' },
-      venmo: { enabled: true, value: '@annanais', qrCode: '', accountName: 'Anna Nguyen' },
-      bankwire: { enabled: false, value: '', qrCode: '', accountName: '' },
-      paypal: { enabled: false, value: '', qrCode: '', accountName: '' },
-      applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
-    }
-  },
-  'NEX-STAFF-LISA1102': {
-    fullName: 'Lisa Tran',
-    nickname: 'Lisa T.',
-    phone: '(408) 555-2345',
-    email: 'lisa@example.com',
-    position: 'Nail Tech',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200&h=200',
-    vlinkpayId: 'VLP-1102-LISA',
-    payoutConfigs: {
-      venmo: { enabled: true, value: '@lisatran-nails', qrCode: '', accountName: 'Lisa Tran' },
-      cashapp: { enabled: true, value: '$lisatran', qrCode: '', accountName: 'Lisa Tran' },
-      zelle: { enabled: true, value: 'lisa@example.com', qrCode: '', accountName: 'Lisa Tran' },
-      bankwire: { enabled: false, value: '', qrCode: '', accountName: '' },
-      paypal: { enabled: false, value: '', qrCode: '', accountName: '' },
-      applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
-    }
-  },
-  'NEX-STAFF-HN1148': {
-    fullName: 'Hanna Nguyen',
-    nickname: 'Hanna Ng.',
-    phone: '(407) 555-4567',
-    email: 'hanna@example.com',
-    position: 'Nail Art Designer',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200&h=200',
-    vlinkpayId: 'VLP-1148-HN',
-    payoutConfigs: {
-      venmo: { enabled: true, value: '@hanna-art', qrCode: '', accountName: 'Hanna Nguyen' },
-      zelle: { enabled: true, value: 'hanna@example.com', qrCode: '', accountName: 'Hanna Nguyen' },
-      cashapp: { enabled: false, value: '', qrCode: '', accountName: '' },
-      bankwire: { enabled: false, value: '', qrCode: '', accountName: '' },
-      paypal: { enabled: false, value: '', qrCode: '', accountName: '' },
-      applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
-    }
-  }
-}
-
-const INITIAL_STAFF = [
-  {
-    id: 'NEX-STAFF-MIA0123',
-    fullName: 'Mia Tran',
-    nickname: 'Mia T.',
-    position: 'Gel-X Artist',
-    isActive: true,
-    showInTipsFlow: true,
-    phone: '407-555-0123',
-    email: 'mia.tran@gmail.com',
-    paymentAccounts: { venmo: '@mia-nails', cashapp: '$miaglow', zelle: 'mia.tran@gmail.com', vlinkpay: 'VLP-0123-MIA' }
-  },
-  {
-    id: 'NEX-STAFF-VL8893',
-    fullName: 'Vivian Le',
-    nickname: 'Vivian L.',
-    position: 'Acrylic Specialist',
-    isActive: true,
-    showInTipsFlow: true,
-    phone: '407-555-0199',
-    email: 'vivian.le@gmail.com',
-    paymentAccounts: { venmo: '', cashapp: '$vivianle', zelle: '407-555-0199', vlinkpay: 'VLP-8893-VL' }
-  },
-  {
-    id: 'NEX-STAFF-ASH0155',
-    fullName: 'Ashley Park',
-    nickname: 'Ashley P.',
-    position: 'Pedicure Lead',
-    isActive: true,
-    showInTipsFlow: true,
-    phone: '407-555-0155',
-    email: 'ashley@glownails.com',
-    paymentAccounts: { venmo: '@ashley-pedi', cashapp: '', zelle: 'ashley@glownails.com', vlinkpay: 'VLP-0155-ASH' }
-  },
-  {
-    id: 'NEX-STAFF-HN1148',
-    fullName: 'Hanna Nguyen',
-    nickname: 'Hanna Ng.',
-    position: 'Nail Art Designer',
-    isActive: false,
-    showInTipsFlow: true,
-    phone: '407-555-0144',
-    email: 'hanna.art@gmail.com',
-    paymentAccounts: { venmo: '@hanna-art', cashapp: '', zelle: '', vlinkpay: 'VLP-1148-HN' }
-  }
-]
-
-const INITIAL_TRANSACTIONS = [
-  { id: 'TX-2042', dateTime: '2026-05-25 14:32', amount: 28, staffName: 'Mia T.', staffId: 'NEX-STAFF-MIA0123', touchpoint: 'Manicure Station 03', paymentMethod: 'Venmo', status: 'Success' },
-  { id: 'TX-2041', dateTime: '2026-05-25 13:10', amount: 35, staffName: 'Vivian L.', staffId: 'NEX-STAFF-VL8893', touchpoint: 'Front Desk', paymentMethod: 'VLINKPAY', status: 'Success' },
-  { id: 'TX-2040', dateTime: '2026-05-25 11:05', amount: 22, staffName: 'Ashley P.', staffId: 'NEX-STAFF-ASH0155', touchpoint: 'Pedicure Chair 02', paymentMethod: 'Cash App', status: 'Success' },
-  { id: 'TX-2039', dateTime: '2026-05-24 17:45', amount: 30, staffName: 'Vivian L.', staffId: 'NEX-STAFF-VL8893', touchpoint: 'Manicure Station 01', paymentMethod: 'Zelle', status: 'Success' },
-  { id: 'TX-2038', dateTime: '2026-05-24 15:20', amount: 18, staffName: 'Mia T.', staffId: 'NEX-STAFF-MIA0123', touchpoint: 'Receipt QR', paymentMethod: 'Venmo', status: 'Success' },
-  { id: 'TX-2037', dateTime: '2026-05-23 10:15', amount: 24, staffName: 'Ashley P.', staffId: 'NEX-STAFF-ASH0155', touchpoint: 'VIP Pedicure Room', paymentMethod: 'VLINKPAY', status: 'Success' },
-  { id: 'TX-2036', dateTime: '2026-05-24 13:20', amount: 25, staffName: 'Hanna Ng.', staffId: 'NEX-STAFF-HN1148', touchpoint: 'Nail Art Station 02', paymentMethod: 'Venmo', status: 'Success' },
-  { id: 'TX-2035', dateTime: '2026-05-24 14:05', amount: 24, staffName: 'Vivian L.', staffId: 'NEX-STAFF-VL8893', touchpoint: 'Acrylic Station 01', paymentMethod: 'Cash App', status: 'Success' },
-  { id: 'TX-2034', dateTime: '2026-05-24 11:15', amount: 45, staffName: 'Mia T.', staffId: 'NEX-STAFF-MIA0123', touchpoint: 'Manicure Station 03', paymentMethod: 'Zelle', status: 'Success' },
-  { id: 'TX-2033', dateTime: '2026-05-24 09:30', amount: 30, staffName: 'Ashley P.', staffId: 'NEX-STAFF-ASH0155', touchpoint: 'Pedicure Chair 02', paymentMethod: 'Venmo', status: 'Success' },
-  { id: 'TX-2032', dateTime: '2026-05-23 17:10', amount: 15, staffName: 'Hanna Ng.', staffId: 'NEX-STAFF-HN1148', touchpoint: 'Nail Art Station 02', paymentMethod: 'VLINKPAY', status: 'Success' },
-  { id: 'TX-2031', dateTime: '2026-05-23 15:50', amount: 40, staffName: 'Vivian L.', staffId: 'NEX-STAFF-VL8893', touchpoint: 'Front Desk', paymentMethod: 'Venmo', status: 'Success' },
-  { id: 'TX-2030', dateTime: '2026-05-23 16:40', amount: 32, staffName: 'Mia T.', staffId: 'NEX-STAFF-MIA0123', touchpoint: 'Receipt QR', paymentMethod: 'VLINKPAY', status: 'Success' },
-  { id: 'TX-2029', dateTime: '2026-05-23 14:25', amount: 18, staffName: 'Ashley P.', staffId: 'NEX-STAFF-ASH0155', touchpoint: 'VIP Pedicure Room', paymentMethod: 'Zelle', status: 'Success' },
-  { id: 'TX-2028', dateTime: '2026-05-23 11:05', amount: 30, staffName: 'Hanna Ng.', staffId: 'NEX-STAFF-HN1148', touchpoint: 'Front Desk', paymentMethod: 'Zelle', status: 'Success' },
-  { id: 'TX-2027', dateTime: '2026-05-23 10:30', amount: 28, staffName: 'Vivian L.', staffId: 'NEX-STAFF-VL8893', touchpoint: 'Acrylic Station 01', paymentMethod: 'VLINKPAY', status: 'Success' },
-  { id: 'TX-2026', dateTime: '2026-05-22 13:10', amount: 25, staffName: 'Mia T.', staffId: 'NEX-STAFF-MIA0123', touchpoint: 'Manicure Station 03', paymentMethod: 'Venmo', status: 'Success' },
-  { id: 'TX-2025', dateTime: '2026-05-22 11:50', amount: 35, staffName: 'Ashley P.', staffId: 'NEX-STAFF-ASH0155', touchpoint: 'Pedicure Chair 02', paymentMethod: 'Cash App', status: 'Success' },
-  { id: 'TX-2024', dateTime: '2026-05-22 16:30', amount: 22, staffName: 'Hanna Ng.', staffId: 'NEX-STAFF-HN1148', touchpoint: 'Nail Art Station 02', paymentMethod: 'Venmo', status: 'Success' },
-  { id: 'TX-2023', dateTime: '2026-05-22 15:15', amount: 32, staffName: 'Vivian L.', staffId: 'NEX-STAFF-VL8893', touchpoint: 'Front Desk', paymentMethod: 'Zelle', status: 'Success' },
-  { id: 'TX-2022', dateTime: '2026-05-22 09:45', amount: 38, staffName: 'Mia T.', staffId: 'NEX-STAFF-MIA0123', touchpoint: 'Receipt QR', paymentMethod: 'Cash App', status: 'Success' },
-  { id: 'TX-2021', dateTime: '2026-05-21 17:10', amount: 28, staffName: 'Ashley P.', staffId: 'NEX-STAFF-ASH0155', touchpoint: 'VIP Pedicure Room', paymentMethod: 'Zelle', status: 'Success' },
-  { id: 'TX-2020', dateTime: '2026-05-21 15:45', amount: 18, staffName: 'Hanna Ng.', staffId: 'NEX-STAFF-HN1148', touchpoint: 'Front Desk', paymentMethod: 'Cash App', status: 'Success' },
-  { id: 'TX-2019', dateTime: '2026-05-21 16:00', amount: 15, staffName: 'Vivian L.', staffId: 'NEX-STAFF-VL8893', touchpoint: 'Acrylic Station 01', paymentMethod: 'Venmo', status: 'Success' },
-  { id: 'TX-2018', dateTime: '2026-05-21 14:20', amount: 50, staffName: 'Mia T.', staffId: 'NEX-STAFF-MIA0123', touchpoint: 'Manicure Station 03', paymentMethod: 'Venmo', status: 'Success' },
-  { id: 'TX-2017', dateTime: '2026-05-21 10:05', amount: 20, staffName: 'Ashley P.', staffId: 'NEX-STAFF-ASH0155', touchpoint: 'Pedicure Chair 02', paymentMethod: 'Venmo', status: 'Success' },
-  { id: 'TX-2016', dateTime: '2026-05-20 12:20', amount: 35, staffName: 'Hanna Ng.', staffId: 'NEX-STAFF-HN1148', touchpoint: 'Nail Art Station 02', paymentMethod: 'VLINKPAY', status: 'Success' },
-  { id: 'TX-2015', dateTime: '2026-05-20 14:10', amount: 42, staffName: 'Vivian L.', staffId: 'NEX-STAFF-VL8893', touchpoint: 'Front Desk', paymentMethod: 'VLINKPAY', status: 'Success' },
-  { id: 'TX-2014', dateTime: '2026-05-20 11:30', amount: 22, staffName: 'Mia T.', staffId: 'NEX-STAFF-MIA0123', touchpoint: 'Receipt QR', paymentMethod: 'Zelle', status: 'Success' },
-  { id: 'TX-2012', dateTime: '2026-05-19 14:50', amount: 26, staffName: 'Hanna Ng.', staffId: 'NEX-STAFF-HN1148', touchpoint: 'Front Desk', paymentMethod: 'Zelle', status: 'Success' }
-]
-
-const INITIAL_REVIEWS = [
-  { id: 'R-1', rating: 5, comment: 'Mia shaped my Gel-X set perfectly and the chrome finish looks premium.', staffName: 'Mia T.', staffId: 'NEX-STAFF-MIA0123', category: 'Good (Google)', date: '2026-05-25' },
-  { id: 'R-2', rating: 5, comment: 'Vivian was fast, clean, and helped me pick a wedding color.', staffName: 'Vivian L.', staffId: 'NEX-STAFF-VL8893', category: 'Good (Yelp)', date: '2026-05-25' },
-  { id: 'R-3', rating: 2, comment: 'Great polish, but I waited 20 minutes after my appointment time.', staffName: 'Ashley P.', staffId: 'NEX-STAFF-ASH0155', category: 'Internal Feedback', date: '2026-05-24' },
-  { id: 'R-4', rating: 4, comment: 'Pedicure was relaxing and the salon was very clean.', staffName: 'Ashley P.', staffId: 'NEX-STAFF-ASH0155', category: 'Good (Google)', date: '2026-05-23' },
-  { id: 'R-5', rating: 1, comment: 'My color chipped after one day. I need someone to contact me.', staffName: 'Vivian L.', staffId: 'NEX-STAFF-VL8893', category: 'Internal Feedback', date: '2026-05-22' },
-  { id: 'R-6', rating: 5, comment: 'Incredible attention to detail! Best Gel-X artist in the city.', staffName: 'Mia T.', staffId: 'NEX-STAFF-MIA0123', category: 'Good (Yelp)', date: '2026-05-24' },
-  { id: 'R-7', rating: 5, comment: 'Vivian does the most natural looking acrylic sets!', staffName: 'Vivian L.', staffId: 'NEX-STAFF-VL8893', category: 'Good (Google)', date: '2026-05-24' },
-  { id: 'R-8', rating: 5, comment: 'Ashley gives the absolute best foot massages during pedicures!', staffName: 'Ashley P.', staffId: 'NEX-STAFF-ASH0155', category: 'Good (Google)', date: '2026-05-24' },
-  { id: 'R-9', rating: 5, comment: 'Sofia is a master of nail art. She drew exactly what I showed her!', staffName: 'Hanna Ng.', staffId: 'NEX-STAFF-HN1148', category: 'Good (Google)', date: '2026-05-24' },
-  { id: 'R-10', rating: 4, comment: 'Love the shape, Mia is very sweet. Will definitely come back.', staffName: 'Mia T.', staffId: 'NEX-STAFF-MIA0123', category: 'Good (Google)', date: '2026-05-22' },
-  { id: 'R-11', rating: 4, comment: 'Fast service and very friendly staff. Nice atmosphere.', staffName: 'Vivian L.', staffId: 'NEX-STAFF-VL8893', category: 'Good (Google)', date: '2026-05-21' },
-  { id: 'R-12', rating: 3, comment: 'The nail art was beautiful, but the top coat was uneven.', staffName: 'Hanna Ng.', staffId: 'NEX-STAFF-HN1148', category: 'Internal Feedback', date: '2026-05-21' },
-  { id: 'R-13', rating: 5, comment: 'Stunning designs and very professional service.', staffName: 'Hanna Ng.', staffId: 'NEX-STAFF-HN1148', category: 'Good (Yelp)', date: '2026-05-20' }
-]
-
-const INITIAL_TOUCHPOINTS = [
-  { id: 'tp-main', name: 'Lobby Welcome QR', type: 'Business Main', isActive: true, scans: 245 },
-  { id: 'tp-front', name: 'Front Desk', type: 'Front Desk', deviceId: 'NFC-001', isActive: true, scans: 842 },
-  { id: 'tp-mani-1', name: 'Manicure Station 01', type: 'Table QR', isActive: true, scans: 1102 },
-  { id: 'tp-mani-3', name: 'Manicure Station 03', type: 'Table QR', isActive: true, scans: 748 },
-  { id: 'tp-pedi-2', name: 'Pedicure Chair 02', type: 'Table QR', isActive: true, scans: 636 },
-  { id: 'tp-receipt', name: 'Receipt QR', type: 'Receipt QR', isActive: true, scans: 436 },
-  { id: 'tp-vip', name: 'VIP Pedicure Room', type: 'Business Main', deviceId: 'NFC-VIP', isActive: true, scans: 312 },
-  { id: 'tp-nail-2', name: 'Nail Art Station 02', type: 'Table QR', isActive: true, scans: 195 },
-  { id: 'tp-acrylic-1', name: 'Acrylic Station 01', type: 'Table QR', isActive: true, scans: 280 }
-]
-
-const INITIAL_DEVICES = [
-  { id: '1', deviceId: 'NFC-001', type: 'NFC Stand', location: 'Front Desk', isActive: true, lastScan: 'Today', scans: 142 },
-  { id: '2', deviceId: 'QR-Table-01', type: 'QR Card', location: 'Table 01', isActive: true, lastScan: 'Today', scans: 95 },
-  { id: '3', deviceId: 'NFC-002', type: 'NFC Stand', location: 'Table 02', isActive: true, lastScan: 'Yesterday', scans: 88 },
-  { id: '4', deviceId: 'QR-Table-03', type: 'QR Card', location: 'Table 03', isActive: false, lastScan: 'N/A', scans: 0 },
-  { id: '5', deviceId: 'NFC-Sticker-01', type: 'NFC Sticker', location: 'Mirror 01', isActive: true, lastScan: 'Today', scans: 210 }
-]
-
-const STAFF_PERFORMANCE = [
-  { name: 'Mia Tran', nickname: 'Mia T.', tips: 612.3, rating: 4.86, reviews: 58, pct: 100, specialty: 'Gel-X' },
-  { name: 'Vivian Le', nickname: 'Vivian L.', tips: 487.45, rating: 4.72, reviews: 47, pct: 80, specialty: 'Acrylic' },
-  { name: 'Ashley Park', nickname: 'Ashley P.', tips: 402.1, rating: 4.69, reviews: 39, pct: 66, specialty: 'Pedicure' },
-  { name: 'Hanna Nguyen', nickname: 'Hanna Ng.', tips: 318.25, rating: 4.61, reviews: 28, pct: 52, specialty: 'Nail Art' },
-  { name: 'Hannah Kim', nickname: 'Hannah K.', tips: 276.58, rating: 4.57, reviews: 24, pct: 45, specialty: 'Dip Powder' }
-]
-
-const TOP_TOUCHPOINTS = [
-  { name: 'Manicure Station 01', type: 'QR', scans: 1102, conversion: 24.6 },
-  { name: 'Front Desk Checkout', type: 'QR', scans: 842, conversion: 18.7 },
-  { name: 'Pedicure Chair 02', type: 'QR', scans: 636, conversion: 16.8 },
-  { name: 'Receipt Bottom QR', type: 'QR', scans: 436, conversion: 15.1 }
-]
-
-const MENU_ITEMS = [
-  { id: 'overview', label: 'Dashboard', icon: LayoutDashboard, image: '/assets/menu/conversion.png' },
-  { id: 'staff', label: 'Staff', icon: Users },
-  { id: 'tips', label: 'Tips', icon: Wallet, image: '/assets/menu/tips.png' },
-  { id: 'reviews', label: 'Reviews', icon: Star, image: '/assets/menu/review.png' },
-  { id: 'reports', label: 'Transactions', icon: ClipboardList },
-  { id: 'touchpoints', label: 'Touch Points', icon: Pointer },
-  { id: 'analytics', label: 'Analytics', icon: BarChart3, image: '/assets/menu/star.png' },
-  { id: 'settings', label: 'Settings', icon: Settings },
-  { id: 'support', label: 'Support', icon: HelpCircle }
-]
-
-const visibleMenuItems = MENU_ITEMS
-
-function formatCurrency(value) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2
-  }).format(value)
-}
-
-function walletLabels(accounts) {
-  return Object.entries(accounts)
-    .filter(([, value]) => value)
-    .map(([key]) => ({ venmo: 'Venmo', cashapp: 'Cash App', zelle: 'Zelle', vlinkpay: 'VLINKPAY' }[key]))
-}
-
-function slugify(value) {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-}
-
-function parseMetricValue(value) {
-  const text = String(value)
-  const number = Number(text.replace(/[^0-9.-]/g, ''))
-  return Number.isFinite(number) ? number : 0
-}
-
-function formatAnimatedValue(template, value) {
-  const text = String(template)
-  if (text.includes('$')) return formatCurrency(value)
-  if (text.includes('%')) return `${value.toFixed(2)}%`
-  if (text.includes('.')) return value.toFixed(2).replace(/\.00$/, '')
-  return Math.round(value).toLocaleString()
-}
-
-function useCountUp(target, duration = 900) {
-  const numericTarget = useMemo(() => parseMetricValue(target), [target])
-  const [value, setValue] = useState(0)
-
-  useEffect(() => {
-    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-    if (reducedMotion) {
-      setValue(numericTarget)
-      return undefined
-    }
-
-    let frameId
-    const start = performance.now()
-    const tick = (now) => {
-      const progress = Math.min((now - start) / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      setValue(numericTarget * eased)
-      if (progress < 1) frameId = requestAnimationFrame(tick)
-    }
-
-    frameId = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(frameId)
-  }, [duration, numericTarget])
-
-  return formatAnimatedValue(target, value)
-}
-
-function Panel({ children, className = '' }) {
-  return (
-    <section className={`nexora-card ${className}`}>
-      {children}
-    </section>
-  )
-}
-
-function IconButton({ label, children, className = '', ...props }) {
-  return (
-    <button
-      aria-label={label}
-      title={label}
-      className={`nexora-icon-button ${className}`}
-      {...props}
-    >
-      {children}
-    </button>
-  )
-}
-
-function MenuIcon({ item, active = false }) {
-  const Icon = item.icon
-  return <Icon className={`h-5 w-5 shrink-0 ${active ? 'text-white' : 'text-white/60'}`} />
-}
-
-function DashboardHeader({ 
-  searchQuery, 
-  setSearchQuery, 
-  onAddTouchpoint, 
-  profile,
-  businessName,
-  onNavigateSettingsTab,
-  onLogout,
-  notifications,
-  setNotifications,
-  isNotiDropdownOpen,
-  setIsNotiDropdownOpen,
-  onNavigateMenu,
-  staff,
-  transactions,
-  reviews,
-  touchpoints,
-  onViewStaffDetail,
-  onApproveStaff
-}) {
-  const { currentLanguage, setLanguage, t } = useTranslation()
-  const dropdownRef = useRef(null)
-  const searchRef = useRef(null)
-  const headerDropdownRef = useRef(null)
-  const [isSearchFocused, setIsSearchFocused] = useState(false)
-  const [isHeaderDropdownOpen, setIsHeaderDropdownOpen] = useState(false)
-
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsNotiDropdownOpen(false)
-      }
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
-        setIsSearchFocused(false)
-      }
-      if (headerDropdownRef.current && !headerDropdownRef.current.contains(event.target)) {
-        setIsHeaderDropdownOpen(false)
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [setIsNotiDropdownOpen, setIsSearchFocused, setIsHeaderDropdownOpen])
-
-  const unreadCount = notifications ? notifications.filter((n) => !n.read).length : 0
-
-  const handleMarkAllAsRead = () => {
-    const updated = notifications.map((n) => ({ ...n, read: true }))
-    setNotifications(updated)
-    localStorage.setItem('nexora_notifications', JSON.stringify(updated))
-  }
-
-  const handleNotificationClick = (item) => {
-    const updated = notifications.map((n) => n.id === item.id ? { ...n, read: true } : n)
-    setNotifications(updated)
-    localStorage.setItem('nexora_notifications', JSON.stringify(updated))
-    setIsNotiDropdownOpen(false)
-    if (item.linkTab === 'staff' && item.staffId) {
-      const member = staff.find(s => s.id === item.staffId)
-      if (member) {
-        onNavigateMenu(item.linkTab)
-        if (typeof onApproveStaff === 'function') {
-          onApproveStaff(member)
-        }
-      } else {
-        onNavigateMenu(item.linkTab)
-      }
-    } else if (item.linkTab) {
-      onNavigateMenu(item.linkTab)
-    }
-  }
-
-  // Calculate search suggestions
-  const suggestions = useMemo(() => {
-    const query = searchQuery.toLowerCase().trim()
-    if (!query) return null
-
-    const matchedStaff = (staff || []).filter(s => 
-      s.fullName.toLowerCase().includes(query) ||
-      s.nickname.toLowerCase().includes(query) ||
-      s.position.toLowerCase().includes(query)
-    ).slice(0, 3)
-
-    const matchedTxs = (transactions || []).filter(tx => 
-      tx.id.toLowerCase().includes(query) ||
-      tx.staffName.toLowerCase().includes(query) ||
-      tx.touchpoint.toLowerCase().includes(query) ||
-      String(tx.amount).includes(query)
-    ).slice(0, 3)
-
-    const matchedReviews = (reviews || []).filter(r => 
-      r.comment.toLowerCase().includes(query) ||
-      r.staffName.toLowerCase().includes(query) ||
-      String(r.rating).includes(query)
-    ).slice(0, 3)
-
-    const matchedTps = (touchpoints || []).filter(tp => 
-      tp.name.toLowerCase().includes(query) ||
-      tp.type.toLowerCase().includes(query)
-    ).slice(0, 3)
-
-    const totalCount = matchedStaff.length + matchedTxs.length + matchedReviews.length + matchedTps.length
-
-    return {
-      staff: matchedStaff,
-      transactions: matchedTxs,
-      reviews: matchedReviews,
-      touchpoints: matchedTps,
-      totalCount
-    }
-  }, [searchQuery, staff, transactions, reviews, touchpoints])
-
-  return (
-    <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between gap-3 border-b border-nexoraBorder bg-nexoraSurface px-4 sm:px-5">
-      <div className="flex min-w-0 items-center gap-3 sm:hidden">
-        <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-9 w-9 shrink-0 object-contain" />
-        <span className="truncate text-sm font-extrabold">NEXORA TOUCH</span>
-      </div>
-
-      {/* Search Input with Suggestions Dropdown */}
-      <div className="relative hidden w-full max-w-[385px] sm:block" ref={searchRef}>
-        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-nexoraMuted" />
-        <input
-          className="nexora-search-input"
-          placeholder={t('dashboard.header.search_placeholder')}
-          value={searchQuery}
-          onChange={(event) => {
-            setSearchQuery(event.target.value)
-            setIsSearchFocused(true)
-          }}
-          onFocus={() => setIsSearchFocused(true)}
-        />
-
-        {isSearchFocused && searchQuery.trim() !== '' && (
-          <div className="absolute left-0 right-0 mt-2 max-h-[380px] overflow-y-auto rounded-xl border border-nexoraBorder bg-white shadow-2xl z-50 py-2 divide-y divide-nexoraBorder animate-fadeIn">
-            
-            {/* Staff Group */}
-            {suggestions?.staff?.length > 0 && (
-              <div className="py-2">
-                <div className="px-4 py-1 text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
-                  Staff / Kỹ thuật viên
-                </div>
-                {suggestions.staff.map(member => (
-                  <button
-                    key={member.id}
-                    type="button"
-                    onClick={() => {
-                      onViewStaffDetail(member.id)
-                      onNavigateMenu('staff')
-                      setIsSearchFocused(false)
-                      setSearchQuery('')
-                    }}
-                    className="w-full text-left px-4 py-2 hover:bg-nexoraCanvas flex items-center justify-between text-xs transition"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Users className="h-3.5 w-3.5 text-nexoraBrand shrink-0" />
-                      <span className="font-bold text-nexoraText">{member.fullName}</span>
-                      <span className="text-[10px] text-nexoraMuted">({member.position})</span>
-                    </div>
-                    <span className="text-[10px] font-bold text-nexoraBrand uppercase tracking-wider">Xem Chi Tiết ›</span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Transactions Group */}
-            {suggestions?.transactions?.length > 0 && (
-              <div className="py-2">
-                <div className="px-4 py-1 text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
-                  Transactions / Giao dịch
-                </div>
-                {suggestions.transactions.map(tx => (
-                  <button
-                    key={tx.id}
-                    type="button"
-                    onClick={() => {
-                      onNavigateMenu('reports')
-                      setIsSearchFocused(false)
-                      setSearchQuery('')
-                    }}
-                    className="w-full text-left px-4 py-2 hover:bg-nexoraCanvas flex items-center justify-between text-xs transition"
-                  >
-                    <div className="flex items-center gap-2">
-                      <ClipboardList className="h-3.5 w-3.5 text-nexoraBrand shrink-0" />
-                      <span className="font-bold text-nexoraText">{tx.id}</span>
-                      <span className="text-[10px] text-nexoraMuted">({tx.staffName} - ${tx.amount})</span>
-                    </div>
-                    <span className="text-[10px] font-bold text-nexoraBrand uppercase tracking-wider">Xem GD ›</span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Reviews Group */}
-            {suggestions?.reviews?.length > 0 && (
-              <div className="py-2">
-                <div className="px-4 py-1 text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
-                  Reviews / Đánh giá
-                </div>
-                {suggestions.reviews.map(rev => (
-                  <button
-                    key={rev.id}
-                    type="button"
-                    onClick={() => {
-                      onNavigateMenu('reviews')
-                      setIsSearchFocused(false)
-                      setSearchQuery('')
-                    }}
-                    className="w-full text-left px-4 py-2 hover:bg-nexoraCanvas flex items-center justify-between text-xs transition"
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500 shrink-0" />
-                      <span className="font-bold text-nexoraText">{rev.rating}★</span>
-                      <span className="text-[10px] text-nexoraMuted truncate">"{rev.comment}"</span>
-                    </div>
-                    <span className="text-[10px] font-bold text-nexoraBrand uppercase tracking-wider shrink-0 ml-2">Xem ›</span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Touchpoints Group */}
-            {suggestions?.touchpoints?.length > 0 && (
-              <div className="py-2">
-                <div className="px-4 py-1 text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
-                  Touchpoints / Điểm chạm
-                </div>
-                {suggestions.touchpoints.map(tp => (
-                  <button
-                    key={tp.id}
-                    type="button"
-                    onClick={() => {
-                      onNavigateMenu('touchpoints')
-                      setIsSearchFocused(false)
-                      setSearchQuery('')
-                    }}
-                    className="w-full text-left px-4 py-2 hover:bg-nexoraCanvas flex items-center justify-between text-xs transition"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Pointer className="h-3.5 w-3.5 text-nexoraBrand shrink-0" />
-                      <span className="font-bold text-nexoraText">{tp.name}</span>
-                      <span className="text-[10px] text-nexoraMuted">({tp.type})</span>
-                    </div>
-                    <span className="text-[10px] font-bold text-nexoraBrand uppercase tracking-wider">Xem ›</span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {suggestions?.totalCount === 0 && (
-              <div className="py-6 text-center text-xs text-nexoraSubtle">
-                Không tìm thấy kết quả nào trùng khớp.
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      <div className="flex shrink-0 items-center gap-2 sm:gap-4">
-        {/* Language Switcher */}
-        <div className="flex items-center gap-1 bg-nexoraSurfaceMuted border border-nexoraBorder px-2.5 py-1 rounded-lg">
-          <button 
-            type="button"
-            onClick={() => setLanguage('vi')}
-            className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition ${currentLanguage === 'vi' ? 'bg-nexoraBrand text-white' : 'text-nexoraMuted hover:text-nexoraText'}`}
-          >
-            VI
-          </button>
-          <span className="text-nexoraBorder text-[10px]">|</span>
-          <button 
-            type="button"
-            onClick={() => setLanguage('en')}
-            className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition ${currentLanguage === 'en' ? 'bg-nexoraBrand text-white' : 'text-nexoraMuted hover:text-nexoraText'}`}
-          >
-            EN
-          </button>
-        </div>
-
-        {/* Notifications Icon and Dropdown */}
-        <div className="relative hidden sm:inline-flex" ref={dropdownRef}>
-          <IconButton 
-            label="Notifications" 
-            onClick={() => setIsNotiDropdownOpen(!isNotiDropdownOpen)} 
-            className="relative"
-          >
-            <Bell className="h-5 w-5" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center text-[9px] font-black text-white bg-red-500 ring-2 ring-white shadow-sm">
-                {unreadCount > 99 ? '99+' : unreadCount}
-              </span>
-            )}
-          </IconButton>
-
-          {isNotiDropdownOpen && (
-            <div className="absolute right-0 mt-12 w-80 max-h-[460px] flex flex-col rounded-xl border border-nexoraBorder bg-white shadow-2xl z-50 animate-fadeIn overflow-hidden">
-              <div className="flex items-center justify-between border-b border-nexoraBorder px-4 py-3 bg-nexoraSurfaceMuted">
-                <span className="text-xs font-black uppercase text-nexoraText tracking-wider">
-                  {t('dashboard.notifications.title') || 'Thông báo'} ({unreadCount})
-                </span>
-                {unreadCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={handleMarkAllAsRead}
-                    className="text-[10px] font-bold text-nexoraBrand hover:underline"
-                  >
-                    {t('dashboard.notifications.mark_all_read') || 'Đọc tất cả'}
-                  </button>
-                )}
-              </div>
-              <div className="flex-grow overflow-y-auto max-h-[380px] divide-y divide-nexoraBorder">
-                {notifications && notifications.length > 0 ? (
-                  notifications.map((item) => {
-                    const IconComponent = {
-                      tip_success: Wallet,
-                      feedback_alert: AlertTriangle,
-                      review_good: Star
-                    }[item.type] || Bell
-
-                    const iconColor = {
-                      tip_success: 'bg-emerald-500 text-white',
-                      feedback_alert: 'bg-amber-500 text-white',
-                      review_good: 'bg-luxuryGold text-white'
-                    }[item.type] || 'bg-nexoraBrand text-white'
-
-                    const isUnread = !item.read
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => handleNotificationClick(item)}
-                        className={`w-full text-left p-3.5 hover:bg-nexoraCanvas transition-colors flex gap-3 items-start border-b border-nexoraBorder/50 last:border-0 relative ${
-                          isUnread ? 'bg-nexoraBrandSoft/40' : 'bg-white'
-                        }`}
-                      >
-                        <span className={`flex h-8 w-8 items-center justify-center rounded-lg shrink-0 ${iconColor} ${
-                          !isUnread ? 'opacity-60' : ''
-                        }`}>
-                          <IconComponent className="h-4 w-4" />
-                        </span>
-                        <div className="flex-grow min-w-0">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className={`text-xs truncate ${
-                              isUnread ? 'font-extrabold text-nexoraText' : 'font-bold text-nexoraMuted'
-                            }`}>
-                              {item.title}
-                            </span>
-                            <span className="text-[10px] text-nexoraSubtle shrink-0 font-medium">{item.time}</span>
-                          </div>
-                          <p className={`text-[11px] leading-normal mt-1 break-words ${
-                            isUnread ? 'font-semibold text-nexoraText' : 'font-medium text-nexoraMuted'
-                          }`}>
-                            {item.message}
-                          </p>
-                        </div>
-                      </button>
-                    )
-                  })
-                ) : (
-                  <div className="py-12 text-center text-nexoraSubtle flex flex-col items-center justify-center">
-                    <Bell className="h-8 w-8 text-nexoraBorder mb-2" />
-                    <p className="text-xs font-semibold">{t('dashboard.notifications.empty') || 'Không có thông báo mới.'}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Profile Dropdown */}
-        <div className="relative hidden sm:inline-flex" ref={headerDropdownRef}>
-          <button
-            type="button"
-            onClick={() => setIsHeaderDropdownOpen(!isHeaderDropdownOpen)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-nexoraBorder overflow-hidden shadow-nexora-soft transition hover:opacity-90 focus:outline-none"
-            aria-label="Profile menu"
-            title="Profile menu"
-            id="header-profile-menu-btn"
-          >
-            {profile.avatar ? (
-              <img src={profile.avatar} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center bg-nexoraBrand text-sm font-bold text-white">
-                {profile.fullName ? profile.fullName.charAt(0) : 'A'}
-              </div>
-            )}
-          </button>
-
-          {isHeaderDropdownOpen && (
-            <div 
-              className="absolute right-0 mt-12 w-64 rounded-xl border border-nexoraBorder bg-white shadow-2xl z-50 py-2 divide-y divide-nexoraRule animate-fadeIn"
-              id="header-profile-dropdown"
-            >
-              <div className="px-4 py-2.5">
-                <div className="text-xs font-black text-nexoraText truncate">{profile.fullName || businessName}</div>
-                <div className="text-[10px] text-nexoraMuted truncate mt-0.5">{profile.email}</div>
-              </div>
-              <div className="py-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    onNavigateSettingsTab('profile')
-                    setIsHeaderDropdownOpen(false)
-                  }}
-                  className="flex w-full items-center px-4 py-2 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition text-left"
-                >
-                  {t('dashboard.menu.business_setting') || 'Business Setting'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    onNavigateSettingsTab('kyb')
-                    setIsHeaderDropdownOpen(false)
-                  }}
-                  className="flex w-full items-center px-4 py-2 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition text-left"
-                >
-                  {t('dashboard.menu.kyb') || 'Business Verification'}
-                </button>
-              </div>
-              <div className="py-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsHeaderDropdownOpen(false)
-                    onLogout()
-                  }}
-                  className="flex w-full items-center px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 transition text-left"
-                >
-                  <LogOut className="h-3.5 w-3.5 mr-2 shrink-0" />
-                  {t('dashboard.sidebar.sign_out') || 'Sign out'}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-        <button onClick={onAddTouchpoint} className="nexora-primary-button">
-          <Plus className="h-4 w-4" />
-          <span className="hidden sm:inline">{t('dashboard.header.add_tp')}</span>
-        </button>
-      </div>
-    </header>
-  )
-}
-
-function DashboardSidebar({ 
-  activeMenu, 
-  setActiveMenu, 
-  businessName, 
-  profile, 
-  settingsTab, 
-  setSettingsTab, 
-  isProfileExpanded, 
-  setIsProfileExpanded, 
-  hasKyb = true, 
-  verificationStatus = 'kyb_approved',
-  onBlockedFeatureClick,
-  onLogout,
-  tipsTab = 'overview',
-  setTipsTab,
-  touchpointsTab = 'stations',
-  setTouchpointsTab
-}) {
-  const { currentLanguage, setLanguage, t } = useTranslation()
-  const [isTipsExpanded, setIsTipsExpanded] = useState(activeMenu === 'tips')
-  const [isTouchpointsExpanded, setIsTouchpointsExpanded] = useState(activeMenu === 'touchpoints')
-
-  useEffect(() => {
-    if (activeMenu === 'tips') {
-      setIsTipsExpanded(true)
-      setIsTouchpointsExpanded(false)
-    } else if (activeMenu === 'touchpoints') {
-      setIsTouchpointsExpanded(true)
-      setIsTipsExpanded(false)
-    }
-  }, [activeMenu])
-
-  return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col bg-nexoraSidebar px-5 py-7 text-white lg:flex">
-      {/* Logo block */}
-      <div className="flex items-center gap-3 px-2">
-        <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-12 w-12 shrink-0 object-contain" />
-        <div className="min-w-0">
-          <div className="text-2xl font-extrabold leading-none tracking-normal">{t('dashboard.sidebar.console_title')}</div>
-          <div className="mt-1 text-sm font-semibold text-white/65">{t('dashboard.sidebar.console_subtitle')}</div>
-        </div>
-      </div>
-
-      {/* Expandable Profile Card */}
-      <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-4 shrink-0">
-        <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsProfileExpanded(!isProfileExpanded)}>
-          <div className="flex items-center gap-3 min-w-0">
-            {profile.avatar ? (
-              <img src={profile.avatar} alt="" className="h-10 w-10 rounded-full border border-white/10 object-cover" />
-            ) : (
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-sm font-extrabold">
-                {profile.fullName ? profile.fullName.charAt(0) : businessName.charAt(0)}
-              </div>
-            )}
-            <div className="min-w-0">
-              <div className="truncate text-xs font-black text-white/50 uppercase tracking-wider">{businessName}</div>
-              <div className="flex items-center gap-1 min-w-0 mt-0.5">
-                <div className="truncate text-sm font-bold text-white">{profile.fullName || businessName}</div>
-              </div>
-              <div className="text-[10px] text-white/40 truncate mt-0.5">{profile.email}</div>
-            </div>
-          </div>
-          <div className="text-white/70 hover:text-white transition ml-2">
-            {isProfileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </div>
-        </div>
-
-        {/* Submenu links */}
-        {isProfileExpanded && (
-          <div className="mt-3.5 pt-3 border-t border-white/5 space-y-1 animate-fadeIn">
-            <button
-              onClick={() => {
-                setActiveMenu('settings')
-                setSettingsTab('profile')
-              }}
-              className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
-                activeMenu === 'settings' && settingsTab === 'profile'
-                  ? 'text-brandCyan font-extrabold'
-                  : 'text-white/60 hover:bg-white/5 hover:text-white'
-              }`}
-            >
-              <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === 'settings' && settingsTab === 'profile' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
-              <span>{t('dashboard.menu.business_setting') || 'Business Setting'}</span>
-            </button>
-            <button
-              onClick={() => {
-                setActiveMenu('settings')
-                setSettingsTab('kyb')
-              }}
-              className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
-                activeMenu === 'settings' && settingsTab === 'kyb'
-                  ? 'text-brandCyan font-extrabold'
-                  : 'text-white/60 hover:bg-white/5 hover:text-white'
-              }`}
-            >
-              <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === 'settings' && settingsTab === 'kyb' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
-              <span>{t('dashboard.menu.kyb') || 'Business Verification'}</span>
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Card 2: Current Plan & Manage Plan */}
-      <div className="mt-3 rounded-xl border border-white/10 bg-white/5 p-4 shrink-0">
-        <div className="text-[10px] font-extrabold uppercase tracking-wider text-white/45">
-          {t('dashboard.sidebar.current_plan_header') || 'CURRENT PLAN'}
-        </div>
-        {hasKyb ? (
-          <>
-            <div className="mt-1 text-sm font-black text-white">
-              {t('dashboard.sidebar.plan_name') || 'Pro Plan'}
-            </div>
-            <div className="mt-1 text-xs text-white/55">
-              {t('dashboard.sidebar.renews_text') || 'Renews on Jun 20, 2024'}
-            </div>
-          </>
-        ) : (
-          <div className="mt-1 text-xs font-semibold text-rose-400">
-            {t('dashboard.sidebar.no_plan') || 'No current plan'}
-          </div>
-        )}
-        <button 
-          type="button"
-          onClick={() => setActiveMenu('subscriptions')}
-          className="mt-3.5 w-full rounded-lg border border-white/15 py-1.5 text-center text-xs font-bold text-luxuryGold hover:bg-white/5 hover:border-white/25 transition-all"
-        >
-          {t('dashboard.sidebar.manage_plan') || 'Manage Plan'}
-        </button>
-      </div>
-
-      {/* Navigation Menu */}
-      <nav className="mt-6 flex-1 space-y-1.5 overflow-y-auto pr-1">
-        {visibleMenuItems.map((item) => {
-          const { id, label } = item
-          const isActive = activeMenu === id
-          const localizedLabel = {
-            overview: t('dashboard.menu.dashboard'),
-            staff: t('dashboard.menu.staff'),
-            tips: t('dashboard.menu.tips'),
-            reviews: t('dashboard.menu.reviews'),
-            reports: t('dashboard.menu.transactions'),
-            touchpoints: t('dashboard.menu.touchpoints'),
-            devices: t('dashboard.menu.qr_nfc'),
-            analytics: t('dashboard.menu.analytics'),
-            support: t('dashboard.menu.support')
-          }[id] || label
-
-          return (
-            <React.Fragment key={id}>
-              <button
-                onClick={() => {
-                  if (verificationStatus !== 'kyb_approved' && (id === 'tips' || id === 'devices')) {
-                    if (onBlockedFeatureClick) onBlockedFeatureClick()
-                  } else {
-                    setActiveMenu(id)
-                    if (id === 'tips') {
-                      setIsTipsExpanded(!isTipsExpanded)
-                    }
-                    if (id === 'touchpoints') {
-                      setIsTouchpointsExpanded(!isTouchpointsExpanded)
-                    }
-                  }
-                }}
-                className={`flex h-12 w-full items-center justify-between rounded-lg px-4 text-left text-sm font-bold transition ${
-                  isActive
-                    ? 'bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] text-white shadow-lg shadow-[#2B59FF]/20'
-                    : 'text-white/70 hover:bg-white/5 hover:text-white'
-                }`}
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <MenuIcon item={item} active={isActive} />
-                  <span className="truncate">{localizedLabel}</span>
-                </div>
-                {(id === 'tips' || id === 'touchpoints') && (
-                  <div className="text-white/50 shrink-0">
-                    {id === 'tips' 
-                      ? (isTipsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)
-                      : (isTouchpointsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)
-                    }
-                  </div>
-                )}
-              </button>
-
-              {id === 'tips' && isTipsExpanded && (
-                <div className="ml-9 mt-1 space-y-1 border-l border-white/10 pl-3 animate-fadeIn">
-                  {[
-                    { id: 'overview', label: t('dashboard.tips.tabs.overview') || 'Overview' },
-                    { id: 'savings', label: t('dashboard.tips.tabs.savings') || 'Direct Savings' },
-                    { id: 'transactions', label: t('dashboard.tips.tabs.transactions') || 'Tip Transactions' },
-                    { id: 'payouts', label: t('dashboard.tips.tabs.payouts') || 'Staff Payouts' }
-                  ].map(sub => {
-                    const isSubActive = activeMenu === 'tips' && tipsTab === sub.id
-                    return (
-                      <button
-                        key={sub.id}
-                        type="button"
-                        onClick={() => {
-                          setActiveMenu('tips')
-                          setTipsTab(sub.id)
-                        }}
-                        className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
-                          isSubActive
-                            ? 'text-brandCyan font-extrabold'
-                            : 'text-white/60 hover:bg-white/5 hover:text-white'
-                        }`}
-                      >
-                        <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
-                        <span>{sub.label}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
-
-              {id === 'touchpoints' && isTouchpointsExpanded && (
-                <div className="ml-9 mt-1 space-y-1 border-l border-white/10 pl-3 animate-fadeIn">
-                  {[
-                    { id: 'stations', label: t('dashboard.touchpoints.tabs.stations') || 'QR Stations' },
-                    { id: 'devices', label: t('dashboard.touchpoints.tabs.devices') || 'Hardware Devices' }
-                  ].map(sub => {
-                    const isSubActive = activeMenu === 'touchpoints' && touchpointsTab === sub.id
-                    return (
-                      <button
-                        key={sub.id}
-                        type="button"
-                        onClick={() => {
-                          setActiveMenu('touchpoints')
-                          setTouchpointsTab(sub.id)
-                        }}
-                        className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
-                          isSubActive
-                            ? 'text-brandCyan font-extrabold'
-                            : 'text-white/60 hover:bg-white/5 hover:text-white'
-                        }`}
-                      >
-                        <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
-                        <span>{sub.label}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
-            </React.Fragment>
-          )
-        })}
-      </nav>
-
-      {/* Bottom Sign Out */}
-      <div className="mt-auto pt-4 border-t border-white/10 shrink-0">
-        <button onClick={onLogout} className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-white/65 transition hover:text-white w-full">
-          <LogOut className="h-4 w-4" />
-          {t('dashboard.sidebar.sign_out')}
-        </button>
-      </div>
-    </aside>
-  )
-}
-
-function PageTitle() {
-  const { t } = useTranslation()
-  return (
-    <div>
-      <h1 className="text-2xl font-extrabold tracking-normal text-nexoraText sm:text-3xl">{t('dashboard.title')}</h1>
-      <p className="mt-2 text-sm font-medium text-nexoraMuted sm:text-base">
-        {t('dashboard.subtitle')}
-      </p>
-    </div>
-  )
-}
-
-function KpiCard({ label, value, delta, active = false, onClick }) {
-  const animatedValue = useCountUp(value)
-  const { t } = useTranslation()
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`nexora-card p-5 text-left transition hover:-translate-y-0.5 hover:shadow-premium flex flex-col justify-between min-h-[140px] focus:outline-none ${
-        active 
-          ? 'border-nexoraBrand ring-1 ring-nexoraBrand bg-nexoraSurface' 
-          : 'border-nexoraBorder bg-nexoraSurface'
-      }`}
-    >
-      <div>
-        <div className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
-          {label}
-        </div>
-        <div className="mt-2 text-2xl font-black text-nexoraText tracking-tight">
-          {animatedValue}
-        </div>
-      </div>
-      <div className="mt-4 flex items-center gap-1.5 text-xs font-bold text-emerald-600">
-        <span>▲ {delta}</span>
-        <span className="text-nexoraSubtle/80 font-semibold uppercase tracking-wider text-[10px]">
-          {t('dashboard.kpi.vs_last_week') || 'vs last week'}
-        </span>
-      </div>
-    </button>
-  )
-}
+import {
+  MOCK_NEXORA_STAFF_PROFILES,
+  INITIAL_STAFF,
+  INITIAL_TRANSACTIONS,
+  INITIAL_REVIEWS,
+  INITIAL_TOUCHPOINTS,
+  INITIAL_DEVICES,
+  STAFF_PERFORMANCE,
+  TOP_TOUCHPOINTS
+} from './dashboard/data/mockData'
+import { WalletLogos, DEFAULT_PAYOUT_CONFIGS, MENU_ITEMS, visibleMenuItems } from './dashboard/constants'
+import {
+  renderTextWithGoldStars,
+  formatCurrency,
+  walletLabels,
+  slugify,
+  parseMetricValue,
+  formatAnimatedValue,
+  getPayoutConfigsFromMember,
+  useCountUp
+} from './dashboard/utils'
+
+import Panel from './ui/Panel'
+import IconButton from './ui/IconButton'
+import MenuIcon from './ui/MenuIcon'
+import PageTitle from './ui/PageTitle'
+import KpiCard from './ui/KpiCard'
+import DashboardHeader from './dashboard/layout/DashboardHeader'
+import DashboardSidebar from './dashboard/layout/DashboardSidebar'
 
 const TIP_SERIES_BY_RANGE = {
   '7 Days': [
@@ -1384,7 +260,7 @@ function TipsOverTimePanel({ range, setRange, hasKyb = true }) {
   const chartRef = useRef(null)
   const [reveal, setReveal] = useState(0)
   const [hoverIndex, setHoverIndex] = useState(null)
-  const series = hasKyb ? (TIP_SERIES_BY_RANGE[range] || TIP_SERIES_BY_RANGE['7 Days']) : []
+  const series = TIP_SERIES_BY_RANGE[range] || TIP_SERIES_BY_RANGE['7 Days']
   const { points: chartPoints, max, width, height } = useMemo(() => buildChartPoints(series), [series])
   
   // Two different morphing speeds: 600ms for sharp line, 900ms for elastic neon trail
@@ -1629,7 +505,7 @@ function TipsOverTimePanel({ range, setRange, hasKyb = true }) {
 
 function StaffLeaderboardPanel({ selectedStaff, setSelectedStaff, hasKyb = true }) {
   const { t } = useTranslation()
-  const rows = hasKyb ? STAFF_PERFORMANCE.slice(0, 4) : []
+  const rows = STAFF_PERFORMANCE.slice(0, 4)
   const avatarClasses = ['bg-nexoraBrand text-white', 'bg-indigo-500 text-white', 'bg-nexoraLavender text-white', 'bg-indigo-200 text-white']
 
   return (
@@ -3217,41 +2093,11 @@ function StaffModal({
   }
 
   const handleToggleWallet = (walletKey) => {
-    if (verificationStatus !== 'kyb_approved') {
-      if (onBlockedFeatureClick) onBlockedFeatureClick()
-      return
-    }
-    const configs = form.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
-    const config = configs[walletKey] || { enabled: false, value: '', qrCode: '' }
-    
-    if (config.enabled) {
-      setForm({
-        ...form,
-        payoutConfigs: {
-          ...configs,
-          [walletKey]: { ...config, enabled: false }
-        }
-      })
-    } else {
-      if (config.value?.trim()) {
-        setForm({
-          ...form,
-          payoutConfigs: {
-            ...configs,
-            [walletKey]: { ...config, enabled: true }
-          }
-        })
-      } else {
-        openPayoutSetup(walletKey)
-      }
-    }
+    // Read-only for Salon Owner
+    return
   }
 
   const openPayoutSetup = (walletKey) => {
-    if (verificationStatus !== 'kyb_approved') {
-      if (onBlockedFeatureClick) onBlockedFeatureClick()
-      return
-    }
     const configs = form.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
     const config = configs[walletKey] || { enabled: false, value: '', qrCode: '' }
     setTempPayoutValues({
@@ -3409,8 +2255,8 @@ function StaffModal({
                         <div className="flex items-center gap-3">
                           <button
                             type="button"
-                            onClick={() => handleToggleWallet(wallet.key)}
-                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                            disabled={true}
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-not-allowed rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                               config.enabled ? 'bg-amber-600' : 'bg-slate-200'
                             }`}
                           >
@@ -3430,10 +2276,10 @@ function StaffModal({
                         <button
                           type="button"
                           onClick={() => openPayoutSetup(wallet.key)}
-                          className="flex items-center gap-1 text-[11px] font-bold text-amber-600 hover:text-amber-700 transition"
+                          className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 hover:text-slate-600 transition"
                         >
-                          <Edit2 className="h-3 w-3 stroke-[2.5]" />
-                          <span>{t('setup.payout_account') || 'Payout account'}</span>
+                          <Eye className="h-3.5 w-3.5" />
+                          <span>{currentLanguage === 'vi' ? 'Xem tài khoản' : 'View Account'}</span>
                         </button>
                       </div>
                     )
@@ -3558,6 +2404,7 @@ function StaffModal({
         initialQrCode={tempPayoutValues.qrCode}
         onClose={() => setPayoutSetupOpen(false)}
         onSubmit={handlePayoutSubmit}
+        readOnly={true}
       />
     </div>
   )
@@ -4117,7 +2964,6 @@ export default function Dashboard({
   }, [initialSettingsTab])
 
   const [transactions, setTransactions] = useState(() => {
-    if (!hasKyb) return []
     try {
       const saved = localStorage.getItem('nexora_transactions')
       if (saved) return JSON.parse(saved)
@@ -4129,7 +2975,6 @@ export default function Dashboard({
   })
 
   const [reviews, setReviews] = useState(() => {
-    if (!hasKyb) return []
     try {
       const saved = localStorage.getItem('nexora_reviews')
       if (saved) return JSON.parse(saved)
@@ -4141,7 +2986,6 @@ export default function Dashboard({
   })
 
   const [notifications, setNotifications] = useState(() => {
-    if (!hasKyb) return []
     try {
       const saved = localStorage.getItem('nexora_notifications')
       if (saved) return JSON.parse(saved)
@@ -4404,7 +3248,6 @@ export default function Dashboard({
 
   // Filter lists based on searchQuery
   const filteredStaff = useMemo(() => {
-    if (!hasKyb) return []
     const visibleStaff = staff.filter(member => member.status !== 'Pending Acceptance')
     if (!searchQuery) return visibleStaff
     const query = searchQuery.toLowerCase().trim()
@@ -4413,15 +3256,13 @@ export default function Dashboard({
       member.nickname.toLowerCase().includes(query) ||
       member.position.toLowerCase().includes(query)
     )
-  }, [staff, searchQuery, hasKyb])
+  }, [staff, searchQuery])
 
   const pendingStaff = useMemo(() => {
-    if (!hasKyb) return []
     return staff.filter(member => member.status === 'Pending Acceptance')
-  }, [staff, hasKyb])
+  }, [staff])
 
   const filteredTouchpoints = useMemo(() => {
-    if (!hasKyb) return []
     if (!searchQuery) return touchpoints
     const query = searchQuery.toLowerCase().trim()
     return touchpoints.filter(point => 
@@ -4429,7 +3270,7 @@ export default function Dashboard({
       point.type.toLowerCase().includes(query) ||
       (point.staffName && point.staffName.toLowerCase().includes(query))
     )
-  }, [touchpoints, searchQuery, hasKyb])
+  }, [touchpoints, searchQuery])
 
   const filteredReviews = useMemo(() => {
     if (!searchQuery) return reviews
@@ -4456,21 +3297,6 @@ export default function Dashboard({
   }, [transactions, searchQuery])
 
   const metrics = useMemo(() => {
-    if (!hasKyb) {
-      return {
-        totalTips: 0.00,
-        totalTransactions: 0,
-        averageTip: 0.00,
-        totalReviews: 0,
-        googleRating: 0.0,
-        googleReviews: 0,
-        yelpRating: 0.0,
-        yelpReviews: 0,
-        responseRate: 0,
-        returningCustomers: 0,
-        returningCustomersDelta: 0
-      }
-    }
     return {
       totalTips: 4785.00,
       totalTransactions: 312,
@@ -4484,7 +3310,7 @@ export default function Dashboard({
       returningCustomers: 68,
       returningCustomersDelta: 12
     }
-  }, [hasKyb])
+  }, [])
 
   const resetStaffForm = () => {
     setStaffForm({
@@ -5273,19 +4099,16 @@ export default function Dashboard({
                 return (
                   <React.Fragment key={id}>
                     <button
+                      type="button"
                       onClick={() => {
-                        if (verificationStatus !== 'kyb_approved' && (id === 'tips' || id === 'devices')) {
-                          setShowKybWarningModal(true)
+                        setActiveMenu(id)
+                        if (id === 'tips') {
+                          setIsTipsMobileExpanded(!isTipsMobileExpanded)
+                        } else if (id === 'touchpoints') {
+                          setIsTouchpointsMobileExpanded(!isTouchpointsMobileExpanded)
                         } else {
-                          setActiveMenu(id)
-                          if (id === 'tips') {
-                            setIsTipsMobileExpanded(!isTipsMobileExpanded)
-                          } else if (id === 'touchpoints') {
-                            setIsTouchpointsMobileExpanded(!isTouchpointsMobileExpanded)
-                          } else {
-                            setIsMobileMenuOpen(false)
-                            setViewingStaffDetailId(null)
-                          }
+                          setIsMobileMenuOpen(false)
+                          setViewingStaffDetailId(null)
                         }
                       }}
                       className={`flex min-h-11 w-full items-center justify-between rounded-lg px-4 text-left text-sm font-bold transition ${
@@ -5530,8 +4353,8 @@ export default function Dashboard({
   )
 }
 
-function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrCode, onClose, onSubmit }) {
-  const { t } = useTranslation()
+function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrCode, onClose, onSubmit, readOnly = false }) {
+  const { t, currentLanguage } = useTranslation()
   const [value, setValue] = useState(initialValue || '')
   const [qrCode, setQrCode] = useState(initialQrCode || '')
   const [accountName, setAccountName] = useState(staffName || '')
@@ -5575,6 +4398,7 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
   }
 
   const handleFileChange = (e) => {
+    if (readOnly) return
     const file = e.target.files?.[0]
     if (!file) return
     const reader = new FileReader()
@@ -5585,6 +4409,7 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
   }
 
   const handleTakePhoto = () => {
+    if (readOnly) return
     setIsCapturing(true)
     setTimeout(() => {
       const mockQr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
@@ -5596,15 +4421,51 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
   }
 
   const handleClearQr = () => {
+    if (readOnly) return
     setQrCode('')
   }
 
   const handleSubmit = () => {
+    if (readOnly) return
     if (!value.trim()) {
       setError(t('setup.errors.field_required') || 'This field is required.')
       return
     }
     onSubmit(value, qrCode, accountName)
+  }
+
+  const PayoutLogos = {
+    zelle: (
+      <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-[#7414CA]" xmlns="http://www.w3.org/2000/svg">
+        <path d="M13.559 24h-2.841a.483.483 0 0 1-.483-.483v-2.765H5.638a.667.667 0 0 1-.666-.666v-2.234a.67.67 0 0 1 .142-.412l8.139-10.382h-7.25a.667.667 0 0 1-.667-.667V3.914c0-.367.299-.666.666-.666h4.23V.483c0-.266.217-.483.483-.483h2.841c.266 0 .483.217.483.483v2.765h4.323c.367 0 .666.299.666.666v2.137a.67.67 0 0 1-.141.41l-8.19 10.481h7.665c.367 0 .666.299.666.666v2.477a.667.667 0 0 1-.666.667h-4.32v2.765a.483.483 0 0 1-.483.483Z" />
+      </svg>
+    ),
+    bankwire: (
+      <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-[#475569]" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L1 7v2h22V7L12 2zm0 18H3v-8h3v8h3v-8h3v8h3v-8h3v8h3v-8h3v8h3v-8h3v8h-3zm-11 2h22v2H1v-2z" />
+      </svg>
+    ),
+    paypal: (
+      <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-[#003087]" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20.09 6.85c-.45 2.24-1.93 7.82-2.18 8.87-.24 1.05-1.12 1.77-2.22 1.77h-3.32l-.96 6.02c-.08.5-.52.87-1.03.87H6.22c-.65 0-1.13-.59-.99-1.22L8.53 5.4c.14-.63.7-.1 1.33-.1h5.8c2.81 0 4.88 1.48 4.43 3.7.22-1.07.13-2.15-.36-3.05z" />
+        <path d="M16.92 3.85c-.45 2.24-1.93 7.82-2.18 8.87-.24 1.05-1.12 1.77-2.22 1.77h-3.32l-.96 6.02c-.08.5-.52.87-1.03.87H3.06c-.65 0-1.13-.59-.99-1.22L5.37 2.4c.14-.63.7-1.1 1.33-1.1h5.8c2.81 0 4.88 1.48 4.43 3.7.22-1.07.13-2.15-.36-3.05z" opacity="0.6" />
+      </svg>
+    ),
+    venmo: (
+      <svg viewBox="0 0 448 512" className="h-[18px] w-[18px] fill-[#008CFF]" xmlns="http://www.w3.org/2000/svg">
+        <path d="M381.4 105.3c11 18.1 15.9 36.7 15.9 60.3 0 75.1-64.1 172.7-116.2 241.2h-118.8l-47.6-285 104.1-9.9 25.3 202.8c23.5-38.4 52.6-98.7 52.6-139.7 0-22.5-3.9-37.8-9.9-50.4z" />
+      </svg>
+    ),
+    cashapp: (
+      <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-[#00D632]" xmlns="http://www.w3.org/2000/svg">
+        <path d="M23.59 3.475a5.1 5.1 0 00-3.05-3.05c-1.31-.42-2.5-.42-4.92-.42H8.36c-2.4 0-3.61 0-4.9.4a5.1 5.1 0 00-3.05 3.06C0 4.765 0 5.965 0 8.365v7.27c0 2.41 0 3.6.4 4.9a5.1 5.1 0 003.05 3.05c1.3.41 2.5.41 4.9.41h7.28c2.41 0 3.61 0 4.9-.4a5.1 5.1 0 003.06-3.06c.41-1.3.41-2.5.41-4.9v-7.25c0-2.41 0-3.61-.41-4.91zm-6.17 4.63l-.93.93a.5.5 0 01-.67.01 5 5 0 00-3.22-1.18c-.97 0-1.94.32-1.94 1.21 0 .9 1.04 1.2 2.24 1.65 2.1.7 3.84 1.58 3.84 3.64 0 2.24-1.74 3.78-4.58 3.95l-.26 1.2a.49.49 0 01-.48.39H9.63l-.09-.01a.5.5 0 01-.38-.59l.28-1.27a6.54 6.54 0 01-2.88-1.57v-.01a.48.48 0 010-.68l1-.97a.49.49 0 01.67 0c.91.86 2.13 1.34 3.39 1.32c1.3 0 2.17-.55 2.17-1.42 0-.87-.88-1.1-2.54-1.72-1.76-.63-3.43-1.52-3.43-3.6 0-2.42 2.01-3.6 4.39-3.71l.25-1.23a.48.48 0 01.48-.38h1.78l.1.01c.26.06.43.31.37.57l-.27 1.37c.9.3 1.75.77 2.48 1.39l.02.02c.19.2.19.5 0 .68z" />
+      </svg>
+    ),
+    applecash: (
+      <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-black" xmlns="http://www.w3.org/2000/svg">
+        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83zM15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.22.67-2.94 1.51-.62.73-1.16 1.87-1.02 2.98 1.11.09 2.25-.56 2.97-1.43z" />
+      </svg>
+    )
   }
 
   const brandStyles = {
@@ -5617,40 +4478,48 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
   }[walletKey] || { text: walletKey, color: 'text-slate-800', fontClass: 'font-bold' }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl animate-scaleUp">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <h3 className="text-base font-extrabold text-slate-800">
-            {t('setup.setup_wallet_title', { wallet: walletNames[walletKey] }) || `Set up ${walletNames[walletKey]} account`}
-          </h3>
-          <button onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition">
-            <X className="h-4 w-4" />
-          </button>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 text-left">
+      <div data-testid="payout-setup-modal" className="bg-white rounded-3xl border border-slate-100 max-w-sm w-full shadow-2xl p-6 relative overflow-hidden animate-scaleUp space-y-4.5">
+        <div className="flex items-center gap-3.5 border-b border-slate-100 pb-3">
+          <span className="h-11 w-11 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 shadow-sm">
+            {PayoutLogos[walletKey]}
+          </span>
+          <div>
+            <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">
+              {currentLanguage === 'vi' 
+                ? `TÀI KHOẢN ${walletNames[walletKey]?.toUpperCase()}`
+                : `${walletNames[walletKey]?.toUpperCase()} ACCOUNT`}
+            </h3>
+            <p className="text-[10px] text-slate-400 font-medium">
+              {currentLanguage === 'vi' ? 'Chỉ định thông tin tài khoản nhận tiền' : 'Specify receiving target identifier'}
+            </p>
+          </div>
         </div>
 
-        <div className="mt-4 space-y-4">
+        <div className="space-y-4">
           <div>
-            <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
-              {t('setup.payout_input_label', { wallet: walletNames[walletKey], field: walletFields[walletKey] }) || `Your ${walletNames[walletKey]} ${walletFields[walletKey]} *`}
+            <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
+              {currentLanguage === 'vi' ? 'THÔNG TIN TÀI KHOẢN' : 'Account Identifier'}
             </label>
             <input
               type="text"
+              disabled={readOnly}
               value={value}
               onChange={(e) => {
                 setValue(e.target.value)
                 setError('')
               }}
               placeholder={walletPlaceholders[walletKey]}
-              className={`mt-1.5 h-10 w-full rounded-lg border px-3 text-sm font-semibold outline-none focus:ring-1 focus:ring-nexoraBrand transition-all ${
-                error ? 'border-rose-500 focus:border-rose-500' : 'border-slate-200 focus:border-nexoraBrand'
-              }`}
+              className={`w-full bg-slate-50 border border-slate-200 focus:border-nexoraBrand focus:ring-2 focus:ring-[#4648D8]/20 focus:bg-white rounded-xl px-3.5 h-11 text-xs text-slate-800 focus:outline-none transition-all ${
+                error ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20' : ''
+              } ${readOnly ? 'bg-slate-100 text-slate-400 cursor-not-allowed border-slate-200' : ''}`}
             />
             {error && <p className="mt-1 text-[10px] font-bold text-rose-500">{error}</p>}
           </div>
 
           <div>
-            <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-2">
-              {t('setup.qr_code_optional') || 'QR Code (optional)'}
+            <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
+              {currentLanguage === 'vi' ? 'MÃ QR (TÙY CHỌN)' : 'QR Code (optional)'}
             </label>
 
             {isCapturing ? (
@@ -5660,14 +4529,16 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
               </div>
             ) : qrCode ? (
               <div className="relative flex flex-col items-center rounded-xl border border-slate-200 bg-white p-4.5 shadow-sm">
-                <button
-                  type="button"
-                  onClick={handleClearQr}
-                  className="absolute right-2 top-2 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
-                  title="Remove image"
-                >
-                  <X className="h-4 w-4" />
-                </button>
+                {!readOnly && (
+                  <button
+                    type="button"
+                    onClick={handleClearQr}
+                    className="absolute right-2 top-2 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+                    title="Remove image"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
                 <div className="text-center">
                   <div className="text-sm font-extrabold text-slate-800">{accountName}</div>
                   <div className="text-[10px] font-semibold text-slate-400 mt-0.5">{value}</div>
@@ -5678,6 +4549,10 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
                 <div className={`${brandStyles.color} ${brandStyles.fontClass}`}>
                   {brandStyles.text}
                 </div>
+              </div>
+            ) : readOnly ? (
+              <div className="flex h-24 w-full flex-col items-center justify-center rounded-xl border border-slate-150 bg-slate-50 text-slate-400 text-xs font-semibold">
+                {currentLanguage === 'vi' ? 'Thợ chưa tải lên mã QR' : 'No QR code uploaded'}
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-3">
@@ -5698,7 +4573,7 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
                 </label>
               </div>
             )}
-            {!qrCode && (
+            {!qrCode && !readOnly && (
               <p className="mt-2 text-[10px] text-slate-400 leading-normal">
                 {t('setup.uploader_hint') || 'You can either take a photo or upload from your device. Accepted formats: JPG, PNG, JPEG. Max size: 5MB per file.'}
               </p>
@@ -5708,24 +4583,28 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
           <div className="rounded-lg bg-blue-50/50 border border-blue-100 p-3 text-[10.5px] leading-relaxed text-blue-800 flex gap-2">
             <AlertTriangle className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
             <span>
-              {t('setup.payout_warning') || 'Please enter the correct receiving account information. This will be used to receive payments.'}
+              {readOnly 
+                ? (currentLanguage === 'vi' ? 'Thông tin này được nhập bởi Kỹ thuật viên khi tham gia Salon. Salon Owner chỉ có thể xem.' : 'This information was entered by the technician. Salon Owner has view-only access.')
+                : (t('setup.payout_warning') || 'Please enter the correct receiving account information. This will be used to receive payments.')}
             </span>
           </div>
         </div>
 
-        <div className="mt-5 flex justify-end gap-2 border-t border-slate-100 pt-3">
+        <div className="flex justify-end gap-2.5 pt-2.5 border-t border-slate-100">
           <button
             onClick={onClose}
-            className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50 transition"
+            className={`px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider rounded-lg transition ${readOnly ? 'w-full text-center' : ''}`}
           >
-            {t('setup.close') || 'Close'}
+            {currentLanguage === 'vi' ? (readOnly ? 'ĐÓNG' : 'HỦY') : (readOnly ? 'CLOSE' : 'CANCEL')}
           </button>
-          <button
-            onClick={handleSubmit}
-            className="rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white hover:opacity-90 shadow-sm transition"
-          >
-            {t('setup.submit') || 'Submit'}
-          </button>
+          {!readOnly && (
+            <button
+              onClick={handleSubmit}
+              className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm transition"
+            >
+              {currentLanguage === 'vi' ? 'LƯU LẠI' : 'SAVE'}
+            </button>
+          )}
         </div>
       </div>
     </div>

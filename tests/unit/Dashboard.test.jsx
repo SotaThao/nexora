@@ -7,6 +7,7 @@ import { LanguageProvider } from '../../src/contexts/LanguageContext';
 describe('Dashboard Component Unit Tests', () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
   });
   const mockSetupData = {
     businessInfo: {
@@ -162,7 +163,7 @@ describe('Dashboard Component Unit Tests', () => {
     expect(activeNfcHeader.closest('div').textContent).toContain('2'); // active NFC stands KPI count is updated
   });
 
-  it('renders zeroed/empty dashboard when hasKyb is false', () => {
+  it('renders normal dashboard statistics and items even when hasKyb is false', () => {
     const mockSetup = {
       businessInfo: {
         name: 'Golden Glow Nail Spa',
@@ -182,27 +183,27 @@ describe('Dashboard Component Unit Tests', () => {
       </LanguageProvider>
     );
 
-    // Verify KPIs display $0.00 or 0
-    expect(screen.getAllByText('$0.00').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('0').length).toBeGreaterThan(0);
+    // Verify KPI boxes render correctly (check for presence of labels since values animate)
+    expect(screen.getByText(/Total Tips/i)).toBeInTheDocument();
+    expect(screen.getByText(/Total Transactions/i)).toBeInTheDocument();
 
-    // Verify leaderboard is empty
-    expect(screen.queryByText('Mia Tran')).not.toBeInTheDocument();
+    // Verify leaderboard is NOT empty
+    expect(screen.getByText('Mia Tran')).toBeInTheDocument();
 
-    // Verify notifications count is 0
+    // Verify notifications can be loaded normally
     const notiBtn = screen.getByTitle('Notifications');
     fireEvent.click(notiBtn);
-    expect(screen.queryByText(/New Internal Feedback/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/New Internal Feedback \(2★\)/i)).toBeInTheDocument();
 
     // Navigate to staff tab
     const staffMenuBtn = screen.getByRole('button', { name: /Staff/i });
     fireEvent.click(staffMenuBtn);
-    expect(screen.queryByText('John Doe')).not.toBeInTheDocument();
+    expect(screen.getByText('John Doe')).toBeInTheDocument();
 
     // Navigate to touchpoints tab
     const touchpointsMenuBtn = screen.getByRole('button', { name: /Touchpoint Manager|Quản Lý Điểm Chạm/i });
     fireEvent.click(touchpointsMenuBtn);
-    expect(screen.queryByText('Manicure Station 01')).not.toBeInTheDocument();
+    expect(screen.getByText('Manicure Station 01')).toBeInTheDocument();
   });
 
   it('toggles header profile dropdown and navigates to settings tabs', () => {
@@ -282,7 +283,7 @@ describe('Dashboard Component Unit Tests', () => {
     expect(screen.getByText(/No Plan yet/i)).toBeInTheDocument();
   });
 
-  it('displays KYB Warning Modal when gated feature is clicked and verificationStatus !== "kyb_approved"', () => {
+  it('does not display KYB Warning Modal and allows navigation when gated feature is clicked and verificationStatus !== "kyb_approved"', () => {
     render(
       <LanguageProvider>
         <Dashboard setupData={mockSetupData} verificationStatus="basic" onLogout={vi.fn()} />
@@ -294,21 +295,76 @@ describe('Dashboard Component Unit Tests', () => {
     const tipsBtn = within(navigation).getByRole('button', { name: /Tips|Tiền Típ/i });
     fireEvent.click(tipsBtn);
 
-    // Verify warning modal is displayed
-    expect(screen.getByText(/KYB Verification Required/i)).toBeInTheDocument();
-
-    // Verify clicking Cancel closes the modal
-    const cancelBtn = screen.getByRole('button', { name: /Cancel|Hủy bỏ/i });
-    fireEvent.click(cancelBtn);
+    // Verify warning modal is NOT displayed
     expect(screen.queryByText(/KYB Verification Required/i)).not.toBeInTheDocument();
 
-    // Click tips again and verify we can click Verify Now
-    fireEvent.click(tipsBtn);
-    const verifyNowBtn = screen.getByRole('button', { name: /Verify Now|Xác thực ngay/i });
-    fireEvent.click(verifyNowBtn);
+    // Verify it navigated to Tips view successfully
+    expect(screen.getByRole('heading', { level: 2, name: /Tips|Tiền Típ/i })).toBeInTheDocument();
+  });
 
-    // Verification modal closes and navigates to settings -> kyb tab
-    expect(screen.queryByText(/KYB Verification Required/i)).not.toBeInTheDocument();
-    expect(screen.getByText('Settings Configuration')).toBeInTheDocument();
+  it('renders technician payout accounts as read-only for Salon Owner', () => {
+    const mockSetup = {
+      businessInfo: {
+        name: 'Golden Glow Nail Spa',
+        industry: 'Nail Salon',
+      },
+      staffList: [
+        { 
+          id: 'NEX-STAFF-MIA0123', 
+          fullName: 'Mia Tran', 
+          nickname: 'Mia T.', 
+          position: 'Gel-X Artist', 
+          isActive: true,
+          showInTipsFlow: true,
+          phone: '407-555-0123',
+          email: 'mia.tran@gmail.com',
+          paymentAccounts: { venmo: '@mia-nails', cashapp: '$miaglow', zelle: 'mia.tran@gmail.com', vlinkpay: 'VLP-0123-MIA' }
+        }
+      ],
+      touchPoints: [],
+    };
+
+    render(
+      <LanguageProvider>
+        <Dashboard setupData={mockSetup} onLogout={vi.fn()} />
+      </LanguageProvider>
+    );
+
+    // 1. Navigate to staff tab
+    const staffMenuBtn = screen.getByRole('button', { name: /Staff/i });
+    fireEvent.click(staffMenuBtn);
+
+    // Assert Mia Tran is in the document
+    expect(screen.getByText('Mia Tran')).toBeInTheDocument();
+
+    // 2. Click on the Edit/Manage staff button for Mia Tran
+    const editBtn = screen.getByTitle(/Edit|common\.edit|Chỉnh sửa thợ/i);
+    fireEvent.click(editBtn);
+
+    // 3. Verify Payout toggles are disabled
+    const payoutToggles = screen.getAllByRole('button').filter(btn => btn.className.includes('w-11') && btn.className.includes('h-6') && btn.className.includes('cursor-not-allowed'));
+    payoutToggles.forEach(toggle => {
+      expect(toggle).toBeDisabled();
+    });
+
+    // 4. Verify "Xem tài khoản" / "View Account" button is rendered
+    const viewAccountBtn = screen.getAllByText(/Xem tài khoản|View Account/i)[0];
+    expect(viewAccountBtn).toBeInTheDocument();
+
+    // 5. Click "View Account" to open payout details modal
+    fireEvent.click(viewAccountBtn);
+
+    const payoutModal = screen.getByTestId('payout-setup-modal');
+
+    // 6. Verify input identifier is disabled
+    const input = within(payoutModal).getByPlaceholderText(/Enter Zelle email/i);
+    expect(input).toBeDisabled();
+
+    // 7. Verify save/submit button is not present
+    expect(within(payoutModal).queryByRole('button', { name: /Lưu lại|Save/i })).not.toBeInTheDocument();
+
+    // 8. Verify Close/Đóng/Hủy button is present and click it to close
+    const closeBtn = within(payoutModal).getByRole('button', { name: /ĐÓNG|CLOSE|HỦY|CANCEL/i });
+    fireEvent.click(closeBtn);
   });
 });
