@@ -3782,6 +3782,7 @@ export default function Dashboard({
     }
   }, [activeMenu])
   const lastProcessedSetupData = useRef(null)
+  const ignoreNextSync = useRef(false)
 
   const [staff, setStaff] = useState(() => {
     const saved = localStorage.getItem('nexora_merchant_setup')
@@ -3797,6 +3798,9 @@ export default function Dashboard({
             avatar: member.avatar || '',
             phone: member.phone || '',
             email: member.email || '',
+            bio: member.bio || '',
+            status: member.status || 'Active',
+            flowType: member.flowType || '',
             isActive: member.isActive !== undefined ? member.isActive : true,
             showInTipsFlow: member.showInTipsFlow !== undefined ? member.showInTipsFlow : true,
             paymentAccounts: {
@@ -3822,6 +3826,9 @@ export default function Dashboard({
         avatar: member.avatar || '',
         phone: member.phone || '',
         email: member.email || '',
+        bio: member.bio || '',
+        status: member.status || 'Active',
+        flowType: member.flowType || '',
         isActive: member.isActive !== undefined ? member.isActive : true,
         showInTipsFlow: member.showInTipsFlow !== undefined ? member.showInTipsFlow : true,
         paymentAccounts: {
@@ -4007,6 +4014,7 @@ export default function Dashboard({
   useEffect(() => {
     if (setupData) {
       lastProcessedSetupData.current = setupData
+      ignoreNextSync.current = true
     }
     if (setupData?.staffList?.length) {
       setStaff(setupData.staffList.map((member) => ({
@@ -4017,6 +4025,9 @@ export default function Dashboard({
         avatar: member.avatar || '',
         phone: member.phone || '',
         email: member.email || '',
+        bio: member.bio || '',
+        status: member.status || 'Active',
+        flowType: member.flowType || '',
         isActive: member.isActive !== undefined ? member.isActive : true,
         showInTipsFlow: member.showInTipsFlow !== undefined ? member.showInTipsFlow : true,
         paymentAccounts: {
@@ -4038,6 +4049,11 @@ export default function Dashboard({
 
   // Sync edits in dashboard to storage so simulator/customer flow gets the updates
   useEffect(() => {
+    if (ignoreNextSync.current) {
+      ignoreNextSync.current = false
+      return
+    }
+
     // If setupData changed but we haven't processed it in Hook 1 yet,
     // skip syncing to avoid overwriting the storage with stale local states.
     if (setupData && lastProcessedSetupData.current !== setupData) {
@@ -4333,7 +4349,7 @@ export default function Dashboard({
       setStaff((current) => current.map((member) => member.id === editingStaffId ? { ...member, ...payload } : member))
     } else {
       const finalStaffId = staffForm.nexoraStaffId.trim() || `NEX-STAFF-${staffForm.fullName.replace(/[^a-zA-Z]/g, '').slice(0, 4).toUpperCase()}${Math.floor(1000 + Math.random() * 9000)}`
-      const newMember = { id: finalStaffId, isActive: true, showInTipsFlow: true, ...payload }
+      const newMember = { id: finalStaffId, isActive: true, showInTipsFlow: true, status: 'Active', flowType: 'Direct Addition', ...payload }
       setStaff((current) => [...current, newMember])
       setTouchpoints((current) => [...current, {
         id: `tp-staff-${newMember.id}`,
