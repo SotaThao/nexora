@@ -9,6 +9,8 @@ export const supabase = isSupabaseConfigured
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null
 
+let activeChannel = null
+
 export const supabaseSync = {
   push: async (key, value) => {
     if (!isSupabaseConfigured) return
@@ -66,6 +68,17 @@ export const supabaseSync = {
   },
   subscribe: (onUpdate) => {
     if (!isSupabaseConfigured) return null
+    
+    // Clean up any active channel first to prevent duplicate subscription error (HMR / React 18 strict mode double-mount)
+    if (activeChannel) {
+      try {
+        supabase.removeChannel(activeChannel)
+      } catch (e) {
+        console.error('Error removing old channel:', e)
+      }
+      activeChannel = null
+    }
+
     const channel = supabase
       .channel('nexora-sync-channel')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'nexora_sync' }, (payload) => {
@@ -79,6 +92,8 @@ export const supabaseSync = {
         }
       })
       .subscribe()
+    
+    activeChannel = channel
     return channel
   }
 }
