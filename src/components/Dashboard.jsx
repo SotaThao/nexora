@@ -2306,7 +2306,7 @@ function StaffModal({
                     <label className="text-[9px] font-extrabold uppercase text-nexoraMuted mb-1 block">NEXORA Staff ID</label>
                     <div className="relative">
                       <span className="absolute left-3 top-[9px] flex items-center justify-center pointer-events-none">
-                        <User className="h-4.5 w-4.5 text-[#4648D8]" />
+                        <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-[18px] w-[18px] object-contain" />
                       </span>
                       <input 
                         className="h-9 w-full rounded-lg border border-nexoraBorder pl-9 pr-3 text-xs outline-none focus:border-nexoraBrand font-semibold font-mono" 

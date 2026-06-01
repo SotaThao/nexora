@@ -1434,7 +1434,7 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
                 <div className="mt-4 pt-3 border-t border-nexoraRule flex justify-between items-center text-xs">
                   <div className="flex items-center gap-2">
                     <span className="h-7 w-7 rounded-lg bg-[#E9E9FF] border border-[#4648D8]/20 flex items-center justify-center shrink-0">
-                      <User className="h-4 w-4 text-[#4648D8]" />
+                      <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-4 w-4 object-contain" />
                     </span>
                     <span className="text-nexoraMuted font-bold">NEXORA Staff ID</span>
                   </div>

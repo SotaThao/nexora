@@ -201,21 +201,15 @@ describe('Nexora Touch E2E Test Suite (CloakBrowser)', () => {
     // Type invalid tip - e.g. 0
     await page.fill('input[placeholder*="0.00"]', '0');
 
-    // Listen for alert dialog
-    let alertMsg = '';
-    page.once('dialog', async dialog => {
-      alertMsg = dialog.message();
-      await dialog.accept();
-    });
-
     // Click Next
     const payBtn = page.locator('button:has-text("Next"), button:has-text("Tiếp theo")');
     await payBtn.click();
 
-    // Small delay to let dialog fire
+    // Small delay to let toast render
     await page.waitForTimeout(500);
 
-    // Verify alert dialog was fired with correct message
-    expect(alertMsg).toMatch(/Please enter a valid tip amount|Vui lòng nhập số tiền típ/);
+    // Verify custom toast message appears on the page body
+    const content = await page.textContent('body');
+    expect(content).toMatch(/Please enter a valid tip amount|Vui lòng nhập số tiền típ/);
   });
 });
