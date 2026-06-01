@@ -385,28 +385,79 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
 
     // Save into localStorage merchant setup
     const savedSetup = localStorage.getItem('nexora_merchant_setup')
+    let parsed = null
     if (savedSetup) {
       try {
-        const parsed = JSON.parse(savedSetup)
-        let staffList = parsed.staffList || []
-        
-        // Find existing index or append
-        const existingIdx = staffList.findIndex(s => s.id === searchId.trim().toUpperCase() || s.email === linkedProfile.email || s.phone === linkedProfile.phone)
-        if (existingIdx !== -1) {
-          staffList[existingIdx] = {
-            ...staffList[existingIdx],
-            ...finalStaffMember
-          }
-        } else {
-          staffList.push(finalStaffMember)
-        }
-
-        parsed.staffList = staffList
-        localStorage.setItem('nexora_merchant_setup', JSON.stringify(parsed))
-        sessionStorage.setItem('nexora_merchant_setup', JSON.stringify(parsed))
+        parsed = JSON.parse(savedSetup)
       } catch (e) {
-        console.error('Failed to update staff database in wizard', e)
+        console.error('Failed to parse saved setup', e)
       }
+    }
+    if (!parsed) {
+      parsed = {
+        businessInfo: {
+          name: inviteData?.biz || 'Golden Glow Nail Spa & Salon',
+          email: 'owner@goldenglownails.com',
+          phone: '(555) 019-2834',
+          category: 'Nail Salon'
+        },
+        staffList: [
+          { id: '1', fullName: 'Mia Tran', nickname: 'Mia T.', position: 'Gel-X Artist', avatar: '', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '@miatran-nails', cashapp: '$miatran', zelle: 'mia.tran@gmail.com', vlinkpay: 'VLP-8842-MT' }, status: 'Active', flowType: 'Direct Addition' },
+          { id: '2', fullName: 'Vivian Le', nickname: 'Vivian L.', position: 'Acrylic Specialist', avatar: '', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '', cashapp: '$vivianle', zelle: '', vlinkpay: 'VLP-7629-VL' }, status: 'Active', flowType: 'Direct Addition' },
+          { id: '3', fullName: 'Ashley Park', nickname: 'Ashley P.', position: 'Pedicure Lead', avatar: '', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '@ashleypark', cashapp: '', zelle: 'ashley.p@gmail.com', vlinkpay: 'VLP-5521-AP' }, status: 'Active', flowType: 'Direct Addition' },
+          { id: '4', fullName: 'Hanna Nguyen', nickname: 'Hanna N.', position: 'Nail Art Designer', avatar: '', isActive: false, showInTipsFlow: true, paymentAccounts: { venmo: '@hanna-art', cashapp: '', zelle: '', vlinkpay: 'VLP-1148-HN' }, status: 'Inactive', flowType: 'Direct Addition' }
+        ],
+        touchPoints: [
+          { id: 'tp-main', name: 'Business Main Lobby QR', type: 'Business Main' },
+          { id: 'tp-front', name: 'Reception Front Desk', type: 'Front Desk' },
+          { id: 'tp-t1', name: 'Service Chair 01', type: 'Table QR' },
+          { id: 'tp-t2', name: 'Service Chair 02', type: 'Table QR' },
+        ]
+      }
+    }
+
+    try {
+      let staffList = parsed.staffList || []
+      
+      // Find existing index or append
+      const existingIdx = staffList.findIndex(s => s.id === searchId.trim().toUpperCase() || s.email === linkedProfile.email || s.phone === linkedProfile.phone)
+      if (existingIdx !== -1) {
+        staffList[existingIdx] = {
+          ...staffList[existingIdx],
+          ...finalStaffMember
+        }
+      } else {
+        staffList.push(finalStaffMember)
+      }
+
+      parsed.staffList = staffList
+      localStorage.setItem('nexora_merchant_setup', JSON.stringify(parsed))
+      sessionStorage.setItem('nexora_merchant_setup', JSON.stringify(parsed))
+
+      // Add notification to merchant
+      const savedNotifications = localStorage.getItem('nexora_notifications')
+      let notis = []
+      if (savedNotifications) {
+        try {
+          notis = JSON.parse(savedNotifications)
+        } catch (e) {}
+      }
+      const newNoti = {
+        id: `noti-join-${finalStaffMember.id}-${Date.now()}`,
+        type: 'feedback_alert',
+        title: currentLanguage === 'vi' ? 'Yêu cầu gia nhập mới' : 'New Join Request',
+        message: currentLanguage === 'vi'
+          ? `Thợ ${finalStaffMember.fullName} (${finalStaffMember.position}) đã gửi yêu cầu liên kết với tiệm của bạn.`
+          : `Technician ${finalStaffMember.fullName} (${finalStaffMember.position}) requested to link with your salon.`,
+        time: currentLanguage === 'vi' ? 'Vừa xong' : 'Just now',
+        read: false,
+        linkTab: 'staff'
+      }
+      notis = [newNoti, ...notis]
+      localStorage.setItem('nexora_notifications', JSON.stringify(notis))
+      sessionStorage.setItem('nexora_notifications', JSON.stringify(notis))
+    } catch (e) {
+      console.error('Failed to update staff database in wizard', e)
     }
 
     setStaffId(searchId.trim().toUpperCase())
@@ -443,52 +494,103 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
 
     // Save into localStorage merchant setup
     const savedSetup = localStorage.getItem('nexora_merchant_setup')
+    let parsedActive = null
     if (savedSetup) {
       try {
-        const parsed = JSON.parse(savedSetup)
-        let staffList = parsed.staffList || []
-        
-        // Find existing index or append
-        const existingIdx = staffList.findIndex(s => s.id === inviteData?.id || s.email === email || s.phone === phone)
-        if (existingIdx !== -1) {
-          const oldId = staffList[existingIdx].id
-          const newId = finalStaffMember.id
-
-          staffList[existingIdx] = {
-            ...staffList[existingIdx],
-            ...finalStaffMember,
-            id: newId
-          }
-          // Update the local staff ID for the success message
-          setStaffId(newId)
-
-          // Update touchpoints matching oldId to newId
-          if (parsed.touchPoints?.length) {
-            parsed.touchPoints = parsed.touchPoints.map(tp => {
-              if (tp.staffId === oldId) {
-                return {
-                  ...tp,
-                  id: tp.id === `tp-staff-${oldId}` ? `tp-staff-${newId}` : tp.id,
-                  staffId: newId
-                }
-              }
-              return tp
-            })
-          }
-        } else {
-          staffList.push(finalStaffMember)
-        }
-
-        parsed.staffList = staffList
-        
-        // We do NOT auto-generate touchpoint QR codes here anymore, because they are Pending Acceptance.
-        // Touchpoint will be generated upon manual acceptance by the merchant.
-
-        localStorage.setItem('nexora_merchant_setup', JSON.stringify(parsed))
-        sessionStorage.setItem('nexora_merchant_setup', JSON.stringify(parsed))
+        parsedActive = JSON.parse(savedSetup)
       } catch (e) {
-        console.error('Failed to update staff database in wizard', e)
+        console.error('Failed to parse saved setup', e)
       }
+    }
+    if (!parsedActive) {
+      parsedActive = {
+        businessInfo: {
+          name: inviteData?.biz || 'Golden Glow Nail Spa & Salon',
+          email: 'owner@goldenglownails.com',
+          phone: '(555) 019-2834',
+          category: 'Nail Salon'
+        },
+        staffList: [
+          { id: '1', fullName: 'Mia Tran', nickname: 'Mia T.', position: 'Gel-X Artist', avatar: '', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '@miatran-nails', cashapp: '$miatran', zelle: 'mia.tran@gmail.com', vlinkpay: 'VLP-8842-MT' }, status: 'Active', flowType: 'Direct Addition' },
+          { id: '2', fullName: 'Vivian Le', nickname: 'Vivian L.', position: 'Acrylic Specialist', avatar: '', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '', cashapp: '$vivianle', zelle: '', vlinkpay: 'VLP-7629-VL' }, status: 'Active', flowType: 'Direct Addition' },
+          { id: '3', fullName: 'Ashley Park', nickname: 'Ashley P.', position: 'Pedicure Lead', avatar: '', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '@ashleypark', cashapp: '', zelle: 'ashley.p@gmail.com', vlinkpay: 'VLP-5521-AP' }, status: 'Active', flowType: 'Direct Addition' },
+          { id: '4', fullName: 'Hanna Nguyen', nickname: 'Hanna N.', position: 'Nail Art Designer', avatar: '', isActive: false, showInTipsFlow: true, paymentAccounts: { venmo: '@hanna-art', cashapp: '', zelle: '', vlinkpay: 'VLP-1148-HN' }, status: 'Inactive', flowType: 'Direct Addition' }
+        ],
+        touchPoints: [
+          { id: 'tp-main', name: 'Business Main Lobby QR', type: 'Business Main' },
+          { id: 'tp-front', name: 'Reception Front Desk', type: 'Front Desk' },
+          { id: 'tp-t1', name: 'Service Chair 01', type: 'Table QR' },
+          { id: 'tp-t2', name: 'Service Chair 02', type: 'Table QR' },
+        ]
+      }
+    }
+
+    try {
+      let staffList = parsedActive.staffList || []
+      
+      // Find existing index or append
+      const existingIdx = staffList.findIndex(s => s.id === inviteData?.id || s.email === email || s.phone === phone)
+      if (existingIdx !== -1) {
+        const oldId = staffList[existingIdx].id
+        const newId = finalStaffMember.id
+
+        staffList[existingIdx] = {
+          ...staffList[existingIdx],
+          ...finalStaffMember,
+          id: newId
+        }
+        // Update the local staff ID for the success message
+        setStaffId(newId)
+
+        // Update touchpoints matching oldId to newId
+        if (parsedActive.touchPoints?.length) {
+          parsedActive.touchPoints = parsedActive.touchPoints.map(tp => {
+            if (tp.staffId === oldId) {
+              return {
+                ...tp,
+                id: tp.id === `tp-staff-${oldId}` ? `tp-staff-${newId}` : tp.id,
+                staffId: newId
+              }
+            }
+            return tp
+          })
+        }
+      } else {
+        staffList.push(finalStaffMember)
+      }
+
+      parsedActive.staffList = staffList
+      
+      // We do NOT auto-generate touchpoint QR codes here anymore, because they are Pending Acceptance.
+      // Touchpoint will be generated upon manual acceptance by the merchant.
+
+      localStorage.setItem('nexora_merchant_setup', JSON.stringify(parsedActive))
+      sessionStorage.setItem('nexora_merchant_setup', JSON.stringify(parsedActive))
+
+      // Add notification to merchant
+      const savedNotifications = localStorage.getItem('nexora_notifications')
+      let notis = []
+      if (savedNotifications) {
+        try {
+          notis = JSON.parse(savedNotifications)
+        } catch (e) {}
+      }
+      const newNoti = {
+        id: `noti-join-${finalStaffMember.id}-${Date.now()}`,
+        type: 'feedback_alert',
+        title: currentLanguage === 'vi' ? 'Yêu cầu gia nhập mới' : 'New Join Request',
+        message: currentLanguage === 'vi'
+          ? `Thợ ${finalStaffMember.fullName} (${finalStaffMember.position}) đã gửi yêu cầu liên kết với tiệm của bạn.`
+          : `Technician ${finalStaffMember.fullName} (${finalStaffMember.position}) requested to link with your salon.`,
+        time: currentLanguage === 'vi' ? 'Vừa xong' : 'Just now',
+        read: false,
+        linkTab: 'staff'
+      }
+      notis = [newNoti, ...notis]
+      localStorage.setItem('nexora_notifications', JSON.stringify(notis))
+      sessionStorage.setItem('nexora_notifications', JSON.stringify(notis))
+    } catch (e) {
+      console.error('Failed to update staff database in wizard', e)
     }
 
     setStep(5)

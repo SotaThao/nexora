@@ -7,14 +7,16 @@ import { LanguageProvider } from '../../src/contexts/LanguageContext'
 describe('StaffRegistrationWizard Component Unit Tests', () => {
   beforeEach(() => {
     localStorage.clear()
+    sessionStorage.clear()
     
-    // Set up a mock merchant configuration in localStorage to simulate linking
+    // Set up a mock merchant configuration in localStorage/sessionStorage to simulate linking
     const mockSetup = {
       businessInfo: { name: 'Golden Glow Nail Spa' },
       staffList: [],
       touchPoints: []
     }
     localStorage.setItem('nexora_merchant_setup', JSON.stringify(mockSetup))
+    sessionStorage.setItem('nexora_merchant_setup', JSON.stringify(mockSetup))
   })
 
   const mockInvite = {
@@ -262,4 +264,96 @@ describe('StaffRegistrationWizard Component Unit Tests', () => {
     fireEvent.change(referralInput, { target: { value: 'custom-salon-referral' } })
     expect(referralInput).toHaveValue('custom-salon-referral')
   })
+
+  it('updates temporary merchant-assigned ID "1" to a valid Staff Code format and re-maps touchpoints', () => {
+    // 1. Setup mock setup in localStorage with a temporary ID '1' and a matching touchpoint
+    const mockSetup = {
+      businessInfo: { name: 'Golden Glow Nail Spa' },
+      staffList: [
+        {
+          id: '1',
+          fullName: 'Lisa Tran',
+          nickname: 'Lisa T.',
+          position: 'Nail Technician',
+          email: 'lisa@example.com',
+          phone: '408-555-2345',
+          status: 'Pending Setup',
+          isActive: false
+        }
+      ],
+      touchPoints: [
+        {
+          id: 'tp-staff-1',
+          name: 'Personal QR - Lisa T.',
+          type: 'Staff QR',
+          staffId: '1',
+          staffName: 'Lisa T.'
+        }
+      ]
+    }
+    localStorage.setItem('nexora_merchant_setup', JSON.stringify(mockSetup))
+    sessionStorage.setItem('nexora_merchant_setup', JSON.stringify(mockSetup))
+
+    const testInvite = {
+      id: '1',
+      name: 'Lisa Tran',
+      email: 'lisa@example.com',
+      phone: '408-555-2345',
+      role: 'Nail Technician',
+      biz: 'Golden Glow Nail Spa'
+    }
+
+    render(
+      <LanguageProvider>
+        <StaffRegistrationWizard inviteData={testInvite} onReturnToMerchant={vi.fn()} />
+      </LanguageProvider>
+    )
+
+    // Step 0: Welcome
+    fireEvent.click(screen.getByRole('button', { name: /Accept Invite/i }))
+
+    // Step 1: Register (fill password)
+    fireEvent.change(screen.getByPlaceholderText('••••••••'), { target: { value: 'password123' } })
+    fireEvent.click(screen.getByRole('button', { name: /Continue|Next/i }))
+
+    // Step 1 - Stage B: OTP
+    fireEvent.click(screen.getByRole('button', { name: /Auto-fill/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Verify & Activate/i }))
+
+    // Step 2: Profile
+    fireEvent.click(screen.getByRole('button', { name: /Next/i }))
+
+    // Step 3: Payments
+    fireEvent.click(screen.getByRole('button', { name: /Save & Activate/i }))
+
+    // Step 5: Success
+    expect(screen.getByText('Join Request Submitted!')).toBeInTheDocument()
+    
+    // Verify that the Personal Payout ID shown is a valid Staff Code and not '1'
+    const successTitle = screen.getByText('Personal Payout ID')
+    expect(successTitle).toBeInTheDocument()
+    const codeElement = successTitle.nextElementSibling
+    expect(codeElement.textContent).toContain('NEX-STAFF-')
+    expect(codeElement.textContent).not.toBe('1')
+
+    const newGeneratedId = codeElement.textContent.trim()
+
+    // Verify localStorage has been updated correctly
+    const savedSetup = JSON.parse(localStorage.getItem('nexora_merchant_setup'))
+    
+    // The staff member with ID '1' should no longer exist
+    expect(savedSetup.staffList.find(s => s.id === '1')).toBeUndefined()
+    
+    // Instead, they should have the new generated ID
+    const updatedStaff = savedSetup.staffList.find(s => s.id === newGeneratedId)
+    expect(updatedStaff).toBeDefined()
+    expect(updatedStaff.fullName).toBe('Lisa Tran')
+    expect(updatedStaff.status).toBe('Pending Acceptance')
+
+    // The touchpoint should be updated to point to the new ID
+    const updatedTp = savedSetup.touchPoints.find(tp => tp.staffId === newGeneratedId)
+    expect(updatedTp).toBeDefined()
+    expect(updatedTp.id).toBe(`tp-staff-${newGeneratedId}`)
+  })
 })
+
