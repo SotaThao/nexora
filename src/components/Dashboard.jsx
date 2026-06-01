@@ -2109,15 +2109,16 @@ function StaffView({
   onApproveClick,
   onAdd, 
   onEdit, 
+  onDelete, 
+  onQr, 
+  onToggle, 
+  onToggleTipsFlow, 
+  onViewDetail,
+  onLinkStaff,
   onInviteStaff,
-  onDelete,
-  onToggleActive,
-  onToggleShowInTipsFlow,
-  onViewStaffDetail,
   businessName,
-  verificationStatus,
-  onBlockedFeatureClick,
-  onOpenInviteShare
+  onAcceptJoin,
+  onDeclineJoin
 }) {
   const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
@@ -2440,6 +2441,7 @@ function StaffView({
                 <th className="px-5 py-3">{t('staff_invite.col_flow') || 'Flow'}</th>
                 <th className="px-5 py-3">{t('setup.linked_wallets') || 'Payment Setup'}</th>
                 <th className="px-5 py-3">{t('dashboard.activity_log.col_status') || 'Status'}</th>
+                <th className="px-5 py-3">{currentLanguage === 'vi' ? 'Tips Flow' : 'Tips Flow'}</th>
                 <th className="px-5 py-3 text-right">{t('dashboard.top_touchpoints.manage') || 'Actions'}</th>
               </tr>
             </thead>
@@ -2515,6 +2517,26 @@ function StaffView({
                       )}
                     </td>
 
+                    <td className="px-5 py-4">
+                      {!isPending && (
+                        <button 
+                          onClick={() => onToggleTipsFlow(member.id)} 
+                          className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase border transition ${
+                            member.showInTipsFlow !== false 
+                              ? 'bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100' 
+                              : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+                          }`}
+                        >
+                          {member.showInTipsFlow !== false 
+                            ? (currentLanguage === 'vi' ? 'Hiển thị' : 'Show') 
+                            : (currentLanguage === 'vi' ? 'Ẩn' : 'Hide')}
+                        </button>
+                      )}
+                      {isPending && (
+                        <span className="text-[10px] text-slate-400 font-bold italic">-</span>
+                      )}
+                    </td>
+
                     <td className="px-5 py-4 text-right">
                       {isPendingSetup && (
                         <div className="flex justify-end gap-2">
@@ -2549,9 +2571,6 @@ function StaffView({
 
                       {!isPending && (
                         <div className="flex justify-end gap-1.5">
-                          <IconButton label={t('common.tips_flow')} onClick={() => onToggleTipsFlow(member.id)} className={member.showInTipsFlow !== false ? "text-blue-600 hover:text-blue-700" : "text-slate-400 hover:text-slate-500"}>
-                            {member.showInTipsFlow !== false ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                          </IconButton>
                           <IconButton label={t('staff_detail.joined_gateway')} onClick={() => onViewDetail(member.id)} className="hover:text-nexoraBrand">
                             <User className="h-4 w-4" />
                           </IconButton>
