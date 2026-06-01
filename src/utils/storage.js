@@ -4,8 +4,22 @@ const isTest = typeof process !== 'undefined' && (process.env.NODE_ENV === 'test
 
 export const STORAGE_PREFIX = isTest ? '' : 'nexora_v3_'
 
+const DYNAMIC_KEYS = [
+  'nexora_merchant_setup',
+  'nexora_profile_settings',
+  'nexora_transactions',
+  'nexora_reviews',
+  'nexora_notifications',
+  'nexora_pending_accounts'
+]
+
+const memoryStore = {}
+
 export const storage = {
   getItem: (key) => {
+    if (isSupabaseConfigured && !isTest && DYNAMIC_KEYS.includes(key)) {
+      return memoryStore[key] || null
+    }
     const sessionVal = sessionStorage.getItem(STORAGE_PREFIX + key)
     if (sessionVal !== null) return sessionVal
     return localStorage.getItem(STORAGE_PREFIX + key)
@@ -22,22 +36,32 @@ export const storage = {
       }
     } catch (e) {}
 
-    sessionStorage.setItem(fullKey, valueWithTime)
-    localStorage.setItem(fullKey, valueWithTime)
-    
-    // Non-blocking sync to Supabase
-    if (isSupabaseConfigured && !isTest) {
+    if (isSupabaseConfigured && !isTest && DYNAMIC_KEYS.includes(key)) {
+      memoryStore[key] = valueWithTime
       supabaseSync.push(fullKey, valueWithTime)
+    } else {
+      sessionStorage.setItem(fullKey, valueWithTime)
+      localStorage.setItem(fullKey, valueWithTime)
+      
+      // Static keys sync (if applicable)
+      if (isSupabaseConfigured && !isTest) {
+        supabaseSync.push(fullKey, valueWithTime)
+      }
     }
   },
   removeItem: (key) => {
     const fullKey = STORAGE_PREFIX + key
-    sessionStorage.removeItem(fullKey)
-    localStorage.removeItem(fullKey)
     
-    // Non-blocking remove from Supabase
-    if (isSupabaseConfigured && !isTest) {
+    if (isSupabaseConfigured && !isTest && DYNAMIC_KEYS.includes(key)) {
+      delete memoryStore[key]
       supabaseSync.remove(fullKey)
+    } else {
+      sessionStorage.removeItem(fullKey)
+      localStorage.removeItem(fullKey)
+      
+      if (isSupabaseConfigured && !isTest) {
+        supabaseSync.remove(fullKey)
+      }
     }
   }
 }
@@ -67,14 +91,67 @@ export const initStorage = () => {
     console.log(`Nexora Storage Version upgraded to: ${STORAGE_PREFIX}. Cleared legacy data.`)
   }
 
-  // If Supabase is active, run the pulling and real-time subscribing logic
+  // If Supabase is active, run the migration, pulling, and subscribing logic
   if (isSupabaseConfigured && !isTest) {
-    console.log('Supabase detected! Syncing demo database...')
-    supabaseSync.pullAll().then(() => {
+    console.log('Supabase detected! Migrating local storage dynamic data to database and clearing browser storage...')
+    
+    // 1. Perform Migration for each dynamic key
+    DYNAMIC_KEYS.forEach(key => {
+      const fullKey = STORAGE_PREFIX + key
+      const localVal = localStorage.getItem(fullKey) || sessionStorage.getItem(fullKey)
+      if (localVal) {
+        // Populate in-memory store
+        memoryStore[key] = localVal
+        // Push to Supabase to persist in database
+        supabaseSync.push(fullKey, localVal)
+        // Clean up from native local and session storage
+        localStorage.removeItem(fullKey)
+        sessionStorage.removeItem(fullKey)
+      }
+    })
+
+    // 2. Pull remote database values to populate memoryStore for any missing keys
+    supabaseSync.pullAll().then((rows) => {
+      if (rows && rows.length) {
+        rows.forEach(row => {
+          // Skip if key doesn't belong to current version prefix
+          if (STORAGE_PREFIX && !row.id.startsWith(STORAGE_PREFIX)) return
+          
+          const rawKey = STORAGE_PREFIX ? row.id.slice(STORAGE_PREFIX.length) : row.id
+          const valueStr = typeof row.data === 'object' ? JSON.stringify(row.data) : row.data
+          
+          if (DYNAMIC_KEYS.includes(rawKey)) {
+            // Only update memory store if we don't have a newer migrated local state
+            const currentMemVal = memoryStore[rawKey]
+            let useRemote = true
+            try {
+              if (currentMemVal && valueStr) {
+                const memParsed = JSON.parse(currentMemVal)
+                const remoteParsed = JSON.parse(valueStr)
+                if (memParsed && remoteParsed && memParsed._client_updated_at && remoteParsed._client_updated_at) {
+                  if (remoteParsed._client_updated_at < memParsed._client_updated_at) {
+                    useRemote = false
+                  }
+                }
+              }
+            } catch (e) {}
+            
+            if (useRemote) {
+              memoryStore[rawKey] = valueStr
+            }
+          } else {
+            // Static key, write to native storage
+            sessionStorage.setItem(row.id, valueStr)
+            localStorage.setItem(row.id, valueStr)
+          }
+        })
+      }
+      
       // Trigger event to inform Dashboard/App to refresh their state
       window.dispatchEvent(new StorageEvent('storage', { key: null, newValue: null }))
     })
 
+    // 3. Subscribe to postgres realtime changes
     supabaseSync.subscribe((fullKey, valueStr) => {
       // Skip if key doesn't belong to current version prefix
       if (STORAGE_PREFIX && !fullKey.startsWith(STORAGE_PREFIX)) return
@@ -82,11 +159,17 @@ export const initStorage = () => {
       const rawKey = STORAGE_PREFIX ? fullKey.slice(STORAGE_PREFIX.length) : fullKey
 
       if (valueStr === null) {
-        sessionStorage.removeItem(fullKey)
-        localStorage.removeItem(fullKey)
+        if (DYNAMIC_KEYS.includes(rawKey)) {
+          delete memoryStore[rawKey]
+        } else {
+          sessionStorage.removeItem(fullKey)
+          localStorage.removeItem(fullKey)
+        }
         window.dispatchEvent(new StorageEvent('storage', { key: rawKey, newValue: null }))
       } else {
-        const localVal = localStorage.getItem(fullKey)
+        const localVal = DYNAMIC_KEYS.includes(rawKey)
+          ? memoryStore[rawKey]
+          : localStorage.getItem(fullKey)
         
         // Timestamp guard to prevent older database updates from overwriting newer local state
         try {
@@ -103,11 +186,16 @@ export const initStorage = () => {
         } catch (e) {}
 
         if (localVal !== valueStr) {
-          sessionStorage.setItem(fullKey, valueStr)
-          localStorage.setItem(fullKey, valueStr)
+          if (DYNAMIC_KEYS.includes(rawKey)) {
+            memoryStore[rawKey] = valueStr
+          } else {
+            sessionStorage.setItem(fullKey, valueStr)
+            localStorage.setItem(fullKey, valueStr)
+          }
           window.dispatchEvent(new StorageEvent('storage', { key: rawKey, newValue: valueStr }))
         }
       }
     })
   }
 }
+
