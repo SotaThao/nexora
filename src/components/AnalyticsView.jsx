@@ -10,7 +10,12 @@ import {
   Zap
 } from 'lucide-react';
 
-export default function AnalyticsView({ transactions = [], staff = [], touchpoints = [] }) {
+export default function AnalyticsView({ 
+  transactions = [], 
+  staff = [], 
+  touchpoints = [],
+  processingFee = 3.0
+}) {
   const { t } = useTranslation();
   const [hoverIndex, setHoverIndex] = useState(null);
   const chartRef = useRef(null);
@@ -30,12 +35,12 @@ export default function AnalyticsView({ transactions = [], staff = [], touchpoin
   }, [totalVolume, totalCount]);
 
   const feesAvoided = useMemo(() => {
-    // 3.00% estimated credit card fee avoided by direct P2P routing
+    // estimated credit card fee avoided by direct P2P routing based on processingFee
     const directTips = transactions
       .filter(tx => ['Zelle', 'Cash App', 'Venmo', 'VLINKPAY'].includes(tx.paymentMethod))
       .reduce((sum, tx) => sum + (tx.amount || 0), 0);
-    return directTips * 0.03;
-  }, [transactions]);
+    return directTips * (processingFee / 100);
+  }, [transactions, processingFee]);
 
   // 2. Staff performance leaderboard
   const staffLeaderboard = useMemo(() => {
@@ -215,6 +220,9 @@ export default function AnalyticsView({ transactions = [], staff = [], touchpoin
           <div>
             <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">{t('dashboard.analytics.kpi.fees_avoided') || 'Phí Xử Lý Tránh Được'}</small>
             <h3 className="mt-1 text-2xl font-black text-emerald-600 dark:text-emerald-400">{formatUSD(feesAvoided)}</h3>
+            <span className="mt-1 block text-[10px] text-mutedGrey dark:text-slate-400">
+              {(t('dashboard.tips.savings.fees_avoided_sub') || 'Ước tính mức 3% phí thẻ').replace('3%', `${processingFee}%`)}
+            </span>
           </div>
           <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
             <Zap className="h-5 w-5" />

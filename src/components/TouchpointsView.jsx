@@ -51,10 +51,14 @@ export default function TouchpointsView({
   devices = [],
   onAddDevice,
   onDeleteDevice,
-  onToggleDeviceStatus
+  onToggleDeviceStatus,
+  activeSubTab: propActiveSubTab,
+  onTabChange
 }) {
   const { t } = useTranslation()
-  const [activeSubTab, setActiveSubTab] = useState('stations') // 'stations' or 'devices'
+  const [localActiveSubTab, setLocalActiveSubTab] = useState('stations') // 'stations' or 'devices'
+  const activeSubTab = propActiveSubTab !== undefined ? propActiveSubTab : localActiveSubTab
+  const setActiveSubTab = onTabChange !== undefined ? onTabChange : setLocalActiveSubTab
   const [deleteConfirmId, setDeleteConfirmId] = useState(null)
   
   // Local state for the Add Touchpoint form
@@ -285,9 +289,9 @@ export default function TouchpointsView({
                       </div>
                     )}
                     {isPointActive && (
-                      <div className="absolute inset-0 bg-nexoraBrand/80 opacity-0 group-hover/qr:opacity-100 flex flex-col items-center justify-center text-white text-[9px] font-black uppercase tracking-wider transition-opacity p-1 text-center">
-                        <QrCode className="h-4 w-4 mb-0.5" />
-                        <span>Preview</span>
+                      <div className="absolute inset-0 bg-nexoraBrand/80 opacity-0 group-hover/qr:opacity-100 flex flex-col items-center justify-center text-white text-[9px] font-black uppercase tracking-wider transition-opacity p-1 text-center gap-1 select-none">
+                        <QrCode className="h-5 w-5" />
+                        <span className="text-[9px] font-black uppercase tracking-wider">PREVIEW</span>
                       </div>
                     )}
                   </div>

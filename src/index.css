@@ -2,6 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Premium mobile-first tap highlight override */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Global text-based input focus ring styling */
+input[type="text"]:focus, 
+input[type="email"]:focus, 
+input[type="password"]:focus, 
+input[type="tel"]:focus, 
+input[type="number"]:focus, 
+input[type="search"]:focus, 
+textarea:focus,
+select:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(70, 72, 216, 0.2) !important;
+  border-color: #4648D8 !important;
+  transition: all 0.15s ease-in-out;
+}
+
+/* Keyboard focus visibility for buttons and links */
+button:focus-visible, a:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(70, 72, 216, 0.4) !important;
+}
+
 /* Premium scrollbar for the application */
 ::-webkit-scrollbar {
   width: 6px;

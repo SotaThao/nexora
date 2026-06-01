@@ -18,6 +18,10 @@ import {
   HelpCircle
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
+import { storage } from '../utils/storage'
+
+const localStorage = storage
+const sessionStorage = storage
 import CustomSelect from './CustomSelect'
 
 const DEFAULT_PROFILE = {
@@ -738,14 +742,16 @@ export default function SettingsView({
                   
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
                     <span className="text-nexoraMuted font-bold">Email:</span>
-                    <span className="text-nexoraText font-extrabold truncate" title={profile.email}>{profile.email}</span>
-                    <button
-                      type="button"
-                      onClick={() => showToast(currentLanguage === 'vi' ? 'Chức năng thay đổi email đang được phát triển.' : 'Email modification is currently under development.')}
-                      className="text-blue-500 hover:text-blue-600 font-bold text-[10px] uppercase hover:underline ml-2"
-                    >
-                      Change
-                    </button>
+                    <div className="flex items-center gap-1 self-end sm:self-auto min-w-0">
+                      <span className="text-nexoraText font-extrabold truncate" title={profile.email}>{profile.email}</span>
+                      <button
+                        type="button"
+                        onClick={() => showToast(currentLanguage === 'vi' ? 'Chức năng thay đổi email đang được phát triển.' : 'Email modification is currently under development.')}
+                        className="text-blue-500 hover:text-blue-600 font-bold text-[10px] uppercase hover:underline ml-2 shrink-0"
+                      >
+                        Change
+                      </button>
+                    </div>
                   </div>
 
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">

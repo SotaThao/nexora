@@ -1,12 +1,18 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { 
   Sparkles, Building2, Link2, Users, QrCode, Download, 
   ArrowRight, ArrowLeft, Upload, Plus, Trash2, CheckCircle2, 
   AlertTriangle, Mail, Phone, Globe, Wallet, ShieldCheck, 
-  MapPin, Clock, Check, Eye, LogIn, Scissors, Edit2, Camera, FolderOpen, X, HelpCircle
+  MapPin, Clock, Check, Eye, LogIn, Scissors, Edit2, Camera, FolderOpen, X, HelpCircle,
+  Search, ChevronDown
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
+import { storage } from '../utils/storage'
+
+const localStorage = storage
+const sessionStorage = storage
 import CustomSelect from './CustomSelect'
+import CountryCodeSelect, { parsePhone } from './CountryCodeSelect'
 
 // Helper to render text with styled star rating symbols (★) in luxuryGold and 4px space
 export function renderTextWithGoldStars(text) {
@@ -50,7 +56,7 @@ const DEMO_LINKS = {
 
 const DEMO_STAFF = [
   {
-    id: '1',
+    id: 'NEX-STAFF-MIA0123',
     fullName: 'Mia Tran',
     nickname: 'Mia T.',
     position: 'Gel-X Artist',
@@ -62,11 +68,11 @@ const DEMO_STAFF = [
       venmo: '@mia-nails',
       cashapp: '$miaglow',
       zelle: 'mia.tran@gmail.com',
-      vlinkpay: ''
+      vlinkpay: 'VLP-0123-MIA'
     }
   },
   {
-    id: '2',
+    id: 'NEX-STAFF-VL8893',
     fullName: 'Vivian Le',
     nickname: 'Vivian L.',
     position: 'Acrylic Specialist',
@@ -82,7 +88,7 @@ const DEMO_STAFF = [
     }
   },
   {
-    id: '3',
+    id: 'NEX-STAFF-ASH0155',
     fullName: 'Ashley Park',
     nickname: 'Ashley P.',
     position: 'Pedicure Lead',
@@ -94,11 +100,11 @@ const DEMO_STAFF = [
       venmo: '@ashley-pedi',
       cashapp: '',
       zelle: 'ashley@glownails.com',
-      vlinkpay: ''
+      vlinkpay: 'VLP-0155-ASH'
     }
   },
   {
-    id: '4',
+    id: 'NEX-STAFF-HN1148',
     fullName: 'Hanna Nguyen',
     nickname: 'Hanna Ng.',
     position: 'Nail Art Designer',
@@ -277,6 +283,7 @@ export default function SetupWizard({
     vlinkpay: '',
     payoutConfigs: { ...DEFAULT_PAYOUT_CONFIGS }
   })
+  const newStaffPhoneParsed = parsePhone(newStaff.phone || '')
 
   // Payout Sub-modal States
   const [payoutSetupOpen, setPayoutSetupOpen] = useState(false)
@@ -1108,7 +1115,7 @@ export default function SetupWizard({
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 gap-4">
                         <div>
                           <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-1">{t('setup.staff_position')}</label>
                           <input 
@@ -1119,19 +1126,27 @@ export default function SetupWizard({
                             onChange={(e) => setNewStaff({ ...newStaff, position: e.target.value })}
                           />
                         </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-1">{t('setup.staff_phone') || 'Phone Number'}</label>
-                          <input 
-                            type="text"
-                            placeholder={t('setup.staff_phone_placeholder') || 'e.g., 407-555-0123'}
-                            className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg px-3 py-2 text-sm text-nexoraText focus:outline-none transition-all"
-                            value={newStaff.phone}
-                            onChange={(e) => setNewStaff({ ...newStaff, phone: e.target.value })}
-                          />
-                        </div>
                       </div>
 
-                      <div className="grid grid-cols-1 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-1">{t('setup.staff_phone') || 'Phone Number'}</label>
+                          <div className="flex rounded-lg shadow-sm">
+                            <CountryCodeSelect
+                              value={newStaffPhoneParsed.countryCode}
+                              onChange={(newCode) => {
+                                setNewStaff({ ...newStaff, phone: `${newCode} ${newStaffPhoneParsed.nationalNumber}`.trim() })
+                              }}
+                            />
+                            <input 
+                              type="text"
+                              placeholder={t('setup.staff_phone_placeholder') || 'e.g., 407-555-0123'}
+                              className="h-10 w-full bg-nexoraCanvas border border-l-0 border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-r-lg px-3 text-sm text-nexoraText focus:outline-none transition-all min-w-0"
+                              value={newStaffPhoneParsed.nationalNumber}
+                              onChange={(e) => setNewStaff({ ...newStaff, phone: `${newStaffPhoneParsed.countryCode} ${e.target.value}`.trim() })}
+                            />
+                          </div>
+                        </div>
                         <div>
                           <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-1">{t('setup.staff_email') || 'Email Address'}</label>
                           <input 

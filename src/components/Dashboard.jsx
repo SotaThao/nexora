@@ -42,11 +42,21 @@ import {
   X,
   ChevronUp,
   ChevronDown,
-  Check
+  Check,
+  Link,
+  Copy,
+  Building,
+  Send,
+  Maximize2
 } from 'lucide-react'
 import StaffDetailView from './StaffDetailView'
 import { useTranslation } from '../contexts/LanguageContext'
+import { storage } from '../utils/storage'
+
+const localStorage = storage
+const sessionStorage = storage
 import CustomSelect from './CustomSelect'
+import CountryCodeSelect, { parsePhone } from './CountryCodeSelect'
 import SettingsView from './SettingsView'
 import TipsView from './TipsView'
 import TouchpointsView from './TouchpointsView'
@@ -180,10 +190,63 @@ const getPayoutConfigsFromMember = (member) => {
   
   return configs
 }
+const MOCK_NEXORA_STAFF_PROFILES = {
+  'NEX-STAFF-ANNA0921': {
+    fullName: 'Anna Nguyen',
+    nickname: 'Anna N.',
+    phone: '(713) 555-1234',
+    email: 'anna@example.com',
+    position: 'Nail Technician',
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200&h=200',
+    vlinkpayId: 'VLP-0921-ANNA',
+    payoutConfigs: {
+      zelle: { enabled: true, value: '(713) 555-1234', qrCode: '', accountName: 'Anna Nguyen' },
+      cashapp: { enabled: true, value: '$annanais', qrCode: '', accountName: 'Anna Nguyen' },
+      venmo: { enabled: true, value: '@annanais', qrCode: '', accountName: 'Anna Nguyen' },
+      bankwire: { enabled: false, value: '', qrCode: '', accountName: '' },
+      paypal: { enabled: false, value: '', qrCode: '', accountName: '' },
+      applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
+    }
+  },
+  'NEX-STAFF-LISA1102': {
+    fullName: 'Lisa Tran',
+    nickname: 'Lisa T.',
+    phone: '(408) 555-2345',
+    email: 'lisa@example.com',
+    position: 'Nail Tech',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200&h=200',
+    vlinkpayId: 'VLP-1102-LISA',
+    payoutConfigs: {
+      venmo: { enabled: true, value: '@lisatran-nails', qrCode: '', accountName: 'Lisa Tran' },
+      cashapp: { enabled: true, value: '$lisatran', qrCode: '', accountName: 'Lisa Tran' },
+      zelle: { enabled: true, value: 'lisa@example.com', qrCode: '', accountName: 'Lisa Tran' },
+      bankwire: { enabled: false, value: '', qrCode: '', accountName: '' },
+      paypal: { enabled: false, value: '', qrCode: '', accountName: '' },
+      applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
+    }
+  },
+  'NEX-STAFF-HN1148': {
+    fullName: 'Hanna Nguyen',
+    nickname: 'Hanna Ng.',
+    phone: '(407) 555-4567',
+    email: 'hanna@example.com',
+    position: 'Nail Art Designer',
+    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200&h=200',
+    vlinkpayId: 'VLP-1148-HN',
+    payoutConfigs: {
+      venmo: { enabled: true, value: '@hanna-art', qrCode: '', accountName: 'Hanna Nguyen' },
+      zelle: { enabled: true, value: 'hanna@example.com', qrCode: '', accountName: 'Hanna Nguyen' },
+      cashapp: { enabled: false, value: '', qrCode: '', accountName: '' },
+      bankwire: { enabled: false, value: '', qrCode: '', accountName: '' },
+      paypal: { enabled: false, value: '', qrCode: '', accountName: '' },
+      applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
+    }
+  }
+}
 
 const INITIAL_STAFF = [
   {
-    id: '1',
+    id: 'NEX-STAFF-MIA0123',
     fullName: 'Mia Tran',
     nickname: 'Mia T.',
     position: 'Gel-X Artist',
@@ -191,10 +254,10 @@ const INITIAL_STAFF = [
     showInTipsFlow: true,
     phone: '407-555-0123',
     email: 'mia.tran@gmail.com',
-    paymentAccounts: { venmo: '@mia-nails', cashapp: '$miaglow', zelle: 'mia.tran@gmail.com', vlinkpay: '' }
+    paymentAccounts: { venmo: '@mia-nails', cashapp: '$miaglow', zelle: 'mia.tran@gmail.com', vlinkpay: 'VLP-0123-MIA' }
   },
   {
-    id: '2',
+    id: 'NEX-STAFF-VL8893',
     fullName: 'Vivian Le',
     nickname: 'Vivian L.',
     position: 'Acrylic Specialist',
@@ -205,7 +268,7 @@ const INITIAL_STAFF = [
     paymentAccounts: { venmo: '', cashapp: '$vivianle', zelle: '407-555-0199', vlinkpay: 'VLP-8893-VL' }
   },
   {
-    id: '3',
+    id: 'NEX-STAFF-ASH0155',
     fullName: 'Ashley Park',
     nickname: 'Ashley P.',
     position: 'Pedicure Lead',
@@ -213,10 +276,10 @@ const INITIAL_STAFF = [
     showInTipsFlow: true,
     phone: '407-555-0155',
     email: 'ashley@glownails.com',
-    paymentAccounts: { venmo: '@ashley-pedi', cashapp: '', zelle: 'ashley@glownails.com', vlinkpay: '' }
+    paymentAccounts: { venmo: '@ashley-pedi', cashapp: '', zelle: 'ashley@glownails.com', vlinkpay: 'VLP-0155-ASH' }
   },
   {
-    id: '4',
+    id: 'NEX-STAFF-HN1148',
     fullName: 'Hanna Nguyen',
     nickname: 'Hanna Ng.',
     position: 'Nail Art Designer',
@@ -229,52 +292,52 @@ const INITIAL_STAFF = [
 ]
 
 const INITIAL_TRANSACTIONS = [
-  { id: 'TX-2042', dateTime: '2026-05-25 14:32', amount: 28, staffName: 'Mia T.', staffId: '1', touchpoint: 'Manicure Station 03', paymentMethod: 'Venmo', status: 'Success' },
-  { id: 'TX-2041', dateTime: '2026-05-25 13:10', amount: 35, staffName: 'Vivian L.', staffId: '2', touchpoint: 'Front Desk', paymentMethod: 'VLINKPAY', status: 'Success' },
-  { id: 'TX-2040', dateTime: '2026-05-25 11:05', amount: 22, staffName: 'Ashley P.', staffId: '3', touchpoint: 'Pedicure Chair 02', paymentMethod: 'Cash App', status: 'Success' },
-  { id: 'TX-2039', dateTime: '2026-05-24 17:45', amount: 30, staffName: 'Vivian L.', staffId: '2', touchpoint: 'Manicure Station 01', paymentMethod: 'Zelle', status: 'Success' },
-  { id: 'TX-2038', dateTime: '2026-05-24 15:20', amount: 18, staffName: 'Mia T.', staffId: '1', touchpoint: 'Receipt QR', paymentMethod: 'Venmo', status: 'Success' },
-  { id: 'TX-2037', dateTime: '2026-05-23 10:15', amount: 24, staffName: 'Ashley P.', staffId: '3', touchpoint: 'VIP Pedicure Room', paymentMethod: 'VLINKPAY', status: 'Success' },
-  { id: 'TX-2036', dateTime: '2026-05-24 13:20', amount: 25, staffName: 'Hanna Ng.', staffId: '4', touchpoint: 'Nail Art Station 02', paymentMethod: 'Venmo', status: 'Success' },
-  { id: 'TX-2035', dateTime: '2026-05-24 14:05', amount: 24, staffName: 'Vivian L.', staffId: '2', touchpoint: 'Acrylic Station 01', paymentMethod: 'Cash App', status: 'Success' },
-  { id: 'TX-2034', dateTime: '2026-05-24 11:15', amount: 45, staffName: 'Mia T.', staffId: '1', touchpoint: 'Manicure Station 03', paymentMethod: 'Zelle', status: 'Success' },
-  { id: 'TX-2033', dateTime: '2026-05-24 09:30', amount: 30, staffName: 'Ashley P.', staffId: '3', touchpoint: 'Pedicure Chair 02', paymentMethod: 'Venmo', status: 'Success' },
-  { id: 'TX-2032', dateTime: '2026-05-23 17:10', amount: 15, staffName: 'Hanna Ng.', staffId: '4', touchpoint: 'Nail Art Station 02', paymentMethod: 'VLINKPAY', status: 'Success' },
-  { id: 'TX-2031', dateTime: '2026-05-23 15:50', amount: 40, staffName: 'Vivian L.', staffId: '2', touchpoint: 'Front Desk', paymentMethod: 'Venmo', status: 'Success' },
-  { id: 'TX-2030', dateTime: '2026-05-23 16:40', amount: 32, staffName: 'Mia T.', staffId: '1', touchpoint: 'Receipt QR', paymentMethod: 'VLINKPAY', status: 'Success' },
-  { id: 'TX-2029', dateTime: '2026-05-23 14:25', amount: 18, staffName: 'Ashley P.', staffId: '3', touchpoint: 'VIP Pedicure Room', paymentMethod: 'Zelle', status: 'Success' },
-  { id: 'TX-2028', dateTime: '2026-05-23 11:05', amount: 30, staffName: 'Hanna Ng.', staffId: '4', touchpoint: 'Front Desk', paymentMethod: 'Zelle', status: 'Success' },
-  { id: 'TX-2027', dateTime: '2026-05-23 10:30', amount: 28, staffName: 'Vivian L.', staffId: '2', touchpoint: 'Acrylic Station 01', paymentMethod: 'VLINKPAY', status: 'Success' },
-  { id: 'TX-2026', dateTime: '2026-05-22 13:10', amount: 25, staffName: 'Mia T.', staffId: '1', touchpoint: 'Manicure Station 03', paymentMethod: 'Venmo', status: 'Success' },
-  { id: 'TX-2025', dateTime: '2026-05-22 11:50', amount: 35, staffName: 'Ashley P.', staffId: '3', touchpoint: 'Pedicure Chair 02', paymentMethod: 'Cash App', status: 'Success' },
-  { id: 'TX-2024', dateTime: '2026-05-22 16:30', amount: 22, staffName: 'Hanna Ng.', staffId: '4', touchpoint: 'Nail Art Station 02', paymentMethod: 'Venmo', status: 'Success' },
-  { id: 'TX-2023', dateTime: '2026-05-22 15:15', amount: 32, staffName: 'Vivian L.', staffId: '2', touchpoint: 'Front Desk', paymentMethod: 'Zelle', status: 'Success' },
-  { id: 'TX-2022', dateTime: '2026-05-22 09:45', amount: 38, staffName: 'Mia T.', staffId: '1', touchpoint: 'Receipt QR', paymentMethod: 'Cash App', status: 'Success' },
-  { id: 'TX-2021', dateTime: '2026-05-21 17:10', amount: 28, staffName: 'Ashley P.', staffId: '3', touchpoint: 'VIP Pedicure Room', paymentMethod: 'Zelle', status: 'Success' },
-  { id: 'TX-2020', dateTime: '2026-05-21 15:45', amount: 18, staffName: 'Hanna Ng.', staffId: '4', touchpoint: 'Front Desk', paymentMethod: 'Cash App', status: 'Success' },
-  { id: 'TX-2019', dateTime: '2026-05-21 16:00', amount: 15, staffName: 'Vivian L.', staffId: '2', touchpoint: 'Acrylic Station 01', paymentMethod: 'Venmo', status: 'Success' },
-  { id: 'TX-2018', dateTime: '2026-05-21 14:20', amount: 50, staffName: 'Mia T.', staffId: '1', touchpoint: 'Manicure Station 03', paymentMethod: 'Venmo', status: 'Success' },
-  { id: 'TX-2017', dateTime: '2026-05-21 10:05', amount: 20, staffName: 'Ashley P.', staffId: '3', touchpoint: 'Pedicure Chair 02', paymentMethod: 'Venmo', status: 'Success' },
-  { id: 'TX-2016', dateTime: '2026-05-20 12:20', amount: 35, staffName: 'Hanna Ng.', staffId: '4', touchpoint: 'Nail Art Station 02', paymentMethod: 'VLINKPAY', status: 'Success' },
-  { id: 'TX-2015', dateTime: '2026-05-20 14:10', amount: 42, staffName: 'Vivian L.', staffId: '2', touchpoint: 'Front Desk', paymentMethod: 'VLINKPAY', status: 'Success' },
-  { id: 'TX-2014', dateTime: '2026-05-20 11:30', amount: 22, staffName: 'Mia T.', staffId: '1', touchpoint: 'Receipt QR', paymentMethod: 'Zelle', status: 'Success' },
-  { id: 'TX-2012', dateTime: '2026-05-19 14:50', amount: 26, staffName: 'Hanna Ng.', staffId: '4', touchpoint: 'Front Desk', paymentMethod: 'Zelle', status: 'Success' }
+  { id: 'TX-2042', dateTime: '2026-05-25 14:32', amount: 28, staffName: 'Mia T.', staffId: 'NEX-STAFF-MIA0123', touchpoint: 'Manicure Station 03', paymentMethod: 'Venmo', status: 'Success' },
+  { id: 'TX-2041', dateTime: '2026-05-25 13:10', amount: 35, staffName: 'Vivian L.', staffId: 'NEX-STAFF-VL8893', touchpoint: 'Front Desk', paymentMethod: 'VLINKPAY', status: 'Success' },
+  { id: 'TX-2040', dateTime: '2026-05-25 11:05', amount: 22, staffName: 'Ashley P.', staffId: 'NEX-STAFF-ASH0155', touchpoint: 'Pedicure Chair 02', paymentMethod: 'Cash App', status: 'Success' },
+  { id: 'TX-2039', dateTime: '2026-05-24 17:45', amount: 30, staffName: 'Vivian L.', staffId: 'NEX-STAFF-VL8893', touchpoint: 'Manicure Station 01', paymentMethod: 'Zelle', status: 'Success' },
+  { id: 'TX-2038', dateTime: '2026-05-24 15:20', amount: 18, staffName: 'Mia T.', staffId: 'NEX-STAFF-MIA0123', touchpoint: 'Receipt QR', paymentMethod: 'Venmo', status: 'Success' },
+  { id: 'TX-2037', dateTime: '2026-05-23 10:15', amount: 24, staffName: 'Ashley P.', staffId: 'NEX-STAFF-ASH0155', touchpoint: 'VIP Pedicure Room', paymentMethod: 'VLINKPAY', status: 'Success' },
+  { id: 'TX-2036', dateTime: '2026-05-24 13:20', amount: 25, staffName: 'Hanna Ng.', staffId: 'NEX-STAFF-HN1148', touchpoint: 'Nail Art Station 02', paymentMethod: 'Venmo', status: 'Success' },
+  { id: 'TX-2035', dateTime: '2026-05-24 14:05', amount: 24, staffName: 'Vivian L.', staffId: 'NEX-STAFF-VL8893', touchpoint: 'Acrylic Station 01', paymentMethod: 'Cash App', status: 'Success' },
+  { id: 'TX-2034', dateTime: '2026-05-24 11:15', amount: 45, staffName: 'Mia T.', staffId: 'NEX-STAFF-MIA0123', touchpoint: 'Manicure Station 03', paymentMethod: 'Zelle', status: 'Success' },
+  { id: 'TX-2033', dateTime: '2026-05-24 09:30', amount: 30, staffName: 'Ashley P.', staffId: 'NEX-STAFF-ASH0155', touchpoint: 'Pedicure Chair 02', paymentMethod: 'Venmo', status: 'Success' },
+  { id: 'TX-2032', dateTime: '2026-05-23 17:10', amount: 15, staffName: 'Hanna Ng.', staffId: 'NEX-STAFF-HN1148', touchpoint: 'Nail Art Station 02', paymentMethod: 'VLINKPAY', status: 'Success' },
+  { id: 'TX-2031', dateTime: '2026-05-23 15:50', amount: 40, staffName: 'Vivian L.', staffId: 'NEX-STAFF-VL8893', touchpoint: 'Front Desk', paymentMethod: 'Venmo', status: 'Success' },
+  { id: 'TX-2030', dateTime: '2026-05-23 16:40', amount: 32, staffName: 'Mia T.', staffId: 'NEX-STAFF-MIA0123', touchpoint: 'Receipt QR', paymentMethod: 'VLINKPAY', status: 'Success' },
+  { id: 'TX-2029', dateTime: '2026-05-23 14:25', amount: 18, staffName: 'Ashley P.', staffId: 'NEX-STAFF-ASH0155', touchpoint: 'VIP Pedicure Room', paymentMethod: 'Zelle', status: 'Success' },
+  { id: 'TX-2028', dateTime: '2026-05-23 11:05', amount: 30, staffName: 'Hanna Ng.', staffId: 'NEX-STAFF-HN1148', touchpoint: 'Front Desk', paymentMethod: 'Zelle', status: 'Success' },
+  { id: 'TX-2027', dateTime: '2026-05-23 10:30', amount: 28, staffName: 'Vivian L.', staffId: 'NEX-STAFF-VL8893', touchpoint: 'Acrylic Station 01', paymentMethod: 'VLINKPAY', status: 'Success' },
+  { id: 'TX-2026', dateTime: '2026-05-22 13:10', amount: 25, staffName: 'Mia T.', staffId: 'NEX-STAFF-MIA0123', touchpoint: 'Manicure Station 03', paymentMethod: 'Venmo', status: 'Success' },
+  { id: 'TX-2025', dateTime: '2026-05-22 11:50', amount: 35, staffName: 'Ashley P.', staffId: 'NEX-STAFF-ASH0155', touchpoint: 'Pedicure Chair 02', paymentMethod: 'Cash App', status: 'Success' },
+  { id: 'TX-2024', dateTime: '2026-05-22 16:30', amount: 22, staffName: 'Hanna Ng.', staffId: 'NEX-STAFF-HN1148', touchpoint: 'Nail Art Station 02', paymentMethod: 'Venmo', status: 'Success' },
+  { id: 'TX-2023', dateTime: '2026-05-22 15:15', amount: 32, staffName: 'Vivian L.', staffId: 'NEX-STAFF-VL8893', touchpoint: 'Front Desk', paymentMethod: 'Zelle', status: 'Success' },
+  { id: 'TX-2022', dateTime: '2026-05-22 09:45', amount: 38, staffName: 'Mia T.', staffId: 'NEX-STAFF-MIA0123', touchpoint: 'Receipt QR', paymentMethod: 'Cash App', status: 'Success' },
+  { id: 'TX-2021', dateTime: '2026-05-21 17:10', amount: 28, staffName: 'Ashley P.', staffId: 'NEX-STAFF-ASH0155', touchpoint: 'VIP Pedicure Room', paymentMethod: 'Zelle', status: 'Success' },
+  { id: 'TX-2020', dateTime: '2026-05-21 15:45', amount: 18, staffName: 'Hanna Ng.', staffId: 'NEX-STAFF-HN1148', touchpoint: 'Front Desk', paymentMethod: 'Cash App', status: 'Success' },
+  { id: 'TX-2019', dateTime: '2026-05-21 16:00', amount: 15, staffName: 'Vivian L.', staffId: 'NEX-STAFF-VL8893', touchpoint: 'Acrylic Station 01', paymentMethod: 'Venmo', status: 'Success' },
+  { id: 'TX-2018', dateTime: '2026-05-21 14:20', amount: 50, staffName: 'Mia T.', staffId: 'NEX-STAFF-MIA0123', touchpoint: 'Manicure Station 03', paymentMethod: 'Venmo', status: 'Success' },
+  { id: 'TX-2017', dateTime: '2026-05-21 10:05', amount: 20, staffName: 'Ashley P.', staffId: 'NEX-STAFF-ASH0155', touchpoint: 'Pedicure Chair 02', paymentMethod: 'Venmo', status: 'Success' },
+  { id: 'TX-2016', dateTime: '2026-05-20 12:20', amount: 35, staffName: 'Hanna Ng.', staffId: 'NEX-STAFF-HN1148', touchpoint: 'Nail Art Station 02', paymentMethod: 'VLINKPAY', status: 'Success' },
+  { id: 'TX-2015', dateTime: '2026-05-20 14:10', amount: 42, staffName: 'Vivian L.', staffId: 'NEX-STAFF-VL8893', touchpoint: 'Front Desk', paymentMethod: 'VLINKPAY', status: 'Success' },
+  { id: 'TX-2014', dateTime: '2026-05-20 11:30', amount: 22, staffName: 'Mia T.', staffId: 'NEX-STAFF-MIA0123', touchpoint: 'Receipt QR', paymentMethod: 'Zelle', status: 'Success' },
+  { id: 'TX-2012', dateTime: '2026-05-19 14:50', amount: 26, staffName: 'Hanna Ng.', staffId: 'NEX-STAFF-HN1148', touchpoint: 'Front Desk', paymentMethod: 'Zelle', status: 'Success' }
 ]
 
 const INITIAL_REVIEWS = [
-  { id: 'R-1', rating: 5, comment: 'Mia shaped my Gel-X set perfectly and the chrome finish looks premium.', staffName: 'Mia T.', staffId: '1', category: 'Good (Google)', date: '2026-05-25' },
-  { id: 'R-2', rating: 5, comment: 'Vivian was fast, clean, and helped me pick a wedding color.', staffName: 'Vivian L.', staffId: '2', category: 'Good (Yelp)', date: '2026-05-25' },
-  { id: 'R-3', rating: 2, comment: 'Great polish, but I waited 20 minutes after my appointment time.', staffName: 'Ashley P.', staffId: '3', category: 'Internal Feedback', date: '2026-05-24' },
-  { id: 'R-4', rating: 4, comment: 'Pedicure was relaxing and the salon was very clean.', staffName: 'Ashley P.', staffId: '3', category: 'Good (Google)', date: '2026-05-23' },
-  { id: 'R-5', rating: 1, comment: 'My color chipped after one day. I need someone to contact me.', staffName: 'Vivian L.', staffId: '2', category: 'Internal Feedback', date: '2026-05-22' },
-  { id: 'R-6', rating: 5, comment: 'Incredible attention to detail! Best Gel-X artist in the city.', staffName: 'Mia T.', staffId: '1', category: 'Good (Yelp)', date: '2026-05-24' },
-  { id: 'R-7', rating: 5, comment: 'Vivian does the most natural looking acrylic sets!', staffName: 'Vivian L.', staffId: '2', category: 'Good (Google)', date: '2026-05-24' },
-  { id: 'R-8', rating: 5, comment: 'Ashley gives the absolute best foot massages during pedicures!', staffName: 'Ashley P.', staffId: '3', category: 'Good (Google)', date: '2026-05-24' },
-  { id: 'R-9', rating: 5, comment: 'Sofia is a master of nail art. She drew exactly what I showed her!', staffName: 'Hanna Ng.', staffId: '4', category: 'Good (Google)', date: '2026-05-24' },
-  { id: 'R-10', rating: 4, comment: 'Love the shape, Mia is very sweet. Will definitely come back.', staffName: 'Mia T.', staffId: '1', category: 'Good (Google)', date: '2026-05-22' },
-  { id: 'R-11', rating: 4, comment: 'Fast service and very friendly staff. Nice atmosphere.', staffName: 'Vivian L.', staffId: '2', category: 'Good (Google)', date: '2026-05-21' },
-  { id: 'R-12', rating: 3, comment: 'The nail art was beautiful, but the top coat was uneven.', staffName: 'Hanna Ng.', staffId: '4', category: 'Internal Feedback', date: '2026-05-21' },
-  { id: 'R-13', rating: 5, comment: 'Stunning designs and very professional service.', staffName: 'Hanna Ng.', staffId: '4', category: 'Good (Yelp)', date: '2026-05-20' }
+  { id: 'R-1', rating: 5, comment: 'Mia shaped my Gel-X set perfectly and the chrome finish looks premium.', staffName: 'Mia T.', staffId: 'NEX-STAFF-MIA0123', category: 'Good (Google)', date: '2026-05-25' },
+  { id: 'R-2', rating: 5, comment: 'Vivian was fast, clean, and helped me pick a wedding color.', staffName: 'Vivian L.', staffId: 'NEX-STAFF-VL8893', category: 'Good (Yelp)', date: '2026-05-25' },
+  { id: 'R-3', rating: 2, comment: 'Great polish, but I waited 20 minutes after my appointment time.', staffName: 'Ashley P.', staffId: 'NEX-STAFF-ASH0155', category: 'Internal Feedback', date: '2026-05-24' },
+  { id: 'R-4', rating: 4, comment: 'Pedicure was relaxing and the salon was very clean.', staffName: 'Ashley P.', staffId: 'NEX-STAFF-ASH0155', category: 'Good (Google)', date: '2026-05-23' },
+  { id: 'R-5', rating: 1, comment: 'My color chipped after one day. I need someone to contact me.', staffName: 'Vivian L.', staffId: 'NEX-STAFF-VL8893', category: 'Internal Feedback', date: '2026-05-22' },
+  { id: 'R-6', rating: 5, comment: 'Incredible attention to detail! Best Gel-X artist in the city.', staffName: 'Mia T.', staffId: 'NEX-STAFF-MIA0123', category: 'Good (Yelp)', date: '2026-05-24' },
+  { id: 'R-7', rating: 5, comment: 'Vivian does the most natural looking acrylic sets!', staffName: 'Vivian L.', staffId: 'NEX-STAFF-VL8893', category: 'Good (Google)', date: '2026-05-24' },
+  { id: 'R-8', rating: 5, comment: 'Ashley gives the absolute best foot massages during pedicures!', staffName: 'Ashley P.', staffId: 'NEX-STAFF-ASH0155', category: 'Good (Google)', date: '2026-05-24' },
+  { id: 'R-9', rating: 5, comment: 'Sofia is a master of nail art. She drew exactly what I showed her!', staffName: 'Hanna Ng.', staffId: 'NEX-STAFF-HN1148', category: 'Good (Google)', date: '2026-05-24' },
+  { id: 'R-10', rating: 4, comment: 'Love the shape, Mia is very sweet. Will definitely come back.', staffName: 'Mia T.', staffId: 'NEX-STAFF-MIA0123', category: 'Good (Google)', date: '2026-05-22' },
+  { id: 'R-11', rating: 4, comment: 'Fast service and very friendly staff. Nice atmosphere.', staffName: 'Vivian L.', staffId: 'NEX-STAFF-VL8893', category: 'Good (Google)', date: '2026-05-21' },
+  { id: 'R-12', rating: 3, comment: 'The nail art was beautiful, but the top coat was uneven.', staffName: 'Hanna Ng.', staffId: 'NEX-STAFF-HN1148', category: 'Internal Feedback', date: '2026-05-21' },
+  { id: 'R-13', rating: 5, comment: 'Stunning designs and very professional service.', staffName: 'Hanna Ng.', staffId: 'NEX-STAFF-HN1148', category: 'Good (Yelp)', date: '2026-05-20' }
 ]
 
 const INITIAL_TOUCHPOINTS = [
@@ -854,9 +917,25 @@ function DashboardSidebar({
   hasKyb = true, 
   verificationStatus = 'kyb_approved',
   onBlockedFeatureClick,
-  onLogout 
+  onLogout,
+  tipsTab = 'overview',
+  setTipsTab,
+  touchpointsTab = 'stations',
+  setTouchpointsTab
 }) {
   const { currentLanguage, setLanguage, t } = useTranslation()
+  const [isTipsExpanded, setIsTipsExpanded] = useState(activeMenu === 'tips')
+  const [isTouchpointsExpanded, setIsTouchpointsExpanded] = useState(activeMenu === 'touchpoints')
+
+  useEffect(() => {
+    if (activeMenu === 'tips') {
+      setIsTipsExpanded(true)
+      setIsTouchpointsExpanded(false)
+    } else if (activeMenu === 'touchpoints') {
+      setIsTouchpointsExpanded(true)
+      setIsTipsExpanded(false)
+    }
+  }, [activeMenu])
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col bg-nexoraSidebar px-5 py-7 text-white lg:flex">
@@ -903,7 +982,7 @@ function DashboardSidebar({
               }}
               className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
                 activeMenu === 'settings' && settingsTab === 'profile'
-                  ? 'bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] text-white shadow-sm'
+                  ? 'text-brandCyan font-extrabold'
                   : 'text-white/60 hover:bg-white/5 hover:text-white'
               }`}
             >
@@ -917,7 +996,7 @@ function DashboardSidebar({
               }}
               className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
                 activeMenu === 'settings' && settingsTab === 'kyb'
-                  ? 'bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] text-white shadow-sm'
+                  ? 'text-brandCyan font-extrabold'
                   : 'text-white/60 hover:bg-white/5 hover:text-white'
               }`}
             >
@@ -974,24 +1053,101 @@ function DashboardSidebar({
           }[id] || label
 
           return (
-            <button
-              key={id}
-              onClick={() => {
-                if (verificationStatus !== 'kyb_approved' && (id === 'tips' || id === 'devices')) {
-                  if (onBlockedFeatureClick) onBlockedFeatureClick()
-                } else {
-                  setActiveMenu(id)
-                }
-              }}
-              className={`flex h-12 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-bold transition ${
-                isActive
-                  ? 'bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] text-white shadow-lg shadow-[#2B59FF]/20'
-                  : 'text-white/70 hover:bg-white/5 hover:text-white'
-              }`}
-            >
-              <MenuIcon item={item} active={isActive} />
-              <span className="truncate">{localizedLabel}</span>
-            </button>
+            <React.Fragment key={id}>
+              <button
+                onClick={() => {
+                  if (verificationStatus !== 'kyb_approved' && (id === 'tips' || id === 'devices')) {
+                    if (onBlockedFeatureClick) onBlockedFeatureClick()
+                  } else {
+                    setActiveMenu(id)
+                    if (id === 'tips') {
+                      setIsTipsExpanded(!isTipsExpanded)
+                    }
+                    if (id === 'touchpoints') {
+                      setIsTouchpointsExpanded(!isTouchpointsExpanded)
+                    }
+                  }
+                }}
+                className={`flex h-12 w-full items-center justify-between rounded-lg px-4 text-left text-sm font-bold transition ${
+                  isActive
+                    ? 'bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] text-white shadow-lg shadow-[#2B59FF]/20'
+                    : 'text-white/70 hover:bg-white/5 hover:text-white'
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <MenuIcon item={item} active={isActive} />
+                  <span className="truncate">{localizedLabel}</span>
+                </div>
+                {(id === 'tips' || id === 'touchpoints') && (
+                  <div className="text-white/50 shrink-0">
+                    {id === 'tips' 
+                      ? (isTipsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)
+                      : (isTouchpointsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)
+                    }
+                  </div>
+                )}
+              </button>
+
+              {id === 'tips' && isTipsExpanded && (
+                <div className="ml-9 mt-1 space-y-1 border-l border-white/10 pl-3 animate-fadeIn">
+                  {[
+                    { id: 'overview', label: t('dashboard.tips.tabs.overview') || 'Overview' },
+                    { id: 'savings', label: t('dashboard.tips.tabs.savings') || 'Direct Savings' },
+                    { id: 'transactions', label: t('dashboard.tips.tabs.transactions') || 'Tip Transactions' },
+                    { id: 'payouts', label: t('dashboard.tips.tabs.payouts') || 'Staff Payouts' }
+                  ].map(sub => {
+                    const isSubActive = activeMenu === 'tips' && tipsTab === sub.id
+                    return (
+                      <button
+                        key={sub.id}
+                        type="button"
+                        onClick={() => {
+                          setActiveMenu('tips')
+                          setTipsTab(sub.id)
+                        }}
+                        className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
+                          isSubActive
+                            ? 'text-brandCyan font-extrabold'
+                            : 'text-white/60 hover:bg-white/5 hover:text-white'
+                        }`}
+                      >
+                        <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+                        <span>{sub.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+
+              {id === 'touchpoints' && isTouchpointsExpanded && (
+                <div className="ml-9 mt-1 space-y-1 border-l border-white/10 pl-3 animate-fadeIn">
+                  {[
+                    { id: 'stations', label: t('dashboard.touchpoints.tabs.stations') || 'QR Stations' },
+                    { id: 'devices', label: t('dashboard.touchpoints.tabs.devices') || 'Hardware Devices' }
+                  ].map(sub => {
+                    const isSubActive = activeMenu === 'touchpoints' && touchpointsTab === sub.id
+                    return (
+                      <button
+                        key={sub.id}
+                        type="button"
+                        onClick={() => {
+                          setActiveMenu('touchpoints')
+                          setTouchpointsTab(sub.id)
+                        }}
+                        className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
+                          isSubActive
+                            ? 'text-brandCyan font-extrabold'
+                            : 'text-white/60 hover:bg-white/5 hover:text-white'
+                        }`}
+                      >
+                        <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+                        <span>{sub.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </React.Fragment>
           )
         })}
       </nav>
@@ -1773,8 +1929,9 @@ function Overview({
                 alt="Master QR Code Preview"
                 className="h-full w-full object-contain group-hover:scale-105 transition duration-200"
               />
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white">
-                <Eye className="h-5 w-5" />
+              <div className="absolute inset-0 bg-nexoraBrand/80 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-1 text-white select-none">
+                <QrCode className="h-5 w-5" />
+                <span className="text-[9px] font-black uppercase tracking-wider">PREVIEW</span>
               </div>
             </div>
           </div>
@@ -1931,94 +2088,452 @@ function Overview({
   )
 }
 
-function StaffView({ staff, onAdd, onEdit, onDelete, onQr, onToggle, onToggleTipsFlow, onViewDetail }) {
-  const { t } = useTranslation()
+function StaffView({ 
+  staff, 
+  onAdd, 
+  onEdit, 
+  onDelete, 
+  onQr, 
+  onToggle, 
+  onToggleTipsFlow, 
+  onViewDetail,
+  onLinkStaff,
+  onInviteStaff,
+  businessName,
+  onAcceptJoin,
+  onDeclineJoin
+}) {
+  const { t, currentLanguage } = useTranslation()
+  const [activeTab, setActiveTab] = useState('link') // 'link' | 'invite'
+  const [largeJoinQrOpen, setLargeJoinQrOpen] = useState(false)
+  
+  // Option A (Link) states
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedRole, setSelectedRole] = useState('Nail Technician')
+  const [searchResult, setSearchResult] = useState(null)
+  const [searchError, setSearchError] = useState('')
+
+  // Option B (Invite) states
+  const [inviteName, setInviteName] = useState('')
+  const [inviteContact, setInviteContact] = useState('')
+  const [inviteRole, setInviteRole] = useState('Nail Technician')
+  const [inviteMethod, setInviteMethod] = useState('SMS')
+
+  // Calculate Metrics
+  const totalLinked = staff.filter(s => s.status !== 'Pending Setup' && s.status !== 'Pending Acceptance').length
+  const pendingCount = staff.filter(s => s.status === 'Pending Setup' || s.status === 'Pending Acceptance').length
+  const paymentCompleteCount = staff.filter(s => {
+    return Object.values(s.paymentAccounts || {}).some(val => val && val.trim() !== '')
+  }).length
+  const paymentCompletePct = staff.length ? Math.round((paymentCompleteCount / staff.length) * 100) : 100
+
+  // Option A Search
+  const handleSearch = () => {
+    setSearchError('')
+    setSearchResult(null)
+    const query = searchQuery.trim().toLowerCase()
+    if (!query) return
+
+    // Search inside simulated global registry
+    const match = Object.values(MOCK_NEXORA_STAFF_PROFILES).find(profile => {
+      const globalId = Object.keys(MOCK_NEXORA_STAFF_PROFILES).find(key => MOCK_NEXORA_STAFF_PROFILES[key] === profile)
+      return (
+        globalId?.toLowerCase() === query ||
+        profile.fullName.toLowerCase().includes(query) ||
+        profile.email.toLowerCase() === query ||
+        profile.phone.replace(/[^0-9]/g, '').includes(query.replace(/[^0-9]/g, ''))
+      )
+    })
+
+    if (match) {
+      const matchedId = Object.keys(MOCK_NEXORA_STAFF_PROFILES).find(key => MOCK_NEXORA_STAFF_PROFILES[key] === match)
+      setSearchResult({ ...match, id: matchedId })
+    } else {
+      setSearchError(currentLanguage === 'vi' ? 'Không tìm thấy hồ sơ nhân viên phù hợp.' : 'No staff profile found matching that criteria.')
+    }
+  }
+
+  // Option A Link Request
+  const handleLinkRequest = () => {
+    if (!searchResult) return
+    onLinkStaff(searchResult, selectedRole)
+    setSearchResult(null)
+    setSearchQuery('')
+  }
+
+  // Option B Submit Invite
+  const handleInviteSubmit = (e) => {
+    e.preventDefault()
+    if (!inviteName.trim() || !inviteContact.trim()) {
+      alert(currentLanguage === 'vi' ? 'Vui lòng điền đầy đủ Tên và phương thức liên hệ.' : 'Please enter both name and contact info.')
+      return
+    }
+    onInviteStaff(inviteName, inviteContact, inviteRole, inviteMethod)
+    setInviteName('')
+    setInviteContact('')
+  }
+
+  // Resend invite toast simulator
+  const handleResendInvite = (member) => {
+    alert(currentLanguage === 'vi' 
+      ? `Đã gửi lại link thiết lập thành công tới ${member.fullName}!` 
+      : `Setup link successfully resent to ${member.fullName}!`
+    )
+  }
+
+  // Helper to extract wallet labels
+  const getWalletBadges = (member) => {
+    const list = []
+    if (member.paymentAccounts?.zelle) list.push('Zelle')
+    if (member.paymentAccounts?.cashapp) list.push('Cash App')
+    if (member.paymentAccounts?.venmo) list.push('Venmo')
+    if (member.paymentAccounts?.vlinkpay) list.push('VLINKPAY')
+    if (member.paymentAccounts?.paypal) list.push('PayPal')
+    return list
+  }
+
   return (
-    <div className="space-y-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-xl font-extrabold text-nexoraText">{t('setup.staff_directory_title')}</h2>
-          <p className="mt-1 text-xs text-nexoraMuted">{t('setup.desc_step_2')}</p>
+    <div className="space-y-6">
+      {/* 1. Statistics KPI Cards Grid */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* KPI Card 1: Total Staff Linked */}
+        <div className="rounded-xl border border-nexoraBorder bg-white p-5 shadow-sm">
+          <small className="text-[10px] font-black uppercase text-nexoraMuted tracking-wider">
+            {t('staff_invite.total_linked') || 'Total Staff Linked'}
+          </small>
+          <div className="mt-2 flex items-baseline justify-between">
+            <h3 className="text-2xl font-black text-nexoraText">{totalLinked}</h3>
+            <span className="text-xs font-bold text-emerald-600">
+              {staff.filter(s => s.isActive).length} active today
+            </span>
+          </div>
         </div>
-        <button onClick={onAdd} className="inline-flex h-9 items-center gap-2 rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white">
-          <Plus className="h-4 w-4" />
-          {t('setup.add_staff_btn')}
-        </button>
+
+        {/* KPI Card 2: Pending Invites */}
+        <div className="rounded-xl border border-nexoraBorder bg-white p-5 shadow-sm">
+          <small className="text-[10px] font-black uppercase text-nexoraMuted tracking-wider">
+            {t('staff_invite.pending_invites') || 'Pending Invites'}
+          </small>
+          <div className="mt-2 flex items-baseline justify-between">
+            <h3 className="text-2xl font-black text-nexoraText">{pendingCount}</h3>
+            <span className="text-xs font-bold text-amber-600">
+              {staff.filter(s => s.status === 'Pending Setup').length} opened invite
+            </span>
+          </div>
+        </div>
+
+        {/* KPI Card 3: Payout Wallet Configured Complete */}
+        <div className="rounded-xl border border-nexoraBorder bg-white p-5 shadow-sm">
+          <small className="text-[10px] font-black uppercase text-nexoraMuted tracking-wider">
+            {t('staff_invite.setup_complete') || 'Payment Setup Complete'}
+          </small>
+          <div className="mt-2 flex items-baseline justify-between">
+            <h3 className="text-2xl font-black text-nexoraText">{paymentCompletePct}%</h3>
+            <span className="text-xs font-bold text-indigo-600">
+              {paymentCompleteCount} / {staff.length} staff
+            </span>
+          </div>
+        </div>
+
+        {/* KPI Card 4: Staff Self Setup Option */}
+        <div className="rounded-xl border border-nexoraBorder bg-white p-5 shadow-sm">
+          <small className="text-[10px] font-black uppercase text-nexoraMuted tracking-wider">
+            {t('staff_invite.self_setup') || 'Staff Self-Setup'}
+          </small>
+          <div className="mt-2 flex items-baseline justify-between">
+            <h3 className="text-2xl font-black text-emerald-600">Enabled</h3>
+            <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+              {t('staff_invite.recommended') || 'Recommended'}
+            </span>
+          </div>
+        </div>
       </div>
 
-      <div className="rounded-xl border border-nexoraBorder bg-white">
-        <div className="hidden grid-cols-[1.8fr_1fr_1.4fr_1fr_1.1fr_118px] gap-3 border-b border-nexoraRule px-5 py-3 text-[10px] font-extrabold uppercase text-nexoraMuted lg:grid">
-          <span>{t('setup.staff_fullname')} / {t('setup.staff_position')}</span>
-          <span>{t('setup.staff_displayname')}</span>
-          <span>{t('setup.add_staff_title') || 'Linked Wallets'}</span>
-          <span>{t('dashboard.activity_log.col_status')}</span>
-          <span>{t('common.tips_flow') || 'Tips Flow'}</span>
-          <span className="text-right">{t('dashboard.top_touchpoints.manage')}</span>
-        </div>
-        {staff.map((member) => {
-          const wallets = walletLabels(member.paymentAccounts)
-          return (
-            <div key={member.id} className="grid grid-cols-1 gap-3 border-b border-nexoraRule px-5 py-4 text-sm last:border-0 lg:grid-cols-[1.8fr_1fr_1.4fr_1fr_1.1fr_118px] lg:items-center">
-              <div className="flex items-center gap-3 cursor-pointer group" onClick={() => onViewDetail(member.id)}>
-                {member.avatar ? (
-                  <img src={member.avatar} alt="" className="h-10 w-10 rounded-full border border-nexoraBorder object-cover group-hover:opacity-85 transition" />
-                ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-50 text-sm font-extrabold text-rose-600 group-hover:bg-rose-100 transition">
-                    {member.nickname.charAt(0)}
-                  </div>
-                )}
-                <div>
-                  <div className="font-extrabold text-nexoraText group-hover:text-nexoraBrand transition">{member.fullName}</div>
-                  <div className="text-xs text-nexoraMuted">{member.position}</div>
-                </div>
-              </div>
-              <span className="font-semibold text-nexoraText">{member.nickname}</span>
-              <div className="flex flex-wrap gap-1.5">
-                {wallets.map((wallet) => (
-                  <span key={wallet} className="rounded-md bg-nexoraCanvas px-2 py-1 text-[10px] font-bold text-nexoraBrand">{wallet}</span>
-                ))}
-              </div>
-              <button onClick={() => onToggle(member.id)} className={`w-fit rounded-full px-3 py-1 text-[10px] font-extrabold ${member.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
-                {member.isActive ? t('common.active') : t('common.inactive')}
-              </button>
-              <button 
-                onClick={() => onToggleTipsFlow(member.id)} 
-                className={`w-fit rounded-full px-3 py-1 text-[10px] font-extrabold flex items-center gap-1 transition-all ${
-                  member.showInTipsFlow !== false 
-                    ? 'bg-blue-50 text-blue-700 hover:bg-blue-100' 
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                {member.showInTipsFlow !== false ? (
-                  <>
-                    <Eye className="h-3 w-3" />
-                    {t('common.show_in_tips') || 'Hiện'}
-                  </>
-                ) : (
-                  <>
-                    <EyeOff className="h-3 w-3" />
-                    {t('common.hide_in_tips') || 'Ẩn'}
-                  </>
-                )}
-              </button>
-              <div className="flex justify-end gap-1.5">
-                <IconButton label={t('staff_detail.joined_gateway')} onClick={() => onViewDetail(member.id)} className="hover:text-nexoraBrand">
-                  <User className="h-4 w-4" />
-                </IconButton>
-                <IconButton label={t('staff_detail.personal_qr')} onClick={() => onQr(member)}>
-                  <QrCode className="h-4 w-4" />
-                </IconButton>
-                <IconButton label={t('common.edit')} onClick={() => onEdit(member)}>
-                  <Edit2 className="h-4 w-4" />
-                </IconButton>
-                <IconButton label={t('common.delete')} onClick={() => onDelete(member.id)} className="hover:text-rose-600">
-                  <Trash2 className="h-4 w-4" />
-                </IconButton>
-              </div>
+      {/* 2. Salon Join Link & QR Code Card */}
+      <div className="rounded-xl border border-nexoraBorder bg-white p-5 shadow-sm flex flex-col md:flex-row items-center justify-between gap-5">
+        
+        {/* Left Side: QR Code */}
+        <div className="flex items-center gap-4 border-slate-100 border-none md:border-r pr-0 md:pr-5 shrink-0 self-stretch md:self-auto justify-center">
+          <div 
+            onClick={() => setLargeJoinQrOpen(true)}
+            className="h-20 w-20 rounded-xl bg-slate-50 border border-slate-200 p-1 flex items-center justify-center shadow-inner bg-white cursor-zoom-in transition hover:scale-105 duration-200 group relative"
+            title={currentLanguage === 'vi' ? 'Click để phóng to' : 'Click to enlarge'}
+          >
+            <img 
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`)}`}
+              alt="Scan to Join" 
+              className="h-full w-full object-contain"
+            />
+            {/* Magnifier icon overlay on hover */}
+            <div className="absolute inset-0 bg-nexoraBrand/80 rounded-xl flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-white select-none">
+              <QrCode className="h-5 w-5" />
+              <span className="text-[9px] font-black uppercase tracking-wider">PREVIEW</span>
             </div>
-          )
-        })}
+          </div>
+          <div className="text-left hidden sm:block">
+            <span className="text-[10px] font-black uppercase text-slate-700 block">
+              {currentLanguage === 'vi' ? 'MÃ QR GIA NHẬP' : 'JOIN QR CODE'}
+            </span>
+            <span className="text-[9px] text-slate-400 block mt-0.5">
+              {currentLanguage === 'vi' ? 'Quét để đăng ký nhanh' : 'Scan to join instantly'}
+            </span>
+          </div>
+        </div>
+
+        {/* Right Side: Text & Referral URL inputs */}
+        <div className="space-y-3 flex-grow min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="p-1.5 rounded-lg bg-amber-50 text-amber-600">
+              <Link className="h-4 w-4" />
+            </span>
+            <div>
+              <h4 className="text-xs font-black uppercase text-slate-800 tracking-wider">
+                {currentLanguage === 'vi' ? 'LIÊN KẾT GIA NHẬP CHO THỢ (REFERRAL LINK)' : 'TECHNICIAN JOIN LINK & REFERRAL'}
+              </h4>
+              <p className="text-[11px] text-slate-500 font-medium mt-0.5 leading-normal">
+                {currentLanguage === 'vi' 
+                  ? 'Chia sẻ liên kết này hoặc cho thợ quét mã QR để tự đăng ký/liên kết tài khoản vào tiệm.' 
+                  : 'Share this referral link or let technicians scan the QR code to self-register or link to your salon.'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-2 max-w-xl">
+            <input 
+              type="text" 
+              readOnly 
+              value={`${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`}
+              className="h-9 flex-grow bg-slate-50 border border-slate-200 rounded-lg px-3 text-xs text-slate-500 font-mono focus:outline-none"
+            />
+            <button
+              onClick={() => {
+                const url = `${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`
+                navigator.clipboard.writeText(url)
+                alert(currentLanguage === 'vi' ? 'Đã sao chép liên kết gia nhập!' : 'Join link copied to clipboard!')
+              }}
+              className="h-9 px-3.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-sm"
+            >
+              <Copy className="h-3.5 w-3.5" />
+              <span>{currentLanguage === 'vi' ? 'Sao chép' : 'Copy'}</span>
+            </button>
+          </div>
+        </div>
+
       </div>
+
+      {/* 3. Upgraded Staff Invite & Link Status Table */}
+      <div className="rounded-xl border border-nexoraBorder bg-white overflow-hidden shadow-sm">
+        <div className="px-5 py-4 border-b border-nexoraRule bg-slate-50/50 flex items-center justify-between">
+          <h3 className="text-xs font-black uppercase text-slate-700 tracking-wider">
+            {t('staff_invite.invite_status_table') || 'Staff Invite & Link Status'}
+          </h3>
+          <button 
+            onClick={onAdd}
+            className="px-4 py-2 bg-nexoraBrand text-white hover:bg-opacity-95 text-xs font-bold rounded-lg transition shadow-sm flex items-center gap-1.5"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span>{t('setup.add_staff_title') || 'Add New Staff'}</span>
+          </button>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-left text-sm">
+            <thead>
+              <tr className="bg-slate-50 text-[10px] font-extrabold uppercase text-nexoraMuted border-b border-nexoraRule">
+                <th className="px-5 py-3">{t('setup.col_staff') || 'Staff'}</th>
+                <th className="px-5 py-3">{t('staff_invite.col_flow') || 'Flow'}</th>
+                <th className="px-5 py-3">{t('setup.linked_wallets') || 'Payment Setup'}</th>
+                <th className="px-5 py-3">{t('dashboard.activity_log.col_status') || 'Status'}</th>
+                <th className="px-5 py-3 text-right">{t('dashboard.top_touchpoints.manage') || 'Actions'}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {staff.map((member) => {
+                const wallets = getWalletBadges(member)
+                const isPendingSetup = member.status === 'Pending Setup'
+                const isPendingAcceptance = member.status === 'Pending Acceptance'
+                const isPending = isPendingSetup || isPendingAcceptance
+
+                return (
+                  <tr key={member.id} className="border-b border-nexoraRule last:border-0 hover:bg-slate-50/40 transition">
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3 cursor-pointer group" onClick={() => onViewDetail(member.id)}>
+                        {member.avatar ? (
+                          <img src={member.avatar} alt="" className="h-10 w-10 rounded-full border border-nexoraBorder object-cover group-hover:opacity-85 transition" />
+                        ) : (
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-50 text-sm font-extrabold text-indigo-600 group-hover:bg-indigo-100 transition">
+                            {member.nickname.charAt(0)}
+                          </div>
+                        )}
+                        <div>
+                          <div className="font-extrabold text-nexoraText group-hover:text-nexoraBrand transition">{member.fullName}</div>
+                          <div className="text-xs text-nexoraMuted">{member.position}</div>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="px-5 py-4">
+                      <span className="text-xs text-slate-500 font-semibold">
+                        {member.flowType || (currentLanguage === 'vi' ? 'Khởi tạo trực tiếp' : 'Direct Addition')}
+                      </span>
+                    </td>
+
+                    <td className="px-5 py-4">
+                      {isPendingSetup ? (
+                        <span className="text-[10px] text-slate-400 font-bold italic">{currentLanguage === 'vi' ? 'Chưa cấu hình' : 'Pending'}</span>
+                      ) : (
+                        <div className="flex flex-wrap gap-1.5">
+                          {wallets.length > 0 ? (
+                            wallets.map((wallet) => (
+                              <span key={wallet} className="rounded px-2 py-0.5 text-[10px] font-bold bg-nexoraCanvas text-nexoraBrand border border-nexoraBrand/10">{wallet}</span>
+                            ))
+                          ) : (
+                            <span className="text-[10px] text-slate-400 font-bold italic">{currentLanguage === 'vi' ? 'Không có ví' : 'No wallets'}</span>
+                          )}
+                        </div>
+                      )}
+                    </td>
+
+                    <td className="px-5 py-4">
+                      {isPendingSetup && (
+                        <span className="inline-flex rounded-full bg-amber-50 text-amber-700 px-2.5 py-0.5 text-[10px] font-extrabold uppercase border border-amber-100">
+                          {currentLanguage === 'vi' ? 'Chờ setup' : 'Pending Setup'}
+                        </span>
+                      )}
+                      {isPendingAcceptance && (
+                        <span className="inline-flex rounded-full bg-indigo-50 text-indigo-700 px-2.5 py-0.5 text-[10px] font-extrabold uppercase border border-indigo-100">
+                          {currentLanguage === 'vi' ? 'Chờ chấp nhận' : 'Pending Acceptance'}
+                        </span>
+                      )}
+                      {!isPending && (
+                        <button 
+                          onClick={() => onToggle(member.id)} 
+                          className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase border transition ${
+                            member.isActive 
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100' 
+                              : 'bg-rose-50 text-rose-700 border-rose-100 hover:bg-rose-100'
+                          }`}
+                        >
+                          {member.isActive ? t('common.active') : t('common.inactive')}
+                        </button>
+                      )}
+                    </td>
+
+                    <td className="px-5 py-4 text-right">
+                      {isPendingSetup && (
+                        <div className="flex justify-end gap-2">
+                          <button 
+                            onClick={() => handleResendInvite(member)}
+                            className="px-2.5 py-1 text-[10px] font-extrabold border border-nexoraBorder bg-white text-nexoraText rounded hover:bg-slate-50 transition"
+                          >
+                            {t('staff_invite.action_resend') || 'Resend Invite'}
+                          </button>
+                          <IconButton label={t('common.delete')} onClick={() => onDelete(member.id)} className="hover:text-rose-600">
+                            <Trash2 className="h-4 w-4" />
+                          </IconButton>
+                        </div>
+                      )}
+
+                      {isPendingAcceptance && (
+                        <div className="flex justify-end gap-2">
+                          <button 
+                            onClick={() => onAcceptJoin && onAcceptJoin(member.id)}
+                            className="px-2.5 py-1 text-[10px] font-extrabold border border-emerald-200 bg-emerald-50 text-emerald-700 rounded hover:bg-emerald-100 transition"
+                          >
+                            {currentLanguage === 'vi' ? 'Chấp nhận' : 'Accept'}
+                          </button>
+                          <button 
+                            onClick={() => onDeclineJoin && onDeclineJoin(member.id)}
+                            className="px-2.5 py-1 text-[10px] font-extrabold border border-rose-200 bg-rose-50 text-rose-700 rounded hover:bg-rose-100 transition"
+                          >
+                            {currentLanguage === 'vi' ? 'Từ chối' : 'Decline'}
+                          </button>
+                        </div>
+                      )}
+
+                      {!isPending && (
+                        <div className="flex justify-end gap-1.5">
+                          <IconButton label={t('common.tips_flow')} onClick={() => onToggleTipsFlow(member.id)} className={member.showInTipsFlow !== false ? "text-blue-600 hover:text-blue-700" : "text-slate-400 hover:text-slate-500"}>
+                            {member.showInTipsFlow !== false ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                          </IconButton>
+                          <IconButton label={t('staff_detail.joined_gateway')} onClick={() => onViewDetail(member.id)} className="hover:text-nexoraBrand">
+                            <User className="h-4 w-4" />
+                          </IconButton>
+                          <IconButton label={t('staff_detail.personal_qr')} onClick={() => onQr(member)}>
+                            <QrCode className="h-4 w-4" />
+                          </IconButton>
+                          <IconButton label={t('common.edit')} onClick={() => onEdit(member)}>
+                            <Edit2 className="h-4 w-4" />
+                          </IconButton>
+                          <IconButton label={t('common.delete')} onClick={() => onDelete(member.id)} className="hover:text-rose-600">
+                            <Trash2 className="h-4 w-4" />
+                          </IconButton>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Large Join QR Modal */}
+      {largeJoinQrOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 cursor-zoom-out"
+          onClick={() => setLargeJoinQrOpen(false)}
+        >
+          <div 
+            className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl border border-slate-100 flex flex-col items-center cursor-default animate-scaleUp"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-full flex justify-between items-center mb-4">
+              <h3 className="text-xs font-black uppercase text-slate-800 tracking-wider">
+                {currentLanguage === 'vi' ? 'MÃ QR GIA NHẬP' : 'JOIN QR CODE'}
+              </h3>
+              <button 
+                onClick={() => setLargeJoinQrOpen(false)}
+                className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            
+            <div className="h-64 w-64 rounded-2xl bg-slate-50 border border-slate-200 p-4 flex items-center justify-center shadow-inner bg-white mb-4">
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`)}`}
+                alt="Scan to Join" 
+                className="h-full w-full object-contain"
+              />
+            </div>
+            
+            <p className="text-[11px] text-slate-500 font-medium text-center leading-relaxed max-w-xs mb-4">
+              {currentLanguage === 'vi' 
+                ? 'Cho thợ quét mã này bằng camera điện thoại để tự đăng ký hoặc liên kết tài khoản vào tiệm.' 
+                : 'Have technicians scan this QR code with their mobile camera to self-register or link accounts.'}
+            </p>
+            
+            <div className="w-full bg-slate-50 rounded-xl border border-slate-200 p-2.5 flex items-center justify-between gap-2">
+              <span className="text-[10px] text-slate-400 font-mono truncate max-w-[210px]">
+                {`${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`}
+              </span>
+              <button
+                onClick={() => {
+                  const url = `${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`
+                  navigator.clipboard.writeText(url)
+                  alert(currentLanguage === 'vi' ? 'Đã sao chép liên kết gia nhập!' : 'Join link copied to clipboard!')
+                }}
+                className="h-7 px-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[10px] font-bold transition flex items-center gap-1 shrink-0"
+              >
+                <Copy className="h-3 w-3" />
+                <span>{currentLanguage === 'vi' ? 'Sao chép' : 'Copy'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -2543,14 +3058,17 @@ function StaffModal({
   verificationStatus = 'kyb_approved',
   onBlockedFeatureClick,
   onClose, 
-  onSave 
+  onSave,
+  onOpenInviteShare
 }) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const [payoutSetupOpen, setPayoutSetupOpen] = useState(false)
   const [payoutSetupWallet, setPayoutSetupWallet] = useState('venmo')
   const [tempPayoutValues, setTempPayoutValues] = useState({ value: '', qrCode: '', accountName: '' })
 
   if (!open) return null
+
+  const phoneParsed = parsePhone(form?.phone || '')
 
   const handleAvatarChange = (event) => {
     const file = event.target.files?.[0]
@@ -2687,7 +3205,20 @@ function StaffModal({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_phone') || 'Phone Number'}</label>
-                <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.phone || ''} onChange={(event) => setForm({ ...form, phone: event.target.value })} placeholder={t('setup.staff_phone_placeholder') || 'e.g., 407-555-0123'} />
+                <div className="mt-1 flex rounded-lg shadow-sm">
+                  <CountryCodeSelect
+                    value={phoneParsed.countryCode}
+                    onChange={(newCode) => {
+                      setForm({ ...form, phone: `${newCode} ${phoneParsed.nationalNumber}`.trim() })
+                    }}
+                  />
+                  <input
+                    className="h-10 w-full rounded-r-lg border border-l-0 border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand bg-white min-w-0"
+                    value={phoneParsed.nationalNumber}
+                    onChange={(event) => setForm({ ...form, phone: `${phoneParsed.countryCode} ${event.target.value}`.trim() })}
+                    placeholder={t('setup.staff_phone_placeholder') || 'e.g., 407-555-0123'}
+                  />
+                </div>
                 {errors.phone && <p className="mt-1 text-[10px] font-bold text-rose-600">{errors.phone}</p>}
               </div>
               <div>
@@ -2770,32 +3301,83 @@ function StaffModal({
                   })}
                 </div>
 
-                <div>
-                  <label className="text-[9px] font-extrabold uppercase text-nexoraMuted mb-1 block">VLINKPAY ID</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-[9px] flex items-center justify-center pointer-events-none">
-                      {WalletLogos.vlinkpay}
-                    </span>
-                    <input 
-                      className="h-9 w-full rounded-lg border border-nexoraBorder pl-9 pr-3 text-xs outline-none focus:border-nexoraBrand" 
-                      value={form.vlinkpay || ''} 
-                      onClick={(e) => {
-                        if (verificationStatus !== 'kyb_approved') {
-                          e.preventDefault()
-                          e.target.blur()
-                          if (onBlockedFeatureClick) onBlockedFeatureClick()
-                        }
-                      }}
-                      onChange={(event) => {
-                        if (verificationStatus !== 'kyb_approved') {
-                          if (onBlockedFeatureClick) onBlockedFeatureClick()
-                          return
-                        }
-                        setForm({ ...form, vlinkpay: event.target.value })
-                      }} 
-                      placeholder="VLINKPAY ID" 
-                    />
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-[9px] font-extrabold uppercase text-nexoraMuted mb-1 block">VLINKPAY ID</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-[9px] flex items-center justify-center pointer-events-none">
+                        <img src="/assets/vlinkpay-logo.png" alt="VLINKPAY Logo" className="h-[18px] w-[18px] object-contain" />
+                      </span>
+                      <input 
+                        className="h-9 w-full rounded-lg border border-nexoraBorder pl-9 pr-3 text-xs outline-none focus:border-nexoraBrand font-semibold font-mono" 
+                        value={form.vlinkpay || ''} 
+                        onChange={(event) => setForm({ ...form, vlinkpay: event.target.value })}
+                        placeholder="e.g. VLP-8893-VL"
+                      />
+                    </div>
                   </div>
+
+                  <div>
+                    <label className="text-[9px] font-extrabold uppercase text-nexoraMuted mb-1 block">NEXORA Staff ID</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-[9px] flex items-center justify-center pointer-events-none">
+                        <User className="h-4.5 w-4.5 text-[#4648D8]" />
+                      </span>
+                      <input 
+                        className="h-9 w-full rounded-lg border border-nexoraBorder pl-9 pr-3 text-xs outline-none focus:border-nexoraBrand font-semibold font-mono" 
+                        value={form.nexoraStaffId || ''} 
+                        onClick={(e) => {
+                          if (verificationStatus !== 'kyb_approved') {
+                            e.preventDefault()
+                            e.target.blur()
+                            if (onBlockedFeatureClick) onBlockedFeatureClick()
+                          }
+                        }}
+                        onChange={(event) => {
+                          if (verificationStatus !== 'kyb_approved') {
+                            if (onBlockedFeatureClick) onBlockedFeatureClick()
+                            return
+                          }
+                          const val = event.target.value
+                          setForm((prev) => {
+                            const updated = { ...prev, nexoraStaffId: val }
+                            const kycProfile = MOCK_NEXORA_STAFF_PROFILES[val.trim()]
+                            if (kycProfile) {
+                              alert(currentLanguage === 'vi' 
+                                ? 'Đã xác thực tài khoản NEXORA! Tự động nhập thông tin thợ.' 
+                                : 'NEXORA Staff Profile Verified! Auto-filled profile details.')
+                              return {
+                                ...updated,
+                                fullName: kycProfile.fullName,
+                                nickname: kycProfile.nickname,
+                                phone: kycProfile.phone,
+                                email: kycProfile.email,
+                                position: kycProfile.position,
+                                avatar: kycProfile.avatar,
+                                vlinkpay: kycProfile.vlinkpayId || '',
+                                payoutConfigs: {
+                                  ...updated.payoutConfigs,
+                                  ...kycProfile.payoutConfigs
+                                }
+                              }
+                            }
+                            return updated
+                          })
+                        }} 
+                        placeholder="e.g. NEX-STAFF-LISA1102" 
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => onOpenInviteShare && onOpenInviteShare(form)}
+                    className="underline text-xs text-amber-600 hover:text-amber-700 font-bold mt-1 cursor-pointer select-none inline-block text-left"
+                  >
+                    {currentLanguage === 'vi' ? 'Chia sẻ liên kết & QR mời thợ' : 'Share Invite Link & QR'}
+                  </button>
                 </div>
               </div>
               {errors.payment && <p className="mt-2 flex items-center gap-1 text-xs font-bold text-rose-600"><AlertTriangle className="h-3.5 w-3.5" />{errors.payment}</p>}
@@ -2911,6 +3493,264 @@ function QrModal({ target, businessName, onClose }) {
   )
 }
 
+function InviteShareModal({ open, businessName, defaultName, defaultContact, onClose, onSendInvite }) {
+  const { t, currentLanguage } = useTranslation()
+  const [name, setName] = useState('')
+  const [contact, setContact] = useState('')
+  const [role, setRole] = useState('Nail Technician')
+  const [inviteMethod, setInviteMethod] = useState('SMS') // 'SMS' | 'Email'
+  const [errors, setErrors] = useState({})
+  const [largeQrOpen, setLargeQrOpen] = useState(false)
+
+  useEffect(() => {
+    if (open) {
+      setName(defaultName || '')
+      setContact(defaultContact || '')
+      setErrors({})
+      if (defaultContact && defaultContact.includes('@')) {
+        setInviteMethod('Email')
+      } else {
+        setInviteMethod('SMS')
+      }
+    }
+  }, [open, defaultName, defaultContact])
+
+  if (!open) return null
+
+  const joinLink = `${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    const nextErrors = {}
+    if (!name.trim()) nextErrors.name = 'Technician name is required.'
+    if (!contact.trim()) nextErrors.contact = 'Contact information (email or phone) is required.'
+    
+    if (inviteMethod === 'Email' && contact.trim() && !/\S+@\S+\.\S+/.test(contact.trim())) {
+      nextErrors.contact = 'Invalid email format.'
+    }
+
+    if (Object.keys(nextErrors).length) {
+      setErrors(nextErrors)
+      return
+    }
+
+    onSendInvite(name, contact, role)
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-nexoraText/70 p-4 py-6 backdrop-blur-sm sm:items-center">
+      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl transition-all relative">
+        <div className="flex items-center justify-between border-b border-nexoraRule pb-4">
+          <h2 className="text-sm font-extrabold text-nexoraText uppercase tracking-wider font-sans">
+            {currentLanguage === 'vi' ? 'Chia sẻ liên kết & QR mời thợ' : 'Share Invitation Link & QR'}
+          </h2>
+          <IconButton label="Close modal" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </IconButton>
+        </div>
+
+        <div className="mt-4 space-y-5">
+          {/* QR Code Section */}
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col items-center text-center space-y-3">
+            <span className="text-[10px] font-black uppercase text-slate-700 tracking-wider font-sans">
+              {currentLanguage === 'vi' ? 'QUÉT QR ĐỂ GIA NHẬP' : 'SCAN QR TO JOIN'}
+            </span>
+            <div 
+              onClick={() => setLargeQrOpen(true)}
+              className="h-32 w-32 rounded-xl bg-slate-50 border border-slate-200 p-2 flex items-center justify-center shadow-inner bg-white cursor-zoom-in transition hover:scale-105 duration-200 group relative"
+              title={currentLanguage === 'vi' ? 'Click để phóng to' : 'Click to enlarge'}
+            >
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(joinLink)}`} 
+                alt="Join QR" 
+                className="h-full w-full object-contain"
+              />
+              {/* Magnifier icon overlay on hover */}
+              <div className="absolute inset-0 bg-nexoraBrand/80 rounded-xl flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-white select-none">
+                <QrCode className="h-5 w-5" />
+                <span className="text-[9px] font-black uppercase tracking-wider">PREVIEW</span>
+              </div>
+            </div>
+            
+            <div className="w-full space-y-1.5">
+              <span className="text-[9px] text-slate-400 font-bold block uppercase font-sans">
+                {currentLanguage === 'vi' ? 'LIÊN KẾT GIA NHẬP' : 'JOIN LINK'}
+              </span>
+              <div className="flex gap-1.5">
+                <input 
+                  type="text" 
+                  readOnly 
+                  value={joinLink} 
+                  className="h-8 flex-grow bg-white border border-slate-200 rounded px-2.5 text-[10px] text-slate-500 font-mono focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(joinLink)
+                    alert(currentLanguage === 'vi' ? 'Đã sao chép liên kết gia nhập!' : 'Join link copied to clipboard!')
+                  }}
+                  className="h-8 px-3 bg-slate-800 text-white rounded text-[10px] font-black uppercase hover:bg-slate-700 transition font-sans"
+                >
+                  {currentLanguage === 'vi' ? 'Sao chép' : 'Copy'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200"></div></div>
+            <span className="relative bg-white pr-3 text-[9px] text-slate-400 font-black uppercase tracking-wider font-sans">
+              {currentLanguage === 'vi' ? 'HOẶC GỬI TRỰC TIẾP' : 'OR SEND DIRECTLY'}
+            </span>
+          </div>
+
+          {/* Send Invite Form */}
+          <form onSubmit={handleSubmit} className="space-y-3.5">
+            <div>
+              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted font-sans">
+                {currentLanguage === 'vi' ? 'Tên thợ' : 'Technician Name'}
+              </label>
+              <input 
+                type="text" 
+                className="mt-1 h-9 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand" 
+                placeholder="e.g. Mia Tran" 
+                value={name} 
+                onChange={(e) => setName(e.target.value)} 
+                required
+              />
+              {errors.name && <p className="mt-1 text-[10px] font-bold text-rose-600">{errors.name}</p>}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setInviteMethod('SMS')
+                  setErrors({})
+                }}
+                className={`h-9 rounded-lg border text-xs font-bold transition flex items-center justify-center gap-1.5 font-sans ${
+                  inviteMethod === 'SMS' 
+                    ? 'border-amber-500 bg-amber-50 text-amber-700' 
+                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                SMS
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setInviteMethod('Email')
+                  setErrors({})
+                }}
+                className={`h-9 rounded-lg border text-xs font-bold transition flex items-center justify-center gap-1.5 font-sans ${
+                  inviteMethod === 'Email' 
+                    ? 'border-amber-500 bg-amber-50 text-amber-700' 
+                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                Email
+              </button>
+            </div>
+
+            <div>
+              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted font-sans">
+                {inviteMethod === 'SMS' ? (currentLanguage === 'vi' ? 'Số điện thoại' : 'Phone Number') : 'Email Address'}
+              </label>
+              <input 
+                type="text" 
+                className="mt-1 h-9 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand font-mono" 
+                placeholder={inviteMethod === 'SMS' ? 'e.g. 407-555-0123' : 'e.g. mia.tran@gmail.com'} 
+                value={contact} 
+                onChange={(e) => setContact(e.target.value)} 
+                required
+              />
+              {errors.contact && <p className="mt-1 text-[10px] font-bold text-rose-600">{errors.contact}</p>}
+            </div>
+
+            <div>
+              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted font-sans">
+                {currentLanguage === 'vi' ? 'Vai trò / Chức danh' : 'Role / Position'}
+              </label>
+              <input 
+                type="text" 
+                className="mt-1 h-9 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand" 
+                placeholder="e.g. Nail Tech" 
+                value={role} 
+                onChange={(e) => setRole(e.target.value)} 
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full h-10 mt-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-95 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg transition shadow-md flex items-center justify-center gap-1.5 font-sans"
+            >
+              <Send className="h-4 w-4" />
+              {currentLanguage === 'vi' ? 'Gửi liên kết mời thợ' : 'Send Invite Link'}
+            </button>
+          </form>
+        </div>
+      </div>
+
+      {/* Large Join QR Modal inside InviteShareModal */}
+      {largeQrOpen && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 cursor-zoom-out animate-fadeIn"
+          onClick={() => setLargeQrOpen(false)}
+        >
+          <div 
+            className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl border border-slate-100 flex flex-col items-center cursor-default animate-scaleUp"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-full flex justify-between items-center mb-4">
+              <h3 className="text-xs font-black uppercase text-slate-800 tracking-wider font-sans">
+                {currentLanguage === 'vi' ? 'MÃ QR GIA NHẬP' : 'JOIN QR CODE'}
+              </h3>
+              <button 
+                type="button"
+                onClick={() => setLargeQrOpen(false)}
+                className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            
+            <div className="h-64 w-64 rounded-2xl bg-slate-50 border border-slate-200 p-4 flex items-center justify-center shadow-inner bg-white mb-4">
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(joinLink)}`}
+                alt="Scan to Join" 
+                className="h-full w-full object-contain"
+              />
+            </div>
+            
+            <p className="text-[11px] text-slate-500 font-medium text-center leading-relaxed max-w-xs mb-4 font-sans">
+              {currentLanguage === 'vi' 
+                ? 'Cho thợ quét mã này bằng camera điện thoại để tự đăng ký hoặc liên kết tài khoản vào tiệm.' 
+                : 'Have technicians scan this QR code with their mobile camera to self-register or link accounts.'}
+            </p>
+            
+            <div className="w-full bg-slate-50 rounded-xl border border-slate-200 p-2.5 flex items-center justify-between gap-2">
+              <span className="text-[10px] text-slate-400 font-mono truncate max-w-[210px]">
+                {joinLink}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(joinLink)
+                  alert(currentLanguage === 'vi' ? 'Đã sao chép liên kết gia nhập!' : 'Join link copied to clipboard!')
+                }}
+                className="h-7 px-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[10px] font-bold transition flex items-center gap-1 shrink-0 font-sans"
+              >
+                <Copy className="h-3 w-3" />
+                <span>{currentLanguage === 'vi' ? 'Sao chép' : 'Copy'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Dashboard({ 
   setupData, 
   verificationStatus = 'kyb_approved',
@@ -2926,12 +3766,81 @@ export default function Dashboard({
   const [showKybWarningModal, setShowKybWarningModal] = useState(false)
   const [activeMenu, setActiveMenu] = useState(initialMenu)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [staff, setStaff] = useState(() => 
-    INITIAL_STAFF.map(member => ({
+  const [tipsTab, setTipsTab] = useState('overview')
+  const [processingFee, setProcessingFee] = useState(3.0)
+  const [isTipsMobileExpanded, setIsTipsMobileExpanded] = useState(initialMenu === 'tips')
+  const [touchpointsTab, setTouchpointsTab] = useState('stations')
+  const [isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded] = useState(initialMenu === 'touchpoints')
+
+  useEffect(() => {
+    if (activeMenu === 'tips') {
+      setIsTipsMobileExpanded(true)
+      setIsTouchpointsMobileExpanded(false)
+    } else if (activeMenu === 'touchpoints') {
+      setIsTouchpointsMobileExpanded(true)
+      setIsTipsMobileExpanded(false)
+    }
+  }, [activeMenu])
+  const lastProcessedSetupData = useRef(null)
+
+  const [staff, setStaff] = useState(() => {
+    const saved = localStorage.getItem('nexora_merchant_setup')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (parsed.staffList?.length) {
+          return parsed.staffList.map((member) => ({
+            id: member.id,
+            fullName: member.fullName,
+            nickname: member.nickname,
+            position: member.position,
+            avatar: member.avatar || '',
+            phone: member.phone || '',
+            email: member.email || '',
+            isActive: member.isActive !== undefined ? member.isActive : true,
+            showInTipsFlow: member.showInTipsFlow !== undefined ? member.showInTipsFlow : true,
+            paymentAccounts: {
+              venmo: member.paymentAccounts?.venmo || '',
+              cashapp: member.paymentAccounts?.cashapp || '',
+              zelle: member.paymentAccounts?.zelle || '',
+              vlinkpay: member.paymentAccounts?.vlinkpay || '',
+              paypal: member.paymentAccounts?.paypal || '',
+              bankwire: member.paymentAccounts?.bankwire || '',
+              applecash: member.paymentAccounts?.applecash || ''
+            },
+            payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member)
+          }))
+        }
+      } catch (e) {}
+    }
+    if (setupData?.staffList?.length) {
+      return setupData.staffList.map((member) => ({
+        id: member.id,
+        fullName: member.fullName,
+        nickname: member.nickname,
+        position: member.position,
+        avatar: member.avatar || '',
+        phone: member.phone || '',
+        email: member.email || '',
+        isActive: member.isActive !== undefined ? member.isActive : true,
+        showInTipsFlow: member.showInTipsFlow !== undefined ? member.showInTipsFlow : true,
+        paymentAccounts: {
+          venmo: member.paymentAccounts?.venmo || '',
+          cashapp: member.paymentAccounts?.cashapp || '',
+          zelle: member.paymentAccounts?.zelle || '',
+          vlinkpay: member.paymentAccounts?.vlinkpay || '',
+          paypal: member.paymentAccounts?.paypal || '',
+          bankwire: member.paymentAccounts?.bankwire || '',
+          applecash: member.paymentAccounts?.applecash || ''
+        },
+        payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member)
+      }))
+    }
+    return INITIAL_STAFF.map(member => ({
       ...member,
       payoutConfigs: getPayoutConfigsFromMember(member)
     }))
-  )
+  })
 
   const [profile, setProfile] = useState(() => {
     try {
@@ -3029,11 +3938,28 @@ export default function Dashboard({
   })
 
   const [isNotiDropdownOpen, setIsNotiDropdownOpen] = useState(false)
-  const [touchpoints, setTouchpoints] = useState(INITIAL_TOUCHPOINTS)
+  const [touchpoints, setTouchpoints] = useState(() => {
+    const saved = localStorage.getItem('nexora_merchant_setup')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (parsed.touchPoints?.length) {
+          return parsed.touchPoints
+        }
+      } catch (e) {}
+    }
+    if (setupData?.touchPoints?.length) {
+      return setupData.touchPoints
+    }
+    return INITIAL_TOUCHPOINTS
+  })
   const [devices, setDevices] = useState(INITIAL_DEVICES)
   const [isStaffModalOpen, setIsStaffModalOpen] = useState(false)
   const [editingStaffId, setEditingStaffId] = useState(null)
   const [qrTarget, setQrTarget] = useState(null)
+  const [isInviteShareOpen, setIsInviteShareOpen] = useState(false)
+  const [inviteShareDefaultName, setInviteShareDefaultName] = useState('')
+  const [inviteShareDefaultContact, setInviteShareDefaultContact] = useState('')
   const [reviewFilterStaff, setReviewFilterStaff] = useState('all')
   const [newTouchpoint, setNewTouchpoint] = useState({ name: '', type: 'Table QR' })
   const [searchQuery, setSearchQuery] = useState('')
@@ -3079,6 +4005,9 @@ export default function Dashboard({
   }, [setupData])
 
   useEffect(() => {
+    if (setupData) {
+      lastProcessedSetupData.current = setupData
+    }
     if (setupData?.staffList?.length) {
       setStaff(setupData.staffList.map((member) => ({
         id: member.id,
@@ -3109,6 +4038,17 @@ export default function Dashboard({
 
   // Sync edits in dashboard to storage so simulator/customer flow gets the updates
   useEffect(() => {
+    // If setupData changed but we haven't processed it in Hook 1 yet,
+    // skip syncing to avoid overwriting the storage with stale local states.
+    if (setupData && lastProcessedSetupData.current !== setupData) {
+      return
+    }
+
+    // Also, if local staff list is empty but setupData has staff, don't overwrite storage with empty staff list!
+    if (setupData?.staffList?.length && !staff.length) {
+      return
+    }
+
     const saved = localStorage.getItem('nexora_merchant_setup') || sessionStorage.getItem('nexora_merchant_setup')
     let parsed = null
     if (saved) {
@@ -3311,6 +4251,7 @@ export default function Dashboard({
       cashapp: '',
       zelle: '',
       vlinkpay: '',
+      nexoraStaffId: '',
       showInTipsFlow: true,
       payoutConfigs: { ...DEFAULT_PAYOUT_CONFIGS }
     })
@@ -3336,6 +4277,7 @@ export default function Dashboard({
       cashapp: member.paymentAccounts?.cashapp || '',
       zelle: member.paymentAccounts?.zelle || '',
       vlinkpay: member.paymentAccounts?.vlinkpay || '',
+      nexoraStaffId: member.id || '',
       showInTipsFlow: member.showInTipsFlow !== false,
       payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member)
     })
@@ -3390,7 +4332,8 @@ export default function Dashboard({
     if (editingStaffId) {
       setStaff((current) => current.map((member) => member.id === editingStaffId ? { ...member, ...payload } : member))
     } else {
-      const newMember = { id: Date.now().toString(), isActive: true, showInTipsFlow: true, ...payload }
+      const finalStaffId = staffForm.nexoraStaffId.trim() || `NEX-STAFF-${staffForm.fullName.replace(/[^a-zA-Z]/g, '').slice(0, 4).toUpperCase()}${Math.floor(1000 + Math.random() * 9000)}`
+      const newMember = { id: finalStaffId, isActive: true, showInTipsFlow: true, ...payload }
       setStaff((current) => [...current, newMember])
       setTouchpoints((current) => [...current, {
         id: `tp-staff-${newMember.id}`,
@@ -3401,6 +4344,192 @@ export default function Dashboard({
       }])
     }
     closeStaffModal()
+  }
+
+  const sendSetupLinkFromModal = (formDetails) => {
+    const nextErrors = {}
+    if (!formDetails.fullName.trim()) nextErrors.fullName = 'Full name is required to invite.'
+    if (!formDetails.email.trim() && !formDetails.phone.trim()) {
+      nextErrors.email = 'Phone or email is required to send invite link.'
+    }
+    
+    if (Object.keys(nextErrors).length) {
+      setErrors(nextErrors)
+      return
+    }
+
+    const tempId = `NEX-STAFF-${Math.floor(100000 + Math.random() * 900000)}`
+    const newMember = {
+      id: tempId,
+      fullName: formDetails.fullName.trim(),
+      nickname: formDetails.nickname.trim() || formDetails.fullName.trim().split(' ')[0] + '.',
+      position: formDetails.position.trim() || 'Nail Tech',
+      avatar: formDetails.avatar || '',
+      phone: formDetails.phone.trim(),
+      email: formDetails.email.trim(),
+      isActive: false,
+      status: 'Pending Setup',
+      flowType: 'Invite New Staff',
+      paymentAccounts: {},
+      payoutConfigs: { ...DEFAULT_PAYOUT_CONFIGS }
+    }
+
+    setStaff((current) => [...current, newMember])
+    setTouchpoints((current) => [...current, {
+      id: `tp-staff-${newMember.id}`,
+      name: `Personal QR - ${newMember.nickname}`,
+      type: 'Staff QR',
+      staffId: newMember.id,
+      staffName: newMember.nickname
+    }])
+
+    closeStaffModal()
+
+    // Dispatch simulation event
+    const inviteEvt = new CustomEvent('showSimulationInvite', {
+      detail: {
+        id: tempId,
+        name: newMember.fullName,
+        email: newMember.email,
+        phone: newMember.phone,
+        role: newMember.position,
+        biz: businessName
+      }
+    })
+    window.dispatchEvent(inviteEvt)
+  }
+
+  const handleLinkStaff = (globalMember, role) => {
+    if (staff.some(s => s.id === globalMember.id)) {
+      alert('This technician is already linked to your salon.');
+      return;
+    }
+
+    const newMember = {
+      id: globalMember.id,
+      fullName: globalMember.fullName,
+      nickname: globalMember.nickname,
+      position: role,
+      avatar: globalMember.avatar || '',
+      phone: globalMember.phone || '',
+      email: globalMember.email || '',
+      isActive: false,
+      status: 'Pending Acceptance',
+      flowType: 'Link Existing Staff ID',
+      paymentAccounts: globalMember.paymentAccounts || {},
+      payoutConfigs: { ...DEFAULT_PAYOUT_CONFIGS }
+    }
+
+    setStaff((current) => [...current, newMember])
+    setTouchpoints((current) => [...current, {
+      id: `tp-staff-${newMember.id}`,
+      name: `Personal QR - ${newMember.nickname}`,
+      type: 'Staff QR',
+      staffId: newMember.id,
+      staffName: newMember.nickname
+    }])
+
+    // Trigger simulation alert
+    const event = new CustomEvent('showSimulationInvite', {
+      detail: {
+        id: globalMember.id,
+        name: globalMember.fullName,
+        email: globalMember.email,
+        phone: globalMember.phone,
+        role: role,
+        biz: businessName,
+        isLinkOnly: true
+      }
+    })
+    window.dispatchEvent(event)
+  }
+
+  const handleInviteStaff = (name, contact, role, method) => {
+    const isEmail = contact.includes('@');
+    const tempId = `NEX-STAFF-${Math.floor(100000 + Math.random() * 900000)}`
+    
+    const newMember = {
+      id: tempId,
+      fullName: name.trim(),
+      nickname: name.trim().split(' ')[0] + '.',
+      position: role,
+      avatar: '',
+      phone: isEmail ? '' : contact.trim(),
+      email: isEmail ? contact.trim() : '',
+      isActive: false,
+      status: 'Pending Setup',
+      flowType: 'Invite New Staff',
+      paymentAccounts: {},
+      payoutConfigs: { ...DEFAULT_PAYOUT_CONFIGS }
+    }
+
+    setStaff((current) => [...current, newMember])
+    setTouchpoints((current) => [...current, {
+      id: `tp-staff-${newMember.id}`,
+      name: `Personal QR - ${newMember.nickname}`,
+      type: 'Staff QR',
+      staffId: newMember.id,
+      staffName: newMember.nickname
+    }])
+
+    // Trigger simulation setup
+    const event = new CustomEvent('showSimulationInvite', {
+      detail: {
+        id: tempId,
+        name: newMember.fullName,
+        email: newMember.email,
+        phone: newMember.phone,
+        role: role,
+        biz: businessName
+      }
+    })
+    window.dispatchEvent(event)
+  }
+
+  const handleAcceptJoinRequest = (staffId) => {
+    const member = staff.find(s => s.id === staffId)
+    if (!member) return
+
+    setStaff((current) => current.map((m) => {
+      if (m.id === staffId) {
+        return {
+          ...m,
+          status: 'Active',
+          isActive: true
+        }
+      }
+      return m
+    }))
+
+    setTouchpoints((current) => {
+      const hasTp = current.some(tp => tp.staffId === staffId)
+      if (!hasTp) {
+        return [...current, {
+          id: `tp-staff-${staffId}`,
+          name: `Personal QR - ${member.nickname}`,
+          type: 'Staff QR',
+          staffId: staffId,
+          staffName: member.nickname
+        }]
+      }
+      return current
+    })
+
+    alert(currentLanguage === 'vi' 
+      ? `Đã chấp nhận và lưu thông tin thợ ${member.fullName} vào tiệm!` 
+      : `Accepted and saved technician ${member.fullName} to salon!`)
+  }
+
+  const handleDeclineJoinRequest = (staffId) => {
+    const member = staff.find(s => s.id === staffId)
+    if (!member) return
+
+    if (confirm(currentLanguage === 'vi' 
+      ? `Bạn có chắc chắn muốn từ chối yêu cầu tham gia của thợ ${member.fullName}?` 
+      : `Are you sure you want to decline join request from ${member.fullName}?`)) {
+      setStaff((current) => current.filter((m) => m.id !== staffId))
+      setTouchpoints((current) => current.filter((tp) => tp.staffId !== staffId))
+    }
   }
 
   const deleteStaff = (id) => {
@@ -3539,7 +4668,23 @@ export default function Dashboard({
         />
       )
     }
-    if (activeMenu === 'staff') return <StaffView staff={filteredStaff} onAdd={openAddStaff} onEdit={openEditStaff} onDelete={deleteStaff} onQr={previewQr} onToggle={toggleStaff} onToggleTipsFlow={toggleStaffTipsFlow} onViewDetail={setViewingStaffDetailId} />
+    if (activeMenu === 'staff') return (
+      <StaffView 
+        staff={filteredStaff} 
+        onAdd={openAddStaff} 
+        onEdit={openEditStaff} 
+        onDelete={deleteStaff} 
+        onQr={previewQr} 
+        onToggle={toggleStaff} 
+        onToggleTipsFlow={toggleStaffTipsFlow} 
+        onViewDetail={setViewingStaffDetailId} 
+        onLinkStaff={handleLinkStaff}
+        onInviteStaff={handleInviteStaff}
+        businessName={businessName}
+        onAcceptJoin={handleAcceptJoinRequest}
+        onDeclineJoin={handleDeclineJoinRequest}
+      />
+    )
     if (activeMenu === 'touchpoints') {
       return (
         <TouchpointsView
@@ -3557,6 +4702,8 @@ export default function Dashboard({
           onAddDevice={handleAddDevice}
           onDeleteDevice={handleDeleteDevice}
           onToggleDeviceStatus={handleToggleDeviceStatus}
+          activeSubTab={touchpointsTab}
+          onTabChange={setTouchpointsTab}
         />
       )
     }
@@ -3569,7 +4716,16 @@ export default function Dashboard({
         setupData={setupData}
       />
     )
-    if (activeMenu === 'tips') return <TipsView transactions={transactions} staff={staff} />
+    if (activeMenu === 'tips') return (
+      <TipsView 
+        transactions={transactions} 
+        staff={staff} 
+        activeTab={tipsTab} 
+        onTabChange={setTipsTab}
+        processingFee={processingFee}
+        setProcessingFee={setProcessingFee}
+      />
+    )
     if (activeMenu === 'reports') return <ReportsView transactions={filteredTransactions} staff={staff} touchpoints={touchpoints} />
     if (activeMenu === 'settings') {
       return (
@@ -3592,6 +4748,7 @@ export default function Dashboard({
           transactions={transactions}
           staff={staff}
           touchpoints={touchpoints}
+          processingFee={processingFee}
         />
       )
     }
@@ -3618,6 +4775,10 @@ export default function Dashboard({
         verificationStatus={verificationStatus}
         onBlockedFeatureClick={() => setShowKybWarningModal(true)}
         onLogout={onLogout} 
+        tipsTab={tipsTab}
+        setTipsTab={setTipsTab}
+        touchpointsTab={touchpointsTab}
+        setTouchpointsTab={setTouchpointsTab}
       />
 
       <div className="lg:pl-72">
@@ -3737,7 +4898,7 @@ export default function Dashboard({
                     }}
                     className={`flex h-8 w-full items-center gap-2.5 rounded-lg px-2 text-left text-xs font-bold transition ${
                       activeMenu === 'settings' && settingsTab === 'profile'
-                        ? 'bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] text-white shadow-sm'
+                        ? 'text-brandCyan font-extrabold'
                         : 'text-white/60 hover:bg-white/5 hover:text-white'
                     }`}
                   >
@@ -3753,7 +4914,7 @@ export default function Dashboard({
                     }}
                     className={`flex h-8 w-full items-center gap-2.5 rounded-lg px-2 text-left text-xs font-bold transition ${
                       activeMenu === 'settings' && settingsTab === 'kyb'
-                        ? 'bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] text-white shadow-sm'
+                        ? 'text-brandCyan font-extrabold'
                         : 'text-white/60 hover:bg-white/5 hover:text-white'
                     }`}
                   >
@@ -3809,24 +4970,107 @@ export default function Dashboard({
                 }[id] || label
 
                 return (
-                  <button
-                    key={id}
-                    onClick={() => {
-                      if (verificationStatus !== 'kyb_approved' && (id === 'tips' || id === 'devices')) {
-                        setShowKybWarningModal(true)
-                      } else {
-                        navigateMenu(id)
-                      }
-                    }}
-                    className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-bold transition ${
-                      isActive
-                        ? 'bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] text-white shadow-lg shadow-[#2B59FF]/20'
-                        : 'text-white/70 hover:bg-white/5 hover:text-white'
-                    }`}
-                  >
-                    <MenuIcon item={item} active={isActive} />
-                    {localizedLabel}
-                  </button>
+                  <React.Fragment key={id}>
+                    <button
+                      onClick={() => {
+                        if (verificationStatus !== 'kyb_approved' && (id === 'tips' || id === 'devices')) {
+                          setShowKybWarningModal(true)
+                        } else {
+                          setActiveMenu(id)
+                          if (id === 'tips') {
+                            setIsTipsMobileExpanded(!isTipsMobileExpanded)
+                          } else if (id === 'touchpoints') {
+                            setIsTouchpointsMobileExpanded(!isTouchpointsMobileExpanded)
+                          } else {
+                            setIsMobileMenuOpen(false)
+                            setViewingStaffDetailId(null)
+                          }
+                        }
+                      }}
+                      className={`flex min-h-11 w-full items-center justify-between rounded-lg px-4 text-left text-sm font-bold transition ${
+                        isActive
+                          ? 'bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] text-white shadow-lg shadow-[#2B59FF]/20'
+                          : 'text-white/70 hover:bg-white/5 hover:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <MenuIcon item={item} active={isActive} />
+                        <span>{localizedLabel}</span>
+                      </div>
+                      {(id === 'tips' || id === 'touchpoints') && (
+                        <div className="text-white/50 shrink-0">
+                          {id === 'tips' 
+                            ? (isTipsMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)
+                            : (isTouchpointsMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)
+                          }
+                        </div>
+                      )}
+                    </button>
+
+                    {id === 'tips' && isTipsMobileExpanded && (
+                      <div className="ml-9 mt-1 space-y-1 border-l border-white/10 pl-3 animate-fadeIn">
+                        {[
+                          { id: 'overview', label: t('dashboard.tips.tabs.overview') || 'Overview' },
+                          { id: 'savings', label: t('dashboard.tips.tabs.savings') || 'Direct Savings' },
+                          { id: 'transactions', label: t('dashboard.tips.tabs.transactions') || 'Tip Transactions' },
+                          { id: 'payouts', label: t('dashboard.tips.tabs.payouts') || 'Staff Payouts' }
+                        ].map(sub => {
+                          const isSubActive = activeMenu === 'tips' && tipsTab === sub.id
+                          return (
+                            <button
+                              key={sub.id}
+                              type="button"
+                              onClick={() => {
+                                setActiveMenu('tips')
+                                setTipsTab(sub.id)
+                                setViewingStaffDetailId(null)
+                                setIsMobileMenuOpen(false)
+                              }}
+                              className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
+                                isSubActive
+                                  ? 'text-brandCyan font-extrabold'
+                                  : 'text-white/60 hover:bg-white/5 hover:text-white'
+                              }`}
+                            >
+                              <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+                              <span>{sub.label}</span>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
+
+                    {id === 'touchpoints' && isTouchpointsMobileExpanded && (
+                      <div className="ml-9 mt-1 space-y-1 border-l border-white/10 pl-3 animate-fadeIn">
+                        {[
+                          { id: 'stations', label: t('dashboard.touchpoints.tabs.stations') || 'QR Stations' },
+                          { id: 'devices', label: t('dashboard.touchpoints.tabs.devices') || 'Hardware Devices' }
+                        ].map(sub => {
+                          const isSubActive = activeMenu === 'touchpoints' && touchpointsTab === sub.id
+                          return (
+                            <button
+                              key={sub.id}
+                              type="button"
+                              onClick={() => {
+                                setActiveMenu('touchpoints')
+                                setTouchpointsTab(sub.id)
+                                setViewingStaffDetailId(null)
+                                setIsMobileMenuOpen(false)
+                              }}
+                              className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
+                                isSubActive
+                                  ? 'text-brandCyan font-extrabold'
+                                  : 'text-white/60 hover:bg-white/5 hover:text-white'
+                              }`}
+                            >
+                              <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+                              <span>{sub.label}</span>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </React.Fragment>
                 )
               })}
             </nav>
@@ -3855,8 +5099,63 @@ export default function Dashboard({
         onBlockedFeatureClick={() => setShowKybWarningModal(true)}
         onClose={closeStaffModal}
         onSave={saveStaff}
+        onOpenInviteShare={(formDetails) => {
+          setInviteShareDefaultName(formDetails.fullName || '')
+          setInviteShareDefaultContact(formDetails.email || formDetails.phone || '')
+          setIsInviteShareOpen(true)
+        }}
       />
       <QrModal target={qrTarget} businessName={businessName} onClose={() => setQrTarget(null)} />
+
+      <InviteShareModal
+        open={isInviteShareOpen}
+        businessName={businessName}
+        defaultName={inviteShareDefaultName}
+        defaultContact={inviteShareDefaultContact}
+        onClose={() => setIsInviteShareOpen(false)}
+        onSendInvite={(name, contact, role) => {
+          const isEmail = contact.includes('@')
+          const tempId = `NEX-STAFF-${Math.floor(100000 + Math.random() * 900000)}`
+          
+          const newMember = {
+            id: tempId,
+            fullName: name.trim() || 'New Technician',
+            nickname: name.trim() ? name.trim().split(' ')[0] + '.' : 'Tech.',
+            position: role || 'Nail Technician',
+            avatar: '',
+            phone: isEmail ? '' : contact.trim(),
+            email: isEmail ? contact.trim() : '',
+            isActive: false,
+            status: 'Pending Setup',
+            flowType: 'Invite New Staff',
+            paymentAccounts: {},
+            payoutConfigs: { ...DEFAULT_PAYOUT_CONFIGS }
+          }
+
+          setStaff((current) => [...current, newMember])
+          setTouchpoints((current) => [...current, {
+            id: `tp-staff-${newMember.id}`,
+            name: `Personal QR - ${newMember.nickname}`,
+            type: 'Staff QR',
+            staffId: newMember.id,
+            staffName: newMember.nickname
+          }])
+
+          const event = new CustomEvent('showSimulationInvite', {
+            detail: {
+              id: tempId,
+              name: newMember.fullName,
+              email: newMember.email,
+              phone: newMember.phone,
+              role: role || 'Nail Technician',
+              biz: businessName
+            }
+          })
+          window.dispatchEvent(event)
+          setIsInviteShareOpen(false)
+          closeStaffModal()
+        }}
+      />
 
       {/* KYB Verification Warning Modal for gated features */}
       {showKybWarningModal && (
