@@ -110,6 +110,9 @@
     "tp_type": "Loại Điểm Chạm",
     "add_tp_btn": "Thêm Điểm Chạm",
     "active_tp_count": "{count} Điểm chạm hoạt động",
+    "tp_lobby_default": "QR Sảnh Chờ / Tipping Chung",
+    "tp_front_default": "Quầy Lễ Tân / Trạm Chính",
+    "tp_personal_default": "QR Cá Nhân - {name}",
     
     "title_step_3": "Bước 3: Tải Xuống QR & Hoàn Tất Cấu Hình",
     "desc_step_3": "Mọi thứ đã sẵn sàng! Bạn có thể tải xuống bộ mã QR in ấn và kích hoạt Nexora Touch Gateway.",

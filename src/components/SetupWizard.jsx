@@ -4,7 +4,7 @@ import {
   ArrowRight, ArrowLeft, Upload, Plus, Trash2, CheckCircle2, 
   AlertTriangle, Mail, Phone, Globe, Wallet, ShieldCheck, 
   MapPin, Clock, Check, Eye, LogIn, Scissors, Edit2, Camera, FolderOpen, X, HelpCircle,
-  Search, ChevronDown
+  Search, ChevronDown, Monitor, Receipt, User
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
 import { storage } from '../utils/storage'
@@ -29,6 +29,23 @@ export function renderTextWithGoldStars(text) {
       </span>
     )
   })
+}
+
+// Helper to map touchpoint type to a Lucide icon component
+export function getTouchpointIcon(type, className = "w-4 h-4") {
+  switch (type) {
+    case 'Business Main':
+      return <Building2 className={`${className} text-nexoraBrand`} />
+    case 'Front Desk':
+      return <Monitor className={`${className} text-amber-500`} />
+    case 'Receipt QR':
+      return <Receipt className={`${className} text-emerald-500`} />
+    case 'Staff QR':
+      return <User className={`${className} text-blue-500`} />
+    case 'Table QR':
+    default:
+      return <QrCode className={`${className} text-slate-500`} />
+  }
 }
 
 // Demo data for quick testing
@@ -296,11 +313,34 @@ export default function SetupWizard({
     type: 'Table QR'
   })
 
+  // Touchpoint editing states
+  const [editingTpId, setEditingTpId] = useState(null)
+  const [editingTpName, setEditingTpName] = useState('')
+  const [editingTpType, setEditingTpType] = useState('Table QR')
+
+  // QR preview modal state
+  const [previewingTp, setPreviewingTp] = useState(null)
+
   // Validation errors
   const [errors, setErrors] = useState({})
   
   // Merchant consent checkbox
   const [isConsentChecked, setIsConsentChecked] = useState(false)
+
+  // Translate default/personal touchpoints dynamically when language toggles
+  useEffect(() => {
+    setTouchPoints(prev => prev.map(tp => {
+      if (tp.nameKey) {
+        return {
+          ...tp,
+          name: tp.nameKey === 'setup.tp_personal_default'
+            ? t('setup.tp_personal_default', { name: tp.staffName || '' })
+            : t(tp.nameKey)
+        }
+      }
+      return tp
+    }))
+  }, [currentLanguage, t])
 
   // Prefill demo data helper
   const prefillDemo = () => {
@@ -313,14 +353,15 @@ export default function SetupWizard({
     
     // Auto-generate touchpoints based on staff
     const initialTouchpoints = [
-      { id: 'tp-main', name: 'Business Main Lobby QR', type: 'Business Main', isActive: true, scans: 245 },
-      { id: 'tp-front', name: 'Reception Front Desk', type: 'Front Desk', isActive: true, scans: 842 },
+      { id: 'tp-main', nameKey: 'setup.tp_lobby_default', name: t('setup.tp_lobby_default'), type: 'Business Main', isActive: true, scans: 245 },
+      { id: 'tp-front', nameKey: 'setup.tp_front_default', name: t('setup.tp_front_default'), type: 'Front Desk', isActive: true, scans: 842 },
       { id: 'tp-t1', name: 'Service Chair 01', type: 'Table QR', isActive: true, scans: 1102 },
       { id: 'tp-t2', name: 'Service Chair 02', type: 'Table QR', isActive: true, scans: 636 },
       { id: 'tp-receipt', name: 'Bottom-of-Receipt QR', type: 'Receipt QR', isActive: true, scans: 436 },
       ...DEMO_STAFF.map(s => ({
         id: `tp-staff-${s.id}`,
-        name: `Personal QR - ${s.nickname}`,
+        nameKey: 'setup.tp_personal_default',
+        name: t('setup.tp_personal_default', { name: s.nickname }),
         type: 'Staff QR',
         staffId: s.id,
         staffName: s.nickname,
@@ -396,8 +437,8 @@ export default function SetupWizard({
       // Auto-populate default business touchpoints on moving from Step 1 to Step 2 if empty
       if (currentStep === 1 && touchPoints.length === 0) {
         setTouchPoints([
-          { id: 'tp-main', name: t('setup.tp_lobby_default'), type: 'Business Main', isActive: true, scans: 0 },
-          { id: 'tp-front', name: t('setup.tp_front_default'), type: 'Front Desk', isActive: true, scans: 0 }
+          { id: 'tp-main', nameKey: 'setup.tp_lobby_default', name: t('setup.tp_lobby_default'), type: 'Business Main', isActive: true, scans: 0 },
+          { id: 'tp-front', nameKey: 'setup.tp_front_default', name: t('setup.tp_front_default'), type: 'Front Desk', isActive: true, scans: 0 }
         ])
       }
       setCurrentStep(prev => prev + 1)
@@ -458,6 +499,7 @@ export default function SetupWizard({
       ...prev,
       {
         id: `tp-staff-${added.id}`,
+        nameKey: 'setup.tp_personal_default',
         name: t('setup.tp_personal_default', { name: added.nickname }),
         type: 'Staff QR',
         staffId: added.id,
@@ -583,6 +625,42 @@ export default function SetupWizard({
   // Step 2: Remove Touch Point
   const handleRemoveTouchpoint = (id) => {
     setTouchPoints(touchPoints.filter(tp => tp.id !== id))
+  }
+
+  // Step 2: Start Editing Touch Point
+  const handleStartEditTouchpoint = (tp) => {
+    setEditingTpId(tp.id)
+    setEditingTpName(tp.name)
+    setEditingTpType(tp.type)
+  }
+
+  // Step 2: Save Edited Touch Point
+  const handleSaveTouchpoint = (id) => {
+    if (!editingTpName.trim()) {
+      return
+    }
+    setTouchPoints(prev => prev.map(tp => {
+      if (tp.id === id) {
+        const updated = {
+          ...tp,
+          name: editingTpName.trim(),
+          type: editingTpType
+        }
+        // If the name is changed, remove the nameKey so that it doesn't get auto-translated
+        if (tp.nameKey) {
+          const originalTranslated = tp.nameKey === 'setup.tp_personal_default'
+            ? t('setup.tp_personal_default', { name: tp.staffName || '' })
+            : t(tp.nameKey)
+          if (editingTpName.trim() !== originalTranslated) {
+            delete updated.nameKey
+          }
+        }
+        return updated
+      }
+      return tp
+    }))
+    setEditingTpId(null)
+    setEditingTpName('')
   }
 
   // Final Complete
@@ -1332,32 +1410,122 @@ export default function SetupWizard({
                     <div className="space-y-3">
                       <h4 className="text-[10px] font-black uppercase text-nexoraMuted tracking-wider">{t('setup.qr_touchpoints_title')} ({touchPoints.length})</h4>
                       <div className="space-y-2 overflow-y-auto pr-1 max-h-[220px] lg:max-h-[440px]">
-                        {touchPoints.map((tp) => (
-                          <div 
-                            key={tp.id} 
-                            className="flex items-center justify-between p-3 rounded-xl border border-nexoraBorder bg-white shadow-sm animate-fadeIn"
-                          >
-                            <div className="min-w-0">
-                              <div className="truncate text-xs font-bold text-nexoraText">{tp.name}</div>
-                              <div className="text-[9px] flex items-center gap-2 mt-0.5">
-                                <span className="px-1.5 py-0.5 rounded font-black bg-nexoraBrandSoft text-nexoraBrand border border-nexoraBrandSoft/50 uppercase">
-                                  {tp.type}
-                                </span>
-                                {tp.staffName && (
-                                  <span className="text-nexoraSubtle">{t('dashboard.modals.assign_staff')} {tp.staffName}</span>
-                                )}
+                        {touchPoints.map((tp) => {
+                          const qrUrl = `${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Golden Glow Nail Spa & Salon')}&tech=tp/${tp.id}`
+                          const qrCodeSrc = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrUrl)}`
+
+                          if (tp.id === editingTpId) {
+                            return (
+                              <div 
+                                key={tp.id} 
+                                className="flex flex-col gap-3 p-3 rounded-xl border border-nexoraBrand bg-slate-50 shadow-sm animate-fadeIn"
+                              >
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-1">
+                                      {t('setup.tp_name')}
+                                    </label>
+                                    <input
+                                      type="text"
+                                      className="w-full bg-white border border-nexoraBorder rounded-lg px-3 py-1.5 text-xs text-nexoraText focus:outline-none focus:border-nexoraBrand transition-all"
+                                      value={editingTpName}
+                                      onChange={(e) => setEditingTpName(e.target.value)}
+                                      placeholder={t('setup.tp_name_placeholder')}
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-1">
+                                      {t('setup.tp_type')}
+                                    </label>
+                                    <select
+                                      className="w-full bg-white border border-nexoraBorder rounded-lg px-3 py-1.5 text-xs text-nexoraText focus:outline-none focus:border-nexoraBrand transition-all h-[34px]"
+                                      value={editingTpType}
+                                      onChange={(e) => setEditingTpType(e.target.value)}
+                                    >
+                                      <option value="Table QR">Table QR</option>
+                                      <option value="Front Desk">Front Desk</option>
+                                      <option value="Receipt QR">Receipt QR</option>
+                                      <option value="Business Main">Business Main</option>
+                                      <option value="Staff QR">Staff QR</option>
+                                    </select>
+                                  </div>
+                                </div>
+                                <div className="flex justify-end gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingTpId(null)}
+                                    className="px-2.5 py-1.5 text-[10px] font-extrabold uppercase tracking-wide text-slate-500 hover:bg-slate-100 rounded border border-slate-200 transition"
+                                  >
+                                    {t('common.cancel') || 'Cancel'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSaveTouchpoint(tp.id)}
+                                    className="px-3.5 py-1.5 text-[10px] font-extrabold uppercase tracking-wide text-white bg-nexoraBrand hover:opacity-90 rounded shadow-sm transition"
+                                  >
+                                    {t('setup.submit') || 'Save'}
+                                  </button>
+                                </div>
+                              </div>
+                            )
+                          }
+
+                          return (
+                            <div 
+                              key={tp.id} 
+                              className="flex items-center justify-between p-3 rounded-xl border border-nexoraBorder bg-white shadow-sm animate-fadeIn"
+                            >
+                              <div className="flex items-center min-w-0 flex-grow">
+                                <div 
+                                  onClick={() => setPreviewingTp(tp)}
+                                  className="relative w-12 h-12 rounded-lg bg-white border border-nexoraBorder/60 p-1 flex items-center justify-center shadow-sm cursor-pointer hover:border-nexoraBrand transition-all hover:scale-105 group/qr select-none overflow-hidden shrink-0"
+                                  title="Click to zoom / Nhấp để phóng to"
+                                >
+                                  <img
+                                    src={qrCodeSrc}
+                                    alt="Scan QR"
+                                    className="h-full w-full object-contain"
+                                  />
+                                  <div className="absolute inset-0 bg-nexoraBrand/75 opacity-0 group-hover/qr:opacity-100 flex items-center justify-center text-white transition-opacity select-none">
+                                    <Search className="h-3.5 w-3.5" />
+                                  </div>
+                                </div>
+                                
+                                <div className="min-w-0 flex-grow ml-3">
+                                  <div className="truncate text-xs font-bold text-nexoraText">{tp.name}</div>
+                                  <div className="text-[9px] flex items-center gap-2 mt-0.5">
+                                    <span className="px-1.5 py-0.5 rounded font-black bg-nexoraBrandSoft text-nexoraBrand border border-nexoraBrandSoft/50 uppercase flex items-center gap-1">
+                                      {getTouchpointIcon(tp.type, "w-3 h-3")}
+                                      {tp.type}
+                                    </span>
+                                    {tp.staffName && (
+                                      <span className="text-nexoraSubtle">{t('dashboard.modals.assign_staff')} {tp.staffName}</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-1 shrink-0 ml-2">
+                                <button 
+                                  type="button"
+                                  onClick={() => handleStartEditTouchpoint(tp)}
+                                  className="p-1.5 rounded-lg text-nexoraSubtle hover:text-nexoraBrand hover:bg-slate-50 transition"
+                                  title="Edit / Sửa"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                </button>
+                                <button 
+                                  type="button"
+                                  onClick={() => handleRemoveTouchpoint(tp.id)}
+                                  className="p-1.5 rounded-lg text-nexoraSubtle hover:text-red-500 hover:bg-slate-50 transition"
+                                  title="Delete / Xóa"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
                               </div>
                             </div>
-                            {tp.id.includes('custom') && (
-                              <button 
-                                onClick={() => handleRemoveTouchpoint(tp.id)}
-                                className="p-1 text-nexoraSubtle hover:text-red-500 transition-colors"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                          </div>
-                        ))}
+                          )
+                        })}
                       </div>
                     </div>
                   </div>
@@ -1536,6 +1704,79 @@ export default function SetupWizard({
         onClose={() => setPayoutSetupOpen(false)}
         onSubmit={handlePayoutSubmit}
       />
+
+      {/* Zoom QR Code Preview Modal */}
+      {previewingTp && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl animate-scaleUp relative">
+            <button 
+              onClick={() => setPreviewingTp(null)} 
+              className="absolute right-4 top-4 rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+              title={t('setup.close') || 'Close'}
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <h3 className="text-base font-extrabold text-slate-800 mb-4 pr-8">
+              {t('dashboard.touchpoints.tabs.stations') || 'QR Touch Point'} - {previewingTp.name}
+            </h3>
+
+            <div className="flex flex-col items-center">
+              <div className="mx-auto flex aspect-[2/3] w-48 flex-col items-center justify-between rounded-2xl bg-nexoraCanvas border border-nexoraBorder/80 p-4 text-nexoraText shadow-md qr-print-card">
+                {/* Nexora Branding Header inside Card */}
+                <div className="flex items-center gap-1 justify-center qr-print-brand-header">
+                  <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-3.5 w-3.5 object-contain qr-print-brand-logo" />
+                  <span className="text-[8px] font-black tracking-wider text-slate-800 qr-print-brand-text">NEXORA</span>
+                </div>
+
+                <div className="w-full text-center">
+                  <div className="text-[10px] font-extrabold uppercase text-nexoraBrand tracking-wide qr-print-biz-name mx-auto">
+                    {previewingTp.name}
+                  </div>
+                  <div className="text-[7.5px] font-bold text-nexoraMuted qr-print-staff-info mx-auto">
+                    {businessInfo.name || 'Your Spa Salon'}
+                  </div>
+                </div>
+                
+                {/* Real generated QR code scan preview */}
+                <div className="h-28 w-28 rounded-lg bg-white border border-nexoraBorder/60 p-2 flex items-center justify-center shadow-inner qr-print-qr-wrapper">
+                  <img 
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
+                      `${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Golden Glow Nail Spa & Salon')}&tech=tp/${previewingTp.id}`
+                    )}`} 
+                    alt="QR Preview" 
+                    className="h-full w-full object-contain qr-print-qr-image"
+                  />
+                </div>
+
+                <div className="text-[8px] font-extrabold uppercase text-nexoraMuted tracking-wider qr-print-scan-text leading-tight mx-auto">
+                  {t('customer.scan_to_tip_review') || 'Scan to Tip & Review'}
+                </div>
+
+                <div className="flex items-center gap-1 text-[7.5px] font-bold text-nexoraSubtle qr-print-footer">
+                  <ShieldCheck className="h-2.5 w-2.5 text-nexoraBrand shrink-0" />
+                  <span>Secure redirect by VLINKPAY</span>
+                </div>
+              </div>
+
+              <div className="mt-4 w-full text-center">
+                <p className="text-[10px] font-mono text-slate-400 select-all truncate bg-slate-50 px-2 py-1.5 rounded border border-slate-100">
+                  {`${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Golden Glow Nail Spa & Salon')}&tech=tp/${previewingTp.id}`}
+                </p>
+              </div>
+
+              <div className="mt-5 flex justify-end gap-2 w-full border-t border-slate-100 pt-3">
+                <button
+                  onClick={() => setPreviewingTp(null)}
+                  className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50 transition w-full"
+                >
+                  {t('setup.close') || 'Close'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Print-only container to match Dashboard's QrModal layout exactly on print */}
       <div className="print-only-container qr-modal-backdrop">

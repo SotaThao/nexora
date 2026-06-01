@@ -110,6 +110,9 @@
     "tp_type": "Touch Point Type",
     "add_tp_btn": "Add Touch Point",
     "active_tp_count": "{count} Active Touch Points",
+    "tp_lobby_default": "Lobby Main / General Tipping QR",
+    "tp_front_default": "Reception Desk / Front Counter",
+    "tp_personal_default": "Personal QR - {name}",
     
     "title_step_3": "Step 3: Download QRs & Finalize Setup",
     "desc_step_3": "Everything is ready! You can download your print-ready QR kit and activate the Nexora Touch Gateway.",
