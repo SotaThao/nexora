@@ -3,11 +3,16 @@ import SetupWizard from './components/SetupWizard'
 import Dashboard from './components/Dashboard'
 import CustomerFlow from './components/CustomerFlow'
 import RegisterWizard from './components/RegisterWizard'
+import StaffRegistrationWizard from './components/StaffRegistrationWizard'
 import { 
   Sparkles, ShieldCheck, LogIn, Lock, Mail, RefreshCw, 
-  Layers, Users, ShieldAlert, CheckCircle2, ChevronRight, Activity
+  Layers, Users, ShieldAlert, CheckCircle2, ChevronRight, Activity, X
 } from 'lucide-react'
 import { useTranslation } from './contexts/LanguageContext'
+import { storage, initStorage } from './utils/storage'
+
+const localStorage = storage
+const sessionStorage = storage
 
 // Mock SSO Account Details
 const MOCK_SSO_KYB_PROFILE = {
@@ -30,7 +35,7 @@ const MOCK_SSO_NO_KYB_EMAIL = 'sso_no_kyb@gmail.com'
 
 export default function App() {
   const { currentLanguage, setLanguage, t } = useTranslation()
-  const [view, setView] = useState('login') // 'login' | 'register-wizard' | 'onboarding' | 'dashboard' | 'customer'
+  const [view, setView] = useState('login') // 'login' | 'register-wizard' | 'onboarding' | 'dashboard' | 'customer' | 'staff-portal'
   const [isLoading, setIsLoading] = useState(false)
   const [setupData, setSetupData] = useState(null)
   const [verificationStatus, setVerificationStatus] = useState('kyb_approved')
@@ -55,11 +60,29 @@ export default function App() {
   const [initialDashboardMenu, setInitialDashboardMenu] = useState('overview')
   const [initialSettingsTab, setInitialSettingsTab] = useState('profile')
 
+  // Staff registration states
+  const [staffInviteData, setStaffInviteData] = useState(null)
+  const [simulationNotification, setSimulationNotification] = useState(null)
+
   // Load setup data or customer flow on mount
   useEffect(() => {
+    initStorage()
     const params = new URLSearchParams(window.location.search)
     if (params.get('flow') === 'customer') {
       setView('customer')
+      return
+    }
+    if (params.get('flow') === 'staff-invite') {
+      const bizName = params.get('biz') || 'Golden Glow Nail Spa'
+      setStaffInviteData({
+        id: '',
+        name: '',
+        email: '',
+        phone: '',
+        role: 'Nail Technician',
+        biz: bizName
+      })
+      setView('staff-portal')
       return
     }
 
@@ -81,6 +104,34 @@ export default function App() {
 
     // Load pending/registered accounts
     loadPendingAccounts()
+
+    // Listen for storage events (e.g. from Supabase or sibling frames) to update setupData state
+    const handleStorage = (e) => {
+      if (!e || !e.key || e.key === 'nexora_merchant_setup') {
+        const updatedSetup = localStorage.getItem('nexora_merchant_setup')
+        if (updatedSetup) {
+          try {
+            setSetupData(JSON.parse(updatedSetup))
+          } catch (err) {}
+        }
+      }
+      if (!e || !e.key || e.key === 'nexora_pending_accounts') {
+        loadPendingAccounts()
+      }
+    }
+    window.addEventListener('storage', handleStorage)
+
+    // Listen for simulation invite event from merchant dashboard
+    const handleSimulationInvite = (e) => {
+      if (e && e.detail) {
+        setSimulationNotification(e.detail)
+      }
+    }
+    window.addEventListener('showSimulationInvite', handleSimulationInvite)
+    return () => {
+      window.removeEventListener('showSimulationInvite', handleSimulationInvite)
+      window.removeEventListener('storage', handleStorage)
+    }
   }, [])
 
   const loadPendingAccounts = () => {
@@ -492,17 +543,17 @@ export default function App() {
                           },
                           staffList: [
                             {
-                              id: '1',
+                              id: 'NEX-STAFF-MIA0123',
                               fullName: 'Mia Tran',
                               nickname: 'Mia T.',
                               position: 'Gel-X Artist',
                               avatar: '',
                               isActive: true,
                               showInTipsFlow: true,
-                              paymentAccounts: { venmo: '@mia-nails', cashapp: '$miaglow', zelle: 'mia.tran@gmail.com', vlinkpay: '' }
+                              paymentAccounts: { venmo: '@mia-nails', cashapp: '$miaglow', zelle: 'mia.tran@gmail.com', vlinkpay: 'VLP-0123-MIA' }
                             },
                             {
-                              id: '2',
+                              id: 'NEX-STAFF-VL8893',
                               fullName: 'Vivian Le',
                               nickname: 'Vivian L.',
                               position: 'Acrylic Specialist',
@@ -512,17 +563,17 @@ export default function App() {
                               paymentAccounts: { venmo: '', cashapp: '$vivianle', zelle: '407-555-0199', vlinkpay: 'VLP-8893-VL' }
                             },
                             {
-                              id: '3',
+                              id: 'NEX-STAFF-ASH0155',
                               fullName: 'Ashley Park',
                               nickname: 'Ashley P.',
                               position: 'Pedicure Lead',
                               avatar: '',
                               isActive: true,
                               showInTipsFlow: true,
-                              paymentAccounts: { venmo: '@ashley-pedi', cashapp: '', zelle: 'ashley@glownails.com', vlinkpay: '' }
+                              paymentAccounts: { venmo: '@ashley-pedi', cashapp: '', zelle: 'ashley@glownails.com', vlinkpay: 'VLP-0155-ASH' }
                             },
                             {
-                              id: '4',
+                              id: 'NEX-STAFF-HN1148',
                               fullName: 'Hanna Nguyen',
                               nickname: 'Hanna Ng.',
                               position: 'Nail Art Designer',
@@ -650,6 +701,36 @@ export default function App() {
                       </p>
                     </div>
                   </button>
+
+                  {/* Scenario 4: Staff Portal Setup */}
+                  <button 
+                    onClick={() => {
+                      setStaffInviteData({
+                        id: '',
+                        name: 'Lisa Tran',
+                        email: 'lisa@example.com',
+                        phone: '408-555-2345',
+                        role: 'Nail Technician',
+                        biz: 'Golden Glow Nail Spa'
+                      })
+                      setView('staff-portal')
+                    }}
+                    className="w-full text-left p-3 rounded-xl border border-nexoraBorder hover:border-nexoraBrand bg-slate-50 hover:bg-nexoraBrandSoft/10 transition flex items-start gap-3 group"
+                  >
+                    <span className="h-6 w-6 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center font-bold text-xs text-amber-600 shrink-0">4</span>
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-slate-800 group-hover:text-nexoraBrand flex items-center gap-1.5">
+                        {currentLanguage === 'vi' ? 'Giả lập Staff Setup Portal' : 'Simulate Staff Setup Portal'}
+                        <ChevronRight className="w-3 h-3 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                      </div>
+                      <p className="text-[9px] text-slate-500 mt-0.5">
+                        {currentLanguage === 'vi'
+                          ? 'Mở trực tiếp luồng đăng ký & cài đặt ví cho nhân viên Lisa Tran.'
+                          : 'Directly opens the registration & wallet setup flow for technician Lisa Tran.'
+                        }
+                      </p>
+                    </div>
+                  </button>
                 </div>
               </div>
 
@@ -769,6 +850,27 @@ export default function App() {
         <CustomerFlow />
       )}
 
+      {/* 6. STAFF REGISTRATION & SETUP PORTAL */}
+      {view === 'staff-portal' && (
+        <StaffRegistrationWizard 
+          inviteData={staffInviteData}
+          onReturnToMerchant={() => {
+            // Reload setupData to reflect new active thợ instantly
+            const savedSetup = localStorage.getItem('nexora_merchant_setup')
+            if (savedSetup) {
+              try {
+                setSetupData(JSON.parse(savedSetup))
+              } catch (e) {
+                console.error(e)
+              }
+            }
+            // Clear URL query parameters
+            window.history.replaceState({}, document.title, window.location.pathname)
+            setView('dashboard')
+          }}
+        />
+      )}
+
       {/* KYB Verification Required Custom Modal */}
       {showKybModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -814,6 +916,49 @@ export default function App() {
                 className="px-5 py-2.5 bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] hover:opacity-90 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-md transition-all animate-pulse"
               >
                 {currentLanguage === 'vi' ? 'Xác thực ngay' : 'Verify Now'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Simulation Invite Toast */}
+      {simulationNotification && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4 animate-fadeIn">
+          <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-2xl p-4 shadow-2xl border border-amber-400 flex items-center justify-between gap-4">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="bg-white/20 rounded-xl p-2 text-white shrink-0 mt-0.5">
+                <Sparkles className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <strong className="text-xs block font-black uppercase tracking-wider">
+                  {simulationNotification.isLinkOnly ? '🔗 Link Request Sent' : '📧 Invite Link Sent'}
+                </strong>
+                <p className="text-[10px] text-white/95 leading-normal mt-0.5 font-medium">
+                  {simulationNotification.isLinkOnly 
+                    ? `Link request sent to ${simulationNotification.name} (${simulationNotification.role})`
+                    : `Staff invitation link generated for ${simulationNotification.name} (${simulationNotification.email || simulationNotification.phone})`
+                  }
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex gap-1.5 shrink-0 items-center">
+              <button
+                onClick={() => {
+                  setStaffInviteData(simulationNotification)
+                  setView('staff-portal')
+                  setSimulationNotification(null)
+                }}
+                className="px-3 py-2 bg-white text-orange-600 hover:bg-orange-50 rounded-xl text-[10px] font-black uppercase transition-all shadow-sm shrink-0"
+              >
+                {currentLanguage === 'vi' ? 'Mở Thiết lập' : 'Open Setup'}
+              </button>
+              <button
+                onClick={() => setSimulationNotification(null)}
+                className="p-1.5 hover:bg-white/15 rounded-xl text-white/80 transition"
+              >
+                <X className="h-4 w-4" />
               </button>
             </div>
           </div>

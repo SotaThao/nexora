@@ -14,16 +14,27 @@ import {
   Users
 } from 'lucide-react';
 
-export default function TipsView({ transactions = [], staff = [] }) {
+export default function TipsView({ 
+  transactions = [], 
+  staff = [],
+  activeTab: propActiveTab,
+  onTabChange,
+  processingFee: propProcessingFee,
+  setProcessingFee: propSetProcessingFee
+}) {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState('overview'); // overview, savings, transactions, payouts
+  const [localActiveTab, setLocalActiveTab] = useState('overview'); // overview, savings, transactions, payouts
+  const activeTab = propActiveTab !== undefined ? propActiveTab : localActiveTab;
+  const setActiveTab = onTabChange !== undefined ? onTabChange : setLocalActiveTab;
   const [searchQuery, setSearchQuery] = useState('');
   const [hoverIndex, setHoverIndex] = useState(null);
   const chartRef = useRef(null);
   
   // Savings Calculator states
   const [monthlyVolume, setMonthlyVolume] = useState(5000);
-  const [processingFee, setProcessingFee] = useState(3.0);
+  const [localProcessingFee, setLocalProcessingFee] = useState(3.0);
+  const processingFee = propProcessingFee !== undefined ? propProcessingFee : localProcessingFee;
+  const setProcessingFee = propSetProcessingFee !== undefined ? propSetProcessingFee : setLocalProcessingFee;
 
   // 1. Calculations
   const totalVolume = useMemo(() => {
@@ -470,8 +481,10 @@ export default function TipsView({ transactions = [], staff = [] }) {
             </div>
             <div className="card-elevated">
               <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">{t('dashboard.tips.savings.fees_avoided') || 'Phí Xử Lý Tránh Được'}</small>
-              <h3 className="mt-1 text-2xl font-black text-luxuryGold">{formatUSD(directTips * 0.03)}</h3>
-              <span className="mt-1.5 block text-[11px] font-bold text-mutedGrey dark:text-slate-400">{t('dashboard.tips.savings.fees_avoided_sub') || 'Ước tính mức 3% phí thẻ'}</span>
+              <h3 className="mt-1 text-2xl font-black text-luxuryGold">{formatUSD(directTips * (processingFee / 100))}</h3>
+              <span className="mt-1.5 block text-[11px] font-bold text-mutedGrey dark:text-slate-400">
+                {(t('dashboard.tips.savings.fees_avoided_sub') || 'Ước tính mức 3% phí thẻ').replace('3%', `${processingFee}%`)}
+              </span>
             </div>
             <div className="card-elevated">
               <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">{t('dashboard.tips.savings.active_payouts') || 'Số Thợ Nhận Trực Tiếp'}</small>
