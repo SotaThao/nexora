@@ -491,7 +491,8 @@ function DashboardHeader({
   transactions,
   reviews,
   touchpoints,
-  onViewStaffDetail
+  onViewStaffDetail,
+  onApproveStaff
 }) {
   const { currentLanguage, setLanguage, t } = useTranslation()
   const dropdownRef = useRef(null)
@@ -532,7 +533,10 @@ function DashboardHeader({
     if (item.linkTab === 'staff' && item.staffId) {
       const member = staff.find(s => s.id === item.staffId)
       if (member) {
-        openApproveStaff(member)
+        onNavigateMenu(item.linkTab)
+        if (typeof onApproveStaff === 'function') {
+          onApproveStaff(member)
+        }
       } else {
         onNavigateMenu(item.linkTab)
       }
@@ -4991,6 +4995,7 @@ export default function Dashboard({
           reviews={reviews}
           touchpoints={touchpoints}
           onViewStaffDetail={setViewingStaffDetailId}
+          onApproveStaff={openApproveStaff}
         />
 
         <div className="sticky top-16 z-10 flex items-center justify-between border-b border-nexoraBorder bg-white px-4 py-3 lg:hidden">
