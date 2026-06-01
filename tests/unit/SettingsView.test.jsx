@@ -206,4 +206,23 @@ describe('SettingsView Component Unit Tests', () => {
     expect(screen.getByText(/IRS Income Reporting/i)).toBeInTheDocument()
     expect(screen.getByText(/Savings Disclaimer/i)).toBeInTheDocument()
   })
+
+  it('supports uploading a QR code and shows the redesigned payout edit modal features', () => {
+    render(
+      <LanguageProvider>
+        <SettingsView hasKyb={true} />
+      </LanguageProvider>
+    )
+
+    // Edit Venmo flow
+    const editBtn = screen.getByRole('button', { name: /Edit Venmo Payout Account/i })
+    fireEvent.click(editBtn)
+
+    // Verify warning alert is present
+    expect(screen.getByText(/Please enter the correct receiving account information/i)).toBeInTheDocument()
+
+    // Verify TAKE PHOTO and CHOOSE FILE options are visible
+    expect(screen.getByRole('button', { name: /TAKE PHOTO/i })).toBeInTheDocument()
+    expect(screen.getByText(/CHOOSE FILE/i)).toBeInTheDocument()
+  })
 })
