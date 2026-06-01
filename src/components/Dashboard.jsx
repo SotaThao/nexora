@@ -53,6 +53,7 @@ import {
 import StaffDetailView from './StaffDetailView'
 import { useTranslation } from '../contexts/LanguageContext'
 import { storage } from '../utils/storage'
+import { useNotification } from '../contexts/NotificationContext'
 
 const localStorage = storage
 const sessionStorage = storage
@@ -1764,6 +1765,7 @@ function Overview({
   hasKyb = true 
 }) {
   const { currentLanguage, t } = useTranslation()
+  const { showToast } = useNotification()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
 
@@ -1976,7 +1978,7 @@ function Overview({
                   onClick={() => {
                     const nfcUrl = `${window.location.origin}${window.location.pathname}?flow=customer&tech=general&biz=${encodeURIComponent(businessName)}`
                     navigator.clipboard.writeText(nfcUrl)
-                    alert('Copied NFC redirect link to clipboard!')
+                    showToast('Copied NFC redirect link to clipboard!', 'success')
                   }}
                   className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-white border border-nexoraBorder px-4 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition cursor-pointer"
                 >
@@ -2107,18 +2109,18 @@ function StaffView({
   onApproveClick,
   onAdd, 
   onEdit, 
-  onDelete, 
-  onQr, 
-  onToggle, 
-  onToggleTipsFlow, 
-  onViewDetail,
-  onLinkStaff,
   onInviteStaff,
+  onDelete,
+  onToggleActive,
+  onToggleShowInTipsFlow,
+  onViewStaffDetail,
   businessName,
-  onAcceptJoin,
-  onDeclineJoin
+  verificationStatus,
+  onBlockedFeatureClick,
+  onOpenInviteShare
 }) {
   const { t, currentLanguage } = useTranslation()
+  const { showToast } = useNotification()
   const [activeTab, setActiveTab] = useState('link') // 'link' | 'invite'
   const [largeJoinQrOpen, setLargeJoinQrOpen] = useState(false)
   
@@ -2180,7 +2182,7 @@ function StaffView({
   const handleInviteSubmit = (e) => {
     e.preventDefault()
     if (!inviteName.trim() || !inviteContact.trim()) {
-      alert(currentLanguage === 'vi' ? 'Vui lòng điền đầy đủ Tên và phương thức liên hệ.' : 'Please enter both name and contact info.')
+      showToast(currentLanguage === 'vi' ? 'Vui lòng điền đầy đủ Tên và phương thức liên hệ.' : 'Please enter both name and contact info.', 'warning')
       return
     }
     onInviteStaff(inviteName, inviteContact, inviteRole, inviteMethod)
@@ -2190,9 +2192,10 @@ function StaffView({
 
   // Resend invite toast simulator
   const handleResendInvite = (member) => {
-    alert(currentLanguage === 'vi' 
+    showToast(currentLanguage === 'vi' 
       ? `Đã gửi lại link thiết lập thành công tới ${member.fullName}!` 
-      : `Setup link successfully resent to ${member.fullName}!`
+      : `Setup link successfully resent to ${member.fullName}!`,
+      'success'
     )
   }
 
@@ -2324,7 +2327,7 @@ function StaffView({
               onClick={() => {
                 const url = `${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`
                 navigator.clipboard.writeText(url)
-                alert(currentLanguage === 'vi' ? 'Đã sao chép liên kết gia nhập!' : 'Join link copied to clipboard!')
+                showToast(currentLanguage === 'vi' ? 'Đã sao chép liên kết gia nhập!' : 'Join link copied to clipboard!', 'success')
               }}
               className="h-9 px-3.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-sm"
             >
@@ -2616,7 +2619,7 @@ function StaffView({
                 onClick={() => {
                   const url = `${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`
                   navigator.clipboard.writeText(url)
-                  alert(currentLanguage === 'vi' ? 'Đã sao chép liên kết gia nhập!' : 'Join link copied to clipboard!')
+                  showToast(currentLanguage === 'vi' ? 'Đã sao chép liên kết gia nhập!' : 'Join link copied to clipboard!', 'success')
                 }}
                 className="h-7 px-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[10px] font-bold transition flex items-center gap-1 shrink-0"
               >
@@ -2633,6 +2636,7 @@ function StaffView({
 
 function ReviewsView({ reviews, staff, filter, setFilter, setupData }) {
   const { t } = useTranslation()
+  const { showToast } = useNotification()
   const [sourceFilter, setSourceFilter] = useState('all')
 
   const reviewLinks = useMemo(() => {
@@ -3157,6 +3161,7 @@ function StaffModal({
   onOpenInviteShare
 }) {
   const { t, currentLanguage } = useTranslation()
+  const { showToast } = useNotification()
   const [payoutSetupOpen, setPayoutSetupOpen] = useState(false)
   const [payoutSetupWallet, setPayoutSetupWallet] = useState('venmo')
   const [tempPayoutValues, setTempPayoutValues] = useState({ value: '', qrCode: '', accountName: '' })
@@ -3442,9 +3447,9 @@ function StaffModal({
                             const updated = { ...prev, nexoraStaffId: val }
                             const kycProfile = MOCK_NEXORA_STAFF_PROFILES[val.trim()]
                             if (kycProfile) {
-                              alert(currentLanguage === 'vi' 
+                              showToast(currentLanguage === 'vi' 
                                 ? 'Đã xác thực tài khoản NEXORA! Tự động nhập thông tin thợ.' 
-                                : 'NEXORA Staff Profile Verified! Auto-filled profile details.')
+                                : 'NEXORA Staff Profile Verified! Auto-filled profile details.', 'success')
                               return {
                                 ...updated,
                                 fullName: kycProfile.fullName,
@@ -3615,6 +3620,7 @@ function QrModal({ target, businessName, onClose }) {
 
 function InviteShareModal({ open, businessName, defaultName, defaultContact, onClose, onSendInvite }) {
   const { t, currentLanguage } = useTranslation()
+  const { showToast } = useNotification()
   const [name, setName] = useState('')
   const [contact, setContact] = useState('')
   const [role, setRole] = useState('Nail Technician')
@@ -3707,7 +3713,7 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
                   type="button"
                   onClick={() => {
                     navigator.clipboard.writeText(joinLink)
-                    alert(currentLanguage === 'vi' ? 'Đã sao chép liên kết gia nhập!' : 'Join link copied to clipboard!')
+                    showToast(currentLanguage === 'vi' ? 'Đã sao chép liên kết gia nhập!' : 'Join link copied to clipboard!', 'success')
                   }}
                   className="h-8 px-3 bg-slate-800 text-white rounded text-[10px] font-black uppercase hover:bg-slate-700 transition font-sans"
                 >
@@ -3856,7 +3862,7 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
                 type="button"
                 onClick={() => {
                   navigator.clipboard.writeText(joinLink)
-                  alert(currentLanguage === 'vi' ? 'Đã sao chép liên kết gia nhập!' : 'Join link copied to clipboard!')
+                  showToast(currentLanguage === 'vi' ? 'Đã sao chép liên kết gia nhập!' : 'Join link copied to clipboard!', 'success')
                 }}
                 className="h-7 px-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[10px] font-bold transition flex items-center gap-1 shrink-0 font-sans"
               >
@@ -3883,6 +3889,7 @@ export default function Dashboard({
   onLogout 
 }) {
   const { currentLanguage, t } = useTranslation()
+  const { showToast, showConfirm } = useNotification()
   const [showKybWarningModal, setShowKybWarningModal] = useState(false)
   const [activeMenu, setActiveMenu] = useState(initialMenu)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -4566,7 +4573,7 @@ export default function Dashboard({
 
   const handleLinkStaff = (globalMember, role) => {
     if (staff.some(s => s.id === globalMember.id)) {
-      alert('This technician is already linked to your salon.');
+      showToast('This technician is already linked to your salon.', 'error');
       return;
     }
 
@@ -4705,25 +4712,29 @@ export default function Dashboard({
       return current
     })
 
-    alert(currentLanguage === 'vi' 
+    showToast(currentLanguage === 'vi' 
       ? `Đã chấp nhận và lưu thông tin thợ ${updatedFormPayload?.fullName || member.fullName} vào tiệm!` 
-      : `Accepted and saved technician ${updatedFormPayload?.fullName || member.fullName} to salon!`)
+      : `Accepted and saved technician ${updatedFormPayload?.fullName || member.fullName} to salon!`, 'success')
   }
 
-  const handleDeclineJoinRequest = (staffId) => {
+  const handleDeclineJoinRequest = async (staffId) => {
     const member = staff.find(s => s.id === staffId)
     if (!member) return
 
-    if (confirm(currentLanguage === 'vi' 
+    const ok = await showConfirm(currentLanguage === 'vi' 
       ? `Bạn có chắc chắn muốn từ chối yêu cầu tham gia của thợ ${member.fullName}?` 
-      : `Are you sure you want to decline join request from ${member.fullName}?`)) {
+      : `Are you sure you want to decline join request from ${member.fullName}?`)
+    if (ok) {
       setStaff((current) => current.filter((m) => m.id !== staffId))
       setTouchpoints((current) => current.filter((tp) => tp.staffId !== staffId))
     }
   }
 
-  const deleteStaff = (id) => {
-    if (!confirm('Delete this staff member from Nexora Touch?')) return
+  const deleteStaff = async (id) => {
+    const ok = await showConfirm(currentLanguage === 'vi'
+      ? 'Bạn có chắc chắn muốn xóa nhân viên này khỏi Nexora Touch?'
+      : 'Delete this staff member from Nexora Touch?')
+    if (!ok) return
     setStaff((current) => current.filter((member) => member.id !== id))
     setTouchpoints((current) => current.filter((point) => !(point.type === 'Staff QR' && point.staffId === id)))
     if (viewingStaffDetailId === id) {

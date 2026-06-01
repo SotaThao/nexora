@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
 import { storage } from '../utils/storage'
+import { useNotification } from '../contexts/NotificationContext'
 
 const localStorage = storage
 const sessionStorage = storage
@@ -121,6 +122,7 @@ const AVATAR_PRESETS = [
 
 export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant }) {
   const { t, currentLanguage, setLanguage } = useTranslation()
+  const { showToast } = useNotification()
   const [step, setStep] = useState(0) // 0: Welcome Invite, 1: OTP, 2: Profile, 3: Payments, 4: Consent & Activate, 5: Success
   
   // Path selection states
@@ -1513,7 +1515,7 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
                     onClick={() => {
                       const link = `https://touch.nexora.com/staff/${staffId}`
                       navigator.clipboard.writeText(link)
-                      alert(currentLanguage === 'vi' ? 'Đã sao chép liên kết của thợ!' : 'Staff link copied to clipboard!')
+                      showToast(currentLanguage === 'vi' ? 'Đã sao chép liên kết của thợ!' : 'Staff link copied to clipboard!')
                     }}
                     className="flex items-center gap-1.5 px-4 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition"
                   >

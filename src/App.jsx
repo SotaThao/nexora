@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { useTranslation } from './contexts/LanguageContext'
 import { storage, initStorage } from './utils/storage'
+import { useNotification } from './contexts/NotificationContext'
 
 const localStorage = storage
 const sessionStorage = storage
@@ -35,6 +36,7 @@ const MOCK_SSO_NO_KYB_EMAIL = 'sso_no_kyb@gmail.com'
 
 export default function App() {
   const { currentLanguage, setLanguage, t } = useTranslation()
+  const { showConfirm } = useNotification()
   const [view, setView] = useState('login') // 'login' | 'register-wizard' | 'onboarding' | 'dashboard' | 'customer' | 'staff-portal'
   const [isLoading, setIsLoading] = useState(false)
   const [setupData, setSetupData] = useState(null)
@@ -327,8 +329,9 @@ export default function App() {
   }
 
   // Action: Simulated log out / Reset onboarding to test again
-  const handleResetApp = () => {
-    if (confirm(t('login.reset_confirm'))) {
+  const handleResetApp = async () => {
+    const ok = await showConfirm(t('login.reset_confirm') || 'Are you sure you want to reset?')
+    if (ok) {
       localStorage.removeItem('nexora_merchant_setup')
       setSetupData(null)
       setVerificationStatus('kyb_approved')

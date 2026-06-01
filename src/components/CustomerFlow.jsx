@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react'
 import { Star, CheckCircle, Wallet, ArrowRight, ShieldCheck, Heart, Search, Users, Check, AlertTriangle } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
 import { storage } from '../utils/storage'
+import { useNotification } from '../contexts/NotificationContext'
 
 const localStorage = storage
 const sessionStorage = storage
@@ -48,6 +49,7 @@ const WalletLogos = {
 
 export default function CustomerFlow() {
   const { currentLanguage, setLanguage, t } = useTranslation()
+  const { showToast } = useNotification()
 
   // Parse parameters from query string
   const params = useMemo(() => new URLSearchParams(window.location.search), [])
@@ -323,12 +325,12 @@ export default function CustomerFlow() {
       if (selTip === 'custom') {
         const val = Number(customTips[member.id])
         if (isNaN(val) || val <= 0) {
-          alert(t('customer.invalid_tip') || 'Please enter a valid tip amount greater than 0.')
+          showToast(t('customer.invalid_tip') || 'Please enter a valid tip amount greater than 0.', 'error')
           return
         }
       } else {
         if (selTip <= 0) {
-          alert(t('customer.invalid_tip') || 'Please enter a valid tip amount greater than 0.')
+          showToast(t('customer.invalid_tip') || 'Please enter a valid tip amount greater than 0.', 'error')
           return
         }
       }
