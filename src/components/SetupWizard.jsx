@@ -382,7 +382,7 @@ export default function SetupWizard({
     }
     
     if (currentStep === 2) {
-      if (staffList.length === 0) {
+      if (!isSsoLocked && staffList.length === 0) {
         newErrors.staffList = t('setup.errors.staff_empty')
       }
     }
@@ -611,7 +611,9 @@ export default function SetupWizard({
   const stepName = (step) => {
     switch (step) {
       case 1: return t('setup.step_name_1')
-      case 2: return t('setup.step_name_2')
+      case 2: return isSsoLocked 
+        ? (currentLanguage === 'vi' ? 'Điểm chạm QR' : 'QR Touchpoints') 
+        : (t('setup.step_name_2') || 'Nhân viên & QR')
       case 3: return t('setup.step_name_3')
       default: return ''
     }
@@ -630,7 +632,7 @@ export default function SetupWizard({
         {/* Header */}
         <header className="flex flex-col md:flex-row md:items-center justify-between border-b border-nexoraBorder pb-6 mb-8 gap-4">
           <div className="flex min-w-0 items-center gap-3">
-            <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="w-10 h-10 shrink-0 object-contain shadow-md" />
+            <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="w-10 h-10 shrink-0 object-contain" />
             <div className="min-w-0">
               <h1 className="font-sans text-xl font-bold tracking-wide sm:text-2xl text-nexoraText">
                 NEXORA <span className="ml-1 inline-flex align-middle text-nexoraBrand font-sans text-xs tracking-widest font-black uppercase bg-nexoraBrand/10 px-2 py-0.5 rounded border border-nexoraBrand/30 sm:ml-2">TOUCH</span>
@@ -1071,18 +1073,23 @@ export default function SetupWizard({
               <div className="space-y-6 animate-fadeIn">
                 <div className="border-b border-nexoraRule pb-4 mb-4">
                   <h2 className="font-sans text-xl md:text-2xl font-bold flex items-center gap-2.5 text-nexoraText">
-                    <Users className="text-nexoraBrand w-6 h-6" />
-                    {t('setup.title_step_2')}
+                    {isSsoLocked ? <QrCode className="text-nexoraBrand w-6 h-6" /> : <Users className="text-nexoraBrand w-6 h-6" />}
+                    {isSsoLocked 
+                      ? (currentLanguage === 'vi' ? 'Bước 2: Cấu hình Điểm Chạm QR' : 'Step 2: QR Touchpoints Configuration')
+                      : (t('setup.title_step_2') || 'Bước 2: Quản lý Nhân viên & Điểm Chạm QR')}
                   </h2>
                   <p className="text-nexoraSubtle text-sm mt-1">
-                    {t('setup.desc_step_2')}
+                    {isSsoLocked 
+                      ? (currentLanguage === 'vi' ? 'Thiết lập các vị trí dán mã QR (ví dụ: quầy lễ tân, bàn làm việc, xe đẩy) tại tiệm.' : 'Set up QR code positions (e.g. reception desk, service table, cart) at your store.')
+                      : (t('setup.desc_step_2') || 'Thêm thợ của bạn. Hệ thống sẽ tự động phát sinh mã QR tương ứng để dán tại ghế hoặc chia sẻ.')}
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                   
                   {/* Left Column: Staff Creation & Grid list */}
-                  <div className="lg:col-span-6 space-y-6 lg:border-r lg:border-nexoraRule lg:pr-8">
+                  {!isSsoLocked && (
+                    <div className="lg:col-span-6 space-y-6 lg:border-r lg:border-nexoraRule lg:pr-8">
                     {/* Add Staff form */}
                     <div className="space-y-4">
                       <h3 className="text-xs font-bold text-nexoraText uppercase tracking-wider flex items-center gap-1.5 pb-1">
@@ -1264,9 +1271,10 @@ export default function SetupWizard({
                       )}
                     </div>
                   </div>
+                )}
                   
                   {/* Right Column: QR Touchpoints management & custom adding */}
-                  <div className="lg:col-span-6 space-y-6">
+                  <div className={`${isSsoLocked ? 'lg:col-span-12' : 'lg:col-span-6'} space-y-6`}>
                     {/* Add Custom touchpoint form */}
                     <div className="space-y-4">
                       <h3 className="text-xs font-bold text-nexoraText uppercase tracking-wider flex items-center gap-1.5 pb-1">

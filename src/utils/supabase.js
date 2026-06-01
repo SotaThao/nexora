@@ -48,22 +48,17 @@ export const supabaseSync = {
     }
   },
   pullAll: async () => {
-    if (!isSupabaseConfigured) return
+    if (!isSupabaseConfigured) return []
     try {
       const { data, error } = await supabase
         .from('nexora_sync')
         .select('*')
       
       if (error) throw error
-      if (data) {
-        data.forEach(row => {
-          const valueStr = typeof row.data === 'object' ? JSON.stringify(row.data) : row.data
-          sessionStorage.setItem(row.id, valueStr)
-          localStorage.setItem(row.id, valueStr)
-        })
-      }
+      return data || []
     } catch (e) {
       console.error('Supabase pull error:', e)
+      return []
     }
   },
   subscribe: (onUpdate) => {
