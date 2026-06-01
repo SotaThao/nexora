@@ -12,12 +12,22 @@ export const storage = {
   },
   setItem: (key, value) => {
     const fullKey = STORAGE_PREFIX + key
-    sessionStorage.setItem(fullKey, value)
-    localStorage.setItem(fullKey, value)
+    
+    let valueWithTime = value
+    try {
+      const parsed = JSON.parse(value)
+      if (parsed && typeof parsed === 'object') {
+        parsed._client_updated_at = Date.now()
+        valueWithTime = JSON.stringify(parsed)
+      }
+    } catch (e) {}
+
+    sessionStorage.setItem(fullKey, valueWithTime)
+    localStorage.setItem(fullKey, valueWithTime)
     
     // Non-blocking sync to Supabase
     if (isSupabaseConfigured && !isTest) {
-      supabaseSync.push(fullKey, value)
+      supabaseSync.push(fullKey, valueWithTime)
     }
   },
   removeItem: (key) => {
@@ -77,6 +87,21 @@ export const initStorage = () => {
         window.dispatchEvent(new StorageEvent('storage', { key: rawKey, newValue: null }))
       } else {
         const localVal = localStorage.getItem(fullKey)
+        
+        // Timestamp guard to prevent older database updates from overwriting newer local state
+        try {
+          if (localVal && valueStr) {
+            const localParsed = JSON.parse(localVal)
+            const remoteParsed = JSON.parse(valueStr)
+            if (localParsed && remoteParsed && localParsed._client_updated_at && remoteParsed._client_updated_at) {
+              if (remoteParsed._client_updated_at < localParsed._client_updated_at) {
+                // Ignore older remote state to prevent flickering race condition
+                return
+              }
+            }
+          }
+        } catch (e) {}
+
         if (localVal !== valueStr) {
           sessionStorage.setItem(fullKey, valueStr)
           localStorage.setItem(fullKey, valueStr)

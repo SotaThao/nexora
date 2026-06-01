@@ -2440,8 +2440,24 @@ function StaffView({
                 <th className="px-5 py-3">{t('setup.col_staff') || 'Staff'}</th>
                 <th className="px-5 py-3">{t('staff_invite.col_flow') || 'Flow'}</th>
                 <th className="px-5 py-3">{t('setup.linked_wallets') || 'Payment Setup'}</th>
-                <th className="px-5 py-3">{t('dashboard.activity_log.col_status') || 'Status'}</th>
-                <th className="px-5 py-3">{currentLanguage === 'vi' ? 'Tips Flow' : 'Tips Flow'}</th>
+                <th className="px-5 py-3">
+                  <div className="flex items-center gap-1 group relative">
+                    <span>{t('dashboard.activity_log.col_status') || 'Status'}</span>
+                    <HelpCircle className="h-3 w-3 text-slate-400 cursor-help shrink-0" />
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1.5 hidden group-hover:block w-44 bg-slate-800 text-white text-[9px] font-bold p-2 rounded-lg shadow-lg pointer-events-none text-center normal-case leading-normal z-50">
+                      {currentLanguage === 'vi' ? 'Nhấp vào chip để đổi trạng thái hoạt động' : 'Click pill to toggle active status'}
+                    </div>
+                  </div>
+                </th>
+                <th className="px-5 py-3">
+                  <div className="flex items-center gap-1 group relative">
+                    <span>{currentLanguage === 'vi' ? 'Tips Flow' : 'Tips Flow'}</span>
+                    <HelpCircle className="h-3 w-3 text-slate-400 cursor-help shrink-0" />
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1.5 hidden group-hover:block w-44 bg-slate-800 text-white text-[9px] font-bold p-2 rounded-lg shadow-lg pointer-events-none text-center normal-case leading-normal z-50 font-sans">
+                      {currentLanguage === 'vi' ? 'Nhấp vào chip để ẩn/hiển thị thợ trên QR tiệm' : 'Click pill to show/hide tech on general QR'}
+                    </div>
+                  </div>
+                </th>
                 <th className="px-5 py-3 text-right">{t('dashboard.top_touchpoints.manage') || 'Actions'}</th>
               </tr>
             </thead>
@@ -3896,6 +3912,57 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
   )
 }
 
+const areStaffListsEqual = (list1, list2) => {
+  if (!list1 || !list2) return list1 === list2
+  if (list1.length !== list2.length) return false
+  
+  for (let i = 0; i < list1.length; i++) {
+    const s1 = list1[i]
+    const s2 = list2[i]
+    if (!s1 || !s2) return s1 === s2
+    if (s1.id !== s2.id) return false
+    if (s1.fullName !== s2.fullName) return false
+    if (s1.nickname !== s2.nickname) return false
+    if (s1.position !== s2.position) return false
+    if ((s1.avatar || '') !== (s2.avatar || '')) return false
+    if ((s1.phone || '') !== (s2.phone || '')) return false
+    if ((s1.email || '') !== (s2.email || '')) return false
+    if ((s1.bio || '') !== (s2.bio || '')) return false
+    if ((s1.status || 'Active') !== (s2.status || 'Active')) return false
+    if ((s1.flowType || '') !== (s2.flowType || '')) return false
+    if ((s1.isActive !== undefined ? s1.isActive : true) !== (s2.isActive !== undefined ? s2.isActive : true)) return false
+    if ((s1.showInTipsFlow !== undefined ? s1.showInTipsFlow : true) !== (s2.showInTipsFlow !== undefined ? s2.showInTipsFlow : true)) return false
+    
+    // Compare payment accounts
+    const pa1 = s1.paymentAccounts || {}
+    const pa2 = s2.paymentAccounts || {}
+    const keys = ['venmo', 'cashapp', 'zelle', 'vlinkpay', 'paypal', 'bankwire', 'applecash']
+    for (const key of keys) {
+      if ((pa1[key] || '') !== (pa2[key] || '')) return false
+    }
+  }
+  return true
+}
+
+const areTouchpointsEqual = (list1, list2) => {
+  if (!list1 || !list2) return list1 === list2
+  if (list1.length !== list2.length) return false
+  
+  for (let i = 0; i < list1.length; i++) {
+    const t1 = list1[i]
+    const t2 = list2[i]
+    if (!t1 || !t2) return t1 === t2
+    if (t1.id !== t2.id) return false
+    if ((t1.name || '') !== (t2.name || '')) return false
+    if ((t1.type || '') !== (t2.type || '')) return false
+    if ((t1.deviceId || '') !== (t2.deviceId || '')) return false
+    if ((t1.isActive !== undefined ? t1.isActive : true) !== (t2.isActive !== undefined ? t2.isActive : true)) return false
+    if ((t1.scans || 0) !== (t2.scans || 0)) return false
+    if ((t1.staffId || '') !== (t2.staffId || '')) return false
+  }
+  return true
+}
+
 export default function Dashboard({ 
   setupData, 
   verificationStatus = 'kyb_approved',
@@ -4211,6 +4278,16 @@ export default function Dashboard({
     // Also, if local staff list is empty but setupData has staff, don't overwrite storage with empty staff list!
     if (setupData?.staffList?.length && !staff.length) {
       return
+    }
+
+    // Check if the current local state matches what is already in setupData.
+    // If it does, we don't need to push any updates, breaking the sync loop and preventing flickering.
+    if (setupData) {
+      const isStaffEqual = areStaffListsEqual(staff, setupData.staffList)
+      const isTouchpointsEqual = areTouchpointsEqual(touchpoints, setupData.touchPoints)
+      if (isStaffEqual && isTouchpointsEqual) {
+        return
+      }
     }
 
     const saved = localStorage.getItem('nexora_merchant_setup') || sessionStorage.getItem('nexora_merchant_setup')
