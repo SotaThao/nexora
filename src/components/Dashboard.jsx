@@ -529,7 +529,14 @@ function DashboardHeader({
     setNotifications(updated)
     localStorage.setItem('nexora_notifications', JSON.stringify(updated))
     setIsNotiDropdownOpen(false)
-    if (item.linkTab) {
+    if (item.linkTab === 'staff' && item.staffId) {
+      const member = staff.find(s => s.id === item.staffId)
+      if (member) {
+        openApproveStaff(member)
+      } else {
+        onNavigateMenu(item.linkTab)
+      }
+    } else if (item.linkTab) {
       onNavigateMenu(item.linkTab)
     }
   }
@@ -2090,6 +2097,9 @@ function Overview({
 
 function StaffView({ 
   staff, 
+  pendingStaff = [],
+  allStaff = [],
+  onApproveClick,
   onAdd, 
   onEdit, 
   onDelete, 
@@ -2120,12 +2130,12 @@ function StaffView({
   const [inviteMethod, setInviteMethod] = useState('SMS')
 
   // Calculate Metrics
-  const totalLinked = staff.filter(s => s.status !== 'Pending Setup' && s.status !== 'Pending Acceptance').length
-  const pendingCount = staff.filter(s => s.status === 'Pending Setup' || s.status === 'Pending Acceptance').length
-  const paymentCompleteCount = staff.filter(s => {
+  const totalLinked = allStaff.filter(s => s.status !== 'Pending Setup' && s.status !== 'Pending Acceptance').length
+  const pendingCount = allStaff.filter(s => s.status === 'Pending Setup' || s.status === 'Pending Acceptance').length
+  const paymentCompleteCount = allStaff.filter(s => {
     return Object.values(s.paymentAccounts || {}).some(val => val && val.trim() !== '')
   }).length
-  const paymentCompletePct = staff.length ? Math.round((paymentCompleteCount / staff.length) * 100) : 100
+  const paymentCompletePct = allStaff.length ? Math.round((paymentCompleteCount / allStaff.length) * 100) : 100
 
   // Option A Search
   const handleSearch = () => {
@@ -2320,6 +2330,84 @@ function StaffView({
         </div>
 
       </div>
+
+      {/* 2.5. Pending Join Requests Section */}
+      {pendingStaff && pendingStaff.length > 0 && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50/40 overflow-hidden shadow-sm">
+          <div className="px-5 py-4 border-b border-amber-200 bg-amber-50 flex items-center justify-between">
+            <h3 className="text-xs font-black uppercase text-amber-800 tracking-wider flex items-center gap-1.5 animate-pulse">
+              <AlertCircle className="h-4 w-4 text-amber-700" />
+              {currentLanguage === 'vi' ? 'Yêu cầu gia nhập chờ duyệt' : 'Pending Join Requests'} ({pendingStaff.length})
+            </h3>
+          </div>
+          <div className="overflow-x-auto bg-white">
+            <table className="w-full border-collapse text-left text-sm">
+              <thead>
+                <tr className="bg-slate-50 text-[10px] font-extrabold uppercase text-nexoraMuted border-b border-nexoraRule">
+                  <th className="px-5 py-3">{t('setup.col_staff') || 'Staff'}</th>
+                  <th className="px-5 py-3">{t('staff_invite.col_flow') || 'Flow'}</th>
+                  <th className="px-5 py-3">{t('setup.linked_wallets') || 'Payment Setup'}</th>
+                  <th className="px-5 py-3 text-right">{t('dashboard.top_touchpoints.manage') || 'Actions'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingStaff.map((member) => {
+                  const wallets = getWalletBadges(member)
+                  return (
+                    <tr key={member.id} className="border-b border-nexoraRule last:border-0 hover:bg-slate-50/40 transition">
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          {member.avatar ? (
+                            <img src={member.avatar} alt="" className="h-10 w-10 rounded-full border border-nexoraBorder object-cover" />
+                          ) : (
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-sm font-extrabold text-amber-700">
+                              {member.nickname?.charAt(0) || member.fullName?.charAt(0) || 'N'}
+                            </div>
+                          )}
+                          <div>
+                            <div className="font-extrabold text-nexoraText">{member.fullName}</div>
+                            <div className="text-xs text-nexoraMuted">{member.position}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className="text-xs text-slate-500 font-semibold">
+                          {member.flowType || (currentLanguage === 'vi' ? 'Khởi tạo trực tiếp' : 'Direct Addition')}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex flex-wrap gap-1.5">
+                          {wallets.length > 0 ? (
+                            wallets.map((wallet) => (
+                              <span key={wallet} className="rounded px-2 py-0.5 text-[10px] font-bold bg-nexoraCanvas text-nexoraBrand border border-nexoraBrand/10">{wallet}</span>
+                            ))
+                          ) : (
+                            <span className="text-[10px] text-slate-400 font-bold italic">{currentLanguage === 'vi' ? 'Chưa cấu hình' : 'Pending'}</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        <button 
+                          onClick={() => onApproveClick && onApproveClick(member)}
+                          className="px-3.5 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition shadow-sm mr-2"
+                        >
+                          {currentLanguage === 'vi' ? 'Xem & Duyệt' : 'Review & Approve'}
+                        </button>
+                        <button 
+                          onClick={() => onDeclineJoin && onDeclineJoin(member.id)}
+                          className="px-3 py-1.5 text-xs font-bold border border-rose-200 bg-rose-50 text-rose-700 rounded-lg hover:bg-rose-100 transition shadow-sm"
+                        >
+                          {currentLanguage === 'vi' ? 'Từ chối' : 'Decline'}
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* 3. Upgraded Staff Invite & Link Status Table */}
       <div className="rounded-xl border border-nexoraBorder bg-white overflow-hidden shadow-sm">
@@ -3052,6 +3140,8 @@ function ComingSoon({ activeMenu, onBack }) {
 function StaffModal({ 
   open, 
   editing, 
+  isApproveMode = false,
+  onDecline,
   form, 
   errors, 
   setForm, 
@@ -3149,7 +3239,11 @@ function StaffModal({
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-nexoraText/70 p-4 py-6 backdrop-blur-sm sm:items-center">
       <div className="w-full max-w-lg md:max-w-3xl lg:max-w-4xl rounded-xl bg-white p-6 shadow-2xl transition-all">
         <div className="flex items-center justify-between border-b border-nexoraRule pb-4">
-          <h2 className="text-lg font-extrabold text-nexoraText">{editing ? t('common.edit') : t('setup.add_staff_title')}</h2>
+          <h2 className="text-lg font-extrabold text-nexoraText">
+            {isApproveMode 
+              ? (currentLanguage === 'vi' ? 'Duyệt yêu cầu tham gia' : 'Review Join Request') 
+              : (editing ? t('common.edit') : t('setup.add_staff_title'))}
+          </h2>
           <IconButton label="Close modal" onClick={onClose}>
             <X className="h-4 w-4" />
           </IconButton>
@@ -3385,8 +3479,29 @@ function StaffModal({
           </div>
         </div>
         <div className="mt-6 flex justify-end gap-2 border-t border-nexoraRule pt-4">
-          <button onClick={onClose} className="rounded-lg border border-nexoraBorder px-4 py-2 text-xs font-bold text-nexoraMuted">{t('common.cancel')}</button>
-          <button onClick={onSave} className="rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white">{t('common.save')}</button>
+          {isApproveMode ? (
+            <>
+              <button 
+                type="button"
+                onClick={onDecline} 
+                className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 transition"
+              >
+                {currentLanguage === 'vi' ? 'Từ chối' : 'Decline'}
+              </button>
+              <button 
+                type="button"
+                onClick={onSave} 
+                className="rounded-lg bg-indigo-600 px-5 py-2 text-xs font-bold text-white hover:bg-indigo-700 transition animate-pulse"
+              >
+                {currentLanguage === 'vi' ? 'Duyệt / Chấp nhận' : 'Approve / Accept'}
+              </button>
+            </>
+          ) : (
+            <>
+              <button onClick={onClose} className="rounded-lg border border-nexoraBorder px-4 py-2 text-xs font-bold text-nexoraMuted">{t('common.cancel')}</button>
+              <button onClick={onSave} className="rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white">{t('common.save')}</button>
+            </>
+          )}
         </div>
       </div>
 
@@ -3963,6 +4078,8 @@ export default function Dashboard({
   const [devices, setDevices] = useState(INITIAL_DEVICES)
   const [isStaffModalOpen, setIsStaffModalOpen] = useState(false)
   const [editingStaffId, setEditingStaffId] = useState(null)
+  const [isApproveModalOpen, setIsApproveModalOpen] = useState(false)
+  const [approvingStaffMember, setApprovingStaffMember] = useState(null)
   const [qrTarget, setQrTarget] = useState(null)
   const [isInviteShareOpen, setIsInviteShareOpen] = useState(false)
   const [inviteShareDefaultName, setInviteShareDefaultName] = useState('')
@@ -4180,14 +4297,20 @@ export default function Dashboard({
   // Filter lists based on searchQuery
   const filteredStaff = useMemo(() => {
     if (!hasKyb) return []
-    if (!searchQuery) return staff
+    const visibleStaff = staff.filter(member => member.status !== 'Pending Acceptance')
+    if (!searchQuery) return visibleStaff
     const query = searchQuery.toLowerCase().trim()
-    return staff.filter(member => 
+    return visibleStaff.filter(member => 
       member.fullName.toLowerCase().includes(query) ||
       member.nickname.toLowerCase().includes(query) ||
       member.position.toLowerCase().includes(query)
     )
   }, [staff, searchQuery, hasKyb])
+
+  const pendingStaff = useMemo(() => {
+    if (!hasKyb) return []
+    return staff.filter(member => member.status === 'Pending Acceptance')
+  }, [staff, hasKyb])
 
   const filteredTouchpoints = useMemo(() => {
     if (!hasKyb) return []
@@ -4278,6 +4401,27 @@ export default function Dashboard({
   const openAddStaff = () => {
     resetStaffForm()
     setIsStaffModalOpen(true)
+  }
+
+  const openApproveStaff = (member) => {
+    setApprovingStaffMember(member)
+    setStaffForm({
+      fullName: member.fullName,
+      nickname: member.nickname,
+      position: member.position,
+      avatar: member.avatar || '',
+      phone: member.phone || '',
+      email: member.email || '',
+      venmo: member.paymentAccounts?.venmo || '',
+      cashapp: member.paymentAccounts?.cashapp || '',
+      zelle: member.paymentAccounts?.zelle || '',
+      vlinkpay: member.paymentAccounts?.vlinkpay || '',
+      nexoraStaffId: member.id || '',
+      showInTipsFlow: member.showInTipsFlow !== false,
+      payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member)
+    })
+    setErrors({})
+    setIsApproveModalOpen(true)
   }
 
   const openEditStaff = (member) => {
@@ -4502,14 +4646,39 @@ export default function Dashboard({
     window.dispatchEvent(event)
   }
 
-  const handleAcceptJoinRequest = (staffId) => {
+  const handleAcceptJoinRequest = (staffId, updatedFormPayload = null) => {
     const member = staff.find(s => s.id === staffId)
     if (!member) return
+
+    let mergedPayload = {}
+    if (updatedFormPayload) {
+      const configs = updatedFormPayload.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
+      mergedPayload = {
+        fullName: updatedFormPayload.fullName.trim(),
+        nickname: updatedFormPayload.nickname.trim(),
+        position: updatedFormPayload.position.trim(),
+        avatar: updatedFormPayload.avatar || '',
+        phone: updatedFormPayload.phone.trim(),
+        email: updatedFormPayload.email.trim(),
+        showInTipsFlow: updatedFormPayload.showInTipsFlow !== false,
+        paymentAccounts: {
+          venmo: configs.venmo?.enabled ? configs.venmo.value.trim() : '',
+          cashapp: configs.cashapp?.enabled ? configs.cashapp.value.trim() : '',
+          zelle: configs.zelle?.enabled ? configs.zelle.value.trim() : '',
+          vlinkpay: updatedFormPayload.vlinkpay.trim(),
+          paypal: configs.paypal?.enabled ? configs.paypal.value.trim() : '',
+          bankwire: configs.bankwire?.enabled ? configs.bankwire.value.trim() : '',
+          applecash: configs.applecash?.enabled ? configs.applecash.value.trim() : ''
+        },
+        payoutConfigs: configs
+      }
+    }
 
     setStaff((current) => current.map((m) => {
       if (m.id === staffId) {
         return {
           ...m,
+          ...mergedPayload,
           status: 'Active',
           isActive: true
         }
@@ -4522,18 +4691,18 @@ export default function Dashboard({
       if (!hasTp) {
         return [...current, {
           id: `tp-staff-${staffId}`,
-          name: `Personal QR - ${member.nickname}`,
+          name: `Personal QR - ${updatedFormPayload?.nickname || member.nickname}`,
           type: 'Staff QR',
           staffId: staffId,
-          staffName: member.nickname
+          staffName: updatedFormPayload?.nickname || member.nickname
         }]
       }
       return current
     })
 
     alert(currentLanguage === 'vi' 
-      ? `Đã chấp nhận và lưu thông tin thợ ${member.fullName} vào tiệm!` 
-      : `Accepted and saved technician ${member.fullName} to salon!`)
+      ? `Đã chấp nhận và lưu thông tin thợ ${updatedFormPayload?.fullName || member.fullName} vào tiệm!` 
+      : `Accepted and saved technician ${updatedFormPayload?.fullName || member.fullName} to salon!`)
   }
 
   const handleDeclineJoinRequest = (staffId) => {
@@ -4687,6 +4856,9 @@ export default function Dashboard({
     if (activeMenu === 'staff') return (
       <StaffView 
         staff={filteredStaff} 
+        pendingStaff={pendingStaff}
+        allStaff={staff}
+        onApproveClick={openApproveStaff}
         onAdd={openAddStaff} 
         onEdit={openEditStaff} 
         onDelete={deleteStaff} 
@@ -5119,6 +5291,33 @@ export default function Dashboard({
           setInviteShareDefaultName(formDetails.fullName || '')
           setInviteShareDefaultContact(formDetails.email || formDetails.phone || '')
           setIsInviteShareOpen(true)
+        }}
+      />
+
+      <StaffModal
+        open={isApproveModalOpen}
+        editing={false}
+        isApproveMode={true}
+        onDecline={() => {
+          if (approvingStaffMember) {
+            handleDeclineJoinRequest(approvingStaffMember.id)
+          }
+          setIsApproveModalOpen(false)
+        }}
+        form={staffForm}
+        errors={errors}
+        setForm={setStaffForm}
+        verificationStatus={verificationStatus}
+        onBlockedFeatureClick={() => setShowKybWarningModal(true)}
+        onClose={() => {
+          setIsApproveModalOpen(false)
+          resetStaffForm()
+        }}
+        onSave={() => {
+          if (approvingStaffMember) {
+            handleAcceptJoinRequest(approvingStaffMember.id, staffForm)
+          }
+          setIsApproveModalOpen(false)
         }}
       />
       <QrModal target={qrTarget} businessName={businessName} onClose={() => setQrTarget(null)} />

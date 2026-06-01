@@ -444,6 +444,7 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
       }
       const newNoti = {
         id: `noti-join-${finalStaffMember.id}-${Date.now()}`,
+        staffId: finalStaffMember.id,
         type: 'feedback_alert',
         title: currentLanguage === 'vi' ? 'Yêu cầu gia nhập mới' : 'New Join Request',
         message: currentLanguage === 'vi'
@@ -577,6 +578,7 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
       }
       const newNoti = {
         id: `noti-join-${finalStaffMember.id}-${Date.now()}`,
+        staffId: finalStaffMember.id,
         type: 'feedback_alert',
         title: currentLanguage === 'vi' ? 'Yêu cầu gia nhập mới' : 'New Join Request',
         message: currentLanguage === 'vi'
