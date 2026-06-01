@@ -49,7 +49,7 @@ describe('Nexora Merchant Dashboard Views E2E Test Suite (CloakBrowser)', () => 
     expect(content).toMatch(/Reception Front Desk/);
 
     // 3. Verify Devices Tab (now nested as a sub-tab under Touchpoint Manager)
-    const devicesSubTab = page.locator('button:has-text("Thiết Bị Vật Lý"), button:has-text("Hardware Devices")');
+    const devicesSubTab = page.locator('main button:has-text("Thiết Bị Vật Lý"), main button:has-text("Hardware Devices")');
     await devicesSubTab.click();
     await page.waitForSelector('text=Thiết Bị QR');
     content = await page.textContent('body');
@@ -81,7 +81,7 @@ describe('Nexora Merchant Dashboard Views E2E Test Suite (CloakBrowser)', () => 
     expect(content).toMatch(/Tổng Doanh Thu Típ/);
 
     // Click "Tiết kiệm phí" sub-tab (hardcoded in TipsView)
-    const savingsSubTab = page.locator('button:has-text("Tiết kiệm phí")');
+    const savingsSubTab = page.locator('main button:has-text("Tiết kiệm phí")');
     await savingsSubTab.click();
     await page.waitForSelector('text=Tính Phí Tiết Kiệm');
     
