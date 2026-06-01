@@ -1774,9 +1774,9 @@ export default function SettingsView({
       {/* Payout Account Edit Custom Modal Popup */}
       {editingMethod && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-slate-100 max-w-sm w-full shadow-2xl p-6 relative overflow-hidden animate-scaleIn text-left space-y-4">
-            <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-              <span className="h-8 w-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
+          <div className="bg-white rounded-3xl border border-slate-100 max-w-sm w-full shadow-2xl p-6 relative overflow-hidden animate-scaleIn text-left space-y-4.5">
+            <div className="flex items-center gap-3.5 border-b border-slate-100 pb-3">
+              <span className="h-11 w-11 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 shadow-sm">
                 {PayoutLogos[editingMethod]}
               </span>
               <div>
@@ -1785,13 +1785,13 @@ export default function SettingsView({
                     ? `Tài khoản ${payoutMethodsList.find(m => m.key === editingMethod)?.label}`
                     : `Configure ${payoutMethodsList.find(m => m.key === editingMethod)?.label}`}
                 </h3>
-                <p className="text-[10px] text-slate-400">Specify receiving target identifier</p>
+                <p className="text-[10px] text-slate-400 font-medium">Specify receiving target identifier</p>
               </div>
             </div>
             
             <form onSubmit={savePayoutAccount} className="space-y-4">
               <div>
-                <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">
+                <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
                   {currentLanguage === 'vi' ? 'Thông tin tài khoản' : 'Account Identifier'}
                 </label>
                 <input
@@ -1799,23 +1799,23 @@ export default function SettingsView({
                   required
                   autoFocus
                   placeholder={payoutMethodsList.find(m => m.key === editingMethod)?.placeholder}
-                  className="w-full bg-slate-50 border border-slate-300 focus:border-amber-500 focus:bg-white rounded px-3 h-10 text-xs text-slate-800 focus:outline-none transition-colors"
+                  className="w-full bg-slate-50 border border-slate-200 focus:border-nexoraBrand focus:ring-2 focus:ring-[#4648D8]/20 focus:bg-white rounded-xl px-3.5 h-11 text-xs text-slate-800 focus:outline-none transition-all"
                   value={editValue}
                   onChange={(e) => setEditValue(e.target.value)}
                 />
               </div>
 
-              <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-50">
+              <div className="flex justify-end gap-2.5 pt-2.5 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setEditingMethod(null)}
-                  className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-500 text-[10px] font-bold uppercase tracking-wider rounded transition"
+                  className="px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider rounded-lg transition"
                 >
                   {currentLanguage === 'vi' ? 'Hủy' : 'Cancel'}
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-bold uppercase tracking-wider rounded shadow-sm transition"
+                  className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm transition"
                 >
                   {currentLanguage === 'vi' ? 'Lưu lại' : 'Save'}
                 </button>

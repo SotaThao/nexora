@@ -1826,7 +1826,7 @@ export default function SetupWizard({
 }
 
 function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrCode, onClose, onSubmit }) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const [value, setValue] = useState(initialValue || '')
   const [qrCode, setQrCode] = useState(initialQrCode || '')
   const [accountName, setAccountName] = useState(staffName || '')
@@ -1912,21 +1912,28 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
   }[walletKey] || { text: walletKey, color: 'text-slate-800', fontClass: 'font-bold' }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl animate-scaleUp">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <h3 className="text-base font-extrabold text-slate-800">
-            {t('setup.setup_wallet_title', { wallet: walletNames[walletKey] }) || `Set up ${walletNames[walletKey]} account`}
-          </h3>
-          <button onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition">
-            <X className="h-4 w-4" />
-          </button>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 text-left">
+      <div className="bg-white rounded-3xl border border-slate-100 max-w-sm w-full shadow-2xl p-6 relative overflow-hidden animate-scaleUp space-y-4.5">
+        <div className="flex items-center gap-3.5 border-b border-slate-100 pb-3">
+          <span className="h-11 w-11 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 shadow-sm">
+            {WalletLogos[walletKey]}
+          </span>
+          <div>
+            <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">
+              {currentLanguage === 'vi' 
+                ? `TÀI KHOẢN ${walletNames[walletKey]?.toUpperCase()}`
+                : `${walletNames[walletKey]?.toUpperCase()} ACCOUNT`}
+            </h3>
+            <p className="text-[10px] text-slate-400 font-medium">
+              {currentLanguage === 'vi' ? 'Chỉ định thông tin tài khoản nhận tiền' : 'Specify receiving target identifier'}
+            </p>
+          </div>
         </div>
 
-        <div className="mt-4 space-y-4">
+        <div className="space-y-4">
           <div>
-            <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
-              {t('setup.payout_input_label', { wallet: walletNames[walletKey], field: walletFields[walletKey] }) || `Your ${walletNames[walletKey]} ${walletFields[walletKey]} *`}
+            <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
+              {currentLanguage === 'vi' ? 'THÔNG TIN TÀI KHOẢN' : 'Account Identifier'}
             </label>
             <input
               type="text"
@@ -1936,16 +1943,16 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
                 setError('')
               }}
               placeholder={walletPlaceholders[walletKey]}
-              className={`mt-1.5 h-10 w-full rounded-lg border px-3 text-sm font-semibold outline-none focus:ring-1 focus:ring-nexoraBrand transition-all ${
-                error ? 'border-rose-500 focus:border-rose-500' : 'border-slate-200 focus:border-nexoraBrand'
+              className={`w-full bg-slate-50 border border-slate-200 focus:border-nexoraBrand focus:ring-2 focus:ring-[#4648D8]/20 focus:bg-white rounded-xl px-3.5 h-11 text-xs text-slate-800 focus:outline-none transition-all ${
+                error ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20' : ''
               }`}
             />
             {error && <p className="mt-1 text-[10px] font-bold text-rose-500">{error}</p>}
           </div>
 
           <div>
-            <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block mb-2">
-              {t('setup.qr_code_optional') || 'QR Code (optional)'}
+            <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
+              {currentLanguage === 'vi' ? 'MÃ QR (TÙY CHỌN)' : 'QR Code (optional)'}
             </label>
 
             {isCapturing ? (
@@ -2008,18 +2015,18 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
           </div>
         </div>
 
-        <div className="mt-5 flex justify-end gap-2 border-t border-slate-100 pt-3">
+        <div className="flex justify-end gap-2.5 pt-2.5 border-t border-slate-100">
           <button
             onClick={onClose}
-            className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50 transition"
+            className="px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider rounded-lg transition"
           >
-            {t('setup.close') || 'Close'}
+            {currentLanguage === 'vi' ? 'HỦY' : 'CANCEL'}
           </button>
           <button
             onClick={handleSubmit}
-            className="rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white hover:opacity-90 shadow-sm transition"
+            className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm transition"
           >
-            {t('setup.submit') || 'Submit'}
+            {currentLanguage === 'vi' ? 'LƯU LẠI' : 'SAVE'}
           </button>
         </div>
       </div>
