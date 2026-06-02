@@ -49,7 +49,7 @@ describe('Staff Personal Dashboard E2E Test Suite (CloakBrowser)', () => {
     // 3. Navigate to "My QR"
     const qrTab = page.locator('button:has-text("My QR"), button:has-text("QR Của Tôi")').filter({ visible: true }).first();
     await qrTab.click();
-    await page.waitForSelector('text=Personal QR Code');
+    await page.waitForSelector('text=My Personal QR');
     content = await page.textContent('body');
     expect(content).toContain('NEX-STAFF-MIA0123');
 
@@ -63,26 +63,26 @@ describe('Staff Personal Dashboard E2E Test Suite (CloakBrowser)', () => {
     // 5. Navigate to "Pay"
     const payTab = page.locator('button:has-text("Pay"), button:has-text("Ví Nhận Tiền")').filter({ visible: true }).first();
     await payTab.click();
-    await page.waitForSelector('text=Payout Methods');
+    await page.waitForSelector('text=Payment Methods');
     content = await page.textContent('body');
-    expect(content).toContain('Payout Methods');
+    expect(content).toContain('Payment Methods');
     expect(content).toContain('Cash App');
     expect(content).toContain('Venmo');
 
     // 6. Navigate to "Profile"
     const profileTab = page.locator('button:has-text("Profile"), button:has-text("Hồ Sơ")').filter({ visible: true }).first();
     await profileTab.click();
-    await page.waitForSelector('text=Identity Settings');
+    await page.waitForSelector('text=Staff Profile');
     content = await page.textContent('body');
-    expect(content).toContain('Identity Settings');
+    expect(content).toContain('Staff Profile');
 
     // 7. Verify notifications
     const notiTab = page.locator('button:has-text("Notifications"), button:has-text("Thông báo")').filter({ visible: true }).first();
     if (await notiTab.isVisible()) {
       await notiTab.click();
-      await page.waitForSelector('text=Notification Center');
+      await page.waitForSelector('text=Notifications');
       content = await page.textContent('body');
-      expect(content).toContain('Notification Center');
+      expect(content).toContain('Notifications');
     }
 
     // 8. Go back to Home and test Confirm Tip Action
