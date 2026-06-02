@@ -1,6 +1,7 @@
 // StaffProfile — personal profile (staff-owned: display name + bio) and
 // per-business display names. Identity basics come from the merchant record.
 import { useEffect, useState } from 'react'
+import { LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 
@@ -9,8 +10,8 @@ const labelCls = 'mb-1.5 block text-[11px] font-bold uppercase tracking-wider te
 const inputCls = 'w-full rounded-xl border border-nexoraBorder bg-nexoraSurface px-3 py-2.5 text-sm text-nexoraText outline-none focus:border-nexoraBrand'
 const readOnlyCls = 'w-full rounded-xl border border-nexoraBorder bg-nexoraCanvas px-3 py-2.5 text-sm font-medium text-nexoraMuted'
 
-export default function StaffProfile() {
-  const { t } = useTranslation()
+export default function StaffProfile({ onLogout }) {
+  const { currentLanguage, t } = useTranslation()
   const { staffMember, account, linkedBusinesses, saveProfile, setBusinessDisplayName } = useStaffAccount()
 
   const [displayName, setDisplayName] = useState(account.defaultDisplayName || '')
@@ -86,6 +87,25 @@ export default function StaffProfile() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section className={panel}>
+        <h3 className="mb-3 text-base font-extrabold text-[#D32F2F] dark:text-red-400">
+          {currentLanguage === 'vi' ? 'Đăng xuất tài khoản' : 'Sign Out Account'}
+        </h3>
+        <p className="mb-4 text-xs text-nexoraSubtle">
+          {currentLanguage === 'vi' 
+            ? 'Đăng xuất khỏi phiên làm việc hiện tại và quay về màn hình đăng nhập.' 
+            : 'Sign out from the current active session and return to the login screen.'}
+        </p>
+        <button
+          type="button"
+          onClick={onLogout}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 py-3 text-sm font-extrabold text-red-600 transition hover:bg-red-100"
+        >
+          <LogOut className="h-4.5 w-4.5" />
+          {t('staff_dashboard.sign_out')}
+        </button>
       </section>
     </div>
   )

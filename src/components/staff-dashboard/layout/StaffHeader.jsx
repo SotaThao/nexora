@@ -1,9 +1,9 @@
 // StaffHeader — top bar: brand (mobile), language switch, notifications bell, profile.
-import { Bell } from 'lucide-react'
+import { Bell, Menu } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 
-export default function StaffHeader({ activeScreen, onNavigate }) {
+export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu }) {
   const { currentLanguage, setLanguage, t } = useTranslation()
   const { staffMember, account, unreadCount } = useStaffAccount()
   const displayName = account.defaultDisplayName || staffMember.fullName || 'Staff'
@@ -12,8 +12,15 @@ export default function StaffHeader({ activeScreen, onNavigate }) {
     <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between gap-3 border-b border-nexoraBorder bg-nexoraSurface px-4 sm:px-5">
       {/* Brand (mobile only — sidebar shows it on desktop) */}
       <div className="flex min-w-0 items-center gap-3 lg:hidden">
+        <button
+          type="button"
+          onClick={onOpenMobileMenu}
+          className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-nexoraBorder bg-white text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"
+          aria-label="Open navigation menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
         <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-9 w-9 shrink-0 object-contain" />
-        <span className="truncate text-sm font-extrabold">{t('staff_dashboard.brand.title')}</span>
       </div>
 
       {/* Screen title (desktop) */}
