@@ -115,8 +115,8 @@ describe('RegisterWizard Component Unit Tests', () => {
     // Check that Full Name field is rendered
     expect(screen.getByText(/Full Name \*/i)).toBeInTheDocument();
 
-    // Fill the inputs
-    const fullNameInput = screen.getByPlaceholderText(/e\.g\., Lisa Tran/i);
+    // Fill the inputs (using the correct "Mia Tran" placeholder defined in en.json)
+    const fullNameInput = screen.getByPlaceholderText(/e\.g\., Mia Tran/i);
     fireEvent.change(fullNameInput, { target: { value: 'Lisa Tran' } });
 
     const emailInputs = screen.getAllByRole('textbox');
@@ -131,8 +131,8 @@ describe('RegisterWizard Component Unit Tests', () => {
     const nextBtnStep1 = screen.getByRole('button', { name: /Next/i });
     fireEvent.click(nextBtnStep1);
 
-    // Should go to Step 2 (Registration Success for Staff)
-    expect(screen.getByText(/Staff Profile Activated/i)).toBeInTheDocument();
+    // Should go to Step 2 (Registration Success for Staff, check using the correct translation key in en.json)
+    expect(screen.getByText(/Staff Account Registered!/i)).toBeInTheDocument();
     expect(screen.getByText(/NEX-STAFF-/)).toBeInTheDocument();
   });
 });
