@@ -22,14 +22,15 @@ select:focus {
   transition: all 0.15s ease-in-out;
 }
 
-/* Prevent iOS Safari from zooming on input focus by dynamically upgrading font-size to 16px on focus */
+/* Prevent iOS Safari from zooming on input focus by ensuring font-size is at least 16px in the base state */
 @supports (-webkit-touch-callout: none) {
-  input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]):focus,
-  textarea:focus,
-  select:focus {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
+  textarea,
+  select {
     font-size: 16px !important;
   }
 }
+
 
 
 /* Keyboard focus visibility for buttons and links */
