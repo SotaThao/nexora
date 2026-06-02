@@ -190,6 +190,12 @@ export default function CustomerFlow() {
     return setupData?.businessInfo?.paymentAccounts || defaultAccounts
   }, [setupData])
 
+  const selectedStaffHasAnyPayment = useMemo(() => {
+    if (selectedStaffMembers.length !== 1) return false
+    const staff = selectedStaffMembers[0]
+    return Object.values(staff.paymentAccounts || {}).some(val => val && val.trim() !== '')
+  }, [selectedStaffMembers])
+
 
   const filteredStaff = useMemo(() => {
     return activeStaffList.filter(s => 
@@ -759,9 +765,15 @@ export default function CustomerFlow() {
                   { name: 'Cash App', key: 'cashapp', color: 'bg-[#00D632] hover:bg-[#00b52a] text-white', logo: WalletLogos.cashapp },
                   { name: 'Apple Pay', key: 'applecash', color: 'bg-black hover:opacity-90 text-white', logo: WalletLogos.applepay }
                 ].filter(wallet => {
-                  const staffHasIt = selectedStaffMembers.length === 1 && !!selectedStaffMembers[0].paymentAccounts?.[wallet.key]
-                  const businessHasIt = !!businessPaymentAccounts?.[wallet.key]
-                  return staffHasIt || businessHasIt
+                  if (selectedStaffMembers.length === 1) {
+                    const staff = selectedStaffMembers[0]
+                    if (selectedStaffHasAnyPayment) {
+                      return !!staff.paymentAccounts?.[wallet.key]
+                    } else {
+                      return !!businessPaymentAccounts?.[wallet.key]
+                    }
+                  }
+                  return !!businessPaymentAccounts?.[wallet.key]
                 }).map(wallet => {
                   return (
                     <button

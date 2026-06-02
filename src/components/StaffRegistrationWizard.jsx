@@ -4,7 +4,7 @@ import {
   Copy, Plus, CheckCircle2, Building, CreditCard, Smartphone, 
   Sparkles, Lock, User, Info, Upload, X, QrCode, Star, 
   Award, DollarSign, Wallet, Send, CheckSquare, Globe, Edit2,
-  Camera, FolderOpen, AlertTriangle
+  Camera, FolderOpen, AlertTriangle, Loader2, XCircle
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
 import { storage } from '../utils/storage'
@@ -131,6 +131,10 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
   const [linkedProfile, setLinkedProfile] = useState(null)
   const [searchError, setSearchError] = useState('')
 
+  // Scanner states
+  const [showScanner, setShowScanner] = useState(false)
+  const [scanTarget, setScanTarget] = useState(null) // 'staff' | 'vlinkpay'
+
   const isSelfServe = !inviteData?.name
 
   // Verification states
@@ -157,6 +161,20 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
   const [staffId, setStaffId] = useState('')
   const [vlinkpayId, setVlinkpayId] = useState('')
   const phoneParsed = useMemo(() => parsePhone(phone), [phone])
+
+  // Verification states for animation
+  const [vlinkpayStatus, setVlinkpayStatus] = useState('idle') // 'idle' | 'checking' | 'success' | 'error'
+  const [nexoraStatus, setNexoraStatus] = useState('idle') // 'idle' | 'checking' | 'success' | 'error'
+  const [vlinkpayTimeout, setVlinkpayTimeout] = useState(null)
+  const [nexoraTimeout, setNexoraTimeout] = useState(null)
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (vlinkpayTimeout) clearTimeout(vlinkpayTimeout)
+      if (nexoraTimeout) clearTimeout(nexoraTimeout)
+    }
+  }, [vlinkpayTimeout, nexoraTimeout])
 
   // Payout Methods Toggles & Values
   const [payouts, setPayouts] = useState({
@@ -230,6 +248,140 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
       return () => clearInterval(interval)
     }
   }, [step, resendTimer])
+
+  // Helper to autofill profile based on a mock profile
+  const autofillFromProfile = (profile) => {
+    if (!profile) return
+    setFullName(profile.fullName || '')
+    setNickname(profile.nickname || '')
+    setPosition(profile.position || 'Nail Technician')
+    setPhone(profile.phone || '')
+    setEmail(profile.email || '')
+    setAvatar(profile.avatar || '')
+    if (profile.vlinkpayId) {
+      setVlinkpayId(profile.vlinkpayId)
+    }
+    
+    // Also autofill staff ID if it's found in MOCK_NEXORA_STAFF_PROFILES keys
+    const foundStaffId = Object.keys(MOCK_NEXORA_STAFF_PROFILES).find(
+      key => MOCK_NEXORA_STAFF_PROFILES[key] === profile
+    )
+    if (foundStaffId) {
+      setStaffId(foundStaffId)
+    }
+
+    // Autofill payout configs
+    if (profile.payoutConfigs) {
+      setPayouts(profile.payoutConfigs)
+    }
+
+    showToast(
+      currentLanguage === 'vi' 
+        ? `Đã nhận diện thành công hồ sơ của ${profile.fullName}!` 
+        : `Successfully matched and imported profile for ${profile.fullName}!`
+    )
+  }
+
+  // Handle typing or scanning a NEXORA STAFF ID with debounce and animation
+  const handleSearchIdChange = (val) => {
+    setSearchId(val)
+    setSearchError('')
+    const upperVal = val.trim().toUpperCase()
+
+    if (nexoraTimeout) clearTimeout(nexoraTimeout)
+
+    if (!upperVal) {
+      setNexoraStatus('idle')
+      setLinkedProfile(null)
+      return
+    }
+
+    setNexoraStatus('checking')
+
+    const timer = setTimeout(() => {
+      console.log('[DEBUG STAFF ID] Searching in wizard for:', upperVal)
+      const profile = MOCK_NEXORA_STAFF_PROFILES[upperVal]
+      if (profile) {
+        setLinkedProfile(profile)
+        setNexoraStatus('success')
+        setSearchError('')
+        showToast(
+          currentLanguage === 'vi'
+            ? `Tìm thấy hồ sơ ${profile.fullName}!`
+            : `Found profile for ${profile.fullName}!`
+        )
+      } else {
+        setLinkedProfile(null)
+        setNexoraStatus('error')
+        setSearchError(
+          currentLanguage === 'vi'
+            ? 'Không tìm thấy NEXORA Staff ID này.'
+            : 'NEXORA Staff ID not found.'
+        )
+      }
+    }, 600)
+
+    setNexoraTimeout(timer)
+  }
+
+  // Handle typing or scanning a VLINKPAY ID with debounce and animation
+  const handleVlinkpayIdChange = (val) => {
+    setVlinkpayId(val)
+    const upperVal = val.trim().toUpperCase()
+
+    if (vlinkpayTimeout) clearTimeout(vlinkpayTimeout)
+
+    if (!upperVal) {
+      setVlinkpayStatus('idle')
+      return
+    }
+
+    setVlinkpayStatus('checking')
+
+    const timer = setTimeout(() => {
+      console.log('[DEBUG VLINKPAY ID] Searching in wizard for:', upperVal)
+      const matchedProfile = Object.values(MOCK_NEXORA_STAFF_PROFILES).find(
+        p => p.vlinkpayId?.toUpperCase() === upperVal
+      )
+      if (matchedProfile) {
+        setVlinkpayStatus('success')
+        autofillFromProfile(matchedProfile)
+      } else {
+        setVlinkpayStatus('error')
+      }
+    }, 600)
+
+    setVlinkpayTimeout(timer)
+  }
+
+  // Handle opening scanner modal
+  const handleScanQr = (target) => {
+    setScanTarget(target)
+    setShowScanner(true)
+  }
+
+  // Handle simulation of successful scan (Lisa Tran)
+  const simulateSuccessfulScan = () => {
+    if (scanTarget === 'staff') {
+      setSearchId('NEX-STAFF-LISA1102')
+      setNexoraStatus('success')
+      setSearchError('')
+      const profile = MOCK_NEXORA_STAFF_PROFILES['NEX-STAFF-LISA1102']
+      setLinkedProfile(profile)
+      showToast(
+        currentLanguage === 'vi'
+          ? `Tìm thấy hồ sơ ${profile.fullName}!`
+          : `Found profile for ${profile.fullName}!`
+      )
+    } else if (scanTarget === 'vlinkpay') {
+      setVlinkpayId('VLP-1102-LISA')
+      setVlinkpayStatus('success')
+      const profile = MOCK_NEXORA_STAFF_PROFILES['NEX-STAFF-LISA1102']
+      autofillFromProfile(profile)
+    }
+    setShowScanner(false)
+    setScanTarget(null)
+  }
 
   // handle registration form submit
   const handleRegisterSubmit = (e) => {
@@ -624,6 +776,23 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
 
   return (
     <div className="min-h-screen bg-nexoraCanvas text-nexoraText font-sans antialiased relative selection:bg-nexoraBrandSoft selection:text-nexoraBrand py-6 sm:py-12">
+      <style>{`
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-3px); }
+          75% { transform: translateX(3px); }
+        }
+        .animate-shake {
+          animation: shake 0.15s ease-in-out 2;
+        }
+        @keyframes scaleUp {
+          0% { transform: scale(0.85); opacity: 0; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-scaleUp {
+          animation: scaleUp 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+      `}</style>
       {/* Background radial soft light */}
       <div className="absolute top-1/4 left-1/4 h-72 w-72 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(245,158,11,0.04)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-[450px] sm:w-[450px]"></div>
       <div className="absolute bottom-1/4 right-1/4 h-80 w-80 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(43,89,255,0.03)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-[500px] sm:w-[500px]"></div>
@@ -852,6 +1021,8 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
                               setJoinPath(null)
                             }}
                             className="p-1 hover:bg-nexoraSurfaceMuted rounded-lg text-nexoraMuted transition"
+                            title="Back"
+                            aria-label="Back"
                           >
                             <ArrowLeft className="h-4 w-4" />
                           </button>
@@ -866,17 +1037,39 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
                               {currentLanguage === 'vi' ? 'Nhập NEXORA Staff ID của bạn' : 'Enter your NEXORA Staff ID'}
                             </label>
                             <div className="mt-1.5 flex gap-2">
-                              <input
-                                type="text"
-                                placeholder="e.g. NEX-STAFF-LISA1102"
-                                className="h-10 flex-grow rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-[#4648D8] focus:ring-2 focus:ring-[#4648D8]/20 focus:outline-none transition-all font-mono font-bold uppercase"
-                                value={searchId}
-                                onChange={(e) => {
-                                  setSearchId(e.target.value)
-                                  setSearchError('')
-                                  setLinkedProfile(null)
-                                }}
-                              />
+                              <div className="relative flex-grow font-sans">
+                                <input
+                                  type="text"
+                                  placeholder="e.g. NEX-STAFF-LISA1102"
+                                  className={`h-10 w-full rounded-lg border pl-3 pr-20 text-xs outline-none font-mono font-bold uppercase transition-all ${
+                                    nexoraStatus === 'success' ? 'border-emerald-500 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 font-bold' :
+                                    nexoraStatus === 'error' ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 animate-shake font-bold' :
+                                    nexoraStatus === 'checking' ? 'border-amber-400 focus:border-amber-400 font-bold' :
+                                    'border-nexoraBorder focus:border-[#4648D8] focus:ring-2 focus:ring-[#4648D8]/20 font-bold'
+                                  }`}
+                                  value={searchId}
+                                  onChange={(e) => handleSearchIdChange(e.target.value)}
+                                />
+                                <div className="absolute right-10 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                  {nexoraStatus === 'checking' && (
+                                    <Loader2 className="h-4 w-4 text-amber-500 animate-spin" />
+                                  )}
+                                  {nexoraStatus === 'success' && (
+                                    <CheckCircle2 className="h-4 w-4 text-emerald-500 animate-scaleUp" />
+                                  )}
+                                  {nexoraStatus === 'error' && (
+                                    <XCircle className="h-4 w-4 text-rose-500 animate-scaleUp" />
+                                  )}
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleScanQr('staff')}
+                                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-nexoraSubtle hover:text-[#4648D8] transition-colors p-1 rounded-md hover:bg-slate-100"
+                                  title={currentLanguage === 'vi' ? 'Quét mã QR' : 'Scan QR Code'}
+                                >
+                                  <QrCode className="h-4 w-4" />
+                                </button>
+                              </div>
                               <button
                                 onClick={() => {
                                   const query = searchId.trim().toUpperCase()
@@ -1295,14 +1488,40 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
                       <label className="text-[10px] font-black uppercase text-nexoraSubtle tracking-wider font-sans">
                         {currentLanguage === 'vi' ? 'Ví VLINKPAY ID' : 'VLINKPAY ID'}
                       </label>
-                      <input 
-                        type="text"
-                        className="mt-1.5 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-[#4648D8] focus:ring-2 focus:ring-[#4648D8]/20 focus:outline-none transition-all font-mono font-bold"
-                        placeholder="e.g. VLP-8893-VL"
-                        value={vlinkpayId}
-                        onChange={(e) => setVlinkpayId(e.target.value)}
-                        required
-                      />
+                      <div className="relative mt-1.5">
+                        <input 
+                          type="text"
+                          className={`h-10 w-full rounded-lg border pl-3 pr-20 text-xs outline-none font-mono font-bold transition-all ${
+                            vlinkpayStatus === 'success' ? 'border-emerald-500 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 font-bold' :
+                            vlinkpayStatus === 'error' ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 animate-shake font-bold' :
+                            vlinkpayStatus === 'checking' ? 'border-amber-400 focus:border-amber-400 font-bold' :
+                            'border-nexoraBorder focus:border-[#4648D8] focus:ring-2 focus:ring-[#4648D8]/20 font-bold'
+                          }`}
+                          placeholder="e.g. VLP-8893-VL"
+                          value={vlinkpayId}
+                          onChange={(e) => handleVlinkpayIdChange(e.target.value)}
+                          required
+                        />
+                        <div className="absolute right-10 top-1/2 -translate-y-1/2 flex items-center gap-1 font-sans">
+                          {vlinkpayStatus === 'checking' && (
+                            <Loader2 className="h-4 w-4 text-amber-500 animate-spin" />
+                          )}
+                          {vlinkpayStatus === 'success' && (
+                            <CheckCircle2 className="h-4 w-4 text-emerald-500 animate-scaleUp" />
+                          )}
+                          {vlinkpayStatus === 'error' && (
+                            <XCircle className="h-4 w-4 text-rose-500 animate-scaleUp" />
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleScanQr('vlinkpay')}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-nexoraSubtle hover:text-[#4648D8] transition-colors p-1 rounded-md hover:bg-slate-100"
+                          title={currentLanguage === 'vi' ? 'Quét mã QR VLINKPAY' : 'Scan VLINKPAY QR Code'}
+                        >
+                          <QrCode className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -1698,6 +1917,135 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
           </div>
         );
       })()}
+
+      {/* Simulated QR Code Camera Scanner Modal Overlay */}
+      {showScanner && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+          <style>{`
+            @keyframes scannerLaser {
+              0% { top: 0%; opacity: 0.8; }
+              50% { top: 100%; opacity: 0.8; }
+              100% { top: 0%; opacity: 0.8; }
+            }
+            .animate-scannerLaser {
+              animation: scannerLaser 2.5s linear infinite;
+            }
+          `}</style>
+          
+          <div className="bg-white border border-slate-100 rounded-3xl max-w-sm w-full p-6 text-center space-y-5 relative overflow-hidden text-slate-800 shadow-2xl animate-scaleUp">
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setShowScanner(false)
+                setScanTarget(null)
+              }}
+              className="absolute right-4 top-4 text-slate-400 hover:text-slate-700 transition p-1.5 rounded-full hover:bg-slate-100"
+              title="Close Scanner"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            {/* Header */}
+            <div className="space-y-1">
+              <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">
+                {currentLanguage === 'vi' ? 'Quét Mã QR Nhận Diện' : 'Scan QR Code'}
+              </h3>
+              <p className="text-[10px] text-slate-500 font-medium">
+                {scanTarget === 'staff' 
+                  ? (currentLanguage === 'vi' ? 'Quét mã NEXORA STAFF ID để liên kết hồ sơ' : 'Scan NEXORA STAFF ID to link your profile')
+                  : (currentLanguage === 'vi' ? 'Quét mã VLINKPAY ID để tự động điền thông tin' : 'Scan VLINKPAY ID to autofill profile data')}
+              </p>
+            </div>
+
+            {/* Scanning viewport */}
+            <div className="relative h-48 w-48 mx-auto rounded-2xl border-2 border-slate-100 bg-slate-50 overflow-hidden flex items-center justify-center shadow-inner">
+              {/* Corner brackets */}
+              <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-amber-500 rounded-tl-sm"></div>
+              <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-amber-500 rounded-tr-sm"></div>
+              <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-amber-500 rounded-bl-sm"></div>
+              <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-amber-500 rounded-br-sm"></div>
+
+              {/* QR icon background */}
+              <QrCode className="h-20 w-20 text-slate-300 opacity-80 animate-pulse" />
+
+              {/* Laser line */}
+              <div className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-amber-500 to-transparent shadow-[0_0_8px_#f59e0b] animate-scannerLaser"></div>
+            </div>
+
+            {/* Helper Text */}
+            <p className="text-[10px] text-slate-500 font-medium max-w-xs mx-auto">
+              {currentLanguage === 'vi'
+                ? 'Hướng camera về phía mã QR hoặc chọn giả lập quét thành công bên dưới.'
+                : 'Point the camera at the QR code, or choose a mockup scan profile below.'}
+            </p>
+
+            {/* Quick simulation buttons */}
+            <div className="space-y-2 pt-2 border-t border-slate-100">
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">
+                {currentLanguage === 'vi' ? 'Giả lập quét QR' : 'Simulate QR Scan'}
+              </span>
+              
+              <div className="flex flex-col gap-2">
+                {/* Standard Successful Scan button required by prompt */}
+                <button
+                  type="button"
+                  onClick={simulateSuccessfulScan}
+                  className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-colors shadow-sm"
+                >
+                  {currentLanguage === 'vi' ? 'Giả lập Quét Lisa Tran' : 'Simulate Successful Scan'}
+                </button>
+
+                {/* Additional quick options for high-end feel */}
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (scanTarget === 'staff') {
+                        handleSearchIdChange('NEX-STAFF-ANNA0921')
+                      } else {
+                        handleVlinkpayIdChange('VLP-0921-ANNA')
+                      }
+                      setShowScanner(false)
+                      setScanTarget(null)
+                    }}
+                    className="py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg text-[10px] font-bold transition-colors"
+                  >
+                    Anna Nguyen
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (scanTarget === 'staff') {
+                        handleSearchIdChange('NEX-STAFF-HN1148')
+                      } else {
+                        handleVlinkpayIdChange('VLP-1148-HN')
+                      }
+                      setShowScanner(false)
+                      setScanTarget(null)
+                    }}
+                    className="py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg text-[10px] font-bold transition-colors"
+                  >
+                    Hanna Nguyen
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Cancel Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setShowScanner(false)
+                setScanTarget(null)
+              }}
+              className="w-full py-2 border border-slate-200 hover:bg-slate-50 text-slate-500 hover:text-slate-700 rounded-xl text-xs font-bold transition"
+            >
+              {currentLanguage === 'vi' ? 'HỦY BỎ' : 'CANCEL'}
+            </button>
+          </div>
+        </div>
+      )}
 
       </div>
     </div>

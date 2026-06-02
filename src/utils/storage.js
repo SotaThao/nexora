@@ -10,7 +10,8 @@ const DYNAMIC_KEYS = [
   'nexora_transactions',
   'nexora_reviews',
   'nexora_notifications',
-  'nexora_pending_accounts'
+  'nexora_pending_accounts',
+  'nexora_staff_account'
 ]
 
 const memoryStore = {}

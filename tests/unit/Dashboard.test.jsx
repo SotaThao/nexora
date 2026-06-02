@@ -367,4 +367,65 @@ describe('Dashboard Component Unit Tests', () => {
     const closeBtn = within(payoutModal).getByRole('button', { name: /ĐÓNG|CLOSE|HỦY|CANCEL/i });
     fireEvent.click(closeBtn);
   });
+
+  it('supports QR code scanning and autofilling inside the Staff modal', () => {
+    const mockSetup = {
+      businessInfo: { name: 'Golden Glow Nail Spa', industry: 'Nail Salon' },
+      staffList: [
+        { 
+          id: 'NEX-STAFF-MIA0123', 
+          fullName: 'Mia Tran', 
+          nickname: 'Mia T.', 
+          position: 'Gel-X Artist', 
+          isActive: true,
+          showInTipsFlow: true,
+          phone: '407-555-0123',
+          email: 'mia.tran@gmail.com',
+          paymentAccounts: { venmo: '@mia-nails', cashapp: '$miaglow', zelle: 'mia.tran@gmail.com', vlinkpay: 'VLP-0123-MIA' }
+        }
+      ],
+      touchPoints: [],
+    };
+
+    render(
+      <LanguageProvider>
+        <Dashboard setupData={mockSetup} verificationStatus="kyb_approved" onLogout={vi.fn()} />
+      </LanguageProvider>
+    );
+
+    // 1. Navigate to staff tab
+    const staffMenuBtn = screen.getByRole('button', { name: /Staff/i });
+    fireEvent.click(staffMenuBtn);
+
+    // 2. Click on the Edit/Manage staff button for Mia Tran
+    const editBtn = screen.getByTitle(/Edit|common\.edit|Chỉnh sửa thợ/i);
+    fireEvent.click(editBtn);
+
+    // 3. Verify VLINKPAY ID QR Scan button is present
+    const vlinkpayScanBtn = screen.getByTitle('Scan VLINKPAY QR Code');
+    expect(vlinkpayScanBtn).toBeInTheDocument();
+
+    // 4. Verify NEXORA QR Scan button is present
+    const staffScanBtn = screen.getByTitle('Scan NEXORA QR Code');
+    expect(staffScanBtn).toBeInTheDocument();
+
+    // 5. Click the VLINKPAY QR Scan button
+    fireEvent.click(vlinkpayScanBtn);
+
+    // Verify Scanner overlay is shown
+    expect(screen.getByText('Scan QR Code')).toBeInTheDocument();
+    expect(screen.getByText('Scan VLINKPAY ID to autofill profile data')).toBeInTheDocument();
+
+    // 6. Trigger simulation successful scan (which scans Lisa Tran)
+    const simulateBtn = screen.getByRole('button', { name: /Simulate Successful Scan/i });
+    fireEvent.click(simulateBtn);
+
+    // 7. Verify Lisa Tran's profile data has been loaded and auto-filled
+    expect(screen.getByPlaceholderText('Mia Tran').value).toBe('Lisa Tran');
+    expect(screen.getByPlaceholderText('Mia T.').value).toBe('Lisa T.');
+    expect(screen.getByPlaceholderText('Nail Tech').value).toBe('Nail Tech');
+    expect(screen.getByPlaceholderText('e.g., mia.tran@gmail.com').value).toBe('lisa@example.com');
+    expect(screen.getByPlaceholderText('e.g. VLP-8893-VL').value).toBe('VLP-1102-LISA');
+    expect(screen.getByPlaceholderText('e.g. NEX-STAFF-LISA1102').value).toBe('NEX-STAFF-LISA1102');
+  });
 });

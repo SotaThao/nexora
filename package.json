@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "test:e2e": "start-server-and-test dev http://localhost:3000 \"vitest run --config vitest.e2e.config.js\"",
     "lint:tokens": "node scripts/verify-tokens.cjs",
-    "test:impact": "node .agents/skills/feature-focused-tester/scripts/detect-changes.cjs"
+    "test:impact": "node .agents/skills/feature-focused-tester/scripts/detect-changes.cjs",
+    "seed:staff-demo": "node scripts/seed-staff-demo.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.2",

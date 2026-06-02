@@ -4,7 +4,8 @@ import Dashboard from './components/Dashboard'
 import CustomerFlow from './components/CustomerFlow'
 import RegisterWizard from './components/RegisterWizard'
 import StaffRegistrationWizard from './components/StaffRegistrationWizard'
-import { 
+import StaffDashboard from './components/staff-dashboard/StaffDashboard'
+import {
   Sparkles, ShieldCheck, LogIn, Lock, Mail, RefreshCw, 
   Layers, Users, ShieldAlert, CheckCircle2, ChevronRight, Activity, X
 } from 'lucide-react'
@@ -37,7 +38,7 @@ const MOCK_SSO_NO_KYB_EMAIL = 'sso_no_kyb@gmail.com'
 export default function App() {
   const { currentLanguage, setLanguage, t } = useTranslation()
   const { showConfirm } = useNotification()
-  const [view, setView] = useState('login') // 'login' | 'register-wizard' | 'onboarding' | 'dashboard' | 'customer' | 'staff-portal'
+  const [view, setView] = useState('login') // 'login' | 'register-wizard' | 'onboarding' | 'dashboard' | 'customer' | 'staff-portal' | 'staff-dashboard'
   const [isLoading, setIsLoading] = useState(false)
   const [setupData, setSetupData] = useState(null)
   const [verificationStatus, setVerificationStatus] = useState('kyb_approved')
@@ -65,6 +66,7 @@ export default function App() {
   // Staff registration states
   const [staffInviteData, setStaffInviteData] = useState(null)
   const [simulationNotification, setSimulationNotification] = useState(null)
+  const [loggedInStaffId, setLoggedInStaffId] = useState(null)
 
   // Load setup data or customer flow on mount
   useEffect(() => {
@@ -215,6 +217,12 @@ export default function App() {
       if (matchedAccount) {
         if (matchedAccount.password !== targetPassword) {
           setLoginError(currentLanguage === 'vi' ? 'Mật khẩu không chính xác.' : 'Incorrect password.')
+          return
+        }
+
+        if (matchedAccount.role === 'personal') {
+          setLoggedInStaffId(matchedAccount.staffId || 'NEX-STAFF-MIA0123')
+          setView('staff-dashboard')
           return
         }
 
@@ -734,6 +742,29 @@ export default function App() {
                       </p>
                     </div>
                   </button>
+
+                  {/* Scenario 5: Staff Personal Dashboard */}
+                  <button
+                    onClick={() => {
+                      setLoggedInStaffId('NEX-STAFF-MIA0123')
+                      setView('staff-dashboard')
+                    }}
+                    className="w-full text-left p-3 rounded-xl border border-nexoraBorder hover:border-nexoraBrand bg-slate-50 hover:bg-nexoraBrandSoft/10 transition flex items-start gap-3 group"
+                  >
+                    <span className="h-6 w-6 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center font-bold text-xs text-sky-600 shrink-0">5</span>
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-slate-800 group-hover:text-nexoraBrand flex items-center gap-1.5">
+                        {currentLanguage === 'vi' ? 'Đăng nhập Staff (Dashboard cá nhân)' : 'Staff Login (Personal Dashboard)'}
+                        <ChevronRight className="w-3 h-3 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                      </div>
+                      <p className="text-[9px] text-slate-500 mt-0.5">
+                        {currentLanguage === 'vi'
+                          ? 'Mở dashboard cá nhân của nhân viên (cờ !personal) để tự quản lý tips, ví, QR, hồ sơ.'
+                          : 'Open the staff personal dashboard (!personal flag) to self-manage tips, payouts, QR, profile.'
+                        }
+                      </p>
+                    </div>
+                  </button>
                 </div>
               </div>
 
@@ -752,24 +783,47 @@ export default function App() {
                     {pendingAccounts.map((acc, index) => (
                       <div key={index} className="p-2 border border-slate-200 rounded-lg bg-slate-50 flex items-center justify-between gap-2 text-[10px]">
                         <div className="min-w-0">
-                          <div className="font-mono font-bold truncate text-slate-700 max-w-[130px]">{acc.email}</div>
+                          <div className="flex items-center gap-1.5">
+                            <div className="font-mono font-bold truncate text-slate-700 max-w-[110px]" title={acc.email}>{acc.email}</div>
+                            <span className={`px-1 py-0.2 rounded text-[7px] font-extrabold uppercase shrink-0
+                              ${acc.role === 'personal' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}
+                            >
+                              {acc.role || 'business'}
+                            </span>
+                          </div>
                           <div className="text-[9px] flex flex-wrap items-center gap-1 mt-0.5">
                             <span className="font-semibold">{currentLanguage === 'vi' ? 'Mật khẩu:' : 'Pass:'} {acc.password}</span>
                             <span>•</span>
                             <span className="font-bold text-indigo-600">
-                              {acc.verificationStatus || (acc.isVerified ? 'kyb_approved' : 'basic')}
+                              {acc.role === 'personal' ? 'active' : (acc.verificationStatus || (acc.isVerified ? 'kyb_approved' : 'basic'))}
                             </span>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-1 shrink-0">
                           <button 
-                            onClick={() => toggleAccountVerification(acc.email)}
-                            className="px-1.5 py-0.5 rounded text-[8px] font-extrabold transition-all border bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200"
-                            title="Cycle verification status"
+                            onClick={() => {
+                              setEmail(acc.email)
+                              setPassword(acc.password)
+                              // Force small delay to ensure input fields are updated
+                              setTimeout(() => {
+                                handleLoginSubmit()
+                              }, 50)
+                            }}
+                            className="px-1.5 py-0.5 rounded text-[8px] font-extrabold transition-all bg-nexoraBrand text-white hover:bg-nexoraBrandDark"
+                            title="Auto Login"
                           >
-                            CYCLE
+                            LOGIN
                           </button>
+                          {acc.role !== 'personal' && (
+                            <button 
+                              onClick={() => toggleAccountVerification(acc.email)}
+                              className="px-1.5 py-0.5 rounded text-[8px] font-extrabold transition-all border bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200"
+                              title="Cycle verification status"
+                            >
+                              CYCLE
+                            </button>
+                          )}
                           <button 
                             onClick={() => deleteSimulatedAccount(acc.email)}
                             className="p-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded border border-red-200"
@@ -872,6 +926,11 @@ export default function App() {
             setView('dashboard')
           }}
         />
+      )}
+
+      {/* 7. STAFF PERSONAL DASHBOARD (!personal account) */}
+      {view === 'staff-dashboard' && (
+        <StaffDashboard staffId={loggedInStaffId} onLogout={() => setView('login')} />
       )}
 
       {/* KYB Verification Required Custom Modal */}

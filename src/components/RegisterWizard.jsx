@@ -5,10 +5,15 @@ import {
   Globe, Landmark, FileText, Sparkles, CheckSquare
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
+import { storage } from '../utils/storage'
+
+const localStorage = storage
+const sessionStorage = storage
 
 export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onKybSuccess, isRedirectedFromSession }) {
   const { t, currentLanguage, setLanguage } = useTranslation()
-  const [currentStep, setCurrentStep] = useState(1) // 1, 2
+  const [currentStep, setCurrentStep] = useState(0) // 0 (Role selection), 1 (Details), 2 (Success)
+  const [role, setRole] = useState('business') // 'business' | 'personal'
 
   // Step 1 states
   const [email, setEmail] = useState(ssoEmail || '')
@@ -16,6 +21,11 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [referralCode, setReferralCode] = useState('')
+  const [fullName, setFullName] = useState('')
+  
+  // Step 2 states
+  const [generatedStaffId, setGeneratedStaffId] = useState('')
+  const [copied, setCopied] = useState(false)
   
   // Validation errors
   const [errors, setErrors] = useState({})
@@ -27,6 +37,10 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
   const handleStep1Next = (e) => {
     e.preventDefault()
     const newErrors = {}
+
+    if (role === 'personal' && !fullName.trim()) {
+      newErrors.fullName = t('register.errors.fullname_required')
+    }
 
     if (!email.trim()) {
       newErrors.email = t('register.errors.email_required')
@@ -53,13 +67,26 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
 
     setErrors({})
     
-    // Register account in local persistence as unverified
+    // Generate Staff ID if personal account
+    let staffId = null
+    if (role === 'personal') {
+      const nameParts = fullName.trim().toUpperCase().split(/\s+/)
+      const initials = nameParts.map(part => part[0]).join('').slice(0, 3) || 'STAFF'
+      const randomDigits = Math.floor(1000 + Math.random() * 9000)
+      staffId = `NEX-STAFF-${initials}${randomDigits}`
+      setGeneratedStaffId(staffId)
+    }
+
+    // Register account in local persistence (synced to Supabase via storage utility override)
     const pendingAccounts = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
     const newAccount = {
       email: email.trim().toLowerCase(),
       password: password,
       referralCode: referralCode.trim(),
-      isVerified: false,
+      role: role,
+      fullName: role === 'personal' ? fullName.trim() : null,
+      staffId: staffId,
+      isVerified: role === 'personal' ? true : false, // Staff accounts bypass KYB verification immediately
       kybDetails: null
     }
     
@@ -67,14 +94,16 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
     filtered.push(newAccount)
     localStorage.setItem('nexora_pending_accounts', JSON.stringify(filtered))
 
-    if (onRegisterAndLogin) {
+    if (role === 'personal') {
+      setCurrentStep(2)
+    } else if (onRegisterAndLogin) {
       onRegisterAndLogin(email.trim().toLowerCase())
     } else {
       setCurrentStep(2)
     }
   }
 
-  // Action: Simulate Admin Verification instantly
+  // Action: Simulate Admin Verification instantly for Business Accounts
   const handleSimulateVerify = () => {
     const pendingAccounts = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
     const updated = pendingAccounts.map(acc => {
@@ -103,11 +132,18 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
     }
   }
 
+  const handleCopyStaffId = () => {
+    navigator.clipboard.writeText(generatedStaffId)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
   // Helper for steps naming
   const getStepName = (step) => {
     switch (step) {
-      case 1: return currentLanguage === 'vi' ? 'Thông tin đăng ký' : 'Account Details'
-      case 2: return currentLanguage === 'vi' ? 'Hoàn tất đăng ký' : 'Registration Success'
+      case 0: return currentLanguage === 'vi' ? 'Chọn vai trò' : 'Account Type'
+      case 1: return currentLanguage === 'vi' ? 'Thông tin đăng ký' : 'Credentials'
+      case 2: return currentLanguage === 'vi' ? 'Hoàn tất đăng ký' : 'Success'
       default: return ''
     }
   }
@@ -151,10 +187,10 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
             <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-[2px] bg-nexoraBorder -z-10"></div>
             <div 
               className="absolute left-0 top-1/2 -translate-y-1/2 h-[2px] bg-nexoraBrand -z-10 transition-all duration-500"
-              style={{ width: `${((currentStep - 1) / 1) * 100}%` }}
+              style={{ width: `${(currentStep / 2) * 100}%` }}
             ></div>
 
-            {[1, 2].map((step) => {
+            {[0, 1, 2].map((step) => {
               const isActive = step === currentStep
               const isCompleted = step < currentStep
               return (
@@ -183,6 +219,105 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
         {/* Main Card container */}
         <div className="bg-white rounded-2xl border border-nexoraBorder shadow-premium overflow-hidden transition-all duration-500">
           
+          {/* STEP 0: Role Selection */}
+          {currentStep === 0 && (
+            <div className="p-6 sm:p-10 space-y-6">
+              <div className="text-center max-w-md mx-auto">
+                <h3 className="text-lg font-bold text-nexoraText">{t('register.role_select_title')}</h3>
+                <p className="text-xs text-nexoraSubtle mt-1">{t('register.role_select_desc')}</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto pt-2">
+                {/* Business Owner Option */}
+                <button
+                  type="button"
+                  onClick={() => setRole('business')}
+                  className={`p-6 rounded-2xl border text-left flex flex-col justify-between transition-all duration-300 group min-h-[180px] hover:shadow-md
+                    ${role === 'business'
+                      ? 'border-nexoraBrand bg-nexoraBrandSoft/10 ring-2 ring-nexoraBrand/20'
+                      : 'border-nexoraBorder bg-white hover:border-slate-300'
+                    }`}
+                >
+                  <div className="flex justify-between items-start w-full">
+                    <div className={`p-3 rounded-xl transition-all duration-300
+                      ${role === 'business'
+                        ? 'bg-nexoraBrand text-white'
+                        : 'bg-slate-50 text-slate-400 group-hover:bg-slate-100 group-hover:text-slate-600'
+                      }`}
+                    >
+                      <Building2 className="w-6 h-6" />
+                    </div>
+                    {role === 'business' && (
+                      <span className="h-5 w-5 rounded-full bg-nexoraBrand text-white flex items-center justify-center">
+                        <Check className="w-3 h-3 stroke-[3px]" />
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-800 mt-4 group-hover:text-nexoraBrand transition-colors">
+                      {t('register.role_business_title')}
+                    </h4>
+                    <p className="text-[11px] text-nexoraSubtle mt-1 leading-relaxed">
+                      {t('register.role_business_desc')}
+                    </p>
+                  </div>
+                </button>
+
+                {/* Technician Option */}
+                <button
+                  type="button"
+                  onClick={() => setRole('personal')}
+                  className={`p-6 rounded-2xl border text-left flex flex-col justify-between transition-all duration-300 group min-h-[180px] hover:shadow-md
+                    ${role === 'personal'
+                      ? 'border-nexoraBrand bg-nexoraBrandSoft/10 ring-2 ring-nexoraBrand/20'
+                      : 'border-nexoraBorder bg-white hover:border-slate-300'
+                    }`}
+                >
+                  <div className="flex justify-between items-start w-full">
+                    <div className={`p-3 rounded-xl transition-all duration-300
+                      ${role === 'personal'
+                        ? 'bg-nexoraBrand text-white'
+                        : 'bg-slate-50 text-slate-400 group-hover:bg-slate-100 group-hover:text-slate-600'
+                      }`}
+                    >
+                      <Sparkles className="w-6 h-6" />
+                    </div>
+                    {role === 'personal' && (
+                      <span className="h-5 w-5 rounded-full bg-nexoraBrand text-white flex items-center justify-center">
+                        <Check className="w-3 h-3 stroke-[3px]" />
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-800 mt-4 group-hover:text-nexoraBrand transition-colors">
+                      {t('register.role_personal_title')}
+                    </h4>
+                    <p className="text-[11px] text-nexoraSubtle mt-1 leading-relaxed">
+                      {t('register.role_personal_desc')}
+                    </p>
+                  </div>
+                </button>
+              </div>
+
+              <div className="pt-4 flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+                <button
+                  type="button"
+                  onClick={onBackToLogin}
+                  className="w-full min-h-11 py-2.5 border border-nexoraBorder hover:bg-nexoraCanvas text-nexoraSubtle hover:text-nexoraText font-semibold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 transition-all"
+                >
+                  <ArrowLeft className="w-4 h-4" /> {t('common.back')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(1)}
+                  className="w-full min-h-11 py-2.5 bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all"
+                >
+                  {t('common.next')} <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* STEP 1: Registration Form */}
           {currentStep === 1 && (
             <div className="p-6 sm:p-10 space-y-6">
@@ -191,7 +326,27 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
                 <p className="text-xs text-nexoraSubtle mt-1">{t('register.desc_step_1')}</p>
               </div>
 
-              <form onSubmit={handleStep1Next} className="space-y-4 max-w-md mx-auto">
+              <form onSubmit={handleStep1Next} noValidate className="space-y-4 max-w-md mx-auto">
+                {/* Full Name Input for Personal Account */}
+                {role === 'personal' && (
+                  <div>
+                    <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
+                      {t('register.fullname_label')}
+                    </label>
+                    <input 
+                      type="text"
+                      placeholder={t('register.fullname_placeholder')}
+                      className={`w-full bg-nexoraCanvas border ${errors.fullName ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all`}
+                      value={fullName}
+                      onChange={(e) => {
+                        setFullName(e.target.value)
+                        if (errors.fullName) setErrors({ ...errors, fullName: '' })
+                      }}
+                    />
+                    {errors.fullName && <span className="text-xs text-red-500 mt-1 block">{errors.fullName}</span>}
+                  </div>
+                )}
+
                 {/* Email Input */}
                 <div>
                   <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
@@ -280,7 +435,7 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
                 <div className="pt-4 flex flex-col sm:flex-row gap-3">
                   <button 
                     type="button"
-                    onClick={onBackToLogin}
+                    onClick={() => setCurrentStep(0)}
                     className="w-full min-h-11 py-2.5 border border-nexoraBorder hover:bg-nexoraCanvas text-nexoraSubtle hover:text-nexoraText font-semibold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 transition-all"
                   >
                     <ArrowLeft className="w-4 h-4" /> {t('common.back')}
@@ -296,8 +451,8 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
             </div>
           )}
 
-          {/* STEP 2: Registration Success */}
-          {currentStep === 2 && (
+          {/* STEP 2: Registration Success (Merchant) */}
+          {currentStep === 2 && role === 'business' && (
             <div className="p-6 sm:p-10 space-y-6 text-center">
               <div className="w-16 h-16 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-full flex items-center justify-center mx-auto animate-pulse">
                 <Sparkles className="w-8 h-8" />
@@ -383,6 +538,76 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
                   className="px-6 py-2.5 border border-nexoraBorder hover:bg-nexoraCanvas text-nexoraSubtle hover:text-nexoraText font-semibold text-xs uppercase tracking-wider rounded-lg transition-all"
                 >
                   {t('register.back_to_login')}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 2: Registration Success (Staff) */}
+          {currentStep === 2 && role === 'personal' && (
+            <div className="p-6 sm:p-10 space-y-6 text-center animate-fadeIn">
+              <div className="w-16 h-16 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-full flex items-center justify-center mx-auto animate-bounce">
+                <Sparkles className="w-8 h-8" />
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold text-nexoraText">
+                  {t('register.staff_success_title')}
+                </h3>
+                <p className="text-xs text-nexoraSubtle max-w-lg mx-auto">
+                  {t('register.staff_success_desc')}
+                </p>
+              </div>
+
+              {/* Staff ID Box */}
+              <div className="max-w-md mx-auto p-5 rounded-2xl border border-nexoraBorder bg-slate-50 flex flex-col items-center justify-center space-y-3 shadow-sm">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  {t('register.staff_id_label')}
+                </span>
+                <div className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-xl border border-nexoraBorder w-full justify-between shadow-inner">
+                  <span className="font-mono text-base font-extrabold text-nexoraBrand select-all">
+                    {generatedStaffId}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleCopyStaffId}
+                    className="px-3 py-1 bg-nexoraBrandSoft text-nexoraBrand hover:bg-nexoraBrand hover:text-white rounded-lg text-xs font-bold transition-all shrink-0"
+                  >
+                    {copied ? t('common.copied') : t('common.copy')}
+                  </button>
+                </div>
+                <p className="text-[10px] text-nexoraSubtle leading-relaxed max-w-xs">
+                  {t('register.staff_linking_instructions')}
+                </p>
+              </div>
+
+              {/* Info summary */}
+              <div className="max-w-md mx-auto bg-slate-50 border border-slate-200 rounded-xl p-4 text-left text-xs space-y-2.5">
+                <h4 className="font-extrabold text-slate-800 border-b border-slate-200 pb-1.5 uppercase text-[10px] tracking-wider">
+                  {currentLanguage === 'vi' ? 'Thông tin đăng ký của bạn' : 'Registered Staff Summary'}
+                </h4>
+                <div className="grid grid-cols-3 gap-y-1.5 text-slate-600">
+                  <span className="font-semibold">{currentLanguage === 'vi' ? 'Họ và tên:' : 'Full Name:'}</span>
+                  <span className="col-span-2 text-slate-800 font-bold">{fullName}</span>
+
+                  <span className="font-semibold">{currentLanguage === 'vi' ? 'Email tài khoản:' : 'Account Email:'}</span>
+                  <span className="col-span-2 font-mono break-all text-slate-800">{email}</span>
+
+                  {referralCode && (
+                    <>
+                      <span className="font-semibold">{currentLanguage === 'vi' ? 'Mã giới thiệu:' : 'Referral Code:'}</span>
+                      <span className="col-span-2 text-slate-800 font-mono">{referralCode}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <div className="pt-6">
+                <button 
+                  onClick={onBackToLogin}
+                  className="px-6 py-2.5 bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg shadow-md transition-all"
+                >
+                  {t('register.staff_login_btn')}
                 </button>
               </div>
             </div>
