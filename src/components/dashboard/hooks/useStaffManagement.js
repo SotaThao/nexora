@@ -183,18 +183,11 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
     if (staffForm.email?.trim() && !/\S+@\S+\.\S+/.test(staffForm.email.trim())) {
       nextErrors.email = t('setup.errors.staff_email_invalid') || 'Invalid email address format.'
     }
-    
-    const configs = staffForm.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
-    const hasAnyActive = Object.values(configs).some(c => c.enabled && c.value.trim() !== '')
-    if (!hasAnyActive && !staffForm.vlinkpay.trim()) {
-      nextErrors.payment = 'Add at least one direct payment wallet.'
-    }
-    
     if (Object.keys(nextErrors).length) {
       setErrors(nextErrors)
       return
     }
-
+    const configs = staffForm.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
     const payload = {
       fullName: staffForm.fullName.trim(),
       nickname: staffForm.nickname.trim(),
