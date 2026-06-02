@@ -47,21 +47,21 @@ describe('Staff Personal Dashboard E2E Test Suite (CloakBrowser)', () => {
     expect(content).toContain('Pending Confirmations');
 
     // 3. Navigate to "My QR"
-    const qrTab = page.locator('button:has-text("My QR"), button:has-text("QR Của Tôi")');
+    const qrTab = page.locator('button:has-text("My QR"), button:has-text("QR Của Tôi")').first();
     await qrTab.click();
     await page.waitForSelector('text=Personal QR Code');
     content = await page.textContent('body');
     expect(content).toContain('NEX-STAFF-MIA0123');
 
     // 4. Navigate to "Tips"
-    const tipsTab = page.locator('button:has-text("Tips"), button:has-text("Lịch Sử Tip")');
+    const tipsTab = page.locator('button:has-text("Tips"), button:has-text("Lịch Sử Tip")').first();
     await tipsTab.click();
     await page.waitForSelector('text=Tip Activity');
     content = await page.textContent('body');
     expect(content).toContain('Tip Activity');
 
     // 5. Navigate to "Pay"
-    const payTab = page.locator('button:has-text("Pay"), button:has-text("Ví Nhận Tiền")');
+    const payTab = page.locator('button:has-text("Pay"), button:has-text("Ví Nhận Tiền")').first();
     await payTab.click();
     await page.waitForSelector('text=Payout Methods');
     content = await page.textContent('body');
@@ -70,14 +70,14 @@ describe('Staff Personal Dashboard E2E Test Suite (CloakBrowser)', () => {
     expect(content).toContain('Venmo');
 
     // 6. Navigate to "Profile"
-    const profileTab = page.locator('button:has-text("Profile"), button:has-text("Hồ Sơ")');
+    const profileTab = page.locator('button:has-text("Profile"), button:has-text("Hồ Sơ")').first();
     await profileTab.click();
     await page.waitForSelector('text=Identity Settings');
     content = await page.textContent('body');
     expect(content).toContain('Identity Settings');
 
     // 7. Verify notifications
-    const notiTab = page.locator('button:has-text("Notifications"), button:has-text("Thông báo")');
+    const notiTab = page.locator('button:has-text("Notifications"), button:has-text("Thông báo")').first();
     if (await notiTab.isVisible()) {
       await notiTab.click();
       await page.waitForSelector('text=Notification Center');
@@ -86,7 +86,7 @@ describe('Staff Personal Dashboard E2E Test Suite (CloakBrowser)', () => {
     }
 
     // 8. Go back to Home and test Confirm Tip Action
-    const homeTab = page.locator('button:has-text("Home"), button:has-text("Trang chủ")');
+    const homeTab = page.locator('button:has-text("Home"), button:has-text("Trang chủ")').first();
     await homeTab.click();
     await page.waitForSelector('text=Pending Confirmations');
 
