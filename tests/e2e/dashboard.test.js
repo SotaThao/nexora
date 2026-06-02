@@ -57,6 +57,11 @@ describe('Nexora Touch E2E Test Suite (CloakBrowser)', () => {
     const venmoBtn = page.locator('button:has-text("Venmo")');
     await venmoBtn.click();
 
+    // Wait for wallet details screen and click confirm
+    const confirmBtn = page.locator('button:has-text("Yes, I Sent The Tip"), button:has-text("Tôi Đã Gửi Tiền Tip")');
+    await confirmBtn.waitFor({ state: 'visible' });
+    await confirmBtn.click();
+
     // Wait for payment processing and verification routing success screen
     await page.waitForSelector('text=Thank You!');
 
@@ -109,6 +114,11 @@ describe('Nexora Touch E2E Test Suite (CloakBrowser)', () => {
     await page.waitForSelector('text=How would you like to pay?');
     const venmoBtn = page.locator('button:has-text("Venmo")');
     await venmoBtn.click();
+
+    // Wait for wallet details screen and click confirm
+    const confirmBtn = page.locator('button:has-text("Yes, I Sent The Tip"), button:has-text("Tôi Đã Gửi Tiền Tip")');
+    await confirmBtn.waitFor({ state: 'visible' });
+    await confirmBtn.click();
 
     // Wait for success screen
     await page.waitForSelector('text=Thank You!');
