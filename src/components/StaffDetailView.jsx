@@ -210,13 +210,15 @@ export default function StaffDetailView({
 
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between relative z-10">
           <div className="flex items-center gap-4">
-            <button
-              onClick={onBack}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-nexoraBorder bg-white text-nexoraText hover:bg-nexoraSurfaceMuted transition"
-              title={t('common.back')}
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </button>
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-nexoraBorder bg-white text-nexoraText hover:bg-nexoraSurfaceMuted transition"
+                title={t('common.back')}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+            )}
 
             {staffMember.avatar ? (
               <img
@@ -286,13 +288,15 @@ export default function StaffDetailView({
             >
               <Edit2 className="h-4 w-4 text-luxuryGold" /> {t('staff_detail.edit_profile')}
             </button>
-            <button
-              onClick={() => onDelete(staffMember.id)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 transition"
-              title={t('staff_detail.delete_tech')}
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
+            {onDelete && (
+              <button
+                onClick={() => onDelete(staffMember.id)}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 transition"
+                title={t('staff_detail.delete_tech')}
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
       </div>

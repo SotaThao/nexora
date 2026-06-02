@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Upload, Eye, AlertTriangle, QrCode, Loader2, CheckCircle2, XCircle } from 'lucide-react'
+import { X, Upload, Eye, AlertTriangle, QrCode, Loader2, CheckCircle2, XCircle, Star } from 'lucide-react'
 import IconButton from '../../ui/IconButton'
 import CountryCodeSelect, { parsePhone } from '../../CountryCodeSelect'
 import { WalletLogos, DEFAULT_PAYOUT_CONFIGS } from '../constants'
@@ -41,8 +41,52 @@ function StaffModal({
   const [nexoraStatus, setNexoraStatus] = useState('idle') // 'idle' | 'checking' | 'success' | 'error'
   const [vlinkpayTimeout, setVlinkpayTimeout] = useState(null)
   const [nexoraTimeout, setNexoraTimeout] = useState(null)
+  const [showReviewsDetailModal, setShowReviewsDetailModal] = useState(false)
+  const [reviewFilterRating, setReviewFilterRating] = useState('all')
+  const [reviewFilterSource, setReviewFilterSource] = useState('all')
+  const [reviewFilterOnlyCommented, setReviewFilterOnlyCommented] = useState(false)
 
   if (!open) return null
+
+  const reviewsList = (() => {
+    try {
+      const saved = localStorage.getItem('nexora_reviews')
+      const allReviews = saved ? JSON.parse(saved) : []
+      const targetId = form?.nexoraStaffId || form?.id
+      if (!targetId) return []
+      return allReviews.filter(r => r.staffId === targetId)
+    } catch (e) {
+      return []
+    }
+  })()
+
+  const averageRating = reviewsList.length
+    ? Math.round((reviewsList.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / reviewsList.length) * 10) / 10
+    : 0
+
+  const starCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
+  reviewsList.forEach((r) => {
+    const rating = Math.round(Number(r.rating) || 0)
+    if (rating >= 1 && rating <= 5) {
+      starCounts[rating]++
+    }
+  })
+
+  const filteredReviewsList = reviewsList.filter((rev) => {
+    if (reviewFilterRating !== 'all' && Number(rev.rating) !== Number(reviewFilterRating)) {
+      return false
+    }
+    if (reviewFilterSource !== 'all') {
+      const source = rev.category?.toLowerCase() || ''
+      if (reviewFilterSource === 'google' && !source.includes('google')) return false
+      if (reviewFilterSource === 'yelp' && !source.includes('yelp')) return false
+      if (reviewFilterSource === 'internal' && (source.includes('google') || source.includes('yelp'))) return false
+    }
+    if (reviewFilterOnlyCommented && !rev.comment?.trim()) {
+      return false
+    }
+    return true
+  })
 
   const phoneParsed = parsePhone(form?.phone || '')
 
@@ -486,7 +530,7 @@ function StaffModal({
                     {(form.nickname || form.fullName || 'N').charAt(0)}
                   </div>
                 )}
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 items-center">
                   <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-nexoraBorder px-3 text-xs font-bold text-nexoraText transition hover:bg-nexoraCanvas">
                     <Upload className="h-4 w-4 text-nexoraBrand" />
                     Upload photo
@@ -499,6 +543,25 @@ function StaffModal({
                       className="h-9 rounded-lg border border-nexoraBorder px-3 text-xs font-bold text-nexoraMuted transition hover:bg-nexoraCanvas"
                     >
                       {t('common.delete')}
+                    </button>
+                  )}
+                  {(form.nexoraStaffId || form.id) && (
+                    <button
+                      type="button"
+                      onClick={() => setShowReviewsDetailModal(true)}
+                      className="inline-flex h-9 items-center gap-2 rounded-lg border border-amber-200 bg-amber-50/50 px-2.5 hover:bg-amber-100/60 transition shadow-sm text-left group shrink-0"
+                      title={currentLanguage === 'vi' ? 'Xem tất cả đánh giá' : 'View all reviews'}
+                    >
+                      <div className="flex items-center gap-0.5 text-amber-500">
+                        <Star className="h-3.5 w-3.5 fill-current" />
+                        <span className="text-xs font-black text-slate-800">
+                          {averageRating ? averageRating.toFixed(1) : '-.-'}
+                        </span>
+                      </div>
+                      <div className="h-3.5 w-[1px] bg-amber-200" />
+                      <span className="text-[10px] text-slate-500 font-bold group-hover:underline">
+                        {currentLanguage === 'vi' ? `${reviewsList.length} đánh giá` : `${reviewsList.length} reviews`}
+                      </span>
                     </button>
                   )}
                 </div>
@@ -719,8 +782,8 @@ function StaffModal({
               </div>
               {errors.payment && <p className="mt-2 flex items-center gap-1 text-xs font-bold text-rose-600"><AlertTriangle className="h-3.5 w-3.5" />{errors.payment}</p>}
             </div>
-          </div>
         </div>
+      </div>
         <div className="mt-6 flex justify-end gap-2 border-t border-nexoraRule pt-4">
           {isApproveMode ? (
             <>
@@ -758,6 +821,216 @@ function StaffModal({
         onSubmit={handlePayoutSubmit}
         readOnly={true}
       />
+
+      {/* Google/Shopee Style Detailed Reviews Modal Overlay */}
+      {showReviewsDetailModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-100 rounded-3xl max-w-lg w-full shadow-2xl p-6 relative overflow-hidden animate-scaleUp space-y-4">
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={() => setShowReviewsDetailModal(false)}
+              className="absolute right-4 top-4 text-slate-400 hover:text-slate-700 transition p-1.5 rounded-full hover:bg-slate-100"
+              title="Close"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            {/* Header */}
+            <div className="text-left">
+              <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">
+                {currentLanguage === 'vi' ? 'Đánh Giá & Uy Tín' : 'Reviews & Reputation'}
+              </h3>
+              <p className="text-[10px] text-slate-400 font-semibold mt-0.5 text-left">
+                {currentLanguage === 'vi' ? `Hồ sơ đánh giá của ${form.fullName}` : `Feedback details for ${form.fullName}`}
+              </p>
+            </div>
+
+            {/* Rating Summary Grid */}
+            <div className="grid grid-cols-5 gap-4 items-center bg-slate-50/50 border border-slate-100 rounded-2xl p-4">
+              {/* Average Score */}
+              <div className="col-span-2 text-center border-r border-slate-200/60 pr-2">
+                <div className="text-4xl font-black text-slate-800 tracking-tighter">
+                  {averageRating ? averageRating.toFixed(1) : '-.-'}
+                </div>
+                <div className="mt-1.5 flex justify-center items-center gap-0.5 text-amber-500">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`h-4.5 w-4.5 ${
+                        i < Math.round(averageRating) ? 'fill-current' : 'text-slate-200'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <p className="text-[10px] text-slate-400 font-extrabold uppercase mt-2 tracking-wider">
+                  {currentLanguage === 'vi' ? `${reviewsList.length} đánh giá` : `${reviewsList.length} reviews`}
+                </p>
+              </div>
+
+              {/* Star Distribution Bars */}
+              <div className="col-span-3 space-y-1.5 pl-2">
+                {[5, 4, 3, 2, 1].map((rating) => {
+                  const count = starCounts[rating] || 0
+                  const pct = reviewsList.length ? (count / reviewsList.length) * 100 : 0
+                  return (
+                    <div key={rating} className="flex items-center gap-2 text-[10px] font-bold text-slate-600">
+                      <span className="w-3 text-right">{rating}</span>
+                      <Star className="h-3 w-3 text-amber-500 fill-current" />
+                      <div className="flex-1 h-2 bg-slate-200/80 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-amber-500 rounded-full"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className="w-6 text-left font-mono text-slate-400">{count}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Quick Filters */}
+            <div className="space-y-2.5 text-left">
+              <label className="text-[10px] font-black uppercase text-slate-500 tracking-wider">
+                {currentLanguage === 'vi' ? 'Bộ lọc nhanh' : 'Quick Filters'}
+              </label>
+              
+              {/* Star Rating Filters */}
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setReviewFilterRating('all')}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold uppercase transition-all border ${
+                    reviewFilterRating === 'all'
+                      ? 'bg-slate-800 text-white border-slate-800'
+                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  {currentLanguage === 'vi' ? 'Tất cả' : 'All'}
+                </button>
+                {[5, 4, 3, 2, 1].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setReviewFilterRating(star.toString())}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold uppercase transition-all flex items-center gap-1 border ${
+                      reviewFilterRating === star.toString()
+                        ? 'bg-amber-600 text-white border-amber-600'
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span>{star}</span>
+                    <Star className="h-3 w-3 fill-current" />
+                  </button>
+                ))}
+              </div>
+
+              {/* Source Filters & Comment Filter */}
+              <div className="flex flex-wrap gap-1.5 items-center justify-between">
+                <div className="flex gap-1.5">
+                  {[
+                    { key: 'all', label: currentLanguage === 'vi' ? 'Tất cả nguồn' : 'All Sources' },
+                    { key: 'google', label: 'Google' },
+                    { key: 'yelp', label: 'Yelp' },
+                    { key: 'internal', label: currentLanguage === 'vi' ? 'Nội bộ' : 'Internal' }
+                  ].map((src) => (
+                    <button
+                      key={src.key}
+                      type="button"
+                      onClick={() => setReviewFilterSource(src.key)}
+                      className={`px-2.5 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all border ${
+                        reviewFilterSource === src.key
+                          ? 'bg-indigo-600 text-white border-indigo-600'
+                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      {src.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* With Comments Only Checkbox */}
+                <button
+                  type="button"
+                  onClick={() => setReviewFilterOnlyCommented(!reviewFilterOnlyCommented)}
+                  className={`px-2.5 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all border ${
+                    reviewFilterOnlyCommented
+                      ? 'bg-emerald-600 text-white border-emerald-600'
+                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  {currentLanguage === 'vi' ? 'Có bình luận' : 'With Comments'}
+                </button>
+              </div>
+            </div>
+
+            {/* Filtered Reviews List */}
+            <div className="space-y-3 max-h-[200px] overflow-y-auto pr-1">
+              {filteredReviewsList.length === 0 ? (
+                <div className="text-center py-8 text-slate-400 text-xs italic">
+                  {currentLanguage === 'vi'
+                    ? 'Không tìm thấy đánh giá phù hợp.'
+                    : 'No matching reviews found.'}
+                </div>
+              ) : (
+                filteredReviewsList.map((rev) => {
+                  const isGoogle = rev.category?.toLowerCase().includes('google')
+                  const isYelp = rev.category?.toLowerCase().includes('yelp')
+
+                  return (
+                    <div key={rev.id} className="rounded-xl border border-slate-100 bg-white p-3 space-y-1.5 shadow-sm text-left transition hover:shadow">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase ${
+                          isGoogle ? 'bg-blue-50 text-blue-600' :
+                          isYelp ? 'bg-rose-50 text-rose-600' :
+                          'bg-slate-100 text-slate-600'
+                        }`}>
+                          {isGoogle ? 'Google' : isYelp ? 'Yelp' : (currentLanguage === 'vi' ? 'Nội bộ' : 'Internal')}
+                        </span>
+                        <span className="text-[9px] text-slate-400 font-bold">{rev.date}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <div className="flex text-amber-500">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`h-3 w-3 ${
+                                i < rev.rating ? 'fill-current' : 'text-slate-200'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-[10px] font-black text-slate-700">{rev.rating}.0★</span>
+                      </div>
+                      {rev.comment ? (
+                        <p className="text-[11px] text-slate-600 italic bg-slate-50 p-2 rounded border border-slate-100/40 leading-relaxed text-left">
+                          "{rev.comment}"
+                        </p>
+                      ) : (
+                        <p className="text-[10px] text-slate-350 italic text-left">
+                          {currentLanguage === 'vi' ? '(Chỉ đánh giá sao)' : '(Rating only)'}
+                        </p>
+                      )}
+                    </div>
+                  )
+                })
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end pt-2.5 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setShowReviewsDetailModal(false)}
+                className="px-5 py-2 text-xs font-extrabold uppercase bg-slate-150 hover:bg-slate-200 text-slate-600 rounded-lg transition"
+              >
+                {currentLanguage === 'vi' ? 'Đóng' : 'Close'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Simulated QR Code Camera Scanner Modal Overlay */}
       {showScanner && (

@@ -60,7 +60,8 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
       password: password,
       referralCode: referralCode.trim(),
       isVerified: false,
-      kybDetails: null
+      kybDetails: null,
+      role: 'owner'
     }
     
     const filtered = pendingAccounts.filter(acc => acc.email !== newAccount.email)

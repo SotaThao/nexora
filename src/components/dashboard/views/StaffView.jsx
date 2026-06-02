@@ -21,7 +21,9 @@ function StaffView({
   onInviteStaff,
   businessName,
   onAcceptJoin,
-  onDeclineJoin
+  onDeclineJoin,
+  onAcceptUnlink,
+  onDeclineUnlink
 }) {
   const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
@@ -369,7 +371,8 @@ function StaffView({
                 const wallets = getWalletBadges(member)
                 const isPendingSetup = member.status === 'Pending Setup'
                 const isPendingAcceptance = member.status === 'Pending Acceptance'
-                const isPending = isPendingSetup || isPendingAcceptance
+                const isPendingUnlink = member.status === 'Pending Unlink'
+                const isPending = isPendingSetup || isPendingAcceptance || isPendingUnlink
 
                 return (
                   <tr key={member.id} className="border-b border-nexoraRule last:border-0 hover:bg-slate-50/40 transition">
@@ -420,6 +423,11 @@ function StaffView({
                       {isPendingAcceptance && (
                         <span className="inline-flex rounded-full bg-indigo-50 text-indigo-700 px-2.5 py-0.5 text-[10px] font-extrabold uppercase border border-indigo-100">
                           {currentLanguage === 'vi' ? 'Chờ chấp nhận' : 'Pending Acceptance'}
+                        </span>
+                      )}
+                      {isPendingUnlink && (
+                        <span className="inline-flex rounded-full bg-rose-50 text-rose-700 px-2.5 py-0.5 text-[10px] font-extrabold uppercase border border-rose-100">
+                          {currentLanguage === 'vi' ? 'Chờ hủy liên kết' : 'Pending Unlink'}
                         </span>
                       )}
                       {!isPending && (
@@ -484,6 +492,23 @@ function StaffView({
                             className="px-2.5 py-1 text-[10px] font-extrabold border border-rose-200 bg-rose-50 text-rose-700 rounded hover:bg-rose-100 transition"
                           >
                             {currentLanguage === 'vi' ? 'Từ chối' : 'Decline'}
+                          </button>
+                        </div>
+                      )}
+
+                      {isPendingUnlink && (
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => onAcceptUnlink && onAcceptUnlink(member.id)}
+                            className="px-2.5 py-1 text-[10px] font-extrabold border border-rose-200 bg-rose-50 text-rose-700 rounded hover:bg-rose-100 transition cursor-pointer"
+                          >
+                            {currentLanguage === 'vi' ? 'Duyệt hủy' : 'Approve Unlink'}
+                          </button>
+                          <button
+                            onClick={() => onDeclineUnlink && onDeclineUnlink(member.id)}
+                            className="px-2.5 py-1 text-[10px] font-extrabold border border-slate-200 bg-white text-slate-700 rounded hover:bg-slate-50 transition cursor-pointer"
+                          >
+                            {currentLanguage === 'vi' ? 'Từ chối' : 'Reject'}
                           </button>
                         </div>
                       )}

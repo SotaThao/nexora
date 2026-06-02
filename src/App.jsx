@@ -38,6 +38,8 @@ export default function App() {
   const { currentLanguage, setLanguage, t } = useTranslation()
   const { showConfirm } = useNotification()
   const [view, setView] = useState('login') // 'login' | 'register-wizard' | 'onboarding' | 'dashboard' | 'customer' | 'staff-portal'
+  const [userRole, setUserRole] = useState('owner') // 'owner' | 'staff'
+  const [currentStaffId, setCurrentStaffId] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [setupData, setSetupData] = useState(null)
   const [verificationStatus, setVerificationStatus] = useState('kyb_approved')
@@ -161,6 +163,8 @@ export default function App() {
 
       // SCENARIO 1: SSO WITH KYB
       if (targetEmail === 'sso_with_kyb@gmail.com') {
+        setUserRole('owner')
+        setCurrentStaffId(null)
         setSsoPrefillData(MOCK_SSO_KYB_PROFILE)
         localStorage.removeItem('nexora_merchant_setup')
         setSetupData(null)
@@ -171,6 +175,8 @@ export default function App() {
 
       // SCENARIO 2: SSO WITHOUT KYB
       if (targetEmail === 'sso_no_kyb@gmail.com') {
+        setUserRole('owner')
+        setCurrentStaffId(null)
         const allAccounts = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
         const matched = allAccounts.find(acc => acc.email === targetEmail)
         
@@ -218,6 +224,16 @@ export default function App() {
           return
         }
 
+        const role = matchedAccount.role || 'owner'
+        setUserRole(role)
+
+        if (role === 'staff') {
+          setCurrentStaffId(matchedAccount.staffId)
+          setView('dashboard')
+          return
+        }
+
+        setCurrentStaffId(null)
         const activeStatus = matchedAccount.verificationStatus || (matchedAccount.isVerified ? 'kyb_approved' : 'basic')
         setVerificationStatus(activeStatus)
         const isAlreadyVerified = activeStatus === 'kyb_approved'
@@ -256,11 +272,29 @@ export default function App() {
 
       // Fallback for simple demo logs (non-SSO, non-registered)
       if (targetEmail.includes('@') && targetPassword.length >= 6) {
-        const savedSetup = localStorage.getItem('nexora_merchant_setup')
-        if (savedSetup) {
+        // Detect if email matches a technician inside merchant setup
+        const savedSetupStr = localStorage.getItem('nexora_merchant_setup')
+        let matchedStaff = null
+        if (savedSetupStr) {
+          try {
+            const parsedSetup = JSON.parse(savedSetupStr)
+            matchedStaff = parsedSetup.staffList?.find(s => s.email?.trim().toLowerCase() === targetEmail)
+          } catch(e) {}
+        }
+
+        if (matchedStaff) {
+          setUserRole('staff')
+          setCurrentStaffId(matchedStaff.id)
           setView('dashboard')
         } else {
-          setView('onboarding')
+          setUserRole('owner')
+          setCurrentStaffId(null)
+          const savedSetup = localStorage.getItem('nexora_merchant_setup')
+          if (savedSetup) {
+            setView('dashboard')
+          } else {
+            setView('onboarding')
+          }
         }
       } else {
         setLoginError(currentLanguage === 'vi' 
@@ -844,6 +878,8 @@ export default function App() {
             initialMenu={initialDashboardMenu}
             initialSettingsTab={initialSettingsTab}
             onLogout={() => setView('login')} 
+            userRole={userRole}
+            currentStaffId={currentStaffId}
           />
         </div>
       )}

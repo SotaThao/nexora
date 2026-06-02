@@ -22,7 +22,8 @@ export default function DashboardSidebar({
   tipsTab = 'overview',
   setTipsTab,
   touchpointsTab = 'stations',
-  setTouchpointsTab
+  setTouchpointsTab,
+  userRole = 'owner'
 }) {
   const { currentLanguage, setLanguage, t } = useTranslation()
   const [isTipsExpanded, setIsTipsExpanded] = useState(activeMenu === 'tips')
@@ -74,7 +75,7 @@ export default function DashboardSidebar({
         </div>
 
         {/* Submenu links */}
-        {isProfileExpanded && (
+        {isProfileExpanded && userRole !== 'staff' && (
           <div className="mt-3.5 pt-3 border-t border-white/5 space-y-1 animate-fadeIn">
             <button
               onClick={() => {
@@ -109,7 +110,8 @@ export default function DashboardSidebar({
       </div>
 
       {/* Card 2: Current Plan & Manage Plan */}
-      <div className="mt-3 rounded-xl border border-white/10 bg-white/5 p-4 shrink-0">
+      {userRole !== 'staff' && (
+        <div className="mt-3 rounded-xl border border-white/10 bg-white/5 p-4 shrink-0">
         <div className="text-[10px] font-extrabold uppercase tracking-wider text-white/45">
           {t('dashboard.sidebar.current_plan_header') || 'CURRENT PLAN'}
         </div>
@@ -135,10 +137,19 @@ export default function DashboardSidebar({
           {t('dashboard.sidebar.manage_plan') || 'Manage Plan'}
         </button>
       </div>
+      )}
 
       {/* Navigation Menu */}
       <nav className="mt-6 flex-1 space-y-1.5 overflow-y-auto pr-1">
-        {visibleMenuItems.map((item) => {
+        {(() => {
+          const menuItemsToDisplay = userRole === 'staff'
+            ? [
+                { id: 'overview', label: currentLanguage === 'vi' ? 'Hồ sơ của tôi' : 'My Dashboard', icon: visibleMenuItems.find(i => i.id === 'overview')?.icon, image: visibleMenuItems.find(i => i.id === 'overview')?.image },
+                { id: 'support', label: t('dashboard.menu.support') || 'Support', icon: visibleMenuItems.find(i => i.id === 'support')?.icon }
+              ]
+            : visibleMenuItems
+
+          return menuItemsToDisplay.map((item) => {
           const { id, label } = item
           const isActive = activeMenu === id
           const localizedLabel = {
@@ -246,7 +257,8 @@ export default function DashboardSidebar({
               )}
             </React.Fragment>
           )
-        })}
+        })
+      })()}
       </nav>
 
       {/* Bottom Sign Out */}

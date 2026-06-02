@@ -437,6 +437,33 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
     }
   }
 
+  const handleAcceptUnlinkRequest = async (staffId) => {
+    const member = staff.find(s => s.id === staffId)
+    if (!member) return
+
+    const ok = await showConfirm(currentLanguage === 'vi' 
+      ? `Bạn có chắc chắn muốn duyệt yêu cầu hủy liên kết của thợ ${member.fullName}?` 
+      : `Are you sure you want to approve unlink request from ${member.fullName}?`)
+    if (ok) {
+      setStaff((current) => current.filter((m) => m.id !== staffId))
+      setTouchpoints((current) => current.filter((tp) => tp.staffId !== staffId))
+      showToast(currentLanguage === 'vi' ? 'Đã hủy liên kết nhân viên thành công.' : 'Staff unlinked successfully.', 'success')
+    }
+  }
+
+  const handleDeclineUnlinkRequest = async (staffId) => {
+    const member = staff.find(s => s.id === staffId)
+    if (!member) return
+
+    const ok = await showConfirm(currentLanguage === 'vi' 
+      ? `Bạn có chắc chắn muốn từ chối yêu cầu hủy liên kết của thợ ${member.fullName}?` 
+      : `Are you sure you want to decline unlink request from ${member.fullName}?`)
+    if (ok) {
+      setStaff((current) => current.map((m) => m.id === staffId ? { ...m, status: 'Active', isActive: true } : m))
+      showToast(currentLanguage === 'vi' ? 'Đã từ chối yêu cầu hủy liên kết.' : 'Declined unlink request.', 'success')
+    }
+  }
+
   const deleteStaff = async (id) => {
     const ok = await showConfirm(currentLanguage === 'vi'
       ? 'Bạn có chắc chắn muốn xóa nhân viên này khỏi Nexora Touch?'
@@ -470,6 +497,7 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
     inviteShareDefaultContact, setInviteShareDefaultContact,
     resetStaffForm, openAddStaff, openApproveStaff, openEditStaff, closeStaffModal,
     saveStaff, sendSetupLinkFromModal, handleLinkStaff, handleInviteStaff,
-    handleAcceptJoinRequest, handleDeclineJoinRequest, deleteStaff, toggleStaff, toggleStaffTipsFlow
+    handleAcceptJoinRequest, handleDeclineJoinRequest, deleteStaff, toggleStaff, toggleStaffTipsFlow,
+    handleAcceptUnlinkRequest, handleDeclineUnlinkRequest
   }
 }

@@ -96,7 +96,9 @@ export default function Dashboard({
   onKybSuccess, 
   initialMenu = 'overview', 
   initialSettingsTab = 'profile', 
-  onLogout 
+  onLogout,
+  userRole = 'owner',
+  currentStaffId = null
 }) {
   const { currentLanguage, t } = useTranslation()
   const { showToast, showConfirm } = useNotification()
@@ -236,7 +238,8 @@ export default function Dashboard({
     inviteShareDefaultContact, setInviteShareDefaultContact,
     resetStaffForm, openAddStaff, openApproveStaff, openEditStaff, closeStaffModal,
     saveStaff, sendSetupLinkFromModal, handleLinkStaff, handleInviteStaff,
-    handleAcceptJoinRequest, handleDeclineJoinRequest, deleteStaff, toggleStaff, toggleStaffTipsFlow
+    handleAcceptJoinRequest, handleDeclineJoinRequest, deleteStaff, toggleStaff, toggleStaffTipsFlow,
+    handleAcceptUnlinkRequest, handleDeclineUnlinkRequest
   } = useStaffManagement({ setupData, businessName, setTouchpoints, viewingStaffDetailId, setViewingStaffDetailId })
 
   // Initialize sessionStorage with initial profile and setupData on mount
@@ -434,6 +437,42 @@ export default function Dashboard({
     }
   }, [hasKyb, userEmail, setupData])
 
+  // For staff dashboard: populate profile info from their staff profile
+  useEffect(() => {
+    if (userRole === 'staff' && currentStaffId && staff.length > 0) {
+      const currentStaff = staff.find(s => s.id === currentStaffId)
+      if (currentStaff) {
+        setProfile({
+          fullName: currentStaff.fullName,
+          email: currentStaff.email,
+          avatar: currentStaff.avatar || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200&h=200',
+          businessName: businessName,
+          businessPhone: currentStaff.phone || '',
+          businessWebsite: '',
+          street: '',
+          googleReview: '',
+          yelpReview: '',
+          paymentAccounts: currentStaff.paymentAccounts || {
+            zelle: '',
+            bankwire: '',
+            paypal: '',
+            venmo: '',
+            cashapp: '',
+            applecash: '',
+            vlinkpay: ''
+          }
+        })
+      }
+    }
+  }, [userRole, currentStaffId, staff, businessName])
+
+  const menuItemsToDisplay = userRole === 'staff'
+    ? [
+        { id: 'overview', label: currentLanguage === 'vi' ? 'Hồ sơ của tôi' : 'My Dashboard', icon: MENU_ITEMS.find(i => i.id === 'overview')?.icon, image: MENU_ITEMS.find(i => i.id === 'overview')?.image },
+        { id: 'support', label: t('dashboard.menu.support') || 'Support', icon: MENU_ITEMS.find(i => i.id === 'support')?.icon }
+      ]
+    : MENU_ITEMS
+
   // Filter lists based on searchQuery
   const filteredStaff = useMemo(() => {
     const visibleStaff = staff.filter(member => member.status !== 'Pending Acceptance')
@@ -548,6 +587,31 @@ export default function Dashboard({
   }
 
   const renderContent = () => {
+    if (userRole === 'staff') {
+      const activeDetailStaff = staff.find((member) => member.id === currentStaffId)
+      if (activeDetailStaff) {
+        return (
+          <StaffDetailView
+            staffMember={activeDetailStaff}
+            onBack={null}
+            transactions={transactions}
+            reviews={reviews}
+            onEdit={openEditStaff}
+            onQr={previewQr}
+            onDelete={null}
+          />
+        )
+      } else {
+        return (
+          <div className="flex h-64 flex-col items-center justify-center space-y-3 nexora-card p-6">
+            <div className="text-sm font-semibold text-nexoraMuted">
+              {currentLanguage === 'vi' ? 'Không tìm thấy hồ sơ thợ của bạn.' : 'Your staff profile was not found.'}
+            </div>
+          </div>
+        )
+      }
+    }
+
     if (viewingStaffDetailId) {
       const activeDetailStaff = staff.find((member) => member.id === viewingStaffDetailId)
       if (activeDetailStaff) {
@@ -600,6 +664,8 @@ export default function Dashboard({
         businessName={businessName}
         onAcceptJoin={handleAcceptJoinRequest}
         onDeclineJoin={handleDeclineJoinRequest}
+        onAcceptUnlink={handleAcceptUnlinkRequest}
+        onDeclineUnlink={handleDeclineUnlinkRequest}
       />
     )
     if (activeMenu === 'touchpoints') {
@@ -696,6 +762,7 @@ export default function Dashboard({
         setTipsTab={setTipsTab}
         touchpointsTab={touchpointsTab}
         setTouchpointsTab={setTouchpointsTab}
+        userRole={userRole}
       />
 
       <div className="lg:pl-72">
@@ -721,6 +788,7 @@ export default function Dashboard({
           touchpoints={touchpoints}
           onViewStaffDetail={setViewingStaffDetailId}
           onApproveStaff={openApproveStaff}
+          userRole={userRole}
         />
 
         <div className="sticky top-16 z-10 flex items-center justify-between border-b border-nexoraBorder bg-white px-4 py-3 lg:hidden">
@@ -805,7 +873,7 @@ export default function Dashboard({
               </div>
 
               {/* Submenu links */}
-              {isProfileExpanded && (
+              {isProfileExpanded && userRole !== 'staff' && (
                 <div className="mt-3 pt-2.5 border-t border-white/5 space-y-1 animate-fadeIn">
                   <button
                     type="button"
@@ -844,35 +912,37 @@ export default function Dashboard({
             </div>
 
             {/* Card 2: Current Plan & Manage Plan (Mobile) */}
-            <div className="mb-4 rounded-xl border border-white/10 bg-white/5 p-3.5 shrink-0">
-              <div className="text-[9px] font-extrabold uppercase tracking-wider text-white/45">
-                {t('dashboard.sidebar.current_plan_header') || 'CURRENT PLAN'}
-              </div>
-              {hasKyb ? (
-                <>
-                  <div className="mt-0.5 text-xs font-black text-white">
-                    {t('dashboard.sidebar.plan_name') || 'Pro Plan'}
-                  </div>
-                  <div className="mt-0.5 text-[10px] text-white/55">
-                    {t('dashboard.sidebar.renews_text') || 'Renews on Jun 20, 2024'}
-                  </div>
-                </>
-              ) : (
-                <div className="mt-0.5 text-[10px] font-semibold text-rose-400">
-                  {t('dashboard.sidebar.no_plan') || 'No current plan'}
+            {userRole !== 'staff' && (
+              <div className="mb-4 rounded-xl border border-white/10 bg-white/5 p-3.5 shrink-0">
+                <div className="text-[9px] font-extrabold uppercase tracking-wider text-white/45">
+                  {t('dashboard.sidebar.current_plan_header') || 'CURRENT PLAN'}
                 </div>
-              )}
-              <button 
-                type="button"
-                onClick={() => navigateMenu('subscriptions')}
-                className="mt-2.5 w-full rounded-lg border border-white/15 py-1 text-center text-[10.5px] font-bold text-luxuryGold hover:bg-white/5 hover:border-white/25 transition-all"
-              >
-                {t('dashboard.sidebar.manage_plan') || 'Manage Plan'}
-              </button>
-            </div>
+                {hasKyb ? (
+                  <>
+                    <div className="mt-0.5 text-xs font-black text-white">
+                      {t('dashboard.sidebar.plan_name') || 'Pro Plan'}
+                    </div>
+                    <div className="mt-0.5 text-[10px] text-white/55">
+                      {t('dashboard.sidebar.renews_text') || 'Renews on Jun 20, 2024'}
+                    </div>
+                  </>
+                ) : (
+                  <div className="mt-0.5 text-[10px] font-semibold text-rose-400">
+                    {t('dashboard.sidebar.no_plan') || 'No current plan'}
+                  </div>
+                )}
+                <button 
+                  type="button"
+                  onClick={() => navigateMenu('subscriptions')}
+                  className="mt-2.5 w-full rounded-lg border border-white/15 py-1 text-center text-[10.5px] font-bold text-luxuryGold hover:bg-white/5 hover:border-white/25 transition-all"
+                >
+                  {t('dashboard.sidebar.manage_plan') || 'Manage Plan'}
+                </button>
+              </div>
+            )}
 
             <nav className="flex-1 space-y-1.5 overflow-y-auto pr-1">
-              {MENU_ITEMS.filter((item) => item.id !== 'settings').map((item) => {
+              {menuItemsToDisplay.filter((item) => item.id !== 'settings').map((item) => {
                 const { id, label } = item
                 const isActive = activeMenu === id
                 const localizedLabel = {
