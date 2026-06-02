@@ -198,6 +198,17 @@ export default function CustomerFlow() {
     return Object.values(staff.paymentAccounts || {}).some(val => val && val.trim() !== '')
   }, [selectedStaffMembers])
 
+  const qrCodeVal = useMemo(() => {
+    if (!selectedWalletObj) return null;
+    if (selectedStaffMembers.length === 1) {
+      const staff = selectedStaffMembers[0];
+      if (selectedStaffHasAnyPayment) {
+        return staff.payoutConfigs?.[selectedWalletObj.key]?.qrCode || staff.payoutQrCodes?.[selectedWalletObj.key] || null;
+      }
+    }
+    return setupData?.businessInfo?.payoutQrCodes?.[selectedWalletObj.key] || null;
+  }, [selectedWalletObj, selectedStaffMembers, selectedStaffHasAnyPayment, setupData])
+
 
   const filteredStaff = useMemo(() => {
     return activeStaffList.filter(s => 
@@ -877,6 +888,20 @@ export default function CustomerFlow() {
                   </p>
                 </div>
 
+                {/* QR Code (if available) */}
+                {qrCodeVal && (
+                  <div className="flex flex-col items-center justify-center p-3 bg-slate-50 border border-nexoraBorder/60 rounded-xl my-2 max-w-[200px] animate-fadeIn">
+                    <img 
+                      src={qrCodeVal} 
+                      alt={`${selectedWalletObj.name} QR Code`} 
+                      className="h-32 w-32 object-contain rounded shadow-sm"
+                    />
+                    <p className="text-[9px] text-nexoraSubtle font-bold mt-2 text-center uppercase tracking-wider">
+                      {currentLanguage === 'vi' ? 'Quét mã để chuyển khoản' : 'Scan to pay'}
+                    </p>
+                  </div>
+                )}
+
                 <div className="w-full border-t border-dashed border-nexoraBorder/60 my-1" />
 
                 <div className="w-full space-y-3.5">
@@ -992,7 +1017,7 @@ export default function CustomerFlow() {
                 <button
                   type="button"
                   onClick={() => handlePay(selectedWalletObj.name)}
-                  className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:opacity-95 active:scale-[0.99] transition-all text-white font-extrabold text-sm uppercase tracking-wider rounded-xl shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-1.5"
+                  className="w-full py-4 bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] hover:opacity-95 active:scale-[0.99] transition-all text-white font-extrabold text-sm uppercase tracking-wider rounded-xl shadow-lg shadow-[#2B59FF]/25 flex items-center justify-center gap-1.5"
                 >
                   <CheckCircle className="h-5 w-5" /> 
                   {currentLanguage === 'vi' ? 'Tôi Đã Gửi Tiền Tip' : 'Yes, I Sent The Tip'}
