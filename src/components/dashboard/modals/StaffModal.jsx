@@ -7,6 +7,8 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { MOCK_NEXORA_STAFF_PROFILES } from '../data/mockData'
 import PayoutSetupModal from './PayoutSetupModal'
+import StaffReviewsDetailModal from './StaffReviewsDetailModal'
+import StaffQrScannerModal from './StaffQrScannerModal'
 import { getPayoutConfigsFromMember } from '../utils'
 import { storage } from '../../../utils/storage'
 
@@ -149,15 +151,10 @@ function StaffModal({
     setVlinkpayStatus('checking')
 
     const timer = setTimeout(() => {
-      console.log('[DEBUG VLINKPAY ID] Searching for:', searchId)
-
       // 1. Check mock profiles
       let matchedProfile = Object.values(MOCK_NEXORA_STAFF_PROFILES).find(
         p => p.vlinkpayId?.toUpperCase() === searchId
       )
-      if (matchedProfile) {
-        console.log('[DEBUG VLINKPAY ID] Found in MOCK_NEXORA_STAFF_PROFILES:', matchedProfile)
-      }
 
       // 2. Check nexora_merchant_setup staffList
       if (!matchedProfile) {
@@ -165,7 +162,6 @@ function StaffModal({
           const savedSetup = localStorage.getItem('nexora_merchant_setup')
           if (savedSetup) {
             const parsed = JSON.parse(savedSetup)
-            console.log('[DEBUG VLINKPAY ID] merchant setup staffList:', parsed.staffList)
             const matched = parsed.staffList?.find(
               s => (s.paymentAccounts?.vlinkpay?.toUpperCase() === searchId) || (s.vlinkpay?.toUpperCase() === searchId)
             )
@@ -180,11 +176,10 @@ function StaffModal({
                 vlinkpayId: searchId,
                 payoutConfigs: matched.payoutConfigs || getPayoutConfigsFromMember(matched)
               }
-              console.log('[DEBUG VLINKPAY ID] Found in nexora_merchant_setup:', matchedProfile)
             }
           }
         } catch (e) {
-          console.error(e)
+          // ignore
         }
       }
 
@@ -192,7 +187,6 @@ function StaffModal({
       if (!matchedProfile) {
         try {
           const staffMap = JSON.parse(localStorage.getItem('nexora_staff_account') || '{}')
-          console.log('[DEBUG VLINKPAY ID] staffMap:', staffMap)
           const matchedEntry = Object.entries(staffMap).find(
             ([id, acc]) => acc.payoutMethods?.vlinkpay?.value?.toUpperCase() === searchId
           )
@@ -219,10 +213,9 @@ function StaffModal({
               vlinkpayId: searchId,
               payoutConfigs
             }
-            console.log('[DEBUG VLINKPAY ID] Found in nexora_staff_account:', matchedProfile)
           }
         } catch (e) {
-          console.error(e)
+          // ignore
         }
       }
 
@@ -230,7 +223,6 @@ function StaffModal({
       if (!matchedProfile) {
         try {
           const pendingList = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
-          console.log('[DEBUG VLINKPAY ID] pendingList:', pendingList)
           const matched = pendingList.find(acc => acc.vlinkpayId?.toUpperCase() === searchId || acc.staffId?.toUpperCase() === searchId)
           if (matched) {
             matchedProfile = {
@@ -251,10 +243,9 @@ function StaffModal({
                 applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
               }
             }
-            console.log('[DEBUG VLINKPAY ID] Found in nexora_pending_accounts:', matchedProfile)
           }
         } catch (e) {
-          console.error(e)
+          // ignore
         }
       }
 
@@ -263,7 +254,7 @@ function StaffModal({
         showToast(currentLanguage === 'vi'
           ? 'Đã xác thực tài khoản VLINKPAY! Tự động nhập thông tin thợ.'
           : 'VLINKPAY Staff Profile Verified! Auto-filled profile details.', 'success')
-        
+
         const staffIdKey = Object.keys(MOCK_NEXORA_STAFF_PROFILES).find(
           k => MOCK_NEXORA_STAFF_PROFILES[k].vlinkpayId?.toUpperCase() === searchId
         ) || matchedProfile.nexoraStaffId || ''
@@ -308,13 +299,8 @@ function StaffModal({
     setNexoraStatus('checking')
 
     const timer = setTimeout(() => {
-      console.log('[DEBUG STAFF ID] Searching for:', searchId)
-
       // 1. Check mock profiles
       let kycProfile = MOCK_NEXORA_STAFF_PROFILES[searchId]
-      if (kycProfile) {
-        console.log('[DEBUG STAFF ID] Found in MOCK_NEXORA_STAFF_PROFILES:', kycProfile)
-      }
 
       // 2. Check nexora_merchant_setup staffList
       if (!kycProfile) {
@@ -322,7 +308,6 @@ function StaffModal({
           const savedSetup = localStorage.getItem('nexora_merchant_setup')
           if (savedSetup) {
             const parsed = JSON.parse(savedSetup)
-            console.log('[DEBUG STAFF ID] merchant setup staffList:', parsed.staffList)
             const matched = parsed.staffList?.find(s => s.id?.toUpperCase() === searchId)
             if (matched) {
               kycProfile = {
@@ -335,11 +320,10 @@ function StaffModal({
                 vlinkpayId: matched.paymentAccounts?.vlinkpay || matched.vlinkpay || '',
                 payoutConfigs: matched.payoutConfigs || getPayoutConfigsFromMember(matched)
               }
-              console.log('[DEBUG STAFF ID] Found in nexora_merchant_setup:', kycProfile)
             }
           }
         } catch (e) {
-          console.error(e)
+          // ignore
         }
       }
 
@@ -347,7 +331,6 @@ function StaffModal({
       if (!kycProfile) {
         try {
           const staffMap = JSON.parse(localStorage.getItem('nexora_staff_account') || '{}')
-          console.log('[DEBUG STAFF ID] staffMap:', staffMap)
           if (staffMap[searchId]) {
             const acc = staffMap[searchId]
             const payoutConfigs = {}
@@ -370,10 +353,9 @@ function StaffModal({
               vlinkpayId: pa.vlinkpay?.value || '',
               payoutConfigs
             }
-            console.log('[DEBUG STAFF ID] Found in nexora_staff_account:', kycProfile)
           }
         } catch (e) {
-          console.error(e)
+          // ignore
         }
       }
 
@@ -381,7 +363,6 @@ function StaffModal({
       if (!kycProfile) {
         try {
           const pendingList = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
-          console.log('[DEBUG STAFF ID] pendingList:', pendingList)
           const matched = pendingList.find(acc => acc.staffId?.toUpperCase() === searchId)
           if (matched) {
             kycProfile = {
@@ -401,10 +382,9 @@ function StaffModal({
                 applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
               }
             }
-            console.log('[DEBUG STAFF ID] Found in nexora_pending_accounts:', kycProfile)
           }
         } catch (e) {
-          console.error(e)
+          // ignore
         }
       }
 
@@ -413,7 +393,7 @@ function StaffModal({
         showToast(currentLanguage === 'vi'
           ? 'Đã xác thực tài khoản NEXORA! Tự động nhập thông tin thợ.'
           : 'NEXORA Staff Profile Verified! Auto-filled profile details.', 'success')
-        
+
         setForm(prev => ({
           ...prev,
           fullName: kycProfile.fullName,
@@ -482,6 +462,26 @@ function StaffModal({
           ...profile.payoutConfigs
         }
       }))
+    }
+    setShowScanner(false)
+    setScanTarget(null)
+  }
+
+  const handleScanAnna = () => {
+    if (scanTarget === 'staff') {
+      handleNexoraStaffIdChange('NEX-STAFF-ANNA0921')
+    } else {
+      handleVlinkpayIdChange('VLP-0921-ANNA')
+    }
+    setShowScanner(false)
+    setScanTarget(null)
+  }
+
+  const handleScanHanna = () => {
+    if (scanTarget === 'staff') {
+      handleNexoraStaffIdChange('NEX-STAFF-HN1148')
+    } else {
+      handleVlinkpayIdChange('VLP-1148-HN')
     }
     setShowScanner(false)
     setScanTarget(null)
@@ -822,344 +822,30 @@ function StaffModal({
         readOnly={true}
       />
 
-      {/* Google/Shopee Style Detailed Reviews Modal Overlay */}
-      {showReviewsDetailModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-100 rounded-3xl max-w-lg w-full shadow-2xl p-6 relative overflow-hidden animate-scaleUp space-y-4">
-            {/* Close Button */}
-            <button
-              type="button"
-              onClick={() => setShowReviewsDetailModal(false)}
-              className="absolute right-4 top-4 text-slate-400 hover:text-slate-700 transition p-1.5 rounded-full hover:bg-slate-100"
-              title="Close"
-            >
-              <X className="h-4 w-4" />
-            </button>
+      <StaffReviewsDetailModal
+        open={showReviewsDetailModal}
+        onClose={() => setShowReviewsDetailModal(false)}
+        form={form}
+        reviewsList={reviewsList}
+        filteredReviewsList={filteredReviewsList}
+        averageRating={averageRating}
+        starCounts={starCounts}
+        reviewFilterRating={reviewFilterRating}
+        reviewFilterSource={reviewFilterSource}
+        reviewFilterOnlyCommented={reviewFilterOnlyCommented}
+        setReviewFilterRating={setReviewFilterRating}
+        setReviewFilterSource={setReviewFilterSource}
+        setReviewFilterOnlyCommented={setReviewFilterOnlyCommented}
+      />
 
-            {/* Header */}
-            <div className="text-left">
-              <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">
-                {currentLanguage === 'vi' ? 'Đánh Giá & Uy Tín' : 'Reviews & Reputation'}
-              </h3>
-              <p className="text-[10px] text-slate-400 font-semibold mt-0.5 text-left">
-                {currentLanguage === 'vi' ? `Hồ sơ đánh giá của ${form.fullName}` : `Feedback details for ${form.fullName}`}
-              </p>
-            </div>
-
-            {/* Rating Summary Grid */}
-            <div className="grid grid-cols-5 gap-4 items-center bg-slate-50/50 border border-slate-100 rounded-2xl p-4">
-              {/* Average Score */}
-              <div className="col-span-2 text-center border-r border-slate-200/60 pr-2">
-                <div className="text-4xl font-black text-slate-800 tracking-tighter">
-                  {averageRating ? averageRating.toFixed(1) : '-.-'}
-                </div>
-                <div className="mt-1.5 flex justify-center items-center gap-0.5 text-amber-500">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`h-4.5 w-4.5 ${
-                        i < Math.round(averageRating) ? 'fill-current' : 'text-slate-200'
-                      }`}
-                    />
-                  ))}
-                </div>
-                <p className="text-[10px] text-slate-400 font-extrabold uppercase mt-2 tracking-wider">
-                  {currentLanguage === 'vi' ? `${reviewsList.length} đánh giá` : `${reviewsList.length} reviews`}
-                </p>
-              </div>
-
-              {/* Star Distribution Bars */}
-              <div className="col-span-3 space-y-1.5 pl-2">
-                {[5, 4, 3, 2, 1].map((rating) => {
-                  const count = starCounts[rating] || 0
-                  const pct = reviewsList.length ? (count / reviewsList.length) * 100 : 0
-                  return (
-                    <div key={rating} className="flex items-center gap-2 text-[10px] font-bold text-slate-600">
-                      <span className="w-3 text-right">{rating}</span>
-                      <Star className="h-3 w-3 text-amber-500 fill-current" />
-                      <div className="flex-1 h-2 bg-slate-200/80 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-amber-500 rounded-full"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                      <span className="w-6 text-left font-mono text-slate-400">{count}</span>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Quick Filters */}
-            <div className="space-y-2.5 text-left">
-              <label className="text-[10px] font-black uppercase text-slate-500 tracking-wider">
-                {currentLanguage === 'vi' ? 'Bộ lọc nhanh' : 'Quick Filters'}
-              </label>
-              
-              {/* Star Rating Filters */}
-              <div className="flex flex-wrap gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setReviewFilterRating('all')}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold uppercase transition-all border ${
-                    reviewFilterRating === 'all'
-                      ? 'bg-slate-800 text-white border-slate-800'
-                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                  }`}
-                >
-                  {currentLanguage === 'vi' ? 'Tất cả' : 'All'}
-                </button>
-                {[5, 4, 3, 2, 1].map((star) => (
-                  <button
-                    key={star}
-                    type="button"
-                    onClick={() => setReviewFilterRating(star.toString())}
-                    className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold uppercase transition-all flex items-center gap-1 border ${
-                      reviewFilterRating === star.toString()
-                        ? 'bg-amber-600 text-white border-amber-600'
-                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                    }`}
-                  >
-                    <span>{star}</span>
-                    <Star className="h-3 w-3 fill-current" />
-                  </button>
-                ))}
-              </div>
-
-              {/* Source Filters & Comment Filter */}
-              <div className="flex flex-wrap gap-1.5 items-center justify-between">
-                <div className="flex gap-1.5">
-                  {[
-                    { key: 'all', label: currentLanguage === 'vi' ? 'Tất cả nguồn' : 'All Sources' },
-                    { key: 'google', label: 'Google' },
-                    { key: 'yelp', label: 'Yelp' },
-                    { key: 'internal', label: currentLanguage === 'vi' ? 'Nội bộ' : 'Internal' }
-                  ].map((src) => (
-                    <button
-                      key={src.key}
-                      type="button"
-                      onClick={() => setReviewFilterSource(src.key)}
-                      className={`px-2.5 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all border ${
-                        reviewFilterSource === src.key
-                          ? 'bg-indigo-600 text-white border-indigo-600'
-                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                      }`}
-                    >
-                      {src.label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* With Comments Only Checkbox */}
-                <button
-                  type="button"
-                  onClick={() => setReviewFilterOnlyCommented(!reviewFilterOnlyCommented)}
-                  className={`px-2.5 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all border ${
-                    reviewFilterOnlyCommented
-                      ? 'bg-emerald-600 text-white border-emerald-600'
-                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                  }`}
-                >
-                  {currentLanguage === 'vi' ? 'Có bình luận' : 'With Comments'}
-                </button>
-              </div>
-            </div>
-
-            {/* Filtered Reviews List */}
-            <div className="space-y-3 max-h-[200px] overflow-y-auto pr-1">
-              {filteredReviewsList.length === 0 ? (
-                <div className="text-center py-8 text-slate-400 text-xs italic">
-                  {currentLanguage === 'vi'
-                    ? 'Không tìm thấy đánh giá phù hợp.'
-                    : 'No matching reviews found.'}
-                </div>
-              ) : (
-                filteredReviewsList.map((rev) => {
-                  const isGoogle = rev.category?.toLowerCase().includes('google')
-                  const isYelp = rev.category?.toLowerCase().includes('yelp')
-
-                  return (
-                    <div key={rev.id} className="rounded-xl border border-slate-100 bg-white p-3 space-y-1.5 shadow-sm text-left transition hover:shadow">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase ${
-                          isGoogle ? 'bg-blue-50 text-blue-600' :
-                          isYelp ? 'bg-rose-50 text-rose-600' :
-                          'bg-slate-100 text-slate-600'
-                        }`}>
-                          {isGoogle ? 'Google' : isYelp ? 'Yelp' : (currentLanguage === 'vi' ? 'Nội bộ' : 'Internal')}
-                        </span>
-                        <span className="text-[9px] text-slate-400 font-bold">{rev.date}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <div className="flex text-amber-500">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`h-3 w-3 ${
-                                i < rev.rating ? 'fill-current' : 'text-slate-200'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-[10px] font-black text-slate-700">{rev.rating}.0★</span>
-                      </div>
-                      {rev.comment ? (
-                        <p className="text-[11px] text-slate-600 italic bg-slate-50 p-2 rounded border border-slate-100/40 leading-relaxed text-left">
-                          "{rev.comment}"
-                        </p>
-                      ) : (
-                        <p className="text-[10px] text-slate-350 italic text-left">
-                          {currentLanguage === 'vi' ? '(Chỉ đánh giá sao)' : '(Rating only)'}
-                        </p>
-                      )}
-                    </div>
-                  )
-                })
-              )}
-            </div>
-
-            {/* Footer */}
-            <div className="flex justify-end pt-2.5 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => setShowReviewsDetailModal(false)}
-                className="px-5 py-2 text-xs font-extrabold uppercase bg-slate-150 hover:bg-slate-200 text-slate-600 rounded-lg transition"
-              >
-                {currentLanguage === 'vi' ? 'Đóng' : 'Close'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Simulated QR Code Camera Scanner Modal Overlay */}
-      {showScanner && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
-          <style>{`
-            @keyframes scannerLaser {
-              0% { top: 0%; opacity: 0.8; }
-              50% { top: 100%; opacity: 0.8; }
-              100% { top: 0%; opacity: 0.8; }
-            }
-            .animate-scannerLaser {
-              animation: scannerLaser 2.5s linear infinite;
-            }
-          `}</style>
-          
-          <div className="bg-white border border-slate-100 rounded-3xl max-w-sm w-full p-6 text-center space-y-5 relative overflow-hidden text-slate-800 shadow-2xl animate-scaleUp">
-            {/* Close Button */}
-            <button
-              type="button"
-              onClick={() => {
-                setShowScanner(false)
-                setScanTarget(null)
-              }}
-              className="absolute right-4 top-4 text-slate-400 hover:text-slate-700 transition p-1.5 rounded-full hover:bg-slate-100"
-              title="Close Scanner"
-            >
-              <X className="h-4 w-4" />
-            </button>
-
-            {/* Header */}
-            <div className="space-y-1 text-center">
-              <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">
-                {currentLanguage === 'vi' ? 'Quét Mã QR Nhận Diện' : 'Scan QR Code'}
-              </h3>
-              <p className="text-[10px] text-slate-500 font-medium text-center">
-                {scanTarget === 'staff' 
-                  ? (currentLanguage === 'vi' ? 'Quét mã NEXORA STAFF ID để liên kết hồ sơ' : 'Scan NEXORA STAFF ID to link your profile')
-                  : (currentLanguage === 'vi' ? 'Quét mã VLINKPAY ID để tự động điền thông tin' : 'Scan VLINKPAY ID to autofill profile data')}
-              </p>
-            </div>
-
-            {/* Scanning viewport */}
-            <div className="relative h-48 w-48 mx-auto rounded-2xl border-2 border-slate-100 bg-slate-50 overflow-hidden flex items-center justify-center shadow-inner">
-              {/* Corner brackets */}
-              <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-amber-500 rounded-tl-sm"></div>
-              <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-amber-500 rounded-tr-sm"></div>
-              <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-amber-500 rounded-bl-sm"></div>
-              <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-amber-500 rounded-br-sm"></div>
-
-              {/* QR icon background */}
-              <QrCode className="h-20 w-20 text-slate-300 opacity-80 animate-pulse" />
-
-              {/* Laser line */}
-              <div className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-amber-500 to-transparent shadow-[0_0_8px_#f59e0b] animate-scannerLaser"></div>
-            </div>
-
-            {/* Helper Text */}
-            <p className="text-[10px] text-slate-500 font-medium max-w-xs mx-auto text-center">
-              {currentLanguage === 'vi'
-                ? 'Hướng camera về phía mã QR hoặc chọn giả lập quét thành công bên dưới.'
-                : 'Point the camera at the QR code, or choose a mockup scan profile below.'}
-            </p>
-
-            {/* Quick simulation buttons */}
-            <div className="space-y-2 pt-2 border-t border-slate-100">
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block text-center">
-                {currentLanguage === 'vi' ? 'Giả lập quét QR' : 'Simulate QR Scan'}
-              </span>
-              
-              <div className="flex flex-col gap-2">
-                {/* Standard Successful Scan button */}
-                <button
-                  type="button"
-                  onClick={simulateSuccessfulScan}
-                  className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-colors shadow-sm"
-                >
-                  {currentLanguage === 'vi' ? 'Giả lập Quét Lisa Tran' : 'Simulate Successful Scan'}
-                </button>
-
-                {/* Additional quick options */}
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (scanTarget === 'staff') {
-                        handleNexoraStaffIdChange('NEX-STAFF-ANNA0921')
-                      } else {
-                        handleVlinkpayIdChange('VLP-0921-ANNA')
-                      }
-                      setShowScanner(false)
-                      setScanTarget(null)
-                    }}
-                    className="py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg text-[10px] font-bold transition-colors"
-                  >
-                    Anna Nguyen
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (scanTarget === 'staff') {
-                        handleNexoraStaffIdChange('NEX-STAFF-HN1148')
-                      } else {
-                        handleVlinkpayIdChange('VLP-1148-HN')
-                      }
-                      setShowScanner(false)
-                      setScanTarget(null)
-                    }}
-                    className="py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg text-[10px] font-bold transition-colors"
-                  >
-                    Hanna Nguyen
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Cancel Button */}
-            <button
-              type="button"
-              onClick={() => {
-                setShowScanner(false)
-                setScanTarget(null)
-              }}
-              className="w-full py-2 border border-slate-200 hover:bg-slate-50 text-slate-500 hover:text-slate-700 rounded-xl text-xs font-bold transition"
-            >
-              {currentLanguage === 'vi' ? 'HỦY BỎ' : 'CANCEL'}
-            </button>
-          </div>
-        </div>
-      )}
+      <StaffQrScannerModal
+        open={showScanner}
+        scanTarget={scanTarget}
+        onClose={() => { setShowScanner(false); setScanTarget(null) }}
+        onSimulateSuccessfulScan={simulateSuccessfulScan}
+        onScanAnna={handleScanAnna}
+        onScanHanna={handleScanHanna}
+      />
     </div>
   )
 }
