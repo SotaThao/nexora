@@ -100,8 +100,8 @@ export default function CustomerFlow() {
   // Get active and visible staff list
   const activeStaffList = useMemo(() => {
     const defaultStaff = [
-      { id: 'NEX-STAFF-MIA0123', fullName: 'Mia Tran', nickname: 'Mia T.', position: 'Gel-X Lead', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '@mia-nails', cashapp: '$miaglow', zelle: 'mia.tran@gmail.com', vlinkpay: 'VLP-0123-MIA' } },
-      { id: 'NEX-STAFF-VL8893', fullName: 'Vivian Le', nickname: 'Vivian L.', position: 'Acrylic Specialist', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '', cashapp: '$vivianle', zelle: '407-555-0199', vlinkpay: 'VLP-8893-VL' } },
+      { id: 'NEX-STAFF-MIA0123', fullName: 'Mia Tran', nickname: 'Mia T.', position: 'Gel-X Lead', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '@mia-nails', cashapp: '$miaglow', zelle: 'mia.tran@gmail.com', vlinkpay: 'VLP-0123-MIA' }, payoutConfigs: { zelle: { enabled: true, value: 'mia.tran@gmail.com', qrCode: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=MiaTranTip' } } },
+      { id: 'NEX-STAFF-VL8893', fullName: 'Vivian Le', nickname: 'Vivian L.', position: 'Acrylic Specialist', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '', cashapp: '$vivianle', zelle: '407-555-0199', vlinkpay: 'VLP-8893-VL' }, payoutConfigs: { zelle: { enabled: true, value: '407-555-0199', qrCode: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=VivianLeTip' } } },
       { id: 'NEX-STAFF-ASH0155', fullName: 'Ashley Park', nickname: 'Ashley P.', position: 'Pedicure Lead', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '@ashley-pedi', cashapp: '', zelle: 'ashley@glownails.com', vlinkpay: 'VLP-0155-ASH' } },
       { id: 'NEX-STAFF-HN1148', fullName: 'Hanna Nguyen', nickname: 'Hanna Ng.', position: 'Nail Art Designer', isActive: false, showInTipsFlow: true, paymentAccounts: { venmo: '@hanna-art', cashapp: '', zelle: '', vlinkpay: 'VLP-1148-HN' } }
     ]
@@ -117,8 +117,8 @@ export default function CustomerFlow() {
     }
 
     const defaultStaff = [
-      { id: 'NEX-STAFF-MIA0123', fullName: 'Mia Tran', nickname: 'Mia T.', position: 'Gel-X Lead', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '@mia-nails', cashapp: '$miaglow', zelle: 'mia.tran@gmail.com', vlinkpay: 'VLP-0123-MIA' } },
-      { id: 'NEX-STAFF-VL8893', fullName: 'Vivian Le', nickname: 'Vivian L.', position: 'Acrylic Specialist', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '', cashapp: '$vivianle', zelle: '407-555-0199', vlinkpay: 'VLP-8893-VL' } },
+      { id: 'NEX-STAFF-MIA0123', fullName: 'Mia Tran', nickname: 'Mia T.', position: 'Gel-X Lead', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '@mia-nails', cashapp: '$miaglow', zelle: 'mia.tran@gmail.com', vlinkpay: 'VLP-0123-MIA' }, payoutConfigs: { zelle: { enabled: true, value: 'mia.tran@gmail.com', qrCode: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=MiaTranTip' } } },
+      { id: 'NEX-STAFF-VL8893', fullName: 'Vivian Le', nickname: 'Vivian L.', position: 'Acrylic Specialist', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '', cashapp: '$vivianle', zelle: '407-555-0199', vlinkpay: 'VLP-8893-VL' }, payoutConfigs: { zelle: { enabled: true, value: '407-555-0199', qrCode: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=VivianLeTip' } } },
       { id: 'NEX-STAFF-ASH0155', fullName: 'Ashley Park', nickname: 'Ashley P.', position: 'Pedicure Lead', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '@ashley-pedi', cashapp: '', zelle: 'ashley@glownails.com', vlinkpay: 'VLP-0155-ASH' } },
       { id: 'NEX-STAFF-HN1148', fullName: 'Hanna Nguyen', nickname: 'Hanna Ng.', position: 'Nail Art Designer', isActive: false, showInTipsFlow: true, paymentAccounts: { venmo: '@hanna-art', cashapp: '', zelle: '', vlinkpay: 'VLP-1148-HN' } }
     ]
@@ -905,14 +905,6 @@ export default function CustomerFlow() {
                 <div className="w-full border-t border-dashed border-nexoraBorder/60 my-1" />
 
                 <div className="w-full space-y-3.5">
-                  <div className="text-center">
-                    <p className="text-xs font-bold text-nexoraMuted uppercase tracking-wider">
-                      {currentLanguage === 'vi' 
-                        ? `Thông tin ${selectedWalletObj.name}` 
-                        : `${selectedWalletObj.name} Information`}
-                    </p>
-                  </div>
-
                   {/* Name Field */}
                   <div className="group relative border border-nexoraBorder/80 rounded-xl px-4 py-2.5 bg-nexoraCanvas/10 hover:bg-nexoraCanvas/30 hover:border-nexoraBrand/30 transition-all flex flex-col justify-between min-h-[56px]">
                     <span className="text-[10px] font-bold text-nexoraSubtle uppercase tracking-wider">
