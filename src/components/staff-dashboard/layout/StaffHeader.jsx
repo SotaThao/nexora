@@ -13,7 +13,6 @@ export default function StaffHeader({ activeScreen, onNavigate }) {
       {/* Brand (mobile only — sidebar shows it on desktop) */}
       <div className="flex min-w-0 items-center gap-3 lg:hidden">
         <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-9 w-9 shrink-0 object-contain" />
-        <span className="truncate text-sm font-extrabold">{t('staff_dashboard.brand.title')}</span>
       </div>
 
       {/* Screen title (desktop) */}
