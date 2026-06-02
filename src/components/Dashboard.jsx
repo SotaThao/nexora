@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { Filter, LogOut, Menu, Moon, Settings, ShieldAlert, Sun, X, ChevronUp, ChevronDown, Check, Link } from 'lucide-react'
+import { Filter, LogOut, Moon, Settings, ShieldAlert, Sun, X, ChevronUp, ChevronDown, Check, Link } from 'lucide-react'
 import StaffDetailView from './StaffDetailView'
 import { useTranslation } from '../contexts/LanguageContext'
 import { storage } from '../utils/storage'
@@ -789,19 +789,8 @@ export default function Dashboard({
           onViewStaffDetail={setViewingStaffDetailId}
           onApproveStaff={openApproveStaff}
           userRole={userRole}
+          onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
         />
-
-        <div className="sticky top-16 z-10 flex items-center justify-between border-b border-nexoraBorder bg-white px-4 py-3 lg:hidden">
-          <span className="text-sm font-extrabold">NEXORA TOUCH</span>
-          <button
-            type="button"
-            onClick={() => setIsMobileMenuOpen(true)}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-nexoraBorder bg-white text-nexoraText shadow-nexora-soft"
-            aria-label="Open navigation menu"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-        </div>
 
         <main className="min-h-screen p-4 sm:p-6 lg:p-7">
           {activeMenu !== 'overview' && !viewingStaffDetailId && (
