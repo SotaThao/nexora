@@ -104,8 +104,8 @@ describe('RegisterWizard Component Unit Tests', () => {
       </LanguageProvider>
     );
 
-    // Select Personal Account role
-    const personalOption = screen.getByRole('button', { name: /Technician/i });
+    // Select Personal Account role (using "Staff Member" to uniquely match the second card)
+    const personalOption = screen.getByRole('button', { name: /Staff Member/i });
     fireEvent.click(personalOption);
 
     // Go to Step 1
