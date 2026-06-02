@@ -35,7 +35,8 @@ export default function DashboardHeader({
   reviews,
   touchpoints,
   onViewStaffDetail,
-  onApproveStaff
+  onApproveStaff,
+  userRole = 'owner'
 }) {
   const { currentLanguage, setLanguage, t } = useTranslation()
   const dropdownRef = useRef(null)
@@ -412,28 +413,30 @@ export default function DashboardHeader({
                 <div className="text-xs font-black text-nexoraText truncate">{profile.fullName || businessName}</div>
                 <div className="text-[10px] text-nexoraMuted truncate mt-0.5">{profile.email}</div>
               </div>
-              <div className="py-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    onNavigateSettingsTab('profile')
-                    setIsHeaderDropdownOpen(false)
-                  }}
-                  className="flex w-full items-center px-4 py-2 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition text-left"
-                >
-                  {t('dashboard.menu.business_setting') || 'Business Setting'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    onNavigateSettingsTab('kyb')
-                    setIsHeaderDropdownOpen(false)
-                  }}
-                  className="flex w-full items-center px-4 py-2 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition text-left"
-                >
-                  {t('dashboard.menu.kyb') || 'Business Verification'}
-                </button>
-              </div>
+              {userRole !== 'staff' && (
+                <div className="py-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onNavigateSettingsTab('profile')
+                      setIsHeaderDropdownOpen(false)
+                    }}
+                    className="flex w-full items-center px-4 py-2 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition text-left"
+                  >
+                    {t('dashboard.menu.business_setting') || 'Business Setting'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onNavigateSettingsTab('kyb')
+                      setIsHeaderDropdownOpen(false)
+                    }}
+                    className="flex w-full items-center px-4 py-2 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition text-left"
+                  >
+                    {t('dashboard.menu.kyb') || 'Business Verification'}
+                  </button>
+                </div>
+              )}
               <div className="py-1">
                 <button
                   type="button"
@@ -450,10 +453,12 @@ export default function DashboardHeader({
             </div>
           )}
         </div>
-        <button onClick={onAddTouchpoint} className="nexora-primary-button">
-          <Plus className="h-4 w-4" />
-          <span className="hidden sm:inline">{t('dashboard.header.add_tp')}</span>
-        </button>
+        {userRole !== 'staff' && (
+          <button onClick={onAddTouchpoint} className="nexora-primary-button">
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">{t('dashboard.header.add_tp')}</span>
+          </button>
+        )}
       </div>
     </header>
   )

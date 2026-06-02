@@ -745,6 +745,23 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
       notis = [newNoti, ...notis]
       localStorage.setItem('nexora_notifications', JSON.stringify(notis))
       sessionStorage.setItem('nexora_notifications', JSON.stringify(notis))
+
+      // Also save the staff account to nexora_pending_accounts so they can log in!
+      if (email.trim() && regPassword) {
+        const pendingAccounts = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
+        const staffAccount = {
+          email: email.trim().toLowerCase(),
+          password: regPassword,
+          role: 'staff',
+          staffId: finalStaffMember.id,
+          isVerified: true,
+          verificationStatus: 'verified'
+        }
+        const filtered = pendingAccounts.filter(acc => acc.email !== staffAccount.email)
+        filtered.push(staffAccount)
+        localStorage.setItem('nexora_pending_accounts', JSON.stringify(filtered))
+        window.dispatchEvent(new Event('storage'))
+      }
     } catch (e) {
       console.error('Failed to update staff database in wizard', e)
     }
