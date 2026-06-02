@@ -1,4 +1,82 @@
 {
+  "staff_dashboard": {
+    "brand": { "title": "NEXORA Staff", "subtitle": "by VLINKPAY" },
+    "staff_id": "Staff ID",
+    "sign_out": "Sign out",
+    "nav": { "home": "Home", "my_qr": "My QR", "tips": "Tips", "reviews": "Reviews", "pay": "Pay", "profile": "Profile" },
+    "titles": {
+      "home": "Home",
+      "qr": "My QR",
+      "tips": "Tips",
+      "reviews": "Reviews & Ratings",
+      "pay": "Payments",
+      "profile": "Profile",
+      "notifications": "Notifications"
+    },
+    "status": { "active": "Active", "inactive": "Inactive" },
+    "home": {
+      "today_tips": "Today Tips",
+      "this_month": "This Month",
+      "pending": "Pending",
+      "rating": "Rating",
+      "tips_count": "{count} tips",
+      "need_confirm": "Need confirm",
+      "pending_confirmations": "Pending Confirmations",
+      "no_pending": "No pending confirmations.",
+      "confirm": "Confirm",
+      "confirm_all": "Confirm All Received",
+      "linked_businesses": "Linked Businesses",
+      "display_name": "Display name"
+    },
+    "tips": {
+      "activity": "Tip Activity",
+      "empty": "No tips yet.",
+      "status": { "pending": "Pending", "completed": "Completed", "verified": "Verified" },
+      "ai_insight": "AI Insight",
+      "ai_insight_body": "Your average tip for Pedicure is 21%, which is 6% higher than the salon average."
+    },
+    "pay": {
+      "title": "Payment Methods",
+      "owner_note": "You manage your own receiving methods. The business owner cannot edit this section.",
+      "not_set": "Not set",
+      "handle_placeholder": "Enter handle / account",
+      "save": "Save Payment Methods",
+      "saved": "Saved ✓"
+    },
+    "qr": {
+      "personal_title": "My Personal QR",
+      "personal_sub": "Use it to share your Staff ID or let a business link you.",
+      "share": "Share Staff QR",
+      "copy_link": "Copy Staff Link",
+      "business_title": "Business Staff QR",
+      "business_sub": "Dedicated QR for tips/reviews at this business",
+      "note": "Per-business QR is stored by business_staff_link_id so it is never confused when you work at multiple businesses."
+    },
+    "profile": {
+      "title": "Staff Profile",
+      "full_name": "Full Name",
+      "display_name": "Default Display Name",
+      "phone": "Phone",
+      "email": "Email",
+      "bio": "Bio",
+      "identity_note": "Full name, phone and email come from your business record. Update your display name and bio here.",
+      "save": "Save Profile",
+      "saved": "Saved ✓",
+      "business_names": "Business Display Names"
+    },
+    "notifications": {
+      "empty": "No notifications.",
+      "tip_title": "New tip marked sent",
+      "tip_message": "${amount} via {method} — confirm receipt",
+      "review_title": "New {rating}-star review",
+      "push_prefs": "Push Preferences",
+      "pref": {
+        "tipConfirmations": "Tip Confirmations",
+        "reviews": "Reviews",
+        "businessInvites": "Business Invites"
+      }
+    }
+  },
   "common": {
     "active": "Active",
     "inactive": "Inactive",
@@ -580,6 +658,19 @@
     "scan_to_tip_review": "Scan to Tip & Review"
   },
   "register": {
+    "role_select_title": "Choose Account Type",
+    "role_select_desc": "Select the appropriate role to configure your portal interface.",
+    "role_business_title": "Merchant / Business Owner",
+    "role_business_desc": "Manage store profile, technicians, touchpoints, review routing, and see shop statistics.",
+    "role_personal_title": "Technician / Staff Member",
+    "role_personal_desc": "Manage own profile, payout wallets, track personal tips, and share personal QR codes.",
+    "fullname_label": "Full Name *",
+    "fullname_placeholder": "e.g., Mia Tran",
+    "staff_success_title": "Staff Account Registered!",
+    "staff_success_desc": "Your personal staff account has been successfully created. You do not need business verification to start.",
+    "staff_id_label": "Your Unique Staff ID:",
+    "staff_linking_instructions": "Give this Staff ID to your Salon Owner so they can link your profile to the business.",
+    "staff_login_btn": "Log In to Staff Dashboard",
     "title_step_1": "Step 1: Create New Account",
     "desc_step_1": "Create your Nexora Touch credentials to get started.",
     "email_label": "Email Address *",
@@ -617,7 +708,8 @@
       "email_mismatch": "Emails do not match",
       "password_required": "Password is required",
       "password_short": "Password must be at least 6 characters long",
-      "kyb_required": "Please fill in all required KYB fields"
+      "kyb_required": "Please fill in all required KYB fields",
+      "fullname_required": "Full name is required"
     }
   },
   "staff_invite": {

@@ -1,4 +1,82 @@
 {
+  "staff_dashboard": {
+    "brand": { "title": "NEXORA Staff", "subtitle": "bởi VLINKPAY" },
+    "staff_id": "Mã nhân viên",
+    "sign_out": "Đăng xuất",
+    "nav": { "home": "Trang chủ", "my_qr": "Mã QR", "tips": "Tiền tip", "reviews": "Đánh giá", "pay": "Thanh toán", "profile": "Hồ sơ" },
+    "titles": {
+      "home": "Trang chủ",
+      "qr": "Mã QR của tôi",
+      "tips": "Tiền tip",
+      "reviews": "Đánh giá & Xếp hạng",
+      "pay": "Phương thức nhận",
+      "profile": "Hồ sơ",
+      "notifications": "Thông báo"
+    },
+    "status": { "active": "Đang hoạt động", "inactive": "Ngừng hoạt động" },
+    "home": {
+      "today_tips": "Tip hôm nay",
+      "this_month": "Tháng này",
+      "pending": "Chờ xác nhận",
+      "rating": "Đánh giá",
+      "tips_count": "{count} lượt tip",
+      "need_confirm": "Cần xác nhận",
+      "pending_confirmations": "Tip chờ xác nhận",
+      "no_pending": "Không có tip nào chờ xác nhận.",
+      "confirm": "Xác nhận",
+      "confirm_all": "Xác nhận đã nhận tất cả",
+      "linked_businesses": "Tiệm đã liên kết",
+      "display_name": "Tên hiển thị"
+    },
+    "tips": {
+      "activity": "Hoạt động tip",
+      "empty": "Chưa có tip nào.",
+      "status": { "pending": "Chờ xử lý", "completed": "Hoàn tất", "verified": "Đã xác minh" },
+      "ai_insight": "Phân tích AI",
+      "ai_insight_body": "Tip trung bình cho dịch vụ Pedicure của bạn là 21%, cao hơn 6% so với mức trung bình của tiệm."
+    },
+    "pay": {
+      "title": "Phương thức nhận tiền",
+      "owner_note": "Bạn tự quản lý phương thức nhận tip. Chủ tiệm không sửa được phần này.",
+      "not_set": "Chưa thiết lập",
+      "handle_placeholder": "Nhập tài khoản / handle",
+      "save": "Lưu phương thức",
+      "saved": "Đã lưu ✓"
+    },
+    "qr": {
+      "personal_title": "Mã QR cá nhân",
+      "personal_sub": "Dùng để chia sẻ Mã nhân viên hoặc cho tiệm liên kết bạn.",
+      "share": "Chia sẻ QR nhân viên",
+      "copy_link": "Sao chép liên kết",
+      "business_title": "QR theo tiệm",
+      "business_sub": "QR riêng cho tip/đánh giá tại tiệm này",
+      "note": "QR theo tiệm được lưu theo business_staff_link_id để không bị lẫn khi bạn làm ở nhiều tiệm."
+    },
+    "profile": {
+      "title": "Hồ sơ nhân viên",
+      "full_name": "Họ và tên",
+      "display_name": "Tên hiển thị mặc định",
+      "phone": "Số điện thoại",
+      "email": "Email",
+      "bio": "Giới thiệu",
+      "identity_note": "Họ tên, số điện thoại và email lấy từ hồ sơ tại tiệm. Cập nhật tên hiển thị và giới thiệu tại đây.",
+      "save": "Lưu hồ sơ",
+      "saved": "Đã lưu ✓",
+      "business_names": "Tên hiển thị theo tiệm"
+    },
+    "notifications": {
+      "empty": "Không có thông báo.",
+      "tip_title": "Có tip mới được đánh dấu đã gửi",
+      "tip_message": "${amount} qua {method} — xác nhận đã nhận",
+      "review_title": "Đánh giá {rating} sao mới",
+      "push_prefs": "Tùy chọn thông báo đẩy",
+      "pref": {
+        "tipConfirmations": "Xác nhận tip",
+        "reviews": "Đánh giá",
+        "businessInvites": "Lời mời từ tiệm"
+      }
+    }
+  },
   "common": {
     "active": "Đang hoạt động",
     "inactive": "Ngừng hoạt động",
@@ -580,6 +658,19 @@
     "scan_to_tip_review": "Quét để Típ & Đánh giá"
   },
   "register": {
+    "role_select_title": "Chọn loại tài khoản",
+    "role_select_desc": "Vui lòng chọn vai trò phù hợp để cấu hình giao diện của bạn.",
+    "role_business_title": "Merchant / Chủ cửa hàng",
+    "role_business_desc": "Quản lý thông tin cửa hàng, nhân viên, touchpoints, định tuyến đánh giá và xem thống kê tiệm.",
+    "role_personal_title": "Kỹ thuật viên / Nhân viên",
+    "role_personal_desc": "Tự quản lý hồ sơ cá nhân, ví nhận tiền, theo dõi tiền tip và chia sẻ mã QR cá nhân.",
+    "fullname_label": "Họ và tên *",
+    "fullname_placeholder": "Ví dụ: Mia Tran",
+    "staff_success_title": "Đăng ký Tài khoản Nhân viên thành công!",
+    "staff_success_desc": "Tài khoản nhân viên cá nhân của bạn đã được tạo. Bạn không cần xác minh KYB doanh nghiệp để bắt đầu.",
+    "staff_id_label": "Mã Staff ID của bạn:",
+    "staff_linking_instructions": "Cung cấp mã Staff ID này cho Chủ tiệm/Salon để họ liên kết bạn vào danh sách nhân viên của tiệm.",
+    "staff_login_btn": "Đăng nhập vào Bảng điều khiển Nhân viên",
     "title_step_1": "Bước 1: Đăng ký Tài khoản mới",
     "desc_step_1": "Tạo tài khoản Nexora Touch để bắt đầu cổng định tuyến thanh toán.",
     "email_label": "Email Đăng Ký *",
@@ -617,7 +708,8 @@
       "email_mismatch": "Email xác nhận không trùng khớp",
       "password_required": "Vui lòng nhập Mật khẩu",
       "password_short": "Mật khẩu phải từ 6 ký tự trở lên",
-      "kyb_required": "Vui lòng điền đầy đủ thông tin KYB bắt buộc"
+      "kyb_required": "Vui lòng điền đầy đủ thông tin KYB bắt buộc",
+      "fullname_required": "Vui lòng nhập Họ và tên"
     }
   },
   "staff_invite": {

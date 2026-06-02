@@ -355,5 +355,75 @@ describe('StaffRegistrationWizard Component Unit Tests', () => {
     expect(updatedTp).toBeDefined()
     expect(updatedTp.id).toBe(`tp-staff-${newGeneratedId}`)
   })
+
+  it('supports QR code scanning and autofilling for NEXORA STAFF ID and VLINKPAY ID inputs', () => {
+    const handleReturn = vi.fn()
+    const generalInvite = { biz: 'Golden Glow Nail Spa' } // self-serve selection
+
+    render(
+      <LanguageProvider>
+        <StaffRegistrationWizard inviteData={generalInvite} onReturnToMerchant={handleReturn} />
+      </LanguageProvider>
+    )
+
+    // --- Part 1: Option A (Link profile via QR scan) ---
+    fireEvent.click(screen.getByText('I already have a Profile'))
+
+    // Trigger Scan QR modal for NEXORA STAFF ID
+    const staffScanBtn = screen.getByTitle('Scan QR Code')
+    fireEvent.click(staffScanBtn)
+
+    // Verify Scanner overlay is shown
+    expect(screen.getByText('Scan QR Code')).toBeInTheDocument()
+    expect(screen.getByText('Scan NEXORA STAFF ID to link your profile')).toBeInTheDocument()
+
+    // Trigger Simulation Scan
+    const simulateBtn = screen.getByRole('button', { name: /Simulate Successful Scan/i })
+    fireEvent.click(simulateBtn)
+
+    // Check that ID is filled and Lisa's profile is loaded
+    expect(screen.getByPlaceholderText('e.g. NEX-STAFF-LISA1102').value).toBe('NEX-STAFF-LISA1102')
+    expect(screen.getAllByText('Lisa Tran').length).toBeGreaterThan(0)
+    expect(screen.getByText(/Nail Tech • \(408\) 555-2345/i)).toBeInTheDocument()
+
+    // Go back and test Option B
+    fireEvent.click(screen.getByRole('button', { name: /Back/i }))
+
+    // --- Part 2: Option B (Register & Autofill via VLINKPAY QR Scan) ---
+    fireEvent.click(screen.getByText('I am a new Technician'))
+
+    // Fill registration credentials
+    const emailInputs = screen.getAllByPlaceholderText('e.g. name@example.com')
+    fireEvent.change(emailInputs[0], { target: { value: 'new.staff@example.com' } })
+    fireEvent.change(emailInputs[1], { target: { value: 'new.staff@example.com' } })
+    fireEvent.change(screen.getByPlaceholderText('••••••••'), { target: { value: 'password123' } })
+    fireEvent.click(screen.getByRole('button', { name: /Continue|Next/i }))
+
+    // Verify OTP
+    fireEvent.click(screen.getByRole('button', { name: /Auto-fill/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Verify & Activate/i }))
+
+    // Now in Step 2: Profile Setup
+    expect(screen.getByText(/Personal Profile/i)).toBeInTheDocument()
+
+    // Trigger Scan QR modal for VLINKPAY ID
+    const vlinkpayScanBtn = screen.getByTitle('Scan VLINKPAY QR Code')
+    fireEvent.click(vlinkpayScanBtn)
+
+    // Verify VLINKPAY ID scan helper description
+    expect(screen.getByText('Scan VLINKPAY ID to autofill profile data')).toBeInTheDocument()
+
+    // Trigger simulation successful scan
+    const simulateBtnVlp = screen.getByRole('button', { name: /Simulate Successful Scan/i })
+    fireEvent.click(simulateBtnVlp)
+
+    // Verify all profile fields are automatically populated with Lisa's profile details
+    expect(screen.getByPlaceholderText('e.g. VLP-8893-VL').value).toBe('VLP-1102-LISA')
+    expect(screen.getByPlaceholderText('Lisa Marie Tran').value).toBe('Lisa Tran')
+    expect(screen.getByPlaceholderText('Lisa T.').value).toBe('Lisa T.')
+    expect(screen.getByPlaceholderText('e.g. name@example.com').value).toBe('lisa@example.com')
+    expect(screen.getByPlaceholderText('e.g. 408-555-1234').value).toBe('(408) 555-2345')
+    expect(screen.getByPlaceholderText('e.g. Acrylic Specialist').value).toBe('Nail Tech')
+  })
 })
 
