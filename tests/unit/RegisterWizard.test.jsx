@@ -12,6 +12,10 @@ describe('RegisterWizard Component Unit Tests', () => {
       </LanguageProvider>
     );
 
+    // Go past Step 0 (default role is Business Owner, click Next)
+    const nextBtnStep0 = screen.getByRole('button', { name: /Next/i });
+    fireEvent.click(nextBtnStep0);
+
     // Using querySelector or exact match for labels
     expect(screen.getByText(/Create New Account/i)).toBeInTheDocument();
     expect(screen.getByText(/Email Address \*/i)).toBeInTheDocument();
@@ -26,8 +30,13 @@ describe('RegisterWizard Component Unit Tests', () => {
       </LanguageProvider>
     );
 
-    const nextBtn = screen.getByRole('button', { name: /Next/i });
-    fireEvent.click(nextBtn);
+    // Go past Step 0
+    const nextBtnStep0 = screen.getByRole('button', { name: /Next/i });
+    fireEvent.click(nextBtnStep0);
+
+    // Step 1 Next button triggers validation
+    const nextBtnStep1 = screen.getByRole('button', { name: /Next/i });
+    fireEvent.click(nextBtnStep1);
 
     // Should show validation errors
     expect(screen.getByText(/Email is required/i)).toBeInTheDocument();
@@ -40,6 +49,10 @@ describe('RegisterWizard Component Unit Tests', () => {
       </LanguageProvider>
     );
 
+    // Go past Step 0
+    const nextBtnStep0 = screen.getByRole('button', { name: /Next/i });
+    fireEvent.click(nextBtnStep0);
+
     const emailInputs = screen.getAllByRole('textbox');
     // First is Email, second is Confirm Email
     fireEvent.change(emailInputs[0], { target: { value: 'test@example.com' } });
@@ -48,8 +61,8 @@ describe('RegisterWizard Component Unit Tests', () => {
     const passwordInput = screen.getByPlaceholderText(/Enter secure password/i);
     fireEvent.change(passwordInput, { target: { value: 'password123' } });
 
-    const nextBtn = screen.getByRole('button', { name: /Next/i });
-    fireEvent.click(nextBtn);
+    const nextBtnStep1 = screen.getByRole('button', { name: /Next/i });
+    fireEvent.click(nextBtnStep1);
 
     // Should show validation errors for mismatched emails
     expect(screen.getByText(/Emails do not match/i)).toBeInTheDocument();
@@ -63,6 +76,10 @@ describe('RegisterWizard Component Unit Tests', () => {
       </LanguageProvider>
     );
 
+    // Go past Step 0
+    const nextBtnStep0 = screen.getByRole('button', { name: /Next/i });
+    fireEvent.click(nextBtnStep0);
+
     const emailInput = screen.getByPlaceholderText(/partner@yourstore.com/i);
     expect(emailInput).toBeDisabled();
     expect(emailInput).toHaveValue('sso@vlinkpay.com');
@@ -73,10 +90,49 @@ describe('RegisterWizard Component Unit Tests', () => {
     const passwordInput = screen.getByPlaceholderText(/Enter secure password\.\.\./i);
     fireEvent.change(passwordInput, { target: { value: 'password123' } });
 
-    const nextBtn = screen.getByRole('button', { name: /Next/i });
-    fireEvent.click(nextBtn);
+    const nextBtnStep1 = screen.getByRole('button', { name: /Next/i });
+    fireEvent.click(nextBtnStep1);
 
     // Should go to Step 2 (Registration Success)
     expect(screen.getByText(/Account Registered Successfully/i)).toBeInTheDocument();
+  });
+
+  it('registers a new personal/technician account successfully', () => {
+    render(
+      <LanguageProvider>
+        <RegisterWizard ssoEmail="" onBackToLogin={vi.fn()} onRegisterSuccess={vi.fn()} />
+      </LanguageProvider>
+    );
+
+    // Select Personal Account role
+    const personalOption = screen.getByRole('button', { name: /Technician/i });
+    fireEvent.click(personalOption);
+
+    // Go to Step 1
+    const nextBtnStep0 = screen.getByRole('button', { name: /Next/i });
+    fireEvent.click(nextBtnStep0);
+
+    // Check that Full Name field is rendered
+    expect(screen.getByText(/Full Name \*/i)).toBeInTheDocument();
+
+    // Fill the inputs
+    const fullNameInput = screen.getByPlaceholderText(/e\.g\., Lisa Tran/i);
+    fireEvent.change(fullNameInput, { target: { value: 'Lisa Tran' } });
+
+    const emailInputs = screen.getAllByRole('textbox');
+    // First is Full Name, second is Email, third is Confirm Email
+    fireEvent.change(emailInputs[1], { target: { value: 'lisa.tran@example.com' } });
+    fireEvent.change(emailInputs[2], { target: { value: 'lisa.tran@example.com' } });
+
+    const passwordInput = screen.getByPlaceholderText(/Enter secure password/i);
+    fireEvent.change(passwordInput, { target: { value: 'password123' } });
+
+    // Click next to complete registration
+    const nextBtnStep1 = screen.getByRole('button', { name: /Next/i });
+    fireEvent.click(nextBtnStep1);
+
+    // Should go to Step 2 (Registration Success for Staff)
+    expect(screen.getByText(/Staff Profile Activated/i)).toBeInTheDocument();
+    expect(screen.getByText(/NEX-STAFF-/)).toBeInTheDocument();
   });
 });
