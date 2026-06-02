@@ -19,7 +19,7 @@ export default class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
+        <div className="min-h-dvh flex items-center justify-center bg-gray-50 p-6">
           <div className="nexora-card max-w-md w-full text-center p-8 space-y-4">
             <div className="text-4xl">⚠️</div>
             <h2 className="text-xl font-semibold text-gray-800">
