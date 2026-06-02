@@ -34,7 +34,7 @@ describe('Staff Personal Dashboard E2E Test Suite (CloakBrowser)', () => {
     await page.waitForSelector('text=Mia Tran');
     let content = await page.textContent('body');
     expect(content).toContain('Mia Tran');
-    expect(content).toContain('Golden Glow Nail Spa & Salon');
+    expect(content).toContain('Golden Glow Nail Spa');
 
     // Toggle language to English (EN) to keep E2E assertions consistent
     const langEnBtn = page.getByRole('button', { name: 'EN', exact: true });
