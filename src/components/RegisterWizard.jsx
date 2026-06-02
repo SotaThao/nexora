@@ -149,7 +149,7 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#0B1C30] font-sans antialiased relative overflow-x-hidden selection:bg-nexoraBrandSoft selection:text-nexoraBrand">
+    <div className="min-h-dvh bg-[#F8FAFC] text-[#0B1C30] font-sans antialiased relative overflow-x-hidden selection:bg-nexoraBrandSoft selection:text-nexoraBrand">
       {/* Background decorations */}
       <div className="absolute top-1/4 left-1/4 h-56 w-56 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(66,72,216,0.04)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-96 sm:w-96"></div>
       <div className="absolute bottom-1/4 right-1/4 h-64 w-64 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(43,89,255,0.02)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-[450px] sm:w-[450px]"></div>
@@ -171,7 +171,7 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
         </button>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-8 relative z-10 flex flex-col justify-center min-h-screen">
+      <div className="max-w-4xl mx-auto px-4 py-8 relative z-10 flex flex-col justify-center min-h-dvh">
         {/* Branding header */}
         <div className="text-center mb-6">
           <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="w-12 h-12 mx-auto object-contain mb-2" />
