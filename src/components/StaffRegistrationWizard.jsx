@@ -4,7 +4,7 @@ import {
   Copy, Plus, CheckCircle2, Building, CreditCard, Smartphone, 
   Sparkles, Lock, User, Info, Upload, X, QrCode, Star, 
   Award, DollarSign, Wallet, Send, CheckSquare, Globe, Edit2,
-  Camera, FolderOpen, AlertTriangle, Loader2, XCircle
+  Camera, FolderOpen, AlertTriangle, Loader2, XCircle, Eye, EyeOff
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
 import { storage } from '../utils/storage'
@@ -149,6 +149,7 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
   const [regPassword, setRegPassword] = useState('')
   const [regReferralLink, setRegReferralLink] = useState('')
   const [regErrors, setRegErrors] = useState({})
+  const [showPassword, setShowPassword] = useState(false)
 
   // Profile states
   const [fullName, setFullName] = useState('')
@@ -1220,17 +1221,26 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
                     <label className="text-[10px] font-black uppercase text-nexoraSubtle tracking-wider">
                       {currentLanguage === 'vi' ? 'Mật khẩu' : 'Password'}
                     </label>
-                    <input 
-                      type="password"
-                      className={`mt-1.5 h-10 w-full rounded-lg border ${regErrors.password ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20' : 'border-nexoraBorder focus:border-[#4648D8] focus:ring-2 focus:ring-[#4648D8]/20'} px-3 text-xs outline-none transition-all`}
-                      placeholder="••••••••"
-                      value={regPassword}
-                      onChange={(e) => {
-                        setRegPassword(e.target.value)
-                        setRegErrors(prev => ({ ...prev, password: '' }))
-                      }}
-                      required
-                    />
+                    <div className="relative mt-1.5">
+                      <input 
+                        type={showPassword ? "text" : "password"}
+                        className={`h-10 w-full rounded-lg border ${regErrors.password ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20' : 'border-nexoraBorder focus:border-[#4648D8] focus:ring-2 focus:ring-[#4648D8]/20'} pl-3 pr-10 text-xs outline-none transition-all`}
+                        placeholder="••••••••"
+                        value={regPassword}
+                        onChange={(e) => {
+                          setRegPassword(e.target.value)
+                          setRegErrors(prev => ({ ...prev, password: '' }))
+                        }}
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-nexoraSubtle hover:text-nexoraText focus:outline-none"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
                     {regErrors.password && <p className="mt-1 text-[10px] font-bold text-rose-600">{regErrors.password}</p>}
                   </div>
 

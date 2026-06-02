@@ -19,7 +19,9 @@ import {
   Camera,
   FolderOpen,
   AlertTriangle,
-  X
+  X,
+  Eye,
+  EyeOff
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
 import { storage } from '../utils/storage'
@@ -163,6 +165,7 @@ export default function SettingsView({
   const [isSubmittingKyb, setIsSubmittingKyb] = useState(false)
   const [kybErrors, setKybErrors] = useState({})
   const [showPortal, setShowPortal] = useState(verificationStatus !== 'kyb_approved' && verificationStatus !== 'verified_pro')
+  const [showKybBankAccount, setShowKybBankAccount] = useState(false)
 
   useEffect(() => {
     setShowPortal(verificationStatus !== 'kyb_approved' && verificationStatus !== 'verified_pro')
@@ -1596,14 +1599,23 @@ export default function SettingsView({
                           <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
                             {currentLanguage === 'vi' ? 'Số tài khoản' : 'Account Number'}
                           </label>
-                          <input 
-                            type="password"
-                            required
-                            placeholder="Account Number"
-                            className="w-full bg-slate-50 border border-slate-300 focus:border-blue-500 focus:bg-white rounded px-3 h-9 text-xs text-slate-800 focus:outline-none transition-colors"
-                            value={kybData.bankAccount}
-                            onChange={(e) => setKybData({ ...kybData, bankAccount: e.target.value })}
-                          />
+                          <div className="relative">
+                            <input 
+                              type={showKybBankAccount ? "text" : "password"}
+                              required
+                              placeholder="Account Number"
+                              className="w-full bg-slate-50 border border-slate-300 focus:border-blue-500 focus:bg-white rounded pl-3 pr-10 h-9 text-xs text-slate-800 focus:outline-none transition-colors"
+                              value={kybData.bankAccount}
+                              onChange={(e) => setKybData({ ...kybData, bankAccount: e.target.value })}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowKybBankAccount(!showKybBankAccount)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                            >
+                              {showKybBankAccount ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
                         </div>
 
                         <div>
