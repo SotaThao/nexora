@@ -15,7 +15,7 @@ import TouchpointsView from './TouchpointsView'
 import AnalyticsView from './AnalyticsView'
 import SupportView from './SupportView'
 
-import { INITIAL_STAFF, INITIAL_TRANSACTIONS, INITIAL_REVIEWS, INITIAL_TOUCHPOINTS, INITIAL_DEVICES, STAFF_PERFORMANCE } from './dashboard/data/mockData'
+import { INITIAL_STAFF, INITIAL_TRANSACTIONS, INITIAL_REVIEWS, INITIAL_TOUCHPOINTS, STAFF_PERFORMANCE } from './dashboard/data/mockData'
 import { DEFAULT_PAYOUT_CONFIGS, MENU_ITEMS } from './dashboard/constants'
 import { slugify, getPayoutConfigsFromMember } from './dashboard/utils'
 
@@ -24,6 +24,8 @@ import MenuIcon from './ui/MenuIcon'
 
 import DashboardHeader from './dashboard/layout/DashboardHeader'
 import DashboardSidebar from './dashboard/layout/DashboardSidebar'
+import { useDashboardNavigation } from './dashboard/hooks/useDashboardNavigation'
+import { useDevices } from './dashboard/hooks/useDevices'
 import Overview from './dashboard/overview/Overview'
 import StaffView from './dashboard/views/StaffView'
 import ReviewsView from './dashboard/views/ReviewsView'
@@ -97,24 +99,21 @@ export default function Dashboard({
 }) {
   const { currentLanguage, t } = useTranslation()
   const { showToast, showConfirm } = useNotification()
+  const {
+    activeMenu, setActiveMenu,
+    isMobileMenuOpen, setIsMobileMenuOpen,
+    tipsTab, setTipsTab,
+    isTipsMobileExpanded, setIsTipsMobileExpanded,
+    touchpointsTab, setTouchpointsTab,
+    isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded,
+    settingsTab, setSettingsTab,
+    isProfileExpanded, setIsProfileExpanded,
+    viewingStaffDetailId, setViewingStaffDetailId,
+    handleNavigateMenu, navigateMenu
+  } = useDashboardNavigation(initialMenu, initialSettingsTab)
   const [showKybWarningModal, setShowKybWarningModal] = useState(false)
-  const [activeMenu, setActiveMenu] = useState(initialMenu)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [tipsTab, setTipsTab] = useState('overview')
   const [processingFee, setProcessingFee] = useState(3.0)
-  const [isTipsMobileExpanded, setIsTipsMobileExpanded] = useState(initialMenu === 'tips')
-  const [touchpointsTab, setTouchpointsTab] = useState('stations')
-  const [isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded] = useState(initialMenu === 'touchpoints')
 
-  useEffect(() => {
-    if (activeMenu === 'tips') {
-      setIsTipsMobileExpanded(true)
-      setIsTouchpointsMobileExpanded(false)
-    } else if (activeMenu === 'touchpoints') {
-      setIsTouchpointsMobileExpanded(true)
-      setIsTipsMobileExpanded(false)
-    }
-  }, [activeMenu])
   const lastProcessedSetupData = useRef(null)
   const ignoreNextSync = useRef(false)
 
@@ -222,21 +221,6 @@ export default function Dashboard({
     }
   })
 
-  const [settingsTab, setSettingsTab] = useState(initialSettingsTab)
-  const [isProfileExpanded, setIsProfileExpanded] = useState(false)
-
-  useEffect(() => {
-    if (initialMenu) {
-      setActiveMenu(initialMenu)
-    }
-  }, [initialMenu])
-
-  useEffect(() => {
-    if (initialSettingsTab) {
-      setSettingsTab(initialSettingsTab)
-    }
-  }, [initialSettingsTab])
-
   const [transactions, setTransactions] = useState(() => {
     try {
       const saved = localStorage.getItem('nexora_transactions')
@@ -291,7 +275,7 @@ export default function Dashboard({
     }
     return INITIAL_TOUCHPOINTS
   })
-  const [devices, setDevices] = useState(INITIAL_DEVICES)
+  const { devices, setDevices, handleAddDevice, handleDeleteDevice, handleToggleDeviceStatus } = useDevices()
   const [isStaffModalOpen, setIsStaffModalOpen] = useState(false)
   const [editingStaffId, setEditingStaffId] = useState(null)
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false)
@@ -306,7 +290,6 @@ export default function Dashboard({
   const [activeKpi, setActiveKpi] = useState('tips')
   const [chartRange, setChartRange] = useState('7 Days')
   const [selectedLeaderboardStaff, setSelectedLeaderboardStaff] = useState(STAFF_PERFORMANCE[0].nickname)
-  const [viewingStaffDetailId, setViewingStaffDetailId] = useState(null)
   const [errors, setErrors] = useState({})
   const [staffForm, setStaffForm] = useState({
     fullName: '',
@@ -975,33 +958,6 @@ export default function Dashboard({
     setTouchpoints((current) => current.map((point) => point.id === id ? { ...point, isActive: point.isActive === false ? true : false } : point))
   }
 
-  const handleAddDevice = (newDevice) => {
-    setDevices((current) => [
-      ...current,
-      {
-        id: 'dev-' + Date.now(),
-        deviceId: newDevice.deviceId,
-        type: newDevice.type,
-        location: newDevice.location,
-        isActive: true,
-        lastScan: 'N/A',
-        scans: 0
-      }
-    ])
-  }
-
-  const handleDeleteDevice = (id) => {
-    setDevices((current) => current.filter((dev) => dev.id !== id))
-  }
-
-  const handleToggleDeviceStatus = (id) => {
-    setDevices((current) =>
-      current.map((dev) =>
-        dev.id === id ? { ...dev, isActive: !dev.isActive } : dev
-      )
-    )
-  }
-
   const previewQr = (target) => {
     setQrTarget({
       name: target.name || `Personal QR - ${target.nickname}`,
@@ -1009,17 +965,6 @@ export default function Dashboard({
       slug: target.nickname ? `staff/${slugify(target.nickname)}` : `tp/${target.id}`,
       isActive: target.isActive !== undefined ? target.isActive : true
     })
-  }
-
-  const handleNavigateMenu = (menuId) => {
-    setActiveMenu(menuId)
-    setViewingStaffDetailId(null)
-  }
-
-  const navigateMenu = (menuId) => {
-    setActiveMenu(menuId)
-    setViewingStaffDetailId(null)
-    setIsMobileMenuOpen(false)
   }
 
   const handleSelectLeaderboardStaff = (nickname) => {
