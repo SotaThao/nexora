@@ -1,14 +1,12 @@
 import { useState, useMemo } from 'react'
 import { Star, ExternalLink, Lock } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { useNotification } from '../../../contexts/NotificationContext'
 import { renderTextWithGoldStars } from '../utils'
 import Panel from '../../ui/Panel'
 import CustomSelect from '../../CustomSelect'
 
 function ReviewsView({ reviews, staff, filter, setFilter, setupData }) {
   const { t } = useTranslation()
-  const { showToast } = useNotification()
   const [sourceFilter, setSourceFilter] = useState('all')
   const [starFilter, setStarFilter] = useState('all')
 
