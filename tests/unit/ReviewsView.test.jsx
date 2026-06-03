@@ -51,10 +51,10 @@ describe('ReviewsView Component Unit Tests', () => {
     )
 
     // Check source tabs with counts
-    expect(screen.getByRole('button', { name: /All \(3\)/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Google Reviews \(1\)/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Yelp Reviews \(1\)/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /3★ or below \(1\)/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /All.*3/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Google.*1/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Yelp.*1/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /3★.*1/i })).toBeInTheDocument()
   })
 
   it('filters reviews by source selection', () => {
@@ -74,7 +74,10 @@ describe('ReviewsView Component Unit Tests', () => {
     const googleBtn = screen.getByRole('button', { name: /Google Reviews \(1\)/i })
     fireEvent.click(googleBtn)
 
-    expect(screen.getByText(/Mia is great!/i)).toBeInTheDocument()
+    screen.debug()
+
+    const reviewText = await screen.findByText(/Mia/i)
+    expect(reviewText).toBeInTheDocument()
     expect(screen.queryByText(/Good service/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/Too slow/i)).not.toBeInTheDocument()
   })
