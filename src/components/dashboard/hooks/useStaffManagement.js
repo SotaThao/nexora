@@ -212,7 +212,7 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
       setStaff((current) => current.map((member) => member.id === editingStaffId ? { ...member, ...payload } : member))
     } else {
       const finalStaffId = staffForm.nexoraStaffId.trim() || `NEX-STAFF-${staffForm.fullName.replace(/[^a-zA-Z]/g, '').slice(0, 4).toUpperCase()}${Math.floor(1000 + Math.random() * 9000)}`
-      const newMember = { id: finalStaffId, isActive: true, showInTipsFlow: true, status: 'Active', flowType: 'Direct Addition', ...payload }
+      const newMember = { id: finalStaffId, isActive: true, showInTipsFlow: true, status: 'Active', flowType: 'Direct Addition', joinedDate: new Date().toISOString().split('T')[0], ...payload }
       setStaff((current) => [...current, newMember])
       setTouchpoints((current) => [...current, {
         id: `tp-staff-${newMember.id}`,
@@ -295,6 +295,7 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
       isActive: false,
       status: 'Pending Acceptance',
       flowType: 'Link Existing Staff ID',
+      joinedDate: new Date().toISOString().split('T')[0],
       paymentAccounts: globalMember.paymentAccounts || {},
       payoutConfigs: { ...DEFAULT_PAYOUT_CONFIGS }
     }
@@ -338,6 +339,7 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
       isActive: false,
       status: 'Pending Setup',
       flowType: 'Invite New Staff',
+      joinedDate: new Date().toISOString().split('T')[0],
       paymentAccounts: {},
       payoutConfigs: { ...DEFAULT_PAYOUT_CONFIGS }
     }
@@ -399,7 +401,8 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
           ...m,
           ...mergedPayload,
           status: 'Active',
-          isActive: true
+          isActive: true,
+          joinedDate: m.joinedDate || new Date().toISOString().split('T')[0]
         }
       }
       return m

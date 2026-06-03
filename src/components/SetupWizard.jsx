@@ -137,11 +137,12 @@ export default function SetupWizard({
         </header>
 
         {/* Wizard Progress Bar */}
-        <div className="mb-8 overflow-x-auto pb-3 sm:mb-10 sm:overflow-visible sm:pb-0">
+        <div className="mb-8 overflow-x-auto pb-3 sm:mb-10 sm:overflow-visible sm:pb-0 px-4">
           <div className="relative flex min-w-[320px] max-w-xl mx-auto items-center justify-between sm:min-w-0">
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-[2px] bg-nexoraBorder -z-10"></div>
+            {/* Connecting Track Line */}
+            <div className="absolute left-0 top-5 -translate-y-1/2 w-full h-[3px] bg-slate-200/60 rounded-full -z-10"></div>
             <div
-              className="absolute left-0 top-1/2 -translate-y-1/2 h-[2px] bg-nexoraBrand -z-10 transition-all duration-500"
+              className="absolute left-0 top-5 -translate-y-1/2 h-[3px] bg-gradient-to-r from-[#2B59FF] via-[#5A5CFF] to-[#8E4DF8] rounded-full -z-10 transition-all duration-500 ease-out"
               style={{ width: `${((currentStep - 1) / 2) * 100}%` }}
             ></div>
 
@@ -149,14 +150,14 @@ export default function SetupWizard({
               const isActive = step === currentStep
               const isCompleted = step < currentStep
               return (
-                <div key={step} className="flex flex-col items-center px-1">
+                <div key={step} className="flex flex-col items-center relative z-10 px-1">
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 border-2 font-bold cursor-pointer
+                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 border-2 font-bold cursor-pointer text-sm
                       ${isActive
-                        ? 'bg-white border-nexoraBrand text-nexoraBrand shadow-[0_4px_12px_rgba(70,72,216,0.2)] scale-110'
+                        ? 'bg-white border-nexoraBrand text-nexoraBrand shadow-[0_4px_12px_rgba(70,72,216,0.18)] ring-4 ring-nexoraBrandSoft/80 scale-110'
                         : isCompleted
-                          ? 'bg-nexoraBrand border-nexoraBrand text-white'
-                          : 'bg-white border-nexoraBorder text-nexoraSubtle'
+                          ? 'bg-gradient-to-tr from-[#2B59FF] to-[#8E4DF8] border-transparent text-white shadow-sm'
+                          : 'bg-white border-slate-200 text-slate-400'
                       }`}
                     onClick={() => {
                       if (step <= currentStep || (step > currentStep && validateStep())) {
@@ -166,10 +167,15 @@ export default function SetupWizard({
                   >
                     {isCompleted ? <Check className="w-5 h-5 stroke-[3px]" /> : step}
                   </div>
-                  <span className={`mt-2 whitespace-nowrap text-center text-[10px] font-semibold tracking-wide transition-colors duration-300 md:text-xs
-                    ${isActive ? 'text-nexoraBrand font-bold' : isCompleted ? 'text-nexoraText' : 'text-nexoraSubtle'}`}>
-                    {stepName(step)}
-                  </span>
+                  <div className="text-center mt-2.5">
+                    <span className="text-[9px] font-extrabold uppercase tracking-widest text-[#2B59FF]/80 mb-0.5 block">
+                      {currentLanguage === 'vi' ? `Bước ${step}` : `Step ${step}`}
+                    </span>
+                    <span className={`text-[11px] font-extrabold tracking-wide transition-colors duration-300 block whitespace-nowrap
+                      ${isActive ? 'text-nexoraBrand' : isCompleted ? 'text-slate-800' : 'text-slate-400'}`}>
+                      {stepName(step)}
+                    </span>
+                  </div>
                 </div>
               )
             })}

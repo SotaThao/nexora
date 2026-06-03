@@ -16,7 +16,7 @@ describe('SettingsView Component Unit Tests', () => {
     expect(screen.getByText(/Settings Configuration/i)).toBeInTheDocument()
 
     // Tab buttons check
-    expect(screen.getByRole('button', { name: /Profile/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Account$/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /^KYB$/i })).toBeInTheDocument()
   })
 
@@ -224,5 +224,35 @@ describe('SettingsView Component Unit Tests', () => {
     // Verify TAKE PHOTO and CHOOSE FILE options are visible
     expect(screen.getByRole('button', { name: /TAKE PHOTO/i })).toBeInTheDocument()
     expect(screen.getByText(/CHOOSE FILE/i)).toBeInTheDocument()
+  })
+
+  it('renders Affiliate Link tab and displays QR code modal when clicked', () => {
+    render(
+      <LanguageProvider>
+        <SettingsView hasKyb={true} />
+      </LanguageProvider>
+    )
+
+    const affiliateTab = screen.getByRole('button', { name: /Affiliate Link/i })
+    expect(affiliateTab).toBeInTheDocument()
+
+    // Click Affiliate Link tab
+    fireEvent.click(affiliateTab)
+
+    // Verify modal is shown immediately
+    expect(screen.getByText(/Register a New Member/i)).toBeInTheDocument()
+    expect(screen.getByText(/Select Placement Leg/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Save QR/i })).toBeInTheDocument()
+
+    // Close modal
+    const closeBtn = screen.getByTitle(/Close modal/i)
+    fireEvent.click(closeBtn)
+
+    // Modal should be gone
+    expect(screen.queryByText(/Register a New Member/i)).not.toBeInTheDocument()
+
+    // Affiliate Link tab content should be visible
+    expect(screen.getAllByText(/Referral Link/i).length).toBeGreaterThan(0)
+    expect(screen.getByText(/nexora.com\/\?ref=VLP\.\.\.-GG/i)).toBeInTheDocument()
   })
 })

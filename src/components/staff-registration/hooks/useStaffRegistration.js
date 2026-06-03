@@ -92,7 +92,13 @@ export default function useStaffRegistration({ inviteData }) {
   const [regPassword, setRegPassword] = useState('')
   const [regReferralLink, setRegReferralLink] = useState('')
   const [regErrors, setRegErrors] = useState({})
-  const [termsAccepted, setTermsAccepted] = useState(false)
+  const [termsAccepted, setTermsAccepted] = useState(true)
+
+  // Existing Account Link states
+  const [linkEmail, setLinkEmail] = useState('')
+  const [linkPassword, setLinkPassword] = useState('')
+  const [linkError, setLinkError] = useState('')
+  const [isLinkLoggedIn, setIsLinkLoggedIn] = useState(false)
 
   // Profile states
   const [fullName, setFullName] = useState('')
@@ -150,6 +156,7 @@ export default function useStaffRegistration({ inviteData }) {
       setRegEmail(inviteData.email || '')
       setRegConfirmEmail(inviteData.email || '')
       setRegReferralLink(inviteData.biz || '')
+      setLinkEmail(inviteData.email || '')
 
       // If it's a verification lookup (Option A linking) they might already have an ID
       if (inviteData.id && inviteData.id.startsWith('NEX-STAFF-')) {
@@ -558,12 +565,124 @@ export default function useStaffRegistration({ inviteData }) {
       notis = [newNoti, ...notis]
       localStorage.setItem('nexora_notifications', JSON.stringify(notis))
       sessionStorage.setItem('nexora_notifications', JSON.stringify(notis))
+      window.dispatchEvent(new Event('storage'))
     } catch (e) {
       console.error('Failed to update staff database in wizard', e)
     }
 
     setStaffId(searchId.trim().toUpperCase())
     setStep(5)
+  }
+
+  const handleLinkLogin = (e) => {
+    if (e) e.preventDefault()
+    setLinkError('')
+
+    const emailQuery = linkEmail.trim().toLowerCase()
+    const passwordQuery = linkPassword
+
+    if (!emailQuery) {
+      setLinkError(currentLanguage === 'vi' ? 'Email không được để trống.' : 'Email is required.')
+      return
+    }
+    if (!passwordQuery) {
+      setLinkError(currentLanguage === 'vi' ? 'Mật khẩu không được để trống.' : 'Password is required.')
+      return
+    }
+
+    // 1. Check in MOCK_NEXORA_STAFF_PROFILES
+    const foundEntry = Object.entries(MOCK_NEXORA_STAFF_PROFILES).find(
+      ([_, p]) => p.email.toLowerCase() === emailQuery
+    )
+
+    if (foundEntry) {
+      const [staffIdKey, profile] = foundEntry
+      if (passwordQuery.length < 6) {
+        setLinkError(currentLanguage === 'vi' ? 'Mật khẩu phải từ 6 ký tự.' : 'Password must be at least 6 characters.')
+        return
+      }
+      setSearchId(staffIdKey)
+      setLinkedProfile(profile)
+      setIsLinkLoggedIn(true)
+      showToast(
+        currentLanguage === 'vi'
+          ? `Đăng nhập thành công! Chào mừng ${profile.fullName}.`
+          : `Login successful! Welcome ${profile.fullName}.`
+      )
+      return
+    }
+
+    // 2. Check in nexora_pending_accounts (registered via wizard)
+    const accs = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
+    const matchedAcc = accs.find(acc => acc.email === emailQuery)
+    if (matchedAcc) {
+      if (matchedAcc.password !== passwordQuery) {
+        setLinkError(currentLanguage === 'vi' ? 'Mật khẩu không chính xác.' : 'Incorrect password.')
+        return
+      }
+
+      // Try to find if this staff exists in the merchant's staffList
+      const savedSetup = JSON.parse(localStorage.getItem('nexora_merchant_setup') || '{}')
+      const staffInList = savedSetup.staffList?.find(s => s.id === matchedAcc.staffId || s.email === emailQuery)
+      
+      let profile = null
+      if (staffInList) {
+        profile = {
+          fullName: staffInList.fullName,
+          nickname: staffInList.nickname,
+          position: staffInList.position,
+          phone: staffInList.phone,
+          email: staffInList.email,
+          avatar: staffInList.avatar,
+          vlinkpayId: staffInList.paymentAccounts?.vlinkpay || '',
+          payoutConfigs: staffInList.payoutConfigs || {
+            zelle: { enabled: true, value: staffInList.paymentAccounts?.zelle || '', qrCode: '', accountName: staffInList.fullName }
+          }
+        }
+      } else {
+        profile = {
+          fullName: matchedAcc.fullName || matchedAcc.email.split('@')[0],
+          nickname: matchedAcc.nickname || matchedAcc.email.split('@')[0],
+          position: matchedAcc.position || 'Nail Technician',
+          phone: matchedAcc.phone || '',
+          email: matchedAcc.email,
+          avatar: matchedAcc.avatar || '',
+          vlinkpayId: matchedAcc.vlinkpayId || '',
+          payoutConfigs: matchedAcc.payoutConfigs || {}
+        }
+      }
+
+      setSearchId(matchedAcc.staffId || `NEX-STAFF-${emailQuery.slice(0,4).toUpperCase()}`)
+      setLinkedProfile(profile)
+      setIsLinkLoggedIn(true)
+      showToast(
+        currentLanguage === 'vi'
+          ? `Đăng nhập thành công! Chào mừng ${profile.fullName}.`
+          : `Login successful! Welcome ${profile.fullName}.`
+      )
+      return
+    }
+
+    setLinkError(
+      currentLanguage === 'vi'
+        ? 'Tài khoản không tồn tại hoặc mật khẩu sai.'
+        : 'Account does not exist or incorrect password.'
+    )
+  }
+
+  const handleLinkDecline = () => {
+    setIsLinkLoggedIn(false)
+    setLinkedProfile(null)
+    setSearchId('')
+    setLinkEmail(inviteData?.email || '')
+    setLinkPassword('')
+    setLinkError('')
+    setJoinPath(null)
+    showToast(
+      currentLanguage === 'vi'
+        ? 'Đã hủy bỏ yêu cầu liên kết.'
+        : 'Link request cancelled.'
+    )
   }
 
   // Save profile and notify App + LocalStorage
@@ -707,8 +826,8 @@ export default function useStaffRegistration({ inviteData }) {
         const filtered = pendingAccounts.filter(acc => acc.email !== staffAccount.email)
         filtered.push(staffAccount)
         localStorage.setItem('nexora_pending_accounts', JSON.stringify(filtered))
-        window.dispatchEvent(new Event('storage'))
       }
+      window.dispatchEvent(new Event('storage'))
     } catch (e) {
       console.error('Failed to update staff database in wizard', e)
     }
@@ -765,6 +884,13 @@ export default function useStaffRegistration({ inviteData }) {
     editAccountName, setEditAccountName,
     isCapturing, setIsCapturing,
     modalError, setModalError,
+    // linking existing account
+    linkEmail, setLinkEmail,
+    linkPassword, setLinkPassword,
+    linkError, setLinkError,
+    isLinkLoggedIn, setIsLinkLoggedIn,
+    handleLinkLogin,
+    handleLinkDecline,
     // handlers
     handleSearchIdChange,
     handleVlinkpayIdChange,

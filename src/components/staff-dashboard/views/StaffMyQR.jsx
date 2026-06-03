@@ -8,6 +8,8 @@ import { storage } from '../../../utils/storage'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 
+const slugify = (str = '') => str.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+
 export default function StaffMyQR() {
   const { t, currentLanguage } = useTranslation()
   const { staffMember, linkedBusinesses } = useStaffAccount()
@@ -17,6 +19,7 @@ export default function StaffMyQR() {
   const [scanStatus, setScanStatus] = useState('idle') // 'idle' | 'checking' | 'success' | 'error'
   const [customInviteLink, setCustomInviteLink] = useState('')
   const [scanTimeout, setScanTimeout] = useState(null)
+  const [zoomedQr, setZoomedQr] = useState(null)
 
   useEffect(() => {
     return () => {
@@ -214,8 +217,8 @@ export default function StaffMyQR() {
   const handleRequestUnlink = (businessName) => {
     const confirmed = window.confirm(
       currentLanguage === 'vi'
-        ? `Bạn có chắc chắn muốn hủy liên kết với tiệm ${businessName}? Yêu cầu này cần chủ tiệm phê duyệt.`
-        : `Are you sure you want to unlink from ${businessName}? This request must be approved by the business owner.`
+        ? `Bạn có chắc chắn muốn hủy liên kết với tiệm ${businessName}? Hành động này sẽ gỡ bỏ bạn khỏi danh sách nhân viên của tiệm ngay lập tức.`
+        : `Are you sure you want to unlink from ${businessName}? This will immediately remove you from the salon's roster.`
     )
     if (!confirmed) return
 
@@ -224,14 +227,12 @@ export default function StaffMyQR() {
       if (savedSetup) {
         const parsed = JSON.parse(savedSetup)
         if (Array.isArray(parsed.staffList)) {
-          parsed.staffList = parsed.staffList.map(s => {
-            if (s.id === staffMember.id) {
-              return { ...s, status: 'Pending Unlink' }
-            }
-            return s
-          })
-          storage.setItem('nexora_merchant_setup', JSON.stringify(parsed))
+          parsed.staffList = parsed.staffList.filter(s => s.id !== staffMember.id)
         }
+        if (Array.isArray(parsed.touchPoints)) {
+          parsed.touchPoints = parsed.touchPoints.filter(tp => !(tp.type === 'Staff QR' && tp.staffId === staffMember.id))
+        }
+        storage.setItem('nexora_merchant_setup', JSON.stringify(parsed))
       }
 
       // Add a notification for the merchant
@@ -247,10 +248,10 @@ export default function StaffMyQR() {
         id: `noti-unlink-${staffMember.id}-${Date.now()}`,
         staffId: staffMember.id,
         type: 'feedback_alert',
-        title: currentLanguage === 'vi' ? 'Yêu cầu hủy liên kết' : 'Unlink Request',
+        title: currentLanguage === 'vi' ? 'Đã hủy liên kết' : 'Unlinked',
         message: currentLanguage === 'vi'
-          ? `Thợ ${staffMember.fullName} yêu cầu hủy liên kết với tiệm của bạn.`
-          : `Technician ${staffMember.fullName} requested to unlink from your salon.`,
+          ? `Thợ ${staffMember.fullName} đã hủy liên kết khỏi tiệm của bạn.`
+          : `Technician ${staffMember.fullName} has unlinked from your salon.`,
         time: currentLanguage === 'vi' ? 'Vừa xong' : 'Just now',
         read: false,
         linkTab: 'staff'
@@ -263,8 +264,8 @@ export default function StaffMyQR() {
 
       showToast(
         currentLanguage === 'vi'
-          ? 'Đã gửi yêu cầu hủy liên kết tới tiệm!'
-          : 'Unlink request sent to the salon!',
+          ? 'Đã hủy liên kết với tiệm thành công.'
+          : 'Successfully unlinked from the salon.',
         'success'
       )
     } catch (e) {
@@ -339,13 +340,39 @@ export default function StaffMyQR() {
         <div className="divide-y divide-nexoraBorder">
           {linkedBusinesses.map((biz) => {
             const isNotConnected = biz.status === 'Pending Link'
+            const techSlug = `staff/${slugify(staffMember.nickname || staffMember.fullName || '')}`
+            const tipUrl = `${window.location.origin}${window.location.pathname}?flow=customer&tech=${encodeURIComponent(techSlug)}&biz=${encodeURIComponent(biz.businessName)}`
+
             return (
-              <div key={biz.businessStaffLinkId} className="flex items-center justify-between gap-3 py-3">
-                <div className="min-w-0">
-                  <div className="truncate text-sm font-bold text-nexoraText">{biz.displayName} @ {biz.businessName}</div>
-                  <div className="truncate text-xs text-nexoraMuted">{t('staff_dashboard.qr.business_sub')}</div>
+              <div key={biz.businessStaffLinkId} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 border-b border-nexoraBorder last:border-0">
+                <div className="flex items-center gap-3 min-w-0">
+                  {biz.status === 'Active' && (
+                    <div
+                      onClick={() => setZoomedQr({ url: tipUrl, title: biz.businessName })}
+                      className="h-12 w-12 bg-white border border-slate-200 p-1 rounded-xl cursor-zoom-in hover:scale-105 transition-transform flex items-center justify-center shrink-0 shadow-sm relative group"
+                      title={currentLanguage === 'vi' ? 'Nhấp để phóng to QR nhận tips' : 'Click to enlarge Tipping QR'}
+                    >
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(tipUrl)}`}
+                        alt="Tipping QR"
+                        className="h-full w-full object-contain"
+                      />
+                      <div className="absolute inset-0 bg-black/40 rounded-xl opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-[8px] font-black">
+                        ZOOM
+                      </div>
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-bold text-nexoraText">{biz.displayName} @ {biz.businessName}</div>
+                    <div className="truncate text-xs text-nexoraMuted">
+                      {biz.status === 'Active'
+                        ? (currentLanguage === 'vi' ? 'Mã QR quét nhận tiền tip cá nhân tại tiệm này' : 'Personal Tipping QR code for this salon')
+                        : t('staff_dashboard.qr.business_sub')
+                      }
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0 font-sans">
+                <div className="flex items-center gap-2 shrink-0 font-sans justify-end">
                   <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black ${
                     biz.status === 'Active' ? 'bg-emerald-50 text-emerald-600' :
                     biz.status === 'Pending Approval' ? 'bg-amber-50 text-amber-600' :
@@ -491,6 +518,93 @@ export default function StaffMyQR() {
                   VLINK Nail Spa
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Zoomed Tipping QR Modal */}
+      {zoomedQr && (
+        <div
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4 cursor-zoom-out"
+          onClick={() => setZoomedQr(null)}
+        >
+          <div
+            className="bg-white border border-slate-100 rounded-3xl max-w-sm w-full p-6 text-center space-y-5 relative overflow-hidden text-slate-800 shadow-2xl animate-scaleUp cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={() => setZoomedQr(null)}
+              className="absolute right-4 top-4 text-slate-400 hover:text-slate-700 transition p-1.5 rounded-full hover:bg-slate-100"
+              title="Close"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            {/* Header */}
+            <div className="space-y-1 text-center">
+              <span className="text-[9px] font-black text-nexoraBrand uppercase tracking-widest block">
+                {currentLanguage === 'vi' ? 'QR Nhận Tip Cá Nhân' : 'Personal Tipping QR'}
+              </span>
+              <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">
+                {zoomedQr.title}
+              </h3>
+              <p className="text-[10px] text-slate-500 font-medium text-center leading-normal">
+                {currentLanguage === 'vi'
+                  ? `Khách hàng quét mã này để gửi tip trực tiếp cho ${staffMember.nickname || staffMember.fullName}`
+                  : `Customers scan this QR to tip ${staffMember.nickname || staffMember.fullName} directly`}
+              </p>
+            </div>
+
+            {/* QR viewport */}
+            <div className="relative h-56 w-56 mx-auto rounded-2xl border-2 border-slate-100 bg-white p-4 flex items-center justify-center shadow-md">
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(zoomedQr.url)}`}
+                alt="Personal Tipping QR"
+                className="h-full w-full object-contain"
+              />
+            </div>
+
+            {/* Link Copy */}
+            <div className="space-y-2 text-left">
+              <label className="text-[9px] font-black uppercase text-slate-400 tracking-wider">
+                {currentLanguage === 'vi' ? 'Liên Kết Nhận Tip' : 'Tipping Link'}
+              </label>
+              <div className="flex gap-2 bg-slate-50 rounded-xl p-1.5 border border-slate-100 items-center justify-between">
+                <span className="text-[10px] text-slate-500 font-mono truncate max-w-[210px] pl-2">
+                  {zoomedQr.url}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    try {
+                      navigator.clipboard?.writeText(zoomedQr.url)
+                      showToast(
+                        currentLanguage === 'vi' ? 'Đã sao chép liên kết nhận tip!' : 'Tipping link copied!',
+                        'success'
+                      )
+                    } catch (e) {}
+                  }}
+                  className="h-7 px-3 bg-slate-800 text-white rounded-lg text-[10px] font-bold hover:bg-slate-700 transition flex items-center gap-1 shrink-0"
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                  <span>{currentLanguage === 'vi' ? 'Sao chép' : 'Copy'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Simulation button */}
+            <div className="pt-2 border-t border-slate-100">
+              <a
+                href={zoomedQr.url}
+                target="_blank"
+                rel="opener"
+                className="inline-flex w-full items-center justify-center gap-1 text-[11px] font-black text-nexoraBrand hover:underline tracking-wide bg-nexoraBrandSoft py-2 rounded-xl transition"
+              >
+                <span>{currentLanguage === 'vi' ? 'Mở trang tip (Giả lập khách) ›' : 'Open Tipping Page (Simulate) ›'}</span>
+              </a>
             </div>
           </div>
         </div>

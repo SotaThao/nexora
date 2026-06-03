@@ -1,5 +1,6 @@
 import React from 'react'
 import { X, Camera, FolderOpen, AlertTriangle } from 'lucide-react'
+import { renderLabel } from '../../../contexts/LanguageContext'
 
 const PayoutLogos = {
   zelle: (
@@ -104,9 +105,9 @@ export default function PayoutEditModal({
           {/* Account Identifier Input */}
           <div>
             <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
-              {currentLanguage === 'vi'
+              {renderLabel(currentLanguage === 'vi'
                 ? `${walletNames[editingMethod]} ${walletFields[editingMethod]} của bạn *`
-                : `Your ${walletNames[editingMethod]} ${walletFields[editingMethod]} *`}
+                : `Your ${walletNames[editingMethod]} ${walletFields[editingMethod]} *`)}
             </label>
             <input
               type="text"

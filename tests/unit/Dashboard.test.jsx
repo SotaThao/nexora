@@ -217,7 +217,7 @@ describe('Dashboard Component Unit Tests', () => {
     expect(screen.queryByTitle('Settings')).not.toBeInTheDocument();
 
     // Click profile menu button in header
-    const profileBtn = screen.getByLabelText('Profile menu');
+    const profileBtn = screen.getByLabelText('Account menu');
     fireEvent.click(profileBtn);
 
     // Dropdown should be open and display owner info and links
@@ -414,7 +414,7 @@ describe('Dashboard Component Unit Tests', () => {
 
     // Verify Scanner overlay is shown
     expect(screen.getByText('Scan QR Code')).toBeInTheDocument();
-    expect(screen.getByText('Scan VLINKPAY ID to autofill profile data')).toBeInTheDocument();
+    expect(screen.getByText('Scan VLINKPAY ID to autofill account data')).toBeInTheDocument();
 
     // 6. Trigger simulation successful scan (which scans Lisa Tran)
     const simulateBtn = screen.getByRole('button', { name: /Simulate Successful Scan/i });
@@ -427,5 +427,80 @@ describe('Dashboard Component Unit Tests', () => {
     expect(screen.getByPlaceholderText('e.g., mia.tran@gmail.com').value).toBe('lisa@example.com');
     expect(screen.getByPlaceholderText('e.g. VLP-8893-VL').value).toBe('VLP-1102-LISA');
     expect(screen.getByPlaceholderText('e.g. NEX-STAFF-LISA1102').value).toBe('NEX-STAFF-LISA1102');
+  });
+
+  it('opens approval modal when clicking on a pending join request notification', () => {
+    const mockSetup = {
+      businessInfo: { name: 'Golden Glow Nail Spa', industry: 'Nail Salon' },
+      staffList: [
+        {
+          id: 'NEX-STAFF-LISA1102',
+          fullName: 'Lisa Tran',
+          nickname: 'Lisa T.',
+          position: 'Nail Tech',
+          isActive: false,
+          status: 'Pending Acceptance',
+          paymentAccounts: { venmo: '@lisatran-nails', cashapp: '$lisatran', zelle: 'lisa@example.com', vlinkpay: 'VLP-1102-LISA' }
+        }
+      ],
+      touchPoints: [],
+    };
+
+    const joinNoti = [
+      {
+        id: 'noti-join-LISA1102',
+        staffId: 'NEX-STAFF-LISA1102',
+        type: 'feedback_alert',
+        title: 'New Join Request',
+        message: 'Technician Lisa Tran requested to link with your salon.',
+        time: 'Just now',
+        read: false,
+        linkTab: 'staff'
+      }
+    ];
+    localStorage.setItem('nexora_notifications', JSON.stringify(joinNoti));
+
+    render(
+      <LanguageProvider>
+        <Dashboard setupData={mockSetup} verificationStatus="kyb_approved" onLogout={vi.fn()} />
+      </LanguageProvider>
+    );
+
+    // 1. Click the notification icon button
+    const notiBtn = screen.getByTitle('Notifications');
+    fireEvent.click(notiBtn);
+
+    // 2. Click on the Join Request notification
+    const joinNotification = screen.getByText('Technician Lisa Tran requested to link with your salon.');
+    fireEvent.click(joinNotification);
+
+    // 3. Verify approval modal is displayed
+    expect(screen.getByText('Review Join Request')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Mia Tran').value).toBe('Lisa Tran');
+  });
+
+  it('supports selecting custom date range presets and inputs in dashboard overview', () => {
+    const { container } = render(
+      <LanguageProvider>
+        <Dashboard setupData={mockSetupData} onLogout={vi.fn()} />
+      </LanguageProvider>
+    );
+
+    // Switch to Custom date range in the dashboard chart
+    const customBtn = screen.getByRole('button', { name: /Tự chọn|Custom/i });
+    expect(customBtn).toBeInTheDocument();
+    fireEvent.click(customBtn);
+
+    // The Date pickers should be displayed
+    const dateInputs = container.querySelectorAll('input[type="date"]');
+    expect(dateInputs.length).toBe(2);
+
+    // Change the start and end dates
+    fireEvent.change(dateInputs[0], { target: { value: '2026-05-10' } });
+    fireEvent.change(dateInputs[1], { target: { value: '2026-05-15' } });
+
+    // Verify values update correctly
+    expect(dateInputs[0].value).toBe('2026-05-10');
+    expect(dateInputs[1].value).toBe('2026-05-15');
   });
 });

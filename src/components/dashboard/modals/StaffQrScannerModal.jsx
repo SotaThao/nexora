@@ -44,8 +44,8 @@ function StaffQrScannerModal({
           </h3>
           <p className="text-[10px] text-slate-500 font-medium text-center">
             {scanTarget === 'staff'
-              ? (currentLanguage === 'vi' ? 'Quét mã NEXORA STAFF ID để liên kết hồ sơ' : 'Scan NEXORA STAFF ID to link your profile')
-              : (currentLanguage === 'vi' ? 'Quét mã VLINKPAY ID để tự động điền thông tin' : 'Scan VLINKPAY ID to autofill profile data')}
+              ? (currentLanguage === 'vi' ? 'Quét mã NEXORA Personal ID để liên kết tài khoản' : 'Scan NEXORA Personal ID to link your account')
+              : (currentLanguage === 'vi' ? 'Quét mã VLINKPAY ID để tự động điền thông tin tài khoản' : 'Scan VLINKPAY ID to autofill account data')}
           </p>
         </div>
 

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
   User,
   Building2,
@@ -13,7 +13,8 @@ import {
   Camera,
   FolderOpen,
   AlertTriangle,
-  X
+  X,
+  QrCode
 } from 'lucide-react'
 
 const PayoutLogos = {
@@ -107,6 +108,7 @@ export default function ProfileTab({
   savePayoutAccount,
   handleAvatarChange,
   formatDOB,
+  onShowQr,
 }) {
   return (
     <>
@@ -141,31 +143,28 @@ export default function ProfileTab({
 
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
                 <span className="text-nexoraMuted font-bold">Email:</span>
-                <div className="flex items-center gap-1 self-end sm:self-auto min-w-0">
-                  <span className="text-nexoraText font-extrabold truncate" title={profile.email}>{profile.email}</span>
-                  <button
-                    type="button"
-                    onClick={() => showToast(currentLanguage === 'vi' ? 'Chức năng thay đổi email đang được phát triển.' : 'Email modification is currently under development.')}
-                    className="text-blue-500 hover:text-blue-600 font-bold text-[10px] uppercase hover:underline ml-2 shrink-0"
-                  >
-                    Change
-                  </button>
-                </div>
+                <span className="text-nexoraText font-extrabold truncate" title={profile.email}>{profile.email}</span>
               </div>
 
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                <span className="text-nexoraMuted font-bold">Referral ID:</span>
-                <div className="flex items-center gap-1 self-end sm:self-auto">
-                  <span className="font-mono text-nexoraText font-extrabold">{profile.referralId}</span>
+                <span className="text-nexoraMuted font-bold">Referral Link:</span>
+                <div className="flex items-center gap-1 self-end sm:self-auto min-w-0">
+                  <span className="text-nexoraText font-extrabold" title={`https://nexora.com/?ref=${profile.referralId}`}>
+                    {profile.referralId && profile.referralId.length > 8
+                      ? `nexora.com/?ref=${profile.referralId.substring(0, 3)}...${profile.referralId.substring(profile.referralId.length - 3)}`
+                      : `nexora.com/?ref=${profile.referralId}`}
+                  </span>
+                  
+                  {/* Copy Button */}
                   <button
                     type="button"
-                    onClick={() => handleCopy(profile.referralId, 'ref')}
-                    className="text-blue-500 hover:text-blue-600 font-bold text-[10px] uppercase hover:underline ml-2 flex items-center gap-1"
+                    onClick={() => handleCopy(`https://nexora.com/?ref=${profile.referralId}`, 'ref')}
+                    className="text-blue-500 hover:text-blue-600 font-bold text-[10px] uppercase hover:underline ml-2 flex items-center gap-1 shrink-0"
                   >
                     {copiedId === 'ref' ? (
                       <>
                         <Check className="h-3 w-3 text-emerald-600" />
-                        <span className="text-emerald-600">Copied</span>
+                        <span className="text-[#10b981]">Copied</span>
                       </>
                     ) : (
                       <>
@@ -173,6 +172,16 @@ export default function ProfileTab({
                         <span>Copy</span>
                       </>
                     )}
+                  </button>
+
+                  {/* Show QR Button */}
+                  <button
+                    type="button"
+                    onClick={onShowQr}
+                    className="text-blue-500 hover:text-blue-600 font-bold text-[10px] uppercase hover:underline ml-2 flex items-center gap-1 shrink-0"
+                  >
+                    <QrCode className="h-3 w-3" />
+                    <span>Show QR</span>
                   </button>
                 </div>
               </div>

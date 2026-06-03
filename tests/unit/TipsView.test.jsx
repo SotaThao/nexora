@@ -124,7 +124,7 @@ describe('TipsView Component Unit Tests', () => {
     expect(screen.getByText('TX-104')).toBeInTheDocument()
 
     // Search query input
-    const searchInput = screen.getByPlaceholderText(/Tìm thợ, khách hàng, trạm\.\.\./i)
+    const searchInput = screen.getByPlaceholderText(/Tìm mã GD, nhân viên, điểm chạm\.\.\./i)
 
     // Filter by staff "Mia"
     fireEvent.change(searchInput, { target: { value: 'Mia' } })
@@ -165,5 +165,39 @@ describe('TipsView Component Unit Tests', () => {
 
     expect(screen.getByText('Chloe Pham')).toBeInTheDocument()
     expect(screen.getAllByText('$100.00').length).toBeGreaterThan(0)
+  })
+
+  it('allows switching chart range preset and handles custom range picker inputs', () => {
+    const { container } = render(
+      <LanguageProvider>
+        <TipsView transactions={mockTransactions} staff={mockStaff} />
+      </LanguageProvider>
+    )
+
+    // Default range is 7 Days. Let's select "30 Days" ("30 Ngày").
+    const preset30Btn = screen.getByRole('button', { name: '30 Ngày' })
+    expect(preset30Btn).toBeInTheDocument()
+    
+    // Switch to 30 Days
+    fireEvent.click(preset30Btn)
+    
+    // Since mock transactions are 2026-05-29, they should be in the 30-day range
+    const totalVolumeCard = screen.getByText('Tổng Doanh Thu Típ').closest('div')
+    expect(within(totalVolumeCard).getByText('$200.00')).toBeInTheDocument()
+
+    // Now switch to Custom range ("Tự chọn")
+    const presetCustomBtn = screen.getByRole('button', { name: 'Tự chọn' })
+    fireEvent.click(presetCustomBtn)
+
+    // Custom date pickers should now be visible
+    const dateInputs = container.querySelectorAll('input[type="date"]')
+    expect(dateInputs.length).toBe(2) // Start date and End date inputs
+
+    // Change start date and end date to filter out TX-101, TX-102, TX-103, TX-104 (on 2026-05-29)
+    fireEvent.change(dateInputs[0], { target: { value: '2026-05-20' } })
+    fireEvent.change(dateInputs[1], { target: { value: '2026-05-25' } })
+
+    // Since mock transactions are on 2026-05-29, total volume should update to $0.00
+    expect(within(totalVolumeCard).getByText('$0.00')).toBeInTheDocument()
   })
 })

@@ -99,9 +99,10 @@ export function StaffAccountProvider({ staffId = DEMO_STAFF_ID, children }) {
                   const pm = nextAccount.payoutMethods || {}
                   return {
                     ...s,
-                    fullName: nextAccount.defaultDisplayName || s.fullName,
-                    nickname: nextAccount.defaultDisplayName || s.nickname,
-                    avatar: nextAccount.avatar || s.avatar,
+                    fullName: nextAccount.fullName !== undefined ? nextAccount.fullName : s.fullName,
+                    nickname: nextAccount.defaultDisplayName !== undefined ? nextAccount.defaultDisplayName : s.nickname,
+                    avatar: nextAccount.avatar !== undefined ? nextAccount.avatar : s.avatar,
+                    phone: nextAccount.phone !== undefined ? nextAccount.phone : s.phone,
                     paymentAccounts: {
                       ...s.paymentAccounts,
                       venmo: pm.venmo?.enabled ? pm.venmo.value || '' : '',

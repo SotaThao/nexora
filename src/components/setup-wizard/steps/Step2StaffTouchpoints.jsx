@@ -6,6 +6,7 @@ import {
 import CustomSelect from '../../CustomSelect'
 import CountryCodeSelect, { parsePhone } from '../../CountryCodeSelect'
 import { WalletLogos, getTouchpointIcon } from '../constants'
+import { renderLabel } from '../../../contexts/LanguageContext'
 
 export default function Step2StaffTouchpoints({
   t,
@@ -66,7 +67,7 @@ export default function Step2StaffTouchpoints({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-1">{t('setup.staff_fullname')}</label>
+                <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-1">{renderLabel(t('setup.staff_fullname'))}</label>
                 <input
                   type="text"
                   placeholder={t('setup.staff_fullname_placeholder')}
@@ -78,7 +79,16 @@ export default function Step2StaffTouchpoints({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-1">{t('setup.staff_displayname')}</label>
+                <label className="flex items-center text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-1 gap-1">
+                  <span>{renderLabel(t('setup.staff_displayname'))}</span>
+                  <div className="relative group inline-block normal-case font-normal text-nexoraSubtle">
+                    <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
+                      {t('setup.nickname_tooltip')}
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
+                    </div>
+                  </div>
+                </label>
                 <input
                   type="text"
                   placeholder={t('setup.staff_displayname_placeholder')}
@@ -252,7 +262,7 @@ export default function Step2StaffTouchpoints({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="flex items-center text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-1">
-                  <span>{t('setup.tp_name')}</span>
+                  <span>{renderLabel(t('setup.tp_name'))}</span>
                   <div className="relative group inline-block ml-1.5 align-middle normal-case font-normal text-nexoraSubtle">
                     <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">

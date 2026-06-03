@@ -10,6 +10,72 @@ function ReviewsView({ reviews, staff, filter, setFilter, setupData }) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const [sourceFilter, setSourceFilter] = useState('all')
+  const [starFilter, setStarFilter] = useState('all')
+
+  // Reviews filtered ONLY by staff/technician, used for calculating filter counts
+  const reviewsByStaff = useMemo(() => {
+    return reviews.filter((review) => filter === 'all' || review.staffId === filter)
+  }, [reviews, filter])
+
+  const stats = useMemo(() => {
+    if (!reviewsByStaff || reviewsByStaff.length === 0) {
+      return { avg: '0.0', google: 0, yelp: 0, internal: 0 }
+    }
+    let sum = 0
+    let google = 0
+    let yelp = 0
+    let internal = 0
+    reviewsByStaff.forEach((r) => {
+      sum += r.rating || 0
+      const cat = r.category?.toLowerCase() || ''
+      if (cat.includes('google')) {
+        google++
+      } else if (cat.includes('yelp')) {
+        yelp++
+      } else {
+        internal++
+      }
+    })
+    return {
+      avg: (sum / reviewsByStaff.length).toFixed(1),
+      google,
+      yelp,
+      internal
+    }
+  }, [reviewsByStaff])
+
+  const counts = useMemo(() => {
+    const total = reviewsByStaff.length
+    let google = 0
+    let yelp = 0
+    let lowStars = 0
+    const stars = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
+
+    reviewsByStaff.forEach((r) => {
+      const cat = r.category?.toLowerCase() || ''
+      if (cat.includes('google')) {
+        google++
+      } else if (cat.includes('yelp')) {
+        yelp++
+      }
+      
+      if ((r.rating || 0) <= 3) {
+        lowStars++
+      }
+
+      if (r.rating >= 1 && r.rating <= 5) {
+        stars[r.rating]++
+      }
+    })
+
+    return {
+      all: total,
+      google,
+      yelp,
+      lowStars,
+      stars
+    }
+  }, [reviewsByStaff])
 
   const reviewLinks = useMemo(() => {
     const defaultLinks = {
@@ -21,11 +87,8 @@ function ReviewsView({ reviews, staff, filter, setFilter, setupData }) {
   }, [setupData])
 
   const filtered = useMemo(() => {
-    return reviews.filter((review) => {
-      // 1. Staff Filter
-      const matchesStaff = filter === 'all' || review.staffId === filter
-
-      // 2. Source / Rating Filter
+    return reviewsByStaff.filter((review) => {
+      // 1. Source / Rating Filter
       let matchesSource = true
       if (sourceFilter === 'google') {
         matchesSource = review.category?.toLowerCase().includes('google')
@@ -35,9 +98,15 @@ function ReviewsView({ reviews, staff, filter, setFilter, setupData }) {
         matchesSource = review.rating <= 3
       }
 
-      return matchesStaff && matchesSource
+      // 2. Star Filter
+      let matchesStar = true
+      if (starFilter !== 'all') {
+        matchesStar = review.rating === Number(starFilter)
+      }
+
+      return matchesSource && matchesStar
     })
-  }, [reviews, filter, sourceFilter])
+  }, [reviewsByStaff, sourceFilter, starFilter])
 
   return (
     <div className="space-y-5">
@@ -47,43 +116,113 @@ function ReviewsView({ reviews, staff, filter, setFilter, setupData }) {
         <p className="mt-1 text-xs text-nexoraMuted">{renderTextWithGoldStars(t('setup.review_routing_policy'))}</p>
       </div>
 
+      {/* Overview Stats Cards Grid */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Panel className="p-4 flex items-center justify-between">
+          <div>
+            <small className="text-[10px] font-black text-nexoraMuted uppercase tracking-widest">
+              {t('dashboard.review_kpi.avg_rating') || 'Average Rating'}
+            </small>
+            <h3 className="mt-1 text-2xl font-black text-nexoraText flex items-center gap-1">
+              {stats.avg} <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
+            </h3>
+          </div>
+        </Panel>
+        <Panel className="p-4 flex items-center justify-between">
+          <div>
+            <small className="text-[10px] font-black text-nexoraMuted uppercase tracking-widest">
+              {t('dashboard.review_kpi.google_reviews') || 'Google Reviews'}
+            </small>
+            <h3 className="mt-1 text-2xl font-black text-nexoraText">{stats.google}</h3>
+          </div>
+        </Panel>
+        <Panel className="p-4 flex items-center justify-between">
+          <div>
+            <small className="text-[10px] font-black text-nexoraMuted uppercase tracking-widest">
+              {t('dashboard.review_kpi.yelp_reviews') || 'Yelp Reviews'}
+            </small>
+            <h3 className="mt-1 text-2xl font-black text-nexoraText">{stats.yelp}</h3>
+          </div>
+        </Panel>
+        <Panel className="p-4 flex items-center justify-between">
+          <div>
+            <small className="text-[10px] font-black text-nexoraMuted uppercase tracking-widest">
+              {t('dashboard.review_kpi.internal_feedback') || 'Internal Feedback'}
+            </small>
+            <h3 className="mt-1 text-2xl font-black text-nexoraText">{stats.internal}</h3>
+          </div>
+        </Panel>
+      </div>
+
       {/* Filter Toolbar */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-white p-3 rounded-xl border border-nexoraBorder/60 shadow-sm">
-        {/* Source & Rating Filters (Left) */}
-        <div className="flex flex-wrap gap-1.5">
-          {[
-            { id: 'all', label: t('staff_detail.tab_all') || 'All' },
-            { id: 'google', label: t('dashboard.review_kpi.google_reviews') || 'Google' },
-            { id: 'yelp', label: t('dashboard.review_kpi.yelp_reviews') || 'Yelp' },
-            { id: 'low_stars', label: t('dashboard.review_kpi.low_stars_filter') || '3★ or below' }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setSourceFilter(tab.id)}
-              className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold uppercase transition cursor-pointer select-none ${
-                sourceFilter === tab.id
-                  ? 'bg-nexoraBrand text-white shadow-sm'
-                  : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between bg-white p-3 rounded-xl border border-nexoraBorder/60 shadow-sm">
+        {/* Left: Source Filters */}
+        <div className="space-y-1 w-full lg:w-auto">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-nexoraMuted block">
+            {t('dashboard.review_kpi.review_source') || 'Review Source'}
+          </span>
+          <div className="flex flex-wrap gap-1.5">
+            {[
+              { id: 'all', label: `${t('staff_detail.tab_all') || 'All'} (${counts.all})` },
+              { id: 'google', label: `${t('dashboard.review_kpi.google_reviews') || 'Google'} (${counts.google})` },
+              { id: 'yelp', label: `${t('dashboard.review_kpi.yelp_reviews') || 'Yelp'} (${counts.yelp})` },
+              { id: 'low_stars', label: `${t('dashboard.review_kpi.low_stars_filter') || '3★ or below'} (${counts.lowStars})` }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setSourceFilter(tab.id)}
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold uppercase transition cursor-pointer select-none ${
+                  sourceFilter === tab.id
+                    ? 'bg-nexoraBrand text-white shadow-sm'
+                    : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Technician Dropdown Filter (Right) */}
-        <div className="w-full sm:w-48 shrink-0">
-          <CustomSelect
-            size="sm"
-            className="font-semibold"
-            buttonClass="h-9 px-3 text-xs"
-            value={filter}
-            onChange={(event) => setFilter(event.target.value)}
-            options={[
-              { value: 'all', label: t('staff_detail.tab_all') },
-              ...staff.map((member) => ({ value: member.id, label: member.nickname }))
-            ]}
-          />
+        {/* Right: Star & Tech Dropdowns */}
+        <div className="flex flex-col sm:flex-row gap-3 items-center shrink-0 w-full lg:w-auto">
+          {/* Star Filter Dropdown */}
+          <div className="space-y-1 w-full sm:w-48">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-nexoraMuted block">
+              {t('dashboard.review_kpi.star_rating') || 'Star Rating'}
+            </span>
+            <CustomSelect
+              size="sm"
+              className="font-semibold"
+              buttonClass="h-9 px-3 text-xs"
+              value={starFilter}
+              onChange={(event) => setStarFilter(event.target.value)}
+              options={[
+                { value: 'all', label: `${t('dashboard.review_kpi.all_stars') || 'All Stars'} (${counts.all})` },
+                ...[5, 4, 3, 2, 1].map((starNum) => ({
+                  value: String(starNum),
+                  label: `${starNum}★ (${counts.stars[starNum]})`
+                }))
+              ]}
+            />
+          </div>
+
+          {/* Technician Dropdown */}
+          <div className="space-y-1 w-full sm:w-48">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-nexoraMuted block">
+              {t('dashboard.activity_log.filter_staff') || 'Technician'}
+            </span>
+            <CustomSelect
+              size="sm"
+              className="font-semibold"
+              buttonClass="h-9 px-3 text-xs"
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+              options={[
+                { value: 'all', label: t('staff_detail.tab_all') },
+                ...staff.map((member) => ({ value: member.id, label: member.nickname }))
+              ]}
+            />
+          </div>
         </div>
       </div>
 

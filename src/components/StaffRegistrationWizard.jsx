@@ -122,6 +122,14 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
               handleLinkExistingProfile={reg.handleLinkExistingProfile}
               onReturnToMerchant={onReturnToMerchant}
               MOCK_NEXORA_STAFF_PROFILES={MOCK_NEXORA_STAFF_PROFILES}
+              linkEmail={reg.linkEmail}
+              setLinkEmail={reg.setLinkEmail}
+              linkPassword={reg.linkPassword}
+              setLinkPassword={reg.setLinkPassword}
+              linkError={reg.linkError}
+              isLinkLoggedIn={reg.isLinkLoggedIn}
+              handleLinkLogin={reg.handleLinkLogin}
+              handleLinkDecline={reg.handleLinkDecline}
             />
           )}
 
@@ -150,6 +158,8 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
               t={reg.t}
               isSelfServe={reg.isSelfServe}
               inviteData={inviteData}
+              termsAccepted={reg.termsAccepted}
+              setTermsAccepted={reg.setTermsAccepted}
               handleRegisterSubmit={reg.handleRegisterSubmit}
               handleVerifyOtp={reg.handleVerifyOtp}
               autoFillOtp={reg.autoFillOtp}

@@ -52,11 +52,35 @@ export default function StaffDetailView({
   onQr,
   onDelete
 }) {
-  const { t } = useTranslation()
+  const { currentLanguage, t } = useTranslation()
   const [copiedWallet, setCopiedWallet] = useState(null)
   const [reviewFilter, setReviewFilter] = useState('all') // 'all' | 'google' | 'private'
   const [hoverIndex, setHoverIndex] = useState(null)
   const chartRef = useRef(null)
+
+  const [range, setRange] = useState('7 Days')
+  const [startDate, setStartDate] = useState('2026-05-20')
+  const [endDate, setEndDate] = useState('2026-05-26')
+
+  const handleRangeChange = (newRange) => {
+    setRange(newRange)
+    if (newRange === '7 Days') {
+      setStartDate('2026-05-20')
+      setEndDate('2026-05-26')
+    } else if (newRange === '30 Days') {
+      setStartDate('2026-04-27')
+      setEndDate('2026-05-26')
+    } else if (newRange === '90 Days') {
+      setStartDate('2026-02-27')
+      setEndDate('2026-05-26')
+    } else if (newRange === '180 Days') {
+      setStartDate('2025-11-28')
+      setEndDate('2026-05-26')
+    } else if (newRange === '365 Days') {
+      setStartDate('2025-05-27')
+      setEndDate('2026-05-26')
+    }
+  }
 
   // 1. Calculate baseline and dynamic statistics
   const stats = useMemo(() => {
@@ -86,12 +110,43 @@ export default function StaffDetailView({
 
     // Filter reviews associated with this tech
     const staffReviews = reviews.filter(
-      (rev) => rev.staffId === staffMember.id || rev.staffName === staffMember.nickname
+      (rev) => rev.staffId === staffMember.id || rev.staffName === rev.staffName
     )
 
-    // Calculate alignment values (exact match to dashboard leaderboard data)
-    const totalTips = baseline.tips
-    const totalReviews = baseline.reviews
+    // Filter transactions and reviews by date range
+    const staffTxFiltered = staffTx.filter((tx) => {
+      const date = tx.dateTime.split(' ')[0]
+      return date >= startDate && date <= endDate
+    })
+
+    const staffReviewsFiltered = staffReviews.filter((rev) => {
+      return rev.date >= startDate && rev.date <= endDate
+    })
+
+    const hasRealTxs = staffTxFiltered.some(tx => tx.status === 'Success')
+
+    // Scale multiplier based on selected range if using baseline fallback
+    let multiplier = 1
+    if (range === '30 Days') multiplier = 4
+    else if (range === '90 Days') multiplier = 12
+    else if (range === '180 Days') multiplier = 24
+    else if (range === '365 Days') multiplier = 52
+    else if (range === 'Custom') {
+      const start = new Date(startDate)
+      const end = new Date(endDate)
+      const diffTime = Math.abs(end - start)
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
+      multiplier = Math.max(0.1, diffDays / 7)
+    }
+
+    const totalTips = hasRealTxs
+      ? staffTxFiltered.reduce((sum, tx) => tx.status === 'Success' ? sum + tx.amount : sum, 0)
+      : baseline.tips * multiplier
+
+    const totalReviews = staffReviewsFiltered.length > 0
+      ? staffReviewsFiltered.length
+      : Math.round(baseline.reviews * multiplier)
+
     const averageRating = baseline.rating.toFixed(2)
     const conversion = baseline.conversion
     const mockScans = Math.round(totalReviews / (conversion / 100))
@@ -102,23 +157,106 @@ export default function StaffDetailView({
       totalReviews,
       conversion,
       specialty: baseline.specialty,
-      recentTransactions: staffTx,
-      filteredReviews: staffReviews,
+      recentTransactions: staffTxFiltered,
+      filteredReviews: staffReviewsFiltered,
       scansCount: mockScans
     }
-  }, [staffMember, transactions, reviews])
+  }, [staffMember, transactions, reviews, startDate, endDate, range])
 
   // 2. Generate tips over time data for SVG chart
   const chartData = useMemo(() => {
     if (!stats) return []
-    const total = stats.totalTips
-    const percentages = [0.12, 0.16, 0.22, 0.14, 0.18, 0.15, 0.03] // Weekly tip distribution
-    const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
-    return days.map((day, index) => ({
-      label: t(`common.days.${day}`),
-      value: total * percentages[index]
-    }))
-  }, [stats, t])
+    const txList = stats.recentTransactions.filter(tx => tx.status === 'Success')
+
+    // If there are real transactions in the filtered list, group them:
+    if (txList.length > 0) {
+      if (range === '7 Days') {
+        const dates = []
+        let curr = new Date(startDate + 'T00:00:00')
+        const end = new Date(endDate + 'T00:00:00')
+        while (curr <= end) {
+          dates.push(curr.toISOString().split('T')[0])
+          curr.setDate(curr.getDate() + 1)
+        }
+
+        return dates.map(dateStr => {
+          const dateObj = new Date(dateStr + 'T00:00:00')
+          const dayIndex = dateObj.getDay()
+          const daysOfWeek = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
+          const label = t(`common.days.${daysOfWeek[dayIndex]}`)
+          const value = txList
+            .filter(tx => tx.dateTime.startsWith(dateStr))
+            .reduce((sum, tx) => sum + tx.amount, 0)
+          return { label, value }
+        })
+      } else {
+        const start = new Date(startDate + 'T00:00:00')
+        const end = new Date(endDate + 'T00:00:00')
+        const totalTime = end - start
+        const pointsCount = 5
+
+        const chartPoints = []
+        for (let i = 0; i < pointsCount; i++) {
+          const intervalStart = new Date(start.getTime() + (totalTime / pointsCount) * i)
+          const intervalEnd = new Date(start.getTime() + (totalTime / pointsCount) * (i + 1))
+
+          const value = txList
+            .filter(tx => {
+              const txDate = new Date(tx.dateTime.replace(' ', 'T') + ':00')
+              return txDate >= intervalStart && txDate < intervalEnd
+            })
+            .reduce((sum, tx) => sum + tx.amount, 0)
+
+          let label = ''
+          if (range === '30 Days') {
+            label = i === pointsCount - 1
+              ? (currentLanguage === 'vi' ? 'Hôm nay' : 'Today')
+              : `${currentLanguage === 'vi' ? 'Tuần' : 'Week'} ${i + 1}`
+          } else {
+            const monthNames = currentLanguage === 'vi'
+              ? ['Th 1', 'Th 2', 'Th 3', 'Th 4', 'Th 5', 'Th 6', 'Th 7', 'Th 8', 'Th 9', 'Th 10', 'Th 11', 'Th 12']
+              : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            label = `${monthNames[intervalStart.getMonth()]} ${intervalStart.getDate()}`
+          }
+          chartPoints.push({ label, value })
+        }
+        return chartPoints
+      }
+    } else {
+      // Generate visual mock data scaled to stats.totalTips
+      const total = stats.totalTips
+      if (range === '7 Days') {
+        const percentages = [0.12, 0.16, 0.22, 0.14, 0.18, 0.15, 0.03]
+        const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+        return days.map((day, index) => ({
+          label: t(`common.days.${day}`),
+          value: total * percentages[index]
+        }))
+      } else if (range === '30 Days') {
+        const percentages = [0.18, 0.23, 0.20, 0.25, 0.14]
+        return percentages.map((pct, index) => ({
+          label: index === percentages.length - 1
+            ? (currentLanguage === 'vi' ? 'Hôm nay' : 'Today')
+            : `${currentLanguage === 'vi' ? 'Tuần' : 'Week'} ${index + 1}`,
+          value: total * pct
+        }))
+      } else {
+        const percentages = [0.15, 0.22, 0.18, 0.25, 0.20]
+        const start = new Date(startDate + 'T00:00:00')
+        const end = new Date(endDate + 'T00:00:00')
+        const totalTime = end - start
+
+        return percentages.map((pct, index) => {
+          const pDate = new Date(start.getTime() + (totalTime / (percentages.length - 1)) * index)
+          const monthNames = currentLanguage === 'vi'
+            ? ['Th 1', 'Th 2', 'Th 3', 'Th 4', 'Th 5', 'Th 6', 'Th 7', 'Th 8', 'Th 9', 'Th 10', 'Th 11', 'Th 12']
+            : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+          const label = `${monthNames[pDate.getMonth()]} ${pDate.getDate()}`
+          return { label, value: total * pct }
+        })
+      }
+    }
+  }, [stats, t, range, startDate, endDate, currentLanguage])
 
   // 3. Build bezier points for weekly trend SVG
   const svgMetrics = useMemo(() => {
@@ -360,7 +498,69 @@ export default function StaffDetailView({
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* 3. WEEKLY TIPS TREND CHART */}
         <div className="nexora-card p-5 shadow-sm">
-          <h2 className="text-sm font-extrabold text-nexoraText uppercase tracking-wider mb-4">{t('staff_detail.weekly_trend')}</h2>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
+            <h2 className="text-sm font-extrabold text-nexoraText uppercase tracking-wider">
+              {range === '7 Days' ? t('staff_detail.weekly_trend') : (currentLanguage === 'vi' ? 'Hiệu Suất Tiền Típ' : 'Tips Performance Trend')}
+            </h2>
+            <div className="flex flex-wrap items-center gap-2 justify-end">
+              {['7 Days', '30 Days', '90 Days', '180 Days', '365 Days', 'Custom'].map((item) => {
+                const rangeLabel = (itm) => {
+                  return {
+                    '7 Days': t('dashboard.chart.7_days'),
+                    '30 Days': t('dashboard.chart.30_days'),
+                    '90 Days': t('dashboard.chart.90_days'),
+                    '180 Days': t('dashboard.chart.180_days'),
+                    '365 Days': t('dashboard.chart.365_days')
+                  }[itm] || itm
+                }
+                return (
+                  <button
+                    key={item}
+                    onClick={() => handleRangeChange(item)}
+                    className={`min-h-8 rounded-lg px-3 text-[11px] font-bold transition cursor-pointer ${
+                      range === item
+                        ? 'bg-nexoraBrand text-white shadow-sm'
+                        : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:text-nexoraText hover:bg-slate-200'
+                    }`}
+                  >
+                    {item === 'Custom' 
+                      ? (currentLanguage === 'vi' ? 'Tự chọn' : 'Custom')
+                      : rangeLabel(item)}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Custom date range inline inputs */}
+          {range === 'Custom' && (
+            <div className="flex flex-wrap items-center justify-end gap-3 mb-4 animate-fadeIn border-t border-dashed border-nexoraRule pt-3">
+              <div className="flex items-center gap-1.5">
+                <label className="text-[10px] font-bold uppercase text-nexoraMuted tracking-wider">
+                  {currentLanguage === 'vi' ? 'Từ ngày' : 'From'}
+                </label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  max={endDate}
+                  className="h-8 rounded border border-nexoraBorder px-2.5 text-xs font-semibold outline-none focus:border-nexoraBrand focus:ring-1 focus:ring-nexoraBrand/20 text-nexoraText bg-white cursor-pointer animate-fadeIn"
+                />
+              </div>
+              <div className="flex items-center gap-1.5">
+                <label className="text-[10px] font-bold uppercase text-nexoraMuted tracking-wider">
+                  {currentLanguage === 'vi' ? 'Đến ngày' : 'To'}
+                </label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  min={startDate}
+                  className="h-8 rounded border border-nexoraBorder px-2.5 text-xs font-semibold outline-none focus:border-nexoraBrand focus:ring-1 focus:ring-nexoraBrand/20 text-nexoraText bg-white cursor-pointer animate-fadeIn"
+                />
+              </div>
+            </div>
+          )}
           {svgMetrics ? (
             <div className="space-y-4">
               <div
@@ -479,8 +679,8 @@ export default function StaffDetailView({
               </div>
 
               <div className="flex justify-between text-[11px] font-semibold text-nexoraSubtle">
-                {chartData.map((d) => (
-                  <span key={d.label}>{d.label}</span>
+                {chartData.map((d, i) => (
+                  <span key={`${d.label}-${i}`}>{d.label}</span>
                 ))}
               </div>
             </div>

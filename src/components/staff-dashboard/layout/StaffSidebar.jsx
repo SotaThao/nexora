@@ -33,7 +33,14 @@ export default function StaffSidebar({ activeScreen, onNavigate, onLogout, isOpe
       </div>
 
       {/* Profile card */}
-      <div className="mt-6 flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-4">
+      <button
+        type="button"
+        onClick={() => {
+          onNavigate('profile')
+          if (isMobile && onClose) onClose()
+        }}
+        className="mt-6 flex w-full items-center text-left gap-3 rounded-xl border border-white/10 bg-white/5 p-4 transition hover:bg-white/10 focus:outline-none cursor-pointer"
+      >
         {account.avatar ? (
           <img src={account.avatar} alt="" className="h-11 w-11 rounded-full border border-white/10 object-cover" />
         ) : (
@@ -41,11 +48,11 @@ export default function StaffSidebar({ activeScreen, onNavigate, onLogout, isOpe
             {displayName.charAt(0)}
           </div>
         )}
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="truncate text-sm font-bold text-white">{staffMember.fullName || displayName}</div>
           <div className="mt-0.5 truncate text-[11px] text-white/50">{t('staff_dashboard.staff_id')}: {staffMember.id}</div>
         </div>
-      </div>
+      </button>
 
       {/* Navigation */}
       <nav className="mt-6 flex-1 space-y-1.5 overflow-y-auto pr-1">
