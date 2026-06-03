@@ -57,8 +57,8 @@ describe('ReviewsView Component Unit Tests', () => {
 
     // Check source tabs with counts
     expect(screen.getByRole('button', { name: /All \(3\)/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Google \(1\)/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Yelp \(1\)/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Google Reviews \(1\)/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Yelp Reviews \(1\)/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /3★ or below \(1\)/i })).toBeInTheDocument()
   })
 
@@ -78,7 +78,7 @@ describe('ReviewsView Component Unit Tests', () => {
     )
 
     // Click Google filter
-    const googleBtn = screen.getByRole('button', { name: /Google \(1\)/i })
+    const googleBtn = screen.getByRole('button', { name: /Google Reviews \(1\)/i })
     fireEvent.click(googleBtn)
 
     expect(screen.getByText('Mia is great!')).toBeInTheDocument()
