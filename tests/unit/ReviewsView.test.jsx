@@ -50,11 +50,11 @@ describe('ReviewsView Component Unit Tests', () => {
       </LanguageProvider>
     )
 
-    // Check source tabs with counts
-    expect(screen.getByRole('button', { name: /All.*3/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Google.*1/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Yelp.*1/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /3★.*1/i })).toBeInTheDocument()
+    // Check source tabs with counts using specific anchored name matchers to avoid overlap with dropdowns
+    expect(screen.getByRole('button', { name: /^All\s*\(3\)$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Google.*\(1\)$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Yelp.*\(1\)$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^3★.*\(1\)$/i })).toBeInTheDocument()
   })
 
   it('filters reviews by source selection', () => {
@@ -71,13 +71,10 @@ describe('ReviewsView Component Unit Tests', () => {
     )
 
     // Click Google filter
-    const googleBtn = screen.getByRole('button', { name: /Google Reviews \(1\)/i })
+    const googleBtn = screen.getByRole('button', { name: /^Google.*\(1\)$/i })
     fireEvent.click(googleBtn)
 
-    screen.debug()
-
-    const reviewText = await screen.findByText(/Mia/i)
-    expect(reviewText).toBeInTheDocument()
+    expect(screen.getByText(/Mia is great!/i)).toBeInTheDocument()
     expect(screen.queryByText(/Good service/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/Too slow/i)).not.toBeInTheDocument()
   })
