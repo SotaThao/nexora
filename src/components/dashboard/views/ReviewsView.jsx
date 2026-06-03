@@ -85,7 +85,7 @@ function ReviewsView({ reviews, staff, filter, setFilter, setupData }) {
   }, [setupData])
 
   const filtered = useMemo(() => {
-    return reviewsByStaff.filter((review) => {
+    const res = reviewsByStaff.filter((review) => {
       // 1. Source / Rating Filter
       let matchesSource = true
       if (sourceFilter === 'google') {
@@ -104,6 +104,8 @@ function ReviewsView({ reviews, staff, filter, setFilter, setupData }) {
 
       return matchesSource && matchesStar
     })
+    console.log('DEBUG sourceFilter:', sourceFilter, 'starFilter:', starFilter, 'filtered count:', res.length, 'ids:', res.map(r => r.id));
+    return res
   }, [reviewsByStaff, sourceFilter, starFilter])
 
   return (
