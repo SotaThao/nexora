@@ -92,6 +92,7 @@ export default function useStaffRegistration({ inviteData }) {
   const [regPassword, setRegPassword] = useState('')
   const [regReferralLink, setRegReferralLink] = useState('')
   const [regErrors, setRegErrors] = useState({})
+  const [termsAccepted, setTermsAccepted] = useState(false)
 
   // Profile states
   const [fullName, setFullName] = useState('')
@@ -242,7 +243,6 @@ export default function useStaffRegistration({ inviteData }) {
     setNexoraStatus('checking')
 
     const timer = setTimeout(() => {
-      console.log('[DEBUG STAFF ID] Searching in wizard for:', upperVal)
       const profile = MOCK_NEXORA_STAFF_PROFILES[upperVal]
       if (profile) {
         setLinkedProfile(profile)
@@ -282,7 +282,6 @@ export default function useStaffRegistration({ inviteData }) {
     setVlinkpayStatus('checking')
 
     const timer = setTimeout(() => {
-      console.log('[DEBUG VLINKPAY ID] Searching in wizard for:', upperVal)
       const matchedProfile = Object.values(MOCK_NEXORA_STAFF_PROFILES).find(
         p => p.vlinkpayId?.toUpperCase() === upperVal
       )
@@ -342,6 +341,11 @@ export default function useStaffRegistration({ inviteData }) {
       errors.password = currentLanguage === 'vi' ? 'Mật khẩu không được để trống' : 'Password is required'
     } else if (regPassword.length < 6) {
       errors.password = currentLanguage === 'vi' ? 'Mật khẩu phải từ 6 ký tự' : 'Password must be at least 6 characters'
+    }
+    if (!termsAccepted) {
+      errors.terms = currentLanguage === 'vi'
+        ? 'Bạn phải đồng ý với Điều khoản & Điều kiện để tiếp tục.'
+        : 'You must agree to the Terms & Conditions to proceed.'
     }
 
     if (Object.keys(errors).length > 0) {
@@ -738,6 +742,7 @@ export default function useStaffRegistration({ inviteData }) {
     regPassword, setRegPassword,
     regReferralLink, setRegReferralLink,
     regErrors, setRegErrors,
+    termsAccepted, setTermsAccepted,
     // profile
     fullName, setFullName,
     nickname, setNickname,
