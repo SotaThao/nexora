@@ -51,10 +51,10 @@ describe('ReviewsView Component Unit Tests', () => {
     )
 
     // Check source tabs with counts
-    expect(screen.getByRole('button', { name: /All/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Google/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Yelp/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /3★/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /All \(3\)/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Google Reviews \(1\)/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Yelp Reviews \(1\)/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /3★ or below \(1\)/i })).toBeInTheDocument()
   })
 
   it('filters reviews by source selection', () => {
@@ -71,11 +71,11 @@ describe('ReviewsView Component Unit Tests', () => {
     )
 
     // Click Google filter
-    const googleBtn = screen.getByRole('button', { name: /Google/i })
+    const googleBtn = screen.getByRole('button', { name: /Google Reviews \(1\)/i })
     fireEvent.click(googleBtn)
 
-    expect(screen.getByText('Mia is great!')).toBeInTheDocument()
-    expect(screen.queryByText('Good service')).not.toBeInTheDocument()
-    expect(screen.queryByText('Too slow')).not.toBeInTheDocument()
+    expect(screen.getByText(/Mia is great!/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Good service/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Too slow/i)).not.toBeInTheDocument()
   })
 })
