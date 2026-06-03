@@ -449,7 +449,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#0B1C30] font-sans antialiased">
+    <div className="min-h-dvh bg-[#F8FAFC] text-[#0B1C30] font-sans antialiased">
       {view === 'login' ? (
         <LoginScreen
           email={email}

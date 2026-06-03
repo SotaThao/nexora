@@ -15,7 +15,7 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
   const reg = useStaffRegistration({ inviteData })
 
   return (
-    <div className="min-h-screen bg-nexoraCanvas text-nexoraText font-sans antialiased relative selection:bg-nexoraBrandSoft selection:text-nexoraBrand py-6 sm:py-12">
+    <div className="min-h-dvh bg-nexoraCanvas text-nexoraText font-sans antialiased relative selection:bg-nexoraBrandSoft selection:text-nexoraBrand py-6 sm:py-12">
       <style>{`
         @keyframes shake {
           0%, 100% { transform: translateX(0); }

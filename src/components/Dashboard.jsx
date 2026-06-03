@@ -744,7 +744,7 @@ export default function Dashboard({
   }
 
   return (
-    <div className="min-h-screen bg-nexoraCanvas font-sans text-nexoraText">
+    <div className="min-h-dvh bg-nexoraCanvas font-sans text-nexoraText">
       <DashboardSidebar 
         activeMenu={activeMenu} 
         setActiveMenu={handleNavigateMenu} 
@@ -792,7 +792,7 @@ export default function Dashboard({
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
         />
 
-        <main className="min-h-screen p-4 sm:p-6 lg:p-7">
+        <main className="min-h-dvh p-4 sm:p-6 lg:p-7">
           {activeMenu !== 'overview' && !viewingStaffDetailId && (
             <button
               onClick={() => handleNavigateMenu('overview')}
