@@ -48,7 +48,7 @@ describe('StaffRegistrationWizard Component Unit Tests', () => {
     expect(screen.getByText(/Register Account/i)).toBeInTheDocument()
     
     // Verify Referral Link is prefilled and disabled/read-only
-    const referralInput = screen.getByPlaceholderText('e.g. nexora-salon-link')
+    const referralInput = screen.getByPlaceholderText('Enter referral code...')
     expect(referralInput).toBeDisabled()
     expect(referralInput).toHaveValue('Golden Glow Nail Spa')
 
@@ -77,7 +77,7 @@ describe('StaffRegistrationWizard Component Unit Tests', () => {
     fireEvent.click(verifyBtn)
 
     // Step 2: Profile Setup
-    expect(screen.getByText(/Personal Profile/i)).toBeInTheDocument()
+    expect(screen.getByText(/Personal Account/i)).toBeInTheDocument()
     
     // Profile name pre-filled
     const nameInput = screen.getByPlaceholderText('Lisa Marie Tran')
@@ -145,27 +145,28 @@ describe('StaffRegistrationWizard Component Unit Tests', () => {
     )
 
     // Option selection page should show
-    expect(screen.getByText('I already have a Profile')).toBeInTheDocument()
+    expect(screen.getByText('I already have an Account')).toBeInTheDocument()
 
-    // Click "I already have a Profile"
-    fireEvent.click(screen.getByText('I already have a Profile'))
+    // Click "I already have an Account"
+    fireEvent.click(screen.getByText('I already have an Account'))
 
-    // Lookup input should display
-    expect(screen.getByPlaceholderText('e.g. NEX-STAFF-LISA1102')).toBeInTheDocument()
+    // Email/password inputs should display
+    expect(screen.getByPlaceholderText('e.g. lisa@example.com')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('••••••••')).toBeInTheDocument()
 
-    // Type recognized Staff ID
-    const input = screen.getByPlaceholderText('e.g. NEX-STAFF-LISA1102')
-    fireEvent.change(input, { target: { value: 'NEX-STAFF-LISA1102' } })
+    // Type credentials
+    fireEvent.change(screen.getByPlaceholderText('e.g. lisa@example.com'), { target: { value: 'lisa@example.com' } })
+    fireEvent.change(screen.getByPlaceholderText('••••••••'), { target: { value: 'password123' } })
 
-    // Click verify
-    fireEvent.click(screen.getByRole('button', { name: /Verify/i }))
+    // Click Login & Verify
+    fireEvent.click(screen.getByRole('button', { name: /Login & Verify/i }))
 
     // Preview details of Lisa Tran should be shown
     expect(screen.getAllByText('Lisa Tran').length).toBeGreaterThan(0)
-    expect(screen.getByText(/Nail Tech • \(408\) 555-2345/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/Nail Tech/i).length).toBeGreaterThan(0)
 
-    // Click Accept & Link
-    const acceptBtn = screen.getByRole('button', { name: /Accept & Link with Salon/i })
+    // Click Accept & Join
+    const acceptBtn = screen.getByRole('button', { name: /Accept & Join/i })
     fireEvent.click(acceptBtn)
 
     // Success step should display
@@ -192,8 +193,8 @@ describe('StaffRegistrationWizard Component Unit Tests', () => {
       </LanguageProvider>
     )
 
-    // Click "I am a new Technician"
-    fireEvent.click(screen.getByText('I am a new Technician'))
+    // Click "Register Account"
+    fireEvent.click(screen.getByText('Register Account'))
 
     // Step 1: Register Account
     expect(screen.getByText(/Register Account/i)).toBeInTheDocument()
@@ -215,7 +216,7 @@ describe('StaffRegistrationWizard Component Unit Tests', () => {
     fireEvent.click(screen.getByRole('button', { name: /Verify & Activate/i }))
 
     // Step 2: Profile Setup
-    expect(screen.getByText(/Personal Profile/i)).toBeInTheDocument()
+    expect(screen.getByText(/Personal Account/i)).toBeInTheDocument()
     
     // Fill out inputs (Phone/Email are enabled in self-serve!)
     const nameInput = screen.getByPlaceholderText('Lisa Marie Tran')
@@ -252,11 +253,11 @@ describe('StaffRegistrationWizard Component Unit Tests', () => {
       </LanguageProvider>
     )
 
-    // Select "I am a new Technician"
-    fireEvent.click(screen.getByText('I am a new Technician'))
+    // Select "Register Account"
+    fireEvent.click(screen.getByText('Register Account'))
 
     // Step 1: Register Account
-    const referralInput = screen.getByPlaceholderText('e.g. nexora-salon-link')
+    const referralInput = screen.getByPlaceholderText('Enter referral code...')
     expect(referralInput).toBeEnabled()
     expect(referralInput).toHaveValue('')
 
@@ -356,7 +357,7 @@ describe('StaffRegistrationWizard Component Unit Tests', () => {
     expect(updatedTp.id).toBe(`tp-staff-${newGeneratedId}`)
   })
 
-  it('supports QR code scanning and autofilling for NEXORA STAFF ID and VLINKPAY ID inputs', () => {
+  it('supports login-based linking', () => {
     const handleReturn = vi.fn()
     const generalInvite = { biz: 'Golden Glow Nail Spa' } // self-serve selection
 
@@ -366,64 +367,23 @@ describe('StaffRegistrationWizard Component Unit Tests', () => {
       </LanguageProvider>
     )
 
-    // --- Part 1: Option A (Link profile via QR scan) ---
-    fireEvent.click(screen.getByText('I already have a Profile'))
+    // --- Part 1: Option A (Link profile via Login) ---
+    fireEvent.click(screen.getByText('I already have an Account'))
 
-    // Trigger Scan QR modal for NEXORA STAFF ID
-    const staffScanBtn = screen.getByTitle('Scan QR Code')
-    fireEvent.click(staffScanBtn)
-
-    // Verify Scanner overlay is shown
-    expect(screen.getByText('Scan QR Code')).toBeInTheDocument()
-    expect(screen.getByText('Scan NEXORA STAFF ID to link your profile')).toBeInTheDocument()
-
-    // Trigger Simulation Scan
-    const simulateBtn = screen.getByRole('button', { name: /Simulate Successful Scan/i })
-    fireEvent.click(simulateBtn)
-
-    // Check that ID is filled and Lisa's profile is loaded
-    expect(screen.getByPlaceholderText('e.g. NEX-STAFF-LISA1102').value).toBe('NEX-STAFF-LISA1102')
-    expect(screen.getAllByText('Lisa Tran').length).toBeGreaterThan(0)
-    expect(screen.getByText(/Nail Tech • \(408\) 555-2345/i)).toBeInTheDocument()
-
-    // Go back and test Option B
-    fireEvent.click(screen.getByRole('button', { name: /Back/i }))
-
-    // --- Part 2: Option B (Register & Autofill via VLINKPAY QR Scan) ---
-    fireEvent.click(screen.getByText('I am a new Technician'))
-
-    // Fill registration credentials
-    const emailInputs = screen.getAllByPlaceholderText('e.g. name@example.com')
-    fireEvent.change(emailInputs[0], { target: { value: 'new.staff@example.com' } })
-    fireEvent.change(emailInputs[1], { target: { value: 'new.staff@example.com' } })
+    // Type credentials
+    fireEvent.change(screen.getByPlaceholderText('e.g. lisa@example.com'), { target: { value: 'lisa@example.com' } })
     fireEvent.change(screen.getByPlaceholderText('••••••••'), { target: { value: 'password123' } })
-    fireEvent.click(screen.getByRole('button', { name: /Continue|Next/i }))
 
-    // Verify OTP
-    fireEvent.click(screen.getByRole('button', { name: /Auto-fill/i }))
-    fireEvent.click(screen.getByRole('button', { name: /Verify & Activate/i }))
+    // Click Login & Verify
+    fireEvent.click(screen.getByRole('button', { name: /Login & Verify/i }))
 
-    // Now in Step 2: Profile Setup
-    expect(screen.getByText(/Personal Profile/i)).toBeInTheDocument()
+    // Check that Lisa's profile is loaded
+    expect(screen.getAllByText('Lisa Tran').length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Nail Tech/i).length).toBeGreaterThan(0)
 
-    // Trigger Scan QR modal for VLINKPAY ID
-    const vlinkpayScanBtn = screen.getByTitle('Scan VLINKPAY QR Code')
-    fireEvent.click(vlinkpayScanBtn)
-
-    // Verify VLINKPAY ID scan helper description
-    expect(screen.getByText('Scan VLINKPAY ID to autofill profile data')).toBeInTheDocument()
-
-    // Trigger simulation successful scan
-    const simulateBtnVlp = screen.getByRole('button', { name: /Simulate Successful Scan/i })
-    fireEvent.click(simulateBtnVlp)
-
-    // Verify all profile fields are automatically populated with Lisa's profile details
-    expect(screen.getByPlaceholderText('e.g. VLP-8893-VL').value).toBe('VLP-1102-LISA')
-    expect(screen.getByPlaceholderText('Lisa Marie Tran').value).toBe('Lisa Tran')
-    expect(screen.getByPlaceholderText('Lisa T.').value).toBe('Lisa T.')
-    expect(screen.getByPlaceholderText('e.g. name@example.com').value).toBe('lisa@example.com')
-    expect(screen.getByPlaceholderText('e.g. 408-555-1234').value).toBe('(408) 555-2345')
-    expect(screen.getByPlaceholderText('e.g. Acrylic Specialist').value).toBe('Nail Tech')
+    // Test decline button (returns to welcome select)
+    fireEvent.click(screen.getByRole('button', { name: /Decline/i }))
+    expect(screen.getByText('I already have an Account')).toBeInTheDocument()
   })
 })
 

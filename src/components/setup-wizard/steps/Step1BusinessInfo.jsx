@@ -4,6 +4,7 @@ import {
 } from 'lucide-react'
 import CustomSelect from '../../CustomSelect'
 import { renderTextWithGoldStars } from '../constants'
+import { renderLabel } from '../../../contexts/LanguageContext'
 
 export default function Step1BusinessInfo({
   t,
@@ -61,7 +62,7 @@ export default function Step1BusinessInfo({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="flex items-center text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-                <span>{t('setup.store_name')}</span>
+                <span>{renderLabel(t('setup.store_name'))}</span>
                 <div className="relative group inline-block ml-1.5 align-middle normal-case font-normal text-nexoraSubtle">
                   <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
@@ -110,7 +111,7 @@ export default function Step1BusinessInfo({
 
           <div>
             <label className="flex items-center text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-              <span>{t('setup.store_address')}</span>
+              <span>{renderLabel(t('setup.store_address'))}</span>
               <div className="relative group inline-block ml-1.5 align-middle normal-case font-normal text-nexoraSubtle">
                 <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
@@ -141,7 +142,7 @@ export default function Step1BusinessInfo({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">{t('setup.store_phone')}</label>
+              <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">{renderLabel(t('setup.store_phone'))}</label>
               <div className="relative">
                 <Phone className="absolute left-3.5 top-3.5 w-4 h-4 text-nexoraSubtle" />
                 <input

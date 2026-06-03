@@ -1,0 +1,236 @@
+import React from 'react'
+import { Building2, Monitor, Receipt, User, QrCode } from 'lucide-react'
+
+// Helper to render text with styled star rating symbols (★) in luxuryGold and 4px space
+export function renderTextWithGoldStars(text) {
+  if (!text) return null
+  const parts = text.split('★')
+  return parts.map((part, index) => {
+    if (index === parts.length - 1) {
+      return part
+    }
+    return (
+      <span key={index}>
+        {part}
+        <span className="text-luxuryGold ml-flox-4 inline-block font-normal">★</span>
+      </span>
+    )
+  })
+}
+
+// Helper to map touchpoint type to a Lucide icon component
+export function getTouchpointIcon(type, className = "w-4 h-4") {
+  switch (type) {
+    case 'Business Main':
+      return <Building2 className={`${className} text-nexoraBrand`} />
+    case 'Front Desk':
+      return <Monitor className={`${className} text-amber-500`} />
+    case 'Receipt QR':
+      return <Receipt className={`${className} text-emerald-500`} />
+    case 'Staff QR':
+      return <User className={`${className} text-blue-500`} />
+    case 'Table QR':
+    default:
+      return <QrCode className={`${className} text-slate-500`} />
+  }
+}
+
+// Demo data for quick testing
+export const DEMO_BUSINESS = {
+  name: 'Golden Glow Nail Spa & Salon',
+  industry: 'Nail Salon',
+  address: '1088 Gold Coast Hwy, Palm Beach, QLD 4221',
+  phone: '+1 (555) 789-2026',
+  website: 'https://goldenglownails.com',
+  logo: null,
+  paymentAccounts: {
+    venmo: '@goldenglow-spa',
+    cashapp: '$goldenglownails',
+    zelle: 'payment@goldenglownails.com',
+    vlinkpay: 'VLP-8893-GG'
+  }
+}
+
+export const DEMO_LINKS = {
+  googleReview: 'https://g.page/r/cGoldenGlowNails/review',
+  yelpReview: 'https://www.yelp.com/biz/golden-glow-nails-palm-beach',
+  facebookReview: 'https://www.facebook.com/goldenglownails/reviews',
+  feedbackEmail: 'manager@goldenglownails.com'
+}
+
+export const DEMO_STAFF = [
+  {
+    id: 'NEX-STAFF-MIA0123',
+    fullName: 'Mia Tran',
+    nickname: 'Mia T.',
+    position: 'Gel-X Artist',
+    avatar: '',
+    phone: '407-555-0123',
+    email: 'mia.tran@gmail.com',
+    showInTipsFlow: true,
+    paymentAccounts: {
+      venmo: '@mia-nails',
+      cashapp: '$miaglow',
+      zelle: 'mia.tran@gmail.com',
+      vlinkpay: 'VLP-0123-MIA'
+    }
+  },
+  {
+    id: 'NEX-STAFF-VL8893',
+    fullName: 'Vivian Le',
+    nickname: 'Vivian L.',
+    position: 'Acrylic Specialist',
+    avatar: '',
+    phone: '407-555-0199',
+    email: 'vivian.le@gmail.com',
+    showInTipsFlow: true,
+    paymentAccounts: {
+      venmo: '',
+      cashapp: '$vivianle',
+      zelle: '407-555-0199',
+      vlinkpay: 'VLP-8893-VL'
+    }
+  },
+  {
+    id: 'NEX-STAFF-ASH0155',
+    fullName: 'Ashley Park',
+    nickname: 'Ashley P.',
+    position: 'Pedicure Lead',
+    avatar: '',
+    phone: '407-555-0155',
+    email: 'ashley@glownails.com',
+    showInTipsFlow: true,
+    paymentAccounts: {
+      venmo: '@ashley-pedi',
+      cashapp: '',
+      zelle: 'ashley@glownails.com',
+      vlinkpay: 'VLP-0155-ASH'
+    }
+  },
+  {
+    id: 'NEX-STAFF-HN1148',
+    fullName: 'Hanna Nguyen',
+    nickname: 'Hanna Ng.',
+    position: 'Nail Art Designer',
+    avatar: '',
+    phone: '407-555-0144',
+    email: 'hanna.art@gmail.com',
+    showInTipsFlow: true,
+    paymentAccounts: {
+      venmo: '@hanna-art',
+      cashapp: '',
+      zelle: '',
+      vlinkpay: 'VLP-1148-HN'
+    }
+  }
+]
+
+export const WalletLogos = {
+  venmo: (
+    <svg viewBox="0 0 448 512" className="h-[18px] w-[18px] fill-[#008CFF]" xmlns="http://www.w3.org/2000/svg">
+      <path d="M381.4 105.3c11 18.1 15.9 36.7 15.9 60.3 0 75.1-64.1 172.7-116.2 241.2h-118.8l-47.6-285 104.1-9.9 25.3 202.8c23.5-38.4 52.6-98.7 52.6-139.7 0-22.5-3.9-37.8-9.9-50.4z" />
+    </svg>
+  ),
+  cashapp: (
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-[#00D632]" xmlns="http://www.w3.org/2000/svg">
+      <path d="M23.59 3.475a5.1 5.1 0 00-3.05-3.05c-1.31-.42-2.5-.42-4.92-.42H8.36c-2.4 0-3.61 0-4.9.4a5.1 5.1 0 00-3.05 3.06C0 4.765 0 5.965 0 8.365v7.27c0 2.41 0 3.6.4 4.9a5.1 5.1 0 003.05 3.05c1.3.41 2.5.41 4.9.41h7.28c2.41 0 3.61 0 4.9-.4a5.1 5.1 0 003.06-3.06c.41-1.3.41-2.5.41-4.9v-7.25c0-2.41 0-3.61-.41-4.91zm-6.17 4.63l-.93.93a.5.5 0 01-.67.01 5 5 0 00-3.22-1.18c-.97 0-1.94.32-1.94 1.21 0 .9 1.04 1.2 2.24 1.65 2.1.7 3.84 1.58 3.84 3.64 0 2.24-1.74 3.78-4.58 3.95l-.26 1.2a.49.49 0 01-.48.39H9.63l-.09-.01a.5.5 0 01-.38-.59l.28-1.27a6.54 6.54 0 01-2.88-1.57v-.01a.48.48 0 010-.68l1-.97a.49.49 0 01.67 0c.91.86 2.13 1.34 3.39 1.32c1.3 0 2.17-.55 2.17-1.42 0-.87-.88-1.1-2.54-1.72-1.76-.63-3.43-1.52-3.43-3.6 0-2.42 2.01-3.6 4.39-3.71l.25-1.23a.48.48 0 01.48-.38h1.78l.1.01c.26.06.43.31.37.57l-.27 1.37c.9.3 1.75.77 2.48 1.39l.02.02c.19.2.19.5 0 .68z" />
+    </svg>
+  ),
+  zelle: (
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-[#7414CA]" xmlns="http://www.w3.org/2000/svg">
+      <path d="M13.559 24h-2.841a.483.483 0 0 1-.483-.483v-2.765H5.638a.667.667 0 0 1-.666-.666v-2.234a.67.67 0 0 1 .142-.412l8.139-10.382h-7.25a.667.667 0 0 1-.667-.667V3.914c0-.367.299-.666.666-.666h4.23V.483c0-.266.217-.483.483-.483h2.841c.266 0 .483.217.483.483v2.765h4.323c.367 0 .666.299.666.666v2.137a.67.67 0 0 1-.141.41l-8.19 10.481h7.665c.367 0 .666.299.666.666v2.477a.667.667 0 0 1-.666.667h-4.32v2.765a.483.483 0 0 1-.483.483Z" />
+    </svg>
+  ),
+  paypal: (
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-[#003087]" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20.09 6.85c-.45 2.24-1.93 7.82-2.18 8.87-.24 1.05-1.12 1.77-2.22 1.77h-3.32l-.96 6.02c-.08.5-.52.87-1.03.87H6.22c-.65 0-1.13-.59-.99-1.22L8.53 5.4c.14-.63.7-.1 1.33-.1h5.8c2.81 0 4.88 1.48 4.43 3.7.22-1.07.13-2.15-.36-3.05z" />
+      <path d="M16.92 3.85c-.45 2.24-1.93 7.82-2.18 8.87-.24 1.05-1.12 1.77-2.22 1.77h-3.32l-.96 6.02c-.08.5-.52.87-1.03.87H3.06c-.65 0-1.13-.59-.99-1.22L5.37 2.4c.14-.63.7-1.1 1.33-1.1h5.8c2.81 0 4.88 1.48 4.43 3.7.22-1.07.13-2.15-.36-3.05z" opacity="0.6" />
+    </svg>
+  ),
+  bankwire: (
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-[#475569]" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2L1 7v2h22V7L12 2zm0 18H3v-8h3v8h3v-8h3v8h3v-8h3v8h3v-8h3v8h-3zm-11 2h22v2H1v-2z" />
+    </svg>
+  ),
+  applecash: (
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-black" xmlns="http://www.w3.org/2000/svg">
+      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83zM15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.22.67-2.94 1.51-.62.73-1.16 1.87-1.02 2.98 1.11.09 2.25-.56 2.97-1.43z" />
+    </svg>
+  ),
+  vlinkpay: (
+    <img src="/assets/vlinkpay-logo.png" alt="VLINKPAY Logo" className="h-[18px] w-[18px] object-contain" />
+  )
+}
+
+export const DEFAULT_PAYOUT_CONFIGS = {
+  zelle: { enabled: false, value: '', qrCode: '', accountName: '' },
+  bankwire: { enabled: false, value: '', qrCode: '', accountName: '' },
+  paypal: { enabled: false, value: '', qrCode: '', accountName: '' },
+  venmo: { enabled: false, value: '', qrCode: '', accountName: '' },
+  cashapp: { enabled: false, value: '', qrCode: '', accountName: '' },
+  applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
+}
+
+export const getPayoutConfigsFromMember = (member) => {
+  const configs = {
+    zelle: { enabled: false, value: '', qrCode: '', accountName: '' },
+    bankwire: { enabled: false, value: '', qrCode: '', accountName: '' },
+    paypal: { enabled: false, value: '', qrCode: '', accountName: '' },
+    venmo: { enabled: false, value: '', qrCode: '', accountName: '' },
+    cashapp: { enabled: false, value: '', qrCode: '', accountName: '' },
+    applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
+  }
+  const accounts = member.paymentAccounts || {}
+  const memberConfigs = member.payoutConfigs || {}
+
+  if (accounts.zelle || memberConfigs.zelle?.value) {
+    configs.zelle = {
+      enabled: memberConfigs.zelle ? memberConfigs.zelle.enabled : true,
+      value: accounts.zelle || memberConfigs.zelle?.value || '',
+      qrCode: memberConfigs.zelle?.qrCode || '',
+      accountName: memberConfigs.zelle?.accountName || member.fullName || ''
+    }
+  }
+  if (accounts.bankwire || memberConfigs.bankwire?.value) {
+    configs.bankwire = {
+      enabled: memberConfigs.bankwire ? memberConfigs.bankwire.enabled : true,
+      value: accounts.bankwire || memberConfigs.bankwire?.value || '',
+      qrCode: memberConfigs.bankwire?.qrCode || '',
+      accountName: memberConfigs.bankwire?.accountName || member.fullName || ''
+    }
+  }
+  if (accounts.paypal || memberConfigs.paypal?.value) {
+    configs.paypal = {
+      enabled: memberConfigs.paypal ? memberConfigs.paypal.enabled : true,
+      value: accounts.paypal || memberConfigs.paypal?.value || '',
+      qrCode: memberConfigs.paypal?.qrCode || '',
+      accountName: memberConfigs.paypal?.accountName || member.fullName || ''
+    }
+  }
+  if (accounts.venmo || memberConfigs.venmo?.value) {
+    configs.venmo = {
+      enabled: memberConfigs.venmo ? memberConfigs.venmo.enabled : true,
+      value: accounts.venmo || memberConfigs.venmo?.value || '',
+      qrCode: memberConfigs.venmo?.qrCode || '',
+      accountName: memberConfigs.venmo?.accountName || member.fullName || ''
+    }
+  }
+  if (accounts.cashapp || memberConfigs.cashapp?.value) {
+    configs.cashapp = {
+      enabled: memberConfigs.cashapp ? memberConfigs.cashapp.enabled : true,
+      value: accounts.cashapp || memberConfigs.cashapp?.value || '',
+      qrCode: memberConfigs.cashapp?.qrCode || '',
+      accountName: memberConfigs.cashapp?.accountName || member.fullName || ''
+    }
+  }
+  if (accounts.applecash || memberConfigs.applecash?.value) {
+    configs.applecash = {
+      enabled: memberConfigs.applecash ? memberConfigs.applecash.enabled : true,
+      value: accounts.applecash || memberConfigs.applecash?.value || '',
+      qrCode: memberConfigs.applecash?.qrCode || '',
+      accountName: memberConfigs.applecash?.accountName || member.fullName || ''
+    }
+  }
+
+  return configs
+}

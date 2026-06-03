@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
   Check, ShieldCheck, AlertCircle, ArrowLeft,
-  CheckCircle2, Building, Plus, Loader2, QrCode, XCircle
+  CheckCircle2, Building, Plus, Loader2, QrCode, XCircle,
+  Eye, EyeOff, Lock, Mail
 } from 'lucide-react'
 
 export default function StepWelcome({
@@ -20,7 +21,15 @@ export default function StepWelcome({
   handleLinkExistingProfile,
   onReturnToMerchant,
   MOCK_NEXORA_STAFF_PROFILES,
+  linkEmail, setLinkEmail,
+  linkPassword, setLinkPassword,
+  linkError,
+  isLinkLoggedIn,
+  handleLinkLogin,
+  handleLinkDecline,
 }) {
+  const [showLinkPassword, setShowLinkPassword] = useState(false)
+
   return (
     <>
       {/* A. If merchant sent a direct prefilled invite */}
@@ -139,7 +148,7 @@ export default function StepWelcome({
                   </div>
                   <div>
                     <strong className="text-xs font-black text-nexoraText block">
-                      {currentLanguage === 'vi' ? 'Đã có tài khoản' : 'I already have a Profile'}
+                      {currentLanguage === 'vi' ? 'Đã có tài khoản' : 'I already have an Account'}
                     </strong>
                     <span className="text-[10px] text-nexoraSubtle block mt-0.5 leading-normal">
                       {currentLanguage === 'vi'
@@ -162,7 +171,7 @@ export default function StepWelcome({
                   </div>
                   <div>
                     <strong className="text-xs font-black text-nexoraText block">
-                      {currentLanguage === 'vi' ? 'Tôi là thợ mới' : 'I am a new Technician'}
+                      {currentLanguage === 'vi' ? 'Đăng ký tài khoản' : 'Register Account'}
                     </strong>
                     <span className="text-[10px] text-nexoraSubtle block mt-0.5 leading-normal">
                       {currentLanguage === 'vi'
@@ -175,8 +184,8 @@ export default function StepWelcome({
             </div>
           )}
 
-          {/* C. Option A: VLINKPAY ID Verification screen */}
-          {joinPath === 'link' && (
+          {/* C. Option A: VLINKPAY ID Verification / Login screen */}
+          {joinPath === 'link' && !isLinkLoggedIn && (
             <div className="space-y-5 py-2 animate-fadeIn">
               <div className="flex items-center gap-2 border-b border-nexoraRule pb-2">
                 <button
@@ -189,117 +198,194 @@ export default function StepWelcome({
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </button>
-                <h3 className="text-sm font-extrabold text-nexoraText uppercase tracking-wide">
-                  {currentLanguage === 'vi' ? 'Liên kết NEXORA Staff ID' : 'Link NEXORA Staff ID'}
+                <h3 className="text-sm font-extrabold text-nexoraText uppercase tracking-wide font-sans">
+                  {currentLanguage === 'vi' ? 'Đăng nhập liên kết tài khoản' : 'Link Account Login'}
+                </h3>
+              </div>
+
+              <form onSubmit={handleLinkLogin} className="space-y-4">
+                <p className="text-xs text-nexoraSubtle font-medium leading-relaxed">
+                  {currentLanguage === 'vi'
+                    ? 'Đăng nhập vào tài khoản NEXORA / VLINKPAY của bạn để liên kết nhanh với tiệm nail này.'
+                    : 'Sign in to your NEXORA / VLINKPAY account to quickly link with this nail salon.'}
+                </p>
+
+                {/* Email field */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase text-nexoraSubtle tracking-wider flex items-center gap-1">
+                    <Mail className="h-3.5 w-3.5" /> Email
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="e.g. lisa@example.com"
+                    className="h-10 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-[#4648D8] focus:ring-2 focus:ring-[#4648D8]/20 font-bold transition-all"
+                    value={linkEmail}
+                    onChange={(e) => setLinkEmail(e.target.value)}
+                  />
+                </div>
+
+                {/* Password field */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase text-nexoraSubtle tracking-wider flex items-center gap-1">
+                    <Lock className="h-3.5 w-3.5" /> {currentLanguage === 'vi' ? 'Mật khẩu' : 'Password'}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showLinkPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      className="h-10 w-full rounded-lg border border-nexoraBorder pl-3 pr-10 text-xs outline-none focus:border-[#4648D8] focus:ring-2 focus:ring-[#4648D8]/20 font-bold transition-all"
+                      value={linkPassword}
+                      onChange={(e) => setLinkPassword(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowLinkPassword(!showLinkPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-nexoraSubtle hover:text-[#4648D8] transition"
+                    >
+                      {showLinkPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {linkError && (
+                  <p className="text-xs font-bold text-rose-600 flex items-center gap-1 bg-rose-50 border border-rose-100 rounded-lg p-2.5 animate-shake">
+                    <AlertCircle className="h-4 w-4 shrink-0" /> {linkError}
+                  </p>
+                )}
+
+                {/* Demo Helper */}
+                <div className="p-3 border border-amber-100 bg-amber-50/40 rounded-xl text-[11px] text-amber-700 leading-normal font-sans">
+                  <span className="font-bold block uppercase tracking-wider text-[9px] text-amber-800 mb-0.5">
+                    {currentLanguage === 'vi' ? 'Gợi ý tài khoản Demo:' : 'Demo Account Tip:'}
+                  </span>
+                  Email: <code className="font-bold font-mono">lisa@example.com</code> / {currentLanguage === 'vi' ? 'Mật khẩu' : 'Password'}: <code className="font-bold font-mono">password123</code> (hoặc thợ khác đã tạo)
+                </div>
+
+                <div className="pt-2 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setJoinPath(null)}
+                    className="w-full h-10 border border-nexoraBorder text-nexoraMuted font-bold text-xs uppercase tracking-wider rounded-lg hover:bg-nexoraSurfaceMuted transition"
+                  >
+                    {currentLanguage === 'vi' ? 'Quay lại' : 'Back'}
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="w-full h-10 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-black text-xs uppercase tracking-wider rounded-lg transition shadow-md flex items-center justify-center gap-1.5"
+                  >
+                    {currentLanguage === 'vi' ? 'Đăng nhập & Xác minh' : 'Login & Verify'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* D. Option A: Preview & Confirm Link screen */}
+          {joinPath === 'link' && isLinkLoggedIn && linkedProfile && (
+            <div className="space-y-5 py-2 animate-fadeIn">
+              <div className="flex items-center gap-2 border-b border-nexoraRule pb-2">
+                <h3 className="text-sm font-extrabold text-nexoraText uppercase tracking-wide font-sans">
+                  {currentLanguage === 'vi' ? 'Xác nhận gia nhập tiệm' : 'Confirm Salon Connection'}
                 </h3>
               </div>
 
               <div className="space-y-4">
-                <div>
-                  <label className="text-[10px] font-black uppercase text-nexoraSubtle tracking-wider">
-                    {currentLanguage === 'vi' ? 'Nhập NEXORA Staff ID của bạn' : 'Enter your NEXORA Staff ID'}
-                  </label>
-                  <div className="mt-1.5 flex gap-2">
-                    <div className="relative flex-grow font-sans">
-                      <input
-                        type="text"
-                        placeholder="e.g. NEX-STAFF-LISA1102"
-                        className={`h-10 w-full rounded-lg border pl-3 pr-20 text-xs outline-none font-mono font-bold uppercase transition-all ${
-                          nexoraStatus === 'success' ? 'border-emerald-500 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 font-bold' :
-                          nexoraStatus === 'error' ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 animate-shake font-bold' :
-                          nexoraStatus === 'checking' ? 'border-amber-400 focus:border-amber-400 font-bold' :
-                          'border-nexoraBorder focus:border-[#4648D8] focus:ring-2 focus:ring-[#4648D8]/20 font-bold'
-                        }`}
-                        value={searchId}
-                        onChange={(e) => handleSearchIdChange(e.target.value)}
-                      />
-                      <div className="absolute right-10 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                        {nexoraStatus === 'checking' && (
-                          <Loader2 className="h-4 w-4 text-amber-500 animate-spin" />
-                        )}
-                        {nexoraStatus === 'success' && (
-                          <CheckCircle2 className="h-4 w-4 text-emerald-500 animate-scaleUp" />
-                        )}
-                        {nexoraStatus === 'error' && (
-                          <XCircle className="h-4 w-4 text-rose-500 animate-scaleUp" />
-                        )}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleScanQr('staff')}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-nexoraSubtle hover:text-[#4648D8] transition-colors p-1 rounded-md hover:bg-slate-100"
-                        title={currentLanguage === 'vi' ? 'Quét mã QR' : 'Scan QR Code'}
-                      >
-                        <QrCode className="h-4 w-4" />
-                      </button>
-                    </div>
-                    <button
-                      onClick={() => {
-                        const query = searchId.trim().toUpperCase()
-                        const profile = MOCK_NEXORA_STAFF_PROFILES[query]
-                        if (profile) {
-                          setLinkedProfile(profile)
-                          setSearchError('')
-                        } else {
-                          setLinkedProfile(null)
-                          setSearchError(currentLanguage === 'vi' ? 'Không tìm thấy NEXORA Staff ID này.' : 'NEXORA Staff ID not found.')
-                        }
-                      }}
-                      className="h-10 px-4 bg-nexoraBrand hover:bg-nexoraBrandDark text-white rounded-lg text-xs font-bold transition"
-                    >
-                      {currentLanguage === 'vi' ? 'Kiểm tra' : 'Verify'}
-                    </button>
-                  </div>
-                  {searchError && (
-                    <p className="mt-1 text-xs font-bold text-rose-600 flex items-center gap-1">
-                      <AlertCircle className="h-3.5 w-3.5" /> {searchError}
-                    </p>
-                  )}
-                </div>
+                <p className="text-xs text-nexoraSubtle font-medium leading-relaxed">
+                  {currentLanguage === 'vi'
+                    ? 'Vui lòng xem lại thông tin cá nhân và thông tin tiệm nail trước khi đồng ý liên kết.'
+                    : 'Please review your personal profile and salon details before confirming the link.'}
+                </p>
 
-                {linkedProfile && (
-                  <div className="border border-[#4648D8]/15 rounded-2xl bg-[#E9E9FF]/10 p-4 space-y-4 animate-scaleIn">
-                    <div className="flex items-center gap-3">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  {/* Personal Profile Card */}
+                  <div className="border border-[#4648D8]/15 rounded-2xl bg-[#E9E9FF]/10 p-4 space-y-3">
+                    <span className="text-[9px] font-black uppercase text-[#4648D8] bg-[#E9E9FF]/80 px-2 py-0.5 rounded-full inline-block">
+                      {currentLanguage === 'vi' ? 'Hồ sơ cá nhân' : 'Personal Profile'}
+                    </span>
+                    <div className="flex items-center gap-3 pt-1">
                       {linkedProfile.avatar ? (
-                        <img src={linkedProfile.avatar} alt="" className="h-12 w-12 rounded-full object-cover border border-[#4648D8]/20 shadow-sm" />
+                        <img src={linkedProfile.avatar} alt="" className="h-10 w-10 rounded-full object-cover border border-[#4648D8]/20 shadow-sm" />
                       ) : (
-                        <div className="h-12 w-12 rounded-full bg-[#E9E9FF]/60 flex items-center justify-center font-black text-[#4648D8] text-sm">
-                          {linkedProfile.nickname.charAt(0)}
+                        <div className="h-10 w-10 rounded-full bg-[#E9E9FF]/60 flex items-center justify-center font-black text-[#4648D8] text-xs">
+                          {linkedProfile.nickname?.charAt(0) || linkedProfile.fullName?.charAt(0) || 'U'}
                         </div>
                       )}
                       <div>
-                        <h4 className="text-xs font-extrabold text-nexoraText flex items-center gap-1.5 font-sans">
+                        <h4 className="text-xs font-extrabold text-nexoraText flex items-center gap-1 font-sans">
                           {linkedProfile.fullName}
-                          <span className="inline-flex items-center gap-0.5 bg-[#E9E9FF] text-[#4648D8] text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full">
-                            <ShieldCheck className="h-2.5 w-2.5" /> KYC
+                          <span className="inline-flex items-center gap-0.5 bg-[#E9E9FF] text-[#4648D8] text-[8px] font-black uppercase px-1 py-0.5 rounded-full">
+                            <ShieldCheck className="h-2 w-2" /> KYC
                           </span>
                         </h4>
-                        <span className="text-[10px] text-nexoraMuted">{linkedProfile.position} • {linkedProfile.phone}</span>
+                        <span className="text-[10px] text-nexoraMuted">{linkedProfile.position}</span>
                       </div>
                     </div>
 
-                    <div className="text-[10px] text-nexoraMuted leading-normal border-t border-[#4648D8]/15 pt-2 space-y-1.5">
+                    <div className="text-[10px] text-nexoraMuted leading-normal border-t border-[#4648D8]/15 pt-2 space-y-1">
                       <div className="flex justify-between">
                         <span>Email:</span>
-                        <strong className="text-nexoraMuted font-mono">{linkedProfile.email}</strong>
+                        <strong className="text-nexoraMuted font-mono truncate max-w-[120px]">{linkedProfile.email}</strong>
                       </div>
                       <div className="flex justify-between">
-                        <span>{currentLanguage === 'vi' ? 'Ví nhận liên kết:' : 'Linked payout methods:'}</span>
-                        <strong className="text-emerald-700 uppercase">
-                          {Object.keys(linkedProfile.payoutConfigs).filter(k => linkedProfile.payoutConfigs[k].enabled).join(', ')}
-                        </strong>
+                        <span>{currentLanguage === 'vi' ? 'Điện thoại:' : 'Phone:'}</span>
+                        <strong className="text-nexoraMuted font-mono">{linkedProfile.phone || 'N/A'}</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Nail Salon Info Card */}
+                  <div className="border border-amber-200/50 rounded-2xl bg-amber-50/15 p-4 space-y-3">
+                    <span className="text-[9px] font-black uppercase text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full inline-block">
+                      {currentLanguage === 'vi' ? 'Thông tin tiệm nail' : 'Nail Salon Info'}
+                    </span>
+                    <div className="flex items-center gap-3 pt-1">
+                      <div className="h-10 w-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0">
+                        <Building className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-extrabold text-nexoraText font-sans">
+                          {inviteData?.biz || 'Golden Glow Nail Spa & Salon'}
+                        </h4>
+                        <span className="text-[10px] text-nexoraMuted">
+                          {currentLanguage === 'vi' ? 'Vai trò mời:' : 'Invited Role:'} {inviteData?.role || position}
+                        </span>
                       </div>
                     </div>
 
-                    <button
-                      onClick={handleLinkExistingProfile}
-                      className="w-full h-10 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-extrabold text-xs uppercase tracking-wider rounded-lg transition shadow-md flex items-center justify-center gap-1.5 font-sans"
-                    >
-                      <Check className="h-4 w-4 stroke-[3px]" />
-                      {currentLanguage === 'vi' ? 'Đồng ý liên kết & gửi yêu cầu' : 'Accept & Link with Salon'}
-                    </button>
+                    <div className="text-[10px] text-nexoraMuted leading-normal border-t border-amber-200/40 pt-2 space-y-1">
+                      <div className="flex justify-between">
+                        <span>{currentLanguage === 'vi' ? 'Trạng thái kết nối:' : 'Connection Status:'}</span>
+                        <strong className="text-amber-600 uppercase text-[9px] font-black">
+                          {currentLanguage === 'vi' ? 'Yêu cầu mới' : 'New Request'}
+                        </strong>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>{currentLanguage === 'vi' ? 'Khu vực:' : 'Location:'}</span>
+                        <strong className="text-nexoraMuted truncate max-w-[120px]">San Jose, CA</strong>
+                      </div>
+                    </div>
                   </div>
-                )}
+                </div>
+
+                <div className="pt-2 flex flex-col sm:flex-row gap-3">
+                  <button
+                    type="button"
+                    onClick={handleLinkDecline}
+                    className="w-full h-11 border border-rose-200 text-rose-600 bg-rose-50/20 hover:bg-rose-50 hover:border-rose-300 font-bold text-xs uppercase tracking-wider rounded-xl transition flex items-center justify-center gap-1.5"
+                  >
+                    {currentLanguage === 'vi' ? 'Từ chối' : 'Decline'}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleLinkExistingProfile}
+                    className="w-full h-11 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-black text-xs uppercase tracking-wider rounded-xl transition flex items-center justify-center gap-1.5 shadow-md"
+                  >
+                    <Check className="h-4 w-4 stroke-[3px]" />
+                    {currentLanguage === 'vi' ? 'Đồng ý tham gia (Join)' : 'Accept & Join'}
+                  </button>
+                </div>
               </div>
             </div>
           )}

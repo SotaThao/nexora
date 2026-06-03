@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import {
   Plus,
   Trash2,
@@ -11,7 +11,8 @@ import {
   Smartphone,
   Layers,
   Activity,
-  AlertOctagon
+  AlertOctagon,
+  ExternalLink
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
 import CustomSelect from './CustomSelect'
@@ -69,6 +70,24 @@ export default function TouchpointsView({
   // Local state for Linking Devices
   const [linkingPointId, setLinkingPointId] = useState(null)
   const [linkInputVal, setLinkInputVal] = useState('')
+
+  // Highlighting selected device
+  const [highlightedDeviceId, setHighlightedDeviceId] = useState(null)
+  
+  // Suggestion overlay state
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const suggestionRef = useRef(null)
+
+  // Click outside suggestions dropdown listener
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (suggestionRef.current && !suggestionRef.current.contains(event.target)) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const handleAdd = () => {
     if (!name.trim()) return
@@ -312,9 +331,22 @@ export default function TouchpointsView({
                           <Trash2 className="h-4 w-4" />
                         </IconButton>
                       </div>
-                      <p className="text-[9.5px] font-mono text-nexoraSubtle select-all truncate">
-                        nexora.vlinkpay.com/touch/{point.id}
-                      </p>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <p className="text-[9.5px] font-mono text-nexoraSubtle select-all truncate flex-grow">
+                          nexora.vlinkpay.com/touch/{point.id}
+                        </p>
+                        {isPointActive && (
+                          <a
+                            href={qrUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center text-nexoraBrand dark:text-luxuryGold hover:opacity-80 transition-opacity shrink-0 cursor-pointer p-0.5"
+                            title={t('dashboard.touchpoints.open_link') || 'Test station flow'}
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
+                        )}
+                      </div>
                     </div>
      
                     {/* Middle Section: Active / Inactive Toggle */}
@@ -339,24 +371,67 @@ export default function TouchpointsView({
                     {/* Linked Hardware Display & Link Device Action */}
                     <div className="mt-2 pt-2 border-t border-nexoraRule dark:border-white/5 space-y-1">
                       {linkingPointId === point.id ? (
-                        <div className="flex items-center gap-1.5">
-                          <input
-                            type="text"
-                            value={linkInputVal}
-                            onChange={(e) => setLinkInputVal(e.target.value)}
-                            placeholder="Device ID (e.g. NFC-105)"
-                            className="h-9 flex-grow rounded-flox-inputs border border-nexoraBorder dark:border-luxuryGold/18 bg-white dark:bg-luxuryCoal px-2 text-base text-nexoraText outline-none focus:border-nexoraBrand"
-                            autoFocus
-                          />
+                        <div className="flex items-center gap-1.5 flex-grow">
+                          <div className="relative flex-grow" ref={suggestionRef}>
+                            <input
+                              type="text"
+                              value={linkInputVal}
+                              onChange={(e) => {
+                                setLinkInputVal(e.target.value)
+                                setShowSuggestions(true)
+                              }}
+                              onFocus={() => setShowSuggestions(true)}
+                              placeholder="Device ID (e.g. NFC-105)"
+                              className="h-9 w-full rounded-flox-inputs border border-nexoraBorder dark:border-luxuryGold/18 bg-white dark:bg-luxuryCoal px-2 text-base text-nexoraText outline-none focus:border-nexoraBrand"
+                              autoFocus
+                            />
+                            {showSuggestions && (
+                              <div className="absolute left-0 right-0 mt-1 z-50 bg-white dark:bg-luxuryCoal border border-nexoraBorder dark:border-luxuryGold/18 rounded-lg shadow-premium max-h-48 overflow-y-auto py-1 text-xs">
+                                {devices.filter(d => 
+                                  !linkInputVal ||
+                                  d.deviceId.toLowerCase().includes(linkInputVal.toLowerCase()) ||
+                                  d.location.toLowerCase().includes(linkInputVal.toLowerCase())
+                                ).map((device) => (
+                                  <button
+                                    key={device.id}
+                                    type="button"
+                                    onClick={() => {
+                                      setLinkInputVal(device.deviceId)
+                                      setShowSuggestions(false)
+                                    }}
+                                    className="w-full text-left px-3 py-2 hover:bg-nexoraSurfaceMuted dark:hover:bg-luxuryBlack transition-colors flex flex-col gap-0.5 cursor-pointer"
+                                  >
+                                    <span className="font-extrabold text-nexoraText dark:text-white font-mono">{device.deviceId}</span>
+                                    <span className="text-[10px] text-nexoraSubtle">{device.location} ({device.type})</span>
+                                  </button>
+                                ))}
+                                {devices.filter(d => 
+                                  !linkInputVal ||
+                                  d.deviceId.toLowerCase().includes(linkInputVal.toLowerCase()) ||
+                                  d.location.toLowerCase().includes(linkInputVal.toLowerCase())
+                                ).length === 0 && (
+                                  <div className="px-3 py-2 text-nexoraSubtle italic text-center">
+                                    No matching devices
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
                           <button
-                            onClick={() => handleSaveLink(point.id)}
+                            onClick={() => {
+                              handleSaveLink(point.id)
+                              setShowSuggestions(false)
+                            }}
                             className="h-9 w-9 flex items-center justify-center rounded-flox-buttons bg-nexoraSuccess text-white hover:bg-nexoraSuccess/90 active:scale-95 shrink-0"
                             title="Confirm"
                           >
                             <Check className="h-4 w-4" />
                           </button>
                           <button
-                            onClick={() => setLinkingPointId(null)}
+                            onClick={() => {
+                              setLinkingPointId(null)
+                              setShowSuggestions(false)
+                            }}
                             className="h-9 w-9 flex items-center justify-center rounded-flox-buttons bg-nexoraRule dark:bg-white/10 text-nexoraMuted dark:text-nexoraSubtle hover:bg-nexoraBorder dark:hover:bg-white/20 active:scale-95 shrink-0"
                             title="Cancel"
                           >
@@ -365,12 +440,20 @@ export default function TouchpointsView({
                         </div>
                       ) : (
                         <div className="flex items-center justify-between gap-1 min-h-[44px]">
-                          <div className="text-[10px] font-bold text-nexoraMuted truncate">
-                            <span>HW: </span>
+                          <div className="text-[10px] font-bold text-nexoraMuted truncate flex items-center gap-1 min-w-0 flex-grow">
                             {point.deviceId ? (
-                              <span className="px-1.5 py-0.5 rounded-flox-badges bg-luxuryGold/15 text-luxuryGold font-mono text-[9.5px]">
-                                {point.deviceId}
-                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setHighlightedDeviceId(point.deviceId)
+                                  setActiveSubTab('devices')
+                                }}
+                                className="flex items-center gap-1.5 bg-gradient-to-r from-nexoraBrand/10 to-brandCyan/10 text-nexoraBrand dark:text-luxuryGold px-2 py-1 rounded-full border border-nexoraBrand/20 text-[9.5px] font-black uppercase tracking-wider truncate cursor-pointer hover:scale-[1.03] active:scale-95 transition-all select-none"
+                                title="Click to view hardware details"
+                              >
+                                <Smartphone className="h-3.5 w-3.5 text-nexoraBrand dark:text-luxuryGold" />
+                                <span>{point.deviceId}</span>
+                              </button>
                             ) : (
                               <span className="text-nexoraSubtle italic text-[9.5px]">
                                 Only Paper QR / Chỉ dùng QR in giấy
@@ -379,7 +462,7 @@ export default function TouchpointsView({
                           </div>
                           <button
                             onClick={() => handleStartLink(point)}
-                            className="h-11 px-2.5 text-[10px] font-black uppercase tracking-wider text-nexoraBrand dark:text-luxuryGold hover:underline focus:outline-none flex items-center justify-center shrink-0"
+                            className="h-11 px-2.5 text-[10px] font-black uppercase tracking-wider text-nexoraBrand dark:text-luxuryGold hover:underline focus:outline-none flex items-center justify-center shrink-0 ml-auto"
                           >
                             {point.deviceId ? 'Edit Link' : 'Link Device'}
                           </button>
@@ -443,6 +526,7 @@ export default function TouchpointsView({
           onAddDevice={onAddDevice}
           onDeleteDevice={onDeleteDevice}
           onToggleDeviceStatus={onToggleDeviceStatus}
+          highlightedDeviceId={highlightedDeviceId}
         />
       )}
     </div>

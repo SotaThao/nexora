@@ -144,7 +144,7 @@ export default function DashboardSidebar({
         {(() => {
           const menuItemsToDisplay = userRole === 'staff'
             ? [
-                { id: 'overview', label: currentLanguage === 'vi' ? 'Hồ sơ của tôi' : 'My Dashboard', icon: visibleMenuItems.find(i => i.id === 'overview')?.icon, image: visibleMenuItems.find(i => i.id === 'overview')?.image },
+                { id: 'overview', label: currentLanguage === 'vi' ? 'Tài khoản của tôi' : 'My Dashboard', icon: visibleMenuItems.find(i => i.id === 'overview')?.icon, image: visibleMenuItems.find(i => i.id === 'overview')?.image },
                 { id: 'support', label: t('dashboard.menu.support') || 'Support', icon: visibleMenuItems.find(i => i.id === 'support')?.icon }
               ]
             : visibleMenuItems

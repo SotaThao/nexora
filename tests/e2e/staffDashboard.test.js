@@ -69,12 +69,12 @@ describe('Staff Personal Dashboard E2E Test Suite (CloakBrowser)', () => {
     expect(content).toContain('Cash App');
     expect(content).toContain('Venmo');
 
-    // 6. Navigate to "Profile"
-    const profileTab = page.locator('button:has-text("Profile"), button:has-text("Hồ Sơ")').filter({ visible: true }).first();
+    // 6. Navigate to "Account"
+    const profileTab = page.locator('button:has-text("Account"), button:has-text("Tài Khoản")').filter({ visible: true }).first();
     await profileTab.click();
-    await page.waitForSelector('text=Staff Profile');
+    await page.waitForSelector('text=Personal Account');
     content = await page.textContent('body');
-    expect(content).toContain('Staff Profile');
+    expect(content).toContain('Personal Account');
 
     // 7. Verify notifications
     const notiTab = page.locator('button:has-text("Notifications"), button:has-text("Thông báo")').filter({ visible: true }).first();

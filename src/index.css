@@ -449,3 +449,18 @@ button:focus-visible, a:focus-visible {
     display: inline-block !important;
   }
 }
+
+@keyframes highlight-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.4);
+    border-color: rgba(212, 175, 55, 0.8) !important;
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(212, 175, 55, 0.8);
+    border-color: rgba(212, 175, 55, 1) !important;
+  }
+}
+.animate-highlight {
+  animation: highlight-pulse 2s infinite ease-in-out;
+}
+

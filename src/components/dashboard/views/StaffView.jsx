@@ -1,9 +1,10 @@
-import { useState } from 'react'
-import { AlertCircle, Plus, HelpCircle, Trash2, User, QrCode, Edit2, Link, Copy, X } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { AlertCircle, Plus, HelpCircle, Trash2, User, QrCode, Edit2, Link, Copy, X, Share2, Eye } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { MOCK_NEXORA_STAFF_PROFILES } from '../data/mockData'
 import IconButton from '../../ui/IconButton'
+import CustomSelect from '../../CustomSelect'
 
 function StaffView({
   staff,
@@ -23,12 +24,14 @@ function StaffView({
   onAcceptJoin,
   onDeclineJoin,
   onAcceptUnlink,
-  onDeclineUnlink
+  onDeclineUnlink,
+  onOpenInviteShare
 }) {
   const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
   const [activeTab, setActiveTab] = useState('link') // 'link' | 'invite'
   const [largeJoinQrOpen, setLargeJoinQrOpen] = useState(false)
+  const [sortBy, setSortBy] = useState('name-asc') // 'name-asc' | 'name-desc' | 'date-newest' | 'date-oldest' | 'status-active'
 
   // Option A (Link) states
   const [searchQuery, setSearchQuery] = useState('')
@@ -36,7 +39,46 @@ function StaffView({
   const [searchResult, setSearchResult] = useState(null)
   const [searchError, setSearchError] = useState('')
 
-  // Option B (Invite) states
+    const sortedStaff = useMemo(() => {
+    return [...staff].sort((a, b) => {
+      if (sortBy === 'name-asc') {
+        return a.fullName.localeCompare(b.fullName)
+      }
+      if (sortBy === 'name-desc') {
+        return b.fullName.localeCompare(a.fullName)
+      }
+      if (sortBy === 'date-newest') {
+        const dateA = a.joinedDate || '2026-05-15'
+        const dateB = b.joinedDate || '2026-05-15'
+        return dateB.localeCompare(dateA)
+      }
+      if (sortBy === 'date-oldest') {
+        const dateA = a.joinedDate || '2026-05-15'
+        const dateB = b.joinedDate || '2026-05-15'
+        return dateA.localeCompare(dateB)
+      }
+      if (sortBy === 'status-active') {
+        if (a.isActive && !b.isActive) return -1
+        if (!a.isActive && b.isActive) return 1
+        return 0
+      }
+      return 0
+    })
+  }, [staff, sortBy])
+
+  const handleShare = () => {
+    const url = `${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`
+    if (navigator.share) {
+      navigator.share({
+        title: 'Join Nexora Touch',
+        text: `Join the team at ${businessName} on Nexora Touch!`,
+        url: url
+      }).catch(() => {})
+    } else {
+      navigator.clipboard.writeText(url)
+      showToast(currentLanguage === 'vi' ? 'Đã sao chép liên kết để chia sẻ!' : 'Link copied to clipboard for sharing!', 'success')
+    }
+  }
   const [inviteName, setInviteName] = useState('')
   const [inviteContact, setInviteContact] = useState('')
   const [inviteRole, setInviteRole] = useState('Nail Technician')
@@ -118,131 +160,96 @@ function StaffView({
 
   return (
     <div className="space-y-6">
-      {/* 1. Statistics KPI Cards Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* 1 & 2. Statistics & Referral Link Unified Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-stretch">
         {/* KPI Card 1: Total Staff Linked */}
-        <div className="rounded-xl border border-nexoraBorder bg-white p-5 shadow-sm">
+        <div className="rounded-xl border border-nexoraBorder bg-white p-5 shadow-sm lg:col-span-1 flex flex-col justify-center">
           <small className="text-[10px] font-black uppercase text-nexoraMuted tracking-wider">
             {t('staff_invite.total_linked') || 'Total Staff Linked'}
           </small>
           <div className="mt-2 flex items-baseline justify-between">
             <h3 className="text-2xl font-black text-nexoraText">{totalLinked}</h3>
-            <span className="text-xs font-bold text-emerald-600">
-              {staff.filter(s => s.isActive).length} active today
-            </span>
           </div>
         </div>
 
         {/* KPI Card 2: Pending Invites */}
-        <div className="rounded-xl border border-nexoraBorder bg-white p-5 shadow-sm">
+        <div className="rounded-xl border border-nexoraBorder bg-white p-5 shadow-sm lg:col-span-1 flex flex-col justify-center">
           <small className="text-[10px] font-black uppercase text-nexoraMuted tracking-wider">
             {t('staff_invite.pending_invites') || 'Pending Invites'}
           </small>
           <div className="mt-2 flex items-baseline justify-between">
             <h3 className="text-2xl font-black text-nexoraText">{pendingCount}</h3>
-            <span className="text-xs font-bold text-amber-600">
-              {staff.filter(s => s.status === 'Pending Setup').length} opened invite
-            </span>
           </div>
         </div>
 
-        {/* KPI Card 3: Payout Wallet Configured Complete */}
-        <div className="rounded-xl border border-nexoraBorder bg-white p-5 shadow-sm">
-          <small className="text-[10px] font-black uppercase text-nexoraMuted tracking-wider">
-            {t('staff_invite.setup_complete') || 'Payment Setup Complete'}
-          </small>
-          <div className="mt-2 flex items-baseline justify-between">
-            <h3 className="text-2xl font-black text-nexoraText">{paymentCompletePct}%</h3>
-            <span className="text-xs font-bold text-indigo-600">
-              {paymentCompleteCount} / {staff.length} staff
-            </span>
-          </div>
-        </div>
-
-        {/* KPI Card 4: Staff Self Setup Option */}
-        <div className="rounded-xl border border-nexoraBorder bg-white p-5 shadow-sm">
-          <small className="text-[10px] font-black uppercase text-nexoraMuted tracking-wider">
-            {t('staff_invite.self_setup') || 'Staff Self-Setup'}
-          </small>
-          <div className="mt-2 flex items-baseline justify-between">
-            <h3 className="text-2xl font-black text-emerald-600">Enabled</h3>
-            <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-              {t('staff_invite.recommended') || 'Recommended'}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. Salon Join Link & QR Code Card */}
-      <div className="rounded-xl border border-nexoraBorder bg-white p-5 shadow-sm flex flex-col md:flex-row items-center justify-between gap-5">
-
-        {/* Left Side: QR Code */}
-        <div className="flex items-center gap-4 border-slate-100 border-none md:border-r pr-0 md:pr-5 shrink-0 self-stretch md:self-auto justify-center">
-          <div
-            onClick={() => setLargeJoinQrOpen(true)}
-            className="h-20 w-20 rounded-xl bg-slate-50 border border-slate-200 p-1 flex items-center justify-center shadow-inner bg-white cursor-zoom-in transition hover:scale-105 duration-200 group relative"
-            title={currentLanguage === 'vi' ? 'Click để phóng to' : 'Click to enlarge'}
-          >
-            <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`)}`}
-              alt="Scan to Join"
-              className="h-full w-full object-contain"
-            />
-            {/* Magnifier icon overlay on hover */}
-            <div className="absolute inset-0 bg-nexoraBrand/80 rounded-xl flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-white select-none">
-              <QrCode className="h-5 w-5" />
-              <span className="text-[9px] font-black uppercase tracking-wider">PREVIEW</span>
-            </div>
-          </div>
-          <div className="text-left hidden sm:block">
-            <span className="text-[10px] font-black uppercase text-slate-700 block">
-              {currentLanguage === 'vi' ? 'MÃ QR GIA NHẬP' : 'JOIN QR CODE'}
-            </span>
-            <span className="text-[9px] text-slate-400 block mt-0.5">
-              {currentLanguage === 'vi' ? 'Quét để đăng ký nhanh' : 'Scan to join instantly'}
-            </span>
-          </div>
-        </div>
-
-        {/* Right Side: Text & Referral URL inputs */}
-        <div className="space-y-3 flex-grow min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-amber-50 text-amber-600">
-              <Link className="h-4 w-4" />
-            </span>
-            <div>
-              <h4 className="text-xs font-black uppercase text-slate-800 tracking-wider">
-                {currentLanguage === 'vi' ? 'LIÊN KẾT GIA NHẬP CHO THỢ (REFERRAL LINK)' : 'TECHNICIAN JOIN LINK & REFERRAL'}
-              </h4>
-              <p className="text-[11px] text-slate-500 font-medium mt-0.5 leading-normal">
-                {currentLanguage === 'vi'
-                  ? 'Chia sẻ liên kết này hoặc cho thợ quét mã QR để tự đăng ký/liên kết tài khoản vào tiệm.'
-                  : 'Share this referral link or let technicians scan the QR code to self-register or link to your salon.'}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex gap-2 max-w-xl">
-            <input
-              type="text"
-              readOnly
-              value={`${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`}
-              className="h-9 flex-grow bg-slate-50 border border-slate-200 rounded-lg px-3 text-xs text-slate-500 font-mono focus:outline-none"
-            />
-            <button
-              onClick={() => {
-                const url = `${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`
-                navigator.clipboard.writeText(url)
-                showToast(currentLanguage === 'vi' ? 'Đã sao chép liên kết gia nhập!' : 'Join link copied to clipboard!', 'success')
-              }}
-              className="h-9 px-3.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-sm"
+        {/* Salon Join Link & QR Code Card */}
+        <div className="rounded-xl border border-nexoraBorder bg-white p-5 shadow-sm flex flex-col md:flex-row items-center justify-between gap-5 lg:col-span-2">
+          {/* Left Side: QR Code */}
+          <div className="shrink-0 flex items-center justify-center">
+            <div
+              onClick={() => setLargeJoinQrOpen(true)}
+              className="h-20 w-20 rounded-xl bg-slate-50 border border-slate-200 p-1 flex items-center justify-center shadow-inner bg-white cursor-zoom-in transition hover:scale-105 duration-200 group relative"
+              title={currentLanguage === 'vi' ? 'Click để phóng to' : 'Click to enlarge'}
             >
-              <Copy className="h-3.5 w-3.5" />
-              <span>{currentLanguage === 'vi' ? 'Sao chép' : 'Copy'}</span>
-            </button>
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`)}`}
+                alt="Scan to Join"
+                className="h-full w-full object-contain"
+              />
+              {/* Magnifier icon overlay on hover */}
+              <div className="absolute inset-0 bg-nexoraBrand/80 rounded-xl flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-white select-none">
+                <QrCode className="h-5 w-5" />
+                <span className="text-[9px] font-black uppercase tracking-wider">PREVIEW</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Side: Text & Referral URL inputs */}
+          <div className="space-y-3 flex-grow min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="p-1.5 rounded-lg bg-amber-50 text-amber-600">
+                <Link className="h-4 w-4" />
+              </span>
+              <div>
+                <h4 className="text-xs font-black uppercase text-slate-800 tracking-wider">
+                  {currentLanguage === 'vi' ? 'LIÊN KẾT GIA NHẬP CHO THỢ (REFERRAL LINK)' : 'TECHNICIAN JOIN LINK & REFERRAL'}
+                </h4>
+                <p className="text-[11px] text-slate-500 font-medium mt-0.5 leading-normal">
+                  {currentLanguage === 'vi'
+                    ? 'Chia sẻ liên kết này hoặc cho thợ quét mã QR để tự đăng ký/liên kết tài khoản vào tiệm.'
+                    : 'Share this referral link or let technicians scan the QR code to self-register or link to your salon.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-2 max-w-xl flex-wrap">
+              <input
+                type="text"
+                readOnly
+                value={`${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`}
+                className="h-9 flex-grow bg-slate-50 border border-slate-200 rounded-lg px-3 text-xs text-slate-500 font-mono focus:outline-none min-w-[200px]"
+              />
+              <button
+                onClick={() => {
+                  const url = `${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`
+                  navigator.clipboard.writeText(url)
+                  showToast(currentLanguage === 'vi' ? 'Đã sao chép liên kết gia nhập!' : 'Join link copied to clipboard!', 'success')
+                }}
+                className="h-9 px-3.5 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-sm bg-white cursor-pointer"
+              >
+                <Copy className="h-3.5 w-3.5" />
+                <span>{currentLanguage === 'vi' ? 'Sao chép' : 'Copy'}</span>
+              </button>
+              <button
+                onClick={() => onOpenInviteShare && onOpenInviteShare()}
+                className="h-9 px-3.5 bg-nexoraBrand text-white hover:bg-opacity-95 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-sm cursor-pointer"
+              >
+                <Share2 className="h-3.5 w-3.5" />
+                <span>{currentLanguage === 'vi' ? 'Chia sẻ' : 'Share'}</span>
+              </button>
+            </div>
           </div>
         </div>
-
       </div>
 
       {/* 2.5. Pending Join Requests Section */}
@@ -325,17 +332,38 @@ function StaffView({
 
       {/* 3. Upgraded Staff Invite & Link Status Table */}
       <div className="rounded-xl border border-nexoraBorder bg-white overflow-hidden shadow-sm">
-        <div className="px-5 py-4 border-b border-nexoraRule bg-slate-50/50 flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-nexoraRule bg-slate-50/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <h3 className="text-xs font-black uppercase text-slate-700 tracking-wider">
             {t('staff_invite.invite_status_table') || 'Staff Invite & Link Status'}
           </h3>
-          <button
-            onClick={onAdd}
-            className="px-4 py-2 bg-nexoraBrand text-white hover:bg-opacity-95 text-xs font-bold rounded-lg transition shadow-sm flex items-center gap-1.5"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            <span>{t('setup.add_staff_title') || 'Add New Staff'}</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-extrabold uppercase text-slate-400 whitespace-nowrap">
+                {currentLanguage === 'vi' ? 'Sắp xếp:' : 'Sort by:'}
+              </span>
+              <CustomSelect
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                options={[
+                  { value: 'name-asc', label: currentLanguage === 'vi' ? 'Tên (A-Z)' : 'Name (A-Z)' },
+                  { value: 'name-desc', label: currentLanguage === 'vi' ? 'Tên (Z-A)' : 'Name (Z-A)' },
+                  { value: 'date-newest', label: currentLanguage === 'vi' ? 'Ngày: Mới nhất' : 'Date: Newest' },
+                  { value: 'date-oldest', label: currentLanguage === 'vi' ? 'Ngày: Cũ nhất' : 'Date: Oldest' },
+                  { value: 'status-active', label: currentLanguage === 'vi' ? 'Trạng thái hoạt động' : 'Status: Active' }
+                ]}
+                size="sm"
+                className="w-44"
+                buttonClass="h-8 text-xs font-bold text-slate-700 bg-white border-slate-200 rounded-lg"
+              />
+            </div>
+            <button
+              onClick={onAdd}
+              className="px-4 py-2 bg-nexoraBrand text-white hover:bg-opacity-95 text-xs font-bold rounded-lg transition shadow-sm flex items-center gap-1.5"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>{t('setup.add_staff_title') || 'Add New Staff'}</span>
+            </button>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -367,7 +395,7 @@ function StaffView({
               </tr>
             </thead>
             <tbody>
-              {staff.map((member) => {
+              {sortedStaff.map((member) => {
                 const wallets = getWalletBadges(member)
                 const isPendingSetup = member.status === 'Pending Setup'
                 const isPendingAcceptance = member.status === 'Pending Acceptance'
@@ -393,9 +421,13 @@ function StaffView({
                     </td>
 
                     <td className="px-5 py-4">
-                      <span className="text-xs text-slate-500 font-semibold">
+                      <div className="text-xs text-slate-500 font-semibold leading-normal">
                         {member.flowType || (currentLanguage === 'vi' ? 'Khởi tạo trực tiếp' : 'Direct Addition')}
-                      </span>
+                      </div>
+                      <div className="text-[10px] text-slate-400 font-bold mt-0.5 leading-normal">
+                        {currentLanguage === 'vi' ? 'Ngày liên kết: ' : 'Linked Date: '}
+                        {member.joinedDate || '2026-05-15'}
+                      </div>
                     </td>
 
                     <td className="px-5 py-4">
@@ -433,13 +465,16 @@ function StaffView({
                       {!isPending && (
                         <button
                           onClick={() => onToggle(member.id)}
-                          className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase border transition ${
-                            member.isActive
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100'
-                              : 'bg-rose-50 text-rose-700 border-rose-100 hover:bg-rose-100'
+                          className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                            member.isActive ? 'bg-emerald-500' : 'bg-slate-300'
                           }`}
+                          title={member.isActive ? t('common.active') : t('common.inactive')}
                         >
-                          {member.isActive ? t('common.active') : t('common.inactive')}
+                          <span
+                            className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                              member.isActive ? 'translate-x-4' : 'translate-x-0'
+                            }`}
+                          />
                         </button>
                       )}
                     </td>
@@ -448,15 +483,16 @@ function StaffView({
                       {!isPending && (
                         <button
                           onClick={() => onToggleTipsFlow(member.id)}
-                          className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase border transition ${
-                            member.showInTipsFlow !== false
-                              ? 'bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100'
-                              : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+                          className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                            member.showInTipsFlow !== false ? 'bg-blue-500' : 'bg-slate-300'
                           }`}
+                          title={member.showInTipsFlow !== false ? 'Show' : 'Hide'}
                         >
-                          {member.showInTipsFlow !== false
-                            ? (currentLanguage === 'vi' ? 'Hiển thị' : 'Show')
-                            : (currentLanguage === 'vi' ? 'Ẩn' : 'Hide')}
+                          <span
+                            className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                              member.showInTipsFlow !== false ? 'translate-x-4' : 'translate-x-0'
+                            }`}
+                          />
                         </button>
                       )}
                       {isPending && (
@@ -593,6 +629,8 @@ function StaffView({
           </div>
         </div>
       )}
+
+
     </div>
   )
 }
