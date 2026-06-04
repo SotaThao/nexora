@@ -6,6 +6,7 @@ import {
   Bell,
   ClipboardList,
   LogOut,
+  Menu,
   Plus,
   Pointer,
   Search,
@@ -36,7 +37,8 @@ export default function DashboardHeader({
   touchpoints,
   onViewStaffDetail,
   onApproveStaff,
-  userRole = 'owner'
+  userRole = 'owner',
+  onOpenMobileMenu
 }) {
   const { currentLanguage, setLanguage, t } = useTranslation()
   const dropdownRef = useRef(null)
@@ -75,7 +77,7 @@ export default function DashboardHeader({
     storage.setItem('nexora_notifications', JSON.stringify(updated))
     setIsNotiDropdownOpen(false)
     if (item.linkTab === 'staff' && item.staffId) {
-      const member = staff.find(s => s.id === item.staffId)
+      const member = staff.find(s => s.id?.trim().toUpperCase() === item.staffId?.trim().toUpperCase())
       if (member) {
         onNavigateMenu(item.linkTab)
         if (typeof onApproveStaff === 'function') {
@@ -131,9 +133,16 @@ export default function DashboardHeader({
 
   return (
     <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between gap-3 border-b border-nexoraBorder bg-nexoraSurface px-4 sm:px-5">
-      <div className="flex min-w-0 items-center gap-3 sm:hidden">
+      <div className="flex min-w-0 items-center gap-3 lg:hidden">
+        <button
+          type="button"
+          onClick={onOpenMobileMenu}
+          className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-nexoraBorder bg-white text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"
+          aria-label="Open navigation menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
         <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-9 w-9 shrink-0 object-contain" />
-        <span className="truncate text-sm font-extrabold">NEXORA TOUCH</span>
       </div>
 
       {/* Search Input with Suggestions Dropdown */}
@@ -391,8 +400,8 @@ export default function DashboardHeader({
             type="button"
             onClick={() => setIsHeaderDropdownOpen(!isHeaderDropdownOpen)}
             className="flex h-10 w-10 items-center justify-center rounded-full border border-nexoraBorder overflow-hidden shadow-nexora-soft transition hover:opacity-90 focus:outline-none"
-            aria-label="Profile menu"
-            title="Profile menu"
+            aria-label="Account menu"
+            title="Account menu"
             id="header-profile-menu-btn"
           >
             {profile.avatar ? (

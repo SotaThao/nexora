@@ -1,4 +1,82 @@
 {
+  "staff_dashboard": {
+    "brand": { "title": "NEXORA Staff", "subtitle": "bởi VLINKPAY" },
+    "staff_id": "Mã nhân viên",
+    "sign_out": "Đăng xuất",
+    "nav": { "home": "Trang chủ", "my_qr": "Mã QR", "tips": "Tiền tip", "reviews": "Đánh giá", "pay": "Thanh toán", "profile": "Tài khoản" },
+    "titles": {
+      "home": "Trang chủ",
+      "qr": "Mã QR của tôi",
+      "tips": "Tiền tip",
+      "reviews": "Đánh giá & Xếp hạng",
+      "pay": "Phương thức nhận",
+      "profile": "Tài khoản",
+      "notifications": "Thông báo"
+    },
+    "status": { "active": "Đang hoạt động", "inactive": "Ngừng hoạt động" },
+    "home": {
+      "today_tips": "Tip hôm nay",
+      "this_month": "Tháng này",
+      "pending": "Chờ xác nhận",
+      "rating": "Đánh giá",
+      "tips_count": "{count} lượt tip",
+      "need_confirm": "Cần xác nhận",
+      "pending_confirmations": "Tip chờ xác nhận",
+      "no_pending": "Không có tip nào chờ xác nhận.",
+      "confirm": "Xác nhận",
+      "confirm_all": "Xác nhận đã nhận tất cả",
+      "linked_businesses": "Tiệm đã liên kết",
+      "display_name": "Tên hiển thị"
+    },
+    "tips": {
+      "activity": "Hoạt động tip",
+      "empty": "Chưa có tip nào.",
+      "status": { "pending": "Chờ xử lý", "completed": "Hoàn tất", "verified": "Đã xác minh" },
+      "ai_insight": "Phân tích AI",
+      "ai_insight_body": "Tip trung bình cho dịch vụ Pedicure của bạn là 21%, cao hơn 6% so với mức trung bình của tiệm."
+    },
+    "pay": {
+      "title": "Phương thức nhận tiền",
+      "owner_note": "Bạn tự quản lý phương thức nhận tip. Chủ tiệm không sửa được phần này.",
+      "not_set": "Chưa thiết lập",
+      "handle_placeholder": "Nhập tài khoản / handle",
+      "save": "Lưu phương thức",
+      "saved": "Đã lưu ✓"
+    },
+    "qr": {
+      "personal_title": "Mã QR cá nhân",
+      "personal_sub": "Dùng để chia sẻ Mã nhân viên hoặc cho tiệm liên kết bạn.",
+      "share": "Chia sẻ QR nhân viên",
+      "copy_link": "Sao chép liên kết",
+      "business_title": "QR theo tiệm",
+      "business_sub": "QR riêng cho tip/đánh giá tại tiệm này",
+      "note": "QR theo tiệm được lưu theo business_staff_link_id để không bị lẫn khi bạn làm ở nhiều tiệm."
+    },
+    "profile": {
+      "title": "Tài khoản cá nhân",
+      "full_name": "Họ và tên",
+      "display_name": "Tên hiển thị mặc định",
+      "phone": "Số điện thoại",
+      "email": "Email",
+      "bio": "Giới thiệu",
+      "identity_note": "Họ tên, số điện thoại và email lấy từ hồ sơ tại tiệm. Cập nhật tên hiển thị và giới thiệu tại đây.",
+      "save": "Lưu tài khoản",
+      "saved": "Đã lưu ✓",
+      "business_names": "Tên hiển thị theo tiệm"
+    },
+    "notifications": {
+      "empty": "Không có thông báo.",
+      "tip_title": "Có tip mới được đánh dấu đã gửi",
+      "tip_message": "${amount} qua {method} — xác nhận đã nhận",
+      "review_title": "Đánh giá {rating} sao mới",
+      "push_prefs": "Tùy chọn thông báo đẩy",
+      "pref": {
+        "tipConfirmations": "Xác nhận tip",
+        "reviews": "Đánh giá",
+        "businessInvites": "Lời mời từ tiệm"
+      }
+    }
+  },
   "common": {
     "active": "Đang hoạt động",
     "inactive": "Ngừng hoạt động",
@@ -51,6 +129,7 @@
     "reset_confirm": "Bạn có muốn xóa dữ liệu đã lưu để thực hiện lại từ đầu quy trình Onboarding Setup Wizard?"
   },
   "setup": {
+    "col_staff": "Nhân viên",
     "title_step_1": "Bước 1: Thiết Lập Cửa Hàng & Định Tuyến Review",
     "desc_step_1": "Cấu hình thông tin cơ bản của tiệm và các cổng định tuyến phản hồi thông minh.",
     "store_info_title": "Thông Tin Cửa Hàng",
@@ -82,8 +161,9 @@
     "linked_wallets": "Ví Nhận Tiền Liên Kết",
     "staff_fullname": "Họ Tên Đầy Đủ (Nội bộ) *",
     "staff_fullname_placeholder": "Ví dụ: Mia Tran",
-    "staff_displayname": "Tên Hiển Thị (Màn hình khách) *",
+    "staff_displayname": "Tên hiển thị *",
     "staff_displayname_placeholder": "Ví dụ: Mia T.",
+    "nickname_tooltip": "Tên này sẽ hiển thị cho khách hàng tại tiệm khi họ quét mã và gửi tip.",
     "staff_position": "Chức Vụ",
     "staff_position_placeholder": "Ví dụ: Gel-X Artist...",
     "staff_phone": "Số Điện Thoại",
@@ -105,7 +185,7 @@
     "staff_directory_empty": "Chưa có nhân viên nào được thêm. Vui lòng thêm phía bên trái.",
     "qr_touchpoints_title": "Cấu Hình Điểm Chạm QR (Touch Points)",
     "qr_touchpoints_desc": "Các mã QR dán tại ghế, quầy thanh toán hoặc in ở hóa đơn.",
-    "tp_name": "Tên Điểm Chạm",
+    "tp_name": "Tên Điểm Chạm *",
     "tp_name_placeholder": "Ví dụ: Service Chair 01...",
     "tp_type": "Loại Điểm Chạm",
     "add_tp_btn": "Thêm Điểm Chạm",
@@ -226,7 +306,12 @@
       "returning_customers": "Khách quay lại",
       "great": "Tuyệt vời!",
       "reviews_count": "{count} lượt đánh giá",
-      "low_stars_filter": "3★ trở xuống"
+      "low_stars_filter": "3★ trở xuống",
+      "avg_rating": "Đánh giá Trung bình",
+      "internal_feedback": "Phản hồi Nội bộ",
+      "review_source": "Nguồn đánh giá",
+      "star_rating": "Số sao đánh giá",
+      "all_stars": "Tất cả sao"
     },
     "chart": {
       "tips_over_time": "Tiền Típ Theo Thời Gian",
@@ -277,7 +362,13 @@
       "all_staff": "Tất cả nhân viên",
       "all_touchpoints": "Tất cả điểm chạm",
       "all_payments": "Tất cả phương thức",
-      "all_statuses": "Tất cả trạng thái"
+      "all_statuses": "Tất cả trạng thái",
+      "filter_search": "Tìm kiếm",
+      "search_placeholder": "Tìm mã GD, nhân viên, điểm chạm...",
+      "modal_title": "Chi tiết giao dịch",
+      "receipt_qr": "Mã QR biên nhận",
+      "scan_to_view": "Quét để xem chi tiết hoặc hóa đơn khách hàng",
+      "staff_id": "Mã nhân viên"
     },
     "modals": {
       "add_tp_title": "Thêm Điểm Chạm Mới",
@@ -338,7 +429,8 @@
       "tabs": {
         "stations": "Điểm Chạm QR",
         "devices": "Thiết Bị Vật Lý"
-      }
+      },
+      "open_link": "Thử nghiệm luồng trạm"
     },
     "devices": {
       "subtitle": "Quản lý các trạm đứng salon vật lý, mã đặt bàn và điểm chạm thông minh.",
@@ -580,7 +672,23 @@
     "scan_to_tip_review": "Quét để Típ & Đánh giá"
   },
   "register": {
-    "title_step_1": "Bước 1: Đăng ký Tài khoản mới",
+    "role_select_title": "Chọn loại tài khoản",
+    "role_select_desc": "Vui lòng chọn vai trò phù hợp để cấu hình giao diện của bạn.",
+    "role_business_title": "Merchant / Chủ cửa hàng",
+    "role_business_desc": "Quản lý thông tin cửa hàng, nhân viên, touchpoints, định tuyến đánh giá và xem thống kê tiệm.",
+    "role_personal_title": "Kỹ thuật viên / Cá nhân",
+    "role_personal_desc": "Tự quản lý tài khoản cá nhân, ví nhận tiền, theo dõi tiền tip và chia sẻ mã QR cá nhân.",
+    "fullname_label": "Họ và tên *",
+    "fullname_placeholder": "Ví dụ: Mia Tran",
+    "staff_success_title": "Đăng ký Tài khoản Cá nhân thành công!",
+    "staff_success_desc": "Tài khoản cá nhân của bạn đã được tạo. Bạn không cần xác minh KYB doanh nghiệp để bắt đầu.",
+    "staff_id_label": "Mã Personal ID của bạn:",
+    "staff_linking_instructions": "Cung cấp mã Personal ID này cho Chủ tiệm/Salon để họ liên kết bạn vào danh sách của tiệm.",
+    "staff_login_btn": "Đăng nhập vào Bảng điều khiển Cá nhân",
+    "agree_terms": "Tôi đồng ý với Điều khoản & Điều kiện sử dụng Nexora Touch",
+    "terms_error": "Bạn phải đồng ý với Điều khoản & Điều kiện để tiếp tục.",
+    "terms_title": "Điều khoản & Điều kiện",
+    "title_step_1": "Bước 2: Đăng ký Tài khoản mới",
     "desc_step_1": "Tạo tài khoản Nexora Touch để bắt đầu cổng định tuyến thanh toán.",
     "email_label": "Email Đăng Ký *",
     "email_placeholder": "partner@yourstore.com",
@@ -617,7 +725,8 @@
       "email_mismatch": "Email xác nhận không trùng khớp",
       "password_required": "Vui lòng nhập Mật khẩu",
       "password_short": "Mật khẩu phải từ 6 ký tự trở lên",
-      "kyb_required": "Vui lòng điền đầy đủ thông tin KYB bắt buộc"
+      "kyb_required": "Vui lòng điền đầy đủ thông tin KYB bắt buộc",
+      "fullname_required": "Vui lòng nhập Họ và tên"
     }
   },
   "staff_invite": {
@@ -643,23 +752,23 @@
     "opened_invite": "{count} đã mở lời mời",
     "recommended": "Khuyên dùng",
     "vlinkpay_kyc_filled": "Ví VLINKPAY ID hợp lệ! Tự động điền dữ liệu KYC.",
-    "wizard_title": "Hoàn Tất Hồ Sơ Nhận Tip",
+    "wizard_title": "Hoàn Tất Tài Khoản Nhận Tip",
     "wizard_subtitle": "Thiết lập thông tin thợ và ví nhận tiền một lần. Dùng Staff ID để liên kết với bất kỳ tiệm nào.",
     "otp_verify": "1. Xác thực OTP",
     "otp_desc": "Nhập mã gồm 4 chữ số được gửi tới số điện thoại/email của bạn.",
     "consent_tax": "Tôi hiểu rằng các khoản tiền tip nhận trực tiếp có thể là thu nhập phải báo cáo thuế. Tôi chịu trách nhiệm lưu trữ hồ sơ và báo cáo thu nhập theo quy định pháp luật.",
     "consent_confirm": "Tôi xác nhận rằng thông tin thanh toán của mình là chính xác và khách hàng có thể sử dụng các phương thức này để gửi tip trực tiếp cho tôi.",
-    "save_activate": "Lưu & Kích hoạt Staff Profile",
+    "save_activate": "Lưu & Kích hoạt Tài khoản Cá nhân",
     "customer_preview": "Giao diện khách quét",
     "customer_preview_desc": "Đây là màn hình khách hàng sẽ thấy sau khi chọn thợ.",
     "linked_businesses": "Tiệm đã liên kết",
     "copy_staff_link": "Sao chép Link Thợ",
     "invite_from_biz": "Lời mời từ Cửa hàng",
-    "invite_desc": "Bạn được mời tham gia hồ sơ thợ NEXORA TOUCH cho cửa hàng dưới đây.",
+    "invite_desc": "Bạn được mời tham gia tài khoản cá nhân NEXORA TOUCH cho cửa hàng dưới đây.",
     "accept_invite": "Chấp nhận lời mời & Thiết lập",
-    "already_have_id": "Tôi đã có Staff ID",
-    "activation_success": "Kích hoạt Staff Profile thành công!",
-    "activation_success_desc": "Staff ID của bạn là {id}. Bạn hiện đã được liên kết với {business} và sẽ xuất hiện trong danh sách nhận tip của khách.",
+    "already_have_id": "Tôi đã có Personal ID",
+    "activation_success": "Kích hoạt tài khoản cá nhân thành công!",
+    "activation_success_desc": "Personal ID của bạn là {id}. Bạn hiện đã được liên kết với {business} và sẽ xuất hiện trong danh sách nhận tip của khách.",
     "return_merchant": "Quay lại Bảng điều khiển Merchant"
   }
 }

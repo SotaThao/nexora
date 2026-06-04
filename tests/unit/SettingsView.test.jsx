@@ -16,7 +16,7 @@ describe('SettingsView Component Unit Tests', () => {
     expect(screen.getByText(/Settings Configuration/i)).toBeInTheDocument()
 
     // Tab buttons check
-    expect(screen.getByRole('button', { name: /Profile/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Account$/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /^KYB$/i })).toBeInTheDocument()
   })
 
@@ -224,5 +224,26 @@ describe('SettingsView Component Unit Tests', () => {
     // Verify TAKE PHOTO and CHOOSE FILE options are visible
     expect(screen.getByRole('button', { name: /TAKE PHOTO/i })).toBeInTheDocument()
     expect(screen.getByText(/CHOOSE FILE/i)).toBeInTheDocument()
+  })
+
+  it('renders Affiliate Link tab and displays QR code inline', () => {
+    render(
+      <LanguageProvider>
+        <SettingsView hasKyb={true} />
+      </LanguageProvider>
+    )
+
+    const affiliateTab = screen.getByRole('button', { name: /Affiliate Link/i })
+    expect(affiliateTab).toBeInTheDocument()
+
+    // Click Affiliate Link tab
+    fireEvent.click(affiliateTab)
+
+    // Verify inline QR section is shown
+    expect(screen.getByRole('button', { name: /Download QR/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Copy Link/i })).toBeInTheDocument()
+
+    // Affiliate Link tab content should be visible with the base referral URL
+    expect(screen.getByText(/https:\/\/nexora\.com\/\?ref=VLP-8893-GG/i)).toBeInTheDocument()
   })
 })

@@ -1,4 +1,82 @@
 {
+  "staff_dashboard": {
+    "brand": { "title": "NEXORA Staff", "subtitle": "by VLINKPAY" },
+    "staff_id": "Staff ID",
+    "sign_out": "Sign out",
+    "nav": { "home": "Home", "my_qr": "My QR", "tips": "Tips", "reviews": "Reviews", "pay": "Pay", "profile": "Account" },
+    "titles": {
+      "home": "Home",
+      "qr": "My QR",
+      "tips": "Tips",
+      "reviews": "Reviews & Ratings",
+      "pay": "Payments",
+      "profile": "Account",
+      "notifications": "Notifications"
+    },
+    "status": { "active": "Active", "inactive": "Inactive" },
+    "home": {
+      "today_tips": "Today Tips",
+      "this_month": "This Month",
+      "pending": "Pending",
+      "rating": "Rating",
+      "tips_count": "{count} tips",
+      "need_confirm": "Need confirm",
+      "pending_confirmations": "Pending Confirmations",
+      "no_pending": "No pending confirmations.",
+      "confirm": "Confirm",
+      "confirm_all": "Confirm All Received",
+      "linked_businesses": "Linked Businesses",
+      "display_name": "Display name"
+    },
+    "tips": {
+      "activity": "Tip Activity",
+      "empty": "No tips yet.",
+      "status": { "pending": "Pending", "completed": "Completed", "verified": "Verified" },
+      "ai_insight": "AI Insight",
+      "ai_insight_body": "Your average tip for Pedicure is 21%, which is 6% higher than the salon average."
+    },
+    "pay": {
+      "title": "Payment Methods",
+      "owner_note": "You manage your own receiving methods. The business owner cannot edit this section.",
+      "not_set": "Not set",
+      "handle_placeholder": "Enter handle / account",
+      "save": "Save Payment Methods",
+      "saved": "Saved ✓"
+    },
+    "qr": {
+      "personal_title": "My Personal QR",
+      "personal_sub": "Use it to share your Staff ID or let a business link you.",
+      "share": "Share Staff QR",
+      "copy_link": "Copy Staff Link",
+      "business_title": "Business Staff QR",
+      "business_sub": "Dedicated QR for tips/reviews at this business",
+      "note": "Per-business QR is stored by business_staff_link_id so it is never confused when you work at multiple businesses."
+    },
+    "profile": {
+      "title": "Personal Account",
+      "full_name": "Full Name",
+      "display_name": "Default Display Name",
+      "phone": "Phone",
+      "email": "Email",
+      "bio": "Bio",
+      "identity_note": "Full name, phone and email come from your business record. Update your display name and bio here.",
+      "save": "Save Account",
+      "saved": "Saved ✓",
+      "business_names": "Business Display Names"
+    },
+    "notifications": {
+      "empty": "No notifications.",
+      "tip_title": "New tip marked sent",
+      "tip_message": "${amount} via {method} — confirm receipt",
+      "review_title": "New {rating}-star review",
+      "push_prefs": "Push Preferences",
+      "pref": {
+        "tipConfirmations": "Tip Confirmations",
+        "reviews": "Reviews",
+        "businessInvites": "Business Invites"
+      }
+    }
+  },
   "common": {
     "active": "Active",
     "inactive": "Inactive",
@@ -51,6 +129,7 @@
     "reset_confirm": "Do you want to delete stored data to perform the Onboarding Setup Wizard again from the beginning?"
   },
   "setup": {
+    "col_staff": "Staff",
     "title_step_1": "Step 1: Store Setup & Review Routing",
     "desc_step_1": "Configure basic salon profile and smart review routing gateways.",
     "store_info_title": "Store Profile",
@@ -82,8 +161,9 @@
     "linked_wallets": "Linked Payment Wallets",
     "staff_fullname": "Full Name (Internal) *",
     "staff_fullname_placeholder": "e.g., Mia Tran",
-    "staff_displayname": "Display Name (Customer-facing) *",
+    "staff_displayname": "Display Nickname *",
     "staff_displayname_placeholder": "e.g., Mia T.",
+    "nickname_tooltip": "This nickname is visible to customers at the salon when they scan and tip.",
     "staff_position": "Position / Role",
     "staff_position_placeholder": "e.g., Gel-X Artist...",
     "staff_phone": "Phone Number",
@@ -105,7 +185,7 @@
     "staff_directory_empty": "No technicians added yet. Please fill the form on the left.",
     "qr_touchpoints_title": "QR Touch Points Directory",
     "qr_touchpoints_desc": "QR codes placed at service tables, reception desk, or receipts.",
-    "tp_name": "Touch Point Name",
+    "tp_name": "Touch Point Name *",
     "tp_name_placeholder": "e.g., Service Chair 01...",
     "tp_type": "Touch Point Type",
     "add_tp_btn": "Add Touch Point",
@@ -226,7 +306,12 @@
       "returning_customers": "Returning Customers",
       "great": "Great!",
       "reviews_count": "{count} reviews",
-      "low_stars_filter": "3★ or below"
+      "low_stars_filter": "3★ or below",
+      "avg_rating": "Average Rating",
+      "internal_feedback": "Internal Feedback",
+      "review_source": "Review Source",
+      "star_rating": "Star Rating",
+      "all_stars": "All Stars"
     },
     "chart": {
       "tips_over_time": "Tips Over Time",
@@ -277,7 +362,13 @@
       "all_staff": "All Staff",
       "all_touchpoints": "All Touch Points",
       "all_payments": "All Payment Methods",
-      "all_statuses": "All Statuses"
+      "all_statuses": "All Statuses",
+      "filter_search": "Search",
+      "search_placeholder": "Search ID, staff, touchpoint...",
+      "modal_title": "Transaction Details",
+      "receipt_qr": "Receipt QR Code",
+      "scan_to_view": "Scan to view details or customer receipt",
+      "staff_id": "Staff ID"
     },
     "modals": {
       "add_tp_title": "Add New Touch Point",
@@ -338,7 +429,8 @@
       "tabs": {
         "stations": "QR Stations",
         "devices": "Hardware Devices"
-      }
+      },
+      "open_link": "Test station flow"
     },
     "devices": {
       "subtitle": "Manage physical salon stands, tabletop codes, and smart taps.",
@@ -580,7 +672,23 @@
     "scan_to_tip_review": "Scan to Tip & Review"
   },
   "register": {
-    "title_step_1": "Step 1: Create New Account",
+    "role_select_title": "Choose Account Type",
+    "role_select_desc": "Select the appropriate role to configure your portal interface.",
+    "role_business_title": "Business Owner",
+    "role_business_desc": "Manage store profile, technicians, touchpoints, review routing, and see shop statistics.",
+    "role_personal_title": "Personal Account",
+    "role_personal_desc": "Manage own profile, payout wallets, track personal tips, and share personal QR codes.",
+    "fullname_label": "Full Name *",
+    "fullname_placeholder": "e.g., Mia Tran",
+    "staff_success_title": "Personal Account Registered!",
+    "staff_success_desc": "Your personal account has been successfully created. You do not need business verification to start.",
+    "staff_id_label": "Your Unique Personal ID:",
+    "staff_linking_instructions": "Give this Personal ID to your Salon Owner so they can link your account to the business.",
+    "staff_login_btn": "Log In to Personal Dashboard",
+    "agree_terms": "I agree to the Nexora Touch Terms & Conditions",
+    "terms_error": "You must agree to the Terms & Conditions to proceed.",
+    "terms_title": "Terms & Conditions",
+    "title_step_1": "Step 2: Create New Account",
     "desc_step_1": "Create your Nexora Touch credentials to get started.",
     "email_label": "Email Address *",
     "email_placeholder": "partner@yourstore.com",
@@ -589,7 +697,7 @@
     "password_label": "Password *",
     "password_placeholder": "Enter secure password...",
     "referral_code_label": "Referral Code (Optional)",
-    "referral_code_placeholder": "Enter promo or referral code...",
+    "referral_code_placeholder": "Enter referral code...",
     "title_step_2": "Step 2: VLINKPAY KYB Portal",
     "desc_step_2": "VLINKPAY requires Know Your Business (KYB) verification to activate payment features.",
     "title_step_3": "Step 3: Registration Pending Approval",
@@ -617,7 +725,8 @@
       "email_mismatch": "Emails do not match",
       "password_required": "Password is required",
       "password_short": "Password must be at least 6 characters long",
-      "kyb_required": "Please fill in all required KYB fields"
+      "kyb_required": "Please fill in all required KYB fields",
+      "fullname_required": "Full name is required"
     }
   },
   "staff_invite": {
@@ -643,23 +752,23 @@
     "opened_invite": "{count} opened invite",
     "recommended": "Recommended",
     "vlinkpay_kyc_filled": "VLINKPAY Profile Verified! Auto-filled KYC details.",
-    "wizard_title": "Complete Your Staff Tip Profile",
+    "wizard_title": "Complete Your Personal Tip Account",
     "wizard_subtitle": "Configure your technician profile and payment methods once. Use it to link with any salon.",
     "otp_verify": "1. Verify OTP",
     "otp_desc": "Enter the 4-digit code sent to your email or phone.",
     "consent_tax": "I understand that tips received directly may be reportable income. I am responsible for keeping records and reporting income as required by applicable law.",
     "consent_confirm": "I confirm that my payment information is correct and customers may use these methods to send tips directly to me.",
-    "save_activate": "Save & Activate Staff Profile",
+    "save_activate": "Save & Activate Personal Account",
     "customer_preview": "Customer Preview",
     "customer_preview_desc": "This is what customers will see after selecting you.",
     "linked_businesses": "Linked Businesses",
-    "copy_staff_link": "Copy Staff Link",
+    "copy_staff_link": "Copy Personal Link",
     "invite_from_biz": "Invitation from Business",
-    "invite_desc": "You are invited to join NEXORA TOUCH staff profile for the business below.",
+    "invite_desc": "You are invited to join NEXORA TOUCH personal profile for the business below.",
     "accept_invite": "Accept Invite & Continue Setup",
-    "already_have_id": "I already have Staff ID",
-    "activation_success": "Staff Profile Activated!",
-    "activation_success_desc": "Your Staff ID is {id}. You are now linked to {business} and will appear in the customer tip list.",
+    "already_have_id": "I already have Personal ID",
+    "activation_success": "Personal Account Activated!",
+    "activation_success_desc": "Your Personal ID is {id}. You are now linked to {business} and will appear in the customer tip list.",
     "return_merchant": "Return to Merchant Dashboard"
   }
 }

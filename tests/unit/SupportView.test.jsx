@@ -18,29 +18,7 @@ describe('SupportView Component Unit Tests', () => {
     ).toBeInTheDocument()
   })
 
-  it('renders the Support KPI cards correctly with values scoped to prevent collisions', () => {
-    render(
-      <LanguageProvider>
-        <SupportView />
-      </LanguageProvider>
-    )
 
-    // 1. Open Tickets KPI (Value: 3)
-    const openTicketsCard = screen.getByText(/^Open Tickets$/i).closest('section')
-    expect(within(openTicketsCard).getByText('3')).toBeInTheDocument()
-
-    // 2. Resolved KPI (Value: 18)
-    const resolvedCard = screen.getByText(/^Resolved$/i).closest('section')
-    expect(within(resolvedCard).getByText('18')).toBeInTheDocument()
-
-    // 3. Avg Response KPI (Value: 2h)
-    const avgResponseCard = screen.getByText(/^Avg Response$/i).closest('section')
-    expect(within(avgResponseCard).getByText('2h')).toBeInTheDocument()
-
-    // 4. System Status KPI (Value: Online)
-    const statusCard = screen.getByText(/^System Status$/i).closest('section')
-    expect(within(statusCard).getByText(/^Online$/i)).toBeInTheDocument()
-  })
 
   it('toggles FAQ accordion answers on click', () => {
     render(

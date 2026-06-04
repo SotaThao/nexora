@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { X, Camera, FolderOpen, AlertTriangle, Bitcoin } from 'lucide-react'
-import { useTranslation } from '../../../contexts/LanguageContext'
+import { useTranslation, renderLabel } from '../../../contexts/LanguageContext'
 
 function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrCode, onClose, onSubmit, readOnly = false }) {
   const { t, currentLanguage } = useTranslation()
@@ -162,7 +162,7 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
         <div className="space-y-4">
           <div>
             <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
-              {currentLanguage === 'vi' ? 'THÔNG TIN TÀI KHOẢN' : 'Account Identifier'}
+              {renderLabel(currentLanguage === 'vi' ? 'THÔNG TIN TÀI KHOẢN *' : 'Account Identifier *')}
             </label>
             <input
               type="text"

@@ -22,6 +22,27 @@ select:focus {
   transition: all 0.15s ease-in-out;
 }
 
+/* Prevent iOS Safari from zooming on input focus by ensuring font-size is at least 16px on iOS devices (portrait and landscape) */
+@supports (-webkit-touch-callout: none) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* Prevent zoom on all other mobile browsers on narrow viewports */
+@media screen and (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+
+
+
 /* Keyboard focus visibility for buttons and links */
 button:focus-visible, a:focus-visible {
   outline: none !important;
@@ -428,3 +449,18 @@ button:focus-visible, a:focus-visible {
     display: inline-block !important;
   }
 }
+
+@keyframes highlight-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.4);
+    border-color: rgba(212, 175, 55, 0.8) !important;
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(212, 175, 55, 0.8);
+    border-color: rgba(212, 175, 55, 1) !important;
+  }
+}
+.animate-highlight {
+  animation: highlight-pulse 2s infinite ease-in-out;
+}
+
