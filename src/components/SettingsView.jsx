@@ -3,6 +3,7 @@ import { QrCode, Copy, Check, X, Download } from 'lucide-react'
 import useSettingsForm from './settings/hooks/useSettingsForm'
 import ProfileTab from './settings/tabs/ProfileTab'
 import KybTab from './settings/tabs/KybTab'
+import { downloadQrCode } from '../utils/qrUtils'
 
 export default function SettingsView({
   setupData,
@@ -34,19 +35,9 @@ export default function SettingsView({
 
   const handleSaveQr = async (qrUrl) => {
     try {
-      const response = await fetch(qrUrl)
-      const blob = await response.blob()
-      const blobUrl = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = blobUrl
-      link.download = `referral-qr-${selectedLeg}.png`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(blobUrl)
+      await downloadQrCode(qrUrl, `referral-qr-${selectedLeg}.png`)
       form.showToast(form.currentLanguage === 'vi' ? 'Đã tải xuống mã QR!' : 'QR code downloaded!')
-    } catch (error) {
-      console.error('Failed to download QR code', error)
+    } catch {
       window.open(qrUrl, '_blank')
     }
   }
