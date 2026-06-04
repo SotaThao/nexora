@@ -1,41 +1,42 @@
+// 1. React
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { logger } from '../utils/logger'
+
+// 2. Third-party
 import { Filter, LogOut, Moon, Settings, ShieldAlert, Sun, X, ChevronUp, ChevronDown, Check, Link } from 'lucide-react'
-import StaffDetailView from './StaffDetailView'
-import { useTranslation } from '../contexts/LanguageContext'
+
+// 3. Internal — utils → contexts → data/constants → hooks → layout → views → modals → ui
+import { logger } from '../utils/logger'
 import { storage } from '../utils/storage'
+import { useTranslation } from '../contexts/LanguageContext'
 import { useNotification } from '../contexts/NotificationContext'
-
-const localStorage = storage
-const sessionStorage = storage
-
-import SettingsView from './SettingsView'
-import TipsView from './TipsView'
-import TouchpointsView from './TouchpointsView'
-
-import AnalyticsView from './AnalyticsView'
-import SupportView from './SupportView'
-
 import { INITIAL_TRANSACTIONS, INITIAL_REVIEWS, INITIAL_TOUCHPOINTS, STAFF_PERFORMANCE } from './dashboard/data/mockData'
 import { DEFAULT_PAYOUT_CONFIGS, MENU_ITEMS } from './dashboard/constants'
 import { slugify, getPayoutConfigsFromMember } from './dashboard/utils'
-
-import IconButton from './ui/IconButton'
-import MenuIcon from './ui/MenuIcon'
-
-import DashboardHeader from './dashboard/layout/DashboardHeader'
-import DashboardSidebar from './dashboard/layout/DashboardSidebar'
 import { useDashboardNavigation } from './dashboard/hooks/useDashboardNavigation'
 import { useDevices } from './dashboard/hooks/useDevices'
 import { useStaffManagement } from './dashboard/hooks/useStaffManagement'
+import DashboardHeader from './dashboard/layout/DashboardHeader'
+import DashboardSidebar from './dashboard/layout/DashboardSidebar'
 import Overview from './dashboard/overview/Overview'
 import StaffView from './dashboard/views/StaffView'
 import ReviewsView from './dashboard/views/ReviewsView'
 import ReportsView from './dashboard/views/ReportsView'
 import ComingSoon from './dashboard/views/ComingSoon'
+import AnalyticsView from './AnalyticsView'
+import SettingsView from './SettingsView'
+import SupportView from './SupportView'
+import TipsView from './TipsView'
+import TouchpointsView from './TouchpointsView'
+import StaffDetailView from './StaffDetailView'
 import StaffModal from './dashboard/modals/StaffModal'
 import QrModal from './dashboard/modals/QrModal'
 import InviteShareModal from './dashboard/modals/InviteShareModal'
+import IconButton from './ui/IconButton'
+import MenuIcon from './ui/MenuIcon'
+
+// Storage aliases (const declarations must follow all imports)
+const localStorage = storage
+const sessionStorage = storage
 
 const areStaffListsEqual = (list1, list2) => {
   if (!list1 || !list2) return list1 === list2
