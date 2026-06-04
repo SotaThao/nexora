@@ -1,6 +1,7 @@
 import React, { lazy, Suspense } from 'react'
 import { RefreshCw, ShieldAlert, X, Sparkles } from 'lucide-react'
 import { storage } from '../utils/storage'
+import { logger } from '../utils/logger'
 
 const localStorage = storage
 
@@ -133,7 +134,7 @@ export default function AppRouter({
               try {
                 setSetupData(JSON.parse(savedSetup))
               } catch (e) {
-                console.error(e)
+                logger.error(e)
               }
             }
             // Clear URL query parameters

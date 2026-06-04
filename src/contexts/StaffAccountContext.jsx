@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { storage } from '../utils/storage'
+import { logger } from '../utils/logger'
 import { INITIAL_TRANSACTIONS, INITIAL_REVIEWS, INITIAL_STAFF } from '../components/dashboard/data/mockData'
 import { DEMO_STAFF_ID, makeDefaultStaffAccount } from '../components/staff-dashboard/data/staffMockData'
 
@@ -123,7 +124,7 @@ export function StaffAccountProvider({ staffId = DEMO_STAFF_ID, children }) {
             }
           }
         } catch (e) {
-          console.error('[StaffAccountContext] Error syncing to merchant setup:', e)
+          logger.error('[StaffAccountContext] Error syncing to merchant setup:', e)
         }
 
         window.dispatchEvent(new Event('storage'))

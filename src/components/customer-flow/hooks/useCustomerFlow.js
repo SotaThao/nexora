@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { storage } from '../../../utils/storage'
 import { useNotification } from '../../../contexts/NotificationContext'
+import { logger } from '../../../utils/logger'
 
 const localStorage = storage
 const sessionStorage = storage
@@ -372,7 +373,7 @@ export default function useCustomerFlow() {
         const existingNotis = JSON.parse(localStorage.getItem('nexora_notifications') || '[]')
         localStorage.setItem('nexora_notifications', JSON.stringify([...newNotifications, ...existingNotis]))
       } catch (e) {
-        console.error('Error saving transaction/notification', e)
+        logger.error('Error saving transaction/notification', e)
       }
     }, 1800)
   }
@@ -410,7 +411,7 @@ export default function useCustomerFlow() {
       const existingNotis = JSON.parse(localStorage.getItem('nexora_notifications') || '[]')
       localStorage.setItem('nexora_notifications', JSON.stringify([...newNotifications, ...existingNotis]))
     } catch (e) {
-      console.error('Error saving review/notification', e)
+      logger.error('Error saving review/notification', e)
     }
 
     if (rating >= 4) {

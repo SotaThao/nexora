@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { logger } from '../utils/logger'
 import { Filter, LogOut, Moon, Settings, ShieldAlert, Sun, X, ChevronUp, ChevronDown, Check, Link } from 'lucide-react'
 import StaffDetailView from './StaffDetailView'
 import { useTranslation } from '../contexts/LanguageContext'
@@ -126,7 +127,7 @@ export default function Dashboard({
       const saved = localStorage.getItem('nexora_profile_settings')
       if (saved) return JSON.parse(saved)
     } catch (e) {
-      console.error(e)
+      logger.error(e)
     }
     // Fallback if not saved yet
     const setupDataStr = localStorage.getItem('nexora_merchant_setup')
@@ -165,7 +166,7 @@ export default function Dashboard({
       const saved = localStorage.getItem('nexora_transactions')
       if (saved) return JSON.parse(saved)
     } catch (e) {
-      console.error(e)
+      logger.error(e)
     }
     localStorage.setItem('nexora_transactions', JSON.stringify(INITIAL_TRANSACTIONS))
     return INITIAL_TRANSACTIONS
@@ -176,7 +177,7 @@ export default function Dashboard({
       const saved = localStorage.getItem('nexora_reviews')
       if (saved) return JSON.parse(saved)
     } catch (e) {
-      console.error(e)
+      logger.error(e)
     }
     localStorage.setItem('nexora_reviews', JSON.stringify(INITIAL_REVIEWS))
     return INITIAL_REVIEWS
@@ -187,7 +188,7 @@ export default function Dashboard({
       const saved = localStorage.getItem('nexora_notifications')
       if (saved) return JSON.parse(saved)
     } catch (e) {
-      console.error(e)
+      logger.error(e)
     }
     const initial = [
       { id: '1', type: 'feedback_alert', title: 'New Internal Feedback (2★)', message: 'Customer left feedback for Ashley P. at Pedicure Chair 02: "Great polish, but I waited 20 minutes after my appointment time."', time: '10 mins ago', read: false, linkTab: 'reviews' },
@@ -440,7 +441,7 @@ export default function Dashboard({
           }
         }
       } catch (err) {
-        console.error('Error parsing synced storage key', e?.key, err)
+        logger.error('Error parsing synced storage key', e?.key, err)
       }
     }
     window.addEventListener('storage', handleStorageChange)

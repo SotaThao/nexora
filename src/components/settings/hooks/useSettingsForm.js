@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { ShieldCheck, ShieldAlert } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { storage } from '../../../utils/storage'
+import { logger } from '../../../utils/logger'
 
 const localStorage = storage
 const sessionStorage = storage
@@ -220,7 +221,7 @@ export default function useSettingsForm({
         const parsed = JSON.parse(saved)
         setProfile(prev => ({ ...prev, ...parsed }))
       } catch (e) {
-        console.error(e)
+        logger.error(e)
       }
     } else if (setupData) {
       const synced = {
@@ -364,7 +365,7 @@ export default function useSettingsForm({
         sessionStorage.setItem('nexora_merchant_setup', JSON.stringify(savedSetup))
         window.dispatchEvent(new Event('storage'))
       } catch (err) {
-        console.error(err)
+        logger.error(err)
       }
     }
 
@@ -404,7 +405,7 @@ export default function useSettingsForm({
         // Dispatch storage event to notify other components
         window.dispatchEvent(new Event('storage'))
       } catch (err) {
-        console.error(err)
+        logger.error(err)
       }
     }
     setIsEditingReviews(false)
@@ -490,7 +491,7 @@ export default function useSettingsForm({
         sessionStorage.setItem('nexora_merchant_setup', JSON.stringify(savedSetup))
         window.dispatchEvent(new Event('storage'))
       } catch (err) {
-        console.error(err)
+        logger.error(err)
       }
     }
 

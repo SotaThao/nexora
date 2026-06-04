@@ -4,6 +4,7 @@ import AppRouter from './app/AppRouter'
 import { MOCK_SSO_KYB_PROFILE, MOCK_SSO_NO_KYB_EMAIL } from './app/mockSso'
 import { useTranslation } from './contexts/LanguageContext'
 import { storage, initStorage } from './utils/storage'
+import { logger } from './utils/logger'
 import { useNotification } from './contexts/NotificationContext'
 
 const localStorage = storage
@@ -73,7 +74,7 @@ export default function App() {
         setSetupData(parsed)
         sessionStorage.setItem('nexora_merchant_setup', savedSetup)
       } catch (e) {
-        console.error('Error parsing setup details', e)
+        logger.error('Error parsing setup details', e)
       }
     }
 

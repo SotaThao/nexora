@@ -5,6 +5,7 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { storage } from '../../../utils/storage'
+import { logger } from '../../../utils/logger'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 
@@ -63,7 +64,7 @@ export default function StaffMyQR() {
     setScanStatus('checking')
 
     const timer = setTimeout(() => {
-      console.log('[DEBUG STAFF QR] Scanned merchant:', bizName)
+      logger.debug('[DEBUG STAFF QR] Scanned merchant:', bizName)
 
       // 1. Get nexora_merchant_setup from localStorage
       let merchantSetup = null
@@ -73,7 +74,7 @@ export default function StaffMyQR() {
           merchantSetup = JSON.parse(saved)
         }
       } catch (e) {
-        console.error(e)
+        logger.error(e)
       }
 
       // If it doesn't exist, create a mock one so the simulation works beautifully
@@ -161,7 +162,7 @@ export default function StaffMyQR() {
           notifications = JSON.parse(savedNotis)
         }
       } catch (e) {
-        console.error(e)
+        logger.error(e)
       }
 
       const newNoti = {
@@ -208,7 +209,7 @@ export default function StaffMyQR() {
         }
       }
     } catch (e) {
-      console.error('URL parsing failed, treating as plain text', e)
+      logger.error('URL parsing failed, treating as plain text', e)
     }
 
     simulateMerchantScan(bizName)
@@ -269,7 +270,7 @@ export default function StaffMyQR() {
         'success'
       )
     } catch (e) {
-      console.error(e)
+      logger.error(e)
     }
   }
 

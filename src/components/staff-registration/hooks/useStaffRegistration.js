@@ -3,6 +3,7 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { storage } from '../../../utils/storage'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { parsePhone } from '../../CountryCodeSelect'
+import { logger } from '../../../utils/logger'
 
 const localStorage = storage
 const sessionStorage = storage
@@ -498,7 +499,7 @@ export default function useStaffRegistration({ inviteData }) {
       try {
         parsed = JSON.parse(savedSetup)
       } catch (e) {
-        console.error('Failed to parse saved setup', e)
+        logger.error('Failed to parse saved setup', e)
       }
     }
     if (!parsed) {
@@ -567,7 +568,7 @@ export default function useStaffRegistration({ inviteData }) {
       sessionStorage.setItem('nexora_notifications', JSON.stringify(notis))
       window.dispatchEvent(new Event('storage'))
     } catch (e) {
-      console.error('Failed to update staff database in wizard', e)
+      logger.error('Failed to update staff database in wizard', e)
     }
 
     setStaffId(searchId.trim().toUpperCase())
@@ -720,7 +721,7 @@ export default function useStaffRegistration({ inviteData }) {
       try {
         parsedActive = JSON.parse(savedSetup)
       } catch (e) {
-        console.error('Failed to parse saved setup', e)
+        logger.error('Failed to parse saved setup', e)
       }
     }
     if (!parsedActive) {
@@ -829,7 +830,7 @@ export default function useStaffRegistration({ inviteData }) {
       }
       window.dispatchEvent(new Event('storage'))
     } catch (e) {
-      console.error('Failed to update staff database in wizard', e)
+      logger.error('Failed to update staff database in wizard', e)
     }
 
     setStep(5)

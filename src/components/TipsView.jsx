@@ -25,6 +25,7 @@ import { WalletLogos } from './dashboard/constants';
 import { useNotification } from '../contexts/NotificationContext';
 import CustomSelect from './CustomSelect';
 import TransactionFilter from './TransactionFilter';
+import { logger } from '../utils/logger';
 
 export default function TipsView({ 
   transactions = [], 
@@ -1230,7 +1231,7 @@ export default function TipsView({
                             url: shareUrl
                           });
                         } catch (err) {
-                          console.log(err);
+                          logger.error(err);
                         }
                       } else {
                         navigator.clipboard.writeText(shareUrl);
