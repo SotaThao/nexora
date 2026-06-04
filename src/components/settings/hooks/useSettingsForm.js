@@ -3,9 +3,11 @@ import { ShieldCheck, ShieldAlert } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { storage } from '../../../utils/storage'
 import { logger } from '../../../utils/logger'
+import { useProfileSettings, useSaveProfileSettings } from '../../../data/hooks/useProfileSettings'
+import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
 
+// Alias used by handleKybSubmit for nexora_pending_accounts (pending_accounts migration is Phase 5)
 const localStorage = storage
-const sessionStorage = storage
 
 const DEFAULT_PROFILE = {
   username: 'goldenglow_owner',
@@ -73,6 +75,10 @@ export default function useSettingsForm({
   verificationStatus
 }) {
   const { t, currentLanguage } = useTranslation()
+  const profileSettingsQuery = useProfileSettings()
+  const saveProfileSettingsMutation = useSaveProfileSettings()
+  const merchantSetupQuery = useMerchantSetup()
+  const saveMerchantSetupMutation = useSaveMerchantSetup()
   const [activeTab, setActiveTab] = useState(initialTab) // profile | kyb
 
   useEffect(() => {
@@ -213,16 +219,10 @@ export default function useSettingsForm({
   const [isCapturing, setIsCapturing] = useState(false)
   const [modalError, setModalError] = useState('')
 
-  // Load profile settings from localStorage or sync with setupData
+  // Load profile settings from Query cache or sync with setupData
   useEffect(() => {
-    const saved = localStorage.getItem('nexora_profile_settings')
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        setProfile(prev => ({ ...prev, ...parsed }))
-      } catch (e) {
-        logger.error(e)
-      }
+    if (profileSettingsQuery.data) {
+      setProfile(prev => ({ ...prev, ...profileSettingsQuery.data }))
     } else if (setupData) {
       const synced = {
         fullName: setupData.businessInfo?.ownerName || (hasKyb ? DEFAULT_PROFILE.fullName : ''),
@@ -259,14 +259,12 @@ export default function useSettingsForm({
         businessEmail: userEmail || prev.businessEmail || ''
       }))
     }
-  }, [setupData, hasKyb, userEmail])
+  }, [profileSettingsQuery.data, setupData, hasKyb, userEmail])
 
   const saveProfile = (updatedProfile) => {
     setProfile(updatedProfile)
-    localStorage.setItem('nexora_profile_settings', JSON.stringify(updatedProfile))
-    sessionStorage.setItem('nexora_profile_settings', JSON.stringify(updatedProfile))
+    saveProfileSettingsMutation.mutate(updatedProfile)
     showToast(currentLanguage === 'vi' ? 'Đã cập nhật cài đặt thành công!' : 'Settings updated successfully!')
-    window.dispatchEvent(new Event('storage'))
   }
 
   const showToast = (msg) => {
@@ -349,24 +347,20 @@ export default function useSettingsForm({
       businessWebsite: businessForm.businessWebsite
     })
 
-    // Update setupData businessInfo in storage to synchronize with other views
-    const savedSetupStr = localStorage.getItem('nexora_merchant_setup') || sessionStorage.getItem('nexora_merchant_setup')
-    if (savedSetupStr) {
-      try {
-        const savedSetup = JSON.parse(savedSetupStr)
-        if (!savedSetup.businessInfo) {
-          savedSetup.businessInfo = {}
+    // Update merchantSetup businessInfo via repository to synchronize with other views
+    const currentSetup = merchantSetupQuery.data
+    if (currentSetup) {
+      const updatedSetup = {
+        ...currentSetup,
+        businessInfo: {
+          ...(currentSetup.businessInfo || {}),
+          name: businessForm.businessName,
+          phone: businessForm.businessPhone,
+          businessEmail: businessForm.businessEmail,
+          website: businessForm.businessWebsite
         }
-        savedSetup.businessInfo.name = businessForm.businessName
-        savedSetup.businessInfo.phone = businessForm.businessPhone
-        savedSetup.businessInfo.businessEmail = businessForm.businessEmail
-        savedSetup.businessInfo.website = businessForm.businessWebsite
-        localStorage.setItem('nexora_merchant_setup', JSON.stringify(savedSetup))
-        sessionStorage.setItem('nexora_merchant_setup', JSON.stringify(savedSetup))
-        window.dispatchEvent(new Event('storage'))
-      } catch (err) {
-        logger.error(err)
       }
+      saveMerchantSetupMutation.mutate(updatedSetup)
     }
 
     setIsEditingBusiness(false)
@@ -389,25 +383,20 @@ export default function useSettingsForm({
     }
     saveProfile(updatedProfile)
 
-    // Update setupData reviewLinks in storage to synchronize with other views
-    const savedSetupStr = localStorage.getItem('nexora_merchant_setup') || sessionStorage.getItem('nexora_merchant_setup')
-    if (savedSetupStr) {
-      try {
-        const savedSetup = JSON.parse(savedSetupStr)
-        if (!savedSetup.reviewLinks) {
-          savedSetup.reviewLinks = {}
+    // Update merchantSetup reviewLinks via repository to synchronize with other views
+    const currentSetup = merchantSetupQuery.data
+    if (currentSetup) {
+      const updatedSetup = {
+        ...currentSetup,
+        reviewLinks: {
+          ...(currentSetup.reviewLinks || {}),
+          googleReview: reviewsForm.googleReview,
+          yelpReview: reviewsForm.yelpReview
         }
-        savedSetup.reviewLinks.googleReview = reviewsForm.googleReview
-        savedSetup.reviewLinks.yelpReview = reviewsForm.yelpReview
-        localStorage.setItem('nexora_merchant_setup', JSON.stringify(savedSetup))
-        sessionStorage.setItem('nexora_merchant_setup', JSON.stringify(savedSetup))
-
-        // Dispatch storage event to notify other components
-        window.dispatchEvent(new Event('storage'))
-      } catch (err) {
-        logger.error(err)
       }
+      saveMerchantSetupMutation.mutate(updatedSetup)
     }
+
     setIsEditingReviews(false)
   }
 
@@ -477,22 +466,18 @@ export default function useSettingsForm({
     }
     saveProfile(updatedProfile)
 
-    // Update setupData businessInfo paymentAccounts in storage to synchronize with other views
-    const savedSetupStr = localStorage.getItem('nexora_merchant_setup') || sessionStorage.getItem('nexora_merchant_setup')
-    if (savedSetupStr) {
-      try {
-        const savedSetup = JSON.parse(savedSetupStr)
-        if (!savedSetup.businessInfo) {
-          savedSetup.businessInfo = {}
+    // Update merchantSetup businessInfo paymentAccounts via repository to synchronize with other views
+    const currentSetup = merchantSetupQuery.data
+    if (currentSetup) {
+      const updatedSetup = {
+        ...currentSetup,
+        businessInfo: {
+          ...(currentSetup.businessInfo || {}),
+          paymentAccounts: updatedAccounts,
+          payoutQrCodes: updatedQrCodes
         }
-        savedSetup.businessInfo.paymentAccounts = updatedAccounts
-        savedSetup.businessInfo.payoutQrCodes = updatedQrCodes
-        localStorage.setItem('nexora_merchant_setup', JSON.stringify(savedSetup))
-        sessionStorage.setItem('nexora_merchant_setup', JSON.stringify(savedSetup))
-        window.dispatchEvent(new Event('storage'))
-      } catch (err) {
-        logger.error(err)
       }
+      saveMerchantSetupMutation.mutate(updatedSetup)
     }
 
     setEditingMethod(null)

@@ -4,7 +4,6 @@ import {
   ArrowRight, ArrowLeft, AlertTriangle,
   ShieldCheck, Check, LogIn, X
 } from 'lucide-react'
-import { storage } from '../utils/storage'
 import useSetupWizard from './setup-wizard/hooks/useSetupWizard'
 import Step1BusinessInfo from './setup-wizard/steps/Step1BusinessInfo'
 import Step2StaffTouchpoints from './setup-wizard/steps/Step2StaffTouchpoints'
@@ -58,9 +57,7 @@ export default function SetupWizard({
   } = wizard
 
   const handleCompleteSetup = () => {
-    const data = { businessInfo, reviewLinks, staffList, touchPoints }
-    storage.setItem('nexora_merchant_setup', JSON.stringify(data))
-    onComplete(data)
+    wizard.handleCompleteSetup(onComplete)
   }
 
   const stepIcon = (step) => {
