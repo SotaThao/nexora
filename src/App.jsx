@@ -6,11 +6,16 @@ import { useTranslation } from './contexts/LanguageContext'
 import { storage, initStorage } from './utils/storage'
 import { logger } from './utils/logger'
 import { useNotification } from './contexts/NotificationContext'
+import { useStorageEventBridge } from './data/storageEventBridge'
 
 const localStorage = storage
 const sessionStorage = storage
 
 export default function App() {
+  // Mount the storage-event → query-cache bridge once at app root (Phase 3 / D4).
+  // Must be called inside QueryClientProvider (see src/main.jsx).
+  useStorageEventBridge()
+
   const { currentLanguage, setLanguage, t } = useTranslation()
   const { showConfirm } = useNotification()
   const [view, setView] = useState('login') // 'login' | 'register-wizard' | 'onboarding' | 'dashboard' | 'customer' | 'staff-portal' | 'staff-dashboard'
