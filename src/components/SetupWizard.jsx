@@ -142,7 +142,7 @@ export default function SetupWizard({
             {/* Connecting Track Line */}
             <div className="absolute left-0 top-5 -translate-y-1/2 w-full h-[3px] bg-slate-200/60 rounded-full -z-10"></div>
             <div
-              className="absolute left-0 top-5 -translate-y-1/2 h-[3px] bg-gradient-to-r from-[#2B59FF] via-[#5A5CFF] to-[#8E4DF8] rounded-full -z-10 transition-all duration-500 ease-out"
+              className="absolute left-0 top-5 -translate-y-1/2 h-[3px] bg-gradient-to-r from-nexoraElectric via-nexoraElectricMid to-nexoraViolet rounded-full -z-10 transition-all duration-500 ease-out"
               style={{ width: `${((currentStep - 1) / 2) * 100}%` }}
             ></div>
 
@@ -156,7 +156,7 @@ export default function SetupWizard({
                       ${isActive
                         ? 'bg-white border-nexoraBrand text-nexoraBrand shadow-[0_4px_12px_rgba(70,72,216,0.18)] ring-4 ring-nexoraBrandSoft/80 scale-110'
                         : isCompleted
-                          ? 'bg-gradient-to-tr from-[#2B59FF] to-[#8E4DF8] border-transparent text-white shadow-sm'
+                          ? 'bg-gradient-to-tr from-nexoraElectric to-nexoraViolet border-transparent text-white shadow-sm'
                           : 'bg-white border-slate-200 text-slate-400'
                       }`}
                     onClick={() => {
@@ -168,7 +168,7 @@ export default function SetupWizard({
                     {isCompleted ? <Check className="w-5 h-5 stroke-[3px]" /> : step}
                   </div>
                   <div className="text-center mt-2.5">
-                    <span className="text-[9px] font-extrabold uppercase tracking-widest text-[#2B59FF]/80 mb-0.5 block">
+                    <span className="text-[9px] font-extrabold uppercase tracking-widest text-nexoraElectric/80 mb-0.5 block">
                       {currentLanguage === 'vi' ? `Bước ${step}` : `Step ${step}`}
                     </span>
                     <span className={`text-[11px] font-extrabold tracking-wide transition-colors duration-300 block whitespace-nowrap
@@ -278,7 +278,7 @@ export default function SetupWizard({
               {currentStep < 3 ? (
                 <button
                   onClick={handleNext}
-                  className="min-h-11 w-full justify-center px-6 py-2.5 rounded-flox-buttons bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] hover:opacity-90 transition-opacity text-white font-extrabold text-sm flex items-center gap-1.5 transition-all shadow-[0_4px_14px_rgba(43,89,255,0.25)] sm:w-auto"
+                  className="min-h-11 w-full justify-center px-6 py-2.5 rounded-flox-buttons bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 transition-opacity text-white font-extrabold text-sm flex items-center gap-1.5 transition-all shadow-[0_4px_14px_rgba(43,89,255,0.25)] sm:w-auto"
                 >
                   {t('common.next')} <ArrowRight className="w-4 h-4" />
                 </button>
@@ -289,7 +289,7 @@ export default function SetupWizard({
                   className={`min-h-11 w-full justify-center px-8 py-3 rounded-flox-buttons text-white font-extrabold text-sm flex items-center gap-2 transition-all sm:w-auto
                     ${!isConsentChecked
                       ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none'
-                      : 'bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] hover:opacity-90 transition-opacity shadow-[0_8px_25px_rgba(43,89,255,0.3)]'
+                      : 'bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 transition-opacity shadow-[0_8px_25px_rgba(43,89,255,0.3)]'
                     }`}
                 >
                   {t('setup.launch_dashboard_btn')} <ArrowRight className="w-[18px] h-[18px] stroke-[3px]" />

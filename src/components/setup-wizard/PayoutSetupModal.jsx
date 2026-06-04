@@ -72,12 +72,12 @@ export default function PayoutSetupModal({ open, walletKey, staffName, initialVa
   }
 
   const brandStyles = {
-    venmo: { text: 'venmo', color: 'text-[#008CFF]', fontClass: 'font-black italic text-lg tracking-tight' },
-    cashapp: { text: 'cash app', color: 'text-[#00D632]', fontClass: 'font-extrabold text-lg tracking-tighter' },
-    zelle: { text: 'zelle', color: 'text-[#7414CA]', fontClass: 'font-black text-lg' },
-    paypal: { text: 'PayPal', color: 'text-[#003087]', fontClass: 'font-black italic text-lg' },
+    venmo: { text: 'venmo', color: 'text-walletVenmo', fontClass: 'font-black italic text-lg tracking-tight' },
+    cashapp: { text: 'cash app', color: 'text-walletCashapp', fontClass: 'font-extrabold text-lg tracking-tighter' },
+    zelle: { text: 'zelle', color: 'text-walletZelle', fontClass: 'font-black text-lg' },
+    paypal: { text: 'PayPal', color: 'text-walletPaypal', fontClass: 'font-black italic text-lg' },
     applecash: { text: 'Apple Cash', color: 'text-black', fontClass: 'font-black text-lg tracking-tight' },
-    bankwire: { text: 'Bank Wire', color: 'text-[#475569]', fontClass: 'font-bold uppercase text-xs tracking-widest' }
+    bankwire: { text: 'Bank Wire', color: 'text-slate-600', fontClass: 'font-bold uppercase text-xs tracking-widest' }
   }[walletKey] || { text: walletKey, color: 'text-slate-800', fontClass: 'font-bold' }
 
   return (
@@ -112,7 +112,7 @@ export default function PayoutSetupModal({ open, walletKey, staffName, initialVa
                 setError('')
               }}
               placeholder={walletPlaceholders[walletKey]}
-              className={`w-full bg-slate-50 border border-slate-200 focus:border-nexoraBrand focus:ring-2 focus:ring-[#4648D8]/20 focus:bg-white rounded-xl px-3.5 h-11 text-xs text-slate-800 focus:outline-none transition-all ${
+              className={`w-full bg-slate-50 border border-slate-200 focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:bg-white rounded-xl px-3.5 h-11 text-xs text-slate-800 focus:outline-none transition-all ${
                 error ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20' : ''
               }`}
             />

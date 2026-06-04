@@ -297,14 +297,14 @@ export default function SettingsView({
                   />
                   <span className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
                     selectedLeg === 'left' 
-                      ? 'border-[#f0b90b] bg-[#f0b90b]/10' 
+                      ? 'border-nexoraWarning bg-nexoraWarning/10' 
                       : 'border-slate-300 bg-white'
                   }`}>
                     {selectedLeg === 'left' && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#f0b90b]" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-nexoraWarning" />
                     )}
                   </span>
-                  <span className={selectedLeg === 'left' ? 'text-[#e6ad00] font-black' : 'text-slate-500'}>
+                  <span className={selectedLeg === 'left' ? 'text-nexoraWarning font-black' : 'text-slate-500'}>
                     {form.currentLanguage === 'vi' ? 'Nhánh Trái' : 'Left Leg'}
                   </span>
                 </label>
@@ -320,14 +320,14 @@ export default function SettingsView({
                   />
                   <span className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
                     selectedLeg === 'right' 
-                      ? 'border-[#f0b90b] bg-[#f0b90b]/10' 
+                      ? 'border-nexoraWarning bg-nexoraWarning/10' 
                       : 'border-slate-300 bg-white'
                   }`}>
                     {selectedLeg === 'right' && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#f0b90b]" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-nexoraWarning" />
                     )}
                   </span>
-                  <span className={selectedLeg === 'right' ? 'text-[#e6ad00] font-black' : 'text-slate-500'}>
+                  <span className={selectedLeg === 'right' ? 'text-nexoraWarning font-black' : 'text-slate-500'}>
                     {form.currentLanguage === 'vi' ? 'Nhánh Phải' : 'Right Leg'}
                   </span>
                 </label>
@@ -355,7 +355,7 @@ export default function SettingsView({
                   `https://nexora.com/?ref=${form.profile.referralId || '640B5FBF'}&leg=${selectedLeg}`
                 )}`
               )}
-              className="w-full bg-[#f0b90b] hover:bg-[#d4a30a] text-black font-extrabold text-xs uppercase tracking-wider py-3.5 rounded-xl transition active:scale-[0.98] shadow-md shadow-amber-500/10"
+              className="w-full bg-nexoraWarning hover:bg-nexoraWarning text-black font-extrabold text-xs uppercase tracking-wider py-3.5 rounded-xl transition active:scale-[0.98] shadow-md shadow-amber-500/10"
             >
               Save QR
             </button>

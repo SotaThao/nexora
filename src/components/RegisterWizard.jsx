@@ -15,28 +15,28 @@ const sessionStorage = storage
 
 const PayoutLogos = {
   zelle: (
-    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-[#7414CA]" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-walletZelle" xmlns="http://www.w3.org/2000/svg">
       <path d="M13.559 24h-2.841a.483.483 0 0 1-.483-.483v-2.765H5.638a.667.667 0 0 1-.666-.666v-2.234a.67.67 0 0 1 .142-.412l8.139-10.382h-7.25a.667.667 0 0 1-.667-.667V3.914c0-.367.299-.666.666-.666h4.23V.483c0-.266.217-.483.483-.483h2.841c.266 0 .483.217.483.483v2.765h4.323c.367 0 .666.299.666.666v2.137a.67.67 0 0 1-.141.41l-8.19 10.481h7.665c.367 0 .666.299.666.666v2.477a.667.667 0 0 1-.666.667h-4.32v2.765a.483.483 0 0 1-.483.483Z" />
     </svg>
   ),
   bankwire: (
-    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-[#475569]" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-slate-600" xmlns="http://www.w3.org/2000/svg">
       <path d="M12 2L1 7v2h22V7L12 2zm0 18H3v-8h3v8h3v-8h3v8h3v-8h3v8h3v-8h3v8h3v-8h3v8h-3zm-11 2h22v2H1v-2z" />
     </svg>
   ),
   paypal: (
-    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-[#003087]" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-walletPaypal" xmlns="http://www.w3.org/2000/svg">
       <path d="M20.09 6.85c-.45 2.24-1.93 7.82-2.18 8.87-.24 1.05-1.12 1.77-2.22 1.77h-3.32l-.96 6.02c-.08.5-.52.87-1.03.87H6.22c-.65 0-1.13-.59-.99-1.22L8.53 5.4c.14-.63.7-.1 1.33-.1h5.8c2.81 0 4.88 1.48 4.43 3.7.22-1.07.13-2.15-.36-3.05z" />
       <path d="M16.92 3.85c-.45 2.24-1.93 7.82-2.18 8.87-.24 1.05-1.12 1.77-2.22 1.77h-3.32l-.96 6.02c-.08.5-.52.87-1.03.87H3.06c-.65 0-1.13-.59-.99-1.22L5.37 2.4c.14-.63.7-1.1 1.33-1.1h5.8c2.81 0 4.88 1.48 4.43 3.7.22-1.07.13-2.15-.36-3.05z" opacity="0.6" />
     </svg>
   ),
   venmo: (
-    <svg viewBox="0 0 448 512" className="h-[18px] w-[18px] fill-[#008CFF]" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 448 512" className="h-[18px] w-[18px] fill-walletVenmo" xmlns="http://www.w3.org/2000/svg">
       <path d="M381.4 105.3c11 18.1 15.9 36.7 15.9 60.3 0 75.1-64.1 172.7-116.2 241.2h-118.8l-47.6-285 104.1-9.9 25.3 202.8c23.5-38.4 52.6-98.7 52.6-139.7 0-22.5-3.9-37.8-9.9-50.4z" />
     </svg>
   ),
   cashapp: (
-    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-[#00D632]" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-walletCashapp" xmlns="http://www.w3.org/2000/svg">
       <path d="M23.59 3.475a5.1 5.1 0 00-3.05-3.05c-1.31-.42-2.5-.42-4.92-.42H8.36c-2.4 0-3.61 0-4.9.4a5.1 5.1 0 00-3.05 3.06C0 4.765 0 5.965 0 8.365v7.27c0 2.41 0 3.6.4 4.9a5.1 5.1 0 003.05 3.05c1.3.41 2.5.41 4.9.41h7.28c2.41 0 3.61 0 4.9-.4a5.1 5.1 0 003.06-3.06c.41-1.3.41-2.5.41-4.9v-7.25c0-2.41 0-3.61-.41-4.91zm-6.17 4.63l-.93.93a.5.5 0 01-.67.01 5 5 0 00-3.22-1.18c-.97 0-1.94.32-1.94 1.21 0 .9 1.04 1.2 2.24 1.65 2.1.7 3.84 1.58 3.84 3.64 0 2.24-1.74 3.78-4.58 3.95l-.26 1.2a.49.49 0 01-.48.39H9.63l-.09-.01a.5.5 0 01-.38-.59l.28-1.27a6.54 6.54 0 01-2.88-1.57v-.01a.48.48 0 010-.68l1-.97a.49.49 0 01.67 0c.91.86 2.13 1.34 3.39 1.32c1.3 0 2.17-.55 2.17-1.42 0-.87-.88-1.1-2.54-1.72-1.76-.63-3.43-1.52-3.43-3.6 0-2.42 2.01-3.6 4.39-3.71l.25-1.23a.48.48 0 01.48-.38h1.78l.1.01c.26.06.43.31.37.57l-.27 1.37c.9.3 1.75.77 2.48 1.39l.02.02c.19.2.19.5 0 .68z" />
     </svg>
   ),
@@ -496,7 +496,7 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
   }
 
   return (
-    <div className="min-h-dvh bg-[#F8FAFC] text-[#0B1C30] font-sans antialiased relative overflow-x-hidden selection:bg-nexoraBrandSoft selection:text-nexoraBrand">
+    <div className="min-h-dvh bg-slate-50 text-inkBlue font-sans antialiased relative overflow-x-hidden selection:bg-nexoraBrandSoft selection:text-nexoraBrand">
       {/* Background decorations */}
       <div className="absolute top-1/4 left-1/4 h-56 w-56 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(66,72,216,0.04)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-96 sm:w-96"></div>
       <div className="absolute bottom-1/4 right-1/4 h-64 w-64 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(43,89,255,0.02)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-[450px] sm:w-[450px]"></div>
@@ -535,7 +535,7 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
               {/* Connecting Track Line */}
               <div className="absolute left-0 top-5 -translate-y-1/2 w-full h-[3px] bg-slate-200/60 rounded-full -z-10"></div>
               <div 
-                className="absolute left-0 top-5 -translate-y-1/2 h-[3px] bg-gradient-to-r from-[#2B59FF] via-[#5A5CFF] to-[#8E4DF8] rounded-full -z-10 transition-all duration-500 ease-out"
+                className="absolute left-0 top-5 -translate-y-1/2 h-[3px] bg-gradient-to-r from-nexoraElectric via-nexoraElectricMid to-nexoraViolet rounded-full -z-10 transition-all duration-500 ease-out"
                 style={{ width: `${((currentStep - 1) / (role === 'business' ? 1 : 3)) * 100}%` }}
               ></div>
 
@@ -549,14 +549,14 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
                         ${isActive 
                           ? 'bg-white border-nexoraBrand text-nexoraBrand shadow-[0_4px_12px_rgba(70,72,216,0.18)] ring-4 ring-nexoraBrandSoft/80 scale-110' 
                           : isCompleted
-                            ? 'bg-gradient-to-tr from-[#2B59FF] to-[#8E4DF8] border-transparent text-white shadow-sm'
+                            ? 'bg-gradient-to-tr from-nexoraElectric to-nexoraViolet border-transparent text-white shadow-sm'
                             : 'bg-white border-slate-200 text-slate-400'
                         }`}
                     >
                       {isCompleted ? <Check className="w-5 h-5 stroke-[3px]" /> : step}
                     </div>
                     <div className="text-center mt-2.5">
-                      <span className="text-[9px] font-extrabold uppercase tracking-widest text-[#2B59FF]/80 mb-0.5 block">
+                      <span className="text-[9px] font-extrabold uppercase tracking-widest text-nexoraElectric/80 mb-0.5 block">
                         {currentLanguage === 'vi' ? `Bước ${step}` : `Step ${step}`}
                       </span>
                       <span className={`text-[11px] font-extrabold tracking-wide transition-colors duration-300 block
@@ -665,7 +665,7 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
                 <button
                   type="button"
                   onClick={() => setCurrentStep(1)}
-                  className="w-full min-h-11 py-2.5 bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all"
+                  className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all"
                 >
                   {t('common.next')} <ArrowRight className="w-4 h-4" />
                 </button>
@@ -751,7 +751,7 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
                       </button>
                       <button 
                         type="submit"
-                        className="w-full min-h-11 py-2.5 bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all"
+                        className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all"
                       >
                         {currentLanguage === 'vi' ? 'Xác minh & Kích hoạt' : 'Verify & Activate'} <ArrowRight className="w-4 h-4" />
                       </button>
@@ -862,7 +862,7 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
                               setModalType('terms')
                               setShowTermsModal(true)
                             }}
-                            className="text-[#0da59a] hover:underline font-bold"
+                            className="text-nexoraTealAlt hover:underline font-bold"
                           >
                             Điều khoản dịch vụ
                           </button>{' '}
@@ -873,7 +873,7 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
                               setModalType('privacy')
                               setShowTermsModal(true)
                             }}
-                            className="text-[#0da59a] hover:underline font-bold"
+                            className="text-nexoraTealAlt hover:underline font-bold"
                           >
                             Chính sách bảo mật
                           </button>{' '}
@@ -888,7 +888,7 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
                               setModalType('terms')
                               setShowTermsModal(true)
                             }}
-                            className="text-[#0da59a] hover:underline font-bold"
+                            className="text-nexoraTealAlt hover:underline font-bold"
                           >
                             Terms of Service
                           </button>{' '}
@@ -899,7 +899,7 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
                               setModalType('privacy')
                               setShowTermsModal(true)
                             }}
-                            className="text-[#0da59a] hover:underline font-bold"
+                            className="text-nexoraTealAlt hover:underline font-bold"
                           >
                             Privacy Policy
                           </button>.
@@ -917,7 +917,7 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
                       </button>
                       <button 
                         type="submit"
-                        className="w-full min-h-11 py-2.5 bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all"
+                        className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all"
                       >
                         {currentLanguage === 'vi' ? 'Đăng ký' : 'Register'} <ArrowRight className="w-4 h-4" />
                       </button>
@@ -988,7 +988,7 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
                       setOtpCode('1234')
                       setOtpError('')
                     }}
-                    className="px-2.5 py-1 bg-[#2B59FF] text-white rounded text-[10px] font-black uppercase hover:bg-opacity-90 shadow-sm animate-pulse"
+                    className="px-2.5 py-1 bg-nexoraElectric text-white rounded text-[10px] font-black uppercase hover:bg-opacity-90 shadow-sm animate-pulse"
                   >
                     Auto-fill (1234)
                   </button>
@@ -1004,7 +1004,7 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
                   </button>
                   <button 
                     type="submit"
-                    className="w-full min-h-11 py-2.5 bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all"
+                    className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all"
                   >
                     {currentLanguage === 'vi' ? 'Xác minh & Kích hoạt' : 'Verify & Activate'} <ArrowRight className="w-4 h-4" />
                   </button>
@@ -1050,7 +1050,7 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
 
                   <div className="flex flex-col gap-1.5">
                     <div className="flex items-center gap-2">
-                      <label className="h-9 px-4 rounded-lg bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] hover:opacity-90 text-white flex items-center justify-center gap-1.5 cursor-pointer text-xs font-bold transition shadow-sm">
+                      <label className="h-9 px-4 rounded-lg bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white flex items-center justify-center gap-1.5 cursor-pointer text-xs font-bold transition shadow-sm">
                         <Upload className="h-3.5 w-3.5" />
                         <span>{currentLanguage === 'vi' ? 'Tải ảnh lên' : 'Upload photo'}</span>
                         <input
@@ -1205,7 +1205,7 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
                   <button 
                     type="submit"
                     disabled={!fullName.trim() || !nickname.trim() || !phone.trim()}
-                    className="w-full min-h-11 py-2.5 bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all disabled:opacity-50"
+                    className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all disabled:opacity-50"
                   >
                     {t('common.next')} <ArrowRight className="w-4 h-4" />
                   </button>
@@ -1314,7 +1314,7 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
                 <button 
                   type="button"
                   onClick={handlePersonalRegisterSubmit}
-                  className="w-full min-h-11 py-2.5 bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all"
+                  className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all"
                 >
                   {currentLanguage === 'vi' ? 'Lưu & Kích hoạt' : 'Save & Activate'} <ArrowRight className="w-4 h-4" />
                 </button>
@@ -1383,7 +1383,7 @@ export default function RegisterWizard({ ssoEmail, onBackToLogin, onRegisterSucc
               <div className="pt-6">
                 <button 
                   onClick={onBackToLogin}
-                  className="px-6 py-2.5 bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg shadow-md transition-all"
+                  className="px-6 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg shadow-md transition-all"
                 >
                   {t('register.staff_login_btn')}
                 </button>
@@ -1622,7 +1622,7 @@ function PayoutEditModal({
                 setModalError('')
               }}
               placeholder={walletPlaceholders[editingMethod]}
-              className={`w-full bg-slate-50 border border-slate-200 focus:border-nexoraBrand focus:ring-2 focus:ring-[#4648D8]/20 focus:bg-white rounded-xl px-3.5 h-11 text-xs text-slate-800 focus:outline-none transition-all ${
+              className={`w-full bg-slate-50 border border-slate-200 focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:bg-white rounded-xl px-3.5 h-11 text-xs text-slate-800 focus:outline-none transition-all ${
                 modalError ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20' : ''
               }`}
             />
@@ -1706,7 +1706,7 @@ function PayoutEditModal({
             </button>
             <button
               type="submit"
-              className="px-5 py-2.5 bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] hover:opacity-90 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm transition"
+              className="px-5 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm transition"
             >
               {currentLanguage === 'vi' ? 'LƯU LẠI' : 'SAVE'}
             </button>

@@ -50,7 +50,7 @@ export default function StepOtpVerify({
               </label>
               <input
                 type="email"
-                className={`mt-1.5 h-10 w-full rounded-lg border ${regErrors.email ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20' : 'border-nexoraBorder focus:border-[#4648D8] focus:ring-2 focus:ring-[#4648D8]/20'} px-3 text-xs outline-none transition-all`}
+                className={`mt-1.5 h-10 w-full rounded-lg border ${regErrors.email ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20' : 'border-nexoraBorder focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20'} px-3 text-xs outline-none transition-all`}
                 placeholder="e.g. name@example.com"
                 value={regEmail}
                 onChange={(e) => {
@@ -69,7 +69,7 @@ export default function StepOtpVerify({
               </label>
               <input
                 type="email"
-                className={`mt-1.5 h-10 w-full rounded-lg border ${regErrors.confirmEmail ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20' : 'border-nexoraBorder focus:border-[#4648D8] focus:ring-2 focus:ring-[#4648D8]/20'} px-3 text-xs outline-none transition-all`}
+                className={`mt-1.5 h-10 w-full rounded-lg border ${regErrors.confirmEmail ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20' : 'border-nexoraBorder focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20'} px-3 text-xs outline-none transition-all`}
                 placeholder="e.g. name@example.com"
                 value={regConfirmEmail}
                 onChange={(e) => {
@@ -89,7 +89,7 @@ export default function StepOtpVerify({
               <div className="relative mt-1.5">
                 <input
                   type={showPassword ? "text" : "password"}
-                  className={`h-10 w-full rounded-lg border ${regErrors.password ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20' : 'border-nexoraBorder focus:border-[#4648D8] focus:ring-2 focus:ring-[#4648D8]/20'} pl-3 pr-10 text-xs outline-none transition-all`}
+                  className={`h-10 w-full rounded-lg border ${regErrors.password ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20' : 'border-nexoraBorder focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20'} pl-3 pr-10 text-xs outline-none transition-all`}
                   placeholder="••••••••"
                   value={regPassword}
                   onChange={(e) => {
@@ -119,7 +119,7 @@ export default function StepOtpVerify({
                 className={`mt-1.5 h-10 w-full rounded-lg border px-3 text-xs outline-none transition-all ${
                   inviteData?.biz
                     ? 'bg-nexoraSurfaceMuted text-nexoraSubtle border-nexoraBorder cursor-not-allowed'
-                    : 'border-nexoraBorder focus:border-[#4648D8] focus:ring-2 focus:ring-[#4648D8]/20 focus:outline-none'
+                    : 'border-nexoraBorder focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:outline-none'
                 }`}
                 placeholder="Enter referral code..."
                 value={regReferralLink}
@@ -139,7 +139,7 @@ export default function StepOtpVerify({
                       setModalType('terms')
                       setShowTermsModal(true)
                     }}
-                    className="text-[#0da59a] hover:underline font-bold"
+                    className="text-nexoraTealAlt hover:underline font-bold"
                   >
                     Điều khoản dịch vụ
                   </button>{' '}
@@ -150,7 +150,7 @@ export default function StepOtpVerify({
                       setModalType('privacy')
                       setShowTermsModal(true)
                     }}
-                    className="text-[#0da59a] hover:underline font-bold"
+                    className="text-nexoraTealAlt hover:underline font-bold"
                   >
                     Chính sách bảo mật
                   </button>{' '}
@@ -165,7 +165,7 @@ export default function StepOtpVerify({
                       setModalType('terms')
                       setShowTermsModal(true)
                     }}
-                    className="text-[#0da59a] hover:underline font-bold"
+                    className="text-nexoraTealAlt hover:underline font-bold"
                   >
                     Terms of Service
                   </button>{' '}
@@ -176,7 +176,7 @@ export default function StepOtpVerify({
                       setModalType('privacy')
                       setShowTermsModal(true)
                     }}
-                    className="text-[#0da59a] hover:underline font-bold"
+                    className="text-nexoraTealAlt hover:underline font-bold"
                   >
                     Privacy Policy
                   </button>.
@@ -229,7 +229,7 @@ export default function StepOtpVerify({
               </label>
               <input
                 type="text"
-                className="mt-1.5 h-12 w-full rounded-lg border border-nexoraBorder px-4 text-center font-mono font-black text-lg text-nexoraText focus:border-[#4648D8] focus:ring-2 focus:ring-[#4648D8]/20 focus:outline-none transition-all"
+                className="mt-1.5 h-12 w-full rounded-lg border border-nexoraBorder px-4 text-center font-mono font-black text-lg text-nexoraText focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:outline-none transition-all"
                 placeholder="e.g. 1234"
                 value={otpCode}
                 onChange={(e) => {
@@ -249,7 +249,7 @@ export default function StepOtpVerify({
                     <button
                       type="button"
                       onClick={() => setResendTimer(30)}
-                      className="text-[#4648D8] hover:underline"
+                      className="text-nexoraBrand hover:underline"
                     >
                       Resend Verification Code
                     </button>
@@ -265,7 +265,7 @@ export default function StepOtpVerify({
             <button
               type="button"
               onClick={autoFillOtp}
-              className="px-2.5 py-1 bg-[#4648D8] text-white rounded text-[10px] font-black uppercase hover:bg-opacity-90 shadow-sm"
+              className="px-2.5 py-1 bg-nexoraBrand text-white rounded text-[10px] font-black uppercase hover:bg-opacity-90 shadow-sm"
             >
               Auto-fill (1234)
             </button>

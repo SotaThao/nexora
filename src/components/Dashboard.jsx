@@ -1054,7 +1054,7 @@ export default function Dashboard({
                       }}
                       className={`flex min-h-11 w-full items-center justify-between rounded-lg px-4 text-left text-sm font-bold transition ${
                         isActive
-                          ? 'bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] text-white shadow-lg shadow-[#2B59FF]/20'
+                          ? 'bg-gradient-to-r from-nexoraElectric to-nexoraViolet text-white shadow-lg shadow-nexoraElectric/20'
                           : 'text-white/70 hover:bg-white/5 hover:text-white'
                       }`}
                     >
@@ -1282,7 +1282,7 @@ export default function Dashboard({
                   setSettingsTab('kyb')
                   setIsMobileMenuOpen(false)
                 }}
-                className="px-5 py-2.5 bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] hover:opacity-90 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-md transition-all animate-pulse"
+                className="px-5 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-md transition-all animate-pulse"
               >
                 {currentLanguage === 'vi' ? 'Xác thực ngay' : 'Verify Now'}
               </button>

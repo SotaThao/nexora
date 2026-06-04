@@ -309,7 +309,7 @@ export default function StaffMyQR() {
           <button
             type="button"
             onClick={handleShare}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] py-3 text-sm font-extrabold text-white transition hover:opacity-90"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-nexoraElectric to-nexoraViolet py-3 text-sm font-extrabold text-white transition hover:opacity-90"
           >
             <Share2 className="h-4 w-4" />
             {t('staff_dashboard.qr.share')}
@@ -506,7 +506,7 @@ export default function StaffMyQR() {
                 <button
                   type="button"
                   onClick={() => simulateMerchantScan('Golden Glow Nail Spa')}
-                  className="w-full py-2 bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] text-white rounded-xl text-xs font-black uppercase tracking-wider transition-opacity hover:opacity-90 shadow-sm"
+                  className="w-full py-2 bg-gradient-to-r from-nexoraElectric to-nexoraViolet text-white rounded-xl text-xs font-black uppercase tracking-wider transition-opacity hover:opacity-90 shadow-sm"
                 >
                   Golden Glow Nail Spa
                 </button>

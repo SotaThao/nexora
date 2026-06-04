@@ -35,13 +35,13 @@ export default function StepWelcome({
       {/* A. If merchant sent a direct prefilled invite */}
       {inviteData?.name ? (
         <div className="space-y-6 py-4">
-          <div className="p-5 border border-[#4648D8]/15 rounded-2xl bg-[#E9E9FF]/20 text-center space-y-4">
-            <div className="h-14 w-14 rounded-full bg-[#E9E9FF]/60 flex items-center justify-center mx-auto text-[#4648D8]">
+          <div className="p-5 border border-nexoraBrand/15 rounded-2xl bg-nexoraBrandSoft/20 text-center space-y-4">
+            <div className="h-14 w-14 rounded-full bg-nexoraBrandSoft/60 flex items-center justify-center mx-auto text-nexoraBrand">
               <Building className="h-7 w-7" />
             </div>
 
             <div className="space-y-1">
-              <span className="text-[10px] font-black uppercase text-[#4648D8] bg-[#E9E9FF]/80 px-2.5 py-0.5 rounded-full">
+              <span className="text-[10px] font-black uppercase text-nexoraBrand bg-nexoraBrandSoft/80 px-2.5 py-0.5 rounded-full">
                 {t('staff_invite.invite_from_biz') || 'Invitation from Business'}
               </span>
               <h3 className="text-lg font-black text-nexoraText tracking-tight mt-2">
@@ -141,9 +141,9 @@ export default function StepWelcome({
                     setLinkedProfile(null)
                     setSearchError('')
                   }}
-                  className="p-5 border border-nexoraBorder rounded-2xl bg-white hover:border-[#4648D8] hover:bg-[#E9E9FF]/10 transition-all text-left space-y-3 shadow-sm hover:shadow-md group focus:outline-none"
+                  className="p-5 border border-nexoraBorder rounded-2xl bg-white hover:border-nexoraBrand hover:bg-nexoraBrandSoft/10 transition-all text-left space-y-3 shadow-sm hover:shadow-md group focus:outline-none"
                 >
-                  <div className="h-10 w-10 rounded-xl bg-[#E9E9FF]/60 text-[#4648D8] flex items-center justify-center group-hover:bg-[#E9E9FF] transition-colors">
+                  <div className="h-10 w-10 rounded-xl bg-nexoraBrandSoft/60 text-nexoraBrand flex items-center justify-center group-hover:bg-nexoraBrandSoft transition-colors">
                     <ShieldCheck className="h-5 w-5" />
                   </div>
                   <div>
@@ -164,7 +164,7 @@ export default function StepWelcome({
                     setJoinPath('register')
                     setStep(1)
                   }}
-                  className="p-5 border border-nexoraBorder rounded-2xl bg-white hover:border-[#4648D8] hover:bg-[#E9E9FF]/10 transition-all text-left space-y-3 shadow-sm hover:shadow-md group focus:outline-none"
+                  className="p-5 border border-nexoraBorder rounded-2xl bg-white hover:border-nexoraBrand hover:bg-nexoraBrandSoft/10 transition-all text-left space-y-3 shadow-sm hover:shadow-md group focus:outline-none"
                 >
                   <div className="h-10 w-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
                     <Plus className="h-5 w-5" />
@@ -218,7 +218,7 @@ export default function StepWelcome({
                   <input
                     type="email"
                     placeholder="e.g. lisa@example.com"
-                    className="h-10 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-[#4648D8] focus:ring-2 focus:ring-[#4648D8]/20 font-bold transition-all"
+                    className="h-10 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 font-bold transition-all"
                     value={linkEmail}
                     onChange={(e) => setLinkEmail(e.target.value)}
                   />
@@ -233,14 +233,14 @@ export default function StepWelcome({
                     <input
                       type={showLinkPassword ? 'text' : 'password'}
                       placeholder="••••••••"
-                      className="h-10 w-full rounded-lg border border-nexoraBorder pl-3 pr-10 text-xs outline-none focus:border-[#4648D8] focus:ring-2 focus:ring-[#4648D8]/20 font-bold transition-all"
+                      className="h-10 w-full rounded-lg border border-nexoraBorder pl-3 pr-10 text-xs outline-none focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 font-bold transition-all"
                       value={linkPassword}
                       onChange={(e) => setLinkPassword(e.target.value)}
                     />
                     <button
                       type="button"
                       onClick={() => setShowLinkPassword(!showLinkPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-nexoraSubtle hover:text-[#4648D8] transition"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-nexoraSubtle hover:text-nexoraBrand transition"
                     >
                       {showLinkPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
@@ -299,22 +299,22 @@ export default function StepWelcome({
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   {/* Personal Profile Card */}
-                  <div className="border border-[#4648D8]/15 rounded-2xl bg-[#E9E9FF]/10 p-4 space-y-3">
-                    <span className="text-[9px] font-black uppercase text-[#4648D8] bg-[#E9E9FF]/80 px-2 py-0.5 rounded-full inline-block">
+                  <div className="border border-nexoraBrand/15 rounded-2xl bg-nexoraBrandSoft/10 p-4 space-y-3">
+                    <span className="text-[9px] font-black uppercase text-nexoraBrand bg-nexoraBrandSoft/80 px-2 py-0.5 rounded-full inline-block">
                       {currentLanguage === 'vi' ? 'Hồ sơ cá nhân' : 'Personal Profile'}
                     </span>
                     <div className="flex items-center gap-3 pt-1">
                       {linkedProfile.avatar ? (
-                        <img src={linkedProfile.avatar} alt="" className="h-10 w-10 rounded-full object-cover border border-[#4648D8]/20 shadow-sm" />
+                        <img src={linkedProfile.avatar} alt="" className="h-10 w-10 rounded-full object-cover border border-nexoraBrand/20 shadow-sm" />
                       ) : (
-                        <div className="h-10 w-10 rounded-full bg-[#E9E9FF]/60 flex items-center justify-center font-black text-[#4648D8] text-xs">
+                        <div className="h-10 w-10 rounded-full bg-nexoraBrandSoft/60 flex items-center justify-center font-black text-nexoraBrand text-xs">
                           {linkedProfile.nickname?.charAt(0) || linkedProfile.fullName?.charAt(0) || 'U'}
                         </div>
                       )}
                       <div>
                         <h4 className="text-xs font-extrabold text-nexoraText flex items-center gap-1 font-sans">
                           {linkedProfile.fullName}
-                          <span className="inline-flex items-center gap-0.5 bg-[#E9E9FF] text-[#4648D8] text-[8px] font-black uppercase px-1 py-0.5 rounded-full">
+                          <span className="inline-flex items-center gap-0.5 bg-nexoraBrandSoft text-nexoraBrand text-[8px] font-black uppercase px-1 py-0.5 rounded-full">
                             <ShieldCheck className="h-2 w-2" /> KYC
                           </span>
                         </h4>
@@ -322,7 +322,7 @@ export default function StepWelcome({
                       </div>
                     </div>
 
-                    <div className="text-[10px] text-nexoraMuted leading-normal border-t border-[#4648D8]/15 pt-2 space-y-1">
+                    <div className="text-[10px] text-nexoraMuted leading-normal border-t border-nexoraBrand/15 pt-2 space-y-1">
                       <div className="flex justify-between">
                         <span>Email:</span>
                         <strong className="text-nexoraMuted font-mono truncate max-w-[120px]">{linkedProfile.email}</strong>

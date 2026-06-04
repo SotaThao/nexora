@@ -191,7 +191,7 @@ export default function AppRouter({
                     setInitialSettingsTab('kyb')
                   }
                 }}
-                className="px-5 py-2.5 bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] hover:opacity-90 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-md transition-all animate-pulse"
+                className="px-5 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-md transition-all animate-pulse"
               >
                 {currentLanguage === 'vi' ? 'Xác thực ngay' : 'Verify Now'}
               </button>

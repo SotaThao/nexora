@@ -56,11 +56,11 @@ export default function Payment({
 
       <div className="space-y-3">
         {[
-          { name: 'Zelle', key: 'zelle', color: 'bg-[#7414CA] hover:bg-[#5f10a6] text-white', logo: WalletLogos.zelle },
-          { name: 'Bank Wire', key: 'bankwire', color: 'bg-[#475569] hover:bg-[#334155] text-white', logo: WalletLogos.bankwire },
-          { name: 'PayPal', key: 'paypal', color: 'bg-[#003087] hover:bg-[#002466] text-white', logo: WalletLogos.paypal },
-          { name: 'Venmo', key: 'venmo', color: 'bg-[#008CFF] hover:bg-[#007ad6] text-white', logo: WalletLogos.venmo },
-          { name: 'Cash App', key: 'cashapp', color: 'bg-[#00D632] hover:bg-[#00b52a] text-white', logo: WalletLogos.cashapp },
+          { name: 'Zelle', key: 'zelle', color: 'bg-walletZelle hover:bg-walletZelleDark text-white', logo: WalletLogos.zelle },
+          { name: 'Bank Wire', key: 'bankwire', color: 'bg-slate-600 hover:bg-slate-700 text-white', logo: WalletLogos.bankwire },
+          { name: 'PayPal', key: 'paypal', color: 'bg-walletPaypal hover:bg-walletPaypalDark text-white', logo: WalletLogos.paypal },
+          { name: 'Venmo', key: 'venmo', color: 'bg-walletVenmo hover:bg-walletVenmoDark text-white', logo: WalletLogos.venmo },
+          { name: 'Cash App', key: 'cashapp', color: 'bg-walletCashapp hover:bg-walletCashappDark text-white', logo: WalletLogos.cashapp },
           { name: 'Apple Pay', key: 'applecash', color: 'bg-black hover:opacity-90 text-white', logo: WalletLogos.applepay }
         ].filter(wallet => {
           if (selectedStaffMembers.length === 1) {

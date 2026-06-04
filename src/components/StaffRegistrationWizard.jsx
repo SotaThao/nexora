@@ -60,7 +60,7 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
 
           {/* Header info */}
           <div className="flex items-center gap-3 pb-4 border-b border-nexoraRule">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-[#4648D8] to-[#32D7FF] flex items-center justify-center text-white shrink-0 shadow-md">
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-nexoraBrand to-brandCyan flex items-center justify-center text-white shrink-0 shadow-md">
               <Smartphone className="h-5 w-5" />
             </div>
             <div>
@@ -85,7 +85,7 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
                   key={s.id}
                   className={`py-2 rounded-lg border transition ${
                     reg.step === s.id
-                      ? 'bg-[#4648D8] text-white border-[#4648D8] shadow-sm'
+                      ? 'bg-nexoraBrand text-white border-nexoraBrand shadow-sm'
                       : reg.step > s.id
                         ? 'bg-emerald-50 text-emerald-700 border-emerald-100 font-bold'
                         : 'bg-nexoraSurfaceMuted text-nexoraSubtle border-nexoraRule'
