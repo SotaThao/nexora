@@ -226,7 +226,7 @@ describe('SettingsView Component Unit Tests', () => {
     expect(screen.getByText(/CHOOSE FILE/i)).toBeInTheDocument()
   })
 
-  it('renders Affiliate Link tab and displays QR code modal when clicked', () => {
+  it('renders Affiliate Link tab and displays QR code inline', () => {
     render(
       <LanguageProvider>
         <SettingsView hasKyb={true} />
@@ -239,20 +239,11 @@ describe('SettingsView Component Unit Tests', () => {
     // Click Affiliate Link tab
     fireEvent.click(affiliateTab)
 
-    // Verify modal is shown immediately
-    expect(screen.getByText(/Register a New Member/i)).toBeInTheDocument()
-    expect(screen.getByText(/Select Placement Leg/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Save QR/i })).toBeInTheDocument()
+    // Verify inline QR section is shown
+    expect(screen.getByRole('button', { name: /Download QR/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Copy Link/i })).toBeInTheDocument()
 
-    // Close modal
-    const closeBtn = screen.getByTitle(/Close modal/i)
-    fireEvent.click(closeBtn)
-
-    // Modal should be gone
-    expect(screen.queryByText(/Register a New Member/i)).not.toBeInTheDocument()
-
-    // Affiliate Link tab content should be visible
-    expect(screen.getAllByText(/Referral Link/i).length).toBeGreaterThan(0)
-    expect(screen.getByText(/nexora.com\/\?ref=VLP\.\.\.-GG/i)).toBeInTheDocument()
+    // Affiliate Link tab content should be visible with the base referral URL
+    expect(screen.getByText(/https:\/\/nexora\.com\/\?ref=VLP-8893-GG/i)).toBeInTheDocument()
   })
 })

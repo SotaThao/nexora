@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { QrCode, Copy, Check, X } from 'lucide-react'
+import { QrCode, Copy, Check, X, Download } from 'lucide-react'
 import useSettingsForm from './settings/hooks/useSettingsForm'
 import ProfileTab from './settings/tabs/ProfileTab'
 import KybTab from './settings/tabs/KybTab'
@@ -29,6 +29,9 @@ export default function SettingsView({
   const [showQrModal, setShowQrModal] = useState(false)
   const [selectedLeg, setSelectedLeg] = useState('left')
 
+  const referralUrl = `https://nexora.com/?ref=${form.profile.referralId || '640B5FBF'}&leg=${selectedLeg}`
+  const baseReferralUrl = `https://nexora.com/?ref=${form.profile.referralId || '640B5FBF'}`
+
   const handleSaveQr = async (qrUrl) => {
     try {
       const response = await fetch(qrUrl)
@@ -50,9 +53,6 @@ export default function SettingsView({
 
   const handleTabChange = (tab) => {
     form.handleTabChange(tab)
-    if (tab === 'affiliate') {
-      setShowQrModal(true)
-    }
   }
 
   const cardDetails = form.getStatusCardDetails()
@@ -194,59 +194,68 @@ export default function SettingsView({
         )}
 
         {form.activeTab === 'affiliate' && (
-          <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 max-w-xl mx-auto animate-fadeIn select-none">
-            <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
+          <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 max-w-xl mx-auto animate-fadeIn select-none space-y-6">
+            <div className="flex justify-between items-center border-b border-nexoraRule pb-3">
               <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
                 <QrCode className="h-4 w-4 text-nexoraBrand" />
                 {form.currentLanguage === 'vi' ? 'Liên kết Affiliate' : 'Affiliate Link'}
               </h4>
             </div>
             
-            <p className="text-xs text-slate-500 mb-6 leading-relaxed">
-              {form.currentLanguage === 'vi'
-                ? 'Sử dụng liên kết giới thiệu của cửa hàng hoặc hiển thị mã QR bên dưới để đối tác quét và đăng ký gia nhập mạng lưới.'
-                : 'Use your salon referral link or present the QR code below for partners to scan and register to your network.'}
-            </p>
+            {/* QR Section (Inline) */}
+            <div className="flex flex-col items-center">
+              {/* QR Code Container */}
+              <div className="flex justify-center mb-2">
+                <div className="bg-slate-50 p-4 border border-slate-200 rounded-2xl flex items-center justify-center h-[240px] w-[240px] shadow-sm hover:shadow-md transition">
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(baseReferralUrl)}`}
+                    alt="Referral Link QR Code"
+                    className="h-full w-full object-contain rounded-lg"
+                  />
+                </div>
+              </div>
 
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-3 px-4 border border-nexoraBorder rounded-lg bg-slate-50/50 gap-3 text-xs w-full text-left">
-              <span className="text-nexoraMuted font-bold shrink-0">
-                {form.currentLanguage === 'vi' ? 'Referral Link:' : 'Referral Link:'}
-              </span>
-              
-              <div className="flex items-center gap-2.5 self-end sm:self-auto min-w-0">
-                <span className="text-nexoraText font-extrabold" title={`https://nexora.com/?ref=${form.profile.referralId}`}>
-                  {form.profile.referralId && form.profile.referralId.length > 8
-                    ? `nexora.com/?ref=${form.profile.referralId.substring(0, 3)}...${form.profile.referralId.substring(form.profile.referralId.length - 3)}`
-                    : `nexora.com/?ref=${form.profile.referralId}`}
-                </span>
+              {/* Clickable Referral URL Link */}
+              <div className="text-center mb-4 max-w-xs sm:max-w-md min-w-0 px-2">
+                <a
+                  href={baseReferralUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:text-blue-600 underline text-[11px] font-bold break-all"
+                >
+                  {baseReferralUrl}
+                </a>
+              </div>
 
-                {/* Copy Button */}
+              {/* Buttons: Download QR & Copy Link */}
+              <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs sm:max-w-md justify-center">
                 <button
                   type="button"
-                  onClick={() => form.handleCopy(`https://nexora.com/?ref=${form.profile.referralId}`, 'ref')}
-                  className="text-blue-500 hover:text-blue-600 font-bold text-[10px] uppercase hover:underline ml-2 flex items-center gap-1 shrink-0"
+                  onClick={() => handleSaveQr(
+                    `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(baseReferralUrl)}`
+                  )}
+                  className="flex-1 flex items-center justify-center gap-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs uppercase tracking-wider py-3 rounded-xl transition active:scale-[0.98] shadow-sm"
                 >
-                  {form.copiedId === 'ref' ? (
+                  <Download className="h-4 w-4 text-slate-500" />
+                  <span>Download QR</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => form.handleCopy(baseReferralUrl, 'inline-ref')}
+                  className="flex-1 flex items-center justify-center gap-2 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-bold text-xs uppercase tracking-wider py-3 rounded-xl transition active:scale-[0.98] shadow-sm shadow-indigo-500/10"
+                >
+                  {form.copiedId === 'inline-ref' ? (
                     <>
-                      <Check className="h-3 w-3 text-emerald-600" />
-                      <span className="text-[#10b981]">Copied</span>
+                      <Check className="h-4 w-4 text-white" />
+                      <span>Copied</span>
                     </>
                   ) : (
                     <>
-                      <Copy className="h-3 w-3" />
-                      <span>Copy</span>
+                      <Copy className="h-4 w-4 text-white" />
+                      <span>Copy Link</span>
                     </>
                   )}
-                </button>
-
-                {/* Show QR Button */}
-                <button
-                  type="button"
-                  onClick={() => setShowQrModal(true)}
-                  className="text-blue-500 hover:text-blue-600 font-bold text-[10px] uppercase hover:underline ml-2 flex items-center gap-1 shrink-0"
-                >
-                  <QrCode className="h-3 w-3" />
-                  <span>Show QR</span>
                 </button>
               </div>
             </div>
