@@ -12,8 +12,6 @@ import StaffQrScannerModal from './StaffQrScannerModal'
 import { getPayoutConfigsFromMember } from '../utils'
 import { storage } from '../../../utils/storage'
 
-const localStorage = storage
-
 function StaffModal({
   open,
   editing,
@@ -26,7 +24,9 @@ function StaffModal({
   onBlockedFeatureClick,
   onClose,
   onSave,
-  onOpenInviteShare
+  onOpenInviteShare,
+  reviews: reviewsProp = null,
+  merchantSetupData = null
 }) {
   const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
@@ -57,15 +57,10 @@ function StaffModal({
   if (!open) return null
 
   const reviewsList = (() => {
-    try {
-      const saved = localStorage.getItem('nexora_reviews')
-      const allReviews = saved ? JSON.parse(saved) : []
-      const targetId = form?.nexoraStaffId || form?.id
-      if (!targetId) return []
-      return allReviews.filter(r => r.staffId === targetId)
-    } catch (e) {
-      return []
-    }
+    const allReviews = reviewsProp ?? []
+    const targetId = form?.nexoraStaffId || form?.id
+    if (!targetId) return []
+    return allReviews.filter(r => r.staffId === targetId)
   })()
 
   const averageRating = reviewsList.length
@@ -207,14 +202,13 @@ function StaffModal({
       }
     }
 
-    // Helper to search local storage nexora_merchant_setup staffList
+    // Helper to search nexora_merchant_setup staffList (received via prop from Dashboard)
     const checkMerchantSetup = () => {
       if (matchedProfile) return
       try {
-        const savedSetup = localStorage.getItem('nexora_merchant_setup')
-        if (savedSetup) {
-          const parsed = JSON.parse(savedSetup)
-          const matched = parsed.staffList?.find(
+        const setupData = merchantSetupData
+        if (setupData) {
+          const matched = setupData.staffList?.find(
             s => (s.paymentAccounts?.vlinkpay?.toUpperCase() === searchId) ||
                  (s.vlinkpay?.toUpperCase() === searchId) ||
                  (s.id?.toUpperCase() === searchId)
@@ -242,11 +236,11 @@ function StaffModal({
       } catch (e) {}
     }
 
-    // Helper to search nexora_staff_account
+    // Helper to search nexora_staff_account (out-of-scope domain; still via storage)
     const checkStaffAccount = () => {
       if (matchedProfile) return
       try {
-        const staffMap = JSON.parse(localStorage.getItem('nexora_staff_account') || '{}')
+        const staffMap = JSON.parse(storage.getItem('nexora_staff_account') || '{}')
         // Check by NEXORA Staff ID
         if (staffMap[searchId]) {
           const acc = staffMap[searchId]
@@ -307,11 +301,11 @@ function StaffModal({
       } catch (e) {}
     }
 
-    // Helper to search nexora_pending_accounts
+    // Helper to search nexora_pending_accounts (out-of-scope domain; still via storage)
     const checkPendingAccounts = () => {
       if (matchedProfile) return
       try {
-        const pendingList = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
+        const pendingList = JSON.parse(storage.getItem('nexora_pending_accounts') || '[]')
         const matched = pendingList.find(acc => acc.vlinkpayId?.toUpperCase() === searchId || acc.staffId?.toUpperCase() === searchId)
         if (matched) {
           matchedProfile = {
