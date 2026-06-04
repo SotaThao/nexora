@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useChartDateRange } from '../hooks/useChartDateRange';
 import { useTranslation } from '../contexts/LanguageContext';
 import { 
   DollarSign, 
@@ -43,74 +44,8 @@ export default function TipsView({
   const [searchQuery, setSearchQuery] = useState('');
   const [hoverIndex, setHoverIndex] = useState(null);
   const [selectedTx, setSelectedTx] = useState(null);
+  const { chartRange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate, handleChartRangeChange } = useChartDateRange(transactions);
 
-  // Helper for subtracting days in UTC format
-  const subtractDays = (dateStr, days) => {
-    const d = new Date(dateStr + 'T00:00:00Z');
-    if (isNaN(d.getTime())) return dateStr;
-    d.setUTCDate(d.getUTCDate() - days);
-    return d.toISOString().split('T')[0];
-  };
-
-  // Derive the reference end date from the transactions array
-  const refEndDate = useMemo(() => {
-    if (!transactions || transactions.length === 0) return '2026-05-26';
-    let maxDate = '1970-01-01';
-    transactions.forEach(tx => {
-      if (tx.dateTime) {
-        const dateStr = tx.dateTime.split(' ')[0];
-        if (dateStr > maxDate && dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-          maxDate = dateStr;
-        }
-      }
-    });
-    return maxDate === '1970-01-01' ? '2026-05-26' : maxDate;
-  }, [transactions]);
-
-  // Chart Date Filter States
-  const [chartRange, setChartRange] = useState('7 Days');
-  const [chartStartDate, setChartStartDate] = useState(() => subtractDays(refEndDate, 6));
-  const [chartEndDate, setChartEndDate] = useState(refEndDate);
-
-  useEffect(() => {
-    if (chartRange === '7 Days') {
-      setChartStartDate(subtractDays(refEndDate, 6));
-      setChartEndDate(refEndDate);
-    } else if (chartRange === '30 Days') {
-      setChartStartDate(subtractDays(refEndDate, 29));
-      setChartEndDate(refEndDate);
-    } else if (chartRange === '90 Days') {
-      setChartStartDate(subtractDays(refEndDate, 89));
-      setChartEndDate(refEndDate);
-    } else if (chartRange === '180 Days') {
-      setChartStartDate(subtractDays(refEndDate, 179));
-      setChartEndDate(refEndDate);
-    } else if (chartRange === '365 Days') {
-      setChartStartDate(subtractDays(refEndDate, 364));
-      setChartEndDate(refEndDate);
-    }
-  }, [refEndDate, chartRange]);
-
-  const handleChartRangeChange = (newRange) => {
-    setChartRange(newRange);
-    if (newRange === '7 Days') {
-      setChartStartDate(subtractDays(refEndDate, 6));
-      setChartEndDate(refEndDate);
-    } else if (newRange === '30 Days') {
-      setChartStartDate(subtractDays(refEndDate, 29));
-      setChartEndDate(refEndDate);
-    } else if (newRange === '90 Days') {
-      setChartStartDate(subtractDays(refEndDate, 89));
-      setChartEndDate(refEndDate);
-    } else if (newRange === '180 Days') {
-      setChartStartDate(subtractDays(refEndDate, 179));
-      setChartEndDate(refEndDate);
-    } else if (newRange === '365 Days') {
-      setChartStartDate(subtractDays(refEndDate, 364));
-      setChartEndDate(refEndDate);
-    }
-  };
-  
   // Filter States
   const [dateRangePreset, setDateRangePreset] = useState('all');
   const [startDate, setStartDate] = useState('');
