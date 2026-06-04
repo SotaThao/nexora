@@ -2,15 +2,15 @@ import React, { useState, useEffect } from 'react'
 import LoginScreen from './app/LoginScreen'
 import AppRouter from './app/AppRouter'
 import { useTranslation } from './contexts/LanguageContext'
-import { storage, initStorage } from './utils/storage'
+import { initStorage } from './utils/storage'
 import { logger } from './utils/logger'
 import { useNotification } from './contexts/NotificationContext'
 import { useStorageEventBridge } from './data/storageEventBridge'
 import { useAuth } from './auth/useAuth'
 import { usePendingAccounts, useReplaceAllPendingAccounts } from './data/hooks/usePendingAccounts'
-
-const localStorage = storage
-const sessionStorage = storage
+import { useClearMerchantSetup, useMerchantSetup, useSaveMerchantSetup } from './data/hooks/useMerchantSetup'
+import { useClearProfileSettings } from './data/hooks/useProfileSettings'
+import { isDemoToolsEnabled } from './app/demoTools'
 
 export default function App() {
   // Mount the storage-event → query-cache bridge once at app root (Phase 3 / D4).
@@ -22,6 +22,10 @@ export default function App() {
   const { session, status: authStatus, login, logout } = useAuth()
   const pendingAccountsQuery = usePendingAccounts()
   const replaceAllPendingAccountsMutation = useReplaceAllPendingAccounts()
+  const merchantSetupQuery = useMerchantSetup()
+  const saveMerchantSetupMutation = useSaveMerchantSetup()
+  const clearMerchantSetupMutation = useClearMerchantSetup()
+  const clearProfileSettingsMutation = useClearProfileSettings()
 
   const [view, setView] = useState('login') // 'login' | 'register-wizard' | 'onboarding' | 'dashboard' | 'customer' | 'staff-portal' | 'staff-dashboard'
   const [userRole, setUserRole] = useState('owner') // 'owner' | 'staff'
@@ -77,21 +81,7 @@ export default function App() {
       return
     }
 
-    const savedSetup = localStorage.getItem('nexora_merchant_setup')
-    if (savedSetup) {
-      try {
-        const parsed = JSON.parse(savedSetup)
-        setSetupData(parsed)
-        sessionStorage.setItem('nexora_merchant_setup', savedSetup)
-      } catch (e) {
-        logger.error('Error parsing setup details', e)
-      }
-    }
-
-    const savedProfile = localStorage.getItem('nexora_profile_settings')
-    if (savedProfile) {
-      sessionStorage.setItem('nexora_profile_settings', savedProfile)
-    }
+    if (!isDemoToolsEnabled) return
 
     // Listen for simulation invite event from merchant dashboard
     const handleSimulationInvite = (e) => {
@@ -104,6 +94,12 @@ export default function App() {
       window.removeEventListener('showSimulationInvite', handleSimulationInvite)
     }
   }, [])
+
+  useEffect(() => {
+    if (merchantSetupQuery.data) {
+      setSetupData(merchantSetupQuery.data)
+    }
+  }, [merchantSetupQuery.data])
 
   // Action: Handle manual login submit or SSO login
   const handleLoginSubmit = (ssoType = null, simulatedStatus = null) => {
@@ -153,11 +149,11 @@ export default function App() {
       clearMerchantSetup, clearProfileSettings, routeToDashboard } = newSession
 
     if (clearMerchantSetup) {
-      localStorage.removeItem('nexora_merchant_setup')
+      clearMerchantSetupMutation.mutate()
       setSetupData(null)
     }
     if (clearProfileSettings) {
-      localStorage.removeItem('nexora_profile_settings')
+      clearProfileSettingsMutation.mutate()
     }
 
     // !personal path → staff dashboard
@@ -190,8 +186,7 @@ export default function App() {
 
     // SSO with KYB → onboarding (Setup Wizard to configure)
     // Registered business accounts: check if setup exists
-    const savedSetup = localStorage.getItem('nexora_merchant_setup')
-    if (savedSetup) {
+    if (!clearMerchantSetup && (setupData || merchantSetupQuery.data)) {
       setView('dashboard')
     } else {
       setView('onboarding')
@@ -202,7 +197,7 @@ export default function App() {
   const triggerSimulation = (scenario, status = null) => {
     setLoginError('')
     if (scenario === 'sso_with_kyb') {
-      localStorage.removeItem('nexora_merchant_setup')
+      clearMerchantSetupMutation.mutate()
       setSetupData(null)
       setEmail('sso_with_kyb@gmail.com')
       setPassword('••••••••')
@@ -269,7 +264,7 @@ export default function App() {
   const handleResetApp = async () => {
     const ok = await showConfirm(t('login.reset_confirm') || 'Are you sure you want to reset?')
     if (ok) {
-      localStorage.removeItem('nexora_merchant_setup')
+      clearMerchantSetupMutation.mutate()
       setSetupData(null)
       setVerificationStatus('kyb_approved')
       await logout()
@@ -280,8 +275,8 @@ export default function App() {
   const handleRegisterAndLogin = (registeredEmail) => {
     setRegisterEmail(registeredEmail)
     setVerificationStatus('basic')
-    localStorage.removeItem('nexora_merchant_setup')
-    localStorage.removeItem('nexora_profile_settings')
+    clearMerchantSetupMutation.mutate()
+    clearProfileSettingsMutation.mutate()
     setSetupData(null)
     setSsoPrefillData({
       email: registeredEmail,
@@ -346,10 +341,15 @@ export default function App() {
 
   // Handle quick demo login from LoginScreen
   const handleQuickDemoLogin = (demoSetup) => {
-    localStorage.setItem('nexora_merchant_setup', JSON.stringify(demoSetup))
-    sessionStorage.setItem('nexora_merchant_setup', JSON.stringify(demoSetup))
-    setSetupData(demoSetup)
-    setView('dashboard')
+    saveMerchantSetupMutation.mutate(demoSetup, {
+      onSuccess: () => {
+        setSetupData(demoSetup)
+        setView('dashboard')
+      },
+      onError: (err) => {
+        logger.error('Failed to save demo setup', err)
+      },
+    })
   }
 
   // Handle auto-login from account list in SimulationPanel
@@ -362,7 +362,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-dvh bg-slate-50 text-inkBlue font-sans antialiased">
+    <div className="min-h-dvh bg-nexoraCanvas text-inkBlue font-sans antialiased">
       {view === 'login' ? (
         <LoginScreen
           email={email}
@@ -386,6 +386,7 @@ export default function App() {
           setStaffInviteData={setStaffInviteData}
           setView={setView}
           setLoggedInStaffId={setLoggedInStaffId}
+          isDemoToolsEnabled={isDemoToolsEnabled}
         />
       ) : (
         <AppRouter
@@ -418,6 +419,7 @@ export default function App() {
           onRegisterAndLogin={handleRegisterAndLogin}
           onLoadPendingAccounts={() => {}}
           preKybView={preKybView}
+          isDemoToolsEnabled={isDemoToolsEnabled}
         />
       )}
     </div>

@@ -1,14 +1,11 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { storage } from '../../../utils/storage'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { parsePhone } from '../../CountryCodeSelect'
 import { logger } from '../../../utils/logger'
-import { usePendingAccounts, useAddPendingAccount, useReplaceAllPendingAccounts } from '../../../data/hooks/usePendingAccounts'
-
-// Alias storage for non-pending-accounts domain access (merchant setup, notifications)
-const localStorage = storage
-const sessionStorage = storage
+import { usePendingAccounts, useReplaceAllPendingAccounts } from '../../../data/hooks/usePendingAccounts'
+import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
+import { useNotifications, useAddNotification } from '../../../data/hooks/useNotifications'
 
 const MOCK_NEXORA_STAFF_PROFILES = {
   'NEX-STAFF-ANNA0921': {
@@ -71,6 +68,10 @@ export default function useStaffRegistration({ inviteData }) {
   const { showToast } = useNotification()
   const pendingAccountsQuery = usePendingAccounts()
   const replaceAllPendingAccountsMutation = useReplaceAllPendingAccounts()
+  const merchantSetupQuery = useMerchantSetup()
+  const saveMerchantSetupMutation = useSaveMerchantSetup()
+  useNotifications()
+  const addNotificationMutation = useAddNotification()
   const [step, setStep] = useState(0) // 0: Welcome Invite, 1: OTP, 2: Profile, 3: Payments, 4: Consent & Activate, 5: Success
 
   // Path selection states
@@ -496,16 +497,8 @@ export default function useStaffRegistration({ inviteData }) {
       payoutConfigs: linkedProfile.payoutConfigs
     }
 
-    // Save into localStorage merchant setup
-    const savedSetup = localStorage.getItem('nexora_merchant_setup')
-    let parsed = null
-    if (savedSetup) {
-      try {
-        parsed = JSON.parse(savedSetup)
-      } catch (e) {
-        logger.error('Failed to parse saved setup', e)
-      }
-    }
+    // Save into merchant setup
+    let parsed = merchantSetupQuery.data ? { ...merchantSetupQuery.data } : null
     if (!parsed) {
       parsed = {
         businessInfo: {
@@ -544,17 +537,10 @@ export default function useStaffRegistration({ inviteData }) {
       }
 
       parsed.staffList = staffList
-      localStorage.setItem('nexora_merchant_setup', JSON.stringify(parsed))
-      sessionStorage.setItem('nexora_merchant_setup', JSON.stringify(parsed))
+      saveMerchantSetupMutation.mutateAsync(parsed)
+        .catch((err) => logger.error('Failed to save merchant setup during staff link', err))
 
       // Add notification to merchant
-      const savedNotifications = localStorage.getItem('nexora_notifications')
-      let notis = []
-      if (savedNotifications) {
-        try {
-          notis = JSON.parse(savedNotifications)
-        } catch (e) {}
-      }
       const newNoti = {
         id: `noti-join-${finalStaffMember.id}-${Date.now()}`,
         staffId: finalStaffMember.id,
@@ -567,10 +553,7 @@ export default function useStaffRegistration({ inviteData }) {
         read: false,
         linkTab: 'staff'
       }
-      notis = [newNoti, ...notis]
-      localStorage.setItem('nexora_notifications', JSON.stringify(notis))
-      sessionStorage.setItem('nexora_notifications', JSON.stringify(notis))
-      window.dispatchEvent(new Event('storage'))
+      addNotificationMutation.mutate(newNoti)
     } catch (e) {
       logger.error('Failed to update staff database in wizard', e)
     }
@@ -627,7 +610,7 @@ export default function useStaffRegistration({ inviteData }) {
       }
 
       // Try to find if this staff exists in the merchant's staffList
-      const savedSetup = JSON.parse(localStorage.getItem('nexora_merchant_setup') || '{}')
+      const savedSetup = merchantSetupQuery.data ?? {}
       const staffInList = savedSetup.staffList?.find(s => s.id === matchedAcc.staffId || s.email === emailQuery)
       
       let profile = null
@@ -690,7 +673,7 @@ export default function useStaffRegistration({ inviteData }) {
     )
   }
 
-  // Save profile and notify App + LocalStorage
+  // Save profile through the merchant setup mutation and notify the merchant.
   const handleActivateProfile = () => {
     // Create the updated staff object
     const finalPaymentAccounts = {}
@@ -718,16 +701,8 @@ export default function useStaffRegistration({ inviteData }) {
       payoutConfigs: payouts
     }
 
-    // Save into localStorage merchant setup
-    const savedSetup = localStorage.getItem('nexora_merchant_setup')
-    let parsedActive = null
-    if (savedSetup) {
-      try {
-        parsedActive = JSON.parse(savedSetup)
-      } catch (e) {
-        logger.error('Failed to parse saved setup', e)
-      }
-    }
+    // Save into merchant setup
+    let parsedActive = merchantSetupQuery.data ? { ...merchantSetupQuery.data } : null
     if (!parsedActive) {
       parsedActive = {
         businessInfo: {
@@ -790,17 +765,10 @@ export default function useStaffRegistration({ inviteData }) {
       // We do NOT auto-generate touchpoint QR codes here anymore, because they are Pending Acceptance.
       // Touchpoint will be generated upon manual acceptance by the merchant.
 
-      localStorage.setItem('nexora_merchant_setup', JSON.stringify(parsedActive))
-      sessionStorage.setItem('nexora_merchant_setup', JSON.stringify(parsedActive))
+      saveMerchantSetupMutation.mutateAsync(parsedActive)
+        .catch((err) => logger.error('Failed to save merchant setup during staff activation', err))
 
       // Add notification to merchant
-      const savedNotifications = localStorage.getItem('nexora_notifications')
-      let notis = []
-      if (savedNotifications) {
-        try {
-          notis = JSON.parse(savedNotifications)
-        } catch (e) {}
-      }
       const newNoti = {
         id: `noti-join-${finalStaffMember.id}-${Date.now()}`,
         staffId: finalStaffMember.id,
@@ -813,9 +781,7 @@ export default function useStaffRegistration({ inviteData }) {
         read: false,
         linkTab: 'staff'
       }
-      notis = [newNoti, ...notis]
-      localStorage.setItem('nexora_notifications', JSON.stringify(notis))
-      sessionStorage.setItem('nexora_notifications', JSON.stringify(notis))
+      addNotificationMutation.mutate(newNoti)
 
       // Also save the staff account to nexora_pending_accounts so they can log in!
       if (email.trim() && regPassword) {
@@ -832,7 +798,6 @@ export default function useStaffRegistration({ inviteData }) {
         filtered.push(staffAccount)
         replaceAllPendingAccountsMutation.mutate(filtered)
       }
-      window.dispatchEvent(new Event('storage'))
     } catch (e) {
       logger.error('Failed to update staff database in wizard', e)
     }

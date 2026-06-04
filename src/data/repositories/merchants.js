@@ -18,6 +18,10 @@ export function createMerchantsRepository(a = defaultAdapter) {
       await a.set(KEY, setup)
     },
 
+    async clearSetup() {
+      await a.remove(KEY)
+    },
+
     /**
      * Convenience: read just the staffList array.
      * @returns {Promise<Array>}

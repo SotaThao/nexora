@@ -22,7 +22,7 @@ describe('Nexora Touch E2E Test Suite (CloakBrowser)', () => {
   });
 
   it('Flow 1: Quick SSO Login to Dashboard', async () => {
-    await page.goto('http://localhost:3000');
+    await page.goto('http://127.0.0.1:3000');
 
     // Wait for the login screen to render
     await page.waitForSelector('text=NEXORA');
@@ -39,7 +39,7 @@ describe('Nexora Touch E2E Test Suite (CloakBrowser)', () => {
 
   it('Flow 2: Customer Flow - Scenario A (Positive 5★ Review)', async () => {
     // Navigate directly to the customer portal URL for technician Mia Tran
-    await page.goto('http://localhost:3000/?flow=customer&tech=staff/mia-t&biz=Golden+Glow+Nail+Spa');
+    await page.goto('http://127.0.0.1:3000/?flow=customer&tech=staff/mia-t&biz=Golden+Glow+Nail+Spa');
 
     // Wait for the customer portal page to load (Tip amount selection)
     await page.waitForSelector('text=Add a Tip');
@@ -97,7 +97,7 @@ describe('Nexora Touch E2E Test Suite (CloakBrowser)', () => {
 
   it('Flow 3: Customer Flow - Scenario B (Negative 2★ Review)', async () => {
     // Navigate directly to the customer portal URL
-    await page.goto('http://localhost:3000/?flow=customer&tech=staff/mia-t&biz=Golden+Glow+Nail+Spa');
+    await page.goto('http://127.0.0.1:3000/?flow=customer&tech=staff/mia-t&biz=Golden+Glow+Nail+Spa');
 
     // Wait for the customer portal page to load (Tip amount selection)
     await page.waitForSelector('text=Add a Tip');
@@ -153,7 +153,7 @@ describe('Nexora Touch E2E Test Suite (CloakBrowser)', () => {
 
   it('Flow 4: Customer Flow - Edge Case: Store QR (Select Staff Member & Search)', async () => {
     // Navigate directly to the customer portal URL without tech slug (Store QR)
-    await page.goto('http://localhost:3000/?flow=customer&biz=Golden+Glow+Nail+Spa');
+    await page.goto('http://127.0.0.1:3000/?flow=customer&biz=Golden+Glow+Nail+Spa');
 
     // Wait for the staff selection screen to render
     await page.waitForSelector('text=Choose your service provider');
@@ -183,7 +183,7 @@ describe('Nexora Touch E2E Test Suite (CloakBrowser)', () => {
 
   it('Flow 5: Customer Flow - Edge Case: Inactive/Disabled Staff Filtering', async () => {
     // Navigate directly to the customer portal URL without tech slug (Store QR)
-    await page.goto('http://localhost:3000/?flow=customer&biz=Golden+Glow+Nail+Spa');
+    await page.goto('http://127.0.0.1:3000/?flow=customer&biz=Golden+Glow+Nail+Spa');
 
     // Wait for the staff selection screen to render
     await page.waitForSelector('text=Choose your service provider');
@@ -199,7 +199,7 @@ describe('Nexora Touch E2E Test Suite (CloakBrowser)', () => {
 
   it('Flow 6: Customer Flow - Edge Case: Custom Tip Validation', async () => {
     // Navigate directly to the customer portal URL
-    await page.goto('http://localhost:3000/?flow=customer&tech=staff/mia-t&biz=Golden+Glow+Nail+Spa');
+    await page.goto('http://127.0.0.1:3000/?flow=customer&tech=staff/mia-t&biz=Golden+Glow+Nail+Spa');
 
     // Wait for the customer portal page to load
     await page.waitForSelector('text=Add a Tip');

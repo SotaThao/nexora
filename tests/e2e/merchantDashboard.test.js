@@ -23,7 +23,7 @@ describe('Nexora Merchant Dashboard Views E2E Test Suite (CloakBrowser)', () => 
 
   it('Verify and interact with all Merchant Dashboard Views', async () => {
     // 1. Navigate to home & login to Dashboard
-    await page.goto('http://localhost:3000');
+    await page.goto('http://127.0.0.1:3000');
     await page.waitForSelector('text=NEXORA');
 
     // Click "Enter Dashboard" button to quickly bypass onboarding & login as kyb_approved

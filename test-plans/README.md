@@ -39,7 +39,7 @@ Optional Supabase sync (staff dashboard / cross-tab realtime): set `VITE_SUPABAS
 
 - **i18n**: every screen must render fully in **VI and EN** with no hardcoded/untranslated strings (no raw `key.path` shown). Language switch is top-right on login and in each shell header.
 - **Responsive**: desktop ≥1024px (`lg`) vs mobile <1024px. Merchant dashboard uses a slide-in drawer; staff dashboard uses a bottom navbar.
-- **Persistence**: data flows through `src/utils/storage.js` → localStorage (+ Supabase when configured). Storage keys: `nexora_merchant_setup`, `nexora_profile_settings`, `nexora_transactions`, `nexora_reviews`, `nexora_notifications`, `nexora_pending_accounts`, `nexora_staff_account`.
+- **Persistence**: domain data flows through `components -> src/data/hooks -> src/data/repositories -> selected adapter`. The current default adapter is `storageAdapter`, which persists via `src/utils/storage.js` to localStorage (+ Supabase when configured). Storage keys remain `nexora_merchant_setup`, `nexora_profile_settings`, `nexora_transactions`, `nexora_reviews`, `nexora_notifications`, `nexora_pending_accounts`, `nexora_staff_account`. Set `VITE_DATA_SOURCE=api` in the future API phase to swap repositories onto the API adapters without changing component-level tests.
 - **No console errors** in any flow; production build (`pnpm build`) must pass.
 - **Account-type flag**: `!business` (merchant, `role: 'business'`) vs `!personal` (staff, `role: 'personal'`). Staff ID format `NEX-STAFF-XXXX`; VLINKPAY ID `VLP-YYYY-XXXX`.
 

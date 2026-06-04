@@ -1,20 +1,20 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { storage } from '../../../utils/storage'
 import { parsePhone } from '../../CountryCodeSelect'
 import { MOCK_NEXORA_STAFF_PROFILES } from '../../staff-registration/hooks/useStaffRegistration'
-import { payoutMethodsList } from '../constants'
-import { useAddPendingAccount, useReplaceAllPendingAccounts, usePendingAccounts } from '../../../data/hooks/usePendingAccounts'
-
-// Alias storage for non-pending-accounts domain access (merchant setup, notifications)
-const localStorage = storage
-const sessionStorage = storage
+import { useReplaceAllPendingAccounts, usePendingAccounts } from '../../../data/hooks/usePendingAccounts'
+import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
+import { useNotifications, useAddNotification } from '../../../data/hooks/useNotifications'
+import { logger } from '../../../utils/logger'
 
 export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onKybSuccess, isRedirectedFromSession }) {
   const { t, currentLanguage, setLanguage, renderLabel } = useTranslation()
-  const addPendingAccountMutation = useAddPendingAccount()
   const replaceAllPendingAccountsMutation = useReplaceAllPendingAccounts()
   const pendingAccountsQuery = usePendingAccounts()
+  const merchantSetupQuery = useMerchantSetup()
+  const saveMerchantSetupMutation = useSaveMerchantSetup()
+  useNotifications()
+  const addNotificationMutation = useAddNotification()
   const [currentStep, setCurrentStep] = useState(0)
   const [role, setRole] = useState('business')
 
@@ -346,13 +346,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     filteredPending.push(newAccount)
     replaceAllPendingAccountsMutation.mutate(filteredPending)
 
-    const savedSetup = localStorage.getItem('nexora_merchant_setup')
-    let parsedSetup = null
-    if (savedSetup) {
-      try {
-        parsedSetup = JSON.parse(savedSetup)
-      } catch (e) {}
-    }
+    let parsedSetup = merchantSetupQuery.data ? { ...merchantSetupQuery.data } : null
     if (!parsedSetup) {
       parsedSetup = {
         businessInfo: {
@@ -388,16 +382,9 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         staffList.push(finalStaffMember)
       }
       parsedSetup.staffList = staffList
-      localStorage.setItem('nexora_merchant_setup', JSON.stringify(parsedSetup))
-      sessionStorage.setItem('nexora_merchant_setup', JSON.stringify(parsedSetup))
+      saveMerchantSetupMutation.mutateAsync(parsedSetup)
+        .catch((err) => logger.error('Failed to save merchant setup during registration', err))
 
-      const savedNotifications = localStorage.getItem('nexora_notifications')
-      let notis = []
-      if (savedNotifications) {
-        try {
-          notis = JSON.parse(savedNotifications)
-        } catch (e) {}
-      }
       const newNoti = {
         id: `noti-join-${finalStaffMember.id}-${Date.now()}`,
         staffId: finalStaffMember.id,
@@ -410,11 +397,10 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         read: false,
         linkTab: 'staff'
       }
-      notis = [newNoti, ...notis]
-      localStorage.setItem('nexora_notifications', JSON.stringify(notis))
-      sessionStorage.setItem('nexora_notifications', JSON.stringify(notis))
-      window.dispatchEvent(new Event('storage'))
-    } catch (e) {}
+      addNotificationMutation.mutate(newNoti)
+    } catch (e) {
+      logger.error('Failed to update merchant setup during registration', e)
+    }
 
     setCurrentStep(4)
   }

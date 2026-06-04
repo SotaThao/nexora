@@ -23,7 +23,7 @@ describe('Staff Personal Dashboard E2E Test Suite (CloakBrowser)', () => {
 
   it('Verify Staff Personal Dashboard Flow', async () => {
     // 1. Navigate to home & login to Staff Dashboard
-    await page.goto('http://localhost:3000');
+    await page.goto('http://127.0.0.1:3000');
     await page.waitForSelector('text=NEXORA');
 
     // Click "Staff Login (Personal Dashboard)" button to log in

@@ -20,7 +20,25 @@ export function useSaveProfileSettings() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (settings) => profileSettingsRepository.save(settings),
+    onMutate: (settings) => {
+      queryClient.setQueryData(qk.profileSettings(), settings)
+    },
+    onSuccess: (_data, settings) => {
+      queryClient.setQueryData(qk.profileSettings(), settings)
+      queryClient.invalidateQueries({ queryKey: qk.profileSettings() })
+    },
+  })
+}
+
+export function useClearProfileSettings() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => profileSettingsRepository.clear(),
+    onMutate: () => {
+      queryClient.setQueryData(qk.profileSettings(), null)
+    },
     onSuccess: () => {
+      queryClient.setQueryData(qk.profileSettings(), null)
       queryClient.invalidateQueries({ queryKey: qk.profileSettings() })
     },
   })

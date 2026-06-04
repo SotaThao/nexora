@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import StaffRegistrationWizard from '../../src/components/StaffRegistrationWizard'
 import { LanguageProvider } from '../../src/contexts/LanguageContext'
@@ -28,12 +28,12 @@ describe('StaffRegistrationWizard Component Unit Tests', () => {
     biz: 'Golden Glow Nail Spa'
   }
 
-  it('navigates through the entire 5-step registration process successfully', () => {
+  it('navigates through the entire 5-step registration process successfully', async () => {
     const handleReturn = vi.fn()
     
     render(
       <LanguageProvider>
-        <StaffRegistrationWizard inviteData={mockInvite} onReturnToMerchant={handleReturn} />
+        <StaffRegistrationWizard inviteData={mockInvite} onReturnToMerchant={handleReturn} isDemoToolsEnabled />
       </LanguageProvider>
     )
 
@@ -125,22 +125,26 @@ describe('StaffRegistrationWizard Component Unit Tests', () => {
     expect(handleReturn).toHaveBeenCalledOnce()
 
     // Verify localStorage has been updated with the new pending thợ
-    const savedSetup = JSON.parse(localStorage.getItem('nexora_merchant_setup'))
-    expect(savedSetup.staffList.length).toBeGreaterThan(0)
-    const activeStaff = savedSetup.staffList.find(s => s.fullName === 'Lisa Tran')
+    let activeStaff
+    await waitFor(() => {
+      const savedSetup = JSON.parse(localStorage.getItem('nexora_merchant_setup'))
+      expect(savedSetup.staffList.length).toBeGreaterThan(0)
+      activeStaff = savedSetup.staffList.find(s => s.fullName === 'Lisa Tran')
+      expect(activeStaff).toBeDefined()
+    })
     expect(activeStaff).toBeDefined()
     expect(activeStaff.status).toBe('Pending Acceptance')
     expect(activeStaff.isActive).toBe(false)
     expect(activeStaff.paymentAccounts.zelle).toBe('lisa@example.com')
   })
 
-  it('links an existing VLINKPAY profile successfully (Option A)', () => {
+  it('links an existing VLINKPAY profile successfully (Option A)', async () => {
     const handleReturn = vi.fn()
     const generalInvite = { biz: 'Golden Glow Nail Spa' } // No name -> isSelfServe
 
     render(
       <LanguageProvider>
-        <StaffRegistrationWizard inviteData={generalInvite} onReturnToMerchant={handleReturn} />
+        <StaffRegistrationWizard inviteData={generalInvite} onReturnToMerchant={handleReturn} isDemoToolsEnabled />
       </LanguageProvider>
     )
 
@@ -174,22 +178,26 @@ describe('StaffRegistrationWizard Component Unit Tests', () => {
     expect(screen.getByText('PENDING')).toBeInTheDocument()
 
     // Verify localStorage has been updated with status Pending Acceptance
-    const savedSetup = JSON.parse(localStorage.getItem('nexora_merchant_setup'))
-    expect(savedSetup.staffList.length).toBeGreaterThan(0)
-    const linkedStaff = savedSetup.staffList.find(s => s.id === 'NEX-STAFF-LISA1102')
+    let linkedStaff
+    await waitFor(() => {
+      const savedSetup = JSON.parse(localStorage.getItem('nexora_merchant_setup'))
+      expect(savedSetup.staffList.length).toBeGreaterThan(0)
+      linkedStaff = savedSetup.staffList.find(s => s.id === 'NEX-STAFF-LISA1102')
+      expect(linkedStaff).toBeDefined()
+    })
     expect(linkedStaff).toBeDefined()
     expect(linkedStaff.status).toBe('Pending Acceptance')
     expect(linkedStaff.isActive).toBe(false)
     expect(linkedStaff.flowType).toBe('Link Existing Staff ID')
   })
 
-  it('registers a new self-serve profile as pending acceptance successfully (Option B)', () => {
+  it('registers a new self-serve profile as pending acceptance successfully (Option B)', async () => {
     const handleReturn = vi.fn()
     const generalInvite = { biz: 'Golden Glow Nail Spa' }
 
     render(
       <LanguageProvider>
-        <StaffRegistrationWizard inviteData={generalInvite} onReturnToMerchant={handleReturn} />
+        <StaffRegistrationWizard inviteData={generalInvite} onReturnToMerchant={handleReturn} isDemoToolsEnabled />
       </LanguageProvider>
     )
 
@@ -239,8 +247,12 @@ describe('StaffRegistrationWizard Component Unit Tests', () => {
     expect(screen.getByText('PENDING')).toBeInTheDocument()
 
     // Verify localStorage has been updated with status Pending Acceptance
-    const savedSetup = JSON.parse(localStorage.getItem('nexora_merchant_setup'))
-    const registeredStaff = savedSetup.staffList.find(s => s.fullName === 'New Staff Member')
+    let registeredStaff
+    await waitFor(() => {
+      const savedSetup = JSON.parse(localStorage.getItem('nexora_merchant_setup'))
+      registeredStaff = savedSetup.staffList.find(s => s.fullName === 'New Staff Member')
+      expect(registeredStaff).toBeDefined()
+    })
     expect(registeredStaff).toBeDefined()
     expect(registeredStaff.status).toBe('Pending Acceptance')
     expect(registeredStaff.isActive).toBe(false)
@@ -249,7 +261,7 @@ describe('StaffRegistrationWizard Component Unit Tests', () => {
   it('allows editing Referral Link field when inviteData or biz is not provided', () => {
     render(
       <LanguageProvider>
-        <StaffRegistrationWizard inviteData={null} onReturnToMerchant={vi.fn()} />
+        <StaffRegistrationWizard inviteData={null} onReturnToMerchant={vi.fn()} isDemoToolsEnabled />
       </LanguageProvider>
     )
 
@@ -266,7 +278,7 @@ describe('StaffRegistrationWizard Component Unit Tests', () => {
     expect(referralInput).toHaveValue('custom-salon-referral')
   })
 
-  it('updates temporary merchant-assigned ID "1" to a valid Staff Code format and re-maps touchpoints', () => {
+  it('updates temporary merchant-assigned ID "1" to a valid Staff Code format and re-maps touchpoints', async () => {
     // 1. Setup mock setup in localStorage with a temporary ID '1' and a matching touchpoint
     const mockSetup = {
       businessInfo: { name: 'Golden Glow Nail Spa' },
@@ -306,7 +318,7 @@ describe('StaffRegistrationWizard Component Unit Tests', () => {
 
     render(
       <LanguageProvider>
-        <StaffRegistrationWizard inviteData={testInvite} onReturnToMerchant={vi.fn()} />
+        <StaffRegistrationWizard inviteData={testInvite} onReturnToMerchant={vi.fn()} isDemoToolsEnabled />
       </LanguageProvider>
     )
 
@@ -340,13 +352,16 @@ describe('StaffRegistrationWizard Component Unit Tests', () => {
     const newGeneratedId = codeElement.textContent.trim()
 
     // Verify localStorage has been updated correctly
-    const savedSetup = JSON.parse(localStorage.getItem('nexora_merchant_setup'))
-    
-    // The staff member with ID '1' should no longer exist
-    expect(savedSetup.staffList.find(s => s.id === '1')).toBeUndefined()
-    
+    let savedSetup
+    let updatedStaff
+    await waitFor(() => {
+      savedSetup = JSON.parse(localStorage.getItem('nexora_merchant_setup'))
+      expect(savedSetup.staffList.find(s => s.id === '1')).toBeUndefined()
+      updatedStaff = savedSetup.staffList.find(s => s.id === newGeneratedId)
+      expect(updatedStaff).toBeDefined()
+    })
+
     // Instead, they should have the new generated ID
-    const updatedStaff = savedSetup.staffList.find(s => s.id === newGeneratedId)
     expect(updatedStaff).toBeDefined()
     expect(updatedStaff.fullName).toBe('Lisa Tran')
     expect(updatedStaff.status).toBe('Pending Acceptance')
@@ -363,7 +378,7 @@ describe('StaffRegistrationWizard Component Unit Tests', () => {
 
     render(
       <LanguageProvider>
-        <StaffRegistrationWizard inviteData={generalInvite} onReturnToMerchant={handleReturn} />
+        <StaffRegistrationWizard inviteData={generalInvite} onReturnToMerchant={handleReturn} isDemoToolsEnabled />
       </LanguageProvider>
     )
 

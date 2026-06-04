@@ -17,6 +17,10 @@ export function createProfileSettingsRepository(a = defaultAdapter) {
     async save(settings) {
       await a.set(KEY, settings)
     },
+
+    async clear() {
+      await a.remove(KEY)
+    },
   }
 }
 

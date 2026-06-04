@@ -109,7 +109,7 @@ function TipsOverTimePanel({
     const start = performance.now()
     setReveal(0.02)
     const tick = (now) => {
-      const progress = Math.min((now - start) / 920, 1)
+      const progress = Math.min(Math.max((now - start) / 920, 0), 1)
       const eased = 1 - Math.pow(1 - progress, 3)
       setReveal(eased)
       if (progress < 1) frameId = requestAnimationFrame(tick)
@@ -153,7 +153,7 @@ function TipsOverTimePanel({
             <button
               key={item}
               onClick={() => setRange(item)}
-              className={`min-h-8 rounded-lg px-3 text-xs font-bold transition cursor-pointer ${range === item ? 'bg-nexoraBrand text-white' : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:text-nexoraText hover:bg-slate-200'}`}
+              className={`min-h-8 rounded-lg px-3 text-xs font-bold transition cursor-pointer ${range === item ? 'bg-nexoraBrand text-white' : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:text-nexoraText hover:bg-nexoraBorder'}`}
             >
               {rangeLabel(item)}
             </button>
@@ -163,7 +163,7 @@ function TipsOverTimePanel({
 
       {/* Custom Date Range Picker */}
       {range === 'Custom' && (
-        <div className="flex flex-wrap items-center justify-end gap-3 mt-4 mb-2 border-t border-dashed border-nexoraBorder dark:border-slate-800 pt-4 text-xs font-bold text-nexoraText">
+        <div className="flex flex-wrap items-center justify-end gap-3 mt-4 mb-2 border-t border-dashed border-nexoraBorder dark:border-luxuryCoal pt-4 text-xs font-bold text-nexoraText">
           <div className="flex items-center gap-2">
             <span className="text-nexoraMuted">{currentLanguage === 'vi' ? 'Từ ngày:' : 'From:'}</span>
             <input
@@ -185,18 +185,18 @@ function TipsOverTimePanel({
         </div>
       )}
       <div className="mt-8 grid grid-cols-[42px_1fr] gap-2 sm:grid-cols-[56px_1fr] sm:gap-3">
-        <div className="flex h-[235px] sm:h-[270px] flex-col justify-between text-right text-sm text-nexoraSubtle">
+        <div className="flex h-64 sm:h-72 flex-col justify-between text-right text-sm text-nexoraSubtle">
           {yTicks.map((tick, index) => (
             <span key={`${tick}-${index}`}>{formatCurrency(tick).replace('.00', '')}</span>
           ))}
         </div>
         <div
           ref={chartRef}
-          className="dashboard-scrub-chart relative h-[260px] min-w-0 cursor-crosshair touch-pan-y select-none sm:h-[300px]"
+          className="dashboard-scrub-chart relative h-72 min-w-0 cursor-crosshair touch-pan-y select-none sm:h-80"
           onPointerMove={handlePointerMove}
           onPointerLeave={handlePointerLeave}
         >
-          <div className="relative h-[235px] w-full sm:h-[270px]">
+          <div className="relative h-64 w-full sm:h-72">
             <svg className="h-full w-full overflow-visible" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" aria-hidden="true">
               <defs>
                 <linearGradient id="tips-chart-area-grad" x1="0" y1="0" x2="0" y2="1">
@@ -321,7 +321,7 @@ function TipsOverTimePanel({
 
             {/* Custom Dark Tooltip Pill from reference image */}
             <div
-              className="pointer-events-none absolute rounded-lg bg-slate-900 px-4 py-2.5 shadow-2xl text-center"
+              className="pointer-events-none absolute rounded-lg bg-nexoraText px-4 py-2.5 shadow-2xl text-center"
               style={{
                 width: '124px',
                 left: `clamp(0px, calc(${(activePoint.x / width) * 100}% - 62px), calc(100% - 124px))`,

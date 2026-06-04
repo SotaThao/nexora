@@ -14,5 +14,7 @@ extracted_*
 scratch/
 .cursor/
 .agents/
-
+openspec/changes/*/smoke-screenshots/
+openspec/changes/*/test_plan.md
+openspec/changes/*/walkthrough.md
 

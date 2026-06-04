@@ -22,7 +22,25 @@ export function useSaveMerchantSetup() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (setup) => merchantsRepository.saveSetup(setup),
+    onMutate: (setup) => {
+      queryClient.setQueryData(qk.merchantSetup(), setup)
+    },
+    onSuccess: (_data, setup) => {
+      queryClient.setQueryData(qk.merchantSetup(), setup)
+      queryClient.invalidateQueries({ queryKey: qk.merchantSetup() })
+    },
+  })
+}
+
+export function useClearMerchantSetup() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => merchantsRepository.clearSetup(),
+    onMutate: () => {
+      queryClient.setQueryData(qk.merchantSetup(), null)
+    },
     onSuccess: () => {
+      queryClient.setQueryData(qk.merchantSetup(), null)
       queryClient.invalidateQueries({ queryKey: qk.merchantSetup() })
     },
   })

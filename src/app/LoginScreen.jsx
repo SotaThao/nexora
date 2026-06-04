@@ -1,10 +1,6 @@
 import React, { useState } from 'react'
 import { ShieldCheck, LogIn, Lock, Mail, Sparkles, Eye, EyeOff } from 'lucide-react'
 import SimulationPanel from './SimulationPanel'
-import { storage } from '../utils/storage'
-
-const localStorage = storage
-const sessionStorage = storage
 
 export default function LoginScreen({
   email,
@@ -28,13 +24,14 @@ export default function LoginScreen({
   setStaffInviteData,
   setView,
   setLoggedInStaffId,
+  isDemoToolsEnabled = false,
 }) {
   const [showPassword, setShowPassword] = useState(false)
   return (
     <div className="min-h-dvh flex items-center justify-center bg-nexoraCanvas relative overflow-x-hidden overflow-y-auto text-nexoraText px-4 py-6 sm:py-10 selection:bg-nexoraBrandSoft selection:text-nexoraBrand">
       {/* Soft background decorations */}
       <div className="absolute top-1/4 left-1/4 h-56 w-56 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(66,72,216,0.05)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-96 sm:w-96"></div>
-      <div className="absolute bottom-1/4 right-1/4 h-64 w-64 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(43,89,255,0.03)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-[450px] sm:w-[450px]"></div>
+      <div className="absolute bottom-1/4 right-1/4 h-64 w-64 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(43,89,255,0.03)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-96 sm:w-96"></div>
 
       {/* Language Switcher */}
       <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-nexoraBorder shadow-sm">
@@ -83,7 +80,7 @@ export default function LoginScreen({
               </div>
 
               {loginError && (
-                <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
+                <div className="p-3 rounded-lg bg-nexoraDanger/10 border border-nexoraDanger/20 text-xs text-nexoraDanger">
                   {loginError}
                 </div>
               )}
@@ -132,10 +129,12 @@ export default function LoginScreen({
                 <LogIn className="w-4 h-4 stroke-[3px]" /> {t('login.login_btn')}
               </button>
 
-              <div className="relative py-2 text-center">
-                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-nexoraBorder"></div></div>
-                <span className="relative bg-white px-3 text-[10px] text-nexoraSubtle font-bold uppercase tracking-wider">{t('login.or_try_demo')}</span>
-              </div>
+              {isDemoToolsEnabled && (
+                <div className="relative py-2 text-center">
+                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-nexoraBorder"></div></div>
+                  <span className="relative bg-white px-3 text-[10px] text-nexoraSubtle font-bold uppercase tracking-wider">{t('login.or_try_demo')}</span>
+                </div>
+              )}
 
               {/* Quick login / registration options */}
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -147,11 +146,12 @@ export default function LoginScreen({
                   {t('login.register_btn')}
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    // Prefill and login directly to Dashboard
-                    const demoSetup = {
+                {isDemoToolsEnabled && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Prefill and login directly to Dashboard
+                      const demoSetup = {
                       businessInfo: {
                         name: 'Golden Glow Nail Spa & Salon',
                         industry: 'Nail Salon',
@@ -220,13 +220,14 @@ export default function LoginScreen({
                         { id: 'tp-t1', name: 'Service Chair 01', type: 'Table QR' },
                         { id: 'tp-t2', name: 'Service Chair 02', type: 'Table QR' },
                       ]
-                    }
-                    onQuickDemoLogin(demoSetup)
-                  }}
-                  className="min-h-11 py-2 border border-nexoraBrand/20 hover:border-nexoraBrand text-nexoraBrand bg-nexoraBrandSoft/40 hover:bg-nexoraBrandSoft text-xs font-semibold rounded-lg flex items-center justify-center gap-1 transition-all"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-nexoraBrand" /> {t('login.enter_dashboard_btn')}
-                </button>
+                      }
+                      onQuickDemoLogin(demoSetup)
+                    }}
+                    className="min-h-11 py-2 border border-nexoraBrand/20 hover:border-nexoraBrand text-nexoraBrand bg-nexoraBrandSoft/40 hover:bg-nexoraBrandSoft text-xs font-semibold rounded-lg flex items-center justify-center gap-1 transition-all"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-nexoraBrand" /> {t('login.enter_dashboard_btn')}
+                  </button>
+                )}
               </div>
             </form>
           )}
@@ -236,16 +237,18 @@ export default function LoginScreen({
           </span>
         </div>
 
-        <SimulationPanel
-          currentLanguage={currentLanguage}
-          simStatus={simStatus}
-          setSimStatus={setSimStatus}
-          pendingAccounts={pendingAccounts}
-          onTriggerSimulation={onTriggerSimulation}
-          onToggleAccountVerification={onToggleAccountVerification}
-          onDeleteSimulatedAccount={onDeleteSimulatedAccount}
-          onAutoLogin={onAutoLogin}
-        />
+        {isDemoToolsEnabled && (
+          <SimulationPanel
+            currentLanguage={currentLanguage}
+            simStatus={simStatus}
+            setSimStatus={setSimStatus}
+            pendingAccounts={pendingAccounts}
+            onTriggerSimulation={onTriggerSimulation}
+            onToggleAccountVerification={onToggleAccountVerification}
+            onDeleteSimulatedAccount={onDeleteSimulatedAccount}
+            onAutoLogin={onAutoLogin}
+          />
+        )}
 
       </div>
     </div>
