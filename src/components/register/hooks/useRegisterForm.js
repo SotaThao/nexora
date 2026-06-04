@@ -4,12 +4,17 @@ import { storage } from '../../../utils/storage'
 import { parsePhone } from '../../CountryCodeSelect'
 import { MOCK_NEXORA_STAFF_PROFILES } from '../../staff-registration/hooks/useStaffRegistration'
 import { payoutMethodsList } from '../constants'
+import { useAddPendingAccount, useReplaceAllPendingAccounts, usePendingAccounts } from '../../../data/hooks/usePendingAccounts'
 
+// Alias storage for non-pending-accounts domain access (merchant setup, notifications)
 const localStorage = storage
 const sessionStorage = storage
 
 export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onKybSuccess, isRedirectedFromSession }) {
   const { t, currentLanguage, setLanguage, renderLabel } = useTranslation()
+  const addPendingAccountMutation = useAddPendingAccount()
+  const replaceAllPendingAccountsMutation = useReplaceAllPendingAccounts()
+  const pendingAccountsQuery = usePendingAccounts()
   const [currentStep, setCurrentStep] = useState(0)
   const [role, setRole] = useState('business')
 
@@ -134,7 +139,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       setOtpError('')
 
       if (role === 'business') {
-        const pendingAccounts = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
+        const existingAccounts = pendingAccountsQuery.data ?? []
         const newAccount = {
           email: email.trim().toLowerCase(),
           password: password,
@@ -146,9 +151,12 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
           kybDetails: null
         }
 
-        const filtered = pendingAccounts.filter(acc => acc.email !== newAccount.email)
+        // Replace entire list to de-dupe by email, then add new
+        const filtered = existingAccounts.filter(acc => acc.email !== newAccount.email)
         filtered.push(newAccount)
-        localStorage.setItem('nexora_pending_accounts', JSON.stringify(filtered))
+        // Fire-and-forget: invoke callback immediately (same user-observable timing as before),
+        // and let the mutation persist in the background.
+        replaceAllPendingAccountsMutation.mutate(filtered)
 
         if (onRegisterAndLogin) {
           onRegisterAndLogin(email.trim().toLowerCase())
@@ -317,7 +325,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       payoutConfigs: payouts
     }
 
-    const pendingAccounts = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
+    const existingAccounts = pendingAccountsQuery.data ?? []
     const newAccount = {
       email: email.trim().toLowerCase(),
       password: password,
@@ -334,9 +342,9 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       payoutConfigs: payouts,
       paymentAccounts: finalPaymentAccounts
     }
-    const filteredPending = pendingAccounts.filter(acc => acc.email !== newAccount.email)
+    const filteredPending = existingAccounts.filter(acc => acc.email !== newAccount.email)
     filteredPending.push(newAccount)
-    localStorage.setItem('nexora_pending_accounts', JSON.stringify(filteredPending))
+    replaceAllPendingAccountsMutation.mutate(filteredPending)
 
     const savedSetup = localStorage.getItem('nexora_merchant_setup')
     let parsedSetup = null

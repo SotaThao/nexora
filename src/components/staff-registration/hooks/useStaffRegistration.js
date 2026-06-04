@@ -4,7 +4,9 @@ import { storage } from '../../../utils/storage'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { parsePhone } from '../../CountryCodeSelect'
 import { logger } from '../../../utils/logger'
+import { usePendingAccounts, useAddPendingAccount, useReplaceAllPendingAccounts } from '../../../data/hooks/usePendingAccounts'
 
+// Alias storage for non-pending-accounts domain access (merchant setup, notifications)
 const localStorage = storage
 const sessionStorage = storage
 
@@ -67,6 +69,8 @@ export { MOCK_NEXORA_STAFF_PROFILES }
 export default function useStaffRegistration({ inviteData }) {
   const { t, currentLanguage, setLanguage } = useTranslation()
   const { showToast } = useNotification()
+  const pendingAccountsQuery = usePendingAccounts()
+  const replaceAllPendingAccountsMutation = useReplaceAllPendingAccounts()
   const [step, setStep] = useState(0) // 0: Welcome Invite, 1: OTP, 2: Profile, 3: Payments, 4: Consent & Activate, 5: Success
 
   // Path selection states
@@ -614,7 +618,7 @@ export default function useStaffRegistration({ inviteData }) {
     }
 
     // 2. Check in nexora_pending_accounts (registered via wizard)
-    const accs = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
+    const accs = pendingAccountsQuery.data ?? []
     const matchedAcc = accs.find(acc => acc.email === emailQuery)
     if (matchedAcc) {
       if (matchedAcc.password !== passwordQuery) {
@@ -815,7 +819,7 @@ export default function useStaffRegistration({ inviteData }) {
 
       // Also save the staff account to nexora_pending_accounts so they can log in!
       if (email.trim() && regPassword) {
-        const pendingAccounts = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
+        const existingAccounts = pendingAccountsQuery.data ?? []
         const staffAccount = {
           email: email.trim().toLowerCase(),
           password: regPassword,
@@ -824,9 +828,9 @@ export default function useStaffRegistration({ inviteData }) {
           isVerified: true,
           verificationStatus: 'verified'
         }
-        const filtered = pendingAccounts.filter(acc => acc.email !== staffAccount.email)
+        const filtered = existingAccounts.filter(acc => acc.email !== staffAccount.email)
         filtered.push(staffAccount)
-        localStorage.setItem('nexora_pending_accounts', JSON.stringify(filtered))
+        replaceAllPendingAccountsMutation.mutate(filtered)
       }
       window.dispatchEvent(new Event('storage'))
     } catch (e) {

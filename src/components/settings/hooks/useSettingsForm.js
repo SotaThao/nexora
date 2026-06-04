@@ -1,13 +1,10 @@
 import { useState, useEffect } from 'react'
 import { ShieldCheck, ShieldAlert } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { storage } from '../../../utils/storage'
 import { logger } from '../../../utils/logger'
 import { useProfileSettings, useSaveProfileSettings } from '../../../data/hooks/useProfileSettings'
 import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
-
-// Alias used by handleKybSubmit for nexora_pending_accounts (pending_accounts migration is Phase 5)
-const localStorage = storage
+import { usePendingAccounts, useReplaceAllPendingAccounts } from '../../../data/hooks/usePendingAccounts'
 
 const DEFAULT_PROFILE = {
   username: 'goldenglow_owner',
@@ -79,6 +76,8 @@ export default function useSettingsForm({
   const saveProfileSettingsMutation = useSaveProfileSettings()
   const merchantSetupQuery = useMerchantSetup()
   const saveMerchantSetupMutation = useSaveMerchantSetup()
+  const pendingAccountsQuery = usePendingAccounts()
+  const replaceAllPendingAccountsMutation = useReplaceAllPendingAccounts()
   const [activeTab, setActiveTab] = useState(initialTab) // profile | kyb
 
   useEffect(() => {
@@ -119,11 +118,11 @@ export default function useSettingsForm({
     }
     setKybErrors({})
     setIsSubmittingKyb(true)
-    setTimeout(() => {
+    setTimeout(async () => {
       setIsSubmittingKyb(false)
-      const pendingAccounts = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
+      const existingAccounts = pendingAccountsQuery.data ?? []
       const targetEmail = profile.email || 'sso_no_kyb@gmail.com'
-      const existing = pendingAccounts.find(acc => acc.email === targetEmail)
+      const existing = existingAccounts.find(acc => acc.email === targetEmail)
       const newAccount = {
         email: targetEmail,
         password: existing ? existing.password : '••••••••',
@@ -131,9 +130,9 @@ export default function useSettingsForm({
         isVerified: true,
         kybDetails: { ...kybData }
       }
-      const filtered = pendingAccounts.filter(acc => acc.email !== targetEmail)
+      const filtered = existingAccounts.filter(acc => acc.email !== targetEmail)
       filtered.push(newAccount)
-      localStorage.setItem('nexora_pending_accounts', JSON.stringify(filtered))
+      await replaceAllPendingAccountsMutation.mutateAsync(filtered)
       if (onKybSuccess) {
         onKybSuccess(targetEmail)
       }

@@ -11,6 +11,7 @@ import StaffReviewsDetailModal from './StaffReviewsDetailModal'
 import StaffQrScannerModal from './StaffQrScannerModal'
 import { getPayoutConfigsFromMember } from '../utils'
 import { storage } from '../../../utils/storage'
+import { usePendingAccounts } from '../../../data/hooks/usePendingAccounts'
 
 function StaffModal({
   open,
@@ -53,6 +54,9 @@ function StaffModal({
   const [reviewFilterRating, setReviewFilterRating] = useState('all')
   const [reviewFilterSource, setReviewFilterSource] = useState('all')
   const [reviewFilterOnlyCommented, setReviewFilterOnlyCommented] = useState(false)
+
+  const pendingAccountsQuery = usePendingAccounts()
+  const pendingAccountsList = pendingAccountsQuery.data ?? []
 
   if (!open) return null
 
@@ -301,11 +305,11 @@ function StaffModal({
       } catch (e) {}
     }
 
-    // Helper to search nexora_pending_accounts (out-of-scope domain; still via storage)
+    // Helper to search nexora_pending_accounts (via TanStack Query hook data)
     const checkPendingAccounts = () => {
       if (matchedProfile) return
       try {
-        const pendingList = JSON.parse(storage.getItem('nexora_pending_accounts') || '[]')
+        const pendingList = pendingAccountsList
         const matched = pendingList.find(acc => acc.vlinkpayId?.toUpperCase() === searchId || acc.staffId?.toUpperCase() === searchId)
         if (matched) {
           matchedProfile = {
