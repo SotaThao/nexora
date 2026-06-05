@@ -1,0 +1,36 @@
+schema: spec-driven
+
+context: |
+  Project: VLinkNexora — NEXORA Staff/Touch, a nail-salon merchant tipping platform by VLINKPAY.
+  Tech stack: React 18 + Vite (JSX, NOT TypeScript), TailwindCSS, lucide-react icons,
+    @supabase/supabase-js. State via React Context (LanguageContext vi/en, NotificationContext)
+    — no Redux/Zustand. i18n via src/contexts/LanguageContext with src/locales/{en,vi}.json.
+  App shell: single-page state machine in src/App.jsx switching `view`
+    (login | register-wizard | onboarding | dashboard | customer | staff-portal).
+  Design system: Tailwind tokens `nexora*` (nexoraBrand, nexoraCanvas, nexoraText, nexoraBorder,
+    nexoraSurface, nexoraSubtle, nexoraMuted, nexoraBrandSoft, nexoraSidebar). Brand gradient
+    `from-[#2B59FF] to-[#8E4DF8]`. Logo /assets/nexora-logo.png. Wallet SVGs in
+    src/components/dashboard/constants.jsx (WalletLogos). Reusable: MenuIcon, IconButton.
+  Data/backend: Supabase is a SINGLE generic KV table `public.nexora_sync`
+    (id text PK = storage key, data jsonb, updated_at) with public RLS — see repo root
+    supabase_setup.sql; .env has VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY. The util
+    src/utils/storage.js transparently syncs keys in its DYNAMIC_KEYS allowlist to nexora_sync
+    (realtime + `_client_updated_at` last-write guard). Existing dynamic keys: nexora_merchant_setup,
+    nexora_profile_settings, nexora_transactions, nexora_reviews, nexora_notifications,
+    nexora_pending_accounts.
+  Conventions: PascalCase components, camelCase hooks/utils. Components under ~500 lines, split when
+    larger; each sub-component in its own file in the same feature dir. All UI text via i18n (en+vi),
+    no hardcoded strings. No console.* in committed code.
+  Domain: Staff = a global personal identity (one profile reused across multiple businesses),
+    Staff ID format `NEX-STAFF-XXXX`. Account types carry a flag: `!personal` (staff) vs `!business`
+    (merchant owner). Staff payment/payout methods are self-managed; the owner cannot edit them.
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours

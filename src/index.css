@@ -1,0 +1,451 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Premium mobile-first tap highlight override */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Global text-based input focus ring styling */
+input[type="text"]:focus, 
+input[type="email"]:focus, 
+input[type="password"]:focus, 
+input[type="tel"]:focus, 
+input[type="number"]:focus, 
+input[type="search"]:focus, 
+textarea:focus,
+select:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(70, 72, 216, 0.2) !important;
+  border-color: #4648D8 !important;
+  transition: all 0.15s ease-in-out;
+}
+
+/* Prevent iOS Safari from zooming on input focus by ensuring font-size is at least 16px on iOS devices (portrait and landscape) */
+@supports (-webkit-touch-callout: none) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* Prevent zoom on all other mobile browsers on narrow viewports */
+@media screen and (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+
+
+
+/* Keyboard focus visibility for buttons and links */
+button:focus-visible, a:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(70, 72, 216, 0.4) !important;
+}
+
+/* Premium scrollbar for the application */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+}
+::-webkit-scrollbar-thumb {
+  background: #32D7FF;
+  border-radius: 99px;
+}
+
+.dark ::-webkit-scrollbar-thumb,
+.bg-luxuryBlack ::-webkit-scrollbar-thumb,
+.bg-neutral-950 ::-webkit-scrollbar-thumb,
+[class*="bg-luxuryBlack"] ::-webkit-scrollbar-thumb,
+[class*="bg-neutral-950"] ::-webkit-scrollbar-thumb,
+[class*="bg-luxuryBlack"]::-webkit-scrollbar-thumb,
+[class*="bg-neutral-950"]::-webkit-scrollbar-thumb {
+  background: #d4af37;
+}
+
+/* Glassmorphism Classes */
+.glass-light {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(231, 234, 240, 0.5);
+}
+
+.glass-dark {
+  background: rgba(17, 16, 13, 0.85);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid rgba(212, 175, 55, 0.18);
+}
+
+/* Flox & Nexora Design System Component Styles */
+@layer components {
+  .nexora-card {
+    @apply rounded-xl border border-nexoraBorder bg-nexoraSurface shadow-nexora-card;
+  }
+
+  .nexora-icon-button {
+    @apply inline-flex h-10 w-10 items-center justify-center rounded-lg text-nexoraText transition hover:bg-nexoraSurfaceMuted;
+  }
+
+  .nexora-primary-button {
+    @apply inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-5 text-sm font-bold text-white shadow-nexora-soft transition hover:bg-nexoraBrandDark;
+  }
+
+  .nexora-search-input {
+    @apply h-11 w-full rounded-full border border-transparent bg-nexoraSurfaceMuted pl-12 pr-4 text-sm text-nexoraText outline-none placeholder:text-nexoraSubtle focus:border-nexoraBrand;
+  }
+
+  .nexora-sidebar-panel {
+    @apply rounded-xl border border-white/10 bg-white/5;
+  }
+
+  /* 1. Ghost Button */
+  .btn-ghost {
+    background-color: transparent;
+    color: #0B1C30; /* Nexora Ink Blue */
+    border: 1px solid #e2e8f0; /* Flox Slate Gray */
+    border-radius: 6px; /* flox-buttons */
+    padding: 4px 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+  }
+  .btn-ghost:hover {
+    background-color: rgba(226, 232, 240, 0.2);
+    color: #050505;
+  }
+  .dark .btn-ghost {
+    color: #ffffff;
+    border-color: rgba(212, 175, 55, 0.18); /* Nexora Gold with opacity */
+  }
+  .dark .btn-ghost:hover {
+    background-color: rgba(212, 175, 55, 0.08);
+  }
+
+  /* 2. Outline Ghost Button */
+  .btn-outline-ghost {
+    background-color: transparent;
+    color: #1b1b1b; /* Anthracite */
+    border: 1px solid #f3f3f3; /* Light Fog */
+    border-radius: 12px; /* flox-cards radius */
+    padding: 12px 25px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+  }
+  .btn-outline-ghost:hover {
+    background-color: rgba(243, 243, 243, 0.4);
+    border-color: #e2e8f0;
+  }
+  .dark .btn-outline-ghost {
+    color: #d4af37; /* Nexora Gold */
+    border-color: rgba(212, 175, 55, 0.18);
+  }
+  .dark .btn-outline-ghost:hover {
+    background-color: rgba(212, 175, 55, 0.05);
+    border-color: #d4af37;
+  }
+
+  /* 3. Primary Action Button */
+  .btn-primary-action {
+    background-color: #0c0c0c; /* Obsidian Black */
+    color: #ffffff;
+    border: 1px solid #f3f3f3;
+    border-radius: 12px;
+    padding: 12px 25px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: rgba(255, 255, 255, 0.2) 0px -2px 1px 0px inset, rgba(255, 255, 255, 0.1) 0px 4px 16px 0px inset, rgba(0, 0, 0, 0.08) 0px 6px 16px 0px;
+    transition: all 0.2s ease-in-out;
+  }
+  .btn-primary-action:hover {
+    background-color: #000000;
+    opacity: 0.95;
+  }
+  .dark .btn-primary-action {
+    background-color: #d4af37; /* Nexora Gold */
+    color: #050505; /* Obsidian Black */
+    border-color: #aa7c11;
+    box-shadow: none;
+  }
+  .dark .btn-primary-action:hover {
+    background-color: #f3e5ab;
+    opacity: 1;
+  }
+
+  /* 4. Gradient Call-to-Action Button */
+  .btn-gradient-cta {
+    background: linear-gradient(92deg, #d4af37 -9.21%, #32D7FF 104.14%); /* Nexora Gold-Cyan Gradient */
+    color: #ffffff;
+    border-radius: 12px;
+    padding: 12px 25px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    transition: opacity 0.2s ease-in-out;
+  }
+  .btn-gradient-cta:hover {
+    opacity: 0.9;
+  }
+
+  /* 5. Elevated Card */
+  .card-elevated {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid #dde5ef;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+  }
+  .dark .card-elevated {
+    background-color: #11100d; /* Nexora Coal */
+    border: 1px solid rgba(212, 175, 55, 0.18);
+    box-shadow: none;
+  }
+
+  /* 6. Code Block Card */
+  .card-code-block {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid #dde5ef;
+    font-family: 'GeistMono', 'Fira Code', monospace;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+  }
+  .dark .card-code-block {
+    background-color: #11100d; /* Nexora Coal */
+    border: 1px solid rgba(212, 175, 55, 0.18);
+    color: #32D7FF; /* Cyan text */
+    box-shadow: none;
+  }
+
+  /* 7. Bordered List Item */
+  .bordered-list-item {
+    background-color: transparent;
+    border-bottom: 1px solid #e2e8f0;
+    color: #020817;
+    padding: 12px 0;
+    transition: all 0.2s ease;
+  }
+  .bordered-list-item:last-child {
+    border-bottom: none;
+  }
+  .dark .bordered-list-item {
+    border-color: rgba(212, 175, 55, 0.18);
+    color: #ffffff;
+  }
+}
+
+/* Screen-only styling */
+.print-only-container {
+  display: none;
+}
+
+/* Print styles for QR Code Stand */
+@media print {
+  /* Hide all screen-only parts of the dashboard and other components */
+  aside, 
+  .lg\:pl-72, 
+  main, 
+  header, 
+  footer, 
+  .no-print, 
+  button, 
+  a,
+  .fixed.bottom-4 {
+    display: none !important;
+  }
+
+  .print-only-container {
+    display: flex !important;
+  }
+
+  /* Reset body and html for print */
+  html, body {
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+  }
+
+  @page {
+    size: portrait;
+    margin: 0.5in;
+  }
+
+  /* Target backdrop to fill print page and center content */
+  .qr-modal-backdrop {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    z-index: 9999 !important;
+    overflow: visible !important;
+  }
+
+  /* Target modal container inside backdrop */
+  .qr-modal-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    background: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  /* Hide headers, subtitles, and URLs outside the card during print */
+  .qr-print-title,
+  .qr-print-subtitle,
+  .qr-print-url {
+    display: none !important;
+  }
+
+  /* Card wrapper - set to standard 4x6 inches */
+  .qr-print-card {
+    width: 4.0in !important;
+    height: 6.0in !important;
+    background: #ffffff !important;
+    border: 1.5px dashed #cbd5e1 !important; /* Guide for scissors/cutting */
+    border-radius: 0.25in !important;
+    padding: 0.3in 0.35in !important;
+    box-shadow: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+    page-break-inside: avoid !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Brand Header inside Card */
+  .qr-print-brand-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    margin-top: 0 !important;
+  }
+
+  .qr-print-brand-logo {
+    width: 26pt !important;
+    height: 26pt !important;
+  }
+
+  .qr-print-brand-text {
+    font-size: 11pt !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.5px !important;
+    color: #020617 !important;
+  }
+
+  /* Hide top gradient strip if present */
+  .qr-print-card-strip {
+    display: none !important;
+  }
+
+  /* QR Owner Name (Primary Title) */
+  .qr-print-biz-name {
+    font-size: 15pt !important;
+    font-weight: 850 !important;
+    color: #1e3a8a !important; /* Premium navy */
+    text-transform: uppercase !important;
+    text-align: center !important;
+    margin-top: 10pt !important;
+    letter-spacing: 0.25px !important;
+    line-height: 1.25 !important;
+  }
+
+  /* Salon Info (Secondary text) */
+  .qr-print-staff-info {
+    font-size: 9.5pt !important;
+    font-weight: 550 !important;
+    color: #475569 !important;
+    text-align: center !important;
+    margin-top: 3pt !important;
+    line-height: 1.25 !important;
+  }
+
+  /* QR Code Wrapper */
+  .qr-print-qr-wrapper {
+    width: 2.1in !important;
+    height: 2.1in !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 0.15in !important;
+    padding: 0.12in !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+    margin: 8pt 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .qr-print-qr-image {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+  }
+
+  /* Subtitle / Scan Instruction text: "SCAN TO TIP & REVIEW" */
+  .qr-print-scan-text {
+    font-size: 10.5pt !important;
+    font-weight: 750 !important;
+    color: #334155 !important;
+    text-transform: uppercase !important;
+    text-align: center !important;
+    letter-spacing: 0.5px !important;
+    line-height: 1.3 !important;
+  }
+
+  /* Card Footer: Scissor icon & Secure redirect text */
+  .qr-print-footer {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    font-size: 7.5pt !important;
+    font-weight: 700 !important;
+    color: #64748b !important;
+    margin-top: 4pt !important;
+  }
+
+  .qr-print-footer svg {
+    width: 10pt !important;
+    height: 10pt !important;
+    color: #2b59ff !important;
+    display: inline-block !important;
+  }
+}
