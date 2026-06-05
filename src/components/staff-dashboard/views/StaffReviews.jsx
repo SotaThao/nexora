@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { Star, Lock, HelpCircle, MessageSquare } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
+import { useReviews } from '../../../data/hooks/useReviews'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-5 shadow-sm'
 
@@ -9,17 +10,12 @@ export default function StaffReviews() {
   const { t, currentLanguage } = useTranslation()
   const { tips, staffMember, kpis } = useStaffAccount()
 
-  // Get reviews from context (derived from nexora_reviews)
-  const { staffReviews } = useMemo(() => {
-    try {
-      const saved = localStorage.getItem('nexora_reviews')
-      const allReviews = saved ? JSON.parse(saved) : []
-      const list = allReviews.filter((r) => r.staffId === staffMember.id)
-      return { staffReviews: list }
-    } catch (e) {
-      return { staffReviews: [] }
-    }
-  }, [staffMember.id])
+  // Get reviews from TanStack Query cache (no direct localStorage read)
+  const { data: allReviews = [] } = useReviews()
+  const staffReviews = useMemo(
+    () => allReviews.filter((r) => r.staffId === staffMember.id),
+    [allReviews, staffMember.id]
+  )
 
   // Aggregate stats
   const averageRating = useMemo(() => {

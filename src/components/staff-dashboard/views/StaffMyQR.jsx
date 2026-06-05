@@ -4,7 +4,9 @@ import { Share2, Copy, QrCode, X, Loader2, CheckCircle2, XCircle } from 'lucide-
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import { useNotification } from '../../../contexts/NotificationContext'
-import { storage } from '../../../utils/storage'
+import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
+import { useAddNotification } from '../../../data/hooks/useNotifications'
+import { logger } from '../../../utils/logger'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 
@@ -14,6 +16,11 @@ export default function StaffMyQR() {
   const { t, currentLanguage } = useTranslation()
   const { staffMember, linkedBusinesses } = useStaffAccount()
   const { showToast } = useNotification()
+
+  // Data layer — merchant setup (read + write) and notifications (write)
+  const { data: merchantSetupData = null } = useMerchantSetup()
+  const saveMerchantSetupMutation = useSaveMerchantSetup()
+  const addNotificationMutation = useAddNotification()
 
   const [showScanner, setShowScanner] = useState(false)
   const [scanStatus, setScanStatus] = useState('idle') // 'idle' | 'checking' | 'success' | 'error'
@@ -63,36 +70,25 @@ export default function StaffMyQR() {
     setScanStatus('checking')
 
     const timer = setTimeout(() => {
-      console.log('[DEBUG STAFF QR] Scanned merchant:', bizName)
+      logger.debug('[DEBUG STAFF QR] Scanned merchant:', bizName)
 
-      // 1. Get nexora_merchant_setup from localStorage
-      let merchantSetup = null
-      try {
-        const saved = storage.getItem('nexora_merchant_setup')
-        if (saved) {
-          merchantSetup = JSON.parse(saved)
-        }
-      } catch (e) {
-        console.error(e)
-      }
-
-      // If it doesn't exist, create a mock one so the simulation works beautifully
-      if (!merchantSetup) {
-        merchantSetup = {
-          businessInfo: {
-            name: bizName,
-            industry: 'Nail Salon',
-            address: '123 Beauty Lane, San Jose, CA 95112',
-            phone: '(408) 555-0123',
-            email: 'owner@goldenglownails.com'
-          },
-          staffList: []
-        }
-      }
+      // 1. Use cached merchant setup from hook; fall back to a mock if none exists yet
+      let merchantSetup = merchantSetupData
+        ? { ...merchantSetupData }
+        : {
+            businessInfo: {
+              name: bizName,
+              industry: 'Nail Salon',
+              address: '123 Beauty Lane, San Jose, CA 95112',
+              phone: '(408) 555-0123',
+              email: 'owner@goldenglownails.com'
+            },
+            staffList: []
+          }
 
       // Ensure staffList is an array
       if (!Array.isArray(merchantSetup.staffList)) {
-        merchantSetup.staffList = []
+        merchantSetup = { ...merchantSetup, staffList: [] }
       }
 
       // Check if this technician is already in the merchant's staff list
@@ -118,7 +114,8 @@ export default function StaffMyQR() {
         'success'
       )
 
-      // If not already in roster, add them
+      // Build updated staff list
+      let updatedStaffList
       if (!isAlreadyInRoster) {
         const newMember = {
           id: staffMember.id,
@@ -142,28 +139,20 @@ export default function StaffMyQR() {
           },
           payoutConfigs: staffMember.payoutConfigs || {}
         }
-        merchantSetup.staffList.push(newMember)
+        updatedStaffList = [...merchantSetup.staffList, newMember]
       } else {
         // If in roster but pending, update flow type or make sure it's correct
-        existingMember.status = 'Pending Acceptance'
-        existingMember.isActive = false
-        existingMember.flowType = 'Self-Service Join (via QR)'
+        updatedStaffList = merchantSetup.staffList.map(s =>
+          s.id === staffMember.id
+            ? { ...s, status: 'Pending Acceptance', isActive: false, flowType: 'Self-Service Join (via QR)' }
+            : s
+        )
       }
 
-      // Save back to local storage
-      storage.setItem('nexora_merchant_setup', JSON.stringify(merchantSetup))
+      // Save updated merchant setup via mutation (invalidates query cache automatically)
+      saveMerchantSetupMutation.mutate({ ...merchantSetup, staffList: updatedStaffList })
 
-      // 2. Add notification to merchant
-      let notifications = []
-      try {
-        const savedNotis = storage.getItem('nexora_notifications')
-        if (savedNotis) {
-          notifications = JSON.parse(savedNotis)
-        }
-      } catch (e) {
-        console.error(e)
-      }
-
+      // 2. Add notification to merchant via mutation
       const newNoti = {
         id: `noti-join-${staffMember.id}-${Date.now()}`,
         staffId: staffMember.id,
@@ -176,11 +165,7 @@ export default function StaffMyQR() {
         read: false,
         linkTab: 'staff'
       }
-      notifications = [newNoti, ...notifications]
-      storage.setItem('nexora_notifications', JSON.stringify(notifications))
-
-      // Trigger storage event so that both merchant dashboard and staff dashboard contexts update in real-time
-      window.dispatchEvent(new Event('storage'))
+      addNotificationMutation.mutate(newNoti)
 
       // Close scanner modal after a short delay
       setTimeout(() => {
@@ -208,7 +193,7 @@ export default function StaffMyQR() {
         }
       }
     } catch (e) {
-      console.error('URL parsing failed, treating as plain text', e)
+      logger.error('URL parsing failed, treating as plain text', e)
     }
 
     simulateMerchantScan(bizName)
@@ -223,27 +208,21 @@ export default function StaffMyQR() {
     if (!confirmed) return
 
     try {
-      const savedSetup = storage.getItem('nexora_merchant_setup')
-      if (savedSetup) {
-        const parsed = JSON.parse(savedSetup)
-        if (Array.isArray(parsed.staffList)) {
-          parsed.staffList = parsed.staffList.filter(s => s.id !== staffMember.id)
+      if (merchantSetupData) {
+        const updatedSetup = { ...merchantSetupData }
+        if (Array.isArray(updatedSetup.staffList)) {
+          updatedSetup.staffList = updatedSetup.staffList.filter(s => s.id !== staffMember.id)
         }
-        if (Array.isArray(parsed.touchPoints)) {
-          parsed.touchPoints = parsed.touchPoints.filter(tp => !(tp.type === 'Staff QR' && tp.staffId === staffMember.id))
+        if (Array.isArray(updatedSetup.touchPoints)) {
+          updatedSetup.touchPoints = updatedSetup.touchPoints.filter(
+            tp => !(tp.type === 'Staff QR' && tp.staffId === staffMember.id)
+          )
         }
-        storage.setItem('nexora_merchant_setup', JSON.stringify(parsed))
+        // Save via mutation (invalidates query cache automatically)
+        saveMerchantSetupMutation.mutate(updatedSetup)
       }
 
-      // Add a notification for the merchant
-      let notifications = []
-      try {
-        const savedNotis = storage.getItem('nexora_notifications')
-        if (savedNotis) {
-          notifications = JSON.parse(savedNotis)
-        }
-      } catch (e) {}
-
+      // Add a notification for the merchant via mutation
       const newNoti = {
         id: `noti-unlink-${staffMember.id}-${Date.now()}`,
         staffId: staffMember.id,
@@ -256,11 +235,7 @@ export default function StaffMyQR() {
         read: false,
         linkTab: 'staff'
       }
-      notifications = [newNoti, ...notifications]
-      storage.setItem('nexora_notifications', JSON.stringify(notifications))
-
-      // Trigger storage event to update both dashboards
-      window.dispatchEvent(new Event('storage'))
+      addNotificationMutation.mutate(newNoti)
 
       showToast(
         currentLanguage === 'vi'
@@ -269,7 +244,7 @@ export default function StaffMyQR() {
         'success'
       )
     } catch (e) {
-      console.error(e)
+      logger.error(e)
     }
   }
 
@@ -308,7 +283,7 @@ export default function StaffMyQR() {
           <button
             type="button"
             onClick={handleShare}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] py-3 text-sm font-extrabold text-white transition hover:opacity-90"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-nexoraElectric to-nexoraViolet py-3 text-sm font-extrabold text-white transition hover:opacity-90"
           >
             <Share2 className="h-4 w-4" />
             {t('staff_dashboard.qr.share')}
@@ -505,7 +480,7 @@ export default function StaffMyQR() {
                 <button
                   type="button"
                   onClick={() => simulateMerchantScan('Golden Glow Nail Spa')}
-                  className="w-full py-2 bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] text-white rounded-xl text-xs font-black uppercase tracking-wider transition-opacity hover:opacity-90 shadow-sm"
+                  className="w-full py-2 bg-gradient-to-r from-nexoraElectric to-nexoraViolet text-white rounded-xl text-xs font-black uppercase tracking-wider transition-opacity hover:opacity-90 shadow-sm"
                 >
                   Golden Glow Nail Spa
                 </button>

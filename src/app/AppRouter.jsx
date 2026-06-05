@@ -1,8 +1,6 @@
 import React, { lazy, Suspense } from 'react'
 import { RefreshCw, ShieldAlert, X, Sparkles } from 'lucide-react'
-import { storage } from '../utils/storage'
-
-const localStorage = storage
+import { useMerchantSetup } from '../data/hooks/useMerchantSetup'
 
 const SetupWizard = lazy(() => import('../components/SetupWizard'))
 const Dashboard = lazy(() => import('../components/Dashboard'))
@@ -52,7 +50,11 @@ export default function AppRouter({
   onRegisterAndLogin,
   onLoadPendingAccounts,
   preKybView,
+  isDemoToolsEnabled = false,
 }) {
+  const merchantSetupQuery = useMerchantSetup()
+  const merchantSetupData = merchantSetupQuery.data
+
   return (
     <Suspense fallback={<LoadingScreen />}>
 
@@ -95,7 +97,7 @@ export default function AppRouter({
           {/* Quick debug reset onboarding button */}
           <button
             onClick={onResetApp}
-            className="fixed bottom-4 right-4 z-40 p-2.5 rounded-full bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white shadow-lg hover:rotate-180 transition-all duration-300"
+            className="fixed bottom-4 right-4 z-40 p-2.5 rounded-full bg-nexoraSidebar border border-nexoraSidebarPanel text-nexoraSubtle hover:text-white shadow-lg hover:rotate-180 transition-all duration-300"
             title={t('login.reset_confirm')}
           >
             <RefreshCw className="w-4 h-4" />
@@ -126,15 +128,11 @@ export default function AppRouter({
       {view === 'staff-portal' && (
         <StaffRegistrationWizard
           inviteData={staffInviteData}
+          isDemoToolsEnabled={isDemoToolsEnabled}
           onReturnToMerchant={() => {
             // Reload setupData to reflect new active thợ instantly
-            const savedSetup = localStorage.getItem('nexora_merchant_setup')
-            if (savedSetup) {
-              try {
-                setSetupData(JSON.parse(savedSetup))
-              } catch (e) {
-                console.error(e)
-              }
+            if (merchantSetupData) {
+              setSetupData(merchantSetupData)
             }
             // Clear URL query parameters
             window.history.replaceState({}, document.title, window.location.pathname)
@@ -150,16 +148,16 @@ export default function AppRouter({
 
       {/* KYB Verification Required Custom Modal */}
       {showKybModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-slate-100 max-w-md w-full shadow-2xl p-6 relative overflow-hidden animate-scaleIn text-center space-y-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-500 mx-auto shrink-0 shadow-sm">
+        <div className="fixed inset-0 bg-nexoraText/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-nexoraBorder max-w-md w-full shadow-2xl p-6 relative overflow-hidden animate-scaleIn text-center space-y-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-nexoraBrandSoft text-nexoraWarning mx-auto shrink-0 shadow-sm">
               <ShieldAlert className="h-6 w-6" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-base font-black text-slate-800 uppercase tracking-wider">
+              <h3 className="text-base font-black text-nexoraText uppercase tracking-wider">
                 {currentLanguage === 'vi' ? 'Yêu cầu xác thực KYB' : 'KYB Verification Required'}
               </h3>
-              <p className="text-xs text-slate-500 font-medium leading-relaxed">
+              <p className="text-xs text-nexoraMuted font-medium leading-relaxed">
                 {currentLanguage === 'vi'
                   ? 'Tính năng này yêu cầu hồ sơ doanh nghiệp đã được xác thực KYB bởi VLINKPAY. Nhấp vào nút bên dưới để chuyển hướng đến trang Cài đặt > KYB để gửi thông tin doanh nghiệp của bạn.'
                   : 'This feature requires your business profile to be KYB verified by VLINKPAY. Click below to navigate to Settings > KYB tab and submit your compliance information.'}
@@ -169,7 +167,7 @@ export default function AppRouter({
               <button
                 type="button"
                 onClick={() => setShowKybModal(false)}
-                className="px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider rounded-lg transition-all"
+                className="px-5 py-2.5 border border-nexoraBorder hover:bg-nexoraCanvas text-nexoraMuted text-xs font-bold uppercase tracking-wider rounded-lg transition-all"
               >
                 {currentLanguage === 'vi' ? 'Hủy bỏ' : 'Cancel'}
               </button>
@@ -178,9 +176,8 @@ export default function AppRouter({
                 onClick={() => {
                   setShowKybModal(false)
                   if (view === 'onboarding') {
-                    const savedSetup = localStorage.getItem('nexora_merchant_setup')
-                    if (savedSetup) {
-                      setSetupData(JSON.parse(savedSetup))
+                    if (merchantSetupData) {
+                      setSetupData(merchantSetupData)
                     }
                     setInitialDashboardMenu('settings')
                     setInitialSettingsTab('kyb')
@@ -190,7 +187,7 @@ export default function AppRouter({
                     setInitialSettingsTab('kyb')
                   }
                 }}
-                className="px-5 py-2.5 bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] hover:opacity-90 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-md transition-all animate-pulse"
+                className="px-5 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-md transition-all animate-pulse"
               >
                 {currentLanguage === 'vi' ? 'Xác thực ngay' : 'Verify Now'}
               </button>
@@ -200,9 +197,9 @@ export default function AppRouter({
       )}
 
       {/* Floating Simulation Invite Toast */}
-      {simulationNotification && (
+      {isDemoToolsEnabled && simulationNotification && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4 animate-fadeIn">
-          <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-2xl p-4 shadow-2xl border border-amber-400 flex items-center justify-between gap-4">
+          <div className="bg-nexoraWarning text-white rounded-2xl p-4 shadow-2xl border border-nexoraWarning flex items-center justify-between gap-4">
             <div className="flex items-start gap-3 min-w-0">
               <div className="bg-white/20 rounded-xl p-2 text-white shrink-0 mt-0.5">
                 <Sparkles className="h-4 w-4" />
@@ -227,7 +224,7 @@ export default function AppRouter({
                   setView('staff-portal')
                   setSimulationNotification(null)
                 }}
-                className="px-3 py-2 bg-white text-orange-600 hover:bg-orange-50 rounded-xl text-[10px] font-black uppercase transition-all shadow-sm shrink-0"
+                className="px-3 py-2 bg-white text-nexoraWarning hover:bg-nexoraBrandSoft rounded-xl text-[10px] font-black uppercase transition-all shadow-sm shrink-0"
               >
                 {currentLanguage === 'vi' ? 'Mở Thiết lập' : 'Open Setup'}
               </button>

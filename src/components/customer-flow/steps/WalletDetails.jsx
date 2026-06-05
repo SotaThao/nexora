@@ -201,7 +201,7 @@ export default function WalletDetails({
         <button
           type="button"
           onClick={() => handlePay(selectedWalletObj.name)}
-          className="w-full py-4 bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] hover:opacity-95 active:scale-[0.99] transition-all text-white font-extrabold text-sm uppercase tracking-wider rounded-xl shadow-lg shadow-[#2B59FF]/25 flex items-center justify-center gap-1.5"
+          className="w-full py-4 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-95 active:scale-[0.99] transition-all text-white font-extrabold text-sm uppercase tracking-wider rounded-xl shadow-lg shadow-nexoraElectric/25 flex items-center justify-center gap-1.5"
         >
           <CheckCircle className="h-5 w-5" />
           {currentLanguage === 'vi' ? 'Tôi Đã Gửi Tiền Tip' : 'Yes, I Sent The Tip'}

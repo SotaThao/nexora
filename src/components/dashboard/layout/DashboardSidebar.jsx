@@ -178,7 +178,7 @@ export default function DashboardSidebar({
                 }}
                 className={`flex h-12 w-full items-center justify-between rounded-lg px-4 text-left text-sm font-bold transition ${
                   isActive
-                    ? 'bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] text-white shadow-lg shadow-[#2B59FF]/20'
+                    ? 'bg-gradient-to-r from-nexoraElectric to-nexoraViolet text-white shadow-lg shadow-nexoraElectric/20'
                     : 'text-white/70 hover:bg-white/5 hover:text-white'
                 }`}
               >

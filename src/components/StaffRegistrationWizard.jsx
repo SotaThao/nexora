@@ -9,7 +9,7 @@ import StepSuccess from './staff-registration/steps/StepSuccess'
 import PayoutEditModal from './staff-registration/steps/PayoutEditModal'
 import QrScannerModal from './staff-registration/steps/QrScannerModal'
 
-export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant }) {
+export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant, isDemoToolsEnabled = false }) {
   const [showPassword, setShowPassword] = useState(false)
 
   const reg = useStaffRegistration({ inviteData })
@@ -34,8 +34,8 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
         }
       `}</style>
       {/* Background radial soft light */}
-      <div className="absolute top-1/4 left-1/4 h-72 w-72 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(245,158,11,0.04)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-[450px] sm:w-[450px]"></div>
-      <div className="absolute bottom-1/4 right-1/4 h-80 w-80 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(43,89,255,0.03)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-[500px] sm:w-[500px]"></div>
+      <div className="absolute top-1/4 left-1/4 h-72 w-72 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(245,158,11,0.04)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-96 sm:w-96"></div>
+      <div className="absolute bottom-1/4 right-1/4 h-80 w-80 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(43,89,255,0.03)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-96 sm:w-96"></div>
 
       {/* Language Switcher */}
       <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-nexoraBorder shadow-sm">
@@ -60,7 +60,7 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
 
           {/* Header info */}
           <div className="flex items-center gap-3 pb-4 border-b border-nexoraRule">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-[#4648D8] to-[#32D7FF] flex items-center justify-center text-white shrink-0 shadow-md">
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-nexoraBrand to-brandCyan flex items-center justify-center text-white shrink-0 shadow-md">
               <Smartphone className="h-5 w-5" />
             </div>
             <div>
@@ -85,9 +85,9 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
                   key={s.id}
                   className={`py-2 rounded-lg border transition ${
                     reg.step === s.id
-                      ? 'bg-[#4648D8] text-white border-[#4648D8] shadow-sm'
+                      ? 'bg-nexoraBrand text-white border-nexoraBrand shadow-sm'
                       : reg.step > s.id
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-100 font-bold'
+                        ? 'bg-nexoraSuccess/10 text-nexoraSuccess border-nexoraSuccess/20 font-bold'
                         : 'bg-nexoraSurfaceMuted text-nexoraSubtle border-nexoraRule'
                   }`}
                 >
@@ -130,6 +130,7 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
               isLinkLoggedIn={reg.isLinkLoggedIn}
               handleLinkLogin={reg.handleLinkLogin}
               handleLinkDecline={reg.handleLinkDecline}
+              isDemoToolsEnabled={isDemoToolsEnabled}
             />
           )}
 
@@ -166,6 +167,7 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
               setStep={reg.setStep}
               setJoinPath={reg.setJoinPath}
               setShowOtpInput={reg.setShowOtpInput}
+              isDemoToolsEnabled={isDemoToolsEnabled}
             />
           )}
 
@@ -211,6 +213,7 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
               handleEditPayoutAccount={reg.handleEditPayoutAccount}
               handleActivateProfile={reg.handleActivateProfile}
               setStep={reg.setStep}
+              isDemoToolsEnabled={isDemoToolsEnabled}
             />
           )}
 
@@ -258,6 +261,7 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
           simulateSuccessfulScan={reg.simulateSuccessfulScan}
           handleSearchIdChange={reg.handleSearchIdChange}
           handleVlinkpayIdChange={reg.handleVlinkpayIdChange}
+          isDemoToolsEnabled={isDemoToolsEnabled}
         />
 
       </div>

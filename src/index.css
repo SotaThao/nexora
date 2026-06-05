@@ -17,8 +17,8 @@ input[type="search"]:focus,
 textarea:focus,
 select:focus {
   outline: none !important;
-  box-shadow: 0 0 0 2px rgba(70, 72, 216, 0.2) !important;
-  border-color: #4648D8 !important;
+  box-shadow: 0 0 0 2px rgba(70, 72, 216, 0.2) !important; /* nexoraBrand/20 */
+  border-color: theme('colors.nexoraBrand') !important;
   transition: all 0.15s ease-in-out;
 }
 

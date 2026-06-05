@@ -307,7 +307,7 @@ export default function AnalyticsView({
                 {svgMetrics && svgMetrics.points.map((pt, i) => (
                   <div
                     key={i}
-                    className="pointer-events-none absolute h-2 w-2 rounded-full border-2 border-[#4648D8] bg-white shadow-sm transition-transform duration-200"
+                    className="pointer-events-none absolute h-2 w-2 rounded-full border-2 border-nexoraBrand bg-white shadow-sm transition-transform duration-200"
                     style={{
                       left: `calc(${(pt.x / svgMetrics.width) * 100}% - 4px)`,
                       top: `calc(${(pt.y / svgMetrics.height) * 100}% - 4px)`,
@@ -321,7 +321,7 @@ export default function AnalyticsView({
                 {activePoint && (
                   <>
                     <div
-                      className="pointer-events-none absolute h-4 w-4 rounded-full bg-[#4648D8]/10 animate-ping"
+                      className="pointer-events-none absolute h-4 w-4 rounded-full bg-nexoraBrand/10 animate-ping"
                       style={{
                         left: `calc(${(activePoint.x / svgMetrics.width) * 100}% - 8px)`,
                         top: `calc(${(activePoint.y / svgMetrics.height) * 100}% - 8px)`,
@@ -329,7 +329,7 @@ export default function AnalyticsView({
                       }}
                     />
                     <div
-                      className="pointer-events-none absolute h-3 w-3 rounded-full border-2 border-white bg-[#4648D8] shadow-md"
+                      className="pointer-events-none absolute h-3 w-3 rounded-full border-2 border-white bg-nexoraBrand shadow-md"
                       style={{
                         left: `calc(${(activePoint.x / svgMetrics.width) * 100}% - 6px)`,
                         top: `calc(${(activePoint.y / svgMetrics.height) * 100}% - 6px)`,
@@ -342,7 +342,7 @@ export default function AnalyticsView({
                 {/* Floating tooltip */}
                 {activePoint && (
                   <div
-                    className="absolute bg-[#071025]/95 text-brandCyan text-[10px] font-mono font-bold px-2 py-1 rounded shadow-lg shadow-brandCyan/10 border border-brandCyan/30 pointer-events-none transition-all duration-75 whitespace-nowrap"
+                    className="absolute bg-inkBlue/95 text-brandCyan text-[10px] font-mono font-bold px-2 py-1 rounded shadow-lg shadow-brandCyan/10 border border-brandCyan/30 pointer-events-none transition-all duration-75 whitespace-nowrap"
                     style={{
                       left: `clamp(0px, calc(${(activePoint.x / svgMetrics.width) * 100}% - 40px), calc(100% - 80px))`,
                       top: `calc(${(activePoint.y / svgMetrics.height) * 100}% - 38px)`,
