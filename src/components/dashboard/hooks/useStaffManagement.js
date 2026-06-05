@@ -7,73 +7,48 @@ import { DEFAULT_PAYOUT_CONFIGS } from '../constants'
 import { getPayoutConfigsFromMember } from '../utils'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
-import { storage } from '../../../utils/storage'
 
-const localStorage = storage
-const sessionStorage = storage
+/**
+ * Normalise a raw staff-list member into the shape the dashboard uses.
+ * Shared by the useState initialiser and the Dashboard seeding effects.
+ */
+export function normaliseMember(member) {
+  return {
+    id: member.id,
+    fullName: member.fullName,
+    nickname: member.nickname,
+    position: member.position,
+    avatar: member.avatar || '',
+    phone: member.phone || '',
+    email: member.email || '',
+    bio: member.bio || '',
+    status: member.status || 'Active',
+    flowType: member.flowType || '',
+    isActive: member.isActive !== undefined ? member.isActive : true,
+    showInTipsFlow: member.showInTipsFlow !== undefined ? member.showInTipsFlow : true,
+    paymentAccounts: {
+      venmo: member.paymentAccounts?.venmo || '',
+      cashapp: member.paymentAccounts?.cashapp || '',
+      zelle: member.paymentAccounts?.zelle || '',
+      vlinkpay: member.paymentAccounts?.vlinkpay || '',
+      paypal: member.paymentAccounts?.paypal || '',
+      bankwire: member.paymentAccounts?.bankwire || '',
+      applecash: member.paymentAccounts?.applecash || ''
+    },
+    payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member)
+  }
+}
 
 export function useStaffManagement({ setupData, businessName, setTouchpoints, viewingStaffDetailId, setViewingStaffDetailId }) {
   const { currentLanguage, t } = useTranslation()
   const { showToast, showConfirm } = useNotification()
 
+  // Staff is initialised from setupData (prop) when available, otherwise from
+  // the mock seed list.  Returning-user data arrives via merchantSetupData in
+  // Dashboard, which calls setStaff via a useEffect after the query resolves.
   const [staff, setStaff] = useState(() => {
-    const saved = localStorage.getItem('nexora_merchant_setup')
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        if (parsed.staffList?.length) {
-          return parsed.staffList.map((member) => ({
-            id: member.id,
-            fullName: member.fullName,
-            nickname: member.nickname,
-            position: member.position,
-            avatar: member.avatar || '',
-            phone: member.phone || '',
-            email: member.email || '',
-            bio: member.bio || '',
-            status: member.status || 'Active',
-            flowType: member.flowType || '',
-            isActive: member.isActive !== undefined ? member.isActive : true,
-            showInTipsFlow: member.showInTipsFlow !== undefined ? member.showInTipsFlow : true,
-            paymentAccounts: {
-              venmo: member.paymentAccounts?.venmo || '',
-              cashapp: member.paymentAccounts?.cashapp || '',
-              zelle: member.paymentAccounts?.zelle || '',
-              vlinkpay: member.paymentAccounts?.vlinkpay || '',
-              paypal: member.paymentAccounts?.paypal || '',
-              bankwire: member.paymentAccounts?.bankwire || '',
-              applecash: member.paymentAccounts?.applecash || ''
-            },
-            payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member)
-          }))
-        }
-      } catch (e) {}
-    }
     if (setupData?.staffList?.length) {
-      return setupData.staffList.map((member) => ({
-        id: member.id,
-        fullName: member.fullName,
-        nickname: member.nickname,
-        position: member.position,
-        avatar: member.avatar || '',
-        phone: member.phone || '',
-        email: member.email || '',
-        bio: member.bio || '',
-        status: member.status || 'Active',
-        flowType: member.flowType || '',
-        isActive: member.isActive !== undefined ? member.isActive : true,
-        showInTipsFlow: member.showInTipsFlow !== undefined ? member.showInTipsFlow : true,
-        paymentAccounts: {
-          venmo: member.paymentAccounts?.venmo || '',
-          cashapp: member.paymentAccounts?.cashapp || '',
-          zelle: member.paymentAccounts?.zelle || '',
-          vlinkpay: member.paymentAccounts?.vlinkpay || '',
-          paypal: member.paymentAccounts?.paypal || '',
-          bankwire: member.paymentAccounts?.bankwire || '',
-          applecash: member.paymentAccounts?.applecash || ''
-        },
-        payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member)
-      }))
+      return setupData.staffList.map(normaliseMember)
     }
     return INITIAL_STAFF.map(member => ({
       ...member,
@@ -212,7 +187,7 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
       setStaff((current) => current.map((member) => member.id === editingStaffId ? { ...member, ...payload } : member))
     } else {
       const finalStaffId = staffForm.nexoraStaffId.trim() || `NEX-STAFF-${staffForm.fullName.replace(/[^a-zA-Z]/g, '').slice(0, 4).toUpperCase()}${Math.floor(1000 + Math.random() * 9000)}`
-      const newMember = { id: finalStaffId, isActive: true, showInTipsFlow: true, status: 'Active', flowType: 'Direct Addition', ...payload }
+      const newMember = { id: finalStaffId, isActive: true, showInTipsFlow: true, status: 'Active', flowType: 'Direct Addition', joinedDate: new Date().toISOString().split('T')[0], ...payload }
       setStaff((current) => [...current, newMember])
       setTouchpoints((current) => [...current, {
         id: `tp-staff-${newMember.id}`,
@@ -295,6 +270,7 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
       isActive: false,
       status: 'Pending Acceptance',
       flowType: 'Link Existing Staff ID',
+      joinedDate: new Date().toISOString().split('T')[0],
       paymentAccounts: globalMember.paymentAccounts || {},
       payoutConfigs: { ...DEFAULT_PAYOUT_CONFIGS }
     }
@@ -338,6 +314,7 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
       isActive: false,
       status: 'Pending Setup',
       flowType: 'Invite New Staff',
+      joinedDate: new Date().toISOString().split('T')[0],
       paymentAccounts: {},
       payoutConfigs: { ...DEFAULT_PAYOUT_CONFIGS }
     }
@@ -399,7 +376,8 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
           ...m,
           ...mergedPayload,
           status: 'Active',
-          isActive: true
+          isActive: true,
+          joinedDate: m.joinedDate || new Date().toISOString().split('T')[0]
         }
       }
       return m

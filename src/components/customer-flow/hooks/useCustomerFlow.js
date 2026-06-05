@@ -1,54 +1,34 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { storage } from '../../../utils/storage'
 import { useNotification } from '../../../contexts/NotificationContext'
-
-const localStorage = storage
-const sessionStorage = storage
+import { logger } from '../../../utils/logger'
+import { useMerchantSetup } from '../../../data/hooks/useMerchantSetup'
+import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
+import { useAddTransaction } from '../../../data/hooks/useTransactions'
+import { useAddReview } from '../../../data/hooks/useReviews'
+import { useAddNotification } from '../../../data/hooks/useNotifications'
 
 export default function useCustomerFlow() {
   const { currentLanguage, setLanguage, t } = useTranslation()
   const { showToast } = useNotification()
 
+  // Domain data via TanStack Query hooks (D3 / D8)
+  const { data: setupData = null } = useMerchantSetup()
+  const { data: profileSettings = null } = useProfileSettings()
+  const addTransactionMutation = useAddTransaction()
+  const addReviewMutation = useAddReview()
+  const addNotificationMutation = useAddNotification()
+
   // Parse parameters from query string
   const params = useMemo(() => new URLSearchParams(window.location.search), [])
   const techSlug = params.get('tech') || '' // e.g. 'staff/mia-t'
-  // Get business name dynamically checking sessionStorage first
+
+  // Get business name from profile settings or merchant setup (D3: no direct storage reads)
   const bizName = useMemo(() => {
-    try {
-      const sessionProfile = sessionStorage.getItem('nexora_profile_settings')
-      if (sessionProfile) {
-        const parsed = JSON.parse(sessionProfile)
-        if (parsed.businessName) return parsed.businessName
-      }
-      const sessionSetup = sessionStorage.getItem('nexora_merchant_setup')
-      if (sessionSetup) {
-        const parsed = JSON.parse(sessionSetup)
-        if (parsed.businessInfo?.name) return parsed.businessInfo.name
-      }
-    } catch (e) {}
-
+    if (profileSettings?.businessName) return profileSettings.businessName
+    if (setupData?.businessInfo?.name) return setupData.businessInfo.name
     return params.get('biz') || 'Golden Glow Nail Spa'
-  }, [params])
-
-  // Load merchant setup from sessionStorage or localStorage (shared origin)
-  const setupData = useMemo(() => {
-    const sessionSaved = sessionStorage.getItem('nexora_merchant_setup')
-    if (sessionSaved) {
-      try {
-        return JSON.parse(sessionSaved)
-      } catch (e) {}
-    }
-    const saved = localStorage.getItem('nexora_merchant_setup')
-    if (saved) {
-      try {
-        return JSON.parse(saved)
-      } catch (e) {
-        return null
-      }
-    }
-    return null
-  }, [])
+  }, [profileSettings, setupData, params])
 
   // Resolve touchpoint information and check if active
   const scannedTouchpoint = useMemo(() => {
@@ -92,7 +72,7 @@ export default function useCustomerFlow() {
     return (matched && matched.isActive !== false && matched.showInTipsFlow !== false) ? matched : null
   }, [setupData, techSlug])
 
-  // Get review destination links dynamically checking sessionStorage first
+  // Get review destination links from profile settings or merchant setup (D3: no direct storage reads)
   const reviewLinks = useMemo(() => {
     const defaultLinks = {
       googleReview: 'https://g.page/r/cGoldenGlowNails/review',
@@ -100,22 +80,16 @@ export default function useCustomerFlow() {
       feedbackEmail: 'manager@goldenglownails.com'
     }
 
-    try {
-      const sessionProfile = sessionStorage.getItem('nexora_profile_settings')
-      if (sessionProfile) {
-        const parsed = JSON.parse(sessionProfile)
-        if (parsed.googleReview || parsed.yelpReview) {
-          return {
-            googleReview: parsed.googleReview || '',
-            yelpReview: parsed.yelpReview || '',
-            feedbackEmail: parsed.businessEmail || parsed.email || defaultLinks.feedbackEmail
-          }
-        }
+    if (profileSettings?.googleReview || profileSettings?.yelpReview) {
+      return {
+        googleReview: profileSettings.googleReview || '',
+        yelpReview: profileSettings.yelpReview || '',
+        feedbackEmail: profileSettings.businessEmail || profileSettings.email || defaultLinks.feedbackEmail
       }
-    } catch (e) {}
+    }
 
     return setupData?.reviewLinks || defaultLinks
-  }, [setupData])
+  }, [profileSettings, setupData])
 
   const [selectedStaffMembers, setSelectedStaffMembers] = useState(initialStaffMember ? [initialStaffMember] : [])
   const [step, setStep] = useState(initialStaffMember ? 'tip_amount' : 'select_staff')
@@ -140,16 +114,9 @@ export default function useCustomerFlow() {
       vlinkpay: 'VLP-8893-GG'
     }
 
-    try {
-      const sessionProfile = sessionStorage.getItem('nexora_profile_settings')
-      if (sessionProfile) {
-        const parsed = JSON.parse(sessionProfile)
-        if (parsed.paymentAccounts) return parsed.paymentAccounts
-      }
-    } catch (e) {}
-
+    if (profileSettings?.paymentAccounts) return profileSettings.paymentAccounts
     return setupData?.businessInfo?.paymentAccounts || defaultAccounts
-  }, [setupData])
+  }, [profileSettings, setupData])
 
   const selectedStaffHasAnyPayment = useMemo(() => {
     if (selectedStaffMembers.length !== 1) return false
@@ -326,20 +293,22 @@ export default function useCustomerFlow() {
       setIsProcessing(false)
       setStep('success_payment')
 
-      // Save simulated transaction to localStorage
+      // D8: all tip/transaction writes go through useAddTransaction so the
+      // future API swap is localized to transactionsRepository / apiAdapter.
       const baseTxIdNum = Math.floor(2000 + Math.random() * 1000)
       const touchpointStr = techSlug
         ? (techSlug.startsWith('staff/') ? 'Staff Personal QR' : (setupData?.touchPoints?.find(tp => techSlug.includes(tp.id))?.name || 'QR Touchpoint'))
         : 'Lobby Welcome QR'
 
-      const newTransactions = selectedStaffMembers.map((member, index) => {
+      selectedStaffMembers.forEach((member, index) => {
         const selTip = selectedTips[member.id] !== undefined ? selectedTips[member.id] : 15
         const amount = selTip === 'custom' ? Number(customTips[member.id]) || 0 : selTip
         const txId = selectedStaffMembers.length > 1
           ? `TX-${baseTxIdNum}-${index + 1}`
           : `TX-${baseTxIdNum}`
 
-        return {
+        // Exact transaction object shape preserved from original
+        const tx = {
           id: txId,
           dateTime: new Date().toISOString().replace('T', ' ').substring(0, 16),
           amount: amount,
@@ -349,38 +318,34 @@ export default function useCustomerFlow() {
           paymentMethod: walletName,
           status: 'Success'
         }
-      })
 
-      try {
-        const existingTx = JSON.parse(localStorage.getItem('nexora_transactions') || '[]')
-        localStorage.setItem('nexora_transactions', JSON.stringify([...newTransactions, ...existingTx]))
-
-        // Create corresponding notifications for each tipped staff
-        const newNotifications = selectedStaffMembers.map((member, index) => {
-          const selTip = selectedTips[member.id] !== undefined ? selectedTips[member.id] : 15
-          const amount = selTip === 'custom' ? Number(customTips[member.id]) || 0 : selTip
-          return {
-            id: `noti-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 5)}`,
-            type: 'tip_success',
-            title: `New Tip Received ($${Number(amount).toFixed(2)})`,
-            message: `${member.nickname} received $${Number(amount).toFixed(2)} tip via ${walletName} at ${touchpointStr}.`,
-            time: 'Just now',
-            read: false,
-            linkTab: 'reports'
-          }
+        addTransactionMutation.mutate(tx, {
+          onError: (e) => logger.error('Error saving transaction', e)
         })
-        const existingNotis = JSON.parse(localStorage.getItem('nexora_notifications') || '[]')
-        localStorage.setItem('nexora_notifications', JSON.stringify([...newNotifications, ...existingNotis]))
-      } catch (e) {
-        console.error('Error saving transaction/notification', e)
-      }
+
+        // Corresponding notification for the tipped staff member
+        const notification = {
+          id: `noti-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 5)}`,
+          type: 'tip_success',
+          title: `New Tip Received ($${Number(amount).toFixed(2)})`,
+          message: `${member.nickname} received $${Number(amount).toFixed(2)} tip via ${walletName} at ${touchpointStr}.`,
+          time: 'Just now',
+          read: false,
+          linkTab: 'reports'
+        }
+
+        addNotificationMutation.mutate(notification, {
+          onError: (e) => logger.error('Error saving notification', e)
+        })
+      })
     }, 1800)
   }
 
   const handleSubmitFeedback = () => {
     const cleanComment = comment.trim()
-    const newReviews = selectedStaffMembers.map((member) => {
-      return {
+
+    selectedStaffMembers.forEach((member, index) => {
+      const review = {
         id: `R-${Date.now()}-${member.id}`,
         rating: rating,
         comment: cleanComment || (rating >= 4 ? 'Good service' : 'Needs improvement'),
@@ -389,29 +354,26 @@ export default function useCustomerFlow() {
         category: rating >= 4 ? 'Good (Google)' : 'Internal Feedback',
         date: new Date().toISOString().substring(0, 10)
       }
-    })
 
-    try {
-      const existingReviews = JSON.parse(localStorage.getItem('nexora_reviews') || '[]')
-      localStorage.setItem('nexora_reviews', JSON.stringify([...newReviews, ...existingReviews]))
-
-      // Add notifications for feedback
-      const newNotifications = selectedStaffMembers.map((member, index) => {
-        return {
-          id: `noti-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 5)}`,
-          type: rating >= 4 ? 'review_good' : 'feedback_alert',
-          title: rating >= 4 ? `New Review (${rating}★)` : `New Internal Feedback (${rating}★)`,
-          message: `Customer left feedback for ${member.nickname}: "${cleanComment.substring(0, 50)}${cleanComment.length > 50 ? '...' : ''}"`,
-          time: 'Just now',
-          read: false,
-          linkTab: 'reviews'
-        }
+      addReviewMutation.mutate(review, {
+        onError: (e) => logger.error('Error saving review', e)
       })
-      const existingNotis = JSON.parse(localStorage.getItem('nexora_notifications') || '[]')
-      localStorage.setItem('nexora_notifications', JSON.stringify([...newNotifications, ...existingNotis]))
-    } catch (e) {
-      console.error('Error saving review/notification', e)
-    }
+
+      // Corresponding notification for the feedback
+      const notification = {
+        id: `noti-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 5)}`,
+        type: rating >= 4 ? 'review_good' : 'feedback_alert',
+        title: rating >= 4 ? `New Review (${rating}★)` : `New Internal Feedback (${rating}★)`,
+        message: `Customer left feedback for ${member.nickname}: "${cleanComment.substring(0, 50)}${cleanComment.length > 50 ? '...' : ''}"`,
+        time: 'Just now',
+        read: false,
+        linkTab: 'reviews'
+      }
+
+      addNotificationMutation.mutate(notification, {
+        onError: (e) => logger.error('Error saving notification', e)
+      })
+    })
 
     if (rating >= 4) {
       setStep('google_yelp_review')

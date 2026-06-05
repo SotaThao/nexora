@@ -47,10 +47,30 @@ export function LanguageProvider({ children }) {
   }
 
   return (
-    <LanguageContext.Provider value={{ currentLanguage, setLanguage, t }}>
+    <LanguageContext.Provider value={{ currentLanguage, setLanguage, t, renderLabel }}>
       {children}
     </LanguageContext.Provider>
   )
+}
+
+export function renderLabel(text) {
+  if (typeof text !== 'string') return text
+  if (text.includes('*')) {
+    const parts = text.split('*')
+    return (
+      <>
+        {parts.map((part, idx) => (
+          <React.Fragment key={idx}>
+            {part}
+            {idx < parts.length - 1 && (
+              <span className="text-red-500 font-bold ml-0.5">*</span>
+            )}
+          </React.Fragment>
+        ))}
+      </>
+    )
+  }
+  return text
 }
 
 export function useTranslation() {

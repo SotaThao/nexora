@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Plus,
   Trash2,
@@ -40,7 +40,8 @@ export default function DevicesView({
   devices = [],
   onAddDevice,
   onDeleteDevice,
-  onToggleDeviceStatus
+  onToggleDeviceStatus,
+  highlightedDeviceId
 }) {
   const { t } = useTranslation()
 
@@ -56,6 +57,16 @@ export default function DevicesView({
 
   // State for Export Toast
   const [showExportToast, setShowExportToast] = useState(false)
+
+  // Scroll to highlighted device card when selected
+  useEffect(() => {
+    if (highlightedDeviceId) {
+      const element = document.getElementById(`device-card-${highlightedDeviceId}`)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    }
+  }, [highlightedDeviceId])
 
   // Handle Add Device Submit
   const handleAddSubmit = (e) => {
@@ -190,15 +201,25 @@ export default function DevicesView({
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {devices.map((device) => {
           const isActive = device.isActive !== false
+          const isHighlighted = device.deviceId === highlightedDeviceId
           return (
             <Panel
               key={device.id}
-              className="p-4 flex flex-col justify-between hover:shadow-premium transition-all duration-300 border border-nexoraBorder relative overflow-hidden min-h-[170px]"
+              id={`device-card-${device.deviceId}`}
+              className={`p-4 flex flex-col justify-between hover:shadow-premium transition-all duration-500 border relative overflow-hidden min-h-[170px] ${
+                isHighlighted
+                  ? 'border-luxuryGold ring-2 ring-luxuryGold bg-luxuryGold/5 dark:bg-luxuryGold/5 scale-[1.03] animate-highlight shadow-premium'
+                  : 'border-nexoraBorder dark:border-luxuryGold/18'
+              }`}
             >
               {/* Active Color Strip */}
               <div
                 className={`absolute top-0 left-0 right-0 h-1 transition-colors ${
-                  isActive ? 'bg-gradient-to-r from-nexoraBrand to-floxElectricViolet' : 'bg-nexoraBorder'
+                  isHighlighted 
+                    ? 'bg-luxuryGold'
+                    : isActive 
+                      ? 'bg-gradient-to-r from-nexoraBrand to-floxElectricViolet' 
+                      : 'bg-nexoraBorder'
                 }`}
               />
 

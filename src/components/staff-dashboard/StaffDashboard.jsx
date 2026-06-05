@@ -27,17 +27,28 @@ const SCREENS = {
 
 export default function StaffDashboard({ staffId = DEMO_STAFF_ID, onLogout }) {
   const [activeScreen, setActiveScreen] = useState('home')
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const ActiveView = SCREENS[activeScreen] || StaffHome
 
   return (
     <StaffAccountProvider staffId={staffId}>
       <div className="min-h-dvh bg-nexoraCanvas text-nexoraText">
-        <StaffSidebar activeScreen={activeScreen} onNavigate={setActiveScreen} onLogout={onLogout} />
+        <StaffSidebar 
+          activeScreen={activeScreen} 
+          onNavigate={setActiveScreen} 
+          onLogout={onLogout} 
+          isOpen={isMobileMenuOpen}
+          onClose={() => setIsMobileMenuOpen(false)}
+        />
 
         <div className="lg:pl-72">
-          <StaffHeader activeScreen={activeScreen} onNavigate={setActiveScreen} />
+          <StaffHeader 
+            activeScreen={activeScreen} 
+            onNavigate={setActiveScreen} 
+            onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
+          />
           <main className="mx-auto max-w-3xl px-4 py-5 pb-28 sm:px-6 lg:pb-10">
-            <ActiveView onNavigate={setActiveScreen} />
+            <ActiveView onNavigate={setActiveScreen} onLogout={onLogout} />
           </main>
         </div>
 

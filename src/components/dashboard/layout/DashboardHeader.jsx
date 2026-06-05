@@ -15,7 +15,6 @@ import {
   Wallet
 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { storage } from '../../../utils/storage'
 import IconButton from '../../ui/IconButton'
 
 export default function DashboardHeader({
@@ -68,16 +67,14 @@ export default function DashboardHeader({
   const handleMarkAllAsRead = () => {
     const updated = notifications.map((n) => ({ ...n, read: true }))
     setNotifications(updated)
-    storage.setItem('nexora_notifications', JSON.stringify(updated))
   }
 
   const handleNotificationClick = (item) => {
     const updated = notifications.map((n) => n.id === item.id ? { ...n, read: true } : n)
     setNotifications(updated)
-    storage.setItem('nexora_notifications', JSON.stringify(updated))
     setIsNotiDropdownOpen(false)
     if (item.linkTab === 'staff' && item.staffId) {
-      const member = staff.find(s => s.id === item.staffId)
+      const member = staff.find(s => s.id?.trim().toUpperCase() === item.staffId?.trim().toUpperCase())
       if (member) {
         onNavigateMenu(item.linkTab)
         if (typeof onApproveStaff === 'function') {
@@ -400,8 +397,8 @@ export default function DashboardHeader({
             type="button"
             onClick={() => setIsHeaderDropdownOpen(!isHeaderDropdownOpen)}
             className="flex h-10 w-10 items-center justify-center rounded-full border border-nexoraBorder overflow-hidden shadow-nexora-soft transition hover:opacity-90 focus:outline-none"
-            aria-label="Profile menu"
-            title="Profile menu"
+            aria-label="Account menu"
+            title="Account menu"
             id="header-profile-menu-btn"
           >
             {profile.avatar ? (

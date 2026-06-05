@@ -85,63 +85,7 @@ export default function SupportView() {
         </p>
       </div>
 
-      {/* KPI Metric Cards Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Open Tickets KPI */}
-        <Panel className="p-4 flex items-center justify-between border-l-4 border-l-nexoraBrand relative overflow-hidden">
-          <div className="space-y-1">
-            <p className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
-              {t('dashboard.support.kpi.open_tickets') || 'Open Tickets'}
-            </p>
-            <p className="text-2xl font-black text-nexoraText font-mono tracking-tight">3</p>
-          </div>
-          <div className="p-2.5 bg-nexoraBrandSoft dark:bg-nexoraBrand/10 text-nexoraBrand rounded-flox-buttons">
-            <Ticket className="h-5 w-5" />
-          </div>
-        </Panel>
 
-        {/* Resolved KPI */}
-        <Panel className="p-4 flex items-center justify-between border-l-4 border-l-emerald-500 relative overflow-hidden">
-          <div className="space-y-1">
-            <p className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
-              {t('dashboard.support.kpi.resolved_tickets') || 'Resolved'}
-            </p>
-            <p className="text-2xl font-black text-nexoraText font-mono tracking-tight">18</p>
-          </div>
-          <div className="p-2.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 rounded-flox-buttons">
-            <CheckCircle2 className="h-5 w-5" />
-          </div>
-        </Panel>
-
-        {/* Avg Response KPI */}
-        <Panel className="p-4 flex items-center justify-between border-l-4 border-l-luxuryGold relative overflow-hidden">
-          <div className="space-y-1">
-            <p className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
-              {t('dashboard.support.kpi.avg_response') || 'Avg Response'}
-            </p>
-            <p className="text-2xl font-black text-nexoraText font-mono tracking-tight">2h</p>
-          </div>
-          <div className="p-2.5 bg-amber-50 dark:bg-luxuryGold/10 text-luxuryGold rounded-flox-buttons">
-            <Clock className="h-5 w-5" />
-          </div>
-        </Panel>
-
-        {/* System Status KPI */}
-        <Panel className="p-4 flex items-center justify-between border-l-4 border-l-emerald-500 relative overflow-hidden">
-          <div className="space-y-1">
-            <p className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
-              {t('dashboard.support.kpi.system_status') || 'System Status'}
-            </p>
-            <div className="flex items-center gap-1.5 mt-1">
-              <span className="h-2 w-2 rounded-full bg-nexoraSuccess animate-pulse" />
-              <p className="text-base font-extrabold text-nexoraSuccess uppercase tracking-wider">Online</p>
-            </div>
-          </div>
-          <div className="p-2.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 rounded-flox-buttons">
-            <Activity className="h-5 w-5" />
-          </div>
-        </Panel>
-      </div>
 
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

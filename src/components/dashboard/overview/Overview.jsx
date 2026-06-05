@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { Calendar, QrCode, Eye, Download, Sparkles, Pointer, Star } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -35,6 +35,11 @@ function Overview({
   setActiveKpi,
   chartRange,
   setChartRange,
+  chartStartDate,
+  chartEndDate,
+  setChartStartDate,
+  setChartEndDate,
+  transactions,
   selectedStaff,
   setSelectedStaff,
   onOpenTouchpoints,
@@ -58,15 +63,80 @@ function Overview({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const dateRangeOptions = [
-    { value: '7 Days', label: currentLanguage === 'vi' ? '20 thg 5 - 26 thg 5, 2024' : 'May 20 - May 26, 2024' },
-    { value: '30 Days', label: currentLanguage === 'vi' ? '27 thg 4 - 26 thg 5, 2024' : 'Apr 27 - May 26, 2024' },
-    { value: '90 Days', label: currentLanguage === 'vi' ? '27 thg 2 - 26 thg 5, 2024' : 'Feb 27 - May 26, 2024' },
-    { value: '180 Days', label: currentLanguage === 'vi' ? '28 thg 11, 2023 - 26 thg 5, 2024' : 'Nov 28, 2023 - May 26, 2024' },
-    { value: '365 Days', label: currentLanguage === 'vi' ? '27 thg 5, 2023 - 26 thg 5, 2024' : 'May 27, 2023 - May 26, 2024' }
-  ]
+  const dateRangeOptions = useMemo(() => {
+    const formatDateStr = (str) => {
+      const d = new Date(str + 'T00:00:00Z');
+      if (isNaN(d.getTime())) return str;
+      if (currentLanguage === 'vi') {
+        return `${d.getUTCDate()} thg ${d.getUTCMonth() + 1}, ${d.getUTCFullYear()}`;
+      }
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+    };
 
-  const selectedOption = dateRangeOptions.find((opt) => opt.value === chartRange) || dateRangeOptions[0]
+    const subtractDays = (dateStr, days) => {
+      const d = new Date(dateStr + 'T00:00:00Z');
+      if (isNaN(d.getTime())) return dateStr;
+      d.setUTCDate(d.getUTCDate() - days);
+      return d.toISOString().split('T')[0];
+    };
+
+    let refEndDate = '2026-05-26';
+    if (transactions && transactions.length > 0) {
+      let maxDate = '1970-01-01';
+      transactions.forEach(tx => {
+        if (tx.dateTime) {
+          const dateStr = tx.dateTime.split(' ')[0];
+          if (dateStr > maxDate && dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            maxDate = dateStr;
+          }
+        }
+      });
+      if (maxDate !== '1970-01-01') refEndDate = maxDate;
+    }
+
+    return [
+      { 
+        value: '7 Days', 
+        label: `${formatDateStr(subtractDays(refEndDate, 6))} - ${formatDateStr(refEndDate)}` 
+      },
+      { 
+        value: '30 Days', 
+        label: `${formatDateStr(subtractDays(refEndDate, 29))} - ${formatDateStr(refEndDate)}` 
+      },
+      { 
+        value: '90 Days', 
+        label: `${formatDateStr(subtractDays(refEndDate, 89))} - ${formatDateStr(refEndDate)}` 
+      },
+      { 
+        value: '180 Days', 
+        label: `${formatDateStr(subtractDays(refEndDate, 179))} - ${formatDateStr(refEndDate)}` 
+      },
+      { 
+        value: '365 Days', 
+        label: `${formatDateStr(subtractDays(refEndDate, 364))} - ${formatDateStr(refEndDate)}` 
+      },
+      {
+        value: 'Custom',
+        label: currentLanguage === 'vi' ? 'Tự chọn' : 'Custom'
+      }
+    ];
+  }, [transactions, currentLanguage]);
+
+  const selectedLabel = useMemo(() => {
+    if (chartRange === 'Custom') {
+      const formatDateStr = (str) => {
+        const d = new Date(str + 'T00:00:00Z');
+        if (isNaN(d.getTime())) return str;
+        if (currentLanguage === 'vi') {
+          return `${d.getUTCDate()} thg ${d.getUTCMonth() + 1}, ${d.getUTCFullYear()}`;
+        }
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+      };
+      return `${formatDateStr(chartStartDate)} - ${formatDateStr(chartEndDate)}`;
+    }
+    const opt = dateRangeOptions.find(o => o.value === chartRange);
+    return opt ? opt.label : dateRangeOptions[0].label;
+  }, [chartRange, chartStartDate, chartEndDate, dateRangeOptions, currentLanguage]);
 
   return (
     <div className="space-y-8">
@@ -83,7 +153,7 @@ function Overview({
           >
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-nexoraMuted" />
-              <span>{selectedOption.label}</span>
+              <span>{selectedLabel}</span>
             </div>
             <span className="text-nexoraMuted">▼</span>
           </button>
@@ -103,7 +173,7 @@ function Overview({
                   }`}
                 >
                   <span>{opt.label}</span>
-                  <span className="text-[10px] text-nexoraMuted uppercase tracking-wider">{opt.value}</span>
+                  <span className="text-[10px] text-nexoraMuted uppercase tracking-wider">{opt.value === 'Custom' && currentLanguage === 'vi' ? 'Tự chọn' : opt.value}</span>
                 </button>
               ))}
             </div>
@@ -145,7 +215,16 @@ function Overview({
 
       {/* Panels Grid */}
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(340px,1fr)]">
-        <TipsOverTimePanel range={chartRange} setRange={setChartRange} hasKyb={hasKyb} />
+        <TipsOverTimePanel
+          range={chartRange}
+          setRange={setChartRange}
+          chartStartDate={chartStartDate}
+          chartEndDate={chartEndDate}
+          setChartStartDate={setChartStartDate}
+          setChartEndDate={setChartEndDate}
+          transactions={transactions}
+          hasKyb={hasKyb}
+        />
         <StaffLeaderboardPanel selectedStaff={selectedStaff} setSelectedStaff={setSelectedStaff} hasKyb={hasKyb} />
       </div>
 

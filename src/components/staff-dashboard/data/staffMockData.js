@@ -27,6 +27,9 @@ export function makeDefaultStaffAccount(staffMember = {}) {
   return {
     staffId: staffMember.id || DEMO_STAFF_ID,
     bio: '',
+    fullName: staffMember.fullName || '',
+    phone: staffMember.phone || '',
+    kycStatus: staffMember.kycStatus || 'basic',
     defaultDisplayName: staffMember.nickname || staffMember.fullName || '',
     avatar: staffMember.avatar || '',
     payoutMethods: {

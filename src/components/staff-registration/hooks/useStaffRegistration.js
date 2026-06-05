@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { storage } from '../../../utils/storage'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { parsePhone } from '../../CountryCodeSelect'
-
-const localStorage = storage
-const sessionStorage = storage
+import { logger } from '../../../utils/logger'
+import { usePendingAccounts, useReplaceAllPendingAccounts } from '../../../data/hooks/usePendingAccounts'
+import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
+import { useNotifications, useAddNotification } from '../../../data/hooks/useNotifications'
 
 const MOCK_NEXORA_STAFF_PROFILES = {
   'NEX-STAFF-ANNA0921': {
@@ -66,6 +66,12 @@ export { MOCK_NEXORA_STAFF_PROFILES }
 export default function useStaffRegistration({ inviteData }) {
   const { t, currentLanguage, setLanguage } = useTranslation()
   const { showToast } = useNotification()
+  const pendingAccountsQuery = usePendingAccounts()
+  const replaceAllPendingAccountsMutation = useReplaceAllPendingAccounts()
+  const merchantSetupQuery = useMerchantSetup()
+  const saveMerchantSetupMutation = useSaveMerchantSetup()
+  useNotifications()
+  const addNotificationMutation = useAddNotification()
   const [step, setStep] = useState(0) // 0: Welcome Invite, 1: OTP, 2: Profile, 3: Payments, 4: Consent & Activate, 5: Success
 
   // Path selection states
@@ -92,6 +98,13 @@ export default function useStaffRegistration({ inviteData }) {
   const [regPassword, setRegPassword] = useState('')
   const [regReferralLink, setRegReferralLink] = useState('')
   const [regErrors, setRegErrors] = useState({})
+  const [termsAccepted, setTermsAccepted] = useState(true)
+
+  // Existing Account Link states
+  const [linkEmail, setLinkEmail] = useState('')
+  const [linkPassword, setLinkPassword] = useState('')
+  const [linkError, setLinkError] = useState('')
+  const [isLinkLoggedIn, setIsLinkLoggedIn] = useState(false)
 
   // Profile states
   const [fullName, setFullName] = useState('')
@@ -149,6 +162,7 @@ export default function useStaffRegistration({ inviteData }) {
       setRegEmail(inviteData.email || '')
       setRegConfirmEmail(inviteData.email || '')
       setRegReferralLink(inviteData.biz || '')
+      setLinkEmail(inviteData.email || '')
 
       // If it's a verification lookup (Option A linking) they might already have an ID
       if (inviteData.id && inviteData.id.startsWith('NEX-STAFF-')) {
@@ -242,7 +256,6 @@ export default function useStaffRegistration({ inviteData }) {
     setNexoraStatus('checking')
 
     const timer = setTimeout(() => {
-      console.log('[DEBUG STAFF ID] Searching in wizard for:', upperVal)
       const profile = MOCK_NEXORA_STAFF_PROFILES[upperVal]
       if (profile) {
         setLinkedProfile(profile)
@@ -282,7 +295,6 @@ export default function useStaffRegistration({ inviteData }) {
     setVlinkpayStatus('checking')
 
     const timer = setTimeout(() => {
-      console.log('[DEBUG VLINKPAY ID] Searching in wizard for:', upperVal)
       const matchedProfile = Object.values(MOCK_NEXORA_STAFF_PROFILES).find(
         p => p.vlinkpayId?.toUpperCase() === upperVal
       )
@@ -342,6 +354,11 @@ export default function useStaffRegistration({ inviteData }) {
       errors.password = currentLanguage === 'vi' ? 'Mật khẩu không được để trống' : 'Password is required'
     } else if (regPassword.length < 6) {
       errors.password = currentLanguage === 'vi' ? 'Mật khẩu phải từ 6 ký tự' : 'Password must be at least 6 characters'
+    }
+    if (!termsAccepted) {
+      errors.terms = currentLanguage === 'vi'
+        ? 'Bạn phải đồng ý với Điều khoản & Điều kiện để tiếp tục.'
+        : 'You must agree to the Terms & Conditions to proceed.'
     }
 
     if (Object.keys(errors).length > 0) {
@@ -480,16 +497,8 @@ export default function useStaffRegistration({ inviteData }) {
       payoutConfigs: linkedProfile.payoutConfigs
     }
 
-    // Save into localStorage merchant setup
-    const savedSetup = localStorage.getItem('nexora_merchant_setup')
-    let parsed = null
-    if (savedSetup) {
-      try {
-        parsed = JSON.parse(savedSetup)
-      } catch (e) {
-        console.error('Failed to parse saved setup', e)
-      }
-    }
+    // Save into merchant setup
+    let parsed = merchantSetupQuery.data ? { ...merchantSetupQuery.data } : null
     if (!parsed) {
       parsed = {
         businessInfo: {
@@ -528,17 +537,10 @@ export default function useStaffRegistration({ inviteData }) {
       }
 
       parsed.staffList = staffList
-      localStorage.setItem('nexora_merchant_setup', JSON.stringify(parsed))
-      sessionStorage.setItem('nexora_merchant_setup', JSON.stringify(parsed))
+      saveMerchantSetupMutation.mutateAsync(parsed)
+        .catch((err) => logger.error('Failed to save merchant setup during staff link', err))
 
       // Add notification to merchant
-      const savedNotifications = localStorage.getItem('nexora_notifications')
-      let notis = []
-      if (savedNotifications) {
-        try {
-          notis = JSON.parse(savedNotifications)
-        } catch (e) {}
-      }
       const newNoti = {
         id: `noti-join-${finalStaffMember.id}-${Date.now()}`,
         staffId: finalStaffMember.id,
@@ -551,18 +553,127 @@ export default function useStaffRegistration({ inviteData }) {
         read: false,
         linkTab: 'staff'
       }
-      notis = [newNoti, ...notis]
-      localStorage.setItem('nexora_notifications', JSON.stringify(notis))
-      sessionStorage.setItem('nexora_notifications', JSON.stringify(notis))
+      addNotificationMutation.mutate(newNoti)
     } catch (e) {
-      console.error('Failed to update staff database in wizard', e)
+      logger.error('Failed to update staff database in wizard', e)
     }
 
     setStaffId(searchId.trim().toUpperCase())
     setStep(5)
   }
 
-  // Save profile and notify App + LocalStorage
+  const handleLinkLogin = (e) => {
+    if (e) e.preventDefault()
+    setLinkError('')
+
+    const emailQuery = linkEmail.trim().toLowerCase()
+    const passwordQuery = linkPassword
+
+    if (!emailQuery) {
+      setLinkError(currentLanguage === 'vi' ? 'Email không được để trống.' : 'Email is required.')
+      return
+    }
+    if (!passwordQuery) {
+      setLinkError(currentLanguage === 'vi' ? 'Mật khẩu không được để trống.' : 'Password is required.')
+      return
+    }
+
+    // 1. Check in MOCK_NEXORA_STAFF_PROFILES
+    const foundEntry = Object.entries(MOCK_NEXORA_STAFF_PROFILES).find(
+      ([_, p]) => p.email.toLowerCase() === emailQuery
+    )
+
+    if (foundEntry) {
+      const [staffIdKey, profile] = foundEntry
+      if (passwordQuery.length < 6) {
+        setLinkError(currentLanguage === 'vi' ? 'Mật khẩu phải từ 6 ký tự.' : 'Password must be at least 6 characters.')
+        return
+      }
+      setSearchId(staffIdKey)
+      setLinkedProfile(profile)
+      setIsLinkLoggedIn(true)
+      showToast(
+        currentLanguage === 'vi'
+          ? `Đăng nhập thành công! Chào mừng ${profile.fullName}.`
+          : `Login successful! Welcome ${profile.fullName}.`
+      )
+      return
+    }
+
+    // 2. Check in nexora_pending_accounts (registered via wizard)
+    const accs = pendingAccountsQuery.data ?? []
+    const matchedAcc = accs.find(acc => acc.email === emailQuery)
+    if (matchedAcc) {
+      if (matchedAcc.password !== passwordQuery) {
+        setLinkError(currentLanguage === 'vi' ? 'Mật khẩu không chính xác.' : 'Incorrect password.')
+        return
+      }
+
+      // Try to find if this staff exists in the merchant's staffList
+      const savedSetup = merchantSetupQuery.data ?? {}
+      const staffInList = savedSetup.staffList?.find(s => s.id === matchedAcc.staffId || s.email === emailQuery)
+      
+      let profile = null
+      if (staffInList) {
+        profile = {
+          fullName: staffInList.fullName,
+          nickname: staffInList.nickname,
+          position: staffInList.position,
+          phone: staffInList.phone,
+          email: staffInList.email,
+          avatar: staffInList.avatar,
+          vlinkpayId: staffInList.paymentAccounts?.vlinkpay || '',
+          payoutConfigs: staffInList.payoutConfigs || {
+            zelle: { enabled: true, value: staffInList.paymentAccounts?.zelle || '', qrCode: '', accountName: staffInList.fullName }
+          }
+        }
+      } else {
+        profile = {
+          fullName: matchedAcc.fullName || matchedAcc.email.split('@')[0],
+          nickname: matchedAcc.nickname || matchedAcc.email.split('@')[0],
+          position: matchedAcc.position || 'Nail Technician',
+          phone: matchedAcc.phone || '',
+          email: matchedAcc.email,
+          avatar: matchedAcc.avatar || '',
+          vlinkpayId: matchedAcc.vlinkpayId || '',
+          payoutConfigs: matchedAcc.payoutConfigs || {}
+        }
+      }
+
+      setSearchId(matchedAcc.staffId || `NEX-STAFF-${emailQuery.slice(0,4).toUpperCase()}`)
+      setLinkedProfile(profile)
+      setIsLinkLoggedIn(true)
+      showToast(
+        currentLanguage === 'vi'
+          ? `Đăng nhập thành công! Chào mừng ${profile.fullName}.`
+          : `Login successful! Welcome ${profile.fullName}.`
+      )
+      return
+    }
+
+    setLinkError(
+      currentLanguage === 'vi'
+        ? 'Tài khoản không tồn tại hoặc mật khẩu sai.'
+        : 'Account does not exist or incorrect password.'
+    )
+  }
+
+  const handleLinkDecline = () => {
+    setIsLinkLoggedIn(false)
+    setLinkedProfile(null)
+    setSearchId('')
+    setLinkEmail(inviteData?.email || '')
+    setLinkPassword('')
+    setLinkError('')
+    setJoinPath(null)
+    showToast(
+      currentLanguage === 'vi'
+        ? 'Đã hủy bỏ yêu cầu liên kết.'
+        : 'Link request cancelled.'
+    )
+  }
+
+  // Save profile through the merchant setup mutation and notify the merchant.
   const handleActivateProfile = () => {
     // Create the updated staff object
     const finalPaymentAccounts = {}
@@ -590,16 +701,8 @@ export default function useStaffRegistration({ inviteData }) {
       payoutConfigs: payouts
     }
 
-    // Save into localStorage merchant setup
-    const savedSetup = localStorage.getItem('nexora_merchant_setup')
-    let parsedActive = null
-    if (savedSetup) {
-      try {
-        parsedActive = JSON.parse(savedSetup)
-      } catch (e) {
-        console.error('Failed to parse saved setup', e)
-      }
-    }
+    // Save into merchant setup
+    let parsedActive = merchantSetupQuery.data ? { ...merchantSetupQuery.data } : null
     if (!parsedActive) {
       parsedActive = {
         businessInfo: {
@@ -662,17 +765,10 @@ export default function useStaffRegistration({ inviteData }) {
       // We do NOT auto-generate touchpoint QR codes here anymore, because they are Pending Acceptance.
       // Touchpoint will be generated upon manual acceptance by the merchant.
 
-      localStorage.setItem('nexora_merchant_setup', JSON.stringify(parsedActive))
-      sessionStorage.setItem('nexora_merchant_setup', JSON.stringify(parsedActive))
+      saveMerchantSetupMutation.mutateAsync(parsedActive)
+        .catch((err) => logger.error('Failed to save merchant setup during staff activation', err))
 
       // Add notification to merchant
-      const savedNotifications = localStorage.getItem('nexora_notifications')
-      let notis = []
-      if (savedNotifications) {
-        try {
-          notis = JSON.parse(savedNotifications)
-        } catch (e) {}
-      }
       const newNoti = {
         id: `noti-join-${finalStaffMember.id}-${Date.now()}`,
         staffId: finalStaffMember.id,
@@ -685,13 +781,11 @@ export default function useStaffRegistration({ inviteData }) {
         read: false,
         linkTab: 'staff'
       }
-      notis = [newNoti, ...notis]
-      localStorage.setItem('nexora_notifications', JSON.stringify(notis))
-      sessionStorage.setItem('nexora_notifications', JSON.stringify(notis))
+      addNotificationMutation.mutate(newNoti)
 
       // Also save the staff account to nexora_pending_accounts so they can log in!
       if (email.trim() && regPassword) {
-        const pendingAccounts = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
+        const existingAccounts = pendingAccountsQuery.data ?? []
         const staffAccount = {
           email: email.trim().toLowerCase(),
           password: regPassword,
@@ -700,13 +794,12 @@ export default function useStaffRegistration({ inviteData }) {
           isVerified: true,
           verificationStatus: 'verified'
         }
-        const filtered = pendingAccounts.filter(acc => acc.email !== staffAccount.email)
+        const filtered = existingAccounts.filter(acc => acc.email !== staffAccount.email)
         filtered.push(staffAccount)
-        localStorage.setItem('nexora_pending_accounts', JSON.stringify(filtered))
-        window.dispatchEvent(new Event('storage'))
+        replaceAllPendingAccountsMutation.mutate(filtered)
       }
     } catch (e) {
-      console.error('Failed to update staff database in wizard', e)
+      logger.error('Failed to update staff database in wizard', e)
     }
 
     setStep(5)
@@ -738,6 +831,7 @@ export default function useStaffRegistration({ inviteData }) {
     regPassword, setRegPassword,
     regReferralLink, setRegReferralLink,
     regErrors, setRegErrors,
+    termsAccepted, setTermsAccepted,
     // profile
     fullName, setFullName,
     nickname, setNickname,
@@ -760,6 +854,13 @@ export default function useStaffRegistration({ inviteData }) {
     editAccountName, setEditAccountName,
     isCapturing, setIsCapturing,
     modalError, setModalError,
+    // linking existing account
+    linkEmail, setLinkEmail,
+    linkPassword, setLinkPassword,
+    linkError, setLinkError,
+    isLinkLoggedIn, setIsLinkLoggedIn,
+    handleLinkLogin,
+    handleLinkDecline,
     // handlers
     handleSearchIdChange,
     handleVlinkpayIdChange,

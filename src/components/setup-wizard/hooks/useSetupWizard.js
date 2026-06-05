@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { storage } from '../../../utils/storage'
+import { useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
 import {
   DEMO_BUSINESS,
   DEMO_LINKS,
@@ -9,11 +9,9 @@ import {
   getPayoutConfigsFromMember
 } from '../constants'
 
-const localStorage = storage
-const sessionStorage = storage
-
 export default function useSetupWizard({ initialBusinessInfo }) {
   const { currentLanguage, setLanguage, t } = useTranslation()
+  const saveMerchantSetup = useSaveMerchantSetup()
   const [currentStep, setCurrentStep] = useState(1) // 1, 2, 3
   const isSsoLocked = !!initialBusinessInfo
 
@@ -427,9 +425,9 @@ export default function useSetupWizard({ initialBusinessInfo }) {
       staffList,
       touchPoints
     }
-    localStorage.setItem('nexora_merchant_setup', JSON.stringify(data))
-    sessionStorage.setItem('nexora_merchant_setup', JSON.stringify(data))
-    onComplete(data)
+    saveMerchantSetup.mutate(data, {
+      onSuccess: () => onComplete(data),
+    })
   }
 
   // UI Step Indicator Helpers
