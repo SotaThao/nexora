@@ -1,6 +1,26 @@
 import React, { useState } from 'react'
-import { ShieldCheck, LogIn, Lock, Mail, Sparkles, Eye, EyeOff } from 'lucide-react'
+import { Lock, Mail, Sparkles, Eye, EyeOff } from 'lucide-react'
 import SimulationPanel from './SimulationPanel'
+import AuthGraphicPanel from '../components/auth/AuthGraphicPanel'
+
+function GoogleIcon() {
+  return (
+    <svg viewBox="0 0 18 18" aria-hidden="true" className="h-4 w-4">
+      <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.91c1.7-1.57 2.69-3.88 2.69-6.62Z" />
+      <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.91-2.26c-.81.54-1.84.86-3.05.86-2.35 0-4.33-1.58-5.04-3.71H.96v2.33A9 9 0 0 0 9 18Z" />
+      <path fill="#FBBC05" d="M3.96 10.71A5.41 5.41 0 0 1 3.68 9c0-.59.1-1.16.28-1.71V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.04l3-2.33Z" />
+      <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.34l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96l3 2.33C4.67 5.16 6.65 3.58 9 3.58Z" />
+    </svg>
+  )
+}
+
+function AppleBrandIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-current">
+      <path d="M16.37 1.43c0 1.12-.42 2.13-1.25 3.03-.99 1.05-2.1 1.66-3.32 1.56-.15-1.08.43-2.24 1.23-3.08.88-.92 2.39-1.62 3.37-1.67.02.04.02.08.02.16ZM20.49 17.37c-.53 1.22-.79 1.77-1.47 2.85-.95 1.47-2.29 3.3-3.95 3.32-1.47.02-1.85-.96-3.86-.95-2 .01-2.42.98-3.89.95-1.66-.03-2.93-1.67-3.88-3.14-2.66-4.12-2.94-8.95-1.3-11.51 1.16-1.81 3-2.87 4.74-2.87 1.77 0 2.89.98 4.35.98 1.42 0 2.28-.98 4.32-.98 1.54 0 3.17.84 4.33 2.28-3.81 2.09-3.19 7.52.61 9.07Z" />
+    </svg>
+  )
+}
 
 export default function LoginScreen({
   email,
@@ -29,10 +49,6 @@ export default function LoginScreen({
   const [showPassword, setShowPassword] = useState(false)
   return (
     <div className="min-h-dvh flex items-center justify-center bg-nexoraCanvas relative overflow-x-hidden overflow-y-auto text-nexoraText px-4 py-6 sm:py-10 selection:bg-nexoraBrandSoft selection:text-nexoraBrand">
-      {/* Soft background decorations */}
-      <div className="absolute top-1/4 left-1/4 h-56 w-56 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(66,72,216,0.05)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-96 sm:w-96"></div>
-      <div className="absolute bottom-1/4 right-1/4 h-64 w-64 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(43,89,255,0.03)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-96 sm:w-96"></div>
-
       {/* Language Switcher */}
       <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-nexoraBorder shadow-sm">
         <button
@@ -50,19 +66,19 @@ export default function LoginScreen({
         </button>
       </div>
 
-      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch relative z-10">
+      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch relative z-10 overflow-hidden rounded-xl border border-nexoraBorder bg-white shadow-premium lg:min-h-[680px]">
 
         {/* Left Column: Login Card */}
-        <div className="lg:col-span-7 bg-white rounded-2xl p-5 sm:p-8 border border-nexoraBorder shadow-premium flex flex-col justify-between relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(70,72,216,0.03)] via-transparent to-transparent rounded-full pointer-events-none"></div>
-
+        <div className="lg:col-span-5 flex flex-col justify-between p-5 sm:p-8 xl:p-10 relative overflow-hidden">
           {/* VLINKPAY branding logo */}
-          <div className="text-center mb-6">
-            <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="w-12 h-12 mx-auto object-contain mb-3" />
-            <h2 className="font-sans text-xl font-bold tracking-wide sm:text-2xl">
-              NEXORA <span className="ml-1.5 inline-flex align-middle text-nexoraBrand font-sans text-xs tracking-widest font-black uppercase bg-nexoraBrand/10 px-2 py-0.5 rounded border border-nexoraBrand/30">TOUCH</span>
-            </h2>
-            <p className="text-xs text-nexoraMuted mt-1">{t('login.gateway_sub')}</p>
+          <div className="mb-8 flex items-center gap-3">
+            <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="w-11 h-11 object-contain" />
+            <div>
+              <h2 className="font-sans text-xl font-bold tracking-wide sm:text-2xl">
+                NEXORA <span className="ml-1.5 inline-flex align-middle text-nexoraBrand font-sans text-xs tracking-widest font-black uppercase bg-nexoraBrand/10 px-2 py-0.5 rounded border border-nexoraBrand/30">TOUCH</span>
+              </h2>
+              <p className="text-xs text-nexoraMuted mt-1">{t('login.gateway_sub')}</p>
+            </div>
           </div>
 
           {isLoading ? (
@@ -74,9 +90,9 @@ export default function LoginScreen({
             </div>
           ) : (
             <form onSubmit={(e) => { e.preventDefault(); onLoginSubmit(); }} className="space-y-5">
-              <div className="p-3 rounded-lg bg-nexoraBrandSoft/40 border border-nexoraBrandSoft text-[11px] text-nexoraText leading-relaxed">
-                <ShieldCheck className="w-4 h-4 text-nexoraBrand inline mr-1.5 shrink-0" />
-                <strong>{t('login.sso_integration_title')}</strong> {t('login.sso_integration_desc')}
+              <div className="space-y-1">
+                <p className="text-[11px] font-black uppercase tracking-wider text-nexoraBrand">Secure Access</p>
+                <h1 className="text-2xl font-black text-nexoraText sm:text-3xl">Sign in to NEXORA</h1>
               </div>
 
               {loginError && (
@@ -126,22 +142,45 @@ export default function LoginScreen({
                 type="submit"
                 className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 transition-opacity text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_14px_rgba(43,89,255,0.25)]"
               >
-                <LogIn className="w-4 h-4 stroke-[3px]" /> {t('login.login_btn')}
+                {t('login.login_btn')}
               </button>
 
-              {isDemoToolsEnabled && (
-                <div className="relative py-2 text-center">
-                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-nexoraBorder"></div></div>
-                  <span className="relative bg-white px-3 text-[10px] text-nexoraSubtle font-bold uppercase tracking-wider">{t('login.or_try_demo')}</span>
-                </div>
-              )}
+              <div className="relative hidden py-1 text-center sm:block">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-nexoraBorder"></div></div>
+                <span className="relative bg-white px-3 text-[10px] text-nexoraSubtle font-bold uppercase tracking-wider">{t('login.social_auth_divider')}</span>
+              </div>
+
+              <div className="flex items-center justify-center gap-3 sm:grid sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => onTriggerSimulation('sso_with_kyb')}
+                  aria-label={t('login.continue_google')}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-nexoraBorder bg-white p-0 text-xs font-bold text-nexoraText shadow-nexora-card transition-all hover:border-nexoraBrand hover:bg-nexoraCanvas sm:min-h-11 sm:w-auto sm:rounded-lg sm:px-4 sm:py-2 sm:shadow-none"
+                >
+                  <span className="flex items-center justify-center gap-2">
+                    <GoogleIcon />
+                    <span className="hidden sm:inline">{t('login.continue_google')}</span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onTriggerSimulation('sso_with_kyb')}
+                  aria-label={t('login.continue_apple')}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-nexoraBorder bg-white p-0 text-xs font-bold text-nexoraText shadow-nexora-card transition-all hover:border-nexoraBrand hover:bg-nexoraCanvas sm:min-h-11 sm:w-auto sm:rounded-lg sm:px-4 sm:py-2 sm:shadow-none"
+                >
+                  <span className="flex items-center justify-center gap-2">
+                    <AppleBrandIcon />
+                    <span className="hidden sm:inline">{t('login.continue_apple')}</span>
+                  </span>
+                </button>
+              </div>
 
               {/* Quick login / registration options */}
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3">
                 <button
                   type="button"
                   onClick={() => onTriggerSimulation('new_register')}
-                  className="min-h-11 py-2 border border-nexoraBorder hover:border-nexoraBorder/80 bg-nexoraCanvas text-nexoraText text-xs font-semibold rounded-lg transition-all"
+                  className="btn-outline-ghost flex min-h-11 w-full items-center justify-center px-4 py-2 text-xs font-bold"
                 >
                   {t('login.register_btn')}
                 </button>
@@ -232,9 +271,10 @@ export default function LoginScreen({
             </form>
           )}
 
-          <span className="text-[9px] text-nexoraSubtle font-medium tracking-wide mt-6 block text-center uppercase">
-            {t('login.sso_security_footer')}
-          </span>
+        </div>
+
+        <div className="hidden p-3 lg:col-span-7 lg:block">
+          <AuthGraphicPanel />
         </div>
 
         {isDemoToolsEnabled && (

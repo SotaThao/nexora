@@ -3,18 +3,19 @@ import { Building2, Sparkles, Check, ArrowLeft, ArrowRight } from 'lucide-react'
 
 export default function StepRoleSelect({ role, setRole, onBackToLogin, setCurrentStep, t, currentLanguage }) {
   return (
-    <div className="p-6 sm:p-10 space-y-6">
-      <div className="text-center max-w-md mx-auto">
-        <h3 className="text-lg font-bold text-nexoraText">{t('register.role_select_title')}</h3>
-        <p className="text-xs text-nexoraSubtle mt-1">{t('register.role_select_desc')}</p>
+    <div className="space-y-6">
+      <div className="max-w-md">
+        <p className="text-[11px] font-black uppercase tracking-wider text-nexoraBrand">Create Account</p>
+        <h3 className="mt-1 text-2xl font-black text-nexoraText sm:text-3xl">{t('register.role_select_title')}</h3>
+        <p className="text-sm font-medium leading-relaxed text-nexoraMuted mt-2">{t('register.role_select_desc')}</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto pt-2">
+      <div className="grid grid-cols-1 gap-3 pt-2">
         {/* Business Owner Option */}
         <button
           type="button"
           onClick={() => setRole('business')}
-          className={`p-6 rounded-2xl border text-left flex flex-col justify-between transition-all duration-300 group min-h-[180px] hover:shadow-md
+          className={`p-5 rounded-xl border text-left flex flex-col justify-between transition-all duration-300 group min-h-[150px] hover:shadow-md
             ${role === 'business'
               ? 'border-nexoraBrand bg-nexoraBrandSoft/10 ring-2 ring-nexoraBrand/20'
               : 'border-nexoraBorder bg-white hover:border-slate-300'
@@ -49,7 +50,7 @@ export default function StepRoleSelect({ role, setRole, onBackToLogin, setCurren
         <button
           type="button"
           onClick={() => setRole('personal')}
-          className={`p-6 rounded-2xl border text-left flex flex-col justify-between transition-all duration-300 group min-h-[180px] hover:shadow-md
+          className={`p-5 rounded-xl border text-left flex flex-col justify-between transition-all duration-300 group min-h-[150px] hover:shadow-md
             ${role === 'personal'
               ? 'border-nexoraBrand bg-nexoraBrandSoft/10 ring-2 ring-nexoraBrand/20'
               : 'border-nexoraBorder bg-white hover:border-slate-300'
