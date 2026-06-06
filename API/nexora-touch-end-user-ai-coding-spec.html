@@ -1,0 +1,1939 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NEXORA TOUCH - End-user & AI Coding Spec</title>
+  <style>
+    :root { --bg:#f6f7fb; --paper:#fff; --ink:#111827; --muted:#5b6472; --line:#e5e7eb; --brand:#6d28d9; --code:#0f172a; }
+    *{box-sizing:border-box} body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(180deg,#fbfbff 0%,var(--bg) 100%);color:var(--ink);line-height:1.6}
+    .layout{display:grid;grid-template-columns:290px 1fr;gap:0} aside{position:sticky;top:0;height:100vh;overflow:auto;padding:24px 18px;background:#0f1020;color:white;border-right:1px solid #1f2937} aside h2{font-size:16px;margin:0 0 12px} aside a{display:block;color:#d7dcff;text-decoration:none;font-size:13px;padding:6px 0} aside a:hover{color:white}
+    main{max-width:1120px;padding:40px 42px 80px} .hero{padding:34px;border-radius:28px;background:radial-gradient(circle at top left,rgba(109,40,217,.16),transparent 32%),radial-gradient(circle at bottom right,rgba(8,145,178,.16),transparent 36%),var(--paper);border:1px solid var(--line);box-shadow:0 20px 60px rgba(15,23,42,.08);margin-bottom:26px}
+    h1{font-size:40px;line-height:1.1;margin:0 0 12px;letter-spacing:-.04em} h2{font-size:28px;margin-top:44px;border-bottom:1px solid var(--line);padding-bottom:10px;letter-spacing:-.02em} h3{font-size:21px;margin-top:34px} h4{font-size:17px;margin-top:24px} p,li{color:var(--muted)} strong{color:var(--ink)}
+    blockquote{margin:0 0 22px;padding:14px 18px;border-left:4px solid var(--brand);background:#faf7ff;border-radius:12px}
+    table{width:100%;border-collapse:collapse;margin:16px 0 22px;background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:table} th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:14px} th{background:#f8fafc;color:#374151;font-weight:700} tr:last-child td{border-bottom:0}
+    code{background:#eef2ff;color:#312e81;padding:2px 5px;border-radius:6px;font-size:.92em} pre{background:var(--code);color:#e5e7eb;border-radius:16px;padding:18px;overflow:auto;border:1px solid #1e293b} pre code{background:transparent;color:inherit;padding:0}
+    a{color:#5b21b6} @media(max-width:920px){.layout{grid-template-columns:1fr} aside{position:relative;height:auto} main{padding:26px 18px 60px} h1{font-size:32px} table{display:block;overflow-x:auto}} @media print{aside{display:none} .layout{display:block} main{max-width:none;padding:0} body{background:white} pre{white-space:pre-wrap}}
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside>
+      <h2>NEXORA TOUCH Spec</h2>
+      <a href="#product-summary">1. Product Summary</a>
+      <a href="#core-actors">2. Core Actors</a>
+      <a href="#system-rules-that-must-not-be-missed">3. Critical Rules</a>
+      <a href="#main-user-facing-screens">4. User-facing Screens</a>
+      <a href="#dto-cheat-sheet">5. DTO Cheat Sheet</a>
+      <a href="#enums">6. Enums</a>
+      <a href="#api-endpoint-map-for-coding-agent">7. API Endpoint Map</a>
+      <a href="#recommended-frontend-architecture">8. Frontend Architecture</a>
+      <a href="#error-handling-rules">9. Error Handling</a>
+      <a href="#acceptance-criteria-for-ai-coding-agent">10. Acceptance Criteria</a>
+      <a href="#suggested-route-map">11. Route Map</a>
+      <a href="#copywriting-notes-for-end-user-ui">12. UI Copy Notes</a>
+      <a href="#implementation-warnings">13. Warnings</a>
+      <a href="#minimal-mvp-build-order">14. MVP Build Order</a>
+    </aside>
+    <main>
+      <section class="hero">
+        <h1>NEXORA TOUCH - End-user & AI Coding Spec</h1>
+        <p>Clean product description, API map, UX flows, DTO cheat sheet, and implementation rules extracted from the API Integration Guide v2.0.</p>
+      </section>
+      <section id="nexora-touch---end-user-ai-coding-spec" class="level1">
+<h1>NEXORA TOUCH - End-user &amp; AI Coding Spec</h1>
+<blockquote>
+<p>Source: <code>02. api-integration-guide-v2.pdf</code> - API
+Integration Guide v2.0, updated 2026-06-05.<br />
+Purpose: Convert the API guide into a product-readable and
+coding-agent-friendly implementation brief.</p>
+</blockquote>
+<hr />
+<section id="product-summary" class="level2">
+<h2>1. Product Summary</h2>
+<p><strong>NEXORA TOUCH</strong> is a QR-based tipping and review
+platform for service businesses such as nail salons, restaurants, front
+desks, tables, receipts, and staff cards.</p>
+<p>The core experience:</p>
+<ol type="1">
+<li>Merchant signs up and completes business onboarding.</li>
+<li>Merchant invites staff or links existing staff.</li>
+<li>Staff completes profile and activates at least one payment
+method.</li>
+<li>Merchant creates QR touch points.</li>
+<li>Customer scans QR, selects staff, tips, confirms payment, then
+leaves a review.</li>
+<li>Merchant tracks tips, scans, reviews, staff performance, and private
+feedback in the dashboard.</li>
+</ol>
+<hr />
+</section>
+<section id="core-actors" class="level2">
+<h2>2. Core Actors</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Actor</th>
+<th>Description</th>
+<th>Main Goals</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Merchant / Business Owner</td>
+<td>Registered business user with
+<code>profileType = Merchant</code>.</td>
+<td>Set up business, invite staff, manage QR touch points, configure
+business payment methods, view dashboard.</td>
+</tr>
+<tr class="even">
+<td>Staff</td>
+<td>Service provider linked to a business.</td>
+<td>Complete profile, configure personal payment methods, receive
+tips/reviews.</td>
+</tr>
+<tr class="odd">
+<td>Customer / Guest</td>
+<td>No account required. Opens public touch page by scanning QR.</td>
+<td>Select staff, tip, confirm payment, leave review.</td>
+</tr>
+<tr class="even">
+<td>AI Coding Agent</td>
+<td>Developer assistant reading this spec.</td>
+<td>Generate frontend screens, API service layer, DTOs, guards,
+validation, and error handling.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+</section>
+<section id="system-rules-that-must-not-be-missed" class="level2">
+<h2>3. System Rules That Must Not Be Missed</h2>
+<section id="authentication" class="level3">
+<h3>Authentication</h3>
+<p>Protected endpoints require:</p>
+<pre class="http"><code>Authorization: Bearer &lt;accessToken&gt;</code></pre>
+<p>Public guest endpoints use <code>AllowAnonymous</code> and usually
+have rate limit policy <code>PublicTouchPolicy</code>.</p>
+</section>
+<section id="privacy" class="level3">
+<h3>Privacy</h3>
+<ul>
+<li>Staff payment <code>accountInfo</code> belongs only to staff.</li>
+<li>Merchant endpoints must not read raw staff payment account
+info.</li>
+<li>Customer touch page only receives method names like
+<code>CashApp</code>, <code>Venmo</code>, <code>Zelle</code>; it must
+not receive raw staff account info.</li>
+<li>Business payment methods are separate from staff payment methods and
+are used for multi-staff tips.</li>
+</ul>
+</section>
+<section id="visibility-rules" class="level3">
+<h3>Visibility Rules</h3>
+<p>A staff member should appear on the customer touch page only
+when:</p>
+<pre class="text"><code>BusinessStaffLink.Status = Active
+AND StaffProfile.IsProfileComplete = true
+AND at least one staff payment method is active and configured</code></pre>
+<p>A payment method is visible only when:</p>
+<pre class="text"><code>isActive = true
+AND accountInfo is not empty</code></pre>
+</section>
+<section id="review-routing" class="level3">
+<h3>Review Routing</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Rating</th>
+<th>Routing</th>
+<th>Frontend Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>4-5 stars</td>
+<td>Public</td>
+<td>Show Google/Yelp review buttons if links exist.</td>
+</tr>
+<tr class="even">
+<td>1-3 stars</td>
+<td>Private</td>
+<td>Collect private feedback and optionally customer email/name.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="tip-limits" class="level3">
+<h3>Tip Limits</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Rule</th>
+<th>Limit</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Single staff tip min</td>
+<td><code>$1.00</code></td>
+</tr>
+<tr class="even">
+<td>Single staff tip max</td>
+<td><code>$500.00</code></td>
+</tr>
+<tr class="odd">
+<td>Multi-staff min staff count</td>
+<td><code>2 distinct staff</code></td>
+</tr>
+<tr class="even">
+<td>Multi-staff total max</td>
+<td><code>$500.00</code></td>
+</tr>
+<tr class="odd">
+<td>Each multi-staff item min</td>
+<td><code>$1.00</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+</section>
+</section>
+<section id="main-user-facing-screens" class="level2">
+<h2>4. Main User-facing Screens</h2>
+<section id="merchant-authentication" class="level3">
+<h3>4.1 Merchant Authentication</h3>
+<p><strong>Screens</strong></p>
+<ul>
+<li>Sign In</li>
+<li>Sign Up</li>
+<li>Verify Email</li>
+<li>Forgot Password</li>
+<li>Reset Password</li>
+</ul>
+<p><strong>Core API</strong></p>
+<table>
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 40%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Action</th>
+<th style="text-align: right;">Method</th>
+<th>Endpoint</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sign in</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/authentication/signin</code></td>
+</tr>
+<tr class="even">
+<td>Sign up</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/authentication/signup</code></td>
+</tr>
+<tr class="odd">
+<td>Refresh token</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/authentication/refresh-token</code></td>
+</tr>
+<tr class="even">
+<td>Forgot password</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/authentication/forgot-password</code></td>
+</tr>
+<tr class="odd">
+<td>Reset password</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/authentication/reset-password</code></td>
+</tr>
+<tr class="even">
+<td>Send verification email</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/authentication/send-verification-email</code></td>
+</tr>
+<tr class="odd">
+<td>Verify email</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/authentication/verify-email</code></td>
+</tr>
+<tr class="even">
+<td>Passwordless sign in</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/authentication/passwordless-signin</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Frontend requirements</strong></p>
+<ul>
+<li>Store <code>accessToken</code>, <code>refreshToken</code>,
+<code>tokenType</code>, <code>expiresIn</code> after login.</li>
+<li>On protected API <code>401</code>, attempt refresh token once, then
+retry original request.</li>
+<li>If refresh token fails, clear tokens and redirect to Sign In.</li>
+<li>Show clear error messages for wrong credentials, inactive account,
+rate limit, expired verification token.</li>
+</ul>
+<hr />
+</section>
+<section id="merchant-onboarding-wizard" class="level3">
+<h3>4.2 Merchant Onboarding Wizard</h3>
+<p><strong>Goal</strong>: Let merchant create a public business profile
+and generate the first touch setup.</p>
+<p><strong>Recommended steps</strong></p>
+<table>
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 30%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">Step</th>
+<th>Screen</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td>Business Info</td>
+<td>Business name, type, address, phone, timezone, logo, custom
+slug.</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td>Review Links</td>
+<td>Google review URL, Yelp URL, Facebook URL, private feedback
+email.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td>Staff</td>
+<td>Invite staff by name + email/phone. Optional but recommended.</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td>Touch Points</td>
+<td>Create QR for table, front desk, receipt, or staff card.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5</td>
+<td>Complete</td>
+<td>Make business public and activate merchant profile.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Core API sequence</strong></p>
+<pre class="http"><code>POST /api/v1/authentication/signup
+POST /api/v1/authentication/verify-email
+POST /api/v1/authentication/signin
+GET  /api/v1/merchant/business/check-slug?slug=bitcoin-nail-bar
+POST /api/v1/images/upload
+POST /api/v1/merchant/business
+PUT  /api/v1/merchant/business/review-links
+POST /api/v1/merchant/staff/invite
+POST /api/v1/merchant/touchpoints
+POST /api/v1/merchant/business/complete-onboarding</code></pre>
+<p><strong>Business rules</strong></p>
+<ul>
+<li>Business creation automatically creates a Starter subscription with
+a 30-day trial.</li>
+<li>Business creation pre-seeds all business payout method types as
+inactive.</li>
+<li><code>customSlug</code> must be lowercase, alphanumeric plus
+hyphens, max 50 chars.</li>
+<li>If no custom slug is provided, generate slug from business name and
+append <code>-2</code>, <code>-3</code>, etc. on collision.</li>
+<li>At least one review link is required if public review routing should
+work.</li>
+<li>Completing onboarding sets <code>Business.IsPublic = true</code> and
+merchant profile status to <code>Active</code>.</li>
+</ul>
+<hr />
+</section>
+<section id="merchant-staff-management" class="level3">
+<h3>4.3 Merchant Staff Management</h3>
+<p><strong>Screens</strong></p>
+<ul>
+<li>Staff List</li>
+<li>Invite Staff</li>
+<li>Pending Invites</li>
+<li>Search Existing Staff</li>
+<li>Staff Status / Reorder / Unlink</li>
+</ul>
+<p><strong>Core API</strong></p>
+<table>
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 40%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Action</th>
+<th style="text-align: right;">Method</th>
+<th>Endpoint</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Invite staff</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/merchant/staff/invite</code></td>
+</tr>
+<tr class="even">
+<td>Resend invite</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/merchant/staff/{inviteId}/resend</code></td>
+</tr>
+<tr class="odd">
+<td>List staff + invites</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/merchant/staff</code></td>
+</tr>
+<tr class="even">
+<td>Search existing staff</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/merchant/staff/search</code></td>
+</tr>
+<tr class="odd">
+<td>Update staff status</td>
+<td style="text-align: right;">PUT</td>
+<td><code>/api/v1/merchant/staff/{staffLinkId}/status</code></td>
+</tr>
+<tr class="even">
+<td>Reorder staff</td>
+<td style="text-align: right;">PUT</td>
+<td><code>/api/v1/merchant/staff/reorder</code></td>
+</tr>
+<tr class="odd">
+<td>Unlink staff</td>
+<td style="text-align: right;">DELETE</td>
+<td><code>/api/v1/merchant/staff/{staffLinkId}</code></td>
+</tr>
+<tr class="even">
+<td>Link existing staff</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/merchant/staff/link-request/{staffProfileId}</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>UI behavior</strong></p>
+<ul>
+<li>Staff list must show both accepted staff and pending invites.</li>
+<li>Use <code>itemType = link</code> for accepted staff and
+<code>itemType = invite</code> for pending invites.</li>
+<li><code>Inactive</code> staff are hidden from customer touch page but
+their data remains.</li>
+<li>Reorder should support drag-and-drop and send
+<code>orderedLinkIds</code>.</li>
+<li>Pending invite can be resent if still pending.</li>
+</ul>
+<hr />
+</section>
+<section id="staff-self-setup" class="level3">
+<h3>4.4 Staff Self-Setup</h3>
+<p><strong>Goal</strong>: Staff opens magic link, accepts invite,
+creates profile, and enables payment method.</p>
+<p><strong>Screens</strong></p>
+<ul>
+<li>Invite Landing Page</li>
+<li>Staff Profile Setup</li>
+<li>Upload Photo</li>
+<li>Payment Method Settings</li>
+<li>Profile Completion State</li>
+</ul>
+<p><strong>Flow</strong></p>
+<pre class="http"><code>GET  /api/v1/staff/invite/{token}
+POST /api/v1/images/public/upload
+POST /api/v1/staff/invite/{token}/accept
+POST /api/v1/authentication/signin
+GET  /api/v1/staff/payment-methods
+PUT  /api/v1/staff/payment-methods/{id}
+PATCH /api/v1/staff/payment-methods/{id}/toggle</code></pre>
+<p><strong>Important rules</strong></p>
+<ul>
+<li>Invite token expires after 7 days.</li>
+<li>Accepting invite creates <code>UserProfile</code>,
+<code>StaffProfile</code>, and 5 inactive staff payment methods.</li>
+<li>Staff becomes visible on customer touch page only after at least one
+payment method is active and configured.</li>
+<li>The token is read from URL path; do not include token in body.</li>
+</ul>
+<hr />
+</section>
+<section id="touch-points-qr" class="level3">
+<h3>4.5 Touch Points &amp; QR</h3>
+<p><strong>Goal</strong>: Merchant creates customer-facing QR codes.</p>
+<p><strong>Touch point types</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th>Type</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Table</code></td>
+<td>Shows all active staff.</td>
+</tr>
+<tr class="even">
+<td><code>FrontDesk</code></td>
+<td>Shows all active staff.</td>
+</tr>
+<tr class="odd">
+<td><code>Receipt</code></td>
+<td>Shows all active staff.</td>
+</tr>
+<tr class="even">
+<td><code>StaffCard</code></td>
+<td>Shows only assigned staff.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Core API</strong></p>
+<table>
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 40%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Action</th>
+<th style="text-align: right;">Method</th>
+<th>Endpoint</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Create touch point</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/merchant/touchpoints</code></td>
+</tr>
+<tr class="even">
+<td>List touch points</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/merchant/touchpoints</code></td>
+</tr>
+<tr class="odd">
+<td>Download QR</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/merchant/touchpoints/{id}/download?format=png|pdf</code></td>
+</tr>
+<tr class="even">
+<td>Delete touch point</td>
+<td style="text-align: right;">DELETE</td>
+<td><code>/api/v1/merchant/touchpoints/{id}</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Business rules</strong></p>
+<ul>
+<li>Creating touch point automatically generates a 1000x1000 PNG QR and
+uploads it to S3.</li>
+<li>Starter plan limit: maximum 3 touch points.</li>
+<li>Touch point URL format:</li>
+</ul>
+<pre class="text"><code>{baseUrl}/touch/{businessSlug}/{touchPointSlug}</code></pre>
+<p>Example:</p>
+<pre class="text"><code>https://nexora.vlinkpay.com/touch/bitcoin-nail-bar/table-1</code></pre>
+<hr />
+</section>
+<section id="customer-touch-page---single-staff-tip" class="level3">
+<h3>4.6 Customer Touch Page - Single Staff Tip</h3>
+<p><strong>Goal</strong>: Customer scans QR, selects staff, pays tip
+through staff payment method, confirms payment, and reviews.</p>
+<p><strong>Public flow</strong></p>
+<pre class="http"><code>GET  /api/v1/touch/{businessSlug}/{touchPointSlug}?sessionId={uuid}
+GET  /api/v1/touch/payment-link?staffId={id}&amp;method={enum}&amp;amount={amount}
+POST /api/v1/touch/tip
+POST /api/v1/touch/tip/{tipId}/confirm
+POST /api/v1/touch/review
+POST /api/v1/touch/review/{reviewId}/track-google
+POST /api/v1/touch/review/{reviewId}/track-yelp</code></pre>
+<p><strong>Screen states</strong></p>
+<ol type="1">
+<li>Loading touch page</li>
+<li>Business header + staff list</li>
+<li>Staff detail + amount selector</li>
+<li>Payment method selection</li>
+<li>Payment redirect / copy instruction</li>
+<li>Confirmation: “Yes, I paid”</li>
+<li>Review screen</li>
+<li>Public review buttons or private feedback form</li>
+<li>Thank-you screen</li>
+</ol>
+<p><strong>Payment method behavior</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>CashApp</td>
+<td>Open deep link.</td>
+</tr>
+<tr class="even">
+<td>Venmo</td>
+<td>Open deep link.</td>
+</tr>
+<tr class="odd">
+<td>PayPal</td>
+<td>Open PayPal.me link.</td>
+</tr>
+<tr class="even">
+<td>Zelle</td>
+<td>No redirect. Show copy-paste phone/email UI.</td>
+</tr>
+<tr class="odd">
+<td>Apple Cash</td>
+<td>No redirect. Show phone copy UI.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+</section>
+<section id="customer-touch-page---multi-staff-tip" class="level3">
+<h3>4.7 Customer Touch Page - Multi-Staff Tip</h3>
+<p><strong>Goal</strong>: Customer tips 2+ staff in one transaction
+through the business payment method.</p>
+<p><strong>Public flow</strong></p>
+<pre class="http"><code>GET  /api/v1/touch/{businessSlug}/{touchPointSlug}?sessionId={uuid}
+GET  /api/v1/public/businesses/{businessId}/payment-methods
+POST /api/v1/tips/multi-staff
+PATCH /api/v1/tips/{tipId}/confirm
+POST /api/v1/touch/review</code></pre>
+<p><strong>Business rules</strong></p>
+<ul>
+<li>Customer must select at least 2 distinct staff members.</li>
+<li>Each item amount must be at least <code>$1.00</code>.</li>
+<li>Total amount must not exceed <code>$500.00</code>.</li>
+<li>Business payment method must be active and configured.</li>
+<li>Backend uses transaction rollback if any validation fails.</li>
+</ul>
+<p><strong>Example request</strong></p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;businessId&quot;</span><span class="fu">:</span> <span class="st">&quot;guid&quot;</span><span class="fu">,</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;touchPointId&quot;</span><span class="fu">:</span> <span class="st">&quot;guid&quot;</span><span class="fu">,</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;businessPaymentMethodId&quot;</span><span class="fu">:</span> <span class="st">&quot;guid&quot;</span><span class="fu">,</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;tipItems&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;staffProfileId&quot;</span><span class="fu">:</span> <span class="st">&quot;guid-linh&quot;</span><span class="fu">,</span> <span class="dt">&quot;amount&quot;</span><span class="fu">:</span> <span class="fl">15.00</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;staffProfileId&quot;</span><span class="fu">:</span> <span class="st">&quot;guid-maria&quot;</span><span class="fu">,</span> <span class="dt">&quot;amount&quot;</span><span class="fu">:</span> <span class="fl">10.00</span> <span class="fu">}</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<hr />
+</section>
+<section id="customer-skip-tip---review-only" class="level3">
+<h3>4.8 Customer Skip Tip - Review Only</h3>
+<p><strong>Goal</strong>: Customer skips tip but still leaves a
+review.</p>
+<p><strong>Flow</strong></p>
+<pre class="http"><code>GET  /api/v1/touch/{businessSlug}/{touchPointSlug}?sessionId={uuid}
+POST /api/v1/touch/tip/skip
+POST /api/v1/touch/review</code></pre>
+<p><strong>Behavior</strong></p>
+<ul>
+<li>Creates a skipped tip record for analytics.</li>
+<li>Review still routes based on rating.</li>
+</ul>
+<hr />
+</section>
+<section id="payment-method-management" class="level3">
+<h3>4.9 Payment Method Management</h3>
+<section id="staff-payment-methods" class="level4">
+<h4>Staff payment methods</h4>
+<p>Used when customers tip a specific staff member directly.</p>
+<pre class="http"><code>GET   /api/v1/staff/payment-methods
+PUT   /api/v1/staff/payment-methods/{id}
+PATCH /api/v1/staff/payment-methods/{id}/toggle</code></pre>
+<p><strong>Supported values</strong></p>
+<ul>
+<li>Zelle</li>
+<li>BankWire</li>
+<li>PayPal</li>
+<li>Venmo</li>
+<li>CashApp</li>
+<li>AppleCash</li>
+<li>VlinkPay</li>
+</ul>
+</section>
+<section id="business-payment-methods" class="level4">
+<h4>Business payment methods</h4>
+<p>Used for multi-staff tip where customer pays the business, then
+business distributes to staff.</p>
+<pre class="http"><code>GET   /api/v1/merchant/payment-methods
+PUT   /api/v1/merchant/payment-methods/{id}
+PATCH /api/v1/merchant/payment-methods/{id}/toggle</code></pre>
+<p><strong>Special rule</strong></p>
+<ul>
+<li><code>VlinkPay</code> method requires KYC/KYB approval before it can
+be toggled active.</li>
+</ul>
+<hr />
+</section>
+</section>
+<section id="merchant-dashboard" class="level3">
+<h3>4.10 Merchant Dashboard</h3>
+<p><strong>Screens / tabs</strong></p>
+<ul>
+<li>Overview</li>
+<li>Staff Performance</li>
+<li>Touch Point Performance</li>
+<li>Reviews / Private Feedback Inbox</li>
+</ul>
+<p><strong>Core API</strong></p>
+<table>
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 40%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Action</th>
+<th style="text-align: right;">Method</th>
+<th>Endpoint</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Overview metrics</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/merchant/dashboard/overview</code></td>
+</tr>
+<tr class="even">
+<td>Reviews list</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/merchant/dashboard/reviews</code></td>
+</tr>
+<tr class="odd">
+<td>Resolve review</td>
+<td style="text-align: right;">PUT</td>
+<td><code>/api/v1/merchant/dashboard/reviews/{id}/resolve</code></td>
+</tr>
+<tr class="even">
+<td>Staff metrics</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/merchant/dashboard/staff</code></td>
+</tr>
+<tr class="odd">
+<td>Touch point metrics</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/merchant/dashboard/touchpoints</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Dashboard metrics</strong></p>
+<ul>
+<li>Total tip amount</li>
+<li>Tip count</li>
+<li>Average tip amount</li>
+<li>Total scans</li>
+<li>Conversion rate</li>
+<li>Total reviews</li>
+<li>Average rating</li>
+<li>Public review count</li>
+<li>Private review count</li>
+<li>Google click count</li>
+<li>Yelp click count</li>
+</ul>
+<hr />
+</section>
+<section id="image-upload" class="level3">
+<h3>4.11 Image Upload</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 30%" />
+<col style="width: 23%" />
+<col style="width: 23%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Use Case</th>
+<th style="text-align: right;">Method</th>
+<th>Endpoint</th>
+<th>Auth</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Authenticated upload</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/images/upload</code></td>
+<td>Bearer token</td>
+</tr>
+<tr class="even">
+<td>Public staff invite upload</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/images/public/upload</code></td>
+<td>Anonymous</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Constraints</strong></p>
+<ul>
+<li><code>multipart/form-data</code></li>
+<li>Field name: <code>file</code></li>
+<li>Accepted: PNG, JPEG, WebP</li>
+<li>Max size: 10 MB</li>
+</ul>
+<hr />
+</section>
+<section id="notifications" class="level3">
+<h3>4.12 Notifications</h3>
+<p><strong>Core API</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th>Action</th>
+<th style="text-align: right;">Method</th>
+<th>Endpoint</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>List notifications</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/notifications</code></td>
+</tr>
+<tr class="even">
+<td>Unread count</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/notifications/unread-count</code></td>
+</tr>
+<tr class="odd">
+<td>Mark one read</td>
+<td style="text-align: right;">PUT</td>
+<td><code>/api/v1/notifications/{id}/read</code></td>
+</tr>
+<tr class="even">
+<td>Mark all read</td>
+<td style="text-align: right;">PUT</td>
+<td><code>/api/v1/notifications/read-all</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+</section>
+</section>
+<section id="dto-cheat-sheet" class="level2">
+<h2>5. DTO Cheat Sheet</h2>
+<section id="auth-response" class="level3">
+<h3>Auth response</h3>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode ts"><code class="sourceCode typescript"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">interface</span> AuthTokenResponse {</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  accessToken<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  refreshToken<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  tokenType<span class="op">:</span> <span class="st">&#39;Bearer&#39;</span><span class="op">;</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  expiresIn<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</section>
+<section id="business" class="level3">
+<h3>Business</h3>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode ts"><code class="sourceCode typescript"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">interface</span> BusinessDto {</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  id<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  name<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  slug<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  businessType<span class="op">?:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  address<span class="op">?:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  city<span class="op">?:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  state<span class="op">?:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>  phone<span class="op">?:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  logoUrl<span class="op">?:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  description<span class="op">?:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>  isPublic<span class="op">:</span> <span class="dt">boolean</span><span class="op">;</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>  onboardingStep<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>  googleReviewUrl<span class="op">?:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>  yelpUrl<span class="op">?:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>  facebookUrl<span class="op">?:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>  feedbackEmail<span class="op">?:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>  subscription<span class="op">?:</span> {</span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>    plan<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>    status<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>    trialEndsAt<span class="op">?:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</section>
+<section id="staff-list-item" class="level3">
+<h3>Staff list item</h3>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode ts"><code class="sourceCode typescript"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">interface</span> MerchantStaffItemDto {</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  id<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  itemType<span class="op">:</span> <span class="st">&#39;link&#39;</span> <span class="op">|</span> <span class="st">&#39;invite&#39;</span><span class="op">;</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  staffProfileId<span class="op">?:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  displayName<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  photoUrl<span class="op">?:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  position<span class="op">?:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  status<span class="op">:</span> <span class="st">&#39;Pending&#39;</span> <span class="op">|</span> <span class="st">&#39;Active&#39;</span> <span class="op">|</span> <span class="st">&#39;Inactive&#39;</span> <span class="op">|</span> <span class="st">&#39;Rejected&#39;</span> <span class="op">|</span> <span class="st">&#39;Accepted&#39;</span> <span class="op">|</span> <span class="st">&#39;Expired&#39;</span> <span class="op">|</span> <span class="st">&#39;Cancelled&#39;</span><span class="op">;</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>  sortOrder<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  isProfileComplete<span class="op">:</span> <span class="dt">boolean</span><span class="op">;</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>  tipCount<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>  averageRating<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</section>
+<section id="touch-page" class="level3">
+<h3>Touch page</h3>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode ts"><code class="sourceCode typescript"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">interface</span> TouchPageDto {</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  business<span class="op">:</span> {</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    name<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    logoUrl<span class="op">?:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    description<span class="op">?:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  touchPoint<span class="op">:</span> {</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    id<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    name<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    type<span class="op">:</span> <span class="st">&#39;Table&#39;</span> <span class="op">|</span> <span class="st">&#39;FrontDesk&#39;</span> <span class="op">|</span> <span class="st">&#39;Receipt&#39;</span> <span class="op">|</span> <span class="st">&#39;StaffCard&#39;</span><span class="op">;</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    assignedStaffProfileId<span class="op">?:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>  staff<span class="op">:</span> TouchStaffDto[]<span class="op">;</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">interface</span> TouchStaffDto {</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>  id<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>  displayName<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>  photoUrl<span class="op">?:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>  position<span class="op">?:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>  bio<span class="op">?:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>  availablePaymentMethods<span class="op">:</span> <span class="dt">string</span>[]<span class="op">;</span></span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</section>
+<section id="payment-method" class="level3">
+<h3>Payment method</h3>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode ts"><code class="sourceCode typescript"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">interface</span> PaymentMethodDto {</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  id<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  type<span class="op">:</span> <span class="st">&#39;Zelle&#39;</span> <span class="op">|</span> <span class="st">&#39;BankWire&#39;</span> <span class="op">|</span> <span class="st">&#39;PayPal&#39;</span> <span class="op">|</span> <span class="st">&#39;Venmo&#39;</span> <span class="op">|</span> <span class="st">&#39;CashApp&#39;</span> <span class="op">|</span> <span class="st">&#39;AppleCash&#39;</span> <span class="op">|</span> <span class="st">&#39;VlinkPay&#39;</span><span class="op">;</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  accountInfo<span class="op">?:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  imageUrl<span class="op">?:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  isActive<span class="op">:</span> <span class="dt">boolean</span><span class="op">;</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  isConfigured<span class="op">:</span> <span class="dt">boolean</span><span class="op">;</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  businessKybStatus<span class="op">?:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+</section>
+<section id="standard-error" class="level3">
+<h3>Standard error</h3>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode ts"><code class="sourceCode typescript"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">interface</span> ApiErrorResponse {</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  type<span class="op">?:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  title<span class="op">?:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  status<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  errorCode<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  errors<span class="op">?:</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> <span class="dt">string</span>[]<span class="op">&gt;;</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  retryAfter<span class="op">?:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<hr />
+</section>
+</section>
+<section id="enums" class="level2">
+<h2>6. Enums</h2>
+<section id="paymentmethod" class="level3">
+<h3>PaymentMethod</h3>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">Value</th>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+<td>CashApp</td>
+<td>Cash App cashtag</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1</td>
+<td>Venmo</td>
+<td>Venmo handle</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2</td>
+<td>Zelle</td>
+<td>Phone or email, no redirect</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">3</td>
+<td>PayPal</td>
+<td>PayPal.me link</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">4</td>
+<td>Other</td>
+<td>Skipped tip, internal only</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">5</td>
+<td>AppleCash</td>
+<td>Phone, no redirect</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="payoutmethodtype" class="level3">
+<h3>PayoutMethodType</h3>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">Value</th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td>Zelle</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td>BankWire</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td>PayPal</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td>Venmo</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5</td>
+<td>CashApp</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">6</td>
+<td>AppleCash</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">7</td>
+<td>VlinkPay</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="touchpointtype" class="level3">
+<h3>TouchPointType</h3>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">Value</th>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+<td>Table</td>
+<td>Shows all active staff</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1</td>
+<td>FrontDesk</td>
+<td>Shows all active staff</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2</td>
+<td>Receipt</td>
+<td>Shows all active staff</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">3</td>
+<td>StaffCard</td>
+<td>Shows assigned staff only</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="tipstatus" class="level3">
+<h3>TipStatus</h3>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">Value</th>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+<td>Initiated</td>
+<td>Customer clicked Pay; payment not confirmed</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1</td>
+<td>Confirmed</td>
+<td>Customer confirmed payment</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2</td>
+<td>Skipped</td>
+<td>Customer skipped tip</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="reviewroutingtype" class="level3">
+<h3>ReviewRoutingType</h3>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">Value</th>
+<th>Name</th>
+<th>Threshold</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+<td>Public</td>
+<td>Rating 4-5</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1</td>
+<td>Private</td>
+<td>Rating 1-3</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2</td>
+<td>Skipped</td>
+<td>Customer skipped review</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="businessstafflinkstatus" class="level3">
+<h3>BusinessStaffLinkStatus</h3>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">Value</th>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+<td>Pending</td>
+<td>Invite/link request sent</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1</td>
+<td>Active</td>
+<td>Staff linked and visible</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2</td>
+<td>Inactive</td>
+<td>Hidden, data preserved</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">3</td>
+<td>Rejected</td>
+<td>Staff declined link request</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="staffinvitestatus" class="level3">
+<h3>StaffInviteStatus</h3>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">Value</th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+<td>Pending</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1</td>
+<td>Accepted</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2</td>
+<td>Expired</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">3</td>
+<td>Cancelled</td>
+</tr>
+</tbody>
+</table>
+<hr />
+</section>
+</section>
+<section id="api-endpoint-map-for-coding-agent" class="level2">
+<h2>7. API Endpoint Map for Coding Agent</h2>
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 25%" />
+<col style="width: 18%" />
+<col style="width: 18%" />
+<col style="width: 18%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Module</th>
+<th style="text-align: right;">Method</th>
+<th>Endpoint</th>
+<th>Auth</th>
+<th>Primary UI</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Authentication</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/authentication/signin</code></td>
+<td>Public</td>
+<td>Sign In</td>
+</tr>
+<tr class="even">
+<td>Authentication</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/authentication/signup</code></td>
+<td>Public</td>
+<td>Sign Up</td>
+</tr>
+<tr class="odd">
+<td>Authentication</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/authentication/refresh-token</code></td>
+<td>Public</td>
+<td>Token Interceptor</td>
+</tr>
+<tr class="even">
+<td>Authentication</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/authentication/forgot-password</code></td>
+<td>Public</td>
+<td>Forgot Password</td>
+</tr>
+<tr class="odd">
+<td>Authentication</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/authentication/reset-password</code></td>
+<td>Public</td>
+<td>Reset Password</td>
+</tr>
+<tr class="even">
+<td>Authentication</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/authentication/send-verification-email</code></td>
+<td>Public</td>
+<td>Verify Email</td>
+</tr>
+<tr class="odd">
+<td>Authentication</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/authentication/verify-email</code></td>
+<td>Public</td>
+<td>Verify Email</td>
+</tr>
+<tr class="even">
+<td>User Profile</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/userprofile/me</code></td>
+<td>Bearer</td>
+<td>Account/Profile</td>
+</tr>
+<tr class="odd">
+<td>User Profile</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/userprofile/verified-status</code></td>
+<td>Bearer</td>
+<td>Account/Profile</td>
+</tr>
+<tr class="even">
+<td>User Profile</td>
+<td style="text-align: right;">PUT</td>
+<td><code>/api/v1/userprofile/update</code></td>
+<td>Bearer</td>
+<td>Edit Profile</td>
+</tr>
+<tr class="odd">
+<td>Merchant Business</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/merchant/business</code></td>
+<td>Merchant</td>
+<td>Onboarding Step 1</td>
+</tr>
+<tr class="even">
+<td>Merchant Business</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/merchant/business</code></td>
+<td>Merchant</td>
+<td>Business Settings</td>
+</tr>
+<tr class="odd">
+<td>Merchant Business</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/merchant/business/check-slug</code></td>
+<td>Merchant</td>
+<td>Slug Input</td>
+</tr>
+<tr class="even">
+<td>Merchant Business</td>
+<td style="text-align: right;">PUT</td>
+<td><code>/api/v1/merchant/business/review-links</code></td>
+<td>Merchant</td>
+<td>Onboarding Step 2</td>
+</tr>
+<tr class="odd">
+<td>Merchant Business</td>
+<td style="text-align: right;">PUT</td>
+<td><code>/api/v1/merchant/business/logo</code></td>
+<td>Merchant</td>
+<td>Logo Upload</td>
+</tr>
+<tr class="even">
+<td>Merchant Business</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/merchant/business/complete-onboarding</code></td>
+<td>Merchant</td>
+<td>Final Onboarding</td>
+</tr>
+<tr class="odd">
+<td>Staff Management</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/merchant/staff/invite</code></td>
+<td>Owner</td>
+<td>Staff Invite</td>
+</tr>
+<tr class="even">
+<td>Staff Management</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/merchant/staff</code></td>
+<td>Owner</td>
+<td>Staff List</td>
+</tr>
+<tr class="odd">
+<td>Staff Management</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/merchant/staff/search</code></td>
+<td>Owner</td>
+<td>Link Existing Staff</td>
+</tr>
+<tr class="even">
+<td>Staff Setup</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/staff/invite/{token}</code></td>
+<td>Public</td>
+<td>Invite Landing</td>
+</tr>
+<tr class="odd">
+<td>Staff Setup</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/staff/invite/{token}/accept</code></td>
+<td>Public</td>
+<td>Accept Invite</td>
+</tr>
+<tr class="even">
+<td>Staff Setup</td>
+<td style="text-align: right;">PUT</td>
+<td><code>/api/v1/staff/profile</code></td>
+<td>Staff</td>
+<td>Staff Profile</td>
+</tr>
+<tr class="odd">
+<td>Touch Points</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/merchant/touchpoints</code></td>
+<td>Merchant</td>
+<td>Create QR</td>
+</tr>
+<tr class="even">
+<td>Touch Points</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/merchant/touchpoints</code></td>
+<td>Merchant</td>
+<td>QR List</td>
+</tr>
+<tr class="odd">
+<td>Touch Points</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/merchant/touchpoints/{id}/download</code></td>
+<td>Merchant</td>
+<td>Download QR</td>
+</tr>
+<tr class="even">
+<td>Staff Payment</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/staff/payment-methods</code></td>
+<td>Staff</td>
+<td>Staff Payment Settings</td>
+</tr>
+<tr class="odd">
+<td>Staff Payment</td>
+<td style="text-align: right;">PUT</td>
+<td><code>/api/v1/staff/payment-methods/{id}</code></td>
+<td>Staff</td>
+<td>Edit Payment Method</td>
+</tr>
+<tr class="even">
+<td>Staff Payment</td>
+<td style="text-align: right;">PATCH</td>
+<td><code>/api/v1/staff/payment-methods/{id}/toggle</code></td>
+<td>Staff</td>
+<td>Toggle Payment Method</td>
+</tr>
+<tr class="odd">
+<td>Merchant Payment</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/merchant/payment-methods</code></td>
+<td>Merchant</td>
+<td>Business Payment Settings</td>
+</tr>
+<tr class="even">
+<td>Merchant Payment</td>
+<td style="text-align: right;">PUT</td>
+<td><code>/api/v1/merchant/payment-methods/{id}</code></td>
+<td>Merchant</td>
+<td>Edit Business Payment</td>
+</tr>
+<tr class="odd">
+<td>Merchant Payment</td>
+<td style="text-align: right;">PATCH</td>
+<td><code>/api/v1/merchant/payment-methods/{id}/toggle</code></td>
+<td>Merchant</td>
+<td>Toggle Business Payment</td>
+</tr>
+<tr class="even">
+<td>Customer Touch</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/touch/{businessSlug}/{touchPointSlug}</code></td>
+<td>Public</td>
+<td>Touch Page</td>
+</tr>
+<tr class="odd">
+<td>Customer Touch</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/touch/payment-link</code></td>
+<td>Public</td>
+<td>Payment Redirect</td>
+</tr>
+<tr class="even">
+<td>Customer Touch</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/touch/tip</code></td>
+<td>Public</td>
+<td>Single Tip</td>
+</tr>
+<tr class="odd">
+<td>Customer Touch</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/touch/tip/skip</code></td>
+<td>Public</td>
+<td>Skip Tip</td>
+</tr>
+<tr class="even">
+<td>Customer Touch</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/touch/tip/{tipId}/confirm</code></td>
+<td>Public</td>
+<td>Confirm Tip</td>
+</tr>
+<tr class="odd">
+<td>Customer Touch</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/touch/review</code></td>
+<td>Public</td>
+<td>Submit Review</td>
+</tr>
+<tr class="even">
+<td>Multi Staff Tip</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/tips/multi-staff</code></td>
+<td>Public</td>
+<td>Multi Staff Tip</td>
+</tr>
+<tr class="odd">
+<td>Multi Staff Tip</td>
+<td style="text-align: right;">PATCH</td>
+<td><code>/api/v1/tips/{id}/confirm</code></td>
+<td>Public</td>
+<td>Confirm Multi Tip</td>
+</tr>
+<tr class="even">
+<td>Public Business</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/public/businesses/{businessId}/payment-methods</code></td>
+<td>Public</td>
+<td>Multi Tip Payment Method</td>
+</tr>
+<tr class="odd">
+<td>Dashboard</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/merchant/dashboard/overview</code></td>
+<td>Merchant</td>
+<td>Dashboard Overview</td>
+</tr>
+<tr class="even">
+<td>Dashboard</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/merchant/dashboard/reviews</code></td>
+<td>Merchant</td>
+<td>Review Inbox</td>
+</tr>
+<tr class="odd">
+<td>Dashboard</td>
+<td style="text-align: right;">PUT</td>
+<td><code>/api/v1/merchant/dashboard/reviews/{id}/resolve</code></td>
+<td>Merchant</td>
+<td>Resolve Feedback</td>
+</tr>
+<tr class="even">
+<td>Dashboard</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/merchant/dashboard/staff</code></td>
+<td>Merchant</td>
+<td>Staff Analytics</td>
+</tr>
+<tr class="odd">
+<td>Dashboard</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/merchant/dashboard/touchpoints</code></td>
+<td>Merchant</td>
+<td>QR Analytics</td>
+</tr>
+<tr class="even">
+<td>Images</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/images/upload</code></td>
+<td>Bearer</td>
+<td>Auth Image Upload</td>
+</tr>
+<tr class="odd">
+<td>Images</td>
+<td style="text-align: right;">POST</td>
+<td><code>/api/v1/images/public/upload</code></td>
+<td>Public</td>
+<td>Staff Invite Upload</td>
+</tr>
+<tr class="even">
+<td>Notifications</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/notifications</code></td>
+<td>Bearer</td>
+<td>Notification Center</td>
+</tr>
+<tr class="odd">
+<td>Notifications</td>
+<td style="text-align: right;">GET</td>
+<td><code>/api/v1/notifications/unread-count</code></td>
+<td>Bearer</td>
+<td>Header Badge</td>
+</tr>
+<tr class="even">
+<td>Notifications</td>
+<td style="text-align: right;">PUT</td>
+<td><code>/api/v1/notifications/{id}/read</code></td>
+<td>Bearer</td>
+<td>Mark Read</td>
+</tr>
+<tr class="odd">
+<td>Notifications</td>
+<td style="text-align: right;">PUT</td>
+<td><code>/api/v1/notifications/read-all</code></td>
+<td>Bearer</td>
+<td>Mark All Read</td>
+</tr>
+</tbody>
+</table>
+<hr />
+</section>
+<section id="recommended-frontend-architecture" class="level2">
+<h2>8. Recommended Frontend Architecture</h2>
+<pre class="text"><code>src/
+  app/
+    core/
+      api/
+        api-client.ts
+        auth.interceptor.ts
+        error.interceptor.ts
+      guards/
+        auth.guard.ts
+        merchant.guard.ts
+      models/
+        auth.models.ts
+        business.models.ts
+        staff.models.ts
+        touch.models.ts
+        payment.models.ts
+        dashboard.models.ts
+        error.models.ts
+    features/
+      auth/
+      merchant-onboarding/
+      merchant-staff/
+      merchant-touchpoints/
+      merchant-payment-methods/
+      merchant-dashboard/
+      staff-invite/
+      staff-profile/
+      staff-payment-methods/
+      public-touch/
+      notifications/</code></pre>
+<section id="service-layer-naming" class="level3">
+<h3>Service layer naming</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Service</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>AuthService</code></td>
+<td>Sign in, sign up, refresh token, verify email, password reset.</td>
+</tr>
+<tr class="even">
+<td><code>UserProfileService</code></td>
+<td>Current profile, verified status, profile update.</td>
+</tr>
+<tr class="odd">
+<td><code>MerchantBusinessService</code></td>
+<td>Create/read business, slug check, review links, logo, complete
+onboarding.</td>
+</tr>
+<tr class="even">
+<td><code>MerchantStaffService</code></td>
+<td>Invite, list, search, link, status, reorder, unlink.</td>
+</tr>
+<tr class="odd">
+<td><code>StaffSetupService</code></td>
+<td>Get invite token metadata, accept invite, update profile.</td>
+</tr>
+<tr class="even">
+<td><code>TouchPointService</code></td>
+<td>Create/list/download/delete QR touch points.</td>
+</tr>
+<tr class="odd">
+<td><code>StaffPaymentMethodService</code></td>
+<td>Staff method list/update/toggle.</td>
+</tr>
+<tr class="even">
+<td><code>MerchantPaymentMethodService</code></td>
+<td>Business method list/update/toggle.</td>
+</tr>
+<tr class="odd">
+<td><code>PublicTouchService</code></td>
+<td>Customer touch page, payment link, tip, skip, review.</td>
+</tr>
+<tr class="even">
+<td><code>MultiStaffTipService</code></td>
+<td>Create and confirm multi-staff tip.</td>
+</tr>
+<tr class="odd">
+<td><code>DashboardService</code></td>
+<td>Overview, staff, touchpoint, reviews.</td>
+</tr>
+<tr class="even">
+<td><code>ImageUploadService</code></td>
+<td>Auth and public image upload.</td>
+</tr>
+<tr class="odd">
+<td><code>NotificationService</code></td>
+<td>List, unread count, mark read.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+</section>
+</section>
+<section id="error-handling-rules" class="level2">
+<h2>9. Error Handling Rules</h2>
+<p>All <code>4xx</code> and <code>5xx</code> errors use a standard
+response shape.</p>
+<section id="single-error" class="level3">
+<h3>Single error</h3>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span><span class="fu">,</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;Not Found&quot;</span><span class="fu">,</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;status&quot;</span><span class="fu">:</span> <span class="dv">404</span><span class="fu">,</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;errorCode&quot;</span><span class="fu">:</span> <span class="st">&quot;BUSINESS_NOT_FOUND&quot;</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+</section>
+<section id="validation-error" class="level3">
+<h3>Validation error</h3>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;status&quot;</span><span class="fu">:</span> <span class="dv">400</span><span class="fu">,</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;errorCode&quot;</span><span class="fu">:</span> <span class="st">&quot;COMMON_VALIDATION_ERROR&quot;</span><span class="fu">,</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;errors&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;BUSINESS_NAME_REQUIRED&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;amount&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;TIP_AMOUNT_TOO_LOW&quot;</span><span class="ot">,</span> <span class="st">&quot;TIP_AMOUNT_TOO_HIGH&quot;</span><span class="ot">]</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+</section>
+<section id="rate-limit" class="level3">
+<h3>Rate limit</h3>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;status&quot;</span><span class="fu">:</span> <span class="dv">429</span><span class="fu">,</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;errorCode&quot;</span><span class="fu">:</span> <span class="st">&quot;COMMON_RATE_LIMIT_EXCEEDED&quot;</span><span class="fu">,</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;retryAfter&quot;</span><span class="fu">:</span> <span class="dv">60</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+</section>
+<section id="common-error-codes" class="level3">
+<h3>Common error codes</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Code</th>
+<th style="text-align: right;">HTTP</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>COMMON_VALIDATION_ERROR</code></td>
+<td style="text-align: right;">400</td>
+<td>Validation failed.</td>
+</tr>
+<tr class="even">
+<td><code>COMMON_NOT_FOUND</code></td>
+<td style="text-align: right;">404</td>
+<td>Generic not found.</td>
+</tr>
+<tr class="odd">
+<td><code>COMMON_UNAUTHORIZED</code></td>
+<td style="text-align: right;">401</td>
+<td>Missing or invalid token.</td>
+</tr>
+<tr class="even">
+<td><code>COMMON_FORBIDDEN</code></td>
+<td style="text-align: right;">403</td>
+<td>No permission.</td>
+</tr>
+<tr class="odd">
+<td><code>COMMON_RATE_LIMIT_EXCEEDED</code></td>
+<td style="text-align: right;">429</td>
+<td>Too many requests.</td>
+</tr>
+<tr class="even">
+<td><code>COMMON_INTERNAL_SERVER_ERROR</code></td>
+<td style="text-align: right;">500</td>
+<td>Unexpected server error.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+</section>
+</section>
+<section id="acceptance-criteria-for-ai-coding-agent" class="level2">
+<h2>10. Acceptance Criteria for AI Coding Agent</h2>
+<section id="authentication-1" class="level3">
+<h3>Authentication</h3>
+<ul>
+<li>User can sign up, verify email, sign in, and refresh token
+automatically.</li>
+<li>Expired access token triggers refresh-token flow exactly once.</li>
+<li>Expired refresh token redirects to Sign In.</li>
+</ul>
+</section>
+<section id="merchant-onboarding" class="level3">
+<h3>Merchant onboarding</h3>
+<ul>
+<li>Merchant can create business profile with slug validation.</li>
+<li>Logo upload supports PNG/JPEG/WebP up to 10 MB.</li>
+<li>Merchant can add review links.</li>
+<li>Merchant can invite staff and create QR touch points.</li>
+<li>Completing onboarding makes business public.</li>
+</ul>
+</section>
+<section id="staff-setup" class="level3">
+<h3>Staff setup</h3>
+<ul>
+<li>Staff can open invite token and see business invite info.</li>
+<li>Staff can upload photo and accept invite.</li>
+<li>Staff can configure and toggle payment method.</li>
+<li>Staff does not appear publicly until at least one method is active
+and configured.</li>
+</ul>
+</section>
+<section id="customer-touch" class="level3">
+<h3>Customer touch</h3>
+<ul>
+<li>Customer can load touch page anonymously from QR.</li>
+<li>Staff list never exposes raw payment account info.</li>
+<li>Single-staff tip supports deep links and copy-only methods.</li>
+<li>Multi-staff tip requires at least two staff and uses business
+payment methods.</li>
+<li>Customer can skip tip and still review.</li>
+<li>Review routes to public/private experience by rating.</li>
+</ul>
+</section>
+<section id="dashboard" class="level3">
+<h3>Dashboard</h3>
+<ul>
+<li>Merchant can view overview, staff metrics, QR metrics, and
+reviews.</li>
+<li>Merchant can filter private unresolved reviews and mark them
+resolved.</li>
+</ul>
+<hr />
+</section>
+</section>
+<section id="suggested-route-map" class="level2">
+<h2>11. Suggested Route Map</h2>
+<pre class="text"><code>/auth/sign-in
+/auth/sign-up
+/auth/verify-email
+/auth/forgot-password
+/auth/reset-password
+
+/merchant/onboarding
+/merchant/business
+/merchant/staff
+/merchant/touchpoints
+/merchant/payment-methods
+/merchant/dashboard
+/merchant/notifications
+
+/staff/invite/:token
+/staff/profile
+/staff/payment-methods
+
+/touch/:businessSlug/:touchPointSlug
+/touch/:businessSlug/:touchPointSlug/pay
+/touch/:businessSlug/:touchPointSlug/confirm
+/touch/:businessSlug/:touchPointSlug/review</code></pre>
+<hr />
+</section>
+<section id="copywriting-notes-for-end-user-ui" class="level2">
+<h2>12. Copywriting Notes for End-user UI</h2>
+<p>Use simple wording. Avoid API terms in customer-facing screens.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Technical Term</th>
+<th>End-user Copy</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Touch Point</td>
+<td>QR Code / Location</td>
+</tr>
+<tr class="even">
+<td>BusinessPaymentMethod</td>
+<td>Business payment account</td>
+</tr>
+<tr class="odd">
+<td>StaffPaymentMethod</td>
+<td>Staff payment account</td>
+</tr>
+<tr class="even">
+<td>Confirm Tip</td>
+<td>I paid</td>
+</tr>
+<tr class="odd">
+<td>Skip Tip</td>
+<td>Skip tip</td>
+</tr>
+<tr class="even">
+<td>ReviewRoutingType.Public</td>
+<td>Share a public review</td>
+</tr>
+<tr class="odd">
+<td>ReviewRoutingType.Private</td>
+<td>Send private feedback</td>
+</tr>
+<tr class="even">
+<td>isConfigured</td>
+<td>Account added</td>
+</tr>
+<tr class="odd">
+<td>isActive</td>
+<td>Enabled</td>
+</tr>
+<tr class="even">
+<td>StaffCard</td>
+<td>Staff QR card</td>
+</tr>
+</tbody>
+</table>
+<hr />
+</section>
+<section id="implementation-warnings" class="level2">
+<h2>13. Implementation Warnings</h2>
+<ul>
+<li>Do not call protected merchant endpoints before token is
+available.</li>
+<li>Do not assume customer touch page has staff; it may return one staff
+for <code>StaffCard</code> or empty if no staff are
+active/configured.</li>
+<li>Do not show Google/Yelp buttons if no review links are
+configured.</li>
+<li>Do not toggle <code>VlinkPay</code> payment method active unless
+KYC/KYB is approved.</li>
+<li>Do not show raw staff payment <code>accountInfo</code> to merchant
+or customer except through <code>/touch/payment-link</code>
+behavior.</li>
+<li>For Zelle and Apple Cash, build copy UI instead of redirecting.</li>
+<li>For multi-staff tips, use business payment methods, not staff
+payment methods.</li>
+<li>For touch point delete, treat as soft delete; analytics history
+remains.</li>
+</ul>
+<hr />
+</section>
+<section id="minimal-mvp-build-order" class="level2">
+<h2>14. Minimal MVP Build Order</h2>
+<ol type="1">
+<li>Auth + token refresh</li>
+<li>Merchant onboarding business info</li>
+<li>Staff invite + staff setup</li>
+<li>Staff payment methods</li>
+<li>Touch point QR creation/list/download</li>
+<li>Public customer touch page - single-staff tip</li>
+<li>Review submission + public/private routing</li>
+<li>Merchant dashboard overview</li>
+<li>Multi-staff tip</li>
+<li>Notifications</li>
+</ol>
+</section>
+</section>
+
+    </main>
+  </div>
+</body>
+</html>
