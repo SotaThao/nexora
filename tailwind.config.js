@@ -30,24 +30,6 @@ export default {
         floxElectricViolet: '#711aff',
         floxVividRose: '#ff4fae',
 
-        // Extended brand tones
-        nexoraElectric:    '#2B59FF',  /* Electric blue — badges, role chips */
-        nexoraElectricMid: '#5A5CFF',  /* Electric blue mid — gradient midpoint */
-        nexoraViolet:      '#8E4DF8',  /* Violet — gradient endpoint */
-        nexoraTealAlt:     '#0da59a',  /* Teal — link / success accent */
-        nexoraDangerDark:  '#D32F2F',  /* Dark red — danger headings */
-
-        // Payment provider brand colors (external brand compliance — do not change)
-        walletZelle:        '#7414CA',  /* Zelle purple */
-        walletZelleDark:    '#5f10a6',  /* Zelle hover */
-        walletPaypal:       '#003087',  /* PayPal navy */
-        walletPaypalDark:   '#002466',  /* PayPal hover */
-        walletVenmo:        '#008CFF',  /* Venmo blue */
-        walletVenmoDark:    '#007ad6',  /* Venmo hover */
-        walletCashapp:      '#00D632',  /* Cash App green */
-        walletCashappDark:  '#00b52a',  /* Cash App hover */
-        walletYelp:         '#D32323',  /* Yelp red */
-
         // Nexora Touch Admin semantic tokens
         nexoraCanvas: '#F7F9FC',
         nexoraSurface: '#FFFFFF',

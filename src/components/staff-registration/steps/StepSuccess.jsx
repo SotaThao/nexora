@@ -33,10 +33,10 @@ export default function StepSuccess({
       <div className="max-w-md mx-auto bg-nexoraSurfaceMuted border border-nexoraBorder rounded-xl p-4 text-left text-xs space-y-3">
         <div className="flex items-center justify-between border-b border-nexoraBorder pb-1.5">
           <span className="font-extrabold text-nexoraText uppercase text-[9px] tracking-wider flex items-center gap-1.5 font-sans">
-            <Building className="h-3.5 w-3.5 text-nexoraWarning" />
+            <Building className="h-3.5 w-3.5 text-[#F59E0B]" />
             {t('staff_invite.linked_businesses') || 'Linked Businesses'}
           </span>
-          <span className="px-1.5 py-0.5 rounded font-extrabold text-[8px] uppercase font-sans bg-nexoraWarning/10 text-nexoraWarning">
+          <span className="px-1.5 py-0.5 rounded font-extrabold text-[8px] uppercase font-sans bg-[#F59E0B]/10 text-[#F59E0B]">
             {currentLanguage === 'vi' ? 'CHỜ DUYỆT' : 'PENDING'}
           </span>
         </div>
@@ -46,8 +46,8 @@ export default function StepSuccess({
             <strong className="text-nexoraText block font-sans">{inviteData?.biz || 'Golden Glow Nail Spa'}</strong>
             <span className="text-[9px] text-nexoraSubtle mt-0.5 block">Joined: Today • Role: {position}</span>
           </div>
-          <span className="text-xs font-bold text-nexoraWarning flex items-center gap-1 font-sans">
-            <AlertCircle className="h-3.5 w-3.5 text-nexoraWarning animate-pulse" /> {currentLanguage === 'vi' ? 'Chờ duyệt' : 'Pending Approval'}
+          <span className="text-xs font-bold text-[#F59E0B] flex items-center gap-1 font-sans">
+            <AlertCircle className="h-3.5 w-3.5 text-[#F59E0B] animate-pulse" /> {currentLanguage === 'vi' ? 'Chờ duyệt' : 'Pending Approval'}
           </span>
         </div>
       </div>

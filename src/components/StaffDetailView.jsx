@@ -16,7 +16,6 @@ import {
   Mail
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
-import { logger } from '../utils/logger'
 
 // Helper to format values as USD currency
 function formatCurrency(value) {
@@ -308,7 +307,7 @@ export default function StaffDetailView({
       setCopiedWallet(walletKey)
       setTimeout(() => setCopiedWallet(null), 1800)
     }).catch(err => {
-      logger.error('Failed to copy:', err)
+      console.error('Failed to copy:', err)
     })
   }
 

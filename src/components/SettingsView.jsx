@@ -3,7 +3,6 @@ import { QrCode, Copy, Check, X, Download } from 'lucide-react'
 import useSettingsForm from './settings/hooks/useSettingsForm'
 import ProfileTab from './settings/tabs/ProfileTab'
 import KybTab from './settings/tabs/KybTab'
-import { downloadQrCode } from '../utils/qrUtils'
 
 export default function SettingsView({
   setupData,
@@ -35,9 +34,19 @@ export default function SettingsView({
 
   const handleSaveQr = async (qrUrl) => {
     try {
-      await downloadQrCode(qrUrl, `referral-qr-${selectedLeg}.png`)
+      const response = await fetch(qrUrl)
+      const blob = await response.blob()
+      const blobUrl = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.download = `referral-qr-${selectedLeg}.png`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(blobUrl)
       form.showToast(form.currentLanguage === 'vi' ? 'Đã tải xuống mã QR!' : 'QR code downloaded!')
-    } catch {
+    } catch (error) {
+      console.error('Failed to download QR code', error)
       window.open(qrUrl, '_blank')
     }
   }
@@ -297,14 +306,14 @@ export default function SettingsView({
                   />
                   <span className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
                     selectedLeg === 'left' 
-                      ? 'border-nexoraWarning bg-nexoraWarning/10' 
+                      ? 'border-[#f0b90b] bg-[#f0b90b]/10' 
                       : 'border-slate-300 bg-white'
                   }`}>
                     {selectedLeg === 'left' && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-nexoraWarning" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#f0b90b]" />
                     )}
                   </span>
-                  <span className={selectedLeg === 'left' ? 'text-nexoraWarning font-black' : 'text-slate-500'}>
+                  <span className={selectedLeg === 'left' ? 'text-[#e6ad00] font-black' : 'text-slate-500'}>
                     {form.currentLanguage === 'vi' ? 'Nhánh Trái' : 'Left Leg'}
                   </span>
                 </label>
@@ -320,14 +329,14 @@ export default function SettingsView({
                   />
                   <span className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
                     selectedLeg === 'right' 
-                      ? 'border-nexoraWarning bg-nexoraWarning/10' 
+                      ? 'border-[#f0b90b] bg-[#f0b90b]/10' 
                       : 'border-slate-300 bg-white'
                   }`}>
                     {selectedLeg === 'right' && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-nexoraWarning" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#f0b90b]" />
                     )}
                   </span>
-                  <span className={selectedLeg === 'right' ? 'text-nexoraWarning font-black' : 'text-slate-500'}>
+                  <span className={selectedLeg === 'right' ? 'text-[#e6ad00] font-black' : 'text-slate-500'}>
                     {form.currentLanguage === 'vi' ? 'Nhánh Phải' : 'Right Leg'}
                   </span>
                 </label>
@@ -355,7 +364,7 @@ export default function SettingsView({
                   `https://nexora.com/?ref=${form.profile.referralId || '640B5FBF'}&leg=${selectedLeg}`
                 )}`
               )}
-              className="w-full bg-nexoraWarning hover:bg-nexoraWarning text-black font-extrabold text-xs uppercase tracking-wider py-3.5 rounded-xl transition active:scale-[0.98] shadow-md shadow-amber-500/10"
+              className="w-full bg-[#f0b90b] hover:bg-[#d4a30a] text-black font-extrabold text-xs uppercase tracking-wider py-3.5 rounded-xl transition active:scale-[0.98] shadow-md shadow-amber-500/10"
             >
               Save QR
             </button>

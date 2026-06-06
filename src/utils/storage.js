@@ -1,5 +1,4 @@
 import { isSupabaseConfigured, supabaseSync } from './supabase'
-import { logger } from './logger'
 
 const isTest = typeof process !== 'undefined' && (process.env.NODE_ENV === 'test' || process.env.VITEST)
 
@@ -90,12 +89,12 @@ export const initStorage = () => {
     }
     // Set the new prefix key
     localStorage.setItem('nexora_active_storage_prefix', STORAGE_PREFIX)
-    logger.info(`Nexora Storage Version upgraded to: ${STORAGE_PREFIX}. Cleared legacy data.`)
+    console.log(`Nexora Storage Version upgraded to: ${STORAGE_PREFIX}. Cleared legacy data.`)
   }
 
   // If Supabase is active, run the migration, pulling, and subscribing logic
   if (isSupabaseConfigured && !isTest) {
-    logger.info('Supabase detected! Migrating local storage dynamic data to database and clearing browser storage...')
+    console.log('Supabase detected! Migrating local storage dynamic data to database and clearing browser storage...')
     
     // 1. Perform Migration for each dynamic key
     DYNAMIC_KEYS.forEach(key => {

@@ -1,32 +1,17 @@
 import React, { useState, useEffect } from 'react'
 import LoginScreen from './app/LoginScreen'
 import AppRouter from './app/AppRouter'
+import { MOCK_SSO_KYB_PROFILE, MOCK_SSO_NO_KYB_EMAIL } from './app/mockSso'
 import { useTranslation } from './contexts/LanguageContext'
-import { initStorage } from './utils/storage'
-import { logger } from './utils/logger'
+import { storage, initStorage } from './utils/storage'
 import { useNotification } from './contexts/NotificationContext'
-import { useStorageEventBridge } from './data/storageEventBridge'
-import { useAuth } from './auth/useAuth'
-import { usePendingAccounts, useReplaceAllPendingAccounts } from './data/hooks/usePendingAccounts'
-import { useClearMerchantSetup, useMerchantSetup, useSaveMerchantSetup } from './data/hooks/useMerchantSetup'
-import { useClearProfileSettings } from './data/hooks/useProfileSettings'
-import { isDemoToolsEnabled } from './app/demoTools'
+
+const localStorage = storage
+const sessionStorage = storage
 
 export default function App() {
-  // Mount the storage-event → query-cache bridge once at app root (Phase 3 / D4).
-  // Must be called inside QueryClientProvider (see src/main.jsx).
-  useStorageEventBridge()
-
   const { currentLanguage, setLanguage, t } = useTranslation()
   const { showConfirm } = useNotification()
-  const { session, status: authStatus, login, logout } = useAuth()
-  const pendingAccountsQuery = usePendingAccounts()
-  const replaceAllPendingAccountsMutation = useReplaceAllPendingAccounts()
-  const merchantSetupQuery = useMerchantSetup()
-  const saveMerchantSetupMutation = useSaveMerchantSetup()
-  const clearMerchantSetupMutation = useClearMerchantSetup()
-  const clearProfileSettingsMutation = useClearProfileSettings()
-
   const [view, setView] = useState('login') // 'login' | 'register-wizard' | 'onboarding' | 'dashboard' | 'customer' | 'staff-portal' | 'staff-dashboard'
   const [userRole, setUserRole] = useState('owner') // 'owner' | 'staff'
   const [currentStaffId, setCurrentStaffId] = useState(null)
@@ -46,6 +31,9 @@ export default function App() {
   // Email passed from SSO redirect to RegisterWizard
   const [registerEmail, setRegisterEmail] = useState('')
 
+  // List of pending accounts from localStorage to display in simulation controls
+  const [pendingAccounts, setPendingAccounts] = useState([])
+
   // KYB Verification deep linking state and modal control
   const [showKybModal, setShowKybModal] = useState(false)
   const [initialDashboardMenu, setInitialDashboardMenu] = useState('overview')
@@ -55,9 +43,6 @@ export default function App() {
   const [staffInviteData, setStaffInviteData] = useState(null)
   const [simulationNotification, setSimulationNotification] = useState(null)
   const [loggedInStaffId, setLoggedInStaffId] = useState(null)
-
-  // Derive pendingAccounts list for simulation panel from TanStack Query
-  const pendingAccounts = pendingAccountsQuery.data ?? []
 
   // Load setup data or customer flow on mount
   useEffect(() => {
@@ -81,7 +66,40 @@ export default function App() {
       return
     }
 
-    if (!isDemoToolsEnabled) return
+    const savedSetup = localStorage.getItem('nexora_merchant_setup')
+    if (savedSetup) {
+      try {
+        const parsed = JSON.parse(savedSetup)
+        setSetupData(parsed)
+        sessionStorage.setItem('nexora_merchant_setup', savedSetup)
+      } catch (e) {
+        console.error('Error parsing setup details', e)
+      }
+    }
+
+    const savedProfile = localStorage.getItem('nexora_profile_settings')
+    if (savedProfile) {
+      sessionStorage.setItem('nexora_profile_settings', savedProfile)
+    }
+
+    // Load pending/registered accounts
+    loadPendingAccounts()
+
+    // Listen for storage events (e.g. from Supabase or sibling frames) to update setupData state
+    const handleStorage = (e) => {
+      if (!e || !e.key || e.key === 'nexora_merchant_setup') {
+        const updatedSetup = localStorage.getItem('nexora_merchant_setup')
+        if (updatedSetup) {
+          try {
+            setSetupData(JSON.parse(updatedSetup))
+          } catch (err) {}
+        }
+      }
+      if (!e || !e.key || e.key === 'nexora_pending_accounts') {
+        loadPendingAccounts()
+      }
+    }
+    window.addEventListener('storage', handleStorage)
 
     // Listen for simulation invite event from merchant dashboard
     const handleSimulationInvite = (e) => {
@@ -92,14 +110,14 @@ export default function App() {
     window.addEventListener('showSimulationInvite', handleSimulationInvite)
     return () => {
       window.removeEventListener('showSimulationInvite', handleSimulationInvite)
+      window.removeEventListener('storage', handleStorage)
     }
   }, [])
 
-  useEffect(() => {
-    if (merchantSetupQuery.data) {
-      setSetupData(merchantSetupQuery.data)
-    }
-  }, [merchantSetupQuery.data])
+  const loadPendingAccounts = () => {
+    const accs = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
+    setPendingAccounts(accs)
+  }
 
   // Action: Handle manual login submit or SSO login
   const handleLoginSubmit = (ssoType = null, simulatedStatus = null) => {
@@ -107,97 +125,168 @@ export default function App() {
     setLoginError('')
 
     // Simulate API delay
-    setTimeout(async () => {
+    setTimeout(() => {
       setIsLoading(false)
+      loadPendingAccounts()
 
-      const credentials = {
-        email: email.trim().toLowerCase(),
-        password,
-        ssoType,
-        simulatedStatus: simulatedStatus || simStatus,
+      const targetEmail = ssoType ? (ssoType === 'sso_with_kyb' ? 'sso_with_kyb@gmail.com' : 'sso_no_kyb@gmail.com') : email.trim().toLowerCase()
+      const targetPassword = ssoType ? '••••••••' : password
+
+      if (!targetEmail || !targetPassword) {
+        setLoginError(t('login.login_error_missing'))
+        return
       }
 
-      try {
-        const newSession = await login(credentials)
-        applySessionToView(newSession)
-      } catch (err) {
-        const code = err?.message || ''
-        if (code === 'missing_credentials') {
-          setLoginError(t('login.login_error_missing'))
-        } else if (code === 'incorrect_password') {
-          setLoginError(currentLanguage === 'vi' ? 'Mật khẩu không chính xác.' : 'Incorrect password.')
-        } else if (code === 'invalid_credentials') {
-          setLoginError(currentLanguage === 'vi'
-            ? 'Email hoặc mật khẩu không hợp lệ. Vui lòng nhập email đúng định dạng và mật khẩu từ 6 ký tự, hoặc sử dụng bảng điều khiển kịch bản ở bên phải.'
-            : 'Invalid credentials. Please enter a valid email and 6+ character password, or use the Simulation Panel on the right.'
-          )
-        } else {
-          setLoginError(currentLanguage === 'vi'
-            ? 'Đăng nhập thất bại. Vui lòng thử lại.'
-            : 'Login failed. Please try again.'
-          )
+      // SCENARIO 1: SSO WITH KYB
+      if (targetEmail === 'sso_with_kyb@gmail.com') {
+        setUserRole('owner')
+        setCurrentStaffId(null)
+        setSsoPrefillData(MOCK_SSO_KYB_PROFILE)
+        localStorage.removeItem('nexora_merchant_setup')
+        setSetupData(null)
+        setVerificationStatus('kyb_approved')
+        setView('onboarding')
+        return
+      }
+
+      // SCENARIO 2: SSO WITHOUT KYB
+      if (targetEmail === 'sso_no_kyb@gmail.com') {
+        setUserRole('owner')
+        setCurrentStaffId(null)
+        const allAccounts = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
+        const matched = allAccounts.find(acc => acc.email === targetEmail)
+
+        const activeStatus = simulatedStatus || matched?.verificationStatus || (matched?.isVerified ? 'kyb_approved' : 'basic')
+        setVerificationStatus(activeStatus)
+        const isAlreadyVerified = activeStatus === 'kyb_approved'
+
+        const kybProfile = {
+          name: isAlreadyVerified ? matched.kybDetails.legalName : 'Golden Glow Nails',
+          industry: isAlreadyVerified ? (matched.kybDetails.businessType === 'LLC' ? 'Nail Salon' : 'Khác') : 'Nail Salon',
+          address: isAlreadyVerified ? 'VLINKPAY Merchant Registered Location' : '123 Beauty Lane, San Jose, CA 95112',
+          phone: isAlreadyVerified ? '+1 (555) VLP-KYB1' : '+1 (408) 555-0123',
+          website: 'https://goldenglownails.com',
+          logo: null,
+          paymentAccounts: {
+            venmo: '',
+            cashapp: '',
+            zelle: '',
+            vlinkpay: isAlreadyVerified && matched.kybDetails.bankAccount ? `VLP-${matched.kybDetails.bankAccount.slice(-4)}` : ''
+          },
+          email: targetEmail,
+          reviewLinks: {
+            googleReview: isAlreadyVerified ? 'https://google.com' : '',
+            yelpReview: isAlreadyVerified ? 'https://yelp.com' : '',
+            facebookReview: '',
+            feedbackEmail: targetEmail
+          }
         }
+        setSsoPrefillData(kybProfile)
+
+        localStorage.removeItem('nexora_merchant_setup')
+        localStorage.removeItem('nexora_profile_settings')
+        setSetupData(null)
+        setView('dashboard')
+        return
+      }
+
+      // SCENARIO 3: CHECK MANUALLY REGISTERED ACCOUNTS
+      const allAccounts = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
+      const matchedAccount = allAccounts.find(acc => acc.email === targetEmail)
+
+      if (matchedAccount) {
+        if (matchedAccount.password !== targetPassword) {
+          setLoginError(currentLanguage === 'vi' ? 'Mật khẩu không chính xác.' : 'Incorrect password.')
+          return
+        }
+
+        const role = matchedAccount.role || 'owner'
+        setUserRole(role)
+
+        if (role === 'personal' || role === 'staff') {
+          setLoggedInStaffId(matchedAccount.staffId || 'NEX-STAFF-MIA0123')
+          setCurrentStaffId(matchedAccount.staffId || 'NEX-STAFF-MIA0123')
+          setView('staff-dashboard')
+          return
+        }
+
+        setCurrentStaffId(null)
+        const activeStatus = matchedAccount.verificationStatus || (matchedAccount.isVerified ? 'kyb_approved' : 'basic')
+        setVerificationStatus(activeStatus)
+        const isAlreadyVerified = activeStatus === 'kyb_approved'
+
+        const kybProfile = {
+          name: isAlreadyVerified ? matchedAccount.kybDetails.legalName : '',
+          industry: isAlreadyVerified ? (matchedAccount.kybDetails.businessType === 'LLC' ? 'Nail Salon' : 'Khác') : '',
+          address: isAlreadyVerified ? 'VLINKPAY Merchant Registered Location' : '',
+          phone: isAlreadyVerified ? '+1 (555) VLP-KYB1' : '',
+          website: '',
+          logo: null,
+          paymentAccounts: {
+            venmo: '',
+            cashapp: '',
+            zelle: '',
+            vlinkpay: isAlreadyVerified && matchedAccount.kybDetails.bankAccount ? `VLP-${matchedAccount.kybDetails.bankAccount.slice(-4)}` : ''
+          },
+          email: matchedAccount.email,
+          reviewLinks: {
+            googleReview: isAlreadyVerified ? 'https://google.com' : '',
+            yelpReview: isAlreadyVerified ? 'https://yelp.com' : '',
+            facebookReview: '',
+            feedbackEmail: matchedAccount.email
+          }
+        }
+        setSsoPrefillData(kybProfile)
+
+        const savedSetup = localStorage.getItem('nexora_merchant_setup')
+        if (savedSetup) {
+          setView('dashboard')
+        } else {
+          setView('onboarding')
+        }
+        return
+      }
+
+      // Fallback for simple demo logs (non-SSO, non-registered)
+      if (targetEmail.includes('@') && targetPassword.length >= 6) {
+        // Detect if email matches a technician inside merchant setup
+        const savedSetupStr = localStorage.getItem('nexora_merchant_setup')
+        let matchedStaff = null
+        if (savedSetupStr) {
+          try {
+            const parsedSetup = JSON.parse(savedSetupStr)
+            matchedStaff = parsedSetup.staffList?.find(s => s.email?.trim().toLowerCase() === targetEmail)
+          } catch(e) {}
+        }
+
+        if (matchedStaff) {
+          setUserRole('staff')
+          setCurrentStaffId(matchedStaff.id)
+          setView('dashboard')
+        } else {
+          setUserRole('owner')
+          setCurrentStaffId(null)
+          const savedSetup = localStorage.getItem('nexora_merchant_setup')
+          if (savedSetup) {
+            setView('dashboard')
+          } else {
+            setView('onboarding')
+          }
+        }
+      } else {
+        setLoginError(currentLanguage === 'vi'
+          ? 'Email hoặc mật khẩu không hợp lệ. Vui lòng nhập email đúng định dạng và mật khẩu từ 6 ký tự, hoặc sử dụng bảng điều khiển kịch bản ở bên phải.'
+          : 'Invalid credentials. Please enter a valid email and 6+ character password, or use the Simulation Panel on the right.'
+        )
       }
     }, 1200)
-  }
-
-  // Apply session returned from the auth adapter to view/state — preserves original routing
-  const applySessionToView = (newSession) => {
-    if (!newSession) return
-
-    const { flag, role, staffId: sId, verificationStatus: vs, ssoPrefillData: sso,
-      clearMerchantSetup, clearProfileSettings, routeToDashboard } = newSession
-
-    if (clearMerchantSetup) {
-      clearMerchantSetupMutation.mutate()
-      setSetupData(null)
-    }
-    if (clearProfileSettings) {
-      clearProfileSettingsMutation.mutate()
-    }
-
-    // !personal path → staff dashboard
-    if (flag === '!personal' || role === 'personal' || role === 'staff') {
-      const resolvedStaffId = sId || 'NEX-STAFF-MIA0123'
-      setLoggedInStaffId(resolvedStaffId)
-      setCurrentStaffId(resolvedStaffId)
-      setUserRole(role || 'staff')
-      setView('staff-dashboard')
-      return
-    }
-
-    // !business path → owner dashboard or onboarding
-    setUserRole('owner')
-    setCurrentStaffId(null)
-
-    if (vs !== undefined && vs !== null) {
-      setVerificationStatus(vs)
-    }
-
-    if (sso) {
-      setSsoPrefillData(sso)
-    }
-
-    // SSO no-kyb scenario always goes to dashboard
-    if (routeToDashboard) {
-      setView('dashboard')
-      return
-    }
-
-    // SSO with KYB → onboarding (Setup Wizard to configure)
-    // Registered business accounts: check if setup exists
-    if (!clearMerchantSetup && (setupData || merchantSetupQuery.data)) {
-      setView('dashboard')
-    } else {
-      setView('onboarding')
-    }
   }
 
   // Trigger Simulation Scenario directly
   const triggerSimulation = (scenario, status = null) => {
     setLoginError('')
     if (scenario === 'sso_with_kyb') {
-      clearMerchantSetupMutation.mutate()
+      localStorage.removeItem('nexora_merchant_setup')
       setSetupData(null)
       setEmail('sso_with_kyb@gmail.com')
       setPassword('••••••••')
@@ -229,7 +318,7 @@ export default function App() {
 
   // Instantly toggle verification status of an account in the simulations listing
   const toggleAccountVerification = (emailAddress) => {
-    const accs = pendingAccounts
+    const accs = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
     const statuses = ['basic', 'lite_pending', 'verified_lite', 'kyb_required', 'kyb_pending', 'kyb_approved', 'suspended']
     const updated = accs.map(acc => {
       if (acc.email === emailAddress) {
@@ -245,13 +334,16 @@ export default function App() {
       }
       return acc
     })
-    replaceAllPendingAccountsMutation.mutate(updated)
+    localStorage.setItem('nexora_pending_accounts', JSON.stringify(updated))
+    loadPendingAccounts()
   }
 
   // Delete simulated account
   const deleteSimulatedAccount = (emailAddress) => {
-    const updated = pendingAccounts.filter(acc => acc.email !== emailAddress)
-    replaceAllPendingAccountsMutation.mutate(updated)
+    const accs = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
+    const updated = accs.filter(acc => acc.email !== emailAddress)
+    localStorage.setItem('nexora_pending_accounts', JSON.stringify(updated))
+    loadPendingAccounts()
   }
 
   // Action: Complete onboarding wizard
@@ -264,10 +356,9 @@ export default function App() {
   const handleResetApp = async () => {
     const ok = await showConfirm(t('login.reset_confirm') || 'Are you sure you want to reset?')
     if (ok) {
-      clearMerchantSetupMutation.mutate()
+      localStorage.removeItem('nexora_merchant_setup')
       setSetupData(null)
       setVerificationStatus('kyb_approved')
-      await logout()
       setView('login')
     }
   }
@@ -275,8 +366,8 @@ export default function App() {
   const handleRegisterAndLogin = (registeredEmail) => {
     setRegisterEmail(registeredEmail)
     setVerificationStatus('basic')
-    clearMerchantSetupMutation.mutate()
-    clearProfileSettingsMutation.mutate()
+    localStorage.removeItem('nexora_merchant_setup')
+    localStorage.removeItem('nexora_profile_settings')
     setSetupData(null)
     setSsoPrefillData({
       email: registeredEmail,
@@ -304,7 +395,7 @@ export default function App() {
 
   const handleKybSuccess = (emailAddress) => {
     setVerificationStatus('kyb_approved')
-    const accs = pendingAccounts
+    const accs = JSON.parse(localStorage.getItem('nexora_pending_accounts') || '[]')
     const matched = accs.find(acc => acc.email === emailAddress)
     if (matched && matched.kybDetails) {
       const kybProfile = {
@@ -331,6 +422,7 @@ export default function App() {
       setSsoPrefillData(kybProfile)
     }
     setView(preKybView)
+    loadPendingAccounts()
   }
 
   const handleKybRequired = () => {
@@ -341,15 +433,10 @@ export default function App() {
 
   // Handle quick demo login from LoginScreen
   const handleQuickDemoLogin = (demoSetup) => {
-    saveMerchantSetupMutation.mutate(demoSetup, {
-      onSuccess: () => {
-        setSetupData(demoSetup)
-        setView('dashboard')
-      },
-      onError: (err) => {
-        logger.error('Failed to save demo setup', err)
-      },
-    })
+    localStorage.setItem('nexora_merchant_setup', JSON.stringify(demoSetup))
+    sessionStorage.setItem('nexora_merchant_setup', JSON.stringify(demoSetup))
+    setSetupData(demoSetup)
+    setView('dashboard')
   }
 
   // Handle auto-login from account list in SimulationPanel
@@ -362,7 +449,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-dvh bg-nexoraCanvas text-inkBlue font-sans antialiased">
+    <div className="min-h-dvh bg-[#F8FAFC] text-[#0B1C30] font-sans antialiased">
       {view === 'login' ? (
         <LoginScreen
           email={email}
@@ -386,7 +473,6 @@ export default function App() {
           setStaffInviteData={setStaffInviteData}
           setView={setView}
           setLoggedInStaffId={setLoggedInStaffId}
-          isDemoToolsEnabled={isDemoToolsEnabled}
         />
       ) : (
         <AppRouter
@@ -417,9 +503,8 @@ export default function App() {
           onKybRequired={handleKybRequired}
           onResetApp={handleResetApp}
           onRegisterAndLogin={handleRegisterAndLogin}
-          onLoadPendingAccounts={() => {}}
+          onLoadPendingAccounts={loadPendingAccounts}
           preKybView={preKybView}
-          isDemoToolsEnabled={isDemoToolsEnabled}
         />
       )}
     </div>

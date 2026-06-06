@@ -51,7 +51,7 @@ npx playwright install chromium --with-deps
   ```
 * **Chạy một bộ test E2E cụ thể (ví dụ bộ Dashboard):**
   ```bash
-  pnpm test:e2e -- -t 'SSO Login'
+  npx start-server-and-test dev http://localhost:3000 "npx vitest run --config vitest.e2e.config.js -t 'SSO Login'"
   ```
 
 ---

@@ -96,7 +96,7 @@ export default function LeaveReview({
         <button
           type="button"
           onClick={handleSubmitFeedback}
-          className="w-full py-3.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 transition text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-nexoraElectric/25"
+          className="w-full py-3.5 bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] hover:opacity-90 transition text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-[#2B59FF]/25"
         >
           Submit Review
         </button>

@@ -1,5 +1,4 @@
 import React from 'react'
-import { logger } from '../../utils/logger'
 
 export default class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -13,7 +12,7 @@ export default class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, info) {
     if (process.env.NODE_ENV !== 'production') {
-      logger.error('[ErrorBoundary]', error, info.componentStack)
+      console.error('[ErrorBoundary]', error, info.componentStack)
     }
   }
 

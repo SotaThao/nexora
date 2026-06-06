@@ -1,31 +1,46 @@
-import React, { createContext, useCallback, useContext, useMemo } from 'react'
-import { logger } from '../utils/logger'
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { storage } from '../utils/storage'
 import { INITIAL_TRANSACTIONS, INITIAL_REVIEWS, INITIAL_STAFF } from '../components/dashboard/data/mockData'
 import { DEMO_STAFF_ID, makeDefaultStaffAccount } from '../components/staff-dashboard/data/staffMockData'
-import {
-  useStaffAccount as useStaffAccountQuery,
-  useSaveStaffAccount as useSaveStaffAccountQuery,
-} from '../data/hooks/useStaffAccount'
-import { useTransactions } from '../data/hooks/useTransactions'
-import { useMerchantSetup, useSaveMerchantSetup } from '../data/hooks/useMerchantSetup'
-import { useReviews } from '../data/hooks/useReviews'
-import { usePendingAccounts } from '../data/hooks/usePendingAccounts'
 
 const StaffAccountContext = createContext(null)
 
+const STAFF_KEY = 'nexora_staff_account'
+
 const slugify = (str = '') => str.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 
-export function StaffAccountProvider({ staffId = DEMO_STAFF_ID, children }) {
-  // --- Server state via TanStack Query hooks --------------------------------
-  // useStaffAccountQuery(staffId) → the single staff account blob (or null)
-  const { data: accountData = null } = useStaffAccountQuery(staffId)
-  const { data: transactions = null } = useTransactions()
-  const { data: merchantSetup = null } = useMerchantSetup()
-  const { data: reviews = null } = useReviews()
-  const { data: allPendingAccounts = [] } = usePendingAccounts()
+// Read a dynamic key from storage and JSON-parse it, falling back to a default.
+function readJSON(key, fallback) {
+  try {
+    const raw = storage.getItem(key)
+    if (!raw) return fallback
+    const parsed = JSON.parse(raw)
+    return parsed ?? fallback
+  } catch (e) {
+    return fallback
+  }
+}
 
-  const saveStaffAccountMutation = useSaveStaffAccountQuery()
-  const saveMerchantSetupMutation = useSaveMerchantSetup()
+export function StaffAccountProvider({ staffId = DEMO_STAFF_ID, children }) {
+  // Raw synced blobs (merchant-owned + staff-owned). Re-read on storage events.
+  const [merchantSetup, setMerchantSetup] = useState(() => readJSON('nexora_merchant_setup', null))
+  const [transactions, setTransactions] = useState(() => readJSON('nexora_transactions', null))
+  const [reviews, setReviews] = useState(() => readJSON('nexora_reviews', null))
+  const [staffMap, setStaffMap] = useState(() => readJSON(STAFF_KEY, {}))
+
+  const refreshFromStorage = useCallback(() => {
+    setMerchantSetup(readJSON('nexora_merchant_setup', null))
+    setTransactions(readJSON('nexora_transactions', null))
+    setReviews(readJSON('nexora_reviews', null))
+    setStaffMap(readJSON(STAFF_KEY, {}))
+  }, [])
+
+  // Realtime: the storage/supabase sync layer dispatches a `storage` event on change.
+  useEffect(() => {
+    refreshFromStorage()
+    window.addEventListener('storage', refreshFromStorage)
+    return () => window.removeEventListener('storage', refreshFromStorage)
+  }, [refreshFromStorage])
 
   // --- Derived: merchant staff list + the signed-in staff member -----------
   const staffList = useMemo(() => {
@@ -35,8 +50,9 @@ export function StaffAccountProvider({ staffId = DEMO_STAFF_ID, children }) {
 
   // Look up registered pending accounts to see if this staff matches a manually registered staff account
   const registeredStaffAccount = useMemo(() => {
-    return allPendingAccounts.find(acc => acc.role === 'personal' && acc.staffId === staffId)
-  }, [allPendingAccounts, staffId])
+    const allAccounts = readJSON('nexora_pending_accounts', [])
+    return allAccounts.find(acc => acc.role === 'personal' && acc.staffId === staffId)
+  }, [staffId])
 
   const staffMember = useMemo(() => {
     const found = staffList.find((s) => s.id === staffId)
@@ -58,57 +74,63 @@ export function StaffAccountProvider({ staffId = DEMO_STAFF_ID, children }) {
   const businessName = merchantSetup?.businessInfo?.name || 'Golden Glow Nail Spa'
 
   // --- Staff-owned blob (with default init) --------------------------------
-  // useStaffAccountQuery(staffId) returns the single account blob for this staff.
   const account = useMemo(
-    () => accountData || makeDefaultStaffAccount(staffMember),
-    [accountData, staffMember]
+    () => staffMap?.[staffId] || makeDefaultStaffAccount(staffMember),
+    [staffMap, staffId, staffMember]
   )
 
   // Persist a partial update to the signed-in staff's owned blob.
-  // repository.save(staffId, data) deep-merges `data` into the existing blob,
-  // so we only need to pass the patch.
   const updateAccount = useCallback(
     (patch) => {
-      const base = accountData || makeDefaultStaffAccount(staffMember)
-      const nextAccount = { ...base, ...patch }
+      setStaffMap((prev) => {
+        const base = prev?.[staffId] || makeDefaultStaffAccount(staffMember)
+        const nextAccount = { ...base, ...patch }
+        const next = { ...prev, [staffId]: nextAccount }
+        storage.setItem(STAFF_KEY, JSON.stringify(next))
 
-      // Save the updated staff account blob (mutation merges patch into existing blob)
-      saveStaffAccountMutation.mutate({ staffId, data: patch })
-
-      // Synchronize back to merchant setup roster
-      if (merchantSetup && Array.isArray(merchantSetup.staffList)) {
+        // Synchronize back to merchant setup roster
         try {
-          const updatedStaffList = merchantSetup.staffList.map((s) => {
-            if (s.id === staffId) {
-              const pm = nextAccount.payoutMethods || {}
-              return {
-                ...s,
-                fullName: nextAccount.fullName !== undefined ? nextAccount.fullName : s.fullName,
-                nickname: nextAccount.defaultDisplayName !== undefined ? nextAccount.defaultDisplayName : s.nickname,
-                avatar: nextAccount.avatar !== undefined ? nextAccount.avatar : s.avatar,
-                phone: nextAccount.phone !== undefined ? nextAccount.phone : s.phone,
-                paymentAccounts: {
-                  ...s.paymentAccounts,
-                  venmo: pm.venmo?.enabled ? pm.venmo.value || '' : '',
-                  cashapp: pm.cashapp?.enabled ? pm.cashapp.value || '' : '',
-                  zelle: pm.zelle?.enabled ? pm.zelle.value || '' : '',
-                  vlinkpay: pm.vlinkpay?.enabled ? pm.vlinkpay.value || '' : '',
-                  paypal: pm.paypal?.enabled ? pm.paypal.value || '' : '',
-                  bankwire: pm.bankwire?.enabled ? pm.bankwire.value || '' : '',
-                  applecash: pm.applecash?.enabled ? pm.applecash.value || '' : '',
-                },
-                payoutConfigs: pm
-              }
+          const savedSetup = storage.getItem('nexora_merchant_setup')
+          if (savedSetup) {
+            const parsed = JSON.parse(savedSetup)
+            if (Array.isArray(parsed.staffList)) {
+              const updatedStaffList = parsed.staffList.map((s) => {
+                if (s.id === staffId) {
+                  const pm = nextAccount.payoutMethods || {}
+                  return {
+                    ...s,
+                    fullName: nextAccount.fullName !== undefined ? nextAccount.fullName : s.fullName,
+                    nickname: nextAccount.defaultDisplayName !== undefined ? nextAccount.defaultDisplayName : s.nickname,
+                    avatar: nextAccount.avatar !== undefined ? nextAccount.avatar : s.avatar,
+                    phone: nextAccount.phone !== undefined ? nextAccount.phone : s.phone,
+                    paymentAccounts: {
+                      ...s.paymentAccounts,
+                      venmo: pm.venmo?.enabled ? pm.venmo.value || '' : '',
+                      cashapp: pm.cashapp?.enabled ? pm.cashapp.value || '' : '',
+                      zelle: pm.zelle?.enabled ? pm.zelle.value || '' : '',
+                      vlinkpay: pm.vlinkpay?.enabled ? pm.vlinkpay.value || '' : '',
+                      paypal: pm.paypal?.enabled ? pm.paypal.value || '' : '',
+                      bankwire: pm.bankwire?.enabled ? pm.bankwire.value || '' : '',
+                      applecash: pm.applecash?.enabled ? pm.applecash.value || '' : '',
+                    },
+                    payoutConfigs: pm
+                  }
+                }
+                return s
+              })
+              parsed.staffList = updatedStaffList
+              storage.setItem('nexora_merchant_setup', JSON.stringify(parsed))
             }
-            return s
-          })
-          saveMerchantSetupMutation.mutate({ ...merchantSetup, staffList: updatedStaffList })
+          }
         } catch (e) {
-          logger.error('[StaffAccountContext] Error syncing to merchant setup:', e)
+          console.error('[StaffAccountContext] Error syncing to merchant setup:', e)
         }
-      }
+
+        window.dispatchEvent(new Event('storage'))
+        return next
+      })
     },
-    [staffId, staffMember, accountData, merchantSetup, saveStaffAccountMutation, saveMerchantSetupMutation]
+    [staffId, staffMember]
   )
 
   // --- Derived: tips for this staff (with status) --------------------------

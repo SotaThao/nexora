@@ -272,7 +272,7 @@ export default function StaffProfile({ onLogout }) {
             <button
               type="button"
               onClick={handleSave}
-              className="mt-4 w-full rounded-xl bg-gradient-to-r from-nexoraElectric to-nexoraViolet py-3 text-sm font-extrabold text-white transition hover:opacity-90 cursor-pointer"
+              className="mt-4 w-full rounded-xl bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] py-3 text-sm font-extrabold text-white transition hover:opacity-90 cursor-pointer"
             >
               {saved ? t('staff_dashboard.profile.saved') : t('staff_dashboard.profile.save')}
             </button>
@@ -295,7 +295,7 @@ export default function StaffProfile({ onLogout }) {
           </section>
 
           <section className={panel}>
-            <h3 className="mb-3 text-base font-extrabold text-nexoraDangerDark dark:text-red-400">
+            <h3 className="mb-3 text-base font-extrabold text-[#D32F2F] dark:text-red-400">
               {currentLanguage === 'vi' ? 'Đăng xuất tài khoản' : 'Sign Out Account'}
             </h3>
             <p className="mb-4 text-xs text-nexoraSubtle">
@@ -352,7 +352,7 @@ export default function StaffProfile({ onLogout }) {
 
           {showPortal && kycStatus !== 'kyc_approved' ? (
             /* Secure Iframe Portal Simulation */
-            <div className="border border-slate-300 rounded-xl overflow-hidden shadow-md bg-slate-100 animate-fadeIn">
+            <div className="border border-slate-300 rounded-xl overflow-hidden shadow-md bg-[#EDF2F7] animate-fadeIn">
               {/* Browser navigation bar */}
               <div className="bg-slate-200 border-b border-slate-300 px-4 py-2 flex items-center gap-2">
                 <div className="flex gap-1.5">
@@ -538,7 +538,7 @@ export default function StaffProfile({ onLogout }) {
                     </button>
                     <button
                       type="submit"
-                      className="px-6 py-2 bg-nexoraElectric hover:bg-blue-700 text-white font-extrabold text-xs uppercase tracking-wider rounded flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+                      className="px-6 py-2 bg-[#2B59FF] hover:bg-blue-700 text-white font-extrabold text-xs uppercase tracking-wider rounded flex items-center gap-1.5 transition shadow-sm cursor-pointer"
                     >
                       <ShieldCheck className="w-4 h-4" /> {currentLanguage === 'vi' ? 'Gửi hồ sơ KYC' : 'Submit KYC'}
                     </button>

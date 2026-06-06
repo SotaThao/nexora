@@ -9,20 +9,18 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "node scripts/run-e2e.cjs",
+    "test:e2e": "start-server-and-test dev http://localhost:3000 \"vitest run --config vitest.e2e.config.js\"",
     "lint:tokens": "node scripts/verify-tokens.cjs",
     "test:impact": "node .agents/skills/feature-focused-tester/scripts/detect-changes.cjs",
     "seed:staff-demo": "node scripts/seed-staff-demo.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.2",
-    "@tanstack/react-query": "^5.0.0",
     "lucide-react": "^0.344.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@tanstack/react-query-devtools": "^5.0.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@vitejs/plugin-react": "^4.2.1",

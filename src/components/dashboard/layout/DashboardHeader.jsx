@@ -15,6 +15,7 @@ import {
   Wallet
 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { storage } from '../../../utils/storage'
 import IconButton from '../../ui/IconButton'
 
 export default function DashboardHeader({
@@ -67,11 +68,13 @@ export default function DashboardHeader({
   const handleMarkAllAsRead = () => {
     const updated = notifications.map((n) => ({ ...n, read: true }))
     setNotifications(updated)
+    storage.setItem('nexora_notifications', JSON.stringify(updated))
   }
 
   const handleNotificationClick = (item) => {
     const updated = notifications.map((n) => n.id === item.id ? { ...n, read: true } : n)
     setNotifications(updated)
+    storage.setItem('nexora_notifications', JSON.stringify(updated))
     setIsNotiDropdownOpen(false)
     if (item.linkTab === 'staff' && item.staffId) {
       const member = staff.find(s => s.id?.trim().toUpperCase() === item.staffId?.trim().toUpperCase())

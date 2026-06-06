@@ -1,5 +1,4 @@
 import { useState, useMemo } from 'react'
-import { logger } from '../../../utils/logger'
 import { CreditCard, Coins, X, QrCode, Share2, CheckCircle, Clock, XCircle, AlertCircle } from 'lucide-react'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { useTranslation } from '../../../contexts/LanguageContext'
@@ -388,7 +387,7 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
                             url: shareUrl
                           });
                         } catch (err) {
-                          logger.error(err);
+                          console.log(err);
                         }
                       } else {
                         navigator.clipboard.writeText(shareUrl);

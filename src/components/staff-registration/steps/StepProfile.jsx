@@ -38,7 +38,7 @@ export default function StepProfile({
             <div className="relative">
               {avatar ? (
                 <>
-                  <img src={avatar} alt="" className="h-16 w-16 rounded-full object-cover border border-nexoraBorder ring-2 ring-nexoraBrand/20" />
+                  <img src={avatar} alt="" className="h-16 w-16 rounded-full object-cover border border-nexoraBorder ring-2 ring-[#4648D8]/20" />
                   <button
                     type="button"
                     onClick={() => setAvatar(null)}
@@ -94,7 +94,7 @@ export default function StepProfile({
             </label>
             <input
               type="text"
-              className="mt-1.5 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:outline-none transition-all"
+              className="mt-1.5 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-[#4648D8] focus:ring-2 focus:ring-[#4648D8]/20 focus:outline-none transition-all"
               placeholder="Lisa Marie Tran"
               value={fullName}
               onChange={(e) => {
@@ -119,7 +119,7 @@ export default function StepProfile({
             </label>
             <input
               type="text"
-              className="mt-1.5 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:outline-none transition-all"
+              className="mt-1.5 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-[#4648D8] focus:ring-2 focus:ring-[#4648D8]/20 focus:outline-none transition-all"
               placeholder="Lisa T."
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
@@ -143,7 +143,7 @@ export default function StepProfile({
               />
               <input
                 type="text"
-                className={`h-10 w-full rounded-r-lg border border-l-0 border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:outline-none transition-all min-w-0 ${!isSelfServe ? 'bg-nexoraSurfaceMuted text-nexoraMuted' : 'bg-white text-nexoraText'}`}
+                className={`h-10 w-full rounded-r-lg border border-l-0 border-nexoraBorder px-3 text-xs outline-none focus:border-[#4648D8] focus:ring-2 focus:ring-[#4648D8]/20 focus:outline-none transition-all min-w-0 ${!isSelfServe ? 'bg-nexoraSurfaceMuted text-nexoraMuted' : 'bg-white text-nexoraText'}`}
                 value={phoneParsed.nationalNumber}
                 onChange={(e) => setPhone(`${phoneParsed.countryCode} ${e.target.value}`.trim())}
                 disabled={!isSelfServe}
@@ -158,7 +158,7 @@ export default function StepProfile({
             </label>
             <input
               type="email"
-              className={`mt-1.5 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:outline-none transition-all ${isSelfServe ? 'bg-white text-nexoraText' : 'bg-nexoraSurfaceMuted text-nexoraMuted'}`}
+              className={`mt-1.5 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-[#4648D8] focus:ring-2 focus:ring-[#4648D8]/20 focus:outline-none transition-all ${isSelfServe ? 'bg-white text-nexoraText' : 'bg-nexoraSurfaceMuted text-nexoraMuted'}`}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={!isSelfServe}
@@ -173,7 +173,7 @@ export default function StepProfile({
             <label className="flex items-center text-[10px] font-black uppercase text-nexoraSubtle tracking-wider h-4">Role / Speciality</label>
             <input
               type="text"
-              className="mt-1.5 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:outline-none transition-all"
+              className="mt-1.5 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-[#4648D8] focus:ring-2 focus:ring-[#4648D8]/20 focus:outline-none transition-all"
               placeholder="e.g. Acrylic Specialist"
               value={position}
               onChange={(e) => setPosition(e.target.value)}
@@ -193,7 +193,7 @@ export default function StepProfile({
         <div>
           <label className="text-[10px] font-black uppercase text-nexoraSubtle tracking-wider">Short Bio (Shows on customer tip screen)</label>
           <textarea
-            className="mt-1.5 w-full rounded-lg border border-nexoraBorder p-3 text-xs outline-none focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:outline-none transition-all min-h-[70px]"
+            className="mt-1.5 w-full rounded-lg border border-nexoraBorder p-3 text-xs outline-none focus:border-[#4648D8] focus:ring-2 focus:ring-[#4648D8]/20 focus:outline-none transition-all min-h-[70px]"
             placeholder="Welcome to my chair! I specialize in luxury nail art, acrylic extensions, and hot stone spa treatments..."
             value={bio}
             onChange={(e) => setBio(e.target.value)}

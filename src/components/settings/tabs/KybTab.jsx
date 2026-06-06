@@ -66,7 +66,7 @@ export default function KybTab({
 
       {showPortal && verificationStatus !== 'kyb_approved' ? (
         /* Simulated browser window border with Secure Iframe */
-        <div className="border border-slate-300 rounded-xl overflow-hidden shadow-md bg-slate-100 animate-fadeIn">
+        <div className="border border-slate-300 rounded-xl overflow-hidden shadow-md bg-[#EDF2F7] animate-fadeIn">
           {/* Browser bar */}
           <div className="bg-slate-200 border-b border-slate-300 px-4 py-2 flex items-center gap-2">
             <div className="flex gap-1.5">
@@ -250,7 +250,7 @@ export default function KybTab({
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-nexoraElectric hover:bg-blue-700 text-white font-extrabold text-xs uppercase tracking-wider rounded flex items-center gap-1.5 transition shadow-sm"
+                  className="px-6 py-2.5 bg-[#2B59FF] hover:bg-blue-700 text-white font-extrabold text-xs uppercase tracking-wider rounded flex items-center gap-1.5 transition shadow-sm"
                 >
                   <ShieldCheck className="w-4 h-4" /> {currentLanguage === 'vi' ? 'Gửi hồ sơ KYB' : 'Submit KYB'}
                 </button>

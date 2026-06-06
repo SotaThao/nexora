@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js'
-import { logger } from './logger'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || import.meta.env.SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || import.meta.env.SUPABASE_PUBLISHABLE_KEY
@@ -34,7 +33,7 @@ export const supabaseSync = {
           { onConflict: 'id' }
         )
     } catch (e) {
-      logger.error('Supabase sync push error:', e)
+      console.error('Supabase sync push error:', e)
     }
   },
   remove: async (key) => {
@@ -45,7 +44,7 @@ export const supabaseSync = {
         .delete()
         .eq('id', key)
     } catch (e) {
-      logger.error('Supabase sync remove error:', e)
+      console.error('Supabase sync remove error:', e)
     }
   },
   pullAll: async () => {
@@ -58,7 +57,7 @@ export const supabaseSync = {
       if (error) throw error
       return data || []
     } catch (e) {
-      logger.error('Supabase pull error:', e)
+      console.error('Supabase pull error:', e)
       return []
     }
   },
@@ -70,7 +69,7 @@ export const supabaseSync = {
       try {
         supabase.removeChannel(activeChannel)
       } catch (e) {
-        logger.error('Error removing old channel:', e)
+        console.error('Error removing old channel:', e)
       }
       activeChannel = null
     }

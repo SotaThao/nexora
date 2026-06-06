@@ -7,48 +7,73 @@ import { DEFAULT_PAYOUT_CONFIGS } from '../constants'
 import { getPayoutConfigsFromMember } from '../utils'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
+import { storage } from '../../../utils/storage'
 
-/**
- * Normalise a raw staff-list member into the shape the dashboard uses.
- * Shared by the useState initialiser and the Dashboard seeding effects.
- */
-export function normaliseMember(member) {
-  return {
-    id: member.id,
-    fullName: member.fullName,
-    nickname: member.nickname,
-    position: member.position,
-    avatar: member.avatar || '',
-    phone: member.phone || '',
-    email: member.email || '',
-    bio: member.bio || '',
-    status: member.status || 'Active',
-    flowType: member.flowType || '',
-    isActive: member.isActive !== undefined ? member.isActive : true,
-    showInTipsFlow: member.showInTipsFlow !== undefined ? member.showInTipsFlow : true,
-    paymentAccounts: {
-      venmo: member.paymentAccounts?.venmo || '',
-      cashapp: member.paymentAccounts?.cashapp || '',
-      zelle: member.paymentAccounts?.zelle || '',
-      vlinkpay: member.paymentAccounts?.vlinkpay || '',
-      paypal: member.paymentAccounts?.paypal || '',
-      bankwire: member.paymentAccounts?.bankwire || '',
-      applecash: member.paymentAccounts?.applecash || ''
-    },
-    payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member)
-  }
-}
+const localStorage = storage
+const sessionStorage = storage
 
 export function useStaffManagement({ setupData, businessName, setTouchpoints, viewingStaffDetailId, setViewingStaffDetailId }) {
   const { currentLanguage, t } = useTranslation()
   const { showToast, showConfirm } = useNotification()
 
-  // Staff is initialised from setupData (prop) when available, otherwise from
-  // the mock seed list.  Returning-user data arrives via merchantSetupData in
-  // Dashboard, which calls setStaff via a useEffect after the query resolves.
   const [staff, setStaff] = useState(() => {
+    const saved = localStorage.getItem('nexora_merchant_setup')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (parsed.staffList?.length) {
+          return parsed.staffList.map((member) => ({
+            id: member.id,
+            fullName: member.fullName,
+            nickname: member.nickname,
+            position: member.position,
+            avatar: member.avatar || '',
+            phone: member.phone || '',
+            email: member.email || '',
+            bio: member.bio || '',
+            status: member.status || 'Active',
+            flowType: member.flowType || '',
+            isActive: member.isActive !== undefined ? member.isActive : true,
+            showInTipsFlow: member.showInTipsFlow !== undefined ? member.showInTipsFlow : true,
+            paymentAccounts: {
+              venmo: member.paymentAccounts?.venmo || '',
+              cashapp: member.paymentAccounts?.cashapp || '',
+              zelle: member.paymentAccounts?.zelle || '',
+              vlinkpay: member.paymentAccounts?.vlinkpay || '',
+              paypal: member.paymentAccounts?.paypal || '',
+              bankwire: member.paymentAccounts?.bankwire || '',
+              applecash: member.paymentAccounts?.applecash || ''
+            },
+            payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member)
+          }))
+        }
+      } catch (e) {}
+    }
     if (setupData?.staffList?.length) {
-      return setupData.staffList.map(normaliseMember)
+      return setupData.staffList.map((member) => ({
+        id: member.id,
+        fullName: member.fullName,
+        nickname: member.nickname,
+        position: member.position,
+        avatar: member.avatar || '',
+        phone: member.phone || '',
+        email: member.email || '',
+        bio: member.bio || '',
+        status: member.status || 'Active',
+        flowType: member.flowType || '',
+        isActive: member.isActive !== undefined ? member.isActive : true,
+        showInTipsFlow: member.showInTipsFlow !== undefined ? member.showInTipsFlow : true,
+        paymentAccounts: {
+          venmo: member.paymentAccounts?.venmo || '',
+          cashapp: member.paymentAccounts?.cashapp || '',
+          zelle: member.paymentAccounts?.zelle || '',
+          vlinkpay: member.paymentAccounts?.vlinkpay || '',
+          paypal: member.paymentAccounts?.paypal || '',
+          bankwire: member.paymentAccounts?.bankwire || '',
+          applecash: member.paymentAccounts?.applecash || ''
+        },
+        payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member)
+      }))
     }
     return INITIAL_STAFF.map(member => ({
       ...member,

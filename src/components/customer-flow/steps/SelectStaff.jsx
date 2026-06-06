@@ -59,7 +59,7 @@ export default function SelectStaff({
                       className="h-12 w-12 rounded-full object-cover border border-nexoraBorder shrink-0"
                     />
                   ) : (
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-tr from-nexoraElectric to-nexoraViolet text-sm font-extrabold text-white shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-tr from-[#2B59FF] to-[#8E4DF8] text-sm font-extrabold text-white shrink-0 shadow-sm group-hover:scale-105 transition-transform">
                       {member.nickname.charAt(0)}
                     </div>
                   )}
@@ -101,7 +101,7 @@ export default function SelectStaff({
           type="button"
           disabled={selectedStaffMembers.length === 0}
           onClick={() => setStep('tip_amount')}
-          className={`w-full py-3.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 transition text-white font-extrabold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 shadow-lg shadow-nexoraElectric/25 ${
+          className={`w-full py-3.5 bg-gradient-to-r from-[#2B59FF] to-[#8E4DF8] hover:opacity-90 transition text-white font-extrabold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 shadow-lg shadow-[#2B59FF]/25 ${
             selectedStaffMembers.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
           }`}
         >
