@@ -3,7 +3,7 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { parsePhone } from '../../CountryCodeSelect'
 import { MOCK_NEXORA_STAFF_PROFILES } from '../../staff-registration/hooks/useStaffRegistration'
 import { useReplaceAllPendingAccounts, usePendingAccounts } from '../../../data/hooks/usePendingAccounts'
-import { useMerchantSetup, useSaveMerchantSetup, useCreateBusiness, useCompleteOnboarding } from '../../../data/hooks/useMerchantSetup'
+import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
 import { useNotifications, useAddNotification } from '../../../data/hooks/useNotifications'
 import { logger } from '../../../utils/logger'
 import apiAuthAdapter from '../../../auth/adapters/apiAuthAdapter'
@@ -16,8 +16,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const pendingAccountsQuery = usePendingAccounts()
   const merchantSetupQuery = useMerchantSetup()
   const saveMerchantSetupMutation = useSaveMerchantSetup()
-  const createBusinessMutation = useCreateBusiness()
-  const completeOnboardingMutation = useCompleteOnboarding()
+
   useNotifications()
   const addNotificationMutation = useAddNotification()
   const completePersonalOnboardingMutation = useCompletePersonalOnboarding()
@@ -91,14 +90,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         return apiAuthAdapter.login({ email: email.trim().toLowerCase(), password })
       })
       .then(async () => {
-        if (role === 'business') {
-          try {
-            await createBusinessMutation.mutateAsync({ name: email.split('@')[0], businessType: 'Nail Salon' })
-            await completeOnboardingMutation.mutateAsync()
-          } catch (e) {
-            console.error('Failed to initialize merchant backend in verify:', e)
-          }
-        }
+        // Business creation is handled by Setup Wizard (onboarding), not here.
         setTimeout(() => {
           if (role === 'business') {
             if (onRegisterSuccess) onRegisterSuccess()
@@ -263,17 +255,12 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         // Let the mutation persist in the background.
         replaceAllPendingAccountsMutation.mutate(filtered)
 
-        // Initialize backend merchant data
-        createBusinessMutation.mutateAsync({ name: email.split('@')[0], businessType: 'Nail Salon' })
-          .then(() => completeOnboardingMutation.mutateAsync())
-          .catch((e) => console.error('Failed to initialize merchant backend in OTP:', e))
-          .finally(() => {
-            if (onRegisterAndLogin) {
-              onRegisterAndLogin(email.trim().toLowerCase())
-            } else if (onRegisterSuccess) {
-              onRegisterSuccess()
-            }
-          })
+        // Business creation is handled by Setup Wizard (onboarding), not here.
+        if (onRegisterAndLogin) {
+          onRegisterAndLogin(email.trim().toLowerCase())
+        } else if (onRegisterSuccess) {
+          onRegisterSuccess()
+        }
       } else {
         setShowOtpInput(false)
         setCurrentStep(2)
