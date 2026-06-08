@@ -79,9 +79,9 @@ export default function StaffMyQR() {
             businessInfo: {
               name: bizName,
               industry: 'Nail Salon',
-              address: '123 Beauty Lane, San Jose, CA 95112',
-              phone: '(408) 555-0123',
-              email: 'owner@goldenglownails.com'
+              address: '',
+              phone: '',
+              email: ''
             },
             staffList: []
           }
@@ -479,10 +479,10 @@ export default function StaffMyQR() {
                 {/* Standard Successful Scan button */}
                 <button
                   type="button"
-                  onClick={() => simulateMerchantScan('Golden Glow Nail Spa')}
+                  onClick={() => simulateMerchantScan('Demo Salon A')}
                   className="w-full py-2 bg-gradient-to-r from-nexoraElectric to-nexoraViolet text-white rounded-xl text-xs font-black uppercase tracking-wider transition-opacity hover:opacity-90 shadow-sm"
                 >
-                  Golden Glow Nail Spa
+                  Demo Salon A
                 </button>
 
                 <button

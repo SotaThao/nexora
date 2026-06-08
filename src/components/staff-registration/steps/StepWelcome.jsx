@@ -46,7 +46,7 @@ export default function StepWelcome({
                 {t('staff_invite.invite_from_biz') || 'Invitation from Business'}
               </span>
               <h3 className="text-lg font-black text-nexoraText tracking-tight mt-2">
-                {inviteData?.biz || 'Golden Glow Nail Spa'}
+                {inviteData?.biz || ''}
               </h3>
               <p className="text-xs text-nexoraMuted max-w-sm mx-auto leading-relaxed mt-1">
                 {t('staff_invite.invite_desc') || 'You are invited to join NEXORA TOUCH staff profile for the business below.'}
@@ -123,7 +123,7 @@ export default function StepWelcome({
                     {currentLanguage === 'vi' ? 'THƯ MỜI GIA NHẬP HỆ THỐNG TIỆM' : 'SALON NETWORK INVITATION'}
                   </span>
                   <h3 className="text-xl font-black text-nexoraText tracking-tight leading-snug">
-                    {inviteData?.biz || 'Golden Glow Nail Spa & Salon'}
+                    {inviteData?.biz || ''}
                   </h3>
                   <p className="text-xs text-nexoraMuted max-w-sm mx-auto leading-relaxed font-medium">
                     {currentLanguage === 'vi'
@@ -347,7 +347,7 @@ export default function StepWelcome({
                       </div>
                       <div>
                         <h4 className="text-xs font-extrabold text-nexoraText font-sans">
-                          {inviteData?.biz || 'Golden Glow Nail Spa & Salon'}
+                          {inviteData?.biz || ''}
                         </h4>
                         <span className="text-[10px] text-nexoraMuted">
                           {currentLanguage === 'vi' ? 'Vai trò mời:' : 'Invited Role:'} {inviteData?.role || position}

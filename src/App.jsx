@@ -22,8 +22,9 @@ export default function App() {
   const [currentStaffId, setCurrentStaffId] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [setupData, setSetupData] = useState(null)
-  const [verificationStatus, setVerificationStatus] = useState('kyb_approved')
+  const [verificationStatus, setVerificationStatus] = useState('unverified')
   const [preKybView, setPreKybView] = useState('onboarding')
+  const [isNewRegistration, setIsNewRegistration] = useState(false)
 
   const needsMerchantData = (view === 'dashboard' || view === 'onboarding')
   const merchantSetupQuery = useMerchantSetup({ enabled: needsMerchantData })
@@ -78,8 +79,14 @@ export default function App() {
       setView('customer')
       return
     }
+    // Public customer touch route: /touch/{businessSlug}/{touchPointSlug}
+    const pathParts = window.location.pathname.split('/').filter(Boolean)
+    if (pathParts[0] === 'touch' && pathParts.length >= 3) {
+      setView('customer')
+      return
+    }
     if (params.get('flow') === 'staff-invite') {
-      const bizName = params.get('biz') || 'Golden Glow Nail Spa'
+      const bizName = params.get('biz') || ''
       setStaffInviteData({
         id: '',
         name: '',
@@ -144,11 +151,12 @@ export default function App() {
   }
 
   // Apply session returned from the auth adapter to view/state
-  const applySessionToView = (newSession) => {
+  const applySessionToView = (newSession, { isFreshRegistration = false } = {}) => {
+    setIsNewRegistration(isFreshRegistration)
     if (!newSession) return
 
     const { flag, role, staffId: sId, verificationStatus: vs, ssoPrefillData: sso,
-      clearMerchantSetup, clearProfileSettings, routeToDashboard } = newSession
+      clearMerchantSetup, clearProfileSettings } = newSession
 
     if (clearMerchantSetup) {
       clearMerchantSetupMutation.mutate()
@@ -160,7 +168,7 @@ export default function App() {
 
     // !personal path → staff dashboard
     if (flag === '!personal' || role === 'personal' || role === 'staff') {
-      const resolvedStaffId = sId || 'NEX-STAFF-MIA0123'
+      const resolvedStaffId = sId || null
       setLoggedInStaffId(resolvedStaffId)
       setCurrentStaffId(resolvedStaffId)
       setUserRole(role || 'staff')
@@ -180,25 +188,21 @@ export default function App() {
       setSsoPrefillData(sso)
     }
 
-    // Route to verification screen if not KYB approved
-    if (vs !== 'kyb_approved') {
-      setView('verification-screen')
-      return
-    }
+    const hasOnboardingState = typeof newSession.hasCompletedOnboarding === 'boolean'
+    const needsOnboarding = (
+      isFreshRegistration ||
+      newSession.clearMerchantSetup ||
+      (hasOnboardingState && !newSession.hasCompletedOnboarding) ||
+      (!hasOnboardingState && (vs === 'basic' || vs === 'unverified'))
+    )
 
-    // SSO no-kyb scenario always goes to dashboard
-    if (routeToDashboard) {
-      setView('dashboard')
-      return
-    }
-
-    // SSO with KYB → onboarding (Setup Wizard to configure)
-    // Registered business accounts: check if setup exists
-    if (!clearMerchantSetup && (setupData || merchantSetupQuery.data)) {
-      setView('dashboard')
-    } else {
+    if (needsOnboarding) {
       setView('onboarding')
+      return
     }
+
+    // KYB gates individual payment/compliance features, not dashboard access.
+    setView('dashboard')
   }
 
   // Trigger Simulation Scenario directly (demo tools only)
@@ -212,15 +216,15 @@ export default function App() {
     } else if (scenario === 'staff_portal') {
       setStaffInviteData({
         id: '',
-        name: 'Lisa Tran',
-        email: 'lisa@example.com',
-        phone: '408-555-2345',
+        name: '',
+        email: '',
+        phone: '',
         role: 'Nail Technician',
-        biz: 'Golden Glow Nail Spa'
+        biz: ''
       })
       setView('staff-portal')
     } else if (scenario === 'staff_dashboard') {
-      setLoggedInStaffId('NEX-STAFF-MIA0123')
+      setLoggedInStaffId(null)
       setView('staff-dashboard')
     }
   }
@@ -228,6 +232,7 @@ export default function App() {
   // Action: Complete onboarding wizard
   const handleWizardComplete = (data) => {
     setSetupData(data)
+    setIsNewRegistration(false)
     setView('dashboard')
   }
 
@@ -235,6 +240,7 @@ export default function App() {
   const handleLogout = async () => {
     await logout()
     setSetupData(null)
+    setIsNewRegistration(false)
     setView('login')
   }
 
@@ -244,18 +250,20 @@ export default function App() {
     if (ok) {
       clearMerchantSetupMutation.mutate()
       setSetupData(null)
-      setVerificationStatus('kyb_approved')
+      setVerificationStatus('unverified')
       await logout()
       setView('login')
     }
   }
 
-  const handleRegisterAndLogin = (registeredEmail) => {
+  const handleRegisterAndLogin = async (registeredEmail) => {
     setRegisterEmail(registeredEmail)
+    setEmail(registeredEmail)
     setVerificationStatus('basic')
     clearMerchantSetupMutation.mutate()
     clearProfileSettingsMutation.mutate()
     setSetupData(null)
+    setIsNewRegistration(true)
     setSsoPrefillData({
       email: registeredEmail,
       name: '',
@@ -277,7 +285,23 @@ export default function App() {
         feedbackEmail: registeredEmail
       }
     })
-    setView('dashboard')
+
+    try {
+      const newSession = await apiAuthAdapter.getSession()
+      if (newSession) {
+        applySessionToView(newSession, { isFreshRegistration: true })
+        return
+      }
+    } catch (e) {
+      logger.error('Failed to get session in handleRegisterAndLogin', e)
+    }
+
+    if (session) {
+      applySessionToView(session, { isFreshRegistration: true })
+      return
+    }
+
+    setView('onboarding')
   }
 
   const handleKybSuccess = (emailAddress) => {
@@ -336,6 +360,7 @@ export default function App() {
           setStaffInviteData={setStaffInviteData}
           ssoPrefillData={ssoPrefillData}
           verificationStatus={verificationStatus}
+          isNewRegistration={isNewRegistration}
           showKybModal={showKybModal}
           setShowKybModal={setShowKybModal}
           simulationNotification={simulationNotification}
@@ -356,6 +381,7 @@ export default function App() {
           onLogout={handleLogout}
           onRegisterAndLogin={handleRegisterAndLogin}
           onLoadPendingAccounts={() => {}}
+          onStartSetup={() => setView('onboarding')}
           preKybView={preKybView}
           isDemoToolsEnabled={isDemoToolsEnabled}
         />

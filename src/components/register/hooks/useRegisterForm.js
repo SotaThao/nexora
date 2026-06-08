@@ -3,7 +3,7 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { parsePhone } from '../../CountryCodeSelect'
 import { MOCK_NEXORA_STAFF_PROFILES } from '../../staff-registration/hooks/useStaffRegistration'
 import { useReplaceAllPendingAccounts, usePendingAccounts } from '../../../data/hooks/usePendingAccounts'
-import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
+import { useMerchantSetup, useSaveMerchantSetup, useCreateBusiness, useCompleteOnboarding } from '../../../data/hooks/useMerchantSetup'
 import { useNotifications, useAddNotification } from '../../../data/hooks/useNotifications'
 import { logger } from '../../../utils/logger'
 import apiAuthAdapter from '../../../auth/adapters/apiAuthAdapter'
@@ -16,6 +16,8 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const pendingAccountsQuery = usePendingAccounts()
   const merchantSetupQuery = useMerchantSetup()
   const saveMerchantSetupMutation = useSaveMerchantSetup()
+  const createBusinessMutation = useCreateBusiness()
+  const completeOnboardingMutation = useCompleteOnboarding()
   useNotifications()
   const addNotificationMutation = useAddNotification()
   const completePersonalOnboardingMutation = useCompletePersonalOnboarding()
@@ -88,7 +90,15 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         // Auto-login to get tokens for subsequent protected calls (Step 2, 3, 4)
         return apiAuthAdapter.login({ email: email.trim().toLowerCase(), password })
       })
-      .then(() => {
+      .then(async () => {
+        if (role === 'business') {
+          try {
+            await createBusinessMutation.mutateAsync({ name: email.split('@')[0], businessType: 'Nail Salon' })
+            await completeOnboardingMutation.mutateAsync()
+          } catch (e) {
+            console.error('Failed to initialize merchant backend in verify:', e)
+          }
+        }
         setTimeout(() => {
           if (role === 'business') {
             if (onRegisterSuccess) onRegisterSuccess()
@@ -176,7 +186,8 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       confirmPassword: password,
       firstName: email.split('@')[0],
       lastName: 'User',
-      profileType: role === 'business' ? 'Merchant' : 'Personal'
+      // profileType enum per signup API docs is "Merchant" | "User" (not "Personal").
+      profileType: role === 'business' ? 'Merchant' : 'User'
     }).then(() => {
       // Send verification email right after successful signup
       return apiAuthAdapter.resendVerificationEmail({ email: email.trim().toLowerCase() })
@@ -194,8 +205,9 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       if (resStatus === 'ALREADY_VERIFIED') {
         // Auto-login to get tokens for subsequent protected calls
         apiAuthAdapter.login({ email: email.trim().toLowerCase(), password })
-          .then(() => {
+          .then(async () => {
             setVerifySuccess(true)
+            // Business will handle API setup in the Setup Wizard
             setTimeout(() => {
               if (role === 'business') {
                 if (onRegisterAndLogin) onRegisterAndLogin(email.trim().toLowerCase())
@@ -248,14 +260,20 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         const filtered = existingAccounts.filter(acc => acc.email !== newAccount.email)
         filtered.push(newAccount)
         // Fire-and-forget: invoke callback immediately (same user-observable timing as before),
-        // and let the mutation persist in the background.
+        // Let the mutation persist in the background.
         replaceAllPendingAccountsMutation.mutate(filtered)
 
-        if (onRegisterAndLogin) {
-          onRegisterAndLogin(email.trim().toLowerCase())
-        } else if (onRegisterSuccess) {
-          onRegisterSuccess()
-        }
+        // Initialize backend merchant data
+        createBusinessMutation.mutateAsync({ name: email.split('@')[0], businessType: 'Nail Salon' })
+          .then(() => completeOnboardingMutation.mutateAsync())
+          .catch((e) => console.error('Failed to initialize merchant backend in OTP:', e))
+          .finally(() => {
+            if (onRegisterAndLogin) {
+              onRegisterAndLogin(email.trim().toLowerCase())
+            } else if (onRegisterSuccess) {
+              onRegisterSuccess()
+            }
+          })
       } else {
         setShowOtpInput(false)
         setCurrentStep(2)
@@ -372,7 +390,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     setIsCapturing(true)
     setTimeout(() => {
       const mockQr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-        editValue || 'nexora-mock-payout'
+        editValue || ''
       )}`
       setEditQrCode(mockQr)
       setIsCapturing(false)
@@ -476,23 +494,13 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     if (!parsedSetup) {
       parsedSetup = {
         businessInfo: {
-          name: 'Golden Glow Nail Spa & Salon',
-          email: 'owner@goldenglownails.com',
-          phone: '(555) 019-2834',
-          category: 'Nail Salon'
+          name: '',
+          email: '',
+          phone: '',
+          category: ''
         },
-        staffList: [
-          { id: '1', fullName: 'Mia Tran', nickname: 'Mia T.', position: 'Gel-X Artist', avatar: '', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '@miatran-nails', cashapp: '$miatran', zelle: 'mia.tran@gmail.com', vlinkpay: 'VLP-8842-MT' }, status: 'Active', flowType: 'Direct Addition' },
-          { id: '2', fullName: 'Vivian Le', nickname: 'Vivian L.', position: 'Acrylic Specialist', avatar: '', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '', cashapp: '$vivianle', zelle: '', vlinkpay: 'VLP-7629-VL' }, status: 'Active', flowType: 'Direct Addition' },
-          { id: '3', fullName: 'Ashley Park', nickname: 'Ashley P.', position: 'Pedicure Lead', avatar: '', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '@ashleypark', cashapp: '', zelle: 'ashley.p@gmail.com', vlinkpay: 'VLP-5521-AP' }, status: 'Active', flowType: 'Direct Addition' },
-          { id: '4', fullName: 'Hanna Nguyen', nickname: 'Hanna N.', position: 'Nail Art Designer', avatar: '', isActive: false, showInTipsFlow: true, paymentAccounts: { venmo: '@hanna-art', cashapp: '', zelle: '', vlinkpay: 'VLP-1148-HN' }, status: 'Inactive', flowType: 'Direct Addition' }
-        ],
-        touchPoints: [
-          { id: 'tp-main', name: 'Business Main Lobby QR', type: 'Business Main' },
-          { id: 'tp-front', name: 'Reception Front Desk', type: 'Front Desk' },
-          { id: 'tp-t1', name: 'Service Chair 01', type: 'Table QR' },
-          { id: 'tp-t2', name: 'Service Chair 02', type: 'Table QR' },
-        ]
+        staffList: [],
+        touchPoints: []
       }
     }
 

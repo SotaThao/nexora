@@ -52,7 +52,7 @@ export default function PayoutSetupModal({ open, walletKey, staffName, initialVa
     setIsCapturing(true)
     setTimeout(() => {
       const mockQr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-        value || 'nexora-mock-payout'
+        value || ''
       )}`
       setQrCode(mockQr)
       setIsCapturing(false)

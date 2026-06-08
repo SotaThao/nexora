@@ -122,7 +122,7 @@ export default function KybTab({
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Golden Glow Nails LLC"
+                    placeholder="e.g. Your Business LLC"
                     className="w-full bg-slate-50 border border-slate-300 focus:border-blue-500 focus:bg-white rounded px-3 h-9 text-xs text-slate-800 focus:outline-none transition-colors"
                     value={kybData.legalName}
                     onChange={(e) => setKybData({ ...kybData, legalName: e.target.value })}

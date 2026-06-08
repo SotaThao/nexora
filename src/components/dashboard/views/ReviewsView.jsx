@@ -77,9 +77,9 @@ function ReviewsView({ reviews, staff, filter, setFilter, setupData }) {
 
   const reviewLinks = useMemo(() => {
     const defaultLinks = {
-      googleReview: 'https://g.page/r/cGoldenGlowNails/review',
-      yelpReview: 'https://www.yelp.com/biz/golden-glow-nails-palm-beach',
-      feedbackEmail: 'manager@goldenglownails.com'
+      googleReview: '',
+      yelpReview: '',
+      feedbackEmail: ''
     }
     return setupData?.reviewLinks || defaultLinks
   }, [setupData])

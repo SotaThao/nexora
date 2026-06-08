@@ -2,21 +2,17 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createMerchantsRepository } from '../merchants'
 
 describe('merchantsRepository', () => {
-  let mockAdapter
   let mockClient
+  let repo
 
   beforeEach(() => {
-    mockAdapter = {
-      get: vi.fn(),
-      set: vi.fn(),
-      remove: vi.fn(),
-    }
     mockClient = {
       get: vi.fn(),
       post: vi.fn(),
       put: vi.fn(),
       upload: vi.fn(),
     }
+    repo = createMerchantsRepository(mockClient)
   })
 
   afterEach(() => {
@@ -24,63 +20,8 @@ describe('merchantsRepository', () => {
     vi.restoreAllMocks()
   })
 
-  describe('Storage Mode (VITE_DATA_SOURCE=storage)', () => {
-    beforeEach(() => {
-      vi.stubEnv('VITE_DATA_SOURCE', 'storage')
-    })
-
-    it('should get setup from storage adapter', async () => {
-      const repo = createMerchantsRepository(mockAdapter, mockClient)
-      const mockSetup = { businessInfo: { name: 'Storage Business' } }
-      mockAdapter.get.mockResolvedValue(mockSetup)
-
-      const res = await repo.getSetup()
-      expect(mockAdapter.get).toHaveBeenCalledWith('nexora_merchant_setup')
-      expect(res).toEqual(mockSetup)
-    })
-
-    it('should save setup to storage adapter', async () => {
-      const repo = createMerchantsRepository(mockAdapter, mockClient)
-      const mockSetup = { businessInfo: { name: 'Storage Business' } }
-
-      await repo.saveSetup(mockSetup)
-      expect(mockAdapter.set).toHaveBeenCalledWith('nexora_merchant_setup', mockSetup)
-    })
-
-    it('should clear setup from storage adapter', async () => {
-      const repo = createMerchantsRepository(mockAdapter, mockClient)
-
-      await repo.clearSetup()
-      expect(mockAdapter.remove).toHaveBeenCalledWith('nexora_merchant_setup')
-    })
-
-    it('should get staff list from storage setup', async () => {
-      const repo = createMerchantsRepository(mockAdapter, mockClient)
-      mockAdapter.get.mockResolvedValue({ staffList: [{ id: 1, name: 'Alice' }] })
-
-      const res = await repo.getStaffList()
-      expect(res).toEqual([{ id: 1, name: 'Alice' }])
-    })
-
-    it('should save staff list to storage setup', async () => {
-      const repo = createMerchantsRepository(mockAdapter, mockClient)
-      mockAdapter.get.mockResolvedValue({ businessInfo: { name: 'Biz' } })
-
-      await repo.saveStaffList([{ id: 1, name: 'Alice' }])
-      expect(mockAdapter.set).toHaveBeenCalledWith('nexora_merchant_setup', {
-        businessInfo: { name: 'Biz' },
-        staffList: [{ id: 1, name: 'Alice' }],
-      })
-    })
-  })
-
-  describe('API Mode (VITE_DATA_SOURCE=api)', () => {
-    beforeEach(() => {
-      vi.stubEnv('VITE_DATA_SOURCE', 'api')
-    })
-
+  describe('API Mode', () => {
     it('should fetch setup and map to domain shape in getSetup', async () => {
-      const repo = createMerchantsRepository(mockAdapter, mockClient)
       const mockApiResponse = {
         name: 'API Business',
         businessType: 'Cafe',
@@ -122,8 +63,6 @@ describe('merchantsRepository', () => {
     })
 
     it('should return null when getSetup returns 404 or BUSINESS_NOT_FOUND', async () => {
-      const repo = createMerchantsRepository(mockAdapter, mockClient)
-      
       // Test status 404
       mockClient.get.mockRejectedValueOnce({ status: 404 })
       let res = await repo.getSetup()
@@ -135,8 +74,14 @@ describe('merchantsRepository', () => {
       expect(res).toBeNull()
     })
 
+    it('should return null when getSetup returns 403 (business-level)', async () => {
+      // 403 is also handled in getSetup as a valid "not found" scenario
+      mockClient.get.mockRejectedValueOnce({ status: 403 })
+      const res = await repo.getSetup()
+      expect(res).toBeNull()
+    })
+
     it('should propagate other errors in getSetup', async () => {
-      const repo = createMerchantsRepository(mockAdapter, mockClient)
       const mockError = { status: 500, errorCode: 'INTERNAL_ERROR' }
       mockClient.get.mockRejectedValue(mockError)
 
@@ -144,7 +89,6 @@ describe('merchantsRepository', () => {
     })
 
     it('should check slug availability', async () => {
-      const repo = createMerchantsRepository(mockAdapter, mockClient)
       mockClient.get.mockResolvedValue({ isAvailable: true, suggestion: null })
 
       const res = await repo.checkSlug('my-slug')
@@ -153,7 +97,6 @@ describe('merchantsRepository', () => {
     })
 
     it('should create business profile', async () => {
-      const repo = createMerchantsRepository(mockAdapter, mockClient)
       const dto = { name: 'New Biz', customSlug: 'new-biz' }
       mockClient.post.mockResolvedValue({ businessId: '123', slug: 'new-biz' })
 
@@ -163,7 +106,6 @@ describe('merchantsRepository', () => {
     })
 
     it('should upload logo using PUT and FormData', async () => {
-      const repo = createMerchantsRepository(mockAdapter, mockClient)
       const fakeFile = new File([''], 'logo.png', { type: 'image/png' })
       mockClient.upload.mockResolvedValue({ logoUrl: 'http://cdn/logo.png' })
 
@@ -177,7 +119,6 @@ describe('merchantsRepository', () => {
     })
 
     it('should update review links', async () => {
-      const repo = createMerchantsRepository(mockAdapter, mockClient)
       const dto = { googleReviewUrl: 'url' }
       mockClient.put.mockResolvedValue(undefined)
 
@@ -186,11 +127,62 @@ describe('merchantsRepository', () => {
     })
 
     it('should complete onboarding', async () => {
-      const repo = createMerchantsRepository(mockAdapter, mockClient)
       mockClient.post.mockResolvedValue(undefined)
 
       await repo.completeOnboarding()
       expect(mockClient.post).toHaveBeenCalledWith('/api/v1/merchant/business/complete-onboarding')
+    })
+  })
+
+  describe('Error propagation (no DEV workarounds)', () => {
+    it('checkSlug propagates 403/USER_NOT_MERCHANT errors', async () => {
+      const err = { status: 403, errorCode: 'USER_NOT_MERCHANT' }
+      mockClient.get.mockRejectedValue(err)
+
+      await expect(repo.checkSlug('test-slug')).rejects.toEqual(err)
+    })
+
+    it('createBusiness propagates 403/USER_NOT_MERCHANT errors', async () => {
+      const err = { status: 403, errorCode: 'USER_NOT_MERCHANT' }
+      mockClient.post.mockRejectedValue(err)
+
+      await expect(repo.createBusiness({ name: 'Biz' })).rejects.toEqual(err)
+    })
+
+    it('uploadLogo propagates 403/USER_NOT_MERCHANT errors', async () => {
+      const err = { status: 403, errorCode: 'USER_NOT_MERCHANT' }
+      mockClient.upload.mockRejectedValue(err)
+
+      const fakeFile = new File([''], 'logo.png', { type: 'image/png' })
+      await expect(repo.uploadLogo(fakeFile)).rejects.toEqual(err)
+    })
+
+    it('updateReviewLinks propagates 403/USER_NOT_MERCHANT errors', async () => {
+      const err = { status: 403, errorCode: 'USER_NOT_MERCHANT' }
+      mockClient.put.mockRejectedValue(err)
+
+      await expect(repo.updateReviewLinks({ googleReviewUrl: 'url' })).rejects.toEqual(err)
+    })
+
+    it('completeOnboarding propagates 403/USER_NOT_MERCHANT errors', async () => {
+      const err = { status: 403, errorCode: 'USER_NOT_MERCHANT' }
+      mockClient.post.mockRejectedValue(err)
+
+      await expect(repo.completeOnboarding()).rejects.toEqual(err)
+    })
+
+    it('checkSlug propagates 500 server errors', async () => {
+      const err = { status: 500, errorCode: 'INTERNAL_ERROR' }
+      mockClient.get.mockRejectedValue(err)
+
+      await expect(repo.checkSlug('test-slug')).rejects.toEqual(err)
+    })
+
+    it('createBusiness propagates 500 server errors', async () => {
+      const err = { status: 500, errorCode: 'INTERNAL_ERROR' }
+      mockClient.post.mockRejectedValue(err)
+
+      await expect(repo.createBusiness({ name: 'Biz' })).rejects.toEqual(err)
     })
   })
 })

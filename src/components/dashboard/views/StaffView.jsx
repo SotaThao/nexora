@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react'
 import { AlertCircle, Plus, HelpCircle, Trash2, User, QrCode, Edit2, Link, Copy, X, Share2, Eye } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
-import { MOCK_NEXORA_STAFF_PROFILES } from '../data/mockData'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
 

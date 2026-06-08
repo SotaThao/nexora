@@ -2,139 +2,191 @@ import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { logger } from '../../../utils/logger'
+import publicTouchRepository from '../../../data/repositories/publicTouch'
 import { useMerchantSetup } from '../../../data/hooks/useMerchantSetup'
 import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
 import { useAddTransaction } from '../../../data/hooks/useTransactions'
 import { useAddReview } from '../../../data/hooks/useReviews'
 import { useAddNotification } from '../../../data/hooks/useNotifications'
+import {
+  useCustomerTouchPage,
+  useCreateTip,
+  useConfirmTip,
+  useSkipTip,
+  useCreateReview,
+  useTrackGoogle,
+  useTrackYelp,
+  usePublicBusinessPaymentMethods,
+} from '../../../data/hooks/usePublicTouch'
+import { createSimulationHandlers } from './useSimulationHandlers'
 
+/**
+ * Custom hook powering the entire customer tipping & review flow.
+ *
+ * Supports two operational modes:
+ * - **API mode** — triggered by `/touch/{businessSlug}/{touchPointSlug}` URLs,
+ *   all data comes from the public touch API.
+ * - **Simulation mode** — triggered by `?flow=customer`, uses local
+ *   merchant setup / profile settings data.
+ *
+ * @returns {Object} All state, derived values, and handlers for CustomerFlow.
+ */
 export default function useCustomerFlow() {
   const { currentLanguage, setLanguage, t } = useTranslation()
   const { showToast } = useNotification()
 
-  // Domain data via TanStack Query hooks (D3 / D8)
-  const { data: setupData = null } = useMerchantSetup()
-  const { data: profileSettings = null } = useProfileSettings()
+  // ── Detect real API touch route ──
+  const touchRoute = useMemo(() => {
+    const parts = window.location.pathname.split('/').filter(Boolean)
+    if (parts[0] === 'touch' && parts.length >= 3) {
+      return { businessSlug: parts[1], touchPointSlug: parts[2] }
+    }
+    return null
+  }, [])
+
+  const isApiMode = !!touchRoute
+
+  /** Generate or extract sessionId for API mode */
+  const sessionId = useMemo(() => {
+    if (!isApiMode) return null
+    const params = new URLSearchParams(window.location.search)
+    return params.get('sessionId') || crypto.randomUUID()
+  }, [isApiMode])
+
+  // ── API data (only fetched in API mode) ──
+  const touchPageQuery = useCustomerTouchPage({
+    businessSlug: touchRoute?.businessSlug,
+    touchPointSlug: touchRoute?.touchPointSlug,
+    sessionId,
+  })
+  const touchPageData = touchPageQuery.data ?? null
+
+  // ── Simulation data (only fetched in simulation mode) ──
+  const { data: setupData = null } = useMerchantSetup({ enabled: !isApiMode })
+  const { data: profileSettings = null } = useProfileSettings({ enabled: !isApiMode })
   const addTransactionMutation = useAddTransaction()
   const addReviewMutation = useAddReview()
   const addNotificationMutation = useAddNotification()
 
-  // Parse parameters from query string
-  const params = useMemo(() => new URLSearchParams(window.location.search), [])
-  const techSlug = params.get('tech') || '' // e.g. 'staff/mia-t'
+  // ── API mutations ──
+  const createTipMutation = useCreateTip()
+  const confirmTipMutation = useConfirmTip()
+  const skipTipMutation = useSkipTip()
+  const createReviewMutationApi = useCreateReview()
+  const trackGoogleMutation = useTrackGoogle()
+  const trackYelpMutation = useTrackYelp()
 
-  // Get business name from profile settings or merchant setup (D3: no direct storage reads)
+  // Query-string params
+  const params = useMemo(() => new URLSearchParams(window.location.search), [])
+  const techSlug = params.get('tech') || ''
+
+  // ── Unified derived data ──
   const bizName = useMemo(() => {
+    if (isApiMode && touchPageData?.business) return touchPageData.business.name || ''
     if (profileSettings?.businessName) return profileSettings.businessName
     if (setupData?.businessInfo?.name) return setupData.businessInfo.name
-    return params.get('biz') || 'Golden Glow Nail Spa'
-  }, [profileSettings, setupData, params])
+    return params.get('biz') || ''
+  }, [isApiMode, touchPageData, profileSettings, setupData, params])
 
-  // Resolve touchpoint information and check if active
   const scannedTouchpoint = useMemo(() => {
+    if (isApiMode) return null
     if (!techSlug || techSlug.startsWith('staff/')) return null
     return setupData?.touchPoints?.find(tp => techSlug.includes(tp.id))
-  }, [setupData, techSlug])
+  }, [isApiMode, setupData, techSlug])
 
-  // Get active and visible staff list
   const activeStaffList = useMemo(() => {
-    const defaultStaff = [
-      { id: 'NEX-STAFF-MIA0123', fullName: 'Mia Tran', nickname: 'Mia T.', position: 'Gel-X Lead', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '@mia-nails', cashapp: '$miaglow', zelle: 'mia.tran@gmail.com', vlinkpay: 'VLP-0123-MIA' }, payoutConfigs: { zelle: { enabled: true, value: 'mia.tran@gmail.com', qrCode: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=MiaTranTip' } } },
-      { id: 'NEX-STAFF-VL8893', fullName: 'Vivian Le', nickname: 'Vivian L.', position: 'Acrylic Specialist', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '', cashapp: '$vivianle', zelle: '407-555-0199', vlinkpay: 'VLP-8893-VL' }, payoutConfigs: { zelle: { enabled: true, value: '407-555-0199', qrCode: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=VivianLeTip' } } },
-      { id: 'NEX-STAFF-ASH0155', fullName: 'Ashley Park', nickname: 'Ashley P.', position: 'Pedicure Lead', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '@ashley-pedi', cashapp: '', zelle: 'ashley@glownails.com', vlinkpay: 'VLP-0155-ASH' } },
-      { id: 'NEX-STAFF-HN1148', fullName: 'Hanna Nguyen', nickname: 'Hanna Ng.', position: 'Nail Art Designer', isActive: false, showInTipsFlow: true, paymentAccounts: { venmo: '@hanna-art', cashapp: '', zelle: '', vlinkpay: 'VLP-1148-HN' } }
-    ]
-
-    const list = setupData?.staffList || defaultStaff
-    return list.filter(s => s.isActive !== false && s.showInTipsFlow !== false)
-  }, [setupData])
-
-  // Determine if a specific technician QR was scanned directly
-  const initialStaffMember = useMemo(() => {
-    if (!techSlug || techSlug.toLowerCase().startsWith('tp/') || techSlug.toLowerCase().startsWith('tp-')) {
-      return null
+    if (isApiMode && touchPageData?.staff) {
+      return touchPageData.staff.filter(s => s.isActive !== false)
     }
+    const list = setupData?.staffList || []
+    return list.filter(s => s.isActive !== false && s.showInTipsFlow !== false)
+  }, [isApiMode, touchPageData, setupData])
 
-    const defaultStaff = [
-      { id: 'NEX-STAFF-MIA0123', fullName: 'Mia Tran', nickname: 'Mia T.', position: 'Gel-X Lead', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '@mia-nails', cashapp: '$miaglow', zelle: 'mia.tran@gmail.com', vlinkpay: 'VLP-0123-MIA' }, payoutConfigs: { zelle: { enabled: true, value: 'mia.tran@gmail.com', qrCode: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=MiaTranTip' } } },
-      { id: 'NEX-STAFF-VL8893', fullName: 'Vivian Le', nickname: 'Vivian L.', position: 'Acrylic Specialist', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '', cashapp: '$vivianle', zelle: '407-555-0199', vlinkpay: 'VLP-8893-VL' }, payoutConfigs: { zelle: { enabled: true, value: '407-555-0199', qrCode: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=VivianLeTip' } } },
-      { id: 'NEX-STAFF-ASH0155', fullName: 'Ashley Park', nickname: 'Ashley P.', position: 'Pedicure Lead', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '@ashley-pedi', cashapp: '', zelle: 'ashley@glownails.com', vlinkpay: 'VLP-0155-ASH' } },
-      { id: 'NEX-STAFF-HN1148', fullName: 'Hanna Nguyen', nickname: 'Hanna Ng.', position: 'Nail Art Designer', isActive: false, showInTipsFlow: true, paymentAccounts: { venmo: '@hanna-art', cashapp: '', zelle: '', vlinkpay: 'VLP-1148-HN' } }
-    ]
-
-    const list = setupData?.staffList || defaultStaff
+  const initialStaffMember = useMemo(() => {
+    if (isApiMode) return null
+    if (!techSlug || techSlug.toLowerCase().startsWith('tp/') || techSlug.toLowerCase().startsWith('tp-')) return null
+    const list = setupData?.staffList || []
     const matched = list.find(s =>
       techSlug.includes(s.id) ||
       techSlug.toLowerCase().includes(s.nickname.toLowerCase().replace(/[^a-z0-9]+/g, '-')) ||
       techSlug.toLowerCase().includes(s.fullName.toLowerCase().split(' ')[0])
     )
-
     return (matched && matched.isActive !== false && matched.showInTipsFlow !== false) ? matched : null
-  }, [setupData, techSlug])
+  }, [isApiMode, setupData, techSlug])
 
-  // Get review destination links from profile settings or merchant setup (D3: no direct storage reads)
   const reviewLinks = useMemo(() => {
-    const defaultLinks = {
-      googleReview: 'https://g.page/r/cGoldenGlowNails/review',
-      yelpReview: 'https://www.yelp.com/biz/golden-glow-nails-palm-beach',
-      feedbackEmail: 'manager@goldenglownails.com'
+    const defaultLinks = { googleReview: '', yelpReview: '', feedbackEmail: '' }
+    if (isApiMode && touchPageData?.business) {
+      return {
+        googleReview: touchPageData.business.googleReviewUrl || '',
+        yelpReview: touchPageData.business.yelpUrl || '',
+        feedbackEmail: touchPageData.business.feedbackEmail || '',
+      }
     }
-
     if (profileSettings?.googleReview || profileSettings?.yelpReview) {
       return {
         googleReview: profileSettings.googleReview || '',
         yelpReview: profileSettings.yelpReview || '',
-        feedbackEmail: profileSettings.businessEmail || profileSettings.email || defaultLinks.feedbackEmail
+        feedbackEmail: profileSettings.businessEmail || profileSettings.email || '',
       }
     }
-
     return setupData?.reviewLinks || defaultLinks
-  }, [profileSettings, setupData])
+  }, [isApiMode, touchPageData, profileSettings, setupData])
 
+  // ── Local state ──
   const [selectedStaffMembers, setSelectedStaffMembers] = useState(initialStaffMember ? [initialStaffMember] : [])
   const [step, setStep] = useState(initialStaffMember ? 'tip_amount' : 'select_staff')
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedTips, setSelectedTips] = useState(() => {
-    return initialStaffMember ? { [initialStaffMember.id]: 15 } : {}
-  })
+  const [selectedTips, setSelectedTips] = useState(() => initialStaffMember ? { [initialStaffMember.id]: 15 } : {})
   const [customTips, setCustomTips] = useState({})
-  const [rating, setRating] = useState(5) // default 5 stars
+  const [rating, setRating] = useState(5)
   const [comment, setComment] = useState('')
   const [selectedTags, setSelectedTags] = useState([])
   const [selectedWallet, setSelectedWallet] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const [selectedWalletObj, setSelectedWalletObj] = useState(null)
   const [tipRefNumber, setTipRefNumber] = useState('')
+  const [currentTipId, setCurrentTipId] = useState(null)
+  const [currentReviewId, setCurrentReviewId] = useState(null)
+  const [paymentLinkData, setPaymentLinkData] = useState(null)
+
+  // ── Payment accounts ──
+  const businessId = touchPageData?.business?.id || null
+  const publicMethodsQuery = usePublicBusinessPaymentMethods(businessId)
+  const publicPaymentMethods = publicMethodsQuery.data ?? []
 
   const businessPaymentAccounts = useMemo(() => {
-    const defaultAccounts = {
-      venmo: '@goldenglow-spa',
-      cashapp: '$goldenglownails',
-      zelle: 'payment@goldenglownails.com',
-      vlinkpay: 'VLP-8893-GG'
+    const defaultAccounts = { venmo: '', cashapp: '', zelle: '', vlinkpay: '' }
+    if (isApiMode && publicPaymentMethods.length > 0) {
+      const accounts = { ...defaultAccounts }
+      publicPaymentMethods.forEach(pm => {
+        const key = (pm.type || pm.name || '').toLowerCase()
+        if (accounts[key] !== undefined) accounts[key] = pm.accountInfo || ''
+      })
+      return accounts
     }
-
     if (profileSettings?.paymentAccounts) return profileSettings.paymentAccounts
     return setupData?.businessInfo?.paymentAccounts || defaultAccounts
-  }, [profileSettings, setupData])
+  }, [isApiMode, publicPaymentMethods, profileSettings, setupData])
 
   const selectedStaffHasAnyPayment = useMemo(() => {
     if (selectedStaffMembers.length !== 1) return false
     const staff = selectedStaffMembers[0]
+    if (isApiMode) {
+      // API staff have availablePaymentMethods: string[]
+      return Array.isArray(staff.availablePaymentMethods) && staff.availablePaymentMethods.length > 0
+    }
     return Object.values(staff.paymentAccounts || {}).some(val => val && val.trim() !== '')
-  }, [selectedStaffMembers])
+  }, [selectedStaffMembers, isApiMode])
 
   const qrCodeVal = useMemo(() => {
-    if (!selectedWalletObj) return null;
-    if (selectedStaffMembers.length === 1) {
-      const staff = selectedStaffMembers[0];
-      if (selectedStaffHasAnyPayment) {
-        return staff.payoutConfigs?.[selectedWalletObj.key]?.qrCode || staff.payoutQrCodes?.[selectedWalletObj.key] || null;
-      }
+    if (!selectedWalletObj) return null
+    if (selectedStaffMembers.length === 1 && selectedStaffHasAnyPayment) {
+      const staff = selectedStaffMembers[0]
+      return staff.payoutConfigs?.[selectedWalletObj.key]?.qrCode || staff.payoutQrCodes?.[selectedWalletObj.key] || null
     }
-    return setupData?.businessInfo?.payoutQrCodes?.[selectedWalletObj.key] || null;
+    return setupData?.businessInfo?.payoutQrCodes?.[selectedWalletObj.key] || null
   }, [selectedWalletObj, selectedStaffMembers, selectedStaffHasAnyPayment, setupData])
-
 
   const filteredStaff = useMemo(() => {
     return activeStaffList.filter(s =>
@@ -146,107 +198,6 @@ export default function useCustomerFlow() {
 
   const positiveTagKeys = ['friendly', 'professional', 'meticulous', 'clean', 'art', 'fast', 'gentle']
   const negativeTagKeys = ['slow', 'rushed', 'careless', 'unfriendly', 'hygiene', 'wrong_design', 'rough']
-
-  // Sync selected tags state when customer manually edits comment
-  useEffect(() => {
-    if (!comment) {
-      setSelectedTags([])
-      return
-    }
-    const isPositive = rating >= 4
-    const activeKeys = isPositive ? positiveTagKeys : negativeTagKeys
-
-    const nextSelected = activeKeys.filter(key => {
-      const tagText = isPositive
-        ? t(`customer.tags_positive.${key}`)
-        : t(`customer.tags_negative.${key}`)
-      return comment.toLowerCase().includes(tagText.toLowerCase())
-    })
-
-    if (JSON.stringify(nextSelected) !== JSON.stringify(selectedTags)) {
-      setSelectedTags(nextSelected)
-    }
-  }, [comment, rating, t])
-
-  const handleTagToggle = (key) => {
-    const isPositive = rating >= 4
-    const tagText = isPositive
-      ? t(`customer.tags_positive.${key}`)
-      : t(`customer.tags_negative.${key}`)
-
-    setSelectedTags((prev) => {
-      const isSelected = prev.includes(key)
-      let nextTags = []
-      let newComment = comment.trim()
-
-      if (isSelected) {
-        nextTags = prev.filter(k => k !== key)
-        const escapedText = tagText.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
-        const regexes = [
-          new RegExp(`,\\s*${escapedText}`, 'gi'),
-          new RegExp(`${escapedText},\\s*`, 'gi'),
-          new RegExp(`^${escapedText}$`, 'gi'),
-          new RegExp(escapedText, 'gi')
-        ]
-
-        for (const regex of regexes) {
-          if (regex.test(newComment)) {
-            newComment = newComment.replace(regex, '').trim()
-            break
-          }
-        }
-
-        newComment = newComment
-          .replace(/,\s*,/g, ', ')
-          .replace(/^,\s*|,\s*$/g, '')
-          .trim()
-      } else {
-        nextTags = [...prev, key]
-        if (newComment === '') {
-          newComment = tagText
-        } else {
-          if (/[.,!]$/.test(newComment)) {
-            newComment = `${newComment} ${tagText}`
-          } else {
-            newComment = `${newComment}, ${tagText}`
-          }
-        }
-      }
-
-      setComment(newComment)
-      return nextTags
-    })
-  }
-
-  const handleRatingChange = (newRating) => {
-    const wasPositive = rating >= 4
-    const isPositive = newRating >= 4
-    if (wasPositive !== isPositive) {
-      setComment('')
-      setSelectedTags([])
-    }
-    setRating(newRating)
-  }
-
-  const handleToggleStaff = (member) => {
-    setSelectedStaffMembers((prev) => {
-      const isAlreadySelected = prev.some((s) => s.id === member.id)
-      if (isAlreadySelected) {
-        const next = prev.filter((s) => s.id !== member.id)
-        const nextTips = { ...selectedTips }
-        delete nextTips[member.id]
-        setSelectedTips(nextTips)
-        return next
-      } else {
-        const next = [...prev, member]
-        setSelectedTips({
-          ...selectedTips,
-          [member.id]: 15
-        })
-        return next
-      }
-    })
-  }
 
   const activeTipAmount = useMemo(() => {
     return selectedStaffMembers.reduce((sum, member) => {
@@ -263,193 +214,217 @@ export default function useCustomerFlow() {
     return currentLanguage === 'vi' ? 'Thêm tiền Tip cho nhân viên' : 'Add tips for your providers'
   }, [selectedStaffMembers, currentLanguage, t])
 
+  // ── Tag / comment sync ──
+  useEffect(() => {
+    if (!comment) { setSelectedTags([]); return }
+    const isPositive = rating >= 4
+    const activeKeys = isPositive ? positiveTagKeys : negativeTagKeys
+    const nextSelected = activeKeys.filter(key => {
+      const tagText = isPositive ? t(`customer.tags_positive.${key}`) : t(`customer.tags_negative.${key}`)
+      return comment.toLowerCase().includes(tagText.toLowerCase())
+    })
+    if (JSON.stringify(nextSelected) !== JSON.stringify(selectedTags)) setSelectedTags(nextSelected)
+  }, [comment, rating, t])
+
+  /** @param {string} key - Tag key to toggle */
+  const handleTagToggle = (key) => {
+    const isPositive = rating >= 4
+    const tagText = isPositive ? t(`customer.tags_positive.${key}`) : t(`customer.tags_negative.${key}`)
+    setSelectedTags((prev) => {
+      const isSelected = prev.includes(key)
+      let nextTags, newComment = comment.trim()
+      if (isSelected) {
+        nextTags = prev.filter(k => k !== key)
+        const esc = tagText.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
+        for (const rx of [new RegExp(`,\\s*${esc}`, 'gi'), new RegExp(`${esc},\\s*`, 'gi'), new RegExp(`^${esc}$`, 'gi'), new RegExp(esc, 'gi')]) {
+          if (rx.test(newComment)) { newComment = newComment.replace(rx, '').trim(); break }
+        }
+        newComment = newComment.replace(/,\s*,/g, ', ').replace(/^,\s*|,\s*$/g, '').trim()
+      } else {
+        nextTags = [...prev, key]
+        newComment = newComment === '' ? tagText : (/[.,!]$/.test(newComment) ? `${newComment} ${tagText}` : `${newComment}, ${tagText}`)
+      }
+      setComment(newComment)
+      return nextTags
+    })
+  }
+
+  const handleRatingChange = (newRating) => {
+    if ((rating >= 4) !== (newRating >= 4)) { setComment(''); setSelectedTags([]) }
+    setRating(newRating)
+  }
+
+  const handleToggleStaff = (member) => {
+    setSelectedStaffMembers((prev) => {
+      const isAlreadySelected = prev.some((s) => s.id === member.id)
+      if (isAlreadySelected) {
+        const nextTips = { ...selectedTips }; delete nextTips[member.id]; setSelectedTips(nextTips)
+        return prev.filter((s) => s.id !== member.id)
+      }
+      setSelectedTips({ ...selectedTips, [member.id]: 15 })
+      return [...prev, member]
+    })
+  }
+
+  // ── Simulation handlers (extracted) ──
+  const { simulatePay, simulateReview } = createSimulationHandlers({
+    addTransactionMutation, addReviewMutation, addNotificationMutation,
+    selectedStaffMembers, selectedTips, customTips, techSlug, setupData,
+    setStep, setIsProcessing,
+  })
+
+  /**
+   * Validates tip amounts and navigates to payment step.
+   * @param {Event} e - Form submit event.
+   */
   const handleNextToPayment = (e) => {
     e.preventDefault()
+    const MIN_TIP = 1, MAX_TIP = 500
+    let total = 0
     for (const member of selectedStaffMembers) {
       const selTip = selectedTips[member.id] !== undefined ? selectedTips[member.id] : 15
-      if (selTip === 'custom') {
-        const val = Number(customTips[member.id])
-        if (isNaN(val) || val <= 0) {
-          showToast(t('customer.invalid_tip') || 'Please enter a valid tip amount greater than 0.', 'error')
-          return
-        }
-      } else {
-        if (selTip <= 0) {
-          showToast(t('customer.invalid_tip') || 'Please enter a valid tip amount greater than 0.', 'error')
-          return
-        }
+      const amount = selTip === 'custom' ? Number(customTips[member.id]) : selTip
+      if (isNaN(amount) || amount < MIN_TIP) {
+        showToast(t('customer.tip_min_error') || `Tip must be at least $${MIN_TIP.toFixed(2)}.`, 'error'); return
       }
+      if (amount > MAX_TIP) {
+        showToast(t('customer.tip_max_error') || `Tip cannot exceed $${MAX_TIP.toFixed(2)}.`, 'error'); return
+      }
+      total += amount
+    }
+    if (total > MAX_TIP) {
+      showToast(t('customer.tip_total_max_error') || `Total tips cannot exceed $${MAX_TIP.toFixed(2)}.`, 'error'); return
     }
     setStep('payment')
   }
 
-  const handlePay = (walletName) => {
+  /**
+   * Handles wallet selection and initiates tip payment.
+   * @param {string} walletName - Payment wallet selected.
+   */
+  const handlePay = async (walletName) => {
     setSelectedWallet(walletName)
     setStep('processing')
-    setIsProcessing(true)
-
-    // Simulate payment transaction routing
-    setTimeout(() => {
-      setIsProcessing(false)
-      setStep('success_payment')
-
-      // D8: all tip/transaction writes go through useAddTransaction so the
-      // future API swap is localized to transactionsRepository / apiAdapter.
-      const baseTxIdNum = Math.floor(2000 + Math.random() * 1000)
-      const touchpointStr = techSlug
-        ? (techSlug.startsWith('staff/') ? 'Staff Personal QR' : (setupData?.touchPoints?.find(tp => techSlug.includes(tp.id))?.name || 'QR Touchpoint'))
-        : 'Lobby Welcome QR'
-
-      selectedStaffMembers.forEach((member, index) => {
+    if (isApiMode) {
+      try {
+        const member = selectedStaffMembers[0]
         const selTip = selectedTips[member.id] !== undefined ? selectedTips[member.id] : 15
         const amount = selTip === 'custom' ? Number(customTips[member.id]) || 0 : selTip
-        const txId = selectedStaffMembers.length > 1
-          ? `TX-${baseTxIdNum}-${index + 1}`
-          : `TX-${baseTxIdNum}`
-
-        // Exact transaction object shape preserved from original
-        const tx = {
-          id: txId,
-          dateTime: new Date().toISOString().replace('T', ' ').substring(0, 16),
-          amount: amount,
-          staffName: member.nickname,
-          staffId: member.id,
-          touchpoint: touchpointStr,
-          paymentMethod: walletName,
-          status: 'Success'
-        }
-
-        addTransactionMutation.mutate(tx, {
-          onError: (e) => logger.error('Error saving transaction', e)
+        const result = await createTipMutation.mutateAsync({
+          touchPointId: touchPageData.touchPoint.id, staffProfileId: member.id,
+          amount, paymentMethod: walletName, sessionId,
         })
-
-        // Corresponding notification for the tipped staff member
-        const notification = {
-          id: `noti-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 5)}`,
-          type: 'tip_success',
-          title: `New Tip Received ($${Number(amount).toFixed(2)})`,
-          message: `${member.nickname} received $${Number(amount).toFixed(2)} tip via ${walletName} at ${touchpointStr}.`,
-          time: 'Just now',
-          read: false,
-          linkTab: 'reports'
+        setCurrentTipId(result?.id || result?.tipId)
+        // Fetch payment link for wallet details display
+        try {
+          const linkData = await publicTouchRepository.getPaymentLink({
+            staffId: member.id,
+            method: walletName,
+            amount,
+          })
+          setPaymentLinkData(linkData)
+        } catch (linkErr) {
+          logger.error('Failed to fetch payment link', linkErr)
+          // Continue without link data — WalletDetails will use fallback
         }
-
-        addNotificationMutation.mutate(notification, {
-          onError: (e) => logger.error('Error saving notification', e)
-        })
-      })
-    }, 1800)
+        setStep('wallet_details')
+      } catch (err) {
+        logger.error('Failed to create tip', err)
+        showToast(t('errors.generic') || 'Something went wrong', 'error')
+        setStep('payment')
+      }
+    } else {
+      simulatePay(walletName)
+    }
   }
 
-  const handleSubmitFeedback = () => {
-    const cleanComment = comment.trim()
-
-    selectedStaffMembers.forEach((member, index) => {
-      const review = {
-        id: `R-${Date.now()}-${member.id}`,
-        rating: rating,
-        comment: cleanComment || (rating >= 4 ? 'Good service' : 'Needs improvement'),
-        staffName: member.nickname,
-        staffId: member.id,
-        category: rating >= 4 ? 'Good (Google)' : 'Internal Feedback',
-        date: new Date().toISOString().substring(0, 10)
+  /** Confirms that customer completed external wallet payment (API mode). */
+  const handleConfirmTip = async () => {
+    if (isApiMode && currentTipId) {
+      try {
+        await confirmTipMutation.mutateAsync(currentTipId)
+        setStep('success_payment')
+      } catch (err) {
+        logger.error('Failed to confirm tip', err)
+        showToast(t('errors.generic') || 'Something went wrong', 'error')
       }
-
-      addReviewMutation.mutate(review, {
-        onError: (e) => logger.error('Error saving review', e)
-      })
-
-      // Corresponding notification for the feedback
-      const notification = {
-        id: `noti-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 5)}`,
-        type: rating >= 4 ? 'review_good' : 'feedback_alert',
-        title: rating >= 4 ? `New Review (${rating}★)` : `New Internal Feedback (${rating}★)`,
-        message: `Customer left feedback for ${member.nickname}: "${cleanComment.substring(0, 50)}${cleanComment.length > 50 ? '...' : ''}"`,
-        time: 'Just now',
-        read: false,
-        linkTab: 'reviews'
-      }
-
-      addNotificationMutation.mutate(notification, {
-        onError: (e) => logger.error('Error saving notification', e)
-      })
-    })
-
-    if (rating >= 4) {
-      setStep('google_yelp_review')
-    } else {
-      setStep('final_done')
     }
+  }
+
+  /** Records that customer skipped tipping and navigates to review. */
+  const handleSkipTip = async () => {
+    if (isApiMode) {
+      try {
+        const member = selectedStaffMembers[0]
+        await skipTipMutation.mutateAsync({
+          touchPointId: touchPageData.touchPoint.id, staffProfileId: member?.id, sessionId,
+        })
+      } catch (err) { logger.error('Failed to record skip-tip', err) }
+    }
+    setStep('leave_review')
+  }
+
+  /** Submits customer feedback review. */
+  const handleSubmitFeedback = async () => {
+    const cleanComment = comment.trim()
+    if (isApiMode) {
+      try {
+        const member = selectedStaffMembers[0]
+        const result = await createReviewMutationApi.mutateAsync({
+          touchPointId: touchPageData.touchPoint.id, tipId: currentTipId || undefined,
+          staffProfileId: member.id, rating,
+          comment: cleanComment || (rating >= 4 ? 'Good service' : 'Needs improvement'),
+        })
+        setCurrentReviewId(result?.id || result?.reviewId)
+        setStep(rating >= 4 ? 'google_yelp_review' : 'final_done')
+      } catch (err) {
+        logger.error('Failed to submit review', err)
+        showToast(t('errors.generic') || 'Something went wrong', 'error')
+      }
+    } else {
+      const nextStep = simulateReview(rating, cleanComment)
+      setStep(nextStep)
+    }
+  }
+
+  /**
+   * Tracks external review link click and navigates to final_done.
+   * @param {'google'|'yelp'} platform
+   */
+  const handleTrackExternalReview = async (platform) => {
+    if (isApiMode && currentReviewId) {
+      try {
+        if (platform === 'google') await trackGoogleMutation.mutateAsync(currentReviewId)
+        if (platform === 'yelp') await trackYelpMutation.mutateAsync(currentReviewId)
+      } catch (err) { logger.error(`Failed to track ${platform} review click`, err) }
+    }
+    setStep('final_done')
   }
 
   const handleReset = () => {
     setSelectedStaffMembers(initialStaffMember ? [initialStaffMember] : [])
     setStep(initialStaffMember ? 'tip_amount' : 'select_staff')
     setSelectedTips(initialStaffMember ? { [initialStaffMember.id]: 15 } : {})
-    setCustomTips({})
-    setRating(5)
-    setComment('')
-    setSelectedTags([])
-    setSelectedWallet('')
-    setSelectedWalletObj(null)
-    setTipRefNumber('')
+    setCustomTips({}); setRating(5); setComment(''); setSelectedTags([])
+    setSelectedWallet(''); setSelectedWalletObj(null); setTipRefNumber('')
+    setCurrentTipId(null); setCurrentReviewId(null); setPaymentLinkData(null)
   }
 
   return {
-    // context
-    currentLanguage,
-    setLanguage,
-    t,
-    showToast,
-    // derived data
-    params,
-    techSlug,
-    bizName,
-    setupData,
-    scannedTouchpoint,
-    activeStaffList,
-    initialStaffMember,
-    reviewLinks,
-    businessPaymentAccounts,
-    selectedStaffHasAnyPayment,
-    qrCodeVal,
-    filteredStaff,
-    positiveTagKeys,
-    negativeTagKeys,
-    activeTipAmount,
-    tipScreenTitle,
-    // state
-    selectedStaffMembers,
-    setSelectedStaffMembers,
-    step,
-    setStep,
-    searchQuery,
-    setSearchQuery,
-    selectedTips,
-    setSelectedTips,
-    customTips,
-    setCustomTips,
-    rating,
-    setRating,
-    comment,
-    setComment,
-    selectedTags,
-    setSelectedTags,
-    selectedWallet,
-    setSelectedWallet,
-    isProcessing,
-    setIsProcessing,
-    selectedWalletObj,
-    setSelectedWalletObj,
-    tipRefNumber,
-    setTipRefNumber,
-    // handlers
-    handleTagToggle,
-    handleRatingChange,
-    handleToggleStaff,
-    handleNextToPayment,
-    handlePay,
-    handleSubmitFeedback,
-    handleReset,
+    currentLanguage, setLanguage, t, showToast,
+    isApiMode, touchPageQuery,
+    params, techSlug, bizName, setupData, scannedTouchpoint, activeStaffList,
+    initialStaffMember, reviewLinks, businessPaymentAccounts,
+    selectedStaffHasAnyPayment, qrCodeVal, filteredStaff,
+    positiveTagKeys, negativeTagKeys, activeTipAmount, tipScreenTitle,
+    selectedStaffMembers, setSelectedStaffMembers, step, setStep,
+    searchQuery, setSearchQuery, selectedTips, setSelectedTips,
+    customTips, setCustomTips, rating, setRating, comment, setComment,
+    selectedTags, setSelectedTags, selectedWallet, setSelectedWallet,
+    isProcessing, setIsProcessing, selectedWalletObj, setSelectedWalletObj,
+    tipRefNumber, setTipRefNumber, currentTipId, currentReviewId,
+    handleTagToggle, handleRatingChange, handleToggleStaff, handleNextToPayment,
+    handlePay, handleConfirmTip, handleSkipTip, handleSubmitFeedback,
+    handleTrackExternalReview, handleReset, paymentLinkData,
   }
 }

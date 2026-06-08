@@ -1,6 +1,26 @@
 import React from 'react'
 import { CheckCircle } from 'lucide-react'
 
+/**
+ * WalletDetails — displays wallet payment info so the customer can
+ * complete the tip via their external wallet app, then confirm.
+ *
+ * @param {object}   props
+ * @param {Function} props.t                       - Translation function
+ * @param {string}   props.currentLanguage          - Active language code
+ * @param {object}   props.selectedWalletObj         - Wallet descriptor (key, name, logo, color)
+ * @param {Array}    props.selectedStaffMembers      - Currently selected staff
+ * @param {string}   props.bizName                   - Business display name
+ * @param {number}   props.activeTipAmount            - Computed tip total
+ * @param {string|null} props.qrCodeVal              - QR code image URL (if available)
+ * @param {object}   props.businessPaymentAccounts   - Business-level payment accounts
+ * @param {string}   props.tipRefNumber              - Tip reference number
+ * @param {Function} props.showToast                 - Toast notification helper
+ * @param {Function} props.handlePay                 - Handler for simulation payment
+ * @param {Function} props.handleConfirmTip          - Handler to confirm tip in API mode
+ * @param {boolean}  props.isApiMode                 - Whether the flow is in API mode
+ * @param {Function} props.setStep                   - Step navigation setter
+ */
 export default function WalletDetails({
   t,
   currentLanguage,
@@ -13,6 +33,8 @@ export default function WalletDetails({
   tipRefNumber,
   showToast,
   handlePay,
+  handleConfirmTip,
+  isApiMode,
   setStep,
 }) {
   return (
@@ -200,7 +222,7 @@ export default function WalletDetails({
       <div className="space-y-3 pt-2">
         <button
           type="button"
-          onClick={() => handlePay(selectedWalletObj.name)}
+          onClick={() => isApiMode ? handleConfirmTip() : handlePay(selectedWalletObj.name)}
           className="w-full py-4 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-95 active:scale-[0.99] transition-all text-white font-extrabold text-sm uppercase tracking-wider rounded-xl shadow-lg shadow-nexoraElectric/25 flex items-center justify-center gap-1.5"
         >
           <CheckCircle className="h-5 w-5" />

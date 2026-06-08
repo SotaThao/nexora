@@ -3,35 +3,62 @@
  * TODO: Wire to real notifications API endpoints when available.
  */
 
-export function createNotificationsRepository() {
+import httpClient from '../../lib/httpClient'
+
+export function createNotificationsRepository(client = httpClient) {
   return {
-    /** @returns {Promise<Array>} */
+    /** 
+     * @returns {Promise<Array>} 
+     */
     async list() {
-      // TODO: Wire to GET /api/v1/notifications
-      return []
+      const response = await client.get('/api/v1/notifications')
+      const items = Array.isArray(response) ? response : (response.data || [])
+      
+      // Normalize to { id, type, title, body, isRead, createdAt }
+      return items.map(item => ({
+        id: item.id,
+        type: item.type || 'info',
+        title: item.title || '',
+        body: item.body || item.message || '',
+        isRead: Boolean(item.isRead || item.read),
+        createdAt: item.createdAt || new Date().toISOString()
+      }))
     },
 
     /**
-     * @param {object} notification
-     * @returns {Promise<object>} the appended notification
+     * @returns {Promise<number>}
      */
-    async add(notification) {
-      // TODO: Wire to POST /api/v1/notifications
-      return notification
+    async unreadCount() {
+      const response = await client.get('/api/v1/notifications/unread-count')
+      return typeof response === 'number' ? response : (response.count || 0)
     },
 
     /**
      * @param {string} id
      */
     async markRead(id) {
-      // TODO: Wire to PATCH /api/v1/notifications/:id/read
+      return client.put(`/api/v1/notifications/${id}/read`)
     },
 
     /**
-     * @param {Array} list
+     * Mark all notifications as read
+     */
+    async markAllRead() {
+      return client.put('/api/v1/notifications/read-all')
+    },
+
+    /**
+     * @deprecated server-side generation
+     */
+    async add(notification) {
+      return notification
+    },
+
+    /**
+     * @deprecated server-side generation
      */
     async replaceAll(list) {
-      // TODO: Wire to PUT /api/v1/notifications
+      // no-op
     },
   }
 }

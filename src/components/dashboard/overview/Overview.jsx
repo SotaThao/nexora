@@ -7,6 +7,7 @@ import Panel from '../../ui/Panel'
 import KpiCard from '../../ui/KpiCard'
 import TipsOverTimePanel from './TipsOverTimePanel'
 import StaffLeaderboardPanel from './StaffLeaderboardPanel'
+import SetupGuideBanner from './SetupGuideBanner'
 
 function renderStars(rating) {
   const stars = []
@@ -46,7 +47,9 @@ function Overview({
   onOpenReviews,
   businessName,
   previewQr,
-  hasKyb = true
+  hasKyb = true,
+  hasSetup = true,
+  onStartSetup
 }) {
   const { currentLanguage, t } = useTranslation()
   const { showToast } = useNotification()
@@ -140,6 +143,14 @@ function Overview({
 
   return (
     <div className="space-y-8">
+      {!hasSetup && (
+        <div className="mb-6">
+          <SetupGuideBanner
+            onStartSetup={onStartSetup}
+          />
+        </div>
+      )}
+      
       {/* Header Overview Row */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between" ref={dropdownRef}>
         <h1 className="text-xl font-extrabold tracking-tight text-nexoraText uppercase">
@@ -180,6 +191,8 @@ function Overview({
           )}
         </div>
       </div>
+
+
 
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">

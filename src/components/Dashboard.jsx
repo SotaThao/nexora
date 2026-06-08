@@ -8,7 +8,6 @@ import { Filter, Moon, Settings, ShieldAlert, Sun, Check, Link } from 'lucide-re
 import { logger } from '../utils/logger'
 import { useTranslation } from '../contexts/LanguageContext'
 import { useNotification } from '../contexts/NotificationContext'
-import { INITIAL_TRANSACTIONS, INITIAL_REVIEWS, INITIAL_TOUCHPOINTS, STAFF_PERFORMANCE } from './dashboard/data/mockData'
 import { DEFAULT_PAYOUT_CONFIGS, MENU_ITEMS } from './dashboard/constants'
 import { slugify, getPayoutConfigsFromMember } from './dashboard/utils'
 import { useDashboardNavigation } from './dashboard/hooks/useDashboardNavigation'
@@ -58,7 +57,8 @@ export default function Dashboard({
   initialSettingsTab = 'profile',
   onLogout,
   userRole = 'owner',
-  currentStaffId = null
+  currentStaffId = null,
+  onStartSetup
 }) {
   const { currentLanguage, t } = useTranslation()
   const { showToast, showConfirm } = useNotification()
@@ -93,8 +93,8 @@ export default function Dashboard({
   // ---------------------------------------------------------------------------
   // Derived read data (with fallbacks so UI is never empty on first load)
   // ---------------------------------------------------------------------------
-  const transactions = transactionsData ?? INITIAL_TRANSACTIONS
-  const reviews = reviewsData ?? INITIAL_REVIEWS
+  const transactions = transactionsData ?? []
+  const reviews = reviewsData ?? []
 
   // Notifications — thin local mirror so UI updates optimistically and
   // preserves default seed on first load (no storage data).
@@ -120,10 +120,10 @@ export default function Dashboard({
 
   // Profile — thin local mirror with complex initialisation / override rules.
   const buildFallbackProfile = (storeInfo, reviewInfo) => ({
-    fullName: storeInfo?.ownerName || (hasKyb ? 'Elena Rostova' : ''),
-    email: storeInfo?.businessEmail || userEmail || (hasKyb ? 'owner@goldenglownails.com' : ''),
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200&h=200',
-    businessName: storeInfo?.name || (hasKyb ? 'Golden Glow Nail Spa & Salon' : ''),
+    fullName: storeInfo?.ownerName || '',
+    email: storeInfo?.businessEmail || userEmail || '',
+    avatar: null,
+    businessName: storeInfo?.name || '',
     businessPhone: storeInfo?.phone || '',
     businessWebsite: storeInfo?.website || '',
     street: storeInfo?.address || '',
@@ -181,7 +181,7 @@ export default function Dashboard({
   const [touchpoints, setTouchpoints] = useState(() => {
     if (merchantSetupData?.touchPoints?.length) return merchantSetupData.touchPoints
     if (setupData?.touchPoints?.length) return setupData.touchPoints
-    return INITIAL_TOUCHPOINTS
+    return []
   })
 
   // Sync touchpoints when merchant setup query updates.
@@ -199,9 +199,9 @@ export default function Dashboard({
   const [activeKpi, setActiveKpi] = useState('tips')
   const { chartRange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate, handleChartRangeChange } = useChartDateRange(transactions)
 
-  const [selectedLeaderboardStaff, setSelectedLeaderboardStaff] = useState(STAFF_PERFORMANCE[0].nickname)
+  const [selectedLeaderboardStaff, setSelectedLeaderboardStaff] = useState(null)
 
-  const businessName = profile?.businessName || setupData?.businessInfo?.name || 'Golden Glow Nail Spa'
+  const businessName = profile?.businessName || setupData?.businessInfo?.name || ''
 
   const {
     staff, setStaff,
@@ -249,6 +249,9 @@ export default function Dashboard({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [staff, touchpoints])
 
+  // Define hasSetup state
+  const hasSetup = !!(merchantSetupData || setupData)
+
   // Seed staff / touchpoints from setupData prop (takes priority).
   useEffect(() => {
     if (setupData?.staffList?.length) {
@@ -282,7 +285,7 @@ export default function Dashboard({
         setProfile({
           fullName: currentStaff.fullName,
           email: currentStaff.email,
-          avatar: currentStaff.avatar || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200&h=200',
+          avatar: currentStaff.avatar || null,
           businessName: businessName,
           businessPhone: currentStaff.phone || '',
           businessWebsite: '',
@@ -375,19 +378,19 @@ export default function Dashboard({
     const totalTransactions = filteredTxsForMetrics.length;
     const averageTip = totalTransactions === 0 ? 0 : totalTips / totalTransactions;
 
-    // Standard fallbacks to keep UI looking premium if empty/zero in range
+    // Standard fallbacks — show real computed values (zeros if no data)
     return {
-      totalTips: totalTips || 4785.00,
-      totalTransactions: totalTransactions || 312,
-      averageTip: averageTip || 15.34,
-      totalReviews: 128,
-      googleRating: 4.8,
-      googleReviews: 96,
-      yelpRating: 4.5,
-      yelpReviews: 32,
-      responseRate: 68,
-      returningCustomers: 68,
-      returningCustomersDelta: 12
+      totalTips,
+      totalTransactions,
+      averageTip,
+      totalReviews: 0,
+      googleRating: 0,
+      googleReviews: 0,
+      yelpRating: 0,
+      yelpReviews: 0,
+      responseRate: 0,
+      returningCustomers: 0,
+      returningCustomersDelta: 0
     }
   }, [filteredTxsForMetrics]);
 
@@ -504,11 +507,13 @@ export default function Dashboard({
           transactions={transactions}
           selectedStaff={selectedLeaderboardStaff}
           setSelectedStaff={handleSelectLeaderboardStaff}
-          onOpenTouchpoints={() => setActiveMenu('touchpoints')}
-          onOpenReviews={() => setActiveMenu('reviews')}
+          onOpenTouchpoints={() => navigateMenu('touchpoints')}
+          onOpenReviews={() => navigateMenu('reviews')}
           businessName={businessName}
           previewQr={previewQr}
           hasKyb={hasKyb}
+          hasSetup={hasSetup}
+          onStartSetup={onStartSetup}
         />
       )
     }

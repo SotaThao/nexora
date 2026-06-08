@@ -44,7 +44,6 @@ const CustomerFlow = lazy(() => import('../components/CustomerFlow'))
 const RegisterWizard = lazy(() => import('../components/RegisterWizard'))
 const StaffRegistrationWizard = lazy(() => import('../components/StaffRegistrationWizard'))
 const StaffDashboard = lazy(() => import('../components/staff-dashboard/StaffDashboard'))
-const VerificationScreen = lazy(() => import('../components/VerificationScreen'))
 const ForgotPassword = lazy(() => import('../components/ForgotPassword'))
 const ResetPassword = lazy(() => import('../components/ResetPassword'))
 
@@ -69,6 +68,7 @@ export default function AppRouter({
   setStaffInviteData,
   ssoPrefillData,
   verificationStatus,
+  isNewRegistration,
   showKybModal,
   setShowKybModal,
   simulationNotification,
@@ -91,28 +91,13 @@ export default function AppRouter({
   preKybView,
   isDemoToolsEnabled = false,
   onLogout,
+  onStartSetup,
 }) {
   const merchantSetupQuery = useMerchantSetup()
   const merchantSetupData = merchantSetupQuery.data
 
   return (
     <Suspense fallback={<LoadingScreen />}>
-
-      {/* 1.5. VERIFICATION STATUS CHECK (Flow 2) */}
-      {view === 'verification-screen' && (
-        <VerificationScreen
-          onLogout={onLogout}
-          onVerifySuccess={(newSession) => {
-            if (newSession.verificationStatus === 'kyb_approved') {
-              if (merchantSetupData) {
-                setView('dashboard')
-              } else {
-                setView('onboarding')
-              }
-            }
-          }}
-        />
-      )}
 
       {/* 1.6. FORGOT & RESET PASSWORD (Flow 2) */}
       {view === 'forgot-password' && (
@@ -148,10 +133,10 @@ export default function AppRouter({
         <SetupWizard
           initialBusinessInfo={ssoPrefillData}
           verificationStatus={verificationStatus}
-          hasKyb={verificationStatus === 'kyb_approved'}
+          hasKyb={verificationStatus === 'kyb_approved' && !isNewRegistration}
           onKybRequired={onKybRequired}
           onComplete={onWizardComplete}
-          onBackToLogin={() => setView('login')}
+          onBackToLogin={onLogout || (() => setView('login'))}
         />
       )}
 
@@ -179,6 +164,7 @@ export default function AppRouter({
             onLogout={onLogout}
             userRole={userRole}
             currentStaffId={currentStaffId}
+            onStartSetup={onStartSetup}
           />
         </div>
       )}

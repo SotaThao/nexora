@@ -2,7 +2,6 @@
 // Dashboard. Staff mutations also create/remove each staff personal-QR touch
 // point, so setTouchpoints is injected. Extracted from Dashboard.jsx (Group 5).
 import { useState } from 'react'
-import { INITIAL_STAFF } from '../data/mockData'
 import { DEFAULT_PAYOUT_CONFIGS } from '../constants'
 import { getPayoutConfigsFromMember } from '../utils'
 import { useTranslation } from '../../../contexts/LanguageContext'
@@ -50,10 +49,7 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
     if (setupData?.staffList?.length) {
       return setupData.staffList.map(normaliseMember)
     }
-    return INITIAL_STAFF.map(member => ({
-      ...member,
-      payoutConfigs: getPayoutConfigsFromMember(member)
-    }))
+    return []
   })
 
   const [errors, setErrors] = useState({})

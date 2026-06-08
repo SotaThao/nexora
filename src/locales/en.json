@@ -1,9 +1,19 @@
 {
   "staff_dashboard": {
-    "brand": { "title": "NEXORA Staff", "subtitle": "by VLINKPAY" },
+    "brand": {
+      "title": "NEXORA Staff",
+      "subtitle": "by VLINKPAY"
+    },
     "staff_id": "Staff ID",
     "sign_out": "Sign out",
-    "nav": { "home": "Home", "my_qr": "My QR", "tips": "Tips", "reviews": "Reviews", "pay": "Pay", "profile": "Account" },
+    "nav": {
+      "home": "Home",
+      "my_qr": "My QR",
+      "tips": "Tips",
+      "reviews": "Reviews",
+      "pay": "Pay",
+      "profile": "Account"
+    },
     "titles": {
       "home": "Home",
       "qr": "My QR",
@@ -13,7 +23,10 @@
       "profile": "Account",
       "notifications": "Notifications"
     },
-    "status": { "active": "Active", "inactive": "Inactive" },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
     "home": {
       "today_tips": "Today Tips",
       "this_month": "This Month",
@@ -31,7 +44,11 @@
     "tips": {
       "activity": "Tip Activity",
       "empty": "No tips yet.",
-      "status": { "pending": "Pending", "completed": "Completed", "verified": "Verified" },
+      "status": {
+        "pending": "Pending",
+        "completed": "Completed",
+        "verified": "Verified"
+      },
       "ai_insight": "AI Insight",
       "ai_insight_body": "Your average tip for Pedicure is 21%, which is 6% higher than the salon average."
     },
@@ -134,7 +151,7 @@
     "desc_step_1": "Configure basic salon profile and smart review routing gateways.",
     "store_info_title": "Store Profile",
     "store_name": "Store Name *",
-    "store_name_placeholder": "e.g., Golden Glow Nails",
+    "store_name_placeholder": "e.g., Your Business Name",
     "business_category": "Business Category",
     "biz_type_nail": "Nail Salon",
     "biz_type_restaurant": "Restaurant",
@@ -154,7 +171,6 @@
     "yelp_review_link": "Yelp Review Link (Optional)",
     "facebook_link": "Facebook Link (Optional)",
     "feedback_email": "Private Feedback Email (1-3★) (Optional)",
-    
     "title_step_2": "Step 2: Staff Management & QR Touchpoints",
     "desc_step_2": "Add your technicians. The system automatically generates corresponding QR codes to place at tables or share.",
     "add_staff_title": "Add New Staff Member",
@@ -193,7 +209,6 @@
     "tp_lobby_default": "Lobby Main / General Tipping QR",
     "tp_front_default": "Reception Desk / Front Counter",
     "tp_personal_default": "Personal QR - {name}",
-    
     "title_step_3": "Step 3: Download QRs & Finalize Setup",
     "desc_step_3": "Everything is ready! You can download your print-ready QR kit and activate the Nexora Touch Gateway.",
     "download_explain": "We have packed all your salon QR codes into a high-quality print PDF/ZIP. Customers just need to scan to Tip & Review.",
@@ -204,7 +219,6 @@
     "chk_staff": "Staff: {count} technicians with linked wallets",
     "chk_touchpoints": "Touch Points: {count} QR Stations generated",
     "launch_dashboard_btn": "Activate Gateway & Launch Dashboard",
-
     "errors": {
       "name_required": "Store name is required",
       "address_required": "Address is required",
@@ -223,7 +237,6 @@
       "store_payment_required": "Required: Must link at least 1 payment wallet for the store (Venmo, Cash App, Zelle, or VLINKPAY).",
       "tp_name_required": "Touch point name is required"
     },
-    
     "step_name_1": "Store & Review Info",
     "step_name_2": "Staff & QR Setup",
     "step_name_3": "Download & Complete",
@@ -323,7 +336,7 @@
       "tooltip_tips": "Tips"
     },
     "leaderboard": {
-      "title": "Nail Tech Leaderboard",
+      "title": "Leaderboard",
       "tips_label": "Tips",
       "rating_label": "Rating"
     },
@@ -563,11 +576,17 @@
         "wallet_share": "Wallet Share percentage"
       },
       "leaderboards": {
-        "staff": "Nail Tech Leaderboard",
+        "staff": "Leaderboard",
         "touchpoints": "QR Touchpoint Performance",
         "tips_count_label": "tips received",
         "scans_count_label": "scans logged"
       }
+    },
+    "empty_states": {
+      "pending_api": "Pending Backend Connection...",
+      "charts_will_render": "Charts will render when live transaction data is available.",
+      "pending_api_short": "Pending API...",
+      "transactions_unavailable": "Transaction history is unavailable pending API endpoint."
     }
   },
   "staff_detail": {

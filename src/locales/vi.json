@@ -1,9 +1,19 @@
 {
   "staff_dashboard": {
-    "brand": { "title": "NEXORA Staff", "subtitle": "bởi VLINKPAY" },
+    "brand": {
+      "title": "NEXORA Staff",
+      "subtitle": "bởi VLINKPAY"
+    },
     "staff_id": "Mã nhân viên",
     "sign_out": "Đăng xuất",
-    "nav": { "home": "Trang chủ", "my_qr": "Mã QR", "tips": "Tiền tip", "reviews": "Đánh giá", "pay": "Thanh toán", "profile": "Tài khoản" },
+    "nav": {
+      "home": "Trang chủ",
+      "my_qr": "Mã QR",
+      "tips": "Tiền tip",
+      "reviews": "Đánh giá",
+      "pay": "Thanh toán",
+      "profile": "Tài khoản"
+    },
     "titles": {
       "home": "Trang chủ",
       "qr": "Mã QR của tôi",
@@ -13,7 +23,10 @@
       "profile": "Tài khoản",
       "notifications": "Thông báo"
     },
-    "status": { "active": "Đang hoạt động", "inactive": "Ngừng hoạt động" },
+    "status": {
+      "active": "Đang hoạt động",
+      "inactive": "Ngừng hoạt động"
+    },
     "home": {
       "today_tips": "Tip hôm nay",
       "this_month": "Tháng này",
@@ -31,7 +44,11 @@
     "tips": {
       "activity": "Hoạt động tip",
       "empty": "Chưa có tip nào.",
-      "status": { "pending": "Chờ xử lý", "completed": "Hoàn tất", "verified": "Đã xác minh" },
+      "status": {
+        "pending": "Chờ xử lý",
+        "completed": "Hoàn tất",
+        "verified": "Đã xác minh"
+      },
       "ai_insight": "Phân tích AI",
       "ai_insight_body": "Tip trung bình cho dịch vụ Pedicure của bạn là 21%, cao hơn 6% so với mức trung bình của tiệm."
     },
@@ -134,7 +151,7 @@
     "desc_step_1": "Cấu hình thông tin cơ bản của tiệm và các cổng định tuyến phản hồi thông minh.",
     "store_info_title": "Thông Tin Cửa Hàng",
     "store_name": "Tên Cửa Hàng *",
-    "store_name_placeholder": "Ví dụ: Golden Glow Nails",
+    "store_name_placeholder": "Ví dụ: Tên Tiệm Của Bạn",
     "business_category": "Loại hình",
     "biz_type_nail": "Nail Salon (Tiệm Nail)",
     "biz_type_restaurant": "Restaurant (Nhà Hàng)",
@@ -154,7 +171,6 @@
     "yelp_review_link": "Yelp Review Link (Tùy chọn)",
     "facebook_link": "Facebook Link (Tùy chọn)",
     "feedback_email": "Email Nhận Góp Ý Kín (1-3★) (Tùy chọn)",
-    
     "title_step_2": "Bước 2: Quản Lý Nhân Viên & Điểm Chạm QR",
     "desc_step_2": "Thêm thợ của bạn. Hệ thống sẽ tự động phát sinh mã QR tương ứng để dán tại ghế hoặc chia sẻ.",
     "add_staff_title": "Thêm Nhân Viên Mới",
@@ -193,7 +209,6 @@
     "tp_lobby_default": "QR Sảnh Chờ / Tipping Chung",
     "tp_front_default": "Quầy Lễ Tân / Trạm Chính",
     "tp_personal_default": "QR Cá Nhân - {name}",
-    
     "title_step_3": "Bước 3: Tải Xuống QR & Hoàn Tất Cấu Hình",
     "desc_step_3": "Mọi thứ đã sẵn sàng! Bạn có thể tải xuống bộ mã QR in ấn và kích hoạt Nexora Touch Gateway.",
     "download_explain": "Chúng tôi đã đóng gói toàn bộ mã QR của tiệm thành một tệp PDF/ZIP in ấn chất lượng cao. Khách hàng chỉ cần quét để Típ & Review.",
@@ -204,7 +219,6 @@
     "chk_staff": "Nhân viên: {count} kỹ thuật viên liên kết ví",
     "chk_touchpoints": "Điểm chạm: {count} QR Station được phát sinh",
     "launch_dashboard_btn": "Kích Hoạt Hệ Thống & Vào Dashboard",
-
     "errors": {
       "name_required": "Tên cửa hàng là bắt buộc",
       "address_required": "Địa chỉ là bắt buộc",
@@ -223,7 +237,6 @@
       "store_payment_required": "Yêu cầu: Phải liên kết ít nhất 1 ví nhận tiền cho cửa hàng (Venmo, Cash App, Zelle, hoặc VLINKPAY).",
       "tp_name_required": "Tên điểm chạm là bắt buộc"
     },
-    
     "step_name_1": "Cửa hàng & Review",
     "step_name_2": "Nhân viên & QR",
     "step_name_3": "Download & Hoàn tất",
@@ -568,6 +581,12 @@
         "tips_count_label": "lượt nhận típ",
         "scans_count_label": "lượt quét"
       }
+    },
+    "empty_states": {
+      "pending_api": "Đang kết nối API...",
+      "charts_will_render": "Biểu đồ sẽ hiển thị khi có dữ liệu giao dịch thật.",
+      "pending_api_short": "Pending API...",
+      "transactions_unavailable": "Lịch sử giao dịch chưa khả dụng trong quá trình kết nối API."
     }
   },
   "staff_detail": {

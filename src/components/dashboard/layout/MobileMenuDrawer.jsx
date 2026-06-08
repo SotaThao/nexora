@@ -61,17 +61,17 @@ export default function MobileMenuDrawer({
         <div className="mb-4 rounded-xl border border-white/10 bg-white/5 p-4 shrink-0">
           <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsProfileExpanded(!isProfileExpanded)}>
             <div className="flex items-center gap-3 min-w-0">
-              {profile.avatar ? (
+              {profile.avatar && !profile.avatar.includes('unsplash.com') ? (
                 <img src={profile.avatar} alt="" className="h-9 w-9 rounded-full border border-white/10 object-cover" />
               ) : (
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-xs font-extrabold">
-                  {profile.fullName ? profile.fullName.charAt(0) : businessName.charAt(0)}
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-xs font-extrabold uppercase">
+                  {(profile.email || '').slice(0, 2).toUpperCase() || '?'}
                 </div>
               )}
               <div className="min-w-0">
                 <div className="truncate text-xs font-black text-white/50 uppercase tracking-wider">{businessName}</div>
                 <div className="flex items-center gap-1 min-w-0 mt-0.5">
-                  <div className="truncate text-xs font-bold text-white">{profile.fullName || businessName}</div>
+                  <div className="truncate text-xs font-bold text-white">{profile.fullName || profile.email || businessName}</div>
                 </div>
                 <div className="text-[10px] text-white/40 truncate mt-0.5">{profile.email}</div>
               </div>

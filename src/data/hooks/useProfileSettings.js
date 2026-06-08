@@ -1,31 +1,36 @@
 /**
  * useProfileSettings — TanStack Query hooks for the profile-settings domain.
- *
- * Hooks:
- *   useProfileSettings()     → useQuery for the settings object
- *   useSaveProfileSettings() → useMutation to replace settings
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import profileSettingsRepository from '../repositories/profileSettings'
 
-export function useProfileSettings() {
+/**
+ * @param {Object} [options]
+ * @param {boolean} [options.enabled=true] - Whether the query should execute.
+ */
+export function useProfileSettings({ enabled = true } = {}) {
   return useQuery({
-    queryKey: qk.profileSettings(),
+    queryKey: qk.userProfile(),
     queryFn: () => profileSettingsRepository.get(),
+    enabled,
   })
 }
 
+export function useVerifiedStatus() {
+  return useQuery({
+    queryKey: qk.verifiedStatus(),
+    queryFn: () => profileSettingsRepository.getVerifiedStatus(),
+  })
+}
+
+/** @deprecated Use useSaveProfileSettings directly on API if needed */
 export function useSaveProfileSettings() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (settings) => profileSettingsRepository.save(settings),
-    onMutate: (settings) => {
-      queryClient.setQueryData(qk.profileSettings(), settings)
-    },
-    onSuccess: (_data, settings) => {
-      queryClient.setQueryData(qk.profileSettings(), settings)
-      queryClient.invalidateQueries({ queryKey: qk.profileSettings() })
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.userProfile() })
     },
   })
 }
@@ -34,12 +39,9 @@ export function useClearProfileSettings() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: () => profileSettingsRepository.clear(),
-    onMutate: () => {
-      queryClient.setQueryData(qk.profileSettings(), null)
-    },
     onSuccess: () => {
-      queryClient.setQueryData(qk.profileSettings(), null)
-      queryClient.invalidateQueries({ queryKey: qk.profileSettings() })
+      queryClient.setQueryData(qk.userProfile(), null)
+      queryClient.invalidateQueries({ queryKey: qk.userProfile() })
     },
   })
 }

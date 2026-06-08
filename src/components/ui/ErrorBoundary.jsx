@@ -11,33 +11,19 @@ export default class ErrorBoundary extends React.Component {
     return { hasError: true, error }
   }
 
-  componentDidCatch(error, info) {
-    if (process.env.NODE_ENV !== 'production') {
-      logger.error('[ErrorBoundary]', error, info.componentStack)
-    }
+  componentDidCatch(error, errorInfo) {
+    // Catch errors in any components below and re-render with error message
+    console.error('ERROR BOUNDARY CAUGHT:', error, errorInfo)
+    logger.error('Uncaught React Error', { error: error.message, stack: error.stack, componentStack: errorInfo.componentStack })
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-dvh flex items-center justify-center bg-gray-50 p-6">
-          <div className="nexora-card max-w-md w-full text-center p-8 space-y-4">
-            <div className="text-4xl">⚠️</div>
-            <h2 className="text-xl font-semibold text-gray-800">
-              Đã xảy ra lỗi / Something went wrong
-            </h2>
-            <p className="text-gray-500 text-sm">
-              Ứng dụng gặp sự cố không mong muốn. Vui lòng thử lại.
-              <br />
-              An unexpected error occurred. Please try again.
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="nexora-btn-primary mt-2"
-            >
-              Tải lại / Reload
-            </button>
-          </div>
+        <div style={{ padding: '20px', background: 'red', color: 'white' }}>
+          <h1>ERROR</h1>
+          <pre>{this.state.error?.message || 'Unknown error'}</pre>
+          <pre>{this.state.errorInfo?.componentStack || ''}</pre>
         </div>
       )
     }
