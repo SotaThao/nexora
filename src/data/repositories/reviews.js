@@ -1,16 +1,14 @@
 /**
- * reviewsRepository — customer reviews submitted via the review-token flow.
- * Key: nexora_reviews.
+ * reviewsRepository — API-only implementation.
+ * TODO: Wire to real reviews API endpoints when available.
  */
-import { adapter as defaultAdapter } from '../adapters'
 
-const KEY = 'nexora_reviews'
-
-export function createReviewsRepository(a = defaultAdapter) {
+export function createReviewsRepository() {
   return {
     /** @returns {Promise<Array>} */
     async list() {
-      return (await a.get(KEY)) ?? []
+      // TODO: Wire to GET /api/v1/merchant/reviews
+      return []
     },
 
     /**
@@ -18,23 +16,16 @@ export function createReviewsRepository(a = defaultAdapter) {
      * @returns {Promise<object>} the appended review
      */
     async add(review) {
-      const list = (await a.get(KEY)) ?? []
-      const updated = [...list, review]
-      await a.set(KEY, updated)
+      // TODO: Wire to POST /api/v1/merchant/reviews
       return review
     },
 
     /**
-     * Merge patch into the review with matching id.
      * @param {string} id
      * @param {object} patch
      */
     async update(id, patch) {
-      const list = (await a.get(KEY)) ?? []
-      const updated = list.map((r) =>
-        r.id === id ? { ...r, ...patch } : r
-      )
-      await a.set(KEY, updated)
+      // TODO: Wire to PATCH /api/v1/merchant/reviews/:id
     },
   }
 }

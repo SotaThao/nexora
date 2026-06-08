@@ -20,7 +20,7 @@ export default function SetupWizard({
   hasKyb = verificationStatus === 'kyb_approved',
   onKybRequired
 }) {
-  const wizard = useSetupWizard({ initialBusinessInfo })
+  const wizard = useSetupWizard({ initialBusinessInfo, onBackToLogin })
   const {
     currentLanguage, setLanguage, t,
     currentStep, setCurrentStep, isSsoLocked,
@@ -186,10 +186,10 @@ export default function SetupWizard({
             <div className="absolute top-0 right-0 w-32 h-32 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(70,72,216,0.03)] via-transparent to-transparent rounded-full pointer-events-none"></div>
 
             {/* Error Banner */}
-            {errors.staffList && (
+            {(errors.staffList || errors.submit) && (
               <div className="mb-6 p-4 rounded-flox-cards bg-red-50 border border-red-200 text-red-700 text-sm flex items-center gap-3">
                 <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
-                <span>{errors.staffList}</span>
+                <span>{errors.staffList || errors.submit}</span>
               </div>
             )}
 

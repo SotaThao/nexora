@@ -6,18 +6,17 @@
  *   status   — 'loading' | 'authenticated' | 'anonymous'
  *   login(credentials) — calls adapter.login(); resolves or throws on failure
  *   logout()           — calls adapter.logout(); clears session
+ *   refreshSession()   — re-fetches session from the adapter
  *
- * The adapter is selected once at module load via VITE_DATA_SOURCE:
- *   storage (default) → mockAuthAdapter
- *   api               → apiAuthAdapter (stub; throws NotImplemented)
+ * The adapter is apiAuthAdapter (API-only mode).
  *
  * Session shape (transport-agnostic — no password/token ever appears here):
  *   { id, email, accountType, flag, displayName, role, staffId,
- *     verificationStatus, ssoPrefillData, clearMerchantSetup?,
- *     clearProfileSettings?, routeToDashboard? }
+ *     verificationStatus, ssoPrefillData }
  */
 import React, { createContext, useState, useEffect, useCallback } from 'react'
-import { authAdapter } from './adapters/index'
+import { authAdapter } from './adapters'
+import { tokenStore } from './tokenStore'
 
 export const AuthContext = createContext(null)
 
@@ -25,7 +24,7 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
   const [status, setStatus] = useState('loading')
 
-  // On mount: restore session from the adapter (mirrors today's mount behavior)
+  // On mount: restore session from the adapter
   useEffect(() => {
     authAdapter.getSession().then((existing) => {
       setSession(existing || null)
@@ -34,6 +33,32 @@ export function AuthProvider({ children }) {
       setSession(null)
       setStatus('anonymous')
     })
+  }, [])
+
+  // Subscribe to tokenStore updates — when tokens are cleared (e.g. 401
+  // refresh failure), transition to anonymous without a page reload.
+  useEffect(() => {
+    const unsubscribe = tokenStore.subscribe((tokens) => {
+      if (!tokens) {
+        setSession(null)
+        setStatus('anonymous')
+      } else {
+        setSession((prev) => {
+          if (!prev) {
+            authAdapter.getSession().then((newSession) => {
+              setSession(newSession)
+              setStatus(newSession ? 'authenticated' : 'anonymous')
+            }).catch(() => {
+              setSession(null)
+              setStatus('anonymous')
+            })
+          }
+          return prev
+        })
+      }
+    })
+
+    return unsubscribe
   }, [])
 
   const login = useCallback(async (credentials) => {
@@ -49,11 +74,25 @@ export function AuthProvider({ children }) {
     setStatus('anonymous')
   }, [])
 
+  const refreshSession = useCallback(async () => {
+    try {
+      const existing = await authAdapter.getSession()
+      setSession(existing || null)
+      setStatus(existing ? 'authenticated' : 'anonymous')
+      return existing
+    } catch (err) {
+      setSession(null)
+      setStatus('anonymous')
+      throw err
+    }
+  }, [])
+
   return (
-    <AuthContext.Provider value={{ session, status, login, logout }}>
+    <AuthContext.Provider value={{ session, status, login, logout, refreshSession }}>
       {children}
     </AuthContext.Provider>
   )
 }
 
 export default AuthProvider
+

@@ -5,6 +5,48 @@ import {
 import CustomSelect from '../../CustomSelect'
 import { renderTextWithGoldStars } from '../constants'
 import { renderLabel } from '../../../contexts/LanguageContext'
+import { useCheckSlug } from '../../../data/hooks/useMerchantSetup'
+
+function SlugStatus({ slug, setBusinessInfo, businessInfo, t }) {
+  const { data, isLoading, isError } = useCheckSlug(slug)
+
+  if (!slug || slug.trim().length === 0) return null
+
+  if (isLoading) {
+    return <p className="text-xs text-nexoraSubtle mt-1">Checking slug availability...</p>
+  }
+
+  if (isError) {
+    return <p className="text-xs text-red-500 mt-1">Error checking slug availability.</p>
+  }
+
+  if (data) {
+    if (data.isAvailable) {
+      return <p className="text-xs text-green-600 mt-1 font-semibold">✓ Slug is available</p>
+    } else {
+      return (
+        <div className="text-xs text-red-500 mt-1">
+          <span>✗ Slug is already taken.</span>
+          {data.suggestion && (
+            <span>
+              {' '}
+              Try suggestion:{' '}
+              <button
+                type="button"
+                onClick={() => setBusinessInfo({ ...businessInfo, customSlug: data.suggestion })}
+                className="text-nexoraBrand font-bold underline cursor-pointer hover:text-nexoraBrandSoft"
+              >
+                {data.suggestion}
+              </button>
+            </span>
+          )}
+        </div>
+      )
+    }
+  }
+
+  return null
+}
 
 export default function Step1BusinessInfo({
   t,
@@ -57,6 +99,7 @@ export default function Step1BusinessInfo({
               </div>
               <span className="text-[10px] text-nexoraSubtle">{t('setup.logo_hint')}</span>
             </div>
+            {errors.logo && <span className="text-xs text-red-500 mt-1 block">{errors.logo}</span>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -108,6 +151,31 @@ export default function Step1BusinessInfo({
               />
             </div>
           </div>
+
+          {import.meta.env.VITE_DATA_SOURCE === 'api' && (
+            <div>
+              <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
+                Store Slug (URL Path) *
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  disabled={isSsoLocked}
+                  placeholder="e.g. golden-glow-nails"
+                  className={`w-full bg-nexoraCanvas border ${errors.customSlug ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} ${isSsoLocked ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : ''} rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
+                  value={businessInfo.customSlug || ''}
+                  onChange={(e) => {
+                    if (isSsoLocked) return
+                    const cleanValue = e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '')
+                    setBusinessInfo({ ...businessInfo, customSlug: cleanValue })
+                    if (errors.customSlug) setErrors({ ...errors, customSlug: '' })
+                  }}
+                />
+                <SlugStatus slug={businessInfo.customSlug} setBusinessInfo={setBusinessInfo} businessInfo={businessInfo} t={t} />
+              </div>
+              {errors.customSlug && <span className="text-xs text-red-500 mt-1 block">{errors.customSlug}</span>}
+            </div>
+          )}
 
           <div>
             <label className="flex items-center text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">

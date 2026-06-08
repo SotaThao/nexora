@@ -5,27 +5,17 @@ import { useTranslation } from './contexts/LanguageContext'
 import { initStorage } from './utils/storage'
 import { logger } from './utils/logger'
 import { useNotification } from './contexts/NotificationContext'
-import { useStorageEventBridge } from './data/storageEventBridge'
 import { useAuth } from './auth/useAuth'
-import { usePendingAccounts, useReplaceAllPendingAccounts } from './data/hooks/usePendingAccounts'
 import { useClearMerchantSetup, useMerchantSetup, useSaveMerchantSetup } from './data/hooks/useMerchantSetup'
 import { useClearProfileSettings } from './data/hooks/useProfileSettings'
 import { isDemoToolsEnabled } from './app/demoTools'
+import { getErrorI18nKey } from './data/errorCodes'
+import apiAuthAdapter from './auth/adapters/apiAuthAdapter'
 
 export default function App() {
-  // Mount the storage-event → query-cache bridge once at app root (Phase 3 / D4).
-  // Must be called inside QueryClientProvider (see src/main.jsx).
-  useStorageEventBridge()
-
   const { currentLanguage, setLanguage, t } = useTranslation()
   const { showConfirm } = useNotification()
   const { session, status: authStatus, login, logout } = useAuth()
-  const pendingAccountsQuery = usePendingAccounts()
-  const replaceAllPendingAccountsMutation = useReplaceAllPendingAccounts()
-  const merchantSetupQuery = useMerchantSetup()
-  const saveMerchantSetupMutation = useSaveMerchantSetup()
-  const clearMerchantSetupMutation = useClearMerchantSetup()
-  const clearProfileSettingsMutation = useClearProfileSettings()
 
   const [view, setView] = useState('login') // 'login' | 'register-wizard' | 'onboarding' | 'dashboard' | 'customer' | 'staff-portal' | 'staff-dashboard'
   const [userRole, setUserRole] = useState('owner') // 'owner' | 'staff'
@@ -33,10 +23,15 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [setupData, setSetupData] = useState(null)
   const [verificationStatus, setVerificationStatus] = useState('kyb_approved')
-  const [simStatus, setSimStatus] = useState('basic')
   const [preKybView, setPreKybView] = useState('onboarding')
 
-  // Login simulated form state
+  const needsMerchantData = (view === 'dashboard' || view === 'onboarding')
+  const merchantSetupQuery = useMerchantSetup({ enabled: needsMerchantData })
+  const saveMerchantSetupMutation = useSaveMerchantSetup()
+  const clearMerchantSetupMutation = useClearMerchantSetup()
+  const clearProfileSettingsMutation = useClearProfileSettings()
+
+  // Login form state
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loginError, setLoginError] = useState('')
@@ -56,13 +51,29 @@ export default function App() {
   const [simulationNotification, setSimulationNotification] = useState(null)
   const [loggedInStaffId, setLoggedInStaffId] = useState(null)
 
-  // Derive pendingAccounts list for simulation panel from TanStack Query
-  const pendingAccounts = pendingAccountsQuery.data ?? []
-
   // Load setup data or customer flow on mount
   useEffect(() => {
     initStorage()
     const params = new URLSearchParams(window.location.search)
+    const action = params.get('action') || params.get('flow')
+    if (action === 'verify-email' && params.get('token') && params.get('email')) {
+      apiAuthAdapter.verifyEmail({
+        token: params.get('token'),
+        email: params.get('email')
+      }).then(() => {
+        setView('login')
+        setLoginError('')
+      }).catch(() => {
+        setView('login')
+        setLoginError(t('errors.user_invalid_email_verification_token') || 'Email verification failed.')
+      })
+      window.history.replaceState({}, '', window.location.pathname)
+      return
+    }
+    if (action === 'reset-password') {
+      setView('reset-password')
+      return
+    }
     if (params.get('flow') === 'customer') {
       setView('customer')
       return
@@ -95,53 +106,44 @@ export default function App() {
     }
   }, [])
 
+  // Restore session view on mount/load
+  useEffect(() => {
+    if (authStatus === 'authenticated' && session && view === 'login') {
+      applySessionToView(session)
+    }
+  }, [authStatus, session, view])
+
   useEffect(() => {
     if (merchantSetupQuery.data) {
       setSetupData(merchantSetupQuery.data)
     }
   }, [merchantSetupQuery.data])
 
-  // Action: Handle manual login submit or SSO login
-  const handleLoginSubmit = (ssoType = null, simulatedStatus = null) => {
+  // Action: Handle login submit
+  const handleLoginSubmit = () => {
     setIsLoading(true)
     setLoginError('')
 
-    // Simulate API delay
     setTimeout(async () => {
       setIsLoading(false)
 
       const credentials = {
         email: email.trim().toLowerCase(),
         password,
-        ssoType,
-        simulatedStatus: simulatedStatus || simStatus,
       }
 
       try {
         const newSession = await login(credentials)
         applySessionToView(newSession)
       } catch (err) {
-        const code = err?.message || ''
-        if (code === 'missing_credentials') {
-          setLoginError(t('login.login_error_missing'))
-        } else if (code === 'incorrect_password') {
-          setLoginError(currentLanguage === 'vi' ? 'Mật khẩu không chính xác.' : 'Incorrect password.')
-        } else if (code === 'invalid_credentials') {
-          setLoginError(currentLanguage === 'vi'
-            ? 'Email hoặc mật khẩu không hợp lệ. Vui lòng nhập email đúng định dạng và mật khẩu từ 6 ký tự, hoặc sử dụng bảng điều khiển kịch bản ở bên phải.'
-            : 'Invalid credentials. Please enter a valid email and 6+ character password, or use the Simulation Panel on the right.'
-          )
-        } else {
-          setLoginError(currentLanguage === 'vi'
-            ? 'Đăng nhập thất bại. Vui lòng thử lại.'
-            : 'Login failed. Please try again.'
-          )
-        }
+        const errorCode = err?.errorCode || 'unknown_error'
+        const i18nKey = getErrorI18nKey(errorCode)
+        setLoginError(t(i18nKey))
       }
-    }, 1200)
+    }, 800)
   }
 
-  // Apply session returned from the auth adapter to view/state — preserves original routing
+  // Apply session returned from the auth adapter to view/state
   const applySessionToView = (newSession) => {
     if (!newSession) return
 
@@ -178,6 +180,12 @@ export default function App() {
       setSsoPrefillData(sso)
     }
 
+    // Route to verification screen if not KYB approved
+    if (vs !== 'kyb_approved') {
+      setView('verification-screen')
+      return
+    }
+
     // SSO no-kyb scenario always goes to dashboard
     if (routeToDashboard) {
       setView('dashboard')
@@ -193,20 +201,10 @@ export default function App() {
     }
   }
 
-  // Trigger Simulation Scenario directly
-  const triggerSimulation = (scenario, status = null) => {
+  // Trigger Simulation Scenario directly (demo tools only)
+  const triggerSimulation = (scenario) => {
     setLoginError('')
-    if (scenario === 'sso_with_kyb') {
-      clearMerchantSetupMutation.mutate()
-      setSetupData(null)
-      setEmail('sso_with_kyb@gmail.com')
-      setPassword('••••••••')
-      handleLoginSubmit('sso_with_kyb')
-    } else if (scenario === 'sso_no_kyb') {
-      setEmail('sso_no_kyb@gmail.com')
-      setPassword('••••••••')
-      handleLoginSubmit('sso_no_kyb', status || simStatus)
-    } else if (scenario === 'new_register') {
+    if (scenario === 'new_register') {
       setEmail('')
       setPassword('')
       setRegisterEmail('')
@@ -227,40 +225,20 @@ export default function App() {
     }
   }
 
-  // Instantly toggle verification status of an account in the simulations listing
-  const toggleAccountVerification = (emailAddress) => {
-    const accs = pendingAccounts
-    const statuses = ['basic', 'lite_pending', 'verified_lite', 'kyb_required', 'kyb_pending', 'kyb_approved', 'suspended']
-    const updated = accs.map(acc => {
-      if (acc.email === emailAddress) {
-        const currentStatus = acc.verificationStatus || (acc.isVerified ? 'kyb_approved' : 'basic')
-        const currentIndex = statuses.indexOf(currentStatus)
-        const nextIndex = (currentIndex + 1) % statuses.length
-        const nextStatus = statuses[nextIndex]
-        return {
-          ...acc,
-          verificationStatus: nextStatus,
-          isVerified: nextStatus === 'kyb_approved'
-        }
-      }
-      return acc
-    })
-    replaceAllPendingAccountsMutation.mutate(updated)
-  }
-
-  // Delete simulated account
-  const deleteSimulatedAccount = (emailAddress) => {
-    const updated = pendingAccounts.filter(acc => acc.email !== emailAddress)
-    replaceAllPendingAccountsMutation.mutate(updated)
-  }
-
   // Action: Complete onboarding wizard
   const handleWizardComplete = (data) => {
     setSetupData(data)
     setView('dashboard')
   }
 
-  // Action: Simulated log out / Reset onboarding to test again
+  // Action: Log out (clear tokens + session, then show login)
+  const handleLogout = async () => {
+    await logout()
+    setSetupData(null)
+    setView('login')
+  }
+
+  // Action: Log out / Reset app
   const handleResetApp = async () => {
     const ok = await showConfirm(t('login.reset_confirm') || 'Are you sure you want to reset?')
     if (ok) {
@@ -304,32 +282,6 @@ export default function App() {
 
   const handleKybSuccess = (emailAddress) => {
     setVerificationStatus('kyb_approved')
-    const accs = pendingAccounts
-    const matched = accs.find(acc => acc.email === emailAddress)
-    if (matched && matched.kybDetails) {
-      const kybProfile = {
-        name: matched.kybDetails.legalName,
-        industry: matched.kybDetails.businessType === 'LLC' ? 'Nail Salon' : 'Khác',
-        address: 'VLINKPAY Merchant Registered Location',
-        phone: '+1 (555) VLP-KYB1',
-        website: '',
-        logo: null,
-        paymentAccounts: {
-          venmo: '',
-          cashapp: '',
-          zelle: '',
-          vlinkpay: matched.kybDetails.bankAccount ? `VLP-${matched.kybDetails.bankAccount.slice(-4)}` : 'VLINKPAY-ID'
-        },
-        email: matched.email,
-        reviewLinks: {
-          googleReview: 'https://google.com',
-          yelpReview: 'https://yelp.com',
-          facebookReview: '',
-          feedbackEmail: matched.email
-        }
-      }
-      setSsoPrefillData(kybProfile)
-    }
     setView(preKybView)
   }
 
@@ -352,15 +304,6 @@ export default function App() {
     })
   }
 
-  // Handle auto-login from account list in SimulationPanel
-  const handleAutoLogin = (accEmail, accPassword) => {
-    setEmail(accEmail)
-    setPassword(accPassword)
-    setTimeout(() => {
-      handleLoginSubmit()
-    }, 50)
-  }
-
   return (
     <div className="min-h-dvh bg-nexoraCanvas text-inkBlue font-sans antialiased">
       {view === 'login' ? (
@@ -374,15 +317,9 @@ export default function App() {
           currentLanguage={currentLanguage}
           setLanguage={setLanguage}
           t={t}
-          simStatus={simStatus}
-          setSimStatus={setSimStatus}
-          pendingAccounts={pendingAccounts}
           onLoginSubmit={handleLoginSubmit}
           onTriggerSimulation={triggerSimulation}
-          onToggleAccountVerification={toggleAccountVerification}
-          onDeleteSimulatedAccount={deleteSimulatedAccount}
           onQuickDemoLogin={handleQuickDemoLogin}
-          onAutoLogin={handleAutoLogin}
           setStaffInviteData={setStaffInviteData}
           setView={setView}
           setLoggedInStaffId={setLoggedInStaffId}
@@ -416,6 +353,7 @@ export default function App() {
           onKybSuccess={handleKybSuccess}
           onKybRequired={handleKybRequired}
           onResetApp={handleResetApp}
+          onLogout={handleLogout}
           onRegisterAndLogin={handleRegisterAndLogin}
           onLoadPendingAccounts={() => {}}
           preKybView={preKybView}

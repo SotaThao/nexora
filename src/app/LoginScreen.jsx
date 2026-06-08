@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Lock, Mail, Sparkles, Eye, EyeOff } from 'lucide-react'
-import SimulationPanel from './SimulationPanel'
 import AuthGraphicPanel from '../components/auth/AuthGraphicPanel'
+import SecondaryButton from '../components/ui/SecondaryButton'
 
 function GoogleIcon() {
   return (
@@ -32,15 +32,9 @@ export default function LoginScreen({
   currentLanguage,
   setLanguage,
   t,
-  simStatus,
-  setSimStatus,
-  pendingAccounts,
   onLoginSubmit,
   onTriggerSimulation,
-  onToggleAccountVerification,
-  onDeleteSimulatedAccount,
   onQuickDemoLogin,
-  onAutoLogin,
   setStaffInviteData,
   setView,
   setLoggedInStaffId,
@@ -117,7 +111,16 @@ export default function LoginScreen({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">{t('login.password_label')}</label>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider">{t('login.password_label')}</label>
+                    <button
+                      type="button"
+                      onClick={() => setView('forgot-password')}
+                      className="text-[10px] font-bold text-nexoraBrand hover:underline focus:outline-none transition-all"
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 w-4 h-4 text-nexoraSubtle" />
                     <input
@@ -177,13 +180,9 @@ export default function LoginScreen({
 
               {/* Quick login / registration options */}
               <div className="grid grid-cols-1 gap-3">
-                <button
-                  type="button"
-                  onClick={() => onTriggerSimulation('new_register')}
-                  className="btn-outline-ghost flex min-h-11 w-full items-center justify-center px-4 py-2 text-xs font-bold"
-                >
+                <SecondaryButton onClick={() => onTriggerSimulation('new_register')}>
                   {t('login.register_btn')}
-                </button>
+                </SecondaryButton>
 
                 {isDemoToolsEnabled && (
                   <button
@@ -276,19 +275,6 @@ export default function LoginScreen({
         <div className="hidden p-3 lg:col-span-7 lg:block">
           <AuthGraphicPanel />
         </div>
-
-        {isDemoToolsEnabled && (
-          <SimulationPanel
-            currentLanguage={currentLanguage}
-            simStatus={simStatus}
-            setSimStatus={setSimStatus}
-            pendingAccounts={pendingAccounts}
-            onTriggerSimulation={onTriggerSimulation}
-            onToggleAccountVerification={onToggleAccountVerification}
-            onDeleteSimulatedAccount={onDeleteSimulatedAccount}
-            onAutoLogin={onAutoLogin}
-          />
-        )}
 
       </div>
     </div>

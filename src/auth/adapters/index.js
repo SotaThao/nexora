@@ -1,20 +1,8 @@
 /**
- * Auth adapter factory — mirrors the data-layer adapter selection pattern.
- *
- * VITE_DATA_SOURCE=storage (default) → mockAuthAdapter
- * VITE_DATA_SOURCE=api              → apiAuthAdapter
+ * Auth adapter — exports the API auth adapter directly.
+ * The storage/mock adapter switching has been removed;
+ * the app now exclusively uses the real API backend.
  */
-import { mockAuthAdapter } from './mockAuthAdapter'
 import { apiAuthAdapter } from './apiAuthAdapter'
 
-export function getAuthAdapter() {
-  if (import.meta.env.VITE_DATA_SOURCE === 'api') {
-    return apiAuthAdapter
-  }
-  return mockAuthAdapter
-}
-
-/** Resolved singleton — import this in AuthProvider. */
-export const authAdapter = getAuthAdapter()
-
-export default authAdapter
+export const authAdapter = apiAuthAdapter

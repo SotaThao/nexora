@@ -1,38 +1,22 @@
 /**
- * usePendingAccounts — TanStack Query hooks for the pending-accounts domain.
+ * usePendingAccounts — no-op hooks (API-only mode).
  *
- * Hooks:
- *   usePendingAccounts()          → useQuery list of all pending accounts
- *   useAddPendingAccount()        → useMutation to append an account
- *   useReplaceAllPendingAccounts() → useMutation to replace the full list
+ * The pendingAccounts domain was a storage-mode simulation construct for
+ * tracking locally registered accounts. In API mode, registration is
+ * handled server-side and this data is not needed.
+ *
+ * These hooks return empty data / no-op mutations to preserve the interface
+ * consumed by existing components without breaking imports.
  */
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { qk } from '../queryKeys'
-import pendingAccountsRepository from '../repositories/pendingAccounts'
 
 export function usePendingAccounts() {
-  return useQuery({
-    queryKey: qk.pendingAccounts(),
-    queryFn: () => pendingAccountsRepository.list(),
-  })
+  return { data: [], isLoading: false, isError: false, error: null }
 }
 
 export function useAddPendingAccount() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (account) => pendingAccountsRepository.add(account),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: qk.pendingAccounts() })
-    },
-  })
+  return { mutate: () => {}, mutateAsync: async (account) => account }
 }
 
 export function useReplaceAllPendingAccounts() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (list) => pendingAccountsRepository.replaceAll(list),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: qk.pendingAccounts() })
-    },
-  })
+  return { mutate: () => {}, mutateAsync: async () => {} }
 }

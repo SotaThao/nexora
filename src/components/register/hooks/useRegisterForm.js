@@ -6,6 +6,9 @@ import { useReplaceAllPendingAccounts, usePendingAccounts } from '../../../data/
 import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
 import { useNotifications, useAddNotification } from '../../../data/hooks/useNotifications'
 import { logger } from '../../../utils/logger'
+import apiAuthAdapter from '../../../auth/adapters/apiAuthAdapter'
+import { getErrorI18nKey } from '../../../data/errorCodes'
+import { useCompletePersonalOnboarding } from '../../../data/hooks/usePersonalOnboarding'
 
 export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onKybSuccess, isRedirectedFromSession }) {
   const { t, currentLanguage, setLanguage, renderLabel } = useTranslation()
@@ -15,8 +18,9 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const saveMerchantSetupMutation = useSaveMerchantSetup()
   useNotifications()
   const addNotificationMutation = useAddNotification()
+  const completePersonalOnboardingMutation = useCompletePersonalOnboarding()
   const [currentStep, setCurrentStep] = useState(0)
-  const [role, setRole] = useState('business')
+  const [role, setRole] = useState('personal')
 
   // Step 1 states
   const [email, setEmail] = useState(ssoEmail || '')
@@ -43,6 +47,14 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
   })
 
+  // API mode states
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [isVerificationPending, setIsVerificationPending] = useState(false)
+  const [simToken, setSimToken] = useState('sim-token-123')
+  const [verifySuccess, setVerifySuccess] = useState(false)
+  const [resendMessage, setResendMessage] = useState('')
+
   // Step 2 states
   const [generatedStaffId, setGeneratedStaffId] = useState('')
   const [copied, setCopied] = useState(false)
@@ -65,6 +77,49 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
 
   // Validation errors
   const [errors, setErrors] = useState({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleSimulateVerify = () => {
+    setErrors({})
+    setVerifySuccess(false)
+    apiAuthAdapter.verifyEmail({ token: simToken, email: email.trim().toLowerCase() })
+      .then(() => {
+        setVerifySuccess(true)
+        // Auto-login to get tokens for subsequent protected calls (Step 2, 3, 4)
+        return apiAuthAdapter.login({ email: email.trim().toLowerCase(), password })
+      })
+      .then(() => {
+        setTimeout(() => {
+          if (role === 'business') {
+            if (onRegisterSuccess) onRegisterSuccess()
+          } else {
+            setIsVerificationPending(false)
+            setCurrentStep(2)
+          }
+        }, 1500)
+      })
+      .catch((err) => {
+        console.error('handleSimulateVerify error:', err)
+        const code = err?.errorCode || 'HTTP_ERROR'
+        const i18nKey = getErrorI18nKey(code)
+        setErrors({ submit: t(i18nKey) || 'Verification or auto-login failed.' })
+      })
+  }
+
+  const handleResendVerification = () => {
+    setErrors({})
+    setResendMessage('')
+    apiAuthAdapter.resendVerificationEmail({ email: email.trim().toLowerCase() })
+      .then(() => {
+        setResendMessage(t('register.resend_verification_success') || 'Verification email resent successfully!')
+        setResendTimer(60)
+      })
+      .catch((err) => {
+        const code = err?.errorCode || 'HTTP_ERROR'
+        const i18nKey = getErrorI18nKey(code)
+        setErrors({ submit: t(i18nKey) || 'Failed to resend email.' })
+      })
+  }
 
   useEffect(() => {
     let interval = null
@@ -112,25 +167,64 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     }
 
     setErrors({})
+    setIsSubmitting(true)
 
-    if (role === 'personal') {
-      const emailPrefix = email.split('@')[0].toUpperCase()
-      const initials = emailPrefix.slice(0, 3) || 'STAFF'
-      const randomDigits = Math.floor(1000 + Math.random() * 9000)
-      const staffId = `NEX-STAFF-${initials}${randomDigits}`
-      setGeneratedStaffId(staffId)
-      setVlinkpayId(`VLP-${randomDigits}-${initials}`)
-
-      setShowOtpInput(true)
-      setOtpCode('')
-      setOtpError('')
-      setResendTimer(30)
-    } else {
-      setOtpCode('')
-      setOtpError('')
-      setResendTimer(30)
-      setCurrentStep(2)
-    }
+    apiAuthAdapter.signup({
+      email: email.trim().toLowerCase(),
+      confirmEmail: confirmEmail.trim().toLowerCase(),
+      password,
+      confirmPassword: password,
+      firstName: email.split('@')[0],
+      lastName: 'User',
+      profileType: role === 'business' ? 'Merchant' : 'Personal'
+    }).then(() => {
+      // Send verification email right after successful signup
+      return apiAuthAdapter.resendVerificationEmail({ email: email.trim().toLowerCase() })
+        .catch(err => {
+          // If the backend auto-verifies in DEV, or rate limits because it already sent it, handle gracefully
+          if (err?.errorCode === 'USER_EMAIL_ALREADY_VERIFIED') {
+            return 'ALREADY_VERIFIED'
+          }
+          if (err?.errorCode === 'COMMON_RATE_LIMIT_EXCEEDED') {
+            return 'RATE_LIMITED' // Treat as success, email was sent by signup or rate limited
+          }
+          throw err
+        })
+    }).then((resStatus) => {
+      if (resStatus === 'ALREADY_VERIFIED') {
+        // Auto-login to get tokens for subsequent protected calls
+        apiAuthAdapter.login({ email: email.trim().toLowerCase(), password })
+          .then(() => {
+            setVerifySuccess(true)
+            setTimeout(() => {
+              if (role === 'business') {
+                if (onRegisterAndLogin) onRegisterAndLogin(email.trim().toLowerCase())
+                else if (onRegisterSuccess) onRegisterSuccess()
+              } else {
+                setIsVerificationPending(false)
+                setCurrentStep(2)
+              }
+            }, 1500)
+          })
+          .catch(err => {
+            console.error('Auto-login failed after auto-verify:', err)
+            const code = err?.errorCode || 'HTTP_ERROR'
+            const i18nKey = getErrorI18nKey(code)
+            setErrors({ email: t(i18nKey) || 'Auto-login failed. Please try logging in manually.' })
+          })
+          .finally(() => setIsSubmitting(false))
+      } else {
+        setIsVerificationPending(true)
+        setIsSubmitting(false)
+      }
+    }).catch((err) => {
+      const errorsMap = {}
+      const code = err?.errorCode || 'HTTP_ERROR'
+      const i18nKey = getErrorI18nKey(code)
+      errorsMap.email = t(i18nKey) || t('errors.unknown_error') || 'Signup failed. Please try again.'
+      setErrors(errorsMap)
+      setIsSubmitting(false)
+    })
   }
 
   const handleVerifyOtp = (e) => {
@@ -142,7 +236,6 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         const existingAccounts = pendingAccountsQuery.data ?? []
         const newAccount = {
           email: email.trim().toLowerCase(),
-          password: password,
           referralCode: referralCode.trim(),
           role: role,
           fullName: null,
@@ -290,14 +383,48 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     setEditQrCode('')
   }
 
-  const handlePersonalRegisterSubmit = () => {
+  const handlePersonalRegisterSubmit = async () => {
+    const isApiMode = import.meta.env.VITE_DATA_SOURCE === 'api'
+
     let staffId = generatedStaffId
     if (!staffId) {
       const emailPrefix = email.split('@')[0].toUpperCase()
       const initials = emailPrefix.slice(0, 3) || 'STAFF'
       const randomDigits = Math.floor(1000 + Math.random() * 9000)
       staffId = `NEX-STAFF-${initials}${randomDigits}`
+      
+      // Try to get actual user ID if in API mode
+      if (isApiMode) {
+        try {
+          const session = await apiAuthAdapter.getSession()
+          if (session && session.id) {
+            staffId = session.id
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+      
       setGeneratedStaffId(staffId)
+    }
+
+    if (isApiMode) {
+      try {
+        await completePersonalOnboardingMutation.mutateAsync({
+          accountData: { 
+            fullName: nickname.trim() || email.split('@')[0], 
+            nickname: nickname.trim() || email.split('@')[0], 
+            phone, 
+            position 
+          },
+          payoutConfigs: payouts
+        })
+        setCurrentStep(4)
+      } catch (err) {
+        logger.error('Failed to complete API onboarding', err)
+        setErrors({ submit: t('register.errors.onboarding_failed') || 'Failed to complete profile setup. Please try again.' })
+      }
+      return
     }
 
     const finalPaymentAccounts = {}
@@ -328,7 +455,6 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     const existingAccounts = pendingAccountsQuery.data ?? []
     const newAccount = {
       email: email.trim().toLowerCase(),
-      password: password,
       referralCode: referralCode.trim(),
       role: role,
       fullName: nickname.trim() || email.split('@')[0],
@@ -505,9 +631,25 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     setModalError,
     vlinkpayStatus,
     setVlinkpayStatus,
+    // API mode states & handlers
+    firstName,
+    setFirstName,
+    lastName,
+    setLastName,
+    isVerificationPending,
+    setIsVerificationPending,
+    simToken,
+    setSimToken,
+    verifySuccess,
+    setVerifySuccess,
+    resendMessage,
+    setResendMessage,
+    handleSimulateVerify,
+    handleResendVerification,
     // validation
     errors,
     setErrors,
+    isSubmitting,
     // handlers
     handleStep1Next,
     handleVerifyOtp,

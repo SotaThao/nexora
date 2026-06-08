@@ -1,14 +1,4 @@
-/**
- * HTTP client scaffold — fetch wrapper with:
- *   - Base URL from VITE_API_BASE_URL (fallback '')
- *   - credentials: 'include' (httpOnly-cookie ready)
- *   - JSON encode/decode
- *   - Normalized error shape: { status, code, message, details }
- *   - Request / response interceptor hook points
- *
- * Not yet wired to any screen. The future apiAdapter / apiAuthAdapter will
- * import this module to make real API calls.
- */
+import { tokenStore } from '../auth/tokenStore'
 
 const baseUrl = (import.meta.env?.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
 
@@ -40,48 +30,101 @@ export function addResponseInterceptor(fn) {
   responseInterceptors.push(fn)
 }
 
+// Module-level refresh promise sentinel
+let refreshPromise = null
+
+// Register Bearer token interceptor — always active in API-only mode
+addRequestInterceptor((init) => {
+  if (init.anonymous) {
+    console.log('[HTTP] Skipping token for anonymous request')
+    return init
+  }
+  const tokens = tokenStore.get()
+  console.log('[HTTP] Token store read:', tokens ? 'FOUND' : 'NULL')
+  if (tokens?.accessToken) {
+    const headers = { ...init.headers }
+    headers['Authorization'] = `Bearer ${tokens.accessToken}`
+    console.log('[HTTP] Attached Authorization header')
+    return {
+      ...init,
+      headers,
+    }
+  }
+  console.log('[HTTP] No accessToken found to attach')
+  return init
+})
+
 /**
  * Parse an error body from a non-2xx response into a normalized shape.
  *
  * @param {Response} response
- * @returns {Promise<{ status: number, code: string, message: string, details: unknown }>}
+ * @returns {Promise<{ status: number, errorCode: string, errors: object, retryAfter: number|null }>}
  */
 async function buildError(response) {
-  let code = 'HTTP_ERROR'
-  let message = response.statusText || `HTTP ${response.status}`
-  let details = null
+  let errorCode = 'HTTP_ERROR'
+  let errors = {}
+  let retryAfter = null
 
   try {
     const text = await response.text()
     if (text) {
       const body = JSON.parse(text)
-      if (body.code) code = body.code
-      if (body.message) message = body.message
-      if (body.details !== undefined) details = body.details
+      if (body.errorCode) errorCode = body.errorCode
+      if (body.errors !== undefined) errors = body.errors
+      if (body.retryAfter !== undefined) retryAfter = body.retryAfter
+
+      // Backend sometimes returns errorCode inside `errorDetail` array
+      // e.g. { errorDetail: [{ message: "...", errorCode: "USER_EMAIL_ALREADY_EXISTS" }] }
+      if (!body.errorCode && Array.isArray(body.errorDetail) && body.errorDetail.length > 0) {
+        const firstDetail = body.errorDetail[0]
+        if (firstDetail.errorCode) errorCode = firstDetail.errorCode
+        // Build errors map from all detail items
+        for (const detail of body.errorDetail) {
+          if (detail.errorCode) {
+            const field = detail.field || '_general'
+            if (!errors[field]) errors[field] = []
+            errors[field].push(detail.errorCode)
+          }
+        }
+      }
     }
-  } catch {
+  } catch (e) {
     // response body was not JSON — use defaults above
   }
 
-  return { status: response.status, code, message, details }
+  // Also read Retry-After header as fallback if not in body
+  if (retryAfter === null || retryAfter === undefined) {
+    const headerVal = response.headers.get('Retry-After')
+    if (headerVal) {
+      const parsedHeader = parseInt(headerVal, 10)
+      retryAfter = isNaN(parsedHeader) ? headerVal : parsedHeader
+    } else {
+      retryAfter = null
+    }
+  }
+
+  return { status: response.status, errorCode, errors, retryAfter }
 }
 
 /**
  * Core request executor.
  *
  * @param {string} path - Path relative to baseUrl (e.g. '/api/users')
- * @param {RequestInit} init - fetch init options
+ * @param {RequestInit & { anonymous?: boolean, _isRefresh?: boolean }} init - fetch init options
  * @returns {Promise<unknown>} - Parsed JSON response body
  */
 async function request(path, init = {}) {
   const defaultHeaders = {
-    'Content-Type': 'application/json',
     Accept: 'application/json',
+  }
+
+  // Do not set Content-Type for FormData uploads (browser will auto-set boundary)
+  if (!(init.body instanceof FormData)) {
+    defaultHeaders['Content-Type'] = 'application/json'
   }
 
   let finalInit = {
     ...init,
-    credentials: 'include',
     headers: {
       ...defaultHeaders,
       ...(init.headers ?? {}),
@@ -97,17 +140,61 @@ async function request(path, init = {}) {
   try {
     response = await fetch(`${baseUrl}${path}`, finalInit)
   } catch (err) {
+    // Normalize network exceptions
     return Promise.reject({
       status: 0,
-      code: 'NETWORK_ERROR',
-      message: err?.message ?? 'Network error',
-      details: null,
+      errorCode: 'NETWORK_ERROR',
+      errors: {},
+      retryAfter: null,
     })
   }
 
-  // Apply response interceptors in order (e.g. 401 → logout)
+  // Apply response interceptors in order
   for (const interceptor of responseInterceptors) {
     interceptor(response)
+  }
+
+  // Single-flight 401 -> refresh -> retry interceptor
+  if (
+    response.status === 401 &&
+    !finalInit.anonymous &&
+    !finalInit._isRefresh &&
+    path !== '/api/v1/authentication/refresh-token'
+  ) {
+    if (!refreshPromise) {
+      refreshPromise = (async () => {
+        const tokens = tokenStore.get()
+        if (!tokens?.refreshToken) {
+          throw new Error('No refresh token available')
+        }
+        // POST to refresh-token endpoint anonymously with _isRefresh flag
+        const res = await post(
+          '/api/v1/authentication/refresh-token',
+          { refreshToken: tokens.refreshToken },
+          { anonymous: true, _isRefresh: true }
+        )
+        tokenStore.set(res)
+        return res
+      })()
+        .catch((err) => {
+          tokenStore.clear()
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('nexora-logout'))
+          }
+          throw err
+        })
+        .finally(() => {
+          refreshPromise = null
+        })
+    }
+
+    try {
+      await refreshPromise
+      // Retry request: interceptor will fetch the updated token
+      return await request(path, init)
+    } catch (err) {
+      return Promise.reject(err)
+    }
   }
 
   if (!response.ok) {
@@ -123,7 +210,7 @@ async function request(path, init = {}) {
 /**
  * GET /path
  * @param {string} path
- * @param {RequestInit} [opts]
+ * @param {RequestInit & { anonymous?: boolean }} [opts]
  */
 export function get(path, opts = {}) {
   return request(path, { ...opts, method: 'GET' })
@@ -133,7 +220,7 @@ export function get(path, opts = {}) {
  * POST /path with JSON body
  * @param {string} path
  * @param {unknown} body
- * @param {RequestInit} [opts]
+ * @param {RequestInit & { anonymous?: boolean }} [opts]
  */
 export function post(path, body, opts = {}) {
   return request(path, { ...opts, method: 'POST', body: JSON.stringify(body) })
@@ -143,7 +230,7 @@ export function post(path, body, opts = {}) {
  * PUT /path with JSON body
  * @param {string} path
  * @param {unknown} body
- * @param {RequestInit} [opts]
+ * @param {RequestInit & { anonymous?: boolean }} [opts]
  */
 export function put(path, body, opts = {}) {
   return request(path, { ...opts, method: 'PUT', body: JSON.stringify(body) })
@@ -153,7 +240,7 @@ export function put(path, body, opts = {}) {
  * PATCH /path with JSON body
  * @param {string} path
  * @param {unknown} body
- * @param {RequestInit} [opts]
+ * @param {RequestInit & { anonymous?: boolean }} [opts]
  */
 export function patch(path, body, opts = {}) {
   return request(path, { ...opts, method: 'PATCH', body: JSON.stringify(body) })
@@ -162,10 +249,44 @@ export function patch(path, body, opts = {}) {
 /**
  * DELETE /path
  * @param {string} path
- * @param {RequestInit} [opts]
+ * @param {RequestInit & { anonymous?: boolean }} [opts]
  */
 export function del(path, opts = {}) {
   return request(path, { ...opts, method: 'DELETE' })
 }
 
-export default { get, post, put, patch, del, addRequestInterceptor, addResponseInterceptor }
+/**
+ * Upload helper using FormData.
+ *
+ * @param {string} path
+ * @param {FormData} formData
+ * @param {'POST'|'PUT'} [method='POST']
+ * @param {RequestInit & { anonymous?: boolean }} [opts]
+ */
+export function upload(path, formData, method = 'POST', opts = {}) {
+  const { headers, ...restOpts } = opts
+  const customHeaders = {
+    Accept: 'application/json',
+    ...(headers ?? {}),
+  }
+  // Let the browser set the boundary for multipart/form-data
+  delete customHeaders['Content-Type']
+
+  return request(path, {
+    ...restOpts,
+    method,
+    body: formData,
+    headers: customHeaders,
+  })
+}
+
+export default {
+  get,
+  post,
+  put,
+  patch,
+  del,
+  upload,
+  addRequestInterceptor,
+  addResponseInterceptor,
+}

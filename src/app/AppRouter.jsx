@@ -1,3 +1,39 @@
+/**
+ * AppRouter — renders the correct view based on the current app state.
+ *
+ * @param {object} props
+ * @param {string} props.view - Current view identifier
+ * @param {Function} props.setView - View setter
+ * @param {object|null} props.setupData - Merchant setup data
+ * @param {Function} props.setSetupData - Setup data setter
+ * @param {string} props.registerEmail - Email used during registration
+ * @param {object|null} props.staffInviteData - Staff invitation data
+ * @param {Function} props.setStaffInviteData - Staff invite setter
+ * @param {object|null} props.ssoPrefillData - SSO prefill data
+ * @param {string} props.verificationStatus - KYB verification status
+ * @param {boolean} props.showKybModal - Whether to show KYB modal
+ * @param {Function} props.setShowKybModal - KYB modal visibility setter
+ * @param {object|null} props.simulationNotification - Demo simulation notification
+ * @param {Function} props.setSimulationNotification - Simulation notification setter
+ * @param {string} props.initialDashboardMenu - Initial menu for dashboard
+ * @param {Function} props.setInitialDashboardMenu - Dashboard menu setter
+ * @param {string} props.initialSettingsTab - Initial settings tab
+ * @param {Function} props.setInitialSettingsTab - Settings tab setter
+ * @param {string} props.currentLanguage - Current language code
+ * @param {Function} props.t - Translation function
+ * @param {string} props.userRole - 'owner' | 'staff'
+ * @param {string|null} props.currentStaffId - Current staff ID
+ * @param {string|null} props.loggedInStaffId - Logged-in staff ID
+ * @param {Function} props.onWizardComplete - Wizard completion handler
+ * @param {Function} props.onKybSuccess - KYB success handler
+ * @param {Function} props.onKybRequired - KYB required handler
+ * @param {Function} props.onResetApp - App reset handler
+ * @param {Function} props.onRegisterAndLogin - Register-and-login handler
+ * @param {Function} props.onLoadPendingAccounts - Pending accounts loader
+ * @param {string} props.preKybView - View to return to after KYB
+ * @param {boolean} [props.isDemoToolsEnabled=false] - Whether demo tools are enabled
+ * @param {Function} props.onLogout - Logout handler
+ */
 import React, { lazy, Suspense } from 'react'
 import { RefreshCw, ShieldAlert, X, Sparkles } from 'lucide-react'
 import { useMerchantSetup } from '../data/hooks/useMerchantSetup'
@@ -8,6 +44,9 @@ const CustomerFlow = lazy(() => import('../components/CustomerFlow'))
 const RegisterWizard = lazy(() => import('../components/RegisterWizard'))
 const StaffRegistrationWizard = lazy(() => import('../components/StaffRegistrationWizard'))
 const StaffDashboard = lazy(() => import('../components/staff-dashboard/StaffDashboard'))
+const VerificationScreen = lazy(() => import('../components/VerificationScreen'))
+const ForgotPassword = lazy(() => import('../components/ForgotPassword'))
+const ResetPassword = lazy(() => import('../components/ResetPassword'))
 
 function LoadingScreen() {
   return (
@@ -51,12 +90,37 @@ export default function AppRouter({
   onLoadPendingAccounts,
   preKybView,
   isDemoToolsEnabled = false,
+  onLogout,
 }) {
   const merchantSetupQuery = useMerchantSetup()
   const merchantSetupData = merchantSetupQuery.data
 
   return (
     <Suspense fallback={<LoadingScreen />}>
+
+      {/* 1.5. VERIFICATION STATUS CHECK (Flow 2) */}
+      {view === 'verification-screen' && (
+        <VerificationScreen
+          onLogout={onLogout}
+          onVerifySuccess={(newSession) => {
+            if (newSession.verificationStatus === 'kyb_approved') {
+              if (merchantSetupData) {
+                setView('dashboard')
+              } else {
+                setView('onboarding')
+              }
+            }
+          }}
+        />
+      )}
+
+      {/* 1.6. FORGOT & RESET PASSWORD (Flow 2) */}
+      {view === 'forgot-password' && (
+        <ForgotPassword setView={setView} />
+      )}
+      {view === 'reset-password' && (
+        <ResetPassword setView={setView} />
+      )}
 
       {/* 2. REGISTRATION & KYB FLOW (Flow 2) */}
       {view === 'register-wizard' && (
@@ -112,7 +176,7 @@ export default function AppRouter({
             onKybSuccess={onKybSuccess}
             initialMenu={initialDashboardMenu}
             initialSettingsTab={initialSettingsTab}
-            onLogout={() => setView('login')}
+            onLogout={onLogout}
             userRole={userRole}
             currentStaffId={currentStaffId}
           />
@@ -143,7 +207,7 @@ export default function AppRouter({
 
       {/* 7. STAFF PERSONAL DASHBOARD (!personal account) */}
       {view === 'staff-dashboard' && (
-        <StaffDashboard staffId={loggedInStaffId} onLogout={() => setView('login')} />
+        <StaffDashboard staffId={loggedInStaffId} onLogout={onLogout} />
       )}
 
       {/* KYB Verification Required Custom Modal */}
@@ -208,7 +272,7 @@ export default function AppRouter({
                 <strong className="text-xs block font-black uppercase tracking-wider">
                   {simulationNotification.isLinkOnly ? '🔗 Link Request Sent' : '📧 Invite Link Sent'}
                 </strong>
-                <p className="text-[10px] text-white/95 leading-normal mt-0.5 font-medium">
+                <p className="text-xs text-white/95 leading-normal mt-0.5 font-medium">
                   {simulationNotification.isLinkOnly
                     ? `Link request sent to ${simulationNotification.name} (${simulationNotification.role})`
                     : `Staff invitation link generated for ${simulationNotification.name} (${simulationNotification.email || simulationNotification.phone})`
@@ -224,7 +288,7 @@ export default function AppRouter({
                   setView('staff-portal')
                   setSimulationNotification(null)
                 }}
-                className="px-3 py-2 bg-white text-nexoraWarning hover:bg-nexoraBrandSoft rounded-xl text-[10px] font-black uppercase transition-all shadow-sm shrink-0"
+                className="px-3 py-2 bg-white text-nexoraWarning hover:bg-nexoraBrandSoft rounded-xl text-xs font-black uppercase transition-all shadow-sm shrink-0"
               >
                 {currentLanguage === 'vi' ? 'Mở Thiết lập' : 'Open Setup'}
               </button>

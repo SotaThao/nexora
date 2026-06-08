@@ -1,30 +1,105 @@
 import React from 'react'
-import { Mail, Lock, Eye, EyeOff, ArrowLeft, ArrowRight } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react'
 
-export default function StepCredentials({
-  // form state
-  email, setEmail,
-  confirmEmail, setConfirmEmail,
-  password, setPassword,
-  showPassword, setShowPassword,
-  referralCode, setReferralCode,
-  errors, setErrors,
-  ssoEmail,
-  // otp inline state
-  showOtpInput, setShowOtpInput,
-  otpCode, setOtpCode,
-  otpError, setOtpError,
-  resendTimer, setResendTimer,
-  // terms modal triggers
-  setModalType, setShowTermsModal,
-  // handlers
-  handleStep1Next,
-  handleVerifyOtp,
-  // step nav
-  setCurrentStep,
-  // translation
-  t, currentLanguage, renderLabel,
-}) {
+export default function StepCredentials(props) {
+  const {
+    // form state
+    email, setEmail,
+    confirmEmail, setConfirmEmail,
+    password, setPassword,
+    showPassword, setShowPassword,
+    referralCode, setReferralCode,
+    errors, setErrors,
+    isSubmitting,
+    ssoEmail,
+    // otp inline state
+    showOtpInput, setShowOtpInput,
+    otpCode, setOtpCode,
+    otpError, setOtpError,
+    resendTimer, setResendTimer,
+    // terms modal triggers
+    setModalType, setShowTermsModal,
+    // handlers
+    handleStep1Next,
+    handleVerifyOtp,
+    // step nav
+    setCurrentStep,
+    // role
+    role,
+    // translation
+    t, currentLanguage, renderLabel,
+    // API mode
+    firstName, setFirstName,
+    lastName, setLastName,
+    isVerificationPending, setIsVerificationPending,
+    simToken, setSimToken,
+    verifySuccess, setVerifySuccess,
+    resendMessage, setResendMessage,
+    handleSimulateVerify,
+    handleResendVerification,
+  } = props
+
+  if (isVerificationPending) {
+    return (
+      <div className="p-6 sm:p-10 space-y-6 animate-fadeIn">
+        <div className="text-center max-w-md mx-auto">
+          <div className="mx-auto w-16 h-16 rounded-full bg-nexoraBrandSoft flex items-center justify-center mb-4">
+            <Mail className="w-8 h-8 text-nexoraBrand" />
+          </div>
+          <h3 className="text-lg font-bold text-nexoraText font-sans">
+            {t('register.verify_your_email')}
+          </h3>
+          <p className="text-xs text-nexoraSubtle mt-2 leading-relaxed">
+            {t('register.verification_email_sent')}{' '}
+            <span className="font-semibold text-nexoraText">{email}</span>
+          </p>
+          <p className="text-xs text-nexoraSubtle mt-1 leading-relaxed">
+            {t('register.verification_email_sent_check')}
+          </p>
+        </div>
+
+        {errors.submit && (
+          <div className="p-3 bg-red-50 text-red-700 text-xs rounded-lg border border-red-200 text-center font-medium">
+            {errors.submit}
+          </div>
+        )}
+
+        {verifySuccess && (
+          <div className="p-3 bg-green-50 text-green-700 text-xs rounded-lg border border-green-200 text-center font-medium">
+            {t('register.email_verified_success')}
+          </div>
+        )}
+
+        <div className="text-center space-y-2">
+          <button
+            type="button"
+            onClick={handleResendVerification}
+            disabled={resendTimer > 0}
+            className={`text-xs font-bold ${resendTimer > 0 ? 'text-nexoraSubtle cursor-not-allowed' : 'text-nexoraBrand hover:underline'}`}
+          >
+            {resendTimer > 0
+              ? (t('register.resend_in_seconds') || 'Resend in {seconds}s').replace('{seconds}', resendTimer)
+              : t('register.resend_verification')
+            }
+          </button>
+          {resendMessage && (
+            <p className="text-xs text-green-600 font-semibold mt-1">{resendMessage}</p>
+          )}
+        </div>
+
+        <div className="pt-4 max-w-md mx-auto">
+          <button
+            type="button"
+            onClick={() => setIsVerificationPending(false)}
+            className="w-full min-h-11 py-2.5 border border-nexoraBorder hover:bg-nexoraCanvas text-nexoraSubtle hover:text-nexoraText font-semibold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 transition-all"
+          >
+            <ArrowLeft className="w-4 h-4" /> {t('register.back_to_signup')}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {showOtpInput ? (
@@ -118,6 +193,7 @@ export default function StepCredentials({
           </div>
 
           <form onSubmit={handleStep1Next} noValidate className="space-y-4">
+
             {/* Email Input */}
             <div>
               <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
@@ -269,9 +345,19 @@ export default function StepCredentials({
               </button>
               <button
                 type="submit"
-                className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all"
+                disabled={isSubmitting}
+                className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {currentLanguage === 'vi' ? 'Đăng ký' : 'Register'} <ArrowRight className="w-4 h-4" />
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    {currentLanguage === 'vi' ? 'Đang xử lý...' : 'Processing...'}
+                  </>
+                ) : (
+                  <>
+                    {currentLanguage === 'vi' ? 'Đăng ký' : 'Register'} <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
               </button>
             </div>
           </form>

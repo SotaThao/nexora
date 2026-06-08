@@ -1,16 +1,14 @@
 /**
- * notificationsRepository — in-app notification items.
- * Key: nexora_notifications.
+ * notificationsRepository — API-only implementation.
+ * TODO: Wire to real notifications API endpoints when available.
  */
-import { adapter as defaultAdapter } from '../adapters'
 
-const KEY = 'nexora_notifications'
-
-export function createNotificationsRepository(a = defaultAdapter) {
+export function createNotificationsRepository() {
   return {
     /** @returns {Promise<Array>} */
     async list() {
-      return (await a.get(KEY)) ?? []
+      // TODO: Wire to GET /api/v1/notifications
+      return []
     },
 
     /**
@@ -18,31 +16,22 @@ export function createNotificationsRepository(a = defaultAdapter) {
      * @returns {Promise<object>} the appended notification
      */
     async add(notification) {
-      const list = (await a.get(KEY)) ?? []
-      const updated = [...list, notification]
-      await a.set(KEY, updated)
+      // TODO: Wire to POST /api/v1/notifications
       return notification
     },
 
     /**
-     * Set read:true on the notification with matching id.
      * @param {string} id
      */
     async markRead(id) {
-      const list = (await a.get(KEY)) ?? []
-      const updated = list.map((n) =>
-        n.id === id ? { ...n, read: true } : n
-      )
-      await a.set(KEY, updated)
+      // TODO: Wire to PATCH /api/v1/notifications/:id/read
     },
 
     /**
-     * Replace the entire notifications list.  Used by the realtime bridge when
-     * a remote update arrives with a canonical list.
      * @param {Array} list
      */
     async replaceAll(list) {
-      await a.set(KEY, list)
+      // TODO: Wire to PUT /api/v1/notifications
     },
   }
 }

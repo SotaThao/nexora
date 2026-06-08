@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
+import {
+  useSaveMerchantSetup,
+  useCreateBusiness,
+  useUploadLogo,
+  useUpdateReviewLinks,
+  useCompleteOnboarding
+} from '../../../data/hooks/useMerchantSetup'
 import {
   DEMO_BUSINESS,
   DEMO_LINKS,
@@ -9,9 +15,13 @@ import {
   getPayoutConfigsFromMember
 } from '../constants'
 
-export default function useSetupWizard({ initialBusinessInfo }) {
+export default function useSetupWizard({ initialBusinessInfo, onBackToLogin }) {
   const { currentLanguage, setLanguage, t } = useTranslation()
   const saveMerchantSetup = useSaveMerchantSetup()
+  const createBusinessMutation = useCreateBusiness()
+  const uploadLogoMutation = useUploadLogo()
+  const updateReviewLinksMutation = useUpdateReviewLinks()
+  const completeOnboardingMutation = useCompleteOnboarding()
   const [currentStep, setCurrentStep] = useState(1) // 1, 2, 3
   const isSsoLocked = !!initialBusinessInfo
 
@@ -128,14 +138,16 @@ export default function useSetupWizard({ initialBusinessInfo }) {
   }
 
   // Handle file logo selection
-  const handleLogoChange = (e) => {
+  const handleLogoChange = async (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0]
-      const reader = new FileReader()
-      reader.onload = (uploadEvent) => {
-        setBusinessInfo({ ...businessInfo, logo: uploadEvent.target.result })
+      try {
+        const res = await uploadLogoMutation.mutateAsync(file)
+        setBusinessInfo(prev => ({ ...prev, logo: res.logoUrl }))
+        if (errors.logo) setErrors(prev => ({ ...prev, logo: '' }))
+      } catch (err) {
+        setErrors(prev => ({ ...prev, logo: err.errorCode || 'Logo upload failed' }))
       }
-      reader.readAsDataURL(file)
     }
   }
 
@@ -156,6 +168,10 @@ export default function useSetupWizard({ initialBusinessInfo }) {
       const hasVlinkpay = businessInfo.paymentAccounts?.vlinkpay?.trim()
       if (!hasVenmo && !hasCashapp && !hasZelle && !hasVlinkpay) {
         newErrors.storePayment = t('setup.errors.store_payment_required')
+      }
+
+      if (!businessInfo.customSlug || !businessInfo.customSlug.trim()) {
+        newErrors.customSlug = t('setup.errors.slug_required') || 'Slug is required'
       }
 
       // Review Links validation (Optional)
@@ -186,14 +202,55 @@ export default function useSetupWizard({ initialBusinessInfo }) {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (validateStep()) {
-      // Auto-populate default business touchpoints on moving from Step 1 to Step 2 if empty
-      if (currentStep === 1 && touchPoints.length === 0) {
-        setTouchPoints([
-          { id: 'tp-main', nameKey: 'setup.tp_lobby_default', name: t('setup.tp_lobby_default'), type: 'Business Main', isActive: true, scans: 0 },
-          { id: 'tp-front', nameKey: 'setup.tp_front_default', name: t('setup.tp_front_default'), type: 'Front Desk', isActive: true, scans: 0 }
-        ])
+      if (currentStep === 1) {
+        try {
+          const businessDto = {
+            name: businessInfo.name,
+            businessType: businessInfo.industry,
+            address: businessInfo.address,
+            phone: businessInfo.phone,
+            website: businessInfo.website,
+            logoUrl: businessInfo.logo,
+            customSlug: businessInfo.customSlug
+          }
+          const res = await createBusinessMutation.mutateAsync(businessDto)
+          setBusinessInfo(prev => ({
+            ...prev,
+            businessId: res.businessId,
+            customSlug: res.slug
+          }))
+
+          const linksDto = {
+            googleReviewUrl: reviewLinks.googleReview,
+            yelpUrl: reviewLinks.yelpReview,
+            facebookUrl: reviewLinks.facebookReview,
+            feedbackEmail: reviewLinks.feedbackEmail
+          }
+          await updateReviewLinksMutation.mutateAsync(linksDto)
+        } catch (err) {
+          const newErrors = {}
+          if (err?.errorCode === 'BUSINESS_INVALID_SLUG_FORMAT') {
+            newErrors.customSlug = t('setup.errors.slug_invalid_format') || 'Invalid slug format.'
+          } else if (err?.errorCode === 'BUSINESS_NAME_REQUIRED') {
+            newErrors.name = t('setup.errors.name_required')
+          } else if (err?.errorCode === 'BUSINESS_ALREADY_EXISTS') {
+            newErrors.customSlug = t('setup.errors.business_already_exists') || 'Business slug already exists.'
+          } else if (err?.errorCode === 'USER_NOT_MERCHANT') {
+            newErrors.submit = t('setup.errors.user_not_merchant') || 'User is not a merchant.'
+            setTimeout(() => {
+              onBackToLogin?.()
+            }, 3000)
+          } else {
+            newErrors.submit = err.errorCode || 'Failed to save business profile.'
+          }
+          setErrors({
+            ...errors,
+            ...newErrors
+          })
+          return
+        }
       }
       setCurrentStep(prev => prev + 1)
     }
@@ -419,14 +476,21 @@ export default function useSetupWizard({ initialBusinessInfo }) {
 
   // Final Complete
   const handleCompleteSetup = (onComplete) => {
-    const data = {
-      businessInfo,
-      reviewLinks,
-      staffList,
-      touchPoints
-    }
-    saveMerchantSetup.mutate(data, {
-      onSuccess: () => onComplete(data),
+    completeOnboardingMutation.mutate(undefined, {
+      onSuccess: () => {
+        onComplete({
+          businessInfo,
+          reviewLinks,
+          staffList,
+          touchPoints
+        })
+      },
+      onError: (err) => {
+        setErrors({
+          ...errors,
+          submit: err.errorCode || 'Failed to complete onboarding'
+        })
+      }
     })
   }
 

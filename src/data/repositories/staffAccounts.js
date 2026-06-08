@@ -1,42 +1,33 @@
 /**
- * staffAccountsRepository — per-staff account blobs stored as a single object
- * keyed by staffId.  Key: nexora_staff_account.
- *
- * Storage shape: { [staffId]: { ...staffAccountData } }
+ * staffAccountsRepository — API-only implementation.
+ * TODO: Wire to real staff accounts API endpoints when available.
  */
-import { adapter as defaultAdapter } from '../adapters'
 
-const KEY = 'nexora_staff_account'
-
-export function createStaffAccountsRepository(a = defaultAdapter) {
+export function createStaffAccountsRepository() {
   return {
     /**
-     * Return the full accounts map.
      * @returns {Promise<object>} — keyed by staffId, or {} if absent
      */
     async getAll() {
-      return (await a.get(KEY)) ?? {}
+      // TODO: Wire to GET /api/v1/merchant/staff-accounts
+      return {}
     },
 
     /**
-     * Return a single staff account by id, or null.
      * @param {string} staffId
      * @returns {Promise<object|null>}
      */
     async get(staffId) {
-      const all = (await a.get(KEY)) ?? {}
-      return all[staffId] ?? null
+      // TODO: Wire to GET /api/v1/merchant/staff-accounts/:staffId
+      return null
     },
 
     /**
-     * Merge data into the account blob for staffId and persist.
      * @param {string} staffId
      * @param {object} data
      */
     async save(staffId, data) {
-      const all = (await a.get(KEY)) ?? {}
-      const updated = { ...all, [staffId]: { ...(all[staffId] ?? {}), ...data } }
-      await a.set(KEY, updated)
+      // TODO: Wire to PUT /api/v1/merchant/staff-accounts/:staffId
     },
   }
 }
