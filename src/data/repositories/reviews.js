@@ -3,29 +3,44 @@
  * TODO: Wire to real reviews API endpoints when available.
  */
 
-export function createReviewsRepository() {
+import httpClient from '../../lib/httpClient'
+
+export function createReviewsRepository(client = httpClient) {
   return {
-    /** @returns {Promise<Array>} */
-    async list() {
-      // TODO: Wire to GET /api/v1/merchant/reviews
-      return []
+    /** 
+     * @param {object} filters
+     * @param {number} [filters.rating]
+     * @param {string} [filters.source]
+     * @param {boolean} [filters.resolved]
+     * @returns {Promise<Array>} 
+     */
+    async list(filters = {}) {
+      const response = await client.get('/api/v1/merchant/dashboard/reviews', { params: filters })
+      return Array.isArray(response) ? response : (response.data || [])
     },
 
     /**
-     * @param {object} review
-     * @returns {Promise<object>} the appended review
+     * Resolve a private feedback review.
+     * @param {string} id
+     * @param {object} dto
+     * @returns {Promise<object>}
+     */
+    async resolve(id, dto = {}) {
+      return client.put(`/api/v1/merchant/dashboard/reviews/${id}/resolve`, dto)
+    },
+
+    /**
+     * @deprecated Customer touch point creates reviews, not merchant dashboard.
      */
     async add(review) {
-      // TODO: Wire to POST /api/v1/merchant/reviews
       return review
     },
 
     /**
-     * @param {string} id
-     * @param {object} patch
+     * @deprecated
      */
     async update(id, patch) {
-      // TODO: Wire to PATCH /api/v1/merchant/reviews/:id
+      // no-op
     },
   }
 }

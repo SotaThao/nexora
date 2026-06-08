@@ -13,7 +13,7 @@ import staffAccountsRepository from '../repositories/staffAccounts'
 export function useStaffAccount(staffId) {
   return useQuery({
     queryKey: qk.staffAccount(staffId),
-    queryFn: () => staffAccountsRepository.get(staffId),
+    queryFn: () => staffAccountsRepository.get(staffId ?? 'self'),
   })
 }
 

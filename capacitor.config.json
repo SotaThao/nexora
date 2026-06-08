@@ -1,0 +1,11 @@
+{
+  "appId": "com.vlink.nexora",
+  "appName": "Nexora Touch",
+  "webDir": "dist",
+  "ios": {
+    "contentInset": "automatic"
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}

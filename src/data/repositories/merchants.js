@@ -74,7 +74,7 @@ export function createMerchantsRepository(client = httpClient) {
      * @returns {Promise<{ isAvailable: boolean, suggestion: string|null }>}
      */
     async checkSlug(slug) {
-      return client.get(`/api/v1/merchant/business/check-slug?slug=${encodeURIComponent(slug)}`)
+      return await client.get(`/api/v1/merchant/business/check-slug?slug=${encodeURIComponent(slug)}`)
     },
 
     /**
@@ -83,7 +83,7 @@ export function createMerchantsRepository(client = httpClient) {
      * @returns {Promise<{ businessId: string, slug: string }>}
      */
     async createBusiness(dto) {
-      return client.post('/api/v1/merchant/business', dto)
+      return await client.post('/api/v1/merchant/business', dto)
     },
 
     /**
@@ -94,7 +94,7 @@ export function createMerchantsRepository(client = httpClient) {
     async uploadLogo(file) {
       const formData = new FormData()
       formData.append('logo', file)
-      return client.upload('/api/v1/merchant/business/logo', formData, 'PUT')
+      return await client.upload('/api/v1/merchant/business/logo', formData, 'PUT')
     },
 
     /**
@@ -103,7 +103,7 @@ export function createMerchantsRepository(client = httpClient) {
      * @returns {Promise<void>}
      */
     async updateReviewLinks(dto) {
-      return client.put('/api/v1/merchant/business/review-links', dto)
+      return await client.put('/api/v1/merchant/business/review-links', dto)
     },
 
     /**
@@ -111,7 +111,7 @@ export function createMerchantsRepository(client = httpClient) {
      * @returns {Promise<void>}
      */
     async completeOnboarding() {
-      return client.post('/api/v1/merchant/business/complete-onboarding')
+      return await client.post('/api/v1/merchant/business/complete-onboarding')
     }
   }
 }

@@ -1,10 +1,8 @@
 // Hardware device (QR/NFC) inventory state + CRUD for the Dashboard.
 // Self-contained, no persistence. Extracted from Dashboard.jsx (Group 5).
 import { useState } from 'react'
-import { INITIAL_DEVICES } from '../data/mockData'
-
 export function useDevices() {
-  const [devices, setDevices] = useState(INITIAL_DEVICES)
+  const [devices, setDevices] = useState([])
 
   const handleAddDevice = (newDevice) => {
     setDevices((current) => [

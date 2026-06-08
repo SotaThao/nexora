@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   envPrefix: ['VITE_', 'SUPABASE_', 'NEXT_PUBLIC_'],
-  esbuild: { drop: ['console', 'debugger'] },
+  // esbuild: { drop: ['console', 'debugger'] },
   build: {
     chunkSizeWarningLimit: 900,
     rollupOptions: {

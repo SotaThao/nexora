@@ -5,7 +5,6 @@ import CountryCodeSelect, { parsePhone } from '../../CountryCodeSelect'
 import { WalletLogos, DEFAULT_PAYOUT_CONFIGS } from '../constants'
 import { useTranslation, renderLabel } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
-import { MOCK_NEXORA_STAFF_PROFILES } from '../data/mockData'
 import PayoutSetupModal from './PayoutSetupModal'
 import StaffReviewsDetailModal from './StaffReviewsDetailModal'
 import StaffQrScannerModal from './StaffQrScannerModal'
@@ -159,38 +158,6 @@ function StaffModal({
     let matchedProfile = null
     let verifiedType = null // 'vlinkpay' | 'nexora'
 
-    // Helper to search mock profiles
-    const checkMock = () => {
-      // Try VLINKPAY match
-      const byVLP = Object.values(MOCK_NEXORA_STAFF_PROFILES).find(
-        p => p.vlinkpayId?.toUpperCase() === searchId
-      )
-      if (byVLP) {
-        const staffIdKey = Object.keys(MOCK_NEXORA_STAFF_PROFILES).find(
-          k => MOCK_NEXORA_STAFF_PROFILES[k].vlinkpayId?.toUpperCase() === searchId
-        ) || ''
-        matchedProfile = {
-          ...byVLP,
-          vlinkpayId: searchId,
-          nexoraStaffId: staffIdKey
-        }
-        verifiedType = 'vlinkpay'
-        return
-      }
-
-      // Try NEXORA match
-      const byNEX = MOCK_NEXORA_STAFF_PROFILES[searchId]
-      if (byNEX) {
-        matchedProfile = {
-          ...byNEX,
-          vlinkpayId: byNEX.vlinkpayId || '',
-          nexoraStaffId: searchId
-        }
-        verifiedType = 'nexora'
-        return
-      }
-    }
-
     // Helper to search nexora_merchant_setup staffList (received via prop from Dashboard)
     const checkMerchantSetup = () => {
       if (matchedProfile) return
@@ -326,7 +293,6 @@ function StaffModal({
     }
 
     // Execute checks synchronously
-    checkMock()
     checkMerchantSetup()
     checkStaffAccount()
     checkPendingAccounts()

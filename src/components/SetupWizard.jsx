@@ -16,11 +16,12 @@ export default function SetupWizard({
   onComplete,
   onBackToLogin,
   initialBusinessInfo,
-  verificationStatus = 'kyb_approved',
-  hasKyb = verificationStatus === 'kyb_approved',
+  verificationStatus,
+  hasKyb,
   onKybRequired
 }) {
-  const wizard = useSetupWizard({ initialBusinessInfo, onBackToLogin })
+  const isKyb = hasKyb !== undefined ? hasKyb : verificationStatus === 'kyb_approved'
+  const wizard = useSetupWizard({ initialBusinessInfo, onBackToLogin, hasKyb: isKyb })
   const {
     currentLanguage, setLanguage, t,
     currentStep, setCurrentStep, isSsoLocked,
@@ -100,14 +101,6 @@ export default function SetupWizard({
                 {t('setup.back_to_login')}
               </button>
             )}
-            <button
-              onClick={prefillDemo}
-              className="min-h-11 text-xs flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-flox-inputs border border-dashed border-nexoraBrand/30 text-nexoraBrand bg-nexoraBrandSoft/40 hover:bg-nexoraBrandSoft transition-all font-semibold"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              {t('setup.prefill_demo_data')}
-            </button>
-
             {/* Language Switcher */}
             <div className="flex items-center gap-1.5 bg-white border border-nexoraBorder px-3 py-1.5 rounded-flox-inputs min-h-11 shadow-sm">
               <button
@@ -126,10 +119,6 @@ export default function SetupWizard({
                 EN
               </button>
             </div>
-
-            <span className="inline-flex min-h-11 items-center justify-center text-xs text-nexoraSubtle bg-white px-3 py-1.5 rounded-flox-inputs border border-nexoraBorder shadow-sm">
-              {t('setup.onboarding_stage')}
-            </span>
           </div>
         </header>
 
@@ -307,7 +296,7 @@ export default function SetupWizard({
       <PayoutSetupModal
         open={payoutSetupOpen}
         walletKey={payoutSetupWallet}
-        staffName={newStaff.fullName || 'Edna Y Schwartz'}
+        staffName={businessInfo.name || 'Business Name'}
         initialValue={tempPayoutValues.value}
         initialQrCode={tempPayoutValues.qrCode}
         onClose={() => setPayoutSetupOpen(false)}
@@ -349,7 +338,7 @@ export default function SetupWizard({
                 <div className="h-28 w-28 rounded-lg bg-white border border-nexoraBorder/60 p-2 flex items-center justify-center shadow-inner qr-print-qr-wrapper">
                   <img
                     src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-                      `${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Golden Glow Nail Spa & Salon')}&tech=tp/${previewingTp.id}`
+                      `${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}&tech=tp/${previewingTp.id}`
                     )}`}
                     alt="QR Preview"
                     className="h-full w-full object-contain qr-print-qr-image"
@@ -368,7 +357,7 @@ export default function SetupWizard({
 
               <div className="mt-4 w-full text-center">
                 <p className="text-[10px] font-mono text-slate-400 select-all truncate bg-slate-50 px-2 py-1.5 rounded border border-slate-100">
-                  {`${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Golden Glow Nail Spa & Salon')}&tech=tp/${previewingTp.id}`}
+                  {`${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}&tech=tp/${previewingTp.id}`}
                 </p>
               </div>
 
@@ -405,7 +394,7 @@ export default function SetupWizard({
             <div className="qr-print-qr-wrapper">
               <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-                  `${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Golden Glow Nail Spa & Salon')}`
+                  `${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}`
                 )}`}
                 alt="Scan QR code to tip and review"
                 className="qr-print-qr-image"

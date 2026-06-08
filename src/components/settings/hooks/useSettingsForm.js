@@ -7,58 +7,31 @@ import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useM
 import { usePendingAccounts, useReplaceAllPendingAccounts } from '../../../data/hooks/usePendingAccounts'
 
 const DEFAULT_PROFILE = {
-  username: 'goldenglow_owner',
-  email: 'owner@goldenglownails.com',
-  referralId: 'VLP-8893-GG',
-  avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200&h=200',
-  // Basic Info
-  fullName: 'Elena Rostova',
-  dob: '1985-05-15',
-  phone: '+1 (555) 789-2026',
-  // Sponsor Info
-  sponsorReferralId: 'VLP-Sponsor-99',
-  sponsorUsername: 'admin_vlinkpay',
-  sponsorEmail: 'support@vlinkpay.com',
-  sponsorPhone: '+1 (800) 555-0100',
-  // Address Details
-  street: '1088 Gold Coast Hwy, Palm Beach, QLD 4221',
-  city: 'Palm Beach',
-  state: 'QLD',
-  zipCode: '4221',
-  country: 'Australia',
-  // Business Info
-  businessName: 'Golden Glow Nail Spa & Salon',
-  businessPhone: '+1 (555) 789-2026',
-  businessEmail: 'manager@goldenglownails.com',
-  businessWebsite: 'https://goldenglownails.com',
-  // Linked Payment Wallets
-  paymentAccounts: {
-    zelle: 'payment@goldenglownails.com',
-    bankwire: '',
-    paypal: '',
-    venmo: '@goldenglow-spa',
-    cashapp: '$goldenglownails',
-    applecash: '',
-    vlinkpay: 'VLP-8893-GG'
-  },
-  payoutToggles: {
-    zelle: true,
-    bankwire: false,
-    paypal: false,
-    venmo: true,
-    cashapp: true,
-    applecash: false
-  },
-  payoutQrCodes: {
-    zelle: '',
-    bankwire: '',
-    paypal: '',
-    venmo: '',
-    cashapp: '',
-    applecash: ''
-  },
-  googleReview: 'https://g.page/r/cGoldenGlowNails/review',
-  yelpReview: 'https://www.yelp.com/biz/golden-glow-nails-palm-beach'
+  username: '',
+  email: '',
+  referralId: '',
+  avatar: null,
+  fullName: '',
+  dob: '',
+  phone: '',
+  sponsorReferralId: '',
+  sponsorUsername: '',
+  sponsorEmail: '',
+  sponsorPhone: '',
+  street: '',
+  city: '',
+  state: '',
+  zipCode: '',
+  country: '',
+  businessName: '',
+  businessPhone: '',
+  businessEmail: '',
+  businessWebsite: '',
+  paymentAccounts: { zelle: '', bankwire: '', paypal: '', venmo: '', cashapp: '', applecash: '', vlinkpay: '' },
+  payoutToggles: { zelle: false, bankwire: false, paypal: false, venmo: false, cashapp: false, applecash: false },
+  payoutQrCodes: { zelle: '', bankwire: '', paypal: '', venmo: '', cashapp: '', applecash: '' },
+  googleReview: '',
+  yelpReview: ''
 }
 
 export default function useSettingsForm({
@@ -121,7 +94,7 @@ export default function useSettingsForm({
     setTimeout(async () => {
       setIsSubmittingKyb(false)
       const existingAccounts = pendingAccountsQuery.data ?? []
-      const targetEmail = profile.email || 'sso_no_kyb@gmail.com'
+      const targetEmail = profile.email || ''
       const existing = existingAccounts.find(acc => acc.email === targetEmail)
       const newAccount = {
         email: targetEmail,
@@ -224,15 +197,15 @@ export default function useSettingsForm({
       setProfile(prev => ({ ...prev, ...profileSettingsQuery.data }))
     } else if (setupData) {
       const synced = {
-        fullName: setupData.businessInfo?.ownerName || (hasKyb ? DEFAULT_PROFILE.fullName : ''),
-        businessName: setupData.businessInfo?.name || (hasKyb ? DEFAULT_PROFILE.businessName : ''),
-        businessPhone: setupData.businessInfo?.phone || (hasKyb ? DEFAULT_PROFILE.businessPhone : ''),
-        businessWebsite: setupData.businessInfo?.website || (hasKyb ? DEFAULT_PROFILE.businessWebsite : ''),
-        businessEmail: setupData.reviewLinks?.feedbackEmail || (hasKyb ? DEFAULT_PROFILE.businessEmail : ''),
-        street: setupData.businessInfo?.address || (hasKyb ? DEFAULT_PROFILE.street : ''),
-        googleReview: setupData.reviewLinks?.googleReview || DEFAULT_PROFILE.googleReview,
-        yelpReview: setupData.reviewLinks?.yelpReview || DEFAULT_PROFILE.yelpReview,
-        paymentAccounts: setupData.businessInfo?.paymentAccounts || (hasKyb ? DEFAULT_PROFILE.paymentAccounts : {
+        fullName: setupData.businessInfo?.ownerName || '',
+        businessName: setupData.businessInfo?.name || '',
+        businessPhone: setupData.businessInfo?.phone || '',
+        businessWebsite: setupData.businessInfo?.website || '',
+        businessEmail: setupData.reviewLinks?.feedbackEmail || '',
+        street: setupData.businessInfo?.address || '',
+        googleReview: setupData.reviewLinks?.googleReview || '',
+        yelpReview: setupData.reviewLinks?.yelpReview || '',
+        paymentAccounts: setupData.businessInfo?.paymentAccounts || {
           zelle: '',
           bankwire: '',
           paypal: '',
@@ -240,15 +213,15 @@ export default function useSettingsForm({
           cashapp: '',
           applecash: '',
           vlinkpay: ''
-        }),
-        payoutQrCodes: setupData.businessInfo?.payoutQrCodes || (hasKyb ? DEFAULT_PROFILE.payoutQrCodes : {
+        },
+        payoutQrCodes: setupData.businessInfo?.payoutQrCodes || {
           zelle: '',
           bankwire: '',
           paypal: '',
           venmo: '',
           cashapp: '',
           applecash: ''
-        })
+        }
       }
       setProfile(prev => ({ ...prev, ...synced }))
     } else if (!hasKyb) {
@@ -432,7 +405,7 @@ export default function useSettingsForm({
     setIsCapturing(true)
     setTimeout(() => {
       const mockQr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-        editValue || 'nexora-mock-payout'
+        editValue || ''
       )}`
       setEditQrCode(mockQr)
       setIsCapturing(false)
@@ -579,7 +552,7 @@ export default function useSettingsForm({
           description: currentLanguage === 'vi'
             ? 'Chúc mừng! Hồ sơ doanh nghiệp của bạn đã được VLINKPAY xác minh đầy đủ. Không giới hạn hạn mức xử lý thẻ tín dụng và tính năng Merchant ATM hoạt động.'
             : 'Business Profile Verified (KYB Approved).',
-          subText: 'Verified Date: May 20, 2026 • Certificate ID: VLP-KYB-99812A',
+          subText: '',
           ctaText: null
         }
       case 'suspended':

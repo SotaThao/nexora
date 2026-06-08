@@ -1,6 +1,29 @@
 import React from 'react'
 
-export default function ReviewRouting({ t, reviewLinks, setStep }) {
+/**
+ * ReviewRouting — shows Google and Yelp review links after a positive review.
+ * Tracks external review clicks in API mode via handleTrackExternalReview.
+ *
+ * @param {Object} props
+ * @param {Function} props.t - Translation function.
+ * @param {Object} props.reviewLinks - Contains googleReview, yelpReview URLs.
+ * @param {Function} props.setStep - Step navigation setter.
+ * @param {Function} [props.handleTrackExternalReview] - Async tracker for review link clicks.
+ */
+export default function ReviewRouting({ t, reviewLinks, setStep, handleTrackExternalReview }) {
+  /**
+   * Handles click on an external review link.
+   * Tracks the click (if handler provided) and navigates to final_done.
+   * @param {'google'|'yelp'} platform
+   */
+  const onReviewClick = (platform) => {
+    if (handleTrackExternalReview) {
+      handleTrackExternalReview(platform)
+    } else {
+      setStep('final_done')
+    }
+  }
+
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="text-center space-y-2">
@@ -18,7 +41,7 @@ export default function ReviewRouting({ t, reviewLinks, setStep }) {
             href={reviewLinks.googleReview}
             target="_blank"
             rel="noreferrer"
-            onClick={() => setStep('final_done')}
+            onClick={() => onReviewClick('google')}
             className="w-full flex items-center justify-between p-4 rounded-xl border border-nexoraBorder hover:bg-nexoraCanvas text-nexoraText shadow-sm transition group"
           >
             <div className="flex items-center gap-3">
@@ -46,7 +69,7 @@ export default function ReviewRouting({ t, reviewLinks, setStep }) {
             href={reviewLinks.yelpReview}
             target="_blank"
             rel="noreferrer"
-            onClick={() => setStep('final_done')}
+            onClick={() => onReviewClick('yelp')}
             className="w-full flex items-center justify-between p-4 rounded-xl border border-nexoraBorder hover:bg-nexoraCanvas text-nexoraText shadow-sm transition group"
           >
             <div className="flex items-center gap-3">

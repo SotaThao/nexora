@@ -1,15 +1,29 @@
 /**
  * useReviews — TanStack Query hooks for the reviews domain.
- *
- * Hooks:
- *   useReviews()        → useQuery list of all reviews
- *   useAddReview()      → useMutation to append a review
- *   useUpdateReview()   → useMutation to patch a review by id
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import reviewsRepository from '../repositories/reviews'
 
+export function useDashboardReviews(filters = {}) {
+  return useQuery({
+    queryKey: qk.dashboardReviews(filters),
+    queryFn: () => reviewsRepository.list(filters),
+  })
+}
+
+export function useResolveReview() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, dto }) => reviewsRepository.resolve(id, dto),
+    onSuccess: () => {
+      // Invalidate all dashboardReviews queries regardless of filters
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'reviews'] })
+    },
+  })
+}
+
+/** @deprecated */
 export function useReviews() {
   return useQuery({
     queryKey: qk.reviews(),
@@ -17,6 +31,7 @@ export function useReviews() {
   })
 }
 
+/** @deprecated */
 export function useAddReview() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -27,12 +42,10 @@ export function useAddReview() {
   })
 }
 
+/** @deprecated */
 export function useUpdateReview() {
   const queryClient = useQueryClient()
   return useMutation({
-    /**
-     * @param {{ id: string, patch: object }} args
-     */
     mutationFn: ({ id, patch }) => reviewsRepository.update(id, patch),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.reviews() })

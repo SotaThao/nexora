@@ -23,8 +23,8 @@ export default function StepSuccess({
         </h3>
         <p className="text-xs text-nexoraMuted max-w-md mx-auto leading-relaxed">
           {currentLanguage === 'vi'
-            ? `Mã thợ NEXORA của bạn là ${staffId}. Yêu cầu liên kết với ${inviteData?.biz || 'Golden Glow Nail Spa'} đã được gửi thành công. Vui lòng chờ chủ tiệm duyệt để kích hoạt QR nhận tiền tip.`
-            : `Your NEXORA Staff ID is ${staffId}. Your request to link with ${inviteData?.biz || 'Golden Glow Nail Spa'} has been successfully submitted. Please ask the salon owner to approve your request to activate your tipping QR.`
+            ? `Mã thợ NEXORA của bạn là ${staffId}. Yêu cầu liên kết với ${inviteData?.biz || ''} đã được gửi thành công. Vui lòng chờ chủ tiệm duyệt để kích hoạt QR nhận tiền tip.`
+            : `Your NEXORA Staff ID is ${staffId}. Your request to link with ${inviteData?.biz || ''} has been successfully submitted. Please ask the salon owner to approve your request to activate your tipping QR.`
           }
         </p>
       </div>
@@ -43,7 +43,7 @@ export default function StepSuccess({
 
         <div className="flex items-center justify-between">
           <div>
-            <strong className="text-nexoraText block font-sans">{inviteData?.biz || 'Golden Glow Nail Spa'}</strong>
+            <strong className="text-nexoraText block font-sans">{inviteData?.biz || ''}</strong>
             <span className="text-[9px] text-nexoraSubtle mt-0.5 block">Joined: Today • Role: {position}</span>
           </div>
           <span className="text-xs font-bold text-nexoraWarning flex items-center gap-1 font-sans">

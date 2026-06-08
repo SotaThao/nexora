@@ -7,10 +7,26 @@ import httpClient from '../../lib/httpClient'
 
 export function createProfileSettingsRepository(client = httpClient) {
   return {
-    /** @returns {Promise<object|null>} */
+    /** 
+     * @returns {Promise<object|null>} 
+     */
     async get() {
-      // TODO: Wire to GET /api/v1/userprofile/me if needed
-      return null
+      try {
+        const response = await client.get('/api/v1/userprofile/me')
+        return response || null
+      } catch (err) {
+        if (err?.errorCode === 'COMMON_NOT_FOUND' || err?.status === 404) {
+          return null
+        }
+        throw err
+      }
+    },
+
+    /**
+     * @returns {Promise<object>}
+     */
+    async getVerifiedStatus() {
+      return client.get('/api/v1/userprofile/verified-status')
     },
 
     /** 

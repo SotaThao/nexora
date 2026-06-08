@@ -401,11 +401,11 @@ export default function DashboardHeader({
             title="Account menu"
             id="header-profile-menu-btn"
           >
-            {profile.avatar ? (
+            {profile.avatar && !profile.avatar.includes('unsplash.com') ? (
               <img src={profile.avatar} alt="" className="h-full w-full object-cover" />
             ) : (
-              <div className="flex h-full w-full items-center justify-center bg-nexoraBrand text-sm font-bold text-white">
-                {profile.fullName ? profile.fullName.charAt(0) : 'A'}
+              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-sm font-bold text-white uppercase">
+                {(profile.email || '').slice(0, 2).toUpperCase() || '?'}
               </div>
             )}
           </button>
@@ -416,7 +416,7 @@ export default function DashboardHeader({
               id="header-profile-dropdown"
             >
               <div className="px-4 py-2.5">
-                <div className="text-xs font-black text-nexoraText truncate">{profile.fullName || businessName}</div>
+                <div className="text-xs font-black text-nexoraText truncate">{profile.fullName || profile.email || businessName}</div>
                 <div className="text-[10px] text-nexoraMuted truncate mt-0.5">{profile.email}</div>
               </div>
               {userRole !== 'staff' && (

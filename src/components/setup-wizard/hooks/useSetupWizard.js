@@ -15,7 +15,7 @@ import {
   getPayoutConfigsFromMember
 } from '../constants'
 
-export default function useSetupWizard({ initialBusinessInfo, onBackToLogin }) {
+export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, hasKyb }) {
   const { currentLanguage, setLanguage, t } = useTranslation()
   const saveMerchantSetup = useSaveMerchantSetup()
   const createBusinessMutation = useCreateBusiness()
@@ -23,7 +23,7 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin }) {
   const updateReviewLinksMutation = useUpdateReviewLinks()
   const completeOnboardingMutation = useCompleteOnboarding()
   const [currentStep, setCurrentStep] = useState(1) // 1, 2, 3
-  const isSsoLocked = !!initialBusinessInfo
+  const isSsoLocked = !!hasKyb // Lock fields ONLY if business is already KYB approved
 
   // State for all steps
   const [businessInfo, setBusinessInfo] = useState({
@@ -38,7 +38,8 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin }) {
       cashapp: initialBusinessInfo?.paymentAccounts?.cashapp || '',
       zelle: initialBusinessInfo?.paymentAccounts?.zelle || '',
       vlinkpay: initialBusinessInfo?.paymentAccounts?.vlinkpay || ''
-    }
+    },
+    payoutConfigs: { ...DEFAULT_PAYOUT_CONFIGS }
   })
 
   const [reviewLinks, setReviewLinks] = useState({
@@ -161,19 +162,6 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin }) {
       if (!businessInfo.address.trim()) newErrors.address = t('setup.errors.address_required')
       if (!businessInfo.phone.trim()) newErrors.phone = t('setup.errors.phone_required')
 
-      // Store Payment validation
-      const hasVenmo = businessInfo.paymentAccounts?.venmo?.trim()
-      const hasCashapp = businessInfo.paymentAccounts?.cashapp?.trim()
-      const hasZelle = businessInfo.paymentAccounts?.zelle?.trim()
-      const hasVlinkpay = businessInfo.paymentAccounts?.vlinkpay?.trim()
-      if (!hasVenmo && !hasCashapp && !hasZelle && !hasVlinkpay) {
-        newErrors.storePayment = t('setup.errors.store_payment_required')
-      }
-
-      if (!businessInfo.customSlug || !businessInfo.customSlug.trim()) {
-        newErrors.customSlug = t('setup.errors.slug_required') || 'Slug is required'
-      }
-
       // Review Links validation (Optional)
       if (reviewLinks.googleReview && reviewLinks.googleReview.trim() && !reviewLinks.googleReview.startsWith('http')) {
         newErrors.googleReview = t('setup.errors.url_protocol')
@@ -193,9 +181,7 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin }) {
     }
 
     if (currentStep === 2) {
-      if (!isSsoLocked && staffList.length === 0) {
-        newErrors.staffList = t('setup.errors.staff_empty')
-      }
+      // Staff has been removed; no validation needed for step 2 right now
     }
 
     setErrors(newErrors)
@@ -212,8 +198,7 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin }) {
             address: businessInfo.address,
             phone: businessInfo.phone,
             website: businessInfo.website,
-            logoUrl: businessInfo.logo,
-            customSlug: businessInfo.customSlug
+            logoUrl: businessInfo.logo
           }
           const res = await createBusinessMutation.mutateAsync(businessDto)
           setBusinessInfo(prev => ({
@@ -231,12 +216,8 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin }) {
           await updateReviewLinksMutation.mutateAsync(linksDto)
         } catch (err) {
           const newErrors = {}
-          if (err?.errorCode === 'BUSINESS_INVALID_SLUG_FORMAT') {
-            newErrors.customSlug = t('setup.errors.slug_invalid_format') || 'Invalid slug format.'
-          } else if (err?.errorCode === 'BUSINESS_NAME_REQUIRED') {
+          if (err?.errorCode === 'BUSINESS_NAME_REQUIRED') {
             newErrors.name = t('setup.errors.name_required')
-          } else if (err?.errorCode === 'BUSINESS_ALREADY_EXISTS') {
-            newErrors.customSlug = t('setup.errors.business_already_exists') || 'Business slug already exists.'
           } else if (err?.errorCode === 'USER_NOT_MERCHANT') {
             newErrors.submit = t('setup.errors.user_not_merchant') || 'User is not a merchant.'
             setTimeout(() => {
@@ -347,56 +328,39 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin }) {
   }
 
   const handleToggleWallet = (walletKey) => {
-    const configs = newStaff.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
+    const configs = businessInfo.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
     const config = configs[walletKey] || { enabled: false, value: '', qrCode: '' }
 
     if (config.enabled) {
-      setNewStaff({
-        ...newStaff,
+      setBusinessInfo({
+        ...businessInfo,
         payoutConfigs: {
           ...configs,
           [walletKey]: { ...config, enabled: false }
         }
       })
     } else {
-      if (config.value?.trim()) {
-        setNewStaff({
-          ...newStaff,
-          payoutConfigs: {
-            ...configs,
-            [walletKey]: { ...config, enabled: true }
-          }
-        })
-      } else {
-        openPayoutSetup(walletKey)
-      }
+      setPayoutSetupWallet(walletKey)
+      setTempPayoutValues({ value: config.value || '', qrCode: config.qrCode || '', accountName: config.accountName || '' })
+      setPayoutSetupOpen(true)
     }
   }
 
   const openPayoutSetup = (walletKey) => {
-    const configs = newStaff.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
+    const configs = businessInfo.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
     const config = configs[walletKey] || { enabled: false, value: '', qrCode: '' }
-    setTempPayoutValues({
-      value: config.value || '',
-      qrCode: config.qrCode || '',
-      accountName: config.accountName || newStaff.fullName || ''
-    })
     setPayoutSetupWallet(walletKey)
+    setTempPayoutValues({ value: config.value || '', qrCode: config.qrCode || '', accountName: config.accountName || '' })
     setPayoutSetupOpen(true)
   }
 
   const handlePayoutSubmit = (value, qrCode, accountName) => {
-    const configs = newStaff.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
-    setNewStaff({
-      ...newStaff,
+    const configs = businessInfo.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
+    setBusinessInfo({
+      ...businessInfo,
       payoutConfigs: {
         ...configs,
-        [payoutSetupWallet]: {
-          enabled: true,
-          value: value.trim(),
-          qrCode: qrCode,
-          accountName: accountName.trim()
-        }
+        [payoutSetupWallet]: { enabled: true, value, qrCode, accountName }
       }
     })
     setPayoutSetupOpen(false)
@@ -503,9 +467,7 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin }) {
   const stepName = (step) => {
     switch (step) {
       case 1: return t('setup.step_name_1')
-      case 2: return isSsoLocked
-        ? (currentLanguage === 'vi' ? 'Điểm chạm QR' : 'QR Touchpoints')
-        : (t('setup.step_name_2') || 'Nhân viên & QR')
+      case 2: return currentLanguage === 'vi' ? 'Thanh Toán & QR' : 'Payout & QR Touchpoints'
       case 3: return t('setup.step_name_3')
       default: return ''
     }

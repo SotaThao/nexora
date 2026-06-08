@@ -1,4 +1,5 @@
 import { tokenStore } from '../auth/tokenStore'
+import { logger } from '../utils/logger'
 
 const baseUrl = (import.meta.env?.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
 
@@ -36,21 +37,21 @@ let refreshPromise = null
 // Register Bearer token interceptor — always active in API-only mode
 addRequestInterceptor((init) => {
   if (init.anonymous) {
-    console.log('[HTTP] Skipping token for anonymous request')
+    logger.log('[HTTP] Skipping token for anonymous request')
     return init
   }
   const tokens = tokenStore.get()
-  console.log('[HTTP] Token store read:', tokens ? 'FOUND' : 'NULL')
+  logger.log('[HTTP] Token store read:', tokens ? 'FOUND' : 'NULL')
   if (tokens?.accessToken) {
     const headers = { ...init.headers }
     headers['Authorization'] = `Bearer ${tokens.accessToken}`
-    console.log('[HTTP] Attached Authorization header')
+    logger.log('[HTTP] Attached Authorization header')
     return {
       ...init,
       headers,
     }
   }
-  console.log('[HTTP] No accessToken found to attach')
+  logger.log('[HTTP] No accessToken found to attach')
   return init
 })
 
@@ -136,9 +137,23 @@ async function request(path, init = {}) {
     finalInit = interceptor(finalInit)
   }
 
+  // Strip custom properties that must not be forwarded to fetch
+  const { params, anonymous, _isRefresh, ...fetchInit } = finalInit
+
+  // Serialize query params into the URL
+  if (params) {
+    const qs = new URLSearchParams()
+    for (const [k, v] of Object.entries(params)) {
+      if (v !== null && v !== undefined) qs.append(k, String(v))
+    }
+    const sep = path.includes('?') ? '&' : '?'
+    const qsStr = qs.toString()
+    if (qsStr) path = `${path}${sep}${qsStr}`
+  }
+
   let response
   try {
-    response = await fetch(`${baseUrl}${path}`, finalInit)
+    response = await fetch(`${baseUrl}${path}`, fetchInit)
   } catch (err) {
     // Normalize network exceptions
     return Promise.reject({
@@ -157,8 +172,8 @@ async function request(path, init = {}) {
   // Single-flight 401 -> refresh -> retry interceptor
   if (
     response.status === 401 &&
-    !finalInit.anonymous &&
-    !finalInit._isRefresh &&
+    !anonymous &&
+    !_isRefresh &&
     path !== '/api/v1/authentication/refresh-token'
   ) {
     if (!refreshPromise) {

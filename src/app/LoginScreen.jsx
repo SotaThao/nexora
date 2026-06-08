@@ -191,72 +191,29 @@ export default function LoginScreen({
                       // Prefill and login directly to Dashboard
                       const demoSetup = {
                       businessInfo: {
-                        name: 'Golden Glow Nail Spa & Salon',
+                        name: 'Demo Nail Spa',
                         industry: 'Nail Salon',
-                        address: '1088 Gold Coast Hwy, Palm Beach, QLD 4221',
-                        phone: '+1 (555) 789-2026',
-                        website: 'https://goldenglownails.com',
+                        address: '123 Demo Street, Suite 100',
+                        phone: '',
+                        website: '',
                         logo: null,
                         paymentAccounts: {
-                          venmo: '@goldenglow-spa',
-                          cashapp: '$goldenglownails',
-                          zelle: 'payment@goldenglownails.com',
-                          vlinkpay: 'VLP-8893-GG'
+                          venmo: '',
+                          cashapp: '',
+                          zelle: '',
+                          vlinkpay: ''
                         }
                       },
                       reviewLinks: {
-                        googleReview: 'https://g.page/r/cGoldenGlowNails/review',
-                        yelpReview: 'https://www.yelp.com/biz/golden-glow-nails-palm-beach',
-                        facebookReview: 'https://www.facebook.com/goldenglownails/reviews',
-                        feedbackEmail: 'manager@goldenglownails.com'
+                        googleReview: '',
+                        yelpReview: '',
+                        facebookReview: '',
+                        feedbackEmail: ''
                       },
-                      staffList: [
-                        {
-                          id: 'NEX-STAFF-MIA0123',
-                          fullName: 'Mia Tran',
-                          nickname: 'Mia T.',
-                          position: 'Gel-X Artist',
-                          avatar: '',
-                          isActive: true,
-                          showInTipsFlow: true,
-                          paymentAccounts: { venmo: '@mia-nails', cashapp: '$miaglow', zelle: 'mia.tran@gmail.com', vlinkpay: 'VLP-0123-MIA' }
-                        },
-                        {
-                          id: 'NEX-STAFF-VL8893',
-                          fullName: 'Vivian Le',
-                          nickname: 'Vivian L.',
-                          position: 'Acrylic Specialist',
-                          avatar: '',
-                          isActive: true,
-                          showInTipsFlow: true,
-                          paymentAccounts: { venmo: '', cashapp: '$vivianle', zelle: '407-555-0199', vlinkpay: 'VLP-8893-VL' }
-                        },
-                        {
-                          id: 'NEX-STAFF-ASH0155',
-                          fullName: 'Ashley Park',
-                          nickname: 'Ashley P.',
-                          position: 'Pedicure Lead',
-                          avatar: '',
-                          isActive: true,
-                          showInTipsFlow: true,
-                          paymentAccounts: { venmo: '@ashley-pedi', cashapp: '', zelle: 'ashley@glownails.com', vlinkpay: 'VLP-0155-ASH' }
-                        },
-                        {
-                          id: 'NEX-STAFF-HN1148',
-                          fullName: 'Hanna Nguyen',
-                          nickname: 'Hanna Ng.',
-                          position: 'Nail Art Designer',
-                          avatar: '',
-                          isActive: false,
-                          showInTipsFlow: true,
-                          paymentAccounts: { venmo: '@hanna-art', cashapp: '', zelle: '', vlinkpay: 'VLP-1148-HN' }
-                        }
-                      ],
+                      staffList: [],
                       touchPoints: [
                         { id: 'tp-main', name: 'Business Main Lobby QR', type: 'Business Main' },
                         { id: 'tp-front', name: 'Reception Front Desk', type: 'Front Desk' },
-                        { id: 'tp-t1', name: 'Service Chair 01', type: 'Table QR' },
-                        { id: 'tp-t2', name: 'Service Chair 02', type: 'Table QR' },
                       ]
                       }
                       onQuickDemoLogin(demoSetup)

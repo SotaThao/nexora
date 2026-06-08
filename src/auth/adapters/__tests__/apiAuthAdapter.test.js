@@ -54,6 +54,8 @@ describe('apiAuthAdapter', () => {
       displayName: 'Mia Tran',
       role: 'owner',
       staffId: null,
+      accountStatus: 'kyb_approved',
+      hasCompletedOnboarding: true,
       verificationStatus: 'kyb_approved',
       ssoPrefillData: null,
     })
@@ -114,9 +116,110 @@ describe('apiAuthAdapter', () => {
       displayName: 'Jane Doe',
       role: 'staff',
       staffId: null,
+      accountStatus: 'active',
+      hasCompletedOnboarding: undefined,
       verificationStatus: 'active',
       ssoPrefillData: null,
     })
+  })
+
+  it('should not treat an Active merchant profile as KYB approved', async () => {
+    const mockSigninResponse = {
+      accessToken: 'access-123',
+      refreshToken: 'refresh-456',
+    }
+
+    const mockProfileResponse = {
+      id: 'merchant-uuid',
+      email: 'biz-owner@salon.com',
+      firstName: 'Mia',
+      lastName: 'Tran',
+      profileType: 'Merchant',
+      status: 'Active',
+    }
+
+    const mockVerifiedStatusResponse = {
+      status: 'Active',
+      isVerified: true,
+    }
+
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      text: async () => JSON.stringify(mockSigninResponse),
+    })
+
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      text: async () => JSON.stringify(mockProfileResponse),
+    })
+
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      text: async () => JSON.stringify(mockVerifiedStatusResponse),
+    })
+
+    const session = await apiAuthAdapter.login({ email: 'biz-owner@salon.com', password: 'password123' })
+
+    expect(session).toEqual({
+      id: 'merchant-uuid',
+      email: 'biz-owner@salon.com',
+      accountType: 'business',
+      flag: '!business',
+      displayName: 'Mia Tran',
+      role: 'owner',
+      staffId: null,
+      accountStatus: 'Active',
+      hasCompletedOnboarding: true,
+      verificationStatus: 'basic',
+      ssoPrefillData: null,
+    })
+  })
+
+  it('should use explicit business KYB status when available', async () => {
+    const mockSigninResponse = {
+      accessToken: 'access-123',
+      refreshToken: 'refresh-456',
+    }
+
+    const mockProfileResponse = {
+      id: 'merchant-uuid',
+      email: 'owner@salon.com',
+      firstName: 'Mia',
+      lastName: 'Tran',
+      profileType: 'Merchant',
+      status: 'Active',
+    }
+
+    const mockVerifiedStatusResponse = {
+      businessKybStatus: 'Approved',
+    }
+
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      text: async () => JSON.stringify(mockSigninResponse),
+    })
+
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      text: async () => JSON.stringify(mockProfileResponse),
+    })
+
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      text: async () => JSON.stringify(mockVerifiedStatusResponse),
+    })
+
+    const session = await apiAuthAdapter.login({ email: 'owner@salon.com', password: 'password123' })
+
+    expect(session.verificationStatus).toBe('kyb_approved')
+    expect(session.accountStatus).toBe('Active')
+    expect(session.hasCompletedOnboarding).toBe(true)
   })
 
   it('should return null on getSession if tokens are absent', async () => {
@@ -152,6 +255,8 @@ describe('apiAuthAdapter', () => {
       displayName: 'Mia Tran',
       role: 'owner',
       staffId: null,
+      accountStatus: 'kyb_approved',
+      hasCompletedOnboarding: true,
       verificationStatus: 'kyb_approved',
       ssoPrefillData: null,
     })

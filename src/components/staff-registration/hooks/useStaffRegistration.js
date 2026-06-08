@@ -7,59 +7,7 @@ import { usePendingAccounts, useReplaceAllPendingAccounts } from '../../../data/
 import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
 import { useNotifications, useAddNotification } from '../../../data/hooks/useNotifications'
 
-const MOCK_NEXORA_STAFF_PROFILES = {
-  'NEX-STAFF-ANNA0921': {
-    fullName: 'Anna Nguyen',
-    nickname: 'Anna N.',
-    phone: '(713) 555-1234',
-    email: 'anna@example.com',
-    position: 'Nail Technician',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200&h=200',
-    vlinkpayId: 'VLP-0921-ANNA',
-    payoutConfigs: {
-      zelle: { enabled: true, value: '(713) 555-1234', qrCode: '', accountName: 'Anna Nguyen' },
-      cashapp: { enabled: true, value: '$annanais', qrCode: '', accountName: 'Anna Nguyen' },
-      venmo: { enabled: true, value: '@annanais', qrCode: '', accountName: 'Anna Nguyen' },
-      bankwire: { enabled: false, value: '', qrCode: '', accountName: '' },
-      paypal: { enabled: false, value: '', qrCode: '', accountName: '' },
-      applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
-    }
-  },
-  'NEX-STAFF-LISA1102': {
-    fullName: 'Lisa Tran',
-    nickname: 'Lisa T.',
-    phone: '(408) 555-2345',
-    email: 'lisa@example.com',
-    position: 'Nail Tech',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200&h=200',
-    vlinkpayId: 'VLP-1102-LISA',
-    payoutConfigs: {
-      venmo: { enabled: true, value: '@lisatran-nails', qrCode: '', accountName: 'Lisa Tran' },
-      cashapp: { enabled: true, value: '$lisatran', qrCode: '', accountName: 'Lisa Tran' },
-      zelle: { enabled: true, value: 'lisa@example.com', qrCode: '', accountName: 'Lisa Tran' },
-      bankwire: { enabled: false, value: '', qrCode: '', accountName: '' },
-      paypal: { enabled: false, value: '', qrCode: '', accountName: '' },
-      applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
-    }
-  },
-  'NEX-STAFF-HN1148': {
-    fullName: 'Hanna Nguyen',
-    nickname: 'Hanna Ng.',
-    phone: '(407) 555-4567',
-    email: 'hanna@example.com',
-    position: 'Nail Art Designer',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200&h=200',
-    vlinkpayId: 'VLP-1148-HN',
-    payoutConfigs: {
-      venmo: { enabled: true, value: '@hanna-art', qrCode: '', accountName: 'Hanna Nguyen' },
-      zelle: { enabled: true, value: 'hanna@example.com', qrCode: '', accountName: 'Hanna Nguyen' },
-      cashapp: { enabled: false, value: '', qrCode: '', accountName: '' },
-      bankwire: { enabled: false, value: '', qrCode: '', accountName: '' },
-      paypal: { enabled: false, value: '', qrCode: '', accountName: '' },
-      applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
-    }
-  }
-}
+const MOCK_NEXORA_STAFF_PROFILES = {}
 
 export { MOCK_NEXORA_STAFF_PROFILES }
 
@@ -459,7 +407,7 @@ export default function useStaffRegistration({ inviteData }) {
     setIsCapturing(true)
     setTimeout(() => {
       const mockQr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-        editValue || 'nexora-mock-payout'
+        editValue || ''
       )}`
       setEditQrCode(mockQr)
       setIsCapturing(false)
@@ -502,23 +450,13 @@ export default function useStaffRegistration({ inviteData }) {
     if (!parsed) {
       parsed = {
         businessInfo: {
-          name: inviteData?.biz || 'Golden Glow Nail Spa & Salon',
-          email: 'owner@goldenglownails.com',
-          phone: '(555) 019-2834',
-          category: 'Nail Salon'
+          name: inviteData?.biz || '',
+          email: '',
+          phone: '',
+          category: ''
         },
-        staffList: [
-          { id: '1', fullName: 'Mia Tran', nickname: 'Mia T.', position: 'Gel-X Artist', avatar: '', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '@miatran-nails', cashapp: '$miatran', zelle: 'mia.tran@gmail.com', vlinkpay: 'VLP-8842-MT' }, status: 'Active', flowType: 'Direct Addition' },
-          { id: '2', fullName: 'Vivian Le', nickname: 'Vivian L.', position: 'Acrylic Specialist', avatar: '', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '', cashapp: '$vivianle', zelle: '', vlinkpay: 'VLP-7629-VL' }, status: 'Active', flowType: 'Direct Addition' },
-          { id: '3', fullName: 'Ashley Park', nickname: 'Ashley P.', position: 'Pedicure Lead', avatar: '', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '@ashleypark', cashapp: '', zelle: 'ashley.p@gmail.com', vlinkpay: 'VLP-5521-AP' }, status: 'Active', flowType: 'Direct Addition' },
-          { id: '4', fullName: 'Hanna Nguyen', nickname: 'Hanna N.', position: 'Nail Art Designer', avatar: '', isActive: false, showInTipsFlow: true, paymentAccounts: { venmo: '@hanna-art', cashapp: '', zelle: '', vlinkpay: 'VLP-1148-HN' }, status: 'Inactive', flowType: 'Direct Addition' }
-        ],
-        touchPoints: [
-          { id: 'tp-main', name: 'Business Main Lobby QR', type: 'Business Main' },
-          { id: 'tp-front', name: 'Reception Front Desk', type: 'Front Desk' },
-          { id: 'tp-t1', name: 'Service Chair 01', type: 'Table QR' },
-          { id: 'tp-t2', name: 'Service Chair 02', type: 'Table QR' },
-        ]
+        staffList: [],
+        touchPoints: []
       }
     }
 
@@ -706,23 +644,13 @@ export default function useStaffRegistration({ inviteData }) {
     if (!parsedActive) {
       parsedActive = {
         businessInfo: {
-          name: inviteData?.biz || 'Golden Glow Nail Spa & Salon',
-          email: 'owner@goldenglownails.com',
-          phone: '(555) 019-2834',
-          category: 'Nail Salon'
+          name: inviteData?.biz || '',
+          email: '',
+          phone: '',
+          category: ''
         },
-        staffList: [
-          { id: '1', fullName: 'Mia Tran', nickname: 'Mia T.', position: 'Gel-X Artist', avatar: '', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '@miatran-nails', cashapp: '$miatran', zelle: 'mia.tran@gmail.com', vlinkpay: 'VLP-8842-MT' }, status: 'Active', flowType: 'Direct Addition' },
-          { id: '2', fullName: 'Vivian Le', nickname: 'Vivian L.', position: 'Acrylic Specialist', avatar: '', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '', cashapp: '$vivianle', zelle: '', vlinkpay: 'VLP-7629-VL' }, status: 'Active', flowType: 'Direct Addition' },
-          { id: '3', fullName: 'Ashley Park', nickname: 'Ashley P.', position: 'Pedicure Lead', avatar: '', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '@ashleypark', cashapp: '', zelle: 'ashley.p@gmail.com', vlinkpay: 'VLP-5521-AP' }, status: 'Active', flowType: 'Direct Addition' },
-          { id: '4', fullName: 'Hanna Nguyen', nickname: 'Hanna N.', position: 'Nail Art Designer', avatar: '', isActive: false, showInTipsFlow: true, paymentAccounts: { venmo: '@hanna-art', cashapp: '', zelle: '', vlinkpay: 'VLP-1148-HN' }, status: 'Inactive', flowType: 'Direct Addition' }
-        ],
-        touchPoints: [
-          { id: 'tp-main', name: 'Business Main Lobby QR', type: 'Business Main' },
-          { id: 'tp-front', name: 'Reception Front Desk', type: 'Front Desk' },
-          { id: 'tp-t1', name: 'Service Chair 01', type: 'Table QR' },
-          { id: 'tp-t2', name: 'Service Chair 02', type: 'Table QR' },
-        ]
+        staffList: [],
+        touchPoints: []
       }
     }
 

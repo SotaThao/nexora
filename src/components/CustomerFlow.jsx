@@ -11,11 +11,16 @@ import LeaveReview from './customer-flow/steps/LeaveReview'
 import ReviewRouting from './customer-flow/steps/ReviewRouting'
 import FinalDone from './customer-flow/steps/FinalDone'
 
+/**
+ * CustomerFlow — renders the full customer tipping & review experience.
+ * Supports both API mode (public /touch/ URLs) and simulation mode (?flow=customer).
+ */
 export default function CustomerFlow() {
   const flow = useCustomerFlow()
 
   const {
     currentLanguage, setLanguage, t, showToast,
+    isApiMode, touchPageQuery,
     bizName, scannedTouchpoint,
     filteredStaff, selectedStaffMembers, searchQuery, setSearchQuery, handleToggleStaff,
     step, setStep,
@@ -30,6 +35,9 @@ export default function CustomerFlow() {
     comment, setComment, handleSubmitFeedback,
     reviewLinks,
     handleReset,
+    handleSkipTip,
+    handleConfirmTip,
+    handleTrackExternalReview,
   } = flow
 
   return (
@@ -58,7 +66,29 @@ export default function CustomerFlow() {
       <main className="flex-grow flex items-center justify-center p-4 relative z-10">
         <div className="w-full max-w-md bg-white border border-nexoraBorder rounded-2xl p-6 shadow-premium space-y-6">
 
-          {scannedTouchpoint && scannedTouchpoint.isActive === false ? (
+          {/* API mode: loading state */}
+          {isApiMode && touchPageQuery.isLoading && (
+            <div className="text-center py-12 space-y-4 animate-fadeIn">
+              <div className="h-12 w-12 border-4 border-nexoraBrand border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-sm text-nexoraMuted font-medium">{t('common.loading') || 'Loading...'}</p>
+            </div>
+          )}
+
+          {/* API mode: error state */}
+          {isApiMode && touchPageQuery.isError && (
+            <div className="text-center py-12 space-y-4 animate-fadeIn">
+              <AlertTriangle className="h-12 w-12 text-nexoraDanger mx-auto" />
+              <h3 className="font-extrabold text-lg text-nexoraText">
+                {t('errors.touchpoint_not_found') || 'Page Not Found'}
+              </h3>
+              <p className="text-xs text-nexoraMuted">
+                {t('errors.touchpoint_not_found_desc') || 'This touch point could not be loaded.'}
+              </p>
+            </div>
+          )}
+
+          {/* Inactive touchpoint warning (simulation mode only) */}
+          {!isApiMode && scannedTouchpoint && scannedTouchpoint.isActive === false ? (
             <div className="text-center space-y-6 py-6 animate-fadeIn flex flex-col items-center">
               <div className="h-16 w-16 bg-amber-100 rounded-full flex items-center justify-center shadow-inner mb-2 animate-bounce">
                 <AlertTriangle className="h-8 w-8 text-amber-600 animate-pulse" />
@@ -80,7 +110,10 @@ export default function CustomerFlow() {
                 {t('common.back') || 'Go Back'}
               </button>
             </div>
-          ) : (
+          ) : null}
+
+          {/* Step components — render when data is ready */}
+          {(!isApiMode || touchPageQuery.isSuccess) && (
             <>
               {step === 'select_staff' && (
                 <SelectStaff
@@ -137,6 +170,8 @@ export default function CustomerFlow() {
                   tipRefNumber={tipRefNumber}
                   showToast={showToast}
                   handlePay={handlePay}
+                  handleConfirmTip={handleConfirmTip}
+                  isApiMode={isApiMode}
                   setStep={setStep}
                 />
               )}
@@ -175,6 +210,7 @@ export default function CustomerFlow() {
                   t={t}
                   reviewLinks={reviewLinks}
                   setStep={setStep}
+                  handleTrackExternalReview={handleTrackExternalReview}
                 />
               )}
 
