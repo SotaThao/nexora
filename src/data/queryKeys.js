@@ -31,6 +31,11 @@ export const qk = {
   userProfile:              () => ['userProfile'],
   verifiedStatus:           () => ['userProfile', 'verifiedStatus'],
 
+  // Merchant Staff Management
+  merchantStaff:       ()      => ['merchantStaff'],
+  merchantStaffSearch: (q)     => ['merchantStaff', 'search', q],
+  staffInvite:         (token) => ['staffInvite', token],
+
   // Public Customer Touch
   customerTouch: (businessSlug, touchPointSlug, sessionId) => ['customerTouch', businessSlug, touchPointSlug, sessionId],
   publicBusinessPaymentMethods: (businessId) => ['publicBusinessPaymentMethods', businessId],
