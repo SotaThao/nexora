@@ -105,17 +105,17 @@ describe('merchantsRepository', () => {
       expect(res).toEqual({ businessId: '123', slug: 'new-biz' })
     })
 
-    it('should upload logo using PUT and FormData', async () => {
+    it('should upload logo via generic /images/upload endpoint', async () => {
       const fakeFile = new File([''], 'logo.png', { type: 'image/png' })
-      mockClient.upload.mockResolvedValue({ logoUrl: 'http://cdn/logo.png' })
+      mockClient.upload.mockResolvedValue({ fileUrl: 'http://cdn/logo.png' })
 
       const res = await repo.uploadLogo(fakeFile)
       expect(mockClient.upload).toHaveBeenCalledWith(
-        '/api/v1/merchant/business/logo',
+        '/api/v1/images/upload',
         expect.any(FormData),
-        'PUT'
+        'POST'
       )
-      expect(res).toEqual({ logoUrl: 'http://cdn/logo.png' })
+      expect(res).toBe('http://cdn/logo.png')
     })
 
     it('should update review links', async () => {

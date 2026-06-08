@@ -165,7 +165,7 @@ export const apiAuthAdapter = {
   async signup({ email, confirmEmail, password, confirmPassword, firstName, lastName, profileType }) {
     return httpClient.post(
       '/api/v1/authentication/signup',
-      { email, confirmEmail, password, confirmPassword, firstName, lastName, profileType },
+      { email, confirmEmail, password, confirmPassword, firstName, lastName, type: profileType },
       { anonymous: true }
     )
   },
