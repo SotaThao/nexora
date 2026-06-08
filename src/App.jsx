@@ -85,6 +85,12 @@ export default function App() {
       setView('customer')
       return
     }
+    // Token-based staff invite: /staff/invite/{token}
+    if (pathParts[0] === 'staff' && pathParts[1] === 'invite' && pathParts[2]) {
+      setStaffInviteData({ token: pathParts[2] })
+      setView('staff-portal')
+      return
+    }
     if (params.get('flow') === 'staff-invite') {
       const bizName = params.get('biz') || ''
       setStaffInviteData({

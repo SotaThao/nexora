@@ -6,6 +6,7 @@ import { logger } from '../../../utils/logger'
 import { usePendingAccounts, useReplaceAllPendingAccounts } from '../../../data/hooks/usePendingAccounts'
 import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
 import { useNotifications, useAddNotification } from '../../../data/hooks/useNotifications'
+import { useStaffInviteInfo, useAcceptStaffInvite } from '../../../data/hooks/useStaffInvites'
 
 const MOCK_NEXORA_STAFF_PROFILES = {}
 
@@ -20,6 +21,19 @@ export default function useStaffRegistration({ inviteData }) {
   const saveMerchantSetupMutation = useSaveMerchantSetup()
   useNotifications()
   const addNotificationMutation = useAddNotification()
+
+  // API invite hooks — only active when inviteData has a real token
+  const inviteToken = inviteData?.token ?? null
+  const inviteInfoQuery = useStaffInviteInfo(inviteToken)
+  const acceptInviteMutation = useAcceptStaffInvite()
+
+  // Derive whether this is a real API-backed invite (has token) or simulation
+  const isApiInvite = Boolean(inviteToken)
+  // Invite metadata from the API (null if not loaded yet or no token)
+  const apiInviteInfo = inviteInfoQuery.data ?? null
+  const isInviteLoading = inviteInfoQuery.isLoading && isApiInvite
+  const isInviteError = inviteInfoQuery.isError
+
   const [step, setStep] = useState(0) // 0: Welcome Invite, 1: OTP, 2: Profile, 3: Payments, 4: Consent & Activate, 5: Success
 
   // Path selection states
@@ -32,7 +46,7 @@ export default function useStaffRegistration({ inviteData }) {
   const [showScanner, setShowScanner] = useState(false)
   const [scanTarget, setScanTarget] = useState(null) // 'staff' | 'vlinkpay'
 
-  const isSelfServe = !inviteData?.name
+  const isSelfServe = isApiInvite ? false : !inviteData?.name
 
   // Verification states
   const [showOtpInput, setShowOtpInput] = useState(false)
@@ -97,9 +111,19 @@ export default function useStaffRegistration({ inviteData }) {
   const [isCapturing, setIsCapturing] = useState(false)
   const [modalError, setModalError] = useState('')
 
-  // Setup initial values from inviteData (merchant dashboard simulation)
+  // Setup initial values from inviteData (merchant dashboard simulation) or API metadata
   useEffect(() => {
-    if (inviteData) {
+    // API invite: use metadata from the API response
+    if (isApiInvite && apiInviteInfo) {
+      setFullName(apiInviteInfo.invitedName || '')
+      setNickname(apiInviteInfo.invitedName ? apiInviteInfo.invitedName.split(' ')[0] + '.' : '')
+      setPosition(apiInviteInfo.invitedPosition || 'Nail Technician')
+      setRegReferralLink(apiInviteInfo.businessName || '')
+      return
+    }
+
+    // Legacy simulation invite: use inviteData props
+    if (inviteData && !isApiInvite) {
       setFullName(inviteData.name || '')
       setNickname(inviteData.name ? inviteData.name.split(' ')[0] + '.' : '')
       setPosition(inviteData.role || 'Nail Technician')
@@ -129,7 +153,7 @@ export default function useStaffRegistration({ inviteData }) {
         setVlinkpayId(`VLP-${Math.floor(1000 + Math.random() * 9000)}-${initials}`)
       }
     }
-  }, [inviteData])
+  }, [inviteData, isApiInvite, apiInviteInfo])
 
   // Auto-generate staffId and vlinkpayId once fullName is typed (for self-serve flow)
   useEffect(() => {
@@ -639,6 +663,32 @@ export default function useStaffRegistration({ inviteData }) {
       payoutConfigs: payouts
     }
 
+    // --- API invite path: use the accept mutation ---
+    if (isApiInvite) {
+      acceptInviteMutation.mutate({
+        token: inviteToken,
+        displayName: fullName.trim(),
+        position: position || null,
+        bio: bio || null,
+        photoUrl: avatar || null,
+      }, {
+        onSuccess: () => {
+          setStep(5)
+        },
+        onError: (err) => {
+          logger.error('Failed to accept invite via API', err)
+          showToast(
+            currentLanguage === 'vi'
+              ? `Chấp nhận lời mời thất bại: ${err?.errorCode || 'Lỗi không xác định'}`
+              : `Failed to accept invite: ${err?.errorCode || 'Unknown error'}`,
+            'error'
+          )
+        }
+      })
+      return
+    }
+
+    // --- Legacy simulation path (no token) ---
     // Save into merchant setup
     let parsedActive = merchantSetupQuery.data ? { ...merchantSetupQuery.data } : null
     if (!parsedActive) {
@@ -748,6 +798,11 @@ export default function useStaffRegistration({ inviteData }) {
     scanTarget, setScanTarget,
     // flags
     isSelfServe,
+    isApiInvite,
+    isInviteLoading,
+    isInviteError,
+    apiInviteInfo,
+    acceptInviteMutation,
     // otp
     showOtpInput, setShowOtpInput,
     otpCode, setOtpCode,
