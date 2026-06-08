@@ -129,12 +129,8 @@ function StaffModal({
   const handleCombinedIdChange = (val) => {
     const searchId = val.trim().toUpperCase()
 
-    // KYB verification check for NEX- prefixed IDs
+    // KYB verification check removed — NEXORA does not require KYB for add staff
     const isNexora = searchId.startsWith('NEX-')
-    if (isNexora && verificationStatus !== 'kyb_approved') {
-      if (onBlockedFeatureClick) onBlockedFeatureClick()
-      return
-    }
 
     setIdInput(val)
 
@@ -345,37 +341,18 @@ function StaffModal({
   }
 
   const simulateSuccessfulScan = () => {
-    // Lisa is a NEX-STAFF ID. If KYB is not approved, block it!
-    if (verificationStatus !== 'kyb_approved') {
-      if (onBlockedFeatureClick) onBlockedFeatureClick()
-      setShowScanner(false)
-      setScanTarget(null)
-      return
-    }
     handleCombinedIdChange('NEX-STAFF-LISA1102')
     setShowScanner(false)
     setScanTarget(null)
   }
 
   const handleScanAnna = () => {
-    if (verificationStatus !== 'kyb_approved') {
-      if (onBlockedFeatureClick) onBlockedFeatureClick()
-      setShowScanner(false)
-      setScanTarget(null)
-      return
-    }
     handleCombinedIdChange('NEX-STAFF-ANNA0921')
     setShowScanner(false)
     setScanTarget(null)
   }
 
   const handleScanHanna = () => {
-    if (verificationStatus !== 'kyb_approved') {
-      if (onBlockedFeatureClick) onBlockedFeatureClick()
-      setShowScanner(false)
-      setScanTarget(null)
-      return
-    }
     handleCombinedIdChange('NEX-STAFF-HN1148')
     setShowScanner(false)
     setScanTarget(null)
