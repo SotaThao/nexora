@@ -1,5 +1,6 @@
 import React from 'react'
 import { X, QrCode } from 'lucide-react'
+import { useTranslation } from '../../../contexts/LanguageContext'
 
 export default function QrScannerModal({
   showScanner,
@@ -12,6 +13,8 @@ export default function QrScannerModal({
   handleVlinkpayIdChange,
   isDemoToolsEnabled = false,
 }) {
+  const { t } = useTranslation()
+
   if (!showScanner) return null
 
   return (
@@ -44,12 +47,12 @@ export default function QrScannerModal({
         {/* Header */}
         <div className="space-y-1">
           <h3 className="text-sm font-black uppercase tracking-wider text-nexoraText">
-            {currentLanguage === 'vi' ? 'Quét Mã QR Nhận Diện' : 'Scan QR Code'}
+            {t('components.staff_registration.steps.QrScannerModal.text_extra_1_32f83e')}
           </h3>
           <p className="text-[10px] text-nexoraMuted font-medium">
             {scanTarget === 'staff'
-              ? (currentLanguage === 'vi' ? 'Quét mã NEXORA Personal ID để liên kết tài khoản' : 'Scan NEXORA Personal ID to link your account')
-              : (currentLanguage === 'vi' ? 'Quét mã VLINKPAY ID để tự động điền thông tin tài khoản' : 'Scan VLINKPAY ID to autofill account data')}
+              ? (t('components.staff_registration.steps.QrScannerModal.text_extra_2_e8d012'))
+              : (t('components.staff_registration.steps.QrScannerModal.text_extra_3_129b71'))}
           </p>
         </div>
 
@@ -71,19 +74,15 @@ export default function QrScannerModal({
         {/* Helper Text */}
         <p className="text-[10px] text-nexoraMuted font-medium max-w-xs mx-auto">
           {isDemoToolsEnabled
-            ? (currentLanguage === 'vi'
-                ? 'Hướng camera về phía mã QR hoặc chọn giả lập quét thành công bên dưới.'
-                : 'Point the camera at the QR code, or choose a mockup scan profile below.')
-            : (currentLanguage === 'vi'
-                ? 'Hướng camera về phía mã QR để quét mã nhận diện.'
-                : 'Point the camera at the QR code to scan the account identifier.')}
+            ? (t('components.staff_registration.steps.QrScannerModal.text_extra_4_7327eb'))
+            : (t('components.staff_registration.steps.QrScannerModal.text_extra_5_04832e'))}
         </p>
 
         {/* Quick simulation buttons */}
         {isDemoToolsEnabled && (
         <div className="space-y-2 pt-2 border-t border-nexoraRule">
           <span className="text-[9px] font-black text-nexoraSubtle uppercase tracking-widest block">
-            {currentLanguage === 'vi' ? 'Giả lập quét QR' : 'Simulate QR Scan'}
+            {t('components.staff_registration.steps.QrScannerModal.text_extra_6_3fd4ec')}
           </span>
 
           <div className="flex flex-col gap-2">
@@ -93,7 +92,7 @@ export default function QrScannerModal({
               onClick={simulateSuccessfulScan}
               className="w-full py-2 bg-nexoraWarning hover:bg-nexoraWarning/80 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-colors shadow-sm"
             >
-              {currentLanguage === 'vi' ? 'Giả lập Quét Lisa Tran' : 'Simulate Successful Scan'}
+              {t('components.staff_registration.steps.QrScannerModal.text_extra_7_a33385')}
             </button>
 
             {/* Additional quick options for high-end feel */}
@@ -142,7 +141,7 @@ export default function QrScannerModal({
           }}
           className="w-full py-2 border border-nexoraBorder hover:bg-nexoraSurfaceMuted text-nexoraMuted hover:text-nexoraText rounded-xl text-xs font-bold transition"
         >
-          {currentLanguage === 'vi' ? 'HỦY BỎ' : 'CANCEL'}
+          {t('components.staff_registration.steps.QrScannerModal.text_extra_8_717e54')}
         </button>
       </div>
     </div>

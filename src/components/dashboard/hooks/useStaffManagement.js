@@ -152,7 +152,7 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
     if (!staffForm.fullName.trim()) nextErrors.fullName = 'Full name is required.'
     if (!staffForm.nickname.trim()) nextErrors.nickname = 'Public nickname is required.'
     if (staffForm.email?.trim() && !/\S+@\S+\.\S+/.test(staffForm.email.trim())) {
-      nextErrors.email = t('setup.errors.staff_email_invalid') || 'Invalid email address format.'
+      nextErrors.email = t('setup.errors.staff_email_invalid')
     }
     if (Object.keys(nextErrors).length) {
       setErrors(nextErrors)
@@ -421,7 +421,7 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
     if (ok) {
       setStaff((current) => current.filter((m) => m.id !== staffId))
       setTouchpoints((current) => current.filter((tp) => tp.staffId !== staffId))
-      showToast(currentLanguage === 'vi' ? 'Đã hủy liên kết nhân viên thành công.' : 'Staff unlinked successfully.', 'success')
+      showToast(t('components.dashboard.hooks.useStaffManagement.text_1_e5bc21'), 'success')
     }
   }
 
@@ -434,14 +434,12 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
       : `Are you sure you want to decline unlink request from ${member.fullName}?`)
     if (ok) {
       setStaff((current) => current.map((m) => m.id === staffId ? { ...m, status: 'Active', isActive: true } : m))
-      showToast(currentLanguage === 'vi' ? 'Đã từ chối yêu cầu hủy liên kết.' : 'Declined unlink request.', 'success')
+      showToast(t('components.dashboard.hooks.useStaffManagement.text_2_6d6e69'), 'success')
     }
   }
 
   const deleteStaff = async (id) => {
-    const ok = await showConfirm(currentLanguage === 'vi'
-      ? 'Bạn có chắc chắn muốn xóa nhân viên này khỏi Nexora Touch?'
-      : 'Delete this staff member from Nexora Touch?')
+    const ok = await showConfirm(t('components.dashboard.hooks.useStaffManagement.text_3_28dbc0'))
     if (!ok) return
     setStaff((current) => current.filter((member) => member.id !== id))
     setTouchpoints((current) => current.filter((point) => !(point.type === 'Staff QR' && point.staffId === id)))

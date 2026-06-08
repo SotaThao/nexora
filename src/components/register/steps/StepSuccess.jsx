@@ -51,15 +51,15 @@ export default function StepSuccess({
       {/* Info summary */}
       <div className="max-w-md mx-auto bg-slate-50 border border-slate-200 rounded-xl p-4 text-left text-xs space-y-2.5">
         <h4 className="font-extrabold text-slate-800 border-b border-slate-200 pb-1.5 uppercase text-[10px] tracking-wider">
-          {currentLanguage === 'vi' ? 'Thông tin đăng ký của bạn' : 'Registered Staff Summary'}
+          {t('components.register.steps.StepSuccess.text_1_dd000e')}
         </h4>
         <div className="grid grid-cols-3 gap-y-1.5 text-slate-600">
-          <span className="font-semibold">{currentLanguage === 'vi' ? 'Email tài khoản:' : 'Account Email:'}</span>
+          <span className="font-semibold">{t('components.register.steps.StepSuccess.text_2_f9d6e3')}</span>
           <span className="col-span-2 font-mono break-all text-slate-800">{email}</span>
 
           {referralCode && (
             <>
-              <span className="font-semibold">{currentLanguage === 'vi' ? 'Mã giới thiệu:' : 'Referral Code:'}</span>
+              <span className="font-semibold">{t('components.register.steps.StepSuccess.text_3_b84a79')}</span>
               <span className="col-span-2 text-slate-800 font-mono">{referralCode}</span>
             </>
           )}

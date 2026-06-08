@@ -14,7 +14,7 @@ export default function ForgotPassword({ setView }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!email.trim()) {
-      setError(t('register.errors.email_required') || 'Email is required')
+      setError(t('register.errors.email_required'))
       return
     }
 

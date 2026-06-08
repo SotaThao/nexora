@@ -26,7 +26,7 @@ export default function StepProfile({
     <div className="space-y-5 py-2">
       <div className="border-b border-nexoraRule pb-2">
         <h3 className="text-sm font-extrabold text-nexoraText uppercase tracking-wide">
-          {currentLanguage === 'vi' ? '2. Tài khoản cá nhân' : '2. Personal Account'}
+          {t('components.staff_registration.steps.StepProfile.text_1_0a45d3')}
         </h3>
       </div>
 
@@ -43,7 +43,7 @@ export default function StepProfile({
                     type="button"
                     onClick={() => setAvatar(null)}
                     className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 hover:bg-red-600 text-white transition shadow duration-150 cursor-pointer"
-                    title={currentLanguage === 'vi' ? 'Xóa ảnh' : 'Remove photo'}
+                    title={t('common.remove_photo')}
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
@@ -58,9 +58,9 @@ export default function StepProfile({
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center gap-2">
                 {/* Device upload option */}
-                <label className="h-9 px-4 rounded-xl bg-nexoraBrand hover:bg-nexoraBrandDark text-white flex items-center justify-center gap-1.5 cursor-pointer text-xs font-bold transition shadow-sm" title={currentLanguage === 'vi' ? 'Tải lên từ thiết bị' : 'Upload from device'}>
+                <label className="h-9 px-4 rounded-xl bg-nexoraBrand hover:bg-nexoraBrandDark text-white flex items-center justify-center gap-1.5 cursor-pointer text-xs font-bold transition shadow-sm" title={t('components.staff_registration.steps.StepProfile.text_2_e42d2b')}>
                   <Upload className="h-3.5 w-3.5" />
-                  <span>{currentLanguage === 'vi' ? 'Tải ảnh lên' : 'Upload photo'}</span>
+                  <span>{t('common.upload_photo')}</span>
                   <input
                     type="file"
                     accept="image/*"
@@ -79,9 +79,7 @@ export default function StepProfile({
                 </label>
               </div>
               <span className="text-[10px] text-nexoraSubtle">
-                {currentLanguage === 'vi'
-                  ? 'Chấp nhận định dạng JPG, PNG. Dung lượng tối đa 5MB.'
-                  : 'Accepted formats: JPG, PNG. Max size: 5MB.'}
+                {t('components.staff_registration.steps.StepProfile.text_3_040240')}
               </span>
             </div>
           </div>
@@ -90,7 +88,7 @@ export default function StepProfile({
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="flex items-center text-[10px] font-black uppercase text-nexoraSubtle tracking-wider h-4">
-              {renderLabel(currentLanguage === 'vi' ? 'Họ và tên *' : 'Full Name *')}
+              {renderLabel(t('components.staff_registration.steps.StepProfile.text_4_dd52c9'))}
             </label>
             <input
               type="text"
@@ -106,13 +104,11 @@ export default function StepProfile({
           </div>
           <div>
             <label className="flex items-center text-[10px] font-black uppercase text-nexoraSubtle tracking-wider gap-1 h-4">
-              <span>{renderLabel(currentLanguage === 'vi' ? 'Tên hiển thị (Nickname) *' : 'Display Nickname *')}</span>
+              <span>{renderLabel(t('components.staff_registration.steps.StepProfile.text_5_fc03e0'))}</span>
               <div className="relative group inline-flex items-center normal-case font-normal text-nexoraSubtle">
                 <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
-                  {currentLanguage === 'vi'
-                    ? 'Tên này sẽ hiển thị cho khách hàng tại tiệm khi họ quét mã và gửi tip.'
-                    : 'This nickname is visible to customers at the salon when they scan and tip.'}
+                  {t('components.staff_registration.steps.StepProfile.text_6_b35373')}
                   <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
                 </div>
               </div>
@@ -131,7 +127,7 @@ export default function StepProfile({
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="flex items-center text-[10px] font-black uppercase text-nexoraSubtle tracking-wider font-sans h-4">
-              {renderLabel(currentLanguage === 'vi' ? 'Số điện thoại *' : 'Phone Number *')}
+              {renderLabel(t('components.staff_registration.steps.StepProfile.text_7_040fc7'))}
             </label>
             <div className="mt-1.5 flex rounded-lg shadow-sm">
               <CountryCodeSelect
@@ -154,7 +150,7 @@ export default function StepProfile({
           </div>
           <div>
             <label className="flex items-center text-[10px] font-black uppercase text-nexoraSubtle tracking-wider font-sans h-4">
-              {renderLabel(currentLanguage === 'vi' ? 'Địa chỉ Email *' : 'Email Address *')}
+              {renderLabel(t('components.staff_registration.steps.StepProfile.text_8_d00227'))}
             </label>
             <input
               type="email"
@@ -207,7 +203,7 @@ export default function StepProfile({
           onClick={() => setStep(1)}
           className="h-10 px-4 border border-nexoraBorder text-nexoraMuted font-bold text-xs uppercase tracking-wider rounded-lg hover:bg-nexoraSurfaceMuted transition"
         >
-          {t('common.back') || 'Back'}
+          {t('common.back')}
         </button>
         <button
           type="button"
@@ -215,7 +211,7 @@ export default function StepProfile({
           disabled={!fullName.trim()}
           className="flex-grow h-10 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-bold text-xs uppercase tracking-wider rounded-lg transition disabled:opacity-50"
         >
-          {t('common.next') || 'Next: Payout Configuration'}
+          {t('common.next')}
         </button>
       </div>
     </div>

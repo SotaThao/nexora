@@ -308,8 +308,8 @@ export default function Dashboard({
 
   const menuItemsToDisplay = userRole === 'staff'
     ? [
-        { id: 'overview', label: currentLanguage === 'vi' ? 'Tài khoản của tôi' : 'My Dashboard', icon: MENU_ITEMS.find(i => i.id === 'overview')?.icon, image: MENU_ITEMS.find(i => i.id === 'overview')?.image },
-        { id: 'support', label: t('dashboard.menu.support') || 'Support', icon: MENU_ITEMS.find(i => i.id === 'support')?.icon }
+        { id: 'overview', label: t('components.dashboardRoot.text_1_43861e'), icon: MENU_ITEMS.find(i => i.id === 'overview')?.icon, image: MENU_ITEMS.find(i => i.id === 'overview')?.image },
+        { id: 'support', label: t('dashboard.menu.support'), icon: MENU_ITEMS.find(i => i.id === 'support')?.icon }
       ]
     : MENU_ITEMS
 
@@ -469,7 +469,7 @@ export default function Dashboard({
         return (
           <div className="flex h-64 flex-col items-center justify-center space-y-3 nexora-card p-6">
             <div className="text-sm font-semibold text-nexoraMuted">
-              {currentLanguage === 'vi' ? 'Không tìm thấy hồ sơ thợ của bạn.' : 'Your staff profile was not found.'}
+              {t('components.dashboardRoot.text_2_91f84a')}
             </div>
           </div>
         )
@@ -827,12 +827,10 @@ export default function Dashboard({
             </div>
             <div className="space-y-1.5">
               <h3 className="text-base font-black text-nexoraText uppercase tracking-wider">
-                {currentLanguage === 'vi' ? 'Yêu cầu xác thực KYB' : 'KYB Verification Required'}
+                {t('components.dashboardRoot.text_3_b9aee9')}
               </h3>
               <p className="text-xs text-nexoraSubtle font-medium leading-relaxed">
-                {currentLanguage === 'vi'
-                  ? 'Tính năng này yêu cầu hồ sơ doanh nghiệp đã được xác thực KYB bởi VLINKPAY. Nhấp vào nút bên dưới để chuyển hướng đến trang Cài đặt > KYB để gửi thông tin doanh nghiệp của bạn.'
-                  : 'This feature requires your business profile to be KYB verified by VLINKPAY. Click below to navigate to Settings > KYB tab and submit your compliance information.'}
+                {t('components.dashboardRoot.text_4_483d61')}
               </p>
             </div>
             <div className="pt-2 flex flex-col sm:flex-row gap-2.5 justify-center">
@@ -841,7 +839,7 @@ export default function Dashboard({
                 onClick={() => setShowKybWarningModal(false)}
                 className="px-5 py-2.5 border border-nexoraBorder hover:bg-nexoraCanvas text-nexoraSubtle text-xs font-bold uppercase tracking-wider rounded-lg transition-all"
               >
-                {currentLanguage === 'vi' ? 'Hủy bỏ' : 'Cancel'}
+                {t('components.dashboardRoot.text_5_dbab9f')}
               </button>
               <button
                 type="button"
@@ -853,7 +851,7 @@ export default function Dashboard({
                 }}
                 className="px-5 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-md transition-all animate-pulse"
               >
-                {currentLanguage === 'vi' ? 'Xác thực ngay' : 'Verify Now'}
+                {t('components.dashboardRoot.text_6_ee6094')}
               </button>
             </div>
           </div>

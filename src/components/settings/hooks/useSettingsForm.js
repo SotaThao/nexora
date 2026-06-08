@@ -86,7 +86,7 @@ export default function useSettingsForm({
     e.preventDefault()
     if (!kybData.legalName.trim() || !kybData.taxId.trim() || !kybData.ownerName.trim() ||
         !kybData.bankName.trim() || !kybData.bankAccount.trim() || !kybData.bankRouting.trim()) {
-      setKybErrors({ kyb: t('register.errors.kyb_required') || 'All fields are required.' })
+      setKybErrors({ kyb: t('register.errors.kyb_required') })
       return
     }
     setKybErrors({})
@@ -119,7 +119,7 @@ export default function useSettingsForm({
           vlinkpay: kybData.bankAccount ? `VLP-${kybData.bankAccount.slice(-4)}` : 'VLINKPAY-ID'
         }
       }))
-      showToast(currentLanguage === 'vi' ? 'Xác thực KYB thành công!' : 'KYB verification successful!')
+      showToast(t('components.settings.hooks.useSettingsForm.text_1_95254f'))
     }, 2000)
   }
 
@@ -236,7 +236,7 @@ export default function useSettingsForm({
   const saveProfile = (updatedProfile) => {
     setProfile(updatedProfile)
     saveProfileSettingsMutation.mutate(updatedProfile)
-    showToast(currentLanguage === 'vi' ? 'Đã cập nhật cài đặt thành công!' : 'Settings updated successfully!')
+    showToast(t('components.settings.hooks.useSettingsForm.text_2_e95b20'))
   }
 
   const showToast = (msg) => {
@@ -250,7 +250,7 @@ export default function useSettingsForm({
     if (!text) return
     navigator.clipboard.writeText(text)
     setCopiedId(id)
-    showToast(currentLanguage === 'vi' ? 'Đã sao chép vào bộ nhớ tạm!' : 'Copied to clipboard!')
+    showToast(t('components.settings.hooks.useSettingsForm.text_3_5379a0'))
     setTimeout(() => setCopiedId(null), 2000)
   }
 
@@ -489,11 +489,9 @@ export default function useSettingsForm({
           bgClass: 'bg-blue-50/70 border-blue-200 text-blue-900',
           icon: ShieldAlert,
           iconBg: 'bg-blue-500',
-          title: currentLanguage === 'vi' ? 'HỒ SƠ CƠ BẢN' : 'BASIC ACCOUNT STATUS',
-          description: currentLanguage === 'vi'
-            ? 'Hồ sơ của bạn chỉ hoạt động cho nhận tiền típ trực tiếp P2P (Venmo, Cash App, Zelle) và đánh giá của khách hàng. Các tính năng xử lý tài chính nâng cao (Ví VLINKPAY, Xử lý Thẻ Tín Dụng, Merchant ATM) đã bị Khóa.'
-            : 'Your profile is active only for direct P2P tipping (Venmo, Cash App, direct Zelle) and customer reviews. Advanced financial processing features (VLINKPAY Wallet, Credit Card processing, Merchant ATM) are Gated.',
-          ctaText: currentLanguage === 'vi' ? 'Hoàn tất Xác minh Doanh nghiệp' : 'Complete Business Verification',
+          title: t('components.settings.hooks.useSettingsForm.text_4_135f79'),
+          description: t('components.settings.hooks.useSettingsForm.text_5_5e771d'),
+          ctaText: t('components.settings.hooks.useSettingsForm.text_6_10271c'),
           ctaAction: () => setShowPortal(prev => !prev)
         }
       case 'lite_pending':
@@ -501,10 +499,8 @@ export default function useSettingsForm({
           bgClass: 'bg-amber-50/70 border-amber-200 text-amber-900',
           icon: ShieldAlert,
           iconBg: 'bg-amber-500',
-          title: currentLanguage === 'vi' ? 'ĐANG CHỜ XÁC MINH LITE' : 'LITE VERIFICATION PENDING REVIEW',
-          description: currentLanguage === 'vi'
-            ? 'Lite Verification đang chờ xem duyệt.'
-            : 'Lite Verification Pending review.',
+          title: t('components.settings.hooks.useSettingsForm.text_7_67e345'),
+          description: t('components.settings.hooks.useSettingsForm.text_8_24e860'),
           ctaText: null
         }
       case 'verified_lite':
@@ -512,11 +508,9 @@ export default function useSettingsForm({
           bgClass: 'bg-emerald-50/70 border-emerald-200 text-emerald-900',
           icon: ShieldCheck,
           iconBg: 'bg-emerald-500',
-          title: currentLanguage === 'vi' ? 'ĐÃ XÁC THỰC LITE' : 'VERIFIED LITE',
-          description: currentLanguage === 'vi'
-            ? 'Đã xác thực Lite. Bật nhận tiền típ P2P. Hoàn thành KYB đầy đủ để mở khóa xử lý thẻ tín dụng.'
-            : 'Verified Lite. P2P tipping enabled. Complete full KYB to unlock credit card processing.',
-          ctaText: currentLanguage === 'vi' ? 'Hoàn tất Xác minh Doanh nghiệp' : 'Complete Business Verification',
+          title: t('components.settings.hooks.useSettingsForm.text_9_77e543'),
+          description: t('components.settings.hooks.useSettingsForm.text_10_55e23a'),
+          ctaText: t('components.settings.hooks.useSettingsForm.text_6_10271c'),
           ctaAction: () => setShowPortal(prev => !prev)
         }
       case 'kyb_required':
@@ -524,11 +518,9 @@ export default function useSettingsForm({
           bgClass: 'bg-orange-50/70 border-orange-200 text-orange-900',
           icon: ShieldAlert,
           iconBg: 'bg-orange-500',
-          title: currentLanguage === 'vi' ? 'YÊU CẦU XÁC MINH DOANH NGHIỆP' : 'BUSINESS VERIFICATION REQUIRED',
-          description: currentLanguage === 'vi'
-            ? 'Yêu cầu Xác minh Doanh nghiệp. Bạn phải xác minh doanh nghiệp của mình để kích hoạt xử lý thẻ.'
-            : 'Business Verification Required. You must verify your business to enable card processing.',
-          ctaText: currentLanguage === 'vi' ? 'Hoàn tất Xác minh Doanh nghiệp' : 'Complete Business Verification',
+          title: t('components.settings.hooks.useSettingsForm.text_11_0886ce'),
+          description: t('components.settings.hooks.useSettingsForm.text_12_ac5ccd'),
+          ctaText: t('components.settings.hooks.useSettingsForm.text_6_10271c'),
           ctaAction: () => setShowPortal(prev => !prev)
         }
       case 'kyb_pending':
@@ -536,10 +528,8 @@ export default function useSettingsForm({
           bgClass: 'bg-indigo-50/70 border-indigo-200 text-indigo-900',
           icon: ShieldAlert,
           iconBg: 'bg-indigo-500',
-          title: currentLanguage === 'vi' ? 'ĐANG CHỜ XÁC MINH DOANH NGHIỆP' : 'BUSINESS VERIFICATION PENDING',
-          description: currentLanguage === 'vi'
-            ? 'Xác minh doanh nghiệp đang chờ xử lý. Ban tuân thủ VLINKPAY đang xem xét chi tiết của bạn.'
-            : 'Business Verification Pending. VLINKPAY Compliance is reviewing your details.',
+          title: t('components.settings.hooks.useSettingsForm.text_13_74ce76'),
+          description: t('components.settings.hooks.useSettingsForm.text_14_9c4655'),
           ctaText: null
         }
       case 'kyb_approved':
@@ -548,10 +538,8 @@ export default function useSettingsForm({
           bgClass: 'bg-emerald-50/70 border-emerald-200 text-emerald-900',
           icon: ShieldCheck,
           iconBg: 'bg-emerald-500',
-          title: currentLanguage === 'vi' ? 'Hồ sơ doanh nghiệp đã xác minh (Phê duyệt KYB)' : 'BUSINESS PROFILE VERIFIED (KYB APPROVED)',
-          description: currentLanguage === 'vi'
-            ? 'Chúc mừng! Hồ sơ doanh nghiệp của bạn đã được VLINKPAY xác minh đầy đủ. Không giới hạn hạn mức xử lý thẻ tín dụng và tính năng Merchant ATM hoạt động.'
-            : 'Business Profile Verified (KYB Approved).',
+          title: t('components.settings.hooks.useSettingsForm.text_15_2951d5'),
+          description: t('components.settings.hooks.useSettingsForm.text_16_bb1b78'),
           subText: '',
           ctaText: null
         }
@@ -560,10 +548,8 @@ export default function useSettingsForm({
           bgClass: 'bg-red-50/70 border-red-200 text-red-900',
           icon: ShieldAlert,
           iconBg: 'bg-red-500',
-          title: currentLanguage === 'vi' ? 'TÀI KHOẢN BỊ ĐÌNH CHỈ' : 'ACCOUNT SUSPENDED',
-          description: currentLanguage === 'vi'
-            ? 'Tài khoản bị đình chỉ. Vui lòng liên hệ bộ phận hỗ trợ.'
-            : 'Account Suspended. Please contact support.',
+          title: t('components.settings.hooks.useSettingsForm.text_17_06bde1'),
+          description: t('components.settings.hooks.useSettingsForm.text_18_f149c2'),
           ctaText: null
         }
       case 'pro_pending':
@@ -571,10 +557,8 @@ export default function useSettingsForm({
           bgClass: 'bg-blue-50/70 border-blue-200 text-blue-900',
           icon: ShieldAlert,
           iconBg: 'bg-blue-500',
-          title: currentLanguage === 'vi' ? 'ĐANG CHỜ PHÊ DUYỆT PRO' : 'PRO VERIFICATION PENDING REVIEW',
-          description: currentLanguage === 'vi'
-            ? 'Hồ sơ nâng cấp Pro đang được thẩm định.'
-            : 'Your Pro Verification upgrade is currently pending review.',
+          title: t('components.settings.hooks.useSettingsForm.text_19_2f0224'),
+          description: t('components.settings.hooks.useSettingsForm.text_20_c0cd86'),
           ctaText: null
         }
       case 'kyb_rejected':
@@ -582,11 +566,9 @@ export default function useSettingsForm({
           bgClass: 'bg-rose-50/70 border-rose-200 text-rose-900',
           icon: ShieldAlert,
           iconBg: 'bg-rose-500',
-          title: currentLanguage === 'vi' ? 'BỊ TỪ CHỐI XÁC THỰC' : 'VERIFICATION REJECTED BY COMPLIANCE',
-          description: currentLanguage === 'vi'
-            ? 'Hồ sơ xác thực doanh nghiệp của bạn đã bị từ chối.'
-            : 'Your business verification application was rejected by Compliance.',
-          ctaText: currentLanguage === 'vi' ? 'Nộp lại thông tin xác minh' : 'Re-submit Verification',
+          title: t('components.settings.hooks.useSettingsForm.text_21_284f51'),
+          description: t('components.settings.hooks.useSettingsForm.text_22_7d1801'),
+          ctaText: t('components.settings.hooks.useSettingsForm.text_23_b1a525'),
           ctaAction: () => setShowPortal(prev => !prev)
         }
       case 'under_review':
@@ -594,11 +576,9 @@ export default function useSettingsForm({
           bgClass: 'bg-amber-50/70 border-amber-200 text-amber-900',
           icon: ShieldAlert,
           iconBg: 'bg-amber-500',
-          title: currentLanguage === 'vi' ? 'CẦN BỔ SUNG HỒ SƠ' : 'UNDER REVIEW - INFO REQUESTED',
-          description: currentLanguage === 'vi'
-            ? 'Hồ sơ đang được xem xét.'
-            : 'Under Review. Additional compliance documentation has been requested.',
-          ctaText: currentLanguage === 'vi' ? 'Tải lên tài liệu bổ sung' : 'Upload Additional Documents',
+          title: t('components.settings.hooks.useSettingsForm.text_24_9a3ed5'),
+          description: t('components.settings.hooks.useSettingsForm.text_25_1ec98f'),
+          ctaText: t('components.settings.hooks.useSettingsForm.text_26_3c56fe'),
           ctaAction: () => setShowPortal(prev => !prev)
         }
       default:

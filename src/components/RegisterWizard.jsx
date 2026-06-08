@@ -120,7 +120,7 @@ export default function RegisterWizard(props) {
                     </div>
                     <div className="text-center mt-2.5">
                       <span className="text-[9px] font-extrabold uppercase tracking-widest text-nexoraElectric/80 mb-0.5 block">
-                        {currentLanguage === 'vi' ? `Bước ${step}` : `Step ${step}`}
+              {t('common.step_number', { step })}
                       </span>
                       <span className={`text-[11px] font-extrabold tracking-wide transition-colors duration-300 block
                         ${isActive ? 'text-nexoraBrand' : isCompleted ? 'text-slate-800' : 'text-slate-400'}`}>

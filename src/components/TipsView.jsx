@@ -46,20 +46,20 @@ export default function TipsView({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-nexoraBorder pb-5">
         <div>
           <h2 className="text-2xl font-black text-inkBlue dark:text-white tracking-tight">
-            {t('dashboard.menu.tips') || 'Tiền Típ'}
+            {t('dashboard.menu.tips')}
           </h2>
           <p className="mt-1 text-sm text-mutedGrey dark:text-slate-400">
-            {t('dashboard.tips.description') || 'Quản lý doanh thu típ, thống kê tiết kiệm phí và giao dịch trực tiếp.'}
+            {t('dashboard.tips.description')}
           </p>
         </div>
 
         {/* Navigation Tabs */}
         <div className="flex flex-wrap gap-1 bg-nexoraSurfaceMuted dark:bg-luxuryCoal p-1 rounded-xl border border-nexoraBorder dark:border-luxuryGold/10">
           {[
-            { id: 'overview', label: t('dashboard.tips.tabs.overview') || 'Tổng quan' },
-            { id: 'savings', label: t('dashboard.tips.tabs.savings') || 'Tiết kiệm phí' },
-            { id: 'transactions', label: t('dashboard.tips.tabs.transactions') || 'Giao dịch típ' },
-            { id: 'payouts', label: t('dashboard.tips.tabs.payouts') || 'Ví nhận thợ' }
+            { id: 'overview', label: t('dashboard.tips.tabs.overview') },
+            { id: 'savings', label: t('dashboard.tips.tabs.savings') },
+            { id: 'transactions', label: t('dashboard.tips.tabs.transactions') },
+            { id: 'payouts', label: t('dashboard.tips.tabs.payouts') }
           ].map(tab => (
             <button
               key={tab.id}

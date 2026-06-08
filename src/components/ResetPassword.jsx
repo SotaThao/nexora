@@ -31,19 +31,19 @@ export default function ResetPassword({ setView }) {
       return
     }
     if (!email.trim()) {
-      setError(t('register.errors.email_required') || 'Email is required')
+      setError(t('register.errors.email_required'))
       return
     }
     if (!newPassword) {
-      setError(t('register.errors.password_required') || 'Password is required')
+      setError(t('register.errors.password_required'))
       return
     }
     if (newPassword.length < 6) {
-      setError(t('register.errors.password_short') || 'Password must be at least 6 characters')
+      setError(t('register.errors.password_short'))
       return
     }
     if (newPassword !== confirmPassword) {
-      setError(t('register.errors.email_mismatch') || 'Passwords do not match')
+      setError(t('register.errors.email_mismatch'))
       return
     }
 

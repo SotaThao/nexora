@@ -19,7 +19,7 @@ export default function StepSuccess({
 
       <div className="space-y-1.5">
         <h3 className="text-xl font-black text-nexoraText tracking-tight font-sans">
-          {currentLanguage === 'vi' ? 'Yêu cầu gia nhập đã gửi!' : 'Join Request Submitted!'}
+          {t('components.staff_registration.steps.StepSuccess.text_1_96b4e5')}
         </h3>
         <p className="text-xs text-nexoraMuted max-w-md mx-auto leading-relaxed">
           {currentLanguage === 'vi'
@@ -34,10 +34,10 @@ export default function StepSuccess({
         <div className="flex items-center justify-between border-b border-nexoraBorder pb-1.5">
           <span className="font-extrabold text-nexoraText uppercase text-[9px] tracking-wider flex items-center gap-1.5 font-sans">
             <Building className="h-3.5 w-3.5 text-nexoraWarning" />
-            {t('staff_invite.linked_businesses') || 'Linked Businesses'}
+            {t('staff_invite.linked_businesses')}
           </span>
           <span className="px-1.5 py-0.5 rounded font-extrabold text-[8px] uppercase font-sans bg-nexoraWarning/10 text-nexoraWarning">
-            {currentLanguage === 'vi' ? 'CHỜ DUYỆT' : 'PENDING'}
+            {t('components.staff_registration.steps.StepSuccess.text_2_b6a032')}
           </span>
         </div>
 
@@ -47,7 +47,7 @@ export default function StepSuccess({
             <span className="text-[9px] text-nexoraSubtle mt-0.5 block">Joined: Today • Role: {position}</span>
           </div>
           <span className="text-xs font-bold text-nexoraWarning flex items-center gap-1 font-sans">
-            <AlertCircle className="h-3.5 w-3.5 text-nexoraWarning animate-pulse" /> {currentLanguage === 'vi' ? 'Chờ duyệt' : 'Pending Approval'}
+            <AlertCircle className="h-3.5 w-3.5 text-nexoraWarning animate-pulse" /> {t('components.staff_registration.steps.StepSuccess.text_3_11d6f3')}
           </span>
         </div>
       </div>
@@ -63,7 +63,7 @@ export default function StepSuccess({
           onClick={() => {
             const link = `https://touch.nexora.com/staff/${staffId}`
             navigator.clipboard.writeText(link)
-            showToast(currentLanguage === 'vi' ? 'Đã sao chép liên kết của thợ!' : 'Staff link copied to clipboard!')
+            showToast(t('components.staff_registration.steps.StepSuccess.text_4_920840'))
           }}
           className="flex items-center gap-1.5 px-4 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition"
         >
@@ -77,7 +77,7 @@ export default function StepSuccess({
           onClick={onReturnToMerchant}
           className="w-full h-11 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-black text-xs uppercase tracking-wider rounded-xl transition flex items-center justify-center gap-1.5 shadow-md"
         >
-          {t('staff_invite.return_merchant') || 'Return to Merchant Dashboard'}
+          {t('staff_invite.return_merchant')}
         </button>
       </div>
     </div>

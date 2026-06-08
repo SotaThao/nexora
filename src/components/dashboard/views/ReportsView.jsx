@@ -44,7 +44,7 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100/50 dark:border-emerald-500/20">
           <CheckCircle className="h-3 w-3" />
-          {currentLanguage === 'vi' ? 'Thành công' : 'Success'}
+          {t('components.dashboard.views.ReportsView.text_1_cf7e01')}
         </span>
       );
     }
@@ -52,7 +52,7 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-100/50 dark:border-amber-500/20">
           <Clock className="h-3 w-3" />
-          {currentLanguage === 'vi' ? 'Đang chờ' : 'Pending'}
+          {t('components.dashboard.views.ReportsView.text_2_1f5bd0')}
         </span>
       );
     }
@@ -60,7 +60,7 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-100/50 dark:border-rose-500/20">
           <XCircle className="h-3 w-3" />
-          {currentLanguage === 'vi' ? 'Thất bại' : 'Failed'}
+          {t('components.dashboard.views.ReportsView.text_3_7d0ef0')}
         </span>
       );
     }
@@ -152,7 +152,7 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
   // Options memoization
   const staffOptions = useMemo(() => {
     return [
-      { value: 'all', label: t('dashboard.activity_log.all_staff') || 'All Staff' },
+      { value: 'all', label: t('dashboard.activity_log.all_staff') },
       ...(staff || []).map(member => ({ value: member.nickname, label: member.nickname }))
     ]
   }, [staff, t])
@@ -165,13 +165,13 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
     ])).filter(Boolean)
 
     return [
-      { value: 'all', label: t('dashboard.activity_log.all_touchpoints') || 'All Touch Points' },
+      { value: 'all', label: t('dashboard.activity_log.all_touchpoints') },
       ...uniquePoints.map(name => ({ value: name, label: name }))
     ]
   }, [touchpoints, transactions, t])
 
   const paymentOptions = [
-    { value: 'all', label: t('dashboard.activity_log.all_payments') || 'All Payment Methods' },
+    { value: 'all', label: t('dashboard.activity_log.all_payments') },
     { value: 'Venmo', label: 'Venmo' },
     { value: 'Cash App', label: 'Cash App' },
     { value: 'Zelle', label: 'Zelle' },
@@ -179,19 +179,19 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
   ]
 
   const statusOptions = [
-    { value: 'all', label: t('dashboard.activity_log.all_statuses') || 'All Statuses' },
+    { value: 'all', label: t('dashboard.activity_log.all_statuses') },
     { value: 'Success', label: 'Success' },
     { value: 'Pending', label: 'Pending' },
     { value: 'Failed', label: 'Failed' }
   ]
 
   const datePresetOptions = [
-    { value: 'all', label: t('dashboard.activity_log.preset_all') || 'All Time' },
-    { value: 'today', label: t('dashboard.activity_log.preset_today') || 'Today' },
-    { value: 'yesterday', label: t('dashboard.activity_log.preset_yesterday') || 'Yesterday' },
-    { value: '7days', label: t('dashboard.activity_log.preset_7days') || 'Last 7 Days' },
-    { value: '30days', label: t('dashboard.activity_log.preset_30days') || 'Last 30 Days' },
-    { value: 'custom', label: t('dashboard.activity_log.preset_custom') || 'Custom Range' }
+    { value: 'all', label: t('dashboard.activity_log.preset_all') },
+    { value: 'today', label: t('dashboard.activity_log.preset_today') },
+    { value: 'yesterday', label: t('dashboard.activity_log.preset_yesterday') },
+    { value: '7days', label: t('dashboard.activity_log.preset_7days') },
+    { value: '30days', label: t('dashboard.activity_log.preset_30days') },
+    { value: 'custom', label: t('dashboard.activity_log.preset_custom') }
   ]
 
   const statusColorClass = (status) => {
@@ -247,14 +247,14 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
               <th className="px-4 py-3">{t('dashboard.activity_log.col_tp')}</th>
               <th className="px-4 py-3">{t('dashboard.activity_log.col_payment')}</th>
               <th className="px-4 py-3">{t('dashboard.activity_log.col_status')}</th>
-              <th className="px-4 py-3 text-right">{currentLanguage === 'vi' ? 'Chi tiết' : 'Details'}</th>
+              <th className="px-4 py-3 text-right">{t('components.dashboard.views.ReportsView.text_4_8cd6d8')}</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
               <tr>
                 <td colSpan="8" className="px-4 py-8 text-center text-nexoraMuted font-medium">
-                  {t('dashboard.activity_log.empty_activity') || 'No transactions matched the criteria.'}
+                  {t('dashboard.activity_log.empty_activity')}
                 </td>
               </tr>
             ) : (
@@ -286,7 +286,7 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
                       }}
                       className="text-xs font-black text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer uppercase tracking-wider"
                     >
-                      {currentLanguage === 'vi' ? 'Chi tiết' : 'Details'}
+                      {t('components.dashboard.views.ReportsView.text_4_8cd6d8')}
                     </button>
                   </td>
                 </tr>
@@ -304,7 +304,7 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
             <div className="flex items-center justify-between border-b border-nexoraBorder pb-4 mb-4">
               <div>
                 <span className="text-[10px] font-black uppercase text-nexoraMuted tracking-wider">
-                  {t('dashboard.activity_log.modal_title') || 'Transaction Details'}
+                  {t('dashboard.activity_log.modal_title')}
                 </span>
                 <h4 className="text-sm font-extrabold text-nexoraText mt-0.5">{selectedTx.id}</h4>
               </div>
@@ -321,7 +321,7 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
               {/* Hero Amount & Status */}
               <div className="flex flex-col items-center justify-center py-4 bg-slate-50 rounded-xl border border-slate-100">
                 <span className="text-[10px] font-bold text-nexoraMuted uppercase tracking-wider">
-                  {t('dashboard.activity_log.col_amount') || 'Amount'}
+                  {t('dashboard.activity_log.col_amount')}
                 </span>
                 <h3 className="text-3xl font-black text-nexoraText mt-1">
                   {formatCurrency(selectedTx.amount)}
@@ -333,13 +333,13 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
               <div className="grid grid-cols-2 gap-x-4 gap-y-4 text-xs border-t border-nexoraBorder pt-4">
                 <div>
                   <span className="text-[10px] font-bold text-nexoraMuted block">
-                    {t('dashboard.activity_log.col_time') || 'Date & Time'}
+                    {t('dashboard.activity_log.col_time')}
                   </span>
                   <span className="font-semibold text-nexoraText block mt-0.5">{selectedTx.dateTime}</span>
                 </div>
                 <div>
                   <span className="text-[10px] font-bold text-nexoraMuted block">
-                    {t('dashboard.activity_log.col_payment') || 'Payment Method'}
+                    {t('dashboard.activity_log.col_payment')}
                   </span>
                   <div className="flex items-center gap-1.5 mt-1">
                     {getPaymentMethodLogo(selectedTx.paymentMethod)}
@@ -348,7 +348,7 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
                 </div>
                 <div>
                   <span className="text-[10px] font-bold text-nexoraMuted block">
-                    {t('dashboard.activity_log.col_staff') || 'Staff Name'}
+                    {t('dashboard.activity_log.col_staff')}
                   </span>
                   <span className="font-semibold text-nexoraText block mt-0.5">{selectedTx.staffName}</span>
                   <span className="font-mono text-[10px] text-slate-400 block mt-0.5">
@@ -357,7 +357,7 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
                 </div>
                 <div>
                   <span className="text-[10px] font-bold text-nexoraMuted block">
-                    {t('dashboard.activity_log.col_tp') || 'Touch Point'}
+                    {t('dashboard.activity_log.col_tp')}
                   </span>
                   <span className="font-semibold text-nexoraText block mt-0.5">{selectedTx.touchpoint}</span>
                 </div>
@@ -372,10 +372,10 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
                 />
                 <div className="flex flex-col text-left">
                   <span className="text-[9px] font-black uppercase text-nexoraMuted tracking-widest">
-                    {currentLanguage === 'vi' ? 'MÃ QR NHẬN TÍP' : 'TIPPING QR CODE'}
+                    {t('components.dashboard.views.ReportsView.text_5_84fbef')}
                   </span>
                   <span className="text-[11px] text-slate-500 mt-1 leading-normal">
-                    {currentLanguage === 'vi' ? 'Quét để chuyển khoản tiền típ cho nhân viên này' : 'Scan to tip this staff member'}
+                    {t('components.dashboard.views.ReportsView.text_6_6bde06')}
                   </span>
                   {/* Share Link Button */}
                   <button
@@ -392,13 +392,13 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
                         }
                       } else {
                         navigator.clipboard.writeText(shareUrl);
-                        showToast(currentLanguage === 'vi' ? 'Đã sao chép liên kết nhận típ!' : 'Tipping link copied to clipboard!', 'success');
+                        showToast(t('components.dashboard.views.ReportsView.text_7_0accc6'), 'success');
                       }
                     }}
                     className="mt-2.5 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-[10px] font-black uppercase tracking-wider text-indigo-600 transition-colors w-max cursor-pointer"
                   >
                     <Share2 className="h-3 w-3" />
-                    {currentLanguage === 'vi' ? 'Chia sẻ liên kết' : 'Share Link'}
+                    {t('components.dashboard.views.ReportsView.text_8_3d9fba')}
                   </button>
                 </div>
               </div>

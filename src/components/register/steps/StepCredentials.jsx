@@ -78,7 +78,7 @@ export default function StepCredentials(props) {
             className={`text-xs font-bold ${resendTimer > 0 ? 'text-nexoraSubtle cursor-not-allowed' : 'text-nexoraBrand hover:underline'}`}
           >
             {resendTimer > 0
-              ? (t('register.resend_in_seconds') || 'Resend in {seconds}s').replace('{seconds}', resendTimer)
+              ? (t('register.resend_in_seconds')).replace('{seconds}', resendTimer)
               : t('register.resend_verification')
             }
           </button>
@@ -106,19 +106,17 @@ export default function StepCredentials(props) {
         <div className="space-y-6 animate-fadeIn">
           <div className="text-center max-w-md mx-auto">
             <h3 className="text-lg font-bold text-nexoraText font-sans">
-              {currentLanguage === 'vi' ? 'Kích hoạt tài khoản (Nhập OTP)' : 'Activate Account (Enter OTP)'}
+              {t('components.register.steps.StepCredentials.text_1_e92627')}
             </h3>
             <p className="text-xs text-nexoraSubtle mt-1 leading-relaxed">
-              {currentLanguage === 'vi'
-                ? 'Nhập mã OTP được gửi tới email của bạn để kích hoạt tài khoản.'
-                : 'Enter the OTP code sent to your email to activate your account.'}
+              {t('components.register.steps.StepCredentials.text_2_cf458c')}
             </p>
           </div>
 
           <form onSubmit={handleVerifyOtp} className="space-y-4 max-w-md mx-auto">
             <div>
               <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-                {renderLabel(currentLanguage === 'vi' ? 'Nhập mã OTP *' : 'Enter OTP Code *')}
+                {renderLabel(t('components.register.steps.StepCredentials.text_3_b7be24'))}
               </label>
               <input
                 type="text"
@@ -138,14 +136,14 @@ export default function StepCredentials(props) {
             <div className="text-center">
               <span className="text-[10px] text-slate-400 font-bold block">
                 {resendTimer > 0
-                  ? (currentLanguage === 'vi' ? `Gửi lại mã sau ${resendTimer}s` : `Resend code in ${resendTimer}s`)
+                  ? t('common.resend_code_in_seconds', { seconds: resendTimer })
                   : (
                     <button
                       type="button"
                       onClick={() => setResendTimer(30)}
                       className="text-nexoraBrand hover:underline"
                     >
-                      {currentLanguage === 'vi' ? 'Gửi lại mã xác thực' : 'Resend Verification Code'}
+                      {t('components.register.steps.StepCredentials.text_4_cb56d6')}
                     </button>
                   )
                 }
@@ -179,7 +177,7 @@ export default function StepCredentials(props) {
                 type="submit"
                 className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all"
               >
-                {currentLanguage === 'vi' ? 'Xác minh & Kích hoạt' : 'Verify & Activate'} <ArrowRight className="w-4 h-4" />
+                {t('components.register.steps.StepCredentials.text_5_ab6602')} <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </form>
@@ -281,58 +279,28 @@ export default function StepCredentials(props) {
 
             {/* Implicit Consent Terms and Privacy Note */}
             <div className="text-[11px] text-slate-500 leading-normal text-center font-sans max-w-sm mx-auto pt-1 pb-2">
-              {currentLanguage === 'vi' ? (
-                <>
-                  Bằng cách chọn vào <span className="font-bold text-slate-700">Đăng ký</span>, bạn xác nhận rằng bạn đã đọc và đồng ý với{' '}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setModalType('terms')
-                      setShowTermsModal(true)
-                    }}
-                    className="text-nexoraTealAlt hover:underline font-bold"
-                  >
-                    Điều khoản dịch vụ
-                  </button>{' '}
-                  và{' '}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setModalType('privacy')
-                      setShowTermsModal(true)
-                    }}
-                    className="text-nexoraTealAlt hover:underline font-bold"
-                  >
-                    Chính sách bảo mật
-                  </button>{' '}
-                  của chúng tôi.
-                </>
-              ) : (
-                <>
-                  By selecting <span className="font-bold text-slate-700">Register</span>, you confirm that you have read and agree to our{' '}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setModalType('terms')
-                      setShowTermsModal(true)
-                    }}
-                    className="text-nexoraTealAlt hover:underline font-bold"
-                  >
-                    Terms of Service
-                  </button>{' '}
-                  and{' '}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setModalType('privacy')
-                      setShowTermsModal(true)
-                    }}
-                    className="text-nexoraTealAlt hover:underline font-bold"
-                  >
-                    Privacy Policy
-                  </button>.
-                </>
-              )}
+              {t('register.consent.prefix')} <span className="font-bold text-slate-700">{t('register.consent.action')}</span>, {t('register.consent.middle')}{' '}
+              <button
+                type="button"
+                onClick={() => {
+                  setModalType('terms')
+                  setShowTermsModal(true)
+                }}
+                className="text-nexoraTealAlt hover:underline font-bold"
+              >
+                {t('register.consent.terms')}
+              </button>{' '}
+              {t('register.consent.and')}{' '}
+              <button
+                type="button"
+                onClick={() => {
+                  setModalType('privacy')
+                  setShowTermsModal(true)
+                }}
+                className="text-nexoraTealAlt hover:underline font-bold"
+              >
+                {t('register.consent.privacy')}
+              </button>.
             </div>
 
             <div className="pt-4 flex flex-col sm:flex-row gap-3">
@@ -351,11 +319,11 @@ export default function StepCredentials(props) {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    {currentLanguage === 'vi' ? 'Đang xử lý...' : 'Processing...'}
+                    {t('components.register.steps.StepCredentials.text_6_e38e1f')}
                   </>
                 ) : (
                   <>
-                    {currentLanguage === 'vi' ? 'Đăng ký' : 'Register'} <ArrowRight className="w-4 h-4" />
+                    {t('components.register.steps.StepCredentials.text_7_651a46')} <ArrowRight className="w-4 h-4" />
                   </>
                 )}
               </button>

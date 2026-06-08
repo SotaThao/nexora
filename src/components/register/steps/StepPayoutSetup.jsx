@@ -18,10 +18,10 @@ export default function StepPayoutSetup({
       <div className="flex items-center justify-between border-b border-nexoraBorder pb-3">
         <div>
           <h3 className="text-lg font-bold text-nexoraText">
-            {currentLanguage === 'vi' ? 'Cấu hình ví nhận tiền' : 'Payout Configuration'}
+            {t('components.register.steps.StepPayoutSetup.text_1_efd01c')}
           </h3>
           <p className="text-xs text-nexoraSubtle mt-1">
-            {currentLanguage === 'vi' ? 'Chọn và thiết lập các ví nhận tiền tip từ khách hàng.' : 'Enable and configure your tipping payout methods.'}
+            {t('components.register.steps.StepPayoutSetup.text_2_74ee7b')}
           </p>
         </div>
         <button
@@ -29,7 +29,7 @@ export default function StepPayoutSetup({
           onClick={autoFillPayments}
           className="px-3 py-1.5 bg-nexoraBrand/10 hover:bg-nexoraBrand/20 text-nexoraBrand border border-nexoraBrand/20 rounded-lg text-[10px] font-extrabold uppercase tracking-wider transition-all"
         >
-          ⚡ {currentLanguage === 'vi' ? 'Tự động điền' : 'Auto-Fill'}
+          ⚡ {t('components.register.steps.StepPayoutSetup.text_3_0b5ade')}
         </button>
       </div>
 
@@ -67,7 +67,7 @@ export default function StepPayoutSetup({
                       </div>
                     ) : (
                       <div className="text-[10px] text-nexoraSubtle italic mt-0.5">
-                        {currentLanguage === 'vi' ? 'Chưa cấu hình' : 'Not Configured'}
+                        {t('components.register.steps.StepPayoutSetup.text_4_6aec72')}
                       </div>
                     )}
                   </div>
@@ -80,7 +80,7 @@ export default function StepPayoutSetup({
                 onClick={() => handleEditPayoutAccount(method.key)}
                 className="flex items-center gap-1 text-[10px] font-bold text-nexoraBrand hover:underline transition shrink-0 ml-2"
               >
-                <span>{currentLanguage === 'vi' ? 'Thiết lập' : 'Configure'}</span>
+                <span>{t('components.register.steps.StepPayoutSetup.text_5_8b3cb9')}</span>
               </button>
             </div>
           )
@@ -114,7 +114,7 @@ export default function StepPayoutSetup({
           onClick={handlePersonalRegisterSubmit}
           className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all"
         >
-          {currentLanguage === 'vi' ? 'Lưu & Kích hoạt' : 'Save & Activate'} <ArrowRight className="w-4 h-4" />
+          {t('components.register.steps.StepPayoutSetup.text_6_73950e')} <ArrowRight className="w-4 h-4" />
         </button>
       </div>
     </div>

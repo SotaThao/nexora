@@ -211,7 +211,7 @@ export default function useCustomerFlow() {
     if (selectedStaffMembers.length === 1) {
       return t('customer.step_form_title', { name: selectedStaffMembers[0].nickname })
     }
-    return currentLanguage === 'vi' ? 'Thêm tiền Tip cho nhân viên' : 'Add tips for your providers'
+    return t('components.customer_flow.hooks.useCustomerFlow.text_1_98e6d0')
   }, [selectedStaffMembers, currentLanguage, t])
 
   // ── Tag / comment sync ──
@@ -285,15 +285,15 @@ export default function useCustomerFlow() {
       const selTip = selectedTips[member.id] !== undefined ? selectedTips[member.id] : 15
       const amount = selTip === 'custom' ? Number(customTips[member.id]) : selTip
       if (isNaN(amount) || amount < MIN_TIP) {
-        showToast(t('customer.tip_min_error') || `Tip must be at least $${MIN_TIP.toFixed(2)}.`, 'error'); return
+        showToast(t('customer.tip_min_error', { amount: `$${MIN_TIP.toFixed(2)}` }), 'error'); return
       }
       if (amount > MAX_TIP) {
-        showToast(t('customer.tip_max_error') || `Tip cannot exceed $${MAX_TIP.toFixed(2)}.`, 'error'); return
+        showToast(t('customer.tip_max_error', { amount: `$${MAX_TIP.toFixed(2)}` }), 'error'); return
       }
       total += amount
     }
     if (total > MAX_TIP) {
-      showToast(t('customer.tip_total_max_error') || `Total tips cannot exceed $${MAX_TIP.toFixed(2)}.`, 'error'); return
+      showToast(t('customer.tip_total_max_error', { amount: `$${MAX_TIP.toFixed(2)}` }), 'error'); return
     }
     setStep('payment')
   }
@@ -330,7 +330,7 @@ export default function useCustomerFlow() {
         setStep('wallet_details')
       } catch (err) {
         logger.error('Failed to create tip', err)
-        showToast(t('errors.generic') || 'Something went wrong', 'error')
+        showToast(t('errors.generic'), 'error')
         setStep('payment')
       }
     } else {
@@ -346,7 +346,7 @@ export default function useCustomerFlow() {
         setStep('success_payment')
       } catch (err) {
         logger.error('Failed to confirm tip', err)
-        showToast(t('errors.generic') || 'Something went wrong', 'error')
+        showToast(t('errors.generic'), 'error')
       }
     }
   }
@@ -379,7 +379,7 @@ export default function useCustomerFlow() {
         setStep(rating >= 4 ? 'google_yelp_review' : 'final_done')
       } catch (err) {
         logger.error('Failed to submit review', err)
-        showToast(t('errors.generic') || 'Something went wrong', 'error')
+        showToast(t('errors.generic'), 'error')
       }
     } else {
       const nextStep = simulateReview(rating, cleanComment)

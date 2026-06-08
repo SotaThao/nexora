@@ -101,10 +101,10 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         }, 1500)
       })
       .catch((err) => {
-        console.error('handleSimulateVerify error:', err)
+        logger.error('handleSimulateVerify error:', err)
         const code = err?.errorCode || 'HTTP_ERROR'
         const i18nKey = getErrorI18nKey(code)
-        setErrors({ submit: t(i18nKey) || 'Verification or auto-login failed.' })
+        setErrors({ submit: t(i18nKey) })
       })
   }
 
@@ -113,13 +113,13 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     setResendMessage('')
     apiAuthAdapter.resendVerificationEmail({ email: email.trim().toLowerCase() })
       .then(() => {
-        setResendMessage(t('register.resend_verification_success') || 'Verification email resent successfully!')
+        setResendMessage(t('register.resend_verification_success'))
         setResendTimer(60)
       })
       .catch((err) => {
         const code = err?.errorCode || 'HTTP_ERROR'
         const i18nKey = getErrorI18nKey(code)
-        setErrors({ submit: t(i18nKey) || 'Failed to resend email.' })
+        setErrors({ submit: t(i18nKey) })
       })
   }
 
@@ -211,10 +211,10 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
             }, 1500)
           })
           .catch(err => {
-            console.error('Auto-login failed after auto-verify:', err)
+            logger.error('Auto-login failed after auto-verify:', err)
             const code = err?.errorCode || 'HTTP_ERROR'
             const i18nKey = getErrorI18nKey(code)
-            setErrors({ email: t(i18nKey) || 'Auto-login failed. Please try logging in manually.' })
+            setErrors({ email: t(i18nKey) })
           })
           .finally(() => setIsSubmitting(false))
       } else {
@@ -225,7 +225,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       const errorsMap = {}
       const code = err?.errorCode || 'HTTP_ERROR'
       const i18nKey = getErrorI18nKey(code)
-      errorsMap.email = t(i18nKey) || t('errors.unknown_error') || 'Signup failed. Please try again.'
+      errorsMap.email = t(i18nKey) || t('errors.unknown_error')
       setErrors(errorsMap)
       setIsSubmitting(false)
     })
@@ -266,7 +266,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         setCurrentStep(2)
       }
     } else {
-      setOtpError(currentLanguage === 'vi' ? 'Mã OTP không chính xác. Thử lại với 1234.' : 'Invalid OTP. Try again with 1234.')
+      setOtpError(t('components.register.hooks.useRegisterForm.text_1_b8ff23'))
     }
   }
 
@@ -348,7 +348,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const savePayoutAccount = (e) => {
     if (e) e.preventDefault()
     if (!editValue.trim()) {
-      setModalError(currentLanguage === 'vi' ? 'Trường này là bắt buộc.' : 'This field is required.')
+      setModalError(t('components.register.hooks.useRegisterForm.text_2_657148'))
       return
     }
     setPayouts(prev => ({
@@ -427,7 +427,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         setCurrentStep(4)
       } catch (err) {
         logger.error('Failed to complete API onboarding', err)
-        setErrors({ submit: t('register.errors.onboarding_failed') || 'Failed to complete profile setup. Please try again.' })
+        setErrors({ submit: t('register.errors.onboarding_failed') })
       }
       return
     }
@@ -510,11 +510,11 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         id: `noti-join-${finalStaffMember.id}-${Date.now()}`,
         staffId: finalStaffMember.id,
         type: 'feedback_alert',
-        title: currentLanguage === 'vi' ? 'Yêu cầu gia nhập mới' : 'New Join Request',
+        title: t('components.register.hooks.useRegisterForm.text_3_40cf1e'),
         message: currentLanguage === 'vi'
           ? `Thợ ${finalStaffMember.fullName} (${finalStaffMember.position}) đã gửi yêu cầu liên kết với tiệm của bạn.`
           : `Technician ${finalStaffMember.fullName} (${finalStaffMember.position}) requested to link with your salon.`,
-        time: currentLanguage === 'vi' ? 'Vừa xong' : 'Just now',
+        time: t('components.register.hooks.useRegisterForm.text_4_fc2c2e'),
         read: false,
         linkTab: 'staff'
       }
@@ -535,18 +535,18 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const getStepName = (step) => {
     if (role === 'business') {
       switch (step) {
-        case 0: return currentLanguage === 'vi' ? 'Chọn vai trò' : 'Account Type'
-        case 1: return currentLanguage === 'vi' ? 'Thông tin đăng ký' : 'Credentials'
-        case 2: return currentLanguage === 'vi' ? 'Kích hoạt OTP' : 'Activate OTP'
+        case 0: return t('components.register.hooks.useRegisterForm.text_5_5a51d8')
+        case 1: return t('components.register.hooks.useRegisterForm.text_6_ae4737')
+        case 2: return t('components.register.hooks.useRegisterForm.text_7_3d980e')
         default: return ''
       }
     } else {
       switch (step) {
-        case 0: return currentLanguage === 'vi' ? 'Chọn vai trò' : 'Account Type'
-        case 1: return currentLanguage === 'vi' ? 'Thông tin đăng ký' : 'Credentials'
-        case 2: return currentLanguage === 'vi' ? 'Hồ sơ cá nhân' : 'Profile Setup'
-        case 3: return currentLanguage === 'vi' ? 'Cấu hình ví' : 'Payout Setup'
-        case 4: return currentLanguage === 'vi' ? 'Hoàn tất' : 'Success'
+        case 0: return t('components.register.hooks.useRegisterForm.text_5_5a51d8')
+        case 1: return t('components.register.hooks.useRegisterForm.text_6_ae4737')
+        case 2: return t('components.register.hooks.useRegisterForm.text_8_19483c')
+        case 3: return t('components.register.hooks.useRegisterForm.text_9_42c376')
+        case 4: return t('components.register.hooks.useRegisterForm.text_10_e5ffa8')
         default: return ''
       }
     }

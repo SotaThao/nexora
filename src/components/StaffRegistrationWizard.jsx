@@ -65,10 +65,10 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
             </div>
             <div>
               <h2 className="text-base font-black text-nexoraText uppercase tracking-wider">
-                {reg.t('staff_invite.wizard_title') || 'Complete Your Staff Tip Profile'}
+                {reg.t('staff_invite.wizard_title')}
               </h2>
               <p className="text-[11px] text-nexoraSubtle font-medium mt-0.5 leading-normal">
-                {reg.t('staff_invite.wizard_subtitle') || 'Configure your technician profile and payment methods once. Use it to link with any salon.'}
+                {reg.t('staff_invite.wizard_subtitle')}
               </p>
             </div>
           </div>
@@ -77,9 +77,9 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
           {reg.step > 0 && reg.step < 4 && (
             <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-extrabold uppercase tracking-wider">
               {[
-                { id: 1, label: reg.currentLanguage === 'vi' ? '1. Đăng ký' : '1. Register' },
-                { id: 2, label: reg.currentLanguage === 'vi' ? '2. Hồ sơ' : '2. Profile' },
-                { id: 3, label: reg.currentLanguage === 'vi' ? '3. Ví nhận' : '3. Wallet' }
+                { id: 1, label: t('components.StaffRegistrationWizard.text_1_403506') },
+                { id: 2, label: t('components.StaffRegistrationWizard.text_2_a7f004') },
+                { id: 3, label: t('components.StaffRegistrationWizard.text_3_0baa00') }
               ].map(s => (
                 <div
                   key={s.id}

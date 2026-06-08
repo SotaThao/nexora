@@ -43,13 +43,13 @@ export default function StepWelcome({
 
             <div className="space-y-1">
               <span className="text-[10px] font-black uppercase text-nexoraBrand bg-nexoraBrandSoft/80 px-2.5 py-0.5 rounded-full">
-                {t('staff_invite.invite_from_biz') || 'Invitation from Business'}
+                {t('staff_invite.invite_from_biz')}
               </span>
               <h3 className="text-lg font-black text-nexoraText tracking-tight mt-2">
                 {inviteData?.biz || ''}
               </h3>
               <p className="text-xs text-nexoraMuted max-w-sm mx-auto leading-relaxed mt-1">
-                {t('staff_invite.invite_desc') || 'You are invited to join NEXORA TOUCH staff profile for the business below.'}
+                {t('staff_invite.invite_desc')}
               </p>
             </div>
 
@@ -82,14 +82,14 @@ export default function StepWelcome({
               onClick={onReturnToMerchant}
               className="w-full h-11 border border-nexoraBorder text-nexoraMuted font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-nexoraSurfaceMuted transition"
             >
-              {currentLanguage === 'vi' ? 'Hủy bỏ / Từ chối' : 'Decline Request'}
+              {t('components.staff_registration.steps.StepWelcome.text_1_9ea11f')}
             </button>
 
             <button
               onClick={() => setStep(1)}
               className="w-full h-11 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-black text-xs uppercase tracking-wider rounded-xl transition flex items-center justify-center gap-1.5 shadow-md"
             >
-              {t('staff_invite.accept_invite') || 'Accept Invite & Continue Setup'} <AlertCircle className="h-4 w-4" />
+              {t('staff_invite.accept_invite')} <AlertCircle className="h-4 w-4" />
             </button>
           </div>
 
@@ -104,7 +104,7 @@ export default function StepWelcome({
               }}
               className="text-xs text-nexoraBrand font-bold hover:underline"
             >
-              {t('staff_invite.already_have_id') || 'I already have Staff ID'}
+              {t('staff_invite.already_have_id')}
             </button>
           </div>
         </div>
@@ -120,15 +120,13 @@ export default function StepWelcome({
                 </div>
                 <div className="space-y-1.5">
                   <span className="text-[10px] font-black uppercase text-nexoraWarning tracking-widest block font-sans">
-                    {currentLanguage === 'vi' ? 'THƯ MỜI GIA NHẬP HỆ THỐNG TIỆM' : 'SALON NETWORK INVITATION'}
+                    {t('components.staff_registration.steps.StepWelcome.text_2_832e3c')}
                   </span>
                   <h3 className="text-xl font-black text-nexoraText tracking-tight leading-snug">
                     {inviteData?.biz || ''}
                   </h3>
                   <p className="text-xs text-nexoraMuted max-w-sm mx-auto leading-relaxed font-medium">
-                    {currentLanguage === 'vi'
-                      ? 'Bạn đã được mời liên kết hồ sơ của mình để nhận tiền tip trực tiếp vào tài khoản cá nhân tại tiệm này.'
-                      : 'You have been invited to link your profile to receive tips directly to your personal account at this salon.'}
+                    {t('components.staff_registration.steps.StepWelcome.text_3_e0f60b')}
                   </p>
                 </div>
               </div>
@@ -149,12 +147,10 @@ export default function StepWelcome({
                   </div>
                   <div>
                     <strong className="text-xs font-black text-nexoraText block">
-                      {currentLanguage === 'vi' ? 'Đã có tài khoản' : 'I already have an Account'}
+                      {t('components.staff_registration.steps.StepWelcome.text_4_8bbc99')}
                     </strong>
                     <span className="text-[10px] text-nexoraSubtle block mt-0.5 leading-normal">
-                      {currentLanguage === 'vi'
-                        ? 'Sử dụng VLINKPAY ID sẵn có của bạn để liên kết nhanh với tiệm.'
-                        : 'Use your existing VLINKPAY ID to link instantly and import your wallets.'}
+                      {t('components.staff_registration.steps.StepWelcome.text_5_b2554e')}
                     </span>
                   </div>
                 </button>
@@ -172,12 +168,10 @@ export default function StepWelcome({
                   </div>
                   <div>
                     <strong className="text-xs font-black text-nexoraText block">
-                      {currentLanguage === 'vi' ? 'Đăng ký tài khoản' : 'Register Account'}
+                      {t('components.staff_registration.steps.StepWelcome.text_6_440c35')}
                     </strong>
                     <span className="text-[10px] text-nexoraSubtle block mt-0.5 leading-normal">
-                      {currentLanguage === 'vi'
-                        ? 'Đăng ký tài khoản mới, thiết lập ví nhận tiền và KYC.'
-                        : 'Register a new account, configure payout wallets, and complete KYC.'}
+                      {t('components.staff_registration.steps.StepWelcome.text_7_d9df8a')}
                     </span>
                   </div>
                 </button>
@@ -200,15 +194,13 @@ export default function StepWelcome({
                   <ArrowLeft className="h-4 w-4" />
                 </button>
                 <h3 className="text-sm font-extrabold text-nexoraText uppercase tracking-wide font-sans">
-                  {currentLanguage === 'vi' ? 'Đăng nhập liên kết tài khoản' : 'Link Account Login'}
+                  {t('components.staff_registration.steps.StepWelcome.text_8_f7afb9')}
                 </h3>
               </div>
 
               <form onSubmit={handleLinkLogin} className="space-y-4">
                 <p className="text-xs text-nexoraSubtle font-medium leading-relaxed">
-                  {currentLanguage === 'vi'
-                    ? 'Đăng nhập vào tài khoản NEXORA / VLINKPAY của bạn để liên kết nhanh với tiệm nail này.'
-                    : 'Sign in to your NEXORA / VLINKPAY account to quickly link with this nail salon.'}
+                  {t('components.staff_registration.steps.StepWelcome.text_9_0c8b9d')}
                 </p>
 
                 {/* Email field */}
@@ -228,7 +220,7 @@ export default function StepWelcome({
                 {/* Password field */}
                 <div className="space-y-1">
                   <label className="text-[10px] font-black uppercase text-nexoraSubtle tracking-wider flex items-center gap-1">
-                    <Lock className="h-3.5 w-3.5" /> {currentLanguage === 'vi' ? 'Mật khẩu' : 'Password'}
+                    <Lock className="h-3.5 w-3.5" /> {t('components.staff_registration.steps.StepWelcome.text_10_29ab67')}
                   </label>
                   <div className="relative">
                     <input
@@ -257,9 +249,9 @@ export default function StepWelcome({
                 {isDemoToolsEnabled && (
                   <div className="p-3 border border-nexoraWarning/20 bg-nexoraWarning/10 rounded-xl text-[11px] text-nexoraWarning leading-normal font-sans">
                     <span className="font-bold block uppercase tracking-wider text-[9px] text-nexoraWarning mb-0.5">
-                      {currentLanguage === 'vi' ? 'Gợi ý tài khoản Demo:' : 'Demo Account Tip:'}
+                      {t('components.staff_registration.steps.StepWelcome.text_11_ccae51')}
                     </span>
-                    Email: <code className="font-bold font-mono">lisa@example.com</code> / {currentLanguage === 'vi' ? 'Mật khẩu' : 'Password'}: <code className="font-bold font-mono">password123</code> (hoặc thợ khác đã tạo)
+                    Email: <code className="font-bold font-mono">lisa@example.com</code> / {t('components.staff_registration.steps.StepWelcome.text_10_29ab67')}: <code className="font-bold font-mono">password123</code> (hoặc thợ khác đã tạo)
                   </div>
                 )}
 
@@ -269,14 +261,14 @@ export default function StepWelcome({
                     onClick={() => setJoinPath(null)}
                     className="w-full h-10 border border-nexoraBorder text-nexoraMuted font-bold text-xs uppercase tracking-wider rounded-lg hover:bg-nexoraSurfaceMuted transition"
                   >
-                    {currentLanguage === 'vi' ? 'Quay lại' : 'Back'}
+                    {t('components.staff_registration.steps.StepWelcome.text_12_0413ad')}
                   </button>
 
                   <button
                     type="submit"
                     className="w-full h-10 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-black text-xs uppercase tracking-wider rounded-lg transition shadow-md flex items-center justify-center gap-1.5"
                   >
-                    {currentLanguage === 'vi' ? 'Đăng nhập & Xác minh' : 'Login & Verify'}
+                    {t('components.staff_registration.steps.StepWelcome.text_13_79d937')}
                   </button>
                 </div>
               </form>
@@ -288,22 +280,20 @@ export default function StepWelcome({
             <div className="space-y-5 py-2 animate-fadeIn">
               <div className="flex items-center gap-2 border-b border-nexoraRule pb-2">
                 <h3 className="text-sm font-extrabold text-nexoraText uppercase tracking-wide font-sans">
-                  {currentLanguage === 'vi' ? 'Xác nhận gia nhập tiệm' : 'Confirm Salon Connection'}
+                  {t('components.staff_registration.steps.StepWelcome.text_14_8736e0')}
                 </h3>
               </div>
 
               <div className="space-y-4">
                 <p className="text-xs text-nexoraSubtle font-medium leading-relaxed">
-                  {currentLanguage === 'vi'
-                    ? 'Vui lòng xem lại thông tin cá nhân và thông tin tiệm nail trước khi đồng ý liên kết.'
-                    : 'Please review your personal profile and salon details before confirming the link.'}
+                  {t('components.staff_registration.steps.StepWelcome.text_15_eb26fc')}
                 </p>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   {/* Personal Profile Card */}
                   <div className="border border-nexoraBrand/15 rounded-2xl bg-nexoraBrandSoft/10 p-4 space-y-3">
                     <span className="text-[9px] font-black uppercase text-nexoraBrand bg-nexoraBrandSoft/80 px-2 py-0.5 rounded-full inline-block">
-                      {currentLanguage === 'vi' ? 'Hồ sơ cá nhân' : 'Personal Profile'}
+                      {t('components.staff_registration.steps.StepWelcome.text_16_afd627')}
                     </span>
                     <div className="flex items-center gap-3 pt-1">
                       {linkedProfile.avatar ? (
@@ -330,7 +320,7 @@ export default function StepWelcome({
                         <strong className="text-nexoraMuted font-mono truncate max-w-32">{linkedProfile.email}</strong>
                       </div>
                       <div className="flex justify-between">
-                        <span>{currentLanguage === 'vi' ? 'Điện thoại:' : 'Phone:'}</span>
+                        <span>{t('components.staff_registration.steps.StepWelcome.text_17_e7aad1')}</span>
                         <strong className="text-nexoraMuted font-mono">{linkedProfile.phone || 'N/A'}</strong>
                       </div>
                     </div>
@@ -339,7 +329,7 @@ export default function StepWelcome({
                   {/* Nail Salon Info Card */}
                   <div className="border border-nexoraWarning/20 rounded-2xl bg-nexoraWarning/10 p-4 space-y-3">
                     <span className="text-[9px] font-black uppercase text-nexoraWarning bg-nexoraWarning/10 px-2 py-0.5 rounded-full inline-block">
-                      {currentLanguage === 'vi' ? 'Thông tin tiệm nail' : 'Nail Salon Info'}
+                      {t('components.staff_registration.steps.StepWelcome.text_18_6a93ce')}
                     </span>
                     <div className="flex items-center gap-3 pt-1">
                       <div className="h-10 w-10 rounded-xl bg-nexoraWarning/10 text-nexoraWarning flex items-center justify-center shrink-0">
@@ -350,20 +340,20 @@ export default function StepWelcome({
                           {inviteData?.biz || ''}
                         </h4>
                         <span className="text-[10px] text-nexoraMuted">
-                          {currentLanguage === 'vi' ? 'Vai trò mời:' : 'Invited Role:'} {inviteData?.role || position}
+                          {t('components.staff_registration.steps.StepWelcome.text_19_749c79')} {inviteData?.role || position}
                         </span>
                       </div>
                     </div>
 
                     <div className="text-[10px] text-nexoraMuted leading-normal border-t border-nexoraWarning/20 pt-2 space-y-1">
                       <div className="flex justify-between">
-                        <span>{currentLanguage === 'vi' ? 'Trạng thái kết nối:' : 'Connection Status:'}</span>
+                        <span>{t('components.staff_registration.steps.StepWelcome.text_20_cfd760')}</span>
                         <strong className="text-nexoraWarning uppercase text-[9px] font-black">
-                          {currentLanguage === 'vi' ? 'Yêu cầu mới' : 'New Request'}
+                          {t('components.staff_registration.steps.StepWelcome.text_21_11b464')}
                         </strong>
                       </div>
                       <div className="flex justify-between">
-                        <span>{currentLanguage === 'vi' ? 'Khu vực:' : 'Location:'}</span>
+                        <span>{t('components.staff_registration.steps.StepWelcome.text_22_cc5680')}</span>
                         <strong className="text-nexoraMuted truncate max-w-32">San Jose, CA</strong>
                       </div>
                     </div>
@@ -376,7 +366,7 @@ export default function StepWelcome({
                     onClick={handleLinkDecline}
                     className="w-full h-11 border border-nexoraDanger/20 text-nexoraDanger bg-nexoraDanger/10 hover:bg-nexoraDanger/10 hover:border-nexoraDanger/30 font-bold text-xs uppercase tracking-wider rounded-xl transition flex items-center justify-center gap-1.5"
                   >
-                    {currentLanguage === 'vi' ? 'Từ chối' : 'Decline'}
+                    {t('components.staff_registration.steps.StepWelcome.text_23_e4b582')}
                   </button>
 
                   <button
@@ -385,7 +375,7 @@ export default function StepWelcome({
                     className="w-full h-11 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-black text-xs uppercase tracking-wider rounded-xl transition flex items-center justify-center gap-1.5 shadow-md"
                   >
                     <Check className="h-4 w-4 stroke-[3px]" />
-                    {currentLanguage === 'vi' ? 'Đồng ý tham gia (Join)' : 'Accept & Join'}
+                    {t('components.staff_registration.steps.StepWelcome.text_24_db241f')}
                   </button>
                 </div>
               </div>

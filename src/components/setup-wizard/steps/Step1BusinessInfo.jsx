@@ -68,9 +68,7 @@ export default function Step1BusinessInfo({
                 <div className="relative group inline-block ml-1.5 align-middle normal-case font-normal text-nexoraSubtle">
                   <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
-                    {currentLanguage === 'vi'
-                      ? 'Nhập tên hợp pháp hoặc tên công khai của cửa hàng/salon của bạn sẽ hiển thị trên màn hình thanh toán của khách hàng.'
-                      : 'Enter the legal or public name of your store/salon as it will appear on customer payment screens.'}
+                    {t('components.setup_wizard.steps.Step1BusinessInfo.text_1_e6b49c')}
                     <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
                   </div>
                 </div>
@@ -119,9 +117,7 @@ export default function Step1BusinessInfo({
               <div className="relative group inline-block ml-1.5 align-middle normal-case font-normal text-nexoraSubtle">
                 <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
-                  {currentLanguage === 'vi'
-                    ? 'Cung cấp địa chỉ thực của cửa hàng. Được sử dụng để bản địa hóa và xác minh.'
-                    : 'Provide the physical location of your store. Used for localization and verification purposes.'}
+                  {t('components.setup_wizard.steps.Step1BusinessInfo.text_2_19c39f')}
                   <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
                 </div>
               </div>

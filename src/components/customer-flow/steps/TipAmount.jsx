@@ -85,7 +85,7 @@ export default function TipAmount({
                       : 'bg-white hover:bg-slate-50 text-nexoraText border border-nexoraBorder/60'
                   }`}
                 >
-                  {t('customer.custom_tip_btn') || 'Other'}
+                  {t('customer.custom_tip_btn')}
                 </button>
               </div>
 
@@ -114,10 +114,10 @@ export default function TipAmount({
       <div className="p-4 bg-nexoraBrandSoft/40 border border-nexoraBrandSoft rounded-xl flex items-center justify-between shadow-sm">
         <div>
           <h4 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">
-            {currentLanguage === 'vi' ? 'Tổng tiền Tip' : 'Total Tip'}
+            {t('components.customer_flow.steps.TipAmount.text_1_028f69')}
           </h4>
           <p className="text-[10px] text-nexoraMuted font-semibold mt-0.5">
-            {currentLanguage === 'vi' ? `Cho ${selectedStaffMembers.length} nhân viên` : `For ${selectedStaffMembers.length} provider(s)`}
+            {t('components.customer_flow.steps.TipAmount.provider_count', { count: selectedStaffMembers.length })}
           </p>
         </div>
         <div className="text-lg font-black text-nexoraBrand">

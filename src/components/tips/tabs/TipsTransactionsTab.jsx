@@ -65,14 +65,14 @@ export default function TipsTransactionsTab({
         <table className="w-full min-w-[780px] text-left text-xs">
           <thead className="bg-nexoraCanvas text-[10px] font-extrabold uppercase text-nexoraMuted">
             <tr>
-              <th className="px-4 py-3">{t('dashboard.tips.ledger.col_id') || 'Mã GD'}</th>
-              <th className="px-4 py-3">{t('dashboard.tips.ledger.col_time') || 'Ngày & Giờ'}</th>
-              <th className="px-4 py-3">{t('dashboard.tips.ledger.col_amount') || 'Số tiền'}</th>
-              <th className="px-4 py-3">{t('dashboard.tips.ledger.col_staff') || 'Nhân viên'}</th>
-              <th className="px-4 py-3">{t('dashboard.tips.ledger.col_tp') || 'Điểm chạm'}</th>
-              <th className="px-4 py-3">{t('dashboard.tips.ledger.col_method') || 'Hình thức'}</th>
-              <th className="px-4 py-3">{t('dashboard.tips.ledger.col_status') || 'Trạng thái'}</th>
-              <th className="px-4 py-3 text-right">{currentLanguage === 'vi' ? 'Chi tiết' : 'Details'}</th>
+              <th className="px-4 py-3">{t('dashboard.tips.ledger.col_id')}</th>
+              <th className="px-4 py-3">{t('dashboard.tips.ledger.col_time')}</th>
+              <th className="px-4 py-3">{t('dashboard.tips.ledger.col_amount')}</th>
+              <th className="px-4 py-3">{t('dashboard.tips.ledger.col_staff')}</th>
+              <th className="px-4 py-3">{t('dashboard.tips.ledger.col_tp')}</th>
+              <th className="px-4 py-3">{t('dashboard.tips.ledger.col_method')}</th>
+              <th className="px-4 py-3">{t('dashboard.tips.ledger.col_status')}</th>
+              <th className="px-4 py-3 text-right">{t('components.tips.tabs.TipsTransactionsTab.text_1_8cd6d8')}</th>
             </tr>
           </thead>
           <tbody>
@@ -105,7 +105,7 @@ export default function TipsTransactionsTab({
                       }}
                       className="text-xs font-black text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer uppercase tracking-wider"
                     >
-                      {currentLanguage === 'vi' ? 'Chi tiết' : 'Details'}
+                      {t('components.tips.tabs.TipsTransactionsTab.text_1_8cd6d8')}
                     </button>
                   </td>
                 </tr>
@@ -113,7 +113,7 @@ export default function TipsTransactionsTab({
             ) : (
               <tr>
                 <td colSpan="8" className="px-4 py-8 text-center text-nexoraMuted font-medium">
-                  {t('dashboard.tips.ledger.empty') || 'Không tìm thấy giao dịch nào phù hợp.'}
+                  {t('dashboard.tips.ledger.empty')}
                 </td>
               </tr>
             )}

@@ -13,7 +13,6 @@ export default class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     // Catch errors in any components below and re-render with error message
-    console.error('ERROR BOUNDARY CAUGHT:', error, errorInfo)
     logger.error('Uncaught React Error', { error: error.message, stack: error.stack, componentStack: errorInfo.componentStack })
   }
 

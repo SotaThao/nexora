@@ -98,7 +98,7 @@ export default function MobileMenuDrawer({
                 }`}
               >
                 <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === 'settings' && settingsTab === 'profile' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
-                <span>{t('dashboard.menu.business_setting') || 'Business Setting'}</span>
+                <span>{t('dashboard.menu.business_setting')}</span>
               </button>
               <button
                 type="button"
@@ -114,7 +114,7 @@ export default function MobileMenuDrawer({
                 }`}
               >
                 <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === 'settings' && settingsTab === 'kyb' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
-                <span>{t('dashboard.menu.kyb') || 'Business Verification'}</span>
+                <span>{t('dashboard.menu.kyb')}</span>
               </button>
             </div>
           )}
@@ -124,20 +124,20 @@ export default function MobileMenuDrawer({
         {userRole !== 'staff' && (
           <div className="mb-4 rounded-xl border border-white/10 bg-white/5 p-3.5 shrink-0">
             <div className="text-[9px] font-extrabold uppercase tracking-wider text-white/45">
-              {t('dashboard.sidebar.current_plan_header') || 'CURRENT PLAN'}
+              {t('dashboard.sidebar.current_plan_header')}
             </div>
             {hasKyb ? (
               <>
                 <div className="mt-0.5 text-xs font-black text-white">
-                  {t('dashboard.sidebar.plan_name') || 'Pro Plan'}
+                  {t('dashboard.sidebar.plan_name')}
                 </div>
                 <div className="mt-0.5 text-[10px] text-white/55">
-                  {t('dashboard.sidebar.renews_text') || 'Renews on Jun 20, 2024'}
+                  {t('dashboard.sidebar.renews_text')}
                 </div>
               </>
             ) : (
               <div className="mt-0.5 text-[10px] font-semibold text-rose-400">
-                {t('dashboard.sidebar.no_plan') || 'No current plan'}
+                {t('dashboard.sidebar.no_plan')}
               </div>
             )}
             <button
@@ -145,7 +145,7 @@ export default function MobileMenuDrawer({
               onClick={() => navigateMenu('subscriptions')}
               className="mt-2.5 w-full rounded-lg border border-white/15 py-1 text-center text-[10.5px] font-bold text-luxuryGold hover:bg-white/5 hover:border-white/25 transition-all"
             >
-              {t('dashboard.sidebar.manage_plan') || 'Manage Plan'}
+              {t('dashboard.sidebar.manage_plan')}
             </button>
           </div>
         )}
@@ -204,10 +204,10 @@ export default function MobileMenuDrawer({
                 {id === 'tips' && isTipsMobileExpanded && (
                   <div className="ml-9 mt-1 space-y-1 border-l border-white/10 pl-3 animate-fadeIn">
                     {[
-                      { id: 'overview', label: t('dashboard.tips.tabs.overview') || 'Overview' },
-                      { id: 'savings', label: t('dashboard.tips.tabs.savings') || 'Direct Savings' },
-                      { id: 'transactions', label: t('dashboard.tips.tabs.transactions') || 'Tip Transactions' },
-                      { id: 'payouts', label: t('dashboard.tips.tabs.payouts') || 'Staff Payouts' }
+                      { id: 'overview', label: t('dashboard.tips.tabs.overview') },
+                      { id: 'savings', label: t('dashboard.tips.tabs.savings') },
+                      { id: 'transactions', label: t('dashboard.tips.tabs.transactions') },
+                      { id: 'payouts', label: t('dashboard.tips.tabs.payouts') }
                     ].map(sub => {
                       const isSubActive = activeMenu === 'tips' && tipsTab === sub.id
                       return (
@@ -237,8 +237,8 @@ export default function MobileMenuDrawer({
                 {id === 'touchpoints' && isTouchpointsMobileExpanded && (
                   <div className="ml-9 mt-1 space-y-1 border-l border-white/10 pl-3 animate-fadeIn">
                     {[
-                      { id: 'stations', label: t('dashboard.touchpoints.tabs.stations') || 'QR Stations' },
-                      { id: 'devices', label: t('dashboard.touchpoints.tabs.devices') || 'Hardware Devices' }
+                      { id: 'stations', label: t('dashboard.touchpoints.tabs.stations') },
+                      { id: 'devices', label: t('dashboard.touchpoints.tabs.devices') }
                     ].map(sub => {
                       const isSubActive = activeMenu === 'touchpoints' && touchpointsTab === sub.id
                       return (

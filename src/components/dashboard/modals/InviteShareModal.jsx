@@ -54,7 +54,7 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
       <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl transition-all relative">
         <div className="flex items-center justify-between border-b border-nexoraRule pb-4">
           <h2 className="text-sm font-extrabold text-nexoraText uppercase tracking-wider font-sans">
-            {currentLanguage === 'vi' ? 'Chia sẻ liên kết & QR mời thợ' : 'Share Invitation Link & QR'}
+            {t('components.dashboard.modals.InviteShareModal.text_1_112041')}
           </h2>
           <IconButton label="Close modal" onClick={onClose}>
             <X className="h-4 w-4" />
@@ -65,12 +65,12 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
           {/* QR Code Section */}
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col items-center text-center space-y-3">
             <span className="text-[10px] font-black uppercase text-slate-700 tracking-wider font-sans">
-              {currentLanguage === 'vi' ? 'QUÉT QR ĐỂ GIA NHẬP' : 'SCAN QR TO JOIN'}
+              {t('components.dashboard.modals.InviteShareModal.text_2_022a98')}
             </span>
             <div
               onClick={() => setLargeQrOpen(true)}
               className="h-32 w-32 rounded-xl bg-slate-50 border border-slate-200 p-2 flex items-center justify-center shadow-inner bg-white cursor-zoom-in transition hover:scale-105 duration-200 group relative"
-              title={currentLanguage === 'vi' ? 'Click để phóng to' : 'Click to enlarge'}
+              title={t('components.dashboard.modals.InviteShareModal.text_3_953f1c')}
             >
               <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(joinLink)}`}
@@ -86,7 +86,7 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
 
             <div className="w-full space-y-1.5">
               <span className="text-[9px] text-slate-400 font-bold block uppercase font-sans">
-                {currentLanguage === 'vi' ? 'LIÊN KẾT GIA NHẬP' : 'JOIN LINK'}
+                {t('components.dashboard.modals.InviteShareModal.text_4_91c96b')}
               </span>
               <div className="flex gap-1.5">
                 <input
@@ -99,11 +99,11 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
                   type="button"
                   onClick={() => {
                     navigator.clipboard.writeText(joinLink)
-                    showToast(currentLanguage === 'vi' ? 'Đã sao chép liên kết gia nhập!' : 'Join link copied to clipboard!', 'success')
+                    showToast(t('components.dashboard.modals.InviteShareModal.text_5_df86c2'), 'success')
                   }}
                   className="h-8 px-3 bg-slate-800 text-white rounded text-[10px] font-black uppercase hover:bg-slate-700 transition font-sans"
                 >
-                  {currentLanguage === 'vi' ? 'Sao chép' : 'Copy'}
+                  {t('components.dashboard.modals.InviteShareModal.text_6_cd2bb1')}
                 </button>
               </div>
             </div>
@@ -112,7 +112,7 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
           <div className="relative">
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200"></div></div>
             <span className="relative bg-white pr-3 text-[9px] text-slate-400 font-black uppercase tracking-wider font-sans">
-              {currentLanguage === 'vi' ? 'HOẶC GỬI TRỰC TIẾP' : 'OR SEND DIRECTLY'}
+              {t('components.dashboard.modals.InviteShareModal.text_7_944077')}
             </span>
           </div>
 
@@ -120,7 +120,7 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
           <form onSubmit={handleSubmit} className="space-y-3.5">
             <div>
               <label className="text-[10px] font-extrabold uppercase text-nexoraMuted font-sans">
-                {currentLanguage === 'vi' ? 'Tên thợ' : 'Technician Name'}
+                {t('components.dashboard.modals.InviteShareModal.text_8_16a818')}
               </label>
               <input
                 type="text"
@@ -166,7 +166,7 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
 
             <div>
               <label className="text-[10px] font-extrabold uppercase text-nexoraMuted font-sans">
-                {inviteMethod === 'SMS' ? (currentLanguage === 'vi' ? 'Số điện thoại' : 'Phone Number') : 'Email Address'}
+                {inviteMethod === 'SMS' ? (t('components.dashboard.modals.InviteShareModal.text_9_db3889')) : 'Email Address'}
               </label>
               <input
                 type="text"
@@ -181,7 +181,7 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
 
             <div>
               <label className="text-[10px] font-extrabold uppercase text-nexoraMuted font-sans">
-                {currentLanguage === 'vi' ? 'Vai trò / Chức danh' : 'Role / Position'}
+                {t('components.dashboard.modals.InviteShareModal.text_10_c21f56')}
               </label>
               <input
                 type="text"
@@ -197,7 +197,7 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
               className="w-full h-10 mt-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-95 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg transition shadow-md flex items-center justify-center gap-1.5 font-sans"
             >
               <Send className="h-4 w-4" />
-              {currentLanguage === 'vi' ? 'Gửi liên kết mời thợ' : 'Send Invite Link'}
+              {t('components.dashboard.modals.InviteShareModal.text_11_28d637')}
             </button>
           </form>
         </div>
@@ -215,7 +215,7 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
           >
             <div className="w-full flex justify-between items-center mb-4">
               <h3 className="text-xs font-black uppercase text-slate-800 tracking-wider font-sans">
-                {currentLanguage === 'vi' ? 'MÃ QR GIA NHẬP' : 'JOIN QR CODE'}
+                {t('components.dashboard.modals.InviteShareModal.text_12_a8934d')}
               </h3>
               <button
                 type="button"
@@ -235,9 +235,7 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
             </div>
 
             <p className="text-[11px] text-slate-500 font-medium text-center leading-relaxed max-w-xs mb-4 font-sans">
-              {currentLanguage === 'vi'
-                ? 'Cho thợ quét mã này bằng camera điện thoại để tự đăng ký hoặc liên kết tài khoản vào tiệm.'
-                : 'Have technicians scan this QR code with their mobile camera to self-register or link accounts.'}
+              {t('components.dashboard.modals.InviteShareModal.text_13_8222f9')}
             </p>
 
             <div className="w-full bg-slate-50 rounded-xl border border-slate-200 p-2.5 flex items-center justify-between gap-2">
@@ -248,12 +246,12 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
                 type="button"
                 onClick={() => {
                   navigator.clipboard.writeText(joinLink)
-                  showToast(currentLanguage === 'vi' ? 'Đã sao chép liên kết gia nhập!' : 'Join link copied to clipboard!', 'success')
+                  showToast(t('components.dashboard.modals.InviteShareModal.text_5_df86c2'), 'success')
                 }}
                 className="h-7 px-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[10px] font-bold transition flex items-center gap-1 shrink-0 font-sans"
               >
                 <Copy className="h-3 w-3" />
-                <span>{currentLanguage === 'vi' ? 'Sao chép' : 'Copy'}</span>
+                <span>{t('components.dashboard.modals.InviteShareModal.text_6_cd2bb1')}</span>
               </button>
             </div>
           </div>

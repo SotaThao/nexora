@@ -180,10 +180,10 @@ export default function AnalyticsView({
       <div className="border-b border-nexoraBorder pb-5">
         <h2 className="text-2xl font-black text-inkBlue dark:text-white tracking-tight flex items-center gap-2">
           <BarChart3 className="h-6 w-6 text-luxuryGold" />
-          {t('dashboard.menu.analytics') || 'Phân Tích'}
+          {t('dashboard.menu.analytics')}
         </h2>
         <p className="mt-1 text-sm text-mutedGrey dark:text-slate-400">
-          {t('dashboard.analytics.description') || 'Xem số liệu phân tích chuyên sâu về doanh thu típ, hiệu suất thợ và điểm chạm.'}
+          {t('dashboard.analytics.description')}
         </p>
       </div>
 
@@ -191,7 +191,7 @@ export default function AnalyticsView({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="card-elevated flex items-center justify-between">
           <div>
-            <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">{t('dashboard.analytics.kpi.total_volume') || 'Tổng Doanh Số'}</small>
+            <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">{t('dashboard.analytics.kpi.total_volume')}</small>
             <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{formatUSD(totalVolume)}</h3>
           </div>
           <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-luxuryGold/10 text-luxuryGold">
@@ -200,8 +200,8 @@ export default function AnalyticsView({
         </div>
         <div className="card-elevated flex items-center justify-between">
           <div>
-            <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">{t('dashboard.analytics.kpi.transactions_count') || 'Số Giao Dịch'}</small>
-            <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{totalCount} {t('dashboard.analytics.kpi.transactions_unit') || 'GD'}</h3>
+            <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">{t('dashboard.analytics.kpi.transactions_count')}</small>
+            <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{totalCount} {t('dashboard.analytics.kpi.transactions_unit')}</h3>
           </div>
           <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-brandCyan/10 text-brandCyan">
             <TrendingUp className="h-5 w-5" />
@@ -209,7 +209,7 @@ export default function AnalyticsView({
         </div>
         <div className="card-elevated flex items-center justify-between">
           <div>
-            <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">{t('dashboard.analytics.kpi.avg_tip') || 'Típ Trung Bình'}</small>
+            <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">{t('dashboard.analytics.kpi.avg_tip')}</small>
             <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{formatUSD(averageTip)}</h3>
           </div>
           <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-white/5 text-mutedGrey">
@@ -218,10 +218,10 @@ export default function AnalyticsView({
         </div>
         <div className="card-elevated flex items-center justify-between">
           <div>
-            <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">{t('dashboard.analytics.kpi.fees_avoided') || 'Phí Xử Lý Tránh Được'}</small>
+            <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">{t('dashboard.analytics.kpi.fees_avoided')}</small>
             <h3 className="mt-1 text-2xl font-black text-emerald-600 dark:text-emerald-400">{formatUSD(feesAvoided)}</h3>
             <span className="mt-1 block text-[10px] text-mutedGrey dark:text-slate-400">
-              {(t('dashboard.tips.savings.fees_avoided_sub') || 'Ước tính mức 3% phí thẻ').replace('3%', `${processingFee}%`)}
+              {(t('dashboard.tips.savings.fees_avoided_sub')).replace('3%', `${processingFee}%`)}
             </span>
           </div>
           <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
@@ -234,7 +234,7 @@ export default function AnalyticsView({
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Daily Trend Chart */}
         <div className="card-elevated lg:col-span-2">
-          <h4 className="text-sm font-black text-inkBlue dark:text-white uppercase tracking-wider mb-6">{t('dashboard.analytics.charts.daily_revenue') || 'Biểu Đồ Doanh Thu Theo Ngày'}</h4>
+          <h4 className="text-sm font-black text-inkBlue dark:text-white uppercase tracking-wider mb-6">{t('dashboard.analytics.charts.daily_revenue')}</h4>
           <div className="h-56 flex items-end gap-4 pt-4 relative">
             {/* Y-Axis Column */}
             <div className="h-40 flex flex-col justify-between text-right text-[10px] font-mono font-semibold text-mutedGrey dark:text-slate-400 select-none w-10 shrink-0 mb-6 pb-0.5">
@@ -369,7 +369,7 @@ export default function AnalyticsView({
         {/* Method Distribution List & Chart */}
         <div className="card-elevated flex flex-col justify-between">
           <div>
-            <h4 className="text-sm font-black text-inkBlue dark:text-white uppercase tracking-wider mb-5">{t('dashboard.analytics.charts.wallet_share') || 'Phần Trăm Theo Ví'}</h4>
+            <h4 className="text-sm font-black text-inkBlue dark:text-white uppercase tracking-wider mb-5">{t('dashboard.analytics.charts.wallet_share')}</h4>
             
             {/* Dynamic visual bar rows */}
             <div className="space-y-4 pt-2">
@@ -403,7 +403,7 @@ export default function AnalyticsView({
         <div className="card-elevated">
           <h4 className="text-sm font-black text-inkBlue dark:text-white uppercase tracking-wider mb-5 flex items-center gap-2">
             <Award className="h-4 w-4 text-luxuryGold" />
-            {t('dashboard.analytics.leaderboards.staff') || 'Bảng Xếp Hạng Nhân Viên'}
+            {t('dashboard.analytics.leaderboards.staff')}
           </h4>
           
           <div className="space-y-4">
@@ -415,7 +415,7 @@ export default function AnalyticsView({
                   </div>
                   <div className="min-w-0">
                     <span className="block text-xs font-black text-inkBlue dark:text-white truncate">{item.name}</span>
-                    <span className="block text-[10px] text-mutedGrey dark:text-slate-400">{item.count} {t('dashboard.analytics.leaderboards.tips_count_label') || 'lượt nhận típ'}</span>
+                    <span className="block text-[10px] text-mutedGrey dark:text-slate-400">{item.count} {t('dashboard.analytics.leaderboards.tips_count_label')}</span>
                   </div>
                 </div>
                 
@@ -437,7 +437,7 @@ export default function AnalyticsView({
         <div className="card-elevated">
           <h4 className="text-sm font-black text-inkBlue dark:text-white uppercase tracking-wider mb-5 flex items-center gap-2">
             <Users className="h-4 w-4 text-brandCyan" />
-            {t('dashboard.analytics.leaderboards.touchpoints') || 'Hiệu Suất Điểm Chạm QR'}
+            {t('dashboard.analytics.leaderboards.touchpoints')}
           </h4>
           
           <div className="space-y-4">
@@ -449,7 +449,7 @@ export default function AnalyticsView({
                   </div>
                   <div className="min-w-0">
                     <span className="block text-xs font-black text-inkBlue dark:text-white truncate">{item.name}</span>
-                    <span className="block text-[10px] text-mutedGrey dark:text-slate-400">{item.count} {t('dashboard.analytics.leaderboards.scans_count_label') || 'lượt quét'}</span>
+                    <span className="block text-[10px] text-mutedGrey dark:text-slate-400">{item.count} {t('dashboard.analytics.leaderboards.scans_count_label')}</span>
                   </div>
                 </div>
                 

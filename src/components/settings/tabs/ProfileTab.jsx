@@ -193,7 +193,7 @@ export default function ProfileTab({
             <div className="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
               <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
                 <Wallet className="h-4 w-4 text-nexoraBrand" />
-                {currentLanguage === 'vi' ? 'Phương thức thanh toán' : 'Payout Methods'}
+                {t('components.settings.tabs.ProfileTab.text_1_e4d822')}
               </h4>
               {/* Keep Payment Wallets text for unit tests matching */}
               <span className="sr-only">Payment Wallets</span>
@@ -247,7 +247,7 @@ export default function ProfileTab({
                     className="flex items-center gap-1 text-[10px] font-bold text-amber-600 hover:text-amber-700 transition shrink-0 ml-2"
                   >
                     <Edit2 className="h-3 w-3" />
-                    <span>{currentLanguage === 'vi' ? 'Tài khoản' : 'Payout account'}</span>
+                    <span>{t('components.settings.tabs.ProfileTab.text_2_2e8d41')}</span>
                   </button>
                 </div>
               ))}
@@ -278,7 +278,7 @@ export default function ProfileTab({
             <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
               <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
                 <User className="h-4 w-4 text-nexoraBrand" />
-                {currentLanguage === 'vi' ? 'Thông tin cơ bản' : 'Basic Information'}
+                {t('components.settings.tabs.ProfileTab.text_3_932fd1')}
               </h4>
               {!isEditingBasic && !hasKyb && (
                 <button
@@ -300,9 +300,7 @@ export default function ProfileTab({
                     <div className="relative group inline-block normal-case font-normal text-nexoraSubtle">
                       <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
-                        {currentLanguage === 'vi'
-                          ? 'Nhập đầy đủ họ và tên hợp pháp của bạn như trên giấy tờ tùy thân.'
-                          : 'Specify your full legal name as it appears on your official government identification documents.'}
+                        {t('components.settings.tabs.ProfileTab.text_4_fe3696')}
                         <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
                       </div>
                     </div>
@@ -321,9 +319,7 @@ export default function ProfileTab({
                     <div className="relative group inline-block normal-case font-normal text-nexoraSubtle">
                       <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
-                        {currentLanguage === 'vi'
-                          ? 'Ngày sinh của bạn (phải từ 18 tuổi trở lên để xác thực).'
-                          : 'Required for identity verification purposes (must be 18 years or older).'}
+                        {t('components.settings.tabs.ProfileTab.text_5_91f714')}
                         <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
                       </div>
                     </div>
@@ -342,9 +338,7 @@ export default function ProfileTab({
                     <div className="relative group inline-block normal-case font-normal text-nexoraSubtle">
                       <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
-                        {currentLanguage === 'vi'
-                          ? 'Số điện thoại chính để nhận thông báo và xác minh tài khoản.'
-                          : 'Primary phone contact for administrative account alerts and verification updates.'}
+                        {t('components.settings.tabs.ProfileTab.text_6_d046e4')}
                         <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
                       </div>
                     </div>
@@ -376,15 +370,15 @@ export default function ProfileTab({
             ) : (
               <div className="space-y-3.5 text-xs">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 gap-1">
-                  <span className="text-nexoraMuted font-bold">{currentLanguage === 'vi' ? 'Họ và tên' : 'Full Name'}</span>
+                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.text_7_2e0cc1')}</span>
                   <span className="text-nexoraText font-extrabold">{profile.fullName}</span>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                  <span className="text-nexoraMuted font-bold">{currentLanguage === 'vi' ? 'Ngày sinh' : 'Date of Birth'}</span>
+                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.text_8_ba148d')}</span>
                   <span className="text-nexoraText font-extrabold">{formatDOB(profile.dob)}</span>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                  <span className="text-nexoraMuted font-bold">{currentLanguage === 'vi' ? 'Số điện thoại' : 'Phone Number'}</span>
+                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.text_9_db3889')}</span>
                   <span className="text-nexoraText font-extrabold">{profile.phone}</span>
                 </div>
               </div>
@@ -396,7 +390,7 @@ export default function ProfileTab({
             <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
               <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-rose-500" />
-                {currentLanguage === 'vi' ? 'Chi tiết địa chỉ' : 'Address Details'}
+                {t('components.settings.tabs.ProfileTab.text_10_5f01d9')}
               </h4>
               {!isEditingAddress && !hasKyb && (
                 <button
@@ -418,9 +412,7 @@ export default function ProfileTab({
                     <div className="relative group inline-block normal-case font-normal text-nexoraSubtle">
                       <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
-                        {currentLanguage === 'vi'
-                          ? 'Cung cấp địa chỉ thực của cửa hàng. Được sử dụng để bản địa hóa và xác minh.'
-                          : 'Provide the physical location of your store. Used for localization and verification purposes.'}
+                        {t('components.settings.tabs.ProfileTab.text_11_19c39f')}
                         <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
                       </div>
                     </div>
@@ -495,15 +487,15 @@ export default function ProfileTab({
             ) : (
               <div className="space-y-3.5 text-xs">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start py-2 sm:py-1 gap-1">
-                  <span className="text-nexoraMuted font-bold shrink-0">{currentLanguage === 'vi' ? 'Đường/Phố' : 'Street'}</span>
+                  <span className="text-nexoraMuted font-bold shrink-0">{t('components.settings.tabs.ProfileTab.text_12_752b31')}</span>
                   <span className="text-nexoraText font-extrabold sm:text-right break-words max-w-full sm:max-w-[180px]">{profile.street}</span>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                  <span className="text-nexoraMuted font-bold">{currentLanguage === 'vi' ? 'Thành phố' : 'City'}</span>
+                <span className="text-nexoraMuted font-bold">{t('common.city')}</span>
                   <span className="text-nexoraText font-extrabold">{profile.city}</span>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                  <span className="text-nexoraMuted font-bold">{currentLanguage === 'vi' ? 'Bang/Tỉnh' : 'State'}</span>
+                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.text_13_487a6b')}</span>
                   <span className="text-nexoraText font-extrabold">{profile.state || 'N/A'}</span>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
@@ -511,7 +503,7 @@ export default function ProfileTab({
                   <span className="text-nexoraText font-extrabold font-mono">{profile.zipCode}</span>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                  <span className="text-nexoraMuted font-bold">{currentLanguage === 'vi' ? 'Quốc gia' : 'Country'}</span>
+                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.text_14_8c850c')}</span>
                   <span className="text-nexoraText font-extrabold">{profile.country}</span>
                 </div>
               </div>
@@ -523,7 +515,7 @@ export default function ProfileTab({
             <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
               <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
                 <Building2 className="h-4 w-4 text-purple-500" />
-                {currentLanguage === 'vi' ? 'Thông tin doanh nghiệp' : 'Business Information'}
+                {t('components.settings.tabs.ProfileTab.text_15_146351')}
               </h4>
               {!isEditingBusiness && !hasKyb && (
                 <button
@@ -545,9 +537,7 @@ export default function ProfileTab({
                     <div className="relative group inline-block normal-case font-normal text-nexoraSubtle">
                       <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
-                        {currentLanguage === 'vi'
-                          ? 'Nhập tên hợp pháp hoặc tên công khai của cửa hàng/salon của bạn sẽ hiển thị trên màn hình thanh toán của khách hàng.'
-                          : 'Enter the legal or public name of your store/salon as it will appear on customer payment screens.'}
+                        {t('components.settings.tabs.ProfileTab.text_16_e6b49c')}
                         <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
                       </div>
                     </div>
@@ -610,11 +600,11 @@ export default function ProfileTab({
             ) : (
               <div className="space-y-3.5 text-xs">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 gap-1">
-                  <span className="text-nexoraMuted font-bold">{currentLanguage === 'vi' ? 'Tên doanh nghiệp' : 'Business Name'}</span>
+                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.text_17_4c5d20')}</span>
                   <span className="text-nexoraText font-extrabold">{profile.businessName}</span>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                  <span className="text-nexoraMuted font-bold">{currentLanguage === 'vi' ? 'Số điện thoại' : 'Phone'}</span>
+                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.text_18_8f0bb5')}</span>
                   <span className="text-nexoraText font-extrabold">{profile.businessPhone}</span>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
@@ -646,7 +636,7 @@ export default function ProfileTab({
               <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
                 <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-sky-500" />
-                  {currentLanguage === 'vi' ? 'Bản đồ vị trí' : 'Location Map'}
+                  {t('components.settings.tabs.ProfileTab.text_19_5ccb22')}
                 </h4>
               </div>
               <div className="h-[220px] w-full rounded-lg border border-slate-200 overflow-hidden bg-slate-100">
@@ -665,7 +655,7 @@ export default function ProfileTab({
               <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
                 <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
                   <Globe className="h-4 w-4 text-emerald-500" />
-                  {currentLanguage === 'vi' ? 'Liên kết đánh giá' : 'Review Links'}
+                  {t('components.settings.tabs.ProfileTab.text_20_f13fde')}
                 </h4>
                 {!isEditingReviews && (
                   <button
@@ -771,21 +761,21 @@ export default function ProfileTab({
         }
 
         const walletFields = {
-          zelle: currentLanguage === 'vi' ? 'email/SĐT' : 'email/phone',
-          bankwire: currentLanguage === 'vi' ? 'chi tiết' : 'details',
+          zelle: t('components.settings.tabs.ProfileTab.text_21_0647ea'),
+          bankwire: t('components.settings.tabs.ProfileTab.text_22_00aa8a'),
           paypal: 'email',
           venmo: '@username',
           cashapp: '$cashtag',
-          applecash: currentLanguage === 'vi' ? 'SĐT' : 'phone number'
+    applecash: t('common.phone_number_short')
         }
 
         const walletPlaceholders = {
-          zelle: currentLanguage === 'vi' ? 'Nhập email/SĐT Zelle...' : 'Enter Zelle email/phone...',
-          bankwire: currentLanguage === 'vi' ? 'Số tài khoản & Số Routing...' : 'Enter Bank Wire routing - account...',
-          paypal: currentLanguage === 'vi' ? 'Nhập PayPal email...' : 'Enter PayPal email...',
-          venmo: currentLanguage === 'vi' ? 'Nhập Venmo @username...' : 'Enter Venmo @username...',
-          cashapp: currentLanguage === 'vi' ? 'Nhập Cash App $cashtag...' : 'Enter Cash App $cashtag...',
-          applecash: currentLanguage === 'vi' ? 'Nhập số điện thoại...' : 'Enter Apple Cash phone number...'
+          zelle: t('components.settings.tabs.ProfileTab.text_23_e1251f'),
+          bankwire: t('components.settings.tabs.ProfileTab.text_24_c4bdfb'),
+          paypal: t('components.settings.tabs.ProfileTab.text_25_c89f8a'),
+          venmo: t('components.settings.tabs.ProfileTab.text_26_40d556'),
+          cashapp: t('components.settings.tabs.ProfileTab.text_27_beba2f'),
+          applecash: t('components.settings.tabs.ProfileTab.text_28_40505b')
         }
 
         return (
@@ -804,7 +794,7 @@ export default function ProfileTab({
                       : `CONFIGURE ${walletNames[editingMethod]?.toUpperCase()}`}
                   </h3>
                   <p className="text-[10px] text-slate-400 font-medium">
-                    {currentLanguage === 'vi' ? 'Chỉ định thông tin tài khoản nhận tiền' : 'Specify receiving target identifier'}
+                    {t('components.settings.tabs.ProfileTab.text_29_2ee37e')}
                   </p>
                 </div>
               </div>
@@ -838,14 +828,14 @@ export default function ProfileTab({
                 {/* QR Code Optional Upload */}
                 <div>
                   <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
-                    {currentLanguage === 'vi' ? 'MÃ QR (TÙY CHỌN)' : 'QR CODE (OPTIONAL)'}
+                    {t('components.settings.tabs.ProfileTab.text_30_2a8c1a')}
                   </label>
 
                   {isCapturing ? (
                     <div className="flex h-44 w-full flex-col items-center justify-center rounded-xl border border-slate-200 bg-slate-50">
                       <div className="h-6 w-6 border-2 border-nexoraBrand/20 border-t-nexoraBrand rounded-full animate-spin"></div>
                       <span className="mt-2 text-xs font-semibold text-slate-500">
-                        {currentLanguage === 'vi' ? 'Đang chụp hình...' : 'Taking photo...'}
+              {t('setup.taking_photo')}
                       </span>
                     </div>
                   ) : editQrCode ? (
@@ -875,7 +865,7 @@ export default function ProfileTab({
                       >
                         <Camera className="w-5 h-5 text-nexoraBrand" />
                         <span className="text-[11px] font-bold text-slate-600">
-                          {currentLanguage === 'vi' ? 'CHỤP HÌNH' : 'TAKE PHOTO'}
+                          {t('components.settings.tabs.ProfileTab.text_31_868f04')}
                         </span>
                       </button>
                       <label
@@ -883,7 +873,7 @@ export default function ProfileTab({
                       >
                         <FolderOpen className="w-5 h-5 text-nexoraBrand" />
                         <span className="text-[11px] font-bold text-slate-600">
-                          {currentLanguage === 'vi' ? 'CHỌN FILE' : 'CHOOSE FILE'}
+                          {t('components.settings.tabs.ProfileTab.text_32_44d455')}
                         </span>
                         <input type="file" accept="image/*" className="sr-only" onChange={handleModalFileChange} />
                       </label>
@@ -895,9 +885,7 @@ export default function ProfileTab({
                 <div className="rounded-lg bg-blue-50/50 border border-blue-100 p-3 text-[10px] leading-relaxed text-blue-800 flex gap-2">
                   <AlertTriangle className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
                   <span>
-                    {currentLanguage === 'vi'
-                      ? 'Vui lòng nhập đúng thông tin tài khoản nhận tiền. Tài khoản này sẽ được dùng để nhận tiền tip.'
-                      : 'Please enter the correct receiving account information. This will be used to receive payments.'}
+                    {t('components.settings.tabs.ProfileTab.text_33_7b89ac')}
                   </span>
                 </div>
 
@@ -908,13 +896,13 @@ export default function ProfileTab({
                     onClick={() => setEditingMethod(null)}
                     className="px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider rounded-lg transition"
                   >
-                    {currentLanguage === 'vi' ? 'HỦY' : 'CANCEL'}
+                    {t('components.settings.tabs.ProfileTab.text_34_8714e2')}
                   </button>
                   <button
                     type="submit"
                     className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm transition"
                   >
-                    {currentLanguage === 'vi' ? 'LƯU LẠI' : 'SAVE'}
+                    {t('components.settings.tabs.ProfileTab.text_35_0f06d4')}
                   </button>
                 </div>
               </form>

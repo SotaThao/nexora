@@ -155,7 +155,7 @@ export default function SetupWizard({
                   </div>
                   <div className="text-center mt-2.5">
                     <span className="text-[9px] font-extrabold uppercase tracking-widest text-nexoraElectric/80 mb-0.5 block">
-                      {currentLanguage === 'vi' ? `Bước ${step}` : `Step ${step}`}
+              {t('common.step_number', { step })}
                     </span>
                     <span className={`text-[11px] font-extrabold tracking-wide transition-colors duration-300 block whitespace-nowrap
                       ${isActive ? 'text-nexoraBrand' : isCompleted ? 'text-slate-800' : 'text-slate-400'}`}>
@@ -310,13 +310,13 @@ export default function SetupWizard({
             <button
               onClick={() => setPreviewingTp(null)}
               className="absolute right-4 top-4 rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
-              title={t('setup.close') || 'Close'}
+              title={t('setup.close')}
             >
               <X className="h-5 w-5" />
             </button>
 
             <h3 className="text-base font-extrabold text-slate-800 mb-4 pr-8">
-              {t('dashboard.touchpoints.tabs.stations') || 'QR Touch Point'} - {previewingTp.name}
+              {t('dashboard.touchpoints.tabs.stations')} - {previewingTp.name}
             </h3>
 
             <div className="flex flex-col items-center">
@@ -346,7 +346,7 @@ export default function SetupWizard({
                 </div>
 
                 <div className="text-[8px] font-extrabold uppercase text-nexoraMuted tracking-wider qr-print-scan-text leading-tight mx-auto">
-                  {t('customer.scan_to_tip_review') || 'Scan to Tip & Review'}
+                  {t('customer.scan_to_tip_review')}
                 </div>
 
                 <div className="flex items-center gap-1 text-[7.5px] font-bold text-nexoraSubtle qr-print-footer">
@@ -366,7 +366,7 @@ export default function SetupWizard({
                   onClick={() => setPreviewingTp(null)}
                   className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50 transition w-full"
                 >
-                  {t('setup.close') || 'Close'}
+                  {t('setup.close')}
                 </button>
               </div>
             </div>
@@ -378,7 +378,7 @@ export default function SetupWizard({
       <div className="print-only-container qr-modal-backdrop">
         <div className="qr-modal-container">
           <h2 className="qr-print-title">Business QR - Lobby</h2>
-          <p className="qr-print-subtitle">{t('customer.step_form_title') || 'Scan to Tip & Review'}</p>
+          <p className="qr-print-subtitle">{t('customer.step_form_title')}</p>
 
           <div className="qr-print-card">
             <div className="flex items-center gap-1 justify-center qr-print-brand-header">
@@ -402,7 +402,7 @@ export default function SetupWizard({
             </div>
 
             <div className="text-[8px] font-extrabold uppercase text-nexoraMuted tracking-wider qr-print-scan-text leading-tight mx-auto">
-              {t('customer.scan_to_tip_review') || 'Scan to Tip & Review'}
+              {t('customer.scan_to_tip_review')}
             </div>
 
             <div className="flex items-center gap-1 text-[7.5px] font-bold text-nexoraSubtle qr-print-footer">

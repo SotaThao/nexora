@@ -112,8 +112,8 @@ export function useTipsData({ transactions, chartStartDate, chartEndDate, chartR
           let label = '';
           if (chartRange === '30 Days') {
             label = i === pointsCount - 1
-              ? (currentLanguage === 'vi' ? 'Hôm nay' : 'Today')
-              : `${currentLanguage === 'vi' ? 'Tuần' : 'Week'} ${i + 1}`;
+              ? (t('components.tips.hooks.useTipsData.text_1_79adeb'))
+              : `${t('components.tips.hooks.useTipsData.text_2_b00f34')} ${i + 1}`;
           } else {
             const monthNames = currentLanguage === 'vi'
               ? ['Th 1', 'Th 2', 'Th 3', 'Th 4', 'Th 5', 'Th 6', 'Th 7', 'Th 8', 'Th 9', 'Th 10', 'Th 11', 'Th 12']
@@ -137,8 +137,8 @@ export function useTipsData({ transactions, chartStartDate, chartEndDate, chartR
         const percentages = [0.18, 0.23, 0.20, 0.25, 0.14];
         return percentages.map((pct, index) => ({
           label: index === percentages.length - 1
-            ? (currentLanguage === 'vi' ? 'Hôm nay' : 'Today')
-            : `${currentLanguage === 'vi' ? 'Tuần' : 'Week'} ${index + 1}`,
+            ? (t('components.tips.hooks.useTipsData.text_1_79adeb'))
+            : `${t('components.tips.hooks.useTipsData.text_2_b00f34')} ${index + 1}`,
           value: total * pct
         }));
       } else {

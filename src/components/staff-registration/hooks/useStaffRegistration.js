@@ -218,9 +218,7 @@ export default function useStaffRegistration({ inviteData }) {
         setLinkedProfile(null)
         setNexoraStatus('error')
         setSearchError(
-          currentLanguage === 'vi'
-            ? 'Không tìm thấy NEXORA Staff ID này.'
-            : 'NEXORA Staff ID not found.'
+          t('components.staff_registration.hooks.useStaffRegistration.text_1_57a340')
         )
       }
     }, 600)
@@ -291,22 +289,20 @@ export default function useStaffRegistration({ inviteData }) {
     if (e) e.preventDefault()
     const errors = {}
     if (!regEmail.trim()) {
-      errors.email = currentLanguage === 'vi' ? 'Email không được để trống' : 'Email is required'
+      errors.email = t('components.staff_registration.hooks.useStaffRegistration.text_2_3d7f02')
     } else if (!/\S+@\S+\.\S+/.test(regEmail)) {
-      errors.email = currentLanguage === 'vi' ? 'Email không hợp lệ' : 'Email is invalid'
+      errors.email = t('components.staff_registration.hooks.useStaffRegistration.text_3_c8694b')
     }
     if (regEmail !== regConfirmEmail) {
-      errors.confirmEmail = currentLanguage === 'vi' ? 'Email nhập lại không khớp' : 'Emails do not match'
+      errors.confirmEmail = t('components.staff_registration.hooks.useStaffRegistration.text_4_ff16be')
     }
     if (!regPassword) {
-      errors.password = currentLanguage === 'vi' ? 'Mật khẩu không được để trống' : 'Password is required'
+      errors.password = t('components.staff_registration.hooks.useStaffRegistration.text_5_85dbe1')
     } else if (regPassword.length < 6) {
-      errors.password = currentLanguage === 'vi' ? 'Mật khẩu phải từ 6 ký tự' : 'Password must be at least 6 characters'
+      errors.password = t('components.staff_registration.hooks.useStaffRegistration.text_6_7bce44')
     }
     if (!termsAccepted) {
-      errors.terms = currentLanguage === 'vi'
-        ? 'Bạn phải đồng ý với Điều khoản & Điều kiện để tiếp tục.'
-        : 'You must agree to the Terms & Conditions to proceed.'
+      errors.terms = t('components.staff_registration.hooks.useStaffRegistration.text_7_ab2ab8')
     }
 
     if (Object.keys(errors).length > 0) {
@@ -323,7 +319,7 @@ export default function useStaffRegistration({ inviteData }) {
     if (otpCode.trim() === '1234') {
       setStep(2)
     } else {
-      setOtpError(currentLanguage === 'vi' ? 'Mã xác thực không hợp lệ. Gợi ý: Hãy nhập 1234.' : 'Invalid code. Tip: Enter 1234.')
+      setOtpError(t('components.staff_registration.hooks.useStaffRegistration.text_8_0ce6ed'))
     }
   }
 
@@ -378,7 +374,7 @@ export default function useStaffRegistration({ inviteData }) {
   const savePayoutAccount = (e) => {
     if (e) e.preventDefault()
     if (!editValue.trim()) {
-      setModalError(currentLanguage === 'vi' ? 'Trường này là bắt buộc.' : 'This field is required.')
+      setModalError(t('components.staff_registration.hooks.useStaffRegistration.text_9_657148'))
       return
     }
     setPayouts(prev => ({
@@ -483,11 +479,11 @@ export default function useStaffRegistration({ inviteData }) {
         id: `noti-join-${finalStaffMember.id}-${Date.now()}`,
         staffId: finalStaffMember.id,
         type: 'feedback_alert',
-        title: currentLanguage === 'vi' ? 'Yêu cầu gia nhập mới' : 'New Join Request',
+        title: t('components.staff_registration.hooks.useStaffRegistration.text_10_40cf1e'),
         message: currentLanguage === 'vi'
           ? `Thợ ${finalStaffMember.fullName} (${finalStaffMember.position}) đã gửi yêu cầu liên kết với tiệm của bạn.`
           : `Technician ${finalStaffMember.fullName} (${finalStaffMember.position}) requested to link with your salon.`,
-        time: currentLanguage === 'vi' ? 'Vừa xong' : 'Just now',
+        time: t('components.staff_registration.hooks.useStaffRegistration.text_11_fc2c2e'),
         read: false,
         linkTab: 'staff'
       }
@@ -508,11 +504,11 @@ export default function useStaffRegistration({ inviteData }) {
     const passwordQuery = linkPassword
 
     if (!emailQuery) {
-      setLinkError(currentLanguage === 'vi' ? 'Email không được để trống.' : 'Email is required.')
+      setLinkError(t('components.staff_registration.hooks.useStaffRegistration.text_12_778990'))
       return
     }
     if (!passwordQuery) {
-      setLinkError(currentLanguage === 'vi' ? 'Mật khẩu không được để trống.' : 'Password is required.')
+      setLinkError(t('components.staff_registration.hooks.useStaffRegistration.text_13_87a059'))
       return
     }
 
@@ -524,7 +520,7 @@ export default function useStaffRegistration({ inviteData }) {
     if (foundEntry) {
       const [staffIdKey, profile] = foundEntry
       if (passwordQuery.length < 6) {
-        setLinkError(currentLanguage === 'vi' ? 'Mật khẩu phải từ 6 ký tự.' : 'Password must be at least 6 characters.')
+        setLinkError(t('components.staff_registration.hooks.useStaffRegistration.text_14_ea6cac'))
         return
       }
       setSearchId(staffIdKey)
@@ -543,7 +539,7 @@ export default function useStaffRegistration({ inviteData }) {
     const matchedAcc = accs.find(acc => acc.email === emailQuery)
     if (matchedAcc) {
       if (matchedAcc.password !== passwordQuery) {
-        setLinkError(currentLanguage === 'vi' ? 'Mật khẩu không chính xác.' : 'Incorrect password.')
+      setLinkError(t('staff_registration.link.incorrect_password'))
         return
       }
 
@@ -590,9 +586,7 @@ export default function useStaffRegistration({ inviteData }) {
     }
 
     setLinkError(
-      currentLanguage === 'vi'
-        ? 'Tài khoản không tồn tại hoặc mật khẩu sai.'
-        : 'Account does not exist or incorrect password.'
+      t('components.staff_registration.hooks.useStaffRegistration.text_15_872434')
     )
   }
 
@@ -605,9 +599,7 @@ export default function useStaffRegistration({ inviteData }) {
     setLinkError('')
     setJoinPath(null)
     showToast(
-      currentLanguage === 'vi'
-        ? 'Đã hủy bỏ yêu cầu liên kết.'
-        : 'Link request cancelled.'
+      t('components.staff_registration.hooks.useStaffRegistration.text_16_e14743')
     )
   }
 
@@ -701,11 +693,11 @@ export default function useStaffRegistration({ inviteData }) {
         id: `noti-join-${finalStaffMember.id}-${Date.now()}`,
         staffId: finalStaffMember.id,
         type: 'feedback_alert',
-        title: currentLanguage === 'vi' ? 'Yêu cầu gia nhập mới' : 'New Join Request',
+        title: t('components.staff_registration.hooks.useStaffRegistration.text_10_40cf1e'),
         message: currentLanguage === 'vi'
           ? `Thợ ${finalStaffMember.fullName} (${finalStaffMember.position}) đã gửi yêu cầu liên kết với tiệm của bạn.`
           : `Technician ${finalStaffMember.fullName} (${finalStaffMember.position}) requested to link with your salon.`,
-        time: currentLanguage === 'vi' ? 'Vừa xong' : 'Just now',
+        time: t('components.staff_registration.hooks.useStaffRegistration.text_11_fc2c2e'),
         read: false,
         linkTab: 'staff'
       }

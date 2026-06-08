@@ -115,9 +115,9 @@ export default function DevicesView({
       {/* View Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-extrabold text-nexoraText">{t('dashboard.menu.qr_nfc') || 'QR / NFC Devices'}</h2>
+          <h2 className="text-xl font-extrabold text-nexoraText">{t('dashboard.menu.qr_nfc')}</h2>
           <p className="mt-1 text-xs text-nexoraMuted">
-            {t('dashboard.devices.subtitle') || 'Manage physical salon stands, tabletop codes, and smart taps.'}
+            {t('dashboard.devices.subtitle')}
           </p>
         </div>
 
@@ -129,7 +129,7 @@ export default function DevicesView({
             className="inline-flex h-11 min-w-[44px] items-center justify-center gap-2 rounded-flox-buttons border border-nexoraBorder bg-white dark:bg-luxuryCoal px-4 text-xs font-bold text-nexoraMuted hover:bg-nexoraSurfaceMuted transition-all"
           >
             <FileSpreadsheet className="h-4 w-4" />
-            <span>{t('common.export') || 'Export'}</span>
+            <span>{t('common.export')}</span>
           </button>
           <button
             type="button"
@@ -137,7 +137,7 @@ export default function DevicesView({
             className="inline-flex h-11 min-w-[44px] items-center justify-center gap-2 rounded-flox-buttons bg-nexoraBrand dark:bg-luxuryGold hover:bg-nexoraBrandDark dark:hover:bg-luxuryGoldLight text-white dark:text-luxuryBlack px-4 text-xs font-bold transition-all"
           >
             <Plus className="h-4 w-4" />
-            <span>{t('dashboard.devices.add_btn') || 'Add New Device'}</span>
+            <span>{t('dashboard.devices.add_btn')}</span>
           </button>
         </div>
       </div>
@@ -148,7 +148,7 @@ export default function DevicesView({
         <Panel className="p-4 flex items-center justify-between border-l-4 border-l-nexoraBrand relative overflow-hidden">
           <div className="space-y-1">
             <p className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
-              {t('dashboard.devices.kpi.qr_devices') || 'QR Devices'}
+              {t('dashboard.devices.kpi.qr_devices')}
             </p>
             <p className="text-2xl font-black text-nexoraText font-mono tracking-tight">{qrDevicesCount}</p>
           </div>
@@ -161,7 +161,7 @@ export default function DevicesView({
         <Panel className="p-4 flex items-center justify-between border-l-4 border-l-luxuryGold relative overflow-hidden">
           <div className="space-y-1">
             <p className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
-              {t('dashboard.devices.kpi.nfc_devices') || 'NFC Devices'}
+              {t('dashboard.devices.kpi.nfc_devices')}
             </p>
             <p className="text-2xl font-black text-nexoraText font-mono tracking-tight">{nfcDevicesCount}</p>
           </div>
@@ -174,7 +174,7 @@ export default function DevicesView({
         <Panel className="p-4 flex items-center justify-between border-l-4 border-l-emerald-500 relative overflow-hidden">
           <div className="space-y-1">
             <p className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
-              {t('dashboard.devices.kpi.active_nfc') || 'Active NFC'}
+              {t('dashboard.devices.kpi.active_nfc')}
             </p>
             <p className="text-2xl font-black text-nexoraText font-mono tracking-tight">{activeNfcCount}</p>
           </div>
@@ -187,7 +187,7 @@ export default function DevicesView({
         <Panel className="p-4 flex items-center justify-between border-l-4 border-l-nexoraDanger relative overflow-hidden">
           <div className="space-y-1">
             <p className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
-              {t('dashboard.devices.kpi.device_issues') || 'Device Issues'}
+              {t('dashboard.devices.kpi.device_issues')}
             </p>
             <p className="text-2xl font-black text-nexoraText font-mono tracking-tight">{deviceIssuesCount}</p>
           </div>
@@ -232,11 +232,11 @@ export default function DevicesView({
                     </span>
                   </h3>
                   <p className="text-[11px] text-nexoraSubtle mt-1.5">
-                    {t('dashboard.devices.location') || 'Location'}: <span className="font-bold text-nexoraText">{device.location}</span>
+                    {t('dashboard.devices.location')}: <span className="font-bold text-nexoraText">{device.location}</span>
                   </p>
                 </div>
                 <IconButton
-                  label={t('common.delete') || 'Delete'}
+                  label={t('common.delete')}
                   onClick={() => setDeleteConfirmId(device.id)}
                   className="text-nexoraDanger hover:opacity-85 hover:bg-nexoraDanger/10 h-9 w-9 p-1"
                 >
@@ -265,7 +265,7 @@ export default function DevicesView({
                     />
                   </button>
                   <span className={`text-[10px] font-extrabold uppercase tracking-wider ${isActive ? 'text-nexoraSuccess' : 'text-nexoraSubtle'}`}>
-                    {isActive ? t('common.active') || 'Active' : t('common.inactive') || 'Inactive'}
+                    {isActive ? t('common.active') : t('common.inactive')}
                   </span>
                 </div>
               </div>
@@ -273,10 +273,10 @@ export default function DevicesView({
               {/* Card Bottom: Scans & Last Scan Info */}
               <div className="flex items-center justify-between gap-4 mt-3 pt-3 border-t border-nexoraRule text-[11px] text-nexoraMuted">
                 <div>
-                  {t('dashboard.devices.scans') || 'Scans'}: <span className="font-black text-nexoraText">{device.scans || 0}</span>
+                  {t('dashboard.devices.scans')}: <span className="font-black text-nexoraText">{device.scans || 0}</span>
                 </div>
                 <div>
-                  {t('dashboard.devices.last_scan') || 'Last Scan'}: <span className="font-black text-nexoraText">{device.lastScan || 'N/A'}</span>
+                  {t('dashboard.devices.last_scan')}: <span className="font-black text-nexoraText">{device.lastScan || 'N/A'}</span>
                 </div>
               </div>
             </Panel>
@@ -293,7 +293,7 @@ export default function DevicesView({
           >
             <div className="flex items-center justify-between border-b border-nexoraRule pb-3">
               <h3 className="text-base font-extrabold text-nexoraText">
-                {t('dashboard.devices.add_modal_title') || 'Register QR / NFC Hardware'}
+                {t('dashboard.devices.add_modal_title')}
               </h3>
               <button
                 type="button"
@@ -318,7 +318,7 @@ export default function DevicesView({
               {/* Device ID Input */}
               <div className="space-y-1.5">
                 <label className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
-                  {t('dashboard.devices.id_label') || 'Device ID / Serial (Required)'}
+                  {t('dashboard.devices.id_label')}
                 </label>
                 <input
                   type="text"
@@ -332,7 +332,7 @@ export default function DevicesView({
               {/* Device Type Select */}
               <div className="space-y-1.5">
                 <label className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
-                  {t('dashboard.devices.type_label') || 'Device Hardware Type'}
+                  {t('dashboard.devices.type_label')}
                 </label>
                 <select
                   value={newType}
@@ -348,7 +348,7 @@ export default function DevicesView({
               {/* Location Input */}
               <div className="space-y-1.5">
                 <label className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
-                  {t('dashboard.devices.location_label') || 'Location Placement (Required)'}
+                  {t('dashboard.devices.location_label')}
                 </label>
                 <input
                   type="text"
@@ -370,13 +370,13 @@ export default function DevicesView({
                 }}
                 className="rounded-lg border border-nexoraBorder px-4 py-2 text-xs font-bold text-nexoraMuted hover:bg-nexoraSurfaceMuted transition min-h-[44px]"
               >
-                {t('common.cancel') || 'Cancel'}
+                {t('common.cancel')}
               </button>
               <button
                 type="submit"
                 className="rounded-lg bg-nexoraBrand dark:bg-luxuryGold text-white dark:text-luxuryBlack px-4 py-2 text-xs font-bold hover:opacity-90 transition min-h-[44px]"
               >
-                {t('common.confirm') || 'Confirm'}
+                {t('common.confirm')}
               </button>
             </div>
           </form>
@@ -388,17 +388,17 @@ export default function DevicesView({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl animate-scaleUp">
             <h3 className="text-base font-extrabold text-nexoraText">
-              {t('dashboard.touchpoint_stats.delete_confirm_title') || 'Confirm Delete'}
+              {t('dashboard.touchpoint_stats.delete_confirm_title')}
             </h3>
             <p className="mt-2.5 text-xs text-nexoraMuted leading-normal">
-              {t('dashboard.devices.delete_confirm') || 'Are you sure you want to unregister this device? This will unlink it from active scans.'}
+              {t('dashboard.devices.delete_confirm')}
             </p>
             <div className="mt-5 flex justify-end gap-2 border-t border-nexoraRule pt-3">
               <button
                 onClick={() => setDeleteConfirmId(null)}
                 className="rounded-lg border border-nexoraBorder px-4 py-2 text-xs font-bold text-nexoraMuted hover:bg-nexoraSurfaceMuted transition min-h-[44px]"
               >
-                {t('common.cancel') || 'Cancel'}
+                {t('common.cancel')}
               </button>
               <button
                 onClick={() => {
@@ -409,7 +409,7 @@ export default function DevicesView({
                 }}
                 className="rounded-lg bg-nexoraDanger px-4 py-2 text-xs font-bold text-white hover:bg-nexoraDanger/90 transition min-h-[44px]"
               >
-                {t('common.delete') || 'Delete'}
+                {t('common.delete')}
               </button>
             </div>
           </div>
@@ -421,7 +421,7 @@ export default function DevicesView({
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-xl bg-nexoraSidebar text-white px-5 py-3 shadow-premium animate-slideIn">
           <Check className="h-4 w-4 text-nexoraSuccess" />
           <span className="text-xs font-bold">
-            {t('dashboard.devices.export_success') || 'Device directory successfully exported to spreadsheet!'}
+            {t('dashboard.devices.export_success')}
           </span>
         </div>
       )}

@@ -4,6 +4,7 @@ import useSettingsForm from './settings/hooks/useSettingsForm'
 import ProfileTab from './settings/tabs/ProfileTab'
 import KybTab from './settings/tabs/KybTab'
 import { downloadQrCode } from '../utils/qrUtils'
+import { useTranslation } from '../contexts/LanguageContext'
 
 export default function SettingsView({
   setupData,
@@ -15,6 +16,7 @@ export default function SettingsView({
   onKybSuccess,
   verificationStatus = hasKyb ? 'kyb_approved' : 'basic'
 }) {
+  const { t } = useTranslation()
   const form = useSettingsForm({
     setupData,
     hasKyb,
@@ -36,7 +38,7 @@ export default function SettingsView({
   const handleSaveQr = async (qrUrl) => {
     try {
       await downloadQrCode(qrUrl, `referral-qr-${selectedLeg}.png`)
-      form.showToast(form.currentLanguage === 'vi' ? 'Đã tải xuống mã QR!' : 'QR code downloaded!')
+      form.showToast(t('components.SettingsView.text_extra_1_0b8a5e'))
     } catch {
       window.open(qrUrl, '_blank')
     }
@@ -62,12 +64,10 @@ export default function SettingsView({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-nexoraRule pb-4">
         <div>
           <h2 className="text-xl font-extrabold text-nexoraText">
-            {form.currentLanguage === 'vi' ? 'Cấu Hinh Cài Đặt' : 'Settings Configuration'}
+            {t('components.SettingsView.text_extra_2_43fa87')}
           </h2>
           <p className="mt-1 text-xs text-nexoraMuted">
-            {form.currentLanguage === 'vi'
-              ? 'Quản lý thông tin tài khoản chủ sở hữu, địa chỉ cửa hàng và cấu hình xác thực pháp lý (KYB).'
-              : 'Manage your owner credentials, store configurations, receiving wallets, and corporate compliance details (KYB).'}
+            {t('components.SettingsView.text_extra_3_76721a')}
           </p>
         </div>
       </div>
@@ -83,7 +83,7 @@ export default function SettingsView({
               : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
           }`}
         >
-          {form.currentLanguage === 'vi' ? 'Tài khoản' : 'Account'}
+          {t('components.SettingsView.text_extra_4_51cfc8')}
         </button>
         <button
           type="button"
@@ -94,7 +94,7 @@ export default function SettingsView({
               : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
           }`}
         >
-          {form.currentLanguage === 'vi' ? 'Xác thực KYB' : 'KYB'}
+          {t('components.SettingsView.text_extra_5_9b19db')}
         </button>
         <button
           type="button"
@@ -105,7 +105,7 @@ export default function SettingsView({
               : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
           }`}
         >
-          {form.currentLanguage === 'vi' ? 'Affiliate Link' : 'Affiliate Link'}
+          {t('components.SettingsView.text_extra_6_1f8239')}
         </button>
       </div>
 
@@ -189,7 +189,7 @@ export default function SettingsView({
             <div className="flex justify-between items-center border-b border-nexoraRule pb-3">
               <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
                 <QrCode className="h-4 w-4 text-nexoraBrand" />
-                {form.currentLanguage === 'vi' ? 'Liên kết Affiliate' : 'Affiliate Link'}
+                {t('components.SettingsView.text_extra_7_5cd6fa')}
               </h4>
             </div>
             
@@ -272,18 +272,16 @@ export default function SettingsView({
 
             {/* Title */}
             <h3 className="text-lg font-black text-slate-800 uppercase tracking-wider mt-2">
-              {form.currentLanguage === 'vi' ? 'Đăng ký Thành viên Mới' : 'Register a New Member'}
+              {t('components.SettingsView.text_extra_8_b4ddb3')}
             </h3>
             <p className="text-[11px] text-slate-400 leading-normal">
-              {form.currentLanguage === 'vi' 
-                ? 'Chia sẻ liên kết này để mời thành viên mới gia nhập mạng lưới của bạn.' 
-                : 'Share this link to invite a new member to join your network.'}
+              {t('components.SettingsView.text_extra_9_579070')}
             </p>
 
             {/* Select Placement Leg */}
             <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
               <span className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2 block">
-                {form.currentLanguage === 'vi' ? 'Chọn Nhánh Xếp Lập' : 'Select Placement Leg'}
+                {t('components.SettingsView.text_extra_10_e5ed90')}
               </span>
               <div className="flex justify-center gap-6 mt-2">
                 <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
@@ -305,7 +303,7 @@ export default function SettingsView({
                     )}
                   </span>
                   <span className={selectedLeg === 'left' ? 'text-nexoraWarning font-black' : 'text-slate-500'}>
-                    {form.currentLanguage === 'vi' ? 'Nhánh Trái' : 'Left Leg'}
+                    {t('components.SettingsView.text_extra_11_1d5298')}
                   </span>
                 </label>
 
@@ -328,7 +326,7 @@ export default function SettingsView({
                     )}
                   </span>
                   <span className={selectedLeg === 'right' ? 'text-nexoraWarning font-black' : 'text-slate-500'}>
-                    {form.currentLanguage === 'vi' ? 'Nhánh Phải' : 'Right Leg'}
+                    {t('components.SettingsView.text_extra_12_09b483')}
                   </span>
                 </label>
               </div>

@@ -59,7 +59,7 @@ export default function StepPayments({
     <div className="space-y-5 py-2 animate-fadeIn">
       <div className="border-b border-nexoraRule pb-2 flex items-center justify-between">
         <h3 className="text-sm font-extrabold text-nexoraText uppercase tracking-wide">
-          {currentLanguage === 'vi' ? '3. Cấu hình Ví nhận tiền tip' : '3. Payout Configurations'}
+          {t('components.staff_registration.steps.StepPayments.text_1_b81314')}
         </h3>
 
         {isDemoToolsEnabled && (
@@ -74,9 +74,7 @@ export default function StepPayments({
       </div>
 
       <p className="text-xs text-nexoraMuted leading-relaxed font-medium">
-        {currentLanguage === 'vi'
-          ? 'Bật các kênh thanh toán bạn muốn nhận tiền. Khi khách hàng quét mã QR của bạn, họ sẽ thanh toán trực tiếp vào các tài khoản này.'
-          : 'Toggle the payment channels you want to receive money. When customers scan your QR, they pay you directly to these accounts.'}
+        {t('components.staff_registration.steps.StepPayments.text_2_4b70b7')}
       </p>
 
       <div className="space-y-2 max-h-80 overflow-y-auto pr-1 divide-y divide-nexoraRule">
@@ -114,7 +112,7 @@ export default function StepPayments({
                       </div>
                     ) : (
                       <div className="text-[10px] text-nexoraSubtle italic font-medium mt-0.5">
-                        {currentLanguage === 'vi' ? 'Chưa cấu hình' : 'Not Configured'}
+                        {t('components.staff_registration.steps.StepPayments.text_3_6aec72')}
                       </div>
                     )}
                   </div>
@@ -129,7 +127,7 @@ export default function StepPayments({
                 className="flex items-center gap-1 text-[10px] font-bold text-nexoraBrand hover:text-nexoraBrandDark transition shrink-0 ml-2"
               >
                 <Edit2 className="h-3 w-3" />
-                <span>{currentLanguage === 'vi' ? 'Tài khoản' : 'Payout account'}</span>
+                <span>{t('components.staff_registration.steps.StepPayments.text_4_2e8d41')}</span>
               </button>
             </div>
           )
@@ -155,14 +153,14 @@ export default function StepPayments({
           onClick={() => setStep(2)}
           className="h-10 px-4 border border-nexoraBorder text-nexoraMuted font-bold text-xs uppercase tracking-wider rounded-lg hover:bg-nexoraSurfaceMuted transition"
         >
-          {t('common.back') || 'Back'}
+          {t('common.back')}
         </button>
         <button
           type="button"
           onClick={handleActivateProfile}
           className="flex-grow h-10 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-bold text-xs uppercase tracking-wider rounded-lg transition"
         >
-          {currentLanguage === 'vi' ? 'Lưu & Kích hoạt' : 'Save & Activate'}
+          {t('components.staff_registration.steps.StepPayments.text_5_73950e')}
         </button>
       </div>
     </div>

@@ -211,8 +211,8 @@ export default function StaffDetailView({
           let label = ''
           if (range === '30 Days') {
             label = i === pointsCount - 1
-              ? (currentLanguage === 'vi' ? 'Hôm nay' : 'Today')
-              : `${currentLanguage === 'vi' ? 'Tuần' : 'Week'} ${i + 1}`
+              ? (t('components.StaffDetailView.text_1_79adeb'))
+              : `${t('components.StaffDetailView.text_2_b00f34')} ${i + 1}`
           } else {
             const monthNames = currentLanguage === 'vi'
               ? ['Th 1', 'Th 2', 'Th 3', 'Th 4', 'Th 5', 'Th 6', 'Th 7', 'Th 8', 'Th 9', 'Th 10', 'Th 11', 'Th 12']
@@ -237,8 +237,8 @@ export default function StaffDetailView({
         const percentages = [0.18, 0.23, 0.20, 0.25, 0.14]
         return percentages.map((pct, index) => ({
           label: index === percentages.length - 1
-            ? (currentLanguage === 'vi' ? 'Hôm nay' : 'Today')
-            : `${currentLanguage === 'vi' ? 'Tuần' : 'Week'} ${index + 1}`,
+            ? (t('components.StaffDetailView.text_1_79adeb'))
+            : `${t('components.StaffDetailView.text_2_b00f34')} ${index + 1}`,
           value: total * pct
         }))
       } else {
@@ -391,7 +391,7 @@ export default function StaffDetailView({
                         : 'bg-slate-100 text-slate-600'
                     }`}
                   >
-                    {staffMember.showInTipsFlow !== false ? (t('common.show_in_tips') || 'Hiện trong tips') : (t('common.hide_in_tips') || 'Ẩn trong tips')}
+                    {staffMember.showInTipsFlow !== false ? (t('common.show_in_tips')) : (t('common.hide_in_tips'))}
                   </span>
                 </div>
               </div>
@@ -501,7 +501,7 @@ export default function StaffDetailView({
         <div className="nexora-card p-5 shadow-sm">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
             <h2 className="text-sm font-extrabold text-nexoraText uppercase tracking-wider">
-              {range === '7 Days' ? t('staff_detail.weekly_trend') : (currentLanguage === 'vi' ? 'Hiệu Suất Tiền Típ' : 'Tips Performance Trend')}
+              {range === '7 Days' ? t('staff_detail.weekly_trend') : (t('components.StaffDetailView.text_3_4de396'))}
             </h2>
             <div className="flex flex-wrap items-center gap-2 justify-end">
               {['7 Days', '30 Days', '90 Days', '180 Days', '365 Days', 'Custom'].map((item) => {
@@ -525,7 +525,7 @@ export default function StaffDetailView({
                     }`}
                   >
                     {item === 'Custom' 
-                      ? (currentLanguage === 'vi' ? 'Tự chọn' : 'Custom')
+                      ? (t('components.StaffDetailView.text_4_1f32e6'))
                       : rangeLabel(item)}
                   </button>
                 )
@@ -538,7 +538,7 @@ export default function StaffDetailView({
             <div className="flex flex-wrap items-center justify-end gap-3 mb-4 animate-fadeIn border-t border-dashed border-nexoraRule pt-3">
               <div className="flex items-center gap-1.5">
                 <label className="text-[10px] font-bold uppercase text-nexoraMuted tracking-wider">
-                  {currentLanguage === 'vi' ? 'Từ ngày' : 'From'}
+                  {t('components.StaffDetailView.text_5_b4e771')}
                 </label>
                 <input
                   type="date"
@@ -550,7 +550,7 @@ export default function StaffDetailView({
               </div>
               <div className="flex items-center gap-1.5">
                 <label className="text-[10px] font-bold uppercase text-nexoraMuted tracking-wider">
-                  {currentLanguage === 'vi' ? 'Đến ngày' : 'To'}
+                  {t('components.StaffDetailView.text_6_9725ef')}
                 </label>
                 <input
                   type="date"

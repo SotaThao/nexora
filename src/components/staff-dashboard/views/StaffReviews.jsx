@@ -40,7 +40,7 @@ export default function StaffReviews() {
       {/* Summary Panel */}
       <section className={panel}>
         <h3 className="text-base font-extrabold text-nexoraText mb-4">
-          {currentLanguage === 'vi' ? 'Đánh Giá & Xếp Hạng' : 'Reviews & Ratings'}
+          {t('components.staff_dashboard.views.StaffReviews.text_1_01d927')}
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
@@ -94,11 +94,11 @@ export default function StaffReviews() {
       <section className={panel}>
         <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
           <h4 className="text-sm font-black uppercase text-slate-700 tracking-wider">
-            {currentLanguage === 'vi' ? 'Ý Kiến Khách Hàng' : 'Customer Reviews'}
+            {t('components.staff_dashboard.views.StaffReviews.text_2_659830')}
           </h4>
           <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-md">
             <Lock className="h-3 w-3 shrink-0" />
-            <span>{currentLanguage === 'vi' ? 'BẢO MẬT DANH TÍNH' : 'IDENTITY SECURED'}</span>
+            <span>{t('components.staff_dashboard.views.StaffReviews.text_3_7fda9d')}</span>
           </div>
         </div>
 
@@ -106,7 +106,7 @@ export default function StaffReviews() {
           <div className="text-center py-10 text-slate-400 space-y-2">
             <MessageSquare className="h-10 w-10 mx-auto text-slate-200" />
             <p className="text-xs font-semibold">
-              {currentLanguage === 'vi' ? 'Bạn chưa có đánh giá nào.' : 'No reviews received yet.'}
+              {t('components.staff_dashboard.views.StaffReviews.text_4_e0f148')}
             </p>
           </div>
         ) : (
@@ -116,7 +116,7 @@ export default function StaffReviews() {
               const isYelp = review.category?.toLowerCase().includes('yelp')
               
               // Privacy-focused: determine name mask label
-              const maskedName = currentLanguage === 'vi' ? 'Khách hàng ẩn danh' : 'Anonymous Customer'
+              const maskedName = t('components.staff_dashboard.views.StaffReviews.text_5_aa2828')
 
               return (
                 <div key={review.id} className="py-4 first:pt-0 last:pb-0 space-y-2">
@@ -151,7 +151,7 @@ export default function StaffReviews() {
                       isYelp ? 'bg-rose-50 text-rose-600 border border-rose-100' :
                       'bg-slate-100 text-slate-600 border border-slate-200'
                     }`}>
-                      {isGoogle ? 'Google' : isYelp ? 'Yelp' : (currentLanguage === 'vi' ? 'Nội bộ' : 'Internal')}
+                      {isGoogle ? 'Google' : isYelp ? 'Yelp' : (t('components.staff_dashboard.views.StaffReviews.text_6_48490b'))}
                     </span>
                   </div>
 

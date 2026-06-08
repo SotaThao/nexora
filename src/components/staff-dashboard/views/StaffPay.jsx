@@ -131,7 +131,7 @@ export default function StaffPay() {
                         </div>
                       ) : (
                         <div className="text-[10px] text-slate-300 italic font-medium mt-0.5">
-                          {t('staff_dashboard.pay.not_set') || 'Not Configured'}
+                          {t('staff_dashboard.pay.not_set')}
                         </div>
                       )}
                     </div>
@@ -146,7 +146,7 @@ export default function StaffPay() {
                   className="flex items-center gap-1 text-[10px] font-bold text-amber-600 hover:text-amber-700 transition shrink-0 ml-2"
                 >
                   <Edit2 className="h-3 w-3" />
-                  <span>{currentLanguage === 'vi' ? 'Cấu hình' : 'Edit account'}</span>
+                  <span>{t('components.staff_dashboard.views.StaffPay.text_1_22ecd2')}</span>
                 </button>
               </div>
             )

@@ -125,7 +125,17 @@
       "fri": "Th 6",
       "sat": "Th 7",
       "sun": "CN"
-    }
+    },
+    "view_on_google": "Xem trên Google",
+    "view_on_yelp": "Xem trên Yelp",
+    "custom": "Tự chọn",
+    "step_number": "Bước {step}",
+    "resend_code_in_seconds": "Gửi lại mã sau {seconds}s",
+    "remove_photo": "Xóa ảnh",
+    "upload_photo": "Tải ảnh lên",
+    "driver_license": "Bằng lái xe",
+    "city": "Thành phố",
+    "phone_number_short": "SĐT"
   },
   "login": {
     "title": "NEXORA TOUCH",
@@ -238,7 +248,9 @@
       "staff_email_invalid": "Định dạng địa chỉ email không hợp lệ.",
       "staff_payment_required": "Yêu cầu: Phải liên kết ít nhất 1 ví nhận tiền (Venmo, Cash App, Zelle, hoặc VLINKPAY).",
       "store_payment_required": "Yêu cầu: Phải liên kết ít nhất 1 ví nhận tiền cho cửa hàng (Venmo, Cash App, Zelle, hoặc VLINKPAY).",
-      "tp_name_required": "Tên điểm chạm là bắt buộc"
+      "tp_name_required": "Tên điểm chạm là bắt buộc",
+      "field_required": "Vui lòng nhập trường này.",
+      "user_not_merchant": "Người dùng không phải là merchant."
     },
     "step_name_1": "Cửa hàng & Review",
     "step_name_2": "Nhân viên & QR",
@@ -396,7 +408,9 @@
       "assign_staff": "Gán nhân viên phục vụ:",
       "no_staff_assigned": "-- Không gán (Típ chung cho cửa hàng) --",
       "download_print_qr": "Tải Xuống QR In Ấn (PDF)",
-      "customer_view_test": "Thử Giao Diện Khách Quét ›"
+      "customer_view_test": "Thử Giao Diện Khách Quét ›",
+      "tp_name_placeholder": "Ví dụ: Ghế Manicure 05",
+      "device_id_label": "Serial thiết bị / Mã NFC"
     },
     "settings_panel": {
       "title": "Cấu Hình Hệ Thống Nexora",
@@ -424,7 +438,8 @@
       "btn_download": "Tải Mã QR",
       "btn_open_nfc": "Thử NFC Link",
       "btn_copy": "Sao chép đường dẫn",
-      "btn_download_config": "Tải File Cấu Hình"
+      "btn_download_config": "Tải File Cấu Hình",
+      "btn_copy_link": "Sao chép link"
     },
     "touchpoint_stats": {
       "scans": "Lượt quét",
@@ -691,7 +706,10 @@
     },
     "quick_tags_positive_label": "Chọn nhanh lời khen",
     "quick_tags_negative_label": "Góp ý nhanh vấn đề",
-    "scan_to_tip_review": "Quét để Típ & Đánh giá"
+    "scan_to_tip_review": "Quét để Típ & Đánh giá",
+    "tip_min_error": "Tiền típ tối thiểu là {amount}.",
+    "tip_max_error": "Tiền típ không được vượt quá {amount}.",
+    "tip_total_max_error": "Tổng tiền típ không được vượt quá {amount}."
   },
   "register": {
     "role_select_title": "Chọn loại tài khoản",
@@ -750,7 +768,8 @@
       "kyb_required": "Vui lòng điền đầy đủ thông tin KYB bắt buộc",
       "fullname_required": "Vui lòng nhập Họ và tên",
       "first_name_required": "Vui lòng nhập Tên",
-      "last_name_required": "Vui lòng nhập Họ"
+      "last_name_required": "Vui lòng nhập Họ",
+      "onboarding_failed": "Không thể hoàn tất thiết lập hồ sơ. Vui lòng thử lại."
     },
     "verify_your_email": "Xác Minh Email",
     "verification_email_sent": "Chúng tôi đã gửi email xác minh đến",
@@ -761,7 +780,61 @@
     "resend_verification_success": "Đã gửi lại email xác minh thành công!",
     "back_to_signup": "Quay lại Đăng ký",
     "first_name_label": "Tên *",
-    "last_name_label": "Họ *"
+    "last_name_label": "Họ *",
+    "consent": {
+      "prefix": "Bằng cách chọn vào",
+      "action": "Đăng ký",
+      "middle": "bạn xác nhận rằng bạn đã đọc và đồng ý với",
+      "terms": "Điều khoản dịch vụ",
+      "and": "và",
+      "privacy": "Chính sách bảo mật"
+    },
+    "payout": {
+      "configure_wallet": "CẤU HÌNH {wallet}",
+      "account_label": "{wallet} {field} của bạn *"
+    },
+    "legal": {
+      "privacy": {
+        "sections": [
+          {
+            "title": "1. Thu thập thông tin",
+            "body": "Chúng tôi thu thập họ tên, email, số điện thoại và thông tin thanh toán để vận hành luồng nhận típ."
+          },
+          {
+            "title": "2. Bảo mật dữ liệu",
+            "body": "Dữ liệu cá nhân và thông tin ví được bảo vệ và chỉ dùng cho định tuyến giao dịch."
+          },
+          {
+            "title": "3. Quyền của bạn",
+            "body": "Bạn có thể xem, cập nhật hoặc yêu cầu xóa thông tin tài khoản trong dashboard."
+          }
+        ]
+      },
+      "terms": {
+        "sections": [
+          {
+            "title": "1. Giới thiệu và đồng ý",
+            "body": "Khi sử dụng Nexora Touch, bạn đồng ý tuân thủ các điều khoản dịch vụ này."
+          },
+          {
+            "title": "2. Tài khoản cá nhân",
+            "body": "Bạn chịu trách nhiệm bảo mật thông tin đăng nhập và đảm bảo thông tin ví nhận tiền chính xác."
+          },
+          {
+            "title": "3. Tiền típ và thanh toán",
+            "body": "Tiền típ được chuyển đến phương thức nhận tiền đã cấu hình. Giao dịch hoàn tất là cuối cùng."
+          },
+          {
+            "title": "4. Quyền riêng tư",
+            "body": "Dữ liệu chỉ được dùng để vận hành luồng típ, hiển thị cho khách hàng và ghi nhận lịch sử giao dịch."
+          },
+          {
+            "title": "5. Cập nhật điều khoản",
+            "body": "Chúng tôi có thể cập nhật điều khoản và công bố thay đổi trong cổng thông tin."
+          }
+        ]
+      }
+    }
   },
   "staff_invite": {
     "total_linked": "Tổng thợ liên kết",
@@ -832,6 +905,655 @@
     "common_unauthorized": "Truy cập chưa được xác thực.",
     "common_forbidden": "Không có quyền truy cập.",
     "common_rate_limit_exceeded": "Yêu cầu quá nhanh. Vui lòng thử lại sau.",
-    "common_internal_server_error": "Đã xảy ra lỗi hệ thống bên trong."
+    "common_internal_server_error": "Đã xảy ra lỗi hệ thống bên trong.",
+    "generic": "Đã xảy ra lỗi",
+    "touchpoint_not_found": "Không tìm thấy trang",
+    "touchpoint_not_found_desc": "Không thể tải điểm chạm này."
+  },
+  "components": {
+    "customer_flow": {
+      "hooks": {
+        "useCustomerFlow": {
+          "text_1_98e6d0": "Thêm tiền Tip cho nhân viên"
+        }
+      },
+      "steps": {
+        "TipAmount": {
+          "text_1_028f69": "Tổng tiền Tip",
+          "provider_count": "Cho {count} nhân viên"
+        },
+        "WalletDetails": {
+          "text_1_237718": "Số tiền chuyển khoản",
+          "text_2_272616": "Quét mã để chuyển khoản",
+          "text_3_c72d55": "Tên người nhận",
+          "text_4_129233": "Email / SĐT",
+          "text_5_8df510": "Tài khoản Venmo",
+          "text_6_a185f6": "Thẻ Cash App",
+          "text_7_fa1eba": "Tài khoản PayPal",
+          "text_8_a91a18": "Thông tin ngân hàng",
+          "text_9_89e34f": "Tài khoản nhận",
+          "text_10_2d3bbb": "Nội dung (Bắt buộc)",
+          "text_11_d6bfa5": "Tôi Đã Gửi Tiền Tip",
+          "text_12_039e89": "Quay Lại"
+        }
+      }
+    },
+    "dashboard": {
+      "hooks": {
+        "useStaffManagement": {
+          "text_1_e5bc21": "Đã hủy liên kết nhân viên thành công.",
+          "text_2_6d6e69": "Đã từ chối yêu cầu hủy liên kết.",
+          "text_3_28dbc0": "Bạn có chắc chắn muốn xóa nhân viên này khỏi Nexora Touch?"
+        }
+      },
+      "layout": {
+        "DashboardSidebar": {
+          "text_1_43861e": "Tài khoản của tôi"
+        }
+      },
+      "modals": {
+        "InviteShareModal": {
+          "text_1_112041": "Chia sẻ liên kết & QR mời thợ",
+          "text_2_022a98": "QUÉT QR ĐỂ GIA NHẬP",
+          "text_3_953f1c": "Click để phóng to",
+          "text_4_91c96b": "LIÊN KẾT GIA NHẬP",
+          "text_5_df86c2": "Đã sao chép liên kết gia nhập!",
+          "text_6_cd2bb1": "Sao chép",
+          "text_7_944077": "HOẶC GỬI TRỰC TIẾP",
+          "text_8_16a818": "Tên thợ",
+          "text_9_db3889": "Số điện thoại",
+          "text_10_c21f56": "Vai trò / Chức danh",
+          "text_11_28d637": "Gửi liên kết mời thợ",
+          "text_12_a8934d": "MÃ QR GIA NHẬP",
+          "text_13_8222f9": "Cho thợ quét mã này bằng camera điện thoại để tự đăng ký hoặc liên kết tài khoản vào tiệm."
+        },
+        "PayoutSetupModal": {
+          "text_1_2ee37e": "Chỉ định thông tin tài khoản nhận tiền",
+          "text_2_11cac2": "THÔNG TIN TÀI KHOẢN *",
+          "text_3_b860af": "MÃ QR (TÙY CHỌN)",
+          "text_4_e83c64": "Thợ chưa tải lên mã QR",
+          "text_5_1af66b": "Thông tin này được nhập bởi Kỹ thuật viên khi tham gia Salon. Salon Owner chỉ có thể xem.",
+          "text_6_0f06d4": "LƯU LẠI"
+        },
+        "StaffModal": {
+          "text_1_ef69eb": "Đã xác thực tài khoản! Tự động nhập thông tin thợ.",
+          "text_2_81aab8": "Duyệt yêu cầu tham gia",
+          "text_3_de8a3f": "NEXORA ID / VLINKPAY ID",
+          "text_4_ef9173": "Quét mã QR",
+          "text_5_a1184a": "Chia sẻ liên kết mời thợ",
+          "text_6_873f87": "Mời",
+          "text_7_050e37": "Đã xác thực tài khoản VLINKPAY",
+          "text_8_473b35": "Đã xác thực tài khoản NEXORA",
+          "text_9_8546c7": "Xem tất cả đánh giá",
+          "text_10_f7cbd0": "Xem tài khoản",
+          "text_11_e4b582": "Từ chối",
+          "text_12_d8d1f8": "Duyệt / Chấp nhận",
+          "remove_photo": "X?a ?nh",
+          "review_count": "{count} ??nh gi?"
+        },
+        "StaffQrScannerModal": {
+          "text_1_32f83e": "Quét Mã QR Nhận Diện",
+          "text_2_e8d012": "Quét mã NEXORA Personal ID để liên kết tài khoản",
+          "text_3_129b71": "Quét mã VLINKPAY ID để tự động điền thông tin tài khoản",
+          "text_4_7327eb": "Hướng camera về phía mã QR hoặc chọn giả lập quét thành công bên dưới.",
+          "text_5_3fd4ec": "Giả lập quét QR",
+          "text_6_a33385": "Giả lập Quét Lisa Tran",
+          "text_7_717e54": "HỦY BỎ"
+        },
+        "StaffReviewsDetailModal": {
+          "text_1_b8270a": "Đánh Giá & Uy Tín",
+          "text_2_b17951": "Bộ lọc nhanh",
+          "text_3_a2e245": "Tất cả",
+          "text_4_3e7c83": "Tất cả nguồn",
+          "text_5_48490b": "Nội bộ",
+          "text_6_29fb14": "Có bình luận",
+          "text_7_e40df3": "Không tìm thấy đánh giá phù hợp.",
+          "text_8_a6b00f": "(Chỉ đánh giá sao)",
+          "text_9_f7e671": "Đóng",
+          "feedback_details": "H? s? ??nh gi? c?a {name}",
+          "review_count": "{count} ??nh gi?"
+        },
+        "TransactionDetailModal": {
+          "text_1_84fbef": "MÃ QR NHẬN TÍP",
+          "text_2_6bde06": "Quét để chuyển khoản tiền típ cho nhân viên này",
+          "text_3_0accc6": "Đã sao chép liên kết nhận típ!",
+          "text_4_3d9fba": "Chia sẻ liên kết"
+        }
+      },
+      "overview": {
+        "Overview": {
+          "text_1_1f32e6": "Tự chọn"
+        },
+        "SetupGuideBanner": {
+          "text_1_3b1b52": "Bắt đầu sử dụng",
+          "text_2_b7f957": "Chào mừng đến với Nexora!",
+          "text_3_8c3924": "Tài khoản doanh nghiệp của bạn đã sẵn sàng. Hãy dành 2 phút để thiết lập thông tin cửa hàng, danh sách nhân viên và các điểm chạm QR để bắt đầu nhận đánh giá và tiền tip.",
+          "text_4_d47bae": "Hoàn tất cài đặt cửa hàng"
+        },
+        "TipsOverTimePanel": {
+          "text_1_1f32e6": "Tự chọn",
+          "text_2_c0e748": "Từ ngày:",
+          "text_3_b40843": "Đến ngày:"
+        }
+      },
+      "views": {
+        "ReportsView": {
+          "text_1_cf7e01": "Thành công",
+          "text_2_1f5bd0": "Đang chờ",
+          "text_3_7d0ef0": "Thất bại",
+          "text_4_8cd6d8": "Chi tiết",
+          "text_5_84fbef": "MÃ QR NHẬN TÍP",
+          "text_6_6bde06": "Quét để chuyển khoản tiền típ cho nhân viên này",
+          "text_7_0accc6": "Đã sao chép liên kết nhận típ!",
+          "text_8_3d9fba": "Chia sẻ liên kết"
+        },
+        "StaffView": {
+          "text_1_70a15f": "Đã sao chép liên kết để chia sẻ!",
+          "text_2_f28638": "Không tìm thấy hồ sơ nhân viên phù hợp.",
+          "text_3_dff6f5": "Vui lòng điền đầy đủ Tên và phương thức liên hệ.",
+          "text_4_953f1c": "Click để phóng to",
+          "text_5_1a8107": "LIÊN KẾT GIA NHẬP CHO THỢ (REFERRAL LINK)",
+          "text_6_c2e0ab": "Chia sẻ liên kết này hoặc cho thợ quét mã QR để tự đăng ký/liên kết tài khoản vào tiệm.",
+          "text_7_df86c2": "Đã sao chép liên kết gia nhập!",
+          "text_8_cd2bb1": "Sao chép",
+          "text_9_240e6a": "Chia sẻ",
+          "text_10_6dfac7": "Yêu cầu gia nhập chờ duyệt",
+          "text_11_51f715": "Khởi tạo trực tiếp",
+          "text_12_e4224c": "Chưa cấu hình",
+          "text_13_788824": "Xem & Duyệt",
+          "text_14_e4b582": "Từ chối",
+          "text_15_cc1367": "Sắp xếp:",
+          "text_16_a3f4dc": "Tên (A-Z)",
+          "text_17_2ac7e8": "Tên (Z-A)",
+          "text_18_46defc": "Ngày: Mới nhất",
+          "text_19_1fa4e0": "Ngày: Cũ nhất",
+          "text_20_ae10de": "Trạng thái hoạt động",
+          "text_21_6157df": "Nhấp vào chip để đổi trạng thái hoạt động",
+          "text_22_93016e": "Tips Flow",
+          "text_23_d7ecfa": "Nhấp vào chip để ẩn/hiển thị thợ trên QR tiệm",
+          "text_24_bd23e6": "Ngày liên kết: ",
+          "text_25_e7119e": "Không có ví",
+          "text_26_d9804e": "Chờ setup",
+          "text_27_55eabd": "Chờ chấp nhận",
+          "text_28_0f6793": "Chờ hủy liên kết",
+          "text_29_e668dd": "Chấp nhận",
+          "text_30_97c175": "Duyệt hủy",
+          "text_31_00cf39": "Từ chối",
+          "text_32_a8934d": "MÃ QR GIA NHẬP",
+          "text_33_8222f9": "Cho thợ quét mã này bằng camera điện thoại để tự đăng ký hoặc liên kết tài khoản vào tiệm."
+        }
+      }
+    },
+    "register": {
+      "hooks": {
+        "useRegisterForm": {
+          "text_1_b8ff23": "Mã OTP không chính xác. Thử lại với 1234.",
+          "text_2_657148": "Trường này là bắt buộc.",
+          "text_3_40cf1e": "Yêu cầu gia nhập mới",
+          "text_4_fc2c2e": "Vừa xong",
+          "text_5_5a51d8": "Chọn vai trò",
+          "text_6_ae4737": "Thông tin đăng ký",
+          "text_7_3d980e": "Kích hoạt OTP",
+          "text_8_19483c": "Hồ sơ cá nhân",
+          "text_9_42c376": "Cấu hình ví",
+          "text_10_e5ffa8": "Hoàn tất"
+        }
+      },
+      "modals": {
+        "PayoutEditModal": {
+          "text_1_0647ea": "email/SĐT",
+          "text_2_00aa8a": "chi tiết",
+          "text_3_e1251f": "Nhập email/SĐT Zelle...",
+          "text_4_9731fc": "Số tài khoản & Số Routing",
+          "text_5_6b6e57": "Nhập số điện thoại...",
+          "text_6_2ee37e": "Chỉ định thông tin tài khoản nhận tiền",
+          "text_7_2a8c1a": "MÃ QR (TÙY CHỌN)",
+          "text_8_868f04": "CHỤP HÌNH",
+          "text_9_44d455": "CHỌN FILE",
+          "text_10_7b89ac": "Vui lòng nhập đúng thông tin tài khoản nhận tiền. Tài khoản này sẽ được dùng để nhận tiền tip.",
+          "text_11_8714e2": "HỦY",
+          "text_12_0f06d4": "LƯU LẠI"
+        },
+        "TermsModal": {
+          "text_extra_1_519796": "Chính sách bảo mật",
+          "text_extra_2_e41b87": "Điều khoản dịch vụ",
+          "text_extra_3_f7e671": "Đóng",
+          "text_extra_4_aa0b10": "Tôi Đồng Ý"
+        }
+      },
+      "steps": {
+        "StepCredentials": {
+          "text_1_e92627": "Kích hoạt tài khoản (Nhập OTP)",
+          "text_2_cf458c": "Nhập mã OTP được gửi tới email của bạn để kích hoạt tài khoản.",
+          "text_3_b7be24": "Nhập mã OTP *",
+          "text_4_cb56d6": "Gửi lại mã xác thực",
+          "text_5_ab6602": "Xác minh & Kích hoạt",
+          "text_6_e38e1f": "Đang xử lý...",
+          "text_7_651a46": "Đăng ký"
+        },
+        "StepOtpVerify": {
+          "text_1_e92627": "Kích hoạt tài khoản (Nhập OTP)",
+          "text_2_cf458c": "Nhập mã OTP được gửi tới email của bạn để kích hoạt tài khoản.",
+          "text_3_b7be24": "Nhập mã OTP *",
+          "text_4_cb56d6": "Gửi lại mã xác thực",
+          "text_5_ab6602": "Xác minh & Kích hoạt"
+        },
+        "StepPayoutSetup": {
+          "text_1_efd01c": "Cấu hình ví nhận tiền",
+          "text_2_74ee7b": "Chọn và thiết lập các ví nhận tiền tip từ khách hàng.",
+          "text_3_0b5ade": "Tự động điền",
+          "text_4_6aec72": "Chưa cấu hình",
+          "text_5_8b3cb9": "Thiết lập",
+          "text_6_73950e": "Lưu & Kích hoạt"
+        },
+        "StepProfileSetup": {
+          "text_1_5d5625": "Cấu hình hồ sơ cá nhân",
+          "text_2_465000": "Thiết lập thông tin hiển thị của bạn trên màn hình nhận tiền tip.",
+          "text_3_040240": "Chấp nhận định dạng JPG, PNG. Dung lượng tối đa 5MB.",
+          "text_4_dd52c9": "Họ và tên *",
+          "text_5_fc03e0": "Tên hiển thị (Nickname) *",
+          "text_6_040fc7": "Số điện thoại *",
+          "text_7_101b70": "Địa chỉ Email",
+          "text_8_57870b": "Chuyên môn / Vai trò",
+          "text_9_acb82f": "Mã thợ NEXORA",
+          "text_10_047453": "Lời chào / Tiểu sử ngắn (Hiển thị cho khách hàng gửi tip)"
+        },
+        "StepSuccess": {
+          "text_1_dd000e": "Thông tin đăng ký của bạn",
+          "text_2_f9d6e3": "Email tài khoản:",
+          "text_3_b84a79": "Mã giới thiệu:"
+        }
+      }
+    },
+    "settings": {
+      "hooks": {
+        "useSettingsForm": {
+          "text_1_95254f": "Xác thực KYB thành công!",
+          "text_2_e95b20": "Đã cập nhật cài đặt thành công!",
+          "text_3_5379a0": "Đã sao chép vào bộ nhớ tạm!",
+          "text_4_135f79": "HỒ SƠ CƠ BẢN",
+          "text_5_5e771d": "Hồ sơ của bạn chỉ hoạt động cho nhận tiền típ trực tiếp P2P (Venmo, Cash App, Zelle) và đánh giá của khách hàng. Các tính năng xử lý tài chính nâng cao (Ví VLINKPAY, Xử lý Thẻ Tín Dụng, Merchant ATM) đã bị Khóa.",
+          "text_6_10271c": "Hoàn tất Xác minh Doanh nghiệp",
+          "text_7_67e345": "ĐANG CHỜ XÁC MINH LITE",
+          "text_8_24e860": "Lite Verification đang chờ xem duyệt.",
+          "text_9_77e543": "ĐÃ XÁC THỰC LITE",
+          "text_10_55e23a": "Đã xác thực Lite. Bật nhận tiền típ P2P. Hoàn thành KYB đầy đủ để mở khóa xử lý thẻ tín dụng.",
+          "text_11_0886ce": "YÊU CẦU XÁC MINH DOANH NGHIỆP",
+          "text_12_ac5ccd": "Yêu cầu Xác minh Doanh nghiệp. Bạn phải xác minh doanh nghiệp của mình để kích hoạt xử lý thẻ.",
+          "text_13_74ce76": "ĐANG CHỜ XÁC MINH DOANH NGHIỆP",
+          "text_14_9c4655": "Xác minh doanh nghiệp đang chờ xử lý. Ban tuân thủ VLINKPAY đang xem xét chi tiết của bạn.",
+          "text_15_2951d5": "Hồ sơ doanh nghiệp đã xác minh (Phê duyệt KYB)",
+          "text_16_bb1b78": "Chúc mừng! Hồ sơ doanh nghiệp của bạn đã được VLINKPAY xác minh đầy đủ. Không giới hạn hạn mức xử lý thẻ tín dụng và tính năng Merchant ATM hoạt động.",
+          "text_17_06bde1": "TÀI KHOẢN BỊ ĐÌNH CHỈ",
+          "text_18_f149c2": "Tài khoản bị đình chỉ. Vui lòng liên hệ bộ phận hỗ trợ.",
+          "text_19_2f0224": "ĐANG CHỜ PHÊ DUYỆT PRO",
+          "text_20_c0cd86": "Hồ sơ nâng cấp Pro đang được thẩm định.",
+          "text_21_284f51": "BỊ TỪ CHỐI XÁC THỰC",
+          "text_22_7d1801": "Hồ sơ xác thực doanh nghiệp của bạn đã bị từ chối.",
+          "text_23_b1a525": "Nộp lại thông tin xác minh",
+          "text_24_9a3ed5": "CẦN BỔ SUNG HỒ SƠ",
+          "text_25_1ec98f": "Hồ sơ đang được xem xét.",
+          "text_26_3c56fe": "Tải lên tài liệu bổ sung"
+        }
+      },
+      "tabs": {
+        "ProfileTab": {
+          "text_1_e4d822": "Phương thức thanh toán",
+          "text_2_2e8d41": "Tài khoản",
+          "text_3_932fd1": "Thông tin cơ bản",
+          "text_4_fe3696": "Nhập đầy đủ họ và tên hợp pháp của bạn như trên giấy tờ tùy thân.",
+          "text_5_91f714": "Ngày sinh của bạn (phải từ 18 tuổi trở lên để xác thực).",
+          "text_6_d046e4": "Số điện thoại chính để nhận thông báo và xác minh tài khoản.",
+          "text_7_2e0cc1": "Họ và tên",
+          "text_8_ba148d": "Ngày sinh",
+          "text_9_db3889": "Số điện thoại",
+          "text_10_5f01d9": "Chi tiết địa chỉ",
+          "text_11_19c39f": "Cung cấp địa chỉ thực của cửa hàng. Được sử dụng để bản địa hóa và xác minh.",
+          "text_12_752b31": "Đường/Phố",
+          "text_13_487a6b": "Bang/Tỉnh",
+          "text_14_8c850c": "Quốc gia",
+          "text_15_146351": "Thông tin doanh nghiệp",
+          "text_16_e6b49c": "Nhập tên hợp pháp hoặc tên công khai của cửa hàng/salon của bạn sẽ hiển thị trên màn hình thanh toán của khách hàng.",
+          "text_17_4c5d20": "Tên doanh nghiệp",
+          "text_18_8f0bb5": "Số điện thoại",
+          "text_19_5ccb22": "Bản đồ vị trí",
+          "text_20_f13fde": "Liên kết đánh giá",
+          "text_21_0647ea": "email/SĐT",
+          "text_22_00aa8a": "chi tiết",
+          "text_23_e1251f": "Nhập email/SĐT Zelle...",
+          "text_24_c4bdfb": "Số tài khoản & Số Routing...",
+          "text_25_c89f8a": "Nhập PayPal email...",
+          "text_26_40d556": "Nhập Venmo @username...",
+          "text_27_beba2f": "Nhập Cash App $cashtag...",
+          "text_28_40505b": "Nhập số điện thoại...",
+          "text_29_2ee37e": "Chỉ định thông tin tài khoản nhận tiền",
+          "text_30_2a8c1a": "MÃ QR (TÙY CHỌN)",
+          "text_31_868f04": "CHỤP HÌNH",
+          "text_32_44d455": "CHỌN FILE",
+          "text_33_7b89ac": "Vui lòng nhập đúng thông tin tài khoản nhận tiền. Tài khoản này sẽ được dùng để nhận tiền tip.",
+          "text_34_8714e2": "HỦY",
+          "text_35_0f06d4": "LƯU LẠI"
+        },
+        "KybTab": {
+          "text_extra_1_32199b": "Đóng Form",
+          "text_extra_2_797bfc": "Đang gửi thông tin xác thực...",
+          "text_extra_3_deea78": "Tên pháp lý doanh nghiệp",
+          "text_extra_4_3e0c97": "Mã số thuế / EIN",
+          "text_extra_5_b85968": "Hình thức doanh nghiệp",
+          "text_extra_6_a4dda0": "Người đại diện pháp luật",
+          "text_extra_7_287b3b": "Tên ngân hàng",
+          "text_extra_8_e0c2f5": "Số tài khoản",
+          "text_extra_9_429b9d": "Mã định tuyến (Routing)",
+          "text_extra_10_a61739": "Hủy",
+          "text_extra_11_c6fd43": "Gửi hồ sơ KYB",
+          "text_extra_12_74fd60": "Hồ sơ pháp lý công ty",
+          "text_extra_13_8eb589": "Tài khoản thanh toán nhận tiền",
+          "text_extra_14_674f7a": "Để thay đổi tài khoản nhận vui lòng liên hệ hỗ trợ.",
+          "text_extra_15_0914c3": "Liên kết Ngân hàng Thanh toán",
+          "text_extra_16_2e5055": "Hồ sơ tài liệu xác thực",
+          "text_extra_17_fcb0f5": "Công bố pháp lý & Điều khoản",
+          "text_extra_18_0535b4": "1. Báo cáo thu nhập IRS",
+          "text_extra_19_213612": "Theo quy định 1099-K của IRS, thu nhập từ tiền típ được xử lý qua các cổng này phải báo cáo thuế hàng năm.",
+          "text_extra_20_2181d5": "2. Tuyên bố miễn trừ tiết kiệm",
+          "text_extra_21_33dab1": "Mức tiết kiệm chi phí xử lý ước tính được tính toán so với phí đại lý tiêu chuẩn ngành và không được bảo đảm.",
+          "text_extra_22_8ca069": "3. Điều khoản dịch vụ",
+          "text_extra_23_a43aa4": "Việc sử dụng dịch vụ đồng nghĩa với việc đồng ý với các điều khoản tuân thủ doanh nghiệp và chính sách thẩm định của VLINKPAY."
+        }
+      }
+    },
+    "setup_wizard": {
+      "hooks": {
+        "useSetupWizard": {
+          "text_1_3ab74c": "Thanh Toán & QR"
+        }
+      },
+      "PayoutSetupModal": {
+        "text_1_2ee37e": "Chỉ định thông tin tài khoản nhận tiền",
+        "text_2_4eb2d1": "THÔNG TIN TÀI KHOẢN",
+        "text_3_b860af": "MÃ QR (TÙY CHỌN)",
+        "text_4_8714e2": "HỦY",
+        "text_5_0f06d4": "LƯU LẠI"
+      },
+      "steps": {
+        "Step1BusinessInfo": {
+          "text_1_e6b49c": "Nhập tên hợp pháp hoặc tên công khai của cửa hàng/salon của bạn sẽ hiển thị trên màn hình thanh toán của khách hàng.",
+          "text_2_19c39f": "Cung cấp địa chỉ thực của cửa hàng. Được sử dụng để bản địa hóa và xác minh."
+        },
+        "Step2StaffTouchpoints": {
+          "text_1_b73097": "Bước 2: Thanh Toán & Điểm Chạm QR",
+          "text_2_433937": "Thiết lập các phương thức thanh toán và các vị trí dán mã QR (ví dụ: quầy lễ tân, bàn làm việc, xe đẩy) tại tiệm.",
+          "text_3_62a131": "Thiết lập các phương thức thanh toán để nhận tiền vào tài khoản tiệm.",
+          "text_4_2c70e6": "Đặt tên cho điểm chạm cụ thể này (ví dụ: Bàn 1, Ghế 3) để theo dõi vị trí nhận tiền tip và phản hồi."
+        },
+        "Step3Download": {
+          "text_1_c25af8": "Tôi đồng ý với Điều khoản dịch vụ người bán của VLINKPAY, yêu cầu báo cáo thuế IRS 1099-K và chính sách thẩm định của doanh nghiệp. Tôi xác nhận rằng tất cả thông tin đăng ký là chính xác."
+        }
+      }
+    },
+    "staff_dashboard": {
+      "views": {
+        "StaffMyQR": {
+          "text_1_bb3266": "Đã sao chép liên kết!",
+          "text_2_b8a2a1": "Yêu cầu gia nhập qua QR",
+          "text_3_fc2c2e": "Vừa xong",
+          "text_4_837d0d": "Đã hủy liên kết",
+          "text_5_b750e4": "Đã hủy liên kết với tiệm thành công.",
+          "text_6_c9dfba": "Quét QR Tiệm",
+          "text_7_597d46": "Nhấp để phóng to QR nhận tips",
+          "text_8_080b40": "Mã QR quét nhận tiền tip cá nhân tại tiệm này",
+          "text_9_d2aca7": "Đang hoạt động",
+          "text_10_e00c37": "Chờ phê duyệt",
+          "text_11_0f6793": "Chờ hủy liên kết",
+          "text_12_5788c4": "Chưa liên kết",
+          "text_13_9bd0ce": "Hủy",
+          "text_14_6beed4": "Liên kết",
+          "text_15_b0ef32": "Quét Mã QR Của Tiệm",
+          "text_16_5f25d1": "Quét mã QR liên kết thợ của tiệm (referral QR) để gửi yêu cầu gia nhập chủ động",
+          "text_17_0bdef9": "Hoặc Nhập Liên Kết / Tên Tiệm",
+          "text_18_42f6d9": "Dán liên kết hoặc tên tiệm...",
+          "text_19_e9c6ac": "Gửi",
+          "text_20_3fd4ec": "Giả lập quét QR",
+          "text_21_683ade": "QR Nhận Tip Cá Nhân",
+          "text_22_5994bb": "Liên Kết Nhận Tip",
+          "text_23_156215": "Đã sao chép liên kết nhận tip!",
+          "text_24_cd2bb1": "Sao chép",
+          "text_25_2badc7": "Mở trang tip (Giả lập khách) ›"
+        },
+        "StaffPay": {
+          "text_1_22ecd2": "Cấu hình"
+        },
+        "StaffProfile": {
+          "text_1_e0e065": "Đã lưu thay đổi tài khoản!",
+          "text_2_9d2699": "Đã cập nhật ảnh đại diện!",
+          "text_3_acd59b": "Vui lòng điền đầy đủ tất cả các trường.",
+          "text_4_ba8d1c": "Xác thực KYC thành công!",
+          "text_5_135f79": "HỒ SƠ CƠ BẢN",
+          "text_6_89dc33": "Hồ sơ của bạn chỉ hoạt động ở mức cơ bản để nhận tiền típ và nhận xét. Hãy hoàn tất xác minh KYC cá nhân để mở khóa các tính năng tài chính của Ví VLINKPAY ID và rút tiền nhanh 24/7.",
+          "text_7_8b82de": "Hoàn tất Xác minh KYC",
+          "text_8_9b334a": "TÀI KHOẢN ĐÃ XÁC THỰC (KYC APPROVED)",
+          "text_9_15dba5": "Chúc mừng! Hồ sơ cá nhân của bạn đã được VLINKPAY xác minh thành công. Rút tiền tức thì 24/7 đã kích hoạt.",
+          "text_10_6747c1": "Đã xác minh: Hôm nay",
+          "text_11_51cfc8": "Tài khoản",
+          "text_12_9ad372": "Xác thực KYC",
+          "text_13_eeacc6": "Thay đổi",
+          "text_14_e8f199": "Đăng xuất tài khoản",
+          "text_15_b44cf1": "Đăng xuất khỏi phiên làm việc hiện tại và quay về màn hình đăng nhập.",
+          "text_16_32199b": "Đóng Form",
+          "text_17_9e95ee": "Đang gửi hồ sơ xác thực...",
+          "text_18_c72648": "Họ và tên hợp pháp",
+          "text_19_6e592e": "Số định danh / SSN / ID",
+          "text_20_0df291": "Loại giấy tờ xác thực",
+          "text_21_2f27d7": "Hộ chiếu",
+          "text_22_288a33": "Căn cước công dân / ID quốc gia",
+          "text_23_25ec8e": "Mặt trước giấy tờ",
+          "text_24_4150b0": "Chọn ảnh mặt trước",
+          "text_25_d46d6b": "Mặt sau giấy tờ",
+          "text_26_187b79": "Chọn ảnh mặt sau",
+          "text_27_dfaab1": "Thông tin tài khoản nhận tiền cá nhân",
+          "text_28_287b3b": "Tên ngân hàng",
+          "text_29_e0c2f5": "Số tài khoản",
+          "text_30_429b9d": "Mã định tuyến (Routing)",
+          "text_31_a61739": "Hủy",
+          "text_32_b322e3": "Gửi hồ sơ KYC",
+          "text_33_3e19e9": "Hồ sơ cá nhân đã xác thực",
+          "text_34_f1c034": "Họ và tên đầy đủ",
+          "text_35_5bd068": "Loại giấy tờ",
+          "text_36_d23163": "Số định danh cá nhân",
+          "text_37_f1033f": "Địa chỉ liên lạc",
+          "text_38_fed581": "Tài khoản thanh toán nhận tiền",
+          "text_39_9cd8df": "Tần suất rút",
+          "text_40_8b216a": "Vui lòng liên hệ bộ phận hỗ trợ để thay đổi tài khoản ngân hàng.",
+          "text_41_43cb59": "Thay đổi Ngân hàng nhận",
+          "text_42_395c00": "Tài liệu danh tính đã tải lên",
+          "text_43_7d44d8": "Công bố pháp lý & Bảo mật KYC",
+          "text_44_f74e51": "1. Bảo vệ dữ liệu cá nhân",
+          "text_45_f7814b": "Thông tin danh tính và giấy tờ tùy thân của bạn được mã hóa hoàn toàn ở đầu cuối và bảo mật theo tiêu chuẩn SOC2.",
+          "text_46_20a61d": "2. Báo cáo Típ IRS",
+          "text_47_974e15": "Việc KYC giúp chứng minh tài khoản nhận tiền chính thức, hỗ trợ việc tạo báo cáo thu nhập tip 1099-K cuối năm chính xác.",
+          "text_48_fa4cac": "3. Điều khoản tuân thủ",
+          "text_49_1be662": "Mọi thông tin danh tính sai lệch hoặc giả mạo có thể dẫn đến việc đình chỉ tài khoản tức thì bởi bộ phận tuân thủ VLINKPAY."
+        },
+        "StaffReviews": {
+          "text_1_01d927": "Đánh Giá & Xếp Hạng",
+          "text_2_659830": "Ý Kiến Khách Hàng",
+          "text_3_7fda9d": "BẢO MẬT DANH TÍNH",
+          "text_4_e0f148": "Bạn chưa có đánh giá nào.",
+          "text_5_aa2828": "Khách hàng ẩn danh",
+          "text_6_48490b": "Nội bộ"
+        }
+      }
+    },
+    "staff_registration": {
+      "hooks": {
+        "useStaffRegistration": {
+          "text_1_57a340": "Không tìm thấy NEXORA Staff ID này.",
+          "text_2_3d7f02": "Email không được để trống",
+          "text_3_c8694b": "Email không hợp lệ",
+          "text_4_ff16be": "Email nhập lại không khớp",
+          "text_5_85dbe1": "Mật khẩu không được để trống",
+          "text_6_7bce44": "Mật khẩu phải từ 6 ký tự",
+          "text_7_ab2ab8": "Bạn phải đồng ý với Điều khoản & Điều kiện để tiếp tục.",
+          "text_8_0ce6ed": "Mã xác thực không hợp lệ. Gợi ý: Hãy nhập 1234.",
+          "text_9_657148": "Trường này là bắt buộc.",
+          "text_10_40cf1e": "Yêu cầu gia nhập mới",
+          "text_11_fc2c2e": "Vừa xong",
+          "text_12_778990": "Email không được để trống.",
+          "text_13_87a059": "Mật khẩu không được để trống.",
+          "text_14_ea6cac": "Mật khẩu phải từ 6 ký tự.",
+          "text_15_872434": "Tài khoản không tồn tại hoặc mật khẩu sai.",
+          "text_16_e14743": "Đã hủy bỏ yêu cầu liên kết."
+        }
+      },
+      "steps": {
+        "StepOtpVerify": {
+          "text_1_e639fe": "1. Đăng ký tài khoản",
+          "text_2_639d1e": "Đăng ký tài khoản thợ mới để bắt đầu nhận tiền tip.",
+          "text_3_d00227": "Địa chỉ Email *",
+          "text_4_386dbd": "Nhập lại địa chỉ Email *",
+          "text_5_a6f190": "Mật khẩu *",
+          "text_6_d5de74": "Liên kết giới thiệu / Salon",
+          "text_7_0718de": "1. Kích hoạt tài khoản",
+          "text_8_cf458c": "Nhập mã OTP được gửi tới email của bạn để kích hoạt tài khoản.",
+          "text_9_b7be24": "Nhập mã OTP *",
+          "text_10_ab6602": "Xác minh & Kích hoạt",
+          "text_11_519796": "Chính sách bảo mật",
+          "text_12_e41b87": "Điều khoản dịch vụ",
+          "text_13_f7e671": "Đóng",
+          "text_14_aa0b10": "Tôi Đồng Ý"
+        },
+        "StepPayments": {
+          "text_1_b81314": "3. Cấu hình Ví nhận tiền tip",
+          "text_2_4b70b7": "Bật các kênh thanh toán bạn muốn nhận tiền. Khi khách hàng quét mã QR của bạn, họ sẽ thanh toán trực tiếp vào các tài khoản này.",
+          "text_3_6aec72": "Chưa cấu hình",
+          "text_4_2e8d41": "Tài khoản",
+          "text_5_73950e": "Lưu & Kích hoạt"
+        },
+        "StepProfile": {
+          "text_1_0a45d3": "2. Tài khoản cá nhân",
+          "text_2_e42d2b": "Tải lên từ thiết bị",
+          "text_3_040240": "Chấp nhận định dạng JPG, PNG. Dung lượng tối đa 5MB.",
+          "text_4_dd52c9": "Họ và tên *",
+          "text_5_fc03e0": "Tên hiển thị (Nickname) *",
+          "text_6_b35373": "Tên này sẽ hiển thị cho khách hàng tại tiệm khi họ quét mã và gửi tip.",
+          "text_7_040fc7": "Số điện thoại *",
+          "text_8_d00227": "Địa chỉ Email *"
+        },
+        "StepSuccess": {
+          "text_1_96b4e5": "Yêu cầu gia nhập đã gửi!",
+          "text_2_b6a032": "CHỜ DUYỆT",
+          "text_3_11d6f3": "Chờ duyệt",
+          "text_4_920840": "Đã sao chép liên kết của thợ!"
+        },
+        "StepWelcome": {
+          "text_1_9ea11f": "Hủy bỏ / Từ chối",
+          "text_2_832e3c": "THƯ MỜI GIA NHẬP HỆ THỐNG TIỆM",
+          "text_3_e0f60b": "Bạn đã được mời liên kết hồ sơ của mình để nhận tiền tip trực tiếp vào tài khoản cá nhân tại tiệm này.",
+          "text_4_8bbc99": "Đã có tài khoản",
+          "text_5_b2554e": "Sử dụng VLINKPAY ID sẵn có của bạn để liên kết nhanh với tiệm.",
+          "text_6_440c35": "Đăng ký tài khoản",
+          "text_7_d9df8a": "Đăng ký tài khoản mới, thiết lập ví nhận tiền và KYC.",
+          "text_8_f7afb9": "Đăng nhập liên kết tài khoản",
+          "text_9_0c8b9d": "Đăng nhập vào tài khoản NEXORA / VLINKPAY của bạn để liên kết nhanh với tiệm nail này.",
+          "text_10_29ab67": "Mật khẩu",
+          "text_11_ccae51": "Gợi ý tài khoản Demo:",
+          "text_12_0413ad": "Quay lại",
+          "text_13_79d937": "Đăng nhập & Xác minh",
+          "text_14_8736e0": "Xác nhận gia nhập tiệm",
+          "text_15_eb26fc": "Vui lòng xem lại thông tin cá nhân và thông tin tiệm nail trước khi đồng ý liên kết.",
+          "text_16_afd627": "Hồ sơ cá nhân",
+          "text_17_e7aad1": "Điện thoại:",
+          "text_18_6a93ce": "Thông tin tiệm nail",
+          "text_19_749c79": "Vai trò mời:",
+          "text_20_cfd760": "Trạng thái kết nối:",
+          "text_21_11b464": "Yêu cầu mới",
+          "text_22_cc5680": "Khu vực:",
+          "text_23_e4b582": "Từ chối",
+          "text_24_db241f": "Đồng ý tham gia (Join)"
+        },
+        "PayoutEditModal": {
+          "text_extra_1_0647ea": "email/SĐT",
+          "text_extra_2_00aa8a": "chi tiết",
+          "text_extra_3_e1251f": "Nhập email/SĐT Zelle...",
+          "text_extra_4_9731fc": "Số tài khoản & Số Routing",
+          "text_extra_5_6b6e57": "Nhập số điện thoại...",
+          "text_extra_6_2ee37e": "Chỉ định thông tin tài khoản nhận tiền",
+          "text_extra_7_2a8c1a": "MÃ QR (TÙY CHỌN)",
+          "text_extra_8_868f04": "CHỤP HÌNH",
+          "text_extra_9_44d455": "CHỌN FILE",
+          "text_extra_10_7b89ac": "Vui lòng nhập đúng thông tin tài khoản nhận tiền. Tài khoản này sẽ được dùng để nhận tiền tip.",
+          "text_extra_11_8714e2": "HỦY",
+          "text_extra_12_0f06d4": "LƯU LẠI"
+        },
+        "QrScannerModal": {
+          "text_extra_1_32f83e": "Quét Mã QR Nhận Diện",
+          "text_extra_2_e8d012": "Quét mã NEXORA Personal ID để liên kết tài khoản",
+          "text_extra_3_129b71": "Quét mã VLINKPAY ID để tự động điền thông tin tài khoản",
+          "text_extra_4_7327eb": "Hướng camera về phía mã QR hoặc chọn giả lập quét thành công bên dưới.",
+          "text_extra_5_04832e": "Hướng camera về phía mã QR để quét mã nhận diện.",
+          "text_extra_6_3fd4ec": "Giả lập quét QR",
+          "text_extra_7_a33385": "Giả lập Quét Lisa Tran",
+          "text_extra_8_717e54": "HỦY BỎ"
+        }
+      }
+    },
+    "StaffDetailView": {
+      "text_1_79adeb": "Hôm nay",
+      "text_2_b00f34": "Tuần",
+      "text_3_4de396": "Hiệu Suất Tiền Típ",
+      "text_4_1f32e6": "Tự chọn",
+      "text_5_b4e771": "Từ ngày",
+      "text_6_9725ef": "Đến ngày"
+    },
+    "StaffRegistrationWizard": {
+      "text_1_403506": "1. Đăng ký",
+      "text_2_a7f004": "2. Hồ sơ",
+      "text_3_0baa00": "3. Ví nhận"
+    },
+    "tips": {
+      "hooks": {
+        "useTipsData": {
+          "text_1_79adeb": "Hôm nay",
+          "text_2_b00f34": "Tuần"
+        }
+      },
+      "tabs": {
+        "TipsOverviewTab": {
+          "text_1_f7316d": "Tiền Típ Theo Thời Gian",
+          "text_2_1f32e6": "Tự chọn",
+          "text_3_b4e771": "Từ ngày",
+          "text_4_9725ef": "Đến ngày"
+        },
+        "TipsTransactionsTab": {
+          "text_1_8cd6d8": "Chi tiết"
+        }
+      }
+    },
+    "dashboardRoot": {
+      "text_1_43861e": "Tài khoản của tôi",
+      "text_2_91f84a": "Không tìm thấy hồ sơ thợ của bạn.",
+      "text_3_b9aee9": "Yêu cầu xác thực KYB",
+      "text_4_483d61": "Tính năng này yêu cầu hồ sơ doanh nghiệp đã được xác thực KYB bởi VLINKPAY. Nhấp vào nút bên dưới để chuyển hướng đến trang Cài đặt > KYB để gửi thông tin doanh nghiệp của bạn.",
+      "text_5_dbab9f": "Hủy bỏ",
+      "text_6_ee6094": "Xác thực ngay"
+    },
+    "SettingsView": {
+      "text_extra_1_0b8a5e": "Đã tải xuống mã QR!",
+      "text_extra_2_43fa87": "Cấu Hinh Cài Đặt",
+      "text_extra_3_76721a": "Quản lý thông tin tài khoản chủ sở hữu, địa chỉ cửa hàng và cấu hình xác thực pháp lý (KYB).",
+      "text_extra_4_51cfc8": "Tài khoản",
+      "text_extra_5_9b19db": "Xác thực KYB",
+      "text_extra_6_1f8239": "Affiliate Link",
+      "text_extra_7_5cd6fa": "Liên kết Affiliate",
+      "text_extra_8_b4ddb3": "Đăng ký Thành viên Mới",
+      "text_extra_9_579070": "Chia sẻ liên kết này để mời thành viên mới gia nhập mạng lưới của bạn.",
+      "text_extra_10_e5ed90": "Chọn Nhánh Xếp Lập",
+      "text_extra_11_1d5298": "Nhánh Trái",
+      "text_extra_12_09b483": "Nhánh Phải"
+    }
+  },
+  "staff_registration": {
+    "link": {
+      "incorrect_password": "Mật khẩu không chính xác."
+    }
   }
 }
