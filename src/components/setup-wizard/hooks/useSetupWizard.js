@@ -143,8 +143,8 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0]
       try {
-        const res = await uploadLogoMutation.mutateAsync(file)
-        setBusinessInfo(prev => ({ ...prev, logo: res.logoUrl }))
+        const logoUrl = await uploadLogoMutation.mutateAsync(file)
+        setBusinessInfo(prev => ({ ...prev, logo: logoUrl }))
         if (errors.logo) setErrors(prev => ({ ...prev, logo: '' }))
       } catch (err) {
         setErrors(prev => ({ ...prev, logo: err.errorCode || 'Logo upload failed' }))

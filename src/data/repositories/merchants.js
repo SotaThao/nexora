@@ -87,14 +87,24 @@ export function createMerchantsRepository(client = httpClient) {
     },
 
     /**
-     * Upload business logo
+     * Upload an image (generic endpoint)
      * @param {File} file
-     * @returns {Promise<{ logoUrl: string }>}
+     * @returns {Promise<{ fileUrl: string }>}
+     */
+    async uploadImage(file) {
+      const formData = new FormData()
+      formData.append('file', file)
+      return await client.upload('/api/v1/images/upload', formData, 'POST')
+    },
+
+    /**
+     * Upload business logo (convenience wrapper)
+     * @param {File} file
+     * @returns {Promise<string>} fileUrl
      */
     async uploadLogo(file) {
-      const formData = new FormData()
-      formData.append('logo', file)
-      return await client.upload('/api/v1/merchant/business/logo', formData, 'PUT')
+      const res = await this.uploadImage(file)
+      return res.fileUrl
     },
 
     /**
