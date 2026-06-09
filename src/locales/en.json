@@ -1124,10 +1124,10 @@
           "save": "SAVE"
         },
         "TermsModal": {
-          "text_extra_1_519796": "Privacy Policy",
-          "text_extra_2_e41b87": "Terms of Service",
-          "text_extra_3_f7e671": "Close",
-          "text_extra_4_aa0b10": "I Accept"
+          "privacyPolicy": "Privacy Policy",
+          "termsOfService": "Terms of Service",
+          "close": "Close",
+          "iAccept": "I Accept"
         }
       },
       "steps": {
@@ -1244,29 +1244,29 @@
           "save": "SAVE"
         },
         "KybTab": {
-          "text_extra_1_32199b": "Close Form",
-          "text_extra_2_797bfc": "Submitting KYB details...",
-          "text_extra_3_deea78": "Legal Business Name",
-          "text_extra_4_3e0c97": "Tax ID / EIN",
-          "text_extra_5_b85968": "Business Structure",
-          "text_extra_6_a4dda0": "Representative Owner Name",
-          "text_extra_7_287b3b": "Bank Name",
-          "text_extra_8_e0c2f5": "Account Number",
-          "text_extra_9_429b9d": "Routing Code",
-          "text_extra_10_a61739": "Cancel",
-          "text_extra_11_c6fd43": "Submit KYB",
-          "text_extra_12_74fd60": "Registered Company Dossier",
-          "text_extra_13_8eb589": "Settlement Account Details",
-          "text_extra_14_674f7a": "To modify receiving targets, contact client support.",
-          "text_extra_15_0914c3": "Link Settlement Bank",
-          "text_extra_16_2e5055": "Uploaded Compliance Documents",
-          "text_extra_17_fcb0f5": "Legal Disclosures & Terms",
-          "text_extra_18_0535b4": "1. IRS Income Reporting",
-          "text_extra_19_213612": "Under 1099-K regulations, tipping income processed through these gateways is subject to annual IRS reporting.",
-          "text_extra_20_2181d5": "2. Savings Disclaimer",
-          "text_extra_21_33dab1": "Estimated processing savings are calculated relative to industry standard merchant processing fees and are not guaranteed.",
-          "text_extra_22_8ca069": "3. Terms of Service",
-          "text_extra_23_a43aa4": "Usage constitutes agreement with VLINKPAY corporate compliance terms and underwriting policies."
+          "closeForm": "Close Form",
+          "submittingKybDetails": "Submitting KYB details...",
+          "legalBusinessName": "Legal Business Name",
+          "taxIdEin": "Tax ID / EIN",
+          "businessStructure": "Business Structure",
+          "representativeOwnerName": "Representative Owner Name",
+          "bankName": "Bank Name",
+          "accountNumber": "Account Number",
+          "routingCode": "Routing Code",
+          "cancel": "Cancel",
+          "submitKyb": "Submit KYB",
+          "registeredCompanyDossier": "Registered Company Dossier",
+          "settlementAccountDetails": "Settlement Account Details",
+          "toModifyReceivingTargets": "To modify receiving targets, contact client support.",
+          "linkSettlementBank": "Link Settlement Bank",
+          "uploadedComplianceDocuments": "Uploaded Compliance Documents",
+          "legalDisclosuresAndTerms": "Legal Disclosures & Terms",
+          "label1IrsIncomeReporting": "1. IRS Income Reporting",
+          "under1099KRegulations": "Under 1099-K regulations, tipping income processed through these gateways is subject to annual IRS reporting.",
+          "label2SavingsDisclaimer": "2. Savings Disclaimer",
+          "estimatedProcessingSavingsAre": "Estimated processing savings are calculated relative to industry standard merchant processing fees and are not guaranteed.",
+          "label3TermsOfService": "3. Terms of Service",
+          "usageConstitutesAgreementWith": "Usage constitutes agreement with VLINKPAY corporate compliance terms and underwriting policies."
         }
       }
     },
@@ -1480,28 +1480,28 @@
           "acceptAndJoin": "Accept & Join"
         },
         "PayoutEditModal": {
-          "text_extra_1_0647ea": "email/phone",
-          "text_extra_2_00aa8a": "details",
-          "text_extra_3_e1251f": "Enter Zelle email/phone...",
-          "text_extra_4_9731fc": "Account & Routing numbers",
-          "text_extra_5_6b6e57": "Enter phone number...",
-          "text_extra_6_2ee37e": "Specify receiving target identifier",
-          "text_extra_7_2a8c1a": "QR CODE (OPTIONAL)",
-          "text_extra_8_868f04": "TAKE PHOTO",
-          "text_extra_9_44d455": "CHOOSE FILE",
-          "text_extra_10_7b89ac": "Please enter the correct receiving account information. This will be used to receive payments.",
-          "text_extra_11_8714e2": "CANCEL",
-          "text_extra_12_0f06d4": "SAVE"
+          "emailPhone": "email/phone",
+          "details": "details",
+          "enterZelleEmailPhone": "Enter Zelle email/phone...",
+          "accountAndRoutingNumbers": "Account & Routing numbers",
+          "enterPhoneNumber": "Enter phone number...",
+          "specifyReceivingTargetIdentifier": "Specify receiving target identifier",
+          "qrCodeOptional": "QR CODE (OPTIONAL)",
+          "takePhoto": "TAKE PHOTO",
+          "chooseFile": "CHOOSE FILE",
+          "pleaseEnterTheCorrect": "Please enter the correct receiving account information. This will be used to receive payments.",
+          "cancel": "CANCEL",
+          "save": "SAVE"
         },
         "QrScannerModal": {
-          "text_extra_1_32f83e": "Scan QR Code",
-          "text_extra_2_e8d012": "Scan NEXORA Personal ID to link your account",
-          "text_extra_3_129b71": "Scan VLINKPAY ID to autofill account data",
-          "text_extra_4_7327eb": "Point the camera at the QR code, or choose a mockup scan profile below.",
-          "text_extra_5_04832e": "Point the camera at the QR code to scan the account identifier.",
-          "text_extra_6_3fd4ec": "Simulate QR Scan",
-          "text_extra_7_a33385": "Simulate Successful Scan",
-          "text_extra_8_717e54": "CANCEL"
+          "scanQrCode": "Scan QR Code",
+          "scanNexoraPersonalId": "Scan NEXORA Personal ID to link your account",
+          "scanVlinkpayIdTo": "Scan VLINKPAY ID to autofill account data",
+          "pointTheCameraAt": "Point the camera at the QR code, or choose a mockup scan profile below.",
+          "pointTheCameraAt2": "Point the camera at the QR code to scan the account identifier.",
+          "simulateQrScan": "Simulate QR Scan",
+          "simulateSuccessfulScan": "Simulate Successful Scan",
+          "cancel": "CANCEL"
         }
       }
     },
@@ -1546,18 +1546,18 @@
       "verifyNow": "Verify Now"
     },
     "SettingsView": {
-      "text_extra_1_0b8a5e": "QR code downloaded!",
-      "text_extra_2_43fa87": "Settings Configuration",
-      "text_extra_3_76721a": "Manage your owner credentials, store configurations, receiving wallets, and corporate compliance details (KYB).",
-      "text_extra_4_51cfc8": "Account",
-      "text_extra_5_9b19db": "KYB",
-      "text_extra_6_1f8239": "Affiliate Link",
-      "text_extra_7_5cd6fa": "Affiliate Link",
-      "text_extra_8_b4ddb3": "Register a New Member",
-      "text_extra_9_579070": "Share this link to invite a new member to join your network.",
-      "text_extra_10_e5ed90": "Select Placement Leg",
-      "text_extra_11_1d5298": "Left Leg",
-      "text_extra_12_09b483": "Right Leg"
+      "qrCodeDownloaded": "QR code downloaded!",
+      "settingsConfiguration": "Settings Configuration",
+      "manageYourOwnerCredentials": "Manage your owner credentials, store configurations, receiving wallets, and corporate compliance details (KYB).",
+      "account": "Account",
+      "kyb": "KYB",
+      "affiliateLink": "Affiliate Link",
+      "affiliateLink2": "Affiliate Link",
+      "registerANewMember": "Register a New Member",
+      "shareThisLinkTo": "Share this link to invite a new member to join your network.",
+      "selectPlacementLeg": "Select Placement Leg",
+      "leftLeg": "Left Leg",
+      "rightLeg": "Right Leg"
     },
     "auth": {
       "AuthGraphicPanel": {

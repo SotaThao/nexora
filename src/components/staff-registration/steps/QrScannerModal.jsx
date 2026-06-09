@@ -47,12 +47,12 @@ export default function QrScannerModal({
         {/* Header */}
         <div className="space-y-1">
           <h3 className="text-sm font-black uppercase tracking-wider text-nexoraText">
-            {t('components.staff_registration.steps.QrScannerModal.text_extra_1_32f83e')}
+            {t('components.staff_registration.steps.QrScannerModal.scanQrCode')}
           </h3>
           <p className="text-[10px] text-nexoraMuted font-medium">
             {scanTarget === 'staff'
-              ? (t('components.staff_registration.steps.QrScannerModal.text_extra_2_e8d012'))
-              : (t('components.staff_registration.steps.QrScannerModal.text_extra_3_129b71'))}
+              ? (t('components.staff_registration.steps.QrScannerModal.scanNexoraPersonalId'))
+              : (t('components.staff_registration.steps.QrScannerModal.scanVlinkpayIdTo'))}
           </p>
         </div>
 
@@ -74,15 +74,15 @@ export default function QrScannerModal({
         {/* Helper Text */}
         <p className="text-[10px] text-nexoraMuted font-medium max-w-xs mx-auto">
           {isDemoToolsEnabled
-            ? (t('components.staff_registration.steps.QrScannerModal.text_extra_4_7327eb'))
-            : (t('components.staff_registration.steps.QrScannerModal.text_extra_5_04832e'))}
+            ? (t('components.staff_registration.steps.QrScannerModal.pointTheCameraAt'))
+            : (t('components.staff_registration.steps.QrScannerModal.pointTheCameraAt2'))}
         </p>
 
         {/* Quick simulation buttons */}
         {isDemoToolsEnabled && (
         <div className="space-y-2 pt-2 border-t border-nexoraRule">
           <span className="text-[9px] font-black text-nexoraSubtle uppercase tracking-widest block">
-            {t('components.staff_registration.steps.QrScannerModal.text_extra_6_3fd4ec')}
+            {t('components.staff_registration.steps.QrScannerModal.simulateQrScan')}
           </span>
 
           <div className="flex flex-col gap-2">
@@ -92,7 +92,7 @@ export default function QrScannerModal({
               onClick={simulateSuccessfulScan}
               className="w-full py-2 bg-nexoraWarning hover:bg-nexoraWarning/80 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-colors shadow-sm"
             >
-              {t('components.staff_registration.steps.QrScannerModal.text_extra_7_a33385')}
+              {t('components.staff_registration.steps.QrScannerModal.simulateSuccessfulScan')}
             </button>
 
             {/* Additional quick options for high-end feel */}
@@ -141,7 +141,7 @@ export default function QrScannerModal({
           }}
           className="w-full py-2 border border-nexoraBorder hover:bg-nexoraSurfaceMuted text-nexoraMuted hover:text-nexoraText rounded-xl text-xs font-bold transition"
         >
-          {t('components.staff_registration.steps.QrScannerModal.text_extra_8_717e54')}
+          {t('components.staff_registration.steps.QrScannerModal.cancel')}
         </button>
       </div>
     </div>

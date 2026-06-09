@@ -1124,10 +1124,10 @@
           "save": "LƯU LẠI"
         },
         "TermsModal": {
-          "text_extra_1_519796": "Chính sách bảo mật",
-          "text_extra_2_e41b87": "Điều khoản dịch vụ",
-          "text_extra_3_f7e671": "Đóng",
-          "text_extra_4_aa0b10": "Tôi Đồng Ý"
+          "privacyPolicy": "Chính sách bảo mật",
+          "termsOfService": "Điều khoản dịch vụ",
+          "close": "Đóng",
+          "iAccept": "Tôi Đồng Ý"
         }
       },
       "steps": {
@@ -1244,29 +1244,29 @@
           "save": "LƯU LẠI"
         },
         "KybTab": {
-          "text_extra_1_32199b": "Đóng Form",
-          "text_extra_2_797bfc": "Đang gửi thông tin xác thực...",
-          "text_extra_3_deea78": "Tên pháp lý doanh nghiệp",
-          "text_extra_4_3e0c97": "Mã số thuế / EIN",
-          "text_extra_5_b85968": "Hình thức doanh nghiệp",
-          "text_extra_6_a4dda0": "Người đại diện pháp luật",
-          "text_extra_7_287b3b": "Tên ngân hàng",
-          "text_extra_8_e0c2f5": "Số tài khoản",
-          "text_extra_9_429b9d": "Mã định tuyến (Routing)",
-          "text_extra_10_a61739": "Hủy",
-          "text_extra_11_c6fd43": "Gửi hồ sơ KYB",
-          "text_extra_12_74fd60": "Hồ sơ pháp lý công ty",
-          "text_extra_13_8eb589": "Tài khoản thanh toán nhận tiền",
-          "text_extra_14_674f7a": "Để thay đổi tài khoản nhận vui lòng liên hệ hỗ trợ.",
-          "text_extra_15_0914c3": "Liên kết Ngân hàng Thanh toán",
-          "text_extra_16_2e5055": "Hồ sơ tài liệu xác thực",
-          "text_extra_17_fcb0f5": "Công bố pháp lý & Điều khoản",
-          "text_extra_18_0535b4": "1. Báo cáo thu nhập IRS",
-          "text_extra_19_213612": "Theo quy định 1099-K của IRS, thu nhập từ tiền típ được xử lý qua các cổng này phải báo cáo thuế hàng năm.",
-          "text_extra_20_2181d5": "2. Tuyên bố miễn trừ tiết kiệm",
-          "text_extra_21_33dab1": "Mức tiết kiệm chi phí xử lý ước tính được tính toán so với phí đại lý tiêu chuẩn ngành và không được bảo đảm.",
-          "text_extra_22_8ca069": "3. Điều khoản dịch vụ",
-          "text_extra_23_a43aa4": "Việc sử dụng dịch vụ đồng nghĩa với việc đồng ý với các điều khoản tuân thủ doanh nghiệp và chính sách thẩm định của VLINKPAY."
+          "closeForm": "Đóng Form",
+          "submittingKybDetails": "Đang gửi thông tin xác thực...",
+          "legalBusinessName": "Tên pháp lý doanh nghiệp",
+          "taxIdEin": "Mã số thuế / EIN",
+          "businessStructure": "Hình thức doanh nghiệp",
+          "representativeOwnerName": "Người đại diện pháp luật",
+          "bankName": "Tên ngân hàng",
+          "accountNumber": "Số tài khoản",
+          "routingCode": "Mã định tuyến (Routing)",
+          "cancel": "Hủy",
+          "submitKyb": "Gửi hồ sơ KYB",
+          "registeredCompanyDossier": "Hồ sơ pháp lý công ty",
+          "settlementAccountDetails": "Tài khoản thanh toán nhận tiền",
+          "toModifyReceivingTargets": "Để thay đổi tài khoản nhận vui lòng liên hệ hỗ trợ.",
+          "linkSettlementBank": "Liên kết Ngân hàng Thanh toán",
+          "uploadedComplianceDocuments": "Hồ sơ tài liệu xác thực",
+          "legalDisclosuresAndTerms": "Công bố pháp lý & Điều khoản",
+          "label1IrsIncomeReporting": "1. Báo cáo thu nhập IRS",
+          "under1099KRegulations": "Theo quy định 1099-K của IRS, thu nhập từ tiền típ được xử lý qua các cổng này phải báo cáo thuế hàng năm.",
+          "label2SavingsDisclaimer": "2. Tuyên bố miễn trừ tiết kiệm",
+          "estimatedProcessingSavingsAre": "Mức tiết kiệm chi phí xử lý ước tính được tính toán so với phí đại lý tiêu chuẩn ngành và không được bảo đảm.",
+          "label3TermsOfService": "3. Điều khoản dịch vụ",
+          "usageConstitutesAgreementWith": "Việc sử dụng dịch vụ đồng nghĩa với việc đồng ý với các điều khoản tuân thủ doanh nghiệp và chính sách thẩm định của VLINKPAY."
         }
       }
     },
@@ -1480,28 +1480,28 @@
           "acceptAndJoin": "Đồng ý tham gia (Join)"
         },
         "PayoutEditModal": {
-          "text_extra_1_0647ea": "email/SĐT",
-          "text_extra_2_00aa8a": "chi tiết",
-          "text_extra_3_e1251f": "Nhập email/SĐT Zelle...",
-          "text_extra_4_9731fc": "Số tài khoản & Số Routing",
-          "text_extra_5_6b6e57": "Nhập số điện thoại...",
-          "text_extra_6_2ee37e": "Chỉ định thông tin tài khoản nhận tiền",
-          "text_extra_7_2a8c1a": "MÃ QR (TÙY CHỌN)",
-          "text_extra_8_868f04": "CHỤP HÌNH",
-          "text_extra_9_44d455": "CHỌN FILE",
-          "text_extra_10_7b89ac": "Vui lòng nhập đúng thông tin tài khoản nhận tiền. Tài khoản này sẽ được dùng để nhận tiền tip.",
-          "text_extra_11_8714e2": "HỦY",
-          "text_extra_12_0f06d4": "LƯU LẠI"
+          "emailPhone": "email/SĐT",
+          "details": "chi tiết",
+          "enterZelleEmailPhone": "Nhập email/SĐT Zelle...",
+          "accountAndRoutingNumbers": "Số tài khoản & Số Routing",
+          "enterPhoneNumber": "Nhập số điện thoại...",
+          "specifyReceivingTargetIdentifier": "Chỉ định thông tin tài khoản nhận tiền",
+          "qrCodeOptional": "MÃ QR (TÙY CHỌN)",
+          "takePhoto": "CHỤP HÌNH",
+          "chooseFile": "CHỌN FILE",
+          "pleaseEnterTheCorrect": "Vui lòng nhập đúng thông tin tài khoản nhận tiền. Tài khoản này sẽ được dùng để nhận tiền tip.",
+          "cancel": "HỦY",
+          "save": "LƯU LẠI"
         },
         "QrScannerModal": {
-          "text_extra_1_32f83e": "Quét Mã QR Nhận Diện",
-          "text_extra_2_e8d012": "Quét mã NEXORA Personal ID để liên kết tài khoản",
-          "text_extra_3_129b71": "Quét mã VLINKPAY ID để tự động điền thông tin tài khoản",
-          "text_extra_4_7327eb": "Hướng camera về phía mã QR hoặc chọn giả lập quét thành công bên dưới.",
-          "text_extra_5_04832e": "Hướng camera về phía mã QR để quét mã nhận diện.",
-          "text_extra_6_3fd4ec": "Giả lập quét QR",
-          "text_extra_7_a33385": "Giả lập Quét Lisa Tran",
-          "text_extra_8_717e54": "HỦY BỎ"
+          "scanQrCode": "Quét Mã QR Nhận Diện",
+          "scanNexoraPersonalId": "Quét mã NEXORA Personal ID để liên kết tài khoản",
+          "scanVlinkpayIdTo": "Quét mã VLINKPAY ID để tự động điền thông tin tài khoản",
+          "pointTheCameraAt": "Hướng camera về phía mã QR hoặc chọn giả lập quét thành công bên dưới.",
+          "pointTheCameraAt2": "Hướng camera về phía mã QR để quét mã nhận diện.",
+          "simulateQrScan": "Giả lập quét QR",
+          "simulateSuccessfulScan": "Giả lập Quét Lisa Tran",
+          "cancel": "HỦY BỎ"
         }
       }
     },
@@ -1546,18 +1546,18 @@
       "verifyNow": "Xác thực ngay"
     },
     "SettingsView": {
-      "text_extra_1_0b8a5e": "Đã tải xuống mã QR!",
-      "text_extra_2_43fa87": "Cấu Hinh Cài Đặt",
-      "text_extra_3_76721a": "Quản lý thông tin tài khoản chủ sở hữu, địa chỉ cửa hàng và cấu hình xác thực pháp lý (KYB).",
-      "text_extra_4_51cfc8": "Tài khoản",
-      "text_extra_5_9b19db": "Xác thực KYB",
-      "text_extra_6_1f8239": "Affiliate Link",
-      "text_extra_7_5cd6fa": "Liên kết Affiliate",
-      "text_extra_8_b4ddb3": "Đăng ký Thành viên Mới",
-      "text_extra_9_579070": "Chia sẻ liên kết này để mời thành viên mới gia nhập mạng lưới của bạn.",
-      "text_extra_10_e5ed90": "Chọn Nhánh Xếp Lập",
-      "text_extra_11_1d5298": "Nhánh Trái",
-      "text_extra_12_09b483": "Nhánh Phải"
+      "qrCodeDownloaded": "Đã tải xuống mã QR!",
+      "settingsConfiguration": "Cấu Hinh Cài Đặt",
+      "manageYourOwnerCredentials": "Quản lý thông tin tài khoản chủ sở hữu, địa chỉ cửa hàng và cấu hình xác thực pháp lý (KYB).",
+      "account": "Tài khoản",
+      "kyb": "Xác thực KYB",
+      "affiliateLink": "Affiliate Link",
+      "affiliateLink2": "Liên kết Affiliate",
+      "registerANewMember": "Đăng ký Thành viên Mới",
+      "shareThisLinkTo": "Chia sẻ liên kết này để mời thành viên mới gia nhập mạng lưới của bạn.",
+      "selectPlacementLeg": "Chọn Nhánh Xếp Lập",
+      "leftLeg": "Nhánh Trái",
+      "rightLeg": "Nhánh Phải"
     },
     "auth": {
       "AuthGraphicPanel": {

@@ -14,8 +14,8 @@ export default function TermsModal({ open, currentLanguage, onClose, onAccept, m
         <div className="flex items-center justify-between border-b border-slate-100 pb-4">
           <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">
             {modalType === 'privacy'
-              ? (t('components.register.modals.TermsModal.text_extra_1_519796'))
-              : (t('components.register.modals.TermsModal.text_extra_2_e41b87'))
+              ? (t('components.register.modals.TermsModal.privacyPolicy'))
+              : (t('components.register.modals.TermsModal.termsOfService'))
             }
           </h3>
           <button
@@ -45,14 +45,14 @@ export default function TermsModal({ open, currentLanguage, onClose, onAccept, m
             onClick={onClose}
             className="px-4 py-2 border border-slate-200 text-slate-500 rounded-xl font-bold hover:bg-slate-50 transition"
           >
-            {t('components.register.modals.TermsModal.text_extra_3_f7e671')}
+            {t('components.register.modals.TermsModal.close')}
           </button>
           <button
             type="button"
             onClick={onAccept}
             className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition shadow-sm"
           >
-            {t('components.register.modals.TermsModal.text_extra_4_aa0b10')}
+            {t('components.register.modals.TermsModal.iAccept')}
           </button>
         </div>
       </div>

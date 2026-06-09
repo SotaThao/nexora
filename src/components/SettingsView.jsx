@@ -38,7 +38,7 @@ export default function SettingsView({
   const handleSaveQr = async (qrUrl) => {
     try {
       await downloadQrCode(qrUrl, `referral-qr-${selectedLeg}.png`)
-      form.showToast(t('components.SettingsView.text_extra_1_0b8a5e'))
+      form.showToast(t('components.SettingsView.qrCodeDownloaded'))
     } catch {
       window.open(qrUrl, '_blank')
     }
@@ -64,10 +64,10 @@ export default function SettingsView({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-nexoraRule pb-4">
         <div>
           <h2 className="text-xl font-extrabold text-nexoraText">
-            {t('components.SettingsView.text_extra_2_43fa87')}
+            {t('components.SettingsView.settingsConfiguration')}
           </h2>
           <p className="mt-1 text-xs text-nexoraMuted">
-            {t('components.SettingsView.text_extra_3_76721a')}
+            {t('components.SettingsView.manageYourOwnerCredentials')}
           </p>
         </div>
       </div>
@@ -83,7 +83,7 @@ export default function SettingsView({
               : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
           }`}
         >
-          {t('components.SettingsView.text_extra_4_51cfc8')}
+          {t('components.SettingsView.account')}
         </button>
         <button
           type="button"
@@ -94,7 +94,7 @@ export default function SettingsView({
               : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
           }`}
         >
-          {t('components.SettingsView.text_extra_5_9b19db')}
+          {t('components.SettingsView.kyb')}
         </button>
         <button
           type="button"
@@ -105,7 +105,7 @@ export default function SettingsView({
               : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
           }`}
         >
-          {t('components.SettingsView.text_extra_6_1f8239')}
+          {t('components.SettingsView.affiliateLink')}
         </button>
       </div>
 
@@ -189,7 +189,7 @@ export default function SettingsView({
             <div className="flex justify-between items-center border-b border-nexoraRule pb-3">
               <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
                 <QrCode className="h-4 w-4 text-nexoraBrand" />
-                {t('components.SettingsView.text_extra_7_5cd6fa')}
+                {t('components.SettingsView.affiliateLink2')}
               </h4>
             </div>
             
@@ -272,16 +272,16 @@ export default function SettingsView({
 
             {/* Title */}
             <h3 className="text-lg font-black text-slate-800 uppercase tracking-wider mt-2">
-              {t('components.SettingsView.text_extra_8_b4ddb3')}
+              {t('components.SettingsView.registerANewMember')}
             </h3>
             <p className="text-[11px] text-slate-400 leading-normal">
-              {t('components.SettingsView.text_extra_9_579070')}
+              {t('components.SettingsView.shareThisLinkTo')}
             </p>
 
             {/* Select Placement Leg */}
             <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
               <span className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2 block">
-                {t('components.SettingsView.text_extra_10_e5ed90')}
+                {t('components.SettingsView.selectPlacementLeg')}
               </span>
               <div className="flex justify-center gap-6 mt-2">
                 <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
@@ -303,7 +303,7 @@ export default function SettingsView({
                     )}
                   </span>
                   <span className={selectedLeg === 'left' ? 'text-nexoraWarning font-black' : 'text-slate-500'}>
-                    {t('components.SettingsView.text_extra_11_1d5298')}
+                    {t('components.SettingsView.leftLeg')}
                   </span>
                 </label>
 
@@ -326,7 +326,7 @@ export default function SettingsView({
                     )}
                   </span>
                   <span className={selectedLeg === 'right' ? 'text-nexoraWarning font-black' : 'text-slate-500'}>
-                    {t('components.SettingsView.text_extra_12_09b483')}
+                    {t('components.SettingsView.rightLeg')}
                   </span>
                 </label>
               </div>

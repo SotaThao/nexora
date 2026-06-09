@@ -61,7 +61,7 @@ export default function KybTab({
               onClick={cardDetails.ctaAction}
               className="shrink-0 rounded-lg bg-nexoraBrand hover:bg-nexoraBrandDark text-white px-4 py-2.5 text-xs font-bold transition shadow-sm animate-pulse"
             >
-              {showPortal ? (t('components.settings.tabs.KybTab.text_extra_1_32199b')) : cardDetails.ctaText}
+              {showPortal ? (t('components.settings.tabs.KybTab.closeForm')) : cardDetails.ctaText}
             </button>
           )}
         </div>
@@ -88,7 +88,7 @@ export default function KybTab({
               <div className="absolute inset-0 bg-white/95 z-20 flex flex-col items-center justify-center space-y-4">
                 <div className="w-12 h-12 border-4 border-nexoraBrand/20 border-t-nexoraBrand rounded-full animate-spin"></div>
                 <p className="text-xs text-nexoraBrand font-bold uppercase tracking-wider animate-pulse">
-                  {t('components.settings.tabs.KybTab.text_extra_2_797bfc')}
+                  {t('components.settings.tabs.KybTab.submittingKybDetails')}
                 </p>
               </div>
             )}
@@ -120,7 +120,7 @@ export default function KybTab({
                 {/* Legal Business Name */}
                 <div>
                   <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                    {t('components.settings.tabs.KybTab.text_extra_3_deea78')}
+                    {t('components.settings.tabs.KybTab.legalBusinessName')}
                   </label>
                   <input
                     type="text"
@@ -135,7 +135,7 @@ export default function KybTab({
                 {/* Tax ID */}
                 <div>
                   <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                    {t('components.settings.tabs.KybTab.text_extra_4_3e0c97')}
+                    {t('components.settings.tabs.KybTab.taxIdEin')}
                   </label>
                   <input
                     type="text"
@@ -152,7 +152,7 @@ export default function KybTab({
                 {/* Business Structure */}
                 <div>
                   <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                    {t('components.settings.tabs.KybTab.text_extra_5_b85968')}
+                    {t('components.settings.tabs.KybTab.businessStructure')}
                   </label>
                   <CustomSelect
                     size="sm"
@@ -171,7 +171,7 @@ export default function KybTab({
                 {/* Owner Representative */}
                 <div>
                   <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                    {t('components.settings.tabs.KybTab.text_extra_6_a4dda0')}
+                    {t('components.settings.tabs.KybTab.representativeOwnerName')}
                   </label>
                   <input
                     type="text"
@@ -192,7 +192,7 @@ export default function KybTab({
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                      {t('components.settings.tabs.KybTab.text_extra_7_287b3b')}
+                      {t('components.settings.tabs.KybTab.bankName')}
                     </label>
                     <input
                       type="text"
@@ -206,7 +206,7 @@ export default function KybTab({
 
                   <div>
                     <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                      {t('components.settings.tabs.KybTab.text_extra_8_e0c2f5')}
+                      {t('components.settings.tabs.KybTab.accountNumber')}
                     </label>
                     <div className="relative">
                       <input
@@ -229,7 +229,7 @@ export default function KybTab({
 
                   <div>
                     <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                      {t('components.settings.tabs.KybTab.text_extra_9_429b9d')}
+                      {t('components.settings.tabs.KybTab.routingCode')}
                     </label>
                     <input
                       type="text"
@@ -249,13 +249,13 @@ export default function KybTab({
                   onClick={() => setShowPortal(false)}
                   className="px-4 py-2.5 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs uppercase tracking-wider rounded transition"
                 >
-                  {t('components.settings.tabs.KybTab.text_extra_10_a61739')}
+                  {t('components.settings.tabs.KybTab.cancel')}
                 </button>
                 <button
                   type="submit"
                   className="px-6 py-2.5 bg-nexoraElectric hover:bg-blue-700 text-white font-extrabold text-xs uppercase tracking-wider rounded flex items-center gap-1.5 transition shadow-sm"
                 >
-                  <ShieldCheck className="w-4 h-4" /> {t('components.settings.tabs.KybTab.text_extra_11_c6fd43')}
+                  <ShieldCheck className="w-4 h-4" /> {t('components.settings.tabs.KybTab.submitKyb')}
                 </button>
               </div>
             </form>
@@ -269,7 +269,7 @@ export default function KybTab({
             <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-2">
               <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
                 <Building2 className="h-4 w-4 text-slate-600" />
-                {t('components.settings.tabs.KybTab.text_extra_12_74fd60')}
+                {t('components.settings.tabs.KybTab.registeredCompanyDossier')}
               </h4>
             </div>
 
@@ -309,7 +309,7 @@ export default function KybTab({
               <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
                 <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
                   <Landmark className="h-4 w-4 text-emerald-600" />
-                  {t('components.settings.tabs.KybTab.text_extra_13_8eb589')}
+                  {t('components.settings.tabs.KybTab.settlementAccountDetails')}
                 </h4>
               </div>
 
@@ -338,7 +338,7 @@ export default function KybTab({
             {verificationStatus === 'kyb_approved' ? (
               <button
                 type="button"
-                onClick={() => showToast(t('components.settings.tabs.KybTab.text_extra_14_674f7a'))}
+                onClick={() => showToast(t('components.settings.tabs.KybTab.toModifyReceivingTargets'))}
                 className="w-full mt-5 rounded-lg border border-slate-200 py-2 text-center text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
               >
                 Change Settlement Target
@@ -354,7 +354,7 @@ export default function KybTab({
                     : 'bg-nexoraBrand hover:bg-nexoraBrandDark'
                   }`}
               >
-                {t('components.settings.tabs.KybTab.text_extra_15_0914c3')}
+                {t('components.settings.tabs.KybTab.linkSettlementBank')}
               </button>
             )}
           </div>
@@ -364,7 +364,7 @@ export default function KybTab({
             <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
               <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
                 <FileText className="h-4 w-4 text-blue-500" />
-                {t('components.settings.tabs.KybTab.text_extra_16_2e5055')}
+                {t('components.settings.tabs.KybTab.uploadedComplianceDocuments')}
               </h4>
             </div>
 
@@ -417,31 +417,31 @@ export default function KybTab({
       {/* Legal Disclosures */}
       <div className="rounded-xl border border-nexoraBorder bg-slate-50 p-6 space-y-4 text-xs mt-6 text-nexoraMuted select-text">
         <h5 className="font-bold text-nexoraText uppercase tracking-wider border-b border-slate-200 pb-2">
-          {t('components.settings.tabs.KybTab.text_extra_17_fcb0f5')}
+          {t('components.settings.tabs.KybTab.legalDisclosuresAndTerms')}
         </h5>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-1">
             <h6 className="font-extrabold text-slate-700">
-              {t('components.settings.tabs.KybTab.text_extra_18_0535b4')}
+              {t('components.settings.tabs.KybTab.label1IrsIncomeReporting')}
             </h6>
             <p className="leading-relaxed text-[11px]">
-              {t('components.settings.tabs.KybTab.text_extra_19_213612')}
+              {t('components.settings.tabs.KybTab.under1099KRegulations')}
             </p>
           </div>
           <div className="space-y-1">
             <h6 className="font-extrabold text-slate-700">
-              {t('components.settings.tabs.KybTab.text_extra_20_2181d5')}
+              {t('components.settings.tabs.KybTab.label2SavingsDisclaimer')}
             </h6>
             <p className="leading-relaxed text-[11px]">
-              {t('components.settings.tabs.KybTab.text_extra_21_33dab1')}
+              {t('components.settings.tabs.KybTab.estimatedProcessingSavingsAre')}
             </p>
           </div>
           <div className="space-y-1">
             <h6 className="font-extrabold text-slate-700">
-              {t('components.settings.tabs.KybTab.text_extra_22_8ca069')}
+              {t('components.settings.tabs.KybTab.label3TermsOfService')}
             </h6>
             <p className="leading-relaxed text-[11px]">
-              {t('components.settings.tabs.KybTab.text_extra_23_a43aa4')}
+              {t('components.settings.tabs.KybTab.usageConstitutesAgreementWith')}
             </p>
           </div>
         </div>
