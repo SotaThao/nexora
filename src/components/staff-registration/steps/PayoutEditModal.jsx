@@ -1,6 +1,6 @@
 import React from 'react'
 import { X, Camera, FolderOpen, AlertTriangle } from 'lucide-react'
-import { renderLabel } from '../../../contexts/LanguageContext'
+import { renderLabel, useTranslation } from '../../../contexts/LanguageContext'
 
 const PayoutLogos = {
   zelle: (
@@ -50,6 +50,8 @@ export default function PayoutEditModal({
   handleModalTakePhoto,
   handleModalClearQr,
 }) {
+  const { t } = useTranslation()
+
   if (!editingMethod) return null
 
   const walletNames = {
@@ -62,21 +64,21 @@ export default function PayoutEditModal({
   }
 
   const walletFields = {
-    zelle: currentLanguage === 'vi' ? 'email/SĐT' : 'email/phone',
-    bankwire: currentLanguage === 'vi' ? 'chi tiết' : 'details',
+    zelle: t('components.staff_registration.steps.PayoutEditModal.emailPhone'),
+    bankwire: t('components.staff_registration.steps.PayoutEditModal.details'),
     paypal: 'email',
     venmo: '@username',
     cashapp: '$cashtag',
-    applecash: currentLanguage === 'vi' ? 'SĐT' : 'phone number'
+    applecash: t('common.phone_number_short')
   }
 
   const walletPlaceholders = {
-    zelle: currentLanguage === 'vi' ? 'Nhập email/SĐT Zelle...' : 'Enter Zelle email/phone...',
-    bankwire: currentLanguage === 'vi' ? 'Số tài khoản & Số Routing' : 'Account & Routing numbers',
+    zelle: t('components.staff_registration.steps.PayoutEditModal.enterZelleEmailPhone'),
+    bankwire: t('components.staff_registration.steps.PayoutEditModal.accountAndRoutingNumbers'),
     paypal: 'email@paypal.com',
     venmo: '@username-venmo',
     cashapp: '$cashtag',
-    applecash: currentLanguage === 'vi' ? 'Nhập số điện thoại...' : 'Enter phone number...'
+    applecash: t('components.staff_registration.steps.PayoutEditModal.enterPhoneNumber')
   }
 
   return (
@@ -90,12 +92,10 @@ export default function PayoutEditModal({
           </span>
           <div>
             <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">
-              {currentLanguage === 'vi'
-                ? `CẤU HÌNH ${walletNames[editingMethod]?.toUpperCase()}`
-                : `CONFIGURE ${walletNames[editingMethod]?.toUpperCase()}`}
+              {t('register.payout.configure_wallet', { wallet: walletNames[editingMethod]?.toUpperCase() })}
             </h3>
             <p className="text-[10px] text-slate-400 font-medium">
-              {currentLanguage === 'vi' ? 'Chỉ định thông tin tài khoản nhận tiền' : 'Specify receiving target identifier'}
+              {t('components.staff_registration.steps.PayoutEditModal.specifyReceivingTargetIdentifier')}
             </p>
           </div>
         </div>
@@ -105,9 +105,10 @@ export default function PayoutEditModal({
           {/* Account Identifier Input */}
           <div>
             <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
-              {renderLabel(currentLanguage === 'vi'
-                ? `${walletNames[editingMethod]} ${walletFields[editingMethod]} của bạn *`
-                : `Your ${walletNames[editingMethod]} ${walletFields[editingMethod]} *`)}
+              {renderLabel(t('register.payout.account_label', {
+                wallet: walletNames[editingMethod],
+                field: walletFields[editingMethod]
+              }))}
             </label>
             <input
               type="text"
@@ -127,14 +128,14 @@ export default function PayoutEditModal({
           {/* QR Code Optional Upload */}
           <div>
             <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
-              {currentLanguage === 'vi' ? 'MÃ QR (TÙY CHỌN)' : 'QR CODE (OPTIONAL)'}
+              {t('components.staff_registration.steps.PayoutEditModal.qrCodeOptional')}
             </label>
 
             {isCapturing ? (
               <div className="flex h-44 w-full flex-col items-center justify-center rounded-xl border border-slate-200 bg-slate-50">
                 <div className="h-6 w-6 border-2 border-nexoraBrand/20 border-t-nexoraBrand rounded-full animate-spin"></div>
                 <span className="mt-2 text-xs font-semibold text-slate-500">
-                  {currentLanguage === 'vi' ? 'Đang chụp hình...' : 'Taking photo...'}
+                  {t('setup.taking_photo')}
                 </span>
               </div>
             ) : editQrCode ? (
@@ -164,7 +165,7 @@ export default function PayoutEditModal({
                 >
                   <Camera className="w-5 h-5 text-nexoraBrand" />
                   <span className="text-[11px] font-bold text-slate-600">
-                    {currentLanguage === 'vi' ? 'CHỤP HÌNH' : 'TAKE PHOTO'}
+                    {t('components.staff_registration.steps.PayoutEditModal.takePhoto')}
                   </span>
                 </button>
                 <label
@@ -172,7 +173,7 @@ export default function PayoutEditModal({
                 >
                   <FolderOpen className="w-5 h-5 text-nexoraBrand" />
                   <span className="text-[11px] font-bold text-slate-600">
-                    {currentLanguage === 'vi' ? 'CHỌN FILE' : 'CHOOSE FILE'}
+                    {t('components.staff_registration.steps.PayoutEditModal.chooseFile')}
                   </span>
                   <input type="file" accept="image/*" className="sr-only" onChange={handleModalFileChange} />
                 </label>
@@ -184,9 +185,7 @@ export default function PayoutEditModal({
           <div className="rounded-lg bg-blue-50/50 border border-blue-100 p-3 text-[10px] leading-relaxed text-blue-800 flex gap-2">
             <AlertTriangle className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
             <span>
-              {currentLanguage === 'vi'
-                ? 'Vui lòng nhập đúng thông tin tài khoản nhận tiền. Tài khoản này sẽ được dùng để nhận tiền tip.'
-                : 'Please enter the correct receiving account information. This will be used to receive payments.'}
+              {t('components.staff_registration.steps.PayoutEditModal.pleaseEnterTheCorrect')}
             </span>
           </div>
 
@@ -197,13 +196,13 @@ export default function PayoutEditModal({
               onClick={() => setEditingMethod(null)}
               className="px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider rounded-lg transition"
             >
-              {currentLanguage === 'vi' ? 'HỦY' : 'CANCEL'}
+              {t('components.staff_registration.steps.PayoutEditModal.cancel')}
             </button>
             <button
               type="submit"
               className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm transition"
             >
-              {currentLanguage === 'vi' ? 'LƯU LẠI' : 'SAVE'}
+              {t('components.staff_registration.steps.PayoutEditModal.save')}
             </button>
           </div>
         </form>

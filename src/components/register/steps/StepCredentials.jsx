@@ -1,53 +1,126 @@
 import React from 'react'
-import { Mail, Lock, Eye, EyeOff, ArrowLeft, ArrowRight } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react'
 
-export default function StepCredentials({
-  // form state
-  email, setEmail,
-  confirmEmail, setConfirmEmail,
-  password, setPassword,
-  showPassword, setShowPassword,
-  referralCode, setReferralCode,
-  errors, setErrors,
-  ssoEmail,
-  // otp inline state
-  showOtpInput, setShowOtpInput,
-  otpCode, setOtpCode,
-  otpError, setOtpError,
-  resendTimer, setResendTimer,
-  // terms modal triggers
-  setModalType, setShowTermsModal,
-  // handlers
-  handleStep1Next,
-  handleVerifyOtp,
-  // step nav
-  setCurrentStep,
-  // translation
-  t, currentLanguage, renderLabel,
-}) {
+export default function StepCredentials(props) {
+  const {
+    // form state
+    email, setEmail,
+    confirmEmail, setConfirmEmail,
+    password, setPassword,
+    showPassword, setShowPassword,
+    referralCode, setReferralCode,
+    errors, setErrors,
+    isSubmitting,
+    ssoEmail,
+    // otp inline state
+    showOtpInput, setShowOtpInput,
+    otpCode, setOtpCode,
+    otpError, setOtpError,
+    resendTimer, setResendTimer,
+    // terms modal triggers
+    setModalType, setShowTermsModal,
+    // handlers
+    handleStep1Next,
+    handleVerifyOtp,
+    // step nav
+    setCurrentStep,
+    // role
+    role,
+    // translation
+    t, currentLanguage, renderLabel,
+    // API mode
+    firstName, setFirstName,
+    lastName, setLastName,
+    isVerificationPending, setIsVerificationPending,
+    simToken, setSimToken,
+    verifySuccess, setVerifySuccess,
+    resendMessage, setResendMessage,
+    handleSimulateVerify,
+    handleResendVerification,
+  } = props
+
+  if (isVerificationPending) {
+    return (
+      <div className="p-6 sm:p-10 space-y-6 animate-fadeIn">
+        <div className="text-center max-w-md mx-auto">
+          <div className="mx-auto w-16 h-16 rounded-full bg-nexoraBrandSoft flex items-center justify-center mb-4">
+            <Mail className="w-8 h-8 text-nexoraBrand" />
+          </div>
+          <h3 className="text-lg font-bold text-nexoraText font-sans">
+            {t('register.verify_your_email')}
+          </h3>
+          <p className="text-xs text-nexoraSubtle mt-2 leading-relaxed">
+            {t('register.verification_email_sent')}{' '}
+            <span className="font-semibold text-nexoraText">{email}</span>
+          </p>
+          <p className="text-xs text-nexoraSubtle mt-1 leading-relaxed">
+            {t('register.verification_email_sent_check')}
+          </p>
+        </div>
+
+        {errors.submit && (
+          <div className="p-3 bg-red-50 text-red-700 text-xs rounded-lg border border-red-200 text-center font-medium">
+            {errors.submit}
+          </div>
+        )}
+
+        {verifySuccess && (
+          <div className="p-3 bg-green-50 text-green-700 text-xs rounded-lg border border-green-200 text-center font-medium">
+            {t('register.email_verified_success')}
+          </div>
+        )}
+
+        <div className="text-center space-y-2">
+          <button
+            type="button"
+            onClick={handleResendVerification}
+            disabled={resendTimer > 0}
+            className={`text-xs font-bold ${resendTimer > 0 ? 'text-nexoraSubtle cursor-not-allowed' : 'text-nexoraBrand hover:underline'}`}
+          >
+            {resendTimer > 0
+              ? (t('register.resend_in_seconds')).replace('{seconds}', resendTimer)
+              : t('register.resend_verification')
+            }
+          </button>
+          {resendMessage && (
+            <p className="text-xs text-green-600 font-semibold mt-1">{resendMessage}</p>
+          )}
+        </div>
+
+        <div className="pt-4 max-w-md mx-auto">
+          <button
+            type="button"
+            onClick={() => setIsVerificationPending(false)}
+            className="w-full min-h-11 py-2.5 border border-nexoraBorder hover:bg-nexoraCanvas text-nexoraSubtle hover:text-nexoraText font-semibold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 transition-all"
+          >
+            <ArrowLeft className="w-4 h-4" /> {t('register.back_to_signup')}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="p-6 sm:p-10 space-y-6">
+    <div className="space-y-6">
       {showOtpInput ? (
         <div className="space-y-6 animate-fadeIn">
           <div className="text-center max-w-md mx-auto">
             <h3 className="text-lg font-bold text-nexoraText font-sans">
-              {currentLanguage === 'vi' ? 'Kích hoạt tài khoản (Nhập OTP)' : 'Activate Account (Enter OTP)'}
+              {t('components.register.steps.StepCredentials.activateAccountEnterOtp')}
             </h3>
             <p className="text-xs text-nexoraSubtle mt-1 leading-relaxed">
-              {currentLanguage === 'vi'
-                ? 'Nhập mã OTP được gửi tới email của bạn để kích hoạt tài khoản.'
-                : 'Enter the OTP code sent to your email to activate your account.'}
+              {t('components.register.steps.StepCredentials.enterTheOtpCode')}
             </p>
           </div>
 
           <form onSubmit={handleVerifyOtp} className="space-y-4 max-w-md mx-auto">
             <div>
               <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-                {renderLabel(currentLanguage === 'vi' ? 'Nhập mã OTP *' : 'Enter OTP Code *')}
+                {renderLabel(t('components.register.steps.StepCredentials.enterOtpCode'))}
               </label>
               <input
                 type="text"
-                placeholder="e.g. 1234"
+                placeholder={t('components.register.steps.StepCredentials.phExampleOtp')}
                 maxLength={6}
                 className={`w-full bg-nexoraCanvas border ${otpError ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} rounded-lg px-4 py-2.5 text-center font-mono font-extrabold text-lg text-nexoraText focus:outline-none transition-all`}
                 value={otpCode}
@@ -63,14 +136,14 @@ export default function StepCredentials({
             <div className="text-center">
               <span className="text-[10px] text-slate-400 font-bold block">
                 {resendTimer > 0
-                  ? (currentLanguage === 'vi' ? `Gửi lại mã sau ${resendTimer}s` : `Resend code in ${resendTimer}s`)
+                  ? t('common.resend_code_in_seconds', { seconds: resendTimer })
                   : (
                     <button
                       type="button"
                       onClick={() => setResendTimer(30)}
                       className="text-nexoraBrand hover:underline"
                     >
-                      {currentLanguage === 'vi' ? 'Gửi lại mã xác thực' : 'Resend Verification Code'}
+                      {t('components.register.steps.StepCredentials.resendVerificationCode')}
                     </button>
                   )
                 }
@@ -104,7 +177,7 @@ export default function StepCredentials({
                 type="submit"
                 className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all"
               >
-                {currentLanguage === 'vi' ? 'Xác minh & Kích hoạt' : 'Verify & Activate'} <ArrowRight className="w-4 h-4" />
+                {t('components.register.steps.StepCredentials.verifyAndActivate')} <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </form>
@@ -112,11 +185,13 @@ export default function StepCredentials({
       ) : (
         <>
           <div>
-            <h3 className="text-lg font-bold text-nexoraText">{t('register.title_step_1')}</h3>
-            <p className="text-xs text-nexoraSubtle mt-1">{t('register.desc_step_1')}</p>
+            <p className="text-[11px] font-black uppercase tracking-wider text-nexoraBrand">Sign Up</p>
+            <h3 className="mt-1 text-2xl font-black text-nexoraText sm:text-3xl">{t('register.title_step_1')}</h3>
+            <p className="text-sm font-medium leading-relaxed text-nexoraMuted mt-2">{t('register.desc_step_1')}</p>
           </div>
 
-          <form onSubmit={handleStep1Next} noValidate className="space-y-4 max-w-md mx-auto">
+          <form onSubmit={handleStep1Next} noValidate className="space-y-4">
+
             {/* Email Input */}
             <div>
               <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
@@ -204,58 +279,28 @@ export default function StepCredentials({
 
             {/* Implicit Consent Terms and Privacy Note */}
             <div className="text-[11px] text-slate-500 leading-normal text-center font-sans max-w-sm mx-auto pt-1 pb-2">
-              {currentLanguage === 'vi' ? (
-                <>
-                  Bằng cách chọn vào <span className="font-bold text-slate-700">Đăng ký</span>, bạn xác nhận rằng bạn đã đọc và đồng ý với{' '}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setModalType('terms')
-                      setShowTermsModal(true)
-                    }}
-                    className="text-nexoraTealAlt hover:underline font-bold"
-                  >
-                    Điều khoản dịch vụ
-                  </button>{' '}
-                  và{' '}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setModalType('privacy')
-                      setShowTermsModal(true)
-                    }}
-                    className="text-nexoraTealAlt hover:underline font-bold"
-                  >
-                    Chính sách bảo mật
-                  </button>{' '}
-                  của chúng tôi.
-                </>
-              ) : (
-                <>
-                  By selecting <span className="font-bold text-slate-700">Register</span>, you confirm that you have read and agree to our{' '}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setModalType('terms')
-                      setShowTermsModal(true)
-                    }}
-                    className="text-nexoraTealAlt hover:underline font-bold"
-                  >
-                    Terms of Service
-                  </button>{' '}
-                  and{' '}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setModalType('privacy')
-                      setShowTermsModal(true)
-                    }}
-                    className="text-nexoraTealAlt hover:underline font-bold"
-                  >
-                    Privacy Policy
-                  </button>.
-                </>
-              )}
+              {t('register.consent.prefix')} <span className="font-bold text-slate-700">{t('register.consent.action')}</span>, {t('register.consent.middle')}{' '}
+              <button
+                type="button"
+                onClick={() => {
+                  setModalType('terms')
+                  setShowTermsModal(true)
+                }}
+                className="text-nexoraTealAlt hover:underline font-bold"
+              >
+                {t('register.consent.terms')}
+              </button>{' '}
+              {t('register.consent.and')}{' '}
+              <button
+                type="button"
+                onClick={() => {
+                  setModalType('privacy')
+                  setShowTermsModal(true)
+                }}
+                className="text-nexoraTealAlt hover:underline font-bold"
+              >
+                {t('register.consent.privacy')}
+              </button>.
             </div>
 
             <div className="pt-4 flex flex-col sm:flex-row gap-3">
@@ -268,9 +313,19 @@ export default function StepCredentials({
               </button>
               <button
                 type="submit"
-                className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all"
+                disabled={isSubmitting}
+                className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {currentLanguage === 'vi' ? 'Đăng ký' : 'Register'} <ArrowRight className="w-4 h-4" />
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    {t('components.register.steps.StepCredentials.processing')}
+                  </>
+                ) : (
+                  <>
+                    {t('components.register.steps.StepCredentials.register')} <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
               </button>
             </div>
           </form>

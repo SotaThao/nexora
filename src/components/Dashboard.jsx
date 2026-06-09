@@ -8,7 +8,6 @@ import { Filter, Moon, Settings, ShieldAlert, Sun, Check, Link } from 'lucide-re
 import { logger } from '../utils/logger'
 import { useTranslation } from '../contexts/LanguageContext'
 import { useNotification } from '../contexts/NotificationContext'
-import { INITIAL_TRANSACTIONS, INITIAL_REVIEWS, INITIAL_TOUCHPOINTS, STAFF_PERFORMANCE } from './dashboard/data/mockData'
 import { DEFAULT_PAYOUT_CONFIGS, MENU_ITEMS } from './dashboard/constants'
 import { slugify, getPayoutConfigsFromMember } from './dashboard/utils'
 import { useDashboardNavigation } from './dashboard/hooks/useDashboardNavigation'
@@ -58,7 +57,8 @@ export default function Dashboard({
   initialSettingsTab = 'profile',
   onLogout,
   userRole = 'owner',
-  currentStaffId = null
+  currentStaffId = null,
+  onStartSetup
 }) {
   const { currentLanguage, t } = useTranslation()
   const { showToast, showConfirm } = useNotification()
@@ -93,8 +93,8 @@ export default function Dashboard({
   // ---------------------------------------------------------------------------
   // Derived read data (with fallbacks so UI is never empty on first load)
   // ---------------------------------------------------------------------------
-  const transactions = transactionsData ?? INITIAL_TRANSACTIONS
-  const reviews = reviewsData ?? INITIAL_REVIEWS
+  const transactions = transactionsData ?? []
+  const reviews = reviewsData ?? []
 
   // Notifications — thin local mirror so UI updates optimistically and
   // preserves default seed on first load (no storage data).
@@ -120,10 +120,10 @@ export default function Dashboard({
 
   // Profile — thin local mirror with complex initialisation / override rules.
   const buildFallbackProfile = (storeInfo, reviewInfo) => ({
-    fullName: storeInfo?.ownerName || (hasKyb ? 'Elena Rostova' : ''),
-    email: storeInfo?.businessEmail || userEmail || (hasKyb ? 'owner@goldenglownails.com' : ''),
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200&h=200',
-    businessName: storeInfo?.name || (hasKyb ? 'Golden Glow Nail Spa & Salon' : ''),
+    fullName: storeInfo?.ownerName || '',
+    email: storeInfo?.businessEmail || userEmail || '',
+    avatar: null,
+    businessName: storeInfo?.name || '',
     businessPhone: storeInfo?.phone || '',
     businessWebsite: storeInfo?.website || '',
     street: storeInfo?.address || '',
@@ -181,7 +181,7 @@ export default function Dashboard({
   const [touchpoints, setTouchpoints] = useState(() => {
     if (merchantSetupData?.touchPoints?.length) return merchantSetupData.touchPoints
     if (setupData?.touchPoints?.length) return setupData.touchPoints
-    return INITIAL_TOUCHPOINTS
+    return []
   })
 
   // Sync touchpoints when merchant setup query updates.
@@ -199,9 +199,9 @@ export default function Dashboard({
   const [activeKpi, setActiveKpi] = useState('tips')
   const { chartRange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate, handleChartRangeChange } = useChartDateRange(transactions)
 
-  const [selectedLeaderboardStaff, setSelectedLeaderboardStaff] = useState(STAFF_PERFORMANCE[0].nickname)
+  const [selectedLeaderboardStaff, setSelectedLeaderboardStaff] = useState(null)
 
-  const businessName = profile?.businessName || setupData?.businessInfo?.name || 'Golden Glow Nail Spa'
+  const businessName = profile?.businessName || setupData?.businessInfo?.name || ''
 
   const {
     staff, setStaff,
@@ -249,6 +249,9 @@ export default function Dashboard({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [staff, touchpoints])
 
+  // Define hasSetup state
+  const hasSetup = !!(merchantSetupData || setupData)
+
   // Seed staff / touchpoints from setupData prop (takes priority).
   useEffect(() => {
     if (setupData?.staffList?.length) {
@@ -282,7 +285,7 @@ export default function Dashboard({
         setProfile({
           fullName: currentStaff.fullName,
           email: currentStaff.email,
-          avatar: currentStaff.avatar || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200&h=200',
+          avatar: currentStaff.avatar || null,
           businessName: businessName,
           businessPhone: currentStaff.phone || '',
           businessWebsite: '',
@@ -305,8 +308,8 @@ export default function Dashboard({
 
   const menuItemsToDisplay = userRole === 'staff'
     ? [
-        { id: 'overview', label: currentLanguage === 'vi' ? 'Tài khoản của tôi' : 'My Dashboard', icon: MENU_ITEMS.find(i => i.id === 'overview')?.icon, image: MENU_ITEMS.find(i => i.id === 'overview')?.image },
-        { id: 'support', label: t('dashboard.menu.support') || 'Support', icon: MENU_ITEMS.find(i => i.id === 'support')?.icon }
+        { id: 'overview', label: t('components.dashboardRoot.myDashboard'), icon: MENU_ITEMS.find(i => i.id === 'overview')?.icon, image: MENU_ITEMS.find(i => i.id === 'overview')?.image },
+        { id: 'support', label: t('dashboard.menu.support'), icon: MENU_ITEMS.find(i => i.id === 'support')?.icon }
       ]
     : MENU_ITEMS
 
@@ -375,19 +378,19 @@ export default function Dashboard({
     const totalTransactions = filteredTxsForMetrics.length;
     const averageTip = totalTransactions === 0 ? 0 : totalTips / totalTransactions;
 
-    // Standard fallbacks to keep UI looking premium if empty/zero in range
+    // Standard fallbacks — show real computed values (zeros if no data)
     return {
-      totalTips: totalTips || 4785.00,
-      totalTransactions: totalTransactions || 312,
-      averageTip: averageTip || 15.34,
-      totalReviews: 128,
-      googleRating: 4.8,
-      googleReviews: 96,
-      yelpRating: 4.5,
-      yelpReviews: 32,
-      responseRate: 68,
-      returningCustomers: 68,
-      returningCustomersDelta: 12
+      totalTips,
+      totalTransactions,
+      averageTip,
+      totalReviews: 0,
+      googleRating: 0,
+      googleReviews: 0,
+      yelpRating: 0,
+      yelpReviews: 0,
+      responseRate: 0,
+      returningCustomers: 0,
+      returningCustomersDelta: 0
     }
   }, [filteredTxsForMetrics]);
 
@@ -466,7 +469,7 @@ export default function Dashboard({
         return (
           <div className="flex h-64 flex-col items-center justify-center space-y-3 nexora-card p-6">
             <div className="text-sm font-semibold text-nexoraMuted">
-              {currentLanguage === 'vi' ? 'Không tìm thấy hồ sơ thợ của bạn.' : 'Your staff profile was not found.'}
+              {t('components.dashboardRoot.yourStaffProfileWas')}
             </div>
           </div>
         )
@@ -504,11 +507,13 @@ export default function Dashboard({
           transactions={transactions}
           selectedStaff={selectedLeaderboardStaff}
           setSelectedStaff={handleSelectLeaderboardStaff}
-          onOpenTouchpoints={() => setActiveMenu('touchpoints')}
-          onOpenReviews={() => setActiveMenu('reviews')}
+          onOpenTouchpoints={() => navigateMenu('touchpoints')}
+          onOpenReviews={() => navigateMenu('reviews')}
           businessName={businessName}
           previewQr={previewQr}
           hasKyb={hasKyb}
+          hasSetup={hasSetup}
+          onStartSetup={onStartSetup}
         />
       )
     }
@@ -822,12 +827,10 @@ export default function Dashboard({
             </div>
             <div className="space-y-1.5">
               <h3 className="text-base font-black text-nexoraText uppercase tracking-wider">
-                {currentLanguage === 'vi' ? 'Yêu cầu xác thực KYB' : 'KYB Verification Required'}
+                {t('components.dashboardRoot.kybVerificationRequired')}
               </h3>
               <p className="text-xs text-nexoraSubtle font-medium leading-relaxed">
-                {currentLanguage === 'vi'
-                  ? 'Tính năng này yêu cầu hồ sơ doanh nghiệp đã được xác thực KYB bởi VLINKPAY. Nhấp vào nút bên dưới để chuyển hướng đến trang Cài đặt > KYB để gửi thông tin doanh nghiệp của bạn.'
-                  : 'This feature requires your business profile to be KYB verified by VLINKPAY. Click below to navigate to Settings > KYB tab and submit your compliance information.'}
+                {t('components.dashboardRoot.thisFeatureRequiresYour')}
               </p>
             </div>
             <div className="pt-2 flex flex-col sm:flex-row gap-2.5 justify-center">
@@ -836,7 +839,7 @@ export default function Dashboard({
                 onClick={() => setShowKybWarningModal(false)}
                 className="px-5 py-2.5 border border-nexoraBorder hover:bg-nexoraCanvas text-nexoraSubtle text-xs font-bold uppercase tracking-wider rounded-lg transition-all"
               >
-                {currentLanguage === 'vi' ? 'Hủy bỏ' : 'Cancel'}
+                {t('components.dashboardRoot.cancel')}
               </button>
               <button
                 type="button"
@@ -848,7 +851,7 @@ export default function Dashboard({
                 }}
                 className="px-5 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-md transition-all animate-pulse"
               >
-                {currentLanguage === 'vi' ? 'Xác thực ngay' : 'Verify Now'}
+                {t('components.dashboardRoot.verifyNow')}
               </button>
             </div>
           </div>

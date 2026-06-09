@@ -143,8 +143,8 @@ export default function TouchpointsView({
         {/* Navigation Tabs */}
         <div className="flex flex-wrap gap-1 bg-nexoraSurfaceMuted dark:bg-luxuryCoal p-1 rounded-xl border border-nexoraBorder dark:border-luxuryGold/10">
           {[
-            { id: 'stations', label: t('dashboard.touchpoints.tabs.stations') || 'Điểm Chạm QR' },
-            { id: 'devices', label: t('dashboard.touchpoints.tabs.devices') || 'Thiết Bị Vật Lý' }
+            { id: 'stations', label: t('dashboard.touchpoints.tabs.stations') },
+            { id: 'devices', label: t('dashboard.touchpoints.tabs.devices') }
           ].map(tab => (
             <button
               key={tab.id}
@@ -170,7 +170,7 @@ export default function TouchpointsView({
             <Panel className="p-4 flex items-center justify-between border-l-4 border-l-nexoraBrand relative overflow-hidden">
               <div className="space-y-1">
                 <p className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
-                  {t('dashboard.touchpoint_stats.total_touchpoints') || 'Total Touchpoints'}
+                  {t('dashboard.touchpoint_stats.total_touchpoints')}
                 </p>
                 <p className="text-2xl font-black text-nexoraText font-mono tracking-tight">{totalTouchpoints}</p>
               </div>
@@ -183,7 +183,7 @@ export default function TouchpointsView({
             <Panel className="p-4 flex items-center justify-between border-l-4 border-l-luxuryGold relative overflow-hidden">
               <div className="space-y-1">
                 <p className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
-                  {t('dashboard.touchpoint_stats.active_nfc') || 'Active NFC Stands'}
+                  {t('dashboard.touchpoint_stats.active_nfc')}
                 </p>
                 <p className="text-2xl font-black text-nexoraText font-mono tracking-tight">{activeNfcStands}</p>
               </div>
@@ -196,7 +196,7 @@ export default function TouchpointsView({
             <Panel className="p-4 flex items-center justify-between border-l-4 border-l-emerald-500 relative overflow-hidden">
               <div className="space-y-1">
                 <p className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
-                  {t('dashboard.touchpoint_stats.total_scans') || 'Total Scans'}
+                  {t('dashboard.touchpoint_stats.total_scans')}
                 </p>
                 <p className="text-2xl font-black text-nexoraText font-mono tracking-tight">{totalScans}</p>
               </div>
@@ -209,7 +209,7 @@ export default function TouchpointsView({
             <Panel className="p-4 flex items-center justify-between border-l-4 border-l-red-500 relative overflow-hidden">
               <div className="space-y-1">
                 <p className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
-                  {t('dashboard.touchpoint_stats.device_issues') || 'Device Issues'}
+                  {t('dashboard.touchpoint_stats.device_issues')}
                 </p>
                 <p className="text-2xl font-black text-nexoraText font-mono tracking-tight">{deviceIssues}</p>
               </div>
@@ -224,31 +224,31 @@ export default function TouchpointsView({
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1fr_180px_auto] items-end">
               <div className="space-y-1.5">
                 <label className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
-                  {t('dashboard.modals.tp_name_label') || 'Touch Point Name'}
+                  {t('dashboard.modals.tp_name_label')}
                 </label>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder={t('dashboard.modals.tp_name_placeholder') || 'e.g. Manicure Chair 05'}
+                  placeholder={t('dashboard.modals.tp_name_placeholder')}
                   className="h-11 w-full rounded-flox-inputs border border-nexoraBorder dark:border-luxuryGold/18 bg-white dark:bg-luxuryCoal px-3 text-base text-nexoraText outline-none focus:border-nexoraBrand dark:focus:border-luxuryGold"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
-                  {t('dashboard.modals.device_id_label') || 'Hardware Serial / Device ID (Optional)'}
+                  {t('dashboard.modals.device_id_label')}
                 </label>
                 <input
                   value={deviceId}
                   onChange={(e) => setDeviceId(e.target.value)}
-                  placeholder="e.g. NFC-105, QR-Table-01"
+                  placeholder={t('components.TouchpointsView.phExampleDeviceIds')}
                   className="h-11 w-full rounded-flox-inputs border border-nexoraBorder dark:border-luxuryGold/18 bg-white dark:bg-luxuryCoal px-3 text-base text-nexoraText outline-none focus:border-nexoraBrand dark:focus:border-luxuryGold"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
-                  {t('dashboard.modals.tp_type_label') || 'Station Type'}
+                  {t('dashboard.modals.tp_type_label')}
                 </label>
                 <CustomSelect
                   buttonClass="h-11 text-sm focus:border-nexoraBrand dark:focus:border-luxuryGold"
@@ -341,7 +341,7 @@ export default function TouchpointsView({
                             target="_blank"
                             rel="noreferrer"
                             className="inline-flex items-center text-nexoraBrand dark:text-luxuryGold hover:opacity-80 transition-opacity shrink-0 cursor-pointer p-0.5"
-                            title={t('dashboard.touchpoints.open_link') || 'Test station flow'}
+                            title={t('dashboard.touchpoints.open_link')}
                           >
                             <ExternalLink className="h-3.5 w-3.5" />
                           </a>
@@ -364,7 +364,7 @@ export default function TouchpointsView({
                         />
                       </button>
                       <span className={`text-[10px] font-extrabold uppercase tracking-wider ${isPointActive ? 'text-nexoraSuccess' : 'text-nexoraSubtle'}`}>
-                        {isPointActive ? t('dashboard.touchpoint_stats.active') || 'Active' : t('dashboard.touchpoint_stats.inactive') || 'Inactive'}
+                        {isPointActive ? t('dashboard.touchpoint_stats.active') : t('dashboard.touchpoint_stats.inactive')}
                       </span>
                     </div>
 
@@ -381,7 +381,7 @@ export default function TouchpointsView({
                                 setShowSuggestions(true)
                               }}
                               onFocus={() => setShowSuggestions(true)}
-                              placeholder="Device ID (e.g. NFC-105)"
+                              placeholder={t('components.TouchpointsView.phDeviceId')}
                               className="h-9 w-full rounded-flox-inputs border border-nexoraBorder dark:border-luxuryGold/18 bg-white dark:bg-luxuryCoal px-2 text-base text-nexoraText outline-none focus:border-nexoraBrand"
                               autoFocus
                             />
@@ -473,10 +473,10 @@ export default function TouchpointsView({
                     {/* Bottom Section: Compact Metrics */}
                     <div className="mt-2 pt-2 border-t border-nexoraRule dark:border-white/5 flex items-center justify-between text-[11px] font-bold text-nexoraMuted">
                       <div>
-                        {t('dashboard.touchpoint_stats.scans') || 'Scans'}: <span className="font-black text-nexoraText">{point.scans || 0}</span>
+                        {t('dashboard.touchpoint_stats.scans')}: <span className="font-black text-nexoraText">{point.scans || 0}</span>
                       </div>
                       <div>
-                        {t('dashboard.touchpoint_stats.revenue') || 'Revenue'}: <span className="font-black text-nexoraSuccess">${revenue.toFixed(2)}</span>
+                        {t('dashboard.touchpoint_stats.revenue')}: <span className="font-black text-nexoraSuccess">${revenue.toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
@@ -490,17 +490,17 @@ export default function TouchpointsView({
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
               <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl animate-scaleUp">
                 <h3 className="text-base font-extrabold text-nexoraText">
-                  {t('dashboard.touchpoint_stats.delete_confirm_title') || 'Confirm Delete'}
+                  {t('dashboard.touchpoint_stats.delete_confirm_title')}
                 </h3>
                 <p className="mt-2.5 text-xs text-nexoraMuted leading-normal">
-                  {t('dashboard.touchpoint_stats.delete_confirm') || 'Are you sure you want to delete this touch point? This action cannot be undone.'}
+                  {t('dashboard.touchpoint_stats.delete_confirm')}
                 </p>
                 <div className="mt-5 flex justify-end gap-2 border-t border-nexoraRule pt-3">
                   <button
                     onClick={() => setDeleteConfirmId(null)}
                     className="rounded-lg border border-nexoraBorder px-4 py-2 text-xs font-bold text-nexoraMuted hover:bg-nexoraSurfaceMuted transition min-h-[44px]"
                   >
-                    {t('common.cancel') || 'Cancel'}
+                    {t('common.cancel')}
                   </button>
                   <button
                     onClick={() => {
@@ -511,7 +511,7 @@ export default function TouchpointsView({
                     }}
                     className="rounded-lg bg-nexoraDanger px-4 py-2 text-xs font-bold text-white hover:bg-nexoraDanger/90 transition min-h-[44px]"
                   >
-                    {t('common.delete') || 'Delete'}
+                    {t('common.delete')}
                   </button>
                 </div>
               </div>

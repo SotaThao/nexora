@@ -7,59 +7,7 @@ import { usePendingAccounts, useReplaceAllPendingAccounts } from '../../../data/
 import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
 import { useNotifications, useAddNotification } from '../../../data/hooks/useNotifications'
 
-const MOCK_NEXORA_STAFF_PROFILES = {
-  'NEX-STAFF-ANNA0921': {
-    fullName: 'Anna Nguyen',
-    nickname: 'Anna N.',
-    phone: '(713) 555-1234',
-    email: 'anna@example.com',
-    position: 'Nail Technician',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200&h=200',
-    vlinkpayId: 'VLP-0921-ANNA',
-    payoutConfigs: {
-      zelle: { enabled: true, value: '(713) 555-1234', qrCode: '', accountName: 'Anna Nguyen' },
-      cashapp: { enabled: true, value: '$annanais', qrCode: '', accountName: 'Anna Nguyen' },
-      venmo: { enabled: true, value: '@annanais', qrCode: '', accountName: 'Anna Nguyen' },
-      bankwire: { enabled: false, value: '', qrCode: '', accountName: '' },
-      paypal: { enabled: false, value: '', qrCode: '', accountName: '' },
-      applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
-    }
-  },
-  'NEX-STAFF-LISA1102': {
-    fullName: 'Lisa Tran',
-    nickname: 'Lisa T.',
-    phone: '(408) 555-2345',
-    email: 'lisa@example.com',
-    position: 'Nail Tech',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200&h=200',
-    vlinkpayId: 'VLP-1102-LISA',
-    payoutConfigs: {
-      venmo: { enabled: true, value: '@lisatran-nails', qrCode: '', accountName: 'Lisa Tran' },
-      cashapp: { enabled: true, value: '$lisatran', qrCode: '', accountName: 'Lisa Tran' },
-      zelle: { enabled: true, value: 'lisa@example.com', qrCode: '', accountName: 'Lisa Tran' },
-      bankwire: { enabled: false, value: '', qrCode: '', accountName: '' },
-      paypal: { enabled: false, value: '', qrCode: '', accountName: '' },
-      applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
-    }
-  },
-  'NEX-STAFF-HN1148': {
-    fullName: 'Hanna Nguyen',
-    nickname: 'Hanna Ng.',
-    phone: '(407) 555-4567',
-    email: 'hanna@example.com',
-    position: 'Nail Art Designer',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200&h=200',
-    vlinkpayId: 'VLP-1148-HN',
-    payoutConfigs: {
-      venmo: { enabled: true, value: '@hanna-art', qrCode: '', accountName: 'Hanna Nguyen' },
-      zelle: { enabled: true, value: 'hanna@example.com', qrCode: '', accountName: 'Hanna Nguyen' },
-      cashapp: { enabled: false, value: '', qrCode: '', accountName: '' },
-      bankwire: { enabled: false, value: '', qrCode: '', accountName: '' },
-      paypal: { enabled: false, value: '', qrCode: '', accountName: '' },
-      applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
-    }
-  }
-}
+const MOCK_NEXORA_STAFF_PROFILES = {}
 
 export { MOCK_NEXORA_STAFF_PROFILES }
 
@@ -270,9 +218,7 @@ export default function useStaffRegistration({ inviteData }) {
         setLinkedProfile(null)
         setNexoraStatus('error')
         setSearchError(
-          currentLanguage === 'vi'
-            ? 'Không tìm thấy NEXORA Staff ID này.'
-            : 'NEXORA Staff ID not found.'
+          t('components.staff_registration.hooks.useStaffRegistration.nexoraStaffIdNot')
         )
       }
     }, 600)
@@ -343,22 +289,20 @@ export default function useStaffRegistration({ inviteData }) {
     if (e) e.preventDefault()
     const errors = {}
     if (!regEmail.trim()) {
-      errors.email = currentLanguage === 'vi' ? 'Email không được để trống' : 'Email is required'
+      errors.email = t('components.staff_registration.hooks.useStaffRegistration.emailIsRequired')
     } else if (!/\S+@\S+\.\S+/.test(regEmail)) {
-      errors.email = currentLanguage === 'vi' ? 'Email không hợp lệ' : 'Email is invalid'
+      errors.email = t('components.staff_registration.hooks.useStaffRegistration.emailIsInvalid')
     }
     if (regEmail !== regConfirmEmail) {
-      errors.confirmEmail = currentLanguage === 'vi' ? 'Email nhập lại không khớp' : 'Emails do not match'
+      errors.confirmEmail = t('components.staff_registration.hooks.useStaffRegistration.emailsDoNotMatch')
     }
     if (!regPassword) {
-      errors.password = currentLanguage === 'vi' ? 'Mật khẩu không được để trống' : 'Password is required'
+      errors.password = t('components.staff_registration.hooks.useStaffRegistration.passwordIsRequired')
     } else if (regPassword.length < 6) {
-      errors.password = currentLanguage === 'vi' ? 'Mật khẩu phải từ 6 ký tự' : 'Password must be at least 6 characters'
+      errors.password = t('components.staff_registration.hooks.useStaffRegistration.passwordMustBeAt')
     }
     if (!termsAccepted) {
-      errors.terms = currentLanguage === 'vi'
-        ? 'Bạn phải đồng ý với Điều khoản & Điều kiện để tiếp tục.'
-        : 'You must agree to the Terms & Conditions to proceed.'
+      errors.terms = t('components.staff_registration.hooks.useStaffRegistration.youMustAgreeTo')
     }
 
     if (Object.keys(errors).length > 0) {
@@ -375,7 +319,7 @@ export default function useStaffRegistration({ inviteData }) {
     if (otpCode.trim() === '1234') {
       setStep(2)
     } else {
-      setOtpError(currentLanguage === 'vi' ? 'Mã xác thực không hợp lệ. Gợi ý: Hãy nhập 1234.' : 'Invalid code. Tip: Enter 1234.')
+      setOtpError(t('components.staff_registration.hooks.useStaffRegistration.invalidCodeTipEnter'))
     }
   }
 
@@ -430,7 +374,7 @@ export default function useStaffRegistration({ inviteData }) {
   const savePayoutAccount = (e) => {
     if (e) e.preventDefault()
     if (!editValue.trim()) {
-      setModalError(currentLanguage === 'vi' ? 'Trường này là bắt buộc.' : 'This field is required.')
+      setModalError(t('components.staff_registration.hooks.useStaffRegistration.thisFieldIsRequired'))
       return
     }
     setPayouts(prev => ({
@@ -459,7 +403,7 @@ export default function useStaffRegistration({ inviteData }) {
     setIsCapturing(true)
     setTimeout(() => {
       const mockQr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-        editValue || 'nexora-mock-payout'
+        editValue || ''
       )}`
       setEditQrCode(mockQr)
       setIsCapturing(false)
@@ -502,23 +446,13 @@ export default function useStaffRegistration({ inviteData }) {
     if (!parsed) {
       parsed = {
         businessInfo: {
-          name: inviteData?.biz || 'Golden Glow Nail Spa & Salon',
-          email: 'owner@goldenglownails.com',
-          phone: '(555) 019-2834',
-          category: 'Nail Salon'
+          name: inviteData?.biz || '',
+          email: '',
+          phone: '',
+          category: ''
         },
-        staffList: [
-          { id: '1', fullName: 'Mia Tran', nickname: 'Mia T.', position: 'Gel-X Artist', avatar: '', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '@miatran-nails', cashapp: '$miatran', zelle: 'mia.tran@gmail.com', vlinkpay: 'VLP-8842-MT' }, status: 'Active', flowType: 'Direct Addition' },
-          { id: '2', fullName: 'Vivian Le', nickname: 'Vivian L.', position: 'Acrylic Specialist', avatar: '', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '', cashapp: '$vivianle', zelle: '', vlinkpay: 'VLP-7629-VL' }, status: 'Active', flowType: 'Direct Addition' },
-          { id: '3', fullName: 'Ashley Park', nickname: 'Ashley P.', position: 'Pedicure Lead', avatar: '', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '@ashleypark', cashapp: '', zelle: 'ashley.p@gmail.com', vlinkpay: 'VLP-5521-AP' }, status: 'Active', flowType: 'Direct Addition' },
-          { id: '4', fullName: 'Hanna Nguyen', nickname: 'Hanna N.', position: 'Nail Art Designer', avatar: '', isActive: false, showInTipsFlow: true, paymentAccounts: { venmo: '@hanna-art', cashapp: '', zelle: '', vlinkpay: 'VLP-1148-HN' }, status: 'Inactive', flowType: 'Direct Addition' }
-        ],
-        touchPoints: [
-          { id: 'tp-main', name: 'Business Main Lobby QR', type: 'Business Main' },
-          { id: 'tp-front', name: 'Reception Front Desk', type: 'Front Desk' },
-          { id: 'tp-t1', name: 'Service Chair 01', type: 'Table QR' },
-          { id: 'tp-t2', name: 'Service Chair 02', type: 'Table QR' },
-        ]
+        staffList: [],
+        touchPoints: []
       }
     }
 
@@ -545,11 +479,11 @@ export default function useStaffRegistration({ inviteData }) {
         id: `noti-join-${finalStaffMember.id}-${Date.now()}`,
         staffId: finalStaffMember.id,
         type: 'feedback_alert',
-        title: currentLanguage === 'vi' ? 'Yêu cầu gia nhập mới' : 'New Join Request',
+        title: t('components.staff_registration.hooks.useStaffRegistration.newJoinRequest'),
         message: currentLanguage === 'vi'
           ? `Thợ ${finalStaffMember.fullName} (${finalStaffMember.position}) đã gửi yêu cầu liên kết với tiệm của bạn.`
           : `Technician ${finalStaffMember.fullName} (${finalStaffMember.position}) requested to link with your salon.`,
-        time: currentLanguage === 'vi' ? 'Vừa xong' : 'Just now',
+        time: t('components.staff_registration.hooks.useStaffRegistration.justNow'),
         read: false,
         linkTab: 'staff'
       }
@@ -570,11 +504,11 @@ export default function useStaffRegistration({ inviteData }) {
     const passwordQuery = linkPassword
 
     if (!emailQuery) {
-      setLinkError(currentLanguage === 'vi' ? 'Email không được để trống.' : 'Email is required.')
+      setLinkError(t('components.staff_registration.hooks.useStaffRegistration.emailIsRequired2'))
       return
     }
     if (!passwordQuery) {
-      setLinkError(currentLanguage === 'vi' ? 'Mật khẩu không được để trống.' : 'Password is required.')
+      setLinkError(t('components.staff_registration.hooks.useStaffRegistration.passwordIsRequired2'))
       return
     }
 
@@ -586,7 +520,7 @@ export default function useStaffRegistration({ inviteData }) {
     if (foundEntry) {
       const [staffIdKey, profile] = foundEntry
       if (passwordQuery.length < 6) {
-        setLinkError(currentLanguage === 'vi' ? 'Mật khẩu phải từ 6 ký tự.' : 'Password must be at least 6 characters.')
+        setLinkError(t('components.staff_registration.hooks.useStaffRegistration.passwordMustBeAt2'))
         return
       }
       setSearchId(staffIdKey)
@@ -605,7 +539,7 @@ export default function useStaffRegistration({ inviteData }) {
     const matchedAcc = accs.find(acc => acc.email === emailQuery)
     if (matchedAcc) {
       if (matchedAcc.password !== passwordQuery) {
-        setLinkError(currentLanguage === 'vi' ? 'Mật khẩu không chính xác.' : 'Incorrect password.')
+      setLinkError(t('staff_registration.link.incorrect_password'))
         return
       }
 
@@ -652,9 +586,7 @@ export default function useStaffRegistration({ inviteData }) {
     }
 
     setLinkError(
-      currentLanguage === 'vi'
-        ? 'Tài khoản không tồn tại hoặc mật khẩu sai.'
-        : 'Account does not exist or incorrect password.'
+      t('components.staff_registration.hooks.useStaffRegistration.accountDoesNotExist')
     )
   }
 
@@ -667,9 +599,7 @@ export default function useStaffRegistration({ inviteData }) {
     setLinkError('')
     setJoinPath(null)
     showToast(
-      currentLanguage === 'vi'
-        ? 'Đã hủy bỏ yêu cầu liên kết.'
-        : 'Link request cancelled.'
+      t('components.staff_registration.hooks.useStaffRegistration.linkRequestCancelled')
     )
   }
 
@@ -706,23 +636,13 @@ export default function useStaffRegistration({ inviteData }) {
     if (!parsedActive) {
       parsedActive = {
         businessInfo: {
-          name: inviteData?.biz || 'Golden Glow Nail Spa & Salon',
-          email: 'owner@goldenglownails.com',
-          phone: '(555) 019-2834',
-          category: 'Nail Salon'
+          name: inviteData?.biz || '',
+          email: '',
+          phone: '',
+          category: ''
         },
-        staffList: [
-          { id: '1', fullName: 'Mia Tran', nickname: 'Mia T.', position: 'Gel-X Artist', avatar: '', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '@miatran-nails', cashapp: '$miatran', zelle: 'mia.tran@gmail.com', vlinkpay: 'VLP-8842-MT' }, status: 'Active', flowType: 'Direct Addition' },
-          { id: '2', fullName: 'Vivian Le', nickname: 'Vivian L.', position: 'Acrylic Specialist', avatar: '', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '', cashapp: '$vivianle', zelle: '', vlinkpay: 'VLP-7629-VL' }, status: 'Active', flowType: 'Direct Addition' },
-          { id: '3', fullName: 'Ashley Park', nickname: 'Ashley P.', position: 'Pedicure Lead', avatar: '', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '@ashleypark', cashapp: '', zelle: 'ashley.p@gmail.com', vlinkpay: 'VLP-5521-AP' }, status: 'Active', flowType: 'Direct Addition' },
-          { id: '4', fullName: 'Hanna Nguyen', nickname: 'Hanna N.', position: 'Nail Art Designer', avatar: '', isActive: false, showInTipsFlow: true, paymentAccounts: { venmo: '@hanna-art', cashapp: '', zelle: '', vlinkpay: 'VLP-1148-HN' }, status: 'Inactive', flowType: 'Direct Addition' }
-        ],
-        touchPoints: [
-          { id: 'tp-main', name: 'Business Main Lobby QR', type: 'Business Main' },
-          { id: 'tp-front', name: 'Reception Front Desk', type: 'Front Desk' },
-          { id: 'tp-t1', name: 'Service Chair 01', type: 'Table QR' },
-          { id: 'tp-t2', name: 'Service Chair 02', type: 'Table QR' },
-        ]
+        staffList: [],
+        touchPoints: []
       }
     }
 
@@ -773,11 +693,11 @@ export default function useStaffRegistration({ inviteData }) {
         id: `noti-join-${finalStaffMember.id}-${Date.now()}`,
         staffId: finalStaffMember.id,
         type: 'feedback_alert',
-        title: currentLanguage === 'vi' ? 'Yêu cầu gia nhập mới' : 'New Join Request',
+        title: t('components.staff_registration.hooks.useStaffRegistration.newJoinRequest'),
         message: currentLanguage === 'vi'
           ? `Thợ ${finalStaffMember.fullName} (${finalStaffMember.position}) đã gửi yêu cầu liên kết với tiệm của bạn.`
           : `Technician ${finalStaffMember.fullName} (${finalStaffMember.position}) requested to link with your salon.`,
-        time: currentLanguage === 'vi' ? 'Vừa xong' : 'Just now',
+        time: t('components.staff_registration.hooks.useStaffRegistration.justNow'),
         read: false,
         linkTab: 'staff'
       }

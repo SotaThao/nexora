@@ -36,10 +36,10 @@ function StaffReviewsDetailModal({
         {/* Header */}
         <div className="text-left">
           <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">
-            {currentLanguage === 'vi' ? 'Đánh Giá & Uy Tín' : 'Reviews & Reputation'}
+            {t('components.dashboard.modals.StaffReviewsDetailModal.reviewsAndReputation')}
           </h3>
           <p className="text-[10px] text-slate-400 font-semibold mt-0.5 text-left">
-            {currentLanguage === 'vi' ? `Hồ sơ đánh giá của ${form.fullName}` : `Feedback details for ${form.fullName}`}
+            {t('components.dashboard.modals.StaffReviewsDetailModal.feedback_details', { name: form.fullName })}
           </p>
         </div>
 
@@ -61,7 +61,7 @@ function StaffReviewsDetailModal({
               ))}
             </div>
             <p className="text-[10px] text-slate-400 font-extrabold uppercase mt-2 tracking-wider">
-              {currentLanguage === 'vi' ? `${reviewsList.length} đánh giá` : `${reviewsList.length} reviews`}
+              {t('components.dashboard.modals.StaffReviewsDetailModal.review_count', { count: reviewsList.length })}
             </p>
           </div>
 
@@ -90,7 +90,7 @@ function StaffReviewsDetailModal({
         {/* Quick Filters */}
         <div className="space-y-2.5 text-left">
           <label className="text-[10px] font-black uppercase text-slate-500 tracking-wider">
-            {currentLanguage === 'vi' ? 'Bộ lọc nhanh' : 'Quick Filters'}
+            {t('components.dashboard.modals.StaffReviewsDetailModal.quickFilters')}
           </label>
 
           {/* Star Rating Filters */}
@@ -104,7 +104,7 @@ function StaffReviewsDetailModal({
                   : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
               }`}
             >
-              {currentLanguage === 'vi' ? 'Tất cả' : 'All'}
+              {t('components.dashboard.modals.StaffReviewsDetailModal.all')}
             </button>
             {[5, 4, 3, 2, 1].map((star) => (
               <button
@@ -127,10 +127,10 @@ function StaffReviewsDetailModal({
           <div className="flex flex-wrap gap-1.5 items-center justify-between">
             <div className="flex gap-1.5">
               {[
-                { key: 'all', label: currentLanguage === 'vi' ? 'Tất cả nguồn' : 'All Sources' },
+                { key: 'all', label: t('components.dashboard.modals.StaffReviewsDetailModal.allSources') },
                 { key: 'google', label: 'Google' },
                 { key: 'yelp', label: 'Yelp' },
-                { key: 'internal', label: currentLanguage === 'vi' ? 'Nội bộ' : 'Internal' }
+                { key: 'internal', label: t('components.dashboard.modals.StaffReviewsDetailModal.internal') }
               ].map((src) => (
                 <button
                   key={src.key}
@@ -157,7 +157,7 @@ function StaffReviewsDetailModal({
                   : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
               }`}
             >
-              {currentLanguage === 'vi' ? 'Có bình luận' : 'With Comments'}
+              {t('components.dashboard.modals.StaffReviewsDetailModal.withComments')}
             </button>
           </div>
         </div>
@@ -166,9 +166,7 @@ function StaffReviewsDetailModal({
         <div className="space-y-3 max-h-[200px] overflow-y-auto pr-1">
           {filteredReviewsList.length === 0 ? (
             <div className="text-center py-8 text-slate-400 text-xs italic">
-              {currentLanguage === 'vi'
-                ? 'Không tìm thấy đánh giá phù hợp.'
-                : 'No matching reviews found.'}
+              {t('components.dashboard.modals.StaffReviewsDetailModal.noMatchingReviewsFound')}
             </div>
           ) : (
             filteredReviewsList.map((rev) => {
@@ -183,7 +181,7 @@ function StaffReviewsDetailModal({
                       isYelp ? 'bg-rose-50 text-rose-600' :
                       'bg-slate-100 text-slate-600'
                     }`}>
-                      {isGoogle ? 'Google' : isYelp ? 'Yelp' : (currentLanguage === 'vi' ? 'Nội bộ' : 'Internal')}
+                      {isGoogle ? 'Google' : isYelp ? 'Yelp' : (t('components.dashboard.modals.StaffReviewsDetailModal.internal'))}
                     </span>
                     <span className="text-[9px] text-slate-400 font-bold">{rev.date}</span>
                   </div>
@@ -206,7 +204,7 @@ function StaffReviewsDetailModal({
                     </p>
                   ) : (
                     <p className="text-[10px] text-slate-350 italic text-left">
-                      {currentLanguage === 'vi' ? '(Chỉ đánh giá sao)' : '(Rating only)'}
+                      {t('components.dashboard.modals.StaffReviewsDetailModal.ratingOnly')}
                     </p>
                   )}
                 </div>
@@ -222,7 +220,7 @@ function StaffReviewsDetailModal({
             onClick={onClose}
             className="px-5 py-2 text-xs font-extrabold uppercase bg-slate-150 hover:bg-slate-200 text-slate-600 rounded-lg transition"
           >
-            {currentLanguage === 'vi' ? 'Đóng' : 'Close'}
+            {t('components.dashboard.modals.StaffReviewsDetailModal.close')}
           </button>
         </div>
       </div>

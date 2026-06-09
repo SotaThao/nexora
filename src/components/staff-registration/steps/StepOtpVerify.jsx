@@ -34,12 +34,10 @@ export default function StepOtpVerify({
         <form onSubmit={handleRegisterSubmit} className="space-y-6 py-4">
           <div className="text-center space-y-1.5">
             <h3 className="text-base font-extrabold text-nexoraText uppercase tracking-wide">
-              {currentLanguage === 'vi' ? '1. Đăng ký tài khoản' : '1. Register Account'}
+              {t('components.staff_registration.steps.StepOtpVerify.label1RegisterAccount')}
             </h3>
             <p className="text-xs text-nexoraMuted leading-relaxed max-w-sm mx-auto">
-              {currentLanguage === 'vi'
-                ? 'Đăng ký tài khoản thợ mới để bắt đầu nhận tiền tip.'
-                : 'Register a new technician account to start receiving tips.'}
+              {t('components.staff_registration.steps.StepOtpVerify.registerANewTechnician')}
             </p>
           </div>
 
@@ -47,12 +45,12 @@ export default function StepOtpVerify({
             {/* Email */}
             <div>
               <label className="text-[10px] font-black uppercase text-nexoraSubtle tracking-wider">
-                {renderLabel(currentLanguage === 'vi' ? 'Địa chỉ Email *' : 'Email Address *')}
+                {renderLabel(t('components.staff_registration.steps.StepOtpVerify.emailAddress'))}
               </label>
               <input
                 type="email"
                 className={`mt-1.5 h-10 w-full rounded-lg border ${regErrors.email ? 'border-nexoraDanger focus:border-nexoraDanger focus:ring-2 focus:ring-nexoraDanger/20' : 'border-nexoraBorder focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20'} px-3 text-xs outline-none transition-all`}
-                placeholder="e.g. name@example.com"
+                placeholder={t('components.staff_registration.steps.StepOtpVerify.phExampleEmail')}
                 value={regEmail}
                 onChange={(e) => {
                   setRegEmail(e.target.value)
@@ -66,12 +64,12 @@ export default function StepOtpVerify({
             {/* Confirm Email */}
             <div>
               <label className="text-[10px] font-black uppercase text-nexoraSubtle tracking-wider">
-                {renderLabel(currentLanguage === 'vi' ? 'Nhập lại địa chỉ Email *' : 'Confirm Email Address *')}
+                {renderLabel(t('components.staff_registration.steps.StepOtpVerify.confirmEmailAddress'))}
               </label>
               <input
                 type="email"
                 className={`mt-1.5 h-10 w-full rounded-lg border ${regErrors.confirmEmail ? 'border-nexoraDanger focus:border-nexoraDanger focus:ring-2 focus:ring-nexoraDanger/20' : 'border-nexoraBorder focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20'} px-3 text-xs outline-none transition-all`}
-                placeholder="e.g. name@example.com"
+                placeholder={t('components.staff_registration.steps.StepOtpVerify.phExampleEmail')}
                 value={regConfirmEmail}
                 onChange={(e) => {
                   setRegConfirmEmail(e.target.value)
@@ -85,13 +83,13 @@ export default function StepOtpVerify({
             {/* Password */}
             <div>
               <label className="text-[10px] font-black uppercase text-nexoraSubtle tracking-wider">
-                {renderLabel(currentLanguage === 'vi' ? 'Mật khẩu *' : 'Password *')}
+                {renderLabel(t('components.staff_registration.steps.StepOtpVerify.password'))}
               </label>
               <div className="relative mt-1.5">
                 <input
                   type={showPassword ? "text" : "password"}
                   className={`h-10 w-full rounded-lg border ${regErrors.password ? 'border-nexoraDanger focus:border-nexoraDanger focus:ring-2 focus:ring-nexoraDanger/20' : 'border-nexoraBorder focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20'} pl-3 pr-10 text-xs outline-none transition-all`}
-                  placeholder="••••••••"
+                  placeholder={t('components.staff_registration.steps.StepOtpVerify.phPassword')}
                   value={regPassword}
                   onChange={(e) => {
                     setRegPassword(e.target.value)
@@ -113,7 +111,7 @@ export default function StepOtpVerify({
             {/* Referral Link */}
             <div>
               <label className="text-[10px] font-black uppercase text-nexoraSubtle tracking-wider">
-                {currentLanguage === 'vi' ? 'Liên kết giới thiệu / Salon' : 'Referral Link / Salon'}
+                {t('components.staff_registration.steps.StepOtpVerify.referralLinkSalon')}
               </label>
               <input
                 type="text"
@@ -122,7 +120,7 @@ export default function StepOtpVerify({
                     ? 'bg-nexoraSurfaceMuted text-nexoraSubtle border-nexoraBorder cursor-not-allowed'
                     : 'border-nexoraBorder focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:outline-none'
                 }`}
-                placeholder="Enter referral code..."
+                placeholder={t('components.staff_registration.steps.StepOtpVerify.phReferralCode')}
                 value={regReferralLink}
                 onChange={(e) => setRegReferralLink(e.target.value)}
                 disabled={!!inviteData?.biz}
@@ -131,58 +129,28 @@ export default function StepOtpVerify({
 
             {/* Implicit Consent Terms and Privacy Note */}
             <div className="text-[11px] text-nexoraMuted leading-normal text-center font-sans max-w-sm mx-auto pt-1 pb-2">
-              {currentLanguage === 'vi' ? (
-                <>
-                  Bằng cách chọn vào <span className="font-bold text-nexoraText">Đăng ký</span>, bạn xác nhận rằng bạn đã đọc và đồng ý với{' '}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setModalType('terms')
-                      setShowTermsModal(true)
-                    }}
-                    className="text-nexoraTealAlt hover:underline font-bold"
-                  >
-                    Điều khoản dịch vụ
-                  </button>{' '}
-                  và{' '}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setModalType('privacy')
-                      setShowTermsModal(true)
-                    }}
-                    className="text-nexoraTealAlt hover:underline font-bold"
-                  >
-                    Chính sách bảo mật
-                  </button>{' '}
-                  của chúng tôi.
-                </>
-              ) : (
-                <>
-                  By selecting <span className="font-bold text-nexoraText">Register</span>, you confirm that you have read and agree to our{' '}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setModalType('terms')
-                      setShowTermsModal(true)
-                    }}
-                    className="text-nexoraTealAlt hover:underline font-bold"
-                  >
-                    Terms of Service
-                  </button>{' '}
-                  and{' '}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setModalType('privacy')
-                      setShowTermsModal(true)
-                    }}
-                    className="text-nexoraTealAlt hover:underline font-bold"
-                  >
-                    Privacy Policy
-                  </button>.
-                </>
-              )}
+              {t('register.consent.prefix')} <span className="font-bold text-nexoraText">{t('register.consent.action')}</span>, {t('register.consent.middle')}{' '}
+              <button
+                type="button"
+                onClick={() => {
+                  setModalType('terms')
+                  setShowTermsModal(true)
+                }}
+                className="text-nexoraTealAlt hover:underline font-bold"
+              >
+                {t('register.consent.terms')}
+              </button>{' '}
+              {t('register.consent.and')}{' '}
+              <button
+                type="button"
+                onClick={() => {
+                  setModalType('privacy')
+                  setShowTermsModal(true)
+                }}
+                className="text-nexoraTealAlt hover:underline font-bold"
+              >
+                {t('register.consent.privacy')}
+              </button>.
             </div>
           </div>
 
@@ -197,13 +165,13 @@ export default function StepOtpVerify({
               }}
               className="h-10 px-4 border border-nexoraBorder text-nexoraMuted font-bold text-xs uppercase tracking-wider rounded-lg hover:bg-nexoraSurfaceMuted transition"
             >
-              {t('common.back') || 'Back'}
+              {t('common.back')}
             </button>
             <button
               type="submit"
               className="flex-grow h-10 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-bold text-xs uppercase tracking-wider rounded-lg transition"
             >
-              {t('common.next') || 'Continue'}
+              {t('common.next')}
             </button>
           </div>
         </form>
@@ -213,12 +181,10 @@ export default function StepOtpVerify({
         <form onSubmit={handleVerifyOtp} className="space-y-6 py-4">
           <div className="text-center space-y-1.5">
             <h3 className="text-base font-extrabold text-nexoraText uppercase tracking-wide">
-              {currentLanguage === 'vi' ? '1. Kích hoạt tài khoản' : '1. Activate Account'}
+              {t('components.staff_registration.steps.StepOtpVerify.label1ActivateAccount')}
             </h3>
             <p className="text-xs text-nexoraMuted leading-relaxed max-w-sm mx-auto">
-              {currentLanguage === 'vi'
-                ? 'Nhập mã OTP được gửi tới email của bạn để kích hoạt tài khoản.'
-                : 'Enter the OTP code sent to your email to activate your account.'}
+              {t('components.staff_registration.steps.StepOtpVerify.enterTheOtpCode')}
             </p>
           </div>
 
@@ -226,12 +192,12 @@ export default function StepOtpVerify({
             {/* Single OTP Input */}
             <div>
               <label className="text-[10px] font-black uppercase text-nexoraSubtle tracking-wider">
-                {renderLabel(currentLanguage === 'vi' ? 'Nhập mã OTP *' : 'Enter OTP Code *')}
+                {renderLabel(t('components.staff_registration.steps.StepOtpVerify.enterOtpCode'))}
               </label>
               <input
                 type="text"
                 className="mt-1.5 h-12 w-full rounded-lg border border-nexoraBorder px-4 text-center font-mono font-black text-lg text-nexoraText focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:outline-none transition-all"
-                placeholder="e.g. 1234"
+                placeholder={t('components.staff_registration.steps.StepOtpVerify.phExampleOtp')}
                 value={otpCode}
                 onChange={(e) => {
                   setOtpCode(e.target.value)
@@ -279,13 +245,13 @@ export default function StepOtpVerify({
               onClick={() => setShowOtpInput(false)}
               className="h-10 px-4 border border-nexoraBorder text-nexoraMuted font-bold text-xs uppercase tracking-wider rounded-lg hover:bg-nexoraSurfaceMuted transition"
             >
-              {t('common.back') || 'Back'}
+              {t('common.back')}
             </button>
             <button
               type="submit"
               className="flex-grow h-10 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-bold text-xs uppercase tracking-wider rounded-lg transition"
             >
-              {currentLanguage === 'vi' ? 'Xác minh & Kích hoạt' : 'Verify & Activate'}
+              {t('components.staff_registration.steps.StepOtpVerify.verifyAndActivate')}
             </button>
           </div>
         </form>
@@ -300,13 +266,16 @@ export default function StepOtpVerify({
           setShowTermsModal(false)
         }}
         modalType={modalType}
+        t={t}
       />
     </>
   )
 }
 
 // Terms & Conditions Modal Overlay
-function TermsModal({ open, currentLanguage, onClose, onAccept, modalType }) {
+function TermsModal({ open, currentLanguage, onClose, onAccept, modalType, t }) {
+  const legalSections = t(`register.legal.${modalType}.sections`)
+
   if (!open) return null
   return (
     <div className="fixed inset-0 bg-nexoraText/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
@@ -315,8 +284,8 @@ function TermsModal({ open, currentLanguage, onClose, onAccept, modalType }) {
         <div className="flex items-center justify-between border-b border-nexoraRule pb-4">
           <h3 className="text-sm font-black uppercase tracking-wider text-nexoraText">
             {modalType === 'privacy'
-              ? (currentLanguage === 'vi' ? 'Chính sách bảo mật' : 'Privacy Policy')
-              : (currentLanguage === 'vi' ? 'Điều khoản dịch vụ' : 'Terms of Service')
+              ? (t('components.staff_registration.steps.StepOtpVerify.privacyPolicy'))
+              : (t('components.staff_registration.steps.StepOtpVerify.termsOfService'))
             }
           </h3>
           <button
@@ -331,67 +300,12 @@ function TermsModal({ open, currentLanguage, onClose, onAccept, modalType }) {
 
         {/* Content body */}
         <div className="flex-grow overflow-y-auto pr-2 py-4 space-y-4 text-xs text-nexoraMuted leading-relaxed max-h-[50vh] scrollbar-thin">
-          {modalType === 'privacy' ? (
-            currentLanguage === 'vi' ? (
-              <>
-                <h4 className="font-extrabold text-nexoraText">1. Thu thập thông tin</h4>
-                <p>Chúng tôi thu thập thông tin cá nhân của bạn như Họ tên, địa chỉ Email, Số điện thoại và thông tin tài khoản thanh toán để hỗ trợ việc định tuyến tiền tip từ khách hàng trực tiếp.</p>
-
-                <h4 className="font-extrabold text-nexoraText">2. Bảo mật dữ liệu</h4>
-                <p>Mọi dữ liệu cá nhân và thông tin ví của bạn đều được mã hóa và bảo mật an toàn theo tiêu chuẩn SSL. Chúng tôi cam kết không bán, chia sẻ hoặc tiết lộ thông tin của bạn cho bất kỳ bên thứ ba nào ngoại trừ các mục đích định tuyến giao dịch qua cổng thanh toán VLINKPAY.</p>
-
-                <h4 className="font-extrabold text-nexoraText">3. Quyền hạn cá nhân</h4>
-                <p>Bạn có toàn quyền kiểm soát thông tin cá nhân của mình. Bạn có thể truy cập, chỉnh sửa hoặc yêu cầu xóa các thông tin này bất kỳ lúc nào trực tiếp trong trang quản lý tài khoản Dashboard.</p>
-              </>
-            ) : (
-              <>
-                <h4 className="font-extrabold text-nexoraText">1. Information Collection</h4>
-                <p>We collect personal details such as your Full Name, Email Address, Phone Number, and linked payment methods to power customer tip routing.</p>
-
-                <h4 className="font-extrabold text-nexoraText">2. Data Privacy & Protection</h4>
-                <p>Your details are securely encrypted and protected under SSL standards. We do not sell or distribute your personal information to third parties except as necessary to process transactions through VLINKPAY.</p>
-
-                <h4 className="font-extrabold text-nexoraText">3. Your Rights</h4>
-                <p>You have full ownership of your data. You may review, edit, or request deletion of your account credentials at any time directly through your dashboard settings.</p>
-              </>
-            )
-          ) : (
-            currentLanguage === 'vi' ? (
-              <>
-                <h4 className="font-extrabold text-nexoraText">1. Giới thiệu và Đồng ý</h4>
-                <p>Chào mừng bạn đến với Nexora Touch, dịch vụ được cung cấp bởi VLINKPAY. Bằng việc đăng ký tài khoản thợ hoặc liên kết ví nhận tiền tip, bạn đồng ý tuân thủ toàn bộ các điều khoản được quy định dưới đây. Nếu không đồng ý, vui lòng ngừng sử dụng dịch vụ.</p>
-
-                <h4 className="font-extrabold text-nexoraText">2. Tài khoản Kỹ thuật viên (Personal Account)</h4>
-                <p>Bạn có trách nhiệm tự bảo mật thông tin tài khoản đăng nhập và đảm bảo độ chính xác của các ví nhận tiền được liên kết. VLINKPAY không chịu trách nhiệm trong trường hợp thông tin thanh toán của bạn bị nhập sai dẫn đến thất thoát tiền tip.</p>
-
-                <h4 className="font-extrabold text-nexoraText">3. Quy trình Tiền Tip và Rút tiền</h4>
-                <p>Tiền tip từ khách hàng gửi trực tiếp thông qua cổng VLINKPAY của bạn sẽ được định tuyến trực tiếp đến tài khoản thanh toán mà bạn chỉ định (Zelle, Venmo, PayPal, vv.). Mọi giao dịch khi đã được hoàn thành qua hệ thống sẽ không thể hoàn trả hoặc thu hồi.</p>
-
-                <h4 className="font-extrabold text-nexoraText">4. Quyền riêng tư và Bảo mật dữ liệu</h4>
-                <p>Chúng tôi cam kết bảo vệ dữ liệu cá nhân của bạn, bao gồm tên hiển thị, hình ảnh, email và thông tin ví thanh toán. Dữ liệu này chỉ được sử dụng cho mục đích vận hành hệ thống Nexora Touch, hiển thị trang gửi tip cho khách hàng của salon và báo cáo lịch sử giao dịch.</p>
-
-                <h4 className="font-extrabold text-nexoraText">5. Thay đổi Điều khoản</h4>
-                <p>Chúng tôi có quyền sửa đổi hoặc cập nhật các điều khoản này bất kỳ lúc nào để đáp ứng các quy định pháp lý và nâng cấp dịch vụ. Mọi thay đổi sẽ được thông báo trực tiếp trên cổng thông tin này.</p>
-              </>
-            ) : (
-              <>
-                <h4 className="font-extrabold text-nexoraText">1. Introduction & Acceptance</h4>
-                <p>Welcome to Nexora Touch, a service provided by VLINKPAY. By creating a technician account or configuring your tipping payout wallet, you fully agree to be bound by these Terms & Conditions. If you do not agree, please discontinue using this portal.</p>
-
-                <h4 className="font-extrabold text-nexoraText">2. Technician Personal Account</h4>
-                <p>You are solely responsible for maintaining the confidentiality of your login credentials and ensuring the accuracy of your linked payout methods. VLINKPAY is not liable for transactions sent to incorrect wallet addresses provided by you.</p>
-
-                <h4 className="font-extrabold text-nexoraText">3. Tips & Payouts Processing</h4>
-                <p>Customer tips processed through VLINKPAY are routed directly to your configured payout wallets (such as Zelle, Venmo, PayPal, etc.). All completed transactions are final and cannot be refunded or recalled.</p>
-
-                <h4 className="font-extrabold text-nexoraText">4. Privacy & Data Security</h4>
-                <p>We are committed to protecting your personal information, including your public display name, photo, email, and wallet details. This data is processed only to power the tipping workflow, display options to salon clients, and log transaction history.</p>
-
-                <h4 className="font-extrabold text-nexoraText">5. Modifications of Terms</h4>
-                <p>We reserve the right to modify these terms at any time to comply with legal requirements or service enhancements. Any updates will be published and made viewable on this portal.</p>
-              </>
-            )
-          )}
+          {Array.isArray(legalSections) && legalSections.map((section) => (
+            <React.Fragment key={section.title}>
+              <h4 className="font-extrabold text-nexoraText">{section.title}</h4>
+              <p>{section.body}</p>
+            </React.Fragment>
+          ))}
         </div>
 
         {/* Footer action buttons */}
@@ -401,14 +315,14 @@ function TermsModal({ open, currentLanguage, onClose, onAccept, modalType }) {
             onClick={onClose}
             className="px-4 py-2 border border-nexoraBorder text-nexoraMuted rounded-xl font-bold hover:bg-nexoraSurfaceMuted transition"
           >
-            {currentLanguage === 'vi' ? 'Đóng' : 'Close'}
+            {t('components.staff_registration.steps.StepOtpVerify.close')}
           </button>
           <button
             type="button"
             onClick={onAccept}
           className="px-5 py-2 bg-nexoraText hover:bg-nexoraText/90 text-white rounded-xl font-bold transition shadow-sm"
           >
-            {currentLanguage === 'vi' ? 'Tôi Đồng Ý' : 'I Accept'}
+            {t('components.staff_registration.steps.StepOtpVerify.iAccept')}
           </button>
         </div>
       </div>

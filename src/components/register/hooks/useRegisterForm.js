@@ -6,6 +6,9 @@ import { useReplaceAllPendingAccounts, usePendingAccounts } from '../../../data/
 import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
 import { useNotifications, useAddNotification } from '../../../data/hooks/useNotifications'
 import { logger } from '../../../utils/logger'
+import apiAuthAdapter from '../../../auth/adapters/apiAuthAdapter'
+import { getErrorI18nKey } from '../../../data/errorCodes'
+import { useCompletePersonalOnboarding } from '../../../data/hooks/usePersonalOnboarding'
 
 export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onKybSuccess, isRedirectedFromSession }) {
   const { t, currentLanguage, setLanguage, renderLabel } = useTranslation()
@@ -13,10 +16,12 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const pendingAccountsQuery = usePendingAccounts()
   const merchantSetupQuery = useMerchantSetup()
   const saveMerchantSetupMutation = useSaveMerchantSetup()
+
   useNotifications()
   const addNotificationMutation = useAddNotification()
+  const completePersonalOnboardingMutation = useCompletePersonalOnboarding()
   const [currentStep, setCurrentStep] = useState(0)
-  const [role, setRole] = useState('business')
+  const [role, setRole] = useState('personal')
 
   // Step 1 states
   const [email, setEmail] = useState(ssoEmail || '')
@@ -43,6 +48,14 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
   })
 
+  // API mode states
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [isVerificationPending, setIsVerificationPending] = useState(false)
+  const [simToken, setSimToken] = useState('sim-token-123')
+  const [verifySuccess, setVerifySuccess] = useState(false)
+  const [resendMessage, setResendMessage] = useState('')
+
   // Step 2 states
   const [generatedStaffId, setGeneratedStaffId] = useState('')
   const [copied, setCopied] = useState(false)
@@ -65,6 +78,50 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
 
   // Validation errors
   const [errors, setErrors] = useState({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleSimulateVerify = () => {
+    setErrors({})
+    setVerifySuccess(false)
+    apiAuthAdapter.verifyEmail({ token: simToken, email: email.trim().toLowerCase() })
+      .then(() => {
+        setVerifySuccess(true)
+        // Auto-login to get tokens for subsequent protected calls (Step 2, 3, 4)
+        return apiAuthAdapter.login({ email: email.trim().toLowerCase(), password })
+      })
+      .then(async () => {
+        // Business creation is handled by Setup Wizard (onboarding), not here.
+        setTimeout(() => {
+          if (role === 'business') {
+            if (onRegisterSuccess) onRegisterSuccess()
+          } else {
+            setIsVerificationPending(false)
+            setCurrentStep(2)
+          }
+        }, 1500)
+      })
+      .catch((err) => {
+        logger.error('handleSimulateVerify error:', err)
+        const code = err?.errorCode || 'HTTP_ERROR'
+        const i18nKey = getErrorI18nKey(code)
+        setErrors({ submit: t(i18nKey) })
+      })
+  }
+
+  const handleResendVerification = () => {
+    setErrors({})
+    setResendMessage('')
+    apiAuthAdapter.resendVerificationEmail({ email: email.trim().toLowerCase() })
+      .then(() => {
+        setResendMessage(t('register.resend_verification_success'))
+        setResendTimer(60)
+      })
+      .catch((err) => {
+        const code = err?.errorCode || 'HTTP_ERROR'
+        const i18nKey = getErrorI18nKey(code)
+        setErrors({ submit: t(i18nKey) })
+      })
+  }
 
   useEffect(() => {
     let interval = null
@@ -112,25 +169,66 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     }
 
     setErrors({})
+    setIsSubmitting(true)
 
-    if (role === 'personal') {
-      const emailPrefix = email.split('@')[0].toUpperCase()
-      const initials = emailPrefix.slice(0, 3) || 'STAFF'
-      const randomDigits = Math.floor(1000 + Math.random() * 9000)
-      const staffId = `NEX-STAFF-${initials}${randomDigits}`
-      setGeneratedStaffId(staffId)
-      setVlinkpayId(`VLP-${randomDigits}-${initials}`)
-
-      setShowOtpInput(true)
-      setOtpCode('')
-      setOtpError('')
-      setResendTimer(30)
-    } else {
-      setOtpCode('')
-      setOtpError('')
-      setResendTimer(30)
-      setCurrentStep(2)
-    }
+    apiAuthAdapter.signup({
+      email: email.trim().toLowerCase(),
+      confirmEmail: confirmEmail.trim().toLowerCase(),
+      password,
+      confirmPassword: password,
+      firstName: email.split('@')[0],
+      lastName: 'User',
+      // profileType enum per signup API docs is "Merchant" | "User" (not "Personal").
+      profileType: role === 'business' ? 'Merchant' : 'User'
+    }).then(() => {
+      // Send verification email right after successful signup
+      return apiAuthAdapter.resendVerificationEmail({ email: email.trim().toLowerCase() })
+        .catch(err => {
+          // If the backend auto-verifies in DEV, or rate limits because it already sent it, handle gracefully
+          if (err?.errorCode === 'USER_EMAIL_ALREADY_VERIFIED') {
+            return 'ALREADY_VERIFIED'
+          }
+          if (err?.errorCode === 'COMMON_RATE_LIMIT_EXCEEDED') {
+            return 'RATE_LIMITED' // Treat as success, email was sent by signup or rate limited
+          }
+          throw err
+        })
+    }).then((resStatus) => {
+      if (resStatus === 'ALREADY_VERIFIED') {
+        // Auto-login to get tokens for subsequent protected calls
+        apiAuthAdapter.login({ email: email.trim().toLowerCase(), password })
+          .then(async () => {
+            setVerifySuccess(true)
+            // Business will handle API setup in the Setup Wizard
+            setTimeout(() => {
+              if (role === 'business') {
+                if (onRegisterAndLogin) onRegisterAndLogin(email.trim().toLowerCase())
+                else if (onRegisterSuccess) onRegisterSuccess()
+              } else {
+                setIsVerificationPending(false)
+                setCurrentStep(2)
+              }
+            }, 1500)
+          })
+          .catch(err => {
+            logger.error('Auto-login failed after auto-verify:', err)
+            const code = err?.errorCode || 'HTTP_ERROR'
+            const i18nKey = getErrorI18nKey(code)
+            setErrors({ email: t(i18nKey) })
+          })
+          .finally(() => setIsSubmitting(false))
+      } else {
+        setIsVerificationPending(true)
+        setIsSubmitting(false)
+      }
+    }).catch((err) => {
+      const errorsMap = {}
+      const code = err?.errorCode || 'HTTP_ERROR'
+      const i18nKey = getErrorI18nKey(code)
+      errorsMap.email = t(i18nKey) || t('errors.unknown_error')
+      setErrors(errorsMap)
+      setIsSubmitting(false)
+    })
   }
 
   const handleVerifyOtp = (e) => {
@@ -142,7 +240,6 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         const existingAccounts = pendingAccountsQuery.data ?? []
         const newAccount = {
           email: email.trim().toLowerCase(),
-          password: password,
           referralCode: referralCode.trim(),
           role: role,
           fullName: null,
@@ -155,9 +252,10 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         const filtered = existingAccounts.filter(acc => acc.email !== newAccount.email)
         filtered.push(newAccount)
         // Fire-and-forget: invoke callback immediately (same user-observable timing as before),
-        // and let the mutation persist in the background.
+        // Let the mutation persist in the background.
         replaceAllPendingAccountsMutation.mutate(filtered)
 
+        // Business creation is handled by Setup Wizard (onboarding), not here.
         if (onRegisterAndLogin) {
           onRegisterAndLogin(email.trim().toLowerCase())
         } else if (onRegisterSuccess) {
@@ -168,7 +266,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         setCurrentStep(2)
       }
     } else {
-      setOtpError(currentLanguage === 'vi' ? 'Mã OTP không chính xác. Thử lại với 1234.' : 'Invalid OTP. Try again with 1234.')
+      setOtpError(t('components.register.hooks.useRegisterForm.invalidOtpTryAgain'))
     }
   }
 
@@ -250,7 +348,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const savePayoutAccount = (e) => {
     if (e) e.preventDefault()
     if (!editValue.trim()) {
-      setModalError(currentLanguage === 'vi' ? 'Trường này là bắt buộc.' : 'This field is required.')
+      setModalError(t('components.register.hooks.useRegisterForm.thisFieldIsRequired'))
       return
     }
     setPayouts(prev => ({
@@ -279,7 +377,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     setIsCapturing(true)
     setTimeout(() => {
       const mockQr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-        editValue || 'nexora-mock-payout'
+        editValue || ''
       )}`
       setEditQrCode(mockQr)
       setIsCapturing(false)
@@ -290,14 +388,48 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     setEditQrCode('')
   }
 
-  const handlePersonalRegisterSubmit = () => {
+  const handlePersonalRegisterSubmit = async () => {
+    const isApiMode = import.meta.env.VITE_DATA_SOURCE === 'api'
+
     let staffId = generatedStaffId
     if (!staffId) {
       const emailPrefix = email.split('@')[0].toUpperCase()
       const initials = emailPrefix.slice(0, 3) || 'STAFF'
       const randomDigits = Math.floor(1000 + Math.random() * 9000)
       staffId = `NEX-STAFF-${initials}${randomDigits}`
+      
+      // Try to get actual user ID if in API mode
+      if (isApiMode) {
+        try {
+          const session = await apiAuthAdapter.getSession()
+          if (session && session.id) {
+            staffId = session.id
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+      
       setGeneratedStaffId(staffId)
+    }
+
+    if (isApiMode) {
+      try {
+        await completePersonalOnboardingMutation.mutateAsync({
+          accountData: { 
+            fullName: nickname.trim() || email.split('@')[0], 
+            nickname: nickname.trim() || email.split('@')[0], 
+            phone, 
+            position 
+          },
+          payoutConfigs: payouts
+        })
+        setCurrentStep(4)
+      } catch (err) {
+        logger.error('Failed to complete API onboarding', err)
+        setErrors({ submit: t('register.errors.onboarding_failed') })
+      }
+      return
     }
 
     const finalPaymentAccounts = {}
@@ -328,7 +460,6 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     const existingAccounts = pendingAccountsQuery.data ?? []
     const newAccount = {
       email: email.trim().toLowerCase(),
-      password: password,
       referralCode: referralCode.trim(),
       role: role,
       fullName: nickname.trim() || email.split('@')[0],
@@ -350,23 +481,13 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     if (!parsedSetup) {
       parsedSetup = {
         businessInfo: {
-          name: 'Golden Glow Nail Spa & Salon',
-          email: 'owner@goldenglownails.com',
-          phone: '(555) 019-2834',
-          category: 'Nail Salon'
+          name: '',
+          email: '',
+          phone: '',
+          category: ''
         },
-        staffList: [
-          { id: '1', fullName: 'Mia Tran', nickname: 'Mia T.', position: 'Gel-X Artist', avatar: '', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '@miatran-nails', cashapp: '$miatran', zelle: 'mia.tran@gmail.com', vlinkpay: 'VLP-8842-MT' }, status: 'Active', flowType: 'Direct Addition' },
-          { id: '2', fullName: 'Vivian Le', nickname: 'Vivian L.', position: 'Acrylic Specialist', avatar: '', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '', cashapp: '$vivianle', zelle: '', vlinkpay: 'VLP-7629-VL' }, status: 'Active', flowType: 'Direct Addition' },
-          { id: '3', fullName: 'Ashley Park', nickname: 'Ashley P.', position: 'Pedicure Lead', avatar: '', isActive: true, showInTipsFlow: true, paymentAccounts: { venmo: '@ashleypark', cashapp: '', zelle: 'ashley.p@gmail.com', vlinkpay: 'VLP-5521-AP' }, status: 'Active', flowType: 'Direct Addition' },
-          { id: '4', fullName: 'Hanna Nguyen', nickname: 'Hanna N.', position: 'Nail Art Designer', avatar: '', isActive: false, showInTipsFlow: true, paymentAccounts: { venmo: '@hanna-art', cashapp: '', zelle: '', vlinkpay: 'VLP-1148-HN' }, status: 'Inactive', flowType: 'Direct Addition' }
-        ],
-        touchPoints: [
-          { id: 'tp-main', name: 'Business Main Lobby QR', type: 'Business Main' },
-          { id: 'tp-front', name: 'Reception Front Desk', type: 'Front Desk' },
-          { id: 'tp-t1', name: 'Service Chair 01', type: 'Table QR' },
-          { id: 'tp-t2', name: 'Service Chair 02', type: 'Table QR' },
-        ]
+        staffList: [],
+        touchPoints: []
       }
     }
 
@@ -389,11 +510,11 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         id: `noti-join-${finalStaffMember.id}-${Date.now()}`,
         staffId: finalStaffMember.id,
         type: 'feedback_alert',
-        title: currentLanguage === 'vi' ? 'Yêu cầu gia nhập mới' : 'New Join Request',
+        title: t('components.register.hooks.useRegisterForm.newJoinRequest'),
         message: currentLanguage === 'vi'
           ? `Thợ ${finalStaffMember.fullName} (${finalStaffMember.position}) đã gửi yêu cầu liên kết với tiệm của bạn.`
           : `Technician ${finalStaffMember.fullName} (${finalStaffMember.position}) requested to link with your salon.`,
-        time: currentLanguage === 'vi' ? 'Vừa xong' : 'Just now',
+        time: t('components.register.hooks.useRegisterForm.justNow'),
         read: false,
         linkTab: 'staff'
       }
@@ -414,18 +535,18 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const getStepName = (step) => {
     if (role === 'business') {
       switch (step) {
-        case 0: return currentLanguage === 'vi' ? 'Chọn vai trò' : 'Account Type'
-        case 1: return currentLanguage === 'vi' ? 'Thông tin đăng ký' : 'Credentials'
-        case 2: return currentLanguage === 'vi' ? 'Kích hoạt OTP' : 'Activate OTP'
+        case 0: return t('components.register.hooks.useRegisterForm.accountType')
+        case 1: return t('components.register.hooks.useRegisterForm.credentials')
+        case 2: return t('components.register.hooks.useRegisterForm.activateOtp')
         default: return ''
       }
     } else {
       switch (step) {
-        case 0: return currentLanguage === 'vi' ? 'Chọn vai trò' : 'Account Type'
-        case 1: return currentLanguage === 'vi' ? 'Thông tin đăng ký' : 'Credentials'
-        case 2: return currentLanguage === 'vi' ? 'Hồ sơ cá nhân' : 'Profile Setup'
-        case 3: return currentLanguage === 'vi' ? 'Cấu hình ví' : 'Payout Setup'
-        case 4: return currentLanguage === 'vi' ? 'Hoàn tất' : 'Success'
+        case 0: return t('components.register.hooks.useRegisterForm.accountType')
+        case 1: return t('components.register.hooks.useRegisterForm.credentials')
+        case 2: return t('components.register.hooks.useRegisterForm.profileSetup')
+        case 3: return t('components.register.hooks.useRegisterForm.payoutSetup')
+        case 4: return t('components.register.hooks.useRegisterForm.success')
         default: return ''
       }
     }
@@ -505,9 +626,25 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     setModalError,
     vlinkpayStatus,
     setVlinkpayStatus,
+    // API mode states & handlers
+    firstName,
+    setFirstName,
+    lastName,
+    setLastName,
+    isVerificationPending,
+    setIsVerificationPending,
+    simToken,
+    setSimToken,
+    verifySuccess,
+    setVerifySuccess,
+    resendMessage,
+    setResendMessage,
+    handleSimulateVerify,
+    handleResendVerification,
     // validation
     errors,
     setErrors,
+    isSubmitting,
     // handlers
     handleStep1Next,
     handleVerifyOtp,

@@ -15,23 +15,21 @@ export default function StepOtpVerify({
     <div className="p-6 sm:p-10 space-y-6 animate-fadeIn">
       <div className="text-center max-w-md mx-auto">
         <h3 className="text-lg font-bold text-nexoraText">
-          {currentLanguage === 'vi' ? 'Kích hoạt tài khoản (Nhập OTP)' : 'Activate Account (Enter OTP)'}
+          {t('components.register.steps.StepOtpVerify.activateAccountEnterOtp')}
         </h3>
         <p className="text-xs text-nexoraSubtle mt-1 leading-relaxed">
-          {currentLanguage === 'vi'
-            ? 'Nhập mã OTP được gửi tới email của bạn để kích hoạt tài khoản.'
-            : 'Enter the OTP code sent to your email to activate your account.'}
+          {t('components.register.steps.StepOtpVerify.enterTheOtpCode')}
         </p>
       </div>
 
       <form onSubmit={handleVerifyOtp} className="space-y-4 max-w-md mx-auto">
         <div>
           <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-            {renderLabel(currentLanguage === 'vi' ? 'Nhập mã OTP *' : 'Enter OTP Code *')}
+            {renderLabel(t('components.register.steps.StepOtpVerify.enterOtpCode'))}
           </label>
           <input
             type="text"
-            placeholder="e.g. 1234"
+            placeholder={t('components.register.steps.StepOtpVerify.phExampleOtp')}
             maxLength={6}
             className={`w-full bg-nexoraCanvas border ${otpError ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} rounded-lg px-4 py-2.5 text-center font-mono font-extrabold text-lg text-nexoraText focus:outline-none transition-all`}
             value={otpCode}
@@ -47,14 +45,14 @@ export default function StepOtpVerify({
         <div className="text-center">
           <span className="text-[10px] text-slate-400 font-bold block">
             {resendTimer > 0
-              ? (currentLanguage === 'vi' ? `Gửi lại mã sau ${resendTimer}s` : `Resend code in ${resendTimer}s`)
+              ? t('common.resend_code_in_seconds', { seconds: resendTimer })
               : (
                 <button
                   type="button"
                   onClick={() => setResendTimer(30)}
                   className="text-nexoraBrand hover:underline"
                 >
-                  {currentLanguage === 'vi' ? 'Gửi lại mã xác thực' : 'Resend Verification Code'}
+                  {t('components.register.steps.StepOtpVerify.resendVerificationCode')}
                 </button>
               )
             }
@@ -88,7 +86,7 @@ export default function StepOtpVerify({
             type="submit"
             className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all"
           >
-            {currentLanguage === 'vi' ? 'Xác minh & Kích hoạt' : 'Verify & Activate'} <ArrowRight className="w-4 h-4" />
+            {t('components.register.steps.StepOtpVerify.verifyAndActivate')} <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       </form>

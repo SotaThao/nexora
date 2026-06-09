@@ -31,7 +31,7 @@ export default function TransactionFilter({
   const { t } = useTranslation()
 
   const paymentOptions = [
-    { value: 'all', label: t('dashboard.activity_log.all_payments') || 'All Payment Methods' },
+    { value: 'all', label: t('dashboard.activity_log.all_payments') },
     { value: 'Venmo', label: 'Venmo' },
     { value: 'Cash App', label: 'Cash App' },
     { value: 'Zelle', label: 'Zelle' },
@@ -39,19 +39,19 @@ export default function TransactionFilter({
   ]
 
   const statusOptions = [
-    { value: 'all', label: t('dashboard.activity_log.all_statuses') || 'All Statuses' },
+    { value: 'all', label: t('dashboard.activity_log.all_statuses') },
     { value: 'Success', label: 'Success' },
     { value: 'Pending', label: 'Pending' },
     { value: 'Failed', label: 'Failed' }
   ]
 
   const datePresetOptions = [
-    { value: 'all', label: t('dashboard.activity_log.preset_all') || 'All Time' },
-    { value: 'today', label: t('dashboard.activity_log.preset_today') || 'Today' },
-    { value: 'yesterday', label: t('dashboard.activity_log.preset_yesterday') || 'Yesterday' },
-    { value: '7days', label: t('dashboard.activity_log.preset_7days') || 'Last 7 Days' },
-    { value: '30days', label: t('dashboard.activity_log.preset_30days') || 'Last 30 Days' },
-    { value: 'custom', label: t('dashboard.activity_log.preset_custom') || 'Custom Range' }
+    { value: 'all', label: t('dashboard.activity_log.preset_all') },
+    { value: 'today', label: t('dashboard.activity_log.preset_today') },
+    { value: 'yesterday', label: t('dashboard.activity_log.preset_yesterday') },
+    { value: '7days', label: t('dashboard.activity_log.preset_7days') },
+    { value: '30days', label: t('dashboard.activity_log.preset_30days') },
+    { value: 'custom', label: t('dashboard.activity_log.preset_custom') }
   ]
 
   return (
@@ -60,7 +60,7 @@ export default function TransactionFilter({
         <div className="flex items-center gap-2">
           <SlidersHorizontal className="h-4 w-4 text-nexoraBrand" />
           <h3 className="text-xs font-bold uppercase tracking-wider text-nexoraText">
-            {t('dashboard.activity_log.filter_title') || 'Filters'}
+            {t('dashboard.activity_log.filter_title')}
           </h3>
         </div>
         <button
@@ -68,7 +68,7 @@ export default function TransactionFilter({
           className="flex items-center gap-1.5 text-xs font-bold text-nexoraMuted hover:text-nexoraBrand transition-colors cursor-pointer select-none"
         >
           <RotateCcw className="h-3.5 w-3.5" />
-          {t('dashboard.activity_log.filter_reset') || 'Reset'}
+          {t('dashboard.activity_log.filter_reset')}
         </button>
       </div>
 
@@ -76,13 +76,13 @@ export default function TransactionFilter({
         {/* Search Query */}
         <div className="flex flex-col gap-1.5">
           <label className="text-[10px] font-semibold uppercase text-nexoraMuted tracking-wider">
-            {t('dashboard.activity_log.filter_search') || 'Search'}
+            {t('dashboard.activity_log.filter_search')}
           </label>
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-nexoraSubtle" />
             <input
               type="text"
-              placeholder={t('dashboard.activity_log.search_placeholder') || 'Search ID, staff, touchpoint...'}
+              placeholder={t('dashboard.activity_log.search_placeholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="h-9 w-full rounded border border-nexoraBorder pl-8 pr-2.5 text-xs font-semibold font-sans outline-none focus:border-nexoraBrand focus:ring-1 focus:ring-nexoraBrand/20 text-nexoraText bg-white transition-all"
@@ -93,7 +93,7 @@ export default function TransactionFilter({
         {/* Date Preset */}
         <div className="flex flex-col gap-1.5">
           <label className="text-[10px] font-semibold uppercase text-nexoraMuted tracking-wider">
-            {t('dashboard.activity_log.filter_date') || 'Date'}
+            {t('dashboard.activity_log.filter_date')}
           </label>
           <CustomSelect
             size="sm"
@@ -106,7 +106,7 @@ export default function TransactionFilter({
         {/* Amount range */}
         <div className="flex flex-col gap-1.5">
           <label className="text-[10px] font-semibold uppercase text-nexoraMuted tracking-wider">
-            {t('dashboard.activity_log.filter_amount') || 'Amount'}
+            {t('dashboard.activity_log.filter_amount')}
           </label>
           <div className="flex items-center gap-1.5">
             <div className="relative w-full">
@@ -114,7 +114,7 @@ export default function TransactionFilter({
               <input
                 type="number"
                 min="0"
-                placeholder="Min"
+                placeholder={t('components.TransactionFilter.phMin')}
                 value={minAmount}
                 onChange={(e) => setMinAmount(e.target.value)}
                 className="h-9 w-full rounded border border-nexoraBorder pl-5 pr-1 text-xs font-semibold font-sans outline-none focus:border-nexoraBrand focus:ring-1 focus:ring-nexoraBrand/20 text-nexoraText bg-white transition-all"
@@ -126,7 +126,7 @@ export default function TransactionFilter({
               <input
                 type="number"
                 min="0"
-                placeholder="Max"
+                placeholder={t('components.TransactionFilter.phMax')}
                 value={maxAmount}
                 onChange={(e) => setMaxAmount(e.target.value)}
                 className="h-9 w-full rounded border border-nexoraBorder pl-5 pr-1 text-xs font-semibold font-sans outline-none focus:border-nexoraBrand focus:ring-1 focus:ring-nexoraBrand/20 text-nexoraText bg-white transition-all"
@@ -138,7 +138,7 @@ export default function TransactionFilter({
         {/* Staff */}
         <div className="flex flex-col gap-1.5">
           <label className="text-[10px] font-semibold uppercase text-nexoraMuted tracking-wider">
-            {t('dashboard.activity_log.filter_staff') || 'Staff'}
+            {t('dashboard.activity_log.filter_staff')}
           </label>
           <CustomSelect
             size="sm"
@@ -151,7 +151,7 @@ export default function TransactionFilter({
         {/* Touch Point */}
         <div className="flex flex-col gap-1.5">
           <label className="text-[10px] font-semibold uppercase text-nexoraMuted tracking-wider">
-            {t('dashboard.activity_log.filter_tp') || 'Touch Point'}
+            {t('dashboard.activity_log.filter_tp')}
           </label>
           <CustomSelect
             size="sm"
@@ -164,7 +164,7 @@ export default function TransactionFilter({
         {/* Payment Method */}
         <div className="flex flex-col gap-1.5">
           <label className="text-[10px] font-semibold uppercase text-nexoraMuted tracking-wider">
-            {t('dashboard.activity_log.filter_payment') || 'Payment method'}
+            {t('dashboard.activity_log.filter_payment')}
           </label>
           <CustomSelect
             size="sm"
@@ -177,7 +177,7 @@ export default function TransactionFilter({
         {/* Status */}
         <div className="flex flex-col gap-1.5">
           <label className="text-[10px] font-semibold uppercase text-nexoraMuted tracking-wider">
-            {t('dashboard.activity_log.filter_status') || 'Status'}
+            {t('dashboard.activity_log.filter_status')}
           </label>
           <CustomSelect
             size="sm"
@@ -193,7 +193,7 @@ export default function TransactionFilter({
         <div className="flex flex-wrap items-center gap-4 pt-3 border-t border-dashed border-nexoraRule transition-all">
           <div className="flex items-center gap-2">
             <label className="text-[10px] font-semibold uppercase text-nexoraMuted tracking-wider">
-              {t('dashboard.activity_log.start_date') || 'Start Date'}
+              {t('dashboard.activity_log.start_date')}
             </label>
             <input
               type="date"
@@ -204,7 +204,7 @@ export default function TransactionFilter({
           </div>
           <div className="flex items-center gap-2">
             <label className="text-[10px] font-semibold uppercase text-nexoraMuted tracking-wider">
-              {t('dashboard.activity_log.end_date') || 'End Date'}
+              {t('dashboard.activity_log.end_date')}
             </label>
             <input
               type="date"

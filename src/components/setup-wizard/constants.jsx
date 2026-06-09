@@ -35,95 +35,30 @@ export function getTouchpointIcon(type, className = "w-4 h-4") {
   }
 }
 
-// Demo data for quick testing
+// Demo data cleared — use real merchant data from setup
 export const DEMO_BUSINESS = {
-  name: 'Golden Glow Nail Spa & Salon',
-  industry: 'Nail Salon',
-  address: '1088 Gold Coast Hwy, Palm Beach, QLD 4221',
-  phone: '+1 (555) 789-2026',
-  website: 'https://goldenglownails.com',
+  name: '',
+  industry: '',
+  address: '',
+  phone: '',
+  website: '',
   logo: null,
   paymentAccounts: {
-    venmo: '@goldenglow-spa',
-    cashapp: '$goldenglownails',
-    zelle: 'payment@goldenglownails.com',
-    vlinkpay: 'VLP-8893-GG'
+    venmo: '',
+    cashapp: '',
+    zelle: '',
+    vlinkpay: ''
   }
 }
 
 export const DEMO_LINKS = {
-  googleReview: 'https://g.page/r/cGoldenGlowNails/review',
-  yelpReview: 'https://www.yelp.com/biz/golden-glow-nails-palm-beach',
-  facebookReview: 'https://www.facebook.com/goldenglownails/reviews',
-  feedbackEmail: 'manager@goldenglownails.com'
+  googleReview: '',
+  yelpReview: '',
+  facebookReview: '',
+  feedbackEmail: ''
 }
 
-export const DEMO_STAFF = [
-  {
-    id: 'NEX-STAFF-MIA0123',
-    fullName: 'Mia Tran',
-    nickname: 'Mia T.',
-    position: 'Gel-X Artist',
-    avatar: '',
-    phone: '407-555-0123',
-    email: 'mia.tran@gmail.com',
-    showInTipsFlow: true,
-    paymentAccounts: {
-      venmo: '@mia-nails',
-      cashapp: '$miaglow',
-      zelle: 'mia.tran@gmail.com',
-      vlinkpay: 'VLP-0123-MIA'
-    }
-  },
-  {
-    id: 'NEX-STAFF-VL8893',
-    fullName: 'Vivian Le',
-    nickname: 'Vivian L.',
-    position: 'Acrylic Specialist',
-    avatar: '',
-    phone: '407-555-0199',
-    email: 'vivian.le@gmail.com',
-    showInTipsFlow: true,
-    paymentAccounts: {
-      venmo: '',
-      cashapp: '$vivianle',
-      zelle: '407-555-0199',
-      vlinkpay: 'VLP-8893-VL'
-    }
-  },
-  {
-    id: 'NEX-STAFF-ASH0155',
-    fullName: 'Ashley Park',
-    nickname: 'Ashley P.',
-    position: 'Pedicure Lead',
-    avatar: '',
-    phone: '407-555-0155',
-    email: 'ashley@glownails.com',
-    showInTipsFlow: true,
-    paymentAccounts: {
-      venmo: '@ashley-pedi',
-      cashapp: '',
-      zelle: 'ashley@glownails.com',
-      vlinkpay: 'VLP-0155-ASH'
-    }
-  },
-  {
-    id: 'NEX-STAFF-HN1148',
-    fullName: 'Hanna Nguyen',
-    nickname: 'Hanna Ng.',
-    position: 'Nail Art Designer',
-    avatar: '',
-    phone: '407-555-0144',
-    email: 'hanna.art@gmail.com',
-    showInTipsFlow: true,
-    paymentAccounts: {
-      venmo: '@hanna-art',
-      cashapp: '',
-      zelle: '',
-      vlinkpay: 'VLP-1148-HN'
-    }
-  }
-]
+export const DEMO_STAFF = []
 
 export const WalletLogos = {
   venmo: (

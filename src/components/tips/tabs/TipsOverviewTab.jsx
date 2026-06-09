@@ -33,7 +33,7 @@ export default function TipsOverviewTab({
         <div className="card-elevated flex items-center justify-between">
           <div>
             <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
-              {t('dashboard.tips.kpi.total_revenue') || 'Tổng Doanh Thu Típ'}
+              {t('dashboard.tips.kpi.total_revenue')}
             </small>
             <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{formatUSD(totalVolume)}</h3>
           </div>
@@ -44,7 +44,7 @@ export default function TipsOverviewTab({
         <div className="card-elevated flex items-center justify-between">
           <div>
             <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
-              {t('dashboard.tips.kpi.direct_p2p') || 'Típ Trực Tiếp (P2P)'}
+              {t('dashboard.tips.kpi.direct_p2p')}
             </small>
             <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{formatUSD(directTips)}</h3>
           </div>
@@ -55,7 +55,7 @@ export default function TipsOverviewTab({
         <div className="card-elevated flex items-center justify-between">
           <div>
             <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
-              {t('dashboard.tips.kpi.card_tips') || 'Típ Qua Thẻ'}
+              {t('dashboard.tips.kpi.card_tips')}
             </small>
             <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{formatUSD(cardTips)}</h3>
           </div>
@@ -66,7 +66,7 @@ export default function TipsOverviewTab({
         <div className="card-elevated flex items-center justify-between">
           <div>
             <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
-              {t('dashboard.tips.kpi.crypto_tips') || 'Típ Crypto'}
+              {t('dashboard.tips.kpi.crypto_tips')}
             </small>
             <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{formatUSD(cryptoTips)}</h3>
           </div>
@@ -83,8 +83,8 @@ export default function TipsOverviewTab({
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
             <h4 className="text-sm font-black text-inkBlue dark:text-white uppercase tracking-wider">
               {chartRange === '7 Days'
-                ? (t('dashboard.tips.charts.weekly_title') || 'Biểu Đồ Tiền Típ Tuần Này')
-                : (currentLanguage === 'vi' ? 'Tiền Típ Theo Thời Gian' : 'Tips Over Time Trend')}
+                ? (t('dashboard.tips.charts.weekly_title'))
+                : (t('components.tips.tabs.TipsOverviewTab.tipsOverTimeTrend'))}
             </h4>
             <div className="flex flex-wrap items-center gap-1.5 justify-end">
               {['7 Days', '30 Days', '90 Days', '180 Days', '365 Days', 'Custom'].map((item) => {
@@ -107,7 +107,7 @@ export default function TipsOverviewTab({
                     }`}
                   >
                     {item === 'Custom'
-                      ? (currentLanguage === 'vi' ? 'Tự chọn' : 'Custom')
+                      ? (t('components.tips.tabs.TipsOverviewTab.custom'))
                       : rangeLabel(item)}
                   </button>
                 );
@@ -120,7 +120,7 @@ export default function TipsOverviewTab({
             <div className="flex flex-wrap items-center justify-end gap-3 mb-6 border-t border-dashed border-nexoraRule dark:border-slate-800 pt-3">
               <div className="flex items-center gap-1.5">
                 <label className="text-[10px] font-bold uppercase text-mutedGrey dark:text-slate-400 tracking-wider">
-                  {currentLanguage === 'vi' ? 'Từ ngày' : 'From'}
+                  {t('components.tips.tabs.TipsOverviewTab.from')}
                 </label>
                 <input
                   type="date"
@@ -132,7 +132,7 @@ export default function TipsOverviewTab({
               </div>
               <div className="flex items-center gap-1.5">
                 <label className="text-[10px] font-bold uppercase text-mutedGrey dark:text-slate-400 tracking-wider">
-                  {currentLanguage === 'vi' ? 'Đến ngày' : 'To'}
+                  {t('components.tips.tabs.TipsOverviewTab.to')}
                 </label>
                 <input
                   type="date"
@@ -160,7 +160,7 @@ export default function TipsOverviewTab({
         <div className="card-elevated lg:col-span-2 flex flex-col justify-between">
           <div>
             <h4 className="text-sm font-black text-inkBlue dark:text-white uppercase tracking-wider mb-6">
-              {t('dashboard.tips.charts.method_split') || 'Tỷ Lệ Phương Thức Típ'}
+              {t('dashboard.tips.charts.method_split')}
             </h4>
 
             {/* Custom SVG Donut Chart */}
@@ -191,7 +191,7 @@ export default function TipsOverviewTab({
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-xs font-bold text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
-                  {t('dashboard.tips.kpi.total_tips_circle') || 'Tổng Típ'}
+                  {t('dashboard.tips.kpi.total_tips_circle')}
                 </span>
                 <span className="text-lg font-black text-inkBlue dark:text-white mt-0.5">{formatUSD(totalVolume)}</span>
               </div>

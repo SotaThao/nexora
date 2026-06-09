@@ -16,11 +16,12 @@ export default function SetupWizard({
   onComplete,
   onBackToLogin,
   initialBusinessInfo,
-  verificationStatus = 'kyb_approved',
-  hasKyb = verificationStatus === 'kyb_approved',
+  verificationStatus,
+  hasKyb,
   onKybRequired
 }) {
-  const wizard = useSetupWizard({ initialBusinessInfo })
+  const isKyb = hasKyb !== undefined ? hasKyb : verificationStatus === 'kyb_approved'
+  const wizard = useSetupWizard({ initialBusinessInfo, onBackToLogin, hasKyb: isKyb })
   const {
     currentLanguage, setLanguage, t,
     currentStep, setCurrentStep, isSsoLocked,
@@ -86,7 +87,7 @@ export default function SetupWizard({
               <h1 className="font-sans text-xl font-bold tracking-wide sm:text-2xl text-nexoraText">
                 NEXORA <span className="ml-1 inline-flex align-middle text-nexoraBrand font-sans text-xs tracking-widest font-black uppercase bg-nexoraBrand/10 px-2 py-0.5 rounded border border-nexoraBrand/30 sm:ml-2">TOUCH</span>
               </h1>
-              <p className="text-xs text-nexoraSubtle font-light">By VLINKPAY Technologies</p>
+              <p className="text-xs text-nexoraSubtle font-light">{t('components.SetupWizard.byVlinkpayTech')}</p>
             </div>
           </div>
 
@@ -100,14 +101,6 @@ export default function SetupWizard({
                 {t('setup.back_to_login')}
               </button>
             )}
-            <button
-              onClick={prefillDemo}
-              className="min-h-11 text-xs flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-flox-inputs border border-dashed border-nexoraBrand/30 text-nexoraBrand bg-nexoraBrandSoft/40 hover:bg-nexoraBrandSoft transition-all font-semibold"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              {t('setup.prefill_demo_data')}
-            </button>
-
             {/* Language Switcher */}
             <div className="flex items-center gap-1.5 bg-white border border-nexoraBorder px-3 py-1.5 rounded-flox-inputs min-h-11 shadow-sm">
               <button
@@ -126,10 +119,6 @@ export default function SetupWizard({
                 EN
               </button>
             </div>
-
-            <span className="inline-flex min-h-11 items-center justify-center text-xs text-nexoraSubtle bg-white px-3 py-1.5 rounded-flox-inputs border border-nexoraBorder shadow-sm">
-              {t('setup.onboarding_stage')}
-            </span>
           </div>
         </header>
 
@@ -166,7 +155,7 @@ export default function SetupWizard({
                   </div>
                   <div className="text-center mt-2.5">
                     <span className="text-[9px] font-extrabold uppercase tracking-widest text-nexoraElectric/80 mb-0.5 block">
-                      {currentLanguage === 'vi' ? `Bước ${step}` : `Step ${step}`}
+              {t('common.step_number', { step })}
                     </span>
                     <span className={`text-[11px] font-extrabold tracking-wide transition-colors duration-300 block whitespace-nowrap
                       ${isActive ? 'text-nexoraBrand' : isCompleted ? 'text-slate-800' : 'text-slate-400'}`}>
@@ -186,10 +175,10 @@ export default function SetupWizard({
             <div className="absolute top-0 right-0 w-32 h-32 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(70,72,216,0.03)] via-transparent to-transparent rounded-full pointer-events-none"></div>
 
             {/* Error Banner */}
-            {errors.staffList && (
+            {(errors.staffList || errors.submit) && (
               <div className="mb-6 p-4 rounded-flox-cards bg-red-50 border border-red-200 text-red-700 text-sm flex items-center gap-3">
                 <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
-                <span>{errors.staffList}</span>
+                <span>{errors.staffList || errors.submit}</span>
               </div>
             )}
 
@@ -307,7 +296,7 @@ export default function SetupWizard({
       <PayoutSetupModal
         open={payoutSetupOpen}
         walletKey={payoutSetupWallet}
-        staffName={newStaff.fullName || 'Edna Y Schwartz'}
+        staffName={businessInfo.name || 'Business Name'}
         initialValue={tempPayoutValues.value}
         initialQrCode={tempPayoutValues.qrCode}
         onClose={() => setPayoutSetupOpen(false)}
@@ -321,13 +310,13 @@ export default function SetupWizard({
             <button
               onClick={() => setPreviewingTp(null)}
               className="absolute right-4 top-4 rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
-              title={t('setup.close') || 'Close'}
+              title={t('setup.close')}
             >
               <X className="h-5 w-5" />
             </button>
 
             <h3 className="text-base font-extrabold text-slate-800 mb-4 pr-8">
-              {t('dashboard.touchpoints.tabs.stations') || 'QR Touch Point'} - {previewingTp.name}
+              {t('dashboard.touchpoints.tabs.stations')} - {previewingTp.name}
             </h3>
 
             <div className="flex flex-col items-center">
@@ -349,7 +338,7 @@ export default function SetupWizard({
                 <div className="h-28 w-28 rounded-lg bg-white border border-nexoraBorder/60 p-2 flex items-center justify-center shadow-inner qr-print-qr-wrapper">
                   <img
                     src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-                      `${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Golden Glow Nail Spa & Salon')}&tech=tp/${previewingTp.id}`
+                      `${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}&tech=tp/${previewingTp.id}`
                     )}`}
                     alt="QR Preview"
                     className="h-full w-full object-contain qr-print-qr-image"
@@ -357,18 +346,18 @@ export default function SetupWizard({
                 </div>
 
                 <div className="text-[8px] font-extrabold uppercase text-nexoraMuted tracking-wider qr-print-scan-text leading-tight mx-auto">
-                  {t('customer.scan_to_tip_review') || 'Scan to Tip & Review'}
+                  {t('customer.scan_to_tip_review')}
                 </div>
 
                 <div className="flex items-center gap-1 text-[7.5px] font-bold text-nexoraSubtle qr-print-footer">
                   <ShieldCheck className="h-2.5 w-2.5 text-nexoraBrand shrink-0" />
-                  <span>Secure redirect by VLINKPAY</span>
+                  <span>{t('components.SetupWizard.secureRedirect')}</span>
                 </div>
               </div>
 
               <div className="mt-4 w-full text-center">
                 <p className="text-[10px] font-mono text-slate-400 select-all truncate bg-slate-50 px-2 py-1.5 rounded border border-slate-100">
-                  {`${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Golden Glow Nail Spa & Salon')}&tech=tp/${previewingTp.id}`}
+                  {`${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}&tech=tp/${previewingTp.id}`}
                 </p>
               </div>
 
@@ -377,7 +366,7 @@ export default function SetupWizard({
                   onClick={() => setPreviewingTp(null)}
                   className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50 transition w-full"
                 >
-                  {t('setup.close') || 'Close'}
+                  {t('setup.close')}
                 </button>
               </div>
             </div>
@@ -388,8 +377,8 @@ export default function SetupWizard({
       {/* Print-only container */}
       <div className="print-only-container qr-modal-backdrop">
         <div className="qr-modal-container">
-          <h2 className="qr-print-title">Business QR - Lobby</h2>
-          <p className="qr-print-subtitle">{t('customer.step_form_title') || 'Scan to Tip & Review'}</p>
+          <h2 className="qr-print-title">{t('components.SetupWizard.businessQrLobby')}</h2>
+          <p className="qr-print-subtitle">{t('customer.step_form_title')}</p>
 
           <div className="qr-print-card">
             <div className="flex items-center gap-1 justify-center qr-print-brand-header">
@@ -398,14 +387,14 @@ export default function SetupWizard({
             </div>
 
             <div className="w-full text-center">
-              <div className="text-[10px] font-extrabold uppercase text-nexoraBrand tracking-wide qr-print-biz-name mx-auto">General Lobby QR</div>
+              <div className="text-[10px] font-extrabold uppercase text-nexoraBrand tracking-wide qr-print-biz-name mx-auto">{t('components.SetupWizard.generalLobbyQr')}</div>
               <div className="text-[7.5px] font-bold text-nexoraMuted qr-print-staff-info mx-auto">{businessInfo.name || 'Your Salon'}</div>
             </div>
 
             <div className="qr-print-qr-wrapper">
               <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-                  `${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Golden Glow Nail Spa & Salon')}`
+                  `${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}`
                 )}`}
                 alt="Scan QR code to tip and review"
                 className="qr-print-qr-image"
@@ -413,12 +402,12 @@ export default function SetupWizard({
             </div>
 
             <div className="text-[8px] font-extrabold uppercase text-nexoraMuted tracking-wider qr-print-scan-text leading-tight mx-auto">
-              {t('customer.scan_to_tip_review') || 'Scan to Tip & Review'}
+              {t('customer.scan_to_tip_review')}
             </div>
 
             <div className="flex items-center gap-1 text-[7.5px] font-bold text-nexoraSubtle qr-print-footer">
               <ShieldCheck className="h-2.5 w-2.5 text-nexoraBrand shrink-0" />
-              <span>Secure redirect by VLINKPAY</span>
+              <span>{t('components.SetupWizard.secureRedirect')}</span>
             </div>
           </div>
 

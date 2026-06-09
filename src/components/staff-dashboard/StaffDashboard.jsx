@@ -3,7 +3,7 @@
 // and switches the active screen. Wraps everything in StaffAccountProvider.
 import { useState } from 'react'
 import { StaffAccountProvider } from '../../contexts/StaffAccountContext'
-import { DEMO_STAFF_ID } from './data/staffMockData'
+
 import StaffSidebar from './layout/StaffSidebar'
 import StaffHeader from './layout/StaffHeader'
 import StaffBottomNav from './layout/StaffBottomNav'
@@ -25,7 +25,7 @@ const SCREENS = {
   notifications: StaffNotifications
 }
 
-export default function StaffDashboard({ staffId = DEMO_STAFF_ID, onLogout }) {
+export default function StaffDashboard({ staffId = null, onLogout }) {
   const [activeScreen, setActiveScreen] = useState('home')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const ActiveView = SCREENS[activeScreen] || StaffHome

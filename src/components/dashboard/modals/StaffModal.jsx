@@ -5,7 +5,6 @@ import CountryCodeSelect, { parsePhone } from '../../CountryCodeSelect'
 import { WalletLogos, DEFAULT_PAYOUT_CONFIGS } from '../constants'
 import { useTranslation, renderLabel } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
-import { MOCK_NEXORA_STAFF_PROFILES } from '../data/mockData'
 import PayoutSetupModal from './PayoutSetupModal'
 import StaffReviewsDetailModal from './StaffReviewsDetailModal'
 import StaffQrScannerModal from './StaffQrScannerModal'
@@ -130,12 +129,8 @@ function StaffModal({
   const handleCombinedIdChange = (val) => {
     const searchId = val.trim().toUpperCase()
 
-    // KYB verification check for NEX- prefixed IDs
+    // KYB verification check removed — NEXORA does not require KYB for add staff
     const isNexora = searchId.startsWith('NEX-')
-    if (isNexora && verificationStatus !== 'kyb_approved') {
-      if (onBlockedFeatureClick) onBlockedFeatureClick()
-      return
-    }
 
     setIdInput(val)
 
@@ -158,38 +153,6 @@ function StaffModal({
 
     let matchedProfile = null
     let verifiedType = null // 'vlinkpay' | 'nexora'
-
-    // Helper to search mock profiles
-    const checkMock = () => {
-      // Try VLINKPAY match
-      const byVLP = Object.values(MOCK_NEXORA_STAFF_PROFILES).find(
-        p => p.vlinkpayId?.toUpperCase() === searchId
-      )
-      if (byVLP) {
-        const staffIdKey = Object.keys(MOCK_NEXORA_STAFF_PROFILES).find(
-          k => MOCK_NEXORA_STAFF_PROFILES[k].vlinkpayId?.toUpperCase() === searchId
-        ) || ''
-        matchedProfile = {
-          ...byVLP,
-          vlinkpayId: searchId,
-          nexoraStaffId: staffIdKey
-        }
-        verifiedType = 'vlinkpay'
-        return
-      }
-
-      // Try NEXORA match
-      const byNEX = MOCK_NEXORA_STAFF_PROFILES[searchId]
-      if (byNEX) {
-        matchedProfile = {
-          ...byNEX,
-          vlinkpayId: byNEX.vlinkpayId || '',
-          nexoraStaffId: searchId
-        }
-        verifiedType = 'nexora'
-        return
-      }
-    }
 
     // Helper to search nexora_merchant_setup staffList (received via prop from Dashboard)
     const checkMerchantSetup = () => {
@@ -326,7 +289,6 @@ function StaffModal({
     }
 
     // Execute checks synchronously
-    checkMock()
     checkMerchantSetup()
     checkStaffAccount()
     checkPendingAccounts()
@@ -359,9 +321,7 @@ function StaffModal({
           setVlinkpayStatus('idle')
         }
 
-        showToast(currentLanguage === 'vi'
-          ? 'Đã xác thực tài khoản! Tự động nhập thông tin thợ.'
-          : 'Staff Profile Verified! Auto-filled profile details.', 'success')
+        showToast(t('components.dashboard.modals.StaffModal.staffProfileVerifiedAuto'), 'success')
       } else {
         setVlinkpayStatus('error')
         setNexoraStatus('error')
@@ -379,37 +339,18 @@ function StaffModal({
   }
 
   const simulateSuccessfulScan = () => {
-    // Lisa is a NEX-STAFF ID. If KYB is not approved, block it!
-    if (verificationStatus !== 'kyb_approved') {
-      if (onBlockedFeatureClick) onBlockedFeatureClick()
-      setShowScanner(false)
-      setScanTarget(null)
-      return
-    }
     handleCombinedIdChange('NEX-STAFF-LISA1102')
     setShowScanner(false)
     setScanTarget(null)
   }
 
   const handleScanAnna = () => {
-    if (verificationStatus !== 'kyb_approved') {
-      if (onBlockedFeatureClick) onBlockedFeatureClick()
-      setShowScanner(false)
-      setScanTarget(null)
-      return
-    }
     handleCombinedIdChange('NEX-STAFF-ANNA0921')
     setShowScanner(false)
     setScanTarget(null)
   }
 
   const handleScanHanna = () => {
-    if (verificationStatus !== 'kyb_approved') {
-      if (onBlockedFeatureClick) onBlockedFeatureClick()
-      setShowScanner(false)
-      setScanTarget(null)
-      return
-    }
     handleCombinedIdChange('NEX-STAFF-HN1148')
     setShowScanner(false)
     setScanTarget(null)
@@ -438,7 +379,7 @@ function StaffModal({
         <div className="flex items-center justify-between border-b border-nexoraRule pb-4">
           <h2 className="text-lg font-extrabold text-nexoraText">
             {isApproveMode
-              ? (currentLanguage === 'vi' ? 'Duyệt yêu cầu tham gia' : 'Review Join Request')
+              ? (t('components.dashboard.modals.StaffModal.reviewJoinRequest'))
               : (editing ? t('common.edit') : t('setup.add_staff_title'))}
           </h2>
           <IconButton label="Close modal" onClick={onClose}>
@@ -451,7 +392,7 @@ function StaffModal({
             {/* Staff ID / VLINKPAY ID Section */}
             <div>
               <label className="text-[10px] font-extrabold uppercase text-nexoraMuted block">
-                {currentLanguage === 'vi' ? 'NEXORA ID / VLINKPAY ID' : 'NEXORA ID / VLINKPAY ID'}
+                {t('components.dashboard.modals.StaffModal.nexoraIdVlinkpayId')}
               </label>
               <div className="mt-1 flex gap-2">
                 <div className="relative flex-1">
@@ -469,20 +410,20 @@ function StaffModal({
                     }`}
                     value={idInput}
                     onChange={(event) => handleCombinedIdChange(event.target.value)}
-                    placeholder="e.g. VLP-0155-ASH"
+                    placeholder={t('components.dashboard.modals.StaffModal.phExampleVlp1')}
                   />
                   {/* Legacy hidden inputs to maintain unit test compatibility */}
                   <input
                     type="text"
                     style={{ display: 'none' }}
-                    placeholder="e.g. VLP-8893-VL"
+                    placeholder={t('components.dashboard.modals.StaffModal.phExampleVlp2')}
                     value={form.vlinkpay || ''}
                     readOnly
                   />
                   <input
                     type="text"
                     style={{ display: 'none' }}
-                    placeholder="e.g. NEX-STAFF-LISA1102"
+                    placeholder={t('components.dashboard.modals.StaffModal.phExampleStaffId')}
                     value={form.nexoraStaffId || ''}
                     readOnly
                   />
@@ -501,7 +442,7 @@ function StaffModal({
                     type="button"
                     onClick={() => handleScanQr('combined')}
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-nexoraSubtle hover:text-nexoraBrand transition-colors p-1.5 rounded hover:bg-nexoraCanvas"
-                    title={currentLanguage === 'vi' ? 'Quét mã QR' : 'Scan QR Code'}
+                    title={t('components.dashboard.modals.StaffModal.scanQrCode')}
                   >
                     <QrCode className="h-3.5 w-3.5" />
                   </button>
@@ -524,20 +465,20 @@ function StaffModal({
                   type="button"
                   onClick={() => onOpenInviteShare && onOpenInviteShare(form)}
                   className="h-10 px-3 rounded-lg bg-nexoraBrandSoft hover:bg-nexoraBrandSoft/80 text-nexoraBrand border border-nexoraBrandSoft text-sm font-bold transition flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
-                  title={currentLanguage === 'vi' ? 'Chia sẻ liên kết mời thợ' : 'Share Invite Link'}
+                  title={t('components.dashboard.modals.StaffModal.shareInviteLink')}
                 >
                   <QrCode className="h-4 w-4 shrink-0" />
-                  {currentLanguage === 'vi' ? 'Mời' : 'Invite'}
+                  {t('components.dashboard.modals.StaffModal.invite')}
                 </button>
               </div>
               {vlinkpayStatus === 'success' && (
                 <p className="mt-1 text-[10px] font-bold text-nexoraSuccess">
-                  ✓ {currentLanguage === 'vi' ? 'Đã xác thực tài khoản VLINKPAY' : 'VLINKPAY verified'}
+                  ✓ {t('components.dashboard.modals.StaffModal.vlinkpayVerified')}
                 </p>
               )}
               {nexoraStatus === 'success' && (
                 <p className="mt-1 text-[10px] font-bold text-nexoraSuccess">
-                  ✓ {currentLanguage === 'vi' ? 'Đã xác thực tài khoản NEXORA' : 'NEXORA verified'}
+                  ✓ {t('components.dashboard.modals.StaffModal.nexoraVerified')}
                 </p>
               )}
             </div>
@@ -554,7 +495,7 @@ function StaffModal({
                         type="button"
                         onClick={() => setForm({ ...form, avatar: '' })}
                         className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-nexoraDanger hover:bg-nexoraDangerDark text-white transition shadow duration-150 cursor-pointer"
-                        title={currentLanguage === 'vi' ? 'Xóa ảnh' : 'Remove photo'}
+                        title={t('components.dashboard.modals.StaffModal.remove_photo')}
                       >
                         <X className="h-3.5 w-3.5" />
                       </button>
@@ -576,7 +517,7 @@ function StaffModal({
                       type="button"
                       onClick={() => setShowReviewsDetailModal(true)}
                       className="inline-flex h-9 items-center gap-2 rounded-lg border border-nexoraBrandSoft bg-nexoraBrandSoft/50 px-2.5 hover:bg-nexoraBrandSoft transition shadow-sm text-left group shrink-0"
-                      title={currentLanguage === 'vi' ? 'Xem tất cả đánh giá' : 'View all reviews'}
+                      title={t('components.dashboard.modals.StaffModal.viewAllReviews')}
                     >
                       <div className="flex items-center gap-0.5 text-nexoraWarning">
                         <Star className="h-3.5 w-3.5 fill-current" />
@@ -586,7 +527,7 @@ function StaffModal({
                       </div>
                       <div className="h-3.5 w-px bg-nexoraBrandSoft" />
                       <span className="text-[10px] text-nexoraMuted font-bold group-hover:underline">
-                        {currentLanguage === 'vi' ? `${reviewsList.length} đánh giá` : `${reviewsList.length} reviews`}
+                        {t('components.dashboard.modals.StaffModal.review_count', { count: reviewsList.length })}
                       </span>
                     </button>
                   )}
@@ -595,7 +536,7 @@ function StaffModal({
             </div>
             <div>
               <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{renderLabel(t('setup.staff_fullname'))}</label>
-              <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} placeholder="Mia Tran" />
+              <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} placeholder={t('components.dashboard.modals.StaffModal.phFullName')} />
               {errors.fullName && <p className="mt-1 text-[10px] font-bold text-nexoraDanger">{errors.fullName}</p>}
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -610,18 +551,18 @@ function StaffModal({
                     </div>
                   </div>
                 </label>
-                <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.nickname} onChange={(event) => setForm({ ...form, nickname: event.target.value })} placeholder="Mia T." />
+                <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.nickname} onChange={(event) => setForm({ ...form, nickname: event.target.value })} placeholder={t('components.dashboard.modals.StaffModal.phNickname')} />
                 {errors.nickname && <p className="mt-1 text-[10px] font-bold text-nexoraDanger">{errors.nickname}</p>}
               </div>
               <div>
                 <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_position')}</label>
-                <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.position} onChange={(event) => setForm({ ...form, position: event.target.value })} placeholder="Nail Tech" />
+                <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.position} onChange={(event) => setForm({ ...form, position: event.target.value })} placeholder={t('components.dashboard.modals.StaffModal.phPosition')} />
               </div>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_phone') || 'Phone Number'}</label>
+                <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_phone')}</label>
                 <div className="mt-1 flex rounded-lg shadow-sm">
                   <CountryCodeSelect
                     value={phoneParsed.countryCode}
@@ -633,14 +574,14 @@ function StaffModal({
                     className="h-10 w-full rounded-r-lg border border-l-0 border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand bg-white min-w-0"
                     value={phoneParsed.nationalNumber}
                     onChange={(event) => setForm({ ...form, phone: `${phoneParsed.countryCode} ${event.target.value}`.trim() })}
-                    placeholder={t('setup.staff_phone_placeholder') || 'e.g., 407-555-0123'}
+                    placeholder={t('setup.staff_phone_placeholder')}
                   />
                 </div>
                 {errors.phone && <p className="mt-1 text-[10px] font-bold text-nexoraDanger">{errors.phone}</p>}
               </div>
               <div>
-                <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_email') || 'Email Address'}</label>
-                <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.email || ''} onChange={(event) => setForm({ ...form, email: event.target.value })} placeholder={t('setup.staff_email_placeholder') || 'e.g., mia.tran@gmail.com'} />
+                <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_email')}</label>
+                <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.email || ''} onChange={(event) => setForm({ ...form, email: event.target.value })} placeholder={t('setup.staff_email_placeholder')} />
                 {errors.email && <p className="mt-1 text-[10px] font-bold text-nexoraDanger">{errors.email}</p>}
               </div>
             </div>
@@ -649,7 +590,7 @@ function StaffModal({
           {/* Right Column: Payout Configurations & Settings */}
           <div className="space-y-4">
             <div>
-              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.payout_methods') || 'Payout Methods'}</label>
+              <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.payout_methods')}</label>
               <div className="mt-2 space-y-4">
                 <div className="divide-y divide-nexoraRule rounded-xl border border-nexoraBorder bg-white px-4">
                   {[
@@ -691,7 +632,7 @@ function StaffModal({
                           className="flex items-center gap-1.5 text-[11px] font-bold text-nexoraMuted hover:text-nexoraText transition"
                         >
                           <Eye className="h-3.5 w-3.5" />
-                          <span>{currentLanguage === 'vi' ? 'Xem tài khoản' : 'View Account'}</span>
+                          <span>{t('components.dashboard.modals.StaffModal.viewAccount')}</span>
                         </button>
                       </div>
                     )
@@ -703,8 +644,8 @@ function StaffModal({
 
             <div className="flex items-center justify-between rounded-lg border border-nexoraBorder bg-nexoraCanvas p-3.5 mt-2">
               <div>
-                <label className="text-xs font-extrabold text-nexoraText block">{t('setup.show_in_tips_flow') || 'Show in Tips Flow'}</label>
-                <p className="text-[10px] text-nexoraMuted leading-relaxed mt-0.5">{t('setup.show_in_tips_flow_desc') || 'If disabled, this staff member won\'t appear in the general QR code staff list.'}</p>
+                <label className="text-xs font-extrabold text-nexoraText block">{t('setup.show_in_tips_flow')}</label>
+                <p className="text-[10px] text-nexoraMuted leading-relaxed mt-0.5">{t('setup.show_in_tips_flow_desc')}</p>
               </div>
               <button
                 type="button"
@@ -730,14 +671,14 @@ function StaffModal({
                 onClick={onDecline}
                 className="rounded-lg border border-nexoraDanger/20 bg-nexoraDanger/10 px-4 py-2 text-xs font-bold text-nexoraDanger hover:bg-nexoraDanger/15 transition"
               >
-                {currentLanguage === 'vi' ? 'Từ chối' : 'Decline'}
+                {t('components.dashboard.modals.StaffModal.decline')}
               </button>
               <button
                 type="button"
                 onClick={onSave}
                 className="rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white hover:bg-nexoraBrandDark transition animate-pulse"
               >
-                {currentLanguage === 'vi' ? 'Duyệt / Chấp nhận' : 'Approve / Accept'}
+                {t('components.dashboard.modals.StaffModal.approveAccept')}
               </button>
             </>
           ) : (

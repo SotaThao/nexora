@@ -1,40 +1,46 @@
 /**
- * reviewsRepository — customer reviews submitted via the review-token flow.
- * Key: nexora_reviews.
+ * reviewsRepository — API-only implementation.
+ * TODO: Wire to real reviews API endpoints when available.
  */
-import { adapter as defaultAdapter } from '../adapters'
 
-const KEY = 'nexora_reviews'
+import httpClient from '../../lib/httpClient'
 
-export function createReviewsRepository(a = defaultAdapter) {
+export function createReviewsRepository(client = httpClient) {
   return {
-    /** @returns {Promise<Array>} */
-    async list() {
-      return (await a.get(KEY)) ?? []
+    /** 
+     * @param {object} filters
+     * @param {number} [filters.rating]
+     * @param {string} [filters.source]
+     * @param {boolean} [filters.resolved]
+     * @returns {Promise<Array>} 
+     */
+    async list(filters = {}) {
+      const response = await client.get('/api/v1/merchant/dashboard/reviews', { params: filters })
+      return Array.isArray(response) ? response : (response.data || [])
     },
 
     /**
-     * @param {object} review
-     * @returns {Promise<object>} the appended review
+     * Resolve a private feedback review.
+     * @param {string} id
+     * @param {object} dto
+     * @returns {Promise<object>}
+     */
+    async resolve(id, dto = {}) {
+      return client.put(`/api/v1/merchant/dashboard/reviews/${id}/resolve`, dto)
+    },
+
+    /**
+     * @deprecated Customer touch point creates reviews, not merchant dashboard.
      */
     async add(review) {
-      const list = (await a.get(KEY)) ?? []
-      const updated = [...list, review]
-      await a.set(KEY, updated)
       return review
     },
 
     /**
-     * Merge patch into the review with matching id.
-     * @param {string} id
-     * @param {object} patch
+     * @deprecated
      */
     async update(id, patch) {
-      const list = (await a.get(KEY)) ?? []
-      const updated = list.map((r) =>
-        r.id === id ? { ...r, ...patch } : r
-      )
-      await a.set(KEY, updated)
+      // no-op
     },
   }
 }

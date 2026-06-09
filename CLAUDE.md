@@ -19,8 +19,8 @@ Guidance for Claude Code when working in this repository. Treat this as an engin
 - Language: JavaScript/JSX, not TypeScript.
 - Styling: Tailwind utility classes plus shared CSS.
 - Server-state cache: TanStack Query.
-- Current persistence mode: storage-backed adapter.
-- Future persistence mode: API-backed adapter selected by environment.
+- Current persistence mode: API-backed (REST API at `VITE_API_BASE_URL`).
+- HTTP client: `src/lib/httpClient.js` with JWT Bearer auth, 401 refresh interceptor.
 
 Useful commands:
 
@@ -31,7 +31,6 @@ pnpm build
 pnpm test
 pnpm test:e2e
 pnpm lint:tokens
-pnpm seed:staff-demo
 ```
 
 ## Principal Workflow
@@ -65,7 +64,7 @@ Responsibilities:
 - Components render UI and call hooks. They should not parse storage or know transport details.
 - Data hooks own TanStack Query integration: query keys, loading/error state, mutations, invalidation.
 - Repositories own domain operations and object-shape normalization. They should not contain React code.
-- Adapters own transport details: storage today, API later.
+- Adapters own transport details: API calls via httpClient.
 
 Do not add new direct domain reads/writes from components, contexts, or feature hooks using `storage.*`, `localStorage.*`, or manual `JSON.parse` for persisted domain keys.
 
@@ -74,7 +73,7 @@ Do not add new direct domain reads/writes from components, contexts, or feature 
 - TanStack Query owns cached domain data.
 - Query keys come from `src/data/queryKeys.js`.
 - Mutations must invalidate or update the relevant query cache.
-- Cross-tab freshness belongs in the centralized storage bridge, not in scattered component listeners.
+- Cross-tab freshness will use query refetch / websocket in the API phase.
 
 ### Auth Boundary
 
@@ -83,20 +82,19 @@ Do not add new direct domain reads/writes from components, contexts, or feature 
 - Adapter-specific behavior belongs in `src/auth/adapters/`.
 - Components should not import mock auth/session helpers directly.
 
-### Transport Switching
+### API Configuration
 
-Environment controls the data source:
+The app uses a single API backend:
 
 ```env
-VITE_DATA_SOURCE=storage
-VITE_API_BASE_URL=
+VITE_API_BASE_URL=https://nexora-dev-api.vlinkhub.com
 ```
 
-- `VITE_DATA_SOURCE=storage`: current default; repositories/auth use storage-backed adapters.
-- `VITE_DATA_SOURCE=api`: future backend path; repositories/auth should switch to API adapters without component changes.
-- `VITE_API_BASE_URL`: API origin for the future API path.
-
-When preparing API migration work, keep component APIs stable and move transport-specific behavior into adapters or the HTTP client.
+- All domain data flows through REST API endpoints.
+- Auth uses JWT Bearer tokens stored in `tokenStore` (localStorage).
+- The `httpClient` handles automatic token refresh on 401.
+- Repositories call `httpClient` directly for API operations.
+- Repositories without implemented API endpoints return empty data with `TODO` markers.
 
 ## Domain Workflow Notes
 
@@ -117,14 +115,14 @@ When changing one of these flows:
 | App shell/routing | `src/App.jsx`, `src/app/AppRouter.jsx` |
 | Auth state | `src/auth/AuthProvider.jsx`, `src/auth/useAuth.js` |
 | Auth adapters | `src/auth/adapters/` |
+| Token store | `src/auth/tokenStore.js` |
 | Data hooks | `src/data/hooks/` |
 | Repositories | `src/data/repositories/` |
-| Data adapters | `src/data/adapters/` |
 | Query keys | `src/data/queryKeys.js` |
 | Query client | `src/lib/queryClient.js` |
-| HTTP client scaffold | `src/lib/httpClient.js` |
-| Storage boundary | `src/utils/storage.js` |
-| Storage bridge | `src/data/storageEventBridge.js` |
+| HTTP client | `src/lib/httpClient.js` |
+| Error codes | `src/data/errorCodes.js` |
+| Storage (token persistence) | `src/utils/storage.js` |
 | Logger | `src/utils/logger.js` |
 | Tests | `tests/`, `src/setupTests.js`, `vitest*.config.*` |
 | OpenSpec work | `openspec/changes/` |

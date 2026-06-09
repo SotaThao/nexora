@@ -38,12 +38,12 @@ export default function SupportView() {
     setSuccessMsg('')
 
     if (!subject.trim() || !description.trim()) {
-      setErrorMsg(t('dashboard.support.form.error_msg') || 'Please fill in all fields.')
+      setErrorMsg(t('dashboard.support.form.error_msg'))
       return
     }
 
     // Success flow
-    setSuccessMsg(t('dashboard.support.form.success_msg') || 'Ticket submitted successfully! Our team will contact you shortly.')
+    setSuccessMsg(t('dashboard.support.form.success_msg'))
     setSubject('')
     setDescription('')
   }
@@ -51,20 +51,20 @@ export default function SupportView() {
   // FAQ items translations and contents
   const faqItems = [
     {
-      question: t('dashboard.support.faq.q1') || 'How to generate QR codes?',
-      answer: t('dashboard.support.faq.a1') || 'Go to the Touchpoint Manager tab, click "+ Add New Touch Point", enter the station name, and assign a staff member if needed. The QR code is generated instantly and can be printed or simulated.'
+      question: t('dashboard.support.faq.q1'),
+      answer: t('dashboard.support.faq.a1')
     },
     {
-      question: t('dashboard.support.faq.q2') || 'How direct tips work?',
-      answer: t('dashboard.support.faq.a2') || 'Nexora touch points route tips directly to the technician\'s connected Venmo, Zelle, Cash App, or VLINKPAY address. Funds go straight to their account without processing delays or owner intervention.'
+      question: t('dashboard.support.faq.q2'),
+      answer: t('dashboard.support.faq.a2')
     },
     {
-      question: t('dashboard.support.faq.q3') || 'How to set up VLINKPAY Wallet?',
-      answer: t('dashboard.support.faq.a3') || 'Navigate to Settings -> Profile tab, scroll down to Payout Methods, and enter your VLINKPAY Wallet identifier. Once verified, customers will see VLINKPAY as a direct tipping option.'
+      question: t('dashboard.support.faq.q3'),
+      answer: t('dashboard.support.faq.a3')
     },
     {
-      question: t('dashboard.support.faq.q4') || 'How to order NFC stands?',
-      answer: t('dashboard.support.faq.a4') || 'You can order custom laser-engraved NFC wooden stands or tabletop cards directly from the Manage Plan / Subscriptions tab, or by contacting our support team with your salon station count.'
+      question: t('dashboard.support.faq.q4'),
+      answer: t('dashboard.support.faq.a4')
     }
   ]
 
@@ -78,10 +78,10 @@ export default function SupportView() {
       <div>
         <h2 className="text-xl font-extrabold text-nexoraText flex items-center gap-2">
           <HelpCircle className="h-5 w-5 text-nexoraBrand dark:text-luxuryGold" />
-          <span>{t('dashboard.menu.support') || 'Support'}</span>
+          <span>{t('dashboard.menu.support')}</span>
         </h2>
         <p className="mt-1 text-xs text-nexoraMuted">
-          {t('dashboard.support.subtitle') || 'Get assistance with your QR/NFC terminals or account configuration.'}
+          {t('dashboard.support.subtitle')}
         </p>
       </div>
 
@@ -93,7 +93,7 @@ export default function SupportView() {
         <Panel className="p-6 flex flex-col justify-between">
           <div className="space-y-4">
             <h3 className="text-base font-extrabold text-nexoraText border-b border-nexoraRule pb-2">
-              {t('dashboard.support.form.title') || 'Submit Support Ticket'}
+              {t('dashboard.support.form.title')}
             </h3>
 
             {errorMsg && (
@@ -113,13 +113,13 @@ export default function SupportView() {
               {/* Subject Input */}
               <div className="space-y-1.5">
                 <label className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
-                  {t('dashboard.support.form.subject_label') || 'Subject'}
+                  {t('dashboard.support.form.subject_label')}
                 </label>
                 <input
                   type="text"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
-                  placeholder={t('dashboard.support.form.subject_placeholder') || 'e.g., NFC Terminal not responding'}
+                  placeholder={t('dashboard.support.form.subject_placeholder')}
                   className="h-11 w-full rounded-flox-inputs border border-nexoraBorder dark:border-luxuryGold/18 bg-white px-3 text-base text-nexoraText outline-none focus:border-nexoraBrand"
                 />
               </div>
@@ -127,12 +127,12 @@ export default function SupportView() {
               {/* Describe Issue Textarea */}
               <div className="space-y-1.5">
                 <label className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
-                  {t('dashboard.support.form.description_label') || 'Describe Issue'}
+                  {t('dashboard.support.form.description_label')}
                 </label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder={t('dashboard.support.form.description_placeholder') || 'Provide details about the issue you are experiencing...'}
+                  placeholder={t('dashboard.support.form.description_placeholder')}
                   rows={4}
                   className="w-full rounded-flox-inputs border border-nexoraBorder dark:border-luxuryGold/18 bg-white p-3 text-base text-nexoraText outline-none focus:border-nexoraBrand resize-none"
                 />
@@ -144,7 +144,7 @@ export default function SupportView() {
                 className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-flox-buttons bg-nexoraBrand dark:bg-luxuryGold hover:bg-nexoraBrandDark dark:hover:bg-luxuryGoldLight text-white dark:text-luxuryBlack font-bold text-xs transition-all shadow-md mt-2"
               >
                 <Send className="h-3.5 w-3.5" />
-                <span>{t('dashboard.support.form.submit_btn') || 'Submit Ticket'}</span>
+                <span>{t('dashboard.support.form.submit_btn')}</span>
               </button>
             </form>
           </div>
@@ -153,7 +153,7 @@ export default function SupportView() {
         {/* Right Column: FAQ Accordion */}
         <Panel className="p-6 space-y-4">
           <h3 className="text-base font-extrabold text-nexoraText border-b border-nexoraRule pb-2">
-            {t('dashboard.support.faq.title') || 'Frequently Asked Questions'}
+            {t('dashboard.support.faq.title')}
           </h3>
 
           <div className="space-y-3">

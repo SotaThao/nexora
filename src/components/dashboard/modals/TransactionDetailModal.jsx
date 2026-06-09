@@ -18,7 +18,7 @@ export default function TransactionDetailModal({ selectedTx, onClose }) {
         <div className="flex items-center justify-between border-b border-nexoraBorder dark:border-white/10 pb-4 mb-4">
           <div>
             <span className="text-[10px] font-black uppercase text-mutedGrey dark:text-slate-400 tracking-wider">
-              {t('dashboard.activity_log.modal_title') || 'Transaction Details'}
+              {t('dashboard.activity_log.modal_title')}
             </span>
             <h4 className="text-sm font-extrabold text-inkBlue dark:text-white mt-0.5">{selectedTx.id}</h4>
           </div>
@@ -35,7 +35,7 @@ export default function TransactionDetailModal({ selectedTx, onClose }) {
           {/* Hero Amount & Status */}
           <div className="flex flex-col items-center justify-center py-4 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5">
             <span className="text-[10px] font-bold text-mutedGrey dark:text-slate-400 uppercase tracking-wider">
-              {t('dashboard.activity_log.col_amount') || 'Amount'}
+              {t('dashboard.activity_log.col_amount')}
             </span>
             <h3 className="text-3xl font-black text-inkBlue dark:text-white mt-1">
               {formatUSD(selectedTx.amount)}
@@ -47,13 +47,13 @@ export default function TransactionDetailModal({ selectedTx, onClose }) {
           <div className="grid grid-cols-2 gap-x-4 gap-y-4 text-xs border-t border-nexoraBorder dark:border-white/10 pt-4">
             <div>
               <span className="text-[10px] font-bold text-mutedGrey dark:text-slate-400 block">
-                {t('dashboard.activity_log.col_time') || 'Date & Time'}
+                {t('dashboard.activity_log.col_time')}
               </span>
               <span className="font-semibold text-inkBlue dark:text-white block mt-0.5">{selectedTx.dateTime}</span>
             </div>
             <div>
               <span className="text-[10px] font-bold text-mutedGrey dark:text-slate-400 block">
-                {t('dashboard.activity_log.col_payment') || 'Payment Method'}
+                {t('dashboard.activity_log.col_payment')}
               </span>
               <div className="flex items-center gap-1.5 mt-1 text-inkBlue dark:text-white">
                 {getPaymentMethodLogo(selectedTx.paymentMethod)}
@@ -62,7 +62,7 @@ export default function TransactionDetailModal({ selectedTx, onClose }) {
             </div>
             <div>
               <span className="text-[10px] font-bold text-mutedGrey dark:text-slate-400 block">
-                {t('dashboard.activity_log.col_staff') || 'Staff Name'}
+                {t('dashboard.activity_log.col_staff')}
               </span>
               <span className="font-semibold text-inkBlue dark:text-white block mt-0.5">{selectedTx.staffName}</span>
               <span className="font-mono text-[10px] text-slate-400 dark:text-slate-500 block mt-0.5">
@@ -71,7 +71,7 @@ export default function TransactionDetailModal({ selectedTx, onClose }) {
             </div>
             <div>
               <span className="text-[10px] font-bold text-mutedGrey dark:text-slate-400 block">
-                {t('dashboard.activity_log.col_tp') || 'Touch Point'}
+                {t('dashboard.activity_log.col_tp')}
               </span>
               <span className="font-semibold text-inkBlue dark:text-white block mt-0.5">{selectedTx.touchpoint}</span>
             </div>
@@ -86,10 +86,10 @@ export default function TransactionDetailModal({ selectedTx, onClose }) {
             />
             <div className="flex flex-col text-left">
               <span className="text-[9px] font-black uppercase text-mutedGrey dark:text-slate-400 tracking-widest">
-                {currentLanguage === 'vi' ? 'MÃ QR NHẬN TÍP' : 'TIPPING QR CODE'}
+                {t('components.dashboard.modals.TransactionDetailModal.tippingQrCode')}
               </span>
               <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-normal">
-                {currentLanguage === 'vi' ? 'Quét để chuyển khoản tiền típ cho nhân viên này' : 'Scan to tip this staff member'}
+                {t('components.dashboard.modals.TransactionDetailModal.scanToTipThis')}
               </span>
               <button
                 onClick={async () => {
@@ -103,7 +103,7 @@ export default function TransactionDetailModal({ selectedTx, onClose }) {
                   } else {
                     navigator.clipboard.writeText(shareUrl);
                     showToast(
-                      currentLanguage === 'vi' ? 'Đã sao chép liên kết nhận típ!' : 'Tipping link copied to clipboard!',
+                      t('components.dashboard.modals.TransactionDetailModal.tippingLinkCopiedTo'),
                       'success'
                     );
                   }
@@ -111,7 +111,7 @@ export default function TransactionDetailModal({ selectedTx, onClose }) {
                 className="mt-2.5 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 text-[10px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400 transition-colors w-max cursor-pointer"
               >
                 <Share2 className="h-3 w-3" />
-                {currentLanguage === 'vi' ? 'Chia sẻ liên kết' : 'Share Link'}
+                {t('components.dashboard.modals.TransactionDetailModal.shareLink')}
               </button>
             </div>
           </div>

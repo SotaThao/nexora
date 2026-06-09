@@ -1,11 +1,5 @@
 /**
  * useNotifications — TanStack Query hooks for the notifications domain.
- *
- * Hooks:
- *   useNotifications()          → useQuery list of all notifications
- *   useAddNotification()        → useMutation to append a notification
- *   useMarkNotificationRead()   → useMutation to mark one notification as read
- *   useReplaceAllNotifications() → useMutation to replace the full list
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
@@ -18,6 +12,38 @@ export function useNotifications() {
   })
 }
 
+export function useUnreadCount() {
+  return useQuery({
+    queryKey: qk.notificationsUnreadCount(),
+    queryFn: () => notificationsRepository.unreadCount(),
+    refetchInterval: 60 * 1000, // 60s
+    refetchOnWindowFocus: true,
+  })
+}
+
+export function useMarkNotificationRead() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => notificationsRepository.markRead(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.notifications() })
+      queryClient.invalidateQueries({ queryKey: qk.notificationsUnreadCount() })
+    },
+  })
+}
+
+export function useMarkAllNotificationsRead() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => notificationsRepository.markAllRead(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.notifications() })
+      queryClient.invalidateQueries({ queryKey: qk.notificationsUnreadCount() })
+    },
+  })
+}
+
+/** @deprecated server-side */
 export function useAddNotification() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -28,16 +54,7 @@ export function useAddNotification() {
   })
 }
 
-export function useMarkNotificationRead() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (id) => notificationsRepository.markRead(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: qk.notifications() })
-    },
-  })
-}
-
+/** @deprecated server-side */
 export function useReplaceAllNotifications() {
   const queryClient = useQueryClient()
   return useMutation({

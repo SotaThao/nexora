@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
+import {
+  useSaveMerchantSetup,
+  useCreateBusiness,
+  useUploadLogo,
+  useUpdateReviewLinks,
+  useCompleteOnboarding
+} from '../../../data/hooks/useMerchantSetup'
 import {
   DEMO_BUSINESS,
   DEMO_LINKS,
@@ -9,11 +15,15 @@ import {
   getPayoutConfigsFromMember
 } from '../constants'
 
-export default function useSetupWizard({ initialBusinessInfo }) {
+export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, hasKyb }) {
   const { currentLanguage, setLanguage, t } = useTranslation()
   const saveMerchantSetup = useSaveMerchantSetup()
+  const createBusinessMutation = useCreateBusiness()
+  const uploadLogoMutation = useUploadLogo()
+  const updateReviewLinksMutation = useUpdateReviewLinks()
+  const completeOnboardingMutation = useCompleteOnboarding()
   const [currentStep, setCurrentStep] = useState(1) // 1, 2, 3
-  const isSsoLocked = !!initialBusinessInfo
+  const isSsoLocked = !!hasKyb // Lock fields ONLY if business is already KYB approved
 
   // State for all steps
   const [businessInfo, setBusinessInfo] = useState({
@@ -28,7 +38,8 @@ export default function useSetupWizard({ initialBusinessInfo }) {
       cashapp: initialBusinessInfo?.paymentAccounts?.cashapp || '',
       zelle: initialBusinessInfo?.paymentAccounts?.zelle || '',
       vlinkpay: initialBusinessInfo?.paymentAccounts?.vlinkpay || ''
-    }
+    },
+    payoutConfigs: { ...DEFAULT_PAYOUT_CONFIGS }
   })
 
   const [reviewLinks, setReviewLinks] = useState({
@@ -128,14 +139,16 @@ export default function useSetupWizard({ initialBusinessInfo }) {
   }
 
   // Handle file logo selection
-  const handleLogoChange = (e) => {
+  const handleLogoChange = async (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0]
-      const reader = new FileReader()
-      reader.onload = (uploadEvent) => {
-        setBusinessInfo({ ...businessInfo, logo: uploadEvent.target.result })
+      try {
+        const logoUrl = await uploadLogoMutation.mutateAsync(file)
+        setBusinessInfo(prev => ({ ...prev, logo: logoUrl }))
+        if (errors.logo) setErrors(prev => ({ ...prev, logo: '' }))
+      } catch (err) {
+        setErrors(prev => ({ ...prev, logo: err.errorCode || 'Logo upload failed' }))
       }
-      reader.readAsDataURL(file)
     }
   }
 
@@ -148,15 +161,6 @@ export default function useSetupWizard({ initialBusinessInfo }) {
       if (!businessInfo.name.trim()) newErrors.name = t('setup.errors.name_required')
       if (!businessInfo.address.trim()) newErrors.address = t('setup.errors.address_required')
       if (!businessInfo.phone.trim()) newErrors.phone = t('setup.errors.phone_required')
-
-      // Store Payment validation
-      const hasVenmo = businessInfo.paymentAccounts?.venmo?.trim()
-      const hasCashapp = businessInfo.paymentAccounts?.cashapp?.trim()
-      const hasZelle = businessInfo.paymentAccounts?.zelle?.trim()
-      const hasVlinkpay = businessInfo.paymentAccounts?.vlinkpay?.trim()
-      if (!hasVenmo && !hasCashapp && !hasZelle && !hasVlinkpay) {
-        newErrors.storePayment = t('setup.errors.store_payment_required')
-      }
 
       // Review Links validation (Optional)
       if (reviewLinks.googleReview && reviewLinks.googleReview.trim() && !reviewLinks.googleReview.startsWith('http')) {
@@ -177,23 +181,57 @@ export default function useSetupWizard({ initialBusinessInfo }) {
     }
 
     if (currentStep === 2) {
-      if (!isSsoLocked && staffList.length === 0) {
-        newErrors.staffList = t('setup.errors.staff_empty')
-      }
+      // Staff has been removed; no validation needed for step 2 right now
     }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (validateStep()) {
-      // Auto-populate default business touchpoints on moving from Step 1 to Step 2 if empty
-      if (currentStep === 1 && touchPoints.length === 0) {
-        setTouchPoints([
-          { id: 'tp-main', nameKey: 'setup.tp_lobby_default', name: t('setup.tp_lobby_default'), type: 'Business Main', isActive: true, scans: 0 },
-          { id: 'tp-front', nameKey: 'setup.tp_front_default', name: t('setup.tp_front_default'), type: 'Front Desk', isActive: true, scans: 0 }
-        ])
+      if (currentStep === 1) {
+        try {
+          const businessDto = {
+            name: businessInfo.name,
+            businessType: businessInfo.industry,
+            address: businessInfo.address,
+            phone: businessInfo.phone,
+            website: businessInfo.website,
+            logoUrl: businessInfo.logo
+          }
+          const res = await createBusinessMutation.mutateAsync(businessDto)
+          setBusinessInfo(prev => ({
+            ...prev,
+            businessId: res.businessId,
+            customSlug: res.slug
+          }))
+
+          const linksDto = {
+            googleReviewUrl: reviewLinks.googleReview,
+            yelpUrl: reviewLinks.yelpReview,
+            facebookUrl: reviewLinks.facebookReview,
+            feedbackEmail: reviewLinks.feedbackEmail
+          }
+          await updateReviewLinksMutation.mutateAsync(linksDto)
+        } catch (err) {
+          const newErrors = {}
+          if (err?.errorCode === 'BUSINESS_NAME_REQUIRED') {
+            newErrors.name = t('setup.errors.name_required')
+          } else if (err?.errorCode === 'USER_NOT_MERCHANT') {
+            newErrors.submit = t('setup.errors.user_not_merchant')
+            setTimeout(() => {
+              onBackToLogin?.()
+            }, 3000)
+          } else {
+            newErrors.submit = err.errorCode || 'Failed to save business profile.'
+          }
+          setErrors({
+            ...errors,
+            ...newErrors
+          })
+          return
+        }
       }
       setCurrentStep(prev => prev + 1)
     }
@@ -209,7 +247,7 @@ export default function useSetupWizard({ initialBusinessInfo }) {
     if (!newStaff.fullName.trim()) staffErrors.staffFullName = t('setup.errors.staff_name_required')
     if (!newStaff.nickname.trim()) staffErrors.staffNickname = t('setup.errors.staff_nickname_required')
     if (newStaff.email?.trim() && !/\S+@\S+\.\S+/.test(newStaff.email.trim())) {
-      staffErrors.staffEmail = t('setup.errors.staff_email_invalid') || 'Invalid email address format.'
+      staffErrors.staffEmail = t('setup.errors.staff_email_invalid')
     }
 
     const configs = newStaff.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
@@ -290,56 +328,39 @@ export default function useSetupWizard({ initialBusinessInfo }) {
   }
 
   const handleToggleWallet = (walletKey) => {
-    const configs = newStaff.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
+    const configs = businessInfo.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
     const config = configs[walletKey] || { enabled: false, value: '', qrCode: '' }
 
     if (config.enabled) {
-      setNewStaff({
-        ...newStaff,
+      setBusinessInfo({
+        ...businessInfo,
         payoutConfigs: {
           ...configs,
           [walletKey]: { ...config, enabled: false }
         }
       })
     } else {
-      if (config.value?.trim()) {
-        setNewStaff({
-          ...newStaff,
-          payoutConfigs: {
-            ...configs,
-            [walletKey]: { ...config, enabled: true }
-          }
-        })
-      } else {
-        openPayoutSetup(walletKey)
-      }
+      setPayoutSetupWallet(walletKey)
+      setTempPayoutValues({ value: config.value || '', qrCode: config.qrCode || '', accountName: config.accountName || '' })
+      setPayoutSetupOpen(true)
     }
   }
 
   const openPayoutSetup = (walletKey) => {
-    const configs = newStaff.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
+    const configs = businessInfo.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
     const config = configs[walletKey] || { enabled: false, value: '', qrCode: '' }
-    setTempPayoutValues({
-      value: config.value || '',
-      qrCode: config.qrCode || '',
-      accountName: config.accountName || newStaff.fullName || ''
-    })
     setPayoutSetupWallet(walletKey)
+    setTempPayoutValues({ value: config.value || '', qrCode: config.qrCode || '', accountName: config.accountName || '' })
     setPayoutSetupOpen(true)
   }
 
   const handlePayoutSubmit = (value, qrCode, accountName) => {
-    const configs = newStaff.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
-    setNewStaff({
-      ...newStaff,
+    const configs = businessInfo.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
+    setBusinessInfo({
+      ...businessInfo,
       payoutConfigs: {
         ...configs,
-        [payoutSetupWallet]: {
-          enabled: true,
-          value: value.trim(),
-          qrCode: qrCode,
-          accountName: accountName.trim()
-        }
+        [payoutSetupWallet]: { enabled: true, value, qrCode, accountName }
       }
     })
     setPayoutSetupOpen(false)
@@ -419,14 +440,21 @@ export default function useSetupWizard({ initialBusinessInfo }) {
 
   // Final Complete
   const handleCompleteSetup = (onComplete) => {
-    const data = {
-      businessInfo,
-      reviewLinks,
-      staffList,
-      touchPoints
-    }
-    saveMerchantSetup.mutate(data, {
-      onSuccess: () => onComplete(data),
+    completeOnboardingMutation.mutate(undefined, {
+      onSuccess: () => {
+        onComplete({
+          businessInfo,
+          reviewLinks,
+          staffList,
+          touchPoints
+        })
+      },
+      onError: (err) => {
+        setErrors({
+          ...errors,
+          submit: err.errorCode || 'Failed to complete onboarding'
+        })
+      }
     })
   }
 
@@ -439,9 +467,7 @@ export default function useSetupWizard({ initialBusinessInfo }) {
   const stepName = (step) => {
     switch (step) {
       case 1: return t('setup.step_name_1')
-      case 2: return isSsoLocked
-        ? (currentLanguage === 'vi' ? 'Điểm chạm QR' : 'QR Touchpoints')
-        : (t('setup.step_name_2') || 'Nhân viên & QR')
+      case 2: return t('components.setup_wizard.hooks.useSetupWizard.payoutAndQrTouchpoints')
       case 3: return t('setup.step_name_3')
       default: return ''
     }

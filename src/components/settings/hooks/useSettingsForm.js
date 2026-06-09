@@ -7,58 +7,31 @@ import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useM
 import { usePendingAccounts, useReplaceAllPendingAccounts } from '../../../data/hooks/usePendingAccounts'
 
 const DEFAULT_PROFILE = {
-  username: 'goldenglow_owner',
-  email: 'owner@goldenglownails.com',
-  referralId: 'VLP-8893-GG',
-  avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200&h=200',
-  // Basic Info
-  fullName: 'Elena Rostova',
-  dob: '1985-05-15',
-  phone: '+1 (555) 789-2026',
-  // Sponsor Info
-  sponsorReferralId: 'VLP-Sponsor-99',
-  sponsorUsername: 'admin_vlinkpay',
-  sponsorEmail: 'support@vlinkpay.com',
-  sponsorPhone: '+1 (800) 555-0100',
-  // Address Details
-  street: '1088 Gold Coast Hwy, Palm Beach, QLD 4221',
-  city: 'Palm Beach',
-  state: 'QLD',
-  zipCode: '4221',
-  country: 'Australia',
-  // Business Info
-  businessName: 'Golden Glow Nail Spa & Salon',
-  businessPhone: '+1 (555) 789-2026',
-  businessEmail: 'manager@goldenglownails.com',
-  businessWebsite: 'https://goldenglownails.com',
-  // Linked Payment Wallets
-  paymentAccounts: {
-    zelle: 'payment@goldenglownails.com',
-    bankwire: '',
-    paypal: '',
-    venmo: '@goldenglow-spa',
-    cashapp: '$goldenglownails',
-    applecash: '',
-    vlinkpay: 'VLP-8893-GG'
-  },
-  payoutToggles: {
-    zelle: true,
-    bankwire: false,
-    paypal: false,
-    venmo: true,
-    cashapp: true,
-    applecash: false
-  },
-  payoutQrCodes: {
-    zelle: '',
-    bankwire: '',
-    paypal: '',
-    venmo: '',
-    cashapp: '',
-    applecash: ''
-  },
-  googleReview: 'https://g.page/r/cGoldenGlowNails/review',
-  yelpReview: 'https://www.yelp.com/biz/golden-glow-nails-palm-beach'
+  username: '',
+  email: '',
+  referralId: '',
+  avatar: null,
+  fullName: '',
+  dob: '',
+  phone: '',
+  sponsorReferralId: '',
+  sponsorUsername: '',
+  sponsorEmail: '',
+  sponsorPhone: '',
+  street: '',
+  city: '',
+  state: '',
+  zipCode: '',
+  country: '',
+  businessName: '',
+  businessPhone: '',
+  businessEmail: '',
+  businessWebsite: '',
+  paymentAccounts: { zelle: '', bankwire: '', paypal: '', venmo: '', cashapp: '', applecash: '', vlinkpay: '' },
+  payoutToggles: { zelle: false, bankwire: false, paypal: false, venmo: false, cashapp: false, applecash: false },
+  payoutQrCodes: { zelle: '', bankwire: '', paypal: '', venmo: '', cashapp: '', applecash: '' },
+  googleReview: '',
+  yelpReview: ''
 }
 
 export default function useSettingsForm({
@@ -113,7 +86,7 @@ export default function useSettingsForm({
     e.preventDefault()
     if (!kybData.legalName.trim() || !kybData.taxId.trim() || !kybData.ownerName.trim() ||
         !kybData.bankName.trim() || !kybData.bankAccount.trim() || !kybData.bankRouting.trim()) {
-      setKybErrors({ kyb: t('register.errors.kyb_required') || 'All fields are required.' })
+      setKybErrors({ kyb: t('register.errors.kyb_required') })
       return
     }
     setKybErrors({})
@@ -121,7 +94,7 @@ export default function useSettingsForm({
     setTimeout(async () => {
       setIsSubmittingKyb(false)
       const existingAccounts = pendingAccountsQuery.data ?? []
-      const targetEmail = profile.email || 'sso_no_kyb@gmail.com'
+      const targetEmail = profile.email || ''
       const existing = existingAccounts.find(acc => acc.email === targetEmail)
       const newAccount = {
         email: targetEmail,
@@ -146,7 +119,7 @@ export default function useSettingsForm({
           vlinkpay: kybData.bankAccount ? `VLP-${kybData.bankAccount.slice(-4)}` : 'VLINKPAY-ID'
         }
       }))
-      showToast(currentLanguage === 'vi' ? 'Xác thực KYB thành công!' : 'KYB verification successful!')
+      showToast(t('components.settings.hooks.useSettingsForm.kybVerificationSuccessful'))
     }, 2000)
   }
 
@@ -224,15 +197,15 @@ export default function useSettingsForm({
       setProfile(prev => ({ ...prev, ...profileSettingsQuery.data }))
     } else if (setupData) {
       const synced = {
-        fullName: setupData.businessInfo?.ownerName || (hasKyb ? DEFAULT_PROFILE.fullName : ''),
-        businessName: setupData.businessInfo?.name || (hasKyb ? DEFAULT_PROFILE.businessName : ''),
-        businessPhone: setupData.businessInfo?.phone || (hasKyb ? DEFAULT_PROFILE.businessPhone : ''),
-        businessWebsite: setupData.businessInfo?.website || (hasKyb ? DEFAULT_PROFILE.businessWebsite : ''),
-        businessEmail: setupData.reviewLinks?.feedbackEmail || (hasKyb ? DEFAULT_PROFILE.businessEmail : ''),
-        street: setupData.businessInfo?.address || (hasKyb ? DEFAULT_PROFILE.street : ''),
-        googleReview: setupData.reviewLinks?.googleReview || DEFAULT_PROFILE.googleReview,
-        yelpReview: setupData.reviewLinks?.yelpReview || DEFAULT_PROFILE.yelpReview,
-        paymentAccounts: setupData.businessInfo?.paymentAccounts || (hasKyb ? DEFAULT_PROFILE.paymentAccounts : {
+        fullName: setupData.businessInfo?.ownerName || '',
+        businessName: setupData.businessInfo?.name || '',
+        businessPhone: setupData.businessInfo?.phone || '',
+        businessWebsite: setupData.businessInfo?.website || '',
+        businessEmail: setupData.reviewLinks?.feedbackEmail || '',
+        street: setupData.businessInfo?.address || '',
+        googleReview: setupData.reviewLinks?.googleReview || '',
+        yelpReview: setupData.reviewLinks?.yelpReview || '',
+        paymentAccounts: setupData.businessInfo?.paymentAccounts || {
           zelle: '',
           bankwire: '',
           paypal: '',
@@ -240,15 +213,15 @@ export default function useSettingsForm({
           cashapp: '',
           applecash: '',
           vlinkpay: ''
-        }),
-        payoutQrCodes: setupData.businessInfo?.payoutQrCodes || (hasKyb ? DEFAULT_PROFILE.payoutQrCodes : {
+        },
+        payoutQrCodes: setupData.businessInfo?.payoutQrCodes || {
           zelle: '',
           bankwire: '',
           paypal: '',
           venmo: '',
           cashapp: '',
           applecash: ''
-        })
+        }
       }
       setProfile(prev => ({ ...prev, ...synced }))
     } else if (!hasKyb) {
@@ -263,7 +236,7 @@ export default function useSettingsForm({
   const saveProfile = (updatedProfile) => {
     setProfile(updatedProfile)
     saveProfileSettingsMutation.mutate(updatedProfile)
-    showToast(currentLanguage === 'vi' ? 'Đã cập nhật cài đặt thành công!' : 'Settings updated successfully!')
+    showToast(t('components.settings.hooks.useSettingsForm.settingsUpdatedSuccessfully'))
   }
 
   const showToast = (msg) => {
@@ -277,7 +250,7 @@ export default function useSettingsForm({
     if (!text) return
     navigator.clipboard.writeText(text)
     setCopiedId(id)
-    showToast(currentLanguage === 'vi' ? 'Đã sao chép vào bộ nhớ tạm!' : 'Copied to clipboard!')
+    showToast(t('components.settings.hooks.useSettingsForm.copiedToClipboard'))
     setTimeout(() => setCopiedId(null), 2000)
   }
 
@@ -432,7 +405,7 @@ export default function useSettingsForm({
     setIsCapturing(true)
     setTimeout(() => {
       const mockQr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-        editValue || 'nexora-mock-payout'
+        editValue || ''
       )}`
       setEditQrCode(mockQr)
       setIsCapturing(false)
@@ -516,11 +489,9 @@ export default function useSettingsForm({
           bgClass: 'bg-blue-50/70 border-blue-200 text-blue-900',
           icon: ShieldAlert,
           iconBg: 'bg-blue-500',
-          title: currentLanguage === 'vi' ? 'HỒ SƠ CƠ BẢN' : 'BASIC ACCOUNT STATUS',
-          description: currentLanguage === 'vi'
-            ? 'Hồ sơ của bạn chỉ hoạt động cho nhận tiền típ trực tiếp P2P (Venmo, Cash App, Zelle) và đánh giá của khách hàng. Các tính năng xử lý tài chính nâng cao (Ví VLINKPAY, Xử lý Thẻ Tín Dụng, Merchant ATM) đã bị Khóa.'
-            : 'Your profile is active only for direct P2P tipping (Venmo, Cash App, direct Zelle) and customer reviews. Advanced financial processing features (VLINKPAY Wallet, Credit Card processing, Merchant ATM) are Gated.',
-          ctaText: currentLanguage === 'vi' ? 'Hoàn tất Xác minh Doanh nghiệp' : 'Complete Business Verification',
+          title: t('components.settings.hooks.useSettingsForm.basicAccountStatus'),
+          description: t('components.settings.hooks.useSettingsForm.yourProfileIsActive'),
+          ctaText: t('components.settings.hooks.useSettingsForm.completeBusinessVerification'),
           ctaAction: () => setShowPortal(prev => !prev)
         }
       case 'lite_pending':
@@ -528,10 +499,8 @@ export default function useSettingsForm({
           bgClass: 'bg-amber-50/70 border-amber-200 text-amber-900',
           icon: ShieldAlert,
           iconBg: 'bg-amber-500',
-          title: currentLanguage === 'vi' ? 'ĐANG CHỜ XÁC MINH LITE' : 'LITE VERIFICATION PENDING REVIEW',
-          description: currentLanguage === 'vi'
-            ? 'Lite Verification đang chờ xem duyệt.'
-            : 'Lite Verification Pending review.',
+          title: t('components.settings.hooks.useSettingsForm.liteVerificationPendingReview'),
+          description: t('components.settings.hooks.useSettingsForm.liteVerificationPendingReview2'),
           ctaText: null
         }
       case 'verified_lite':
@@ -539,11 +508,9 @@ export default function useSettingsForm({
           bgClass: 'bg-emerald-50/70 border-emerald-200 text-emerald-900',
           icon: ShieldCheck,
           iconBg: 'bg-emerald-500',
-          title: currentLanguage === 'vi' ? 'ĐÃ XÁC THỰC LITE' : 'VERIFIED LITE',
-          description: currentLanguage === 'vi'
-            ? 'Đã xác thực Lite. Bật nhận tiền típ P2P. Hoàn thành KYB đầy đủ để mở khóa xử lý thẻ tín dụng.'
-            : 'Verified Lite. P2P tipping enabled. Complete full KYB to unlock credit card processing.',
-          ctaText: currentLanguage === 'vi' ? 'Hoàn tất Xác minh Doanh nghiệp' : 'Complete Business Verification',
+          title: t('components.settings.hooks.useSettingsForm.verifiedLite'),
+          description: t('components.settings.hooks.useSettingsForm.verifiedLiteP2pTipping'),
+          ctaText: t('components.settings.hooks.useSettingsForm.completeBusinessVerification'),
           ctaAction: () => setShowPortal(prev => !prev)
         }
       case 'kyb_required':
@@ -551,11 +518,9 @@ export default function useSettingsForm({
           bgClass: 'bg-orange-50/70 border-orange-200 text-orange-900',
           icon: ShieldAlert,
           iconBg: 'bg-orange-500',
-          title: currentLanguage === 'vi' ? 'YÊU CẦU XÁC MINH DOANH NGHIỆP' : 'BUSINESS VERIFICATION REQUIRED',
-          description: currentLanguage === 'vi'
-            ? 'Yêu cầu Xác minh Doanh nghiệp. Bạn phải xác minh doanh nghiệp của mình để kích hoạt xử lý thẻ.'
-            : 'Business Verification Required. You must verify your business to enable card processing.',
-          ctaText: currentLanguage === 'vi' ? 'Hoàn tất Xác minh Doanh nghiệp' : 'Complete Business Verification',
+          title: t('components.settings.hooks.useSettingsForm.businessVerificationRequired'),
+          description: t('components.settings.hooks.useSettingsForm.businessVerificationRequiredYou'),
+          ctaText: t('components.settings.hooks.useSettingsForm.completeBusinessVerification'),
           ctaAction: () => setShowPortal(prev => !prev)
         }
       case 'kyb_pending':
@@ -563,10 +528,8 @@ export default function useSettingsForm({
           bgClass: 'bg-indigo-50/70 border-indigo-200 text-indigo-900',
           icon: ShieldAlert,
           iconBg: 'bg-indigo-500',
-          title: currentLanguage === 'vi' ? 'ĐANG CHỜ XÁC MINH DOANH NGHIỆP' : 'BUSINESS VERIFICATION PENDING',
-          description: currentLanguage === 'vi'
-            ? 'Xác minh doanh nghiệp đang chờ xử lý. Ban tuân thủ VLINKPAY đang xem xét chi tiết của bạn.'
-            : 'Business Verification Pending. VLINKPAY Compliance is reviewing your details.',
+          title: t('components.settings.hooks.useSettingsForm.businessVerificationPending'),
+          description: t('components.settings.hooks.useSettingsForm.businessVerificationPendingVlinkpay'),
           ctaText: null
         }
       case 'kyb_approved':
@@ -575,11 +538,9 @@ export default function useSettingsForm({
           bgClass: 'bg-emerald-50/70 border-emerald-200 text-emerald-900',
           icon: ShieldCheck,
           iconBg: 'bg-emerald-500',
-          title: currentLanguage === 'vi' ? 'Hồ sơ doanh nghiệp đã xác minh (Phê duyệt KYB)' : 'BUSINESS PROFILE VERIFIED (KYB APPROVED)',
-          description: currentLanguage === 'vi'
-            ? 'Chúc mừng! Hồ sơ doanh nghiệp của bạn đã được VLINKPAY xác minh đầy đủ. Không giới hạn hạn mức xử lý thẻ tín dụng và tính năng Merchant ATM hoạt động.'
-            : 'Business Profile Verified (KYB Approved).',
-          subText: 'Verified Date: May 20, 2026 • Certificate ID: VLP-KYB-99812A',
+          title: t('components.settings.hooks.useSettingsForm.businessProfileVerifiedKyb'),
+          description: t('components.settings.hooks.useSettingsForm.businessProfileVerifiedKyb2'),
+          subText: '',
           ctaText: null
         }
       case 'suspended':
@@ -587,10 +548,8 @@ export default function useSettingsForm({
           bgClass: 'bg-red-50/70 border-red-200 text-red-900',
           icon: ShieldAlert,
           iconBg: 'bg-red-500',
-          title: currentLanguage === 'vi' ? 'TÀI KHOẢN BỊ ĐÌNH CHỈ' : 'ACCOUNT SUSPENDED',
-          description: currentLanguage === 'vi'
-            ? 'Tài khoản bị đình chỉ. Vui lòng liên hệ bộ phận hỗ trợ.'
-            : 'Account Suspended. Please contact support.',
+          title: t('components.settings.hooks.useSettingsForm.accountSuspended'),
+          description: t('components.settings.hooks.useSettingsForm.accountSuspendedPleaseContact'),
           ctaText: null
         }
       case 'pro_pending':
@@ -598,10 +557,8 @@ export default function useSettingsForm({
           bgClass: 'bg-blue-50/70 border-blue-200 text-blue-900',
           icon: ShieldAlert,
           iconBg: 'bg-blue-500',
-          title: currentLanguage === 'vi' ? 'ĐANG CHỜ PHÊ DUYỆT PRO' : 'PRO VERIFICATION PENDING REVIEW',
-          description: currentLanguage === 'vi'
-            ? 'Hồ sơ nâng cấp Pro đang được thẩm định.'
-            : 'Your Pro Verification upgrade is currently pending review.',
+          title: t('components.settings.hooks.useSettingsForm.proVerificationPendingReview'),
+          description: t('components.settings.hooks.useSettingsForm.yourProVerificationUpgrade'),
           ctaText: null
         }
       case 'kyb_rejected':
@@ -609,11 +566,9 @@ export default function useSettingsForm({
           bgClass: 'bg-rose-50/70 border-rose-200 text-rose-900',
           icon: ShieldAlert,
           iconBg: 'bg-rose-500',
-          title: currentLanguage === 'vi' ? 'BỊ TỪ CHỐI XÁC THỰC' : 'VERIFICATION REJECTED BY COMPLIANCE',
-          description: currentLanguage === 'vi'
-            ? 'Hồ sơ xác thực doanh nghiệp của bạn đã bị từ chối.'
-            : 'Your business verification application was rejected by Compliance.',
-          ctaText: currentLanguage === 'vi' ? 'Nộp lại thông tin xác minh' : 'Re-submit Verification',
+          title: t('components.settings.hooks.useSettingsForm.verificationRejectedByCompliance'),
+          description: t('components.settings.hooks.useSettingsForm.yourBusinessVerificationApplication'),
+          ctaText: t('components.settings.hooks.useSettingsForm.reSubmitVerification'),
           ctaAction: () => setShowPortal(prev => !prev)
         }
       case 'under_review':
@@ -621,11 +576,9 @@ export default function useSettingsForm({
           bgClass: 'bg-amber-50/70 border-amber-200 text-amber-900',
           icon: ShieldAlert,
           iconBg: 'bg-amber-500',
-          title: currentLanguage === 'vi' ? 'CẦN BỔ SUNG HỒ SƠ' : 'UNDER REVIEW - INFO REQUESTED',
-          description: currentLanguage === 'vi'
-            ? 'Hồ sơ đang được xem xét.'
-            : 'Under Review. Additional compliance documentation has been requested.',
-          ctaText: currentLanguage === 'vi' ? 'Tải lên tài liệu bổ sung' : 'Upload Additional Documents',
+          title: t('components.settings.hooks.useSettingsForm.underReviewInfoRequested'),
+          description: t('components.settings.hooks.useSettingsForm.underReviewAdditionalCompliance'),
+          ctaText: t('components.settings.hooks.useSettingsForm.uploadAdditionalDocuments'),
           ctaAction: () => setShowPortal(prev => !prev)
         }
       default:

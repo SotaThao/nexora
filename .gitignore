@@ -10,8 +10,14 @@ pnpm-debug.log*
 extracted_scripts/
 extracted_*
 *.test
+*.test.js
+*.test.jsx
 .test
 scratch/
+__tests__/
+coverage/
+artifacts/
+vitest-out.json
 .cursor/
 .agents/
 openspec/changes/*/smoke-screenshots/
@@ -23,3 +29,6 @@ script/
 test-plans/
 skills-lock.json
 package-lock.json
+API/
+ios/
+reports/

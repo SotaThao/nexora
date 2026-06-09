@@ -1,6 +1,26 @@
 import React from 'react'
 import { CheckCircle } from 'lucide-react'
 
+/**
+ * WalletDetails — displays wallet payment info so the customer can
+ * complete the tip via their external wallet app, then confirm.
+ *
+ * @param {object}   props
+ * @param {Function} props.t                       - Translation function
+ * @param {string}   props.currentLanguage          - Active language code
+ * @param {object}   props.selectedWalletObj         - Wallet descriptor (key, name, logo, color)
+ * @param {Array}    props.selectedStaffMembers      - Currently selected staff
+ * @param {string}   props.bizName                   - Business display name
+ * @param {number}   props.activeTipAmount            - Computed tip total
+ * @param {string|null} props.qrCodeVal              - QR code image URL (if available)
+ * @param {object}   props.businessPaymentAccounts   - Business-level payment accounts
+ * @param {string}   props.tipRefNumber              - Tip reference number
+ * @param {Function} props.showToast                 - Toast notification helper
+ * @param {Function} props.handlePay                 - Handler for simulation payment
+ * @param {Function} props.handleConfirmTip          - Handler to confirm tip in API mode
+ * @param {boolean}  props.isApiMode                 - Whether the flow is in API mode
+ * @param {Function} props.setStep                   - Step navigation setter
+ */
 export default function WalletDetails({
   t,
   currentLanguage,
@@ -13,6 +33,8 @@ export default function WalletDetails({
   tipRefNumber,
   showToast,
   handlePay,
+  handleConfirmTip,
+  isApiMode,
   setStep,
 }) {
   return (
@@ -76,7 +98,7 @@ export default function WalletDetails({
             ${activeTipAmount.toFixed(2)}
           </div>
           <p className="text-[10px] text-nexoraSubtle font-semibold tracking-wider uppercase">
-            {currentLanguage === 'vi' ? 'Số tiền chuyển khoản' : 'Tip Amount'}
+            {t('components.customer_flow.steps.WalletDetails.tipAmount')}
           </p>
         </div>
 
@@ -89,7 +111,7 @@ export default function WalletDetails({
               className="h-32 w-32 object-contain rounded shadow-sm"
             />
             <p className="text-[9px] text-nexoraSubtle font-bold mt-2 text-center uppercase tracking-wider">
-              {currentLanguage === 'vi' ? 'Quét mã để chuyển khoản' : 'Scan to pay'}
+              {t('components.customer_flow.steps.WalletDetails.scanToPay')}
             </p>
           </div>
         )}
@@ -100,7 +122,7 @@ export default function WalletDetails({
           {/* Name Field */}
           <div className="group relative border border-nexoraBorder/80 rounded-xl px-4 py-2.5 bg-nexoraCanvas/10 hover:bg-nexoraCanvas/30 hover:border-nexoraBrand/30 transition-all flex flex-col justify-between min-h-[56px]">
             <span className="text-[10px] font-bold text-nexoraSubtle uppercase tracking-wider">
-              {currentLanguage === 'vi' ? 'Tên người nhận' : 'Name'}
+              {t('components.customer_flow.steps.WalletDetails.name')}
             </span>
             <div className="flex items-center justify-between mt-1">
               <span className="text-sm font-extrabold text-slate-800">
@@ -115,11 +137,11 @@ export default function WalletDetails({
                     ? selectedStaffMembers[0].fullName
                     : bizName;
                   navigator.clipboard.writeText(nameText);
-                  showToast(t('common.copied') || 'Copied!', 'success');
+                  showToast(t('common.copied'), 'success');
                 }}
                 className="text-[10px] font-bold text-nexoraBrand hover:text-nexoraBrand/80 px-2 py-1 rounded bg-nexoraBrandSoft/40 hover:bg-nexoraBrandSoft transition"
               >
-                {t('common.copy') || 'Copy'}
+                {t('common.copy')}
               </button>
             </div>
           </div>
@@ -131,12 +153,12 @@ export default function WalletDetails({
               : businessPaymentAccounts?.[selectedWalletObj.key];
 
             const getFieldLabel = () => {
-              if (selectedWalletObj.key === 'zelle') return currentLanguage === 'vi' ? 'Email / SĐT' : 'Email/Phone';
-              if (selectedWalletObj.key === 'venmo') return currentLanguage === 'vi' ? 'Tài khoản Venmo' : 'Venmo Username';
-              if (selectedWalletObj.key === 'cashapp') return currentLanguage === 'vi' ? 'Thẻ Cash App' : 'Cash Tag';
-              if (selectedWalletObj.key === 'paypal') return currentLanguage === 'vi' ? 'Tài khoản PayPal' : 'PayPal Email/Phone';
-              if (selectedWalletObj.key === 'bankwire') return currentLanguage === 'vi' ? 'Thông tin ngân hàng' : 'Bank details';
-              return currentLanguage === 'vi' ? 'Tài khoản nhận' : 'Account';
+              if (selectedWalletObj.key === 'zelle') return t('components.customer_flow.steps.WalletDetails.emailPhone');
+              if (selectedWalletObj.key === 'venmo') return t('components.customer_flow.steps.WalletDetails.venmoUsername');
+              if (selectedWalletObj.key === 'cashapp') return t('components.customer_flow.steps.WalletDetails.cashTag');
+              if (selectedWalletObj.key === 'paypal') return t('components.customer_flow.steps.WalletDetails.paypalEmailPhone');
+              if (selectedWalletObj.key === 'bankwire') return t('components.customer_flow.steps.WalletDetails.bankDetails');
+              return t('components.customer_flow.steps.WalletDetails.account');
             };
 
             return (
@@ -153,11 +175,11 @@ export default function WalletDetails({
                       type="button"
                       onClick={() => {
                         navigator.clipboard.writeText(accountVal);
-                        showToast(t('common.copied') || 'Copied!', 'success');
+                        showToast(t('common.copied'), 'success');
                       }}
                       className="text-[10px] font-bold text-nexoraBrand hover:text-nexoraBrand/80 px-2 py-1 rounded bg-nexoraBrandSoft/40 hover:bg-nexoraBrandSoft transition"
                     >
-                      {t('common.copy') || 'Copy'}
+                      {t('common.copy')}
                     </button>
                   )}
                 </div>
@@ -174,7 +196,7 @@ export default function WalletDetails({
             return (
               <div className="group relative border border-nexoraBorder/80 rounded-xl px-4 py-2.5 bg-nexoraCanvas/10 hover:bg-nexoraCanvas/30 hover:border-nexoraBrand/30 transition-all flex flex-col justify-between min-h-[56px]">
                 <span className="text-[10px] font-bold text-nexoraSubtle uppercase tracking-wider">
-                  {currentLanguage === 'vi' ? 'Nội dung (Bắt buộc)' : 'Note (Required)'}
+                  {t('components.customer_flow.steps.WalletDetails.noteRequired')}
                 </span>
                 <div className="flex items-center justify-between mt-1">
                   <span className="text-sm font-black text-red-600 font-mono tracking-wide">
@@ -184,11 +206,11 @@ export default function WalletDetails({
                     type="button"
                     onClick={() => {
                       navigator.clipboard.writeText(noteText);
-                      showToast(t('common.copied') || 'Copied!', 'success');
+                      showToast(t('common.copied'), 'success');
                     }}
                     className="text-[10px] font-bold text-nexoraBrand hover:text-nexoraBrand/80 px-2 py-1 rounded bg-nexoraBrandSoft/40 hover:bg-nexoraBrandSoft transition"
                   >
-                    {t('common.copy') || 'Copy'}
+                    {t('common.copy')}
                   </button>
                 </div>
               </div>
@@ -200,11 +222,11 @@ export default function WalletDetails({
       <div className="space-y-3 pt-2">
         <button
           type="button"
-          onClick={() => handlePay(selectedWalletObj.name)}
+          onClick={() => isApiMode ? handleConfirmTip() : handlePay(selectedWalletObj.name)}
           className="w-full py-4 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-95 active:scale-[0.99] transition-all text-white font-extrabold text-sm uppercase tracking-wider rounded-xl shadow-lg shadow-nexoraElectric/25 flex items-center justify-center gap-1.5"
         >
           <CheckCircle className="h-5 w-5" />
-          {currentLanguage === 'vi' ? 'Tôi Đã Gửi Tiền Tip' : 'Yes, I Sent The Tip'}
+          {t('components.customer_flow.steps.WalletDetails.yesISentThe')}
         </button>
 
         <button
@@ -212,7 +234,7 @@ export default function WalletDetails({
           onClick={() => setStep('payment')}
           className="w-full py-3 bg-nexoraCanvas border border-nexoraBorder hover:bg-nexoraSurfaceMuted transition text-nexoraMuted font-extrabold text-xs uppercase tracking-wider rounded-xl"
         >
-          {currentLanguage === 'vi' ? 'Quay Lại' : 'Go Back'}
+          {t('components.customer_flow.steps.WalletDetails.goBack')}
         </button>
       </div>
     </div>
