@@ -87,7 +87,7 @@ export default function SetupWizard({
               <h1 className="font-sans text-xl font-bold tracking-wide sm:text-2xl text-nexoraText">
                 NEXORA <span className="ml-1 inline-flex align-middle text-nexoraBrand font-sans text-xs tracking-widest font-black uppercase bg-nexoraBrand/10 px-2 py-0.5 rounded border border-nexoraBrand/30 sm:ml-2">TOUCH</span>
               </h1>
-              <p className="text-xs text-nexoraSubtle font-light">By VLINKPAY Technologies</p>
+              <p className="text-xs text-nexoraSubtle font-light">{t('components.SetupWizard.byVlinkpayTech')}</p>
             </div>
           </div>
 
@@ -351,7 +351,7 @@ export default function SetupWizard({
 
                 <div className="flex items-center gap-1 text-[7.5px] font-bold text-nexoraSubtle qr-print-footer">
                   <ShieldCheck className="h-2.5 w-2.5 text-nexoraBrand shrink-0" />
-                  <span>Secure redirect by VLINKPAY</span>
+                  <span>{t('components.SetupWizard.secureRedirect')}</span>
                 </div>
               </div>
 
@@ -377,7 +377,7 @@ export default function SetupWizard({
       {/* Print-only container */}
       <div className="print-only-container qr-modal-backdrop">
         <div className="qr-modal-container">
-          <h2 className="qr-print-title">Business QR - Lobby</h2>
+          <h2 className="qr-print-title">{t('components.SetupWizard.businessQrLobby')}</h2>
           <p className="qr-print-subtitle">{t('customer.step_form_title')}</p>
 
           <div className="qr-print-card">
@@ -387,7 +387,7 @@ export default function SetupWizard({
             </div>
 
             <div className="w-full text-center">
-              <div className="text-[10px] font-extrabold uppercase text-nexoraBrand tracking-wide qr-print-biz-name mx-auto">General Lobby QR</div>
+              <div className="text-[10px] font-extrabold uppercase text-nexoraBrand tracking-wide qr-print-biz-name mx-auto">{t('components.SetupWizard.generalLobbyQr')}</div>
               <div className="text-[7.5px] font-bold text-nexoraMuted qr-print-staff-info mx-auto">{businessInfo.name || 'Your Salon'}</div>
             </div>
 
@@ -407,7 +407,7 @@ export default function SetupWizard({
 
             <div className="flex items-center gap-1 text-[7.5px] font-bold text-nexoraSubtle qr-print-footer">
               <ShieldCheck className="h-2.5 w-2.5 text-nexoraBrand shrink-0" />
-              <span>Secure redirect by VLINKPAY</span>
+              <span>{t('components.SetupWizard.secureRedirect')}</span>
             </div>
           </div>
 

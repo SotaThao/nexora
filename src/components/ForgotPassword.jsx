@@ -43,10 +43,10 @@ export default function ForgotPassword({ setView }) {
 
         <div className="text-center mb-6">
           <h2 className="font-sans text-xl font-bold tracking-wide sm:text-2xl">
-            Reset Password
+            {t('components.ForgotPassword.resetPassword')}
           </h2>
           <p className="text-xs text-nexoraSubtle mt-1.5 leading-relaxed">
-            Enter your email address and we'll send you a link to reset your password.
+            {t('components.ForgotPassword.description')}
           </p>
         </div>
 
@@ -73,7 +73,7 @@ export default function ForgotPassword({ setView }) {
 
             <div>
               <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-                Email Address
+                {t('components.ForgotPassword.emailAddress')}
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 w-4 h-4 text-nexoraSubtle" />
@@ -95,7 +95,7 @@ export default function ForgotPassword({ setView }) {
                 className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 disabled:opacity-50 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all"
               >
                 <Send className="w-4 h-4" />
-                Send Reset Link
+                {t('components.ForgotPassword.sendResetLink')}
               </button>
 
               <button

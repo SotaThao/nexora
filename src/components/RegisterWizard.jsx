@@ -63,7 +63,7 @@ export default function RegisterWizard(props) {
                   <h2 className="font-sans text-xl font-bold tracking-wide sm:text-2xl text-nexoraText">
                     NEXORA <span className="ml-1.5 inline-flex align-middle text-nexoraBrand font-sans text-xs tracking-widest font-black uppercase bg-nexoraBrand/10 px-2 py-0.5 rounded border border-nexoraBrand/30">TOUCH</span>
                   </h2>
-                  <p className="text-xs text-nexoraSubtle font-light tracking-wide mt-1">Merchant Auth & VLINKPAY KYB</p>
+                  <p className="text-xs text-nexoraSubtle font-light tracking-wide mt-1">{t('components.RegisterWizard.subtitle')}</p>
                 </div>
               </div>
 
@@ -88,7 +88,7 @@ export default function RegisterWizard(props) {
           <h2 className="font-sans text-xl font-bold tracking-wide sm:text-2xl text-nexoraText">
             NEXORA <span className="ml-1.5 inline-flex align-middle text-nexoraBrand font-sans text-xs tracking-widest font-black uppercase bg-nexoraBrand/10 px-2 py-0.5 rounded border border-nexoraBrand/30">TOUCH</span>
           </h2>
-          <p className="text-xs text-nexoraSubtle font-light tracking-wide mt-1">Cổng đăng ký Merchant Nexora & VLINKPAY KYB</p>
+          <p className="text-xs text-nexoraSubtle font-light tracking-wide mt-1">{t('components.RegisterWizard.subtitle')}</p>
         </div>
 
         {/* Wizard Steps indicator */}

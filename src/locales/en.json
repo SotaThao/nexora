@@ -1625,13 +1625,25 @@
       "phExampleLocations": "e.g. Table 04, Mirror 05, Front Counter"
     },
     "ForgotPassword": {
-      "phExampleEmail": "e.g. owner@salon.com"
+      "phExampleEmail": "e.g. owner@salon.com",
+      "resetPassword": "Reset Password",
+      "description": "Enter your email address and we'll send you a link to reset your password.",
+      "emailAddress": "Email Address",
+      "sendResetLink": "Send Reset Link"
     },
     "ResetPassword": {
       "phEmail": "owner@salon.com",
       "phToken": "Reset Token",
       "phNewPassword": "At least 6 characters",
-      "phConfirmPassword": "Re-enter password"
+      "phConfirmPassword": "Re-enter password",
+      "chooseNewPassword": "Choose New Password",
+      "description": "Please enter your new password below.",
+      "resetSuccess": "Password has been reset successfully! Redirecting you to sign in...",
+      "emailAddress": "Email Address",
+      "resetToken": "Reset Token",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm Password",
+      "resetPassword": "Reset Password"
     },
     "TouchpointsView": {
       "phExampleDeviceIds": "e.g. NFC-105, QR-Table-01",
@@ -1640,6 +1652,15 @@
     "TransactionFilter": {
       "phMin": "Min",
       "phMax": "Max"
+    },
+    "RegisterWizard": {
+      "subtitle": "Merchant Auth & VLINKPAY KYB"
+    },
+    "SetupWizard": {
+      "byVlinkpayTech": "By VLINKPAY Technologies",
+      "secureRedirect": "Secure redirect by VLINKPAY",
+      "businessQrLobby": "Business QR - Lobby",
+      "generalLobbyQr": "General Lobby QR"
     }
   },
   "staff_registration": {

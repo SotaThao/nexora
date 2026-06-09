@@ -1625,13 +1625,25 @@
       "phExampleLocations": "vd: Bàn 04, Gương 05, Quầy trước"
     },
     "ForgotPassword": {
-      "phExampleEmail": "vd: owner@salon.com"
+      "phExampleEmail": "vd: owner@salon.com",
+      "resetPassword": "Đặt lại mật khẩu",
+      "description": "Nhập địa chỉ email của bạn và chúng tôi sẽ gửi link đặt lại mật khẩu.",
+      "emailAddress": "Địa chỉ email",
+      "sendResetLink": "Gửi link đặt lại"
     },
     "ResetPassword": {
       "phEmail": "owner@salon.com",
       "phToken": "Mã đặt lại",
       "phNewPassword": "Ít nhất 6 ký tự",
-      "phConfirmPassword": "Nhập lại mật khẩu"
+      "phConfirmPassword": "Nhập lại mật khẩu",
+      "chooseNewPassword": "Chọn mật khẩu mới",
+      "description": "Vui lòng nhập mật khẩu mới bên dưới.",
+      "resetSuccess": "Đặt lại mật khẩu thành công! Đang chuyển đến trang đăng nhập...",
+      "emailAddress": "Địa chỉ email",
+      "resetToken": "Mã đặt lại",
+      "newPassword": "Mật khẩu mới",
+      "confirmPassword": "Xác nhận mật khẩu",
+      "resetPassword": "Đặt lại mật khẩu"
     },
     "TouchpointsView": {
       "phExampleDeviceIds": "vd: NFC-105, QR-Table-01",
@@ -1640,6 +1652,15 @@
     "TransactionFilter": {
       "phMin": "Tối thiểu",
       "phMax": "Tối đa"
+    },
+    "RegisterWizard": {
+      "subtitle": "Cổng đăng ký Merchant Nexora & VLINKPAY KYB"
+    },
+    "SetupWizard": {
+      "byVlinkpayTech": "Bởi VLINKPAY Technologies",
+      "secureRedirect": "Chuyển hướng an toàn bởi VLINKPAY",
+      "businessQrLobby": "QR Doanh nghiệp - Sảnh",
+      "generalLobbyQr": "QR Sảnh chung"
     }
   },
   "staff_registration": {
