@@ -73,3 +73,49 @@ Khi bạn (Agent) được yêu cầu phát triển tính năng mới hoặc th�
 ## ⛓️ Tự động hóa qua GitHub Actions (CI)
 Quy trình CI trên GitHub (`.github/workflows/ci.yml`) đã được tích hợp bước **Lint Design Tokens**. 
 Nếu có bất kỳ dòng code nào vi phạm tiêu chuẩn Design System hoặc gây lỗi kiểm thử đơn vị/E2E, hệ thống CI sẽ tự động đánh dấu đỏ (Fail) trên Pull Request để đảm bảo chất lượng code và giao diện luôn ở mức cao nhất trước khi merge vào nhánh `main`.
+
+---
+
+## Multi-Environment CI/CD Configuration
+
+Workflow `/.github/workflows/frontend.yaml` now supports these deployment environments:
+
+| Branch | GitHub Environment | Build Mode |
+| :--- | :--- | :--- |
+| `dev` | `TEST` | `test` |
+| `staging` | `STAGING` | `staging` |
+| `main`, `master` | `PRODUCTION` | `production` |
+
+`development` is local-only and should be used via `.env.development` and local scripts.
+
+### Required GitHub Environment Variables
+
+Create these variables in each GitHub Environment (`TEST`, `STAGING`, `PRODUCTION`):
+
+* `VITE_APP_ENV` (`test`, `staging`, `production`)
+* `VITE_API_BASE_URL`
+* `VITE_DATA_SOURCE` (`api` for API runtime, `storage` for mock/storage runtime)
+* `VITE_ENABLE_DEMO_TOOLS` (`false` for deployed environments)
+* `VITE_GOOGLE_MAPS_API_KEY`
+* `VITE_MAPBOX_TOKEN`
+* `VITE_MAP_MARKER_ENGINE`
+* `VITE_GOOGLE_MAPS_MAP_ID`
+* `VITE_VLINKPAY_WEB_URL_BASE`
+* `VITE_SENTRY_ENV` (optional)
+
+### Optional GitHub Environment Secrets
+
+* `VITE_SENTRY_DSN` (if Sentry is enabled)
+* `DIGITALOCEAN_ACCESS_TOKEN`
+* `GH_PAT`
+
+### Local Build Commands
+
+Use these commands to verify each environment build locally:
+
+```bash
+pnpm run build:dev
+pnpm run build:test
+pnpm run build:staging
+pnpm run build:prod
+```
