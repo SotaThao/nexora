@@ -37,6 +37,7 @@ import StaffDetailView from './StaffDetailView'
 import StaffModal from './dashboard/modals/StaffModal'
 import QrModal from './dashboard/modals/QrModal'
 import InviteShareModal from './dashboard/modals/InviteShareModal'
+import AddTouchpointModal from './dashboard/modals/AddTouchpointModal'
 
 // ---------------------------------------------------------------------------
 // Default notifications seeded on first dashboard load (no storage data yet)
@@ -197,6 +198,8 @@ export default function Dashboard({
   const [qrTarget, setQrTarget] = useState(null)
   const [reviewFilterStaff, setReviewFilterStaff] = useState('all')
   const [newTouchpoint, setNewTouchpoint] = useState({ name: '', type: 'Table QR' })
+  const [isAddTouchpointModalOpen, setIsAddTouchpointModalOpen] = useState(false)
+  const [addTouchpointPrefill, setAddTouchpointPrefill] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeKpi, setActiveKpi] = useState('tips')
   const { chartRange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate, handleChartRangeChange } = useChartDateRange(transactions)
@@ -544,9 +547,10 @@ export default function Dashboard({
       return (
         <TouchpointsView
           touchpoints={filteredTouchpoints}
-          newTouchpoint={newTouchpoint}
-          setNewTouchpoint={setNewTouchpoint}
-          onAdd={addTouchpoint}
+          onOpenAddModal={(prefill) => {
+            setAddTouchpointPrefill(prefill || null)
+            setIsAddTouchpointModalOpen(true)
+          }}
           onDelete={(id) => setTouchpoints((current) => current.filter((point) => point.id !== id))}
           onQr={previewQr}
           onToggleStatus={toggleTouchpointStatus}
@@ -641,7 +645,10 @@ export default function Dashboard({
         <DashboardHeader
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
-          onAddTouchpoint={() => setActiveMenu('touchpoints')}
+          onAddTouchpoint={() => {
+            setAddTouchpointPrefill(null)
+            setIsAddTouchpointModalOpen(true)
+          }}
           profile={profile}
           businessName={businessName}
           onNavigateSettingsTab={(tab) => {
@@ -763,6 +770,17 @@ export default function Dashboard({
         merchantSetupData={merchantSetupData}
       />
       <QrModal target={qrTarget} businessName={businessName} onClose={() => setQrTarget(null)} />
+
+      <AddTouchpointModal
+        open={isAddTouchpointModalOpen}
+        initialValues={addTouchpointPrefill}
+        onClose={() => setIsAddTouchpointModalOpen(false)}
+        onAdd={(name, type, deviceId) => {
+          addTouchpoint(name, type, deviceId)
+          setActiveMenu('touchpoints')
+          setTouchpointsTab('stations')
+        }}
+      />
 
       <InviteShareModal
         open={isInviteShareOpen}

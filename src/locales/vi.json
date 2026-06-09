@@ -406,6 +406,8 @@
       "device_id_placeholder": "Ví dụ: NFC-105, QR-Table-01",
       "tp_type_label": "Loại vị trí",
       "add_btn": "Thêm Điểm Chạm",
+      "tp_name_required": "Vui lòng nhập tên điểm chạm.",
+      "tp_added_success": "Đã thêm điểm chạm \"{name}\" thành công!",
       "view_qr_title": "Mã QR cho {name}",
       "view_qr_desc": "Khách hàng quét mã này để típ và viết đánh giá trực tiếp cho nhân viên được gán.",
       "assign_staff": "Gán nhân viên phục vụ:",
