@@ -218,7 +218,7 @@ export default function useStaffRegistration({ inviteData }) {
         setLinkedProfile(null)
         setNexoraStatus('error')
         setSearchError(
-          t('components.staff_registration.hooks.useStaffRegistration.text_1_57a340')
+          t('components.staff_registration.hooks.useStaffRegistration.nexoraStaffIdNot')
         )
       }
     }, 600)
@@ -289,20 +289,20 @@ export default function useStaffRegistration({ inviteData }) {
     if (e) e.preventDefault()
     const errors = {}
     if (!regEmail.trim()) {
-      errors.email = t('components.staff_registration.hooks.useStaffRegistration.text_2_3d7f02')
+      errors.email = t('components.staff_registration.hooks.useStaffRegistration.emailIsRequired')
     } else if (!/\S+@\S+\.\S+/.test(regEmail)) {
-      errors.email = t('components.staff_registration.hooks.useStaffRegistration.text_3_c8694b')
+      errors.email = t('components.staff_registration.hooks.useStaffRegistration.emailIsInvalid')
     }
     if (regEmail !== regConfirmEmail) {
-      errors.confirmEmail = t('components.staff_registration.hooks.useStaffRegistration.text_4_ff16be')
+      errors.confirmEmail = t('components.staff_registration.hooks.useStaffRegistration.emailsDoNotMatch')
     }
     if (!regPassword) {
-      errors.password = t('components.staff_registration.hooks.useStaffRegistration.text_5_85dbe1')
+      errors.password = t('components.staff_registration.hooks.useStaffRegistration.passwordIsRequired')
     } else if (regPassword.length < 6) {
-      errors.password = t('components.staff_registration.hooks.useStaffRegistration.text_6_7bce44')
+      errors.password = t('components.staff_registration.hooks.useStaffRegistration.passwordMustBeAt')
     }
     if (!termsAccepted) {
-      errors.terms = t('components.staff_registration.hooks.useStaffRegistration.text_7_ab2ab8')
+      errors.terms = t('components.staff_registration.hooks.useStaffRegistration.youMustAgreeTo')
     }
 
     if (Object.keys(errors).length > 0) {
@@ -319,7 +319,7 @@ export default function useStaffRegistration({ inviteData }) {
     if (otpCode.trim() === '1234') {
       setStep(2)
     } else {
-      setOtpError(t('components.staff_registration.hooks.useStaffRegistration.text_8_0ce6ed'))
+      setOtpError(t('components.staff_registration.hooks.useStaffRegistration.invalidCodeTipEnter'))
     }
   }
 
@@ -374,7 +374,7 @@ export default function useStaffRegistration({ inviteData }) {
   const savePayoutAccount = (e) => {
     if (e) e.preventDefault()
     if (!editValue.trim()) {
-      setModalError(t('components.staff_registration.hooks.useStaffRegistration.text_9_657148'))
+      setModalError(t('components.staff_registration.hooks.useStaffRegistration.thisFieldIsRequired'))
       return
     }
     setPayouts(prev => ({
@@ -479,11 +479,11 @@ export default function useStaffRegistration({ inviteData }) {
         id: `noti-join-${finalStaffMember.id}-${Date.now()}`,
         staffId: finalStaffMember.id,
         type: 'feedback_alert',
-        title: t('components.staff_registration.hooks.useStaffRegistration.text_10_40cf1e'),
+        title: t('components.staff_registration.hooks.useStaffRegistration.newJoinRequest'),
         message: currentLanguage === 'vi'
           ? `Thợ ${finalStaffMember.fullName} (${finalStaffMember.position}) đã gửi yêu cầu liên kết với tiệm của bạn.`
           : `Technician ${finalStaffMember.fullName} (${finalStaffMember.position}) requested to link with your salon.`,
-        time: t('components.staff_registration.hooks.useStaffRegistration.text_11_fc2c2e'),
+        time: t('components.staff_registration.hooks.useStaffRegistration.justNow'),
         read: false,
         linkTab: 'staff'
       }
@@ -504,11 +504,11 @@ export default function useStaffRegistration({ inviteData }) {
     const passwordQuery = linkPassword
 
     if (!emailQuery) {
-      setLinkError(t('components.staff_registration.hooks.useStaffRegistration.text_12_778990'))
+      setLinkError(t('components.staff_registration.hooks.useStaffRegistration.emailIsRequired2'))
       return
     }
     if (!passwordQuery) {
-      setLinkError(t('components.staff_registration.hooks.useStaffRegistration.text_13_87a059'))
+      setLinkError(t('components.staff_registration.hooks.useStaffRegistration.passwordIsRequired2'))
       return
     }
 
@@ -520,7 +520,7 @@ export default function useStaffRegistration({ inviteData }) {
     if (foundEntry) {
       const [staffIdKey, profile] = foundEntry
       if (passwordQuery.length < 6) {
-        setLinkError(t('components.staff_registration.hooks.useStaffRegistration.text_14_ea6cac'))
+        setLinkError(t('components.staff_registration.hooks.useStaffRegistration.passwordMustBeAt2'))
         return
       }
       setSearchId(staffIdKey)
@@ -586,7 +586,7 @@ export default function useStaffRegistration({ inviteData }) {
     }
 
     setLinkError(
-      t('components.staff_registration.hooks.useStaffRegistration.text_15_872434')
+      t('components.staff_registration.hooks.useStaffRegistration.accountDoesNotExist')
     )
   }
 
@@ -599,7 +599,7 @@ export default function useStaffRegistration({ inviteData }) {
     setLinkError('')
     setJoinPath(null)
     showToast(
-      t('components.staff_registration.hooks.useStaffRegistration.text_16_e14743')
+      t('components.staff_registration.hooks.useStaffRegistration.linkRequestCancelled')
     )
   }
 
@@ -693,11 +693,11 @@ export default function useStaffRegistration({ inviteData }) {
         id: `noti-join-${finalStaffMember.id}-${Date.now()}`,
         staffId: finalStaffMember.id,
         type: 'feedback_alert',
-        title: t('components.staff_registration.hooks.useStaffRegistration.text_10_40cf1e'),
+        title: t('components.staff_registration.hooks.useStaffRegistration.newJoinRequest'),
         message: currentLanguage === 'vi'
           ? `Thợ ${finalStaffMember.fullName} (${finalStaffMember.position}) đã gửi yêu cầu liên kết với tiệm của bạn.`
           : `Technician ${finalStaffMember.fullName} (${finalStaffMember.position}) requested to link with your salon.`,
-        time: t('components.staff_registration.hooks.useStaffRegistration.text_11_fc2c2e'),
+        time: t('components.staff_registration.hooks.useStaffRegistration.justNow'),
         read: false,
         linkTab: 'staff'
       }

@@ -72,7 +72,7 @@ export default function TipsTransactionsTab({
               <th className="px-4 py-3">{t('dashboard.tips.ledger.col_tp')}</th>
               <th className="px-4 py-3">{t('dashboard.tips.ledger.col_method')}</th>
               <th className="px-4 py-3">{t('dashboard.tips.ledger.col_status')}</th>
-              <th className="px-4 py-3 text-right">{t('components.tips.tabs.TipsTransactionsTab.text_1_8cd6d8')}</th>
+              <th className="px-4 py-3 text-right">{t('components.tips.tabs.TipsTransactionsTab.details')}</th>
             </tr>
           </thead>
           <tbody>
@@ -105,7 +105,7 @@ export default function TipsTransactionsTab({
                       }}
                       className="text-xs font-black text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer uppercase tracking-wider"
                     >
-                      {t('components.tips.tabs.TipsTransactionsTab.text_1_8cd6d8')}
+                      {t('components.tips.tabs.TipsTransactionsTab.details')}
                     </button>
                   </td>
                 </tr>

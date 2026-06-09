@@ -106,7 +106,7 @@ export default function Step3Download({
                 onChange={(e) => setIsConsentChecked(e.target.checked)}
               />
               <span className="text-xs text-nexoraMuted leading-relaxed">
-                {t('components.setup_wizard.steps.Step3Download.text_1_c25af8')}
+                {t('components.setup_wizard.steps.Step3Download.iHerebyConsentTo')}
               </span>
             </label>
           </div>

@@ -40,7 +40,7 @@ export default function StaffReviews() {
       {/* Summary Panel */}
       <section className={panel}>
         <h3 className="text-base font-extrabold text-nexoraText mb-4">
-          {t('components.staff_dashboard.views.StaffReviews.text_1_01d927')}
+          {t('components.staff_dashboard.views.StaffReviews.reviewsAndRatings')}
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
@@ -94,11 +94,11 @@ export default function StaffReviews() {
       <section className={panel}>
         <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
           <h4 className="text-sm font-black uppercase text-slate-700 tracking-wider">
-            {t('components.staff_dashboard.views.StaffReviews.text_2_659830')}
+            {t('components.staff_dashboard.views.StaffReviews.customerReviews')}
           </h4>
           <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-md">
             <Lock className="h-3 w-3 shrink-0" />
-            <span>{t('components.staff_dashboard.views.StaffReviews.text_3_7fda9d')}</span>
+            <span>{t('components.staff_dashboard.views.StaffReviews.identitySecured')}</span>
           </div>
         </div>
 
@@ -106,7 +106,7 @@ export default function StaffReviews() {
           <div className="text-center py-10 text-slate-400 space-y-2">
             <MessageSquare className="h-10 w-10 mx-auto text-slate-200" />
             <p className="text-xs font-semibold">
-              {t('components.staff_dashboard.views.StaffReviews.text_4_e0f148')}
+              {t('components.staff_dashboard.views.StaffReviews.noReviewsReceivedYet')}
             </p>
           </div>
         ) : (
@@ -116,7 +116,7 @@ export default function StaffReviews() {
               const isYelp = review.category?.toLowerCase().includes('yelp')
               
               // Privacy-focused: determine name mask label
-              const maskedName = t('components.staff_dashboard.views.StaffReviews.text_5_aa2828')
+              const maskedName = t('components.staff_dashboard.views.StaffReviews.anonymousCustomer')
 
               return (
                 <div key={review.id} className="py-4 first:pt-0 last:pb-0 space-y-2">
@@ -151,7 +151,7 @@ export default function StaffReviews() {
                       isYelp ? 'bg-rose-50 text-rose-600 border border-rose-100' :
                       'bg-slate-100 text-slate-600 border border-slate-200'
                     }`}>
-                      {isGoogle ? 'Google' : isYelp ? 'Yelp' : (t('components.staff_dashboard.views.StaffReviews.text_6_48490b'))}
+                      {isGoogle ? 'Google' : isYelp ? 'Yelp' : (t('components.staff_dashboard.views.StaffReviews.internal'))}
                     </span>
                   </div>
 

@@ -140,7 +140,7 @@ function TipsOverTimePanel({
       '90 Days': t('dashboard.chart.90_days'),
       '180 Days': t('dashboard.chart.180_days'),
       '365 Days': t('dashboard.chart.365_days'),
-      'Custom': t('components.dashboard.overview.TipsOverTimePanel.text_1_1f32e6')
+      'Custom': t('components.dashboard.overview.TipsOverTimePanel.custom')
     }[item] || item
   }
 
@@ -165,7 +165,7 @@ function TipsOverTimePanel({
       {range === 'Custom' && (
         <div className="flex flex-wrap items-center justify-end gap-3 mt-4 mb-2 border-t border-dashed border-nexoraBorder dark:border-luxuryCoal pt-4 text-xs font-bold text-nexoraText">
           <div className="flex items-center gap-2">
-            <span className="text-nexoraMuted">{t('components.dashboard.overview.TipsOverTimePanel.text_2_c0e748')}</span>
+            <span className="text-nexoraMuted">{t('components.dashboard.overview.TipsOverTimePanel.from')}</span>
             <input
               type="date"
               value={chartStartDate}
@@ -174,7 +174,7 @@ function TipsOverTimePanel({
             />
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-nexoraMuted">{t('components.dashboard.overview.TipsOverTimePanel.text_3_b40843')}</span>
+            <span className="text-nexoraMuted">{t('components.dashboard.overview.TipsOverTimePanel.to')}</span>
             <input
               type="date"
               value={chartEndDate}

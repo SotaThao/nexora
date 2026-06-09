@@ -308,7 +308,7 @@ export default function Dashboard({
 
   const menuItemsToDisplay = userRole === 'staff'
     ? [
-        { id: 'overview', label: t('components.dashboardRoot.text_1_43861e'), icon: MENU_ITEMS.find(i => i.id === 'overview')?.icon, image: MENU_ITEMS.find(i => i.id === 'overview')?.image },
+        { id: 'overview', label: t('components.dashboardRoot.myDashboard'), icon: MENU_ITEMS.find(i => i.id === 'overview')?.icon, image: MENU_ITEMS.find(i => i.id === 'overview')?.image },
         { id: 'support', label: t('dashboard.menu.support'), icon: MENU_ITEMS.find(i => i.id === 'support')?.icon }
       ]
     : MENU_ITEMS
@@ -469,7 +469,7 @@ export default function Dashboard({
         return (
           <div className="flex h-64 flex-col items-center justify-center space-y-3 nexora-card p-6">
             <div className="text-sm font-semibold text-nexoraMuted">
-              {t('components.dashboardRoot.text_2_91f84a')}
+              {t('components.dashboardRoot.yourStaffProfileWas')}
             </div>
           </div>
         )
@@ -827,10 +827,10 @@ export default function Dashboard({
             </div>
             <div className="space-y-1.5">
               <h3 className="text-base font-black text-nexoraText uppercase tracking-wider">
-                {t('components.dashboardRoot.text_3_b9aee9')}
+                {t('components.dashboardRoot.kybVerificationRequired')}
               </h3>
               <p className="text-xs text-nexoraSubtle font-medium leading-relaxed">
-                {t('components.dashboardRoot.text_4_483d61')}
+                {t('components.dashboardRoot.thisFeatureRequiresYour')}
               </p>
             </div>
             <div className="pt-2 flex flex-col sm:flex-row gap-2.5 justify-center">
@@ -839,7 +839,7 @@ export default function Dashboard({
                 onClick={() => setShowKybWarningModal(false)}
                 className="px-5 py-2.5 border border-nexoraBorder hover:bg-nexoraCanvas text-nexoraSubtle text-xs font-bold uppercase tracking-wider rounded-lg transition-all"
               >
-                {t('components.dashboardRoot.text_5_dbab9f')}
+                {t('components.dashboardRoot.cancel')}
               </button>
               <button
                 type="button"
@@ -851,7 +851,7 @@ export default function Dashboard({
                 }}
                 className="px-5 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-md transition-all animate-pulse"
               >
-                {t('components.dashboardRoot.text_6_ee6094')}
+                {t('components.dashboardRoot.verifyNow')}
               </button>
             </div>
           </div>

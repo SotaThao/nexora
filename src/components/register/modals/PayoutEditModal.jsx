@@ -31,8 +31,8 @@ export default function PayoutEditModal({
   }
 
   const walletFields = {
-    zelle: t('components.register.modals.PayoutEditModal.text_1_0647ea'),
-    bankwire: t('components.register.modals.PayoutEditModal.text_2_00aa8a'),
+    zelle: t('components.register.modals.PayoutEditModal.emailPhone'),
+    bankwire: t('components.register.modals.PayoutEditModal.details'),
     paypal: 'email',
     venmo: '@username',
     cashapp: '$cashtag',
@@ -40,12 +40,12 @@ export default function PayoutEditModal({
   }
 
   const walletPlaceholders = {
-    zelle: t('components.register.modals.PayoutEditModal.text_3_e1251f'),
-    bankwire: t('components.register.modals.PayoutEditModal.text_4_9731fc'),
+    zelle: t('components.register.modals.PayoutEditModal.enterZelleEmailPhone'),
+    bankwire: t('components.register.modals.PayoutEditModal.accountAndRoutingNumbers'),
     paypal: 'email@paypal.com',
     venmo: '@username-venmo',
     cashapp: '$cashtag',
-    applecash: t('components.register.modals.PayoutEditModal.text_5_6b6e57')
+    applecash: t('components.register.modals.PayoutEditModal.enterPhoneNumber')
   }
 
   return (
@@ -62,7 +62,7 @@ export default function PayoutEditModal({
               {t('register.payout.configure_wallet', { wallet: walletNames[editingMethod]?.toUpperCase() })}
             </h3>
             <p className="text-[10px] text-slate-400 font-medium">
-              {t('components.register.modals.PayoutEditModal.text_6_2ee37e')}
+              {t('components.register.modals.PayoutEditModal.specifyReceivingTargetIdentifier')}
             </p>
           </div>
         </div>
@@ -95,7 +95,7 @@ export default function PayoutEditModal({
           {/* QR Code Optional Upload */}
           <div>
             <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
-              {t('components.register.modals.PayoutEditModal.text_7_2a8c1a')}
+              {t('components.register.modals.PayoutEditModal.qrCodeOptional')}
             </label>
 
             {isCapturing ? (
@@ -132,7 +132,7 @@ export default function PayoutEditModal({
                 >
                   <Camera className="w-5 h-5 text-nexoraBrand" />
                   <span className="text-[11px] font-bold text-slate-600">
-                    {t('components.register.modals.PayoutEditModal.text_8_868f04')}
+                    {t('components.register.modals.PayoutEditModal.takePhoto')}
                   </span>
                 </button>
                 <label
@@ -140,7 +140,7 @@ export default function PayoutEditModal({
                 >
                   <FolderOpen className="w-5 h-5 text-nexoraBrand" />
                   <span className="text-[11px] font-bold text-slate-600">
-                    {t('components.register.modals.PayoutEditModal.text_9_44d455')}
+                    {t('components.register.modals.PayoutEditModal.chooseFile')}
                   </span>
                   <input type="file" accept="image/*" className="sr-only" onChange={handleModalFileChange} />
                 </label>
@@ -152,7 +152,7 @@ export default function PayoutEditModal({
           <div className="rounded-lg bg-blue-50/50 border border-blue-100 p-3 text-[10px] leading-relaxed text-blue-800 flex gap-2">
             <AlertTriangle className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
             <span>
-              {t('components.register.modals.PayoutEditModal.text_10_7b89ac')}
+              {t('components.register.modals.PayoutEditModal.pleaseEnterTheCorrect')}
             </span>
           </div>
 
@@ -163,13 +163,13 @@ export default function PayoutEditModal({
               onClick={() => setEditingMethod(null)}
               className="px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider rounded-lg transition"
             >
-              {t('components.register.modals.PayoutEditModal.text_11_8714e2')}
+              {t('components.register.modals.PayoutEditModal.cancel')}
             </button>
             <button
               type="submit"
               className="px-5 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm transition"
             >
-              {t('components.register.modals.PayoutEditModal.text_12_0f06d4')}
+              {t('components.register.modals.PayoutEditModal.save')}
             </button>
           </div>
         </form>

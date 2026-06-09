@@ -193,7 +193,7 @@ export default function ProfileTab({
             <div className="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
               <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
                 <Wallet className="h-4 w-4 text-nexoraBrand" />
-                {t('components.settings.tabs.ProfileTab.text_1_e4d822')}
+                {t('components.settings.tabs.ProfileTab.payoutMethods')}
               </h4>
               {/* Keep Payment Wallets text for unit tests matching */}
               <span className="sr-only">Payment Wallets</span>
@@ -247,7 +247,7 @@ export default function ProfileTab({
                     className="flex items-center gap-1 text-[10px] font-bold text-amber-600 hover:text-amber-700 transition shrink-0 ml-2"
                   >
                     <Edit2 className="h-3 w-3" />
-                    <span>{t('components.settings.tabs.ProfileTab.text_2_2e8d41')}</span>
+                    <span>{t('components.settings.tabs.ProfileTab.payoutAccount')}</span>
                   </button>
                 </div>
               ))}
@@ -278,7 +278,7 @@ export default function ProfileTab({
             <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
               <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
                 <User className="h-4 w-4 text-nexoraBrand" />
-                {t('components.settings.tabs.ProfileTab.text_3_932fd1')}
+                {t('components.settings.tabs.ProfileTab.basicInformation')}
               </h4>
               {!isEditingBasic && !hasKyb && (
                 <button
@@ -300,7 +300,7 @@ export default function ProfileTab({
                     <div className="relative group inline-block normal-case font-normal text-nexoraSubtle">
                       <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
-                        {t('components.settings.tabs.ProfileTab.text_4_fe3696')}
+                        {t('components.settings.tabs.ProfileTab.specifyYourFullLegal')}
                         <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
                       </div>
                     </div>
@@ -319,7 +319,7 @@ export default function ProfileTab({
                     <div className="relative group inline-block normal-case font-normal text-nexoraSubtle">
                       <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
-                        {t('components.settings.tabs.ProfileTab.text_5_91f714')}
+                        {t('components.settings.tabs.ProfileTab.requiredForIdentityVerification')}
                         <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
                       </div>
                     </div>
@@ -338,7 +338,7 @@ export default function ProfileTab({
                     <div className="relative group inline-block normal-case font-normal text-nexoraSubtle">
                       <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
-                        {t('components.settings.tabs.ProfileTab.text_6_d046e4')}
+                        {t('components.settings.tabs.ProfileTab.primaryPhoneContactFor')}
                         <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
                       </div>
                     </div>
@@ -370,15 +370,15 @@ export default function ProfileTab({
             ) : (
               <div className="space-y-3.5 text-xs">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 gap-1">
-                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.text_7_2e0cc1')}</span>
+                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.fullName')}</span>
                   <span className="text-nexoraText font-extrabold">{profile.fullName}</span>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.text_8_ba148d')}</span>
+                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.dateOfBirth')}</span>
                   <span className="text-nexoraText font-extrabold">{formatDOB(profile.dob)}</span>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.text_9_db3889')}</span>
+                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.phoneNumber')}</span>
                   <span className="text-nexoraText font-extrabold">{profile.phone}</span>
                 </div>
               </div>
@@ -390,7 +390,7 @@ export default function ProfileTab({
             <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
               <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-rose-500" />
-                {t('components.settings.tabs.ProfileTab.text_10_5f01d9')}
+                {t('components.settings.tabs.ProfileTab.addressDetails')}
               </h4>
               {!isEditingAddress && !hasKyb && (
                 <button
@@ -412,7 +412,7 @@ export default function ProfileTab({
                     <div className="relative group inline-block normal-case font-normal text-nexoraSubtle">
                       <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
-                        {t('components.settings.tabs.ProfileTab.text_11_19c39f')}
+                        {t('components.settings.tabs.ProfileTab.provideThePhysicalLocation')}
                         <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
                       </div>
                     </div>
@@ -487,7 +487,7 @@ export default function ProfileTab({
             ) : (
               <div className="space-y-3.5 text-xs">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start py-2 sm:py-1 gap-1">
-                  <span className="text-nexoraMuted font-bold shrink-0">{t('components.settings.tabs.ProfileTab.text_12_752b31')}</span>
+                  <span className="text-nexoraMuted font-bold shrink-0">{t('components.settings.tabs.ProfileTab.street')}</span>
                   <span className="text-nexoraText font-extrabold sm:text-right break-words max-w-full sm:max-w-[180px]">{profile.street}</span>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
@@ -495,7 +495,7 @@ export default function ProfileTab({
                   <span className="text-nexoraText font-extrabold">{profile.city}</span>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.text_13_487a6b')}</span>
+                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.state')}</span>
                   <span className="text-nexoraText font-extrabold">{profile.state || 'N/A'}</span>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
@@ -503,7 +503,7 @@ export default function ProfileTab({
                   <span className="text-nexoraText font-extrabold font-mono">{profile.zipCode}</span>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.text_14_8c850c')}</span>
+                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.country')}</span>
                   <span className="text-nexoraText font-extrabold">{profile.country}</span>
                 </div>
               </div>
@@ -515,7 +515,7 @@ export default function ProfileTab({
             <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
               <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
                 <Building2 className="h-4 w-4 text-purple-500" />
-                {t('components.settings.tabs.ProfileTab.text_15_146351')}
+                {t('components.settings.tabs.ProfileTab.businessInformation')}
               </h4>
               {!isEditingBusiness && !hasKyb && (
                 <button
@@ -537,7 +537,7 @@ export default function ProfileTab({
                     <div className="relative group inline-block normal-case font-normal text-nexoraSubtle">
                       <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
-                        {t('components.settings.tabs.ProfileTab.text_16_e6b49c')}
+                        {t('components.settings.tabs.ProfileTab.enterTheLegalOr')}
                         <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
                       </div>
                     </div>
@@ -600,11 +600,11 @@ export default function ProfileTab({
             ) : (
               <div className="space-y-3.5 text-xs">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 gap-1">
-                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.text_17_4c5d20')}</span>
+                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.businessName')}</span>
                   <span className="text-nexoraText font-extrabold">{profile.businessName}</span>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.text_18_8f0bb5')}</span>
+                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.phone')}</span>
                   <span className="text-nexoraText font-extrabold">{profile.businessPhone}</span>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
@@ -636,7 +636,7 @@ export default function ProfileTab({
               <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
                 <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-sky-500" />
-                  {t('components.settings.tabs.ProfileTab.text_19_5ccb22')}
+                  {t('components.settings.tabs.ProfileTab.locationMap')}
                 </h4>
               </div>
               <div className="h-[220px] w-full rounded-lg border border-slate-200 overflow-hidden bg-slate-100">
@@ -655,7 +655,7 @@ export default function ProfileTab({
               <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
                 <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
                   <Globe className="h-4 w-4 text-emerald-500" />
-                  {t('components.settings.tabs.ProfileTab.text_20_f13fde')}
+                  {t('components.settings.tabs.ProfileTab.reviewLinks')}
                 </h4>
                 {!isEditingReviews && (
                   <button
@@ -761,8 +761,8 @@ export default function ProfileTab({
         }
 
         const walletFields = {
-          zelle: t('components.settings.tabs.ProfileTab.text_21_0647ea'),
-          bankwire: t('components.settings.tabs.ProfileTab.text_22_00aa8a'),
+          zelle: t('components.settings.tabs.ProfileTab.emailPhone'),
+          bankwire: t('components.settings.tabs.ProfileTab.details'),
           paypal: 'email',
           venmo: '@username',
           cashapp: '$cashtag',
@@ -770,12 +770,12 @@ export default function ProfileTab({
         }
 
         const walletPlaceholders = {
-          zelle: t('components.settings.tabs.ProfileTab.text_23_e1251f'),
-          bankwire: t('components.settings.tabs.ProfileTab.text_24_c4bdfb'),
-          paypal: t('components.settings.tabs.ProfileTab.text_25_c89f8a'),
-          venmo: t('components.settings.tabs.ProfileTab.text_26_40d556'),
-          cashapp: t('components.settings.tabs.ProfileTab.text_27_beba2f'),
-          applecash: t('components.settings.tabs.ProfileTab.text_28_40505b')
+          zelle: t('components.settings.tabs.ProfileTab.enterZelleEmailPhone'),
+          bankwire: t('components.settings.tabs.ProfileTab.enterBankWireRouting'),
+          paypal: t('components.settings.tabs.ProfileTab.enterPaypalEmail'),
+          venmo: t('components.settings.tabs.ProfileTab.enterVenmoUsername'),
+          cashapp: t('components.settings.tabs.ProfileTab.enterCashAppCashtag'),
+          applecash: t('components.settings.tabs.ProfileTab.enterAppleCashPhone')
         }
 
         return (
@@ -794,7 +794,7 @@ export default function ProfileTab({
                       : `CONFIGURE ${walletNames[editingMethod]?.toUpperCase()}`}
                   </h3>
                   <p className="text-[10px] text-slate-400 font-medium">
-                    {t('components.settings.tabs.ProfileTab.text_29_2ee37e')}
+                    {t('components.settings.tabs.ProfileTab.specifyReceivingTargetIdentifier')}
                   </p>
                 </div>
               </div>
@@ -828,7 +828,7 @@ export default function ProfileTab({
                 {/* QR Code Optional Upload */}
                 <div>
                   <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
-                    {t('components.settings.tabs.ProfileTab.text_30_2a8c1a')}
+                    {t('components.settings.tabs.ProfileTab.qrCodeOptional')}
                   </label>
 
                   {isCapturing ? (
@@ -865,7 +865,7 @@ export default function ProfileTab({
                       >
                         <Camera className="w-5 h-5 text-nexoraBrand" />
                         <span className="text-[11px] font-bold text-slate-600">
-                          {t('components.settings.tabs.ProfileTab.text_31_868f04')}
+                          {t('components.settings.tabs.ProfileTab.takePhoto')}
                         </span>
                       </button>
                       <label
@@ -873,7 +873,7 @@ export default function ProfileTab({
                       >
                         <FolderOpen className="w-5 h-5 text-nexoraBrand" />
                         <span className="text-[11px] font-bold text-slate-600">
-                          {t('components.settings.tabs.ProfileTab.text_32_44d455')}
+                          {t('components.settings.tabs.ProfileTab.chooseFile')}
                         </span>
                         <input type="file" accept="image/*" className="sr-only" onChange={handleModalFileChange} />
                       </label>
@@ -885,7 +885,7 @@ export default function ProfileTab({
                 <div className="rounded-lg bg-blue-50/50 border border-blue-100 p-3 text-[10px] leading-relaxed text-blue-800 flex gap-2">
                   <AlertTriangle className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
                   <span>
-                    {t('components.settings.tabs.ProfileTab.text_33_7b89ac')}
+                    {t('components.settings.tabs.ProfileTab.pleaseEnterTheCorrect')}
                   </span>
                 </div>
 
@@ -896,13 +896,13 @@ export default function ProfileTab({
                     onClick={() => setEditingMethod(null)}
                     className="px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider rounded-lg transition"
                   >
-                    {t('components.settings.tabs.ProfileTab.text_34_8714e2')}
+                    {t('components.settings.tabs.ProfileTab.cancel')}
                   </button>
                   <button
                     type="submit"
                     className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm transition"
                   >
-                    {t('components.settings.tabs.ProfileTab.text_35_0f06d4')}
+                    {t('components.settings.tabs.ProfileTab.save')}
                   </button>
                 </div>
               </form>

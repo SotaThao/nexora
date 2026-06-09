@@ -75,7 +75,7 @@ function StaffView({
       }).catch(() => {})
     } else {
       navigator.clipboard.writeText(url)
-      showToast(t('components.dashboard.views.StaffView.text_1_70a15f'), 'success')
+      showToast(t('components.dashboard.views.StaffView.linkCopiedToClipboard'), 'success')
     }
   }
   const [inviteName, setInviteName] = useState('')
@@ -113,7 +113,7 @@ function StaffView({
       const matchedId = Object.keys(MOCK_NEXORA_STAFF_PROFILES).find(key => MOCK_NEXORA_STAFF_PROFILES[key] === match)
       setSearchResult({ ...match, id: matchedId })
     } else {
-      setSearchError(t('components.dashboard.views.StaffView.text_2_f28638'))
+      setSearchError(t('components.dashboard.views.StaffView.noStaffProfileFound'))
     }
   }
 
@@ -129,7 +129,7 @@ function StaffView({
   const handleInviteSubmit = (e) => {
     e.preventDefault()
     if (!inviteName.trim() || !inviteContact.trim()) {
-      showToast(t('components.dashboard.views.StaffView.text_3_dff6f5'), 'warning')
+      showToast(t('components.dashboard.views.StaffView.pleaseEnterBothName'), 'warning')
       return
     }
     onInviteStaff(inviteName, inviteContact, inviteRole, inviteMethod)
@@ -188,7 +188,7 @@ function StaffView({
             <div
               onClick={() => setLargeJoinQrOpen(true)}
               className="h-20 w-20 rounded-xl bg-slate-50 border border-slate-200 p-1 flex items-center justify-center shadow-inner bg-white cursor-zoom-in transition hover:scale-105 duration-200 group relative"
-              title={t('components.dashboard.views.StaffView.text_4_953f1c')}
+              title={t('components.dashboard.views.StaffView.clickToEnlarge')}
             >
               <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`)}`}
@@ -211,10 +211,10 @@ function StaffView({
               </span>
               <div>
                 <h4 className="text-xs font-black uppercase text-slate-800 tracking-wider">
-                  {t('components.dashboard.views.StaffView.text_5_1a8107')}
+                  {t('components.dashboard.views.StaffView.technicianJoinLinkAnd')}
                 </h4>
                 <p className="text-[11px] text-slate-500 font-medium mt-0.5 leading-normal">
-                  {t('components.dashboard.views.StaffView.text_6_c2e0ab')}
+                  {t('components.dashboard.views.StaffView.shareThisReferralLink')}
                 </p>
               </div>
             </div>
@@ -230,19 +230,19 @@ function StaffView({
                 onClick={() => {
                   const url = `${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`
                   navigator.clipboard.writeText(url)
-                  showToast(t('components.dashboard.views.StaffView.text_7_df86c2'), 'success')
+                  showToast(t('components.dashboard.views.StaffView.joinLinkCopiedTo'), 'success')
                 }}
                 className="h-9 px-3.5 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-sm bg-white cursor-pointer"
               >
                 <Copy className="h-3.5 w-3.5" />
-                <span>{t('components.dashboard.views.StaffView.text_8_cd2bb1')}</span>
+                <span>{t('components.dashboard.views.StaffView.copy')}</span>
               </button>
               <button
                 onClick={() => onOpenInviteShare && onOpenInviteShare()}
                 className="h-9 px-3.5 bg-nexoraBrand text-white hover:bg-opacity-95 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-sm cursor-pointer"
               >
                 <Share2 className="h-3.5 w-3.5" />
-                <span>{t('components.dashboard.views.StaffView.text_9_240e6a')}</span>
+                <span>{t('components.dashboard.views.StaffView.share')}</span>
               </button>
             </div>
           </div>
@@ -255,7 +255,7 @@ function StaffView({
           <div className="px-5 py-4 border-b border-amber-200 bg-amber-50 flex items-center justify-between">
             <h3 className="text-xs font-black uppercase text-amber-800 tracking-wider flex items-center gap-1.5 animate-pulse">
               <AlertCircle className="h-4 w-4 text-amber-700" />
-              {t('components.dashboard.views.StaffView.text_10_6dfac7')} ({pendingStaff.length})
+              {t('components.dashboard.views.StaffView.pendingJoinRequests')} ({pendingStaff.length})
             </h3>
           </div>
           <div className="overflow-x-auto bg-white">
@@ -290,7 +290,7 @@ function StaffView({
                       </td>
                       <td className="px-5 py-4">
                         <span className="text-xs text-slate-500 font-semibold">
-                          {member.flowType || (t('components.dashboard.views.StaffView.text_11_51f715'))}
+                          {member.flowType || (t('components.dashboard.views.StaffView.directAddition'))}
                         </span>
                       </td>
                       <td className="px-5 py-4">
@@ -300,7 +300,7 @@ function StaffView({
                               <span key={wallet} className="rounded px-2 py-0.5 text-[10px] font-bold bg-nexoraCanvas text-nexoraBrand border border-nexoraBrand/10">{wallet}</span>
                             ))
                           ) : (
-                            <span className="text-[10px] text-slate-400 font-bold italic">{t('components.dashboard.views.StaffView.text_12_e4224c')}</span>
+                            <span className="text-[10px] text-slate-400 font-bold italic">{t('components.dashboard.views.StaffView.pending')}</span>
                           )}
                         </div>
                       </td>
@@ -309,13 +309,13 @@ function StaffView({
                           onClick={() => onApproveClick && onApproveClick(member)}
                           className="px-3.5 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition shadow-sm mr-2"
                         >
-                          {t('components.dashboard.views.StaffView.text_13_788824')}
+                          {t('components.dashboard.views.StaffView.reviewAndApprove')}
                         </button>
                         <button
                           onClick={() => onDeclineJoin && onDeclineJoin(member.id)}
                           className="px-3 py-1.5 text-xs font-bold border border-rose-200 bg-rose-50 text-rose-700 rounded-lg hover:bg-rose-100 transition shadow-sm"
                         >
-                          {t('components.dashboard.views.StaffView.text_14_e4b582')}
+                          {t('components.dashboard.views.StaffView.decline')}
                         </button>
                       </td>
                     </tr>
@@ -336,17 +336,17 @@ function StaffView({
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-extrabold uppercase text-slate-400 whitespace-nowrap">
-                {t('components.dashboard.views.StaffView.text_15_cc1367')}
+                {t('components.dashboard.views.StaffView.sortBy')}
               </span>
               <CustomSelect
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 options={[
-                  { value: 'name-asc', label: t('components.dashboard.views.StaffView.text_16_a3f4dc') },
-                  { value: 'name-desc', label: t('components.dashboard.views.StaffView.text_17_2ac7e8') },
-                  { value: 'date-newest', label: t('components.dashboard.views.StaffView.text_18_46defc') },
-                  { value: 'date-oldest', label: t('components.dashboard.views.StaffView.text_19_1fa4e0') },
-                  { value: 'status-active', label: t('components.dashboard.views.StaffView.text_20_ae10de') }
+                  { value: 'name-asc', label: t('components.dashboard.views.StaffView.nameAZ') },
+                  { value: 'name-desc', label: t('components.dashboard.views.StaffView.nameZA') },
+                  { value: 'date-newest', label: t('components.dashboard.views.StaffView.dateNewest') },
+                  { value: 'date-oldest', label: t('components.dashboard.views.StaffView.dateOldest') },
+                  { value: 'status-active', label: t('components.dashboard.views.StaffView.statusActive') }
                 ]}
                 size="sm"
                 className="w-44"
@@ -375,16 +375,16 @@ function StaffView({
                     <span>{t('dashboard.activity_log.col_status')}</span>
                     <HelpCircle className="h-3 w-3 text-slate-400 cursor-help shrink-0" />
                     <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1.5 hidden group-hover:block w-44 bg-slate-800 text-white text-[9px] font-bold p-2 rounded-lg shadow-lg pointer-events-none text-center normal-case leading-normal z-50">
-                      {t('components.dashboard.views.StaffView.text_21_6157df')}
+                      {t('components.dashboard.views.StaffView.clickPillToToggle')}
                     </div>
                   </div>
                 </th>
                 <th className="px-5 py-3">
                   <div className="flex items-center gap-1 group relative">
-                    <span>{t('components.dashboard.views.StaffView.text_22_93016e')}</span>
+                    <span>{t('components.dashboard.views.StaffView.tipsFlow')}</span>
                     <HelpCircle className="h-3 w-3 text-slate-400 cursor-help shrink-0" />
                     <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1.5 hidden group-hover:block w-44 bg-slate-800 text-white text-[9px] font-bold p-2 rounded-lg shadow-lg pointer-events-none text-center normal-case leading-normal z-50 font-sans">
-                      {t('components.dashboard.views.StaffView.text_23_d7ecfa')}
+                      {t('components.dashboard.views.StaffView.clickPillToShow')}
                     </div>
                   </div>
                 </th>
@@ -419,17 +419,17 @@ function StaffView({
 
                     <td className="px-5 py-4">
                       <div className="text-xs text-slate-500 font-semibold leading-normal">
-                        {member.flowType || (t('components.dashboard.views.StaffView.text_11_51f715'))}
+                        {member.flowType || (t('components.dashboard.views.StaffView.directAddition'))}
                       </div>
                       <div className="text-[10px] text-slate-400 font-bold mt-0.5 leading-normal">
-                        {t('components.dashboard.views.StaffView.text_24_bd23e6')}
+                        {t('components.dashboard.views.StaffView.linkedDate')}
                         {member.joinedDate || '2026-05-15'}
                       </div>
                     </td>
 
                     <td className="px-5 py-4">
                       {isPendingSetup ? (
-                        <span className="text-[10px] text-slate-400 font-bold italic">{t('components.dashboard.views.StaffView.text_12_e4224c')}</span>
+                        <span className="text-[10px] text-slate-400 font-bold italic">{t('components.dashboard.views.StaffView.pending')}</span>
                       ) : (
                         <div className="flex flex-wrap gap-1.5">
                           {wallets.length > 0 ? (
@@ -437,7 +437,7 @@ function StaffView({
                               <span key={wallet} className="rounded px-2 py-0.5 text-[10px] font-bold bg-nexoraCanvas text-nexoraBrand border border-nexoraBrand/10">{wallet}</span>
                             ))
                           ) : (
-                            <span className="text-[10px] text-slate-400 font-bold italic">{t('components.dashboard.views.StaffView.text_25_e7119e')}</span>
+                            <span className="text-[10px] text-slate-400 font-bold italic">{t('components.dashboard.views.StaffView.noWallets')}</span>
                           )}
                         </div>
                       )}
@@ -446,17 +446,17 @@ function StaffView({
                     <td className="px-5 py-4">
                       {isPendingSetup && (
                         <span className="inline-flex rounded-full bg-amber-50 text-amber-700 px-2.5 py-0.5 text-[10px] font-extrabold uppercase border border-amber-100">
-                          {t('components.dashboard.views.StaffView.text_26_d9804e')}
+                          {t('components.dashboard.views.StaffView.pendingSetup')}
                         </span>
                       )}
                       {isPendingAcceptance && (
                         <span className="inline-flex rounded-full bg-indigo-50 text-indigo-700 px-2.5 py-0.5 text-[10px] font-extrabold uppercase border border-indigo-100">
-                          {t('components.dashboard.views.StaffView.text_27_55eabd')}
+                          {t('components.dashboard.views.StaffView.pendingAcceptance')}
                         </span>
                       )}
                       {isPendingUnlink && (
                         <span className="inline-flex rounded-full bg-rose-50 text-rose-700 px-2.5 py-0.5 text-[10px] font-extrabold uppercase border border-rose-100">
-                          {t('components.dashboard.views.StaffView.text_28_0f6793')}
+                          {t('components.dashboard.views.StaffView.pendingUnlink')}
                         </span>
                       )}
                       {!isPending && (
@@ -518,13 +518,13 @@ function StaffView({
                             onClick={() => onAcceptJoin && onAcceptJoin(member.id)}
                             className="px-2.5 py-1 text-[10px] font-extrabold border border-emerald-200 bg-emerald-50 text-emerald-700 rounded hover:bg-emerald-100 transition"
                           >
-                            {t('components.dashboard.views.StaffView.text_29_e668dd')}
+                            {t('components.dashboard.views.StaffView.accept')}
                           </button>
                           <button
                             onClick={() => onDeclineJoin && onDeclineJoin(member.id)}
                             className="px-2.5 py-1 text-[10px] font-extrabold border border-rose-200 bg-rose-50 text-rose-700 rounded hover:bg-rose-100 transition"
                           >
-                            {t('components.dashboard.views.StaffView.text_14_e4b582')}
+                            {t('components.dashboard.views.StaffView.decline')}
                           </button>
                         </div>
                       )}
@@ -535,13 +535,13 @@ function StaffView({
                             onClick={() => onAcceptUnlink && onAcceptUnlink(member.id)}
                             className="px-2.5 py-1 text-[10px] font-extrabold border border-rose-200 bg-rose-50 text-rose-700 rounded hover:bg-rose-100 transition cursor-pointer"
                           >
-                            {t('components.dashboard.views.StaffView.text_30_97c175')}
+                            {t('components.dashboard.views.StaffView.approveUnlink')}
                           </button>
                           <button
                             onClick={() => onDeclineUnlink && onDeclineUnlink(member.id)}
                             className="px-2.5 py-1 text-[10px] font-extrabold border border-slate-200 bg-white text-slate-700 rounded hover:bg-slate-50 transition cursor-pointer"
                           >
-                            {t('components.dashboard.views.StaffView.text_31_00cf39')}
+                            {t('components.dashboard.views.StaffView.reject')}
                           </button>
                         </div>
                       )}
@@ -583,7 +583,7 @@ function StaffView({
           >
             <div className="w-full flex justify-between items-center mb-4">
               <h3 className="text-xs font-black uppercase text-slate-800 tracking-wider">
-                {t('components.dashboard.views.StaffView.text_32_a8934d')}
+                {t('components.dashboard.views.StaffView.joinQrCode')}
               </h3>
               <button
                 onClick={() => setLargeJoinQrOpen(false)}
@@ -602,7 +602,7 @@ function StaffView({
             </div>
 
             <p className="text-[11px] text-slate-500 font-medium text-center leading-relaxed max-w-xs mb-4">
-              {t('components.dashboard.views.StaffView.text_33_8222f9')}
+              {t('components.dashboard.views.StaffView.haveTechniciansScanThis')}
             </p>
 
             <div className="w-full bg-slate-50 rounded-xl border border-slate-200 p-2.5 flex items-center justify-between gap-2">
@@ -613,12 +613,12 @@ function StaffView({
                 onClick={() => {
                   const url = `${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`
                   navigator.clipboard.writeText(url)
-                  showToast(t('components.dashboard.views.StaffView.text_7_df86c2'), 'success')
+                  showToast(t('components.dashboard.views.StaffView.joinLinkCopiedTo'), 'success')
                 }}
                 className="h-7 px-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[10px] font-bold transition flex items-center gap-1 shrink-0"
               >
                 <Copy className="h-3 w-3" />
-                <span>{t('components.dashboard.views.StaffView.text_8_cd2bb1')}</span>
+                <span>{t('components.dashboard.views.StaffView.copy')}</span>
               </button>
             </div>
           </div>

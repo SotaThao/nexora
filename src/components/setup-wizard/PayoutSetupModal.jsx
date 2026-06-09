@@ -94,7 +94,7 @@ export default function PayoutSetupModal({ open, walletKey, staffName, initialVa
                 : `${walletNames[walletKey]?.toUpperCase()} ACCOUNT`}
             </h3>
             <p className="text-[10px] text-slate-400 font-medium">
-              {t('components.setup_wizard.PayoutSetupModal.text_1_2ee37e')}
+              {t('components.setup_wizard.PayoutSetupModal.specifyReceivingTargetIdentifier')}
             </p>
           </div>
         </div>
@@ -102,7 +102,7 @@ export default function PayoutSetupModal({ open, walletKey, staffName, initialVa
         <div className="space-y-4">
           <div>
             <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
-              {t('components.setup_wizard.PayoutSetupModal.text_2_4eb2d1')}
+              {t('components.setup_wizard.PayoutSetupModal.accountIdentifier')}
             </label>
             <input
               type="text"
@@ -121,7 +121,7 @@ export default function PayoutSetupModal({ open, walletKey, staffName, initialVa
 
           <div>
             <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
-              {t('components.setup_wizard.PayoutSetupModal.text_3_b860af')}
+              {t('components.setup_wizard.PayoutSetupModal.qrCodeOptional')}
             </label>
 
             {isCapturing ? (
@@ -189,13 +189,13 @@ export default function PayoutSetupModal({ open, walletKey, staffName, initialVa
             onClick={onClose}
             className="px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider rounded-lg transition"
           >
-            {t('components.setup_wizard.PayoutSetupModal.text_4_8714e2')}
+            {t('components.setup_wizard.PayoutSetupModal.cancel')}
           </button>
           <button
             onClick={handleSubmit}
             className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm transition"
           >
-            {t('components.setup_wizard.PayoutSetupModal.text_5_0f06d4')}
+            {t('components.setup_wizard.PayoutSetupModal.save')}
           </button>
         </div>
       </div>

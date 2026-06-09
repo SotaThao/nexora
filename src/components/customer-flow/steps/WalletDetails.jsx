@@ -98,7 +98,7 @@ export default function WalletDetails({
             ${activeTipAmount.toFixed(2)}
           </div>
           <p className="text-[10px] text-nexoraSubtle font-semibold tracking-wider uppercase">
-            {t('components.customer_flow.steps.WalletDetails.text_1_237718')}
+            {t('components.customer_flow.steps.WalletDetails.tipAmount')}
           </p>
         </div>
 
@@ -111,7 +111,7 @@ export default function WalletDetails({
               className="h-32 w-32 object-contain rounded shadow-sm"
             />
             <p className="text-[9px] text-nexoraSubtle font-bold mt-2 text-center uppercase tracking-wider">
-              {t('components.customer_flow.steps.WalletDetails.text_2_272616')}
+              {t('components.customer_flow.steps.WalletDetails.scanToPay')}
             </p>
           </div>
         )}
@@ -122,7 +122,7 @@ export default function WalletDetails({
           {/* Name Field */}
           <div className="group relative border border-nexoraBorder/80 rounded-xl px-4 py-2.5 bg-nexoraCanvas/10 hover:bg-nexoraCanvas/30 hover:border-nexoraBrand/30 transition-all flex flex-col justify-between min-h-[56px]">
             <span className="text-[10px] font-bold text-nexoraSubtle uppercase tracking-wider">
-              {t('components.customer_flow.steps.WalletDetails.text_3_c72d55')}
+              {t('components.customer_flow.steps.WalletDetails.name')}
             </span>
             <div className="flex items-center justify-between mt-1">
               <span className="text-sm font-extrabold text-slate-800">
@@ -153,12 +153,12 @@ export default function WalletDetails({
               : businessPaymentAccounts?.[selectedWalletObj.key];
 
             const getFieldLabel = () => {
-              if (selectedWalletObj.key === 'zelle') return t('components.customer_flow.steps.WalletDetails.text_4_129233');
-              if (selectedWalletObj.key === 'venmo') return t('components.customer_flow.steps.WalletDetails.text_5_8df510');
-              if (selectedWalletObj.key === 'cashapp') return t('components.customer_flow.steps.WalletDetails.text_6_a185f6');
-              if (selectedWalletObj.key === 'paypal') return t('components.customer_flow.steps.WalletDetails.text_7_fa1eba');
-              if (selectedWalletObj.key === 'bankwire') return t('components.customer_flow.steps.WalletDetails.text_8_a91a18');
-              return t('components.customer_flow.steps.WalletDetails.text_9_89e34f');
+              if (selectedWalletObj.key === 'zelle') return t('components.customer_flow.steps.WalletDetails.emailPhone');
+              if (selectedWalletObj.key === 'venmo') return t('components.customer_flow.steps.WalletDetails.venmoUsername');
+              if (selectedWalletObj.key === 'cashapp') return t('components.customer_flow.steps.WalletDetails.cashTag');
+              if (selectedWalletObj.key === 'paypal') return t('components.customer_flow.steps.WalletDetails.paypalEmailPhone');
+              if (selectedWalletObj.key === 'bankwire') return t('components.customer_flow.steps.WalletDetails.bankDetails');
+              return t('components.customer_flow.steps.WalletDetails.account');
             };
 
             return (
@@ -196,7 +196,7 @@ export default function WalletDetails({
             return (
               <div className="group relative border border-nexoraBorder/80 rounded-xl px-4 py-2.5 bg-nexoraCanvas/10 hover:bg-nexoraCanvas/30 hover:border-nexoraBrand/30 transition-all flex flex-col justify-between min-h-[56px]">
                 <span className="text-[10px] font-bold text-nexoraSubtle uppercase tracking-wider">
-                  {t('components.customer_flow.steps.WalletDetails.text_10_2d3bbb')}
+                  {t('components.customer_flow.steps.WalletDetails.noteRequired')}
                 </span>
                 <div className="flex items-center justify-between mt-1">
                   <span className="text-sm font-black text-red-600 font-mono tracking-wide">
@@ -226,7 +226,7 @@ export default function WalletDetails({
           className="w-full py-4 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-95 active:scale-[0.99] transition-all text-white font-extrabold text-sm uppercase tracking-wider rounded-xl shadow-lg shadow-nexoraElectric/25 flex items-center justify-center gap-1.5"
         >
           <CheckCircle className="h-5 w-5" />
-          {t('components.customer_flow.steps.WalletDetails.text_11_d6bfa5')}
+          {t('components.customer_flow.steps.WalletDetails.yesISentThe')}
         </button>
 
         <button
@@ -234,7 +234,7 @@ export default function WalletDetails({
           onClick={() => setStep('payment')}
           className="w-full py-3 bg-nexoraCanvas border border-nexoraBorder hover:bg-nexoraSurfaceMuted transition text-nexoraMuted font-extrabold text-xs uppercase tracking-wider rounded-xl"
         >
-          {t('components.customer_flow.steps.WalletDetails.text_12_039e89')}
+          {t('components.customer_flow.steps.WalletDetails.goBack')}
         </button>
       </div>
     </div>

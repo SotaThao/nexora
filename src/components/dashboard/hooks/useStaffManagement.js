@@ -421,7 +421,7 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
     if (ok) {
       setStaff((current) => current.filter((m) => m.id !== staffId))
       setTouchpoints((current) => current.filter((tp) => tp.staffId !== staffId))
-      showToast(t('components.dashboard.hooks.useStaffManagement.text_1_e5bc21'), 'success')
+      showToast(t('components.dashboard.hooks.useStaffManagement.staffUnlinkedSuccessfully'), 'success')
     }
   }
 
@@ -434,12 +434,12 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
       : `Are you sure you want to decline unlink request from ${member.fullName}?`)
     if (ok) {
       setStaff((current) => current.map((m) => m.id === staffId ? { ...m, status: 'Active', isActive: true } : m))
-      showToast(t('components.dashboard.hooks.useStaffManagement.text_2_6d6e69'), 'success')
+      showToast(t('components.dashboard.hooks.useStaffManagement.declinedUnlinkRequest'), 'success')
     }
   }
 
   const deleteStaff = async (id) => {
-    const ok = await showConfirm(t('components.dashboard.hooks.useStaffManagement.text_3_28dbc0'))
+    const ok = await showConfirm(t('components.dashboard.hooks.useStaffManagement.deleteThisStaffMember'))
     if (!ok) return
     setStaff((current) => current.filter((member) => member.id !== id))
     setTouchpoints((current) => current.filter((point) => !(point.type === 'Staff QR' && point.staffId === id)))

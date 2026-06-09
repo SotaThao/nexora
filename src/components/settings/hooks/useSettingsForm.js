@@ -119,7 +119,7 @@ export default function useSettingsForm({
           vlinkpay: kybData.bankAccount ? `VLP-${kybData.bankAccount.slice(-4)}` : 'VLINKPAY-ID'
         }
       }))
-      showToast(t('components.settings.hooks.useSettingsForm.text_1_95254f'))
+      showToast(t('components.settings.hooks.useSettingsForm.kybVerificationSuccessful'))
     }, 2000)
   }
 
@@ -236,7 +236,7 @@ export default function useSettingsForm({
   const saveProfile = (updatedProfile) => {
     setProfile(updatedProfile)
     saveProfileSettingsMutation.mutate(updatedProfile)
-    showToast(t('components.settings.hooks.useSettingsForm.text_2_e95b20'))
+    showToast(t('components.settings.hooks.useSettingsForm.settingsUpdatedSuccessfully'))
   }
 
   const showToast = (msg) => {
@@ -250,7 +250,7 @@ export default function useSettingsForm({
     if (!text) return
     navigator.clipboard.writeText(text)
     setCopiedId(id)
-    showToast(t('components.settings.hooks.useSettingsForm.text_3_5379a0'))
+    showToast(t('components.settings.hooks.useSettingsForm.copiedToClipboard'))
     setTimeout(() => setCopiedId(null), 2000)
   }
 
@@ -489,9 +489,9 @@ export default function useSettingsForm({
           bgClass: 'bg-blue-50/70 border-blue-200 text-blue-900',
           icon: ShieldAlert,
           iconBg: 'bg-blue-500',
-          title: t('components.settings.hooks.useSettingsForm.text_4_135f79'),
-          description: t('components.settings.hooks.useSettingsForm.text_5_5e771d'),
-          ctaText: t('components.settings.hooks.useSettingsForm.text_6_10271c'),
+          title: t('components.settings.hooks.useSettingsForm.basicAccountStatus'),
+          description: t('components.settings.hooks.useSettingsForm.yourProfileIsActive'),
+          ctaText: t('components.settings.hooks.useSettingsForm.completeBusinessVerification'),
           ctaAction: () => setShowPortal(prev => !prev)
         }
       case 'lite_pending':
@@ -499,8 +499,8 @@ export default function useSettingsForm({
           bgClass: 'bg-amber-50/70 border-amber-200 text-amber-900',
           icon: ShieldAlert,
           iconBg: 'bg-amber-500',
-          title: t('components.settings.hooks.useSettingsForm.text_7_67e345'),
-          description: t('components.settings.hooks.useSettingsForm.text_8_24e860'),
+          title: t('components.settings.hooks.useSettingsForm.liteVerificationPendingReview'),
+          description: t('components.settings.hooks.useSettingsForm.liteVerificationPendingReview2'),
           ctaText: null
         }
       case 'verified_lite':
@@ -508,9 +508,9 @@ export default function useSettingsForm({
           bgClass: 'bg-emerald-50/70 border-emerald-200 text-emerald-900',
           icon: ShieldCheck,
           iconBg: 'bg-emerald-500',
-          title: t('components.settings.hooks.useSettingsForm.text_9_77e543'),
-          description: t('components.settings.hooks.useSettingsForm.text_10_55e23a'),
-          ctaText: t('components.settings.hooks.useSettingsForm.text_6_10271c'),
+          title: t('components.settings.hooks.useSettingsForm.verifiedLite'),
+          description: t('components.settings.hooks.useSettingsForm.verifiedLiteP2pTipping'),
+          ctaText: t('components.settings.hooks.useSettingsForm.completeBusinessVerification'),
           ctaAction: () => setShowPortal(prev => !prev)
         }
       case 'kyb_required':
@@ -518,9 +518,9 @@ export default function useSettingsForm({
           bgClass: 'bg-orange-50/70 border-orange-200 text-orange-900',
           icon: ShieldAlert,
           iconBg: 'bg-orange-500',
-          title: t('components.settings.hooks.useSettingsForm.text_11_0886ce'),
-          description: t('components.settings.hooks.useSettingsForm.text_12_ac5ccd'),
-          ctaText: t('components.settings.hooks.useSettingsForm.text_6_10271c'),
+          title: t('components.settings.hooks.useSettingsForm.businessVerificationRequired'),
+          description: t('components.settings.hooks.useSettingsForm.businessVerificationRequiredYou'),
+          ctaText: t('components.settings.hooks.useSettingsForm.completeBusinessVerification'),
           ctaAction: () => setShowPortal(prev => !prev)
         }
       case 'kyb_pending':
@@ -528,8 +528,8 @@ export default function useSettingsForm({
           bgClass: 'bg-indigo-50/70 border-indigo-200 text-indigo-900',
           icon: ShieldAlert,
           iconBg: 'bg-indigo-500',
-          title: t('components.settings.hooks.useSettingsForm.text_13_74ce76'),
-          description: t('components.settings.hooks.useSettingsForm.text_14_9c4655'),
+          title: t('components.settings.hooks.useSettingsForm.businessVerificationPending'),
+          description: t('components.settings.hooks.useSettingsForm.businessVerificationPendingVlinkpay'),
           ctaText: null
         }
       case 'kyb_approved':
@@ -538,8 +538,8 @@ export default function useSettingsForm({
           bgClass: 'bg-emerald-50/70 border-emerald-200 text-emerald-900',
           icon: ShieldCheck,
           iconBg: 'bg-emerald-500',
-          title: t('components.settings.hooks.useSettingsForm.text_15_2951d5'),
-          description: t('components.settings.hooks.useSettingsForm.text_16_bb1b78'),
+          title: t('components.settings.hooks.useSettingsForm.businessProfileVerifiedKyb'),
+          description: t('components.settings.hooks.useSettingsForm.businessProfileVerifiedKyb2'),
           subText: '',
           ctaText: null
         }
@@ -548,8 +548,8 @@ export default function useSettingsForm({
           bgClass: 'bg-red-50/70 border-red-200 text-red-900',
           icon: ShieldAlert,
           iconBg: 'bg-red-500',
-          title: t('components.settings.hooks.useSettingsForm.text_17_06bde1'),
-          description: t('components.settings.hooks.useSettingsForm.text_18_f149c2'),
+          title: t('components.settings.hooks.useSettingsForm.accountSuspended'),
+          description: t('components.settings.hooks.useSettingsForm.accountSuspendedPleaseContact'),
           ctaText: null
         }
       case 'pro_pending':
@@ -557,8 +557,8 @@ export default function useSettingsForm({
           bgClass: 'bg-blue-50/70 border-blue-200 text-blue-900',
           icon: ShieldAlert,
           iconBg: 'bg-blue-500',
-          title: t('components.settings.hooks.useSettingsForm.text_19_2f0224'),
-          description: t('components.settings.hooks.useSettingsForm.text_20_c0cd86'),
+          title: t('components.settings.hooks.useSettingsForm.proVerificationPendingReview'),
+          description: t('components.settings.hooks.useSettingsForm.yourProVerificationUpgrade'),
           ctaText: null
         }
       case 'kyb_rejected':
@@ -566,9 +566,9 @@ export default function useSettingsForm({
           bgClass: 'bg-rose-50/70 border-rose-200 text-rose-900',
           icon: ShieldAlert,
           iconBg: 'bg-rose-500',
-          title: t('components.settings.hooks.useSettingsForm.text_21_284f51'),
-          description: t('components.settings.hooks.useSettingsForm.text_22_7d1801'),
-          ctaText: t('components.settings.hooks.useSettingsForm.text_23_b1a525'),
+          title: t('components.settings.hooks.useSettingsForm.verificationRejectedByCompliance'),
+          description: t('components.settings.hooks.useSettingsForm.yourBusinessVerificationApplication'),
+          ctaText: t('components.settings.hooks.useSettingsForm.reSubmitVerification'),
           ctaAction: () => setShowPortal(prev => !prev)
         }
       case 'under_review':
@@ -576,9 +576,9 @@ export default function useSettingsForm({
           bgClass: 'bg-amber-50/70 border-amber-200 text-amber-900',
           icon: ShieldAlert,
           iconBg: 'bg-amber-500',
-          title: t('components.settings.hooks.useSettingsForm.text_24_9a3ed5'),
-          description: t('components.settings.hooks.useSettingsForm.text_25_1ec98f'),
-          ctaText: t('components.settings.hooks.useSettingsForm.text_26_3c56fe'),
+          title: t('components.settings.hooks.useSettingsForm.underReviewInfoRequested'),
+          description: t('components.settings.hooks.useSettingsForm.underReviewAdditionalCompliance'),
+          ctaText: t('components.settings.hooks.useSettingsForm.uploadAdditionalDocuments'),
           ctaAction: () => setShowPortal(prev => !prev)
         }
       default:

@@ -84,7 +84,7 @@ export default function TipsOverviewTab({
             <h4 className="text-sm font-black text-inkBlue dark:text-white uppercase tracking-wider">
               {chartRange === '7 Days'
                 ? (t('dashboard.tips.charts.weekly_title'))
-                : (t('components.tips.tabs.TipsOverviewTab.text_1_f7316d'))}
+                : (t('components.tips.tabs.TipsOverviewTab.tipsOverTimeTrend'))}
             </h4>
             <div className="flex flex-wrap items-center gap-1.5 justify-end">
               {['7 Days', '30 Days', '90 Days', '180 Days', '365 Days', 'Custom'].map((item) => {
@@ -107,7 +107,7 @@ export default function TipsOverviewTab({
                     }`}
                   >
                     {item === 'Custom'
-                      ? (t('components.tips.tabs.TipsOverviewTab.text_2_1f32e6'))
+                      ? (t('components.tips.tabs.TipsOverviewTab.custom'))
                       : rangeLabel(item)}
                   </button>
                 );
@@ -120,7 +120,7 @@ export default function TipsOverviewTab({
             <div className="flex flex-wrap items-center justify-end gap-3 mb-6 border-t border-dashed border-nexoraRule dark:border-slate-800 pt-3">
               <div className="flex items-center gap-1.5">
                 <label className="text-[10px] font-bold uppercase text-mutedGrey dark:text-slate-400 tracking-wider">
-                  {t('components.tips.tabs.TipsOverviewTab.text_3_b4e771')}
+                  {t('components.tips.tabs.TipsOverviewTab.from')}
                 </label>
                 <input
                   type="date"
@@ -132,7 +132,7 @@ export default function TipsOverviewTab({
               </div>
               <div className="flex items-center gap-1.5">
                 <label className="text-[10px] font-bold uppercase text-mutedGrey dark:text-slate-400 tracking-wider">
-                  {t('components.tips.tabs.TipsOverviewTab.text_4_9725ef')}
+                  {t('components.tips.tabs.TipsOverviewTab.to')}
                 </label>
                 <input
                   type="date"

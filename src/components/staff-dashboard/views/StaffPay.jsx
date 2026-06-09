@@ -146,7 +146,7 @@ export default function StaffPay() {
                   className="flex items-center gap-1 text-[10px] font-bold text-amber-600 hover:text-amber-700 transition shrink-0 ml-2"
                 >
                   <Edit2 className="h-3 w-3" />
-                  <span>{t('components.staff_dashboard.views.StaffPay.text_1_22ecd2')}</span>
+                  <span>{t('components.staff_dashboard.views.StaffPay.editAccount')}</span>
                 </button>
               </div>
             )

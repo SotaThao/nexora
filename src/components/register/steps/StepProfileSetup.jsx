@@ -21,10 +21,10 @@ export default function StepProfileSetup({
     <div className="p-6 sm:p-10 space-y-6 animate-fadeIn">
       <div>
         <h3 className="text-lg font-bold text-nexoraText">
-          {t('components.register.steps.StepProfileSetup.text_1_5d5625')}
+          {t('components.register.steps.StepProfileSetup.personalProfileSetup')}
         </h3>
         <p className="text-xs text-nexoraSubtle mt-1">
-          {t('components.register.steps.StepProfileSetup.text_2_465000')}
+          {t('components.register.steps.StepProfileSetup.configureYourDisplayDetails')}
         </p>
       </div>
 
@@ -74,7 +74,7 @@ export default function StepProfileSetup({
               </label>
             </div>
             <span className="text-[10px] text-nexoraSubtle">
-              {t('components.register.steps.StepProfileSetup.text_3_040240')}
+              {t('components.register.steps.StepProfileSetup.acceptedFormatsJpgPng')}
             </span>
           </div>
         </div>
@@ -83,7 +83,7 @@ export default function StepProfileSetup({
           {/* Full Name */}
           <div>
             <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-              {renderLabel(t('components.register.steps.StepProfileSetup.text_4_dd52c9'))}
+              {renderLabel(t('components.register.steps.StepProfileSetup.fullName'))}
             </label>
             <input
               type="text"
@@ -101,7 +101,7 @@ export default function StepProfileSetup({
           {/* Display Nickname */}
           <div>
             <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-              {renderLabel(t('components.register.steps.StepProfileSetup.text_5_fc03e0'))}
+              {renderLabel(t('components.register.steps.StepProfileSetup.displayNickname'))}
             </label>
             <input
               type="text"
@@ -118,7 +118,7 @@ export default function StepProfileSetup({
           {/* Phone Number */}
           <div>
             <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-              {renderLabel(t('components.register.steps.StepProfileSetup.text_6_040fc7'))}
+              {renderLabel(t('components.register.steps.StepProfileSetup.phoneNumber'))}
             </label>
             <div className="flex rounded-lg shadow-sm">
               <CountryCodeSelect
@@ -141,7 +141,7 @@ export default function StepProfileSetup({
           {/* Email Address (View-Only) */}
           <div>
             <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-              {t('components.register.steps.StepProfileSetup.text_7_101b70')}
+              {t('components.register.steps.StepProfileSetup.emailAddress')}
             </label>
             <input
               type="email"
@@ -156,7 +156,7 @@ export default function StepProfileSetup({
           {/* Role / Specialty */}
           <div>
             <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-              {t('components.register.steps.StepProfileSetup.text_8_57870b')}
+              {t('components.register.steps.StepProfileSetup.roleSpeciality')}
             </label>
             <input
               type="text"
@@ -170,7 +170,7 @@ export default function StepProfileSetup({
           {/* Staff ID */}
           <div>
             <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-              {t('components.register.steps.StepProfileSetup.text_9_acb82f')}
+              {t('components.register.steps.StepProfileSetup.nexoraStaffId')}
             </label>
             <input
               type="text"
@@ -184,7 +184,7 @@ export default function StepProfileSetup({
         {/* Short Bio */}
         <div>
           <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-            {t('components.register.steps.StepProfileSetup.text_10_047453')}
+            {t('components.register.steps.StepProfileSetup.shortBioShowsOn')}
           </label>
           <textarea
             className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg p-3 text-sm text-nexoraText focus:outline-none transition-all min-h-[70px]"

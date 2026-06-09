@@ -77,9 +77,9 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
           {reg.step > 0 && reg.step < 4 && (
             <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-extrabold uppercase tracking-wider">
               {[
-                { id: 1, label: t('components.StaffRegistrationWizard.text_1_403506') },
-                { id: 2, label: t('components.StaffRegistrationWizard.text_2_a7f004') },
-                { id: 3, label: t('components.StaffRegistrationWizard.text_3_0baa00') }
+                { id: 1, label: t('components.StaffRegistrationWizard.label1Register') },
+                { id: 2, label: t('components.StaffRegistrationWizard.label2Profile') },
+                { id: 3, label: t('components.StaffRegistrationWizard.label3Wallet') }
               ].map(s => (
                 <div
                   key={s.id}

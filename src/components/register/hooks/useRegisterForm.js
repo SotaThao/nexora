@@ -266,7 +266,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         setCurrentStep(2)
       }
     } else {
-      setOtpError(t('components.register.hooks.useRegisterForm.text_1_b8ff23'))
+      setOtpError(t('components.register.hooks.useRegisterForm.invalidOtpTryAgain'))
     }
   }
 
@@ -348,7 +348,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const savePayoutAccount = (e) => {
     if (e) e.preventDefault()
     if (!editValue.trim()) {
-      setModalError(t('components.register.hooks.useRegisterForm.text_2_657148'))
+      setModalError(t('components.register.hooks.useRegisterForm.thisFieldIsRequired'))
       return
     }
     setPayouts(prev => ({
@@ -510,11 +510,11 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         id: `noti-join-${finalStaffMember.id}-${Date.now()}`,
         staffId: finalStaffMember.id,
         type: 'feedback_alert',
-        title: t('components.register.hooks.useRegisterForm.text_3_40cf1e'),
+        title: t('components.register.hooks.useRegisterForm.newJoinRequest'),
         message: currentLanguage === 'vi'
           ? `Thợ ${finalStaffMember.fullName} (${finalStaffMember.position}) đã gửi yêu cầu liên kết với tiệm của bạn.`
           : `Technician ${finalStaffMember.fullName} (${finalStaffMember.position}) requested to link with your salon.`,
-        time: t('components.register.hooks.useRegisterForm.text_4_fc2c2e'),
+        time: t('components.register.hooks.useRegisterForm.justNow'),
         read: false,
         linkTab: 'staff'
       }
@@ -535,18 +535,18 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const getStepName = (step) => {
     if (role === 'business') {
       switch (step) {
-        case 0: return t('components.register.hooks.useRegisterForm.text_5_5a51d8')
-        case 1: return t('components.register.hooks.useRegisterForm.text_6_ae4737')
-        case 2: return t('components.register.hooks.useRegisterForm.text_7_3d980e')
+        case 0: return t('components.register.hooks.useRegisterForm.accountType')
+        case 1: return t('components.register.hooks.useRegisterForm.credentials')
+        case 2: return t('components.register.hooks.useRegisterForm.activateOtp')
         default: return ''
       }
     } else {
       switch (step) {
-        case 0: return t('components.register.hooks.useRegisterForm.text_5_5a51d8')
-        case 1: return t('components.register.hooks.useRegisterForm.text_6_ae4737')
-        case 2: return t('components.register.hooks.useRegisterForm.text_8_19483c')
-        case 3: return t('components.register.hooks.useRegisterForm.text_9_42c376')
-        case 4: return t('components.register.hooks.useRegisterForm.text_10_e5ffa8')
+        case 0: return t('components.register.hooks.useRegisterForm.accountType')
+        case 1: return t('components.register.hooks.useRegisterForm.credentials')
+        case 2: return t('components.register.hooks.useRegisterForm.profileSetup')
+        case 3: return t('components.register.hooks.useRegisterForm.payoutSetup')
+        case 4: return t('components.register.hooks.useRegisterForm.success')
         default: return ''
       }
     }

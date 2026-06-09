@@ -114,7 +114,7 @@ export default function TipAmount({
       <div className="p-4 bg-nexoraBrandSoft/40 border border-nexoraBrandSoft rounded-xl flex items-center justify-between shadow-sm">
         <div>
           <h4 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">
-            {t('components.customer_flow.steps.TipAmount.text_1_028f69')}
+            {t('components.customer_flow.steps.TipAmount.totalTip')}
           </h4>
           <p className="text-[10px] text-nexoraMuted font-semibold mt-0.5">
             {t('components.customer_flow.steps.TipAmount.provider_count', { count: selectedStaffMembers.length })}

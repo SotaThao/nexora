@@ -72,7 +72,7 @@ export default function StaffProfile({ onLogout }) {
       phone
     })
     setSaved(true)
-    showToast(t('components.staff_dashboard.views.StaffProfile.text_1_e0e065'))
+    showToast(t('components.staff_dashboard.views.StaffProfile.accountChangesSavedSuccessfully'))
   }
 
   const handleAvatarChange = (e) => {
@@ -81,7 +81,7 @@ export default function StaffProfile({ onLogout }) {
     const reader = new FileReader()
     reader.onload = () => {
       saveProfile({ avatar: reader.result })
-      showToast(t('components.staff_dashboard.views.StaffProfile.text_2_9d2699'))
+      showToast(t('components.staff_dashboard.views.StaffProfile.avatarUpdatedSuccessfully'))
     }
     reader.readAsDataURL(file)
   }
@@ -89,7 +89,7 @@ export default function StaffProfile({ onLogout }) {
   const handleKycSubmit = (e) => {
     e.preventDefault()
     if (!kycData.legalName.trim() || !kycData.idNumber.trim() || !kycData.bankName.trim() || !kycData.bankAccount.trim() || !kycData.bankRouting.trim()) {
-      setKycErrors({ kyc: t('components.staff_dashboard.views.StaffProfile.text_3_acd59b') })
+      setKycErrors({ kyc: t('components.staff_dashboard.views.StaffProfile.allFieldsAreRequired') })
       return
     }
     setKycErrors({})
@@ -107,7 +107,7 @@ export default function StaffProfile({ onLogout }) {
         }
       })
       setShowPortal(false)
-      showToast(t('components.staff_dashboard.views.StaffProfile.text_4_ba8d1c'))
+      showToast(t('components.staff_dashboard.views.StaffProfile.kycVerificationSuccessful'))
     }, 2000)
   }
 
@@ -129,9 +129,9 @@ export default function StaffProfile({ onLogout }) {
           bgClass: 'bg-blue-50/70 border-blue-200 text-blue-900 dark:bg-blue-950/20 dark:border-blue-900 dark:text-blue-200',
           icon: ShieldAlert,
           iconBg: 'bg-blue-500',
-          title: t('components.staff_dashboard.views.StaffProfile.text_5_135f79'),
-          description: t('components.staff_dashboard.views.StaffProfile.text_6_89dc33'),
-          ctaText: t('components.staff_dashboard.views.StaffProfile.text_7_8b82de'),
+          title: t('components.staff_dashboard.views.StaffProfile.basicAccountStatus'),
+          description: t('components.staff_dashboard.views.StaffProfile.yourProfileIsActive'),
+          ctaText: t('components.staff_dashboard.views.StaffProfile.completeKycVerification'),
           ctaAction: () => setShowPortal(prev => !prev)
         }
       case 'kyc_approved':
@@ -140,9 +140,9 @@ export default function StaffProfile({ onLogout }) {
           bgClass: 'bg-emerald-50/70 border-emerald-200 text-emerald-900 dark:bg-emerald-950/20 dark:border-emerald-900 dark:text-emerald-200',
           icon: ShieldCheck,
           iconBg: 'bg-emerald-500',
-          title: t('components.staff_dashboard.views.StaffProfile.text_8_9b334a'),
-          description: t('components.staff_dashboard.views.StaffProfile.text_9_15dba5'),
-          subText: t('components.staff_dashboard.views.StaffProfile.text_10_6747c1'),
+          title: t('components.staff_dashboard.views.StaffProfile.personalProfileVerifiedKyc'),
+          description: t('components.staff_dashboard.views.StaffProfile.congratulationsYourPersonalIdentity'),
+          subText: t('components.staff_dashboard.views.StaffProfile.verifiedToday'),
           ctaText: null
         }
     }
@@ -171,7 +171,7 @@ export default function StaffProfile({ onLogout }) {
               : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
           }`}
         >
-          {t('components.staff_dashboard.views.StaffProfile.text_11_51cfc8')}
+          {t('components.staff_dashboard.views.StaffProfile.account')}
         </button>
         <button
           type="button"
@@ -182,7 +182,7 @@ export default function StaffProfile({ onLogout }) {
               : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
           }`}
         >
-          {t('components.staff_dashboard.views.StaffProfile.text_12_9ad372')}
+          {t('components.staff_dashboard.views.StaffProfile.kyc')}
         </button>
       </div>
 
@@ -207,7 +207,7 @@ export default function StaffProfile({ onLogout }) {
                 )}
                 <label className="absolute inset-0 rounded-full bg-black/45 text-white text-[10px] font-black uppercase flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
                   <Camera className="h-5 w-5 mb-1" />
-                  {t('components.staff_dashboard.views.StaffProfile.text_13_eeacc6')}
+                  {t('components.staff_dashboard.views.StaffProfile.change')}
                   <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
                 </label>
               </div>
@@ -292,10 +292,10 @@ export default function StaffProfile({ onLogout }) {
 
           <section className={panel}>
             <h3 className="mb-3 text-base font-extrabold text-nexoraDangerDark dark:text-red-400">
-              {t('components.staff_dashboard.views.StaffProfile.text_14_e8f199')}
+              {t('components.staff_dashboard.views.StaffProfile.signOutAccount')}
             </h3>
             <p className="mb-4 text-xs text-nexoraSubtle">
-              {t('components.staff_dashboard.views.StaffProfile.text_15_b44cf1')}
+              {t('components.staff_dashboard.views.StaffProfile.signOutFromThe')}
             </p>
             <button
               type="button"
@@ -339,7 +339,7 @@ export default function StaffProfile({ onLogout }) {
                 onClick={kycCard.ctaAction}
                 className="shrink-0 rounded-lg bg-nexoraBrand hover:bg-nexoraBrandDark text-white px-4 py-2.5 text-xs font-bold transition shadow-sm animate-pulse cursor-pointer"
               >
-                {showPortal ? (t('components.staff_dashboard.views.StaffProfile.text_16_32199b')) : kycCard.ctaText}
+                {showPortal ? (t('components.staff_dashboard.views.StaffProfile.closeForm')) : kycCard.ctaText}
               </button>
             )}
           </div>
@@ -365,7 +365,7 @@ export default function StaffProfile({ onLogout }) {
                   <div className="absolute inset-0 bg-white/95 z-20 flex flex-col items-center justify-center space-y-4">
                     <div className="w-12 h-12 border-4 border-nexoraBrand/20 border-t-nexoraBrand rounded-full animate-spin"></div>
                     <p className="text-xs text-nexoraBrand font-bold uppercase tracking-wider animate-pulse">
-                      {t('components.staff_dashboard.views.StaffProfile.text_17_9e95ee')}
+                      {t('components.staff_dashboard.views.StaffProfile.submittingKycDetails')}
                     </p>
                   </div>
                 )}
@@ -396,7 +396,7 @@ export default function StaffProfile({ onLogout }) {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                        {t('components.staff_dashboard.views.StaffProfile.text_18_c72648')}
+                        {t('components.staff_dashboard.views.StaffProfile.legalFullName')}
                       </label>
                       <input
                         type="text"
@@ -409,7 +409,7 @@ export default function StaffProfile({ onLogout }) {
                     </div>
                     <div>
                       <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                        {t('components.staff_dashboard.views.StaffProfile.text_19_6e592e')}
+                        {t('components.staff_dashboard.views.StaffProfile.idNumberSsn')}
                       </label>
                       <input
                         type="text"
@@ -424,7 +424,7 @@ export default function StaffProfile({ onLogout }) {
 
                   <div>
                     <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                      {t('components.staff_dashboard.views.StaffProfile.text_20_0df291')}
+                      {t('components.staff_dashboard.views.StaffProfile.documentType')}
                     </label>
                     <select
                       className="w-full bg-slate-50 border border-slate-300 focus:border-blue-500 focus:bg-white rounded px-3 h-9 text-xs text-slate-800 focus:outline-none transition-colors"
@@ -432,8 +432,8 @@ export default function StaffProfile({ onLogout }) {
                       onChange={(e) => setKycData({ ...kycData, idType: e.target.value })}
                     >
               <option value="DriverLicense">{t('common.driver_license')}</option>
-                      <option value="Passport">{t('components.staff_dashboard.views.StaffProfile.text_21_2f27d7')}</option>
-                      <option value="NationalID">{t('components.staff_dashboard.views.StaffProfile.text_22_288a33')}</option>
+                      <option value="Passport">{t('components.staff_dashboard.views.StaffProfile.passport')}</option>
+                      <option value="NationalID">{t('components.staff_dashboard.views.StaffProfile.nationalIdCard')}</option>
                     </select>
                   </div>
 
@@ -441,24 +441,24 @@ export default function StaffProfile({ onLogout }) {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                     <div>
                       <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                        {t('components.staff_dashboard.views.StaffProfile.text_23_25ec8e')}
+                        {t('components.staff_dashboard.views.StaffProfile.idCardFrontImage')}
                       </label>
                       <div className="border border-dashed border-slate-300 rounded-lg p-4 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition relative cursor-pointer min-h-[90px]">
                         <Upload className="w-4 h-4 text-slate-400 mb-1" />
                         <span className="text-[10px] text-slate-500 text-center font-medium">
-                          {idFrontFile || (t('components.staff_dashboard.views.StaffProfile.text_24_4150b0'))}
+                          {idFrontFile || (t('components.staff_dashboard.views.StaffProfile.uploadFrontSide'))}
                         </span>
                         <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(e, 'front')} />
                       </div>
                     </div>
                     <div>
                       <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                        {t('components.staff_dashboard.views.StaffProfile.text_25_d46d6b')}
+                        {t('components.staff_dashboard.views.StaffProfile.idCardBackImage')}
                       </label>
                       <div className="border border-dashed border-slate-300 rounded-lg p-4 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition relative cursor-pointer min-h-[90px]">
                         <Upload className="w-4 h-4 text-slate-400 mb-1" />
                         <span className="text-[10px] text-slate-500 text-center font-medium">
-                          {idBackFile || (t('components.staff_dashboard.views.StaffProfile.text_26_187b79'))}
+                          {idBackFile || (t('components.staff_dashboard.views.StaffProfile.uploadBackSide'))}
                         </span>
                         <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(e, 'back')} />
                       </div>
@@ -468,12 +468,12 @@ export default function StaffProfile({ onLogout }) {
                   {/* Personal Settlement Bank Info */}
                   <div className="border-t border-slate-100 pt-4 mt-2">
                     <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-3">
-                      {t('components.staff_dashboard.views.StaffProfile.text_27_dfaab1')}
+                      {t('components.staff_dashboard.views.StaffProfile.personalSettlementAccountInfo')}
                     </h5>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div>
                         <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                          {t('components.staff_dashboard.views.StaffProfile.text_28_287b3b')}
+                          {t('components.staff_dashboard.views.StaffProfile.bankName')}
                         </label>
                         <input
                           type="text"
@@ -486,7 +486,7 @@ export default function StaffProfile({ onLogout }) {
                       </div>
                       <div>
                         <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                          {t('components.staff_dashboard.views.StaffProfile.text_29_e0c2f5')}
+                          {t('components.staff_dashboard.views.StaffProfile.accountNumber')}
                         </label>
                         <div className="relative">
                           <input
@@ -508,7 +508,7 @@ export default function StaffProfile({ onLogout }) {
                       </div>
                       <div>
                         <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                          {t('components.staff_dashboard.views.StaffProfile.text_30_429b9d')}
+                          {t('components.staff_dashboard.views.StaffProfile.routingCode')}
                         </label>
                         <input
                           type="text"
@@ -528,13 +528,13 @@ export default function StaffProfile({ onLogout }) {
                       onClick={() => setShowPortal(false)}
                       className="px-4 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs uppercase tracking-wider rounded transition cursor-pointer"
                     >
-                      {t('components.staff_dashboard.views.StaffProfile.text_31_a61739')}
+                      {t('components.staff_dashboard.views.StaffProfile.cancel')}
                     </button>
                     <button
                       type="submit"
                       className="px-6 py-2 bg-nexoraElectric hover:bg-blue-700 text-white font-extrabold text-xs uppercase tracking-wider rounded flex items-center gap-1.5 transition shadow-sm cursor-pointer"
                     >
-                      <ShieldCheck className="w-4 h-4" /> {t('components.staff_dashboard.views.StaffProfile.text_32_b322e3')}
+                      <ShieldCheck className="w-4 h-4" /> {t('components.staff_dashboard.views.StaffProfile.submitKyc')}
                     </button>
                   </div>
                 </form>
@@ -548,25 +548,25 @@ export default function StaffProfile({ onLogout }) {
                   <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-2">
                     <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
                       <User className="h-4 w-4 text-slate-600" />
-                      {t('components.staff_dashboard.views.StaffProfile.text_33_3e19e9')}
+                      {t('components.staff_dashboard.views.StaffProfile.verifiedPersonalDossier')}
                     </h4>
                   </div>
 
                   <div className="space-y-3.5 text-xs">
                     <div className="flex flex-col py-1.5 border-b border-slate-50 gap-1">
-                      <span className="text-nexoraMuted font-semibold">{t('components.staff_dashboard.views.StaffProfile.text_34_f1c034')}</span>
+                      <span className="text-nexoraMuted font-semibold">{t('components.staff_dashboard.views.StaffProfile.legalFullName2')}</span>
                       <span className="text-nexoraText font-extrabold">{account.fullName || staffMember.fullName}</span>
                     </div>
                     <div className="flex flex-col py-1.5 border-b border-slate-50 gap-1">
-                      <span className="text-nexoraMuted font-semibold">{t('components.staff_dashboard.views.StaffProfile.text_35_5bd068')}</span>
+                      <span className="text-nexoraMuted font-semibold">{t('components.staff_dashboard.views.StaffProfile.documentType2')}</span>
                       <span className="text-nexoraText font-extrabold">National ID / Passport</span>
                     </div>
                     <div className="flex flex-col py-1.5 border-b border-slate-50 gap-1">
-                      <span className="text-nexoraMuted font-semibold">{t('components.staff_dashboard.views.StaffProfile.text_36_d23163')}</span>
+                      <span className="text-nexoraMuted font-semibold">{t('components.staff_dashboard.views.StaffProfile.identityNumberSsn')}</span>
                       <span className="font-mono text-nexoraText font-extrabold">•••• •••• 9102</span>
                     </div>
                     <div className="flex flex-col py-1.5 border-b border-slate-50 gap-1">
-                      <span className="text-nexoraMuted font-semibold">{t('components.staff_dashboard.views.StaffProfile.text_37_f1033f')}</span>
+                      <span className="text-nexoraMuted font-semibold">{t('components.staff_dashboard.views.StaffProfile.residentialAddress')}</span>
                       <span className="text-nexoraText font-extrabold">1088 Gold Coast Hwy, Palm Beach, QLD 4221</span>
                     </div>
                   </div>
@@ -578,13 +578,13 @@ export default function StaffProfile({ onLogout }) {
                     <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
                       <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
                         <Landmark className="h-4 w-4 text-emerald-600" />
-                        {t('components.staff_dashboard.views.StaffProfile.text_38_fed581')}
+                        {t('components.staff_dashboard.views.StaffProfile.payoutSettlementBank')}
                       </h4>
                     </div>
 
                     <div className="space-y-4 text-xs">
                       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 gap-1">
-                        <span className="text-nexoraMuted font-semibold">{t('components.staff_dashboard.views.StaffProfile.text_28_287b3b')}</span>
+                        <span className="text-nexoraMuted font-semibold">{t('components.staff_dashboard.views.StaffProfile.bankName')}</span>
                         <span className="text-nexoraText font-extrabold">Chase Bank, N.A.</span>
                       </div>
                       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
@@ -592,11 +592,11 @@ export default function StaffProfile({ onLogout }) {
                         <span className="font-mono text-nexoraText font-extrabold">021000021</span>
                       </div>
                       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                        <span className="text-nexoraMuted font-semibold">{t('components.staff_dashboard.views.StaffProfile.text_29_e0c2f5')}</span>
+                        <span className="text-nexoraMuted font-semibold">{t('components.staff_dashboard.views.StaffProfile.accountNumber')}</span>
                         <span className="font-mono text-nexoraText font-extrabold">•••• 4192</span>
                       </div>
                       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                        <span className="text-nexoraMuted font-semibold">{t('components.staff_dashboard.views.StaffProfile.text_39_9cd8df')}</span>
+                        <span className="text-nexoraMuted font-semibold">{t('components.staff_dashboard.views.StaffProfile.payoutFrequency')}</span>
                         <span className="text-emerald-600 font-extrabold">Auto-Settled 24/7 (Instant)</span>
                       </div>
                     </div>
@@ -604,10 +604,10 @@ export default function StaffProfile({ onLogout }) {
 
                   <button
                     type="button"
-                    onClick={() => showToast(t('components.staff_dashboard.views.StaffProfile.text_40_8b216a'))}
+                    onClick={() => showToast(t('components.staff_dashboard.views.StaffProfile.pleaseContactSupportTo'))}
                     className="w-full mt-5 rounded-lg border border-slate-200 py-2 text-center text-xs font-bold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
                   >
-                    {t('components.staff_dashboard.views.StaffProfile.text_41_43cb59')}
+                    {t('components.staff_dashboard.views.StaffProfile.changeSettlementBank')}
                   </button>
                 </div>
 
@@ -616,7 +616,7 @@ export default function StaffProfile({ onLogout }) {
                   <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
                     <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
                       <FileText className="h-4 w-4 text-blue-500" />
-                      {t('components.staff_dashboard.views.StaffProfile.text_42_395c00')}
+                      {t('components.staff_dashboard.views.StaffProfile.uploadedIdentityDocuments')}
                     </h4>
                   </div>
 
@@ -660,31 +660,31 @@ export default function StaffProfile({ onLogout }) {
           {/* Legal Disclosures */}
           <div className="rounded-xl border border-nexoraBorder bg-slate-50 dark:bg-slate-900/10 p-6 space-y-4 text-xs mt-6 text-nexoraMuted select-text text-left">
             <h5 className="font-bold text-nexoraText uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 pb-2">
-              {t('components.staff_dashboard.views.StaffProfile.text_43_7d44d8')}
+              {t('components.staff_dashboard.views.StaffProfile.legalDisclosuresAndKyc')}
             </h5>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-1">
                 <h6 className="font-extrabold text-slate-700 dark:text-slate-350">
-                  {t('components.staff_dashboard.views.StaffProfile.text_44_f74e51')}
+                  {t('components.staff_dashboard.views.StaffProfile.label1PersonalDataEncryption')}
                 </h6>
                 <p className="leading-relaxed text-[11px]">
-                  {t('components.staff_dashboard.views.StaffProfile.text_45_f7814b')}
+                  {t('components.staff_dashboard.views.StaffProfile.yourIdentityInputsAnd')}
                 </p>
               </div>
               <div className="space-y-1">
                 <h6 className="font-extrabold text-slate-700 dark:text-slate-350">
-                  {t('components.staff_dashboard.views.StaffProfile.text_46_20a61d')}
+                  {t('components.staff_dashboard.views.StaffProfile.label2TipIncomeAnd')}
                 </h6>
                 <p className="leading-relaxed text-[11px]">
-                  {t('components.staff_dashboard.views.StaffProfile.text_47_974e15')}
+                  {t('components.staff_dashboard.views.StaffProfile.completingKycSecuresYour')}
                 </p>
               </div>
               <div className="space-y-1">
                 <h6 className="font-extrabold text-slate-700 dark:text-slate-350">
-                  {t('components.staff_dashboard.views.StaffProfile.text_48_fa4cac')}
+                  {t('components.staff_dashboard.views.StaffProfile.label3ComplianceTerms')}
                 </h6>
                 <p className="leading-relaxed text-[11px]">
-                  {t('components.staff_dashboard.views.StaffProfile.text_49_1be662')}
+                  {t('components.staff_dashboard.views.StaffProfile.providingInaccurateOrFalsified')}
                 </p>
               </div>
             </div>

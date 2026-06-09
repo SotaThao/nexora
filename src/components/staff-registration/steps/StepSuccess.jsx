@@ -19,7 +19,7 @@ export default function StepSuccess({
 
       <div className="space-y-1.5">
         <h3 className="text-xl font-black text-nexoraText tracking-tight font-sans">
-          {t('components.staff_registration.steps.StepSuccess.text_1_96b4e5')}
+          {t('components.staff_registration.steps.StepSuccess.joinRequestSubmitted')}
         </h3>
         <p className="text-xs text-nexoraMuted max-w-md mx-auto leading-relaxed">
           {currentLanguage === 'vi'
@@ -37,7 +37,7 @@ export default function StepSuccess({
             {t('staff_invite.linked_businesses')}
           </span>
           <span className="px-1.5 py-0.5 rounded font-extrabold text-[8px] uppercase font-sans bg-nexoraWarning/10 text-nexoraWarning">
-            {t('components.staff_registration.steps.StepSuccess.text_2_b6a032')}
+            {t('components.staff_registration.steps.StepSuccess.pending')}
           </span>
         </div>
 
@@ -47,7 +47,7 @@ export default function StepSuccess({
             <span className="text-[9px] text-nexoraSubtle mt-0.5 block">Joined: Today • Role: {position}</span>
           </div>
           <span className="text-xs font-bold text-nexoraWarning flex items-center gap-1 font-sans">
-            <AlertCircle className="h-3.5 w-3.5 text-nexoraWarning animate-pulse" /> {t('components.staff_registration.steps.StepSuccess.text_3_11d6f3')}
+            <AlertCircle className="h-3.5 w-3.5 text-nexoraWarning animate-pulse" /> {t('components.staff_registration.steps.StepSuccess.pendingApproval')}
           </span>
         </div>
       </div>
@@ -63,7 +63,7 @@ export default function StepSuccess({
           onClick={() => {
             const link = `https://touch.nexora.com/staff/${staffId}`
             navigator.clipboard.writeText(link)
-            showToast(t('components.staff_registration.steps.StepSuccess.text_4_920840'))
+            showToast(t('components.staff_registration.steps.StepSuccess.staffLinkCopiedTo'))
           }}
           className="flex items-center gap-1.5 px-4 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition"
         >

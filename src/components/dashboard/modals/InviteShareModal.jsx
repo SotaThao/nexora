@@ -54,7 +54,7 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
       <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl transition-all relative">
         <div className="flex items-center justify-between border-b border-nexoraRule pb-4">
           <h2 className="text-sm font-extrabold text-nexoraText uppercase tracking-wider font-sans">
-            {t('components.dashboard.modals.InviteShareModal.text_1_112041')}
+            {t('components.dashboard.modals.InviteShareModal.shareInvitationLinkAnd')}
           </h2>
           <IconButton label="Close modal" onClick={onClose}>
             <X className="h-4 w-4" />
@@ -65,12 +65,12 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
           {/* QR Code Section */}
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col items-center text-center space-y-3">
             <span className="text-[10px] font-black uppercase text-slate-700 tracking-wider font-sans">
-              {t('components.dashboard.modals.InviteShareModal.text_2_022a98')}
+              {t('components.dashboard.modals.InviteShareModal.scanQrToJoin')}
             </span>
             <div
               onClick={() => setLargeQrOpen(true)}
               className="h-32 w-32 rounded-xl bg-slate-50 border border-slate-200 p-2 flex items-center justify-center shadow-inner bg-white cursor-zoom-in transition hover:scale-105 duration-200 group relative"
-              title={t('components.dashboard.modals.InviteShareModal.text_3_953f1c')}
+              title={t('components.dashboard.modals.InviteShareModal.clickToEnlarge')}
             >
               <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(joinLink)}`}
@@ -86,7 +86,7 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
 
             <div className="w-full space-y-1.5">
               <span className="text-[9px] text-slate-400 font-bold block uppercase font-sans">
-                {t('components.dashboard.modals.InviteShareModal.text_4_91c96b')}
+                {t('components.dashboard.modals.InviteShareModal.joinLink')}
               </span>
               <div className="flex gap-1.5">
                 <input
@@ -99,11 +99,11 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
                   type="button"
                   onClick={() => {
                     navigator.clipboard.writeText(joinLink)
-                    showToast(t('components.dashboard.modals.InviteShareModal.text_5_df86c2'), 'success')
+                    showToast(t('components.dashboard.modals.InviteShareModal.joinLinkCopiedTo'), 'success')
                   }}
                   className="h-8 px-3 bg-slate-800 text-white rounded text-[10px] font-black uppercase hover:bg-slate-700 transition font-sans"
                 >
-                  {t('components.dashboard.modals.InviteShareModal.text_6_cd2bb1')}
+                  {t('components.dashboard.modals.InviteShareModal.copy')}
                 </button>
               </div>
             </div>
@@ -112,7 +112,7 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
           <div className="relative">
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200"></div></div>
             <span className="relative bg-white pr-3 text-[9px] text-slate-400 font-black uppercase tracking-wider font-sans">
-              {t('components.dashboard.modals.InviteShareModal.text_7_944077')}
+              {t('components.dashboard.modals.InviteShareModal.orSendDirectly')}
             </span>
           </div>
 
@@ -120,7 +120,7 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
           <form onSubmit={handleSubmit} className="space-y-3.5">
             <div>
               <label className="text-[10px] font-extrabold uppercase text-nexoraMuted font-sans">
-                {t('components.dashboard.modals.InviteShareModal.text_8_16a818')}
+                {t('components.dashboard.modals.InviteShareModal.technicianName')}
               </label>
               <input
                 type="text"
@@ -166,7 +166,7 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
 
             <div>
               <label className="text-[10px] font-extrabold uppercase text-nexoraMuted font-sans">
-                {inviteMethod === 'SMS' ? (t('components.dashboard.modals.InviteShareModal.text_9_db3889')) : 'Email Address'}
+                {inviteMethod === 'SMS' ? (t('components.dashboard.modals.InviteShareModal.phoneNumber')) : 'Email Address'}
               </label>
               <input
                 type="text"
@@ -181,7 +181,7 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
 
             <div>
               <label className="text-[10px] font-extrabold uppercase text-nexoraMuted font-sans">
-                {t('components.dashboard.modals.InviteShareModal.text_10_c21f56')}
+                {t('components.dashboard.modals.InviteShareModal.rolePosition')}
               </label>
               <input
                 type="text"
@@ -197,7 +197,7 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
               className="w-full h-10 mt-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-95 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg transition shadow-md flex items-center justify-center gap-1.5 font-sans"
             >
               <Send className="h-4 w-4" />
-              {t('components.dashboard.modals.InviteShareModal.text_11_28d637')}
+              {t('components.dashboard.modals.InviteShareModal.sendInviteLink')}
             </button>
           </form>
         </div>
@@ -215,7 +215,7 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
           >
             <div className="w-full flex justify-between items-center mb-4">
               <h3 className="text-xs font-black uppercase text-slate-800 tracking-wider font-sans">
-                {t('components.dashboard.modals.InviteShareModal.text_12_a8934d')}
+                {t('components.dashboard.modals.InviteShareModal.joinQrCode')}
               </h3>
               <button
                 type="button"
@@ -235,7 +235,7 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
             </div>
 
             <p className="text-[11px] text-slate-500 font-medium text-center leading-relaxed max-w-xs mb-4 font-sans">
-              {t('components.dashboard.modals.InviteShareModal.text_13_8222f9')}
+              {t('components.dashboard.modals.InviteShareModal.haveTechniciansScanThis')}
             </p>
 
             <div className="w-full bg-slate-50 rounded-xl border border-slate-200 p-2.5 flex items-center justify-between gap-2">
@@ -246,12 +246,12 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
                 type="button"
                 onClick={() => {
                   navigator.clipboard.writeText(joinLink)
-                  showToast(t('components.dashboard.modals.InviteShareModal.text_5_df86c2'), 'success')
+                  showToast(t('components.dashboard.modals.InviteShareModal.joinLinkCopiedTo'), 'success')
                 }}
                 className="h-7 px-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[10px] font-bold transition flex items-center gap-1 shrink-0 font-sans"
               >
                 <Copy className="h-3 w-3" />
-                <span>{t('components.dashboard.modals.InviteShareModal.text_6_cd2bb1')}</span>
+                <span>{t('components.dashboard.modals.InviteShareModal.copy')}</span>
               </button>
             </div>
           </div>

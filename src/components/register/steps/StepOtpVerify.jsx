@@ -15,17 +15,17 @@ export default function StepOtpVerify({
     <div className="p-6 sm:p-10 space-y-6 animate-fadeIn">
       <div className="text-center max-w-md mx-auto">
         <h3 className="text-lg font-bold text-nexoraText">
-          {t('components.register.steps.StepOtpVerify.text_1_e92627')}
+          {t('components.register.steps.StepOtpVerify.activateAccountEnterOtp')}
         </h3>
         <p className="text-xs text-nexoraSubtle mt-1 leading-relaxed">
-          {t('components.register.steps.StepOtpVerify.text_2_cf458c')}
+          {t('components.register.steps.StepOtpVerify.enterTheOtpCode')}
         </p>
       </div>
 
       <form onSubmit={handleVerifyOtp} className="space-y-4 max-w-md mx-auto">
         <div>
           <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-            {renderLabel(t('components.register.steps.StepOtpVerify.text_3_b7be24'))}
+            {renderLabel(t('components.register.steps.StepOtpVerify.enterOtpCode'))}
           </label>
           <input
             type="text"
@@ -52,7 +52,7 @@ export default function StepOtpVerify({
                   onClick={() => setResendTimer(30)}
                   className="text-nexoraBrand hover:underline"
                 >
-                  {t('components.register.steps.StepOtpVerify.text_4_cb56d6')}
+                  {t('components.register.steps.StepOtpVerify.resendVerificationCode')}
                 </button>
               )
             }
@@ -86,7 +86,7 @@ export default function StepOtpVerify({
             type="submit"
             className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all"
           >
-            {t('components.register.steps.StepOtpVerify.text_5_ab6602')} <ArrowRight className="w-4 h-4" />
+            {t('components.register.steps.StepOtpVerify.verifyAndActivate')} <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       </form>

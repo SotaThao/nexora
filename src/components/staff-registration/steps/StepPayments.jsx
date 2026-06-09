@@ -59,7 +59,7 @@ export default function StepPayments({
     <div className="space-y-5 py-2 animate-fadeIn">
       <div className="border-b border-nexoraRule pb-2 flex items-center justify-between">
         <h3 className="text-sm font-extrabold text-nexoraText uppercase tracking-wide">
-          {t('components.staff_registration.steps.StepPayments.text_1_b81314')}
+          {t('components.staff_registration.steps.StepPayments.label3PayoutConfigurations')}
         </h3>
 
         {isDemoToolsEnabled && (
@@ -74,7 +74,7 @@ export default function StepPayments({
       </div>
 
       <p className="text-xs text-nexoraMuted leading-relaxed font-medium">
-        {t('components.staff_registration.steps.StepPayments.text_2_4b70b7')}
+        {t('components.staff_registration.steps.StepPayments.toggleThePaymentChannels')}
       </p>
 
       <div className="space-y-2 max-h-80 overflow-y-auto pr-1 divide-y divide-nexoraRule">
@@ -112,7 +112,7 @@ export default function StepPayments({
                       </div>
                     ) : (
                       <div className="text-[10px] text-nexoraSubtle italic font-medium mt-0.5">
-                        {t('components.staff_registration.steps.StepPayments.text_3_6aec72')}
+                        {t('components.staff_registration.steps.StepPayments.notConfigured')}
                       </div>
                     )}
                   </div>
@@ -127,7 +127,7 @@ export default function StepPayments({
                 className="flex items-center gap-1 text-[10px] font-bold text-nexoraBrand hover:text-nexoraBrandDark transition shrink-0 ml-2"
               >
                 <Edit2 className="h-3 w-3" />
-                <span>{t('components.staff_registration.steps.StepPayments.text_4_2e8d41')}</span>
+                <span>{t('components.staff_registration.steps.StepPayments.payoutAccount')}</span>
               </button>
             </div>
           )
@@ -160,7 +160,7 @@ export default function StepPayments({
           onClick={handleActivateProfile}
           className="flex-grow h-10 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-bold text-xs uppercase tracking-wider rounded-lg transition"
         >
-          {t('components.staff_registration.steps.StepPayments.text_5_73950e')}
+          {t('components.staff_registration.steps.StepPayments.saveAndActivate')}
         </button>
       </div>
     </div>

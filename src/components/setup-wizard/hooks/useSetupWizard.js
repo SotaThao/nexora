@@ -467,7 +467,7 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
   const stepName = (step) => {
     switch (step) {
       case 1: return t('setup.step_name_1')
-      case 2: return t('components.setup_wizard.hooks.useSetupWizard.text_1_3ab74c')
+      case 2: return t('components.setup_wizard.hooks.useSetupWizard.payoutAndQrTouchpoints')
       case 3: return t('setup.step_name_3')
       default: return ''
     }

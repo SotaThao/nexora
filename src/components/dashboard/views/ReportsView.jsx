@@ -44,7 +44,7 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100/50 dark:border-emerald-500/20">
           <CheckCircle className="h-3 w-3" />
-          {t('components.dashboard.views.ReportsView.text_1_cf7e01')}
+          {t('components.dashboard.views.ReportsView.success')}
         </span>
       );
     }
@@ -52,7 +52,7 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-100/50 dark:border-amber-500/20">
           <Clock className="h-3 w-3" />
-          {t('components.dashboard.views.ReportsView.text_2_1f5bd0')}
+          {t('components.dashboard.views.ReportsView.pending')}
         </span>
       );
     }
@@ -60,7 +60,7 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-100/50 dark:border-rose-500/20">
           <XCircle className="h-3 w-3" />
-          {t('components.dashboard.views.ReportsView.text_3_7d0ef0')}
+          {t('components.dashboard.views.ReportsView.failed')}
         </span>
       );
     }
@@ -247,7 +247,7 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
               <th className="px-4 py-3">{t('dashboard.activity_log.col_tp')}</th>
               <th className="px-4 py-3">{t('dashboard.activity_log.col_payment')}</th>
               <th className="px-4 py-3">{t('dashboard.activity_log.col_status')}</th>
-              <th className="px-4 py-3 text-right">{t('components.dashboard.views.ReportsView.text_4_8cd6d8')}</th>
+              <th className="px-4 py-3 text-right">{t('components.dashboard.views.ReportsView.details')}</th>
             </tr>
           </thead>
           <tbody>
@@ -286,7 +286,7 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
                       }}
                       className="text-xs font-black text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer uppercase tracking-wider"
                     >
-                      {t('components.dashboard.views.ReportsView.text_4_8cd6d8')}
+                      {t('components.dashboard.views.ReportsView.details')}
                     </button>
                   </td>
                 </tr>
@@ -372,10 +372,10 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
                 />
                 <div className="flex flex-col text-left">
                   <span className="text-[9px] font-black uppercase text-nexoraMuted tracking-widest">
-                    {t('components.dashboard.views.ReportsView.text_5_84fbef')}
+                    {t('components.dashboard.views.ReportsView.tippingQrCode')}
                   </span>
                   <span className="text-[11px] text-slate-500 mt-1 leading-normal">
-                    {t('components.dashboard.views.ReportsView.text_6_6bde06')}
+                    {t('components.dashboard.views.ReportsView.scanToTipThis')}
                   </span>
                   {/* Share Link Button */}
                   <button
@@ -392,13 +392,13 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
                         }
                       } else {
                         navigator.clipboard.writeText(shareUrl);
-                        showToast(t('components.dashboard.views.ReportsView.text_7_0accc6'), 'success');
+                        showToast(t('components.dashboard.views.ReportsView.tippingLinkCopiedTo'), 'success');
                       }
                     }}
                     className="mt-2.5 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-[10px] font-black uppercase tracking-wider text-indigo-600 transition-colors w-max cursor-pointer"
                   >
                     <Share2 className="h-3 w-3" />
-                    {t('components.dashboard.views.ReportsView.text_8_3d9fba')}
+                    {t('components.dashboard.views.ReportsView.shareLink')}
                   </button>
                 </div>
               </div>

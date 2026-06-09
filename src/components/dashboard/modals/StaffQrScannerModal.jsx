@@ -40,12 +40,12 @@ function StaffQrScannerModal({
         {/* Header */}
         <div className="space-y-1 text-center">
           <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">
-            {t('components.dashboard.modals.StaffQrScannerModal.text_1_32f83e')}
+            {t('components.dashboard.modals.StaffQrScannerModal.scanQrCode')}
           </h3>
           <p className="text-[10px] text-slate-500 font-medium text-center">
             {scanTarget === 'staff'
-              ? (t('components.dashboard.modals.StaffQrScannerModal.text_2_e8d012'))
-              : (t('components.dashboard.modals.StaffQrScannerModal.text_3_129b71'))}
+              ? (t('components.dashboard.modals.StaffQrScannerModal.scanNexoraPersonalId'))
+              : (t('components.dashboard.modals.StaffQrScannerModal.scanVlinkpayIdTo'))}
           </p>
         </div>
 
@@ -66,13 +66,13 @@ function StaffQrScannerModal({
 
         {/* Helper Text */}
         <p className="text-[10px] text-slate-500 font-medium max-w-xs mx-auto text-center">
-          {t('components.dashboard.modals.StaffQrScannerModal.text_4_7327eb')}
+          {t('components.dashboard.modals.StaffQrScannerModal.pointTheCameraAt')}
         </p>
 
         {/* Quick simulation buttons */}
         <div className="space-y-2 pt-2 border-t border-slate-100">
           <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block text-center">
-            {t('components.dashboard.modals.StaffQrScannerModal.text_5_3fd4ec')}
+            {t('components.dashboard.modals.StaffQrScannerModal.simulateQrScan')}
           </span>
 
           <div className="flex flex-col gap-2">
@@ -82,7 +82,7 @@ function StaffQrScannerModal({
               onClick={onSimulateSuccessfulScan}
               className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-colors shadow-sm"
             >
-              {t('components.dashboard.modals.StaffQrScannerModal.text_6_a33385')}
+              {t('components.dashboard.modals.StaffQrScannerModal.simulateSuccessfulScan')}
             </button>
 
             {/* Additional quick options */}
@@ -111,7 +111,7 @@ function StaffQrScannerModal({
           onClick={onClose}
           className="w-full py-2 border border-slate-200 hover:bg-slate-50 text-slate-500 hover:text-slate-700 rounded-xl text-xs font-bold transition"
         >
-          {t('components.dashboard.modals.StaffQrScannerModal.text_7_717e54')}
+          {t('components.dashboard.modals.StaffQrScannerModal.cancel')}
         </button>
       </div>
     </div>

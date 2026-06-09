@@ -120,7 +120,7 @@ function Overview({
       },
       {
         value: 'Custom',
-        label: t('components.dashboard.overview.Overview.text_1_1f32e6')
+        label: t('components.dashboard.overview.Overview.custom')
       }
     ];
   }, [transactions, currentLanguage]);

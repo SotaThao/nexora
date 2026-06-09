@@ -321,7 +321,7 @@ function StaffModal({
           setVlinkpayStatus('idle')
         }
 
-        showToast(t('components.dashboard.modals.StaffModal.text_1_ef69eb'), 'success')
+        showToast(t('components.dashboard.modals.StaffModal.staffProfileVerifiedAuto'), 'success')
       } else {
         setVlinkpayStatus('error')
         setNexoraStatus('error')
@@ -379,7 +379,7 @@ function StaffModal({
         <div className="flex items-center justify-between border-b border-nexoraRule pb-4">
           <h2 className="text-lg font-extrabold text-nexoraText">
             {isApproveMode
-              ? (t('components.dashboard.modals.StaffModal.text_2_81aab8'))
+              ? (t('components.dashboard.modals.StaffModal.reviewJoinRequest'))
               : (editing ? t('common.edit') : t('setup.add_staff_title'))}
           </h2>
           <IconButton label="Close modal" onClick={onClose}>
@@ -392,7 +392,7 @@ function StaffModal({
             {/* Staff ID / VLINKPAY ID Section */}
             <div>
               <label className="text-[10px] font-extrabold uppercase text-nexoraMuted block">
-                {t('components.dashboard.modals.StaffModal.text_3_de8a3f')}
+                {t('components.dashboard.modals.StaffModal.nexoraIdVlinkpayId')}
               </label>
               <div className="mt-1 flex gap-2">
                 <div className="relative flex-1">
@@ -442,7 +442,7 @@ function StaffModal({
                     type="button"
                     onClick={() => handleScanQr('combined')}
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-nexoraSubtle hover:text-nexoraBrand transition-colors p-1.5 rounded hover:bg-nexoraCanvas"
-                    title={t('components.dashboard.modals.StaffModal.text_4_ef9173')}
+                    title={t('components.dashboard.modals.StaffModal.scanQrCode')}
                   >
                     <QrCode className="h-3.5 w-3.5" />
                   </button>
@@ -465,20 +465,20 @@ function StaffModal({
                   type="button"
                   onClick={() => onOpenInviteShare && onOpenInviteShare(form)}
                   className="h-10 px-3 rounded-lg bg-nexoraBrandSoft hover:bg-nexoraBrandSoft/80 text-nexoraBrand border border-nexoraBrandSoft text-sm font-bold transition flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
-                  title={t('components.dashboard.modals.StaffModal.text_5_a1184a')}
+                  title={t('components.dashboard.modals.StaffModal.shareInviteLink')}
                 >
                   <QrCode className="h-4 w-4 shrink-0" />
-                  {t('components.dashboard.modals.StaffModal.text_6_873f87')}
+                  {t('components.dashboard.modals.StaffModal.invite')}
                 </button>
               </div>
               {vlinkpayStatus === 'success' && (
                 <p className="mt-1 text-[10px] font-bold text-nexoraSuccess">
-                  ✓ {t('components.dashboard.modals.StaffModal.text_7_050e37')}
+                  ✓ {t('components.dashboard.modals.StaffModal.vlinkpayVerified')}
                 </p>
               )}
               {nexoraStatus === 'success' && (
                 <p className="mt-1 text-[10px] font-bold text-nexoraSuccess">
-                  ✓ {t('components.dashboard.modals.StaffModal.text_8_473b35')}
+                  ✓ {t('components.dashboard.modals.StaffModal.nexoraVerified')}
                 </p>
               )}
             </div>
@@ -517,7 +517,7 @@ function StaffModal({
                       type="button"
                       onClick={() => setShowReviewsDetailModal(true)}
                       className="inline-flex h-9 items-center gap-2 rounded-lg border border-nexoraBrandSoft bg-nexoraBrandSoft/50 px-2.5 hover:bg-nexoraBrandSoft transition shadow-sm text-left group shrink-0"
-                      title={t('components.dashboard.modals.StaffModal.text_9_8546c7')}
+                      title={t('components.dashboard.modals.StaffModal.viewAllReviews')}
                     >
                       <div className="flex items-center gap-0.5 text-nexoraWarning">
                         <Star className="h-3.5 w-3.5 fill-current" />
@@ -632,7 +632,7 @@ function StaffModal({
                           className="flex items-center gap-1.5 text-[11px] font-bold text-nexoraMuted hover:text-nexoraText transition"
                         >
                           <Eye className="h-3.5 w-3.5" />
-                          <span>{t('components.dashboard.modals.StaffModal.text_10_f7cbd0')}</span>
+                          <span>{t('components.dashboard.modals.StaffModal.viewAccount')}</span>
                         </button>
                       </div>
                     )
@@ -671,14 +671,14 @@ function StaffModal({
                 onClick={onDecline}
                 className="rounded-lg border border-nexoraDanger/20 bg-nexoraDanger/10 px-4 py-2 text-xs font-bold text-nexoraDanger hover:bg-nexoraDanger/15 transition"
               >
-                {t('components.dashboard.modals.StaffModal.text_11_e4b582')}
+                {t('components.dashboard.modals.StaffModal.decline')}
               </button>
               <button
                 type="button"
                 onClick={onSave}
                 className="rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white hover:bg-nexoraBrandDark transition animate-pulse"
               >
-                {t('components.dashboard.modals.StaffModal.text_12_d8d1f8')}
+                {t('components.dashboard.modals.StaffModal.approveAccept')}
               </button>
             </>
           ) : (

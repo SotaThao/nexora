@@ -154,7 +154,7 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
                 : `${walletNames[walletKey]?.toUpperCase()} ACCOUNT`}
             </h3>
             <p className="text-[10px] text-slate-400 font-medium">
-              {t('components.dashboard.modals.PayoutSetupModal.text_1_2ee37e')}
+              {t('components.dashboard.modals.PayoutSetupModal.specifyReceivingTargetIdentifier')}
             </p>
           </div>
         </div>
@@ -162,7 +162,7 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
         <div className="space-y-4">
           <div>
             <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
-              {renderLabel(t('components.dashboard.modals.PayoutSetupModal.text_2_11cac2'))}
+              {renderLabel(t('components.dashboard.modals.PayoutSetupModal.accountIdentifier'))}
             </label>
             <input
               type="text"
@@ -182,7 +182,7 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
 
           <div>
             <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
-              {t('components.dashboard.modals.PayoutSetupModal.text_3_b860af')}
+              {t('components.dashboard.modals.PayoutSetupModal.qrCodeOptional')}
             </label>
 
             {isCapturing ? (
@@ -215,7 +215,7 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
               </div>
             ) : readOnly ? (
               <div className="flex h-24 w-full flex-col items-center justify-center rounded-xl border border-slate-150 bg-slate-50 text-slate-400 text-xs font-semibold">
-                {t('components.dashboard.modals.PayoutSetupModal.text_4_e83c64')}
+                {t('components.dashboard.modals.PayoutSetupModal.noQrCodeUploaded')}
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-3">
@@ -247,7 +247,7 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
             <AlertTriangle className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
             <span>
               {readOnly
-                ? (t('components.dashboard.modals.PayoutSetupModal.text_5_1af66b'))
+                ? (t('components.dashboard.modals.PayoutSetupModal.thisInformationWasEntered'))
                 : (t('setup.payout_warning'))}
             </span>
           </div>
@@ -265,7 +265,7 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
               onClick={handleSubmit}
               className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm transition"
             >
-              {t('components.dashboard.modals.PayoutSetupModal.text_6_0f06d4')}
+              {t('components.dashboard.modals.PayoutSetupModal.save')}
             </button>
           )}
         </div>

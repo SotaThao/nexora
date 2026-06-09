@@ -82,7 +82,7 @@ export default function StepWelcome({
               onClick={onReturnToMerchant}
               className="w-full h-11 border border-nexoraBorder text-nexoraMuted font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-nexoraSurfaceMuted transition"
             >
-              {t('components.staff_registration.steps.StepWelcome.text_1_9ea11f')}
+              {t('components.staff_registration.steps.StepWelcome.declineRequest')}
             </button>
 
             <button
@@ -120,13 +120,13 @@ export default function StepWelcome({
                 </div>
                 <div className="space-y-1.5">
                   <span className="text-[10px] font-black uppercase text-nexoraWarning tracking-widest block font-sans">
-                    {t('components.staff_registration.steps.StepWelcome.text_2_832e3c')}
+                    {t('components.staff_registration.steps.StepWelcome.salonNetworkInvitation')}
                   </span>
                   <h3 className="text-xl font-black text-nexoraText tracking-tight leading-snug">
                     {inviteData?.biz || ''}
                   </h3>
                   <p className="text-xs text-nexoraMuted max-w-sm mx-auto leading-relaxed font-medium">
-                    {t('components.staff_registration.steps.StepWelcome.text_3_e0f60b')}
+                    {t('components.staff_registration.steps.StepWelcome.youHaveBeenInvited')}
                   </p>
                 </div>
               </div>
@@ -147,10 +147,10 @@ export default function StepWelcome({
                   </div>
                   <div>
                     <strong className="text-xs font-black text-nexoraText block">
-                      {t('components.staff_registration.steps.StepWelcome.text_4_8bbc99')}
+                      {t('components.staff_registration.steps.StepWelcome.iAlreadyHaveAn')}
                     </strong>
                     <span className="text-[10px] text-nexoraSubtle block mt-0.5 leading-normal">
-                      {t('components.staff_registration.steps.StepWelcome.text_5_b2554e')}
+                      {t('components.staff_registration.steps.StepWelcome.useYourExistingVlinkpay')}
                     </span>
                   </div>
                 </button>
@@ -168,10 +168,10 @@ export default function StepWelcome({
                   </div>
                   <div>
                     <strong className="text-xs font-black text-nexoraText block">
-                      {t('components.staff_registration.steps.StepWelcome.text_6_440c35')}
+                      {t('components.staff_registration.steps.StepWelcome.registerAccount')}
                     </strong>
                     <span className="text-[10px] text-nexoraSubtle block mt-0.5 leading-normal">
-                      {t('components.staff_registration.steps.StepWelcome.text_7_d9df8a')}
+                      {t('components.staff_registration.steps.StepWelcome.registerANewAccount')}
                     </span>
                   </div>
                 </button>
@@ -194,13 +194,13 @@ export default function StepWelcome({
                   <ArrowLeft className="h-4 w-4" />
                 </button>
                 <h3 className="text-sm font-extrabold text-nexoraText uppercase tracking-wide font-sans">
-                  {t('components.staff_registration.steps.StepWelcome.text_8_f7afb9')}
+                  {t('components.staff_registration.steps.StepWelcome.linkAccountLogin')}
                 </h3>
               </div>
 
               <form onSubmit={handleLinkLogin} className="space-y-4">
                 <p className="text-xs text-nexoraSubtle font-medium leading-relaxed">
-                  {t('components.staff_registration.steps.StepWelcome.text_9_0c8b9d')}
+                  {t('components.staff_registration.steps.StepWelcome.signInToYour')}
                 </p>
 
                 {/* Email field */}
@@ -220,7 +220,7 @@ export default function StepWelcome({
                 {/* Password field */}
                 <div className="space-y-1">
                   <label className="text-[10px] font-black uppercase text-nexoraSubtle tracking-wider flex items-center gap-1">
-                    <Lock className="h-3.5 w-3.5" /> {t('components.staff_registration.steps.StepWelcome.text_10_29ab67')}
+                    <Lock className="h-3.5 w-3.5" /> {t('components.staff_registration.steps.StepWelcome.password')}
                   </label>
                   <div className="relative">
                     <input
@@ -249,9 +249,9 @@ export default function StepWelcome({
                 {isDemoToolsEnabled && (
                   <div className="p-3 border border-nexoraWarning/20 bg-nexoraWarning/10 rounded-xl text-[11px] text-nexoraWarning leading-normal font-sans">
                     <span className="font-bold block uppercase tracking-wider text-[9px] text-nexoraWarning mb-0.5">
-                      {t('components.staff_registration.steps.StepWelcome.text_11_ccae51')}
+                      {t('components.staff_registration.steps.StepWelcome.demoAccountTip')}
                     </span>
-                    Email: <code className="font-bold font-mono">lisa@example.com</code> / {t('components.staff_registration.steps.StepWelcome.text_10_29ab67')}: <code className="font-bold font-mono">password123</code> (hoặc thợ khác đã tạo)
+                    Email: <code className="font-bold font-mono">lisa@example.com</code> / {t('components.staff_registration.steps.StepWelcome.password')}: <code className="font-bold font-mono">password123</code> (hoặc thợ khác đã tạo)
                   </div>
                 )}
 
@@ -261,14 +261,14 @@ export default function StepWelcome({
                     onClick={() => setJoinPath(null)}
                     className="w-full h-10 border border-nexoraBorder text-nexoraMuted font-bold text-xs uppercase tracking-wider rounded-lg hover:bg-nexoraSurfaceMuted transition"
                   >
-                    {t('components.staff_registration.steps.StepWelcome.text_12_0413ad')}
+                    {t('components.staff_registration.steps.StepWelcome.back')}
                   </button>
 
                   <button
                     type="submit"
                     className="w-full h-10 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-black text-xs uppercase tracking-wider rounded-lg transition shadow-md flex items-center justify-center gap-1.5"
                   >
-                    {t('components.staff_registration.steps.StepWelcome.text_13_79d937')}
+                    {t('components.staff_registration.steps.StepWelcome.loginAndVerify')}
                   </button>
                 </div>
               </form>
@@ -280,20 +280,20 @@ export default function StepWelcome({
             <div className="space-y-5 py-2 animate-fadeIn">
               <div className="flex items-center gap-2 border-b border-nexoraRule pb-2">
                 <h3 className="text-sm font-extrabold text-nexoraText uppercase tracking-wide font-sans">
-                  {t('components.staff_registration.steps.StepWelcome.text_14_8736e0')}
+                  {t('components.staff_registration.steps.StepWelcome.confirmSalonConnection')}
                 </h3>
               </div>
 
               <div className="space-y-4">
                 <p className="text-xs text-nexoraSubtle font-medium leading-relaxed">
-                  {t('components.staff_registration.steps.StepWelcome.text_15_eb26fc')}
+                  {t('components.staff_registration.steps.StepWelcome.pleaseReviewYourPersonal')}
                 </p>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   {/* Personal Profile Card */}
                   <div className="border border-nexoraBrand/15 rounded-2xl bg-nexoraBrandSoft/10 p-4 space-y-3">
                     <span className="text-[9px] font-black uppercase text-nexoraBrand bg-nexoraBrandSoft/80 px-2 py-0.5 rounded-full inline-block">
-                      {t('components.staff_registration.steps.StepWelcome.text_16_afd627')}
+                      {t('components.staff_registration.steps.StepWelcome.personalProfile')}
                     </span>
                     <div className="flex items-center gap-3 pt-1">
                       {linkedProfile.avatar ? (
@@ -320,7 +320,7 @@ export default function StepWelcome({
                         <strong className="text-nexoraMuted font-mono truncate max-w-32">{linkedProfile.email}</strong>
                       </div>
                       <div className="flex justify-between">
-                        <span>{t('components.staff_registration.steps.StepWelcome.text_17_e7aad1')}</span>
+                        <span>{t('components.staff_registration.steps.StepWelcome.phone')}</span>
                         <strong className="text-nexoraMuted font-mono">{linkedProfile.phone || 'N/A'}</strong>
                       </div>
                     </div>
@@ -329,7 +329,7 @@ export default function StepWelcome({
                   {/* Nail Salon Info Card */}
                   <div className="border border-nexoraWarning/20 rounded-2xl bg-nexoraWarning/10 p-4 space-y-3">
                     <span className="text-[9px] font-black uppercase text-nexoraWarning bg-nexoraWarning/10 px-2 py-0.5 rounded-full inline-block">
-                      {t('components.staff_registration.steps.StepWelcome.text_18_6a93ce')}
+                      {t('components.staff_registration.steps.StepWelcome.nailSalonInfo')}
                     </span>
                     <div className="flex items-center gap-3 pt-1">
                       <div className="h-10 w-10 rounded-xl bg-nexoraWarning/10 text-nexoraWarning flex items-center justify-center shrink-0">
@@ -340,20 +340,20 @@ export default function StepWelcome({
                           {inviteData?.biz || ''}
                         </h4>
                         <span className="text-[10px] text-nexoraMuted">
-                          {t('components.staff_registration.steps.StepWelcome.text_19_749c79')} {inviteData?.role || position}
+                          {t('components.staff_registration.steps.StepWelcome.invitedRole')} {inviteData?.role || position}
                         </span>
                       </div>
                     </div>
 
                     <div className="text-[10px] text-nexoraMuted leading-normal border-t border-nexoraWarning/20 pt-2 space-y-1">
                       <div className="flex justify-between">
-                        <span>{t('components.staff_registration.steps.StepWelcome.text_20_cfd760')}</span>
+                        <span>{t('components.staff_registration.steps.StepWelcome.connectionStatus')}</span>
                         <strong className="text-nexoraWarning uppercase text-[9px] font-black">
-                          {t('components.staff_registration.steps.StepWelcome.text_21_11b464')}
+                          {t('components.staff_registration.steps.StepWelcome.newRequest')}
                         </strong>
                       </div>
                       <div className="flex justify-between">
-                        <span>{t('components.staff_registration.steps.StepWelcome.text_22_cc5680')}</span>
+                        <span>{t('components.staff_registration.steps.StepWelcome.location')}</span>
                         <strong className="text-nexoraMuted truncate max-w-32">San Jose, CA</strong>
                       </div>
                     </div>
@@ -366,7 +366,7 @@ export default function StepWelcome({
                     onClick={handleLinkDecline}
                     className="w-full h-11 border border-nexoraDanger/20 text-nexoraDanger bg-nexoraDanger/10 hover:bg-nexoraDanger/10 hover:border-nexoraDanger/30 font-bold text-xs uppercase tracking-wider rounded-xl transition flex items-center justify-center gap-1.5"
                   >
-                    {t('components.staff_registration.steps.StepWelcome.text_23_e4b582')}
+                    {t('components.staff_registration.steps.StepWelcome.decline')}
                   </button>
 
                   <button
@@ -375,7 +375,7 @@ export default function StepWelcome({
                     className="w-full h-11 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-black text-xs uppercase tracking-wider rounded-xl transition flex items-center justify-center gap-1.5 shadow-md"
                   >
                     <Check className="h-4 w-4 stroke-[3px]" />
-                    {t('components.staff_registration.steps.StepWelcome.text_24_db241f')}
+                    {t('components.staff_registration.steps.StepWelcome.acceptAndJoin')}
                   </button>
                 </div>
               </div>

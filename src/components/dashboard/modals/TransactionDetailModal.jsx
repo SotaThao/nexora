@@ -86,10 +86,10 @@ export default function TransactionDetailModal({ selectedTx, onClose }) {
             />
             <div className="flex flex-col text-left">
               <span className="text-[9px] font-black uppercase text-mutedGrey dark:text-slate-400 tracking-widest">
-                {t('components.dashboard.modals.TransactionDetailModal.text_1_84fbef')}
+                {t('components.dashboard.modals.TransactionDetailModal.tippingQrCode')}
               </span>
               <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-normal">
-                {t('components.dashboard.modals.TransactionDetailModal.text_2_6bde06')}
+                {t('components.dashboard.modals.TransactionDetailModal.scanToTipThis')}
               </span>
               <button
                 onClick={async () => {
@@ -103,7 +103,7 @@ export default function TransactionDetailModal({ selectedTx, onClose }) {
                   } else {
                     navigator.clipboard.writeText(shareUrl);
                     showToast(
-                      t('components.dashboard.modals.TransactionDetailModal.text_3_0accc6'),
+                      t('components.dashboard.modals.TransactionDetailModal.tippingLinkCopiedTo'),
                       'success'
                     );
                   }
@@ -111,7 +111,7 @@ export default function TransactionDetailModal({ selectedTx, onClose }) {
                 className="mt-2.5 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 text-[10px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400 transition-colors w-max cursor-pointer"
               >
                 <Share2 className="h-3 w-3" />
-                {t('components.dashboard.modals.TransactionDetailModal.text_4_3d9fba')}
+                {t('components.dashboard.modals.TransactionDetailModal.shareLink')}
               </button>
             </div>
           </div>

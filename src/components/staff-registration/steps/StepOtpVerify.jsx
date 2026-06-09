@@ -34,10 +34,10 @@ export default function StepOtpVerify({
         <form onSubmit={handleRegisterSubmit} className="space-y-6 py-4">
           <div className="text-center space-y-1.5">
             <h3 className="text-base font-extrabold text-nexoraText uppercase tracking-wide">
-              {t('components.staff_registration.steps.StepOtpVerify.text_1_e639fe')}
+              {t('components.staff_registration.steps.StepOtpVerify.label1RegisterAccount')}
             </h3>
             <p className="text-xs text-nexoraMuted leading-relaxed max-w-sm mx-auto">
-              {t('components.staff_registration.steps.StepOtpVerify.text_2_639d1e')}
+              {t('components.staff_registration.steps.StepOtpVerify.registerANewTechnician')}
             </p>
           </div>
 
@@ -45,7 +45,7 @@ export default function StepOtpVerify({
             {/* Email */}
             <div>
               <label className="text-[10px] font-black uppercase text-nexoraSubtle tracking-wider">
-                {renderLabel(t('components.staff_registration.steps.StepOtpVerify.text_3_d00227'))}
+                {renderLabel(t('components.staff_registration.steps.StepOtpVerify.emailAddress'))}
               </label>
               <input
                 type="email"
@@ -64,7 +64,7 @@ export default function StepOtpVerify({
             {/* Confirm Email */}
             <div>
               <label className="text-[10px] font-black uppercase text-nexoraSubtle tracking-wider">
-                {renderLabel(t('components.staff_registration.steps.StepOtpVerify.text_4_386dbd'))}
+                {renderLabel(t('components.staff_registration.steps.StepOtpVerify.confirmEmailAddress'))}
               </label>
               <input
                 type="email"
@@ -83,7 +83,7 @@ export default function StepOtpVerify({
             {/* Password */}
             <div>
               <label className="text-[10px] font-black uppercase text-nexoraSubtle tracking-wider">
-                {renderLabel(t('components.staff_registration.steps.StepOtpVerify.text_5_a6f190'))}
+                {renderLabel(t('components.staff_registration.steps.StepOtpVerify.password'))}
               </label>
               <div className="relative mt-1.5">
                 <input
@@ -111,7 +111,7 @@ export default function StepOtpVerify({
             {/* Referral Link */}
             <div>
               <label className="text-[10px] font-black uppercase text-nexoraSubtle tracking-wider">
-                {t('components.staff_registration.steps.StepOtpVerify.text_6_d5de74')}
+                {t('components.staff_registration.steps.StepOtpVerify.referralLinkSalon')}
               </label>
               <input
                 type="text"
@@ -181,10 +181,10 @@ export default function StepOtpVerify({
         <form onSubmit={handleVerifyOtp} className="space-y-6 py-4">
           <div className="text-center space-y-1.5">
             <h3 className="text-base font-extrabold text-nexoraText uppercase tracking-wide">
-              {t('components.staff_registration.steps.StepOtpVerify.text_7_0718de')}
+              {t('components.staff_registration.steps.StepOtpVerify.label1ActivateAccount')}
             </h3>
             <p className="text-xs text-nexoraMuted leading-relaxed max-w-sm mx-auto">
-              {t('components.staff_registration.steps.StepOtpVerify.text_8_cf458c')}
+              {t('components.staff_registration.steps.StepOtpVerify.enterTheOtpCode')}
             </p>
           </div>
 
@@ -192,7 +192,7 @@ export default function StepOtpVerify({
             {/* Single OTP Input */}
             <div>
               <label className="text-[10px] font-black uppercase text-nexoraSubtle tracking-wider">
-                {renderLabel(t('components.staff_registration.steps.StepOtpVerify.text_9_b7be24'))}
+                {renderLabel(t('components.staff_registration.steps.StepOtpVerify.enterOtpCode'))}
               </label>
               <input
                 type="text"
@@ -251,7 +251,7 @@ export default function StepOtpVerify({
               type="submit"
               className="flex-grow h-10 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-bold text-xs uppercase tracking-wider rounded-lg transition"
             >
-              {t('components.staff_registration.steps.StepOtpVerify.text_10_ab6602')}
+              {t('components.staff_registration.steps.StepOtpVerify.verifyAndActivate')}
             </button>
           </div>
         </form>
@@ -284,8 +284,8 @@ function TermsModal({ open, currentLanguage, onClose, onAccept, modalType, t }) 
         <div className="flex items-center justify-between border-b border-nexoraRule pb-4">
           <h3 className="text-sm font-black uppercase tracking-wider text-nexoraText">
             {modalType === 'privacy'
-              ? (t('components.staff_registration.steps.StepOtpVerify.text_11_519796'))
-              : (t('components.staff_registration.steps.StepOtpVerify.text_12_e41b87'))
+              ? (t('components.staff_registration.steps.StepOtpVerify.privacyPolicy'))
+              : (t('components.staff_registration.steps.StepOtpVerify.termsOfService'))
             }
           </h3>
           <button
@@ -315,14 +315,14 @@ function TermsModal({ open, currentLanguage, onClose, onAccept, modalType, t }) 
             onClick={onClose}
             className="px-4 py-2 border border-nexoraBorder text-nexoraMuted rounded-xl font-bold hover:bg-nexoraSurfaceMuted transition"
           >
-            {t('components.staff_registration.steps.StepOtpVerify.text_13_f7e671')}
+            {t('components.staff_registration.steps.StepOtpVerify.close')}
           </button>
           <button
             type="button"
             onClick={onAccept}
           className="px-5 py-2 bg-nexoraText hover:bg-nexoraText/90 text-white rounded-xl font-bold transition shadow-sm"
           >
-            {t('components.staff_registration.steps.StepOtpVerify.text_14_aa0b10')}
+            {t('components.staff_registration.steps.StepOtpVerify.iAccept')}
           </button>
         </div>
       </div>

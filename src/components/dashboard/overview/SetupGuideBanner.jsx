@@ -21,16 +21,16 @@ export default function SetupGuideBanner({ onStartSetup }) {
         <div className="inline-flex items-center gap-2 rounded-full bg-nexoraBrand/10 px-3 py-1 mb-4">
           <Sparkles className="h-4 w-4 text-nexoraBrand" />
           <span className="text-[10px] font-black uppercase tracking-widest text-nexoraBrand">
-            {t('components.dashboard.overview.SetupGuideBanner.text_1_3b1b52')}
+            {t('components.dashboard.overview.SetupGuideBanner.gettingStarted')}
           </span>
         </div>
         
         <h2 className="text-xl md:text-2xl font-black text-nexoraText tracking-tight mb-2">
-          {t('components.dashboard.overview.SetupGuideBanner.text_2_b7f957')}
+          {t('components.dashboard.overview.SetupGuideBanner.welcomeToNexora')}
         </h2>
         
         <p className="text-sm text-nexoraMuted mb-6 leading-relaxed">
-          {t('components.dashboard.overview.SetupGuideBanner.text_3_8c3924')}
+          {t('components.dashboard.overview.SetupGuideBanner.yourBusinessAccountIs')}
         </p>
 
         <button
@@ -39,7 +39,7 @@ export default function SetupGuideBanner({ onStartSetup }) {
         >
           <Settings className="h-4 w-4 transition-transform group-hover:rotate-90" />
           <span>
-            {t('components.dashboard.overview.SetupGuideBanner.text_4_d47bae')}
+            {t('components.dashboard.overview.SetupGuideBanner.completeStoreSetup')}
           </span>
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </button>

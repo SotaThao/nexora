@@ -211,7 +211,7 @@ export default function useCustomerFlow() {
     if (selectedStaffMembers.length === 1) {
       return t('customer.step_form_title', { name: selectedStaffMembers[0].nickname })
     }
-    return t('components.customer_flow.hooks.useCustomerFlow.text_1_98e6d0')
+    return t('components.customer_flow.hooks.useCustomerFlow.addTipsForYour')
   }, [selectedStaffMembers, currentLanguage, t])
 
   // ── Tag / comment sync ──

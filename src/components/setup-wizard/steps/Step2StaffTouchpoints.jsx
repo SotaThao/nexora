@@ -43,10 +43,10 @@ export default function Step2StaffTouchpoints({
       <div className="border-b border-nexoraRule pb-4 mb-4">
         <h2 className="font-sans text-xl md:text-2xl font-bold flex items-center gap-2.5 text-nexoraText">
           <QrCode className="text-nexoraBrand w-6 h-6" />
-          {t('components.setup_wizard.steps.Step2StaffTouchpoints.text_1_b73097')}
+          {t('components.setup_wizard.steps.Step2StaffTouchpoints.step2PayoutAnd')}
         </h2>
         <p className="text-nexoraSubtle text-sm mt-1">
-          {t('components.setup_wizard.steps.Step2StaffTouchpoints.text_2_433937')}
+          {t('components.setup_wizard.steps.Step2StaffTouchpoints.setUpPayoutMethods')}
         </p>
       </div>
 
@@ -59,7 +59,7 @@ export default function Step2StaffTouchpoints({
               <QrCode className="w-4 h-4 text-nexoraBrand" /> {t('setup.payout_methods')}
             </h3>
             <p className="text-xs text-nexoraSubtle mb-4">
-              {t('components.setup_wizard.steps.Step2StaffTouchpoints.text_3_62a131')}
+              {t('components.setup_wizard.steps.Step2StaffTouchpoints.setUpPaymentMethods')}
             </p>
 
             <div className="mt-4">
@@ -128,7 +128,7 @@ export default function Step2StaffTouchpoints({
                   <div className="relative group inline-block ml-1.5 align-middle normal-case font-normal text-nexoraSubtle">
                     <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
-                      {t('components.setup_wizard.steps.Step2StaffTouchpoints.text_4_2c70e6')}
+                      {t('components.setup_wizard.steps.Step2StaffTouchpoints.nameThisSpecificTouch')}
                       <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
                     </div>
                   </div>
