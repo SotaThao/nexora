@@ -5,7 +5,7 @@ export default function StepRoleSelect({ role, setRole, onBackToLogin, setCurren
   return (
     <div className="space-y-6">
       <div className="max-w-md">
-        <p className="text-[11px] font-black uppercase tracking-wider text-nexoraBrand">Create Account</p>
+        <p className="text-[11px] font-black uppercase tracking-wider text-nexoraBrand">{t('register.create_account')}</p>
         <h3 className="mt-1 text-2xl font-black text-nexoraText sm:text-3xl">{t('register.role_select_title')}</h3>
         <p className="text-sm font-medium leading-relaxed text-nexoraMuted mt-2">{t('register.role_select_desc')}</p>
       </div>

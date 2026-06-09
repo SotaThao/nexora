@@ -70,8 +70,6 @@ export default function StaffMyQR() {
     setScanStatus('checking')
 
     const timer = setTimeout(() => {
-      logger.debug('[DEBUG STAFF QR] Scanned merchant:', bizName)
-
       // 1. Use cached merchant setup from hook; fall back to a mock if none exists yet
       let merchantSetup = merchantSetupData
         ? { ...merchantSetupData }

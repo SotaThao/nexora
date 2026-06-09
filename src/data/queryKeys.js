@@ -5,6 +5,10 @@
  * invalidateQueries targets exactly the right cache entries.
  */
 
+// Shared stable default for optional object params in keys, so callers that
+// omit filters reuse one reference rather than allocating a fresh {} each call.
+const EMPTY = {}
+
 export const qk = {
   merchantSetup:    ()         => ['merchantSetup'],
   profileSettings:  ()         => ['profileSettings'],
@@ -22,7 +26,7 @@ export const qk = {
   dashboardOverview:        () => ['dashboard', 'overview'],
   dashboardStaff:           () => ['dashboard', 'staff'],
   dashboardTouchpoints:     () => ['dashboard', 'touchpoints'],
-  dashboardReviews:         (filters) => ['dashboard', 'reviews', filters ?? {}],
+  dashboardReviews:         (filters = EMPTY) => ['dashboard', 'reviews', filters],
   
   // Notifications
   notificationsUnreadCount: () => ['notifications', 'unreadCount'],

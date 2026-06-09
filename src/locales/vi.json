@@ -712,6 +712,7 @@
     "tip_total_max_error": "Tổng tiền típ không được vượt quá {amount}."
   },
   "register": {
+    "create_account": "Tạo tài khoản",
     "role_select_title": "Chọn loại tài khoản",
     "role_select_desc": "Vui lòng chọn vai trò phù hợp để cấu hình giao diện của bạn.",
     "role_business_title": "Business",
@@ -1629,7 +1630,9 @@
       "resetPassword": "Đặt lại mật khẩu",
       "description": "Nhập địa chỉ email của bạn và chúng tôi sẽ gửi link đặt lại mật khẩu.",
       "emailAddress": "Địa chỉ email",
-      "sendResetLink": "Gửi link đặt lại"
+      "sendResetLink": "Gửi link đặt lại",
+      "backToSignIn": "Quay lại Đăng nhập",
+      "successMessage": "Nếu có tài khoản đăng ký với {email}, bạn sẽ sớm nhận được link đặt lại mật khẩu. Vui lòng kiểm tra hộp thư đến và thư mục spam."
     },
     "ResetPassword": {
       "phEmail": "owner@salon.com",

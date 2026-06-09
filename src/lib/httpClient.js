@@ -1,5 +1,4 @@
 import { tokenStore } from '../auth/tokenStore'
-import { logger } from '../utils/logger'
 
 const baseUrl = (import.meta.env?.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
 
@@ -37,21 +36,17 @@ let refreshPromise = null
 // Register Bearer token interceptor — always active in API-only mode
 addRequestInterceptor((init) => {
   if (init.anonymous) {
-    logger.log('[HTTP] Skipping token for anonymous request')
     return init
   }
   const tokens = tokenStore.get()
-  logger.log('[HTTP] Token store read:', tokens ? 'FOUND' : 'NULL')
   if (tokens?.accessToken) {
     const headers = { ...init.headers }
     headers['Authorization'] = `Bearer ${tokens.accessToken}`
-    logger.log('[HTTP] Attached Authorization header')
     return {
       ...init,
       headers,
     }
   }
-  logger.log('[HTTP] No accessToken found to attach')
   return init
 })
 

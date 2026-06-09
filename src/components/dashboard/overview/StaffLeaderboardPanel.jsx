@@ -18,16 +18,16 @@ function StaffLeaderboardPanel({ selectedStaff, setSelectedStaff, hasKyb = true 
       <div className="mt-7 space-y-7">
         {rows.map((member, index) => (
           <button
-            key={member.staffId || index}
-            onClick={() => setSelectedStaff(member.staffName)}
-            className={`dashboard-list-row grid w-full grid-cols-[40px_minmax(0,1fr)] items-center gap-3 rounded-lg p-2 text-left transition hover:bg-nexoraSurfaceMuted sm:grid-cols-[48px_minmax(0,1fr)_88px_72px] sm:gap-4 ${selectedStaff === member.staffName ? 'bg-nexoraBrandSoft' : ''}`}
+            key={member.id || index}
+            onClick={() => setSelectedStaff(member.name)}
+            className={`dashboard-list-row grid w-full grid-cols-[40px_minmax(0,1fr)] items-center gap-3 rounded-lg p-2 text-left transition hover:bg-nexoraSurfaceMuted sm:grid-cols-[48px_minmax(0,1fr)_88px_72px] sm:gap-4 ${selectedStaff === member.name ? 'bg-nexoraBrandSoft' : ''}`}
             style={{ animationDelay: `${index * 80}ms` }}
           >
             <span className={`flex h-11 w-11 items-center justify-center rounded-full text-sm font-bold ${avatarClasses[index]}`}>
-              {(member.staffName || 'A').split(' ').map((part) => part[0]).join('')}
+              {(member.name || 'A').split(' ').map((part) => part[0]).join('')}
             </span>
-            <span className="truncate text-lg font-semibold text-nexoraText">{member.staffName}</span>
-            <span className="hidden text-lg font-bold text-nexoraText sm:block">{formatCurrency(member.tipVolume)}</span>
+            <span className="truncate text-lg font-semibold text-nexoraText">{member.name}</span>
+            <span className="hidden text-lg font-bold text-nexoraText sm:block">{formatCurrency(member.tips)}</span>
             <span className="flex items-center gap-1 text-sm font-bold text-nexoraWarning">
               <Star className="h-4 w-4 fill-current" />
               {member.rating}

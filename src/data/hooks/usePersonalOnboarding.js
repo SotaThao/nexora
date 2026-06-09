@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import profileSettingsRepository from '../repositories/profileSettings'
 import staffPaymentMethodsRepository from '../repositories/staffPaymentMethods'
+import { logger } from '../../utils/logger'
 
 /**
  * Hook to handle the API integration for Step 4 of the Personal Registration flow.
@@ -26,7 +27,7 @@ export function useCompletePersonalOnboarding() {
         displayName: accountData.nickname || accountData.fullName,
         position: accountData.position || ''
       }).catch(err => {
-        console.warn('[Personal Onboarding] Ignored staff profile update error:', err)
+        logger.warn('[Personal Onboarding] Ignored staff profile update error:', err)
       })
 
       // 3. Update Payment Methods
@@ -35,7 +36,7 @@ export function useCompletePersonalOnboarding() {
       try {
         methods = await staffPaymentMethodsRepository.getAll()
       } catch (err) {
-        console.warn('[Personal Onboarding] Ignored fetch payment methods error:', err)
+        logger.warn('[Personal Onboarding] Ignored fetch payment methods error:', err)
       }
       
       // We only update methods that the user has configured

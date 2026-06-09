@@ -712,6 +712,7 @@
     "tip_total_max_error": "Total tips cannot exceed {amount}."
   },
   "register": {
+    "create_account": "Create Account",
     "role_select_title": "Choose Account Type",
     "role_select_desc": "Select the appropriate role to configure your portal interface.",
     "role_business_title": "Business",
@@ -1629,7 +1630,9 @@
       "resetPassword": "Reset Password",
       "description": "Enter your email address and we'll send you a link to reset your password.",
       "emailAddress": "Email Address",
-      "sendResetLink": "Send Reset Link"
+      "sendResetLink": "Send Reset Link",
+      "backToSignIn": "Back to Sign In",
+      "successMessage": "If an account is registered with {email}, you will receive a password reset link shortly. Please check your inbox and spam folder."
     },
     "ResetPassword": {
       "phEmail": "owner@salon.com",

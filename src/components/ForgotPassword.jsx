@@ -53,14 +53,14 @@ export default function ForgotPassword({ setView }) {
         {isSubmitted ? (
           <div className="space-y-6 text-center">
             <div className="p-4 bg-green-50 text-green-800 text-xs rounded-xl border border-green-200 leading-relaxed">
-              If an account is registered with <span className="font-semibold">{email}</span>, you will receive a password reset link shortly. Please check your inbox and spam folder.
+              {t('components.ForgotPassword.successMessage', { email })}
             </div>
 
             <button
               onClick={() => setView('login')}
               className="w-full min-h-11 py-2.5 border border-nexoraBorder hover:bg-nexoraCanvas text-nexoraSubtle hover:text-nexoraText font-semibold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 transition-all"
             >
-              <ArrowLeft className="w-4 h-4" /> Back to Sign In
+              <ArrowLeft className="w-4 h-4" /> {t('components.ForgotPassword.backToSignIn')}
             </button>
           </div>
         ) : (
@@ -103,7 +103,7 @@ export default function ForgotPassword({ setView }) {
                 onClick={() => setView('login')}
                 className="w-full min-h-11 py-2.5 border border-nexoraBorder hover:bg-nexoraCanvas text-nexoraSubtle hover:text-nexoraText font-semibold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 transition-all"
               >
-                <ArrowLeft className="w-4 h-4" /> Cancel
+                <ArrowLeft className="w-4 h-4" /> {t('common.cancel')}
               </button>
             </div>
           </form>
