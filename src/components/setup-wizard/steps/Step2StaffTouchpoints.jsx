@@ -43,10 +43,10 @@ export default function Step2StaffTouchpoints({
       <div className="border-b border-nexoraRule pb-4 mb-4">
         <h2 className="font-sans text-xl md:text-2xl font-bold flex items-center gap-2.5 text-nexoraText">
           <QrCode className="text-nexoraBrand w-6 h-6" />
-          {currentLanguage === 'vi' ? 'Bước 2: Thanh Toán & Điểm Chạm QR' : 'Step 2: Payout & QR Touchpoints'}
+          {t('components.setup_wizard.steps.Step2StaffTouchpoints.step2PayoutAnd')}
         </h2>
         <p className="text-nexoraSubtle text-sm mt-1">
-          {currentLanguage === 'vi' ? 'Thiết lập các phương thức thanh toán và các vị trí dán mã QR (ví dụ: quầy lễ tân, bàn làm việc, xe đẩy) tại tiệm.' : 'Set up payout methods and QR code positions (e.g. reception desk, service table, cart) at your store.'}
+          {t('components.setup_wizard.steps.Step2StaffTouchpoints.setUpPayoutMethods')}
         </p>
       </div>
 
@@ -56,10 +56,10 @@ export default function Step2StaffTouchpoints({
         <div className="lg:col-span-6 space-y-6 lg:border-r lg:border-nexoraRule lg:pr-8">
           <div className="space-y-4">
             <h3 className="text-xs font-bold text-nexoraText uppercase tracking-wider flex items-center gap-1.5 pb-1">
-              <QrCode className="w-4 h-4 text-nexoraBrand" /> {t('setup.payout_methods') || 'Business Payout Methods'}
+              <QrCode className="w-4 h-4 text-nexoraBrand" /> {t('setup.payout_methods')}
             </h3>
             <p className="text-xs text-nexoraSubtle mb-4">
-              {currentLanguage === 'vi' ? 'Thiết lập các phương thức thanh toán để nhận tiền vào tài khoản tiệm.' : 'Set up payment methods to receive money into your business account.'}
+              {t('components.setup_wizard.steps.Step2StaffTouchpoints.setUpPaymentMethods')}
             </p>
 
             <div className="mt-4">
@@ -103,7 +103,7 @@ export default function Step2StaffTouchpoints({
                         className="flex items-center gap-1 text-[11px] font-bold text-amber-600 hover:text-amber-700 transition"
                       >
                         <Edit2 className="h-3 w-3 stroke-[2.5]" />
-                        <span>{t('setup.payout_account') || 'Payout account'}</span>
+                        <span>{t('setup.payout_account')}</span>
                       </button>
                     </div>
                   )
@@ -128,9 +128,7 @@ export default function Step2StaffTouchpoints({
                   <div className="relative group inline-block ml-1.5 align-middle normal-case font-normal text-nexoraSubtle">
                     <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
-                      {currentLanguage === 'vi'
-                        ? 'Đặt tên cho điểm chạm cụ thể này (ví dụ: Bàn 1, Ghế 3) để theo dõi vị trí nhận tiền tip và phản hồi.'
-                        : 'Name this specific touch point (e.g., Table 1, Station 3) to track tips and feedback location-wise.'}
+                      {t('components.setup_wizard.steps.Step2StaffTouchpoints.nameThisSpecificTouch')}
                       <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
                     </div>
                   </div>
@@ -218,14 +216,14 @@ export default function Step2StaffTouchpoints({
                           onClick={() => setEditingTpId(null)}
                           className="px-2.5 py-1.5 text-[10px] font-extrabold uppercase tracking-wide text-slate-500 hover:bg-slate-100 rounded border border-slate-200 transition"
                         >
-                          {t('common.cancel') || 'Cancel'}
+                          {t('common.cancel')}
                         </button>
                         <button
                           type="button"
                           onClick={() => handleSaveTouchpoint(tp.id)}
                           className="px-3.5 py-1.5 text-[10px] font-extrabold uppercase tracking-wide text-white bg-nexoraBrand hover:opacity-90 rounded shadow-sm transition"
                         >
-                          {t('setup.submit') || 'Save'}
+                          {t('setup.submit')}
                         </button>
                       </div>
                     </div>

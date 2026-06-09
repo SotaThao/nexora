@@ -9,6 +9,7 @@ import {
   EyeOff
 } from 'lucide-react'
 import CustomSelect from '../../CustomSelect'
+import { useTranslation } from '../../../contexts/LanguageContext'
 
 export default function KybTab({
   profile,
@@ -26,6 +27,8 @@ export default function KybTab({
   currentLanguage,
   showToast,
 }) {
+  const { t } = useTranslation()
+
   return (
     <div className="space-y-6 animate-fadeIn">
 
@@ -58,7 +61,7 @@ export default function KybTab({
               onClick={cardDetails.ctaAction}
               className="shrink-0 rounded-lg bg-nexoraBrand hover:bg-nexoraBrandDark text-white px-4 py-2.5 text-xs font-bold transition shadow-sm animate-pulse"
             >
-              {showPortal ? (currentLanguage === 'vi' ? 'Đóng Form' : 'Close Form') : cardDetails.ctaText}
+              {showPortal ? (t('components.settings.tabs.KybTab.closeForm')) : cardDetails.ctaText}
             </button>
           )}
         </div>
@@ -85,7 +88,7 @@ export default function KybTab({
               <div className="absolute inset-0 bg-white/95 z-20 flex flex-col items-center justify-center space-y-4">
                 <div className="w-12 h-12 border-4 border-nexoraBrand/20 border-t-nexoraBrand rounded-full animate-spin"></div>
                 <p className="text-xs text-nexoraBrand font-bold uppercase tracking-wider animate-pulse">
-                  {currentLanguage === 'vi' ? 'Đang gửi thông tin xác thực...' : 'Submitting KYB details...'}
+                  {t('components.settings.tabs.KybTab.submittingKybDetails')}
                 </p>
               </div>
             )}
@@ -117,12 +120,12 @@ export default function KybTab({
                 {/* Legal Business Name */}
                 <div>
                   <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                    {currentLanguage === 'vi' ? 'Tên pháp lý doanh nghiệp' : 'Legal Business Name'}
+                    {t('components.settings.tabs.KybTab.legalBusinessName')}
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Your Business LLC"
+                    placeholder={t('components.settings.tabs.KybTab.phLegalName')}
                     className="w-full bg-slate-50 border border-slate-300 focus:border-blue-500 focus:bg-white rounded px-3 h-9 text-xs text-slate-800 focus:outline-none transition-colors"
                     value={kybData.legalName}
                     onChange={(e) => setKybData({ ...kybData, legalName: e.target.value })}
@@ -132,12 +135,12 @@ export default function KybTab({
                 {/* Tax ID */}
                 <div>
                   <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                    {currentLanguage === 'vi' ? 'Mã số thuế / EIN' : 'Tax ID / EIN'}
+                    {t('components.settings.tabs.KybTab.taxIdEin')}
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. XX-XXXXXXX"
+                    placeholder={t('components.settings.tabs.KybTab.phTaxId')}
                     className="w-full bg-slate-50 border border-slate-300 focus:border-blue-500 focus:bg-white rounded px-3 h-9 text-xs text-slate-800 focus:outline-none transition-colors"
                     value={kybData.taxId}
                     onChange={(e) => setKybData({ ...kybData, taxId: e.target.value })}
@@ -149,7 +152,7 @@ export default function KybTab({
                 {/* Business Structure */}
                 <div>
                   <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                    {currentLanguage === 'vi' ? 'Hình thức doanh nghiệp' : 'Business Structure'}
+                    {t('components.settings.tabs.KybTab.businessStructure')}
                   </label>
                   <CustomSelect
                     size="sm"
@@ -168,12 +171,12 @@ export default function KybTab({
                 {/* Owner Representative */}
                 <div>
                   <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                    {currentLanguage === 'vi' ? 'Người đại diện pháp luật' : 'Representative Owner Name'}
+                    {t('components.settings.tabs.KybTab.representativeOwnerName')}
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="Representative full name"
+                    placeholder={t('components.settings.tabs.KybTab.phRepName')}
                     className="w-full bg-slate-50 border border-slate-300 focus:border-blue-500 focus:bg-white rounded px-3 h-9 text-xs text-slate-800 focus:outline-none transition-colors"
                     value={kybData.ownerName}
                     onChange={(e) => setKybData({ ...kybData, ownerName: e.target.value })}
@@ -189,12 +192,12 @@ export default function KybTab({
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                      {currentLanguage === 'vi' ? 'Tên ngân hàng' : 'Bank Name'}
+                      {t('components.settings.tabs.KybTab.bankName')}
                     </label>
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Chase Bank"
+                      placeholder={t('components.settings.tabs.KybTab.phBankName')}
                       className="w-full bg-slate-50 border border-slate-300 focus:border-blue-500 focus:bg-white rounded px-3 h-9 text-xs text-slate-800 focus:outline-none transition-colors"
                       value={kybData.bankName}
                       onChange={(e) => setKybData({ ...kybData, bankName: e.target.value })}
@@ -203,13 +206,13 @@ export default function KybTab({
 
                   <div>
                     <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                      {currentLanguage === 'vi' ? 'Số tài khoản' : 'Account Number'}
+                      {t('components.settings.tabs.KybTab.accountNumber')}
                     </label>
                     <div className="relative">
                       <input
                         type={showKybBankAccount ? "text" : "password"}
                         required
-                        placeholder="Account Number"
+                        placeholder={t('components.settings.tabs.KybTab.phAccountNumber')}
                         className="w-full bg-slate-50 border border-slate-300 focus:border-blue-500 focus:bg-white rounded pl-3 pr-10 h-9 text-xs text-slate-800 focus:outline-none transition-colors"
                         value={kybData.bankAccount}
                         onChange={(e) => setKybData({ ...kybData, bankAccount: e.target.value })}
@@ -226,12 +229,12 @@ export default function KybTab({
 
                   <div>
                     <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                      {currentLanguage === 'vi' ? 'Mã định tuyến (Routing)' : 'Routing Code'}
+                      {t('components.settings.tabs.KybTab.routingCode')}
                     </label>
                     <input
                       type="text"
                       required
-                      placeholder="Routing Code"
+                      placeholder={t('components.settings.tabs.KybTab.phRoutingCode')}
                       className="w-full bg-slate-50 border border-slate-300 focus:border-blue-500 focus:bg-white rounded px-3 h-9 text-xs text-slate-800 focus:outline-none transition-colors"
                       value={kybData.bankRouting}
                       onChange={(e) => setKybData({ ...kybData, bankRouting: e.target.value })}
@@ -246,13 +249,13 @@ export default function KybTab({
                   onClick={() => setShowPortal(false)}
                   className="px-4 py-2.5 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs uppercase tracking-wider rounded transition"
                 >
-                  {currentLanguage === 'vi' ? 'Hủy' : 'Cancel'}
+                  {t('components.settings.tabs.KybTab.cancel')}
                 </button>
                 <button
                   type="submit"
                   className="px-6 py-2.5 bg-nexoraElectric hover:bg-blue-700 text-white font-extrabold text-xs uppercase tracking-wider rounded flex items-center gap-1.5 transition shadow-sm"
                 >
-                  <ShieldCheck className="w-4 h-4" /> {currentLanguage === 'vi' ? 'Gửi hồ sơ KYB' : 'Submit KYB'}
+                  <ShieldCheck className="w-4 h-4" /> {t('components.settings.tabs.KybTab.submitKyb')}
                 </button>
               </div>
             </form>
@@ -266,7 +269,7 @@ export default function KybTab({
             <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-2">
               <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
                 <Building2 className="h-4 w-4 text-slate-600" />
-                {currentLanguage === 'vi' ? 'Hồ sơ pháp lý công ty' : 'Registered Company Dossier'}
+                {t('components.settings.tabs.KybTab.registeredCompanyDossier')}
               </h4>
             </div>
 
@@ -306,7 +309,7 @@ export default function KybTab({
               <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
                 <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
                   <Landmark className="h-4 w-4 text-emerald-600" />
-                  {currentLanguage === 'vi' ? 'Tài khoản thanh toán nhận tiền' : 'Settlement Account Details'}
+                  {t('components.settings.tabs.KybTab.settlementAccountDetails')}
                 </h4>
               </div>
 
@@ -335,7 +338,7 @@ export default function KybTab({
             {verificationStatus === 'kyb_approved' ? (
               <button
                 type="button"
-                onClick={() => showToast(currentLanguage === 'vi' ? 'Để thay đổi tài khoản nhận vui lòng liên hệ hỗ trợ.' : 'To modify receiving targets, contact client support.')}
+                onClick={() => showToast(t('components.settings.tabs.KybTab.toModifyReceivingTargets'))}
                 className="w-full mt-5 rounded-lg border border-slate-200 py-2 text-center text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
               >
                 Change Settlement Target
@@ -351,7 +354,7 @@ export default function KybTab({
                     : 'bg-nexoraBrand hover:bg-nexoraBrandDark'
                   }`}
               >
-                {currentLanguage === 'vi' ? 'Liên kết Ngân hàng Thanh toán' : 'Link Settlement Bank'}
+                {t('components.settings.tabs.KybTab.linkSettlementBank')}
               </button>
             )}
           </div>
@@ -361,7 +364,7 @@ export default function KybTab({
             <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
               <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
                 <FileText className="h-4 w-4 text-blue-500" />
-                {currentLanguage === 'vi' ? 'Hồ sơ tài liệu xác thực' : 'Uploaded Compliance Documents'}
+                {t('components.settings.tabs.KybTab.uploadedComplianceDocuments')}
               </h4>
             </div>
 
@@ -414,37 +417,31 @@ export default function KybTab({
       {/* Legal Disclosures */}
       <div className="rounded-xl border border-nexoraBorder bg-slate-50 p-6 space-y-4 text-xs mt-6 text-nexoraMuted select-text">
         <h5 className="font-bold text-nexoraText uppercase tracking-wider border-b border-slate-200 pb-2">
-          {currentLanguage === 'vi' ? 'Công bố pháp lý & Điều khoản' : 'Legal Disclosures & Terms'}
+          {t('components.settings.tabs.KybTab.legalDisclosuresAndTerms')}
         </h5>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-1">
             <h6 className="font-extrabold text-slate-700">
-              {currentLanguage === 'vi' ? '1. Báo cáo thu nhập IRS' : '1. IRS Income Reporting'}
+              {t('components.settings.tabs.KybTab.label1IrsIncomeReporting')}
             </h6>
             <p className="leading-relaxed text-[11px]">
-              {currentLanguage === 'vi'
-                ? 'Theo quy định 1099-K của IRS, thu nhập từ tiền típ được xử lý qua các cổng này phải báo cáo thuế hàng năm.'
-                : 'Under 1099-K regulations, tipping income processed through these gateways is subject to annual IRS reporting.'}
+              {t('components.settings.tabs.KybTab.under1099KRegulations')}
             </p>
           </div>
           <div className="space-y-1">
             <h6 className="font-extrabold text-slate-700">
-              {currentLanguage === 'vi' ? '2. Tuyên bố miễn trừ tiết kiệm' : '2. Savings Disclaimer'}
+              {t('components.settings.tabs.KybTab.label2SavingsDisclaimer')}
             </h6>
             <p className="leading-relaxed text-[11px]">
-              {currentLanguage === 'vi'
-                ? 'Mức tiết kiệm chi phí xử lý ước tính được tính toán so với phí đại lý tiêu chuẩn ngành và không được bảo đảm.'
-                : 'Estimated processing savings are calculated relative to industry standard merchant processing fees and are not guaranteed.'}
+              {t('components.settings.tabs.KybTab.estimatedProcessingSavingsAre')}
             </p>
           </div>
           <div className="space-y-1">
             <h6 className="font-extrabold text-slate-700">
-              {currentLanguage === 'vi' ? '3. Điều khoản dịch vụ' : '3. Terms of Service'}
+              {t('components.settings.tabs.KybTab.label3TermsOfService')}
             </h6>
             <p className="leading-relaxed text-[11px]">
-              {currentLanguage === 'vi'
-                ? 'Việc sử dụng dịch vụ đồng nghĩa với việc đồng ý với các điều khoản tuân thủ doanh nghiệp và chính sách thẩm định của VLINKPAY.'
-                : 'Usage constitutes agreement with VLINKPAY corporate compliance terms and underwriting policies.'}
+              {t('components.settings.tabs.KybTab.usageConstitutesAgreementWith')}
             </p>
           </div>
         </div>

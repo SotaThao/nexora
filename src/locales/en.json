@@ -125,7 +125,17 @@
       "fri": "Fri",
       "sat": "Sat",
       "sun": "Sun"
-    }
+    },
+    "view_on_google": "View on Google",
+    "view_on_yelp": "View on Yelp",
+    "custom": "Custom",
+    "step_number": "Step {step}",
+    "resend_code_in_seconds": "Resend code in {seconds}s",
+    "remove_photo": "Remove photo",
+    "upload_photo": "Upload photo",
+    "driver_license": "Driver's License",
+    "city": "City",
+    "phone_number_short": "phone number"
   },
   "login": {
     "title": "NEXORA TOUCH",
@@ -238,7 +248,9 @@
       "staff_email_invalid": "Invalid email address format.",
       "staff_payment_required": "Required: Must link at least 1 payment wallet (Venmo, Cash App, Zelle, or VLINKPAY).",
       "store_payment_required": "Required: Must link at least 1 payment wallet for the store (Venmo, Cash App, Zelle, or VLINKPAY).",
-      "tp_name_required": "Touch point name is required"
+      "tp_name_required": "Touch point name is required",
+      "field_required": "This field is required.",
+      "user_not_merchant": "User is not a merchant."
     },
     "step_name_1": "Store & Review Info",
     "step_name_2": "Staff & QR Setup",
@@ -399,7 +411,9 @@
       "assign_staff": "Assign staff member:",
       "no_staff_assigned": "-- General QR (Store Pool Tips) --",
       "download_print_qr": "Download Print QR (PDF)",
-      "customer_view_test": "Simulate Customer Scan ›"
+      "customer_view_test": "Simulate Customer Scan ›",
+      "tp_name_placeholder": "e.g. Manicure Chair 05",
+      "device_id_label": "Hardware Serial / NFC ID"
     },
     "settings_panel": {
       "title": "Nexora Gateway Configuration",
@@ -427,7 +441,8 @@
       "btn_download": "Download QR",
       "btn_open_nfc": "Test NFC Redirect",
       "btn_copy": "Copy Payload URL",
-      "btn_download_config": "Download Config"
+      "btn_download_config": "Download Config",
+      "btn_copy_link": "Copy Link"
     },
     "touchpoint_stats": {
       "scans": "Scans",
@@ -694,9 +709,13 @@
     },
     "quick_tags_positive_label": "Tap to add compliments",
     "quick_tags_negative_label": "What could be improved?",
-    "scan_to_tip_review": "Scan to Tip & Review"
+    "scan_to_tip_review": "Scan to Tip & Review",
+    "tip_min_error": "Tip must be at least {amount}.",
+    "tip_max_error": "Tip cannot exceed {amount}.",
+    "tip_total_max_error": "Total tips cannot exceed {amount}."
   },
   "register": {
+    "create_account": "Create Account",
     "role_select_title": "Choose Account Type",
     "role_select_desc": "Select the appropriate role to configure your portal interface.",
     "role_business_title": "Business",
@@ -753,7 +772,8 @@
       "kyb_required": "Please fill in all required KYB fields",
       "fullname_required": "Full name is required",
       "first_name_required": "First name is required",
-      "last_name_required": "Last name is required"
+      "last_name_required": "Last name is required",
+      "onboarding_failed": "Failed to complete profile setup. Please try again."
     },
     "verify_your_email": "Verify Your Email",
     "verification_email_sent": "We have sent a verification email to",
@@ -764,7 +784,61 @@
     "resend_verification_success": "Verification email resent successfully!",
     "back_to_signup": "Back to Signup",
     "first_name_label": "First Name *",
-    "last_name_label": "Last Name *"
+    "last_name_label": "Last Name *",
+    "consent": {
+      "prefix": "By selecting",
+      "action": "Register",
+      "middle": "you confirm that you have read and agree to the",
+      "terms": "Terms of Service",
+      "and": "and",
+      "privacy": "Privacy Policy"
+    },
+    "payout": {
+      "configure_wallet": "CONFIGURE {wallet}",
+      "account_label": "Your {wallet} {field} *"
+    },
+    "legal": {
+      "privacy": {
+        "sections": [
+          {
+            "title": "1. Information Collection",
+            "body": "We collect personal details such as full name, email, phone number, and linked payment methods to power customer tip routing."
+          },
+          {
+            "title": "2. Data Privacy & Protection",
+            "body": "Your personal data and payout details are protected and used only for transaction routing and account operations."
+          },
+          {
+            "title": "3. Your Rights",
+            "body": "You may review, update, or request deletion of your account information from the dashboard."
+          }
+        ]
+      },
+      "terms": {
+        "sections": [
+          {
+            "title": "1. Introduction & Acceptance",
+            "body": "By using Nexora Touch, you agree to follow these service terms."
+          },
+          {
+            "title": "2. Personal Account",
+            "body": "You are responsible for protecting your login credentials and keeping payout information accurate."
+          },
+          {
+            "title": "3. Tips & Payouts",
+            "body": "Tips are routed to your configured payout methods. Completed transactions are final."
+          },
+          {
+            "title": "4. Privacy & Data Security",
+            "body": "Your data is used to run the tipping workflow, show options to customers, and record transaction history."
+          },
+          {
+            "title": "5. Terms Updates",
+            "body": "We may update these terms and publish changes in the portal."
+          }
+        ]
+      }
+    }
   },
   "staff_invite": {
     "total_linked": "Total Staff Linked",
@@ -835,6 +909,769 @@
     "common_unauthorized": "Unauthorized access.",
     "common_forbidden": "Access denied.",
     "common_rate_limit_exceeded": "Too many requests. Please try again later.",
-    "common_internal_server_error": "An internal server error occurred."
+    "common_internal_server_error": "An internal server error occurred.",
+    "generic": "Something went wrong",
+    "touchpoint_not_found": "Page Not Found",
+    "touchpoint_not_found_desc": "This touch point could not be loaded."
+  },
+  "components": {
+    "customer_flow": {
+      "hooks": {
+        "useCustomerFlow": {
+          "addTipsForYour": "Add tips for your providers"
+        }
+      },
+      "steps": {
+        "TipAmount": {
+          "totalTip": "Total Tip",
+          "provider_count": "For {count} provider(s)",
+          "phAmount": "0.00"
+        },
+        "WalletDetails": {
+          "tipAmount": "Tip Amount",
+          "scanToPay": "Scan to pay",
+          "name": "Name",
+          "emailPhone": "Email/Phone",
+          "venmoUsername": "Venmo Username",
+          "cashTag": "Cash Tag",
+          "paypalEmailPhone": "PayPal Email/Phone",
+          "bankDetails": "Bank details",
+          "account": "Account",
+          "noteRequired": "Note (Required)",
+          "yesISentThe": "Yes, I Sent The Tip",
+          "goBack": "Go Back"
+        }
+      }
+    },
+    "dashboard": {
+      "hooks": {
+        "useStaffManagement": {
+          "staffUnlinkedSuccessfully": "Staff unlinked successfully.",
+          "declinedUnlinkRequest": "Declined unlink request.",
+          "deleteThisStaffMember": "Delete this staff member from Nexora Touch?",
+          "fullNameRequired": "Full name is required.",
+          "publicNicknameRequired": "Public nickname is required.",
+          "fullNameRequiredToInvite": "Full name is required to invite.",
+          "phoneOrEmailRequired": "Phone or email is required to send invite link.",
+          "technicianAlreadyLinked": "This technician is already linked to your salon."
+        }
+      },
+      "layout": {
+        "DashboardSidebar": {
+          "myDashboard": "My Dashboard"
+        }
+      },
+      "modals": {
+        "InviteShareModal": {
+          "shareInvitationLinkAnd": "Share Invitation Link & QR",
+          "scanQrToJoin": "SCAN QR TO JOIN",
+          "clickToEnlarge": "Click to enlarge",
+          "joinLink": "JOIN LINK",
+          "joinLinkCopiedTo": "Join link copied to clipboard!",
+          "copy": "Copy",
+          "orSendDirectly": "OR SEND DIRECTLY",
+          "technicianName": "Technician Name",
+          "phoneNumber": "Phone Number",
+          "rolePosition": "Role / Position",
+          "sendInviteLink": "Send Invite Link",
+          "joinQrCode": "JOIN QR CODE",
+          "haveTechniciansScanThis": "Have technicians scan this QR code with their mobile camera to self-register or link accounts.",
+          "technicianNameRequired": "Technician name is required.",
+          "contactRequired": "Contact information (email or phone) is required.",
+          "invalidEmailFormat": "Invalid email format.",
+          "phExampleName": "e.g. Mia Tran",
+          "phExampleRole": "e.g. Nail Tech"
+        },
+        "PayoutSetupModal": {
+          "specifyReceivingTargetIdentifier": "Specify receiving target identifier",
+          "accountIdentifier": "Account Identifier *",
+          "qrCodeOptional": "QR Code (optional)",
+          "noQrCodeUploaded": "No QR code uploaded",
+          "thisInformationWasEntered": "This information was entered by the technician. Salon Owner has view-only access.",
+          "save": "SAVE"
+        },
+        "StaffModal": {
+          "staffProfileVerifiedAuto": "Staff Profile Verified! Auto-filled profile details.",
+          "reviewJoinRequest": "Review Join Request",
+          "nexoraIdVlinkpayId": "NEXORA ID / VLINKPAY ID",
+          "scanQrCode": "Scan QR Code",
+          "shareInviteLink": "Share Invite Link",
+          "invite": "Invite",
+          "vlinkpayVerified": "VLINKPAY verified",
+          "nexoraVerified": "NEXORA verified",
+          "viewAllReviews": "View all reviews",
+          "viewAccount": "View Account",
+          "decline": "Decline",
+          "approveAccept": "Approve / Accept",
+          "remove_photo": "Remove photo",
+          "review_count": "{count} reviews",
+          "phExampleVlp1": "e.g. VLP-0155-ASH",
+          "phExampleVlp2": "e.g. VLP-8893-VL",
+          "phExampleStaffId": "e.g. NEX-STAFF-LISA1102",
+          "phFullName": "Mia Tran",
+          "phNickname": "Mia T.",
+          "phPosition": "Nail Tech"
+        },
+        "StaffQrScannerModal": {
+          "scanQrCode": "Scan QR Code",
+          "scanNexoraPersonalId": "Scan NEXORA Personal ID to link your account",
+          "scanVlinkpayIdTo": "Scan VLINKPAY ID to autofill account data",
+          "pointTheCameraAt": "Point the camera at the QR code, or choose a mockup scan profile below.",
+          "simulateQrScan": "Simulate QR Scan",
+          "simulateSuccessfulScan": "Simulate Successful Scan",
+          "cancel": "CANCEL"
+        },
+        "StaffReviewsDetailModal": {
+          "reviewsAndReputation": "Reviews & Reputation",
+          "quickFilters": "Quick Filters",
+          "all": "All",
+          "allSources": "All Sources",
+          "internal": "Internal",
+          "withComments": "With Comments",
+          "noMatchingReviewsFound": "No matching reviews found.",
+          "ratingOnly": "(Rating only)",
+          "close": "Close",
+          "feedback_details": "Feedback details for {name}",
+          "review_count": "{count} reviews"
+        },
+        "TransactionDetailModal": {
+          "tippingQrCode": "TIPPING QR CODE",
+          "scanToTipThis": "Scan to tip this staff member",
+          "tippingLinkCopiedTo": "Tipping link copied to clipboard!",
+          "shareLink": "Share Link"
+        }
+      },
+      "overview": {
+        "Overview": {
+          "custom": "Custom",
+          "copiedNfcRedirectLink": "Copied NFC redirect link to clipboard!"
+        },
+        "SetupGuideBanner": {
+          "gettingStarted": "Getting Started",
+          "welcomeToNexora": "Welcome to Nexora!",
+          "yourBusinessAccountIs": "Your business account is ready. Take 2 minutes to set up your store profile, staff directory, and QR touchpoints to start collecting reviews and tips.",
+          "completeStoreSetup": "Complete Store Setup"
+        },
+        "TipsOverTimePanel": {
+          "custom": "Custom",
+          "from": "From:",
+          "to": "To:"
+        }
+      },
+      "views": {
+        "ReportsView": {
+          "success": "Success",
+          "pending": "Pending",
+          "failed": "Failed",
+          "details": "Details",
+          "tippingQrCode": "TIPPING QR CODE",
+          "scanToTipThis": "Scan to tip this staff member",
+          "tippingLinkCopiedTo": "Tipping link copied to clipboard!",
+          "shareLink": "Share Link"
+        },
+        "StaffView": {
+          "linkCopiedToClipboard": "Link copied to clipboard for sharing!",
+          "noStaffProfileFound": "No staff profile found matching that criteria.",
+          "pleaseEnterBothName": "Please enter both name and contact info.",
+          "clickToEnlarge": "Click to enlarge",
+          "technicianJoinLinkAnd": "TECHNICIAN JOIN LINK & REFERRAL",
+          "shareThisReferralLink": "Share this referral link or let technicians scan the QR code to self-register or link to your salon.",
+          "joinLinkCopiedTo": "Join link copied to clipboard!",
+          "copy": "Copy",
+          "share": "Share",
+          "pendingJoinRequests": "Pending Join Requests",
+          "directAddition": "Direct Addition",
+          "pending": "Pending",
+          "reviewAndApprove": "Review & Approve",
+          "decline": "Decline",
+          "sortBy": "Sort by:",
+          "nameAZ": "Name (A-Z)",
+          "nameZA": "Name (Z-A)",
+          "dateNewest": "Date: Newest",
+          "dateOldest": "Date: Oldest",
+          "statusActive": "Status: Active",
+          "clickPillToToggle": "Click pill to toggle active status",
+          "tipsFlow": "Tips Flow",
+          "clickPillToShow": "Click pill to show/hide tech on general QR",
+          "linkedDate": "Linked Date: ",
+          "noWallets": "No wallets",
+          "pendingSetup": "Pending Setup",
+          "pendingAcceptance": "Pending Acceptance",
+          "pendingUnlink": "Pending Unlink",
+          "accept": "Accept",
+          "approveUnlink": "Approve Unlink",
+          "reject": "Reject",
+          "joinQrCode": "JOIN QR CODE",
+          "haveTechniciansScanThis": "Have technicians scan this QR code with their mobile camera to self-register or link accounts."
+        }
+      }
+    },
+    "register": {
+      "hooks": {
+        "useRegisterForm": {
+          "invalidOtpTryAgain": "Invalid OTP. Try again with 1234.",
+          "thisFieldIsRequired": "This field is required.",
+          "newJoinRequest": "New Join Request",
+          "justNow": "Just now",
+          "accountType": "Account Type",
+          "credentials": "Credentials",
+          "activateOtp": "Activate OTP",
+          "profileSetup": "Profile Setup",
+          "payoutSetup": "Payout Setup",
+          "success": "Success"
+        }
+      },
+      "modals": {
+        "PayoutEditModal": {
+          "emailPhone": "email/phone",
+          "details": "details",
+          "enterZelleEmailPhone": "Enter Zelle email/phone...",
+          "accountAndRoutingNumbers": "Account & Routing numbers",
+          "enterPhoneNumber": "Enter phone number...",
+          "specifyReceivingTargetIdentifier": "Specify receiving target identifier",
+          "qrCodeOptional": "QR CODE (OPTIONAL)",
+          "takePhoto": "TAKE PHOTO",
+          "chooseFile": "CHOOSE FILE",
+          "pleaseEnterTheCorrect": "Please enter the correct receiving account information. This will be used to receive payments.",
+          "cancel": "CANCEL",
+          "save": "SAVE"
+        },
+        "TermsModal": {
+          "privacyPolicy": "Privacy Policy",
+          "termsOfService": "Terms of Service",
+          "close": "Close",
+          "iAccept": "I Accept"
+        }
+      },
+      "steps": {
+        "StepCredentials": {
+          "activateAccountEnterOtp": "Activate Account (Enter OTP)",
+          "enterTheOtpCode": "Enter the OTP code sent to your email to activate your account.",
+          "enterOtpCode": "Enter OTP Code *",
+          "resendVerificationCode": "Resend Verification Code",
+          "verifyAndActivate": "Verify & Activate",
+          "processing": "Processing...",
+          "register": "Register",
+          "phExampleOtp": "e.g. 1234"
+        },
+        "StepOtpVerify": {
+          "activateAccountEnterOtp": "Activate Account (Enter OTP)",
+          "enterTheOtpCode": "Enter the OTP code sent to your email to activate your account.",
+          "enterOtpCode": "Enter OTP Code *",
+          "resendVerificationCode": "Resend Verification Code",
+          "verifyAndActivate": "Verify & Activate",
+          "phExampleOtp": "e.g. 1234"
+        },
+        "StepPayoutSetup": {
+          "payoutConfiguration": "Payout Configuration",
+          "enableAndConfigureYour": "Enable and configure your tipping payout methods.",
+          "autoFill": "Auto-Fill",
+          "notConfigured": "Not Configured",
+          "configure": "Configure",
+          "saveAndActivate": "Save & Activate"
+        },
+        "StepProfileSetup": {
+          "personalProfileSetup": "Personal Profile Setup",
+          "configureYourDisplayDetails": "Configure your display details for the customer tip screen.",
+          "acceptedFormatsJpgPng": "Accepted formats: JPG, PNG. Max size: 5MB.",
+          "fullName": "Full Name *",
+          "displayNickname": "Display Nickname *",
+          "phoneNumber": "Phone Number *",
+          "emailAddress": "Email Address",
+          "roleSpeciality": "Role / Speciality",
+          "nexoraStaffId": "NEXORA Staff ID",
+          "shortBioShowsOn": "Short Bio (Shows on customer tip screen)",
+          "phFullName": "e.g. Lisa Marie Tran",
+          "phNickname": "e.g. Lisa T.",
+          "phPhone": "e.g. 408-555-1234",
+          "phPosition": "e.g. Acrylic Specialist",
+          "phBio": "Welcome to my chair! I specialize in luxury nail art..."
+        },
+        "StepSuccess": {
+          "registeredStaffSummary": "Registered Staff Summary",
+          "accountEmail": "Account Email:",
+          "referralCode": "Referral Code:"
+        }
+      }
+    },
+    "settings": {
+      "hooks": {
+        "useSettingsForm": {
+          "kybVerificationSuccessful": "KYB verification successful!",
+          "settingsUpdatedSuccessfully": "Settings updated successfully!",
+          "copiedToClipboard": "Copied to clipboard!",
+          "basicAccountStatus": "BASIC ACCOUNT STATUS",
+          "yourProfileIsActive": "Your profile is active only for direct P2P tipping (Venmo, Cash App, direct Zelle) and customer reviews. Advanced financial processing features (VLINKPAY Wallet, Credit Card processing, Merchant ATM) are Gated.",
+          "completeBusinessVerification": "Complete Business Verification",
+          "liteVerificationPendingReview": "LITE VERIFICATION PENDING REVIEW",
+          "liteVerificationPendingReview2": "Lite Verification Pending review.",
+          "verifiedLite": "VERIFIED LITE",
+          "verifiedLiteP2pTipping": "Verified Lite. P2P tipping enabled. Complete full KYB to unlock credit card processing.",
+          "businessVerificationRequired": "BUSINESS VERIFICATION REQUIRED",
+          "businessVerificationRequiredYou": "Business Verification Required. You must verify your business to enable card processing.",
+          "businessVerificationPending": "BUSINESS VERIFICATION PENDING",
+          "businessVerificationPendingVlinkpay": "Business Verification Pending. VLINKPAY Compliance is reviewing your details.",
+          "businessProfileVerifiedKyb": "BUSINESS PROFILE VERIFIED (KYB APPROVED)",
+          "businessProfileVerifiedKyb2": "Business Profile Verified (KYB Approved).",
+          "accountSuspended": "ACCOUNT SUSPENDED",
+          "accountSuspendedPleaseContact": "Account Suspended. Please contact support.",
+          "proVerificationPendingReview": "PRO VERIFICATION PENDING REVIEW",
+          "yourProVerificationUpgrade": "Your Pro Verification upgrade is currently pending review.",
+          "verificationRejectedByCompliance": "VERIFICATION REJECTED BY COMPLIANCE",
+          "yourBusinessVerificationApplication": "Your business verification application was rejected by Compliance.",
+          "reSubmitVerification": "Re-submit Verification",
+          "underReviewInfoRequested": "UNDER REVIEW - INFO REQUESTED",
+          "underReviewAdditionalCompliance": "Under Review. Additional compliance documentation has been requested.",
+          "uploadAdditionalDocuments": "Upload Additional Documents"
+        }
+      },
+      "tabs": {
+        "ProfileTab": {
+          "payoutMethods": "Payout Methods",
+          "payoutAccount": "Payout account",
+          "basicInformation": "Basic Information",
+          "specifyYourFullLegal": "Specify your full legal name as it appears on your official government identification documents.",
+          "requiredForIdentityVerification": "Required for identity verification purposes (must be 18 years or older).",
+          "primaryPhoneContactFor": "Primary phone contact for administrative account alerts and verification updates.",
+          "fullName": "Full Name",
+          "dateOfBirth": "Date of Birth",
+          "phoneNumber": "Phone Number",
+          "addressDetails": "Address Details",
+          "provideThePhysicalLocation": "Provide the physical location of your store. Used for localization and verification purposes.",
+          "street": "Street",
+          "state": "State",
+          "country": "Country",
+          "businessInformation": "Business Information",
+          "enterTheLegalOr": "Enter the legal or public name of your store/salon as it will appear on customer payment screens.",
+          "businessName": "Business Name",
+          "phone": "Phone",
+          "locationMap": "Location Map",
+          "reviewLinks": "Review Links",
+          "emailPhone": "email/phone",
+          "details": "details",
+          "enterZelleEmailPhone": "Enter Zelle email/phone...",
+          "enterBankWireRouting": "Enter Bank Wire routing - account...",
+          "enterPaypalEmail": "Enter PayPal email...",
+          "enterVenmoUsername": "Enter Venmo @username...",
+          "enterCashAppCashtag": "Enter Cash App $cashtag...",
+          "enterAppleCashPhone": "Enter Apple Cash phone number...",
+          "specifyReceivingTargetIdentifier": "Specify receiving target identifier",
+          "qrCodeOptional": "QR CODE (OPTIONAL)",
+          "takePhoto": "TAKE PHOTO",
+          "chooseFile": "CHOOSE FILE",
+          "pleaseEnterTheCorrect": "Please enter the correct receiving account information. This will be used to receive payments.",
+          "cancel": "CANCEL",
+          "save": "SAVE",
+          "phGoogleReviewUrl": "https://g.page/r/.../review",
+          "phYelpUrl": "https://www.yelp.com/biz/..."
+        },
+        "KybTab": {
+          "closeForm": "Close Form",
+          "submittingKybDetails": "Submitting KYB details...",
+          "legalBusinessName": "Legal Business Name",
+          "taxIdEin": "Tax ID / EIN",
+          "businessStructure": "Business Structure",
+          "representativeOwnerName": "Representative Owner Name",
+          "bankName": "Bank Name",
+          "accountNumber": "Account Number",
+          "routingCode": "Routing Code",
+          "cancel": "Cancel",
+          "submitKyb": "Submit KYB",
+          "registeredCompanyDossier": "Registered Company Dossier",
+          "settlementAccountDetails": "Settlement Account Details",
+          "toModifyReceivingTargets": "To modify receiving targets, contact client support.",
+          "linkSettlementBank": "Link Settlement Bank",
+          "uploadedComplianceDocuments": "Uploaded Compliance Documents",
+          "legalDisclosuresAndTerms": "Legal Disclosures & Terms",
+          "label1IrsIncomeReporting": "1. IRS Income Reporting",
+          "under1099KRegulations": "Under 1099-K regulations, tipping income processed through these gateways is subject to annual IRS reporting.",
+          "label2SavingsDisclaimer": "2. Savings Disclaimer",
+          "estimatedProcessingSavingsAre": "Estimated processing savings are calculated relative to industry standard merchant processing fees and are not guaranteed.",
+          "label3TermsOfService": "3. Terms of Service",
+          "usageConstitutesAgreementWith": "Usage constitutes agreement with VLINKPAY corporate compliance terms and underwriting policies.",
+          "phLegalName": "e.g. Your Business LLC",
+          "phTaxId": "e.g. XX-XXXXXXX",
+          "phRepName": "Representative full name",
+          "phBankName": "e.g. Chase Bank",
+          "phAccountNumber": "Account Number",
+          "phRoutingCode": "Routing Code"
+        }
+      }
+    },
+    "setup_wizard": {
+      "hooks": {
+        "useSetupWizard": {
+          "payoutAndQrTouchpoints": "Payout & QR Touchpoints"
+        }
+      },
+      "PayoutSetupModal": {
+        "specifyReceivingTargetIdentifier": "Specify receiving target identifier",
+        "accountIdentifier": "Account Identifier",
+        "qrCodeOptional": "QR Code (optional)",
+        "cancel": "CANCEL",
+        "save": "SAVE"
+      },
+      "steps": {
+        "Step1BusinessInfo": {
+          "enterTheLegalOr": "Enter the legal or public name of your store/salon as it will appear on customer payment screens.",
+          "provideThePhysicalLocation": "Provide the physical location of your store. Used for localization and verification purposes.",
+          "phPhone": "+1 (555) 789-2026",
+          "phWebsite": "https://spasalon.com",
+          "phGoogleReviewUrl": "https://g.page/r/cxxxxxx/review",
+          "phYelpUrl": "https://www.yelp.com/biz/your-store",
+          "phFacebookUrl": "https://facebook.com/reviews",
+          "phManagerEmail": "manager@yourstore.com"
+        },
+        "Step2StaffTouchpoints": {
+          "step2PayoutAnd": "Step 2: Payout & QR Touchpoints",
+          "setUpPayoutMethods": "Set up payout methods and QR code positions (e.g. reception desk, service table, cart) at your store.",
+          "setUpPaymentMethods": "Set up payment methods to receive money into your business account.",
+          "nameThisSpecificTouch": "Name this specific touch point (e.g., Table 1, Station 3) to track tips and feedback location-wise."
+        },
+        "Step3Download": {
+          "iHerebyConsentTo": "I hereby consent to the VLINKPAY Merchant Terms of Service, IRS 1099-K tax reporting requirements, and corporate compliance underwriting policies. I certify that all registration and business details provided are true and accurate."
+        }
+      }
+    },
+    "staff_dashboard": {
+      "views": {
+        "StaffMyQR": {
+          "linkCopiedToClipboard": "Link copied to clipboard!",
+          "joinRequestViaQr": "Join Request (via QR)",
+          "justNow": "Just now",
+          "unlinked": "Unlinked",
+          "successfullyUnlinkedFromThe": "Successfully unlinked from the salon.",
+          "scanSalonQr": "Scan Salon QR",
+          "clickToEnlargeTipping": "Click to enlarge Tipping QR",
+          "personalTippingQrCode": "Personal Tipping QR code for this salon",
+          "active": "Active",
+          "pendingApproval": "Pending Approval",
+          "pendingUnlink": "Pending Unlink",
+          "notConnected": "Not Connected",
+          "unlink": "Unlink",
+          "link": "Link",
+          "scanSalonQrCode": "Scan Salon QR Code",
+          "scanTheSalonReferral": "Scan the salon referral QR code to actively submit your join request",
+          "orEnterInviteLink": "Or Enter Invite Link / Business Name",
+          "pasteSalonInviteLink": "Paste salon invite link or name...",
+          "send": "Send",
+          "simulateQrScan": "Simulate QR Scan",
+          "personalTippingQr": "Personal Tipping QR",
+          "tippingLink": "Tipping Link",
+          "tippingLinkCopied": "Tipping link copied!",
+          "copy": "Copy",
+          "openTippingPageSimulate": "Open Tipping Page (Simulate) ›"
+        },
+        "StaffPay": {
+          "editAccount": "Edit account"
+        },
+        "StaffProfile": {
+          "accountChangesSavedSuccessfully": "Account changes saved successfully!",
+          "avatarUpdatedSuccessfully": "Avatar updated successfully!",
+          "allFieldsAreRequired": "All fields are required.",
+          "kycVerificationSuccessful": "KYC verification successful!",
+          "basicAccountStatus": "BASIC ACCOUNT STATUS",
+          "yourProfileIsActive": "Your profile is active in basic tier. Complete KYC verification to upgrade your VLINKPAY ID and unlock 24/7 instant payouts.",
+          "completeKycVerification": "Complete KYC Verification",
+          "personalProfileVerifiedKyc": "PERSONAL PROFILE VERIFIED (KYC APPROVED)",
+          "congratulationsYourPersonalIdentity": "Congratulations! Your personal identity has been verified by VLINKPAY Compliance. 24/7 instant payouts enabled.",
+          "verifiedToday": "Verified: Today",
+          "account": "Account",
+          "kyc": "KYC",
+          "change": "Change",
+          "signOutAccount": "Sign Out Account",
+          "signOutFromThe": "Sign out from the current active session and return to the login screen.",
+          "closeForm": "Close Form",
+          "submittingKycDetails": "Submitting KYC details...",
+          "legalFullName": "Legal Full Name",
+          "idNumberSsn": "ID Number / SSN",
+          "documentType": "Document Type",
+          "passport": "Passport",
+          "nationalIdCard": "National ID Card",
+          "idCardFrontImage": "ID Card Front Image",
+          "uploadFrontSide": "Upload front side",
+          "idCardBackImage": "ID Card Back Image",
+          "uploadBackSide": "Upload back side",
+          "personalSettlementAccountInfo": "Personal Settlement Account Info",
+          "bankName": "Bank Name",
+          "accountNumber": "Account Number",
+          "routingCode": "Routing Code",
+          "cancel": "Cancel",
+          "submitKyc": "Submit KYC",
+          "verifiedPersonalDossier": "Verified Personal Dossier",
+          "legalFullName2": "Legal Full Name",
+          "documentType2": "Document Type",
+          "identityNumberSsn": "Identity Number / SSN",
+          "residentialAddress": "Residential Address",
+          "payoutSettlementBank": "Payout Settlement Bank",
+          "payoutFrequency": "Payout frequency",
+          "pleaseContactSupportTo": "Please contact support to modify your settlement bank.",
+          "changeSettlementBank": "Change Settlement Bank",
+          "uploadedIdentityDocuments": "Uploaded Identity Documents",
+          "legalDisclosuresAndKyc": "Legal Disclosures & KYC Privacy",
+          "label1PersonalDataEncryption": "1. Personal Data Encryption",
+          "yourIdentityInputsAnd": "Your identity inputs and documents are fully encrypted end-to-end and stored securely complying with SOC2 standards.",
+          "label2TipIncomeAnd": "2. Tip Income & Regulations",
+          "completingKycSecuresYour": "Completing KYC secures your official receiving wallet details, aiding in compiling accurate annual 1099-K tip tax reports.",
+          "label3ComplianceTerms": "3. Compliance Terms",
+          "providingInaccurateOrFalsified": "Providing inaccurate or falsified identity information may result in immediate payout suspension by VLINKPAY Compliance.",
+          "phFullName": "Mia Tran",
+          "phSsn": "e.g. XXX-XX-XXXX",
+          "phBankName": "e.g. Chase Bank",
+          "phAccountNumber": "Account Number",
+          "phRoutingCode": "Routing Code"
+        },
+        "StaffReviews": {
+          "reviewsAndRatings": "Reviews & Ratings",
+          "customerReviews": "Customer Reviews",
+          "identitySecured": "IDENTITY SECURED",
+          "noReviewsReceivedYet": "No reviews received yet.",
+          "anonymousCustomer": "Anonymous Customer",
+          "internal": "Internal"
+        }
+      }
+    },
+    "staff_registration": {
+      "hooks": {
+        "useStaffRegistration": {
+          "nexoraStaffIdNot": "NEXORA Staff ID not found.",
+          "emailIsRequired": "Email is required",
+          "emailIsInvalid": "Email is invalid",
+          "emailsDoNotMatch": "Emails do not match",
+          "passwordIsRequired": "Password is required",
+          "passwordMustBeAt": "Password must be at least 6 characters",
+          "youMustAgreeTo": "You must agree to the Terms & Conditions to proceed.",
+          "invalidCodeTipEnter": "Invalid code. Tip: Enter 1234.",
+          "thisFieldIsRequired": "This field is required.",
+          "newJoinRequest": "New Join Request",
+          "justNow": "Just now",
+          "emailIsRequired2": "Email is required.",
+          "passwordIsRequired2": "Password is required.",
+          "passwordMustBeAt2": "Password must be at least 6 characters.",
+          "accountDoesNotExist": "Account does not exist or incorrect password.",
+          "linkRequestCancelled": "Link request cancelled."
+        }
+      },
+      "steps": {
+        "StepOtpVerify": {
+          "label1RegisterAccount": "1. Register Account",
+          "registerANewTechnician": "Register a new technician account to start receiving tips.",
+          "emailAddress": "Email Address *",
+          "confirmEmailAddress": "Confirm Email Address *",
+          "password": "Password *",
+          "referralLinkSalon": "Referral Link / Salon",
+          "label1ActivateAccount": "1. Activate Account",
+          "enterTheOtpCode": "Enter the OTP code sent to your email to activate your account.",
+          "enterOtpCode": "Enter OTP Code *",
+          "verifyAndActivate": "Verify & Activate",
+          "privacyPolicy": "Privacy Policy",
+          "termsOfService": "Terms of Service",
+          "close": "Close",
+          "iAccept": "I Accept",
+          "phExampleEmail": "e.g. name@example.com",
+          "phPassword": "••••••••",
+          "phReferralCode": "Enter referral code...",
+          "phExampleOtp": "e.g. 1234"
+        },
+        "StepPayments": {
+          "label3PayoutConfigurations": "3. Payout Configurations",
+          "toggleThePaymentChannels": "Toggle the payment channels you want to receive money. When customers scan your QR, they pay you directly to these accounts.",
+          "notConfigured": "Not Configured",
+          "payoutAccount": "Payout account",
+          "saveAndActivate": "Save & Activate"
+        },
+        "StepProfile": {
+          "label2PersonalAccount": "2. Personal Account",
+          "uploadFromDevice": "Upload from device",
+          "acceptedFormatsJpgPng": "Accepted formats: JPG, PNG. Max size: 5MB.",
+          "fullName": "Full Name *",
+          "displayNickname": "Display Nickname *",
+          "thisNicknameIsVisible": "This nickname is visible to customers at the salon when they scan and tip.",
+          "phoneNumber": "Phone Number *",
+          "emailAddress": "Email Address *",
+          "phFullName": "Lisa Marie Tran",
+          "phNickname": "Lisa T.",
+          "phPhone": "e.g. 408-555-1234",
+          "phExampleEmail": "e.g. name@example.com",
+          "phPosition": "e.g. Acrylic Specialist",
+          "phBio": "Welcome to my chair! I specialize in luxury nail art, acrylic extensions, and hot stone spa treatments..."
+        },
+        "StepSuccess": {
+          "joinRequestSubmitted": "Join Request Submitted!",
+          "pending": "PENDING",
+          "pendingApproval": "Pending Approval",
+          "staffLinkCopiedTo": "Staff link copied to clipboard!"
+        },
+        "StepWelcome": {
+          "declineRequest": "Decline Request",
+          "salonNetworkInvitation": "SALON NETWORK INVITATION",
+          "youHaveBeenInvited": "You have been invited to link your profile to receive tips directly to your personal account at this salon.",
+          "iAlreadyHaveAn": "I already have an Account",
+          "useYourExistingVlinkpay": "Use your existing VLINKPAY ID to link instantly and import your wallets.",
+          "registerAccount": "Register Account",
+          "registerANewAccount": "Register a new account, configure payout wallets, and complete KYC.",
+          "linkAccountLogin": "Link Account Login",
+          "signInToYour": "Sign in to your NEXORA / VLINKPAY account to quickly link with this nail salon.",
+          "password": "Password",
+          "demoAccountTip": "Demo Account Tip:",
+          "back": "Back",
+          "loginAndVerify": "Login & Verify",
+          "confirmSalonConnection": "Confirm Salon Connection",
+          "pleaseReviewYourPersonal": "Please review your personal profile and salon details before confirming the link.",
+          "personalProfile": "Personal Profile",
+          "phone": "Phone:",
+          "nailSalonInfo": "Nail Salon Info",
+          "invitedRole": "Invited Role:",
+          "connectionStatus": "Connection Status:",
+          "newRequest": "New Request",
+          "location": "Location:",
+          "decline": "Decline",
+          "acceptAndJoin": "Accept & Join",
+          "phExampleEmail": "e.g. lisa@example.com",
+          "phPassword": "••••••••"
+        },
+        "PayoutEditModal": {
+          "emailPhone": "email/phone",
+          "details": "details",
+          "enterZelleEmailPhone": "Enter Zelle email/phone...",
+          "accountAndRoutingNumbers": "Account & Routing numbers",
+          "enterPhoneNumber": "Enter phone number...",
+          "specifyReceivingTargetIdentifier": "Specify receiving target identifier",
+          "qrCodeOptional": "QR CODE (OPTIONAL)",
+          "takePhoto": "TAKE PHOTO",
+          "chooseFile": "CHOOSE FILE",
+          "pleaseEnterTheCorrect": "Please enter the correct receiving account information. This will be used to receive payments.",
+          "cancel": "CANCEL",
+          "save": "SAVE"
+        },
+        "QrScannerModal": {
+          "scanQrCode": "Scan QR Code",
+          "scanNexoraPersonalId": "Scan NEXORA Personal ID to link your account",
+          "scanVlinkpayIdTo": "Scan VLINKPAY ID to autofill account data",
+          "pointTheCameraAt": "Point the camera at the QR code, or choose a mockup scan profile below.",
+          "pointTheCameraAt2": "Point the camera at the QR code to scan the account identifier.",
+          "simulateQrScan": "Simulate QR Scan",
+          "simulateSuccessfulScan": "Simulate Successful Scan",
+          "cancel": "CANCEL"
+        }
+      }
+    },
+    "StaffDetailView": {
+      "today": "Today",
+      "week": "Week",
+      "tipsPerformanceTrend": "Tips Performance Trend",
+      "custom": "Custom",
+      "from": "From",
+      "to": "To"
+    },
+    "StaffRegistrationWizard": {
+      "label1Register": "1. Register",
+      "label2Profile": "2. Profile",
+      "label3Wallet": "3. Wallet"
+    },
+    "tips": {
+      "hooks": {
+        "useTipsData": {
+          "today": "Today",
+          "week": "Week"
+        }
+      },
+      "tabs": {
+        "TipsOverviewTab": {
+          "tipsOverTimeTrend": "Tips Over Time Trend",
+          "custom": "Custom",
+          "from": "From",
+          "to": "To"
+        },
+        "TipsTransactionsTab": {
+          "details": "Details"
+        }
+      }
+    },
+    "dashboardRoot": {
+      "myDashboard": "My Dashboard",
+      "yourStaffProfileWas": "Your staff profile was not found.",
+      "kybVerificationRequired": "KYB Verification Required",
+      "thisFeatureRequiresYour": "This feature requires your business profile to be KYB verified by VLINKPAY. Click below to navigate to Settings > KYB tab and submit your compliance information.",
+      "cancel": "Cancel",
+      "verifyNow": "Verify Now"
+    },
+    "SettingsView": {
+      "qrCodeDownloaded": "QR code downloaded!",
+      "settingsConfiguration": "Settings Configuration",
+      "manageYourOwnerCredentials": "Manage your owner credentials, store configurations, receiving wallets, and corporate compliance details (KYB).",
+      "account": "Account",
+      "kyb": "KYB",
+      "affiliateLink": "Affiliate Link",
+      "affiliateLink2": "Affiliate Link",
+      "registerANewMember": "Register a New Member",
+      "shareThisLinkTo": "Share this link to invite a new member to join your network.",
+      "selectPlacementLeg": "Select Placement Leg",
+      "leftLeg": "Left Leg",
+      "rightLeg": "Right Leg"
+    },
+    "auth": {
+      "AuthGraphicPanel": {
+        "badge": "NEXORA TOUCH",
+        "merchantOsLabel": "Merchant OS",
+        "headline": "Tips, QR, NFC",
+        "statTips": "Tips",
+        "statReviews": "Reviews",
+        "statFlow": "Flow",
+        "footer": "VLINKPAY-ready merchant authentication"
+      }
+    },
+    "CountryCodeSelect": {
+      "phSearch": "Search country or code..."
+    },
+    "DevicesView": {
+      "phExampleDeviceIds": "e.g. NFC-003, QR-Table-04",
+      "phExampleLocations": "e.g. Table 04, Mirror 05, Front Counter"
+    },
+    "ForgotPassword": {
+      "phExampleEmail": "e.g. owner@salon.com",
+      "resetPassword": "Reset Password",
+      "description": "Enter your email address and we'll send you a link to reset your password.",
+      "emailAddress": "Email Address",
+      "sendResetLink": "Send Reset Link",
+      "backToSignIn": "Back to Sign In",
+      "successMessage": "If an account is registered with {email}, you will receive a password reset link shortly. Please check your inbox and spam folder."
+    },
+    "ResetPassword": {
+      "phEmail": "owner@salon.com",
+      "phToken": "Reset Token",
+      "phNewPassword": "At least 6 characters",
+      "phConfirmPassword": "Re-enter password",
+      "chooseNewPassword": "Choose New Password",
+      "description": "Please enter your new password below.",
+      "resetSuccess": "Password has been reset successfully! Redirecting you to sign in...",
+      "emailAddress": "Email Address",
+      "resetToken": "Reset Token",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm Password",
+      "resetPassword": "Reset Password"
+    },
+    "TouchpointsView": {
+      "phExampleDeviceIds": "e.g. NFC-105, QR-Table-01",
+      "phDeviceId": "Device ID (e.g. NFC-105)"
+    },
+    "TransactionFilter": {
+      "phMin": "Min",
+      "phMax": "Max"
+    },
+    "RegisterWizard": {
+      "subtitle": "Merchant Auth & VLINKPAY KYB"
+    },
+    "SetupWizard": {
+      "byVlinkpayTech": "By VLINKPAY Technologies",
+      "secureRedirect": "Secure redirect by VLINKPAY",
+      "businessQrLobby": "Business QR - Lobby",
+      "generalLobbyQr": "General Lobby QR"
+    }
+  },
+  "staff_registration": {
+    "link": {
+      "incorrect_password": "Incorrect password."
+    }
   }
 }

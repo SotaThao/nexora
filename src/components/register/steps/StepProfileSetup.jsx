@@ -21,10 +21,10 @@ export default function StepProfileSetup({
     <div className="p-6 sm:p-10 space-y-6 animate-fadeIn">
       <div>
         <h3 className="text-lg font-bold text-nexoraText">
-          {currentLanguage === 'vi' ? 'Cấu hình hồ sơ cá nhân' : 'Personal Profile Setup'}
+          {t('components.register.steps.StepProfileSetup.personalProfileSetup')}
         </h3>
         <p className="text-xs text-nexoraSubtle mt-1">
-          {currentLanguage === 'vi' ? 'Thiết lập thông tin hiển thị của bạn trên màn hình nhận tiền tip.' : 'Configure your display details for the customer tip screen.'}
+          {t('components.register.steps.StepProfileSetup.configureYourDisplayDetails')}
         </p>
       </div>
 
@@ -39,7 +39,7 @@ export default function StepProfileSetup({
                   type="button"
                   onClick={() => setAvatar(null)}
                   className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 hover:bg-red-600 text-white transition shadow duration-150 cursor-pointer"
-                  title={currentLanguage === 'vi' ? 'Xóa ảnh' : 'Remove photo'}
+                  title={t('common.remove_photo')}
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -55,7 +55,7 @@ export default function StepProfileSetup({
             <div className="flex items-center gap-2">
               <label className="h-9 px-4 rounded-lg bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white flex items-center justify-center gap-1.5 cursor-pointer text-xs font-bold transition shadow-sm">
                 <Upload className="h-3.5 w-3.5" />
-                <span>{currentLanguage === 'vi' ? 'Tải ảnh lên' : 'Upload photo'}</span>
+                <span>{t('common.upload_photo')}</span>
                 <input
                   type="file"
                   accept="image/*"
@@ -74,9 +74,7 @@ export default function StepProfileSetup({
               </label>
             </div>
             <span className="text-[10px] text-nexoraSubtle">
-              {currentLanguage === 'vi'
-                ? 'Chấp nhận định dạng JPG, PNG. Dung lượng tối đa 5MB.'
-                : 'Accepted formats: JPG, PNG. Max size: 5MB.'}
+              {t('components.register.steps.StepProfileSetup.acceptedFormatsJpgPng')}
             </span>
           </div>
         </div>
@@ -85,11 +83,11 @@ export default function StepProfileSetup({
           {/* Full Name */}
           <div>
             <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-              {renderLabel(currentLanguage === 'vi' ? 'Họ và tên *' : 'Full Name *')}
+              {renderLabel(t('components.register.steps.StepProfileSetup.fullName'))}
             </label>
             <input
               type="text"
-              placeholder="e.g. Lisa Marie Tran"
+              placeholder={t('components.register.steps.StepProfileSetup.phFullName')}
               required
               className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
               value={fullName}
@@ -103,11 +101,11 @@ export default function StepProfileSetup({
           {/* Display Nickname */}
           <div>
             <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-              {renderLabel(currentLanguage === 'vi' ? 'Tên hiển thị (Nickname) *' : 'Display Nickname *')}
+              {renderLabel(t('components.register.steps.StepProfileSetup.displayNickname'))}
             </label>
             <input
               type="text"
-              placeholder="e.g. Lisa T."
+              placeholder={t('components.register.steps.StepProfileSetup.phNickname')}
               required
               className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
               value={nickname}
@@ -120,7 +118,7 @@ export default function StepProfileSetup({
           {/* Phone Number */}
           <div>
             <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-              {renderLabel(currentLanguage === 'vi' ? 'Số điện thoại *' : 'Phone Number *')}
+              {renderLabel(t('components.register.steps.StepProfileSetup.phoneNumber'))}
             </label>
             <div className="flex rounded-lg shadow-sm">
               <CountryCodeSelect
@@ -137,7 +135,7 @@ export default function StepProfileSetup({
                   const formatted = formatNationalNumber(e.target.value, phoneParsed.countryCode)
                   setPhone(`${phoneParsed.countryCode} ${formatted}`.trim())
                 }}
-                placeholder="e.g. 408-555-1234"
+                placeholder={t('components.register.steps.StepProfileSetup.phPhone')}
                 required
               />
             </div>
@@ -146,7 +144,7 @@ export default function StepProfileSetup({
           {/* Email Address (View-Only) */}
           <div>
             <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-              {currentLanguage === 'vi' ? 'Địa chỉ Email' : 'Email Address'}
+              {t('components.register.steps.StepProfileSetup.emailAddress')}
             </label>
             <input
               type="email"
@@ -161,11 +159,11 @@ export default function StepProfileSetup({
           {/* Role / Specialty */}
           <div>
             <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-              {currentLanguage === 'vi' ? 'Chuyên môn / Vai trò' : 'Role / Speciality'}
+              {t('components.register.steps.StepProfileSetup.roleSpeciality')}
             </label>
             <input
               type="text"
-              placeholder="e.g. Acrylic Specialist"
+              placeholder={t('components.register.steps.StepProfileSetup.phPosition')}
               className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
               value={position}
               onChange={(e) => setPosition(e.target.value)}
@@ -175,7 +173,7 @@ export default function StepProfileSetup({
           {/* Staff ID */}
           <div>
             <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-              {currentLanguage === 'vi' ? 'Mã thợ NEXORA' : 'NEXORA Staff ID'}
+              {t('components.register.steps.StepProfileSetup.nexoraStaffId')}
             </label>
             <input
               type="text"
@@ -189,11 +187,11 @@ export default function StepProfileSetup({
         {/* Short Bio */}
         <div>
           <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-            {currentLanguage === 'vi' ? 'Lời chào / Tiểu sử ngắn (Hiển thị cho khách hàng gửi tip)' : 'Short Bio (Shows on customer tip screen)'}
+            {t('components.register.steps.StepProfileSetup.shortBioShowsOn')}
           </label>
           <textarea
             className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg p-3 text-sm text-nexoraText focus:outline-none transition-all min-h-[70px]"
-            placeholder="Welcome to my chair! I specialize in luxury nail art..."
+            placeholder={t('components.register.steps.StepProfileSetup.phBio')}
             value={bio}
             onChange={(e) => setBio(e.target.value)}
           />

@@ -40,7 +40,7 @@ export default function StaffMyQR() {
     try {
       navigator.clipboard?.writeText(staffLink)
       showToast(
-        currentLanguage === 'vi' ? 'Đã sao chép liên kết!' : 'Link copied to clipboard!',
+        t('components.staff_dashboard.views.StaffMyQR.linkCopiedToClipboard'),
         'success'
       )
     } catch (e) {
@@ -70,8 +70,6 @@ export default function StaffMyQR() {
     setScanStatus('checking')
 
     const timer = setTimeout(() => {
-      logger.debug('[DEBUG STAFF QR] Scanned merchant:', bizName)
-
       // 1. Use cached merchant setup from hook; fall back to a mock if none exists yet
       let merchantSetup = merchantSetupData
         ? { ...merchantSetupData }
@@ -157,11 +155,11 @@ export default function StaffMyQR() {
         id: `noti-join-${staffMember.id}-${Date.now()}`,
         staffId: staffMember.id,
         type: 'feedback_alert',
-        title: currentLanguage === 'vi' ? 'Yêu cầu gia nhập qua QR' : 'Join Request (via QR)',
+        title: t('components.staff_dashboard.views.StaffMyQR.joinRequestViaQr'),
         message: currentLanguage === 'vi'
           ? `Thợ ${staffMember.fullName} đã quét QR và yêu cầu gia nhập tiệm của bạn.`
           : `Technician ${staffMember.fullName} scanned your QR and requested to link with your salon.`,
-        time: currentLanguage === 'vi' ? 'Vừa xong' : 'Just now',
+        time: t('components.staff_dashboard.views.StaffMyQR.justNow'),
         read: false,
         linkTab: 'staff'
       }
@@ -227,20 +225,18 @@ export default function StaffMyQR() {
         id: `noti-unlink-${staffMember.id}-${Date.now()}`,
         staffId: staffMember.id,
         type: 'feedback_alert',
-        title: currentLanguage === 'vi' ? 'Đã hủy liên kết' : 'Unlinked',
+        title: t('components.staff_dashboard.views.StaffMyQR.unlinked'),
         message: currentLanguage === 'vi'
           ? `Thợ ${staffMember.fullName} đã hủy liên kết khỏi tiệm của bạn.`
           : `Technician ${staffMember.fullName} has unlinked from your salon.`,
-        time: currentLanguage === 'vi' ? 'Vừa xong' : 'Just now',
+        time: t('components.staff_dashboard.views.StaffMyQR.justNow'),
         read: false,
         linkTab: 'staff'
       }
       addNotificationMutation.mutate(newNoti)
 
       showToast(
-        currentLanguage === 'vi'
-          ? 'Đã hủy liên kết với tiệm thành công.'
-          : 'Successfully unlinked from the salon.',
+        t('components.staff_dashboard.views.StaffMyQR.successfullyUnlinkedFromThe'),
         'success'
       )
     } catch (e) {
@@ -301,14 +297,14 @@ export default function StaffMyQR() {
 
       <section className={panel}>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-base font-extrabold text-nexoraText">{t('staff_dashboard.home.linked_businesses') || 'Linked Businesses'}</h3>
+          <h3 className="text-base font-extrabold text-nexoraText">{t('staff_dashboard.home.linked_businesses')}</h3>
           <button
             type="button"
             onClick={handleOpenScan}
             className="flex items-center gap-1.5 rounded-lg border border-nexoraBorder bg-white hover:bg-slate-50 px-3 py-1.5 text-xs font-bold text-nexoraBrand transition shadow-sm"
           >
             <QrCode className="h-3.5 w-3.5" />
-            <span>{currentLanguage === 'vi' ? 'Quét QR Tiệm' : 'Scan Salon QR'}</span>
+            <span>{t('components.staff_dashboard.views.StaffMyQR.scanSalonQr')}</span>
           </button>
         </div>
 
@@ -325,7 +321,7 @@ export default function StaffMyQR() {
                     <div
                       onClick={() => setZoomedQr({ url: tipUrl, title: biz.businessName })}
                       className="h-12 w-12 bg-white border border-slate-200 p-1 rounded-xl cursor-zoom-in hover:scale-105 transition-transform flex items-center justify-center shrink-0 shadow-sm relative group"
-                      title={currentLanguage === 'vi' ? 'Nhấp để phóng to QR nhận tips' : 'Click to enlarge Tipping QR'}
+                      title={t('components.staff_dashboard.views.StaffMyQR.clickToEnlargeTipping')}
                     >
                       <img
                         src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(tipUrl)}`}
@@ -341,7 +337,7 @@ export default function StaffMyQR() {
                     <div className="truncate text-sm font-bold text-nexoraText">{biz.displayName} @ {biz.businessName}</div>
                     <div className="truncate text-xs text-nexoraMuted">
                       {biz.status === 'Active'
-                        ? (currentLanguage === 'vi' ? 'Mã QR quét nhận tiền tip cá nhân tại tiệm này' : 'Personal Tipping QR code for this salon')
+                        ? (t('components.staff_dashboard.views.StaffMyQR.personalTippingQrCode'))
                         : t('staff_dashboard.qr.business_sub')
                       }
                     </div>
@@ -354,10 +350,10 @@ export default function StaffMyQR() {
                     biz.status === 'Pending Unlink' ? 'bg-rose-50 text-rose-600' :
                     'bg-slate-100 text-slate-600'
                   }`}>
-                    {biz.status === 'Active' ? (currentLanguage === 'vi' ? 'Đang hoạt động' : 'Active') :
-                     biz.status === 'Pending Approval' ? (currentLanguage === 'vi' ? 'Chờ phê duyệt' : 'Pending Approval') :
-                     biz.status === 'Pending Unlink' ? (currentLanguage === 'vi' ? 'Chờ hủy liên kết' : 'Pending Unlink') :
-                     (currentLanguage === 'vi' ? 'Chưa liên kết' : 'Not Connected')}
+                    {biz.status === 'Active' ? (t('components.staff_dashboard.views.StaffMyQR.active')) :
+                     biz.status === 'Pending Approval' ? (t('components.staff_dashboard.views.StaffMyQR.pendingApproval')) :
+                     biz.status === 'Pending Unlink' ? (t('components.staff_dashboard.views.StaffMyQR.pendingUnlink')) :
+                     (t('components.staff_dashboard.views.StaffMyQR.notConnected'))}
                   </span>
                   {biz.status === 'Active' && (
                     <button
@@ -365,7 +361,7 @@ export default function StaffMyQR() {
                       onClick={() => handleRequestUnlink(biz.businessName)}
                       className="inline-flex items-center gap-1 rounded-lg bg-rose-50 border border-rose-200 px-3 py-1.5 text-xs font-bold text-rose-700 transition hover:bg-rose-100 shadow-sm cursor-pointer select-none"
                     >
-                      <span>{currentLanguage === 'vi' ? 'Hủy' : 'Unlink'}</span>
+                      <span>{t('components.staff_dashboard.views.StaffMyQR.unlink')}</span>
                     </button>
                   )}
                   {isNotConnected && (
@@ -375,7 +371,7 @@ export default function StaffMyQR() {
                       className="inline-flex items-center gap-1 rounded-lg bg-nexoraBrand px-3 py-1.5 text-xs font-bold text-white transition hover:bg-opacity-95 shadow-sm"
                     >
                       <QrCode className="h-3 w-3" />
-                      <span>{currentLanguage === 'vi' ? 'Liên kết' : 'Link'}</span>
+                      <span>{t('components.staff_dashboard.views.StaffMyQR.link')}</span>
                     </button>
                   )}
                 </div>
@@ -408,12 +404,10 @@ export default function StaffMyQR() {
             {/* Header */}
             <div className="space-y-1 text-center">
               <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">
-                {currentLanguage === 'vi' ? 'Quét Mã QR Của Tiệm' : 'Scan Salon QR Code'}
+                {t('components.staff_dashboard.views.StaffMyQR.scanSalonQrCode')}
               </h3>
               <p className="text-[10px] text-slate-500 font-medium text-center leading-normal">
-                {currentLanguage === 'vi' 
-                  ? 'Quét mã QR liên kết thợ của tiệm (referral QR) để gửi yêu cầu gia nhập chủ động' 
-                  : 'Scan the salon referral QR code to actively submit your join request'}
+                {t('components.staff_dashboard.views.StaffMyQR.scanTheSalonReferral')}
               </p>
             </div>
 
@@ -445,15 +439,13 @@ export default function StaffMyQR() {
             {/* Custom URL or text input */}
             <div className="space-y-2 text-left">
               <label className="text-[9px] font-black uppercase text-slate-400 tracking-wider">
-                {currentLanguage === 'vi' ? 'Hoặc Nhập Liên Kết / Tên Tiệm' : 'Or Enter Invite Link / Business Name'}
+                {t('components.staff_dashboard.views.StaffMyQR.orEnterInviteLink')}
               </label>
               <div className="flex gap-2">
                 <input
                   type="text"
                   placeholder={
-                    currentLanguage === 'vi'
-                      ? 'Dán liên kết hoặc tên tiệm...'
-                      : 'Paste salon invite link or name...'
+                    t('components.staff_dashboard.views.StaffMyQR.pasteSalonInviteLink')
                   }
                   className="flex-grow h-9 px-3 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-amber-500 text-slate-700 bg-slate-50"
                   value={customInviteLink}
@@ -464,7 +456,7 @@ export default function StaffMyQR() {
                   onClick={() => handleUrlOrTextSubmit(customInviteLink)}
                   className="h-9 px-3 bg-slate-800 text-white rounded-xl text-xs font-bold hover:bg-slate-700 transition"
                 >
-                  {currentLanguage === 'vi' ? 'Gửi' : 'Send'}
+                  {t('components.staff_dashboard.views.StaffMyQR.send')}
                 </button>
               </div>
             </div>
@@ -472,7 +464,7 @@ export default function StaffMyQR() {
             {/* Quick simulation buttons */}
             <div className="space-y-2 pt-2 border-t border-slate-100">
               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block text-center">
-                {currentLanguage === 'vi' ? 'Giả lập quét QR' : 'Simulate QR Scan'}
+                {t('components.staff_dashboard.views.StaffMyQR.simulateQrScan')}
               </span>
               
               <div className="flex flex-col gap-2">
@@ -521,7 +513,7 @@ export default function StaffMyQR() {
             {/* Header */}
             <div className="space-y-1 text-center">
               <span className="text-[9px] font-black text-nexoraBrand uppercase tracking-widest block">
-                {currentLanguage === 'vi' ? 'QR Nhận Tip Cá Nhân' : 'Personal Tipping QR'}
+                {t('components.staff_dashboard.views.StaffMyQR.personalTippingQr')}
               </span>
               <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">
                 {zoomedQr.title}
@@ -545,7 +537,7 @@ export default function StaffMyQR() {
             {/* Link Copy */}
             <div className="space-y-2 text-left">
               <label className="text-[9px] font-black uppercase text-slate-400 tracking-wider">
-                {currentLanguage === 'vi' ? 'Liên Kết Nhận Tip' : 'Tipping Link'}
+                {t('components.staff_dashboard.views.StaffMyQR.tippingLink')}
               </label>
               <div className="flex gap-2 bg-slate-50 rounded-xl p-1.5 border border-slate-100 items-center justify-between">
                 <span className="text-[10px] text-slate-500 font-mono truncate max-w-[210px] pl-2">
@@ -557,7 +549,7 @@ export default function StaffMyQR() {
                     try {
                       navigator.clipboard?.writeText(zoomedQr.url)
                       showToast(
-                        currentLanguage === 'vi' ? 'Đã sao chép liên kết nhận tip!' : 'Tipping link copied!',
+                        t('components.staff_dashboard.views.StaffMyQR.tippingLinkCopied'),
                         'success'
                       )
                     } catch (e) {}
@@ -565,7 +557,7 @@ export default function StaffMyQR() {
                   className="h-7 px-3 bg-slate-800 text-white rounded-lg text-[10px] font-bold hover:bg-slate-700 transition flex items-center gap-1 shrink-0"
                 >
                   <Copy className="h-3.5 w-3.5" />
-                  <span>{currentLanguage === 'vi' ? 'Sao chép' : 'Copy'}</span>
+                  <span>{t('components.staff_dashboard.views.StaffMyQR.copy')}</span>
                 </button>
               </div>
             </div>
@@ -578,7 +570,7 @@ export default function StaffMyQR() {
                 rel="opener"
                 className="inline-flex w-full items-center justify-center gap-1 text-[11px] font-black text-nexoraBrand hover:underline tracking-wide bg-nexoraBrandSoft py-2 rounded-xl transition"
               >
-                <span>{currentLanguage === 'vi' ? 'Mở trang tip (Giả lập khách) ›' : 'Open Tipping Page (Simulate) ›'}</span>
+                <span>{t('components.staff_dashboard.views.StaffMyQR.openTippingPageSimulate')}</span>
               </a>
             </div>
           </div>

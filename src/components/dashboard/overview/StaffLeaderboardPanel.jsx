@@ -18,7 +18,7 @@ function StaffLeaderboardPanel({ selectedStaff, setSelectedStaff, hasKyb = true 
       <div className="mt-7 space-y-7">
         {rows.map((member, index) => (
           <button
-            key={member.staffId || index}
+            key={member.id || index}
             onClick={() => setSelectedStaff(member.name)}
             className={`dashboard-list-row grid w-full grid-cols-[40px_minmax(0,1fr)] items-center gap-3 rounded-lg p-2 text-left transition hover:bg-nexoraSurfaceMuted sm:grid-cols-[48px_minmax(0,1fr)_88px_72px] sm:gap-4 ${selectedStaff === member.name ? 'bg-nexoraBrandSoft' : ''}`}
             style={{ animationDelay: `${index * 80}ms` }}

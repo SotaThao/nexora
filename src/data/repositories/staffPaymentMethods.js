@@ -3,7 +3,7 @@ import httpClient from '../../lib/httpClient'
 export function createStaffPaymentMethodsRepository(client = httpClient) {
   return {
     /** 
-     * @returns {Promise<Array<{ id: string, type: string, accountInfo: string, imageUrl: string, isActive: string, isConfigured: boolean }>>} 
+     * @returns {Promise<Array<{ id: string, type: string, accountInfo: string, imageUrl: string, isActive: boolean, isConfigured: boolean }>>}
      */
     async getAll() {
       return client.get('/api/v1/staff/payment-methods')

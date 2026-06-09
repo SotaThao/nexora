@@ -70,7 +70,7 @@ export default function CustomerFlow() {
           {isApiMode && touchPageQuery.isLoading && (
             <div className="text-center py-12 space-y-4 animate-fadeIn">
               <div className="h-12 w-12 border-4 border-nexoraBrand border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-sm text-nexoraMuted font-medium">{t('common.loading') || 'Loading...'}</p>
+              <p className="text-sm text-nexoraMuted font-medium">{t('common.loading')}</p>
             </div>
           )}
 
@@ -79,10 +79,10 @@ export default function CustomerFlow() {
             <div className="text-center py-12 space-y-4 animate-fadeIn">
               <AlertTriangle className="h-12 w-12 text-nexoraDanger mx-auto" />
               <h3 className="font-extrabold text-lg text-nexoraText">
-                {t('errors.touchpoint_not_found') || 'Page Not Found'}
+                {t('errors.touchpoint_not_found')}
               </h3>
               <p className="text-xs text-nexoraMuted">
-                {t('errors.touchpoint_not_found_desc') || 'This touch point could not be loaded.'}
+                {t('errors.touchpoint_not_found_desc')}
               </p>
             </div>
           )}
@@ -95,10 +95,10 @@ export default function CustomerFlow() {
               </div>
               <div className="space-y-2">
                 <h3 className="font-extrabold text-lg text-nexoraText">
-                  {t('dashboard.touchpoint_stats.inactive_warning_title') || 'Station Inactive'}
+                  {t('dashboard.touchpoint_stats.inactive_warning_title')}
                 </h3>
                 <p className="text-xs text-nexoraMuted leading-relaxed px-4">
-                  {t('dashboard.touchpoint_stats.inactive_warning_desc') || 'This QR touchpoint is currently disabled by the owner.'}
+                  {t('dashboard.touchpoint_stats.inactive_warning_desc')}
                 </p>
               </div>
               <button
@@ -107,7 +107,7 @@ export default function CustomerFlow() {
                 }}
                 className="w-full mt-4 py-3 bg-nexoraCanvas border border-nexoraBorder hover:bg-nexoraSurfaceMuted text-nexoraText font-extrabold text-xs uppercase tracking-wider rounded-xl transition"
               >
-                {t('common.back') || 'Go Back'}
+                {t('common.back')}
               </button>
             </div>
           ) : null}

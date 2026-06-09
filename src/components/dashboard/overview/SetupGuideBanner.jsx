@@ -21,20 +21,16 @@ export default function SetupGuideBanner({ onStartSetup }) {
         <div className="inline-flex items-center gap-2 rounded-full bg-nexoraBrand/10 px-3 py-1 mb-4">
           <Sparkles className="h-4 w-4 text-nexoraBrand" />
           <span className="text-[10px] font-black uppercase tracking-widest text-nexoraBrand">
-            {currentLanguage === 'vi' ? 'Bắt đầu sử dụng' : 'Getting Started'}
+            {t('components.dashboard.overview.SetupGuideBanner.gettingStarted')}
           </span>
         </div>
         
         <h2 className="text-xl md:text-2xl font-black text-nexoraText tracking-tight mb-2">
-          {currentLanguage === 'vi' 
-            ? 'Chào mừng đến với Nexora!' 
-            : 'Welcome to Nexora!'}
+          {t('components.dashboard.overview.SetupGuideBanner.welcomeToNexora')}
         </h2>
         
         <p className="text-sm text-nexoraMuted mb-6 leading-relaxed">
-          {currentLanguage === 'vi'
-            ? 'Tài khoản doanh nghiệp của bạn đã sẵn sàng. Hãy dành 2 phút để thiết lập thông tin cửa hàng, danh sách nhân viên và các điểm chạm QR để bắt đầu nhận đánh giá và tiền tip.'
-            : 'Your business account is ready. Take 2 minutes to set up your store profile, staff directory, and QR touchpoints to start collecting reviews and tips.'}
+          {t('components.dashboard.overview.SetupGuideBanner.yourBusinessAccountIs')}
         </p>
 
         <button
@@ -43,7 +39,7 @@ export default function SetupGuideBanner({ onStartSetup }) {
         >
           <Settings className="h-4 w-4 transition-transform group-hover:rotate-90" />
           <span>
-            {currentLanguage === 'vi' ? 'Hoàn tất cài đặt cửa hàng' : 'Complete Store Setup'}
+            {t('components.dashboard.overview.SetupGuideBanner.completeStoreSetup')}
           </span>
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </button>

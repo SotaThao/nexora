@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { ChevronDown, Search } from 'lucide-react'
+import { useTranslation } from '../contexts/LanguageContext'
 
 export const COUNTRY_CODES = [
   { name: 'United States', code: 'US', dialCode: '+1', flag: '🇺🇸' },
@@ -68,6 +69,7 @@ export const isPhoneValid = (phoneStr) => {
 }
 
 export default function CountryCodeSelect({ value, onChange, disabled = false }) {
+  const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
   const [search, setSearch] = useState('')
   const dropdownRef = useRef(null)
@@ -118,7 +120,7 @@ export default function CountryCodeSelect({ value, onChange, disabled = false })
             <input
               type="text"
               autoFocus
-              placeholder="Search country or code..."
+              placeholder={t('components.CountryCodeSelect.phSearch')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full text-xs bg-transparent border-0 outline-none p-0 focus:ring-0 text-nexoraText placeholder-nexoraSubtle"

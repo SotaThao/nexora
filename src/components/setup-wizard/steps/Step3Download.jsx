@@ -50,7 +50,7 @@ export default function Step3Download({
             </div>
 
             <div className="text-[8px] font-extrabold uppercase text-nexoraMuted tracking-wider qr-print-scan-text leading-tight mx-auto">
-              {t('customer.scan_to_tip_review') || 'Scan to Tip & Review'}
+              {t('customer.scan_to_tip_review')}
             </div>
 
             <div className="flex items-center gap-1 text-[7.5px] font-bold text-nexoraSubtle qr-print-footer">
@@ -106,9 +106,7 @@ export default function Step3Download({
                 onChange={(e) => setIsConsentChecked(e.target.checked)}
               />
               <span className="text-xs text-nexoraMuted leading-relaxed">
-                {currentLanguage === 'vi'
-                  ? 'Tôi đồng ý với Điều khoản dịch vụ người bán của VLINKPAY, yêu cầu báo cáo thuế IRS 1099-K và chính sách thẩm định của doanh nghiệp. Tôi xác nhận rằng tất cả thông tin đăng ký là chính xác.'
-                  : 'I hereby consent to the VLINKPAY Merchant Terms of Service, IRS 1099-K tax reporting requirements, and corporate compliance underwriting policies. I certify that all registration and business details provided are true and accurate.'}
+                {t('components.setup_wizard.steps.Step3Download.iHerebyConsentTo')}
               </span>
             </label>
           </div>

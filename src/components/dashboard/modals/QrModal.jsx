@@ -55,7 +55,7 @@ function QrModal({ target, businessName, onClose }) {
           </div>
 
           <div className="text-[8px] font-extrabold uppercase text-nexoraMuted tracking-wider qr-print-scan-text leading-tight mx-auto">
-            {t('customer.scan_to_tip_review') || 'Scan to Tip & Review'}
+            {t('customer.scan_to_tip_review')}
           </div>
 
           <div className="flex items-center gap-1 text-[7.5px] font-bold text-nexoraSubtle qr-print-footer">
@@ -68,14 +68,24 @@ function QrModal({ target, businessName, onClose }) {
           nexora.vlinkpay.com/touch/{target.slug}
         </p>
 
-
+        {/* Browser simulator trigger */}
+        <div className="mt-3.5 no-print">
+          <a
+            href={qrUrl}
+            target="_blank"
+            rel="opener"
+            className="inline-flex items-center gap-1 text-[10.5px] font-black text-nexoraBrand hover:underline tracking-wide bg-nexoraBrandSoft px-3 py-1.5 rounded-lg transition"
+          >
+            <span>{t('dashboard.modals.customer_view_test')}</span>
+          </a>
+        </div>
 
         <button
           onClick={() => window.print()}
           className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white hover:bg-opacity-90 transition no-print"
         >
           <Download className="h-4 w-4" />
-          {t('dashboard.modals.download_print_qr') || 'Print / Download Design'}
+          {t('dashboard.modals.download_print_qr')}
         </button>
       </div>
     </div>

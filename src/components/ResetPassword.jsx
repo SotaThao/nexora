@@ -31,19 +31,19 @@ export default function ResetPassword({ setView }) {
       return
     }
     if (!email.trim()) {
-      setError(t('register.errors.email_required') || 'Email is required')
+      setError(t('register.errors.email_required'))
       return
     }
     if (!newPassword) {
-      setError(t('register.errors.password_required') || 'Password is required')
+      setError(t('register.errors.password_required'))
       return
     }
     if (newPassword.length < 6) {
-      setError(t('register.errors.password_short') || 'Password must be at least 6 characters')
+      setError(t('register.errors.password_short'))
       return
     }
     if (newPassword !== confirmPassword) {
-      setError(t('register.errors.email_mismatch') || 'Passwords do not match')
+      setError(t('register.errors.email_mismatch'))
       return
     }
 
@@ -80,10 +80,10 @@ export default function ResetPassword({ setView }) {
 
         <div className="text-center mb-6">
           <h2 className="font-sans text-xl font-bold tracking-wide sm:text-2xl">
-            Choose New Password
+            {t('components.ResetPassword.chooseNewPassword')}
           </h2>
           <p className="text-xs text-nexoraSubtle mt-1.5 leading-relaxed">
-            Please enter your new password below.
+            {t('components.ResetPassword.description')}
           </p>
         </div>
 
@@ -93,7 +93,7 @@ export default function ResetPassword({ setView }) {
               <CheckCircle className="h-6 w-6" />
             </div>
             <div className="p-4 bg-green-50 text-green-800 text-xs rounded-xl border border-green-200 font-medium">
-              Password has been reset successfully! Redirecting you to sign in...
+              {t('components.ResetPassword.resetSuccess')}
             </div>
           </div>
         ) : (
@@ -107,11 +107,11 @@ export default function ResetPassword({ setView }) {
             {/* Email (Hidden or editable if missing) */}
             <div>
               <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-                Email Address
+                {t('components.ResetPassword.emailAddress')}
               </label>
               <input
                 type="email"
-                placeholder="owner@salon.com"
+                placeholder={t('components.ResetPassword.phEmail')}
                 className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -122,11 +122,11 @@ export default function ResetPassword({ setView }) {
             {/* Token */}
             <div>
               <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-                Reset Token
+                {t('components.ResetPassword.resetToken')}
               </label>
               <input
                 type="text"
-                placeholder="Reset Token"
+                placeholder={t('components.ResetPassword.phToken')}
                 className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle font-mono transition-all"
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
@@ -137,13 +137,13 @@ export default function ResetPassword({ setView }) {
             {/* New Password */}
             <div>
               <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-                New Password
+                {t('components.ResetPassword.newPassword')}
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 w-4 h-4 text-nexoraSubtle" />
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="At least 6 characters"
+                  placeholder={t('components.ResetPassword.phNewPassword')}
                   className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg pl-10 pr-10 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
@@ -162,13 +162,13 @@ export default function ResetPassword({ setView }) {
             {/* Confirm Password */}
             <div>
               <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-                Confirm Password
+                {t('components.ResetPassword.confirmPassword')}
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 w-4 h-4 text-nexoraSubtle" />
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Re-enter password"
+                  placeholder={t('components.ResetPassword.phConfirmPassword')}
                   className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg pl-10 pr-10 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -183,7 +183,7 @@ export default function ResetPassword({ setView }) {
                 disabled={isLoading}
                 className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 disabled:opacity-50 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all"
               >
-                Reset Password
+                {t('components.ResetPassword.resetPassword')}
               </button>
 
               <button

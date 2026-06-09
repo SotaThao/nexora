@@ -219,7 +219,7 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
           if (err?.errorCode === 'BUSINESS_NAME_REQUIRED') {
             newErrors.name = t('setup.errors.name_required')
           } else if (err?.errorCode === 'USER_NOT_MERCHANT') {
-            newErrors.submit = t('setup.errors.user_not_merchant') || 'User is not a merchant.'
+            newErrors.submit = t('setup.errors.user_not_merchant')
             setTimeout(() => {
               onBackToLogin?.()
             }, 3000)
@@ -247,7 +247,7 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
     if (!newStaff.fullName.trim()) staffErrors.staffFullName = t('setup.errors.staff_name_required')
     if (!newStaff.nickname.trim()) staffErrors.staffNickname = t('setup.errors.staff_nickname_required')
     if (newStaff.email?.trim() && !/\S+@\S+\.\S+/.test(newStaff.email.trim())) {
-      staffErrors.staffEmail = t('setup.errors.staff_email_invalid') || 'Invalid email address format.'
+      staffErrors.staffEmail = t('setup.errors.staff_email_invalid')
     }
 
     const configs = newStaff.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
@@ -467,7 +467,7 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
   const stepName = (step) => {
     switch (step) {
       case 1: return t('setup.step_name_1')
-      case 2: return currentLanguage === 'vi' ? 'Thanh Toán & QR' : 'Payout & QR Touchpoints'
+      case 2: return t('components.setup_wizard.hooks.useSetupWizard.payoutAndQrTouchpoints')
       case 3: return t('setup.step_name_3')
       default: return ''
     }

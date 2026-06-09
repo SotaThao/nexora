@@ -120,7 +120,7 @@ function Overview({
       },
       {
         value: 'Custom',
-        label: currentLanguage === 'vi' ? 'Tự chọn' : 'Custom'
+        label: t('components.dashboard.overview.Overview.custom')
       }
     ];
   }, [transactions, currentLanguage]);
@@ -154,7 +154,7 @@ function Overview({
       {/* Header Overview Row */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between" ref={dropdownRef}>
         <h1 className="text-xl font-extrabold tracking-tight text-nexoraText uppercase">
-          {t('dashboard.overview_title') || 'Dashboard Overview'}
+          {t('dashboard.overview_title')}
         </h1>
         <div className="relative">
           <button
@@ -184,7 +184,7 @@ function Overview({
                   }`}
                 >
                   <span>{opt.label}</span>
-                  <span className="text-[10px] text-nexoraMuted uppercase tracking-wider">{opt.value === 'Custom' && currentLanguage === 'vi' ? 'Tự chọn' : opt.value}</span>
+                    <span className="text-[10px] text-nexoraMuted uppercase tracking-wider">{opt.value === 'Custom' ? t('common.custom') : opt.value}</span>
                 </button>
               ))}
             </div>
@@ -244,10 +244,10 @@ function Overview({
       {/* Master Gateways Panel */}
       <Panel className="p-7">
         <h2 className="text-sm font-extrabold text-nexoraText uppercase tracking-wider">
-          {t('dashboard.master_gateway.title') || 'Master QR & NFC Gateways'}
+          {t('dashboard.master_gateway.title')}
         </h2>
         <p className="mt-1 text-xs text-nexoraMuted">
-          {t('dashboard.master_gateway.subtitle') || 'Quick access welcome points for direct customer engagement.'}
+          {t('dashboard.master_gateway.subtitle')}
         </p>
 
         <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -261,15 +261,15 @@ function Overview({
                   </span>
                   <div>
                     <h3 className="text-sm font-extrabold text-nexoraText">
-                      {t('dashboard.master_gateway.qr_title') || 'Master Store QR'}
+                      {t('dashboard.master_gateway.qr_title')}
                     </h3>
                     <p className="text-[10px] text-nexoraMuted">
-                      {t('dashboard.master_gateway.qr_desc') || 'Lobby entrance / general pool tips'}
+                      {t('dashboard.master_gateway.qr_desc')}
                     </p>
                   </div>
                 </div>
                 <p className="mt-4 text-xs leading-normal text-nexoraMuted">
-                  {t('dashboard.master_gateway.qr_body') || 'Place this QR code at the reception desk. Customers scan to choose their technician and submit reviews.'}
+                  {t('dashboard.master_gateway.qr_body')}
                 </p>
               </div>
 
@@ -280,7 +280,7 @@ function Overview({
                   className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-white border border-nexoraBorder px-4 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition cursor-pointer"
                 >
                   <Eye className="h-4 w-4" />
-                  {t('dashboard.master_gateway.btn_open') || 'Open QR'}
+                  {t('dashboard.master_gateway.btn_open')}
                 </button>
                 <button
                   type="button"
@@ -297,7 +297,7 @@ function Overview({
                   className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white hover:bg-nexoraBrandDark transition cursor-pointer"
                 >
                   <Download className="h-4 w-4" />
-                  {t('dashboard.master_gateway.btn_download') || 'Download QR'}
+                  {t('dashboard.master_gateway.btn_download')}
                 </button>
               </div>
             </div>
@@ -331,15 +331,15 @@ function Overview({
                   </span>
                   <div>
                     <h3 className="text-sm font-extrabold text-nexoraText">
-                      {t('dashboard.master_gateway.nfc_title') || 'Master NFC Tag'}
+                      {t('dashboard.master_gateway.nfc_title')}
                     </h3>
                     <p className="text-[10px] text-nexoraMuted">
-                      {t('dashboard.master_gateway.nfc_desc') || 'Contactless desk pucks / smart signs'}
+                      {t('dashboard.master_gateway.nfc_desc')}
                     </p>
                   </div>
                 </div>
                 <p className="mt-4 text-xs leading-normal text-nexoraMuted">
-                  {t('dashboard.master_gateway.nfc_body') || 'Write the customer portal link to physical NFC tags. Customers tap their smartphones to pay tips and write reviews instantly.'}
+                  {t('dashboard.master_gateway.nfc_body')}
                 </p>
               </div>
 
@@ -349,12 +349,12 @@ function Overview({
                   onClick={() => {
                     const nfcUrl = `${window.location.origin}${window.location.pathname}?flow=customer&tech=general&biz=${encodeURIComponent(businessName)}`
                     navigator.clipboard.writeText(nfcUrl)
-                    showToast('Copied NFC redirect link to clipboard!', 'success')
+                    showToast(t('components.dashboard.overview.Overview.copiedNfcRedirectLink'), 'success')
                   }}
                   className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-white border border-nexoraBorder px-4 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition cursor-pointer"
                 >
                   <Pointer className="h-4 w-4" />
-                  {t('dashboard.master_gateway.btn_copy_link') || 'Copy Link'}
+                  {t('dashboard.master_gateway.btn_copy_link')}
                 </button>
                 <button
                   type="button"
@@ -378,7 +378,7 @@ function Overview({
                   className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white hover:bg-nexoraBrandDark transition cursor-pointer"
                 >
                   <Download className="h-4 w-4" />
-                  {t('dashboard.master_gateway.btn_download_config') || 'Download Config'}
+                  {t('dashboard.master_gateway.btn_download_config')}
                 </button>
               </div>
             </div>
@@ -447,7 +447,7 @@ function Overview({
             </div>
           </div>
           <div className="mt-4 flex items-center gap-1.5 text-xs font-bold text-emerald-600">
-            <span>{t('dashboard.review_kpi.great') || 'Great!'}</span>
+            <span>{t('dashboard.review_kpi.great')}</span>
           </div>
         </Panel>
 
@@ -464,7 +464,7 @@ function Overview({
           <div className="mt-4 flex items-center gap-1.5 text-xs font-bold text-emerald-600">
             <span>▲ {metrics.returningCustomersDelta}%</span>
             <span className="text-nexoraMuted font-semibold">
-              {t('dashboard.kpi.vs_last_week') || 'vs last week'}
+              {t('dashboard.kpi.vs_last_week')}
             </span>
           </div>
         </Panel>

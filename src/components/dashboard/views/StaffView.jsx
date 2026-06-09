@@ -81,7 +81,7 @@ function StaffView({
       }).catch(() => {})
     } else {
       navigator.clipboard.writeText(url)
-      showToast(currentLanguage === 'vi' ? 'Đã sao chép liên kết để chia sẻ!' : 'Link copied to clipboard for sharing!', 'success')
+      showToast(t('components.dashboard.views.StaffView.linkCopiedToClipboard'), 'success')
     }
   }
   const [inviteName, setInviteName] = useState('')
@@ -109,7 +109,7 @@ function StaffView({
       // Take the first result as the match
       setSearchResult(searchResults[0])
     } else {
-      setSearchError(currentLanguage === 'vi' ? 'Không tìm thấy hồ sơ nhân viên phù hợp.' : 'No staff profile found matching that criteria.')
+      setSearchError(t('components.dashboard.views.StaffView.noStaffProfileFound'))
     }
   }
 
@@ -125,7 +125,7 @@ function StaffView({
   const handleInviteSubmit = (e) => {
     e.preventDefault()
     if (!inviteName.trim() || !inviteContact.trim()) {
-      showToast(currentLanguage === 'vi' ? 'Vui lòng điền đầy đủ Tên và phương thức liên hệ.' : 'Please enter both name and contact info.', 'warning')
+      showToast(t('components.dashboard.views.StaffView.pleaseEnterBothName'), 'warning')
       return
     }
     onInviteStaff(inviteName, inviteContact, inviteRole, inviteMethod)
@@ -158,7 +158,7 @@ function StaffView({
         {/* KPI Card 1: Total Staff Linked */}
         <div className="rounded-xl border border-nexoraBorder bg-white p-5 shadow-sm lg:col-span-1 flex flex-col justify-center">
           <small className="text-[10px] font-black uppercase text-nexoraMuted tracking-wider">
-            {t('staff_invite.total_linked') || 'Total Staff Linked'}
+            {t('staff_invite.total_linked')}
           </small>
           <div className="mt-2 flex items-baseline justify-between">
             <h3 className="text-2xl font-black text-nexoraText">{totalLinked}</h3>
@@ -168,7 +168,7 @@ function StaffView({
         {/* KPI Card 2: Pending Invites */}
         <div className="rounded-xl border border-nexoraBorder bg-white p-5 shadow-sm lg:col-span-1 flex flex-col justify-center">
           <small className="text-[10px] font-black uppercase text-nexoraMuted tracking-wider">
-            {t('staff_invite.pending_invites') || 'Pending Invites'}
+            {t('staff_invite.pending_invites')}
           </small>
           <div className="mt-2 flex items-baseline justify-between">
             <h3 className="text-2xl font-black text-nexoraText">{pendingCount}</h3>
@@ -182,7 +182,7 @@ function StaffView({
             <div
               onClick={() => setLargeJoinQrOpen(true)}
               className="h-20 w-20 rounded-xl bg-slate-50 border border-slate-200 p-1 flex items-center justify-center shadow-inner bg-white cursor-zoom-in transition hover:scale-105 duration-200 group relative"
-              title={currentLanguage === 'vi' ? 'Click để phóng to' : 'Click to enlarge'}
+              title={t('components.dashboard.views.StaffView.clickToEnlarge')}
             >
               <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`)}`}
@@ -205,12 +205,10 @@ function StaffView({
               </span>
               <div>
                 <h4 className="text-xs font-black uppercase text-slate-800 tracking-wider">
-                  {currentLanguage === 'vi' ? 'LIÊN KẾT GIA NHẬP CHO THỢ (REFERRAL LINK)' : 'TECHNICIAN JOIN LINK & REFERRAL'}
+                  {t('components.dashboard.views.StaffView.technicianJoinLinkAnd')}
                 </h4>
                 <p className="text-[11px] text-slate-500 font-medium mt-0.5 leading-normal">
-                  {currentLanguage === 'vi'
-                    ? 'Chia sẻ liên kết này hoặc cho thợ quét mã QR để tự đăng ký/liên kết tài khoản vào tiệm.'
-                    : 'Share this referral link or let technicians scan the QR code to self-register or link to your salon.'}
+                  {t('components.dashboard.views.StaffView.shareThisReferralLink')}
                 </p>
               </div>
             </div>
@@ -226,19 +224,19 @@ function StaffView({
                 onClick={() => {
                   const url = `${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`
                   navigator.clipboard.writeText(url)
-                  showToast(currentLanguage === 'vi' ? 'Đã sao chép liên kết gia nhập!' : 'Join link copied to clipboard!', 'success')
+                  showToast(t('components.dashboard.views.StaffView.joinLinkCopiedTo'), 'success')
                 }}
                 className="h-9 px-3.5 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-sm bg-white cursor-pointer"
               >
                 <Copy className="h-3.5 w-3.5" />
-                <span>{currentLanguage === 'vi' ? 'Sao chép' : 'Copy'}</span>
+                <span>{t('components.dashboard.views.StaffView.copy')}</span>
               </button>
               <button
                 onClick={() => onOpenInviteShare && onOpenInviteShare()}
                 className="h-9 px-3.5 bg-nexoraBrand text-white hover:bg-opacity-95 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-sm cursor-pointer"
               >
                 <Share2 className="h-3.5 w-3.5" />
-                <span>{currentLanguage === 'vi' ? 'Chia sẻ' : 'Share'}</span>
+                <span>{t('components.dashboard.views.StaffView.share')}</span>
               </button>
             </div>
           </div>
@@ -251,17 +249,17 @@ function StaffView({
           <div className="px-5 py-4 border-b border-amber-200 bg-amber-50 flex items-center justify-between">
             <h3 className="text-xs font-black uppercase text-amber-800 tracking-wider flex items-center gap-1.5 animate-pulse">
               <AlertCircle className="h-4 w-4 text-amber-700" />
-              {currentLanguage === 'vi' ? 'Yêu cầu gia nhập chờ duyệt' : 'Pending Join Requests'} ({pendingStaff.length})
+              {t('components.dashboard.views.StaffView.pendingJoinRequests')} ({pendingStaff.length})
             </h3>
           </div>
           <div className="overflow-x-auto bg-white">
             <table className="w-full border-collapse text-left text-sm">
               <thead>
                 <tr className="bg-slate-50 text-[10px] font-extrabold uppercase text-nexoraMuted border-b border-nexoraRule">
-                  <th className="px-5 py-3">{t('setup.col_staff') || 'Staff'}</th>
-                  <th className="px-5 py-3">{t('staff_invite.col_flow') || 'Flow'}</th>
-                  <th className="px-5 py-3">{t('setup.linked_wallets') || 'Payment Setup'}</th>
-                  <th className="px-5 py-3 text-right">{t('dashboard.top_touchpoints.manage') || 'Actions'}</th>
+                  <th className="px-5 py-3">{t('setup.col_staff')}</th>
+                  <th className="px-5 py-3">{t('staff_invite.col_flow')}</th>
+                  <th className="px-5 py-3">{t('setup.linked_wallets')}</th>
+                  <th className="px-5 py-3 text-right">{t('dashboard.top_touchpoints.manage')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -286,7 +284,7 @@ function StaffView({
                       </td>
                       <td className="px-5 py-4">
                         <span className="text-xs text-slate-500 font-semibold">
-                          {member.flowType || (currentLanguage === 'vi' ? 'Khởi tạo trực tiếp' : 'Direct Addition')}
+                          {member.flowType || (t('components.dashboard.views.StaffView.directAddition'))}
                         </span>
                       </td>
                       <td className="px-5 py-4">
@@ -296,7 +294,7 @@ function StaffView({
                               <span key={wallet} className="rounded px-2 py-0.5 text-[10px] font-bold bg-nexoraCanvas text-nexoraBrand border border-nexoraBrand/10">{wallet}</span>
                             ))
                           ) : (
-                            <span className="text-[10px] text-slate-400 font-bold italic">{currentLanguage === 'vi' ? 'Chưa cấu hình' : 'Pending'}</span>
+                            <span className="text-[10px] text-slate-400 font-bold italic">{t('components.dashboard.views.StaffView.pending')}</span>
                           )}
                         </div>
                       </td>
@@ -305,13 +303,13 @@ function StaffView({
                           onClick={() => onApproveClick && onApproveClick(member)}
                           className="px-3.5 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition shadow-sm mr-2"
                         >
-                          {currentLanguage === 'vi' ? 'Xem & Duyệt' : 'Review & Approve'}
+                          {t('components.dashboard.views.StaffView.reviewAndApprove')}
                         </button>
                         <button
                           onClick={() => onDeclineJoin && onDeclineJoin(member.id)}
                           className="px-3 py-1.5 text-xs font-bold border border-rose-200 bg-rose-50 text-rose-700 rounded-lg hover:bg-rose-100 transition shadow-sm"
                         >
-                          {currentLanguage === 'vi' ? 'Từ chối' : 'Decline'}
+                          {t('components.dashboard.views.StaffView.decline')}
                         </button>
                       </td>
                     </tr>
@@ -327,22 +325,22 @@ function StaffView({
       <div className="rounded-xl border border-nexoraBorder bg-white overflow-hidden shadow-sm">
         <div className="px-5 py-4 border-b border-nexoraRule bg-slate-50/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <h3 className="text-xs font-black uppercase text-slate-700 tracking-wider">
-            {t('staff_invite.invite_status_table') || 'Staff Invite & Link Status'}
+            {t('staff_invite.invite_status_table')}
           </h3>
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-extrabold uppercase text-slate-400 whitespace-nowrap">
-                {currentLanguage === 'vi' ? 'Sắp xếp:' : 'Sort by:'}
+                {t('components.dashboard.views.StaffView.sortBy')}
               </span>
               <CustomSelect
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 options={[
-                  { value: 'name-asc', label: currentLanguage === 'vi' ? 'Tên (A-Z)' : 'Name (A-Z)' },
-                  { value: 'name-desc', label: currentLanguage === 'vi' ? 'Tên (Z-A)' : 'Name (Z-A)' },
-                  { value: 'date-newest', label: currentLanguage === 'vi' ? 'Ngày: Mới nhất' : 'Date: Newest' },
-                  { value: 'date-oldest', label: currentLanguage === 'vi' ? 'Ngày: Cũ nhất' : 'Date: Oldest' },
-                  { value: 'status-active', label: currentLanguage === 'vi' ? 'Trạng thái hoạt động' : 'Status: Active' }
+                  { value: 'name-asc', label: t('components.dashboard.views.StaffView.nameAZ') },
+                  { value: 'name-desc', label: t('components.dashboard.views.StaffView.nameZA') },
+                  { value: 'date-newest', label: t('components.dashboard.views.StaffView.dateNewest') },
+                  { value: 'date-oldest', label: t('components.dashboard.views.StaffView.dateOldest') },
+                  { value: 'status-active', label: t('components.dashboard.views.StaffView.statusActive') }
                 ]}
                 size="sm"
                 className="w-44"
@@ -354,7 +352,7 @@ function StaffView({
               className="px-4 py-2 bg-nexoraBrand text-white hover:bg-opacity-95 text-xs font-bold rounded-lg transition shadow-sm flex items-center gap-1.5"
             >
               <Plus className="h-3.5 w-3.5" />
-              <span>{t('setup.add_staff_title') || 'Add New Staff'}</span>
+              <span>{t('setup.add_staff_title')}</span>
             </button>
           </div>
         </div>
@@ -363,28 +361,28 @@ function StaffView({
           <table className="w-full border-collapse text-left text-sm">
             <thead>
               <tr className="bg-slate-50 text-[10px] font-extrabold uppercase text-nexoraMuted border-b border-nexoraRule">
-                <th className="px-5 py-3">{t('setup.col_staff') || 'Staff'}</th>
-                <th className="px-5 py-3">{t('staff_invite.col_flow') || 'Flow'}</th>
-                <th className="px-5 py-3">{t('setup.linked_wallets') || 'Payment Setup'}</th>
+                <th className="px-5 py-3">{t('setup.col_staff')}</th>
+                <th className="px-5 py-3">{t('staff_invite.col_flow')}</th>
+                <th className="px-5 py-3">{t('setup.linked_wallets')}</th>
                 <th className="px-5 py-3">
                   <div className="flex items-center gap-1 group relative">
-                    <span>{t('dashboard.activity_log.col_status') || 'Status'}</span>
+                    <span>{t('dashboard.activity_log.col_status')}</span>
                     <HelpCircle className="h-3 w-3 text-slate-400 cursor-help shrink-0" />
                     <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1.5 hidden group-hover:block w-44 bg-slate-800 text-white text-[9px] font-bold p-2 rounded-lg shadow-lg pointer-events-none text-center normal-case leading-normal z-50">
-                      {currentLanguage === 'vi' ? 'Nhấp vào chip để đổi trạng thái hoạt động' : 'Click pill to toggle active status'}
+                      {t('components.dashboard.views.StaffView.clickPillToToggle')}
                     </div>
                   </div>
                 </th>
                 <th className="px-5 py-3">
                   <div className="flex items-center gap-1 group relative">
-                    <span>{currentLanguage === 'vi' ? 'Tips Flow' : 'Tips Flow'}</span>
+                    <span>{t('components.dashboard.views.StaffView.tipsFlow')}</span>
                     <HelpCircle className="h-3 w-3 text-slate-400 cursor-help shrink-0" />
                     <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1.5 hidden group-hover:block w-44 bg-slate-800 text-white text-[9px] font-bold p-2 rounded-lg shadow-lg pointer-events-none text-center normal-case leading-normal z-50 font-sans">
-                      {currentLanguage === 'vi' ? 'Nhấp vào chip để ẩn/hiển thị thợ trên QR tiệm' : 'Click pill to show/hide tech on general QR'}
+                      {t('components.dashboard.views.StaffView.clickPillToShow')}
                     </div>
                   </div>
                 </th>
-                <th className="px-5 py-3 text-right">{t('dashboard.top_touchpoints.manage') || 'Actions'}</th>
+                <th className="px-5 py-3 text-right">{t('dashboard.top_touchpoints.manage')}</th>
               </tr>
             </thead>
             <tbody>
@@ -415,17 +413,17 @@ function StaffView({
 
                     <td className="px-5 py-4">
                       <div className="text-xs text-slate-500 font-semibold leading-normal">
-                        {member.flowType || (currentLanguage === 'vi' ? 'Khởi tạo trực tiếp' : 'Direct Addition')}
+                        {member.flowType || (t('components.dashboard.views.StaffView.directAddition'))}
                       </div>
                       <div className="text-[10px] text-slate-400 font-bold mt-0.5 leading-normal">
-                        {currentLanguage === 'vi' ? 'Ngày liên kết: ' : 'Linked Date: '}
+                        {t('components.dashboard.views.StaffView.linkedDate')}
                         {member.joinedDate || '2026-05-15'}
                       </div>
                     </td>
 
                     <td className="px-5 py-4">
                       {isPendingSetup ? (
-                        <span className="text-[10px] text-slate-400 font-bold italic">{currentLanguage === 'vi' ? 'Chưa cấu hình' : 'Pending'}</span>
+                        <span className="text-[10px] text-slate-400 font-bold italic">{t('components.dashboard.views.StaffView.pending')}</span>
                       ) : (
                         <div className="flex flex-wrap gap-1.5">
                           {wallets.length > 0 ? (
@@ -433,7 +431,7 @@ function StaffView({
                               <span key={wallet} className="rounded px-2 py-0.5 text-[10px] font-bold bg-nexoraCanvas text-nexoraBrand border border-nexoraBrand/10">{wallet}</span>
                             ))
                           ) : (
-                            <span className="text-[10px] text-slate-400 font-bold italic">{currentLanguage === 'vi' ? 'Không có ví' : 'No wallets'}</span>
+                            <span className="text-[10px] text-slate-400 font-bold italic">{t('components.dashboard.views.StaffView.noWallets')}</span>
                           )}
                         </div>
                       )}
@@ -442,17 +440,17 @@ function StaffView({
                     <td className="px-5 py-4">
                       {isPendingSetup && (
                         <span className="inline-flex rounded-full bg-amber-50 text-amber-700 px-2.5 py-0.5 text-[10px] font-extrabold uppercase border border-amber-100">
-                          {currentLanguage === 'vi' ? 'Chờ setup' : 'Pending Setup'}
+                          {t('components.dashboard.views.StaffView.pendingSetup')}
                         </span>
                       )}
                       {isPendingAcceptance && (
                         <span className="inline-flex rounded-full bg-indigo-50 text-indigo-700 px-2.5 py-0.5 text-[10px] font-extrabold uppercase border border-indigo-100">
-                          {currentLanguage === 'vi' ? 'Chờ chấp nhận' : 'Pending Acceptance'}
+                          {t('components.dashboard.views.StaffView.pendingAcceptance')}
                         </span>
                       )}
                       {isPendingUnlink && (
                         <span className="inline-flex rounded-full bg-rose-50 text-rose-700 px-2.5 py-0.5 text-[10px] font-extrabold uppercase border border-rose-100">
-                          {currentLanguage === 'vi' ? 'Chờ hủy liên kết' : 'Pending Unlink'}
+                          {t('components.dashboard.views.StaffView.pendingUnlink')}
                         </span>
                       )}
                       {!isPending && (
@@ -500,7 +498,7 @@ function StaffView({
                             onClick={() => handleResendInvite(member)}
                             className="px-2.5 py-1 text-[10px] font-extrabold border border-nexoraBorder bg-white text-nexoraText rounded hover:bg-slate-50 transition"
                           >
-                            {t('staff_invite.action_resend') || 'Resend Invite'}
+                            {t('staff_invite.action_resend')}
                           </button>
                           <IconButton label={t('common.delete')} onClick={() => onDelete(member.id)} className="hover:text-rose-600">
                             <Trash2 className="h-4 w-4" />
@@ -514,13 +512,13 @@ function StaffView({
                             onClick={() => onAcceptJoin && onAcceptJoin(member.id)}
                             className="px-2.5 py-1 text-[10px] font-extrabold border border-emerald-200 bg-emerald-50 text-emerald-700 rounded hover:bg-emerald-100 transition"
                           >
-                            {currentLanguage === 'vi' ? 'Chấp nhận' : 'Accept'}
+                            {t('components.dashboard.views.StaffView.accept')}
                           </button>
                           <button
                             onClick={() => onDeclineJoin && onDeclineJoin(member.id)}
                             className="px-2.5 py-1 text-[10px] font-extrabold border border-rose-200 bg-rose-50 text-rose-700 rounded hover:bg-rose-100 transition"
                           >
-                            {currentLanguage === 'vi' ? 'Từ chối' : 'Decline'}
+                            {t('components.dashboard.views.StaffView.decline')}
                           </button>
                         </div>
                       )}
@@ -531,13 +529,13 @@ function StaffView({
                             onClick={() => onAcceptUnlink && onAcceptUnlink(member.id)}
                             className="px-2.5 py-1 text-[10px] font-extrabold border border-rose-200 bg-rose-50 text-rose-700 rounded hover:bg-rose-100 transition cursor-pointer"
                           >
-                            {currentLanguage === 'vi' ? 'Duyệt hủy' : 'Approve Unlink'}
+                            {t('components.dashboard.views.StaffView.approveUnlink')}
                           </button>
                           <button
                             onClick={() => onDeclineUnlink && onDeclineUnlink(member.id)}
                             className="px-2.5 py-1 text-[10px] font-extrabold border border-slate-200 bg-white text-slate-700 rounded hover:bg-slate-50 transition cursor-pointer"
                           >
-                            {currentLanguage === 'vi' ? 'Từ chối' : 'Reject'}
+                            {t('components.dashboard.views.StaffView.reject')}
                           </button>
                         </div>
                       )}
@@ -579,7 +577,7 @@ function StaffView({
           >
             <div className="w-full flex justify-between items-center mb-4">
               <h3 className="text-xs font-black uppercase text-slate-800 tracking-wider">
-                {currentLanguage === 'vi' ? 'MÃ QR GIA NHẬP' : 'JOIN QR CODE'}
+                {t('components.dashboard.views.StaffView.joinQrCode')}
               </h3>
               <button
                 onClick={() => setLargeJoinQrOpen(false)}
@@ -598,9 +596,7 @@ function StaffView({
             </div>
 
             <p className="text-[11px] text-slate-500 font-medium text-center leading-relaxed max-w-xs mb-4">
-              {currentLanguage === 'vi'
-                ? 'Cho thợ quét mã này bằng camera điện thoại để tự đăng ký hoặc liên kết tài khoản vào tiệm.'
-                : 'Have technicians scan this QR code with their mobile camera to self-register or link accounts.'}
+              {t('components.dashboard.views.StaffView.haveTechniciansScanThis')}
             </p>
 
             <div className="w-full bg-slate-50 rounded-xl border border-slate-200 p-2.5 flex items-center justify-between gap-2">
@@ -611,12 +607,12 @@ function StaffView({
                 onClick={() => {
                   const url = `${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`
                   navigator.clipboard.writeText(url)
-                  showToast(currentLanguage === 'vi' ? 'Đã sao chép liên kết gia nhập!' : 'Join link copied to clipboard!', 'success')
+                  showToast(t('components.dashboard.views.StaffView.joinLinkCopiedTo'), 'success')
                 }}
                 className="h-7 px-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[10px] font-bold transition flex items-center gap-1 shrink-0"
               >
                 <Copy className="h-3 w-3" />
-                <span>{currentLanguage === 'vi' ? 'Sao chép' : 'Copy'}</span>
+                <span>{t('components.dashboard.views.StaffView.copy')}</span>
               </button>
             </div>
           </div>

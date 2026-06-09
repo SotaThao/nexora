@@ -14,7 +14,7 @@ export default function ForgotPassword({ setView }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!email.trim()) {
-      setError(t('register.errors.email_required') || 'Email is required')
+      setError(t('register.errors.email_required'))
       return
     }
 
@@ -43,24 +43,24 @@ export default function ForgotPassword({ setView }) {
 
         <div className="text-center mb-6">
           <h2 className="font-sans text-xl font-bold tracking-wide sm:text-2xl">
-            Reset Password
+            {t('components.ForgotPassword.resetPassword')}
           </h2>
           <p className="text-xs text-nexoraSubtle mt-1.5 leading-relaxed">
-            Enter your email address and we'll send you a link to reset your password.
+            {t('components.ForgotPassword.description')}
           </p>
         </div>
 
         {isSubmitted ? (
           <div className="space-y-6 text-center">
             <div className="p-4 bg-green-50 text-green-800 text-xs rounded-xl border border-green-200 leading-relaxed">
-              If an account is registered with <span className="font-semibold">{email}</span>, you will receive a password reset link shortly. Please check your inbox and spam folder.
+              {t('components.ForgotPassword.successMessage', { email })}
             </div>
 
             <button
               onClick={() => setView('login')}
               className="w-full min-h-11 py-2.5 border border-nexoraBorder hover:bg-nexoraCanvas text-nexoraSubtle hover:text-nexoraText font-semibold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 transition-all"
             >
-              <ArrowLeft className="w-4 h-4" /> Back to Sign In
+              <ArrowLeft className="w-4 h-4" /> {t('components.ForgotPassword.backToSignIn')}
             </button>
           </div>
         ) : (
@@ -73,13 +73,13 @@ export default function ForgotPassword({ setView }) {
 
             <div>
               <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-                Email Address
+                {t('components.ForgotPassword.emailAddress')}
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 w-4 h-4 text-nexoraSubtle" />
                 <input
                   type="email"
-                  placeholder="e.g. owner@salon.com"
+                  placeholder={t('components.ForgotPassword.phExampleEmail')}
                   className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg pl-10 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -95,7 +95,7 @@ export default function ForgotPassword({ setView }) {
                 className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 disabled:opacity-50 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all"
               >
                 <Send className="w-4 h-4" />
-                Send Reset Link
+                {t('components.ForgotPassword.sendResetLink')}
               </button>
 
               <button
@@ -103,7 +103,7 @@ export default function ForgotPassword({ setView }) {
                 onClick={() => setView('login')}
                 className="w-full min-h-11 py-2.5 border border-nexoraBorder hover:bg-nexoraCanvas text-nexoraSubtle hover:text-nexoraText font-semibold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 transition-all"
               >
-                <ArrowLeft className="w-4 h-4" /> Cancel
+                <ArrowLeft className="w-4 h-4" /> {t('common.cancel')}
               </button>
             </div>
           </form>

@@ -68,9 +68,7 @@ export default function Step1BusinessInfo({
                 <div className="relative group inline-block ml-1.5 align-middle normal-case font-normal text-nexoraSubtle">
                   <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
-                    {currentLanguage === 'vi'
-                      ? 'Nhập tên hợp pháp hoặc tên công khai của cửa hàng/salon của bạn sẽ hiển thị trên màn hình thanh toán của khách hàng.'
-                      : 'Enter the legal or public name of your store/salon as it will appear on customer payment screens.'}
+                    {t('components.setup_wizard.steps.Step1BusinessInfo.enterTheLegalOr')}
                     <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
                   </div>
                 </div>
@@ -119,9 +117,7 @@ export default function Step1BusinessInfo({
               <div className="relative group inline-block ml-1.5 align-middle normal-case font-normal text-nexoraSubtle">
                 <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
-                  {currentLanguage === 'vi'
-                    ? 'Cung cấp địa chỉ thực của cửa hàng. Được sử dụng để bản địa hóa và xác minh.'
-                    : 'Provide the physical location of your store. Used for localization and verification purposes.'}
+                  {t('components.setup_wizard.steps.Step1BusinessInfo.provideThePhysicalLocation')}
                   <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-black"></div>
                 </div>
               </div>
@@ -152,7 +148,7 @@ export default function Step1BusinessInfo({
                 <input
                   type="text"
                   disabled={isSsoLocked}
-                  placeholder="+1 (555) 789-2026"
+                  placeholder={t('components.setup_wizard.steps.Step1BusinessInfo.phPhone')}
                   className={`w-full bg-nexoraCanvas border ${errors.phone ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} ${isSsoLocked ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : ''} rounded-lg pl-11 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
                   value={businessInfo.phone}
                   onChange={(e) => {
@@ -172,7 +168,7 @@ export default function Step1BusinessInfo({
                 <input
                   type="url"
                   disabled={isSsoLocked}
-                  placeholder="https://spasalon.com"
+                  placeholder={t('components.setup_wizard.steps.Step1BusinessInfo.phWebsite')}
                   className={`w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white ${isSsoLocked ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : ''} rounded-lg pl-11 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
                   value={businessInfo.website}
                   onChange={(e) => {
@@ -204,7 +200,7 @@ export default function Step1BusinessInfo({
             <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">{renderLabel(t('setup.google_review_link'))}</label>
             <input
               type="url"
-              placeholder="https://g.page/r/cxxxxxx/review"
+              placeholder={t('components.setup_wizard.steps.Step1BusinessInfo.phGoogleReviewUrl')}
               className={`w-full bg-nexoraCanvas border ${errors.googleReview ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
               value={reviewLinks.googleReview}
               onChange={(e) => {
@@ -219,7 +215,7 @@ export default function Step1BusinessInfo({
             <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">{renderLabel(t('setup.yelp_review_link'))}</label>
             <input
               type="url"
-              placeholder="https://www.yelp.com/biz/your-store"
+              placeholder={t('components.setup_wizard.steps.Step1BusinessInfo.phYelpUrl')}
               className={`w-full bg-nexoraCanvas border ${errors.yelpReview ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
               value={reviewLinks.yelpReview}
               onChange={(e) => {
@@ -235,7 +231,7 @@ export default function Step1BusinessInfo({
               <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">{renderLabel(t('setup.facebook_link'))}</label>
               <input
                 type="url"
-                placeholder="https://facebook.com/reviews"
+                placeholder={t('components.setup_wizard.steps.Step1BusinessInfo.phFacebookUrl')}
                 className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all"
                 value={reviewLinks.facebookReview}
                 onChange={(e) => setReviewLinks({ ...reviewLinks, facebookReview: e.target.value })}
@@ -246,7 +242,7 @@ export default function Step1BusinessInfo({
               <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">{renderTextWithGoldStars(t('setup.feedback_email'))}</label>
               <input
                 type="email"
-                placeholder="manager@yourstore.com"
+                placeholder={t('components.setup_wizard.steps.Step1BusinessInfo.phManagerEmail')}
                 className={`w-full bg-nexoraCanvas border ${errors.feedbackEmail ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
                 value={reviewLinks.feedbackEmail}
                 onChange={(e) => {

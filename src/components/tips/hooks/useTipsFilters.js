@@ -30,7 +30,7 @@ export function useTipsFilters({ transactions, staff }) {
 
   const staffOptions = useMemo(() => {
     return [
-      { value: 'all', label: t('dashboard.activity_log.all_staff') || 'All Staff' },
+      { value: 'all', label: t('dashboard.activity_log.all_staff') },
       ...(staff || []).map(member => ({ value: member.nickname, label: member.nickname }))
     ];
   }, [staff, t]);
@@ -38,13 +38,13 @@ export function useTipsFilters({ transactions, staff }) {
   const touchpointOptions = useMemo(() => {
     const uniqueFromTx = Array.from(new Set(transactions.map(tx => tx.touchpoint)));
     return [
-      { value: 'all', label: t('dashboard.activity_log.all_touchpoints') || 'All Touch Points' },
+      { value: 'all', label: t('dashboard.activity_log.all_touchpoints') },
       ...uniqueFromTx.filter(Boolean).map(name => ({ value: name, label: name }))
     ];
   }, [transactions, t]);
 
   const paymentOptions = [
-    { value: 'all', label: t('dashboard.activity_log.all_payments') || 'All Payment Methods' },
+    { value: 'all', label: t('dashboard.activity_log.all_payments') },
     { value: 'Venmo', label: 'Venmo' },
     { value: 'Cash App', label: 'Cash App' },
     { value: 'Zelle', label: 'Zelle' },
@@ -52,19 +52,19 @@ export function useTipsFilters({ transactions, staff }) {
   ];
 
   const statusOptions = [
-    { value: 'all', label: t('dashboard.activity_log.all_statuses') || 'All Statuses' },
+    { value: 'all', label: t('dashboard.activity_log.all_statuses') },
     { value: 'Success', label: 'Success' },
     { value: 'Pending', label: 'Pending' },
     { value: 'Failed', label: 'Failed' }
   ];
 
   const datePresetOptions = [
-    { value: 'all', label: t('dashboard.activity_log.preset_all') || 'All Time' },
-    { value: 'today', label: t('dashboard.activity_log.preset_today') || 'Today' },
-    { value: 'yesterday', label: t('dashboard.activity_log.preset_yesterday') || 'Yesterday' },
-    { value: '7days', label: t('dashboard.activity_log.preset_7days') || 'Last 7 Days' },
-    { value: '30days', label: t('dashboard.activity_log.preset_30days') || 'Last 30 Days' },
-    { value: 'custom', label: t('dashboard.activity_log.preset_custom') || 'Custom Range' }
+    { value: 'all', label: t('dashboard.activity_log.preset_all') },
+    { value: 'today', label: t('dashboard.activity_log.preset_today') },
+    { value: 'yesterday', label: t('dashboard.activity_log.preset_yesterday') },
+    { value: '7days', label: t('dashboard.activity_log.preset_7days') },
+    { value: '30days', label: t('dashboard.activity_log.preset_30days') },
+    { value: 'custom', label: t('dashboard.activity_log.preset_custom') }
   ];
 
   const filteredTransactions = useMemo(() => {
