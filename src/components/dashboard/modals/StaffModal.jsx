@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { X, Upload, Eye, AlertTriangle, QrCode, Loader2, CheckCircle2, XCircle, Star, HelpCircle } from 'lucide-react'
 import IconButton from '../../ui/IconButton'
+import ImageFileInput from '../../ui/ImageFileInput'
 import CountryCodeSelect, { parsePhone } from '../../CountryCodeSelect'
 import { WalletLogos, DEFAULT_PAYOUT_CONFIGS } from '../constants'
 import { useTranslation, renderLabel } from '../../../contexts/LanguageContext'
@@ -81,15 +82,9 @@ function StaffModal({
 
   const phoneParsed = parsePhone(form?.phone || '')
 
-  const handleAvatarChange = (event) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    const reader = new FileReader()
-    reader.onload = () => {
-      setForm({ ...form, avatar: reader.result })
-    }
-    reader.readAsDataURL(file)
+  const handleAvatarPick = (dataUrl) => {
+    if (!dataUrl) return
+    setForm({ ...form, avatar: dataUrl })
   }
 
   const handleToggleWallet = (walletKey) => {
@@ -507,11 +502,14 @@ function StaffModal({
                   )}
                 </div>
                 <div className="flex flex-wrap gap-2 items-center">
-                  <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-nexoraBorder px-3 text-xs font-bold text-nexoraText transition hover:bg-nexoraCanvas">
+                  <ImageFileInput
+                    as="label"
+                    className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-nexoraBorder px-3 text-xs font-bold text-nexoraText transition hover:bg-nexoraCanvas"
+                    onPick={handleAvatarPick}
+                  >
                     <Upload className="h-4 w-4 text-nexoraBrand" />
                     Upload photo
-                    <input type="file" accept="image/*" className="sr-only" onChange={handleAvatarChange} />
-                  </label>
+                  </ImageFileInput>
                   {(form.nexoraStaffId || form.id) && (
                     <button
                       type="button"

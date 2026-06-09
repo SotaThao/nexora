@@ -155,11 +155,11 @@ export default function SettingsView({
             saveReviews={form.saveReviews}
             handleToggleMethod={form.handleToggleMethod}
             handleEditPayoutAccount={form.handleEditPayoutAccount}
-            handleModalFileChange={form.handleModalFileChange}
+            handleModalImagePick={form.handleModalImagePick}
             handleModalTakePhoto={form.handleModalTakePhoto}
             handleModalClearQr={form.handleModalClearQr}
             savePayoutAccount={form.savePayoutAccount}
-            handleAvatarChange={form.handleAvatarChange}
+            handleAvatarPick={form.handleAvatarPick}
             formatDOB={form.formatDOB}
             onShowQr={() => setShowQrModal(true)}
           />

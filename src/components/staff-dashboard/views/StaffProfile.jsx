@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
+import ImageFileInput from '../../ui/ImageFileInput'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 const labelCls = 'mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-nexoraSubtle'
@@ -75,15 +76,10 @@ export default function StaffProfile({ onLogout }) {
     showToast(t('components.staff_dashboard.views.StaffProfile.accountChangesSavedSuccessfully'))
   }
 
-  const handleAvatarChange = (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      saveProfile({ avatar: reader.result })
-      showToast(t('components.staff_dashboard.views.StaffProfile.avatarUpdatedSuccessfully'))
-    }
-    reader.readAsDataURL(file)
+  const handleAvatarPick = (dataUrl) => {
+    if (!dataUrl) return
+    saveProfile({ avatar: dataUrl })
+    showToast(t('components.staff_dashboard.views.StaffProfile.avatarUpdatedSuccessfully'))
   }
 
   const handleKycSubmit = (e) => {
@@ -111,8 +107,7 @@ export default function StaffProfile({ onLogout }) {
     }, 2000)
   }
 
-  const handleFileChange = (e, side) => {
-    const file = e.target.files?.[0]
+  const handleIdImagePick = (side, file) => {
     if (!file) return
     if (side === 'front') {
       setIdFrontFile(file.name)
@@ -205,11 +200,14 @@ export default function StaffProfile({ onLogout }) {
                     {(fullName || displayName || 'S').charAt(0)}
                   </div>
                 )}
-                <label className="absolute inset-0 rounded-full bg-black/45 text-white text-[10px] font-black uppercase flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                <ImageFileInput
+                  as="label"
+                  className="absolute inset-0 rounded-full bg-black/45 text-white text-[10px] font-black uppercase flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
+                  onPick={handleAvatarPick}
+                >
                   <Camera className="h-5 w-5 mb-1" />
                   {t('components.staff_dashboard.views.StaffProfile.change')}
-                  <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-                </label>
+                </ImageFileInput>
               </div>
               <span className="mt-2 text-xs font-bold text-nexoraText">
                 {fullName || displayName}
@@ -448,7 +446,11 @@ export default function StaffProfile({ onLogout }) {
                         <span className="text-[10px] text-slate-500 text-center font-medium">
                           {idFrontFile || (t('components.staff_dashboard.views.StaffProfile.uploadFrontSide'))}
                         </span>
-                        <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(e, 'front')} />
+                        <ImageFileInput
+                          as="div"
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                          onPickFile={(file) => handleIdImagePick('front', file)}
+                        />
                       </div>
                     </div>
                     <div>
@@ -460,7 +462,11 @@ export default function StaffProfile({ onLogout }) {
                         <span className="text-[10px] text-slate-500 text-center font-medium">
                           {idBackFile || (t('components.staff_dashboard.views.StaffProfile.uploadBackSide'))}
                         </span>
-                        <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(e, 'back')} />
+                        <ImageFileInput
+                          as="div"
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                          onPickFile={(file) => handleIdImagePick('back', file)}
+                        />
                       </div>
                     </div>
                   </div>

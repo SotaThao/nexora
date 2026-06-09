@@ -6,6 +6,7 @@ import { logger } from '../../../utils/logger'
 import { usePendingAccounts, useReplaceAllPendingAccounts } from '../../../data/hooks/usePendingAccounts'
 import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
 import { useNotifications, useAddNotification } from '../../../data/hooks/useNotifications'
+import { captureQrImage } from '../../../native/imagePicker'
 
 const MOCK_NEXORA_STAFF_PROFILES = {}
 
@@ -389,25 +390,18 @@ export default function useStaffRegistration({ inviteData }) {
     setEditingMethod(null)
   }
 
-  const handleModalFileChange = (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      setEditQrCode(reader.result)
-    }
-    reader.readAsDataURL(file)
+  const handleModalImagePick = (dataUrl) => {
+    if (dataUrl) setEditQrCode(dataUrl)
   }
 
-  const handleModalTakePhoto = () => {
+  const handleModalTakePhoto = async () => {
     setIsCapturing(true)
-    setTimeout(() => {
-      const mockQr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-        editValue || ''
-      )}`
-      setEditQrCode(mockQr)
+    try {
+      const dataUrl = await captureQrImage({ fallbackValue: editValue || '' })
+      if (dataUrl) setEditQrCode(dataUrl)
+    } finally {
       setIsCapturing(false)
-    }, 800)
+    }
   }
 
   const handleModalClearQr = () => {
@@ -793,7 +787,7 @@ export default function useStaffRegistration({ inviteData }) {
     handleToggleMethod,
     handleEditPayoutAccount,
     savePayoutAccount,
-    handleModalFileChange,
+    handleModalImagePick,
     handleModalTakePhoto,
     handleModalClearQr,
     handleLinkExistingProfile,

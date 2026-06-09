@@ -47,5 +47,11 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Nexora needs camera access to capture profile photos and QR payment codes.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Nexora needs photo library access so you can upload images.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Nexora needs permission to save photos you capture in the app.</string>
 </dict>
 </plist>

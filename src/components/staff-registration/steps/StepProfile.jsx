@@ -2,6 +2,7 @@ import React from 'react'
 import { Upload, Loader2, CheckCircle2, XCircle, QrCode, HelpCircle, X } from 'lucide-react'
 import CountryCodeSelect from '../../CountryCodeSelect'
 import { renderLabel } from '../../../contexts/LanguageContext'
+import ImageFileInput from '../../ui/ImageFileInput'
 
 
 export default function StepProfile({
@@ -58,25 +59,15 @@ export default function StepProfile({
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center gap-2">
                 {/* Device upload option */}
-                <label className="h-9 px-4 rounded-xl bg-nexoraBrand hover:bg-nexoraBrandDark text-white flex items-center justify-center gap-1.5 cursor-pointer text-xs font-bold transition shadow-sm" title={t('components.staff_registration.steps.StepProfile.uploadFromDevice')}>
+                <ImageFileInput
+                  as="label"
+                  className="h-9 px-4 rounded-xl bg-nexoraBrand hover:bg-nexoraBrandDark text-white flex items-center justify-center gap-1.5 cursor-pointer text-xs font-bold transition shadow-sm"
+                  title={t('components.staff_registration.steps.StepProfile.uploadFromDevice')}
+                  onPick={setAvatar}
+                >
                   <Upload className="h-3.5 w-3.5" />
                   <span>{t('common.upload_photo')}</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0]
-                      if (file) {
-                        const reader = new FileReader()
-                        reader.onloadend = () => {
-                          setAvatar(reader.result)
-                        }
-                        reader.readAsDataURL(file)
-                      }
-                    }}
-                  />
-                </label>
+                </ImageFileInput>
               </div>
               <span className="text-[10px] text-nexoraSubtle">
                 {t('components.staff_registration.steps.StepProfile.acceptedFormatsJpgPng')}

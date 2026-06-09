@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { X, Camera, FolderOpen, AlertTriangle, Bitcoin } from 'lucide-react'
 import { useTranslation, renderLabel } from '../../../contexts/LanguageContext'
+import ImageFileInput from '../../ui/ImageFileInput'
+import { captureQrImage } from '../../../native/imagePicker'
 
 function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrCode, onClose, onSubmit, readOnly = false }) {
   const { t, currentLanguage } = useTranslation()
@@ -52,27 +54,20 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
     crypto: 'Enter BTC/ETH/USDT address...'
   }
 
-  const handleFileChange = (e) => {
-    if (readOnly) return
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      setQrCode(reader.result)
-    }
-    reader.readAsDataURL(file)
+  const handleImagePick = (dataUrl) => {
+    if (readOnly || !dataUrl) return
+    setQrCode(dataUrl)
   }
 
-  const handleTakePhoto = () => {
+  const handleTakePhoto = async () => {
     if (readOnly) return
     setIsCapturing(true)
-    setTimeout(() => {
-      const mockQr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-        value || ''
-      )}`
-      setQrCode(mockQr)
+    try {
+      const dataUrl = await captureQrImage({ fallbackValue: value || '' })
+      if (dataUrl) setQrCode(dataUrl)
+    } finally {
       setIsCapturing(false)
-    }, 800)
+    }
   }
 
   const handleClearQr = () => {
@@ -227,13 +222,15 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
                   <Camera className="w-5 h-5 text-nexoraBrand" />
                   <span className="text-[11px] font-bold text-slate-600">{t('setup.take_photo')}</span>
                 </button>
-                <label
+                <ImageFileInput
+                  as="label"
                   className="flex flex-col items-center justify-center py-5 border border-dashed border-slate-200 hover:border-nexoraBrand rounded-xl bg-slate-50 hover:bg-slate-50/50 transition gap-1.5 cursor-pointer"
+                  onPick={handleImagePick}
+                  disabled={readOnly}
                 >
                   <FolderOpen className="w-5 h-5 text-nexoraBrand" />
                   <span className="text-[11px] font-bold text-slate-600">{t('setup.choose_file')}</span>
-                  <input type="file" accept="image/*" className="sr-only" onChange={handleFileChange} />
-                </label>
+                </ImageFileInput>
               </div>
             )}
             {!qrCode && !readOnly && (

@@ -3,11 +3,29 @@
   "appName": "VLink Nexora",
   "webDir": "dist",
   "server": {
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "hostname": "localhost"
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "scrollEnabled": true,
+    "initialFocus": false
   },
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 0
+    },
+    "SystemBars": {
+      "insetsHandling": "css",
+      "style": "DARK",
+      "hidden": false,
+      "animation": "NONE"
+    },
+    "CapacitorUpdater": {
+      "appId": "net.vlinkgroup.nexora",
+      "autoUpdate": "atBackground",
+      "version": "0.0.1",
+      "defaultChannel": "production"
     }
   }
 }

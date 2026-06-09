@@ -34,6 +34,8 @@ const DEFAULT_PROFILE = {
   yelpReview: ''
 }
 
+import { captureQrImage } from '../../../native/imagePicker'
+
 export default function useSettingsForm({
   setupData,
   hasKyb,
@@ -391,25 +393,18 @@ export default function useSettingsForm({
     setModalError('')
   }
 
-  const handleModalFileChange = (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      setEditQrCode(reader.result)
-    }
-    reader.readAsDataURL(file)
+  const handleModalImagePick = (dataUrl) => {
+    if (dataUrl) setEditQrCode(dataUrl)
   }
 
-  const handleModalTakePhoto = () => {
+  const handleModalTakePhoto = async () => {
     setIsCapturing(true)
-    setTimeout(() => {
-      const mockQr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-        editValue || ''
-      )}`
-      setEditQrCode(mockQr)
+    try {
+      const dataUrl = await captureQrImage({ fallbackValue: editValue || '' })
+      if (dataUrl) setEditQrCode(dataUrl)
+    } finally {
       setIsCapturing(false)
-    }, 800)
+    }
   }
 
   const handleModalClearQr = () => {
@@ -455,17 +450,12 @@ export default function useSettingsForm({
     setEditingMethod(null)
   }
 
-  const handleAvatarChange = (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      saveProfile({
-        ...profile,
-        avatar: reader.result
-      })
-    }
-    reader.readAsDataURL(file)
+  const handleAvatarPick = (dataUrl) => {
+    if (!dataUrl) return
+    saveProfile({
+      ...profile,
+      avatar: dataUrl
+    })
   }
 
   const formatDOB = (dobString) => {
@@ -642,11 +632,11 @@ export default function useSettingsForm({
     saveReviews,
     handleToggleMethod,
     handleEditPayoutAccount,
-    handleModalFileChange,
+    handleModalImagePick,
     handleModalTakePhoto,
     handleModalClearQr,
     savePayoutAccount,
-    handleAvatarChange,
+    handleAvatarPick,
     formatDOB,
     getStatusCardDetails,
     currentLanguage,

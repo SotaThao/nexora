@@ -22,7 +22,7 @@ export default function RegisterWizard(props) {
     editQrCode, setEditQrCode,
     editAccountName, setEditAccountName,
     isCapturing, modalError, setModalError,
-    savePayoutAccount, handleModalFileChange, handleModalTakePhoto, handleModalClearQr,
+    savePayoutAccount, handleModalImagePick, handleModalTakePhoto, handleModalClearQr,
   } = form
   const isAuthEntryStep = currentStep <= 1
 
@@ -37,7 +37,7 @@ export default function RegisterWizard(props) {
       )}
 
       {/* Language Switcher */}
-      <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-nexoraBorder shadow-sm">
+      <div className="absolute top-[max(1rem,env(safe-area-inset-top,0px))] right-[max(1rem,env(safe-area-inset-right,0px))] z-50 flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-nexoraBorder shadow-sm">
         <button
           onClick={() => setLanguage('vi')}
           className={`text-xs font-bold px-2 py-0.5 rounded transition ${currentLanguage === 'vi' ? 'bg-nexoraBrand text-white' : 'text-nexoraSubtle hover:text-nexoraText'}`}
@@ -54,7 +54,7 @@ export default function RegisterWizard(props) {
       </div>
 
       {isAuthEntryStep ? (
-        <div className="max-w-6xl mx-auto px-4 py-8 relative z-10 flex min-h-dvh items-center">
+        <div className="max-w-6xl mx-auto px-4 pt-[max(2rem,env(safe-area-inset-top,0px))] pb-[max(2rem,env(safe-area-inset-bottom,0px))] relative z-10 flex min-h-dvh items-center">
           <div className="grid w-full grid-cols-1 overflow-hidden rounded-xl border border-nexoraBorder bg-white shadow-premium lg:min-h-[680px] lg:grid-cols-12">
             <div className="lg:col-span-5 flex flex-col justify-between p-5 sm:p-8 xl:p-10">
               <div className="mb-6 flex items-center gap-3">
@@ -174,7 +174,7 @@ export default function RegisterWizard(props) {
         setModalError={setModalError}
         currentLanguage={currentLanguage}
         savePayoutAccount={savePayoutAccount}
-        handleModalFileChange={handleModalFileChange}
+        handleModalImagePick={handleModalImagePick}
         handleModalTakePhoto={handleModalTakePhoto}
         handleModalClearQr={handleModalClearQr}
       />

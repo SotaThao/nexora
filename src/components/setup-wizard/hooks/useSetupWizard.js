@@ -138,17 +138,14 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
     setErrors({})
   }
 
-  // Handle file logo selection
-  const handleLogoChange = async (e) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0]
-      try {
-        const logoUrl = await uploadLogoMutation.mutateAsync(file)
-        setBusinessInfo(prev => ({ ...prev, logo: logoUrl }))
-        if (errors.logo) setErrors(prev => ({ ...prev, logo: '' }))
-      } catch (err) {
-        setErrors(prev => ({ ...prev, logo: err.errorCode || 'Logo upload failed' }))
-      }
+  const handleLogoFile = async (file) => {
+    if (!file) return
+    try {
+      const logoUrl = await uploadLogoMutation.mutateAsync(file)
+      setBusinessInfo(prev => ({ ...prev, logo: logoUrl }))
+      if (errors.logo) setErrors(prev => ({ ...prev, logo: '' }))
+    } catch (err) {
+      setErrors(prev => ({ ...prev, logo: err.errorCode || 'Logo upload failed' }))
     }
   }
 
@@ -520,7 +517,7 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
     setErrors,
     // handlers
     prefillDemo,
-    handleLogoChange,
+    handleLogoFile,
     validateStep,
     handleNext,
     handleBack,

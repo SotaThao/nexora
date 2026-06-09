@@ -2,6 +2,7 @@ import React from 'react'
 import { X, Camera, FolderOpen, AlertTriangle } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { PayoutLogos } from '../constants'
+import ImageFileInput from '../../ui/ImageFileInput'
 
 export default function PayoutEditModal({
   editingMethod,
@@ -13,7 +14,7 @@ export default function PayoutEditModal({
   modalError, setModalError,
   currentLanguage,
   savePayoutAccount,
-  handleModalFileChange,
+  handleModalImagePick,
   handleModalTakePhoto,
   handleModalClearQr,
 }) {
@@ -135,15 +136,16 @@ export default function PayoutEditModal({
                     {t('components.register.modals.PayoutEditModal.takePhoto')}
                   </span>
                 </button>
-                <label
+                <ImageFileInput
+                  as="label"
                   className="flex flex-col items-center justify-center py-5 border border-dashed border-slate-200 hover:border-nexoraBrand rounded-xl bg-slate-50 hover:bg-slate-50/50 transition gap-1.5 cursor-pointer"
+                  onPick={handleModalImagePick}
                 >
                   <FolderOpen className="w-5 h-5 text-nexoraBrand" />
                   <span className="text-[11px] font-bold text-slate-600">
                     {t('components.register.modals.PayoutEditModal.chooseFile')}
                   </span>
-                  <input type="file" accept="image/*" className="sr-only" onChange={handleModalFileChange} />
-                </label>
+                </ImageFileInput>
               </div>
             )}
           </div>

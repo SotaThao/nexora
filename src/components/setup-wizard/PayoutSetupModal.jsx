@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { AlertTriangle, Camera, FolderOpen, X } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { WalletLogos } from './constants'
+import ImageFileInput from '../ui/ImageFileInput'
+import { captureQrImage } from '../../native/imagePicker'
 
 export default function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrCode, onClose, onSubmit }) {
   const { t, currentLanguage } = useTranslation()
@@ -38,25 +40,18 @@ export default function PayoutSetupModal({ open, walletKey, staffName, initialVa
     applecash: 'Enter phone number...'
   }
 
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      setQrCode(reader.result)
-    }
-    reader.readAsDataURL(file)
+  const handleImagePick = (dataUrl) => {
+    if (dataUrl) setQrCode(dataUrl)
   }
 
-  const handleTakePhoto = () => {
+  const handleTakePhoto = async () => {
     setIsCapturing(true)
-    setTimeout(() => {
-      const mockQr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-        value || ''
-      )}`
-      setQrCode(mockQr)
+    try {
+      const dataUrl = await captureQrImage({ fallbackValue: value || '' })
+      if (dataUrl) setQrCode(dataUrl)
+    } finally {
       setIsCapturing(false)
-    }, 800)
+    }
   }
 
   const handleClearQr = () => {
@@ -160,13 +155,14 @@ export default function PayoutSetupModal({ open, walletKey, staffName, initialVa
                   <Camera className="w-5 h-5 text-nexoraBrand" />
                   <span className="text-[11px] font-bold text-slate-600">{t('setup.take_photo')}</span>
                 </button>
-                <label
+                <ImageFileInput
+                  as="label"
                   className="flex flex-col items-center justify-center py-5 border border-dashed border-slate-200 hover:border-nexoraBrand rounded-xl bg-slate-50 hover:bg-slate-50/50 transition gap-1.5 cursor-pointer"
+                  onPick={handleImagePick}
                 >
                   <FolderOpen className="w-5 h-5 text-nexoraBrand" />
                   <span className="text-[11px] font-bold text-slate-600">{t('setup.choose_file')}</span>
-                  <input type="file" accept="image/*" className="sr-only" onChange={handleFileChange} />
-                </label>
+                </ImageFileInput>
               </div>
             )}
             {!qrCode && (

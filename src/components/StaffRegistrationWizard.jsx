@@ -246,7 +246,7 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
           setModalError={reg.setModalError}
           currentLanguage={reg.currentLanguage}
           savePayoutAccount={reg.savePayoutAccount}
-          handleModalFileChange={reg.handleModalFileChange}
+          handleModalImagePick={reg.handleModalImagePick}
           handleModalTakePhoto={reg.handleModalTakePhoto}
           handleModalClearQr={reg.handleModalClearQr}
         />

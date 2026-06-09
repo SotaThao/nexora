@@ -8,6 +8,9 @@ import ErrorBoundary from './components/ui/ErrorBoundary.jsx'
 import { QueryClientProvider } from '@tanstack/react-query'
 import queryClient from './lib/queryClient.js'
 import { AuthProvider } from './auth/AuthProvider.jsx'
+import { initNativeShell } from './native/initNativeShell.js'
+
+void initNativeShell()
 
 // Devtools are loaded lazily so they are excluded from the production bundle
 let ReactQueryDevtools = null

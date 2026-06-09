@@ -16,6 +16,7 @@ import {
   X,
   QrCode
 } from 'lucide-react'
+import ImageFileInput from '../../ui/ImageFileInput'
 
 const PayoutLogos = {
   zelle: (
@@ -102,11 +103,11 @@ export default function ProfileTab({
   saveReviews,
   handleToggleMethod,
   handleEditPayoutAccount,
-  handleModalFileChange,
+  handleModalImagePick,
   handleModalTakePhoto,
   handleModalClearQr,
   savePayoutAccount,
-  handleAvatarChange,
+  handleAvatarPick,
   formatDOB,
   onShowQr,
 }) {
@@ -126,10 +127,13 @@ export default function ProfileTab({
                 alt={profile.fullName}
                 className="h-20 w-20 rounded-full object-cover border border-white shadow-sm"
               />
-              <label className="absolute inset-0 rounded-full bg-black/40 text-white text-[9px] font-black uppercase flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+              <ImageFileInput
+                as="label"
+                className="absolute inset-0 rounded-full bg-black/40 text-white text-[9px] font-black uppercase flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
+                onPick={handleAvatarPick}
+              >
                 Edit
-                <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-              </label>
+              </ImageFileInput>
             </div>
             <span className="mt-2 inline-block bg-orange-50 text-orange-600 border border-orange-100 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full">
               Business Owner
@@ -868,15 +872,16 @@ export default function ProfileTab({
                           {t('components.settings.tabs.ProfileTab.takePhoto')}
                         </span>
                       </button>
-                      <label
+                      <ImageFileInput
+                        as="label"
                         className="flex flex-col items-center justify-center py-5 border border-dashed border-slate-200 hover:border-nexoraBrand rounded-xl bg-slate-50 hover:bg-slate-50/50 transition gap-1.5 cursor-pointer"
+                        onPick={handleModalImagePick}
                       >
                         <FolderOpen className="w-5 h-5 text-nexoraBrand" />
                         <span className="text-[11px] font-bold text-slate-600">
                           {t('components.settings.tabs.ProfileTab.chooseFile')}
                         </span>
-                        <input type="file" accept="image/*" className="sr-only" onChange={handleModalFileChange} />
-                      </label>
+                      </ImageFileInput>
                     </div>
                   )}
                 </div>
