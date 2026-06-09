@@ -68,17 +68,7 @@ function QrModal({ target, businessName, onClose }) {
           nexora.vlinkpay.com/touch/{target.slug}
         </p>
 
-        {/* Browser simulator trigger */}
-        <div className="mt-3.5 no-print">
-          <a
-            href={qrUrl}
-            target="_blank"
-            rel="opener"
-            className="inline-flex items-center gap-1 text-[10.5px] font-black text-nexoraBrand hover:underline tracking-wide bg-nexoraBrandSoft px-3 py-1.5 rounded-lg transition"
-          >
-            <span>{t('dashboard.modals.customer_view_test') || 'Mô phỏng quét QR (Mở trang khách) ›'}</span>
-          </a>
-        </div>
+
 
         <button
           onClick={() => window.print()}

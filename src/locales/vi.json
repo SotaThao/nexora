@@ -389,6 +389,9 @@
     "modals": {
       "add_tp_title": "Thêm Điểm Chạm Mới",
       "tp_name_label": "Tên điểm chạm (Ví dụ: Ghế Manicure 05)",
+      "tp_name_placeholder": "Ví dụ: Ghế Manicure 05",
+      "device_id_label": "Serial phần cứng / ID Thiết bị (Tùy chọn)",
+      "device_id_placeholder": "Ví dụ: NFC-105, QR-Table-01",
       "tp_type_label": "Loại vị trí",
       "add_btn": "Thêm Điểm Chạm",
       "view_qr_title": "Mã QR cho {name}",

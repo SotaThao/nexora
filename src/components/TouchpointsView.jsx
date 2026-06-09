@@ -241,7 +241,7 @@ export default function TouchpointsView({
                 <input
                   value={deviceId}
                   onChange={(e) => setDeviceId(e.target.value)}
-                  placeholder="e.g. NFC-105, QR-Table-01"
+                  placeholder={t('dashboard.modals.device_id_placeholder') || 'e.g. NFC-105, QR-Table-01'}
                   className="h-11 w-full rounded-flox-inputs border border-nexoraBorder dark:border-luxuryGold/18 bg-white dark:bg-luxuryCoal px-3 text-base text-nexoraText outline-none focus:border-nexoraBrand dark:focus:border-luxuryGold"
                 />
               </div>

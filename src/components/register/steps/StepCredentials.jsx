@@ -101,7 +101,7 @@ export default function StepCredentials(props) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 sm:p-10 space-y-6">
       {showOtpInput ? (
         <div className="space-y-6 animate-fadeIn">
           <div className="text-center max-w-md mx-auto">
@@ -187,12 +187,11 @@ export default function StepCredentials(props) {
       ) : (
         <>
           <div>
-            <p className="text-[11px] font-black uppercase tracking-wider text-nexoraBrand">Sign Up</p>
-            <h3 className="mt-1 text-2xl font-black text-nexoraText sm:text-3xl">{t('register.title_step_1')}</h3>
-            <p className="text-sm font-medium leading-relaxed text-nexoraMuted mt-2">{t('register.desc_step_1')}</p>
+            <h3 className="text-lg font-bold text-nexoraText">{t('register.title_step_1')}</h3>
+            <p className="text-xs text-nexoraSubtle mt-1">{t('register.desc_step_1')}</p>
           </div>
 
-          <form onSubmit={handleStep1Next} noValidate className="space-y-4">
+          <form onSubmit={handleStep1Next} noValidate className="space-y-4 max-w-md mx-auto">
 
             {/* Email Input */}
             <div>

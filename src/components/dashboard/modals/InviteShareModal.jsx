@@ -10,7 +10,7 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
   const [name, setName] = useState('')
   const [contact, setContact] = useState('')
   const [role, setRole] = useState('Nail Technician')
-  const [inviteMethod, setInviteMethod] = useState('SMS') // 'SMS' | 'Email'
+  const [inviteMethod, setInviteMethod] = useState('Email') // 'SMS' | 'Email'
   const [errors, setErrors] = useState({})
   const [largeQrOpen, setLargeQrOpen] = useState(false)
 
@@ -19,10 +19,10 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
       setName(defaultName || '')
       setContact(defaultContact || '')
       setErrors({})
-      if (defaultContact && defaultContact.includes('@')) {
-        setInviteMethod('Email')
-      } else {
+      if (defaultContact && !defaultContact.includes('@')) {
         setInviteMethod('SMS')
+      } else {
+        setInviteMethod('Email')
       }
     }
   }, [open, defaultName, defaultContact])
@@ -137,30 +137,32 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
               <button
                 type="button"
                 onClick={() => {
-                  setInviteMethod('SMS')
-                  setErrors({})
-                }}
-                className={`h-9 rounded-lg border text-xs font-bold transition flex items-center justify-center gap-1.5 font-sans ${
-                  inviteMethod === 'SMS'
-                    ? 'border-amber-500 bg-amber-50 text-amber-700'
-                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                SMS
-              </button>
-              <button
-                type="button"
-                onClick={() => {
                   setInviteMethod('Email')
                   setErrors({})
                 }}
-                className={`h-9 rounded-lg border text-xs font-bold transition flex items-center justify-center gap-1.5 font-sans ${
+                className={`h-10 rounded-lg border text-xs font-bold transition flex items-center justify-center gap-1.5 font-sans ${
                   inviteMethod === 'Email'
-                    ? 'border-amber-500 bg-amber-50 text-amber-700'
+                    ? 'border-nexoraBrand bg-nexoraBrandSoft text-nexoraBrand'
                     : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                 }`}
               >
                 Email
+              </button>
+              <button
+                type="button"
+                disabled
+                onClick={() => {
+                  setInviteMethod('SMS')
+                  setErrors({})
+                }}
+                className={`h-10 rounded-lg border text-xs font-bold transition flex flex-col items-center justify-center font-sans ${
+                  inviteMethod === 'SMS'
+                    ? 'border-amber-500 bg-amber-50 text-amber-700'
+                    : 'border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed opacity-80'
+                }`}
+              >
+                <span>SMS</span>
+                <span className="text-[9px] font-medium normal-case opacity-80 -mt-0.5">Coming soon</span>
               </button>
             </div>
 

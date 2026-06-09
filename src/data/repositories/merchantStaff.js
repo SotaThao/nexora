@@ -66,7 +66,8 @@ export function createMerchantStaffRepository(client = httpClient) {
      */
     async list() {
       const data = await client.get('/api/v1/merchant/staff')
-      return (data ?? []).map(normalizeStaffListItem)
+      const items = data?.items ?? (Array.isArray(data) ? data : [])
+      return items.map(normalizeStaffListItem)
     },
 
     /**
@@ -99,7 +100,8 @@ export function createMerchantStaffRepository(client = httpClient) {
      */
     async search(q) {
       const data = await client.get(`/api/v1/merchant/staff/search?q=${encodeURIComponent(q)}`)
-      return (data ?? []).map(normalizeStaffSearchResult)
+      const items = data?.items ?? (Array.isArray(data) ? data : [])
+      return items.map(normalizeStaffSearchResult)
     },
 
     /**

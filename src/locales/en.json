@@ -389,6 +389,9 @@
     "modals": {
       "add_tp_title": "Add New Touch Point",
       "tp_name_label": "Touch Point Name (e.g. Manicure Chair 05)",
+      "tp_name_placeholder": "e.g. Manicure Chair 05",
+      "device_id_label": "Hardware Serial / Device ID (Optional)",
+      "device_id_placeholder": "e.g. NFC-105, QR-Table-01",
       "tp_type_label": "Station Type",
       "add_btn": "Add Touch Point",
       "view_qr_title": "QR Code for {name}",

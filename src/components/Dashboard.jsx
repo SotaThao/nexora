@@ -418,10 +418,11 @@ export default function Dashboard({
   }
 
   const previewQr = (target) => {
+    const staffName = target.nickname || target.fullName
     setQrTarget({
-      name: target.name || `Personal QR - ${target.nickname}`,
+      name: target.name || `Personal QR - ${staffName}`,
       subtitle: target.position || target.type || 'Staff QR',
-      slug: target.nickname ? `staff/${slugify(target.nickname)}` : `tp/${target.id}`,
+      slug: staffName ? `staff/${slugify(staffName)}` : `tp/${target.id}`,
       isActive: target.isActive !== undefined ? target.isActive : true
     })
   }

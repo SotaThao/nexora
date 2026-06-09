@@ -4,6 +4,7 @@
 import { useState } from 'react'
 import { DEFAULT_PAYOUT_CONFIGS } from '../constants'
 import { getPayoutConfigsFromMember } from '../utils'
+import { isPhoneValid } from '../../CountryCodeSelect'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import {
@@ -182,6 +183,9 @@ export function useStaffManagement({ staffData, isStaffLoading, businessName, se
     if (staffForm.email?.trim() && !/\S+@\S+\.\S+/.test(staffForm.email.trim())) {
       nextErrors.email = t('setup.errors.staff_email_invalid') || 'Invalid email address format.'
     }
+    if (staffForm.phone?.trim() && !isPhoneValid(staffForm.phone.trim())) {
+      nextErrors.phone = t('setup.errors.staff_phone_invalid') || 'Invalid phone number.'
+    }
     if (Object.keys(nextErrors).length) {
       setErrors(nextErrors)
       return
@@ -201,6 +205,13 @@ export function useStaffManagement({ staffData, isStaffLoading, businessName, se
     if (!formDetails.fullName.trim()) nextErrors.fullName = 'Full name is required to invite.'
     if (!formDetails.email.trim() && !formDetails.phone.trim()) {
       nextErrors.email = 'Phone or email is required to send invite link.'
+    } else {
+      if (formDetails.email?.trim() && !/\S+@\S+\.\S+/.test(formDetails.email.trim())) {
+        nextErrors.email = 'Invalid email address format.'
+      }
+      if (formDetails.phone?.trim() && !isPhoneValid(formDetails.phone.trim())) {
+        nextErrors.phone = 'Invalid phone number.'
+      }
     }
     
     if (Object.keys(nextErrors).length) {
