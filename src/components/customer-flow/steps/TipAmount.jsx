@@ -96,7 +96,7 @@ export default function TipAmount({
                   <input
                     type="text"
                     inputMode="decimal"
-                    placeholder="0.00"
+                    placeholder={t('components.customer_flow.steps.TipAmount.phAmount')}
                     className="w-full bg-white border border-nexoraBorder focus:border-nexoraBrand rounded-lg pl-7 pr-3 py-2 text-xs font-extrabold text-nexoraText focus:outline-none transition-all"
                     value={custTip}
                     onChange={(e) => {

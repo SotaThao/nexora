@@ -210,7 +210,7 @@ export default function StepWelcome({
                   </label>
                   <input
                     type="email"
-                    placeholder="e.g. lisa@example.com"
+                    placeholder={t('components.staff_registration.steps.StepWelcome.phExampleEmail')}
                     className="h-10 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 font-bold transition-all"
                     value={linkEmail}
                     onChange={(e) => setLinkEmail(e.target.value)}
@@ -225,7 +225,7 @@ export default function StepWelcome({
                   <div className="relative">
                     <input
                       type={showLinkPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
+                      placeholder={t('components.staff_registration.steps.StepWelcome.phPassword')}
                       className="h-10 w-full rounded-lg border border-nexoraBorder pl-3 pr-10 text-xs outline-none focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 font-bold transition-all"
                       value={linkPassword}
                       onChange={(e) => setLinkPassword(e.target.value)}

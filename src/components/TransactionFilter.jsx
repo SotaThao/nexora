@@ -114,7 +114,7 @@ export default function TransactionFilter({
               <input
                 type="number"
                 min="0"
-                placeholder="Min"
+                placeholder={t('components.TransactionFilter.phMin')}
                 value={minAmount}
                 onChange={(e) => setMinAmount(e.target.value)}
                 className="h-9 w-full rounded border border-nexoraBorder pl-5 pr-1 text-xs font-semibold font-sans outline-none focus:border-nexoraBrand focus:ring-1 focus:ring-nexoraBrand/20 text-nexoraText bg-white transition-all"
@@ -126,7 +126,7 @@ export default function TransactionFilter({
               <input
                 type="number"
                 min="0"
-                placeholder="Max"
+                placeholder={t('components.TransactionFilter.phMax')}
                 value={maxAmount}
                 onChange={(e) => setMaxAmount(e.target.value)}
                 className="h-9 w-full rounded border border-nexoraBorder pl-5 pr-1 text-xs font-semibold font-sans outline-none focus:border-nexoraBrand focus:ring-1 focus:ring-nexoraBrand/20 text-nexoraText bg-white transition-all"

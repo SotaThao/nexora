@@ -410,20 +410,20 @@ function StaffModal({
                     }`}
                     value={idInput}
                     onChange={(event) => handleCombinedIdChange(event.target.value)}
-                    placeholder="e.g. VLP-0155-ASH"
+                    placeholder={t('components.dashboard.modals.StaffModal.phExampleVlp1')}
                   />
                   {/* Legacy hidden inputs to maintain unit test compatibility */}
                   <input
                     type="text"
                     style={{ display: 'none' }}
-                    placeholder="e.g. VLP-8893-VL"
+                    placeholder={t('components.dashboard.modals.StaffModal.phExampleVlp2')}
                     value={form.vlinkpay || ''}
                     readOnly
                   />
                   <input
                     type="text"
                     style={{ display: 'none' }}
-                    placeholder="e.g. NEX-STAFF-LISA1102"
+                    placeholder={t('components.dashboard.modals.StaffModal.phExampleStaffId')}
                     value={form.nexoraStaffId || ''}
                     readOnly
                   />
@@ -536,7 +536,7 @@ function StaffModal({
             </div>
             <div>
               <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{renderLabel(t('setup.staff_fullname'))}</label>
-              <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} placeholder="Mia Tran" />
+              <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} placeholder={t('components.dashboard.modals.StaffModal.phFullName')} />
               {errors.fullName && <p className="mt-1 text-[10px] font-bold text-nexoraDanger">{errors.fullName}</p>}
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -551,12 +551,12 @@ function StaffModal({
                     </div>
                   </div>
                 </label>
-                <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.nickname} onChange={(event) => setForm({ ...form, nickname: event.target.value })} placeholder="Mia T." />
+                <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.nickname} onChange={(event) => setForm({ ...form, nickname: event.target.value })} placeholder={t('components.dashboard.modals.StaffModal.phNickname')} />
                 {errors.nickname && <p className="mt-1 text-[10px] font-bold text-nexoraDanger">{errors.nickname}</p>}
               </div>
               <div>
                 <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_position')}</label>
-                <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.position} onChange={(event) => setForm({ ...form, position: event.target.value })} placeholder="Nail Tech" />
+                <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.position} onChange={(event) => setForm({ ...form, position: event.target.value })} placeholder={t('components.dashboard.modals.StaffModal.phPosition')} />
               </div>
             </div>
 

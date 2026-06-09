@@ -241,7 +241,7 @@ export default function TouchpointsView({
                 <input
                   value={deviceId}
                   onChange={(e) => setDeviceId(e.target.value)}
-                  placeholder="e.g. NFC-105, QR-Table-01"
+                  placeholder={t('components.TouchpointsView.phExampleDeviceIds')}
                   className="h-11 w-full rounded-flox-inputs border border-nexoraBorder dark:border-luxuryGold/18 bg-white dark:bg-luxuryCoal px-3 text-base text-nexoraText outline-none focus:border-nexoraBrand dark:focus:border-luxuryGold"
                 />
               </div>
@@ -381,7 +381,7 @@ export default function TouchpointsView({
                                 setShowSuggestions(true)
                               }}
                               onFocus={() => setShowSuggestions(true)}
-                              placeholder="Device ID (e.g. NFC-105)"
+                              placeholder={t('components.TouchpointsView.phDeviceId')}
                               className="h-9 w-full rounded-flox-inputs border border-nexoraBorder dark:border-luxuryGold/18 bg-white dark:bg-luxuryCoal px-2 text-base text-nexoraText outline-none focus:border-nexoraBrand"
                               autoFocus
                             />

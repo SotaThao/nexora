@@ -125,7 +125,7 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
               <input
                 type="text"
                 className="mt-1 h-9 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand"
-                placeholder="e.g. Mia Tran"
+                placeholder={t('components.dashboard.modals.InviteShareModal.phExampleName')}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -186,7 +186,7 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
               <input
                 type="text"
                 className="mt-1 h-9 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand"
-                placeholder="e.g. Nail Tech"
+                placeholder={t('components.dashboard.modals.InviteShareModal.phExampleRole')}
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
               />

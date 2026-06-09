@@ -920,7 +920,8 @@
       "steps": {
         "TipAmount": {
           "totalTip": "Tổng tiền Tip",
-          "provider_count": "Cho {count} nhân viên"
+          "provider_count": "Cho {count} nhân viên",
+          "phAmount": "0.00"
         },
         "WalletDetails": {
           "tipAmount": "Số tiền chuyển khoản",
@@ -973,7 +974,9 @@
           "haveTechniciansScanThis": "Cho thợ quét mã này bằng camera điện thoại để tự đăng ký hoặc liên kết tài khoản vào tiệm.",
           "technicianNameRequired": "Vui lòng nhập tên thợ.",
           "contactRequired": "Cần thông tin liên hệ (email hoặc số điện thoại).",
-          "invalidEmailFormat": "Định dạng email không hợp lệ."
+          "invalidEmailFormat": "Định dạng email không hợp lệ.",
+          "phExampleName": "vd: Mia Tran",
+          "phExampleRole": "vd: Thợ nail"
         },
         "PayoutSetupModal": {
           "specifyReceivingTargetIdentifier": "Chỉ định thông tin tài khoản nhận tiền",
@@ -997,7 +1000,13 @@
           "decline": "Từ chối",
           "approveAccept": "Duyệt / Chấp nhận",
           "remove_photo": "X?a ?nh",
-          "review_count": "{count} ??nh gi?"
+          "review_count": "{count} ??nh gi?",
+          "phExampleVlp1": "vd: VLP-0155-ASH",
+          "phExampleVlp2": "vd: VLP-8893-VL",
+          "phExampleStaffId": "vd: NEX-STAFF-LISA1102",
+          "phFullName": "Mia Tran",
+          "phNickname": "Mia T.",
+          "phPosition": "Thợ nail"
         },
         "StaffQrScannerModal": {
           "scanQrCode": "Quét Mã QR Nhận Diện",
@@ -1138,14 +1147,16 @@
           "resendVerificationCode": "Gửi lại mã xác thực",
           "verifyAndActivate": "Xác minh & Kích hoạt",
           "processing": "Đang xử lý...",
-          "register": "Đăng ký"
+          "register": "Đăng ký",
+          "phExampleOtp": "vd: 1234"
         },
         "StepOtpVerify": {
           "activateAccountEnterOtp": "Kích hoạt tài khoản (Nhập OTP)",
           "enterTheOtpCode": "Nhập mã OTP được gửi tới email của bạn để kích hoạt tài khoản.",
           "enterOtpCode": "Nhập mã OTP *",
           "resendVerificationCode": "Gửi lại mã xác thực",
-          "verifyAndActivate": "Xác minh & Kích hoạt"
+          "verifyAndActivate": "Xác minh & Kích hoạt",
+          "phExampleOtp": "vd: 1234"
         },
         "StepPayoutSetup": {
           "payoutConfiguration": "Cấu hình ví nhận tiền",
@@ -1165,7 +1176,12 @@
           "emailAddress": "Địa chỉ Email",
           "roleSpeciality": "Chuyên môn / Vai trò",
           "nexoraStaffId": "Mã thợ NEXORA",
-          "shortBioShowsOn": "Lời chào / Tiểu sử ngắn (Hiển thị cho khách hàng gửi tip)"
+          "shortBioShowsOn": "Lời chào / Tiểu sử ngắn (Hiển thị cho khách hàng gửi tip)",
+          "phFullName": "vd: Lisa Marie Tran",
+          "phNickname": "vd: Lisa T.",
+          "phPhone": "vd: 408-555-1234",
+          "phPosition": "vd: Chuyên viên Acrylic",
+          "phBio": "Chào mừng đến với ghế của tôi! Tôi chuyên về nail nghệ thuật cao cấp..."
         },
         "StepSuccess": {
           "registeredStaffSummary": "Thông tin đăng ký của bạn",
@@ -1241,7 +1257,9 @@
           "chooseFile": "CHỌN FILE",
           "pleaseEnterTheCorrect": "Vui lòng nhập đúng thông tin tài khoản nhận tiền. Tài khoản này sẽ được dùng để nhận tiền tip.",
           "cancel": "HỦY",
-          "save": "LƯU LẠI"
+          "save": "LƯU LẠI",
+          "phGoogleReviewUrl": "https://g.page/r/.../review",
+          "phYelpUrl": "https://www.yelp.com/biz/..."
         },
         "KybTab": {
           "closeForm": "Đóng Form",
@@ -1266,7 +1284,13 @@
           "label2SavingsDisclaimer": "2. Tuyên bố miễn trừ tiết kiệm",
           "estimatedProcessingSavingsAre": "Mức tiết kiệm chi phí xử lý ước tính được tính toán so với phí đại lý tiêu chuẩn ngành và không được bảo đảm.",
           "label3TermsOfService": "3. Điều khoản dịch vụ",
-          "usageConstitutesAgreementWith": "Việc sử dụng dịch vụ đồng nghĩa với việc đồng ý với các điều khoản tuân thủ doanh nghiệp và chính sách thẩm định của VLINKPAY."
+          "usageConstitutesAgreementWith": "Việc sử dụng dịch vụ đồng nghĩa với việc đồng ý với các điều khoản tuân thủ doanh nghiệp và chính sách thẩm định của VLINKPAY.",
+          "phLegalName": "vd: Doanh nghiệp của bạn LLC",
+          "phTaxId": "vd: XX-XXXXXXX",
+          "phRepName": "Họ và tên người đại diện",
+          "phBankName": "vd: Chase Bank",
+          "phAccountNumber": "Số tài khoản",
+          "phRoutingCode": "Mã routing"
         }
       }
     },
@@ -1286,7 +1310,13 @@
       "steps": {
         "Step1BusinessInfo": {
           "enterTheLegalOr": "Nhập tên hợp pháp hoặc tên công khai của cửa hàng/salon của bạn sẽ hiển thị trên màn hình thanh toán của khách hàng.",
-          "provideThePhysicalLocation": "Cung cấp địa chỉ thực của cửa hàng. Được sử dụng để bản địa hóa và xác minh."
+          "provideThePhysicalLocation": "Cung cấp địa chỉ thực của cửa hàng. Được sử dụng để bản địa hóa và xác minh.",
+          "phPhone": "+1 (555) 789-2026",
+          "phWebsite": "https://spasalon.com",
+          "phGoogleReviewUrl": "https://g.page/r/cxxxxxx/review",
+          "phYelpUrl": "https://www.yelp.com/biz/your-store",
+          "phFacebookUrl": "https://facebook.com/reviews",
+          "phManagerEmail": "manager@yourstore.com"
         },
         "Step2StaffTouchpoints": {
           "step2PayoutAnd": "Bước 2: Thanh Toán & Điểm Chạm QR",
@@ -1380,7 +1410,12 @@
           "label2TipIncomeAnd": "2. Báo cáo Típ IRS",
           "completingKycSecuresYour": "Việc KYC giúp chứng minh tài khoản nhận tiền chính thức, hỗ trợ việc tạo báo cáo thu nhập tip 1099-K cuối năm chính xác.",
           "label3ComplianceTerms": "3. Điều khoản tuân thủ",
-          "providingInaccurateOrFalsified": "Mọi thông tin danh tính sai lệch hoặc giả mạo có thể dẫn đến việc đình chỉ tài khoản tức thì bởi bộ phận tuân thủ VLINKPAY."
+          "providingInaccurateOrFalsified": "Mọi thông tin danh tính sai lệch hoặc giả mạo có thể dẫn đến việc đình chỉ tài khoản tức thì bởi bộ phận tuân thủ VLINKPAY.",
+          "phFullName": "Mia Tran",
+          "phSsn": "vd: XXX-XX-XXXX",
+          "phBankName": "vd: Chase Bank",
+          "phAccountNumber": "Số tài khoản",
+          "phRoutingCode": "Mã routing"
         },
         "StaffReviews": {
           "reviewsAndRatings": "Đánh Giá & Xếp Hạng",
@@ -1428,7 +1463,11 @@
           "privacyPolicy": "Chính sách bảo mật",
           "termsOfService": "Điều khoản dịch vụ",
           "close": "Đóng",
-          "iAccept": "Tôi Đồng Ý"
+          "iAccept": "Tôi Đồng Ý",
+          "phExampleEmail": "vd: name@example.com",
+          "phPassword": "••••••••",
+          "phReferralCode": "Nhập mã giới thiệu...",
+          "phExampleOtp": "vd: 1234"
         },
         "StepPayments": {
           "label3PayoutConfigurations": "3. Cấu hình Ví nhận tiền tip",
@@ -1445,7 +1484,13 @@
           "displayNickname": "Tên hiển thị (Nickname) *",
           "thisNicknameIsVisible": "Tên này sẽ hiển thị cho khách hàng tại tiệm khi họ quét mã và gửi tip.",
           "phoneNumber": "Số điện thoại *",
-          "emailAddress": "Địa chỉ Email *"
+          "emailAddress": "Địa chỉ Email *",
+          "phFullName": "Lisa Marie Tran",
+          "phNickname": "Lisa T.",
+          "phPhone": "vd: 408-555-1234",
+          "phExampleEmail": "vd: name@example.com",
+          "phPosition": "vd: Chuyên viên Acrylic",
+          "phBio": "Chào mừng đến với ghế của tôi! Tôi chuyên về nail nghệ thuật cao cấp, nối móng acrylic, và liệu pháp spa đá nóng..."
         },
         "StepSuccess": {
           "joinRequestSubmitted": "Yêu cầu gia nhập đã gửi!",
@@ -1477,7 +1522,9 @@
           "newRequest": "Yêu cầu mới",
           "location": "Khu vực:",
           "decline": "Từ chối",
-          "acceptAndJoin": "Đồng ý tham gia (Join)"
+          "acceptAndJoin": "Đồng ý tham gia (Join)",
+          "phExampleEmail": "vd: lisa@example.com",
+          "phPassword": "••••••••"
         },
         "PayoutEditModal": {
           "emailPhone": "email/SĐT",
@@ -1569,6 +1616,30 @@
         "statFlow": "Liên tục",
         "footer": "Xác thực merchant tích hợp VLINKPAY"
       }
+    },
+    "CountryCodeSelect": {
+      "phSearch": "Tìm quốc gia hoặc mã..."
+    },
+    "DevicesView": {
+      "phExampleDeviceIds": "vd: NFC-003, QR-Table-04",
+      "phExampleLocations": "vd: Bàn 04, Gương 05, Quầy trước"
+    },
+    "ForgotPassword": {
+      "phExampleEmail": "vd: owner@salon.com"
+    },
+    "ResetPassword": {
+      "phEmail": "owner@salon.com",
+      "phToken": "Mã đặt lại",
+      "phNewPassword": "Ít nhất 6 ký tự",
+      "phConfirmPassword": "Nhập lại mật khẩu"
+    },
+    "TouchpointsView": {
+      "phExampleDeviceIds": "vd: NFC-105, QR-Table-01",
+      "phDeviceId": "Mã thiết bị (vd: NFC-105)"
+    },
+    "TransactionFilter": {
+      "phMin": "Tối thiểu",
+      "phMax": "Tối đa"
     }
   },
   "staff_registration": {

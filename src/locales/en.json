@@ -920,7 +920,8 @@
       "steps": {
         "TipAmount": {
           "totalTip": "Total Tip",
-          "provider_count": "For {count} provider(s)"
+          "provider_count": "For {count} provider(s)",
+          "phAmount": "0.00"
         },
         "WalletDetails": {
           "tipAmount": "Tip Amount",
@@ -973,7 +974,9 @@
           "haveTechniciansScanThis": "Have technicians scan this QR code with their mobile camera to self-register or link accounts.",
           "technicianNameRequired": "Technician name is required.",
           "contactRequired": "Contact information (email or phone) is required.",
-          "invalidEmailFormat": "Invalid email format."
+          "invalidEmailFormat": "Invalid email format.",
+          "phExampleName": "e.g. Mia Tran",
+          "phExampleRole": "e.g. Nail Tech"
         },
         "PayoutSetupModal": {
           "specifyReceivingTargetIdentifier": "Specify receiving target identifier",
@@ -997,7 +1000,13 @@
           "decline": "Decline",
           "approveAccept": "Approve / Accept",
           "remove_photo": "Remove photo",
-          "review_count": "{count} reviews"
+          "review_count": "{count} reviews",
+          "phExampleVlp1": "e.g. VLP-0155-ASH",
+          "phExampleVlp2": "e.g. VLP-8893-VL",
+          "phExampleStaffId": "e.g. NEX-STAFF-LISA1102",
+          "phFullName": "Mia Tran",
+          "phNickname": "Mia T.",
+          "phPosition": "Nail Tech"
         },
         "StaffQrScannerModal": {
           "scanQrCode": "Scan QR Code",
@@ -1138,14 +1147,16 @@
           "resendVerificationCode": "Resend Verification Code",
           "verifyAndActivate": "Verify & Activate",
           "processing": "Processing...",
-          "register": "Register"
+          "register": "Register",
+          "phExampleOtp": "e.g. 1234"
         },
         "StepOtpVerify": {
           "activateAccountEnterOtp": "Activate Account (Enter OTP)",
           "enterTheOtpCode": "Enter the OTP code sent to your email to activate your account.",
           "enterOtpCode": "Enter OTP Code *",
           "resendVerificationCode": "Resend Verification Code",
-          "verifyAndActivate": "Verify & Activate"
+          "verifyAndActivate": "Verify & Activate",
+          "phExampleOtp": "e.g. 1234"
         },
         "StepPayoutSetup": {
           "payoutConfiguration": "Payout Configuration",
@@ -1165,7 +1176,12 @@
           "emailAddress": "Email Address",
           "roleSpeciality": "Role / Speciality",
           "nexoraStaffId": "NEXORA Staff ID",
-          "shortBioShowsOn": "Short Bio (Shows on customer tip screen)"
+          "shortBioShowsOn": "Short Bio (Shows on customer tip screen)",
+          "phFullName": "e.g. Lisa Marie Tran",
+          "phNickname": "e.g. Lisa T.",
+          "phPhone": "e.g. 408-555-1234",
+          "phPosition": "e.g. Acrylic Specialist",
+          "phBio": "Welcome to my chair! I specialize in luxury nail art..."
         },
         "StepSuccess": {
           "registeredStaffSummary": "Registered Staff Summary",
@@ -1241,7 +1257,9 @@
           "chooseFile": "CHOOSE FILE",
           "pleaseEnterTheCorrect": "Please enter the correct receiving account information. This will be used to receive payments.",
           "cancel": "CANCEL",
-          "save": "SAVE"
+          "save": "SAVE",
+          "phGoogleReviewUrl": "https://g.page/r/.../review",
+          "phYelpUrl": "https://www.yelp.com/biz/..."
         },
         "KybTab": {
           "closeForm": "Close Form",
@@ -1266,7 +1284,13 @@
           "label2SavingsDisclaimer": "2. Savings Disclaimer",
           "estimatedProcessingSavingsAre": "Estimated processing savings are calculated relative to industry standard merchant processing fees and are not guaranteed.",
           "label3TermsOfService": "3. Terms of Service",
-          "usageConstitutesAgreementWith": "Usage constitutes agreement with VLINKPAY corporate compliance terms and underwriting policies."
+          "usageConstitutesAgreementWith": "Usage constitutes agreement with VLINKPAY corporate compliance terms and underwriting policies.",
+          "phLegalName": "e.g. Your Business LLC",
+          "phTaxId": "e.g. XX-XXXXXXX",
+          "phRepName": "Representative full name",
+          "phBankName": "e.g. Chase Bank",
+          "phAccountNumber": "Account Number",
+          "phRoutingCode": "Routing Code"
         }
       }
     },
@@ -1286,7 +1310,13 @@
       "steps": {
         "Step1BusinessInfo": {
           "enterTheLegalOr": "Enter the legal or public name of your store/salon as it will appear on customer payment screens.",
-          "provideThePhysicalLocation": "Provide the physical location of your store. Used for localization and verification purposes."
+          "provideThePhysicalLocation": "Provide the physical location of your store. Used for localization and verification purposes.",
+          "phPhone": "+1 (555) 789-2026",
+          "phWebsite": "https://spasalon.com",
+          "phGoogleReviewUrl": "https://g.page/r/cxxxxxx/review",
+          "phYelpUrl": "https://www.yelp.com/biz/your-store",
+          "phFacebookUrl": "https://facebook.com/reviews",
+          "phManagerEmail": "manager@yourstore.com"
         },
         "Step2StaffTouchpoints": {
           "step2PayoutAnd": "Step 2: Payout & QR Touchpoints",
@@ -1380,7 +1410,12 @@
           "label2TipIncomeAnd": "2. Tip Income & Regulations",
           "completingKycSecuresYour": "Completing KYC secures your official receiving wallet details, aiding in compiling accurate annual 1099-K tip tax reports.",
           "label3ComplianceTerms": "3. Compliance Terms",
-          "providingInaccurateOrFalsified": "Providing inaccurate or falsified identity information may result in immediate payout suspension by VLINKPAY Compliance."
+          "providingInaccurateOrFalsified": "Providing inaccurate or falsified identity information may result in immediate payout suspension by VLINKPAY Compliance.",
+          "phFullName": "Mia Tran",
+          "phSsn": "e.g. XXX-XX-XXXX",
+          "phBankName": "e.g. Chase Bank",
+          "phAccountNumber": "Account Number",
+          "phRoutingCode": "Routing Code"
         },
         "StaffReviews": {
           "reviewsAndRatings": "Reviews & Ratings",
@@ -1428,7 +1463,11 @@
           "privacyPolicy": "Privacy Policy",
           "termsOfService": "Terms of Service",
           "close": "Close",
-          "iAccept": "I Accept"
+          "iAccept": "I Accept",
+          "phExampleEmail": "e.g. name@example.com",
+          "phPassword": "••••••••",
+          "phReferralCode": "Enter referral code...",
+          "phExampleOtp": "e.g. 1234"
         },
         "StepPayments": {
           "label3PayoutConfigurations": "3. Payout Configurations",
@@ -1445,7 +1484,13 @@
           "displayNickname": "Display Nickname *",
           "thisNicknameIsVisible": "This nickname is visible to customers at the salon when they scan and tip.",
           "phoneNumber": "Phone Number *",
-          "emailAddress": "Email Address *"
+          "emailAddress": "Email Address *",
+          "phFullName": "Lisa Marie Tran",
+          "phNickname": "Lisa T.",
+          "phPhone": "e.g. 408-555-1234",
+          "phExampleEmail": "e.g. name@example.com",
+          "phPosition": "e.g. Acrylic Specialist",
+          "phBio": "Welcome to my chair! I specialize in luxury nail art, acrylic extensions, and hot stone spa treatments..."
         },
         "StepSuccess": {
           "joinRequestSubmitted": "Join Request Submitted!",
@@ -1477,7 +1522,9 @@
           "newRequest": "New Request",
           "location": "Location:",
           "decline": "Decline",
-          "acceptAndJoin": "Accept & Join"
+          "acceptAndJoin": "Accept & Join",
+          "phExampleEmail": "e.g. lisa@example.com",
+          "phPassword": "••••••••"
         },
         "PayoutEditModal": {
           "emailPhone": "email/phone",
@@ -1569,6 +1616,30 @@
         "statFlow": "Flow",
         "footer": "VLINKPAY-ready merchant authentication"
       }
+    },
+    "CountryCodeSelect": {
+      "phSearch": "Search country or code..."
+    },
+    "DevicesView": {
+      "phExampleDeviceIds": "e.g. NFC-003, QR-Table-04",
+      "phExampleLocations": "e.g. Table 04, Mirror 05, Front Counter"
+    },
+    "ForgotPassword": {
+      "phExampleEmail": "e.g. owner@salon.com"
+    },
+    "ResetPassword": {
+      "phEmail": "owner@salon.com",
+      "phToken": "Reset Token",
+      "phNewPassword": "At least 6 characters",
+      "phConfirmPassword": "Re-enter password"
+    },
+    "TouchpointsView": {
+      "phExampleDeviceIds": "e.g. NFC-105, QR-Table-01",
+      "phDeviceId": "Device ID (e.g. NFC-105)"
+    },
+    "TransactionFilter": {
+      "phMin": "Min",
+      "phMax": "Max"
     }
   },
   "staff_registration": {

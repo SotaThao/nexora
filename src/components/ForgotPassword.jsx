@@ -79,7 +79,7 @@ export default function ForgotPassword({ setView }) {
                 <Mail className="absolute left-3 top-3 w-4 h-4 text-nexoraSubtle" />
                 <input
                   type="email"
-                  placeholder="e.g. owner@salon.com"
+                  placeholder={t('components.ForgotPassword.phExampleEmail')}
                   className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg pl-10 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}

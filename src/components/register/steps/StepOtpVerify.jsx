@@ -29,7 +29,7 @@ export default function StepOtpVerify({
           </label>
           <input
             type="text"
-            placeholder="e.g. 1234"
+            placeholder={t('components.register.steps.StepOtpVerify.phExampleOtp')}
             maxLength={6}
             className={`w-full bg-nexoraCanvas border ${otpError ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} rounded-lg px-4 py-2.5 text-center font-mono font-extrabold text-lg text-nexoraText focus:outline-none transition-all`}
             value={otpCode}

@@ -111,7 +111,7 @@ export default function ResetPassword({ setView }) {
               </label>
               <input
                 type="email"
-                placeholder="owner@salon.com"
+                placeholder={t('components.ResetPassword.phEmail')}
                 className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -126,7 +126,7 @@ export default function ResetPassword({ setView }) {
               </label>
               <input
                 type="text"
-                placeholder="Reset Token"
+                placeholder={t('components.ResetPassword.phToken')}
                 className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle font-mono transition-all"
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
@@ -143,7 +143,7 @@ export default function ResetPassword({ setView }) {
                 <Lock className="absolute left-3 top-3 w-4 h-4 text-nexoraSubtle" />
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="At least 6 characters"
+                  placeholder={t('components.ResetPassword.phNewPassword')}
                   className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg pl-10 pr-10 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
@@ -168,7 +168,7 @@ export default function ResetPassword({ setView }) {
                 <Lock className="absolute left-3 top-3 w-4 h-4 text-nexoraSubtle" />
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Re-enter password"
+                  placeholder={t('components.ResetPassword.phConfirmPassword')}
                   className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg pl-10 pr-10 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}

@@ -679,7 +679,7 @@ export default function ProfileTab({
                       className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas focus:bg-white px-3.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand transition-all"
                       value={reviewsForm.googleReview}
                       onChange={(e) => setReviewsForm({ ...reviewsForm, googleReview: e.target.value })}
-                      placeholder="https://g.page/r/.../review"
+                      placeholder={t('components.settings.tabs.ProfileTab.phGoogleReviewUrl')}
                     />
                   </div>
                   <div>
@@ -690,7 +690,7 @@ export default function ProfileTab({
                       className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas focus:bg-white px-3.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand transition-all"
                       value={reviewsForm.yelpReview}
                       onChange={(e) => setReviewsForm({ ...reviewsForm, yelpReview: e.target.value })}
-                      placeholder="https://www.yelp.com/biz/..."
+                      placeholder={t('components.settings.tabs.ProfileTab.phYelpUrl')}
                     />
                   </div>
                   <div className="flex gap-2 pt-2 justify-end">

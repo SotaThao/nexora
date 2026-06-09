@@ -50,7 +50,7 @@ export default function StepOtpVerify({
               <input
                 type="email"
                 className={`mt-1.5 h-10 w-full rounded-lg border ${regErrors.email ? 'border-nexoraDanger focus:border-nexoraDanger focus:ring-2 focus:ring-nexoraDanger/20' : 'border-nexoraBorder focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20'} px-3 text-xs outline-none transition-all`}
-                placeholder="e.g. name@example.com"
+                placeholder={t('components.staff_registration.steps.StepOtpVerify.phExampleEmail')}
                 value={regEmail}
                 onChange={(e) => {
                   setRegEmail(e.target.value)
@@ -69,7 +69,7 @@ export default function StepOtpVerify({
               <input
                 type="email"
                 className={`mt-1.5 h-10 w-full rounded-lg border ${regErrors.confirmEmail ? 'border-nexoraDanger focus:border-nexoraDanger focus:ring-2 focus:ring-nexoraDanger/20' : 'border-nexoraBorder focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20'} px-3 text-xs outline-none transition-all`}
-                placeholder="e.g. name@example.com"
+                placeholder={t('components.staff_registration.steps.StepOtpVerify.phExampleEmail')}
                 value={regConfirmEmail}
                 onChange={(e) => {
                   setRegConfirmEmail(e.target.value)
@@ -89,7 +89,7 @@ export default function StepOtpVerify({
                 <input
                   type={showPassword ? "text" : "password"}
                   className={`h-10 w-full rounded-lg border ${regErrors.password ? 'border-nexoraDanger focus:border-nexoraDanger focus:ring-2 focus:ring-nexoraDanger/20' : 'border-nexoraBorder focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20'} pl-3 pr-10 text-xs outline-none transition-all`}
-                  placeholder="••••••••"
+                  placeholder={t('components.staff_registration.steps.StepOtpVerify.phPassword')}
                   value={regPassword}
                   onChange={(e) => {
                     setRegPassword(e.target.value)
@@ -120,7 +120,7 @@ export default function StepOtpVerify({
                     ? 'bg-nexoraSurfaceMuted text-nexoraSubtle border-nexoraBorder cursor-not-allowed'
                     : 'border-nexoraBorder focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:outline-none'
                 }`}
-                placeholder="Enter referral code..."
+                placeholder={t('components.staff_registration.steps.StepOtpVerify.phReferralCode')}
                 value={regReferralLink}
                 onChange={(e) => setRegReferralLink(e.target.value)}
                 disabled={!!inviteData?.biz}
@@ -197,7 +197,7 @@ export default function StepOtpVerify({
               <input
                 type="text"
                 className="mt-1.5 h-12 w-full rounded-lg border border-nexoraBorder px-4 text-center font-mono font-black text-lg text-nexoraText focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:outline-none transition-all"
-                placeholder="e.g. 1234"
+                placeholder={t('components.staff_registration.steps.StepOtpVerify.phExampleOtp')}
                 value={otpCode}
                 onChange={(e) => {
                   setOtpCode(e.target.value)

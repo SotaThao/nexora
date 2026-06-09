@@ -324,7 +324,7 @@ export default function DevicesView({
                   type="text"
                   value={newDeviceId}
                   onChange={(e) => setNewDeviceId(e.target.value)}
-                  placeholder="e.g. NFC-003, QR-Table-04"
+                  placeholder={t('components.DevicesView.phExampleDeviceIds')}
                   className="h-11 w-full rounded-flox-inputs border border-nexoraBorder dark:border-luxuryGold/18 bg-white px-3 text-base text-nexoraText outline-none focus:border-nexoraBrand"
                 />
               </div>
@@ -354,7 +354,7 @@ export default function DevicesView({
                   type="text"
                   value={newLocation}
                   onChange={(e) => setNewLocation(e.target.value)}
-                  placeholder="e.g. Table 04, Mirror 05, Front Counter"
+                  placeholder={t('components.DevicesView.phExampleLocations')}
                   className="h-11 w-full rounded-flox-inputs border border-nexoraBorder dark:border-luxuryGold/18 bg-white px-3 text-base text-nexoraText outline-none focus:border-nexoraBrand"
                 />
               </div>

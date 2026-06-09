@@ -125,7 +125,7 @@ export default function KybTab({
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Your Business LLC"
+                    placeholder={t('components.settings.tabs.KybTab.phLegalName')}
                     className="w-full bg-slate-50 border border-slate-300 focus:border-blue-500 focus:bg-white rounded px-3 h-9 text-xs text-slate-800 focus:outline-none transition-colors"
                     value={kybData.legalName}
                     onChange={(e) => setKybData({ ...kybData, legalName: e.target.value })}
@@ -140,7 +140,7 @@ export default function KybTab({
                   <input
                     type="text"
                     required
-                    placeholder="e.g. XX-XXXXXXX"
+                    placeholder={t('components.settings.tabs.KybTab.phTaxId')}
                     className="w-full bg-slate-50 border border-slate-300 focus:border-blue-500 focus:bg-white rounded px-3 h-9 text-xs text-slate-800 focus:outline-none transition-colors"
                     value={kybData.taxId}
                     onChange={(e) => setKybData({ ...kybData, taxId: e.target.value })}
@@ -176,7 +176,7 @@ export default function KybTab({
                   <input
                     type="text"
                     required
-                    placeholder="Representative full name"
+                    placeholder={t('components.settings.tabs.KybTab.phRepName')}
                     className="w-full bg-slate-50 border border-slate-300 focus:border-blue-500 focus:bg-white rounded px-3 h-9 text-xs text-slate-800 focus:outline-none transition-colors"
                     value={kybData.ownerName}
                     onChange={(e) => setKybData({ ...kybData, ownerName: e.target.value })}
@@ -197,7 +197,7 @@ export default function KybTab({
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Chase Bank"
+                      placeholder={t('components.settings.tabs.KybTab.phBankName')}
                       className="w-full bg-slate-50 border border-slate-300 focus:border-blue-500 focus:bg-white rounded px-3 h-9 text-xs text-slate-800 focus:outline-none transition-colors"
                       value={kybData.bankName}
                       onChange={(e) => setKybData({ ...kybData, bankName: e.target.value })}
@@ -212,7 +212,7 @@ export default function KybTab({
                       <input
                         type={showKybBankAccount ? "text" : "password"}
                         required
-                        placeholder="Account Number"
+                        placeholder={t('components.settings.tabs.KybTab.phAccountNumber')}
                         className="w-full bg-slate-50 border border-slate-300 focus:border-blue-500 focus:bg-white rounded pl-3 pr-10 h-9 text-xs text-slate-800 focus:outline-none transition-colors"
                         value={kybData.bankAccount}
                         onChange={(e) => setKybData({ ...kybData, bankAccount: e.target.value })}
@@ -234,7 +234,7 @@ export default function KybTab({
                     <input
                       type="text"
                       required
-                      placeholder="Routing Code"
+                      placeholder={t('components.settings.tabs.KybTab.phRoutingCode')}
                       className="w-full bg-slate-50 border border-slate-300 focus:border-blue-500 focus:bg-white rounded px-3 h-9 text-xs text-slate-800 focus:outline-none transition-colors"
                       value={kybData.bankRouting}
                       onChange={(e) => setKybData({ ...kybData, bankRouting: e.target.value })}

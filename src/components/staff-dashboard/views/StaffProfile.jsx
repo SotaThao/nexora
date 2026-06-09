@@ -401,7 +401,7 @@ export default function StaffProfile({ onLogout }) {
                       <input
                         type="text"
                         required
-                        placeholder="Mia Tran"
+                        placeholder={t('components.staff_dashboard.views.StaffProfile.phFullName')}
                         className="w-full bg-slate-50 border border-slate-300 focus:border-blue-500 focus:bg-white rounded px-3 h-9 text-xs text-slate-800 focus:outline-none transition-colors"
                         value={kycData.legalName}
                         onChange={(e) => setKycData({ ...kycData, legalName: e.target.value })}
@@ -414,7 +414,7 @@ export default function StaffProfile({ onLogout }) {
                       <input
                         type="text"
                         required
-                        placeholder="e.g. XXX-XX-XXXX"
+                        placeholder={t('components.staff_dashboard.views.StaffProfile.phSsn')}
                         className="w-full bg-slate-50 border border-slate-300 focus:border-blue-500 focus:bg-white rounded px-3 h-9 text-xs text-slate-800 focus:outline-none transition-colors"
                         value={kycData.idNumber}
                         onChange={(e) => setKycData({ ...kycData, idNumber: e.target.value })}
@@ -478,7 +478,7 @@ export default function StaffProfile({ onLogout }) {
                         <input
                           type="text"
                           required
-                          placeholder="e.g. Chase Bank"
+                          placeholder={t('components.staff_dashboard.views.StaffProfile.phBankName')}
                           className="w-full bg-slate-50 border border-slate-300 focus:border-blue-500 focus:bg-white rounded px-3 h-9 text-xs text-slate-800 focus:outline-none transition-colors"
                           value={kycData.bankName}
                           onChange={(e) => setKycData({ ...kycData, bankName: e.target.value })}
@@ -492,7 +492,7 @@ export default function StaffProfile({ onLogout }) {
                           <input
                             type={showKycBankAccount ? 'text' : 'password'}
                             required
-                            placeholder="Account Number"
+                            placeholder={t('components.staff_dashboard.views.StaffProfile.phAccountNumber')}
                             className="w-full bg-slate-50 border border-slate-300 focus:border-blue-500 focus:bg-white rounded pl-3 pr-8 h-9 text-xs text-slate-800 focus:outline-none transition-colors"
                             value={kycData.bankAccount}
                             onChange={(e) => setKycData({ ...kycData, bankAccount: e.target.value })}
@@ -513,7 +513,7 @@ export default function StaffProfile({ onLogout }) {
                         <input
                           type="text"
                           required
-                          placeholder="Routing Code"
+                          placeholder={t('components.staff_dashboard.views.StaffProfile.phRoutingCode')}
                           className="w-full bg-slate-50 border border-slate-300 focus:border-blue-500 focus:bg-white rounded px-3 h-9 text-xs text-slate-800 focus:outline-none transition-colors"
                           value={kycData.bankRouting}
                           onChange={(e) => setKycData({ ...kycData, bankRouting: e.target.value })}

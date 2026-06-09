@@ -87,7 +87,7 @@ export default function StepProfileSetup({
             </label>
             <input
               type="text"
-              placeholder="e.g. Lisa Marie Tran"
+              placeholder={t('components.register.steps.StepProfileSetup.phFullName')}
               required
               className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
               value={fullName}
@@ -105,7 +105,7 @@ export default function StepProfileSetup({
             </label>
             <input
               type="text"
-              placeholder="e.g. Lisa T."
+              placeholder={t('components.register.steps.StepProfileSetup.phNickname')}
               required
               className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
               value={nickname}
@@ -132,7 +132,7 @@ export default function StepProfileSetup({
                 className="h-10 w-full bg-nexoraCanvas border border-l-0 border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-r-lg px-4 text-sm text-nexoraText focus:outline-none transition-all min-w-0"
                 value={phoneParsed.nationalNumber}
                 onChange={(e) => setPhone(`${phoneParsed.countryCode} ${e.target.value}`.trim())}
-                placeholder="e.g. 408-555-1234"
+                placeholder={t('components.register.steps.StepProfileSetup.phPhone')}
                 required
               />
             </div>
@@ -160,7 +160,7 @@ export default function StepProfileSetup({
             </label>
             <input
               type="text"
-              placeholder="e.g. Acrylic Specialist"
+              placeholder={t('components.register.steps.StepProfileSetup.phPosition')}
               className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
               value={position}
               onChange={(e) => setPosition(e.target.value)}
@@ -188,7 +188,7 @@ export default function StepProfileSetup({
           </label>
           <textarea
             className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg p-3 text-sm text-nexoraText focus:outline-none transition-all min-h-[70px]"
-            placeholder="Welcome to my chair! I specialize in luxury nail art..."
+            placeholder={t('components.register.steps.StepProfileSetup.phBio')}
             value={bio}
             onChange={(e) => setBio(e.target.value)}
           />

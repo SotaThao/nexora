@@ -93,7 +93,7 @@ export default function StepProfile({
             <input
               type="text"
               className="mt-1.5 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:outline-none transition-all"
-              placeholder="Lisa Marie Tran"
+              placeholder={t('components.staff_registration.steps.StepProfile.phFullName')}
               value={fullName}
               onChange={(e) => {
                 setFullName(e.target.value)
@@ -116,7 +116,7 @@ export default function StepProfile({
             <input
               type="text"
               className="mt-1.5 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:outline-none transition-all"
-              placeholder="Lisa T."
+              placeholder={t('components.staff_registration.steps.StepProfile.phNickname')}
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
               required
@@ -143,7 +143,7 @@ export default function StepProfile({
                 value={phoneParsed.nationalNumber}
                 onChange={(e) => setPhone(`${phoneParsed.countryCode} ${e.target.value}`.trim())}
                 disabled={!isSelfServe}
-                placeholder="e.g. 408-555-1234"
+                placeholder={t('components.staff_registration.steps.StepProfile.phPhone')}
                 required
               />
             </div>
@@ -158,7 +158,7 @@ export default function StepProfile({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={!isSelfServe}
-              placeholder="e.g. name@example.com"
+              placeholder={t('components.staff_registration.steps.StepProfile.phExampleEmail')}
               required
             />
           </div>
@@ -170,7 +170,7 @@ export default function StepProfile({
             <input
               type="text"
               className="mt-1.5 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:outline-none transition-all"
-              placeholder="e.g. Acrylic Specialist"
+              placeholder={t('components.staff_registration.steps.StepProfile.phPosition')}
               value={position}
               onChange={(e) => setPosition(e.target.value)}
             />
@@ -190,7 +190,7 @@ export default function StepProfile({
           <label className="text-[10px] font-black uppercase text-nexoraSubtle tracking-wider">Short Bio (Shows on customer tip screen)</label>
           <textarea
             className="mt-1.5 w-full rounded-lg border border-nexoraBorder p-3 text-xs outline-none focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:outline-none transition-all min-h-[70px]"
-            placeholder="Welcome to my chair! I specialize in luxury nail art, acrylic extensions, and hot stone spa treatments..."
+            placeholder={t('components.staff_registration.steps.StepProfile.phBio')}
             value={bio}
             onChange={(e) => setBio(e.target.value)}
           />
