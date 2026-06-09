@@ -14,10 +14,10 @@ export default function SelectStaff({
     <div className="space-y-6 animate-fadeIn">
       <div className="text-center space-y-1">
         <h2 className="font-sans text-xl font-bold tracking-wide text-nexoraText uppercase">
-          {t('customer.select_staff_title') || 'Choose your service provider'}
+          {t('customer.select_staff_title')}
         </h2>
         <p className="text-xs text-nexoraSubtle font-medium">
-          {t('customer.select_staff_subtitle') || 'Select the staff who served you.'}
+          {t('customer.select_staff_subtitle')}
         </p>
       </div>
 
@@ -26,7 +26,7 @@ export default function SelectStaff({
         <Search className="absolute left-3 top-3.5 w-4 h-4 text-nexoraSubtle" />
         <input
           type="text"
-          placeholder={t('customer.search_staff_placeholder') || 'Search staff...'}
+          placeholder={t('customer.search_staff_placeholder')}
           className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg pl-10 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -90,7 +90,7 @@ export default function SelectStaff({
         ) : (
           <div className="py-12 flex flex-col items-center justify-center text-center text-nexoraSubtle">
             <Users className="w-10 h-10 text-nexoraBorder mb-3" />
-            <p className="text-xs font-semibold">{t('customer.no_staff_found') || 'No staff members found.'}</p>
+            <p className="text-xs font-semibold">{t('customer.no_staff_found')}</p>
           </div>
         )}
       </div>
@@ -105,7 +105,7 @@ export default function SelectStaff({
             selectedStaffMembers.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
           }`}
         >
-          {t('common.next') || 'Next'} <ArrowRight className="h-4 w-4" />
+          {t('common.next')} <ArrowRight className="h-4 w-4" />
         </button>
       </div>
     </div>

@@ -19,42 +19,42 @@ export default function TipsSavingsTab({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="card-elevated">
           <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
-            {t('dashboard.tips.savings.direct_routed') || 'Típ Trực Tiếp Routed'}
+            {t('dashboard.tips.savings.direct_routed')}
           </small>
           <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{formatUSD(directTips)}</h3>
           <span className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-bold text-brandCyan">
-            <TrendingUp className="h-3 w-3" /> {t('dashboard.tips.savings.direct_routed_sub') || 'Tránh cổng thẻ'}
+            <TrendingUp className="h-3 w-3" /> {t('dashboard.tips.savings.direct_routed_sub')}
           </span>
         </div>
         <div className="card-elevated">
           <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
-            {t('dashboard.tips.savings.fees_avoided') || 'Phí Xử Lý Tránh Được'}
+            {t('dashboard.tips.savings.fees_avoided')}
           </small>
           <h3 className="mt-1 text-2xl font-black text-luxuryGold">{formatUSD(directTips * (processingFee / 100))}</h3>
           <span className="mt-1.5 block text-[11px] font-bold text-mutedGrey dark:text-slate-400">
-            {(t('dashboard.tips.savings.fees_avoided_sub') || 'Ước tính mức 3% phí thẻ').replace('3%', `${processingFee}%`)}
+            {(t('dashboard.tips.savings.fees_avoided_sub')).replace('3%', `${processingFee}%`)}
           </span>
         </div>
         <div className="card-elevated">
           <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
-            {t('dashboard.tips.savings.active_payouts') || 'Số Thợ Nhận Trực Tiếp'}
+            {t('dashboard.tips.savings.active_payouts')}
           </small>
           <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">
             {new Set(transactions.map(tx => tx.staffId)).size}
           </h3>
           <span className="mt-1.5 block text-[11px] font-bold text-mutedGrey dark:text-slate-400">
-            {t('dashboard.tips.savings.active_payouts_sub') || 'Nhận trực tiếp tức thời'}
+            {t('dashboard.tips.savings.active_payouts_sub')}
           </span>
         </div>
         <div className="card-elevated">
           <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
-            {t('dashboard.tips.savings.duration_label') || 'Thời Gian Nhận Típ'}
+            {t('dashboard.tips.savings.duration_label')}
           </small>
           <h3 className="mt-1 text-2xl font-black text-brandCyan">
-            {t('dashboard.tips.savings.duration_value') || 'Tức Thời'}
+            {t('dashboard.tips.savings.duration_value')}
           </h3>
           <span className="mt-1.5 block text-[11px] font-bold text-mutedGrey dark:text-slate-400">
-            {t('dashboard.tips.savings.duration_sub') || 'Không giữ tiền, không phí ẩn'}
+            {t('dashboard.tips.savings.duration_sub')}
           </span>
         </div>
       </div>
@@ -65,13 +65,13 @@ export default function TipsSavingsTab({
           <div>
             <h4 className="text-sm font-black text-inkBlue dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
               <Calculator className="h-4 w-4 text-luxuryGold" />
-              {t('dashboard.tips.savings.calculator_title') || 'Tính Phí Tiết Kiệm Ước Tính'}
+              {t('dashboard.tips.savings.calculator_title')}
             </h4>
 
             <div className="space-y-4 mt-6">
               <div>
                 <label className="text-xs font-bold text-mutedGrey dark:text-slate-400">
-                  {t('dashboard.tips.savings.monthly_volume') || 'Doanh số típ tháng ($)'}
+                  {t('dashboard.tips.savings.monthly_volume')}
                 </label>
                 <input
                   type="number"
@@ -84,7 +84,7 @@ export default function TipsSavingsTab({
 
               <div>
                 <div className="flex justify-between text-xs font-bold text-mutedGrey dark:text-slate-400">
-                  <span>{t('dashboard.tips.savings.card_fee_avg') || 'Mức phí quẹt thẻ trung bình (%)'}</span>
+                  <span>{t('dashboard.tips.savings.card_fee_avg')}</span>
                   <span>{processingFee}%</span>
                 </div>
                 <input
@@ -103,17 +103,17 @@ export default function TipsSavingsTab({
           {/* Calculator Output */}
           <div className="mt-6 rounded-lg bg-gradient-to-r from-nexoraBrand/10 to-brandCyan/10 p-4 border border-nexoraBrand/20">
             <span className="text-[10px] font-black text-nexoraBrand dark:text-luxuryGold uppercase tracking-widest">
-              {t('dashboard.tips.savings.est_savings') || 'Ước tính số tiền tiết kiệm:'}
+              {t('dashboard.tips.savings.est_savings')}
             </span>
             <div className="mt-1 flex items-baseline gap-2">
               <span className="text-2xl font-black text-inkBlue dark:text-white">
-                {formatUSD(monthlyVolume * (processingFee / 100))}{t('dashboard.tips.savings.per_month') || '/tháng'}
+                {formatUSD(monthlyVolume * (processingFee / 100))}{t('dashboard.tips.savings.per_month')}
               </span>
             </div>
             <span className="mt-1.5 block text-xs font-bold text-mutedGrey dark:text-slate-400">
-              {t('dashboard.tips.savings.est_savings_annual_prefix') || 'Tiết kiệm khoảng'}{' '}
+              {t('dashboard.tips.savings.est_savings_annual_prefix')}{' '}
               <strong className="text-brandCyan">{formatUSD(monthlyVolume * (processingFee / 100) * 12)}</strong>{' '}
-              {t('dashboard.tips.savings.est_savings_annual_suffix') || 'mỗi năm.'}
+              {t('dashboard.tips.savings.est_savings_annual_suffix')}
             </span>
           </div>
         </div>
@@ -121,17 +121,17 @@ export default function TipsSavingsTab({
         {/* Right: Recent Direct Transactions Table */}
         <div className="card-elevated lg:col-span-3">
           <h4 className="text-sm font-black text-inkBlue dark:text-white uppercase tracking-wider mb-5">
-            {t('dashboard.tips.savings.recent_payouts') || 'Giao Dịch Trực Tiếp Gần Đây'}
+            {t('dashboard.tips.savings.recent_payouts')}
           </h4>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-nexoraBorder dark:border-white/5 text-mutedGrey dark:text-slate-400 uppercase tracking-widest text-[10px]">
-                  <th className="py-3 px-2">{t('dashboard.tips.savings.col_time') || 'Thời gian'}</th>
-                  <th className="py-3 px-2">{t('dashboard.tips.savings.col_staff') || 'Nhân viên'}</th>
-                  <th className="py-3 px-2">{t('dashboard.tips.savings.col_amount') || 'Số tiền'}</th>
-                  <th className="py-3 px-2">{t('dashboard.tips.savings.col_method') || 'Ví gửi'}</th>
-                  <th className="py-3 px-2">{t('dashboard.tips.savings.col_status') || 'Trạng thái'}</th>
+                  <th className="py-3 px-2">{t('dashboard.tips.savings.col_time')}</th>
+                  <th className="py-3 px-2">{t('dashboard.tips.savings.col_staff')}</th>
+                  <th className="py-3 px-2">{t('dashboard.tips.savings.col_amount')}</th>
+                  <th className="py-3 px-2">{t('dashboard.tips.savings.col_method')}</th>
+                  <th className="py-3 px-2">{t('dashboard.tips.savings.col_status')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -148,7 +148,7 @@ export default function TipsSavingsTab({
                     </td>
                     <td className="py-3.5 px-2">
                       <span className="inline-flex items-center gap-1 text-[10px] font-bold text-brandCyan">
-                        <CheckCircle className="h-3 w-3" /> {t('dashboard.tips.savings.status_success') || 'Thành công'}
+                        <CheckCircle className="h-3 w-3" /> {t('dashboard.tips.savings.status_success')}
                       </span>
                     </td>
                   </tr>

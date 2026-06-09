@@ -1,48 +1,64 @@
 /**
- * notificationsRepository — in-app notification items.
- * Key: nexora_notifications.
+ * notificationsRepository — API-only implementation.
+ * TODO: Wire to real notifications API endpoints when available.
  */
-import { adapter as defaultAdapter } from '../adapters'
 
-const KEY = 'nexora_notifications'
+import httpClient from '../../lib/httpClient'
 
-export function createNotificationsRepository(a = defaultAdapter) {
+export function createNotificationsRepository(client = httpClient) {
   return {
-    /** @returns {Promise<Array>} */
+    /** 
+     * @returns {Promise<Array>} 
+     */
     async list() {
-      return (await a.get(KEY)) ?? []
+      const response = await client.get('/api/v1/notifications')
+      const items = Array.isArray(response) ? response : (response.data || [])
+      
+      // Normalize to { id, type, title, body, isRead, createdAt }
+      return items.map(item => ({
+        id: item.id,
+        type: item.type || 'info',
+        title: item.title || '',
+        body: item.body || item.message || '',
+        isRead: Boolean(item.isRead || item.read),
+        createdAt: item.createdAt || new Date().toISOString()
+      }))
     },
 
     /**
-     * @param {object} notification
-     * @returns {Promise<object>} the appended notification
+     * @returns {Promise<number>}
+     */
+    async unreadCount() {
+      const response = await client.get('/api/v1/notifications/unread-count')
+      return typeof response === 'number' ? response : (response.count || 0)
+    },
+
+    /**
+     * @param {string} id
+     */
+    async markRead(id) {
+      return client.put(`/api/v1/notifications/${id}/read`)
+    },
+
+    /**
+     * Mark all notifications as read
+     */
+    async markAllRead() {
+      return client.put('/api/v1/notifications/read-all')
+    },
+
+    /**
+     * @deprecated server-side generation
      */
     async add(notification) {
-      const list = (await a.get(KEY)) ?? []
-      const updated = [...list, notification]
-      await a.set(KEY, updated)
       return notification
     },
 
     /**
-     * Set read:true on the notification with matching id.
-     * @param {string} id
-     */
-    async markRead(id) {
-      const list = (await a.get(KEY)) ?? []
-      const updated = list.map((n) =>
-        n.id === id ? { ...n, read: true } : n
-      )
-      await a.set(KEY, updated)
-    },
-
-    /**
-     * Replace the entire notifications list.  Used by the realtime bridge when
-     * a remote update arrives with a canonical list.
-     * @param {Array} list
+     * @deprecated server-side generation
      */
     async replaceAll(list) {
-      await a.set(KEY, list)
+      // no-op
     },
   }
 }

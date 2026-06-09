@@ -27,7 +27,7 @@ export default function KpiCard({ label, value, delta, active = false, onClick }
       <div className="mt-4 flex items-center gap-1.5 text-xs font-bold text-emerald-600">
         <span>▲ {delta}</span>
         <span className="text-nexoraSubtle/80 font-semibold uppercase tracking-wider text-[10px]">
-          {t('dashboard.kpi.vs_last_week') || 'vs last week'}
+          {t('dashboard.kpi.vs_last_week')}
         </span>
       </div>
     </button>

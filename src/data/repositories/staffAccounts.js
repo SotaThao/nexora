@@ -1,42 +1,66 @@
 /**
- * staffAccountsRepository — per-staff account blobs stored as a single object
- * keyed by staffId.  Key: nexora_staff_account.
- *
- * Storage shape: { [staffId]: { ...staffAccountData } }
+ * staffAccountsRepository — API-only implementation.
+ * TODO: Wire to real staff accounts API endpoints when available.
  */
-import { adapter as defaultAdapter } from '../adapters'
 
-const KEY = 'nexora_staff_account'
+import profileSettingsRepository from './profileSettings'
+import staffPaymentMethodsRepository from './staffPaymentMethods'
 
-export function createStaffAccountsRepository(a = defaultAdapter) {
+export function createStaffAccountsRepository() {
   return {
     /**
-     * Return the full accounts map.
      * @returns {Promise<object>} — keyed by staffId, or {} if absent
      */
     async getAll() {
-      return (await a.get(KEY)) ?? {}
+      // TODO: Wire to GET /api/v1/merchant/staff-accounts
+      return {}
     },
 
     /**
-     * Return a single staff account by id, or null.
+     * Composes the staff account view for the Personal dashboard.
      * @param {string} staffId
      * @returns {Promise<object|null>}
      */
     async get(staffId) {
-      const all = (await a.get(KEY)) ?? {}
-      return all[staffId] ?? null
+      if (staffId && staffId !== 'self') {
+        // TODO: Wire to GET /api/v1/merchant/staff-accounts/:staffId for merchant reading staff
+        return null
+      }
+
+      // 'self' logic (Personal dashboard)
+      const [profile, paymentMethods] = await Promise.all([
+        profileSettingsRepository.get(),
+        staffPaymentMethodsRepository.getAll()
+      ])
+
+      if (!profile) return null
+
+      return {
+        id: profile.id,
+        profile,
+        paymentMethods,
+        tips: [],
+        staffReviews: [],
+        kpis: {
+          totalTips: 0,
+          averageTip: 0,
+          totalTransactions: 0,
+          averageRating: 0,
+          isPending: true // signals to UI that stats are deferred
+        }
+      }
     },
 
     /**
-     * Merge data into the account blob for staffId and persist.
      * @param {string} staffId
      * @param {object} data
      */
     async save(staffId, data) {
-      const all = (await a.get(KEY)) ?? {}
-      const updated = { ...all, [staffId]: { ...(all[staffId] ?? {}), ...data } }
-      await a.set(KEY, updated)
+      // Keep existing mapping to profile update
+      if (staffId === 'self' || !staffId) {
+        return profileSettingsRepository.updateStaffProfile(data)
+      }
+      // TODO: Wire to PUT /api/v1/merchant/staff-accounts/:staffId
     },
   }
 }

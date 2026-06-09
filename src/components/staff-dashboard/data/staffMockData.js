@@ -3,7 +3,7 @@
 // merchant data (nexora_transactions + nexora_merchant_setup) — see StaffAccountContext.
 
 // The staff signed in for the demo. Matches an entry in the merchant staffList.
-export const DEMO_STAFF_ID = 'NEX-STAFF-MIA0123'
+export const DEMO_STAFF_ID = null
 
 // Payout methods a staff can manage themselves (owner cannot edit these).
 export const PAYOUT_METHODS = [
@@ -54,7 +54,7 @@ export function makeDefaultStaffAccount(staffMember = {}) {
 export function makeDemoStaffAccount(staffMember = {}) {
   return {
     ...makeDefaultStaffAccount(staffMember),
-    bio: 'Hi, I’m Mia. Thank you for supporting my work!',
+    bio: '',
     confirmedTipIds: []
   }
 }

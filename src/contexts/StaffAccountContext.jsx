@@ -1,7 +1,6 @@
 import React, { createContext, useCallback, useContext, useMemo } from 'react'
 import { logger } from '../utils/logger'
-import { INITIAL_TRANSACTIONS, INITIAL_REVIEWS, INITIAL_STAFF } from '../components/dashboard/data/mockData'
-import { DEMO_STAFF_ID, makeDefaultStaffAccount } from '../components/staff-dashboard/data/staffMockData'
+import { makeDefaultStaffAccount } from '../components/staff-dashboard/data/staffMockData'
 import {
   useStaffAccount as useStaffAccountQuery,
   useSaveStaffAccount as useSaveStaffAccountQuery,
@@ -15,7 +14,7 @@ const StaffAccountContext = createContext(null)
 
 const slugify = (str = '') => str.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 
-export function StaffAccountProvider({ staffId = DEMO_STAFF_ID, children }) {
+export function StaffAccountProvider({ staffId = null, children }) {
   // --- Server state via TanStack Query hooks --------------------------------
   // useStaffAccountQuery(staffId) → the single staff account blob (or null)
   const { data: accountData = null } = useStaffAccountQuery(staffId)
@@ -30,7 +29,7 @@ export function StaffAccountProvider({ staffId = DEMO_STAFF_ID, children }) {
   // --- Derived: merchant staff list + the signed-in staff member -----------
   const staffList = useMemo(() => {
     const list = merchantSetup?.staffList
-    return Array.isArray(list) && list.length ? list : INITIAL_STAFF
+    return Array.isArray(list) && list.length ? list : []
   }, [merchantSetup])
 
   // Look up registered pending accounts to see if this staff matches a manually registered staff account
@@ -55,7 +54,7 @@ export function StaffAccountProvider({ staffId = DEMO_STAFF_ID, children }) {
     return staffList[0] || {}
   }, [staffList, staffId, registeredStaffAccount])
 
-  const businessName = merchantSetup?.businessInfo?.name || 'Golden Glow Nail Spa'
+  const businessName = merchantSetup?.businessInfo?.name || ''
 
   // --- Staff-owned blob (with default init) --------------------------------
   // useStaffAccountQuery(staffId) returns the single account blob for this staff.
@@ -113,7 +112,7 @@ export function StaffAccountProvider({ staffId = DEMO_STAFF_ID, children }) {
 
   // --- Derived: tips for this staff (with status) --------------------------
   const allTx = useMemo(() => {
-    const list = Array.isArray(transactions) && transactions.length ? transactions : INITIAL_TRANSACTIONS
+    const list = Array.isArray(transactions) && transactions.length ? transactions : []
     return list.filter((tx) => tx.staffId === staffId)
   }, [transactions, staffId])
 
@@ -132,7 +131,7 @@ export function StaffAccountProvider({ staffId = DEMO_STAFF_ID, children }) {
 
   // --- Derived: KPIs -------------------------------------------------------
   const staffReviews = useMemo(() => {
-    const list = Array.isArray(reviews) && reviews.length ? reviews : INITIAL_REVIEWS
+    const list = Array.isArray(reviews) && reviews.length ? reviews : []
     return list.filter((r) => r.staffId === staffId)
   }, [reviews, staffId])
 

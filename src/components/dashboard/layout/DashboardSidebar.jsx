@@ -54,17 +54,17 @@ export default function DashboardSidebar({
       <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-4 shrink-0">
         <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsProfileExpanded(!isProfileExpanded)}>
           <div className="flex items-center gap-3 min-w-0">
-            {profile.avatar ? (
+            {profile.avatar && !profile.avatar.includes('unsplash.com') ? (
               <img src={profile.avatar} alt="" className="h-10 w-10 rounded-full border border-white/10 object-cover" />
             ) : (
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-sm font-extrabold">
-                {profile.fullName ? profile.fullName.charAt(0) : businessName.charAt(0)}
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-sm font-extrabold uppercase">
+                {(profile.email || '').slice(0, 2).toUpperCase() || '?'}
               </div>
             )}
             <div className="min-w-0">
               <div className="truncate text-xs font-black text-white/50 uppercase tracking-wider">{businessName}</div>
               <div className="flex items-center gap-1 min-w-0 mt-0.5">
-                <div className="truncate text-sm font-bold text-white">{profile.fullName || businessName}</div>
+                <div className="truncate text-sm font-bold text-white">{profile.fullName || profile.email || businessName}</div>
               </div>
               <div className="text-[10px] text-white/40 truncate mt-0.5">{profile.email}</div>
             </div>
@@ -89,7 +89,7 @@ export default function DashboardSidebar({
               }`}
             >
               <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === 'settings' && settingsTab === 'profile' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
-              <span>{t('dashboard.menu.business_setting') || 'Business Setting'}</span>
+              <span>{t('dashboard.menu.business_setting')}</span>
             </button>
             <button
               onClick={() => {
@@ -103,7 +103,7 @@ export default function DashboardSidebar({
               }`}
             >
               <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === 'settings' && settingsTab === 'kyb' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
-              <span>{t('dashboard.menu.kyb') || 'Business Verification'}</span>
+              <span>{t('dashboard.menu.kyb')}</span>
             </button>
           </div>
         )}
@@ -113,20 +113,20 @@ export default function DashboardSidebar({
       {userRole !== 'staff' && (
         <div className="mt-3 rounded-xl border border-white/10 bg-white/5 p-4 shrink-0">
         <div className="text-[10px] font-extrabold uppercase tracking-wider text-white/45">
-          {t('dashboard.sidebar.current_plan_header') || 'CURRENT PLAN'}
+          {t('dashboard.sidebar.current_plan_header')}
         </div>
         {hasKyb ? (
           <>
             <div className="mt-1 text-sm font-black text-white">
-              {t('dashboard.sidebar.plan_name') || 'Pro Plan'}
+              {t('dashboard.sidebar.plan_name')}
             </div>
             <div className="mt-1 text-xs text-white/55">
-              {t('dashboard.sidebar.renews_text') || 'Renews on Jun 20, 2024'}
+              {t('dashboard.sidebar.renews_text')}
             </div>
           </>
         ) : (
           <div className="mt-1 text-xs font-semibold text-rose-400">
-            {t('dashboard.sidebar.no_plan') || 'No current plan'}
+            {t('dashboard.sidebar.no_plan')}
           </div>
         )}
         <button
@@ -134,7 +134,7 @@ export default function DashboardSidebar({
           onClick={() => setActiveMenu('subscriptions')}
           className="mt-3.5 w-full rounded-lg border border-white/15 py-1.5 text-center text-xs font-bold text-luxuryGold hover:bg-white/5 hover:border-white/25 transition-all"
         >
-          {t('dashboard.sidebar.manage_plan') || 'Manage Plan'}
+          {t('dashboard.sidebar.manage_plan')}
         </button>
       </div>
       )}
@@ -144,8 +144,8 @@ export default function DashboardSidebar({
         {(() => {
           const menuItemsToDisplay = userRole === 'staff'
             ? [
-                { id: 'overview', label: currentLanguage === 'vi' ? 'Tài khoản của tôi' : 'My Dashboard', icon: visibleMenuItems.find(i => i.id === 'overview')?.icon, image: visibleMenuItems.find(i => i.id === 'overview')?.image },
-                { id: 'support', label: t('dashboard.menu.support') || 'Support', icon: visibleMenuItems.find(i => i.id === 'support')?.icon }
+                { id: 'overview', label: t('components.dashboard.layout.DashboardSidebar.myDashboard'), icon: visibleMenuItems.find(i => i.id === 'overview')?.icon, image: visibleMenuItems.find(i => i.id === 'overview')?.image },
+                { id: 'support', label: t('dashboard.menu.support'), icon: visibleMenuItems.find(i => i.id === 'support')?.icon }
               ]
             : visibleMenuItems
 
@@ -199,10 +199,10 @@ export default function DashboardSidebar({
               {id === 'tips' && isTipsExpanded && (
                 <div className="ml-9 mt-1 space-y-1 border-l border-white/10 pl-3 animate-fadeIn">
                   {[
-                    { id: 'overview', label: t('dashboard.tips.tabs.overview') || 'Overview' },
-                    { id: 'savings', label: t('dashboard.tips.tabs.savings') || 'Direct Savings' },
-                    { id: 'transactions', label: t('dashboard.tips.tabs.transactions') || 'Tip Transactions' },
-                    { id: 'payouts', label: t('dashboard.tips.tabs.payouts') || 'Staff Payouts' }
+                    { id: 'overview', label: t('dashboard.tips.tabs.overview') },
+                    { id: 'savings', label: t('dashboard.tips.tabs.savings') },
+                    { id: 'transactions', label: t('dashboard.tips.tabs.transactions') },
+                    { id: 'payouts', label: t('dashboard.tips.tabs.payouts') }
                   ].map(sub => {
                     const isSubActive = activeMenu === 'tips' && tipsTab === sub.id
                     return (
@@ -230,8 +230,8 @@ export default function DashboardSidebar({
               {id === 'touchpoints' && isTouchpointsExpanded && (
                 <div className="ml-9 mt-1 space-y-1 border-l border-white/10 pl-3 animate-fadeIn">
                   {[
-                    { id: 'stations', label: t('dashboard.touchpoints.tabs.stations') || 'QR Stations' },
-                    { id: 'devices', label: t('dashboard.touchpoints.tabs.devices') || 'Hardware Devices' }
+                    { id: 'stations', label: t('dashboard.touchpoints.tabs.stations') },
+                    { id: 'devices', label: t('dashboard.touchpoints.tabs.devices') }
                   ].map(sub => {
                     const isSubActive = activeMenu === 'touchpoints' && touchpointsTab === sub.id
                     return (

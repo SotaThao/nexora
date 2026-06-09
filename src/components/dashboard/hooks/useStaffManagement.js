@@ -2,7 +2,6 @@
 // Dashboard. Staff mutations also create/remove each staff personal-QR touch
 // point, so setTouchpoints is injected. Extracted from Dashboard.jsx (Group 5).
 import { useState } from 'react'
-import { INITIAL_STAFF } from '../data/mockData'
 import { DEFAULT_PAYOUT_CONFIGS } from '../constants'
 import { getPayoutConfigsFromMember } from '../utils'
 import { useTranslation } from '../../../contexts/LanguageContext'
@@ -50,10 +49,7 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
     if (setupData?.staffList?.length) {
       return setupData.staffList.map(normaliseMember)
     }
-    return INITIAL_STAFF.map(member => ({
-      ...member,
-      payoutConfigs: getPayoutConfigsFromMember(member)
-    }))
+    return []
   })
 
   const [errors, setErrors] = useState({})
@@ -153,10 +149,10 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
 
   const saveStaff = () => {
     const nextErrors = {}
-    if (!staffForm.fullName.trim()) nextErrors.fullName = 'Full name is required.'
-    if (!staffForm.nickname.trim()) nextErrors.nickname = 'Public nickname is required.'
+    if (!staffForm.fullName.trim()) nextErrors.fullName = t('components.dashboard.hooks.useStaffManagement.fullNameRequired')
+    if (!staffForm.nickname.trim()) nextErrors.nickname = t('components.dashboard.hooks.useStaffManagement.publicNicknameRequired')
     if (staffForm.email?.trim() && !/\S+@\S+\.\S+/.test(staffForm.email.trim())) {
-      nextErrors.email = t('setup.errors.staff_email_invalid') || 'Invalid email address format.'
+      nextErrors.email = t('setup.errors.staff_email_invalid')
     }
     if (Object.keys(nextErrors).length) {
       setErrors(nextErrors)
@@ -202,9 +198,9 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
 
   const sendSetupLinkFromModal = (formDetails) => {
     const nextErrors = {}
-    if (!formDetails.fullName.trim()) nextErrors.fullName = 'Full name is required to invite.'
+    if (!formDetails.fullName.trim()) nextErrors.fullName = t('components.dashboard.hooks.useStaffManagement.fullNameRequiredToInvite')
     if (!formDetails.email.trim() && !formDetails.phone.trim()) {
-      nextErrors.email = 'Phone or email is required to send invite link.'
+      nextErrors.email = t('components.dashboard.hooks.useStaffManagement.phoneOrEmailRequired')
     }
     
     if (Object.keys(nextErrors).length) {
@@ -255,7 +251,7 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
 
   const handleLinkStaff = (globalMember, role) => {
     if (staff.some(s => s.id === globalMember.id)) {
-      showToast('This technician is already linked to your salon.', 'error');
+      showToast(t('components.dashboard.hooks.useStaffManagement.technicianAlreadyLinked'), 'error');
       return;
     }
 
@@ -425,7 +421,7 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
     if (ok) {
       setStaff((current) => current.filter((m) => m.id !== staffId))
       setTouchpoints((current) => current.filter((tp) => tp.staffId !== staffId))
-      showToast(currentLanguage === 'vi' ? 'Đã hủy liên kết nhân viên thành công.' : 'Staff unlinked successfully.', 'success')
+      showToast(t('components.dashboard.hooks.useStaffManagement.staffUnlinkedSuccessfully'), 'success')
     }
   }
 
@@ -438,14 +434,12 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
       : `Are you sure you want to decline unlink request from ${member.fullName}?`)
     if (ok) {
       setStaff((current) => current.map((m) => m.id === staffId ? { ...m, status: 'Active', isActive: true } : m))
-      showToast(currentLanguage === 'vi' ? 'Đã từ chối yêu cầu hủy liên kết.' : 'Declined unlink request.', 'success')
+      showToast(t('components.dashboard.hooks.useStaffManagement.declinedUnlinkRequest'), 'success')
     }
   }
 
   const deleteStaff = async (id) => {
-    const ok = await showConfirm(currentLanguage === 'vi'
-      ? 'Bạn có chắc chắn muốn xóa nhân viên này khỏi Nexora Touch?'
-      : 'Delete this staff member from Nexora Touch?')
+    const ok = await showConfirm(t('components.dashboard.hooks.useStaffManagement.deleteThisStaffMember'))
     if (!ok) return
     setStaff((current) => current.filter((member) => member.id !== id))
     setTouchpoints((current) => current.filter((point) => !(point.type === 'Staff QR' && point.staffId === id)))

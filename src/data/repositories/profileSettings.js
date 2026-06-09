@@ -1,25 +1,64 @@
 /**
- * profileSettingsRepository — merchant profile/account settings.
- * Key: nexora_profile_settings.
+ * profileSettingsRepository — API-only implementation.
+ * TODO: Wire to real profile settings API endpoints when available.
  */
-import { adapter as defaultAdapter } from '../adapters'
 
-const KEY = 'nexora_profile_settings'
+import httpClient from '../../lib/httpClient'
 
-export function createProfileSettingsRepository(a = defaultAdapter) {
+export function createProfileSettingsRepository(client = httpClient) {
   return {
-    /** @returns {Promise<object|null>} */
+    /** 
+     * @returns {Promise<object|null>} 
+     */
     async get() {
-      return a.get(KEY)
+      try {
+        const response = await client.get('/api/v1/userprofile/me')
+        return response || null
+      } catch (err) {
+        if (err?.errorCode === 'COMMON_NOT_FOUND' || err?.status === 404) {
+          return null
+        }
+        throw err
+      }
     },
 
-    /** @param {object} settings */
+    /**
+     * @returns {Promise<object>}
+     */
+    async getVerifiedStatus() {
+      return client.get('/api/v1/userprofile/verified-status')
+    },
+
+    /** 
+     * @param {object} dto 
+     * @param {string} dto.firstName
+     * @param {string} dto.lastName
+     * @param {string} dto.phoneNumber
+     * @param {string} [dto.profileImageUrl]
+     * @param {string} [dto.city]
+     */
+    async updateUserProfile(dto) {
+      return client.put('/api/v1/userprofile/update', dto)
+    },
+
+    /**
+     * @param {object} dto
+     * @param {string} dto.displayName
+     * @param {string} [dto.position]
+     * @param {string} [dto.bio]
+     * @param {string} [dto.photoUrl]
+     */
+    async updateStaffProfile(dto) {
+      return client.put('/api/v1/staff/profile', dto)
+    },
+
+    /** @deprecated Use updateUserProfile instead */
     async save(settings) {
-      await a.set(KEY, settings)
+      // no-op
     },
 
     async clear() {
-      await a.remove(KEY)
+      // no-op
     },
   }
 }

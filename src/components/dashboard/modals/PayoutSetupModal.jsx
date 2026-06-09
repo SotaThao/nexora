@@ -68,7 +68,7 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
     setIsCapturing(true)
     setTimeout(() => {
       const mockQr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-        value || 'nexora-mock-payout'
+        value || ''
       )}`
       setQrCode(mockQr)
       setIsCapturing(false)
@@ -83,7 +83,7 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
   const handleSubmit = () => {
     if (readOnly) return
     if (!value.trim()) {
-      setError(t('setup.errors.field_required') || 'This field is required.')
+      setError(t('setup.errors.field_required'))
       return
     }
     onSubmit(value, qrCode, accountName)
@@ -154,7 +154,7 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
                 : `${walletNames[walletKey]?.toUpperCase()} ACCOUNT`}
             </h3>
             <p className="text-[10px] text-slate-400 font-medium">
-              {currentLanguage === 'vi' ? 'Chỉ định thông tin tài khoản nhận tiền' : 'Specify receiving target identifier'}
+              {t('components.dashboard.modals.PayoutSetupModal.specifyReceivingTargetIdentifier')}
             </p>
           </div>
         </div>
@@ -162,7 +162,7 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
         <div className="space-y-4">
           <div>
             <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
-              {renderLabel(currentLanguage === 'vi' ? 'THÔNG TIN TÀI KHOẢN *' : 'Account Identifier *')}
+              {renderLabel(t('components.dashboard.modals.PayoutSetupModal.accountIdentifier'))}
             </label>
             <input
               type="text"
@@ -182,13 +182,13 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
 
           <div>
             <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
-              {currentLanguage === 'vi' ? 'MÃ QR (TÙY CHỌN)' : 'QR Code (optional)'}
+              {t('components.dashboard.modals.PayoutSetupModal.qrCodeOptional')}
             </label>
 
             {isCapturing ? (
               <div className="flex h-44 w-full flex-col items-center justify-center rounded-xl border border-slate-200 bg-slate-50">
                 <div className="h-6 w-6 border-2 border-nexoraBrand/20 border-t-nexoraBrand rounded-full animate-spin"></div>
-                <span className="mt-2 text-xs font-semibold text-slate-500">{t('setup.taking_photo') || 'Taking photo...'}</span>
+                <span className="mt-2 text-xs font-semibold text-slate-500">{t('setup.taking_photo')}</span>
               </div>
             ) : qrCode ? (
               <div className="relative flex flex-col items-center rounded-xl border border-slate-200 bg-white p-4.5 shadow-sm">
@@ -215,7 +215,7 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
               </div>
             ) : readOnly ? (
               <div className="flex h-24 w-full flex-col items-center justify-center rounded-xl border border-slate-150 bg-slate-50 text-slate-400 text-xs font-semibold">
-                {currentLanguage === 'vi' ? 'Thợ chưa tải lên mã QR' : 'No QR code uploaded'}
+                {t('components.dashboard.modals.PayoutSetupModal.noQrCodeUploaded')}
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-3">
@@ -225,20 +225,20 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
                   className="flex flex-col items-center justify-center py-5 border border-dashed border-slate-200 hover:border-nexoraBrand rounded-xl bg-slate-50 hover:bg-slate-50/50 transition gap-1.5"
                 >
                   <Camera className="w-5 h-5 text-nexoraBrand" />
-                  <span className="text-[11px] font-bold text-slate-600">{t('setup.take_photo') || 'Take photo'}</span>
+                  <span className="text-[11px] font-bold text-slate-600">{t('setup.take_photo')}</span>
                 </button>
                 <label
                   className="flex flex-col items-center justify-center py-5 border border-dashed border-slate-200 hover:border-nexoraBrand rounded-xl bg-slate-50 hover:bg-slate-50/50 transition gap-1.5 cursor-pointer"
                 >
                   <FolderOpen className="w-5 h-5 text-nexoraBrand" />
-                  <span className="text-[11px] font-bold text-slate-600">{t('setup.choose_file') || 'Choose file'}</span>
+                  <span className="text-[11px] font-bold text-slate-600">{t('setup.choose_file')}</span>
                   <input type="file" accept="image/*" className="sr-only" onChange={handleFileChange} />
                 </label>
               </div>
             )}
             {!qrCode && !readOnly && (
               <p className="mt-2 text-[10px] text-slate-400 leading-normal">
-                {t('setup.uploader_hint') || 'You can either take a photo or upload from your device. Accepted formats: JPG, PNG, JPEG. Max size: 5MB per file.'}
+                {t('setup.uploader_hint')}
               </p>
             )}
           </div>
@@ -247,8 +247,8 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
             <AlertTriangle className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
             <span>
               {readOnly
-                ? (currentLanguage === 'vi' ? 'Thông tin này được nhập bởi Kỹ thuật viên khi tham gia Salon. Salon Owner chỉ có thể xem.' : 'This information was entered by the technician. Salon Owner has view-only access.')
-                : (t('setup.payout_warning') || 'Please enter the correct receiving account information. This will be used to receive payments.')}
+                ? (t('components.dashboard.modals.PayoutSetupModal.thisInformationWasEntered'))
+                : (t('setup.payout_warning'))}
             </span>
           </div>
         </div>
@@ -258,14 +258,14 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
             onClick={onClose}
             className={`px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider rounded-lg transition ${readOnly ? 'w-full text-center' : ''}`}
           >
-            {currentLanguage === 'vi' ? (readOnly ? 'ĐÓNG' : 'HỦY') : (readOnly ? 'CLOSE' : 'CANCEL')}
+            {t(readOnly ? 'setup.close' : 'common.cancel')}
           </button>
           {!readOnly && (
             <button
               onClick={handleSubmit}
               className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm transition"
             >
-              {currentLanguage === 'vi' ? 'LƯU LẠI' : 'SAVE'}
+              {t('components.dashboard.modals.PayoutSetupModal.save')}
             </button>
           )}
         </div>

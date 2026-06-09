@@ -320,7 +320,7 @@ export default function DashboardHeader({
             <div className="absolute right-0 mt-12 w-80 max-h-[460px] flex flex-col rounded-xl border border-nexoraBorder bg-white shadow-2xl z-50 animate-fadeIn overflow-hidden">
               <div className="flex items-center justify-between border-b border-nexoraBorder px-4 py-3 bg-nexoraSurfaceMuted">
                 <span className="text-xs font-black uppercase text-nexoraText tracking-wider">
-                  {t('dashboard.notifications.title') || 'Thông báo'} ({unreadCount})
+                  {t('dashboard.notifications.title')} ({unreadCount})
                 </span>
                 {unreadCount > 0 && (
                   <button
@@ -328,7 +328,7 @@ export default function DashboardHeader({
                     onClick={handleMarkAllAsRead}
                     className="text-[10px] font-bold text-nexoraBrand hover:underline"
                   >
-                    {t('dashboard.notifications.mark_all_read') || 'Đọc tất cả'}
+                    {t('dashboard.notifications.mark_all_read')}
                   </button>
                 )}
               </div>
@@ -383,7 +383,7 @@ export default function DashboardHeader({
                 ) : (
                   <div className="py-12 text-center text-nexoraSubtle flex flex-col items-center justify-center">
                     <Bell className="h-8 w-8 text-nexoraBorder mb-2" />
-                    <p className="text-xs font-semibold">{t('dashboard.notifications.empty') || 'Không có thông báo mới.'}</p>
+                    <p className="text-xs font-semibold">{t('dashboard.notifications.empty')}</p>
                   </div>
                 )}
               </div>
@@ -401,11 +401,11 @@ export default function DashboardHeader({
             title="Account menu"
             id="header-profile-menu-btn"
           >
-            {profile.avatar ? (
+            {profile.avatar && !profile.avatar.includes('unsplash.com') ? (
               <img src={profile.avatar} alt="" className="h-full w-full object-cover" />
             ) : (
-              <div className="flex h-full w-full items-center justify-center bg-nexoraBrand text-sm font-bold text-white">
-                {profile.fullName ? profile.fullName.charAt(0) : 'A'}
+              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-sm font-bold text-white uppercase">
+                {(profile.email || '').slice(0, 2).toUpperCase() || '?'}
               </div>
             )}
           </button>
@@ -416,7 +416,7 @@ export default function DashboardHeader({
               id="header-profile-dropdown"
             >
               <div className="px-4 py-2.5">
-                <div className="text-xs font-black text-nexoraText truncate">{profile.fullName || businessName}</div>
+                <div className="text-xs font-black text-nexoraText truncate">{profile.fullName || profile.email || businessName}</div>
                 <div className="text-[10px] text-nexoraMuted truncate mt-0.5">{profile.email}</div>
               </div>
               {userRole !== 'staff' && (
@@ -429,7 +429,7 @@ export default function DashboardHeader({
                     }}
                     className="flex w-full items-center px-4 py-2 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition text-left"
                   >
-                    {t('dashboard.menu.business_setting') || 'Business Setting'}
+                    {t('dashboard.menu.business_setting')}
                   </button>
                   <button
                     type="button"
@@ -439,7 +439,7 @@ export default function DashboardHeader({
                     }}
                     className="flex w-full items-center px-4 py-2 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition text-left"
                   >
-                    {t('dashboard.menu.kyb') || 'Business Verification'}
+                    {t('dashboard.menu.kyb')}
                   </button>
                 </div>
               )}
@@ -453,7 +453,7 @@ export default function DashboardHeader({
                   className="flex w-full items-center px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 transition text-left"
                 >
                   <LogOut className="h-3.5 w-3.5 mr-2 shrink-0" />
-                  {t('dashboard.sidebar.sign_out') || 'Sign out'}
+                  {t('dashboard.sidebar.sign_out')}
                 </button>
               </div>
             </div>

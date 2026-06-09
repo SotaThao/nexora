@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   base: './',
   envPrefix: ['VITE_', 'SUPABASE_', 'NEXT_PUBLIC_'],
-  esbuild: { drop: ['console', 'debugger'] },
+  // esbuild: { drop: ['console', 'debugger'] },
   build: {
     chunkSizeWarningLimit: 900,
     rollupOptions: {
@@ -21,4 +21,10 @@ export default defineConfig({
   server: {
     port: 3000,
   },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/setupTests.js',
+  },
 })
+

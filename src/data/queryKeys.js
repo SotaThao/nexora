@@ -1,12 +1,13 @@
 /**
  * Central query-key registry.
  *
- * All hooks, mutations, and the storageEventBridge reference these keys so
- * that invalidateQueries targets exactly the right cache entries.
- *
- * The storage-key → query-key map (STORAGE_KEY_TO_QUERY_KEY) is used by the
- * bridge (Phase 3) to translate window 'storage' events into cache invalidations.
+ * All hooks and mutations reference these keys so that
+ * invalidateQueries targets exactly the right cache entries.
  */
+
+// Shared stable default for optional object params in keys, so callers that
+// omit filters reuse one reference rather than allocating a fresh {} each call.
+const EMPTY = {}
 
 export const qk = {
   merchantSetup:    ()         => ['merchantSetup'],
@@ -20,19 +21,21 @@ export const qk = {
    *   "current user's own account" case.
    */
   staffAccount:     (staffId)  => ['staffAccount', staffId ?? 'self'],
-}
+  
+  // Dashboard & Analytics
+  dashboardOverview:        () => ['dashboard', 'overview'],
+  dashboardStaff:           () => ['dashboard', 'staff'],
+  dashboardTouchpoints:     () => ['dashboard', 'touchpoints'],
+  dashboardReviews:         (filters = EMPTY) => ['dashboard', 'reviews', filters],
+  
+  // Notifications
+  notificationsUnreadCount: () => ['notifications', 'unreadCount'],
+  
+  // Profile (Staff/Personal)
+  userProfile:              () => ['userProfile'],
+  verifiedStatus:           () => ['userProfile', 'verifiedStatus'],
 
-/**
- * Maps each DYNAMIC storage key string → the query-key array for that domain.
- * The bridge (Phase 3) uses this to call queryClient.invalidateQueries when a
- * window 'storage' event fires for a known key.
- */
-export const STORAGE_KEY_TO_QUERY_KEY = {
-  nexora_merchant_setup:    qk.merchantSetup(),
-  nexora_profile_settings:  qk.profileSettings(),
-  nexora_transactions:      qk.transactions(),
-  nexora_reviews:           qk.reviews(),
-  nexora_notifications:     qk.notifications(),
-  nexora_pending_accounts:  qk.pendingAccounts(),
-  nexora_staff_account:     qk.staffAccount(),
+  // Public Customer Touch
+  customerTouch: (businessSlug, touchPointSlug, sessionId) => ['customerTouch', businessSlug, touchPointSlug, sessionId],
+  publicBusinessPaymentMethods: (businessId) => ['publicBusinessPaymentMethods', businessId],
 }
