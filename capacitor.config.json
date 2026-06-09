@@ -1,0 +1,13 @@
+{
+  "appId": "net.vlinkgroup.nexora",
+  "appName": "VLink Nexora",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0
+    }
+  }
+}
