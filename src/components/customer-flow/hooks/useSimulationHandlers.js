@@ -17,6 +17,8 @@ import { logger } from '../../../utils/logger'
  * @param {Function} deps.setIsProcessing - Processing state setter.
  * @returns {Object} Simulation handler functions.
  */
+const I18N = 'components.customer_flow.hooks.useSimulationHandlers'
+
 export function createSimulationHandlers({
   addTransactionMutation,
   addReviewMutation,
@@ -28,6 +30,7 @@ export function createSimulationHandlers({
   setupData,
   setStep,
   setIsProcessing,
+  t,
 }) {
   /**
    * Simulates a payment transaction with a delay.
@@ -42,8 +45,8 @@ export function createSimulationHandlers({
 
       const baseTxIdNum = Math.floor(2000 + Math.random() * 1000)
       const touchpointStr = techSlug
-        ? (techSlug.startsWith('staff/') ? 'Staff Personal QR' : (setupData?.touchPoints?.find(tp => techSlug.includes(tp.id))?.name || 'QR Touchpoint'))
-        : 'Lobby Welcome QR'
+        ? (techSlug.startsWith('staff/') ? t(`${I18N}.touchpointStaffPersonalQr`) : (setupData?.touchPoints?.find(tp => techSlug.includes(tp.id))?.name || t(`${I18N}.touchpointQr`)))
+        : t(`${I18N}.touchpointLobby`)
 
       selectedStaffMembers.forEach((member, index) => {
         const selTip = selectedTips[member.id] !== undefined ? selectedTips[member.id] : 15
@@ -67,12 +70,13 @@ export function createSimulationHandlers({
           onError: (e) => logger.error('Error saving transaction', e)
         })
 
+        const amountLabel = `$${Number(amount).toFixed(2)}`
         const notification = {
           id: `noti-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 5)}`,
           type: 'tip_success',
-          title: `New Tip Received ($${Number(amount).toFixed(2)})`,
-          message: `${member.nickname} received $${Number(amount).toFixed(2)} tip via ${walletName} at ${touchpointStr}.`,
-          time: 'Just now',
+          title: t(`${I18N}.tipReceivedTitle`, { amount: amountLabel }),
+          message: t(`${I18N}.tipReceivedMessage`, { name: member.nickname, amount: amountLabel, method: walletName, touchpoint: touchpointStr }),
+          time: t(`${I18N}.justNow`),
           read: false,
           linkTab: 'reports'
         }
@@ -95,7 +99,7 @@ export function createSimulationHandlers({
       const review = {
         id: `R-${Date.now()}-${member.id}`,
         rating: rating,
-        comment: cleanComment || (rating >= 4 ? 'Good service' : 'Needs improvement'),
+        comment: cleanComment || (rating >= 4 ? t(`${I18N}.reviewGoodComment`) : t(`${I18N}.reviewBadComment`)),
         staffName: member.nickname,
         staffId: member.id,
         category: rating >= 4 ? 'Good (Google)' : 'Internal Feedback',
@@ -106,12 +110,13 @@ export function createSimulationHandlers({
         onError: (e) => logger.error('Error saving review', e)
       })
 
+      const commentPreview = `${cleanComment.substring(0, 50)}${cleanComment.length > 50 ? '...' : ''}`
       const notification = {
         id: `noti-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 5)}`,
         type: rating >= 4 ? 'review_good' : 'feedback_alert',
-        title: rating >= 4 ? `New Review (${rating}★)` : `New Internal Feedback (${rating}★)`,
-        message: `Customer left feedback for ${member.nickname}: "${cleanComment.substring(0, 50)}${cleanComment.length > 50 ? '...' : ''}"`,
-        time: 'Just now',
+        title: rating >= 4 ? t(`${I18N}.reviewTitleGood`, { rating }) : t(`${I18N}.reviewTitleInternal`, { rating }),
+        message: t(`${I18N}.reviewMessage`, { name: member.nickname, comment: commentPreview }),
+        time: t(`${I18N}.justNow`),
         read: false,
         linkTab: 'reviews'
       }

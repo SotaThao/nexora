@@ -270,7 +270,7 @@ export default function useCustomerFlow() {
   const { simulatePay, simulateReview } = createSimulationHandlers({
     addTransactionMutation, addReviewMutation, addNotificationMutation,
     selectedStaffMembers, selectedTips, customTips, techSlug, setupData,
-    setStep, setIsProcessing,
+    setStep, setIsProcessing, t,
   })
 
   /**

@@ -2,13 +2,25 @@ import { tokenStore } from '../tokenStore'
 import httpClient from '../../lib/httpClient'
 import { logger } from '../../utils/logger'
 
+// Backend profileType discriminator + dev fallback email keywords.
+const PROFILE_TYPE_MERCHANT = 'Merchant'
+const MERCHANT_EMAIL_KEYWORDS = ['biz', 'merchant']
+
+// KYB status sentinel returned when no explicit status is available.
+const KYB_STATUS_BASIC = 'basic'
+
+// Session account types and roles.
+const ACCOUNT_TYPE = { PERSONAL: 'personal', BUSINESS: 'business' }
+const ROLE = { STAFF: 'staff', OWNER: 'owner' }
+
 function isBusinessProfile(profile) {
   // TODO(backend-bug B1): the email-keyword fallback below is a temporary workaround for the
   // backend not persisting `profileType` on signup (every account comes back as `User`).
-  // Remove `isMerchantEmail` and rely solely on `profile.profileType === 'Merchant'` once the
-  // backend returns the real profileType from /api/v1/userprofile/me. See API/backend-api-gaps.md.
-  const isMerchantEmail = profile?.email?.toLowerCase().includes('biz') || profile?.email?.toLowerCase().includes('merchant')
-  return profile?.profileType === 'Merchant' || isMerchantEmail
+  // Remove `isMerchantEmail` and rely solely on `profile.profileType === PROFILE_TYPE_MERCHANT` once
+  // the backend returns the real profileType from /api/v1/userprofile/me. See API/backend-api-gaps.md.
+  const email = profile?.email?.toLowerCase() || ''
+  const isMerchantEmail = MERCHANT_EMAIL_KEYWORDS.some((kw) => email.includes(kw))
+  return profile?.profileType === PROFILE_TYPE_MERCHANT || isMerchantEmail
 }
 
 function normalizeKybStatus(value, { isExplicitKybField = false } = {}) {
@@ -69,30 +81,30 @@ async function getBusinessKybStatus(profile) {
 
   try {
     const verifiedStatus = await httpClient.get('/api/v1/userprofile/verified-status')
-    return extractKybStatus(verifiedStatus) || 'basic'
+    return extractKybStatus(verifiedStatus) || KYB_STATUS_BASIC
   } catch (err) {
     logger.error('Failed to fetch business KYB status', err)
-    return 'basic'
+    return KYB_STATUS_BASIC
   }
 }
 
 function mapProfileToSession(profile, kybStatus) {
   if (!profile) return null
 
-  let accountType = 'personal'
-  let flag = '!personal'
-  let role = 'staff'
+  let accountType = ACCOUNT_TYPE.PERSONAL
+  let flag = `!${ACCOUNT_TYPE.PERSONAL}`
+  let role = ROLE.STAFF
 
   // Backend currently returns userType: 'User' for both Merchant and Staff.
   // As a fallback for dev/testing, if the email contains 'biz' or 'merchant', we treat them as Merchant.
   if (isBusinessProfile(profile)) {
-    accountType = 'business'
-    flag = '!business'
-    role = 'owner'
+    accountType = ACCOUNT_TYPE.BUSINESS
+    flag = `!${ACCOUNT_TYPE.BUSINESS}`
+    role = ROLE.OWNER
   }
 
   const displayName = `${profile.firstName ?? ''} ${profile.lastName ?? ''}`.trim() || profile.email
-  const isBusiness = accountType === 'business'
+  const isBusiness = accountType === ACCOUNT_TYPE.BUSINESS
   const accountStatus = profile.status || null
 
   return {
@@ -107,7 +119,7 @@ function mapProfileToSession(profile, kybStatus) {
     hasCompletedOnboarding: isBusiness
       ? accountStatus === 'Active' || kybStatus === 'kyb_approved' || !!profile.hasCompletedOnboarding
       : undefined,
-    verificationStatus: isBusiness ? (kybStatus || 'basic') : (profile.status || 'unverified'),
+    verificationStatus: isBusiness ? (kybStatus || KYB_STATUS_BASIC) : (profile.status || 'unverified'),
     ssoPrefillData: null,
   }
 }

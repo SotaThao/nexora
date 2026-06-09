@@ -919,6 +919,19 @@
       "hooks": {
         "useCustomerFlow": {
           "addTipsForYour": "Thêm tiền Tip cho nhân viên"
+        },
+        "useSimulationHandlers": {
+          "touchpointStaffPersonalQr": "QR cá nhân nhân viên",
+          "touchpointQr": "Điểm chạm QR",
+          "touchpointLobby": "QR chào mừng sảnh",
+          "tipReceivedTitle": "Nhận tip mới ({amount})",
+          "tipReceivedMessage": "{name} nhận tip {amount} qua {method} tại {touchpoint}.",
+          "reviewGoodComment": "Dịch vụ tốt",
+          "reviewBadComment": "Cần cải thiện",
+          "reviewTitleGood": "Đánh giá mới ({rating}★)",
+          "reviewTitleInternal": "Phản hồi nội bộ mới ({rating}★)",
+          "reviewMessage": "Khách để lại phản hồi cho {name}: \"{comment}\"",
+          "justNow": "Vừa xong"
         }
       },
       "steps": {

@@ -919,6 +919,19 @@
       "hooks": {
         "useCustomerFlow": {
           "addTipsForYour": "Add tips for your providers"
+        },
+        "useSimulationHandlers": {
+          "touchpointStaffPersonalQr": "Staff Personal QR",
+          "touchpointQr": "QR Touchpoint",
+          "touchpointLobby": "Lobby Welcome QR",
+          "tipReceivedTitle": "New Tip Received ({amount})",
+          "tipReceivedMessage": "{name} received {amount} tip via {method} at {touchpoint}.",
+          "reviewGoodComment": "Good service",
+          "reviewBadComment": "Needs improvement",
+          "reviewTitleGood": "New Review ({rating}★)",
+          "reviewTitleInternal": "New Internal Feedback ({rating}★)",
+          "reviewMessage": "Customer left feedback for {name}: \"{comment}\"",
+          "justNow": "Just now"
         }
       },
       "steps": {
