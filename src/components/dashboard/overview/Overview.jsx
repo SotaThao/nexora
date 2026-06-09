@@ -349,7 +349,7 @@ function Overview({
                   onClick={() => {
                     const nfcUrl = `${window.location.origin}${window.location.pathname}?flow=customer&tech=general&biz=${encodeURIComponent(businessName)}`
                     navigator.clipboard.writeText(nfcUrl)
-                    showToast('Copied NFC redirect link to clipboard!', 'success')
+                    showToast(t('components.dashboard.overview.Overview.copiedNfcRedirectLink'), 'success')
                   }}
                   className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-white border border-nexoraBorder px-4 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition cursor-pointer"
                 >

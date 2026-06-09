@@ -34,11 +34,11 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
   const handleSubmit = (e) => {
     e.preventDefault()
     const nextErrors = {}
-    if (!name.trim()) nextErrors.name = 'Technician name is required.'
-    if (!contact.trim()) nextErrors.contact = 'Contact information (email or phone) is required.'
+    if (!name.trim()) nextErrors.name = t('components.dashboard.modals.InviteShareModal.technicianNameRequired')
+    if (!contact.trim()) nextErrors.contact = t('components.dashboard.modals.InviteShareModal.contactRequired')
 
     if (inviteMethod === 'Email' && contact.trim() && !/\S+@\S+\.\S+/.test(contact.trim())) {
-      nextErrors.contact = 'Invalid email format.'
+      nextErrors.contact = t('components.dashboard.modals.InviteShareModal.invalidEmailFormat')
     }
 
     if (Object.keys(nextErrors).length) {

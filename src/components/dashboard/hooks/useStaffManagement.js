@@ -149,8 +149,8 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
 
   const saveStaff = () => {
     const nextErrors = {}
-    if (!staffForm.fullName.trim()) nextErrors.fullName = 'Full name is required.'
-    if (!staffForm.nickname.trim()) nextErrors.nickname = 'Public nickname is required.'
+    if (!staffForm.fullName.trim()) nextErrors.fullName = t('components.dashboard.hooks.useStaffManagement.fullNameRequired')
+    if (!staffForm.nickname.trim()) nextErrors.nickname = t('components.dashboard.hooks.useStaffManagement.publicNicknameRequired')
     if (staffForm.email?.trim() && !/\S+@\S+\.\S+/.test(staffForm.email.trim())) {
       nextErrors.email = t('setup.errors.staff_email_invalid')
     }
@@ -198,9 +198,9 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
 
   const sendSetupLinkFromModal = (formDetails) => {
     const nextErrors = {}
-    if (!formDetails.fullName.trim()) nextErrors.fullName = 'Full name is required to invite.'
+    if (!formDetails.fullName.trim()) nextErrors.fullName = t('components.dashboard.hooks.useStaffManagement.fullNameRequiredToInvite')
     if (!formDetails.email.trim() && !formDetails.phone.trim()) {
-      nextErrors.email = 'Phone or email is required to send invite link.'
+      nextErrors.email = t('components.dashboard.hooks.useStaffManagement.phoneOrEmailRequired')
     }
     
     if (Object.keys(nextErrors).length) {
@@ -251,7 +251,7 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
 
   const handleLinkStaff = (globalMember, role) => {
     if (staff.some(s => s.id === globalMember.id)) {
-      showToast('This technician is already linked to your salon.', 'error');
+      showToast(t('components.dashboard.hooks.useStaffManagement.technicianAlreadyLinked'), 'error');
       return;
     }
 

@@ -943,7 +943,12 @@
         "useStaffManagement": {
           "staffUnlinkedSuccessfully": "Staff unlinked successfully.",
           "declinedUnlinkRequest": "Declined unlink request.",
-          "deleteThisStaffMember": "Delete this staff member from Nexora Touch?"
+          "deleteThisStaffMember": "Delete this staff member from Nexora Touch?",
+          "fullNameRequired": "Full name is required.",
+          "publicNicknameRequired": "Public nickname is required.",
+          "fullNameRequiredToInvite": "Full name is required to invite.",
+          "phoneOrEmailRequired": "Phone or email is required to send invite link.",
+          "technicianAlreadyLinked": "This technician is already linked to your salon."
         }
       },
       "layout": {
@@ -965,7 +970,10 @@
           "rolePosition": "Role / Position",
           "sendInviteLink": "Send Invite Link",
           "joinQrCode": "JOIN QR CODE",
-          "haveTechniciansScanThis": "Have technicians scan this QR code with their mobile camera to self-register or link accounts."
+          "haveTechniciansScanThis": "Have technicians scan this QR code with their mobile camera to self-register or link accounts.",
+          "technicianNameRequired": "Technician name is required.",
+          "contactRequired": "Contact information (email or phone) is required.",
+          "invalidEmailFormat": "Invalid email format."
         },
         "PayoutSetupModal": {
           "specifyReceivingTargetIdentifier": "Specify receiving target identifier",
@@ -1022,7 +1030,8 @@
       },
       "overview": {
         "Overview": {
-          "custom": "Custom"
+          "custom": "Custom",
+          "copiedNfcRedirectLink": "Copied NFC redirect link to clipboard!"
         },
         "SetupGuideBanner": {
           "gettingStarted": "Getting Started",

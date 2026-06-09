@@ -943,7 +943,12 @@
         "useStaffManagement": {
           "staffUnlinkedSuccessfully": "Đã hủy liên kết nhân viên thành công.",
           "declinedUnlinkRequest": "Đã từ chối yêu cầu hủy liên kết.",
-          "deleteThisStaffMember": "Bạn có chắc chắn muốn xóa nhân viên này khỏi Nexora Touch?"
+          "deleteThisStaffMember": "Bạn có chắc chắn muốn xóa nhân viên này khỏi Nexora Touch?",
+          "fullNameRequired": "Vui lòng nhập họ và tên.",
+          "publicNicknameRequired": "Vui lòng nhập tên hiển thị.",
+          "fullNameRequiredToInvite": "Cần họ và tên để gửi lời mời.",
+          "phoneOrEmailRequired": "Cần số điện thoại hoặc email để gửi link mời.",
+          "technicianAlreadyLinked": "Thợ này đã được liên kết với tiệm của bạn."
         }
       },
       "layout": {
@@ -965,7 +970,10 @@
           "rolePosition": "Vai trò / Chức danh",
           "sendInviteLink": "Gửi liên kết mời thợ",
           "joinQrCode": "MÃ QR GIA NHẬP",
-          "haveTechniciansScanThis": "Cho thợ quét mã này bằng camera điện thoại để tự đăng ký hoặc liên kết tài khoản vào tiệm."
+          "haveTechniciansScanThis": "Cho thợ quét mã này bằng camera điện thoại để tự đăng ký hoặc liên kết tài khoản vào tiệm.",
+          "technicianNameRequired": "Vui lòng nhập tên thợ.",
+          "contactRequired": "Cần thông tin liên hệ (email hoặc số điện thoại).",
+          "invalidEmailFormat": "Định dạng email không hợp lệ."
         },
         "PayoutSetupModal": {
           "specifyReceivingTargetIdentifier": "Chỉ định thông tin tài khoản nhận tiền",
@@ -1022,7 +1030,8 @@
       },
       "overview": {
         "Overview": {
-          "custom": "Tự chọn"
+          "custom": "Tự chọn",
+          "copiedNfcRedirectLink": "Đã sao chép link chuyển hướng NFC vào clipboard!"
         },
         "SetupGuideBanner": {
           "gettingStarted": "Bắt đầu sử dụng",
