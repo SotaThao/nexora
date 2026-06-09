@@ -29,6 +29,5 @@ script/
 test-plans/
 skills-lock.json
 package-lock.json
-API/
 ios/
 reports/
