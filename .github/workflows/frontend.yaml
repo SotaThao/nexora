@@ -1,4 +1,4 @@
-name: Frontend CI/CD - Crypto Map 360
+name: Frontend CI/CD - Nexora
 
 on:
   push:
@@ -19,7 +19,50 @@ env:
   IMAGE_NAME: nexora-frontend
 
 jobs:
+  resolve-environment:
+    runs-on: ubuntu-latest
+    name: Resolve Deployment Environment
+    outputs:
+      github_environment: ${{ steps.resolve.outputs.github_environment }}
+      build_env: ${{ steps.resolve.outputs.build_env }}
+      deploy_path: ${{ steps.resolve.outputs.deploy_path }}
+    steps:
+      - name: Resolve environment from branch
+        id: resolve
+        shell: bash
+        run: |
+          target_ref="${GITHUB_REF_NAME}"
+          if [ "${GITHUB_EVENT_NAME}" = "pull_request" ] && [ -n "${GITHUB_BASE_REF}" ]; then
+            target_ref="${GITHUB_BASE_REF}"
+          fi
+
+          case "$target_ref" in
+            master|main)
+              github_environment="PRODUCTION"
+              build_env="production"
+              ;;
+            staging)
+              github_environment="STAGING"
+              build_env="staging"
+              ;;
+            dev)
+              github_environment="TEST"
+              build_env="test"
+              ;;
+            *)
+              echo "Unsupported deployment branch: $target_ref" >&2
+              exit 1
+              ;;
+          esac
+
+          echo "github_environment=$github_environment" >> "$GITHUB_OUTPUT"
+          echo "build_env=$build_env" >> "$GITHUB_OUTPUT"
+          echo "deploy_path=$target_ref" >> "$GITHUB_OUTPUT"
+
+          echo "Resolved $target_ref -> $github_environment / $build_env"
+
   validate-build:
+    needs: resolve-environment
     runs-on: ubuntu-latest
     name: Validate Multi-Environment Build
     steps:
@@ -54,24 +97,42 @@ jobs:
       - name: Validate all build modes
         run: |
           echo "Testing all supported build modes..."
-          VITE_APP_ENV=development pnpm run build:dev
+          VITE_APP_ENV=development \
+          VITE_API_BASE_URL=https://development-api.nexoratouch.com \
+          VITE_DATA_SOURCE=storage \
+          VITE_ENABLE_DEMO_TOOLS=false \
+          pnpm run build:dev
           rm -rf dist
-          VITE_APP_ENV=test pnpm run build:test
+          VITE_APP_ENV=test \
+          VITE_API_BASE_URL=https://test-api.nexoratouch.com \
+          VITE_DATA_SOURCE=api \
+          VITE_ENABLE_DEMO_TOOLS=false \
+          pnpm run build:test
           rm -rf dist
-          VITE_APP_ENV=staging pnpm run build:staging
+          VITE_APP_ENV=staging \
+          VITE_API_BASE_URL=https://staging-api.nexoratouch.com \
+          VITE_DATA_SOURCE=api \
+          VITE_ENABLE_DEMO_TOOLS=false \
+          pnpm run build:staging
           rm -rf dist
-          VITE_APP_ENV=production pnpm run build:prod
+          VITE_APP_ENV=production \
+          VITE_API_BASE_URL=https://api.nexoratouch.com \
+          VITE_DATA_SOURCE=api \
+          VITE_ENABLE_DEMO_TOOLS=false \
+          pnpm run build:prod
           echo "All environment builds successful!"
 
   build-and-push:
-    needs: validate-build
-    environment: "${{ github.ref_name == 'master' && 'PRODUCTION' || github.ref_name == 'main' && 'PRODUCTION' || github.ref_name == 'staging' && 'STAGING' || 'TEST' }}"
+    needs:
+      - resolve-environment
+      - validate-build
+    environment: ${{ needs.resolve-environment.outputs.github_environment }}
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     name: Build & Push Docker Image
     env:
-      BUILD_ENV: "${{ github.ref_name == 'master' && 'production' || github.ref_name == 'main' && 'production' || github.ref_name == 'staging' && 'staging' || 'test' }}"
-      APP_ENV: "${{ vars.VITE_APP_ENV != '' && vars.VITE_APP_ENV || (github.ref_name == 'master' && 'production' || github.ref_name == 'main' && 'production' || github.ref_name == 'staging' && 'staging' || 'test') }}"
+      BUILD_ENV: ${{ needs.resolve-environment.outputs.build_env }}
+      APP_ENV: ${{ vars.VITE_APP_ENV || needs.resolve-environment.outputs.build_env }}
     steps:
       - uses: actions/checkout@v4
 
@@ -109,11 +170,12 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          echo "*********** Build Crypto Map 360 Frontend ***********"
+          echo "*********** Build Nexora Frontend ***********"
           export DIGITALOCEAN_ACCESS_TOKEN=${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
           doctl auth init
           doctl registry login
           echo "Build environment: $BUILD_ENV"
+          echo "GitHub environment: ${{ needs.resolve-environment.outputs.github_environment }}"
           docker build \
             --file ./Dockerfile \
             --build-arg BUILD_ENV="$BUILD_ENV" \
@@ -128,18 +190,20 @@ jobs:
             --build-arg VITE_MAP_MARKER_ENGINE="${{ vars.VITE_MAP_MARKER_ENGINE }}" \
             --build-arg VITE_GOOGLE_MAPS_MAP_ID="${{ vars.VITE_GOOGLE_MAPS_MAP_ID }}" \
             --build-arg VITE_VLINKPAY_WEB_URL_BASE="${{ vars.VITE_VLINKPAY_WEB_URL_BASE }}" \
-            --tag $REGISTRY/$IMAGE_NAME:${{ github.ref_name }}-${{ github.sha }} \
+            --tag $REGISTRY/$IMAGE_NAME:${{ needs.resolve-environment.outputs.deploy_path }}-${{ github.sha }} \
             .
 
       - name: Push Docker Image
         run: |
-          echo "*********** Push Crypto Map 360 Frontend ***********"
-          docker push $REGISTRY/$IMAGE_NAME:${{ github.ref_name }}-${{ github.sha }}
+          echo "*********** Push Nexora Frontend ***********"
+          docker push $REGISTRY/$IMAGE_NAME:${{ needs.resolve-environment.outputs.deploy_path }}-${{ github.sha }}
 
   deploy:
-    environment: "${{ github.ref_name == 'master' && 'PRODUCTION' || github.ref_name == 'main' && 'PRODUCTION' || github.ref_name == 'staging' && 'STAGING' || 'TEST' }}"
+    environment: ${{ needs.resolve-environment.outputs.github_environment }}
     if: github.event_name == 'push'
-    needs: build-and-push
+    needs:
+      - resolve-environment
+      - build-and-push
     runs-on: ubuntu-latest
     name: Deploy to ArgoCD
     steps:
@@ -153,9 +217,9 @@ jobs:
 
       - name: Update Deployment Manifest
         run: |
-          echo "Updating deployment for Crypto Map 360 Frontend"
-          echo "Branch: ${{ github.ref_name }}, SHA: ${{ github.sha }}"
-          sed -i 's|:${{ github.ref_name }}-.*|:${{ github.ref_name }}-${{ github.sha }}|g' devops/argocd/${{ github.ref_name }}/app-crypto-map-360-frontend/deployment.yaml
+          echo "Updating deployment for Nexora Frontend"
+          echo "Deploy path: ${{ needs.resolve-environment.outputs.deploy_path }}, SHA: ${{ github.sha }}"
+          sed -i 's|:${{ needs.resolve-environment.outputs.deploy_path }}-.*|:${{ needs.resolve-environment.outputs.deploy_path }}-${{ github.sha }}|g' devops/argocd/${{ needs.resolve-environment.outputs.deploy_path }}/app-nexora-frontend/deployment.yaml
 
       - name: Commit and Push Changes
         run: |
@@ -163,5 +227,5 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add .
-          git diff --staged --quiet || git commit -m "Update Crypto Map 360 Frontend deployment image to ${{ github.sha }}"
+          git diff --staged --quiet || git commit -m "Update Nexora Frontend ${{ needs.resolve-environment.outputs.deploy_path }} image to ${{ github.sha }}"
           git push
