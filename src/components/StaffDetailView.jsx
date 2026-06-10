@@ -367,7 +367,7 @@ export default function StaffDetailView({
               />
             ) : (
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-tr from-nexoraBrand to-nexoraLavender text-xl font-black text-white shadow-md">
-                {staffMember.nickname.charAt(0)}
+                {(staffMember.nickname || staffMember.fullName || 'N').charAt(0).toUpperCase()}
               </div>
             )}
 

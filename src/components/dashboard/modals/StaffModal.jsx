@@ -158,6 +158,7 @@ function StaffModal({
           const matched = setupData.staffList?.find(
             s => (s.paymentAccounts?.vlinkpay?.toUpperCase() === searchId) ||
                  (s.vlinkpay?.toUpperCase() === searchId) ||
+                 (s.staffCode?.toUpperCase() === searchId) ||
                  (s.id?.toUpperCase() === searchId)
           )
           if (matched) {
@@ -173,7 +174,7 @@ function StaffModal({
               nexoraStaffId: matched.id || '',
               payoutConfigs: matched.payoutConfigs || getPayoutConfigsFromMember(matched)
             }
-            if (searchId === (matched.id || '').toUpperCase()) {
+            if (searchId === (matched.staffCode || matched.id || '').toUpperCase()) {
               verifiedType = 'nexora'
             } else {
               verifiedType = 'vlinkpay'
@@ -190,8 +191,10 @@ function StaffModal({
         const staffMap = staffAccountsQuery.data ?? {}
         // Check by NEXORA Staff ID
         const directAccount = searchId === normalizedIdInput ? staffAccountQuery.data : null
-        if (directAccount || staffMap[searchId]) {
-          const acc = directAccount || staffMap[searchId]
+        const staffCodeMatch = Object.entries(staffMap).find(([id, acc]) => acc.staffCode?.toUpperCase() === searchId)
+        if (directAccount || staffMap[searchId] || staffCodeMatch) {
+          const acc = directAccount || staffMap[searchId] || staffCodeMatch[1]
+          const matchedId = staffCodeMatch ? staffCodeMatch[0] : searchId
           const payoutConfigs = {}
           const pa = acc.payoutMethods || {}
           Object.keys(pa).forEach(k => {
@@ -203,7 +206,7 @@ function StaffModal({
             }
           })
           matchedProfile = {
-            nexoraStaffId: searchId,
+            nexoraStaffId: matchedId,
             fullName: acc.defaultDisplayName || '',
             nickname: acc.defaultDisplayName || '',
             phone: acc.phone || '',
@@ -254,7 +257,7 @@ function StaffModal({
       if (matchedProfile) return
       try {
         const pendingList = pendingAccountsList
-        const matched = pendingList.find(acc => acc.vlinkpayId?.toUpperCase() === searchId || acc.staffId?.toUpperCase() === searchId)
+        const matched = pendingList.find(acc => acc.vlinkpayId?.toUpperCase() === searchId || acc.staffCode?.toUpperCase() === searchId || acc.staffId?.toUpperCase() === searchId)
         if (matched) {
           matchedProfile = {
             nexoraStaffId: matched.staffId || '',
@@ -274,7 +277,7 @@ function StaffModal({
               applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
             }
           }
-          if (searchId === (matched.staffId || '').toUpperCase()) {
+          if (searchId === (matched.staffCode || matched.staffId || '').toUpperCase()) {
             verifiedType = 'nexora'
           } else {
             verifiedType = 'vlinkpay'
@@ -486,14 +489,6 @@ function StaffModal({
                   {form.avatar ? (
                     <>
                       <img src={form.avatar} alt="" className="h-16 w-16 rounded-full object-cover ring-1 ring-nexoraBorder" />
-                      <button
-                        type="button"
-                        onClick={() => setForm({ ...form, avatar: '' })}
-                        className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-nexoraDanger hover:bg-nexoraDangerDark text-white transition shadow duration-150 cursor-pointer"
-                        title={t('components.dashboard.modals.StaffModal.remove_photo')}
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
                     </>
                   ) : (
                     <div className="flex h-16 w-16 items-center justify-center rounded-full bg-nexoraCanvas text-lg font-extrabold text-nexoraBrand ring-1 ring-nexoraBorder">
@@ -534,7 +529,7 @@ function StaffModal({
             </div>
             <div>
               <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{renderLabel(t('setup.staff_fullname'))}</label>
-              <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} placeholder={t('components.dashboard.modals.StaffModal.phFullName')} />
+              <input className="mt-1 h-10 w-full rounded-lg border border-transparent bg-nexoraCanvas px-3 text-sm font-semibold text-nexoraText outline-none cursor-not-allowed" value={form.fullName} readOnly placeholder={t('components.dashboard.modals.StaffModal.phFullName')} />
               {errors.fullName && <p className="mt-1 text-[10px] font-bold text-nexoraDanger">{errors.fullName}</p>}
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -549,32 +544,24 @@ function StaffModal({
                     </div>
                   </div>
                 </label>
-                <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.nickname} onChange={(event) => setForm({ ...form, nickname: event.target.value })} placeholder={t('components.dashboard.modals.StaffModal.phNickname')} />
+                <input className="mt-1 h-10 w-full rounded-lg border border-transparent bg-nexoraCanvas px-3 text-sm font-semibold text-nexoraText outline-none cursor-not-allowed" value={form.nickname} readOnly placeholder={t('components.dashboard.modals.StaffModal.phNickname')} />
                 {errors.nickname && <p className="mt-1 text-[10px] font-bold text-nexoraDanger">{errors.nickname}</p>}
               </div>
               <div>
                 <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_position')}</label>
-                <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.position} onChange={(event) => setForm({ ...form, position: event.target.value })} placeholder={t('components.dashboard.modals.StaffModal.phPosition')} />
+                <input className="mt-1 h-10 w-full rounded-lg border border-transparent bg-nexoraCanvas px-3 text-sm font-semibold text-nexoraText outline-none cursor-not-allowed" value={form.position} readOnly placeholder={t('components.dashboard.modals.StaffModal.phPosition')} />
               </div>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_phone')}</label>
-                <div className="mt-1 flex rounded-lg shadow-sm">
-                  <CountryCodeSelect
-                    value={phoneParsed.countryCode}
-                    onChange={(newCode) => {
-                      setForm({ ...form, phone: `${newCode} ${phoneParsed.nationalNumber}`.trim() })
-                    }}
-                  />
+                <div className="mt-1 flex rounded-lg shadow-sm opacity-70 pointer-events-none">
+                  <CountryCodeSelect value={phoneParsed.countryCode} disabled />
                   <input
-                    className="h-10 w-full rounded-r-lg border border-l-0 border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand bg-white min-w-0"
+                    className="h-10 w-full rounded-r-lg border-transparent bg-nexoraCanvas px-3 text-sm font-semibold text-nexoraText outline-none min-w-0"
                     value={phoneParsed.nationalNumber}
-                    onChange={(event) => {
-                      const formatted = formatNationalNumber(event.target.value, phoneParsed.countryCode)
-                      setForm({ ...form, phone: `${phoneParsed.countryCode} ${formatted}`.trim() })
-                    }}
+                    readOnly
                     placeholder={t('setup.staff_phone_placeholder')}
                   />
                 </div>
@@ -582,7 +569,7 @@ function StaffModal({
               </div>
               <div>
                 <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_email')}</label>
-                <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand" value={form.email || ''} onChange={(event) => setForm({ ...form, email: event.target.value })} placeholder={t('setup.staff_email_placeholder')} />
+                <input className="mt-1 h-10 w-full rounded-lg border border-transparent bg-nexoraCanvas px-3 text-sm font-semibold text-nexoraText outline-none cursor-not-allowed" value={form.email || ''} readOnly placeholder={t('setup.staff_email_placeholder')} />
                 {errors.email && <p className="mt-1 text-[10px] font-bold text-nexoraDanger">{errors.email}</p>}
               </div>
             </div>

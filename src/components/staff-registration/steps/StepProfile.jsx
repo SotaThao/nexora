@@ -22,6 +22,8 @@ export default function StepProfile({
   handleVlinkpayIdChange,
   handleScanQr,
   setStep,
+  onSubmit,
+  isSubmitting = false,
 }) {
   return (
     <div className="space-y-5 py-2">
@@ -124,14 +126,15 @@ export default function StepProfile({
               <CountryCodeSelect
                 value={phoneParsed.countryCode}
                 onChange={(newCode) => {
-                  setPhone(`${newCode} ${phoneParsed.nationalNumber}`.trim())
+                  const reFormatted = formatNationalNumber(phoneParsed.nationalNumber, newCode)
+                  setPhone(`${newCode} ${reFormatted}`.trim())
                 }}
                 disabled={contactLocked}
               />
               <input
                 type="text"
                 className={`h-10 w-full rounded-r-lg border border-l-0 border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:outline-none transition-all min-w-0 ${contactLocked ? 'bg-nexoraSurfaceMuted text-nexoraMuted' : 'bg-white text-nexoraText'}`}
-                value={phoneParsed.nationalNumber}
+                value={formatNationalNumber(phoneParsed.nationalNumber, phoneParsed.countryCode)}
                 onChange={(e) => {
                   const formatted = formatNationalNumber(e.target.value, phoneParsed.countryCode)
                   setPhone(`${phoneParsed.countryCode} ${formatted}`.trim())
@@ -170,7 +173,7 @@ export default function StepProfile({
             />
           </div>
           <div>
-            <label className="flex items-center text-[10px] font-black uppercase text-nexoraSubtle tracking-wider h-4">Staff ID (Auto-Generated)</label>
+            <label className="flex items-center text-[10px] font-black uppercase text-nexoraSubtle tracking-wider h-4">Staff Code (Auto-Generated)</label>
             <input
               type="text"
               className="mt-1.5 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none bg-nexoraSurfaceMuted text-nexoraSubtle font-mono font-bold"
@@ -201,11 +204,18 @@ export default function StepProfile({
         </button>
         <button
           type="button"
-          onClick={() => setStep(3)}
-          disabled={!fullName.trim() || !phone.trim() || !isPhoneValid(phone)}
-          className="flex-grow h-10 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-bold text-xs uppercase tracking-wider rounded-lg transition disabled:opacity-50"
+          onClick={onSubmit || (() => setStep(3))}
+          disabled={isSubmitting || !fullName.trim() || !phone.trim() || !isPhoneValid(phone)}
+          className="flex-grow h-10 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-bold text-xs uppercase tracking-wider rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
         >
-          {t('common.next')}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              {t('common.processing')}
+            </>
+          ) : (
+            t('common.next')
+          )}
         </button>
       </div>
     </div>

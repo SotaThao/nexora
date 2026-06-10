@@ -46,7 +46,7 @@ export function createStaffInvitesRepository(client = httpClient) {
      * @param {{ displayName: string, position?: string, bio?: string, photoUrl?: string }} body
      * @returns {Promise<void>}
      */
-    async acceptInvite(token, { displayName, position, bio, photoUrl }) {
+    async acceptInvite(token, { displayName, position, bio, photoUrl, password }) {
       return await client.post(
         `/api/v1/staff/invite/${encodeURIComponent(token)}/accept`,
         {
@@ -55,8 +55,8 @@ export function createStaffInvitesRepository(client = httpClient) {
           position: position ?? null,
           bio: bio ?? null,
           photoUrl: photoUrl ?? null,
-        },
-        { anonymous: true }
+          password: password ?? null,
+        }
       )
     },
   }

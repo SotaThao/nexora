@@ -2,7 +2,11 @@
 import { useState } from 'react'
 import { Bitcoin, Edit2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { useStaffAccount } from '../../../contexts/StaffAccountContext'
+import {
+  useStaffPaymentMethods,
+  useUpdateStaffPaymentMethod,
+  useToggleStaffPaymentMethod
+} from '../../../data/hooks/useStaffPaymentMethods'
 import { PAYOUT_METHODS } from '../data/staffMockData'
 import PayoutSetupModal from '../../dashboard/modals/PayoutSetupModal'
 
@@ -69,11 +73,18 @@ function Toggle({ on, onChange, label }) {
 
 export default function StaffPay() {
   const { t, currentLanguage } = useTranslation()
-  const { account, setPayoutMethod } = useStaffAccount()
+  const { data: apiPaymentMethods = [] } = useStaffPaymentMethods()
+  const toggleMutation = useToggleStaffPaymentMethod()
+  const updateMutation = useUpdateStaffPaymentMethod()
+
   const [activeWalletKey, setActiveWalletKey] = useState(null)
 
+  const getMethod = (key) => apiPaymentMethods.find(m => m.type?.toLowerCase() === key.toLowerCase()) || { type: key, isActive: false, isConfigured: false, accountInfo: '', imageUrl: '' }
+
   const handleToggleMethod = (key, enabledValue) => {
-    setPayoutMethod(key, { enabled: enabledValue })
+    const methodData = getMethod(key)
+    if (!methodData.id) return // Normally UI shouldn't allow toggling unconfigured, but backend protects it anyway
+    toggleMutation.mutate(methodData.id)
   }
 
   const handleEditPayout = (key) => {
@@ -86,18 +97,22 @@ export default function StaffPay() {
 
   const handleSavePayout = (value, qrCode, accountName) => {
     if (!activeWalletKey) return
-    setPayoutMethod(activeWalletKey, {
-      enabled: true,
-      value: value.trim(),
-      qrCode,
-      accountName: accountName.trim()
-    })
-    setActiveWalletKey(null)
+    const methodData = getMethod(activeWalletKey)
+    if (!methodData.id) return
+    updateMutation.mutate(
+      { id: methodData.id, accountInfo: value.trim(), imageUrl: qrCode },
+      { 
+        onSuccess: () => {
+          setActiveWalletKey(null)
+          if (!methodData.isActive) {
+            toggleMutation.mutate(methodData.id)
+          }
+        } 
+      }
+    )
   }
 
-  const activeMethod = activeWalletKey
-    ? account.payoutMethods?.[activeWalletKey] || { enabled: false, value: '', qrCode: '', accountName: '' }
-    : null
+  const activeMethod = activeWalletKey ? getMethod(activeWalletKey) : null
 
   return (
     <div className="space-y-4">
@@ -107,13 +122,13 @@ export default function StaffPay() {
 
         <div className="mt-4 divide-y divide-nexoraBorder">
           {PAYOUT_METHODS.map((item) => {
-            const method = account.payoutMethods?.[item.key] || { enabled: false, value: '', qrCode: '', accountName: '' }
+            const method = getMethod(item.key)
             return (
               <div key={item.key} className="flex items-center justify-between py-3">
                 <div className="flex items-center gap-3 min-w-0">
                   {/* Toggle Switch */}
                   <Toggle
-                    on={!!method.enabled}
+                    on={!!method.isActive}
                     onChange={(v) => handleToggleMethod(item.key, v)}
                     label={`Toggle ${item.label}`}
                   />
@@ -125,9 +140,9 @@ export default function StaffPay() {
                     </span>
                     <div className="min-w-0">
                       <div className="text-xs font-bold text-nexoraText">{item.label}</div>
-                      {method.value ? (
+                      {method.isConfigured ? (
                         <div className="text-[10px] text-nexoraMuted font-mono mt-0.5 truncate max-w-[120px] sm:max-w-[200px]">
-                          {method.value}
+                          {method.accountInfo}
                         </div>
                       ) : (
                         <div className="text-[10px] text-slate-300 italic font-medium mt-0.5">
@@ -158,9 +173,9 @@ export default function StaffPay() {
         <PayoutSetupModal
           open={!!activeWalletKey}
           walletKey={activeWalletKey}
-          staffName={activeMethod?.accountName || account.defaultDisplayName || ''}
-          initialValue={activeMethod?.value || ''}
-          initialQrCode={activeMethod?.qrCode || ''}
+          staffName={activeMethod?.accountName || ''}
+          initialValue={activeMethod?.accountInfo || ''}
+          initialQrCode={activeMethod?.imageUrl || ''}
           onClose={handleCloseModal}
           onSubmit={handleSavePayout}
           readOnly={false}

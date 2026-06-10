@@ -33,9 +33,9 @@ export function useStaffInviteInfo(token) {
 export function useAcceptStaffInvite() {
   return useMutation({
     /**
-     * @param {{ token: string, displayName: string, position?: string, bio?: string, photoUrl?: string }} vars
+     * @param {{ token: string, displayName: string, position?: string, bio?: string, photoUrl?: string, password?: string }} vars
      */
-    mutationFn: ({ token, displayName, position, bio, photoUrl }) =>
-      staffInvitesRepository.acceptInvite(token, { displayName, position, bio, photoUrl }),
+    mutationFn: ({ token, displayName, position, bio, photoUrl, password }) =>
+      staffInvitesRepository.acceptInvite(token, { displayName, position, bio, photoUrl, password }),
   })
 }

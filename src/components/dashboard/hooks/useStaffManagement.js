@@ -58,11 +58,10 @@ export function normaliseMember(member) {
  * @param {Array} opts.staffData - Staff data from useMerchantStaff() query
  * @param {boolean} opts.isStaffLoading - Loading state from useMerchantStaff()
  * @param {string} opts.businessName
- * @param {Function} opts.setTouchpoints
  * @param {string|null} opts.viewingStaffDetailId
  * @param {Function} opts.setViewingStaffDetailId
  */
-export function useStaffManagement({ staffData, isStaffLoading, businessName, setTouchpoints, viewingStaffDetailId, setViewingStaffDetailId }) {
+export function useStaffManagement({ staffData, isStaffLoading, businessName, viewingStaffDetailId, setViewingStaffDetailId }) {
   const { currentLanguage, t } = useTranslation()
   const { showToast, showConfirm } = useNotification()
 

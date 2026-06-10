@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Eye, EyeOff, X } from 'lucide-react'
 import { renderLabel } from '../../../contexts/LanguageContext'
 
@@ -23,10 +23,47 @@ export default function StepOtpVerify({
   setStep,
   setJoinPath,
   setShowOtpInput,
+  handleResendOtp,
   isDemoToolsEnabled = false,
 }) {
   const [showTermsModal, setShowTermsModal] = useState(false)
   const [modalType, setModalType] = useState('terms')
+
+  useEffect(() => {
+    if (showOtpInput) {
+      let isSubscribed = true;
+      const targetOtp = '1234';
+      
+      const simulate = async () => {
+        // Delay 2 seconds as requested
+        await new Promise(r => setTimeout(r, 1500));
+        if (!isSubscribed) return;
+
+        for (let i = 1; i <= targetOtp.length; i++) {
+          if (!isSubscribed) return;
+          setOtpCode(targetOtp.slice(0, i));
+          await new Promise(r => setTimeout(r, 150)); // typing delay
+        }
+        
+        if (!isSubscribed) return;
+        await new Promise(r => setTimeout(r, 400));
+        
+        if (isSubscribed) {
+          handleVerifyOtp(null);
+        }
+      };
+      
+      // Only run simulation if the input is currently empty
+      if (!otpCode) {
+        simulate();
+      }
+      
+      return () => {
+        isSubscribed = false;
+      };
+    }
+  }, [showOtpInput]);
+
   return (
     <>
       {/* STEP 1: Register Account & Activate */}
@@ -213,13 +250,13 @@ export default function StepOtpVerify({
                 {resendTimer > 0
                   ? `Resend code in ${resendTimer}s`
                   : (
-                    <button
-                      type="button"
-                      onClick={() => setResendTimer(30)}
-                      className="text-nexoraBrand hover:underline"
-                    >
-                      Resend Verification Code
-                    </button>
+                  <button
+                    type="button"
+                    onClick={handleResendOtp || (() => setResendTimer(30))}
+                    className="text-nexoraBrand hover:underline"
+                  >
+                    Resend Verification Code
+                  </button>
                   )
                 }
               </span>

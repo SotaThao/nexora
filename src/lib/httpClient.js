@@ -227,6 +227,38 @@ export function get(path, opts = {}) {
 }
 
 /**
+ * GET /path and return Blob
+ * @param {string} path
+ * @param {RequestInit & { anonymous?: boolean }} [opts]
+ */
+export async function getBlob(path, opts = {}) {
+  // Using the request structure but returning blob
+  const init = { ...opts, method: 'GET' }
+  const defaultHeaders = {}
+  
+  let finalInit = {
+    ...init,
+    headers: {
+      ...defaultHeaders,
+      ...(init.headers ?? {}),
+    },
+  }
+
+  for (const interceptor of requestInterceptors) {
+    finalInit = interceptor(finalInit)
+  }
+
+  const { params, anonymous, _isRefresh, ...fetchInit } = finalInit
+  
+  let response = await fetch(`${baseUrl}${path}`, fetchInit)
+  
+  if (!response.ok) {
+    return Promise.reject(await buildError(response))
+  }
+  return await response.blob()
+}
+
+/**
  * POST /path with JSON body
  * @param {string} path
  * @param {unknown} body
@@ -292,6 +324,7 @@ export function upload(path, formData, method = 'POST', opts = {}) {
 
 export default {
   get,
+  getBlob,
   post,
   put,
   patch,

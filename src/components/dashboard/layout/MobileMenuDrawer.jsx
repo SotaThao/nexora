@@ -27,8 +27,6 @@ export default function MobileMenuDrawer({
   userRole,
   onLogout,
   menuItemsToDisplay,
-  viewingStaffDetailId,
-  setViewingStaffDetailId,
   navigateMenu,
 }) {
   const { t } = useTranslation()
@@ -171,14 +169,14 @@ export default function MobileMenuDrawer({
                 <button
                   type="button"
                   onClick={() => {
-                    setActiveMenu(id)
                     if (id === 'tips') {
+                      navigateMenu(id)
                       setIsTipsMobileExpanded(!isTipsMobileExpanded)
                     } else if (id === 'touchpoints') {
+                      navigateMenu(id)
                       setIsTouchpointsMobileExpanded(!isTouchpointsMobileExpanded)
                     } else {
-                      onClose()
-                      setViewingStaffDetailId(null)
+                      navigateMenu(id)
                     }
                   }}
                   className={`flex min-h-11 w-full items-center justify-between rounded-lg px-4 text-left text-sm font-bold transition ${
@@ -215,10 +213,8 @@ export default function MobileMenuDrawer({
                           key={sub.id}
                           type="button"
                           onClick={() => {
-                            setActiveMenu('tips')
                             setTipsTab(sub.id)
-                            setViewingStaffDetailId(null)
-                            onClose()
+                            navigateMenu('tips')
                           }}
                           className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
                             isSubActive
@@ -246,10 +242,8 @@ export default function MobileMenuDrawer({
                           key={sub.id}
                           type="button"
                           onClick={() => {
-                            setActiveMenu('touchpoints')
                             setTouchpointsTab(sub.id)
-                            setViewingStaffDetailId(null)
-                            onClose()
+                            navigateMenu('touchpoints')
                           }}
                           className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
                             isSubActive

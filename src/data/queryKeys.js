@@ -40,6 +40,15 @@ export const qk = {
   merchantStaffSearch: (q)     => ['merchantStaff', 'search', q],
   staffInvite:         (token) => ['staffInvite', token],
 
+  // Merchant Touchpoints
+  merchantTouchpoints: ()      => ['merchantTouchpoints'],
+
+  // Merchant Payment Methods
+  merchantPaymentMethods: ()   => ['merchantPaymentMethods'],
+
+  // Staff Payment Methods
+  staffPaymentMethods: ()      => ['staffPaymentMethods'],
+
   // Public Customer Touch
   customerTouch: (businessSlug, touchPointSlug, sessionId) => ['customerTouch', businessSlug, touchPointSlug, sessionId],
   publicBusinessPaymentMethods: (businessId) => ['publicBusinessPaymentMethods', businessId],
