@@ -2,40 +2,29 @@
  * merchantTouchpointsRepository — API-only implementation.
  * Calls the Nexora REST API for merchant touchpoint operations.
  */
-import httpClient from '../../lib/httpClient'
+import httpClient from "../../lib/httpClient";
 
 export function createMerchantTouchpointsRepository(client = httpClient) {
   return {
     /**
-     * Get paginated active touch points
-     * @param {object} params
-     * @param {number} [params.PageNumber]
-     * @param {number} [params.PageSize]
-     * @param {string} [params.Name]
-     * @returns {Promise<{items: Array, pageNumber: number, totalPages: number, totalCount: number, hasNextPage: boolean, hasPreviousPage: boolean}>}
+     * Get all touch points (flat array, no pagination)
+     * @returns {Promise<Array<{touchPointId: string, name: string, type: string, scanCount: number, tipCount: number, tipTotal: number, ctr: number, avgRating: number}>>}
      */
-    async getTouchpoints(params = {}) {
-      const queryParams = new URLSearchParams()
-      if (params.PageNumber) queryParams.append('PageNumber', params.PageNumber)
-      if (params.PageSize) queryParams.append('PageSize', params.PageSize)
-      if (params.Name) queryParams.append('Name', params.Name)
-      
-      const queryString = queryParams.toString()
-      const url = `/api/v1/merchant/touchpoints${queryString ? `?${queryString}` : ''}`
-      
-      const res = await client.get(url)
-      
-      // Fallback for empty/404 response
-      if (!res) {
-        return { items: [], pageNumber: 1, totalPages: 0, totalCount: 0, hasNextPage: false, hasPreviousPage: false }
-      }
-      
-      // If the API returns a direct array, wrap it in a pagination object
-      if (Array.isArray(res)) {
-        return { items: res, pageNumber: 1, totalPages: 1, totalCount: res.length, hasNextPage: false, hasPreviousPage: false }
-      }
-      
-      return res
+    async getTouchpoints() {
+      const res = await client.get('/api/v1/merchant/dashboard/touchpoints');
+
+      const arr = Array.isArray(res) ? res : [];
+
+      return arr.map((item) => ({
+        touchPointId: item.touchPointId || '',
+        name: item.name || '',
+        type: item.type || 'Table',
+        scanCount: item.scanCount ?? 0,
+        tipCount: item.tipCount ?? 0,
+        tipTotal: item.tipTotal ?? 0,
+        ctr: item.ctr ?? 0,
+        avgRating: item.avgRating ?? 0,
+      }));
     },
 
     /**
@@ -47,7 +36,7 @@ export function createMerchantTouchpointsRepository(client = httpClient) {
      * @returns {Promise<{touchPointId: string, qrImageUrl: string}>}
      */
     async createTouchpoint(dto) {
-      return await client.post('/api/v1/merchant/touchpoints', dto)
+      return await client.post("/api/v1/merchant/touchpoints", dto);
     },
 
     /**
@@ -56,7 +45,7 @@ export function createMerchantTouchpointsRepository(client = httpClient) {
      * @returns {Promise<void>}
      */
     async deleteTouchpoint(id) {
-      return await client.delete(`/api/v1/merchant/touchpoints/${id}`)
+      return await client.delete(`/api/v1/merchant/touchpoints/${id}`);
     },
 
     /**
@@ -65,11 +54,14 @@ export function createMerchantTouchpointsRepository(client = httpClient) {
      * @param {string} format - "png" | "pdf"
      * @returns {Promise<Blob>}
      */
-    async downloadQr(id, format = 'png') {
-      return await client.getBlob(`/api/v1/merchant/touchpoints/${id}/download?format=${format}`)
-    }
-  }
+    async downloadQr(id, format = "png") {
+      return await client.getBlob(
+        `/api/v1/merchant/touchpoints/${id}/download?format=${format}`,
+      );
+    },
+  };
 }
 
-export const merchantTouchpointsRepository = createMerchantTouchpointsRepository()
-export default merchantTouchpointsRepository
+export const merchantTouchpointsRepository =
+  createMerchantTouchpointsRepository();
+export default merchantTouchpointsRepository;

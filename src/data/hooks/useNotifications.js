@@ -9,6 +9,7 @@ export function useNotifications() {
   return useQuery({
     queryKey: qk.notifications(),
     queryFn: () => notificationsRepository.list(),
+    staleTime: 2 * 60_000, // 2 min — avoid refetch on every remount
   })
 }
 

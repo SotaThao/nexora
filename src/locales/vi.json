@@ -208,7 +208,7 @@
     "feedback_email": "Email Nhận Góp Ý Kín (1-3★) (Tùy chọn)",
     "title_step_2": "Bước 2: Quản Lý Nhân Viên & Điểm Chạm QR",
     "desc_step_2": "Thêm thợ của bạn. Hệ thống sẽ tự động phát sinh mã QR tương ứng để dán tại ghế hoặc chia sẻ.",
-    "add_staff_title": "Thêm Nhân Viên Mới",
+    "add_staff_title": "Thêm Mới",
     "linked_wallets": "Ví Nhận Tiền Liên Kết",
     "staff_fullname": "Họ Tên Đầy Đủ (Nội bộ) *",
     "staff_fullname_placeholder": "Ví dụ: Mia Tran",
@@ -867,6 +867,8 @@
   "staff_invite": {
     "total_linked": "Tổng thợ liên kết",
     "pending_invites": "Lời mời đang chờ",
+    "connected_label": "Đã kết nối",
+    "awaiting_label": "Chờ xác nhận",
     "setup_complete": "Hoàn tất cài đặt ví",
     "self_setup": "Thợ tự cài đặt",
     "option_a_title": "Lựa chọn A — Liên kết Staff ID đã có",

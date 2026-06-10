@@ -5,15 +5,15 @@ import merchantTouchpointsRepository from '../repositories/merchantTouchpoints'
 import { AuthContext } from '../../auth/AuthProvider'
 
 /**
- * Hook to fetch paginated merchant touchpoints
+ * Hook to fetch merchant touchpoints (flat array, no pagination)
  */
-export function useTouchpoints(params = {}) {
+export function useTouchpoints() {
   const auth = useContext(AuthContext)
   const isOwner = auth?.status === 'authenticated' && auth?.session?.role === 'owner'
 
   return useQuery({
-    queryKey: [...qk.merchantTouchpoints(), params],
-    queryFn: () => merchantTouchpointsRepository.getTouchpoints(params),
+    queryKey: qk.merchantTouchpoints(),
+    queryFn: () => merchantTouchpointsRepository.getTouchpoints(),
     enabled: isOwner,
   })
 }

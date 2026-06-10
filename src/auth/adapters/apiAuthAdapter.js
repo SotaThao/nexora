@@ -1,6 +1,7 @@
 import { tokenStore } from '../tokenStore'
 import httpClient from '../../lib/httpClient'
 import { logger } from '../../utils/logger'
+import profileSettingsRepository from '../../data/repositories/profileSettings'
 
 // /api/v1/userprofile/me returns `userType`; /api/v1/userprofile/verified-status returns `profileType`.
 // Both fields are checked so either endpoint's response shape is accepted.
@@ -77,7 +78,7 @@ async function getBusinessKybStatus(profile) {
   if (profileKybStatus) return profileKybStatus
 
   try {
-    const verifiedStatus = await httpClient.get('/api/v1/userprofile/verified-status')
+    const verifiedStatus = await profileSettingsRepository.getVerifiedStatus()
     return extractKybStatus(verifiedStatus) || KYB_STATUS_BASIC
   } catch (err) {
     logger.error('Failed to fetch business KYB status', err)
@@ -121,7 +122,6 @@ function mapProfileToSession(profile, kybStatus) {
   }
 }
 
-let getProfilePromise = null
 
 export const apiAuthAdapter = {
   async login({ email, password }) {
@@ -148,12 +148,7 @@ export const apiAuthAdapter = {
     }
 
     try {
-      if (!getProfilePromise) {
-        getProfilePromise = httpClient.get('/api/v1/userprofile/me').finally(() => {
-          getProfilePromise = null
-        })
-      }
-      const profile = await getProfilePromise
+      const profile = await profileSettingsRepository.get()
       const isBusiness = isBusinessProfile(profile)
       const kybStatus = isBusiness ? await getBusinessKybStatus(profile) : null
       return mapProfileToSession(profile, kybStatus)

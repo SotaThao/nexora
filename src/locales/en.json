@@ -208,7 +208,7 @@
     "feedback_email": "Private Feedback Email (1-3★) (Optional)",
     "title_step_2": "Step 2: Staff Management & QR Touchpoints",
     "desc_step_2": "Add your technicians. The system automatically generates corresponding QR codes to place at tables or share.",
-    "add_staff_title": "Add New Staff Member",
+    "add_staff_title": "Add New",
     "linked_wallets": "Linked Payment Wallets",
     "staff_fullname": "Full Name (Internal) *",
     "staff_fullname_placeholder": "e.g., Mia Tran",
@@ -867,6 +867,8 @@
   "staff_invite": {
     "total_linked": "Total Staff Linked",
     "pending_invites": "Pending Invites",
+    "connected_label": "Connected",
+    "awaiting_label": "Awaiting confirmation",
     "setup_complete": "Payment Setup Complete",
     "self_setup": "Staff Self-Setup",
     "option_a_title": "Option A — Link Existing Staff ID",

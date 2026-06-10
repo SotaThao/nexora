@@ -14,6 +14,7 @@ export function useProfileSettings({ enabled = true } = {}) {
     queryKey: qk.userProfile(),
     queryFn: () => profileSettingsRepository.get(),
     enabled,
+    staleTime: 5 * 60_000, // 5 min — profile rarely changes mid-session
   })
 }
 
@@ -21,6 +22,7 @@ export function useVerifiedStatus() {
   return useQuery({
     queryKey: qk.verifiedStatus(),
     queryFn: () => profileSettingsRepository.getVerifiedStatus(),
+    staleTime: 5 * 60_000, // 5 min — KYB status rarely changes
   })
 }
 
