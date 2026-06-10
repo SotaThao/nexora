@@ -37,9 +37,12 @@ export function OverviewRoute() {
       hasKyb={ctx.hasKyb}
       hasSetup={ctx.hasSetup}
       onStartSetup={ctx.onStartSetup}
+      profile={ctx.profile}
+      onNavigateMenu={ctx.onNavigateMenu}
     />
   )
 }
+
 
 export function StaffRoute() {
   const ctx = useOutletContext()

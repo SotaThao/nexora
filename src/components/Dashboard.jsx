@@ -40,6 +40,7 @@ import StaffModal from './dashboard/modals/StaffModal'
 import QrModal from './dashboard/modals/QrModal'
 import InviteShareModal from './dashboard/modals/InviteShareModal'
 import AddTouchpointModal from './dashboard/modals/AddTouchpointModal'
+import MobileBottomNav from './dashboard/layout/MobileBottomNav'
 
 // ---------------------------------------------------------------------------
 // Default notifications seeded on first dashboard load (no storage data yet)
@@ -413,7 +414,9 @@ export default function Dashboard({
     tipsTab, setTipsTab, processingFee, setProcessingFee,
     filteredTransactions, touchpoints,
     verificationStatus, requireKyb, userEmail, onKybSuccess, settingsTab, setSettingsTab,
-    currentStaffId
+    currentStaffId,
+    profile,
+    onNavigateMenu: handleNavigateMenu
   }
 
   return (
@@ -468,7 +471,7 @@ export default function Dashboard({
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
         />
 
-        <main className="min-h-dvh p-4 sm:p-6 lg:p-7">
+        <main className="min-h-dvh p-4 pb-24 sm:p-6 sm:pb-24 lg:p-7 lg:pb-7">
           {activeMenu !== 'overview' && (
             <button
               onClick={() => handleNavigateMenu('overview')}
@@ -483,13 +486,15 @@ export default function Dashboard({
 
       <button
         onClick={() => document.documentElement.classList.toggle('dark')}
-        className="fixed bottom-4 right-4 z-40 flex h-10 w-10 items-center justify-center rounded-full border border-nexoraBorder bg-nexoraSurface text-nexoraMuted shadow-lg"
+        className="fixed bottom-4 right-4 z-40 hidden lg:flex h-10 w-10 items-center justify-center rounded-full border border-nexoraBorder bg-nexoraSurface text-nexoraMuted shadow-lg"
         title="Toggle theme hook"
         aria-label="Toggle theme hook"
       >
         <Sun className="h-4 w-4 dark:hidden" />
         <Moon className="hidden h-4 w-4 dark:block" />
       </button>
+
+      <MobileBottomNav activeMenu={activeMenu} onNavigate={handleNavigateMenu} />
 
       <MobileMenuDrawer
         isOpen={isMobileMenuOpen}
