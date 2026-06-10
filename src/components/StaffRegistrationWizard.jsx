@@ -101,6 +101,9 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
           {reg.step === 0 && (
             <StepWelcome
               inviteData={inviteData}
+              businessName={reg.apiInviteInfo?.businessName || inviteData?.biz || ''}
+              isInviteLoading={reg.isInviteLoading}
+              isInviteError={reg.isInviteError}
               joinPath={reg.joinPath}
               setJoinPath={reg.setJoinPath}
               searchId={reg.searchId}
@@ -192,7 +195,7 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
               vlinkpayId={reg.vlinkpayId}
               phoneParsed={reg.phoneParsed}
               vlinkpayStatus={reg.vlinkpayStatus}
-              isSelfServe={reg.isSelfServe}
+              contactLocked={!reg.isSelfServe && !reg.isApiInvite}
               currentLanguage={reg.currentLanguage}
               t={reg.t}
               handleVlinkpayIdChange={reg.handleVlinkpayIdChange}

@@ -401,8 +401,13 @@
     "modals": {
       "add_tp_title": "Thêm Điểm Chạm Mới",
       "tp_name_label": "Tên điểm chạm (Ví dụ: Ghế Manicure 05)",
+      "tp_name_placeholder": "Ví dụ: Ghế Manicure 05",
+      "device_id_label": "Serial phần cứng / ID Thiết bị (Tùy chọn)",
+      "device_id_placeholder": "Ví dụ: NFC-105, QR-Table-01",
       "tp_type_label": "Loại vị trí",
       "add_btn": "Thêm Điểm Chạm",
+      "tp_name_required": "Vui lòng nhập tên điểm chạm.",
+      "tp_added_success": "Đã thêm điểm chạm \"{name}\" thành công!",
       "view_qr_title": "Mã QR cho {name}",
       "view_qr_desc": "Khách hàng quét mã này để típ và viết đánh giá trực tiếp cho nhân viên được gán.",
       "assign_staff": "Gán nhân viên phục vụ:",
@@ -916,6 +921,19 @@
       "hooks": {
         "useCustomerFlow": {
           "addTipsForYour": "Thêm tiền Tip cho nhân viên"
+        },
+        "useSimulationHandlers": {
+          "touchpointStaffPersonalQr": "QR cá nhân nhân viên",
+          "touchpointQr": "Điểm chạm QR",
+          "touchpointLobby": "QR chào mừng sảnh",
+          "tipReceivedTitle": "Nhận tip mới ({amount})",
+          "tipReceivedMessage": "{name} nhận tip {amount} qua {method} tại {touchpoint}.",
+          "reviewGoodComment": "Dịch vụ tốt",
+          "reviewBadComment": "Cần cải thiện",
+          "reviewTitleGood": "Đánh giá mới ({rating}★)",
+          "reviewTitleInternal": "Phản hồi nội bộ mới ({rating}★)",
+          "reviewMessage": "Khách để lại phản hồi cho {name}: \"{comment}\"",
+          "justNow": "Vừa xong"
         }
       },
       "steps": {

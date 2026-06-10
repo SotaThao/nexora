@@ -1,11 +1,19 @@
 // Staff roster + staff-modal/form state and all staff CRUD handlers for the
-// Dashboard. Staff mutations also create/remove each staff personal-QR touch
-// point, so setTouchpoints is injected. Extracted from Dashboard.jsx (Group 5).
+// Dashboard. Refactored to use API mutation hooks instead of local setStaff().
+// Extracted from Dashboard.jsx (Group 5).
 import { useState } from 'react'
 import { DEFAULT_PAYOUT_CONFIGS } from '../constants'
 import { getPayoutConfigsFromMember } from '../utils'
+import { isPhoneValid } from '../../CountryCodeSelect'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
+import {
+  useInviteStaff,
+  useResendStaffInvite,
+  useSendStaffLinkRequest,
+  useUpdateMerchantStaffStatus,
+  useRemoveMerchantStaff,
+} from '../../../data/hooks/useMerchantStaff'
 
 /**
  * Normalise a raw staff-list member into the shape the dashboard uses.
@@ -34,23 +42,40 @@ export function normaliseMember(member) {
       bankwire: member.paymentAccounts?.bankwire || '',
       applecash: member.paymentAccounts?.applecash || ''
     },
-    payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member)
+    payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member),
+    // Preserve API identifiers
+    staffLinkId: member.staffLinkId ?? null,
+    inviteId: member.inviteId ?? null,
+    staffProfileId: member.staffProfileId ?? null,
+    staffCode: member.staffCode ?? null,
+    itemType: member.itemType ?? null,
+    sortOrder: member.sortOrder ?? 0,
   }
 }
 
-export function useStaffManagement({ setupData, businessName, setTouchpoints, viewingStaffDetailId, setViewingStaffDetailId }) {
+/**
+ * @param {object} opts
+ * @param {Array} opts.staffData - Staff data from useMerchantStaff() query
+ * @param {boolean} opts.isStaffLoading - Loading state from useMerchantStaff()
+ * @param {string} opts.businessName
+ * @param {Function} opts.setTouchpoints
+ * @param {string|null} opts.viewingStaffDetailId
+ * @param {Function} opts.setViewingStaffDetailId
+ */
+export function useStaffManagement({ staffData, isStaffLoading, businessName, setTouchpoints, viewingStaffDetailId, setViewingStaffDetailId }) {
   const { currentLanguage, t } = useTranslation()
   const { showToast, showConfirm } = useNotification()
 
-  // Staff is initialised from setupData (prop) when available, otherwise from
-  // the mock seed list.  Returning-user data arrives via merchantSetupData in
-  // Dashboard, which calls setStaff via a useEffect after the query resolves.
-  const [staff, setStaff] = useState(() => {
-    if (setupData?.staffList?.length) {
-      return setupData.staffList.map(normaliseMember)
-    }
-    return []
-  })
+  // API mutation hooks — all invalidate qk.merchantStaff() on success
+  const inviteStaffMutation = useInviteStaff()
+  const resendInviteMutation = useResendStaffInvite()
+  const linkRequestMutation = useSendStaffLinkRequest()
+  const updateStatusMutation = useUpdateMerchantStaffStatus()
+  const removeStaffMutation = useRemoveMerchantStaff()
+
+  // Staff comes from the API query (useMerchantStaff) passed in as staffData.
+  // No more local setStaff — the query cache is the source of truth.
+  const staff = staffData ?? []
 
   const [errors, setErrors] = useState({})
   const [staffForm, setStaffForm] = useState({
@@ -104,7 +129,7 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
     setApprovingStaffMember(member)
     setStaffForm({
       fullName: member.fullName,
-      nickname: member.nickname,
+      nickname: member.nickname || member.fullName?.split(' ')[0] || '',
       position: member.position,
       avatar: member.avatar || '',
       phone: member.phone || '',
@@ -125,7 +150,7 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
     setEditingStaffId(member.id)
     setStaffForm({
       fullName: member.fullName,
-      nickname: member.nickname,
+      nickname: member.nickname || member.fullName?.split(' ')[0] || '',
       position: member.position,
       avatar: member.avatar || '',
       phone: member.phone || '',
@@ -147,60 +172,46 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
     resetStaffForm()
   }
 
+  /**
+   * Save staff — for editing existing staff, this is a local UI operation
+   * since Swagger does not expose a merchant endpoint to edit staff profiles.
+   * For adding new staff, the merchant should use invite or link request instead.
+   */
   const saveStaff = () => {
     const nextErrors = {}
-    if (!staffForm.fullName.trim()) nextErrors.fullName = t('components.dashboard.hooks.useStaffManagement.fullNameRequired')
-    if (!staffForm.nickname.trim()) nextErrors.nickname = t('components.dashboard.hooks.useStaffManagement.publicNicknameRequired')
+    if (!staffForm.fullName.trim()) nextErrors.fullName = 'Full name is required.'
     if (staffForm.email?.trim() && !/\S+@\S+\.\S+/.test(staffForm.email.trim())) {
-      nextErrors.email = t('setup.errors.staff_email_invalid')
+      nextErrors.email = t('setup.errors.staff_email_invalid') || 'Invalid email address format.'
+    }
+    if (staffForm.phone?.trim() && !isPhoneValid(staffForm.phone.trim())) {
+      nextErrors.phone = t('setup.errors.staff_phone_invalid') || 'Invalid phone number.'
     }
     if (Object.keys(nextErrors).length) {
       setErrors(nextErrors)
       return
     }
-    const configs = staffForm.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
-    const payload = {
-      fullName: staffForm.fullName.trim(),
-      nickname: staffForm.nickname.trim(),
-      position: staffForm.position.trim() || 'Nail Tech',
-      avatar: staffForm.avatar || '',
-      phone: staffForm.phone.trim(),
-      email: staffForm.email.trim(),
-      showInTipsFlow: staffForm.showInTipsFlow !== false,
-      paymentAccounts: {
-        venmo: configs.venmo?.enabled ? configs.venmo.value.trim() : '',
-        cashapp: configs.cashapp?.enabled ? configs.cashapp.value.trim() : '',
-        zelle: configs.zelle?.enabled ? configs.zelle.value.trim() : '',
-        vlinkpay: staffForm.vlinkpay.trim(),
-        paypal: configs.paypal?.enabled ? configs.paypal.value.trim() : '',
-        bankwire: configs.bankwire?.enabled ? configs.bankwire.value.trim() : '',
-        applecash: configs.applecash?.enabled ? configs.applecash.value.trim() : ''
-      },
-      payoutConfigs: configs
-    }
 
-    if (editingStaffId) {
-      setStaff((current) => current.map((member) => member.id === editingStaffId ? { ...member, ...payload } : member))
-    } else {
-      const finalStaffId = staffForm.nexoraStaffId.trim() || `NEX-STAFF-${staffForm.fullName.replace(/[^a-zA-Z]/g, '').slice(0, 4).toUpperCase()}${Math.floor(1000 + Math.random() * 9000)}`
-      const newMember = { id: finalStaffId, isActive: true, showInTipsFlow: true, status: 'Active', flowType: 'Direct Addition', joinedDate: new Date().toISOString().split('T')[0], ...payload }
-      setStaff((current) => [...current, newMember])
-      setTouchpoints((current) => [...current, {
-        id: `tp-staff-${newMember.id}`,
-        name: `Personal QR - ${newMember.nickname}`,
-        type: 'Staff QR',
-        staffId: newMember.id,
-        staffName: newMember.nickname
-      }])
-    }
+    // Editing is view-only in API mode since merchant cannot mutate staff profiles.
+    // New staff creation should go through invite or link request flows.
     closeStaffModal()
   }
 
+  /**
+   * Send invite via the InviteShareModal (from StaffModal).
+   * Calls POST /api/v1/merchant/staff/invite — no local state mutation.
+   */
   const sendSetupLinkFromModal = (formDetails) => {
     const nextErrors = {}
-    if (!formDetails.fullName.trim()) nextErrors.fullName = t('components.dashboard.hooks.useStaffManagement.fullNameRequiredToInvite')
+    if (!formDetails.fullName.trim()) nextErrors.fullName = 'Full name is required to invite.'
     if (!formDetails.email.trim() && !formDetails.phone.trim()) {
-      nextErrors.email = t('components.dashboard.hooks.useStaffManagement.phoneOrEmailRequired')
+      nextErrors.email = 'Phone or email is required to send invite link.'
+    } else {
+      if (formDetails.email?.trim() && !/\S+@\S+\.\S+/.test(formDetails.email.trim())) {
+        nextErrors.email = 'Invalid email address format.'
+      }
+      if (formDetails.phone?.trim() && !isPhoneValid(formDetails.phone.trim())) {
+        nextErrors.phone = 'Invalid phone number.'
+      }
     }
     
     if (Object.keys(nextErrors).length) {
@@ -208,196 +219,156 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
       return
     }
 
-    const tempId = `NEX-STAFF-${Math.floor(100000 + Math.random() * 900000)}`
-    const newMember = {
-      id: tempId,
-      fullName: formDetails.fullName.trim(),
-      nickname: formDetails.nickname.trim() || formDetails.fullName.trim().split(' ')[0] + '.',
-      position: formDetails.position.trim() || 'Nail Tech',
-      avatar: formDetails.avatar || '',
-      phone: formDetails.phone.trim(),
-      email: formDetails.email.trim(),
-      isActive: false,
-      status: 'Pending Setup',
-      flowType: 'Invite New Staff',
-      paymentAccounts: {},
-      payoutConfigs: { ...DEFAULT_PAYOUT_CONFIGS }
-    }
-
-    setStaff((current) => [...current, newMember])
-    setTouchpoints((current) => [...current, {
-      id: `tp-staff-${newMember.id}`,
-      name: `Personal QR - ${newMember.nickname}`,
-      type: 'Staff QR',
-      staffId: newMember.id,
-      staffName: newMember.nickname
-    }])
-
-    closeStaffModal()
-
-    // Dispatch simulation event
-    const inviteEvt = new CustomEvent('showSimulationInvite', {
-      detail: {
-        id: tempId,
-        name: newMember.fullName,
-        email: newMember.email,
-        phone: newMember.phone,
-        role: newMember.position,
-        biz: businessName
+    const isEmail = formDetails.email?.trim()
+    inviteStaffMutation.mutate({
+      name: formDetails.fullName.trim(),
+      email: isEmail || null,
+      phone: formDetails.phone?.trim() || null,
+      position: formDetails.position?.trim() || 'Nail Tech',
+    }, {
+      onSuccess: () => {
+        showToast(
+          currentLanguage === 'vi'
+            ? `Đã gửi lời mời đến ${formDetails.fullName.trim()} thành công!`
+            : `Invite sent to ${formDetails.fullName.trim()} successfully!`,
+          'success'
+        )
+        closeStaffModal()
+      },
+      onError: (err) => {
+        showToast(
+          currentLanguage === 'vi'
+            ? `Gửi lời mời thất bại: ${err?.errorCode || 'Lỗi không xác định'}`
+            : `Failed to send invite: ${err?.errorCode || 'Unknown error'}`,
+          'error'
+        )
       }
     })
-    window.dispatchEvent(inviteEvt)
   }
 
-  const handleLinkStaff = (globalMember, role) => {
-    if (staff.some(s => s.id === globalMember.id)) {
-      showToast(t('components.dashboard.hooks.useStaffManagement.technicianAlreadyLinked'), 'error');
-      return;
-    }
+  /**
+   * Link an existing staff profile from search results.
+   * Calls POST /api/v1/merchant/staff/link-request/{staffProfileId}.
+   */
+  const handleLinkStaff = (searchResult) => {
+    if (!searchResult?.staffProfileId) return
 
-    const newMember = {
-      id: globalMember.id,
-      fullName: globalMember.fullName,
-      nickname: globalMember.nickname,
-      position: role,
-      avatar: globalMember.avatar || '',
-      phone: globalMember.phone || '',
-      email: globalMember.email || '',
-      isActive: false,
-      status: 'Pending Acceptance',
-      flowType: 'Link Existing Staff ID',
-      joinedDate: new Date().toISOString().split('T')[0],
-      paymentAccounts: globalMember.paymentAccounts || {},
-      payoutConfigs: { ...DEFAULT_PAYOUT_CONFIGS }
-    }
-
-    setStaff((current) => [...current, newMember])
-    setTouchpoints((current) => [...current, {
-      id: `tp-staff-${newMember.id}`,
-      name: `Personal QR - ${newMember.nickname}`,
-      type: 'Staff QR',
-      staffId: newMember.id,
-      staffName: newMember.nickname
-    }])
-
-    // Trigger simulation alert
-    const event = new CustomEvent('showSimulationInvite', {
-      detail: {
-        id: globalMember.id,
-        name: globalMember.fullName,
-        email: globalMember.email,
-        phone: globalMember.phone,
-        role: role,
-        biz: businessName,
-        isLinkOnly: true
+    linkRequestMutation.mutate(searchResult.staffProfileId, {
+      onSuccess: () => {
+        showToast(
+          currentLanguage === 'vi'
+            ? `Đã gửi yêu cầu liên kết đến ${searchResult.fullName}!`
+            : `Link request sent to ${searchResult.fullName}!`,
+          'success'
+        )
+      },
+      onError: (err) => {
+        showToast(
+          currentLanguage === 'vi'
+            ? `Yêu cầu liên kết thất bại: ${err?.errorCode || 'Lỗi'}`
+            : `Link request failed: ${err?.errorCode || 'Error'}`,
+          'error'
+        )
       }
     })
-    window.dispatchEvent(event)
   }
 
-  const handleInviteStaff = (name, contact, role, method) => {
-    const isEmail = contact.includes('@');
-    const tempId = `NEX-STAFF-${Math.floor(100000 + Math.random() * 900000)}`
-    
-    const newMember = {
-      id: tempId,
-      fullName: name.trim(),
-      nickname: name.trim().split(' ')[0] + '.',
-      position: role,
-      avatar: '',
-      phone: isEmail ? '' : contact.trim(),
-      email: isEmail ? contact.trim() : '',
-      isActive: false,
-      status: 'Pending Setup',
-      flowType: 'Invite New Staff',
-      joinedDate: new Date().toISOString().split('T')[0],
-      paymentAccounts: {},
-      payoutConfigs: { ...DEFAULT_PAYOUT_CONFIGS }
-    }
+  /**
+   * Invite new staff (from StaffView invite tab).
+   * Calls POST /api/v1/merchant/staff/invite.
+   */
+  const handleInviteStaff = (name, contact, role) => {
+    const isEmail = contact.includes('@')
 
-    setStaff((current) => [...current, newMember])
-    setTouchpoints((current) => [...current, {
-      id: `tp-staff-${newMember.id}`,
-      name: `Personal QR - ${newMember.nickname}`,
-      type: 'Staff QR',
-      staffId: newMember.id,
-      staffName: newMember.nickname
-    }])
-
-    // Trigger simulation setup
-    const event = new CustomEvent('showSimulationInvite', {
-      detail: {
-        id: tempId,
-        name: newMember.fullName,
-        email: newMember.email,
-        phone: newMember.phone,
-        role: role,
-        biz: businessName
+    inviteStaffMutation.mutate({
+      name: name.trim(),
+      email: isEmail ? contact.trim() : null,
+      phone: isEmail ? null : contact.trim(),
+      position: role || 'Nail Tech',
+    }, {
+      onSuccess: () => {
+        showToast(
+          currentLanguage === 'vi'
+            ? `Đã gửi lời mời đến ${name.trim()} thành công!`
+            : `Invite sent to ${name.trim()} successfully!`,
+          'success'
+        )
+      },
+      onError: (err) => {
+        showToast(
+          currentLanguage === 'vi'
+            ? `Gửi lời mời thất bại: ${err?.errorCode || 'Lỗi không xác định'}`
+            : `Failed to send invite: ${err?.errorCode || 'Unknown error'}`,
+          'error'
+        )
       }
     })
-    window.dispatchEvent(event)
   }
 
-  const handleAcceptJoinRequest = (staffId, updatedFormPayload = null) => {
+  /**
+   * Resend a pending invite.
+   * Calls POST /api/v1/merchant/staff/{inviteId}/resend.
+   */
+  const handleResendInvite = (member) => {
+    if (!member?.inviteId) {
+      showToast(
+        currentLanguage === 'vi'
+          ? 'Không thể gửi lại lời mời: thiếu inviteId.'
+          : 'Cannot resend invite: missing inviteId.',
+        'error'
+      )
+      return
+    }
+
+    resendInviteMutation.mutate(member.inviteId, {
+      onSuccess: () => {
+        showToast(
+          currentLanguage === 'vi'
+            ? `Đã gửi lại link thiết lập thành công tới ${member.fullName}!`
+            : `Setup link successfully resent to ${member.fullName}!`,
+          'success'
+        )
+      },
+      onError: (err) => {
+        showToast(
+          currentLanguage === 'vi'
+            ? `Gửi lại thất bại: ${err?.errorCode || 'Lỗi'}`
+            : `Resend failed: ${err?.errorCode || 'Error'}`,
+          'error'
+        )
+      }
+    })
+  }
+
+  /**
+   * Accept a join request — update status to Active.
+   * Calls PUT /api/v1/merchant/staff/{staffLinkId}/status.
+   */
+  const handleAcceptJoinRequest = (staffId) => {
     const member = staff.find(s => s.id === staffId)
-    if (!member) return
+    if (!member?.staffLinkId) return
 
-    let mergedPayload = {}
-    if (updatedFormPayload) {
-      const configs = updatedFormPayload.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
-      mergedPayload = {
-        fullName: updatedFormPayload.fullName.trim(),
-        nickname: updatedFormPayload.nickname.trim(),
-        position: updatedFormPayload.position.trim(),
-        avatar: updatedFormPayload.avatar || '',
-        phone: updatedFormPayload.phone.trim(),
-        email: updatedFormPayload.email.trim(),
-        showInTipsFlow: updatedFormPayload.showInTipsFlow !== false,
-        paymentAccounts: {
-          venmo: configs.venmo?.enabled ? configs.venmo.value.trim() : '',
-          cashapp: configs.cashapp?.enabled ? configs.cashapp.value.trim() : '',
-          zelle: configs.zelle?.enabled ? configs.zelle.value.trim() : '',
-          vlinkpay: updatedFormPayload.vlinkpay.trim(),
-          paypal: configs.paypal?.enabled ? configs.paypal.value.trim() : '',
-          bankwire: configs.bankwire?.enabled ? configs.bankwire.value.trim() : '',
-          applecash: configs.applecash?.enabled ? configs.applecash.value.trim() : ''
-        },
-        payoutConfigs: configs
+    updateStatusMutation.mutate({ staffLinkId: member.staffLinkId, status: 'Active' }, {
+      onSuccess: () => {
+        showToast(currentLanguage === 'vi' 
+          ? `Đã chấp nhận thợ ${member.fullName} vào tiệm!` 
+          : `Accepted technician ${member.fullName} to salon!`, 'success')
+      },
+      onError: (err) => {
+        showToast(
+          currentLanguage === 'vi'
+            ? `Chấp nhận thất bại: ${err?.errorCode || 'Lỗi'}`
+            : `Accept failed: ${err?.errorCode || 'Error'}`,
+          'error'
+        )
       }
-    }
-
-    setStaff((current) => current.map((m) => {
-      if (m.id === staffId) {
-        return {
-          ...m,
-          ...mergedPayload,
-          status: 'Active',
-          isActive: true,
-          joinedDate: m.joinedDate || new Date().toISOString().split('T')[0]
-        }
-      }
-      return m
-    }))
-
-    setTouchpoints((current) => {
-      const hasTp = current.some(tp => tp.staffId === staffId)
-      if (!hasTp) {
-        return [...current, {
-          id: `tp-staff-${staffId}`,
-          name: `Personal QR - ${updatedFormPayload?.nickname || member.nickname}`,
-          type: 'Staff QR',
-          staffId: staffId,
-          staffName: updatedFormPayload?.nickname || member.nickname
-        }]
-      }
-      return current
     })
-
-    showToast(currentLanguage === 'vi' 
-      ? `Đã chấp nhận và lưu thông tin thợ ${updatedFormPayload?.fullName || member.fullName} vào tiệm!` 
-      : `Accepted and saved technician ${updatedFormPayload?.fullName || member.fullName} to salon!`, 'success')
   }
 
+  /**
+   * Decline a join request — update status to Rejected.
+   * Calls PUT /api/v1/merchant/staff/{staffLinkId}/status.
+   */
   const handleDeclineJoinRequest = async (staffId) => {
     const member = staff.find(s => s.id === staffId)
     if (!member) return
@@ -405,12 +376,26 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
     const ok = await showConfirm(currentLanguage === 'vi' 
       ? `Bạn có chắc chắn muốn từ chối yêu cầu tham gia của thợ ${member.fullName}?` 
       : `Are you sure you want to decline join request from ${member.fullName}?`)
-    if (ok) {
-      setStaff((current) => current.filter((m) => m.id !== staffId))
-      setTouchpoints((current) => current.filter((tp) => tp.staffId !== staffId))
+    if (!ok) return
+
+    if (member.staffLinkId) {
+      updateStatusMutation.mutate({ staffLinkId: member.staffLinkId, status: 'Rejected' }, {
+        onError: (err) => {
+          showToast(
+            currentLanguage === 'vi'
+              ? `Từ chối thất bại: ${err?.errorCode || 'Lỗi'}`
+              : `Decline failed: ${err?.errorCode || 'Error'}`,
+            'error'
+          )
+        }
+      })
     }
   }
 
+  /**
+   * Accept an unlink request — remove the staff link.
+   * Calls DELETE /api/v1/merchant/staff/{staffLinkId}.
+   */
   const handleAcceptUnlinkRequest = async (staffId) => {
     const member = staff.find(s => s.id === staffId)
     if (!member) return
@@ -418,13 +403,29 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
     const ok = await showConfirm(currentLanguage === 'vi' 
       ? `Bạn có chắc chắn muốn duyệt yêu cầu hủy liên kết của thợ ${member.fullName}?` 
       : `Are you sure you want to approve unlink request from ${member.fullName}?`)
-    if (ok) {
-      setStaff((current) => current.filter((m) => m.id !== staffId))
-      setTouchpoints((current) => current.filter((tp) => tp.staffId !== staffId))
-      showToast(t('components.dashboard.hooks.useStaffManagement.staffUnlinkedSuccessfully'), 'success')
+    if (!ok) return
+
+    if (member.staffLinkId) {
+      removeStaffMutation.mutate(member.staffLinkId, {
+        onSuccess: () => {
+          showToast(currentLanguage === 'vi' ? 'Đã hủy liên kết nhân viên thành công.' : 'Staff unlinked successfully.', 'success')
+        },
+        onError: (err) => {
+          showToast(
+            currentLanguage === 'vi'
+              ? `Hủy liên kết thất bại: ${err?.errorCode || 'Lỗi'}`
+              : `Unlink failed: ${err?.errorCode || 'Error'}`,
+            'error'
+          )
+        }
+      })
     }
   }
 
+  /**
+   * Decline an unlink request — update status back to Active.
+   * Calls PUT /api/v1/merchant/staff/{staffLinkId}/status.
+   */
   const handleDeclineUnlinkRequest = async (staffId) => {
     const member = staff.find(s => s.id === staffId)
     if (!member) return
@@ -432,32 +433,105 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
     const ok = await showConfirm(currentLanguage === 'vi' 
       ? `Bạn có chắc chắn muốn từ chối yêu cầu hủy liên kết của thợ ${member.fullName}?` 
       : `Are you sure you want to decline unlink request from ${member.fullName}?`)
-    if (ok) {
-      setStaff((current) => current.map((m) => m.id === staffId ? { ...m, status: 'Active', isActive: true } : m))
-      showToast(t('components.dashboard.hooks.useStaffManagement.declinedUnlinkRequest'), 'success')
-    }
-  }
-
-  const deleteStaff = async (id) => {
-    const ok = await showConfirm(t('components.dashboard.hooks.useStaffManagement.deleteThisStaffMember'))
     if (!ok) return
-    setStaff((current) => current.filter((member) => member.id !== id))
-    setTouchpoints((current) => current.filter((point) => !(point.type === 'Staff QR' && point.staffId === id)))
-    if (viewingStaffDetailId === id) {
-      setViewingStaffDetailId(null)
+
+    if (member.staffLinkId) {
+      updateStatusMutation.mutate({ staffLinkId: member.staffLinkId, status: 'Active' }, {
+        onSuccess: () => {
+          showToast(currentLanguage === 'vi' ? 'Đã từ chối yêu cầu hủy liên kết.' : 'Declined unlink request.', 'success')
+        },
+        onError: (err) => {
+          showToast(
+            currentLanguage === 'vi'
+              ? `Từ chối thất bại: ${err?.errorCode || 'Lỗi'}`
+              : `Decline failed: ${err?.errorCode || 'Error'}`,
+            'error'
+          )
+        }
+      })
     }
   }
 
-  const toggleStaff = (id) => {
-    setStaff((current) => current.map((member) => member.id === id ? { ...member, isActive: !member.isActive } : member))
+  /**
+   * Delete/unlink a staff member.
+   * For invite items: removes via DELETE /api/v1/merchant/staff/{staffLinkId}
+   * For link items: removes via DELETE /api/v1/merchant/staff/{staffLinkId}
+   */
+  const deleteStaff = async (id) => {
+    const member = staff.find(s => s.id === id)
+    if (!member) return
+
+    const ok = await showConfirm(currentLanguage === 'vi'
+      ? 'Bạn có chắc chắn muốn xóa nhân viên này khỏi Nexora Touch?'
+      : 'Delete this staff member from Nexora Touch?')
+    if (!ok) return
+
+    const linkId = member.staffLinkId || member.inviteId
+    if (linkId) {
+      removeStaffMutation.mutate(linkId, {
+        onSuccess: () => {
+          if (viewingStaffDetailId === id) {
+            setViewingStaffDetailId(null)
+          }
+        },
+        onError: (err) => {
+          showToast(
+            currentLanguage === 'vi'
+              ? `Xóa thất bại: ${err?.errorCode || 'Lỗi'}`
+              : `Delete failed: ${err?.errorCode || 'Error'}`,
+            'error'
+          )
+        }
+      })
+    }
   }
 
+  /**
+   * Toggle staff active/inactive status.
+   * Calls PUT /api/v1/merchant/staff/{staffLinkId}/status.
+   */
+  const toggleStaff = (id) => {
+    const member = staff.find(s => s.id === id)
+    if (!member?.staffLinkId) return
+
+    const newStatus = member.isActive ? 'Inactive' : 'Active'
+    updateStatusMutation.mutate({ staffLinkId: member.staffLinkId, status: newStatus }, {
+      onError: (err) => {
+        showToast(
+          currentLanguage === 'vi'
+            ? `Cập nhật trạng thái thất bại: ${err?.errorCode || 'Lỗi'}`
+            : `Status update failed: ${err?.errorCode || 'Error'}`,
+          'error'
+        )
+      }
+    })
+  }
+
+  /**
+   * Toggle staff tips flow visibility.
+   * In API mode, tips flow is derived from active status (showInTipsFlow = isActive).
+   * Toggling tips flow is equivalent to toggling status.
+   */
   const toggleStaffTipsFlow = (id) => {
-    setStaff((current) => current.map((member) => member.id === id ? { ...member, showInTipsFlow: member.showInTipsFlow === false ? true : false } : member))
+    const member = staff.find(s => s.id === id)
+    if (!member?.staffLinkId) return
+
+    const newStatus = member.showInTipsFlow ? 'Inactive' : 'Active'
+    updateStatusMutation.mutate({ staffLinkId: member.staffLinkId, status: newStatus }, {
+      onError: (err) => {
+        showToast(
+          currentLanguage === 'vi'
+            ? `Cập nhật tips flow thất bại: ${err?.errorCode || 'Lỗi'}`
+            : `Tips flow update failed: ${err?.errorCode || 'Error'}`,
+          'error'
+        )
+      }
+    })
   }
 
   return {
-    staff, setStaff,
+    staff,
+    isStaffLoading,
     staffForm, setStaffForm,
     errors, setErrors,
     editingStaffId, setEditingStaffId,
@@ -469,7 +543,14 @@ export function useStaffManagement({ setupData, businessName, setTouchpoints, vi
     inviteShareDefaultContact, setInviteShareDefaultContact,
     resetStaffForm, openAddStaff, openApproveStaff, openEditStaff, closeStaffModal,
     saveStaff, sendSetupLinkFromModal, handleLinkStaff, handleInviteStaff,
+    handleResendInvite,
     handleAcceptJoinRequest, handleDeclineJoinRequest, deleteStaff, toggleStaff, toggleStaffTipsFlow,
-    handleAcceptUnlinkRequest, handleDeclineUnlinkRequest
+    handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
+    // Expose mutation states for loading indicators
+    inviteStaffMutation,
+    resendInviteMutation,
+    linkRequestMutation,
+    updateStatusMutation,
+    removeStaffMutation,
   }
 }

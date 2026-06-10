@@ -25,6 +25,8 @@ export const COUNTRY_CODES = [
   { name: 'Indonesia', code: 'ID', dialCode: '+62', flag: '🇮🇩' },
 ]
 
+import { AsYouType, isValidPhoneNumber } from 'libphonenumber-js'
+
 export const parsePhone = (phoneStr) => {
   if (!phoneStr) return { countryCode: '+1', nationalNumber: '' }
   
@@ -44,6 +46,26 @@ export const parsePhone = (phoneStr) => {
     }
   }
   return { countryCode: '+1', nationalNumber: phoneStr }
+}
+
+export const getCountryByDialCode = (dialCode) => {
+  return COUNTRY_CODES.find(c => c.dialCode === dialCode) || COUNTRY_CODES.find(c => c.code === 'US')
+}
+
+export const formatNationalNumber = (nationalNumber, dialCode) => {
+  const country = getCountryByDialCode(dialCode)
+  // Ensure we format just the national part
+  const formatter = new AsYouType(country.code)
+  return formatter.input(nationalNumber)
+}
+
+export const isPhoneValid = (phoneStr) => {
+  if (!phoneStr) return false
+  try {
+    return isValidPhoneNumber(phoneStr)
+  } catch (e) {
+    return false
+  }
 }
 
 export default function CountryCodeSelect({ value, onChange, disabled = false }) {

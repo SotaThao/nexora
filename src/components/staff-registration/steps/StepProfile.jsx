@@ -1,6 +1,6 @@
 import React from 'react'
 import { Upload, Loader2, CheckCircle2, XCircle, QrCode, HelpCircle, X } from 'lucide-react'
-import CountryCodeSelect from '../../CountryCodeSelect'
+import CountryCodeSelect, { formatNationalNumber, isPhoneValid } from '../../CountryCodeSelect'
 import { renderLabel } from '../../../contexts/LanguageContext'
 import ImageFileInput from '../../ui/ImageFileInput'
 
@@ -17,7 +17,7 @@ export default function StepProfile({
   vlinkpayId,
   phoneParsed,
   vlinkpayStatus,
-  isSelfServe,
+  contactLocked,
   currentLanguage, t,
   handleVlinkpayIdChange,
   handleScanQr,
@@ -126,14 +126,17 @@ export default function StepProfile({
                 onChange={(newCode) => {
                   setPhone(`${newCode} ${phoneParsed.nationalNumber}`.trim())
                 }}
-                disabled={!isSelfServe}
+                disabled={contactLocked}
               />
               <input
                 type="text"
-                className={`h-10 w-full rounded-r-lg border border-l-0 border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:outline-none transition-all min-w-0 ${!isSelfServe ? 'bg-nexoraSurfaceMuted text-nexoraMuted' : 'bg-white text-nexoraText'}`}
+                className={`h-10 w-full rounded-r-lg border border-l-0 border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:outline-none transition-all min-w-0 ${contactLocked ? 'bg-nexoraSurfaceMuted text-nexoraMuted' : 'bg-white text-nexoraText'}`}
                 value={phoneParsed.nationalNumber}
-                onChange={(e) => setPhone(`${phoneParsed.countryCode} ${e.target.value}`.trim())}
-                disabled={!isSelfServe}
+                onChange={(e) => {
+                  const formatted = formatNationalNumber(e.target.value, phoneParsed.countryCode)
+                  setPhone(`${phoneParsed.countryCode} ${formatted}`.trim())
+                }}
+                disabled={contactLocked}
                 placeholder={t('components.staff_registration.steps.StepProfile.phPhone')}
                 required
               />
@@ -145,10 +148,10 @@ export default function StepProfile({
             </label>
             <input
               type="email"
-              className={`mt-1.5 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:outline-none transition-all ${isSelfServe ? 'bg-white text-nexoraText' : 'bg-nexoraSurfaceMuted text-nexoraMuted'}`}
+              className={`mt-1.5 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:outline-none transition-all ${contactLocked ? 'bg-nexoraSurfaceMuted text-nexoraMuted' : 'bg-white text-nexoraText'}`}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              disabled={!isSelfServe}
+              disabled={contactLocked}
               placeholder={t('components.staff_registration.steps.StepProfile.phExampleEmail')}
               required
             />
@@ -199,7 +202,7 @@ export default function StepProfile({
         <button
           type="button"
           onClick={() => setStep(3)}
-          disabled={!fullName.trim()}
+          disabled={!fullName.trim() || !phone.trim() || !isPhoneValid(phone)}
           className="flex-grow h-10 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-bold text-xs uppercase tracking-wider rounded-lg transition disabled:opacity-50"
         >
           {t('common.next')}

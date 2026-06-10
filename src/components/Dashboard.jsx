@@ -12,7 +12,8 @@ import { DEFAULT_PAYOUT_CONFIGS, MENU_ITEMS } from './dashboard/constants'
 import { slugify, getPayoutConfigsFromMember } from './dashboard/utils'
 import { useDashboardNavigation } from './dashboard/hooks/useDashboardNavigation'
 import { useDevices } from './dashboard/hooks/useDevices'
-import { useStaffManagement, normaliseMember } from './dashboard/hooks/useStaffManagement'
+import { useStaffManagement } from './dashboard/hooks/useStaffManagement'
+import { useMerchantStaff } from '../data/hooks/useMerchantStaff'
 import { useChartDateRange } from '../hooks/useChartDateRange'
 import { useTransactions } from '../data/hooks/useTransactions'
 import { useReviews } from '../data/hooks/useReviews'
@@ -36,6 +37,7 @@ import StaffDetailView from './StaffDetailView'
 import StaffModal from './dashboard/modals/StaffModal'
 import QrModal from './dashboard/modals/QrModal'
 import InviteShareModal from './dashboard/modals/InviteShareModal'
+import AddTouchpointModal from './dashboard/modals/AddTouchpointModal'
 
 // ---------------------------------------------------------------------------
 // Default notifications seeded on first dashboard load (no storage data yet)
@@ -85,6 +87,7 @@ export default function Dashboard({
   const { data: notificationsData } = useNotifications()
   const { data: profileSettingsData } = useProfileSettings()
   const { data: merchantSetupData } = useMerchantSetup()
+  const { data: merchantStaffData, isLoading: isStaffLoading } = useMerchantStaff()
 
   const replaceAllNotificationsMutation = useReplaceAllNotifications()
   const markNotificationReadMutation = useMarkNotificationRead()
@@ -195,6 +198,8 @@ export default function Dashboard({
   const [qrTarget, setQrTarget] = useState(null)
   const [reviewFilterStaff, setReviewFilterStaff] = useState('all')
   const [newTouchpoint, setNewTouchpoint] = useState({ name: '', type: 'Table QR' })
+  const [isAddTouchpointModalOpen, setIsAddTouchpointModalOpen] = useState(false)
+  const [addTouchpointPrefill, setAddTouchpointPrefill] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeKpi, setActiveKpi] = useState('tips')
   const { chartRange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate, handleChartRangeChange } = useChartDateRange(transactions)
@@ -204,7 +209,8 @@ export default function Dashboard({
   const businessName = profile?.businessName || setupData?.businessInfo?.name || ''
 
   const {
-    staff, setStaff,
+    staff,
+    isStaffLoading: staffLoading,
     staffForm, setStaffForm,
     errors, setErrors,
     editingStaffId, setEditingStaffId,
@@ -216,47 +222,41 @@ export default function Dashboard({
     inviteShareDefaultContact, setInviteShareDefaultContact,
     resetStaffForm, openAddStaff, openApproveStaff, openEditStaff, closeStaffModal,
     saveStaff, sendSetupLinkFromModal, handleLinkStaff, handleInviteStaff,
+    handleResendInvite,
     handleAcceptJoinRequest, handleDeclineJoinRequest, deleteStaff, toggleStaff, toggleStaffTipsFlow,
-    handleAcceptUnlinkRequest, handleDeclineUnlinkRequest
-  } = useStaffManagement({ setupData, businessName, setTouchpoints, viewingStaffDetailId, setViewingStaffDetailId })
+    handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
+    inviteStaffMutation,
+  } = useStaffManagement({ staffData: merchantStaffData, isStaffLoading, businessName, setTouchpoints, viewingStaffDetailId, setViewingStaffDetailId })
 
   // ---------------------------------------------------------------------------
-  // Sync staff+touchpoints to repo whenever they change.
-  // Previously done by a manual storage write; now goes through mutation →
-  // repository → storageAdapter, and auto-invalidates the merchantSetup query
-  // key so the bridge and other components see the update.
+  // Sync touchpoints to repo whenever they change.
+  // Staff is now managed via dedicated API endpoints (mutations invalidate cache).
   // ---------------------------------------------------------------------------
-  const lastSavedStaff = useRef(null)
   const lastSavedTouchpoints = useRef(null)
 
   useEffect(() => {
     // Skip on initial mount (no change yet).
-    if (lastSavedStaff.current === null && lastSavedTouchpoints.current === null) {
-      lastSavedStaff.current = staff
+    if (lastSavedTouchpoints.current === null) {
       lastSavedTouchpoints.current = touchpoints
       return
     }
     // Skip if nothing changed.
-    if (lastSavedStaff.current === staff && lastSavedTouchpoints.current === touchpoints) {
+    if (lastSavedTouchpoints.current === touchpoints) {
       return
     }
-    lastSavedStaff.current = staff
     lastSavedTouchpoints.current = touchpoints
 
     const base = merchantSetupData ?? setupData ?? {}
-    saveMerchantSetupMutation.mutate({ ...base, staffList: staff, touchPoints: touchpoints })
-  // eslint-disable name react-hooks/exhaustive-deps
+    saveMerchantSetupMutation.mutate({ ...base, touchPoints: touchpoints })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [staff, touchpoints])
+  }, [touchpoints])
 
   // Define hasSetup state
   const hasSetup = !!(merchantSetupData || setupData)
 
-  // Seed staff / touchpoints from setupData prop (takes priority).
+  // Seed touchpoints from setupData prop (takes priority).
+  // Staff is now loaded from useMerchantStaff() query — no local seeding needed.
   useEffect(() => {
-    if (setupData?.staffList?.length) {
-      setStaff(setupData.staffList.map(normaliseMember))
-    }
     if (setupData?.touchPoints?.length) {
       setTouchpoints(setupData.touchPoints)
     }
@@ -264,13 +264,9 @@ export default function Dashboard({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setupData])
 
-  // Seed staff / touchpoints from persisted merchant-setup query (returning users
+  // Seed touchpoints from persisted merchant-setup query (returning users
   // who have no setupData prop but have data in the repository).
   useEffect(() => {
-    if (setupData?.staffList?.length) return  // setupData already handled above
-    if (merchantSetupData?.staffList?.length) {
-      setStaff(merchantSetupData.staffList.map(normaliseMember))
-    }
     if (!setupData?.touchPoints?.length && merchantSetupData?.touchPoints?.length) {
       setTouchpoints(merchantSetupData.touchPoints)
     }
@@ -319,9 +315,9 @@ export default function Dashboard({
     if (!searchQuery) return visibleStaff
     const query = searchQuery.toLowerCase().trim()
     return visibleStaff.filter(member =>
-      member.fullName.toLowerCase().includes(query) ||
-      member.nickname.toLowerCase().includes(query) ||
-      member.position.toLowerCase().includes(query)
+      member.fullName?.toLowerCase().includes(query) ||
+      (member.nickname && member.nickname.toLowerCase().includes(query)) ||
+      member.position?.toLowerCase().includes(query)
     )
   }, [staff, searchQuery])
 
@@ -425,10 +421,11 @@ export default function Dashboard({
   }
 
   const previewQr = (target) => {
+    const staffName = target.nickname || target.fullName
     setQrTarget({
-      name: target.name || `Personal QR - ${target.nickname}`,
+      name: target.name || `Personal QR - ${staffName}`,
       subtitle: target.position || target.type || 'Staff QR',
-      slug: target.nickname ? `staff/${slugify(target.nickname)}` : `tp/${target.id}`,
+      slug: staffName ? `staff/${slugify(staffName)}` : `tp/${target.id}`,
       isActive: target.isActive !== undefined ? target.isActive : true
     })
   }
@@ -522,6 +519,7 @@ export default function Dashboard({
         staff={filteredStaff}
         pendingStaff={pendingStaff}
         allStaff={staff}
+        isLoading={staffLoading}
         onApproveClick={openApproveStaff}
         onAdd={openAddStaff}
         onEdit={openEditStaff}
@@ -532,6 +530,7 @@ export default function Dashboard({
         onViewDetail={setViewingStaffDetailId}
         onLinkStaff={handleLinkStaff}
         onInviteStaff={handleInviteStaff}
+        onResendInvite={handleResendInvite}
         businessName={businessName}
         onAcceptJoin={handleAcceptJoinRequest}
         onDeclineJoin={handleDeclineJoinRequest}
@@ -548,9 +547,10 @@ export default function Dashboard({
       return (
         <TouchpointsView
           touchpoints={filteredTouchpoints}
-          newTouchpoint={newTouchpoint}
-          setNewTouchpoint={setNewTouchpoint}
-          onAdd={addTouchpoint}
+          onOpenAddModal={(prefill) => {
+            setAddTouchpointPrefill(prefill || null)
+            setIsAddTouchpointModalOpen(true)
+          }}
           onDelete={(id) => setTouchpoints((current) => current.filter((point) => point.id !== id))}
           onQr={previewQr}
           onToggleStatus={toggleTouchpointStatus}
@@ -645,7 +645,10 @@ export default function Dashboard({
         <DashboardHeader
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
-          onAddTouchpoint={() => setActiveMenu('touchpoints')}
+          onAddTouchpoint={() => {
+            setAddTouchpointPrefill(null)
+            setIsAddTouchpointModalOpen(true)
+          }}
           profile={profile}
           businessName={businessName}
           onNavigateSettingsTab={(tab) => {
@@ -768,6 +771,17 @@ export default function Dashboard({
       />
       <QrModal target={qrTarget} businessName={businessName} onClose={() => setQrTarget(null)} />
 
+      <AddTouchpointModal
+        open={isAddTouchpointModalOpen}
+        initialValues={addTouchpointPrefill}
+        onClose={() => setIsAddTouchpointModalOpen(false)}
+        onAdd={(name, type, deviceId) => {
+          addTouchpoint(name, type, deviceId)
+          setActiveMenu('touchpoints')
+          setTouchpointsTab('stations')
+        }}
+      />
+
       <InviteShareModal
         open={isInviteShareOpen}
         businessName={businessName}
@@ -775,44 +789,7 @@ export default function Dashboard({
         defaultContact={inviteShareDefaultContact}
         onClose={() => setIsInviteShareOpen(false)}
         onSendInvite={(name, contact, role) => {
-          const isEmail = contact.includes('@')
-          const tempId = `NEX-STAFF-${Math.floor(100000 + Math.random() * 900000)}`
-
-          const newMember = {
-            id: tempId,
-            fullName: name.trim() || 'New Technician',
-            nickname: name.trim() ? name.trim().split(' ')[0] + '.' : 'Tech.',
-            position: role || 'Nail Technician',
-            avatar: '',
-            phone: isEmail ? '' : contact.trim(),
-            email: isEmail ? contact.trim() : '',
-            isActive: false,
-            status: 'Pending Setup',
-            flowType: 'Invite New Staff',
-            paymentAccounts: {},
-            payoutConfigs: { ...DEFAULT_PAYOUT_CONFIGS }
-          }
-
-          setStaff((current) => [...current, newMember])
-          setTouchpoints((current) => [...current, {
-            id: `tp-staff-${newMember.id}`,
-            name: `Personal QR - ${newMember.nickname}`,
-            type: 'Staff QR',
-            staffId: newMember.id,
-            staffName: newMember.nickname
-          }])
-
-          const event = new CustomEvent('showSimulationInvite', {
-            detail: {
-              id: tempId,
-              name: newMember.fullName,
-              email: newMember.email,
-              phone: newMember.phone,
-              role: role || 'Nail Technician',
-              biz: businessName
-            }
-          })
-          window.dispatchEvent(event)
+          handleInviteStaff(name, contact, role)
           setIsInviteShareOpen(false)
           closeStaffModal()
         }}

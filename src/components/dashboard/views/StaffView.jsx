@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react'
-import { AlertCircle, Plus, HelpCircle, Trash2, User, QrCode, Edit2, Link, Copy, X, Share2, Eye } from 'lucide-react'
+import { AlertCircle, Plus, HelpCircle, Trash2, User, QrCode, Edit2, Link, Copy, X, Share2, Eye, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
+import { useSearchMerchantStaff } from '../../../data/hooks/useMerchantStaff'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
 
@@ -9,6 +10,7 @@ function StaffView({
   staff,
   pendingStaff = [],
   allStaff = [],
+  isLoading = false,
   onApproveClick,
   onAdd,
   onEdit,
@@ -19,6 +21,7 @@ function StaffView({
   onViewDetail,
   onLinkStaff,
   onInviteStaff,
+  onResendInvite,
   businessName,
   onAcceptJoin,
   onDeclineJoin,
@@ -37,6 +40,9 @@ function StaffView({
   const [selectedRole, setSelectedRole] = useState('Nail Technician')
   const [searchResult, setSearchResult] = useState(null)
   const [searchError, setSearchError] = useState('')
+
+  // API search hook (enabled only when query is non-empty)
+  const { data: searchResults, isLoading: isSearching } = useSearchMerchantStaff(searchQuery.trim())
 
     const sortedStaff = useMemo(() => {
     return [...staff].sort((a, b) => {
@@ -91,36 +97,26 @@ function StaffView({
   }).length
   const paymentCompletePct = allStaff.length ? Math.round((paymentCompleteCount / allStaff.length) * 100) : 100
 
-  // Option A Search
+  // Option A Search — uses API results from useSearchMerchantStaff
   const handleSearch = () => {
     setSearchError('')
     setSearchResult(null)
-    const query = searchQuery.trim().toLowerCase()
+    const query = searchQuery.trim()
     if (!query) return
 
-    // Search inside simulated global registry
-    const match = Object.values(MOCK_NEXORA_STAFF_PROFILES).find(profile => {
-      const globalId = Object.keys(MOCK_NEXORA_STAFF_PROFILES).find(key => MOCK_NEXORA_STAFF_PROFILES[key] === profile)
-      return (
-        globalId?.toLowerCase() === query ||
-        profile.fullName.toLowerCase().includes(query) ||
-        profile.email.toLowerCase() === query ||
-        profile.phone.replace(/[^0-9]/g, '').includes(query.replace(/[^0-9]/g, ''))
-      )
-    })
-
-    if (match) {
-      const matchedId = Object.keys(MOCK_NEXORA_STAFF_PROFILES).find(key => MOCK_NEXORA_STAFF_PROFILES[key] === match)
-      setSearchResult({ ...match, id: matchedId })
+    // searchResults comes from the API hook (debounced by TanStack Query)
+    if (searchResults && searchResults.length > 0) {
+      // Take the first result as the match
+      setSearchResult(searchResults[0])
     } else {
       setSearchError(t('components.dashboard.views.StaffView.noStaffProfileFound'))
     }
   }
 
-  // Option A Link Request
+  // Option A Link Request — sends to API via mutation
   const handleLinkRequest = () => {
     if (!searchResult) return
-    onLinkStaff(searchResult, selectedRole)
+    onLinkStaff(searchResult)
     setSearchResult(null)
     setSearchQuery('')
   }
@@ -137,13 +133,11 @@ function StaffView({
     setInviteContact('')
   }
 
-  // Resend invite toast simulator
+  // Resend invite — calls API via mutation prop
   const handleResendInvite = (member) => {
-    showToast(currentLanguage === 'vi'
-      ? `Đã gửi lại link thiết lập thành công tới ${member.fullName}!`
-      : `Setup link successfully resent to ${member.fullName}!`,
-      'success'
-    )
+    if (onResendInvite) {
+      onResendInvite(member)
+    }
   }
 
   // Helper to extract wallet labels
@@ -407,7 +401,7 @@ function StaffView({
                           <img src={member.avatar} alt="" className="h-10 w-10 rounded-full border border-nexoraBorder object-cover group-hover:opacity-85 transition" />
                         ) : (
                           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-50 text-sm font-extrabold text-indigo-600 group-hover:bg-indigo-100 transition">
-                            {member.nickname.charAt(0)}
+                            {member.nickname?.charAt(0) || member.fullName?.charAt(0) || '?'}
                           </div>
                         )}
                         <div>

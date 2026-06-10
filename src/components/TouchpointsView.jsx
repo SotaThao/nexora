@@ -42,7 +42,7 @@ function IconButton({ label, children, className = '', ...props }) {
 
 export default function TouchpointsView({
   touchpoints = [],
-  onAdd,
+  onOpenAddModal,
   onDelete,
   onQr,
   onToggleStatus,
@@ -61,7 +61,7 @@ export default function TouchpointsView({
   const activeSubTab = propActiveSubTab !== undefined ? propActiveSubTab : localActiveSubTab
   const setActiveSubTab = onTabChange !== undefined ? onTabChange : setLocalActiveSubTab
   const [deleteConfirmId, setDeleteConfirmId] = useState(null)
-  
+
   // Local state for the Add Touchpoint form
   const [name, setName] = useState('')
   const [type, setType] = useState('Table QR')
@@ -90,9 +90,9 @@ export default function TouchpointsView({
   }, [])
 
   const handleAdd = () => {
-    if (!name.trim()) return
-    if (onAdd) {
-      onAdd(name.trim(), type, deviceId.trim())
+    // Hand off to the Add Touch Point modal, prefilled with anything typed here.
+    if (onOpenAddModal) {
+      onOpenAddModal({ name: name.trim(), type, deviceId: deviceId.trim() })
     }
     setName('')
     setDeviceId('')

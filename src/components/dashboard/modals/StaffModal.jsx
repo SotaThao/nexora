@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { X, Upload, Eye, AlertTriangle, QrCode, Loader2, CheckCircle2, XCircle, Star, HelpCircle } from 'lucide-react'
 import IconButton from '../../ui/IconButton'
 import ImageFileInput from '../../ui/ImageFileInput'
-import CountryCodeSelect, { parsePhone } from '../../CountryCodeSelect'
+import CountryCodeSelect, { parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
 import { WalletLogos, DEFAULT_PAYOUT_CONFIGS } from '../constants'
 import { useTranslation, renderLabel } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -571,7 +571,10 @@ function StaffModal({
                   <input
                     className="h-10 w-full rounded-r-lg border border-l-0 border-nexoraBorder px-3 text-sm outline-none focus:border-nexoraBrand bg-white min-w-0"
                     value={phoneParsed.nationalNumber}
-                    onChange={(event) => setForm({ ...form, phone: `${phoneParsed.countryCode} ${event.target.value}`.trim() })}
+                    onChange={(event) => {
+                      const formatted = formatNationalNumber(event.target.value, phoneParsed.countryCode)
+                      setForm({ ...form, phone: `${phoneParsed.countryCode} ${formatted}`.trim() })
+                    }}
                     placeholder={t('setup.staff_phone_placeholder')}
                   />
                 </div>

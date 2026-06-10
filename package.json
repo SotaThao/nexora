@@ -30,6 +30,7 @@
     "@capacitor/ios": "^8.4.0",
     "@capgo/capacitor-updater": "^8.49.0",
     "@tanstack/react-query": "^5.0.0",
+    "libphonenumber-js": "^1.13.6",
     "lucide-react": "^0.344.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

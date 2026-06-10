@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import LoginScreen from './app/LoginScreen'
 import AppRouter from './app/AppRouter'
 import { useTranslation } from './contexts/LanguageContext'
@@ -52,6 +52,10 @@ export default function App() {
   const [simulationNotification, setSimulationNotification] = useState(null)
   const [loggedInStaffId, setLoggedInStaffId] = useState(null)
 
+  // True once a public deep-link route (invite / touch / customer / reset) has
+  // claimed the view on mount. Prevents session auto-restore from overriding it.
+  const deepLinkHandledRef = useRef(false)
+
   // Load setup data or customer flow on mount
   useEffect(() => {
     initStorage()
@@ -72,20 +76,38 @@ export default function App() {
       return
     }
     if (action === 'reset-password') {
+      deepLinkHandledRef.current = true
       setView('reset-password')
       return
     }
     if (params.get('flow') === 'customer') {
+      deepLinkHandledRef.current = true
       setView('customer')
       return
     }
     // Public customer touch route: /touch/{businessSlug}/{touchPointSlug}
     const pathParts = window.location.pathname.split('/').filter(Boolean)
     if (pathParts[0] === 'touch' && pathParts.length >= 3) {
+      deepLinkHandledRef.current = true
       setView('customer')
       return
     }
+    // Token-based staff invite (magic link): /invite/{token}
+    // Also accept legacy /staff/invite/{token} for backward compatibility.
+    const inviteToken =
+      pathParts[0] === 'invite' && pathParts[1]
+        ? pathParts[1]
+        : pathParts[0] === 'staff' && pathParts[1] === 'invite' && pathParts[2]
+          ? pathParts[2]
+          : null
+    if (inviteToken) {
+      deepLinkHandledRef.current = true
+      setStaffInviteData({ token: inviteToken })
+      setView('staff-portal')
+      return
+    }
     if (params.get('flow') === 'staff-invite') {
+      deepLinkHandledRef.current = true
       const bizName = params.get('biz') || ''
       setStaffInviteData({
         id: '',
@@ -113,8 +135,11 @@ export default function App() {
     }
   }, [])
 
-  // Restore session view on mount/load
+  // Restore session view on mount/load.
+  // Skip when a public deep-link (invite / touch / customer / reset) owns the
+  // view — those must not be hijacked by auto session-restore to the dashboard.
   useEffect(() => {
+    if (deepLinkHandledRef.current) return
     if (authStatus === 'authenticated' && session && view === 'login') {
       applySessionToView(session)
     }

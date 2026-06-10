@@ -7,6 +7,9 @@ import {
 
 export default function StepWelcome({
   inviteData,
+  businessName = '',
+  isInviteLoading = false,
+  isInviteError = false,
   joinPath, setJoinPath,
   searchId,
   linkedProfile,
@@ -31,6 +34,39 @@ export default function StepWelcome({
 }) {
   const [showLinkPassword, setShowLinkPassword] = useState(false)
 
+  // Token-based invite: while metadata loads or the token is invalid/expired,
+  // show a dedicated state instead of an empty invitation card.
+  if (isInviteLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+        <Loader2 className="h-7 w-7 text-nexoraBrand animate-spin" />
+        <p className="text-xs text-nexoraMuted font-semibold uppercase tracking-wider">
+          {currentLanguage === 'vi' ? 'Đang tải lời mời…' : 'Loading invitation…'}
+        </p>
+      </div>
+    )
+  }
+
+  if (isInviteError) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+        <div className="h-14 w-14 rounded-full bg-nexoraDanger/10 flex items-center justify-center text-nexoraDanger">
+          <XCircle className="h-7 w-7" />
+        </div>
+        <div className="space-y-1">
+          <h3 className="text-base font-black text-nexoraText tracking-tight">
+            {currentLanguage === 'vi' ? 'Lời mời không hợp lệ' : 'Invitation Not Valid'}
+          </h3>
+          <p className="text-xs text-nexoraMuted max-w-xs mx-auto leading-relaxed">
+            {currentLanguage === 'vi'
+              ? 'Liên kết lời mời này không hợp lệ hoặc đã hết hạn. Vui lòng liên hệ tiệm để được mời lại.'
+              : 'This invitation link is invalid or has expired. Please contact the salon to request a new invite.'}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
       {/* A. If merchant sent a direct prefilled invite */}
@@ -46,7 +82,7 @@ export default function StepWelcome({
                 {t('staff_invite.invite_from_biz')}
               </span>
               <h3 className="text-lg font-black text-nexoraText tracking-tight mt-2">
-                {inviteData?.biz || ''}
+                {businessName}
               </h3>
               <p className="text-xs text-nexoraMuted max-w-sm mx-auto leading-relaxed mt-1">
                 {t('staff_invite.invite_desc')}
@@ -123,7 +159,7 @@ export default function StepWelcome({
                     {t('components.staff_registration.steps.StepWelcome.salonNetworkInvitation')}
                   </span>
                   <h3 className="text-xl font-black text-nexoraText tracking-tight leading-snug">
-                    {inviteData?.biz || ''}
+                    {businessName}
                   </h3>
                   <p className="text-xs text-nexoraMuted max-w-sm mx-auto leading-relaxed font-medium">
                     {t('components.staff_registration.steps.StepWelcome.youHaveBeenInvited')}
@@ -337,7 +373,7 @@ export default function StepWelcome({
                       </div>
                       <div>
                         <h4 className="text-xs font-extrabold text-nexoraText font-sans">
-                          {inviteData?.biz || ''}
+                          {businessName}
                         </h4>
                         <span className="text-[10px] text-nexoraMuted">
                           {t('components.staff_registration.steps.StepWelcome.invitedRole')} {inviteData?.role || position}

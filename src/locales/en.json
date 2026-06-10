@@ -401,8 +401,13 @@
     "modals": {
       "add_tp_title": "Add New Touch Point",
       "tp_name_label": "Touch Point Name (e.g. Manicure Chair 05)",
+      "tp_name_placeholder": "e.g. Manicure Chair 05",
+      "device_id_label": "Hardware Serial / Device ID (Optional)",
+      "device_id_placeholder": "e.g. NFC-105, QR-Table-01",
       "tp_type_label": "Station Type",
       "add_btn": "Add Touch Point",
+      "tp_name_required": "Please enter a touch point name.",
+      "tp_added_success": "Touch point \"{name}\" added successfully!",
       "view_qr_title": "QR Code for {name}",
       "view_qr_desc": "Customers scan this code to Tip & Review directly for the assigned staff member.",
       "assign_staff": "Assign staff member:",
@@ -916,6 +921,19 @@
       "hooks": {
         "useCustomerFlow": {
           "addTipsForYour": "Add tips for your providers"
+        },
+        "useSimulationHandlers": {
+          "touchpointStaffPersonalQr": "Staff Personal QR",
+          "touchpointQr": "QR Touchpoint",
+          "touchpointLobby": "Lobby Welcome QR",
+          "tipReceivedTitle": "New Tip Received ({amount})",
+          "tipReceivedMessage": "{name} received {amount} tip via {method} at {touchpoint}.",
+          "reviewGoodComment": "Good service",
+          "reviewBadComment": "Needs improvement",
+          "reviewTitleGood": "New Review ({rating}★)",
+          "reviewTitleInternal": "New Internal Feedback ({rating}★)",
+          "reviewMessage": "Customer left feedback for {name}: \"{comment}\"",
+          "justNow": "Just now"
         }
       },
       "steps": {
