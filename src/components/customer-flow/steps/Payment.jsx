@@ -66,7 +66,7 @@ export default function Payment({
           if (selectedStaffMembers.length === 1) {
             const staff = selectedStaffMembers[0]
             if (selectedStaffHasAnyPayment) {
-              return !!staff.paymentAccounts?.[wallet.key]
+              return staff.availablePaymentMethods?.some(m => m.toLowerCase() === wallet.key.toLowerCase())
             } else {
               return !!businessPaymentAccounts?.[wallet.key]
             }

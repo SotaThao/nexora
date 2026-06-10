@@ -1,5 +1,5 @@
-// 1. React
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { Outlet, useNavigate } from 'react-router-dom'
 
 // 2. Third-party
 import { Filter, Moon, Settings, ShieldAlert, Sun, Check, Link } from 'lucide-react'
@@ -12,7 +12,9 @@ import { DEFAULT_PAYOUT_CONFIGS, MENU_ITEMS } from './dashboard/constants'
 import { slugify, getPayoutConfigsFromMember } from './dashboard/utils'
 import { useDashboardNavigation } from './dashboard/hooks/useDashboardNavigation'
 import { useDevices } from './dashboard/hooks/useDevices'
+import { useKybGate } from '../contexts/KybGateContext'
 import { useStaffManagement } from './dashboard/hooks/useStaffManagement'
+import { useTouchpoints, useCreateTouchpoint, useDeleteTouchpoint, useDownloadTouchpointQr } from '../data/hooks/useMerchantTouchpoints'
 import { useMerchantStaff } from '../data/hooks/useMerchantStaff'
 import { useChartDateRange } from '../hooks/useChartDateRange'
 import { useTransactions } from '../data/hooks/useTransactions'
@@ -53,7 +55,6 @@ export default function Dashboard({
   verificationStatus = 'kyb_approved',
   hasKyb = verificationStatus === 'kyb_approved',
   userEmail = '',
-  onKybRequired,
   onKybSuccess,
   initialMenu = 'overview',
   initialSettingsTab = 'profile',
@@ -64,8 +65,9 @@ export default function Dashboard({
 }) {
   const { currentLanguage, t } = useTranslation()
   const { showToast, showConfirm } = useNotification()
+  const { requireKyb } = useKybGate()
   const {
-    activeMenu, setActiveMenu,
+    activeMenu,
     isMobileMenuOpen, setIsMobileMenuOpen,
     tipsTab, setTipsTab,
     isTipsMobileExpanded, setIsTipsMobileExpanded,
@@ -73,10 +75,9 @@ export default function Dashboard({
     isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded,
     settingsTab, setSettingsTab,
     isProfileExpanded, setIsProfileExpanded,
-    viewingStaffDetailId, setViewingStaffDetailId,
     handleNavigateMenu, navigateMenu
-  } = useDashboardNavigation(initialMenu, initialSettingsTab)
-  const [showKybWarningModal, setShowKybWarningModal] = useState(false)
+  } = useDashboardNavigation()
+  const navigate = useNavigate()
   const [processingFee, setProcessingFee] = useState(3.0)
 
   // ---------------------------------------------------------------------------
@@ -179,20 +180,11 @@ export default function Dashboard({
 
   const [isNotiDropdownOpen, setIsNotiDropdownOpen] = useState(false)
 
-  // Touchpoints — thin local mirror; bridge invalidation refetches setup and
-  // the effect below syncs to local state.
-  const [touchpoints, setTouchpoints] = useState(() => {
-    if (merchantSetupData?.touchPoints?.length) return merchantSetupData.touchPoints
-    if (setupData?.touchPoints?.length) return setupData.touchPoints
-    return []
-  })
-
-  // Sync touchpoints when merchant setup query updates.
-  useEffect(() => {
-    if (merchantSetupData?.touchPoints?.length) {
-      setTouchpoints(merchantSetupData.touchPoints)
-    }
-  }, [merchantSetupData])
+  // Use API hooks for Touchpoints
+  const { data: touchpointsData } = useTouchpoints()
+  const touchpoints = touchpointsData?.items || []
+  const createTouchpointMutation = useCreateTouchpoint()
+  const deleteTouchpointMutation = useDeleteTouchpoint()
 
   const { devices, setDevices, handleAddDevice, handleDeleteDevice, handleToggleDeviceStatus } = useDevices()
   const [qrTarget, setQrTarget] = useState(null)
@@ -226,52 +218,12 @@ export default function Dashboard({
     handleAcceptJoinRequest, handleDeclineJoinRequest, deleteStaff, toggleStaff, toggleStaffTipsFlow,
     handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     inviteStaffMutation,
-  } = useStaffManagement({ staffData: merchantStaffData, isStaffLoading, businessName, setTouchpoints, viewingStaffDetailId, setViewingStaffDetailId })
+  } = useStaffManagement({ staffData: merchantStaffData, isStaffLoading, businessName })
 
-  // ---------------------------------------------------------------------------
-  // Sync touchpoints to repo whenever they change.
-  // Staff is now managed via dedicated API endpoints (mutations invalidate cache).
-  // ---------------------------------------------------------------------------
-  const lastSavedTouchpoints = useRef(null)
-
-  useEffect(() => {
-    // Skip on initial mount (no change yet).
-    if (lastSavedTouchpoints.current === null) {
-      lastSavedTouchpoints.current = touchpoints
-      return
-    }
-    // Skip if nothing changed.
-    if (lastSavedTouchpoints.current === touchpoints) {
-      return
-    }
-    lastSavedTouchpoints.current = touchpoints
-
-    const base = merchantSetupData ?? setupData ?? {}
-    saveMerchantSetupMutation.mutate({ ...base, touchPoints: touchpoints })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [touchpoints])
+  // Sync touchpoints removed (now handled by React Query cache)
 
   // Define hasSetup state
   const hasSetup = !!(merchantSetupData || setupData)
-
-  // Seed touchpoints from setupData prop (takes priority).
-  // Staff is now loaded from useMerchantStaff() query — no local seeding needed.
-  useEffect(() => {
-    if (setupData?.touchPoints?.length) {
-      setTouchpoints(setupData.touchPoints)
-    }
-  // Only re-run when setupData reference changes.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setupData])
-
-  // Seed touchpoints from persisted merchant-setup query (returning users
-  // who have no setupData prop but have data in the repository).
-  useEffect(() => {
-    if (!setupData?.touchPoints?.length && merchantSetupData?.touchPoints?.length) {
-      setTouchpoints(merchantSetupData.touchPoints)
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [merchantSetupData])
 
   // For staff dashboard: populate profile info from their staff profile.
   useEffect(() => {
@@ -397,35 +349,38 @@ export default function Dashboard({
     const finalDeviceId = typeof deviceId === 'string' ? deviceId.trim() : ''
 
     if (!finalName) return
-    setTouchpoints((current) => [...current, {
-      id: `tp-${Date.now()}`,
+    
+    createTouchpointMutation.mutate({
       name: finalName,
-      type: finalType,
-      deviceId: finalDeviceId || undefined,
-      isActive: true,
-      scans: 0
-    }])
+      type: finalType === 'Table QR' ? 'Table' : finalType === 'Front Desk' ? 'FrontDesk' : finalType === 'Receipt QR' ? 'Receipt' : finalType === 'Staff QR' ? 'StaffCard' : 'Table',
+      // If we supported hardware linkage, we would map finalDeviceId here.
+    })
+    
     setNewTouchpoint({ name: '', type: 'Table QR' })
   }
 
   const linkDevice = (id, deviceId) => {
-    setTouchpoints((current) =>
-      current.map((point) =>
-        point.id === id ? { ...point, deviceId: deviceId.trim() || undefined } : point
-      )
-    )
+    // API not yet supported for device linking in touchpoints
   }
 
   const toggleTouchpointStatus = (id) => {
-    setTouchpoints((current) => current.map((point) => point.id === id ? { ...point, isActive: point.isActive === false ? true : false } : point))
+    // Toggle not supported by API yet. Use delete.
+  }
+
+  const deleteTouchpoint = (id) => {
+    deleteTouchpointMutation.mutate(id)
   }
 
   const previewQr = (target) => {
     const staffName = target.nickname || target.fullName
+    const finalSlug = target.slug 
+      ? target.slug 
+      : (staffName ? `staff-${slugify(staffName)}` : slugify(target.name || target.id || 'general'))
+
     setQrTarget({
       name: target.name || `Personal QR - ${staffName}`,
       subtitle: target.position || target.type || 'Staff QR',
-      slug: staffName ? `staff/${slugify(staffName)}` : `tp/${target.id}`,
+      slug: finalSlug,
       isActive: target.isActive !== undefined ? target.isActive : true
     })
   }
@@ -434,7 +389,7 @@ export default function Dashboard({
     setSelectedLeaderboardStaff(nickname)
     const member = staff.find((s) => s.nickname === nickname || s.fullName.toLowerCase().includes(nickname.toLowerCase().split(' ')[0]))
     if (member) {
-      setViewingStaffDetailId(member.id)
+      navigate(`/dashboard/staff/${member.id}`)
     }
   }
 
@@ -447,176 +402,18 @@ export default function Dashboard({
     replaceAllNotificationsMutation.mutate(next)
   }
 
-  const renderContent = () => {
-    if (userRole === 'staff') {
-      const activeDetailStaff = staff.find((member) => member.id === currentStaffId)
-      if (activeDetailStaff) {
-        return (
-          <StaffDetailView
-            staffMember={activeDetailStaff}
-            onBack={null}
-            transactions={transactions}
-            reviews={reviews}
-            onEdit={openEditStaff}
-            onQr={previewQr}
-            onDelete={null}
-          />
-        )
-      } else {
-        return (
-          <div className="flex h-64 flex-col items-center justify-center space-y-3 nexora-card p-6">
-            <div className="text-sm font-semibold text-nexoraMuted">
-              {t('components.dashboardRoot.yourStaffProfileWas')}
-            </div>
-          </div>
-        )
-      }
-    }
-
-    if (viewingStaffDetailId) {
-      const activeDetailStaff = staff.find((member) => member.id === viewingStaffDetailId)
-      if (activeDetailStaff) {
-        return (
-          <StaffDetailView
-            staffMember={activeDetailStaff}
-            onBack={() => setViewingStaffDetailId(null)}
-            transactions={transactions}
-            reviews={reviews}
-            onEdit={openEditStaff}
-            onQr={previewQr}
-            onDelete={deleteStaff}
-          />
-        )
-      }
-    }
-    if (activeMenu === 'overview') {
-      return (
-        <Overview
-          metrics={metrics}
-          activeKpi={activeKpi}
-          setActiveKpi={setActiveKpi}
-          chartRange={chartRange}
-          setChartRange={handleChartRangeChange}
-          chartStartDate={chartStartDate}
-          chartEndDate={chartEndDate}
-          setChartStartDate={setChartStartDate}
-          setChartEndDate={setChartEndDate}
-          transactions={transactions}
-          selectedStaff={selectedLeaderboardStaff}
-          setSelectedStaff={handleSelectLeaderboardStaff}
-          onOpenTouchpoints={() => navigateMenu('touchpoints')}
-          onOpenReviews={() => navigateMenu('reviews')}
-          businessName={businessName}
-          previewQr={previewQr}
-          hasKyb={hasKyb}
-          hasSetup={hasSetup}
-          onStartSetup={onStartSetup}
-        />
-      )
-    }
-    if (activeMenu === 'staff') return (
-      <StaffView
-        staff={filteredStaff}
-        pendingStaff={pendingStaff}
-        allStaff={staff}
-        isLoading={staffLoading}
-        onApproveClick={openApproveStaff}
-        onAdd={openAddStaff}
-        onEdit={openEditStaff}
-        onDelete={deleteStaff}
-        onQr={previewQr}
-        onToggle={toggleStaff}
-        onToggleTipsFlow={toggleStaffTipsFlow}
-        onViewDetail={setViewingStaffDetailId}
-        onLinkStaff={handleLinkStaff}
-        onInviteStaff={handleInviteStaff}
-        onResendInvite={handleResendInvite}
-        businessName={businessName}
-        onAcceptJoin={handleAcceptJoinRequest}
-        onDeclineJoin={handleDeclineJoinRequest}
-        onAcceptUnlink={handleAcceptUnlinkRequest}
-        onDeclineUnlink={handleDeclineUnlinkRequest}
-        onOpenInviteShare={() => {
-          setInviteShareDefaultName('')
-          setInviteShareDefaultContact('')
-          setIsInviteShareOpen(true)
-        }}
-      />
-    )
-    if (activeMenu === 'touchpoints') {
-      return (
-        <TouchpointsView
-          touchpoints={filteredTouchpoints}
-          onOpenAddModal={(prefill) => {
-            setAddTouchpointPrefill(prefill || null)
-            setIsAddTouchpointModalOpen(true)
-          }}
-          onDelete={(id) => setTouchpoints((current) => current.filter((point) => point.id !== id))}
-          onQr={previewQr}
-          onToggleStatus={toggleTouchpointStatus}
-          onLinkDevice={linkDevice}
-          transactions={transactions}
-          businessName={businessName}
-          devices={devices}
-          onAddDevice={handleAddDevice}
-          onDeleteDevice={handleDeleteDevice}
-          onToggleDeviceStatus={handleToggleDeviceStatus}
-          activeSubTab={touchpointsTab}
-          onTabChange={setTouchpointsTab}
-        />
-      )
-    }
-    if (activeMenu === 'reviews') return (
-      <ReviewsView
-        reviews={filteredReviews}
-        staff={staff}
-        filter={reviewFilterStaff}
-        setFilter={setReviewFilterStaff}
-        setupData={setupData}
-      />
-    )
-    if (activeMenu === 'tips') return (
-      <TipsView
-        transactions={transactions}
-        staff={staff}
-        activeTab={tipsTab}
-        onTabChange={setTipsTab}
-        processingFee={processingFee}
-        setProcessingFee={setProcessingFee}
-      />
-    )
-    if (activeMenu === 'reports') return <ReportsView transactions={filteredTransactions} staff={staff} touchpoints={touchpoints} />
-    if (activeMenu === 'settings') {
-      return (
-        <SettingsView
-          setupData={setupData}
-          hasKyb={hasKyb}
-          verificationStatus={verificationStatus}
-          onBlockedFeatureClick={() => setShowKybWarningModal(true)}
-          userEmail={userEmail}
-          onKybRequired={onKybRequired}
-          initialTab={settingsTab}
-          onTabChange={setSettingsTab}
-          onKybSuccess={onKybSuccess}
-        />
-      )
-    }
-    if (activeMenu === 'analytics') {
-      return (
-        <AnalyticsView
-          transactions={transactions}
-          staff={staff}
-          touchpoints={touchpoints}
-          processingFee={processingFee}
-        />
-      )
-    }
-    if (activeMenu === 'support') {
-      return (
-        <SupportView />
-      )
-    }
-    return <ComingSoon activeMenu={activeMenu} onBack={() => setActiveMenu('overview')} />
+  const dashboardCtx = {
+    metrics, activeKpi, setActiveKpi, chartRange, handleChartRangeChange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate,
+    transactions, selectedLeaderboardStaff, handleSelectLeaderboardStaff, businessName, previewQr, hasKyb, hasSetup, onStartSetup,
+    filteredStaff, pendingStaff, staff, staffLoading, openApproveStaff, openAddStaff, openEditStaff, deleteStaff, toggleStaff, toggleStaffTipsFlow,
+    handleLinkStaff, handleInviteStaff, handleResendInvite, handleAcceptJoinRequest, handleDeclineJoinRequest, handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
+    setInviteShareDefaultName, setInviteShareDefaultContact, setIsInviteShareOpen,
+    filteredTouchpoints, setAddTouchpointPrefill, setIsAddTouchpointModalOpen, deleteTouchpoint, toggleTouchpointStatus, linkDevice, devices, handleAddDevice, handleDeleteDevice, handleToggleDeviceStatus,
+    filteredReviews, reviewFilterStaff, setReviewFilterStaff, setupData,
+    tipsTab, setTipsTab, processingFee, setProcessingFee,
+    filteredTransactions, touchpoints,
+    verificationStatus, requireKyb, userEmail, onKybSuccess, settingsTab, setSettingsTab,
+    currentStaffId
   }
 
   return (
@@ -632,7 +429,7 @@ export default function Dashboard({
         setIsProfileExpanded={setIsProfileExpanded}
         hasKyb={hasKyb}
         verificationStatus={verificationStatus}
-        onBlockedFeatureClick={() => setShowKybWarningModal(true)}
+        onBlockedFeatureClick={requireKyb}
         onLogout={onLogout}
         tipsTab={tipsTab}
         setTipsTab={setTipsTab}
@@ -652,7 +449,7 @@ export default function Dashboard({
           profile={profile}
           businessName={businessName}
           onNavigateSettingsTab={(tab) => {
-            setActiveMenu('settings')
+            handleNavigateMenu('settings')
             setSettingsTab(tab)
           }}
           onLogout={onLogout}
@@ -665,14 +462,14 @@ export default function Dashboard({
           transactions={transactions}
           reviews={reviews}
           touchpoints={touchpoints}
-          onViewStaffDetail={setViewingStaffDetailId}
+          onViewStaffDetail={(id) => navigate(`/dashboard/staff/${id}`)}
           onApproveStaff={openApproveStaff}
           userRole={userRole}
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
         />
 
         <main className="min-h-dvh p-4 sm:p-6 lg:p-7">
-          {activeMenu !== 'overview' && !viewingStaffDetailId && (
+          {activeMenu !== 'overview' && (
             <button
               onClick={() => handleNavigateMenu('overview')}
               className="mb-5 inline-flex h-9 items-center rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-extrabold text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"
@@ -680,7 +477,7 @@ export default function Dashboard({
               Back to Dashboard
             </button>
           )}
-          {renderContent()}
+          <Outlet context={dashboardCtx} />
         </main>
       </div>
 
@@ -700,7 +497,7 @@ export default function Dashboard({
         profile={profile}
         businessName={businessName}
         activeMenu={activeMenu}
-        setActiveMenu={setActiveMenu}
+        setActiveMenu={handleNavigateMenu}
         settingsTab={settingsTab}
         setSettingsTab={setSettingsTab}
         isProfileExpanded={isProfileExpanded}
@@ -717,8 +514,6 @@ export default function Dashboard({
         userRole={userRole}
         onLogout={onLogout}
         menuItemsToDisplay={menuItemsToDisplay}
-        viewingStaffDetailId={viewingStaffDetailId}
-        setViewingStaffDetailId={setViewingStaffDetailId}
         navigateMenu={navigateMenu}
       />
 
@@ -729,7 +524,7 @@ export default function Dashboard({
         errors={errors}
         setForm={setStaffForm}
         verificationStatus={verificationStatus}
-        onBlockedFeatureClick={() => setShowKybWarningModal(true)}
+        onBlockedFeatureClick={requireKyb}
         onClose={closeStaffModal}
         onSave={saveStaff}
         onOpenInviteShare={(formDetails) => {
@@ -755,7 +550,7 @@ export default function Dashboard({
         errors={errors}
         setForm={setStaffForm}
         verificationStatus={verificationStatus}
-        onBlockedFeatureClick={() => setShowKybWarningModal(true)}
+        onBlockedFeatureClick={requireKyb}
         onClose={() => {
           setIsApproveModalOpen(false)
           resetStaffForm()
@@ -777,7 +572,7 @@ export default function Dashboard({
         onClose={() => setIsAddTouchpointModalOpen(false)}
         onAdd={(name, type, deviceId) => {
           addTouchpoint(name, type, deviceId)
-          setActiveMenu('touchpoints')
+          handleNavigateMenu('touchpoints')
           setTouchpointsTab('stations')
         }}
       />
@@ -794,46 +589,6 @@ export default function Dashboard({
           closeStaffModal()
         }}
       />
-
-      {/* KYB Verification Warning Modal for gated features */}
-      {showKybWarningModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-nexoraBorder max-w-md w-full shadow-2xl p-6 relative overflow-hidden animate-scaleUp text-center space-y-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-nexoraWarning/10 text-nexoraWarning mx-auto shrink-0 shadow-sm">
-              <ShieldAlert className="h-6 w-6" />
-            </div>
-            <div className="space-y-1.5">
-              <h3 className="text-base font-black text-nexoraText uppercase tracking-wider">
-                {t('components.dashboardRoot.kybVerificationRequired')}
-              </h3>
-              <p className="text-xs text-nexoraSubtle font-medium leading-relaxed">
-                {t('components.dashboardRoot.thisFeatureRequiresYour')}
-              </p>
-            </div>
-            <div className="pt-2 flex flex-col sm:flex-row gap-2.5 justify-center">
-              <button
-                type="button"
-                onClick={() => setShowKybWarningModal(false)}
-                className="px-5 py-2.5 border border-nexoraBorder hover:bg-nexoraCanvas text-nexoraSubtle text-xs font-bold uppercase tracking-wider rounded-lg transition-all"
-              >
-                {t('components.dashboardRoot.cancel')}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowKybWarningModal(false)
-                  setActiveMenu('settings')
-                  setSettingsTab('kyb')
-                  setIsMobileMenuOpen(false)
-                }}
-                className="px-5 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-md transition-all animate-pulse"
-              >
-                {t('components.dashboardRoot.verifyNow')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

@@ -1,18 +1,19 @@
-// Navigation / UI state for the merchant Dashboard: active menu, mobile menu,
-// tips & touchpoints tabs (+ mobile expansion), settings tab, profile card,
-// and the currently-viewed staff detail. Extracted from Dashboard.jsx (Group 5).
 import { useState, useEffect } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 
-export function useDashboardNavigation(initialMenu = 'overview', initialSettingsTab = 'profile') {
-  const [activeMenu, setActiveMenu] = useState(initialMenu)
+export function useDashboardNavigation() {
+  const location = useLocation()
+  const navigate = useNavigate()
+  
+  const activeMenu = location.pathname.split('/')[2] || 'overview'
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [tipsTab, setTipsTab] = useState('overview')
-  const [isTipsMobileExpanded, setIsTipsMobileExpanded] = useState(initialMenu === 'tips')
+  const [isTipsMobileExpanded, setIsTipsMobileExpanded] = useState(activeMenu === 'tips')
   const [touchpointsTab, setTouchpointsTab] = useState('stations')
-  const [isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded] = useState(initialMenu === 'touchpoints')
-  const [settingsTab, setSettingsTab] = useState(initialSettingsTab)
+  const [isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded] = useState(activeMenu === 'touchpoints')
+  const [settingsTab, setSettingsTab] = useState('profile')
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
-  const [viewingStaffDetailId, setViewingStaffDetailId] = useState(null)
 
   useEffect(() => {
     if (activeMenu === 'tips') {
@@ -24,31 +25,19 @@ export function useDashboardNavigation(initialMenu = 'overview', initialSettings
     }
   }, [activeMenu])
 
-  useEffect(() => {
-    if (initialMenu) {
-      setActiveMenu(initialMenu)
-    }
-  }, [initialMenu])
-
-  useEffect(() => {
-    if (initialSettingsTab) {
-      setSettingsTab(initialSettingsTab)
-    }
-  }, [initialSettingsTab])
-
   const handleNavigateMenu = (menuId) => {
-    setActiveMenu(menuId)
-    setViewingStaffDetailId(null)
+    const route = menuId === 'overview' ? '/dashboard' : `/dashboard/${menuId}`
+    navigate(route)
   }
 
   const navigateMenu = (menuId) => {
-    setActiveMenu(menuId)
-    setViewingStaffDetailId(null)
+    const route = menuId === 'overview' ? '/dashboard' : `/dashboard/${menuId}`
+    navigate(route)
     setIsMobileMenuOpen(false)
   }
 
   return {
-    activeMenu, setActiveMenu,
+    activeMenu,
     isMobileMenuOpen, setIsMobileMenuOpen,
     tipsTab, setTipsTab,
     isTipsMobileExpanded, setIsTipsMobileExpanded,
@@ -56,7 +45,6 @@ export function useDashboardNavigation(initialMenu = 'overview', initialSettings
     isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded,
     settingsTab, setSettingsTab,
     isProfileExpanded, setIsProfileExpanded,
-    viewingStaffDetailId, setViewingStaffDetailId,
     handleNavigateMenu, navigateMenu
   }
 }

@@ -1,42 +1,15 @@
-/**
- * AppRouter — renders the correct view based on the current app state.
- *
- * @param {object} props
- * @param {string} props.view - Current view identifier
- * @param {Function} props.setView - View setter
- * @param {object|null} props.setupData - Merchant setup data
- * @param {Function} props.setSetupData - Setup data setter
- * @param {string} props.registerEmail - Email used during registration
- * @param {object|null} props.staffInviteData - Staff invitation data
- * @param {Function} props.setStaffInviteData - Staff invite setter
- * @param {object|null} props.ssoPrefillData - SSO prefill data
- * @param {string} props.verificationStatus - KYB verification status
- * @param {boolean} props.showKybModal - Whether to show KYB modal
- * @param {Function} props.setShowKybModal - KYB modal visibility setter
- * @param {object|null} props.simulationNotification - Demo simulation notification
- * @param {Function} props.setSimulationNotification - Simulation notification setter
- * @param {string} props.initialDashboardMenu - Initial menu for dashboard
- * @param {Function} props.setInitialDashboardMenu - Dashboard menu setter
- * @param {string} props.initialSettingsTab - Initial settings tab
- * @param {Function} props.setInitialSettingsTab - Settings tab setter
- * @param {string} props.currentLanguage - Current language code
- * @param {Function} props.t - Translation function
- * @param {string} props.userRole - 'owner' | 'staff'
- * @param {string|null} props.currentStaffId - Current staff ID
- * @param {string|null} props.loggedInStaffId - Logged-in staff ID
- * @param {Function} props.onWizardComplete - Wizard completion handler
- * @param {Function} props.onKybSuccess - KYB success handler
- * @param {Function} props.onKybRequired - KYB required handler
- * @param {Function} props.onResetApp - App reset handler
- * @param {Function} props.onRegisterAndLogin - Register-and-login handler
- * @param {Function} props.onLoadPendingAccounts - Pending accounts loader
- * @param {string} props.preKybView - View to return to after KYB
- * @param {boolean} [props.isDemoToolsEnabled=false] - Whether demo tools are enabled
- * @param {Function} props.onLogout - Logout handler
- */
 import React, { lazy, Suspense } from 'react'
-import { RefreshCw, ShieldAlert, X, Sparkles } from 'lucide-react'
-import { useMerchantSetup } from '../data/hooks/useMerchantSetup'
+import { Routes, Route, Navigate, useParams, useLocation, useNavigate } from 'react-router-dom'
+import RequireAuth from './RequireAuth'
+import RootRedirect from './RootRedirect'
+import LoadingScreen from './LoadingScreen'
+import { isDemoToolsEnabled } from './demoTools'
+import { useAuth } from '../auth/useAuth'
+import {
+  OverviewRoute, StaffRoute, StaffDetailRoute, TouchpointsRoute,
+  ReviewsRoute, TipsRoute, ReportsRoute, AnalyticsRoute,
+  SettingsRoute, SupportRoute, SubscriptionsRoute, FallbackRoute
+} from '../components/dashboard/routes'
 
 const SetupWizard = lazy(() => import('../components/SetupWizard'))
 const Dashboard = lazy(() => import('../components/Dashboard'))
@@ -44,251 +17,106 @@ const CustomerFlow = lazy(() => import('../components/CustomerFlow'))
 const RegisterWizard = lazy(() => import('../components/RegisterWizard'))
 const StaffRegistrationWizard = lazy(() => import('../components/StaffRegistrationWizard'))
 const StaffDashboard = lazy(() => import('../components/staff-dashboard/StaffDashboard'))
+const StaffHome = lazy(() => import('../components/staff-dashboard/views/StaffHome'))
+const StaffMyQR = lazy(() => import('../components/staff-dashboard/views/StaffMyQR'))
+const StaffTips = lazy(() => import('../components/staff-dashboard/views/StaffTips'))
+const StaffReviews = lazy(() => import('../components/staff-dashboard/views/StaffReviews'))
+const StaffPay = lazy(() => import('../components/staff-dashboard/views/StaffPay'))
+const StaffProfile = lazy(() => import('../components/staff-dashboard/views/StaffProfile'))
+const StaffNotifications = lazy(() => import('../components/staff-dashboard/views/StaffNotifications'))
 const ForgotPassword = lazy(() => import('../components/ForgotPassword'))
 const ResetPassword = lazy(() => import('../components/ResetPassword'))
+const LoginScreen = lazy(() => import('./LoginScreen'))
 
-function LoadingScreen() {
+// Bridges the URL (path token / legacy ?flow=staff-invite biz) to the wizard's
+// inviteData prop. A real token → API-backed invite; otherwise the legacy
+// simulation/biz path (matches the pre-router ?flow=staff-invite payload shape).
+function InviteRoute() {
+  const { token } = useParams()
+  const { state } = useLocation()
+  const navigate = useNavigate()
+  const biz = state?.biz || ''
+  const inviteData = token
+    ? { token, biz }
+    : { id: '', name: '', email: '', phone: '', role: 'Nail Technician', biz }
   return (
-    <div className="min-h-dvh flex items-center justify-center bg-nexoraCanvas">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-10 h-10 border-4 border-nexoraBrand/20 border-t-nexoraBrand rounded-full animate-spin"></div>
-        <p className="text-xs text-nexoraBrand font-semibold uppercase tracking-wider animate-pulse">Loading...</p>
-      </div>
-    </div>
+    <StaffRegistrationWizard
+      inviteData={inviteData}
+      isDemoToolsEnabled={isDemoToolsEnabled}
+      onReturnToMerchant={() => navigate('/dashboard', { replace: true })}
+    />
   )
 }
 
-export default function AppRouter({
-  view,
-  setView,
-  setupData,
-  setSetupData,
-  registerEmail,
-  staffInviteData,
-  setStaffInviteData,
-  ssoPrefillData,
-  verificationStatus,
-  isNewRegistration,
-  showKybModal,
-  setShowKybModal,
-  simulationNotification,
-  setSimulationNotification,
-  initialDashboardMenu,
-  setInitialDashboardMenu,
-  initialSettingsTab,
-  setInitialSettingsTab,
-  currentLanguage,
-  t,
-  userRole,
-  currentStaffId,
-  loggedInStaffId,
-  onWizardComplete,
-  onKybSuccess,
-  onKybRequired,
-  onResetApp,
-  onRegisterAndLogin,
-  onLoadPendingAccounts,
-  preKybView,
-  isDemoToolsEnabled = false,
-  onLogout,
-  onStartSetup,
-}) {
-  const merchantSetupQuery = useMerchantSetup()
-  const merchantSetupData = merchantSetupQuery.data
-
+export default function AppRouter() {
+  const { session, logout } = useAuth()
+  
   return (
     <Suspense fallback={<LoadingScreen />}>
-
-      {/* 1.6. FORGOT & RESET PASSWORD (Flow 2) */}
-      {view === 'forgot-password' && (
-        <ForgotPassword setView={setView} />
-      )}
-      {view === 'reset-password' && (
-        <ResetPassword setView={setView} />
-      )}
-
-      {/* 2. REGISTRATION & KYB FLOW (Flow 2) */}
-      {view === 'register-wizard' && (
-        <RegisterWizard
-          ssoEmail={registerEmail}
-          onBackToLogin={() => {
-            if (ssoPrefillData?.email) {
-              setView(preKybView)
-            } else {
-              setView('login')
-            }
-          }}
-          onRegisterSuccess={() => {
-            setView('login')
-            onLoadPendingAccounts()
-          }}
-          onRegisterAndLogin={onRegisterAndLogin}
-          onKybSuccess={onKybSuccess}
-          isRedirectedFromSession={!!(ssoPrefillData?.email)}
-        />
-      )}
-
-      {/* 3. ONBOARDING SETUP WIZARD (Flow 1 / Prefillable) */}
-      {view === 'onboarding' && (
-        <SetupWizard
-          initialBusinessInfo={ssoPrefillData}
-          verificationStatus={verificationStatus}
-          hasKyb={verificationStatus === 'kyb_approved' && !isNewRegistration}
-          onKybRequired={onKybRequired}
-          onComplete={onWizardComplete}
-          onBackToLogin={onLogout || (() => setView('login'))}
-        />
-      )}
-
-      {/* 4. OWNER DASHBOARD */}
-      {view === 'dashboard' && (
-        <div className="relative">
-          {/* Quick debug reset onboarding button */}
-          <button
-            onClick={onResetApp}
-            className="fixed bottom-4 right-4 z-40 p-2.5 rounded-full bg-nexoraSidebar border border-nexoraSidebarPanel text-nexoraSubtle hover:text-white shadow-lg hover:rotate-180 transition-all duration-300"
-            title={t('login.reset_confirm')}
-          >
-            <RefreshCw className="w-4 h-4" />
-          </button>
-
-          <Dashboard
-            setupData={setupData}
-            verificationStatus={verificationStatus}
-            hasKyb={verificationStatus === 'kyb_approved'}
-            userEmail={ssoPrefillData?.email || registerEmail}
-            onKybRequired={onKybRequired}
-            onKybSuccess={onKybSuccess}
-            initialMenu={initialDashboardMenu}
-            initialSettingsTab={initialSettingsTab}
-            onLogout={onLogout}
-            userRole={userRole}
-            currentStaffId={currentStaffId}
-            onStartSetup={onStartSetup}
-          />
-        </div>
-      )}
-
-      {/* 5. CUSTOMER TIPPING & REVIEW FLOW SIMULATION */}
-      {view === 'customer' && (
-        <CustomerFlow />
-      )}
-
-      {/* 6. STAFF REGISTRATION & SETUP PORTAL */}
-      {view === 'staff-portal' && (
-        <StaffRegistrationWizard
-          inviteData={staffInviteData}
-          isDemoToolsEnabled={isDemoToolsEnabled}
-          onReturnToMerchant={() => {
-            // Reload setupData to reflect new active thợ instantly
-            if (merchantSetupData) {
-              setSetupData(merchantSetupData)
-            }
-            // Clear URL query parameters
-            window.history.replaceState({}, document.title, window.location.pathname)
-            setView('dashboard')
-          }}
-        />
-      )}
-
-      {/* 7. STAFF PERSONAL DASHBOARD (!personal account) */}
-      {view === 'staff-dashboard' && (
-        <StaffDashboard staffId={loggedInStaffId} onLogout={onLogout} />
-      )}
-
-      {/* KYB Verification Required Custom Modal */}
-      {showKybModal && (
-        <div className="fixed inset-0 bg-nexoraText/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-nexoraBorder max-w-md w-full shadow-2xl p-6 relative overflow-hidden animate-scaleIn text-center space-y-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-nexoraBrandSoft text-nexoraWarning mx-auto shrink-0 shadow-sm">
-              <ShieldAlert className="h-6 w-6" />
-            </div>
-            <div className="space-y-1">
-              <h3 className="text-base font-black text-nexoraText uppercase tracking-wider">
-                {currentLanguage === 'vi' ? 'Yêu cầu xác thực KYB' : 'KYB Verification Required'}
-              </h3>
-              <p className="text-xs text-nexoraMuted font-medium leading-relaxed">
-                {currentLanguage === 'vi'
-                  ? 'Tính năng này yêu cầu hồ sơ doanh nghiệp đã được xác thực KYB bởi VLINKPAY. Nhấp vào nút bên dưới để chuyển hướng đến trang Cài đặt > KYB để gửi thông tin doanh nghiệp của bạn.'
-                  : 'This feature requires your business profile to be KYB verified by VLINKPAY. Click below to navigate to Settings > KYB tab and submit your compliance information.'}
-              </p>
-            </div>
-            <div className="pt-2 flex flex-col sm:flex-row gap-2.5 justify-center">
-              <button
-                type="button"
-                onClick={() => setShowKybModal(false)}
-                className="px-5 py-2.5 border border-nexoraBorder hover:bg-nexoraCanvas text-nexoraMuted text-xs font-bold uppercase tracking-wider rounded-lg transition-all"
-              >
-                {currentLanguage === 'vi' ? 'Hủy bỏ' : 'Cancel'}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowKybModal(false)
-                  if (view === 'onboarding') {
-                    if (merchantSetupData) {
-                      setSetupData(merchantSetupData)
-                    }
-                    setInitialDashboardMenu('settings')
-                    setInitialSettingsTab('kyb')
-                    setView('dashboard')
-                  } else if (view === 'dashboard') {
-                    setInitialDashboardMenu('settings')
-                    setInitialSettingsTab('kyb')
-                  }
-                }}
-                className="px-5 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-md transition-all animate-pulse"
-              >
-                {currentLanguage === 'vi' ? 'Xác thực ngay' : 'Verify Now'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Floating Simulation Invite Toast */}
-      {isDemoToolsEnabled && simulationNotification && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4 animate-fadeIn">
-          <div className="bg-nexoraWarning text-white rounded-2xl p-4 shadow-2xl border border-nexoraWarning flex items-center justify-between gap-4">
-            <div className="flex items-start gap-3 min-w-0">
-              <div className="bg-white/20 rounded-xl p-2 text-white shrink-0 mt-0.5">
-                <Sparkles className="h-4 w-4" />
-              </div>
-              <div className="min-w-0">
-                <strong className="text-xs block font-black uppercase tracking-wider">
-                  {simulationNotification.isLinkOnly ? '🔗 Link Request Sent' : '📧 Invite Link Sent'}
-                </strong>
-                <p className="text-xs text-white/95 leading-normal mt-0.5 font-medium">
-                  {simulationNotification.isLinkOnly
-                    ? `Link request sent to ${simulationNotification.name} (${simulationNotification.role})`
-                    : `Staff invitation link generated for ${simulationNotification.name} (${simulationNotification.email || simulationNotification.phone})`
-                  }
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-1.5 shrink-0 items-center">
-              <button
-                onClick={() => {
-                  setStaffInviteData(simulationNotification)
-                  setView('staff-portal')
-                  setSimulationNotification(null)
-                }}
-                className="px-3 py-2 bg-white text-nexoraWarning hover:bg-nexoraBrandSoft rounded-xl text-xs font-black uppercase transition-all shadow-sm shrink-0"
-              >
-                {currentLanguage === 'vi' ? 'Mở Thiết lập' : 'Open Setup'}
-              </button>
-              <button
-                onClick={() => setSimulationNotification(null)}
-                className="p-1.5 hover:bg-white/15 rounded-xl text-white/80 transition"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
+      <Routes>
+        <Route path="/" element={<RootRedirect />} />
+        <Route path="/login" element={<LoginScreen />} />
+        <Route path="/register" element={<RegisterWizard />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        
+        <Route path="/touch/:businessSlug/:touchPointSlug" element={<CustomerFlow />} />
+        <Route path="/invite" element={<InviteRoute />} />
+        <Route path="/invite/:token" element={<InviteRoute />} />
+        <Route path="/staff/invite/:token" element={<InviteRoute />} />
+        
+        <Route path="/onboarding" element={
+          <RequireAuth role="owner">
+            <SetupWizard />
+          </RequireAuth>
+        } />
+        
+        <Route path="/dashboard" element={
+          <RequireAuth role="owner">
+            <Dashboard
+               userEmail={session?.email}
+               userRole="owner"
+               verificationStatus={session?.verificationStatus || 'unverified'}
+               hasKyb={session?.verificationStatus === 'kyb_approved'}
+               onLogout={logout}
+            />
+          </RequireAuth>
+        }>
+          <Route index element={<OverviewRoute />} />
+          <Route path="staff" element={<StaffRoute />} />
+          <Route path="staff/:staffId" element={<StaffDetailRoute />} />
+          <Route path="tips" element={<TipsRoute />} />
+          <Route path="reviews" element={<ReviewsRoute />} />
+          <Route path="reports" element={<ReportsRoute />} />
+          <Route path="touchpoints" element={<TouchpointsRoute />} />
+          <Route path="analytics" element={<AnalyticsRoute />} />
+          <Route path="settings" element={<SettingsRoute />} />
+          <Route path="settings/:tab" element={<SettingsRoute />} />
+          <Route path="subscriptions" element={<SubscriptionsRoute />} />
+          <Route path="support" element={<SupportRoute />} />
+          <Route path="*" element={<FallbackRoute />} />
+        </Route>
+        
+        <Route path="/staff" element={
+          <RequireAuth role="staff">
+            <StaffDashboard 
+              staffId={session?.staffId}
+              onLogout={logout}
+            />
+          </RequireAuth>
+        }>
+          <Route index element={<StaffHome />} />
+          <Route path="qr" element={<StaffMyQR />} />
+          <Route path="tips" element={<StaffTips />} />
+          <Route path="reviews" element={<StaffReviews />} />
+          <Route path="pay" element={<StaffPay />} />
+          <Route path="profile" element={<StaffProfile />} />
+          <Route path="notifications" element={<StaffNotifications />} />
+          <Route path="*" element={<FallbackRoute />} />
+        </Route>
+        
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </Suspense>
   )
 }

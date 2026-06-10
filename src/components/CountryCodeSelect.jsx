@@ -53,10 +53,22 @@ export const getCountryByDialCode = (dialCode) => {
 }
 
 export const formatNationalNumber = (nationalNumber, dialCode) => {
+  let digits = nationalNumber.replace(/\D/g, '')
+  digits = digits.slice(0, 10)
+
+  if (dialCode === '+1') {
+    if (digits.length <= 3) return digits
+    if (digits.length <= 6) return `${digits.slice(0, 3)}-${digits.slice(3)}`
+    return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`
+  } else if (dialCode === '+84') {
+    if (digits.length <= 3) return digits
+    if (digits.length <= 6) return `${digits.slice(0, 3)} ${digits.slice(3)}`
+    return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`
+  }
+
   const country = getCountryByDialCode(dialCode)
-  // Ensure we format just the national part
   const formatter = new AsYouType(country.code)
-  return formatter.input(nationalNumber)
+  return formatter.input(digits)
 }
 
 export const isPhoneValid = (phoneStr) => {

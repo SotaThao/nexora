@@ -107,6 +107,8 @@
     "copy": "Copy",
     "copied": "Copied!",
     "loading": "Loading...",
+    "processing": "Processing...",
+    "saving": "Saving...",
     "error": "Error",
     "success": "Success",
     "active_status": "Active",
@@ -1464,7 +1466,8 @@
           "passwordIsRequired2": "Password is required.",
           "passwordMustBeAt2": "Password must be at least 6 characters.",
           "accountDoesNotExist": "Account does not exist or incorrect password.",
-          "linkRequestCancelled": "Link request cancelled."
+          "linkRequestCancelled": "Link request cancelled.",
+          "emailAlreadyExists": "This email is already registered."
         }
       },
       "steps": {

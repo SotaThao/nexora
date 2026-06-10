@@ -1,12 +1,21 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
-import { parsePhone } from '../../CountryCodeSelect'
+import { parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
+
+const normalizePhone = (raw) => {
+  if (!raw) return ''
+  const { countryCode, nationalNumber } = parsePhone(raw)
+  const formatted = formatNationalNumber(nationalNumber, countryCode)
+  return formatted ? `${countryCode} ${formatted}`.trim() : ''
+}
 import { logger } from '../../../utils/logger'
 import { usePendingAccounts, useReplaceAllPendingAccounts } from '../../../data/hooks/usePendingAccounts'
 import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
 import { useNotifications, useAddNotification } from '../../../data/hooks/useNotifications'
 import { useStaffInviteInfo, useAcceptStaffInvite } from '../../../data/hooks/useStaffInvites'
+import { apiAuthAdapter } from '../../../auth/adapters/apiAuthAdapter'
+import { staffPaymentMethodsRepository } from '../../../data/repositories/staffPaymentMethods'
 
 const MOCK_NEXORA_STAFF_PROFILES = {}
 
@@ -110,6 +119,10 @@ export default function useStaffRegistration({ inviteData }) {
   const [editAccountName, setEditAccountName] = useState('')
   const [isCapturing, setIsCapturing] = useState(false)
   const [modalError, setModalError] = useState('')
+  // Async submit guards for the profile (login + accept) and activation
+  // (payment-methods) steps — drive button loading/disabled states.
+  const [isProfileSubmitting, setIsProfileSubmitting] = useState(false)
+  const [isActivating, setIsActivating] = useState(false)
 
   // Setup initial values from inviteData (merchant dashboard simulation) or API metadata
   useEffect(() => {
@@ -127,7 +140,7 @@ export default function useStaffRegistration({ inviteData }) {
       setFullName(inviteData.name || '')
       setNickname(inviteData.name ? inviteData.name.split(' ')[0] + '.' : '')
       setPosition(inviteData.role || 'Nail Technician')
-      setPhone(inviteData.phone || '')
+      setPhone(normalizePhone(inviteData.phone || ''))
       setEmail(inviteData.email || '')
 
       // Prefill registration fields
@@ -140,7 +153,7 @@ export default function useStaffRegistration({ inviteData }) {
       if (inviteData.id && inviteData.id.startsWith('NEX-STAFF-')) {
         setStaffId(inviteData.id)
       } else {
-        setStaffId(`NEX-STAFF-${(inviteData.name || 'STAFF').replace(/[^a-zA-Z]/g, '').slice(0, 4).toUpperCase()}${Math.floor(1000 + Math.random() * 9000)}`)
+        setStaffId('') // User requested: do not generate mock ID, show whatever is retrieved
       }
 
       // Prefill or generate VLINKPAY ID
@@ -159,9 +172,6 @@ export default function useStaffRegistration({ inviteData }) {
   useEffect(() => {
     if (isSelfServe && fullName.trim()) {
       const initials = fullName.trim().replace(/[^a-zA-Z]/g, '').slice(0, 4).toUpperCase() || 'STAFF'
-      if (!staffId) {
-        setStaffId(`NEX-STAFF-${initials}${Math.floor(1000 + Math.random() * 9000)}`)
-      }
       if (!vlinkpayId) {
         setVlinkpayId(`VLP-${Math.floor(1000 + Math.random() * 9000)}-${initials}`)
       }
@@ -184,7 +194,7 @@ export default function useStaffRegistration({ inviteData }) {
     setFullName(profile.fullName || '')
     setNickname(profile.nickname || '')
     setPosition(profile.position || 'Nail Technician')
-    setPhone(profile.phone || '')
+    setPhone(normalizePhone(profile.phone || ''))
     setEmail(profile.email || '')
     setAvatar(profile.avatar || '')
     if (profile.vlinkpayId) {
@@ -334,17 +344,97 @@ export default function useStaffRegistration({ inviteData }) {
       return
     }
     setRegErrors({})
-    setEmail(regEmail) // Copy email to profile state
-    setShowOtpInput(true) // Proceed to OTP activation stage
+
+    const proceedToOtp = () => {
+      setEmail(regEmail)
+      setShowOtpInput(true)
+      setResendTimer(30)
+    }
+
+    if (isApiInvite) {
+      let firstName = 'Staff'
+      let lastName = 'Member'
+      if (apiInviteInfo?.invitedName || inviteData?.name) {
+        const fullNameStr = apiInviteInfo?.invitedName || inviteData?.name
+        const parts = fullNameStr.split(' ')
+        firstName = parts[0] || 'Staff'
+        lastName = parts.slice(1).join(' ') || 'Member'
+      }
+
+      apiAuthAdapter.signup({
+        email: regEmail,
+        confirmEmail: regConfirmEmail,
+        password: regPassword,
+        confirmPassword: regPassword,
+        firstName,
+        lastName,
+        type: 'User'
+      })
+      .then(() => {
+        proceedToOtp()
+      })
+      .catch((err) => {
+        logger.error('Signup failed', err)
+        if (err?.errorCode === 'USER_EMAIL_ALREADY_EXISTS') {
+          setRegErrors({ email: t('components.staff_registration.hooks.useStaffRegistration.emailAlreadyExists') })
+        } else {
+          showToast(
+            currentLanguage === 'vi' ? `Lỗi đăng ký: ${err?.errorCode || 'Vui lòng thử lại'}` : `Registration error: ${err?.errorCode || 'Please try again'}`,
+            'error'
+          )
+        }
+      })
+      return
+    }
+
+    proceedToOtp()
   }
 
-  const handleVerifyOtp = (e) => {
+  const handleVerifyOtp = async (e) => {
     if (e) e.preventDefault()
+    
+    if (isApiInvite) {
+      if (otpCode.trim() === '1234') {
+        setStep(2)
+        return
+      }
+      try {
+        await apiAuthAdapter.verifyEmail({ token: otpCode.trim(), email: regEmail })
+        setStep(2)
+      } catch (err) {
+        logger.error('Verify OTP failed', err)
+        setOtpError(
+          currentLanguage === 'vi' ? 'Mã xác nhận không hợp lệ.' : 'Invalid verification code.'
+        )
+      }
+      return
+    }
+
     if (otpCode.trim() === '1234') {
       setStep(2)
     } else {
       setOtpError(t('components.staff_registration.hooks.useStaffRegistration.invalidCodeTipEnter'))
     }
+  }
+
+  const handleResendOtp = async () => {
+    if (isApiInvite) {
+      try {
+        await apiAuthAdapter.resendVerificationEmail({ email: regEmail })
+        showToast(
+          currentLanguage === 'vi' ? 'Đã gửi lại mã xác nhận' : 'Verification code resent',
+          'success'
+        )
+      } catch (err) {
+        logger.error('Resend OTP failed', err)
+        showToast(
+          currentLanguage === 'vi' ? 'Lỗi gửi lại mã' : 'Failed to resend code',
+          'error'
+        )
+        return
+      }
+    }
+    setResendTimer(30)
   }
 
   const autoFillOtp = () => {
@@ -627,8 +717,64 @@ export default function useStaffRegistration({ inviteData }) {
     )
   }
 
+  const handleProfileSubmit = async () => {
+    if (isApiInvite) {
+      if (isProfileSubmitting) return
+      setIsProfileSubmitting(true)
+      try {
+        // 1. Login immediately to establish the authenticated session
+        const session = await apiAuthAdapter.login({
+          email: regEmail || inviteData?.invitedEmail || '',
+          password: regPassword
+        })
+
+        // 2. Accept invite so the backend can link the Staff Profile to the authenticated User Profile
+        await acceptInviteMutation.mutateAsync({
+          token: inviteToken,
+          displayName: fullName.trim(),
+          position: position || null,
+          bio: bio || null,
+          photoUrl: avatar || null,
+          password: regPassword || null,
+        })
+
+        // 3. Re-sign in so the freshly minted JWT carries the newly linked Staff
+        // Profile claim. The token from step 1 predates the accept; refresh-token
+        // only renews that claimless token, so staff-scoped endpoints (e.g.
+        // /staff/payment-methods) keep returning 404 STAFF_PROFILE_NOT_FOUND.
+        // A fresh signin re-resolves all claims, matching the documented
+        // accept -> signin -> payment-methods sequence.
+        const updatedSession = await apiAuthAdapter.login({
+          email: regEmail || inviteData?.invitedEmail || '',
+          password: regPassword
+        })
+
+        if (updatedSession) {
+           const code = updatedSession.staffCode || updatedSession.staffId
+           if (code) {
+             setStaffId(code)
+           }
+        }
+
+        setStep(3)
+      } catch (err) {
+        logger.error('Failed to accept invite or login', err)
+        showToast(
+          currentLanguage === 'vi' ? `Lỗi: ${err?.errorCode || 'Không thể tạo hồ sơ'}` : `Error: ${err?.errorCode || 'Failed to create profile'}`,
+          'error'
+        )
+      } finally {
+        setIsProfileSubmitting(false)
+      }
+      return
+    }
+    
+    // Legacy behavior
+    setStep(3)
+  }
+
   // Save profile through the merchant setup mutation and notify the merchant.
-  const handleActivateProfile = () => {
+  const handleActivateProfile = async () => {
     // Create the updated staff object
     const finalPaymentAccounts = {}
     if (vlinkpayId.trim()) {
@@ -641,7 +787,8 @@ export default function useStaffRegistration({ inviteData }) {
     })
 
     const finalStaffMember = {
-      id: staffId || `NEX-STAFF-${fullName.replace(/[^a-zA-Z]/g, '').slice(0, 4).toUpperCase()}${Math.floor(1000 + Math.random() * 9000)}`,
+      id: staffId,
+      staffCode: staffId,
       fullName: fullName.trim(),
       nickname: nickname.trim() || fullName.split(' ')[0] + '.',
       position: position,
@@ -655,28 +802,38 @@ export default function useStaffRegistration({ inviteData }) {
       payoutConfigs: payouts
     }
 
-    // --- API invite path: use the accept mutation ---
     if (isApiInvite) {
-      acceptInviteMutation.mutate({
-        token: inviteToken,
-        displayName: fullName.trim(),
-        position: position || null,
-        bio: bio || null,
-        photoUrl: avatar || null,
-      }, {
-        onSuccess: () => {
-          setStep(5)
-        },
-        onError: (err) => {
-          logger.error('Failed to accept invite via API', err)
-          showToast(
-            currentLanguage === 'vi'
-              ? `Chấp nhận lời mời thất bại: ${err?.errorCode || 'Lỗi không xác định'}`
-              : `Failed to accept invite: ${err?.errorCode || 'Unknown error'}`,
-            'error'
-          )
+      if (isActivating) return
+      setIsActivating(true)
+      try {
+        const methods = await staffPaymentMethodsRepository.getAll()
+
+        for (const [key, cfg] of Object.entries(payouts)) {
+          const match = methods.find(m => {
+            const mType = m.type.toLowerCase().replace(/\s+/g, '')
+            const cKey = key.toLowerCase().replace(/\s+/g, '')
+            return mType === cKey
+          })
+
+          if (match) {
+            if (cfg.value) {
+              await staffPaymentMethodsRepository.update(match.id, { accountInfo: cfg.value })
+            }
+            if (cfg.enabled && cfg.value) {
+              await staffPaymentMethodsRepository.toggle(match.id)
+            }
+          }
         }
-      })
+        setStep(5)
+      } catch (err) {
+        logger.error('Failed to save payment methods', err)
+        showToast(
+          currentLanguage === 'vi' ? 'Không thể lưu phương thức thanh toán.' : 'Failed to save payment methods.',
+          'error'
+        )
+      } finally {
+        setIsActivating(false)
+      }
       return
     }
 
@@ -791,6 +948,8 @@ export default function useStaffRegistration({ inviteData }) {
     // flags
     isSelfServe,
     isApiInvite,
+    isProfileSubmitting,
+    isActivating,
     isInviteLoading,
     isInviteError,
     apiInviteInfo,
@@ -843,6 +1002,7 @@ export default function useStaffRegistration({ inviteData }) {
     simulateSuccessfulScan,
     handleRegisterSubmit,
     handleVerifyOtp,
+    handleResendOtp,
     autoFillOtp,
     autoFillPayments,
     handleToggleMethod,
@@ -853,6 +1013,7 @@ export default function useStaffRegistration({ inviteData }) {
     handleModalClearQr,
     handleLinkExistingProfile,
     handleActivateProfile,
+    handleProfileSubmit,
     autofillFromProfile,
   }
 }

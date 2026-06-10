@@ -2,9 +2,9 @@ import { tokenStore } from '../tokenStore'
 import httpClient from '../../lib/httpClient'
 import { logger } from '../../utils/logger'
 
-// Backend profileType discriminator + dev fallback email keywords.
+// /api/v1/userprofile/me returns `userType`; /api/v1/userprofile/verified-status returns `profileType`.
+// Both fields are checked so either endpoint's response shape is accepted.
 const PROFILE_TYPE_MERCHANT = 'Merchant'
-const MERCHANT_EMAIL_KEYWORDS = ['biz', 'merchant']
 
 // KYB status sentinel returned when no explicit status is available.
 const KYB_STATUS_BASIC = 'basic'
@@ -14,13 +14,10 @@ const ACCOUNT_TYPE = { PERSONAL: 'personal', BUSINESS: 'business' }
 const ROLE = { STAFF: 'staff', OWNER: 'owner' }
 
 function isBusinessProfile(profile) {
-  // TODO(backend-bug B1): the email-keyword fallback below is a temporary workaround for the
-  // backend not persisting `profileType` on signup (every account comes back as `User`).
-  // Remove `isMerchantEmail` and rely solely on `profile.profileType === PROFILE_TYPE_MERCHANT` once
-  // the backend returns the real profileType from /api/v1/userprofile/me. See API/backend-api-gaps.md.
-  const email = profile?.email?.toLowerCase() || ''
-  const isMerchantEmail = MERCHANT_EMAIL_KEYWORDS.some((kw) => email.includes(kw))
-  return profile?.profileType === PROFILE_TYPE_MERCHANT || isMerchantEmail
+  return (
+    profile?.userType === PROFILE_TYPE_MERCHANT ||
+    profile?.profileType === PROFILE_TYPE_MERCHANT
+  )
 }
 
 function normalizeKybStatus(value, { isExplicitKybField = false } = {}) {
@@ -114,7 +111,7 @@ function mapProfileToSession(profile, kybStatus) {
     flag,
     displayName,
     role,
-    staffId: null,
+    staffId: profile.staffCode || profile.staffProfileId || profile.staffId || null,
     accountStatus,
     hasCompletedOnboarding: isBusiness
       ? accountStatus === 'Active' || kybStatus === 'kyb_approved' || !!profile.hasCompletedOnboarding
@@ -170,14 +167,33 @@ export const apiAuthAdapter = {
     }
   },
 
+  // Force a token refresh, then return the freshly resolved session.
+  // Use this after an action that changes the user's server-side claims
+  // (e.g. accepting a staff invite links a Staff Profile): the access token
+  // minted at login predates those claims, so staff-scoped endpoints would
+  // otherwise 404 (STAFF_PROFILE_NOT_FOUND) until the token is reissued.
+  async refreshSession() {
+    const tokens = tokenStore.get()
+    if (!tokens?.refreshToken) {
+      return this.getSession()
+    }
+    const res = await httpClient.post(
+      '/api/v1/authentication/refresh-token',
+      { refreshToken: tokens.refreshToken },
+      { anonymous: true }
+    )
+    tokenStore.set(res)
+    return this.getSession()
+  },
+
   async logout() {
     tokenStore.clear()
   },
 
-  async signup({ email, confirmEmail, password, confirmPassword, firstName, lastName, profileType }) {
+  async signup({ email, confirmEmail, password, confirmPassword, firstName, lastName, type, profileType }) {
     return httpClient.post(
       '/api/v1/authentication/signup',
-      { email, confirmEmail, password, confirmPassword, firstName, lastName, type: profileType },
+      { email, confirmEmail, password, confirmPassword, firstName, lastName, type: type || profileType },
       { anonymous: true }
     )
   },

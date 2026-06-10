@@ -124,13 +124,14 @@ export default function StepProfileSetup({
               <CountryCodeSelect
                 value={phoneParsed.countryCode}
                 onChange={(newCode) => {
-                  setPhone(`${newCode} ${phoneParsed.nationalNumber}`.trim())
+                  const reFormatted = formatNationalNumber(phoneParsed.nationalNumber, newCode)
+                  setPhone(`${newCode} ${reFormatted}`.trim())
                 }}
               />
               <input
                 type="text"
                 className="h-10 w-full bg-nexoraCanvas border border-l-0 border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-r-lg px-4 text-sm text-nexoraText focus:outline-none transition-all min-w-0"
-                value={phoneParsed.nationalNumber}
+                value={formatNationalNumber(phoneParsed.nationalNumber, phoneParsed.countryCode)}
                 onChange={(e) => {
                   const formatted = formatNationalNumber(e.target.value, phoneParsed.countryCode)
                   setPhone(`${phoneParsed.countryCode} ${formatted}`.trim())

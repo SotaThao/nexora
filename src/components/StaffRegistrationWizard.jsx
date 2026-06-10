@@ -77,9 +77,9 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
           {reg.step > 0 && reg.step < 4 && (
             <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-extrabold uppercase tracking-wider">
               {[
-                { id: 1, label: t('components.StaffRegistrationWizard.label1Register') },
-                { id: 2, label: t('components.StaffRegistrationWizard.label2Profile') },
-                { id: 3, label: t('components.StaffRegistrationWizard.label3Wallet') }
+                { id: 1, label: reg.t('components.StaffRegistrationWizard.label1Register') },
+                { id: 2, label: reg.t('components.StaffRegistrationWizard.label2Profile') },
+                { id: 3, label: reg.t('components.StaffRegistrationWizard.label3Wallet') }
               ].map(s => (
                 <div
                   key={s.id}
@@ -166,6 +166,7 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
               setTermsAccepted={reg.setTermsAccepted}
               handleRegisterSubmit={reg.handleRegisterSubmit}
               handleVerifyOtp={reg.handleVerifyOtp}
+              handleResendOtp={reg.handleResendOtp}
               autoFillOtp={reg.autoFillOtp}
               setStep={reg.setStep}
               setJoinPath={reg.setJoinPath}
@@ -201,6 +202,8 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
               handleVlinkpayIdChange={reg.handleVlinkpayIdChange}
               handleScanQr={reg.handleScanQr}
               setStep={reg.setStep}
+              onSubmit={reg.handleProfileSubmit}
+              isSubmitting={reg.isProfileSubmitting}
             />
           )}
 
@@ -217,6 +220,7 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
               handleActivateProfile={reg.handleActivateProfile}
               setStep={reg.setStep}
               isDemoToolsEnabled={isDemoToolsEnabled}
+              isSubmitting={reg.isActivating}
             />
           )}
 

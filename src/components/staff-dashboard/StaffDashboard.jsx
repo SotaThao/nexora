@@ -2,6 +2,7 @@
 // Renders a responsive shell (desktop sidebar + mobile bottom nav + header)
 // and switches the active screen. Wraps everything in StaffAccountProvider.
 import { useState } from 'react'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { StaffAccountProvider } from '../../contexts/StaffAccountContext'
 
 import StaffSidebar from './layout/StaffSidebar'
@@ -26,16 +27,23 @@ const SCREENS = {
 }
 
 export default function StaffDashboard({ staffId = null, onLogout }) {
-  const [activeScreen, setActiveScreen] = useState('home')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const ActiveView = SCREENS[activeScreen] || StaffHome
+  const location = useLocation()
+  const navigate = useNavigate()
+  
+  const activeScreen = location.pathname.split('/')[2] || 'home'
+  
+  const handleNavigate = (screen) => {
+    navigate(screen === 'home' ? '/staff' : `/staff/${screen}`)
+    setIsMobileMenuOpen(false)
+  }
 
   return (
     <StaffAccountProvider staffId={staffId}>
       <div className="min-h-dvh bg-nexoraCanvas text-nexoraText">
         <StaffSidebar 
           activeScreen={activeScreen} 
-          onNavigate={setActiveScreen} 
+          onNavigate={handleNavigate} 
           onLogout={onLogout} 
           isOpen={isMobileMenuOpen}
           onClose={() => setIsMobileMenuOpen(false)}
@@ -44,15 +52,15 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
         <div className="lg:pl-72">
           <StaffHeader 
             activeScreen={activeScreen} 
-            onNavigate={setActiveScreen} 
+            onNavigate={handleNavigate} 
             onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
           />
           <main className="mx-auto max-w-3xl px-4 py-5 pb-28 sm:px-6 lg:pb-10">
-            <ActiveView onNavigate={setActiveScreen} onLogout={onLogout} />
+            <Outlet context={{ onNavigate: handleNavigate, onLogout }} />
           </main>
         </div>
 
-        <StaffBottomNav activeScreen={activeScreen} onNavigate={setActiveScreen} />
+        <StaffBottomNav activeScreen={activeScreen} onNavigate={handleNavigate} />
       </div>
     </StaffAccountProvider>
   )

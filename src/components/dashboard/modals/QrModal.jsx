@@ -2,14 +2,17 @@ import { X, ShieldAlert, ShieldCheck, Download } from 'lucide-react'
 import IconButton from '../../ui/IconButton'
 import { useTranslation } from '../../../contexts/LanguageContext'
 
+const slugify = (str = '') => str.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+
 function QrModal({ target, businessName, onClose }) {
   const { t } = useTranslation()
   if (!target) return null
 
+  const businessSlug = slugify(businessName || '')
   // Build the live customer portal URL for this touchpoint/staff QR
-  const qrUrl = `${window.location.origin}${window.location.pathname}?flow=customer&tech=${encodeURIComponent(target.slug)}&biz=${encodeURIComponent(businessName)}`
+  const qrUrl = `${window.location.origin}/touch/${businessSlug}/${target.slug}`
 
-  const isStaff = target.slug?.startsWith('staff/')
+  const isStaff = target.slug?.startsWith('staff-')
   const displayName = isStaff ? target.name.replace('Personal QR - ', '') : ''
   const displayRole = isStaff ? target.subtitle : ''
 
@@ -65,20 +68,8 @@ function QrModal({ target, businessName, onClose }) {
         </div>
 
         <p className="mt-4 rounded-lg bg-nexoraCanvas px-3 py-2 text-[10px] font-mono text-nexoraMuted select-all qr-print-url">
-          nexora.vlinkpay.com/touch/{target.slug}
+          nexora.vlinkpay.com/touch/{businessSlug}/{target.slug}
         </p>
-
-        {/* Browser simulator trigger */}
-        <div className="mt-3.5 no-print">
-          <a
-            href={qrUrl}
-            target="_blank"
-            rel="opener"
-            className="inline-flex items-center gap-1 text-[10.5px] font-black text-nexoraBrand hover:underline tracking-wide bg-nexoraBrandSoft px-3 py-1.5 rounded-lg transition"
-          >
-            <span>{t('dashboard.modals.customer_view_test')}</span>
-          </a>
-        </div>
 
         <button
           onClick={() => window.print()}

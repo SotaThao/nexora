@@ -1,4 +1,10 @@
 import React, { useState } from 'react'
+import { useTranslation } from '../../../contexts/LanguageContext'
+import {
+  useMerchantPaymentMethods,
+  useUpdateMerchantPaymentMethod,
+  useToggleMerchantPaymentMethod
+} from '../../../data/hooks/useMerchantPaymentMethods'
 import {
   User,
   Building2,
@@ -79,15 +85,6 @@ export default function ProfileTab({
   setIsEditingReviews,
   reviewsForm,
   setReviewsForm,
-  editingMethod,
-  setEditingMethod,
-  editValue,
-  setEditValue,
-  editQrCode,
-  setEditQrCode,
-  isCapturing,
-  modalError,
-  setModalError,
   hasKyb,
   currentLanguage,
   showToast,
@@ -100,16 +97,85 @@ export default function ProfileTab({
   saveBusiness,
   startEditReviews,
   saveReviews,
-  handleToggleMethod,
-  handleEditPayoutAccount,
-  handleModalFileChange,
-  handleModalTakePhoto,
-  handleModalClearQr,
-  savePayoutAccount,
   handleAvatarChange,
   formatDOB,
   onShowQr,
 }) {
+  const { t } = useTranslation()
+
+  const { data: apiPaymentMethods = [] } = useMerchantPaymentMethods()
+  const toggleMutation = useToggleMerchantPaymentMethod()
+  const updateMutation = useUpdateMerchantPaymentMethod()
+
+  // Local state for the payment method edit modal
+  const [editingMethod, setEditingMethod] = useState(null)
+  const [editValue, setEditValue] = useState('')
+  const [editQrCode, setEditQrCode] = useState(null)
+  const [isCapturing, setIsCapturing] = useState(false)
+  const [modalError, setModalError] = useState('')
+
+  const getMethod = (key) => apiPaymentMethods.find(m => m.type?.toLowerCase() === key.toLowerCase()) || { type: key, isActive: false, isConfigured: false, accountInfo: '' }
+
+  const handleToggleMethod = (key) => {
+    const methodData = getMethod(key)
+    if (!methodData.id) {
+      showToast(currentLanguage === 'vi' ? 'Phương thức chưa được cấu hình.' : 'Method is not configured.', 'error')
+      return
+    }
+    toggleMutation.mutate(methodData.id)
+  }
+
+  const handleEditPayoutAccount = (key) => {
+    const methodData = getMethod(key)
+    setEditingMethod(key)
+    setEditValue(methodData.accountInfo || '')
+    setEditQrCode(methodData.imageUrl || null)
+    setModalError('')
+  }
+
+  const savePayoutAccount = (e) => {
+    e.preventDefault()
+    if (!editValue.trim()) {
+      setModalError(currentLanguage === 'vi' ? 'Vui lòng nhập thông tin tài khoản.' : 'Please enter account details.')
+      return
+    }
+    const methodData = getMethod(editingMethod)
+    if (!methodData.id) {
+      showToast('System Error: Method ID missing', 'error')
+      return
+    }
+    updateMutation.mutate(
+      { id: methodData.id, accountInfo: editValue.trim(), imageUrl: editQrCode },
+      {
+        onSuccess: () => {
+          setEditingMethod(null)
+          if (!methodData.isActive) {
+            toggleMutation.mutate(methodData.id)
+          }
+        }
+      }
+    )
+  }
+
+  const handleModalFileChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => setEditQrCode(reader.result)
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleModalTakePhoto = () => {
+    setIsCapturing(true)
+    setTimeout(() => {
+      setEditQrCode('https://via.placeholder.com/300?text=Mock+Camera+QR')
+      setIsCapturing(false)
+    }, 1500)
+  }
+
+  const handleModalClearQr = () => setEditQrCode(null)
+
   return (
     <>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
@@ -200,7 +266,9 @@ export default function ProfileTab({
             </div>
 
             <div className="divide-y divide-slate-100">
-              {payoutMethodsList.map((item) => (
+              {payoutMethodsList.map((item) => {
+                const methodData = getMethod(item.key)
+                return (
                 <div key={item.key} className="flex items-center justify-between py-3">
                   <div className="flex items-center gap-3 min-w-0">
                     {/* Toggle Switch */}
@@ -209,12 +277,12 @@ export default function ProfileTab({
                       onClick={() => handleToggleMethod(item.key)}
                       aria-label={`Toggle ${item.label}`}
                       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                        profile.payoutToggles?.[item.key] ? 'bg-amber-600' : 'bg-slate-200'
+                        methodData.isActive ? 'bg-amber-600' : 'bg-slate-200'
                       }`}
                     >
                       <span
                         className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                          profile.payoutToggles?.[item.key] ? 'translate-x-4' : 'translate-x-0'
+                          methodData.isActive ? 'translate-x-4' : 'translate-x-0'
                         }`}
                       />
                     </button>
@@ -226,9 +294,9 @@ export default function ProfileTab({
                       </span>
                       <div className="min-w-0">
                         <div className="text-xs font-bold text-slate-800">{item.label}</div>
-                        {profile.paymentAccounts?.[item.key] ? (
+                        {methodData.isConfigured ? (
                           <div className="text-[10px] text-slate-500 font-mono mt-0.5 truncate max-w-[110px] sm:max-w-[150px]">
-                            {profile.paymentAccounts[item.key]}
+                            {methodData.accountInfo}
                           </div>
                         ) : (
                           <div className="text-[10px] text-slate-300 italic font-medium mt-0.5">
@@ -250,7 +318,7 @@ export default function ProfileTab({
                     <span>{t('components.settings.tabs.ProfileTab.payoutAccount')}</span>
                   </button>
                 </div>
-              ))}
+              )})}
             </div>
 
             {/* VLINKPAY ID display at the bottom */}
@@ -262,7 +330,7 @@ export default function ProfileTab({
                 <span className="text-nexoraMuted font-bold">VLINKPAY ID</span>
               </div>
               <span className="text-nexoraText font-extrabold font-mono bg-slate-50 border border-slate-200 px-2 py-0.5 rounded">
-                {profile.paymentAccounts?.vlinkpay || 'Pending KYB'}
+                {getMethod('vlinkpay').accountInfo || 'Pending KYB'}
               </span>
             </div>
 

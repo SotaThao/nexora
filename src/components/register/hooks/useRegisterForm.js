@@ -1,6 +1,13 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { parsePhone } from '../../CountryCodeSelect'
+import { parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
+
+const normalizePhone = (raw) => {
+  if (!raw) return ''
+  const { countryCode, nationalNumber } = parsePhone(raw)
+  const formatted = formatNationalNumber(nationalNumber, countryCode)
+  return formatted ? `${countryCode} ${formatted}`.trim() : ''
+}
 import { MOCK_NEXORA_STAFF_PROFILES } from '../../staff-registration/hooks/useStaffRegistration'
 import { useReplaceAllPendingAccounts, usePendingAccounts } from '../../../data/hooks/usePendingAccounts'
 import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
@@ -291,7 +298,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         setVlinkpayStatus('success')
         setNickname(matchedProfile.nickname || '')
         setPosition(matchedProfile.position || 'Nail Technician')
-        setPhone(matchedProfile.phone || '')
+        setPhone(normalizePhone(matchedProfile.phone || ''))
         setAvatar(matchedProfile.avatar || '')
         if (matchedProfile.payoutConfigs) {
           setPayouts(matchedProfile.payoutConfigs)

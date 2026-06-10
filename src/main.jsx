@@ -1,5 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 import './index.css'
 import { LanguageProvider } from './contexts/LanguageContext.jsx'
@@ -24,8 +25,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <AuthProvider>
           <LanguageProvider>
             <NotificationProvider>
-              <App />
-              {ReactQueryDevtools && <ReactQueryDevtools initialIsOpen={false} />}
+              <BrowserRouter>
+                <App />
+                {ReactQueryDevtools && <ReactQueryDevtools initialIsOpen={false} />}
+              </BrowserRouter>
             </NotificationProvider>
           </LanguageProvider>
         </AuthProvider>

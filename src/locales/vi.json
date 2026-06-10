@@ -107,6 +107,8 @@
     "copy": "Sao chép",
     "copied": "Đã sao chép!",
     "loading": "Đang tải...",
+    "processing": "Đang xử lý...",
+    "saving": "Đang lưu...",
     "error": "Lỗi",
     "success": "Thành công",
     "active_status": "Hoạt động",
@@ -1464,7 +1466,8 @@
           "passwordIsRequired2": "Mật khẩu không được để trống.",
           "passwordMustBeAt2": "Mật khẩu phải từ 6 ký tự.",
           "accountDoesNotExist": "Tài khoản không tồn tại hoặc mật khẩu sai.",
-          "linkRequestCancelled": "Đã hủy bỏ yêu cầu liên kết."
+          "linkRequestCancelled": "Đã hủy bỏ yêu cầu liên kết.",
+          "emailAlreadyExists": "Email này đã được đăng ký."
         }
       },
       "steps": {

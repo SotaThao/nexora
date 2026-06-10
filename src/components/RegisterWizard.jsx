@@ -1,5 +1,6 @@
 import React from 'react'
 import { Check } from 'lucide-react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useRegisterForm } from './register/hooks/useRegisterForm'
 import StepRoleSelect from './register/steps/StepRoleSelect'
 import StepCredentials from './register/steps/StepCredentials'
@@ -9,10 +10,59 @@ import StepPayoutSetup from './register/steps/StepPayoutSetup'
 import StepSuccess from './register/steps/StepSuccess'
 import TermsModal from './register/modals/TermsModal'
 import PayoutEditModal from './register/modals/PayoutEditModal'
-import AuthGraphicPanel from './auth/AuthGraphicPanel'
+import apiAuthAdapter from '../auth/adapters/apiAuthAdapter'
+import { useClearMerchantSetup } from '../data/hooks/useMerchantSetup'
+import { useClearProfileSettings } from '../data/hooks/useProfileSettings'
+import { logger } from '../utils/logger'
 
-export default function RegisterWizard(props) {
-  const form = useRegisterForm(props)
+export default function RegisterWizard() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const clearMerchantSetupMutation = useClearMerchantSetup()
+  const clearProfileSettingsMutation = useClearProfileSettings()
+
+  const ssoEmail = location.state?.ssoEmail || ''
+
+  const handleRegisterAndLogin = async (registeredEmail) => {
+    clearMerchantSetupMutation.mutate()
+    clearProfileSettingsMutation.mutate()
+
+    const ssoPrefillData = {
+      email: registeredEmail,
+      name: '',
+      industry: '',
+      address: '',
+      phone: '',
+      website: '',
+      logo: null,
+      paymentAccounts: { venmo: '', cashapp: '', zelle: '', vlinkpay: '' },
+      reviewLinks: { googleReview: '', yelpReview: '', facebookReview: '', feedbackEmail: registeredEmail }
+    }
+
+    try {
+      await apiAuthAdapter.getSession()
+    } catch (e) {
+      logger.error('Failed to get session in handleRegisterAndLogin', e)
+    }
+    
+    navigate('/onboarding', { state: { ssoPrefillData, isNewRegistration: true } })
+  }
+
+  const formProps = {
+    ssoEmail,
+    isRedirectedFromSession: !!ssoEmail,
+    onBackToLogin: () => {
+      if (ssoEmail) {
+        navigate(-1)
+      } else {
+        navigate('/login')
+      }
+    },
+    onRegisterSuccess: () => navigate('/login'),
+    onRegisterAndLogin: handleRegisterAndLogin
+  }
+
+  const form = useRegisterForm(formProps)
   const {
     currentStep, role, currentLanguage, setLanguage, t, getStepName,
     showTermsModal, setShowTermsModal, setTermsAccepted, setErrors,
@@ -24,17 +74,13 @@ export default function RegisterWizard(props) {
     isCapturing, modalError, setModalError,
     savePayoutAccount, handleModalFileChange, handleModalTakePhoto, handleModalClearQr,
   } = form
-  const isAuthEntryStep = currentStep <= 1
+
 
   return (
     <div className="min-h-dvh bg-slate-50 text-inkBlue font-sans antialiased relative overflow-x-hidden selection:bg-nexoraBrandSoft selection:text-nexoraBrand">
       {/* Background decorations */}
-      {!isAuthEntryStep && (
-        <>
-          <div className="absolute top-1/4 left-1/4 h-56 w-56 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(66,72,216,0.04)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-96 sm:w-96"></div>
-          <div className="absolute bottom-1/4 right-1/4 h-64 w-64 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(43,89,255,0.02)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-[450px] sm:w-[450px]"></div>
-        </>
-      )}
+      <div className="absolute top-1/4 left-1/4 h-56 w-56 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(66,72,216,0.04)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-96 sm:w-96"></div>
+      <div className="absolute bottom-1/4 right-1/4 h-64 w-64 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(43,89,255,0.02)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-[450px] sm:w-[450px]"></div>
 
       {/* Language Switcher */}
       <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-nexoraBorder shadow-sm">
@@ -53,34 +99,6 @@ export default function RegisterWizard(props) {
         </button>
       </div>
 
-      {isAuthEntryStep ? (
-        <div className="max-w-6xl mx-auto px-4 py-8 relative z-10 flex min-h-dvh items-center">
-          <div className="grid w-full grid-cols-1 overflow-hidden rounded-xl border border-nexoraBorder bg-white shadow-premium lg:min-h-[680px] lg:grid-cols-12">
-            <div className="lg:col-span-5 flex flex-col justify-between p-5 sm:p-8 xl:p-10">
-              <div className="mb-6 flex items-center gap-3">
-                <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="w-11 h-11 object-contain" />
-                <div>
-                  <h2 className="font-sans text-xl font-bold tracking-wide sm:text-2xl text-nexoraText">
-                    NEXORA <span className="ml-1.5 inline-flex align-middle text-nexoraBrand font-sans text-xs tracking-widest font-black uppercase bg-nexoraBrand/10 px-2 py-0.5 rounded border border-nexoraBrand/30">TOUCH</span>
-                  </h2>
-                  <p className="text-xs text-nexoraSubtle font-light tracking-wide mt-1">{t('components.RegisterWizard.subtitle')}</p>
-                </div>
-              </div>
-
-              <div className="flex flex-1 items-center">
-                <div className="w-full">
-                  {currentStep === 0 && <StepRoleSelect {...form} />}
-                  {currentStep === 1 && <StepCredentials {...form} />}
-                </div>
-              </div>
-            </div>
-
-            <div className="hidden p-3 lg:col-span-7 lg:block">
-              <AuthGraphicPanel />
-            </div>
-          </div>
-        </div>
-      ) : (
       <div className="max-w-4xl mx-auto px-4 py-8 relative z-10 flex flex-col justify-center min-h-dvh">
         {/* Branding header */}
         <div className="text-center mb-6">
@@ -93,22 +111,24 @@ export default function RegisterWizard(props) {
 
         {/* Wizard Steps indicator */}
         {currentStep > 0 && (
-          <div className="max-w-xl mx-auto w-full mb-10 px-4">
+          <div className="mb-14 sm:mb-16 px-8 max-w-xl mx-auto w-full">
             <div className="relative flex items-center justify-between">
-              {/* Connecting Track Line */}
-              <div className="absolute left-0 top-5 -translate-y-1/2 w-full h-[3px] bg-slate-200/60 rounded-full -z-10"></div>
-              <div
-                className="absolute left-0 top-5 -translate-y-1/2 h-[3px] bg-gradient-to-r from-nexoraElectric via-nexoraElectricMid to-nexoraViolet rounded-full -z-10 transition-all duration-500 ease-out"
-                style={{ width: `${((currentStep - 1) / (role === 'business' ? 1 : 3)) * 100}%` }}
-              ></div>
+              {/* Connecting Track Line Container */}
+              <div className="absolute left-5 right-5 top-5 -translate-y-1/2 h-[3px] -z-10">
+                <div className="absolute inset-0 bg-slate-200/60 rounded-full"></div>
+                <div
+                  className="absolute left-0 top-0 h-full bg-gradient-to-r from-nexoraElectric via-nexoraElectricMid to-nexoraViolet rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${((currentStep - 1) / (role === 'business' ? 1 : 3)) * 100}%` }}
+                ></div>
+              </div>
 
               {(role === 'business' ? [1, 2] : [1, 2, 3, 4]).map((step) => {
                 const isActive = step === currentStep
                 const isCompleted = step < currentStep
                 return (
-                  <div key={step} className="flex flex-col items-center relative z-10">
+                  <div key={step} className="relative z-10 flex flex-col items-center">
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 border-2 font-bold text-sm
+                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 border-2 font-bold text-sm shrink-0
                         ${isActive
                           ? 'bg-white border-nexoraBrand text-nexoraBrand shadow-[0_4px_12px_rgba(70,72,216,0.18)] ring-4 ring-nexoraBrandSoft/80 scale-110'
                           : isCompleted
@@ -118,11 +138,11 @@ export default function RegisterWizard(props) {
                     >
                       {isCompleted ? <Check className="w-5 h-5 stroke-[3px]" /> : step}
                     </div>
-                    <div className="text-center mt-2.5">
+                    <div className="absolute top-full mt-3 w-32 text-center left-1/2 -translate-x-1/2">
                       <span className="text-[9px] font-extrabold uppercase tracking-widest text-nexoraElectric/80 mb-0.5 block">
               {t('common.step_number', { step })}
                       </span>
-                      <span className={`text-[11px] font-extrabold tracking-wide transition-colors duration-300 block
+                      <span className={`text-[11px] font-extrabold tracking-wide transition-colors duration-300 block whitespace-nowrap
                         ${isActive ? 'text-nexoraBrand' : isCompleted ? 'text-slate-800' : 'text-slate-400'}`}>
                         {getStepName(step)}
                       </span>
@@ -144,7 +164,6 @@ export default function RegisterWizard(props) {
           {currentStep === 4 && role === 'personal' && <StepSuccess {...form} />}
         </div>
       </div>
-      )}
 
       {/* Terms & Conditions Modal Overlay */}
       <TermsModal
