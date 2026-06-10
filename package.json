@@ -15,6 +15,7 @@
     "seed:staff-demo": "node scripts/seed-staff-demo.js",
     "version:sync": "node scripts/bump-app-version.js --sync-only",
     "cap:sync": "node scripts/bump-app-version.js --sync-only && pnpm build && npx cap sync",
+    "sync":"pnpm build && npx cap sync",
     "cap:open:ios": "npx cap open ios",
     "cap:open:android": "npx cap open android",
     "capgo:init": "npx @capgo/cli init",

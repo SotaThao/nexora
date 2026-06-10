@@ -152,32 +152,7 @@ export default function LoginScreen({
                 <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-nexoraBorder"></div></div>
                 <span className="relative bg-white px-3 text-[10px] text-nexoraSubtle font-bold uppercase tracking-wider">{t('login.social_auth_divider')}</span>
               </div>
-
-              <div className="flex items-center justify-center gap-3 sm:grid sm:grid-cols-2">
-                <button
-                  type="button"
-                  onClick={() => onTriggerSimulation('sso_with_kyb')}
-                  aria-label={t('login.continue_google')}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-nexoraBorder bg-white p-0 text-xs font-bold text-nexoraText shadow-nexora-card transition-all hover:border-nexoraBrand hover:bg-nexoraCanvas sm:min-h-11 sm:w-auto sm:rounded-lg sm:px-4 sm:py-2 sm:shadow-none"
-                >
-                  <span className="flex items-center justify-center gap-2">
-                    <GoogleIcon />
-                    <span className="hidden sm:inline">{t('login.continue_google')}</span>
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onTriggerSimulation('sso_with_kyb')}
-                  aria-label={t('login.continue_apple')}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-nexoraBorder bg-white p-0 text-xs font-bold text-nexoraText shadow-nexora-card transition-all hover:border-nexoraBrand hover:bg-nexoraCanvas sm:min-h-11 sm:w-auto sm:rounded-lg sm:px-4 sm:py-2 sm:shadow-none"
-                >
-                  <span className="flex items-center justify-center gap-2">
-                    <AppleBrandIcon />
-                    <span className="hidden sm:inline">{t('login.continue_apple')}</span>
-                  </span>
-                </button>
-              </div>
-
+ 
               {/* Quick login / registration options */}
               <div className="grid grid-cols-1 gap-3">
                 <SecondaryButton onClick={() => onTriggerSimulation('new_register')}>
