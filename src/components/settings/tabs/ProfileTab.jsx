@@ -23,6 +23,7 @@ import {
   QrCode
 } from 'lucide-react'
 import ImageFileInput from '../../ui/ImageFileInput'
+import { captureQrImage } from '../../../native/imagePicker'
 
 const PayoutLogos = {
   zelle: (
@@ -98,12 +99,6 @@ export default function ProfileTab({
   saveBusiness,
   startEditReviews,
   saveReviews,
-  handleToggleMethod,
-  handleEditPayoutAccount,
-  handleModalImagePick,
-  handleModalTakePhoto,
-  handleModalClearQr,
-  savePayoutAccount,
   handleAvatarPick,
   handleAvatarChange,
   formatDOB,
@@ -165,21 +160,18 @@ export default function ProfileTab({
     )
   }
 
-  const handleModalFileChange = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => setEditQrCode(reader.result)
-      reader.readAsDataURL(file)
-    }
+  const handleModalImagePick = (dataUrl) => {
+    if (dataUrl) setEditQrCode(dataUrl)
   }
 
-  const handleModalTakePhoto = () => {
+  const handleModalTakePhoto = async () => {
     setIsCapturing(true)
-    setTimeout(() => {
-      setEditQrCode('https://via.placeholder.com/300?text=Mock+Camera+QR')
+    try {
+      const dataUrl = await captureQrImage({ fallbackValue: editValue || '' })
+      if (dataUrl) setEditQrCode(dataUrl)
+    } finally {
       setIsCapturing(false)
-    }, 1500)
+    }
   }
 
   const handleModalClearQr = () => setEditQrCode(null)

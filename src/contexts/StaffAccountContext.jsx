@@ -152,7 +152,9 @@ export function StaffAccountProvider({ staffId = null, children }) {
       todayTips,
       todayCount: tips.filter((t) => (t.dateTime || '').startsWith(latestDate)).length,
       monthTips,
+      monthCount: tips.length,
       pendingCount: pendingTips.length,
+      pendingAmount: pendingTips.reduce((sum, t) => sum + (Number(t.amount) || 0), 0),
       rating
     }
   }, [tips, pendingTips, staffReviews])

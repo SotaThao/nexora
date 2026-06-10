@@ -12,7 +12,7 @@
       "tips": "Tiền tip",
       "reviews": "Đánh giá",
       "pay": "Thanh toán",
-      "profile": "Tài khoản"
+      "profile": "Hồ sơ"
     },
     "titles": {
       "home": "Trang chủ",
@@ -28,18 +28,38 @@
       "inactive": "Ngừng hoạt động"
     },
     "home": {
+      "greeting_morning": "Chào buổi sáng, {name} 👋",
+      "greeting_afternoon": "Chào buổi chiều, {name} 👋",
+      "greeting_evening": "Chào buổi tối, {name} 👋",
+      "greeting_night": "Xin chào, {name} 👋",
+      "performance_subtitle": "Đây là hiệu suất của bạn hôm nay",
       "today_tips": "Tip hôm nay",
       "this_month": "Tháng này",
       "pending": "Chờ xác nhận",
       "rating": "Đánh giá",
       "tips_count": "{count} lượt tip",
+      "tips_plus": "+ {count} lượt tip",
+      "awaiting_confirm": "{count} đang chờ xác nhận",
       "need_confirm": "Cần xác nhận",
       "pending_confirmations": "Tip chờ xác nhận",
       "no_pending": "Không có tip nào chờ xác nhận.",
       "confirm": "Xác nhận",
       "confirm_all": "Xác nhận đã nhận tất cả",
+      "view_all": "Xem tất cả",
+      "manage": "Quản lý",
+      "your_linked_businesses": "Tiệm đã liên kết",
       "linked_businesses": "Tiệm đã liên kết",
-      "display_name": "Tên hiển thị"
+      "display_name": "Tên hiển thị",
+      "via_method": "qua {method}",
+      "anonymous_customer": "Khách hàng",
+      "quick_qr": "Mã QR",
+      "quick_tips": "Tip",
+      "quick_reviews": "Đánh giá",
+      "quick_payments": "Thanh toán",
+      "quick_refer": "Giới thiệu",
+      "refer_title": "Mời đồng nghiệp nail tech",
+      "refer_subtitle": "Nhận $10 cho mỗi bạn bè tham gia!",
+      "invite_now": "Mời ngay"
     },
     "tips": {
       "activity": "Hoạt động tip",

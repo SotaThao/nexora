@@ -12,7 +12,7 @@
       "tips": "Tips",
       "reviews": "Reviews",
       "pay": "Pay",
-      "profile": "Account"
+      "profile": "Profile"
     },
     "titles": {
       "home": "Home",
@@ -28,18 +28,38 @@
       "inactive": "Inactive"
     },
     "home": {
-      "today_tips": "Today Tips",
+      "greeting_morning": "Good morning, {name} 👋",
+      "greeting_afternoon": "Good afternoon, {name} 👋",
+      "greeting_evening": "Good evening, {name} 👋",
+      "greeting_night": "Hello, {name} 👋",
+      "performance_subtitle": "Here's your performance today",
+      "today_tips": "Today's Tips",
       "this_month": "This Month",
       "pending": "Pending",
       "rating": "Rating",
       "tips_count": "{count} tips",
+      "tips_plus": "+ {count} tips",
+      "awaiting_confirm": "{count} awaiting confirmation",
       "need_confirm": "Need confirm",
       "pending_confirmations": "Pending Confirmations",
       "no_pending": "No pending confirmations.",
       "confirm": "Confirm",
       "confirm_all": "Confirm All Received",
+      "view_all": "View all",
+      "manage": "Manage",
+      "your_linked_businesses": "Your Linked Businesses",
       "linked_businesses": "Linked Businesses",
-      "display_name": "Display name"
+      "display_name": "Display name",
+      "via_method": "via {method}",
+      "anonymous_customer": "Customer",
+      "quick_qr": "My QR",
+      "quick_tips": "Tips",
+      "quick_reviews": "Reviews",
+      "quick_payments": "Payments",
+      "quick_refer": "Refer & Earn",
+      "refer_title": "Invite fellow nail techs",
+      "refer_subtitle": "Earn $10 for each friend who joins!",
+      "invite_now": "Invite Now"
     },
     "tips": {
       "activity": "Tip Activity",
