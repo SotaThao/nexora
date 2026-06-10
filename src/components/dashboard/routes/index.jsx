@@ -34,6 +34,7 @@ export function OverviewRoute() {
       onOpenReviews={() => navigate('/dashboard/reviews')}
       businessName={ctx.businessName}
       previewQr={ctx.previewQr}
+      touchpoints={ctx.touchpoints}
       hasKyb={ctx.hasKyb}
       hasSetup={ctx.hasSetup}
       onStartSetup={ctx.onStartSetup}
@@ -80,7 +81,7 @@ export function StaffDetailRoute() {
   const { staffId } = useParams()
   const navigate = useNavigate()
   
-  const member = ctx.staff.find((m) => m.id === staffId)
+  const member = ctx.staff.find((m) => String(m.id) === String(staffId))
   if (!member) {
     return <Navigate to="/dashboard/staff" replace />
   }

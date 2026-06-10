@@ -16,6 +16,8 @@ import { useNotifications, useAddNotification } from '../../../data/hooks/useNot
 import { useStaffInviteInfo, useAcceptStaffInvite } from '../../../data/hooks/useStaffInvites'
 import { apiAuthAdapter } from '../../../auth/adapters/apiAuthAdapter'
 import { staffPaymentMethodsRepository } from '../../../data/repositories/staffPaymentMethods'
+import { staffInvitesRepository } from '../../../data/repositories/staffInvites'
+import httpClient from '../../../lib/httpClient'
 
 const MOCK_NEXORA_STAFF_PROFILES = {}
 
@@ -76,6 +78,7 @@ export default function useStaffRegistration({ inviteData }) {
   const [linkPassword, setLinkPassword] = useState('')
   const [linkError, setLinkError] = useState('')
   const [isLinkLoggedIn, setIsLinkLoggedIn] = useState(false)
+  const [hasAcceptedInvite, setHasAcceptedInvite] = useState(false)
 
   // Profile states
   const [fullName, setFullName] = useState('')
@@ -123,6 +126,7 @@ export default function useStaffRegistration({ inviteData }) {
   // (payment-methods) steps — drive button loading/disabled states.
   const [isProfileSubmitting, setIsProfileSubmitting] = useState(false)
   const [isActivating, setIsActivating] = useState(false)
+  const [isRegisterSubmitting, setIsRegisterSubmitting] = useState(false)
 
   // Setup initial values from inviteData (merchant dashboard simulation) or API metadata
   useEffect(() => {
@@ -361,6 +365,9 @@ export default function useStaffRegistration({ inviteData }) {
         lastName = parts.slice(1).join(' ') || 'Member'
       }
 
+      if (isRegisterSubmitting) return
+      setIsRegisterSubmitting(true)
+
       apiAuthAdapter.signup({
         email: regEmail,
         confirmEmail: regConfirmEmail,
@@ -384,6 +391,9 @@ export default function useStaffRegistration({ inviteData }) {
           )
         }
       })
+      .finally(() => {
+        setIsRegisterSubmitting(false)
+      })
       return
     }
 
@@ -398,6 +408,10 @@ export default function useStaffRegistration({ inviteData }) {
         setStep(2)
         return
       }
+      
+      if (isRegisterSubmitting) return
+      setIsRegisterSubmitting(true)
+      
       try {
         await apiAuthAdapter.verifyEmail({ token: otpCode.trim(), email: regEmail })
         setStep(2)
@@ -406,6 +420,8 @@ export default function useStaffRegistration({ inviteData }) {
         setOtpError(
           currentLanguage === 'vi' ? 'Mã xác nhận không hợp lệ.' : 'Invalid verification code.'
         )
+      } finally {
+        setIsRegisterSubmitting(false)
       }
       return
     }
@@ -529,88 +545,76 @@ export default function useStaffRegistration({ inviteData }) {
   }
 
   // Link existing profile (Option A)
-  const handleLinkExistingProfile = () => {
+  const handleLinkExistingProfile = async () => {
     if (!linkedProfile) return
 
-    const finalStaffMember = {
-      id: searchId.trim().toUpperCase(),
-      fullName: linkedProfile.fullName,
-      nickname: linkedProfile.nickname,
-      position: linkedProfile.position,
-      avatar: linkedProfile.avatar,
-      phone: linkedProfile.phone,
-      email: linkedProfile.email,
-      isActive: false, // Must be approved by merchant
-      status: 'Pending Acceptance',
-      flowType: 'Link Existing Staff ID',
-      paymentAccounts: {
-        venmo: linkedProfile.payoutConfigs?.venmo?.enabled ? linkedProfile.payoutConfigs.venmo.value.trim() : '',
-        cashapp: linkedProfile.payoutConfigs?.cashapp?.enabled ? linkedProfile.payoutConfigs.cashapp.value.trim() : '',
-        zelle: linkedProfile.payoutConfigs?.zelle?.enabled ? linkedProfile.payoutConfigs.zelle.value.trim() : '',
-        vlinkpay: linkedProfile.vlinkpayId || '',
-        paypal: linkedProfile.payoutConfigs?.paypal?.enabled ? linkedProfile.payoutConfigs.paypal.value.trim() : '',
-        bankwire: linkedProfile.payoutConfigs?.bankwire?.enabled ? linkedProfile.payoutConfigs.bankwire.value.trim() : '',
-        applecash: linkedProfile.payoutConfigs?.applecash?.enabled ? linkedProfile.payoutConfigs.applecash.value.trim() : ''
-      },
-      payoutConfigs: linkedProfile.payoutConfigs
-    }
-
-    // Save into merchant setup
-    let parsed = merchantSetupQuery.data ? { ...merchantSetupQuery.data } : null
-    if (!parsed) {
-      parsed = {
-        businessInfo: {
-          name: inviteData?.biz || '',
-          email: '',
-          phone: '',
-          category: ''
-        },
-        staffList: [],
-        touchPoints: []
+    if (isApiInvite) {
+      if (hasAcceptedInvite) {
+        setStep(5)
+        return
       }
-    }
 
-    try {
-      let staffList = parsed.staffList || []
-
-      // Find existing index or append
-      const existingIdx = staffList.findIndex(s => s.id === searchId.trim().toUpperCase() || s.email === linkedProfile.email || s.phone === linkedProfile.phone)
-      if (existingIdx !== -1) {
-        staffList[existingIdx] = {
-          ...staffList[existingIdx],
-          ...finalStaffMember
+      if (isRegisterSubmitting) return
+      setIsRegisterSubmitting(true)
+      try {
+        let finalDisplayName = (linkedProfile.fullName || '').trim()
+        if (finalDisplayName.length < 2) {
+          finalDisplayName = 'Staff Member'
         }
-      } else {
-        staffList.push(finalStaffMember)
-      }
 
-      parsed.staffList = staffList
-      saveMerchantSetupMutation.mutateAsync(parsed)
-        .catch((err) => logger.error('Failed to save merchant setup during staff link', err))
-
-      // Add notification to merchant
-      const newNoti = {
-        id: `noti-join-${finalStaffMember.id}-${Date.now()}`,
-        staffId: finalStaffMember.id,
-        type: 'feedback_alert',
-        title: t('components.staff_registration.hooks.useStaffRegistration.newJoinRequest'),
-        message: currentLanguage === 'vi'
-          ? `Thợ ${finalStaffMember.fullName} (${finalStaffMember.position}) đã gửi yêu cầu liên kết với tiệm của bạn.`
-          : `Technician ${finalStaffMember.fullName} (${finalStaffMember.position}) requested to link with your salon.`,
-        time: t('components.staff_registration.hooks.useStaffRegistration.justNow'),
-        read: false,
-        linkTab: 'staff'
+        await acceptInviteMutation.mutateAsync({
+          token: inviteToken,
+          displayName: finalDisplayName,
+          position: linkedProfile.position || null,
+        })
+        
+        // Refresh session after accepting invite to get the updated staffId/claims
+        const session = await apiAuthAdapter.refreshSession()
+        if (session) {
+          const code = session.staffCode || session.staffId
+          if (code) setStaffId(code)
+        }
+        
+        setStep(5)
+      } catch (err) {
+        logger.error('Failed to link existing profile', err)
+        showToast(
+          currentLanguage === 'vi' ? 'Lỗi liên kết tiệm. Vui lòng thử lại.' : 'Failed to link with salon. Please try again.',
+          'error'
+        )
+      } finally {
+        setIsRegisterSubmitting(false)
       }
-      addNotificationMutation.mutate(newNoti)
-    } catch (e) {
-      logger.error('Failed to update staff database in wizard', e)
+      return
+    }
+
+    setIsRegisterSubmitting(true)
+    try {
+      await staffInvitesRepository.joinPublicInvite({
+        referralCode: inviteData?.biz,
+        displayName: linkedProfile.fullName,
+        phoneNumber: linkedProfile.phone,
+        position: linkedProfile.position,
+        bio: null
+      })
+    } catch (err) {
+      logger.error('Failed to join public invite', err)
+      const isAlreadyLinked = err?.response?.data?.errorCode === 'STAFF_ALREADY_LINKED_TO_BUSINESS' || err?.response?.data?.errorCode === 'STAFF_INVITE_ALREADY_EXISTS'
+      const errorMsg = isAlreadyLinked
+        ? (currentLanguage === 'vi' ? 'Bạn đã gửi yêu cầu rồi hoặc đã là nhân viên của tiệm này.' : 'You have already requested or are already linked to this business.')
+        : (currentLanguage === 'vi' ? 'Lỗi gửi yêu cầu gia nhập. Vui lòng thử lại.' : 'Failed to join business. Please try again.')
+      showToast(errorMsg, 'error')
+      setIsRegisterSubmitting(false)
+      return
+    } finally {
+      setIsRegisterSubmitting(false)
     }
 
     setStaffId(searchId.trim().toUpperCase())
     setStep(5)
   }
 
-  const handleLinkLogin = (e) => {
+  const handleLinkLogin = async (e) => {
     if (e) e.preventDefault()
     setLinkError('')
 
@@ -623,6 +627,75 @@ export default function useStaffRegistration({ inviteData }) {
     }
     if (!passwordQuery) {
       setLinkError(t('components.staff_registration.hooks.useStaffRegistration.passwordIsRequired2'))
+      return
+    }
+
+    if (isApiInvite) {
+      if (isRegisterSubmitting) return
+      setIsRegisterSubmitting(true)
+      try {
+        const session = await apiAuthAdapter.login({ email: emailQuery, password: passwordQuery })
+        
+        if (session?.role !== 'staff') {
+          setLinkError(currentLanguage === 'vi' ? 'Tài khoản không phải là thợ (Staff)' : 'Account is not a staff account')
+          return
+        }
+
+        const profileData = await httpClient.get('/api/v1/userprofile/me')
+        const paymentMethods = await staffPaymentMethodsRepository.getAll()
+
+        const payoutConfigs = {}
+        paymentMethods.forEach(pm => {
+          const typeLower = pm.type.toLowerCase()
+          payoutConfigs[typeLower] = {
+            enabled: pm.isActive,
+            value: pm.accountInfo || '',
+            qrCode: pm.imageUrl || '',
+            accountName: profileData.fullName || ''
+          }
+        })
+        
+        const vlinkpayMethod = paymentMethods.find(m => m.type.toLowerCase() === 'vlinkpay')
+        const vlinkpayIdVal = vlinkpayMethod ? vlinkpayMethod.accountInfo : ''
+
+        const isProfileComplete = paymentMethods.some(pm => pm.isActive && (pm.accountInfo || '').trim() !== '')
+
+        setSearchId(session.staffId || `NEX-STAFF-${emailQuery.slice(0,4).toUpperCase()}`)
+        setLinkedProfile({
+          fullName: profileData.fullName || profileData.email?.split('@')[0] || '',
+          nickname: profileData.firstName || profileData.email?.split('@')[0] || '',
+          position: 'Nail Technician',
+          phone: profileData.phoneNumber || '',
+          email: profileData.email || emailQuery,
+          avatar: profileData.profileImage?.url || '',
+          vlinkpayId: vlinkpayIdVal,
+          payoutConfigs
+        })
+        setIsLinkLoggedIn(true)
+        
+        if (!isProfileComplete) {
+          setFullName(profileData.fullName || profileData.email?.split('@')[0] || '')
+          setNickname(profileData.firstName || profileData.email?.split('@')[0] || '')
+          setPhone(profileData.phoneNumber || '')
+          setEmail(profileData.email || emailQuery)
+          setStep(2)
+        } else {
+          showToast(
+            currentLanguage === 'vi'
+              ? `Đăng nhập thành công! Chào mừng ${profileData.fullName || emailQuery}.`
+              : `Login successful! Welcome ${profileData.fullName || emailQuery}.`
+          )
+        }
+      } catch (err) {
+        logger.error('handleLinkLogin API error', err)
+        if (err?.status === 401 || err?.errorCode === 'USER_LOGIN_INVALID_USERNAME_OR_PASSWORD') {
+          setLinkError(t('staff_registration.link.incorrect_password') || 'Account does not exist or incorrect password.')
+        } else {
+          setLinkError(currentLanguage === 'vi' ? 'Lỗi đăng nhập. Vui lòng thử lại.' : 'Login failed. Please try again.')
+        }
+      } finally {
+        setIsRegisterSubmitting(false)
+      }
       return
     }
 
@@ -756,6 +829,7 @@ export default function useStaffRegistration({ inviteData }) {
            }
         }
 
+        setHasAcceptedInvite(true)
         setStep(3)
       } catch (err) {
         logger.error('Failed to accept invite or login', err)
@@ -824,7 +898,11 @@ export default function useStaffRegistration({ inviteData }) {
             }
           }
         }
-        setStep(5)
+        if (isLinkLoggedIn) {
+          setStep(0)
+        } else {
+          setStep(5)
+        }
       } catch (err) {
         logger.error('Failed to save payment methods', err)
         showToast(
@@ -1002,6 +1080,7 @@ export default function useStaffRegistration({ inviteData }) {
     simulateSuccessfulScan,
     handleRegisterSubmit,
     handleVerifyOtp,
+    isRegisterSubmitting,
     handleResendOtp,
     autoFillOtp,
     autoFillPayments,

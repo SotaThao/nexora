@@ -1,8 +1,9 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import {
-  Building2, Upload, MapPin, Phone, Globe, ShieldCheck, HelpCircle
+  Building2, Upload, MapPin, Globe, ShieldCheck, HelpCircle
 } from 'lucide-react'
 import CustomSelect from '../../CustomSelect'
+import CountryCodeSelect, { formatNationalNumber, parsePhone } from '../../CountryCodeSelect'
 import { renderTextWithGoldStars } from '../constants'
 import { renderLabel } from '../../../contexts/LanguageContext'
 
@@ -19,6 +20,8 @@ export default function Step1BusinessInfo({
   setErrors,
   handleLogoChange
 }) {
+  const phoneParsed = useMemo(() => parsePhone(businessInfo.phone), [businessInfo.phone])
+
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="border-b border-nexoraRule pb-4 mb-4">
@@ -33,9 +36,12 @@ export default function Step1BusinessInfo({
 
         {/* Left Column - Store Info & Logo */}
         <div className="lg:col-span-6 space-y-5 lg:border-r lg:border-nexoraRule lg:pr-8">
-          <h3 className="text-xs font-bold text-nexoraText uppercase tracking-wider border-b border-nexoraRule pb-2">
-            {t('setup.store_info_title')}
-          </h3>
+          <div className="flex justify-between items-end border-b border-nexoraRule pb-2">
+            <h3 className="text-xs font-bold text-nexoraText uppercase tracking-wider">
+              {t('setup.store_info_title')}
+            </h3>
+            <span className="text-[10px] text-red-500 font-bold bg-red-50 px-1.5 py-0.5 rounded">* require</span>
+          </div>
 
           {/* Logo uploader compact row */}
           <div>
@@ -143,17 +149,27 @@ export default function Step1BusinessInfo({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">{renderLabel(t('setup.store_phone'))}</label>
-              <div className="relative">
-                <Phone className="absolute left-3.5 top-3.5 w-4 h-4 text-nexoraSubtle" />
+              <div className="flex rounded-lg shadow-sm">
+                <CountryCodeSelect
+                  value={phoneParsed.countryCode}
+                  onChange={(newCode) => {
+                    if (isSsoLocked) return
+                    const reFormatted = formatNationalNumber(phoneParsed.nationalNumber, newCode)
+                    setBusinessInfo({ ...businessInfo, phone: `${newCode} ${reFormatted}`.trim() })
+                    if (errors.phone) setErrors({ ...errors, phone: '' })
+                  }}
+                  disabled={isSsoLocked}
+                />
                 <input
                   type="text"
                   disabled={isSsoLocked}
                   placeholder={t('components.setup_wizard.steps.Step1BusinessInfo.phPhone')}
-                  className={`w-full bg-nexoraCanvas border ${errors.phone ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} ${isSsoLocked ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : ''} rounded-lg pl-11 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
-                  value={businessInfo.phone}
+                  className={`w-full bg-nexoraCanvas border border-l-0 ${errors.phone ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} ${isSsoLocked ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : ''} rounded-r-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all min-w-0`}
+                  value={formatNationalNumber(phoneParsed.nationalNumber, phoneParsed.countryCode)}
                   onChange={(e) => {
                     if (isSsoLocked) return
-                    setBusinessInfo({ ...businessInfo, phone: e.target.value })
+                    const formatted = formatNationalNumber(e.target.value, phoneParsed.countryCode)
+                    setBusinessInfo({ ...businessInfo, phone: `${phoneParsed.countryCode} ${formatted}`.trim() })
                     if (errors.phone) setErrors({ ...errors, phone: '' })
                   }}
                 />

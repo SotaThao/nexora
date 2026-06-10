@@ -11,6 +11,7 @@ import {
   useMerchantPaymentMethods,
   useSaveMerchantPayoutConfigs
 } from '../../../data/hooks/useMerchantPaymentMethods'
+import { useCreateTouchpoint } from '../../../data/hooks/useMerchantTouchpoints'
 import {
   DEMO_BUSINESS,
   DEMO_LINKS,
@@ -27,6 +28,7 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
   const updateReviewLinksMutation = useUpdateReviewLinks()
   const completeOnboardingMutation = useCompleteOnboarding()
   const savePayoutConfigsMutation = useSaveMerchantPayoutConfigs()
+  const createTouchpointMutation = useCreateTouchpoint()
   const [currentStep, setCurrentStep] = useState(1) // 1, 2, 3
   const isSsoLocked = !!hasKyb // Lock fields ONLY if business is already KYB approved
 
@@ -472,7 +474,18 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
   // (PUT accountInfo + PATCH toggle on the pre-seeded methods), then complete onboarding.
   const handleCompleteSetup = (onComplete) => {
     savePayoutConfigsMutation.mutate(businessInfo.payoutConfigs, {
-      onSuccess: () => {
+      onSuccess: async () => {
+        // Persist a default master/lobby touch point so the "Master Store QR"
+        // (general pool tips) has a real backing touch page. The onboarding
+        // wizard previously kept touch points only in local state and never
+        // created any via the API, leaving /touch/{slug}/general → 404.
+        // Best-effort: never block onboarding completion on this (e.g. Starter
+        // plan limit reached, or it already exists from a prior run).
+        try {
+          await createTouchpointMutation.mutateAsync({ name: 'Master Store', type: 'FrontDesk' })
+        } catch {
+          // ignore — owner can still add touch points later in Touchpoint Manager
+        }
         completeOnboardingMutation.mutate(undefined, {
           onSuccess: () => {
             onComplete({

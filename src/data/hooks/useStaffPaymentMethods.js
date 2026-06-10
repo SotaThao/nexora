@@ -21,7 +21,18 @@ import { useTranslation } from '../../contexts/LanguageContext'
 export function useStaffPaymentMethods() {
   return useQuery({
     queryKey: qk.staffPaymentMethods(),
-    queryFn: () => staffPaymentMethodsRepository.getAll()
+    queryFn: async () => {
+      try {
+        return await staffPaymentMethodsRepository.getAll()
+      } catch (err) {
+        if (err?.status === 404) return []
+        throw err
+      }
+    },
+    retry: (failureCount, error) => {
+      if (error?.status === 404) return false
+      return failureCount < 3
+    }
   })
 }
 

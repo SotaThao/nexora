@@ -21,6 +21,7 @@ export default function RegisterWizard() {
   const clearMerchantSetupMutation = useClearMerchantSetup()
   const clearProfileSettingsMutation = useClearProfileSettings()
 
+  const showPersonalSuccessPopup = location.state?.showPersonalSuccessPopup || false
   const ssoEmail = location.state?.ssoEmail || ''
 
   const handleRegisterAndLogin = async (registeredEmail) => {
@@ -51,6 +52,8 @@ export default function RegisterWizard() {
   const formProps = {
     ssoEmail,
     isRedirectedFromSession: !!ssoEmail,
+    initialStep: showPersonalSuccessPopup ? 3 : 0,
+    initialRole: showPersonalSuccessPopup ? 'personal' : 'personal',
     onBackToLogin: () => {
       if (ssoEmail) {
         navigate(-1)
@@ -118,11 +121,11 @@ export default function RegisterWizard() {
                 <div className="absolute inset-0 bg-slate-200/60 rounded-full"></div>
                 <div
                   className="absolute left-0 top-0 h-full bg-gradient-to-r from-nexoraElectric via-nexoraElectricMid to-nexoraViolet rounded-full transition-all duration-500 ease-out"
-                  style={{ width: `${((currentStep - 1) / (role === 'business' ? 1 : 3)) * 100}%` }}
+                  style={{ width: `${((currentStep - 1) / (role === 'business' ? 1 : 2)) * 100}%` }}
                 ></div>
               </div>
 
-              {(role === 'business' ? [1, 2] : [1, 2, 3, 4]).map((step) => {
+              {(role === 'business' ? [1, 2] : [1, 2, 3]).map((step) => {
                 const isActive = step === currentStep
                 const isCompleted = step < currentStep
                 return (
@@ -158,10 +161,8 @@ export default function RegisterWizard() {
         <div className="bg-white rounded-2xl border border-nexoraBorder shadow-premium overflow-hidden transition-all duration-500">
           {currentStep === 0 && <StepRoleSelect {...form} />}
           {currentStep === 1 && <StepCredentials {...form} />}
-          {currentStep === 2 && role === 'business' && <StepOtpVerify {...form} />}
-          {currentStep === 2 && role === 'personal' && <StepProfileSetup {...form} />}
-          {currentStep === 3 && role === 'personal' && <StepPayoutSetup {...form} />}
-          {currentStep === 4 && role === 'personal' && <StepSuccess {...form} />}
+          {currentStep === 2 && <StepOtpVerify {...form} />}
+          {currentStep === 3 && role === 'personal' && <StepSuccess {...form} />}
         </div>
       </div>
 

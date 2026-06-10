@@ -198,7 +198,7 @@ export default function Dashboard({
 
   const [selectedLeaderboardStaff, setSelectedLeaderboardStaff] = useState(null)
 
-  const businessName = profile?.businessName || setupData?.businessInfo?.name || ''
+  const businessName = profile?.businessName || setupData?.businessInfo?.name || merchantSetupData?.businessInfo?.name || ''
 
   const {
     staff,
@@ -263,7 +263,12 @@ export default function Dashboard({
 
   // Filter lists based on searchQuery
   const filteredStaff = useMemo(() => {
-    const visibleStaff = staff.filter(member => member.status !== 'Pending Acceptance')
+    const isPendingRequest = (member) => 
+      (member.status === 'Pending Acceptance' || member.status === 'Pending') && 
+      (member.itemType === 'link' || member.itemType === 'invite')
+      
+    const visibleStaff = staff.filter(member => !isPendingRequest(member))
+    
     if (!searchQuery) return visibleStaff
     const query = searchQuery.toLowerCase().trim()
     return visibleStaff.filter(member =>
@@ -274,7 +279,10 @@ export default function Dashboard({
   }, [staff, searchQuery])
 
   const pendingStaff = useMemo(() => {
-    return staff.filter(member => member.status === 'Pending Acceptance')
+    return staff.filter(member => 
+      (member.status === 'Pending Acceptance' || member.status === 'Pending') && 
+      (member.itemType === 'link' || member.itemType === 'invite')
+    )
   }, [staff])
 
   const filteredTouchpoints = useMemo(() => {
@@ -381,6 +389,11 @@ export default function Dashboard({
       name: target.name || `Personal QR - ${staffName}`,
       subtitle: target.position || target.type || 'Staff QR',
       slug: finalSlug,
+      // Canonical customer URL + QR image come from the API (GET touchpoints).
+      // Carry them through so QrModal uses the real slugs instead of building
+      // a link from slugify(businessName) (which is blank pre-KYB).
+      url: target.url || null,
+      qrImageUrl: target.qrImageUrl || null,
       isActive: target.isActive !== undefined ? target.isActive : true
     })
   }
@@ -409,7 +422,7 @@ export default function Dashboard({
     handleLinkStaff, handleInviteStaff, handleResendInvite, handleAcceptJoinRequest, handleDeclineJoinRequest, handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     setInviteShareDefaultName, setInviteShareDefaultContact, setIsInviteShareOpen,
     filteredTouchpoints, setAddTouchpointPrefill, setIsAddTouchpointModalOpen, deleteTouchpoint, toggleTouchpointStatus, linkDevice, devices, handleAddDevice, handleDeleteDevice, handleToggleDeviceStatus,
-    filteredReviews, reviewFilterStaff, setReviewFilterStaff, setupData,
+    reviews, filteredReviews, reviewFilterStaff, setReviewFilterStaff, setupData: setupData ?? merchantSetupData,
     tipsTab, setTipsTab, processingFee, setProcessingFee,
     filteredTransactions, touchpoints,
     verificationStatus, requireKyb, userEmail, onKybSuccess, settingsTab, setSettingsTab,

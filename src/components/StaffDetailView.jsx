@@ -47,8 +47,8 @@ function renderTextWithGoldStars(text) {
 export default function StaffDetailView({
   staffMember,
   onBack,
-  transactions,
-  reviews,
+  transactions = [],
+  reviews = [],
   onEdit,
   onQr,
   onDelete

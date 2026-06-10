@@ -90,8 +90,8 @@ function StaffView({
   const [inviteMethod, setInviteMethod] = useState('SMS')
 
   // Calculate Metrics
-  const totalLinked = allStaff.filter(s => s.status !== 'Pending Setup' && s.status !== 'Pending Acceptance').length
-  const pendingCount = allStaff.filter(s => s.status === 'Pending Setup' || s.status === 'Pending Acceptance').length
+  const totalLinked = staff ? staff.length : 0
+  const pendingCount = pendingStaff ? pendingStaff.length : 0
   const paymentCompleteCount = allStaff.filter(s => {
     return Object.values(s.paymentAccounts || {}).some(val => val && val.trim() !== '')
   }).length
@@ -263,10 +263,10 @@ function StaffView({
                 </tr>
               </thead>
               <tbody>
-                {pendingStaff.map((member) => {
+                {pendingStaff.map((member, index) => {
                   const wallets = getWalletBadges(member)
                   return (
-                    <tr key={member.id} className="border-b border-nexoraRule last:border-0 hover:bg-slate-50/40 transition">
+                    <tr key={member.id || index} className="border-b border-nexoraRule last:border-0 hover:bg-slate-50/40 transition">
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           {member.avatar ? (
@@ -386,7 +386,7 @@ function StaffView({
               </tr>
             </thead>
             <tbody>
-              {sortedStaff.map((member) => {
+              {sortedStaff.map((member, index) => {
                 const wallets = getWalletBadges(member)
                 const isPendingSetup = member.status === 'Pending Setup'
                 const isPendingAcceptance = member.status === 'Pending Acceptance'
@@ -394,7 +394,7 @@ function StaffView({
                 const isPending = isPendingSetup || isPendingAcceptance || isPendingUnlink
 
                 return (
-                  <tr key={member.id} className="border-b border-nexoraRule last:border-0 hover:bg-slate-50/40 transition">
+                  <tr key={member.id || index} className="border-b border-nexoraRule last:border-0 hover:bg-slate-50/40 transition">
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3 cursor-pointer group" onClick={() => onViewDetail(member.id)}>
                         {member.avatar ? (

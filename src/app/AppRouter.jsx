@@ -1,8 +1,10 @@
 import React, { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, useParams, useLocation, useNavigate } from 'react-router-dom'
 import RequireAuth from './RequireAuth'
+import RequireOnboarded from './RequireOnboarded'
 import RootRedirect from './RootRedirect'
 import LoadingScreen from './LoadingScreen'
+import ErrorBoundary from '../components/ui/ErrorBoundary'
 import { isDemoToolsEnabled } from './demoTools'
 import { useAuth } from '../auth/useAuth'
 import {
@@ -50,8 +52,10 @@ function InviteRoute() {
 
 export default function AppRouter() {
   const { session, logout } = useAuth()
-  
+  const location = useLocation()
+
   return (
+    <ErrorBoundary resetKey={location.pathname}>
     <Suspense fallback={<LoadingScreen />}>
       <Routes>
         <Route path="/" element={<RootRedirect />} />
@@ -73,13 +77,15 @@ export default function AppRouter() {
         
         <Route path="/dashboard" element={
           <RequireAuth role="owner">
-            <Dashboard
-               userEmail={session?.email}
-               userRole="owner"
-               verificationStatus={session?.verificationStatus || 'unverified'}
-               hasKyb={session?.verificationStatus === 'kyb_approved'}
-               onLogout={logout}
-            />
+            <RequireOnboarded>
+              <Dashboard
+                 userEmail={session?.email}
+                 userRole="owner"
+                 verificationStatus={session?.verificationStatus || 'unverified'}
+                 hasKyb={session?.verificationStatus === 'kyb_approved'}
+                 onLogout={logout}
+              />
+            </RequireOnboarded>
           </RequireAuth>
         }>
           <Route index element={<OverviewRoute />} />
@@ -118,5 +124,6 @@ export default function AppRouter() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
+    </ErrorBoundary>
   )
 }

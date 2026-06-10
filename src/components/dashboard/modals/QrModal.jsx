@@ -9,8 +9,22 @@ function QrModal({ target, businessName, onClose }) {
   if (!target) return null
 
   const businessSlug = slugify(businessName || '')
-  // Build the live customer portal URL for this touchpoint/staff QR
-  const qrUrl = `${window.location.origin}/touch/${businessSlug}/${target.slug}`
+  // Prefer the canonical customer URL returned by the API (GET touchpoints →
+  // `url`), which carries the real business + touch-point slugs. Keep the
+  // current environment's origin so the link resolves in dev (localhost) and
+  // deployed envs alike. Fall back to building from the slug only when the API
+  // url is missing (e.g. staff/master QR not sourced from the touchpoints API).
+  let qrUrl = ''
+  if (target.url) {
+    try {
+      qrUrl = `${window.location.origin}${new URL(target.url).pathname}`
+    } catch {
+      qrUrl = target.url
+    }
+  }
+  if (!qrUrl) {
+    qrUrl = `${window.location.origin}/touch/${businessSlug}/${target.slug}`
+  }
 
   const isStaff = target.slug?.startsWith('staff-')
   const displayName = isStaff ? target.name.replace('Personal QR - ', '') : ''
@@ -68,7 +82,7 @@ function QrModal({ target, businessName, onClose }) {
         </div>
 
         <p className="mt-4 rounded-lg bg-nexoraCanvas px-3 py-2 text-[10px] font-mono text-nexoraMuted select-all qr-print-url">
-          nexora.vlinkpay.com/touch/{businessSlug}/{target.slug}
+          {qrUrl.replace(/^https?:\/\//, '')}
         </p>
 
         <button

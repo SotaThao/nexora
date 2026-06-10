@@ -730,6 +730,7 @@
     "fullname_placeholder": "Ví dụ: Mia Tran",
     "staff_success_title": "Đăng ký Tài khoản Cá nhân thành công!",
     "staff_success_desc": "Tài khoản cá nhân của bạn đã được tạo. Bạn không cần xác minh KYB doanh nghiệp để bắt đầu.",
+    "need_invite_link": "Bạn cần có link invite từ một tiệm (Business) để trở thành thợ.",
     "staff_id_label": "Mã Personal ID của bạn:",
     "staff_linking_instructions": "Cung cấp mã Personal ID này cho Chủ tiệm/Salon để họ liên kết bạn vào danh sách của tiệm.",
     "staff_login_btn": "Đăng nhập vào Bảng điều khiển Cá nhân",

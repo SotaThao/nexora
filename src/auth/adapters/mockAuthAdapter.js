@@ -170,7 +170,7 @@ export const mockAuthAdapter = {
       const role = matchedAccount.role || 'owner'
 
       if (role === 'personal' || role === 'staff') {
-        const staffId = matchedAccount.staffId || 'NEX-STAFF-MIA0123'
+        const staffId = matchedAccount.staffId !== undefined ? matchedAccount.staffId : 'NEX-STAFF-MIA0123'
         _session = {
           id: matchedAccount.email,
           email: matchedAccount.email,

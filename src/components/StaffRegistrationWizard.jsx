@@ -172,6 +172,7 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
               setJoinPath={reg.setJoinPath}
               setShowOtpInput={reg.setShowOtpInput}
               isDemoToolsEnabled={isDemoToolsEnabled}
+              isSubmitting={reg.isRegisterSubmitting}
             />
           )}
 
