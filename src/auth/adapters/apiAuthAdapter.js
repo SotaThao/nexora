@@ -86,7 +86,23 @@ async function getBusinessKybStatus(profile) {
   }
 }
 
-function mapProfileToSession(profile, kybStatus) {
+/**
+ * Fetch the authenticated user's own StaffProfile (live Swagger:
+ * GET /api/v1/staff/profile → StaffProfileDto { staffCode, displayName, ... }).
+ * Returns null when no StaffProfile is linked (404 STAFF_PROFILE_NOT_FOUND).
+ */
+async function fetchStaffProfile() {
+  try {
+    return await httpClient.get('/api/v1/staff/profile')
+  } catch (err) {
+    if (err?.status !== 404) {
+      logger.error('Failed to fetch staff profile', err)
+    }
+    return null
+  }
+}
+
+function mapProfileToSession(profile, kybStatus, staffProfile = null) {
   if (!profile) return null
 
   let accountType = ACCOUNT_TYPE.PERSONAL
@@ -112,11 +128,16 @@ function mapProfileToSession(profile, kybStatus) {
     flag,
     displayName,
     role,
-    staffId: profile.staffCode || profile.staffProfileId || profile.staffId || null,
+    staffId: staffProfile?.staffCode || profile.staffCode || profile.staffProfileId || profile.staffId || null,
+    hasStaffProfile: Boolean(staffProfile),
+    staffCode: staffProfile?.staffCode || null,
     accountStatus,
     hasCompletedOnboarding: isBusiness
       ? accountStatus === 'Active' || kybStatus === 'kyb_approved' || !!profile.hasCompletedOnboarding
-      : undefined,
+      // Personal/staff: onboarding counts as completed only when the personal
+      // data was actually persisted to the backend (PUT /userprofile/update
+      // during the invite wizard / register flow).
+      : Boolean(((profile.firstName ?? '').trim() || (profile.lastName ?? '').trim())),
     verificationStatus: isBusiness ? (kybStatus || KYB_STATUS_BASIC) : (profile.status || 'unverified'),
     ssoPrefillData: null,
   }
@@ -151,7 +172,8 @@ export const apiAuthAdapter = {
       const profile = await profileSettingsRepository.get()
       const isBusiness = isBusinessProfile(profile)
       const kybStatus = isBusiness ? await getBusinessKybStatus(profile) : null
-      return mapProfileToSession(profile, kybStatus)
+      const staffProfile = isBusiness ? null : await fetchStaffProfile()
+      return mapProfileToSession(profile, kybStatus, staffProfile)
     } catch (err) {
       logger.error('Failed to get session profile', err)
       if (err?.status === 401 || err?.status === 403) {

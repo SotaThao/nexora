@@ -138,6 +138,7 @@ function Overview({
   onOpenReviews,
   businessName,
   previewQr,
+  touchpoints = [],
   hasKyb = true,
   hasSetup = true,
   onStartSetup,
@@ -165,6 +166,37 @@ function Overview({
       })() : `${i + 1}h ago`,
       avatarColor: ['bg-nexoraBrand', 'bg-purple-500', 'bg-nexoraElectric'][i % 3]
     }))
+  // The "Master Store QR" (general pool tips) must point to a REAL backing
+  // touch point — there is no store-level "general" touch page on the API
+  // (every customer touch URL needs a touchPointSlug). Prefer a FrontDesk
+  // touch point (the lobby/master created at onboarding), else the first one.
+  const masterTouchpoint =
+    (touchpoints || []).find((tp) => tp.type === 'FrontDesk') || (touchpoints || [])[0] || null
+  let masterTouchUrl = ''
+  if (masterTouchpoint?.url) {
+    try {
+      masterTouchUrl = `${window.location.origin}${new URL(masterTouchpoint.url).pathname}`
+    } catch {
+      masterTouchUrl = masterTouchpoint.url
+    }
+  }
+  const masterQrTarget = {
+    name: 'Master Welcome QR',
+    subtitle: 'Store Main Portal',
+    slug: masterTouchpoint?.slug || 'general',
+    url: masterTouchpoint?.url || null,
+    isActive: true,
+  }
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   // Fallback mock data if no real pending
   const displayPending = pendingConfirmations.length > 0 ? pendingConfirmations : [
@@ -303,6 +335,175 @@ function Overview({
             iconColor="text-pink-500"
             onClick={() => onNavigateMenu?.('support')}
           />
+      {/* Panels Grid */}
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(340px,1fr)]">
+        <TipsOverTimePanel
+          range={chartRange}
+          setRange={setChartRange}
+          chartStartDate={chartStartDate}
+          chartEndDate={chartEndDate}
+          setChartStartDate={setChartStartDate}
+          setChartEndDate={setChartEndDate}
+          transactions={transactions}
+          hasKyb={hasKyb}
+        />
+        <StaffLeaderboardPanel selectedStaff={selectedStaff} setSelectedStaff={setSelectedStaff} hasKyb={hasKyb} />
+      </div>
+
+      {/* Master Gateways Panel */}
+      <Panel className="p-7">
+        <h2 className="text-sm font-extrabold text-nexoraText uppercase tracking-wider">
+          {t('dashboard.master_gateway.title')}
+        </h2>
+        <p className="mt-1 text-xs text-nexoraMuted">
+          {t('dashboard.master_gateway.subtitle')}
+        </p>
+
+        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
+          {/* Master QR section */}
+          <div className="rounded-xl border border-nexoraBorder bg-nexoraCanvas p-5 flex flex-col md:flex-row justify-between gap-5">
+            <div className="flex-grow flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-nexoraBrandSoft text-nexoraBrand">
+                    <QrCode className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-nexoraText">
+                      {t('dashboard.master_gateway.qr_title')}
+                    </h3>
+                    <p className="text-[10px] text-nexoraMuted">
+                      {t('dashboard.master_gateway.qr_desc')}
+                    </p>
+                  </div>
+                </div>
+                <p className="mt-4 text-xs leading-normal text-nexoraMuted">
+                  {t('dashboard.master_gateway.qr_body')}
+                </p>
+              </div>
+
+              <div className="mt-6 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => previewQr(masterQrTarget)}
+                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-white border border-nexoraBorder px-4 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition cursor-pointer"
+                >
+                  <Eye className="h-4 w-4" />
+                  {t('dashboard.master_gateway.btn_open')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&data=${encodeURIComponent(
+                      (masterTouchUrl || `${window.location.origin}/touch/${(businessName || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}/general`)
+                    )}`
+                    const link = document.createElement('a')
+                    link.href = qrUrl
+                    link.download = 'master-qr.png'
+                    link.target = '_blank'
+                    link.click()
+                  }}
+                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white hover:bg-nexoraBrandDark transition cursor-pointer"
+                >
+                  <Download className="h-4 w-4" />
+                  {t('dashboard.master_gateway.btn_download')}
+                </button>
+              </div>
+            </div>
+
+            {/* Visual QR mockup thumbnail */}
+            <div
+              onClick={() => previewQr(masterQrTarget)}
+              className="flex-shrink-0 mx-auto md:mx-0 w-28 h-28 rounded-lg bg-white border border-nexoraBorder/80 p-2 flex items-center justify-center shadow-sm relative overflow-hidden cursor-pointer hover:border-nexoraBrand transition select-none group"
+            >
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
+                  (masterTouchUrl || `${window.location.origin}/touch/${(businessName || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}/general`)
+                )}`}
+                alt="Master QR Code Preview"
+                className="h-full w-full object-contain group-hover:scale-105 transition duration-200"
+              />
+              <div className="absolute inset-0 bg-nexoraBrand/80 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-1 text-white select-none">
+                <QrCode className="h-5 w-5" />
+                <span className="text-[9px] font-black uppercase tracking-wider">PREVIEW</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Master NFC section */}
+          <div className="rounded-xl border border-nexoraBorder bg-nexoraCanvas p-5 flex flex-col md:flex-row justify-between gap-5">
+            <div className="flex-grow flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-nexoraBrandSoft text-nexoraBrand">
+                    <Sparkles className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-nexoraText">
+                      {t('dashboard.master_gateway.nfc_title')}
+                    </h3>
+                    <p className="text-[10px] text-nexoraMuted">
+                      {t('dashboard.master_gateway.nfc_desc')}
+                    </p>
+                  </div>
+                </div>
+                <p className="mt-4 text-xs leading-normal text-nexoraMuted">
+                  {t('dashboard.master_gateway.nfc_body')}
+                </p>
+              </div>
+
+              <div className="mt-6 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nfcUrl = (masterTouchUrl || `${window.location.origin}/touch/${(businessName || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}/general`)
+                    navigator.clipboard.writeText(nfcUrl)
+                    showToast(t('components.dashboard.overview.Overview.copiedNfcRedirectLink'), 'success')
+                  }}
+                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-white border border-nexoraBorder px-4 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition cursor-pointer"
+                >
+                  <Pointer className="h-4 w-4" />
+                  {t('dashboard.master_gateway.btn_copy_link')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const slugify = (str) => str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+                    const configData = {
+                      version: "1.0",
+                      platform: "nexora-touch",
+                      businessName: businessName,
+                      gatewayUrl: (masterTouchUrl || `${window.location.origin}/touch/${(businessName || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}/general`),
+                      nfcTagId: "master-nfc-general"
+                    }
+                    const blob = new Blob([JSON.stringify(configData, null, 2)], { type: 'application/json' })
+                    const url = URL.createObjectURL(blob)
+                    const link = document.createElement('a')
+                    link.href = url
+                    link.download = `${slugify(businessName)}-nfc-config.json`
+                    link.click()
+                    URL.revokeObjectURL(url)
+                  }}
+                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white hover:bg-nexoraBrandDark transition cursor-pointer"
+                >
+                  <Download className="h-4 w-4" />
+                  {t('dashboard.master_gateway.btn_download_config')}
+                </button>
+              </div>
+            </div>
+
+            {/* Visual NFC puck mockup */}
+            <div className="flex-shrink-0 mx-auto md:mx-0 w-28 h-28 rounded-lg bg-white border border-nexoraBorder/80 p-3 flex flex-col items-center justify-center shadow-sm relative overflow-hidden select-none">
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-400/10 to-amber-500/20 border border-dashed border-amber-500/40 flex items-center justify-center animate-pulse">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-500 text-white shadow-md">
+                  <Sparkles className="h-[18px] w-[18px]" />
+                </span>
+              </div>
+              <div className="text-[9px] font-black uppercase text-amber-600 tracking-widest mt-2 animate-pulse">
+                NFC Active
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

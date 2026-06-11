@@ -15,8 +15,8 @@ export function normalizeStaffListItem(dto) {
   const isActive = dto.status === 'Active' || dto.status === 'Accepted'
 
   return {
-    id: dto.id,
-    staffLinkId: dto.itemType === 'link' ? dto.staffLinkId : null,
+    id: dto.id ?? dto.linkId ?? dto.inviteId,
+    staffLinkId: dto.itemType === 'link' ? (dto.staffLinkId ?? dto.linkId) : null,
     inviteId: dto.itemType === 'invite' ? dto.inviteId : null,
     staffProfileId: dto.staffProfileId ?? null,
     staffCode: dto.staffCode ?? null,

@@ -19,7 +19,7 @@ import { useMerchantStaff } from '../data/hooks/useMerchantStaff'
 import { useChartDateRange } from '../hooks/useChartDateRange'
 import { useTransactions } from '../data/hooks/useTransactions'
 import { useReviews } from '../data/hooks/useReviews'
-import { useNotifications, useReplaceAllNotifications, useMarkNotificationRead } from '../data/hooks/useNotifications'
+import { useNotifications, useMarkNotificationRead } from '../data/hooks/useNotifications'
 import { useProfileSettings, useSaveProfileSettings } from '../data/hooks/useProfileSettings'
 import { useMerchantSetup, useSaveMerchantSetup } from '../data/hooks/useMerchantSetup'
 import DashboardHeader from './dashboard/layout/DashboardHeader'
@@ -42,14 +42,6 @@ import InviteShareModal from './dashboard/modals/InviteShareModal'
 import AddTouchpointModal from './dashboard/modals/AddTouchpointModal'
 import MobileBottomNav from './dashboard/layout/MobileBottomNav'
 
-// ---------------------------------------------------------------------------
-// Default notifications seeded on first dashboard load (no storage data yet)
-// ---------------------------------------------------------------------------
-const DEFAULT_NOTIFICATIONS = [
-  { id: '1', type: 'feedback_alert', title: 'New Internal Feedback (2★)', message: 'Customer left feedback for Ashley P. at Pedicure Chair 02: "Great polish, but I waited 20 minutes after my appointment time."', time: '10 mins ago', read: false, linkTab: 'reviews' },
-  { id: '2', type: 'tip_success', title: 'New Tip Received ($28.00)', message: 'Mia Tran received $28.00 tip via Venmo at Manicure Station 03.', time: '25 mins ago', read: true, linkTab: 'reports' },
-  { id: '3', type: 'feedback_alert', title: 'New Internal Feedback (1★)', message: 'Customer left feedback for Vivian L. at Front Desk: "My color chipped after one day. I need someone to contact me."', time: '1 day ago', read: true, linkTab: 'reviews' }
-]
 
 export default function Dashboard({
   setupData,
@@ -91,7 +83,6 @@ export default function Dashboard({
   const { data: merchantSetupData } = useMerchantSetup()
   const { data: merchantStaffData, isLoading: isStaffLoading } = useMerchantStaff()
 
-  const replaceAllNotificationsMutation = useReplaceAllNotifications()
   const markNotificationReadMutation = useMarkNotificationRead()
   const saveMerchantSetupMutation = useSaveMerchantSetup()
 
@@ -101,26 +92,15 @@ export default function Dashboard({
   const transactions = transactionsData ?? []
   const reviews = reviewsData ?? []
 
-  // Notifications — thin local mirror so UI updates optimistically and
-  // preserves default seed on first load (no storage data).
-  const [notifications, setNotifications] = useState(() =>
-    notificationsData && notificationsData.length > 0
-      ? notificationsData
-      : DEFAULT_NOTIFICATIONS
-  )
+  // Notifications — thin local mirror so UI updates optimistically.
+  // Server-generated notifications come from GET /api/v1/notifications.
+  const [notifications, setNotifications] = useState(() => notificationsData ?? [])
 
   // Keep local notification mirror in sync when query data arrives / changes
   // (e.g. bridge-triggered refetch after a cross-tab update).
   useEffect(() => {
     if (notificationsData === undefined) return
-    if (notificationsData.length > 0) {
-      setNotifications(notificationsData)
-    } else {
-      // Seed defaults into the repo so they persist across reloads.
-      replaceAllNotificationsMutation.mutate(DEFAULT_NOTIFICATIONS)
-      setNotifications(DEFAULT_NOTIFICATIONS)
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    setNotifications(notificationsData)
   }, [notificationsData])
 
   // Profile — thin local mirror with complex initialisation / override rules.
@@ -199,7 +179,7 @@ export default function Dashboard({
 
   const [selectedLeaderboardStaff, setSelectedLeaderboardStaff] = useState(null)
 
-  const businessName = profile?.businessName || setupData?.businessInfo?.name || ''
+  const businessName = profile?.businessName || setupData?.businessInfo?.name || merchantSetupData?.businessInfo?.name || ''
 
   const {
     staff,
@@ -264,7 +244,12 @@ export default function Dashboard({
 
   // Filter lists based on searchQuery
   const filteredStaff = useMemo(() => {
-    const visibleStaff = staff.filter(member => member.status !== 'Pending Acceptance')
+    const isPendingRequest = (member) => 
+      (member.status === 'Pending Acceptance' || member.status === 'Pending') && 
+      (member.itemType === 'link' || member.itemType === 'invite')
+      
+    const visibleStaff = staff.filter(member => !isPendingRequest(member))
+    
     if (!searchQuery) return visibleStaff
     const query = searchQuery.toLowerCase().trim()
     return visibleStaff.filter(member =>
@@ -275,7 +260,10 @@ export default function Dashboard({
   }, [staff, searchQuery])
 
   const pendingStaff = useMemo(() => {
-    return staff.filter(member => member.status === 'Pending Acceptance')
+    return staff.filter(member => 
+      (member.status === 'Pending Acceptance' || member.status === 'Pending') && 
+      (member.itemType === 'link' || member.itemType === 'invite')
+    )
   }, [staff])
 
   const filteredTouchpoints = useMemo(() => {
@@ -382,6 +370,11 @@ export default function Dashboard({
       name: target.name || `Personal QR - ${staffName}`,
       subtitle: target.position || target.type || 'Staff QR',
       slug: finalSlug,
+      // Canonical customer URL + QR image come from the API (GET touchpoints).
+      // Carry them through so QrModal uses the real slugs instead of building
+      // a link from slugify(businessName) (which is blank pre-KYB).
+      url: target.url || null,
+      qrImageUrl: target.qrImageUrl || null,
       isActive: target.isActive !== undefined ? target.isActive : true
     })
   }
@@ -399,8 +392,16 @@ export default function Dashboard({
   // ---------------------------------------------------------------------------
   const handleSetNotifications = (updater) => {
     const next = typeof updater === 'function' ? updater(notifications) : updater
+    // Persist read-state transitions to the API (PUT /notifications/{id}/read).
+    next.forEach((n) => {
+      const prev = notifications.find((p) => p.id === n.id)
+      const nowRead = Boolean(n.read || n.isRead)
+      const wasRead = Boolean(prev && (prev.read || prev.isRead))
+      if (prev && nowRead && !wasRead) {
+        markNotificationReadMutation.mutate(n.id)
+      }
+    })
     setNotifications(next)
-    replaceAllNotificationsMutation.mutate(next)
   }
 
   const dashboardCtx = {
@@ -410,7 +411,7 @@ export default function Dashboard({
     handleLinkStaff, handleInviteStaff, handleResendInvite, handleAcceptJoinRequest, handleDeclineJoinRequest, handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     setInviteShareDefaultName, setInviteShareDefaultContact, setIsInviteShareOpen,
     filteredTouchpoints, setAddTouchpointPrefill, setIsAddTouchpointModalOpen, deleteTouchpoint, toggleTouchpointStatus, linkDevice, devices, handleAddDevice, handleDeleteDevice, handleToggleDeviceStatus,
-    filteredReviews, reviewFilterStaff, setReviewFilterStaff, setupData,
+    reviews, filteredReviews, reviewFilterStaff, setReviewFilterStaff, setupData: setupData ?? merchantSetupData,
     tipsTab, setTipsTab, processingFee, setProcessingFee,
     filteredTransactions, touchpoints,
     verificationStatus, requireKyb, userEmail, onKybSuccess, settingsTab, setSettingsTab,

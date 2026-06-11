@@ -62,7 +62,10 @@ function StaffModal({
   const pendingAccountsQuery = usePendingAccounts()
   const pendingAccountsList = pendingAccountsQuery.data ?? []
   const normalizedIdInput = idInput.trim().toUpperCase()
-  const staffAccountQuery = useStaffAccount(normalizedIdInput.startsWith('NEX-') ? normalizedIdInput : undefined)
+  const staffAccountQuery = useStaffAccount(
+    normalizedIdInput.startsWith('NEX-') ? normalizedIdInput : undefined,
+    { enabled: open && normalizedIdInput.startsWith('NEX-') }
+  )
   const staffAccountsQuery = useQuery({
     queryKey: qk.staffAccount(),
     queryFn: () => staffAccountsRepository.getAll(),

@@ -49,6 +49,10 @@ export const qk = {
   // Staff Payment Methods
   staffPaymentMethods: ()      => ['staffPaymentMethods'],
 
+  // Staff Self (own staff profile + linked businesses)
+  staffProfile:        ()      => ['staffProfile'],
+  staffBusinesses:     ()      => ['staffBusinesses'],
+
   // Public Customer Touch
   customerTouch: (businessSlug, touchPointSlug, sessionId) => ['customerTouch', businessSlug, touchPointSlug, sessionId],
   publicBusinessPaymentMethods: (businessId) => ['publicBusinessPaymentMethods', businessId],

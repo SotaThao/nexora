@@ -6,7 +6,12 @@ export function createStaffPaymentMethodsRepository(client = httpClient) {
      * @returns {Promise<Array<{ id: string, type: string, accountInfo: string, imageUrl: string, isActive: boolean, isConfigured: boolean }>>}
      */
     async getAll() {
-      return client.get('/api/v1/staff/payment-methods')
+      try {
+        return await client.get('/api/v1/staff/payment-methods')
+      } catch (err) {
+        if (err?.status === 404) return []
+        throw err
+      }
     },
 
     /**

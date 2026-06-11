@@ -59,6 +59,26 @@ export function createStaffInvitesRepository(client = httpClient) {
         }
       )
     },
+
+    /**
+     * Send a request to join a business via public invite QR code (Self-Serve Join).
+     * @param {object} payload - Request payload
+     * @param {string} payload.referralCode - The business referral code (from ?biz= parameter)
+     * @param {string} payload.displayName - Staff display name
+     * @param {string} [payload.phoneNumber] - Optional phone number
+     * @param {string} [payload.position] - Optional position
+     * @param {string} [payload.bio] - Optional bio
+     * @returns {Promise<void>}
+     */
+    async joinPublicInvite({ referralCode, displayName, phoneNumber, position, bio }) {
+      return await client.post('/api/v1/staff/join-public-invite', {
+        referralCode,
+        displayName,
+        phoneNumber: phoneNumber ?? null,
+        position: position ?? null,
+        bio: bio ?? null
+      })
+    },
   }
 }
 

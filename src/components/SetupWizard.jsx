@@ -17,7 +17,7 @@ export { renderTextWithGoldStars, getTouchpointIcon } from './setup-wizard/const
 export default function SetupWizard() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { logout, session } = useAuth()
+  const { logout, session, refreshSession } = useAuth()
 
   const ssoPrefillData = location.state?.ssoPrefillData || session?.ssoPrefillData
   const isKyb = session?.verificationStatus === 'kyb_approved'
@@ -27,7 +27,15 @@ export default function SetupWizard() {
     navigate('/login')
   }
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    // Onboarding just flipped the account to Active server-side. Refresh the
+    // auth session so hasCompletedOnboarding becomes true before we land on
+    // /dashboard, otherwise the RequireOnboarded gate would bounce us back.
+    try {
+      await refreshSession()
+    } catch {
+      // Non-fatal: navigate anyway; the gate re-derives on next session load.
+    }
     navigate('/dashboard')
   }
 
@@ -428,7 +436,7 @@ export default function SetupWizard() {
           </div>
 
           <p className="qr-print-url">
-            nexora.vlinkpay.com/touch/tp-main
+            {window.location.host}/touch/tp-main
           </p>
         </div>
       </div>

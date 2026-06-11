@@ -10,10 +10,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import staffAccountsRepository from '../repositories/staffAccounts'
 
-export function useStaffAccount(staffId) {
+export function useStaffAccount(staffId, options = {}) {
   return useQuery({
     queryKey: qk.staffAccount(staffId),
     queryFn: () => staffAccountsRepository.get(staffId ?? 'self'),
+    ...options
   })
 }
 

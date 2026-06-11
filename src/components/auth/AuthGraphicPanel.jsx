@@ -1,5 +1,5 @@
 import React from 'react'
-import { CreditCard, QrCode, Radio, ShieldCheck, Sparkles } from 'lucide-react'
+import { QrCode, Radio, Sparkles } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
 
 export default function AuthGraphicPanel() {
@@ -51,13 +51,7 @@ export default function AuthGraphicPanel() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-[11px] font-semibold text-white/75">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-brandCyan/15 text-brandCyan">
-              <CreditCard className="h-4 w-4" />
-            </span>
-            <span>{t('components.auth.AuthGraphicPanel.footer')}</span>
-            <ShieldCheck className="h-4 w-4 text-nexoraSuccess" />
-          </div>
+
         </div>
       </div>
     </aside>

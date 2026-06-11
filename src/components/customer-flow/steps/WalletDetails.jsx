@@ -36,7 +36,31 @@ export default function WalletDetails({
   handleConfirmTip,
   isApiMode,
   setStep,
+  paymentLinkData,
 }) {
+  /**
+   * API mode: derive the receiving account identifier from the
+   * GET /touch/payment-link response (redirectUrl / zelle / apple cash fields).
+   */
+  const apiAccountVal = (() => {
+    if (!paymentLinkData) return null
+    const key = selectedWalletObj.key
+    if (key === 'zelle') return paymentLinkData.zellePhone || paymentLinkData.zelleEmail || null
+    if (key === 'applecash') return paymentLinkData.appleCashPhone || null
+    if (paymentLinkData.redirectUrl) {
+      try {
+        const segments = new URL(paymentLinkData.redirectUrl).pathname.split('/').filter(Boolean)
+        if (!segments.length) return null
+        const handle = segments[segments.length - 1]
+        if (key === 'venmo') return handle.startsWith('@') ? handle : `@${handle}`
+        if (key === 'cashapp') return handle.startsWith('$') ? handle : `$${handle}`
+        return handle
+      } catch {
+        return null
+      }
+    }
+    return null
+  })()
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="text-center space-y-1">
@@ -148,9 +172,9 @@ export default function WalletDetails({
 
           {/* Account Field */}
           {(() => {
-            const accountVal = selectedStaffMembers.length === 1
+            const accountVal = (selectedStaffMembers.length === 1
               ? selectedStaffMembers[0].paymentAccounts?.[selectedWalletObj.key]
-              : businessPaymentAccounts?.[selectedWalletObj.key];
+              : businessPaymentAccounts?.[selectedWalletObj.key]) || apiAccountVal;
 
             const getFieldLabel = () => {
               if (selectedWalletObj.key === 'zelle') return t('components.customer_flow.steps.WalletDetails.emailPhone');

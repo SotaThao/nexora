@@ -1,6 +1,7 @@
 // DashboardSidebar — left nav: brand, profile card, plan card, menu w/ tips & touchpoints sub-tabs.
 // Extracted from Dashboard.jsx (Group 2 refactor).
 import React, { useEffect, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { visibleMenuItems } from '../constants'
@@ -26,6 +27,11 @@ export default function DashboardSidebar({
   userRole = 'owner'
 }) {
   const { currentLanguage, setLanguage, t } = useTranslation()
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  // Sub-tabs are URL-driven (?tab=) so the sidebar highlight stays in sync with
+  // the rendered route content (TipsRoute / TouchpointsRoute read the same param).
+  const activeSubTab = searchParams.get('tab')
   const [isTipsExpanded, setIsTipsExpanded] = useState(activeMenu === 'tips')
   const [isTouchpointsExpanded, setIsTouchpointsExpanded] = useState(activeMenu === 'touchpoints')
 
@@ -62,9 +68,10 @@ export default function DashboardSidebar({
               </div>
             )}
             <div className="min-w-0">
-              <div className="truncate text-xs font-black text-white/50 uppercase tracking-wider">{businessName}</div>
-              <div className="flex items-center gap-1 min-w-0 mt-0.5">
-                <div className="truncate text-sm font-bold text-white">{profile.fullName || profile.email || businessName}</div>
+              {/* Top line: business name when present (same bold style), else
+                  fall back to owner name / email. Email always shown below. */}
+              <div className="flex items-center gap-1 min-w-0">
+                <div className="truncate text-sm font-bold text-white">{businessName || profile.fullName || profile.email}</div>
               </div>
               <div className="text-[10px] text-white/40 truncate mt-0.5">{profile.email}</div>
             </div>
@@ -204,14 +211,13 @@ export default function DashboardSidebar({
                     { id: 'transactions', label: t('dashboard.tips.tabs.transactions') },
                     { id: 'payouts', label: t('dashboard.tips.tabs.payouts') }
                   ].map(sub => {
-                    const isSubActive = activeMenu === 'tips' && tipsTab === sub.id
+                    const isSubActive = activeMenu === 'tips' && (activeSubTab || 'overview') === sub.id
                     return (
                       <button
                         key={sub.id}
                         type="button"
                         onClick={() => {
-                          setActiveMenu('tips')
-                          setTipsTab(sub.id)
+                          navigate(`/dashboard/tips?tab=${sub.id}`, { replace: true })
                         }}
                         className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
                           isSubActive
@@ -233,14 +239,13 @@ export default function DashboardSidebar({
                     { id: 'stations', label: t('dashboard.touchpoints.tabs.stations') },
                     { id: 'devices', label: t('dashboard.touchpoints.tabs.devices') }
                   ].map(sub => {
-                    const isSubActive = activeMenu === 'touchpoints' && touchpointsTab === sub.id
+                    const isSubActive = activeMenu === 'touchpoints' && (activeSubTab || 'stations') === sub.id
                     return (
                       <button
                         key={sub.id}
                         type="button"
                         onClick={() => {
-                          setActiveMenu('touchpoints')
-                          setTouchpointsTab(sub.id)
+                          navigate(`/dashboard/touchpoints?tab=${sub.id}`, { replace: true })
                         }}
                         className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
                           isSubActive

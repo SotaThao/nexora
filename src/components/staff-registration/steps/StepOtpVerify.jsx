@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Eye, EyeOff, X } from 'lucide-react'
+import { Eye, EyeOff, X, Loader2 } from 'lucide-react'
 import { renderLabel } from '../../../contexts/LanguageContext'
 
 export default function StepOtpVerify({
@@ -25,6 +25,7 @@ export default function StepOtpVerify({
   setShowOtpInput,
   handleResendOtp,
   isDemoToolsEnabled = false,
+  isSubmitting,
 }) {
   const [showTermsModal, setShowTermsModal] = useState(false)
   const [modalType, setModalType] = useState('terms')
@@ -206,9 +207,17 @@ export default function StepOtpVerify({
             </button>
             <button
               type="submit"
-              className="flex-grow h-10 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-bold text-xs uppercase tracking-wider rounded-lg transition"
+              disabled={isSubmitting}
+              className="flex-grow h-10 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-bold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 transition disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {t('common.next')}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {t('common.processing', { defaultValue: 'Processing...' })}
+                </>
+              ) : (
+                t('common.next')
+              )}
             </button>
           </div>
         </form>
@@ -286,9 +295,17 @@ export default function StepOtpVerify({
             </button>
             <button
               type="submit"
-              className="flex-grow h-10 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-bold text-xs uppercase tracking-wider rounded-lg transition"
+              disabled={isSubmitting}
+              className="flex-grow h-10 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-bold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 transition disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {t('components.staff_registration.steps.StepOtpVerify.verifyAndActivate')}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {t('common.processing', { defaultValue: 'Processing...' })}
+                </>
+              ) : (
+                t('components.staff_registration.steps.StepOtpVerify.verifyAndActivate')
+              )}
             </button>
           </div>
         </form>
