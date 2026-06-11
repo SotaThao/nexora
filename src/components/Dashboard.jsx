@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
+
 
 // 2. Third-party
 import { Filter, Moon, Settings, ShieldAlert, Sun, Check, Link } from 'lucide-react'
@@ -15,7 +17,7 @@ import { useDevices } from './dashboard/hooks/useDevices'
 import { useKybGate } from '../contexts/KybGateContext'
 import { useStaffManagement } from './dashboard/hooks/useStaffManagement'
 import { useTouchpoints, useCreateTouchpoint, useDeleteTouchpoint, useDownloadTouchpointQr } from '../data/hooks/useMerchantTouchpoints'
-import { useMerchantStaff } from '../data/hooks/useMerchantStaff'
+import { useMerchantStaff, StatusFilter } from '../data/hooks/useMerchantStaff'
 import { useChartDateRange } from '../hooks/useChartDateRange'
 import { useTransactions } from '../data/hooks/useTransactions'
 import { useReviews } from '../data/hooks/useReviews'
@@ -57,6 +59,7 @@ export default function Dashboard({
   onStartSetup
 }) {
   const { currentLanguage, t } = useTranslation()
+  const queryClient = useQueryClient()
   const { showToast, showConfirm } = useNotification()
   const { requireKyb } = useKybGate()
   const {
@@ -81,7 +84,18 @@ export default function Dashboard({
   const { data: notificationsData } = useNotifications()
   const { data: profileSettingsData } = useProfileSettings()
   const { data: merchantSetupData } = useMerchantSetup()
-  const { data: merchantStaffData, isLoading: isStaffLoading } = useMerchantStaff()
+  const [activeStaffPage, setActiveStaffPage] = useState(1)
+  const [activeStaffPageSize] = useState(9)
+  const { data: activeStaffData, isLoading: isActiveStaffLoading } = useMerchantStaff({
+    statusFilter: StatusFilter.Active,
+    pageNumber: activeStaffPage,
+    pageSize: activeStaffPageSize
+  })
+  const { data: pendingStaffData, isLoading: isPendingStaffLoading } = useMerchantStaff({
+    statusFilter: StatusFilter.Pending,
+    pageNumber: 1,
+    pageSize: 100
+  })
 
   const markNotificationReadMutation = useMarkNotificationRead()
   const saveMerchantSetupMutation = useSaveMerchantSetup()
@@ -181,6 +195,11 @@ export default function Dashboard({
 
   const businessName = profile?.businessName || setupData?.businessInfo?.name || merchantSetupData?.businessInfo?.name || ''
 
+  const combinedStaffData = useMemo(() => [
+    ...(activeStaffData?.items ?? []),
+    ...(pendingStaffData?.items ?? [])
+  ], [activeStaffData, pendingStaffData])
+
   const {
     staff,
     isStaffLoading: staffLoading,
@@ -199,7 +218,7 @@ export default function Dashboard({
     handleAcceptJoinRequest, handleDeclineJoinRequest, deleteStaff, toggleStaff, toggleStaffTipsFlow,
     handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     inviteStaffMutation,
-  } = useStaffManagement({ staffData: merchantStaffData, isStaffLoading, businessName })
+  } = useStaffManagement({ staffData: combinedStaffData, isStaffLoading: isActiveStaffLoading || isPendingStaffLoading, businessName })
 
   // Sync touchpoints removed (now handled by React Query cache)
 
@@ -244,11 +263,7 @@ export default function Dashboard({
 
   // Filter lists based on searchQuery
   const filteredStaff = useMemo(() => {
-    const isPendingRequest = (member) => 
-      (member.status === 'Pending Acceptance' || member.status === 'Pending') && 
-      (member.itemType === 'link' || member.itemType === 'invite')
-      
-    const visibleStaff = staff.filter(member => !isPendingRequest(member))
+    const visibleStaff = activeStaffData?.items ?? []
     
     if (!searchQuery) return visibleStaff
     const query = searchQuery.toLowerCase().trim()
@@ -257,14 +272,9 @@ export default function Dashboard({
       (member.nickname && member.nickname.toLowerCase().includes(query)) ||
       member.position?.toLowerCase().includes(query)
     )
-  }, [staff, searchQuery])
+  }, [activeStaffData, searchQuery])
 
-  const pendingStaff = useMemo(() => {
-    return staff.filter(member => 
-      (member.status === 'Pending Acceptance' || member.status === 'Pending') && 
-      (member.itemType === 'link' || member.itemType === 'invite')
-    )
-  }, [staff])
+  const pendingStaff = pendingStaffData?.items ?? []
 
   const filteredTouchpoints = useMemo(() => {
     if (!searchQuery) return touchpoints
@@ -417,7 +427,14 @@ export default function Dashboard({
     verificationStatus, requireKyb, userEmail, onKybSuccess, settingsTab, setSettingsTab,
     currentStaffId,
     profile,
-    onNavigateMenu: handleNavigateMenu
+    onNavigateMenu: handleNavigateMenu,
+    // Pagination fields for active staff
+    activeStaffPage,
+    setActiveStaffPage,
+    activeStaffTotalPages: activeStaffData?.totalPages ?? 1,
+    activeStaffTotalCount: activeStaffData?.totalCount ?? 0,
+    activeStaffHasNext: activeStaffData?.hasNextPage ?? false,
+    activeStaffHasPrev: activeStaffData?.hasPreviousPage ?? false,
   }
 
   return (
@@ -551,6 +568,7 @@ export default function Dashboard({
             handleDeclineJoinRequest(approvingStaffMember.id)
           }
           setIsApproveModalOpen(false)
+          queryClient.invalidateQueries({ queryKey: ['merchantStaff'] })
         }}
         form={staffForm}
         errors={errors}
@@ -560,12 +578,14 @@ export default function Dashboard({
         onClose={() => {
           setIsApproveModalOpen(false)
           resetStaffForm()
+          queryClient.invalidateQueries({ queryKey: ['merchantStaff'] })
         }}
         onSave={() => {
           if (approvingStaffMember) {
             handleAcceptJoinRequest(approvingStaffMember.id, staffForm)
           }
           setIsApproveModalOpen(false)
+          queryClient.invalidateQueries({ queryKey: ['merchantStaff'] })
         }}
         reviews={reviews}
         merchantSetupData={merchantSetupData}

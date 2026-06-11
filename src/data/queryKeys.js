@@ -35,8 +35,12 @@ export const qk = {
   userProfile:              () => ['userProfile'],
   verifiedStatus:           () => ['userProfile', 'verifiedStatus'],
 
-  // Merchant Staff Management
-  merchantStaff:       ()      => ['merchantStaff'],
+  merchantStaff:       (statusFilter, pageNumber, pageSize)  => {
+    const key = ['merchantStaff']
+    if (statusFilter) key.push(statusFilter)
+    if (pageNumber !== undefined || pageSize !== undefined) key.push({ pageNumber, pageSize })
+    return key
+  },
   merchantStaffSearch: (q)     => ['merchantStaff', 'search', q],
   staffInvite:         (token) => ['staffInvite', token],
 

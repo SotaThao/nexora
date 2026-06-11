@@ -40,6 +40,8 @@ export function OverviewRoute() {
       onStartSetup={ctx.onStartSetup}
       profile={ctx.profile}
       onNavigateMenu={ctx.onNavigateMenu}
+      onApproveClick={ctx.openApproveStaff}
+      pendingStaff={ctx.pendingStaff}
     />
   )
 }
@@ -75,6 +77,13 @@ export function StaffRoute() {
         ctx.setInviteShareDefaultContact('')
         ctx.setIsInviteShareOpen(true)
       }}
+      // Pagination props
+      pageNumber={ctx.activeStaffPage}
+      totalPages={ctx.activeStaffTotalPages}
+      totalCount={ctx.activeStaffTotalCount}
+      hasNextPage={ctx.activeStaffHasNext}
+      hasPreviousPage={ctx.activeStaffHasPrev}
+      onPageChange={ctx.setActiveStaffPage}
     />
   )
 }

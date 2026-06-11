@@ -13,6 +13,8 @@ import {
   useSendStaffLinkRequest,
   useUpdateMerchantStaffStatus,
   useRemoveMerchantStaff,
+  useApproveStaffLink,
+  useRejectStaffLink,
 } from '../../../data/hooks/useMerchantStaff'
 
 /**
@@ -71,6 +73,8 @@ export function useStaffManagement({ staffData, isStaffLoading, businessName, vi
   const linkRequestMutation = useSendStaffLinkRequest()
   const updateStatusMutation = useUpdateMerchantStaffStatus()
   const removeStaffMutation = useRemoveMerchantStaff()
+  const approveLinkMutation = useApproveStaffLink()
+  const rejectLinkMutation = useRejectStaffLink()
 
   // Staff comes from the API query (useMerchantStaff) passed in as staffData.
   // No more local setStaff — the query cache is the source of truth.
@@ -345,13 +349,14 @@ export function useStaffManagement({ staffData, isStaffLoading, businessName, vi
    */
   const handleAcceptJoinRequest = (staffId) => {
     const member = staff.find(s => s.id === staffId)
-    if (!member?.staffLinkId) return
+    const linkId = member?.staffLinkId || member?.id
+    if (!linkId) return
 
-    updateStatusMutation.mutate({ staffLinkId: member.staffLinkId, status: 'Active' }, {
+    approveLinkMutation.mutate(linkId, {
       onSuccess: () => {
         showToast(currentLanguage === 'vi' 
-          ? `Đã chấp nhận thợ ${member.fullName} vào tiệm!` 
-          : `Accepted technician ${member.fullName} to salon!`, 'success')
+          ? `Đã chấp nhận thợ ${member.fullName || 'nhân viên'} vào tiệm!` 
+          : `Accepted technician ${member.fullName || 'staff'} to salon!`, 'success')
       },
       onError: (err) => {
         showToast(
@@ -365,8 +370,8 @@ export function useStaffManagement({ staffData, isStaffLoading, businessName, vi
   }
 
   /**
-   * Decline a join request — update status to Rejected.
-   * Calls PUT /api/v1/merchant/staff/{staffLinkId}/status.
+   * Decline a join request.
+   * Calls PUT /api/v1/merchant/staff/links/{linkId}/reject.
    */
   const handleDeclineJoinRequest = async (staffId) => {
     const member = staff.find(s => s.id === staffId)
@@ -377,8 +382,14 @@ export function useStaffManagement({ staffData, isStaffLoading, businessName, vi
       : `Are you sure you want to decline join request from ${member.fullName}?`)
     if (!ok) return
 
-    if (member.staffLinkId) {
-      updateStatusMutation.mutate({ staffLinkId: member.staffLinkId, status: 'Rejected' }, {
+    const linkId = member.staffLinkId || member.id
+    if (linkId) {
+      rejectLinkMutation.mutate(linkId, {
+        onSuccess: () => {
+          showToast(currentLanguage === 'vi' 
+            ? `Đã từ chối yêu cầu tham gia của thợ ${member.fullName}!` 
+            : `Declined join request from ${member.fullName}!`, 'success')
+        },
         onError: (err) => {
           showToast(
             currentLanguage === 'vi'

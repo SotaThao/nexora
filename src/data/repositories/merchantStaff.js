@@ -52,6 +52,13 @@ export function normalizeStaffSearchResult(dto) {
   }
 }
 
+export const StatusFilter = {
+  Pending: 'Pending',
+  Active: 'Active',
+  InActive: 'InActive',
+  Rejected: 'Rejected'
+}
+
 /**
  * Factory to create a merchant staff repository instance.
  *
@@ -62,12 +69,36 @@ export function createMerchantStaffRepository(client = httpClient) {
   return {
     /**
      * Fetch the merchant's staff list (links + pending invites).
-     * @returns {Promise<Array>} Normalized staff rows
+     * @param {string} [statusFilter] - Optional status filter (Pending, Active, InActive, Rejected)
+     * @param {number} [pageNumber] - Page number (default: 1)
+     * @param {number} [pageSize] - Page size (default: 10)
+     * @returns {Promise<{items: Array, pageNumber: number, totalPages: number, totalCount: number, hasNextPage: boolean, hasPreviousPage: boolean}>} Normalized staff rows with pagination details
      */
-    async list() {
-      const data = await client.get('/api/v1/merchant/staff')
+    async list(statusFilter, pageNumber = 1, pageSize = 10) {
+      let url = '/api/v1/merchant/staff'
+      const queryParams = []
+      if (statusFilter) {
+        queryParams.push(`StatusFilter=${encodeURIComponent(statusFilter)}`)
+      }
+      if (pageNumber !== undefined) {
+        queryParams.push(`PageNumber=${pageNumber}`)
+      }
+      if (pageSize !== undefined) {
+        queryParams.push(`PageSize=${pageSize}`)
+      }
+      if (queryParams.length > 0) {
+        url += `?${queryParams.join('&')}`
+      }
+      const data = await client.get(url)
       const items = data?.items ?? (Array.isArray(data) ? data : [])
-      return items.map(normalizeStaffListItem)
+      return {
+        items: items.map(normalizeStaffListItem),
+        pageNumber: data?.pageNumber ?? pageNumber,
+        totalPages: data?.totalPages ?? 1,
+        totalCount: data?.totalCount ?? items.length,
+        hasNextPage: data?.hasNextPage ?? false,
+        hasPreviousPage: data?.hasPreviousPage ?? false,
+      }
     },
 
     /**
@@ -111,6 +142,24 @@ export function createMerchantStaffRepository(client = httpClient) {
      */
     async sendLinkRequest(staffProfileId) {
       return await client.post(`/api/v1/merchant/staff/link-request/${encodeURIComponent(staffProfileId)}`)
+    },
+
+    /**
+     * Approve a staff link request.
+     * @param {string} linkId
+     * @returns {Promise<void>}
+     */
+    async approveLink(linkId) {
+      return await client.put(`/api/v1/merchant/staff/links/${encodeURIComponent(linkId)}/approve`)
+    },
+
+    /**
+     * Reject a staff link request.
+     * @param {string} linkId
+     * @returns {Promise<void>}
+     */
+    async rejectLink(linkId) {
+      return await client.put(`/api/v1/merchant/staff/links/${encodeURIComponent(linkId)}/reject`)
     },
 
     /**

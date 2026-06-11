@@ -6,17 +6,20 @@
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
-import merchantStaffRepository from '../repositories/merchantStaff'
+import merchantStaffRepository, { StatusFilter } from '../repositories/merchantStaff'
+
+export { StatusFilter }
+
 
 /**
  * Fetch the merchant's staff list (links + pending invites).
- * @param {{ enabled?: boolean }} [options]
+ * @param {{ statusFilter?: string, enabled?: boolean }} [options]
  * @returns {import('@tanstack/react-query').UseQueryResult}
  */
-export function useMerchantStaff({ enabled = true } = {}) {
+export function useMerchantStaff({ statusFilter, pageNumber, pageSize, enabled = true } = {}) {
   return useQuery({
-    queryKey: qk.merchantStaff(),
-    queryFn: () => merchantStaffRepository.list(),
+    queryKey: qk.merchantStaff(statusFilter, pageNumber, pageSize),
+    queryFn: () => merchantStaffRepository.list(statusFilter, pageNumber, pageSize),
     enabled,
   })
 }
@@ -122,6 +125,36 @@ export function useRemoveMerchantStaff() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (staffLinkId) => merchantStaffRepository.remove(staffLinkId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
+    },
+  })
+}
+
+/**
+ * Approve a staff link request.
+ * Invalidates the staff list on success.
+ * @returns {import('@tanstack/react-query').UseMutationResult}
+ */
+export function useApproveStaffLink() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (linkId) => merchantStaffRepository.approveLink(linkId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
+    },
+  })
+}
+
+/**
+ * Reject a staff link request.
+ * Invalidates the staff list on success.
+ * @returns {import('@tanstack/react-query').UseMutationResult}
+ */
+export function useRejectStaffLink() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (linkId) => merchantStaffRepository.rejectLink(linkId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
     },

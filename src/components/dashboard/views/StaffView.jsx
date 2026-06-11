@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react'
-import { AlertCircle, Plus, Trash2, User, QrCode, Edit2, Link, Copy, X, Share2, Eye, Loader2 } from 'lucide-react'
+import { AlertCircle, Plus, Trash2, User, QrCode, Edit2, Link, Copy, X, Share2, Eye, Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
-import { useSearchMerchantStaff } from '../../../data/hooks/useMerchantStaff'
+import { useSearchMerchantStaff, StatusFilter } from '../../../data/hooks/useMerchantStaff'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
 
@@ -258,7 +258,14 @@ function StaffView({
   onDeclineJoin,
   onAcceptUnlink,
   onDeclineUnlink,
-  onOpenInviteShare
+  onOpenInviteShare,
+  // Pagination props
+  pageNumber = 1,
+  totalPages = 1,
+  totalCount = 0,
+  hasNextPage = false,
+  hasPreviousPage = false,
+  onPageChange
 }) {
   const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
@@ -628,8 +635,8 @@ function StaffView({
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
               {sortedStaff.map((member) => {
                 const wallets = getWalletBadges(member)
-                const isPendingSetup = member.status === 'Pending Setup'
-                const isPendingAcceptance = member.status === 'Pending Acceptance'
+                const isPendingSetup = member.status === StatusFilter.Pending && member.itemType === 'invite'
+                const isPendingAcceptance = member.status === StatusFilter.Pending && member.itemType === 'link'
                 const isPendingUnlink = member.status === 'Pending Unlink'
                 const isPending = isPendingSetup || isPendingAcceptance || isPendingUnlink
 
@@ -657,6 +664,78 @@ function StaffView({
                   />
                 )
               })}
+            </div>
+          )}
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-slate-100 px-4 py-4 sm:px-6 mt-6">
+              <div className="flex flex-1 justify-between sm:hidden">
+                <button
+                  onClick={() => hasPreviousPage && onPageChange(pageNumber - 1)}
+                  disabled={!hasPreviousPage}
+                  className={`relative inline-flex items-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition active:scale-95 ${
+                    !hasPreviousPage ? 'opacity-50 cursor-not-allowed active:scale-100' : ''
+                  }`}
+                >
+                  {t('common.previous') || 'Previous'}
+                </button>
+                <button
+                  onClick={() => hasNextPage && onPageChange(pageNumber + 1)}
+                  disabled={!hasNextPage}
+                  className={`relative ml-3 inline-flex items-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition active:scale-95 ${
+                    !hasNextPage ? 'opacity-50 cursor-not-allowed active:scale-100' : ''
+                  }`}
+                >
+                  {t('common.next') || 'Next'}
+                </button>
+              </div>
+              <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-xs text-slate-500 font-semibold">
+                    Showing <span className="font-extrabold text-slate-800">{(pageNumber - 1) * 9 + 1}</span> to{' '}
+                    <span className="font-extrabold text-slate-800">
+                      {Math.min(pageNumber * 9, totalCount)}
+                    </span>{' '}
+                    of <span className="font-extrabold text-slate-800">{totalCount}</span> results
+                  </p>
+                </div>
+                <div>
+                  <nav className="isolate inline-flex -space-x-px rounded-lg shadow-sm border border-slate-200 overflow-hidden bg-white" aria-label="Pagination">
+                    <button
+                      onClick={() => hasPreviousPage && onPageChange(pageNumber - 1)}
+                      disabled={!hasPreviousPage}
+                      className={`relative inline-flex items-center px-3 py-2 text-slate-400 hover:bg-slate-50 transition ${
+                        !hasPreviousPage ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => onPageChange(p)}
+                        className={`relative inline-flex items-center px-3.5 py-2 text-xs font-bold transition ${
+                          p === pageNumber
+                            ? 'bg-nexoraBrand text-white'
+                            : 'text-slate-700 hover:bg-slate-50 border-l border-slate-100'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => hasNextPage && onPageChange(pageNumber + 1)}
+                      disabled={!hasNextPage}
+                      className={`relative inline-flex items-center px-3 py-2 text-slate-400 hover:bg-slate-50 transition border-l border-slate-100 ${
+                        !hasNextPage ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </nav>
+                </div>
+              </div>
             </div>
           )}
         </div>
