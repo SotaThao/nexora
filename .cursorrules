@@ -11,9 +11,13 @@ When an Agent needs to create, edit, or checklist tasks/TODOs:
 1. **Detect Current Sprint**: Scan files in the Obsidian vault `C:\Users\AD\Documents\Obsidian\shancao\Nexora\Sprints\` folder. Find the file containing `status: in-progress` in its frontmatter. Extract the week/sprint number from the filename (e.g., `Week-02` -> `week-02`).
 2. **Locate User Stories**: All User Stories for the active week must be stored in the directory:
    `C:\Users\AD\Documents\Obsidian\shancao\Nexora\user-story\<week-name>\` (e.g. `user-story/week-02/US-XXX-name.md`).
-3. **Task Completion Checklist**:
+3. **Task Completion Checklist & Evidence**:
    - Each User Story file must contain a `## 📋 Tasks / TODOs` section with checkbox items (e.g. `- [ ] Task name`).
-   - When an Agent completes a task, it must mark it as completed (`- [x]`).
+   - When an Agent completes a task and marks it as completed (`- [x]`), it **MUST** append or attach clear **Evidence** in the User Story file (or in the `user-story/report/` folder and link it):
+     a. **For UI/UX or Flow changes (including E2E / browser live tests)**: Attach screenshots or video recording files (.mp4 or .webm) saved in `user-story/report/`.
+     b. **Non-tech Explanation**: Provide a detailed explanation in a dedicated section (e.g., `### 💡 Giải thích thay đổi`) answering:
+        - **Tại sao lại thay đổi? (Why)**: Lý do thực hiện thay đổi là gì (lỗi gì cần sửa, tính năng mới mang lại lợi ích gì cho người dùng).
+        - **Thay đổi như thế nào? (How)**: Mô tả cách hệ thống hoạt động sau thay đổi bằng ngôn ngữ đơn giản, dễ hiểu nhất cho người non-tech (tránh từ ngữ quá kỹ thuật).
    - Once all tasks in the US file are checked (`- [x]`), the Agent must automatically:
      a. Update the US file frontmatter to `status: done`.
      b. Find the corresponding checkbox for this US in the active Sprint file (e.g., `Sprints/Week-02.md`) and check it (e.g., change `- [ ] **US-10**:` to `- [x] **US-10**:`).
