@@ -43,3 +43,5 @@ debug.log
 *.mjs
 *.mjs
 .agent-rules
+.cursorrules
+pr_body.md
