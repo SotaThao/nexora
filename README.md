@@ -73,3 +73,66 @@ Khi bạn (Agent) được yêu cầu phát triển tính năng mới hoặc th�
 ## ⛓️ Tự động hóa qua GitHub Actions (CI)
 Quy trình CI trên GitHub (`.github/workflows/ci.yml`) đã được tích hợp bước **Lint Design Tokens**. 
 Nếu có bất kỳ dòng code nào vi phạm tiêu chuẩn Design System hoặc gây lỗi kiểm thử đơn vị/E2E, hệ thống CI sẽ tự động đánh dấu đỏ (Fail) trên Pull Request để đảm bảo chất lượng code và giao diện luôn ở mức cao nhất trước khi merge vào nhánh `main`.
+
+---
+
+## Multi-Environment CI/CD Configuration
+
+Workflow `/.github/workflows/frontend.yaml` validates all Vite modes and deploys only server-backed environments:
+
+| Branch | GitHub Environment | Build Mode |
+| :--- | :--- | :--- |
+| `dev` | `TEST` | `test` |
+| `staging` | `STAGING` | `staging` |
+| `main`, `master` | `PRODUCTION` | `production` |
+
+`development` is local-only. Use `.env.development` and `pnpm run build:dev`; it does not deploy to ArgoCD.
+
+### Required GitHub Environment Variables
+
+Create these variables in each GitHub Environment (`TEST`, `STAGING`, `PRODUCTION`):
+
+* `VITE_APP_ENV` (`test`, `staging`, `production`)
+* `VITE_API_BASE_URL` (canonical API endpoint, no trailing slash)
+* `VITE_DATA_SOURCE` (`api` for API runtime, `storage` for mock/storage runtime)
+* `VITE_ENABLE_DEMO_TOOLS` (`false` for deployed environments)
+* `VITE_GOOGLE_MAPS_API_KEY`
+* `VITE_MAPBOX_TOKEN`
+* `VITE_MAP_MARKER_ENGINE`
+* `VITE_GOOGLE_MAPS_MAP_ID`
+* `VITE_VLINKPAY_WEB_URL_BASE`
+* `VITE_SENTRY_ENV` (optional)
+
+Suggested values:
+
+| Name | Development | Test | Staging | Production |
+| :--- | :--- | :--- | :--- | :--- |
+| `VITE_APP_ENV` | `development` | `test` | `staging` | `production` |
+| `VITE_API_BASE_URL` | local/dev API URL | test API URL | staging API URL | production API URL |
+| `VITE_DATA_SOURCE` | `api` or `storage` | `api` | `api` | `api` |
+| `VITE_ENABLE_DEMO_TOOLS` | `true` if needed | `false` | `false` | `false` |
+| `VITE_SENTRY_ENV` | empty or `development` | `test` | `staging` | `production` |
+| `VITE_GOOGLE_MAPS_API_KEY` | dev key | test key | staging key | production key |
+| `VITE_MAPBOX_TOKEN` | dev token | test token | staging token | production token |
+| `VITE_MAP_MARKER_ENGINE` | `advanced` | `advanced` | `advanced` | `advanced` |
+| `VITE_GOOGLE_MAPS_MAP_ID` | dev map id | test map id | staging map id | production map id |
+| `VITE_VLINKPAY_WEB_URL_BASE` | dev URL | test URL | staging URL | production URL |
+
+`VITE_API_BASE` is still supported as a legacy alias inside the Docker build, but new CI/CD configuration should use `VITE_API_BASE_URL`.
+
+### Optional GitHub Environment Secrets
+
+* `VITE_SENTRY_DSN` (if Sentry is enabled)
+* `DIGITALOCEAN_ACCESS_TOKEN`
+* `GH_PAT`
+
+### Local Build Commands
+
+Use these commands to verify each environment build locally:
+
+```bash
+pnpm run build:dev
+pnpm run build:test
+pnpm run build:staging
+pnpm run build:prod
+```
