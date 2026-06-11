@@ -165,6 +165,7 @@
     "title_step_1": "Step 1: Store Setup & Review Routing",
     "desc_step_1": "Configure basic salon profile and smart review routing gateways.",
     "store_info_title": "Store Profile",
+    "required_badge": "* Required",
     "store_name": "Store Name *",
     "store_name_placeholder": "e.g., Your Business Name",
     "business_category": "Business Category",
@@ -1247,6 +1248,9 @@
         "ProfileTab": {
           "payoutMethods": "Payout Methods",
           "payoutAccount": "Payout account",
+          "methodNotConfigured": "Method is not configured.",
+          "pleaseEnterAccountDetails": "Please enter account details.",
+          "methodIdMissing": "System Error: Method ID missing",
           "basicInformation": "Basic Information",
           "specifyYourFullLegal": "Specify your full legal name as it appears on your official government identification documents.",
           "requiredForIdentityVerification": "Required for identity verification purposes (must be 18 years or older).",

@@ -165,6 +165,7 @@
     "title_step_1": "Bước 1: Thiết Lập Cửa Hàng & Định Tuyến Review",
     "desc_step_1": "Cấu hình thông tin cơ bản của tiệm và các cổng định tuyến phản hồi thông minh.",
     "store_info_title": "Thông Tin Cửa Hàng",
+    "required_badge": "* Bắt buộc",
     "store_name": "Tên Cửa Hàng *",
     "store_name_placeholder": "Ví dụ: Tên Tiệm Của Bạn",
     "business_category": "Loại hình",
@@ -1247,6 +1248,9 @@
         "ProfileTab": {
           "payoutMethods": "Phương thức thanh toán",
           "payoutAccount": "Tài khoản",
+          "methodNotConfigured": "Phương thức chưa được cấu hình.",
+          "pleaseEnterAccountDetails": "Vui lòng nhập thông tin tài khoản.",
+          "methodIdMissing": "Lỗi hệ thống: Thiếu ID phương thức",
           "basicInformation": "Thông tin cơ bản",
           "specifyYourFullLegal": "Nhập đầy đủ họ và tên hợp pháp của bạn như trên giấy tờ tùy thân.",
           "requiredForIdentityVerification": "Ngày sinh của bạn (phải từ 18 tuổi trở lên để xác thực).",
