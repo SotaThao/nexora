@@ -122,7 +122,7 @@ export default function ProfileTab({
   const handleToggleMethod = (key) => {
     const methodData = getMethod(key)
     if (!methodData.id) {
-      showToast(currentLanguage === 'vi' ? 'Phương thức chưa được cấu hình.' : 'Method is not configured.', 'error')
+      showToast(t('components.settings.tabs.ProfileTab.methodNotConfigured'), 'error')
       return
     }
     toggleMutation.mutate(methodData.id)
@@ -139,12 +139,12 @@ export default function ProfileTab({
   const savePayoutAccount = (e) => {
     e.preventDefault()
     if (!editValue.trim()) {
-      setModalError(currentLanguage === 'vi' ? 'Vui lòng nhập thông tin tài khoản.' : 'Please enter account details.')
+      setModalError(t('components.settings.tabs.ProfileTab.pleaseEnterAccountDetails'))
       return
     }
     const methodData = getMethod(editingMethod)
     if (!methodData.id) {
-      showToast('System Error: Method ID missing', 'error')
+      showToast(t('components.settings.tabs.ProfileTab.methodIdMissing'), 'error')
       return
     }
     updateMutation.mutate(

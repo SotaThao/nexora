@@ -10,21 +10,37 @@ export function createMerchantTouchpointsRepository(client = httpClient) {
      * Get all touch points (flat array, no pagination)
      * @returns {Promise<Array<{touchPointId: string, name: string, type: string, scanCount: number, tipCount: number, tipTotal: number, ctr: number, avgRating: number}>>}
      */
-    async getTouchpoints() {
-      const res = await client.get('/api/v1/merchant/dashboard/touchpoints');
+    async getTouchpoints(params = {}) {
+      const queryParams = new URLSearchParams()
+      if (params.PageNumber) queryParams.append('PageNumber', params.PageNumber)
+      if (params.PageSize) queryParams.append('PageSize', params.PageSize)
+      if (params.Name) queryParams.append('Name', params.Name)
+      
+      const queryString = queryParams.toString()
+      const url = `/api/v1/merchant/touchpoints${queryString ? `?${queryString}` : ''}`
 
-      const arr = Array.isArray(res) ? res : [];
+      let res
+      try {
+        res = await client.get(url)
+      } catch (err) {
+        // Treat 404 as "no touchpoints yet" and return an empty page
+        if (err?.status === 404) {
+          return { items: [], pageNumber: 1, totalPages: 0, totalCount: 0, hasNextPage: false, hasPreviousPage: false }
+        }
+        throw err
+      }
 
-      return arr.map((item) => ({
-        touchPointId: item.touchPointId || '',
-        name: item.name || '',
-        type: item.type || 'Table',
-        scanCount: item.scanCount ?? 0,
-        tipCount: item.tipCount ?? 0,
-        tipTotal: item.tipTotal ?? 0,
-        ctr: item.ctr ?? 0,
-        avgRating: item.avgRating ?? 0,
-      }));
+      // Fallback for empty response
+      if (!res) {
+        return { items: [], pageNumber: 1, totalPages: 0, totalCount: 0, hasNextPage: false, hasPreviousPage: false }
+      }
+      
+      // If the API returns a direct array, wrap it in a pagination object
+      if (Array.isArray(res)) {
+        return { items: res, pageNumber: 1, totalPages: 1, totalCount: res.length, hasNextPage: false, hasPreviousPage: false }
+      }
+      
+      return res
     },
 
     /**
@@ -45,7 +61,7 @@ export function createMerchantTouchpointsRepository(client = httpClient) {
      * @returns {Promise<void>}
      */
     async deleteTouchpoint(id) {
-      return await client.delete(`/api/v1/merchant/touchpoints/${id}`);
+      return await client.del(`/api/v1/merchant/touchpoints/${id}`)
     },
 
     /**

@@ -41,7 +41,7 @@ export default function Step1BusinessInfo({
             <h3 className="text-xs font-bold text-nexoraText uppercase tracking-wider">
               {t('setup.store_info_title')}
             </h3>
-            <span className="text-[10px] text-red-500 font-bold bg-red-50 px-1.5 py-0.5 rounded">* require</span>
+            <span className="text-[10px] text-red-500 font-bold bg-red-50 px-1.5 py-0.5 rounded">{t('setup.required_badge')}</span>
           </div>
 
           {/* Logo uploader compact row */}

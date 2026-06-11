@@ -159,6 +159,11 @@
     "city": "Thành phố",
     "phone_number_short": "SĐT"
   },
+  "payment_methods": {
+    "update_success": "Đã cập nhật phương thức thanh toán.",
+    "update_failed": "Không thể cập nhật phương thức thanh toán",
+    "toggle_failed": "Không thể bật/tắt phương thức thanh toán"
+  },
   "login": {
     "title": "NEXORA TOUCH",
     "gateway_sub": "Cổng định tuyến Phản hồi & Típ thông minh",
@@ -185,6 +190,7 @@
     "title_step_1": "Bước 1: Thiết Lập Cửa Hàng & Định Tuyến Review",
     "desc_step_1": "Cấu hình thông tin cơ bản của tiệm và các cổng định tuyến phản hồi thông minh.",
     "store_info_title": "Thông Tin Cửa Hàng",
+    "required_badge": "* Bắt buộc",
     "store_name": "Tên Cửa Hàng *",
     "store_name_placeholder": "Ví dụ: Tên Tiệm Của Bạn",
     "business_category": "Loại hình",
@@ -907,7 +913,7 @@
     "already_have_id": "Tôi đã có Personal ID",
     "activation_success": "Kích hoạt tài khoản cá nhân thành công!",
     "activation_success_desc": "Personal ID của bạn là {id}. Bạn hiện đã được liên kết với {business} và sẽ xuất hiện trong danh sách nhận tip của khách.",
-    "return_merchant": "Quay lại Bảng điều khiển Merchant"
+    "return_merchant": "Đi tới Bảng điều khiển Personal"
   },
   "errors": {
     "unknown_error": "Đã xảy ra lỗi không xác định. Vui lòng thử lại.",
@@ -1269,6 +1275,9 @@
         "ProfileTab": {
           "payoutMethods": "Phương thức thanh toán",
           "payoutAccount": "Tài khoản",
+          "methodNotConfigured": "Phương thức chưa được cấu hình.",
+          "pleaseEnterAccountDetails": "Vui lòng nhập thông tin tài khoản.",
+          "methodIdMissing": "Lỗi hệ thống: Thiếu ID phương thức",
           "basicInformation": "Thông tin cơ bản",
           "specifyYourFullLegal": "Nhập đầy đủ họ và tên hợp pháp của bạn như trên giấy tờ tùy thân.",
           "requiredForIdentityVerification": "Ngày sinh của bạn (phải từ 18 tuổi trở lên để xác thực).",
@@ -1509,6 +1518,8 @@
           "termsOfService": "Điều khoản dịch vụ",
           "close": "Đóng",
           "iAccept": "Tôi Đồng Ý",
+          "loginCta": "Bấm vào đây để đăng nhập",
+          "resendVerificationCode": "Gửi lại mã xác minh",
           "phExampleEmail": "vd: name@example.com",
           "phPassword": "••••••••",
           "phReferralCode": "Nhập mã giới thiệu...",
@@ -1545,6 +1556,9 @@
         },
         "StepWelcome": {
           "declineRequest": "Hủy bỏ / Từ chối",
+          "loadingInvitation": "Đang tải lời mời...",
+          "invalidInvitationTitle": "Lời mời không hợp lệ",
+          "invalidInvitationDescription": "Liên kết lời mời này không hợp lệ hoặc đã hết hạn. Vui lòng liên hệ tiệm để được mời lại.",
           "salonNetworkInvitation": "THƯ MỜI GIA NHẬP HỆ THỐNG TIỆM",
           "youHaveBeenInvited": "Bạn đã được mời liên kết hồ sơ của mình để nhận tiền tip trực tiếp vào tài khoản cá nhân tại tiệm này.",
           "iAlreadyHaveAn": "Đã có tài khoản",
@@ -1690,7 +1704,8 @@
       "resetToken": "Mã đặt lại",
       "newPassword": "Mật khẩu mới",
       "confirmPassword": "Xác nhận mật khẩu",
-      "resetPassword": "Đặt lại mật khẩu"
+      "resetPassword": "Đặt lại mật khẩu",
+      "backToSignIn": "Quay lại Đăng nhập"
     },
     "TouchpointsView": {
       "phExampleDeviceIds": "vd: NFC-105, QR-Table-01",

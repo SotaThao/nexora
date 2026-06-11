@@ -1,5 +1,6 @@
 import React from 'react'
 import { useOutletContext, useNavigate, useParams, Navigate, useSearchParams } from 'react-router-dom'
+import { useTranslation } from '../../../contexts/LanguageContext'
 
 import Overview from '../overview/Overview'
 import StaffView from '../views/StaffView'
@@ -114,15 +115,14 @@ export function StaffDetailRoute() {
 export function StaffRoleRoute() {
   const ctx = useOutletContext()
   const navigate = useNavigate()
-  // currentStaffId should be passed via context, wait, we didn't add it to dashboardCtx!
-  // Let's rely on ctx.currentStaffId
+  const { t } = useTranslation()
   const member = ctx.staff.find((m) => m.id === ctx.currentStaffId)
-  
+
   if (!member) {
     return (
       <div className="flex h-64 flex-col items-center justify-center space-y-3 nexora-card p-6">
         <div className="text-sm font-semibold text-nexoraMuted">
-          We could not locate your staff profile.
+          {t('components.dashboardRoot.yourStaffProfileWas')}
         </div>
       </div>
     )

@@ -43,20 +43,17 @@ export function useStaffPaymentMethods() {
 export function useUpdateStaffPaymentMethod() {
   const queryClient = useQueryClient()
   const { showToast } = useNotification()
-  const { t, currentLanguage } = useTranslation()
+  const { t } = useTranslation()
 
   return useMutation({
     mutationFn: ({ id, accountInfo, imageUrl }) => 
       staffPaymentMethodsRepository.update(id, { accountInfo, imageUrl }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.staffPaymentMethods() })
-      showToast(
-        currentLanguage === 'vi' ? 'Đã cập nhật phương thức thanh toán.' : 'Payment method updated.',
-        'success'
-      )
+      showToast(t('payment_methods.update_success'), 'success')
     },
     onError: (err) => {
-      showToast(err.message || 'Failed to update payment method', 'error')
+      showToast(err.message || t('payment_methods.update_failed'), 'error')
     }
   })
 }
@@ -68,6 +65,7 @@ export function useUpdateStaffPaymentMethod() {
 export function useToggleStaffPaymentMethod() {
   const queryClient = useQueryClient()
   const { showToast } = useNotification()
+  const { t } = useTranslation()
 
   return useMutation({
     mutationFn: (id) => staffPaymentMethodsRepository.toggle(id),
@@ -75,7 +73,7 @@ export function useToggleStaffPaymentMethod() {
       queryClient.invalidateQueries({ queryKey: qk.staffPaymentMethods() })
     },
     onError: (err) => {
-      showToast(err.message || 'Failed to toggle payment method', 'error')
+      showToast(err.message || t('payment_methods.toggle_failed'), 'error')
     }
   })
 }

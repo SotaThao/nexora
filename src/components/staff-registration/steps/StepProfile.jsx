@@ -107,6 +107,7 @@ export default function StepProfile({
               </div>
             </label>
             <input
+              id="profile-nickname"
               type="text"
               className="mt-1.5 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:outline-none transition-all"
               placeholder={t('components.staff_registration.steps.StepProfile.phNickname')}

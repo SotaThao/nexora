@@ -54,7 +54,8 @@ export const getCountryByDialCode = (dialCode) => {
 
 export const formatNationalNumber = (nationalNumber, dialCode) => {
   let digits = nationalNumber.replace(/\D/g, '')
-  digits = digits.slice(0, 10)
+  // E.164 allows up to 15 digits total; don't truncate valid longer numbers.
+  digits = digits.slice(0, 15)
 
   if (dialCode === '+1') {
     if (digits.length <= 3) return digits
@@ -73,6 +74,11 @@ export const formatNationalNumber = (nationalNumber, dialCode) => {
 
 export const isPhoneValid = (phoneStr) => {
   if (!phoneStr) return false
+
+  // Custom requirement: always accept if it has at least 10 digits
+  const digits = phoneStr.replace(/\D/g, '')
+  if (digits.length >= 10) return true
+
   try {
     return isValidPhoneNumber(phoneStr)
   } catch (e) {

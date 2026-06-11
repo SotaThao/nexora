@@ -33,6 +33,42 @@ export function addResponseInterceptor(fn) {
 // Module-level refresh promise sentinel
 let refreshPromise = null
 
+/**
+ * Single-flight token refresh. Concurrent callers share one in-flight refresh.
+ * On failure, clears tokens and dispatches the logout event.
+ *
+ * @returns {Promise<unknown>} The refreshed token payload
+ */
+function runTokenRefresh() {
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      const tokens = tokenStore.get()
+      if (!tokens?.refreshToken) {
+        throw new Error('No refresh token available')
+      }
+      // POST to refresh-token endpoint anonymously with _isRefresh flag
+      const res = await post(
+        '/api/v1/authentication/refresh-token',
+        { refreshToken: tokens.refreshToken },
+        { anonymous: true, _isRefresh: true }
+      )
+      tokenStore.set(res)
+      return res
+    })()
+      .catch((err) => {
+        tokenStore.clear()
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('nexora-logout'))
+        }
+        throw err
+      })
+      .finally(() => {
+        refreshPromise = null
+      })
+  }
+  return refreshPromise
+}
+
 // Register Bearer token interceptor — always active in API-only mode
 addRequestInterceptor((init) => {
   if (init.anonymous) {
@@ -171,35 +207,8 @@ async function request(path, init = {}) {
     !_isRefresh &&
     path !== '/api/v1/authentication/refresh-token'
   ) {
-    if (!refreshPromise) {
-      refreshPromise = (async () => {
-        const tokens = tokenStore.get()
-        if (!tokens?.refreshToken) {
-          throw new Error('No refresh token available')
-        }
-        // POST to refresh-token endpoint anonymously with _isRefresh flag
-        const res = await post(
-          '/api/v1/authentication/refresh-token',
-          { refreshToken: tokens.refreshToken },
-          { anonymous: true, _isRefresh: true }
-        )
-        tokenStore.set(res)
-        return res
-      })()
-        .catch((err) => {
-          tokenStore.clear()
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(new CustomEvent('nexora-logout'))
-          }
-          throw err
-        })
-        .finally(() => {
-          refreshPromise = null
-        })
-    }
-
     try {
-      await refreshPromise
+      await runTokenRefresh()
       // Retry request: interceptor will fetch the updated token
       return await request(path, init)
     } catch (err) {
@@ -232,16 +241,12 @@ export function get(path, opts = {}) {
  * @param {RequestInit & { anonymous?: boolean }} [opts]
  */
 export async function getBlob(path, opts = {}) {
-  // Using the request structure but returning blob
-  const init = { ...opts, method: 'GET' }
-  const defaultHeaders = {}
-  
+  // Mirrors request() so authenticated downloads share the same params,
+  // interceptors, error normalization, and 401 -> refresh -> retry behavior.
   let finalInit = {
-    ...init,
-    headers: {
-      ...defaultHeaders,
-      ...(init.headers ?? {}),
-    },
+    ...opts,
+    method: 'GET',
+    headers: { ...(opts.headers ?? {}) },
   }
 
   for (const interceptor of requestInterceptors) {
@@ -249,9 +254,51 @@ export async function getBlob(path, opts = {}) {
   }
 
   const { params, anonymous, _isRefresh, ...fetchInit } = finalInit
-  
-  let response = await fetch(`${baseUrl}${path}`, fetchInit)
-  
+
+  // Serialize query params into the URL
+  let url = path
+  if (params) {
+    const qs = new URLSearchParams()
+    for (const [k, v] of Object.entries(params)) {
+      if (v !== null && v !== undefined) qs.append(k, String(v))
+    }
+    const sep = path.includes('?') ? '&' : '?'
+    const qsStr = qs.toString()
+    if (qsStr) url = `${path}${sep}${qsStr}`
+  }
+
+  let response
+  try {
+    response = await fetch(`${baseUrl}${url}`, fetchInit)
+  } catch (err) {
+    return Promise.reject({
+      status: 0,
+      errorCode: 'NETWORK_ERROR',
+      errors: {},
+      retryAfter: null,
+    })
+  }
+
+  for (const interceptor of responseInterceptors) {
+    interceptor(response)
+  }
+
+  // Single-flight 401 -> refresh -> retry
+  if (
+    response.status === 401 &&
+    !anonymous &&
+    !_isRefresh &&
+    path !== '/api/v1/authentication/refresh-token'
+  ) {
+    try {
+      await runTokenRefresh()
+      // Retry: interceptor will fetch the updated token
+      return await getBlob(path, opts)
+    } catch (err) {
+      return Promise.reject(err)
+    }
+  }
+
   if (!response.ok) {
     return Promise.reject(await buildError(response))
   }

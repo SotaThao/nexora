@@ -31,3 +31,17 @@ skills-lock.json
 package-lock.json
 ios/
 reports/
+
+# QA & Tests
+tests/unit/
+reports/
+test_plan*.md
+walkthrough*.md
+vitest-output-debug.json
+debug.log
+.claude/worktrees/staff-invite-comments/
+*.mjs
+*.mjs
+.agent-rules
+.cursorrules
+pr_body.md

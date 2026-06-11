@@ -31,7 +31,8 @@ export default function StepOtpVerify({
   const [modalType, setModalType] = useState('terms')
 
   useEffect(() => {
-    if (showOtpInput) {
+    // Demo/simulator only — never auto-fill or auto-submit during real onboarding.
+    if (showOtpInput && isDemoToolsEnabled) {
       let isSubscribed = true;
       const targetOtp = '1234';
       
@@ -63,7 +64,7 @@ export default function StepOtpVerify({
         isSubscribed = false;
       };
     }
-  }, [showOtpInput]);
+  }, [showOtpInput, isDemoToolsEnabled]);
 
   return (
     <>
@@ -96,7 +97,23 @@ export default function StepOtpVerify({
                 }}
                 required
               />
-              {regErrors.email && <p className="mt-1 text-[10px] font-bold text-nexoraDanger">{regErrors.email}</p>}
+              {regErrors.email && (
+                <div className="mt-1">
+                  <p className="text-[10px] font-bold text-nexoraDanger">{regErrors.email}</p>
+                  {(regErrors.email.includes('exists') || regErrors.email.includes('tồn tại')) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setJoinPath('link')
+                        setStep(0)
+                      }}
+                      className="text-[10px] text-nexoraBrand font-bold hover:underline mt-1 inline-flex items-center"
+                    >
+                      {t('components.staff_registration.steps.StepOtpVerify.loginCta')}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Confirm Email */}
@@ -241,6 +258,7 @@ export default function StepOtpVerify({
                 {renderLabel(t('components.staff_registration.steps.StepOtpVerify.enterOtpCode'))}
               </label>
               <input
+                id="otp-input"
                 type="text"
                 className="mt-1.5 h-12 w-full rounded-lg border border-nexoraBorder px-4 text-center font-mono font-black text-lg text-nexoraText focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:outline-none transition-all"
                 placeholder={t('components.staff_registration.steps.StepOtpVerify.phExampleOtp')}
@@ -257,14 +275,14 @@ export default function StepOtpVerify({
             <div className="text-center">
               <span className="text-[10px] text-nexoraSubtle font-bold block">
                 {resendTimer > 0
-                  ? `Resend code in ${resendTimer}s`
+                  ? t('common.resend_code_in_seconds', { seconds: resendTimer })
                   : (
                   <button
                     type="button"
                     onClick={handleResendOtp || (() => setResendTimer(30))}
                     className="text-nexoraBrand hover:underline"
                   >
-                    Resend Verification Code
+                    {t('components.staff_registration.steps.StepOtpVerify.resendVerificationCode')}
                   </button>
                   )
                 }

@@ -16,7 +16,7 @@ export default function StepWelcome({
   searchError,
   nexoraStatus,
   fullName, position, phone, email,
-  currentLanguage, t,
+  t,
   setStep,
   setSearchId, setLinkedProfile, setSearchError,
   handleSearchIdChange,
@@ -41,7 +41,7 @@ export default function StepWelcome({
       <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
         <Loader2 className="h-7 w-7 text-nexoraBrand animate-spin" />
         <p className="text-xs text-nexoraMuted font-semibold uppercase tracking-wider">
-          {currentLanguage === 'vi' ? 'Đang tải lời mời…' : 'Loading invitation…'}
+          {t('components.staff_registration.steps.StepWelcome.loadingInvitation')}
         </p>
       </div>
     )
@@ -55,12 +55,10 @@ export default function StepWelcome({
         </div>
         <div className="space-y-1">
           <h3 className="text-base font-black text-nexoraText tracking-tight">
-            {currentLanguage === 'vi' ? 'Lời mời không hợp lệ' : 'Invitation Not Valid'}
+            {t('components.staff_registration.steps.StepWelcome.invalidInvitationTitle')}
           </h3>
           <p className="text-xs text-nexoraMuted max-w-xs mx-auto leading-relaxed">
-            {currentLanguage === 'vi'
-              ? 'Liên kết lời mời này không hợp lệ hoặc đã hết hạn. Vui lòng liên hệ tiệm để được mời lại.'
-              : 'This invitation link is invalid or has expired. Please contact the salon to request a new invite.'}
+            {t('components.staff_registration.steps.StepWelcome.invalidInvitationDescription')}
           </p>
         </div>
       </div>

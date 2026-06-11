@@ -102,6 +102,21 @@ export function useUpdateMerchantStaffStatus() {
 }
 
 /**
+ * Reject a pending staff link/join request via the dedicated reject endpoint.
+ * Invalidates the staff list on success so the declined request drops off.
+ * @returns {import('@tanstack/react-query').UseMutationResult}
+ */
+export function useRejectMerchantStaffLink() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (linkId) => merchantStaffRepository.rejectLink(linkId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
+    },
+  })
+}
+
+/**
  * Persist staff display order.
  * Invalidates the staff list on success.
  * @returns {import('@tanstack/react-query').UseMutationResult}
