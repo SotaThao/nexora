@@ -39,3 +39,7 @@ test_plan*.md
 walkthrough*.md
 vitest-output-debug.json
 debug.log
+.claude/worktrees/staff-invite-comments/
+*.mjs
+*.mjs
+.agent-rules
