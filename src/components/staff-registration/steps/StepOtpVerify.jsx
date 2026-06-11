@@ -31,7 +31,8 @@ export default function StepOtpVerify({
   const [modalType, setModalType] = useState('terms')
 
   useEffect(() => {
-    if (showOtpInput) {
+    // Demo/simulator only — never auto-fill or auto-submit during real onboarding.
+    if (showOtpInput && isDemoToolsEnabled) {
       let isSubscribed = true;
       const targetOtp = '1234';
       
@@ -63,7 +64,7 @@ export default function StepOtpVerify({
         isSubscribed = false;
       };
     }
-  }, [showOtpInput]);
+  }, [showOtpInput, isDemoToolsEnabled]);
 
   return (
     <>

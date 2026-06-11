@@ -63,7 +63,9 @@ export default function StepProfileSetup({
                   onChange={(e) => {
                     const file = e.target.files?.[0]
                     if (file) {
-                      setAvatar(URL.createObjectURL(file))
+                      const reader = new FileReader()
+                      reader.onload = () => setAvatar(reader.result)
+                      reader.readAsDataURL(file)
                     }
                   }}
                 />

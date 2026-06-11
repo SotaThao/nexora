@@ -41,7 +41,7 @@ export function useUpdateStaffProfile() {
   return useMutation({
     mutationFn: (dto) => profileSettingsRepository.updateStaffProfile(dto),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['staffProfile'] })
+      queryClient.invalidateQueries({ queryKey: qk.staffProfile() })
     },
   })
 }

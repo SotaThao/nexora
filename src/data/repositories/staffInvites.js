@@ -56,7 +56,8 @@ export function createStaffInvitesRepository(client = httpClient) {
           bio: bio ?? null,
           photoUrl: photoUrl ?? null,
           password: password ?? null,
-        }
+        },
+        { anonymous: true }
       )
     },
 
@@ -77,7 +78,7 @@ export function createStaffInvitesRepository(client = httpClient) {
         phoneNumber: phoneNumber ?? null,
         position: position ?? null,
         bio: bio ?? null
-      })
+      }, { anonymous: true })
     },
   }
 }

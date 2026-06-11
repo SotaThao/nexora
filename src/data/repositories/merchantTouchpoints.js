@@ -22,10 +22,19 @@ export function createMerchantTouchpointsRepository(client = httpClient) {
       
       const queryString = queryParams.toString()
       const url = `/api/v1/merchant/touchpoints${queryString ? `?${queryString}` : ''}`
-      
-      const res = await client.get(url)
-      
-      // Fallback for empty/404 response
+
+      let res
+      try {
+        res = await client.get(url)
+      } catch (err) {
+        // Treat 404 as "no touchpoints yet" and return an empty page
+        if (err?.status === 404) {
+          return { items: [], pageNumber: 1, totalPages: 0, totalCount: 0, hasNextPage: false, hasPreviousPage: false }
+        }
+        throw err
+      }
+
+      // Fallback for empty response
       if (!res) {
         return { items: [], pageNumber: 1, totalPages: 0, totalCount: 0, hasNextPage: false, hasPreviousPage: false }
       }
@@ -56,7 +65,7 @@ export function createMerchantTouchpointsRepository(client = httpClient) {
      * @returns {Promise<void>}
      */
     async deleteTouchpoint(id) {
-      return await client.delete(`/api/v1/merchant/touchpoints/${id}`)
+      return await client.del(`/api/v1/merchant/touchpoints/${id}`)
     },
 
     /**

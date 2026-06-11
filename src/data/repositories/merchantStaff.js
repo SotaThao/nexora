@@ -6,6 +6,57 @@
 import httpClient from '../../lib/httpClient'
 
 /**
+ * Map a PayoutMethodType enum value (from the API) to the dashboard wallet key.
+ * Enum (Swagger): Zelle | BankWire | PayPal | Venmo | CashApp | AppleCash | VlinkPay
+ */
+const PAYOUT_TYPE_TO_KEY = {
+  Zelle: 'zelle',
+  BankWire: 'bankwire',
+  PayPal: 'paypal',
+  Venmo: 'venmo',
+  CashApp: 'cashapp',
+  AppleCash: 'applecash',
+  VlinkPay: 'vlinkpay',
+}
+
+/**
+ * Build the dashboard payoutConfigs + simple paymentAccounts maps from the
+ * API `StaffPaymentMethodItemDto[]` (`{ type, isActive, accountInfo, imageUrl }`).
+ *
+ * @param {Array} paymentMethods - dto.paymentMethods from StaffListItemDto
+ * @param {string} [displayName] - Fallback account-holder name
+ * @returns {{ payoutConfigs: object, paymentAccounts: object }}
+ */
+export function normalizePaymentMethods(paymentMethods, displayName = '') {
+  const payoutConfigs = {
+    zelle: { enabled: false, value: '', qrCode: '', accountName: '' },
+    bankwire: { enabled: false, value: '', qrCode: '', accountName: '' },
+    paypal: { enabled: false, value: '', qrCode: '', accountName: '' },
+    venmo: { enabled: false, value: '', qrCode: '', accountName: '' },
+    cashapp: { enabled: false, value: '', qrCode: '', accountName: '' },
+    applecash: { enabled: false, value: '', qrCode: '', accountName: '' },
+  }
+  const paymentAccounts = {}
+
+  for (const method of paymentMethods ?? []) {
+    const key = PAYOUT_TYPE_TO_KEY[method?.type]
+    if (!key) continue
+    const value = method.accountInfo ?? ''
+    paymentAccounts[key] = value
+    // VlinkPay is shown as the ID field, not a payout toggle.
+    if (key === 'vlinkpay') continue
+    payoutConfigs[key] = {
+      enabled: !!method.isActive,
+      value,
+      qrCode: method.imageUrl ?? '',
+      accountName: displayName ?? '',
+    }
+  }
+
+  return { payoutConfigs, paymentAccounts }
+}
+
+/**
  * Normalize a StaffListItemDto from the API into the dashboard-friendly shape.
  *
  * @param {object} dto - Raw StaffListItemDto from GET /api/v1/merchant/staff
@@ -13,6 +64,8 @@ import httpClient from '../../lib/httpClient'
  */
 export function normalizeStaffListItem(dto) {
   const isActive = dto.status === 'Active' || dto.status === 'Accepted'
+  const displayName = dto.displayName ?? ''
+  const { payoutConfigs, paymentAccounts } = normalizePaymentMethods(dto.paymentMethods, displayName)
 
   return {
     id: dto.id ?? dto.linkId ?? dto.inviteId,
@@ -25,16 +78,20 @@ export function normalizeStaffListItem(dto) {
     isProfileComplete: dto.isProfileComplete ?? false,
     tipCount: dto.tipCount ?? 0,
     averageRating: dto.averageRating ?? 0,
-    fullName: dto.displayName ?? '',
+    fullName: displayName,
     avatar: dto.photoUrl ?? null,
     status: (dto.itemType === 'invite' && dto.status === 'Pending') ? 'Pending Setup' : (dto.status ?? null),
     isActive,
     showInTipsFlow: isActive,
     position: dto.position ?? null,
+    bio: dto.bio ?? null,
     invitedEmail: dto.invitedEmail ?? null,
     invitedPhone: dto.invitedPhone ?? null,
-    phone: dto.staffProfile?.phoneNumber ?? dto.staffProfile?.phone ?? dto.user?.phoneNumber ?? dto.user?.phone ?? dto.phone ?? dto.phoneNumber ?? dto.invitedPhone ?? null,
-    email: dto.staffProfile?.email ?? dto.user?.email ?? dto.email ?? dto.invitedEmail ?? null,
+    phone: dto.phoneNumber ?? dto.staffProfile?.phoneNumber ?? dto.staffProfile?.phone ?? dto.user?.phoneNumber ?? dto.user?.phone ?? dto.phone ?? dto.invitedPhone ?? null,
+    email: dto.email ?? dto.staffProfile?.email ?? dto.user?.email ?? dto.invitedEmail ?? null,
+    // Payout methods from StaffListItemDto.paymentMethods (review/edit modal)
+    payoutConfigs,
+    paymentAccounts,
   }
 }
 
@@ -69,9 +126,6 @@ export function createMerchantStaffRepository(client = httpClient) {
     async list() {
       const data = await client.get('/api/v1/merchant/staff')
       const items = data?.items ?? (Array.isArray(data) ? data : [])
-      if (items.length > 0) {
-        console.log("MERCHANT STAFF DTO: ", JSON.stringify(items[0]))
-      }
       return items.map(normalizeStaffListItem)
     },
 

@@ -460,10 +460,14 @@ export default function useSettingsForm({
   const handleAvatarChange = (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    saveProfile({
-      ...profile,
-      avatar: URL.createObjectURL(file)
-    })
+    const reader = new FileReader()
+    reader.onload = () => {
+      saveProfile({
+        ...profile,
+        avatar: reader.result
+      })
+    }
+    reader.readAsDataURL(file)
   }
 
   const formatDOB = (dobString) => {
