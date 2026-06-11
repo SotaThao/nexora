@@ -35,3 +35,7 @@ reports/
 # QA & Tests
 tests/unit/
 reports/
+test_plan*.md
+walkthrough*.md
+vitest-output-debug.json
+debug.log
