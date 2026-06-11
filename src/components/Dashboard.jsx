@@ -135,7 +135,7 @@ export default function Dashboard({
   // Sync profile when query data arrives (bridge-triggered refetch).
   useEffect(() => {
     if (profileSettingsData) {
-      if (!hasKyb) {
+      if (!hasKyb && verificationStatus !== 'basic') {
         setProfile({
           ...profileSettingsData,
           fullName: '',
@@ -156,7 +156,7 @@ export default function Dashboard({
       setProfile(buildFallbackProfile(storeInfo, reviewInfo))
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profileSettingsData, hasKyb, userEmail])
+  }, [profileSettingsData, hasKyb, userEmail, verificationStatus])
 
   const [isNotiDropdownOpen, setIsNotiDropdownOpen] = useState(false)
 
