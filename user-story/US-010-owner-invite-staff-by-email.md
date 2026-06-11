@@ -34,7 +34,7 @@ Vòng đời: `Invite sent (Pending) → thợ hoàn tất wizard (Pending Appro
 
 | # | Tình huống | Hành vi mong đợi | API | Trạng thái verify |
 |---|-----------|------------------|-----|-------------------|
-| S1 | **Owner từ chối** join request | Bấm Decline → confirm → status Rejected, thợ biến khỏi Pending; phía thợ thấy bị từ chối (linkStatus) | `PUT /merchant/staff/{staffLinkId}/status` body `status: "Rejected"` hoặc `POST /merchant/staff/links/{linkId}/reject` | Chưa test (UI có sẵn) |
+| S1 | **Owner từ chối** join request | Bấm Decline → confirm → Rejected, thợ biến khỏi Pending; phía thợ thấy bị từ chối (linkStatus) | ⚠️ PHẢI dùng `POST /merchant/staff/links/{linkId}/reject` — `PUT .../status` chỉ nhận `Active\|Inactive`, gửi `Rejected` bị 400 (đã verify, repo có `rejectLink()`) | Repo đã wire, chưa test UI |
 | S2 | **Token invite không hợp lệ / hết hạn** | `/invite/{token}` hiện màn lỗi rõ ràng, không crash, có hướng dẫn xin link mới | `GET /staff/invite/{token}` 404/400 | Chưa test |
 | S3 | **Email đã có tài khoản** nhưng dùng nhánh "Register Account" | Signup 4xx (email tồn tại) → UI báo lỗi + gợi ý nhánh "I already have an Account" | `POST /authentication/signup` 409/400 | Chưa test |
 | S4 | **OTP sai / hết hạn** | 400 "Invalid verification code", cho Resend Verification Code | `POST /authentication/verify-email` | ✅ Tested (TC-05) |
