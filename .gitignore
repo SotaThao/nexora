@@ -31,3 +31,7 @@ skills-lock.json
 package-lock.json
 ios/
 reports/
+
+# QA & Tests
+tests/unit/
+reports/
