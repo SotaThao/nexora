@@ -5,3 +5,20 @@ Whenever the user requests to export a report or walkthrough, or when a tester a
    C:\Users\AD\Documents\Obsidian\shancao\Nexora\user-story\report\
 2. If the test involves browser live tests, E2E flows, or manual walkthroughs that generate screenshots or video recordings (e.g. .mp4, .webm), ALWAYS save these media assets into that same directory (C:\Users\AD\Documents\Obsidian\shancao\Nexora\user-story\report\) alongside the report.
 This ensures all test evidence remains colocated and tied directly to the corresponding user stories.
+
+# Obsidian Sprint & User Story Workflow Rule
+When an Agent needs to create, edit, or checklist tasks/TODOs:
+1. **Detect Current Sprint**: Scan files in the Obsidian vault `C:\Users\AD\Documents\Obsidian\shancao\Nexora\Sprints\` folder. Find the file containing `status: in-progress` in its frontmatter. Extract the week/sprint number from the filename (e.g., `Week-02` -> `week-02`).
+2. **Locate User Stories**: All User Stories for the active week must be stored in the directory:
+   `C:\Users\AD\Documents\Obsidian\shancao\Nexora\user-story\<week-name>\` (e.g. `user-story/week-02/US-XXX-name.md`).
+3. **Task Completion Checklist**:
+   - Each User Story file must contain a `## 📋 Tasks / TODOs` section with checkbox items (e.g. `- [ ] Task name`).
+   - When an Agent completes a task, it must mark it as completed (`- [x]`).
+   - Once all tasks in the US file are checked (`- [x]`), the Agent must automatically:
+     a. Update the US file frontmatter to `status: done`.
+     b. Find the corresponding checkbox for this US in the active Sprint file (e.g., `Sprints/Week-02.md`) and check it (e.g., change `- [ ] **US-10**:` to `- [x] **US-10**:`).
+4. **Sprint Closeout**:
+   - When all US checkboxes in the active Sprint file are checked (`- [x]`), the Agent must:
+     a. Update the Sprint file frontmatter to `status: completed`.
+     b. Send a final notification to the Telegram Thread 735 reporting the successful completion of the sprint, along with test summaries.
+
