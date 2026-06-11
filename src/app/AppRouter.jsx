@@ -2,6 +2,7 @@ import React, { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, useParams, useLocation, useNavigate } from 'react-router-dom'
 import RequireAuth from './RequireAuth'
 import RequireOnboarded from './RequireOnboarded'
+import RequireStaffReady from './RequireStaffReady'
 import RootRedirect from './RootRedirect'
 import LoadingScreen from './LoadingScreen'
 import ErrorBoundary from '../components/ui/ErrorBoundary'
@@ -105,10 +106,12 @@ export default function AppRouter() {
         
         <Route path="/staff" element={
           <RequireAuth role="staff">
-            <StaffDashboard 
-              staffId={session?.staffId}
-              onLogout={logout}
-            />
+            <RequireStaffReady>
+              <StaffDashboard
+                staffId={session?.staffId}
+                onLogout={logout}
+              />
+            </RequireStaffReady>
           </RequireAuth>
         }>
           <Route index element={<StaffHome />} />

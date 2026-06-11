@@ -24,6 +24,28 @@ export function useVerifiedStatus() {
   })
 }
 
+/** PUT /api/v1/userprofile/update — firstName/lastName/phoneNumber. */
+export function useUpdateUserProfile() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (dto) => profileSettingsRepository.updateUserProfile(dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.userProfile() })
+    },
+  })
+}
+
+/** PUT /api/v1/staff/profile — displayName/position/bio/photoUrl. */
+export function useUpdateStaffProfile() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (dto) => profileSettingsRepository.updateStaffProfile(dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['staffProfile'] })
+    },
+  })
+}
+
 /** @deprecated Use useSaveProfileSettings directly on API if needed */
 export function useSaveProfileSettings() {
   const queryClient = useQueryClient()

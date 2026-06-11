@@ -46,6 +46,8 @@ export default function Payment({
   setSelectedWallet,
   setTipRefNumber,
   setStep,
+  isApiMode,
+  handlePay,
 }) {
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -80,7 +82,13 @@ export default function Payment({
                 setSelectedWalletObj(wallet)
                 setSelectedWallet(wallet.name)
                 setTipRefNumber(Math.floor(1000 + Math.random() * 9000).toString())
-                setStep('wallet_details')
+                if (isApiMode && typeof handlePay === 'function') {
+                  // API mode: create the tip on the backend (POST /touch/tip)
+                  // and fetch the payment link before showing wallet details.
+                  handlePay(wallet.name)
+                } else {
+                  setStep('wallet_details')
+                }
               }}
               className="w-full flex items-center justify-between p-4 rounded-xl font-bold text-sm bg-white border border-nexoraBorder hover:bg-nexoraCanvas text-nexoraText shadow-sm transition"
             >

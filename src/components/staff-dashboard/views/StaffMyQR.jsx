@@ -14,7 +14,7 @@ const slugify = (str = '') => str.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-
 
 export default function StaffMyQR() {
   const { t, currentLanguage } = useTranslation()
-  const { staffMember, linkedBusinesses } = useStaffAccount()
+  const { staffMember, linkedBusinesses, account } = useStaffAccount()
   const { showToast } = useNotification()
 
   // Data layer — merchant setup (read + write) and notifications (write)
@@ -266,7 +266,7 @@ export default function StaffMyQR() {
             className="h-full w-full object-contain"
           />
         </div>
-        <div className="text-sm font-bold text-nexoraText">{t('staff_dashboard.staff_id')}: {staffMember.id}</div>
+        <div className="text-sm font-bold text-nexoraText">{t('staff_dashboard.staff_id')}: {account.staffCode || staffMember.id}</div>
         <div className="mt-3 space-y-2">
           <button
             type="button"

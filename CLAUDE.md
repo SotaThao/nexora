@@ -33,6 +33,17 @@ pnpm test:e2e
 pnpm lint:tokens
 ```
 
+## API Integration Workflow (goal-driven, mandatory)
+
+Every API feature integration starts from a user story — never integrate "vu vơ" without a goal.
+
+1. **User story first.** Each story is one file in `user-story/` (`US-XXX-<slug>.md`, copy `user-story/_TEMPLATE.md`). If the user gives a raw requirement, draft the story (Story + AC + API Mapping + FE Surface) and get it approved before writing code. Status lifecycle: Draft → Approved → Integrated → Tested → Done.
+2. **Contract from live Swagger.** Source of truth is `https://test-api.nexoratouch.com/api/` (spec: `/api/specification.json`). `API/update/<latest>/api-integration-guide-v4.md` is a snapshot — when in doubt, re-check the live spec. Never code against guessed field names; unresolved contract questions go in the story's "cần hỏi BE" section and block implementation.
+3. **OpenSpec for large changes.** A feature touching ≥3 files or any shared layer (auth adapter, httpClient, shared repository/context) requires an OpenSpec change in `openspec/changes/` whose `design.md` maps US ↔ endpoints ↔ FE files. Small single-owner fixes may skip OpenSpec but still need a story.
+4. **Integrate along the data boundary** (components → hooks → repositories → adapter). Normalization of API DTOs lives in the repository only.
+5. **Verify against the story.** DoD in the story file is the gate: AC pass on dev API, network trace shows the mapped calls (method + status), mutations invalidate the right query keys, no console errors, 3-layer tests (feature-focused-tester). A feature that "looks working" in UI but fires no API call is a failure (see US-009 lesson).
+6. **Close the loop.** Update the story status + TC links, and record bugs/deviations in the story's execution notes.
+
 ## Principal Workflow
 
 For every task:
@@ -126,6 +137,8 @@ When changing one of these flows:
 | Logger | `src/utils/logger.js` |
 | Tests | `tests/`, `src/setupTests.js`, `vitest*.config.*` |
 | OpenSpec work | `openspec/changes/` |
+| User stories (integration goals) | `user-story/` (template: `_TEMPLATE.md`) |
+| API contract snapshot | `API/update/<latest>/api-integration-guide-v4.md` (truth: live Swagger) |
 
 ## Code Standards
 

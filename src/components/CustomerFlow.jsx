@@ -29,7 +29,7 @@ export default function CustomerFlow() {
     selectedStaffHasAnyPayment, businessPaymentAccounts,
     setSelectedWalletObj, setSelectedWallet, setTipRefNumber,
     selectedWalletObj, qrCodeVal, tipRefNumber, handlePay,
-    selectedWallet,
+    selectedWallet, paymentLinkData,
     rating, handleRatingChange,
     positiveTagKeys, negativeTagKeys, selectedTags, handleTagToggle,
     comment, setComment, handleSubmitFeedback,
@@ -154,6 +154,8 @@ export default function CustomerFlow() {
                   setSelectedWallet={setSelectedWallet}
                   setTipRefNumber={setTipRefNumber}
                   setStep={setStep}
+                  isApiMode={isApiMode}
+                  handlePay={handlePay}
                 />
               )}
 
@@ -173,6 +175,7 @@ export default function CustomerFlow() {
                   handleConfirmTip={handleConfirmTip}
                   isApiMode={isApiMode}
                   setStep={setStep}
+                  paymentLinkData={paymentLinkData}
                 />
               )}
 

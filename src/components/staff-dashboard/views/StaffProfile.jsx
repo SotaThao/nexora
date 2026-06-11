@@ -212,7 +212,7 @@ export default function StaffProfile() {
                 {fullName || displayName}
               </span>
               <span className="text-[10px] text-nexoraSubtle">
-                {t('staff_dashboard.staff_id')}: {staffMember.id}
+                {t('staff_dashboard.staff_id')}: {account.staffCode || staffMember.id}
               </span>
             </div>
 

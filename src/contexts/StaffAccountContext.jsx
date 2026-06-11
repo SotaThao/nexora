@@ -9,6 +9,8 @@ import { useTransactions } from '../data/hooks/useTransactions'
 import { useMerchantSetup, useSaveMerchantSetup } from '../data/hooks/useMerchantSetup'
 import { useReviews } from '../data/hooks/useReviews'
 import { usePendingAccounts } from '../data/hooks/usePendingAccounts'
+import { useProfileSettings, useUpdateUserProfile, useUpdateStaffProfile } from '../data/hooks/useProfileSettings'
+import { useStaffProfile, useStaffBusinesses } from '../data/hooks/useStaffSelf'
 
 const StaffAccountContext = createContext(null)
 
@@ -25,6 +27,14 @@ export function StaffAccountProvider({ staffId = null, children }) {
 
   const saveStaffAccountMutation = useSaveStaffAccountQuery()
   const saveMerchantSetupMutation = useSaveMerchantSetup()
+
+  // API identity: GET /userprofile/me — the persisted personal onboarding data.
+  const { data: userProfile = null } = useProfileSettings()
+  // API staff self: own StaffProfile (staffCode, displayName, bio) + linked businesses.
+  const { data: staffProfile = null } = useStaffProfile()
+  const { data: staffBusinesses = null } = useStaffBusinesses()
+  const updateUserProfileMutation = useUpdateUserProfile()
+  const updateStaffProfileMutation = useUpdateStaffProfile()
 
   // --- Derived: merchant staff list + the signed-in staff member -----------
   const staffList = useMemo(() => {
@@ -58,10 +68,25 @@ export function StaffAccountProvider({ staffId = null, children }) {
 
   // --- Staff-owned blob (with default init) --------------------------------
   // useStaffAccountQuery(staffId) returns the single account blob for this staff.
-  const account = useMemo(
-    () => accountData || makeDefaultStaffAccount(staffMember),
-    [accountData, staffMember]
-  )
+  const account = useMemo(() => {
+    const base = accountData || makeDefaultStaffAccount(staffMember)
+    if (!userProfile && !staffProfile) return base
+    // Hydrate identity fields from the backend (API mode):
+    // - GET /userprofile/me  → fullName / phone / email
+    // - GET /staff/profile   → staffCode / displayName / bio / photo
+    const apiFullName = (userProfile?.fullName || '').trim()
+      || `${userProfile?.firstName ?? ''} ${userProfile?.lastName ?? ''}`.trim()
+    return {
+      ...base,
+      fullName: base.fullName || apiFullName,
+      phone: base.phone || userProfile?.phoneNumber || '',
+      email: base.email || userProfile?.email || '',
+      defaultDisplayName: base.defaultDisplayName || staffProfile?.displayName || userProfile?.firstName || apiFullName,
+      bio: base.bio || staffProfile?.bio || '',
+      avatar: base.avatar || staffProfile?.photoUrl || null,
+      staffCode: staffProfile?.staffCode || base.staffCode || null,
+    }
+  }, [accountData, staffMember, userProfile, staffProfile])
 
   // Persist a partial update to the signed-in staff's owned blob.
   // repository.save(staffId, data) deep-merges `data` into the existing blob,
@@ -158,11 +183,25 @@ export function StaffAccountProvider({ staffId = null, children }) {
   }, [tips, pendingTips, staffReviews])
 
   // --- Derived: linked businesses ------------------------------------------
+  // API-first: GET /api/v1/staff/businesses. Falls back to the legacy
+  // merchant-setup derivation when the API returns nothing (storage mode).
   const linkedBusinesses = useMemo(() => {
+    if (Array.isArray(staffBusinesses) && staffBusinesses.length) {
+      return staffBusinesses.map((b) => ({
+        businessStaffLinkId: b.businessId,
+        businessName: b.businessName,
+        displayName: account.displayNamesByBusiness?.[b.businessId] || account.defaultDisplayName,
+        status: b.linkStatusLabel || b.linkStatus || 'Active',
+        logoUrl: b.logoUrl,
+        role: b.roleLabel || b.role || null,
+        linkedAt: b.linkedAt,
+      }))
+    }
+
     const isLinked = merchantSetup?.staffList?.some((s) => s.id === staffId)
     const linkedStaff = merchantSetup?.staffList?.find((s) => s.id === staffId)
     const linkId = `${slugify(businessName)}__${staffId}`
-    
+
     let status = 'Pending Link'
     if (isLinked) {
       if (linkedStaff?.status === 'Pending Acceptance') {
@@ -184,7 +223,7 @@ export function StaffAccountProvider({ staffId = null, children }) {
         status
       }
     ]
-  }, [businessName, staffId, account.displayNamesByBusiness, account.defaultDisplayName, staffMember.isActive, merchantSetup])
+  }, [staffBusinesses, businessName, staffId, account.displayNamesByBusiness, account.defaultDisplayName, staffMember.isActive, merchantSetup])
 
   // --- Derived: notifications (from pending tips + recent good reviews) -----
   const notifications = useMemo(() => {
@@ -236,8 +275,33 @@ export function StaffAccountProvider({ staffId = null, children }) {
   )
 
   const saveProfile = useCallback(
-    (patch) => updateAccount(patch),
-    [updateAccount]
+    (patch) => {
+      updateAccount(patch)
+
+      // Persist to the backend (API mode).
+      if (patch.fullName !== undefined || patch.phone !== undefined) {
+        const fullName = (patch.fullName ?? account.fullName ?? '').trim()
+        updateUserProfileMutation.mutate({
+          firstName: fullName.split(' ')[0] || '',
+          lastName: fullName.split(' ').slice(1).join(' ') || '',
+          phoneNumber: patch.phone ?? account.phone ?? '',
+        }, {
+          onError: (err) => logger.error('[StaffAccountContext] Failed to persist user profile', err),
+        })
+      }
+      if (patch.defaultDisplayName !== undefined || patch.bio !== undefined) {
+        const displayName = (patch.defaultDisplayName ?? account.defaultDisplayName ?? account.fullName ?? '').trim()
+        if (displayName) {
+          updateStaffProfileMutation.mutate({
+            displayName,
+            bio: patch.bio ?? account.bio ?? '',
+          }, {
+            onError: (err) => logger.error('[StaffAccountContext] Failed to persist staff profile', err),
+          })
+        }
+      }
+    },
+    [updateAccount, account, updateUserProfileMutation, updateStaffProfileMutation]
   )
 
   const setBusinessDisplayName = useCallback(

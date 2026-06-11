@@ -66,7 +66,14 @@ export default function LoginScreen() {
           newSession.clearMerchantSetup ||
           newSession.hasCompletedOnboarding === false
 
-        if ((newSession.role === 'personal' || newSession.role === 'staff') && !newSession.staffId) {
+        // Staff dashboard requires BOTH: a real StaffProfile (accepted invite)
+        // AND persisted onboarding data on the backend. Otherwise the user
+        // must finish registration/onboarding first.
+        const isStaffReady =
+          Boolean(newSession.staffId) ||
+          (newSession.hasStaffProfile && newSession.hasCompletedOnboarding)
+
+        if ((newSession.role === 'personal' || newSession.role === 'staff') && !isStaffReady) {
           navigate('/register', { state: { showPersonalSuccessPopup: true, ssoEmail: newSession.email } })
         } else if (newSession.flag === '!personal' || newSession.role === 'personal' || newSession.role === 'staff') {
           navigate('/staff')

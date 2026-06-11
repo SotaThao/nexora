@@ -12,17 +12,27 @@ export function createNotificationsRepository(client = httpClient) {
      */
     async list() {
       const response = await client.get('/api/v1/notifications')
-      const items = Array.isArray(response) ? response : (response.data || [])
-      
+      // API returns a paged shape ({ items, pageNumber, ... }); support raw arrays too.
+      const items = Array.isArray(response) ? response : (response.items || response.data || [])
+
       // Normalize to { id, type, title, body, isRead, createdAt }
-      return items.map(item => ({
-        id: item.id,
-        type: item.type || 'info',
-        title: item.title || '',
-        body: item.body || item.message || '',
-        isRead: Boolean(item.isRead || item.read),
-        createdAt: item.createdAt || new Date().toISOString()
-      }))
+      return items.map(item => {
+        const isRead = Boolean(item.isRead || item.read)
+        const body = item.body || item.message || ''
+        const createdAt = item.createdAt || new Date().toISOString()
+        return {
+          id: item.id,
+          type: item.type || 'info',
+          title: item.title || '',
+          body,
+          isRead,
+          createdAt,
+          // Compatibility aliases for the dashboard header dropdown.
+          read: isRead,
+          message: body,
+          time: new Date(createdAt).toLocaleString(),
+        }
+      })
     },
 
     /**

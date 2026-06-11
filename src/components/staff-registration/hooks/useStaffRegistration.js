@@ -17,6 +17,7 @@ import { useStaffInviteInfo, useAcceptStaffInvite } from '../../../data/hooks/us
 import { apiAuthAdapter } from '../../../auth/adapters/apiAuthAdapter'
 import { staffPaymentMethodsRepository } from '../../../data/repositories/staffPaymentMethods'
 import { staffInvitesRepository } from '../../../data/repositories/staffInvites'
+import profileSettingsRepository from '../../../data/repositories/profileSettings'
 import httpClient from '../../../lib/httpClient'
 
 const MOCK_NEXORA_STAFF_PROFILES = {}
@@ -827,6 +828,24 @@ export default function useStaffRegistration({ inviteData }) {
            if (code) {
              setStaffId(code)
            }
+        }
+
+        // 4. Persist personal onboarding data to the backend user profile.
+        // Without this the account keeps an empty firstName/phoneNumber and is
+        // treated as not-onboarded (mirrors useCompletePersonalOnboarding in
+        // the standalone register flow).
+        const trimmedName = fullName.trim()
+        const profileFirstName = trimmedName.split(' ')[0] || ''
+        const profileLastName = trimmedName.split(' ').slice(1).join(' ') || ''
+        try {
+          await profileSettingsRepository.updateUserProfile({
+            firstName: profileFirstName,
+            lastName: profileLastName,
+            phoneNumber: phone || ''
+          })
+        } catch (profileErr) {
+          // Profile persistence must not block the invite acceptance flow.
+          logger.error('Failed to persist personal onboarding profile', profileErr)
         }
 
         setHasAcceptedInvite(true)

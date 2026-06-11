@@ -49,8 +49,8 @@ export default function StaffSidebar({ activeScreen, onNavigate, onLogout, isOpe
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-bold text-white">{staffMember.fullName || displayName}</div>
-          <div className="mt-0.5 truncate text-[11px] text-white/50">{t('staff_dashboard.staff_id')}: {staffMember.id}</div>
+          <div className="truncate text-sm font-bold text-white">{account.fullName || staffMember.fullName || displayName}</div>
+          <div className="mt-0.5 truncate text-[11px] text-white/50">{t('staff_dashboard.staff_id')}: {account.staffCode || staffMember.id}</div>
         </div>
       </button>
 
