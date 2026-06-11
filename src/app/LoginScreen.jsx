@@ -1,7 +1,14 @@
 import React, { useState } from 'react'
 import { Lock, Mail, Sparkles, Eye, EyeOff } from 'lucide-react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import AuthGraphicPanel from '../components/auth/AuthGraphicPanel'
 import SecondaryButton from '../components/ui/SecondaryButton'
+import { useAuth } from '../auth/useAuth'
+import { useTranslation } from '../contexts/LanguageContext'
+import { getErrorI18nKey } from '../data/errorCodes'
+import { isDemoToolsEnabled } from './demoTools'
+import { useSaveMerchantSetup } from '../data/hooks/useMerchantSetup'
+import { logger } from '../utils/logger'
 
 function GoogleIcon() {
   return (
@@ -22,25 +29,89 @@ function AppleBrandIcon() {
   )
 }
 
-export default function LoginScreen({
-  email,
-  setEmail,
-  password,
-  setPassword,
-  loginError,
-  isLoading,
-  currentLanguage,
-  setLanguage,
-  t,
-  onLoginSubmit,
-  onTriggerSimulation,
-  onQuickDemoLogin,
-  setStaffInviteData,
-  setView,
-  setLoggedInStaffId,
-  isDemoToolsEnabled = false,
-}) {
+export default function LoginScreen() {
+  const { currentLanguage, setLanguage, t } = useTranslation()
+  const { login } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const saveMerchantSetupMutation = useSaveMerchantSetup()
+
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loginError, setLoginError] = useState(location.state?.loginError || '')
+  const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+
+  const handleLoginSubmit = () => {
+    setIsLoading(true)
+    setLoginError('')
+
+    setTimeout(async () => {
+      setIsLoading(false)
+
+      const credentials = {
+        email: email.trim().toLowerCase(),
+        password,
+      }
+
+      try {
+        const newSession = await login(credentials)
+        // Onboarding completion is independent of KYB/verification status.
+        // A business that finished onboarding but hasn't done KYB has
+        // verificationStatus 'basic'/'unverified' — that must NOT force the
+        // onboarding wizard (KYB has its own gate). Rely only on the real
+        // onboarding signal (hasCompletedOnboarding, derived from account
+        // status Active / kyb_approved / explicit flag in apiAuthAdapter).
+        const needsOnboarding =
+          newSession.clearMerchantSetup ||
+          newSession.hasCompletedOnboarding === false
+
+        // Staff dashboard requires BOTH: a real StaffProfile (accepted invite)
+        // AND persisted onboarding data on the backend. Otherwise the user
+        // must finish registration/onboarding first.
+        const isStaffReady =
+          Boolean(newSession.staffId) ||
+          (newSession.hasStaffProfile && newSession.hasCompletedOnboarding)
+
+        if ((newSession.role === 'personal' || newSession.role === 'staff') && !isStaffReady) {
+          navigate('/register', { state: { showPersonalSuccessPopup: true, ssoEmail: newSession.email } })
+        } else if (newSession.flag === '!personal' || newSession.role === 'personal' || newSession.role === 'staff') {
+          navigate('/staff')
+        } else if (needsOnboarding) {
+          navigate('/onboarding')
+        } else {
+          navigate('/dashboard')
+        }
+      } catch (err) {
+        const errorCode = err?.errorCode || 'unknown_error'
+        const i18nKey = getErrorI18nKey(errorCode)
+        setLoginError(t(i18nKey))
+      }
+    }, 800)
+  }
+
+  const triggerSimulation = (scenario) => {
+    setLoginError('')
+    if (scenario === 'new_register') {
+      navigate('/register')
+    } else if (scenario === 'staff_portal') {
+      navigate('/invite', { state: { biz: '' } })
+    } else if (scenario === 'staff_dashboard') {
+      navigate('/staff')
+    }
+  }
+
+  const handleQuickDemoLogin = (demoSetup) => {
+    saveMerchantSetupMutation.mutate(demoSetup, {
+      onSuccess: () => {
+        navigate('/dashboard')
+      },
+      onError: (err) => {
+        logger.error('Failed to save demo setup', err)
+      },
+    })
+  }
+
   return (
     <div className="min-h-dvh flex items-center justify-center bg-nexoraCanvas relative overflow-x-hidden overflow-y-auto text-nexoraText px-4 py-6 sm:py-10 selection:bg-nexoraBrandSoft selection:text-nexoraBrand">
       {/* Language Switcher */}
@@ -83,7 +154,7 @@ export default function LoginScreen({
               </p>
             </div>
           ) : (
-            <form onSubmit={(e) => { e.preventDefault(); onLoginSubmit(); }} className="space-y-5">
+            <form onSubmit={(e) => { e.preventDefault(); handleLoginSubmit(); }} className="space-y-5">
               <div className="space-y-1">
                 <p className="text-[11px] font-black uppercase tracking-wider text-nexoraBrand">Secure Access</p>
                 <h1 className="text-2xl font-black text-nexoraText sm:text-3xl">Sign in to NEXORA</h1>
@@ -115,7 +186,7 @@ export default function LoginScreen({
                     <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider">{t('login.password_label')}</label>
                     <button
                       type="button"
-                      onClick={() => setView('forgot-password')}
+                      onClick={() => navigate('/forgot-password')}
                       className="text-[10px] font-bold text-nexoraBrand hover:underline focus:outline-none transition-all"
                     >
                       Forgot Password?
@@ -156,7 +227,7 @@ export default function LoginScreen({
               <div className="flex items-center justify-center gap-3 sm:grid sm:grid-cols-2">
                 <button
                   type="button"
-                  onClick={() => onTriggerSimulation('sso_with_kyb')}
+                  onClick={() => triggerSimulation('sso_with_kyb')}
                   aria-label={t('login.continue_google')}
                   className="flex h-9 w-9 items-center justify-center rounded-full border border-nexoraBorder bg-white p-0 text-xs font-bold text-nexoraText shadow-nexora-card transition-all hover:border-nexoraBrand hover:bg-nexoraCanvas sm:min-h-11 sm:w-auto sm:rounded-lg sm:px-4 sm:py-2 sm:shadow-none"
                 >
@@ -167,7 +238,7 @@ export default function LoginScreen({
                 </button>
                 <button
                   type="button"
-                  onClick={() => onTriggerSimulation('sso_with_kyb')}
+                  onClick={() => triggerSimulation('sso_with_kyb')}
                   aria-label={t('login.continue_apple')}
                   className="flex h-9 w-9 items-center justify-center rounded-full border border-nexoraBorder bg-white p-0 text-xs font-bold text-nexoraText shadow-nexora-card transition-all hover:border-nexoraBrand hover:bg-nexoraCanvas sm:min-h-11 sm:w-auto sm:rounded-lg sm:px-4 sm:py-2 sm:shadow-none"
                 >
@@ -180,7 +251,7 @@ export default function LoginScreen({
 
               {/* Quick login / registration options */}
               <div className="grid grid-cols-1 gap-3">
-                <SecondaryButton onClick={() => onTriggerSimulation('new_register')}>
+                <SecondaryButton onClick={() => triggerSimulation('new_register')}>
                   {t('login.register_btn')}
                 </SecondaryButton>
 
@@ -216,9 +287,9 @@ export default function LoginScreen({
                         { id: 'tp-front', name: 'Reception Front Desk', type: 'Front Desk' },
                       ]
                       }
-                      onQuickDemoLogin(demoSetup)
+                      handleQuickDemoLogin(demoSetup)
                     }}
-                    className="min-h-11 py-2 border border-nexoraBrand/20 hover:border-nexoraBrand text-nexoraBrand bg-nexoraBrandSoft/40 hover:bg-nexoraBrandSoft text-xs font-semibold rounded-lg flex items-center justify-center gap-1 transition-all"
+                    className="min-h-11 py-2 border border-nexoraBrand/20 hover:border-nexoraBrand text-nexoraBrand bg-nexoraBrandSoft/40 hover:bg-nexoraBrandSoft text-xs font-semibold rounded-lg hidden lg:flex items-center justify-center gap-1 transition-all"
                   >
                     <Sparkles className="w-3.5 h-3.5 text-nexoraBrand" /> {t('login.enter_dashboard_btn')}
                   </button>

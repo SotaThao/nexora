@@ -2,14 +2,31 @@ import { X, ShieldAlert, ShieldCheck, Download } from 'lucide-react'
 import IconButton from '../../ui/IconButton'
 import { useTranslation } from '../../../contexts/LanguageContext'
 
+const slugify = (str = '') => str.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+
 function QrModal({ target, businessName, onClose }) {
   const { t } = useTranslation()
   if (!target) return null
 
-  // Build the live customer portal URL for this touchpoint/staff QR
-  const qrUrl = `${window.location.origin}${window.location.pathname}?flow=customer&tech=${encodeURIComponent(target.slug)}&biz=${encodeURIComponent(businessName)}`
+  const businessSlug = slugify(businessName || '')
+  // Prefer the canonical customer URL returned by the API (GET touchpoints →
+  // `url`), which carries the real business + touch-point slugs. Keep the
+  // current environment's origin so the link resolves in dev (localhost) and
+  // deployed envs alike. Fall back to building from the slug only when the API
+  // url is missing (e.g. staff/master QR not sourced from the touchpoints API).
+  let qrUrl = ''
+  if (target.url) {
+    try {
+      qrUrl = `${window.location.origin}${new URL(target.url).pathname}`
+    } catch {
+      qrUrl = target.url
+    }
+  }
+  if (!qrUrl) {
+    qrUrl = `${window.location.origin}/touch/${businessSlug}/${target.slug}`
+  }
 
-  const isStaff = target.slug?.startsWith('staff/')
+  const isStaff = target.slug?.startsWith('staff-')
   const displayName = isStaff ? target.name.replace('Personal QR - ', '') : ''
   const displayRole = isStaff ? target.subtitle : ''
 
@@ -65,20 +82,8 @@ function QrModal({ target, businessName, onClose }) {
         </div>
 
         <p className="mt-4 rounded-lg bg-nexoraCanvas px-3 py-2 text-[10px] font-mono text-nexoraMuted select-all qr-print-url">
-          nexora.vlinkpay.com/touch/{target.slug}
+          {qrUrl.replace(/^https?:\/\//, '')}
         </p>
-
-        {/* Browser simulator trigger */}
-        <div className="mt-3.5 no-print">
-          <a
-            href={qrUrl}
-            target="_blank"
-            rel="opener"
-            className="inline-flex items-center gap-1 text-[10.5px] font-black text-nexoraBrand hover:underline tracking-wide bg-nexoraBrandSoft px-3 py-1.5 rounded-lg transition"
-          >
-            <span>{t('dashboard.modals.customer_view_test')}</span>
-          </a>
-        </div>
 
         <button
           onClick={() => window.print()}

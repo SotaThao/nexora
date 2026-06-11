@@ -1,5 +1,5 @@
 import React from 'react'
-import { Edit2 } from 'lucide-react'
+import { Edit2, Loader2 } from 'lucide-react'
 
 const PayoutLogos = {
   zelle: (
@@ -54,6 +54,7 @@ export default function StepPayments({
   handleActivateProfile,
   setStep,
   isDemoToolsEnabled = false,
+  isSubmitting = false,
 }) {
   return (
     <div className="space-y-5 py-2 animate-fadeIn">
@@ -158,9 +159,17 @@ export default function StepPayments({
         <button
           type="button"
           onClick={handleActivateProfile}
-          className="flex-grow h-10 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-bold text-xs uppercase tracking-wider rounded-lg transition"
+          disabled={isSubmitting}
+          className="flex-grow h-10 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-bold text-xs uppercase tracking-wider rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
         >
-          {t('components.staff_registration.steps.StepPayments.saveAndActivate')}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              {t('common.saving')}
+            </>
+          ) : (
+            t('components.staff_registration.steps.StepPayments.saveAndActivate')
+          )}
         </button>
       </div>
     </div>

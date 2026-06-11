@@ -26,25 +26,10 @@ export default function StepSuccess({
         </p>
       </div>
 
-      {/* Staff ID Box */}
-      <div className="max-w-md mx-auto p-5 rounded-2xl border border-nexoraBorder bg-slate-50 flex flex-col items-center justify-center space-y-3 shadow-sm">
-        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-          {t('register.staff_id_label')}
-        </span>
-        <div className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-xl border border-nexoraBorder w-full justify-between shadow-inner">
-          <span className="font-mono text-base font-extrabold text-nexoraBrand select-all">
-            {generatedStaffId}
-          </span>
-          <button
-            type="button"
-            onClick={handleCopyStaffId}
-            className="px-3 py-1 bg-nexoraBrandSoft text-nexoraBrand hover:bg-nexoraBrand hover:text-white rounded-lg text-xs font-bold transition-all shrink-0"
-          >
-            {copied ? t('common.copied') : t('common.copy')}
-          </button>
-        </div>
-        <p className="text-[10px] text-nexoraSubtle leading-relaxed max-w-xs">
-          {t('register.staff_linking_instructions')}
+      {/* Instruction Box */}
+      <div className="max-w-md mx-auto p-5 rounded-2xl border border-nexoraBrand/30 bg-nexoraBrandSoft/20 flex flex-col items-center justify-center space-y-3 shadow-sm">
+        <p className="text-sm font-semibold text-nexoraBrand leading-relaxed max-w-xs text-center">
+          {t('register.need_invite_link')}
         </p>
       </div>
 

@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { Eye, EyeOff, X } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Eye, EyeOff, X, Loader2 } from 'lucide-react'
 import { renderLabel } from '../../../contexts/LanguageContext'
 
 export default function StepOtpVerify({
@@ -23,10 +23,49 @@ export default function StepOtpVerify({
   setStep,
   setJoinPath,
   setShowOtpInput,
+  handleResendOtp,
   isDemoToolsEnabled = false,
+  isSubmitting,
 }) {
   const [showTermsModal, setShowTermsModal] = useState(false)
   const [modalType, setModalType] = useState('terms')
+
+  useEffect(() => {
+    // Demo/simulator only — never auto-fill or auto-submit during real onboarding.
+    if (showOtpInput && isDemoToolsEnabled) {
+      let isSubscribed = true;
+      const targetOtp = '1234';
+      
+      const simulate = async () => {
+        // Delay 2 seconds as requested
+        await new Promise(r => setTimeout(r, 1500));
+        if (!isSubscribed) return;
+
+        for (let i = 1; i <= targetOtp.length; i++) {
+          if (!isSubscribed) return;
+          setOtpCode(targetOtp.slice(0, i));
+          await new Promise(r => setTimeout(r, 150)); // typing delay
+        }
+        
+        if (!isSubscribed) return;
+        await new Promise(r => setTimeout(r, 400));
+        
+        if (isSubscribed) {
+          handleVerifyOtp(null);
+        }
+      };
+      
+      // Only run simulation if the input is currently empty
+      if (!otpCode) {
+        simulate();
+      }
+      
+      return () => {
+        isSubscribed = false;
+      };
+    }
+  }, [showOtpInput, isDemoToolsEnabled]);
+
   return (
     <>
       {/* STEP 1: Register Account & Activate */}
@@ -58,7 +97,23 @@ export default function StepOtpVerify({
                 }}
                 required
               />
-              {regErrors.email && <p className="mt-1 text-[10px] font-bold text-nexoraDanger">{regErrors.email}</p>}
+              {regErrors.email && (
+                <div className="mt-1">
+                  <p className="text-[10px] font-bold text-nexoraDanger">{regErrors.email}</p>
+                  {(regErrors.email.includes('exists') || regErrors.email.includes('tồn tại')) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setJoinPath('link')
+                        setStep(0)
+                      }}
+                      className="text-[10px] text-nexoraBrand font-bold hover:underline mt-1 inline-flex items-center"
+                    >
+                      {t('components.staff_registration.steps.StepOtpVerify.loginCta')}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Confirm Email */}
@@ -169,9 +224,17 @@ export default function StepOtpVerify({
             </button>
             <button
               type="submit"
-              className="flex-grow h-10 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-bold text-xs uppercase tracking-wider rounded-lg transition"
+              disabled={isSubmitting}
+              className="flex-grow h-10 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-bold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 transition disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {t('common.next')}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {t('common.processing', { defaultValue: 'Processing...' })}
+                </>
+              ) : (
+                t('common.next')
+              )}
             </button>
           </div>
         </form>
@@ -195,6 +258,7 @@ export default function StepOtpVerify({
                 {renderLabel(t('components.staff_registration.steps.StepOtpVerify.enterOtpCode'))}
               </label>
               <input
+                id="otp-input"
                 type="text"
                 className="mt-1.5 h-12 w-full rounded-lg border border-nexoraBorder px-4 text-center font-mono font-black text-lg text-nexoraText focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:outline-none transition-all"
                 placeholder={t('components.staff_registration.steps.StepOtpVerify.phExampleOtp')}
@@ -211,15 +275,15 @@ export default function StepOtpVerify({
             <div className="text-center">
               <span className="text-[10px] text-nexoraSubtle font-bold block">
                 {resendTimer > 0
-                  ? `Resend code in ${resendTimer}s`
+                  ? t('common.resend_code_in_seconds', { seconds: resendTimer })
                   : (
-                    <button
-                      type="button"
-                      onClick={() => setResendTimer(30)}
-                      className="text-nexoraBrand hover:underline"
-                    >
-                      Resend Verification Code
-                    </button>
+                  <button
+                    type="button"
+                    onClick={handleResendOtp || (() => setResendTimer(30))}
+                    className="text-nexoraBrand hover:underline"
+                  >
+                    {t('components.staff_registration.steps.StepOtpVerify.resendVerificationCode')}
+                  </button>
                   )
                 }
               </span>
@@ -249,9 +313,17 @@ export default function StepOtpVerify({
             </button>
             <button
               type="submit"
-              className="flex-grow h-10 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-bold text-xs uppercase tracking-wider rounded-lg transition"
+              disabled={isSubmitting}
+              className="flex-grow h-10 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-bold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 transition disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {t('components.staff_registration.steps.StepOtpVerify.verifyAndActivate')}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {t('common.processing', { defaultValue: 'Processing...' })}
+                </>
+              ) : (
+                t('components.staff_registration.steps.StepOtpVerify.verifyAndActivate')
+              )}
             </button>
           </div>
         </form>

@@ -3,11 +3,6 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { logger } from '../../../utils/logger'
 import publicTouchRepository from '../../../data/repositories/publicTouch'
-import { useMerchantSetup } from '../../../data/hooks/useMerchantSetup'
-import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
-import { useAddTransaction } from '../../../data/hooks/useTransactions'
-import { useAddReview } from '../../../data/hooks/useReviews'
-import { useAddNotification } from '../../../data/hooks/useNotifications'
 import {
   useCustomerTouchPage,
   useCreateTip,
@@ -18,16 +13,12 @@ import {
   useTrackYelp,
   usePublicBusinessPaymentMethods,
 } from '../../../data/hooks/usePublicTouch'
-import { createSimulationHandlers } from './useSimulationHandlers'
 
 /**
  * Custom hook powering the entire customer tipping & review flow.
  *
- * Supports two operational modes:
- * - **API mode** — triggered by `/touch/{businessSlug}/{touchPointSlug}` URLs,
- *   all data comes from the public touch API.
- * - **Simulation mode** — triggered by `?flow=customer`, uses local
- *   merchant setup / profile settings data.
+ * This flow operates STRICTLY in API mode, driven by the real Touchpoint API.
+ * Triggered by `/touch/{businessSlug}/{touchPointSlug}` URLs.
  *
  * @returns {Object} All state, derived values, and handlers for CustomerFlow.
  */
@@ -35,7 +26,7 @@ export default function useCustomerFlow() {
   const { currentLanguage, setLanguage, t } = useTranslation()
   const { showToast } = useNotification()
 
-  // ── Detect real API touch route ──
+  // ── Route & Session Parameters ──
   const touchRoute = useMemo(() => {
     const parts = window.location.pathname.split('/').filter(Boolean)
     if (parts[0] === 'touch' && parts.length >= 3) {
@@ -44,29 +35,18 @@ export default function useCustomerFlow() {
     return null
   }, [])
 
-  const isApiMode = !!touchRoute
-
-  /** Generate or extract sessionId for API mode */
   const sessionId = useMemo(() => {
-    if (!isApiMode) return null
     const params = new URLSearchParams(window.location.search)
     return params.get('sessionId') || crypto.randomUUID()
-  }, [isApiMode])
+  }, [])
 
-  // ── API data (only fetched in API mode) ──
+  // ── API data ──
   const touchPageQuery = useCustomerTouchPage({
     businessSlug: touchRoute?.businessSlug,
     touchPointSlug: touchRoute?.touchPointSlug,
     sessionId,
   })
   const touchPageData = touchPageQuery.data ?? null
-
-  // ── Simulation data (only fetched in simulation mode) ──
-  const { data: setupData = null } = useMerchantSetup({ enabled: !isApiMode })
-  const { data: profileSettings = null } = useProfileSettings({ enabled: !isApiMode })
-  const addTransactionMutation = useAddTransaction()
-  const addReviewMutation = useAddReview()
-  const addNotificationMutation = useAddNotification()
 
   // ── API mutations ──
   const createTipMutation = useCreateTip()
@@ -76,68 +56,53 @@ export default function useCustomerFlow() {
   const trackGoogleMutation = useTrackGoogle()
   const trackYelpMutation = useTrackYelp()
 
-  // Query-string params
-  const params = useMemo(() => new URLSearchParams(window.location.search), [])
-  const techSlug = params.get('tech') || ''
-
   // ── Unified derived data ──
   const bizName = useMemo(() => {
-    if (isApiMode && touchPageData?.business) return touchPageData.business.name || ''
-    if (profileSettings?.businessName) return profileSettings.businessName
-    if (setupData?.businessInfo?.name) return setupData.businessInfo.name
-    return params.get('biz') || ''
-  }, [isApiMode, touchPageData, profileSettings, setupData, params])
-
-  const scannedTouchpoint = useMemo(() => {
-    if (isApiMode) return null
-    if (!techSlug || techSlug.startsWith('staff/')) return null
-    return setupData?.touchPoints?.find(tp => techSlug.includes(tp.id))
-  }, [isApiMode, setupData, techSlug])
+    return touchPageData?.business?.name || ''
+  }, [touchPageData])
 
   const activeStaffList = useMemo(() => {
-    if (isApiMode && touchPageData?.staff) {
-      return touchPageData.staff.filter(s => s.isActive !== false)
+    let staffArray = []
+    if (Array.isArray(touchPageData?.staff)) {
+      staffArray = touchPageData.staff
+    } else if (Array.isArray(touchPageData?.staff?.items)) {
+      staffArray = touchPageData.staff.items
+    } else if (Array.isArray(touchPageData?.items)) { // Fallback if API root is items
+      staffArray = touchPageData.items
     }
-    const list = setupData?.staffList || []
-    return list.filter(s => s.isActive !== false && s.showInTipsFlow !== false)
-  }, [isApiMode, touchPageData, setupData])
 
-  const initialStaffMember = useMemo(() => {
-    if (isApiMode) return null
-    if (!techSlug || techSlug.toLowerCase().startsWith('tp/') || techSlug.toLowerCase().startsWith('tp-')) return null
-    const list = setupData?.staffList || []
-    const matched = list.find(s =>
-      techSlug.includes(s.id) ||
-      techSlug.toLowerCase().includes(s.nickname.toLowerCase().replace(/[^a-z0-9]+/g, '-')) ||
-      techSlug.toLowerCase().includes(s.fullName.toLowerCase().split(' ')[0])
-    )
-    return (matched && matched.isActive !== false && matched.showInTipsFlow !== false) ? matched : null
-  }, [isApiMode, setupData, techSlug])
+    if (staffArray.length > 0) {
+      return staffArray
+        .filter(s => (s.status === 'Active' || s.isActive !== false) && s.showInTipsFlow !== false)
+        .map(s => ({
+          ...s,
+          fullName: s.fullName || s.displayName || '',
+          nickname: s.nickname || s.displayName || '',
+          avatar: s.avatar || s.photoUrl || ''
+        }))
+    }
+    return []
+  }, [touchPageData])
+
+  const initialStaffMember = null // No auto-select since 'techSlug' simulation is removed
 
   const reviewLinks = useMemo(() => {
     const defaultLinks = { googleReview: '', yelpReview: '', feedbackEmail: '' }
-    if (isApiMode && touchPageData?.business) {
+    if (touchPageData?.business) {
       return {
         googleReview: touchPageData.business.googleReviewUrl || '',
         yelpReview: touchPageData.business.yelpUrl || '',
         feedbackEmail: touchPageData.business.feedbackEmail || '',
       }
     }
-    if (profileSettings?.googleReview || profileSettings?.yelpReview) {
-      return {
-        googleReview: profileSettings.googleReview || '',
-        yelpReview: profileSettings.yelpReview || '',
-        feedbackEmail: profileSettings.businessEmail || profileSettings.email || '',
-      }
-    }
-    return setupData?.reviewLinks || defaultLinks
-  }, [isApiMode, touchPageData, profileSettings, setupData])
+    return defaultLinks
+  }, [touchPageData])
 
   // ── Local state ──
-  const [selectedStaffMembers, setSelectedStaffMembers] = useState(initialStaffMember ? [initialStaffMember] : [])
-  const [step, setStep] = useState(initialStaffMember ? 'tip_amount' : 'select_staff')
+  const [selectedStaffMembers, setSelectedStaffMembers] = useState([])
+  const [step, setStep] = useState('select_staff')
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedTips, setSelectedTips] = useState(() => initialStaffMember ? { [initialStaffMember.id]: 15 } : {})
+  const [selectedTips, setSelectedTips] = useState({})
   const [customTips, setCustomTips] = useState({})
   const [rating, setRating] = useState(5)
   const [comment, setComment] = useState('')
@@ -157,7 +122,7 @@ export default function useCustomerFlow() {
 
   const businessPaymentAccounts = useMemo(() => {
     const defaultAccounts = { venmo: '', cashapp: '', zelle: '', vlinkpay: '' }
-    if (isApiMode && publicPaymentMethods.length > 0) {
+    if (publicPaymentMethods.length > 0) {
       const accounts = { ...defaultAccounts }
       publicPaymentMethods.forEach(pm => {
         const key = (pm.type || pm.name || '').toLowerCase()
@@ -165,19 +130,14 @@ export default function useCustomerFlow() {
       })
       return accounts
     }
-    if (profileSettings?.paymentAccounts) return profileSettings.paymentAccounts
-    return setupData?.businessInfo?.paymentAccounts || defaultAccounts
-  }, [isApiMode, publicPaymentMethods, profileSettings, setupData])
+    return defaultAccounts
+  }, [publicPaymentMethods])
 
   const selectedStaffHasAnyPayment = useMemo(() => {
     if (selectedStaffMembers.length !== 1) return false
     const staff = selectedStaffMembers[0]
-    if (isApiMode) {
-      // API staff have availablePaymentMethods: string[]
-      return Array.isArray(staff.availablePaymentMethods) && staff.availablePaymentMethods.length > 0
-    }
-    return Object.values(staff.paymentAccounts || {}).some(val => val && val.trim() !== '')
-  }, [selectedStaffMembers, isApiMode])
+    return Array.isArray(staff.availablePaymentMethods) && staff.availablePaymentMethods.length > 0
+  }, [selectedStaffMembers])
 
   const qrCodeVal = useMemo(() => {
     if (!selectedWalletObj) return null
@@ -185,8 +145,8 @@ export default function useCustomerFlow() {
       const staff = selectedStaffMembers[0]
       return staff.payoutConfigs?.[selectedWalletObj.key]?.qrCode || staff.payoutQrCodes?.[selectedWalletObj.key] || null
     }
-    return setupData?.businessInfo?.payoutQrCodes?.[selectedWalletObj.key] || null
-  }, [selectedWalletObj, selectedStaffMembers, selectedStaffHasAnyPayment, setupData])
+    return null // Business-level fallback is not supported in API strictly without data payload mapping
+  }, [selectedWalletObj, selectedStaffMembers, selectedStaffHasAnyPayment])
 
   const filteredStaff = useMemo(() => {
     return activeStaffList.filter(s =>
@@ -266,13 +226,6 @@ export default function useCustomerFlow() {
     })
   }
 
-  // ── Simulation handlers (extracted) ──
-  const { simulatePay, simulateReview } = createSimulationHandlers({
-    addTransactionMutation, addReviewMutation, addNotificationMutation,
-    selectedStaffMembers, selectedTips, customTips, techSlug, setupData,
-    setStep, setIsProcessing,
-  })
-
   /**
    * Validates tip amounts and navigates to payment step.
    * @param {Event} e - Form submit event.
@@ -305,42 +258,38 @@ export default function useCustomerFlow() {
   const handlePay = async (walletName) => {
     setSelectedWallet(walletName)
     setStep('processing')
-    if (isApiMode) {
+    try {
+      const member = selectedStaffMembers[0]
+      const selTip = selectedTips[member.id] !== undefined ? selectedTips[member.id] : 15
+      const amount = selTip === 'custom' ? Number(customTips[member.id]) || 0 : selTip
+      const result = await createTipMutation.mutateAsync({
+        touchPointId: touchPageData?.touchPoint?.id, staffProfileId: member.id,
+        amount, paymentMethod: walletName, sessionId,
+      })
+      setCurrentTipId(result?.id || result?.tipId)
+      // Fetch payment link for wallet details display
       try {
-        const member = selectedStaffMembers[0]
-        const selTip = selectedTips[member.id] !== undefined ? selectedTips[member.id] : 15
-        const amount = selTip === 'custom' ? Number(customTips[member.id]) || 0 : selTip
-        const result = await createTipMutation.mutateAsync({
-          touchPointId: touchPageData.touchPoint.id, staffProfileId: member.id,
-          amount, paymentMethod: walletName, sessionId,
+        const linkData = await publicTouchRepository.getPaymentLink({
+          staffId: member.id,
+          method: walletName,
+          amount,
         })
-        setCurrentTipId(result?.id || result?.tipId)
-        // Fetch payment link for wallet details display
-        try {
-          const linkData = await publicTouchRepository.getPaymentLink({
-            staffId: member.id,
-            method: walletName,
-            amount,
-          })
-          setPaymentLinkData(linkData)
-        } catch (linkErr) {
-          logger.error('Failed to fetch payment link', linkErr)
-          // Continue without link data — WalletDetails will use fallback
-        }
-        setStep('wallet_details')
-      } catch (err) {
-        logger.error('Failed to create tip', err)
-        showToast(t('errors.generic'), 'error')
-        setStep('payment')
+        setPaymentLinkData(linkData)
+      } catch (linkErr) {
+        logger.error('Failed to fetch payment link', linkErr)
+        // Continue without link data — WalletDetails will use fallback
       }
-    } else {
-      simulatePay(walletName)
+      setStep('wallet_details')
+    } catch (err) {
+      logger.error('Failed to create tip', err)
+      showToast(t('errors.generic'), 'error')
+      setStep('payment')
     }
   }
 
-  /** Confirms that customer completed external wallet payment (API mode). */
+  /** Confirms that customer completed external wallet payment. */
   const handleConfirmTip = async () => {
-    if (isApiMode && currentTipId) {
+    if (currentTipId) {
       try {
         await confirmTipMutation.mutateAsync(currentTipId)
         setStep('success_payment')
@@ -353,37 +302,30 @@ export default function useCustomerFlow() {
 
   /** Records that customer skipped tipping and navigates to review. */
   const handleSkipTip = async () => {
-    if (isApiMode) {
-      try {
-        const member = selectedStaffMembers[0]
-        await skipTipMutation.mutateAsync({
-          touchPointId: touchPageData.touchPoint.id, staffProfileId: member?.id, sessionId,
-        })
-      } catch (err) { logger.error('Failed to record skip-tip', err) }
-    }
+    try {
+      const member = selectedStaffMembers[0]
+      await skipTipMutation.mutateAsync({
+        touchPointId: touchPageData?.touchPoint?.id, staffProfileId: member?.id, sessionId,
+      })
+    } catch (err) { logger.error('Failed to record skip-tip', err) }
     setStep('leave_review')
   }
 
   /** Submits customer feedback review. */
   const handleSubmitFeedback = async () => {
     const cleanComment = comment.trim()
-    if (isApiMode) {
-      try {
-        const member = selectedStaffMembers[0]
-        const result = await createReviewMutationApi.mutateAsync({
-          touchPointId: touchPageData.touchPoint.id, tipId: currentTipId || undefined,
-          staffProfileId: member.id, rating,
-          comment: cleanComment || (rating >= 4 ? 'Good service' : 'Needs improvement'),
-        })
-        setCurrentReviewId(result?.id || result?.reviewId)
-        setStep(rating >= 4 ? 'google_yelp_review' : 'final_done')
-      } catch (err) {
-        logger.error('Failed to submit review', err)
-        showToast(t('errors.generic'), 'error')
-      }
-    } else {
-      const nextStep = simulateReview(rating, cleanComment)
-      setStep(nextStep)
+    try {
+      const member = selectedStaffMembers[0]
+      const result = await createReviewMutationApi.mutateAsync({
+        touchPointId: touchPageData?.touchPoint?.id, tipId: currentTipId || undefined,
+        staffProfileId: member.id, rating,
+        comment: cleanComment || (rating >= 4 ? 'Good service' : 'Needs improvement'),
+      })
+      setCurrentReviewId(result?.id || result?.reviewId)
+      setStep(rating >= 4 ? 'google_yelp_review' : 'final_done')
+    } catch (err) {
+      logger.error('Failed to submit review', err)
+      showToast(t('errors.generic'), 'error')
     }
   }
 
@@ -392,7 +334,7 @@ export default function useCustomerFlow() {
    * @param {'google'|'yelp'} platform
    */
   const handleTrackExternalReview = async (platform) => {
-    if (isApiMode && currentReviewId) {
+    if (currentReviewId) {
       try {
         if (platform === 'google') await trackGoogleMutation.mutateAsync(currentReviewId)
         if (platform === 'yelp') await trackYelpMutation.mutateAsync(currentReviewId)
@@ -402,18 +344,19 @@ export default function useCustomerFlow() {
   }
 
   const handleReset = () => {
-    setSelectedStaffMembers(initialStaffMember ? [initialStaffMember] : [])
-    setStep(initialStaffMember ? 'tip_amount' : 'select_staff')
-    setSelectedTips(initialStaffMember ? { [initialStaffMember.id]: 15 } : {})
+    setSelectedStaffMembers([])
+    setStep('select_staff')
+    setSelectedTips({})
     setCustomTips({}); setRating(5); setComment(''); setSelectedTags([])
     setSelectedWallet(''); setSelectedWalletObj(null); setTipRefNumber('')
     setCurrentTipId(null); setCurrentReviewId(null); setPaymentLinkData(null)
   }
 
+  // To preserve backwards compatibility with tests and consumers, we export 'isApiMode' as true
   return {
     currentLanguage, setLanguage, t, showToast,
-    isApiMode, touchPageQuery,
-    params, techSlug, bizName, setupData, scannedTouchpoint, activeStaffList,
+    isApiMode: true, touchPageQuery,
+    bizName, activeStaffList,
     initialStaffMember, reviewLinks, businessPaymentAccounts,
     selectedStaffHasAnyPayment, qrCodeVal, filteredStaff,
     positiveTagKeys, negativeTagKeys, activeTipAmount, tipScreenTitle,

@@ -191,46 +191,48 @@ export default function useSettingsForm({
   const [isCapturing, setIsCapturing] = useState(false)
   const [modalError, setModalError] = useState('')
 
-  // Load profile settings from Query cache or sync with setupData
+  // Load profile settings + business profile into the form.
+  //
+  // IMPORTANT: account/owner fields come from profileSettingsQuery (the user
+  // profile), while the STORE/BUSINESS fields (name, address, phone, review
+  // links, payout accounts) come from setupData (the merchant business record,
+  // GET /api/v1/merchant/business). These two sources must be MERGED, not
+  // treated as mutually exclusive: profileSettingsQuery shares the
+  // ['userProfile'] query key and carries no business fields, so the old
+  // `if (profileSettingsQuery.data) ... else if (setupData)` chain meant the
+  // business name was never read once the user profile loaded. Business fields
+  // are applied last so they always reflect the saved business record (and are
+  // shown regardless of KYB status).
   useEffect(() => {
-    if (profileSettingsQuery.data) {
-      setProfile(prev => ({ ...prev, ...profileSettingsQuery.data }))
-    } else if (setupData) {
-      const synced = {
-        fullName: setupData.businessInfo?.ownerName || '',
-        businessName: setupData.businessInfo?.name || '',
-        businessPhone: setupData.businessInfo?.phone || '',
-        businessWebsite: setupData.businessInfo?.website || '',
-        businessEmail: setupData.reviewLinks?.feedbackEmail || '',
-        street: setupData.businessInfo?.address || '',
-        googleReview: setupData.reviewLinks?.googleReview || '',
-        yelpReview: setupData.reviewLinks?.yelpReview || '',
-        paymentAccounts: setupData.businessInfo?.paymentAccounts || {
-          zelle: '',
-          bankwire: '',
-          paypal: '',
-          venmo: '',
-          cashapp: '',
-          applecash: '',
-          vlinkpay: ''
-        },
-        payoutQrCodes: setupData.businessInfo?.payoutQrCodes || {
-          zelle: '',
-          bankwire: '',
-          paypal: '',
-          venmo: '',
-          cashapp: '',
-          applecash: ''
+    setProfile(prev => {
+      let next = { ...prev }
+      if (profileSettingsQuery.data) {
+        next = { ...next, ...profileSettingsQuery.data }
+      }
+      if (setupData) {
+        next = {
+          ...next,
+          fullName: setupData.businessInfo?.ownerName || next.fullName || '',
+          businessName: setupData.businessInfo?.name || '',
+          businessPhone: setupData.businessInfo?.phone || '',
+          businessWebsite: setupData.businessInfo?.website || '',
+          businessEmail: setupData.reviewLinks?.feedbackEmail || next.businessEmail || '',
+          street: setupData.businessInfo?.address || next.street || '',
+          googleReview: setupData.reviewLinks?.googleReview || '',
+          yelpReview: setupData.reviewLinks?.yelpReview || '',
+          paymentAccounts: setupData.businessInfo?.paymentAccounts || next.paymentAccounts,
+          payoutQrCodes: setupData.businessInfo?.payoutQrCodes || next.payoutQrCodes,
         }
       }
-      setProfile(prev => ({ ...prev, ...synced }))
-    } else if (!hasKyb) {
-      setProfile(prev => ({
-        ...prev,
-        email: userEmail || prev.email || '',
-        businessEmail: userEmail || prev.businessEmail || ''
-      }))
-    }
+      if (!setupData && !profileSettingsQuery.data && !hasKyb) {
+        next = {
+          ...next,
+          email: userEmail || next.email || '',
+          businessEmail: userEmail || next.businessEmail || '',
+        }
+      }
+      return next
+    })
   }, [profileSettingsQuery.data, setupData, hasKyb, userEmail])
 
   const saveProfile = (updatedProfile) => {

@@ -25,6 +25,8 @@ export const COUNTRY_CODES = [
   { name: 'Indonesia', code: 'ID', dialCode: '+62', flag: '🇮🇩' },
 ]
 
+import { AsYouType, isValidPhoneNumber } from 'libphonenumber-js'
+
 export const parsePhone = (phoneStr) => {
   if (!phoneStr) return { countryCode: '+1', nationalNumber: '' }
   
@@ -44,6 +46,44 @@ export const parsePhone = (phoneStr) => {
     }
   }
   return { countryCode: '+1', nationalNumber: phoneStr }
+}
+
+export const getCountryByDialCode = (dialCode) => {
+  return COUNTRY_CODES.find(c => c.dialCode === dialCode) || COUNTRY_CODES.find(c => c.code === 'US')
+}
+
+export const formatNationalNumber = (nationalNumber, dialCode) => {
+  let digits = nationalNumber.replace(/\D/g, '')
+  // E.164 allows up to 15 digits total; don't truncate valid longer numbers.
+  digits = digits.slice(0, 15)
+
+  if (dialCode === '+1') {
+    if (digits.length <= 3) return digits
+    if (digits.length <= 6) return `${digits.slice(0, 3)}-${digits.slice(3)}`
+    return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`
+  } else if (dialCode === '+84') {
+    if (digits.length <= 3) return digits
+    if (digits.length <= 6) return `${digits.slice(0, 3)} ${digits.slice(3)}`
+    return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`
+  }
+
+  const country = getCountryByDialCode(dialCode)
+  const formatter = new AsYouType(country.code)
+  return formatter.input(digits)
+}
+
+export const isPhoneValid = (phoneStr) => {
+  if (!phoneStr) return false
+
+  // Custom requirement: always accept if it has at least 10 digits
+  const digits = phoneStr.replace(/\D/g, '')
+  if (digits.length >= 10) return true
+
+  try {
+    return isValidPhoneNumber(phoneStr)
+  } catch (e) {
+    return false
+  }
 }
 
 export default function CountryCodeSelect({ value, onChange, disabled = false }) {

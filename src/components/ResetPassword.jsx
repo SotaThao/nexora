@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { Lock, Eye, EyeOff, CheckCircle, ArrowLeft } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import apiAuthAdapter from '../auth/adapters/apiAuthAdapter'
 import { getErrorI18nKey } from '../data/errorCodes'
 
-export default function ResetPassword({ setView }) {
+export default function ResetPassword() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [token, setToken] = useState('')
   const [email, setEmail] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -15,14 +18,12 @@ export default function ResetPassword({ setView }) {
   const [isSuccess, setIsSuccess] = useState(false)
   const [error, setError] = useState('')
 
-  // Prefill token and email from URL parameters if available
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const urlToken = params.get('token')
-    const urlEmail = params.get('email')
+    const urlToken = searchParams.get('token')
+    const urlEmail = searchParams.get('email')
     if (urlToken) setToken(urlToken)
     if (urlEmail) setEmail(urlEmail)
-  }, [])
+  }, [searchParams])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -58,7 +59,7 @@ export default function ResetPassword({ setView }) {
       })
       setIsSuccess(true)
       setTimeout(() => {
-        setView('login')
+        navigate('/login')
       }, 2500)
     } catch (err) {
       const errorCode = err?.errorCode || 'unknown_error'
@@ -188,10 +189,10 @@ export default function ResetPassword({ setView }) {
 
               <button
                 type="button"
-                onClick={() => setView('login')}
+                onClick={() => navigate('/login')}
                 className="w-full min-h-11 py-2.5 border border-nexoraBorder hover:bg-nexoraCanvas text-nexoraSubtle hover:text-nexoraText font-semibold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 transition-all"
               >
-                <ArrowLeft className="w-4 h-4" /> Back to Sign In
+                <ArrowLeft className="w-4 h-4" /> {t('components.ResetPassword.backToSignIn')}
               </button>
             </div>
           </form>

@@ -42,7 +42,7 @@ function IconButton({ label, children, className = '', ...props }) {
 
 export default function TouchpointsView({
   touchpoints = [],
-  onAdd,
+  onOpenAddModal,
   onDelete,
   onQr,
   onToggleStatus,
@@ -61,7 +61,7 @@ export default function TouchpointsView({
   const activeSubTab = propActiveSubTab !== undefined ? propActiveSubTab : localActiveSubTab
   const setActiveSubTab = onTabChange !== undefined ? onTabChange : setLocalActiveSubTab
   const [deleteConfirmId, setDeleteConfirmId] = useState(null)
-  
+
   // Local state for the Add Touchpoint form
   const [name, setName] = useState('')
   const [type, setType] = useState('Table QR')
@@ -90,9 +90,9 @@ export default function TouchpointsView({
   }, [])
 
   const handleAdd = () => {
-    if (!name.trim()) return
-    if (onAdd) {
-      onAdd(name.trim(), type, deviceId.trim())
+    // Hand off to the Add Touch Point modal, prefilled with anything typed here.
+    if (onOpenAddModal) {
+      onOpenAddModal({ name: name.trim(), type, deviceId: deviceId.trim() })
     }
     setName('')
     setDeviceId('')
@@ -278,7 +278,21 @@ export default function TouchpointsView({
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {touchpoints.map((point) => {
               const isPointActive = point.isActive !== false
-              const qrUrl = `${window.location.origin}${window.location.pathname}?tech=tp/${point.id}&biz=${encodeURIComponent(businessName)}`
+              // Use the canonical customer URL from the API (`url`, with real
+              // business + touch-point slugs). Keep the current origin so it
+              // resolves in dev (localhost) and deployed envs. Fall back to the
+              // slug only if the API didn't return a url.
+              let qrUrl = ''
+              if (point.url) {
+                try {
+                  qrUrl = `${window.location.origin}${new URL(point.url).pathname}`
+                } catch {
+                  qrUrl = point.url
+                }
+              }
+              if (!qrUrl) {
+                qrUrl = `${window.location.origin}/touch/${point.slug || point.id}`
+              }
               
               // Calculate dynamic revenue
               const revenue = transactions
@@ -333,7 +347,7 @@ export default function TouchpointsView({
                       </div>
                       <div className="flex items-center gap-1.5 min-w-0">
                         <p className="text-[9.5px] font-mono text-nexoraSubtle select-all truncate flex-grow">
-                          nexora.vlinkpay.com/touch/{point.id}
+                          {qrUrl.replace(/^https?:\/\//, '')}
                         </p>
                         {isPointActive && (
                           <a

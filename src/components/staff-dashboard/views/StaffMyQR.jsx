@@ -14,7 +14,7 @@ const slugify = (str = '') => str.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-
 
 export default function StaffMyQR() {
   const { t, currentLanguage } = useTranslation()
-  const { staffMember, linkedBusinesses } = useStaffAccount()
+  const { staffMember, linkedBusinesses, account } = useStaffAccount()
   const { showToast } = useNotification()
 
   // Data layer — merchant setup (read + write) and notifications (write)
@@ -126,16 +126,8 @@ export default function StaffMyQR() {
           isActive: false,
           status: 'Pending Acceptance',
           flowType: 'Self-Service Join (via QR)',
-          paymentAccounts: {
-            vlinkpay: staffMember.paymentAccounts?.vlinkpay || '',
-            zelle: staffMember.paymentAccounts?.zelle || '',
-            venmo: staffMember.paymentAccounts?.venmo || '',
-            cashapp: staffMember.paymentAccounts?.cashapp || '',
-            paypal: staffMember.paymentAccounts?.paypal || '',
-            bankwire: staffMember.paymentAccounts?.bankwire || '',
-            applecash: staffMember.paymentAccounts?.applecash || ''
-          },
-          payoutConfigs: staffMember.payoutConfigs || {}
+          paymentAccounts: {},
+          payoutConfigs: {}
         }
         updatedStaffList = [...merchantSetup.staffList, newMember]
       } else {
@@ -274,7 +266,7 @@ export default function StaffMyQR() {
             className="h-full w-full object-contain"
           />
         </div>
-        <div className="text-sm font-bold text-nexoraText">{t('staff_dashboard.staff_id')}: {staffMember.id}</div>
+        <div className="text-sm font-bold text-nexoraText">{t('staff_dashboard.staff_id')}: {account.staffCode || staffMember.id}</div>
         <div className="mt-3 space-y-2">
           <button
             type="button"
@@ -311,8 +303,9 @@ export default function StaffMyQR() {
         <div className="divide-y divide-nexoraBorder">
           {linkedBusinesses.map((biz) => {
             const isNotConnected = biz.status === 'Pending Link'
-            const techSlug = `staff/${slugify(staffMember.nickname || staffMember.fullName || '')}`
-            const tipUrl = `${window.location.origin}${window.location.pathname}?flow=customer&tech=${encodeURIComponent(techSlug)}&biz=${encodeURIComponent(biz.businessName)}`
+            const businessSlug = slugify(biz.businessName || '')
+            const tpSlug = slugify(staffMember.nickname || staffMember.fullName || '')
+            const tipUrl = `${window.location.origin}/touch/${businessSlug}/staff-${tpSlug}`
 
             return (
               <div key={biz.businessStaffLinkId} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 border-b border-nexoraBorder last:border-0">

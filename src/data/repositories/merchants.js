@@ -20,18 +20,21 @@ export function createMerchantsRepository(client = httpClient) {
             phone: res.phone || '',
             website: res.website || '',
             logo: res.logoUrl || null,
-            paymentAccounts: res.paymentAccounts || {
+            // Payment accounts are NOT part of GET /api/v1/merchant/business —
+            // they live in GET /api/v1/merchant/payment-methods (see merchantPaymentMethods repo).
+            paymentAccounts: {
               venmo: '',
               cashapp: '',
               zelle: '',
               vlinkpay: ''
             }
           },
+          // Review link fields are flat on the business response, not nested.
           reviewLinks: {
-            googleReview: res.reviewLinks?.googleReviewUrl || '',
-            yelpReview: res.reviewLinks?.yelpUrl || '',
-            facebookReview: res.reviewLinks?.facebookUrl || '',
-            feedbackEmail: res.reviewLinks?.feedbackEmail || ''
+            googleReview: res.googleReviewUrl || '',
+            yelpReview: res.yelpUrl || '',
+            facebookReview: res.facebookUrl || '',
+            feedbackEmail: res.feedbackEmail || ''
           },
           staffList: [],
           touchPoints: []
@@ -104,7 +107,7 @@ export function createMerchantsRepository(client = httpClient) {
      */
     async uploadLogo(file) {
       const res = await this.uploadImage(file)
-      return res.fileUrl
+      return res?.imageUrl || res?.fileUrl || res
     },
 
     /**

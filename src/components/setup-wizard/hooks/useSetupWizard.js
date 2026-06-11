@@ -8,6 +8,11 @@ import {
   useCompleteOnboarding
 } from '../../../data/hooks/useMerchantSetup'
 import {
+  useMerchantPaymentMethods,
+  useSaveMerchantPayoutConfigs
+} from '../../../data/hooks/useMerchantPaymentMethods'
+import { useCreateTouchpoint } from '../../../data/hooks/useMerchantTouchpoints'
+import {
   DEMO_BUSINESS,
   DEMO_LINKS,
   DEMO_STAFF,
@@ -22,6 +27,8 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
   const uploadLogoMutation = useUploadLogo()
   const updateReviewLinksMutation = useUpdateReviewLinks()
   const completeOnboardingMutation = useCompleteOnboarding()
+  const savePayoutConfigsMutation = useSaveMerchantPayoutConfigs()
+  const createTouchpointMutation = useCreateTouchpoint()
   const [currentStep, setCurrentStep] = useState(1) // 1, 2, 3
   const isSsoLocked = !!hasKyb // Lock fields ONLY if business is already KYB approved
 
@@ -92,6 +99,30 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
   // Merchant consent checkbox
   const [isConsentChecked, setIsConsentChecked] = useState(false)
 
+  // Merchant payment methods are pre-seeded by the backend when the business is
+  // created at the end of step 1, so only fetch from step 2 onward.
+  const merchantPaymentMethodsQuery = useMerchantPaymentMethods({ enabled: currentStep >= 2 })
+
+  // Prefill payout toggles from GET /api/v1/merchant/payment-methods without
+  // clobbering values the user already entered in this session.
+  useEffect(() => {
+    const methods = merchantPaymentMethodsQuery.data
+    if (!methods?.length) return
+    setBusinessInfo(prev => {
+      const configs = { ...(prev.payoutConfigs || DEFAULT_PAYOUT_CONFIGS) }
+      let changed = false
+      for (const method of methods) {
+        const key = (method.type || '').toLowerCase()
+        const existing = configs[key]
+        if (!existing || existing.value.trim()) continue
+        if (!method.accountInfo && !method.isActive) continue
+        configs[key] = { ...existing, enabled: !!method.isActive, value: method.accountInfo || '' }
+        changed = true
+      }
+      return changed ? { ...prev, payoutConfigs: configs } : prev
+    })
+  }, [merchantPaymentMethodsQuery.data])
+
   // Translate default/personal touchpoints dynamically when language toggles
   useEffect(() => {
     setTouchPoints(prev => prev.map(tp => {
@@ -143,8 +174,9 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0]
       try {
-        const logoUrl = await uploadLogoMutation.mutateAsync(file)
-        setBusinessInfo(prev => ({ ...prev, logo: logoUrl }))
+        const response = await uploadLogoMutation.mutateAsync(file)
+        const finalUrl = response?.imageUrl || response
+        setBusinessInfo(prev => ({ ...prev, logo: finalUrl }))
         if (errors.logo) setErrors(prev => ({ ...prev, logo: '' }))
       } catch (err) {
         setErrors(prev => ({ ...prev, logo: err.errorCode || 'Logo upload failed' }))
@@ -438,21 +470,43 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
     setEditingTpName('')
   }
 
-  // Final Complete
+  // Final Complete — persist payout configs to the merchant payment-methods API
+  // (PUT accountInfo + PATCH toggle on the pre-seeded methods), then complete onboarding.
   const handleCompleteSetup = (onComplete) => {
-    completeOnboardingMutation.mutate(undefined, {
-      onSuccess: () => {
-        onComplete({
-          businessInfo,
-          reviewLinks,
-          staffList,
-          touchPoints
+    savePayoutConfigsMutation.mutate(businessInfo.payoutConfigs, {
+      onSuccess: async () => {
+        // Persist a default master/lobby touch point so the "Master Store QR"
+        // (general pool tips) has a real backing touch page. The onboarding
+        // wizard previously kept touch points only in local state and never
+        // created any via the API, leaving /touch/{slug}/general → 404.
+        // Best-effort: never block onboarding completion on this (e.g. Starter
+        // plan limit reached, or it already exists from a prior run).
+        try {
+          await createTouchpointMutation.mutateAsync({ name: 'Master Store', type: 'FrontDesk' })
+        } catch {
+          // ignore — owner can still add touch points later in Touchpoint Manager
+        }
+        completeOnboardingMutation.mutate(undefined, {
+          onSuccess: () => {
+            onComplete({
+              businessInfo,
+              reviewLinks,
+              staffList,
+              touchPoints
+            })
+          },
+          onError: (err) => {
+            setErrors({
+              ...errors,
+              submit: err.errorCode || 'Failed to complete onboarding'
+            })
+          }
         })
       },
       onError: (err) => {
         setErrors({
           ...errors,
-          submit: err.errorCode || 'Failed to complete onboarding'
+          submit: err.errorCode || 'Failed to save payout methods'
         })
       }
     })

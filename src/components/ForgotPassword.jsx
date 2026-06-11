@@ -1,11 +1,13 @@
 import React, { useState } from 'react'
 import { Mail, ArrowLeft, Send } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
+import { useNavigate } from 'react-router-dom'
 import apiAuthAdapter from '../auth/adapters/apiAuthAdapter'
 import { getErrorI18nKey } from '../data/errorCodes'
 
-export default function ForgotPassword({ setView }) {
+export default function ForgotPassword() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -57,7 +59,7 @@ export default function ForgotPassword({ setView }) {
             </div>
 
             <button
-              onClick={() => setView('login')}
+              onClick={() => navigate('/login')}
               className="w-full min-h-11 py-2.5 border border-nexoraBorder hover:bg-nexoraCanvas text-nexoraSubtle hover:text-nexoraText font-semibold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 transition-all"
             >
               <ArrowLeft className="w-4 h-4" /> {t('components.ForgotPassword.backToSignIn')}
@@ -100,7 +102,7 @@ export default function ForgotPassword({ setView }) {
 
               <button
                 type="button"
-                onClick={() => setView('login')}
+                onClick={() => navigate('/login')}
                 className="w-full min-h-11 py-2.5 border border-nexoraBorder hover:bg-nexoraCanvas text-nexoraSubtle hover:text-nexoraText font-semibold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 transition-all"
               >
                 <ArrowLeft className="w-4 h-4" /> {t('common.cancel')}

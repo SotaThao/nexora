@@ -4,6 +4,8 @@ import {
   ArrowRight, ArrowLeft, AlertTriangle,
   ShieldCheck, Check, LogIn, X
 } from 'lucide-react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { useAuth } from '../auth/useAuth'
 import useSetupWizard from './setup-wizard/hooks/useSetupWizard'
 import Step1BusinessInfo from './setup-wizard/steps/Step1BusinessInfo'
 import Step2StaffTouchpoints from './setup-wizard/steps/Step2StaffTouchpoints'
@@ -12,16 +14,36 @@ import PayoutSetupModal from './setup-wizard/PayoutSetupModal'
 
 export { renderTextWithGoldStars, getTouchpointIcon } from './setup-wizard/constants'
 
-export default function SetupWizard({
-  onComplete,
-  onBackToLogin,
-  initialBusinessInfo,
-  verificationStatus,
-  hasKyb,
-  onKybRequired
-}) {
-  const isKyb = hasKyb !== undefined ? hasKyb : verificationStatus === 'kyb_approved'
-  const wizard = useSetupWizard({ initialBusinessInfo, onBackToLogin, hasKyb: isKyb })
+export default function SetupWizard() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { logout, session, refreshSession } = useAuth()
+
+  const ssoPrefillData = location.state?.ssoPrefillData || session?.ssoPrefillData
+  const isKyb = session?.verificationStatus === 'kyb_approved'
+
+  const handleBackToLogin = async () => {
+    await logout()
+    navigate('/login')
+  }
+
+  const handleComplete = async () => {
+    // Onboarding just flipped the account to Active server-side. Refresh the
+    // auth session so hasCompletedOnboarding becomes true before we land on
+    // /dashboard, otherwise the RequireOnboarded gate would bounce us back.
+    try {
+      await refreshSession()
+    } catch {
+      // Non-fatal: navigate anyway; the gate re-derives on next session load.
+    }
+    navigate('/dashboard')
+  }
+
+  const wizard = useSetupWizard({ 
+    initialBusinessInfo: ssoPrefillData, 
+    onBackToLogin: handleBackToLogin, 
+    hasKyb: isKyb 
+  })
   const {
     currentLanguage, setLanguage, t,
     currentStep, setCurrentStep, isSsoLocked,
@@ -58,7 +80,7 @@ export default function SetupWizard({
   } = wizard
 
   const handleCompleteSetup = () => {
-    wizard.handleCompleteSetup(onComplete)
+    wizard.handleCompleteSetup(handleComplete)
   }
 
   const stepIcon = (step) => {
@@ -92,9 +114,9 @@ export default function SetupWizard({
           </div>
 
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
-            {onBackToLogin && (
+            {handleBackToLogin && (
               <button
-                onClick={onBackToLogin}
+                onClick={handleBackToLogin}
                 className="min-h-11 text-xs flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-flox-inputs border border-nexoraBorder text-nexoraSubtle hover:text-nexoraText bg-white hover:bg-nexoraCanvas transition-all font-semibold shadow-sm"
               >
                 <LogIn className="w-3.5 h-3.5" />
@@ -123,22 +145,24 @@ export default function SetupWizard({
         </header>
 
         {/* Wizard Progress Bar */}
-        <div className="mb-8 overflow-x-auto pb-3 sm:mb-10 sm:overflow-visible sm:pb-0 px-4">
-          <div className="relative flex min-w-[320px] max-w-xl mx-auto items-center justify-between sm:min-w-0">
-            {/* Connecting Track Line */}
-            <div className="absolute left-0 top-5 -translate-y-1/2 w-full h-[3px] bg-slate-200/60 rounded-full -z-10"></div>
-            <div
-              className="absolute left-0 top-5 -translate-y-1/2 h-[3px] bg-gradient-to-r from-nexoraElectric via-nexoraElectricMid to-nexoraViolet rounded-full -z-10 transition-all duration-500 ease-out"
-              style={{ width: `${((currentStep - 1) / 2) * 100}%` }}
-            ></div>
+        <div className="mb-14 sm:mb-16 px-8 max-w-xl mx-auto w-full">
+          <div className="relative flex items-center justify-between">
+            {/* Connecting Track Line Container */}
+            <div className="absolute left-5 right-5 top-5 -translate-y-1/2 h-[3px] -z-10">
+              <div className="absolute inset-0 bg-slate-200/60 rounded-full"></div>
+              <div
+                className="absolute left-0 top-0 h-full bg-gradient-to-r from-nexoraElectric via-nexoraElectricMid to-nexoraViolet rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${((currentStep - 1) / 2) * 100}%` }}
+              ></div>
+            </div>
 
             {[1, 2, 3].map((step) => {
               const isActive = step === currentStep
               const isCompleted = step < currentStep
               return (
-                <div key={step} className="flex flex-col items-center relative z-10 px-1">
+                <div key={step} className="relative z-10 flex flex-col items-center">
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 border-2 font-bold cursor-pointer text-sm
+                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 border-2 font-bold cursor-pointer text-sm shrink-0
                       ${isActive
                         ? 'bg-white border-nexoraBrand text-nexoraBrand shadow-[0_4px_12px_rgba(70,72,216,0.18)] ring-4 ring-nexoraBrandSoft/80 scale-110'
                         : isCompleted
@@ -153,7 +177,7 @@ export default function SetupWizard({
                   >
                     {isCompleted ? <Check className="w-5 h-5 stroke-[3px]" /> : step}
                   </div>
-                  <div className="text-center mt-2.5">
+                  <div className="absolute top-full mt-3 w-40 text-center left-1/2 -translate-x-1/2">
                     <span className="text-[9px] font-extrabold uppercase tracking-widest text-nexoraElectric/80 mb-0.5 block">
               {t('common.step_number', { step })}
                     </span>
@@ -250,9 +274,9 @@ export default function SetupWizard({
                 >
                   <ArrowLeft className="w-4 h-4" /> {t('common.back')}
                 </button>
-              ) : onBackToLogin ? (
+              ) : handleBackToLogin ? (
                 <button
-                  onClick={onBackToLogin}
+                  onClick={handleBackToLogin}
                   className="min-h-11 w-full justify-center px-5 py-2.5 rounded-flox-inputs border border-nexoraBorder hover:bg-nexoraCanvas bg-white text-nexoraText font-semibold text-sm flex items-center gap-1.5 transition-all shadow-sm sm:w-auto"
                 >
                   <LogIn className="w-4 h-4 text-nexoraSubtle" /> {t('setup.back_to_login')}
@@ -412,7 +436,7 @@ export default function SetupWizard({
           </div>
 
           <p className="qr-print-url">
-            nexora.vlinkpay.com/touch/tp-main
+            {window.location.host}/touch/tp-main
           </p>
         </div>
       </div>

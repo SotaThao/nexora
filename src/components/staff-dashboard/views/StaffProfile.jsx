@@ -17,15 +17,17 @@ import {
 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
+import { useOutletContext } from 'react-router-dom'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 const labelCls = 'mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-nexoraSubtle'
 const inputCls = 'w-full rounded-xl border border-nexoraBorder bg-nexoraSurface px-3 py-2.5 text-sm text-nexoraText outline-none focus:border-nexoraBrand transition-all'
 const readOnlyCls = 'w-full rounded-xl border border-nexoraBorder bg-nexoraCanvas px-3 py-2.5 text-sm font-medium text-nexoraMuted select-text'
 
-export default function StaffProfile({ onLogout }) {
+export default function StaffProfile() {
   const { currentLanguage, t } = useTranslation()
   const { staffMember, account, linkedBusinesses, saveProfile, setBusinessDisplayName } = useStaffAccount()
+  const { onLogout } = useOutletContext()
 
   const [activeTab, setActiveTab] = useState('profile') // profile | kyc
   const [displayName, setDisplayName] = useState(account.defaultDisplayName || '')
@@ -99,12 +101,7 @@ export default function StaffProfile({ onLogout }) {
       saveProfile({
         kycStatus: 'kyc_approved',
         fullName: kycData.legalName,
-        phone: phone || kycData.phone || staffMember.phone,
-        // Automatically sync the bank info as VLINKPAY payout target if configured
-        payoutMethods: {
-          ...account.payoutMethods,
-          vlinkpay: { enabled: true, value: `VLP-${kycData.bankAccount.slice(-4)}` }
-        }
+        phone: phone || kycData.phone || staffMember.phone
       })
       setShowPortal(false)
       showToast(t('components.staff_dashboard.views.StaffProfile.kycVerificationSuccessful'))
@@ -215,7 +212,7 @@ export default function StaffProfile({ onLogout }) {
                 {fullName || displayName}
               </span>
               <span className="text-[10px] text-nexoraSubtle">
-                {t('staff_dashboard.staff_id')}: {staffMember.id}
+                {t('staff_dashboard.staff_id')}: {account.staffCode || staffMember.id}
               </span>
             </div>
 

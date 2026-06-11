@@ -47,6 +47,7 @@ function Overview({
   onOpenReviews,
   businessName,
   previewQr,
+  touchpoints = [],
   hasKyb = true,
   hasSetup = true,
   onStartSetup
@@ -55,6 +56,28 @@ function Overview({
   const { showToast } = useNotification()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
+
+  // The "Master Store QR" (general pool tips) must point to a REAL backing
+  // touch point — there is no store-level "general" touch page on the API
+  // (every customer touch URL needs a touchPointSlug). Prefer a FrontDesk
+  // touch point (the lobby/master created at onboarding), else the first one.
+  const masterTouchpoint =
+    (touchpoints || []).find((tp) => tp.type === 'FrontDesk') || (touchpoints || [])[0] || null
+  let masterTouchUrl = ''
+  if (masterTouchpoint?.url) {
+    try {
+      masterTouchUrl = `${window.location.origin}${new URL(masterTouchpoint.url).pathname}`
+    } catch {
+      masterTouchUrl = masterTouchpoint.url
+    }
+  }
+  const masterQrTarget = {
+    name: 'Master Welcome QR',
+    subtitle: 'Store Main Portal',
+    slug: masterTouchpoint?.slug || 'general',
+    url: masterTouchpoint?.url || null,
+    isActive: true,
+  }
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -276,7 +299,7 @@ function Overview({
               <div className="mt-6 flex flex-wrap gap-2">
                 <button
                   type="button"
-                  onClick={() => previewQr({ name: 'Master Welcome QR', subtitle: 'Store Main Portal', slug: 'general', isActive: true })}
+                  onClick={() => previewQr(masterQrTarget)}
                   className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-white border border-nexoraBorder px-4 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition cursor-pointer"
                 >
                   <Eye className="h-4 w-4" />
@@ -286,7 +309,7 @@ function Overview({
                   type="button"
                   onClick={() => {
                     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&data=${encodeURIComponent(
-                      `${window.location.origin}${window.location.pathname}?flow=customer&tech=general&biz=${encodeURIComponent(businessName)}`
+                      (masterTouchUrl || `${window.location.origin}/touch/${(businessName || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}/general`)
                     )}`
                     const link = document.createElement('a')
                     link.href = qrUrl
@@ -304,12 +327,12 @@ function Overview({
 
             {/* Visual QR mockup thumbnail */}
             <div
-              onClick={() => previewQr({ name: 'Master Welcome QR', subtitle: 'Store Main Portal', slug: 'general', isActive: true })}
+              onClick={() => previewQr(masterQrTarget)}
               className="flex-shrink-0 mx-auto md:mx-0 w-28 h-28 rounded-lg bg-white border border-nexoraBorder/80 p-2 flex items-center justify-center shadow-sm relative overflow-hidden cursor-pointer hover:border-nexoraBrand transition select-none group"
             >
               <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-                  `${window.location.origin}${window.location.pathname}?flow=customer&tech=general&biz=${encodeURIComponent(businessName)}`
+                  (masterTouchUrl || `${window.location.origin}/touch/${(businessName || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}/general`)
                 )}`}
                 alt="Master QR Code Preview"
                 className="h-full w-full object-contain group-hover:scale-105 transition duration-200"
@@ -347,7 +370,7 @@ function Overview({
                 <button
                   type="button"
                   onClick={() => {
-                    const nfcUrl = `${window.location.origin}${window.location.pathname}?flow=customer&tech=general&biz=${encodeURIComponent(businessName)}`
+                    const nfcUrl = (masterTouchUrl || `${window.location.origin}/touch/${(businessName || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}/general`)
                     navigator.clipboard.writeText(nfcUrl)
                     showToast(t('components.dashboard.overview.Overview.copiedNfcRedirectLink'), 'success')
                   }}
@@ -364,7 +387,7 @@ function Overview({
                       version: "1.0",
                       platform: "nexora-touch",
                       businessName: businessName,
-                      gatewayUrl: `${window.location.origin}${window.location.pathname}?flow=customer&tech=general&biz=${encodeURIComponent(businessName)}`,
+                      gatewayUrl: (masterTouchUrl || `${window.location.origin}/touch/${(businessName || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}/general`),
                       nfcTagId: "master-nfc-general"
                     }
                     const blob = new Blob([JSON.stringify(configData, null, 2)], { type: 'application/json' })

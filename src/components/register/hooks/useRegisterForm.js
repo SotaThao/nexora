@@ -1,6 +1,13 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { parsePhone } from '../../CountryCodeSelect'
+import { parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
+
+const normalizePhone = (raw) => {
+  if (!raw) return ''
+  const { countryCode, nationalNumber } = parsePhone(raw)
+  const formatted = formatNationalNumber(nationalNumber, countryCode)
+  return formatted ? `${countryCode} ${formatted}`.trim() : ''
+}
 import { MOCK_NEXORA_STAFF_PROFILES } from '../../staff-registration/hooks/useStaffRegistration'
 import { useReplaceAllPendingAccounts, usePendingAccounts } from '../../../data/hooks/usePendingAccounts'
 import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
@@ -10,7 +17,7 @@ import apiAuthAdapter from '../../../auth/adapters/apiAuthAdapter'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { useCompletePersonalOnboarding } from '../../../data/hooks/usePersonalOnboarding'
 
-export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onKybSuccess, isRedirectedFromSession }) {
+export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onKybSuccess, isRedirectedFromSession, initialStep = 0, initialRole = 'personal' }) {
   const { t, currentLanguage, setLanguage, renderLabel } = useTranslation()
   const replaceAllPendingAccountsMutation = useReplaceAllPendingAccounts()
   const pendingAccountsQuery = usePendingAccounts()
@@ -20,8 +27,8 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   useNotifications()
   const addNotificationMutation = useAddNotification()
   const completePersonalOnboardingMutation = useCompletePersonalOnboarding()
-  const [currentStep, setCurrentStep] = useState(0)
-  const [role, setRole] = useState('personal')
+  const [currentStep, setCurrentStep] = useState(initialStep)
+  const [role, setRole] = useState(initialRole)
 
   // Step 1 states
   const [email, setEmail] = useState(ssoEmail || '')
@@ -93,10 +100,11 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         // Business creation is handled by Setup Wizard (onboarding), not here.
         setTimeout(() => {
           if (role === 'business') {
-            if (onRegisterSuccess) onRegisterSuccess()
+            if (onRegisterAndLogin) onRegisterAndLogin(email.trim().toLowerCase())
+            else if (onRegisterSuccess) onRegisterSuccess()
           } else {
             setIsVerificationPending(false)
-            setCurrentStep(2)
+            setCurrentStep(3)
           }
         }, 1500)
       })
@@ -206,7 +214,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
                 else if (onRegisterSuccess) onRegisterSuccess()
               } else {
                 setIsVerificationPending(false)
-                setCurrentStep(2)
+                setCurrentStep(3)
               }
             }, 1500)
           })
@@ -218,8 +226,9 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
           })
           .finally(() => setIsSubmitting(false))
       } else {
-        setIsVerificationPending(true)
+        setIsVerificationPending(false)
         setIsSubmitting(false)
+        setCurrentStep(2)
       }
     }).catch((err) => {
       const errorsMap = {}
@@ -262,8 +271,22 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
           onRegisterSuccess()
         }
       } else {
+        const existingAccounts = pendingAccountsQuery.data ?? []
+        const newAccount = {
+          email: email.trim().toLowerCase(),
+          referralCode: referralCode.trim(),
+          role: role,
+          fullName: email.split('@')[0],
+          staffId: null,
+          isVerified: true,
+          kybDetails: null
+        }
+        const filtered = existingAccounts.filter(acc => acc.email !== newAccount.email)
+        filtered.push(newAccount)
+        replaceAllPendingAccountsMutation.mutate(filtered)
+
         setShowOtpInput(false)
-        setCurrentStep(2)
+        setCurrentStep(3)
       }
     } else {
       setOtpError(t('components.register.hooks.useRegisterForm.invalidOtpTryAgain'))
@@ -291,7 +314,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         setVlinkpayStatus('success')
         setNickname(matchedProfile.nickname || '')
         setPosition(matchedProfile.position || 'Nail Technician')
-        setPhone(matchedProfile.phone || '')
+        setPhone(normalizePhone(matchedProfile.phone || ''))
         setAvatar(matchedProfile.avatar || '')
         if (matchedProfile.payoutConfigs) {
           setPayouts(matchedProfile.payoutConfigs)
@@ -544,9 +567,8 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       switch (step) {
         case 0: return t('components.register.hooks.useRegisterForm.accountType')
         case 1: return t('components.register.hooks.useRegisterForm.credentials')
-        case 2: return t('components.register.hooks.useRegisterForm.profileSetup')
-        case 3: return t('components.register.hooks.useRegisterForm.payoutSetup')
-        case 4: return t('components.register.hooks.useRegisterForm.success')
+        case 2: return t('components.register.hooks.useRegisterForm.activateOtp')
+        case 3: return t('components.register.hooks.useRegisterForm.success')
         default: return ''
       }
     }

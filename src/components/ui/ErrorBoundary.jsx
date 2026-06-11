@@ -4,11 +4,22 @@ import { logger } from '../../utils/logger'
 export default class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props)
-    this.state = { hasError: false, error: null, errorInfo: null }
+    this.state = { hasError: false, error: null, errorInfo: null, resetKey: props.resetKey }
   }
 
   static getDerivedStateFromError(error) {
     return { hasError: true, error }
+  }
+
+  // Auto-recover on navigation: when the caller passes a changing `resetKey`
+  // (e.g. the router pathname), clear any captured error so the new route can
+  // render instead of leaving the user stuck on the error screen until a full
+  // page reload.
+  static getDerivedStateFromProps(props, state) {
+    if (props.resetKey !== state.resetKey) {
+      return { hasError: false, error: null, errorInfo: null, resetKey: props.resetKey }
+    }
+    return null
   }
 
   componentDidCatch(error, errorInfo) {

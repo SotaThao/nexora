@@ -1,5 +1,6 @@
 import React from 'react'
 import { CheckCircle } from 'lucide-react'
+import { WALLET_KEYS } from '../constants'
 
 /**
  * WalletDetails — displays wallet payment info so the customer can
@@ -36,7 +37,31 @@ export default function WalletDetails({
   handleConfirmTip,
   isApiMode,
   setStep,
+  paymentLinkData,
 }) {
+  /**
+   * API mode: derive the receiving account identifier from the
+   * GET /touch/payment-link response (redirectUrl / zelle / apple cash fields).
+   */
+  const apiAccountVal = (() => {
+    if (!paymentLinkData) return null
+    const key = selectedWalletObj.key
+    if (key === WALLET_KEYS.ZELLE) return paymentLinkData.zellePhone || paymentLinkData.zelleEmail || null
+    if (key === WALLET_KEYS.APPLECASH) return paymentLinkData.appleCashPhone || null
+    if (paymentLinkData.redirectUrl) {
+      try {
+        const segments = new URL(paymentLinkData.redirectUrl).pathname.split('/').filter(Boolean)
+        if (!segments.length) return null
+        const handle = segments[segments.length - 1]
+        if (key === WALLET_KEYS.VENMO) return handle.startsWith('@') ? handle : `@${handle}`
+        if (key === WALLET_KEYS.CASHAPP) return handle.startsWith('$') ? handle : `$${handle}`
+        return handle
+      } catch {
+        return null
+      }
+    }
+    return null
+  })()
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="text-center space-y-1">
@@ -52,14 +77,14 @@ export default function WalletDetails({
               : bizName;
 
             if (currentLanguage === 'vi') {
-              if (selectedWalletObj.key === 'zelle') return `Mở ứng dụng ngân hàng của bạn và gửi tới ${recipientName}.`;
-              if (selectedWalletObj.key === 'venmo') return `Mở ứng dụng Venmo và gửi tới ${recipientName}.`;
-              if (selectedWalletObj.key === 'cashapp') return `Mở ứng dụng Cash App và gửi tới ${recipientName}.`;
+              if (selectedWalletObj.key === WALLET_KEYS.ZELLE) return `Mở ứng dụng ngân hàng của bạn và gửi tới ${recipientName}.`;
+              if (selectedWalletObj.key === WALLET_KEYS.VENMO) return `Mở ứng dụng Venmo và gửi tới ${recipientName}.`;
+              if (selectedWalletObj.key === WALLET_KEYS.CASHAPP) return `Mở ứng dụng Cash App và gửi tới ${recipientName}.`;
               return `Mở ứng dụng ví và gửi tới ${recipientName}.`;
             } else {
-              if (selectedWalletObj.key === 'zelle') return `Open your bank app and send to ${recipientName}.`;
-              if (selectedWalletObj.key === 'venmo') return `Open your Venmo app and send to ${recipientName}.`;
-              if (selectedWalletObj.key === 'cashapp') return `Open your Cash App and send to ${recipientName}.`;
+              if (selectedWalletObj.key === WALLET_KEYS.ZELLE) return `Open your bank app and send to ${recipientName}.`;
+              if (selectedWalletObj.key === WALLET_KEYS.VENMO) return `Open your Venmo app and send to ${recipientName}.`;
+              if (selectedWalletObj.key === WALLET_KEYS.CASHAPP) return `Open your Cash App and send to ${recipientName}.`;
               return `Open your wallet app and send to ${recipientName}.`;
             }
           })()}
@@ -69,11 +94,11 @@ export default function WalletDetails({
       <div className="bg-white border border-nexoraBorder rounded-2xl p-6 shadow-sm space-y-5 flex flex-col items-center relative overflow-hidden">
         <div
           className="absolute -top-12 -left-12 w-24 h-24 rounded-full opacity-10 filter blur-xl"
-          style={{ backgroundColor: selectedWalletObj.key === 'zelle' ? '#7414CA' : selectedWalletObj.key === 'venmo' ? '#008CFF' : selectedWalletObj.key === 'cashapp' ? '#00D632' : '#475569' }}
+          style={{ backgroundColor: selectedWalletObj.key === WALLET_KEYS.ZELLE ? '#7414CA' : selectedWalletObj.key === WALLET_KEYS.VENMO ? '#008CFF' : selectedWalletObj.key === WALLET_KEYS.CASHAPP ? '#00D632' : '#475569' }}
         />
         <div
           className="absolute -bottom-12 -right-12 w-24 h-24 rounded-full opacity-10 filter blur-xl"
-          style={{ backgroundColor: selectedWalletObj.key === 'zelle' ? '#7414CA' : selectedWalletObj.key === 'venmo' ? '#008CFF' : selectedWalletObj.key === 'cashapp' ? '#00D632' : '#475569' }}
+          style={{ backgroundColor: selectedWalletObj.key === WALLET_KEYS.ZELLE ? '#7414CA' : selectedWalletObj.key === WALLET_KEYS.VENMO ? '#008CFF' : selectedWalletObj.key === WALLET_KEYS.CASHAPP ? '#00D632' : '#475569' }}
         />
 
         <div className={`h-16 w-16 rounded-2xl flex items-center justify-center shadow-md scale-105 transform transition duration-300 hover:rotate-3 ${selectedWalletObj.color}`}>
@@ -86,11 +111,11 @@ export default function WalletDetails({
           <div
             className="text-4xl font-black tracking-tight"
             style={{
-              color: selectedWalletObj.key === 'zelle'
+              color: selectedWalletObj.key === WALLET_KEYS.ZELLE
                 ? '#7414CA'
-                : selectedWalletObj.key === 'venmo'
+                : selectedWalletObj.key === WALLET_KEYS.VENMO
                   ? '#008CFF'
-                  : selectedWalletObj.key === 'cashapp'
+                  : selectedWalletObj.key === WALLET_KEYS.CASHAPP
                     ? '#00D632'
                     : '#1E293B'
             }}
@@ -148,16 +173,16 @@ export default function WalletDetails({
 
           {/* Account Field */}
           {(() => {
-            const accountVal = selectedStaffMembers.length === 1
+            const accountVal = (selectedStaffMembers.length === 1
               ? selectedStaffMembers[0].paymentAccounts?.[selectedWalletObj.key]
-              : businessPaymentAccounts?.[selectedWalletObj.key];
+              : businessPaymentAccounts?.[selectedWalletObj.key]) || apiAccountVal;
 
             const getFieldLabel = () => {
-              if (selectedWalletObj.key === 'zelle') return t('components.customer_flow.steps.WalletDetails.emailPhone');
-              if (selectedWalletObj.key === 'venmo') return t('components.customer_flow.steps.WalletDetails.venmoUsername');
-              if (selectedWalletObj.key === 'cashapp') return t('components.customer_flow.steps.WalletDetails.cashTag');
-              if (selectedWalletObj.key === 'paypal') return t('components.customer_flow.steps.WalletDetails.paypalEmailPhone');
-              if (selectedWalletObj.key === 'bankwire') return t('components.customer_flow.steps.WalletDetails.bankDetails');
+              if (selectedWalletObj.key === WALLET_KEYS.ZELLE) return t('components.customer_flow.steps.WalletDetails.emailPhone');
+              if (selectedWalletObj.key === WALLET_KEYS.VENMO) return t('components.customer_flow.steps.WalletDetails.venmoUsername');
+              if (selectedWalletObj.key === WALLET_KEYS.CASHAPP) return t('components.customer_flow.steps.WalletDetails.cashTag');
+              if (selectedWalletObj.key === WALLET_KEYS.PAYPAL) return t('components.customer_flow.steps.WalletDetails.paypalEmailPhone');
+              if (selectedWalletObj.key === WALLET_KEYS.BANKWIRE) return t('components.customer_flow.steps.WalletDetails.bankDetails');
               return t('components.customer_flow.steps.WalletDetails.account');
             };
 
