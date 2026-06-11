@@ -1,0 +1,7 @@
+
+# Reports Export Rule
+Whenever the user requests to export a report or walkthrough, or when a tester agent completes a test run:
+1. ALWAYS save or copy the markdown report to the user-story report folder in the Obsidian vault:
+   C:\Users\AD\Documents\Obsidian\shancao\Nexora\user-story\report\
+2. If the test involves browser live tests, E2E flows, or manual walkthroughs that generate screenshots or video recordings (e.g. .mp4, .webm), ALWAYS save these media assets into that same directory (C:\Users\AD\Documents\Obsidian\shancao\Nexora\user-story\report\) alongside the report.
+This ensures all test evidence remains colocated and tied directly to the corresponding user stories.
