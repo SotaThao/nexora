@@ -109,7 +109,7 @@ export default function StepOtpVerify({
                       }}
                       className="text-[10px] text-nexoraBrand font-bold hover:underline mt-1 inline-flex items-center"
                     >
-                      {currentLanguage === 'vi' ? 'Bấm vào đây để đăng nhập' : 'Click here to login'}
+                      {t('components.staff_registration.steps.StepOtpVerify.loginCta')}
                     </button>
                   )}
                 </div>
@@ -275,14 +275,14 @@ export default function StepOtpVerify({
             <div className="text-center">
               <span className="text-[10px] text-nexoraSubtle font-bold block">
                 {resendTimer > 0
-                  ? `Resend code in ${resendTimer}s`
+                  ? t('common.resend_code_in_seconds', { seconds: resendTimer })
                   : (
                   <button
                     type="button"
                     onClick={handleResendOtp || (() => setResendTimer(30))}
                     className="text-nexoraBrand hover:underline"
                   >
-                    Resend Verification Code
+                    {t('components.staff_registration.steps.StepOtpVerify.resendVerificationCode')}
                   </button>
                   )
                 }

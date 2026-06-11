@@ -139,6 +139,11 @@
     "city": "City",
     "phone_number_short": "phone number"
   },
+  "payment_methods": {
+    "update_success": "Payment method updated.",
+    "update_failed": "Failed to update payment method",
+    "toggle_failed": "Failed to toggle payment method"
+  },
   "login": {
     "title": "NEXORA TOUCH",
     "gateway_sub": "Smart Tip & Google Review Filtration Gateway",
@@ -1491,6 +1496,8 @@
           "termsOfService": "Terms of Service",
           "close": "Close",
           "iAccept": "I Accept",
+          "loginCta": "Click here to login",
+          "resendVerificationCode": "Resend Verification Code",
           "phExampleEmail": "e.g. name@example.com",
           "phPassword": "••••••••",
           "phReferralCode": "Enter referral code...",
@@ -1527,6 +1534,9 @@
         },
         "StepWelcome": {
           "declineRequest": "Decline Request",
+          "loadingInvitation": "Loading invitation...",
+          "invalidInvitationTitle": "Invitation Not Valid",
+          "invalidInvitationDescription": "This invitation link is invalid or has expired. Please contact the salon to request a new invite.",
           "salonNetworkInvitation": "SALON NETWORK INVITATION",
           "youHaveBeenInvited": "You have been invited to link your profile to receive tips directly to your personal account at this salon.",
           "iAlreadyHaveAn": "I already have an Account",
@@ -1672,7 +1682,8 @@
       "resetToken": "Reset Token",
       "newPassword": "New Password",
       "confirmPassword": "Confirm Password",
-      "resetPassword": "Reset Password"
+      "resetPassword": "Reset Password",
+      "backToSignIn": "Back to Sign In"
     },
     "TouchpointsView": {
       "phExampleDeviceIds": "e.g. NFC-105, QR-Table-01",

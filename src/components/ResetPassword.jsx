@@ -192,7 +192,7 @@ export default function ResetPassword() {
                 onClick={() => navigate('/login')}
                 className="w-full min-h-11 py-2.5 border border-nexoraBorder hover:bg-nexoraCanvas text-nexoraSubtle hover:text-nexoraText font-semibold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 transition-all"
               >
-                <ArrowLeft className="w-4 h-4" /> Back to Sign In
+                <ArrowLeft className="w-4 h-4" /> {t('components.ResetPassword.backToSignIn')}
               </button>
             </div>
           </form>

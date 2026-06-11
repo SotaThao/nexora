@@ -139,6 +139,11 @@
     "city": "Thành phố",
     "phone_number_short": "SĐT"
   },
+  "payment_methods": {
+    "update_success": "Đã cập nhật phương thức thanh toán.",
+    "update_failed": "Không thể cập nhật phương thức thanh toán",
+    "toggle_failed": "Không thể bật/tắt phương thức thanh toán"
+  },
   "login": {
     "title": "NEXORA TOUCH",
     "gateway_sub": "Cổng định tuyến Phản hồi & Típ thông minh",
@@ -1491,6 +1496,8 @@
           "termsOfService": "Điều khoản dịch vụ",
           "close": "Đóng",
           "iAccept": "Tôi Đồng Ý",
+          "loginCta": "Bấm vào đây để đăng nhập",
+          "resendVerificationCode": "Gửi lại mã xác minh",
           "phExampleEmail": "vd: name@example.com",
           "phPassword": "••••••••",
           "phReferralCode": "Nhập mã giới thiệu...",
@@ -1527,6 +1534,9 @@
         },
         "StepWelcome": {
           "declineRequest": "Hủy bỏ / Từ chối",
+          "loadingInvitation": "Đang tải lời mời...",
+          "invalidInvitationTitle": "Lời mời không hợp lệ",
+          "invalidInvitationDescription": "Liên kết lời mời này không hợp lệ hoặc đã hết hạn. Vui lòng liên hệ tiệm để được mời lại.",
           "salonNetworkInvitation": "THƯ MỜI GIA NHẬP HỆ THỐNG TIỆM",
           "youHaveBeenInvited": "Bạn đã được mời liên kết hồ sơ của mình để nhận tiền tip trực tiếp vào tài khoản cá nhân tại tiệm này.",
           "iAlreadyHaveAn": "Đã có tài khoản",
@@ -1672,7 +1682,8 @@
       "resetToken": "Mã đặt lại",
       "newPassword": "Mật khẩu mới",
       "confirmPassword": "Xác nhận mật khẩu",
-      "resetPassword": "Đặt lại mật khẩu"
+      "resetPassword": "Đặt lại mật khẩu",
+      "backToSignIn": "Quay lại Đăng nhập"
     },
     "TouchpointsView": {
       "phExampleDeviceIds": "vd: NFC-105, QR-Table-01",
