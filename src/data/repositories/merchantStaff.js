@@ -27,12 +27,14 @@ export function normalizeStaffListItem(dto) {
     averageRating: dto.averageRating ?? 0,
     fullName: dto.displayName ?? '',
     avatar: dto.photoUrl ?? null,
-    status: dto.status ?? null,
+    status: (dto.itemType === 'invite' && dto.status === 'Pending') ? 'Pending Setup' : (dto.status ?? null),
     isActive,
     showInTipsFlow: isActive,
     position: dto.position ?? null,
     invitedEmail: dto.invitedEmail ?? null,
     invitedPhone: dto.invitedPhone ?? null,
+    phone: dto.staffProfile?.phoneNumber ?? dto.staffProfile?.phone ?? dto.user?.phoneNumber ?? dto.user?.phone ?? dto.phone ?? dto.phoneNumber ?? dto.invitedPhone ?? null,
+    email: dto.staffProfile?.email ?? dto.user?.email ?? dto.email ?? dto.invitedEmail ?? null,
   }
 }
 
@@ -67,6 +69,9 @@ export function createMerchantStaffRepository(client = httpClient) {
     async list() {
       const data = await client.get('/api/v1/merchant/staff')
       const items = data?.items ?? (Array.isArray(data) ? data : [])
+      if (items.length > 0) {
+        console.log("MERCHANT STAFF DTO: ", JSON.stringify(items[0]))
+      }
       return items.map(normalizeStaffListItem)
     },
 
@@ -124,6 +129,17 @@ export function createMerchantStaffRepository(client = httpClient) {
         staffLinkId,
         status,
       })
+    },
+
+    /**
+     * Reject a pending staff link/join request.
+     * Uses the dedicated reject endpoint — the status-update route only
+     * accepts "Active" | "Inactive" and 400s on "Rejected".
+     * @param {string} linkId - BusinessStaffLink id (same as staffLinkId)
+     * @returns {Promise<void>}
+     */
+    async rejectLink(linkId) {
+      return await client.post(`/api/v1/merchant/staff/links/${encodeURIComponent(linkId)}/reject`)
     },
 
     /**

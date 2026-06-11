@@ -885,7 +885,7 @@
     "already_have_id": "I already have Personal ID",
     "activation_success": "Personal Account Activated!",
     "activation_success_desc": "Your Personal ID is {id}. You are now linked to {business} and will appear in the customer tip list.",
-    "return_merchant": "Return to Merchant Dashboard"
+    "return_merchant": "Go to Personal Dashboard"
   },
   "errors": {
     "unknown_error": "An unknown error occurred. Please try again.",

@@ -73,6 +73,11 @@ export const formatNationalNumber = (nationalNumber, dialCode) => {
 
 export const isPhoneValid = (phoneStr) => {
   if (!phoneStr) return false
+
+  // Custom requirement: always accept if it has at least 10 digits
+  const digits = phoneStr.replace(/\D/g, '')
+  if (digits.length >= 10) return true
+
   try {
     return isValidPhoneNumber(phoneStr)
   } catch (e) {

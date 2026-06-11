@@ -12,6 +12,7 @@ import {
   useResendStaffInvite,
   useSendStaffLinkRequest,
   useUpdateMerchantStaffStatus,
+  useRejectMerchantStaffLink,
   useRemoveMerchantStaff,
 } from '../../../data/hooks/useMerchantStaff'
 
@@ -26,8 +27,8 @@ export function normaliseMember(member) {
     nickname: member.nickname,
     position: member.position,
     avatar: member.avatar || '',
-    phone: member.phone || '',
-    email: member.email || '',
+    phone: member.phone || member.invitedPhone || '',
+    email: member.email || member.invitedEmail || '',
     bio: member.bio || '',
     status: member.status || 'Active',
     flowType: member.flowType || '',
@@ -70,6 +71,7 @@ export function useStaffManagement({ staffData, isStaffLoading, businessName, vi
   const resendInviteMutation = useResendStaffInvite()
   const linkRequestMutation = useSendStaffLinkRequest()
   const updateStatusMutation = useUpdateMerchantStaffStatus()
+  const rejectLinkMutation = useRejectMerchantStaffLink()
   const removeStaffMutation = useRemoveMerchantStaff()
 
   // Staff comes from the API query (useMerchantStaff) passed in as staffData.
@@ -137,7 +139,7 @@ export function useStaffManagement({ staffData, isStaffLoading, businessName, vi
       cashapp: member.paymentAccounts?.cashapp || '',
       zelle: member.paymentAccounts?.zelle || '',
       vlinkpay: member.paymentAccounts?.vlinkpay || '',
-      nexoraStaffId: member.id || '',
+      nexoraStaffId: member.staffCode || '',
       showInTipsFlow: member.showInTipsFlow !== false,
       payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member)
     })
@@ -158,7 +160,7 @@ export function useStaffManagement({ staffData, isStaffLoading, businessName, vi
       cashapp: member.paymentAccounts?.cashapp || '',
       zelle: member.paymentAccounts?.zelle || '',
       vlinkpay: member.paymentAccounts?.vlinkpay || '',
-      nexoraStaffId: member.id || '',
+      nexoraStaffId: member.staffCode || '',
       showInTipsFlow: member.showInTipsFlow !== false,
       payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member)
     })
@@ -345,9 +347,9 @@ export function useStaffManagement({ staffData, isStaffLoading, businessName, vi
    */
   const handleAcceptJoinRequest = (staffId) => {
     const member = staff.find(s => s.id === staffId)
-    if (!member?.staffLinkId) return
+    if (!member?.id) return
 
-    updateStatusMutation.mutate({ staffLinkId: member.staffLinkId, status: 'Active' }, {
+    updateStatusMutation.mutate({ staffLinkId: member.id, status: 'Active' }, {
       onSuccess: () => {
         showToast(currentLanguage === 'vi' 
           ? `Đã chấp nhận thợ ${member.fullName} vào tiệm!` 
@@ -365,20 +367,21 @@ export function useStaffManagement({ staffData, isStaffLoading, businessName, vi
   }
 
   /**
-   * Decline a join request — update status to Rejected.
-   * Calls PUT /api/v1/merchant/staff/{staffLinkId}/status.
+   * Decline a join request — reject the pending link.
+   * Calls POST /api/v1/merchant/staff/links/{linkId}/reject (the status-update
+   * route only accepts "Active" | "Inactive" and 400s on "Rejected").
    */
   const handleDeclineJoinRequest = async (staffId) => {
     const member = staff.find(s => s.id === staffId)
     if (!member) return
 
-    const ok = await showConfirm(currentLanguage === 'vi' 
-      ? `Bạn có chắc chắn muốn từ chối yêu cầu tham gia của thợ ${member.fullName}?` 
+    const ok = await showConfirm(currentLanguage === 'vi'
+      ? `Bạn có chắc chắn muốn từ chối yêu cầu tham gia của thợ ${member.fullName}?`
       : `Are you sure you want to decline join request from ${member.fullName}?`)
     if (!ok) return
 
-    if (member.staffLinkId) {
-      updateStatusMutation.mutate({ staffLinkId: member.staffLinkId, status: 'Rejected' }, {
+    if (member.id) {
+      rejectLinkMutation.mutate(member.id, {
         onError: (err) => {
           showToast(
             currentLanguage === 'vi'
@@ -404,8 +407,8 @@ export function useStaffManagement({ staffData, isStaffLoading, businessName, vi
       : `Are you sure you want to approve unlink request from ${member.fullName}?`)
     if (!ok) return
 
-    if (member.staffLinkId) {
-      removeStaffMutation.mutate(member.staffLinkId, {
+    if (member.id) {
+      removeStaffMutation.mutate(member.id, {
         onSuccess: () => {
           showToast(currentLanguage === 'vi' ? 'Đã hủy liên kết nhân viên thành công.' : 'Staff unlinked successfully.', 'success')
         },
@@ -434,8 +437,8 @@ export function useStaffManagement({ staffData, isStaffLoading, businessName, vi
       : `Are you sure you want to decline unlink request from ${member.fullName}?`)
     if (!ok) return
 
-    if (member.staffLinkId) {
-      updateStatusMutation.mutate({ staffLinkId: member.staffLinkId, status: 'Active' }, {
+    if (member.id) {
+      updateStatusMutation.mutate({ staffLinkId: member.id, status: 'Active' }, {
         onSuccess: () => {
           showToast(currentLanguage === 'vi' ? 'Đã từ chối yêu cầu hủy liên kết.' : 'Declined unlink request.', 'success')
         },
@@ -465,7 +468,7 @@ export function useStaffManagement({ staffData, isStaffLoading, businessName, vi
       : 'Delete this staff member from Nexora Touch?')
     if (!ok) return
 
-    const linkId = member.staffLinkId || member.inviteId
+    const linkId = member.id
     if (linkId) {
       removeStaffMutation.mutate(linkId, {
         onSuccess: () => {
@@ -491,10 +494,10 @@ export function useStaffManagement({ staffData, isStaffLoading, businessName, vi
    */
   const toggleStaff = (id) => {
     const member = staff.find(s => s.id === id)
-    if (!member?.staffLinkId) return
+    if (!member?.id) return
 
     const newStatus = member.isActive ? 'Inactive' : 'Active'
-    updateStatusMutation.mutate({ staffLinkId: member.staffLinkId, status: newStatus }, {
+    updateStatusMutation.mutate({ staffLinkId: member.id, status: newStatus }, {
       onError: (err) => {
         showToast(
           currentLanguage === 'vi'
@@ -513,10 +516,10 @@ export function useStaffManagement({ staffData, isStaffLoading, businessName, vi
    */
   const toggleStaffTipsFlow = (id) => {
     const member = staff.find(s => s.id === id)
-    if (!member?.staffLinkId) return
+    if (!member?.id) return
 
     const newStatus = member.showInTipsFlow ? 'Inactive' : 'Active'
-    updateStatusMutation.mutate({ staffLinkId: member.staffLinkId, status: newStatus }, {
+    updateStatusMutation.mutate({ staffLinkId: member.id, status: newStatus }, {
       onError: (err) => {
         showToast(
           currentLanguage === 'vi'

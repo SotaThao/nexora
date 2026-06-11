@@ -885,7 +885,7 @@
     "already_have_id": "Tôi đã có Personal ID",
     "activation_success": "Kích hoạt tài khoản cá nhân thành công!",
     "activation_success_desc": "Personal ID của bạn là {id}. Bạn hiện đã được liên kết với {business} và sẽ xuất hiện trong danh sách nhận tip của khách.",
-    "return_merchant": "Quay lại Bảng điều khiển Merchant"
+    "return_merchant": "Đi tới Bảng điều khiển Personal"
   },
   "errors": {
     "unknown_error": "Đã xảy ra lỗi không xác định. Vui lòng thử lại.",

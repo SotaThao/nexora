@@ -797,12 +797,15 @@ export default function useStaffRegistration({ inviteData }) {
       setIsProfileSubmitting(true)
       try {
         // 1. Login immediately to establish the authenticated session
+        console.log('DEBUG: Attempting login for', regEmail || inviteData?.invitedEmail || '')
         const session = await apiAuthAdapter.login({
           email: regEmail || inviteData?.invitedEmail || '',
           password: regPassword
         })
+        console.log('DEBUG: Login success, session:', !!session)
 
         // 2. Accept invite so the backend can link the Staff Profile to the authenticated User Profile
+        console.log('DEBUG: Calling acceptInviteMutation with token:', inviteToken)
         await acceptInviteMutation.mutateAsync({
           token: inviteToken,
           displayName: fullName.trim(),
@@ -811,6 +814,7 @@ export default function useStaffRegistration({ inviteData }) {
           photoUrl: avatar || null,
           password: regPassword || null,
         })
+        console.log('DEBUG: acceptInviteMutation success!')
 
         // 3. Re-sign in so the freshly minted JWT carries the newly linked Staff
         // Profile claim. The token from step 1 predates the accept; refresh-token

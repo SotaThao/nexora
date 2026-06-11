@@ -96,7 +96,23 @@ export default function StepOtpVerify({
                 }}
                 required
               />
-              {regErrors.email && <p className="mt-1 text-[10px] font-bold text-nexoraDanger">{regErrors.email}</p>}
+              {regErrors.email && (
+                <div className="mt-1">
+                  <p className="text-[10px] font-bold text-nexoraDanger">{regErrors.email}</p>
+                  {(regErrors.email.includes('exists') || regErrors.email.includes('tồn tại')) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setJoinPath('link')
+                        setStep(0)
+                      }}
+                      className="text-[10px] text-nexoraBrand font-bold hover:underline mt-1 inline-flex items-center"
+                    >
+                      {currentLanguage === 'vi' ? 'Bấm vào đây để đăng nhập' : 'Click here to login'}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Confirm Email */}
@@ -241,6 +257,7 @@ export default function StepOtpVerify({
                 {renderLabel(t('components.staff_registration.steps.StepOtpVerify.enterOtpCode'))}
               </label>
               <input
+                id="otp-input"
                 type="text"
                 className="mt-1.5 h-12 w-full rounded-lg border border-nexoraBorder px-4 text-center font-mono font-black text-lg text-nexoraText focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:outline-none transition-all"
                 placeholder={t('components.staff_registration.steps.StepOtpVerify.phExampleOtp')}
