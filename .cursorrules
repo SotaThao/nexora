@@ -26,3 +26,24 @@ When an Agent needs to create, edit, or checklist tasks/TODOs:
      a. Update the Sprint file frontmatter to `status: completed`.
      b. Send a final notification to the Telegram Thread 735 reporting the successful completion of the sprint, along with test summaries.
 
+# Task Creation, Sizing & Estimation Rule
+When creating tasks/TODOs for any User Story in Obsidian:
+1. **Enforce Task Granularity**:
+   - Tasks must be detailed and appropriately sized. Avoid tasks that are too granular (under 0.5h) or too broad/large (above 8h).
+   - The allowed duration range for any task is **0.5 hour to 8 hours**.
+2. **Standard Task Categories**:
+   - For standard feature implementations, always structure the checklist using these standard categories:
+     - `Figma Design` (e.g., `Thiết kế giao diện trên Figma (Xh)`)
+     - `FE Build UI` (e.g., `Xây dựng UI Frontend (Xh)`)
+     - `Integrate API` (e.g., `Tích hợp API (Xh)`)
+     - `Automation Test` (e.g., `Viết automation test (Xh)`)
+   - You may add custom tasks as needed (e.g. `BE Development (Xh)`, `Database Migration (Xh)`) but they must respect the same sizing and estimate notation.
+3. **Estimate Format**:
+   - Always append the estimated duration in parentheses at the end of the task description: `(Xh)` or `(X.Xh)`.
+   - E.g.:
+     - `- [ ] Thiết kế giao diện trên Figma (3h)`
+     - `- [ ] Xây dựng UI Frontend (4.5h)`
+     - `- [ ] Tích hợp API (2h)`
+     - `- [ ] Viết automation test (1.5h)`
+4. **Time Tracking Automation**:
+   - The weekly report script will parse these checkbox lines and sum up the hours of all completed tasks (`- [x]`) to calculate the member's weekly hours. Ensure all completed tasks have correct time notations.
