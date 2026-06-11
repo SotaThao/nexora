@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| **Trạng thái** | Draft → Grilled → Approved → Integrated → Tested → Done |
+| **Trạng thái** | Draft → Approved → Integrated → Tested → Done |
 | **Ngày tạo** | YYYY-MM-DD |
 | **Epic / Domain** | (vd: Staff Onboarding, Customer Tips, Notifications) |
 | **OpenSpec change** | `openspec/changes/<change-id>` hoặc `—` (fix nhỏ) |
@@ -43,15 +43,6 @@
 | Data hook | | query key: `qk.<...>`, invalidation: |
 | Repository | | normalize shape: |
 | Khác (auth/route/context) | | |
-
-## Grill Checklist (bắt buộc trước khi Approve — dùng skill `grill-me` nếu có, không thì tự trả lời)
-
-- [ ] **AC mơ hồ?** Mỗi Then đều đo được (status code, UI state cụ thể) — không có "hoạt động đúng"
-- [ ] **Đủ trạng thái?** Đã liệt kê: decline/reject từ CẢ HAI phía, fail (4xx từng mã), duplicate, expiry/timeout, unlink/rollback, empty state
-- [ ] **Contract thật?** Mỗi endpoint đã đối chiếu Swagger live HOẶC probe request thật (không tin doc snapshot)
-- [ ] **Side effects?** Mutation nào invalidate cache nào; ảnh hưởng phía bên kia (owner ↔ staff ↔ customer)
-- [ ] **Cái gì chặn?** Câu hỏi BE chưa trả lời → story ở Draft, KHÔNG code phần bị chặn
-- [ ] **Scope creep?** Nhánh nào nên tách story riêng
 
 ## Definition of Done
 
