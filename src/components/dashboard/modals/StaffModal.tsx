@@ -11,6 +11,12 @@ import StaffQrScannerModal from './StaffQrScannerModal'
 import { useSearchMerchantStaff } from '../../../data/hooks/useMerchantStaff'
 import { buildStaffReviewSummary } from './staffModalReviewUtils'
 
+const STAFF_QR_SCAN_PROFILES = [
+  { key: 'lisa', displayName: 'Lisa Tran', staffCode: 'LISA1102' },
+  { key: 'anna', displayName: 'Anna Nguyen', staffCode: 'ANNA0921' },
+  { key: 'hanna', displayName: 'Hanna Nguyen', staffCode: 'HN1148' },
+]
+
 function StaffModal({
   open,
   editing,
@@ -212,20 +218,8 @@ function StaffModal({
     setShowScanner(true)
   }
 
-  const simulateSuccessfulScan = () => {
-    handleCombinedIdChange('LISA1102')
-    setShowScanner(false)
-    setScanTarget(null)
-  }
-
-  const handleScanAnna = () => {
-    handleCombinedIdChange('ANNA0921')
-    setShowScanner(false)
-    setScanTarget(null)
-  }
-
-  const handleScanHanna = () => {
-    handleCombinedIdChange('HN1148')
+  const handleSimulatedProfileScan = (staffCode) => {
+    handleCombinedIdChange(staffCode)
     setShowScanner(false)
     setScanTarget(null)
   }
@@ -606,9 +600,8 @@ function StaffModal({
         open={showScanner}
         scanTarget={scanTarget}
         onClose={() => { setShowScanner(false); setScanTarget(null) }}
-        onSimulateSuccessfulScan={simulateSuccessfulScan}
-        onScanAnna={handleScanAnna}
-        onScanHanna={handleScanHanna}
+        scanProfiles={STAFF_QR_SCAN_PROFILES}
+        onScanProfile={handleSimulatedProfileScan}
       />
     </div>
   )

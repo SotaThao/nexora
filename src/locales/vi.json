@@ -1059,6 +1059,12 @@
         },
         "PayoutSetupModal": {
           "walletAccountTitle": "TÀI KHOẢN {wallet}",
+          "placeholderZelle": "Nhập email/SĐT Zelle...",
+          "placeholderBankWire": "Số tài khoản & số routing",
+          "placeholderPaypal": "email@paypal.com",
+          "placeholderAppleCash": "Nhập số điện thoại...",
+          "placeholderVlinkpay": "Nhập VLINKPAY ID (vd: MIA0123)...",
+          "placeholderCrypto": "Nhập địa chỉ BTC/ETH/USDT...",
           "specifyReceivingTargetIdentifier": "Chỉ định thông tin tài khoản nhận tiền",
           "accountIdentifier": "THÔNG TIN TÀI KHOẢN *",
           "qrCodeOptional": "MÃ QR (TÙY CHỌN)",
@@ -1099,6 +1105,7 @@
           "pointTheCameraAt": "Hướng camera về phía mã QR hoặc chọn giả lập quét thành công bên dưới.",
           "simulateQrScan": "Giả lập quét QR",
           "simulateSuccessfulScan": "Giả lập Quét Lisa Tran",
+          "simulateProfileLabel": "{name} ({code})",
           "cancel": "HỦY BỎ"
         },
         "StaffReviewsDetailModal": {

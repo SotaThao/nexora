@@ -1059,6 +1059,12 @@
         },
         "PayoutSetupModal": {
           "walletAccountTitle": "{wallet} ACCOUNT",
+          "placeholderZelle": "Enter Zelle email/phone...",
+          "placeholderBankWire": "Account & Routing numbers",
+          "placeholderPaypal": "email@paypal.com",
+          "placeholderAppleCash": "Enter phone number...",
+          "placeholderVlinkpay": "Enter VLINKPAY ID (e.g. MIA0123)...",
+          "placeholderCrypto": "Enter BTC/ETH/USDT address...",
           "specifyReceivingTargetIdentifier": "Specify receiving target identifier",
           "accountIdentifier": "Account Identifier *",
           "qrCodeOptional": "QR Code (optional)",
@@ -1099,6 +1105,7 @@
           "pointTheCameraAt": "Point the camera at the QR code, or choose a mockup scan profile below.",
           "simulateQrScan": "Simulate QR Scan",
           "simulateSuccessfulScan": "Simulate Successful Scan",
+          "simulateProfileLabel": "{name} ({code})",
           "cancel": "CANCEL"
         },
         "StaffReviewsDetailModal": {

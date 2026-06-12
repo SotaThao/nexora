@@ -58,14 +58,14 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
   }
 
   const walletPlaceholders = {
-    zelle: 'Enter Zelle email/phone...',
-    bankwire: 'Account & Routing numbers',
-    paypal: 'email@paypal.com',
+    zelle: t('components.dashboard.modals.PayoutSetupModal.placeholderZelle'),
+    bankwire: t('components.dashboard.modals.PayoutSetupModal.placeholderBankWire'),
+    paypal: t('components.dashboard.modals.PayoutSetupModal.placeholderPaypal'),
     venmo: '@username-venmo',
     cashapp: '$cashtag',
-    applecash: 'Enter phone number...',
-    vlinkpay: 'Enter VLINKPAY ID (e.g. MIA0123)...',
-    crypto: 'Enter BTC/ETH/USDT address...'
+    applecash: t('components.dashboard.modals.PayoutSetupModal.placeholderAppleCash'),
+    vlinkpay: t('components.dashboard.modals.PayoutSetupModal.placeholderVlinkpay'),
+    crypto: t('components.dashboard.modals.PayoutSetupModal.placeholderCrypto')
   }
 
   const handleFileChange = (e) => {
