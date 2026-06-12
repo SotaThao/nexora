@@ -537,6 +537,7 @@ export default function Dashboard({
         onBlockedFeatureClick={requireKyb}
         onClose={closeStaffModal}
         onSave={saveStaff}
+        onLinkStaff={handleLinkStaff}
         onOpenInviteShare={(formDetails) => {
           setInviteShareDefaultName(formDetails.fullName || '')
           setInviteShareDefaultContact(formDetails.email || formDetails.phone || '')

@@ -9,6 +9,7 @@ import type {
   StaffAccountView,
   StaffBusinessLink,
   StaffInviteInfo,
+  StaffLinkRequestDetail,
   StaffMember,
   StaffSearchResult,
   TouchpointPage,
@@ -170,9 +171,20 @@ export interface NotificationApiDto {
   title?: string
   body?: string
   message?: string
+  actionUrl?: string | null
+  referenceId?: string | null
   isRead?: boolean
   read?: boolean
   createdAt?: string
+}
+
+export interface StaffLinkRequestDetailApiDto {
+  id?: string
+  businessName?: string
+  businessLogoUrl?: string | null
+  businessRole?: string | null
+  requestedAt?: string | null
+  status?: string | null
 }
 
 export interface InviteInfoApiDto {
@@ -268,6 +280,7 @@ export type {
   StaffAccountView,
   StaffBusinessLink,
   StaffInviteInfo,
+  StaffLinkRequestDetail,
   StaffMember,
   StaffSearchResult,
   TouchpointPage,

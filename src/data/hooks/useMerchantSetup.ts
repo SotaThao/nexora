@@ -4,7 +4,7 @@ import { qk } from '../queryKeys'
 import merchantsRepository from '../repositories/merchants'
 import { AuthContext } from '../../auth/AuthProvider'
 import type { MerchantSetup } from '../../types/domain'
-import type { CreateBusinessResult, SlugCheckResult } from '../../types/repositories'
+import type { CreateBusinessResult, ImageUploadResult, SlugCheckResult } from '../../types/repositories'
 
 export function useMerchantSetup({ enabled: callerEnabled = true } = {}) {
   const auth = useContext(AuthContext)
@@ -99,6 +99,12 @@ export function useCreateBusiness() {
 export function useUploadLogo() {
   return useMutation<string, Error, File>({
     mutationFn: (file) => merchantsRepository.uploadLogo(file),
+  })
+}
+
+export function useUploadImage() {
+  return useMutation<ImageUploadResult, Error, File>({
+    mutationFn: (file) => merchantsRepository.uploadImage(file),
   })
 }
 

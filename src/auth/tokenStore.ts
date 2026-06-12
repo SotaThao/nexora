@@ -2,6 +2,9 @@ import { storage } from '../utils/storage'
 import type { AuthTokens } from '../types/auth'
 
 type TokenSubscriber = (tokens: AuthTokens | null) => void
+interface TokenStoreSetOptions {
+  silent?: boolean
+}
 
 let subscribers: TokenSubscriber[] = []
 
@@ -16,12 +19,15 @@ export const tokenStore = {
     }
   },
 
-  set(tokens: AuthTokens | null | undefined) {
+  set(tokens: AuthTokens | null | undefined, options: TokenStoreSetOptions = {}) {
     if (!tokens) {
       this.clear()
       return
     }
     storage.setItem('nexora_auth_tokens', JSON.stringify(tokens))
+    if (options.silent) {
+      return
+    }
     const currentSubscribers = [...subscribers]
     for (const fn of currentSubscribers) {
       try {

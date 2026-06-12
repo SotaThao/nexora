@@ -188,6 +188,24 @@ export const apiAuthAdapter = {
     return this.getSession()
   },
 
+  async signInForInviteAccept({ email, password }: LoginCredentials): Promise<void> {
+    const res = await httpClient.post<AuthTokens>(
+      '/api/v1/authentication/signin',
+      { email, password },
+      { anonymous: true },
+    )
+
+    tokenStore.set(
+      {
+        accessToken: res.accessToken,
+        refreshToken: res.refreshToken,
+        tokenType: res.tokenType,
+        expiresIn: res.expiresIn,
+      },
+      { silent: true },
+    )
+  },
+
   async getSession(): Promise<AuthSession | null> {
     const tokens = tokenStore.get()
     if (!tokens || !tokens.accessToken) {
