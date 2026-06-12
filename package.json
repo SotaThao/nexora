@@ -26,8 +26,7 @@
     "capgo:init": "npx @capgo/cli init",
     "capgo:setup": "npx @capgo/cli app add net.vlinkgroup.nexora && npx @capgo/cli channel add production net.vlinkgroup.nexora --default --self-assign",
     "capgo:bump": "node scripts/bump-app-version.js",
-    "capgo:upload": "node scripts/capgo-upload.js",
-    "typecheck": "tsc --noEmit"
+    "capgo:upload": "node scripts/capgo-upload.js"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.0",

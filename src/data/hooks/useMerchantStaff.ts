@@ -1,17 +1,31 @@
 /**
  * TanStack Query hooks for merchant staff management.
  */
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
-import merchantStaffRepository from '../repositories/merchantStaff'
+import merchantStaffRepository, { StatusFilter } from '../repositories/merchantStaff'
+import type { StaffListPage } from '../repositories/merchantStaff'
 import type { StaffMember, StaffSearchResult } from '../../types/domain'
 import type { StaffInviteParams, StaffReorderItem, UpdateStaffStatusVars } from '../../types/hooks'
 
-export function useMerchantStaff({ enabled = true } = {}) {
-  return useQuery<StaffMember[]>({
-    queryKey: qk.merchantStaff(),
-    queryFn: () => merchantStaffRepository.list(),
+export { StatusFilter }
+
+export function useMerchantStaff({
+  statusFilter,
+  pageNumber,
+  pageSize,
+  enabled = true,
+}: {
+  statusFilter?: string
+  pageNumber?: number
+  pageSize?: number
+  enabled?: boolean
+} = {}) {
+  return useQuery<StaffListPage>({
+    queryKey: qk.merchantStaff(statusFilter, pageNumber, pageSize),
+    queryFn: () => merchantStaffRepository.list(statusFilter, pageNumber, pageSize),
     enabled,
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -28,7 +42,7 @@ export function useInviteStaff() {
 export function useResendStaffInvite() {
   const queryClient = useQueryClient()
   return useMutation<void, Error, string>({
-    mutationFn: (inviteId) => merchantStaffRepository.resendInvite(inviteId),
+    mutationFn: (linkId) => merchantStaffRepository.resendInvite(linkId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
     },
@@ -88,6 +102,26 @@ export function useRemoveMerchantStaff() {
   const queryClient = useQueryClient()
   return useMutation<void, Error, string>({
     mutationFn: (staffLinkId) => merchantStaffRepository.remove(staffLinkId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
+    },
+  })
+}
+
+export function useApproveStaffLink() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, string>({
+    mutationFn: (linkId) => merchantStaffRepository.approveLink(linkId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
+    },
+  })
+}
+
+export function useRejectStaffLink() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, string>({
+    mutationFn: (linkId) => merchantStaffRepository.rejectLink(linkId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
     },

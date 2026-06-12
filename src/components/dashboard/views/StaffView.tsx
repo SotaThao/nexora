@@ -180,13 +180,35 @@ function StaffMemberCard({
 
         <div className="flex flex-wrap items-center justify-end gap-1.5 pt-1 border-t border-nexoraRule">
           {isPendingInvite && (
-            <button
-              type="button"
-              onClick={() => onResendInvite(member)}
-              className="px-2.5 py-1.5 text-[10px] font-extrabold border border-nexoraBorder bg-white text-nexoraText rounded-lg hover:bg-slate-50 transition"
-            >
-              {t('staff_invite.action_resend')}
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onApproveClick) {
+                    onApproveClick(member)
+                  } else if (onAcceptJoin) {
+                    onAcceptJoin(member.id)
+                  }
+                }}
+                className="px-2.5 py-1.5 text-[10px] font-extrabold border border-emerald-200 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition"
+              >
+                {t('components.dashboard.views.StaffView.approve')}
+              </button>
+              <button
+                type="button"
+                onClick={() => onDeclineJoin && onDeclineJoin(member.id)}
+                className="px-2.5 py-1.5 text-[10px] font-extrabold border border-rose-200 bg-rose-50 text-rose-700 rounded-lg hover:bg-rose-100 transition"
+              >
+                {t('components.dashboard.views.StaffView.reject')}
+              </button>
+              <button
+                type="button"
+                onClick={() => onResendInvite(member)}
+                className="px-2.5 py-1.5 text-[10px] font-extrabold border border-nexoraBorder bg-white text-nexoraText rounded-lg hover:bg-slate-50 transition"
+              >
+                {t('staff_invite.action_resend')}
+              </button>
+            </>
           )}
           {isPendingLink && (
             <>
@@ -569,33 +591,20 @@ function StaffView({
                         </div>
                       </td>
                       <td className="px-5 py-4 text-right">
-                        {isPendingLinkMember(member) && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => onApproveClick && onApproveClick(member)}
-                              className="px-3.5 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition shadow-sm mr-2"
-                            >
-                              {t('components.dashboard.views.StaffView.approve')}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => onDeclineJoin && onDeclineJoin(member.id)}
-                              className="px-3 py-1.5 text-xs font-bold border border-rose-200 bg-rose-50 text-rose-700 rounded-lg hover:bg-rose-100 transition shadow-sm"
-                            >
-                              {t('components.dashboard.views.StaffView.reject')}
-                            </button>
-                          </>
-                        )}
-                        {isPendingInviteMember(member) && (
-                          <button
-                            type="button"
-                            onClick={() => handleResendInvite(member)}
-                            className="px-3.5 py-1.5 text-xs font-bold border border-nexoraBorder bg-white text-nexoraText rounded-lg hover:bg-slate-50 transition shadow-sm"
-                          >
-                            {t('staff_invite.action_resend')}
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          onClick={() => onApproveClick && onApproveClick(member)}
+                          className="px-3.5 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition shadow-sm mr-2"
+                        >
+                          {t('components.dashboard.views.StaffView.approve')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onDeclineJoin && onDeclineJoin(member.id)}
+                          className="px-3 py-1.5 text-xs font-bold border border-rose-200 bg-rose-50 text-rose-700 rounded-lg hover:bg-rose-100 transition shadow-sm"
+                        >
+                          {t('components.dashboard.views.StaffView.reject')}
+                        </button>
                       </td>
                     </tr>
                   )

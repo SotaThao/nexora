@@ -29,12 +29,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<AuthSession | null>(null)
   const [status, setStatus] = useState<AuthStatus>('loading')
 
-export const AuthContext = createContext<AuthContextValue | null>(null)
-
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<AuthSession | null>(null)
-  const [status, setStatus] = useState<AuthStatus>('loading')
-
   // Shared promise to deduplicate concurrent getSession() calls
   const sessionPromiseRef = React.useRef(null)
 

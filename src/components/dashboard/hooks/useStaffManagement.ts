@@ -2,8 +2,7 @@
 // Dashboard. Refactored to use API mutation hooks instead of local setStaff().
 // Extracted from Dashboard.jsx (Group 5).
 import { useState } from 'react'
-import type { StaffFormState } from '../../../types/forms'
-import { EMPTY_STAFF_FORM } from '../../../types/forms'
+import { EMPTY_STAFF_FORM, type StaffFormState } from '../../../types/forms'
 import { DEFAULT_PAYOUT_CONFIGS } from '../constants'
 import { getPayoutConfigsFromMember } from '../utils'
 import { isPhoneValid } from '../../CountryCodeSelect'
@@ -19,7 +18,6 @@ import {
   useApproveStaffLink,
   useRejectStaffLink,
 } from '../../../data/hooks/useMerchantStaff'
-import { EMPTY_STAFF_FORM, type StaffFormState } from '../../../types/forms'
 import { getApiErrorCode } from '../../../types/domain'
 
 /**

@@ -11,4 +11,6 @@ export const STAFF_MENU_ITEMS = [
   { id: 'profile', icon: User, labelKey: 'staff_dashboard.nav.profile' }
 ]
 
+export const STAFF_BOTTOM_NAV_ITEMS = STAFF_MENU_ITEMS.filter((item) => item.id !== 'pay')
+
 export const STAFF_SCREENS = ['home', 'qr', 'tips', 'reviews', 'pay', 'profile', 'notifications']
