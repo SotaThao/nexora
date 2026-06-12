@@ -113,6 +113,7 @@
     "cancel": "Hủy",
     "confirm": "Xác nhận",
     "save": "Lưu",
+    "update": "Cập nhật",
     "delete": "Xóa",
     "edit": "Sửa",
     "copy": "Sao chép",
@@ -318,8 +319,8 @@
       "qr_nfc": "Thiết bị QR / NFC",
       "analytics": "Phân Tích",
       "settings": "Cài Đặt",
-      "business_setting": "Cài đặt doanh nghiệp",
-      "kyb": "Xác minh Doanh nghiệp",
+      "business_setting": "Cài đặt",
+      "kyb": "KYB",
       "support": "Hỗ Trợ"
     },
     "header": {
@@ -937,6 +938,23 @@
     "touchpoint_not_found_desc": "Không thể tải điểm chạm này."
   },
   "components": {
+    "payout": {
+      "bankWireForm": {
+        "title": "Thiết lập tài khoản ngân hàng",
+        "beneficiaryName": "Tên người thụ hưởng",
+        "bankName": "Tên ngân hàng",
+        "routingNumber": "Số ABA/Routing",
+        "accountNumber": "Số tài khoản",
+        "bankAddress": "Địa chỉ ngân hàng",
+        "city": "Thành phố",
+        "state": "Bang/Tỉnh",
+        "zipCode": "Mã bưu chính",
+        "country": "Quốc gia",
+        "selectCountry": "Chọn quốc gia",
+        "warning": "Vui lòng nhập đúng thông tin tài khoản nhận tiền. Thông tin này sẽ được sử dụng để nhận thanh toán.",
+        "completeRequired": "Vui lòng nhập đầy đủ thông tin tài khoản ngân hàng."
+      }
+    },
     "customer_flow": {
       "hooks": {
         "useCustomerFlow": {
@@ -1037,15 +1055,16 @@
           "linkRequestBtn": "Gửi yêu cầu liên kết",
           "vlinkpayVerified": "Đã xác thực tài khoản VLINKPAY",
           "nexoraVerified": "Đã xác thực tài khoản NEXORA",
+          "profileVerified": "Đã xác thực hồ sơ thợ",
           "viewAllReviews": "Xem tất cả đánh giá",
           "viewAccount": "Xem tài khoản",
           "decline": "Từ chối",
           "approveAccept": "Duyệt / Chấp nhận",
           "remove_photo": "X?a ?nh",
           "review_count": "{count} ??nh gi?",
-          "phExampleVlp1": "vd: VLP-0155-ASH",
-          "phExampleVlp2": "vd: VLP-8893-VL",
-          "phExampleStaffId": "vd: NEX-STAFF-LISA1102",
+          "phExampleVlp1": "vd: ASH0155",
+          "phExampleVlp2": "vd: VL8893",
+          "phExampleStaffId": "vd: LISA1102",
           "phFullName": "Mia Tran",
           "phNickname": "Mia T.",
           "phPosition": "Thợ nail"
@@ -1719,7 +1738,9 @@
   },
   "staff_registration": {
     "link": {
-      "incorrect_password": "Mật khẩu không chính xác."
+      "incorrect_password": "Mật khẩu không chính xác.",
+      "business_account_not_allowed": "Chỉ tài khoản cá nhân (Personal) mới có thể chấp nhận lời mời tiệm. Vui lòng đăng nhập bằng tài khoản cá nhân.",
+      "onboarding_required": "Vui lòng hoàn tất hồ sơ cá nhân trước khi gia nhập tiệm."
     }
   }
 }

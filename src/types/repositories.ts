@@ -191,6 +191,7 @@ export interface InviteInfoApiDto {
   invitedName?: string
   invitedPosition?: string | null
   businessName?: string
+  businessAddress?: string | null
 }
 
 export interface SlugCheckResult {

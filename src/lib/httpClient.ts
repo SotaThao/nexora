@@ -77,6 +77,7 @@ interface ErrorDetailItem {
 
 async function buildError(response: Response): Promise<ApiError> {
   let errorCode = 'HTTP_ERROR'
+  let message = ''
   let errors: Record<string, string[]> = {}
   let retryAfter: number | string | null = null
 
@@ -85,11 +86,13 @@ async function buildError(response: Response): Promise<ApiError> {
     if (text) {
       const body = JSON.parse(text) as {
         errorCode?: string
+        message?: string
         errors?: Record<string, string[]>
         retryAfter?: number | string
         errorDetail?: ErrorDetailItem[]
       }
       if (body.errorCode) errorCode = body.errorCode
+      if (body.message) message = body.message
       if (body.errors !== undefined) errors = body.errors
       if (body.retryAfter !== undefined) retryAfter = body.retryAfter
 
@@ -119,7 +122,7 @@ async function buildError(response: Response): Promise<ApiError> {
     }
   }
 
-  return { status: response.status, errorCode, errors, retryAfter }
+  return { status: response.status, errorCode, message, errors, retryAfter }
 }
 
 async function request<T = unknown>(path: string, init: HttpRequestInit = {}): Promise<T | null> {
@@ -163,6 +166,7 @@ async function request<T = unknown>(path: string, init: HttpRequestInit = {}): P
     return Promise.reject({
       status: 0,
       errorCode: 'NETWORK_ERROR',
+      message: '',
       errors: {},
       retryAfter: null,
     } satisfies ApiError)
@@ -230,6 +234,7 @@ export async function getBlob(path: string, opts: HttpRequestInit = {}) {
     return Promise.reject({
       status: 0,
       errorCode: 'NETWORK_ERROR',
+      message: '',
       errors: {},
       retryAfter: null,
     } satisfies ApiError)

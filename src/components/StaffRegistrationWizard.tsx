@@ -133,6 +133,8 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
               handleLinkLogin={reg.handleLinkLogin}
               handleLinkDecline={reg.handleLinkDecline}
               isDemoToolsEnabled={isDemoToolsEnabled}
+              apiInviteInfo={reg.apiInviteInfo}
+              isRegisterSubmitting={reg.isRegisterSubmitting}
             />
           )}
 

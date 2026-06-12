@@ -12,6 +12,7 @@ export function normalizeInviteInfo(dto: InviteInfoApiDto): StaffInviteInfo {
     invitedName: dto.invitedName ?? '',
     invitedPosition: dto.invitedPosition ?? null,
     businessName: dto.businessName ?? '',
+    businessAddress: dto.businessAddress ?? null,
   }
 }
 

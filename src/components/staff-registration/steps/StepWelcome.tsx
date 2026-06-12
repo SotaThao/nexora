@@ -31,6 +31,8 @@ export default function StepWelcome({
   handleLinkLogin,
   handleLinkDecline,
   isDemoToolsEnabled = false,
+  apiInviteInfo = null,
+  isRegisterSubmitting = false,
 }) {
   const [showLinkPassword, setShowLinkPassword] = useState(false)
 
@@ -388,7 +390,7 @@ export default function StepWelcome({
                       </div>
                       <div className="flex justify-between">
                         <span>{t('components.staff_registration.steps.StepWelcome.location')}</span>
-                        <strong className="text-nexoraMuted truncate max-w-32">San Jose, CA</strong>
+                        <strong className="text-nexoraMuted truncate max-w-32">{apiInviteInfo?.businessAddress || '—'}</strong>
                       </div>
                     </div>
                   </div>
@@ -406,10 +408,17 @@ export default function StepWelcome({
                   <button
                     type="button"
                     onClick={handleLinkExistingProfile}
-                    className="w-full h-11 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-black text-xs uppercase tracking-wider rounded-xl transition flex items-center justify-center gap-1.5 shadow-md"
+                    disabled={isRegisterSubmitting}
+                    className="w-full h-11 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-black text-xs uppercase tracking-wider rounded-xl transition flex items-center justify-center gap-1.5 shadow-md disabled:opacity-60"
                   >
-                    <Check className="h-4 w-4 stroke-[3px]" />
-                    {t('components.staff_registration.steps.StepWelcome.acceptAndJoin')}
+                    {isRegisterSubmitting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Check className="h-4 w-4 stroke-[3px]" />
+                        {t('components.staff_registration.steps.StepWelcome.acceptAndJoin')}
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

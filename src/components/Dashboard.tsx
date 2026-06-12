@@ -114,7 +114,7 @@ export default function Dashboard({
   const buildFallbackProfile = (storeInfo, reviewInfo) => ({
     fullName: storeInfo?.ownerName || '',
     email: storeInfo?.businessEmail || userEmail || '',
-    avatar: null,
+    avatar: storeInfo?.logo || null,
     businessName: storeInfo?.name || '',
     businessPhone: storeInfo?.phone || '',
     businessWebsite: storeInfo?.website || '',
@@ -132,9 +132,11 @@ export default function Dashboard({
     }
   })
 
+  const businessLogo = merchantSetupData?.businessInfo?.logo || setupData?.businessInfo?.logo || null
+
   const [profile, setProfile] = useState(() => {
     // Prefer saved profile settings, fall back to business info from setupData.
-    if (profileSettingsData) return profileSettingsData
+    if (profileSettingsData) return { ...profileSettingsData, avatar: profileSettingsData.avatar || businessLogo }
     const storeInfo = setupData?.businessInfo || merchantSetupData?.businessInfo
     const reviewInfo = setupData?.reviewLinks || merchantSetupData?.reviewLinks
     return buildFallbackProfile(storeInfo, reviewInfo)
@@ -146,6 +148,7 @@ export default function Dashboard({
       if (!hasKyb && verificationStatus !== 'basic') {
         setProfile({
           ...profileSettingsData,
+          avatar: profileSettingsData.avatar || businessLogo,
           fullName: '',
           email: userEmail || '',
           businessName: '',
@@ -155,7 +158,7 @@ export default function Dashboard({
           }
         })
       } else {
-        setProfile(profileSettingsData)
+        setProfile({ ...profileSettingsData, avatar: profileSettingsData.avatar || businessLogo })
       }
     } else {
       // No saved settings — build from setup data / merchant setup query.
@@ -164,7 +167,7 @@ export default function Dashboard({
       setProfile(buildFallbackProfile(storeInfo, reviewInfo))
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profileSettingsData, hasKyb, userEmail, verificationStatus])
+  }, [profileSettingsData, hasKyb, userEmail, verificationStatus, businessLogo])
 
   const [isNotiDropdownOpen, setIsNotiDropdownOpen] = useState(false)
 

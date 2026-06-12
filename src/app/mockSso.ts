@@ -9,7 +9,7 @@ export const MOCK_SSO_KYB_PROFILE = {
     venmo: '@vlinknail',
     cashapp: '$vlinknail',
     zelle: 'pay@vlinknailstudio.com',
-    vlinkpay: 'VLP-7721-VN'
+    vlinkpay: 'VN7721'
   },
   email: 'sso_with_kyb@gmail.com'
 }

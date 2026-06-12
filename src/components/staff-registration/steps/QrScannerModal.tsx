@@ -101,9 +101,9 @@ export default function QrScannerModal({
                 type="button"
                 onClick={() => {
                   if (scanTarget === 'staff') {
-                    handleSearchIdChange('NEX-STAFF-ANNA0921')
+                    handleSearchIdChange('ANNA0921')
                   } else {
-                    handleVlinkpayIdChange('VLP-0921-ANNA')
+                    handleVlinkpayIdChange('ANNA0921')
                   }
                   setShowScanner(false)
                   setScanTarget(null)
@@ -116,9 +116,9 @@ export default function QrScannerModal({
                 type="button"
                 onClick={() => {
                   if (scanTarget === 'staff') {
-                    handleSearchIdChange('NEX-STAFF-HN1148')
+                    handleSearchIdChange('HN1148')
                   } else {
-                    handleVlinkpayIdChange('VLP-1148-HN')
+                    handleVlinkpayIdChange('HN1148')
                   }
                   setShowScanner(false)
                   setScanTarget(null)

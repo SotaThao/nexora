@@ -11,6 +11,7 @@ import {
   Pointer,
   Search,
   Star,
+  UserCheck,
   Users,
   Wallet
 } from 'lucide-react'
@@ -74,14 +75,16 @@ export default function DashboardHeader({
     setNotifications(updated)
     setIsNotiDropdownOpen(false)
     if (item.linkTab === 'staff' && item.staffId) {
-      const member = staff.find(s => s.id?.trim().toUpperCase() === item.staffId?.trim().toUpperCase())
-      if (member) {
-        onNavigateMenu(item.linkTab)
-        if (typeof onApproveStaff === 'function') {
-          onApproveStaff(member)
-        }
-      } else {
-        onNavigateMenu(item.linkTab)
+      const sid = item.staffId.trim().toUpperCase()
+      const member = staff.find(s =>
+        s.id?.trim().toUpperCase() === sid ||
+        s.staffProfileId?.trim().toUpperCase() === sid ||
+        s.staffLinkId?.trim().toUpperCase() === sid ||
+        s.staffCode?.trim().toUpperCase() === sid
+      )
+      onNavigateMenu(item.linkTab)
+      if (member && typeof onApproveStaff === 'function') {
+        onApproveStaff(member)
       }
     } else if (item.linkTab) {
       onNavigateMenu(item.linkTab)
@@ -335,17 +338,30 @@ export default function DashboardHeader({
               <div className="flex-grow overflow-y-auto max-h-[380px] divide-y divide-nexoraBorder">
                 {notifications && notifications.length > 0 ? (
                   notifications.map((item) => {
+                    const typeLower = (item.type || '').toLowerCase()
                     const IconComponent = {
                       tip_success: Wallet,
                       feedback_alert: AlertTriangle,
-                      review_good: Star
-                    }[item.type] || Bell
+                      review_good: Star,
+                      staff_accepted_invite: UserCheck,
+                      staffacceptedinvite: UserCheck,
+                      stafflinkrequest: UserCheck,
+                      staff_link_request: UserCheck,
+                      staff_joined: UserCheck,
+                      staffjoined: UserCheck,
+                    }[typeLower] || Bell
 
                     const iconColor = {
                       tip_success: 'bg-emerald-500 text-white',
                       feedback_alert: 'bg-amber-500 text-white',
-                      review_good: 'bg-luxuryGold text-white'
-                    }[item.type] || 'bg-nexoraBrand text-white'
+                      review_good: 'bg-luxuryGold text-white',
+                      staff_accepted_invite: 'bg-nexoraBrand text-white',
+                      staffacceptedinvite: 'bg-nexoraBrand text-white',
+                      stafflinkrequest: 'bg-nexoraBrand text-white',
+                      staff_link_request: 'bg-nexoraBrand text-white',
+                      staff_joined: 'bg-nexoraBrand text-white',
+                      staffjoined: 'bg-nexoraBrand text-white',
+                    }[typeLower] || 'bg-nexoraBrand text-white'
 
                     const isUnread = !item.read
                     return (
@@ -405,7 +421,7 @@ export default function DashboardHeader({
               <img src={profile.avatar} alt="" className="h-full w-full object-cover" />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-sm font-bold text-white uppercase">
-                {(profile.email || '').slice(0, 2).toUpperCase() || '?'}
+                {(businessName || profile.email || '').slice(0, 2).toUpperCase() || '?'}
               </div>
             )}
           </button>

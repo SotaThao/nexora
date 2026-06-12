@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { getApiErrorCode, isApiError } from '../../../types/domain'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
+import { serializeBankWireAccount } from '../../payout/bankWireAccount'
 
 const normalizePhone = (raw) => {
   if (!raw) return ''
@@ -330,9 +331,20 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
 
   const autoFillPayments = () => {
     const defaultName = nickname.trim() || 'Lisa Tran'
+    const bankWireValue = serializeBankWireAccount({
+      beneficiaryName: defaultName,
+      bankName: 'Chase',
+      routingNumber: '021000021',
+      accountNumber: '1234567890',
+      bankAddress: '270 Park Ave',
+      city: 'New York',
+      state: 'NY',
+      zipCode: '10017',
+      country: 'United States',
+    })
     setPayouts({
       zelle: { enabled: true, value: email || 'lisa@example.com', qrCode: '', accountName: defaultName },
-      bankwire: { enabled: true, value: '123456789 - 987654321', qrCode: '', accountName: defaultName },
+      bankwire: { enabled: true, value: bankWireValue, qrCode: '', accountName: defaultName },
       paypal: { enabled: true, value: email || 'lisa@example.com', qrCode: '', accountName: defaultName },
       venmo: { enabled: true, value: `@${nickname.toLowerCase().replace(/[^a-z]/g, '') || 'lisa'}-nails`, qrCode: '', accountName: defaultName },
       cashapp: { enabled: true, value: `$${nickname.toLowerCase().replace(/[^a-z]/g, '') || 'lisa'}nails`, qrCode: '', accountName: defaultName },
@@ -420,7 +432,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       const emailPrefix = email.split('@')[0].toUpperCase()
       const initials = emailPrefix.slice(0, 3) || 'STAFF'
       const randomDigits = Math.floor(1000 + Math.random() * 9000)
-      staffId = `NEX-STAFF-${initials}${randomDigits}`
+      staffId = `${initials}${randomDigits}`
       
       // Try to get actual user ID if in API mode
       if (isApiMode) {

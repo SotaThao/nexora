@@ -95,6 +95,7 @@ export interface StaffInviteInfo {
   invitedName: string
   invitedPosition: string | null
   businessName: string
+  businessAddress: string | null
 }
 
 export interface StaffSearchResult {
