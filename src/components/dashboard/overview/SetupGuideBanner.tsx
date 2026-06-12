@@ -34,6 +34,7 @@ export default function SetupGuideBanner({ onStartSetup }) {
         </p>
 
         <button
+          type="button"
           onClick={onStartSetup}
           className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl bg-nexoraBrand px-6 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-nexoraBrand/25 active:scale-95"
         >

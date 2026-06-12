@@ -190,6 +190,8 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
               setEmail={reg.setEmail}
               avatar={reg.avatar}
               setAvatar={reg.setAvatar}
+              onAvatarFileChange={reg.handleAvatarFileChange}
+              isAvatarUploading={reg.isAvatarUploading}
               bio={reg.bio}
               setBio={reg.setBio}
               staffId={reg.staffId}

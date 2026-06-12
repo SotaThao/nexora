@@ -4,7 +4,8 @@
 
 import httpClient from '../../lib/httpClient'
 import { isApiError } from '../../types/domain'
-import type { StaffBusinessLink, StaffProfile } from '../../types/domain'
+import type { StaffBusinessLink, StaffLinkRequestDetail, StaffProfile } from '../../types/domain'
+import type { StaffLinkRequestDetailApiDto } from '../../types/repositories'
 
 type HttpClient = typeof httpClient
 
@@ -24,6 +25,17 @@ interface StaffBusinessApiDto {
 
 interface StaffBusinessesResponse {
   items?: StaffBusinessApiDto[]
+}
+
+export function normalizeStaffLinkRequestDetail(dto: StaffLinkRequestDetailApiDto): StaffLinkRequestDetail {
+  return {
+    id: dto.id ?? '',
+    businessName: dto.businessName ?? '',
+    businessLogoUrl: dto.businessLogoUrl ?? null,
+    businessRole: dto.businessRole ?? null,
+    requestedAt: dto.requestedAt ?? null,
+    status: dto.status ?? null,
+  }
 }
 
 export function createStaffSelfRepository(client: HttpClient = httpClient) {
@@ -53,6 +65,21 @@ export function createStaffSelfRepository(client: HttpClient = httpClient) {
         linkStatusLabel: b.linkStatusLabel ?? null,
         linkedAt: b.linkedAt ?? null,
       }))
+    },
+
+    async getLinkRequest(linkId: string): Promise<StaffLinkRequestDetail> {
+      const data = await client.get<StaffLinkRequestDetailApiDto>(
+        `/api/v1/staff/link-requests/${encodeURIComponent(linkId)}`,
+      )
+      return normalizeStaffLinkRequestDetail(data)
+    },
+
+    async acceptLinkRequest(linkId: string): Promise<void> {
+      await client.put(`/api/v1/staff/link-requests/${encodeURIComponent(linkId)}/accept`)
+    },
+
+    async rejectLinkRequest(linkId: string): Promise<void> {
+      await client.put(`/api/v1/staff/link-requests/${encodeURIComponent(linkId)}/reject`)
     },
   }
 }

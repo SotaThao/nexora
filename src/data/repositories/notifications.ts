@@ -26,6 +26,8 @@ function normalizeNotification(item: NotificationApiDto): NotificationRecord {
     type: item.type || 'info',
     title: item.title || '',
     body,
+    actionUrl: item.actionUrl ?? null,
+    referenceId: item.referenceId ?? null,
     isRead,
     createdAt,
     read: isRead,

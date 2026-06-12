@@ -11,6 +11,8 @@ export default function StepProfile({
   phone, setPhone,
   email, setEmail,
   avatar, setAvatar,
+  onAvatarFileChange,
+  isAvatarUploading = false,
   bio, setBio,
   staffId,
   vlinkpayId,
@@ -60,20 +62,22 @@ export default function StepProfile({
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center gap-2">
                 {/* Device upload option */}
-                <label className="h-9 px-4 rounded-xl bg-nexoraBrand hover:bg-nexoraBrandDark text-white flex items-center justify-center gap-1.5 cursor-pointer text-xs font-bold transition shadow-sm" title={t('components.staff_registration.steps.StepProfile.uploadFromDevice')}>
-                  <Upload className="h-3.5 w-3.5" />
+                <label className={`h-9 px-4 rounded-xl bg-nexoraBrand hover:bg-nexoraBrandDark text-white flex items-center justify-center gap-1.5 text-xs font-bold transition shadow-sm ${isAvatarUploading ? 'cursor-wait opacity-80' : 'cursor-pointer'}`} title={t('components.staff_registration.steps.StepProfile.uploadFromDevice')}>
+                  {isAvatarUploading ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Upload className="h-3.5 w-3.5" />
+                  )}
                   <span>{t('common.upload_photo')}</span>
                   <input
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={(e) => {
+                    disabled={isAvatarUploading}
+                    onChange={async (e) => {
                       const file = e.target.files?.[0]
-                      if (file) {
-                        const reader = new FileReader()
-                        reader.onload = () => setAvatar(reader.result)
-                        reader.readAsDataURL(file)
-                      }
+                      if (file) await onAvatarFileChange?.(file)
+                      e.target.value = ''
                     }}
                   />
                 </label>

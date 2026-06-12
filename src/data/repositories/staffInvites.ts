@@ -39,7 +39,6 @@ export function createStaffInvitesRepository(client: HttpClient = httpClient) {
           photoUrl: photoUrl ?? null,
           password: password ?? null,
         },
-        { anonymous: true },
       )
     },
 

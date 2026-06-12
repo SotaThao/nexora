@@ -79,6 +79,8 @@ export interface NotificationRecord {
   type: string
   title: string
   body?: string
+  actionUrl?: string | null
+  referenceId?: string | null
   isRead?: boolean
   createdAt?: string
   read: boolean
@@ -115,6 +117,15 @@ export interface StaffBusinessLink {
   linkStatus: string | null
   linkStatusLabel: string | null
   linkedAt: string | null
+}
+
+export interface StaffLinkRequestDetail {
+  id: string
+  businessName: string
+  businessLogoUrl: string | null
+  businessRole: string | null
+  requestedAt: string | null
+  status: string | null
 }
 
 export interface StaffAccountView {
