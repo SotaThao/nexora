@@ -2,9 +2,11 @@
  * staffAccountsRepository — API-only implementation.
  */
 
+import queryClient from '../../lib/queryClient'
+import { qk } from '../queryKeys'
 import profileSettingsRepository from './profileSettings'
 import staffPaymentMethodsRepository from './staffPaymentMethods'
-import type { StaffAccountView } from '../../types/domain'
+import type { StaffAccountView, UserProfile } from '../../types/domain'
 import type { UpdateStaffProfileDto } from '../../types/repositories'
 
 export function createStaffAccountsRepository() {
@@ -20,11 +22,9 @@ export function createStaffAccountsRepository() {
         return null
       }
 
-      const [profile, paymentMethods] = await Promise.all([
-        profileSettingsRepository.get(),
-        staffPaymentMethodsRepository.getAll(),
-      ])
-
+      const paymentMethods = await staffPaymentMethodsRepository.getAll()
+      // Profile is bootstrapped once during auth (seedAuthQueryCache) and via useProfileSettings.
+      const profile = queryClient.getQueryData<UserProfile | null>(qk.userProfile()) ?? null
       if (!profile) return null
 
       return {

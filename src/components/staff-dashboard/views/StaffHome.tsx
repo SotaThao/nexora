@@ -1,7 +1,10 @@
 // StaffHome — KPI overview, pending tip confirmations, linked businesses.
 import { CheckCircle2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { useStaffAccount } from '../../../contexts/StaffAccountContext'
+import { useConfirmStaffTipsReceipt } from '../../../data/hooks/useStaffSelf'
+import { useStaffHomeData } from '../hooks/useStaffHomeData'
+import { SkeletonLayout } from '../../ui/skeleton'
+import { STAFF_HOME_SKELETON } from '../skeletons/staffDashboardSkeletons'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 
@@ -15,9 +18,21 @@ function KpiCard({ label, value, sub = '', subClass = 'text-nexoraMuted' }) {
   )
 }
 
+function formatTipAmount(amount) {
+  return `$${Number(amount || 0).toFixed(2)}`
+}
+
 export default function StaffHome() {
   const { t } = useTranslation()
-  const { kpis, pendingTips, confirmTip, confirmAllPending, linkedBusinesses } = useStaffAccount()
+  const confirmTipsMutation = useConfirmStaffTipsReceipt()
+  const { kpis, isHomeLoading, isPendingTipsFetching, pendingTips, linkedBusinesses } =
+    useStaffHomeData()
+
+  const isConfirming = confirmTipsMutation.isPending
+
+  if (isHomeLoading || kpis.isLoading) {
+    return <SkeletonLayout blocks={STAFF_HOME_SKELETON} />
+  }
 
   return (
     <div className="space-y-4">
@@ -25,11 +40,15 @@ export default function StaffHome() {
       <section className="grid grid-cols-2 gap-3">
         <KpiCard
           label={t('staff_dashboard.home.today_tips')}
-          value={`$${kpis.todayTips}`}
+          value={formatTipAmount(kpis.todayTips)}
           sub={t('staff_dashboard.home.tips_count', { count: kpis.todayCount })}
           subClass="text-emerald-600"
         />
-        <KpiCard label={t('staff_dashboard.home.this_month')} value={`$${kpis.monthTips}`} sub="" />
+        <KpiCard
+          label={t('staff_dashboard.home.this_month')}
+          value={formatTipAmount(kpis.monthTips)}
+          sub=""
+        />
         <KpiCard
           label={t('staff_dashboard.home.pending')}
           value={kpis.pendingCount}
@@ -47,6 +66,11 @@ export default function StaffHome() {
       {/* Pending confirmations */}
       <section className={panel}>
         <h3 className="mb-3 text-base font-extrabold text-nexoraText">{t('staff_dashboard.home.pending_confirmations')}</h3>
+        {isPendingTipsFetching && pendingTips.length > 0 ? (
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-nexoraSubtle">
+            {t('common.loading')}
+          </p>
+        ) : null}
         {pendingTips.length === 0 ? (
           <p className="py-4 text-center text-xs text-nexoraSubtle">{t('staff_dashboard.home.no_pending')}</p>
         ) : (
@@ -55,13 +79,16 @@ export default function StaffHome() {
               {pendingTips.map((tip) => (
                 <div key={tip.id} className="flex items-center justify-between gap-3 py-3">
                   <div className="min-w-0">
-                    <div className="text-sm font-bold text-nexoraText">${tip.amount} · {tip.paymentMethod}</div>
+                    <div className="text-sm font-bold text-nexoraText">
+                      {formatTipAmount(tip.amount)} · {tip.paymentMethod}
+                    </div>
                     <div className="truncate text-xs text-nexoraMuted">{tip.touchpoint}</div>
                   </div>
                   <button
                     type="button"
-                    onClick={() => confirmTip(tip.id)}
-                    className="shrink-0 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-black text-amber-700 transition hover:bg-amber-100"
+                    disabled={isConfirming}
+                    onClick={() => confirmTipsMutation.mutate([tip.id])}
+                    className="shrink-0 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-black text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {t('staff_dashboard.home.confirm')}
                   </button>
@@ -70,8 +97,9 @@ export default function StaffHome() {
             </div>
             <button
               type="button"
-              onClick={confirmAllPending}
-              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-400 py-3 text-sm font-extrabold text-white transition hover:opacity-90"
+              disabled={isConfirming}
+              onClick={() => confirmTipsMutation.mutate(pendingTips.map((tip) => tip.id))}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-400 py-3 text-sm font-extrabold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <CheckCircle2 className="h-4 w-4" />
               {t('staff_dashboard.home.confirm_all')}

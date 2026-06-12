@@ -43,23 +43,21 @@ export function createStaffInvitesRepository(client: HttpClient = httpClient) {
       )
     },
 
-    async joinPublicInvite({
-      referralCode,
-      displayName,
-      phoneNumber,
-      position,
-      bio,
-    }: JoinPublicInviteDto): Promise<void> {
+    async joinPublicInvite(
+      dto: JoinPublicInviteDto,
+      { anonymous = false }: { anonymous?: boolean } = {},
+    ): Promise<void> {
       await client.post(
         '/api/v1/staff/join-public-invite',
         {
-          referralCode,
-          displayName,
-          phoneNumber: phoneNumber ?? null,
-          position: position ?? null,
-          bio: bio ?? null,
+          referralCode: dto.referralCode,
+          displayName: dto.displayName,
+          phoneNumber: dto.phoneNumber ?? null,
+          position: dto.position ?? null,
+          bio: dto.bio ?? null,
+          photoUrl: dto.photoUrl ?? null,
         },
-        { anonymous: true },
+        anonymous ? { anonymous: true } : {},
       )
     },
   }

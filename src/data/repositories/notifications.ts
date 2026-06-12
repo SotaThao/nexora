@@ -3,14 +3,26 @@
  */
 
 import httpClient from '../../lib/httpClient'
-import type { NotificationRecord } from '../../types/domain'
+import type { NotificationRecord, NotificationsPage } from '../../types/domain'
 import type { NotificationApiDto } from '../../types/repositories'
 
 type HttpClient = typeof httpClient
 
+const NOTIFICATIONS_BASE = '/api/v1/Notifications'
+
 interface NotificationsListResponse {
   items?: NotificationApiDto[]
-  data?: NotificationApiDto[]
+  pageNumber?: number
+  totalPages?: number
+  totalCount?: number
+  hasPreviousPage?: boolean
+  hasNextPage?: boolean
+}
+
+interface NotificationsListParams {
+  pageNumber?: number
+  pageSize?: number
+  isRead?: boolean | null
 }
 
 interface UnreadCountResponse {
@@ -79,11 +91,10 @@ function normalizeNotification(item: NotificationApiDto): NotificationRecord {
     id: item.id ?? '',
     type,
     title: item.title || '',
-    body,
+    message,
+    body: message,
     actionUrl: item.actionUrl ?? null,
-    referenceId: item.referenceId ?? null,
     isRead,
-    createdAt,
     read: isRead,
     message: body,
     time: new Date(createdAt).toLocaleString(),
@@ -94,25 +105,44 @@ function normalizeNotification(item: NotificationApiDto): NotificationRecord {
 
 export function createNotificationsRepository(client: HttpClient = httpClient) {
   return {
-    async list(): Promise<NotificationRecord[]> {
+    async listPaged({
+      pageNumber = 0,
+      pageSize = 20,
+      isRead = null,
+    }: NotificationsListParams = {}): Promise<NotificationsPage> {
+      const params: Record<string, string | number> = {
+        PageNumber: pageNumber,
+        PageSize: pageSize,
+      }
+      if (isRead !== null && isRead !== undefined) {
+        params.IsRead = String(isRead)
+      }
       const response = await client.get<NotificationApiDto[] | NotificationsListResponse>(
-        '/api/v1/notifications',
+        NOTIFICATIONS_BASE,
+        { params },
       )
-      const items = Array.isArray(response) ? response : (response.items || response.data || [])
-      return items.map(normalizeNotification)
+      return normalizeNotificationsPage(response, pageNumber)
+    },
+
+    async list(): Promise<NotificationRecord[]> {
+      const page = await this.listPaged({ pageNumber: 0, pageSize: 50 })
+      return page.items
     },
 
     async unreadCount(): Promise<number> {
-      const response = await client.get<number | UnreadCountResponse>('/api/v1/notifications/unread-count')
-      return typeof response === 'number' ? response : (response.count || 0)
+      const response = await client.get<number | UnreadCountResponse>(
+        `${NOTIFICATIONS_BASE}/unread-count`,
+      )
+      if (typeof response === 'number') return response
+      return response.count ?? 0
     },
 
     async markRead(id: string): Promise<void> {
-      await client.put(`/api/v1/notifications/${id}/read`)
+      await client.put(`${NOTIFICATIONS_BASE}/${id}/read`)
     },
 
     async markAllRead(): Promise<void> {
-      await client.put('/api/v1/notifications/read-all')
+      await client.put(`${NOTIFICATIONS_BASE}/read-all`)
     },
 
     async add(notification: NotificationRecord): Promise<NotificationRecord> {

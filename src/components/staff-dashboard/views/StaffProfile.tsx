@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
+import { useStaffLinkedBusinesses } from '../hooks/useStaffLinkedBusinesses'
 import { useOutletContext } from 'react-router-dom'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
@@ -26,7 +27,8 @@ const readOnlyCls = 'w-full rounded-xl border border-nexoraBorder bg-nexoraCanva
 
 export default function StaffProfile() {
   const { currentLanguage, t } = useTranslation()
-  const { staffMember, account, linkedBusinesses, saveProfile, setBusinessDisplayName } = useStaffAccount()
+  const { staffMember, account, saveProfile, setBusinessDisplayName } = useStaffAccount()
+  const { linkedBusinesses } = useStaffLinkedBusinesses()
   const { onLogout } = useOutletContext<LooseObject>()
 
   const [activeTab, setActiveTab] = useState('profile') // profile | kyc

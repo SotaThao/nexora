@@ -38,15 +38,24 @@
       "no_pending": "No pending confirmations.",
       "confirm": "Confirm",
       "confirm_all": "Confirm All Received",
+      "confirm_success": "Tip receipt confirmed.",
+      "confirm_failed": "Could not confirm tip receipt.",
+      "confirm_partial": "Confirmed {{count}} tip(s). Some items could not be confirmed.",
       "linked_businesses": "Linked Businesses",
       "display_name": "Display name"
     },
     "tips": {
       "activity": "Tip Activity",
       "empty": "No tips yet.",
+      "total_count": "{{count}} tips",
+      "page_of": "Page {{page}} of {{total}}",
+      "multi_staff": "Multi-staff",
       "status": {
-        "pending": "Pending",
+        "initiated": "Initiated",
+        "confirmed": "Confirmed",
+        "skipped": "Skipped",
         "completed": "Completed",
+        "pending": "Pending",
         "verified": "Verified"
       },
       "ai_insight": "AI Insight",
@@ -55,6 +64,7 @@
     "pay": {
       "title": "Payment Methods",
       "owner_note": "You manage your own receiving methods. The business owner cannot edit this section.",
+      "empty": "No payment methods available.",
       "not_set": "Not set",
       "handle_placeholder": "Enter handle / account",
       "save": "Save Payment Methods",
@@ -83,6 +93,8 @@
     },
     "notifications": {
       "empty": "No notifications.",
+      "mark_all_read": "Mark all read",
+      "generic_title": "Notification",
       "tip_title": "New tip marked sent",
       "tip_message": "${amount} via {method} — confirm receipt",
       "review_title": "New {rating}-star review",
@@ -154,6 +166,8 @@
   "payment_methods": {
     "update_success": "Payment method updated.",
     "update_failed": "Failed to update payment method",
+    "toggle_enabled": "Payment method enabled.",
+    "toggle_disabled": "Payment method disabled.",
     "toggle_failed": "Failed to toggle payment method"
   },
   "login": {
@@ -284,6 +298,14 @@
     "payout_input_label": "Your {wallet} {field} *",
     "qr_code_optional": "QR Code (optional)",
     "take_photo": "Take photo",
+    "capture_photo": "Capture",
+    "camera_capture_title": "Take photo",
+    "camera_capture_hint": "Position the QR code in the frame, then tap Capture.",
+    "camera_starting": "Starting camera...",
+    "camera_not_available": "No camera found on this device.",
+    "camera_permission_denied": "Camera access was blocked.",
+    "camera_use_file_instead": "Use Choose file to upload an image from your device instead.",
+    "camera_fallback_hint": "Desktop PCs without a webcam cannot use Take photo. Choose file works on any device.",
     "choose_file": "Choose file",
     "uploader_hint": "You can either take a photo or upload from your device. Accepted formats: JPG, PNG, JPEG. Max size: 5MB per file.",
     "payout_warning": "Please enter the correct receiving account information. This will be used to receive payments.",
@@ -1399,6 +1421,9 @@
       "views": {
         "StaffMyQR": {
           "linkCopiedToClipboard": "Link copied to clipboard!",
+          "staffCodeUnavailable": "Staff ID is not available yet. Please try again in a moment.",
+          "shareFailed": "Could not share the link. Please copy it instead.",
+          "copyFailed": "Could not copy the link.",
           "joinRequestViaQr": "Join Request (via QR)",
           "justNow": "Just now",
           "unlinked": "Unlinked",
@@ -1415,8 +1440,13 @@
           "scanSalonQrCode": "Scan Salon QR Code",
           "scanTheSalonReferral": "Scan the salon referral QR code to actively submit your join request",
           "orEnterInviteLink": "Or Enter Invite Link / Business Name",
-          "pasteSalonInviteLink": "Paste salon invite link or name...",
+          "pasteSalonInviteLink": "Paste salon invite link or referral code...",
           "send": "Send",
+          "referralCodeRequired": "Please enter a salon invite link or referral code.",
+          "profileReferralCodeMissing": "Your profile does not have a referral code yet. Please contact support.",
+          "joinRequestSent": "Join request sent successfully.",
+          "joinRequestFailed": "Failed to send join request. Please try again.",
+          "alreadyLinkedOrRequested": "You have already requested or are already linked to this business.",
           "simulateQrScan": "Simulate QR Scan",
           "personalTippingQr": "Personal Tipping QR",
           "tippingLink": "Tipping Link",
@@ -1486,10 +1516,14 @@
         "StaffReviews": {
           "reviewsAndRatings": "Reviews & Ratings",
           "customerReviews": "Customer Reviews",
+          "averageRating": "Average Rating",
+          "totalReviews": "Total Reviews",
           "identitySecured": "IDENTITY SECURED",
           "noReviewsReceivedYet": "No reviews received yet.",
           "anonymousCustomer": "Anonymous Customer",
-          "internal": "Internal"
+          "ratingOnly": "Rating only — no comment.",
+          "pageOf": "Page {{page}} of {{total}}",
+          "internal": "Customer identities are protected. You see ratings and feedback only."
         }
       }
     },

@@ -1,5 +1,5 @@
 // StaffPay — staff self-managed payout methods (owner cannot edit these).
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Bitcoin, Edit2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import {
@@ -7,7 +7,8 @@ import {
   useUpdateStaffPaymentMethod,
   useToggleStaffPaymentMethod
 } from '../../../data/hooks/useStaffPaymentMethods'
-import { PAYOUT_METHODS } from '../data/staffMockData'
+import type { PaymentMethodDto } from '../../../types/domain'
+import { SkeletonLayout } from '../../ui/skeleton'
 import PayoutSetupModal from '../../dashboard/modals/PayoutSetupModal'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
@@ -72,47 +73,70 @@ function Toggle({ on, onChange, label }) {
 }
 
 export default function StaffPay() {
-  const { t, currentLanguage } = useTranslation()
-  const { data: apiPaymentMethods = [] } = useStaffPaymentMethods()
+  const { t } = useTranslation()
+  const {
+    data: apiPaymentMethods = [],
+    isPending,
+    isFetching,
+  } = useStaffPaymentMethods()
   const toggleMutation = useToggleStaffPaymentMethod()
   const updateMutation = useUpdateStaffPaymentMethod()
 
-  const [activeWalletKey, setActiveWalletKey] = useState<any | null>(null)
+  const [activeMethod, setActiveMethod] = useState<PaymentMethodDto | null>(null)
 
-  const getMethod = (key) => apiPaymentMethods.find(m => m.type?.toLowerCase() === key.toLowerCase()) || { type: key, isActive: false, isConfigured: false, accountInfo: '', imageUrl: '', id: undefined, accountName: null }
+  const paymentMethods = useMemo(
+    () => apiPaymentMethods.filter((method) => Boolean(method.id && method.uiKey)),
+    [apiPaymentMethods],
+  )
 
-  const handleToggleMethod = (key, enabledValue) => {
-    const methodData = getMethod(key)
-    if (!methodData.id) return // Normally UI shouldn't allow toggling unconfigured, but backend protects it anyway
-    toggleMutation.mutate(methodData.id)
+  const isLoading = isPending || isFetching
+
+  const handleToggleMethod = (method: PaymentMethodDto) => {
+    if (!method.id) return
+    toggleMutation.mutate(method.id)
   }
 
-  const handleEditPayout = (key) => {
-    setActiveWalletKey(key)
+  const handleEditPayout = (method: PaymentMethodDto) => {
+    setActiveMethod(method)
   }
 
   const handleCloseModal = () => {
-    setActiveWalletKey(null)
+    setActiveMethod(null)
   }
 
-  const handleSavePayout = (value, qrCode, accountName) => {
-    if (!activeWalletKey) return
-    const methodData = getMethod(activeWalletKey)
-    if (!methodData.id) return
+  const handleSavePayout = (value, qrCode, _accountName, qrFile) => {
+    if (!activeMethod?.id) return
     updateMutation.mutate(
-      { id: methodData.id, accountInfo: value.trim(), imageUrl: qrCode },
-      { 
+      {
+        id: activeMethod.id,
+        accountInfo: value.trim(),
+        imageUrl: qrFile ? null : (qrCode || null),
+        imageFile: qrFile || undefined,
+      },
+      {
         onSuccess: () => {
-          setActiveWalletKey(null)
-          if (!methodData.isActive) {
-            toggleMutation.mutate(methodData.id)
+          setActiveMethod(null)
+          if (!activeMethod.isActive) {
+            toggleMutation.mutate(activeMethod.id!)
           }
-        } 
-      }
+        },
+      },
     )
   }
 
-  const activeMethod = activeWalletKey ? getMethod(activeWalletKey) : null
+  if (isLoading) {
+    return (
+      <SkeletonLayout
+        blocks={[
+          {
+            type: 'panel',
+            rows: 5,
+            listProps: { showAction: true, lines: 2 },
+          },
+        ]}
+      />
+    )
+  }
 
   return (
     <div className="space-y-4">
@@ -120,65 +144,70 @@ export default function StaffPay() {
         <h3 className="text-base font-extrabold text-nexoraText">{t('staff_dashboard.pay.title')}</h3>
         <p className="mt-1 text-xs text-nexoraMuted">{t('staff_dashboard.pay.owner_note')}</p>
 
-        <div className="mt-4 divide-y divide-nexoraBorder">
-          {PAYOUT_METHODS.map((item) => {
-            const method = getMethod(item.key)
-            return (
-              <div key={item.key} className="flex items-center justify-between py-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  {/* Toggle Switch */}
-                  <Toggle
-                    on={!!method.isActive}
-                    onChange={(v) => handleToggleMethod(item.key, v)}
-                    label={`Toggle ${item.label}`}
-                  />
+        {paymentMethods.length === 0 ? (
+          <p className="mt-4 py-6 text-center text-xs text-nexoraSubtle">
+            {t('staff_dashboard.pay.empty')}
+          </p>
+        ) : (
+          <div className="mt-4 divide-y divide-nexoraBorder">
+            {paymentMethods.map((method) => {
+              const uiKey = method.uiKey || ''
+              const label = method.name || method.type
+              return (
+                <div key={method.id} className="flex items-center justify-between py-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Toggle
+                      on={!!method.isActive}
+                      onChange={() => handleToggleMethod(method)}
+                      label={`Toggle ${label}`}
+                    />
 
-                  {/* Logo and Label */}
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="h-7 w-7 rounded-lg bg-nexoraCanvas border border-nexoraBorder flex items-center justify-center shrink-0">
-                      {PayoutLogos[item.key] || <Bitcoin className="h-[18px] w-[18px] text-amber-500 shrink-0" />}
-                    </span>
-                    <div className="min-w-0">
-                      <div className="text-xs font-bold text-nexoraText">{item.label}</div>
-                      {method.isConfigured ? (
-                        <div className="text-[10px] text-nexoraMuted font-mono mt-0.5 truncate max-w-[120px] sm:max-w-[200px]">
-                          {method.accountInfo}
-                        </div>
-                      ) : (
-                        <div className="text-[10px] text-slate-300 italic font-medium mt-0.5">
-                          {t('staff_dashboard.pay.not_set')}
-                        </div>
-                      )}
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-nexoraBorder bg-nexoraCanvas">
+                        {PayoutLogos[uiKey] || <Bitcoin className="h-[18px] w-[18px] shrink-0 text-amber-500" />}
+                      </span>
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-nexoraText">{label}</div>
+                        {method.isConfigured && method.accountInfo ? (
+                          <div className="mt-0.5 max-w-[120px] truncate font-mono text-[10px] text-nexoraMuted sm:max-w-[200px]">
+                            {method.accountInfo}
+                          </div>
+                        ) : (
+                          <div className="mt-0.5 text-[10px] font-medium italic text-slate-300">
+                            {t('staff_dashboard.pay.not_set')}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Edit button */}
-                <button
-                  type="button"
-                  onClick={() => handleEditPayout(item.key)}
-                  aria-label={`Edit ${item.label} Payout Account`}
-                  className="flex items-center gap-1 text-[10px] font-bold text-amber-600 hover:text-amber-700 transition shrink-0 ml-2"
-                >
-                  <Edit2 className="h-3 w-3" />
-                  <span>{t('components.staff_dashboard.views.StaffPay.editAccount')}</span>
-                </button>
-              </div>
-            )
-          })}
-        </div>
+                  <button
+                    type="button"
+                    onClick={() => handleEditPayout(method)}
+                    aria-label={`Edit ${label} Payout Account`}
+                    className="ml-2 flex shrink-0 items-center gap-1 text-[10px] font-bold text-amber-600 transition hover:text-amber-700"
+                  >
+                    <Edit2 className="h-3 w-3" />
+                    <span>{t('components.staff_dashboard.views.StaffPay.editAccount')}</span>
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </section>
 
-      {activeWalletKey && (
+      {activeMethod?.uiKey && (
         <PayoutSetupModal
-          open={!!activeWalletKey}
-          walletKey={activeWalletKey}
-          staffName={activeMethod?.accountName || ''}
-          initialValue={activeMethod?.accountInfo || ''}
-          initialQrCode={activeMethod?.imageUrl || ''}
+          open={Boolean(activeMethod)}
+          walletKey={activeMethod.uiKey}
+          staffName={activeMethod.accountName || ''}
+          initialValue={activeMethod.accountInfo || ''}
+          initialQrCode={activeMethod.imageUrl || ''}
           onClose={handleCloseModal}
           onSubmit={handleSavePayout}
           readOnly={false}
+          isSaving={updateMutation.isPending}
         />
       )}
     </div>
