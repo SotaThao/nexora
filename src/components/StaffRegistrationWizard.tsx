@@ -168,7 +168,6 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
               handleRegisterSubmit={reg.handleRegisterSubmit}
               handleVerifyOtp={reg.handleVerifyOtp}
               handleResendOtp={reg.handleResendOtp}
-              autoFillOtp={reg.autoFillOtp}
               setStep={reg.setStep}
               setJoinPath={reg.setJoinPath}
               setShowOtpInput={reg.setShowOtpInput}
@@ -218,7 +217,6 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
               staffId={reg.staffId}
               currentLanguage={reg.currentLanguage}
               t={reg.t}
-              autoFillPayments={reg.autoFillPayments}
               handleToggleMethod={reg.handleToggleMethod}
               handleEditPayoutAccount={reg.handleEditPayoutAccount}
               handleActivateProfile={reg.handleActivateProfile}

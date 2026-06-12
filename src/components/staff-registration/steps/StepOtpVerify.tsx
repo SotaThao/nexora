@@ -19,7 +19,6 @@ export default function StepOtpVerify({
   termsAccepted, setTermsAccepted,
   handleRegisterSubmit,
   handleVerifyOtp,
-  autoFillOtp,
   setStep,
   setJoinPath,
   setShowOtpInput,
@@ -30,41 +29,6 @@ export default function StepOtpVerify({
   const [showTermsModal, setShowTermsModal] = useState(false)
   const [modalType, setModalType] = useState('terms')
 
-  useEffect(() => {
-    // Demo/simulator only — never auto-fill or auto-submit during real onboarding.
-    if (showOtpInput && isDemoToolsEnabled) {
-      let isSubscribed = true;
-      const targetOtp = '1234';
-      
-      const simulate = async () => {
-        // Delay 2 seconds as requested
-        await new Promise(r => setTimeout(r, 1500));
-        if (!isSubscribed) return;
-
-        for (let i = 1; i <= targetOtp.length; i++) {
-          if (!isSubscribed) return;
-          setOtpCode(targetOtp.slice(0, i));
-          await new Promise(r => setTimeout(r, 150)); // typing delay
-        }
-        
-        if (!isSubscribed) return;
-        await new Promise(r => setTimeout(r, 400));
-        
-        if (isSubscribed) {
-          handleVerifyOtp(null);
-        }
-      };
-      
-      // Only run simulation if the input is currently empty
-      if (!otpCode) {
-        simulate();
-      }
-      
-      return () => {
-        isSubscribed = false;
-      };
-    }
-  }, [showOtpInput, isDemoToolsEnabled]);
 
   return (
     <>
@@ -290,19 +254,7 @@ export default function StepOtpVerify({
             </div>
           </div>
 
-          {isDemoToolsEnabled && (
-            <div className="p-3 border border-dashed border-nexoraBrand/40 bg-nexoraBrandSoft/20 rounded-xl flex items-center justify-between gap-3 max-w-xs mx-auto">
-              <span className="text-[10px] text-nexoraBrand font-bold">Simulator Helper:</span>
-              <button
-                type="button"
-                onClick={autoFillOtp}
-                className="px-2.5 py-1 bg-nexoraBrand text-white rounded text-[10px] font-black uppercase hover:bg-opacity-90 shadow-sm"
-              >
-                Auto-fill (1234)
-              </button>
-            </div>
-          )}
-
+          
           <div className="pt-4 flex gap-3 border-t border-nexoraRule">
             <button
               type="button"

@@ -6,7 +6,6 @@ export default function StepPayoutSetup({
   payouts,
   handleToggleMethod,
   handleEditPayoutAccount,
-  autoFillPayments,
   generatedStaffId,
   setCurrentStep,
   handlePersonalRegisterSubmit,
@@ -24,13 +23,6 @@ export default function StepPayoutSetup({
             {t('components.register.steps.StepPayoutSetup.enableAndConfigureYour')}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={autoFillPayments}
-          className="px-3 py-1.5 bg-nexoraBrand/10 hover:bg-nexoraBrand/20 text-nexoraBrand border border-nexoraBrand/20 rounded-lg text-[10px] font-extrabold uppercase tracking-wider transition-all"
-        >
-          ⚡ {t('components.register.steps.StepPayoutSetup.autoFill')}
-        </button>
       </div>
 
       <div className="space-y-1 divide-y divide-nexoraBorder max-h-[300px] overflow-y-auto pr-1">

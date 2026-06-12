@@ -329,28 +329,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     setVlinkpayTimeout(timer)
   }
 
-  const autoFillPayments = () => {
-    const defaultName = nickname.trim() || 'Lisa Tran'
-    const bankWireValue = serializeBankWireAccount({
-      beneficiaryName: defaultName,
-      bankName: 'Chase',
-      routingNumber: '021000021',
-      accountNumber: '1234567890',
-      bankAddress: '270 Park Ave',
-      city: 'New York',
-      state: 'NY',
-      zipCode: '10017',
-      country: 'United States',
-    })
-    setPayouts({
-      zelle: { enabled: true, value: email || 'lisa@example.com', qrCode: '', accountName: defaultName },
-      bankwire: { enabled: true, value: bankWireValue, qrCode: '', accountName: defaultName },
-      paypal: { enabled: true, value: email || 'lisa@example.com', qrCode: '', accountName: defaultName },
-      venmo: { enabled: true, value: `@${nickname.toLowerCase().replace(/[^a-z]/g, '') || 'lisa'}-nails`, qrCode: '', accountName: defaultName },
-      cashapp: { enabled: true, value: `$${nickname.toLowerCase().replace(/[^a-z]/g, '') || 'lisa'}nails`, qrCode: '', accountName: defaultName },
-      applecash: { enabled: true, value: phone || '408-555-2345', qrCode: '', accountName: defaultName }
-    })
-  }
+  const autoFillPayments = () => {}
 
   const handleToggleMethod = (key) => {
     setPayouts(prev => {
@@ -685,7 +664,6 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     handleStep1Next,
     handleVerifyOtp,
     handleVlinkpayIdChange,
-    autoFillPayments,
     handleToggleMethod,
     handleEditPayoutAccount,
     savePayoutAccount,
