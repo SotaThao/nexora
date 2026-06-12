@@ -1,20 +1,14 @@
 import { useState, useEffect } from 'react'
 import { X, Camera, FolderOpen, AlertTriangle, Bitcoin } from 'lucide-react'
 import { useTranslation, renderLabel } from '../../../contexts/LanguageContext'
-import CameraCaptureModal from '../../ui/CameraCaptureModal'
+import BankWireAccountForm from '../../payout/BankWireAccountForm'
+import {
+  getBankWireBeneficiaryName,
+  isBankWireAccountComplete,
+} from '../../payout/bankWireAccount'
 
-function PayoutSetupModal({
-  open,
-  walletKey,
-  staffName,
-  initialValue,
-  initialQrCode,
-  onClose,
-  onSubmit,
-  readOnly = false,
-  isSaving = false,
-}) {
-  const { t, currentLanguage } = useTranslation()
+function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrCode, onClose, onSubmit, readOnly = false }) {
+  const { t } = useTranslation()
   const [value, setValue] = useState(initialValue || '')
   const [qrCode, setQrCode] = useState(initialQrCode || '')
   const [qrFile, setQrFile] = useState(null)
@@ -39,6 +33,7 @@ function PayoutSetupModal({
   }, [qrCode])
 
   if (!open) return null
+  const isBankWire = walletKey === 'bankwire'
 
   const walletNames = {
     zelle: 'Zelle',
@@ -63,14 +58,14 @@ function PayoutSetupModal({
   }
 
   const walletPlaceholders = {
-    zelle: 'Enter Zelle email/phone...',
-    bankwire: 'Account & Routing numbers',
-    paypal: 'email@paypal.com',
+    zelle: t('components.dashboard.modals.PayoutSetupModal.placeholderZelle'),
+    bankwire: t('components.dashboard.modals.PayoutSetupModal.placeholderBankWire'),
+    paypal: t('components.dashboard.modals.PayoutSetupModal.placeholderPaypal'),
     venmo: '@username-venmo',
     cashapp: '$cashtag',
-    applecash: 'Enter phone number...',
-    vlinkpay: 'Enter VLINKPAY ID (e.g. VLP-0123-MIA)...',
-    crypto: 'Enter BTC/ETH/USDT address...'
+    applecash: t('components.dashboard.modals.PayoutSetupModal.placeholderAppleCash'),
+    vlinkpay: t('components.dashboard.modals.PayoutSetupModal.placeholderVlinkpay'),
+    crypto: t('components.dashboard.modals.PayoutSetupModal.placeholderCrypto')
   }
 
   const handleFileChange = (e) => {
@@ -108,7 +103,15 @@ function PayoutSetupModal({
   }
 
   const handleSubmit = () => {
-    if (readOnly || isSaving) return
+    if (readOnly) return
+    if (isBankWire) {
+      if (!isBankWireAccountComplete(value)) {
+        setError(t('components.payout.bankWireForm.completeRequired'))
+        return
+      }
+      onSubmit(value, '', getBankWireBeneficiaryName(value) || accountName)
+      return
+    }
     if (!value.trim()) {
       setError(t('setup.errors.field_required'))
       return
@@ -169,16 +172,18 @@ function PayoutSetupModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 text-left">
-      <div data-testid="payout-setup-modal" className="bg-white rounded-3xl border border-slate-100 max-w-sm w-full shadow-2xl p-6 relative overflow-hidden animate-scaleUp space-y-4.5">
+      <div data-testid="payout-setup-modal" className={`bg-white rounded-3xl border border-slate-100 w-full shadow-2xl p-6 relative overflow-hidden animate-scaleUp space-y-4.5 ${isBankWire ? 'max-w-md' : 'max-w-sm'}`}>
         <div className="flex items-center gap-3.5 border-b border-slate-100 pb-3">
           <span className="h-11 w-11 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 shadow-sm">
             {PayoutLogos[walletKey]}
           </span>
           <div>
             <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">
-              {currentLanguage === 'vi'
-                ? `TùI KHO?N ${walletNames[walletKey]?.toUpperCase()}`
-                : `${walletNames[walletKey]?.toUpperCase()} ACCOUNT`}
+              {isBankWire
+                ? t('components.payout.bankWireForm.title')
+                : t('components.dashboard.modals.PayoutSetupModal.walletAccountTitle', {
+                  wallet: walletNames[walletKey]?.toUpperCase(),
+                })}
             </h3>
             <p className="text-[10px] text-slate-400 font-medium">
               {t('components.dashboard.modals.PayoutSetupModal.specifyReceivingTargetIdentifier')}
@@ -187,6 +192,20 @@ function PayoutSetupModal({
         </div>
 
         <div className="space-y-4">
+          {isBankWire && (
+            <BankWireAccountForm
+              value={value}
+              onChange={(nextValue) => {
+                setValue(nextValue)
+                setError('')
+              }}
+              onBeneficiaryNameChange={setAccountName}
+              disabled={readOnly}
+              error={error}
+            />
+          )}
+          {!isBankWire && (
+          <>
           <div>
             <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
               {renderLabel(t('components.dashboard.modals.PayoutSetupModal.accountIdentifier'))}
@@ -264,12 +283,16 @@ function PayoutSetupModal({
               </p>
             )}
           </div>
+          </>
+          )}
 
           <div className="rounded-lg bg-blue-50/50 border border-blue-100 p-3 text-[10.5px] leading-relaxed text-blue-800 flex gap-2">
             <AlertTriangle className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
             <span>
               {readOnly
                 ? (t('components.dashboard.modals.PayoutSetupModal.thisInformationWasEntered'))
+                : isBankWire
+                  ? (t('components.payout.bankWireForm.warning'))
                 : (t('setup.payout_warning'))}
             </span>
           </div>
@@ -280,7 +303,7 @@ function PayoutSetupModal({
             onClick={onClose}
             className={`px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider rounded-lg transition ${readOnly ? 'w-full text-center' : ''}`}
           >
-            {t(readOnly ? 'setup.close' : 'common.cancel')}
+            {t(readOnly || isBankWire ? 'setup.close' : 'common.cancel')}
           </button>
           {!readOnly && (
             <button
@@ -288,7 +311,7 @@ function PayoutSetupModal({
               disabled={isSaving}
               className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm transition"
             >
-              {isSaving ? t('common.saving') : t('components.dashboard.modals.PayoutSetupModal.save')}
+              {t(isBankWire ? 'common.update' : 'components.dashboard.modals.PayoutSetupModal.save')}
             </button>
           )}
         </div>

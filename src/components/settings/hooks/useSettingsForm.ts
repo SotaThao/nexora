@@ -213,6 +213,7 @@ export default function useSettingsForm({
         next = {
           ...next,
           fullName: setupData.businessInfo?.ownerName || next.fullName || '',
+          avatar: next.avatar || setupData.businessInfo?.logo || null,
           businessName: setupData.businessInfo?.name || '',
           businessPhone: setupData.businessInfo?.phone || '',
           businessWebsite: setupData.businessInfo?.website || '',

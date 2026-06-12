@@ -125,6 +125,7 @@
     "cancel": "Cancel",
     "confirm": "Confirm",
     "save": "Save",
+    "update": "Update",
     "delete": "Delete",
     "edit": "Edit",
     "copy": "Copy",
@@ -340,8 +341,8 @@
       "qr_nfc": "QR / NFC Devices",
       "analytics": "Analytics",
       "settings": "Settings",
-      "business_setting": "Business Setting",
-      "kyb": "Business Verification",
+      "business_setting": "Setting",
+      "kyb": "KYB",
       "support": "Support"
     },
     "header": {
@@ -959,6 +960,23 @@
     "touchpoint_not_found_desc": "This touch point could not be loaded."
   },
   "components": {
+    "payout": {
+      "bankWireForm": {
+        "title": "Set Up Bank Account",
+        "beneficiaryName": "Beneficiary Name",
+        "bankName": "Bank Name",
+        "routingNumber": "ABA/Routing Number",
+        "accountNumber": "Account Number",
+        "bankAddress": "Bank Address",
+        "city": "City",
+        "state": "State",
+        "zipCode": "Zip Code",
+        "country": "Country",
+        "selectCountry": "Select your country",
+        "warning": "Please enter the correct receiving account information. This will be used to receive payments.",
+        "completeRequired": "Please complete all bank account fields."
+      }
+    },
     "customer_flow": {
       "hooks": {
         "useCustomerFlow": {
@@ -1040,6 +1058,13 @@
           "phExampleRole": "e.g. Nail Tech"
         },
         "PayoutSetupModal": {
+          "walletAccountTitle": "{wallet} ACCOUNT",
+          "placeholderZelle": "Enter Zelle email/phone...",
+          "placeholderBankWire": "Account & Routing numbers",
+          "placeholderPaypal": "email@paypal.com",
+          "placeholderAppleCash": "Enter phone number...",
+          "placeholderVlinkpay": "Enter VLINKPAY ID (e.g. MIA0123)...",
+          "placeholderCrypto": "Enter BTC/ETH/USDT address...",
           "specifyReceivingTargetIdentifier": "Specify receiving target identifier",
           "accountIdentifier": "Account Identifier *",
           "qrCodeOptional": "QR Code (optional)",
@@ -1059,15 +1084,16 @@
           "linkRequestBtn": "Send Link Request",
           "vlinkpayVerified": "VLINKPAY verified",
           "nexoraVerified": "NEXORA verified",
+          "profileVerified": "Staff profile verified",
           "viewAllReviews": "View all reviews",
           "viewAccount": "View Account",
           "decline": "Decline",
           "approveAccept": "Approve / Accept",
           "remove_photo": "Remove photo",
           "review_count": "{count} reviews",
-          "phExampleVlp1": "e.g. VLP-0155-ASH",
-          "phExampleVlp2": "e.g. VLP-8893-VL",
-          "phExampleStaffId": "e.g. NEX-STAFF-LISA1102",
+          "phExampleVlp1": "e.g. ASH0155",
+          "phExampleVlp2": "e.g. VL8893",
+          "phExampleStaffId": "e.g. LISA1102",
           "phFullName": "Mia Tran",
           "phNickname": "Mia T.",
           "phPosition": "Nail Tech"
@@ -1079,6 +1105,7 @@
           "pointTheCameraAt": "Point the camera at the QR code, or choose a mockup scan profile below.",
           "simulateQrScan": "Simulate QR Scan",
           "simulateSuccessfulScan": "Simulate Successful Scan",
+          "simulateProfileLabel": "{name} ({code})",
           "cancel": "CANCEL"
         },
         "StaffReviewsDetailModal": {
@@ -1368,6 +1395,7 @@
         }
       },
       "PayoutSetupModal": {
+        "walletAccountTitle": "{wallet} ACCOUNT",
         "specifyReceivingTargetIdentifier": "Specify receiving target identifier",
         "accountIdentifier": "Account Identifier",
         "qrCodeOptional": "QR Code (optional)",
@@ -1753,7 +1781,9 @@
   },
   "staff_registration": {
     "link": {
-      "incorrect_password": "Incorrect password."
+      "incorrect_password": "Incorrect password.",
+      "business_account_not_allowed": "Only personal accounts can accept salon invitations. Please sign in with a personal account.",
+      "onboarding_required": "Please complete your profile setup before joining this salon."
     }
   }
 }

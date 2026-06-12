@@ -2,9 +2,14 @@ import React, { useState, useEffect } from 'react'
 import { AlertTriangle, Camera, FolderOpen, X } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { WalletLogos } from './constants'
+import BankWireAccountForm from '../payout/BankWireAccountForm'
+import {
+  getBankWireBeneficiaryName,
+  isBankWireAccountComplete,
+} from '../payout/bankWireAccount'
 
 export default function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrCode, onClose, onSubmit }) {
-  const { t, currentLanguage } = useTranslation()
+  const { t } = useTranslation()
   const [value, setValue] = useState(initialValue || '')
   const [qrCode, setQrCode] = useState(initialQrCode || '')
   const [accountName, setAccountName] = useState(staffName || '')
@@ -19,6 +24,7 @@ export default function PayoutSetupModal({ open, walletKey, staffName, initialVa
   }, [open, walletKey, initialValue, initialQrCode, staffName])
 
   if (!open) return null
+  const isBankWire = walletKey === 'bankwire'
 
   const walletNames = {
     zelle: 'Zelle',
@@ -64,6 +70,14 @@ export default function PayoutSetupModal({ open, walletKey, staffName, initialVa
   }
 
   const handleSubmit = () => {
+    if (isBankWire) {
+      if (!isBankWireAccountComplete(value)) {
+        setError(t('components.payout.bankWireForm.completeRequired'))
+        return
+      }
+      onSubmit(value, '', getBankWireBeneficiaryName(value) || accountName)
+      return
+    }
     if (!value.trim()) {
       setError(t('setup.errors.field_required'))
       return
@@ -82,16 +96,18 @@ export default function PayoutSetupModal({ open, walletKey, staffName, initialVa
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 text-left">
-      <div className="bg-white rounded-3xl border border-slate-100 max-w-sm w-full shadow-2xl p-6 relative overflow-hidden animate-scaleUp space-y-4.5">
+      <div className={`bg-white rounded-3xl border border-slate-100 w-full shadow-2xl p-6 relative overflow-hidden animate-scaleUp space-y-4.5 ${isBankWire ? 'max-w-md' : 'max-w-sm'}`}>
         <div className="flex items-center gap-3.5 border-b border-slate-100 pb-3">
           <span className="h-11 w-11 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 shadow-sm">
             {WalletLogos[walletKey]}
           </span>
           <div>
             <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">
-              {currentLanguage === 'vi'
-                ? `TÀI KHOẢN ${walletNames[walletKey]?.toUpperCase()}`
-                : `${walletNames[walletKey]?.toUpperCase()} ACCOUNT`}
+              {isBankWire
+                ? t('components.payout.bankWireForm.title')
+                : t('components.setup_wizard.PayoutSetupModal.walletAccountTitle', {
+                  wallet: walletNames[walletKey]?.toUpperCase(),
+                })}
             </h3>
             <p className="text-[10px] text-slate-400 font-medium">
               {t('components.setup_wizard.PayoutSetupModal.specifyReceivingTargetIdentifier')}
@@ -100,6 +116,19 @@ export default function PayoutSetupModal({ open, walletKey, staffName, initialVa
         </div>
 
         <div className="space-y-4">
+          {isBankWire && (
+            <BankWireAccountForm
+              value={value}
+              onChange={(nextValue) => {
+                setValue(nextValue)
+                setError('')
+              }}
+              onBeneficiaryNameChange={setAccountName}
+              error={error}
+            />
+          )}
+          {!isBankWire && (
+          <>
           <div>
             <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
               {t('components.setup_wizard.PayoutSetupModal.accountIdentifier')}
@@ -175,11 +204,13 @@ export default function PayoutSetupModal({ open, walletKey, staffName, initialVa
               </p>
             )}
           </div>
+          </>
+          )}
 
           <div className="rounded-lg bg-blue-50/50 border border-blue-100 p-3 text-[10.5px] leading-relaxed text-blue-800 flex gap-2">
             <AlertTriangle className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
             <span>
-              {t('setup.payout_warning')}
+              {t(isBankWire ? 'components.payout.bankWireForm.warning' : 'setup.payout_warning')}
             </span>
           </div>
         </div>
@@ -189,13 +220,13 @@ export default function PayoutSetupModal({ open, walletKey, staffName, initialVa
             onClick={onClose}
             className="px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider rounded-lg transition"
           >
-            {t('components.setup_wizard.PayoutSetupModal.cancel')}
+            {t(isBankWire ? 'setup.close' : 'components.setup_wizard.PayoutSetupModal.cancel')}
           </button>
           <button
             onClick={handleSubmit}
             className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm transition"
           >
-            {t('components.setup_wizard.PayoutSetupModal.save')}
+            {t(isBankWire ? 'common.update' : 'components.setup_wizard.PayoutSetupModal.save')}
           </button>
         </div>
       </div>

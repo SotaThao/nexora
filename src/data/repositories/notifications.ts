@@ -29,40 +29,77 @@ interface UnreadCountResponse {
   count?: number
 }
 
+/**
+ * Notification types that should navigate to the staff tab and open
+ * the approve/review modal. Matched case-insensitively.
+ */
+const STAFF_NOTIFICATION_TYPES = new Set([
+  'staff_accepted_invite',
+  'staffacceptedinvite',
+  'stafflinkrequest',
+  'staff_link_request',
+  'staff_joined',
+  'staffjoined',
+])
+
+/**
+ * Notification types that map to a specific dashboard tab (linkTab).
+ * Add new mappings here as the API introduces new notification types.
+ */
+const TYPE_TO_LINK_TAB: Record<string, string> = {
+  tip_success: 'tips',
+  tip: 'tips',
+  review_good: 'reviews',
+  review: 'reviews',
+  feedback_alert: 'reviews',
+}
+
+/**
+ * Extract a staffId/referenceId from the notification's actionUrl.
+ * Supports patterns like:
+ *   /staff/{id}, /staff/links/{id}, /merchant/staff/{id}
+ */
+function extractStaffIdFromUrl(url: string | null | undefined): string | null {
+  if (!url) return null
+  const match = url.match(/\/(?:merchant\/)?staff(?:\/links)?\/([^/?#]+)/i)
+  return match?.[1] || null
+}
+
 function normalizeNotification(item: NotificationApiDto): NotificationRecord {
-  const isRead = Boolean(item.isRead ?? item.read)
-  const message = item.message ?? item.body ?? ''
-  const createdAt = item.createdAt ?? ''
+  const isRead = Boolean(item.isRead || item.read)
+  const body = item.body || item.message || ''
+  const createdAt = item.createdAt || new Date().toISOString()
+  const type = item.type || 'info'
+  const typeLower = type.toLowerCase()
+
+  // Derive linkTab and staffId for navigation on click
+  let linkTab: string | undefined
+  let staffId: string | undefined
+
+  if (STAFF_NOTIFICATION_TYPES.has(typeLower)) {
+    linkTab = 'staff'
+    staffId = item.referenceId || extractStaffIdFromUrl(item.actionUrl) || undefined
+  } else if (TYPE_TO_LINK_TAB[typeLower]) {
+    linkTab = TYPE_TO_LINK_TAB[typeLower]
+  } else if (item.actionUrl) {
+    // Fallback: try to derive linkTab from actionUrl path
+    const urlMatch = item.actionUrl.match(/\/dashboard\/([^/?#]+)/i)
+    if (urlMatch) linkTab = urlMatch[1]
+  }
+
   return {
     id: item.id ?? '',
-    type: item.type || 'info',
+    type,
     title: item.title || '',
     message,
     body: message,
     actionUrl: item.actionUrl ?? null,
     isRead,
     read: isRead,
-    readAt: item.readAt ?? null,
-    referenceId: item.referenceId ?? null,
-    createdAt: createdAt || undefined,
-    time: createdAt ? new Date(createdAt).toLocaleString() : '',
-  }
-}
-
-function normalizeNotificationsPage(
-  response: NotificationApiDto[] | NotificationsListResponse,
-  fallbackPageNumber = 0,
-): NotificationsPage {
-  const items = Array.isArray(response) ? response : (response.items ?? [])
-  const pageNumber = Array.isArray(response) ? fallbackPageNumber : (response.pageNumber ?? fallbackPageNumber)
-  const totalPages = Array.isArray(response) ? 1 : (response.totalPages ?? 0)
-  return {
-    items: items.map(normalizeNotification),
-    pageNumber,
-    totalPages,
-    totalCount: Array.isArray(response) ? items.length : (response.totalCount ?? items.length),
-    hasPreviousPage: Array.isArray(response) ? false : Boolean(response.hasPreviousPage),
-    hasNextPage: Array.isArray(response) ? false : Boolean(response.hasNextPage),
+    message: body,
+    time: new Date(createdAt).toLocaleString(),
+    ...(linkTab ? { linkTab } : {}),
+    ...(staffId ? { staffId } : {}),
   }
 }
 

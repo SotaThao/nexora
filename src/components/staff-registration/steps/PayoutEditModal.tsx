@@ -1,6 +1,7 @@
 import React from 'react'
 import { X, Camera, FolderOpen, AlertTriangle } from 'lucide-react'
 import { renderLabel, useTranslation } from '../../../contexts/LanguageContext'
+import BankWireAccountForm from '../../payout/BankWireAccountForm'
 
 const PayoutLogos = {
   zelle: (
@@ -53,6 +54,7 @@ export default function PayoutEditModal({
   const { t } = useTranslation()
 
   if (!editingMethod) return null
+  const isBankWire = editingMethod === 'bankwire'
 
   const walletNames = {
     zelle: 'Zelle',
@@ -83,7 +85,7 @@ export default function PayoutEditModal({
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl border border-slate-100 max-w-sm w-full shadow-2xl p-6 relative overflow-hidden animate-scaleUp text-left space-y-4.5">
+      <div className={`bg-white rounded-3xl border border-slate-100 w-full shadow-2xl p-6 relative overflow-hidden animate-scaleUp text-left space-y-4.5 ${isBankWire ? 'max-w-md' : 'max-w-sm'}`}>
 
         {/* Header */}
         <div className="flex items-center gap-3.5 border-b border-slate-100 pb-3">
@@ -92,7 +94,9 @@ export default function PayoutEditModal({
           </span>
           <div>
             <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">
-              {t('register.payout.configure_wallet', { wallet: walletNames[editingMethod]?.toUpperCase() })}
+              {isBankWire
+                ? t('components.payout.bankWireForm.title')
+                : t('register.payout.configure_wallet', { wallet: walletNames[editingMethod]?.toUpperCase() })}
             </h3>
             <p className="text-[10px] text-slate-400 font-medium">
               {t('components.staff_registration.steps.PayoutEditModal.specifyReceivingTargetIdentifier')}
@@ -103,6 +107,17 @@ export default function PayoutEditModal({
         {/* Form Content */}
         <form onSubmit={savePayoutAccount} className="space-y-4">
           {/* Account Identifier Input */}
+          {isBankWire ? (
+            <BankWireAccountForm
+              value={editValue}
+              onChange={(nextValue) => {
+                setEditValue(nextValue)
+                setModalError('')
+              }}
+              onBeneficiaryNameChange={setEditAccountName}
+              error={modalError}
+            />
+          ) : (
           <div>
             <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
               {renderLabel(t('register.payout.account_label', {
@@ -124,8 +139,10 @@ export default function PayoutEditModal({
             />
             {modalError && <p className="mt-1 text-[10px] font-bold text-rose-500">{modalError}</p>}
           </div>
+          )}
 
           {/* QR Code Optional Upload */}
+          {!isBankWire && (
           <div>
             <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
               {t('components.staff_registration.steps.PayoutEditModal.qrCodeOptional')}
@@ -180,12 +197,13 @@ export default function PayoutEditModal({
               </div>
             )}
           </div>
+          )}
 
           {/* Warning box */}
           <div className="rounded-lg bg-blue-50/50 border border-blue-100 p-3 text-[10px] leading-relaxed text-blue-800 flex gap-2">
             <AlertTriangle className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
             <span>
-              {t('components.staff_registration.steps.PayoutEditModal.pleaseEnterTheCorrect')}
+              {t(isBankWire ? 'components.payout.bankWireForm.warning' : 'components.staff_registration.steps.PayoutEditModal.pleaseEnterTheCorrect')}
             </span>
           </div>
 
@@ -196,13 +214,13 @@ export default function PayoutEditModal({
               onClick={() => setEditingMethod(null)}
               className="px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider rounded-lg transition"
             >
-              {t('components.staff_registration.steps.PayoutEditModal.cancel')}
+              {t(isBankWire ? 'setup.close' : 'components.staff_registration.steps.PayoutEditModal.cancel')}
             </button>
             <button
               type="submit"
               className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm transition"
             >
-              {t('components.staff_registration.steps.PayoutEditModal.save')}
+              {t(isBankWire ? 'common.update' : 'components.staff_registration.steps.PayoutEditModal.save')}
             </button>
           </div>
         </form>
