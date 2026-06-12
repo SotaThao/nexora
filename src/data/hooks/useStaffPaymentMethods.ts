@@ -1,13 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import { staffPaymentMethodsRepository } from '../repositories/staffPaymentMethods'
+import { useSessionRole } from '../../auth/useSessionRole'
 import { useNotification } from '../../contexts/NotificationContext'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { isApiError } from '../../types/domain'
 import type { PaymentMethodDto } from '../../types/domain'
 import type { UpdatePaymentMethodVars } from '../../types/hooks'
+import { resolvePaymentMethodImageUrl } from '../../utils/resolvePaymentMethodImageUrl'
 
-export function useStaffPaymentMethods() {
+export function useStaffPaymentMethods({ enabled: callerEnabled = true } = {}) {
+  const { isStaff } = useSessionRole()
   return useQuery<PaymentMethodDto[]>({
     queryKey: qk.staffPaymentMethods(),
     queryFn: async () => {
@@ -18,6 +21,7 @@ export function useStaffPaymentMethods() {
         throw err
       }
     },
+    enabled: isStaff && callerEnabled,
     retry: (failureCount, error) => {
       if (isApiError(error) && error.status === 404) return false
       return failureCount < 3
@@ -31,8 +35,13 @@ export function useUpdateStaffPaymentMethod() {
   const { t } = useTranslation()
 
   return useMutation<PaymentMethodDto, Error, UpdatePaymentMethodVars>({
-    mutationFn: ({ id, accountInfo, imageUrl }) =>
-      staffPaymentMethodsRepository.update(id, { accountInfo, imageUrl }),
+    mutationFn: async ({ id, accountInfo, imageUrl, imageFile }) => {
+      const resolvedImageUrl = await resolvePaymentMethodImageUrl({ imageFile, imageUrl })
+      return staffPaymentMethodsRepository.update(id, {
+        accountInfo,
+        imageUrl: resolvedImageUrl,
+      })
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.staffPaymentMethods() })
       showToast(t('payment_methods.update_success'), 'success')
@@ -50,8 +59,12 @@ export function useToggleStaffPaymentMethod() {
 
   return useMutation<PaymentMethodDto, Error, string>({
     mutationFn: (id) => staffPaymentMethodsRepository.toggle(id),
-    onSuccess: () => {
+    onSuccess: (method) => {
       queryClient.invalidateQueries({ queryKey: qk.staffPaymentMethods() })
+      showToast(
+        t(method.isActive ? 'payment_methods.toggle_enabled' : 'payment_methods.toggle_disabled'),
+        'success',
+      )
     },
     onError: (err) => {
       showToast(err.message || t('payment_methods.toggle_failed'), 'error')

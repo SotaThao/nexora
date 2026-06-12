@@ -168,11 +168,15 @@ export interface NotificationApiDto {
   id?: string
   type?: string
   title?: string
-  body?: string
-  message?: string
+  message?: string | null
+  actionUrl?: string | null
   isRead?: boolean
-  read?: boolean
+  readAt?: string | null
+  referenceId?: string | null
   createdAt?: string
+  /** @deprecated legacy mock shape */
+  body?: string
+  read?: boolean
 }
 
 export interface InviteInfoApiDto {
@@ -247,6 +251,7 @@ export interface JoinPublicInviteDto {
   phoneNumber?: string | null
   position?: string | null
   bio?: string | null
+  photoUrl?: string | null
 }
 
 export interface PersonalOnboardingInput {

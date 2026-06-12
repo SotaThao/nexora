@@ -2,10 +2,12 @@
 import { Bell, Menu } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
+import { useUnreadCount } from '../../../data/hooks/useNotifications'
 
 export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu }) {
   const { currentLanguage, setLanguage, t } = useTranslation()
-  const { staffMember, account, unreadCount } = useStaffAccount()
+  const { staffMember, account } = useStaffAccount()
+  const { data: unreadCount = 0 } = useUnreadCount()
   const displayName = account.defaultDisplayName || staffMember.fullName || 'Staff'
 
   return (

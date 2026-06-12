@@ -1,87 +1,67 @@
 import React, { createContext, useCallback, useContext, useMemo, type ReactNode } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { DomainRecord, StaffAccountContextValue } from '../types/contexts'
 import { logger } from '../utils/logger'
 import { makeDefaultStaffAccount } from '../components/staff-dashboard/data/staffMockData'
-import {
-  useStaffAccount as useStaffAccountQuery,
-  useSaveStaffAccount as useSaveStaffAccountQuery,
-} from '../data/hooks/useStaffAccount'
-import { useTransactions } from '../data/hooks/useTransactions'
-import { useMerchantSetup, useSaveMerchantSetup } from '../data/hooks/useMerchantSetup'
-import { useReviews } from '../data/hooks/useReviews'
-import { usePendingAccounts } from '../data/hooks/usePendingAccounts'
-import { useProfileSettings, useUpdateUserProfile, useUpdateStaffProfile } from '../data/hooks/useProfileSettings'
-import { useStaffProfile, useStaffBusinesses } from '../data/hooks/useStaffSelf'
+import { useSaveStaffAccount as useSaveStaffAccountQuery } from '../data/hooks/useStaffAccount'
+import profileSettingsRepository from '../data/repositories/profileSettings'
+import staffSelfRepository from '../data/repositories/staffSelf'
+import { useUpdateUserProfile, useUpdateStaffProfile } from '../data/hooks/useProfileSettings'
+import { useAuth } from '../auth/useAuth'
+import { qk } from '../data/queryKeys'
 
 const StaffAccountContext = createContext<StaffAccountContextValue | null>(null)
-
-const slugify = (str = '') => str.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 
 interface StaffAccountProviderProps {
   staffId?: string | null
   children: ReactNode
 }
 
+/**
+ * Shared staff shell state: identity from auth cache, local account blob, mutations.
+ * Page-specific APIs are fetched inside each route view (lazy per tab).
+ */
 export function StaffAccountProvider({ staffId = null, children }: StaffAccountProviderProps) {
-  // --- Server state via TanStack Query hooks --------------------------------
-  // useStaffAccountQuery(staffId) → the single staff account blob (or null)
-  const { data: accountData = null } = useStaffAccountQuery(staffId)
-  const { data: transactions = null } = useTransactions()
-  const { data: merchantSetup = null } = useMerchantSetup()
-  const { data: reviews = null } = useReviews()
-  const { data: allPendingAccounts = [] } = usePendingAccounts()
+  const { session } = useAuth()
+  const queryClient = useQueryClient()
 
   const saveStaffAccountMutation = useSaveStaffAccountQuery()
-  const saveMerchantSetupMutation = useSaveMerchantSetup()
-
-  // API identity: GET /userprofile/me — the persisted personal onboarding data.
-  const { data: userProfileRaw = null } = useProfileSettings()
-  const userProfile = userProfileRaw as DomainRecord | null
-  // API staff self: own StaffProfile (staffCode, displayName, bio) + linked businesses.
-  const { data: staffProfileRaw = null } = useStaffProfile()
-  const staffProfile = staffProfileRaw as DomainRecord | null
-  const { data: staffBusinesses = null } = useStaffBusinesses()
   const updateUserProfileMutation = useUpdateUserProfile()
   const updateStaffProfileMutation = useUpdateStaffProfile()
 
-  // --- Derived: merchant staff list + the signed-in staff member -----------
-  const staffList = useMemo(() => {
-    const list = merchantSetup?.staffList
-    return Array.isArray(list) && list.length ? list : []
-  }, [merchantSetup])
-
-  // Look up registered pending accounts to see if this staff matches a manually registered staff account
-  const registeredStaffAccount = useMemo(() => {
-    return allPendingAccounts.find(acc => acc.role === 'personal' && acc.staffId === staffId)
-  }, [allPendingAccounts, staffId])
+  // Subscribe to auth-bootstrapped profile cache (no network unless cache miss).
+  const { data: userProfileRaw = null } = useQuery({
+    queryKey: qk.userProfile(),
+    queryFn: () => profileSettingsRepository.get(),
+    enabled: false,
+  })
+  const { data: staffProfileRaw = null } = useQuery({
+    queryKey: qk.staffProfile(),
+    queryFn: () => staffSelfRepository.getMyProfile(),
+    enabled: false,
+  })
+  const userProfile = userProfileRaw as DomainRecord | null
+  const staffProfile = staffProfileRaw as DomainRecord | null
 
   const staffMember = useMemo(() => {
-    const found = staffList.find((s) => s.id === staffId)
-    if (found) return found
-    if (registeredStaffAccount) {
-      return {
-        id: registeredStaffAccount.staffId,
-        fullName: registeredStaffAccount.fullName,
-        nickname: registeredStaffAccount.fullName,
-        email: registeredStaffAccount.email,
-        isActive: true,
-        showInTipsFlow: true,
-        paymentAccounts: {}
-      }
+    const apiFullName = (userProfile?.fullName || '').trim()
+      || `${userProfile?.firstName ?? ''} ${userProfile?.lastName ?? ''}`.trim()
+    return {
+      id: staffId || session?.staffId || session?.staffCode || '',
+      fullName: apiFullName || session?.displayName || '',
+      nickname: staffProfile?.displayName || session?.displayName || '',
+      email: userProfile?.email || session?.email || '',
+      phone: userProfile?.phoneNumber || '',
+      isActive: true,
+      showInTipsFlow: true,
+      paymentAccounts: {},
     }
-    return staffList[0] || {}
-  }, [staffList, staffId, registeredStaffAccount])
+  }, [staffId, session, userProfile, staffProfile])
 
-  const businessName = merchantSetup?.businessInfo?.name || ''
-
-  // --- Staff-owned blob (with default init) --------------------------------
-  // useStaffAccountQuery(staffId) returns the single account blob for this staff.
   const account = useMemo(() => {
-    const base = (accountData || makeDefaultStaffAccount(staffMember)) as DomainRecord
+    const base = makeDefaultStaffAccount(staffMember) as DomainRecord
     if (!userProfile && !staffProfile) return base
-    // Hydrate identity fields from the backend (API mode):
-    // - GET /userprofile/me  → fullName / phone / email
-    // - GET /staff/profile   → staffCode / displayName / bio / photo
+
     const apiFullName = (userProfile?.fullName || '').trim()
       || `${userProfile?.firstName ?? ''} ${userProfile?.lastName ?? ''}`.trim()
     return {
@@ -92,172 +72,20 @@ export function StaffAccountProvider({ staffId = null, children }: StaffAccountP
       defaultDisplayName: base.defaultDisplayName || staffProfile?.displayName || userProfile?.firstName || apiFullName,
       bio: base.bio || staffProfile?.bio || '',
       avatar: base.avatar || staffProfile?.photoUrl || null,
-      staffCode: staffProfile?.staffCode || base.staffCode || null,
+      staffCode: staffProfile?.staffCode || base.staffCode || session?.staffCode || null,
     }
-  }, [accountData, staffMember, userProfile, staffProfile])
+  }, [staffMember, userProfile, staffProfile, session?.staffCode])
 
-  // Persist a partial update to the signed-in staff's owned blob.
-  // repository.save(staffId, data) deep-merges `data` into the existing blob,
-  // so we only need to pass the patch.
   const updateAccount = useCallback(
     (patch) => {
-      const base = accountData || makeDefaultStaffAccount(staffMember)
+      const base = { ...makeDefaultStaffAccount(staffMember), ...account }
       const nextAccount = { ...base, ...patch }
-
-      // Save the updated staff account blob (mutation merges patch into existing blob)
       saveStaffAccountMutation.mutate({ staffId, data: patch })
-
-      // Synchronize back to merchant setup roster
-      if (merchantSetup && Array.isArray(merchantSetup.staffList)) {
-        try {
-          const updatedStaffList = merchantSetup.staffList.map((s) => {
-            if (s.id === staffId) {
-              const pm = nextAccount.payoutMethods || {}
-              return {
-                ...s,
-                fullName: nextAccount.fullName !== undefined ? nextAccount.fullName : s.fullName,
-                nickname: nextAccount.defaultDisplayName !== undefined ? nextAccount.defaultDisplayName : s.nickname,
-                avatar: nextAccount.avatar !== undefined ? nextAccount.avatar : s.avatar,
-                phone: nextAccount.phone !== undefined ? nextAccount.phone : s.phone,
-                paymentAccounts: {
-                  ...s.paymentAccounts,
-                  venmo: pm.venmo?.enabled ? pm.venmo.value || '' : '',
-                  cashapp: pm.cashapp?.enabled ? pm.cashapp.value || '' : '',
-                  zelle: pm.zelle?.enabled ? pm.zelle.value || '' : '',
-                  vlinkpay: pm.vlinkpay?.enabled ? pm.vlinkpay.value || '' : '',
-                  paypal: pm.paypal?.enabled ? pm.paypal.value || '' : '',
-                  bankwire: pm.bankwire?.enabled ? pm.bankwire.value || '' : '',
-                  applecash: pm.applecash?.enabled ? pm.applecash.value || '' : '',
-                },
-                payoutConfigs: pm
-              }
-            }
-            return s
-          })
-          saveMerchantSetupMutation.mutate({ ...merchantSetup, staffList: updatedStaffList })
-        } catch (e) {
-          logger.error('[StaffAccountContext] Error syncing to merchant setup:', e)
-        }
-      }
+      return nextAccount
     },
-    [staffId, staffMember, accountData, merchantSetup, saveStaffAccountMutation, saveMerchantSetupMutation]
+    [staffId, staffMember, account, saveStaffAccountMutation]
   )
 
-  // --- Derived: tips for this staff (with status) --------------------------
-  const allTx = useMemo(() => {
-    const list = Array.isArray(transactions) && transactions.length ? transactions : []
-    return list.filter((tx) => tx.staffId === staffId)
-  }, [transactions, staffId])
-
-  const tips = useMemo(() => {
-    const confirmed = new Set(account.confirmedTipIds || [])
-    return allTx.map((tx) => {
-      const method = tx.paymentMethod || ''
-      let status = 'Pending'
-      if (method.toUpperCase().includes('VLINKPAY')) status = 'Verified'
-      else if (confirmed.has(tx.id)) status = 'Completed'
-      return { ...tx, status, businessName, displayName: account.defaultDisplayName }
-    })
-  }, [allTx, account.confirmedTipIds, account.defaultDisplayName, businessName])
-
-  const pendingTips = useMemo(() => tips.filter((t) => t.status === 'Pending'), [tips])
-
-  // --- Derived: KPIs -------------------------------------------------------
-  const staffReviews = useMemo(() => {
-    const list = Array.isArray(reviews) && reviews.length ? reviews : []
-    return list.filter((r) => r.staffId === staffId)
-  }, [reviews, staffId])
-
-  const kpis = useMemo(() => {
-    const monthTips = tips.reduce((sum, t) => sum + (Number(t.amount) || 0), 0)
-    const latestDate = tips.reduce((d, t) => {
-      const day = (t.dateTime || '').split(' ')[0]
-      return day > d ? day : d
-    }, '')
-    const todayTips = tips
-      .filter((t) => (t.dateTime || '').startsWith(latestDate))
-      .reduce((sum, t) => sum + (Number(t.amount) || 0), 0)
-    const ratingValues = staffReviews.map((r) => Number(r.rating) || 0)
-    const rating = ratingValues.length
-      ? Math.round((ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length) * 10) / 10
-      : 0
-    return {
-      todayTips,
-      todayCount: tips.filter((t) => (t.dateTime || '').startsWith(latestDate)).length,
-      monthTips,
-      pendingCount: pendingTips.length,
-      rating
-    }
-  }, [tips, pendingTips, staffReviews])
-
-  // --- Derived: linked businesses ------------------------------------------
-  // API-first: GET /api/v1/staff/businesses. Falls back to the legacy
-  // merchant-setup derivation when the API returns nothing (storage mode).
-  const linkedBusinesses = useMemo(() => {
-    if (Array.isArray(staffBusinesses) && staffBusinesses.length) {
-      return staffBusinesses.map((b) => ({
-        businessStaffLinkId: b.businessId,
-        businessName: b.businessName,
-        displayName: account.displayNamesByBusiness?.[b.businessId] || account.defaultDisplayName,
-        status: b.linkStatusLabel || b.linkStatus || 'Active',
-        logoUrl: b.logoUrl,
-        role: b.roleLabel || b.role || null,
-        linkedAt: b.linkedAt,
-      }))
-    }
-
-    const isLinked = merchantSetup?.staffList?.some((s) => s.id === staffId)
-    const linkedStaff = merchantSetup?.staffList?.find((s) => s.id === staffId)
-    const linkId = `${slugify(businessName)}__${staffId}`
-
-    let status = 'Pending Link'
-    if (isLinked) {
-      if (linkedStaff?.status === 'Pending Acceptance') {
-        status = 'Pending Approval'
-      } else if (linkedStaff?.status === 'Pending Unlink') {
-        status = 'Pending Unlink'
-      } else if (linkedStaff?.isActive === false) {
-        status = 'Inactive'
-      } else {
-        status = 'Active'
-      }
-    }
-
-    return [
-      {
-        businessStaffLinkId: linkId,
-        businessName,
-        displayName: account.displayNamesByBusiness?.[linkId] || account.defaultDisplayName,
-        status
-      }
-    ]
-  }, [staffBusinesses, businessName, staffId, account.displayNamesByBusiness, account.defaultDisplayName, staffMember.isActive, merchantSetup])
-
-  // --- Derived: notifications (from pending tips + recent good reviews) -----
-  const notifications = useMemo(() => {
-    const read = new Set(account.notificationsRead || [])
-    // Return structured data only; display strings are composed via i18n in the view.
-    const fromTips = pendingTips.slice(0, 3).map((t) => ({
-      id: `noti-tip-${t.id}`,
-      type: 'tip',
-      amount: t.amount,
-      method: t.paymentMethod,
-      read: read.has(`noti-tip-${t.id}`)
-    }))
-    const fromReviews = staffReviews
-      .filter((r) => Number(r.rating) >= 4)
-      .slice(0, 3)
-      .map((r) => ({
-        id: `noti-rev-${r.id}`,
-        type: 'review',
-        rating: r.rating,
-        comment: r.comment,
-        read: read.has(`noti-rev-${r.id}`)
-      }))
-    return [...fromTips, ...fromReviews]
-  }, [pendingTips, staffReviews, account.notificationsRead])
-
-  // --- Actions -------------------------------------------------------------
   const confirmTip = useCallback(
     (tipId) => {
       const set = new Set(account.confirmedTipIds || [])
@@ -267,11 +95,14 @@ export function StaffAccountProvider({ staffId = null, children }: StaffAccountP
     [account.confirmedTipIds, updateAccount]
   )
 
-  const confirmAllPending = useCallback(() => {
-    const set = new Set(account.confirmedTipIds || [])
-    pendingTips.forEach((t) => set.add(t.id))
-    updateAccount({ confirmedTipIds: Array.from(set) })
-  }, [account.confirmedTipIds, pendingTips, updateAccount])
+  const confirmAllPending = useCallback(
+    (tipIds: string[] = []) => {
+      const set = new Set(account.confirmedTipIds || [])
+      tipIds.forEach((id) => set.add(id))
+      updateAccount({ confirmedTipIds: Array.from(set) })
+    },
+    [account.confirmedTipIds, updateAccount]
+  )
 
   const setPayoutMethod = useCallback(
     (key, patch) => {
@@ -286,7 +117,6 @@ export function StaffAccountProvider({ staffId = null, children }: StaffAccountP
     (patch) => {
       updateAccount(patch)
 
-      // Persist to the backend (API mode).
       if (patch.fullName !== undefined || patch.phone !== undefined) {
         const fullName = (patch.fullName ?? account.fullName ?? '').trim()
         updateUserProfileMutation.mutate({
@@ -337,24 +167,22 @@ export function StaffAccountProvider({ staffId = null, children }: StaffAccountP
     [account.notificationsRead, updateAccount]
   )
 
+  const cachedSummary = queryClient.getQueryData<DomainRecord>(qk.staffDashboardSummary())
+  const unreadCount = Number(cachedSummary?.pendingTips?.count) || 0
+
   const value = {
     staffId,
     staffMember,
-    businessName,
+    businessName: '',
     account,
-    tips,
-    pendingTips,
-    kpis,
-    linkedBusinesses,
-    notifications,
-    unreadCount: notifications.filter((n) => !n.read).length,
+    unreadCount,
     confirmTip,
     confirmAllPending,
     setPayoutMethod,
     saveProfile,
     setBusinessDisplayName,
     setPushPreference,
-    markNotificationRead
+    markNotificationRead,
   }
 
   return <StaffAccountContext.Provider value={value}>{children}</StaffAccountContext.Provider>

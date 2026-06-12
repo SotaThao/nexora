@@ -1,5 +1,6 @@
 import { tokenStore } from '../tokenStore'
 import httpClient from '../../lib/httpClient'
+import { clearAuthQueryCache, seedAuthQueryCache } from '../../data/seedAuthQueryCache'
 import { logger } from '../../utils/logger'
 import type {
   AuthSession,
@@ -106,15 +107,24 @@ async function getBusinessKybStatus(profile: UserProfile): Promise<string> {
  * GET /api/v1/staff/profile → StaffProfileDto { staffCode, displayName, ... }).
  * Returns null when no StaffProfile is linked (404 STAFF_PROFILE_NOT_FOUND).
  */
+let getStaffProfilePromise: Promise<StaffProfile | null> | null = null
+
 async function fetchStaffProfile(): Promise<StaffProfile | null> {
-  try {
-    return await httpClient.get<StaffProfile>('/api/v1/staff/profile')
-  } catch (err: unknown) {
-    if (!isApiError(err) || err.status !== 404) {
-      logger.error('Failed to fetch staff profile', err)
-    }
-    return null
+  if (!getStaffProfilePromise) {
+    getStaffProfilePromise = (async () => {
+      try {
+        return await httpClient.get<StaffProfile>('/api/v1/staff/profile')
+      } catch (err: unknown) {
+        if (!isApiError(err) || err.status !== 404) {
+          logger.error('Failed to fetch staff profile', err)
+        }
+        return null
+      }
+    })().finally(() => {
+      getStaffProfilePromise = null
+    })
   }
+  return getStaffProfilePromise
 }
 
 function mapProfileToSession(
@@ -169,6 +179,28 @@ function mapProfileToSession(
 }
 
 let getProfilePromise: Promise<UserProfile> | null = null
+let getSessionPromise: Promise<AuthSession | null> | null = null
+
+async function resolveAuthSession(): Promise<AuthSession | null> {
+  const tokens = tokenStore.get()
+  if (!tokens || !tokens.accessToken) {
+    return null
+  }
+
+  if (!getProfilePromise) {
+    getProfilePromise = httpClient
+      .get<UserProfile>('/api/v1/userprofile/me')
+      .finally(() => {
+        getProfilePromise = null
+      }) as Promise<UserProfile>
+  }
+  const profile = await getProfilePromise
+  const isBusiness = isBusinessProfile(profile)
+  const kybStatus = isBusiness ? await getBusinessKybStatus(profile) : null
+  const staffProfile = isBusiness ? null : await fetchStaffProfile()
+  seedAuthQueryCache({ userProfile: profile, staffProfile })
+  return mapProfileToSession(profile, kybStatus, staffProfile)
+}
 
 export const apiAuthAdapter = {
   async login({ email, password }: LoginCredentials): Promise<AuthSession | null> {
@@ -189,32 +221,23 @@ export const apiAuthAdapter = {
   },
 
   async getSession(): Promise<AuthSession | null> {
-    const tokens = tokenStore.get()
-    if (!tokens || !tokens.accessToken) {
-      return null
+    if (!getSessionPromise) {
+      getSessionPromise = (async () => {
+        try {
+          return await resolveAuthSession()
+        } catch (err: unknown) {
+          logger.error('Failed to get session profile', err)
+          if (isApiError(err) && (err.status === 401 || err.status === 403)) {
+            tokenStore.clear()
+            return null
+          }
+          throw err
+        }
+      })().finally(() => {
+        getSessionPromise = null
+      })
     }
-
-    try {
-      if (!getProfilePromise) {
-        getProfilePromise = httpClient
-          .get<UserProfile>('/api/v1/userprofile/me')
-          .finally(() => {
-            getProfilePromise = null
-          }) as Promise<UserProfile>
-      }
-      const profile = await getProfilePromise
-      const isBusiness = isBusinessProfile(profile)
-      const kybStatus = isBusiness ? await getBusinessKybStatus(profile) : null
-      const staffProfile = isBusiness ? null : await fetchStaffProfile()
-      return mapProfileToSession(profile, kybStatus, staffProfile)
-    } catch (err: unknown) {
-      logger.error('Failed to get session profile', err)
-      if (isApiError(err) && (err.status === 401 || err.status === 403)) {
-        tokenStore.clear()
-        return null
-      }
-      throw err
-    }
+    return getSessionPromise
   },
 
   async refreshSession(): Promise<AuthSession | null> {
@@ -233,6 +256,7 @@ export const apiAuthAdapter = {
 
   async logout(): Promise<void> {
     tokenStore.clear()
+    clearAuthQueryCache()
   },
 
   async signup(credentials: SignupCredentials): Promise<unknown> {

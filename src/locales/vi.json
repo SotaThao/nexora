@@ -38,15 +38,24 @@
       "no_pending": "Không có tip nào chờ xác nhận.",
       "confirm": "Xác nhận",
       "confirm_all": "Xác nhận đã nhận tất cả",
+      "confirm_success": "Đã xác nhận nhận tip.",
+      "confirm_failed": "Không thể xác nhận nhận tip.",
+      "confirm_partial": "Đã xác nhận {{count}} tip. Một số mục không xác nhận được.",
       "linked_businesses": "Tiệm đã liên kết",
       "display_name": "Tên hiển thị"
     },
     "tips": {
       "activity": "Hoạt động tip",
       "empty": "Chưa có tip nào.",
+      "total_count": "{{count}} tip",
+      "page_of": "Trang {{page}} / {{total}}",
+      "multi_staff": "Nhiều thợ",
       "status": {
-        "pending": "Chờ xử lý",
+        "initiated": "Đã khởi tạo",
+        "confirmed": "Đã xác nhận",
+        "skipped": "Đã bỏ qua",
         "completed": "Hoàn tất",
+        "pending": "Chờ xử lý",
         "verified": "Đã xác minh"
       },
       "ai_insight": "Phân tích AI",
@@ -55,6 +64,7 @@
     "pay": {
       "title": "Phương thức nhận tiền",
       "owner_note": "Bạn tự quản lý phương thức nhận tip. Chủ tiệm không sửa được phần này.",
+      "empty": "Chưa có phương thức thanh toán.",
       "not_set": "Chưa thiết lập",
       "handle_placeholder": "Nhập tài khoản / handle",
       "save": "Lưu phương thức",
@@ -83,6 +93,8 @@
     },
     "notifications": {
       "empty": "Không có thông báo.",
+      "mark_all_read": "Đánh dấu tất cả đã đọc",
+      "generic_title": "Thông báo",
       "tip_title": "Có tip mới được đánh dấu đã gửi",
       "tip_message": "${amount} qua {method} — xác nhận đã nhận",
       "review_title": "Đánh giá {rating} sao mới",
@@ -142,6 +154,8 @@
   "payment_methods": {
     "update_success": "Đã cập nhật phương thức thanh toán.",
     "update_failed": "Không thể cập nhật phương thức thanh toán",
+    "toggle_enabled": "Đã bật phương thức thanh toán.",
+    "toggle_disabled": "Đã tắt phương thức thanh toán.",
     "toggle_failed": "Không thể bật/tắt phương thức thanh toán"
   },
   "login": {
@@ -272,6 +286,14 @@
     "payout_input_label": "Tài khoản {wallet} của bạn {field} *",
     "qr_code_optional": "Mã QR Code (tùy chọn)",
     "take_photo": "Chụp ảnh",
+    "capture_photo": "Chụp",
+    "camera_capture_title": "Chụp ảnh",
+    "camera_capture_hint": "Đưa mã QR vào khung hình, sau đó nhấn Chụp.",
+    "camera_starting": "Đang mở camera...",
+    "camera_not_available": "Không tìm thấy camera trên thiết bị này.",
+    "camera_permission_denied": "Trình duyệt đã chặn quyền truy cập camera.",
+    "camera_use_file_instead": "Hãy dùng Chọn file để tải ảnh từ thiết bị.",
+    "camera_fallback_hint": "Máy tính không có webcam sẽ không dùng được Chụp ảnh. Chọn file vẫn hoạt động trên mọi thiết bị.",
     "choose_file": "Chọn file",
     "uploader_hint": "Bạn có thể chụp ảnh hoặc tải lên từ thiết bị. Định dạng hỗ trợ: JPG, PNG, JPEG. Kích thước tối đa: 5MB mỗi file.",
     "payout_warning": "Vui lòng nhập đúng thông tin tài khoản nhận tiền. Thông tin này sẽ được sử dụng để nhận thanh toán.",
@@ -1364,6 +1386,9 @@
       "views": {
         "StaffMyQR": {
           "linkCopiedToClipboard": "Đã sao chép liên kết!",
+          "staffCodeUnavailable": "Chưa có Staff ID. Vui lòng thử lại sau giây lát.",
+          "shareFailed": "Không thể chia sẻ liên kết. Hãy dùng nút sao chép.",
+          "copyFailed": "Không thể sao chép liên kết.",
           "joinRequestViaQr": "Yêu cầu gia nhập qua QR",
           "justNow": "Vừa xong",
           "unlinked": "Đã hủy liên kết",
@@ -1380,8 +1405,13 @@
           "scanSalonQrCode": "Quét Mã QR Của Tiệm",
           "scanTheSalonReferral": "Quét mã QR liên kết thợ của tiệm (referral QR) để gửi yêu cầu gia nhập chủ động",
           "orEnterInviteLink": "Hoặc Nhập Liên Kết / Tên Tiệm",
-          "pasteSalonInviteLink": "Dán liên kết hoặc tên tiệm...",
+          "pasteSalonInviteLink": "Dán link mời hoặc mã referral của tiệm...",
           "send": "Gửi",
+          "referralCodeRequired": "Vui lòng nhập link mời hoặc mã referral của tiệm.",
+          "profileReferralCodeMissing": "Hồ sơ của bạn chưa có mã referral. Vui lòng liên hệ hỗ trợ.",
+          "joinRequestSent": "Đã gửi yêu cầu gia nhập thành công.",
+          "joinRequestFailed": "Gửi yêu cầu gia nhập thất bại. Vui lòng thử lại.",
+          "alreadyLinkedOrRequested": "Bạn đã gửi yêu cầu hoặc đã liên kết với tiệm này rồi.",
           "simulateQrScan": "Giả lập quét QR",
           "personalTippingQr": "QR Nhận Tip Cá Nhân",
           "tippingLink": "Liên Kết Nhận Tip",
@@ -1451,10 +1481,14 @@
         "StaffReviews": {
           "reviewsAndRatings": "Đánh Giá & Xếp Hạng",
           "customerReviews": "Ý Kiến Khách Hàng",
+          "averageRating": "Điểm trung bình",
+          "totalReviews": "Tổng đánh giá",
           "identitySecured": "BẢO MẬT DANH TÍNH",
           "noReviewsReceivedYet": "Bạn chưa có đánh giá nào.",
           "anonymousCustomer": "Khách hàng ẩn danh",
-          "internal": "Nội bộ"
+          "ratingOnly": "Chỉ có điểm — không có bình luận.",
+          "pageOf": "Trang {{page}} / {{total}}",
+          "internal": "Danh tính khách hàng được bảo vệ. Bạn chỉ thấy điểm và phản hồi."
         }
       }
     },

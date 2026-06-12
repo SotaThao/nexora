@@ -1,21 +1,42 @@
 import { useState, useEffect } from 'react'
 import { X, Camera, FolderOpen, AlertTriangle, Bitcoin } from 'lucide-react'
 import { useTranslation, renderLabel } from '../../../contexts/LanguageContext'
+import CameraCaptureModal from '../../ui/CameraCaptureModal'
 
-function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrCode, onClose, onSubmit, readOnly = false }) {
+function PayoutSetupModal({
+  open,
+  walletKey,
+  staffName,
+  initialValue,
+  initialQrCode,
+  onClose,
+  onSubmit,
+  readOnly = false,
+  isSaving = false,
+}) {
   const { t, currentLanguage } = useTranslation()
   const [value, setValue] = useState(initialValue || '')
   const [qrCode, setQrCode] = useState(initialQrCode || '')
+  const [qrFile, setQrFile] = useState(null)
   const [accountName, setAccountName] = useState(staffName || '')
-  const [isCapturing, setIsCapturing] = useState(false)
+  const [showCameraModal, setShowCameraModal] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
     setValue(initialValue || '')
     setQrCode(initialQrCode || '')
+    setQrFile(null)
     setAccountName(staffName || '')
     setError('')
   }, [open, walletKey, initialValue, initialQrCode, staffName])
+
+  useEffect(() => {
+    return () => {
+      if (qrCode?.startsWith('blob:')) {
+        URL.revokeObjectURL(qrCode)
+      }
+    }
+  }, [qrCode])
 
   if (!open) return null
 
@@ -56,37 +77,43 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
     if (readOnly) return
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      setQrCode(reader.result)
+    if (qrCode?.startsWith('blob:')) {
+      URL.revokeObjectURL(qrCode)
     }
-    reader.readAsDataURL(file)
+    setQrFile(file)
+    setQrCode(URL.createObjectURL(file))
   }
 
   const handleTakePhoto = () => {
     if (readOnly) return
-    setIsCapturing(true)
-    setTimeout(() => {
-      const mockQr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-        value || ''
-      )}`
-      setQrCode(mockQr)
-      setIsCapturing(false)
-    }, 800)
+    setShowCameraModal(true)
+  }
+
+  const handleCameraCapture = (file) => {
+    if (qrCode?.startsWith('blob:')) {
+      URL.revokeObjectURL(qrCode)
+    }
+    setQrFile(file)
+    setQrCode(URL.createObjectURL(file))
+    setShowCameraModal(false)
   }
 
   const handleClearQr = () => {
     if (readOnly) return
+    if (qrCode?.startsWith('blob:')) {
+      URL.revokeObjectURL(qrCode)
+    }
+    setQrFile(null)
     setQrCode('')
   }
 
   const handleSubmit = () => {
-    if (readOnly) return
+    if (readOnly || isSaving) return
     if (!value.trim()) {
       setError(t('setup.errors.field_required'))
       return
     }
-    onSubmit(value, qrCode, accountName)
+    onSubmit(value, qrCode, accountName, qrFile)
   }
 
   const PayoutLogos = {
@@ -150,7 +177,7 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
           <div>
             <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">
               {currentLanguage === 'vi'
-                ? `TÀI KHOẢN ${walletNames[walletKey]?.toUpperCase()}`
+                ? `T�I KHO?N ${walletNames[walletKey]?.toUpperCase()}`
                 : `${walletNames[walletKey]?.toUpperCase()} ACCOUNT`}
             </h3>
             <p className="text-[10px] text-slate-400 font-medium">
@@ -185,12 +212,7 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
               {t('components.dashboard.modals.PayoutSetupModal.qrCodeOptional')}
             </label>
 
-            {isCapturing ? (
-              <div className="flex h-44 w-full flex-col items-center justify-center rounded-xl border border-slate-200 bg-slate-50">
-                <div className="h-6 w-6 border-2 border-nexoraBrand/20 border-t-nexoraBrand rounded-full animate-spin"></div>
-                <span className="mt-2 text-xs font-semibold text-slate-500">{t('setup.taking_photo')}</span>
-              </div>
-            ) : qrCode ? (
+            {qrCode ? (
               <div className="relative flex flex-col items-center rounded-xl border border-slate-200 bg-white p-4.5 shadow-sm">
                 {!readOnly && (
                   <button
@@ -263,13 +285,20 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
           {!readOnly && (
             <button
               onClick={handleSubmit}
-              className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm transition"
+              disabled={isSaving}
+              className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm transition"
             >
-              {t('components.dashboard.modals.PayoutSetupModal.save')}
+              {isSaving ? t('common.saving') : t('components.dashboard.modals.PayoutSetupModal.save')}
             </button>
           )}
         </div>
       </div>
+
+      <CameraCaptureModal
+        open={showCameraModal}
+        onClose={() => setShowCameraModal(false)}
+        onCapture={handleCameraCapture}
+      />
     </div>
   )
 }
