@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 
 // 2. Third-party
@@ -53,7 +53,7 @@ export default function Dashboard({
   onLogout,
   userRole = 'owner',
   currentStaffId = null,
-  onStartSetup = () => {},
+  onStartSetup = null,
 }) {
   const { currentLanguage, t } = useTranslation()
   const { showToast, showConfirm } = useNotification()
@@ -70,6 +70,14 @@ export default function Dashboard({
     handleNavigateMenu, navigateMenu
   } = useDashboardNavigation()
   const navigate = useNavigate()
+  const handleStartSetup = useCallback(() => {
+    if (typeof onStartSetup === 'function') {
+      onStartSetup()
+      return
+    }
+
+    navigate('/onboarding')
+  }, [navigate, onStartSetup])
   const [processingFee, setProcessingFee] = useState(3.0)
 
   // ---------------------------------------------------------------------------
@@ -405,7 +413,7 @@ export default function Dashboard({
 
   const dashboardCtx = {
     metrics, activeKpi, setActiveKpi, chartRange, handleChartRangeChange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate,
-    transactions, selectedLeaderboardStaff, handleSelectLeaderboardStaff, businessName, previewQr, hasKyb, hasSetup, onStartSetup,
+    transactions, selectedLeaderboardStaff, handleSelectLeaderboardStaff, businessName, previewQr, hasKyb, hasSetup, onStartSetup: handleStartSetup,
     filteredStaff, pendingStaff, staff, staffLoading, openApproveStaff, openAddStaff, openEditStaff, deleteStaff, toggleStaff, toggleStaffTipsFlow,
     handleLinkStaff, handleInviteStaff, handleResendInvite, handleAcceptJoinRequest, handleDeclineJoinRequest, handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     setInviteShareDefaultName, setInviteShareDefaultContact, setIsInviteShareOpen,
