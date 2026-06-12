@@ -111,6 +111,7 @@ export default function ProfileTab({
   const [editingMethod, setEditingMethod] = useState<any | null>(null)
   const [editValue, setEditValue] = useState('')
   const [editQrCode, setEditQrCode] = useState<any | null>(null)
+  const [editQrFile, setEditQrFile] = useState(null)
   const [isCapturing, setIsCapturing] = useState(false)
   const [modalError, setModalError] = useState('')
 
@@ -130,6 +131,7 @@ export default function ProfileTab({
     setEditingMethod(key)
     setEditValue(methodData.accountInfo || '')
     setEditQrCode(methodData.imageUrl || null)
+    setEditQrFile(null)
     setModalError('')
   }
 
@@ -145,7 +147,12 @@ export default function ProfileTab({
       return
     }
     updateMutation.mutate(
-      { id: methodData.id, accountInfo: editValue.trim(), imageUrl: editQrCode },
+      {
+        id: methodData.id,
+        accountInfo: editValue.trim(),
+        imageUrl: editQrFile ? null : (editQrCode || null),
+        imageFile: editQrFile || undefined,
+      },
       {
         onSuccess: () => {
           setEditingMethod(null)
@@ -158,12 +165,13 @@ export default function ProfileTab({
   }
 
   const handleModalFileChange = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => setEditQrCode(reader.result)
-      reader.readAsDataURL(file)
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (editQrCode?.startsWith?.('blob:')) {
+      URL.revokeObjectURL(editQrCode)
     }
+    setEditQrFile(file)
+    setEditQrCode(URL.createObjectURL(file))
   }
 
   const handleModalTakePhoto = () => {
@@ -174,7 +182,13 @@ export default function ProfileTab({
     }, 1500)
   }
 
-  const handleModalClearQr = () => setEditQrCode(null)
+  const handleModalClearQr = () => {
+    if (editQrCode?.startsWith?.('blob:')) {
+      URL.revokeObjectURL(editQrCode)
+    }
+    setEditQrFile(null)
+    setEditQrCode(null)
+  }
 
   return (
     <>

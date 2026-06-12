@@ -30,6 +30,7 @@ export const qk = {
   
   // Notifications
   notificationsUnreadCount: () => ['notifications', 'unreadCount'],
+  notificationsList:      (filters = EMPTY) => ['notifications', 'list', filters],
   
   // Profile (Staff/Personal)
   userProfile:              () => ['userProfile'],
@@ -52,6 +53,9 @@ export const qk = {
   // Staff Self (own staff profile + linked businesses)
   staffProfile:        ()      => ['staffProfile'],
   staffBusinesses:     ()      => ['staffBusinesses'],
+  staffDashboardSummary: ()    => ['staffDashboardSummary'],
+  staffReviews:          (filters = EMPTY) => ['staffReviews', filters],
+  staffTips:             (filters = EMPTY) => ['staffTips', filters],
   staffLinkRequest:    (linkId: string | null | undefined) => ['staffLinkRequest', linkId ?? 'unknown'],
 
   // Public Customer Touch

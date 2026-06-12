@@ -5,6 +5,7 @@ import httpClient from '../../lib/httpClient'
 import type { MerchantSetup } from '../../types/domain'
 import { isApiError } from '../../types/domain'
 import type { BusinessApiDto, CreateBusinessResult, ImageUploadResult, SlugCheckResult } from '../../types/repositories'
+import { imagesRepository } from './images'
 
 type HttpClient = typeof httpClient
 
@@ -78,14 +79,11 @@ export function createMerchantsRepository(client: HttpClient = httpClient) {
     },
 
     async uploadImage(file: File): Promise<ImageUploadResult> {
-      const formData = new FormData()
-      formData.append('file', file)
-      return await client.upload<ImageUploadResult>('/api/v1/images/upload', formData, 'POST')
+      return imagesRepository.upload(file)
     },
 
     async uploadLogo(file: File): Promise<string> {
-      const res = await this.uploadImage(file)
-      return res?.imageUrl || res?.fileUrl || ''
+      return imagesRepository.uploadAndGetUrl(file)
     },
 
     async updateReviewLinks(dto: LooseObject): Promise<void> {

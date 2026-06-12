@@ -1,12 +1,13 @@
 // StaffMyQR — personal QR/link + per-business staff QR (placeholder QR visuals).
-import { useState, useEffect } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { Share2, Copy, QrCode, X, Loader2, CheckCircle2, XCircle } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
+import { useStaffLinkedBusinesses } from '../hooks/useStaffLinkedBusinesses'
 import { useNotification } from '../../../contexts/NotificationContext'
-import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
-import { useAddNotification } from '../../../data/hooks/useNotifications'
-import { logger } from '../../../utils/logger'
+import { useJoinPublicInvite } from '../../../data/hooks/useStaffInvites'
+import { isApiError } from '../../../types/domain'
+import { shareUrl } from '../../../utils/shareUrl'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 
@@ -14,47 +15,71 @@ const slugify = (str = '') => str.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-
 
 export default function StaffMyQR() {
   const { t, currentLanguage } = useTranslation()
-  const { staffMember, linkedBusinesses, account } = useStaffAccount()
+  const { staffMember, account } = useStaffAccount()
+  const { linkedBusinesses } = useStaffLinkedBusinesses()
   const { showToast } = useNotification()
-
-  // Data layer — merchant setup (read + write) and notifications (write)
-  const { data: merchantSetupData = null } = useMerchantSetup()
-  const saveMerchantSetupMutation = useSaveMerchantSetup()
-  const addNotificationMutation = useAddNotification()
+  const joinPublicInviteMutation = useJoinPublicInvite()
 
   const [showScanner, setShowScanner] = useState(false)
   const [scanStatus, setScanStatus] = useState('idle') // 'idle' | 'checking' | 'success' | 'error'
   const [customInviteLink, setCustomInviteLink] = useState('')
-  const [scanTimeout, setScanTimeout] = useState<any | null>(null)
   const [zoomedQr, setZoomedQr] = useState<any | null>(null)
 
-  useEffect(() => {
-    return () => {
-      if (scanTimeout) clearTimeout(scanTimeout)
+  const staffCode = (account.staffCode || staffMember.id || '').trim()
+  const staffLink = useMemo(
+    () =>
+      staffCode
+        ? `${window.location.origin}/?flow=staff-invite&staff=${encodeURIComponent(staffCode)}`
+        : '',
+    [staffCode],
+  )
+  const qrImageSrc = useMemo(
+    () =>
+      staffLink
+        ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(staffLink)}`
+        : '',
+    [staffLink],
+  )
+
+  const handleCopy = useCallback(async () => {
+    if (!staffLink) {
+      showToast(t('components.staff_dashboard.views.StaffMyQR.staffCodeUnavailable'), 'error')
+      return
     }
-  }, [scanTimeout])
-
-  const staffLink = `${window.location.origin}/?flow=staff-invite&staff=${staffMember.id || ''}`
-
-  const handleCopy = () => {
     try {
-      navigator.clipboard?.writeText(staffLink)
+      await navigator.clipboard.writeText(staffLink)
       showToast(
         t('components.staff_dashboard.views.StaffMyQR.linkCopiedToClipboard'),
-        'success'
+        'success',
       )
-    } catch (e) {
-      /* clipboard unavailable — no-op */
+    } catch {
+      showToast(t('components.staff_dashboard.views.StaffMyQR.copyFailed'), 'error')
     }
-  }
+  }, [staffLink, showToast, t])
 
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({ title: 'NEXORA Staff', text: staffMember.id, url: staffLink }).catch(() => {})
-    } else {
-      handleCopy()
+  const handleShare = useCallback(async () => {
+    if (!staffLink) {
+      showToast(t('components.staff_dashboard.views.StaffMyQR.staffCodeUnavailable'), 'error')
+      return
     }
-  }
+
+    try {
+      const result = await shareUrl({
+        url: staffLink,
+        title: t('staff_dashboard.qr.share'),
+        text: staffCode,
+      })
+
+      if (result === 'copied') {
+        showToast(
+          t('components.staff_dashboard.views.StaffMyQR.linkCopiedToClipboard'),
+          'success',
+        )
+      }
+    } catch {
+      showToast(t('components.staff_dashboard.views.StaffMyQR.shareFailed'), 'error')
+    }
+  }, [staffCode, staffLink, showToast, t])
 
   const handleOpenScan = () => {
     setShowScanner(true)
@@ -62,177 +87,38 @@ export default function StaffMyQR() {
     setCustomInviteLink('')
   }
 
-  const simulateMerchantScan = (businessNameInput) => {
-    const bizName = businessNameInput.trim()
-    if (!bizName) return
+  const handleUrlOrTextSubmit = async () => {
+    if (joinPublicInviteMutation.isPending) return
 
-    if (scanTimeout) clearTimeout(scanTimeout)
     setScanStatus('checking')
-
-    const timer = setTimeout(() => {
-      // 1. Use cached merchant setup from hook; fall back to a mock if none exists yet
-      let merchantSetup = merchantSetupData
-        ? { ...merchantSetupData }
-        : {
-            businessInfo: {
-              name: bizName,
-              industry: 'Nail Salon',
-              address: '',
-              phone: '',
-              email: ''
-            },
-            staffList: []
-          }
-
-      // Ensure staffList is an array
-      if (!Array.isArray(merchantSetup.staffList)) {
-        merchantSetup = { ...merchantSetup, staffList: [] }
-      }
-
-      // Check if this technician is already in the merchant's staff list
-      const isAlreadyInRoster = merchantSetup.staffList.some(s => s.id === staffMember.id)
-      const existingMember = merchantSetup.staffList.find(s => s.id === staffMember.id)
-
-      if (isAlreadyInRoster && existingMember?.status !== 'Pending Acceptance' && existingMember?.status !== 'Pending Setup') {
-        setScanStatus('error')
-        showToast(
-          currentLanguage === 'vi'
-            ? `Bạn đã được liên kết với tiệm ${bizName}!`
-            : `You are already linked to ${bizName}!`,
-          'warning'
-        )
-        return
-      }
-
+    try {
+      await joinPublicInviteMutation.mutateAsync()
       setScanStatus('success')
       showToast(
-        currentLanguage === 'vi'
-          ? `Gửi yêu cầu tham gia tiệm ${bizName} thành công!`
-          : `Successfully sent join request to ${bizName}!`,
-        'success'
+        t('components.staff_dashboard.views.StaffMyQR.joinRequestSent'),
+        'success',
       )
-
-      // Build updated staff list
-      let updatedStaffList
-      if (!isAlreadyInRoster) {
-        const newMember = {
-          id: staffMember.id,
-          fullName: staffMember.fullName || 'Mia Tran',
-          nickname: staffMember.nickname || 'Mia T.',
-          position: staffMember.position || 'Nail Tech',
-          avatar: staffMember.avatar || '',
-          phone: staffMember.phone || '',
-          email: staffMember.email || '',
-          isActive: false,
-          status: 'Pending Acceptance',
-          flowType: 'Self-Service Join (via QR)',
-          paymentAccounts: {},
-          payoutConfigs: {}
-        }
-        updatedStaffList = [...merchantSetup.staffList, newMember]
-      } else {
-        // If in roster but pending, update flow type or make sure it's correct
-        updatedStaffList = merchantSetup.staffList.map(s =>
-          s.id === staffMember.id
-            ? { ...s, status: 'Pending Acceptance', isActive: false, flowType: 'Self-Service Join (via QR)' }
-            : s
-        )
-      }
-
-      // Save updated merchant setup via mutation (invalidates query cache automatically)
-      saveMerchantSetupMutation.mutate({ ...merchantSetup, staffList: updatedStaffList })
-
-      // 2. Add notification to merchant via mutation
-      const newNoti = {
-        id: `noti-join-${staffMember.id}-${Date.now()}`,
-        staffId: staffMember.id,
-        type: 'feedback_alert',
-        title: t('components.staff_dashboard.views.StaffMyQR.joinRequestViaQr'),
-        message: currentLanguage === 'vi'
-          ? `Thợ ${staffMember.fullName} đã quét QR và yêu cầu gia nhập tiệm của bạn.`
-          : `Technician ${staffMember.fullName} scanned your QR and requested to link with your salon.`,
-        time: t('components.staff_dashboard.views.StaffMyQR.justNow'),
-        read: false,
-        linkTab: 'staff'
-      }
-      addNotificationMutation.mutate(newNoti)
-
-      // Close scanner modal after a short delay
       setTimeout(() => {
         setShowScanner(false)
         setScanStatus('idle')
+        setCustomInviteLink('')
       }, 1000)
-
-    }, 800)
-
-    setScanTimeout(timer)
-  }
-
-  const handleUrlOrTextSubmit = (val) => {
-    let bizName = val.trim()
-    if (!bizName) return
-
-    // Check if it's a URL
-    try {
-      if (bizName.startsWith('http://') || bizName.startsWith('https://')) {
-        const url = new URL(bizName)
-        const params = new URLSearchParams(url.search)
-        const bizParam = params.get('biz')
-        if (bizParam) {
-          bizName = bizParam
-        }
-      }
-    } catch (e) {
-      logger.error('URL parsing failed, treating as plain text', e)
-    }
-
-    simulateMerchantScan(bizName)
-  }
-
-  const handleRequestUnlink = (businessName) => {
-    const confirmed = window.confirm(
-      currentLanguage === 'vi'
-        ? `Bạn có chắc chắn muốn hủy liên kết với tiệm ${businessName}? Hành động này sẽ gỡ bỏ bạn khỏi danh sách nhân viên của tiệm ngay lập tức.`
-        : `Are you sure you want to unlink from ${businessName}? This will immediately remove you from the salon's roster.`
-    )
-    if (!confirmed) return
-
-    try {
-      if (merchantSetupData) {
-        const updatedSetup = { ...merchantSetupData }
-        if (Array.isArray(updatedSetup.staffList)) {
-          updatedSetup.staffList = updatedSetup.staffList.filter(s => s.id !== staffMember.id)
-        }
-        if (Array.isArray(updatedSetup.touchPoints)) {
-          updatedSetup.touchPoints = updatedSetup.touchPoints.filter(
-            tp => !(tp.type === 'Staff QR' && tp.staffId === staffMember.id)
-          )
-        }
-        // Save via mutation (invalidates query cache automatically)
-        saveMerchantSetupMutation.mutate(updatedSetup)
-      }
-
-      // Add a notification for the merchant via mutation
-      const newNoti = {
-        id: `noti-unlink-${staffMember.id}-${Date.now()}`,
-        staffId: staffMember.id,
-        type: 'feedback_alert',
-        title: t('components.staff_dashboard.views.StaffMyQR.unlinked'),
-        message: currentLanguage === 'vi'
-          ? `Thợ ${staffMember.fullName} đã hủy liên kết khỏi tiệm của bạn.`
-          : `Technician ${staffMember.fullName} has unlinked from your salon.`,
-        time: t('components.staff_dashboard.views.StaffMyQR.justNow'),
-        read: false,
-        linkTab: 'staff'
-      }
-      addNotificationMutation.mutate(newNoti)
-
+    } catch (err: unknown) {
+      setScanStatus('error')
+      const isAlreadyLinked =
+        isApiError(err) &&
+        (err.errorCode === 'STAFF_ALREADY_LINKED_TO_BUSINESS' ||
+          err.errorCode === 'STAFF_INVITE_ALREADY_EXISTS')
+      const isMissingReferralCode =
+        isApiError(err) && err.errorCode === 'REFERRAL_CODE_REQUIRED'
       showToast(
-        t('components.staff_dashboard.views.StaffMyQR.successfullyUnlinkedFromThe'),
-        'success'
+        isMissingReferralCode
+          ? t('components.staff_dashboard.views.StaffMyQR.profileReferralCodeMissing')
+          : isAlreadyLinked
+            ? t('components.staff_dashboard.views.StaffMyQR.alreadyLinkedOrRequested')
+            : t('components.staff_dashboard.views.StaffMyQR.joinRequestFailed'),
+        'error',
       )
-    } catch (e) {
-      logger.error(e)
     }
   }
 
@@ -260,18 +146,25 @@ export default function StaffMyQR() {
         <h3 className="text-base font-extrabold text-nexoraText">{t('staff_dashboard.qr.personal_title')}</h3>
         <p className="mt-1 text-xs text-nexoraMuted">{t('staff_dashboard.qr.personal_sub')}</p>
         <div className="mx-auto my-4 h-44 w-44 rounded-xl bg-white border border-nexoraBorder/60 p-3.5 flex items-center justify-center shadow-sm select-none overflow-hidden shrink-0">
-          <img
-            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(staffLink)}`}
-            alt="Scan QR"
-            className="h-full w-full object-contain"
-          />
+          {qrImageSrc ? (
+            <img
+              src={qrImageSrc}
+              alt="Scan QR"
+              className="h-full w-full object-contain"
+            />
+          ) : (
+            <QrCode className="h-16 w-16 text-nexoraSubtle" />
+          )}
         </div>
-        <div className="text-sm font-bold text-nexoraText">{t('staff_dashboard.staff_id')}: {account.staffCode || staffMember.id}</div>
+        <div className="text-sm font-bold text-nexoraText">
+          {t('staff_dashboard.staff_id')}: {staffCode || '—'}
+        </div>
         <div className="mt-3 space-y-2">
           <button
             type="button"
             onClick={handleShare}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-nexoraElectric to-nexoraViolet py-3 text-sm font-extrabold text-white transition hover:opacity-90"
+            disabled={!staffLink}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-nexoraElectric to-nexoraViolet py-3 text-sm font-extrabold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Share2 className="h-4 w-4" />
             {t('staff_dashboard.qr.share')}
@@ -348,15 +241,6 @@ export default function StaffMyQR() {
                      biz.status === 'Pending Unlink' ? (t('components.staff_dashboard.views.StaffMyQR.pendingUnlink')) :
                      (t('components.staff_dashboard.views.StaffMyQR.notConnected'))}
                   </span>
-                  {biz.status === 'Active' && (
-                    <button
-                      type="button"
-                      onClick={() => handleRequestUnlink(biz.businessName)}
-                      className="inline-flex items-center gap-1 rounded-lg bg-rose-50 border border-rose-200 px-3 py-1.5 text-xs font-bold text-rose-700 transition hover:bg-rose-100 shadow-sm cursor-pointer select-none"
-                    >
-                      <span>{t('components.staff_dashboard.views.StaffMyQR.unlink')}</span>
-                    </button>
-                  )}
                   {isNotConnected && (
                     <button
                       type="button"
@@ -446,39 +330,17 @@ export default function StaffMyQR() {
                 />
                 <button
                   type="button"
-                  onClick={() => handleUrlOrTextSubmit(customInviteLink)}
-                  className="h-9 px-3 bg-slate-800 text-white rounded-xl text-xs font-bold hover:bg-slate-700 transition"
+                  onClick={() => handleUrlOrTextSubmit()}
+                  disabled={joinPublicInviteMutation.isPending}
+                  className="h-9 px-3 bg-slate-800 text-white rounded-xl text-xs font-bold hover:bg-slate-700 transition disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {t('components.staff_dashboard.views.StaffMyQR.send')}
+                  {joinPublicInviteMutation.isPending
+                    ? t('common.processing')
+                    : t('components.staff_dashboard.views.StaffMyQR.send')}
                 </button>
               </div>
             </div>
 
-            {/* Quick simulation buttons */}
-            <div className="space-y-2 pt-2 border-t border-slate-100">
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block text-center">
-                {t('components.staff_dashboard.views.StaffMyQR.simulateQrScan')}
-              </span>
-              
-              <div className="flex flex-col gap-2">
-                {/* Standard Successful Scan button */}
-                <button
-                  type="button"
-                  onClick={() => simulateMerchantScan('Demo Salon A')}
-                  className="w-full py-2 bg-gradient-to-r from-nexoraElectric to-nexoraViolet text-white rounded-xl text-xs font-black uppercase tracking-wider transition-opacity hover:opacity-90 shadow-sm"
-                >
-                  Demo Salon A
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => simulateMerchantScan('VLINK Nail Spa')}
-                  className="w-full py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition"
-                >
-                  VLINK Nail Spa
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       )}

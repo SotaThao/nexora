@@ -614,13 +614,16 @@ export default function useStaffRegistration({ inviteData }) {
 
     setIsRegisterSubmitting(true)
     try {
-      await staffInvitesRepository.joinPublicInvite({
-        referralCode: inviteData?.biz,
-        displayName: linkedProfile.fullName,
-        phoneNumber: linkedProfile.phone,
-        position: linkedProfile.position,
-        bio: null
-      })
+      await staffInvitesRepository.joinPublicInvite(
+        {
+          referralCode: inviteData?.biz,
+          displayName: linkedProfile.fullName,
+          phoneNumber: linkedProfile.phone,
+          position: linkedProfile.position,
+          bio: null,
+        },
+        { anonymous: true },
+      )
     } catch (err: unknown) {
       logger.error('Failed to join public invite', err)
       const isAlreadyLinked =

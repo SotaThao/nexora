@@ -4,15 +4,19 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import reviewsRepository from '../repositories/reviews'
+import { useSessionRole } from '../../auth/useSessionRole'
 import type { ReviewRecord } from '../../types/domain'
 import type { ResolveReviewVars } from '../../types/hooks'
 
 const EMPTY_FILTERS = {}
 
-export function useDashboardReviews(filters: LooseObject = EMPTY_FILTERS) {
+export function useDashboardReviews(filters: LooseObject = EMPTY_FILTERS, { enabled: callerEnabled = true } = {}) {
+  const { isOwner } = useSessionRole()
   return useQuery<ReviewRecord[]>({
     queryKey: qk.dashboardReviews(filters),
     queryFn: () => reviewsRepository.list(filters),
+    enabled: isOwner && callerEnabled,
+    retry: false,
   })
 }
 
@@ -27,10 +31,13 @@ export function useResolveReview() {
 }
 
 /** @deprecated */
-export function useReviews() {
+export function useReviews({ enabled: callerEnabled = true } = {}) {
+  const { isOwner } = useSessionRole()
   return useQuery<ReviewRecord[]>({
     queryKey: qk.reviews(),
     queryFn: () => reviewsRepository.list(),
+    enabled: isOwner && callerEnabled,
+    retry: false,
   })
 }
 
