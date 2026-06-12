@@ -17,7 +17,7 @@ function TipsOverTimePanel({
   const { t, currentLanguage } = useTranslation()
   const chartRef = useRef(null)
   const [reveal, setReveal] = useState(0)
-  const [hoverIndex, setHoverIndex] = useState(null)
+  const [hoverIndex, setHoverIndex] = useState<any | null>(null)
 
   const series = useMemo(() => {
     if (range === 'Custom') {

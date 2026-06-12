@@ -19,6 +19,8 @@ import {
   useApproveStaffLink,
   useRejectStaffLink,
 } from '../../../data/hooks/useMerchantStaff'
+import { EMPTY_STAFF_FORM, type StaffFormState } from '../../../types/forms'
+import { getApiErrorCode } from '../../../types/domain'
 
 /**
  * Normalise a raw staff-list member into the shape the dashboard uses.
@@ -59,21 +61,21 @@ export function normaliseMember(member) {
   }
 }
 
-interface UseStaffManagementOptions {
-  staffData?: LooseObject[]
-  isStaffLoading?: boolean
-  businessName?: string
-  viewingStaffDetailId?: string | null
-  setViewingStaffDetailId?: (id: string | null) => void
-}
-
+/**
+ * @param {object} opts
+ * @param {Array} opts.staffData - Staff data from useMerchantStaff() query
+ * @param {boolean} opts.isStaffLoading - Loading state from useMerchantStaff()
+ * @param {string} opts.businessName
+ * @param {string|null} opts.viewingStaffDetailId
+ * @param {Function} opts.setViewingStaffDetailId
+ */
 export function useStaffManagement({
   staffData,
-  isStaffLoading = false,
-  businessName = '',
-  viewingStaffDetailId,
-  setViewingStaffDetailId,
-}: UseStaffManagementOptions) {
+  isStaffLoading,
+  businessName,
+  viewingStaffDetailId = null,
+  setViewingStaffDetailId = (_id: string | null) => {},
+}) {
   const { currentLanguage, t } = useTranslation()
   const { showToast, showConfirm } = useNotification()
 
@@ -93,13 +95,12 @@ export function useStaffManagement({
   const [errors, setErrors] = useState<LooseObject>({})
   const [staffForm, setStaffForm] = useState<StaffFormState>({
     ...EMPTY_STAFF_FORM,
-    position: 'Nail Tech',
-    payoutConfigs: { ...DEFAULT_PAYOUT_CONFIGS }
+    payoutConfigs: { ...DEFAULT_PAYOUT_CONFIGS },
   })
-  const [editingStaffId, setEditingStaffId] = useState(null)
+  const [editingStaffId, setEditingStaffId] = useState<any | null>(null)
   const [isStaffModalOpen, setIsStaffModalOpen] = useState(false)
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false)
-  const [approvingStaffMember, setApprovingStaffMember] = useState(null)
+  const [approvingStaffMember, setApprovingStaffMember] = useState<any | null>(null)
   const [isInviteShareOpen, setIsInviteShareOpen] = useState(false)
   const [inviteShareDefaultName, setInviteShareDefaultName] = useState('')
   const [inviteShareDefaultContact, setInviteShareDefaultContact] = useState('')

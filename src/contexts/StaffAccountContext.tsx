@@ -1,4 +1,5 @@
-import React, { createContext, useCallback, useContext, useMemo } from 'react'
+import React, { createContext, useCallback, useContext, useMemo, type ReactNode } from 'react'
+import type { DomainRecord, StaffAccountContextValue } from '../types/contexts'
 import { logger } from '../utils/logger'
 import { makeDefaultStaffAccount } from '../components/staff-dashboard/data/staffMockData'
 import {
@@ -12,67 +13,50 @@ import { usePendingAccounts } from '../data/hooks/usePendingAccounts'
 import { useProfileSettings, useUpdateUserProfile, useUpdateStaffProfile } from '../data/hooks/useProfileSettings'
 import { useStaffProfile, useStaffBusinesses } from '../data/hooks/useStaffSelf'
 
-interface StaffKpis {
-  todayTips: number
-  todayCount: number
-  monthTips: number
-  monthCount: number
-  pendingCount: number
-  pendingAmount: number
-  rating: number
-}
-
-interface StaffAccountContextValue {
-  staffId: string | null
-  staffMember: LooseObject
-  businessName: string
-  account: LooseObject
-  tips: LooseObject[]
-  pendingTips: LooseObject[]
-  kpis: StaffKpis
-  linkedBusinesses: LooseObject[]
-  notifications: LooseObject[]
-  unreadCount: number
-  confirmTip: (tipId: string) => void
-  confirmAllPending: () => void
-  setPayoutMethod: (key: string, patch: LooseObject) => void
-  saveProfile: (patch: LooseObject) => void
-  setBusinessDisplayName: (linkId: string, name: string) => void
-  setPushPreference: (key: string, value: unknown) => void
-  markNotificationRead: (notiId: string) => void
-}
-
 const StaffAccountContext = createContext<StaffAccountContextValue | null>(null)
 
 const slugify = (str = '') => str.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 
-export function StaffAccountProvider({ staffId = null, children }: { staffId?: string | null, children: React.ReactNode }) {
-  const { data: accountData = null } = useStaffAccountQuery(staffId) as { data: LooseObject | null }
-  const { data: transactions = null } = useTransactions() as { data: LooseObject[] | null }
-  const { data: merchantSetup = null } = useMerchantSetup() as { data: LooseObject | null }
-  const { data: reviews = null } = useReviews() as { data: LooseObject[] | null }
-  const { data: allPendingAccounts = [] } = usePendingAccounts() as { data: LooseObject[] }
+interface StaffAccountProviderProps {
+  staffId?: string | null
+  children: ReactNode
+}
+
+export function StaffAccountProvider({ staffId = null, children }: StaffAccountProviderProps) {
+  // --- Server state via TanStack Query hooks --------------------------------
+  // useStaffAccountQuery(staffId) → the single staff account blob (or null)
+  const { data: accountData = null } = useStaffAccountQuery(staffId)
+  const { data: transactions = null } = useTransactions()
+  const { data: merchantSetup = null } = useMerchantSetup()
+  const { data: reviews = null } = useReviews()
+  const { data: allPendingAccounts = [] } = usePendingAccounts()
 
   const saveStaffAccountMutation = useSaveStaffAccountQuery()
   const saveMerchantSetupMutation = useSaveMerchantSetup()
 
-  const { data: userProfile = null } = useProfileSettings() as { data: LooseObject | null }
-  const { data: staffProfile = null } = useStaffProfile() as { data: LooseObject | null }
-  const { data: staffBusinesses = null } = useStaffBusinesses() as { data: LooseObject[] | null }
+  // API identity: GET /userprofile/me — the persisted personal onboarding data.
+  const { data: userProfileRaw = null } = useProfileSettings()
+  const userProfile = userProfileRaw as DomainRecord | null
+  // API staff self: own StaffProfile (staffCode, displayName, bio) + linked businesses.
+  const { data: staffProfileRaw = null } = useStaffProfile()
+  const staffProfile = staffProfileRaw as DomainRecord | null
+  const { data: staffBusinesses = null } = useStaffBusinesses()
   const updateUserProfileMutation = useUpdateUserProfile()
   const updateStaffProfileMutation = useUpdateStaffProfile()
 
-  const staffList: LooseObject[] = useMemo(() => {
+  // --- Derived: merchant staff list + the signed-in staff member -----------
+  const staffList = useMemo(() => {
     const list = merchantSetup?.staffList
     return Array.isArray(list) && list.length ? list : []
   }, [merchantSetup])
 
+  // Look up registered pending accounts to see if this staff matches a manually registered staff account
   const registeredStaffAccount = useMemo(() => {
-    return allPendingAccounts.find((acc: LooseObject) => acc.role === 'personal' && acc.staffId === staffId)
+    return allPendingAccounts.find(acc => acc.role === 'personal' && acc.staffId === staffId)
   }, [allPendingAccounts, staffId])
 
-  const staffMember: LooseObject = useMemo(() => {
-    const found = staffList.find((s: LooseObject) => s.id === staffId)
+  const staffMember = useMemo(() => {
+    const found = staffList.find((s) => s.id === staffId)
     if (found) return found
     if (registeredStaffAccount) {
       return {
@@ -88,11 +72,16 @@ export function StaffAccountProvider({ staffId = null, children }: { staffId?: s
     return staffList[0] || {}
   }, [staffList, staffId, registeredStaffAccount])
 
-  const businessName: string = merchantSetup?.businessInfo?.name || ''
+  const businessName = merchantSetup?.businessInfo?.name || ''
 
-  const account: LooseObject = useMemo(() => {
-    const base: LooseObject = accountData || makeDefaultStaffAccount(staffMember)
+  // --- Staff-owned blob (with default init) --------------------------------
+  // useStaffAccountQuery(staffId) returns the single account blob for this staff.
+  const account = useMemo(() => {
+    const base = (accountData || makeDefaultStaffAccount(staffMember)) as DomainRecord
     if (!userProfile && !staffProfile) return base
+    // Hydrate identity fields from the backend (API mode):
+    // - GET /userprofile/me  → fullName / phone / email
+    // - GET /staff/profile   → staffCode / displayName / bio / photo
     const apiFullName = (userProfile?.fullName || '').trim()
       || `${userProfile?.firstName ?? ''} ${userProfile?.lastName ?? ''}`.trim()
     return {
@@ -107,18 +96,23 @@ export function StaffAccountProvider({ staffId = null, children }: { staffId?: s
     }
   }, [accountData, staffMember, userProfile, staffProfile])
 
+  // Persist a partial update to the signed-in staff's owned blob.
+  // repository.save(staffId, data) deep-merges `data` into the existing blob,
+  // so we only need to pass the patch.
   const updateAccount = useCallback(
-    (patch: LooseObject) => {
-      const base: LooseObject = accountData || makeDefaultStaffAccount(staffMember)
-      const nextAccount: LooseObject = { ...base, ...patch }
+    (patch) => {
+      const base = accountData || makeDefaultStaffAccount(staffMember)
+      const nextAccount = { ...base, ...patch }
 
+      // Save the updated staff account blob (mutation merges patch into existing blob)
       saveStaffAccountMutation.mutate({ staffId, data: patch })
 
+      // Synchronize back to merchant setup roster
       if (merchantSetup && Array.isArray(merchantSetup.staffList)) {
         try {
-          const updatedStaffList = merchantSetup.staffList.map((s: LooseObject) => {
+          const updatedStaffList = merchantSetup.staffList.map((s) => {
             if (s.id === staffId) {
-              const pm: LooseObject = nextAccount.payoutMethods || {}
+              const pm = nextAccount.payoutMethods || {}
               return {
                 ...s,
                 fullName: nextAccount.fullName !== undefined ? nextAccount.fullName : s.fullName,
@@ -140,7 +134,7 @@ export function StaffAccountProvider({ staffId = null, children }: { staffId?: s
             }
             return s
           })
-          ;(saveMerchantSetupMutation.mutate as any)({ ...merchantSetup, staffList: updatedStaffList })
+          saveMerchantSetupMutation.mutate({ ...merchantSetup, staffList: updatedStaffList })
         } catch (e) {
           logger.error('[StaffAccountContext] Error syncing to merchant setup:', e)
         }
@@ -149,14 +143,15 @@ export function StaffAccountProvider({ staffId = null, children }: { staffId?: s
     [staffId, staffMember, accountData, merchantSetup, saveStaffAccountMutation, saveMerchantSetupMutation]
   )
 
-  const allTx: LooseObject[] = useMemo(() => {
+  // --- Derived: tips for this staff (with status) --------------------------
+  const allTx = useMemo(() => {
     const list = Array.isArray(transactions) && transactions.length ? transactions : []
-    return list.filter((tx: LooseObject) => tx.staffId === staffId)
+    return list.filter((tx) => tx.staffId === staffId)
   }, [transactions, staffId])
 
-  const tips: LooseObject[] = useMemo(() => {
-    const confirmed = new Set<string>(account.confirmedTipIds || [])
-    return allTx.map((tx: LooseObject) => {
+  const tips = useMemo(() => {
+    const confirmed = new Set(account.confirmedTipIds || [])
+    return allTx.map((tx) => {
       const method = tx.paymentMethod || ''
       let status = 'Pending'
       if (method.toUpperCase().includes('VLINKPAY')) status = 'Verified'
@@ -165,40 +160,42 @@ export function StaffAccountProvider({ staffId = null, children }: { staffId?: s
     })
   }, [allTx, account.confirmedTipIds, account.defaultDisplayName, businessName])
 
-  const pendingTips: LooseObject[] = useMemo(() => tips.filter((t: LooseObject) => t.status === 'Pending'), [tips])
+  const pendingTips = useMemo(() => tips.filter((t) => t.status === 'Pending'), [tips])
 
-  const staffReviews: LooseObject[] = useMemo(() => {
+  // --- Derived: KPIs -------------------------------------------------------
+  const staffReviews = useMemo(() => {
     const list = Array.isArray(reviews) && reviews.length ? reviews : []
-    return list.filter((r: LooseObject) => r.staffId === staffId)
+    return list.filter((r) => r.staffId === staffId)
   }, [reviews, staffId])
 
-  const kpis: StaffKpis = useMemo(() => {
-    const monthTips = tips.reduce((sum, t: LooseObject) => sum + (Number(t.amount) || 0), 0)
-    const latestDate = tips.reduce((d, t: LooseObject) => {
+  const kpis = useMemo(() => {
+    const monthTips = tips.reduce((sum, t) => sum + (Number(t.amount) || 0), 0)
+    const latestDate = tips.reduce((d, t) => {
       const day = (t.dateTime || '').split(' ')[0]
       return day > d ? day : d
     }, '')
     const todayTips = tips
-      .filter((t: LooseObject) => (t.dateTime || '').startsWith(latestDate))
-      .reduce((sum, t: LooseObject) => sum + (Number(t.amount) || 0), 0)
-    const ratingValues = staffReviews.map((r: LooseObject) => Number(r.rating) || 0)
+      .filter((t) => (t.dateTime || '').startsWith(latestDate))
+      .reduce((sum, t) => sum + (Number(t.amount) || 0), 0)
+    const ratingValues = staffReviews.map((r) => Number(r.rating) || 0)
     const rating = ratingValues.length
       ? Math.round((ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length) * 10) / 10
       : 0
     return {
       todayTips,
-      todayCount: tips.filter((t: LooseObject) => (t.dateTime || '').startsWith(latestDate)).length,
+      todayCount: tips.filter((t) => (t.dateTime || '').startsWith(latestDate)).length,
       monthTips,
-      monthCount: tips.length,
       pendingCount: pendingTips.length,
-      pendingAmount: pendingTips.reduce((sum, t: LooseObject) => sum + (Number(t.amount) || 0), 0),
       rating
     }
   }, [tips, pendingTips, staffReviews])
 
-  const linkedBusinesses: LooseObject[] = useMemo(() => {
+  // --- Derived: linked businesses ------------------------------------------
+  // API-first: GET /api/v1/staff/businesses. Falls back to the legacy
+  // merchant-setup derivation when the API returns nothing (storage mode).
+  const linkedBusinesses = useMemo(() => {
     if (Array.isArray(staffBusinesses) && staffBusinesses.length) {
-      return staffBusinesses.map((b: LooseObject) => ({
+      return staffBusinesses.map((b) => ({
         businessStaffLinkId: b.businessId,
         businessName: b.businessName,
         displayName: account.displayNamesByBusiness?.[b.businessId] || account.defaultDisplayName,
@@ -209,8 +206,8 @@ export function StaffAccountProvider({ staffId = null, children }: { staffId?: s
       }))
     }
 
-    const isLinked = merchantSetup?.staffList?.some((s: LooseObject) => s.id === staffId)
-    const linkedStaff = merchantSetup?.staffList?.find((s: LooseObject) => s.id === staffId)
+    const isLinked = merchantSetup?.staffList?.some((s) => s.id === staffId)
+    const linkedStaff = merchantSetup?.staffList?.find((s) => s.id === staffId)
     const linkId = `${slugify(businessName)}__${staffId}`
 
     let status = 'Pending Link'
@@ -236,9 +233,11 @@ export function StaffAccountProvider({ staffId = null, children }: { staffId?: s
     ]
   }, [staffBusinesses, businessName, staffId, account.displayNamesByBusiness, account.defaultDisplayName, staffMember.isActive, merchantSetup])
 
-  const notifications: LooseObject[] = useMemo(() => {
-    const read = new Set<string>(account.notificationsRead || [])
-    const fromTips = pendingTips.slice(0, 3).map((t: LooseObject) => ({
+  // --- Derived: notifications (from pending tips + recent good reviews) -----
+  const notifications = useMemo(() => {
+    const read = new Set(account.notificationsRead || [])
+    // Return structured data only; display strings are composed via i18n in the view.
+    const fromTips = pendingTips.slice(0, 3).map((t) => ({
       id: `noti-tip-${t.id}`,
       type: 'tip',
       amount: t.amount,
@@ -246,9 +245,9 @@ export function StaffAccountProvider({ staffId = null, children }: { staffId?: s
       read: read.has(`noti-tip-${t.id}`)
     }))
     const fromReviews = staffReviews
-      .filter((r: LooseObject) => Number(r.rating) >= 4)
+      .filter((r) => Number(r.rating) >= 4)
       .slice(0, 3)
-      .map((r: LooseObject) => ({
+      .map((r) => ({
         id: `noti-rev-${r.id}`,
         type: 'review',
         rating: r.rating,
@@ -258,9 +257,10 @@ export function StaffAccountProvider({ staffId = null, children }: { staffId?: s
     return [...fromTips, ...fromReviews]
   }, [pendingTips, staffReviews, account.notificationsRead])
 
+  // --- Actions -------------------------------------------------------------
   const confirmTip = useCallback(
-    (tipId: string) => {
-      const set = new Set<string>(account.confirmedTipIds || [])
+    (tipId) => {
+      const set = new Set(account.confirmedTipIds || [])
       set.add(tipId)
       updateAccount({ confirmedTipIds: Array.from(set) })
     },
@@ -268,14 +268,14 @@ export function StaffAccountProvider({ staffId = null, children }: { staffId?: s
   )
 
   const confirmAllPending = useCallback(() => {
-    const set = new Set<string>(account.confirmedTipIds || [])
-    pendingTips.forEach((t: LooseObject) => set.add(t.id))
+    const set = new Set(account.confirmedTipIds || [])
+    pendingTips.forEach((t) => set.add(t.id))
     updateAccount({ confirmedTipIds: Array.from(set) })
   }, [account.confirmedTipIds, pendingTips, updateAccount])
 
   const setPayoutMethod = useCallback(
-    (key: string, patch: LooseObject) => {
-      const methods: LooseObject = { ...account.payoutMethods }
+    (key, patch) => {
+      const methods = { ...account.payoutMethods }
       methods[key] = { ...methods[key], ...patch }
       updateAccount({ payoutMethods: methods })
     },
@@ -283,27 +283,28 @@ export function StaffAccountProvider({ staffId = null, children }: { staffId?: s
   )
 
   const saveProfile = useCallback(
-    (patch: LooseObject) => {
+    (patch) => {
       updateAccount(patch)
 
+      // Persist to the backend (API mode).
       if (patch.fullName !== undefined || patch.phone !== undefined) {
         const fullName = (patch.fullName ?? account.fullName ?? '').trim()
-        ;(updateUserProfileMutation.mutate as any)({
+        updateUserProfileMutation.mutate({
           firstName: fullName.split(' ')[0] || '',
           lastName: fullName.split(' ').slice(1).join(' ') || '',
           phoneNumber: patch.phone ?? account.phone ?? '',
         }, {
-          onError: (err: unknown) => logger.error('[StaffAccountContext] Failed to persist user profile', err),
+          onError: (err) => logger.error('[StaffAccountContext] Failed to persist user profile', err),
         })
       }
       if (patch.defaultDisplayName !== undefined || patch.bio !== undefined) {
         const displayName = (patch.defaultDisplayName ?? account.defaultDisplayName ?? account.fullName ?? '').trim()
         if (displayName) {
-          ;(updateStaffProfileMutation.mutate as any)({
+          updateStaffProfileMutation.mutate({
             displayName,
             bio: patch.bio ?? account.bio ?? '',
           }, {
-            onError: (err: unknown) => logger.error('[StaffAccountContext] Failed to persist staff profile', err),
+            onError: (err) => logger.error('[StaffAccountContext] Failed to persist staff profile', err),
           })
         }
       }
@@ -312,8 +313,8 @@ export function StaffAccountProvider({ staffId = null, children }: { staffId?: s
   )
 
   const setBusinessDisplayName = useCallback(
-    (linkId: string, name: string) => {
-      const map: LooseObject = { ...(account.displayNamesByBusiness || {}) }
+    (linkId, name) => {
+      const map = { ...(account.displayNamesByBusiness || {}) }
       map[linkId] = name
       updateAccount({ displayNamesByBusiness: map })
     },
@@ -321,22 +322,22 @@ export function StaffAccountProvider({ staffId = null, children }: { staffId?: s
   )
 
   const setPushPreference = useCallback(
-    (key: string, value: unknown) => {
+    (key, value) => {
       updateAccount({ pushPreferences: { ...account.pushPreferences, [key]: value } })
     },
     [account.pushPreferences, updateAccount]
   )
 
   const markNotificationRead = useCallback(
-    (notiId: string) => {
-      const set = new Set<string>(account.notificationsRead || [])
+    (notiId) => {
+      const set = new Set(account.notificationsRead || [])
       set.add(notiId)
       updateAccount({ notificationsRead: Array.from(set) })
     },
     [account.notificationsRead, updateAccount]
   )
 
-  const value: StaffAccountContextValue = {
+  const value = {
     staffId,
     staffMember,
     businessName,
@@ -346,7 +347,7 @@ export function StaffAccountProvider({ staffId = null, children }: { staffId?: s
     kpis,
     linkedBusinesses,
     notifications,
-    unreadCount: notifications.filter((n: LooseObject) => !n.read).length,
+    unreadCount: notifications.filter((n) => !n.read).length,
     confirmTip,
     confirmAllPending,
     setPayoutMethod,
@@ -359,7 +360,7 @@ export function StaffAccountProvider({ staffId = null, children }: { staffId?: s
   return <StaffAccountContext.Provider value={value}>{children}</StaffAccountContext.Provider>
 }
 
-export function useStaffAccount(): StaffAccountContextValue {
+export function useStaffAccount() {
   const ctx = useContext(StaffAccountContext)
   if (!ctx) throw new Error('useStaffAccount must be used within a StaffAccountProvider')
   return ctx

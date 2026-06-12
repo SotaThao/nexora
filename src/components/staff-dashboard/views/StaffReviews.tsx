@@ -112,8 +112,8 @@ export default function StaffReviews() {
         ) : (
           <div className="divide-y divide-slate-100">
             {staffReviews.map((review) => {
-              const isGoogle = review.category?.toLowerCase().includes('google')
-              const isYelp = review.category?.toLowerCase().includes('yelp')
+              const isGoogle = String(review.category ?? '').toLowerCase().includes('google')
+              const isYelp = String(review.category ?? '').toLowerCase().includes('yelp')
               
               // Privacy-focused: determine name mask label
               const maskedName = t('components.staff_dashboard.views.StaffReviews.anonymousCustomer')
@@ -128,7 +128,7 @@ export default function StaffReviews() {
                       <span className="text-xs font-black text-slate-700">{maskedName}</span>
                     </div>
 
-                    <span className="text-[10px] text-slate-400 font-bold">{review.date}</span>
+                    <span className="text-[10px] text-slate-400 font-bold">{String(review.date ?? '')}</span>
                   </div>
 
                   <div className="flex items-center gap-2 flex-wrap">

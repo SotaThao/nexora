@@ -1,68 +1,40 @@
 import { tokenStore } from '../auth/tokenStore'
-
-/** Extended fetch init with httpClient-specific options. */
-export interface HttpRequestInit extends Omit<RequestInit, 'body'> {
-  anonymous?: boolean
-  _isRefresh?: boolean
-  params?: Record<string, string | number | boolean | null | undefined>
-  body?: BodyInit | null
-}
-
-/** Shape of a normalised API error rejected by httpClient. */
-export interface ApiError {
-  status: number
-  errorCode: string
-  errors: Record<string, unknown>
-  retryAfter: number | string | null
-}
+import type { AuthTokens } from '../types/auth'
+import type {
+  ApiError,
+  HttpRequestInit,
+  RequestInterceptor,
+  ResponseInterceptor,
+} from '../types/api'
 
 const baseUrl = (import.meta.env?.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
 
-const requestInterceptors: Array<(init: HttpRequestInit) => HttpRequestInit> = []
+const requestInterceptors: RequestInterceptor[] = []
+const responseInterceptors: ResponseInterceptor[] = []
 
-const responseInterceptors: Array<(response: Response) => void> = []
-
-/**
- * Register a request interceptor.
- * The function receives the RequestInit object and must return it (possibly mutated).
- * Interceptors are applied in registration order.
- */
-export function addRequestInterceptor(fn: (init: HttpRequestInit) => HttpRequestInit): void {
+export function addRequestInterceptor(fn: RequestInterceptor) {
   requestInterceptors.push(fn)
 }
 
-/**
- * Register a response interceptor.
- * The function receives the raw Response object (before JSON decode).
- * Interceptors are applied in registration order.
- */
-export function addResponseInterceptor(fn: (response: Response) => void): void {
+export function addResponseInterceptor(fn: ResponseInterceptor) {
   responseInterceptors.push(fn)
 }
 
-// Module-level refresh promise sentinel
-let refreshPromise: Promise<unknown> | null = null
+let refreshPromise: Promise<AuthTokens> | null = null
 
-/**
- * Single-flight token refresh. Concurrent callers share one in-flight refresh.
- * On failure, clears tokens and dispatches the logout event.
- *
- * @returns {Promise<unknown>} The refreshed token payload
- */
-function runTokenRefresh() {
+function runTokenRefresh(): Promise<AuthTokens> {
   if (!refreshPromise) {
     refreshPromise = (async () => {
       const tokens = tokenStore.get()
       if (!tokens?.refreshToken) {
         throw new Error('No refresh token available')
       }
-      // POST to refresh-token endpoint anonymously with _isRefresh flag
-      const res = await post(
+      const res = await post<AuthTokens>(
         '/api/v1/authentication/refresh-token',
         { refreshToken: tokens.refreshToken },
-        { anonymous: true, _isRefresh: true }
+        { anonymous: true, _isRefresh: true },
       )
-      tokenStore.set(res as any)
+      tokenStore.set(res)
       return res
     })()
       .catch((err) => {
@@ -79,14 +51,15 @@ function runTokenRefresh() {
   return refreshPromise
 }
 
-// Register Bearer token interceptor — always active in API-only mode
 addRequestInterceptor((init) => {
   if (init.anonymous) {
     return init
   }
   const tokens = tokenStore.get()
   if (tokens?.accessToken) {
-    const headers = { ...init.headers }
+    const headers: Record<string, string> = {
+      ...(init.headers as Record<string, string> | undefined),
+    }
     headers['Authorization'] = `Bearer ${tokens.accessToken}`
     return {
       ...init,
@@ -96,50 +69,51 @@ addRequestInterceptor((init) => {
   return init
 })
 
-/**
- * Parse an error body from a non-2xx response into a normalized shape.
- *
- * @param {Response} response
- * @returns {Promise<{ status: number, errorCode: string, errors: object, retryAfter: number|null }>}
- */
+interface ErrorDetailItem {
+  errorCode?: string
+  field?: string
+  message?: string
+}
+
 async function buildError(response: Response): Promise<ApiError> {
   let errorCode = 'HTTP_ERROR'
-  let errors: Record<string, unknown> = {}
-  let retryAfter = null
+  let errors: Record<string, string[]> = {}
+  let retryAfter: number | string | null = null
 
   try {
     const text = await response.text()
     if (text) {
-      const body = JSON.parse(text)
+      const body = JSON.parse(text) as {
+        errorCode?: string
+        errors?: Record<string, string[]>
+        retryAfter?: number | string
+        errorDetail?: ErrorDetailItem[]
+      }
       if (body.errorCode) errorCode = body.errorCode
       if (body.errors !== undefined) errors = body.errors
       if (body.retryAfter !== undefined) retryAfter = body.retryAfter
 
-      // Backend sometimes returns errorCode inside `errorDetail` array
-      // e.g. { errorDetail: [{ message: "...", errorCode: "USER_EMAIL_ALREADY_EXISTS" }] }
       if (!body.errorCode && Array.isArray(body.errorDetail) && body.errorDetail.length > 0) {
         const firstDetail = body.errorDetail[0]
         if (firstDetail.errorCode) errorCode = firstDetail.errorCode
-        // Build errors map from all detail items
         for (const detail of body.errorDetail) {
           if (detail.errorCode) {
             const field = detail.field || '_general'
             if (!errors[field]) errors[field] = []
-            ;(errors[field] as unknown[]).push(detail.errorCode)
+            errors[field].push(detail.errorCode)
           }
         }
       }
     }
-  } catch (e) {
+  } catch {
     // response body was not JSON — use defaults above
   }
 
-  // Also read Retry-After header as fallback if not in body
   if (retryAfter === null || retryAfter === undefined) {
     const headerVal = response.headers.get('Retry-After')
     if (headerVal) {
       const parsedHeader = parseInt(headerVal, 10)
-      retryAfter = isNaN(parsedHeader) ? headerVal : parsedHeader
+      retryAfter = Number.isNaN(parsedHeader) ? headerVal : parsedHeader
     } else {
       retryAfter = null
     }
@@ -148,19 +122,11 @@ async function buildError(response: Response): Promise<ApiError> {
   return { status: response.status, errorCode, errors, retryAfter }
 }
 
-/**
- * Core request executor.
- *
- * @param {string} path - Path relative to baseUrl (e.g. '/api/users')
- * @param {RequestInit & { anonymous?: boolean, _isRefresh?: boolean }} init - fetch init options
- * @returns {Promise<unknown>} - Parsed JSON response body
- */
-async function request<T = unknown>(path: string, init: HttpRequestInit = {}): Promise<T> {
+async function request<T = unknown>(path: string, init: HttpRequestInit = {}): Promise<T | null> {
   const defaultHeaders: Record<string, string> = {
     Accept: 'application/json',
   }
 
-  // Do not set Content-Type for FormData uploads (browser will auto-set boundary)
   if (!(init.body instanceof FormData)) {
     defaultHeaders['Content-Type'] = 'application/json'
   }
@@ -169,19 +135,17 @@ async function request<T = unknown>(path: string, init: HttpRequestInit = {}): P
     ...init,
     headers: {
       ...defaultHeaders,
-      ...(init.headers ?? {}),
+      ...(init.headers as Record<string, string> | undefined),
     },
   }
 
-  // Apply request interceptors in order
   for (const interceptor of requestInterceptors) {
     finalInit = interceptor(finalInit)
   }
 
-  // Strip custom properties that must not be forwarded to fetch
   const { params, anonymous, _isRefresh, ...fetchInit } = finalInit
 
-  // Serialize query params into the URL
+  let resolvedPath = path
   if (params) {
     const qs = new URLSearchParams()
     for (const [k, v] of Object.entries(params)) {
@@ -189,28 +153,25 @@ async function request<T = unknown>(path: string, init: HttpRequestInit = {}): P
     }
     const sep = path.includes('?') ? '&' : '?'
     const qsStr = qs.toString()
-    if (qsStr) path = `${path}${sep}${qsStr}`
+    if (qsStr) resolvedPath = `${path}${sep}${qsStr}`
   }
 
-  let response
+  let response: Response
   try {
-    response = await fetch(`${baseUrl}${path}`, fetchInit)
-  } catch (err) {
-    // Normalize network exceptions
+    response = await fetch(`${baseUrl}${resolvedPath}`, fetchInit)
+  } catch {
     return Promise.reject({
       status: 0,
       errorCode: 'NETWORK_ERROR',
       errors: {},
       retryAfter: null,
-    })
+    } satisfies ApiError)
   }
 
-  // Apply response interceptors in order
   for (const interceptor of responseInterceptors) {
     interceptor(response)
   }
 
-  // Single-flight 401 -> refresh -> retry interceptor
   if (
     response.status === 401 &&
     !anonymous &&
@@ -219,9 +180,8 @@ async function request<T = unknown>(path: string, init: HttpRequestInit = {}): P
   ) {
     try {
       await runTokenRefresh()
-      // Retry request: interceptor will fetch the updated token
-      return await request(path, init)
-    } catch (err) {
+      return await request<T>(path, init)
+    } catch (err: unknown) {
       return Promise.reject(err)
     }
   }
@@ -230,33 +190,20 @@ async function request<T = unknown>(path: string, init: HttpRequestInit = {}): P
     return Promise.reject(await buildError(response))
   }
 
-  // Parse JSON; return null for empty bodies (204 No Content, etc.)
   const text = await response.text()
-  if (!text) return null as unknown as T
+  if (!text) return null
   return JSON.parse(text) as T
 }
 
-/**
- * GET /path
- * @param {string} path
- * @param {HttpRequestInit} [opts]
- */
-export function get<T = unknown>(path: string, opts: HttpRequestInit = {}): Promise<T> {
-  return request(path, { ...opts, method: 'GET' }) as Promise<T>
+export function get<T = unknown>(path: string, opts: HttpRequestInit = {}) {
+  return request<T>(path, { ...opts, method: 'GET' })
 }
 
-/**
- * GET /path and return Blob
- * @param {string} path
- * @param {HttpRequestInit} [opts]
- */
-export async function getBlob(path: string, opts: HttpRequestInit = {}): Promise<Blob> {
-  // Mirrors request() so authenticated downloads share the same params,
-  // interceptors, error normalization, and 401 -> refresh -> retry behavior.
+export async function getBlob(path: string, opts: HttpRequestInit = {}) {
   let finalInit: HttpRequestInit = {
     ...opts,
     method: 'GET',
-    headers: { ...(opts.headers ?? {}) },
+    headers: { ...(opts.headers as Record<string, string> | undefined) },
   }
 
   for (const interceptor of requestInterceptors) {
@@ -265,7 +212,6 @@ export async function getBlob(path: string, opts: HttpRequestInit = {}): Promise
 
   const { params, anonymous, _isRefresh, ...fetchInit } = finalInit
 
-  // Serialize query params into the URL
   let url = path
   if (params) {
     const qs = new URLSearchParams()
@@ -277,23 +223,22 @@ export async function getBlob(path: string, opts: HttpRequestInit = {}): Promise
     if (qsStr) url = `${path}${sep}${qsStr}`
   }
 
-  let response
+  let response: Response
   try {
     response = await fetch(`${baseUrl}${url}`, fetchInit)
-  } catch (err) {
+  } catch {
     return Promise.reject({
       status: 0,
       errorCode: 'NETWORK_ERROR',
       errors: {},
       retryAfter: null,
-    })
+    } satisfies ApiError)
   }
 
   for (const interceptor of responseInterceptors) {
     interceptor(response)
   }
 
-  // Single-flight 401 -> refresh -> retry
   if (
     response.status === 401 &&
     !anonymous &&
@@ -302,9 +247,8 @@ export async function getBlob(path: string, opts: HttpRequestInit = {}): Promise
   ) {
     try {
       await runTokenRefresh()
-      // Retry: interceptor will fetch the updated token
       return await getBlob(path, opts)
-    } catch (err) {
+    } catch (err: unknown) {
       return Promise.reject(err)
     }
   }
@@ -315,71 +259,50 @@ export async function getBlob(path: string, opts: HttpRequestInit = {}): Promise
   return await response.blob()
 }
 
-/**
- * POST /path with JSON body
- * @param {string} path
- * @param {unknown} [body]
- * @param {HttpRequestInit} [opts]
- */
-export function post<T = unknown>(path: string, body?: unknown, opts: HttpRequestInit = {}): Promise<T> {
-  return request(path, { ...opts, method: 'POST', body: JSON.stringify(body) }) as Promise<T>
+export function post<T = unknown>(path: string, body?: unknown, opts: HttpRequestInit = {}) {
+  const init: HttpRequestInit = { ...opts, method: 'POST' }
+  if (body !== undefined) init.body = JSON.stringify(body)
+  return request<T>(path, init)
 }
 
-/**
- * PUT /path with JSON body
- * @param {string} path
- * @param {unknown} [body]
- * @param {HttpRequestInit} [opts]
- */
-export function put<T = unknown>(path: string, body?: unknown, opts: HttpRequestInit = {}): Promise<T> {
-  return request(path, { ...opts, method: 'PUT', body: JSON.stringify(body) }) as Promise<T>
+export function put<T = unknown>(path: string, body?: unknown, opts: HttpRequestInit = {}) {
+  const init: HttpRequestInit = { ...opts, method: 'PUT' }
+  if (body !== undefined) init.body = JSON.stringify(body)
+  return request<T>(path, init)
 }
 
-/**
- * PATCH /path with JSON body
- * @param {string} path
- * @param {unknown} [body]
- * @param {HttpRequestInit} [opts]
- */
-export function patch<T = unknown>(path: string, body?: unknown, opts: HttpRequestInit = {}): Promise<T> {
-  return request(path, { ...opts, method: 'PATCH', body: JSON.stringify(body) }) as Promise<T>
+export function patch<T = unknown>(path: string, body?: unknown, opts: HttpRequestInit = {}) {
+  const init: HttpRequestInit = { ...opts, method: 'PATCH' }
+  if (body !== undefined) init.body = JSON.stringify(body)
+  return request<T>(path, init)
 }
 
-/**
- * DELETE /path
- * @param {string} path
- * @param {HttpRequestInit} [opts]
- */
-export function del<T = unknown>(path: string, opts: HttpRequestInit = {}): Promise<T> {
-  return request(path, { ...opts, method: 'DELETE' }) as Promise<T>
+export function del<T = unknown>(path: string, opts: HttpRequestInit = {}) {
+  return request<T>(path, { ...opts, method: 'DELETE' })
 }
 
-/**
- * Upload helper using FormData.
- *
- * @param {string} path
- * @param {FormData} formData
- * @param {'POST'|'PUT'} [method='POST']
- * @param {HttpRequestInit} [opts]
- */
-export function upload<T = unknown>(path: string, formData: FormData, method: 'POST' | 'PUT' = 'POST', opts: HttpRequestInit = {}): Promise<T> {
+export function upload<T = unknown>(
+  path: string,
+  formData: FormData,
+  method: 'POST' | 'PUT' = 'POST',
+  opts: HttpRequestInit = {},
+) {
   const { headers, ...restOpts } = opts
-  const customHeaders = {
+  const customHeaders: Record<string, string> = {
     Accept: 'application/json',
-    ...(headers ?? {}),
+    ...(headers as Record<string, string> | undefined),
   }
-  // Let the browser set the boundary for multipart/form-data
   delete customHeaders['Content-Type']
 
-  return request(path, {
+  return request<T>(path, {
     ...restOpts,
     method,
     body: formData,
     headers: customHeaders,
-  }) as Promise<T>
+  })
 }
 
-export default {
+const httpClient = {
   get,
   getBlob,
   post,
@@ -390,3 +313,5 @@ export default {
   addRequestInterceptor,
   addResponseInterceptor,
 }
+
+export default httpClient

@@ -29,7 +29,7 @@ export default function SupportView() {
   const [successMsg, setSuccessMsg] = useState('')
 
   // Accordion State (stores the index of the open item, or null if all closed)
-  const [openFaqIndex, setOpenFaqIndex] = useState(null)
+  const [openFaqIndex, setOpenFaqIndex] = useState<any | null>(null)
 
   // Handle support form submission
   const handleSubmit = (e) => {

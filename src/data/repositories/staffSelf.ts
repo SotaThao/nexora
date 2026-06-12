@@ -1,41 +1,59 @@
 /**
- * staffSelfRepository — staff-side self-service endpoints (live Swagger).
- *
- * Endpoints:
- *   GET /api/v1/staff/profile     → StaffProfileDto { id, staffCode, displayName, position, bio, photoUrl, isProfileComplete }
- *   GET /api/v1/staff/businesses  → PaginatedListOfStaffBusinessDto
+ * staffSelfRepository — staff-side self-service endpoints.
  */
 
 import httpClient from '../../lib/httpClient'
+import { isApiError } from '../../types/domain'
+import type { StaffBusinessLink, StaffLinkRequestDetail, StaffProfile } from '../../types/domain'
+import type { StaffLinkRequestDetailApiDto } from '../../types/repositories'
 
-export function createStaffSelfRepository(client = httpClient) {
+type HttpClient = typeof httpClient
+
+interface StaffBusinessApiDto {
+  businessId?: string
+  businessName?: string
+  address?: string | null
+  city?: string | null
+  state?: string | null
+  logoUrl?: string | null
+  role?: string | null
+  roleLabel?: string | null
+  linkStatus?: string | null
+  linkStatusLabel?: string | null
+  linkedAt?: string | null
+}
+
+interface StaffBusinessesResponse {
+  items?: StaffBusinessApiDto[]
+}
+
+export function normalizeStaffLinkRequestDetail(dto: StaffLinkRequestDetailApiDto): StaffLinkRequestDetail {
   return {
-    /**
-     * The authenticated staff member's own profile.
-     * @returns {Promise<object|null>} StaffProfileDto, or null when the user
-     *   has no StaffProfile yet (404 STAFF_PROFILE_NOT_FOUND).
-     */
-    async getMyProfile() {
+    id: dto.id ?? '',
+    businessName: dto.businessName ?? '',
+    businessLogoUrl: dto.businessLogoUrl ?? null,
+    businessRole: dto.businessRole ?? null,
+    requestedAt: dto.requestedAt ?? null,
+    status: dto.status ?? null,
+  }
+}
+
+export function createStaffSelfRepository(client: HttpClient = httpClient) {
+  return {
+    async getMyProfile(): Promise<StaffProfile | null> {
       try {
-        return await client.get<LooseObject>('/api/v1/staff/profile')
-      } catch (err) {
-        if ((err as any)?.status === 404) return null
+        return await client.get<StaffProfile>('/api/v1/staff/profile')
+      } catch (err: unknown) {
+        if (isApiError(err) && err.status === 404) return null
         throw err
       }
     },
 
-    /**
-     * Businesses linked to the authenticated staff member.
-     * @returns {Promise<Array<{ businessId: string, businessName: string,
-     *   address: string|null, city: string|null, state: string|null,
-     *   logoUrl: string|null, role: string|null, roleLabel: string|null,
-     *   linkStatus: string|null, linkStatusLabel: string|null, linkedAt: string|null }>>}
-     */
-    async getMyBusinesses() {
-      const res = await client.get<LooseObject>('/api/v1/staff/businesses')
-      const items: LooseObject[] = Array.isArray(res) ? res : ((res?.items as LooseObject[]) || [])
+    async getMyBusinesses(): Promise<StaffBusinessLink[]> {
+      const res = await client.get<StaffBusinessApiDto[] | StaffBusinessesResponse>('/api/v1/staff/businesses')
+      const items = Array.isArray(res) ? res : (res?.items || [])
       return items.map((b) => ({
-        businessId: b.businessId,
+        businessId: b.businessId ?? '',
         businessName: b.businessName ?? '',
         address: b.address ?? null,
         city: b.city ?? null,
@@ -47,6 +65,21 @@ export function createStaffSelfRepository(client = httpClient) {
         linkStatusLabel: b.linkStatusLabel ?? null,
         linkedAt: b.linkedAt ?? null,
       }))
+    },
+
+    async getLinkRequest(linkId: string): Promise<StaffLinkRequestDetail> {
+      const data = await client.get<StaffLinkRequestDetailApiDto>(
+        `/api/v1/staff/link-requests/${encodeURIComponent(linkId)}`,
+      )
+      return normalizeStaffLinkRequestDetail(data)
+    },
+
+    async acceptLinkRequest(linkId: string): Promise<void> {
+      await client.put(`/api/v1/staff/link-requests/${encodeURIComponent(linkId)}/accept`)
+    },
+
+    async rejectLinkRequest(linkId: string): Promise<void> {
+      await client.put(`/api/v1/staff/link-requests/${encodeURIComponent(linkId)}/reject`)
     },
   }
 }

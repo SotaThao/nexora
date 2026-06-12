@@ -78,9 +78,9 @@ export default function StaffPay() {
   const toggleMutation = useToggleStaffPaymentMethod()
   const updateMutation = useUpdateStaffPaymentMethod()
 
-  const [activeWalletKey, setActiveWalletKey] = useState(null)
+  const [activeWalletKey, setActiveWalletKey] = useState<any | null>(null)
 
-  const getMethod = (key) => apiPaymentMethods.find(m => m.type?.toLowerCase() === key.toLowerCase()) || { type: key, isActive: false, isConfigured: false, accountInfo: '', imageUrl: '' }
+  const getMethod = (key) => apiPaymentMethods.find(m => m.type?.toLowerCase() === key.toLowerCase()) || { type: key, isActive: false, isConfigured: false, accountInfo: '', imageUrl: '', id: undefined, accountName: null }
 
   const handleToggleMethod = (key, enabledValue) => {
     const methodData = getMethod(key)

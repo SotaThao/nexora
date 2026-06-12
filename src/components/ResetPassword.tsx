@@ -4,6 +4,7 @@ import { useTranslation } from '../contexts/LanguageContext'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import apiAuthAdapter from '../auth/adapters/apiAuthAdapter'
 import { getErrorI18nKey } from '../data/errorCodes'
+import { getApiErrorCode } from '../types/domain'
 
 export default function ResetPassword() {
   const { t } = useTranslation()
@@ -61,8 +62,8 @@ export default function ResetPassword() {
       setTimeout(() => {
         navigate('/login')
       }, 2500)
-    } catch (err) {
-      const errorCode = (err as any)?.errorCode || 'unknown_error'
+    } catch (err: unknown) {
+      const errorCode = getApiErrorCode(err, 'unknown_error')
       const i18nKey = getErrorI18nKey(errorCode)
       setError(t(i18nKey))
     } finally {

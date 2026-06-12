@@ -14,9 +14,9 @@ import {
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
 
-function Panel({ children, className = '' }) {
+function Panel({ children, className = '', id }: { children: React.ReactNode; className?: string; id?: string }) {
   return (
-    <section className={`bg-white dark:bg-luxuryCoal border border-nexoraBorder dark:border-luxuryGold/18 rounded-flox-cards shadow-premium ${className}`}>
+    <section id={id} className={`bg-white dark:bg-luxuryCoal border border-nexoraBorder dark:border-luxuryGold/18 rounded-flox-cards shadow-premium ${className}`}>
       {children}
     </section>
   )
@@ -53,7 +53,7 @@ export default function DevicesView({
   const [validationError, setValidationError] = useState('')
 
   // State for Delete Confirm Modal
-  const [deleteConfirmId, setDeleteConfirmId] = useState(null)
+  const [deleteConfirmId, setDeleteConfirmId] = useState<any | null>(null)
 
   // State for Export Toast
   const [showExportToast, setShowExportToast] = useState(false)

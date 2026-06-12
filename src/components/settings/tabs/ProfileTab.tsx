@@ -22,8 +22,6 @@ import {
   X,
   QrCode
 } from 'lucide-react'
-import ImageFileInput from '../../ui/ImageFileInput'
-import { captureQrImage } from '../../../native/imagePicker'
 
 const PayoutLogos = {
   zelle: (
@@ -99,7 +97,6 @@ export default function ProfileTab({
   saveBusiness,
   startEditReviews,
   saveReviews,
-  handleAvatarPick,
   handleAvatarChange,
   formatDOB,
   onShowQr,
@@ -111,13 +108,13 @@ export default function ProfileTab({
   const updateMutation = useUpdateMerchantPaymentMethod()
 
   // Local state for the payment method edit modal
-  const [editingMethod, setEditingMethod] = useState(null)
+  const [editingMethod, setEditingMethod] = useState<any | null>(null)
   const [editValue, setEditValue] = useState('')
-  const [editQrCode, setEditQrCode] = useState(null)
+  const [editQrCode, setEditQrCode] = useState<any | null>(null)
   const [isCapturing, setIsCapturing] = useState(false)
   const [modalError, setModalError] = useState('')
 
-  const getMethod = (key) => (apiPaymentMethods as LooseObject[]).find(m => m.type?.toLowerCase() === key.toLowerCase()) || { type: key, isActive: false, isConfigured: false, accountInfo: '' }
+  const getMethod = (key) => apiPaymentMethods.find(m => m.type?.toLowerCase() === key.toLowerCase()) || { type: key, isActive: false, isConfigured: false, accountInfo: '', id: undefined, imageUrl: null, accountName: null }
 
   const handleToggleMethod = (key) => {
     const methodData = getMethod(key)
@@ -160,18 +157,21 @@ export default function ProfileTab({
     )
   }
 
-  const handleModalImagePick = (dataUrl) => {
-    if (dataUrl) setEditQrCode(dataUrl)
+  const handleModalFileChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => setEditQrCode(reader.result)
+      reader.readAsDataURL(file)
+    }
   }
 
-  const handleModalTakePhoto = async () => {
+  const handleModalTakePhoto = () => {
     setIsCapturing(true)
-    try {
-      const dataUrl = await captureQrImage({ fallbackValue: editValue || '' })
-      if (dataUrl) setEditQrCode(dataUrl)
-    } finally {
+    setTimeout(() => {
+      setEditQrCode('https://via.placeholder.com/300?text=Mock+Camera+QR')
       setIsCapturing(false)
-    }
+    }, 1500)
   }
 
   const handleModalClearQr = () => setEditQrCode(null)
@@ -192,13 +192,10 @@ export default function ProfileTab({
                 alt={profile.fullName}
                 className="h-20 w-20 rounded-full object-cover border border-white shadow-sm"
               />
-              <ImageFileInput
-                as="label"
-                className="absolute inset-0 rounded-full bg-black/40 text-white text-[9px] font-black uppercase flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
-                onPick={handleAvatarPick}
-              >
+              <label className="absolute inset-0 rounded-full bg-black/40 text-white text-[9px] font-black uppercase flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
                 Edit
-              </ImageFileInput>
+                <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+              </label>
             </div>
             <span className="mt-2 inline-block bg-orange-50 text-orange-600 border border-orange-100 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full">
               Business Owner
@@ -715,7 +712,7 @@ export default function ProfileTab({
                   title="Business Location Map"
                   src="https://maps.google.com/maps?q=Palm%20Beach,%20QLD,%20Australia&t=&z=14&ie=UTF8&iwloc=&output=embed"
                   className="w-full h-full border-0 grayscale-[10%]"
-                  allowFullScreen={true}
+                  allowFullScreen
                   loading="lazy"
                 ></iframe>
               </div>
@@ -939,16 +936,15 @@ export default function ProfileTab({
                           {t('components.settings.tabs.ProfileTab.takePhoto')}
                         </span>
                       </button>
-                      <ImageFileInput
-                        as="label"
+                      <label
                         className="flex flex-col items-center justify-center py-5 border border-dashed border-slate-200 hover:border-nexoraBrand rounded-xl bg-slate-50 hover:bg-slate-50/50 transition gap-1.5 cursor-pointer"
-                        onPick={handleModalImagePick}
                       >
                         <FolderOpen className="w-5 h-5 text-nexoraBrand" />
                         <span className="text-[11px] font-bold text-slate-600">
                           {t('components.settings.tabs.ProfileTab.chooseFile')}
                         </span>
-                      </ImageFileInput>
+                        <input type="file" accept="image/*" className="sr-only" onChange={handleModalFileChange} />
+                      </label>
                     </div>
                   )}
                 </div>

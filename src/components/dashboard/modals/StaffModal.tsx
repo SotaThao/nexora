@@ -9,12 +9,7 @@ import { useNotification } from '../../../contexts/NotificationContext'
 import PayoutSetupModal from './PayoutSetupModal'
 import StaffReviewsDetailModal from './StaffReviewsDetailModal'
 import StaffQrScannerModal from './StaffQrScannerModal'
-import { getPayoutConfigsFromMember } from '../utils'
-import { usePendingAccounts } from '../../../data/hooks/usePendingAccounts'
-import { useStaffAccount } from '../../../data/hooks/useStaffAccount'
-import staffAccountsRepository from '../../../data/repositories/staffAccounts'
-import { useQuery } from '@tanstack/react-query'
-import { qk } from '../../../data/queryKeys'
+import { useSearchMerchantStaff } from '../../../data/hooks/useMerchantStaff'
 import { buildStaffReviewSummary } from './staffModalReviewUtils'
 
 function StaffModal({
@@ -29,6 +24,7 @@ function StaffModal({
   onBlockedFeatureClick,
   onClose,
   onSave,
+  onLinkStaff,
   onOpenInviteShare,
   reviews: reviewsProp = null,
   merchantSetupData = null
@@ -41,9 +37,11 @@ function StaffModal({
 
   // Scanner states
   const [showScanner, setShowScanner] = useState(false)
-  const [scanTarget, setScanTarget] = useState(null) // 'staff' | 'vlinkpay' | 'combined'
+  const [scanTarget, setScanTarget] = useState<any | null>(null) // 'staff' | 'vlinkpay' | 'combined'
 
   const [idInput, setIdInput] = useState(() => form.vlinkpay || form.nexoraStaffId || '')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [lastHandledSearchQuery, setLastHandledSearchQuery] = useState('')
 
   useEffect(() => {
     setIdInput(form.vlinkpay || form.nexoraStaffId || '')
@@ -52,24 +50,74 @@ function StaffModal({
   // Verification states
   const [vlinkpayStatus, setVlinkpayStatus] = useState('idle') // 'idle' | 'checking' | 'success' | 'error'
   const [nexoraStatus, setNexoraStatus] = useState('idle') // 'idle' | 'checking' | 'success' | 'error'
-  const [vlinkpayTimeout, setVlinkpayTimeout] = useState(null)
-  const [nexoraTimeout, setNexoraTimeout] = useState(null)
+  const [vlinkpayTimeout, setVlinkpayTimeout] = useState<any | null>(null)
+  const [nexoraTimeout, setNexoraTimeout] = useState<any | null>(null)
   const [showReviewsDetailModal, setShowReviewsDetailModal] = useState(false)
   const [reviewFilterRating, setReviewFilterRating] = useState('all')
   const [reviewFilterSource, setReviewFilterSource] = useState('all')
   const [reviewFilterOnlyCommented, setReviewFilterOnlyCommented] = useState(false)
 
-  const pendingAccountsQuery = usePendingAccounts()
-  const pendingAccountsList = pendingAccountsQuery.data ?? []
-  const normalizedIdInput = idInput.trim().toUpperCase()
-  const staffAccountQuery = useStaffAccount(
-    normalizedIdInput.startsWith('NEX-') ? normalizedIdInput : undefined,
-    { enabled: open && normalizedIdInput.startsWith('NEX-') }
-  )
-  const staffAccountsQuery = useQuery({
-    queryKey: qk.staffAccount(),
-    queryFn: () => staffAccountsRepository.getAll(),
+  const searchResultsQuery = useSearchMerchantStaff(searchQuery, {
+    enabled: open && !editing && !isApproveMode && searchQuery.trim().length > 0,
   })
+
+  useEffect(() => {
+    if (!searchQuery) return
+
+    if (searchResultsQuery.isFetching) {
+      setVlinkpayStatus('checking')
+      setNexoraStatus('checking')
+      return
+    }
+
+    if (searchResultsQuery.isError) {
+      setVlinkpayStatus('error')
+      setNexoraStatus('error')
+      if (lastHandledSearchQuery !== searchQuery) {
+        setLastHandledSearchQuery(searchQuery)
+        showToast(t('components.dashboard.modals.StaffModal.searchError'), 'error')
+      }
+      return
+    }
+
+    const results = searchResultsQuery.data
+    if (!results) return
+
+    if (results.length > 0) {
+      const matchedProfile = results[0]
+      setForm(prev => ({
+        ...prev,
+        fullName: matchedProfile.fullName,
+        nickname: matchedProfile.fullName?.split(' ')[0] || '',
+        position: matchedProfile.position || 'Nail Tech',
+        avatar: matchedProfile.avatar || '',
+        nexoraStaffId: matchedProfile.staffCode || '',
+        staffProfileId: matchedProfile.staffProfileId || '',
+        vlinkpay: searchQuery.startsWith('VLP-') ? searchQuery : '',
+        payoutConfigs: { ...prev.payoutConfigs },
+      }))
+      if (searchQuery.startsWith('VLP-')) {
+        setVlinkpayStatus('success')
+        setNexoraStatus('idle')
+      } else {
+        setNexoraStatus('success')
+        setVlinkpayStatus('idle')
+      }
+      if (lastHandledSearchQuery !== searchQuery) {
+        setLastHandledSearchQuery(searchQuery)
+        showToast(t('components.dashboard.modals.StaffModal.staffProfileVerifiedAuto'), 'success')
+      }
+      return
+    }
+
+    setForm(prev => ({ ...prev, staffProfileId: '', nexoraStaffId: '', vlinkpay: '' }))
+    setNexoraStatus('error')
+    setVlinkpayStatus('error')
+    if (lastHandledSearchQuery !== searchQuery) {
+      setLastHandledSearchQuery(searchQuery)
+      showToast(t('components.dashboard.modals.StaffModal.staffNotFound'), 'error')
+    }
+  }, [lastHandledSearchQuery, searchQuery, searchResultsQuery.data, searchResultsQuery.isError, searchResultsQuery.isFetching, setForm, showToast, t])
 
   if (!open) return null
 
@@ -125,212 +173,37 @@ function StaffModal({
   }
 
   const handleCombinedIdChange = (val) => {
-    const searchId = val.trim().toUpperCase()
+    const trimmed = val.trim()
+    const searchId = trimmed.includes('@') ? trimmed : trimmed.toUpperCase()
 
     // KYB verification check removed — NEXORA does not require KYB for add staff
-    const isNexora = searchId.startsWith('NEX-')
-
     setIdInput(val)
 
     if (vlinkpayTimeout) clearTimeout(vlinkpayTimeout)
     if (nexoraTimeout) clearTimeout(nexoraTimeout)
+    setSearchQuery('')
+    setLastHandledSearchQuery('')
 
     if (!searchId) {
       setVlinkpayStatus('idle')
       setNexoraStatus('idle')
-      setForm((prev) => ({ ...prev, vlinkpay: '', nexoraStaffId: '' }))
+      setForm((prev) => ({ ...prev, vlinkpay: '', nexoraStaffId: '', staffProfileId: '' }))
       return
     }
 
     // Checking states for both
     setVlinkpayStatus('checking')
     setNexoraStatus('checking')
+    setForm((prev) => ({ ...prev, vlinkpay: '', nexoraStaffId: '', staffProfileId: '' }))
 
-    // Detect type based on prefix
-    const isVLP = searchId.startsWith('VLP-')
-
-    let matchedProfile = null
-    let verifiedType = null // 'vlinkpay' | 'nexora'
-
-    // Helper to search nexora_merchant_setup staffList (received via prop from Dashboard)
-    const checkMerchantSetup = () => {
-      if (matchedProfile) return
-      try {
-        const setupData = merchantSetupData
-        if (setupData) {
-          const matched = setupData.staffList?.find(
-            s => (s.paymentAccounts?.vlinkpay?.toUpperCase() === searchId) ||
-                 (s.vlinkpay?.toUpperCase() === searchId) ||
-                 (s.staffCode?.toUpperCase() === searchId) ||
-                 (s.id?.toUpperCase() === searchId)
-          )
-          if (matched) {
-            const matchedVlp = matched.paymentAccounts?.vlinkpay || matched.vlinkpay || ''
-            matchedProfile = {
-              fullName: matched.fullName,
-              nickname: matched.nickname,
-              phone: matched.phone || '',
-              email: matched.email || '',
-              position: matched.position || 'Nail Tech',
-              avatar: matched.avatar || '',
-              vlinkpayId: matchedVlp,
-              nexoraStaffId: matched.id || '',
-              payoutConfigs: matched.payoutConfigs || getPayoutConfigsFromMember(matched)
-            }
-            if (searchId === (matched.staffCode || matched.id || '').toUpperCase()) {
-              verifiedType = 'nexora'
-            } else {
-              verifiedType = 'vlinkpay'
-            }
-          }
-        }
-      } catch (e) {}
-    }
-
-    // Helper to search nexora_staff_account (via TanStack Query hook/repository data)
-    const checkStaffAccount = () => {
-      if (matchedProfile) return
-      try {
-        const staffMap: LooseObject = staffAccountsQuery.data ?? {}
-        // Check by NEXORA Staff ID
-        const directAccount = searchId === normalizedIdInput ? staffAccountQuery.data : null
-        const staffCodeMatch = Object.entries(staffMap).find(([id, acc]) => acc.staffCode?.toUpperCase() === searchId)
-        if (directAccount || staffMap[searchId] || staffCodeMatch) {
-          const acc = directAccount || staffMap[searchId] || staffCodeMatch[1]
-          const matchedId = staffCodeMatch ? staffCodeMatch[0] : searchId
-          const payoutConfigs = {}
-          const pa = acc.payoutMethods || {}
-          Object.keys(pa).forEach(k => {
-            payoutConfigs[k] = {
-              enabled: !!pa[k]?.enabled,
-              value: pa[k]?.value || '',
-              qrCode: pa[k]?.qrCode || '',
-              accountName: pa[k]?.accountName || acc.defaultDisplayName || ''
-            }
-          })
-          matchedProfile = {
-            nexoraStaffId: matchedId,
-            fullName: acc.defaultDisplayName || '',
-            nickname: acc.defaultDisplayName || '',
-            phone: acc.phone || '',
-            email: acc.email || '',
-            position: acc.bio || 'Nail Tech',
-            avatar: acc.avatar || '',
-            vlinkpayId: pa.vlinkpay?.value || '',
-            payoutConfigs
-          }
-          verifiedType = 'nexora'
-          return
-        }
-
-        // Check by VLINKPAY ID
-        const matchedEntry = Object.entries(staffMap).find(
-          ([id, acc]) => acc.payoutMethods?.vlinkpay?.value?.toUpperCase() === searchId
-        )
-        if (matchedEntry) {
-          const [id, acc] = matchedEntry
-          const payoutConfigs = {}
-          const pa = acc.payoutMethods || {}
-          Object.keys(pa).forEach(k => {
-            payoutConfigs[k] = {
-              enabled: !!pa[k]?.enabled,
-              value: pa[k]?.value || '',
-              qrCode: pa[k]?.qrCode || '',
-              accountName: pa[k]?.accountName || acc.defaultDisplayName || ''
-            }
-          })
-          matchedProfile = {
-            nexoraStaffId: id,
-            fullName: acc.defaultDisplayName || '',
-            nickname: acc.defaultDisplayName || '',
-            phone: acc.phone || '',
-            email: acc.email || '',
-            position: acc.bio || 'Nail Tech',
-            avatar: acc.avatar || '',
-            vlinkpayId: searchId,
-            payoutConfigs
-          }
-          verifiedType = 'vlinkpay'
-        }
-      } catch (e) {}
-    }
-
-    // Helper to search nexora_pending_accounts (via TanStack Query hook data)
-    const checkPendingAccounts = () => {
-      if (matchedProfile) return
-      try {
-        const pendingList = pendingAccountsList
-        const matched = pendingList.find(acc => acc.vlinkpayId?.toUpperCase() === searchId || acc.staffCode?.toUpperCase() === searchId || acc.staffId?.toUpperCase() === searchId)
-        if (matched) {
-          matchedProfile = {
-            nexoraStaffId: matched.staffId || '',
-            fullName: matched.fullName || '',
-            nickname: matched.fullName ? matched.fullName.split(' ')[0] + '.' : '',
-            phone: '',
-            email: matched.email || '',
-            position: 'Nail Tech',
-            avatar: '',
-            vlinkpayId: matched.vlinkpayId || '',
-            payoutConfigs: {
-              zelle: { enabled: false, value: '', qrCode: '', accountName: '' },
-              bankwire: { enabled: false, value: '', qrCode: '', accountName: '' },
-              paypal: { enabled: false, value: '', qrCode: '', accountName: '' },
-              venmo: { enabled: false, value: '', qrCode: '', accountName: '' },
-              cashapp: { enabled: false, value: '', qrCode: '', accountName: '' },
-              applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
-            }
-          }
-          if (searchId === (matched.staffCode || matched.staffId || '').toUpperCase()) {
-            verifiedType = 'nexora'
-          } else {
-            verifiedType = 'vlinkpay'
-          }
-        }
-      } catch (e) {}
-    }
-
-    // Execute checks synchronously
-    checkMerchantSetup()
-    checkStaffAccount()
-    checkPendingAccounts()
-
-    if (matchedProfile) {
-      setForm(prev => ({
-        ...prev,
-        fullName: matchedProfile.fullName,
-        nickname: matchedProfile.nickname,
-        phone: matchedProfile.phone,
-        email: matchedProfile.email,
-        position: matchedProfile.position,
-        avatar: matchedProfile.avatar,
-        vlinkpay: matchedProfile.vlinkpayId || prev.vlinkpay || '',
-        nexoraStaffId: matchedProfile.nexoraStaffId || prev.nexoraStaffId || '',
-        payoutConfigs: {
-          ...prev.payoutConfigs,
-          ...matchedProfile.payoutConfigs
-        }
-      }))
-    }
-
-    const timer = setTimeout(() => {
-      if (matchedProfile) {
-        if (verifiedType === 'vlinkpay' || isVLP) {
-          setVlinkpayStatus('success')
-          setNexoraStatus('idle')
-        } else {
-          setNexoraStatus('success')
-          setVlinkpayStatus('idle')
-        }
-
-        showToast(t('components.dashboard.modals.StaffModal.staffProfileVerifiedAuto'), 'success')
-      } else {
-        setVlinkpayStatus('error')
-        setNexoraStatus('error')
-      }
+    const apiSearchTimer = setTimeout(() => {
+      setSearchQuery(searchId)
     }, 600)
 
-    setVlinkpayTimeout(timer)
-    setNexoraTimeout(timer)
+    setVlinkpayTimeout(apiSearchTimer)
+    setNexoraTimeout(apiSearchTimer)
+    return
+
   }
 
   const handleScanQr = (target) => {
@@ -675,7 +548,20 @@ function StaffModal({
           ) : (
             <>
               <button onClick={onClose} className="rounded-lg border border-nexoraBorder px-4 py-2 text-xs font-bold text-nexoraMuted">{t('common.cancel')}</button>
-              <button onClick={onSave} className="rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white">{t('common.save')}</button>
+              {!editing && form.staffProfileId ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onLinkStaff?.({ staffProfileId: form.staffProfileId, fullName: form.fullName })
+                    onClose()
+                  }}
+                  className="rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white"
+                >
+                  {t('components.dashboard.modals.StaffModal.linkRequestBtn')}
+                </button>
+              ) : (
+                <button onClick={onSave} className="rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white">{t('common.save')}</button>
+              )}
             </>
           )}
         </div>

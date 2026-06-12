@@ -1,35 +1,32 @@
 import httpClient from '../../lib/httpClient'
+import { isApiError } from '../../types/domain'
+import type { PaymentMethodDto } from '../../types/domain'
 
-export function createStaffPaymentMethodsRepository(client = httpClient) {
+type HttpClient = typeof httpClient
+
+interface UpdatePaymentMethodDto {
+  accountInfo?: string | null
+  imageUrl?: string | null
+}
+
+export function createStaffPaymentMethodsRepository(client: HttpClient = httpClient) {
   return {
-    /** 
-     * @returns {Promise<Array<{ id: string, type: string, accountInfo: string, imageUrl: string, isActive: boolean, isConfigured: boolean }>>}
-     */
-    async getAll() {
+    async getAll(): Promise<PaymentMethodDto[]> {
       try {
-        return await client.get('/api/v1/staff/payment-methods')
-      } catch (err) {
-        if ((err as any)?.status === 404) return []
+        return await client.get<PaymentMethodDto[]>('/api/v1/staff/payment-methods')
+      } catch (err: unknown) {
+        if (isApiError(err) && err.status === 404) return []
         throw err
       }
     },
 
-    /**
-     * @param {string} id
-     * @param {object} dto
-     * @param {string} [dto.accountInfo]
-     * @param {string} [dto.imageUrl]
-     */
-    async update(id, dto) {
-      return client.put(`/api/v1/staff/payment-methods/${id}`, dto)
+    async update(id: string, dto: UpdatePaymentMethodDto): Promise<PaymentMethodDto> {
+      return client.put<PaymentMethodDto>(`/api/v1/staff/payment-methods/${id}`, dto)
     },
 
-    /**
-     * @param {string} id
-     */
-    async toggle(id) {
-      return client.patch(`/api/v1/staff/payment-methods/${id}/toggle`)
-    }
+    async toggle(id: string): Promise<PaymentMethodDto> {
+      return client.patch<PaymentMethodDto>(`/api/v1/staff/payment-methods/${id}/toggle`)
+    },
   }
 }
 

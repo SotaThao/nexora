@@ -11,5 +11,5 @@ interface ImportMeta {
   readonly env: ImportMetaEnv
 }
 
-/** Global escape hatch for legacy form/state blobs during incremental typing. */
+/** Global loose object type for incremental migration of legacy form/state blobs. */
 type LooseObject = Record<string, any>

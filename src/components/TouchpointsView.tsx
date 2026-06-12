@@ -60,7 +60,7 @@ export default function TouchpointsView({
   const [localActiveSubTab, setLocalActiveSubTab] = useState('stations') // 'stations' or 'devices'
   const activeSubTab = propActiveSubTab !== undefined ? propActiveSubTab : localActiveSubTab
   const setActiveSubTab = onTabChange !== undefined ? onTabChange : setLocalActiveSubTab
-  const [deleteConfirmId, setDeleteConfirmId] = useState(null)
+  const [deleteConfirmId, setDeleteConfirmId] = useState<any | null>(null)
 
   // Local state for the Add Touchpoint form
   const [name, setName] = useState('')
@@ -68,11 +68,11 @@ export default function TouchpointsView({
   const [deviceId, setDeviceId] = useState('')
 
   // Local state for Linking Devices
-  const [linkingPointId, setLinkingPointId] = useState(null)
+  const [linkingPointId, setLinkingPointId] = useState<any | null>(null)
   const [linkInputVal, setLinkInputVal] = useState('')
 
   // Highlighting selected device
-  const [highlightedDeviceId, setHighlightedDeviceId] = useState(null)
+  const [highlightedDeviceId, setHighlightedDeviceId] = useState<any | null>(null)
   
   // Suggestion overlay state
   const [showSuggestions, setShowSuggestions] = useState(false)

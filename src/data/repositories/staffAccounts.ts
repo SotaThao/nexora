@@ -1,36 +1,28 @@
 /**
  * staffAccountsRepository — API-only implementation.
- * TODO: Wire to real staff accounts API endpoints when available.
  */
 
 import profileSettingsRepository from './profileSettings'
 import staffPaymentMethodsRepository from './staffPaymentMethods'
+import type { StaffAccountView } from '../../types/domain'
+import type { UpdateStaffProfileDto } from '../../types/repositories'
 
 export function createStaffAccountsRepository() {
   return {
-    /**
-     * @returns {Promise<object>} — keyed by staffId, or {} if absent
-     */
-    async getAll() {
+    async getAll(): Promise<Record<string, StaffAccountView>> {
       // TODO: Wire to GET /api/v1/merchant/staff-accounts
       return {}
     },
 
-    /**
-     * Composes the staff account view for the Personal dashboard.
-     * @param {string} staffId
-     * @returns {Promise<object|null>}
-     */
-    async get(staffId) {
+    async get(staffId?: string | null): Promise<StaffAccountView | null> {
       if (staffId && staffId !== 'self') {
-        // TODO: Wire to GET /api/v1/merchant/staff-accounts/:staffId for merchant reading staff
+        // TODO: Wire to GET /api/v1/merchant/staff-accounts/:staffId
         return null
       }
 
-      // 'self' logic (Personal dashboard)
       const [profile, paymentMethods] = await Promise.all([
         profileSettingsRepository.get(),
-        staffPaymentMethodsRepository.getAll()
+        staffPaymentMethodsRepository.getAll(),
       ])
 
       if (!profile) return null
@@ -46,19 +38,15 @@ export function createStaffAccountsRepository() {
           averageTip: 0,
           totalTransactions: 0,
           averageRating: 0,
-          isPending: true // signals to UI that stats are deferred
-        }
+          isPending: true,
+        },
       }
     },
 
-    /**
-     * @param {string} staffId
-     * @param {object} data
-     */
-    async save(staffId, data) {
-      // Keep existing mapping to profile update
+    async save(staffId: string | null | undefined, data: UpdateStaffProfileDto | LooseObject): Promise<void> {
       if (staffId === 'self' || !staffId) {
-        return profileSettingsRepository.updateStaffProfile(data)
+        await profileSettingsRepository.updateStaffProfile(data as UpdateStaffProfileDto)
+        return
       }
       // TODO: Wire to PUT /api/v1/merchant/staff-accounts/:staffId
     },

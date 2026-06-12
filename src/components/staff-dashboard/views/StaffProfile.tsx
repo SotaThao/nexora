@@ -1,6 +1,6 @@
 // StaffProfile — personal profile (staff-owned: display name + bio) and
 // per-business display names. Identity basics come from the merchant record.
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   LogOut,
   Camera,
@@ -17,7 +17,6 @@ import {
 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
-import ImageFileInput from '../../ui/ImageFileInput'
 import { useOutletContext } from 'react-router-dom'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
@@ -28,7 +27,7 @@ const readOnlyCls = 'w-full rounded-xl border border-nexoraBorder bg-nexoraCanva
 export default function StaffProfile() {
   const { currentLanguage, t } = useTranslation()
   const { staffMember, account, linkedBusinesses, saveProfile, setBusinessDisplayName } = useStaffAccount()
-  const { onLogout } = useOutletContext<{ onLogout: () => void }>()
+  const { onLogout } = useOutletContext<LooseObject>()
 
   const [activeTab, setActiveTab] = useState('profile') // profile | kyc
   const [displayName, setDisplayName] = useState(account.defaultDisplayName || '')
@@ -50,10 +49,11 @@ export default function StaffProfile() {
     idType: 'DriverLicense',
     bankName: '',
     bankAccount: '',
-    bankRouting: ''
+    bankRouting: '',
+    phone: '',
   })
-  const [idFrontFile, setIdFrontFile] = useState(null)
-  const [idBackFile, setIdBackFile] = useState(null)
+  const [idFrontFile, setIdFrontFile] = useState<any | null>(null)
+  const [idBackFile, setIdBackFile] = useState<any | null>(null)
 
   useEffect(() => {
     setDisplayName(account.defaultDisplayName || '')
@@ -78,13 +78,18 @@ export default function StaffProfile() {
     showToast(t('components.staff_dashboard.views.StaffProfile.accountChangesSavedSuccessfully'))
   }
 
-  const handleAvatarPick = (dataUrl) => {
-    if (!dataUrl) return
-    saveProfile({ avatar: dataUrl })
-    showToast(t('components.staff_dashboard.views.StaffProfile.avatarUpdatedSuccessfully'))
+  const handleAvatarChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      saveProfile({ avatar: reader.result })
+      showToast(t('components.staff_dashboard.views.StaffProfile.avatarUpdatedSuccessfully'))
+    }
+    reader.readAsDataURL(file)
   }
 
-  const handleKycSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleKycSubmit = (e) => {
     e.preventDefault()
     if (!kycData.legalName.trim() || !kycData.idNumber.trim() || !kycData.bankName.trim() || !kycData.bankAccount.trim() || !kycData.bankRouting.trim()) {
       setKycErrors({ kyc: t('components.staff_dashboard.views.StaffProfile.allFieldsAreRequired') })
@@ -97,14 +102,15 @@ export default function StaffProfile() {
       saveProfile({
         kycStatus: 'kyc_approved',
         fullName: kycData.legalName,
-        phone: phone || (kycData as LooseObject).phone || staffMember.phone
+        phone: phone || kycData.phone || staffMember.phone
       })
       setShowPortal(false)
       showToast(t('components.staff_dashboard.views.StaffProfile.kycVerificationSuccessful'))
     }, 2000)
   }
 
-  const handleIdImagePick = (side, file) => {
+  const handleFileChange = (e, side) => {
+    const file = e.target.files?.[0]
     if (!file) return
     if (side === 'front') {
       setIdFrontFile(file.name)
@@ -114,7 +120,7 @@ export default function StaffProfile() {
   }
 
   // Determine status card details for KYC
-  const getKycCardDetails = (): LooseObject => {
+  const getKycCardDetails = () => {
     switch (kycStatus) {
       case 'basic':
         return {
@@ -197,14 +203,11 @@ export default function StaffProfile() {
                     {(fullName || displayName || 'S').charAt(0)}
                   </div>
                 )}
-                <ImageFileInput
-                  as="label"
-                  className="absolute inset-0 rounded-full bg-black/45 text-white text-[10px] font-black uppercase flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
-                  onPick={handleAvatarPick}
-                >
+                <label className="absolute inset-0 rounded-full bg-black/45 text-white text-[10px] font-black uppercase flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
                   <Camera className="h-5 w-5 mb-1" />
                   {t('components.staff_dashboard.views.StaffProfile.change')}
-                </ImageFileInput>
+                  <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                </label>
               </div>
               <span className="mt-2 text-xs font-bold text-nexoraText">
                 {fullName || displayName}
@@ -443,12 +446,7 @@ export default function StaffProfile() {
                         <span className="text-[10px] text-slate-500 text-center font-medium">
                           {idFrontFile || (t('components.staff_dashboard.views.StaffProfile.uploadFrontSide'))}
                         </span>
-                        <ImageFileInput
-                          as="div"
-                          className="absolute inset-0 opacity-0 cursor-pointer"
-                          onPick={() => {}}
-                          onPickFile={(file) => handleIdImagePick('front', file)}
-                        >{null}</ImageFileInput>
+                        <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(e, 'front')} />
                       </div>
                     </div>
                     <div>
@@ -460,12 +458,7 @@ export default function StaffProfile() {
                         <span className="text-[10px] text-slate-500 text-center font-medium">
                           {idBackFile || (t('components.staff_dashboard.views.StaffProfile.uploadBackSide'))}
                         </span>
-                        <ImageFileInput
-                          as="div"
-                          className="absolute inset-0 opacity-0 cursor-pointer"
-                          onPick={() => {}}
-                          onPickFile={(file) => handleIdImagePick('back', file)}
-                        >{null}</ImageFileInput>
+                        <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(e, 'back')} />
                       </div>
                     </div>
                   </div>

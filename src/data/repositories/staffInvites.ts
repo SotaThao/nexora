@@ -1,17 +1,13 @@
 /**
  * staffInvitesRepository — API implementation for staff invite token flows.
- * These are anonymous (unauthenticated) endpoints used by invitees to load
- * invite metadata and accept invitations.
  */
 import httpClient from '../../lib/httpClient'
+import type { StaffInviteInfo } from '../../types/domain'
+import type { AcceptStaffInviteDto, InviteInfoApiDto, JoinPublicInviteDto } from '../../types/repositories'
 
-/**
- * Normalize an InviteInfoDto into the shape the invite portal uses.
- *
- * @param {object} dto - Raw InviteInfoDto from GET /api/v1/staff/invite/{token}
- * @returns {object} Normalized invite metadata
- */
-export function normalizeInviteInfo(dto) {
+type HttpClient = typeof httpClient
+
+export function normalizeInviteInfo(dto: InviteInfoApiDto): StaffInviteInfo {
   return {
     invitedName: dto.invitedName ?? '',
     invitedPosition: dto.invitedPosition ?? null,
@@ -19,35 +15,21 @@ export function normalizeInviteInfo(dto) {
   }
 }
 
-/**
- * Factory to create a staff invites repository instance.
- *
- * @param {object} [client] - HTTP client (defaults to httpClient)
- * @returns {object} Repository with invite token methods
- */
-export function createStaffInvitesRepository(client = httpClient) {
+export function createStaffInvitesRepository(client: HttpClient = httpClient) {
   return {
-    /**
-     * Load invite metadata by token (anonymous).
-     * @param {string} token
-     * @returns {Promise<object>} Normalized invite info
-     */
-    async getInviteInfo(token) {
-      const data = await client.get(
+    async getInviteInfo(token: string): Promise<StaffInviteInfo> {
+      const data = await client.get<InviteInfoApiDto>(
         `/api/v1/staff/invite/${encodeURIComponent(token)}`,
-        { anonymous: true }
+        { anonymous: true },
       )
       return normalizeInviteInfo(data)
     },
 
-    /**
-     * Accept an invite token (anonymous).
-     * @param {string} token
-     * @param {{ displayName: string, position?: string, bio?: string, photoUrl?: string }} body
-     * @returns {Promise<void>}
-     */
-    async acceptInvite(token, { displayName, position, bio, photoUrl, password }) {
-      return await client.post(
+    async acceptInvite(
+      token: string,
+      { displayName, position, bio, photoUrl, password }: Omit<AcceptStaffInviteDto, 'token'>,
+    ): Promise<void> {
+      await client.post(
         `/api/v1/staff/invite/${encodeURIComponent(token)}/accept`,
         {
           token,
@@ -57,28 +39,27 @@ export function createStaffInvitesRepository(client = httpClient) {
           photoUrl: photoUrl ?? null,
           password: password ?? null,
         },
-        { anonymous: true }
       )
     },
 
-    /**
-     * Send a request to join a business via public invite QR code (Self-Serve Join).
-     * @param {object} payload - Request payload
-     * @param {string} payload.referralCode - The business referral code (from ?biz= parameter)
-     * @param {string} payload.displayName - Staff display name
-     * @param {string} [payload.phoneNumber] - Optional phone number
-     * @param {string} [payload.position] - Optional position
-     * @param {string} [payload.bio] - Optional bio
-     * @returns {Promise<void>}
-     */
-    async joinPublicInvite({ referralCode, displayName, phoneNumber, position, bio }) {
-      return await client.post('/api/v1/staff/join-public-invite', {
-        referralCode,
-        displayName,
-        phoneNumber: phoneNumber ?? null,
-        position: position ?? null,
-        bio: bio ?? null
-      }, { anonymous: true })
+    async joinPublicInvite({
+      referralCode,
+      displayName,
+      phoneNumber,
+      position,
+      bio,
+    }: JoinPublicInviteDto): Promise<void> {
+      await client.post(
+        '/api/v1/staff/join-public-invite',
+        {
+          referralCode,
+          displayName,
+          phoneNumber: phoneNumber ?? null,
+          position: position ?? null,
+          bio: bio ?? null,
+        },
+        { anonymous: true },
+      )
     },
   }
 }

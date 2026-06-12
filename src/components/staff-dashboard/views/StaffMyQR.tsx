@@ -27,8 +27,8 @@ export default function StaffMyQR() {
   const [showScanner, setShowScanner] = useState(false)
   const [scanStatus, setScanStatus] = useState('idle') // 'idle' | 'checking' | 'success' | 'error'
   const [customInviteLink, setCustomInviteLink] = useState('')
-  const [scanTimeout, setScanTimeout] = useState(null)
-  const [zoomedQr, setZoomedQr] = useState(null)
+  const [scanTimeout, setScanTimeout] = useState<any | null>(null)
+  const [zoomedQr, setZoomedQr] = useState<any | null>(null)
 
   useEffect(() => {
     return () => {

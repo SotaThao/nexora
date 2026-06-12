@@ -4,13 +4,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import profileSettingsRepository from '../repositories/profileSettings'
+import type { UserProfile } from '../../types/domain'
+import type { UpdateStaffProfileDto, UpdateUserProfileDto } from '../../types/repositories'
 
-/**
- * @param {Object} [options]
- * @param {boolean} [options.enabled=true] - Whether the query should execute.
- */
 export function useProfileSettings({ enabled = true } = {}) {
-  return useQuery({
+  return useQuery<UserProfile | null>({
     queryKey: qk.userProfile(),
     queryFn: () => profileSettingsRepository.get(),
     enabled,
@@ -19,17 +17,16 @@ export function useProfileSettings({ enabled = true } = {}) {
 }
 
 export function useVerifiedStatus() {
-  return useQuery({
+  return useQuery<LooseObject>({
     queryKey: qk.verifiedStatus(),
     queryFn: () => profileSettingsRepository.getVerifiedStatus(),
     staleTime: 5 * 60_000, // 5 min — KYB status rarely changes
   })
 }
 
-/** PUT /api/v1/userprofile/update — firstName/lastName/phoneNumber. */
 export function useUpdateUserProfile() {
   const queryClient = useQueryClient()
-  return useMutation({
+  return useMutation<LooseObject, Error, UpdateUserProfileDto>({
     mutationFn: (dto) => profileSettingsRepository.updateUserProfile(dto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.userProfile() })
@@ -37,10 +34,9 @@ export function useUpdateUserProfile() {
   })
 }
 
-/** PUT /api/v1/staff/profile — displayName/position/bio/photoUrl. */
 export function useUpdateStaffProfile() {
   const queryClient = useQueryClient()
-  return useMutation({
+  return useMutation<LooseObject, Error, UpdateStaffProfileDto>({
     mutationFn: (dto) => profileSettingsRepository.updateStaffProfile(dto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.staffProfile() })
@@ -48,10 +44,10 @@ export function useUpdateStaffProfile() {
   })
 }
 
-/** @deprecated Use useSaveProfileSettings directly on API if needed */
+/** @deprecated */
 export function useSaveProfileSettings() {
   const queryClient = useQueryClient()
-  return useMutation({
+  return useMutation<void, Error, LooseObject>({
     mutationFn: (settings) => profileSettingsRepository.save(settings),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.userProfile() })
@@ -61,7 +57,7 @@ export function useSaveProfileSettings() {
 
 export function useClearProfileSettings() {
   const queryClient = useQueryClient()
-  return useMutation({
+  return useMutation<void, Error, void>({
     mutationFn: () => profileSettingsRepository.clear(),
     onSuccess: () => {
       queryClient.setQueryData(qk.userProfile(), null)

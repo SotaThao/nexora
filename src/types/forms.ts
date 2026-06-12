@@ -1,5 +1,4 @@
-import type { LooseObject } from './domain'
-
+/** Dashboard staff modal form state. */
 export interface StaffFormState {
   fullName: string
   nickname: string
@@ -20,7 +19,7 @@ export interface StaffFormState {
 export const EMPTY_STAFF_FORM: StaffFormState = {
   fullName: '',
   nickname: '',
-  position: '',
+  position: 'Nail Tech',
   avatar: '',
   phone: '',
   email: '',

@@ -113,56 +113,41 @@ export default function SettingsView({
       <div className="space-y-6">
 
         {form.activeTab === 'profile' && (
-          React.createElement(ProfileTab as any, {
-            profile: form.profile,
-            copiedId: form.copiedId,
-            isEditingBasic: form.isEditingBasic,
-            setIsEditingBasic: form.setIsEditingBasic,
-            basicForm: form.basicForm,
-            setBasicForm: form.setBasicForm,
-            isEditingAddress: form.isEditingAddress,
-            setIsEditingAddress: form.setIsEditingAddress,
-            addressForm: form.addressForm,
-            setAddressForm: form.setAddressForm,
-            isEditingBusiness: form.isEditingBusiness,
-            setIsEditingBusiness: form.setIsEditingBusiness,
-            businessForm: form.businessForm,
-            setBusinessForm: form.setBusinessForm,
-            isEditingReviews: form.isEditingReviews,
-            setIsEditingReviews: form.setIsEditingReviews,
-            reviewsForm: form.reviewsForm,
-            setReviewsForm: form.setReviewsForm,
-            editingMethod: form.editingMethod,
-            setEditingMethod: form.setEditingMethod,
-            editValue: form.editValue,
-            setEditValue: form.setEditValue,
-            editQrCode: form.editQrCode,
-            setEditQrCode: form.setEditQrCode,
-            isCapturing: form.isCapturing,
-            modalError: form.modalError,
-            setModalError: form.setModalError,
-            hasKyb,
-            currentLanguage: form.currentLanguage,
-            showToast: form.showToast,
-            handleCopy: form.handleCopy,
-            startEditBasic: form.startEditBasic,
-            saveBasic: form.saveBasic,
-            startEditAddress: form.startEditAddress,
-            saveAddress: form.saveAddress,
-            startEditBusiness: form.startEditBusiness,
-            saveBusiness: form.saveBusiness,
-            startEditReviews: form.startEditReviews,
-            saveReviews: form.saveReviews,
-            handleToggleMethod: form.handleToggleMethod,
-            handleEditPayoutAccount: form.handleEditPayoutAccount,
-            handleModalImagePick: form.handleModalImagePick,
-            handleModalTakePhoto: form.handleModalTakePhoto,
-            handleModalClearQr: form.handleModalClearQr,
-            savePayoutAccount: form.savePayoutAccount,
-            handleAvatarPick: form.handleAvatarPick,
-            formatDOB: form.formatDOB,
-            onShowQr: () => setShowQrModal(true),
-          })
+          <ProfileTab
+            profile={form.profile}
+            copiedId={form.copiedId}
+            isEditingBasic={form.isEditingBasic}
+            setIsEditingBasic={form.setIsEditingBasic}
+            basicForm={form.basicForm}
+            setBasicForm={form.setBasicForm}
+            isEditingAddress={form.isEditingAddress}
+            setIsEditingAddress={form.setIsEditingAddress}
+            addressForm={form.addressForm}
+            setAddressForm={form.setAddressForm}
+            isEditingBusiness={form.isEditingBusiness}
+            setIsEditingBusiness={form.setIsEditingBusiness}
+            businessForm={form.businessForm}
+            setBusinessForm={form.setBusinessForm}
+            isEditingReviews={form.isEditingReviews}
+            setIsEditingReviews={form.setIsEditingReviews}
+            reviewsForm={form.reviewsForm}
+            setReviewsForm={form.setReviewsForm}
+            hasKyb={hasKyb}
+            currentLanguage={form.currentLanguage}
+            showToast={form.showToast}
+            handleCopy={form.handleCopy}
+            startEditBasic={form.startEditBasic}
+            saveBasic={form.saveBasic}
+            startEditAddress={form.startEditAddress}
+            saveAddress={form.saveAddress}
+            startEditBusiness={form.startEditBusiness}
+            saveBusiness={form.saveBusiness}
+            startEditReviews={form.startEditReviews}
+            saveReviews={form.saveReviews}
+            handleAvatarChange={form.handleAvatarChange}
+            formatDOB={form.formatDOB}
+            onShowQr={() => setShowQrModal(true)}
+          />
         )}
 
         {form.activeTab === 'kyb' && (

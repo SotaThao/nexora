@@ -1,30 +1,26 @@
 import httpClient from '../../lib/httpClient'
+import type { PaymentMethodDto } from '../../types/domain'
 
-export function createMerchantPaymentMethodsRepository(client = httpClient) {
+type HttpClient = typeof httpClient
+
+interface UpdatePaymentMethodDto {
+  accountInfo?: string | null
+  imageUrl?: string | null
+}
+
+export function createMerchantPaymentMethodsRepository(client: HttpClient = httpClient) {
   return {
-    /** 
-     * @returns {Promise<Array<{ id: string, type: string, accountInfo: string, imageUrl: string, isActive: boolean, isConfigured: boolean, businessKybStatus: string|null }>>}
-     */
-    async getAll() {
-      return client.get('/api/v1/merchant/payment-methods')
+    async getAll(): Promise<PaymentMethodDto[]> {
+      return client.get<PaymentMethodDto[]>('/api/v1/merchant/payment-methods')
     },
 
-    /**
-     * @param {string} id
-     * @param {object} dto
-     * @param {string} [dto.accountInfo]
-     * @param {string} [dto.imageUrl]
-     */
-    async update(id, dto) {
-      return client.put(`/api/v1/merchant/payment-methods/${id}`, dto)
+    async update(id: string, dto: UpdatePaymentMethodDto): Promise<PaymentMethodDto> {
+      return client.put<PaymentMethodDto>(`/api/v1/merchant/payment-methods/${id}`, dto)
     },
 
-    /**
-     * @param {string} id
-     */
-    async toggle(id) {
-      return client.patch(`/api/v1/merchant/payment-methods/${id}/toggle`)
-    }
+    async toggle(id: string): Promise<PaymentMethodDto> {
+      return client.patch<PaymentMethodDto>(`/api/v1/merchant/payment-methods/${id}/toggle`)
+    },
   }
 }
 

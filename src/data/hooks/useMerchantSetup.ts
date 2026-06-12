@@ -3,12 +3,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import merchantsRepository from '../repositories/merchants'
 import { AuthContext } from '../../auth/AuthProvider'
+import type { MerchantSetup } from '../../types/domain'
+import type { CreateBusinessResult, ImageUploadResult, SlugCheckResult } from '../../types/repositories'
 
 export function useMerchantSetup({ enabled: callerEnabled = true } = {}) {
   const auth = useContext(AuthContext)
-  // Only fetch when user is an authenticated merchant owner
   const isOwner = auth?.status === 'authenticated' && auth?.session?.role === 'owner'
-  return useQuery({
+  return useQuery<MerchantSetup | null>({
     queryKey: qk.merchantSetup(),
     queryFn: () => merchantsRepository.getSetup(),
     enabled: isOwner && callerEnabled,
@@ -18,7 +19,7 @@ export function useMerchantSetup({ enabled: callerEnabled = true } = {}) {
 
 export function useSaveMerchantSetup() {
   const queryClient = useQueryClient()
-  return useMutation({
+  return useMutation<void, Error, MerchantSetup>({
     mutationFn: (setup) => merchantsRepository.saveSetup(setup),
     onMutate: (setup) => {
       queryClient.setQueryData(qk.merchantSetup(), setup)
@@ -32,7 +33,7 @@ export function useSaveMerchantSetup() {
 
 export function useClearMerchantSetup() {
   const queryClient = useQueryClient()
-  return useMutation({
+  return useMutation<void, Error, void>({
     mutationFn: () => merchantsRepository.clearSetup(),
     onMutate: () => {
       queryClient.setQueryData(qk.merchantSetup(), null)
@@ -47,7 +48,7 @@ export function useClearMerchantSetup() {
 export function useStaffList() {
   const auth = useContext(AuthContext)
   const isOwner = auth?.status === 'authenticated' && auth?.session?.role === 'owner'
-  return useQuery({
+  return useQuery<MerchantSetup['staffList']>({
     queryKey: qk.merchantSetup(),
     queryFn: () => merchantsRepository.getStaffList(),
     select: (data) => data ?? [],
@@ -58,7 +59,7 @@ export function useStaffList() {
 
 export function useSaveStaffList() {
   const queryClient = useQueryClient()
-  return useMutation<unknown, Error, any[]>({
+  return useMutation<void, Error, MerchantSetup['staffList']>({
     mutationFn: (list) => merchantsRepository.saveStaffList(list),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantSetup() })
@@ -66,10 +67,7 @@ export function useSaveStaffList() {
   })
 }
 
-/**
- * Checks slug availability with debounced API query.
- */
-export function useCheckSlug(slug) {
+export function useCheckSlug(slug: string) {
   const [debouncedSlug, setDebouncedSlug] = useState(slug)
 
   useEffect(() => {
@@ -79,7 +77,7 @@ export function useCheckSlug(slug) {
     return () => clearTimeout(handler)
   }, [slug])
 
-  return useQuery({
+  return useQuery<SlugCheckResult>({
     queryKey: ['checkSlug', debouncedSlug],
     queryFn: () => merchantsRepository.checkSlug(debouncedSlug),
     enabled: !!debouncedSlug && debouncedSlug.trim().length > 0,
@@ -90,7 +88,7 @@ export function useCheckSlug(slug) {
 export function useCreateBusiness() {
   const queryClient = useQueryClient()
 
-  return useMutation({
+  return useMutation<CreateBusinessResult, Error, LooseObject>({
     mutationFn: (dto) => merchantsRepository.createBusiness(dto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantSetup() })
@@ -99,15 +97,21 @@ export function useCreateBusiness() {
 }
 
 export function useUploadLogo() {
-  return useMutation<unknown, Error, File>({
+  return useMutation<string, Error, File>({
     mutationFn: (file) => merchantsRepository.uploadLogo(file),
+  })
+}
+
+export function useUploadImage() {
+  return useMutation<ImageUploadResult, Error, File>({
+    mutationFn: (file) => merchantsRepository.uploadImage(file),
   })
 }
 
 export function useUpdateReviewLinks() {
   const queryClient = useQueryClient()
 
-  return useMutation({
+  return useMutation<void, Error, LooseObject>({
     mutationFn: (dto) => merchantsRepository.updateReviewLinks(dto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantSetup() })
@@ -118,7 +122,7 @@ export function useUpdateReviewLinks() {
 export function useCompleteOnboarding() {
   const queryClient = useQueryClient()
 
-  return useMutation({
+  return useMutation<void, Error, void>({
     mutationFn: () => merchantsRepository.completeOnboarding(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantSetup() })

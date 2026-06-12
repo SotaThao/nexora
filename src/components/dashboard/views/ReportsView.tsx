@@ -23,7 +23,7 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
   const [selectedPayment, setSelectedPayment] = useState('all')
   const [selectedStatus, setSelectedStatus] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedTx, setSelectedTx] = useState(null)
+  const [selectedTx, setSelectedTx] = useState<any | null>(null)
 
   const resetFilters = () => {
     setDateRangePreset('all')

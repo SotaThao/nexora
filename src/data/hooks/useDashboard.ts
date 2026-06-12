@@ -1,29 +1,34 @@
 import { useQuery } from '@tanstack/react-query'
 import { dashboardRepository } from '../repositories/dashboard'
 import { qk } from '../queryKeys'
+import type { DashboardOverviewMetrics, StaffLeaderboardRow } from '../../types/repositories'
 
-// Shared stable default so omitted-params calls reuse the same reference
-// instead of allocating a fresh {} on every render.
 const EMPTY_PARAMS = {}
 
-export function useDashboardOverview(params = EMPTY_PARAMS) {
-  return useQuery({
+interface DateRangeParams {
+  startDate?: string
+  endDate?: string
+  [key: string]: string | number | boolean | null | undefined
+}
+
+export function useDashboardOverview(params: DateRangeParams = EMPTY_PARAMS) {
+  return useQuery<DashboardOverviewMetrics | null>({
     queryKey: [...qk.dashboardOverview(), params],
     queryFn: () => dashboardRepository.getOverview(params),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   })
 }
 
-export function useDashboardStaff(params = EMPTY_PARAMS) {
-  return useQuery({
+export function useDashboardStaff(params: DateRangeParams = EMPTY_PARAMS) {
+  return useQuery<StaffLeaderboardRow[]>({
     queryKey: [...qk.dashboardStaff(), params],
     queryFn: () => dashboardRepository.getStaffMetrics(params),
     staleTime: 5 * 60 * 1000,
   })
 }
 
-export function useDashboardTouchpoints(params = EMPTY_PARAMS) {
-  return useQuery({
+export function useDashboardTouchpoints(params: DateRangeParams = EMPTY_PARAMS) {
+  return useQuery<LooseObject[]>({
     queryKey: [...qk.dashboardTouchpoints(), params],
     queryFn: () => dashboardRepository.getTouchpointMetrics(params),
     staleTime: 5 * 60 * 1000,

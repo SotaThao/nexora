@@ -1,17 +1,16 @@
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useState, type ReactNode } from 'react'
 import { ShieldAlert } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from './LanguageContext'
-
-interface KybGateContextValue {
-  requireKyb: () => void
-  isOpen: boolean
-  dismiss: () => void
-}
+import type { KybGateContextValue } from '../types/contexts'
 
 const KybGateContext = createContext<KybGateContextValue | null>(null)
 
-export function KybGateProvider({ children }: { children: React.ReactNode }) {
+interface KybGateProviderProps {
+  children: ReactNode
+}
+
+export function KybGateProvider({ children }: KybGateProviderProps) {
   const [isOpen, setIsOpen] = useState(false)
   const navigate = useNavigate()
   const { t } = useTranslation()
@@ -62,7 +61,7 @@ export function KybGateProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function useKybGate(): KybGateContextValue {
+export function useKybGate() {
   const context = useContext(KybGateContext)
   if (!context) {
     throw new Error('useKybGate must be used within a KybGateProvider')

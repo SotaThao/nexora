@@ -34,8 +34,6 @@ const DEFAULT_PROFILE = {
   yelpReview: ''
 }
 
-import { captureQrImage } from '../../../native/imagePicker'
-
 export default function useSettingsForm({
   setupData,
   hasKyb,
@@ -107,7 +105,7 @@ export default function useSettingsForm({
       }
       const filtered = existingAccounts.filter(acc => acc.email !== targetEmail)
       filtered.push(newAccount)
-      await (replaceAllPendingAccountsMutation.mutateAsync as any)(filtered)
+      await replaceAllPendingAccountsMutation.mutateAsync(filtered)
       if (onKybSuccess) {
         onKybSuccess(targetEmail)
       }
@@ -171,7 +169,7 @@ export default function useSettingsForm({
     }
     return DEFAULT_PROFILE
   })
-  const [copiedId, setCopiedId] = useState(null)
+  const [copiedId, setCopiedId] = useState<any | null>(null)
   const [toastMessage, setToastMessage] = useState('')
 
   // Edit states for different cards
@@ -187,7 +185,7 @@ export default function useSettingsForm({
   const [isEditingReviews, setIsEditingReviews] = useState(false)
   const [reviewsForm, setReviewsForm] = useState({ googleReview: '', yelpReview: '' })
 
-  const [editingMethod, setEditingMethod] = useState(null)
+  const [editingMethod, setEditingMethod] = useState<any | null>(null)
   const [editValue, setEditValue] = useState('')
   const [editQrCode, setEditQrCode] = useState('')
   const [isCapturing, setIsCapturing] = useState(false)
@@ -336,7 +334,7 @@ export default function useSettingsForm({
           website: businessForm.businessWebsite
         }
       }
-      saveMerchantSetupMutation.mutate(updatedSetup as any)
+      saveMerchantSetupMutation.mutate(updatedSetup)
     }
 
     setIsEditingBusiness(false)
@@ -370,7 +368,7 @@ export default function useSettingsForm({
           yelpReview: reviewsForm.yelpReview
         }
       }
-      saveMerchantSetupMutation.mutate(updatedSetup as any)
+      saveMerchantSetupMutation.mutate(updatedSetup)
     }
 
     setIsEditingReviews(false)
@@ -395,18 +393,25 @@ export default function useSettingsForm({
     setModalError('')
   }
 
-  const handleModalImagePick = (dataUrl) => {
-    if (dataUrl) setEditQrCode(dataUrl)
+  const handleModalFileChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      setEditQrCode(typeof reader.result === 'string' ? reader.result : '')
+    }
+    reader.readAsDataURL(file)
   }
 
-  const handleModalTakePhoto = async () => {
+  const handleModalTakePhoto = () => {
     setIsCapturing(true)
-    try {
-      const dataUrl = await captureQrImage({ fallbackValue: editValue || '' })
-      if (dataUrl) setEditQrCode(dataUrl)
-    } finally {
+    setTimeout(() => {
+      const mockQr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+        editValue || ''
+      )}`
+      setEditQrCode(mockQr)
       setIsCapturing(false)
-    }
+    }, 800)
   }
 
   const handleModalClearQr = () => {
@@ -446,18 +451,23 @@ export default function useSettingsForm({
           payoutQrCodes: updatedQrCodes
         }
       }
-      saveMerchantSetupMutation.mutate(updatedSetup as any)
+      saveMerchantSetupMutation.mutate(updatedSetup)
     }
 
     setEditingMethod(null)
   }
 
-  const handleAvatarPick = (dataUrl) => {
-    if (!dataUrl) return
-    saveProfile({
-      ...profile,
-      avatar: dataUrl
-    })
+  const handleAvatarChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      saveProfile({
+        ...profile,
+        avatar: reader.result
+      })
+    }
+    reader.readAsDataURL(file)
   }
 
   const formatDOB = (dobString) => {
@@ -634,11 +644,11 @@ export default function useSettingsForm({
     saveReviews,
     handleToggleMethod,
     handleEditPayoutAccount,
-    handleModalImagePick,
+    handleModalFileChange,
     handleModalTakePhoto,
     handleModalClearQr,
     savePayoutAccount,
-    handleAvatarPick,
+    handleAvatarChange,
     formatDOB,
     getStatusCardDetails,
     currentLanguage,

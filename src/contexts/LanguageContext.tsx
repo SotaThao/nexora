@@ -1,40 +1,40 @@
-import React, { createContext, useState, useEffect, useContext } from 'react'
+import React, { createContext, useState, useContext, type ReactNode } from 'react'
 import en from '../locales/en.json'
 import vi from '../locales/vi.json'
+import type { AppLanguage, LanguageContextValue, TranslationVariables } from '../types/contexts'
 
-const translations: Record<string, Record<string, unknown>> = { en, vi }
+const translations = { en, vi }
 
-interface LanguageContextValue {
-  currentLanguage: 'en' | 'vi'
-  setLanguage: (lang: 'en' | 'vi') => void
-  t: (key: string, variables?: Record<string, string | number>) => string
-  renderLabel: (text: unknown) => React.ReactNode
+const LanguageContext = createContext<LanguageContextValue | null>(null)
+
+interface LanguageProviderProps {
+  children: ReactNode
 }
 
-const LanguageContext = createContext<LanguageContextValue | undefined>(undefined)
-
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [currentLanguage, setCurrentLanguageState] = useState<'en' | 'vi'>(() => {
+export function LanguageProvider({ children }: LanguageProviderProps) {
+  const [currentLanguage, setCurrentLanguageState] = useState<AppLanguage>(() => {
     const saved = localStorage.getItem('nexora_lang')
     if (saved === 'en' || saved === 'vi') return saved
-    const browserLang = navigator.language || (navigator as any).userLanguage
+    // Fallback to browser language or default to 'vi'
+    const browserLang = navigator.language || (navigator as Navigator & { userLanguage?: string }).userLanguage
     return browserLang?.startsWith('vi') ? 'vi' : 'en'
   })
 
-  const setLanguage = (lang: 'en' | 'vi') => {
+  const setLanguage = (lang: AppLanguage) => {
     if (lang === 'en' || lang === 'vi') {
       setCurrentLanguageState(lang)
       localStorage.setItem('nexora_lang', lang)
     }
   }
 
-  const t = (key: string, variables: Record<string, string | number> = {}): string => {
+  // Translation helper with dot notation and interpolation support
+  const t: LanguageContextValue['t'] = (key, variables: TranslationVariables = {}) => {
     const dictionary = translations[currentLanguage] || translations['vi']
     const keys = key.split('.')
     let value: unknown = dictionary
-
+    
     for (const k of keys) {
-      if (value && typeof value === 'object' && k in (value as object)) {
+      if (value && typeof value === 'object' && k in (value as Record<string, unknown>)) {
         value = (value as Record<string, unknown>)[k]
       } else {
         value = key
@@ -58,8 +58,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function renderLabel(text: unknown): React.ReactNode {
-  if (typeof text !== 'string') return text as React.ReactNode
+export function renderLabel(text: ReactNode): ReactNode {
+  if (typeof text !== 'string') return text
   if (text.includes('*')) {
     const parts = text.split('*')
     return (
@@ -78,7 +78,7 @@ export function renderLabel(text: unknown): React.ReactNode {
   return text
 }
 
-export function useTranslation(): LanguageContextValue {
+export function useTranslation() {
   const context = useContext(LanguageContext)
   if (!context) {
     throw new Error('useTranslation must be used within a LanguageProvider')

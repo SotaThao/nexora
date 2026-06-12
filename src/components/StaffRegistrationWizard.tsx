@@ -117,7 +117,6 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
               position={reg.position}
               phone={reg.phone}
               email={reg.email}
-              {...({ currentLanguage: reg.currentLanguage } as any)}
               t={reg.t}
               setStep={reg.setStep}
               handleSearchIdChange={reg.handleSearchIdChange}
@@ -191,6 +190,8 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
               setEmail={reg.setEmail}
               avatar={reg.avatar}
               setAvatar={reg.setAvatar}
+              onAvatarFileChange={reg.handleAvatarFileChange}
+              isAvatarUploading={reg.isAvatarUploading}
               bio={reg.bio}
               setBio={reg.setBio}
               staffId={reg.staffId}
@@ -254,7 +255,7 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
           setModalError={reg.setModalError}
           currentLanguage={reg.currentLanguage}
           savePayoutAccount={reg.savePayoutAccount}
-          handleModalImagePick={reg.handleModalImagePick}
+          handleModalFileChange={reg.handleModalFileChange}
           handleModalTakePhoto={reg.handleModalTakePhoto}
           handleModalClearQr={reg.handleModalClearQr}
         />

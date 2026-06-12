@@ -18,14 +18,14 @@ export function useUnreadCount() {
   return useQuery<number>({
     queryKey: qk.notificationsUnreadCount(),
     queryFn: () => notificationsRepository.unreadCount(),
-    refetchInterval: 60 * 1000, // 60s
+    refetchInterval: 60 * 1000,
     refetchOnWindowFocus: true,
   })
 }
 
 export function useMarkNotificationRead() {
   const queryClient = useQueryClient()
-  return useMutation({
+  return useMutation<void, Error, string>({
     mutationFn: (id) => notificationsRepository.markRead(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.notifications() })
@@ -36,7 +36,7 @@ export function useMarkNotificationRead() {
 
 export function useMarkAllNotificationsRead() {
   const queryClient = useQueryClient()
-  return useMutation({
+  return useMutation<void, Error, void>({
     mutationFn: () => notificationsRepository.markAllRead(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.notifications() })
@@ -48,7 +48,7 @@ export function useMarkAllNotificationsRead() {
 /** @deprecated server-side */
 export function useAddNotification() {
   const queryClient = useQueryClient()
-  return useMutation({
+  return useMutation<NotificationRecord, Error, NotificationRecord>({
     mutationFn: (notification) => notificationsRepository.add(notification),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.notifications() })
@@ -59,7 +59,7 @@ export function useAddNotification() {
 /** @deprecated server-side */
 export function useReplaceAllNotifications() {
   const queryClient = useQueryClient()
-  return useMutation({
+  return useMutation<void, Error, NotificationRecord[]>({
     mutationFn: (list) => notificationsRepository.replaceAll(list),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.notifications() })

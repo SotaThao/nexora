@@ -9,7 +9,7 @@ function StaffQrScannerModal({
   onScanAnna,
   onScanHanna
 }) {
-  const { currentLanguage, t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
 
   if (!open) return null
 

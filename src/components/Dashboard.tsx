@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 
@@ -50,13 +50,13 @@ export default function Dashboard({
   verificationStatus = 'kyb_approved',
   hasKyb = verificationStatus === 'kyb_approved',
   userEmail = '',
-  onKybSuccess = undefined,
+  onKybSuccess = () => {},
   initialMenu = 'overview',
   initialSettingsTab = 'profile',
   onLogout,
   userRole = 'owner',
   currentStaffId = null,
-  onStartSetup = undefined,
+  onStartSetup = null,
 }) {
   const { currentLanguage, t } = useTranslation()
   const queryClient = useQueryClient()
@@ -74,6 +74,14 @@ export default function Dashboard({
     handleNavigateMenu, navigateMenu
   } = useDashboardNavigation()
   const navigate = useNavigate()
+  const handleStartSetup = useCallback(() => {
+    if (typeof onStartSetup === 'function') {
+      onStartSetup()
+      return
+    }
+
+    navigate('/onboarding')
+  }, [navigate, onStartSetup])
   const [processingFee, setProcessingFee] = useState(3.0)
 
   // ---------------------------------------------------------------------------
@@ -185,16 +193,16 @@ export default function Dashboard({
   const deleteTouchpointMutation = useDeleteTouchpoint()
 
   const { devices, setDevices, handleAddDevice, handleDeleteDevice, handleToggleDeviceStatus } = useDevices()
-  const [qrTarget, setQrTarget] = useState(null)
+  const [qrTarget, setQrTarget] = useState<any | null>(null)
   const [reviewFilterStaff, setReviewFilterStaff] = useState('all')
   const [newTouchpoint, setNewTouchpoint] = useState({ name: '', type: 'Table QR' })
   const [isAddTouchpointModalOpen, setIsAddTouchpointModalOpen] = useState(false)
-  const [addTouchpointPrefill, setAddTouchpointPrefill] = useState(null)
+  const [addTouchpointPrefill, setAddTouchpointPrefill] = useState<any | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeKpi, setActiveKpi] = useState('tips')
   const { chartRange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate, handleChartRangeChange } = useChartDateRange(transactions)
 
-  const [selectedLeaderboardStaff, setSelectedLeaderboardStaff] = useState(null)
+  const [selectedLeaderboardStaff, setSelectedLeaderboardStaff] = useState<any | null>(null)
 
   const businessName = profile?.businessName || setupData?.businessInfo?.name || merchantSetupData?.businessInfo?.name || ''
 
@@ -289,9 +297,9 @@ export default function Dashboard({
     if (!searchQuery) return touchpoints
     const query = searchQuery.toLowerCase().trim()
     return touchpoints.filter(point =>
-      point.name.toLowerCase().includes(query) ||
-      point.type.toLowerCase().includes(query) ||
-      (point.staffName && point.staffName.toLowerCase().includes(query))
+      String(point.name ?? '').toLowerCase().includes(query) ||
+      String(point.type ?? '').toLowerCase().includes(query) ||
+      (point.staffName && String(point.staffName).toLowerCase().includes(query))
     )
   }, [touchpoints, searchQuery])
 
@@ -299,9 +307,9 @@ export default function Dashboard({
     if (!searchQuery) return reviews
     const query = searchQuery.toLowerCase().trim()
     return reviews.filter(rev =>
-      rev.comment.toLowerCase().includes(query) ||
-      rev.staffName.toLowerCase().includes(query) ||
-      rev.category.toLowerCase().includes(query) ||
+      String(rev.comment ?? '').toLowerCase().includes(query) ||
+      String(rev.staffName ?? '').toLowerCase().includes(query) ||
+      String(rev.category ?? '').toLowerCase().includes(query) ||
       String(rev.rating).includes(query)
     )
   }, [reviews, searchQuery])
@@ -425,7 +433,7 @@ export default function Dashboard({
 
   const dashboardCtx = {
     metrics, activeKpi, setActiveKpi, chartRange, handleChartRangeChange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate,
-    transactions, selectedLeaderboardStaff, handleSelectLeaderboardStaff, businessName, previewQr, hasKyb, hasSetup, onStartSetup,
+    transactions, selectedLeaderboardStaff, handleSelectLeaderboardStaff, businessName, previewQr, hasKyb, hasSetup, onStartSetup: handleStartSetup,
     filteredStaff, pendingStaff, staff, staffLoading, openApproveStaff, openAddStaff, openEditStaff, deleteStaff, toggleStaff, toggleStaffTipsFlow,
     handleLinkStaff, handleInviteStaff, handleResendInvite, handleAcceptJoinRequest, handleDeclineJoinRequest, handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     setInviteShareDefaultName, setInviteShareDefaultContact, setIsInviteShareOpen,
@@ -554,6 +562,7 @@ export default function Dashboard({
       <StaffModal
         open={isStaffModalOpen}
         editing={Boolean(editingStaffId)}
+        onDecline={closeStaffModal}
         form={staffForm}
         errors={errors}
         setForm={setStaffForm}
@@ -561,7 +570,7 @@ export default function Dashboard({
         onBlockedFeatureClick={requireKyb}
         onClose={closeStaffModal}
         onSave={saveStaff}
-        onDecline={undefined}
+        onLinkStaff={handleLinkStaff}
         onOpenInviteShare={(formDetails) => {
           setInviteShareDefaultName(formDetails.fullName || '')
           setInviteShareDefaultContact(formDetails.email || formDetails.phone || '')
@@ -599,7 +608,7 @@ export default function Dashboard({
           setIsApproveModalOpen(false)
           queryClient.invalidateQueries({ queryKey: ['merchantStaff'] })
         }}
-        onOpenInviteShare={undefined}
+        onOpenInviteShare={() => {}}
         reviews={reviews}
         merchantSetupData={merchantSetupData}
       />

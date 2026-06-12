@@ -1,5 +1,5 @@
-import { defineConfig } from 'vitest/config';
-import { resolve } from 'path';
+import { defineConfig } from 'vitest/config'
+import { resolve } from 'path'
 
 export default defineConfig({
   resolve: {
@@ -14,4 +14,4 @@ export default defineConfig({
     testTimeout: 300000,
     hookTimeout: 300000,
   },
-});
+})

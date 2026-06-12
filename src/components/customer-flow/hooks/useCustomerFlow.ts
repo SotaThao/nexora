@@ -99,21 +99,21 @@ export default function useCustomerFlow() {
   }, [touchPageData])
 
   // ── Local state ──
-  const [selectedStaffMembers, setSelectedStaffMembers] = useState([])
+  const [selectedStaffMembers, setSelectedStaffMembers] = useState<any[]>([])
   const [step, setStep] = useState('select_staff')
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedTips, setSelectedTips] = useState({})
-  const [customTips, setCustomTips] = useState({})
+  const [selectedTips, setSelectedTips] = useState<LooseObject>({})
+  const [customTips, setCustomTips] = useState<LooseObject>({})
   const [rating, setRating] = useState(5)
   const [comment, setComment] = useState('')
-  const [selectedTags, setSelectedTags] = useState([])
+  const [selectedTags, setSelectedTags] = useState<any[]>([])
   const [selectedWallet, setSelectedWallet] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
-  const [selectedWalletObj, setSelectedWalletObj] = useState(null)
+  const [selectedWalletObj, setSelectedWalletObj] = useState<any | null>(null)
   const [tipRefNumber, setTipRefNumber] = useState('')
-  const [currentTipId, setCurrentTipId] = useState(null)
-  const [currentReviewId, setCurrentReviewId] = useState(null)
-  const [paymentLinkData, setPaymentLinkData] = useState(null)
+  const [currentTipId, setCurrentTipId] = useState<any | null>(null)
+  const [currentReviewId, setCurrentReviewId] = useState<any | null>(null)
+  const [paymentLinkData, setPaymentLinkData] = useState<any | null>(null)
 
   // ── Payment accounts ──
   const businessId = touchPageData?.business?.id || null
@@ -369,5 +369,6 @@ export default function useCustomerFlow() {
     handleTagToggle, handleRatingChange, handleToggleStaff, handleNextToPayment,
     handlePay, handleConfirmTip, handleSkipTip, handleSubmitFeedback,
     handleTrackExternalReview, handleReset, paymentLinkData,
+    scannedTouchpoint: null,
   }
 }

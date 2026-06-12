@@ -1,85 +1,73 @@
 /**
  * notificationsRepository — API-only implementation.
- * Short-lived cache prevents StrictMode double-mount from duplicating calls.
  */
 
-import httpClient from "../../lib/httpClient";
+import httpClient from '../../lib/httpClient'
+import type { NotificationRecord } from '../../types/domain'
+import type { NotificationApiDto } from '../../types/repositories'
 
-const CACHE_TTL = 5_000; // 5 seconds
-let _listCache = { promise: null, ts: 0 };
-let _unreadCache = { promise: null, ts: 0 };
+type HttpClient = typeof httpClient
 
-function cachedFetch(cache, fetcher) {
-  const now = Date.now();
-  if (cache.promise && now - cache.ts < CACHE_TTL) return cache.promise;
-  cache.ts = now;
-  cache.promise = fetcher().catch((err) => {
-    cache.promise = null;
-    cache.ts = 0;
-    throw err;
-  });
-  return cache.promise;
+interface NotificationsListResponse {
+  items?: NotificationApiDto[]
+  data?: NotificationApiDto[]
 }
 
-export function createNotificationsRepository(client = httpClient) {
+interface UnreadCountResponse {
+  count?: number
+}
+
+function normalizeNotification(item: NotificationApiDto): NotificationRecord {
+  const isRead = Boolean(item.isRead || item.read)
+  const body = item.body || item.message || ''
+  const createdAt = item.createdAt || new Date().toISOString()
   return {
-    /**
-     * @returns {Promise<Array>}
-     */
-    async list() {
-      return cachedFetch(_listCache, async () => {
-        const response = await client.get<LooseObject>("/api/v1/notifications");
-        const items = Array.isArray(response) ? response : (response.data as LooseObject[]) || [];
-        return items.map((item) => ({
-          id: item.id,
-          type: item.type || "info",
-          title: item.title || "",
-          body: item.body || item.message || "",
-          isRead: Boolean(item.isRead || item.read),
-          createdAt: item.createdAt || new Date().toISOString(),
-        }));
-      });
+    id: item.id ?? '',
+    type: item.type || 'info',
+    title: item.title || '',
+    body,
+    actionUrl: item.actionUrl ?? null,
+    referenceId: item.referenceId ?? null,
+    isRead,
+    createdAt,
+    read: isRead,
+    message: body,
+    time: new Date(createdAt).toLocaleString(),
+  }
+}
+
+export function createNotificationsRepository(client: HttpClient = httpClient) {
+  return {
+    async list(): Promise<NotificationRecord[]> {
+      const response = await client.get<NotificationApiDto[] | NotificationsListResponse>(
+        '/api/v1/notifications',
+      )
+      const items = Array.isArray(response) ? response : (response.items || response.data || [])
+      return items.map(normalizeNotification)
     },
 
-    /**
-     * @returns {Promise<number>}
-     */
-    async unreadCount() {
-      return cachedFetch(_unreadCache, async () => {
-        const response = await client.get<LooseObject>("/api/v1/notifications/unread-count");
-        return typeof response === "number" ? response : (response.count as number) || 0;
-      });
+    async unreadCount(): Promise<number> {
+      const response = await client.get<number | UnreadCountResponse>('/api/v1/notifications/unread-count')
+      return typeof response === 'number' ? response : (response.count || 0)
     },
 
-    /**
-     * @param {string} id
-     */
-    async markRead(id) {
-      return client.put(`/api/v1/notifications/${id}/read`);
+    async markRead(id: string): Promise<void> {
+      await client.put(`/api/v1/notifications/${id}/read`)
     },
 
-    /**
-     * Mark all notifications as read
-     */
-    async markAllRead() {
-      return client.put("/api/v1/notifications/read-all");
+    async markAllRead(): Promise<void> {
+      await client.put('/api/v1/notifications/read-all')
     },
 
-    /**
-     * @deprecated server-side generation
-     */
-    async add(notification) {
-      return notification;
+    async add(notification: NotificationRecord): Promise<NotificationRecord> {
+      return notification
     },
 
-    /**
-     * @deprecated server-side generation
-     */
-    async replaceAll(list) {
+    async replaceAll(_list: NotificationRecord[]): Promise<void> {
       // no-op
     },
-  };
+  }
 }
 
-export const notificationsRepository = createNotificationsRepository();
-export default notificationsRepository;
+export const notificationsRepository = createNotificationsRepository()
+export default notificationsRepository

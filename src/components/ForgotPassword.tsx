@@ -4,6 +4,7 @@ import { useTranslation } from '../contexts/LanguageContext'
 import { useNavigate } from 'react-router-dom'
 import apiAuthAdapter from '../auth/adapters/apiAuthAdapter'
 import { getErrorI18nKey } from '../data/errorCodes'
+import { getApiErrorCode } from '../types/domain'
 
 export default function ForgotPassword() {
   const { t } = useTranslation()
@@ -25,8 +26,8 @@ export default function ForgotPassword() {
     try {
       await apiAuthAdapter.forgotPassword({ email: email.trim().toLowerCase() })
       setIsSubmitted(true)
-    } catch (err) {
-      const errorCode = (err as any)?.errorCode || 'unknown_error'
+    } catch (err: unknown) {
+      const errorCode = getApiErrorCode(err, 'unknown_error')
       const i18nKey = getErrorI18nKey(errorCode)
       setError(t(i18nKey))
     } finally {
