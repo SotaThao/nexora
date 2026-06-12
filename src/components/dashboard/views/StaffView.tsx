@@ -257,6 +257,7 @@ function StaffView({
   pendingStaff = [],
   allStaff = [],
   isLoading = false,
+  isFetching = false,
   onApproveClick,
   onAdd,
   onEdit,
@@ -298,14 +299,7 @@ function StaffView({
   const { data: searchResults, isLoading: isSearching } = useSearchMerchantStaff(searchQuery.trim())
 
     const sortedStaff = useMemo(() => {
-    const byId = new Map()
-    for (const member of staff ?? []) {
-      if (member?.id != null) byId.set(member.id, member)
-    }
-    for (const member of pendingStaff ?? []) {
-      if (member?.id != null) byId.set(member.id, member)
-    }
-    return Array.from(byId.values()).sort((a, b) => {
+    return [...(staff ?? [])].sort((a, b) => {
       if (sortBy === 'name-asc') {
         return a.fullName.localeCompare(b.fullName)
       }
@@ -329,7 +323,7 @@ function StaffView({
       }
       return 0
     })
-  }, [staff, pendingStaff, sortBy])
+  }, [staff, sortBy])
 
   const handleShare = () => {
     const url = `${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`
@@ -659,7 +653,7 @@ function StaffView({
         </div>
 
         <div className="p-4">
-          {isLoading ? (
+          {isLoading && sortedStaff.length === 0 ? (
             <div className="flex items-center justify-center py-12 text-nexoraMuted">
               <Loader2 className="h-6 w-6 animate-spin text-nexoraBrand" />
             </div>
@@ -669,6 +663,7 @@ function StaffView({
               <p className="text-sm font-bold text-nexoraMuted">{t('setup.col_staff')}</p>
             </div>
           ) : (
+            <div className={`relative ${isFetching ? 'opacity-60 pointer-events-none' : ''}`}>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
               {sortedStaff.map((member) => {
                 const wallets = getWalletBadges(member)
@@ -702,6 +697,12 @@ function StaffView({
                   />
                 )
               })}
+            </div>
+            {isFetching && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-nexoraBrand" />
+              </div>
+            )}
             </div>
           )}
 

@@ -4,7 +4,7 @@
  * All mutations invalidate the `merchantStaff` query key so the staff
  * list refetches after every server-side state change.
  */
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import merchantStaffRepository, { StatusFilter } from '../repositories/merchantStaff'
 import type { StaffListPage } from '../repositories/merchantStaff'
@@ -23,6 +23,7 @@ export function useMerchantStaff({ statusFilter, pageNumber, pageSize, enabled =
     queryKey: qk.merchantStaff(statusFilter, pageNumber, pageSize),
     queryFn: () => merchantStaffRepository.list(statusFilter, pageNumber, pageSize),
     enabled,
+    placeholderData: keepPreviousData,
   })
 }
 

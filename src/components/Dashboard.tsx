@@ -86,10 +86,13 @@ export default function Dashboard({
   const { data: merchantSetupData } = useMerchantSetup()
   const [activeStaffPage, setActiveStaffPage] = useState(1)
   const [activeStaffPageSize] = useState(9)
-  const { data: activeStaffData, isLoading: isActiveStaffLoading } = useMerchantStaff({
-    statusFilter: StatusFilter.Active,
+  const {
+    data: staffListData,
+    isLoading: isStaffListLoading,
+    isFetching: isStaffListFetching,
+  } = useMerchantStaff({
     pageNumber: activeStaffPage,
-    pageSize: activeStaffPageSize
+    pageSize: activeStaffPageSize,
   })
   const { data: pendingStaffData, isLoading: isPendingStaffLoading } = useMerchantStaff({
     statusFilter: StatusFilter.Pending,
@@ -197,14 +200,14 @@ export default function Dashboard({
 
   const combinedStaffData = useMemo(() => {
     const byId = new Map()
-    for (const member of activeStaffData?.items ?? []) {
+    for (const member of staffListData?.items ?? []) {
       if (member?.id != null) byId.set(member.id, member)
     }
     for (const member of pendingStaffData?.items ?? []) {
       if (member?.id != null) byId.set(member.id, member)
     }
     return Array.from(byId.values())
-  }, [activeStaffData, pendingStaffData])
+  }, [staffListData, pendingStaffData])
 
   const {
     staff,
@@ -224,7 +227,7 @@ export default function Dashboard({
     handleAcceptJoinRequest, handleDeclineJoinRequest, deleteStaff, toggleStaff, toggleStaffTipsFlow,
     handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     inviteStaffMutation,
-  } = useStaffManagement({ staffData: combinedStaffData, isStaffLoading: isActiveStaffLoading || isPendingStaffLoading, businessName })
+  } = useStaffManagement({ staffData: combinedStaffData, isStaffLoading: isStaffListLoading || isPendingStaffLoading, businessName })
 
   // Sync touchpoints removed (now handled by React Query cache)
 
@@ -269,8 +272,8 @@ export default function Dashboard({
 
   // Filter lists based on searchQuery
   const filteredStaff = useMemo(() => {
-    const visibleStaff = activeStaffData?.items ?? []
-    
+    const visibleStaff = staffListData?.items ?? []
+
     if (!searchQuery) return visibleStaff
     const query = searchQuery.toLowerCase().trim()
     return visibleStaff.filter(member =>
@@ -278,7 +281,7 @@ export default function Dashboard({
       (member.nickname && member.nickname.toLowerCase().includes(query)) ||
       member.position?.toLowerCase().includes(query)
     )
-  }, [activeStaffData, searchQuery])
+  }, [staffListData, searchQuery])
 
   const pendingStaff = pendingStaffData?.items ?? []
 
@@ -437,10 +440,12 @@ export default function Dashboard({
     // Pagination fields for active staff
     activeStaffPage,
     setActiveStaffPage,
-    activeStaffTotalPages: activeStaffData?.totalPages ?? 1,
-    activeStaffTotalCount: activeStaffData?.totalCount ?? 0,
-    activeStaffHasNext: activeStaffData?.hasNextPage ?? false,
-    activeStaffHasPrev: activeStaffData?.hasPreviousPage ?? false,
+    activeStaffTotalPages: staffListData?.totalPages ?? 1,
+    activeStaffTotalCount: staffListData?.totalCount ?? 0,
+    activeStaffHasNext: staffListData?.hasNextPage ?? false,
+    activeStaffHasPrev: staffListData?.hasPreviousPage ?? false,
+    staffListLoading: isStaffListLoading,
+    staffListFetching: isStaffListFetching,
   }
 
   return (

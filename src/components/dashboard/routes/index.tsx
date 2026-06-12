@@ -58,7 +58,8 @@ export function StaffRoute() {
       staff={ctx.filteredStaff}
       pendingStaff={ctx.pendingStaff}
       allStaff={ctx.staff}
-      isLoading={ctx.staffLoading}
+      isLoading={ctx.staffListLoading ?? ctx.staffLoading}
+      isFetching={ctx.staffListFetching}
       onApproveClick={ctx.openApproveStaff}
       onAdd={ctx.openAddStaff}
       onEdit={ctx.openEditStaff}
