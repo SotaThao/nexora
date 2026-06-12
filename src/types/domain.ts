@@ -208,6 +208,15 @@ export interface StaffTipsConfirmReceiptResult {
   failedIds: string[]
 }
 
+export interface StaffLinkRequestDetail {
+  id: string
+  businessName: string
+  businessLogoUrl: string | null
+  businessRole: string | null
+  requestedAt: string | null
+  status: string | null
+}
+
 export interface StaffAccountView {
   id?: string
   profile: UserProfile

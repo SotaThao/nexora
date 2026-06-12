@@ -16,6 +16,7 @@ export default defineConfig({
     include: [
       'tests/unit/**/*.test.{ts,tsx}',
       'src/data/repositories/__tests__/**/*.test.{ts,tsx}',
+      'src/data/repositories/**/*.test.{ts,tsx}',
     ],
   },
 })

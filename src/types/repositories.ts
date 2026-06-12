@@ -9,6 +9,7 @@ import type {
   StaffAccountView,
   StaffBusinessLink,
   StaffInviteInfo,
+  StaffLinkRequestDetail,
   StaffMember,
   StaffSearchResult,
   TouchpointPage,
@@ -168,15 +169,24 @@ export interface NotificationApiDto {
   id?: string
   type?: string
   title?: string
-  message?: string | null
+  body?: string
+  message?: string
   actionUrl?: string | null
+  referenceId?: string | null
   isRead?: boolean
   readAt?: string | null
-  referenceId?: string | null
   createdAt?: string
   /** @deprecated legacy mock shape */
-  body?: string
   read?: boolean
+}
+
+export interface StaffLinkRequestDetailApiDto {
+  id?: string
+  businessName?: string
+  businessLogoUrl?: string | null
+  businessRole?: string | null
+  requestedAt?: string | null
+  status?: string | null
 }
 
 export interface InviteInfoApiDto {
@@ -273,6 +283,7 @@ export type {
   StaffAccountView,
   StaffBusinessLink,
   StaffInviteInfo,
+  StaffLinkRequestDetail,
   StaffMember,
   StaffSearchResult,
   TouchpointPage,

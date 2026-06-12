@@ -10,6 +10,7 @@ import { useTranslation } from '../../contexts/LanguageContext'
 import type {
   StaffBusinessLink,
   StaffDashboardSummary,
+  StaffLinkRequestDetail,
   StaffProfile,
   StaffReviewsPage,
   StaffTipsConfirmReceiptResult,
@@ -105,6 +106,40 @@ export function useConfirmStaffTipsReceipt() {
     },
     onError: (err) => {
       showToast(err.message || t('staff_dashboard.home.confirm_failed'), 'error')
+    },
+  })
+}
+
+export function useStaffLinkRequest(linkId: string | null | undefined, { enabled = true } = {}) {
+  return useQuery<StaffLinkRequestDetail>({
+    queryKey: qk.staffLinkRequest(linkId),
+    queryFn: () => staffSelfRepository.getLinkRequest(linkId || ''),
+    enabled: enabled && !!linkId,
+  })
+}
+
+export function useAcceptStaffLinkRequest() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, string>({
+    mutationFn: (linkId) => staffSelfRepository.acceptLinkRequest(linkId),
+    onSuccess: (_data, linkId) => {
+      queryClient.invalidateQueries({ queryKey: qk.staffLinkRequest(linkId) })
+      queryClient.invalidateQueries({ queryKey: qk.staffBusinesses() })
+      queryClient.invalidateQueries({ queryKey: qk.notifications() })
+      queryClient.invalidateQueries({ queryKey: qk.notificationsUnreadCount() })
+    },
+  })
+}
+
+export function useRejectStaffLinkRequest() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, string>({
+    mutationFn: (linkId) => staffSelfRepository.rejectLinkRequest(linkId),
+    onSuccess: (_data, linkId) => {
+      queryClient.invalidateQueries({ queryKey: qk.staffLinkRequest(linkId) })
+      queryClient.invalidateQueries({ queryKey: qk.staffBusinesses() })
+      queryClient.invalidateQueries({ queryKey: qk.notifications() })
+      queryClient.invalidateQueries({ queryKey: qk.notificationsUnreadCount() })
     },
   })
 }

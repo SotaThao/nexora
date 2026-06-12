@@ -12,11 +12,13 @@ import type {
   StaffReviewItem,
   StaffReviewsPage,
   StaffReviewsSummary,
+  StaffLinkRequestDetail,
   StaffTipItem,
   StaffTipsConfirmReceiptResult,
   StaffTipsPage,
   TipCountAmount,
 } from '../../types/domain'
+import type { StaffLinkRequestDetailApiDto } from '../../types/repositories'
 
 type HttpClient = typeof httpClient
 
@@ -200,6 +202,17 @@ function normalizeTipsPage(dto: StaffTipsPageApiDto): StaffTipsPage {
   }
 }
 
+export function normalizeStaffLinkRequestDetail(dto: StaffLinkRequestDetailApiDto): StaffLinkRequestDetail {
+  return {
+    id: dto.id ?? '',
+    businessName: dto.businessName ?? '',
+    businessLogoUrl: dto.businessLogoUrl ?? null,
+    businessRole: dto.businessRole ?? null,
+    requestedAt: dto.requestedAt ?? null,
+    status: dto.status ?? null,
+  }
+}
+
 export function createStaffSelfRepository(client: HttpClient = httpClient) {
   return {
     async getMyProfile(): Promise<StaffProfile | null> {
@@ -272,6 +285,21 @@ export function createStaffSelfRepository(client: HttpClient = httpClient) {
         confirmedCount: Number(res?.confirmedCount) || 0,
         failedIds: Array.isArray(res?.failedIds) ? res.failedIds : [],
       }
+    },
+
+    async getLinkRequest(linkId: string): Promise<StaffLinkRequestDetail> {
+      const data = await client.get<StaffLinkRequestDetailApiDto>(
+        `/api/v1/staff/link-requests/${encodeURIComponent(linkId)}`,
+      )
+      return normalizeStaffLinkRequestDetail(data)
+    },
+
+    async acceptLinkRequest(linkId: string): Promise<void> {
+      await client.put(`/api/v1/staff/link-requests/${encodeURIComponent(linkId)}/accept`)
+    },
+
+    async rejectLinkRequest(linkId: string): Promise<void> {
+      await client.put(`/api/v1/staff/link-requests/${encodeURIComponent(linkId)}/reject`)
     },
   }
 }

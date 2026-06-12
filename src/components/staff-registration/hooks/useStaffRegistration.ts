@@ -9,9 +9,14 @@ const normalizePhone = (raw) => {
   const formatted = formatNationalNumber(nationalNumber, countryCode)
   return formatted ? `${countryCode} ${formatted}`.trim() : ''
 }
+
+const imageUrlOrNull = (value) => {
+  if (!value || String(value).startsWith('data:')) return null
+  return value
+}
 import { logger } from '../../../utils/logger'
 import { usePendingAccounts, useReplaceAllPendingAccounts } from '../../../data/hooks/usePendingAccounts'
-import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
+import { useMerchantSetup, useSaveMerchantSetup, useUploadImage } from '../../../data/hooks/useMerchantSetup'
 import { useNotifications, useAddNotification } from '../../../data/hooks/useNotifications'
 import { useStaffInviteInfo, useAcceptStaffInvite } from '../../../data/hooks/useStaffInvites'
 import { apiAuthAdapter } from '../../../auth/adapters/apiAuthAdapter'
@@ -32,6 +37,7 @@ export default function useStaffRegistration({ inviteData }) {
   const replaceAllPendingAccountsMutation = useReplaceAllPendingAccounts()
   const merchantSetupQuery = useMerchantSetup()
   const saveMerchantSetupMutation = useSaveMerchantSetup()
+  const uploadImageMutation = useUploadImage()
   useNotifications()
   const addNotificationMutation = useAddNotification()
 
@@ -293,6 +299,22 @@ export default function useStaffRegistration({ inviteData }) {
     }, 600)
 
     setVlinkpayTimeout(timer)
+  }
+
+  const handleAvatarFileChange = async (file) => {
+    if (!file) return
+    try {
+      const uploaded = await uploadImageMutation.mutateAsync(file)
+      const uploadedUrl = uploaded.imageUrl || uploaded.fileUrl || ''
+      if (uploadedUrl) {
+        setAvatar(uploadedUrl)
+        return
+      }
+      showToast(t('errors.image_upload_failed'), 'error')
+    } catch (err: unknown) {
+      logger.error('Failed to upload staff avatar', err)
+      showToast(t('errors.image_upload_failed'), 'error')
+    }
   }
 
   // Handle opening scanner modal
@@ -642,6 +664,21 @@ export default function useStaffRegistration({ inviteData }) {
       if (isRegisterSubmitting) return
       setIsRegisterSubmitting(true)
       try {
+        await apiAuthAdapter.signInForInviteAccept({ email: emailQuery, password: passwordQuery })
+
+        const inviteDisplayName =
+          (apiInviteInfo?.invitedName || '').trim() ||
+          emailQuery.split('@')[0] ||
+          'Staff Member'
+
+        await acceptInviteMutation.mutateAsync({
+          token: inviteToken,
+          displayName: inviteDisplayName,
+          position: apiInviteInfo?.invitedPosition || 'Nail Technician',
+        })
+
+        setHasAcceptedInvite(true)
+
         const session = await apiAuthAdapter.login({ email: emailQuery, password: passwordQuery })
         
         if (session?.role !== 'staff') {
@@ -688,6 +725,7 @@ export default function useStaffRegistration({ inviteData }) {
           setEmail(profileData.email || emailQuery)
           setStep(2)
         } else {
+          setStep(5)
           showToast(
             currentLanguage === 'vi'
               ? `Đăng nhập thành công! Chào mừng ${profileData.fullName || emailQuery}.`
@@ -803,27 +841,23 @@ export default function useStaffRegistration({ inviteData }) {
       if (isProfileSubmitting) return
       setIsProfileSubmitting(true)
       try {
-        // 1. Login immediately to establish the authenticated session
-        console.log('DEBUG: Attempting login for', regEmail || inviteData?.invitedEmail || '')
-        const session = await apiAuthAdapter.login({
+        // Sign in without hydrating the session so /staff/profile is not
+        // requested before the invite has been accepted.
+        await apiAuthAdapter.signInForInviteAccept({
           email: regEmail || inviteData?.invitedEmail || '',
           password: regPassword
         })
-        console.log('DEBUG: Login success, session:', !!session)
 
-        // 2. Accept invite so the backend can link the Staff Profile to the authenticated User Profile
-        console.log('DEBUG: Calling acceptInviteMutation with token:', inviteToken)
         await acceptInviteMutation.mutateAsync({
           token: inviteToken,
           displayName: fullName.trim(),
           position: position || null,
           bio: bio || null,
-          photoUrl: avatar || null,
+          photoUrl: imageUrlOrNull(avatar),
           password: regPassword || null,
         })
-        console.log('DEBUG: acceptInviteMutation success!')
 
-        // 3. Re-sign in so the freshly minted JWT carries the newly linked Staff
+        // Re-sign in so the freshly minted JWT carries the newly linked Staff
         // Profile claim. The token from step 1 predates the accept; refresh-token
         // only renews that claimless token, so staff-scoped endpoints (e.g.
         // /staff/payment-methods) keep returning 404 STAFF_PROFILE_NOT_FOUND.
@@ -1057,6 +1091,7 @@ export default function useStaffRegistration({ inviteData }) {
     isSelfServe,
     isApiInvite,
     isProfileSubmitting,
+    isAvatarUploading: uploadImageMutation.isPending,
     isActivating,
     isInviteLoading,
     isInviteError,
@@ -1080,7 +1115,7 @@ export default function useStaffRegistration({ inviteData }) {
     position, setPosition,
     phone, setPhone,
     email, setEmail,
-    avatar, setAvatar,
+    avatar, setAvatar, handleAvatarFileChange,
     bio, setBio,
     staffId, setStaffId,
     vlinkpayId, setVlinkpayId,
