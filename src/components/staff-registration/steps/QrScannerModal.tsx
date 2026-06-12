@@ -8,9 +8,6 @@ export default function QrScannerModal({
   currentLanguage,
   setShowScanner,
   setScanTarget,
-  simulateSuccessfulScan,
-  handleSearchIdChange,
-  handleVlinkpayIdChange,
   isDemoToolsEnabled = false,
 }) {
   const { t } = useTranslation()
@@ -79,59 +76,7 @@ export default function QrScannerModal({
         </p>
 
         {/* Quick simulation buttons */}
-        {isDemoToolsEnabled && (
-        <div className="space-y-2 pt-2 border-t border-nexoraRule">
-          <span className="text-[9px] font-black text-nexoraSubtle uppercase tracking-widest block">
-            {t('components.staff_registration.steps.QrScannerModal.simulateQrScan')}
-          </span>
-
-          <div className="flex flex-col gap-2">
-            {/* Standard Successful Scan button required by prompt */}
-            <button
-              type="button"
-              onClick={simulateSuccessfulScan}
-              className="w-full py-2 bg-nexoraWarning hover:bg-nexoraWarning/80 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-colors shadow-sm"
-            >
-              {t('components.staff_registration.steps.QrScannerModal.simulateSuccessfulScan')}
-            </button>
-
-            {/* Additional quick options for high-end feel */}
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  if (scanTarget === 'staff') {
-                    handleSearchIdChange('ANNA0921')
-                  } else {
-                    handleVlinkpayIdChange('ANNA0921')
-                  }
-                  setShowScanner(false)
-                  setScanTarget(null)
-                }}
-                className="py-1.5 bg-nexoraSurfaceMuted hover:bg-nexoraSurfaceMuted border border-nexoraBorder text-nexoraText rounded-lg text-[10px] font-bold transition-colors"
-              >
-                Anna Nguyen
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (scanTarget === 'staff') {
-                    handleSearchIdChange('HN1148')
-                  } else {
-                    handleVlinkpayIdChange('HN1148')
-                  }
-                  setShowScanner(false)
-                  setScanTarget(null)
-                }}
-                className="py-1.5 bg-nexoraSurfaceMuted hover:bg-nexoraSurfaceMuted border border-nexoraBorder text-nexoraText rounded-lg text-[10px] font-bold transition-colors"
-              >
-                Hanna Nguyen
-              </button>
-            </div>
-          </div>
-        </div>
-        )}
-
+        
         {/* Cancel Button */}
         <button
           type="button"

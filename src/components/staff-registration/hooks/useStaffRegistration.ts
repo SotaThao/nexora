@@ -329,27 +329,6 @@ export default function useStaffRegistration({ inviteData }) {
   }
 
   // Handle simulation of successful scan (Lisa Tran)
-  const simulateSuccessfulScan = () => {
-    if (scanTarget === 'staff') {
-      setSearchId('LISA1102')
-      setNexoraStatus('success')
-      setSearchError('')
-      const profile = MOCK_NEXORA_STAFF_PROFILES['LISA1102']
-      setLinkedProfile(profile)
-      showToast(
-        currentLanguage === 'vi'
-          ? `Tìm thấy hồ sơ ${profile.fullName}!`
-          : `Found profile for ${profile.fullName}!`
-      )
-    } else if (scanTarget === 'vlinkpay') {
-      setVlinkpayId('LISA1102')
-      setVlinkpayStatus('success')
-      const profile = MOCK_NEXORA_STAFF_PROFILES['LISA1102']
-      autofillFromProfile(profile)
-    }
-    setShowScanner(false)
-    setScanTarget(null)
-  }
 
   // handle registration form submit
   const handleRegisterSubmit = (e) => {
@@ -1116,7 +1095,6 @@ export default function useStaffRegistration({ inviteData }) {
     handleSearchIdChange,
     handleVlinkpayIdChange,
     handleScanQr,
-    simulateSuccessfulScan,
     handleRegisterSubmit,
     handleVerifyOtp,
     isRegisterSubmitting,
