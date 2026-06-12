@@ -1036,6 +1036,7 @@
           "phExampleRole": "vd: Thợ nail"
         },
         "PayoutSetupModal": {
+          "walletAccountTitle": "TÀI KHOẢN {wallet}",
           "specifyReceivingTargetIdentifier": "Chỉ định thông tin tài khoản nhận tiền",
           "accountIdentifier": "THÔNG TIN TÀI KHOẢN *",
           "qrCodeOptional": "MÃ QR (TÙY CHỌN)",
@@ -1365,6 +1366,7 @@
         }
       },
       "PayoutSetupModal": {
+        "walletAccountTitle": "TÀI KHOẢN {wallet}",
         "specifyReceivingTargetIdentifier": "Chỉ định thông tin tài khoản nhận tiền",
         "accountIdentifier": "THÔNG TIN TÀI KHOẢN",
         "qrCodeOptional": "MÃ QR (TÙY CHỌN)",

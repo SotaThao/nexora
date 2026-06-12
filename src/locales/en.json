@@ -1036,6 +1036,7 @@
           "phExampleRole": "e.g. Nail Tech"
         },
         "PayoutSetupModal": {
+          "walletAccountTitle": "{wallet} ACCOUNT",
           "specifyReceivingTargetIdentifier": "Specify receiving target identifier",
           "accountIdentifier": "Account Identifier *",
           "qrCodeOptional": "QR Code (optional)",
@@ -1365,6 +1366,7 @@
         }
       },
       "PayoutSetupModal": {
+        "walletAccountTitle": "{wallet} ACCOUNT",
         "specifyReceivingTargetIdentifier": "Specify receiving target identifier",
         "accountIdentifier": "Account Identifier",
         "qrCodeOptional": "QR Code (optional)",

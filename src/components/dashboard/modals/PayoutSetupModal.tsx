@@ -8,7 +8,7 @@ import {
 } from '../../payout/bankWireAccount'
 
 function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrCode, onClose, onSubmit, readOnly = false }) {
-  const { t, currentLanguage } = useTranslation()
+  const { t } = useTranslation()
   const [value, setValue] = useState(initialValue || '')
   const [qrCode, setQrCode] = useState(initialQrCode || '')
   const [accountName, setAccountName] = useState(staffName || '')
@@ -165,9 +165,9 @@ function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrC
             <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">
               {isBankWire
                 ? t('components.payout.bankWireForm.title')
-                : currentLanguage === 'vi'
-                  ? `TÀI KHOẢN ${walletNames[walletKey]?.toUpperCase()}`
-                  : `${walletNames[walletKey]?.toUpperCase()} ACCOUNT`}
+                : t('components.dashboard.modals.PayoutSetupModal.walletAccountTitle', {
+                  wallet: walletNames[walletKey]?.toUpperCase(),
+                })}
             </h3>
             <p className="text-[10px] text-slate-400 font-medium">
               {t('components.dashboard.modals.PayoutSetupModal.specifyReceivingTargetIdentifier')}
