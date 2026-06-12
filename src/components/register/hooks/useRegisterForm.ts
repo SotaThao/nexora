@@ -1,0 +1,686 @@
+import { useState, useEffect, useMemo } from 'react'
+import { useTranslation } from '../../../contexts/LanguageContext'
+import { parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
+
+const normalizePhone = (raw) => {
+  if (!raw) return ''
+  const { countryCode, nationalNumber } = parsePhone(raw)
+  const formatted = formatNationalNumber(nationalNumber, countryCode)
+  return formatted ? `${countryCode} ${formatted}`.trim() : ''
+}
+import { MOCK_NEXORA_STAFF_PROFILES } from '../../staff-registration/hooks/useStaffRegistration'
+import { useReplaceAllPendingAccounts, usePendingAccounts } from '../../../data/hooks/usePendingAccounts'
+import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
+import { useNotifications, useAddNotification } from '../../../data/hooks/useNotifications'
+import { logger } from '../../../utils/logger'
+import apiAuthAdapter from '../../../auth/adapters/apiAuthAdapter'
+import { getErrorI18nKey } from '../../../data/errorCodes'
+import { useCompletePersonalOnboarding } from '../../../data/hooks/usePersonalOnboarding'
+import { captureQrImage } from '../../../native/imagePicker'
+
+export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onKybSuccess, isRedirectedFromSession, initialStep = 0, initialRole = 'personal' }) {
+  const { t, currentLanguage, setLanguage, renderLabel } = useTranslation()
+  const replaceAllPendingAccountsMutation = useReplaceAllPendingAccounts()
+  const pendingAccountsQuery = usePendingAccounts()
+  const merchantSetupQuery = useMerchantSetup()
+  const saveMerchantSetupMutation = useSaveMerchantSetup()
+
+  useNotifications()
+  const addNotificationMutation = useAddNotification()
+  const completePersonalOnboardingMutation = useCompletePersonalOnboarding()
+  const [currentStep, setCurrentStep] = useState(initialStep)
+  const [role, setRole] = useState(initialRole)
+
+  // Step 1 states
+  const [email, setEmail] = useState(ssoEmail || '')
+  const [confirmEmail, setConfirmEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [referralCode, setReferralCode] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [termsAccepted, setTermsAccepted] = useState(true)
+  const [showTermsModal, setShowTermsModal] = useState(false)
+  const [modalType, setModalType] = useState('terms')
+  const [nickname, setNickname] = useState('')
+  const [position, setPosition] = useState('Nail Technician')
+  const [phone, setPhone] = useState('')
+  const [bio, setBio] = useState('')
+  const [vlinkpayId, setVlinkpayId] = useState('')
+  const [avatar, setAvatar] = useState('')
+  const [payouts, setPayouts] = useState({
+    zelle: { enabled: false, value: '', qrCode: '', accountName: '' },
+    bankwire: { enabled: false, value: '', qrCode: '', accountName: '' },
+    paypal: { enabled: false, value: '', qrCode: '', accountName: '' },
+    venmo: { enabled: false, value: '', qrCode: '', accountName: '' },
+    cashapp: { enabled: false, value: '', qrCode: '', accountName: '' },
+    applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
+  })
+
+  // API mode states
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [isVerificationPending, setIsVerificationPending] = useState(false)
+  const [simToken, setSimToken] = useState('sim-token-123')
+  const [verifySuccess, setVerifySuccess] = useState(false)
+  const [resendMessage, setResendMessage] = useState('')
+
+  // Step 2 states
+  const [generatedStaffId, setGeneratedStaffId] = useState('')
+  const [copied, setCopied] = useState(false)
+
+  // OTP activation states
+  const [otpCode, setOtpCode] = useState('')
+  const [otpError, setOtpError] = useState('')
+  const [showOtpInput, setShowOtpInput] = useState(false)
+  const [resendTimer, setResendTimer] = useState(30)
+
+  // Profile / Payments Setup extra states
+  const [editingMethod, setEditingMethod] = useState(null)
+  const [editValue, setEditValue] = useState('')
+  const [editQrCode, setEditQrCode] = useState('')
+  const [editAccountName, setEditAccountName] = useState('')
+  const [isCapturing, setIsCapturing] = useState(false)
+  const [modalError, setModalError] = useState('')
+  const [vlinkpayStatus, setVlinkpayStatus] = useState('idle')
+  const [vlinkpayTimeout, setVlinkpayTimeout] = useState(null)
+
+  // Validation errors
+  const [errors, setErrors] = useState<LooseObject>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleSimulateVerify = () => {
+    setErrors({})
+    setVerifySuccess(false)
+    apiAuthAdapter.verifyEmail({ token: simToken, email: email.trim().toLowerCase() })
+      .then(() => {
+        setVerifySuccess(true)
+        // Auto-login to get tokens for subsequent protected calls (Step 2, 3, 4)
+        return apiAuthAdapter.login({ email: email.trim().toLowerCase(), password })
+      })
+      .then(async () => {
+        // Business creation is handled by Setup Wizard (onboarding), not here.
+        setTimeout(() => {
+          if (role === 'business') {
+            if (onRegisterAndLogin) onRegisterAndLogin(email.trim().toLowerCase())
+            else if (onRegisterSuccess) onRegisterSuccess()
+          } else {
+            setIsVerificationPending(false)
+            setCurrentStep(3)
+          }
+        }, 1500)
+      })
+      .catch((err) => {
+        logger.error('handleSimulateVerify error:', err)
+        const code = (err as any)?.errorCode || 'HTTP_ERROR'
+        const i18nKey = getErrorI18nKey(code)
+        setErrors({ submit: t(i18nKey) })
+      })
+  }
+
+  const handleResendVerification = () => {
+    setErrors({})
+    setResendMessage('')
+    apiAuthAdapter.resendVerificationEmail({ email: email.trim().toLowerCase() })
+      .then(() => {
+        setResendMessage(t('register.resend_verification_success'))
+        setResendTimer(60)
+      })
+      .catch((err) => {
+        const code = (err as any)?.errorCode || 'HTTP_ERROR'
+        const i18nKey = getErrorI18nKey(code)
+        setErrors({ submit: t(i18nKey) })
+      })
+  }
+
+  useEffect(() => {
+    let interval = null
+    if (resendTimer > 0) {
+      interval = setInterval(() => {
+        setResendTimer(prev => prev - 1)
+      }, 1000)
+    }
+    return () => clearInterval(interval)
+  }, [resendTimer])
+
+  useEffect(() => {
+    return () => {
+      if (vlinkpayTimeout) clearTimeout(vlinkpayTimeout)
+    }
+  }, [vlinkpayTimeout])
+
+  const phoneParsed = useMemo(() => parsePhone(phone), [phone])
+
+  const handleStep1Next = (e) => {
+    e.preventDefault()
+    const newErrors: LooseObject = {}
+
+    if (!email.trim()) {
+      newErrors.email = t('register.errors.email_required')
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = t('register.errors.email_invalid')
+    }
+
+    if (!confirmEmail.trim()) {
+      newErrors.confirmEmail = t('register.errors.confirm_email_required')
+    } else if (confirmEmail.trim().toLowerCase() !== email.trim().toLowerCase()) {
+      newErrors.confirmEmail = t('register.errors.email_mismatch')
+    }
+
+    if (!password) {
+      newErrors.password = t('register.errors.password_required')
+    } else if (password.length < 6) {
+      newErrors.password = t('register.errors.password_short')
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+      return
+    }
+
+    setErrors({})
+    setIsSubmitting(true)
+
+    apiAuthAdapter.signup({
+      email: email.trim().toLowerCase(),
+      confirmEmail: confirmEmail.trim().toLowerCase(),
+      password,
+      confirmPassword: password,
+      firstName: email.split('@')[0],
+      lastName: 'User',
+      // profileType enum per signup API docs is "Merchant" | "User" (not "Personal").
+      profileType: role === 'business' ? 'Merchant' : 'User'
+    } as any).then(() => {
+      // Send verification email right after successful signup
+      return apiAuthAdapter.resendVerificationEmail({ email: email.trim().toLowerCase() })
+        .catch(err => {
+          // If the backend auto-verifies in DEV, or rate limits because it already sent it, handle gracefully
+          if ((err as any)?.errorCode === 'USER_EMAIL_ALREADY_VERIFIED') {
+            return 'ALREADY_VERIFIED'
+          }
+          if ((err as any)?.errorCode === 'COMMON_RATE_LIMIT_EXCEEDED') {
+            return 'RATE_LIMITED' // Treat as success, email was sent by signup or rate limited
+          }
+          throw err
+        })
+    }).then((resStatus) => {
+      if (resStatus === 'ALREADY_VERIFIED') {
+        // Auto-login to get tokens for subsequent protected calls
+        apiAuthAdapter.login({ email: email.trim().toLowerCase(), password })
+          .then(async () => {
+            setVerifySuccess(true)
+            // Business will handle API setup in the Setup Wizard
+            setTimeout(() => {
+              if (role === 'business') {
+                if (onRegisterAndLogin) onRegisterAndLogin(email.trim().toLowerCase())
+                else if (onRegisterSuccess) onRegisterSuccess()
+              } else {
+                setIsVerificationPending(false)
+                setCurrentStep(3)
+              }
+            }, 1500)
+          })
+          .catch(err => {
+            logger.error('Auto-login failed after auto-verify:', err)
+            const code = (err as any)?.errorCode || 'HTTP_ERROR'
+            const i18nKey = getErrorI18nKey(code)
+            setErrors({ email: t(i18nKey) })
+          })
+          .finally(() => setIsSubmitting(false))
+      } else {
+        setIsVerificationPending(false)
+        setIsSubmitting(false)
+        setCurrentStep(2)
+      }
+    }).catch((err) => {
+      const errorsMap: LooseObject = {}
+      const code = (err as any)?.errorCode || 'HTTP_ERROR'
+      const i18nKey = getErrorI18nKey(code)
+      errorsMap.email = t(i18nKey) || t('errors.unknown_error')
+      setErrors(errorsMap)
+      setIsSubmitting(false)
+    })
+  }
+
+  const handleVerifyOtp = (e) => {
+    e.preventDefault()
+    if (otpCode === '1234') {
+      setOtpError('')
+
+      if (role === 'business') {
+        const existingAccounts = pendingAccountsQuery.data ?? []
+        const newAccount = {
+          email: email.trim().toLowerCase(),
+          referralCode: referralCode.trim(),
+          role: role,
+          fullName: null,
+          staffId: null,
+          isVerified: false,
+          kybDetails: null
+        }
+
+        // Replace entire list to de-dupe by email, then add new
+        const filtered = existingAccounts.filter(acc => acc.email !== newAccount.email)
+        filtered.push(newAccount)
+        // Fire-and-forget: invoke callback immediately (same user-observable timing as before),
+        // Let the mutation persist in the background.
+        ;(replaceAllPendingAccountsMutation.mutate as (v: any) => void)(filtered)
+
+        // Business creation is handled by Setup Wizard (onboarding), not here.
+        if (onRegisterAndLogin) {
+          onRegisterAndLogin(email.trim().toLowerCase())
+        } else if (onRegisterSuccess) {
+          onRegisterSuccess()
+        }
+      } else {
+        const existingAccounts = pendingAccountsQuery.data ?? []
+        const newAccount = {
+          email: email.trim().toLowerCase(),
+          referralCode: referralCode.trim(),
+          role: role,
+          fullName: email.split('@')[0],
+          staffId: null,
+          isVerified: true,
+          kybDetails: null
+        }
+        const filtered = existingAccounts.filter(acc => acc.email !== newAccount.email)
+        filtered.push(newAccount)
+        ;(replaceAllPendingAccountsMutation.mutate as (v: any) => void)(filtered)
+
+        setShowOtpInput(false)
+        setCurrentStep(3)
+      }
+    } else {
+      setOtpError(t('components.register.hooks.useRegisterForm.invalidOtpTryAgain'))
+    }
+  }
+
+  const handleVlinkpayIdChange = (val) => {
+    setVlinkpayId(val)
+    const upperVal = val.trim().toUpperCase()
+
+    if (vlinkpayTimeout) clearTimeout(vlinkpayTimeout)
+
+    if (!upperVal) {
+      setVlinkpayStatus('idle')
+      return
+    }
+
+    setVlinkpayStatus('checking')
+
+    const timer = setTimeout(() => {
+      const matchedProfile = Object.values(MOCK_NEXORA_STAFF_PROFILES).find(
+        (p: any) => p.vlinkpayId?.toUpperCase() === upperVal
+      ) as any
+      if (matchedProfile) {
+        setVlinkpayStatus('success')
+        setNickname(matchedProfile.nickname || '')
+        setPosition(matchedProfile.position || 'Nail Technician')
+        setPhone(normalizePhone(matchedProfile.phone || ''))
+        setAvatar(matchedProfile.avatar || '')
+        if (matchedProfile.payoutConfigs) {
+          setPayouts(matchedProfile.payoutConfigs)
+        }
+      } else {
+        setVlinkpayStatus('error')
+      }
+    }, 600)
+
+    setVlinkpayTimeout(timer)
+  }
+
+  const autoFillPayments = () => {
+    const defaultName = nickname.trim() || 'Lisa Tran'
+    setPayouts({
+      zelle: { enabled: true, value: email || 'lisa@example.com', qrCode: '', accountName: defaultName },
+      bankwire: { enabled: true, value: '123456789 - 987654321', qrCode: '', accountName: defaultName },
+      paypal: { enabled: true, value: email || 'lisa@example.com', qrCode: '', accountName: defaultName },
+      venmo: { enabled: true, value: `@${nickname.toLowerCase().replace(/[^a-z]/g, '') || 'lisa'}-nails`, qrCode: '', accountName: defaultName },
+      cashapp: { enabled: true, value: `$${nickname.toLowerCase().replace(/[^a-z]/g, '') || 'lisa'}nails`, qrCode: '', accountName: defaultName },
+      applecash: { enabled: true, value: phone || '408-555-2345', qrCode: '', accountName: defaultName }
+    })
+  }
+
+  const handleToggleMethod = (key) => {
+    setPayouts(prev => {
+      const current = prev[key] || { enabled: false, value: '', qrCode: '', accountName: '' }
+      const newEnabled = !current.enabled
+      if (newEnabled && !current.value.trim()) {
+        setTimeout(() => {
+          handleEditPayoutAccount(key)
+        }, 0)
+      }
+      return {
+        ...prev,
+        [key]: {
+          ...current,
+          enabled: newEnabled
+        }
+      }
+    })
+  }
+
+  const handleEditPayoutAccount = (key) => {
+    const config = payouts[key] || { enabled: false, value: '', qrCode: '', accountName: '' }
+    setEditingMethod(key)
+    setEditValue(config.value || '')
+    setEditQrCode(config.qrCode || '')
+    setEditAccountName(config.accountName || nickname || '')
+    setModalError('')
+    setIsCapturing(false)
+  }
+
+  const savePayoutAccount = (e) => {
+    if (e) e.preventDefault()
+    if (!editValue.trim()) {
+      setModalError(t('components.register.hooks.useRegisterForm.thisFieldIsRequired'))
+      return
+    }
+    setPayouts(prev => ({
+      ...prev,
+      [editingMethod]: {
+        enabled: true,
+        value: editValue.trim(),
+        qrCode: editQrCode,
+        accountName: editAccountName.trim()
+      }
+    }))
+    setEditingMethod(null)
+  }
+
+  const handleModalImagePick = (dataUrl) => {
+    if (dataUrl) setEditQrCode(dataUrl)
+  }
+
+  const handleModalTakePhoto = async () => {
+    setIsCapturing(true)
+    try {
+      const dataUrl = await captureQrImage({ fallbackValue: editValue || '' })
+      if (dataUrl) setEditQrCode(dataUrl)
+    } finally {
+      setIsCapturing(false)
+    }
+  }
+
+  const handleModalClearQr = () => {
+    setEditQrCode('')
+  }
+
+  const handlePersonalRegisterSubmit = async () => {
+    const isApiMode = import.meta.env.VITE_DATA_SOURCE === 'api'
+
+    let staffId = generatedStaffId
+    if (!staffId) {
+      const emailPrefix = email.split('@')[0].toUpperCase()
+      const initials = emailPrefix.slice(0, 3) || 'STAFF'
+      const randomDigits = Math.floor(1000 + Math.random() * 9000)
+      staffId = `NEX-STAFF-${initials}${randomDigits}`
+      
+      // Try to get actual user ID if in API mode
+      if (isApiMode) {
+        try {
+          const session = await apiAuthAdapter.getSession()
+          if (session && (session as any).id) {
+            staffId = (session as any).id as string
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+      
+      setGeneratedStaffId(staffId)
+    }
+
+    if (isApiMode) {
+      try {
+        await completePersonalOnboardingMutation.mutateAsync({
+          accountData: { 
+            fullName: nickname.trim() || email.split('@')[0], 
+            nickname: nickname.trim() || email.split('@')[0], 
+            phone, 
+            position 
+          },
+          payoutConfigs: payouts
+        })
+        setCurrentStep(4)
+      } catch (err) {
+        logger.error('Failed to complete API onboarding', err)
+        setErrors({ submit: t('register.errors.onboarding_failed') })
+      }
+      return
+    }
+
+    const finalPaymentAccounts: LooseObject = {}
+    if (vlinkpayId.trim()) {
+      finalPaymentAccounts.vlinkpay = vlinkpayId.trim()
+    }
+    Object.keys(payouts).forEach(key => {
+      if (payouts[key].enabled && payouts[key].value.trim()) {
+        finalPaymentAccounts[key] = payouts[key].value.trim()
+      }
+    })
+
+    const finalStaffMember = {
+      id: staffId,
+      fullName: nickname.trim() || email.split('@')[0],
+      nickname: nickname.trim() || email.split('@')[0],
+      position: position,
+      avatar: avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200&h=200',
+      phone: phone,
+      email: email,
+      isActive: false,
+      status: 'Pending Acceptance',
+      flowType: 'Self-Service Join',
+      paymentAccounts: finalPaymentAccounts,
+      payoutConfigs: payouts
+    }
+
+    const existingAccounts = pendingAccountsQuery.data ?? []
+    const newAccount = {
+      email: email.trim().toLowerCase(),
+      referralCode: referralCode.trim(),
+      role: role,
+      fullName: nickname.trim() || email.split('@')[0],
+      staffId: staffId,
+      isVerified: true,
+      kybDetails: null,
+      nickname: nickname.trim(),
+      position: position,
+      phone: phone,
+      avatar: avatar,
+      payoutConfigs: payouts,
+      paymentAccounts: finalPaymentAccounts
+    }
+    const filteredPending = existingAccounts.filter(acc => acc.email !== newAccount.email)
+    filteredPending.push(newAccount)
+    ;(replaceAllPendingAccountsMutation.mutate as (v: any) => void)(filteredPending)
+
+    let parsedSetup = merchantSetupQuery.data ? { ...(merchantSetupQuery.data as LooseObject) } : null
+    if (!parsedSetup) {
+      parsedSetup = {
+        businessInfo: {
+          name: '',
+          email: '',
+          phone: '',
+          category: ''
+        },
+        staffList: [],
+        touchPoints: []
+      }
+    }
+
+    try {
+      const staffList = parsedSetup.staffList || []
+      const existingIdx = staffList.findIndex(s => s.id === staffId || s.email === email || s.phone === phone)
+      if (existingIdx !== -1) {
+        staffList[existingIdx] = {
+          ...staffList[existingIdx],
+          ...finalStaffMember
+        }
+      } else {
+        staffList.push(finalStaffMember)
+      }
+      parsedSetup.staffList = staffList
+      saveMerchantSetupMutation.mutateAsync(parsedSetup as any)
+        .catch((err) => logger.error('Failed to save merchant setup during registration', err))
+
+      const newNoti = {
+        id: `noti-join-${finalStaffMember.id}-${Date.now()}`,
+        staffId: finalStaffMember.id,
+        type: 'feedback_alert',
+        title: t('components.register.hooks.useRegisterForm.newJoinRequest'),
+        message: currentLanguage === 'vi'
+          ? `Thợ ${finalStaffMember.fullName} (${finalStaffMember.position}) đã gửi yêu cầu liên kết với tiệm của bạn.`
+          : `Technician ${finalStaffMember.fullName} (${finalStaffMember.position}) requested to link with your salon.`,
+        time: t('components.register.hooks.useRegisterForm.justNow'),
+        read: false,
+        linkTab: 'staff'
+      }
+      addNotificationMutation.mutate(newNoti as any)
+    } catch (e) {
+      logger.error('Failed to update merchant setup during registration', e)
+    }
+
+    setCurrentStep(4)
+  }
+
+  const handleCopyStaffId = () => {
+    navigator.clipboard.writeText(generatedStaffId)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const getStepName = (step) => {
+    if (role === 'business') {
+      switch (step) {
+        case 0: return t('components.register.hooks.useRegisterForm.accountType')
+        case 1: return t('components.register.hooks.useRegisterForm.credentials')
+        case 2: return t('components.register.hooks.useRegisterForm.activateOtp')
+        default: return ''
+      }
+    } else {
+      switch (step) {
+        case 0: return t('components.register.hooks.useRegisterForm.accountType')
+        case 1: return t('components.register.hooks.useRegisterForm.credentials')
+        case 2: return t('components.register.hooks.useRegisterForm.activateOtp')
+        case 3: return t('components.register.hooks.useRegisterForm.success')
+        default: return ''
+      }
+    }
+  }
+
+  return {
+    // translation
+    t,
+    currentLanguage,
+    setLanguage,
+    renderLabel,
+    // step/role
+    currentStep,
+    setCurrentStep,
+    role,
+    setRole,
+    // step 1 state
+    email,
+    setEmail,
+    confirmEmail,
+    setConfirmEmail,
+    password,
+    setPassword,
+    showPassword,
+    setShowPassword,
+    referralCode,
+    setReferralCode,
+    fullName,
+    setFullName,
+    termsAccepted,
+    setTermsAccepted,
+    showTermsModal,
+    setShowTermsModal,
+    modalType,
+    setModalType,
+    nickname,
+    setNickname,
+    position,
+    setPosition,
+    phone,
+    setPhone,
+    phoneParsed,
+    bio,
+    setBio,
+    vlinkpayId,
+    setVlinkpayId,
+    avatar,
+    setAvatar,
+    payouts,
+    setPayouts,
+    // step 2 state
+    generatedStaffId,
+    setGeneratedStaffId,
+    copied,
+    setCopied,
+    // OTP state
+    otpCode,
+    setOtpCode,
+    otpError,
+    setOtpError,
+    showOtpInput,
+    setShowOtpInput,
+    resendTimer,
+    setResendTimer,
+    // payout modal state
+    editingMethod,
+    setEditingMethod,
+    editValue,
+    setEditValue,
+    editQrCode,
+    setEditQrCode,
+    editAccountName,
+    setEditAccountName,
+    isCapturing,
+    setIsCapturing,
+    modalError,
+    setModalError,
+    vlinkpayStatus,
+    setVlinkpayStatus,
+    // API mode states & handlers
+    firstName,
+    setFirstName,
+    lastName,
+    setLastName,
+    isVerificationPending,
+    setIsVerificationPending,
+    simToken,
+    setSimToken,
+    verifySuccess,
+    setVerifySuccess,
+    resendMessage,
+    setResendMessage,
+    handleSimulateVerify,
+    handleResendVerification,
+    // validation
+    errors,
+    setErrors,
+    isSubmitting,
+    // handlers
+    handleStep1Next,
+    handleVerifyOtp,
+    handleVlinkpayIdChange,
+    autoFillPayments,
+    handleToggleMethod,
+    handleEditPayoutAccount,
+    savePayoutAccount,
+    handleModalImagePick,
+    handleModalTakePhoto,
+    handleModalClearQr,
+    handlePersonalRegisterSubmit,
+    handleCopyStaffId,
+    getStepName,
+    // props passthrough
+    ssoEmail,
+    onBackToLogin,
+    onRegisterSuccess,
+    onRegisterAndLogin,
+    onKybSuccess,
+    isRedirectedFromSession,
+  }
+}

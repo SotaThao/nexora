@@ -12,7 +12,7 @@
       "tips": "Tiền tip",
       "reviews": "Đánh giá",
       "pay": "Thanh toán",
-      "profile": "Tài khoản"
+      "profile": "Hồ sơ"
     },
     "titles": {
       "home": "Trang chủ",
@@ -28,18 +28,38 @@
       "inactive": "Ngừng hoạt động"
     },
     "home": {
+      "greeting_morning": "Chào buổi sáng, {name} 👋",
+      "greeting_afternoon": "Chào buổi chiều, {name} 👋",
+      "greeting_evening": "Chào buổi tối, {name} 👋",
+      "greeting_night": "Xin chào, {name} 👋",
+      "performance_subtitle": "Đây là hiệu suất của bạn hôm nay",
       "today_tips": "Tip hôm nay",
       "this_month": "Tháng này",
       "pending": "Chờ xác nhận",
       "rating": "Đánh giá",
       "tips_count": "{count} lượt tip",
+      "tips_plus": "+ {count} lượt tip",
+      "awaiting_confirm": "{count} đang chờ xác nhận",
       "need_confirm": "Cần xác nhận",
       "pending_confirmations": "Tip chờ xác nhận",
       "no_pending": "Không có tip nào chờ xác nhận.",
       "confirm": "Xác nhận",
       "confirm_all": "Xác nhận đã nhận tất cả",
+      "view_all": "Xem tất cả",
+      "manage": "Quản lý",
+      "your_linked_businesses": "Tiệm đã liên kết",
       "linked_businesses": "Tiệm đã liên kết",
-      "display_name": "Tên hiển thị"
+      "display_name": "Tên hiển thị",
+      "via_method": "qua {method}",
+      "anonymous_customer": "Khách hàng",
+      "quick_qr": "Mã QR",
+      "quick_tips": "Tip",
+      "quick_reviews": "Đánh giá",
+      "quick_payments": "Thanh toán",
+      "quick_refer": "Giới thiệu",
+      "refer_title": "Mời đồng nghiệp nail tech",
+      "refer_subtitle": "Nhận $10 cho mỗi bạn bè tham gia!",
+      "invite_now": "Mời ngay"
     },
     "tips": {
       "activity": "Hoạt động tip",
@@ -98,6 +118,7 @@
     "active": "Đang hoạt động",
     "inactive": "Ngừng hoạt động",
     "back": "Quay lại",
+    "previous": "Trước",
     "next": "Tiếp theo",
     "cancel": "Hủy",
     "confirm": "Xác nhận",
@@ -107,6 +128,8 @@
     "copy": "Sao chép",
     "copied": "Đã sao chép!",
     "loading": "Đang tải...",
+    "processing": "Đang xử lý...",
+    "saving": "Đang lưu...",
     "error": "Lỗi",
     "success": "Thành công",
     "active_status": "Hoạt động",
@@ -137,6 +160,11 @@
     "city": "Thành phố",
     "phone_number_short": "SĐT"
   },
+  "payment_methods": {
+    "update_success": "Đã cập nhật phương thức thanh toán.",
+    "update_failed": "Không thể cập nhật phương thức thanh toán",
+    "toggle_failed": "Không thể bật/tắt phương thức thanh toán"
+  },
   "login": {
     "title": "NEXORA TOUCH",
     "gateway_sub": "Cổng định tuyến Phản hồi & Típ thông minh",
@@ -163,6 +191,7 @@
     "title_step_1": "Bước 1: Thiết Lập Cửa Hàng & Định Tuyến Review",
     "desc_step_1": "Cấu hình thông tin cơ bản của tiệm và các cổng định tuyến phản hồi thông minh.",
     "store_info_title": "Thông Tin Cửa Hàng",
+    "required_badge": "* Bắt buộc",
     "store_name": "Tên Cửa Hàng *",
     "store_name_placeholder": "Ví dụ: Tên Tiệm Của Bạn",
     "business_category": "Loại hình",
@@ -186,7 +215,7 @@
     "feedback_email": "Email Nhận Góp Ý Kín (1-3★) (Tùy chọn)",
     "title_step_2": "Bước 2: Quản Lý Nhân Viên & Điểm Chạm QR",
     "desc_step_2": "Thêm thợ của bạn. Hệ thống sẽ tự động phát sinh mã QR tương ứng để dán tại ghế hoặc chia sẻ.",
-    "add_staff_title": "Thêm Nhân Viên Mới",
+    "add_staff_title": "Thêm Mới",
     "linked_wallets": "Ví Nhận Tiền Liên Kết",
     "staff_fullname": "Họ Tên Đầy Đủ (Nội bộ) *",
     "staff_fullname_placeholder": "Ví dụ: Mia Tran",
@@ -246,6 +275,7 @@
       "staff_name_required": "Họ tên bắt buộc",
       "staff_nickname_required": "Tên hiển thị bắt buộc",
       "staff_email_invalid": "Định dạng địa chỉ email không hợp lệ.",
+      "staff_phone_invalid": "Số điện thoại không hợp lệ.",
       "staff_payment_required": "Yêu cầu: Phải liên kết ít nhất 1 ví nhận tiền (Venmo, Cash App, Zelle, hoặc VLINKPAY).",
       "store_payment_required": "Yêu cầu: Phải liên kết ít nhất 1 ví nhận tiền cho cửa hàng (Venmo, Cash App, Zelle, hoặc VLINKPAY).",
       "tp_name_required": "Tên điểm chạm là bắt buộc",
@@ -401,8 +431,13 @@
     "modals": {
       "add_tp_title": "Thêm Điểm Chạm Mới",
       "tp_name_label": "Tên điểm chạm (Ví dụ: Ghế Manicure 05)",
+      "tp_name_placeholder": "Ví dụ: Ghế Manicure 05",
+      "device_id_label": "Serial phần cứng / ID Thiết bị (Tùy chọn)",
+      "device_id_placeholder": "Ví dụ: NFC-105, QR-Table-01",
       "tp_type_label": "Loại vị trí",
       "add_btn": "Thêm Điểm Chạm",
+      "tp_name_required": "Vui lòng nhập tên điểm chạm.",
+      "tp_added_success": "Đã thêm điểm chạm \"{name}\" thành công!",
       "view_qr_title": "Mã QR cho {name}",
       "view_qr_desc": "Khách hàng quét mã này để típ và viết đánh giá trực tiếp cho nhân viên được gán.",
       "assign_staff": "Gán nhân viên phục vụ:",
@@ -723,6 +758,7 @@
     "fullname_placeholder": "Ví dụ: Mia Tran",
     "staff_success_title": "Đăng ký Tài khoản Cá nhân thành công!",
     "staff_success_desc": "Tài khoản cá nhân của bạn đã được tạo. Bạn không cần xác minh KYB doanh nghiệp để bắt đầu.",
+    "need_invite_link": "Bạn cần có link invite từ một tiệm (Business) để trở thành thợ.",
     "staff_id_label": "Mã Personal ID của bạn:",
     "staff_linking_instructions": "Cung cấp mã Personal ID này cho Chủ tiệm/Salon để họ liên kết bạn vào danh sách của tiệm.",
     "staff_login_btn": "Đăng nhập vào Bảng điều khiển Cá nhân",
@@ -840,6 +876,8 @@
   "staff_invite": {
     "total_linked": "Tổng thợ liên kết",
     "pending_invites": "Lời mời đang chờ",
+    "connected_label": "Đã kết nối",
+    "awaiting_label": "Chờ xác nhận",
     "setup_complete": "Hoàn tất cài đặt ví",
     "self_setup": "Thợ tự cài đặt",
     "option_a_title": "Lựa chọn A — Liên kết Staff ID đã có",
@@ -877,7 +915,7 @@
     "already_have_id": "Tôi đã có Personal ID",
     "activation_success": "Kích hoạt tài khoản cá nhân thành công!",
     "activation_success_desc": "Personal ID của bạn là {id}. Bạn hiện đã được liên kết với {business} và sẽ xuất hiện trong danh sách nhận tip của khách.",
-    "return_merchant": "Quay lại Bảng điều khiển Merchant"
+    "return_merchant": "Đi tới Bảng điều khiển Personal"
   },
   "errors": {
     "unknown_error": "Đã xảy ra lỗi không xác định. Vui lòng thử lại.",
@@ -916,6 +954,19 @@
       "hooks": {
         "useCustomerFlow": {
           "addTipsForYour": "Thêm tiền Tip cho nhân viên"
+        },
+        "useSimulationHandlers": {
+          "touchpointStaffPersonalQr": "QR cá nhân nhân viên",
+          "touchpointQr": "Điểm chạm QR",
+          "touchpointLobby": "QR chào mừng sảnh",
+          "tipReceivedTitle": "Nhận tip mới ({amount})",
+          "tipReceivedMessage": "{name} nhận tip {amount} qua {method} tại {touchpoint}.",
+          "reviewGoodComment": "Dịch vụ tốt",
+          "reviewBadComment": "Cần cải thiện",
+          "reviewTitleGood": "Đánh giá mới ({rating}★)",
+          "reviewTitleInternal": "Phản hồi nội bộ mới ({rating}★)",
+          "reviewMessage": "Khách để lại phản hồi cho {name}: \"{comment}\"",
+          "justNow": "Vừa xong"
         }
       },
       "steps": {
@@ -950,7 +1001,27 @@
           "publicNicknameRequired": "Vui lòng nhập tên hiển thị.",
           "fullNameRequiredToInvite": "Cần họ và tên để gửi lời mời.",
           "phoneOrEmailRequired": "Cần số điện thoại hoặc email để gửi link mời.",
-          "technicianAlreadyLinked": "Thợ này đã được liên kết với tiệm của bạn."
+          "technicianAlreadyLinked": "Thợ này đã được liên kết với tiệm của bạn.",
+          "inviteSuccess": "Đã gửi lời mời đến {name} thành công!",
+          "inviteFailed": "Gửi lời mời thất bại: {error}",
+          "linkRequestSuccess": "Đã gửi yêu cầu liên kết đến {name}!",
+          "linkRequestFailed": "Yêu cầu liên kết thất bại: {error}",
+          "missingLinkId": "Không thể gửi lại lời mời: thiếu linkId.",
+          "missingInviteId": "Không thể gửi lại lời mời: thiếu inviteId.",
+          "resendInviteSuccess": "Đã gửi lại link thiết lập thành công tới {name}!",
+          "resendInviteFailed": "Gửi lại thất bại: {error}",
+          "acceptJoinSuccess": "Đã chấp nhận thợ {name} vào tiệm!",
+          "acceptJoinFailed": "Chấp nhận thất bại: {error}",
+          "declineJoinConfirm": "Bạn có chắc chắn muốn từ chối yêu cầu tham gia của thợ {name}?",
+          "declineJoinSuccess": "Đã từ chối yêu cầu tham gia của thợ {name}!",
+          "declineJoinFailed": "Từ chối thất bại: {error}",
+          "approveUnlinkConfirm": "Bạn có chắc chắn muốn duyệt yêu cầu hủy liên kết của thợ {name}?",
+          "unlinkFailed": "Hủy liên kết thất bại: {error}",
+          "declineUnlinkConfirm": "Bạn có chắc chắn muốn từ chối yêu cầu hủy liên kết của thợ {name}?",
+          "declineFailed": "Từ chối thất bại: {error}",
+          "deleteFailed": "Xóa thất bại: {error}",
+          "statusUpdateFailed": "Cập nhật trạng thái thất bại: {error}",
+          "tipsFlowUpdateFailed": "Cập nhật tips flow thất bại: {error}"
         }
       },
       "layout": {
@@ -1096,6 +1167,7 @@
           "pendingAcceptance": "Chờ chấp nhận",
           "pendingUnlink": "Chờ hủy liên kết",
           "accept": "Chấp nhận",
+          "approve": "Duyệt",
           "approveUnlink": "Duyệt hủy",
           "reject": "Từ chối",
           "joinQrCode": "MÃ QR GIA NHẬP",
@@ -1226,6 +1298,9 @@
         "ProfileTab": {
           "payoutMethods": "Phương thức thanh toán",
           "payoutAccount": "Tài khoản",
+          "methodNotConfigured": "Phương thức chưa được cấu hình.",
+          "pleaseEnterAccountDetails": "Vui lòng nhập thông tin tài khoản.",
+          "methodIdMissing": "Lỗi hệ thống: Thiếu ID phương thức",
           "basicInformation": "Thông tin cơ bản",
           "specifyYourFullLegal": "Nhập đầy đủ họ và tên hợp pháp của bạn như trên giấy tờ tùy thân.",
           "requiredForIdentityVerification": "Ngày sinh của bạn (phải từ 18 tuổi trở lên để xác thực).",
@@ -1446,7 +1521,8 @@
           "passwordIsRequired2": "Mật khẩu không được để trống.",
           "passwordMustBeAt2": "Mật khẩu phải từ 6 ký tự.",
           "accountDoesNotExist": "Tài khoản không tồn tại hoặc mật khẩu sai.",
-          "linkRequestCancelled": "Đã hủy bỏ yêu cầu liên kết."
+          "linkRequestCancelled": "Đã hủy bỏ yêu cầu liên kết.",
+          "emailAlreadyExists": "Email này đã được đăng ký."
         }
       },
       "steps": {
@@ -1465,6 +1541,8 @@
           "termsOfService": "Điều khoản dịch vụ",
           "close": "Đóng",
           "iAccept": "Tôi Đồng Ý",
+          "loginCta": "Bấm vào đây để đăng nhập",
+          "resendVerificationCode": "Gửi lại mã xác minh",
           "phExampleEmail": "vd: name@example.com",
           "phPassword": "••••••••",
           "phReferralCode": "Nhập mã giới thiệu...",
@@ -1501,6 +1579,9 @@
         },
         "StepWelcome": {
           "declineRequest": "Hủy bỏ / Từ chối",
+          "loadingInvitation": "Đang tải lời mời...",
+          "invalidInvitationTitle": "Lời mời không hợp lệ",
+          "invalidInvitationDescription": "Liên kết lời mời này không hợp lệ hoặc đã hết hạn. Vui lòng liên hệ tiệm để được mời lại.",
           "salonNetworkInvitation": "THƯ MỜI GIA NHẬP HỆ THỐNG TIỆM",
           "youHaveBeenInvited": "Bạn đã được mời liên kết hồ sơ của mình để nhận tiền tip trực tiếp vào tài khoản cá nhân tại tiệm này.",
           "iAlreadyHaveAn": "Đã có tài khoản",
@@ -1646,7 +1727,8 @@
       "resetToken": "Mã đặt lại",
       "newPassword": "Mật khẩu mới",
       "confirmPassword": "Xác nhận mật khẩu",
-      "resetPassword": "Đặt lại mật khẩu"
+      "resetPassword": "Đặt lại mật khẩu",
+      "backToSignIn": "Quay lại Đăng nhập"
     },
     "TouchpointsView": {
       "phExampleDeviceIds": "vd: NFC-105, QR-Table-01",

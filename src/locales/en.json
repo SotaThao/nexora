@@ -12,7 +12,7 @@
       "tips": "Tips",
       "reviews": "Reviews",
       "pay": "Pay",
-      "profile": "Account"
+      "profile": "Profile"
     },
     "titles": {
       "home": "Home",
@@ -28,18 +28,38 @@
       "inactive": "Inactive"
     },
     "home": {
-      "today_tips": "Today Tips",
+      "greeting_morning": "Good morning, {name} 👋",
+      "greeting_afternoon": "Good afternoon, {name} 👋",
+      "greeting_evening": "Good evening, {name} 👋",
+      "greeting_night": "Hello, {name} 👋",
+      "performance_subtitle": "Here's your performance today",
+      "today_tips": "Today's Tips",
       "this_month": "This Month",
       "pending": "Pending",
       "rating": "Rating",
       "tips_count": "{count} tips",
+      "tips_plus": "+ {count} tips",
+      "awaiting_confirm": "{count} awaiting confirmation",
       "need_confirm": "Need confirm",
       "pending_confirmations": "Pending Confirmations",
       "no_pending": "No pending confirmations.",
       "confirm": "Confirm",
       "confirm_all": "Confirm All Received",
+      "view_all": "View all",
+      "manage": "Manage",
+      "your_linked_businesses": "Your Linked Businesses",
       "linked_businesses": "Linked Businesses",
-      "display_name": "Display name"
+      "display_name": "Display name",
+      "via_method": "via {method}",
+      "anonymous_customer": "Customer",
+      "quick_qr": "My QR",
+      "quick_tips": "Tips",
+      "quick_reviews": "Reviews",
+      "quick_payments": "Payments",
+      "quick_refer": "Refer & Earn",
+      "refer_title": "Invite fellow nail techs",
+      "refer_subtitle": "Earn $10 for each friend who joins!",
+      "invite_now": "Invite Now"
     },
     "tips": {
       "activity": "Tip Activity",
@@ -99,6 +119,7 @@
     "inactive": "Inactive",
     "back": "Back",
     "next": "Next",
+    "previous": "Previous",
     "cancel": "Cancel",
     "confirm": "Confirm",
     "save": "Save",
@@ -107,6 +128,8 @@
     "copy": "Copy",
     "copied": "Copied!",
     "loading": "Loading...",
+    "processing": "Processing...",
+    "saving": "Saving...",
     "error": "Error",
     "success": "Success",
     "active_status": "Active",
@@ -137,6 +160,11 @@
     "city": "City",
     "phone_number_short": "phone number"
   },
+  "payment_methods": {
+    "update_success": "Payment method updated.",
+    "update_failed": "Failed to update payment method",
+    "toggle_failed": "Failed to toggle payment method"
+  },
   "login": {
     "title": "NEXORA TOUCH",
     "gateway_sub": "Smart Tip & Google Review Filtration Gateway",
@@ -163,6 +191,7 @@
     "title_step_1": "Step 1: Store Setup & Review Routing",
     "desc_step_1": "Configure basic salon profile and smart review routing gateways.",
     "store_info_title": "Store Profile",
+    "required_badge": "* Required",
     "store_name": "Store Name *",
     "store_name_placeholder": "e.g., Your Business Name",
     "business_category": "Business Category",
@@ -180,13 +209,13 @@
     "logo_hint": "Square image (Max 2MB)",
     "review_routing_title": "Review Routing",
     "review_routing_policy": "Policy: Satisfied customers (4-5★) are routed directly to Google/Yelp. Dissatisfied customers (1-3★) are routed to submit private feedback to the administrator email below for resolution.",
-    "google_review_link": "Google Review Link (Optional)",
-    "yelp_review_link": "Yelp Review Link (Optional)",
-    "facebook_link": "Facebook Link (Optional)",
-    "feedback_email": "Private Feedback Email (1-3★) (Optional)",
+    "google_review_link": "Google Review Link",
+    "yelp_review_link": "Yelp Review Link",
+    "facebook_link": "Facebook Link",
+    "feedback_email": "Private Feedback Email (1-3★)",
     "title_step_2": "Step 2: Staff Management & QR Touchpoints",
     "desc_step_2": "Add your technicians. The system automatically generates corresponding QR codes to place at tables or share.",
-    "add_staff_title": "Add New Staff Member",
+    "add_staff_title": "Add New",
     "linked_wallets": "Linked Payment Wallets",
     "staff_fullname": "Full Name (Internal) *",
     "staff_fullname_placeholder": "e.g., Mia Tran",
@@ -246,6 +275,7 @@
       "staff_name_required": "Full name is required",
       "staff_nickname_required": "Display name is required",
       "staff_email_invalid": "Invalid email address format.",
+      "staff_phone_invalid": "Invalid phone number.",
       "staff_payment_required": "Required: Must link at least 1 payment wallet (Venmo, Cash App, Zelle, or VLINKPAY).",
       "store_payment_required": "Required: Must link at least 1 payment wallet for the store (Venmo, Cash App, Zelle, or VLINKPAY).",
       "tp_name_required": "Touch point name is required",
@@ -401,8 +431,13 @@
     "modals": {
       "add_tp_title": "Add New Touch Point",
       "tp_name_label": "Touch Point Name (e.g. Manicure Chair 05)",
+      "tp_name_placeholder": "e.g. Manicure Chair 05",
+      "device_id_label": "Hardware Serial / Device ID (Optional)",
+      "device_id_placeholder": "e.g. NFC-105, QR-Table-01",
       "tp_type_label": "Station Type",
       "add_btn": "Add Touch Point",
+      "tp_name_required": "Please enter a touch point name.",
+      "tp_added_success": "Touch point \"{name}\" added successfully!",
       "view_qr_title": "QR Code for {name}",
       "view_qr_desc": "Customers scan this code to Tip & Review directly for the assigned staff member.",
       "assign_staff": "Assign staff member:",
@@ -723,6 +758,7 @@
     "fullname_placeholder": "e.g., Mia Tran",
     "staff_success_title": "Personal Account Registered!",
     "staff_success_desc": "Your personal account has been successfully created. You do not need business verification to start.",
+    "need_invite_link": "You need an invite link from a business to become a staff.",
     "staff_id_label": "Your Unique Personal ID:",
     "staff_linking_instructions": "Give this Personal ID to your Salon Owner so they can link your account to the business.",
     "staff_login_btn": "Log In to Personal Dashboard",
@@ -840,6 +876,8 @@
   "staff_invite": {
     "total_linked": "Total Staff Linked",
     "pending_invites": "Pending Invites",
+    "connected_label": "Connected",
+    "awaiting_label": "Awaiting confirmation",
     "setup_complete": "Payment Setup Complete",
     "self_setup": "Staff Self-Setup",
     "option_a_title": "Option A — Link Existing Staff ID",
@@ -877,7 +915,7 @@
     "already_have_id": "I already have Personal ID",
     "activation_success": "Personal Account Activated!",
     "activation_success_desc": "Your Personal ID is {id}. You are now linked to {business} and will appear in the customer tip list.",
-    "return_merchant": "Return to Merchant Dashboard"
+    "return_merchant": "Go to Personal Dashboard"
   },
   "errors": {
     "unknown_error": "An unknown error occurred. Please try again.",
@@ -916,6 +954,19 @@
       "hooks": {
         "useCustomerFlow": {
           "addTipsForYour": "Add tips for your providers"
+        },
+        "useSimulationHandlers": {
+          "touchpointStaffPersonalQr": "Staff Personal QR",
+          "touchpointQr": "QR Touchpoint",
+          "touchpointLobby": "Lobby Welcome QR",
+          "tipReceivedTitle": "New Tip Received ({amount})",
+          "tipReceivedMessage": "{name} received {amount} tip via {method} at {touchpoint}.",
+          "reviewGoodComment": "Good service",
+          "reviewBadComment": "Needs improvement",
+          "reviewTitleGood": "New Review ({rating}★)",
+          "reviewTitleInternal": "New Internal Feedback ({rating}★)",
+          "reviewMessage": "Customer left feedback for {name}: \"{comment}\"",
+          "justNow": "Just now"
         }
       },
       "steps": {
@@ -950,7 +1001,27 @@
           "publicNicknameRequired": "Public nickname is required.",
           "fullNameRequiredToInvite": "Full name is required to invite.",
           "phoneOrEmailRequired": "Phone or email is required to send invite link.",
-          "technicianAlreadyLinked": "This technician is already linked to your salon."
+          "technicianAlreadyLinked": "This technician is already linked to your salon.",
+          "inviteSuccess": "Invite sent to {name} successfully!",
+          "inviteFailed": "Failed to send invite: {error}",
+          "linkRequestSuccess": "Link request sent to {name}!",
+          "linkRequestFailed": "Link request failed: {error}",
+          "missingLinkId": "Cannot resend invite: missing linkId.",
+          "missingInviteId": "Cannot resend invite: missing inviteId.",
+          "resendInviteSuccess": "Setup link successfully resent to {name}!",
+          "resendInviteFailed": "Resend failed: {error}",
+          "acceptJoinSuccess": "Accepted technician {name} to salon!",
+          "acceptJoinFailed": "Accept failed: {error}",
+          "declineJoinConfirm": "Are you sure you want to decline join request from {name}?",
+          "declineJoinSuccess": "Declined join request from {name}!",
+          "declineJoinFailed": "Decline failed: {error}",
+          "approveUnlinkConfirm": "Are you sure you want to approve unlink request from {name}?",
+          "unlinkFailed": "Unlink failed: {error}",
+          "declineUnlinkConfirm": "Are you sure you want to decline unlink request from {name}?",
+          "declineFailed": "Decline failed: {error}",
+          "deleteFailed": "Delete failed: {error}",
+          "statusUpdateFailed": "Status update failed: {error}",
+          "tipsFlowUpdateFailed": "Tips flow update failed: {error}"
         }
       },
       "layout": {
@@ -1096,6 +1167,7 @@
           "pendingAcceptance": "Pending Acceptance",
           "pendingUnlink": "Pending Unlink",
           "accept": "Accept",
+          "approve": "Approve",
           "approveUnlink": "Approve Unlink",
           "reject": "Reject",
           "joinQrCode": "JOIN QR CODE",
@@ -1226,6 +1298,9 @@
         "ProfileTab": {
           "payoutMethods": "Payout Methods",
           "payoutAccount": "Payout account",
+          "methodNotConfigured": "Method is not configured.",
+          "pleaseEnterAccountDetails": "Please enter account details.",
+          "methodIdMissing": "System Error: Method ID missing",
           "basicInformation": "Basic Information",
           "specifyYourFullLegal": "Specify your full legal name as it appears on your official government identification documents.",
           "requiredForIdentityVerification": "Required for identity verification purposes (must be 18 years or older).",
@@ -1446,7 +1521,8 @@
           "passwordIsRequired2": "Password is required.",
           "passwordMustBeAt2": "Password must be at least 6 characters.",
           "accountDoesNotExist": "Account does not exist or incorrect password.",
-          "linkRequestCancelled": "Link request cancelled."
+          "linkRequestCancelled": "Link request cancelled.",
+          "emailAlreadyExists": "This email is already registered."
         }
       },
       "steps": {
@@ -1465,6 +1541,8 @@
           "termsOfService": "Terms of Service",
           "close": "Close",
           "iAccept": "I Accept",
+          "loginCta": "Click here to login",
+          "resendVerificationCode": "Resend Verification Code",
           "phExampleEmail": "e.g. name@example.com",
           "phPassword": "••••••••",
           "phReferralCode": "Enter referral code...",
@@ -1501,6 +1579,9 @@
         },
         "StepWelcome": {
           "declineRequest": "Decline Request",
+          "loadingInvitation": "Loading invitation...",
+          "invalidInvitationTitle": "Invitation Not Valid",
+          "invalidInvitationDescription": "This invitation link is invalid or has expired. Please contact the salon to request a new invite.",
           "salonNetworkInvitation": "SALON NETWORK INVITATION",
           "youHaveBeenInvited": "You have been invited to link your profile to receive tips directly to your personal account at this salon.",
           "iAlreadyHaveAn": "I already have an Account",
@@ -1646,7 +1727,8 @@
       "resetToken": "Reset Token",
       "newPassword": "New Password",
       "confirmPassword": "Confirm Password",
-      "resetPassword": "Reset Password"
+      "resetPassword": "Reset Password",
+      "backToSignIn": "Back to Sign In"
     },
     "TouchpointsView": {
       "phExampleDeviceIds": "e.g. NFC-105, QR-Table-01",

@@ -1,0 +1,49 @@
+
+# Reports Export Rule
+Whenever the user requests to export a report or walkthrough, or when a tester agent completes a test run:
+1. ALWAYS save or copy the markdown report to the user-story report folder in the Obsidian vault:
+   C:\Users\AD\Documents\Obsidian\shancao\Nexora\user-story\report\
+2. If the test involves browser live tests, E2E flows, or manual walkthroughs that generate screenshots or video recordings (e.g. .mp4, .webm), ALWAYS save these media assets into that same directory (C:\Users\AD\Documents\Obsidian\shancao\Nexora\user-story\report\) alongside the report.
+This ensures all test evidence remains colocated and tied directly to the corresponding user stories.
+
+# Obsidian Sprint & User Story Workflow Rule
+When an Agent needs to create, edit, or checklist tasks/TODOs:
+1. **Detect Current Sprint**: Scan files in the Obsidian vault `C:\Users\AD\Documents\Obsidian\shancao\Nexora\Sprints\` folder. Find the file containing `status: in-progress` in its frontmatter. Extract the week/sprint number from the filename (e.g., `Week-02` -> `week-02`).
+2. **Locate User Stories**: All User Stories for the active week must be stored in the directory:
+   `C:\Users\AD\Documents\Obsidian\shancao\Nexora\user-story\<week-name>\` (e.g. `user-story/week-02/US-XXX-name.md`).
+3. **Task Completion Checklist & Evidence**:
+   - Each User Story file must contain a `## 📋 Tasks / TODOs` section with checkbox items (e.g. `- [ ] Task name`).
+   - When an Agent completes a task and marks it as completed (`- [x]`), it **MUST** append or attach clear **Evidence** in the User Story file (or in the `user-story/report/` folder and link it):
+     a. **For UI/UX or Flow changes (including E2E / browser live tests)**: Attach screenshots or video recording files (.mp4 or .webm) saved in `user-story/report/`.
+     b. **Non-tech Explanation**: Provide a detailed explanation in a dedicated section (e.g., `### 💡 Giải thích thay đổi`) answering:
+        - **Tại sao lại thay đổi? (Why)**: Lý do thực hiện thay đổi là gì (lỗi gì cần sửa, tính năng mới mang lại lợi ích gì cho người dùng).
+        - **Thay đổi như thế nào? (How)**: Mô tả cách hệ thống hoạt động sau thay đổi bằng ngôn ngữ đơn giản, dễ hiểu nhất cho người non-tech (tránh từ ngữ quá kỹ thuật).
+   - Once all tasks in the US file are checked (`- [x]`), the Agent must automatically:
+     a. Update the US file frontmatter to `status: done`.
+     b. Find the corresponding checkbox for this US in the active Sprint file (e.g., `Sprints/Week-02.md`) and check it (e.g., change `- [ ] **US-10**:` to `- [x] **US-10**:`).
+4. **Sprint Closeout**:
+   - When all US checkboxes in the active Sprint file are checked (`- [x]`), the Agent must:
+     a. Update the Sprint file frontmatter to `status: completed`.
+     b. Send a final notification to the Telegram Thread 735 reporting the successful completion of the sprint, along with test summaries.
+
+# Task Creation, Sizing & Estimation Rule
+When creating tasks/TODOs for any User Story in Obsidian:
+1. **Enforce Task Granularity**:
+   - Tasks must be detailed and appropriately sized. Avoid tasks that are too granular (under 0.5h) or too broad/large (above 8h).
+   - The allowed duration range for any task is **0.5 hour to 8 hours**.
+2. **Standard Task Categories**:
+   - For standard feature implementations, always structure the checklist using these standard categories:
+     - `Figma Design` (e.g., `Thiết kế giao diện trên Figma (Xh)`)
+     - `FE Build UI` (e.g., `Xây dựng UI Frontend (Xh)`)
+     - `Integrate API` (e.g., `Tích hợp API (Xh)`)
+     - `Automation Test` (e.g., `Viết automation test (Xh)`)
+   - You may add custom tasks as needed (e.g. `BE Development (Xh)`, `Database Migration (Xh)`) but they must respect the same sizing and estimate notation.
+3. **Estimate Format**:
+   - Always append the estimated duration in parentheses at the end of the task description: `(Xh)` or `(X.Xh)`.
+   - E.g.:
+     - `- [ ] Thiết kế giao diện trên Figma (3h)`
+     - `- [ ] Xây dựng UI Frontend (4.5h)`
+     - `- [ ] Tích hợp API (2h)`
+     - `- [ ] Viết automation test (1.5h)`
+4. **Time Tracking Automation**:
+   - The weekly report script will parse these checkbox lines and sum up the hours of all completed tasks (`- [x]`) to calculate the member's weekly hours. Ensure all completed tasks have correct time notations.
