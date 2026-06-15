@@ -98,7 +98,7 @@ jobs:
         run: |
           echo "Testing all supported build modes..."
           VITE_APP_ENV=development \
-          VITE_API_BASE_URL=https://development-api.nexoratouch.com \
+          VITE_API_BASE_URL=https://localhost:5005 \
           VITE_DATA_SOURCE=storage \
           VITE_ENABLE_DEMO_TOOLS=false \
           pnpm run build:dev
