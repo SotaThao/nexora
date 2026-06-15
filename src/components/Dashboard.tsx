@@ -6,6 +6,7 @@ import { Filter, Moon, Settings, ShieldAlert, Sun, Check, Link } from 'lucide-re
 
 // 3. Internal — utils → contexts → data/constants → hooks → layout → views → modals → ui
 import { logger } from '../utils/logger'
+import { resolveMerchantStaffTipQr, toLocalCustomerTouchUrl } from '../utils/staffTipUrl'
 import { useTranslation } from '../contexts/LanguageContext'
 import { useNotification } from '../contexts/NotificationContext'
 import { DEFAULT_PAYOUT_CONFIGS, MENU_ITEMS } from './dashboard/constants'
@@ -372,20 +373,39 @@ export default function Dashboard({
 
   const previewQr = (target) => {
     const staffName = target.nickname || target.fullName
-    const finalSlug = target.slug 
-      ? target.slug 
+    const masterTouchpoint =
+      touchpoints.find((tp) => tp.type === 'FrontDesk') || touchpoints[0] || null
+
+    // Staff personal QR → master touch URL + ?staffProfileId=… (skip staff picker).
+    const staffTipQr = resolveMerchantStaffTipQr(target.staffProfileId, {
+      businessName,
+      masterTouchpoint,
+    })
+    if (staffTipQr?.tipUrl) {
+      setQrTarget({
+        name: target.name || `Personal QR - ${staffName}`,
+        subtitle: target.position || 'Staff QR',
+        slug: staffTipQr.touchPointSlug,
+        url: staffTipQr.tipUrl,
+        qrImageUrl: target.qrImageUrl || staffTipQr.qrImageUrl || null,
+        isActive: target.isActive !== undefined ? target.isActive : true,
+        isStaffQr: true,
+      })
+      return
+    }
+
+    const finalSlug = target.slug
+      ? target.slug
       : (staffName ? `staff-${slugify(staffName)}` : slugify(target.name || target.id || 'general'))
 
     setQrTarget({
       name: target.name || `Personal QR - ${staffName}`,
       subtitle: target.position || target.type || 'Staff QR',
       slug: finalSlug,
-      // Canonical customer URL + QR image come from the API (GET touchpoints).
-      // Carry them through so QrModal uses the real slugs instead of building
-      // a link from slugify(businessName) (which is blank pre-KYB).
-      url: target.url || null,
+      url: target.url ? toLocalCustomerTouchUrl(target.url) : null,
       qrImageUrl: target.qrImageUrl || null,
-      isActive: target.isActive !== undefined ? target.isActive : true
+      isActive: target.isActive !== undefined ? target.isActive : true,
+      isStaffQr: Boolean(staffName && target.staffProfileId),
     })
   }
 

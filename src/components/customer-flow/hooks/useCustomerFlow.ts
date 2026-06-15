@@ -219,11 +219,18 @@ export default function useCustomerFlow() {
   const [paymentLinkData, setPaymentLinkData] = useState<any | null>(null)
 
   useEffect(() => {
-    if (didApplyStaffPreselect.current) return
-    if (!preselectedStaffProfileId || activeStaffList.length === 0) return
+    if (didApplyStaffPreselect.current || activeStaffList.length === 0) return
+
+    const assignedStaffProfileId = touchPageData?.touchPoint?.assignedStaffProfileId
+    const staffCardPreselectId =
+      touchPageData?.touchPoint?.type === 'StaffCard' && assignedStaffProfileId
+        ? String(assignedStaffProfileId)
+        : null
+    const preselectId = preselectedStaffProfileId || staffCardPreselectId
+    if (!preselectId) return
 
     const match = activeStaffList.find(
-      (staff) => String(staff.id) === preselectedStaffProfileId,
+      (staff) => String(staff.id) === preselectId,
     )
     if (!match) return
 
@@ -234,7 +241,7 @@ export default function useCustomerFlow() {
       [match.id]: prev[match.id] !== undefined ? prev[match.id] : 15,
     }))
     setStep('tip_amount')
-  }, [preselectedStaffProfileId, activeStaffList])
+  }, [preselectedStaffProfileId, activeStaffList, touchPageData])
 
   // ── Payment accounts ──
   const touchBusinessId = useMemo(

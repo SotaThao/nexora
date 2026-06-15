@@ -31,6 +31,55 @@ export function stripSessionIdFromUrl(url: string): string {
   }
 }
 
+/** Rewrite a touch customer URL to the current origin while keeping query params (e.g. staffProfileId). */
+export function toLocalCustomerTouchUrl(
+  url: string,
+  origin = typeof window !== 'undefined' ? window.location.origin : '',
+): string {
+  try {
+    const parsed = new URL(url.startsWith('http') ? url : `${origin}${url}`)
+    parsed.searchParams.delete('sessionId')
+    const qs = parsed.searchParams.toString()
+    return `${origin}${parsed.pathname}${qs ? `?${qs}` : ''}`
+  } catch {
+    return stripSessionIdFromUrl(url)
+  }
+}
+
+export interface MasterTouchpointRef {
+  url?: string | null
+  slug?: string | null
+  type?: string | null
+}
+
+/** Build a staff-specific customer URL on the business master touch point (skips staff picker). */
+export function resolveMerchantStaffTipQr(
+  staffProfileId: string | null | undefined,
+  {
+    businessName,
+    businessSlug,
+    masterTouchpoint,
+    origin = typeof window !== 'undefined' ? window.location.origin : '',
+  }: {
+    businessName?: string
+    businessSlug?: string | null
+    masterTouchpoint?: MasterTouchpointRef | null
+    origin?: string
+  },
+): ResolvedStaffTipQr | null {
+  if (!staffProfileId?.trim()) return null
+  return resolveStaffTipQr(
+    {
+      businessName,
+      businessSlug,
+      touchPointSlug: masterTouchpoint?.slug ?? null,
+      tipUrl: masterTouchpoint?.url ?? null,
+    },
+    staffProfileId,
+    origin,
+  )
+}
+
 export function buildStaffTipCustomerUrl({
   origin,
   businessSlug,
