@@ -1520,6 +1520,24 @@
           "phAccountNumber": "Account Number",
           "phRoutingCode": "Routing Code"
         },
+        "StaffKycOverview": {
+          "retry": "Retry",
+          "verifyYourAccount": "Verify Your Account",
+          "completeKyc": "Complete your",
+          "kyc": "KYC",
+          "andExploreNextLevel": "and explore the next level of experience with",
+          "nexora": "Nexora Touch",
+          "getStarted": "Get Started",
+          "whyKycMatters": "Why KYC Verification Matters",
+          "kycDescription": "By completing this process, you are helping us maintain a safe and secure environment for all",
+          "kycDescriptionContinued": "members. KYC verification also allows you to enjoy full access to our platform, including higher transaction limits and additional features.",
+          "networkError": "Unable to load KYC portal. Please check your connection and try again.",
+          "serverError": "Unable to initialize KYC portal. Please try again later.",
+          "statusReviewTitle": "KYC UNDER REVIEW",
+          "statusReviewDescription": "Your identity verification is being reviewed. You can continue using the portal below to check status or update information.",
+          "statusRejectedTitle": "KYC VERIFICATION REJECTED",
+          "statusRejectedDescription": "Your previous verification was rejected. Please complete the KYC process again using the portal below."
+        },
         "StaffReviews": {
           "reviewsAndRatings": "Reviews & Ratings",
           "customerReviews": "Customer Reviews",

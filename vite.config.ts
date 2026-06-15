@@ -4,6 +4,12 @@ import react from '@vitejs/plugin-react'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    dedupe: ['react', 'react-dom', 'react/jsx-runtime'],
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react/jsx-runtime', 'react-loading-skeleton'],
+  },
   envPrefix: ['VITE_', 'SUPABASE_', 'NEXT_PUBLIC_'],
   build: {
     chunkSizeWarningLimit: 900,

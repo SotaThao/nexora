@@ -35,6 +35,7 @@ export const qk = {
   // Profile (Staff/Personal)
   userProfile:              () => ['userProfile'],
   verifiedStatus:           () => ['userProfile', 'verifiedStatus'],
+  kycInitialize:            () => ['userProfile', 'kycInitialize'],
 
   // Merchant Staff Management
   merchantStaff:       ()      => ['merchantStaff'],

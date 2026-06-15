@@ -1520,6 +1520,24 @@
           "phAccountNumber": "Số tài khoản",
           "phRoutingCode": "Mã routing"
         },
+        "StaffKycOverview": {
+          "retry": "Thử lại",
+          "verifyYourAccount": "Xác minh tài khoản của bạn",
+          "completeKyc": "Hoàn tất",
+          "kyc": "KYC",
+          "andExploreNextLevel": "và trải nghiệm đầy đủ các tính năng với",
+          "nexora": "Nexora Touch",
+          "getStarted": "Bắt đầu",
+          "whyKycMatters": "Tại sao xác minh KYC quan trọng",
+          "kycDescription": "Bằng việc hoàn tất quy trình này, bạn giúp chúng tôi duy trì môi trường an toàn và bảo mật cho tất cả",
+          "kycDescriptionContinued": "thành viên. Xác minh KYC cũng cho phép bạn sử dụng đầy đủ nền tảng, bao gồm hạn mức giao dịch cao hơn và các tính năng bổ sung.",
+          "networkError": "Không thể tải cổng KYC. Vui lòng kiểm tra kết nối và thử lại.",
+          "serverError": "Không thể khởi tạo cổng KYC. Vui lòng thử lại sau.",
+          "statusReviewTitle": "KYC ĐANG ĐƯỢC XEM XÉT",
+          "statusReviewDescription": "Hồ sơ xác minh danh tính của bạn đang được xem xét. Bạn có thể tiếp tục sử dụng cổng bên dưới để kiểm tra trạng thái hoặc cập nhật thông tin.",
+          "statusRejectedTitle": "KYC BỊ TỪ CHỐI",
+          "statusRejectedDescription": "Xác minh trước đó của bạn đã bị từ chối. Vui lòng hoàn tất lại quy trình KYC qua cổng bên dưới."
+        },
         "StaffReviews": {
           "reviewsAndRatings": "Đánh Giá & Xếp Hạng",
           "customerReviews": "Ý Kiến Khách Hàng",

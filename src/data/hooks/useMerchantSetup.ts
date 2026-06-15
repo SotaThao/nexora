@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import merchantsRepository from '../repositories/merchants'
-import { AuthContext } from '../../auth/AuthProvider'
+import { AuthContext } from '../../auth/AuthContext'
 import type { MerchantSetup } from '../../types/domain'
 import type { CreateBusinessResult, ImageUploadResult, SlugCheckResult } from '../../types/repositories'
 
