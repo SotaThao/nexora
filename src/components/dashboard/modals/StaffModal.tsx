@@ -47,6 +47,7 @@ function StaffModal({
   const [idInput, setIdInput] = useState(() => form.vlinkpay || form.nexoraStaffId || '')
   const [searchQuery, setSearchQuery] = useState('')
   const [lastHandledSearchQuery, setLastHandledSearchQuery] = useState('')
+  const isReviewOnly = isApproveMode
 
   useEffect(() => {
     setIdInput(form.vlinkpay || form.nexoraStaffId || '')
@@ -63,7 +64,7 @@ function StaffModal({
   const [reviewFilterOnlyCommented, setReviewFilterOnlyCommented] = useState(false)
 
   const searchResultsQuery = useSearchMerchantStaff(searchQuery, {
-    enabled: open && !editing && !isApproveMode && searchQuery.trim().length > 0,
+    enabled: open && !editing && !isReviewOnly && searchQuery.trim().length > 0,
   })
 
   useEffect(() => {
@@ -179,6 +180,8 @@ function StaffModal({
   }
 
   const handleCombinedIdChange = (val) => {
+    if (isReviewOnly) return
+
     const trimmed = val.trim()
     const searchId = trimmed.includes('@') ? trimmed : trimmed.toUpperCase()
 
@@ -271,12 +274,14 @@ function StaffModal({
                   </span>
                   <input
                     className={`h-10 w-full rounded-lg border pl-[76px] pr-10 text-sm outline-none font-semibold font-mono transition-all ${
+                      isReviewOnly ? 'border-nexoraBorder bg-nexoraCanvas cursor-default' :
                       (vlinkpayStatus === 'success' || nexoraStatus === 'success') ? 'border-nexoraSuccess focus:border-nexoraSuccess focus:ring-1 focus:ring-nexoraSuccess/20' :
                       (vlinkpayStatus === 'error' && nexoraStatus === 'error') ? 'border-nexoraDanger focus:border-nexoraDanger focus:ring-1 focus:ring-nexoraDanger/20 animate-shake' :
                       (vlinkpayStatus === 'checking' || nexoraStatus === 'checking') ? 'border-nexoraWarning focus:border-nexoraWarning' :
                       'border-nexoraBorder focus:border-nexoraBrand'
                     }`}
                     value={idInput}
+                    readOnly={isReviewOnly}
                     onChange={(event) => handleCombinedIdChange(event.target.value)}
                     placeholder={t('components.dashboard.modals.StaffModal.phExampleVlp1')}
                   />
@@ -295,49 +300,55 @@ function StaffModal({
                     value={form.nexoraStaffId || ''}
                     readOnly
                   />
-                  <div className="absolute right-9 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                    {(vlinkpayStatus === 'checking' || nexoraStatus === 'checking') && (
-                      <Loader2 className="h-3.5 w-3.5 text-nexoraWarning animate-spin" />
-                    )}
-                    {(vlinkpayStatus === 'success' || nexoraStatus === 'success') && (
-                      <CheckCircle2 className="h-3.5 w-3.5 text-nexoraSuccess animate-scaleUp" />
-                    )}
-                    {(vlinkpayStatus === 'error' && nexoraStatus === 'error') && (
-                      <XCircle className="h-3.5 w-3.5 text-nexoraDanger animate-scaleUp" />
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleScanQr('combined')}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-nexoraSubtle hover:text-nexoraBrand transition-colors p-1.5 rounded hover:bg-nexoraCanvas"
-                    title={t('components.dashboard.modals.StaffModal.scanQrCode')}
-                  >
-                    <QrCode className="h-3.5 w-3.5" />
-                  </button>
-                  {/* Hidden legacy scan buttons to satisfy unit test assertions */}
-                  <button
-                    type="button"
-                    style={{ display: 'none' }}
-                    title="Scan VLINKPAY QR Code"
-                    onClick={() => handleScanQr('vlinkpay')}
-                  />
-                  <button
-                    type="button"
-                    style={{ display: 'none' }}
-                    title="Scan NEXORA QR Code"
-                    onClick={() => handleScanQr('staff')}
-                  />
+                  {!isReviewOnly && (
+                    <>
+                      <div className="absolute right-9 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                        {(vlinkpayStatus === 'checking' || nexoraStatus === 'checking') && (
+                          <Loader2 className="h-3.5 w-3.5 text-nexoraWarning animate-spin" />
+                        )}
+                        {(vlinkpayStatus === 'success' || nexoraStatus === 'success') && (
+                          <CheckCircle2 className="h-3.5 w-3.5 text-nexoraSuccess animate-scaleUp" />
+                        )}
+                        {(vlinkpayStatus === 'error' && nexoraStatus === 'error') && (
+                          <XCircle className="h-3.5 w-3.5 text-nexoraDanger animate-scaleUp" />
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleScanQr('combined')}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-nexoraSubtle hover:text-nexoraBrand transition-colors p-1.5 rounded hover:bg-nexoraCanvas"
+                        title={t('components.dashboard.modals.StaffModal.scanQrCode')}
+                      >
+                        <QrCode className="h-3.5 w-3.5" />
+                      </button>
+                      {/* Hidden legacy scan buttons to satisfy unit test assertions */}
+                      <button
+                        type="button"
+                        style={{ display: 'none' }}
+                        title="Scan VLINKPAY QR Code"
+                        onClick={() => handleScanQr('vlinkpay')}
+                      />
+                      <button
+                        type="button"
+                        style={{ display: 'none' }}
+                        title="Scan NEXORA QR Code"
+                        onClick={() => handleScanQr('staff')}
+                      />
+                    </>
+                  )}
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => onOpenInviteShare && onOpenInviteShare(form)}
-                  className="h-10 px-3 rounded-lg bg-nexoraBrandSoft hover:bg-nexoraBrandSoft/80 text-nexoraBrand border border-nexoraBrandSoft text-sm font-bold transition flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
-                  title={t('components.dashboard.modals.StaffModal.shareInviteLink')}
-                >
-                  <QrCode className="h-4 w-4 shrink-0" />
-                  {t('components.dashboard.modals.StaffModal.invite')}
-                </button>
+                {!isReviewOnly && (
+                  <button
+                    type="button"
+                    onClick={() => onOpenInviteShare && onOpenInviteShare(form)}
+                    className="h-10 px-3 rounded-lg bg-nexoraBrandSoft hover:bg-nexoraBrandSoft/80 text-nexoraBrand border border-nexoraBrandSoft text-sm font-bold transition flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
+                    title={t('components.dashboard.modals.StaffModal.shareInviteLink')}
+                  >
+                    <QrCode className="h-4 w-4 shrink-0" />
+                    {t('components.dashboard.modals.StaffModal.invite')}
+                  </button>
+                )}
               </div>
               {(vlinkpayStatus === 'success' || nexoraStatus === 'success') && (
                 <p className="mt-1 text-[10px] font-bold text-nexoraSuccess">
@@ -466,7 +477,7 @@ function StaffModal({
                     { name: 'Venmo', key: 'venmo' },
                     { name: 'Cash App', key: 'cashapp' },
                     { name: 'Apple Cash', key: 'applecash' }
-                  ].map((wallet) => {
+                  ].filter(wallet => wallet.key !== 'bankwire').map((wallet) => {
                     const config = (form.payoutConfigs && form.payoutConfigs[wallet.key]) || { enabled: false, value: '', qrCode: '' }
 
                     return (

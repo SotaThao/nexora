@@ -132,6 +132,7 @@ export interface StaffListItemApiDto {
   invitedEmail?: string | null
   invitedPhone?: string | null
   phoneNumber?: string | null
+  joinDate?: string | null
   email?: string | null
   phone?: string | null
   paymentMethods?: StaffPaymentMethodApiDto[]

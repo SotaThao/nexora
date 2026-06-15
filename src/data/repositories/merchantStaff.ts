@@ -29,6 +29,11 @@ const PAYOUT_TYPE_TO_KEY: Record<string, string> = {
   VlinkPay: 'vlinkpay',
 }
 
+const normalizeDateOnly = (value?: string | null) => {
+  if (!value) return null
+  return value.split('T')[0]
+}
+
 export function normalizePaymentMethods(
   paymentMethods: StaffPaymentMethodApiDto[] | undefined,
   displayName = '',
@@ -64,23 +69,33 @@ export function normalizeStaffListItem(dto: StaffListItemApiDto): StaffMember {
   const isActive = dto.status === 'Active' || dto.status === 'Accepted'
   const displayName = dto.displayName ?? ''
   const { payoutConfigs, paymentAccounts } = normalizePaymentMethods(dto.paymentMethods, displayName)
+  const itemType =
+    dto.itemType ??
+    (dto.inviteId ? 'invite' : undefined) ??
+    (dto.linkId || dto.staffLinkId || dto.status === 'Pending' ? 'link' : undefined)
+  const status =
+    itemType === 'invite' && dto.status === 'Pending'
+      ? 'Pending Setup'
+      : itemType === 'link' && dto.status === 'Pending'
+        ? 'Pending Acceptance'
+        : (dto.status ?? null)
 
   return {
     id: dto.id ?? dto.linkId ?? dto.inviteId,
-    staffLinkId: dto.itemType === 'link' ? (dto.staffLinkId ?? dto.linkId) : null,
-    inviteId: dto.itemType === 'invite' ? dto.inviteId : null,
+    staffLinkId: itemType === 'link' ? (dto.staffLinkId ?? dto.linkId ?? dto.id) : null,
+    inviteId: itemType === 'invite' ? (dto.inviteId ?? dto.id) : null,
     staffProfileId: dto.staffProfileId ?? null,
     staffCode: dto.staffCode ?? null,
     refCode: dto.refCode ?? null,
     source: dto.source ?? dto.inviteSource ?? null,
-    itemType: dto.itemType,
+    itemType,
     sortOrder: dto.sortOrder ?? 0,
     isProfileComplete: dto.isProfileComplete ?? false,
     tipCount: dto.tipCount ?? 0,
     averageRating: dto.averageRating ?? 0,
     fullName: displayName,
     avatar: dto.photoUrl ?? null,
-    status: dto.itemType === 'invite' && dto.status === 'Pending' ? 'Pending Setup' : (dto.status ?? null),
+    status,
     isActive,
     showInTipsFlow: isActive,
     position: dto.position ?? null,
@@ -98,6 +113,7 @@ export function normalizeStaffListItem(dto: StaffListItemApiDto): StaffMember {
       null,
     email:
       dto.email ?? dto.staffProfile?.email ?? dto.user?.email ?? dto.invitedEmail ?? null,
+    joinedDate: normalizeDateOnly(dto.joinDate),
     payoutConfigs,
     paymentAccounts,
   }

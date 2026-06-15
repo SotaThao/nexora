@@ -289,7 +289,7 @@ export default function ProfileTab({
             </div>
 
             <div className="divide-y divide-slate-100">
-              {payoutMethodsList.map((item) => {
+              {payoutMethodsList.filter(item => item.key !== 'bankwire').map((item) => {
                 const methodData = getMethod(item.key)
                 return (
                 <div key={item.key} className="flex items-center justify-between py-3">

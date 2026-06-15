@@ -20,6 +20,12 @@ const buildVlinkpayId = (name = 'STAFF') => {
   const initials = name.replace(/[^a-zA-Z]/g, '').slice(0, 4).toUpperCase() || 'STAFF'
   return `${initials}${Math.floor(1000 + Math.random() * 9000)}`
 }
+
+const formatReferralDisplay = (businessName = '', referralCode = '') => {
+  const name = String(businessName || '').trim()
+  const code = String(referralCode || '').trim()
+  return [name, code].filter(Boolean).join(' - ')
+}
 import { logger } from '../../../utils/logger'
 import { usePendingAccounts, useReplaceAllPendingAccounts } from '../../../data/hooks/usePendingAccounts'
 import { useMerchantSetup, useSaveMerchantSetup, useUploadImage } from '../../../data/hooks/useMerchantSetup'
@@ -164,7 +170,7 @@ export default function useStaffRegistration({ inviteData }) {
       setFullName(apiInviteInfo.invitedName || '')
       setNickname(apiInviteInfo.invitedName ? apiInviteInfo.invitedName.split(' ')[0] + '.' : '')
       setPosition(apiInviteInfo.invitedPosition || 'Nail Technician')
-      setRegReferralLink(apiInviteInfo.businessName || '')
+      setRegReferralLink(formatReferralDisplay(apiInviteInfo.businessName, apiInviteInfo.refCode || inviteRefCode))
       setEmail(apiInviteInfo.invitedEmail || inviteEmail || '')
       setRegEmail(apiInviteInfo.invitedEmail || inviteEmail || '')
       setRegConfirmEmail(apiInviteInfo.invitedEmail || inviteEmail || '')
@@ -183,7 +189,7 @@ export default function useStaffRegistration({ inviteData }) {
       // Prefill registration fields
       setRegEmail(inviteData.email || '')
       setRegConfirmEmail(inviteData.email || '')
-      setRegReferralLink(inviteData.biz || '')
+      setRegReferralLink(formatReferralDisplay(inviteData.biz, inviteData.refCode || inviteData.referralCode))
       setLinkEmail(inviteData.email || '')
 
       // If it's a verification lookup (Option A linking) they might already have an ID
@@ -614,6 +620,21 @@ export default function useStaffRegistration({ inviteData }) {
         isPublicInvite ? {} : { anonymous: true },
       )
     } catch (err: unknown) {
+      if (isExistingBusinessLinkError(err)) {
+        try {
+          await hydrateStaffSessionAfterPublicJoin()
+        } catch (sessionErr: unknown) {
+          logger.warn('Could not refresh session for existing public join request', sessionErr)
+        }
+        showToast(getPublicJoinAlreadyLinkedMessage(), 'info')
+        const linkedCode = searchId.trim().toUpperCase()
+        if (linkedCode) {
+          setStaffId(linkedCode)
+        }
+        setStep(5)
+        return
+      }
+
       logger.error('Failed to join public invite', err)
       const isAlreadyLinked =
         isApiError(err) &&
@@ -770,6 +791,31 @@ export default function useStaffRegistration({ inviteData }) {
     showToast(
       t('components.staff_registration.hooks.useStaffRegistration.linkRequestCancelled')
     )
+  }
+
+  const isExistingBusinessLinkError = (err: unknown) =>
+    isApiError(err) &&
+    (err.errorCode === 'STAFF_ALREADY_LINKED_TO_BUSINESS' ||
+      err.errorCode === 'STAFF_INVITE_ALREADY_EXISTS' ||
+      err.errorCode === 'STAFF_ALREADY_LINKED')
+
+  const getPublicJoinAlreadyLinkedMessage = () =>
+    t('components.staff_registration.hooks.useStaffRegistration.alreadyLinkedOrRequested')
+
+  const hydrateStaffSessionAfterPublicJoin = async () => {
+    const loginEmail = regEmail || inviteData?.invitedEmail || inviteData?.email || linkEmail || ''
+    const loginPassword = regPassword || linkPassword
+    const session =
+      loginEmail && loginPassword
+        ? await apiAuthAdapter.login({ email: loginEmail, password: loginPassword })
+        : await apiAuthAdapter.refreshSession()
+
+    if (session) {
+      const code = session.staffCode || session.staffId
+      if (code) {
+        setStaffId(code)
+      }
+    }
   }
 
   const saveSelectedPaymentMethods = async () => {
@@ -977,19 +1023,22 @@ export default function useStaffRegistration({ inviteData }) {
           },
           {},
         )
-        const updatedSession = await apiAuthAdapter.login({
-          email: regEmail || inviteData?.invitedEmail || inviteData?.email || '',
-          password: regPassword,
-        })
-        if (updatedSession) {
-          const code = updatedSession.staffCode || updatedSession.staffId
-          if (code) {
-            setStaffId(code)
-          }
-        }
+        await hydrateStaffSessionAfterPublicJoin()
         await saveSelectedPaymentMethods()
         setStep(5)
       } catch (err: unknown) {
+        if (isExistingBusinessLinkError(err)) {
+          try {
+            await hydrateStaffSessionAfterPublicJoin()
+            await saveSelectedPaymentMethods()
+          } catch (followUpErr: unknown) {
+            logger.warn('Could not hydrate session or save payment methods for existing public join request', followUpErr)
+          }
+          showToast(getPublicJoinAlreadyLinkedMessage(), 'info')
+          setStep(5)
+          return
+        }
+
         logger.error('Failed to join public invite', err)
         showToast(
           currentLanguage === 'vi'

@@ -72,13 +72,13 @@ function StaffView({
         return b.fullName.localeCompare(a.fullName)
       }
       if (sortBy === 'date-newest') {
-        const dateA = a.joinedDate || '2026-05-15'
-        const dateB = b.joinedDate || '2026-05-15'
+        const dateA = a.joinedDate || ''
+        const dateB = b.joinedDate || ''
         return dateB.localeCompare(dateA)
       }
       if (sortBy === 'date-oldest') {
-        const dateA = a.joinedDate || '2026-05-15'
-        const dateB = b.joinedDate || '2026-05-15'
+        const dateA = a.joinedDate || ''
+        const dateB = b.joinedDate || ''
         return dateA.localeCompare(dateB)
       }
       if (sortBy === 'status-active') {
@@ -443,10 +443,12 @@ function StaffView({
                       <div className="text-xs text-slate-500 font-semibold leading-normal">
                         {member.flowType || (t('components.dashboard.views.StaffView.directAddition'))}
                       </div>
-                      <div className="text-[10px] text-slate-400 font-bold mt-0.5 leading-normal">
-                        {t('components.dashboard.views.StaffView.linkedDate')}
-                        {member.joinedDate || '2026-05-15'}
-                      </div>
+                      {member.joinedDate && (
+                        <div className="text-[10px] text-slate-400 font-bold mt-0.5 leading-normal">
+                          {t('components.dashboard.views.StaffView.linkedDate')}
+                          {member.joinedDate}
+                        </div>
+                      )}
                     </td>
 
                     <td className="px-5 py-4">

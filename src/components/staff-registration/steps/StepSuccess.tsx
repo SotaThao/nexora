@@ -55,7 +55,7 @@ export default function StepSuccess({
       {/* Copy link option */}
       <div className="max-w-md mx-auto p-4.5 rounded-2xl border border-slate-200 flex items-center justify-between bg-white shadow-sm">
         <div className="text-left">
-          <strong className="text-xs text-slate-800 font-extrabold block">Personal Payout ID</strong>
+          <strong className="text-xs text-slate-800 font-extrabold block">NEXORA ID</strong>
           <span className="text-[11px] text-slate-500 font-bold select-all mt-1 block">{staffId}</span>
         </div>
 
