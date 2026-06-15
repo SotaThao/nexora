@@ -1066,7 +1066,29 @@
           "publicNicknameRequired": "Vui lòng nhập tên hiển thị.",
           "fullNameRequiredToInvite": "Cần họ và tên để gửi lời mời.",
           "phoneOrEmailRequired": "Cần số điện thoại hoặc email để gửi link mời.",
-          "technicianAlreadyLinked": "Thợ này đã được liên kết với tiệm của bạn."
+          "technicianAlreadyLinked": "Thợ này đã được liên kết với tiệm của bạn.",
+          "thisPerson": "thợ này",
+          "inviteSent": "Đã gửi lời mời đến {name} thành công!",
+          "inviteFailed": "Gửi lời mời thất bại: {error}",
+          "linkRequestSent": "Đã gửi yêu cầu liên kết đến {name}!",
+          "linkRequestFailed": "Yêu cầu liên kết thất bại: {error}",
+          "cancelInviteMissingId": "Không thể hủy lời mời: thiếu inviteId.",
+          "cancelInviteConfirm": "Bạn có chắc chắn muốn hủy lời mời tới {name}?",
+          "inviteCancelled": "Đã hủy lời mời.",
+          "cancelInviteFailed": "Hủy lời mời thất bại: {error}",
+          "resendInviteMissingId": "Không thể gửi lại lời mời: thiếu inviteId.",
+          "resendInviteSuccess": "Đã gửi lại link thiết lập thành công tới {name}!",
+          "resendInviteFailed": "Gửi lại thất bại: {error}",
+          "joinAccepted": "Đã chấp nhận thợ {name} vào tiệm!",
+          "acceptFailed": "Chấp nhận thất bại: {error}",
+          "declineJoinConfirm": "Bạn có chắc chắn muốn từ chối yêu cầu tham gia của thợ {name}?",
+          "declineFailed": "Từ chối thất bại: {error}",
+          "approveUnlinkConfirm": "Bạn có chắc chắn muốn duyệt yêu cầu hủy liên kết của thợ {name}?",
+          "unlinkFailed": "Hủy liên kết thất bại: {error}",
+          "declineUnlinkConfirm": "Bạn có chắc chắn muốn từ chối yêu cầu hủy liên kết của thợ {name}?",
+          "deleteFailed": "Xóa thất bại: {error}",
+          "statusUpdateFailed": "Cập nhật trạng thái thất bại: {error}",
+          "tipsFlowUpdateFailed": "Cập nhật tips flow thất bại: {error}"
         }
       },
       "layout": {
@@ -1094,7 +1116,13 @@
           "contactRequired": "Cần thông tin liên hệ (email hoặc số điện thoại).",
           "invalidEmailFormat": "Định dạng email không hợp lệ.",
           "phExampleName": "vd: Mia Tran",
-          "phExampleRole": "vd: Thợ nail"
+          "phExampleRole": "vd: Thợ nail",
+          "inviteLinkLoading": "Đang tải link mời...",
+          "inviteLinkDisabled": "Public invite link chưa bật trong Merchant Settings.",
+          "joinQrAlt": "Mã QR gia nhập",
+          "scanToJoinAlt": "Quét để gia nhập",
+          "preview": "Xem trước",
+          "disabled": "Chưa bật"
         },
         "PayoutSetupModal": {
           "walletAccountTitle": "TÀI KHOẢN {wallet}",
@@ -1135,7 +1163,9 @@
           "phExampleStaffId": "vd: LISA1102",
           "phFullName": "Mia Tran",
           "phNickname": "Mia T.",
-          "phPosition": "Thợ nail"
+          "phPosition": "Thợ nail",
+          "scanVlinkpayQrCode": "Quét mã QR VLINKPAY",
+          "scanNexoraQrCode": "Quét mã QR NEXORA"
         },
         "StaffQrScannerModal": {
           "scanQrCode": "Quét Mã QR Nhận Diện",
@@ -1230,7 +1260,11 @@
           "approveUnlink": "Duyệt hủy",
           "reject": "Từ chối",
           "joinQrCode": "MÃ QR GIA NHẬP",
-          "haveTechniciansScanThis": "Cho thợ quét mã này bằng camera điện thoại để tự đăng ký hoặc liên kết tài khoản vào tiệm."
+          "haveTechniciansScanThis": "Cho thợ quét mã này bằng camera điện thoại để tự đăng ký hoặc liên kết tài khoản vào tiệm.",
+          "inviteLinkLoading": "Đang tải link mời...",
+          "inviteLinkDisabled": "Public invite link chưa bật trong Merchant Settings.",
+          "scanToJoinAlt": "Quét để gia nhập",
+          "preview": "Xem trước"
         }
       }
     },
@@ -1614,7 +1648,8 @@
           "linkRequestCancelled": "Đã hủy bỏ yêu cầu liên kết.",
           "emailAlreadyExists": "Email này đã được đăng ký.",
           "alreadyLinkedOrRequested": "Bạn đã gửi yêu cầu hoặc đã liên kết với tiệm này rồi.",
-          "joinRequestPending": "Yêu cầu gia nhập của bạn đang chờ tiệm duyệt."
+          "joinRequestPending": "Yêu cầu gia nhập của bạn đang chờ tiệm duyệt.",
+          "joinRequestFailed": "Gửi yêu cầu gia nhập thất bại: {error}"
         }
       },
       "steps": {
@@ -1667,7 +1702,11 @@
           "joinRequestSubmitted": "Yêu cầu gia nhập đã gửi!",
           "pending": "CHỜ DUYỆT",
           "pendingApproval": "Chờ duyệt",
-          "staffLinkCopiedTo": "Đã sao chép liên kết của thợ!"
+          "staffLinkCopiedTo": "Đã sao chép liên kết của thợ!",
+          "joinRequestMessage": "Mã thợ NEXORA của bạn là {staffId}. Yêu cầu liên kết với {businessName} đã được gửi thành công. Vui lòng chờ chủ tiệm duyệt để kích hoạt QR nhận tiền tip.",
+          "joinedTodayRole": "Gia nhập: Hôm nay • Vai trò: {role}",
+          "nexoraId": "NEXORA ID",
+          "copyStaffLink": "SAO CHÉP STAFF LINK"
         },
         "StepWelcome": {
           "declineRequest": "Hủy bỏ / Từ chối",

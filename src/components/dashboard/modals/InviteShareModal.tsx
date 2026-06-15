@@ -16,7 +16,7 @@ function InviteShareModal({
   onClose,
   onSendInvite,
 }) {
-  const { t, currentLanguage } = useTranslation()
+  const { t } = useTranslation()
   const { showToast } = useNotification()
   const [name, setName] = useState('')
   const [contact, setContact] = useState('')
@@ -39,7 +39,7 @@ function InviteShareModal({
   }, [open, defaultName, defaultContact])
 
   const publicInviteEnabled = Boolean(inviteLinkSetting?.isEnabled && inviteLinkSetting?.referralCode)
-  // Directed email invite vs open QR/link — drives the URL `source` tag (AC #10).
+  // Directed email invite vs open QR/link - drives the URL `source` tag (AC #10).
   const linkSource = inviteMethod === 'Email' && contact.trim() ? 'email_invite' : 'public_link'
   const joinLink = useMemo(
     () => publicInviteEnabled
@@ -55,8 +55,8 @@ function InviteShareModal({
     [businessName, businessSlug, contact, inviteLinkSetting?.referralCode, inviteMethod, linkSource, publicInviteEnabled],
   )
   const publicInviteUnavailableText = isInviteLinkSettingLoading
-    ? (currentLanguage === 'vi' ? 'Äang táº£i link má»i...' : 'Loading invite link...')
-    : (currentLanguage === 'vi' ? 'Public invite link chÆ°a báº­t trong Merchant Settings.' : 'Public invite link is disabled in Merchant Settings.')
+    ? t('components.dashboard.modals.InviteShareModal.inviteLinkLoading')
+    : t('components.dashboard.modals.InviteShareModal.inviteLinkDisabled')
 
   if (!open) return null
 
@@ -85,7 +85,7 @@ function InviteShareModal({
           <h2 className="text-sm font-extrabold text-nexoraText uppercase tracking-wider font-sans">
             {t('components.dashboard.modals.InviteShareModal.shareInvitationLinkAnd')}
           </h2>
-          <IconButton label="Close modal" onClick={onClose}>
+          <IconButton label={t('common.close')} onClick={onClose}>
             <X className="h-4 w-4" />
           </IconButton>
         </div>
@@ -104,7 +104,7 @@ function InviteShareModal({
               {publicInviteEnabled ? (
                 <img
                   src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(joinLink)}`}
-                  alt="Join QR"
+                  alt={t('components.dashboard.modals.InviteShareModal.joinQrAlt')}
                   className="h-full w-full object-contain"
                 />
               ) : (
@@ -113,7 +113,7 @@ function InviteShareModal({
               {/* Magnifier icon overlay on hover */}
               <div className="absolute inset-0 bg-nexoraBrand/80 rounded-xl flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-white select-none">
                 <QrCode className="h-5 w-5" />
-                <span className="text-[9px] font-black uppercase tracking-wider">PREVIEW</span>
+                <span className="text-[9px] font-black uppercase tracking-wider">{t('components.dashboard.modals.InviteShareModal.preview')}</span>
               </div>
             </div>
 
@@ -146,7 +146,7 @@ function InviteShareModal({
                   {linkSource}
                 </span>
                 <span className="rounded bg-white px-2 py-0.5 text-[9px] font-black uppercase text-slate-500 border border-slate-200">
-                  {inviteLinkSetting?.referralCode || 'DISABLED'}
+                  {inviteLinkSetting?.referralCode || t('components.dashboard.modals.InviteShareModal.disabled')}
                 </span>
               </div>
             </div>
@@ -274,7 +274,7 @@ function InviteShareModal({
             <div className="h-64 w-64 rounded-2xl bg-slate-50 border border-slate-200 p-4 flex items-center justify-center shadow-inner bg-white mb-4">
               <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(joinLink)}`}
-                alt="Scan to Join"
+                alt={t('components.dashboard.modals.InviteShareModal.scanToJoinAlt')}
                 className="h-full w-full object-contain"
               />
             </div>

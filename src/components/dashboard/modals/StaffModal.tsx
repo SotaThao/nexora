@@ -253,7 +253,7 @@ function StaffModal({
               ? (t('components.dashboard.modals.StaffModal.reviewJoinRequest'))
               : (editing ? t('common.edit') : t('setup.add_staff_title'))}
           </h2>
-          <IconButton label="Close modal" onClick={onClose}>
+          <IconButton label={t('common.close')} onClick={onClose}>
             <X className="h-4 w-4" />
           </IconButton>
         </div>
@@ -325,13 +325,13 @@ function StaffModal({
                       <button
                         type="button"
                         style={{ display: 'none' }}
-                        title="Scan VLINKPAY QR Code"
+                        title={t('components.dashboard.modals.StaffModal.scanVlinkpayQrCode')}
                         onClick={() => handleScanQr('vlinkpay')}
                       />
                       <button
                         type="button"
                         style={{ display: 'none' }}
-                        title="Scan NEXORA QR Code"
+                        title={t('components.dashboard.modals.StaffModal.scanNexoraQrCode')}
                         onClick={() => handleScanQr('staff')}
                       />
                     </>

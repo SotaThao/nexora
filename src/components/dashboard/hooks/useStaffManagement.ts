@@ -76,7 +76,7 @@ export function useStaffManagement({
   viewingStaffDetailId = null,
   setViewingStaffDetailId = (_id: string | null) => {},
 }) {
-  const { currentLanguage, t } = useTranslation()
+  const { t } = useTranslation()
   const { showToast, showConfirm } = useNotification()
 
   // API mutation hooks — all invalidate qk.merchantStaff() on success
@@ -178,12 +178,12 @@ export function useStaffManagement({
    */
   const saveStaff = () => {
     const nextErrors: LooseObject = {}
-    if (!staffForm.fullName.trim()) nextErrors.fullName = 'Full name is required.'
+    if (!staffForm.fullName.trim()) nextErrors.fullName = t('components.dashboard.hooks.useStaffManagement.fullNameRequired')
     if (staffForm.email?.trim() && !/\S+@\S+\.\S+/.test(staffForm.email.trim())) {
-      nextErrors.email = t('setup.errors.staff_email_invalid') || 'Invalid email address format.'
+      nextErrors.email = t('setup.errors.staff_email_invalid')
     }
     if (staffForm.phone?.trim() && !isPhoneValid(staffForm.phone.trim())) {
-      nextErrors.phone = t('setup.errors.staff_phone_invalid') || 'Invalid phone number.'
+      nextErrors.phone = t('setup.errors.staff_phone_invalid')
     }
     if (Object.keys(nextErrors).length) {
       setErrors(nextErrors)
@@ -201,15 +201,15 @@ export function useStaffManagement({
    */
   const sendSetupLinkFromModal = (formDetails) => {
     const nextErrors: LooseObject = {}
-    if (!formDetails.fullName.trim()) nextErrors.fullName = 'Full name is required to invite.'
+    if (!formDetails.fullName.trim()) nextErrors.fullName = t('components.dashboard.hooks.useStaffManagement.fullNameRequiredToInvite')
     if (!formDetails.email.trim() && !formDetails.phone.trim()) {
-      nextErrors.email = 'Phone or email is required to send invite link.'
+      nextErrors.email = t('components.dashboard.hooks.useStaffManagement.phoneOrEmailRequired')
     } else {
       if (formDetails.email?.trim() && !/\S+@\S+\.\S+/.test(formDetails.email.trim())) {
-        nextErrors.email = 'Invalid email address format.'
+        nextErrors.email = t('setup.errors.staff_email_invalid')
       }
       if (formDetails.phone?.trim() && !isPhoneValid(formDetails.phone.trim())) {
-        nextErrors.phone = 'Invalid phone number.'
+        nextErrors.phone = t('setup.errors.staff_phone_invalid')
       }
     }
     
@@ -227,21 +227,11 @@ export function useStaffManagement({
       position: formDetails.position?.trim() || 'Nail Tech',
     }, {
       onSuccess: () => {
-        showToast(
-          currentLanguage === 'vi'
-            ? `Đã gửi lời mời đến ${formDetails.fullName.trim()} thành công!`
-            : `Invite sent to ${formDetails.fullName.trim()} successfully!`,
-          'success'
-        )
+        showToast(t('components.dashboard.hooks.useStaffManagement.inviteSent', { name: formDetails.fullName.trim() }), 'success')
         closeStaffModal()
       },
       onError: (err) => {
-        showToast(
-          currentLanguage === 'vi'
-            ? `Gửi lời mời thất bại: ${errMsg(err)}`
-            : `Failed to send invite: ${errMsg(err)}`,
-          'error'
-        )
+        showToast(t('components.dashboard.hooks.useStaffManagement.inviteFailed', { error: errMsg(err) }), 'error')
       }
     })
   }
@@ -258,20 +248,10 @@ export function useStaffManagement({
       staffCode: searchResult.staffCode ?? null,
     }, {
       onSuccess: () => {
-        showToast(
-          currentLanguage === 'vi'
-            ? `Đã gửi yêu cầu liên kết đến ${searchResult.fullName}!`
-            : `Link request sent to ${searchResult.fullName}!`,
-          'success'
-        )
+        showToast(t('components.dashboard.hooks.useStaffManagement.linkRequestSent', { name: searchResult.fullName }), 'success')
       },
       onError: (err) => {
-        showToast(
-          currentLanguage === 'vi'
-            ? `Yêu cầu liên kết thất bại: ${errMsg(err)}`
-            : `Link request failed: ${errMsg(err)}`,
-          'error'
-        )
+        showToast(t('components.dashboard.hooks.useStaffManagement.linkRequestFailed', { error: errMsg(err) }), 'error')
       }
     })
   }
@@ -290,20 +270,10 @@ export function useStaffManagement({
       position: role || 'Nail Tech',
     }, {
       onSuccess: () => {
-        showToast(
-          currentLanguage === 'vi'
-            ? `Đã gửi lời mời đến ${name.trim()} thành công!`
-            : `Invite sent to ${name.trim()} successfully!`,
-          'success'
-        )
+        showToast(t('components.dashboard.hooks.useStaffManagement.inviteSent', { name: name.trim() }), 'success')
       },
       onError: (err) => {
-        showToast(
-          currentLanguage === 'vi'
-            ? `Gửi lời mời thất bại: ${errMsg(err)}`
-            : `Failed to send invite: ${errMsg(err)}`,
-          'error'
-        )
+        showToast(t('components.dashboard.hooks.useStaffManagement.inviteFailed', { error: errMsg(err) }), 'error')
       }
     })
   }
@@ -314,18 +284,13 @@ export function useStaffManagement({
    */
   const handleCancelInvite = async (member) => {
     if (!member?.inviteId) {
-      showToast(
-        currentLanguage === 'vi'
-          ? 'Không thể hủy lời mời: thiếu inviteId.'
-          : 'Cannot cancel invite: missing inviteId.',
-        'error'
-      )
+      showToast(t('components.dashboard.hooks.useStaffManagement.cancelInviteMissingId'), 'error')
       return
     }
 
-    const ok = await showConfirm(currentLanguage === 'vi'
-      ? `Bạn có chắc chắn muốn hủy lời mời tới ${member.fullName || member.invitedEmail || 'thợ này'}?`
-      : `Are you sure you want to cancel the invite to ${member.fullName || member.invitedEmail || 'this person'}?`)
+    const ok = await showConfirm(t('components.dashboard.hooks.useStaffManagement.cancelInviteConfirm', {
+      name: member.fullName || member.invitedEmail || t('components.dashboard.hooks.useStaffManagement.thisPerson'),
+    }))
     if (!ok) return
 
     cancelInviteMutation.mutate(member.inviteId, {
@@ -333,18 +298,10 @@ export function useStaffManagement({
         if (viewingStaffDetailId === member.id) {
           setViewingStaffDetailId(null)
         }
-        showToast(
-          currentLanguage === 'vi' ? 'Đã hủy lời mời.' : 'Invite cancelled.',
-          'success'
-        )
+        showToast(t('components.dashboard.hooks.useStaffManagement.inviteCancelled'), 'success')
       },
       onError: (err) => {
-        showToast(
-          currentLanguage === 'vi'
-            ? `Hủy lời mời thất bại: ${errMsg(err)}`
-            : `Cancel invite failed: ${errMsg(err)}`,
-          'error'
-        )
+        showToast(t('components.dashboard.hooks.useStaffManagement.cancelInviteFailed', { error: errMsg(err) }), 'error')
       }
     })
   }
@@ -355,31 +312,16 @@ export function useStaffManagement({
    */
   const handleResendInvite = (member) => {
     if (!member?.inviteId) {
-      showToast(
-        currentLanguage === 'vi'
-          ? 'Không thể gửi lại lời mời: thiếu inviteId.'
-          : 'Cannot resend invite: missing inviteId.',
-        'error'
-      )
+      showToast(t('components.dashboard.hooks.useStaffManagement.resendInviteMissingId'), 'error')
       return
     }
 
     resendInviteMutation.mutate(member.inviteId, {
       onSuccess: () => {
-        showToast(
-          currentLanguage === 'vi'
-            ? `Đã gửi lại link thiết lập thành công tới ${member.fullName}!`
-            : `Setup link successfully resent to ${member.fullName}!`,
-          'success'
-        )
+        showToast(t('components.dashboard.hooks.useStaffManagement.resendInviteSuccess', { name: member.fullName }), 'success')
       },
       onError: (err) => {
-        showToast(
-          currentLanguage === 'vi'
-            ? `Gửi lại thất bại: ${getApiErrorCode(err, 'Lỗi')}`
-            : `Resend failed: ${getApiErrorCode(err, 'Error')}`,
-          'error'
-        )
+        showToast(t('components.dashboard.hooks.useStaffManagement.resendInviteFailed', { error: errMsg(err) }), 'error')
       }
     })
   }
@@ -395,17 +337,10 @@ export function useStaffManagement({
 
     approveLinkMutation.mutate(linkId, {
       onSuccess: () => {
-        showToast(currentLanguage === 'vi' 
-          ? `Đã chấp nhận thợ ${member.fullName} vào tiệm!` 
-          : `Accepted technician ${member.fullName} to salon!`, 'success')
+        showToast(t('components.dashboard.hooks.useStaffManagement.joinAccepted', { name: member.fullName }), 'success')
       },
       onError: (err) => {
-        showToast(
-          currentLanguage === 'vi'
-            ? `Chấp nhận thất bại: ${getApiErrorCode(err, 'Lỗi')}`
-            : `Accept failed: ${getApiErrorCode(err, 'Error')}`,
-          'error'
-        )
+        showToast(t('components.dashboard.hooks.useStaffManagement.acceptFailed', { error: errMsg(err) }), 'error')
       }
     })
   }
@@ -419,21 +354,14 @@ export function useStaffManagement({
     const member = staff.find(s => s.id === staffId)
     if (!member) return
 
-    const ok = await showConfirm(currentLanguage === 'vi'
-      ? `Bạn có chắc chắn muốn từ chối yêu cầu tham gia của thợ ${member.fullName}?`
-      : `Are you sure you want to decline join request from ${member.fullName}?`)
+    const ok = await showConfirm(t('components.dashboard.hooks.useStaffManagement.declineJoinConfirm', { name: member.fullName }))
     if (!ok) return
 
     const linkId = member.staffLinkId || member.id
     if (linkId) {
       rejectLinkMutation.mutate(linkId, {
         onError: (err) => {
-          showToast(
-            currentLanguage === 'vi'
-              ? `Từ chối thất bại: ${getApiErrorCode(err, 'Lỗi')}`
-              : `Decline failed: ${getApiErrorCode(err, 'Error')}`,
-            'error'
-          )
+          showToast(t('components.dashboard.hooks.useStaffManagement.declineFailed', { error: errMsg(err) }), 'error')
         }
       })
     }
@@ -447,23 +375,16 @@ export function useStaffManagement({
     const member = staff.find(s => s.id === staffId)
     if (!member) return
 
-    const ok = await showConfirm(currentLanguage === 'vi' 
-      ? `Bạn có chắc chắn muốn duyệt yêu cầu hủy liên kết của thợ ${member.fullName}?` 
-      : `Are you sure you want to approve unlink request from ${member.fullName}?`)
+    const ok = await showConfirm(t('components.dashboard.hooks.useStaffManagement.approveUnlinkConfirm', { name: member.fullName }))
     if (!ok) return
 
     if (member.id) {
       removeStaffMutation.mutate(member.id, {
         onSuccess: () => {
-          showToast(currentLanguage === 'vi' ? 'Đã hủy liên kết nhân viên thành công.' : 'Staff unlinked successfully.', 'success')
+          showToast(t('components.dashboard.hooks.useStaffManagement.staffUnlinkedSuccessfully'), 'success')
         },
         onError: (err) => {
-          showToast(
-            currentLanguage === 'vi'
-              ? `Hủy liên kết thất bại: ${getApiErrorCode(err, 'Lỗi')}`
-              : `Unlink failed: ${getApiErrorCode(err, 'Error')}`,
-            'error'
-          )
+          showToast(t('components.dashboard.hooks.useStaffManagement.unlinkFailed', { error: errMsg(err) }), 'error')
         }
       })
     }
@@ -477,23 +398,16 @@ export function useStaffManagement({
     const member = staff.find(s => s.id === staffId)
     if (!member) return
 
-    const ok = await showConfirm(currentLanguage === 'vi' 
-      ? `Bạn có chắc chắn muốn từ chối yêu cầu hủy liên kết của thợ ${member.fullName}?` 
-      : `Are you sure you want to decline unlink request from ${member.fullName}?`)
+    const ok = await showConfirm(t('components.dashboard.hooks.useStaffManagement.declineUnlinkConfirm', { name: member.fullName }))
     if (!ok) return
 
     if (member.id) {
       updateStatusMutation.mutate({ staffLinkId: member.id, status: 'Active' }, {
         onSuccess: () => {
-          showToast(currentLanguage === 'vi' ? 'Đã từ chối yêu cầu hủy liên kết.' : 'Declined unlink request.', 'success')
+          showToast(t('components.dashboard.hooks.useStaffManagement.declinedUnlinkRequest'), 'success')
         },
         onError: (err) => {
-          showToast(
-            currentLanguage === 'vi'
-              ? `Từ chối thất bại: ${getApiErrorCode(err, 'Lỗi')}`
-              : `Decline failed: ${getApiErrorCode(err, 'Error')}`,
-            'error'
-          )
+          showToast(t('components.dashboard.hooks.useStaffManagement.declineFailed', { error: errMsg(err) }), 'error')
         }
       })
     }
@@ -515,9 +429,7 @@ export function useStaffManagement({
       return
     }
 
-    const ok = await showConfirm(currentLanguage === 'vi'
-      ? 'Bạn có chắc chắn muốn xóa nhân viên này khỏi Nexora Touch?'
-      : 'Delete this staff member from Nexora Touch?')
+    const ok = await showConfirm(t('components.dashboard.hooks.useStaffManagement.deleteThisStaffMember'))
     if (!ok) return
 
     const linkId = member.id
@@ -529,12 +441,7 @@ export function useStaffManagement({
           }
         },
         onError: (err) => {
-          showToast(
-            currentLanguage === 'vi'
-              ? `Xóa thất bại: ${errMsg(err)}`
-              : `Delete failed: ${errMsg(err)}`,
-            'error'
-          )
+          showToast(t('components.dashboard.hooks.useStaffManagement.deleteFailed', { error: errMsg(err) }), 'error')
         }
       })
     }
@@ -551,12 +458,7 @@ export function useStaffManagement({
     const newStatus = member.isActive ? 'Inactive' : 'Active'
     updateStatusMutation.mutate({ staffLinkId: member.id, status: newStatus }, {
       onError: (err) => {
-        showToast(
-          currentLanguage === 'vi'
-            ? `Cập nhật trạng thái thất bại: ${getApiErrorCode(err, 'Lỗi')}`
-            : `Status update failed: ${getApiErrorCode(err, 'Error')}`,
-          'error'
-        )
+        showToast(t('components.dashboard.hooks.useStaffManagement.statusUpdateFailed', { error: errMsg(err) }), 'error')
       }
     })
   }
@@ -573,12 +475,7 @@ export function useStaffManagement({
     const newStatus = member.showInTipsFlow ? 'Inactive' : 'Active'
     updateStatusMutation.mutate({ staffLinkId: member.id, status: newStatus }, {
       onError: (err) => {
-        showToast(
-          currentLanguage === 'vi'
-            ? `Cập nhật tips flow thất bại: ${getApiErrorCode(err, 'Lỗi')}`
-            : `Tips flow update failed: ${getApiErrorCode(err, 'Error')}`,
-          'error'
-        )
+        showToast(t('components.dashboard.hooks.useStaffManagement.tipsFlowUpdateFailed', { error: errMsg(err) }), 'error')
       }
     })
   }

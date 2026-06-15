@@ -53,7 +53,7 @@ export default function useStaffRegistration({ inviteData }) {
   useNotifications()
   const addNotificationMutation = useAddNotification()
 
-  // API invite hooks — only active when inviteData has a real token
+  // API invite hooks - only active when inviteData has a real token
   const inviteToken = inviteData?.token ?? null
   const inviteRefCode = inviteData?.refCode || null
   const inviteBusinessSlug = inviteData?.businessSlug || null
@@ -158,7 +158,7 @@ export default function useStaffRegistration({ inviteData }) {
   const [isCapturing, setIsCapturing] = useState(false)
   const [modalError, setModalError] = useState('')
   // Async submit guards for the profile (login + accept) and activation
-  // (payment-methods) steps — drive button loading/disabled states.
+  // (payment-methods) steps - drive button loading/disabled states.
   const [isProfileSubmitting, setIsProfileSubmitting] = useState(false)
   const [isActivating, setIsActivating] = useState(false)
   const [isRegisterSubmitting, setIsRegisterSubmitting] = useState(false)
@@ -641,8 +641,10 @@ export default function useStaffRegistration({ inviteData }) {
         (err.errorCode === 'STAFF_ALREADY_LINKED_TO_BUSINESS' ||
           err.errorCode === 'STAFF_INVITE_ALREADY_EXISTS')
       const errorMsg = isAlreadyLinked
-        ? (currentLanguage === 'vi' ? 'Bạn đã gửi yêu cầu rồi hoặc đã là nhân viên của tiệm này.' : 'You have already requested or are already linked to this business.')
-        : (currentLanguage === 'vi' ? 'Lỗi gửi yêu cầu gia nhập. Vui lòng thử lại.' : 'Failed to join business. Please try again.')
+        ? t('components.staff_registration.hooks.useStaffRegistration.alreadyLinkedOrRequested')
+        : t('components.staff_registration.hooks.useStaffRegistration.joinRequestFailed', {
+          error: getApiErrorCode(err, 'Unknown error'),
+        })
       showToast(errorMsg, 'error')
       setIsRegisterSubmitting(false)
       return
@@ -694,7 +696,7 @@ export default function useStaffRegistration({ inviteData }) {
       )
 
       if (!hasOnboarded) {
-        // User has NOT completed personal onboarding → send to profile + payout steps first
+        // User has NOT completed personal onboarding - send to profile + payout steps first
         setNeedsOnboarding(true)
         setIsLinkLoggedIn(true)
         setLinkedProfile({
@@ -721,7 +723,7 @@ export default function useStaffRegistration({ inviteData }) {
         return
       }
 
-      // Step 5: Already onboarded → fetch full profile + payment methods, show confirm screen
+      // Step 5: Already onboarded - fetch full profile + payment methods, show confirm screen
       let paymentMethods: import('../../types/domain').PaymentMethodDto[] = []
       try {
         // Staff profile may not exist yet (not linked to any business), so handle 404
@@ -766,7 +768,7 @@ export default function useStaffRegistration({ inviteData }) {
           ? `Đăng nhập thành công! Chào mừng ${profileData.fullName || emailQuery}.`
           : `Login successful! Welcome ${profileData.fullName || emailQuery}.`,
       )
-      // Stay on Step 0 — section D (confirm screen) will render
+      // Stay on Step 0 - section D (confirm screen) will render
     } catch (err: unknown) {
       logger.error('handleLinkLogin API error', err)
       if (isApiError(err) && (err.status === 401 || err.errorCode === 'USER_LOGIN_INVALID_USERNAME_OR_PASSWORD')) {
@@ -1041,9 +1043,9 @@ export default function useStaffRegistration({ inviteData }) {
 
         logger.error('Failed to join public invite', err)
         showToast(
-          currentLanguage === 'vi'
-            ? `Lá»—i gá»­i yÃªu cáº§u gia nháº­p: ${getApiErrorCode(err, 'KhÃ´ng xÃ¡c Ä‘á»‹nh')}`
-            : `Failed to submit join request: ${getApiErrorCode(err, 'Unknown error')}`,
+          t('components.staff_registration.hooks.useStaffRegistration.joinRequestFailed', {
+            error: getApiErrorCode(err, 'Unknown error'),
+          }),
           'error',
         )
       } finally {

@@ -33,7 +33,7 @@ function StaffView({
   onDeclineUnlink,
   onOpenInviteShare
 }) {
-  const { t, currentLanguage } = useTranslation()
+  const { t } = useTranslation()
   const { showToast } = useNotification()
   const [activeTab, setActiveTab] = useState('link') // 'link' | 'invite'
   const [largeJoinQrOpen, setLargeJoinQrOpen] = useState(false)
@@ -60,8 +60,8 @@ function StaffView({
     [businessName, businessSlug, inviteLinkSetting?.referralCode, publicInviteEnabled],
   )
   const publicInviteUnavailableText = isInviteLinkSettingLoading
-    ? (currentLanguage === 'vi' ? 'Äang táº£i link má»i...' : 'Loading invite link...')
-    : (currentLanguage === 'vi' ? 'Public invite link chÆ°a báº­t trong Merchant Settings.' : 'Public invite link is disabled in Merchant Settings.')
+    ? t('components.dashboard.views.StaffView.inviteLinkLoading')
+    : t('components.dashboard.views.StaffView.inviteLinkDisabled')
 
     const sortedStaff = useMemo(() => {
     return [...staff].sort((a, b) => {
@@ -119,7 +119,7 @@ function StaffView({
   }).length
   const paymentCompletePct = allStaff.length ? Math.round((paymentCompleteCount / allStaff.length) * 100) : 100
 
-  // Option A Search — uses API results from useSearchMerchantStaff
+  // Option A Search - uses API results from useSearchMerchantStaff
   const handleSearch = () => {
     setSearchError('')
     setSearchResult(null)
@@ -135,7 +135,7 @@ function StaffView({
     }
   }
 
-  // Option A Link Request — sends to API via mutation
+  // Option A Link Request - sends to API via mutation
   const handleLinkRequest = () => {
     if (!searchResult) return
     onLinkStaff(searchResult)
@@ -155,7 +155,7 @@ function StaffView({
     setInviteContact('')
   }
 
-  // Resend invite — calls API via mutation prop
+  // Resend invite - calls API via mutation prop
   const handleResendInvite = (member) => {
     if (onResendInvite) {
       onResendInvite(member)
@@ -209,7 +209,7 @@ function StaffView({
               {publicInviteEnabled ? (
                 <img
                   src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(publicInviteLink)}`}
-                  alt="Scan to Join"
+                  alt={t('components.dashboard.views.StaffView.scanToJoinAlt')}
                   className="h-full w-full object-contain"
                 />
               ) : (
@@ -218,7 +218,7 @@ function StaffView({
               {/* Magnifier icon overlay on hover */}
               <div className="absolute inset-0 bg-nexoraBrand/80 rounded-xl flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-white select-none">
                 <QrCode className="h-5 w-5" />
-                <span className="text-[9px] font-black uppercase tracking-wider">PREVIEW</span>
+                <span className="text-[9px] font-black uppercase tracking-wider">{t('components.dashboard.views.StaffView.preview')}</span>
               </div>
             </div>
           </div>
@@ -620,7 +620,7 @@ function StaffView({
             <div className="h-64 w-64 rounded-2xl bg-slate-50 border border-slate-200 p-4 flex items-center justify-center shadow-inner bg-white mb-4">
               <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(publicInviteLink)}`}
-                alt="Scan to Join"
+                alt={t('components.dashboard.views.StaffView.scanToJoinAlt')}
                 className="h-full w-full object-contain"
               />
             </div>
