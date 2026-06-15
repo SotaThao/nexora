@@ -1,6 +1,7 @@
 /**
  * useStaffSelf — TanStack Query hooks for the staff self-service domain.
  */
+import { useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import staffSelfRepository from '../repositories/staffSelf'
@@ -9,6 +10,7 @@ import { useNotification } from '../../contexts/NotificationContext'
 import { useTranslation } from '../../contexts/LanguageContext'
 import type {
   StaffBusinessLink,
+  StaffBusinessTipQr,
   StaffDashboardSummary,
   StaffLinkRequestDetail,
   StaffProfile,
@@ -17,6 +19,8 @@ import type {
   StaffTipsPage,
 } from '../../types/domain'
 import type { StaffTipsListParams } from '../repositories/staffSelf'
+import { useStaffAccount } from '../../contexts/StaffAccountContext'
+import { resolveStaffTipQr } from '../../utils/staffTipUrl'
 
 export function useStaffProfile({ enabled: callerEnabled = true } = {}) {
   const queryClient = useQueryClient()
@@ -41,6 +45,88 @@ export function useStaffBusinesses({ enabled: callerEnabled = true } = {}) {
     queryFn: () => staffSelfRepository.getMyBusinesses(),
     enabled: isStaff && callerEnabled,
   })
+}
+
+export function useStaffBusinessTipQrs({ enabled: callerEnabled = true } = {}) {
+  const { isStaff } = useSessionRole()
+  const { account } = useStaffAccount()
+  const { data: staffProfile } = useStaffProfile({ enabled: isStaff && callerEnabled })
+  const staffProfileId = staffProfile?.id?.trim() || null
+
+  const businessesQuery = useStaffBusinesses({ enabled: isStaff && callerEnabled })
+  const qrCodesQuery = useQuery<StaffBusinessTipQr[] | null>({
+    queryKey: [...qk.staffBusinessQrCodes(), staffProfileId],
+    queryFn: () => staffSelfRepository.getMyBusinessQrCodes(staffProfileId),
+    enabled: isStaff && callerEnabled,
+  })
+
+  const businessTipQrs = useMemo(() => {
+    const businesses = businessesQuery.data ?? []
+    const dedicatedQr = qrCodesQuery.data
+    const origin = typeof window !== 'undefined' ? window.location.origin : ''
+
+    if (dedicatedQr?.length) {
+      const byBusinessId = new Map(dedicatedQr.map((item) => [item.businessId, item]))
+      return businesses.map((biz) => {
+        const fromApi = byBusinessId.get(biz.businessId)
+        if (fromApi) {
+          return {
+            ...fromApi,
+            displayName:
+              fromApi.displayName ||
+              account.displayNamesByBusiness?.[biz.businessId] ||
+              account.defaultDisplayName,
+          }
+        }
+
+        const resolved = resolveStaffTipQr(biz, staffProfileId, origin)
+        return {
+          businessId: biz.businessId,
+          businessName: biz.businessName,
+          displayName:
+            account.displayNamesByBusiness?.[biz.businessId] || account.defaultDisplayName,
+          businessSlug: resolved.businessSlug,
+          touchPointSlug: resolved.touchPointSlug,
+          tipUrl: resolved.tipUrl,
+          qrImageUrl: resolved.qrImageUrl ?? biz.qrImageUrl ?? null,
+          linkStatus: biz.linkStatus,
+          linkStatusLabel: biz.linkStatusLabel,
+          roleLabel: biz.roleLabel,
+          logoUrl: biz.logoUrl,
+        } satisfies StaffBusinessTipQr
+      })
+    }
+
+    return businesses.map((biz) => {
+      const resolved = resolveStaffTipQr(biz, staffProfileId, origin)
+      return {
+        businessId: biz.businessId,
+        businessName: biz.businessName,
+        displayName:
+          account.displayNamesByBusiness?.[biz.businessId] || account.defaultDisplayName,
+        businessSlug: resolved.businessSlug,
+        touchPointSlug: resolved.touchPointSlug,
+        tipUrl: resolved.tipUrl,
+        qrImageUrl: resolved.qrImageUrl ?? biz.qrImageUrl ?? null,
+        linkStatus: biz.linkStatus,
+        linkStatusLabel: biz.linkStatusLabel,
+        roleLabel: biz.roleLabel,
+        logoUrl: biz.logoUrl,
+      } satisfies StaffBusinessTipQr
+    })
+  }, [
+    businessesQuery.data,
+    qrCodesQuery.data,
+    staffProfileId,
+    account.displayNamesByBusiness,
+    account.defaultDisplayName,
+  ])
+
+  return {
+    businessTipQrs,
+    isLoading: businessesQuery.isPending || qrCodesQuery.isPending,
+    isFetching: businessesQuery.isFetching || qrCodesQuery.isFetching,
+  }
 }
 
 export function useStaffDashboardSummary({ enabled: callerEnabled = true } = {}) {

@@ -62,6 +62,7 @@ export const qk = {
   // Staff Self (own staff profile + linked businesses)
   staffProfile:        ()      => ['staffProfile'],
   staffBusinesses:     ()      => ['staffBusinesses'],
+  staffBusinessQrCodes: ()     => ['staffBusinessQrCodes'],
   staffDashboardSummary: ()    => ['staffDashboardSummary'],
   staffReviews:          (filters = EMPTY) => ['staffReviews', filters],
   staffTips:             (filters = EMPTY) => ['staffTips', filters],

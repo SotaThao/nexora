@@ -54,6 +54,20 @@ export function createMerchantsRepository(client: HttpClient = httpClient) {
       }
     },
 
+    async getBusinessContext(): Promise<{ id: string; slug: string; name: string } | null> {
+      try {
+        const res = await client.get<BusinessApiDto>('/api/v1/merchant/business')
+        if (!res?.id) return null
+        return {
+          id: res.id,
+          slug: res.slug || '',
+          name: res.name || '',
+        }
+      } catch {
+        return null
+      }
+    },
+
     async saveSetup(_setup: MerchantSetup): Promise<void> {
       // no-op: business data is managed via dedicated endpoints
     },

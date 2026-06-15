@@ -141,6 +141,29 @@ export interface StaffBusinessLink {
   linkStatus: string | null
   linkStatusLabel: string | null
   linkedAt: string | null
+  /** Canonical business slug for /touch/{businessSlug}/… (from API when available). */
+  businessSlug?: string | null
+  /** Business touch-point slug (e.g. master-store / FrontDesk), from API. */
+  touchPointSlug?: string | null
+  masterTouchPointSlug?: string | null
+  /** Full customer tipping URL (from API when available). */
+  tipUrl?: string | null
+  /** Hosted QR PNG from touchpoint API (from API when available). */
+  qrImageUrl?: string | null
+}
+
+export interface StaffBusinessTipQr {
+  businessId: string
+  businessName: string
+  displayName?: string | null
+  businessSlug: string
+  touchPointSlug: string
+  tipUrl: string | null
+  qrImageUrl: string | null
+  linkStatus: string | null
+  linkStatusLabel: string | null
+  roleLabel: string | null
+  logoUrl: string | null
 }
 
 export interface TipCountAmount {
@@ -311,6 +334,7 @@ export interface UserProfile {
 }
 
 export interface StaffProfile {
+  id?: string
   staffCode?: string
   displayName?: string
   bio?: string

@@ -39,9 +39,9 @@ const WalletLogos = {
 
 export default function Payment({
   t,
-  selectedStaffMembers,
-  selectedStaffHasAnyPayment,
-  businessPaymentAccounts,
+  availablePaymentWalletKeys,
+  isPaymentMethodsLoading,
+  multiStaffPaymentBlocked,
   setSelectedWalletObj,
   setSelectedWallet,
   setTipRefNumber,
@@ -49,6 +49,15 @@ export default function Payment({
   isApiMode,
   handlePay,
 }) {
+  const walletOptions = [
+    { name: 'Zelle', key: 'zelle', color: 'bg-walletZelle hover:bg-walletZelleDark text-white', logo: WalletLogos.zelle },
+    { name: 'Bank Wire', key: 'bankwire', color: 'bg-slate-600 hover:bg-slate-700 text-white', logo: WalletLogos.bankwire },
+    { name: 'PayPal', key: 'paypal', color: 'bg-walletPaypal hover:bg-walletPaypalDark text-white', logo: WalletLogos.paypal },
+    { name: 'Venmo', key: 'venmo', color: 'bg-walletVenmo hover:bg-walletVenmoDark text-white', logo: WalletLogos.venmo },
+    { name: 'Cash App', key: 'cashapp', color: 'bg-walletCashapp hover:bg-walletCashappDark text-white', logo: WalletLogos.cashapp },
+    { name: 'Apple Pay', key: 'applecash', color: 'bg-black hover:opacity-90 text-white', logo: WalletLogos.applepay },
+  ].filter((wallet) => availablePaymentWalletKeys?.has(wallet.key))
+
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="text-center space-y-1">
@@ -56,25 +65,15 @@ export default function Payment({
         <p className="text-xs text-nexoraMuted">{t('customer.payment_desc')}</p>
       </div>
 
+      {isPaymentMethodsLoading && walletOptions.length === 0 ? (
+        <div className="text-center py-8 space-y-3">
+          <div className="h-8 w-8 border-4 border-nexoraBrand border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs text-nexoraMuted font-medium">{t('common.loading')}</p>
+        </div>
+      ) : null}
+
       <div className="space-y-3">
-        {[
-          { name: 'Zelle', key: 'zelle', color: 'bg-walletZelle hover:bg-walletZelleDark text-white', logo: WalletLogos.zelle },
-          { name: 'Bank Wire', key: 'bankwire', color: 'bg-slate-600 hover:bg-slate-700 text-white', logo: WalletLogos.bankwire },
-          { name: 'PayPal', key: 'paypal', color: 'bg-walletPaypal hover:bg-walletPaypalDark text-white', logo: WalletLogos.paypal },
-          { name: 'Venmo', key: 'venmo', color: 'bg-walletVenmo hover:bg-walletVenmoDark text-white', logo: WalletLogos.venmo },
-          { name: 'Cash App', key: 'cashapp', color: 'bg-walletCashapp hover:bg-walletCashappDark text-white', logo: WalletLogos.cashapp },
-          { name: 'Apple Pay', key: 'applecash', color: 'bg-black hover:opacity-90 text-white', logo: WalletLogos.applepay }
-        ].filter(wallet => {
-          if (selectedStaffMembers.length === 1) {
-            const staff = selectedStaffMembers[0]
-            if (selectedStaffHasAnyPayment) {
-              return staff.availablePaymentMethods?.some(m => m.toLowerCase() === wallet.key.toLowerCase())
-            } else {
-              return !!businessPaymentAccounts?.[wallet.key]
-            }
-          }
-          return !!businessPaymentAccounts?.[wallet.key]
-        }).map(wallet => {
+        {walletOptions.map(wallet => {
           return (
             <button
               key={wallet.key}
@@ -85,7 +84,7 @@ export default function Payment({
                 if (isApiMode && typeof handlePay === 'function') {
                   // API mode: create the tip on the backend (POST /touch/tip)
                   // and fetch the payment link before showing wallet details.
-                  handlePay(wallet.name)
+                  handlePay(wallet.name, wallet.key)
                 } else {
                   setStep('wallet_details')
                 }
@@ -103,6 +102,21 @@ export default function Payment({
           )
         })}
       </div>
+
+      {!isPaymentMethodsLoading && walletOptions.length === 0 ? (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-center">
+          <p className="text-sm font-bold text-amber-900">
+            {multiStaffPaymentBlocked === 'missing_business'
+              ? t('customer.multi_staff_missing_business')
+              : multiStaffPaymentBlocked === 'missing_payment_methods'
+                ? t('customer.multi_staff_missing_payment_method')
+                : t('customer.payment_empty_title')}
+          </p>
+          {multiStaffPaymentBlocked ? null : (
+            <p className="text-xs text-amber-800 mt-1 leading-relaxed">{t('customer.payment_empty_desc')}</p>
+          )}
+        </div>
+      ) : null}
 
       <button
         onClick={() => setStep('tip_amount')}

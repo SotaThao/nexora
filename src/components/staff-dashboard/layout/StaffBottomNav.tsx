@@ -1,5 +1,5 @@
 // StaffBottomNav — fixed bottom navigation for mobile (<1024px).
-// Mirrors the reference app's tabs: Home, My QR, Tips, Pay, Profile.
+// Mirrors the reference app's tabs: Home, Link & Tip, Tips, Pay, Profile.
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { STAFF_MENU_ITEMS } from '../constants'
 
