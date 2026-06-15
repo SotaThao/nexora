@@ -85,7 +85,7 @@ export default function StaffPay() {
   const [activeMethod, setActiveMethod] = useState<PaymentMethodDto | null>(null)
 
   const paymentMethods = useMemo(
-    () => apiPaymentMethods.filter((method) => Boolean(method.id && method.uiKey)),
+    () => apiPaymentMethods.filter((method) => Boolean(method.id && method.uiKey) && method.uiKey !== 'bankwire'),
     [apiPaymentMethods],
   )
 

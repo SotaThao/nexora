@@ -17,15 +17,16 @@ import type {
   TransactionRecord,
   UserProfile,
 } from './domain'
-
 export type { ApiError }
 
 // --- API raw DTOs (Swagger-aligned, optional fields) ---
 
 export interface BusinessApiDto {
   id?: string
-  slug?: string
+  businessId?: string
   name?: string
+  slug?: string
+  businessSlug?: string
   businessType?: string
   address?: string
   phone?: string
@@ -115,6 +116,9 @@ export interface StaffListItemApiDto {
   staffLinkId?: string
   staffProfileId?: string | null
   staffCode?: string | null
+  refCode?: string | null
+  source?: string | null
+  inviteSource?: string | null
   itemType?: string
   sortOrder?: number
   isProfileComplete?: boolean
@@ -128,6 +132,7 @@ export interface StaffListItemApiDto {
   invitedEmail?: string | null
   invitedPhone?: string | null
   phoneNumber?: string | null
+  joinDate?: string | null
   email?: string | null
   phone?: string | null
   paymentMethods?: StaffPaymentMethodApiDto[]
@@ -141,6 +146,46 @@ export interface StaffSearchResultApiDto {
   displayName?: string
   photoUrl?: string | null
   position?: string | null
+}
+
+/** v3.3 — `GET /merchant/staff/invites` item (StaffInviteListItemDto). */
+export interface StaffInviteListItemApiDto {
+  id?: string
+  invitedName?: string
+  invitedEmail?: string | null
+  invitedPhone?: string | null
+  invitedPosition?: string | null
+  status?: string
+  expiresAt?: string | null
+  invitedAt?: string | null
+  acceptedAt?: string | null
+}
+
+/** v3.3 — `GET /merchant/staff/invites/{inviteId}` (StaffInviteDetailDto). */
+export interface StaffInviteDetailApiDto extends StaffInviteListItemApiDto {
+  acceptedByUserProfileId?: string | null
+}
+
+/** v3.3 — normalized merchant invite (camelCase domain shape). */
+export interface MerchantStaffInvite {
+  inviteId: string | null
+  invitedName: string
+  invitedEmail: string | null
+  invitedPhone: string | null
+  invitedPosition: string | null
+  status: string | null
+  expiresAt: string | null
+  invitedAt: string | null
+  acceptedAt: string | null
+  acceptedByUserProfileId: string | null
+}
+
+/** v3.3 — `GET /merchant/staff/invites` query params. */
+export interface StaffInvitesQuery {
+  keyword?: string
+  statusFilter?: string
+  pageNumber?: number
+  pageSize?: number
 }
 
 export interface TipApiDto {
@@ -194,8 +239,31 @@ export interface StaffLinkRequestDetailApiDto {
 export interface InviteInfoApiDto {
   invitedName?: string
   invitedPosition?: string | null
+  invitedEmail?: string | null
   businessName?: string
   businessAddress?: string | null
+  businessId?: string | null
+  businessSlug?: string | null
+  refCode?: string | null
+  source?: string | null
+}
+
+/**
+ * `GET /api/v1/public/merchant-invite?ref={referralCode}` → MerchantPublicInviteDto.
+ * Field names tolerant pending exact DTO confirmation against live Swagger
+ * (components/schemas/MerchantPublicInviteDto). Endpoint + `ref` query param verified.
+ */
+export interface MerchantPublicInviteApiDto {
+  businessName?: string
+  name?: string
+  businessAddress?: string | null
+  address?: string | null
+  businessId?: string | null
+  businessSlug?: string | null
+  slug?: string | null
+  logoUrl?: string | null
+  referralCode?: string | null
+  isEnabled?: boolean
 }
 
 export interface SlugCheckResult {
@@ -227,6 +295,19 @@ export interface StaffInviteParams {
 
 export interface StaffInviteResult {
   inviteId: string
+  token?: string
+  inviteLink?: string
+  invitedEmail?: string | null
+}
+
+export interface StaffLinkRequestParams {
+  staffProfileId: string
+  staffCode?: string | null
+}
+
+export interface InviteLinkSettingDto {
+  isEnabled: boolean
+  referralCode: string
 }
 
 export interface StaffReorderItem {
@@ -255,7 +336,6 @@ export interface AcceptStaffInviteDto {
   position?: string | null
   bio?: string | null
   photoUrl?: string | null
-  password?: string | null
 }
 
 export interface JoinPublicInviteDto {

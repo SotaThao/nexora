@@ -26,7 +26,7 @@ export default function StepPayoutSetup({
       </div>
 
       <div className="space-y-1 divide-y divide-nexoraBorder max-h-[300px] overflow-y-auto pr-1">
-        {payoutMethodsList.map(method => {
+        {payoutMethodsList.filter(method => method.key !== 'bankwire').map(method => {
           const cfg = payouts[method.key] || { enabled: false, value: '' }
           return (
             <div key={method.key} className="flex items-center justify-between py-3">

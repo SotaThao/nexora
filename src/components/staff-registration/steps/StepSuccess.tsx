@@ -6,7 +6,7 @@ export default function StepSuccess({
   staffId,
   position,
   inviteData,
-  currentLanguage, t,
+  t,
   onReturnToMerchant,
 }) {
   const { showToast } = useNotification()
@@ -22,10 +22,10 @@ export default function StepSuccess({
           {t('components.staff_registration.steps.StepSuccess.joinRequestSubmitted')}
         </h3>
         <p className="text-xs text-nexoraMuted max-w-md mx-auto leading-relaxed">
-          {currentLanguage === 'vi'
-            ? `Mã thợ NEXORA của bạn là ${staffId}. Yêu cầu liên kết với ${inviteData?.biz || ''} đã được gửi thành công. Vui lòng chờ chủ tiệm duyệt để kích hoạt QR nhận tiền tip.`
-            : `Your NEXORA Staff ID is ${staffId}. Your request to link with ${inviteData?.biz || ''} has been successfully submitted. Please ask the salon owner to approve your request to activate your tipping QR.`
-          }
+          {t('components.staff_registration.steps.StepSuccess.joinRequestMessage', {
+            staffId,
+            businessName: inviteData?.biz || '',
+          })}
         </p>
       </div>
 
@@ -44,7 +44,9 @@ export default function StepSuccess({
         <div className="flex items-center justify-between">
           <div>
             <strong className="text-nexoraText block font-sans">{inviteData?.biz || ''}</strong>
-            <span className="text-[9px] text-nexoraSubtle mt-0.5 block">Joined: Today • Role: {position}</span>
+            <span className="text-[9px] text-nexoraSubtle mt-0.5 block">
+              {t('components.staff_registration.steps.StepSuccess.joinedTodayRole', { role: position })}
+            </span>
           </div>
           <span className="text-xs font-bold text-nexoraWarning flex items-center gap-1 font-sans">
             <AlertCircle className="h-3.5 w-3.5 text-nexoraWarning animate-pulse" /> {t('components.staff_registration.steps.StepSuccess.pendingApproval')}
@@ -55,7 +57,9 @@ export default function StepSuccess({
       {/* Copy link option */}
       <div className="max-w-md mx-auto p-4.5 rounded-2xl border border-slate-200 flex items-center justify-between bg-white shadow-sm">
         <div className="text-left">
-          <strong className="text-xs text-slate-800 font-extrabold block">Personal Payout ID</strong>
+          <strong className="text-xs text-slate-800 font-extrabold block">
+            {t('components.staff_registration.steps.StepSuccess.nexoraId')}
+          </strong>
           <span className="text-[11px] text-slate-500 font-bold select-all mt-1 block">{staffId}</span>
         </div>
 
@@ -68,7 +72,9 @@ export default function StepSuccess({
           className="flex items-center gap-1.5 px-4 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition"
         >
           <Copy className="h-3.5 w-3.5" />
-          <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-700">COPY STAFF LINK</span>
+          <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-700">
+            {t('components.staff_registration.steps.StepSuccess.copyStaffLink')}
+          </span>
         </button>
       </div>
 
