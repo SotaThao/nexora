@@ -4,6 +4,7 @@
 
 import httpClient from '../../lib/httpClient'
 import type { CreateReviewVars, CreateTipVars, SkipTipVars } from '../../types/hooks'
+import { normalizeTouchPageData } from './normalizeTouchPage'
 
 type HttpClient = typeof httpClient
 
@@ -30,10 +31,11 @@ export function createPublicTouchRepository(client: HttpClient = httpClient) {
       touchPointSlug: string
       sessionId: string
     }) {
-      return client.get<LooseObject>(
+      const raw = await client.get<LooseObject>(
         `/api/v1/touch/${encodeURIComponent(businessSlug)}/${encodeURIComponent(touchPointSlug)}`,
         { anonymous: true, params: { sessionId } },
       )
+      return normalizeTouchPageData(raw)
     },
 
     async getPaymentLink({

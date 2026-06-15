@@ -23,6 +23,8 @@ export type { ApiError }
 // --- API raw DTOs (Swagger-aligned, optional fields) ---
 
 export interface BusinessApiDto {
+  id?: string
+  slug?: string
   name?: string
   businessType?: string
   address?: string
