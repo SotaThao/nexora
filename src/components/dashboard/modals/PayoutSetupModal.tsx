@@ -2,12 +2,35 @@ import { useState, useEffect } from 'react'
 import { X, Camera, FolderOpen, AlertTriangle, Bitcoin } from 'lucide-react'
 import { useTranslation, renderLabel } from '../../../contexts/LanguageContext'
 import BankWireAccountForm from '../../payout/BankWireAccountForm'
+import CameraCaptureModal from '../../ui/CameraCaptureModal'
 import {
   getBankWireBeneficiaryName,
   isBankWireAccountComplete,
 } from '../../payout/bankWireAccount'
 
-function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrCode, onClose, onSubmit, readOnly = false }) {
+interface PayoutSetupModalProps {
+  open: boolean
+  walletKey: string
+  staffName?: string
+  initialValue?: string
+  initialQrCode?: string
+  onClose: () => void
+  onSubmit: (value: string, qrCode: string, accountName: string, qrFile?: File | null) => void
+  readOnly?: boolean
+  isSaving?: boolean
+}
+
+function PayoutSetupModal({
+  open,
+  walletKey,
+  staffName,
+  initialValue,
+  initialQrCode,
+  onClose,
+  onSubmit,
+  readOnly = false,
+  isSaving = false,
+}: PayoutSetupModalProps) {
   const { t } = useTranslation()
   const [value, setValue] = useState(initialValue || '')
   const [qrCode, setQrCode] = useState(initialQrCode || '')

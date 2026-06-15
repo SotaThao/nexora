@@ -14,12 +14,13 @@
  *   { id, email, accountType, flag, displayName, role, staffId,
  *     verificationStatus, ssoPrefillData }
  */
-import React, { createContext, useState, useEffect, useCallback, type ReactNode } from 'react'
+import React, { useState, useEffect, useCallback, type ReactNode } from 'react'
 import { authAdapter } from './adapters'
 import { tokenStore } from './tokenStore'
-import type { AuthContextValue, AuthSession, AuthStatus, LoginCredentials } from '../types/auth'
+import { AuthContext } from './AuthContext'
+import type { AuthSession, AuthStatus, LoginCredentials } from '../types/auth'
 
-export const AuthContext = createContext<AuthContextValue | null>(null)
+export { AuthContext } from './AuthContext'
 
 interface AuthProviderProps {
   children: ReactNode

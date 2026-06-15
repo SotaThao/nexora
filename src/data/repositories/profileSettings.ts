@@ -27,6 +27,10 @@ export function createProfileSettingsRepository(client: HttpClient = httpClient)
       return client.get<LooseObject>('/api/v1/userprofile/verified-status')
     },
 
+    async initializeKyc(): Promise<{ url?: string }> {
+      return client.post<{ url?: string }>('/api/v1/userprofile/kyc/initialize')
+    },
+
     async updateUserProfile(dto: UpdateUserProfileDto): Promise<LooseObject> {
       return client.put<LooseObject>('/api/v1/userprofile/update', dto)
     },

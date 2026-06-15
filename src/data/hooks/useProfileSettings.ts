@@ -24,10 +24,21 @@ export function useProfileSettings({ enabled: callerEnabled = true } = {}) {
   })
 }
 
-export function useVerifiedStatus() {
+export function useVerifiedStatus({ enabled = true } = {}) {
   return useQuery<LooseObject>({
     queryKey: qk.verifiedStatus(),
     queryFn: () => profileSettingsRepository.getVerifiedStatus(),
+    enabled,
+    refetchOnWindowFocus: false,
+  })
+}
+
+export function useKycInitialize({ enabled = false } = {}) {
+  return useQuery<{ url?: string }>({
+    queryKey: qk.kycInitialize(),
+    queryFn: () => profileSettingsRepository.initializeKyc(),
+    enabled,
+    refetchOnWindowFocus: false,
   })
 }
 
