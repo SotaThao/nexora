@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { logger } from '../../../utils/logger'
+import { sanitizePlainText } from '../../../utils/sanitize'
 import publicTouchRepository from '../../../data/repositories/publicTouch'
 import { resolveTouchBusinessId } from '../../../data/repositories/normalizeTouchPage'
 import merchantsRepository from '../../../data/repositories/merchants'
@@ -577,7 +578,7 @@ export default function useCustomerFlow() {
 
   /** Submits customer feedback review. */
   const handleSubmitFeedback = async () => {
-    const cleanComment = comment.trim()
+    const cleanComment = sanitizePlainText(comment)
     try {
       const member = selectedStaffMembers[0]
       const result = await createReviewMutationApi.mutateAsync({

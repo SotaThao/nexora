@@ -229,7 +229,7 @@
     "store_website": "Website (Tùy chọn)",
     "store_logo": "Logo Doanh Nghiệp",
     "store_payment_title": "Phương thức nhận tiền của tiệm",
-    "logo_hint": "Logo vuông (Max 2MB)",
+    "logo_hint": "Logo vuông (Max 5MB)",
     "review_routing_title": "Review Routing (Định tuyến review)",
     "review_routing_policy": "Châm ngôn: Khách hài lòng (4-5★) được đưa thẳng sang Google/Yelp. Khách chưa hài lòng (1-3★) sẽ được định tuyến gửi biểu mẫu đóng góp kín về Email quản trị dưới đây để xử lý kín.",
     "google_review_link": "Google Review Link (Tùy chọn)",
@@ -745,6 +745,15 @@
     "yelp_review_btn": "Đánh giá trên Yelp",
     "rating_bad_text": "Chúng tôi rất tiếc vì trải nghiệm chưa tốt của bạn. Hệ thống sẽ gửi góp ý riêng tư trực tiếp tới Quản lý để khắc phục.",
     "submit_internal_btn": "Gửi Góp Ý Bảo Mật",
+    "rating_label_5": "Tuyệt vời!",
+    "rating_label_4": "Tốt!",
+    "rating_label_3": "Tạm ổn",
+    "rating_label_2": "Tệ",
+    "rating_label_1": "Rất tệ",
+    "submit_review_btn": "Gửi đánh giá",
+    "skip_btn": "Bỏ qua",
+    "maybe_later_btn": "Để sau",
+    "final_thanks_desc": "Cảm ơn bạn đã ủng hộ! Chúc bạn một ngày tốt lành!",
     "final_success_title": "Cảm ơn bạn!",
     "final_success_desc": "Giúp chúng tôi phát triển bằng cách đánh giá trên Google hoặc Yelp.",
     "send_new_btn": "Gửi Thêm Lượt Mới",
@@ -937,6 +946,10 @@
     "otp_desc": "Nhập mã gồm 4 chữ số được gửi tới số điện thoại/email của bạn.",
     "consent_tax": "Tôi hiểu rằng các khoản tiền tip nhận trực tiếp có thể là thu nhập phải báo cáo thuế. Tôi chịu trách nhiệm lưu trữ hồ sơ và báo cáo thu nhập theo quy định pháp luật.",
     "consent_confirm": "Tôi xác nhận rằng thông tin thanh toán của mình là chính xác và khách hàng có thể sử dụng các phương thức này để gửi tip trực tiếp cho tôi.",
+    "label_invited_name": "Tên được mời:",
+    "label_assigned_role": "Vai trò được giao:",
+    "label_invited_email": "Email được mời:",
+    "label_invited_phone": "SĐT được mời:",
     "save_activate": "Lưu & Kích hoạt Tài khoản Cá nhân",
     "customer_preview": "Giao diện khách quét",
     "customer_preview_desc": "Đây là màn hình khách hàng sẽ thấy sau khi chọn thợ.",
@@ -1052,7 +1065,12 @@
           "multiStaffSubtitle": "Mở ứng dụng ngân hàng và gửi một lần tới {business}. Tiền tip sẽ được chia cho các nhân viên đã chọn.",
           "tipBreakdown": "Chi tiết từng nhân viên",
           "totalCombinedTip": "Tổng tiền Tip",
-          "goBack": "Quay Lại"
+          "goBack": "Quay Lại",
+          "singleStaffTitle": "Gửi tiền Tip qua {wallet}",
+          "singleStaffSubtitle_zelle": "Mở ứng dụng ngân hàng của bạn và gửi tới {recipient}.",
+          "singleStaffSubtitle_venmo": "Mở ứng dụng Venmo và gửi tới {recipient}.",
+          "singleStaffSubtitle_cashapp": "Mở ứng dụng Cash App và gửi tới {recipient}.",
+          "singleStaffSubtitle_default": "Mở ứng dụng ví và gửi tới {recipient}."
         }
       }
     },
@@ -1122,7 +1140,13 @@
           "joinQrAlt": "Mã QR gia nhập",
           "scanToJoinAlt": "Quét để gia nhập",
           "preview": "Xem trước",
-          "disabled": "Chưa bật"
+          "disabled": "Chưa bật",
+          "methodEmail": "Email",
+          "methodSms": "SMS",
+          "methodSmsComingSoon": "Sắp ra mắt",
+          "emailAddress": "Địa chỉ Email",
+          "phExampleEmail": "vd: mia.tran@gmail.com",
+          "phExamplePhone": "vd: 0407-555-0123"
         },
         "PayoutSetupModal": {
           "walletAccountTitle": "TÀI KHOẢN {wallet}",
@@ -1637,7 +1661,7 @@
           "passwordIsRequired": "Mật khẩu không được để trống",
           "passwordMustBeAt": "Mật khẩu phải từ 6 ký tự",
           "youMustAgreeTo": "Bạn phải đồng ý với Điều khoản & Điều kiện để tiếp tục.",
-          "invalidCodeTipEnter": "Mã xác thực không hợp lệ. Gợi ý: Hãy nhập 1234.",
+          "invalidCodeTipEnter": "Mã xác thực không hợp lệ. Vui lòng kiểm tra và thử lại.",
           "thisFieldIsRequired": "Trường này là bắt buộc.",
           "newJoinRequest": "Yêu cầu gia nhập mới",
           "justNow": "Vừa xong",
@@ -1680,7 +1704,22 @@
           "toggleThePaymentChannels": "Bật các kênh thanh toán bạn muốn nhận tiền. Khi khách hàng quét mã QR của bạn, họ sẽ thanh toán trực tiếp vào các tài khoản này.",
           "notConfigured": "Chưa cấu hình",
           "payoutAccount": "Tài khoản",
-          "saveAndActivate": "Lưu & Kích hoạt"
+          "saveAndActivate": "Lưu & Kích hoạt",
+          "walletLabel_zelle": "Zelle",
+          "walletLabel_bankwire": "Bank Wire",
+          "walletLabel_paypal": "PayPal",
+          "walletLabel_venmo": "Venmo",
+          "walletLabel_cashapp": "Cash App",
+          "walletLabel_applecash": "Apple Cash",
+          "walletPlaceholder_zelle": "Nhập email/SĐT Zelle...",
+          "walletPlaceholder_bankwire": "Nhập số routing và tài khoản ngân hàng...",
+          "walletPlaceholder_paypal": "Nhập email PayPal...",
+          "walletPlaceholder_venmo": "Nhập @username Venmo...",
+          "walletPlaceholder_cashapp": "Nhập $cashtag Cash App...",
+          "walletPlaceholder_applecash": "Nhập số điện thoại Apple Cash...",
+          "nexoraStaffId": "NEXORA Staff ID",
+          "pendingRegister": "Chờ đăng ký",
+          "consentRequired": "Bạn phải chấp nhận cả hai điều khoản trước khi kích hoạt tài khoản."
         },
         "StepProfile": {
           "label2PersonalAccount": "2. Tài khoản cá nhân",
@@ -1885,5 +1924,15 @@
       "business_account_not_allowed": "Chỉ tài khoản cá nhân (Personal) mới có thể chấp nhận lời mời tiệm. Vui lòng đăng nhập bằng tài khoản cá nhân.",
       "onboarding_required": "Vui lòng hoàn tất hồ sơ cá nhân trước khi gia nhập tiệm."
     }
+  },
+  "coming_soon": {
+    "analytics_title": "Phân Tích Nâng Cao",
+    "analytics_desc": "Chuyển đổi thiết bị, phân tích khách quay lại, và tóm tắt đánh giá bằng AI sẽ ra mắt ở giai đoạn 3.",
+    "subscriptions_title": "Gói Dịch Vụ",
+    "subscriptions_desc": "Quản lý đơn hàng giá NFC, gói gia hạn, và phần cứng bổ sung từ không gian này.",
+    "settings_title": "Cài Đặt",
+    "settings_desc": "Tuỳ chọn cửa hàng, khoá webhook và điểm đến review sẽ được cấu hình tại đây.",
+    "default_title": "Tính Năng Đang Phát Triển",
+    "default_desc": "Module này đang được chuẩn bị cho bảng điều khiển Nexora Touch."
   }
 }
