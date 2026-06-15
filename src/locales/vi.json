@@ -1051,7 +1051,7 @@
           "multiStaffTitle": "Gửi tổng tiền Tip qua {wallet}",
           "multiStaffSubtitle": "Mở ứng dụng ngân hàng và gửi một lần tới {business}. Tiền tip sẽ được chia cho các nhân viên đã chọn.",
           "tipBreakdown": "Chi tiết từng nhân viên",
-          "totalCombinedTip": "Tổng tiền Tip"
+          "totalCombinedTip": "Tổng tiền Tip",
           "goBack": "Quay Lại"
         }
       }
