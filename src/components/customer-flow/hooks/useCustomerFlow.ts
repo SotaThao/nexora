@@ -1,18 +1,107 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { logger } from '../../../utils/logger'
 import publicTouchRepository from '../../../data/repositories/publicTouch'
+import { resolveTouchBusinessId } from '../../../data/repositories/normalizeTouchPage'
+import merchantsRepository from '../../../data/repositories/merchants'
+import { useMerchantSetup } from '../../../data/hooks/useMerchantSetup'
 import {
   useCustomerTouchPage,
   useCreateTip,
   useConfirmTip,
+  useCreateMultiStaffTip,
+  useConfirmMultiStaffTip,
   useSkipTip,
   useCreateReview,
   useTrackGoogle,
   useTrackYelp,
   usePublicBusinessPaymentMethods,
 } from '../../../data/hooks/usePublicTouch'
+import { PAYOUT_UI_LABELS, payoutTypeToUiKey } from '../../../data/paymentMethodTypes'
+import type { PaymentMethodDto } from '../../../types/domain'
+
+function walletNameToKey(walletName: string): string {
+  const match = Object.entries(PAYOUT_UI_LABELS).find(([, label]) => label === walletName)
+  return match?.[0] ?? walletName.toLowerCase().replace(/\s+/g, '')
+}
+
+function resolveBusinessPaymentMethodId(
+  methods: PaymentMethodDto[],
+  walletKey: string,
+): string | null {
+  const normalizedKey = walletKey.toLowerCase()
+  const match = methods.find((pm) => {
+    if (!pm.id || pm.isActive === false) return false
+    const uiKey = (pm.uiKey || payoutTypeToUiKey(pm.type)).toLowerCase()
+    const typeKey = (pm.type || '').toLowerCase()
+    const nameKey = (pm.name || '').toLowerCase().replace(/\s+/g, '')
+    return uiKey === normalizedKey || typeKey === normalizedKey || nameKey === normalizedKey
+  })
+  return match?.id ?? null
+}
+
+function getStaffTipAmount(
+  memberId: string,
+  selectedTips: LooseObject,
+  customTips: LooseObject,
+): number {
+  const selTip = selectedTips[memberId] !== undefined ? selectedTips[memberId] : 15
+  return selTip === 'custom' ? Number(customTips[memberId]) || 0 : Number(selTip)
+}
+
+function collectStaffPaymentKeys(staffMembers: Array<{ availablePaymentMethods?: string[] }>): Set<string> {
+  const keys = new Set<string>()
+  for (const staff of staffMembers) {
+    for (const method of staff.availablePaymentMethods || []) {
+      keys.add(payoutTypeToUiKey(method))
+    }
+  }
+  return keys
+}
+
+function collectBusinessPaymentKeys(methods: PaymentMethodDto[]): Set<string> {
+  const keys = new Set<string>()
+  for (const pm of methods) {
+    if (!pm.id || pm.isActive === false) continue
+    keys.add(payoutTypeToUiKey(pm.type || pm.name || ''))
+  }
+  return keys
+}
+
+function buildAvailablePaymentWalletKeys(
+  selectedStaffMembers: Array<{ availablePaymentMethods?: string[] }>,
+  effectivePaymentMethods: PaymentMethodDto[],
+  isMultiStaff: boolean,
+): Set<string> {
+  if (!isMultiStaff && selectedStaffMembers.length === 1) {
+    const staffKeys = collectStaffPaymentKeys(selectedStaffMembers)
+    if (staffKeys.size > 0) return staffKeys
+  }
+
+  const businessKeys = collectBusinessPaymentKeys(effectivePaymentMethods)
+  if (businessKeys.size > 0) return businessKeys
+
+  if (isMultiStaff) {
+    return new Set<string>()
+  }
+
+  return collectStaffPaymentKeys(selectedStaffMembers)
+}
+
+function slugify(value = ''): string {
+  return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+}
+
+function getApiErrorMessage(err: unknown, fallback: string): string {
+  if (err && typeof err === 'object') {
+    const apiErr = err as { message?: string; errorCode?: string }
+    if (apiErr.message) return apiErr.message
+    if (apiErr.errorCode && apiErr.errorCode !== 'HTTP_ERROR') return apiErr.errorCode
+  }
+  return fallback
+}
 
 /**
  * Custom hook powering the entire customer tipping & review flow.
@@ -40,6 +129,18 @@ export default function useCustomerFlow() {
     return params.get('sessionId') || crypto.randomUUID()
   }, [])
 
+  const queryBusinessId = useMemo(() => {
+    const params = new URLSearchParams(window.location.search)
+    return params.get('businessId')
+  }, [])
+
+  const preselectedStaffProfileId = useMemo(() => {
+    const params = new URLSearchParams(window.location.search)
+    return params.get('staffProfileId') || params.get('staffId')
+  }, [])
+
+  const didApplyStaffPreselect = useRef(false)
+
   // ── API data ──
   const touchPageQuery = useCustomerTouchPage({
     businessSlug: touchRoute?.businessSlug,
@@ -51,6 +152,8 @@ export default function useCustomerFlow() {
   // ── API mutations ──
   const createTipMutation = useCreateTip()
   const confirmTipMutation = useConfirmTip()
+  const createMultiStaffTipMutation = useCreateMultiStaffTip()
+  const confirmMultiStaffTipMutation = useConfirmMultiStaffTip()
   const skipTipMutation = useSkipTip()
   const createReviewMutationApi = useCreateReview()
   const trackGoogleMutation = useTrackGoogle()
@@ -115,23 +218,121 @@ export default function useCustomerFlow() {
   const [currentReviewId, setCurrentReviewId] = useState<any | null>(null)
   const [paymentLinkData, setPaymentLinkData] = useState<any | null>(null)
 
+  useEffect(() => {
+    if (didApplyStaffPreselect.current) return
+    if (!preselectedStaffProfileId || activeStaffList.length === 0) return
+
+    const match = activeStaffList.find(
+      (staff) => String(staff.id) === preselectedStaffProfileId,
+    )
+    if (!match) return
+
+    didApplyStaffPreselect.current = true
+    setSelectedStaffMembers([match])
+    setSelectedTips((prev) => ({
+      ...prev,
+      [match.id]: prev[match.id] !== undefined ? prev[match.id] : 15,
+    }))
+    setStep('tip_amount')
+  }, [preselectedStaffProfileId, activeStaffList])
+
   // ── Payment accounts ──
-  const businessId = touchPageData?.business?.id || null
+  const touchBusinessId = useMemo(
+    () => resolveTouchBusinessId(touchPageData, touchRoute?.businessSlug, queryBusinessId),
+    [touchPageData, touchRoute?.businessSlug, queryBusinessId],
+  )
+
+  const merchantSetupQuery = useMerchantSetup({
+    enabled: Boolean(touchRoute?.businessSlug && !touchBusinessId),
+  })
+
+  const merchantProfileBusinessId = useMemo(() => {
+    const info = merchantSetupQuery.data?.businessInfo as LooseObject | undefined
+    const profileId = info?.businessId || info?.id
+    if (!profileId || !touchRoute?.businessSlug) return null
+    const profileSlug = slugify(String(info?.slug || info?.name || ''))
+    return profileSlug === touchRoute.businessSlug ? String(profileId) : null
+  }, [merchantSetupQuery.data, touchRoute?.businessSlug])
+
+  const merchantBusinessQuery = useQuery({
+    queryKey: ['merchantBusinessContext', touchRoute?.businessSlug],
+    queryFn: () => merchantsRepository.getBusinessContext(),
+    enabled: Boolean(
+      touchRoute?.businessSlug &&
+      !touchBusinessId &&
+      !merchantProfileBusinessId &&
+      merchantSetupQuery.isFetched &&
+      !merchantSetupQuery.data,
+    ),
+    staleTime: 60_000,
+    retry: false,
+  })
+
+  const merchantMatchedBusinessId = useMemo(() => {
+    const ctx = merchantBusinessQuery.data
+    if (!ctx?.id || !touchRoute?.businessSlug) return null
+    const merchantSlug = slugify(ctx.slug || ctx.name)
+    return merchantSlug === touchRoute.businessSlug ? ctx.id : null
+  }, [merchantBusinessQuery.data, touchRoute?.businessSlug])
+
+  const businessId =
+    touchBusinessId ||
+    merchantProfileBusinessId ||
+    merchantMatchedBusinessId ||
+    null
   const publicMethodsQuery = usePublicBusinessPaymentMethods(businessId)
   const publicPaymentMethods = publicMethodsQuery.data ?? []
 
+  const touchPagePaymentMethods = touchPageData?.businessPaymentMethods ?? []
+  const effectivePaymentMethods = useMemo(() => {
+    if (touchPagePaymentMethods.length > 0) return touchPagePaymentMethods
+    return publicPaymentMethods
+  }, [touchPagePaymentMethods, publicPaymentMethods])
+
+  const isMultiStaffSelection = selectedStaffMembers.length > 1
+
   const businessPaymentAccounts = useMemo(() => {
-    const defaultAccounts = { venmo: '', cashapp: '', zelle: '', vlinkpay: '' }
-    if (publicPaymentMethods.length > 0) {
-      const accounts = { ...defaultAccounts }
-      publicPaymentMethods.forEach(pm => {
-        const key = (pm.type || pm.name || '').toLowerCase()
-        if (accounts[key] !== undefined) accounts[key] = pm.accountInfo || ''
-      })
-      return accounts
+    const accounts: Record<string, string> = {}
+    for (const pm of effectivePaymentMethods) {
+      const key = payoutTypeToUiKey(pm.type || pm.name || '')
+      accounts[key] = pm.accountInfo || ''
     }
-    return defaultAccounts
-  }, [publicPaymentMethods])
+    return accounts
+  }, [effectivePaymentMethods])
+
+  const availablePaymentWalletKeys = useMemo(
+    () => buildAvailablePaymentWalletKeys(
+      selectedStaffMembers,
+      effectivePaymentMethods,
+      isMultiStaffSelection,
+    ),
+    [selectedStaffMembers, effectivePaymentMethods, isMultiStaffSelection],
+  )
+
+  const multiStaffPaymentBlocked = useMemo(() => {
+    if (!isMultiStaffSelection) return null
+    const resolvingMerchantProfile =
+      !touchBusinessId &&
+      (merchantSetupQuery.isLoading || merchantBusinessQuery.isLoading)
+    if (resolvingMerchantProfile && !businessId) return null
+    if (!businessId) return 'missing_business'
+    if (!publicMethodsQuery.isLoading && effectivePaymentMethods.length === 0) {
+      return 'missing_payment_methods'
+    }
+    return null
+  }, [
+    isMultiStaffSelection,
+    businessId,
+    touchBusinessId,
+    merchantSetupQuery.isLoading,
+    merchantBusinessQuery.isLoading,
+    publicMethodsQuery.isLoading,
+    effectivePaymentMethods.length,
+  ])
+
+  const isPaymentMethodsLoading =
+    publicMethodsQuery.isLoading ||
+    (!touchBusinessId && (merchantSetupQuery.isLoading || merchantBusinessQuery.isLoading))
 
   const selectedStaffHasAnyPayment = useMemo(() => {
     if (selectedStaffMembers.length !== 1) return false
@@ -145,14 +346,24 @@ export default function useCustomerFlow() {
       const staff = selectedStaffMembers[0]
       return staff.payoutConfigs?.[selectedWalletObj.key]?.qrCode || staff.payoutQrCodes?.[selectedWalletObj.key] || null
     }
-    return null // Business-level fallback is not supported in API strictly without data payload mapping
-  }, [selectedWalletObj, selectedStaffMembers, selectedStaffHasAnyPayment])
+    if (selectedStaffMembers.length > 1) {
+      const walletKey = selectedWalletObj.key.toLowerCase()
+      const match = effectivePaymentMethods.find((pm) => {
+        if (!pm.id || pm.isActive === false) return false
+        const uiKey = (pm.uiKey || payoutTypeToUiKey(pm.type)).toLowerCase()
+        return uiKey === walletKey
+      })
+      return match?.imageUrl || null
+    }
+    return null
+  }, [selectedWalletObj, selectedStaffMembers, selectedStaffHasAnyPayment, effectivePaymentMethods])
 
   const filteredStaff = useMemo(() => {
+    const query = searchQuery.toLowerCase()
     return activeStaffList.filter(s =>
-      s.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.nickname.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.position.toLowerCase().includes(searchQuery.toLowerCase())
+      s.fullName.toLowerCase().includes(query) ||
+      s.nickname.toLowerCase().includes(query) ||
+      (s.position || '').toLowerCase().includes(query)
     )
   }, [activeStaffList, searchQuery])
 
@@ -253,21 +464,64 @@ export default function useCustomerFlow() {
 
   /**
    * Handles wallet selection and initiates tip payment.
-   * @param {string} walletName - Payment wallet selected.
+   * Single staff → POST /api/v1/touch/tip
+   * Multi staff  → POST /api/v1/tips/multi-staff
+   * @param {string} walletName - Payment wallet display name.
+   * @param {string} [walletKey] - Wallet key for business payment method lookup.
    */
-  const handlePay = async (walletName) => {
+  const handlePay = async (walletName, walletKey?: string) => {
     setSelectedWallet(walletName)
     setStep('processing')
+    const resolvedWalletKey = walletKey || walletNameToKey(walletName)
+
     try {
+      if (selectedStaffMembers.length > 1) {
+        const touchPointId = touchPageData?.touchPoint?.id
+        if (!touchPointId) {
+          showToast(t('customer.multi_staff_missing_touchpoint'), 'error')
+          setStep('payment')
+          return
+        }
+        if (!businessId) {
+          showToast(t('customer.multi_staff_missing_business'), 'error')
+          setStep('payment')
+          return
+        }
+
+        const businessPaymentMethodId = resolveBusinessPaymentMethodId(
+          effectivePaymentMethods,
+          resolvedWalletKey,
+        )
+        if (!businessPaymentMethodId) {
+          showToast(t('customer.multi_staff_missing_payment_method'), 'error')
+          setStep('payment')
+          return
+        }
+
+        const tipItems = selectedStaffMembers.map((member) => ({
+          staffProfileId: member.id,
+          amount: getStaffTipAmount(member.id, selectedTips, customTips),
+        }))
+
+        const result = await createMultiStaffTipMutation.mutateAsync({
+          businessId,
+          touchPointId,
+          businessPaymentMethodId,
+          tipItems,
+        })
+        setCurrentTipId(result?.tipId || result?.id)
+        setPaymentLinkData(null)
+        setStep('wallet_details')
+        return
+      }
+
       const member = selectedStaffMembers[0]
-      const selTip = selectedTips[member.id] !== undefined ? selectedTips[member.id] : 15
-      const amount = selTip === 'custom' ? Number(customTips[member.id]) || 0 : selTip
+      const amount = getStaffTipAmount(member.id, selectedTips, customTips)
       const result = await createTipMutation.mutateAsync({
         touchPointId: touchPageData?.touchPoint?.id, staffProfileId: member.id,
         amount, paymentMethod: walletName, sessionId,
       })
       setCurrentTipId(result?.id || result?.tipId)
-      // Fetch payment link for wallet details display
       try {
         const linkData = await publicTouchRepository.getPaymentLink({
           staffId: member.id,
@@ -277,12 +531,11 @@ export default function useCustomerFlow() {
         setPaymentLinkData(linkData)
       } catch (linkErr) {
         logger.error('Failed to fetch payment link', linkErr)
-        // Continue without link data — WalletDetails will use fallback
       }
       setStep('wallet_details')
     } catch (err) {
       logger.error('Failed to create tip', err)
-      showToast(t('errors.generic'), 'error')
+      showToast(getApiErrorMessage(err, t('errors.generic')), 'error')
       setStep('payment')
     }
   }
@@ -291,7 +544,11 @@ export default function useCustomerFlow() {
   const handleConfirmTip = async () => {
     if (currentTipId) {
       try {
-        await confirmTipMutation.mutateAsync(currentTipId)
+        if (selectedStaffMembers.length > 1) {
+          await confirmMultiStaffTipMutation.mutateAsync(currentTipId)
+        } else {
+          await confirmTipMutation.mutateAsync(currentTipId)
+        }
         setStep('success_payment')
       } catch (err) {
         logger.error('Failed to confirm tip', err)
@@ -358,6 +615,7 @@ export default function useCustomerFlow() {
     isApiMode: true, touchPageQuery,
     bizName, activeStaffList,
     initialStaffMember, reviewLinks, businessPaymentAccounts,
+    availablePaymentWalletKeys, isPaymentMethodsLoading, multiStaffPaymentBlocked,
     selectedStaffHasAnyPayment, qrCodeVal, filteredStaff,
     positiveTagKeys, negativeTagKeys, activeTipAmount, tipScreenTitle,
     selectedStaffMembers, setSelectedStaffMembers, step, setStep,

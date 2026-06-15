@@ -18,6 +18,8 @@ export function createMerchantsRepository(client: HttpClient = httpClient) {
 
         return {
           businessInfo: {
+            businessId: res.id,
+            slug: res.slug,
             name: res.name || '',
             industry: res.businessType || 'Nail Salon',
             address: res.address || '',
@@ -48,6 +50,20 @@ export function createMerchantsRepository(client: HttpClient = httpClient) {
           return null
         }
         throw err
+      }
+    },
+
+    async getBusinessContext(): Promise<{ id: string; slug: string; name: string } | null> {
+      try {
+        const res = await client.get<BusinessApiDto>('/api/v1/merchant/business')
+        if (!res?.id) return null
+        return {
+          id: res.id,
+          slug: res.slug || '',
+          name: res.name || '',
+        }
+      } catch {
+        return null
       }
     },
 

@@ -16,6 +16,10 @@ export function useStaffLinkedBusinesses({ enabled = true } = {}) {
     return staffBusinesses.map((b) => ({
       businessStaffLinkId: b.businessId,
       businessName: b.businessName,
+      businessSlug: b.businessSlug ?? null,
+      touchPointSlug: b.touchPointSlug ?? null,
+      tipUrl: b.tipUrl ?? null,
+      qrImageUrl: b.qrImageUrl ?? null,
       displayName: account.displayNamesByBusiness?.[b.businessId] || account.defaultDisplayName,
       status: b.linkStatusLabel || b.linkStatus || 'Active',
       logoUrl: b.logoUrl,
