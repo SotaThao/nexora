@@ -8,7 +8,7 @@
     "sign_out": "Sign out",
     "nav": {
       "home": "Home",
-      "my_qr": "My QR",
+      "my_qr": "Link & Tip",
       "tips": "Tips",
       "reviews": "Reviews",
       "pay": "Pay",
@@ -16,7 +16,7 @@
     },
     "titles": {
       "home": "Home",
-      "qr": "My QR",
+      "qr": "Salon Link & Tips",
       "tips": "Tips",
       "reviews": "Reviews & Ratings",
       "pay": "Payments",

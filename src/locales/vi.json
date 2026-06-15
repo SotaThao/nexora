@@ -8,7 +8,7 @@
     "sign_out": "Đăng xuất",
     "nav": {
       "home": "Trang chủ",
-      "my_qr": "Mã QR",
+      "my_qr": "Liên kết & Tip",
       "tips": "Tiền tip",
       "reviews": "Đánh giá",
       "pay": "Thanh toán",
@@ -16,7 +16,7 @@
     },
     "titles": {
       "home": "Trang chủ",
-      "qr": "Mã QR của tôi",
+      "qr": "Liên kết tiệm & Nhận tip",
       "tips": "Tiền tip",
       "reviews": "Đánh giá & Xếp hạng",
       "pay": "Phương thức nhận",
