@@ -772,6 +772,38 @@ export default function useStaffRegistration({ inviteData }) {
     )
   }
 
+  const saveSelectedPaymentMethods = async () => {
+    let methods: import('../../types/domain').PaymentMethodDto[] = []
+    try {
+      methods = await staffPaymentMethodsRepository.getAll()
+    } catch (pmErr: unknown) {
+      logger.warn('Could not fetch payment methods during activation', pmErr)
+    }
+
+    for (const [key, cfg] of Object.entries(payouts)) {
+      const accountInfo = cfg.value?.trim()
+      if (!accountInfo) continue
+
+      const match = methods.find(m => {
+        const mUiKey = (m.uiKey || '').toLowerCase().replace(/\s+/g, '')
+        const mType = m.type.toLowerCase().replace(/\s+/g, '')
+        const cKey = key.toLowerCase().replace(/\s+/g, '')
+        return mUiKey === cKey || mType === cKey
+      })
+
+      if (!match?.id) continue
+
+      await staffPaymentMethodsRepository.update(match.id, {
+        accountInfo,
+        imageUrl: imageUrlOrNull(cfg.qrCode),
+      })
+
+      if (Boolean(cfg.enabled) !== Boolean(match.isActive)) {
+        await staffPaymentMethodsRepository.toggle(match.id)
+      }
+    }
+  }
+
   const handleProfileSubmit = async () => {
     if (usesApiRegistration) {
       if (isProfileSubmitting) return
@@ -812,22 +844,21 @@ export default function useStaffRegistration({ inviteData }) {
           })
         }
 
-        // Re-sign in so the freshly minted JWT carries the newly linked Staff
-        // Profile claim. The token from step 1 predates the accept; refresh-token
-        // only renews that claimless token, so staff-scoped endpoints (e.g.
-        // /staff/payment-methods) keep returning 404 STAFF_PROFILE_NOT_FOUND.
-        // A fresh signin re-resolves all claims, matching the documented
-        // accept -> signin -> payment-methods sequence.
-        const updatedSession = await apiAuthAdapter.login({
-          email: regEmail || inviteData?.invitedEmail || inviteData?.email || '',
-          password: regPassword
-        })
+        if (isApiInvite) {
+          // Re-sign in so the freshly minted JWT carries the newly linked Staff
+          // Profile claim. Public invites cannot do this yet because the staff
+          // profile is created later by join-public-invite during activation.
+          const updatedSession = await apiAuthAdapter.login({
+            email: regEmail || inviteData?.invitedEmail || inviteData?.email || '',
+            password: regPassword
+          })
 
-        if (updatedSession) {
-           const code = updatedSession.staffCode || updatedSession.staffId
-           if (code) {
-             setStaffId(code)
-           }
+          if (updatedSession) {
+             const code = updatedSession.staffCode || updatedSession.staffId
+             if (code) {
+               setStaffId(code)
+             }
+          }
         }
 
         // Persist personal onboarding data to the backend user profile.
@@ -896,30 +927,7 @@ export default function useStaffRegistration({ inviteData }) {
       if (isActivating) return
       setIsActivating(true)
       try {
-        let methods: import('../../types/domain').PaymentMethodDto[] = []
-        try {
-          methods = await staffPaymentMethodsRepository.getAll()
-        } catch (pmErr: unknown) {
-          // Staff profile may not exist yet during onboarding link flow
-          logger.warn('Could not fetch payment methods during activation', pmErr)
-        }
-
-        for (const [key, cfg] of Object.entries(payouts)) {
-          const match = methods.find(m => {
-            const mType = m.type.toLowerCase().replace(/\s+/g, '')
-            const cKey = key.toLowerCase().replace(/\s+/g, '')
-            return mType === cKey
-          })
-
-          if (match) {
-            if (cfg.value) {
-              await staffPaymentMethodsRepository.update(match.id, { accountInfo: cfg.value })
-            }
-            if (cfg.enabled && cfg.value) {
-              await staffPaymentMethodsRepository.toggle(match.id)
-            }
-          }
-        }
+        await saveSelectedPaymentMethods()
 
         // Post-onboarding link flow: refresh profile data and return to confirm screen
         if (isLinkLoggedIn && needsOnboarding) {
@@ -969,6 +977,17 @@ export default function useStaffRegistration({ inviteData }) {
           },
           {},
         )
+        const updatedSession = await apiAuthAdapter.login({
+          email: regEmail || inviteData?.invitedEmail || inviteData?.email || '',
+          password: regPassword,
+        })
+        if (updatedSession) {
+          const code = updatedSession.staffCode || updatedSession.staffId
+          if (code) {
+            setStaffId(code)
+          }
+        }
+        await saveSelectedPaymentMethods()
         setStep(5)
       } catch (err: unknown) {
         logger.error('Failed to join public invite', err)
