@@ -1,5 +1,5 @@
 // StaffBottomNav — fixed bottom navigation for mobile (<1024px).
-// Five tabs: Home, My QR, Tips, Reviews, Profile.
+// Mirrors the reference app's tabs: Home, Link & Tip, Tips, Pay, Profile.
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { STAFF_BOTTOM_NAV_ITEMS } from '../constants'
 

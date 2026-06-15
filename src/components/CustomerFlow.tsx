@@ -27,9 +27,10 @@ export default function CustomerFlow() {
     selectedTips, setSelectedTips, customTips, setCustomTips,
     activeTipAmount, tipScreenTitle, initialStaffMember, handleNextToPayment,
     selectedStaffHasAnyPayment, businessPaymentAccounts,
+    availablePaymentWalletKeys, isPaymentMethodsLoading, multiStaffPaymentBlocked,
     setSelectedWalletObj, setSelectedWallet, setTipRefNumber,
     selectedWalletObj, qrCodeVal, tipRefNumber, handlePay,
-    selectedWallet, paymentLinkData,
+    selectedWallet, paymentLinkData, currentTipId,
     rating, handleRatingChange,
     positiveTagKeys, negativeTagKeys, selectedTags, handleTagToggle,
     comment, setComment, handleSubmitFeedback,
@@ -147,9 +148,9 @@ export default function CustomerFlow() {
               {step === 'payment' && (
                 <Payment
                   t={t}
-                  selectedStaffMembers={selectedStaffMembers}
-                  selectedStaffHasAnyPayment={selectedStaffHasAnyPayment}
-                  businessPaymentAccounts={businessPaymentAccounts}
+                  availablePaymentWalletKeys={availablePaymentWalletKeys}
+                  isPaymentMethodsLoading={isPaymentMethodsLoading}
+                  multiStaffPaymentBlocked={multiStaffPaymentBlocked}
                   setSelectedWalletObj={setSelectedWalletObj}
                   setSelectedWallet={setSelectedWallet}
                   setTipRefNumber={setTipRefNumber}
@@ -165,11 +166,14 @@ export default function CustomerFlow() {
                   currentLanguage={currentLanguage}
                   selectedWalletObj={selectedWalletObj}
                   selectedStaffMembers={selectedStaffMembers}
+                  selectedTips={selectedTips}
+                  customTips={customTips}
                   bizName={bizName}
                   activeTipAmount={activeTipAmount}
                   qrCodeVal={qrCodeVal}
                   businessPaymentAccounts={businessPaymentAccounts}
                   tipRefNumber={tipRefNumber}
+                  currentTipId={currentTipId}
                   showToast={showToast}
                   handlePay={handlePay}
                   handleConfirmTip={handleConfirmTip}

@@ -8,7 +8,7 @@
     "sign_out": "Đăng xuất",
     "nav": {
       "home": "Trang chủ",
-      "my_qr": "Mã QR",
+      "my_qr": "Liên kết & Tip",
       "tips": "Tiền tip",
       "reviews": "Đánh giá",
       "pay": "Thanh toán",
@@ -16,7 +16,7 @@
     },
     "titles": {
       "home": "Trang chủ",
-      "qr": "Mã QR của tôi",
+      "qr": "Liên kết tiệm & Nhận tip",
       "tips": "Tiền tip",
       "reviews": "Đánh giá & Xếp hạng",
       "pay": "Phương thức nhận",
@@ -95,9 +95,26 @@
       "personal_sub": "Dùng để chia sẻ Mã nhân viên hoặc cho tiệm liên kết bạn.",
       "share": "Chia sẻ QR nhân viên",
       "copy_link": "Sao chép liên kết",
+      "tab_referral": "QR Giới thiệu",
+      "tab_tipping": "QR Nhận tip",
+      "share_tip": "Chia sẻ QR tip",
+      "copy_tip_link": "Sao chép link tip",
       "business_title": "QR theo tiệm",
       "business_sub": "QR riêng cho tip/đánh giá tại tiệm này",
-      "note": "QR theo tiệm được lưu theo business_staff_link_id để không bị lẫn khi bạn làm ở nhiều tiệm."
+      "note": "Khách tip qua touchpoint của tiệm (/touch/{businessSlug}/{touchPointSlug}) kèm ?staffProfileId= để chọn sẵn bạn. sessionId được tạo trên thiết bị khách khi mở link — không gắn vào mã QR.",
+      "no_linked_businesses": "Chưa liên kết tiệm nào. Quét QR giới thiệu của tiệm để gửi yêu cầu tham gia.",
+      "no_linked_businesses_title": "Chưa liên kết tiệm nào",
+      "no_linked_businesses_body": "Bạn cần liên kết với tiệm trước khi nhận tip qua QR. Quét mã QR giới thiệu của tiệm hoặc nhờ chủ tiệm mời bạn.",
+      "not_linked_title": "Chưa liên kết với tiệm này",
+      "not_linked_body": "Mã QR nhận tip sẽ hiện ở đây sau khi bạn liên kết với tiệm và được chủ tiệm duyệt.",
+      "pending_approval_title": "Đang chờ duyệt",
+      "pending_approval_body": "{business} đã nhận yêu cầu liên kết của bạn. Mã QR tip sẽ sẵn sàng khi chủ tiệm phê duyệt.",
+      "pending_unlink_title": "Đang hủy liên kết",
+      "pending_unlink_body": "Liên kết với {business} đang được gỡ. Mã QR tip tạm thời không dùng được.",
+      "qr_unavailable_title": "Chưa có mã QR tip",
+      "qr_unavailable_body": "Mã QR tip tại {business} chưa kích hoạt. Liên hệ chủ tiệm hoặc quét QR giới thiệu để liên kết.",
+      "referral_unavailable_title": "Chưa có Staff ID",
+      "referral_unavailable_body": "Mã QR giới thiệu cá nhân sẽ hiện khi hồ sơ staff được thiết lập xong. Vui lòng thử lại sau giây lát."
     },
     "profile": {
       "title": "Tài khoản cá nhân",
@@ -732,6 +749,11 @@
     "pay_btn": "Tiếp theo",
     "payment_title": "Bạn muốn thanh toán bằng cách nào?",
     "payment_desc": "Chọn phương thức thanh toán yêu thích.",
+    "payment_empty_title": "Chưa có phương thức thanh toán",
+    "payment_empty_desc": "Tiệm chưa cấu hình phương thức thanh toán cho luồng tip này. Vui lòng hỏi nhân viên hoặc thử lại sau.",
+    "multi_staff_missing_business": "Không thể tip nhiều người vì thiếu business ID từ touch page. Backend cần trả business.id trong GET /touch/{slug}/{slug}.",
+    "multi_staff_missing_payment_method": "Tiệm chưa có phương thức thanh toán active cho ví đã chọn.",
+    "multi_staff_missing_touchpoint": "Thiếu thông tin touch point. Vui lòng tải lại trang và thử lại.",
     "pay_via": "{name}",
     "choose_chevron": "Chọn ›",
     "not_supported": "Không hỗ trợ",
@@ -1030,6 +1052,7 @@
           "tipAmount": "Số tiền chuyển khoản",
           "scanToPay": "Quét mã để chuyển khoản",
           "name": "Tên người nhận",
+          "businessName": "Tiệm / Doanh nghiệp",
           "emailPhone": "Email / SĐT",
           "venmoUsername": "Tài khoản Venmo",
           "cashTag": "Thẻ Cash App",
@@ -1038,7 +1061,11 @@
           "account": "Tài khoản nhận",
           "noteRequired": "Nội dung (Bắt buộc)",
           "yesISentThe": "Tôi Đã Gửi Tiền Tip",
-          "goBack": "Quay Lại"
+          "goBack": "Quay Lại",
+          "multiStaffTitle": "Gửi tổng tiền Tip qua {wallet}",
+          "multiStaffSubtitle": "Mở ứng dụng ngân hàng và gửi một lần tới {business}. Tiền tip sẽ được chia cho các nhân viên đã chọn.",
+          "tipBreakdown": "Chi tiết từng nhân viên",
+          "totalCombinedTip": "Tổng tiền Tip"
         }
       }
     },

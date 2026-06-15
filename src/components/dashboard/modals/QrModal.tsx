@@ -1,6 +1,7 @@
 import { X, ShieldAlert, ShieldCheck, Download } from 'lucide-react'
 import IconButton from '../../ui/IconButton'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
 
 const slugify = (str = '') => str.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 
@@ -10,23 +11,27 @@ function QrModal({ target, businessName, onClose }) {
 
   const businessSlug = slugify(businessName || '')
   // Prefer the canonical customer URL returned by the API (GET touchpoints →
-  // `url`), which carries the real business + touch-point slugs. Keep the
-  // current environment's origin so the link resolves in dev (localhost) and
-  // deployed envs alike. Fall back to building from the slug only when the API
-  // url is missing (e.g. staff/master QR not sourced from the touchpoints API).
+  // `url`), which carries the real business + touch-point slugs. Keep query
+  // params such as staffProfileId so staff QR skips the picker step.
   let qrUrl = ''
   if (target.url) {
-    try {
-      qrUrl = `${window.location.origin}${new URL(target.url).pathname}`
-    } catch {
-      qrUrl = target.url
-    }
+    qrUrl = toLocalCustomerTouchUrl(target.url)
   }
   if (!qrUrl) {
     qrUrl = `${window.location.origin}/touch/${businessSlug}/${target.slug}`
   }
 
-  const isStaff = target.slug?.startsWith('staff-')
+  const isStaff = Boolean(
+    target.isStaffQr ||
+    target.slug?.startsWith('staff-') ||
+    (() => {
+      try {
+        return new URL(qrUrl).searchParams.has('staffProfileId')
+      } catch {
+        return false
+      }
+    })(),
+  )
   const displayName = isStaff ? target.name.replace('Personal QR - ', '') : ''
   const displayRole = isStaff ? target.subtitle : ''
 
