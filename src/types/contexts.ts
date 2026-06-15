@@ -49,7 +49,7 @@ export interface StaffAccountContextValue {
   staffProfile?: DomainRecord | null
   staffBusinesses?: DomainRecord[] | null
   confirmTip?: (tipId: string) => void
-  confirmAllPending?: () => void
+  confirmAllPending?: (tipIds?: string[]) => void
   setPayoutMethod?: (key: string, patch: LooseObject) => void
   saveProfile?: (patch: DomainRecord) => void
   setBusinessDisplayName?: (linkId: string, name: string) => void

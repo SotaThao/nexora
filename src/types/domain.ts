@@ -54,6 +54,8 @@ export interface PaginatedResponse<T> {
 export interface PaymentMethodDto {
   id?: string
   type: string
+  /** Normalized key for logos / payout modals (e.g. cashapp, zelle). */
+  uiKey?: string
   accountInfo: string | null
   imageUrl?: string | null
   accountName?: string | null
@@ -78,23 +80,35 @@ export interface NotificationRecord {
   id: string
   type: string
   title: string
-  body?: string
-  actionUrl?: string | null
-  referenceId?: string | null
-  isRead?: boolean
-  createdAt?: string
-  read: boolean
   message: string
+  actionUrl?: string | null
+  isRead?: boolean
+  read: boolean
+  readAt?: string | null
+  referenceId?: string | null
+  createdAt?: string
+  /** Alias of message for legacy UI */
+  body?: string
   time: string
   staffId?: string
   linkTab?: string
   [key: string]: unknown
 }
 
+export interface NotificationsPage {
+  items: NotificationRecord[]
+  pageNumber: number
+  totalPages: number
+  totalCount: number
+  hasPreviousPage: boolean
+  hasNextPage: boolean
+}
+
 export interface StaffInviteInfo {
   invitedName: string
   invitedPosition: string | null
   businessName: string
+  businessAddress: string | null
 }
 
 export interface StaffSearchResult {
@@ -117,6 +131,82 @@ export interface StaffBusinessLink {
   linkStatus: string | null
   linkStatusLabel: string | null
   linkedAt: string | null
+}
+
+export interface TipCountAmount {
+  count: number
+  totalAmount: number
+}
+
+export interface StaffDashboardSummary {
+  todayTips: TipCountAmount
+  thisMonthTips: TipCountAmount
+  pendingTips: TipCountAmount
+  averageRating: number
+  totalReviews: number
+}
+
+export interface StaffReviewDistribution {
+  star1: number
+  star2: number
+  star3: number
+  star4: number
+  star5: number
+}
+
+export interface StaffReviewsSummary {
+  totalReviews: number
+  averageRating: number
+  distribution: StaffReviewDistribution
+}
+
+export interface StaffReviewItem {
+  id: string
+  rating: number
+  comment: string | null
+  customerName: string | null
+  businessName: string | null
+  createdAt: string | null
+}
+
+export interface StaffReviewsPage {
+  summary: StaffReviewsSummary
+  items: StaffReviewItem[]
+  pageNumber: number
+  totalPages: number
+  totalCount: number
+}
+
+export type StaffTipStatus = 'Initiated' | 'Confirmed' | 'Skipped' | 'Completed' | string
+
+export interface StaffTipItem {
+  id: string
+  amount: number
+  totalAmount: number
+  status: StaffTipStatus
+  statusLabel: string | null
+  paymentMethod: string | null
+  isMultiStaff: boolean
+  touchPointName: string | null
+  businessName: string | null
+  createdAt: string | null
+  confirmedAt: string | null
+  staffConfirmedAt: string | null
+  merchantConfirmedAt: string | null
+}
+
+export interface StaffTipsPage {
+  items: StaffTipItem[]
+  pageNumber: number
+  totalPages: number
+  totalCount: number
+  hasPreviousPage: boolean
+  hasNextPage: boolean
+}
+
+export interface StaffTipsConfirmReceiptResult {
+  confirmedCount: number
+  failedIds: string[]
 }
 
 export interface StaffLinkRequestDetail {
@@ -206,6 +296,7 @@ export interface UserProfile {
   staffProfileId?: string
   staffId?: string
   hasCompletedOnboarding?: boolean
+  referralCode?: string
   [key: string]: unknown
 }
 

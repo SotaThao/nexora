@@ -48,6 +48,9 @@
       "view_all": "View all",
       "manage": "Manage",
       "your_linked_businesses": "Your Linked Businesses",
+      "confirm_success": "Tip receipt confirmed.",
+      "confirm_failed": "Could not confirm tip receipt.",
+      "confirm_partial": "Confirmed {{count}} tip(s). Some items could not be confirmed.",
       "linked_businesses": "Linked Businesses",
       "display_name": "Display name",
       "via_method": "via {method}",
@@ -64,9 +67,15 @@
     "tips": {
       "activity": "Tip Activity",
       "empty": "No tips yet.",
+      "total_count": "{{count}} tips",
+      "page_of": "Page {{page}} of {{total}}",
+      "multi_staff": "Multi-staff",
       "status": {
-        "pending": "Pending",
+        "initiated": "Initiated",
+        "confirmed": "Confirmed",
+        "skipped": "Skipped",
         "completed": "Completed",
+        "pending": "Pending",
         "verified": "Verified"
       },
       "ai_insight": "AI Insight",
@@ -75,6 +84,7 @@
     "pay": {
       "title": "Payment Methods",
       "owner_note": "You manage your own receiving methods. The business owner cannot edit this section.",
+      "empty": "No payment methods available.",
       "not_set": "Not set",
       "handle_placeholder": "Enter handle / account",
       "save": "Save Payment Methods",
@@ -103,6 +113,8 @@
     },
     "notifications": {
       "empty": "No notifications.",
+      "mark_all_read": "Mark all read",
+      "generic_title": "Notification",
       "tip_title": "New tip marked sent",
       "tip_message": "${amount} via {method} — confirm receipt",
       "review_title": "New {rating}-star review",
@@ -134,6 +146,7 @@
     "cancel": "Cancel",
     "confirm": "Confirm",
     "save": "Save",
+    "update": "Update",
     "delete": "Delete",
     "edit": "Edit",
     "copy": "Copy",
@@ -174,6 +187,8 @@
   "payment_methods": {
     "update_success": "Payment method updated.",
     "update_failed": "Failed to update payment method",
+    "toggle_enabled": "Payment method enabled.",
+    "toggle_disabled": "Payment method disabled.",
     "toggle_failed": "Failed to toggle payment method"
   },
   "login": {
@@ -305,6 +320,14 @@
     "payout_input_label": "Your {wallet} {field} *",
     "qr_code_optional": "QR Code (optional)",
     "take_photo": "Take photo",
+    "capture_photo": "Capture",
+    "camera_capture_title": "Take photo",
+    "camera_capture_hint": "Position the QR code in the frame, then tap Capture.",
+    "camera_starting": "Starting camera...",
+    "camera_not_available": "No camera found on this device.",
+    "camera_permission_denied": "Camera access was blocked.",
+    "camera_use_file_instead": "Use Choose file to upload an image from your device instead.",
+    "camera_fallback_hint": "Desktop PCs without a webcam cannot use Take photo. Choose file works on any device.",
     "choose_file": "Choose file",
     "uploader_hint": "You can either take a photo or upload from your device. Accepted formats: JPG, PNG, JPEG. Max size: 5MB per file.",
     "payout_warning": "Please enter the correct receiving account information. This will be used to receive payments.",
@@ -340,8 +363,8 @@
       "qr_nfc": "QR / NFC Devices",
       "analytics": "Analytics",
       "settings": "Settings",
-      "business_setting": "Business Setting",
-      "kyb": "Business Verification",
+      "business_setting": "Setting",
+      "kyb": "KYB",
       "support": "Support"
     },
     "header": {
@@ -961,6 +984,23 @@
     "touchpoint_not_found_desc": "This touch point could not be loaded."
   },
   "components": {
+    "payout": {
+      "bankWireForm": {
+        "title": "Set Up Bank Account",
+        "beneficiaryName": "Beneficiary Name",
+        "bankName": "Bank Name",
+        "routingNumber": "ABA/Routing Number",
+        "accountNumber": "Account Number",
+        "bankAddress": "Bank Address",
+        "city": "City",
+        "state": "State",
+        "zipCode": "Zip Code",
+        "country": "Country",
+        "selectCountry": "Select your country",
+        "warning": "Please enter the correct receiving account information. This will be used to receive payments.",
+        "completeRequired": "Please complete all bank account fields."
+      }
+    },
     "customer_flow": {
       "hooks": {
         "useCustomerFlow": {
@@ -1062,6 +1102,13 @@
           "phExampleRole": "e.g. Nail Tech"
         },
         "PayoutSetupModal": {
+          "walletAccountTitle": "{wallet} ACCOUNT",
+          "placeholderZelle": "Enter Zelle email/phone...",
+          "placeholderBankWire": "Account & Routing numbers",
+          "placeholderPaypal": "email@paypal.com",
+          "placeholderAppleCash": "Enter phone number...",
+          "placeholderVlinkpay": "Enter VLINKPAY ID (e.g. MIA0123)...",
+          "placeholderCrypto": "Enter BTC/ETH/USDT address...",
           "specifyReceivingTargetIdentifier": "Specify receiving target identifier",
           "accountIdentifier": "Account Identifier *",
           "qrCodeOptional": "QR Code (optional)",
@@ -1081,15 +1128,16 @@
           "linkRequestBtn": "Send Link Request",
           "vlinkpayVerified": "VLINKPAY verified",
           "nexoraVerified": "NEXORA verified",
+          "profileVerified": "Staff profile verified",
           "viewAllReviews": "View all reviews",
           "viewAccount": "View Account",
           "decline": "Decline",
           "approveAccept": "Approve / Accept",
           "remove_photo": "Remove photo",
           "review_count": "{count} reviews",
-          "phExampleVlp1": "e.g. VLP-0155-ASH",
-          "phExampleVlp2": "e.g. VLP-8893-VL",
-          "phExampleStaffId": "e.g. NEX-STAFF-LISA1102",
+          "phExampleVlp1": "e.g. ASH0155",
+          "phExampleVlp2": "e.g. VL8893",
+          "phExampleStaffId": "e.g. LISA1102",
           "phFullName": "Mia Tran",
           "phNickname": "Mia T.",
           "phPosition": "Nail Tech"
@@ -1101,6 +1149,7 @@
           "pointTheCameraAt": "Point the camera at the QR code, or choose a mockup scan profile below.",
           "simulateQrScan": "Simulate QR Scan",
           "simulateSuccessfulScan": "Simulate Successful Scan",
+          "simulateProfileLabel": "{name} ({code})",
           "cancel": "CANCEL"
         },
         "StaffReviewsDetailModal": {
@@ -1391,6 +1440,7 @@
         }
       },
       "PayoutSetupModal": {
+        "walletAccountTitle": "{wallet} ACCOUNT",
         "specifyReceivingTargetIdentifier": "Specify receiving target identifier",
         "accountIdentifier": "Account Identifier",
         "qrCodeOptional": "QR Code (optional)",
@@ -1423,6 +1473,9 @@
       "views": {
         "StaffMyQR": {
           "linkCopiedToClipboard": "Link copied to clipboard!",
+          "staffCodeUnavailable": "Staff ID is not available yet. Please try again in a moment.",
+          "shareFailed": "Could not share the link. Please copy it instead.",
+          "copyFailed": "Could not copy the link.",
           "joinRequestViaQr": "Join Request (via QR)",
           "justNow": "Just now",
           "unlinked": "Unlinked",
@@ -1439,8 +1492,13 @@
           "scanSalonQrCode": "Scan Salon QR Code",
           "scanTheSalonReferral": "Scan the salon referral QR code to actively submit your join request",
           "orEnterInviteLink": "Or Enter Invite Link / Business Name",
-          "pasteSalonInviteLink": "Paste salon invite link or name...",
+          "pasteSalonInviteLink": "Paste salon invite link or referral code...",
           "send": "Send",
+          "referralCodeRequired": "Please enter a salon invite link or referral code.",
+          "profileReferralCodeMissing": "Your profile does not have a referral code yet. Please contact support.",
+          "joinRequestSent": "Join request sent successfully.",
+          "joinRequestFailed": "Failed to send join request. Please try again.",
+          "alreadyLinkedOrRequested": "You have already requested or are already linked to this business.",
           "simulateQrScan": "Simulate QR Scan",
           "personalTippingQr": "Personal Tipping QR",
           "tippingLink": "Tipping Link",
@@ -1507,13 +1565,35 @@
           "phAccountNumber": "Account Number",
           "phRoutingCode": "Routing Code"
         },
+        "StaffKycOverview": {
+          "retry": "Retry",
+          "verifyYourAccount": "Verify Your Account",
+          "completeKyc": "Complete your",
+          "kyc": "KYC",
+          "andExploreNextLevel": "and explore the next level of experience with",
+          "nexora": "Nexora Touch",
+          "getStarted": "Get Started",
+          "whyKycMatters": "Why KYC Verification Matters",
+          "kycDescription": "By completing this process, you are helping us maintain a safe and secure environment for all",
+          "kycDescriptionContinued": "members. KYC verification also allows you to enjoy full access to our platform, including higher transaction limits and additional features.",
+          "networkError": "Unable to load KYC portal. Please check your connection and try again.",
+          "serverError": "Unable to initialize KYC portal. Please try again later.",
+          "statusReviewTitle": "KYC UNDER REVIEW",
+          "statusReviewDescription": "Your identity verification is being reviewed. You can continue using the portal below to check status or update information.",
+          "statusRejectedTitle": "KYC VERIFICATION REJECTED",
+          "statusRejectedDescription": "Your previous verification was rejected. Please complete the KYC process again using the portal below."
+        },
         "StaffReviews": {
           "reviewsAndRatings": "Reviews & Ratings",
           "customerReviews": "Customer Reviews",
+          "averageRating": "Average Rating",
+          "totalReviews": "Total Reviews",
           "identitySecured": "IDENTITY SECURED",
           "noReviewsReceivedYet": "No reviews received yet.",
           "anonymousCustomer": "Anonymous Customer",
-          "internal": "Internal"
+          "ratingOnly": "Rating only — no comment.",
+          "pageOf": "Page {{page}} of {{total}}",
+          "internal": "Customer identities are protected. You see ratings and feedback only."
         }
       }
     },
@@ -1764,7 +1844,9 @@
   },
   "staff_registration": {
     "link": {
-      "incorrect_password": "Incorrect password."
+      "incorrect_password": "Incorrect password.",
+      "business_account_not_allowed": "Only personal accounts can accept salon invitations. Please sign in with a personal account.",
+      "onboarding_required": "Please complete your profile setup before joining this salon."
     }
   }
 }

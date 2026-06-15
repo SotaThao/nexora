@@ -12,6 +12,12 @@ import StaffQrScannerModal from './StaffQrScannerModal'
 import { useSearchMerchantStaff } from '../../../data/hooks/useMerchantStaff'
 import { buildStaffReviewSummary } from './staffModalReviewUtils'
 
+const STAFF_QR_SCAN_PROFILES = [
+  { key: 'lisa', displayName: 'Lisa Tran', staffCode: 'LISA1102' },
+  { key: 'anna', displayName: 'Anna Nguyen', staffCode: 'ANNA0921' },
+  { key: 'hanna', displayName: 'Hanna Nguyen', staffCode: 'HN1148' },
+]
+
 function StaffModal({
   open,
   editing,
@@ -93,16 +99,11 @@ function StaffModal({
         avatar: matchedProfile.avatar || '',
         nexoraStaffId: matchedProfile.staffCode || '',
         staffProfileId: matchedProfile.staffProfileId || '',
-        vlinkpay: searchQuery.startsWith('VLP-') ? searchQuery : '',
+        vlinkpay: '',
         payoutConfigs: { ...prev.payoutConfigs },
       }))
-      if (searchQuery.startsWith('VLP-')) {
-        setVlinkpayStatus('success')
-        setNexoraStatus('idle')
-      } else {
-        setNexoraStatus('success')
-        setVlinkpayStatus('idle')
-      }
+      setNexoraStatus('success')
+      setVlinkpayStatus('idle')
       if (lastHandledSearchQuery !== searchQuery) {
         setLastHandledSearchQuery(searchQuery)
         showToast(t('components.dashboard.modals.StaffModal.staffProfileVerifiedAuto'), 'success')
@@ -212,20 +213,8 @@ function StaffModal({
     setShowScanner(true)
   }
 
-  const simulateSuccessfulScan = () => {
-    handleCombinedIdChange('NEX-STAFF-LISA1102')
-    setShowScanner(false)
-    setScanTarget(null)
-  }
-
-  const handleScanAnna = () => {
-    handleCombinedIdChange('NEX-STAFF-ANNA0921')
-    setShowScanner(false)
-    setScanTarget(null)
-  }
-
-  const handleScanHanna = () => {
-    handleCombinedIdChange('NEX-STAFF-HN1148')
+  const handleSimulatedProfileScan = (staffCode) => {
+    handleCombinedIdChange(staffCode)
     setShowScanner(false)
     setScanTarget(null)
   }
@@ -345,14 +334,9 @@ function StaffModal({
                   {t('components.dashboard.modals.StaffModal.invite')}
                 </button>
               </div>
-              {vlinkpayStatus === 'success' && (
+              {(vlinkpayStatus === 'success' || nexoraStatus === 'success') && (
                 <p className="mt-1 text-[10px] font-bold text-nexoraSuccess">
-                  ✓ {t('components.dashboard.modals.StaffModal.vlinkpayVerified')}
-                </p>
-              )}
-              {nexoraStatus === 'success' && (
-                <p className="mt-1 text-[10px] font-bold text-nexoraSuccess">
-                  ✓ {t('components.dashboard.modals.StaffModal.nexoraVerified')}
+                  ✓ {t('components.dashboard.modals.StaffModal.profileVerified')}
                 </p>
               )}
             </div>
@@ -405,12 +389,17 @@ function StaffModal({
             </div>
             <div>
               <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{renderLabel(t('setup.staff_fullname'))}</label>
-              <input className="mt-1 h-10 w-full rounded-lg border border-transparent bg-nexoraCanvas px-3 text-sm font-semibold text-nexoraText outline-none cursor-not-allowed" value={form.fullName} readOnly placeholder={t('components.dashboard.modals.StaffModal.phFullName')} />
+              <input
+                className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-white px-3 text-sm font-semibold text-nexoraText outline-none transition focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20"
+                value={form.fullName}
+                onChange={(event) => setForm(prev => ({ ...prev, fullName: event.target.value }))}
+                placeholder={t('components.dashboard.modals.StaffModal.phFullName')}
+              />
               {errors.fullName && <p className="mt-1 text-[10px] font-bold text-nexoraDanger">{errors.fullName}</p>}
             </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label className="flex items-center text-[10px] font-extrabold uppercase text-nexoraMuted gap-1">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+              <div className="min-w-0">
+                <label className="flex h-4 items-center text-[10px] font-extrabold uppercase text-nexoraMuted gap-1">
                   <span>{renderLabel(t('setup.staff_displayname'))}</span>
                   <div className="relative group inline-block normal-case font-normal text-nexoraSubtle">
                     <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
@@ -420,12 +409,22 @@ function StaffModal({
                     </div>
                   </div>
                 </label>
-                <input className="mt-1 h-10 w-full rounded-lg border border-transparent bg-nexoraCanvas px-3 text-sm font-semibold text-nexoraText outline-none cursor-not-allowed" value={form.nickname} readOnly placeholder={t('components.dashboard.modals.StaffModal.phNickname')} />
+                <input
+                  className="mt-1 h-10 w-full min-w-0 rounded-lg border border-nexoraBorder bg-white px-3 text-sm font-semibold text-nexoraText outline-none transition focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20"
+                  value={form.nickname}
+                  onChange={(event) => setForm(prev => ({ ...prev, nickname: event.target.value }))}
+                  placeholder={t('components.dashboard.modals.StaffModal.phNickname')}
+                />
                 {errors.nickname && <p className="mt-1 text-[10px] font-bold text-nexoraDanger">{errors.nickname}</p>}
               </div>
-              <div>
-                <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_position')}</label>
-                <input className="mt-1 h-10 w-full rounded-lg border border-transparent bg-nexoraCanvas px-3 text-sm font-semibold text-nexoraText outline-none cursor-not-allowed" value={form.position} readOnly placeholder={t('components.dashboard.modals.StaffModal.phPosition')} />
+              <div className="min-w-0">
+                <label className="flex h-4 items-center text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_position')}</label>
+                <input
+                  className="mt-1 h-10 w-full min-w-0 rounded-lg border border-nexoraBorder bg-white px-3 text-sm font-semibold text-nexoraText outline-none transition focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20"
+                  value={form.position}
+                  onChange={(event) => setForm(prev => ({ ...prev, position: event.target.value }))}
+                  placeholder={t('components.dashboard.modals.StaffModal.phPosition')}
+                />
               </div>
             </div>
 
@@ -435,7 +434,7 @@ function StaffModal({
                 <div className="mt-1 flex rounded-lg shadow-sm opacity-70 pointer-events-none">
                   <CountryCodeSelect value={phoneParsed.countryCode} onChange={() => {}} disabled />
                   <input
-                    className="h-10 w-full rounded-r-lg border-transparent bg-nexoraCanvas px-3 text-sm font-semibold text-nexoraText outline-none min-w-0"
+                    className="h-full w-full min-w-0 border-transparent bg-transparent px-3 text-right text-sm font-semibold text-nexoraText outline-none"
                     value={phoneParsed.nationalNumber}
                     readOnly
                     placeholder={t('setup.staff_phone_placeholder')}
@@ -598,9 +597,8 @@ function StaffModal({
         open={showScanner}
         scanTarget={scanTarget}
         onClose={() => { setShowScanner(false); setScanTarget(null) }}
-        onSimulateSuccessfulScan={simulateSuccessfulScan}
-        onScanAnna={handleScanAnna}
-        onScanHanna={handleScanHanna}
+        scanProfiles={STAFF_QR_SCAN_PROFILES}
+        onScanProfile={handleSimulatedProfileScan}
       />
     </div>
   )

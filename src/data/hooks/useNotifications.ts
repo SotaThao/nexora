@@ -4,13 +4,26 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import notificationsRepository from '../repositories/notifications'
-import type { NotificationRecord } from '../../types/domain'
+import type { NotificationRecord, NotificationsPage } from '../../types/domain'
 
 export function useNotifications() {
   return useQuery<NotificationRecord[]>({
     queryKey: qk.notifications(),
     queryFn: () => notificationsRepository.list() as Promise<NotificationRecord[]>,
     staleTime: 2 * 60_000, // 2 min — avoid refetch on every remount
+  })
+}
+
+export function useNotificationsPage({
+  pageNumber = 0,
+  pageSize = 20,
+}: {
+  pageNumber?: number
+  pageSize?: number
+} = {}) {
+  return useQuery<NotificationsPage>({
+    queryKey: qk.notificationsList({ pageNumber, pageSize }),
+    queryFn: () => notificationsRepository.listPaged({ pageNumber, pageSize }),
   })
 }
 
@@ -28,8 +41,7 @@ export function useMarkNotificationRead() {
   return useMutation<void, Error, string>({
     mutationFn: (id) => notificationsRepository.markRead(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: qk.notifications() })
-      queryClient.invalidateQueries({ queryKey: qk.notificationsUnreadCount() })
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
     },
   })
 }
@@ -39,8 +51,7 @@ export function useMarkAllNotificationsRead() {
   return useMutation<void, Error, void>({
     mutationFn: () => notificationsRepository.markAllRead(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: qk.notifications() })
-      queryClient.invalidateQueries({ queryKey: qk.notificationsUnreadCount() })
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
     },
   })
 }

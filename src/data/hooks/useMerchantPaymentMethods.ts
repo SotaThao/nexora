@@ -5,6 +5,7 @@ import { useNotification } from '../../contexts/NotificationContext'
 import { useTranslation } from '../../contexts/LanguageContext'
 import type { PaymentMethodDto } from '../../types/domain'
 import type { PayoutConfigMap, UpdatePaymentMethodVars } from '../../types/hooks'
+import { resolvePaymentMethodImageUrl } from '../../utils/resolvePaymentMethodImageUrl'
 
 export function useMerchantPaymentMethods({ enabled = true } = {}) {
   return useQuery<PaymentMethodDto[]>({
@@ -20,8 +21,13 @@ export function useUpdateMerchantPaymentMethod() {
   const { t } = useTranslation()
 
   return useMutation<PaymentMethodDto, Error, UpdatePaymentMethodVars>({
-    mutationFn: ({ id, accountInfo, imageUrl }) =>
-      merchantPaymentMethodsRepository.update(id, { accountInfo, imageUrl }),
+    mutationFn: async ({ id, accountInfo, imageUrl, imageFile }) => {
+      const resolvedImageUrl = await resolvePaymentMethodImageUrl({ imageFile, imageUrl })
+      return merchantPaymentMethodsRepository.update(id, {
+        accountInfo,
+        imageUrl: resolvedImageUrl,
+      })
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPaymentMethods() })
       showToast(t('payment_methods.update_success'), 'success')

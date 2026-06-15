@@ -12,6 +12,8 @@ export interface UpdatePaymentMethodVars {
   id: string
   accountInfo?: string | null
   imageUrl?: string | null
+  /** When set, file is uploaded via POST /api/v1/images/upload before PUT payment-methods. */
+  imageFile?: File | null
 }
 
 export interface SaveStaffAccountVars {

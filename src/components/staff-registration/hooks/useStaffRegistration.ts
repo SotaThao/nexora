@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
+import { serializeBankWireAccount } from '../../payout/bankWireAccount'
+import { captureQrImage } from '../../../native/imagePicker'
 
 const normalizePhone = (raw) => {
   if (!raw) return ''
@@ -13,6 +15,11 @@ const normalizePhone = (raw) => {
 const imageUrlOrNull = (value) => {
   if (!value || String(value).startsWith('data:')) return null
   return value
+}
+
+const buildVlinkpayId = (name = 'STAFF') => {
+  const initials = name.replace(/[^a-zA-Z]/g, '').slice(0, 4).toUpperCase() || 'STAFF'
+  return `${initials}${Math.floor(1000 + Math.random() * 9000)}`
 }
 import { logger } from '../../../utils/logger'
 import { usePendingAccounts, useReplaceAllPendingAccounts } from '../../../data/hooks/usePendingAccounts'
@@ -87,6 +94,7 @@ export default function useStaffRegistration({ inviteData }) {
   const [linkError, setLinkError] = useState('')
   const [isLinkLoggedIn, setIsLinkLoggedIn] = useState(false)
   const [hasAcceptedInvite, setHasAcceptedInvite] = useState(false)
+  const [needsOnboarding, setNeedsOnboarding] = useState(false)
 
   // Profile states
   const [fullName, setFullName] = useState('')
@@ -162,7 +170,7 @@ export default function useStaffRegistration({ inviteData }) {
       setLinkEmail(inviteData.email || '')
 
       // If it's a verification lookup (Option A linking) they might already have an ID
-      if (inviteData.id && inviteData.id.startsWith('NEX-STAFF-')) {
+      if (inviteData.id) {
         setStaffId(inviteData.id)
       } else {
         setStaffId('') // User requested: do not generate mock ID, show whatever is retrieved
@@ -174,8 +182,7 @@ export default function useStaffRegistration({ inviteData }) {
       } else if (inviteData.vlinkpay) {
         setVlinkpayId(inviteData.vlinkpay)
       } else {
-        const initials = (inviteData.name || 'STAFF').replace(/[^a-zA-Z]/g, '').slice(0, 4).toUpperCase()
-        setVlinkpayId(`VLP-${Math.floor(1000 + Math.random() * 9000)}-${initials}`)
+        setVlinkpayId(buildVlinkpayId(inviteData.name || 'STAFF'))
       }
     }
   }, [inviteData, isApiInvite, apiInviteInfo])
@@ -183,9 +190,8 @@ export default function useStaffRegistration({ inviteData }) {
   // Auto-generate staffId and vlinkpayId once fullName is typed (for self-serve flow)
   useEffect(() => {
     if (isSelfServe && fullName.trim()) {
-      const initials = fullName.trim().replace(/[^a-zA-Z]/g, '').slice(0, 4).toUpperCase() || 'STAFF'
       if (!vlinkpayId) {
-        setVlinkpayId(`VLP-${Math.floor(1000 + Math.random() * 9000)}-${initials}`)
+        setVlinkpayId(buildVlinkpayId(fullName.trim()))
       }
     }
   }, [fullName, isSelfServe])
@@ -324,27 +330,6 @@ export default function useStaffRegistration({ inviteData }) {
   }
 
   // Handle simulation of successful scan (Lisa Tran)
-  const simulateSuccessfulScan = () => {
-    if (scanTarget === 'staff') {
-      setSearchId('NEX-STAFF-LISA1102')
-      setNexoraStatus('success')
-      setSearchError('')
-      const profile = MOCK_NEXORA_STAFF_PROFILES['NEX-STAFF-LISA1102']
-      setLinkedProfile(profile)
-      showToast(
-        currentLanguage === 'vi'
-          ? `Tìm thấy hồ sơ ${profile.fullName}!`
-          : `Found profile for ${profile.fullName}!`
-      )
-    } else if (scanTarget === 'vlinkpay') {
-      setVlinkpayId('VLP-1102-LISA')
-      setVlinkpayStatus('success')
-      const profile = MOCK_NEXORA_STAFF_PROFILES['NEX-STAFF-LISA1102']
-      autofillFromProfile(profile)
-    }
-    setShowScanner(false)
-    setScanTarget(null)
-  }
 
   // handle registration form submit
   const handleRegisterSubmit = (e) => {
@@ -477,23 +462,10 @@ export default function useStaffRegistration({ inviteData }) {
     setResendTimer(30)
   }
 
-  const autoFillOtp = () => {
-    setOtpCode('1234')
-    setOtpError('')
-  }
+  const autoFillOtp = () => {}
 
   // Pre-fill payment configurations for faster testing
-  const autoFillPayments = () => {
-    const defaultName = fullName.trim() || 'Lisa Tran'
-    setPayouts({
-      zelle: { enabled: true, value: email || 'lisa@example.com', qrCode: '', accountName: defaultName },
-      bankwire: { enabled: true, value: '123456789 - 987654321', qrCode: '', accountName: defaultName },
-      paypal: { enabled: true, value: email || 'lisa@example.com', qrCode: '', accountName: defaultName },
-      venmo: { enabled: true, value: `@${nickname.toLowerCase().replace(/[^a-z]/g, '') || 'lisa'}-nails`, qrCode: '', accountName: defaultName },
-      cashapp: { enabled: true, value: `$${nickname.toLowerCase().replace(/[^a-z]/g, '') || 'lisa'}nails`, qrCode: '', accountName: defaultName },
-      applecash: { enabled: true, value: phone || '408-555-2345', qrCode: '', accountName: defaultName }
-    })
-  }
+  const autoFillPayments = () => {}
 
   // Toggle payout method
   const handleToggleMethod = (key) => {
@@ -543,25 +515,18 @@ export default function useStaffRegistration({ inviteData }) {
     setEditingMethod(null)
   }
 
-  const handleModalFileChange = (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      setEditQrCode(typeof reader.result === 'string' ? reader.result : '')
-    }
-    reader.readAsDataURL(file)
+  const handleModalImagePick = (dataUrl) => {
+    if (dataUrl) setEditQrCode(dataUrl)
   }
 
-  const handleModalTakePhoto = () => {
+  const handleModalTakePhoto = async () => {
     setIsCapturing(true)
-    setTimeout(() => {
-      const mockQr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-        editValue || ''
-      )}`
-      setEditQrCode(mockQr)
+    try {
+      const dataUrl = await captureQrImage({ fallbackValue: editValue || '' })
+      if (dataUrl) setEditQrCode(dataUrl)
+    } finally {
       setIsCapturing(false)
-    }, 800)
+    }
   }
 
   const handleModalClearQr = () => {
@@ -614,13 +579,16 @@ export default function useStaffRegistration({ inviteData }) {
 
     setIsRegisterSubmitting(true)
     try {
-      await staffInvitesRepository.joinPublicInvite({
-        referralCode: inviteData?.biz,
-        displayName: linkedProfile.fullName,
-        phoneNumber: linkedProfile.phone,
-        position: linkedProfile.position,
-        bio: null
-      })
+      await staffInvitesRepository.joinPublicInvite(
+        {
+          referralCode: inviteData?.biz,
+          displayName: linkedProfile.fullName,
+          phoneNumber: linkedProfile.phone,
+          position: linkedProfile.position,
+          bio: null,
+        },
+        { anonymous: true },
+      )
     } catch (err: unknown) {
       logger.error('Failed to join public invite', err)
       const isAlreadyLinked =
@@ -657,167 +625,114 @@ export default function useStaffRegistration({ inviteData }) {
       return
     }
 
-    if (isApiInvite) {
-      if (isRegisterSubmitting) return
-      setIsRegisterSubmitting(true)
-      try {
-        await apiAuthAdapter.signInForInviteAccept({ email: emailQuery, password: passwordQuery })
+    if (isRegisterSubmitting) return
+    setIsRegisterSubmitting(true)
+    try {
+      // Step 1: Silent sign-in (do NOT accept invite yet)
+      await apiAuthAdapter.signInForInviteAccept({ email: emailQuery, password: passwordQuery })
 
-        const inviteDisplayName =
-          (apiInviteInfo?.invitedName || '').trim() ||
-          emailQuery.split('@')[0] ||
-          'Staff Member'
+      // Step 2: Fetch user profile to validate account type & onboarding status
+      const profileData = await httpClient.get<UserProfile>('/api/v1/userprofile/me')
 
-        await acceptInviteMutation.mutateAsync({
-          token: inviteToken,
-          displayName: inviteDisplayName,
-          position: apiInviteInfo?.invitedPosition || 'Nail Technician',
-        })
+      // Step 3: Only personal accounts can accept invite links
+      const isMerchant =
+        profileData.userType === 'Merchant' || profileData.profileType === 'Merchant'
+      if (isMerchant) {
+        setLinkError(t('staff_registration.link.business_account_not_allowed'))
+        return
+      }
 
-        setHasAcceptedInvite(true)
+      // Step 4: Determine onboarding status (same logic as apiAuthAdapter.mapProfileToSession)
+      const hasOnboarded = Boolean(
+        ((profileData.firstName ?? '') as string).trim() ||
+          ((profileData.lastName ?? '') as string).trim(),
+      )
 
-        const session = await apiAuthAdapter.login({ email: emailQuery, password: passwordQuery })
-        
-        if (session?.role !== 'staff') {
-          setLinkError(currentLanguage === 'vi' ? 'Tài khoản không phải là thợ (Staff)' : 'Account is not a staff account')
-          return
-        }
-
-        const profileData = await httpClient.get<UserProfile>('/api/v1/userprofile/me')
-        const paymentMethods = await staffPaymentMethodsRepository.getAll()
-
-        const payoutConfigs = {}
-        paymentMethods.forEach(pm => {
-          const typeLower = pm.type.toLowerCase()
-          payoutConfigs[typeLower] = {
-            enabled: pm.isActive,
-            value: pm.accountInfo || '',
-            qrCode: pm.imageUrl || '',
-            accountName: profileData.fullName || ''
-          }
-        })
-        
-        const vlinkpayMethod = paymentMethods.find(m => m.type.toLowerCase() === 'vlinkpay')
-        const vlinkpayIdVal = vlinkpayMethod ? vlinkpayMethod.accountInfo : ''
-
-        const isProfileComplete = paymentMethods.some(pm => pm.isActive && (pm.accountInfo || '').trim() !== '')
-
-        setSearchId(session.staffId || `NEX-STAFF-${emailQuery.slice(0,4).toUpperCase()}`)
-        setLinkedProfile({
-          fullName: profileData.fullName || profileData.email?.split('@')[0] || '',
-          nickname: profileData.firstName || profileData.email?.split('@')[0] || '',
-          position: 'Nail Technician',
-          phone: profileData.phoneNumber || '',
-          email: profileData.email || emailQuery,
-          avatar: (profileData.profileImage as { url?: string } | undefined)?.url || '',
-          vlinkpayId: vlinkpayIdVal,
-          payoutConfigs
-        })
+      if (!hasOnboarded) {
+        // User has NOT completed personal onboarding → send to profile + payout steps first
+        setNeedsOnboarding(true)
         setIsLinkLoggedIn(true)
-        
-        if (!isProfileComplete) {
-          setFullName(profileData.fullName || profileData.email?.split('@')[0] || '')
-          setNickname(profileData.firstName || profileData.email?.split('@')[0] || '')
-          setPhone(profileData.phoneNumber || '')
-          setEmail(profileData.email || emailQuery)
-          setStep(2)
-        } else {
-          setStep(5)
-          showToast(
-            currentLanguage === 'vi'
-              ? `Đăng nhập thành công! Chào mừng ${profileData.fullName || emailQuery}.`
-              : `Login successful! Welcome ${profileData.fullName || emailQuery}.`
-          )
-        }
-      } catch (err: unknown) {
-        logger.error('handleLinkLogin API error', err)
-        if (isApiError(err) && (err.status === 401 || err.errorCode === 'USER_LOGIN_INVALID_USERNAME_OR_PASSWORD')) {
-          setLinkError(t('staff_registration.link.incorrect_password') || 'Account does not exist or incorrect password.')
-        } else {
-          setLinkError(currentLanguage === 'vi' ? 'Lỗi đăng nhập. Vui lòng thử lại.' : 'Login failed. Please try again.')
-        }
-      } finally {
-        setIsRegisterSubmitting(false)
-      }
-      return
-    }
-
-    // 1. Check in MOCK_NEXORA_STAFF_PROFILES
-    const foundEntry = Object.entries(MOCK_NEXORA_STAFF_PROFILES).find(
-      ([_, p]) => p.email.toLowerCase() === emailQuery
-    )
-
-    if (foundEntry) {
-      const [staffIdKey, profile] = foundEntry
-      if (passwordQuery.length < 6) {
-        setLinkError(t('components.staff_registration.hooks.useStaffRegistration.passwordMustBeAt2'))
+        setLinkedProfile({
+          fullName: '',
+          nickname: '',
+          position: apiInviteInfo?.invitedPosition || 'Nail Technician',
+          phone: '',
+          email: profileData.email || emailQuery,
+          avatar: '',
+          vlinkpayId: '',
+          payoutConfigs: {},
+        })
+        // Pre-fill form fields for the profile step
+        setFullName('')
+        setNickname('')
+        setPhone('')
+        setEmail(profileData.email || emailQuery)
+        setPosition(apiInviteInfo?.invitedPosition || 'Nail Technician')
+        setStep(2)
+        showToast(
+          t('staff_registration.link.onboarding_required'),
+          'info',
+        )
         return
       }
-      setSearchId(staffIdKey)
-      setLinkedProfile(profile)
+
+      // Step 5: Already onboarded → fetch full profile + payment methods, show confirm screen
+      let paymentMethods: import('../../../types/domain').PaymentMethodDto[] = []
+      try {
+        // Staff profile may not exist yet (not linked to any business), so handle 404
+        paymentMethods = await staffPaymentMethodsRepository.getAll()
+      } catch (pmErr: unknown) {
+        logger.warn('Could not fetch payment methods during link login', pmErr)
+      }
+
+      const payoutConfigs = {}
+      paymentMethods.forEach(pm => {
+        const typeLower = pm.type.toLowerCase()
+        payoutConfigs[typeLower] = {
+          enabled: pm.isActive,
+          value: pm.accountInfo || '',
+          qrCode: pm.imageUrl || '',
+          accountName: profileData.fullName || '',
+        }
+      })
+
+      const vlinkpayMethod = paymentMethods.find(m => m.type.toLowerCase() === 'vlinkpay')
+      const vlinkpayIdVal = vlinkpayMethod ? vlinkpayMethod.accountInfo : ''
+
+      setSearchId(
+        (profileData.staffCode as string | undefined) ||
+          (profileData.staffId as string | undefined) ||
+          `${emailQuery.slice(0, 4).toUpperCase()}${Math.floor(1000 + Math.random() * 9000)}`,
+      )
+      setLinkedProfile({
+        fullName: profileData.fullName || profileData.email?.split('@')[0] || '',
+        nickname: profileData.firstName || profileData.email?.split('@')[0] || '',
+        position: apiInviteInfo?.invitedPosition || 'Nail Technician',
+        phone: profileData.phoneNumber || '',
+        email: profileData.email || emailQuery,
+        avatar: (profileData.profileImage as { url?: string } | undefined)?.url || '',
+        vlinkpayId: vlinkpayIdVal,
+        payoutConfigs,
+      })
       setIsLinkLoggedIn(true)
+      setNeedsOnboarding(false)
       showToast(
         currentLanguage === 'vi'
-          ? `Đăng nhập thành công! Chào mừng ${profile.fullName}.`
-          : `Login successful! Welcome ${profile.fullName}.`
+          ? `Đăng nhập thành công! Chào mừng ${profileData.fullName || emailQuery}.`
+          : `Login successful! Welcome ${profileData.fullName || emailQuery}.`,
       )
-      return
-    }
-
-    // 2. Check in nexora_pending_accounts (registered via wizard)
-    const accs = pendingAccountsQuery.data ?? []
-    const matchedAcc = accs.find(acc => acc.email === emailQuery)
-    if (matchedAcc) {
-      if (matchedAcc.password !== passwordQuery) {
-      setLinkError(t('staff_registration.link.incorrect_password'))
-        return
-      }
-
-      // Try to find if this staff exists in the merchant's staffList
-      const savedSetup = merchantSetupQuery.data ?? {}
-      const staffInList = savedSetup.staffList?.find(s => s.id === matchedAcc.staffId || s.email === emailQuery)
-      
-      let profile = null
-      if (staffInList) {
-        profile = {
-          fullName: staffInList.fullName,
-          nickname: staffInList.nickname,
-          position: staffInList.position,
-          phone: staffInList.phone,
-          email: staffInList.email,
-          avatar: staffInList.avatar,
-          vlinkpayId: staffInList.paymentAccounts?.vlinkpay || '',
-          payoutConfigs: staffInList.payoutConfigs || {
-            zelle: { enabled: true, value: staffInList.paymentAccounts?.zelle || '', qrCode: '', accountName: staffInList.fullName }
-          }
-        }
+      // Stay on Step 0 — section D (confirm screen) will render
+    } catch (err: unknown) {
+      logger.error('handleLinkLogin API error', err)
+      if (isApiError(err) && (err.status === 401 || err.errorCode === 'USER_LOGIN_INVALID_USERNAME_OR_PASSWORD')) {
+        setLinkError(err.message || t('staff_registration.link.incorrect_password'))
       } else {
-        profile = {
-          fullName: matchedAcc.fullName || matchedAcc.email.split('@')[0],
-          nickname: matchedAcc.nickname || matchedAcc.email.split('@')[0],
-          position: matchedAcc.position || 'Nail Technician',
-          phone: matchedAcc.phone || '',
-          email: matchedAcc.email,
-          avatar: matchedAcc.avatar || '',
-          vlinkpayId: matchedAcc.vlinkpayId || '',
-          payoutConfigs: matchedAcc.payoutConfigs || {}
-        }
+        const apiMsg = isApiError(err) ? err.message : ''
+        setLinkError(apiMsg || (currentLanguage === 'vi' ? 'Lỗi đăng nhập. Vui lòng thử lại.' : 'Login failed. Please try again.'))
       }
-
-      setSearchId(matchedAcc.staffId || `NEX-STAFF-${emailQuery.slice(0,4).toUpperCase()}`)
-      setLinkedProfile(profile)
-      setIsLinkLoggedIn(true)
-      showToast(
-        currentLanguage === 'vi'
-          ? `Đăng nhập thành công! Chào mừng ${profile.fullName}.`
-          : `Login successful! Welcome ${profile.fullName}.`
-      )
-      return
+    } finally {
+      setIsRegisterSubmitting(false)
     }
-
-    setLinkError(
-      t('components.staff_registration.hooks.useStaffRegistration.accountDoesNotExist')
-    )
   }
 
   const handleLinkDecline = () => {
@@ -838,6 +753,23 @@ export default function useStaffRegistration({ inviteData }) {
       if (isProfileSubmitting) return
       setIsProfileSubmitting(true)
       try {
+        // --- Existing-account link flow (needsOnboarding): persist profile
+        // to backend without accepting invite yet. Acceptance happens at
+        // the final confirm screen (handleLinkExistingProfile).
+        if (isLinkLoggedIn && needsOnboarding) {
+          const trimmedName = fullName.trim()
+          const profileFirstName = trimmedName.split(' ')[0] || ''
+          const profileLastName = trimmedName.split(' ').slice(1).join(' ') || ''
+          await profileSettingsRepository.updateUserProfile({
+            firstName: profileFirstName,
+            lastName: profileLastName,
+            phoneNumber: phone || '',
+          })
+          setStep(3)
+          return
+        }
+
+        // --- New registration flow: sign in, accept invite, persist profile ---
         // Sign in without hydrating the session so /staff/profile is not
         // requested before the invite has been accepted.
         await apiAuthAdapter.signInForInviteAccept({
@@ -872,10 +804,7 @@ export default function useStaffRegistration({ inviteData }) {
            }
         }
 
-        // 4. Persist personal onboarding data to the backend user profile.
-        // Without this the account keeps an empty firstName/phoneNumber and is
-        // treated as not-onboarded (mirrors useCompletePersonalOnboarding in
-        // the standalone register flow).
+        // Persist personal onboarding data to the backend user profile.
         const trimmedName = fullName.trim()
         const profileFirstName = trimmedName.split(' ')[0] || ''
         const profileLastName = trimmedName.split(' ').slice(1).join(' ') || ''
@@ -941,7 +870,13 @@ export default function useStaffRegistration({ inviteData }) {
       if (isActivating) return
       setIsActivating(true)
       try {
-        const methods = await staffPaymentMethodsRepository.getAll()
+        let methods: import('../../../types/domain').PaymentMethodDto[] = []
+        try {
+          methods = await staffPaymentMethodsRepository.getAll()
+        } catch (pmErr: unknown) {
+          // Staff profile may not exist yet during onboarding link flow
+          logger.warn('Could not fetch payment methods during activation', pmErr)
+        }
 
         for (const [key, cfg] of Object.entries(payouts)) {
           const match = methods.find(m => {
@@ -959,6 +894,23 @@ export default function useStaffRegistration({ inviteData }) {
             }
           }
         }
+
+        // Post-onboarding link flow: refresh profile data and return to confirm screen
+        if (isLinkLoggedIn && needsOnboarding) {
+          const refreshedProfile = await httpClient.get<UserProfile>('/api/v1/userprofile/me')
+          setLinkedProfile(prev => ({
+            ...prev,
+            fullName: refreshedProfile.fullName || refreshedProfile.email?.split('@')[0] || '',
+            nickname: refreshedProfile.firstName || refreshedProfile.email?.split('@')[0] || '',
+            phone: refreshedProfile.phoneNumber || '',
+            email: refreshedProfile.email || prev?.email || '',
+            avatar: (refreshedProfile.profileImage as { url?: string } | undefined)?.url || '',
+          }))
+          setNeedsOnboarding(false)
+          setStep(0)
+          return
+        }
+
         if (isLinkLoggedIn) {
           setStep(0)
         } else {
@@ -1133,13 +1085,13 @@ export default function useStaffRegistration({ inviteData }) {
     linkPassword, setLinkPassword,
     linkError, setLinkError,
     isLinkLoggedIn, setIsLinkLoggedIn,
+    needsOnboarding,
     handleLinkLogin,
     handleLinkDecline,
     // handlers
     handleSearchIdChange,
     handleVlinkpayIdChange,
     handleScanQr,
-    simulateSuccessfulScan,
     handleRegisterSubmit,
     handleVerifyOtp,
     isRegisterSubmitting,
@@ -1149,7 +1101,7 @@ export default function useStaffRegistration({ inviteData }) {
     handleToggleMethod,
     handleEditPayoutAccount,
     savePayoutAccount,
-    handleModalFileChange,
+    handleModalImagePick,
     handleModalTakePhoto,
     handleModalClearQr,
     handleLinkExistingProfile,

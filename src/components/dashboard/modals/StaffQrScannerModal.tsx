@@ -5,13 +5,14 @@ function StaffQrScannerModal({
   open,
   scanTarget,
   onClose,
-  onSimulateSuccessfulScan,
-  onScanAnna,
-  onScanHanna
+  scanProfiles = [],
+  onScanProfile,
 }) {
-  const { t, currentLanguage } = useTranslation()
+  const { t } = useTranslation()
 
   if (!open) return null
+
+  const [primaryProfile, ...secondaryProfiles] = scanProfiles
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
@@ -79,28 +80,33 @@ function StaffQrScannerModal({
             {/* Standard Successful Scan button */}
             <button
               type="button"
-              onClick={onSimulateSuccessfulScan}
+              onClick={() => primaryProfile && onScanProfile(primaryProfile.staffCode)}
+              disabled={!primaryProfile}
               className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-colors shadow-sm"
             >
-              {t('components.dashboard.modals.StaffQrScannerModal.simulateSuccessfulScan')}
+              {primaryProfile
+                ? t('components.dashboard.modals.StaffQrScannerModal.simulateProfileLabel', {
+                  name: primaryProfile.displayName,
+                  code: primaryProfile.staffCode,
+                })
+                : t('components.dashboard.modals.StaffQrScannerModal.simulateSuccessfulScan')}
             </button>
 
             {/* Additional quick options */}
             <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={onScanAnna}
-                className="py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg text-[10px] font-bold transition-colors"
-              >
-                Anna Nguyen
-              </button>
-              <button
-                type="button"
-                onClick={onScanHanna}
-                className="py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg text-[10px] font-bold transition-colors"
-              >
-                Hanna Nguyen
-              </button>
+              {secondaryProfiles.map((profile) => (
+                <button
+                  key={profile.key}
+                  type="button"
+                  onClick={() => onScanProfile(profile.staffCode)}
+                  className="py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg text-[10px] font-bold transition-colors"
+                >
+                  {t('components.dashboard.modals.StaffQrScannerModal.simulateProfileLabel', {
+                    name: profile.displayName,
+                    code: profile.staffCode,
+                  })}
+                </button>
+              ))}
             </div>
           </div>
         </div>

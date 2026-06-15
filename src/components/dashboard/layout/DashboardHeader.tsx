@@ -11,6 +11,7 @@ import {
   Pointer,
   Search,
   Star,
+  UserCheck,
   Users,
   Wallet
 } from 'lucide-react'
@@ -78,14 +79,16 @@ export default function DashboardHeader({
     setNotifications(updated)
     setIsNotiDropdownOpen(false)
     if (item.linkTab === 'staff' && item.staffId) {
-      const member = staff.find(s => s.id?.trim().toUpperCase() === item.staffId?.trim().toUpperCase())
-      if (member) {
-        onNavigateMenu(item.linkTab)
-        if (typeof onApproveStaff === 'function') {
-          onApproveStaff(member)
-        }
-      } else {
-        onNavigateMenu(item.linkTab)
+      const sid = item.staffId.trim().toUpperCase()
+      const member = staff.find(s =>
+        s.id?.trim().toUpperCase() === sid ||
+        s.staffProfileId?.trim().toUpperCase() === sid ||
+        s.staffLinkId?.trim().toUpperCase() === sid ||
+        s.staffCode?.trim().toUpperCase() === sid
+      )
+      onNavigateMenu(item.linkTab)
+      if (member && typeof onApproveStaff === 'function') {
+        onApproveStaff(member)
       }
     } else if (item.linkTab) {
       onNavigateMenu(item.linkTab)

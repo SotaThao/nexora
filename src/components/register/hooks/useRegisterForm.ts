@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { getApiErrorCode, isApiError } from '../../../types/domain'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
+import { serializeBankWireAccount } from '../../payout/bankWireAccount'
+import { captureQrImage } from '../../../native/imagePicker'
 
 const normalizePhone = (raw) => {
   if (!raw) return ''
@@ -328,17 +330,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     setVlinkpayTimeout(timer)
   }
 
-  const autoFillPayments = () => {
-    const defaultName = nickname.trim() || 'Lisa Tran'
-    setPayouts({
-      zelle: { enabled: true, value: email || 'lisa@example.com', qrCode: '', accountName: defaultName },
-      bankwire: { enabled: true, value: '123456789 - 987654321', qrCode: '', accountName: defaultName },
-      paypal: { enabled: true, value: email || 'lisa@example.com', qrCode: '', accountName: defaultName },
-      venmo: { enabled: true, value: `@${nickname.toLowerCase().replace(/[^a-z]/g, '') || 'lisa'}-nails`, qrCode: '', accountName: defaultName },
-      cashapp: { enabled: true, value: `$${nickname.toLowerCase().replace(/[^a-z]/g, '') || 'lisa'}nails`, qrCode: '', accountName: defaultName },
-      applecash: { enabled: true, value: phone || '408-555-2345', qrCode: '', accountName: defaultName }
-    })
-  }
+  const autoFillPayments = () => {}
 
   const handleToggleMethod = (key) => {
     setPayouts(prev => {
@@ -387,25 +379,18 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     setEditingMethod(null)
   }
 
-  const handleModalFileChange = (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      setEditQrCode(typeof reader.result === 'string' ? reader.result : '')
-    }
-    reader.readAsDataURL(file)
+  const handleModalImagePick = (dataUrl) => {
+    if (dataUrl) setEditQrCode(dataUrl)
   }
 
-  const handleModalTakePhoto = () => {
+  const handleModalTakePhoto = async () => {
     setIsCapturing(true)
-    setTimeout(() => {
-      const mockQr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-        editValue || ''
-      )}`
-      setEditQrCode(mockQr)
+    try {
+      const dataUrl = await captureQrImage({ fallbackValue: editValue || '' })
+      if (dataUrl) setEditQrCode(dataUrl)
+    } finally {
       setIsCapturing(false)
-    }, 800)
+    }
   }
 
   const handleModalClearQr = () => {
@@ -420,7 +405,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       const emailPrefix = email.split('@')[0].toUpperCase()
       const initials = emailPrefix.slice(0, 3) || 'STAFF'
       const randomDigits = Math.floor(1000 + Math.random() * 9000)
-      staffId = `NEX-STAFF-${initials}${randomDigits}`
+      staffId = `${initials}${randomDigits}`
       
       // Try to get actual user ID if in API mode
       if (isApiMode) {
@@ -673,11 +658,10 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     handleStep1Next,
     handleVerifyOtp,
     handleVlinkpayIdChange,
-    autoFillPayments,
     handleToggleMethod,
     handleEditPayoutAccount,
     savePayoutAccount,
-    handleModalFileChange,
+    handleModalImagePick,
     handleModalTakePhoto,
     handleModalClearQr,
     handlePersonalRegisterSubmit,

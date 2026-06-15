@@ -174,8 +174,10 @@ export interface NotificationApiDto {
   actionUrl?: string | null
   referenceId?: string | null
   isRead?: boolean
-  read?: boolean
+  readAt?: string | null
   createdAt?: string
+  /** @deprecated legacy mock shape */
+  read?: boolean
 }
 
 export interface StaffLinkRequestDetailApiDto {
@@ -191,6 +193,7 @@ export interface InviteInfoApiDto {
   invitedName?: string
   invitedPosition?: string | null
   businessName?: string
+  businessAddress?: string | null
 }
 
 export interface SlugCheckResult {
@@ -259,6 +262,7 @@ export interface JoinPublicInviteDto {
   phoneNumber?: string | null
   position?: string | null
   bio?: string | null
+  photoUrl?: string | null
 }
 
 export interface PersonalOnboardingInput {

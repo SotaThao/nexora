@@ -30,10 +30,12 @@ export const qk = {
   
   // Notifications
   notificationsUnreadCount: () => ['notifications', 'unreadCount'],
+  notificationsList:      (filters = EMPTY) => ['notifications', 'list', filters],
   
   // Profile (Staff/Personal)
   userProfile:              () => ['userProfile'],
   verifiedStatus:           () => ['userProfile', 'verifiedStatus'],
+  kycInitialize:            () => ['userProfile', 'kycInitialize'],
 
   // Merchant Staff Management
   merchantStaff:       (statusFilter?: string, pageNumber?: number, pageSize?: number) => {
@@ -57,6 +59,9 @@ export const qk = {
   // Staff Self (own staff profile + linked businesses)
   staffProfile:        ()      => ['staffProfile'],
   staffBusinesses:     ()      => ['staffBusinesses'],
+  staffDashboardSummary: ()    => ['staffDashboardSummary'],
+  staffReviews:          (filters = EMPTY) => ['staffReviews', filters],
+  staffTips:             (filters = EMPTY) => ['staffTips', filters],
   staffLinkRequest:    (linkId: string | null | undefined) => ['staffLinkRequest', linkId ?? 'unknown'],
 
   // Public Customer Touch

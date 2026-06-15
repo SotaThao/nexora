@@ -111,6 +111,7 @@ export default function ProfileTab({
   const [editingMethod, setEditingMethod] = useState<any | null>(null)
   const [editValue, setEditValue] = useState('')
   const [editQrCode, setEditQrCode] = useState<any | null>(null)
+  const [editQrFile, setEditQrFile] = useState(null)
   const [isCapturing, setIsCapturing] = useState(false)
   const [modalError, setModalError] = useState('')
 
@@ -130,6 +131,7 @@ export default function ProfileTab({
     setEditingMethod(key)
     setEditValue(methodData.accountInfo || '')
     setEditQrCode(methodData.imageUrl || null)
+    setEditQrFile(null)
     setModalError('')
   }
 
@@ -145,7 +147,12 @@ export default function ProfileTab({
       return
     }
     updateMutation.mutate(
-      { id: methodData.id, accountInfo: editValue.trim(), imageUrl: editQrCode },
+      {
+        id: methodData.id,
+        accountInfo: editValue.trim(),
+        imageUrl: editQrFile ? null : (editQrCode || null),
+        imageFile: editQrFile || undefined,
+      },
       {
         onSuccess: () => {
           setEditingMethod(null)
@@ -158,12 +165,13 @@ export default function ProfileTab({
   }
 
   const handleModalFileChange = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => setEditQrCode(reader.result)
-      reader.readAsDataURL(file)
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (editQrCode?.startsWith?.('blob:')) {
+      URL.revokeObjectURL(editQrCode)
     }
+    setEditQrFile(file)
+    setEditQrCode(URL.createObjectURL(file))
   }
 
   const handleModalTakePhoto = () => {
@@ -174,7 +182,13 @@ export default function ProfileTab({
     }, 1500)
   }
 
-  const handleModalClearQr = () => setEditQrCode(null)
+  const handleModalClearQr = () => {
+    if (editQrCode?.startsWith?.('blob:')) {
+      URL.revokeObjectURL(editQrCode)
+    }
+    setEditQrFile(null)
+    setEditQrCode(null)
+  }
 
   return (
     <>
@@ -187,17 +201,26 @@ export default function ProfileTab({
           <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 flex flex-col items-center text-center relative">
             {/* Avatar Section */}
             <div className="relative group">
-              <img
-                src={profile.avatar}
-                alt={profile.fullName}
-                className="h-20 w-20 rounded-full object-cover border border-white shadow-sm"
-              />
+              {profile.avatar && !profile.avatar.includes('unsplash.com') ? (
+                <img
+                  src={profile.avatar}
+                  alt={profile.fullName}
+                  className="h-20 w-20 rounded-full object-cover border border-white shadow-sm"
+                />
+              ) : (
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-2xl font-extrabold text-white uppercase border border-white shadow-sm">
+                  {(profile.businessName || profile.email || '').slice(0, 2).toUpperCase() || '?'}
+                </div>
+              )}
               <label className="absolute inset-0 rounded-full bg-black/40 text-white text-[9px] font-black uppercase flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
                 Edit
                 <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
               </label>
             </div>
-            <span className="mt-2 inline-block bg-orange-50 text-orange-600 border border-orange-100 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full">
+            <div className="mt-2 text-sm font-extrabold text-nexoraText truncate max-w-full">
+              {profile.businessName || profile.email}
+            </div>
+            <span className="mt-1 inline-block bg-orange-50 text-orange-600 border border-orange-100 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full">
               Business Owner
             </span>
 

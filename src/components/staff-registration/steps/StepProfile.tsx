@@ -20,7 +20,6 @@ export default function StepProfile({
   vlinkpayStatus,
   contactLocked,
   currentLanguage, t,
-  handleVlinkpayIdChange,
   handleScanQr,
   setStep,
   onSubmit,

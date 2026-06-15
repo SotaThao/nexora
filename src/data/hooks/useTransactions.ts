@@ -4,13 +4,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import transactionsRepository from '../repositories/transactions'
+import { useSessionRole } from '../../auth/useSessionRole'
 import type { TransactionRecord } from '../../types/domain'
 import type { UpdateTransactionVars } from '../../types/hooks'
 
-export function useTransactions() {
+export function useTransactions({ enabled: callerEnabled = true } = {}) {
+  const { isOwner } = useSessionRole()
   return useQuery<TransactionRecord[]>({
     queryKey: qk.transactions(),
     queryFn: () => transactionsRepository.list(),
+    enabled: isOwner && callerEnabled,
+    retry: false,
   })
 }
 
