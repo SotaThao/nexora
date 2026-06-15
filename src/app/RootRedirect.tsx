@@ -37,7 +37,17 @@ export default function RootRedirect() {
 
     if (action === 'staff-invite') {
       const bizName = searchParams.get('biz') || ''
-      navigate('/invite', { replace: true, state: { biz: bizName } })
+      const refCode = searchParams.get('ref') || searchParams.get('refCode') || ''
+      const source = searchParams.get('source') || 'public_link'
+      const email = searchParams.get('email') || ''
+      const nextParams = new URLSearchParams()
+      if (refCode) nextParams.set('ref', refCode)
+      if (source) nextParams.set('source', source)
+      if (email) nextParams.set('email', email)
+      navigate(`/invite${nextParams.toString() ? `?${nextParams.toString()}` : ''}`, {
+        replace: true,
+        state: { biz: bizName },
+      })
       return
     }
 

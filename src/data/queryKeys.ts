@@ -40,7 +40,15 @@ export const qk = {
   // Merchant Staff Management
   merchantStaff:       ()      => ['merchantStaff'],
   merchantStaffSearch: (q)     => ['merchantStaff', 'search', q],
-  staffInvite:         (token) => ['staffInvite', token],
+  // v3.3 — MerchantStaff invite lifecycle + staff-by-code detail.
+  // Note: all are prefixed with 'merchantStaff' so invalidating qk.merchantStaff()
+  // also refreshes invites/detail caches.
+  merchantStaffInvites: (filters = EMPTY) => ['merchantStaff', 'invites', filters],
+  merchantStaffInvite:  (inviteId)        => ['merchantStaff', 'invite', inviteId],
+  merchantStaffByCode:  (staffCode)       => ['merchantStaff', 'byCode', staffCode],
+  staffInvite:         (token)   => ['staffInvite', token],
+  publicMerchantInvite: (ref)    => ['publicMerchantInvite', ref],
+  merchantInviteLink:  ()      => ['merchantSettings', 'inviteLink'],
 
   // Merchant Touchpoints
   merchantTouchpoints: ()      => ['merchantTouchpoints'],

@@ -554,7 +554,11 @@ function StaffModal({
                 <button
                   type="button"
                   onClick={() => {
-                    onLinkStaff?.({ staffProfileId: form.staffProfileId, fullName: form.fullName })
+                    onLinkStaff?.({
+                      staffProfileId: form.staffProfileId,
+                      staffCode: form.nexoraStaffId || null,
+                      fullName: form.fullName,
+                    })
                     onClose()
                   }}
                   className="rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white"

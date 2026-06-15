@@ -5,7 +5,10 @@ export type LooseObject = Record<string, any>
 
 /** Shared loose domain shapes — tighten incrementally per repository. */
 export interface MerchantBusinessInfo {
+  id?: string
+  businessId?: string
   name?: string
+  slug?: string
   industry?: string
   address?: string
   phone?: string
@@ -22,6 +25,8 @@ export interface StaffMember {
   phone?: string
   isActive?: boolean
   showInTipsFlow?: boolean
+  refCode?: string | null
+  source?: string | null
   paymentAccounts?: Record<string, string>
   [key: string]: unknown
 }
@@ -107,8 +112,13 @@ export interface NotificationsPage {
 export interface StaffInviteInfo {
   invitedName: string
   invitedPosition: string | null
+  invitedEmail?: string | null
   businessName: string
   businessAddress: string | null
+  businessId?: string | null
+  businessSlug?: string | null
+  refCode?: string | null
+  source?: string | null
 }
 
 export interface StaffSearchResult {

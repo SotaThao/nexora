@@ -18,7 +18,10 @@ export function createMerchantsRepository(client: HttpClient = httpClient) {
 
         return {
           businessInfo: {
+            id: res.id || res.businessId || '',
+            businessId: res.businessId || res.id || '',
             name: res.name || '',
+            slug: res.slug || res.businessSlug || '',
             industry: res.businessType || 'Nail Salon',
             address: res.address || '',
             phone: res.phone || '',

@@ -1,10 +1,21 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { X, QrCode, Send, Copy } from 'lucide-react'
 import IconButton from '../../ui/IconButton'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
+import { buildPublicInviteLink } from '../../../utils/inviteRef'
 
-function InviteShareModal({ open, businessName, defaultName, defaultContact, onClose, onSendInvite }) {
+function InviteShareModal({
+  open,
+  businessName,
+  businessSlug,
+  inviteLinkSetting,
+  isInviteLinkSettingLoading = false,
+  defaultName,
+  defaultContact,
+  onClose,
+  onSendInvite,
+}) {
   const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
   const [name, setName] = useState('')
@@ -27,9 +38,27 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
     }
   }, [open, defaultName, defaultContact])
 
-  if (!open) return null
+  const publicInviteEnabled = Boolean(inviteLinkSetting?.isEnabled && inviteLinkSetting?.referralCode)
+  // Directed email invite vs open QR/link — drives the URL `source` tag (AC #10).
+  const linkSource = inviteMethod === 'Email' && contact.trim() ? 'email_invite' : 'public_link'
+  const joinLink = useMemo(
+    () => publicInviteEnabled
+      ? buildPublicInviteLink({
+        origin: window.location.origin,
+        businessName,
+        businessSlug,
+        referralCode: inviteLinkSetting?.referralCode ?? '',
+        email: inviteMethod === 'Email' && contact ? contact.trim() : null,
+        source: linkSource,
+      })
+      : '',
+    [businessName, businessSlug, contact, inviteLinkSetting?.referralCode, inviteMethod, linkSource, publicInviteEnabled],
+  )
+  const publicInviteUnavailableText = isInviteLinkSettingLoading
+    ? (currentLanguage === 'vi' ? 'Äang táº£i link má»i...' : 'Loading invite link...')
+    : (currentLanguage === 'vi' ? 'Public invite link chÆ°a báº­t trong Merchant Settings.' : 'Public invite link is disabled in Merchant Settings.')
 
-  const joinLink = `${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`
+  if (!open) return null
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -68,15 +97,19 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
               {t('components.dashboard.modals.InviteShareModal.scanQrToJoin')}
             </span>
             <div
-              onClick={() => setLargeQrOpen(true)}
-              className="h-32 w-32 rounded-xl bg-slate-50 border border-slate-200 p-2 flex items-center justify-center shadow-inner bg-white cursor-zoom-in transition hover:scale-105 duration-200 group relative"
+              onClick={() => publicInviteEnabled && setLargeQrOpen(true)}
+              className={`h-32 w-32 rounded-xl bg-slate-50 border border-slate-200 p-2 flex items-center justify-center shadow-inner bg-white transition duration-200 group relative ${publicInviteEnabled ? 'cursor-zoom-in hover:scale-105' : 'cursor-not-allowed opacity-60'}`}
               title={t('components.dashboard.modals.InviteShareModal.clickToEnlarge')}
             >
-              <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(joinLink)}`}
-                alt="Join QR"
-                className="h-full w-full object-contain"
-              />
+              {publicInviteEnabled ? (
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(joinLink)}`}
+                  alt="Join QR"
+                  className="h-full w-full object-contain"
+                />
+              ) : (
+                <QrCode className="h-10 w-10 text-slate-300" />
+              )}
               {/* Magnifier icon overlay on hover */}
               <div className="absolute inset-0 bg-nexoraBrand/80 rounded-xl flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-white select-none">
                 <QrCode className="h-5 w-5" />
@@ -92,19 +125,29 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
                 <input
                   type="text"
                   readOnly
-                  value={joinLink}
+                  value={publicInviteEnabled ? joinLink : publicInviteUnavailableText}
                   className="h-8 flex-grow bg-white border border-slate-200 rounded px-2.5 text-[10px] text-slate-500 font-mono focus:outline-none"
                 />
                 <button
                   type="button"
+                  disabled={!publicInviteEnabled}
                   onClick={() => {
+                    if (!publicInviteEnabled) return
                     navigator.clipboard.writeText(joinLink)
                     showToast(t('components.dashboard.modals.InviteShareModal.joinLinkCopiedTo'), 'success')
                   }}
-                  className="h-8 px-3 bg-slate-800 text-white rounded text-[10px] font-black uppercase hover:bg-slate-700 transition font-sans"
+                  className={`h-8 px-3 bg-slate-800 text-white rounded text-[10px] font-black uppercase transition font-sans ${publicInviteEnabled ? 'hover:bg-slate-700' : 'cursor-not-allowed opacity-50'}`}
                 >
                   {t('components.dashboard.modals.InviteShareModal.copy')}
                 </button>
+              </div>
+              <div className="flex flex-wrap items-center justify-center gap-1.5 pt-1">
+                <span className="rounded bg-white px-2 py-0.5 text-[9px] font-black uppercase text-slate-500 border border-slate-200">
+                  {linkSource}
+                </span>
+                <span className="rounded bg-white px-2 py-0.5 text-[9px] font-black uppercase text-slate-500 border border-slate-200">
+                  {inviteLinkSetting?.referralCode || 'DISABLED'}
+                </span>
               </div>
             </div>
           </div>
@@ -206,7 +249,7 @@ function InviteShareModal({ open, businessName, defaultName, defaultContact, onC
       </div>
 
       {/* Large Join QR Modal inside InviteShareModal */}
-      {largeQrOpen && (
+      {largeQrOpen && publicInviteEnabled && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 cursor-zoom-out animate-fadeIn"
           onClick={() => setLargeQrOpen(false)}

@@ -4,6 +4,7 @@ import type {
   PersonalOnboardingInput,
   PayoutConfigMap,
   StaffInviteParams,
+  StaffLinkRequestParams,
   StaffReorderItem,
   UpdateStaffProfileDto,
 } from './repositories'
@@ -91,6 +92,7 @@ export type {
   PaymentMethodDto,
   ReviewRecord,
   StaffInviteParams,
+  StaffLinkRequestParams,
   StaffReorderItem,
   TransactionRecord,
 }

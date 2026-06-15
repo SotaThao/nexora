@@ -64,6 +64,9 @@ export function StaffRoute() {
       onInviteStaff={ctx.handleInviteStaff}
       onResendInvite={ctx.handleResendInvite}
       businessName={ctx.businessName}
+      businessSlug={ctx.businessSlug}
+      inviteLinkSetting={ctx.inviteLinkSetting}
+      isInviteLinkSettingLoading={ctx.isInviteLinkSettingLoading}
       onAcceptJoin={ctx.handleAcceptJoinRequest}
       onDeclineJoin={ctx.handleDeclineJoinRequest}
       onAcceptUnlink={ctx.handleAcceptUnlinkRequest}
