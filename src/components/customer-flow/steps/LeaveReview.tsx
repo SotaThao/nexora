@@ -44,7 +44,7 @@ export default function LeaveReview({
         </div>
         {/* Rating description */}
         <p className="text-center text-sm font-bold text-amber-600 animate-pulse">
-          {rating === 5 ? 'Amazing!' : rating === 4 ? 'Good!' : rating === 3 ? 'Okay' : rating === 2 ? 'Bad' : 'Terrible'}
+          {t(`customer.rating_label_${rating}`)}
         </p>
       </div>
 
@@ -98,7 +98,7 @@ export default function LeaveReview({
           onClick={handleSubmitFeedback}
           className="w-full py-3.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 transition text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-nexoraElectric/25"
         >
-          Submit Review
+          {t('customer.submit_review_btn')}
         </button>
         <button
           type="button"
@@ -111,7 +111,7 @@ export default function LeaveReview({
           }}
           className="w-full py-2 text-center text-xs font-bold text-nexoraSubtle hover:text-nexoraText transition"
         >
-          Skip
+          {t('customer.skip_btn')}
         </button>
       </div>
     </div>

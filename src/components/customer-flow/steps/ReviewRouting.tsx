@@ -96,7 +96,7 @@ export default function ReviewRouting({ t, reviewLinks, setStep, handleTrackExte
           onClick={() => setStep('final_done')}
           className="text-xs font-bold text-nexoraSubtle hover:text-nexoraText transition"
         >
-          Maybe later
+          {t('customer.maybe_later_btn')}
         </button>
         <p className="text-[10px] text-nexoraSubtle font-medium italic mt-2">
           {t('customer.final_success_desc')}

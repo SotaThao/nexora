@@ -3,11 +3,12 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 
 function ComingSoon({ activeMenu, onBack }) {
   const { t } = useTranslation()
-  const copy = {
-    analytics: ['Advanced Analytics', 'Device conversion, return customer cohorts, and AI review summaries are planned for phase 3.'],
-    subscriptions: ['Subscriptions', 'Manage NFC stand orders, renewal plans, and hardware add-ons from this workspace soon.'],
-    settings: ['Settings', 'Shop preferences, webhook keys, and review destinations will be configured here.']
-  }[activeMenu] || ['Feature In Progress', 'This module is being prepared for the Nexora Touch merchant dashboard.']
+  const copyMap = {
+    analytics: [t('coming_soon.analytics_title'), t('coming_soon.analytics_desc')],
+    subscriptions: [t('coming_soon.subscriptions_title'), t('coming_soon.subscriptions_desc')],
+    settings: [t('coming_soon.settings_title'), t('coming_soon.settings_desc')],
+  }
+  const copy = copyMap[activeMenu] || [t('coming_soon.default_title'), t('coming_soon.default_desc')]
 
   return (
     <div className="flex min-h-[520px] items-center justify-center">
