@@ -6,6 +6,7 @@ import httpClient from '../../lib/httpClient'
 import { isApiError } from '../../types/domain'
 import type { UserProfile } from '../../types/domain'
 import type { UpdateStaffProfileDto, UpdateUserProfileDto } from '../../types/repositories'
+import { getUserProfileImageUrl } from '../../utils/userProfileImage'
 
 type HttpClient = typeof httpClient
 
@@ -14,7 +15,11 @@ export function createProfileSettingsRepository(client: HttpClient = httpClient)
     async get(): Promise<UserProfile | null> {
       try {
         const response = await client.get<UserProfile>('/api/v1/userprofile/me')
-        return response || null
+        if (!response) return null
+        const profileImageUrl = getUserProfileImageUrl(response)
+        return profileImageUrl
+          ? { ...response, profileImageUrl }
+          : response
       } catch (err: unknown) {
         if (isApiError(err) && (err.errorCode === 'COMMON_NOT_FOUND' || err.status === 404)) {
           return null
