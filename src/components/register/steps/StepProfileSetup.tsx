@@ -1,5 +1,6 @@
 import React from 'react'
 import { Upload, X, ArrowLeft, ArrowRight } from 'lucide-react'
+import ImageFileInput from '../../ui/ImageFileInput'
 import CountryCodeSelect, { formatNationalNumber, isPhoneValid } from '../../CountryCodeSelect'
 
 export default function StepProfileSetup({
@@ -53,23 +54,14 @@ export default function StepProfileSetup({
 
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center gap-2">
-              <label className="h-9 px-4 rounded-lg bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white flex items-center justify-center gap-1.5 cursor-pointer text-xs font-bold transition shadow-sm">
+              <ImageFileInput
+                as="label"
+                className="h-9 px-4 rounded-lg bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white flex items-center justify-center gap-1.5 cursor-pointer text-xs font-bold transition shadow-sm"
+                onPick={setAvatar}
+              >
                 <Upload className="h-3.5 w-3.5" />
                 <span>{t('common.upload_photo')}</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0]
-                    if (file) {
-                      const reader = new FileReader()
-                      reader.onload = () => setAvatar(reader.result)
-                      reader.readAsDataURL(file)
-                    }
-                  }}
-                />
-              </label>
+              </ImageFileInput>
             </div>
             <span className="text-[10px] text-nexoraSubtle">
               {t('components.register.steps.StepProfileSetup.acceptedFormatsJpgPng')}

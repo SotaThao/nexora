@@ -16,7 +16,7 @@ import FinalDone from './customer-flow/steps/FinalDone'
  * Supports both API mode (public /touch/ URLs) and simulation mode (?flow=customer).
  */
 export default function CustomerFlow() {
-  const flow = useCustomerFlow()
+  const flow = useCustomerFlow() as any
 
   const {
     currentLanguage, setLanguage, t, showToast,

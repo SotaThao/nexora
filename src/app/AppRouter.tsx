@@ -98,7 +98,7 @@ export default function AppRouter() {
               <Dashboard
                  userEmail={session?.email}
                  userRole="owner"
-                 verificationStatus={session?.verificationStatus || 'unverified'}
+                 verificationStatus={(session?.verificationStatus as string) || 'unverified'}
                  hasKyb={session?.verificationStatus === 'kyb_approved'}
                  onLogout={logout}
               />

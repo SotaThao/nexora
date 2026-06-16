@@ -63,7 +63,7 @@ export default function SetupWizard() {
     isConsentChecked, setIsConsentChecked,
     errors,
     prefillDemo,
-    handleLogoChange,
+    handleLogoFile,
     validateStep,
     handleNext,
     handleBack,
@@ -218,7 +218,7 @@ export default function SetupWizard() {
                 setReviewLinks={setReviewLinks}
                 errors={errors}
                 setErrors={wizard.setErrors}
-                handleLogoChange={handleLogoChange}
+                handleLogoFile={handleLogoFile}
               />
             )}
 

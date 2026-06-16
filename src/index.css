@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Capacitor native: prefer injected inset vars, fall back to env() from viewport-fit=cover */
+html.capacitor-native {
+  --app-safe-area-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --app-safe-area-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+  --app-safe-area-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --app-safe-area-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+}
+
 /* Premium mobile-first tap highlight override */
 * {
   -webkit-tap-highlight-color: transparent;

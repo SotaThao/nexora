@@ -9,7 +9,8 @@ import type { NotificationRecord, NotificationsPage } from '../../types/domain'
 export function useNotifications() {
   return useQuery<NotificationRecord[]>({
     queryKey: qk.notifications(),
-    queryFn: () => notificationsRepository.list(),
+    queryFn: () => notificationsRepository.list() as Promise<NotificationRecord[]>,
+    staleTime: 2 * 60_000, // 2 min — avoid refetch on every remount
   })
 }
 

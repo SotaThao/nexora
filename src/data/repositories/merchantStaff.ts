@@ -82,6 +82,7 @@ export function normalizeStaffListItem(dto: StaffListItemApiDto): StaffMember {
 
   return {
     id: dto.id ?? dto.linkId ?? dto.inviteId,
+    linkId: dto.linkId ?? dto.staffLinkId ?? dto.id ?? null,
     staffLinkId: itemType === 'link' ? (dto.staffLinkId ?? dto.linkId ?? dto.id) : null,
     inviteId: itemType === 'invite' ? (dto.inviteId ?? dto.id) : null,
     staffProfileId: dto.staffProfileId ?? null,
@@ -147,16 +148,60 @@ export function normalizeStaffSearchResult(dto: StaffSearchResultApiDto): StaffS
   }
 }
 
+export interface StaffListPage {
+  items: StaffMember[]
+  pageNumber: number
+  totalPages: number
+  totalCount: number
+  hasNextPage: boolean
+  hasPreviousPage: boolean
+}
+
 interface StaffListApiResponse {
   items?: StaffListItemApiDto[]
+  pageNumber?: number
+  totalPages?: number
+  totalCount?: number
+  hasNextPage?: boolean
+  hasPreviousPage?: boolean
 }
+
+export const StatusFilter = {
+  Pending: 'Pending',
+  Active: 'Active',
+  InActive: 'InActive',
+  Rejected: 'Rejected',
+  Accepted: 'Accepted',
+} as const
 
 export function createMerchantStaffRepository(client: HttpClient = httpClient) {
   return {
-    async list(): Promise<StaffMember[]> {
-      const data = await client.get<StaffListItemApiDto[] | StaffListApiResponse>('/api/v1/merchant/staff')
-      const items = Array.isArray(data) ? data : (data?.items ?? [])
-      return items.map(normalizeStaffListItem)
+    async list(statusFilter?: string, pageNumber = 1, pageSize = 10): Promise<StaffListPage> {
+      let url = '/api/v1/merchant/staff'
+      const queryParams: string[] = []
+      if (statusFilter) {
+        queryParams.push(`StatusFilter=${encodeURIComponent(statusFilter)}`)
+      }
+      if (pageNumber !== undefined) {
+        queryParams.push(`PageNumber=${pageNumber}`)
+      }
+      if (pageSize !== undefined) {
+        queryParams.push(`PageSize=${pageSize}`)
+      }
+      if (queryParams.length > 0) {
+        url += `?${queryParams.join('&')}`
+      }
+      const data = await client.get<StaffListItemApiDto[] | StaffListApiResponse>(url)
+      const page = Array.isArray(data) ? null : data
+      const items = Array.isArray(data) ? data : (page?.items ?? [])
+      return {
+        items: items.map(normalizeStaffListItem),
+        pageNumber: page?.pageNumber ?? pageNumber,
+        totalPages: page?.totalPages ?? 1,
+        totalCount: page?.totalCount ?? items.length,
+        hasNextPage: page?.hasNextPage ?? false,
+        hasPreviousPage: page?.hasPreviousPage ?? false,
+      }
     },
 
     async invite({ name, email, phone, position }: StaffInviteParams): Promise<StaffInviteResult> {
@@ -168,8 +213,8 @@ export function createMerchantStaffRepository(client: HttpClient = httpClient) {
       })
     },
 
-    async resendInvite(inviteId: string): Promise<void> {
-      await client.post(`/api/v1/merchant/staff/${encodeURIComponent(inviteId)}/resend`)
+    async resendInvite(linkId: string): Promise<void> {
+      await client.post(`/api/v1/merchant/staff/${encodeURIComponent(linkId)}/resend-invite`)
     },
 
     // v3.3 — invite lifecycle management.

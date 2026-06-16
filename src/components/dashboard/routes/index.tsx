@@ -19,15 +19,17 @@ export function OverviewRoute() {
   const navigate = useNavigate()
   return (
     <Overview
+      {...({
+        chartRange: ctx.chartRange,
+        setChartRange: ctx.handleChartRangeChange,
+        chartStartDate: ctx.chartStartDate,
+        chartEndDate: ctx.chartEndDate,
+        setChartStartDate: ctx.setChartStartDate,
+        setChartEndDate: ctx.setChartEndDate,
+      } as any)}
       metrics={ctx.metrics}
       activeKpi={ctx.activeKpi}
       setActiveKpi={ctx.setActiveKpi}
-      chartRange={ctx.chartRange}
-      setChartRange={ctx.handleChartRangeChange}
-      chartStartDate={ctx.chartStartDate}
-      chartEndDate={ctx.chartEndDate}
-      setChartStartDate={ctx.setChartStartDate}
-      setChartEndDate={ctx.setChartEndDate}
       transactions={ctx.transactions}
       selectedStaff={ctx.selectedLeaderboardStaff}
       setSelectedStaff={ctx.handleSelectLeaderboardStaff}
@@ -39,9 +41,14 @@ export function OverviewRoute() {
       hasKyb={ctx.hasKyb}
       hasSetup={ctx.hasSetup}
       onStartSetup={ctx.onStartSetup}
+      profile={ctx.profile}
+      onNavigateMenu={ctx.onNavigateMenu}
+      onApproveClick={ctx.openApproveStaff}
+      pendingStaff={ctx.pendingStaff}
     />
   )
 }
+
 
 export function StaffRoute() {
   const ctx = useOutletContext<LooseObject>()
@@ -51,7 +58,8 @@ export function StaffRoute() {
       staff={ctx.filteredStaff}
       pendingStaff={ctx.pendingStaff}
       allStaff={ctx.staff}
-      isLoading={ctx.staffLoading}
+      isLoading={ctx.staffListLoading ?? ctx.staffLoading}
+      isFetching={ctx.staffListFetching}
       onApproveClick={ctx.openApproveStaff}
       onAdd={ctx.openAddStaff}
       onEdit={ctx.openEditStaff}
@@ -76,6 +84,13 @@ export function StaffRoute() {
         ctx.setInviteShareDefaultContact('')
         ctx.setIsInviteShareOpen(true)
       }}
+      // Pagination props
+      pageNumber={ctx.activeStaffPage}
+      totalPages={ctx.activeStaffTotalPages}
+      totalCount={ctx.activeStaffTotalCount}
+      hasNextPage={ctx.activeStaffHasNext}
+      hasPreviousPage={ctx.activeStaffHasPrev}
+      onPageChange={ctx.setActiveStaffPage}
     />
   )
 }
@@ -214,6 +229,7 @@ export function SettingsRoute() {
 
   return (
     <SettingsView
+      {...({ onBlockedFeatureClick: ctx.requireKyb } as any)}
       setupData={ctx.setupData}
       hasKyb={ctx.hasKyb}
       verificationStatus={ctx.verificationStatus}

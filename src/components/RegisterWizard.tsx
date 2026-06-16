@@ -62,7 +62,8 @@ export default function RegisterWizard() {
       }
     },
     onRegisterSuccess: () => navigate('/login'),
-    onRegisterAndLogin: handleRegisterAndLogin
+    onRegisterAndLogin: handleRegisterAndLogin,
+    onKybSuccess: () => {}
   }
 
   const form = useRegisterForm(formProps)
@@ -75,7 +76,7 @@ export default function RegisterWizard() {
     editQrCode, setEditQrCode,
     editAccountName, setEditAccountName,
     isCapturing, modalError, setModalError,
-    savePayoutAccount, handleModalFileChange, handleModalTakePhoto, handleModalClearQr,
+    savePayoutAccount, handleModalImagePick, handleModalTakePhoto, handleModalClearQr,
   } = form
 
 
@@ -180,24 +181,24 @@ export default function RegisterWizard() {
       />
 
       {/* Payout Configuration Edit Modal Overlay */}
-      <PayoutEditModal
-        editingMethod={editingMethod}
-        setEditingMethod={setEditingMethod}
-        editValue={editValue}
-        setEditValue={setEditValue}
-        editQrCode={editQrCode}
-        setEditQrCode={setEditQrCode}
-        editAccountName={editAccountName}
-        setEditAccountName={setEditAccountName}
-        isCapturing={isCapturing}
-        modalError={modalError}
-        setModalError={setModalError}
-        currentLanguage={currentLanguage}
-        savePayoutAccount={savePayoutAccount}
-        handleModalFileChange={handleModalFileChange}
-        handleModalTakePhoto={handleModalTakePhoto}
-        handleModalClearQr={handleModalClearQr}
-      />
+      {React.createElement(PayoutEditModal as any, {
+        editingMethod,
+        setEditingMethod,
+        editValue,
+        setEditValue,
+        editQrCode,
+        setEditQrCode,
+        editAccountName,
+        setEditAccountName,
+        isCapturing,
+        modalError,
+        setModalError,
+        currentLanguage,
+        savePayoutAccount,
+        handleModalImagePick,
+        handleModalTakePhoto,
+        handleModalClearQr,
+      })}
     </div>
   )
 }

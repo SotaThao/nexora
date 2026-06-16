@@ -12,6 +12,8 @@ import { shareUrl } from '../../../utils/shareUrl'
 import { buildQrImageUrl } from '../../../utils/staffTipUrl'
 import { SkeletonLayout } from '../../ui/skeleton'
 
+type LooseObject = Record<string, any>
+
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 
 type QrTab = 'referral' | 'tipping'

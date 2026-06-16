@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { X, Camera, FolderOpen, AlertTriangle, Bitcoin } from 'lucide-react'
 import { useTranslation, renderLabel } from '../../../contexts/LanguageContext'
+import ImageFileInput from '../../ui/ImageFileInput'
+import { captureQrImage } from '../../../native/imagePicker'
 import BankWireAccountForm from '../../payout/BankWireAccountForm'
-import CameraCaptureModal from '../../ui/CameraCaptureModal'
 import {
   getBankWireBeneficiaryName,
   isBankWireAccountComplete,
@@ -36,7 +37,7 @@ function PayoutSetupModal({
   const [qrCode, setQrCode] = useState(initialQrCode || '')
   const [qrFile, setQrFile] = useState(null)
   const [accountName, setAccountName] = useState(staffName || '')
-  const [showCameraModal, setShowCameraModal] = useState(false)
+  const [isCapturing, setIsCapturing] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -91,29 +92,20 @@ function PayoutSetupModal({
     crypto: t('components.dashboard.modals.PayoutSetupModal.placeholderCrypto')
   }
 
-  const handleFileChange = (e) => {
-    if (readOnly) return
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (qrCode?.startsWith('blob:')) {
-      URL.revokeObjectURL(qrCode)
-    }
-    setQrFile(file)
-    setQrCode(URL.createObjectURL(file))
+  const handleImagePick = (dataUrl) => {
+    if (readOnly || !dataUrl) return
+    setQrCode(dataUrl)
   }
 
-  const handleTakePhoto = () => {
+  const handleTakePhoto = async () => {
     if (readOnly) return
-    setShowCameraModal(true)
-  }
-
-  const handleCameraCapture = (file) => {
-    if (qrCode?.startsWith('blob:')) {
-      URL.revokeObjectURL(qrCode)
+    setIsCapturing(true)
+    try {
+      const dataUrl = await captureQrImage({ fallbackValue: value || '' })
+      if (dataUrl) setQrCode(dataUrl)
+    } finally {
+      setIsCapturing(false)
     }
-    setQrFile(file)
-    setQrCode(URL.createObjectURL(file))
-    setShowCameraModal(false)
   }
 
   const handleClearQr = () => {
@@ -286,18 +278,21 @@ function PayoutSetupModal({
                 <button
                   type="button"
                   onClick={handleTakePhoto}
-                  className="flex flex-col items-center justify-center py-5 border border-dashed border-slate-200 hover:border-nexoraBrand rounded-xl bg-slate-50 hover:bg-slate-50/50 transition gap-1.5"
+                  disabled={isCapturing}
+                  className="flex flex-col items-center justify-center py-5 border border-dashed border-slate-200 hover:border-nexoraBrand rounded-xl bg-slate-50 hover:bg-slate-50/50 transition gap-1.5 disabled:opacity-60"
                 >
                   <Camera className="w-5 h-5 text-nexoraBrand" />
                   <span className="text-[11px] font-bold text-slate-600">{t('setup.take_photo')}</span>
                 </button>
-                <label
+                <ImageFileInput
+                  as="label"
                   className="flex flex-col items-center justify-center py-5 border border-dashed border-slate-200 hover:border-nexoraBrand rounded-xl bg-slate-50 hover:bg-slate-50/50 transition gap-1.5 cursor-pointer"
+                  onPick={handleImagePick}
+                  disabled={readOnly}
                 >
                   <FolderOpen className="w-5 h-5 text-nexoraBrand" />
                   <span className="text-[11px] font-bold text-slate-600">{t('setup.choose_file')}</span>
-                  <input type="file" accept="image/*" className="sr-only" onChange={handleFileChange} />
-                </label>
+                </ImageFileInput>
               </div>
             )}
             {!qrCode && !readOnly && (
@@ -339,12 +334,6 @@ function PayoutSetupModal({
           )}
         </div>
       </div>
-
-      <CameraCaptureModal
-        open={showCameraModal}
-        onClose={() => setShowCameraModal(false)}
-        onCapture={handleCameraCapture}
-      />
     </div>
   )
 }
