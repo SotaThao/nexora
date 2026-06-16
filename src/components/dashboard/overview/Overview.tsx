@@ -15,6 +15,7 @@ import {
 import { useTranslation } from '../../../contexts/LanguageContext'
 
 import SetupGuideBanner from './SetupGuideBanner'
+import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 
 function renderStars(rating) {
   const stars = []
@@ -157,7 +158,7 @@ function Overview({
   let masterTouchUrl = ''
   if (masterTouchpoint?.url) {
     try {
-      masterTouchUrl = `${window.location.origin}${new URL(masterTouchpoint.url).pathname}`
+      masterTouchUrl = `${getWebUrlOrigin()}${new URL(masterTouchpoint.url).pathname}`
     } catch {
       masterTouchUrl = masterTouchpoint.url
     }

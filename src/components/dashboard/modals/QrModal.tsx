@@ -2,6 +2,7 @@ import { X, ShieldAlert, ShieldCheck, Download } from 'lucide-react'
 import IconButton from '../../ui/IconButton'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
+import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 
 const slugify = (str = '') => str.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 
@@ -18,7 +19,7 @@ function QrModal({ target, businessName, onClose }) {
     qrUrl = toLocalCustomerTouchUrl(target.url)
   }
   if (!qrUrl) {
-    qrUrl = `${window.location.origin}/touch/${businessSlug}/${target.slug}`
+    qrUrl = `${getWebUrlOrigin()}/touch/${businessSlug}/${target.slug}`
   }
 
   const isStaff = Boolean(

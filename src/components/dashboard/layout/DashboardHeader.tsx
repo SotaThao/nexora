@@ -38,7 +38,7 @@ export default function DashboardHeader({
   onViewStaffDetail,
   onApproveStaff,
   userRole = 'owner',
-  onOpenMobileMenu
+  onOpenMobileMenu,
 }) {
   const { currentLanguage, setLanguage, t } = useTranslation()
   const dropdownRef = useRef(null)
@@ -48,6 +48,7 @@ export default function DashboardHeader({
   const mobileAvatarRef = useRef(null)
   const [isSearchFocused, setIsSearchFocused] = useState(false)
   const [isHeaderDropdownOpen, setIsHeaderDropdownOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -66,6 +67,16 @@ export default function DashboardHeader({
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [setIsNotiDropdownOpen, setIsSearchFocused, setIsHeaderDropdownOpen])
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 8)
+    }
+
+    handleScroll()
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const unreadCount = notifications ? notifications.filter((n) => !n.read).length : 0
 
@@ -262,7 +273,13 @@ export default function DashboardHeader({
   )
 
   return (
-    <header className="sticky top-0 z-20 border-b border-nexoraBorder bg-nexoraSurface">
+    <header
+      className={`fixed inset-x-0 top-0 z-30 border-b bg-nexoraSurface pt-[var(--app-safe-area-top)] transition-all duration-200 lg:sticky lg:z-20 lg:pt-0 ${
+        isScrolled
+          ? 'border-nexoraBorder/90 shadow-[0_6px_18px_rgba(15,23,42,0.12)] supports-[backdrop-filter]:bg-nexoraSurface/90 supports-[backdrop-filter]:backdrop-blur-md'
+          : 'border-nexoraBorder shadow-none'
+      }`}
+    >
 
       {/* ── Mobile header ──────────────────────────────────────────────────── */}
       <div className="flex min-h-16 items-center justify-between px-4 lg:hidden">

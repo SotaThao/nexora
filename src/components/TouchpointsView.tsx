@@ -17,6 +17,8 @@ import {
 import { useTranslation } from '../contexts/LanguageContext'
 import CustomSelect from './CustomSelect'
 import DevicesView from './DevicesView'
+import { toLocalCustomerTouchUrl } from '../utils/staffTipUrl'
+import { getWebUrlOrigin } from '../utils/webUrlBase'
 
 function Panel({ children, className = '' }) {
   return (
@@ -284,14 +286,10 @@ export default function TouchpointsView({
               // slug only if the API didn't return a url.
               let qrUrl = ''
               if (point.url) {
-                try {
-                  qrUrl = `${window.location.origin}${new URL(point.url).pathname}`
-                } catch {
-                  qrUrl = point.url
-                }
+                qrUrl = toLocalCustomerTouchUrl(point.url)
               }
               if (!qrUrl) {
-                qrUrl = `${window.location.origin}/touch/${point.slug || point.id}`
+                qrUrl = `${getWebUrlOrigin()}/touch/${point.slug || point.id}`
               }
               
               // Calculate dynamic revenue

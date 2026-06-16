@@ -21,6 +21,7 @@ import type {
 } from '../../types/domain'
 import type { StaffLinkRequestDetailApiDto } from '../../types/repositories'
 import { resolveStaffTipQr } from '../../utils/staffTipUrl'
+import { getWebUrlOrigin } from '../../utils/webUrlBase'
 
 type HttpClient = typeof httpClient
 
@@ -73,7 +74,7 @@ function normalizeStaffBusinessQrItems(
   items: StaffBusinessQrApiDto[],
   staffProfileId?: string | null,
 ): StaffBusinessTipQr[] {
-  const origin = typeof window !== 'undefined' ? window.location.origin : ''
+  const origin = getWebUrlOrigin()
 
   return items.map((item) => {
     const businessId = item.businessId ?? item.businessStaffLinkId ?? ''

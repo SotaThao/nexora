@@ -11,7 +11,9 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
   const displayName = account.defaultDisplayName || staffMember.fullName || 'Staff'
 
   return (
-    <header className="sticky top-0 z-20 border-b border-nexoraBorder bg-nexoraSurface">
+    <header
+      className="sticky top-0 z-20 border-b border-nexoraBorder bg-nexoraSurface pt-[var(--app-safe-area-top)] lg:pt-0"
+    >
       {/* Mobile top bar */}
       <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 px-4 py-3 lg:hidden">
         <button

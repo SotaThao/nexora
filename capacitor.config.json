@@ -1,19 +1,27 @@
 {
   "appId": "net.vlinkgroup.nexora",
-  "appName": "VLink Nexora",
+  "appName": "Nexora Touch",
   "webDir": "dist",
   "server": {
     "androidScheme": "https",
+    "iosScheme": "https",
     "hostname": "localhost"
   },
   "ios": {
-    "contentInset": "automatic",
+    "contentInset": "never",
     "scrollEnabled": true,
     "initialFocus": false
   },
   "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    },
     "SplashScreen": {
       "launchShowDuration": 0
+    },
+    "Keyboard": {
+      "resize": "native",
+      "resizeOnFullScreen": true
     },
     "SystemBars": {
       "insetsHandling": "css",

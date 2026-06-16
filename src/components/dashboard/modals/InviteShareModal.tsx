@@ -4,6 +4,7 @@ import IconButton from '../../ui/IconButton'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
+import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 
 function InviteShareModal({
   open,
@@ -44,7 +45,7 @@ function InviteShareModal({
   const joinLink = useMemo(
     () => publicInviteEnabled
       ? buildPublicInviteLink({
-        origin: window.location.origin,
+        origin: getWebUrlOrigin(),
         businessName,
         businessSlug,
         referralCode: inviteLinkSetting?.referralCode ?? '',

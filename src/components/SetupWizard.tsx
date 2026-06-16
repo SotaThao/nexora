@@ -11,6 +11,7 @@ import Step1BusinessInfo from './setup-wizard/steps/Step1BusinessInfo'
 import Step2StaffTouchpoints from './setup-wizard/steps/Step2StaffTouchpoints'
 import Step3Download from './setup-wizard/steps/Step3Download'
 import PayoutSetupModal from './setup-wizard/PayoutSetupModal'
+import { getCustomerAppBaseUrl } from '../utils/webUrlBase'
 
 export { renderTextWithGoldStars, getTouchpointIcon } from './setup-wizard/constants'
 
@@ -99,7 +100,10 @@ export default function SetupWizard() {
       <div className="absolute bottom-1/4 right-1/4 h-64 w-64 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(43,89,255,0.02)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-[450px] sm:w-[450px] no-print"></div>
 
       {/* Main Container */}
-      <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8 relative z-10 flex flex-col min-h-dvh justify-between no-print">
+      <div
+        className="max-w-6xl mx-auto px-4 pb-6 sm:pb-8 relative z-10 flex flex-col min-h-dvh justify-between no-print"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.5rem)' }}
+      >
 
         {/* Header */}
         <header className="flex flex-col md:flex-row md:items-center justify-between border-b border-nexoraBorder pb-6 mb-8 gap-4">
@@ -362,7 +366,7 @@ export default function SetupWizard() {
                 <div className="h-28 w-28 rounded-lg bg-white border border-nexoraBorder/60 p-2 flex items-center justify-center shadow-inner qr-print-qr-wrapper">
                   <img
                     src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-                      `${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}&tech=tp/${previewingTp.id}`
+                      `${getCustomerAppBaseUrl()}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}&tech=tp/${previewingTp.id}`
                     )}`}
                     alt="QR Preview"
                     className="h-full w-full object-contain qr-print-qr-image"
@@ -381,7 +385,7 @@ export default function SetupWizard() {
 
               <div className="mt-4 w-full text-center">
                 <p className="text-[10px] font-mono text-slate-400 select-all truncate bg-slate-50 px-2 py-1.5 rounded border border-slate-100">
-                  {`${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}&tech=tp/${previewingTp.id}`}
+                  {`${getCustomerAppBaseUrl()}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}&tech=tp/${previewingTp.id}`}
                 </p>
               </div>
 
@@ -418,7 +422,7 @@ export default function SetupWizard() {
             <div className="qr-print-qr-wrapper">
               <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-                  `${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}`
+                  `${getCustomerAppBaseUrl()}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}`
                 )}`}
                 alt="Scan QR code to tip and review"
                 className="qr-print-qr-image"

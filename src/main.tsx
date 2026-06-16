@@ -3,6 +3,9 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import './index.css'
+import { initNativeShell } from './native/initNativeShell'
+
+initNativeShell()
 import { LanguageProvider } from './contexts/LanguageContext'
 import { NotificationProvider } from './contexts/NotificationContext'
 import ErrorBoundary from './components/ui/ErrorBoundary'

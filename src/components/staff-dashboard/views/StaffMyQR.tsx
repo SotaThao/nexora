@@ -10,6 +10,7 @@ import { isApiError } from '../../../types/domain'
 import type { StaffBusinessTipQr } from '../../../types/domain'
 import { shareUrl } from '../../../utils/shareUrl'
 import { buildQrImageUrl } from '../../../utils/staffTipUrl'
+import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import { SkeletonLayout } from '../../ui/skeleton'
 
 type LooseObject = Record<string, any>
@@ -144,7 +145,7 @@ export default function StaffMyQR() {
   const staffLink = useMemo(
     () =>
       staffCode
-        ? `${window.location.origin}/?flow=staff-invite&staff=${encodeURIComponent(staffCode)}`
+        ? `${getWebUrlOrigin()}/?flow=staff-invite&staff=${encodeURIComponent(staffCode)}`
         : '',
     [staffCode],
   )

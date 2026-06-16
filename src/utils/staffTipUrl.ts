@@ -1,3 +1,5 @@
+import { getWebUrlOrigin } from './webUrlBase'
+
 /**
  * Resolve staff per-business tipping customer URLs.
  *
@@ -34,7 +36,7 @@ export function stripSessionIdFromUrl(url: string): string {
 /** Rewrite a touch customer URL to the current origin while keeping query params (e.g. staffProfileId). */
 export function toLocalCustomerTouchUrl(
   url: string,
-  origin = typeof window !== 'undefined' ? window.location.origin : '',
+  origin = getWebUrlOrigin(),
 ): string {
   try {
     const parsed = new URL(url.startsWith('http') ? url : `${origin}${url}`)
@@ -59,7 +61,7 @@ export function resolveMerchantStaffTipQr(
     businessName,
     businessSlug,
     masterTouchpoint,
-    origin = typeof window !== 'undefined' ? window.location.origin : '',
+    origin = getWebUrlOrigin(),
   }: {
     businessName?: string
     businessSlug?: string | null
@@ -143,7 +145,7 @@ export interface ResolvedStaffTipQr {
 export function resolveStaffTipQr(
   source: StaffTipQrSource,
   staffProfileId?: string | null,
-  origin = typeof window !== 'undefined' ? window.location.origin : '',
+  origin = getWebUrlOrigin(),
 ): ResolvedStaffTipQr {
   const businessSlug =
     source.businessSlug || slugify(source.businessName || '')

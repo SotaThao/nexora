@@ -13,7 +13,7 @@ export default function MobileBottomNav({ activeMenu, onNavigate }) {
     <nav
       className="fixed bottom-0 left-0 right-0 z-30 bg-white lg:hidden"
       style={{
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        paddingBottom: 'var(--app-safe-area-bottom)',
         boxShadow: '0 -4px 20px rgba(0,0,0,0.08)',
       }}
     >

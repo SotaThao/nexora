@@ -7,6 +7,7 @@ import { formatCurrency } from '../utils'
 import CustomSelect from '../../CustomSelect'
 import { WalletLogos } from '../constants'
 import TransactionFilter from '../../TransactionFilter'
+import { getCustomerAppBaseUrl } from '../../../utils/webUrlBase'
 
 function ReportsView({ transactions, staff = [], touchpoints = [] }) {
   const { t, currentLanguage } = useTranslation()
@@ -366,7 +367,7 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
               {/* Tipping QR utility footer */}
               <div className="flex gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100 items-center">
                 <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(`${window.location.origin}${window.location.pathname}?flow=customer&tech=staff/${encodeURIComponent(selectedTx.staffId)}`)}`}
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(`${getCustomerAppBaseUrl()}?flow=customer&tech=staff/${encodeURIComponent(selectedTx.staffId)}`)}`}
                   alt="Staff Tipping QR"
                   className="h-20 w-20 object-contain bg-white p-1 rounded-lg border border-slate-200 shadow-sm shrink-0"
                 />
@@ -380,7 +381,7 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
                   {/* Share Link Button */}
                   <button
                     onClick={async () => {
-                      const shareUrl = `${window.location.origin}${window.location.pathname}?flow=customer&tech=staff/${encodeURIComponent(selectedTx.staffId)}`;
+                      const shareUrl = `${getCustomerAppBaseUrl()}?flow=customer&tech=staff/${encodeURIComponent(selectedTx.staffId)}`;
                       if (navigator.share) {
                         try {
                           await navigator.share({

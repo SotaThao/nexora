@@ -21,6 +21,7 @@ import type {
 import type { StaffTipsListParams } from '../repositories/staffSelf'
 import { useStaffAccount } from '../../contexts/StaffAccountContext'
 import { resolveStaffTipQr } from '../../utils/staffTipUrl'
+import { getWebUrlOrigin } from '../../utils/webUrlBase'
 
 export function useStaffProfile({ enabled: callerEnabled = true } = {}) {
   const queryClient = useQueryClient()
@@ -63,7 +64,7 @@ export function useStaffBusinessTipQrs({ enabled: callerEnabled = true } = {}) {
   const businessTipQrs = useMemo(() => {
     const businesses = businessesQuery.data ?? []
     const dedicatedQr = qrCodesQuery.data
-    const origin = typeof window !== 'undefined' ? window.location.origin : ''
+    const origin = getWebUrlOrigin()
 
     if (dedicatedQr?.length) {
       const byBusinessId = new Map(dedicatedQr.map((item) => [item.businessId, item]))

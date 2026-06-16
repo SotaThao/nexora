@@ -7,6 +7,7 @@ import CustomSelect from '../../CustomSelect'
 import CountryCodeSelect, { parsePhone } from '../../CountryCodeSelect'
 import { WalletLogos, getTouchpointIcon } from '../constants'
 import { renderLabel } from '../../../contexts/LanguageContext'
+import { getCustomerAppBaseUrl } from '../../../utils/webUrlBase'
 
 export default function Step2StaffTouchpoints({
   t,
@@ -171,7 +172,7 @@ export default function Step2StaffTouchpoints({
             <h4 className="text-[10px] font-black uppercase text-nexoraMuted tracking-wider">{t('setup.qr_touchpoints_title')} ({touchPoints.length})</h4>
             <div className="space-y-2 overflow-y-auto pr-1 max-h-[220px] lg:max-h-[440px]">
               {touchPoints.map((tp) => {
-                const qrUrl = `${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}&tech=tp/${tp.id}`
+                const qrUrl = `${getCustomerAppBaseUrl()}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}&tech=tp/${tp.id}`
                 const qrCodeSrc = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrUrl)}`
 
                 if (tp.id === editingTpId) {

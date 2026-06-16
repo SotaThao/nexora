@@ -1,5 +1,6 @@
 import React from 'react'
 import { Download, CheckCircle2, ShieldCheck } from 'lucide-react'
+import { getCustomerAppBaseUrl } from '../../../utils/webUrlBase'
 
 export default function Step3Download({
   t,
@@ -42,7 +43,7 @@ export default function Step3Download({
             <div className="h-28 w-28 rounded-lg bg-white border border-nexoraBorder/60 p-2 flex items-center justify-center shadow-inner qr-print-qr-wrapper">
               <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-                  `${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}`
+                  `${getCustomerAppBaseUrl()}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}`
                 )}`}
                 alt="QR Preview"
                 className="h-full w-full object-contain qr-print-qr-image"

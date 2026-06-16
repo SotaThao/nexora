@@ -541,7 +541,12 @@ export default function Dashboard({
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
         />
 
-        <main className="min-h-dvh p-4 pb-24 sm:p-6 sm:pb-24 lg:p-7 lg:pb-7">
+        <div
+          className="h-[calc(4rem+var(--app-safe-area-top))] lg:hidden"
+          aria-hidden="true"
+        />
+
+        <main className="min-h-dvh p-4 sm:p-6 lg:p-7 lg:pb-7 max-lg:min-h-[calc(100svh-4rem-var(--app-safe-area-top))] max-lg:pb-[calc(1.5rem+4rem+var(--app-safe-area-bottom))]">
           {activeMenu !== 'overview' && (
             <button
               onClick={() => handleNavigateMenu('overview')}

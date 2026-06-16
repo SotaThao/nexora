@@ -2,6 +2,32 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "cap:build:ios",
+      "type": "shell",
+      "command": "pnpm run cap:build:ios",
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "PATH": "/opt/homebrew/bin:${env:HOME}/.local/bin:${env:PATH}"
+        }
+      },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "cap:build:android",
+      "type": "shell",
+      "command": "pnpm run cap:build:android",
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "PATH": "/opt/homebrew/bin:${env:HOME}/.local/bin:${env:PATH}"
+        }
+      },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
       "label": "cap:sync",
       "type": "shell",
       "command": "pnpm run cap:sync",

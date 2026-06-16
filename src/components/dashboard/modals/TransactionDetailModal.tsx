@@ -4,6 +4,7 @@ import { useTranslation } from '../../../contexts/LanguageContext';
 import { useNotification } from '../../../contexts/NotificationContext';
 import { formatUSD, renderStatusBadge, getPaymentMethodLogo } from '../../../utils/tipsFormatters';
 import { logger } from '../../../utils/logger';
+import { getCustomerAppBaseUrl } from '../../../utils/webUrlBase';
 
 export default function TransactionDetailModal({ selectedTx, onClose }) {
   const { t, currentLanguage } = useTranslation();
@@ -80,7 +81,7 @@ export default function TransactionDetailModal({ selectedTx, onClose }) {
           {/* Tipping QR utility footer */}
           <div className="flex gap-4 p-4 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5 items-center">
             <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(`${window.location.origin}${window.location.pathname}?flow=customer&tech=staff/${encodeURIComponent(selectedTx.staffId)}`)}`}
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(`${getCustomerAppBaseUrl()}?flow=customer&tech=staff/${encodeURIComponent(selectedTx.staffId)}`)}`}
               alt="Staff Tipping QR"
               className="h-20 w-20 object-contain bg-white p-1 rounded-lg border border-slate-200 shadow-sm shrink-0"
             />
@@ -93,7 +94,7 @@ export default function TransactionDetailModal({ selectedTx, onClose }) {
               </span>
               <button
                 onClick={async () => {
-                  const shareUrl = `${window.location.origin}${window.location.pathname}?flow=customer&tech=staff/${encodeURIComponent(selectedTx.staffId)}`;
+                  const shareUrl = `${getCustomerAppBaseUrl()}?flow=customer&tech=staff/${encodeURIComponent(selectedTx.staffId)}`;
                   if (navigator.share) {
                     try {
                       await navigator.share({ title: 'Tip ' + selectedTx.staffName, url: shareUrl });
