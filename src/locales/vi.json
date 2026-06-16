@@ -64,7 +64,16 @@
       "quick_refer": "Giới thiệu",
       "refer_title": "Mời đồng nghiệp nail tech",
       "refer_subtitle": "Nhận $10 cho mỗi bạn bè tham gia!",
-      "invite_now": "Mời ngay"
+      "invite_now": "Mời ngay",
+      "master_welcome_qr": "QR Chào Mừng Chính",
+      "master_store_qr_title": "Master Store QR",
+      "master_status_active": "Đang hoạt động",
+      "master_status_setup_required": "Cần thiết lập",
+      "store_main_portal": "Cổng Chính Cửa Hàng",
+      "master_store_qr_desc": "QR chung của cửa hàng để khách truy cập trang tip chính.",
+      "no_master_touchpoint_url": "Chưa có URL master touchpoint",
+      "preview_qr": "Xem QR",
+      "manage_touchpoints": "Quản lý Touchpoints"
     },
     "tips": {
       "activity": "Hoạt động tip",

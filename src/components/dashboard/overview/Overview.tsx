@@ -1,16 +1,13 @@
-import { useState } from 'react'
 import {
   QrCode,
   Star,
   Clock,
   DollarSign,
   Calendar,
-  Gift,
   CreditCard,
   MessageSquare,
-  ChevronRight,
-  CheckCircle2,
-  Building2
+  LifeBuoy,
+  ChevronRight
 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 
@@ -64,6 +61,21 @@ function StatCard({ icon, iconBg, label, value, sub, subColor = 'text-nexoraTeal
   )
 }
 
+
+/* ─── Review KPI Card ──────────────────────────────────────────────────── */
+function ReviewKpiCard({ label, value, footer, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-2xl border border-nexoraBorder bg-white p-4 text-left shadow-nexora-card transition hover:-translate-y-0.5 hover:shadow-premium focus:outline-none active:scale-[0.98]"
+    >
+      <p className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">{label}</p>
+      <p className="mt-1 text-2xl font-black text-nexoraText tracking-tight">{value}</p>
+      <div className="mt-1">{footer}</div>
+    </button>
+  )
+}
 
 /* ─── Quick Action Button ──────────────────────────────────────────────── */
 function QuickAction({ icon, label, onClick, bg, iconColor }) {
@@ -164,8 +176,8 @@ function Overview({
     }
   }
   const masterQrTarget = {
-    name: 'Master Welcome QR',
-    subtitle: 'Store Main Portal',
+    name: t('staff_dashboard.home.master_welcome_qr'),
+    subtitle: t('staff_dashboard.home.store_main_portal'),
     slug: masterTouchpoint?.slug || 'general',
     url: masterTouchpoint?.url || null,
     isActive: true,
@@ -275,7 +287,7 @@ function Overview({
             label={t('staff_dashboard.home.quick_qr')}
             bg="bg-gray-100"
             iconColor="text-gray-600"
-            onClick={() => previewQr?.({ name: 'Master Welcome QR', subtitle: 'Store Main Portal', slug: 'general', isActive: true })}
+            onClick={() => previewQr?.(masterQrTarget)}
           />
           <QuickAction
             icon={<DollarSign className="h-5 w-5" />}
@@ -299,8 +311,8 @@ function Overview({
             onClick={() => onNavigateMenu?.('reports')}
           />
           <QuickAction
-            icon={<Gift className="h-5 w-5" />}
-            label={t('staff_dashboard.home.quick_refer')}
+            icon={<LifeBuoy className="h-5 w-5" />}
+            label={t('dashboard.menu.support')}
             bg="bg-pink-100"
             iconColor="text-pink-500"
             onClick={() => onNavigateMenu?.('support')}
@@ -340,65 +352,101 @@ function Overview({
         </div>
       </div>
 
-      {/* ── Your Linked Businesses ────────────────────────────────────────── */}
+      {/* ── Master Store QR ───────────────────────────────────────────────── */}
       <div className="rounded-2xl border border-nexoraBorder bg-white shadow-nexora-card overflow-hidden">
-        <div className="flex items-center justify-between px-5 pt-5 pb-3">
-          <h2 className="text-sm font-black text-nexoraText">{t('staff_dashboard.home.your_linked_businesses')}</h2>
-          <button
-            type="button"
-            onClick={() => onNavigateMenu?.('settings')}
-            className="text-xs font-bold text-nexoraBrand hover:text-nexoraBrandDark transition"
-          >
-            {t('staff_dashboard.home.manage')}
-          </button>
+        <div className="flex items-center justify-between px-5 pt-5 pb-2">
+          <h2 className="text-sm font-black text-nexoraText">{t('staff_dashboard.home.master_store_qr_title')}</h2>
+          <span className="rounded-full bg-nexoraBrandSoft px-2.5 py-1 text-[10px] font-bold text-nexoraBrand">
+            {masterTouchpoint
+              ? t('staff_dashboard.home.master_status_active')
+              : t('staff_dashboard.home.master_status_setup_required')}
+          </span>
         </div>
-        <div className="px-5 pb-4">
-          <button
-            type="button"
-            onClick={() => onNavigateMenu?.('settings')}
-            className="flex w-full items-center gap-3 rounded-xl border border-nexoraBorder p-3 hover:border-nexoraBrand hover:bg-nexoraBrandSoft/30 transition-all duration-200 group"
-          >
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-nexoraSidebar to-nexoraBrand text-white shadow-nexora-soft">
-              <Building2 className="h-6 w-6" />
-            </span>
-            <div className="flex-1 text-left min-w-0">
-              <p className="text-sm font-bold text-nexoraText truncate">{businessName || 'Your Business'}</p>
-              <p className="text-[11px] text-nexoraMuted">
-                {t('staff_dashboard.home.display_name')}: {profile?.fullName?.split(' ')[0] || 'Owner'}
-              </p>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <span className="h-6 px-2.5 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-bold text-emerald-600 flex items-center">
-                {t('common.active')}
+        <div className="px-5 pb-5">
+          <div className="rounded-xl border border-nexoraBorder bg-nexoraSurface p-4">
+            <div className="flex items-start gap-3">
+              <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-nexoraBrand to-nexoraElectric text-white shadow-nexora-soft">
+                <QrCode className="h-5 w-5" />
               </span>
-              <ChevronRight className="h-4 w-4 text-nexoraSubtle group-hover:text-nexoraBrand transition-colors" />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold text-nexoraText">{t('staff_dashboard.home.store_main_portal')}</p>
+                <p className="mt-0.5 text-[11px] text-nexoraMuted">
+                  {t('staff_dashboard.home.master_store_qr_desc')}
+                </p>
+                <p className="mt-2 truncate text-[10px] text-nexoraSubtle">
+                  {masterTouchUrl || t('staff_dashboard.home.no_master_touchpoint_url')}
+                </p>
+              </div>
             </div>
-          </button>
+            <div className="mt-4 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => previewQr?.(masterQrTarget)}
+                className="inline-flex h-8 items-center justify-center rounded-full bg-nexoraBrand px-4 text-xs font-bold text-white transition hover:bg-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={!masterTouchpoint}
+              >
+                {t('staff_dashboard.home.preview_qr')}
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigateMenu?.('touchpoints')}
+                className="inline-flex h-8 items-center justify-center rounded-full border border-nexoraBorder bg-white px-4 text-xs font-bold text-nexoraText transition hover:border-nexoraBrand hover:text-nexoraBrand"
+              >
+                {t('staff_dashboard.home.manage_touchpoints')}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* ── Invite Banner ─────────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-nexoraBrand via-nexoraElectricMid to-nexoraViolet p-5 shadow-nexora-soft">
-        {/* Decorative circles */}
-        <div className="absolute -top-6 -right-6 h-24 w-24 rounded-full bg-white/10" />
-        <div className="absolute -bottom-4 right-16 h-16 w-16 rounded-full bg-white/10" />
-
-        <div className="relative flex items-center gap-4">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
-            <Gift className="h-6 w-6 text-white" />
-          </span>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-black text-white">{t('staff_dashboard.home.refer_title')}</p>
-            <p className="text-[11px] text-white/80 mt-0.5">{t('staff_dashboard.home.refer_subtitle')}</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => onNavigateMenu?.('support')}
-            className="shrink-0 h-9 px-4 rounded-full bg-white text-xs font-black text-nexoraBrand hover:bg-white/90 transition shadow-md active:scale-95"
-          >
-            {t('staff_dashboard.home.invite_now')}
-          </button>
-        </div>
+      {/* ── Review KPI Cards ─────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <ReviewKpiCard
+          label={t('dashboard.review_kpi.google_reviews')}
+          value={metrics.googleReviews ?? 0}
+          footer={
+            <>
+              {renderStars(metrics.googleRating ?? 0)}
+              <p className="mt-1 text-[10px] font-semibold text-nexoraMuted">
+                {t('dashboard.review_kpi.reviews_count', { count: metrics.googleReviews ?? 0 })}
+              </p>
+            </>
+          }
+          onClick={() => onOpenReviews?.()}
+        />
+        <ReviewKpiCard
+          label={t('dashboard.review_kpi.yelp_reviews')}
+          value={metrics.yelpReviews ?? 0}
+          footer={
+            <>
+              {renderStars(metrics.yelpRating ?? 0)}
+              <p className="mt-1 text-[10px] font-semibold text-nexoraMuted">
+                {t('dashboard.review_kpi.reviews_count', { count: metrics.yelpReviews ?? 0 })}
+              </p>
+            </>
+          }
+          onClick={() => onOpenReviews?.()}
+        />
+        <ReviewKpiCard
+          label={t('dashboard.review_kpi.response_rate')}
+          value={`${metrics.responseRate ?? 0}%`}
+          footer={
+            <p className="text-[10px] font-semibold text-emerald-600">
+              {t('dashboard.review_kpi.great')}
+            </p>
+          }
+          onClick={() => onOpenReviews?.()}
+        />
+        <ReviewKpiCard
+          label={t('dashboard.review_kpi.returning_customers')}
+          value={`${metrics.returningCustomers ?? 0}%`}
+          footer={
+            <p className="text-[10px] font-semibold text-emerald-600">
+              ▲ {metrics.returningCustomersDelta ?? 0}% {t('dashboard.kpi.vs_last_week')}
+            </p>
+          }
+          onClick={() => onOpenReviews?.()}
+        />
       </div>
 
     </div>

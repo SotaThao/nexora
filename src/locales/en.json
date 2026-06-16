@@ -64,7 +64,16 @@
       "quick_refer": "Refer & Earn",
       "refer_title": "Invite fellow nail techs",
       "refer_subtitle": "Earn $10 for each friend who joins!",
-      "invite_now": "Invite Now"
+      "invite_now": "Invite Now",
+      "master_welcome_qr": "Master Welcome QR",
+      "master_store_qr_title": "Master Store QR",
+      "master_status_active": "Active",
+      "master_status_setup_required": "Setup required",
+      "store_main_portal": "Store Main Portal",
+      "master_store_qr_desc": "Shared store QR for customers to access the main tipping page.",
+      "no_master_touchpoint_url": "No master touchpoint URL yet",
+      "preview_qr": "Preview QR",
+      "manage_touchpoints": "Manage Touchpoints"
     },
     "tips": {
       "activity": "Tip Activity",

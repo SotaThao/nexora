@@ -101,13 +101,14 @@ export default function Dashboard({
     isLoading: isStaffListLoading,
     isFetching: isStaffListFetching,
   } = useMerchantStaff({
+    statusFilter: StatusFilter.Active,
     pageNumber: activeStaffPage,
     pageSize: activeStaffPageSize,
   })
   const { data: pendingStaffData, isLoading: isPendingStaffLoading } = useMerchantStaff({
     statusFilter: StatusFilter.Pending,
     pageNumber: 1,
-    pageSize: 100
+    pageSize: 100,
   })
   const {
     data: inviteLinkSetting,
