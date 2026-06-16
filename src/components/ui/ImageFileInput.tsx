@@ -1,6 +1,4 @@
 import React, { useRef } from 'react'
-import { Capacitor } from '@capacitor/core'
-import { pickImage } from '../../native/imagePicker'
 import { readImageFileAsDataUrl } from '../../utils/imageFile'
 
 interface ImageFileInputProps extends React.HTMLAttributes<HTMLElement> {
@@ -18,6 +16,7 @@ export default function ImageFileInput({
   onPick,
   onPickFile = undefined,
   disabled = false,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   source = 'photos',
   className = '',
   inputClassName = 'sr-only',
@@ -42,19 +41,12 @@ export default function ImageFileInput({
     event.target.value = ''
   }
 
-  const handleActivate = async (event) => {
+  const handleActivate = (event) => {
     if (disabled) {
       event?.preventDefault?.()
       return
     }
-
-    if (Capacitor.isNativePlatform()) {
-      event?.preventDefault?.()
-      const selection = await pickImage({ source })
-      emitSelection(selection)
-      return
-    }
-
+    // For non-label wrappers, forward the activation to the hidden file input.
     if (as !== 'label') {
       event?.preventDefault?.()
       inputRef.current?.click()
@@ -62,34 +54,32 @@ export default function ImageFileInput({
   }
 
   const Wrapper = as === 'button' ? 'button' : as === 'label' ? 'label' : 'div'
-  const usesNativeActivation = Capacitor.isNativePlatform() || as !== 'label'
+  const usesManualActivation = as !== 'label'
 
   return (
     <Wrapper
       {...rest}
       className={className}
-      onClick={usesNativeActivation ? handleActivate : undefined}
+      onClick={usesManualActivation ? handleActivate : undefined}
       type={as === 'button' ? 'button' : undefined}
       role={as === 'div' ? 'button' : undefined}
       tabIndex={as === 'div' && !disabled ? 0 : undefined}
       onKeyDown={as === 'div' && !disabled ? (event) => {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault()
-          void handleActivate(event)
+          handleActivate(event)
         }
       } : undefined}
     >
       {children}
-      {!Capacitor.isNativePlatform() && (
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          className={inputClassName}
-          onChange={handleWebChange}
-          disabled={disabled}
-        />
-      )}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className={inputClassName}
+        onChange={handleWebChange}
+        disabled={disabled}
+      />
     </Wrapper>
   )
 }

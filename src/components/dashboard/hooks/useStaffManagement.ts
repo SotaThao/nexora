@@ -1,4 +1,4 @@
-﻿// Staff roster + staff-modal/form state and all staff CRUD handlers for the
+// Staff roster + staff-modal/form state and all staff CRUD handlers for the
 // Dashboard. Refactored to use API mutation hooks instead of local setStaff().
 // Extracted from Dashboard.jsx (Group 5).
 import { useState } from 'react'
@@ -80,7 +80,7 @@ export function useStaffManagement({
   const { t } = useTranslation()
   const { showToast, showConfirm } = useNotification()
 
-  // API mutation hooks ΓÇö all invalidate qk.merchantStaff() on success
+  // API mutation hooks — all invalidate qk.merchantStaff() on success
   const inviteStaffMutation = useInviteStaff()
   const resendInviteMutation = useResendStaffInvite()
   const linkRequestMutation = useSendStaffLinkRequest()
@@ -95,7 +95,7 @@ export function useStaffManagement({
   const errMsg = (err: unknown) => t(getErrorI18nKey(getApiErrorCode(err)))
 
   // Staff comes from the API query (useMerchantStaff) passed in as staffData.
-  // No more local setStaff ΓÇö the query cache is the source of truth.
+  // No more local setStaff — the query cache is the source of truth.
   const staff = staffData ?? []
 
   const [errors, setErrors] = useState<LooseObject>({})
@@ -173,7 +173,7 @@ export function useStaffManagement({
   }
 
   /**
-   * Save staff ΓÇö for editing existing staff, this is a local UI operation
+   * Save staff — for editing existing staff, this is a local UI operation
    * since Swagger does not expose a merchant endpoint to edit staff profiles.
    * For adding new staff, the merchant should use invite or link request instead.
    */
@@ -198,7 +198,7 @@ export function useStaffManagement({
 
   /**
    * Send invite via the InviteShareModal (from StaffModal).
-   * Calls POST /api/v1/merchant/staff/invite ΓÇö no local state mutation.
+   * Calls POST /api/v1/merchant/staff/invite — no local state mutation.
    */
   const sendSetupLinkFromModal = (formDetails) => {
     const nextErrors: LooseObject = {}
@@ -328,7 +328,7 @@ export function useStaffManagement({
   }
 
   /**
-   * Accept a join request ΓÇö update status to Active.
+   * Accept a join request — update status to Active.
    * Calls PUT /api/v1/merchant/staff/{staffLinkId}/status.
    */
   const handleAcceptJoinRequest = (staffId) => {
@@ -347,7 +347,7 @@ export function useStaffManagement({
   }
 
   /**
-   * Decline a join request ΓÇö reject the pending link.
+   * Decline a join request — reject the pending link.
    * Calls PUT /api/v1/merchant/staff/links/{linkId}/reject (the status-update
    * route only accepts "Active" | "Inactive" and 400s on "Rejected").
    */
@@ -369,7 +369,7 @@ export function useStaffManagement({
   }
 
   /**
-   * Accept an unlink request ΓÇö remove the staff link.
+   * Accept an unlink request — remove the staff link.
    * Calls DELETE /api/v1/merchant/staff/{staffLinkId}.
    */
   const handleAcceptUnlinkRequest = async (staffId) => {
@@ -392,7 +392,7 @@ export function useStaffManagement({
   }
 
   /**
-   * Decline an unlink request ΓÇö update status back to Active.
+   * Decline an unlink request — update status back to Active.
    * Calls PUT /api/v1/merchant/staff/{staffLinkId}/status.
    */
   const handleDeclineUnlinkRequest = async (staffId) => {

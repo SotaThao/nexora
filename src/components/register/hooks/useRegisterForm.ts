@@ -3,7 +3,7 @@ import { getApiErrorCode, isApiError } from '../../../types/domain'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
 import { serializeBankWireAccount } from '../../payout/bankWireAccount'
-import { captureQrImage } from '../../../native/imagePicker'
+import { captureQrImage } from '../../../utils/qrCode'
 
 const normalizePhone = (raw) => {
   if (!raw) return ''
