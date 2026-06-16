@@ -12,7 +12,7 @@ import {
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import { useStaffLinkedBusinesses } from '../hooks/useStaffLinkedBusinesses'
-import { useOutletContext } from 'react-router-dom'
+import { useOutletContext, useSearchParams } from 'react-router-dom'
 import { UserVerifyStatus } from '../../../constants/userVerifyStatus'
 import { useVerifiedStatus } from '../../../data/hooks/useProfileSettings'
 import { useUploadImage } from '../../../data/hooks/useMerchantSetup'
@@ -29,8 +29,15 @@ export default function StaffProfile() {
   const { staffMember, account, saveProfile, setBusinessDisplayName } = useStaffAccount()
   const { linkedBusinesses } = useStaffLinkedBusinesses()
   const { onLogout } = useOutletContext<LooseObject>()
+  const [searchParams] = useSearchParams()
 
-  const [activeTab, setActiveTab] = useState('profile') // profile | kyc
+  const tabFromUrl = searchParams.get('tab')
+  const [activeTab, setActiveTab] = useState(tabFromUrl === 'kyc' ? 'kyc' : 'profile') // profile | kyc
+
+  useEffect(() => {
+    if (tabFromUrl === 'kyc') setActiveTab('kyc')
+    else if (tabFromUrl === 'account' || !tabFromUrl) setActiveTab('profile')
+  }, [tabFromUrl])
   const [displayName, setDisplayName] = useState(account.defaultDisplayName || '')
   const [bio, setBio] = useState(account.bio || '')
   const [fullName, setFullName] = useState(account.fullName || staffMember.fullName || '')

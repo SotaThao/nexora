@@ -91,37 +91,38 @@ function normalizeNotification(item: NotificationApiDto): NotificationRecord {
     id: item.id ?? '',
     type,
     title: item.title || '',
-    message,
-    body: message,
+    message: body,
+    body,
     actionUrl: item.actionUrl ?? null,
     isRead,
     read: isRead,
-    readAt: item.readAt ?? null,
-    referenceId: item.referenceId ?? null,
-    createdAt: createdAt || undefined,
-    time: createdAt ? new Date(createdAt).toLocaleString() : '',
+    time: new Date(createdAt).toLocaleString(),
     ...(linkTab ? { linkTab } : {}),
     ...(staffId ? { staffId } : {}),
   }
 }
 
 function normalizeNotificationsPage(
-  response: NotificationApiDto[] | NotificationsListResponse | null,
-  fallbackPageNumber = 1,
+  response: NotificationApiDto[] | NotificationsListResponse,
+  pageNumber: number,
 ): NotificationsPage {
-  const items = Array.isArray(response) ? response : (response?.items ?? [])
-  const pageNumber = Array.isArray(response)
-    ? fallbackPageNumber
-    : (response?.pageNumber ?? fallbackPageNumber)
-  const totalPages = Array.isArray(response) ? 1 : (response?.totalPages ?? 0)
-
+  if (Array.isArray(response)) {
+    return {
+      items: response.map(normalizeNotification),
+      pageNumber,
+      totalPages: 1,
+      totalCount: response.length,
+      hasPreviousPage: false,
+      hasNextPage: false,
+    }
+  }
   return {
-    items: items.map(normalizeNotification),
-    pageNumber,
-    totalPages,
-    totalCount: Array.isArray(response) ? items.length : (response?.totalCount ?? items.length),
-    hasPreviousPage: Array.isArray(response) ? false : Boolean(response?.hasPreviousPage),
-    hasNextPage: Array.isArray(response) ? false : Boolean(response?.hasNextPage),
+    items: (response.items ?? []).map(normalizeNotification),
+    pageNumber: response.pageNumber ?? pageNumber,
+    totalPages: response.totalPages ?? 1,
+    totalCount: response.totalCount ?? 0,
+    hasPreviousPage: response.hasPreviousPage ?? false,
+    hasNextPage: response.hasNextPage ?? false,
   }
 }
 

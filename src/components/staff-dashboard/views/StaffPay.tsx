@@ -141,8 +141,7 @@ export default function StaffPay() {
   return (
     <div className="space-y-4">
       <section className={panel}>
-        <h3 className="text-base font-extrabold text-nexoraText">{t('staff_dashboard.pay.title')}</h3>
-        <p className="mt-1 text-xs text-nexoraMuted">{t('staff_dashboard.pay.owner_note')}</p>
+        <p className="text-xs text-nexoraMuted">{t('staff_dashboard.pay.owner_note')}</p>
 
         {paymentMethods.length === 0 ? (
           <p className="mt-4 py-6 text-center text-xs text-nexoraSubtle">
