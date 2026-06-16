@@ -321,7 +321,14 @@ export interface UserProfile {
   email?: string
   phone?: string
   phoneNumber?: string
-  profileImage?: { url?: string } | string
+  profileImage?: {
+    id?: string | null
+    title?: string | null
+    imageUrl?: string | null
+    thumbnailUrl?: string | null
+    url?: string
+  } | string
+  profileImageUrl?: string
   userType?: string
   profileType?: string
   status?: string

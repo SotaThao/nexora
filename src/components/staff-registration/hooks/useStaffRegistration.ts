@@ -27,6 +27,7 @@ const formatReferralDisplay = (businessName = '', referralCode = '') => {
   return [name, code].filter(Boolean).join(' - ')
 }
 import { logger } from '../../../utils/logger'
+import { getUserProfileImageUrl } from '../../../utils/userProfileImage'
 import { usePendingAccounts, useReplaceAllPendingAccounts } from '../../../data/hooks/usePendingAccounts'
 import { useMerchantSetup, useSaveMerchantSetup, useUploadImage } from '../../../data/hooks/useMerchantSetup'
 import { useNotifications, useAddNotification } from '../../../data/hooks/useNotifications'
@@ -757,7 +758,7 @@ export default function useStaffRegistration({ inviteData }) {
         position: apiInviteInfo?.invitedPosition || 'Nail Technician',
         phone: profileData.phoneNumber || '',
         email: profileData.email || emailQuery,
-        avatar: (profileData.profileImage as { url?: string } | undefined)?.url || '',
+        avatar: getUserProfileImageUrl(profileData) || '',
         vlinkpayId: vlinkpayIdVal,
         payoutConfigs,
       })
@@ -986,7 +987,7 @@ export default function useStaffRegistration({ inviteData }) {
             nickname: refreshedProfile.firstName || refreshedProfile.email?.split('@')[0] || '',
             phone: refreshedProfile.phoneNumber || '',
             email: refreshedProfile.email || prev?.email || '',
-            avatar: (refreshedProfile.profileImage as { url?: string } | undefined)?.url || '',
+            avatar: getUserProfileImageUrl(refreshedProfile) || '',
           }))
           setNeedsOnboarding(false)
           setStep(0)

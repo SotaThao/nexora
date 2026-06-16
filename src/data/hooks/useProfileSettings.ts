@@ -53,7 +53,20 @@ export function useUpdateUserProfile() {
   const queryClient = useQueryClient()
   return useMutation<LooseObject, Error, UpdateUserProfileDto>({
     mutationFn: (dto) => profileSettingsRepository.updateUserProfile(dto),
-    onSuccess: () => {
+    onSuccess: (_data, dto) => {
+      if (dto.profileImageUrl !== undefined) {
+        queryClient.setQueryData(qk.userProfile(), (prev: UserProfile | null | undefined) => (
+          prev
+            ? {
+                ...prev,
+                profileImageUrl: dto.profileImageUrl || undefined,
+                profileImage: dto.profileImageUrl
+                  ? { imageUrl: dto.profileImageUrl, thumbnailUrl: dto.profileImageUrl }
+                  : prev.profileImage,
+              }
+            : prev
+        ))
+      }
       queryClient.invalidateQueries({ queryKey: qk.userProfile() })
     },
   })

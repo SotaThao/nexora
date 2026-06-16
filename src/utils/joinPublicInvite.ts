@@ -1,11 +1,10 @@
 import type { UserProfile } from '../types/domain'
 import type { JoinPublicInviteDto } from '../types/repositories'
 
+import { getUserProfileImageUrl } from './userProfileImage'
+
 export function getUserProfilePhotoUrl(profile: UserProfile | null | undefined): string | null {
-  const image = profile?.profileImage
-  if (!image) return null
-  if (typeof image === 'string') return image
-  return image.url ?? null
+  return getUserProfileImageUrl(profile)
 }
 
 export function getUserProfileDisplayName(profile: UserProfile | null | undefined): string {
