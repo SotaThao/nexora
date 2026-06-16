@@ -1431,6 +1431,14 @@
           "phYelpUrl": "https://www.yelp.com/biz/..."
         },
         "KybTab": {
+          "verifyYourBusiness": "Xác minh doanh nghiệp của bạn",
+          "subtitle": "Hoàn thành <b>KYB</b> và khám phá trải nghiệm đẳng cấp tiếp theo cùng <b>Nexora Touch</b>",
+          "getStarted": "Bắt đầu",
+          "tabKybTitle": "Tại sao xác minh KYB lại quan trọng",
+          "tabKybContent": "Hoàn thành quá trình xác minh KYB đảm bảo doanh nghiệp của bạn tuân thủ đầy đủ các yêu cầu quy định, cho phép truy cập tất cả tính năng và lợi ích của Nexora Touch, bao gồm xử lý thanh toán, thông tin chi tiết doanh nghiệp và nhiều hơn nữa. Quá trình này cũng bảo vệ doanh nghiệp khỏi gian lận và củng cố niềm tin với khách hàng.",
+          "retry": "Thử lại",
+          "networkError": "Không thể tải cổng KYB. Vui lòng kiểm tra kết nối và thử lại.",
+          "serverError": "Không thể khởi tạo cổng KYB. Vui lòng thử lại sau.",
           "closeForm": "Đóng Form",
           "submittingKybDetails": "Đang gửi thông tin xác thực...",
           "legalBusinessName": "Tên pháp lý doanh nghiệp",

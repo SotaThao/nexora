@@ -1431,6 +1431,14 @@
           "phYelpUrl": "https://www.yelp.com/biz/..."
         },
         "KybTab": {
+          "verifyYourBusiness": "Verify Your Business",
+          "subtitle": "Complete your <b>KYB</b> and explore the next level of experience with <b>Nexora Touch</b>",
+          "getStarted": "Get Started",
+          "tabKybTitle": "Why KYB Verification Is Important",
+          "tabKybContent": "Completing the KYB verification ensures your business is fully compliant with regulatory requirements, providing you access to all the features and benefits of Nexora Touch, including payment processing, business insights, and more. This process also protects your business from fraudulent activities and strengthens trust with your customers.",
+          "retry": "Retry",
+          "networkError": "Unable to load KYB portal. Please check your connection and try again.",
+          "serverError": "Unable to initialize KYB portal. Please try again later.",
           "closeForm": "Close Form",
           "submittingKybDetails": "Submitting KYB details...",
           "legalBusinessName": "Legal Business Name",

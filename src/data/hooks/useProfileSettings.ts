@@ -42,6 +42,13 @@ export function useKycInitialize({ enabled = false } = {}) {
   })
 }
 
+/** Initialize VLINKPAY KYB/KYC iframe portal (merchant settings). */
+export function useInitializeKybPortal() {
+  return useMutation<{ url?: string }, Error, void>({
+    mutationFn: () => profileSettingsRepository.initializeKyc(),
+  })
+}
+
 export function useUpdateUserProfile() {
   const queryClient = useQueryClient()
   return useMutation<LooseObject, Error, UpdateUserProfileDto>({

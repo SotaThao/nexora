@@ -4,7 +4,6 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { logger } from '../../../utils/logger'
 import { useProfileSettings, useSaveProfileSettings } from '../../../data/hooks/useProfileSettings'
 import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
-import { usePendingAccounts, useReplaceAllPendingAccounts } from '../../../data/hooks/usePendingAccounts'
 
 const DEFAULT_PROFILE = {
   username: '',
@@ -42,15 +41,14 @@ export default function useSettingsForm({
   initialTab,
   onTabChange,
   onKybSuccess,
-  verificationStatus
+  verificationStatus,
+  openKybPortal,
 }) {
   const { t, currentLanguage } = useTranslation()
   const profileSettingsQuery = useProfileSettings()
   const saveProfileSettingsMutation = useSaveProfileSettings()
   const merchantSetupQuery = useMerchantSetup()
   const saveMerchantSetupMutation = useSaveMerchantSetup()
-  const pendingAccountsQuery = usePendingAccounts()
-  const replaceAllPendingAccountsMutation = useReplaceAllPendingAccounts()
   const [activeTab, setActiveTab] = useState(initialTab) // profile | kyb
 
   useEffect(() => {
@@ -64,63 +62,8 @@ export default function useSettingsForm({
     if (onTabChange) onTabChange(tab)
   }
 
-  // State for secure VLINKPAY KYB iframe
-  const [kybData, setKybData] = useState({
-    legalName: '',
-    taxId: '',
-    businessType: 'LLC',
-    ownerName: '',
-    bankName: '',
-    bankAccount: '',
-    bankRouting: ''
-  })
-  const [isSubmittingKyb, setIsSubmittingKyb] = useState(false)
-  const [kybErrors, setKybErrors] = useState<LooseObject>({})
-  const [showPortal, setShowPortal] = useState(verificationStatus !== 'kyb_approved' && verificationStatus !== 'verified_pro')
-
-  useEffect(() => {
-    setShowPortal(verificationStatus !== 'kyb_approved' && verificationStatus !== 'verified_pro')
-  }, [verificationStatus])
-
-  const handleKybSubmit = (e) => {
-    e.preventDefault()
-    if (!kybData.legalName.trim() || !kybData.taxId.trim() || !kybData.ownerName.trim() ||
-        !kybData.bankName.trim() || !kybData.bankAccount.trim() || !kybData.bankRouting.trim()) {
-      setKybErrors({ kyb: t('register.errors.kyb_required') })
-      return
-    }
-    setKybErrors({})
-    setIsSubmittingKyb(true)
-    setTimeout(async () => {
-      setIsSubmittingKyb(false)
-      const existingAccounts = pendingAccountsQuery.data ?? []
-      const targetEmail = profile.email || ''
-      const existing = existingAccounts.find(acc => acc.email === targetEmail)
-      const newAccount = {
-        email: targetEmail,
-        password: existing ? existing.password : '••••••••',
-        referralCode: existing ? existing.referralCode : '',
-        isVerified: true,
-        kybDetails: { ...kybData }
-      }
-      const filtered = existingAccounts.filter(acc => acc.email !== targetEmail)
-      filtered.push(newAccount)
-      await replaceAllPendingAccountsMutation.mutateAsync(filtered)
-      if (onKybSuccess) {
-        onKybSuccess(targetEmail)
-      }
-      setShowPortal(false)
-      setProfile(prev => ({
-        ...prev,
-        businessName: kybData.legalName,
-        fullName: kybData.ownerName,
-        paymentAccounts: {
-          ...prev.paymentAccounts,
-          vlinkpay: kybData.bankAccount ? `VLP-${kybData.bankAccount.slice(-4)}` : 'VLINKPAY-ID'
-        }
-      }))
-      showToast(t('components.settings.hooks.useSettingsForm.kybVerificationSuccessful'))
-    }, 2000)
+  const openKybPortalFlow = () => {
+    if (openKybPortal) openKybPortal()
   }
 
   // Settings profile state loaded from local storage or default
@@ -495,7 +438,7 @@ export default function useSettingsForm({
           title: t('components.settings.hooks.useSettingsForm.basicAccountStatus'),
           description: t('components.settings.hooks.useSettingsForm.yourProfileIsActive'),
           ctaText: t('components.settings.hooks.useSettingsForm.completeBusinessVerification'),
-          ctaAction: () => setShowPortal(prev => !prev)
+          ctaAction: openKybPortalFlow
         }
       case 'lite_pending':
         return {
@@ -514,7 +457,7 @@ export default function useSettingsForm({
           title: t('components.settings.hooks.useSettingsForm.verifiedLite'),
           description: t('components.settings.hooks.useSettingsForm.verifiedLiteP2pTipping'),
           ctaText: t('components.settings.hooks.useSettingsForm.completeBusinessVerification'),
-          ctaAction: () => setShowPortal(prev => !prev)
+          ctaAction: openKybPortalFlow
         }
       case 'kyb_required':
         return {
@@ -524,7 +467,7 @@ export default function useSettingsForm({
           title: t('components.settings.hooks.useSettingsForm.businessVerificationRequired'),
           description: t('components.settings.hooks.useSettingsForm.businessVerificationRequiredYou'),
           ctaText: t('components.settings.hooks.useSettingsForm.completeBusinessVerification'),
-          ctaAction: () => setShowPortal(prev => !prev)
+          ctaAction: openKybPortalFlow
         }
       case 'kyb_pending':
         return {
@@ -572,7 +515,7 @@ export default function useSettingsForm({
           title: t('components.settings.hooks.useSettingsForm.verificationRejectedByCompliance'),
           description: t('components.settings.hooks.useSettingsForm.yourBusinessVerificationApplication'),
           ctaText: t('components.settings.hooks.useSettingsForm.reSubmitVerification'),
-          ctaAction: () => setShowPortal(prev => !prev)
+          ctaAction: openKybPortalFlow
         }
       case 'under_review':
         return {
@@ -582,7 +525,7 @@ export default function useSettingsForm({
           title: t('components.settings.hooks.useSettingsForm.underReviewInfoRequested'),
           description: t('components.settings.hooks.useSettingsForm.underReviewAdditionalCompliance'),
           ctaText: t('components.settings.hooks.useSettingsForm.uploadAdditionalDocuments'),
-          ctaAction: () => setShowPortal(prev => !prev)
+          ctaAction: openKybPortalFlow
         }
       default:
         return null;
@@ -593,14 +536,6 @@ export default function useSettingsForm({
     // tab state
     activeTab,
     handleTabChange,
-    // kyb state
-    kybData,
-    setKybData,
-    isSubmittingKyb,
-    kybErrors,
-    showPortal,
-    setShowPortal,
-    handleKybSubmit,
     // profile state
     profile,
     copiedId,
