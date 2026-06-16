@@ -4,6 +4,8 @@ import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
+import { isApiError } from '../../../types/domain'
+import { getErrorI18nKey } from '../../../data/errorCodes'
 
 const STATION_TYPE_OPTIONS = [
   { value: 'Table QR', label: 'Table QR' },
@@ -21,6 +23,7 @@ export default function AddTouchpointModal({ open, onClose, onAdd, initialValues
   const [type, setType] = useState('Table QR')
   const [deviceId, setDeviceId] = useState('')
   const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Reset the form whenever the modal is (re)opened, seeding any prefill values
   // (e.g. text already typed into the inline banner before clicking "Add").
@@ -30,23 +33,41 @@ export default function AddTouchpointModal({ open, onClose, onAdd, initialValues
       setType(initialValues?.type || 'Table QR')
       setDeviceId(initialValues?.deviceId || '')
       setError('')
+      setIsSubmitting(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
   if (!open) return null
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (isSubmitting) return
+
     const trimmedName = name.trim()
     if (!trimmedName) {
       setError(t('dashboard.modals.tp_name_required'))
       return
     }
-    if (onAdd) {
-      onAdd(trimmedName, type, deviceId.trim())
+    if (!onAdd) return
+
+    try {
+      setIsSubmitting(true)
+      await onAdd(trimmedName, type, deviceId.trim())
+      showToast(t('dashboard.modals.tp_added_success', { name: trimmedName }), 'success')
+      onClose()
+    } catch (err) {
+      const fallbackMessage = t('dashboard.modals.tp_add_failed')
+      let message = fallbackMessage
+      if (isApiError(err)) {
+        const i18nKey = getErrorI18nKey(err.errorCode)
+        const translated = t(i18nKey)
+        message = translated !== i18nKey ? translated : (err.message || fallbackMessage)
+      }
+      setError(message)
+      showToast(message, 'error')
+    } finally {
+      setIsSubmitting(false)
     }
-    showToast(t('dashboard.modals.tp_added_success', { name: trimmedName }), 'success')
-    onClose()
   }
 
   return (
@@ -89,7 +110,7 @@ export default function AddTouchpointModal({ open, onClose, onAdd, initialValues
                 if (error) setError('')
               }}
               onKeyDown={(event) => {
-                if (event.key === 'Enter') handleSubmit()
+                if (event.key === 'Enter') void handleSubmit()
               }}
               placeholder={t('dashboard.modals.tp_name_placeholder')}
               className={`mt-1 h-11 w-full rounded-lg border px-3 text-sm text-nexoraText outline-none transition-colors ${
@@ -123,7 +144,7 @@ export default function AddTouchpointModal({ open, onClose, onAdd, initialValues
               value={deviceId}
               onChange={(event) => setDeviceId(event.target.value)}
               onKeyDown={(event) => {
-                if (event.key === 'Enter') handleSubmit()
+                if (event.key === 'Enter') void handleSubmit()
               }}
               placeholder={t('dashboard.modals.device_id_placeholder')}
               className="mt-1 h-11 w-full rounded-lg border border-nexoraBorder px-3 text-sm text-nexoraText outline-none focus:border-nexoraBrand font-mono"
@@ -135,17 +156,19 @@ export default function AddTouchpointModal({ open, onClose, onAdd, initialValues
           <button
             type="button"
             onClick={onClose}
+            disabled={isSubmitting}
             className="rounded-lg border border-nexoraBorder px-4 py-2 text-xs font-bold text-nexoraMuted hover:bg-nexoraSurfaceMuted transition min-h-[44px]"
           >
             {t('common.cancel')}
           </button>
           <button
             type="button"
-            onClick={handleSubmit}
-            className="inline-flex items-center gap-2 rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white hover:bg-nexoraBrandDark transition min-h-[44px]"
+            onClick={() => void handleSubmit()}
+            disabled={isSubmitting}
+            className="inline-flex items-center gap-2 rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white hover:bg-nexoraBrandDark transition min-h-[44px] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Plus className="h-4 w-4" />
-            {t('dashboard.modals.add_btn')}
+            {isSubmitting ? t('common.loading') : t('dashboard.modals.add_btn')}
           </button>
         </div>
       </div>

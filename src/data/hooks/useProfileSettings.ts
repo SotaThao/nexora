@@ -3,7 +3,10 @@
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
-import profileSettingsRepository from '../repositories/profileSettings'
+import profileSettingsRepository, {
+  type KybCustomerProfileResponse,
+  type RegisterKybResponse,
+} from '../repositories/profileSettings'
 import { useSessionRole } from '../../auth/useSessionRole'
 import type { UserProfile } from '../../types/domain'
 import type { UpdateStaffProfileDto, UpdateUserProfileDto } from '../../types/repositories'
@@ -33,6 +36,22 @@ export function useVerifiedStatus({ enabled = true } = {}) {
   })
 }
 
+/** KYB dossier — GET /customers/customers/kyb/{customerId} */
+export function useKybInfo({
+  customerId,
+  enabled = true,
+}: {
+  customerId?: string | number | null
+  enabled?: boolean
+} = {}) {
+  return useQuery<KybCustomerProfileResponse>({
+    queryKey: qk.kybInfo(customerId),
+    queryFn: () => profileSettingsRepository.getKybInfo(customerId!),
+    enabled: enabled && customerId != null && customerId !== '',
+    refetchOnWindowFocus: false,
+  })
+}
+
 export function useKycInitialize({ enabled = false } = {}) {
   return useQuery<{ url?: string }>({
     queryKey: qk.kycInitialize(),
@@ -42,11 +61,16 @@ export function useKycInitialize({ enabled = false } = {}) {
   })
 }
 
-/** Initialize VLINKPAY KYB/KYC iframe portal (merchant settings). */
-export function useInitializeKybPortal() {
-  return useMutation<{ url?: string }, Error, void>({
-    mutationFn: () => profileSettingsRepository.initializeKyc(),
+/** POST /customers/customers/kyb/register — VLINKPAY KYB iframe portal. */
+export function useRegisterKyb() {
+  return useMutation<RegisterKybResponse, Error, void>({
+    mutationFn: () => profileSettingsRepository.registerKyb(),
   })
+}
+
+/** @deprecated Use useRegisterKyb — KYB does not use kyc/initialize. */
+export function useInitializeKybPortal() {
+  return useRegisterKyb()
 }
 
 export function useUpdateUserProfile() {

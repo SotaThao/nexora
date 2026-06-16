@@ -36,6 +36,8 @@ export const qk = {
   userProfile:              () => ['userProfile'],
   verifiedStatus:           () => ['userProfile', 'verifiedStatus'],
   kycInitialize:            () => ['userProfile', 'kycInitialize'],
+  kybInfo:                  (customerId?: string | number | null) => ['userProfile', 'kybInfo', customerId ?? 'unknown'],
+  kybRegister:              () => ['userProfile', 'kybRegister'],
 
   // Merchant Staff Management
   merchantStaff:       ()      => ['merchantStaff'],

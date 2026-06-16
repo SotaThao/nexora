@@ -468,6 +468,7 @@
       "add_btn": "Add Touch Point",
       "tp_name_required": "Please enter a touch point name.",
       "tp_added_success": "Touch point \"{name}\" added successfully!",
+      "tp_add_failed": "Failed to add touch point. Please try again.",
       "view_qr_title": "QR Code for {name}",
       "view_qr_desc": "Customers scan this code to Tip & Review directly for the assigned staff member.",
       "assign_staff": "Assign staff member:",
@@ -526,11 +527,15 @@
         "stations": "QR Stations",
         "devices": "Hardware Devices"
       },
-      "open_link": "Test station flow"
+      "open_link": "Test station flow",
+      "empty_title": "No QR stations yet",
+      "empty_desc": "Create your first touchpoint to start receiving scans and tips."
     },
     "devices": {
       "subtitle": "Manage physical salon stands, tabletop codes, and smart taps.",
       "add_btn": "Add New Device",
+      "empty_title": "No hardware devices yet",
+      "empty_desc": "Add a QR or NFC device to manage stations and scan activity.",
       "location": "Location",
       "scans": "Scans",
       "last_scan": "Last Scan",
@@ -968,6 +973,7 @@
     "business_name_required": "Business name is required.",
     "business_invalid_slug_format": "The URL slug format is invalid.",
     "user_not_merchant": "Your account is not registered as a merchant.",
+    "touchpoint_starter_limit_reached": "Starter plan limit reached: you can only create up to 3 touch points. Please upgrade your plan to add more.",
     "image_file_size_exceeded": "The image file size exceeds the 10MB limit.",
     "image_unsupported_file_type": "Unsupported file format. Please upload PNG, JPEG, or WebP.",
     "image_upload_failed": "Failed to upload the image.",
@@ -1431,6 +1437,7 @@
           "phYelpUrl": "https://www.yelp.com/biz/..."
         },
         "KybTab": {
+          "iframeTitle": "Know your business",
           "verifyYourBusiness": "Verify Your Business",
           "subtitle": "Complete your <b>KYB</b> and explore the next level of experience with <b>Nexora Touch</b>",
           "getStarted": "Get Started",

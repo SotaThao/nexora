@@ -94,6 +94,13 @@ export default function DashboardHeader({
   // Calculate search suggestions
   const suggestions = useMemo(() => {
     const query = searchQuery.toLowerCase().trim()
+    const normalize = (value) =>
+      String(value ?? '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[\s_-]+/g, '')
+    const normalizedQuery = normalize(query)
     if (!query) return null
 
     const matchedStaff = (staff || []).filter(s =>
@@ -115,10 +122,20 @@ export default function DashboardHeader({
       String(r.rating).includes(query)
     ).slice(0, 3)
 
-    const matchedTps = (touchpoints || []).filter(tp =>
-      tp.name.toLowerCase().includes(query) ||
-      tp.type.toLowerCase().includes(query)
-    ).slice(0, 3)
+    const matchedTps = (touchpoints || []).filter((tp) => {
+      const name = String(tp?.name ?? '')
+      const type = String(tp?.type ?? '')
+      const deviceId = String(tp?.deviceId ?? '')
+      const slug = String(tp?.slug ?? '')
+      return (
+        name.toLowerCase().includes(query) ||
+        type.toLowerCase().includes(query) ||
+        deviceId.toLowerCase().includes(query) ||
+        slug.toLowerCase().includes(query) ||
+        normalize(name).includes(normalizedQuery) ||
+        normalize(type).includes(normalizedQuery)
+      )
+    }).slice(0, 3)
 
     const totalCount = matchedStaff.length + matchedTxs.length + matchedReviews.length + matchedTps.length
 
@@ -157,6 +174,13 @@ export default function DashboardHeader({
             setIsSearchFocused(true)
           }}
           onFocus={() => setIsSearchFocused(true)}
+          onKeyDown={(event) => {
+            if (event.key !== 'Enter') return
+            if (suggestions?.touchpoints?.length > 0) {
+              onNavigateMenu('touchpoints')
+              setIsSearchFocused(false)
+            }
+          }}
         />
 
         {isSearchFocused && searchQuery.trim() !== '' && (
@@ -260,7 +284,6 @@ export default function DashboardHeader({
                     onClick={() => {
                       onNavigateMenu('touchpoints')
                       setIsSearchFocused(false)
-                      setSearchQuery('')
                     }}
                     className="w-full text-left px-4 py-2 hover:bg-nexoraCanvas flex items-center justify-between text-xs transition"
                   >
