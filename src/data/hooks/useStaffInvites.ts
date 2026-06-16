@@ -19,10 +19,26 @@ export function useStaffInviteInfo(token?: string | null) {
   })
 }
 
+/** Public invite landing — business info by business referralCode (US-014 AC #8). */
+export function usePublicMerchantInvite(referralCode?: string | null) {
+  return useQuery<StaffInviteInfo>({
+    queryKey: qk.publicMerchantInvite(referralCode),
+    queryFn: () => staffInvitesRepository.getPublicMerchantInvite(referralCode!),
+    enabled: Boolean(referralCode),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  })
+}
+
 export function useAcceptStaffInvite() {
   return useMutation<void, Error, AcceptStaffInviteDto>({
-    mutationFn: ({ token, displayName, position, bio, photoUrl, password }) =>
-      staffInvitesRepository.acceptInvite(token, { displayName, position, bio, photoUrl, password }),
+    mutationFn: ({ token, displayName, position, bio, photoUrl }) =>
+      staffInvitesRepository.acceptInvite(token, {
+        displayName,
+        position,
+        bio,
+        photoUrl,
+      }),
   })
 }
 

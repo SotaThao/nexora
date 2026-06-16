@@ -69,7 +69,7 @@ export default function StepPayments({
       </p>
 
       <div className="space-y-2 max-h-80 overflow-y-auto pr-1 divide-y divide-nexoraRule">
-        {payoutMethodsList.map(method => {
+        {payoutMethodsList.filter(method => method.key !== 'bankwire').map(method => {
           const cfg = payouts[method.key] || { enabled: false, value: '' }
           return (
             <div key={method.key} className="flex items-center justify-between py-3">

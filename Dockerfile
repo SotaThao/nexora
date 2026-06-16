@@ -30,29 +30,25 @@ ARG VITE_MAP_MARKER_ENGINE=advanced
 ARG VITE_GOOGLE_MAPS_MAP_ID=
 ARG VITE_VLINKPAY_WEB_URL_BASE=
 
-ENV VITE_APP_ENV=$VITE_APP_ENV
-ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
-ENV VITE_API_BASE=$VITE_API_BASE_URL
-ENV VITE_DATA_SOURCE=$VITE_DATA_SOURCE
-ENV VITE_ENABLE_DEMO_TOOLS=$VITE_ENABLE_DEMO_TOOLS
-ENV VITE_SENTRY_ENV=$VITE_SENTRY_ENV
-ENV VITE_SENTRY_DSN=$VITE_SENTRY_DSN
-ENV VITE_GOOGLE_MAPS_API_KEY=$VITE_GOOGLE_MAPS_API_KEY
-ENV VITE_MAPBOX_TOKEN=$VITE_MAPBOX_TOKEN
-ENV VITE_MAP_MARKER_ENGINE=$VITE_MAP_MARKER_ENGINE
-ENV VITE_GOOGLE_MAPS_MAP_ID=$VITE_GOOGLE_MAPS_MAP_ID
-ENV VITE_VLINKPAY_WEB_URL_BASE=$VITE_VLINKPAY_WEB_URL_BASE
-
-# Build the application based on the environment
-RUN if [ "$BUILD_ENV" = "production" ]; then \
-    pnpm run build:prod; \
-  elif [ "$BUILD_ENV" = "staging" ]; then \
-    pnpm run build:staging; \
-  elif [ "$BUILD_ENV" = "test" ]; then \
-    pnpm run build:test; \
-  else \
-    pnpm run build:dev; \
-  fi
+# Build the application based on the environment.
+# Unset empty ARGs first so Vite falls back to the matching .env.* file values
+# rather than treating an empty string as a defined override.
+RUN set -e; \
+    for var in VITE_APP_ENV VITE_API_BASE_URL VITE_DATA_SOURCE VITE_ENABLE_DEMO_TOOLS \
+               VITE_SENTRY_ENV VITE_SENTRY_DSN VITE_GOOGLE_MAPS_API_KEY VITE_MAPBOX_TOKEN \
+               VITE_MAP_MARKER_ENGINE VITE_GOOGLE_MAPS_MAP_ID VITE_VLINKPAY_WEB_URL_BASE; do \
+      eval "val=\$$var"; \
+      if [ -z "$val" ]; then unset "$var"; fi; \
+    done; \
+    if [ "$BUILD_ENV" = "production" ]; then \
+      pnpm run build:prod; \
+    elif [ "$BUILD_ENV" = "staging" ]; then \
+      pnpm run build:staging; \
+    elif [ "$BUILD_ENV" = "test" ]; then \
+      pnpm run build:test; \
+    else \
+      pnpm run build:dev; \
+    fi
 
 # Use nginx to serve the built application
 FROM nginx:alpine

@@ -4,8 +4,13 @@
 import httpClient from '../../lib/httpClient'
 import type { StaffMember, StaffSearchResult } from '../../types/domain'
 import type {
+  MerchantStaffInvite,
+  StaffInviteDetailApiDto,
+  StaffInviteListItemApiDto,
   StaffInviteParams,
   StaffInviteResult,
+  StaffInvitesQuery,
+  StaffLinkRequestParams,
   StaffListItemApiDto,
   StaffPaymentMethodApiDto,
   StaffReorderItem,
@@ -22,6 +27,11 @@ const PAYOUT_TYPE_TO_KEY: Record<string, string> = {
   CashApp: 'cashapp',
   AppleCash: 'applecash',
   VlinkPay: 'vlinkpay',
+}
+
+const normalizeDateOnly = (value?: string | null) => {
+  if (!value) return null
+  return value.split('T')[0]
 }
 
 export function normalizePaymentMethods(
@@ -59,22 +69,34 @@ export function normalizeStaffListItem(dto: StaffListItemApiDto): StaffMember {
   const isActive = dto.status === 'Active' || dto.status === 'Accepted'
   const displayName = dto.displayName ?? ''
   const { payoutConfigs, paymentAccounts } = normalizePaymentMethods(dto.paymentMethods, displayName)
+  const itemType =
+    dto.itemType ??
+    (dto.inviteId ? 'invite' : undefined) ??
+    (dto.linkId || dto.staffLinkId || dto.status === 'Pending' ? 'link' : undefined)
+  const status =
+    itemType === 'invite' && dto.status === 'Pending'
+      ? 'Pending Setup'
+      : itemType === 'link' && dto.status === 'Pending'
+        ? 'Pending Acceptance'
+        : (dto.status ?? null)
 
   return {
-    id: dto.linkId ?? dto.id ?? dto.inviteId,
+    id: dto.id ?? dto.linkId ?? dto.inviteId,
     linkId: dto.linkId ?? dto.staffLinkId ?? dto.id ?? null,
-    staffLinkId: dto.itemType === 'link' ? (dto.staffLinkId ?? dto.linkId) : null,
-    inviteId: dto.itemType === 'invite' ? dto.inviteId : null,
+    staffLinkId: itemType === 'link' ? (dto.staffLinkId ?? dto.linkId ?? dto.id) : null,
+    inviteId: itemType === 'invite' ? (dto.inviteId ?? dto.id) : null,
     staffProfileId: dto.staffProfileId ?? null,
     staffCode: dto.staffCode ?? null,
-    itemType: dto.itemType,
+    refCode: dto.refCode ?? null,
+    source: dto.source ?? dto.inviteSource ?? null,
+    itemType,
     sortOrder: dto.sortOrder ?? 0,
     isProfileComplete: dto.isProfileComplete ?? false,
     tipCount: dto.tipCount ?? 0,
     averageRating: dto.averageRating ?? 0,
     fullName: displayName,
     avatar: dto.photoUrl ?? null,
-    status: dto.itemType === 'invite' && dto.status === 'Pending' ? 'Pending Setup' : (dto.status ?? null),
+    status,
     isActive,
     showInTipsFlow: isActive,
     position: dto.position ?? null,
@@ -92,8 +114,27 @@ export function normalizeStaffListItem(dto: StaffListItemApiDto): StaffMember {
       null,
     email:
       dto.email ?? dto.staffProfile?.email ?? dto.user?.email ?? dto.invitedEmail ?? null,
+    joinedDate: normalizeDateOnly(dto.joinDate),
     payoutConfigs,
     paymentAccounts,
+  }
+}
+
+export function normalizeStaffInvite(
+  dto: StaffInviteListItemApiDto | StaffInviteDetailApiDto,
+): MerchantStaffInvite {
+  return {
+    inviteId: dto.id ?? null,
+    invitedName: dto.invitedName ?? '',
+    invitedEmail: dto.invitedEmail ?? null,
+    invitedPhone: dto.invitedPhone ?? null,
+    invitedPosition: dto.invitedPosition ?? null,
+    status: dto.status ?? null,
+    expiresAt: dto.expiresAt ?? null,
+    invitedAt: dto.invitedAt ?? null,
+    acceptedAt: dto.acceptedAt ?? null,
+    acceptedByUserProfileId:
+      (dto as StaffInviteDetailApiDto).acceptedByUserProfileId ?? null,
   }
 }
 
@@ -176,8 +217,39 @@ export function createMerchantStaffRepository(client: HttpClient = httpClient) {
       await client.post(`/api/v1/merchant/staff/${encodeURIComponent(linkId)}/resend-invite`)
     },
 
-    async approveLink(linkId: string): Promise<void> {
-      await client.put(`/api/v1/merchant/staff/links/${encodeURIComponent(linkId)}/approve`)
+    // v3.3 — invite lifecycle management.
+    async listInvites(query: StaffInvitesQuery = {}): Promise<MerchantStaffInvite[]> {
+      const params = new URLSearchParams()
+      if (query.keyword) params.set('Keyword', query.keyword)
+      if (query.statusFilter) params.set('StatusFilter', query.statusFilter)
+      if (query.pageNumber != null) params.set('PageNumber', String(query.pageNumber))
+      if (query.pageSize != null) params.set('PageSize', String(query.pageSize))
+      const qs = params.toString()
+      const data = await client.get<
+        StaffInviteListItemApiDto[] | { items?: StaffInviteListItemApiDto[] }
+      >(`/api/v1/merchant/staff/invites${qs ? `?${qs}` : ''}`)
+      const items = Array.isArray(data) ? data : (data?.items ?? [])
+      return items.map(normalizeStaffInvite)
+    },
+
+    async getInvite(inviteId: string): Promise<MerchantStaffInvite> {
+      const data = await client.get<StaffInviteDetailApiDto>(
+        `/api/v1/merchant/staff/invites/${encodeURIComponent(inviteId)}`,
+      )
+      return normalizeStaffInvite(data)
+    },
+
+    async cancelInvite(inviteId: string): Promise<void> {
+      await client.del(`/api/v1/merchant/staff/invites/${encodeURIComponent(inviteId)}`)
+    },
+
+    async getByStaffCode(staffCode: string): Promise<StaffMember> {
+      // StaffDetailByCodeDto is a superset of StaffListItemDto, so the existing
+      // list normalizer covers the shared fields.
+      const dto = await client.get<StaffListItemApiDto>(
+        `/api/v1/merchant/staff/${encodeURIComponent(staffCode)}`,
+      )
+      return normalizeStaffListItem(dto)
     },
 
     async search(q: string): Promise<StaffSearchResult[]> {
@@ -188,8 +260,15 @@ export function createMerchantStaffRepository(client: HttpClient = httpClient) {
       return items.map(normalizeStaffSearchResult)
     },
 
-    async sendLinkRequest(staffProfileId: string): Promise<void> {
-      await client.post(`/api/v1/merchant/staff/link-request/${encodeURIComponent(staffProfileId)}`)
+    async sendLinkRequest(params: string | StaffLinkRequestParams): Promise<void> {
+      const dto = typeof params === 'string'
+        ? { staffProfileId: params }
+        : params
+      await client.post(`/api/v1/merchant/staff/link-request/${encodeURIComponent(dto.staffProfileId)}`)
+    },
+
+    async approveLink(linkId: string): Promise<void> {
+      await client.put(`/api/v1/merchant/staff/links/${encodeURIComponent(linkId)}/approve`)
     },
 
     async updateStatus(staffLinkId: string, status: string): Promise<void> {
@@ -200,7 +279,7 @@ export function createMerchantStaffRepository(client: HttpClient = httpClient) {
     },
 
     async rejectLink(linkId: string): Promise<void> {
-      await client.post(`/api/v1/merchant/staff/links/${encodeURIComponent(linkId)}/reject`)
+      await client.put(`/api/v1/merchant/staff/links/${encodeURIComponent(linkId)}/reject`)
     },
 
     async reorder(items: StaffReorderItem[]): Promise<void> {

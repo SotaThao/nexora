@@ -3,6 +3,7 @@ import { AlertCircle, Plus, Trash2, User, QrCode, Edit2, Link, Copy, X, Share2, 
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { useSearchMerchantStaff, StatusFilter } from '../../../data/hooks/useMerchantStaff'
+import { buildPublicInviteLink } from '../../../utils/inviteRef'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
 
@@ -292,6 +293,9 @@ function StaffView({
   onInviteStaff,
   onResendInvite,
   businessName,
+  businessSlug,
+  inviteLinkSetting,
+  isInviteLinkSettingLoading = false,
   onAcceptJoin,
   onDeclineJoin,
   onAcceptUnlink,
@@ -305,7 +309,7 @@ function StaffView({
   hasPreviousPage = false,
   onPageChange
 }) {
-  const { t, currentLanguage } = useTranslation()
+  const { t } = useTranslation()
   const { showToast } = useNotification()
   const [activeTab, setActiveTab] = useState('link') // 'link' | 'invite'
   const [largeJoinQrOpen, setLargeJoinQrOpen] = useState(false)
@@ -319,6 +323,21 @@ function StaffView({
 
   // API search hook (enabled only when query is non-empty)
   const { data: searchResults, isLoading: isSearching } = useSearchMerchantStaff(searchQuery.trim())
+  const publicInviteEnabled = Boolean(inviteLinkSetting?.isEnabled && inviteLinkSetting?.referralCode)
+  const publicInviteLink = useMemo(
+    () => publicInviteEnabled
+      ? buildPublicInviteLink({
+        origin: window.location.origin,
+        businessName,
+        businessSlug,
+        referralCode: inviteLinkSetting?.referralCode ?? '',
+      })
+      : '',
+    [businessName, businessSlug, inviteLinkSetting?.referralCode, publicInviteEnabled],
+  )
+  const publicInviteUnavailableText = isInviteLinkSettingLoading
+    ? t('components.dashboard.views.StaffView.inviteLinkLoading')
+    : t('components.dashboard.views.StaffView.inviteLinkDisabled')
 
     const sortedStaff = useMemo(() => {
     return [...(staff ?? [])].sort((a, b) => {
@@ -329,13 +348,13 @@ function StaffView({
         return b.fullName.localeCompare(a.fullName)
       }
       if (sortBy === 'date-newest') {
-        const dateA = a.joinedDate || '2026-05-15'
-        const dateB = b.joinedDate || '2026-05-15'
+        const dateA = a.joinedDate || ''
+        const dateB = b.joinedDate || ''
         return dateB.localeCompare(dateA)
       }
       if (sortBy === 'date-oldest') {
-        const dateA = a.joinedDate || '2026-05-15'
-        const dateB = b.joinedDate || '2026-05-15'
+        const dateA = a.joinedDate || ''
+        const dateB = b.joinedDate || ''
         return dateA.localeCompare(dateB)
       }
       if (sortBy === 'status-active') {
@@ -348,15 +367,18 @@ function StaffView({
   }, [staff, sortBy])
 
   const handleShare = () => {
-    const url = `${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`
+    if (!publicInviteEnabled) {
+      showToast(publicInviteUnavailableText, 'warning')
+      return
+    }
     if (navigator.share) {
       navigator.share({
-        title: 'Join Nexora Touch',
-        text: `Join the team at ${businessName} on Nexora Touch!`,
-        url: url
+        title: t('components.dashboard.views.StaffView.shareTitle'),
+        text: t('components.dashboard.views.StaffView.shareText', { businessName }),
+        url: publicInviteLink
       }).catch(() => {})
     } else {
-      navigator.clipboard.writeText(url)
+      navigator.clipboard.writeText(publicInviteLink)
       showToast(t('components.dashboard.views.StaffView.linkCopiedToClipboard'), 'success')
     }
   }
@@ -373,7 +395,7 @@ function StaffView({
   }).length
   const paymentCompletePct = allStaff.length ? Math.round((paymentCompleteCount / allStaff.length) * 100) : 100
 
-  // Option A Search — uses API results from useSearchMerchantStaff
+  // Option A Search - uses API results from useSearchMerchantStaff
   const handleSearch = () => {
     setSearchError('')
     setSearchResult(null)
@@ -389,7 +411,7 @@ function StaffView({
     }
   }
 
-  // Option A Link Request — sends to API via mutation
+  // Option A Link Request - sends to API via mutation
   const handleLinkRequest = () => {
     if (!searchResult) return
     onLinkStaff(searchResult)
@@ -409,7 +431,7 @@ function StaffView({
     setInviteContact('')
   }
 
-  // Resend invite — calls API via mutation prop
+  // Resend invite - calls API via mutation prop
   const handleResendInvite = (member) => {
     if (onResendInvite) {
       onResendInvite(member)
@@ -469,16 +491,19 @@ function StaffView({
         {/* Left Side: QR Code */}
         <div className="shrink-0 flex items-center justify-center">
           <div
-            onClick={() => setLargeJoinQrOpen(true)}
-            className="h-20 w-20 rounded-xl bg-slate-50 border border-slate-200 p-1 flex items-center justify-center shadow-inner bg-white cursor-zoom-in transition hover:scale-105 duration-200 group relative"
+            onClick={() => publicInviteEnabled && setLargeJoinQrOpen(true)}
+            className={`h-20 w-20 rounded-xl bg-slate-50 border border-slate-200 p-1 flex items-center justify-center shadow-inner bg-white transition duration-200 group relative ${publicInviteEnabled ? 'cursor-zoom-in hover:scale-105' : 'cursor-not-allowed opacity-60'}`}
             title={t('components.dashboard.views.StaffView.clickToEnlarge')}
           >
-            <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`)}`}
-              alt="Scan to Join"
-              className="h-full w-full object-contain"
-            />
-            {/* Magnifier icon overlay on hover */}
+            {publicInviteEnabled ? (
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(publicInviteLink)}`}
+                alt={t('components.dashboard.views.StaffView.scanToJoinAlt')}
+                className="h-full w-full object-contain"
+              />
+            ) : (
+              <QrCode className="h-8 w-8 text-slate-300" />
+            )}
             <div className="absolute inset-0 bg-nexoraBrand/80 rounded-xl flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-white select-none">
               <QrCode className="h-5 w-5" />
               <span className="text-[9px] font-black uppercase tracking-wider">PREVIEW</span>
@@ -506,26 +531,28 @@ function StaffView({
             <input
               type="text"
               readOnly
-              value={`${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`}
+              value={publicInviteEnabled ? publicInviteLink : publicInviteUnavailableText}
               className="h-9 w-full bg-slate-50 border border-slate-200 rounded-lg px-3 text-xs text-slate-500 font-mono focus:outline-none"
             />
             <div className="flex justify-center items-center gap-2">
               <button
                 type="button"
+                disabled={!publicInviteEnabled}
                 onClick={() => {
-                  const url = `${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`
-                  navigator.clipboard.writeText(url)
+                  if (!publicInviteEnabled) return
+                  navigator.clipboard.writeText(publicInviteLink)
                   showToast(t('components.dashboard.views.StaffView.joinLinkCopiedTo'), 'success')
                 }}
-                className="h-9 px-4 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm bg-white cursor-pointer"
+                className={`h-9 px-4 border border-slate-200 text-slate-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm bg-white ${publicInviteEnabled ? 'hover:bg-slate-50 cursor-pointer' : 'cursor-not-allowed opacity-50'}`}
               >
                 <Copy className="h-3.5 w-3.5" />
                 <span>{t('components.dashboard.views.StaffView.copy')}</span>
               </button>
               <button
                 type="button"
-                onClick={() => onOpenInviteShare && onOpenInviteShare()}
-                className="h-9 px-4 bg-nexoraBrand text-white hover:bg-opacity-95 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+                onClick={() => publicInviteEnabled && onOpenInviteShare && onOpenInviteShare()}
+                disabled={!publicInviteEnabled}
+                className={`h-9 px-4 bg-nexoraBrand text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm ${publicInviteEnabled ? 'hover:bg-opacity-95 cursor-pointer' : 'cursor-not-allowed opacity-50'}`}
               >
                 <Share2 className="h-3.5 w-3.5" />
                 <span>{t('components.dashboard.views.StaffView.share')}</span>
@@ -790,7 +817,7 @@ function StaffView({
       </div>
 
       {/* Large Join QR Modal */}
-      {largeJoinQrOpen && (
+      {largeJoinQrOpen && publicInviteEnabled && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 cursor-zoom-out"
           onClick={() => setLargeJoinQrOpen(false)}
@@ -813,8 +840,8 @@ function StaffView({
 
             <div className="h-64 w-64 rounded-2xl bg-slate-50 border border-slate-200 p-4 flex items-center justify-center shadow-inner bg-white mb-4">
               <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`)}`}
-                alt="Scan to Join"
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(publicInviteLink)}`}
+                alt={t('components.dashboard.views.StaffView.scanToJoinAlt')}
                 className="h-full w-full object-contain"
               />
             </div>
@@ -825,12 +852,11 @@ function StaffView({
 
             <div className="w-full bg-slate-50 rounded-xl border border-slate-200 p-2.5 flex items-center justify-between gap-2">
               <span className="text-[10px] text-slate-400 font-mono truncate max-w-[210px]">
-                {`${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`}
+                {publicInviteLink}
               </span>
               <button
                 onClick={() => {
-                  const url = `${window.location.origin}${window.location.pathname}?flow=staff-invite&biz=${encodeURIComponent(businessName)}`
-                  navigator.clipboard.writeText(url)
+                  navigator.clipboard.writeText(publicInviteLink)
                   showToast(t('components.dashboard.views.StaffView.joinLinkCopiedTo'), 'success')
                 }}
                 className="h-7 px-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[10px] font-bold transition flex items-center gap-1 shrink-0"

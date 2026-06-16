@@ -25,6 +25,20 @@ export const errorCodeToI18nKey = {
   IMAGE_UPLOAD_FAILED: 'errors.image_upload_failed',
   BUSINESS_LOGO_UPLOAD_FAILED: 'errors.business_logo_upload_failed',
 
+  // Staff invite & public referral (US-014). Exact server codes pending BE
+  // confirmation on live Swagger; mapped here so the UI shows friendly text and
+  // falls back to errors.unknown_error for any unmapped variant.
+  REFERRAL_CODE_REQUIRED: 'errors.referral_code_required',
+  REFERRAL_CODE_INVALID: 'errors.referral_code_invalid',
+  REFERRAL_CODE_EXPIRED: 'errors.referral_code_expired',
+  REFERRAL_CODE_REVOKED: 'errors.referral_code_revoked',
+  INVITE_LINK_DISABLED: 'errors.invite_link_disabled',
+  STAFF_INVITE_ALREADY_EXISTS: 'errors.staff_invite_already_exists',
+  STAFF_ALREADY_LINKED: 'errors.staff_already_linked',
+  STAFF_INVITE_NOT_FOUND: 'errors.staff_invite_not_found',
+  STAFF_INVITE_EXPIRED: 'errors.staff_invite_expired',
+  STAFF_PROFILE_NOT_FOUND: 'errors.staff_profile_not_found',
+
   // Common
   COMMON_VALIDATION_ERROR: 'errors.common_validation_error',
   COMMON_NOT_FOUND: 'errors.common_not_found',

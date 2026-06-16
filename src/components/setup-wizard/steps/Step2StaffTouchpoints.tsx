@@ -71,7 +71,7 @@ export default function Step2StaffTouchpoints({
                   { name: 'Venmo', key: 'venmo' },
                   { name: 'Cash App', key: 'cashapp' },
                   { name: 'Apple Cash', key: 'applecash' }
-                ].map((wallet) => {
+                ].filter(wallet => wallet.key !== 'bankwire').map((wallet) => {
                   const config = (businessInfo.payoutConfigs && businessInfo.payoutConfigs[wallet.key]) || { enabled: false, value: '', qrCode: '' }
 
                   return (

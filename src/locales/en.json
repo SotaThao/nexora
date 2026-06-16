@@ -114,7 +114,8 @@
       "qr_unavailable_title": "Tipping QR not available",
       "qr_unavailable_body": "Your tipping QR for {business} is not active yet. Please contact the salon owner or scan their referral QR to link.",
       "referral_unavailable_title": "Staff ID not ready",
-      "referral_unavailable_body": "Your personal referral QR will appear once your staff profile is fully set up. Please try again in a moment."
+      "referral_unavailable_body": "Your personal referral QR will appear once your staff profile is fully set up. Please try again in a moment.",
+      "note": "Per-business QR is stored by business_staff_link_id so it is never confused when you work at multiple businesses."
     },
     "profile": {
       "title": "Personal Account",
@@ -294,16 +295,16 @@
     "tp_lobby_default": "Lobby Main / General Tipping QR",
     "tp_front_default": "Reception Desk / Front Counter",
     "tp_personal_default": "Personal QR - {name}",
-    "title_step_3": "Step 3: Download QRs & Finalize Setup",
-    "desc_step_3": "Everything is ready! You can download your print-ready QR kit and activate the Nexora Touch Gateway.",
-    "download_explain": "We have packed all your salon QR codes into a high-quality print PDF/ZIP. Customers just need to scan to Tip & Review.",
-    "download_btn": "Download Printable QR Kit (ZIP)",
+    "title_step_3": "Step 3: Print QRs & Finalize Setup",
+    "desc_step_3": "Everything is ready! You can print your QR kit and launch the Nexora dashboard.",
+    "download_explain": "We have prepared all your salon QR codes as a high-quality print PDF/ZIP. Customers just need to scan to Tip & Review.",
+    "download_btn": "Print QR Kit",
     "config_checklist_title": "Setup Configuration Checklist",
     "chk_business": "Business: {name} ({industry})",
     "chk_routing": "Google/Yelp Routing: Linked",
     "chk_staff": "Staff: {count} technicians with linked wallets",
     "chk_touchpoints": "Touch Points: {count} QR Stations generated",
-    "launch_dashboard_btn": "Activate Gateway & Launch Dashboard",
+    "launch_dashboard_btn": "Launch Dashboard",
     "errors": {
       "name_required": "Store name is required",
       "address_required": "Address is required",
@@ -995,6 +996,16 @@
     "image_unsupported_file_type": "Unsupported file format. Please upload PNG, JPEG, or WebP.",
     "image_upload_failed": "Failed to upload the image.",
     "business_logo_upload_failed": "Failed to upload the business logo.",
+    "referral_code_required": "No referral code found. Please open the salon's invite link or QR again.",
+    "referral_code_invalid": "This invite link is not valid. Please ask the salon for a new one.",
+    "referral_code_expired": "This invite link has expired. Please ask the salon for a new one.",
+    "referral_code_revoked": "This invite link has been turned off by the salon.",
+    "invite_link_disabled": "The salon's public invite link is currently disabled.",
+    "staff_invite_already_exists": "An invite has already been sent to this person.",
+    "staff_already_linked": "This technician is already linked to your salon.",
+    "staff_invite_not_found": "This invite could not be found.",
+    "staff_invite_expired": "This invite has expired.",
+    "staff_profile_not_found": "Staff profile not found.",
     "common_validation_error": "Validation failed. Please check your inputs.",
     "common_not_found": "The requested resource was not found.",
     "common_unauthorized": "Unauthorized access.",
@@ -1051,8 +1062,8 @@
         "WalletDetails": {
           "tipAmount": "Tip Amount",
           "scanToPay": "Scan to pay",
-          "name": "Name",
           "businessName": "Business / Store",
+          "name": "Name",
           "emailPhone": "Email/Phone",
           "venmoUsername": "Venmo Username",
           "cashTag": "Cash Tag",
@@ -1061,11 +1072,11 @@
           "account": "Account",
           "noteRequired": "Note (Required)",
           "yesISentThe": "Yes, I Sent The Tip",
-          "goBack": "Go Back",
           "multiStaffTitle": "Send combined tip via {wallet}",
           "multiStaffSubtitle": "Open your bank app and send one payment to {business}. Your tip will be split among the selected providers.",
           "tipBreakdown": "Tip breakdown",
-          "totalCombinedTip": "Total combined tip"
+          "totalCombinedTip": "Total combined tip",
+          "goBack": "Go Back"
         }
       }
     },
@@ -1080,23 +1091,25 @@
           "fullNameRequiredToInvite": "Full name is required to invite.",
           "phoneOrEmailRequired": "Phone or email is required to send invite link.",
           "technicianAlreadyLinked": "This technician is already linked to your salon.",
-          "inviteSuccess": "Invite sent to {name} successfully!",
+          "thisPerson": "this person",
+          "inviteSent": "Invite sent to {name} successfully!",
           "inviteFailed": "Failed to send invite: {error}",
-          "linkRequestSuccess": "Link request sent to {name}!",
+          "linkRequestSent": "Link request sent to {name}!",
           "linkRequestFailed": "Link request failed: {error}",
-          "missingLinkId": "Cannot resend invite: missing linkId.",
-          "missingInviteId": "Cannot resend invite: missing inviteId.",
+          "cancelInviteMissingId": "Cannot cancel invite: missing inviteId.",
+          "cancelInviteConfirm": "Are you sure you want to cancel the invite to {name}?",
+          "inviteCancelled": "Invite cancelled.",
+          "cancelInviteFailed": "Cancel invite failed: {error}",
+          "resendInviteMissingId": "Cannot resend invite: missing inviteId.",
           "resendInviteSuccess": "Setup link successfully resent to {name}!",
           "resendInviteFailed": "Resend failed: {error}",
-          "acceptJoinSuccess": "Accepted technician {name} to salon!",
-          "acceptJoinFailed": "Accept failed: {error}",
+          "joinAccepted": "Accepted technician {name} to salon!",
+          "acceptFailed": "Accept failed: {error}",
           "declineJoinConfirm": "Are you sure you want to decline join request from {name}?",
-          "declineJoinSuccess": "Declined join request from {name}!",
-          "declineJoinFailed": "Decline failed: {error}",
+          "declineFailed": "Decline failed: {error}",
           "approveUnlinkConfirm": "Are you sure you want to approve unlink request from {name}?",
           "unlinkFailed": "Unlink failed: {error}",
           "declineUnlinkConfirm": "Are you sure you want to decline unlink request from {name}?",
-          "declineFailed": "Decline failed: {error}",
           "deleteFailed": "Delete failed: {error}",
           "statusUpdateFailed": "Status update failed: {error}",
           "tipsFlowUpdateFailed": "Tips flow update failed: {error}"
@@ -1122,11 +1135,18 @@
           "sendInviteLink": "Send Invite Link",
           "joinQrCode": "JOIN QR CODE",
           "haveTechniciansScanThis": "Have technicians scan this QR code with their mobile camera to self-register or link accounts.",
+          "sourcePublicLink": "source: public link",
           "technicianNameRequired": "Technician name is required.",
           "contactRequired": "Contact information (email or phone) is required.",
           "invalidEmailFormat": "Invalid email format.",
           "phExampleName": "e.g. Mia Tran",
-          "phExampleRole": "e.g. Nail Tech"
+          "phExampleRole": "e.g. Nail Tech",
+          "inviteLinkLoading": "Loading invite link...",
+          "inviteLinkDisabled": "Public invite link is disabled in Merchant Settings.",
+          "joinQrAlt": "Join QR",
+          "scanToJoinAlt": "Scan to Join",
+          "preview": "Preview",
+          "disabled": "Disabled"
         },
         "PayoutSetupModal": {
           "walletAccountTitle": "{wallet} ACCOUNT",
@@ -1159,7 +1179,7 @@
           "viewAllReviews": "View all reviews",
           "viewAccount": "View Account",
           "decline": "Decline",
-          "approveAccept": "Approve / Accept",
+          "approveAccept": "Approve",
           "remove_photo": "Remove photo",
           "review_count": "{count} reviews",
           "phExampleVlp1": "e.g. ASH0155",
@@ -1167,7 +1187,9 @@
           "phExampleStaffId": "e.g. LISA1102",
           "phFullName": "Mia Tran",
           "phNickname": "Mia T.",
-          "phPosition": "Nail Tech"
+          "phPosition": "Nail Tech",
+          "scanVlinkpayQrCode": "Scan VLINKPAY QR Code",
+          "scanNexoraQrCode": "Scan NEXORA QR Code"
         },
         "StaffQrScannerModal": {
           "scanQrCode": "Scan QR Code",
@@ -1229,14 +1251,16 @@
         },
         "StaffView": {
           "linkCopiedToClipboard": "Link copied to clipboard for sharing!",
+          "shareTitle": "Join Nexora Touch",
+          "shareText": "Join the team at {businessName} on Nexora Touch.",
           "noStaffProfileFound": "No staff profile found matching that criteria.",
           "pleaseEnterBothName": "Please enter both name and contact info.",
           "clickToEnlarge": "Click to enlarge",
-          "technicianJoinLinkAnd": "TECHNICIAN JOIN LINK & REFERRAL",
+          "technicianJoinLinkAnd": "JOIN LINK & REFERRAL",
           "shareThisReferralLink": "Share this referral link or let technicians scan the QR code to self-register or link to your salon.",
           "joinLinkCopiedTo": "Join link copied to clipboard!",
           "copy": "Copy",
-          "share": "Share",
+          "share": "Invite",
           "pendingJoinRequests": "Pending Join Requests",
           "directAddition": "Direct Addition",
           "pending": "Pending",
@@ -1261,7 +1285,11 @@
           "approveUnlink": "Approve Unlink",
           "reject": "Reject",
           "joinQrCode": "JOIN QR CODE",
-          "haveTechniciansScanThis": "Have technicians scan this QR code with their mobile camera to self-register or link accounts."
+          "haveTechniciansScanThis": "Have technicians scan this QR code with their mobile camera to self-register or link accounts.",
+          "inviteLinkLoading": "Loading invite link...",
+          "inviteLinkDisabled": "Public invite link is disabled in Merchant Settings.",
+          "scanToJoinAlt": "Scan to Join",
+          "preview": "Preview"
         }
       }
     },
@@ -1643,7 +1671,10 @@
           "passwordMustBeAt2": "Password must be at least 6 characters.",
           "accountDoesNotExist": "Account does not exist or incorrect password.",
           "linkRequestCancelled": "Link request cancelled.",
-          "emailAlreadyExists": "This email is already registered."
+          "emailAlreadyExists": "This email is already registered.",
+          "alreadyLinkedOrRequested": "You have already requested or are already linked to this business.",
+          "joinRequestPending": "Your join request is pending salon approval.",
+          "joinRequestFailed": "Failed to submit join request: {error}"
         }
       },
       "steps": {
@@ -1653,7 +1684,7 @@
           "emailAddress": "Email Address *",
           "confirmEmailAddress": "Confirm Email Address *",
           "password": "Password *",
-          "referralLinkSalon": "Referral Link / Salon",
+          "referralLinkSalon": "Business Name - Referral Code",
           "label1ActivateAccount": "1. Activate Account",
           "enterTheOtpCode": "Enter the OTP code sent to your email to activate your account.",
           "enterOtpCode": "Enter OTP Code *",
@@ -1696,7 +1727,11 @@
           "joinRequestSubmitted": "Join Request Submitted!",
           "pending": "PENDING",
           "pendingApproval": "Pending Approval",
-          "staffLinkCopiedTo": "Staff link copied to clipboard!"
+          "staffLinkCopiedTo": "Staff link copied to clipboard!",
+          "joinRequestMessage": "Your NEXORA Staff ID is {staffId}. Your request to link with {businessName} has been successfully submitted. Please ask the salon owner to approve your request to activate your tipping QR.",
+          "joinedTodayRole": "Joined: Today • Role: {role}",
+          "nexoraId": "NEXORA ID",
+          "copyStaffLink": "COPY STAFF LINK"
         },
         "StepWelcome": {
           "declineRequest": "Decline Request",

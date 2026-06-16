@@ -25,6 +25,7 @@ import { useReviews } from '../data/hooks/useReviews'
 import { useNotifications, useMarkNotificationRead } from '../data/hooks/useNotifications'
 import { useProfileSettings, useSaveProfileSettings } from '../data/hooks/useProfileSettings'
 import { useMerchantSetup, useSaveMerchantSetup } from '../data/hooks/useMerchantSetup'
+import { useMerchantInviteLinkSetting } from '../data/hooks/useMerchantSettings'
 import DashboardHeader from './dashboard/layout/DashboardHeader'
 import DashboardSidebar from './dashboard/layout/DashboardSidebar'
 import MobileMenuDrawer from './dashboard/layout/MobileMenuDrawer'
@@ -108,6 +109,10 @@ export default function Dashboard({
     pageNumber: 1,
     pageSize: 100
   })
+  const {
+    data: inviteLinkSetting,
+    isLoading: isInviteLinkSettingLoading,
+  } = useMerchantInviteLinkSetting({ enabled: userRole === 'owner' })
 
   const markNotificationReadMutation = useMarkNotificationRead()
   const saveMerchantSetupMutation = useSaveMerchantSetup()
@@ -209,6 +214,10 @@ export default function Dashboard({
   const [selectedLeaderboardStaff, setSelectedLeaderboardStaff] = useState<any | null>(null)
 
   const businessName = profile?.businessName || setupData?.businessInfo?.name || merchantSetupData?.businessInfo?.name || ''
+  const businessSlug =
+    merchantSetupData?.businessInfo?.slug ||
+    setupData?.businessInfo?.slug ||
+    slugify(businessName || 'business')
 
   const combinedStaffData = useMemo(() => {
     const byId = new Map()
@@ -235,7 +244,7 @@ export default function Dashboard({
     inviteShareDefaultContact, setInviteShareDefaultContact,
     resetStaffForm, openAddStaff, openApproveStaff, openEditStaff, closeStaffModal,
     saveStaff, sendSetupLinkFromModal, handleLinkStaff, handleInviteStaff,
-    handleResendInvite,
+    handleResendInvite, handleCancelInvite,
     handleAcceptJoinRequest, handleDeclineJoinRequest, deleteStaff, toggleStaff, toggleStaffTipsFlow,
     handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     inviteStaffMutation,
@@ -456,7 +465,8 @@ export default function Dashboard({
 
   const dashboardCtx = {
     metrics, activeKpi, setActiveKpi, chartRange, handleChartRangeChange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate,
-    transactions, selectedLeaderboardStaff, handleSelectLeaderboardStaff, businessName, previewQr, hasKyb, hasSetup, onStartSetup: handleStartSetup,
+    transactions, selectedLeaderboardStaff, handleSelectLeaderboardStaff, businessName, businessSlug, previewQr, hasKyb, hasSetup, onStartSetup: handleStartSetup,
+    inviteLinkSetting, isInviteLinkSettingLoading,
     filteredStaff, pendingStaff, staff, staffLoading, openApproveStaff, openAddStaff, openEditStaff, deleteStaff, toggleStaff, toggleStaffTipsFlow,
     handleLinkStaff, handleInviteStaff, handleResendInvite, handleAcceptJoinRequest, handleDeclineJoinRequest, handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     setInviteShareDefaultName, setInviteShareDefaultContact, setIsInviteShareOpen,
@@ -651,6 +661,9 @@ export default function Dashboard({
       <InviteShareModal
         open={isInviteShareOpen}
         businessName={businessName}
+        businessSlug={businessSlug}
+        inviteLinkSetting={inviteLinkSetting}
+        isInviteLinkSettingLoading={isInviteLinkSettingLoading}
         defaultName={inviteShareDefaultName}
         defaultContact={inviteShareDefaultContact}
         onClose={() => setIsInviteShareOpen(false)}
