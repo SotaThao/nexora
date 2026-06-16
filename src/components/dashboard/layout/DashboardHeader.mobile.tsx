@@ -262,7 +262,7 @@ export default function DashboardHeader({
   )
 
   return (
-    <header className="sticky top-0 z-20 border-b border-nexoraBorder bg-nexoraSurface">
+    <header className="sticky top-0 z-20 border-b border-nexoraBorder bg-nexoraSurface/90 backdrop-blur-md">
 
       {/* ── Mobile header ──────────────────────────────────────────────────── */}
       <div className="flex min-h-16 items-center justify-between px-4 lg:hidden">
@@ -271,7 +271,7 @@ export default function DashboardHeader({
           <button
             type="button"
             onClick={onOpenMobileMenu}
-            className="flex h-10 w-10 items-center justify-center rounded-lg border border-nexoraBorder bg-white text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-nexoraBorder bg-white text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"
             aria-label="Open navigation menu"
           >
             <Menu className="h-5 w-5" />
@@ -304,7 +304,7 @@ export default function DashboardHeader({
             <button
               type="button"
               onClick={() => setIsNotiDropdownOpen(!isNotiDropdownOpen)}
-              className="relative flex h-10 w-10 items-center justify-center rounded-lg border border-nexoraBorder bg-white text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"
+              className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-nexoraBorder bg-white text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"
               aria-label="Notifications"
             >
               <Bell className="h-5 w-5" />

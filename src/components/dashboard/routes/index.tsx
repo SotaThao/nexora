@@ -45,6 +45,7 @@ export function OverviewRoute() {
       onNavigateMenu={ctx.onNavigateMenu}
       onApproveClick={ctx.openApproveStaff}
       pendingStaff={ctx.pendingStaff}
+      staff={ctx.staff}
     />
   )
 }
