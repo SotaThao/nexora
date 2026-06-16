@@ -321,6 +321,16 @@ export interface UpdateUserProfileDto {
   phoneNumber: string
   profileImageUrl?: string
   city?: string
+  state?: string
+  country?: string
+  zipCode?: string
+  address?: string
+  website?: string
+  youtube?: string
+  instagram?: string
+  facebook?: string
+  twitter?: string
+  tiktok?: string
 }
 
 export interface UpdateStaffProfileDto {

@@ -66,9 +66,9 @@ function extractStaffIdFromUrl(url: string | null | undefined): string | null {
 }
 
 function normalizeNotification(item: NotificationApiDto): NotificationRecord {
-  const isRead = Boolean(item.isRead || item.read)
-  const body = item.body || item.message || ''
-  const createdAt = item.createdAt || new Date().toISOString()
+  const isRead = Boolean(item.isRead ?? item.read)
+  const message = item.message ?? item.body ?? ''
+  const createdAt = item.createdAt ?? ''
   const type = item.type || 'info'
   const typeLower = type.toLowerCase()
 
@@ -96,17 +96,39 @@ function normalizeNotification(item: NotificationApiDto): NotificationRecord {
     actionUrl: item.actionUrl ?? null,
     isRead,
     read: isRead,
-    message: body,
-    time: new Date(createdAt).toLocaleString(),
+    readAt: item.readAt ?? null,
+    referenceId: item.referenceId ?? null,
+    createdAt: createdAt || undefined,
+    time: createdAt ? new Date(createdAt).toLocaleString() : '',
     ...(linkTab ? { linkTab } : {}),
     ...(staffId ? { staffId } : {}),
+  }
+}
+
+function normalizeNotificationsPage(
+  response: NotificationApiDto[] | NotificationsListResponse | null,
+  fallbackPageNumber = 1,
+): NotificationsPage {
+  const items = Array.isArray(response) ? response : (response?.items ?? [])
+  const pageNumber = Array.isArray(response)
+    ? fallbackPageNumber
+    : (response?.pageNumber ?? fallbackPageNumber)
+  const totalPages = Array.isArray(response) ? 1 : (response?.totalPages ?? 0)
+
+  return {
+    items: items.map(normalizeNotification),
+    pageNumber,
+    totalPages,
+    totalCount: Array.isArray(response) ? items.length : (response?.totalCount ?? items.length),
+    hasPreviousPage: Array.isArray(response) ? false : Boolean(response?.hasPreviousPage),
+    hasNextPage: Array.isArray(response) ? false : Boolean(response?.hasNextPage),
   }
 }
 
 export function createNotificationsRepository(client: HttpClient = httpClient) {
   return {
     async listPaged({
-      pageNumber = 0,
+      pageNumber = 1,
       pageSize = 20,
       isRead = null,
     }: NotificationsListParams = {}): Promise<NotificationsPage> {
@@ -125,7 +147,7 @@ export function createNotificationsRepository(client: HttpClient = httpClient) {
     },
 
     async list(): Promise<NotificationRecord[]> {
-      const page = await this.listPaged({ pageNumber: 0, pageSize: 50 })
+      const page = await this.listPaged({ pageNumber: 1, pageSize: 50 })
       return page.items
     },
 
