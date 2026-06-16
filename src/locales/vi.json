@@ -470,6 +470,7 @@
       "add_btn": "Thêm Điểm Chạm",
       "tp_name_required": "Vui lòng nhập tên điểm chạm.",
       "tp_added_success": "Đã thêm điểm chạm \"{name}\" thành công!",
+      "tp_add_failed": "Thêm điểm chạm thất bại. Vui lòng thử lại.",
       "view_qr_title": "Mã QR cho {name}",
       "view_qr_desc": "Khách hàng quét mã này để típ và viết đánh giá trực tiếp cho nhân viên được gán.",
       "assign_staff": "Gán nhân viên phục vụ:",
@@ -528,11 +529,15 @@
         "stations": "Điểm Chạm QR",
         "devices": "Thiết Bị Vật Lý"
       },
-      "open_link": "Thử nghiệm luồng trạm"
+      "open_link": "Thử nghiệm luồng trạm",
+      "empty_title": "Chưa có trạm QR nào",
+      "empty_desc": "Tạo touchpoint đầu tiên để bắt đầu nhận lượt quét và tiền tip."
     },
     "devices": {
       "subtitle": "Quản lý các trạm đứng salon vật lý, mã đặt bàn và điểm chạm thông minh.",
       "add_btn": "Thêm Thiết Bị Mới",
+      "empty_title": "Chưa có thiết bị phần cứng",
+      "empty_desc": "Thêm thiết bị QR hoặc NFC để quản lý trạm và theo dõi lượt quét.",
       "location": "Vị trí",
       "scans": "Lượt quét",
       "last_scan": "Lần quét cuối",
@@ -983,6 +988,7 @@
     "business_name_required": "Tên tiệm là bắt buộc.",
     "business_invalid_slug_format": "Định dạng đường dẫn URL không hợp lệ.",
     "user_not_merchant": "Tài khoản của bạn không có vai trò chủ tiệm.",
+    "touchpoint_starter_limit_reached": "Gói Starter đã đạt giới hạn: bạn chỉ có thể tạo tối đa 3 điểm chạm. Vui lòng nâng cấp gói để thêm nhiều hơn.",
     "image_file_size_exceeded": "Kích thước ảnh vượt quá giới hạn cho phép 10MB.",
     "image_unsupported_file_type": "Định dạng ảnh không hỗ trợ. Vui lòng tải lên PNG, JPEG hoặc WebP.",
     "image_upload_failed": "Tải ảnh lên thất bại.",
@@ -1457,6 +1463,15 @@
           "phYelpUrl": "https://www.yelp.com/biz/..."
         },
         "KybTab": {
+          "iframeTitle": "Cổng xác minh KYB VLINKPAY",
+          "verifyYourBusiness": "Xác minh doanh nghiệp của bạn",
+          "subtitle": "Hoàn thành <b>KYB</b> và khám phá trải nghiệm đẳng cấp tiếp theo cùng <b>Nexora Touch</b>",
+          "getStarted": "Bắt đầu",
+          "tabKybTitle": "Tại sao xác minh KYB lại quan trọng",
+          "tabKybContent": "Hoàn thành quá trình xác minh KYB đảm bảo doanh nghiệp của bạn tuân thủ đầy đủ các yêu cầu quy định, cho phép truy cập tất cả tính năng và lợi ích của Nexora Touch, bao gồm xử lý thanh toán, thông tin chi tiết doanh nghiệp và nhiều hơn nữa. Quá trình này cũng bảo vệ doanh nghiệp khỏi gian lận và củng cố niềm tin với khách hàng.",
+          "retry": "Thử lại",
+          "networkError": "Không thể tải cổng KYB. Vui lòng kiểm tra kết nối và thử lại.",
+          "serverError": "Không thể khởi tạo cổng KYB. Vui lòng thử lại sau.",
           "closeForm": "Đóng Form",
           "submittingKybDetails": "Đang gửi thông tin xác thực...",
           "legalBusinessName": "Tên pháp lý doanh nghiệp",

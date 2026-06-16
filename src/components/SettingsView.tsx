@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { QrCode, Copy, Check, X, Download } from 'lucide-react'
 import useSettingsForm from './settings/hooks/useSettingsForm'
 import ProfileTab from './settings/tabs/ProfileTab'
@@ -17,6 +17,7 @@ export default function SettingsView({
   verificationStatus = hasKyb ? 'kyb_approved' : 'basic'
 }) {
   const { t } = useTranslation()
+  const kybPortalRef = useRef(null)
   const form = useSettingsForm({
     setupData,
     hasKyb,
@@ -25,10 +26,10 @@ export default function SettingsView({
     initialTab,
     onTabChange,
     onKybSuccess,
-    verificationStatus
+    verificationStatus,
+    openKybPortal: () => kybPortalRef.current?.openPortal(),
   })
 
-  const [showKybBankAccount, setShowKybBankAccount] = useState(false)
   const [showQrModal, setShowQrModal] = useState(false)
   const [selectedLeg, setSelectedLeg] = useState('left')
 
@@ -153,19 +154,10 @@ export default function SettingsView({
         {form.activeTab === 'kyb' && (
           <KybTab
             profile={form.profile}
-            kybData={form.kybData}
-            setKybData={form.setKybData}
-            isSubmittingKyb={form.isSubmittingKyb}
-            kybErrors={form.kybErrors}
-            showPortal={form.showPortal}
-            setShowPortal={form.setShowPortal}
-            handleKybSubmit={form.handleKybSubmit}
-            showKybBankAccount={showKybBankAccount}
-            setShowKybBankAccount={setShowKybBankAccount}
             cardDetails={cardDetails}
             verificationStatus={verificationStatus}
-            currentLanguage={form.currentLanguage}
             showToast={form.showToast}
+            portalRef={kybPortalRef}
           />
         )}
 

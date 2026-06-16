@@ -109,6 +109,8 @@ export default function DevicesView({
   const nfcDevicesCount = devices.filter((d) => d.type.toUpperCase().includes('NFC')).length
   const activeNfcCount = devices.filter((d) => d.type.toUpperCase().includes('NFC') && d.isActive).length
   const deviceIssuesCount = devices.filter((d) => !d.isActive).length
+  const headerActionBaseClass =
+    'inline-flex h-[44px] min-h-[44px] max-h-[44px] min-w-[44px] shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-flox-buttons px-4 py-0 text-xs font-bold leading-none transition-all'
 
   return (
     <div className="space-y-6 relative">
@@ -126,7 +128,7 @@ export default function DevicesView({
           <button
             type="button"
             onClick={handleExport}
-            className="inline-flex h-11 min-w-[44px] items-center justify-center gap-2 rounded-flox-buttons border border-nexoraBorder bg-white dark:bg-luxuryCoal px-4 text-xs font-bold text-nexoraMuted hover:bg-nexoraSurfaceMuted transition-all"
+            className={`${headerActionBaseClass} border border-nexoraBorder bg-white dark:bg-luxuryCoal text-nexoraMuted hover:bg-nexoraSurfaceMuted`}
           >
             <FileSpreadsheet className="h-4 w-4" />
             <span>{t('common.export')}</span>
@@ -134,7 +136,7 @@ export default function DevicesView({
           <button
             type="button"
             onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex h-11 min-w-[44px] items-center justify-center gap-2 rounded-flox-buttons bg-nexoraBrand dark:bg-luxuryGold hover:bg-nexoraBrandDark dark:hover:bg-luxuryGoldLight text-white dark:text-luxuryBlack px-4 text-xs font-bold transition-all"
+            className={`${headerActionBaseClass} bg-nexoraBrand text-white hover:bg-nexoraBrandDark dark:bg-luxuryGold dark:text-luxuryBlack dark:hover:bg-luxuryGoldLight`}
           >
             <Plus className="h-4 w-4" />
             <span>{t('dashboard.devices.add_btn')}</span>
@@ -199,6 +201,21 @@ export default function DevicesView({
 
       {/* Devices Responsive Grid */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {devices.length === 0 && (
+          <Panel className="md:col-span-2 lg:col-span-3 border-dashed border-nexoraBorder/80">
+            <div className="mx-auto flex max-w-xl flex-col items-center gap-4 px-6 py-12 text-center sm:gap-5 sm:py-14">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-nexoraBrandSoft to-brandCyan/20 dark:from-nexoraBrand/20 dark:to-brandCyan/20 text-nexoraBrand shadow-sm ring-1 ring-nexoraBrand/10">
+                <Tablet className="h-7 w-7" />
+              </div>
+              <h3 className="text-lg font-extrabold text-nexoraText">
+                {t('dashboard.devices.empty_title')}
+              </h3>
+              <p className="max-w-md text-sm leading-relaxed text-nexoraMuted">
+                {t('dashboard.devices.empty_desc')}
+              </p>
+            </div>
+          </Panel>
+        )}
         {devices.map((device) => {
           const isActive = device.isActive !== false
           const isHighlighted = device.deviceId === highlightedDeviceId
