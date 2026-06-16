@@ -1,24 +1,23 @@
 // StaffProfile — personal profile (staff-owned: display name + bio) and
 // per-business display names. Identity basics come from the merchant record.
-import React, { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   LogOut,
   Camera,
   ShieldCheck,
   ShieldAlert,
-  Building2,
-  Landmark,
-  FileText,
-  User,
-  Eye,
-  EyeOff,
-  Upload,
-  Download
+  ShieldX,
+  Clock,
 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
-import ImageFileInput from '../../ui/ImageFileInput'
-import { useOutletContext } from 'react-router-dom'
+import { useStaffLinkedBusinesses } from '../hooks/useStaffLinkedBusinesses'
+import { useOutletContext, useSearchParams } from 'react-router-dom'
+import { UserVerifyStatus } from '../../../constants/userVerifyStatus'
+import { useVerifiedStatus } from '../../../data/hooks/useProfileSettings'
+import { useUploadImage } from '../../../data/hooks/useMerchantSetup'
+import { logger } from '../../../utils/logger'
+import StaffKycOverview from './StaffKycOverview'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 const labelCls = 'mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-nexoraSubtle'
@@ -27,33 +26,32 @@ const readOnlyCls = 'w-full rounded-xl border border-nexoraBorder bg-nexoraCanva
 
 export default function StaffProfile() {
   const { currentLanguage, t } = useTranslation()
-  const { staffMember, account, linkedBusinesses, saveProfile, setBusinessDisplayName } = useStaffAccount()
-  const { onLogout } = useOutletContext<{ onLogout: () => void }>()
+  const { staffMember, account, saveProfile, setBusinessDisplayName } = useStaffAccount()
+  const { linkedBusinesses } = useStaffLinkedBusinesses()
+  const { onLogout } = useOutletContext<LooseObject>()
+  const [searchParams] = useSearchParams()
 
-  const [activeTab, setActiveTab] = useState('profile') // profile | kyc
+  const tabFromUrl = searchParams.get('tab')
+  const [activeTab, setActiveTab] = useState(tabFromUrl === 'kyc' ? 'kyc' : 'profile') // profile | kyc
+
+  useEffect(() => {
+    if (tabFromUrl === 'kyc') setActiveTab('kyc')
+    else if (tabFromUrl === 'account' || !tabFromUrl) setActiveTab('profile')
+  }, [tabFromUrl])
   const [displayName, setDisplayName] = useState(account.defaultDisplayName || '')
   const [bio, setBio] = useState(account.bio || '')
   const [fullName, setFullName] = useState(account.fullName || staffMember.fullName || '')
   const [phone, setPhone] = useState(account.phone || staffMember.phone || '')
   const [saved, setSaved] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const avatarObjectUrlRef = useRef<string | null>(null)
+  const uploadImageMutation = useUploadImage()
 
-  // KYC States
-  const kycStatus = account.kycStatus || 'basic'
-  const [showPortal, setShowPortal] = useState(false)
-  const [isSubmittingKyc, setIsSubmittingKyc] = useState(false)
-  const [kycErrors, setKycErrors] = useState<LooseObject>({})
-  const [showKycBankAccount, setShowKycBankAccount] = useState(false)
-  const [kycData, setKycData] = useState({
-    legalName: account.fullName || staffMember.fullName || '',
-    idNumber: '',
-    idType: 'DriverLicense',
-    bankName: '',
-    bankAccount: '',
-    bankRouting: ''
-  })
-  const [idFrontFile, setIdFrontFile] = useState(null)
-  const [idBackFile, setIdBackFile] = useState(null)
+  const displayAvatar = avatarPreview || account.avatar
+
+  const { data: verifyStatusData } = useVerifiedStatus({ enabled: activeTab === 'kyc' })
+  const verifyStatus = verifyStatusData?.status
 
   useEffect(() => {
     setDisplayName(account.defaultDisplayName || '')
@@ -61,6 +59,20 @@ export default function StaffProfile() {
     setFullName(account.fullName || staffMember.fullName || '')
     setPhone(account.phone || staffMember.phone || '')
   }, [account.defaultDisplayName, account.bio, account.fullName, staffMember.fullName, account.phone, staffMember.phone])
+
+  useEffect(() => {
+    return () => {
+      if (avatarObjectUrlRef.current) {
+        URL.revokeObjectURL(avatarObjectUrlRef.current)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (account.avatar && avatarPreview && avatarPreview === account.avatar) {
+      setAvatarPreview(null)
+    }
+  }, [account.avatar, avatarPreview])
 
   const showToast = (msg) => {
     setToastMessage(msg)
@@ -78,56 +90,49 @@ export default function StaffProfile() {
     showToast(t('components.staff_dashboard.views.StaffProfile.accountChangesSavedSuccessfully'))
   }
 
-  const handleAvatarPick = (dataUrl) => {
-    if (!dataUrl) return
-    saveProfile({ avatar: dataUrl })
-    showToast(t('components.staff_dashboard.views.StaffProfile.avatarUpdatedSuccessfully'))
-  }
-
-  const handleKycSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (!kycData.legalName.trim() || !kycData.idNumber.trim() || !kycData.bankName.trim() || !kycData.bankAccount.trim() || !kycData.bankRouting.trim()) {
-      setKycErrors({ kyc: t('components.staff_dashboard.views.StaffProfile.allFieldsAreRequired') })
-      return
-    }
-    setKycErrors({})
-    setIsSubmittingKyc(true)
-    setTimeout(() => {
-      setIsSubmittingKyc(false)
-      saveProfile({
-        kycStatus: 'kyc_approved',
-        fullName: kycData.legalName,
-        phone: phone || (kycData as LooseObject).phone || staffMember.phone
-      })
-      setShowPortal(false)
-      showToast(t('components.staff_dashboard.views.StaffProfile.kycVerificationSuccessful'))
-    }, 2000)
-  }
-
-  const handleIdImagePick = (side, file) => {
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0]
     if (!file) return
-    if (side === 'front') {
-      setIdFrontFile(file.name)
-    } else {
-      setIdBackFile(file.name)
+
+    if (avatarObjectUrlRef.current) {
+      URL.revokeObjectURL(avatarObjectUrlRef.current)
+      avatarObjectUrlRef.current = null
+    }
+
+    const objectUrl = URL.createObjectURL(file)
+    avatarObjectUrlRef.current = objectUrl
+    setAvatarPreview(objectUrl)
+
+    try {
+      const uploaded = await uploadImageMutation.mutateAsync(file)
+      const photoUrl = uploaded.imageUrl || uploaded.fileUrl || ''
+      if (!photoUrl) {
+        throw new Error('IMAGE_UPLOAD_FAILED')
+      }
+      saveProfile({ avatar: photoUrl })
+      setAvatarPreview(photoUrl)
+      if (avatarObjectUrlRef.current) {
+        URL.revokeObjectURL(avatarObjectUrlRef.current)
+        avatarObjectUrlRef.current = null
+      }
+      showToast(t('components.staff_dashboard.views.StaffProfile.avatarUpdatedSuccessfully'))
+    } catch (err) {
+      logger.error('[StaffProfile] Failed to upload avatar', err)
+      setAvatarPreview(account.avatar || null)
+      if (avatarObjectUrlRef.current) {
+        URL.revokeObjectURL(avatarObjectUrlRef.current)
+        avatarObjectUrlRef.current = null
+      }
+      showToast(t('errors.image_upload_failed'))
+    } finally {
+      e.target.value = ''
     }
   }
 
   // Determine status card details for KYC
-  const getKycCardDetails = (): LooseObject => {
-    switch (kycStatus) {
-      case 'basic':
-        return {
-          bgClass: 'bg-blue-50/70 border-blue-200 text-blue-900 dark:bg-blue-950/20 dark:border-blue-900 dark:text-blue-200',
-          icon: ShieldAlert,
-          iconBg: 'bg-blue-500',
-          title: t('components.staff_dashboard.views.StaffProfile.basicAccountStatus'),
-          description: t('components.staff_dashboard.views.StaffProfile.yourProfileIsActive'),
-          ctaText: t('components.staff_dashboard.views.StaffProfile.completeKycVerification'),
-          ctaAction: () => setShowPortal(prev => !prev)
-        }
-      case 'kyc_approved':
-      default:
+  const getKycCardDetails = () => {
+    switch (verifyStatus) {
+      case UserVerifyStatus.Verified:
         return {
           bgClass: 'bg-emerald-50/70 border-emerald-200 text-emerald-900 dark:bg-emerald-950/20 dark:border-emerald-900 dark:text-emerald-200',
           icon: ShieldCheck,
@@ -135,7 +140,31 @@ export default function StaffProfile() {
           title: t('components.staff_dashboard.views.StaffProfile.personalProfileVerifiedKyc'),
           description: t('components.staff_dashboard.views.StaffProfile.congratulationsYourPersonalIdentity'),
           subText: t('components.staff_dashboard.views.StaffProfile.verifiedToday'),
-          ctaText: null
+        }
+      case UserVerifyStatus.Review:
+        return {
+          bgClass: 'bg-amber-50/70 border-amber-200 text-amber-900 dark:bg-amber-950/20 dark:border-amber-900 dark:text-amber-200',
+          icon: Clock,
+          iconBg: 'bg-amber-500',
+          title: t('components.staff_dashboard.views.StaffKycOverview.statusReviewTitle'),
+          description: t('components.staff_dashboard.views.StaffKycOverview.statusReviewDescription'),
+        }
+      case UserVerifyStatus.Rejected:
+        return {
+          bgClass: 'bg-red-50/70 border-red-200 text-red-900 dark:bg-red-950/20 dark:border-red-900 dark:text-red-200',
+          icon: ShieldX,
+          iconBg: 'bg-red-500',
+          title: t('components.staff_dashboard.views.StaffKycOverview.statusRejectedTitle'),
+          description: t('components.staff_dashboard.views.StaffKycOverview.statusRejectedDescription'),
+        }
+      case UserVerifyStatus.None:
+      default:
+        return {
+          bgClass: 'bg-blue-50/70 border-blue-200 text-blue-900 dark:bg-blue-950/20 dark:border-blue-900 dark:text-blue-200',
+          icon: ShieldAlert,
+          iconBg: 'bg-blue-500',
+          title: t('components.staff_dashboard.views.StaffProfile.basicAccountStatus'),
+          description: t('components.staff_dashboard.views.StaffProfile.yourProfileIsActive'),
         }
     }
   }
@@ -186,25 +215,24 @@ export default function StaffProfile() {
             {/* Avatar Section */}
             <div className="flex flex-col items-center mb-6">
               <div className="relative group">
-                {account.avatar ? (
+                {displayAvatar ? (
                   <img
-                    src={account.avatar}
+                    src={displayAvatar}
                     alt={fullName}
-                    className="h-24 w-24 rounded-full object-cover border-2 border-nexoraBorder shadow-md transition-all group-hover:opacity-85"
+                    className={`h-24 w-24 rounded-full object-cover border-2 border-nexoraBorder shadow-md transition-all group-hover:opacity-85 ${uploadImageMutation.isPending ? 'opacity-60' : ''}`}
                   />
                 ) : (
-                  <div className="flex h-24 w-24 items-center justify-center rounded-full bg-nexoraBrand/10 text-nexoraBrand border-2 border-dashed border-nexoraBrand/30 text-3xl font-extrabold transition-all group-hover:bg-nexoraBrand/20">
+                  <div className={`flex h-24 w-24 items-center justify-center rounded-full bg-nexoraBrand/10 text-nexoraBrand border-2 border-dashed border-nexoraBrand/30 text-3xl font-extrabold transition-all group-hover:bg-nexoraBrand/20 ${uploadImageMutation.isPending ? 'opacity-60' : ''}`}>
                     {(fullName || displayName || 'S').charAt(0)}
                   </div>
                 )}
-                <ImageFileInput
-                  as="label"
-                  className="absolute inset-0 rounded-full bg-black/45 text-white text-[10px] font-black uppercase flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
-                  onPick={handleAvatarPick}
-                >
+                <label className={`absolute inset-0 rounded-full bg-black/45 text-white text-[10px] font-black uppercase flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity ${uploadImageMutation.isPending ? 'pointer-events-none opacity-100' : ''}`}>
                   <Camera className="h-5 w-5 mb-1" />
-                  {t('components.staff_dashboard.views.StaffProfile.change')}
-                </ImageFileInput>
+                  {uploadImageMutation.isPending
+                    ? t('common.loading')
+                    : t('components.staff_dashboard.views.StaffProfile.change')}
+                  <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} disabled={uploadImageMutation.isPending} />
+                </label>
               </div>
               <span className="mt-2 text-xs font-bold text-nexoraText">
                 {fullName || displayName}
@@ -327,340 +355,9 @@ export default function StaffProfile() {
                 )}
               </div>
             </div>
-
-            {kycCard.ctaText && (
-              <button
-                type="button"
-                onClick={kycCard.ctaAction}
-                className="shrink-0 rounded-lg bg-nexoraBrand hover:bg-nexoraBrandDark text-white px-4 py-2.5 text-xs font-bold transition shadow-sm animate-pulse cursor-pointer"
-              >
-                {showPortal ? (t('components.staff_dashboard.views.StaffProfile.closeForm')) : kycCard.ctaText}
-              </button>
-            )}
           </div>
 
-          {showPortal && kycStatus !== 'kyc_approved' ? (
-            /* Secure Iframe Portal Simulation */
-            <div className="border border-slate-300 rounded-xl overflow-hidden shadow-md bg-slate-100 animate-fadeIn">
-              {/* Browser navigation bar */}
-              <div className="bg-slate-200 border-b border-slate-300 px-4 py-2 flex items-center gap-2">
-                <div className="flex gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-red-400"></div>
-                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>
-                  <div className="w-2.5 h-2.5 rounded-full bg-green-400"></div>
-                </div>
-                <div className="bg-white rounded-md border border-slate-300 text-[10px] text-slate-500 font-mono px-3 py-0.5 flex-grow text-center select-none truncate">
-                  https://gateway.vlinkpay.com/personal/kyc?email={encodeURIComponent(staffMember.email || '')}
-                </div>
-              </div>
-
-              {/* Portal Content */}
-              <div className="bg-white p-5 sm:p-8 min-h-[400px] relative text-left">
-                {isSubmittingKyc && (
-                  <div className="absolute inset-0 bg-white/95 z-20 flex flex-col items-center justify-center space-y-4">
-                    <div className="w-12 h-12 border-4 border-nexoraBrand/20 border-t-nexoraBrand rounded-full animate-spin"></div>
-                    <p className="text-xs text-nexoraBrand font-bold uppercase tracking-wider animate-pulse">
-                      {t('components.staff_dashboard.views.StaffProfile.submittingKycDetails')}
-                    </p>
-                  </div>
-                )}
-
-                {/* Portal Header */}
-                <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-md flex items-center justify-center text-white font-extrabold text-[10px] tracking-tighter">
-                      VLP
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-black text-slate-800 tracking-wider">VLINKPAY PORTAL</h4>
-                      <p className="text-[9px] text-slate-400">Personal Identity Verification (KYC)</p>
-                    </div>
-                  </div>
-                  <span className="text-[9px] text-emerald-600 font-bold bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200">
-                    SECURE OAUTH 2.0
-                  </span>
-                </div>
-
-                {kycErrors.kyc && (
-                  <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
-                    {kycErrors.kyc}
-                  </div>
-                )}
-
-                <form onSubmit={handleKycSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                        {t('components.staff_dashboard.views.StaffProfile.legalFullName')}
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        placeholder={t('components.staff_dashboard.views.StaffProfile.phFullName')}
-                        className="w-full bg-slate-50 border border-slate-300 focus:border-blue-500 focus:bg-white rounded px-3 h-9 text-xs text-slate-800 focus:outline-none transition-colors"
-                        value={kycData.legalName}
-                        onChange={(e) => setKycData({ ...kycData, legalName: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                        {t('components.staff_dashboard.views.StaffProfile.idNumberSsn')}
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        placeholder={t('components.staff_dashboard.views.StaffProfile.phSsn')}
-                        className="w-full bg-slate-50 border border-slate-300 focus:border-blue-500 focus:bg-white rounded px-3 h-9 text-xs text-slate-800 focus:outline-none transition-colors"
-                        value={kycData.idNumber}
-                        onChange={(e) => setKycData({ ...kycData, idNumber: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                      {t('components.staff_dashboard.views.StaffProfile.documentType')}
-                    </label>
-                    <select
-                      className="w-full bg-slate-50 border border-slate-300 focus:border-blue-500 focus:bg-white rounded px-3 h-9 text-xs text-slate-800 focus:outline-none transition-colors"
-                      value={kycData.idType}
-                      onChange={(e) => setKycData({ ...kycData, idType: e.target.value })}
-                    >
-              <option value="DriverLicense">{t('common.driver_license')}</option>
-                      <option value="Passport">{t('components.staff_dashboard.views.StaffProfile.passport')}</option>
-                      <option value="NationalID">{t('components.staff_dashboard.views.StaffProfile.nationalIdCard')}</option>
-                    </select>
-                  </div>
-
-                  {/* ID Upload boxes */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                    <div>
-                      <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                        {t('components.staff_dashboard.views.StaffProfile.idCardFrontImage')}
-                      </label>
-                      <div className="border border-dashed border-slate-300 rounded-lg p-4 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition relative cursor-pointer min-h-[90px]">
-                        <Upload className="w-4 h-4 text-slate-400 mb-1" />
-                        <span className="text-[10px] text-slate-500 text-center font-medium">
-                          {idFrontFile || (t('components.staff_dashboard.views.StaffProfile.uploadFrontSide'))}
-                        </span>
-                        <ImageFileInput
-                          as="div"
-                          className="absolute inset-0 opacity-0 cursor-pointer"
-                          onPick={() => {}}
-                          onPickFile={(file) => handleIdImagePick('front', file)}
-                        >{null}</ImageFileInput>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                        {t('components.staff_dashboard.views.StaffProfile.idCardBackImage')}
-                      </label>
-                      <div className="border border-dashed border-slate-300 rounded-lg p-4 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition relative cursor-pointer min-h-[90px]">
-                        <Upload className="w-4 h-4 text-slate-400 mb-1" />
-                        <span className="text-[10px] text-slate-500 text-center font-medium">
-                          {idBackFile || (t('components.staff_dashboard.views.StaffProfile.uploadBackSide'))}
-                        </span>
-                        <ImageFileInput
-                          as="div"
-                          className="absolute inset-0 opacity-0 cursor-pointer"
-                          onPick={() => {}}
-                          onPickFile={(file) => handleIdImagePick('back', file)}
-                        >{null}</ImageFileInput>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Personal Settlement Bank Info */}
-                  <div className="border-t border-slate-100 pt-4 mt-2">
-                    <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-3">
-                      {t('components.staff_dashboard.views.StaffProfile.personalSettlementAccountInfo')}
-                    </h5>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <div>
-                        <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                          {t('components.staff_dashboard.views.StaffProfile.bankName')}
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          placeholder={t('components.staff_dashboard.views.StaffProfile.phBankName')}
-                          className="w-full bg-slate-50 border border-slate-300 focus:border-blue-500 focus:bg-white rounded px-3 h-9 text-xs text-slate-800 focus:outline-none transition-colors"
-                          value={kycData.bankName}
-                          onChange={(e) => setKycData({ ...kycData, bankName: e.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                          {t('components.staff_dashboard.views.StaffProfile.accountNumber')}
-                        </label>
-                        <div className="relative">
-                          <input
-                            type={showKycBankAccount ? 'text' : 'password'}
-                            required
-                            placeholder={t('components.staff_dashboard.views.StaffProfile.phAccountNumber')}
-                            className="w-full bg-slate-50 border border-slate-300 focus:border-blue-500 focus:bg-white rounded pl-3 pr-8 h-9 text-xs text-slate-800 focus:outline-none transition-colors"
-                            value={kycData.bankAccount}
-                            onChange={(e) => setKycData({ ...kycData, bankAccount: e.target.value })}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowKycBankAccount(!showKycBankAccount)}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
-                          >
-                            {showKycBankAccount ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                          </button>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-[9px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                          {t('components.staff_dashboard.views.StaffProfile.routingCode')}
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          placeholder={t('components.staff_dashboard.views.StaffProfile.phRoutingCode')}
-                          className="w-full bg-slate-50 border border-slate-300 focus:border-blue-500 focus:bg-white rounded px-3 h-9 text-xs text-slate-800 focus:outline-none transition-colors"
-                          value={kycData.bankRouting}
-                          onChange={(e) => setKycData({ ...kycData, bankRouting: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pt-4 flex items-center justify-end gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setShowPortal(false)}
-                      className="px-4 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-xs uppercase tracking-wider rounded transition cursor-pointer"
-                    >
-                      {t('components.staff_dashboard.views.StaffProfile.cancel')}
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-6 py-2 bg-nexoraElectric hover:bg-blue-700 text-white font-extrabold text-xs uppercase tracking-wider rounded flex items-center gap-1.5 transition shadow-sm cursor-pointer"
-                    >
-                      <ShieldCheck className="w-4 h-4" /> {t('components.staff_dashboard.views.StaffProfile.submitKyc')}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          ) : (
-            kycStatus === 'kyc_approved' && (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn text-left">
-                {/* Dossier Card */}
-                <div className="lg:col-span-2 rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 space-y-4">
-                  <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-2">
-                    <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
-                      <User className="h-4 w-4 text-slate-600" />
-                      {t('components.staff_dashboard.views.StaffProfile.verifiedPersonalDossier')}
-                    </h4>
-                  </div>
-
-                  <div className="space-y-3.5 text-xs">
-                    <div className="flex flex-col py-1.5 border-b border-slate-50 gap-1">
-                      <span className="text-nexoraMuted font-semibold">{t('components.staff_dashboard.views.StaffProfile.legalFullName2')}</span>
-                      <span className="text-nexoraText font-extrabold">{account.fullName || staffMember.fullName}</span>
-                    </div>
-                    <div className="flex flex-col py-1.5 border-b border-slate-50 gap-1">
-                      <span className="text-nexoraMuted font-semibold">{t('components.staff_dashboard.views.StaffProfile.documentType2')}</span>
-                      <span className="text-nexoraText font-extrabold">National ID / Passport</span>
-                    </div>
-                    <div className="flex flex-col py-1.5 border-b border-slate-50 gap-1">
-                      <span className="text-nexoraMuted font-semibold">{t('components.staff_dashboard.views.StaffProfile.identityNumberSsn')}</span>
-                      <span className="font-mono text-nexoraText font-extrabold">•••• •••• 9102</span>
-                    </div>
-                    <div className="flex flex-col py-1.5 border-b border-slate-50 gap-1">
-                      <span className="text-nexoraMuted font-semibold">{t('components.staff_dashboard.views.StaffProfile.residentialAddress')}</span>
-                      <span className="text-nexoraText font-extrabold">1088 Gold Coast Hwy, Palm Beach, QLD 4221</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bank Account Details */}
-                <div className="lg:col-span-1 rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 flex flex-col justify-between">
-                  <div>
-                    <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
-                      <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
-                        <Landmark className="h-4 w-4 text-emerald-600" />
-                        {t('components.staff_dashboard.views.StaffProfile.payoutSettlementBank')}
-                      </h4>
-                    </div>
-
-                    <div className="space-y-4 text-xs">
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 gap-1">
-                        <span className="text-nexoraMuted font-semibold">{t('components.staff_dashboard.views.StaffProfile.bankName')}</span>
-                        <span className="text-nexoraText font-extrabold">Chase Bank, N.A.</span>
-                      </div>
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                        <span className="text-nexoraMuted font-semibold">Routing (ABA)</span>
-                        <span className="font-mono text-nexoraText font-extrabold">021000021</span>
-                      </div>
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                        <span className="text-nexoraMuted font-semibold">{t('components.staff_dashboard.views.StaffProfile.accountNumber')}</span>
-                        <span className="font-mono text-nexoraText font-extrabold">•••• 4192</span>
-                      </div>
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                        <span className="text-nexoraMuted font-semibold">{t('components.staff_dashboard.views.StaffProfile.payoutFrequency')}</span>
-                        <span className="text-emerald-600 font-extrabold">Auto-Settled 24/7 (Instant)</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => showToast(t('components.staff_dashboard.views.StaffProfile.pleaseContactSupportTo'))}
-                    className="w-full mt-5 rounded-lg border border-slate-200 py-2 text-center text-xs font-bold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
-                  >
-                    {t('components.staff_dashboard.views.StaffProfile.changeSettlementBank')}
-                  </button>
-                </div>
-
-                {/* Uploaded Documents List */}
-                <div className="lg:col-span-3 rounded-xl border border-nexoraBorder bg-white shadow-sm p-6">
-                  <div className="flex justify-between items-center border-b border-nexoraRule pb-3 mb-4">
-                    <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-blue-500" />
-                      {t('components.staff_dashboard.views.StaffProfile.uploadedIdentityDocuments')}
-                    </h4>
-                  </div>
-
-                  <div className="divide-y divide-slate-100">
-                    <div className="flex items-center justify-between py-3 text-xs">
-                      <div className="flex items-center gap-3">
-                        <span className="h-9 w-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">IMG</span>
-                        <div>
-                          <p className="font-extrabold text-slate-800 truncate max-w-[150px] sm:max-w-xs">National_ID_Front.jpg</p>
-                          <p className="text-[10px] text-slate-400">1.2 MB • Verified & Securely Stored</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-black uppercase rounded">Verified</span>
-                        <button className="p-1.5 border border-slate-200 hover:bg-slate-50 rounded text-slate-500 transition cursor-pointer" title="Download">
-                          <Download className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between py-3 text-xs">
-                      <div className="flex items-center gap-3">
-                        <span className="h-9 w-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">IMG</span>
-                        <div>
-                          <p className="font-extrabold text-slate-800 truncate max-w-[150px] sm:max-w-xs">National_ID_Back.jpg</p>
-                          <p className="text-[10px] text-slate-400">980 KB • Verified & Securely Stored</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-black uppercase rounded">Verified</span>
-                        <button className="p-1.5 border border-slate-200 hover:bg-slate-50 rounded text-slate-500 transition cursor-pointer" title="Download">
-                          <Download className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )
-          )}
+          <StaffKycOverview />
 
           {/* Legal Disclosures */}
           <div className="rounded-xl border border-nexoraBorder bg-slate-50 dark:bg-slate-900/10 p-6 space-y-4 text-xs mt-6 text-nexoraMuted select-text text-left">

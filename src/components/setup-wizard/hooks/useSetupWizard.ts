@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import {
-  useSaveMerchantSetup,
   useCreateBusiness,
   useUploadLogo,
   useUpdateReviewLinks,
@@ -19,10 +18,10 @@ import {
   DEFAULT_PAYOUT_CONFIGS,
   getPayoutConfigsFromMember
 } from '../constants'
+import { getApiErrorCode } from '../../../types/domain'
 
 export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, hasKyb }) {
   const { currentLanguage, setLanguage, t } = useTranslation()
-  const saveMerchantSetup = useSaveMerchantSetup()
   const createBusinessMutation = useCreateBusiness()
   const uploadLogoMutation = useUploadLogo()
   const updateReviewLinksMutation = useUpdateReviewLinks()
@@ -56,8 +55,8 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
     feedbackEmail: initialBusinessInfo?.reviewLinks?.feedbackEmail || initialBusinessInfo?.email || ''
   })
 
-  const [staffList, setStaffList] = useState([])
-  const [touchPoints, setTouchPoints] = useState([])
+  const [staffList, setStaffList] = useState<any[]>([])
+  const [touchPoints, setTouchPoints] = useState<any[]>([])
 
   // Staff input state
   const [newStaff, setNewStaff] = useState({
@@ -86,12 +85,12 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
   })
 
   // Touchpoint editing states
-  const [editingTpId, setEditingTpId] = useState(null)
+  const [editingTpId, setEditingTpId] = useState<any | null>(null)
   const [editingTpName, setEditingTpName] = useState('')
   const [editingTpType, setEditingTpType] = useState('Table QR')
 
   // QR preview modal state
-  const [previewingTp, setPreviewingTp] = useState(null)
+  const [previewingTp, setPreviewingTp] = useState<any | null>(null)
 
   // Validation errors
   const [errors, setErrors] = useState<LooseObject>({})
@@ -99,14 +98,17 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
   // Merchant consent checkbox
   const [isConsentChecked, setIsConsentChecked] = useState(false)
 
-  // Merchant payment methods are pre-seeded by the backend when the business is
-  // created at the end of step 1, so only fetch from step 2 onward.
-  const merchantPaymentMethodsQuery = useMerchantPaymentMethods({ enabled: currentStep >= 2 })
+  // Merchant payment methods are pre-seeded by the backend after the business
+  // exists. For new onboarding, defer the fetch until the step-2 submit creates
+  // the business so step 1 can be revisited without touching the backend.
+  const merchantPaymentMethodsQuery = useMerchantPaymentMethods({
+    enabled: currentStep >= 2 && !!(hasKyb || businessInfo.businessId),
+  })
 
   // Prefill payout toggles from GET /api/v1/merchant/payment-methods without
   // clobbering values the user already entered in this session.
   useEffect(() => {
-    const methods = merchantPaymentMethodsQuery.data as LooseObject[] | null
+    const methods = merchantPaymentMethodsQuery.data
     if (!methods?.length) return
     setBusinessInfo(prev => {
       const configs = { ...(prev.payoutConfigs || DEFAULT_PAYOUT_CONFIGS) }
@@ -140,7 +142,7 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
 
   // Prefill demo data helper
   const prefillDemo = () => {
-    setBusinessInfo(prev => ({ ...prev, ...(DEMO_BUSINESS as any) }))
+    setBusinessInfo(prev => ({ ...prev, ...DEMO_BUSINESS }))
     setReviewLinks(DEMO_LINKS)
     setStaffList(DEMO_STAFF.map(member => ({
       ...member,
@@ -169,14 +171,27 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
     setErrors({})
   }
 
-  const handleLogoFile = async (file) => {
+  const uploadLogoFromFile = async (file) => {
     if (!file) return
     try {
-      const logoUrl = await uploadLogoMutation.mutateAsync(file)
-      setBusinessInfo(prev => ({ ...prev, logo: logoUrl }))
+      const response = await uploadLogoMutation.mutateAsync(file)
+      const finalUrl =
+        typeof response === 'string'
+          ? response
+          : (response as { imageUrl?: string } | null)?.imageUrl || ''
+      setBusinessInfo(prev => ({ ...prev, logo: finalUrl }))
       if (errors.logo) setErrors(prev => ({ ...prev, logo: '' }))
-    } catch (err) {
-      setErrors(prev => ({ ...prev, logo: (err as any)?.errorCode || 'Logo upload failed' }))
+    } catch (err: unknown) {
+      setErrors(prev => ({ ...prev, logo: getApiErrorCode(err, 'Logo upload failed') }))
+    }
+  }
+
+  const handleLogoFile = uploadLogoFromFile
+
+  // Handle file logo selection (web file input fallback)
+  const handleLogoChange = async (e) => {
+    if (e.target.files?.[0]) {
+      await uploadLogoFromFile(e.target.files[0])
     }
   }
 
@@ -216,53 +231,71 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
     return Object.keys(newErrors).length === 0
   }
 
-  const handleNext = async () => {
-    if (validateStep()) {
-      if (currentStep === 1) {
-        try {
-          const businessDto = {
-            name: businessInfo.name,
-            businessType: businessInfo.industry,
-            address: businessInfo.address,
-            phone: businessInfo.phone,
-            website: businessInfo.website,
-            logoUrl: businessInfo.logo
-          }
-          const res = await createBusinessMutation.mutateAsync(businessDto as any) as LooseObject
-          setBusinessInfo(prev => ({
-            ...prev,
-            businessId: res.businessId,
-            customSlug: res.slug
-          }))
-
-          const linksDto = {
-            googleReviewUrl: reviewLinks.googleReview,
-            yelpUrl: reviewLinks.yelpReview,
-            facebookUrl: reviewLinks.facebookReview,
-            feedbackEmail: reviewLinks.feedbackEmail
-          }
-          await updateReviewLinksMutation.mutateAsync(linksDto as any)
-        } catch (err) {
-          const newErrors: LooseObject = {}
-          if ((err as any)?.errorCode === 'BUSINESS_NAME_REQUIRED') {
-            newErrors.name = t('setup.errors.name_required')
-          } else if ((err as any)?.errorCode === 'USER_NOT_MERCHANT') {
-            newErrors.submit = t('setup.errors.user_not_merchant')
-            setTimeout(() => {
-              onBackToLogin?.()
-            }, 3000)
-          } else {
-            newErrors.submit = (err as any)?.errorCode || 'Failed to save business profile.'
-          }
-          setErrors({
-            ...errors,
-            ...newErrors
-          })
-          return
+  const persistSetupDraft = async () => {
+    try {
+      if (!businessInfo.businessId) {
+        const businessDto = {
+          name: businessInfo.name,
+          businessType: businessInfo.industry,
+          address: businessInfo.address,
+          phone: businessInfo.phone,
+          website: businessInfo.website,
+          logoUrl: businessInfo.logo
         }
+        const res = await createBusinessMutation.mutateAsync(businessDto)
+        setBusinessInfo(prev => ({
+          ...prev,
+          businessId: res.businessId,
+          customSlug: res.slug
+        }))
       }
-      setCurrentStep(prev => prev + 1)
+
+      const linksDto = {
+        googleReviewUrl: reviewLinks.googleReview,
+        yelpUrl: reviewLinks.yelpReview,
+        facebookUrl: reviewLinks.facebookReview,
+        feedbackEmail: reviewLinks.feedbackEmail
+      }
+      await updateReviewLinksMutation.mutateAsync(linksDto)
+      await savePayoutConfigsMutation.mutateAsync(businessInfo.payoutConfigs)
+
+      try {
+        await createTouchpointMutation.mutateAsync({ name: 'Master Store', type: 'FrontDesk' })
+      } catch {
+        // Non-blocking: owner can still manage touchpoints after onboarding.
+      }
+
+      return true
+    } catch (err: unknown) {
+      const newErrors: LooseObject = {}
+      const code = getApiErrorCode(err)
+      if (code === 'BUSINESS_NAME_REQUIRED') {
+        newErrors.name = t('setup.errors.name_required')
+      } else if (code === 'USER_NOT_MERCHANT') {
+        newErrors.submit = t('setup.errors.user_not_merchant')
+        setTimeout(() => {
+          onBackToLogin?.()
+        }, 3000)
+      } else {
+        newErrors.submit = getApiErrorCode(err, 'Failed to save onboarding setup.')
+      }
+      setErrors({
+        ...errors,
+        ...newErrors
+      })
+      return false
     }
+  }
+
+  const handleNext = async () => {
+    if (!validateStep()) return
+
+    if (currentStep === 2) {
+      const saved = await persistSetupDraft()
+      if (!saved) return
+    }
+
+    setCurrentStep(prev => prev + 1)
   }
 
   const handleBack = () => {
@@ -466,43 +499,22 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
     setEditingTpName('')
   }
 
-  // Final Complete — persist payout configs to the merchant payment-methods API
-  // (PUT accountInfo + PATCH toggle on the pre-seeded methods), then complete onboarding.
+  // Final Complete: step 2 already persisted the onboarding draft. This only
+  // flips the account onboarding status after the merchant confirms the review.
   const handleCompleteSetup = (onComplete) => {
-    savePayoutConfigsMutation.mutate(businessInfo.payoutConfigs, {
-      onSuccess: async () => {
-        // Persist a default master/lobby touch point so the "Master Store QR"
-        // (general pool tips) has a real backing touch page. The onboarding
-        // wizard previously kept touch points only in local state and never
-        // created any via the API, leaving /touch/{slug}/general → 404.
-        // Best-effort: never block onboarding completion on this (e.g. Starter
-        // plan limit reached, or it already exists from a prior run).
-        try {
-          await createTouchpointMutation.mutateAsync({ name: 'Master Store', type: 'FrontDesk' } as any)
-        } catch {
-          // ignore — owner can still add touch points later in Touchpoint Manager
-        }
-        completeOnboardingMutation.mutate(undefined, {
-          onSuccess: () => {
-            onComplete({
-              businessInfo,
-              reviewLinks,
-              staffList,
-              touchPoints
-            })
-          },
-          onError: (err) => {
-            setErrors({
-              ...errors,
-              submit: (err as any)?.errorCode || 'Failed to complete onboarding'
-            })
-          }
+    completeOnboardingMutation.mutate(undefined, {
+      onSuccess: () => {
+        onComplete({
+          businessInfo,
+          reviewLinks,
+          staffList,
+          touchPoints
         })
       },
       onError: (err) => {
         setErrors({
           ...errors,
-          submit: (err as any)?.errorCode || 'Failed to save payout methods'
+          submit: getApiErrorCode(err, 'Failed to complete onboarding')
         })
       }
     })
@@ -571,6 +583,7 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
     // handlers
     prefillDemo,
     handleLogoFile,
+    handleLogoChange,
     validateStep,
     handleNext,
     handleBack,

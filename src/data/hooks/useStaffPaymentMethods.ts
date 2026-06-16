@@ -1,79 +1,73 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import { staffPaymentMethodsRepository } from '../repositories/staffPaymentMethods'
+import { useSessionRole } from '../../auth/useSessionRole'
 import { useNotification } from '../../contexts/NotificationContext'
 import { useTranslation } from '../../contexts/LanguageContext'
+import { isApiError } from '../../types/domain'
+import type { PaymentMethodDto } from '../../types/domain'
+import type { UpdatePaymentMethodVars } from '../../types/hooks'
+import { resolvePaymentMethodImageUrl } from '../../utils/resolvePaymentMethodImageUrl'
 
-/**
- * @typedef {object} StaffPaymentMethodDto
- * @property {string} id
- * @property {string} type
- * @property {string|null} accountInfo
- * @property {string|null} imageUrl
- * @property {boolean} isActive
- * @property {boolean} isConfigured
- */
-
-/**
- * Hook to get the authenticated staff member's own payment methods.
- * @returns {import('@tanstack/react-query').UseQueryResult<StaffPaymentMethodDto[], Error>}
- */
-export function useStaffPaymentMethods() {
-  return useQuery({
+export function useStaffPaymentMethods({ enabled: callerEnabled = true } = {}) {
+  const { isStaff } = useSessionRole()
+  return useQuery<PaymentMethodDto[]>({
     queryKey: qk.staffPaymentMethods(),
     queryFn: async () => {
       try {
         return await staffPaymentMethodsRepository.getAll()
-      } catch (err) {
-        if ((err as any)?.status === 404) return []
+      } catch (err: unknown) {
+        if (isApiError(err) && err.status === 404) return []
         throw err
       }
     },
+    enabled: isStaff && callerEnabled,
     retry: (failureCount, error) => {
-      if ((error as any)?.status === 404) return false
+      if (isApiError(error) && error.status === 404) return false
       return failureCount < 3
-    }
+    },
   })
 }
 
-/**
- * Hook to update a staff member's payment method.
- * @returns {import('@tanstack/react-query').UseMutationResult<StaffPaymentMethodDto, Error, { id: string, accountInfo?: string|null, imageUrl?: string|null }>}
- */
 export function useUpdateStaffPaymentMethod() {
   const queryClient = useQueryClient()
   const { showToast } = useNotification()
   const { t } = useTranslation()
 
-  return useMutation({
-    mutationFn: ({ id, accountInfo, imageUrl }: LooseObject) =>
-      staffPaymentMethodsRepository.update(id, { accountInfo, imageUrl }),
+  return useMutation<PaymentMethodDto, Error, UpdatePaymentMethodVars>({
+    mutationFn: async ({ id, accountInfo, imageUrl, imageFile }) => {
+      const resolvedImageUrl = await resolvePaymentMethodImageUrl({ imageFile, imageUrl })
+      return staffPaymentMethodsRepository.update(id, {
+        accountInfo,
+        imageUrl: resolvedImageUrl,
+      })
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.staffPaymentMethods() })
       showToast(t('payment_methods.update_success'), 'success')
     },
-    onError: (err: any) => {
+    onError: (err) => {
       showToast(err.message || t('payment_methods.update_failed'), 'error')
-    }
+    },
   })
 }
 
-/**
- * Hook to toggle a staff member's payment method active status.
- * @returns {import('@tanstack/react-query').UseMutationResult<StaffPaymentMethodDto, Error, string>}
- */
 export function useToggleStaffPaymentMethod() {
   const queryClient = useQueryClient()
   const { showToast } = useNotification()
   const { t } = useTranslation()
 
-  return useMutation({
+  return useMutation<PaymentMethodDto, Error, string>({
     mutationFn: (id) => staffPaymentMethodsRepository.toggle(id),
-    onSuccess: () => {
+    onSuccess: (method) => {
       queryClient.invalidateQueries({ queryKey: qk.staffPaymentMethods() })
+      showToast(
+        t(method.isActive ? 'payment_methods.toggle_enabled' : 'payment_methods.toggle_disabled'),
+        'success',
+      )
     },
-    onError: (err: any) => {
+    onError: (err) => {
       showToast(err.message || t('payment_methods.toggle_failed'), 'error')
-    }
+    },
   })
 }

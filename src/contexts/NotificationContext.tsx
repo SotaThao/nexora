@@ -1,11 +1,12 @@
-import React, { createContext, useContext, useState, useCallback } from 'react'
+import React, { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
 import { CheckCircle2, AlertTriangle, XCircle, Info, X } from 'lucide-react'
 import { useTranslation } from './LanguageContext'
+import type { NotificationContextValue, ToastType } from '../types/contexts'
 
-interface Toast {
+interface ToastItem {
   id: number
   message: string
-  type: string
+  type: ToastType
 }
 
 interface ConfirmState {
@@ -14,19 +15,18 @@ interface ConfirmState {
   resolve: (val: boolean) => void
 }
 
-interface NotificationContextValue {
-  showToast: (message: string, type?: string, duration?: number) => void
-  showConfirm: (message: string, title?: string) => Promise<boolean>
+const NotificationContext = createContext<NotificationContextValue | null>(null)
+
+interface NotificationProviderProps {
+  children: ReactNode
 }
 
-const NotificationContext = createContext<NotificationContextValue | undefined>(undefined)
-
-export function NotificationProvider({ children }: { children: React.ReactNode }) {
-  const [toasts, setToasts] = useState<Toast[]>([])
+export function NotificationProvider({ children }: NotificationProviderProps) {
+  const [toasts, setToasts] = useState<ToastItem[]>([])
   const [confirmState, setConfirmState] = useState<ConfirmState | null>(null)
   const { t } = useTranslation()
 
-  const showToast = useCallback((message: string, type = 'success', duration = 3000) => {
+  const showToast = useCallback<NotificationContextValue['showToast']>((message, type = 'success', duration = 3000) => {
     const id = Date.now() + Math.random()
     setToasts((prev) => [...prev, { id, message, type }])
     setTimeout(() => {
@@ -34,8 +34,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }, duration)
   }, [])
 
-  const showConfirm = useCallback((message: string, title = ''): Promise<boolean> => {
-    return new Promise((resolve) => {
+  const showConfirm = useCallback<NotificationContextValue['showConfirm']>((message, title = '') => {
+    return new Promise<boolean>((resolve) => {
       setConfirmState({
         message,
         title,
@@ -47,37 +47,37 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     })
   }, [])
 
-  const removeToast = useCallback((id: number) => {
+  const removeToast = useCallback((id) => {
     setToasts((prev) => prev.filter((t) => t.id !== id))
   }, [])
 
   return (
     <NotificationContext.Provider value={{ showToast, showConfirm }}>
       {children}
-
+      
       {/* Sleek Premium Toast Overlay */}
       <div className="fixed top-5 right-5 z-[99999] flex flex-col gap-3 max-w-sm w-full pointer-events-none">
         {toasts.map((toast) => {
-          const Icon = ({
+          const Icon = {
             success: CheckCircle2,
             error: XCircle,
             warning: AlertTriangle,
             info: Info
-          } as Record<string, React.ElementType>)[toast.type] || Info
+          }[toast.type] || Info
 
-          const colors = ({
+          const colors = {
             success: 'border-emerald-100 bg-emerald-50/95 text-emerald-950 shadow-emerald-100/20',
             error: 'border-rose-100 bg-rose-50/95 text-rose-950 shadow-rose-100/20',
             warning: 'border-amber-100 bg-amber-50/95 text-amber-950 shadow-amber-100/20',
             info: 'border-indigo-100 bg-indigo-50/95 text-indigo-950 shadow-indigo-100/20'
-          } as Record<string, string>)[toast.type] || 'border-slate-100 bg-white/95 text-slate-900 shadow-slate-100/20'
+          }[toast.type] || 'border-slate-100 bg-white/95 text-slate-900 shadow-slate-100/20'
 
-          const iconColor = ({
+          const iconColor = {
             success: 'text-emerald-500',
             error: 'text-rose-500',
             warning: 'text-amber-500',
             info: 'text-indigo-500'
-          } as Record<string, string>)[toast.type] || 'text-slate-500'
+          }[toast.type] || 'text-slate-500'
 
           return (
             <div
@@ -104,7 +104,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       {/* Sleek Premium Confirm Dialog Overlay */}
       {confirmState && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[99998] flex items-center justify-center p-4">
-          <div
+          <div 
             className="bg-white border border-slate-100 shadow-2xl rounded-2xl max-w-sm w-full overflow-hidden p-6 transform transition-all duration-300 animate-scale-in"
             style={{
               animation: 'confirmScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards'
@@ -137,7 +137,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           </div>
         </div>
       )}
-
+      
       {/* CSS Keyframes injected directly for compatibility */}
       <style>{`
         @keyframes toastSlideIn {
@@ -165,7 +165,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   )
 }
 
-export function useNotification(): NotificationContextValue {
+export function useNotification() {
   const context = useContext(NotificationContext)
   if (!context) {
     throw new Error('useNotification must be used within a NotificationProvider')

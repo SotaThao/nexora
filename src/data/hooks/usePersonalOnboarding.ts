@@ -2,92 +2,85 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import profileSettingsRepository from '../repositories/profileSettings'
 import staffPaymentMethodsRepository from '../repositories/staffPaymentMethods'
 import { logger } from '../../utils/logger'
+import type { PaymentMethodDto } from '../../types/domain'
+import type { PersonalOnboardingInput } from '../../types/hooks'
 
-/**
- * Hook to handle the API integration for Step 4 of the Personal Registration flow.
- * It updates the user profile, staff profile, and payment methods in a single flow.
- */
+const METHOD_TYPE_BY_UI_KEY: Record<string, string> = {
+  zelle: 'Zelle',
+  venmo: 'Venmo',
+  cashapp: 'CashApp',
+  paypal: 'PayPal',
+  vlinkpay: 'VlinkPay',
+  applecash: 'AppleCash',
+  bankwire: 'BankWire',
+}
+
 export function useCompletePersonalOnboarding() {
   const queryClient = useQueryClient()
 
-  return useMutation({
-    mutationFn: async ({ accountData, paymentAccounts, payoutConfigs }: LooseObject) => {
-      // 1. Update User Profile (Phone, First Name, Last Name)
+  return useMutation<{ success: boolean }, Error, PersonalOnboardingInput>({
+    mutationFn: async ({ accountData, payoutConfigs }) => {
       const firstName = accountData.fullName?.split(' ')[0] || ''
       const lastName = accountData.fullName?.split(' ').slice(1).join(' ') || ''
 
       await profileSettingsRepository.updateUserProfile({
         firstName,
         lastName,
-        phoneNumber: accountData.phone || ''
+        phoneNumber: accountData.phone || '',
       })
 
-      // 2. Update Staff Profile (Nickname, Position)
-      await profileSettingsRepository.updateStaffProfile({
-        displayName: accountData.nickname || accountData.fullName,
-        position: accountData.position || ''
-      }).catch(err => {
-        logger.warn('[Personal Onboarding] Ignored staff profile update error:', err)
-      })
+      await profileSettingsRepository
+        .updateStaffProfile({
+          displayName: accountData.nickname || accountData.fullName,
+          position: accountData.position || '',
+        })
+        .catch((err: unknown) => {
+          logger.warn('[Personal Onboarding] Ignored staff profile update error:', err)
+        })
 
-      // 3. Update Payment Methods
-      // First, get the list of available payment methods to get their IDs
-      let methods: LooseObject[] = []
+      let methods: PaymentMethodDto[] = []
       try {
-        methods = (await staffPaymentMethodsRepository.getAll()) as LooseObject[]
-      } catch (err) {
+        methods = await staffPaymentMethodsRepository.getAll()
+      } catch (err: unknown) {
         logger.warn('[Personal Onboarding] Ignored fetch payment methods error:', err)
       }
 
-      // We only update methods that the user has configured
-      const updatePromises: Promise<any>[] = []
+      const updatePromises: Promise<void>[] = []
 
-      // Map of payout method types from UI to Backend Enums (Zelle, Venmo, CashApp, PayPal, AppleCash, VlinkPay, BankWire)
-      const methodMapping: LooseObject = {
-        zelle: 'Zelle',
-        venmo: 'Venmo',
-        cashapp: 'CashApp',
-        paypal: 'PayPal',
-        vlinkpay: 'VlinkPay',
-        applecash: 'AppleCash',
-        bankwire: 'BankWire'
-      }
-
-      // In useRegisterForm, payouts is an object like: { zelle: { enabled: true, value: '...' } }
-      for (const [uiKey, payoutData] of Object.entries(payoutConfigs) as [string, LooseObject][]) {
+      for (const [uiKey, payoutData] of Object.entries(payoutConfigs)) {
         const accountInfo = payoutData.value?.trim()
-        if (!accountInfo) continue // Skip empty ones
+        if (!accountInfo) continue
 
-        const backendType = methodMapping[uiKey]
+        const backendType = METHOD_TYPE_BY_UI_KEY[uiKey]
         if (!backendType) continue
 
-        const targetMethod = methods.find((m: LooseObject) => m.type === backendType)
+        const targetMethod = methods.find((m) => m.type === backendType)
         if (targetMethod) {
-          // Update the account info
           updatePromises.push(
-            staffPaymentMethodsRepository.update(targetMethod.id, {
-              accountInfo
-            }).then(() => {
-              // If it's enabled in UI, toggle it if it wasn't active
-              const isActiveInUi = payoutData.enabled
-              if (isActiveInUi && !targetMethod.isActive) {
-                return staffPaymentMethodsRepository.toggle(targetMethod.id)
-              } else if (!isActiveInUi && targetMethod.isActive) {
-                return staffPaymentMethodsRepository.toggle(targetMethod.id)
-              }
-            })
+            staffPaymentMethodsRepository
+              .update(targetMethod.id, { accountInfo })
+              .then(() => {
+                const isActiveInUi = payoutData.enabled
+                if (isActiveInUi && !targetMethod.isActive) {
+                  return staffPaymentMethodsRepository.toggle(targetMethod.id).then(() => undefined)
+                }
+                if (!isActiveInUi && targetMethod.isActive) {
+                  return staffPaymentMethodsRepository.toggle(targetMethod.id).then(() => undefined)
+                }
+                return undefined
+              }),
           )
         }
       }
 
       await Promise.all(updatePromises)
-      
+
       return { success: true }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userProfile'] })
       queryClient.invalidateQueries({ queryKey: ['staffProfile'] })
       queryClient.invalidateQueries({ queryKey: ['staffPaymentMethods'] })
-    }
+    },
   })
 }

@@ -1,41 +1,68 @@
 /**
  * useStaffInvites — TanStack Query hooks for the staff invite token flow.
- * These endpoints are anonymous and used by the staff invite portal.
  */
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import { staffInvitesRepository } from '../repositories/staffInvites'
+import profileSettingsRepository from '../repositories/profileSettings'
+import { buildJoinPublicInvitePayload } from '../../utils/joinPublicInvite'
+import type { AcceptStaffInviteDto } from '../../types/hooks'
+import type { StaffInviteInfo, UserProfile } from '../../types/domain'
 
-/**
- * Hook to load invite metadata by token.
- * Only enabled when token is a non-empty string.
- *
- * @param {string|null|undefined} token - Invite token from the URL
- * @returns {import('@tanstack/react-query').UseQueryResult}
- */
-export function useStaffInviteInfo(token) {
-  return useQuery({
+export function useStaffInviteInfo(token?: string | null) {
+  return useQuery<StaffInviteInfo>({
     queryKey: qk.staffInvite(token),
-    queryFn: () => staffInvitesRepository.getInviteInfo(token),
+    queryFn: () => staffInvitesRepository.getInviteInfo(token!),
     enabled: Boolean(token),
-    staleTime: 5 * 60 * 1000, // 5 min — invite metadata rarely changes
-    retry: false, // 400/404 = invalid/expired — no point retrying
+    staleTime: 5 * 60 * 1000,
+    retry: false,
   })
 }
 
-/**
- * Hook to accept an invite token.
- * No cache invalidation needed since the invitee is anonymous and
- * the merchant's staff list will update via their own query.
- *
- * @returns {import('@tanstack/react-query').UseMutationResult}
- */
+/** Public invite landing — business info by business referralCode (US-014 AC #8). */
+export function usePublicMerchantInvite(referralCode?: string | null) {
+  return useQuery<StaffInviteInfo>({
+    queryKey: qk.publicMerchantInvite(referralCode),
+    queryFn: () => staffInvitesRepository.getPublicMerchantInvite(referralCode!),
+    enabled: Boolean(referralCode),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  })
+}
+
 export function useAcceptStaffInvite() {
-  return useMutation({
-    /**
-     * @param {{ token: string, displayName: string, position?: string, bio?: string, photoUrl?: string, password?: string }} vars
-     */
-    mutationFn: ({ token, displayName, position, bio, photoUrl, password }: LooseObject) =>
-      staffInvitesRepository.acceptInvite(token, { displayName, position, bio, photoUrl, password }),
+  return useMutation<void, Error, AcceptStaffInviteDto>({
+    mutationFn: ({ token, displayName, position, bio, photoUrl }) =>
+      staffInvitesRepository.acceptInvite(token, {
+        displayName,
+        position,
+        bio,
+        photoUrl,
+      }),
+  })
+}
+
+export function useJoinPublicInvite() {
+  const queryClient = useQueryClient()
+
+  return useMutation<void, Error, void>({
+    mutationFn: async () => {
+      let profile = queryClient.getQueryData<UserProfile | null>(qk.userProfile())
+      if (!profile) {
+        profile = await profileSettingsRepository.get()
+      }
+
+      const payload = buildJoinPublicInvitePayload(profile)
+      if (!payload.referralCode) {
+        throw Object.assign(new Error('REFERRAL_CODE_REQUIRED'), {
+          errorCode: 'REFERRAL_CODE_REQUIRED',
+        })
+      }
+
+      await staffInvitesRepository.joinPublicInvite(payload)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.staffBusinesses() })
+    },
   })
 }

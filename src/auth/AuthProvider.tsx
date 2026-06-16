@@ -14,24 +14,19 @@
  *   { id, email, accountType, flag, displayName, role, staffId,
  *     verificationStatus, ssoPrefillData }
  */
-import React, { createContext, useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, type ReactNode } from 'react'
 import { authAdapter } from './adapters'
 import { tokenStore } from './tokenStore'
-import type { AuthSession } from '../types/domain'
+import { AuthContext } from './AuthContext'
+import type { AuthSession, AuthStatus, LoginCredentials } from '../types/auth'
 
-type AuthStatus = 'loading' | 'authenticated' | 'anonymous'
+export { AuthContext } from './AuthContext'
 
-interface AuthContextValue {
-  session: AuthSession | null
-  status: AuthStatus
-  login: (credentials: { email: string; password: string }) => Promise<AuthSession | null>
-  logout: () => Promise<void>
-  refreshSession: () => Promise<AuthSession | null>
+interface AuthProviderProps {
+  children: ReactNode
 }
 
-export const AuthContext = createContext<AuthContextValue | null>(null)
-
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<AuthSession | null>(null)
   const [status, setStatus] = useState<AuthStatus>('loading')
 
@@ -82,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return unsubscribe
   }, [resolveSession])
 
-  const login = useCallback(async (credentials) => {
+  const login = useCallback(async (credentials: LoginCredentials) => {
     const newSession = await authAdapter.login(credentials)
     setSession(newSession)
     setStatus('authenticated')

@@ -22,8 +22,8 @@ export const DEFAULT_PUSH_PREFERENCES = {
 
 // Build the default staff-owned blob from a merchant staffList entry.
 // Pre-fills payout values from the staff's merchant payment accounts.
-export function makeDefaultStaffAccount(staffMember: LooseObject = {}): LooseObject {
-  const pa: LooseObject = staffMember.paymentAccounts || {}
+export function makeDefaultStaffAccount(staffMember: LooseObject = {}) {
+  const pa = staffMember.paymentAccounts || {}
   return {
     staffId: staffMember.id || DEMO_STAFF_ID,
     bio: '',
@@ -51,7 +51,7 @@ export function makeDefaultStaffAccount(staffMember: LooseObject = {}): LooseObj
 
 // Seed values for the demo staff's owned fields (used by scripts/seed-staff-demo.js
 // and as a local fallback). Bio + a couple of confirmed tips for a realistic view.
-export function makeDemoStaffAccount(staffMember: LooseObject = {}): LooseObject {
+export function makeDemoStaffAccount(staffMember = {}) {
   return {
     ...makeDefaultStaffAccount(staffMember),
     bio: '',

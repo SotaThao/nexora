@@ -22,8 +22,8 @@ export default function TipsView({
   const activeTab = propActiveTab !== undefined ? propActiveTab : localActiveTab;
   const setActiveTab = onTabChange !== undefined ? onTabChange : setLocalActiveTab;
 
-  const [hoverIndex, setHoverIndex] = useState(null);
-  const [selectedTx, setSelectedTx] = useState(null);
+  const [hoverIndex, setHoverIndex] = useState<any | null>(null);
+  const [selectedTx, setSelectedTx] = useState<any | null>(null);
   const [monthlyVolume, setMonthlyVolume] = useState(5000);
   const [localProcessingFee, setLocalProcessingFee] = useState(3.0);
   const processingFee = propProcessingFee !== undefined ? propProcessingFee : localProcessingFee;

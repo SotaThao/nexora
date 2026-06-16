@@ -33,8 +33,10 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
   
   const activeScreen = location.pathname.split('/')[2] || 'home'
   
-  const handleNavigate = (screen) => {
-    navigate(screen === 'home' ? '/staff' : `/staff/${screen}`)
+  const handleNavigate = (screen, params?: Record<string, string>) => {
+    const path = screen === 'home' ? '/staff' : `/staff/${screen}`
+    const search = params ? `?${new URLSearchParams(params).toString()}` : ''
+    navigate(path + search)
     setIsMobileMenuOpen(false)
   }
 
@@ -50,10 +52,11 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
         />
 
         <div className="lg:pl-72">
-          <StaffHeader 
-            activeScreen={activeScreen} 
-            onNavigate={handleNavigate} 
+          <StaffHeader
+            activeScreen={activeScreen}
+            onNavigate={handleNavigate}
             onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
+            onLogout={onLogout}
           />
           <main className="mx-auto max-w-3xl px-4 py-5 pb-28 sm:px-6 lg:pb-10">
             <Outlet context={{ onNavigate: handleNavigate, onLogout }} />

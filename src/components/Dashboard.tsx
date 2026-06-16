@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 
@@ -8,6 +8,7 @@ import { Filter, Moon, Settings, ShieldAlert, Sun, Check, Link } from 'lucide-re
 
 // 3. Internal — utils → contexts → data/constants → hooks → layout → views → modals → ui
 import { logger } from '../utils/logger'
+import { resolveMerchantStaffTipQr, toLocalCustomerTouchUrl } from '../utils/staffTipUrl'
 import { useTranslation } from '../contexts/LanguageContext'
 import { useNotification } from '../contexts/NotificationContext'
 import { DEFAULT_PAYOUT_CONFIGS, MENU_ITEMS } from './dashboard/constants'
@@ -24,6 +25,7 @@ import { useReviews } from '../data/hooks/useReviews'
 import { useNotifications, useMarkNotificationRead } from '../data/hooks/useNotifications'
 import { useProfileSettings, useSaveProfileSettings } from '../data/hooks/useProfileSettings'
 import { useMerchantSetup, useSaveMerchantSetup } from '../data/hooks/useMerchantSetup'
+import { useMerchantInviteLinkSetting } from '../data/hooks/useMerchantSettings'
 import DashboardHeader from './dashboard/layout/DashboardHeader'
 import DashboardSidebar from './dashboard/layout/DashboardSidebar'
 import MobileMenuDrawer from './dashboard/layout/MobileMenuDrawer'
@@ -50,13 +52,13 @@ export default function Dashboard({
   verificationStatus = 'kyb_approved',
   hasKyb = verificationStatus === 'kyb_approved',
   userEmail = '',
-  onKybSuccess = undefined,
+  onKybSuccess = () => {},
   initialMenu = 'overview',
   initialSettingsTab = 'profile',
   onLogout,
   userRole = 'owner',
   currentStaffId = null,
-  onStartSetup = undefined,
+  onStartSetup = null,
 }) {
   const { currentLanguage, t } = useTranslation()
   const queryClient = useQueryClient()
@@ -74,6 +76,14 @@ export default function Dashboard({
     handleNavigateMenu, navigateMenu
   } = useDashboardNavigation()
   const navigate = useNavigate()
+  const handleStartSetup = useCallback(() => {
+    if (typeof onStartSetup === 'function') {
+      onStartSetup()
+      return
+    }
+
+    navigate('/onboarding')
+  }, [navigate, onStartSetup])
   const [processingFee, setProcessingFee] = useState(3.0)
 
   // ---------------------------------------------------------------------------
@@ -99,6 +109,10 @@ export default function Dashboard({
     pageNumber: 1,
     pageSize: 100
   })
+  const {
+    data: inviteLinkSetting,
+    isLoading: isInviteLinkSettingLoading,
+  } = useMerchantInviteLinkSetting({ enabled: userRole === 'owner' })
 
   const markNotificationReadMutation = useMarkNotificationRead()
   const saveMerchantSetupMutation = useSaveMerchantSetup()
@@ -124,7 +138,7 @@ export default function Dashboard({
   const buildFallbackProfile = (storeInfo, reviewInfo) => ({
     fullName: storeInfo?.ownerName || '',
     email: storeInfo?.businessEmail || userEmail || '',
-    avatar: null,
+    avatar: storeInfo?.logo || null,
     businessName: storeInfo?.name || '',
     businessPhone: storeInfo?.phone || '',
     businessWebsite: storeInfo?.website || '',
@@ -142,9 +156,11 @@ export default function Dashboard({
     }
   })
 
+  const businessLogo = merchantSetupData?.businessInfo?.logo || setupData?.businessInfo?.logo || null
+
   const [profile, setProfile] = useState(() => {
     // Prefer saved profile settings, fall back to business info from setupData.
-    if (profileSettingsData) return profileSettingsData
+    if (profileSettingsData) return { ...profileSettingsData, avatar: profileSettingsData.avatar || businessLogo }
     const storeInfo = setupData?.businessInfo || merchantSetupData?.businessInfo
     const reviewInfo = setupData?.reviewLinks || merchantSetupData?.reviewLinks
     return buildFallbackProfile(storeInfo, reviewInfo)
@@ -156,6 +172,7 @@ export default function Dashboard({
       if (!hasKyb && verificationStatus !== 'basic') {
         setProfile({
           ...profileSettingsData,
+          avatar: profileSettingsData.avatar || businessLogo,
           fullName: '',
           email: userEmail || '',
           businessName: '',
@@ -165,7 +182,7 @@ export default function Dashboard({
           }
         })
       } else {
-        setProfile(profileSettingsData)
+        setProfile({ ...profileSettingsData, avatar: profileSettingsData.avatar || businessLogo })
       }
     } else {
       // No saved settings — build from setup data / merchant setup query.
@@ -174,7 +191,7 @@ export default function Dashboard({
       setProfile(buildFallbackProfile(storeInfo, reviewInfo))
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profileSettingsData, hasKyb, userEmail, verificationStatus])
+  }, [profileSettingsData, hasKyb, userEmail, verificationStatus, businessLogo])
 
   const [isNotiDropdownOpen, setIsNotiDropdownOpen] = useState(false)
 
@@ -185,18 +202,22 @@ export default function Dashboard({
   const deleteTouchpointMutation = useDeleteTouchpoint()
 
   const { devices, setDevices, handleAddDevice, handleDeleteDevice, handleToggleDeviceStatus } = useDevices()
-  const [qrTarget, setQrTarget] = useState(null)
+  const [qrTarget, setQrTarget] = useState<any | null>(null)
   const [reviewFilterStaff, setReviewFilterStaff] = useState('all')
   const [newTouchpoint, setNewTouchpoint] = useState({ name: '', type: 'Table QR' })
   const [isAddTouchpointModalOpen, setIsAddTouchpointModalOpen] = useState(false)
-  const [addTouchpointPrefill, setAddTouchpointPrefill] = useState(null)
+  const [addTouchpointPrefill, setAddTouchpointPrefill] = useState<any | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeKpi, setActiveKpi] = useState('tips')
   const { chartRange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate, handleChartRangeChange } = useChartDateRange(transactions)
 
-  const [selectedLeaderboardStaff, setSelectedLeaderboardStaff] = useState(null)
+  const [selectedLeaderboardStaff, setSelectedLeaderboardStaff] = useState<any | null>(null)
 
   const businessName = profile?.businessName || setupData?.businessInfo?.name || merchantSetupData?.businessInfo?.name || ''
+  const businessSlug =
+    merchantSetupData?.businessInfo?.slug ||
+    setupData?.businessInfo?.slug ||
+    slugify(businessName || 'business')
 
   const combinedStaffData = useMemo(() => {
     const byId = new Map()
@@ -223,7 +244,7 @@ export default function Dashboard({
     inviteShareDefaultContact, setInviteShareDefaultContact,
     resetStaffForm, openAddStaff, openApproveStaff, openEditStaff, closeStaffModal,
     saveStaff, sendSetupLinkFromModal, handleLinkStaff, handleInviteStaff,
-    handleResendInvite,
+    handleResendInvite, handleCancelInvite,
     handleAcceptJoinRequest, handleDeclineJoinRequest, deleteStaff, toggleStaff, toggleStaffTipsFlow,
     handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     inviteStaffMutation,
@@ -289,9 +310,9 @@ export default function Dashboard({
     if (!searchQuery) return touchpoints
     const query = searchQuery.toLowerCase().trim()
     return touchpoints.filter(point =>
-      point.name.toLowerCase().includes(query) ||
-      point.type.toLowerCase().includes(query) ||
-      (point.staffName && point.staffName.toLowerCase().includes(query))
+      String(point.name ?? '').toLowerCase().includes(query) ||
+      String(point.type ?? '').toLowerCase().includes(query) ||
+      (point.staffName && String(point.staffName).toLowerCase().includes(query))
     )
   }, [touchpoints, searchQuery])
 
@@ -299,9 +320,9 @@ export default function Dashboard({
     if (!searchQuery) return reviews
     const query = searchQuery.toLowerCase().trim()
     return reviews.filter(rev =>
-      rev.comment.toLowerCase().includes(query) ||
-      rev.staffName.toLowerCase().includes(query) ||
-      rev.category.toLowerCase().includes(query) ||
+      String(rev.comment ?? '').toLowerCase().includes(query) ||
+      String(rev.staffName ?? '').toLowerCase().includes(query) ||
+      String(rev.category ?? '').toLowerCase().includes(query) ||
       String(rev.rating).includes(query)
     )
   }, [reviews, searchQuery])
@@ -381,20 +402,39 @@ export default function Dashboard({
 
   const previewQr = (target) => {
     const staffName = target.nickname || target.fullName
-    const finalSlug = target.slug 
-      ? target.slug 
+    const masterTouchpoint =
+      touchpoints.find((tp) => tp.type === 'FrontDesk') || touchpoints[0] || null
+
+    // Staff personal QR → master touch URL + ?staffProfileId=… (skip staff picker).
+    const staffTipQr = resolveMerchantStaffTipQr(target.staffProfileId, {
+      businessName,
+      masterTouchpoint,
+    })
+    if (staffTipQr?.tipUrl) {
+      setQrTarget({
+        name: target.name || `Personal QR - ${staffName}`,
+        subtitle: target.position || 'Staff QR',
+        slug: staffTipQr.touchPointSlug,
+        url: staffTipQr.tipUrl,
+        qrImageUrl: target.qrImageUrl || staffTipQr.qrImageUrl || null,
+        isActive: target.isActive !== undefined ? target.isActive : true,
+        isStaffQr: true,
+      })
+      return
+    }
+
+    const finalSlug = target.slug
+      ? target.slug
       : (staffName ? `staff-${slugify(staffName)}` : slugify(target.name || target.id || 'general'))
 
     setQrTarget({
       name: target.name || `Personal QR - ${staffName}`,
       subtitle: target.position || target.type || 'Staff QR',
       slug: finalSlug,
-      // Canonical customer URL + QR image come from the API (GET touchpoints).
-      // Carry them through so QrModal uses the real slugs instead of building
-      // a link from slugify(businessName) (which is blank pre-KYB).
-      url: target.url || null,
+      url: target.url ? toLocalCustomerTouchUrl(target.url) : null,
       qrImageUrl: target.qrImageUrl || null,
-      isActive: target.isActive !== undefined ? target.isActive : true
+      isActive: target.isActive !== undefined ? target.isActive : true,
+      isStaffQr: Boolean(staffName && target.staffProfileId),
     })
   }
 
@@ -425,7 +465,8 @@ export default function Dashboard({
 
   const dashboardCtx = {
     metrics, activeKpi, setActiveKpi, chartRange, handleChartRangeChange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate,
-    transactions, selectedLeaderboardStaff, handleSelectLeaderboardStaff, businessName, previewQr, hasKyb, hasSetup, onStartSetup,
+    transactions, selectedLeaderboardStaff, handleSelectLeaderboardStaff, businessName, businessSlug, previewQr, hasKyb, hasSetup, onStartSetup: handleStartSetup,
+    inviteLinkSetting, isInviteLinkSettingLoading,
     filteredStaff, pendingStaff, staff, staffLoading, openApproveStaff, openAddStaff, openEditStaff, deleteStaff, toggleStaff, toggleStaffTipsFlow,
     handleLinkStaff, handleInviteStaff, handleResendInvite, handleAcceptJoinRequest, handleDeclineJoinRequest, handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     setInviteShareDefaultName, setInviteShareDefaultContact, setIsInviteShareOpen,
@@ -554,6 +595,7 @@ export default function Dashboard({
       <StaffModal
         open={isStaffModalOpen}
         editing={Boolean(editingStaffId)}
+        onDecline={closeStaffModal}
         form={staffForm}
         errors={errors}
         setForm={setStaffForm}
@@ -561,7 +603,7 @@ export default function Dashboard({
         onBlockedFeatureClick={requireKyb}
         onClose={closeStaffModal}
         onSave={saveStaff}
-        onDecline={undefined}
+        onLinkStaff={handleLinkStaff}
         onOpenInviteShare={(formDetails) => {
           setInviteShareDefaultName(formDetails.fullName || '')
           setInviteShareDefaultContact(formDetails.email || formDetails.phone || '')
@@ -599,7 +641,7 @@ export default function Dashboard({
           setIsApproveModalOpen(false)
           queryClient.invalidateQueries({ queryKey: ['merchantStaff'] })
         }}
-        onOpenInviteShare={undefined}
+        onOpenInviteShare={() => {}}
         reviews={reviews}
         merchantSetupData={merchantSetupData}
       />
@@ -619,6 +661,9 @@ export default function Dashboard({
       <InviteShareModal
         open={isInviteShareOpen}
         businessName={businessName}
+        businessSlug={businessSlug}
+        inviteLinkSetting={inviteLinkSetting}
+        isInviteLinkSettingLoading={isInviteLinkSettingLoading}
         defaultName={inviteShareDefaultName}
         defaultContact={inviteShareDefaultContact}
         onClose={() => setIsInviteShareOpen(false)}

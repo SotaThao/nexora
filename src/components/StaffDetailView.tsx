@@ -54,9 +54,9 @@ export default function StaffDetailView({
   onDelete
 }) {
   const { currentLanguage, t } = useTranslation()
-  const [copiedWallet, setCopiedWallet] = useState(null)
+  const [copiedWallet, setCopiedWallet] = useState<any | null>(null)
   const [reviewFilter, setReviewFilter] = useState('all') // 'all' | 'google' | 'private'
-  const [hoverIndex, setHoverIndex] = useState(null)
+  const [hoverIndex, setHoverIndex] = useState<any | null>(null)
   const chartRef = useRef(null)
 
   const [range, setRange] = useState('7 Days')
@@ -133,8 +133,8 @@ export default function StaffDetailView({
     else if (range === '180 Days') multiplier = 24
     else if (range === '365 Days') multiplier = 52
     else if (range === 'Custom') {
-      const start = new Date(startDate)
-      const end = new Date(endDate)
+      const start = new Date(String(startDate))
+      const end = new Date(String(endDate))
       const diffTime = Math.abs(end.getTime() - start.getTime())
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
       multiplier = Math.max(0.1, diffDays / 7)
@@ -723,7 +723,7 @@ export default function StaffDetailView({
                   <div className="flex items-center gap-2.5">
                     <span className="font-bold text-nexoraText">{label}</span>
                     {isConfigured ? (
-                      <span className="font-mono text-nexoraMuted">{value as any}</span>
+                      <span className="font-mono text-nexoraMuted">{String(value ?? '')}</span>
                     ) : (
                       <span className="italic text-nexoraSubtle">{t('staff_detail.not_configured')}</span>
                     )}

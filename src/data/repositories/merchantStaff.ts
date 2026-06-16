@@ -1,40 +1,25 @@
 /**
  * merchantStaffRepository — API implementation for staff management.
- * Handles merchant staff list, invitations, linking, status updates,
- * reordering, and removal via the Nexora REST API.
  */
 import httpClient from '../../lib/httpClient'
-import type { StaffMember, PaymentMethodDto } from '../../types/domain'
+import type { StaffMember, StaffSearchResult } from '../../types/domain'
+import type {
+  MerchantStaffInvite,
+  StaffInviteDetailApiDto,
+  StaffInviteListItemApiDto,
+  StaffInviteParams,
+  StaffInviteResult,
+  StaffInvitesQuery,
+  StaffLinkRequestParams,
+  StaffListItemApiDto,
+  StaffPaymentMethodApiDto,
+  StaffReorderItem,
+  StaffSearchResultApiDto,
+} from '../../types/repositories'
 
-export interface StaffListPage {
-  items: StaffMember[]
-  pageNumber: number
-  totalPages: number
-  totalCount: number
-  hasNextPage: boolean
-  hasPreviousPage: boolean
-}
+type HttpClient = typeof httpClient
 
-/** Raw paginated response shape from GET /api/v1/merchant/staff */
-interface StaffListApiResponse {
-  items?: LooseObject[]
-  pageNumber?: number
-  totalPages?: number
-  totalCount?: number
-  hasNextPage?: boolean
-  hasPreviousPage?: boolean
-}
-
-/** Raw search response shape from GET /api/v1/merchant/staff/search */
-interface StaffSearchApiResponse {
-  items?: LooseObject[]
-}
-
-/**
- * Map a PayoutMethodType enum value (from the API) to the dashboard wallet key.
- * Enum (Swagger): Zelle | BankWire | PayPal | Venmo | CashApp | AppleCash | VlinkPay
- */
-const PAYOUT_TYPE_TO_KEY = {
+const PAYOUT_TYPE_TO_KEY: Record<string, string> = {
   Zelle: 'zelle',
   BankWire: 'bankwire',
   PayPal: 'paypal',
@@ -44,18 +29,16 @@ const PAYOUT_TYPE_TO_KEY = {
   VlinkPay: 'vlinkpay',
 }
 
-/**
- * Build the dashboard payoutConfigs + simple paymentAccounts maps from the
- * API `StaffPaymentMethodItemDto[]` (`{ type, isActive, accountInfo, imageUrl }`).
- *
- * @param {Array} paymentMethods - dto.paymentMethods from StaffListItemDto
- * @param {string} [displayName] - Fallback account-holder name
- */
+const normalizeDateOnly = (value?: string | null) => {
+  if (!value) return null
+  return value.split('T')[0]
+}
+
 export function normalizePaymentMethods(
-  paymentMethods: PaymentMethodDto[] | undefined,
-  displayName = ''
-): { payoutConfigs: LooseObject; paymentAccounts: LooseObject } {
-  const payoutConfigs = {
+  paymentMethods: StaffPaymentMethodApiDto[] | undefined,
+  displayName = '',
+) {
+  const payoutConfigs: Record<string, { enabled: boolean; value: string; qrCode: string; accountName: string }> = {
     zelle: { enabled: false, value: '', qrCode: '', accountName: '' },
     bankwire: { enabled: false, value: '', qrCode: '', accountName: '' },
     paypal: { enabled: false, value: '', qrCode: '', accountName: '' },
@@ -63,14 +46,13 @@ export function normalizePaymentMethods(
     cashapp: { enabled: false, value: '', qrCode: '', accountName: '' },
     applecash: { enabled: false, value: '', qrCode: '', accountName: '' },
   }
-  const paymentAccounts = {}
+  const paymentAccounts: Record<string, string> = {}
 
   for (const method of paymentMethods ?? []) {
-    const key = PAYOUT_TYPE_TO_KEY[method?.type]
+    const key = PAYOUT_TYPE_TO_KEY[method?.type ?? '']
     if (!key) continue
     const value = method.accountInfo ?? ''
     paymentAccounts[key] = value
-    // VlinkPay is shown as the ID field, not a payout toggle.
     if (key === 'vlinkpay') continue
     payoutConfigs[key] = {
       enabled: !!method.isActive,
@@ -83,60 +65,105 @@ export function normalizePaymentMethods(
   return { payoutConfigs, paymentAccounts }
 }
 
-/**
- * Normalize a StaffListItemDto from the API into the dashboard-friendly shape.
- *
- * @param {object} dto - Raw StaffListItemDto from GET /api/v1/merchant/staff
- */
-export function normalizeStaffListItem(dto: LooseObject): StaffMember {
-  const isActive = dto['status'] === 'Active' || dto['status'] === 'Accepted'
-  const displayName = (dto['displayName'] as string) ?? ''
-  const { payoutConfigs, paymentAccounts } = normalizePaymentMethods(dto['paymentMethods'] as PaymentMethodDto[] | undefined, displayName)
+export function normalizeStaffListItem(dto: StaffListItemApiDto): StaffMember {
+  const isActive = dto.status === 'Active' || dto.status === 'Accepted'
+  const displayName = dto.displayName ?? ''
+  const { payoutConfigs, paymentAccounts } = normalizePaymentMethods(dto.paymentMethods, displayName)
+  const itemType =
+    dto.itemType ??
+    (dto.inviteId ? 'invite' : undefined) ??
+    (dto.linkId || dto.staffLinkId || dto.status === 'Pending' ? 'link' : undefined)
+  const status =
+    itemType === 'invite' && dto.status === 'Pending'
+      ? 'Pending Setup'
+      : itemType === 'link' && dto.status === 'Pending'
+        ? 'Pending Acceptance'
+        : (dto.status ?? null)
 
-  const staffProfile = dto['staffProfile'] as LooseObject | undefined
-  const user = dto['user'] as LooseObject | undefined
   return {
-    id: (dto['linkId'] ?? dto['id'] ?? dto['inviteId']) as string,
-    linkId: (dto['linkId'] ?? dto['staffLinkId'] ?? dto['id'] ?? null) as string | null,
-    staffLinkId: (dto['itemType'] === 'link' ? (dto['staffLinkId'] ?? dto['linkId']) : null) as string | null,
-    inviteId: (dto['itemType'] === 'invite' ? dto['inviteId'] : null) as string | null,
-    staffProfileId: (dto['staffProfileId'] ?? null) as string | null,
-    staffCode: (dto['staffCode'] ?? null) as string | null,
-    itemType: dto['itemType'] as string,
-    sortOrder: (dto['sortOrder'] ?? 0) as number,
-    isProfileComplete: (dto['isProfileComplete'] ?? false) as boolean,
-    tipCount: (dto['tipCount'] ?? 0) as number,
-    averageRating: (dto['averageRating'] ?? 0) as number,
+    id: dto.id ?? dto.linkId ?? dto.inviteId,
+    linkId: dto.linkId ?? dto.staffLinkId ?? dto.id ?? null,
+    staffLinkId: itemType === 'link' ? (dto.staffLinkId ?? dto.linkId ?? dto.id) : null,
+    inviteId: itemType === 'invite' ? (dto.inviteId ?? dto.id) : null,
+    staffProfileId: dto.staffProfileId ?? null,
+    staffCode: dto.staffCode ?? null,
+    refCode: dto.refCode ?? null,
+    source: dto.source ?? dto.inviteSource ?? null,
+    itemType,
+    sortOrder: dto.sortOrder ?? 0,
+    isProfileComplete: dto.isProfileComplete ?? false,
+    tipCount: dto.tipCount ?? 0,
+    averageRating: dto.averageRating ?? 0,
     fullName: displayName,
-    avatar: (dto['photoUrl'] ?? null) as string | null,
-    status: (dto['itemType'] === 'invite' && dto['status'] === 'Pending') ? 'Pending Setup' : ((dto['status'] ?? null) as string | null),
+    avatar: dto.photoUrl ?? null,
+    status,
     isActive,
     showInTipsFlow: isActive,
-    position: (dto['position'] ?? null) as string | null,
-    bio: (dto['bio'] ?? null) as string | null,
-    invitedEmail: (dto['invitedEmail'] ?? null) as string | null,
-    invitedPhone: (dto['invitedPhone'] ?? null) as string | null,
-    phone: (dto['phoneNumber'] ?? staffProfile?.['phoneNumber'] ?? staffProfile?.['phone'] ?? user?.['phoneNumber'] ?? user?.['phone'] ?? dto['phone'] ?? dto['invitedPhone'] ?? null) as string | null,
-    email: (dto['email'] ?? staffProfile?.['email'] ?? user?.['email'] ?? dto['invitedEmail'] ?? null) as string | null,
-    // Payout methods from StaffListItemDto.paymentMethods (review/edit modal)
+    position: dto.position ?? null,
+    bio: dto.bio ?? null,
+    invitedEmail: dto.invitedEmail ?? null,
+    invitedPhone: dto.invitedPhone ?? null,
+    phone:
+      dto.phoneNumber ??
+      dto.staffProfile?.phoneNumber ??
+      dto.staffProfile?.phone ??
+      dto.user?.phoneNumber ??
+      dto.user?.phone ??
+      dto.phone ??
+      dto.invitedPhone ??
+      null,
+    email:
+      dto.email ?? dto.staffProfile?.email ?? dto.user?.email ?? dto.invitedEmail ?? null,
+    joinedDate: normalizeDateOnly(dto.joinDate),
     payoutConfigs,
     paymentAccounts,
   }
 }
 
-/**
- * Normalize a StaffSearchResultDto from the API.
- *
- * @param {object} dto - Raw StaffSearchResultDto from GET /api/v1/merchant/staff/search
- */
-export function normalizeStaffSearchResult(dto: LooseObject): Partial<StaffMember> {
+export function normalizeStaffInvite(
+  dto: StaffInviteListItemApiDto | StaffInviteDetailApiDto,
+): MerchantStaffInvite {
   return {
-    staffProfileId: (dto['staffProfileId'] ?? undefined) as string | undefined,
-    staffCode: (dto['staffCode'] ?? null) as string | null,
-    fullName: (dto['displayName'] ?? '') as string,
-    avatar: (dto['photoUrl'] ?? null) as string | null,
-    position: (dto['position'] ?? null) as string | null,
+    inviteId: dto.id ?? null,
+    invitedName: dto.invitedName ?? '',
+    invitedEmail: dto.invitedEmail ?? null,
+    invitedPhone: dto.invitedPhone ?? null,
+    invitedPosition: dto.invitedPosition ?? null,
+    status: dto.status ?? null,
+    expiresAt: dto.expiresAt ?? null,
+    invitedAt: dto.invitedAt ?? null,
+    acceptedAt: dto.acceptedAt ?? null,
+    acceptedByUserProfileId:
+      (dto as StaffInviteDetailApiDto).acceptedByUserProfileId ?? null,
   }
+}
+
+export function normalizeStaffSearchResult(dto: StaffSearchResultApiDto): StaffSearchResult {
+  return {
+    staffProfileId: dto.staffProfileId,
+    staffCode: dto.staffCode ?? null,
+    fullName: dto.displayName ?? '',
+    avatar: dto.photoUrl ?? null,
+    position: dto.position ?? null,
+  }
+}
+
+export interface StaffListPage {
+  items: StaffMember[]
+  pageNumber: number
+  totalPages: number
+  totalCount: number
+  hasNextPage: boolean
+  hasPreviousPage: boolean
+}
+
+interface StaffListApiResponse {
+  items?: StaffListItemApiDto[]
+  pageNumber?: number
+  totalPages?: number
+  totalCount?: number
+  hasNextPage?: boolean
+  hasPreviousPage?: boolean
 }
 
 export const StatusFilter = {
@@ -144,27 +171,14 @@ export const StatusFilter = {
   Active: 'Active',
   InActive: 'InActive',
   Rejected: 'Rejected',
-  Accepted: 'Accepted'
-}
+  Accepted: 'Accepted',
+} as const
 
-/**
- * Factory to create a merchant staff repository instance.
- *
- * @param {object} [client] - HTTP client (defaults to httpClient)
- * @returns {object} Repository with all staff management methods
- */
-export function createMerchantStaffRepository(client = httpClient) {
+export function createMerchantStaffRepository(client: HttpClient = httpClient) {
   return {
-    /**
-     * Fetch the merchant's staff list (links + pending invites).
-     * @param {string} [statusFilter] - Optional status filter (Pending, Active, InActive, Rejected)
-     * @param {number} [pageNumber] - Page number (default: 1)
-     * @param {number} [pageSize] - Page size (default: 10)
-     * @returns {Promise<{items: Array, pageNumber: number, totalPages: number, totalCount: number, hasNextPage: boolean, hasPreviousPage: boolean}>} Normalized staff rows with pagination details
-     */
     async list(statusFilter?: string, pageNumber = 1, pageSize = 10): Promise<StaffListPage> {
       let url = '/api/v1/merchant/staff'
-      const queryParams = []
+      const queryParams: string[] = []
       if (statusFilter) {
         queryParams.push(`StatusFilter=${encodeURIComponent(statusFilter)}`)
       }
@@ -177,25 +191,21 @@ export function createMerchantStaffRepository(client = httpClient) {
       if (queryParams.length > 0) {
         url += `?${queryParams.join('&')}`
       }
-      const data = await client.get<StaffListApiResponse>(url)
-      const items: LooseObject[] = (data?.items ?? (Array.isArray(data) ? data : [])) as LooseObject[]
+      const data = await client.get<StaffListItemApiDto[] | StaffListApiResponse>(url)
+      const page = Array.isArray(data) ? null : data
+      const items = Array.isArray(data) ? data : (page?.items ?? [])
       return {
         items: items.map(normalizeStaffListItem),
-        pageNumber: data?.pageNumber ?? pageNumber,
-        totalPages: data?.totalPages ?? 1,
-        totalCount: data?.totalCount ?? items.length,
-        hasNextPage: data?.hasNextPage ?? false,
-        hasPreviousPage: data?.hasPreviousPage ?? false,
+        pageNumber: page?.pageNumber ?? pageNumber,
+        totalPages: page?.totalPages ?? 1,
+        totalCount: page?.totalCount ?? items.length,
+        hasNextPage: page?.hasNextPage ?? false,
+        hasPreviousPage: page?.hasPreviousPage ?? false,
       }
     },
 
-    /**
-     * Invite a new staff member.
-     * @param {{ name: string, email?: string, phone?: string, position?: string }} params
-     * @returns {Promise<{ inviteId: string }>}
-     */
-    async invite({ name, email, phone, position }) {
-      return await client.post('/api/v1/merchant/staff/invite', {
+    async invite({ name, email, phone, position }: StaffInviteParams): Promise<StaffInviteResult> {
+      return await client.post<StaffInviteResult>('/api/v1/merchant/staff/invite', {
         invitedName: name,
         invitedEmail: email ?? null,
         invitedPhone: phone ?? null,
@@ -203,84 +213,81 @@ export function createMerchantStaffRepository(client = httpClient) {
       })
     },
 
-    /**
-     * Resend a pending invite notification.
-     * @param {string} linkId
-     * @returns {Promise<void>}
-     */
-    async resendInvite(linkId) {
-      return await client.post(`/api/v1/merchant/staff/${encodeURIComponent(linkId)}/resend-invite`)
+    async resendInvite(linkId: string): Promise<void> {
+      await client.post(`/api/v1/merchant/staff/${encodeURIComponent(linkId)}/resend-invite`)
     },
 
-    /**
-     * Search existing staff profiles by query string.
-     * @param {string} q - Search query
-     * @returns {Promise<Array>} Normalized search results
-     */
-    async search(q) {
-      const data = await client.get<StaffSearchApiResponse>(`/api/v1/merchant/staff/search?q=${encodeURIComponent(q)}`)
-      const items: LooseObject[] = (data?.items ?? (Array.isArray(data) ? data : [])) as LooseObject[]
+    // v3.3 — invite lifecycle management.
+    async listInvites(query: StaffInvitesQuery = {}): Promise<MerchantStaffInvite[]> {
+      const params = new URLSearchParams()
+      if (query.keyword) params.set('Keyword', query.keyword)
+      if (query.statusFilter) params.set('StatusFilter', query.statusFilter)
+      if (query.pageNumber != null) params.set('PageNumber', String(query.pageNumber))
+      if (query.pageSize != null) params.set('PageSize', String(query.pageSize))
+      const qs = params.toString()
+      const data = await client.get<
+        StaffInviteListItemApiDto[] | { items?: StaffInviteListItemApiDto[] }
+      >(`/api/v1/merchant/staff/invites${qs ? `?${qs}` : ''}`)
+      const items = Array.isArray(data) ? data : (data?.items ?? [])
+      return items.map(normalizeStaffInvite)
+    },
+
+    async getInvite(inviteId: string): Promise<MerchantStaffInvite> {
+      const data = await client.get<StaffInviteDetailApiDto>(
+        `/api/v1/merchant/staff/invites/${encodeURIComponent(inviteId)}`,
+      )
+      return normalizeStaffInvite(data)
+    },
+
+    async cancelInvite(inviteId: string): Promise<void> {
+      await client.del(`/api/v1/merchant/staff/invites/${encodeURIComponent(inviteId)}`)
+    },
+
+    async getByStaffCode(staffCode: string): Promise<StaffMember> {
+      // StaffDetailByCodeDto is a superset of StaffListItemDto, so the existing
+      // list normalizer covers the shared fields.
+      const dto = await client.get<StaffListItemApiDto>(
+        `/api/v1/merchant/staff/${encodeURIComponent(staffCode)}`,
+      )
+      return normalizeStaffListItem(dto)
+    },
+
+    async search(q: string): Promise<StaffSearchResult[]> {
+      const data = await client.get<StaffSearchResultApiDto[] | { items?: StaffSearchResultApiDto[] }>(
+        `/api/v1/merchant/staff/search?q=${encodeURIComponent(q)}`,
+      )
+      const items = Array.isArray(data) ? data : (data?.items ?? [])
       return items.map(normalizeStaffSearchResult)
     },
 
-    /**
-     * Send a link request to an existing staff profile.
-     * @param {string} staffProfileId
-     * @returns {Promise<void>}
-     */
-    async sendLinkRequest(staffProfileId) {
-      return await client.post(`/api/v1/merchant/staff/link-request/${encodeURIComponent(staffProfileId)}`)
+    async sendLinkRequest(params: string | StaffLinkRequestParams): Promise<void> {
+      const dto = typeof params === 'string'
+        ? { staffProfileId: params }
+        : params
+      await client.post(`/api/v1/merchant/staff/link-request/${encodeURIComponent(dto.staffProfileId)}`)
     },
 
-    /**
-     * Approve a staff link request.
-     * @param {string} linkId
-     * @returns {Promise<void>}
-     */
-    async approveLink(linkId) {
-      return await client.put(`/api/v1/merchant/staff/links/${encodeURIComponent(linkId)}/approve`)
+    async approveLink(linkId: string): Promise<void> {
+      await client.put(`/api/v1/merchant/staff/links/${encodeURIComponent(linkId)}/approve`)
     },
 
-    /**
-     * Update the status of a staff link (Active, Inactive, etc.).
-     * @param {string} staffLinkId
-     * @param {string} status
-     * @returns {Promise<void>}
-     */
-    async updateStatus(staffLinkId, status) {
-      return await client.put(`/api/v1/merchant/staff/${encodeURIComponent(staffLinkId)}/status`, {
+    async updateStatus(staffLinkId: string, status: string): Promise<void> {
+      await client.put(`/api/v1/merchant/staff/${encodeURIComponent(staffLinkId)}/status`, {
         staffLinkId,
         status,
       })
     },
 
-    /**
-     * Reject a pending staff link/join request.
-     * Uses the dedicated reject endpoint — the status-update route only
-     * accepts "Active" | "Inactive" and 400s on "Rejected".
-     * @param {string} linkId - BusinessStaffLink id (same as staffLinkId)
-     * @returns {Promise<void>}
-     */
-    async rejectLink(linkId) {
-      return await client.post(`/api/v1/merchant/staff/links/${encodeURIComponent(linkId)}/reject`)
+    async rejectLink(linkId: string): Promise<void> {
+      await client.put(`/api/v1/merchant/staff/links/${encodeURIComponent(linkId)}/reject`)
     },
 
-    /**
-     * Persist staff display order.
-     * @param {Array<{ staffLinkId: string, sortOrder: number }>} items
-     * @returns {Promise<void>}
-     */
-    async reorder(items) {
-      return await client.put('/api/v1/merchant/staff/reorder', { items })
+    async reorder(items: StaffReorderItem[]): Promise<void> {
+      await client.put('/api/v1/merchant/staff/reorder', { items })
     },
 
-    /**
-     * Remove (unlink/delete) a staff link.
-     * @param {string} staffLinkId
-     * @returns {Promise<void>}
-     */
-    async remove(staffLinkId) {
-      return await client.del(`/api/v1/merchant/staff/${encodeURIComponent(staffLinkId)}`)
+    async remove(staffLinkId: string): Promise<void> {
+      await client.del(`/api/v1/merchant/staff/${encodeURIComponent(staffLinkId)}`)
     },
   }
 }

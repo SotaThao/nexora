@@ -1,19 +1,14 @@
 import React from 'react'
 
-interface SecondaryButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  children?: React.ReactNode
-  className?: string
-  contentClassName?: string
-  type?: 'button' | 'submit' | 'reset'
-}
-
 export default function SecondaryButton({
   children,
   className = '',
   contentClassName = '',
   type = 'button',
   ...props
-}: SecondaryButtonProps) {
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  contentClassName?: string
+}) {
   return (
     <button
       type={type}

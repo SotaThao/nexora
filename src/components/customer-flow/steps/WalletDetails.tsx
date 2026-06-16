@@ -2,36 +2,78 @@ import React from 'react'
 import { CheckCircle } from 'lucide-react'
 import { WALLET_KEYS } from '../constants'
 
+function getMemberTipAmount(
+  memberId: string,
+  selectedTips: Record<string, number | string>,
+  customTips: Record<string, string>,
+): number {
+  const selTip = selectedTips[memberId] !== undefined ? selectedTips[memberId] : 15
+  return selTip === 'custom' ? Number(customTips[memberId]) || 0 : Number(selTip)
+}
+
+function walletAccentColor(walletKey: string): string {
+  if (walletKey === WALLET_KEYS.ZELLE) return '#7414CA'
+  if (walletKey === WALLET_KEYS.VENMO) return '#008CFF'
+  if (walletKey === WALLET_KEYS.CASHAPP) return '#00D632'
+  return '#475569'
+}
+
+function CopyField({
+  label,
+  value,
+  showToast,
+  t,
+  valueClassName = 'text-sm font-extrabold text-slate-800',
+}: {
+  label: string
+  value: string
+  showToast: (message: string, type: string) => void
+  t: (key: string) => string
+  valueClassName?: string
+}) {
+  return (
+    <div className="group relative border border-nexoraBorder/80 rounded-xl px-4 py-2.5 bg-nexoraCanvas/10 hover:bg-nexoraCanvas/30 hover:border-nexoraBrand/30 transition-all flex flex-col justify-between min-h-[56px]">
+      <span className="text-[10px] font-bold text-nexoraSubtle uppercase tracking-wider">
+        {label}
+      </span>
+      <div className="flex items-center justify-between mt-1 gap-2">
+        <span className={`${valueClassName} break-all select-all`}>
+          {value || 'N/A'}
+        </span>
+        {value ? (
+          <button
+            type="button"
+            onClick={() => {
+              navigator.clipboard.writeText(value)
+              showToast(t('common.copied'), 'success')
+            }}
+            className="text-[10px] font-bold text-nexoraBrand hover:text-nexoraBrand/80 px-2 py-1 rounded bg-nexoraBrandSoft/40 hover:bg-nexoraBrandSoft transition shrink-0"
+          >
+            {t('common.copy')}
+          </button>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
 /**
  * WalletDetails — displays wallet payment info so the customer can
  * complete the tip via their external wallet app, then confirm.
- *
- * @param {object}   props
- * @param {Function} props.t                       - Translation function
- * @param {string}   props.currentLanguage          - Active language code
- * @param {object}   props.selectedWalletObj         - Wallet descriptor (key, name, logo, color)
- * @param {Array}    props.selectedStaffMembers      - Currently selected staff
- * @param {string}   props.bizName                   - Business display name
- * @param {number}   props.activeTipAmount            - Computed tip total
- * @param {string|null} props.qrCodeVal              - QR code image URL (if available)
- * @param {object}   props.businessPaymentAccounts   - Business-level payment accounts
- * @param {string}   props.tipRefNumber              - Tip reference number
- * @param {Function} props.showToast                 - Toast notification helper
- * @param {Function} props.handlePay                 - Handler for simulation payment
- * @param {Function} props.handleConfirmTip          - Handler to confirm tip in API mode
- * @param {boolean}  props.isApiMode                 - Whether the flow is in API mode
- * @param {Function} props.setStep                   - Step navigation setter
  */
 export default function WalletDetails({
   t,
   currentLanguage,
   selectedWalletObj,
   selectedStaffMembers,
+  selectedTips,
+  customTips,
   bizName,
   activeTipAmount,
   qrCodeVal,
   businessPaymentAccounts,
   tipRefNumber,
+  currentTipId,
   showToast,
   handlePay,
   handleConfirmTip,
@@ -39,10 +81,9 @@ export default function WalletDetails({
   setStep,
   paymentLinkData,
 }) {
-  /**
-   * API mode: derive the receiving account identifier from the
-   * GET /touch/payment-link response (redirectUrl / zelle / apple cash fields).
-   */
+  const isMultiStaff = selectedStaffMembers.length > 1
+  const accentColor = walletAccentColor(selectedWalletObj.key)
+
   const apiAccountVal = (() => {
     if (!paymentLinkData) return null
     const key = selectedWalletObj.key
@@ -62,43 +103,72 @@ export default function WalletDetails({
     }
     return null
   })()
+
+  const getFieldLabel = () => {
+    if (selectedWalletObj.key === WALLET_KEYS.ZELLE) return t('components.customer_flow.steps.WalletDetails.emailPhone')
+    if (selectedWalletObj.key === WALLET_KEYS.VENMO) return t('components.customer_flow.steps.WalletDetails.venmoUsername')
+    if (selectedWalletObj.key === WALLET_KEYS.CASHAPP) return t('components.customer_flow.steps.WalletDetails.cashTag')
+    if (selectedWalletObj.key === WALLET_KEYS.PAYPAL) return t('components.customer_flow.steps.WalletDetails.paypalEmailPhone')
+    if (selectedWalletObj.key === WALLET_KEYS.BANKWIRE) return t('components.customer_flow.steps.WalletDetails.bankDetails')
+    return t('components.customer_flow.steps.WalletDetails.account')
+  }
+
+  const accountVal = isMultiStaff
+    ? businessPaymentAccounts?.[selectedWalletObj.key] || null
+    : (selectedStaffMembers[0]?.paymentAccounts?.[selectedWalletObj.key] || apiAccountVal)
+
+  const noteText = isMultiStaff
+    ? (currentTipId ? `TIP-${String(currentTipId).slice(0, 8).toUpperCase()}` : `TIP-NEXORA-${tipRefNumber}`)
+    : `TIP-${selectedStaffMembers[0].nickname.toUpperCase().replace(/[^A-Z0-9]/g, '')}-${tipRefNumber}`
+
+  const recipientName = isMultiStaff
+    ? bizName
+    : selectedStaffMembers[0].nickname
+
+  const recipientFullName = isMultiStaff
+    ? bizName
+    : selectedStaffMembers[0].fullName
+
+  const title = isMultiStaff
+    ? t('components.customer_flow.steps.WalletDetails.multiStaffTitle', { wallet: selectedWalletObj.name })
+    : (currentLanguage === 'vi'
+      ? `Gửi tiền Tip qua ${selectedWalletObj.name}`
+      : `Send Tip via ${selectedWalletObj.name}`)
+
+  const subtitle = isMultiStaff
+    ? t('components.customer_flow.steps.WalletDetails.multiStaffSubtitle', { business: bizName || recipientName })
+    : (() => {
+      if (currentLanguage === 'vi') {
+        if (selectedWalletObj.key === WALLET_KEYS.ZELLE) return `Mở ứng dụng ngân hàng của bạn và gửi tới ${recipientName}.`
+        if (selectedWalletObj.key === WALLET_KEYS.VENMO) return `Mở ứng dụng Venmo và gửi tới ${recipientName}.`
+        if (selectedWalletObj.key === WALLET_KEYS.CASHAPP) return `Mở ứng dụng Cash App và gửi tới ${recipientName}.`
+        return `Mở ứng dụng ví và gửi tới ${recipientName}.`
+      }
+      if (selectedWalletObj.key === WALLET_KEYS.ZELLE) return `Open your bank app and send to ${recipientName}.`
+      if (selectedWalletObj.key === WALLET_KEYS.VENMO) return `Open your Venmo app and send to ${recipientName}.`
+      if (selectedWalletObj.key === WALLET_KEYS.CASHAPP) return `Open your Cash App and send to ${recipientName}.`
+      return `Open your wallet app and send to ${recipientName}.`
+    })()
+
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="text-center space-y-1">
         <h3 className="font-extrabold text-xl text-nexoraText">
-          {currentLanguage === 'vi'
-            ? `Gửi tiền Tip qua ${selectedWalletObj.name}`
-            : `Send Tip via ${selectedWalletObj.name}`}
+          {title}
         </h3>
         <p className="text-xs text-nexoraSubtle font-medium leading-relaxed">
-          {(() => {
-            const recipientName = selectedStaffMembers.length === 1
-              ? selectedStaffMembers[0].nickname
-              : bizName;
-
-            if (currentLanguage === 'vi') {
-              if (selectedWalletObj.key === WALLET_KEYS.ZELLE) return `Mở ứng dụng ngân hàng của bạn và gửi tới ${recipientName}.`;
-              if (selectedWalletObj.key === WALLET_KEYS.VENMO) return `Mở ứng dụng Venmo và gửi tới ${recipientName}.`;
-              if (selectedWalletObj.key === WALLET_KEYS.CASHAPP) return `Mở ứng dụng Cash App và gửi tới ${recipientName}.`;
-              return `Mở ứng dụng ví và gửi tới ${recipientName}.`;
-            } else {
-              if (selectedWalletObj.key === WALLET_KEYS.ZELLE) return `Open your bank app and send to ${recipientName}.`;
-              if (selectedWalletObj.key === WALLET_KEYS.VENMO) return `Open your Venmo app and send to ${recipientName}.`;
-              if (selectedWalletObj.key === WALLET_KEYS.CASHAPP) return `Open your Cash App and send to ${recipientName}.`;
-              return `Open your wallet app and send to ${recipientName}.`;
-            }
-          })()}
+          {subtitle}
         </p>
       </div>
 
       <div className="bg-white border border-nexoraBorder rounded-2xl p-6 shadow-sm space-y-5 flex flex-col items-center relative overflow-hidden">
         <div
           className="absolute -top-12 -left-12 w-24 h-24 rounded-full opacity-10 filter blur-xl"
-          style={{ backgroundColor: selectedWalletObj.key === WALLET_KEYS.ZELLE ? '#7414CA' : selectedWalletObj.key === WALLET_KEYS.VENMO ? '#008CFF' : selectedWalletObj.key === WALLET_KEYS.CASHAPP ? '#00D632' : '#475569' }}
+          style={{ backgroundColor: accentColor }}
         />
         <div
           className="absolute -bottom-12 -right-12 w-24 h-24 rounded-full opacity-10 filter blur-xl"
-          style={{ backgroundColor: selectedWalletObj.key === WALLET_KEYS.ZELLE ? '#7414CA' : selectedWalletObj.key === WALLET_KEYS.VENMO ? '#008CFF' : selectedWalletObj.key === WALLET_KEYS.CASHAPP ? '#00D632' : '#475569' }}
+          style={{ backgroundColor: accentColor }}
         />
 
         <div className={`h-16 w-16 rounded-2xl flex items-center justify-center shadow-md scale-105 transform transition duration-300 hover:rotate-3 ${selectedWalletObj.color}`}>
@@ -110,25 +180,65 @@ export default function WalletDetails({
         <div className="text-center space-y-1">
           <div
             className="text-4xl font-black tracking-tight"
-            style={{
-              color: selectedWalletObj.key === WALLET_KEYS.ZELLE
-                ? '#7414CA'
-                : selectedWalletObj.key === WALLET_KEYS.VENMO
-                  ? '#008CFF'
-                  : selectedWalletObj.key === WALLET_KEYS.CASHAPP
-                    ? '#00D632'
-                    : '#1E293B'
-            }}
+            style={{ color: accentColor }}
           >
             ${activeTipAmount.toFixed(2)}
           </div>
           <p className="text-[10px] text-nexoraSubtle font-semibold tracking-wider uppercase">
-            {t('components.customer_flow.steps.WalletDetails.tipAmount')}
+            {isMultiStaff
+              ? t('components.customer_flow.steps.WalletDetails.totalCombinedTip')
+              : t('components.customer_flow.steps.WalletDetails.tipAmount')}
           </p>
+          {isMultiStaff ? (
+            <p className="text-[10px] text-nexoraMuted font-semibold">
+              {t('components.customer_flow.steps.TipAmount.provider_count', {
+                count: selectedStaffMembers.length,
+              })}
+            </p>
+          ) : null}
         </div>
 
-        {/* QR Code (if available) */}
-        {qrCodeVal && (
+        {isMultiStaff ? (
+          <div className="w-full space-y-2">
+            <p className="text-[10px] font-bold text-nexoraSubtle uppercase tracking-wider px-1">
+              {t('components.customer_flow.steps.WalletDetails.tipBreakdown')}
+            </p>
+            <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
+              {selectedStaffMembers.map((member) => {
+                const amount = getMemberTipAmount(member.id, selectedTips, customTips)
+                return (
+                  <div
+                    key={member.id}
+                    className="flex items-center justify-between gap-3 p-3 bg-nexoraCanvas/30 border border-nexoraBorder/70 rounded-xl"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      {member.avatar ? (
+                        <img
+                          src={member.avatar}
+                          alt=""
+                          className="h-8 w-8 rounded-full object-cover border border-nexoraBorder shrink-0"
+                        />
+                      ) : (
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-tr from-nexoraElectric to-nexoraViolet text-[10px] font-black text-white shrink-0">
+                          {member.nickname.charAt(0)}
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-nexoraText truncate">{member.nickname}</p>
+                        {member.position ? (
+                          <p className="text-[10px] text-nexoraSubtle truncate">{member.position}</p>
+                        ) : null}
+                      </div>
+                    </div>
+                    <span className="text-sm font-black text-nexoraText shrink-0">${amount.toFixed(2)}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        ) : null}
+
+        {qrCodeVal ? (
           <div className="flex flex-col items-center justify-center p-3 bg-slate-50 border border-nexoraBorder/60 rounded-xl my-2 max-w-[200px] animate-fadeIn">
             <img
               src={qrCodeVal}
@@ -139,108 +249,34 @@ export default function WalletDetails({
               {t('components.customer_flow.steps.WalletDetails.scanToPay')}
             </p>
           </div>
-        )}
+        ) : null}
 
         <div className="w-full border-t border-dashed border-nexoraBorder/60 my-1" />
 
         <div className="w-full space-y-3.5">
-          {/* Name Field */}
-          <div className="group relative border border-nexoraBorder/80 rounded-xl px-4 py-2.5 bg-nexoraCanvas/10 hover:bg-nexoraCanvas/30 hover:border-nexoraBrand/30 transition-all flex flex-col justify-between min-h-[56px]">
-            <span className="text-[10px] font-bold text-nexoraSubtle uppercase tracking-wider">
-              {t('components.customer_flow.steps.WalletDetails.name')}
-            </span>
-            <div className="flex items-center justify-between mt-1">
-              <span className="text-sm font-extrabold text-slate-800">
-                {selectedStaffMembers.length === 1
-                  ? selectedStaffMembers[0].fullName
-                  : bizName}
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  const nameText = selectedStaffMembers.length === 1
-                    ? selectedStaffMembers[0].fullName
-                    : bizName;
-                  navigator.clipboard.writeText(nameText);
-                  showToast(t('common.copied'), 'success');
-                }}
-                className="text-[10px] font-bold text-nexoraBrand hover:text-nexoraBrand/80 px-2 py-1 rounded bg-nexoraBrandSoft/40 hover:bg-nexoraBrandSoft transition"
-              >
-                {t('common.copy')}
-              </button>
-            </div>
-          </div>
+          <CopyField
+            label={isMultiStaff
+              ? t('components.customer_flow.steps.WalletDetails.businessName')
+              : t('components.customer_flow.steps.WalletDetails.name')}
+            value={recipientFullName}
+            showToast={showToast}
+            t={t}
+          />
 
-          {/* Account Field */}
-          {(() => {
-            const accountVal = (selectedStaffMembers.length === 1
-              ? selectedStaffMembers[0].paymentAccounts?.[selectedWalletObj.key]
-              : businessPaymentAccounts?.[selectedWalletObj.key]) || apiAccountVal;
+          <CopyField
+            label={getFieldLabel()}
+            value={accountVal || ''}
+            showToast={showToast}
+            t={t}
+          />
 
-            const getFieldLabel = () => {
-              if (selectedWalletObj.key === WALLET_KEYS.ZELLE) return t('components.customer_flow.steps.WalletDetails.emailPhone');
-              if (selectedWalletObj.key === WALLET_KEYS.VENMO) return t('components.customer_flow.steps.WalletDetails.venmoUsername');
-              if (selectedWalletObj.key === WALLET_KEYS.CASHAPP) return t('components.customer_flow.steps.WalletDetails.cashTag');
-              if (selectedWalletObj.key === WALLET_KEYS.PAYPAL) return t('components.customer_flow.steps.WalletDetails.paypalEmailPhone');
-              if (selectedWalletObj.key === WALLET_KEYS.BANKWIRE) return t('components.customer_flow.steps.WalletDetails.bankDetails');
-              return t('components.customer_flow.steps.WalletDetails.account');
-            };
-
-            return (
-              <div className="group relative border border-nexoraBorder/80 rounded-xl px-4 py-2.5 bg-nexoraCanvas/10 hover:bg-nexoraCanvas/30 hover:border-nexoraBrand/30 transition-all flex flex-col justify-between min-h-[56px]">
-                <span className="text-[10px] font-bold text-nexoraSubtle uppercase tracking-wider">
-                  {getFieldLabel()}
-                </span>
-                <div className="flex items-center justify-between mt-1">
-                  <span className="text-sm font-extrabold text-slate-800 break-all select-all">
-                    {accountVal || 'N/A'}
-                  </span>
-                  {accountVal && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        navigator.clipboard.writeText(accountVal);
-                        showToast(t('common.copied'), 'success');
-                      }}
-                      className="text-[10px] font-bold text-nexoraBrand hover:text-nexoraBrand/80 px-2 py-1 rounded bg-nexoraBrandSoft/40 hover:bg-nexoraBrandSoft transition"
-                    >
-                      {t('common.copy')}
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* Reference Note Field */}
-          {(() => {
-            const noteText = selectedStaffMembers.length === 1
-              ? `TIP-${selectedStaffMembers[0].nickname.toUpperCase().replace(/[^A-Z0-9]/g, '')}-${tipRefNumber}`
-              : `TIP-NEXORA-${tipRefNumber}`;
-
-            return (
-              <div className="group relative border border-nexoraBorder/80 rounded-xl px-4 py-2.5 bg-nexoraCanvas/10 hover:bg-nexoraCanvas/30 hover:border-nexoraBrand/30 transition-all flex flex-col justify-between min-h-[56px]">
-                <span className="text-[10px] font-bold text-nexoraSubtle uppercase tracking-wider">
-                  {t('components.customer_flow.steps.WalletDetails.noteRequired')}
-                </span>
-                <div className="flex items-center justify-between mt-1">
-                  <span className="text-sm font-black text-red-600 font-mono tracking-wide">
-                    {noteText}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      navigator.clipboard.writeText(noteText);
-                      showToast(t('common.copied'), 'success');
-                    }}
-                    className="text-[10px] font-bold text-nexoraBrand hover:text-nexoraBrand/80 px-2 py-1 rounded bg-nexoraBrandSoft/40 hover:bg-nexoraBrandSoft transition"
-                  >
-                    {t('common.copy')}
-                  </button>
-                </div>
-              </div>
-            );
-          })()}
+          <CopyField
+            label={t('components.customer_flow.steps.WalletDetails.noteRequired')}
+            value={noteText}
+            showToast={showToast}
+            t={t}
+            valueClassName="text-sm font-black text-red-600 font-mono tracking-wide"
+          />
         </div>
       </div>
 

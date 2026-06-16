@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react'
 import { ShieldCheck, ShieldAlert } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { logger } from '../../../utils/logger'
-import { useProfileSettings, useSaveProfileSettings } from '../../../data/hooks/useProfileSettings'
-import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
+import { useProfileSettings, useSaveProfileSettings, useUpdateUserProfile } from '../../../data/hooks/useProfileSettings'
+import { useMerchantSetup, useSaveMerchantSetup, useUploadImage } from '../../../data/hooks/useMerchantSetup'
 import { usePendingAccounts, useReplaceAllPendingAccounts } from '../../../data/hooks/usePendingAccounts'
+import { buildUpdateUserProfileDto, getUserProfileImageUrl } from '../../../utils/userProfileImage'
 
 const DEFAULT_PROFILE = {
   username: '',
@@ -34,8 +35,6 @@ const DEFAULT_PROFILE = {
   yelpReview: ''
 }
 
-import { captureQrImage } from '../../../native/imagePicker'
-
 export default function useSettingsForm({
   setupData,
   hasKyb,
@@ -49,6 +48,8 @@ export default function useSettingsForm({
   const { t, currentLanguage } = useTranslation()
   const profileSettingsQuery = useProfileSettings()
   const saveProfileSettingsMutation = useSaveProfileSettings()
+  const updateUserProfileMutation = useUpdateUserProfile()
+  const uploadImageMutation = useUploadImage()
   const merchantSetupQuery = useMerchantSetup()
   const saveMerchantSetupMutation = useSaveMerchantSetup()
   const pendingAccountsQuery = usePendingAccounts()
@@ -107,7 +108,7 @@ export default function useSettingsForm({
       }
       const filtered = existingAccounts.filter(acc => acc.email !== targetEmail)
       filtered.push(newAccount)
-      await (replaceAllPendingAccountsMutation.mutateAsync as any)(filtered)
+      await replaceAllPendingAccountsMutation.mutateAsync(filtered)
       if (onKybSuccess) {
         onKybSuccess(targetEmail)
       }
@@ -171,7 +172,7 @@ export default function useSettingsForm({
     }
     return DEFAULT_PROFILE
   })
-  const [copiedId, setCopiedId] = useState(null)
+  const [copiedId, setCopiedId] = useState<any | null>(null)
   const [toastMessage, setToastMessage] = useState('')
 
   // Edit states for different cards
@@ -187,7 +188,7 @@ export default function useSettingsForm({
   const [isEditingReviews, setIsEditingReviews] = useState(false)
   const [reviewsForm, setReviewsForm] = useState({ googleReview: '', yelpReview: '' })
 
-  const [editingMethod, setEditingMethod] = useState(null)
+  const [editingMethod, setEditingMethod] = useState<any | null>(null)
   const [editValue, setEditValue] = useState('')
   const [editQrCode, setEditQrCode] = useState('')
   const [isCapturing, setIsCapturing] = useState(false)
@@ -209,12 +210,18 @@ export default function useSettingsForm({
     setProfile(prev => {
       let next = { ...prev }
       if (profileSettingsQuery.data) {
-        next = { ...next, ...profileSettingsQuery.data }
+        const profileImageUrl = getUserProfileImageUrl(profileSettingsQuery.data)
+        next = {
+          ...next,
+          ...profileSettingsQuery.data,
+          avatar: profileImageUrl || next.avatar || null,
+        }
       }
       if (setupData) {
         next = {
           ...next,
           fullName: setupData.businessInfo?.ownerName || next.fullName || '',
+          avatar: next.avatar || setupData.businessInfo?.logo || null,
           businessName: setupData.businessInfo?.name || '',
           businessPhone: setupData.businessInfo?.phone || '',
           businessWebsite: setupData.businessInfo?.website || '',
@@ -336,7 +343,7 @@ export default function useSettingsForm({
           website: businessForm.businessWebsite
         }
       }
-      saveMerchantSetupMutation.mutate(updatedSetup as any)
+      saveMerchantSetupMutation.mutate(updatedSetup)
     }
 
     setIsEditingBusiness(false)
@@ -370,7 +377,7 @@ export default function useSettingsForm({
           yelpReview: reviewsForm.yelpReview
         }
       }
-      saveMerchantSetupMutation.mutate(updatedSetup as any)
+      saveMerchantSetupMutation.mutate(updatedSetup)
     }
 
     setIsEditingReviews(false)
@@ -395,18 +402,25 @@ export default function useSettingsForm({
     setModalError('')
   }
 
-  const handleModalImagePick = (dataUrl) => {
-    if (dataUrl) setEditQrCode(dataUrl)
+  const handleModalFileChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      setEditQrCode(typeof reader.result === 'string' ? reader.result : '')
+    }
+    reader.readAsDataURL(file)
   }
 
-  const handleModalTakePhoto = async () => {
+  const handleModalTakePhoto = () => {
     setIsCapturing(true)
-    try {
-      const dataUrl = await captureQrImage({ fallbackValue: editValue || '' })
-      if (dataUrl) setEditQrCode(dataUrl)
-    } finally {
+    setTimeout(() => {
+      const mockQr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+        editValue || ''
+      )}`
+      setEditQrCode(mockQr)
       setIsCapturing(false)
-    }
+    }, 800)
   }
 
   const handleModalClearQr = () => {
@@ -446,18 +460,35 @@ export default function useSettingsForm({
           payoutQrCodes: updatedQrCodes
         }
       }
-      saveMerchantSetupMutation.mutate(updatedSetup as any)
+      saveMerchantSetupMutation.mutate(updatedSetup)
     }
 
     setEditingMethod(null)
   }
 
-  const handleAvatarPick = (dataUrl) => {
-    if (!dataUrl) return
-    saveProfile({
-      ...profile,
-      avatar: dataUrl
-    })
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    try {
+      const uploaded = await uploadImageMutation.mutateAsync(file)
+      const profileImageUrl = uploaded.imageUrl || uploaded.fileUrl || ''
+      if (!profileImageUrl) {
+        throw new Error('IMAGE_UPLOAD_FAILED')
+      }
+
+      await updateUserProfileMutation.mutateAsync(
+        buildUpdateUserProfileDto(profile, { profileImageUrl }),
+      )
+
+      setProfile((prev) => ({ ...prev, avatar: profileImageUrl }))
+      showToast(t('components.staff_dashboard.views.StaffProfile.avatarUpdatedSuccessfully'))
+    } catch (err) {
+      logger.error('[useSettingsForm] Failed to upload profile avatar', err)
+      showToast(t('errors.image_upload_failed'))
+    } finally {
+      e.target.value = ''
+    }
   }
 
   const formatDOB = (dobString) => {
@@ -634,11 +665,11 @@ export default function useSettingsForm({
     saveReviews,
     handleToggleMethod,
     handleEditPayoutAccount,
-    handleModalImagePick,
+    handleModalFileChange,
     handleModalTakePhoto,
     handleModalClearQr,
     savePayoutAccount,
-    handleAvatarPick,
+    handleAvatarChange,
     formatDOB,
     getStatusCardDetails,
     currentLanguage,

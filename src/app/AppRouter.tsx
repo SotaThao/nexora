@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from 'react'
-import { Routes, Route, Navigate, useParams, useLocation, useNavigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useParams, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import RequireAuth from './RequireAuth'
 import RequireOnboarded from './RequireOnboarded'
 import RequireStaffReady from './RequireStaffReady'
@@ -35,13 +35,27 @@ const LoginScreen = lazy(() => import('./LoginScreen'))
 // inviteData prop. A real token → API-backed invite; otherwise the legacy
 // simulation/biz path (matches the pre-router ?flow=staff-invite payload shape).
 function InviteRoute() {
-  const { token } = useParams()
+  const { token, businessSlug } = useParams()
   const { state } = useLocation()
+  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const biz = state?.biz || ''
+  const refCode = searchParams.get('ref') || searchParams.get('refCode') || ''
+  const source = searchParams.get('source') || (businessSlug ? 'public_link' : (token ? 'email_invite' : 'public_link'))
+  const email = searchParams.get('email') || ''
+  const biz = state?.biz || businessSlug || ''
   const inviteData = token
-    ? { token, biz }
-    : { id: '', name: '', email: '', phone: '', role: 'Nail Technician', biz }
+    ? { token, biz, email, refCode, source }
+    : {
+      id: '',
+      name: '',
+      email,
+      phone: '',
+      role: 'Nail Technician',
+      biz,
+      businessSlug: businessSlug || '',
+      refCode,
+      source,
+    }
   return (
     <StaffRegistrationWizard
       inviteData={inviteData}
@@ -68,6 +82,8 @@ export default function AppRouter() {
         <Route path="/touch/:businessSlug/:touchPointSlug" element={<CustomerFlow />} />
         <Route path="/invite" element={<InviteRoute />} />
         <Route path="/invite/:token" element={<InviteRoute />} />
+        <Route path="/invite/public/:businessSlug" element={<InviteRoute />} />
+        <Route path="/join/:businessSlug" element={<InviteRoute />} />
         <Route path="/staff/invite/:token" element={<InviteRoute />} />
         
         <Route path="/onboarding" element={

@@ -1,24 +1,27 @@
 /**
  * TanStack Query hooks for merchant staff management.
- *
- * All mutations invalidate the `merchantStaff` query key so the staff
- * list refetches after every server-side state change.
  */
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import merchantStaffRepository, { StatusFilter } from '../repositories/merchantStaff'
 import type { StaffListPage } from '../repositories/merchantStaff'
-import type { StaffMember } from '../../types/domain'
+import type { StaffMember, StaffSearchResult } from '../../types/domain'
+import type { MerchantStaffInvite, StaffInvitesQuery } from '../../types/repositories'
+import type { StaffInviteParams, StaffLinkRequestParams, StaffReorderItem, UpdateStaffStatusVars } from '../../types/hooks'
 
 export { StatusFilter }
 
-
-/**
- * Fetch the merchant's staff list (links + pending invites).
- * @param {{ statusFilter?: string, enabled?: boolean }} [options]
- * @returns {import('@tanstack/react-query').UseQueryResult}
- */
-export function useMerchantStaff({ statusFilter, pageNumber, pageSize, enabled = true }: { statusFilter?: string; pageNumber?: number; pageSize?: number; enabled?: boolean } = {}) {
+export function useMerchantStaff({
+  statusFilter,
+  pageNumber,
+  pageSize,
+  enabled = true,
+}: {
+  statusFilter?: string
+  pageNumber?: number
+  pageSize?: number
+  enabled?: boolean
+} = {}) {
   return useQuery<StaffListPage>({
     queryKey: qk.merchantStaff(statusFilter, pageNumber, pageSize),
     queryFn: () => merchantStaffRepository.list(statusFilter, pageNumber, pageSize),
@@ -27,29 +30,19 @@ export function useMerchantStaff({ statusFilter, pageNumber, pageSize, enabled =
   })
 }
 
-/**
- * Invite a new staff member.
- * Invalidates the staff list on success so the new pending invite row appears.
- * @returns {import('@tanstack/react-query').UseMutationResult}
- */
 export function useInviteStaff() {
   const queryClient = useQueryClient()
-  return useMutation<unknown, Error, LooseObject>({
-    mutationFn: (params) => merchantStaffRepository.invite(params as any),
+  return useMutation<LooseObject, Error, StaffInviteParams>({
+    mutationFn: (params) => merchantStaffRepository.invite(params),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
     },
   })
 }
 
-/**
- * Resend a pending staff invite notification.
- * Invalidates the staff list on success.
- * @returns {import('@tanstack/react-query').UseMutationResult}
- */
 export function useResendStaffInvite() {
   const queryClient = useQueryClient()
-  return useMutation({
+  return useMutation<void, Error, string>({
     mutationFn: (linkId) => merchantStaffRepository.resendInvite(linkId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
@@ -57,45 +50,61 @@ export function useResendStaffInvite() {
   })
 }
 
-/**
- * Search existing staff profiles.
- * The query is only enabled when `q` is a non-empty string.
- *
- * @param {string} q - Search query string
- * @param {{ enabled?: boolean }} [options]
- * @returns {import('@tanstack/react-query').UseQueryResult}
- */
-export function useSearchMerchantStaff(q: string, { enabled = true }: { enabled?: boolean } = {}) {
-  return useQuery<Partial<StaffMember>[]>({
+/** v3.3 — paged list of staff invites (`GET /merchant/staff/invites`). */
+export function useMerchantStaffInvites(
+  query: StaffInvitesQuery = {},
+  { enabled = true } = {},
+) {
+  return useQuery<MerchantStaffInvite[]>({
+    queryKey: qk.merchantStaffInvites(query),
+    queryFn: () => merchantStaffRepository.listInvites(query),
+    enabled,
+  })
+}
+
+/** v3.3 — single invite detail (`GET /merchant/staff/invites/{inviteId}`). */
+export function useMerchantStaffInvite(inviteId?: string | null, { enabled = true } = {}) {
+  return useQuery<MerchantStaffInvite>({
+    queryKey: qk.merchantStaffInvite(inviteId),
+    queryFn: () => merchantStaffRepository.getInvite(inviteId!),
+    enabled: enabled && !!inviteId,
+  })
+}
+
+/** v3.3 — cancel/revoke a pending invite (`DELETE /merchant/staff/invites/{inviteId}`). */
+export function useCancelStaffInvite() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, string>({
+    mutationFn: (inviteId) => merchantStaffRepository.cancelInvite(inviteId),
+    onSuccess: () => {
+      // qk.merchantStaff() === ['merchantStaff'] is a prefix of the invites/
+      // detail keys, so this single invalidation refreshes the roster + invite lists.
+      queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
+    },
+  })
+}
+
+export function useSearchMerchantStaff(q: string, { enabled = true } = {}) {
+  return useQuery<StaffSearchResult[]>({
     queryKey: qk.merchantStaffSearch(q),
     queryFn: () => merchantStaffRepository.search(q),
     enabled: enabled && !!q && q.trim().length > 0,
   })
 }
 
-/**
- * Send a link request to an existing staff profile.
- * Invalidates the staff list on success.
- * @returns {import('@tanstack/react-query').UseMutationResult}
- */
 export function useSendStaffLinkRequest() {
   const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (staffProfileId) => merchantStaffRepository.sendLinkRequest(staffProfileId),
+  return useMutation<void, Error, string | StaffLinkRequestParams>({
+    mutationFn: (params) => merchantStaffRepository.sendLinkRequest(params),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
     },
   })
 }
 
-/**
- * Update the status of a staff link (Active / Inactive / etc.).
- * Invalidates the staff list on success.
- * @returns {import('@tanstack/react-query').UseMutationResult}
- */
 export function useUpdateMerchantStaffStatus() {
   const queryClient = useQueryClient()
-  return useMutation<unknown, Error, { staffLinkId: string; status: string }>({
+  return useMutation<void, Error, UpdateStaffStatusVars>({
     mutationFn: ({ staffLinkId, status }) =>
       merchantStaffRepository.updateStatus(staffLinkId, status),
     onSuccess: () => {
@@ -104,59 +113,9 @@ export function useUpdateMerchantStaffStatus() {
   })
 }
 
-/**
- * Reject a pending staff link/join request via the dedicated reject endpoint.
- * Invalidates the staff list on success so the declined request drops off.
- * @returns {import('@tanstack/react-query').UseMutationResult}
- */
-export function useRejectMerchantStaffLink() {
+export function useApproveMerchantStaffLink() {
   const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (linkId) => merchantStaffRepository.rejectLink(linkId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
-    },
-  })
-}
-
-/**
- * Persist staff display order.
- * Invalidates the staff list on success.
- * @returns {import('@tanstack/react-query').UseMutationResult}
- */
-export function useReorderMerchantStaff() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (items) => merchantStaffRepository.reorder(items),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
-    },
-  })
-}
-
-/**
- * Remove (unlink/delete) a staff link.
- * Invalidates the staff list on success.
- * @returns {import('@tanstack/react-query').UseMutationResult}
- */
-export function useRemoveMerchantStaff() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (staffLinkId) => merchantStaffRepository.remove(staffLinkId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
-    },
-  })
-}
-
-/**
- * Approve a staff link request.
- * Invalidates the staff list on success.
- * @returns {import('@tanstack/react-query').UseMutationResult}
- */
-export function useApproveStaffLink() {
-  const queryClient = useQueryClient()
-  return useMutation({
+  return useMutation<void, Error, string>({
     mutationFn: (linkId) => merchantStaffRepository.approveLink(linkId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
@@ -164,14 +123,49 @@ export function useApproveStaffLink() {
   })
 }
 
-/**
- * Reject a staff link request.
- * Invalidates the staff list on success.
- * @returns {import('@tanstack/react-query').UseMutationResult}
- */
+export function useRejectMerchantStaffLink() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, string>({
+    mutationFn: (linkId) => merchantStaffRepository.rejectLink(linkId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
+    },
+  })
+}
+
+export function useReorderMerchantStaff() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, StaffReorderItem[]>({
+    mutationFn: (items) => merchantStaffRepository.reorder(items),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
+    },
+  })
+}
+
+export function useRemoveMerchantStaff() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, string>({
+    mutationFn: (staffLinkId) => merchantStaffRepository.remove(staffLinkId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
+    },
+  })
+}
+
+export function useApproveStaffLink() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, string>({
+    mutationFn: (linkId) => merchantStaffRepository.approveLink(linkId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
+    },
+  })
+}
+
 export function useRejectStaffLink() {
   const queryClient = useQueryClient()
-  return useMutation({
+  return useMutation<void, Error, string>({
     mutationFn: (linkId) => merchantStaffRepository.rejectLink(linkId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })

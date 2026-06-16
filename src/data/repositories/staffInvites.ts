@@ -1,53 +1,72 @@
 /**
  * staffInvitesRepository — API implementation for staff invite token flows.
- * These are anonymous (unauthenticated) endpoints used by invitees to load
- * invite metadata and accept invitations.
  */
 import httpClient from '../../lib/httpClient'
+import type { StaffInviteInfo } from '../../types/domain'
+import type {
+  AcceptStaffInviteDto,
+  InviteInfoApiDto,
+  JoinPublicInviteDto,
+  MerchantPublicInviteApiDto,
+} from '../../types/repositories'
 
-/**
- * Normalize an InviteInfoDto into the shape the invite portal uses.
- *
- * @param {object} dto - Raw InviteInfoDto from GET /api/v1/staff/invite/{token}
- * @returns {object} Normalized invite metadata
- */
-export function normalizeInviteInfo(dto) {
+type HttpClient = typeof httpClient
+
+export function normalizeInviteInfo(dto: InviteInfoApiDto): StaffInviteInfo {
   return {
     invitedName: dto.invitedName ?? '',
     invitedPosition: dto.invitedPosition ?? null,
+    invitedEmail: dto.invitedEmail ?? null,
     businessName: dto.businessName ?? '',
+    businessAddress: dto.businessAddress ?? null,
+    businessId: dto.businessId ?? null,
+    businessSlug: dto.businessSlug ?? null,
   }
 }
 
 /**
- * Factory to create a staff invites repository instance.
- *
- * @param {object} [client] - HTTP client (defaults to httpClient)
- * @returns {object} Repository with invite token methods
+ * Normalize the public merchant-invite DTO into the shared StaffInviteInfo shape
+ * so the invite landing renders business info uniformly. Public invites are not
+ * person-specific, so invited* fields stay empty.
  */
-export function createStaffInvitesRepository(client = httpClient) {
+export function normalizeMerchantPublicInvite(dto: MerchantPublicInviteApiDto): StaffInviteInfo {
   return {
-    /**
-     * Load invite metadata by token (anonymous).
-     * @param {string} token
-     * @returns {Promise<object>} Normalized invite info
-     */
-    async getInviteInfo(token) {
-      const data = await client.get(
+    invitedName: '',
+    invitedPosition: null,
+    invitedEmail: null,
+    businessName: dto.businessName ?? dto.name ?? '',
+    businessAddress: dto.businessAddress ?? dto.address ?? null,
+    businessId: dto.businessId ?? null,
+    businessSlug: dto.businessSlug ?? dto.slug ?? null,
+    refCode: dto.referralCode ?? null,
+    source: 'public_link',
+  }
+}
+
+export function createStaffInvitesRepository(client: HttpClient = httpClient) {
+  return {
+    async getInviteInfo(token: string): Promise<StaffInviteInfo> {
+      const data = await client.get<InviteInfoApiDto>(
         `/api/v1/staff/invite/${encodeURIComponent(token)}`,
-        { anonymous: true }
+        { anonymous: true },
       )
       return normalizeInviteInfo(data)
     },
 
-    /**
-     * Accept an invite token (anonymous).
-     * @param {string} token
-     * @param {{ displayName: string, position?: string, bio?: string, photoUrl?: string }} body
-     * @returns {Promise<void>}
-     */
-    async acceptInvite(token, { displayName, position, bio, photoUrl, password }) {
-      return await client.post(
+    // Public invite landing — business info by business referralCode (ANON).
+    async getPublicMerchantInvite(referralCode: string): Promise<StaffInviteInfo> {
+      const data = await client.get<MerchantPublicInviteApiDto>(
+        `/api/v1/public/merchant-invite?ref=${encodeURIComponent(referralCode)}`,
+        { anonymous: true },
+      )
+      return normalizeMerchantPublicInvite(data)
+    },
+
+    async acceptInvite(
+      token: string,
+      { displayName, position, bio, photoUrl }: Omit<AcceptStaffInviteDto, 'token'>,
+    ): Promise<void> {
+      await client.post(
         `/api/v1/staff/invite/${encodeURIComponent(token)}/accept`,
         {
           token,
@@ -55,30 +74,26 @@ export function createStaffInvitesRepository(client = httpClient) {
           position: position ?? null,
           bio: bio ?? null,
           photoUrl: photoUrl ?? null,
-          password: password ?? null,
         },
-        { anonymous: true }
       )
     },
 
-    /**
-     * Send a request to join a business via public invite QR code (Self-Serve Join).
-     * @param {object} payload - Request payload
-     * @param {string} payload.referralCode - The business referral code (from ?biz= parameter)
-     * @param {string} payload.displayName - Staff display name
-     * @param {string} [payload.phoneNumber] - Optional phone number
-     * @param {string} [payload.position] - Optional position
-     * @param {string} [payload.bio] - Optional bio
-     * @returns {Promise<void>}
-     */
-    async joinPublicInvite({ referralCode, displayName, phoneNumber, position, bio }) {
-      return await client.post('/api/v1/staff/join-public-invite', {
-        referralCode,
-        displayName,
-        phoneNumber: phoneNumber ?? null,
-        position: position ?? null,
-        bio: bio ?? null
-      }, { anonymous: true })
+    async joinPublicInvite(
+      dto: JoinPublicInviteDto,
+      { anonymous = false }: { anonymous?: boolean } = {},
+    ): Promise<void> {
+      await client.post(
+        '/api/v1/staff/join-public-invite',
+        {
+          referralCode: dto.referralCode,
+          displayName: dto.displayName,
+          phoneNumber: dto.phoneNumber ?? null,
+          position: dto.position ?? null,
+          bio: dto.bio ?? null,
+          photoUrl: dto.photoUrl ?? null,
+        },
+        anonymous ? { anonymous: true } : {},
+      )
     },
   }
 }

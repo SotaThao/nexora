@@ -68,7 +68,7 @@ export const formatNationalNumber = (nationalNumber, dialCode) => {
   }
 
   const country = getCountryByDialCode(dialCode)
-  const formatter = new AsYouType(country.code as any)
+  const formatter = new AsYouType(country.code as import('libphonenumber-js').CountryCode)
   return formatter.input(digits)
 }
 
@@ -86,7 +86,15 @@ export const isPhoneValid = (phoneStr) => {
   }
 }
 
-export default function CountryCodeSelect({ value, onChange, disabled = false }) {
+export default function CountryCodeSelect({
+  value,
+  onChange = (_code: string) => {},
+  disabled = false,
+}: {
+  value: string
+  onChange?: (code: string) => void
+  disabled?: boolean
+}) {
   const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
   const [search, setSearch] = useState('')

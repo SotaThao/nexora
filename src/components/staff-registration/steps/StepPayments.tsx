@@ -48,7 +48,6 @@ export default function StepPayments({
   payouts,
   staffId,
   currentLanguage, t,
-  autoFillPayments,
   handleToggleMethod,
   handleEditPayoutAccount,
   handleActivateProfile,
@@ -63,23 +62,14 @@ export default function StepPayments({
           {t('components.staff_registration.steps.StepPayments.label3PayoutConfigurations')}
         </h3>
 
-        {isDemoToolsEnabled && (
-          <button
-            type="button"
-            onClick={autoFillPayments}
-            className="px-2 py-1 bg-nexoraBrandSoft hover:bg-opacity-90 text-nexoraBrand border border-nexoraBrand/20 rounded text-[9px] font-black uppercase tracking-wider transition"
-          >
-            ⚡ Auto-Fill Mock Handles
-          </button>
-        )}
-      </div>
+              </div>
 
       <p className="text-xs text-nexoraMuted leading-relaxed font-medium">
         {t('components.staff_registration.steps.StepPayments.toggleThePaymentChannels')}
       </p>
 
       <div className="space-y-2 max-h-80 overflow-y-auto pr-1 divide-y divide-nexoraRule">
-        {payoutMethodsList.map(method => {
+        {payoutMethodsList.filter(method => method.key !== 'bankwire').map(method => {
           const cfg = payouts[method.key] || { enabled: false, value: '' }
           return (
             <div key={method.key} className="flex items-center justify-between py-3">

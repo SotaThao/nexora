@@ -18,5 +18,8 @@ export function useAddPendingAccount() {
 }
 
 export function useReplaceAllPendingAccounts() {
-  return { mutate: () => {}, mutateAsync: async () => {} }
+  return {
+    mutate: (_list?: unknown) => {},
+    mutateAsync: async (_list?: unknown) => {},
+  }
 }

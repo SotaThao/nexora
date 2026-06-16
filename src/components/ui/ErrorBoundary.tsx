@@ -23,21 +23,23 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
     return { hasError: true, error }
   }
 
-  // Auto-recover on navigation: when the caller passes a changing `resetKey`
-  // (e.g. the router pathname), clear any captured error so the new route can
-  // render instead of leaving the user stuck on the error screen until a full
-  // page reload.
-  static getDerivedStateFromProps(props: ErrorBoundaryProps, state: ErrorBoundaryState): Partial<ErrorBoundaryState> | null {
+  static getDerivedStateFromProps(
+    props: ErrorBoundaryProps,
+    state: ErrorBoundaryState,
+  ): Partial<ErrorBoundaryState> | null {
     if (props.resetKey !== state.resetKey) {
       return { hasError: false, error: null, errorInfo: null, resetKey: props.resetKey }
     }
     return null
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
-    // Persist the component stack so it can be surfaced in development.
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     this.setState({ errorInfo })
-    logger.error('Uncaught React Error', { error: error.message, stack: error.stack, componentStack: errorInfo?.componentStack })
+    logger.error('Uncaught React Error', {
+      error: error.message,
+      stack: error.stack,
+      componentStack: errorInfo?.componentStack,
+    })
   }
 
   handleReload = () => {
@@ -46,8 +48,6 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
 
   render() {
     if (this.state.hasError) {
-      // Only expose raw error details in development; production users get a
-      // friendly recovery UI without leaking internal stack traces.
       const isDev = import.meta.env.DEV
       return (
         <div className="min-h-dvh flex items-center justify-center bg-nexoraCanvas p-4">
@@ -60,18 +60,20 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
               onClick={this.handleReload}
               className="mt-6 min-h-11 px-6 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet text-white font-extrabold text-xs uppercase tracking-wider rounded-lg transition-all hover:opacity-90"
             >
-              Reload
+              Reload Page
             </button>
             {isDev && (
-              <pre className="mt-6 max-h-64 overflow-auto whitespace-pre-wrap rounded-lg bg-red-50 p-3 text-left text-[11px] text-red-700">
-                {this.state.error?.message || 'Unknown error'}
-                {this.state.errorInfo?.componentStack || ''}
+              <pre className="mt-6 text-left text-xs text-red-600 overflow-auto max-h-48 p-3 bg-red-50 rounded-lg">
+                {this.state.error?.toString()}
+                {'\n'}
+                {this.state.errorInfo?.componentStack}
               </pre>
             )}
           </div>
         </div>
       )
     }
+
     return this.props.children
   }
 }

@@ -1,9 +1,7 @@
-// Staff roster + staff-modal/form state and all staff CRUD handlers for the
+﻿// Staff roster + staff-modal/form state and all staff CRUD handlers for the
 // Dashboard. Refactored to use API mutation hooks instead of local setStaff().
 // Extracted from Dashboard.jsx (Group 5).
 import { useState } from 'react'
-import type { StaffFormState } from '../../../types/forms'
-import { EMPTY_STAFF_FORM } from '../../../types/forms'
 import { DEFAULT_PAYOUT_CONFIGS } from '../constants'
 import { getPayoutConfigsFromMember } from '../utils'
 import { isPhoneValid } from '../../CountryCodeSelect'
@@ -14,11 +12,14 @@ import {
   useResendStaffInvite,
   useSendStaffLinkRequest,
   useUpdateMerchantStaffStatus,
+  useApproveMerchantStaffLink,
   useRejectMerchantStaffLink,
   useRemoveMerchantStaff,
-  useApproveStaffLink,
-  useRejectStaffLink,
+  useCancelStaffInvite,
 } from '../../../data/hooks/useMerchantStaff'
+import { EMPTY_STAFF_FORM, type StaffFormState } from '../../../types/forms'
+import { getApiErrorCode } from '../../../types/domain'
+import { getErrorI18nKey } from '../../../data/errorCodes'
 
 /**
  * Normalise a raw staff-list member into the shape the dashboard uses.
@@ -54,58 +55,67 @@ export function normaliseMember(member) {
     inviteId: member.inviteId ?? null,
     staffProfileId: member.staffProfileId ?? null,
     staffCode: member.staffCode ?? null,
+    refCode: member.refCode ?? null,
+    source: member.source ?? null,
     itemType: member.itemType ?? null,
     sortOrder: member.sortOrder ?? 0,
   }
 }
 
-interface UseStaffManagementOptions {
-  staffData?: LooseObject[]
-  isStaffLoading?: boolean
-  businessName?: string
-  viewingStaffDetailId?: string | null
-  setViewingStaffDetailId?: (id: string | null) => void
-}
-
+/**
+ * @param {object} opts
+ * @param {Array} opts.staffData - Staff data from useMerchantStaff() query
+ * @param {boolean} opts.isStaffLoading - Loading state from useMerchantStaff()
+ * @param {string} opts.businessName
+ * @param {string|null} opts.viewingStaffDetailId
+ * @param {Function} opts.setViewingStaffDetailId
+ */
 export function useStaffManagement({
   staffData,
-  isStaffLoading = false,
-  businessName = '',
-  viewingStaffDetailId,
-  setViewingStaffDetailId,
-}: UseStaffManagementOptions) {
-  const { currentLanguage, t } = useTranslation()
+  isStaffLoading,
+  businessName,
+  viewingStaffDetailId = null,
+  setViewingStaffDetailId = (_id: string | null) => {},
+}) {
+  const { t } = useTranslation()
   const { showToast, showConfirm } = useNotification()
 
-  // API mutation hooks — all invalidate qk.merchantStaff() on success
+  // API mutation hooks ΓÇö all invalidate qk.merchantStaff() on success
   const inviteStaffMutation = useInviteStaff()
   const resendInviteMutation = useResendStaffInvite()
   const linkRequestMutation = useSendStaffLinkRequest()
   const updateStatusMutation = useUpdateMerchantStaffStatus()
+  const approveLinkMutation = useApproveMerchantStaffLink()
+  const rejectLinkMutation = useRejectMerchantStaffLink()
   const removeStaffMutation = useRemoveMerchantStaff()
-  const approveLinkMutation = useApproveStaffLink()
-  const rejectLinkMutation = useRejectStaffLink()
+  const cancelInviteMutation = useCancelStaffInvite()
+
+  // Map an API error to a localized, human-readable message (US-014 AC #11/#12).
+  // Falls back to errors.unknown_error for unmapped server codes.
+  const errMsg = (err: unknown) => t(getErrorI18nKey(getApiErrorCode(err)))
 
   // Staff comes from the API query (useMerchantStaff) passed in as staffData.
-  // No more local setStaff — the query cache is the source of truth.
+  // No more local setStaff ΓÇö the query cache is the source of truth.
   const staff = staffData ?? []
 
   const [errors, setErrors] = useState<LooseObject>({})
   const [staffForm, setStaffForm] = useState<StaffFormState>({
     ...EMPTY_STAFF_FORM,
-    position: 'Nail Tech',
-    payoutConfigs: { ...DEFAULT_PAYOUT_CONFIGS }
+    payoutConfigs: { ...DEFAULT_PAYOUT_CONFIGS },
   })
-  const [editingStaffId, setEditingStaffId] = useState(null)
+  const [editingStaffId, setEditingStaffId] = useState<any | null>(null)
   const [isStaffModalOpen, setIsStaffModalOpen] = useState(false)
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false)
-  const [approvingStaffMember, setApprovingStaffMember] = useState(null)
+  const [approvingStaffMember, setApprovingStaffMember] = useState<any | null>(null)
   const [isInviteShareOpen, setIsInviteShareOpen] = useState(false)
   const [inviteShareDefaultName, setInviteShareDefaultName] = useState('')
   const [inviteShareDefaultContact, setInviteShareDefaultContact] = useState('')
 
   const resetStaffForm = () => {
-    setStaffForm({ ...EMPTY_STAFF_FORM, position: 'Nail Tech', payoutConfigs: { ...DEFAULT_PAYOUT_CONFIGS } })
+    setStaffForm({
+      ...EMPTY_STAFF_FORM,
+      payoutConfigs: { ...DEFAULT_PAYOUT_CONFIGS },
+    })
     setEditingStaffId(null)
     setErrors({})
   }
@@ -163,20 +173,18 @@ export function useStaffManagement({
   }
 
   /**
-   * Save staff — for editing existing staff, this is a local UI operation
+   * Save staff ΓÇö for editing existing staff, this is a local UI operation
    * since Swagger does not expose a merchant endpoint to edit staff profiles.
    * For adding new staff, the merchant should use invite or link request instead.
    */
   const saveStaff = () => {
     const nextErrors: LooseObject = {}
-    if (!staffForm.fullName.trim()) {
-      nextErrors.fullName = t('components.dashboard.hooks.useStaffManagement.fullNameRequired') || 'Full name is required.'
-    }
+    if (!staffForm.fullName.trim()) nextErrors.fullName = t('components.dashboard.hooks.useStaffManagement.fullNameRequired')
     if (staffForm.email?.trim() && !/\S+@\S+\.\S+/.test(staffForm.email.trim())) {
-      nextErrors.email = t('setup.errors.staff_email_invalid') || 'Invalid email address format.'
+      nextErrors.email = t('setup.errors.staff_email_invalid')
     }
     if (staffForm.phone?.trim() && !isPhoneValid(staffForm.phone.trim())) {
-      nextErrors.phone = t('setup.errors.staff_phone_invalid') || 'Invalid phone number.'
+      nextErrors.phone = t('setup.errors.staff_phone_invalid')
     }
     if (Object.keys(nextErrors).length) {
       setErrors(nextErrors)
@@ -190,21 +198,19 @@ export function useStaffManagement({
 
   /**
    * Send invite via the InviteShareModal (from StaffModal).
-   * Calls POST /api/v1/merchant/staff/invite — no local state mutation.
+   * Calls POST /api/v1/merchant/staff/invite ΓÇö no local state mutation.
    */
   const sendSetupLinkFromModal = (formDetails) => {
     const nextErrors: LooseObject = {}
-    if (!formDetails.fullName.trim()) {
-      nextErrors.fullName = t('components.dashboard.hooks.useStaffManagement.fullNameRequiredToInvite') || 'Full name is required to invite.'
-    }
+    if (!formDetails.fullName.trim()) nextErrors.fullName = t('components.dashboard.hooks.useStaffManagement.fullNameRequiredToInvite')
     if (!formDetails.email.trim() && !formDetails.phone.trim()) {
-      nextErrors.email = t('components.dashboard.hooks.useStaffManagement.phoneOrEmailRequired') || 'Phone or email is required to send invite link.'
+      nextErrors.email = t('components.dashboard.hooks.useStaffManagement.phoneOrEmailRequired')
     } else {
       if (formDetails.email?.trim() && !/\S+@\S+\.\S+/.test(formDetails.email.trim())) {
-        nextErrors.email = t('setup.errors.staff_email_invalid') || 'Invalid email address format.'
+        nextErrors.email = t('setup.errors.staff_email_invalid')
       }
       if (formDetails.phone?.trim() && !isPhoneValid(formDetails.phone.trim())) {
-        nextErrors.phone = t('setup.errors.staff_phone_invalid') || 'Invalid phone number.'
+        nextErrors.phone = t('setup.errors.staff_phone_invalid')
       }
     }
     
@@ -214,24 +220,19 @@ export function useStaffManagement({
     }
 
     const isEmail = formDetails.email?.trim()
+
     inviteStaffMutation.mutate({
       name: formDetails.fullName.trim(),
       email: isEmail || null,
       phone: formDetails.phone?.trim() || null,
       position: formDetails.position?.trim() || 'Nail Tech',
-    } as any, {
+    }, {
       onSuccess: () => {
-        showToast(
-          t('components.dashboard.hooks.useStaffManagement.inviteSuccess', { name: formDetails.fullName.trim() }),
-          'success'
-        )
+        showToast(t('components.dashboard.hooks.useStaffManagement.inviteSent', { name: formDetails.fullName.trim() }), 'success')
         closeStaffModal()
       },
       onError: (err) => {
-        showToast(
-          t('components.dashboard.hooks.useStaffManagement.inviteFailed', { error: (err as any)?.errorCode || 'Unknown error' }),
-          'error'
-        )
+        showToast(t('components.dashboard.hooks.useStaffManagement.inviteFailed', { error: errMsg(err) }), 'error')
       }
     })
   }
@@ -243,18 +244,15 @@ export function useStaffManagement({
   const handleLinkStaff = (searchResult) => {
     if (!searchResult?.staffProfileId) return
 
-    linkRequestMutation.mutate(searchResult.staffProfileId, {
+    linkRequestMutation.mutate({
+      staffProfileId: searchResult.staffProfileId,
+      staffCode: searchResult.staffCode ?? null,
+    }, {
       onSuccess: () => {
-        showToast(
-          t('components.dashboard.hooks.useStaffManagement.linkRequestSuccess', { name: searchResult.fullName }),
-          'success'
-        )
+        showToast(t('components.dashboard.hooks.useStaffManagement.linkRequestSent', { name: searchResult.fullName }), 'success')
       },
       onError: (err) => {
-        showToast(
-          t('components.dashboard.hooks.useStaffManagement.linkRequestFailed', { error: (err as any)?.errorCode || 'Error' }),
-          'error'
-        )
+        showToast(t('components.dashboard.hooks.useStaffManagement.linkRequestFailed', { error: errMsg(err) }), 'error')
       }
     })
   }
@@ -271,54 +269,66 @@ export function useStaffManagement({
       email: isEmail ? contact.trim() : null,
       phone: isEmail ? null : contact.trim(),
       position: role || 'Nail Tech',
-    } as any, {
+    }, {
       onSuccess: () => {
-        showToast(
-          t('components.dashboard.hooks.useStaffManagement.inviteSuccess', { name: name.trim() }),
-          'success'
-        )
+        showToast(t('components.dashboard.hooks.useStaffManagement.inviteSent', { name: name.trim() }), 'success')
       },
       onError: (err) => {
-        showToast(
-          t('components.dashboard.hooks.useStaffManagement.inviteFailed', { error: (err as any)?.errorCode || 'Unknown error' }),
-          'error'
-        )
+        showToast(t('components.dashboard.hooks.useStaffManagement.inviteFailed', { error: errMsg(err) }), 'error')
+      }
+    })
+  }
+
+  /**
+   * Cancel/revoke a pending invite (US-014).
+   * Calls DELETE /api/v1/merchant/staff/invites/{inviteId} (v3.3 dedicated endpoint).
+   */
+  const handleCancelInvite = async (member) => {
+    if (!member?.inviteId) {
+      showToast(t('components.dashboard.hooks.useStaffManagement.cancelInviteMissingId'), 'error')
+      return
+    }
+
+    const ok = await showConfirm(t('components.dashboard.hooks.useStaffManagement.cancelInviteConfirm', {
+      name: member.fullName || member.invitedEmail || t('components.dashboard.hooks.useStaffManagement.thisPerson'),
+    }))
+    if (!ok) return
+
+    cancelInviteMutation.mutate(member.inviteId, {
+      onSuccess: () => {
+        if (viewingStaffDetailId === member.id) {
+          setViewingStaffDetailId(null)
+        }
+        showToast(t('components.dashboard.hooks.useStaffManagement.inviteCancelled'), 'success')
+      },
+      onError: (err) => {
+        showToast(t('components.dashboard.hooks.useStaffManagement.cancelInviteFailed', { error: errMsg(err) }), 'error')
       }
     })
   }
 
   /**
    * Resend a pending invite.
-   * Calls POST /api/v1/merchant/staff/{linkId}/resend-invite.
+   * Calls POST /api/v1/merchant/staff/{inviteId}/resend.
    */
   const handleResendInvite = (member) => {
-    const linkId = member?.linkId ?? member?.staffLinkId ?? member?.id
-    if (!linkId) {
-      showToast(
-        t('components.dashboard.hooks.useStaffManagement.missingLinkId') || 'Cannot resend invite: missing linkId.',
-        'error'
-      )
+    if (!member?.inviteId) {
+      showToast(t('components.dashboard.hooks.useStaffManagement.resendInviteMissingId'), 'error')
       return
     }
 
-    resendInviteMutation.mutate(linkId, {
+    resendInviteMutation.mutate(member.inviteId, {
       onSuccess: () => {
-        showToast(
-          t('components.dashboard.hooks.useStaffManagement.resendInviteSuccess', { name: member.fullName }),
-          'success'
-        )
+        showToast(t('components.dashboard.hooks.useStaffManagement.resendInviteSuccess', { name: member.fullName }), 'success')
       },
       onError: (err) => {
-        showToast(
-          t('components.dashboard.hooks.useStaffManagement.resendInviteFailed', { error: (err as any)?.errorCode || 'Error' }),
-          'error'
-        )
+        showToast(t('components.dashboard.hooks.useStaffManagement.resendInviteFailed', { error: errMsg(err) }), 'error')
       }
     })
   }
 
   /**
-   * Accept a join request — update status to Active.
+   * Accept a join request ΓÇö update status to Active.
    * Calls PUT /api/v1/merchant/staff/{staffLinkId}/status.
    */
   const handleAcceptJoinRequest = (staffId) => {
@@ -328,128 +338,99 @@ export function useStaffManagement({
 
     approveLinkMutation.mutate(linkId, {
       onSuccess: () => {
-        showToast(
-          t('components.dashboard.hooks.useStaffManagement.acceptJoinSuccess', {
-            name: member.fullName || t('common.col_staff')
-          }),
-          'success'
-        )
+        showToast(t('components.dashboard.hooks.useStaffManagement.joinAccepted', { name: member.fullName }), 'success')
       },
       onError: (err) => {
-        showToast(
-          t('components.dashboard.hooks.useStaffManagement.acceptJoinFailed', { error: (err as any)?.errorCode || 'Error' }),
-          'error'
-        )
+        showToast(t('components.dashboard.hooks.useStaffManagement.acceptFailed', { error: errMsg(err) }), 'error')
       }
     })
   }
 
   /**
-   * Decline a join request.
-   * Calls PUT /api/v1/merchant/staff/links/{linkId}/reject.
+   * Decline a join request ΓÇö reject the pending link.
+   * Calls PUT /api/v1/merchant/staff/links/{linkId}/reject (the status-update
+   * route only accepts "Active" | "Inactive" and 400s on "Rejected").
    */
   const handleDeclineJoinRequest = async (staffId) => {
     const member = staff.find(s => s.id === staffId)
     if (!member) return
 
-    const ok = await showConfirm(
-      t('components.dashboard.hooks.useStaffManagement.declineJoinConfirm', { name: member.fullName })
-    )
+    const ok = await showConfirm(t('components.dashboard.hooks.useStaffManagement.declineJoinConfirm', { name: member.fullName }))
     if (!ok) return
 
     const linkId = member.staffLinkId || member.id
     if (linkId) {
       rejectLinkMutation.mutate(linkId, {
-        onSuccess: () => {
-          showToast(
-            t('components.dashboard.hooks.useStaffManagement.declineJoinSuccess', { name: member.fullName }),
-            'success'
-          )
-        },
         onError: (err) => {
-          showToast(
-            t('components.dashboard.hooks.useStaffManagement.declineJoinFailed', { error: (err as any)?.errorCode || 'Error' }),
-            'error'
-          )
+          showToast(t('components.dashboard.hooks.useStaffManagement.declineFailed', { error: errMsg(err) }), 'error')
         }
       })
     }
   }
 
   /**
-   * Accept an unlink request — remove the staff link.
+   * Accept an unlink request ΓÇö remove the staff link.
    * Calls DELETE /api/v1/merchant/staff/{staffLinkId}.
    */
   const handleAcceptUnlinkRequest = async (staffId) => {
     const member = staff.find(s => s.id === staffId)
     if (!member) return
 
-    const ok = await showConfirm(
-      t('components.dashboard.hooks.useStaffManagement.approveUnlinkConfirm', { name: member.fullName })
-    )
+    const ok = await showConfirm(t('components.dashboard.hooks.useStaffManagement.approveUnlinkConfirm', { name: member.fullName }))
     if (!ok) return
 
     if (member.id) {
       removeStaffMutation.mutate(member.id, {
         onSuccess: () => {
-          showToast(
-            t('components.dashboard.hooks.useStaffManagement.staffUnlinkedSuccessfully') || 'Staff unlinked successfully.',
-            'success'
-          )
+          showToast(t('components.dashboard.hooks.useStaffManagement.staffUnlinkedSuccessfully'), 'success')
         },
         onError: (err) => {
-          showToast(
-            t('components.dashboard.hooks.useStaffManagement.unlinkFailed', { error: (err as any)?.errorCode || 'Error' }),
-            'error'
-          )
+          showToast(t('components.dashboard.hooks.useStaffManagement.unlinkFailed', { error: errMsg(err) }), 'error')
         }
       })
     }
   }
 
   /**
-   * Decline an unlink request — update status back to Active.
+   * Decline an unlink request ΓÇö update status back to Active.
    * Calls PUT /api/v1/merchant/staff/{staffLinkId}/status.
    */
   const handleDeclineUnlinkRequest = async (staffId) => {
     const member = staff.find(s => s.id === staffId)
     if (!member) return
 
-    const ok = await showConfirm(
-      t('components.dashboard.hooks.useStaffManagement.declineUnlinkConfirm', { name: member.fullName })
-    )
+    const ok = await showConfirm(t('components.dashboard.hooks.useStaffManagement.declineUnlinkConfirm', { name: member.fullName }))
     if (!ok) return
 
     if (member.id) {
-      updateStatusMutation.mutate({ staffLinkId: member.id, status: 'Active' } as any, {
+      updateStatusMutation.mutate({ staffLinkId: member.id, status: 'Active' }, {
         onSuccess: () => {
-          showToast(
-            t('components.dashboard.hooks.useStaffManagement.declinedUnlinkRequest') || 'Declined unlink request.',
-            'success'
-          )
+          showToast(t('components.dashboard.hooks.useStaffManagement.declinedUnlinkRequest'), 'success')
         },
         onError: (err) => {
-          showToast(
-            t('components.dashboard.hooks.useStaffManagement.declineFailed', { error: (err as any)?.errorCode || 'Error' }),
-            'error'
-          )
+          showToast(t('components.dashboard.hooks.useStaffManagement.declineFailed', { error: errMsg(err) }), 'error')
         }
       })
     }
   }
 
   /**
-   * Delete/unlink a staff member.
-   * For invite items: removes via DELETE /api/v1/merchant/staff/{staffLinkId}
-   * For link items: removes via DELETE /api/v1/merchant/staff/{staffLinkId}
+   * Delete a staff roster entry.
+   * - Pending invite items ΓåÆ cancel via DELETE /api/v1/merchant/staff/invites/{inviteId}
+   *   (v3.3 dedicated endpoint).
+   * - Linked staff items ΓåÆ unlink via DELETE /api/v1/merchant/staff/{staffLinkId}.
    */
   const deleteStaff = async (id) => {
     const member = staff.find(s => s.id === id)
     if (!member) return
 
-    const ok = await showConfirm(
-      t('components.dashboard.hooks.useStaffManagement.deleteThisStaffMember') || 'Delete this staff member from Nexora Touch?'
-    )
+    // Pending invites use the dedicated cancel endpoint (handles its own confirm/toast).
+    if (member.itemType === 'invite' && member.inviteId) {
+      await handleCancelInvite(member)
+      return
+    }
+
+    const ok = await showConfirm(t('components.dashboard.hooks.useStaffManagement.deleteThisStaffMember'))
     if (!ok) return
 
     const linkId = member.id
@@ -461,10 +442,7 @@ export function useStaffManagement({
           }
         },
         onError: (err) => {
-          showToast(
-            t('components.dashboard.hooks.useStaffManagement.deleteFailed', { error: (err as any)?.errorCode || 'Error' }),
-            'error'
-          )
+          showToast(t('components.dashboard.hooks.useStaffManagement.deleteFailed', { error: errMsg(err) }), 'error')
         }
       })
     }
@@ -479,12 +457,9 @@ export function useStaffManagement({
     if (!member?.id) return
 
     const newStatus = member.isActive ? 'Inactive' : 'Active'
-    updateStatusMutation.mutate({ staffLinkId: member.id, status: newStatus } as any, {
+    updateStatusMutation.mutate({ staffLinkId: member.id, status: newStatus }, {
       onError: (err) => {
-        showToast(
-          t('components.dashboard.hooks.useStaffManagement.statusUpdateFailed', { error: (err as any)?.errorCode || 'Error' }),
-          'error'
-        )
+        showToast(t('components.dashboard.hooks.useStaffManagement.statusUpdateFailed', { error: errMsg(err) }), 'error')
       }
     })
   }
@@ -499,12 +474,9 @@ export function useStaffManagement({
     if (!member?.id) return
 
     const newStatus = member.showInTipsFlow ? 'Inactive' : 'Active'
-    updateStatusMutation.mutate({ staffLinkId: member.id, status: newStatus } as any, {
+    updateStatusMutation.mutate({ staffLinkId: member.id, status: newStatus }, {
       onError: (err) => {
-        showToast(
-          t('components.dashboard.hooks.useStaffManagement.tipsFlowUpdateFailed', { error: (err as any)?.errorCode || 'Error' }),
-          'error'
-        )
+        showToast(t('components.dashboard.hooks.useStaffManagement.tipsFlowUpdateFailed', { error: errMsg(err) }), 'error')
       }
     })
   }
@@ -523,14 +495,16 @@ export function useStaffManagement({
     inviteShareDefaultContact, setInviteShareDefaultContact,
     resetStaffForm, openAddStaff, openApproveStaff, openEditStaff, closeStaffModal,
     saveStaff, sendSetupLinkFromModal, handleLinkStaff, handleInviteStaff,
-    handleResendInvite,
+    handleResendInvite, handleCancelInvite,
     handleAcceptJoinRequest, handleDeclineJoinRequest, deleteStaff, toggleStaff, toggleStaffTipsFlow,
     handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     // Expose mutation states for loading indicators
     inviteStaffMutation,
     resendInviteMutation,
     linkRequestMutation,
+    approveLinkMutation,
     updateStatusMutation,
     removeStaffMutation,
+    cancelInviteMutation,
   }
 }

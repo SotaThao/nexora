@@ -63,7 +63,7 @@ export default function MobileMenuDrawer({
                 <img src={profile.avatar} alt="" className="h-9 w-9 rounded-full border border-white/10 object-cover" />
               ) : (
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-xs font-extrabold uppercase">
-                  {(profile.email || '').slice(0, 2).toUpperCase() || '?'}
+                  {(businessName || profile.email || '').slice(0, 2).toUpperCase() || '?'}
                 </div>
               )}
               <div className="min-w-0">

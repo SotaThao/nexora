@@ -6,6 +6,7 @@ import SecondaryButton from '../components/ui/SecondaryButton'
 import { useAuth } from '../auth/useAuth'
 import { useTranslation } from '../contexts/LanguageContext'
 import { getErrorI18nKey } from '../data/errorCodes'
+import { getApiErrorCode } from '../types/domain'
 import { isDemoToolsEnabled } from './demoTools'
 import { useSaveMerchantSetup } from '../data/hooks/useMerchantSetup'
 import { logger } from '../utils/logger'
@@ -82,8 +83,8 @@ export default function LoginScreen() {
         } else {
           navigate('/dashboard')
         }
-      } catch (err) {
-        const errorCode = (err as any)?.errorCode || 'unknown_error'
+      } catch (err: unknown) {
+        const errorCode = getApiErrorCode(err, 'unknown_error')
         const i18nKey = getErrorI18nKey(errorCode)
         setLoginError(t(i18nKey))
       }

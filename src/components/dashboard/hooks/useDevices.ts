@@ -2,7 +2,7 @@
 // Self-contained, no persistence. Extracted from Dashboard.jsx (Group 5).
 import { useState } from 'react'
 export function useDevices() {
-  const [devices, setDevices] = useState([])
+  const [devices, setDevices] = useState<any[]>([])
 
   const handleAddDevice = (newDevice) => {
     setDevices((current) => [

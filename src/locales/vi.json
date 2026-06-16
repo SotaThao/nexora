@@ -1,26 +1,28 @@
 {
   "staff_dashboard": {
     "brand": {
-      "title": "NEXORA Staff",
+      "title": "NEXORA",
       "subtitle": "bởi VLINKPAY"
     },
     "staff_id": "Mã nhân viên",
     "sign_out": "Đăng xuất",
     "nav": {
-      "home": "Trang chủ",
+      "home": "Dashboard",
       "my_qr": "Mã QR",
       "tips": "Tiền tip",
       "reviews": "Đánh giá",
       "pay": "Thanh toán",
-      "profile": "Hồ sơ"
+      "profile": "Hồ sơ",
+      "profile_account": "Cài đặt",
+      "profile_kyc": "KYC"
     },
     "titles": {
-      "home": "Trang chủ",
+      "home": "Dashboard",
       "qr": "Mã QR của tôi",
       "tips": "Tiền tip",
       "reviews": "Đánh giá & Xếp hạng",
       "pay": "Phương thức nhận",
-      "profile": "Tài khoản",
+      "profile": "Cài đặt",
       "notifications": "Thông báo"
     },
     "status": {
@@ -48,6 +50,9 @@
       "view_all": "Xem tất cả",
       "manage": "Quản lý",
       "your_linked_businesses": "Tiệm đã liên kết",
+      "confirm_success": "Đã xác nhận nhận tip.",
+      "confirm_failed": "Không thể xác nhận nhận tip.",
+      "confirm_partial": "Đã xác nhận {{count}} tip. Một số mục không xác nhận được.",
       "linked_businesses": "Tiệm đã liên kết",
       "display_name": "Tên hiển thị",
       "via_method": "qua {method}",
@@ -64,9 +69,15 @@
     "tips": {
       "activity": "Hoạt động tip",
       "empty": "Chưa có tip nào.",
+      "total_count": "{{count}} tip",
+      "page_of": "Trang {{page}} / {{total}}",
+      "multi_staff": "Nhiều thợ",
       "status": {
-        "pending": "Chờ xử lý",
+        "initiated": "Đã khởi tạo",
+        "confirmed": "Đã xác nhận",
+        "skipped": "Đã bỏ qua",
         "completed": "Hoàn tất",
+        "pending": "Chờ xử lý",
         "verified": "Đã xác minh"
       },
       "ai_insight": "Phân tích AI",
@@ -75,6 +86,7 @@
     "pay": {
       "title": "Phương thức nhận tiền",
       "owner_note": "Bạn tự quản lý phương thức nhận tip. Chủ tiệm không sửa được phần này.",
+      "empty": "Chưa có phương thức thanh toán.",
       "not_set": "Chưa thiết lập",
       "handle_placeholder": "Nhập tài khoản / handle",
       "save": "Lưu phương thức",
@@ -85,8 +97,26 @@
       "personal_sub": "Dùng để chia sẻ Mã nhân viên hoặc cho tiệm liên kết bạn.",
       "share": "Chia sẻ QR nhân viên",
       "copy_link": "Sao chép liên kết",
+      "tab_referral": "QR Giới thiệu",
+      "tab_tipping": "QR Nhận tip",
+      "share_tip": "Chia sẻ QR tip",
+      "copy_tip_link": "Sao chép link tip",
       "business_title": "QR theo tiệm",
       "business_sub": "QR riêng cho tip/đánh giá tại tiệm này",
+      "note": "Khách tip qua touchpoint của tiệm (/touch/{businessSlug}/{touchPointSlug}) kèm ?staffProfileId= để chọn sẵn bạn. sessionId được tạo trên thiết bị khách khi mở link — không gắn vào mã QR.",
+      "no_linked_businesses": "Chưa liên kết tiệm nào. Quét QR giới thiệu của tiệm để gửi yêu cầu tham gia.",
+      "no_linked_businesses_title": "Chưa liên kết tiệm nào",
+      "no_linked_businesses_body": "Bạn cần liên kết với tiệm trước khi nhận tip qua QR. Quét mã QR giới thiệu của tiệm hoặc nhờ chủ tiệm mời bạn.",
+      "not_linked_title": "Chưa liên kết với tiệm này",
+      "not_linked_body": "Mã QR nhận tip sẽ hiện ở đây sau khi bạn liên kết với tiệm và được chủ tiệm duyệt.",
+      "pending_approval_title": "Đang chờ duyệt",
+      "pending_approval_body": "{business} đã nhận yêu cầu liên kết của bạn. Mã QR tip sẽ sẵn sàng khi chủ tiệm phê duyệt.",
+      "pending_unlink_title": "Đang hủy liên kết",
+      "pending_unlink_body": "Liên kết với {business} đang được gỡ. Mã QR tip tạm thời không dùng được.",
+      "qr_unavailable_title": "Chưa có mã QR tip",
+      "qr_unavailable_body": "Mã QR tip tại {business} chưa kích hoạt. Liên hệ chủ tiệm hoặc quét QR giới thiệu để liên kết.",
+      "referral_unavailable_title": "Chưa có Staff ID",
+      "referral_unavailable_body": "Mã QR giới thiệu cá nhân sẽ hiện khi hồ sơ staff được thiết lập xong. Vui lòng thử lại sau giây lát.",
       "note": "QR theo tiệm được lưu theo business_staff_link_id để không bị lẫn khi bạn làm ở nhiều tiệm."
     },
     "profile": {
@@ -103,9 +133,22 @@
     },
     "notifications": {
       "empty": "Không có thông báo.",
+      "mark_all_read": "Đánh dấu tất cả đã đọc",
+      "generic_title": "Thông báo",
       "tip_title": "Có tip mới được đánh dấu đã gửi",
       "tip_message": "${amount} qua {method} — xác nhận đã nhận",
       "review_title": "Đánh giá {rating} sao mới",
+      "link_request_title": "Yêu cầu liên kết tiệm",
+      "link_request_message": "{businessName} muốn liên kết hồ sơ thợ của bạn.",
+      "link_request_role": "Vai trò: {role}",
+      "link_request_business_fallback": "Một tiệm",
+      "accept_link_request": "Chấp nhận",
+      "reject_link_request": "Từ chối",
+      "link_request_missing_id": "Thông báo này thiếu mã yêu cầu liên kết.",
+      "link_request_accepted": "Đã chấp nhận yêu cầu liên kết tiệm.",
+      "link_request_rejected": "Đã từ chối yêu cầu liên kết tiệm.",
+      "link_request_accept_failed": "Không thể chấp nhận yêu cầu này.",
+      "link_request_reject_failed": "Không thể từ chối yêu cầu này.",
       "push_prefs": "Tùy chọn thông báo đẩy",
       "pref": {
         "tipConfirmations": "Xác nhận tip",
@@ -123,6 +166,7 @@
     "cancel": "Hủy",
     "confirm": "Xác nhận",
     "save": "Lưu",
+    "update": "Cập nhật",
     "delete": "Xóa",
     "edit": "Sửa",
     "copy": "Sao chép",
@@ -163,6 +207,8 @@
   "payment_methods": {
     "update_success": "Đã cập nhật phương thức thanh toán.",
     "update_failed": "Không thể cập nhật phương thức thanh toán",
+    "toggle_enabled": "Đã bật phương thức thanh toán.",
+    "toggle_disabled": "Đã tắt phương thức thanh toán.",
     "toggle_failed": "Không thể bật/tắt phương thức thanh toán"
   },
   "login": {
@@ -251,16 +297,16 @@
     "tp_lobby_default": "QR Sảnh Chờ / Tipping Chung",
     "tp_front_default": "Quầy Lễ Tân / Trạm Chính",
     "tp_personal_default": "QR Cá Nhân - {name}",
-    "title_step_3": "Bước 3: Tải Xuống QR & Hoàn Tất Cấu Hình",
-    "desc_step_3": "Mọi thứ đã sẵn sàng! Bạn có thể tải xuống bộ mã QR in ấn và kích hoạt Nexora Touch Gateway.",
-    "download_explain": "Chúng tôi đã đóng gói toàn bộ mã QR của tiệm thành một tệp PDF/ZIP in ấn chất lượng cao. Khách hàng chỉ cần quét để Típ & Review.",
-    "download_btn": "Tải Xuống Bộ In Ấn QR Kit (ZIP)",
+    "title_step_3": "Bước 3: In QR & Hoàn Tất Cấu Hình",
+    "desc_step_3": "Mọi thứ đã sẵn sàng! Bạn có thể in bộ mã QR và vào Dashboard Nexora.",
+    "download_explain": "Chúng tôi đã chuẩn bị toàn bộ mã QR của tiệm thành tệp PDF/ZIP in ấn chất lượng cao. Khách hàng chỉ cần quét để Típ & Review.",
+    "download_btn": "In QR Kit",
     "config_checklist_title": "Kiểm tra cấu hình",
     "chk_business": "Cửa hàng: {name} ({industry})",
     "chk_routing": "Google/Yelp Routing: Đã liên kết",
     "chk_staff": "Nhân viên: {count} kỹ thuật viên liên kết ví",
     "chk_touchpoints": "Điểm chạm: {count} QR Station được phát sinh",
-    "launch_dashboard_btn": "Kích Hoạt Hệ Thống & Vào Dashboard",
+    "launch_dashboard_btn": "Vào Dashboard",
     "errors": {
       "name_required": "Tên cửa hàng là bắt buộc",
       "address_required": "Địa chỉ là bắt buộc",
@@ -294,6 +340,14 @@
     "payout_input_label": "Tài khoản {wallet} của bạn {field} *",
     "qr_code_optional": "Mã QR Code (tùy chọn)",
     "take_photo": "Chụp ảnh",
+    "capture_photo": "Chụp",
+    "camera_capture_title": "Chụp ảnh",
+    "camera_capture_hint": "Đưa mã QR vào khung hình, sau đó nhấn Chụp.",
+    "camera_starting": "Đang mở camera...",
+    "camera_not_available": "Không tìm thấy camera trên thiết bị này.",
+    "camera_permission_denied": "Trình duyệt đã chặn quyền truy cập camera.",
+    "camera_use_file_instead": "Hãy dùng Chọn file để tải ảnh từ thiết bị.",
+    "camera_fallback_hint": "Máy tính không có webcam sẽ không dùng được Chụp ảnh. Chọn file vẫn hoạt động trên mọi thiết bị.",
     "choose_file": "Chọn file",
     "uploader_hint": "Bạn có thể chụp ảnh hoặc tải lên từ thiết bị. Định dạng hỗ trợ: JPG, PNG, JPEG. Kích thước tối đa: 5MB mỗi file.",
     "payout_warning": "Vui lòng nhập đúng thông tin tài khoản nhận tiền. Thông tin này sẽ được sử dụng để nhận thanh toán.",
@@ -329,8 +383,8 @@
       "qr_nfc": "Thiết bị QR / NFC",
       "analytics": "Phân Tích",
       "settings": "Cài Đặt",
-      "business_setting": "Cài đặt doanh nghiệp",
-      "kyb": "Xác minh Doanh nghiệp",
+      "business_setting": "Cài đặt",
+      "kyb": "KYB",
       "support": "Hỗ Trợ"
     },
     "header": {
@@ -698,6 +752,11 @@
     "pay_btn": "Tiếp theo",
     "payment_title": "Bạn muốn thanh toán bằng cách nào?",
     "payment_desc": "Chọn phương thức thanh toán yêu thích.",
+    "payment_empty_title": "Chưa có phương thức thanh toán",
+    "payment_empty_desc": "Tiệm chưa cấu hình phương thức thanh toán cho luồng tip này. Vui lòng hỏi nhân viên hoặc thử lại sau.",
+    "multi_staff_missing_business": "Không thể tip nhiều người vì thiếu business ID từ touch page. Backend cần trả business.id trong GET /touch/{slug}/{slug}.",
+    "multi_staff_missing_payment_method": "Tiệm chưa có phương thức thanh toán active cho ví đã chọn.",
+    "multi_staff_missing_touchpoint": "Thiếu thông tin touch point. Vui lòng tải lại trang và thử lại.",
     "pay_via": "{name}",
     "choose_chevron": "Chọn ›",
     "not_supported": "Không hỗ trợ",
@@ -939,6 +998,16 @@
     "image_unsupported_file_type": "Định dạng ảnh không hỗ trợ. Vui lòng tải lên PNG, JPEG hoặc WebP.",
     "image_upload_failed": "Tải ảnh lên thất bại.",
     "business_logo_upload_failed": "Tải logo tiệm thất bại.",
+    "referral_code_required": "Không tìm thấy mã giới thiệu. Vui lòng mở lại link mời hoặc QR của tiệm.",
+    "referral_code_invalid": "Link mời không hợp lệ. Vui lòng xin tiệm link mới.",
+    "referral_code_expired": "Link mời đã hết hạn. Vui lòng xin tiệm link mới.",
+    "referral_code_revoked": "Link mời đã bị tiệm tắt.",
+    "invite_link_disabled": "Link mời công khai của tiệm hiện đang tắt.",
+    "staff_invite_already_exists": "Đã gửi lời mời cho người này trước đó.",
+    "staff_already_linked": "Thợ này đã được liên kết với tiệm của bạn.",
+    "staff_invite_not_found": "Không tìm thấy lời mời này.",
+    "staff_invite_expired": "Lời mời này đã hết hạn.",
+    "staff_profile_not_found": "Không tìm thấy hồ sơ thợ.",
     "common_validation_error": "Dữ liệu nhập vào chưa hợp lệ. Vui lòng kiểm tra lại.",
     "common_not_found": "Không tìm thấy tài nguyên yêu cầu.",
     "common_unauthorized": "Truy cập chưa được xác thực.",
@@ -950,6 +1019,23 @@
     "touchpoint_not_found_desc": "Không thể tải điểm chạm này."
   },
   "components": {
+    "payout": {
+      "bankWireForm": {
+        "title": "Thiết lập tài khoản ngân hàng",
+        "beneficiaryName": "Tên người thụ hưởng",
+        "bankName": "Tên ngân hàng",
+        "routingNumber": "Số ABA/Routing",
+        "accountNumber": "Số tài khoản",
+        "bankAddress": "Địa chỉ ngân hàng",
+        "city": "Thành phố",
+        "state": "Bang/Tỉnh",
+        "zipCode": "Mã bưu chính",
+        "country": "Quốc gia",
+        "selectCountry": "Chọn quốc gia",
+        "warning": "Vui lòng nhập đúng thông tin tài khoản nhận tiền. Thông tin này sẽ được sử dụng để nhận thanh toán.",
+        "completeRequired": "Vui lòng nhập đầy đủ thông tin tài khoản ngân hàng."
+      }
+    },
     "customer_flow": {
       "hooks": {
         "useCustomerFlow": {
@@ -979,6 +1065,7 @@
           "tipAmount": "Số tiền chuyển khoản",
           "scanToPay": "Quét mã để chuyển khoản",
           "name": "Tên người nhận",
+          "businessName": "Tiệm / Doanh nghiệp",
           "emailPhone": "Email / SĐT",
           "venmoUsername": "Tài khoản Venmo",
           "cashTag": "Thẻ Cash App",
@@ -987,6 +1074,10 @@
           "account": "Tài khoản nhận",
           "noteRequired": "Nội dung (Bắt buộc)",
           "yesISentThe": "Tôi Đã Gửi Tiền Tip",
+          "multiStaffTitle": "Gửi tổng tiền Tip qua {wallet}",
+          "multiStaffSubtitle": "Mở ứng dụng ngân hàng và gửi một lần tới {business}. Tiền tip sẽ được chia cho các nhân viên đã chọn.",
+          "tipBreakdown": "Chi tiết từng nhân viên",
+          "totalCombinedTip": "Tổng tiền Tip",
           "goBack": "Quay Lại"
         }
       }
@@ -1002,23 +1093,25 @@
           "fullNameRequiredToInvite": "Cần họ và tên để gửi lời mời.",
           "phoneOrEmailRequired": "Cần số điện thoại hoặc email để gửi link mời.",
           "technicianAlreadyLinked": "Thợ này đã được liên kết với tiệm của bạn.",
-          "inviteSuccess": "Đã gửi lời mời đến {name} thành công!",
+          "thisPerson": "thợ này",
+          "inviteSent": "Đã gửi lời mời đến {name} thành công!",
           "inviteFailed": "Gửi lời mời thất bại: {error}",
-          "linkRequestSuccess": "Đã gửi yêu cầu liên kết đến {name}!",
+          "linkRequestSent": "Đã gửi yêu cầu liên kết đến {name}!",
           "linkRequestFailed": "Yêu cầu liên kết thất bại: {error}",
-          "missingLinkId": "Không thể gửi lại lời mời: thiếu linkId.",
-          "missingInviteId": "Không thể gửi lại lời mời: thiếu inviteId.",
+          "cancelInviteMissingId": "Không thể hủy lời mời: thiếu inviteId.",
+          "cancelInviteConfirm": "Bạn có chắc chắn muốn hủy lời mời tới {name}?",
+          "inviteCancelled": "Đã hủy lời mời.",
+          "cancelInviteFailed": "Hủy lời mời thất bại: {error}",
+          "resendInviteMissingId": "Không thể gửi lại lời mời: thiếu inviteId.",
           "resendInviteSuccess": "Đã gửi lại link thiết lập thành công tới {name}!",
           "resendInviteFailed": "Gửi lại thất bại: {error}",
-          "acceptJoinSuccess": "Đã chấp nhận thợ {name} vào tiệm!",
-          "acceptJoinFailed": "Chấp nhận thất bại: {error}",
+          "joinAccepted": "Đã chấp nhận thợ {name} vào tiệm!",
+          "acceptFailed": "Chấp nhận thất bại: {error}",
           "declineJoinConfirm": "Bạn có chắc chắn muốn từ chối yêu cầu tham gia của thợ {name}?",
-          "declineJoinSuccess": "Đã từ chối yêu cầu tham gia của thợ {name}!",
-          "declineJoinFailed": "Từ chối thất bại: {error}",
+          "declineFailed": "Từ chối thất bại: {error}",
           "approveUnlinkConfirm": "Bạn có chắc chắn muốn duyệt yêu cầu hủy liên kết của thợ {name}?",
           "unlinkFailed": "Hủy liên kết thất bại: {error}",
           "declineUnlinkConfirm": "Bạn có chắc chắn muốn từ chối yêu cầu hủy liên kết của thợ {name}?",
-          "declineFailed": "Từ chối thất bại: {error}",
           "deleteFailed": "Xóa thất bại: {error}",
           "statusUpdateFailed": "Cập nhật trạng thái thất bại: {error}",
           "tipsFlowUpdateFailed": "Cập nhật tips flow thất bại: {error}"
@@ -1044,13 +1137,27 @@
           "sendInviteLink": "Gửi liên kết mời thợ",
           "joinQrCode": "MÃ QR GIA NHẬP",
           "haveTechniciansScanThis": "Cho thợ quét mã này bằng camera điện thoại để tự đăng ký hoặc liên kết tài khoản vào tiệm.",
+          "sourcePublicLink": "source: public link",
           "technicianNameRequired": "Vui lòng nhập tên thợ.",
           "contactRequired": "Cần thông tin liên hệ (email hoặc số điện thoại).",
           "invalidEmailFormat": "Định dạng email không hợp lệ.",
           "phExampleName": "vd: Mia Tran",
-          "phExampleRole": "vd: Thợ nail"
+          "phExampleRole": "vd: Thợ nail",
+          "inviteLinkLoading": "Đang tải link mời...",
+          "inviteLinkDisabled": "Public invite link chưa bật trong Merchant Settings.",
+          "joinQrAlt": "Mã QR gia nhập",
+          "scanToJoinAlt": "Quét để gia nhập",
+          "preview": "Xem trước",
+          "disabled": "Chưa bật"
         },
         "PayoutSetupModal": {
+          "walletAccountTitle": "TÀI KHOẢN {wallet}",
+          "placeholderZelle": "Nhập email/SĐT Zelle...",
+          "placeholderBankWire": "Số tài khoản & số routing",
+          "placeholderPaypal": "email@paypal.com",
+          "placeholderAppleCash": "Nhập số điện thoại...",
+          "placeholderVlinkpay": "Nhập VLINKPAY ID (vd: MIA0123)...",
+          "placeholderCrypto": "Nhập địa chỉ BTC/ETH/USDT...",
           "specifyReceivingTargetIdentifier": "Chỉ định thông tin tài khoản nhận tiền",
           "accountIdentifier": "THÔNG TIN TÀI KHOẢN *",
           "qrCodeOptional": "MÃ QR (TÙY CHỌN)",
@@ -1060,25 +1167,31 @@
         },
         "StaffModal": {
           "staffProfileVerifiedAuto": "Đã xác thực tài khoản! Tự động nhập thông tin thợ.",
+          "staffNotFound": "Không tìm thấy thợ. Hãy mời bằng email hoặc số điện thoại.",
+          "searchError": "Chưa thể tìm kiếm thợ lúc này.",
           "reviewJoinRequest": "Duyệt yêu cầu tham gia",
           "nexoraIdVlinkpayId": "NEXORA ID / VLINKPAY ID",
           "scanQrCode": "Quét mã QR",
           "shareInviteLink": "Chia sẻ liên kết mời thợ",
           "invite": "Mời",
+          "linkRequestBtn": "Gửi yêu cầu liên kết",
           "vlinkpayVerified": "Đã xác thực tài khoản VLINKPAY",
           "nexoraVerified": "Đã xác thực tài khoản NEXORA",
+          "profileVerified": "Đã xác thực hồ sơ thợ",
           "viewAllReviews": "Xem tất cả đánh giá",
           "viewAccount": "Xem tài khoản",
           "decline": "Từ chối",
-          "approveAccept": "Duyệt / Chấp nhận",
+          "approveAccept": "Duyệt",
           "remove_photo": "X?a ?nh",
           "review_count": "{count} ??nh gi?",
-          "phExampleVlp1": "vd: VLP-0155-ASH",
-          "phExampleVlp2": "vd: VLP-8893-VL",
-          "phExampleStaffId": "vd: NEX-STAFF-LISA1102",
+          "phExampleVlp1": "vd: ASH0155",
+          "phExampleVlp2": "vd: VL8893",
+          "phExampleStaffId": "vd: LISA1102",
           "phFullName": "Mia Tran",
           "phNickname": "Mia T.",
-          "phPosition": "Thợ nail"
+          "phPosition": "Thợ nail",
+          "scanVlinkpayQrCode": "Quét mã QR VLINKPAY",
+          "scanNexoraQrCode": "Quét mã QR NEXORA"
         },
         "StaffQrScannerModal": {
           "scanQrCode": "Quét Mã QR Nhận Diện",
@@ -1087,6 +1200,7 @@
           "pointTheCameraAt": "Hướng camera về phía mã QR hoặc chọn giả lập quét thành công bên dưới.",
           "simulateQrScan": "Giả lập quét QR",
           "simulateSuccessfulScan": "Giả lập Quét Lisa Tran",
+          "simulateProfileLabel": "{name} ({code})",
           "cancel": "HỦY BỎ"
         },
         "StaffReviewsDetailModal": {
@@ -1139,14 +1253,16 @@
         },
         "StaffView": {
           "linkCopiedToClipboard": "Đã sao chép liên kết để chia sẻ!",
+          "shareTitle": "Gia nhập Nexora Touch",
+          "shareText": "Gia nhập đội ngũ {businessName} trên Nexora Touch.",
           "noStaffProfileFound": "Không tìm thấy hồ sơ nhân viên phù hợp.",
           "pleaseEnterBothName": "Vui lòng điền đầy đủ Tên và phương thức liên hệ.",
           "clickToEnlarge": "Click để phóng to",
-          "technicianJoinLinkAnd": "LIÊN KẾT GIA NHẬP CHO THỢ (REFERRAL LINK)",
+          "technicianJoinLinkAnd": "LIÊN KẾT GIA NHẬP (REFERRAL LINK)",
           "shareThisReferralLink": "Chia sẻ liên kết này hoặc cho thợ quét mã QR để tự đăng ký/liên kết tài khoản vào tiệm.",
           "joinLinkCopiedTo": "Đã sao chép liên kết gia nhập!",
           "copy": "Sao chép",
-          "share": "Chia sẻ",
+          "share": "Mời",
           "pendingJoinRequests": "Yêu cầu gia nhập chờ duyệt",
           "directAddition": "Khởi tạo trực tiếp",
           "pending": "Chưa cấu hình",
@@ -1171,7 +1287,11 @@
           "approveUnlink": "Duyệt hủy",
           "reject": "Từ chối",
           "joinQrCode": "MÃ QR GIA NHẬP",
-          "haveTechniciansScanThis": "Cho thợ quét mã này bằng camera điện thoại để tự đăng ký hoặc liên kết tài khoản vào tiệm."
+          "haveTechniciansScanThis": "Cho thợ quét mã này bằng camera điện thoại để tự đăng ký hoặc liên kết tài khoản vào tiệm.",
+          "inviteLinkLoading": "Đang tải link mời...",
+          "inviteLinkDisabled": "Public invite link chưa bật trong Merchant Settings.",
+          "scanToJoinAlt": "Quét để gia nhập",
+          "preview": "Xem trước"
         }
       }
     },
@@ -1377,6 +1497,7 @@
         }
       },
       "PayoutSetupModal": {
+        "walletAccountTitle": "TÀI KHOẢN {wallet}",
         "specifyReceivingTargetIdentifier": "Chỉ định thông tin tài khoản nhận tiền",
         "accountIdentifier": "THÔNG TIN TÀI KHOẢN",
         "qrCodeOptional": "MÃ QR (TÙY CHỌN)",
@@ -1409,6 +1530,9 @@
       "views": {
         "StaffMyQR": {
           "linkCopiedToClipboard": "Đã sao chép liên kết!",
+          "staffCodeUnavailable": "Chưa có Staff ID. Vui lòng thử lại sau giây lát.",
+          "shareFailed": "Không thể chia sẻ liên kết. Hãy dùng nút sao chép.",
+          "copyFailed": "Không thể sao chép liên kết.",
           "joinRequestViaQr": "Yêu cầu gia nhập qua QR",
           "justNow": "Vừa xong",
           "unlinked": "Đã hủy liên kết",
@@ -1425,8 +1549,13 @@
           "scanSalonQrCode": "Quét Mã QR Của Tiệm",
           "scanTheSalonReferral": "Quét mã QR liên kết thợ của tiệm (referral QR) để gửi yêu cầu gia nhập chủ động",
           "orEnterInviteLink": "Hoặc Nhập Liên Kết / Tên Tiệm",
-          "pasteSalonInviteLink": "Dán liên kết hoặc tên tiệm...",
+          "pasteSalonInviteLink": "Dán link mời hoặc mã referral của tiệm...",
           "send": "Gửi",
+          "referralCodeRequired": "Vui lòng nhập link mời hoặc mã referral của tiệm.",
+          "profileReferralCodeMissing": "Hồ sơ của bạn chưa có mã referral. Vui lòng liên hệ hỗ trợ.",
+          "joinRequestSent": "Đã gửi yêu cầu gia nhập thành công.",
+          "joinRequestFailed": "Gửi yêu cầu gia nhập thất bại. Vui lòng thử lại.",
+          "alreadyLinkedOrRequested": "Bạn đã gửi yêu cầu hoặc đã liên kết với tiệm này rồi.",
           "simulateQrScan": "Giả lập quét QR",
           "personalTippingQr": "QR Nhận Tip Cá Nhân",
           "tippingLink": "Liên Kết Nhận Tip",
@@ -1493,13 +1622,35 @@
           "phAccountNumber": "Số tài khoản",
           "phRoutingCode": "Mã routing"
         },
+        "StaffKycOverview": {
+          "retry": "Thử lại",
+          "verifyYourAccount": "Xác minh tài khoản của bạn",
+          "completeKyc": "Hoàn tất",
+          "kyc": "KYC",
+          "andExploreNextLevel": "và trải nghiệm đầy đủ các tính năng với",
+          "nexora": "Nexora Touch",
+          "getStarted": "Bắt đầu",
+          "whyKycMatters": "Tại sao xác minh KYC quan trọng",
+          "kycDescription": "Bằng việc hoàn tất quy trình này, bạn giúp chúng tôi duy trì môi trường an toàn và bảo mật cho tất cả",
+          "kycDescriptionContinued": "thành viên. Xác minh KYC cũng cho phép bạn sử dụng đầy đủ nền tảng, bao gồm hạn mức giao dịch cao hơn và các tính năng bổ sung.",
+          "networkError": "Không thể tải cổng KYC. Vui lòng kiểm tra kết nối và thử lại.",
+          "serverError": "Không thể khởi tạo cổng KYC. Vui lòng thử lại sau.",
+          "statusReviewTitle": "KYC ĐANG ĐƯỢC XEM XÉT",
+          "statusReviewDescription": "Hồ sơ xác minh danh tính của bạn đang được xem xét. Bạn có thể tiếp tục sử dụng cổng bên dưới để kiểm tra trạng thái hoặc cập nhật thông tin.",
+          "statusRejectedTitle": "KYC BỊ TỪ CHỐI",
+          "statusRejectedDescription": "Xác minh trước đó của bạn đã bị từ chối. Vui lòng hoàn tất lại quy trình KYC qua cổng bên dưới."
+        },
         "StaffReviews": {
           "reviewsAndRatings": "Đánh Giá & Xếp Hạng",
           "customerReviews": "Ý Kiến Khách Hàng",
+          "averageRating": "Điểm trung bình",
+          "totalReviews": "Tổng đánh giá",
           "identitySecured": "BẢO MẬT DANH TÍNH",
           "noReviewsReceivedYet": "Bạn chưa có đánh giá nào.",
           "anonymousCustomer": "Khách hàng ẩn danh",
-          "internal": "Nội bộ"
+          "ratingOnly": "Chỉ có điểm — không có bình luận.",
+          "pageOf": "Trang {{page}} / {{total}}",
+          "internal": "Danh tính khách hàng được bảo vệ. Bạn chỉ thấy điểm và phản hồi."
         }
       }
     },
@@ -1522,7 +1673,10 @@
           "passwordMustBeAt2": "Mật khẩu phải từ 6 ký tự.",
           "accountDoesNotExist": "Tài khoản không tồn tại hoặc mật khẩu sai.",
           "linkRequestCancelled": "Đã hủy bỏ yêu cầu liên kết.",
-          "emailAlreadyExists": "Email này đã được đăng ký."
+          "emailAlreadyExists": "Email này đã được đăng ký.",
+          "alreadyLinkedOrRequested": "Bạn đã gửi yêu cầu hoặc đã liên kết với tiệm này rồi.",
+          "joinRequestPending": "Yêu cầu gia nhập của bạn đang chờ tiệm duyệt.",
+          "joinRequestFailed": "Gửi yêu cầu gia nhập thất bại: {error}"
         }
       },
       "steps": {
@@ -1532,7 +1686,7 @@
           "emailAddress": "Địa chỉ Email *",
           "confirmEmailAddress": "Nhập lại địa chỉ Email *",
           "password": "Mật khẩu *",
-          "referralLinkSalon": "Liên kết giới thiệu / Salon",
+          "referralLinkSalon": "Tên tiệm - Mã giới thiệu",
           "label1ActivateAccount": "1. Kích hoạt tài khoản",
           "enterTheOtpCode": "Nhập mã OTP được gửi tới email của bạn để kích hoạt tài khoản.",
           "enterOtpCode": "Nhập mã OTP *",
@@ -1575,7 +1729,11 @@
           "joinRequestSubmitted": "Yêu cầu gia nhập đã gửi!",
           "pending": "CHỜ DUYỆT",
           "pendingApproval": "Chờ duyệt",
-          "staffLinkCopiedTo": "Đã sao chép liên kết của thợ!"
+          "staffLinkCopiedTo": "Đã sao chép liên kết của thợ!",
+          "joinRequestMessage": "Mã thợ NEXORA của bạn là {staffId}. Yêu cầu liên kết với {businessName} đã được gửi thành công. Vui lòng chờ chủ tiệm duyệt để kích hoạt QR nhận tiền tip.",
+          "joinedTodayRole": "Gia nhập: Hôm nay • Vai trò: {role}",
+          "nexoraId": "NEXORA ID",
+          "copyStaffLink": "SAO CHÉP STAFF LINK"
         },
         "StepWelcome": {
           "declineRequest": "Hủy bỏ / Từ chối",
@@ -1750,7 +1908,9 @@
   },
   "staff_registration": {
     "link": {
-      "incorrect_password": "Mật khẩu không chính xác."
+      "incorrect_password": "Mật khẩu không chính xác.",
+      "business_account_not_allowed": "Chỉ tài khoản cá nhân (Personal) mới có thể chấp nhận lời mời tiệm. Vui lòng đăng nhập bằng tài khoản cá nhân.",
+      "onboarding_required": "Vui lòng hoàn tất hồ sơ cá nhân trước khi gia nhập tiệm."
     }
   }
 }

@@ -1,6 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
+import { getApiErrorCode, isApiError } from '../../../types/domain'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
+import { serializeBankWireAccount } from '../../payout/bankWireAccount'
+import { captureQrImage } from '../../../native/imagePicker'
 
 const normalizePhone = (raw) => {
   if (!raw) return ''
@@ -16,9 +19,8 @@ import { logger } from '../../../utils/logger'
 import apiAuthAdapter from '../../../auth/adapters/apiAuthAdapter'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { useCompletePersonalOnboarding } from '../../../data/hooks/usePersonalOnboarding'
-import { captureQrImage } from '../../../native/imagePicker'
 
-export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onKybSuccess, isRedirectedFromSession, initialStep = 0, initialRole = 'personal' }) {
+export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onKybSuccess = () => {}, isRedirectedFromSession, initialStep = 0, initialRole = 'personal' }) {
   const { t, currentLanguage, setLanguage, renderLabel } = useTranslation()
   const replaceAllPendingAccountsMutation = useReplaceAllPendingAccounts()
   const pendingAccountsQuery = usePendingAccounts()
@@ -75,14 +77,14 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const [resendTimer, setResendTimer] = useState(30)
 
   // Profile / Payments Setup extra states
-  const [editingMethod, setEditingMethod] = useState(null)
+  const [editingMethod, setEditingMethod] = useState<any | null>(null)
   const [editValue, setEditValue] = useState('')
   const [editQrCode, setEditQrCode] = useState('')
   const [editAccountName, setEditAccountName] = useState('')
   const [isCapturing, setIsCapturing] = useState(false)
   const [modalError, setModalError] = useState('')
   const [vlinkpayStatus, setVlinkpayStatus] = useState('idle')
-  const [vlinkpayTimeout, setVlinkpayTimeout] = useState(null)
+  const [vlinkpayTimeout, setVlinkpayTimeout] = useState<any | null>(null)
 
   // Validation errors
   const [errors, setErrors] = useState<LooseObject>({})
@@ -111,7 +113,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       })
       .catch((err) => {
         logger.error('handleSimulateVerify error:', err)
-        const code = (err as any)?.errorCode || 'HTTP_ERROR'
+        const code = getApiErrorCode(err, 'HTTP_ERROR')
         const i18nKey = getErrorI18nKey(code)
         setErrors({ submit: t(i18nKey) })
       })
@@ -126,7 +128,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         setResendTimer(60)
       })
       .catch((err) => {
-        const code = (err as any)?.errorCode || 'HTTP_ERROR'
+        const code = getApiErrorCode(err, 'HTTP_ERROR')
         const i18nKey = getErrorI18nKey(code)
         setErrors({ submit: t(i18nKey) })
       })
@@ -189,15 +191,15 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       lastName: 'User',
       // profileType enum per signup API docs is "Merchant" | "User" (not "Personal").
       profileType: role === 'business' ? 'Merchant' : 'User'
-    } as any).then(() => {
+    }).then(() => {
       // Send verification email right after successful signup
       return apiAuthAdapter.resendVerificationEmail({ email: email.trim().toLowerCase() })
         .catch(err => {
           // If the backend auto-verifies in DEV, or rate limits because it already sent it, handle gracefully
-          if ((err as any)?.errorCode === 'USER_EMAIL_ALREADY_VERIFIED') {
+          if (isApiError(err) && err.errorCode === 'USER_EMAIL_ALREADY_VERIFIED') {
             return 'ALREADY_VERIFIED'
           }
-          if ((err as any)?.errorCode === 'COMMON_RATE_LIMIT_EXCEEDED') {
+          if (isApiError(err) && err.errorCode === 'COMMON_RATE_LIMIT_EXCEEDED') {
             return 'RATE_LIMITED' // Treat as success, email was sent by signup or rate limited
           }
           throw err
@@ -221,7 +223,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
           })
           .catch(err => {
             logger.error('Auto-login failed after auto-verify:', err)
-            const code = (err as any)?.errorCode || 'HTTP_ERROR'
+            const code = getApiErrorCode(err, 'HTTP_ERROR')
             const i18nKey = getErrorI18nKey(code)
             setErrors({ email: t(i18nKey) })
           })
@@ -233,7 +235,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       }
     }).catch((err) => {
       const errorsMap: LooseObject = {}
-      const code = (err as any)?.errorCode || 'HTTP_ERROR'
+      const code = getApiErrorCode(err, 'HTTP_ERROR')
       const i18nKey = getErrorI18nKey(code)
       errorsMap.email = t(i18nKey) || t('errors.unknown_error')
       setErrors(errorsMap)
@@ -263,7 +265,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         filtered.push(newAccount)
         // Fire-and-forget: invoke callback immediately (same user-observable timing as before),
         // Let the mutation persist in the background.
-        ;(replaceAllPendingAccountsMutation.mutate as (v: any) => void)(filtered)
+        replaceAllPendingAccountsMutation.mutate(filtered)
 
         // Business creation is handled by Setup Wizard (onboarding), not here.
         if (onRegisterAndLogin) {
@@ -284,7 +286,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         }
         const filtered = existingAccounts.filter(acc => acc.email !== newAccount.email)
         filtered.push(newAccount)
-        ;(replaceAllPendingAccountsMutation.mutate as (v: any) => void)(filtered)
+        replaceAllPendingAccountsMutation.mutate(filtered)
 
         setShowOtpInput(false)
         setCurrentStep(3)
@@ -309,8 +311,8 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
 
     const timer = setTimeout(() => {
       const matchedProfile = Object.values(MOCK_NEXORA_STAFF_PROFILES).find(
-        (p: any) => p.vlinkpayId?.toUpperCase() === upperVal
-      ) as any
+        p => p.vlinkpayId?.toUpperCase() === upperVal
+      )
       if (matchedProfile) {
         setVlinkpayStatus('success')
         setNickname(matchedProfile.nickname || '')
@@ -328,17 +330,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     setVlinkpayTimeout(timer)
   }
 
-  const autoFillPayments = () => {
-    const defaultName = nickname.trim() || 'Lisa Tran'
-    setPayouts({
-      zelle: { enabled: true, value: email || 'lisa@example.com', qrCode: '', accountName: defaultName },
-      bankwire: { enabled: true, value: '123456789 - 987654321', qrCode: '', accountName: defaultName },
-      paypal: { enabled: true, value: email || 'lisa@example.com', qrCode: '', accountName: defaultName },
-      venmo: { enabled: true, value: `@${nickname.toLowerCase().replace(/[^a-z]/g, '') || 'lisa'}-nails`, qrCode: '', accountName: defaultName },
-      cashapp: { enabled: true, value: `$${nickname.toLowerCase().replace(/[^a-z]/g, '') || 'lisa'}nails`, qrCode: '', accountName: defaultName },
-      applecash: { enabled: true, value: phone || '408-555-2345', qrCode: '', accountName: defaultName }
-    })
-  }
+  const autoFillPayments = () => {}
 
   const handleToggleMethod = (key) => {
     setPayouts(prev => {
@@ -413,16 +405,16 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       const emailPrefix = email.split('@')[0].toUpperCase()
       const initials = emailPrefix.slice(0, 3) || 'STAFF'
       const randomDigits = Math.floor(1000 + Math.random() * 9000)
-      staffId = `NEX-STAFF-${initials}${randomDigits}`
+      staffId = `${initials}${randomDigits}`
       
       // Try to get actual user ID if in API mode
       if (isApiMode) {
         try {
           const session = await apiAuthAdapter.getSession()
-          if (session && (session as any).id) {
-            staffId = (session as any).id as string
+          if (session && session.id) {
+            staffId = session.id
           }
-        } catch (e) {
+        } catch (e: unknown) {
           // ignore
         }
       }
@@ -439,10 +431,11 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
             phone, 
             position 
           },
+          paymentAccounts: {},
           payoutConfigs: payouts
         })
         setCurrentStep(4)
-      } catch (err) {
+      } catch (err: unknown) {
         logger.error('Failed to complete API onboarding', err)
         setErrors({ submit: t('register.errors.onboarding_failed') })
       }
@@ -492,9 +485,9 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     }
     const filteredPending = existingAccounts.filter(acc => acc.email !== newAccount.email)
     filteredPending.push(newAccount)
-    ;(replaceAllPendingAccountsMutation.mutate as (v: any) => void)(filteredPending)
+    replaceAllPendingAccountsMutation.mutate(filteredPending)
 
-    let parsedSetup = merchantSetupQuery.data ? { ...(merchantSetupQuery.data as LooseObject) } : null
+    let parsedSetup = merchantSetupQuery.data ? { ...merchantSetupQuery.data } : null
     if (!parsedSetup) {
       parsedSetup = {
         businessInfo: {
@@ -520,7 +513,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         staffList.push(finalStaffMember)
       }
       parsedSetup.staffList = staffList
-      saveMerchantSetupMutation.mutateAsync(parsedSetup as any)
+      saveMerchantSetupMutation.mutateAsync(parsedSetup)
         .catch((err) => logger.error('Failed to save merchant setup during registration', err))
 
       const newNoti = {
@@ -535,8 +528,8 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         read: false,
         linkTab: 'staff'
       }
-      addNotificationMutation.mutate(newNoti as any)
-    } catch (e) {
+      addNotificationMutation.mutate(newNoti)
+    } catch (e: unknown) {
       logger.error('Failed to update merchant setup during registration', e)
     }
 
@@ -665,7 +658,6 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     handleStep1Next,
     handleVerifyOtp,
     handleVlinkpayIdChange,
-    autoFillPayments,
     handleToggleMethod,
     handleEditPayoutAccount,
     savePayoutAccount,

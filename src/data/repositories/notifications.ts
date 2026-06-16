@@ -1,85 +1,185 @@
 /**
  * notificationsRepository — API-only implementation.
- * Short-lived cache prevents StrictMode double-mount from duplicating calls.
  */
 
-import httpClient from "../../lib/httpClient";
+import httpClient from '../../lib/httpClient'
+import type { NotificationRecord, NotificationsPage } from '../../types/domain'
+import type { NotificationApiDto } from '../../types/repositories'
 
-const CACHE_TTL = 5_000; // 5 seconds
-let _listCache = { promise: null, ts: 0 };
-let _unreadCache = { promise: null, ts: 0 };
+type HttpClient = typeof httpClient
 
-function cachedFetch(cache, fetcher) {
-  const now = Date.now();
-  if (cache.promise && now - cache.ts < CACHE_TTL) return cache.promise;
-  cache.ts = now;
-  cache.promise = fetcher().catch((err) => {
-    cache.promise = null;
-    cache.ts = 0;
-    throw err;
-  });
-  return cache.promise;
+const NOTIFICATIONS_BASE = '/api/v1/Notifications'
+
+interface NotificationsListResponse {
+  items?: NotificationApiDto[]
+  pageNumber?: number
+  totalPages?: number
+  totalCount?: number
+  hasPreviousPage?: boolean
+  hasNextPage?: boolean
 }
 
-export function createNotificationsRepository(client = httpClient) {
+interface NotificationsListParams {
+  pageNumber?: number
+  pageSize?: number
+  isRead?: boolean | null
+}
+
+interface UnreadCountResponse {
+  count?: number
+}
+
+/**
+ * Notification types that should navigate to the staff tab and open
+ * the approve/review modal. Matched case-insensitively.
+ */
+const STAFF_NOTIFICATION_TYPES = new Set([
+  'staff_accepted_invite',
+  'staffacceptedinvite',
+  'stafflinkrequest',
+  'staff_link_request',
+  'staff_joined',
+  'staffjoined',
+])
+
+/**
+ * Notification types that map to a specific dashboard tab (linkTab).
+ * Add new mappings here as the API introduces new notification types.
+ */
+const TYPE_TO_LINK_TAB: Record<string, string> = {
+  tip_success: 'tips',
+  tip: 'tips',
+  review_good: 'reviews',
+  review: 'reviews',
+  feedback_alert: 'reviews',
+}
+
+/**
+ * Extract a staffId/referenceId from the notification's actionUrl.
+ * Supports patterns like:
+ *   /staff/{id}, /staff/links/{id}, /merchant/staff/{id}
+ */
+function extractStaffIdFromUrl(url: string | null | undefined): string | null {
+  if (!url) return null
+  const match = url.match(/\/(?:merchant\/)?staff(?:\/links)?\/([^/?#]+)/i)
+  return match?.[1] || null
+}
+
+function normalizeNotification(item: NotificationApiDto): NotificationRecord {
+  const isRead = Boolean(item.isRead ?? item.read)
+  const body = item.body ?? item.message ?? ''
+  const createdAt = item.createdAt ?? ''
+  const type = item.type || 'info'
+  const typeLower = type.toLowerCase()
+
+  // Derive linkTab and staffId for navigation on click
+  let linkTab: string | undefined
+  let staffId: string | undefined
+
+  if (STAFF_NOTIFICATION_TYPES.has(typeLower)) {
+    linkTab = 'staff'
+    staffId = item.referenceId || extractStaffIdFromUrl(item.actionUrl) || undefined
+  } else if (TYPE_TO_LINK_TAB[typeLower]) {
+    linkTab = TYPE_TO_LINK_TAB[typeLower]
+  } else if (item.actionUrl) {
+    // Fallback: try to derive linkTab from actionUrl path
+    const urlMatch = item.actionUrl.match(/\/dashboard\/([^/?#]+)/i)
+    if (urlMatch) linkTab = urlMatch[1]
+  }
+
   return {
-    /**
-     * @returns {Promise<Array>}
-     */
-    async list() {
-      return cachedFetch(_listCache, async () => {
-        const response = await client.get<LooseObject>("/api/v1/notifications");
-        const items = Array.isArray(response) ? response : (response.data as LooseObject[]) || [];
-        return items.map((item) => ({
-          id: item.id,
-          type: item.type || "info",
-          title: item.title || "",
-          body: item.body || item.message || "",
-          isRead: Boolean(item.isRead || item.read),
-          createdAt: item.createdAt || new Date().toISOString(),
-        }));
-      });
+    id: item.id ?? '',
+    type,
+    title: item.title || '',
+    message: body,
+    body,
+    actionUrl: item.actionUrl ?? null,
+    isRead,
+    read: isRead,
+    time: new Date(createdAt).toLocaleString(),
+    ...(linkTab ? { linkTab } : {}),
+    ...(staffId ? { staffId } : {}),
+  }
+}
+
+function normalizeNotificationsPage(
+  response: NotificationApiDto[] | NotificationsListResponse,
+  pageNumber: number,
+): NotificationsPage {
+  if (Array.isArray(response)) {
+    const items = response.map(normalizeNotification)
+    return {
+      items,
+      pageNumber,
+      totalPages: 1,
+      totalCount: items.length,
+      hasPreviousPage: false,
+      hasNextPage: false,
+    }
+  }
+
+  const items = (response.items ?? []).map(normalizeNotification)
+  return {
+    items,
+    pageNumber: response.pageNumber ?? pageNumber,
+    totalPages: response.totalPages ?? 1,
+    totalCount: response.totalCount ?? items.length,
+    hasPreviousPage: response.hasPreviousPage ?? false,
+    hasNextPage: response.hasNextPage ?? false,
+  }
+}
+
+export function createNotificationsRepository(client: HttpClient = httpClient) {
+  return {
+    async listPaged({
+      pageNumber = 1,
+      pageSize = 20,
+      isRead = null,
+    }: NotificationsListParams = {}): Promise<NotificationsPage> {
+      const params: Record<string, string | number> = {
+        PageNumber: pageNumber,
+        PageSize: pageSize,
+      }
+      if (isRead !== null && isRead !== undefined) {
+        params.IsRead = String(isRead)
+      }
+      const response = await client.get<NotificationApiDto[] | NotificationsListResponse>(
+        NOTIFICATIONS_BASE,
+        { params },
+      )
+      return normalizeNotificationsPage(response, pageNumber)
     },
 
-    /**
-     * @returns {Promise<number>}
-     */
-    async unreadCount() {
-      return cachedFetch(_unreadCache, async () => {
-        const response = await client.get<LooseObject>("/api/v1/notifications/unread-count");
-        return typeof response === "number" ? response : (response.count as number) || 0;
-      });
+    async list(): Promise<NotificationRecord[]> {
+      const page = await this.listPaged({ pageNumber: 1, pageSize: 50 })
+      return page.items
     },
 
-    /**
-     * @param {string} id
-     */
-    async markRead(id) {
-      return client.put(`/api/v1/notifications/${id}/read`);
+    async unreadCount(): Promise<number> {
+      const response = await client.get<number | UnreadCountResponse>(
+        `${NOTIFICATIONS_BASE}/unread-count`,
+      )
+      if (typeof response === 'number') return response
+      return response.count ?? 0
     },
 
-    /**
-     * Mark all notifications as read
-     */
-    async markAllRead() {
-      return client.put("/api/v1/notifications/read-all");
+    async markRead(id: string): Promise<void> {
+      await client.put(`${NOTIFICATIONS_BASE}/${id}/read`)
     },
 
-    /**
-     * @deprecated server-side generation
-     */
-    async add(notification) {
-      return notification;
+    async markAllRead(): Promise<void> {
+      await client.put(`${NOTIFICATIONS_BASE}/read-all`)
     },
 
-    /**
-     * @deprecated server-side generation
-     */
-    async replaceAll(list) {
+    async add(notification: NotificationRecord): Promise<NotificationRecord> {
+      return notification
+    },
+
+    async replaceAll(_list: NotificationRecord[]): Promise<void> {
       // no-op
     },
-  };
+  }
 }
 
-export const notificationsRepository = createNotificationsRepository();
-export default notificationsRepository;
+export const notificationsRepository = createNotificationsRepository()
+export default notificationsRepository

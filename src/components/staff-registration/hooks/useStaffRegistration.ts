@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
+import { serializeBankWireAccount } from '../../payout/bankWireAccount'
+import { captureQrImage } from '../../../native/imagePicker'
 
 const normalizePhone = (raw) => {
   if (!raw) return ''
@@ -9,19 +11,36 @@ const normalizePhone = (raw) => {
   const formatted = formatNationalNumber(nationalNumber, countryCode)
   return formatted ? `${countryCode} ${formatted}`.trim() : ''
 }
+
+const imageUrlOrNull = (value) => {
+  if (!value || String(value).startsWith('data:')) return null
+  return value
+}
+
+const buildVlinkpayId = (name = 'STAFF') => {
+  const initials = name.replace(/[^a-zA-Z]/g, '').slice(0, 4).toUpperCase() || 'STAFF'
+  return `${initials}${Math.floor(1000 + Math.random() * 9000)}`
+}
+
+const formatReferralDisplay = (businessName = '', referralCode = '') => {
+  const name = String(businessName || '').trim()
+  const code = String(referralCode || '').trim()
+  return [name, code].filter(Boolean).join(' - ')
+}
 import { logger } from '../../../utils/logger'
+import { getUserProfileImageUrl } from '../../../utils/userProfileImage'
 import { usePendingAccounts, useReplaceAllPendingAccounts } from '../../../data/hooks/usePendingAccounts'
-import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
+import { useMerchantSetup, useSaveMerchantSetup, useUploadImage } from '../../../data/hooks/useMerchantSetup'
 import { useNotifications, useAddNotification } from '../../../data/hooks/useNotifications'
-import { captureQrImage } from '../../../native/imagePicker'
-import { useStaffInviteInfo, useAcceptStaffInvite } from '../../../data/hooks/useStaffInvites'
+import { useStaffInviteInfo, useAcceptStaffInvite, usePublicMerchantInvite } from '../../../data/hooks/useStaffInvites'
 import { apiAuthAdapter } from '../../../auth/adapters/apiAuthAdapter'
 import { staffPaymentMethodsRepository } from '../../../data/repositories/staffPaymentMethods'
 import { staffInvitesRepository } from '../../../data/repositories/staffInvites'
 import profileSettingsRepository from '../../../data/repositories/profileSettings'
 import httpClient from '../../../lib/httpClient'
+import { getApiErrorCode, isApiError, type UserProfile } from '../../../types/domain'
 
-const MOCK_NEXORA_STAFF_PROFILES = {}
+const MOCK_NEXORA_STAFF_PROFILES: Record<string, LooseObject> = {}
 
 export { MOCK_NEXORA_STAFF_PROFILES }
 
@@ -32,32 +51,47 @@ export default function useStaffRegistration({ inviteData }) {
   const replaceAllPendingAccountsMutation = useReplaceAllPendingAccounts()
   const merchantSetupQuery = useMerchantSetup()
   const saveMerchantSetupMutation = useSaveMerchantSetup()
+  const uploadImageMutation = useUploadImage()
   useNotifications()
   const addNotificationMutation = useAddNotification()
 
-  // API invite hooks — only active when inviteData has a real token
+  // API invite hooks - only active when inviteData has a real token
   const inviteToken = inviteData?.token ?? null
+  const inviteRefCode = inviteData?.refCode || null
+  const inviteBusinessSlug = inviteData?.businessSlug || null
+  const inviteEmail = inviteData?.email || null
   const inviteInfoQuery = useStaffInviteInfo(inviteToken)
   const acceptInviteMutation = useAcceptStaffInvite()
 
   // Derive whether this is a real API-backed invite (has token) or simulation
   const isApiInvite = Boolean(inviteToken)
-  // Invite metadata from the API (null if not loaded yet or no token)
-  const apiInviteInfo = inviteInfoQuery.data ?? null
-  const isInviteLoading = inviteInfoQuery.isLoading && isApiInvite
-  const isInviteError = inviteInfoQuery.isError
+  const isPublicInvite = Boolean(inviteBusinessSlug)
+  const usesApiRegistration = isApiInvite || isPublicInvite
+  // Public invite landing: fetch business info by referralCode (no token).
+  const publicInviteInfoQuery = usePublicMerchantInvite(
+    isPublicInvite ? inviteRefCode : null,
+  )
+  // Invite metadata from the API (null if not loaded yet). Token invite first,
+  // then public merchant-invite for the QR/public-link flow.
+  const apiInviteInfo = inviteInfoQuery.data ?? publicInviteInfoQuery.data ?? null
+  const isInviteLoading =
+    (inviteInfoQuery.isLoading && isApiInvite) ||
+    (publicInviteInfoQuery.isLoading && isPublicInvite)
+  const isInviteError =
+    (inviteInfoQuery.isError && isApiInvite) ||
+    (publicInviteInfoQuery.isError && isPublicInvite)
 
   const [step, setStep] = useState(0) // 0: Welcome Invite, 1: OTP, 2: Profile, 3: Payments, 4: Consent & Activate, 5: Success
 
   // Path selection states
-  const [joinPath, setJoinPath] = useState(null)
+  const [joinPath, setJoinPath] = useState<any | null>(null)
   const [searchId, setSearchId] = useState('')
-  const [linkedProfile, setLinkedProfile] = useState(null)
+  const [linkedProfile, setLinkedProfile] = useState<any | null>(null)
   const [searchError, setSearchError] = useState('')
 
   // Scanner states
   const [showScanner, setShowScanner] = useState(false)
-  const [scanTarget, setScanTarget] = useState(null) // 'staff' | 'vlinkpay'
+  const [scanTarget, setScanTarget] = useState<any | null>(null) // 'staff' | 'vlinkpay'
 
   const isSelfServe = isApiInvite ? false : !inviteData?.name
 
@@ -81,6 +115,7 @@ export default function useStaffRegistration({ inviteData }) {
   const [linkError, setLinkError] = useState('')
   const [isLinkLoggedIn, setIsLinkLoggedIn] = useState(false)
   const [hasAcceptedInvite, setHasAcceptedInvite] = useState(false)
+  const [needsOnboarding, setNeedsOnboarding] = useState(false)
 
   // Profile states
   const [fullName, setFullName] = useState('')
@@ -97,8 +132,8 @@ export default function useStaffRegistration({ inviteData }) {
   // Verification states for animation
   const [vlinkpayStatus, setVlinkpayStatus] = useState('idle') // 'idle' | 'checking' | 'success' | 'error'
   const [nexoraStatus, setNexoraStatus] = useState('idle') // 'idle' | 'checking' | 'success' | 'error'
-  const [vlinkpayTimeout, setVlinkpayTimeout] = useState(null)
-  const [nexoraTimeout, setNexoraTimeout] = useState(null)
+  const [vlinkpayTimeout, setVlinkpayTimeout] = useState<any | null>(null)
+  const [nexoraTimeout, setNexoraTimeout] = useState<any | null>(null)
 
   // Cleanup timeouts on unmount
   useEffect(() => {
@@ -118,14 +153,14 @@ export default function useStaffRegistration({ inviteData }) {
     applecash: { enabled: false, value: '', qrCode: '', accountName: '' }
   })
 
-  const [editingMethod, setEditingMethod] = useState(null)
+  const [editingMethod, setEditingMethod] = useState<any | null>(null)
   const [editValue, setEditValue] = useState('')
   const [editQrCode, setEditQrCode] = useState('')
   const [editAccountName, setEditAccountName] = useState('')
   const [isCapturing, setIsCapturing] = useState(false)
   const [modalError, setModalError] = useState('')
   // Async submit guards for the profile (login + accept) and activation
-  // (payment-methods) steps — drive button loading/disabled states.
+  // (payment-methods) steps - drive button loading/disabled states.
   const [isProfileSubmitting, setIsProfileSubmitting] = useState(false)
   const [isActivating, setIsActivating] = useState(false)
   const [isRegisterSubmitting, setIsRegisterSubmitting] = useState(false)
@@ -133,11 +168,15 @@ export default function useStaffRegistration({ inviteData }) {
   // Setup initial values from inviteData (merchant dashboard simulation) or API metadata
   useEffect(() => {
     // API invite: use metadata from the API response
-    if (isApiInvite && apiInviteInfo) {
+    if ((isApiInvite || isPublicInvite) && apiInviteInfo) {
       setFullName(apiInviteInfo.invitedName || '')
       setNickname(apiInviteInfo.invitedName ? apiInviteInfo.invitedName.split(' ')[0] + '.' : '')
       setPosition(apiInviteInfo.invitedPosition || 'Nail Technician')
-      setRegReferralLink(apiInviteInfo.businessName || '')
+      setRegReferralLink(formatReferralDisplay(apiInviteInfo.businessName, apiInviteInfo.refCode || inviteRefCode))
+      setEmail(apiInviteInfo.invitedEmail || inviteEmail || '')
+      setRegEmail(apiInviteInfo.invitedEmail || inviteEmail || '')
+      setRegConfirmEmail(apiInviteInfo.invitedEmail || inviteEmail || '')
+      setLinkEmail(apiInviteInfo.invitedEmail || inviteEmail || '')
       return
     }
 
@@ -152,11 +191,11 @@ export default function useStaffRegistration({ inviteData }) {
       // Prefill registration fields
       setRegEmail(inviteData.email || '')
       setRegConfirmEmail(inviteData.email || '')
-      setRegReferralLink(inviteData.biz || '')
+      setRegReferralLink(formatReferralDisplay(inviteData.biz, inviteData.refCode || inviteData.referralCode))
       setLinkEmail(inviteData.email || '')
 
       // If it's a verification lookup (Option A linking) they might already have an ID
-      if (inviteData.id && inviteData.id.startsWith('NEX-STAFF-')) {
+      if (inviteData.id) {
         setStaffId(inviteData.id)
       } else {
         setStaffId('') // User requested: do not generate mock ID, show whatever is retrieved
@@ -168,18 +207,16 @@ export default function useStaffRegistration({ inviteData }) {
       } else if (inviteData.vlinkpay) {
         setVlinkpayId(inviteData.vlinkpay)
       } else {
-        const initials = (inviteData.name || 'STAFF').replace(/[^a-zA-Z]/g, '').slice(0, 4).toUpperCase()
-        setVlinkpayId(`VLP-${Math.floor(1000 + Math.random() * 9000)}-${initials}`)
+        setVlinkpayId(buildVlinkpayId(inviteData.name || 'STAFF'))
       }
     }
-  }, [inviteData, isApiInvite, apiInviteInfo])
+  }, [inviteData, isApiInvite, isPublicInvite, apiInviteInfo, inviteEmail])
 
   // Auto-generate staffId and vlinkpayId once fullName is typed (for self-serve flow)
   useEffect(() => {
     if (isSelfServe && fullName.trim()) {
-      const initials = fullName.trim().replace(/[^a-zA-Z]/g, '').slice(0, 4).toUpperCase() || 'STAFF'
       if (!vlinkpayId) {
-        setVlinkpayId(`VLP-${Math.floor(1000 + Math.random() * 9000)}-${initials}`)
+        setVlinkpayId(buildVlinkpayId(fullName.trim()))
       }
     }
   }, [fullName, isSelfServe])
@@ -281,7 +318,7 @@ export default function useStaffRegistration({ inviteData }) {
     setVlinkpayStatus('checking')
 
     const timer = setTimeout(() => {
-      const matchedProfile = (Object.values(MOCK_NEXORA_STAFF_PROFILES) as LooseObject[]).find(
+      const matchedProfile = Object.values(MOCK_NEXORA_STAFF_PROFILES).find(
         p => p.vlinkpayId?.toUpperCase() === upperVal
       )
       if (matchedProfile) {
@@ -295,6 +332,22 @@ export default function useStaffRegistration({ inviteData }) {
     setVlinkpayTimeout(timer)
   }
 
+  const handleAvatarFileChange = async (file) => {
+    if (!file) return
+    try {
+      const uploaded = await uploadImageMutation.mutateAsync(file)
+      const uploadedUrl = uploaded.imageUrl || uploaded.fileUrl || ''
+      if (uploadedUrl) {
+        setAvatar(uploadedUrl)
+        return
+      }
+      showToast(t('errors.image_upload_failed'), 'error')
+    } catch (err: unknown) {
+      logger.error('Failed to upload staff avatar', err)
+      showToast(t('errors.image_upload_failed'), 'error')
+    }
+  }
+
   // Handle opening scanner modal
   const handleScanQr = (target) => {
     setScanTarget(target)
@@ -302,27 +355,6 @@ export default function useStaffRegistration({ inviteData }) {
   }
 
   // Handle simulation of successful scan (Lisa Tran)
-  const simulateSuccessfulScan = () => {
-    if (scanTarget === 'staff') {
-      setSearchId('NEX-STAFF-LISA1102')
-      setNexoraStatus('success')
-      setSearchError('')
-      const profile = MOCK_NEXORA_STAFF_PROFILES['NEX-STAFF-LISA1102']
-      setLinkedProfile(profile)
-      showToast(
-        currentLanguage === 'vi'
-          ? `Tìm thấy hồ sơ ${profile.fullName}!`
-          : `Found profile for ${profile.fullName}!`
-      )
-    } else if (scanTarget === 'vlinkpay') {
-      setVlinkpayId('VLP-1102-LISA')
-      setVlinkpayStatus('success')
-      const profile = MOCK_NEXORA_STAFF_PROFILES['NEX-STAFF-LISA1102']
-      autofillFromProfile(profile)
-    }
-    setShowScanner(false)
-    setScanTarget(null)
-  }
 
   // handle registration form submit
   const handleRegisterSubmit = (e) => {
@@ -357,7 +389,7 @@ export default function useStaffRegistration({ inviteData }) {
       setResendTimer(30)
     }
 
-    if (isApiInvite) {
+    if (usesApiRegistration) {
       let firstName = 'Staff'
       let lastName = 'Member'
       if (apiInviteInfo?.invitedName || inviteData?.name) {
@@ -377,19 +409,18 @@ export default function useStaffRegistration({ inviteData }) {
         confirmPassword: regPassword,
         firstName,
         lastName,
-        type: 'User',
-        profileType: undefined
+        type: 'User'
       })
       .then(() => {
         proceedToOtp()
       })
-      .catch((err: any) => {
+      .catch((err) => {
         logger.error('Signup failed', err)
-        if (err?.errorCode === 'USER_EMAIL_ALREADY_EXISTS') {
+        if (isApiError(err) && err.errorCode === 'USER_EMAIL_ALREADY_EXISTS') {
           setRegErrors({ email: t('components.staff_registration.hooks.useStaffRegistration.emailAlreadyExists') })
         } else {
           showToast(
-            currentLanguage === 'vi' ? `Lỗi đăng ký: ${err?.errorCode || 'Vui lòng thử lại'}` : `Registration error: ${err?.errorCode || 'Please try again'}`,
+            currentLanguage === 'vi' ? `Lỗi đăng ký: ${getApiErrorCode(err, 'Vui lòng thử lại')}` : `Registration error: ${getApiErrorCode(err, 'Please try again')}`,
             'error'
           )
         }
@@ -406,7 +437,7 @@ export default function useStaffRegistration({ inviteData }) {
   const handleVerifyOtp = async (e) => {
     if (e) e.preventDefault()
     
-    if (isApiInvite) {
+    if (usesApiRegistration) {
       if (otpCode.trim() === '1234') {
         setStep(2)
         return
@@ -418,7 +449,7 @@ export default function useStaffRegistration({ inviteData }) {
       try {
         await apiAuthAdapter.verifyEmail({ token: otpCode.trim(), email: regEmail })
         setStep(2)
-      } catch (err) {
+      } catch (err: unknown) {
         logger.error('Verify OTP failed', err)
         setOtpError(
           currentLanguage === 'vi' ? 'Mã xác nhận không hợp lệ.' : 'Invalid verification code.'
@@ -437,14 +468,14 @@ export default function useStaffRegistration({ inviteData }) {
   }
 
   const handleResendOtp = async () => {
-    if (isApiInvite) {
+    if (usesApiRegistration) {
       try {
         await apiAuthAdapter.resendVerificationEmail({ email: regEmail })
         showToast(
           currentLanguage === 'vi' ? 'Đã gửi lại mã xác nhận' : 'Verification code resent',
           'success'
         )
-      } catch (err) {
+      } catch (err: unknown) {
         logger.error('Resend OTP failed', err)
         showToast(
           currentLanguage === 'vi' ? 'Lỗi gửi lại mã' : 'Failed to resend code',
@@ -456,23 +487,10 @@ export default function useStaffRegistration({ inviteData }) {
     setResendTimer(30)
   }
 
-  const autoFillOtp = () => {
-    setOtpCode('1234')
-    setOtpError('')
-  }
+  const autoFillOtp = () => {}
 
   // Pre-fill payment configurations for faster testing
-  const autoFillPayments = () => {
-    const defaultName = fullName.trim() || 'Lisa Tran'
-    setPayouts({
-      zelle: { enabled: true, value: email || 'lisa@example.com', qrCode: '', accountName: defaultName },
-      bankwire: { enabled: true, value: '123456789 - 987654321', qrCode: '', accountName: defaultName },
-      paypal: { enabled: true, value: email || 'lisa@example.com', qrCode: '', accountName: defaultName },
-      venmo: { enabled: true, value: `@${nickname.toLowerCase().replace(/[^a-z]/g, '') || 'lisa'}-nails`, qrCode: '', accountName: defaultName },
-      cashapp: { enabled: true, value: `$${nickname.toLowerCase().replace(/[^a-z]/g, '') || 'lisa'}nails`, qrCode: '', accountName: defaultName },
-      applecash: { enabled: true, value: phone || '408-555-2345', qrCode: '', accountName: defaultName }
-    })
-  }
+  const autoFillPayments = () => {}
 
   // Toggle payout method
   const handleToggleMethod = (key) => {
@@ -558,21 +576,21 @@ export default function useStaffRegistration({ inviteData }) {
           finalDisplayName = 'Staff Member'
         }
 
-        await (acceptInviteMutation.mutateAsync as unknown as (vars: LooseObject) => Promise<unknown>)({
+        await acceptInviteMutation.mutateAsync({
           token: inviteToken,
           displayName: finalDisplayName,
           position: linkedProfile.position || null,
         })
-
+        
         // Refresh session after accepting invite to get the updated staffId/claims
-        const session = await apiAuthAdapter.refreshSession() as LooseObject | null
+        const session = await apiAuthAdapter.refreshSession()
         if (session) {
           const code = session.staffCode || session.staffId
-          if (code) setStaffId(code as string)
+          if (code) setStaffId(code)
         }
         
         setStep(5)
-      } catch (err: any) {
+      } catch (err: unknown) {
         logger.error('Failed to link existing profile', err)
         showToast(
           currentLanguage === 'vi' ? 'Lỗi liên kết tiệm. Vui lòng thử lại.' : 'Failed to link with salon. Please try again.',
@@ -586,19 +604,42 @@ export default function useStaffRegistration({ inviteData }) {
 
     setIsRegisterSubmitting(true)
     try {
-      await staffInvitesRepository.joinPublicInvite({
-        referralCode: inviteData?.biz,
-        displayName: linkedProfile.fullName,
-        phoneNumber: linkedProfile.phone,
-        position: linkedProfile.position,
-        bio: null
-      })
-    } catch (err: any) {
+      await staffInvitesRepository.joinPublicInvite(
+        {
+          referralCode: inviteRefCode || '',
+          displayName: linkedProfile.fullName,
+          phoneNumber: linkedProfile.phone,
+          position: linkedProfile.position,
+          bio: null,
+        },
+        isPublicInvite ? {} : { anonymous: true },
+      )
+    } catch (err: unknown) {
+      if (isExistingBusinessLinkError(err)) {
+        try {
+          await hydrateStaffSessionAfterPublicJoin()
+        } catch (sessionErr: unknown) {
+          logger.warn('Could not refresh session for existing public join request', sessionErr)
+        }
+        showToast(getPublicJoinAlreadyLinkedMessage(), 'info')
+        const linkedCode = searchId.trim().toUpperCase()
+        if (linkedCode) {
+          setStaffId(linkedCode)
+        }
+        setStep(5)
+        return
+      }
+
       logger.error('Failed to join public invite', err)
-      const isAlreadyLinked = err?.response?.data?.errorCode === 'STAFF_ALREADY_LINKED_TO_BUSINESS' || err?.response?.data?.errorCode === 'STAFF_INVITE_ALREADY_EXISTS'
+      const isAlreadyLinked =
+        isApiError(err) &&
+        (err.errorCode === 'STAFF_ALREADY_LINKED_TO_BUSINESS' ||
+          err.errorCode === 'STAFF_INVITE_ALREADY_EXISTS')
       const errorMsg = isAlreadyLinked
-        ? (currentLanguage === 'vi' ? 'Bạn đã gửi yêu cầu rồi hoặc đã là nhân viên của tiệm này.' : 'You have already requested or are already linked to this business.')
-        : (currentLanguage === 'vi' ? 'Lỗi gửi yêu cầu gia nhập. Vui lòng thử lại.' : 'Failed to join business. Please try again.')
+        ? t('components.staff_registration.hooks.useStaffRegistration.alreadyLinkedOrRequested')
+        : t('components.staff_registration.hooks.useStaffRegistration.joinRequestFailed', {
+          error: getApiErrorCode(err, 'Unknown error'),
+        })
       showToast(errorMsg, 'error')
       setIsRegisterSubmitting(false)
       return
@@ -626,152 +667,114 @@ export default function useStaffRegistration({ inviteData }) {
       return
     }
 
-    if (isApiInvite) {
-      if (isRegisterSubmitting) return
-      setIsRegisterSubmitting(true)
-      try {
-        const session = await apiAuthAdapter.login({ email: emailQuery, password: passwordQuery })
-        
-        if (session?.role !== 'staff') {
-          setLinkError(currentLanguage === 'vi' ? 'Tài khoản không phải là thợ (Staff)' : 'Account is not a staff account')
-          return
-        }
+    if (isRegisterSubmitting) return
+    setIsRegisterSubmitting(true)
+    try {
+      // Step 1: Silent sign-in (do NOT accept invite yet)
+      await apiAuthAdapter.signInForInviteAccept({ email: emailQuery, password: passwordQuery })
 
-        const profileData = await httpClient.get('/api/v1/userprofile/me') as LooseObject
-        const paymentMethods = await staffPaymentMethodsRepository.getAll() as LooseObject[]
+      // Step 2: Fetch user profile to validate account type & onboarding status
+      const profileData = await httpClient.get<UserProfile>('/api/v1/userprofile/me')
 
-        const payoutConfigs: LooseObject = {}
-        paymentMethods.forEach(pm => {
-          const typeLower = pm.type.toLowerCase()
-          payoutConfigs[typeLower] = {
-            enabled: pm.isActive,
-            value: pm.accountInfo || '',
-            qrCode: pm.imageUrl || '',
-            accountName: profileData.fullName || ''
-          }
-        })
+      // Step 3: Only personal accounts can accept invite links
+      const isMerchant =
+        profileData.userType === 'Merchant' || profileData.profileType === 'Merchant'
+      if (isMerchant) {
+        setLinkError(t('staff_registration.link.business_account_not_allowed'))
+        return
+      }
 
-        const vlinkpayMethod = paymentMethods.find(m => m.type.toLowerCase() === 'vlinkpay')
-        const vlinkpayIdVal = vlinkpayMethod ? vlinkpayMethod.accountInfo : ''
+      // Step 4: Determine onboarding status (same logic as apiAuthAdapter.mapProfileToSession)
+      const hasOnboarded = Boolean(
+        ((profileData.firstName ?? '') as string).trim() ||
+          ((profileData.lastName ?? '') as string).trim(),
+      )
 
-        const isProfileComplete = paymentMethods.some(pm => pm.isActive && (pm.accountInfo || '').trim() !== '')
-
-        const loginSession = session as LooseObject
-        setSearchId(loginSession.staffId || `NEX-STAFF-${emailQuery.slice(0,4).toUpperCase()}`)
-        setLinkedProfile({
-          fullName: profileData.fullName || profileData.email?.split('@')[0] || '',
-          nickname: profileData.firstName || profileData.email?.split('@')[0] || '',
-          position: 'Nail Technician',
-          phone: profileData.phoneNumber || '',
-          email: profileData.email || emailQuery,
-          avatar: profileData.profileImage?.url || '',
-          vlinkpayId: vlinkpayIdVal,
-          payoutConfigs
-        })
+      if (!hasOnboarded) {
+        // User has NOT completed personal onboarding - send to profile + payout steps first
+        setNeedsOnboarding(true)
         setIsLinkLoggedIn(true)
-
-        if (!isProfileComplete) {
-          setFullName(profileData.fullName || profileData.email?.split('@')[0] || '')
-          setNickname(profileData.firstName || profileData.email?.split('@')[0] || '')
-          setPhone(profileData.phoneNumber || '')
-          setEmail(profileData.email || emailQuery)
-          setStep(2)
-        } else {
-          showToast(
-            currentLanguage === 'vi'
-              ? `Đăng nhập thành công! Chào mừng ${profileData.fullName || emailQuery}.`
-              : `Login successful! Welcome ${profileData.fullName || emailQuery}.`
-          )
-        }
-      } catch (err: any) {
-        logger.error('handleLinkLogin API error', err)
-        if (err?.status === 401 || err?.errorCode === 'USER_LOGIN_INVALID_USERNAME_OR_PASSWORD') {
-          setLinkError(t('staff_registration.link.incorrect_password') || 'Account does not exist or incorrect password.')
-        } else {
-          setLinkError(currentLanguage === 'vi' ? 'Lỗi đăng nhập. Vui lòng thử lại.' : 'Login failed. Please try again.')
-        }
-      } finally {
-        setIsRegisterSubmitting(false)
-      }
-      return
-    }
-
-    // 1. Check in MOCK_NEXORA_STAFF_PROFILES
-    const foundEntry = (Object.entries(MOCK_NEXORA_STAFF_PROFILES) as [string, LooseObject][]).find(
-      ([_, p]) => p.email.toLowerCase() === emailQuery
-    )
-
-    if (foundEntry) {
-      const [staffIdKey, profile] = foundEntry
-      if (passwordQuery.length < 6) {
-        setLinkError(t('components.staff_registration.hooks.useStaffRegistration.passwordMustBeAt2'))
+        setLinkedProfile({
+          fullName: '',
+          nickname: '',
+          position: apiInviteInfo?.invitedPosition || 'Nail Technician',
+          phone: '',
+          email: profileData.email || emailQuery,
+          avatar: '',
+          vlinkpayId: '',
+          payoutConfigs: {},
+        })
+        // Pre-fill form fields for the profile step
+        setFullName('')
+        setNickname('')
+        setPhone('')
+        setEmail(profileData.email || emailQuery)
+        setPosition(apiInviteInfo?.invitedPosition || 'Nail Technician')
+        setStep(2)
+        showToast(
+          t('staff_registration.link.onboarding_required'),
+          'info',
+        )
         return
       }
-      setSearchId(staffIdKey)
-      setLinkedProfile(profile)
+
+      // Step 5: Already onboarded → fetch full profile + payment methods, show confirm screen
+      let paymentMethods: import('../../../types/domain').PaymentMethodDto[] = []
+      try {
+        // Staff profile may not exist yet (not linked to any business), so handle 404
+        paymentMethods = await staffPaymentMethodsRepository.getAll()
+      } catch (pmErr: unknown) {
+        logger.warn('Could not fetch payment methods during link login', pmErr)
+      }
+
+      const payoutConfigs = {}
+      paymentMethods.forEach(pm => {
+        const typeLower = pm.type.toLowerCase()
+        payoutConfigs[typeLower] = {
+          enabled: pm.isActive,
+          value: pm.accountInfo || '',
+          qrCode: pm.imageUrl || '',
+          accountName: profileData.fullName || '',
+        }
+      })
+
+      const vlinkpayMethod = paymentMethods.find(m => m.type.toLowerCase() === 'vlinkpay')
+      const vlinkpayIdVal = vlinkpayMethod ? vlinkpayMethod.accountInfo : ''
+
+      setSearchId(
+        (profileData.staffCode as string | undefined) ||
+          (profileData.staffId as string | undefined) ||
+          `${emailQuery.slice(0, 4).toUpperCase()}${Math.floor(1000 + Math.random() * 9000)}`,
+      )
+      setLinkedProfile({
+        fullName: profileData.fullName || profileData.email?.split('@')[0] || '',
+        nickname: profileData.firstName || profileData.email?.split('@')[0] || '',
+        position: apiInviteInfo?.invitedPosition || 'Nail Technician',
+        phone: profileData.phoneNumber || '',
+        email: profileData.email || emailQuery,
+        avatar: getUserProfileImageUrl(profileData) || '',
+        vlinkpayId: vlinkpayIdVal,
+        payoutConfigs,
+      })
       setIsLinkLoggedIn(true)
+      setNeedsOnboarding(false)
       showToast(
         currentLanguage === 'vi'
-          ? `Đăng nhập thành công! Chào mừng ${profile.fullName}.`
-          : `Login successful! Welcome ${profile.fullName}.`
+          ? `Đăng nhập thành công! Chào mừng ${profileData.fullName || emailQuery}.`
+          : `Login successful! Welcome ${profileData.fullName || emailQuery}.`,
       )
-      return
-    }
-
-    // 2. Check in nexora_pending_accounts (registered via wizard)
-    const accs = pendingAccountsQuery.data ?? []
-    const matchedAcc = accs.find(acc => acc.email === emailQuery)
-    if (matchedAcc) {
-      if (matchedAcc.password !== passwordQuery) {
-      setLinkError(t('staff_registration.link.incorrect_password'))
-        return
-      }
-
-      // Try to find if this staff exists in the merchant's staffList
-      const savedSetup = (merchantSetupQuery.data ?? {}) as LooseObject
-      const staffInList = (savedSetup.staffList as LooseObject[] | undefined)?.find((s: LooseObject) => s.id === matchedAcc.staffId || s.email === emailQuery)
-      
-      let profile = null
-      if (staffInList) {
-        profile = {
-          fullName: staffInList.fullName,
-          nickname: staffInList.nickname,
-          position: staffInList.position,
-          phone: staffInList.phone,
-          email: staffInList.email,
-          avatar: staffInList.avatar,
-          vlinkpayId: staffInList.paymentAccounts?.vlinkpay || '',
-          payoutConfigs: staffInList.payoutConfigs || {
-            zelle: { enabled: true, value: staffInList.paymentAccounts?.zelle || '', qrCode: '', accountName: staffInList.fullName }
-          }
-        }
+      // Stay on Step 0 - section D (confirm screen) will render
+    } catch (err: unknown) {
+      logger.error('handleLinkLogin API error', err)
+      if (isApiError(err) && (err.status === 401 || err.errorCode === 'USER_LOGIN_INVALID_USERNAME_OR_PASSWORD')) {
+        setLinkError(err.message || t('staff_registration.link.incorrect_password'))
       } else {
-        profile = {
-          fullName: matchedAcc.fullName || matchedAcc.email.split('@')[0],
-          nickname: matchedAcc.nickname || matchedAcc.email.split('@')[0],
-          position: matchedAcc.position || 'Nail Technician',
-          phone: matchedAcc.phone || '',
-          email: matchedAcc.email,
-          avatar: matchedAcc.avatar || '',
-          vlinkpayId: matchedAcc.vlinkpayId || '',
-          payoutConfigs: matchedAcc.payoutConfigs || {}
-        }
+        const apiMsg = isApiError(err) ? err.message : ''
+        setLinkError(apiMsg || (currentLanguage === 'vi' ? 'Lỗi đăng nhập. Vui lòng thử lại.' : 'Login failed. Please try again.'))
       }
-
-      setSearchId(matchedAcc.staffId || `NEX-STAFF-${emailQuery.slice(0,4).toUpperCase()}`)
-      setLinkedProfile(profile)
-      setIsLinkLoggedIn(true)
-      showToast(
-        currentLanguage === 'vi'
-          ? `Đăng nhập thành công! Chào mừng ${profile.fullName}.`
-          : `Login successful! Welcome ${profile.fullName}.`
-      )
-      return
+    } finally {
+      setIsRegisterSubmitting(false)
     }
-
-    setLinkError(
-      t('components.staff_registration.hooks.useStaffRegistration.accountDoesNotExist')
-    )
   }
 
   const handleLinkDecline = () => {
@@ -787,54 +790,121 @@ export default function useStaffRegistration({ inviteData }) {
     )
   }
 
+  const isExistingBusinessLinkError = (err: unknown) =>
+    isApiError(err) &&
+    (err.errorCode === 'STAFF_ALREADY_LINKED_TO_BUSINESS' ||
+      err.errorCode === 'STAFF_INVITE_ALREADY_EXISTS' ||
+      err.errorCode === 'STAFF_ALREADY_LINKED')
+
+  const getPublicJoinAlreadyLinkedMessage = () =>
+    t('components.staff_registration.hooks.useStaffRegistration.alreadyLinkedOrRequested')
+
+  const hydrateStaffSessionAfterPublicJoin = async () => {
+    const loginEmail = regEmail || inviteData?.invitedEmail || inviteData?.email || linkEmail || ''
+    const loginPassword = regPassword || linkPassword
+    const session =
+      loginEmail && loginPassword
+        ? await apiAuthAdapter.login({ email: loginEmail, password: loginPassword })
+        : await apiAuthAdapter.refreshSession()
+
+    if (session) {
+      const code = session.staffCode || session.staffId
+      if (code) {
+        setStaffId(code)
+      }
+    }
+  }
+
+  const saveSelectedPaymentMethods = async () => {
+    let methods: import('../../types/domain').PaymentMethodDto[] = []
+    try {
+      methods = await staffPaymentMethodsRepository.getAll()
+    } catch (pmErr: unknown) {
+      logger.warn('Could not fetch payment methods during activation', pmErr)
+    }
+
+    for (const [key, cfg] of Object.entries(payouts)) {
+      const accountInfo = cfg.value?.trim()
+      if (!accountInfo) continue
+
+      const match = methods.find(m => {
+        const mUiKey = (m.uiKey || '').toLowerCase().replace(/\s+/g, '')
+        const mType = m.type.toLowerCase().replace(/\s+/g, '')
+        const cKey = key.toLowerCase().replace(/\s+/g, '')
+        return mUiKey === cKey || mType === cKey
+      })
+
+      if (!match?.id) continue
+
+      await staffPaymentMethodsRepository.update(match.id, {
+        accountInfo,
+        imageUrl: imageUrlOrNull(cfg.qrCode),
+      })
+
+      if (Boolean(cfg.enabled) !== Boolean(match.isActive)) {
+        await staffPaymentMethodsRepository.toggle(match.id)
+      }
+    }
+  }
+
   const handleProfileSubmit = async () => {
-    if (isApiInvite) {
+    if (usesApiRegistration) {
       if (isProfileSubmitting) return
       setIsProfileSubmitting(true)
       try {
-        // 1. Login immediately to establish the authenticated session
-        console.log('DEBUG: Attempting login for', regEmail || inviteData?.invitedEmail || '')
-        const session = await apiAuthAdapter.login({
-          email: regEmail || inviteData?.invitedEmail || '',
-          password: regPassword
-        })
-        console.log('DEBUG: Login success, session:', !!session)
-
-        // 2. Accept invite so the backend can link the Staff Profile to the authenticated User Profile
-        console.log('DEBUG: Calling acceptInviteMutation with token:', inviteToken)
-        await (acceptInviteMutation.mutateAsync as unknown as (vars: LooseObject) => Promise<unknown>)({
-          token: inviteToken,
-          displayName: fullName.trim(),
-          position: position || null,
-          bio: bio || null,
-          photoUrl: avatar || null,
-          password: regPassword || null,
-        })
-        console.log('DEBUG: acceptInviteMutation success!')
-
-        // 3. Re-sign in so the freshly minted JWT carries the newly linked Staff
-        // Profile claim. The token from step 1 predates the accept; refresh-token
-        // only renews that claimless token, so staff-scoped endpoints (e.g.
-        // /staff/payment-methods) keep returning 404 STAFF_PROFILE_NOT_FOUND.
-        // A fresh signin re-resolves all claims, matching the documented
-        // accept -> signin -> payment-methods sequence.
-        const updatedSession = await apiAuthAdapter.login({
-          email: regEmail || inviteData?.invitedEmail || '',
-          password: regPassword
-        })
-
-        if (updatedSession) {
-           const updatedSessionObj = updatedSession as LooseObject
-           const code = updatedSessionObj.staffCode || updatedSessionObj.staffId
-           if (code) {
-             setStaffId(code as string)
-           }
+        // --- Existing-account link flow (needsOnboarding): persist profile
+        // to backend without accepting invite yet. Acceptance happens at
+        // the final confirm screen (handleLinkExistingProfile).
+        if (isLinkLoggedIn && needsOnboarding) {
+          const trimmedName = fullName.trim()
+          const profileFirstName = trimmedName.split(' ')[0] || ''
+          const profileLastName = trimmedName.split(' ').slice(1).join(' ') || ''
+          await profileSettingsRepository.updateUserProfile({
+            firstName: profileFirstName,
+            lastName: profileLastName,
+            phoneNumber: phone || '',
+          })
+          setStep(3)
+          return
         }
 
-        // 4. Persist personal onboarding data to the backend user profile.
-        // Without this the account keeps an empty firstName/phoneNumber and is
-        // treated as not-onboarded (mirrors useCompletePersonalOnboarding in
-        // the standalone register flow).
+        // --- New registration flow: sign in, accept token invite if present,
+        // then persist profile. Public invites join the business at activation.
+        // Sign in without hydrating the session so /staff/profile is not
+        // requested before the invite has been accepted.
+        await apiAuthAdapter.signInForInviteAccept({
+          email: regEmail || inviteData?.invitedEmail || inviteData?.email || '',
+          password: regPassword
+        })
+
+        if (isApiInvite) {
+          await acceptInviteMutation.mutateAsync({
+            token: inviteToken,
+            displayName: fullName.trim(),
+            position: position || null,
+            bio: bio || null,
+            photoUrl: imageUrlOrNull(avatar),
+          })
+        }
+
+        if (isApiInvite) {
+          // Re-sign in so the freshly minted JWT carries the newly linked Staff
+          // Profile claim. Public invites cannot do this yet because the staff
+          // profile is created later by join-public-invite during activation.
+          const updatedSession = await apiAuthAdapter.login({
+            email: regEmail || inviteData?.invitedEmail || inviteData?.email || '',
+            password: regPassword
+          })
+
+          if (updatedSession) {
+             const code = updatedSession.staffCode || updatedSession.staffId
+             if (code) {
+               setStaffId(code)
+             }
+          }
+        }
+
+        // Persist personal onboarding data to the backend user profile.
         const trimmedName = fullName.trim()
         const profileFirstName = trimmedName.split(' ')[0] || ''
         const profileLastName = trimmedName.split(' ').slice(1).join(' ') || ''
@@ -844,17 +914,17 @@ export default function useStaffRegistration({ inviteData }) {
             lastName: profileLastName,
             phoneNumber: phone || ''
           })
-        } catch (profileErr) {
+        } catch (profileErr: unknown) {
           // Profile persistence must not block the invite acceptance flow.
           logger.error('Failed to persist personal onboarding profile', profileErr)
         }
 
-        setHasAcceptedInvite(true)
+        setHasAcceptedInvite(isApiInvite)
         setStep(3)
-      } catch (err: any) {
+      } catch (err: unknown) {
         logger.error('Failed to accept invite or login', err)
         showToast(
-          currentLanguage === 'vi' ? `Lỗi: ${err?.errorCode || 'Không thể tạo hồ sơ'}` : `Error: ${err?.errorCode || 'Failed to create profile'}`,
+          currentLanguage === 'vi' ? `Lỗi: ${getApiErrorCode(err, 'Không thể tạo hồ sơ')}` : `Error: ${getApiErrorCode(err, 'Failed to create profile')}`,
           'error'
         )
       } finally {
@@ -900,30 +970,30 @@ export default function useStaffRegistration({ inviteData }) {
       if (isActivating) return
       setIsActivating(true)
       try {
-        const methods = await staffPaymentMethodsRepository.getAll() as LooseObject[]
+        await saveSelectedPaymentMethods()
 
-        for (const [key, cfg] of Object.entries(payouts)) {
-          const match = methods.find(m => {
-            const mType = m.type.toLowerCase().replace(/\s+/g, '')
-            const cKey = key.toLowerCase().replace(/\s+/g, '')
-            return mType === cKey
-          })
-
-          if (match) {
-            if (cfg.value) {
-              await staffPaymentMethodsRepository.update(match.id, { accountInfo: cfg.value })
-            }
-            if (cfg.enabled && cfg.value) {
-              await staffPaymentMethodsRepository.toggle(match.id)
-            }
-          }
+        // Post-onboarding link flow: refresh profile data and return to confirm screen
+        if (isLinkLoggedIn && needsOnboarding) {
+          const refreshedProfile = await httpClient.get<UserProfile>('/api/v1/userprofile/me')
+          setLinkedProfile(prev => ({
+            ...prev,
+            fullName: refreshedProfile.fullName || refreshedProfile.email?.split('@')[0] || '',
+            nickname: refreshedProfile.firstName || refreshedProfile.email?.split('@')[0] || '',
+            phone: refreshedProfile.phoneNumber || '',
+            email: refreshedProfile.email || prev?.email || '',
+            avatar: getUserProfileImageUrl(refreshedProfile) || '',
+          }))
+          setNeedsOnboarding(false)
+          setStep(0)
+          return
         }
+
         if (isLinkLoggedIn) {
           setStep(0)
         } else {
           setStep(5)
         }
-      } catch (err) {
+      } catch (err: unknown) {
         logger.error('Failed to save payment methods', err)
         showToast(
           currentLanguage === 'vi' ? 'Không thể lưu phương thức thanh toán.' : 'Failed to save payment methods.',
@@ -935,9 +1005,53 @@ export default function useStaffRegistration({ inviteData }) {
       return
     }
 
+    if (isPublicInvite) {
+      if (isActivating) return
+      setIsActivating(true)
+      try {
+        await staffInvitesRepository.joinPublicInvite(
+          {
+            referralCode: inviteRefCode || '',
+            displayName: finalStaffMember.fullName,
+            phoneNumber: finalStaffMember.phone,
+            position: finalStaffMember.position,
+            bio: bio || null,
+            photoUrl: imageUrlOrNull(avatar),
+          },
+          {},
+        )
+        await hydrateStaffSessionAfterPublicJoin()
+        await saveSelectedPaymentMethods()
+        setStep(5)
+      } catch (err: unknown) {
+        if (isExistingBusinessLinkError(err)) {
+          try {
+            await hydrateStaffSessionAfterPublicJoin()
+            await saveSelectedPaymentMethods()
+          } catch (followUpErr: unknown) {
+            logger.warn('Could not hydrate session or save payment methods for existing public join request', followUpErr)
+          }
+          showToast(getPublicJoinAlreadyLinkedMessage(), 'info')
+          setStep(5)
+          return
+        }
+
+        logger.error('Failed to join public invite', err)
+        showToast(
+          t('components.staff_registration.hooks.useStaffRegistration.joinRequestFailed', {
+            error: getApiErrorCode(err, 'Unknown error'),
+          }),
+          'error',
+        )
+      } finally {
+        setIsActivating(false)
+      }
+      return
+    }
+
     // --- Legacy simulation path (no token) ---
     // Save into merchant setup
-    let parsedActive: LooseObject = merchantSetupQuery.data ? { ...merchantSetupQuery.data } : null
+    let parsedActive = merchantSetupQuery.data ? { ...merchantSetupQuery.data } : null
     if (!parsedActive) {
       parsedActive = {
         businessInfo: {
@@ -952,16 +1066,16 @@ export default function useStaffRegistration({ inviteData }) {
     }
 
     try {
-      let staffList = (parsedActive.staffList || []) as LooseObject[]
+      let staffList = parsedActive.staffList || []
 
       // Find existing index or append
-      const existingIdx = staffList.findIndex((s: LooseObject) => s.id === inviteData?.id || s.email === email || s.phone === phone)
+      const existingIdx = staffList.findIndex(s => s.id === inviteData?.id || s.email === email || s.phone === phone)
       if (existingIdx !== -1) {
-        const oldId = (staffList[existingIdx] as LooseObject).id
+        const oldId = staffList[existingIdx].id
         const newId = finalStaffMember.id
 
         staffList[existingIdx] = {
-          ...(staffList[existingIdx] as LooseObject),
+          ...staffList[existingIdx],
           ...finalStaffMember,
           id: newId
         }
@@ -970,7 +1084,7 @@ export default function useStaffRegistration({ inviteData }) {
 
         // Update touchpoints matching oldId to newId
         if (parsedActive.touchPoints?.length) {
-          parsedActive.touchPoints = (parsedActive.touchPoints as LooseObject[]).map((tp: LooseObject) => {
+          parsedActive.touchPoints = parsedActive.touchPoints.map(tp => {
             if (tp.staffId === oldId) {
               return {
                 ...tp,
@@ -990,7 +1104,7 @@ export default function useStaffRegistration({ inviteData }) {
       // We do NOT auto-generate touchpoint QR codes here anymore, because they are Pending Acceptance.
       // Touchpoint will be generated upon manual acceptance by the merchant.
 
-      ;(saveMerchantSetupMutation.mutateAsync as unknown as (setup: LooseObject) => Promise<unknown>)(parsedActive)
+      saveMerchantSetupMutation.mutateAsync(parsedActive)
         .catch((err) => logger.error('Failed to save merchant setup during staff activation', err))
 
       // Add notification to merchant
@@ -1006,7 +1120,7 @@ export default function useStaffRegistration({ inviteData }) {
         read: false,
         linkTab: 'staff'
       }
-      ;(addNotificationMutation.mutate as unknown as (notification: LooseObject) => void)(newNoti)
+      addNotificationMutation.mutate(newNoti)
 
       // Also save the staff account to nexora_pending_accounts so they can log in!
       if (email.trim() && regPassword) {
@@ -1021,9 +1135,9 @@ export default function useStaffRegistration({ inviteData }) {
         }
         const filtered = existingAccounts.filter(acc => acc.email !== staffAccount.email)
         filtered.push(staffAccount)
-        ;(replaceAllPendingAccountsMutation.mutate as (accounts: LooseObject[]) => void)(filtered)
+        replaceAllPendingAccountsMutation.mutate(filtered)
       }
-    } catch (e) {
+    } catch (e: unknown) {
       logger.error('Failed to update staff database in wizard', e)
     }
 
@@ -1047,6 +1161,7 @@ export default function useStaffRegistration({ inviteData }) {
     isSelfServe,
     isApiInvite,
     isProfileSubmitting,
+    isAvatarUploading: uploadImageMutation.isPending,
     isActivating,
     isInviteLoading,
     isInviteError,
@@ -1070,7 +1185,7 @@ export default function useStaffRegistration({ inviteData }) {
     position, setPosition,
     phone, setPhone,
     email, setEmail,
-    avatar, setAvatar,
+    avatar, setAvatar, handleAvatarFileChange,
     bio, setBio,
     staffId, setStaffId,
     vlinkpayId, setVlinkpayId,
@@ -1091,13 +1206,13 @@ export default function useStaffRegistration({ inviteData }) {
     linkPassword, setLinkPassword,
     linkError, setLinkError,
     isLinkLoggedIn, setIsLinkLoggedIn,
+    needsOnboarding,
     handleLinkLogin,
     handleLinkDecline,
     // handlers
     handleSearchIdChange,
     handleVlinkpayIdChange,
     handleScanQr,
-    simulateSuccessfulScan,
     handleRegisterSubmit,
     handleVerifyOtp,
     isRegisterSubmitting,

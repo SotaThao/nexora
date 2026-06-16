@@ -117,10 +117,8 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
               position={reg.position}
               phone={reg.phone}
               email={reg.email}
-              {...({ currentLanguage: reg.currentLanguage } as any)}
               t={reg.t}
               setStep={reg.setStep}
-              handleSearchIdChange={reg.handleSearchIdChange}
               handleScanQr={reg.handleScanQr}
               handleLinkExistingProfile={reg.handleLinkExistingProfile}
               onReturnToMerchant={onReturnToMerchant}
@@ -134,6 +132,8 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
               handleLinkLogin={reg.handleLinkLogin}
               handleLinkDecline={reg.handleLinkDecline}
               isDemoToolsEnabled={isDemoToolsEnabled}
+              apiInviteInfo={reg.apiInviteInfo}
+              isRegisterSubmitting={reg.isRegisterSubmitting}
             />
           )}
 
@@ -167,7 +167,6 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
               handleRegisterSubmit={reg.handleRegisterSubmit}
               handleVerifyOtp={reg.handleVerifyOtp}
               handleResendOtp={reg.handleResendOtp}
-              autoFillOtp={reg.autoFillOtp}
               setStep={reg.setStep}
               setJoinPath={reg.setJoinPath}
               setShowOtpInput={reg.setShowOtpInput}
@@ -191,6 +190,8 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
               setEmail={reg.setEmail}
               avatar={reg.avatar}
               setAvatar={reg.setAvatar}
+              onAvatarFileChange={reg.handleAvatarFileChange}
+              isAvatarUploading={reg.isAvatarUploading}
               bio={reg.bio}
               setBio={reg.setBio}
               staffId={reg.staffId}
@@ -200,7 +201,6 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
               contactLocked={!reg.isSelfServe && !reg.isApiInvite}
               currentLanguage={reg.currentLanguage}
               t={reg.t}
-              handleVlinkpayIdChange={reg.handleVlinkpayIdChange}
               handleScanQr={reg.handleScanQr}
               setStep={reg.setStep}
               onSubmit={reg.handleProfileSubmit}
@@ -215,7 +215,6 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
               staffId={reg.staffId}
               currentLanguage={reg.currentLanguage}
               t={reg.t}
-              autoFillPayments={reg.autoFillPayments}
               handleToggleMethod={reg.handleToggleMethod}
               handleEditPayoutAccount={reg.handleEditPayoutAccount}
               handleActivateProfile={reg.handleActivateProfile}
@@ -266,9 +265,6 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
           currentLanguage={reg.currentLanguage}
           setShowScanner={reg.setShowScanner}
           setScanTarget={reg.setScanTarget}
-          simulateSuccessfulScan={reg.simulateSuccessfulScan}
-          handleSearchIdChange={reg.handleSearchIdChange}
-          handleVlinkpayIdChange={reg.handleVlinkpayIdChange}
           isDemoToolsEnabled={isDemoToolsEnabled}
         />
 

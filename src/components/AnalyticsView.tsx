@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useRef } from 'react';
 import { useTranslation } from '../contexts/LanguageContext';
+import type { TransactionRecord } from '../types/domain';
 import { 
   BarChart3, 
   TrendingUp, 
@@ -10,21 +11,28 @@ import {
   Zap
 } from 'lucide-react';
 
+interface LeaderboardEntry {
+  name: string
+  amount: number
+  count: number
+  percentage?: number
+}
+
 interface AnalyticsViewProps {
-  transactions?: LooseObject[]
+  transactions?: TransactionRecord[]
   staff?: LooseObject[]
   touchpoints?: LooseObject[]
   processingFee?: number
 }
 
-export default function AnalyticsView({
-  transactions = [],
-  staff = [],
+export default function AnalyticsView({ 
+  transactions = [], 
+  staff = [], 
   touchpoints = [],
   processingFee = 3.0
 }: AnalyticsViewProps) {
   const { t } = useTranslation();
-  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const [hoverIndex, setHoverIndex] = useState<any | null>(null);
   const chartRef = useRef(null);
 
   // 1. Core metric calculations
@@ -51,7 +59,7 @@ export default function AnalyticsView({
 
   // 2. Staff performance leaderboard
   const staffLeaderboard = useMemo(() => {
-    const map: Record<string, { name: string; amount: number; count: number }> = {};
+    const map: Record<string, LeaderboardEntry> = {};
     transactions.forEach(tx => {
       const staffName = tx.staffName || 'Unknown';
       if (!map[staffName]) {
@@ -71,9 +79,9 @@ export default function AnalyticsView({
 
   // 3. Touchpoint performance leaderboard
   const touchpointLeaderboard = useMemo(() => {
-    const map: Record<string, { name: string; amount: number; count: number }> = {};
+    const map: Record<string, LeaderboardEntry> = {};
     transactions.forEach(tx => {
-      const tp = tx.touchpoint || 'Unknown';
+      const tp = (tx.touchpoint as string | undefined) || 'Unknown';
       if (!map[tp]) {
         map[tp] = { name: tp, amount: 0, count: 0 };
       }
@@ -138,7 +146,7 @@ export default function AnalyticsView({
 
   const yTicks = svgMetrics ? [svgMetrics.max, svgMetrics.max * 0.75, svgMetrics.max * 0.5, svgMetrics.max * 0.25, 0] : [];
 
-  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+  const handlePointerMove = (event) => {
     const rect = chartRef.current?.getBoundingClientRect();
     if (!rect || !svgMetrics) return;
     const relativeX = (event.clientX - rect.left) / rect.width;
@@ -162,7 +170,7 @@ export default function AnalyticsView({
     });
 
     const total = Object.values(map).reduce((a, b) => a + b, 0) || 1;
-    const colors = {
+    const colors: Record<string, string> = {
       Zelle: '#d4af37',      // Gold
       'Cash App': '#00B873', // Green
       Venmo: '#32D7FF',      // Cyan
@@ -179,7 +187,7 @@ export default function AnalyticsView({
     })).sort((a, b) => b.amount - a.amount);
   }, [transactions]);
 
-  const formatUSD = (val: number) => `$${val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const formatUSD = (val) => `$${val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   return (
     <div className="space-y-6 pb-12">
