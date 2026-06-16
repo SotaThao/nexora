@@ -66,9 +66,9 @@ function extractStaffIdFromUrl(url: string | null | undefined): string | null {
 }
 
 function normalizeNotification(item: NotificationApiDto): NotificationRecord {
-  const isRead = Boolean(item.isRead || item.read)
-  const body = item.body || item.message || ''
-  const createdAt = item.createdAt || new Date().toISOString()
+  const isRead = Boolean(item.isRead ?? item.read)
+  const body = item.body ?? item.message ?? ''
+  const createdAt = item.createdAt ?? ''
   const type = item.type || 'info'
   const typeLower = type.toLowerCase()
 
@@ -132,7 +132,7 @@ function normalizeNotificationsPage(
 export function createNotificationsRepository(client: HttpClient = httpClient) {
   return {
     async listPaged({
-      pageNumber = 0,
+      pageNumber = 1,
       pageSize = 20,
       isRead = null,
     }: NotificationsListParams = {}): Promise<NotificationsPage> {
@@ -151,7 +151,7 @@ export function createNotificationsRepository(client: HttpClient = httpClient) {
     },
 
     async list(): Promise<NotificationRecord[]> {
-      const page = await this.listPaged({ pageNumber: 0, pageSize: 50 })
+      const page = await this.listPaged({ pageNumber: 1, pageSize: 50 })
       return page.items
     },
 

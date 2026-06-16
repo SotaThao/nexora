@@ -1,26 +1,28 @@
 {
   "staff_dashboard": {
     "brand": {
-      "title": "NEXORA Staff",
+      "title": "NEXORA",
       "subtitle": "bởi VLINKPAY"
     },
     "staff_id": "Mã nhân viên",
     "sign_out": "Đăng xuất",
     "nav": {
-      "home": "Trang chủ",
+      "home": "Dashboard",
       "my_qr": "Mã QR",
       "tips": "Tiền tip",
       "reviews": "Đánh giá",
       "pay": "Thanh toán",
-      "profile": "Hồ sơ"
+      "profile": "Hồ sơ",
+      "profile_account": "Cài đặt",
+      "profile_kyc": "KYC"
     },
     "titles": {
-      "home": "Trang chủ",
+      "home": "Dashboard",
       "qr": "Mã QR của tôi",
       "tips": "Tiền tip",
       "reviews": "Đánh giá & Xếp hạng",
       "pay": "Phương thức nhận",
-      "profile": "Tài khoản",
+      "profile": "Cài đặt",
       "notifications": "Thông báo"
     },
     "status": {

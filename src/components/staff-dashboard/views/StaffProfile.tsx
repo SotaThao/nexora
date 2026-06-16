@@ -1,6 +1,6 @@
 // StaffProfile — personal profile (staff-owned: display name + bio) and
 // per-business display names. Identity basics come from the merchant record.
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   LogOut,
   Camera,
@@ -12,9 +12,11 @@ import {
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import { useStaffLinkedBusinesses } from '../hooks/useStaffLinkedBusinesses'
-import { useOutletContext } from 'react-router-dom'
+import { useOutletContext, useSearchParams } from 'react-router-dom'
 import { UserVerifyStatus } from '../../../constants/userVerifyStatus'
 import { useVerifiedStatus } from '../../../data/hooks/useProfileSettings'
+import { useUploadImage } from '../../../data/hooks/useMerchantSetup'
+import { logger } from '../../../utils/logger'
 import StaffKycOverview from './StaffKycOverview'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
@@ -27,14 +29,26 @@ export default function StaffProfile() {
   const { staffMember, account, saveProfile, setBusinessDisplayName } = useStaffAccount()
   const { linkedBusinesses } = useStaffLinkedBusinesses()
   const { onLogout } = useOutletContext<LooseObject>()
+  const [searchParams] = useSearchParams()
 
-  const [activeTab, setActiveTab] = useState('profile') // profile | kyc
+  const tabFromUrl = searchParams.get('tab')
+  const [activeTab, setActiveTab] = useState(tabFromUrl === 'kyc' ? 'kyc' : 'profile') // profile | kyc
+
+  useEffect(() => {
+    if (tabFromUrl === 'kyc') setActiveTab('kyc')
+    else if (tabFromUrl === 'account' || !tabFromUrl) setActiveTab('profile')
+  }, [tabFromUrl])
   const [displayName, setDisplayName] = useState(account.defaultDisplayName || '')
   const [bio, setBio] = useState(account.bio || '')
   const [fullName, setFullName] = useState(account.fullName || staffMember.fullName || '')
   const [phone, setPhone] = useState(account.phone || staffMember.phone || '')
   const [saved, setSaved] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const avatarObjectUrlRef = useRef<string | null>(null)
+  const uploadImageMutation = useUploadImage()
+
+  const displayAvatar = avatarPreview || account.avatar
 
   const { data: verifyStatusData } = useVerifiedStatus({ enabled: activeTab === 'kyc' })
   const verifyStatus = verifyStatusData?.status
@@ -45,6 +59,20 @@ export default function StaffProfile() {
     setFullName(account.fullName || staffMember.fullName || '')
     setPhone(account.phone || staffMember.phone || '')
   }, [account.defaultDisplayName, account.bio, account.fullName, staffMember.fullName, account.phone, staffMember.phone])
+
+  useEffect(() => {
+    return () => {
+      if (avatarObjectUrlRef.current) {
+        URL.revokeObjectURL(avatarObjectUrlRef.current)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (account.avatar && avatarPreview && avatarPreview === account.avatar) {
+      setAvatarPreview(null)
+    }
+  }, [account.avatar, avatarPreview])
 
   const showToast = (msg) => {
     setToastMessage(msg)
@@ -62,15 +90,43 @@ export default function StaffProfile() {
     showToast(t('components.staff_dashboard.views.StaffProfile.accountChangesSavedSuccessfully'))
   }
 
-  const handleAvatarChange = (e) => {
+  const handleAvatarChange = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      saveProfile({ avatar: reader.result })
-      showToast(t('components.staff_dashboard.views.StaffProfile.avatarUpdatedSuccessfully'))
+
+    if (avatarObjectUrlRef.current) {
+      URL.revokeObjectURL(avatarObjectUrlRef.current)
+      avatarObjectUrlRef.current = null
     }
-    reader.readAsDataURL(file)
+
+    const objectUrl = URL.createObjectURL(file)
+    avatarObjectUrlRef.current = objectUrl
+    setAvatarPreview(objectUrl)
+
+    try {
+      const uploaded = await uploadImageMutation.mutateAsync(file)
+      const photoUrl = uploaded.imageUrl || uploaded.fileUrl || ''
+      if (!photoUrl) {
+        throw new Error('IMAGE_UPLOAD_FAILED')
+      }
+      saveProfile({ avatar: photoUrl })
+      setAvatarPreview(photoUrl)
+      if (avatarObjectUrlRef.current) {
+        URL.revokeObjectURL(avatarObjectUrlRef.current)
+        avatarObjectUrlRef.current = null
+      }
+      showToast(t('components.staff_dashboard.views.StaffProfile.avatarUpdatedSuccessfully'))
+    } catch (err) {
+      logger.error('[StaffProfile] Failed to upload avatar', err)
+      setAvatarPreview(account.avatar || null)
+      if (avatarObjectUrlRef.current) {
+        URL.revokeObjectURL(avatarObjectUrlRef.current)
+        avatarObjectUrlRef.current = null
+      }
+      showToast(t('errors.image_upload_failed'))
+    } finally {
+      e.target.value = ''
+    }
   }
 
   // Determine status card details for KYC
@@ -159,21 +215,23 @@ export default function StaffProfile() {
             {/* Avatar Section */}
             <div className="flex flex-col items-center mb-6">
               <div className="relative group">
-                {account.avatar ? (
+                {displayAvatar ? (
                   <img
-                    src={account.avatar}
+                    src={displayAvatar}
                     alt={fullName}
-                    className="h-24 w-24 rounded-full object-cover border-2 border-nexoraBorder shadow-md transition-all group-hover:opacity-85"
+                    className={`h-24 w-24 rounded-full object-cover border-2 border-nexoraBorder shadow-md transition-all group-hover:opacity-85 ${uploadImageMutation.isPending ? 'opacity-60' : ''}`}
                   />
                 ) : (
-                  <div className="flex h-24 w-24 items-center justify-center rounded-full bg-nexoraBrand/10 text-nexoraBrand border-2 border-dashed border-nexoraBrand/30 text-3xl font-extrabold transition-all group-hover:bg-nexoraBrand/20">
+                  <div className={`flex h-24 w-24 items-center justify-center rounded-full bg-nexoraBrand/10 text-nexoraBrand border-2 border-dashed border-nexoraBrand/30 text-3xl font-extrabold transition-all group-hover:bg-nexoraBrand/20 ${uploadImageMutation.isPending ? 'opacity-60' : ''}`}>
                     {(fullName || displayName || 'S').charAt(0)}
                   </div>
                 )}
-                <label className="absolute inset-0 rounded-full bg-black/45 text-white text-[10px] font-black uppercase flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                <label className={`absolute inset-0 rounded-full bg-black/45 text-white text-[10px] font-black uppercase flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity ${uploadImageMutation.isPending ? 'pointer-events-none opacity-100' : ''}`}>
                   <Camera className="h-5 w-5 mb-1" />
-                  {t('components.staff_dashboard.views.StaffProfile.change')}
-                  <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                  {uploadImageMutation.isPending
+                    ? t('common.loading')
+                    : t('components.staff_dashboard.views.StaffProfile.change')}
+                  <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} disabled={uploadImageMutation.isPending} />
                 </label>
               </div>
               <span className="mt-2 text-xs font-bold text-nexoraText">

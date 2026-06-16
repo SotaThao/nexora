@@ -15,7 +15,7 @@ export function useNotifications() {
 }
 
 export function useNotificationsPage({
-  pageNumber = 0,
+  pageNumber = 1,
   pageSize = 20,
 }: {
   pageNumber?: number

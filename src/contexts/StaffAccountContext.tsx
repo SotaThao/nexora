@@ -9,6 +9,7 @@ import staffSelfRepository from '../data/repositories/staffSelf'
 import { useUpdateUserProfile, useUpdateStaffProfile } from '../data/hooks/useProfileSettings'
 import { useAuth } from '../auth/useAuth'
 import { qk } from '../data/queryKeys'
+import { buildUpdateUserProfileDto, getUserProfileImageUrl } from '../utils/userProfileImage'
 
 const StaffAccountContext = createContext<StaffAccountContextValue | null>(null)
 
@@ -71,7 +72,7 @@ export function StaffAccountProvider({ staffId = null, children }: StaffAccountP
       email: base.email || userProfile?.email || '',
       defaultDisplayName: base.defaultDisplayName || staffProfile?.displayName || userProfile?.firstName || apiFullName,
       bio: base.bio || staffProfile?.bio || '',
-      avatar: base.avatar || staffProfile?.photoUrl || null,
+      avatar: base.avatar || getUserProfileImageUrl(userProfile) || staffProfile?.photoUrl || staffProfile?.photo || null,
       staffCode: staffProfile?.staffCode || base.staffCode || session?.staffCode || null,
     }
   }, [staffMember, userProfile, staffProfile, session?.staffCode])
@@ -115,17 +116,21 @@ export function StaffAccountProvider({ staffId = null, children }: StaffAccountP
 
   const saveProfile = useCallback(
     (patch) => {
-      updateAccount(patch)
+      const { avatar, photoUrl, ...accountPatch } = patch
+      if (Object.keys(accountPatch).length > 0) {
+        updateAccount(accountPatch)
+      }
 
       if (patch.fullName !== undefined || patch.phone !== undefined) {
-        const fullName = (patch.fullName ?? account.fullName ?? '').trim()
-        updateUserProfileMutation.mutate({
-          firstName: fullName.split(' ')[0] || '',
-          lastName: fullName.split(' ').slice(1).join(' ') || '',
-          phoneNumber: patch.phone ?? account.phone ?? '',
-        }, {
-          onError: (err) => logger.error('[StaffAccountContext] Failed to persist user profile', err),
-        })
+        updateUserProfileMutation.mutate(
+          buildUpdateUserProfileDto(
+            { ...account, ...userProfile, fullName: patch.fullName ?? account.fullName, phone: patch.phone ?? account.phone },
+            patch,
+          ),
+          {
+            onError: (err) => logger.error('[StaffAccountContext] Failed to persist user profile', err),
+          },
+        )
       }
       if (patch.defaultDisplayName !== undefined || patch.bio !== undefined) {
         const displayName = (patch.defaultDisplayName ?? account.defaultDisplayName ?? account.fullName ?? '').trim()
@@ -138,8 +143,20 @@ export function StaffAccountProvider({ staffId = null, children }: StaffAccountP
           })
         }
       }
+      if (avatar !== undefined || photoUrl !== undefined) {
+        const profileImageUrl = String(photoUrl ?? avatar ?? '').trim()
+        updateUserProfileMutation.mutate(
+          buildUpdateUserProfileDto(
+            { ...account, ...userProfile },
+            { ...patch, profileImageUrl },
+          ),
+          {
+            onError: (err) => logger.error('[StaffAccountContext] Failed to persist user avatar', err),
+          },
+        )
+      }
     },
-    [updateAccount, account, updateUserProfileMutation, updateStaffProfileMutation]
+    [updateAccount, account, userProfile, updateUserProfileMutation, updateStaffProfileMutation]
   )
 
   const setBusinessDisplayName = useCallback(
