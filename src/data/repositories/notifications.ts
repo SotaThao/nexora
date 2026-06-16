@@ -91,15 +91,38 @@ function normalizeNotification(item: NotificationApiDto): NotificationRecord {
     id: item.id ?? '',
     type,
     title: item.title || '',
-    message,
-    body: message,
+    message: body,
+    body,
     actionUrl: item.actionUrl ?? null,
     isRead,
     read: isRead,
-    message: body,
     time: new Date(createdAt).toLocaleString(),
     ...(linkTab ? { linkTab } : {}),
     ...(staffId ? { staffId } : {}),
+  }
+}
+
+function normalizeNotificationsPage(
+  response: NotificationApiDto[] | NotificationsListResponse,
+  pageNumber: number,
+): NotificationsPage {
+  if (Array.isArray(response)) {
+    return {
+      items: response.map(normalizeNotification),
+      pageNumber,
+      totalPages: 1,
+      totalCount: response.length,
+      hasPreviousPage: false,
+      hasNextPage: false,
+    }
+  }
+  return {
+    items: (response.items ?? []).map(normalizeNotification),
+    pageNumber: response.pageNumber ?? pageNumber,
+    totalPages: response.totalPages ?? 1,
+    totalCount: response.totalCount ?? 0,
+    hasPreviousPage: response.hasPreviousPage ?? false,
+    hasNextPage: response.hasNextPage ?? false,
   }
 }
 

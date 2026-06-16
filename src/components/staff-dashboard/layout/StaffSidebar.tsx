@@ -1,5 +1,6 @@
 // StaffSidebar — desktop (≥1024px) left nav and mobile drawer for the staff dashboard.
-import { LogOut, X } from 'lucide-react'
+import { useState } from 'react'
+import { LogOut, X, ChevronDown, ChevronUp } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { STAFF_MENU_ITEMS } from '../constants'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
@@ -8,6 +9,7 @@ export default function StaffSidebar({ activeScreen, onNavigate, onLogout, isOpe
   const { t } = useTranslation()
   const { staffMember, account } = useStaffAccount()
   const displayName = account.defaultDisplayName || staffMember.fullName || 'Staff'
+  const [isProfileExpanded, setIsProfileExpanded] = useState(false)
 
   const renderContent = (isMobile = false) => (
     <>
@@ -33,26 +35,56 @@ export default function StaffSidebar({ activeScreen, onNavigate, onLogout, isOpe
       </div>
 
       {/* Profile card */}
-      <button
-        type="button"
-        onClick={() => {
-          onNavigate('profile')
-          if (isMobile && onClose) onClose()
-        }}
-        className="mt-6 flex w-full items-center text-left gap-3 rounded-xl border border-white/10 bg-white/5 p-4 transition hover:bg-white/10 focus:outline-none cursor-pointer"
-      >
-        {account.avatar ? (
-          <img src={account.avatar} alt="" className="h-11 w-11 rounded-full border border-white/10 object-cover" />
-        ) : (
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-base font-extrabold">
-            {displayName.charAt(0)}
+      <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-4 shrink-0">
+        <div
+          className="flex items-center justify-between cursor-pointer"
+          onClick={() => setIsProfileExpanded(!isProfileExpanded)}
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            {account.avatar ? (
+              <img src={account.avatar} alt="" className="h-11 w-11 rounded-full border border-white/10 object-cover" />
+            ) : (
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-base font-extrabold">
+                {displayName.charAt(0)}
+              </div>
+            )}
+            <div className="min-w-0">
+              <div className="truncate text-sm font-bold text-white">{account.fullName || staffMember.fullName || displayName}</div>
+              <div className="mt-0.5 truncate text-[11px] text-white/50">{t('staff_dashboard.staff_id')}: {account.staffCode || staffMember.id}</div>
+            </div>
+          </div>
+          <div className="text-white/70 hover:text-white transition ml-2">
+            {isProfileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </div>
+        </div>
+
+        {isProfileExpanded && (
+          <div className="mt-3.5 pt-3 border-t border-white/5 space-y-1 animate-fadeIn">
+            {[
+              { tab: 'account', labelKey: 'staff_dashboard.nav.profile_account' },
+              { tab: 'kyc', labelKey: 'staff_dashboard.nav.profile_kyc' },
+            ].map(({ tab, labelKey }) => {
+              const isSubActive = activeScreen === 'profile'
+              return (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => {
+                    onNavigate('profile', { tab })
+                    if (isMobile && onClose) onClose()
+                  }}
+                  className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
+                    isSubActive ? 'text-brandCyan font-extrabold' : 'text-white/60 hover:bg-white/5 hover:text-white'
+                  }`}
+                >
+                  <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+                  <span>{t(labelKey)}</span>
+                </button>
+              )
+            })}
           </div>
         )}
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-bold text-white">{account.fullName || staffMember.fullName || displayName}</div>
-          <div className="mt-0.5 truncate text-[11px] text-white/50">{t('staff_dashboard.staff_id')}: {account.staffCode || staffMember.id}</div>
-        </div>
-      </button>
+      </div>
 
       {/* Navigation */}
       <nav className="mt-6 flex-1 space-y-1.5 overflow-y-auto pr-1">

@@ -7,20 +7,22 @@
     "staff_id": "Staff ID",
     "sign_out": "Sign out",
     "nav": {
-      "home": "Home",
+      "home": "Dashboard",
       "my_qr": "Link & Tip",
       "tips": "Tips",
       "reviews": "Reviews",
-      "pay": "Pay",
-      "profile": "Account"
+      "pay": "Payout Methods",
+      "profile": "Settings",
+      "profile_account": "Setting",
+      "profile_kyc": "KYC"
     },
     "titles": {
-      "home": "Home",
+      "home": "Dashboard",
       "qr": "Salon Link & Tips",
       "tips": "Tips",
       "reviews": "Reviews & Ratings",
-      "pay": "Payments",
-      "profile": "Account",
+      "pay": "Payout Methods",
+      "profile": "Settings",
       "notifications": "Notifications"
     },
     "status": {
