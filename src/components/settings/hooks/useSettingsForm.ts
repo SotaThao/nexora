@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react'
 import { ShieldCheck, ShieldAlert } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { logger } from '../../../utils/logger'
-import { useProfileSettings, useSaveProfileSettings } from '../../../data/hooks/useProfileSettings'
-import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
+import { useProfileSettings, useSaveProfileSettings, useUpdateUserProfile } from '../../../data/hooks/useProfileSettings'
+import { useMerchantSetup, useSaveMerchantSetup, useUploadImage } from '../../../data/hooks/useMerchantSetup'
 import { usePendingAccounts, useReplaceAllPendingAccounts } from '../../../data/hooks/usePendingAccounts'
+import { buildUpdateUserProfileDto, getUserProfileImageUrl } from '../../../utils/userProfileImage'
 
 const DEFAULT_PROFILE = {
   username: '',
@@ -47,6 +48,8 @@ export default function useSettingsForm({
   const { t, currentLanguage } = useTranslation()
   const profileSettingsQuery = useProfileSettings()
   const saveProfileSettingsMutation = useSaveProfileSettings()
+  const updateUserProfileMutation = useUpdateUserProfile()
+  const uploadImageMutation = useUploadImage()
   const merchantSetupQuery = useMerchantSetup()
   const saveMerchantSetupMutation = useSaveMerchantSetup()
   const pendingAccountsQuery = usePendingAccounts()
@@ -207,7 +210,12 @@ export default function useSettingsForm({
     setProfile(prev => {
       let next = { ...prev }
       if (profileSettingsQuery.data) {
-        next = { ...next, ...profileSettingsQuery.data }
+        const profileImageUrl = getUserProfileImageUrl(profileSettingsQuery.data)
+        next = {
+          ...next,
+          ...profileSettingsQuery.data,
+          avatar: profileImageUrl || next.avatar || null,
+        }
       }
       if (setupData) {
         next = {
@@ -458,17 +466,29 @@ export default function useSettingsForm({
     setEditingMethod(null)
   }
 
-  const handleAvatarChange = (e) => {
+  const handleAvatarChange = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      saveProfile({
-        ...profile,
-        avatar: reader.result
-      })
+
+    try {
+      const uploaded = await uploadImageMutation.mutateAsync(file)
+      const profileImageUrl = uploaded.imageUrl || uploaded.fileUrl || ''
+      if (!profileImageUrl) {
+        throw new Error('IMAGE_UPLOAD_FAILED')
+      }
+
+      await updateUserProfileMutation.mutateAsync(
+        buildUpdateUserProfileDto(profile, { profileImageUrl }),
+      )
+
+      setProfile((prev) => ({ ...prev, avatar: profileImageUrl }))
+      showToast(t('components.staff_dashboard.views.StaffProfile.avatarUpdatedSuccessfully'))
+    } catch (err) {
+      logger.error('[useSettingsForm] Failed to upload profile avatar', err)
+      showToast(t('errors.image_upload_failed'))
+    } finally {
+      e.target.value = ''
     }
-    reader.readAsDataURL(file)
   }
 
   const formatDOB = (dobString) => {
