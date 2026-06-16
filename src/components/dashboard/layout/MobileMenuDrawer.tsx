@@ -41,7 +41,13 @@ export default function MobileMenuDrawer({
         aria-label="Close navigation menu"
         onClick={onClose}
       />
-      <aside className="relative flex h-full w-[min(84vw,320px)] flex-col bg-nexoraSidebar px-5 py-6 text-white shadow-2xl">
+      <aside
+        className="relative flex h-full w-[min(84vw,320px)] flex-col bg-nexoraSidebar px-5 py-6 text-white shadow-2xl"
+        style={{
+          paddingTop: 'calc(1.5rem + var(--app-safe-area-top))',
+          paddingBottom: 'calc(1.5rem + var(--app-safe-area-bottom))',
+        }}
+      >
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-10 w-10 object-contain" />
