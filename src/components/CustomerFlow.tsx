@@ -222,7 +222,7 @@ export default function CustomerFlow() {
               )}
 
               {step === 'final_done' && (
-                <FinalDone t={t} handleReset={handleReset} />
+                <FinalDone t={t} handleReset={handleReset} rating={rating} />
               )}
             </>
           )}

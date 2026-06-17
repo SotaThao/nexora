@@ -131,23 +131,16 @@ export default function WalletDetails({
 
   const title = isMultiStaff
     ? t('components.customer_flow.steps.WalletDetails.multiStaffTitle', { wallet: selectedWalletObj.name })
-    : (currentLanguage === 'vi'
-      ? `Gửi tiền Tip qua ${selectedWalletObj.name}`
-      : `Send Tip via ${selectedWalletObj.name}`)
+    : t('components.customer_flow.steps.WalletDetails.singleStaffTitle', { wallet: selectedWalletObj.name })
 
   const subtitle = isMultiStaff
     ? t('components.customer_flow.steps.WalletDetails.multiStaffSubtitle', { business: bizName || recipientName })
     : (() => {
-      if (currentLanguage === 'vi') {
-        if (selectedWalletObj.key === WALLET_KEYS.ZELLE) return `Mở ứng dụng ngân hàng của bạn và gửi tới ${recipientName}.`
-        if (selectedWalletObj.key === WALLET_KEYS.VENMO) return `Mở ứng dụng Venmo và gửi tới ${recipientName}.`
-        if (selectedWalletObj.key === WALLET_KEYS.CASHAPP) return `Mở ứng dụng Cash App và gửi tới ${recipientName}.`
-        return `Mở ứng dụng ví và gửi tới ${recipientName}.`
-      }
-      if (selectedWalletObj.key === WALLET_KEYS.ZELLE) return `Open your bank app and send to ${recipientName}.`
-      if (selectedWalletObj.key === WALLET_KEYS.VENMO) return `Open your Venmo app and send to ${recipientName}.`
-      if (selectedWalletObj.key === WALLET_KEYS.CASHAPP) return `Open your Cash App and send to ${recipientName}.`
-      return `Open your wallet app and send to ${recipientName}.`
+      const params = { recipient: recipientName }
+      if (selectedWalletObj.key === WALLET_KEYS.ZELLE) return t('components.customer_flow.steps.WalletDetails.singleStaffSubtitle_zelle', params)
+      if (selectedWalletObj.key === WALLET_KEYS.VENMO) return t('components.customer_flow.steps.WalletDetails.singleStaffSubtitle_venmo', params)
+      if (selectedWalletObj.key === WALLET_KEYS.CASHAPP) return t('components.customer_flow.steps.WalletDetails.singleStaffSubtitle_cashapp', params)
+      return t('components.customer_flow.steps.WalletDetails.singleStaffSubtitle_default', params)
     })()
 
   return (

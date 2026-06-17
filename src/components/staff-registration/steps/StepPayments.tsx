@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Edit2, Loader2 } from 'lucide-react'
 
 const PayoutLogos = {
@@ -35,14 +35,7 @@ const PayoutLogos = {
   )
 }
 
-const payoutMethodsList = [
-  { key: 'zelle', label: 'Zelle', placeholder: 'Enter Zelle email/phone...' },
-  { key: 'bankwire', label: 'Bank Wire', placeholder: 'Enter Bank Wire routing - account...' },
-  { key: 'paypal', label: 'PayPal', placeholder: 'Enter PayPal email...' },
-  { key: 'venmo', label: 'Venmo', placeholder: 'Enter Venmo @username...' },
-  { key: 'cashapp', label: 'Cash App', placeholder: 'Enter Cash App $cashtag...' },
-  { key: 'applecash', label: 'Apple Cash', placeholder: 'Enter Apple Cash phone number...' }
-]
+const PAYOUT_KEYS = ['zelle', 'bankwire', 'paypal', 'venmo', 'cashapp', 'applecash'] as const
 
 export default function StepPayments({
   payouts,
@@ -55,6 +48,16 @@ export default function StepPayments({
   isDemoToolsEnabled = false,
   isSubmitting = false,
 }) {
+  const [consentTax, setConsentTax] = useState(false)
+  const [consentConfirm, setConsentConfirm] = useState(false)
+  const bothConsentsChecked = consentTax && consentConfirm
+
+  const payoutMethodsList = PAYOUT_KEYS.map(key => ({
+    key,
+    label: t(`components.staff_registration.steps.StepPayments.walletLabel_${key}`),
+    placeholder: t(`components.staff_registration.steps.StepPayments.walletPlaceholder_${key}`),
+  }))
+
   return (
     <div className="space-y-5 py-2 animate-fadeIn">
       <div className="border-b border-nexoraRule pb-2 flex items-center justify-between">
@@ -131,11 +134,37 @@ export default function StepPayments({
           <span className="h-7 w-7 rounded-lg bg-nexoraBrandSoft border border-nexoraBrand/20 flex items-center justify-center shrink-0">
             <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-4 w-4 object-contain" />
           </span>
-          <span className="text-nexoraMuted font-bold">NEXORA Staff ID</span>
+          <span className="text-nexoraMuted font-bold">{t('components.staff_registration.steps.StepPayments.nexoraStaffId')}</span>
         </div>
         <span className="text-nexoraText font-extrabold font-mono bg-nexoraSurfaceMuted border border-nexoraBorder px-2 py-0.5 rounded">
-          {staffId || 'Pending Register'}
+          {staffId || t('components.staff_registration.steps.StepPayments.pendingRegister')}
         </span>
+      </div>
+
+      {/* Legal consent checkboxes — required before activation (STF-009) */}
+      <div className="pt-3 space-y-3 border-t border-nexoraRule">
+        <label className="flex items-start gap-2.5 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={consentTax}
+            onChange={e => setConsentTax(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-nexoraBorder accent-nexoraBrand"
+          />
+          <span className="text-[11px] text-nexoraMuted leading-relaxed">
+            {t('staff_invite.consent_tax')}
+          </span>
+        </label>
+        <label className="flex items-start gap-2.5 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={consentConfirm}
+            onChange={e => setConsentConfirm(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-nexoraBorder accent-nexoraBrand"
+          />
+          <span className="text-[11px] text-nexoraMuted leading-relaxed">
+            {t('staff_invite.consent_confirm')}
+          </span>
+        </label>
       </div>
 
       <div className="pt-4 flex gap-3 border-t border-nexoraRule">
@@ -149,7 +178,8 @@ export default function StepPayments({
         <button
           type="button"
           onClick={handleActivateProfile}
-          disabled={isSubmitting}
+          disabled={isSubmitting || !bothConsentsChecked}
+          title={!bothConsentsChecked ? t('components.staff_registration.steps.StepPayments.consentRequired') : undefined}
           className="flex-grow h-10 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-bold text-xs uppercase tracking-wider rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
         >
           {isSubmitting ? (

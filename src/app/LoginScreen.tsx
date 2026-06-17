@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Lock, Mail, Sparkles, Eye, EyeOff } from 'lucide-react'
+import { Lock, Mail, Eye, EyeOff } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import AuthGraphicPanel from '../components/auth/AuthGraphicPanel'
 import SecondaryButton from '../components/ui/SecondaryButton'
@@ -7,9 +7,6 @@ import { useAuth } from '../auth/useAuth'
 import { useTranslation } from '../contexts/LanguageContext'
 import { getErrorI18nKey } from '../data/errorCodes'
 import { getApiErrorCode } from '../types/domain'
-import { isDemoToolsEnabled } from './demoTools'
-import { useSaveMerchantSetup } from '../data/hooks/useMerchantSetup'
-import { logger } from '../utils/logger'
 
 function GoogleIcon() {
   return (
@@ -35,8 +32,6 @@ export default function LoginScreen() {
   const { login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const saveMerchantSetupMutation = useSaveMerchantSetup()
-
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loginError, setLoginError] = useState(location.state?.loginError || '')
@@ -100,17 +95,6 @@ export default function LoginScreen() {
     } else if (scenario === 'staff_dashboard') {
       navigate('/staff')
     }
-  }
-
-  const handleQuickDemoLogin = (demoSetup) => {
-    saveMerchantSetupMutation.mutate(demoSetup, {
-      onSuccess: () => {
-        navigate('/dashboard')
-      },
-      onError: (err) => {
-        logger.error('Failed to save demo setup', err)
-      },
-    })
   }
 
   return (
@@ -230,46 +214,6 @@ export default function LoginScreen() {
                 <SecondaryButton onClick={() => triggerSimulation('new_register')}>
                   {t('login.register_btn')}
                 </SecondaryButton>
-
-                {isDemoToolsEnabled && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      // Prefill and login directly to Dashboard
-                      const demoSetup = {
-                      businessInfo: {
-                        name: 'Demo Nail Spa',
-                        industry: 'Nail Salon',
-                        address: '123 Demo Street, Suite 100',
-                        phone: '',
-                        website: '',
-                        logo: null,
-                        paymentAccounts: {
-                          venmo: '',
-                          cashapp: '',
-                          zelle: '',
-                          vlinkpay: ''
-                        }
-                      },
-                      reviewLinks: {
-                        googleReview: '',
-                        yelpReview: '',
-                        facebookReview: '',
-                        feedbackEmail: ''
-                      },
-                      staffList: [],
-                      touchPoints: [
-                        { id: 'tp-main', name: 'Business Main Lobby QR', type: 'Business Main' },
-                        { id: 'tp-front', name: 'Reception Front Desk', type: 'Front Desk' },
-                      ]
-                      }
-                      handleQuickDemoLogin(demoSetup)
-                    }}
-                    className="min-h-11 py-2 border border-nexoraBrand/20 hover:border-nexoraBrand text-nexoraBrand bg-nexoraBrandSoft/40 hover:bg-nexoraBrandSoft text-xs font-semibold rounded-lg hidden lg:flex items-center justify-center gap-1 transition-all"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-nexoraBrand" /> {t('login.enter_dashboard_btn')}
-                  </button>
-                )}
               </div>
             </form>
           )}

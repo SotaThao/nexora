@@ -278,6 +278,21 @@ export default function TouchpointsView({
 
           {/* Touchpoint Cards Grid */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {touchpoints.length === 0 && (
+              <Panel className="md:col-span-2 xl:col-span-3 border-dashed border-nexoraBorder/80">
+                <div className="mx-auto flex max-w-xl flex-col items-center gap-4 px-6 py-12 text-center sm:gap-5 sm:py-14">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-nexoraBrandSoft to-brandCyan/20 dark:from-nexoraBrand/20 dark:to-brandCyan/20 text-nexoraBrand shadow-sm ring-1 ring-nexoraBrand/10">
+                    <HelpCircle className="h-7 w-7" />
+                  </div>
+                  <h3 className="text-lg font-extrabold text-nexoraText">
+                    {t('dashboard.touchpoints.empty_title')}
+                  </h3>
+                  <p className="max-w-md text-sm leading-relaxed text-nexoraMuted">
+                    {t('dashboard.touchpoints.empty_desc')}
+                  </p>
+                </div>
+              </Panel>
+            )}
             {touchpoints.map((point) => {
               const isPointActive = point.isActive !== false
               // Use the canonical customer URL from the API (`url`, with real

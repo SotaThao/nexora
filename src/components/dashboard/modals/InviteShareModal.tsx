@@ -190,7 +190,7 @@ function InviteShareModal({
                     : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                 }`}
               >
-                Email
+                {t('components.dashboard.modals.InviteShareModal.methodEmail')}
               </button>
               <button
                 type="button"
@@ -205,19 +205,23 @@ function InviteShareModal({
                     : 'border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed opacity-80'
                 }`}
               >
-                <span>SMS</span>
-                <span className="text-[9px] font-medium normal-case opacity-80 -mt-0.5">Coming soon</span>
+                <span>{t('components.dashboard.modals.InviteShareModal.methodSms')}</span>
+                <span className="text-[9px] font-medium normal-case opacity-80 -mt-0.5">{t('components.dashboard.modals.InviteShareModal.methodSmsComingSoon')}</span>
               </button>
             </div>
 
             <div>
               <label className="text-[10px] font-extrabold uppercase text-nexoraMuted font-sans">
-                {inviteMethod === 'SMS' ? (t('components.dashboard.modals.InviteShareModal.phoneNumber')) : 'Email Address'}
+                {inviteMethod === 'SMS'
+                  ? t('components.dashboard.modals.InviteShareModal.phoneNumber')
+                  : t('components.dashboard.modals.InviteShareModal.emailAddress')}
               </label>
               <input
                 type="text"
                 className="mt-1 h-9 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand font-mono"
-                placeholder={inviteMethod === 'SMS' ? 'e.g. 407-555-0123' : 'e.g. mia.tran@gmail.com'}
+                placeholder={inviteMethod === 'SMS'
+                  ? t('components.dashboard.modals.InviteShareModal.phExamplePhone')
+                  : t('components.dashboard.modals.InviteShareModal.phExampleEmail')}
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
                 required

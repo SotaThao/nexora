@@ -310,11 +310,46 @@ export default function Dashboard({
   const filteredTouchpoints = useMemo(() => {
     if (!searchQuery) return touchpoints
     const query = searchQuery.toLowerCase().trim()
-    return touchpoints.filter(point =>
-      String(point.name ?? '').toLowerCase().includes(query) ||
-      String(point.type ?? '').toLowerCase().includes(query) ||
-      (point.staffName && String(point.staffName).toLowerCase().includes(query))
-    )
+    const normalize = (value) =>
+      String(value ?? '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[\s_-]+/g, '')
+    const compactQuery = normalize(query)
+
+    const toReadableType = (rawType) => {
+      const value = String(rawType ?? '').toLowerCase()
+      if (value === 'frontdesk') return 'front desk'
+      if (value === 'staffcard') return 'staff qr'
+      if (value === 'receipt') return 'receipt qr'
+      if (value === 'table') return 'table qr'
+      return value
+    }
+
+    return touchpoints.filter((point) => {
+      const isActive = point?.isActive !== false
+      const readableStatus = isActive ? 'active' : 'inactive'
+      const readableType = toReadableType(point?.type)
+
+      return (
+        String(point?.name ?? '').toLowerCase().includes(query) ||
+        String(point?.type ?? '').toLowerCase().includes(query) ||
+        readableType.includes(query) ||
+        (point?.staffName && String(point.staffName).toLowerCase().includes(query)) ||
+        String(point?.deviceId ?? '').toLowerCase().includes(query) ||
+        String(point?.slug ?? '').toLowerCase().includes(query) ||
+        String(point?.id ?? '').toLowerCase().includes(query) ||
+        String(point?.url ?? '').toLowerCase().includes(query) ||
+        readableStatus.includes(query) ||
+        normalize(point?.name).includes(compactQuery) ||
+        normalize(point?.deviceId).includes(compactQuery) ||
+        normalize(point?.slug).includes(compactQuery) ||
+        normalize(point?.type).includes(compactQuery) ||
+        normalize(readableType).includes(compactQuery) ||
+        normalize(readableStatus).includes(compactQuery)
+      )
+    })
   }, [touchpoints, searchQuery])
 
   const filteredReviews = useMemo(() => {
@@ -373,14 +408,14 @@ export default function Dashboard({
   }, [filteredTxsForMetrics]);
 
 
-  const addTouchpoint = (name, type, deviceId) => {
+  const addTouchpoint = async (name, type, deviceId) => {
     const finalName = typeof name === 'string' ? name.trim() : (newTouchpoint.name || '').trim()
     const finalType = typeof type === 'string' ? type : (newTouchpoint.type || 'Table QR')
     const finalDeviceId = typeof deviceId === 'string' ? deviceId.trim() : ''
 
     if (!finalName) return
-    
-    createTouchpointMutation.mutate({
+
+    await createTouchpointMutation.mutateAsync({
       name: finalName,
       type: finalType === 'Table QR' ? 'Table' : finalType === 'Front Desk' ? 'FrontDesk' : finalType === 'Receipt QR' ? 'Receipt' : finalType === 'Staff QR' ? 'StaffCard' : 'Table',
       // If we supported hardware linkage, we would map finalDeviceId here.
@@ -657,8 +692,8 @@ export default function Dashboard({
         open={isAddTouchpointModalOpen}
         initialValues={addTouchpointPrefill}
         onClose={() => setIsAddTouchpointModalOpen(false)}
-        onAdd={(name, type, deviceId) => {
-          addTouchpoint(name, type, deviceId)
+        onAdd={async (name, type, deviceId) => {
+          await addTouchpoint(name, type, deviceId)
           handleNavigateMenu('touchpoints')
           setTouchpointsTab('stations')
         }}

@@ -89,22 +89,22 @@ export default function StepWelcome({
 
             <div className="p-3 border border-nexoraBorder rounded-xl bg-white text-left text-xs max-w-xs mx-auto space-y-1">
               <div className="flex justify-between text-nexoraMuted">
-                <span>Invited Name:</span>
+                <span>{t('staff_invite.label_invited_name')}</span>
                 <strong className="text-nexoraText">{fullName}</strong>
               </div>
               <div className="flex justify-between text-nexoraMuted">
-                <span>Assigned Role:</span>
+                <span>{t('staff_invite.label_assigned_role')}</span>
                 <strong className="text-nexoraText">{position}</strong>
               </div>
               {email && (
                 <div className="flex justify-between text-nexoraMuted">
-                  <span>Invited Email:</span>
+                  <span>{t('staff_invite.label_invited_email')}</span>
                   <strong className="text-nexoraText font-mono">{email}</strong>
                 </div>
               )}
               {phone && (
                 <div className="flex justify-between text-nexoraMuted">
-                  <span>Invited Phone:</span>
+                  <span>{t('staff_invite.label_invited_phone')}</span>
                   <strong className="text-nexoraText font-mono">{phone}</strong>
                 </div>
               )}

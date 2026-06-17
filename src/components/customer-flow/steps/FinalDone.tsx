@@ -1,7 +1,8 @@
 import React from 'react'
 import { Heart } from 'lucide-react'
 
-export default function FinalDone({ t, handleReset }) {
+export default function FinalDone({ t, handleReset, rating = 5 }) {
+  const isPrivateFeedback = rating < 4
   return (
     <div className="text-center space-y-6 animate-fadeIn py-4 flex flex-col items-center">
       <div className="h-16 w-16 bg-nexoraBrand/10 text-nexoraBrand rounded-full flex items-center justify-center animate-bounce">
@@ -11,7 +12,7 @@ export default function FinalDone({ t, handleReset }) {
       <div className="space-y-2">
         <h3 className="font-extrabold text-xl text-nexoraText">{t('customer.final_success_title')}</h3>
         <p className="text-sm text-nexoraMuted leading-relaxed">
-          Thank you for your support! Have a great day!
+          {isPrivateFeedback ? t('customer.rating_bad_text') : t('customer.final_thanks_desc')}
         </p>
       </div>
 
