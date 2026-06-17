@@ -42,13 +42,49 @@ interface StaffBusinessApiDto {
   tipUrl?: string | null
   url?: string | null
   qrImageUrl?: string | null
+  touchPoints?: StaffBusinessTouchPointApiDto[] | null
 }
 
 interface StaffBusinessQrApiDto extends StaffBusinessApiDto {
   businessStaffLinkId?: string
 }
 
+interface StaffBusinessTouchPointApiDto {
+  id?: string
+  name?: string
+  slug?: string | null
+  type?: number | string | null
+  typeLabel?: string | null
+  url?: string | null
+  qrImageUrl?: string | null
+  isActive?: boolean | null
+}
+
+function pickPreferredTouchPoint(
+  touchPoints?: StaffBusinessTouchPointApiDto[] | null,
+): StaffBusinessTouchPointApiDto | null {
+  if (!Array.isArray(touchPoints) || touchPoints.length === 0) return null
+
+  const active = touchPoints.find(
+    (tp) => tp?.isActive && (Boolean(tp?.slug?.trim()) || Boolean(tp?.url?.trim())),
+  )
+  if (active) return active
+
+  return (
+    touchPoints.find((tp) => Boolean(tp?.slug?.trim()) || Boolean(tp?.url?.trim())) || touchPoints[0]
+  )
+}
+
 function normalizeStaffBusinessLink(b: StaffBusinessApiDto): StaffBusinessLink {
+  const preferredTouchPoint = pickPreferredTouchPoint(b.touchPoints)
+  const touchPointSlug =
+    b.touchPointSlug ??
+    b.masterTouchPointSlug ??
+    preferredTouchPoint?.slug ??
+    null
+  const tipUrl = b.tipUrl ?? b.url ?? preferredTouchPoint?.url ?? null
+  const qrImageUrl = b.qrImageUrl ?? preferredTouchPoint?.qrImageUrl ?? null
+
   return {
     businessId: b.businessId ?? '',
     businessName: b.businessName ?? '',
@@ -62,10 +98,10 @@ function normalizeStaffBusinessLink(b: StaffBusinessApiDto): StaffBusinessLink {
     linkStatusLabel: b.linkStatusLabel ?? null,
     linkedAt: b.linkedAt ?? null,
     businessSlug: b.businessSlug ?? null,
-    touchPointSlug: b.touchPointSlug ?? b.masterTouchPointSlug ?? null,
-    masterTouchPointSlug: b.masterTouchPointSlug ?? b.touchPointSlug ?? null,
-    tipUrl: b.tipUrl ?? b.url ?? null,
-    qrImageUrl: b.qrImageUrl ?? null,
+    touchPointSlug,
+    masterTouchPointSlug: b.masterTouchPointSlug ?? touchPointSlug,
+    tipUrl,
+    qrImageUrl,
   }
 }
 
