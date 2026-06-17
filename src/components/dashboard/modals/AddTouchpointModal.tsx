@@ -16,7 +16,6 @@ const STATION_TYPE_OPTIONS = [
   { value: 'Table QR', label: 'Table QR' },
   { value: 'Front Desk', label: 'Front Desk' },
   { value: 'Receipt QR', label: 'Receipt QR' },
-  { value: 'Business Main', label: 'Business Main' },
   { value: 'Staff QR', label: 'Staff QR' },
 ]
 

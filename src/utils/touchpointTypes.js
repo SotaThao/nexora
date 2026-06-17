@@ -19,11 +19,11 @@ export function getAssignableActiveStaff(staffList = []) {
   })
 }
 
-export function resolveAssignedStaffProfileId(apiType, { selectedStaffProfileId, currentUserProfileId }) {
-  if (apiType === 'StaffCard') {
-    return selectedStaffProfileId || null
+export function resolveAssignedStaffProfileId(apiType, selectedStaffProfileId) {
+  if (apiType === 'StaffCard' && selectedStaffProfileId) {
+    return selectedStaffProfileId
   }
-  return currentUserProfileId || null
+  return null
 }
 
 export function buildStaffProfileSelectOptions(staffList = [], placeholder = '') {

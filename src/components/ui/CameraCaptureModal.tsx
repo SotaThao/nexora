@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { AlertTriangle, Camera, FolderOpen, X } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
+import { ensureNativeCameraPermission } from '../../utils/cameraPermission'
 
 type CameraState = 'loading' | 'ready' | 'unavailable' | 'permission_denied'
 
@@ -37,6 +38,13 @@ export default function CameraCaptureModal({ open, onClose, onCapture }: CameraC
 
     const startCamera = async () => {
       setCameraState('loading')
+
+      const hasPermission = await ensureNativeCameraPermission()
+      if (cancelled) return
+      if (!hasPermission) {
+        setCameraState('permission_denied')
+        return
+      }
 
       if (!navigator.mediaDevices?.getUserMedia) {
         setCameraState('unavailable')

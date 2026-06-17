@@ -797,6 +797,7 @@
     "submit_review_btn": "Gửi đánh giá",
     "skip_btn": "Bỏ qua",
     "maybe_later_btn": "Để sau",
+    "back_to_dashboard_btn": "Quay lại Dashboard",
     "final_thanks_desc": "Cảm ơn bạn đã ủng hộ! Chúc bạn một ngày tốt lành!",
     "final_success_title": "Cảm ơn bạn!",
     "final_success_desc": "Giúp chúng tôi phát triển bằng cách đánh giá trên Google hoặc Yelp.",
@@ -1057,6 +1058,7 @@
       "AppQrScanner": {
         "title": "Quét mã QR",
         "camera_error": "Không thể truy cập camera. Vui lòng kiểm tra quyền truy cập.",
+        "permission_denied": "Quyền truy cập camera bị từ chối. Vui lòng cấp quyền camera trong Cài đặt thiết bị để quét mã QR.",
         "torch": "Đèn pin",
         "hint": "Hướng camera vào mã QR để quét tự động",
         "unsupported_qr": "Mã QR không hỗ trợ"

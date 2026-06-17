@@ -797,6 +797,7 @@
     "submit_review_btn": "Submit Review",
     "skip_btn": "Skip",
     "maybe_later_btn": "Maybe later",
+    "back_to_dashboard_btn": "Back to Dashboard",
     "final_thanks_desc": "Thank you for your support! Have a great day!",
     "final_success_title": "Thank You!",
     "final_success_desc": "Help us grow by leaving a review on Google or Yelp.",
@@ -1057,6 +1058,7 @@
       "AppQrScanner": {
         "title": "Scan QR Code",
         "camera_error": "Cannot access camera. Please check camera permissions.",
+        "permission_denied": "Camera access was denied. Please allow camera access in your device settings to scan QR codes.",
         "torch": "Flashlight",
         "hint": "Point the camera at a QR code to scan automatically",
         "unsupported_qr": "QR code not supported"

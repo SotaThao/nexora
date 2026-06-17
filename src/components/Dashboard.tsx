@@ -10,7 +10,6 @@ import { Filter, Moon, Settings, ShieldAlert, Sun, Check, Link } from 'lucide-re
 import { logger } from '../utils/logger'
 import { resolveMerchantStaffTipQr, toLocalCustomerTouchUrl } from '../utils/staffTipUrl'
 import { mapTouchpointTypeToApi, resolveAssignedStaffProfileId } from '../utils/touchpointTypes'
-import { useAuth } from '../auth/useAuth'
 import { useTranslation } from '../contexts/LanguageContext'
 import { useNotification } from '../contexts/NotificationContext'
 import { DEFAULT_PAYOUT_CONFIGS, MENU_ITEMS } from './dashboard/constants'
@@ -66,7 +65,6 @@ export default function Dashboard({
   const queryClient = useQueryClient()
   const { showToast, showConfirm } = useNotification()
   const { requireKyb } = useKybGate()
-  const { session } = useAuth()
   const {
     activeMenu,
     isMobileMenuOpen, setIsMobileMenuOpen,
@@ -417,10 +415,7 @@ export default function Dashboard({
     if (!finalName) return
 
     const apiType = mapTouchpointTypeToApi(finalType)
-    const resolvedAssignedStaffProfileId = resolveAssignedStaffProfileId(apiType, {
-      selectedStaffProfileId: assignedStaffProfileId,
-      currentUserProfileId: session?.id,
-    })
+    const resolvedAssignedStaffProfileId = resolveAssignedStaffProfileId(apiType, assignedStaffProfileId)
 
     const payload = {
       name: finalName,

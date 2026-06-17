@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import jsQR from 'jsqr'
 import { X, AlertCircle, Flashlight } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
+import { ensureNativeCameraPermission } from '../../utils/cameraPermission'
 
 interface Props {
   onClose: () => void
@@ -66,6 +67,18 @@ export default function AppQrScanner({ onClose, onDetect }: Props) {
 
     async function startCamera() {
       try {
+        const hasPermission = await ensureNativeCameraPermission()
+        if (!active) return
+        if (!hasPermission) {
+          setError(t('components.common.AppQrScanner.permission_denied'))
+          return
+        }
+
+        if (!navigator.mediaDevices?.getUserMedia) {
+          setError(t('components.common.AppQrScanner.camera_error'))
+          return
+        }
+
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
           audio: false,
@@ -80,8 +93,14 @@ export default function AppQrScanner({ onClose, onDetect }: Props) {
           await videoRef.current.play()
           rafRef.current = requestAnimationFrame(tick)
         }
-      } catch {
-        if (active) setError(t('components.common.AppQrScanner.camera_error'))
+      } catch (err: unknown) {
+        if (!active) return
+        const name = err instanceof DOMException ? err.name : ''
+        if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+          setError(t('components.common.AppQrScanner.permission_denied'))
+        } else {
+          setError(t('components.common.AppQrScanner.camera_error'))
+        }
       }
     }
 
