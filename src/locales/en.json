@@ -195,6 +195,9 @@
     "gateway_sub": "Smart Tip & Google Review Filtration Gateway",
     "sso_integration_title": "VLINKPAY SSO Integration:",
     "sso_integration_desc": "You will use your registered VLINKPAY business account to log in quickly.",
+    "secure_access": "Secure Access",
+    "sign_in_title": "Sign in to NEXORA",
+    "forgot_password": "Forgot Password?",
     "email_label": "Email or username",
     "password_label": "Password",
     "email_placeholder": "owner@yourstore.com",
@@ -285,6 +288,7 @@
     "chk_routing": "Google/Yelp Routing: Linked",
     "chk_staff": "Staff: {count} technicians with linked wallets",
     "chk_touchpoints": "Touch Points: {count} QR Stations generated",
+    "print_action": "Print",
     "launch_dashboard_btn": "Launch Dashboard",
     "errors": {
       "name_required": "Store name is required",
