@@ -3,7 +3,6 @@
  */
 
 import httpClient from '../../lib/httpClient'
-import { UserKybStatus } from '../../constants/userVerifyStatus'
 import { isApiError } from '../../types/domain'
 import type { UserProfile } from '../../types/domain'
 import type { UpdateStaffProfileDto, UpdateUserProfileDto } from '../../types/repositories'
@@ -11,24 +10,25 @@ import { getUserProfileImageUrl } from '../../utils/userProfileImage'
 
 type HttpClient = typeof httpClient
 
-const KYB_API_BASE = '/customers/customers/kyb'
-
-export type KybProfileItem = {
-  name: string
-  value: string
-  imageUrl: string | null
-  status: number
+export type KybIframeInitializeCommand = {
+  viewType?: 'NetworkTree' | 'Identity' | 'Profile' | 'Wallet'
+  language?: string
 }
 
-/** Mirrors VLINKPAY KYBCustomerProfileResponse. */
-export type KybCustomerProfileResponse = {
-  status: number
-  kybProfile: KybProfileItem[]
+/** POST /api/v1/UserProfile/iframe/initialize */
+export type KybIframeInitializeResponse = {
+  identityId?: string
+  viewType?: string
+  url?: string
 }
 
-export type RegisterKybResponse = {
-  url: string
+/** POST /api/v1/UserProfile/kyb/initialize */
+export type InitializeKybResponse = {
+  url?: string
 }
+
+/** @deprecated Use InitializeKybResponse */
+export type RegisterKybResponse = InitializeKybResponse
 
 export function createProfileSettingsRepository(client: HttpClient = httpClient) {
   return {
@@ -52,19 +52,21 @@ export function createProfileSettingsRepository(client: HttpClient = httpClient)
       return client.get<LooseObject>('/api/v1/userprofile/verified-status')
     },
 
-    /** GET /customers/customers/kyb/{customerId} — VLINKPAY gateway. */
-    async getKybInfo(customerId: string | number): Promise<KybCustomerProfileResponse> {
+    /** POST /api/v1/UserProfile/iframe/initialize — existing KYB iframe session. */
+    async initializeKybIframe(
+      command: KybIframeInitializeCommand = {},
+    ): Promise<KybIframeInitializeResponse> {
       try {
-        const response = await client.get<LooseObject>(`${KYB_API_BASE}/${customerId}`)
-        const status = Number(response?.status ?? UserKybStatus.None)
-        const kybProfile = Array.isArray(response?.kybProfile)
-          ? (response.kybProfile as KybProfileItem[])
-          : []
-
-        return { status, kybProfile }
+        return await client.post<KybIframeInitializeResponse>(
+          '/api/v1/userprofile/iframe/initialize',
+          {
+            viewType: command.viewType ?? 'Identity',
+            language: command.language ?? 'en',
+          },
+        )
       } catch (err: unknown) {
         if (isApiError(err) && (err.status === 404 || err.errorCode === 'COMMON_NOT_FOUND')) {
-          return { status: UserKybStatus.None, kybProfile: [] }
+          return {}
         }
         throw err
       }
@@ -75,9 +77,9 @@ export function createProfileSettingsRepository(client: HttpClient = httpClient)
       return client.post<{ url?: string }>('/api/v1/userprofile/kyc/initialize')
     },
 
-    /** POST /customers/customers/kyb/register — VLINKPAY gateway. */
-    async registerKyb(): Promise<RegisterKybResponse> {
-      return client.post<RegisterKybResponse>(`${KYB_API_BASE}/register`, {})
+    /** POST /api/v1/UserProfile/kyb/initialize — start or resume KYB iframe portal. */
+    async initializeKyb(): Promise<InitializeKybResponse> {
+      return client.post<InitializeKybResponse>('/api/v1/userprofile/kyb/initialize', {})
     },
 
     async updateUserProfile(dto: UpdateUserProfileDto): Promise<LooseObject> {
