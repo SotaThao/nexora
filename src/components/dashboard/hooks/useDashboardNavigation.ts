@@ -10,18 +10,12 @@ export function useDashboardNavigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [tipsTab, setTipsTab] = useState('overview')
   const [isTipsMobileExpanded, setIsTipsMobileExpanded] = useState(activeMenu === 'tips')
-  const [touchpointsTab, setTouchpointsTab] = useState('stations')
-  const [isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded] = useState(activeMenu === 'touchpoints')
   const [settingsTab, setSettingsTab] = useState('profile')
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
 
   useEffect(() => {
     if (activeMenu === 'tips') {
       setIsTipsMobileExpanded(true)
-      setIsTouchpointsMobileExpanded(false)
-    } else if (activeMenu === 'touchpoints') {
-      setIsTouchpointsMobileExpanded(true)
-      setIsTipsMobileExpanded(false)
     }
   }, [activeMenu])
 
@@ -41,8 +35,6 @@ export function useDashboardNavigation() {
     isMobileMenuOpen, setIsMobileMenuOpen,
     tipsTab, setTipsTab,
     isTipsMobileExpanded, setIsTipsMobileExpanded,
-    touchpointsTab, setTouchpointsTab,
-    isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded,
     settingsTab, setSettingsTab,
     isProfileExpanded, setIsProfileExpanded,
     handleNavigateMenu, navigateMenu

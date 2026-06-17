@@ -9,6 +9,8 @@ import { Filter, Moon, Settings, ShieldAlert, Sun, Check, Link } from 'lucide-re
 // 3. Internal — utils → contexts → data/constants → hooks → layout → views → modals → ui
 import { logger } from '../utils/logger'
 import { resolveMerchantStaffTipQr, toLocalCustomerTouchUrl } from '../utils/staffTipUrl'
+import { mapTouchpointTypeToApi, resolveAssignedStaffProfileId } from '../utils/touchpointTypes'
+import { useAuth } from '../auth/useAuth'
 import { useTranslation } from '../contexts/LanguageContext'
 import { useNotification } from '../contexts/NotificationContext'
 import { DEFAULT_PAYOUT_CONFIGS, MENU_ITEMS } from './dashboard/constants'
@@ -64,13 +66,12 @@ export default function Dashboard({
   const queryClient = useQueryClient()
   const { showToast, showConfirm } = useNotification()
   const { requireKyb } = useKybGate()
+  const { session } = useAuth()
   const {
     activeMenu,
     isMobileMenuOpen, setIsMobileMenuOpen,
     tipsTab, setTipsTab,
     isTipsMobileExpanded, setIsTipsMobileExpanded,
-    touchpointsTab, setTouchpointsTab,
-    isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded,
     settingsTab, setSettingsTab,
     isProfileExpanded, setIsProfileExpanded,
     handleNavigateMenu, navigateMenu
@@ -408,18 +409,28 @@ export default function Dashboard({
   }, [filteredTxsForMetrics]);
 
 
-  const addTouchpoint = async (name, type, deviceId) => {
+  const addTouchpoint = async (name, type, deviceId, assignedStaffProfileId) => {
     const finalName = typeof name === 'string' ? name.trim() : (newTouchpoint.name || '').trim()
     const finalType = typeof type === 'string' ? type : (newTouchpoint.type || 'Table QR')
     const finalDeviceId = typeof deviceId === 'string' ? deviceId.trim() : ''
 
     if (!finalName) return
 
-    await createTouchpointMutation.mutateAsync({
+    const apiType = mapTouchpointTypeToApi(finalType)
+    const resolvedAssignedStaffProfileId = resolveAssignedStaffProfileId(apiType, {
+      selectedStaffProfileId: assignedStaffProfileId,
+      currentUserProfileId: session?.id,
+    })
+
+    const payload = {
       name: finalName,
-      type: finalType === 'Table QR' ? 'Table' : finalType === 'Front Desk' ? 'FrontDesk' : finalType === 'Receipt QR' ? 'Receipt' : finalType === 'Staff QR' ? 'StaffCard' : 'Table',
-      // If we supported hardware linkage, we would map finalDeviceId here.
-    } as any)
+      type: apiType,
+      ...(resolvedAssignedStaffProfileId
+        ? { assignedStaffProfileId: resolvedAssignedStaffProfileId }
+        : {}),
+    }
+
+    await createTouchpointMutation.mutateAsync(payload)
     
     setNewTouchpoint({ name: '', type: 'Table QR' })
   }
@@ -507,6 +518,7 @@ export default function Dashboard({
     handleLinkStaff, handleInviteStaff, handleResendInvite, handleAcceptJoinRequest, handleDeclineJoinRequest, handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     setInviteShareDefaultName, setInviteShareDefaultContact, setIsInviteShareOpen,
     filteredTouchpoints, setAddTouchpointPrefill, setIsAddTouchpointModalOpen, deleteTouchpoint, toggleTouchpointStatus, linkDevice, devices, handleAddDevice, handleDeleteDevice, handleToggleDeviceStatus,
+    activeStaffList: staffListData?.items ?? [],
     reviews, filteredReviews, reviewFilterStaff, setReviewFilterStaff, setupData: setupData ?? merchantSetupData,
     tipsTab, setTipsTab, processingFee, setProcessingFee,
     filteredTransactions, touchpoints,
@@ -542,8 +554,6 @@ export default function Dashboard({
         onLogout={onLogout}
         tipsTab={tipsTab}
         setTipsTab={setTipsTab}
-        touchpointsTab={touchpointsTab}
-        setTouchpointsTab={setTouchpointsTab}
         userRole={userRole}
       />
 
@@ -620,12 +630,8 @@ export default function Dashboard({
         setIsProfileExpanded={setIsProfileExpanded}
         tipsTab={tipsTab}
         setTipsTab={setTipsTab}
-        touchpointsTab={touchpointsTab}
-        setTouchpointsTab={setTouchpointsTab}
         isTipsMobileExpanded={isTipsMobileExpanded}
         setIsTipsMobileExpanded={setIsTipsMobileExpanded}
-        isTouchpointsMobileExpanded={isTouchpointsMobileExpanded}
-        setIsTouchpointsMobileExpanded={setIsTouchpointsMobileExpanded}
         hasKyb={hasKyb}
         userRole={userRole}
         onLogout={onLogout}
@@ -691,11 +697,11 @@ export default function Dashboard({
       <AddTouchpointModal
         open={isAddTouchpointModalOpen}
         initialValues={addTouchpointPrefill}
+        activeStaff={staffListData?.items ?? []}
         onClose={() => setIsAddTouchpointModalOpen(false)}
-        onAdd={async (name, type, deviceId) => {
-          await addTouchpoint(name, type, deviceId)
+        onAdd={async (name, type, deviceId, assignedStaffProfileId) => {
+          await addTouchpoint(name, type, deviceId, assignedStaffProfileId)
           handleNavigateMenu('touchpoints')
-          setTouchpointsTab('stations')
         }}
       />
 

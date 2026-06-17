@@ -13,6 +13,7 @@
       "reviews": "Reviews",
       "pay": "Pay",
       "profile": "Profile",
+      "scan": "Scan",
       "profile_account": "Setting",
       "profile_kyc": "KYC"
     },
@@ -167,6 +168,7 @@
     }
   },
   "common": {
+    "close": "Close",
     "active": "Active",
     "inactive": "Inactive",
     "back": "Back",
@@ -394,7 +396,8 @@
       "settings": "Settings",
       "business_setting": "Setting",
       "kyb": "KYB",
-      "support": "Support"
+      "support": "Support",
+      "scan": "Scan"
     },
     "header": {
       "search_placeholder": "Search tech, station, review...",
@@ -505,6 +508,9 @@
       "view_qr_title": "QR Code for {name}",
       "view_qr_desc": "Customers scan this code to Tip & Review directly for the assigned staff member.",
       "assign_staff": "Assign staff member:",
+      "tp_staff_placeholder": "Select an active staff member",
+      "tp_staff_required": "Please select a staff member for Staff QR.",
+      "tp_staff_empty": "No active staff available. Add staff before creating a Staff QR touchpoint.",
       "no_staff_assigned": "-- General QR (Store Pool Tips) --",
       "download_print_qr": "Download Print QR (PDF)",
       "customer_view_test": "Simulate Customer Scan ›",
@@ -1047,6 +1053,15 @@
     "touchpoint_not_found_desc": "This touch point could not be loaded."
   },
   "components": {
+    "common": {
+      "AppQrScanner": {
+        "title": "Scan QR Code",
+        "camera_error": "Cannot access camera. Please check camera permissions.",
+        "torch": "Flashlight",
+        "hint": "Point the camera at a QR code to scan automatically",
+        "unsupported_qr": "QR code not supported"
+      }
+    },
     "payout": {
       "bankWireForm": {
         "title": "Set Up Bank Account",
@@ -1567,7 +1582,14 @@
           "step2PayoutAnd": "Step 2: Payout & QR Touchpoints",
           "setUpPayoutMethods": "Set up payout methods and QR code positions (e.g. reception desk, service table, cart) at your store.",
           "setUpPaymentMethods": "Set up payment methods to receive money into your business account.",
-          "nameThisSpecificTouch": "Name this specific touch point (e.g., Table 1, Station 3) to track tips and feedback location-wise."
+          "nameThisSpecificTouch": "Name this specific touch point (e.g., Table 1, Station 3) to track tips and feedback location-wise.",
+          "clickToZoom": "Click to zoom",
+          "scanQrAlt": "Scan QR code",
+          "tpTypeTableQr": "Table QR",
+          "tpTypeFrontDesk": "Front Desk",
+          "tpTypeReceiptQr": "Receipt QR",
+          "tpTypeBusinessMain": "Business Main",
+          "tpTypeStaffQr": "Staff QR"
         },
         "Step3Download": {
           "iHerebyConsentTo": "I hereby consent to the VLINKPAY Merchant Terms of Service, IRS 1099-K tax reporting requirements, and corporate compliance underwriting policies. I certify that all registration and business details provided are true and accurate."
@@ -1953,7 +1975,14 @@
     },
     "TouchpointsView": {
       "phExampleDeviceIds": "e.g. NFC-105, QR-Table-01",
-      "phDeviceId": "Device ID (e.g. NFC-105)"
+      "phDeviceId": "Device ID (e.g. NFC-105)",
+      "scanQrAlt": "Scan QR code",
+      "previewQr": "Preview",
+      "noMatchingDevices": "No matching devices",
+      "viewHardwareDetails": "Click to view hardware details",
+      "paperQrOnly": "Paper QR only",
+      "editLink": "Edit Link",
+      "linkDevice": "Link Device"
     },
     "TransactionFilter": {
       "phMin": "Min",

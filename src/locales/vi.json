@@ -13,6 +13,7 @@
       "reviews": "Đánh giá",
       "pay": "Thanh toán",
       "profile": "Hồ sơ",
+      "scan": "Quét QR",
       "profile_account": "Cài đặt",
       "profile_kyc": "KYC"
     },
@@ -167,6 +168,7 @@
     }
   },
   "common": {
+    "close": "Đóng",
     "active": "Đang hoạt động",
     "inactive": "Ngừng hoạt động",
     "back": "Quay lại",
@@ -394,7 +396,8 @@
       "settings": "Cài Đặt",
       "business_setting": "Cài đặt",
       "kyb": "KYB",
-      "support": "Hỗ Trợ"
+      "support": "Hỗ Trợ",
+      "scan": "Quét QR"
     },
     "header": {
       "search_placeholder": "Tìm thợ, bàn ghế, review...",
@@ -505,6 +508,9 @@
       "view_qr_title": "Mã QR cho {name}",
       "view_qr_desc": "Khách hàng quét mã này để típ và viết đánh giá trực tiếp cho nhân viên được gán.",
       "assign_staff": "Gán nhân viên phục vụ:",
+      "tp_staff_placeholder": "Chọn nhân viên đang hoạt động",
+      "tp_staff_required": "Vui lòng chọn nhân viên cho QR Nhân viên.",
+      "tp_staff_empty": "Chưa có nhân viên active. Hãy thêm nhân viên trước khi tạo touchpoint Staff QR.",
       "no_staff_assigned": "-- Không gán (Típ chung cho cửa hàng) --",
       "download_print_qr": "Tải Xuống QR In Ấn (PDF)",
       "customer_view_test": "Thử Giao Diện Khách Quét ›",
@@ -1047,6 +1053,15 @@
     "touchpoint_not_found_desc": "Không thể tải điểm chạm này."
   },
   "components": {
+    "common": {
+      "AppQrScanner": {
+        "title": "Quét mã QR",
+        "camera_error": "Không thể truy cập camera. Vui lòng kiểm tra quyền truy cập.",
+        "torch": "Đèn pin",
+        "hint": "Hướng camera vào mã QR để quét tự động",
+        "unsupported_qr": "Mã QR không hỗ trợ"
+      }
+    },
     "payout": {
       "bankWireForm": {
         "title": "Thiết lập tài khoản ngân hàng",
@@ -1567,7 +1582,14 @@
           "step2PayoutAnd": "Bước 2: Thanh Toán & Điểm Chạm QR",
           "setUpPayoutMethods": "Thiết lập các phương thức thanh toán và các vị trí dán mã QR (ví dụ: quầy lễ tân, bàn làm việc, xe đẩy) tại tiệm.",
           "setUpPaymentMethods": "Thiết lập các phương thức thanh toán để nhận tiền vào tài khoản tiệm.",
-          "nameThisSpecificTouch": "Đặt tên cho điểm chạm cụ thể này (ví dụ: Bàn 1, Ghế 3) để theo dõi vị trí nhận tiền tip và phản hồi."
+          "nameThisSpecificTouch": "Đặt tên cho điểm chạm cụ thể này (ví dụ: Bàn 1, Ghế 3) để theo dõi vị trí nhận tiền tip và phản hồi.",
+          "clickToZoom": "Nhấp để phóng to",
+          "scanQrAlt": "Quét mã QR",
+          "tpTypeTableQr": "QR Bàn/Ghế",
+          "tpTypeFrontDesk": "Quầy Lễ Tân",
+          "tpTypeReceiptQr": "QR Trên Hóa Đơn",
+          "tpTypeBusinessMain": "QR Chính Tiệm",
+          "tpTypeStaffQr": "QR Nhân Viên"
         },
         "Step3Download": {
           "iHerebyConsentTo": "Tôi đồng ý với Điều khoản dịch vụ người bán của VLINKPAY, yêu cầu báo cáo thuế IRS 1099-K và chính sách thẩm định của doanh nghiệp. Tôi xác nhận rằng tất cả thông tin đăng ký là chính xác."
@@ -1952,8 +1974,15 @@
       "backToSignIn": "Quay lại Đăng nhập"
     },
     "TouchpointsView": {
-      "phExampleDeviceIds": "vd: NFC-105, QR-Table-01",
-      "phDeviceId": "Mã thiết bị (vd: NFC-105)"
+      "phExampleDeviceIds": "vd: NFC-105, QR-Ban-01",
+      "phDeviceId": "Mã thiết bị (vd: NFC-105)",
+      "scanQrAlt": "Quét mã QR",
+      "previewQr": "Xem trước",
+      "noMatchingDevices": "Không tìm thấy thiết bị phù hợp",
+      "viewHardwareDetails": "Nhấp để xem chi tiết thiết bị",
+      "paperQrOnly": "Chỉ dùng QR in giấy",
+      "editLink": "Sửa liên kết",
+      "linkDevice": "Liên kết thiết bị"
     },
     "TransactionFilter": {
       "phMin": "Tối thiểu",

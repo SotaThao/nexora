@@ -17,12 +17,8 @@ export default function MobileMenuDrawer({
   setIsProfileExpanded,
   tipsTab,
   setTipsTab,
-  touchpointsTab,
-  setTouchpointsTab,
   isTipsMobileExpanded,
   setIsTipsMobileExpanded,
-  isTouchpointsMobileExpanded,
-  setIsTouchpointsMobileExpanded,
   hasKyb,
   userRole,
   onLogout,
@@ -178,9 +174,6 @@ export default function MobileMenuDrawer({
                     if (id === 'tips') {
                       navigateMenu(id)
                       setIsTipsMobileExpanded(!isTipsMobileExpanded)
-                    } else if (id === 'touchpoints') {
-                      navigateMenu(id)
-                      setIsTouchpointsMobileExpanded(!isTouchpointsMobileExpanded)
                     } else {
                       navigateMenu(id)
                     }
@@ -195,12 +188,9 @@ export default function MobileMenuDrawer({
                     <MenuIcon item={item} active={isActive} />
                     <span>{localizedLabel}</span>
                   </div>
-                  {(id === 'tips' || id === 'touchpoints') && (
+                  {(id === 'tips') && (
                     <div className="text-white/50 shrink-0">
-                      {id === 'tips'
-                        ? (isTipsMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)
-                        : (isTouchpointsMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)
-                      }
+                      {isTipsMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </div>
                   )}
                 </button>
@@ -236,34 +226,6 @@ export default function MobileMenuDrawer({
                   </div>
                 )}
 
-                {id === 'touchpoints' && isTouchpointsMobileExpanded && (
-                  <div className="ml-9 mt-1 space-y-1 border-l border-white/10 pl-3 animate-fadeIn">
-                    {[
-                      { id: 'stations', label: t('dashboard.touchpoints.tabs.stations') },
-                      { id: 'devices', label: t('dashboard.touchpoints.tabs.devices') }
-                    ].map(sub => {
-                      const isSubActive = activeMenu === 'touchpoints' && touchpointsTab === sub.id
-                      return (
-                        <button
-                          key={sub.id}
-                          type="button"
-                          onClick={() => {
-                            setTouchpointsTab(sub.id)
-                            navigateMenu('touchpoints')
-                          }}
-                          className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
-                            isSubActive
-                              ? 'text-brandCyan font-extrabold'
-                              : 'text-white/60 hover:bg-white/5 hover:text-white'
-                          }`}
-                        >
-                          <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
-                          <span>{sub.label}</span>
-                        </button>
-                      )
-                    })}
-                  </div>
-                )}
               </React.Fragment>
             )
           })}
