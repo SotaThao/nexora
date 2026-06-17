@@ -114,7 +114,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         logger.error('handleSimulateVerify error:', err)
         const code = getApiErrorCode(err, 'HTTP_ERROR')
         const i18nKey = getErrorI18nKey(code)
-        setErrors({ submit: t(i18nKey) })
+        setErrors({ submit: i18nKey })
       })
   }
 
@@ -129,7 +129,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       .catch((err) => {
         const code = getApiErrorCode(err, 'HTTP_ERROR')
         const i18nKey = getErrorI18nKey(code)
-        setErrors({ submit: t(i18nKey) })
+        setErrors({ submit: i18nKey })
       })
   }
 
@@ -156,21 +156,21 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     const newErrors: LooseObject = {}
 
     if (!email.trim()) {
-      newErrors.email = t('register.errors.email_required')
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = t('register.errors.email_invalid')
+      newErrors.email = 'register.errors.email_required'
+    } else if (!/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email.trim())) {
+      newErrors.email = 'register.errors.email_invalid'
     }
 
     if (!confirmEmail.trim()) {
-      newErrors.confirmEmail = t('register.errors.confirm_email_required')
+      newErrors.confirmEmail = 'register.errors.confirm_email_required'
     } else if (confirmEmail.trim().toLowerCase() !== email.trim().toLowerCase()) {
-      newErrors.confirmEmail = t('register.errors.email_mismatch')
+      newErrors.confirmEmail = 'register.errors.email_mismatch'
     }
 
     if (!password) {
-      newErrors.password = t('register.errors.password_required')
+      newErrors.password = 'register.errors.password_required'
     } else if (password.length < 6) {
-      newErrors.password = t('register.errors.password_short')
+      newErrors.password = 'register.errors.password_short'
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -224,7 +224,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
             logger.error('Auto-login failed after auto-verify:', err)
             const code = getApiErrorCode(err, 'HTTP_ERROR')
             const i18nKey = getErrorI18nKey(code)
-            setErrors({ email: t(i18nKey) })
+            setErrors({ email: i18nKey })
           })
           .finally(() => setIsSubmitting(false))
       } else {
@@ -236,7 +236,11 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       const errorsMap: LooseObject = {}
       const code = getApiErrorCode(err, 'HTTP_ERROR')
       const i18nKey = getErrorI18nKey(code)
-      errorsMap.email = t(i18nKey) || t('errors.unknown_error')
+      if (code === 'AUTH_PASSWORDS_DO_NOT_MATCH') {
+        errorsMap.confirmEmail = 'register.errors.email_mismatch'
+      } else {
+        errorsMap.email = i18nKey || 'errors.unknown_error'
+      }
       setErrors(errorsMap)
       setIsSubmitting(false)
     })

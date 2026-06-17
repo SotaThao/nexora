@@ -35,10 +35,28 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loginError, setLoginError] = useState(location.state?.loginError || '')
+  const [fieldErrorKeys, setFieldErrorKeys] = useState<{ email?: string; password?: string }>({})
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
   const handleLoginSubmit = () => {
+    const newFieldErrorKeys: { email?: string; password?: string } = {}
+    if (!email.trim()) {
+      newFieldErrorKeys.email = 'register.errors.email_required'
+    } else if (!/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email.trim())) {
+      newFieldErrorKeys.email = 'register.errors.email_invalid'
+    }
+    if (!password) {
+      newFieldErrorKeys.password = 'register.errors.password_required'
+    } else if (password.length < 6) {
+      newFieldErrorKeys.password = 'register.errors.password_short'
+    }
+    if (Object.keys(newFieldErrorKeys).length > 0) {
+      setFieldErrorKeys(newFieldErrorKeys)
+      setLoginError('')
+      return
+    }
+    setFieldErrorKeys({})
     setIsLoading(true)
     setLoginError('')
 
@@ -141,8 +159,8 @@ export default function LoginScreen() {
           ) : (
             <form onSubmit={(e) => { e.preventDefault(); handleLoginSubmit(); }} className="space-y-5">
               <div className="space-y-1">
-                <p className="text-[11px] font-black uppercase tracking-wider text-nexoraBrand">Secure Access</p>
-                <h1 className="text-2xl font-black text-nexoraText sm:text-3xl">Sign in to NEXORA</h1>
+                <p className="text-[11px] font-black uppercase tracking-wider text-nexoraBrand">{t('login.secure_access')}</p>
+                <h1 className="text-2xl font-black text-nexoraText sm:text-3xl">{t('login.sign_in_title')}</h1>
               </div>
 
               {loginError && (
@@ -159,11 +177,15 @@ export default function LoginScreen() {
                     <input
                       type="email"
                       placeholder={t('login.email_placeholder')}
-                      className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg pl-10 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all"
+                      className={`w-full bg-nexoraCanvas border ${fieldErrorKeys.email ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} rounded-lg pl-10 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all`}
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value)
+                        if (fieldErrorKeys.email) setFieldErrorKeys(prev => ({ ...prev, email: undefined }))
+                      }}
                     />
                   </div>
+                  {fieldErrorKeys.email && <span className="text-xs text-nexoraDanger mt-1 block">{t(fieldErrorKeys.email)}</span>}
                 </div>
 
                 <div>
@@ -174,7 +196,7 @@ export default function LoginScreen() {
                       onClick={() => navigate('/forgot-password')}
                       className="text-[10px] font-bold text-nexoraBrand hover:underline focus:outline-none transition-all"
                     >
-                      Forgot Password?
+                      {t('login.forgot_password')}
                     </button>
                   </div>
                   <div className="relative">
@@ -182,9 +204,12 @@ export default function LoginScreen() {
                     <input
                       type={showPassword ? "text" : "password"}
                       placeholder={t('login.password_placeholder')}
-                      className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg pl-10 pr-10 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all"
+                      className={`w-full bg-nexoraCanvas border ${fieldErrorKeys.password ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} rounded-lg pl-10 pr-10 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all`}
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        setPassword(e.target.value)
+                        if (fieldErrorKeys.password) setFieldErrorKeys(prev => ({ ...prev, password: undefined }))
+                      }}
                     />
                     <button
                       type="button"
@@ -194,6 +219,7 @@ export default function LoginScreen() {
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
+                  {fieldErrorKeys.password && <span className="text-xs text-nexoraDanger mt-1 block">{t(fieldErrorKeys.password)}</span>}
                 </div>
               </div>
 
