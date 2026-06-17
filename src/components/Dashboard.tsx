@@ -9,6 +9,7 @@ import { Filter, Moon, Settings, ShieldAlert, Sun, Check, Link } from 'lucide-re
 // 3. Internal — utils → contexts → data/constants → hooks → layout → views → modals → ui
 import { logger } from '../utils/logger'
 import { resolveMerchantStaffTipQr, toLocalCustomerTouchUrl } from '../utils/staffTipUrl'
+import { mapTouchpointTypeToApi, resolveAssignedStaffProfileId } from '../utils/touchpointTypes'
 import { useTranslation } from '../contexts/LanguageContext'
 import { useNotification } from '../contexts/NotificationContext'
 import { DEFAULT_PAYOUT_CONFIGS, MENU_ITEMS } from './dashboard/constants'
@@ -69,8 +70,6 @@ export default function Dashboard({
     isMobileMenuOpen, setIsMobileMenuOpen,
     tipsTab, setTipsTab,
     isTipsMobileExpanded, setIsTipsMobileExpanded,
-    touchpointsTab, setTouchpointsTab,
-    isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded,
     settingsTab, setSettingsTab,
     isProfileExpanded, setIsProfileExpanded,
     handleNavigateMenu, navigateMenu
@@ -101,13 +100,14 @@ export default function Dashboard({
     isLoading: isStaffListLoading,
     isFetching: isStaffListFetching,
   } = useMerchantStaff({
+    statusFilter: StatusFilter.Active,
     pageNumber: activeStaffPage,
     pageSize: activeStaffPageSize,
   })
   const { data: pendingStaffData, isLoading: isPendingStaffLoading } = useMerchantStaff({
     statusFilter: StatusFilter.Pending,
     pageNumber: 1,
-    pageSize: 100
+    pageSize: 100,
   })
   const {
     data: inviteLinkSetting,
@@ -309,11 +309,46 @@ export default function Dashboard({
   const filteredTouchpoints = useMemo(() => {
     if (!searchQuery) return touchpoints
     const query = searchQuery.toLowerCase().trim()
-    return touchpoints.filter(point =>
-      String(point.name ?? '').toLowerCase().includes(query) ||
-      String(point.type ?? '').toLowerCase().includes(query) ||
-      (point.staffName && String(point.staffName).toLowerCase().includes(query))
-    )
+    const normalize = (value) =>
+      String(value ?? '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[\s_-]+/g, '')
+    const compactQuery = normalize(query)
+
+    const toReadableType = (rawType) => {
+      const value = String(rawType ?? '').toLowerCase()
+      if (value === 'frontdesk') return 'front desk'
+      if (value === 'staffcard') return 'staff qr'
+      if (value === 'receipt') return 'receipt qr'
+      if (value === 'table') return 'table qr'
+      return value
+    }
+
+    return touchpoints.filter((point) => {
+      const isActive = point?.isActive !== false
+      const readableStatus = isActive ? 'active' : 'inactive'
+      const readableType = toReadableType(point?.type)
+
+      return (
+        String(point?.name ?? '').toLowerCase().includes(query) ||
+        String(point?.type ?? '').toLowerCase().includes(query) ||
+        readableType.includes(query) ||
+        (point?.staffName && String(point.staffName).toLowerCase().includes(query)) ||
+        String(point?.deviceId ?? '').toLowerCase().includes(query) ||
+        String(point?.slug ?? '').toLowerCase().includes(query) ||
+        String(point?.id ?? '').toLowerCase().includes(query) ||
+        String(point?.url ?? '').toLowerCase().includes(query) ||
+        readableStatus.includes(query) ||
+        normalize(point?.name).includes(compactQuery) ||
+        normalize(point?.deviceId).includes(compactQuery) ||
+        normalize(point?.slug).includes(compactQuery) ||
+        normalize(point?.type).includes(compactQuery) ||
+        normalize(readableType).includes(compactQuery) ||
+        normalize(readableStatus).includes(compactQuery)
+      )
+    })
   }, [touchpoints, searchQuery])
 
   const filteredReviews = useMemo(() => {
@@ -372,18 +407,25 @@ export default function Dashboard({
   }, [filteredTxsForMetrics]);
 
 
-  const addTouchpoint = (name, type, deviceId) => {
+  const addTouchpoint = async (name, type, deviceId, assignedStaffProfileId) => {
     const finalName = typeof name === 'string' ? name.trim() : (newTouchpoint.name || '').trim()
     const finalType = typeof type === 'string' ? type : (newTouchpoint.type || 'Table QR')
     const finalDeviceId = typeof deviceId === 'string' ? deviceId.trim() : ''
 
     if (!finalName) return
-    
-    createTouchpointMutation.mutate({
+
+    const apiType = mapTouchpointTypeToApi(finalType)
+    const resolvedAssignedStaffProfileId = resolveAssignedStaffProfileId(apiType, assignedStaffProfileId)
+
+    const payload = {
       name: finalName,
-      type: finalType === 'Table QR' ? 'Table' : finalType === 'Front Desk' ? 'FrontDesk' : finalType === 'Receipt QR' ? 'Receipt' : finalType === 'Staff QR' ? 'StaffCard' : 'Table',
-      // If we supported hardware linkage, we would map finalDeviceId here.
-    } as any)
+      type: apiType,
+      ...(resolvedAssignedStaffProfileId
+        ? { assignedStaffProfileId: resolvedAssignedStaffProfileId }
+        : {}),
+    }
+
+    await createTouchpointMutation.mutateAsync(payload)
     
     setNewTouchpoint({ name: '', type: 'Table QR' })
   }
@@ -471,6 +513,7 @@ export default function Dashboard({
     handleLinkStaff, handleInviteStaff, handleResendInvite, handleAcceptJoinRequest, handleDeclineJoinRequest, handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     setInviteShareDefaultName, setInviteShareDefaultContact, setIsInviteShareOpen,
     filteredTouchpoints, setAddTouchpointPrefill, setIsAddTouchpointModalOpen, deleteTouchpoint, toggleTouchpointStatus, linkDevice, devices, handleAddDevice, handleDeleteDevice, handleToggleDeviceStatus,
+    activeStaffList: staffListData?.items ?? [],
     reviews, filteredReviews, reviewFilterStaff, setReviewFilterStaff, setupData: setupData ?? merchantSetupData,
     tipsTab, setTipsTab, processingFee, setProcessingFee,
     filteredTransactions, touchpoints,
@@ -506,8 +549,6 @@ export default function Dashboard({
         onLogout={onLogout}
         tipsTab={tipsTab}
         setTipsTab={setTipsTab}
-        touchpointsTab={touchpointsTab}
-        setTouchpointsTab={setTouchpointsTab}
         userRole={userRole}
       />
 
@@ -584,12 +625,8 @@ export default function Dashboard({
         setIsProfileExpanded={setIsProfileExpanded}
         tipsTab={tipsTab}
         setTipsTab={setTipsTab}
-        touchpointsTab={touchpointsTab}
-        setTouchpointsTab={setTouchpointsTab}
         isTipsMobileExpanded={isTipsMobileExpanded}
         setIsTipsMobileExpanded={setIsTipsMobileExpanded}
-        isTouchpointsMobileExpanded={isTouchpointsMobileExpanded}
-        setIsTouchpointsMobileExpanded={setIsTouchpointsMobileExpanded}
         hasKyb={hasKyb}
         userRole={userRole}
         onLogout={onLogout}
@@ -655,11 +692,11 @@ export default function Dashboard({
       <AddTouchpointModal
         open={isAddTouchpointModalOpen}
         initialValues={addTouchpointPrefill}
+        activeStaff={staffListData?.items ?? []}
         onClose={() => setIsAddTouchpointModalOpen(false)}
-        onAdd={(name, type, deviceId) => {
-          addTouchpoint(name, type, deviceId)
+        onAdd={async (name, type, deviceId, assignedStaffProfileId) => {
+          await addTouchpoint(name, type, deviceId, assignedStaffProfileId)
           handleNavigateMenu('touchpoints')
-          setTouchpointsTab('stations')
         }}
       />
 

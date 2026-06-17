@@ -13,6 +13,7 @@
       "reviews": "Reviews",
       "pay": "Pay",
       "profile": "Profile",
+      "scan": "Scan",
       "profile_account": "Setting",
       "profile_kyc": "KYC"
     },
@@ -64,7 +65,16 @@
       "quick_refer": "Refer & Earn",
       "refer_title": "Invite fellow nail techs",
       "refer_subtitle": "Earn $10 for each friend who joins!",
-      "invite_now": "Invite Now"
+      "invite_now": "Invite Now",
+      "master_welcome_qr": "Master Welcome QR",
+      "master_store_qr_title": "Master Store QR",
+      "master_status_active": "Active",
+      "master_status_setup_required": "Setup required",
+      "store_main_portal": "Store Main Portal",
+      "master_store_qr_desc": "Shared store QR for customers to access the main tipping page.",
+      "no_master_touchpoint_url": "No master touchpoint URL yet",
+      "preview_qr": "Preview QR",
+      "manage_touchpoints": "Manage Touchpoints"
     },
     "tips": {
       "activity": "Tip Activity",
@@ -158,6 +168,7 @@
     }
   },
   "common": {
+    "close": "Close",
     "active": "Active",
     "inactive": "Inactive",
     "back": "Back",
@@ -220,7 +231,7 @@
     "password_label": "Password",
     "email_placeholder": "owner@yourstore.com",
     "password_placeholder": "••••••••",
-    "login_btn": "Đăng nhập",
+    "login_btn": "Log in",
     "or_try_demo": "Or Try Demo",
     "social_auth_divider": "Or continue with",
     "continue_google": "Google",
@@ -228,7 +239,7 @@
     "register_btn": "Create account",
     "enter_dashboard_btn": "Enter Dashboard",
     "sso_security_footer": "VLINKPAY OAuth 2.0 Security Compliance",
-    "login_error_missing": "Vui lòng điền đầy đủ Email và Mật khẩu.",
+    "login_error_missing": "Please enter your Email and Password.",
     "connecting_sso": "Connecting to VLINKPAY SSO...",
     "reset_confirm": "Do you want to delete stored data to perform the Onboarding Setup Wizard again from the beginning?"
   },
@@ -252,7 +263,7 @@
     "store_website": "Website (Optional)",
     "store_logo": "Business Logo",
     "store_payment_title": "Store Payment Methods",
-    "logo_hint": "Square image (Max 2MB)",
+    "logo_hint": "Square image (Max 5MB)",
     "review_routing_title": "Review Routing",
     "review_routing_policy": "Policy: Satisfied customers (4-5★) are routed directly to Google/Yelp. Dissatisfied customers (1-3★) are routed to submit private feedback to the administrator email below for resolution.",
     "google_review_link": "Google Review Link",
@@ -385,7 +396,8 @@
       "settings": "Settings",
       "business_setting": "Setting",
       "kyb": "KYB",
-      "support": "Support"
+      "support": "Support",
+      "scan": "Scan"
     },
     "header": {
       "search_placeholder": "Search tech, station, review...",
@@ -492,9 +504,13 @@
       "add_btn": "Add Touch Point",
       "tp_name_required": "Please enter a touch point name.",
       "tp_added_success": "Touch point \"{name}\" added successfully!",
+      "tp_add_failed": "Failed to add touch point. Please try again.",
       "view_qr_title": "QR Code for {name}",
       "view_qr_desc": "Customers scan this code to Tip & Review directly for the assigned staff member.",
       "assign_staff": "Assign staff member:",
+      "tp_staff_placeholder": "Select an active staff member",
+      "tp_staff_required": "Please select a staff member for Staff QR.",
+      "tp_staff_empty": "No active staff available. Add staff before creating a Staff QR touchpoint.",
       "no_staff_assigned": "-- General QR (Store Pool Tips) --",
       "download_print_qr": "Download Print QR (PDF)",
       "customer_view_test": "Simulate Customer Scan ›",
@@ -550,11 +566,15 @@
         "stations": "QR Stations",
         "devices": "Hardware Devices"
       },
-      "open_link": "Test station flow"
+      "open_link": "Test station flow",
+      "empty_title": "No QR stations yet",
+      "empty_desc": "Create your first touchpoint to start receiving scans and tips."
     },
     "devices": {
       "subtitle": "Manage physical salon stands, tabletop codes, and smart taps.",
       "add_btn": "Add New Device",
+      "empty_title": "No hardware devices yet",
+      "empty_desc": "Add a QR or NFC device to manage stations and scan activity.",
       "location": "Location",
       "scans": "Scans",
       "last_scan": "Last Scan",
@@ -769,6 +789,16 @@
     "yelp_review_btn": "Review us on Yelp",
     "rating_bad_text": "We are very sorry for your poor experience. The system will save your private feedback directly to the Manager.",
     "submit_internal_btn": "Submit Secure Feedback",
+    "rating_label_5": "Amazing!",
+    "rating_label_4": "Good!",
+    "rating_label_3": "Okay",
+    "rating_label_2": "Bad",
+    "rating_label_1": "Terrible",
+    "submit_review_btn": "Submit Review",
+    "skip_btn": "Skip",
+    "maybe_later_btn": "Maybe later",
+    "back_to_dashboard_btn": "Back to Dashboard",
+    "final_thanks_desc": "Thank you for your support! Have a great day!",
     "final_success_title": "Thank You!",
     "final_success_desc": "Help us grow by leaving a review on Google or Yelp.",
     "send_new_btn": "Send New Submission",
@@ -963,6 +993,10 @@
     "otp_desc": "Enter the 4-digit code sent to your email or phone.",
     "consent_tax": "I understand that tips received directly may be reportable income. I am responsible for keeping records and reporting income as required by applicable law.",
     "consent_confirm": "I confirm that my payment information is correct and customers may use these methods to send tips directly to me.",
+    "label_invited_name": "Invited Name:",
+    "label_assigned_role": "Assigned Role:",
+    "label_invited_email": "Invited Email:",
+    "label_invited_phone": "Invited Phone:",
     "save_activate": "Save & Activate Personal Account",
     "customer_preview": "Customer Preview",
     "customer_preview_desc": "This is what customers will see after selecting you.",
@@ -994,6 +1028,7 @@
     "business_name_required": "Business name is required.",
     "business_invalid_slug_format": "The URL slug format is invalid.",
     "user_not_merchant": "Your account is not registered as a merchant.",
+    "touchpoint_starter_limit_reached": "Starter plan limit reached: you can only create up to 3 touch points. Please upgrade your plan to add more.",
     "image_file_size_exceeded": "The image file size exceeds the 10MB limit.",
     "image_unsupported_file_type": "Unsupported file format. Please upload PNG, JPEG, or WebP.",
     "image_upload_failed": "Failed to upload the image.",
@@ -1019,6 +1054,16 @@
     "touchpoint_not_found_desc": "This touch point could not be loaded."
   },
   "components": {
+    "common": {
+      "AppQrScanner": {
+        "title": "Scan QR Code",
+        "camera_error": "Cannot access camera. Please check camera permissions.",
+        "permission_denied": "Camera access was denied. Please allow camera access in your device settings to scan QR codes.",
+        "torch": "Flashlight",
+        "hint": "Point the camera at a QR code to scan automatically",
+        "unsupported_qr": "QR code not supported"
+      }
+    },
     "payout": {
       "bankWireForm": {
         "title": "Set Up Bank Account",
@@ -1078,7 +1123,12 @@
           "multiStaffSubtitle": "Open your bank app and send one payment to {business}. Your tip will be split among the selected providers.",
           "tipBreakdown": "Tip breakdown",
           "totalCombinedTip": "Total combined tip",
-          "goBack": "Go Back"
+          "goBack": "Go Back",
+          "singleStaffTitle": "Send Tip via {wallet}",
+          "singleStaffSubtitle_zelle": "Open your bank app and send to {recipient}.",
+          "singleStaffSubtitle_venmo": "Open your Venmo app and send to {recipient}.",
+          "singleStaffSubtitle_cashapp": "Open your Cash App and send to {recipient}.",
+          "singleStaffSubtitle_default": "Open your wallet app and send to {recipient}."
         }
       }
     },
@@ -1148,7 +1198,13 @@
           "joinQrAlt": "Join QR",
           "scanToJoinAlt": "Scan to Join",
           "preview": "Preview",
-          "disabled": "Disabled"
+          "disabled": "Disabled",
+          "methodEmail": "Email",
+          "methodSms": "SMS",
+          "methodSmsComingSoon": "Coming soon",
+          "emailAddress": "Email Address",
+          "phExampleEmail": "e.g. mia.tran@gmail.com",
+          "phExamplePhone": "e.g. 407-555-0123"
         },
         "PayoutSetupModal": {
           "walletAccountTitle": "{wallet} ACCOUNT",
@@ -1458,6 +1514,15 @@
           "phYelpUrl": "https://www.yelp.com/biz/..."
         },
         "KybTab": {
+          "iframeTitle": "Know your business",
+          "verifyYourBusiness": "Verify Your Business",
+          "subtitle": "Complete your <b>KYB</b> and explore the next level of experience with <b>Nexora Touch</b>",
+          "getStarted": "Get Started",
+          "tabKybTitle": "Why KYB Verification Is Important",
+          "tabKybContent": "Completing the KYB verification ensures your business is fully compliant with regulatory requirements, providing you access to all the features and benefits of Nexora Touch, including payment processing, business insights, and more. This process also protects your business from fraudulent activities and strengthens trust with your customers.",
+          "retry": "Retry",
+          "networkError": "Unable to load KYB portal. Please check your connection and try again.",
+          "serverError": "Unable to initialize KYB portal. Please try again later.",
           "closeForm": "Close Form",
           "submittingKybDetails": "Submitting KYB details...",
           "legalBusinessName": "Legal Business Name",
@@ -1519,7 +1584,14 @@
           "step2PayoutAnd": "Step 2: Payout & QR Touchpoints",
           "setUpPayoutMethods": "Set up payout methods and QR code positions (e.g. reception desk, service table, cart) at your store.",
           "setUpPaymentMethods": "Set up payment methods to receive money into your business account.",
-          "nameThisSpecificTouch": "Name this specific touch point (e.g., Table 1, Station 3) to track tips and feedback location-wise."
+          "nameThisSpecificTouch": "Name this specific touch point (e.g., Table 1, Station 3) to track tips and feedback location-wise.",
+          "clickToZoom": "Click to zoom",
+          "scanQrAlt": "Scan QR code",
+          "tpTypeTableQr": "Table QR",
+          "tpTypeFrontDesk": "Front Desk",
+          "tpTypeReceiptQr": "Receipt QR",
+          "tpTypeBusinessMain": "Business Main",
+          "tpTypeStaffQr": "Staff QR"
         },
         "Step3Download": {
           "iHerebyConsentTo": "I hereby consent to the VLINKPAY Merchant Terms of Service, IRS 1099-K tax reporting requirements, and corporate compliance underwriting policies. I certify that all registration and business details provided are true and accurate."
@@ -1664,7 +1736,7 @@
           "passwordIsRequired": "Password is required",
           "passwordMustBeAt": "Password must be at least 6 characters",
           "youMustAgreeTo": "You must agree to the Terms & Conditions to proceed.",
-          "invalidCodeTipEnter": "Invalid code. Tip: Enter 1234.",
+          "invalidCodeTipEnter": "Invalid verification code. Please check and try again.",
           "thisFieldIsRequired": "This field is required.",
           "newJoinRequest": "New Join Request",
           "justNow": "Just now",
@@ -1707,7 +1779,22 @@
           "toggleThePaymentChannels": "Toggle the payment channels you want to receive money. When customers scan your QR, they pay you directly to these accounts.",
           "notConfigured": "Not Configured",
           "payoutAccount": "Payout account",
-          "saveAndActivate": "Save & Activate"
+          "saveAndActivate": "Save & Activate",
+          "walletLabel_zelle": "Zelle",
+          "walletLabel_bankwire": "Bank Wire",
+          "walletLabel_paypal": "PayPal",
+          "walletLabel_venmo": "Venmo",
+          "walletLabel_cashapp": "Cash App",
+          "walletLabel_applecash": "Apple Cash",
+          "walletPlaceholder_zelle": "Enter Zelle email/phone...",
+          "walletPlaceholder_bankwire": "Enter Bank Wire routing - account...",
+          "walletPlaceholder_paypal": "Enter PayPal email...",
+          "walletPlaceholder_venmo": "Enter Venmo @username...",
+          "walletPlaceholder_cashapp": "Enter Cash App $cashtag...",
+          "walletPlaceholder_applecash": "Enter Apple Cash phone number...",
+          "nexoraStaffId": "NEXORA Staff ID",
+          "pendingRegister": "Pending Register",
+          "consentRequired": "You must accept both agreements before activating your account."
         },
         "StepProfile": {
           "label2PersonalAccount": "2. Personal Account",
@@ -1890,7 +1977,14 @@
     },
     "TouchpointsView": {
       "phExampleDeviceIds": "e.g. NFC-105, QR-Table-01",
-      "phDeviceId": "Device ID (e.g. NFC-105)"
+      "phDeviceId": "Device ID (e.g. NFC-105)",
+      "scanQrAlt": "Scan QR code",
+      "previewQr": "Preview",
+      "noMatchingDevices": "No matching devices",
+      "viewHardwareDetails": "Click to view hardware details",
+      "paperQrOnly": "Paper QR only",
+      "editLink": "Edit Link",
+      "linkDevice": "Link Device"
     },
     "TransactionFilter": {
       "phMin": "Min",
@@ -1912,5 +2006,15 @@
       "business_account_not_allowed": "Only personal accounts can accept salon invitations. Please sign in with a personal account.",
       "onboarding_required": "Please complete your profile setup before joining this salon."
     }
+  },
+  "coming_soon": {
+    "analytics_title": "Advanced Analytics",
+    "analytics_desc": "Device conversion, return customer cohorts, and AI review summaries are planned for phase 3.",
+    "subscriptions_title": "Subscriptions",
+    "subscriptions_desc": "Manage NFC stand orders, renewal plans, and hardware add-ons from this workspace soon.",
+    "settings_title": "Settings",
+    "settings_desc": "Shop preferences, webhook keys, and review destinations will be configured here.",
+    "default_title": "Feature In Progress",
+    "default_desc": "This module is being prepared for the Nexora Touch merchant dashboard."
   }
 }

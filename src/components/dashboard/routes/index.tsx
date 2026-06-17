@@ -149,8 +149,6 @@ export function StaffRoleRoute() {
 
 export function TouchpointsRoute() {
   const ctx = useOutletContext<LooseObject>()
-  const [sp, setSp] = useSearchParams()
-  const tab = sp.get('tab') || 'stations'
 
   return (
     <TouchpointsView
@@ -164,13 +162,8 @@ export function TouchpointsRoute() {
       onToggleStatus={ctx.toggleTouchpointStatus}
       onLinkDevice={ctx.linkDevice}
       transactions={ctx.transactions}
-      businessName={ctx.businessName}
       devices={ctx.devices}
-      onAddDevice={ctx.handleAddDevice}
-      onDeleteDevice={ctx.handleDeleteDevice}
-      onToggleDeviceStatus={ctx.handleToggleDeviceStatus}
-      activeSubTab={tab}
-      onTabChange={(t) => setSp({ tab: t }, { replace: true })}
+      activeStaff={ctx.activeStaffList ?? []}
     />
   )
 }

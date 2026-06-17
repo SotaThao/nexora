@@ -3,7 +3,10 @@
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
-import profileSettingsRepository from '../repositories/profileSettings'
+import profileSettingsRepository, {
+  type InitializeKybResponse,
+  type KybIframeInitializeResponse,
+} from '../repositories/profileSettings'
 import { useSessionRole } from '../../auth/useSessionRole'
 import type { LooseObject, UserProfile } from '../../types/domain'
 import type { UpdateStaffProfileDto, UpdateUserProfileDto } from '../../types/repositories'
@@ -33,6 +36,25 @@ export function useVerifiedStatus({ enabled = true } = {}) {
   })
 }
 
+/** KYB iframe session — POST /api/v1/UserProfile/iframe/initialize */
+export function useKybInfo({
+  language = 'en',
+  enabled = true,
+}: {
+  language?: string
+  enabled?: boolean
+} = {}) {
+  return useQuery<KybIframeInitializeResponse>({
+    queryKey: qk.kybIframeInitialize(language),
+    queryFn: () => profileSettingsRepository.initializeKybIframe({
+      viewType: 'Identity',
+      language,
+    }),
+    enabled,
+    refetchOnWindowFocus: false,
+  })
+}
+
 export function useKycInitialize({ enabled = false } = {}) {
   return useQuery<{ url?: string }>({
     queryKey: qk.kycInitialize(),
@@ -40,6 +62,18 @@ export function useKycInitialize({ enabled = false } = {}) {
     enabled,
     refetchOnWindowFocus: false,
   })
+}
+
+/** POST /api/v1/UserProfile/kyb/initialize — KYB iframe portal URL. */
+export function useRegisterKyb() {
+  return useMutation<InitializeKybResponse, Error, void>({
+    mutationFn: () => profileSettingsRepository.initializeKyb(),
+  })
+}
+
+/** @deprecated Use useRegisterKyb — KYB does not use kyc/initialize. */
+export function useInitializeKybPortal() {
+  return useRegisterKyb()
 }
 
 export function useUpdateUserProfile() {

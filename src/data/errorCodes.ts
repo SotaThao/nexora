@@ -18,6 +18,7 @@ export const errorCodeToI18nKey = {
   BUSINESS_NAME_REQUIRED: 'errors.business_name_required',
   BUSINESS_INVALID_SLUG_FORMAT: 'errors.business_invalid_slug_format',
   USER_NOT_MERCHANT: 'errors.user_not_merchant',
+  TOUCHPOINT_STARTER_LIMIT_REACHED: 'errors.touchpoint_starter_limit_reached',
 
   // Image
   IMAGE_FILE_SIZE_EXCEEDED: 'errors.image_file_size_exceeded',

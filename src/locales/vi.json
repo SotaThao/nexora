@@ -13,6 +13,7 @@
       "reviews": "Đánh giá",
       "pay": "Thanh toán",
       "profile": "Hồ sơ",
+      "scan": "Quét QR",
       "profile_account": "Cài đặt",
       "profile_kyc": "KYC"
     },
@@ -64,7 +65,16 @@
       "quick_refer": "Giới thiệu",
       "refer_title": "Mời đồng nghiệp nail tech",
       "refer_subtitle": "Nhận $10 cho mỗi bạn bè tham gia!",
-      "invite_now": "Mời ngay"
+      "invite_now": "Mời ngay",
+      "master_welcome_qr": "QR Chào Mừng Chính",
+      "master_store_qr_title": "Master Store QR",
+      "master_status_active": "Đang hoạt động",
+      "master_status_setup_required": "Cần thiết lập",
+      "store_main_portal": "Cổng Chính Cửa Hàng",
+      "master_store_qr_desc": "QR chung của cửa hàng để khách truy cập trang tip chính.",
+      "no_master_touchpoint_url": "Chưa có URL master touchpoint",
+      "preview_qr": "Xem QR",
+      "manage_touchpoints": "Quản lý Touchpoints"
     },
     "tips": {
       "activity": "Hoạt động tip",
@@ -158,6 +168,7 @@
     }
   },
   "common": {
+    "close": "Đóng",
     "active": "Đang hoạt động",
     "inactive": "Ngừng hoạt động",
     "back": "Quay lại",
@@ -252,7 +263,7 @@
     "store_website": "Website (Tùy chọn)",
     "store_logo": "Logo Doanh Nghiệp",
     "store_payment_title": "Phương thức nhận tiền của tiệm",
-    "logo_hint": "Logo vuông (Max 2MB)",
+    "logo_hint": "Logo vuông (Max 5MB)",
     "review_routing_title": "Review Routing (Định tuyến review)",
     "review_routing_policy": "Châm ngôn: Khách hài lòng (4-5★) được đưa thẳng sang Google/Yelp. Khách chưa hài lòng (1-3★) sẽ được định tuyến gửi biểu mẫu đóng góp kín về Email quản trị dưới đây để xử lý kín.",
     "google_review_link": "Google Review Link (Tùy chọn)",
@@ -385,7 +396,8 @@
       "settings": "Cài Đặt",
       "business_setting": "Cài đặt",
       "kyb": "KYB",
-      "support": "Hỗ Trợ"
+      "support": "Hỗ Trợ",
+      "scan": "Quét QR"
     },
     "header": {
       "search_placeholder": "Tìm thợ, bàn ghế, review...",
@@ -492,9 +504,13 @@
       "add_btn": "Thêm Điểm Chạm",
       "tp_name_required": "Vui lòng nhập tên điểm chạm.",
       "tp_added_success": "Đã thêm điểm chạm \"{name}\" thành công!",
+      "tp_add_failed": "Thêm điểm chạm thất bại. Vui lòng thử lại.",
       "view_qr_title": "Mã QR cho {name}",
       "view_qr_desc": "Khách hàng quét mã này để típ và viết đánh giá trực tiếp cho nhân viên được gán.",
       "assign_staff": "Gán nhân viên phục vụ:",
+      "tp_staff_placeholder": "Chọn nhân viên đang hoạt động",
+      "tp_staff_required": "Vui lòng chọn nhân viên cho QR Nhân viên.",
+      "tp_staff_empty": "Chưa có nhân viên active. Hãy thêm nhân viên trước khi tạo touchpoint Staff QR.",
       "no_staff_assigned": "-- Không gán (Típ chung cho cửa hàng) --",
       "download_print_qr": "Tải Xuống QR In Ấn (PDF)",
       "customer_view_test": "Thử Giao Diện Khách Quét ›",
@@ -550,11 +566,15 @@
         "stations": "Điểm Chạm QR",
         "devices": "Thiết Bị Vật Lý"
       },
-      "open_link": "Thử nghiệm luồng trạm"
+      "open_link": "Thử nghiệm luồng trạm",
+      "empty_title": "Chưa có trạm QR nào",
+      "empty_desc": "Tạo touchpoint đầu tiên để bắt đầu nhận lượt quét và tiền tip."
     },
     "devices": {
       "subtitle": "Quản lý các trạm đứng salon vật lý, mã đặt bàn và điểm chạm thông minh.",
       "add_btn": "Thêm Thiết Bị Mới",
+      "empty_title": "Chưa có thiết bị phần cứng",
+      "empty_desc": "Thêm thiết bị QR hoặc NFC để quản lý trạm và theo dõi lượt quét.",
       "location": "Vị trí",
       "scans": "Lượt quét",
       "last_scan": "Lần quét cuối",
@@ -769,6 +789,16 @@
     "yelp_review_btn": "Đánh giá trên Yelp",
     "rating_bad_text": "Chúng tôi rất tiếc vì trải nghiệm chưa tốt của bạn. Hệ thống sẽ gửi góp ý riêng tư trực tiếp tới Quản lý để khắc phục.",
     "submit_internal_btn": "Gửi Góp Ý Bảo Mật",
+    "rating_label_5": "Tuyệt vời!",
+    "rating_label_4": "Tốt!",
+    "rating_label_3": "Tạm ổn",
+    "rating_label_2": "Tệ",
+    "rating_label_1": "Rất tệ",
+    "submit_review_btn": "Gửi đánh giá",
+    "skip_btn": "Bỏ qua",
+    "maybe_later_btn": "Để sau",
+    "back_to_dashboard_btn": "Quay lại Dashboard",
+    "final_thanks_desc": "Cảm ơn bạn đã ủng hộ! Chúc bạn một ngày tốt lành!",
     "final_success_title": "Cảm ơn bạn!",
     "final_success_desc": "Giúp chúng tôi phát triển bằng cách đánh giá trên Google hoặc Yelp.",
     "send_new_btn": "Gửi Thêm Lượt Mới",
@@ -963,6 +993,10 @@
     "otp_desc": "Nhập mã gồm 4 chữ số được gửi tới số điện thoại/email của bạn.",
     "consent_tax": "Tôi hiểu rằng các khoản tiền tip nhận trực tiếp có thể là thu nhập phải báo cáo thuế. Tôi chịu trách nhiệm lưu trữ hồ sơ và báo cáo thu nhập theo quy định pháp luật.",
     "consent_confirm": "Tôi xác nhận rằng thông tin thanh toán của mình là chính xác và khách hàng có thể sử dụng các phương thức này để gửi tip trực tiếp cho tôi.",
+    "label_invited_name": "Tên được mời:",
+    "label_assigned_role": "Vai trò được giao:",
+    "label_invited_email": "Email được mời:",
+    "label_invited_phone": "SĐT được mời:",
     "save_activate": "Lưu & Kích hoạt Tài khoản Cá nhân",
     "customer_preview": "Giao diện khách quét",
     "customer_preview_desc": "Đây là màn hình khách hàng sẽ thấy sau khi chọn thợ.",
@@ -994,6 +1028,7 @@
     "business_name_required": "Tên tiệm là bắt buộc.",
     "business_invalid_slug_format": "Định dạng đường dẫn URL không hợp lệ.",
     "user_not_merchant": "Tài khoản của bạn không có vai trò chủ tiệm.",
+    "touchpoint_starter_limit_reached": "Gói Starter đã đạt giới hạn: bạn chỉ có thể tạo tối đa 3 điểm chạm. Vui lòng nâng cấp gói để thêm nhiều hơn.",
     "image_file_size_exceeded": "Kích thước ảnh vượt quá giới hạn cho phép 10MB.",
     "image_unsupported_file_type": "Định dạng ảnh không hỗ trợ. Vui lòng tải lên PNG, JPEG hoặc WebP.",
     "image_upload_failed": "Tải ảnh lên thất bại.",
@@ -1019,6 +1054,16 @@
     "touchpoint_not_found_desc": "Không thể tải điểm chạm này."
   },
   "components": {
+    "common": {
+      "AppQrScanner": {
+        "title": "Quét mã QR",
+        "camera_error": "Không thể truy cập camera. Vui lòng kiểm tra quyền truy cập.",
+        "permission_denied": "Quyền truy cập camera bị từ chối. Vui lòng cấp quyền camera trong Cài đặt thiết bị để quét mã QR.",
+        "torch": "Đèn pin",
+        "hint": "Hướng camera vào mã QR để quét tự động",
+        "unsupported_qr": "Mã QR không hỗ trợ"
+      }
+    },
     "payout": {
       "bankWireForm": {
         "title": "Thiết lập tài khoản ngân hàng",
@@ -1078,7 +1123,12 @@
           "multiStaffSubtitle": "Mở ứng dụng ngân hàng và gửi một lần tới {business}. Tiền tip sẽ được chia cho các nhân viên đã chọn.",
           "tipBreakdown": "Chi tiết từng nhân viên",
           "totalCombinedTip": "Tổng tiền Tip",
-          "goBack": "Quay Lại"
+          "goBack": "Quay Lại",
+          "singleStaffTitle": "Gửi tiền Tip qua {wallet}",
+          "singleStaffSubtitle_zelle": "Mở ứng dụng ngân hàng của bạn và gửi tới {recipient}.",
+          "singleStaffSubtitle_venmo": "Mở ứng dụng Venmo và gửi tới {recipient}.",
+          "singleStaffSubtitle_cashapp": "Mở ứng dụng Cash App và gửi tới {recipient}.",
+          "singleStaffSubtitle_default": "Mở ứng dụng ví và gửi tới {recipient}."
         }
       }
     },
@@ -1148,7 +1198,13 @@
           "joinQrAlt": "Mã QR gia nhập",
           "scanToJoinAlt": "Quét để gia nhập",
           "preview": "Xem trước",
-          "disabled": "Chưa bật"
+          "disabled": "Chưa bật",
+          "methodEmail": "Email",
+          "methodSms": "SMS",
+          "methodSmsComingSoon": "Sắp ra mắt",
+          "emailAddress": "Địa chỉ Email",
+          "phExampleEmail": "vd: mia.tran@gmail.com",
+          "phExamplePhone": "vd: 0407-555-0123"
         },
         "PayoutSetupModal": {
           "walletAccountTitle": "TÀI KHOẢN {wallet}",
@@ -1458,6 +1514,15 @@
           "phYelpUrl": "https://www.yelp.com/biz/..."
         },
         "KybTab": {
+          "iframeTitle": "Cổng xác minh KYB VLINKPAY",
+          "verifyYourBusiness": "Xác minh doanh nghiệp của bạn",
+          "subtitle": "Hoàn thành <b>KYB</b> và khám phá trải nghiệm đẳng cấp tiếp theo cùng <b>Nexora Touch</b>",
+          "getStarted": "Bắt đầu",
+          "tabKybTitle": "Tại sao xác minh KYB lại quan trọng",
+          "tabKybContent": "Hoàn thành quá trình xác minh KYB đảm bảo doanh nghiệp của bạn tuân thủ đầy đủ các yêu cầu quy định, cho phép truy cập tất cả tính năng và lợi ích của Nexora Touch, bao gồm xử lý thanh toán, thông tin chi tiết doanh nghiệp và nhiều hơn nữa. Quá trình này cũng bảo vệ doanh nghiệp khỏi gian lận và củng cố niềm tin với khách hàng.",
+          "retry": "Thử lại",
+          "networkError": "Không thể tải cổng KYB. Vui lòng kiểm tra kết nối và thử lại.",
+          "serverError": "Không thể khởi tạo cổng KYB. Vui lòng thử lại sau.",
           "closeForm": "Đóng Form",
           "submittingKybDetails": "Đang gửi thông tin xác thực...",
           "legalBusinessName": "Tên pháp lý doanh nghiệp",
@@ -1519,7 +1584,14 @@
           "step2PayoutAnd": "Bước 2: Thanh Toán & Điểm Chạm QR",
           "setUpPayoutMethods": "Thiết lập các phương thức thanh toán và các vị trí dán mã QR (ví dụ: quầy lễ tân, bàn làm việc, xe đẩy) tại tiệm.",
           "setUpPaymentMethods": "Thiết lập các phương thức thanh toán để nhận tiền vào tài khoản tiệm.",
-          "nameThisSpecificTouch": "Đặt tên cho điểm chạm cụ thể này (ví dụ: Bàn 1, Ghế 3) để theo dõi vị trí nhận tiền tip và phản hồi."
+          "nameThisSpecificTouch": "Đặt tên cho điểm chạm cụ thể này (ví dụ: Bàn 1, Ghế 3) để theo dõi vị trí nhận tiền tip và phản hồi.",
+          "clickToZoom": "Nhấp để phóng to",
+          "scanQrAlt": "Quét mã QR",
+          "tpTypeTableQr": "QR Bàn/Ghế",
+          "tpTypeFrontDesk": "Quầy Lễ Tân",
+          "tpTypeReceiptQr": "QR Trên Hóa Đơn",
+          "tpTypeBusinessMain": "QR Chính Tiệm",
+          "tpTypeStaffQr": "QR Nhân Viên"
         },
         "Step3Download": {
           "iHerebyConsentTo": "Tôi đồng ý với Điều khoản dịch vụ người bán của VLINKPAY, yêu cầu báo cáo thuế IRS 1099-K và chính sách thẩm định của doanh nghiệp. Tôi xác nhận rằng tất cả thông tin đăng ký là chính xác."
@@ -1664,7 +1736,7 @@
           "passwordIsRequired": "Mật khẩu không được để trống",
           "passwordMustBeAt": "Mật khẩu phải từ 6 ký tự",
           "youMustAgreeTo": "Bạn phải đồng ý với Điều khoản & Điều kiện để tiếp tục.",
-          "invalidCodeTipEnter": "Mã xác thực không hợp lệ. Gợi ý: Hãy nhập 1234.",
+          "invalidCodeTipEnter": "Mã xác thực không hợp lệ. Vui lòng kiểm tra và thử lại.",
           "thisFieldIsRequired": "Trường này là bắt buộc.",
           "newJoinRequest": "Yêu cầu gia nhập mới",
           "justNow": "Vừa xong",
@@ -1707,7 +1779,22 @@
           "toggleThePaymentChannels": "Bật các kênh thanh toán bạn muốn nhận tiền. Khi khách hàng quét mã QR của bạn, họ sẽ thanh toán trực tiếp vào các tài khoản này.",
           "notConfigured": "Chưa cấu hình",
           "payoutAccount": "Tài khoản",
-          "saveAndActivate": "Lưu & Kích hoạt"
+          "saveAndActivate": "Lưu & Kích hoạt",
+          "walletLabel_zelle": "Zelle",
+          "walletLabel_bankwire": "Bank Wire",
+          "walletLabel_paypal": "PayPal",
+          "walletLabel_venmo": "Venmo",
+          "walletLabel_cashapp": "Cash App",
+          "walletLabel_applecash": "Apple Cash",
+          "walletPlaceholder_zelle": "Nhập email/SĐT Zelle...",
+          "walletPlaceholder_bankwire": "Nhập số routing và tài khoản ngân hàng...",
+          "walletPlaceholder_paypal": "Nhập email PayPal...",
+          "walletPlaceholder_venmo": "Nhập @username Venmo...",
+          "walletPlaceholder_cashapp": "Nhập $cashtag Cash App...",
+          "walletPlaceholder_applecash": "Nhập số điện thoại Apple Cash...",
+          "nexoraStaffId": "NEXORA Staff ID",
+          "pendingRegister": "Chờ đăng ký",
+          "consentRequired": "Bạn phải chấp nhận cả hai điều khoản trước khi kích hoạt tài khoản."
         },
         "StepProfile": {
           "label2PersonalAccount": "2. Tài khoản cá nhân",
@@ -1889,8 +1976,15 @@
       "backToSignIn": "Quay lại Đăng nhập"
     },
     "TouchpointsView": {
-      "phExampleDeviceIds": "vd: NFC-105, QR-Table-01",
-      "phDeviceId": "Mã thiết bị (vd: NFC-105)"
+      "phExampleDeviceIds": "vd: NFC-105, QR-Ban-01",
+      "phDeviceId": "Mã thiết bị (vd: NFC-105)",
+      "scanQrAlt": "Quét mã QR",
+      "previewQr": "Xem trước",
+      "noMatchingDevices": "Không tìm thấy thiết bị phù hợp",
+      "viewHardwareDetails": "Nhấp để xem chi tiết thiết bị",
+      "paperQrOnly": "Chỉ dùng QR in giấy",
+      "editLink": "Sửa liên kết",
+      "linkDevice": "Liên kết thiết bị"
     },
     "TransactionFilter": {
       "phMin": "Tối thiểu",
@@ -1912,5 +2006,15 @@
       "business_account_not_allowed": "Chỉ tài khoản cá nhân (Personal) mới có thể chấp nhận lời mời tiệm. Vui lòng đăng nhập bằng tài khoản cá nhân.",
       "onboarding_required": "Vui lòng hoàn tất hồ sơ cá nhân trước khi gia nhập tiệm."
     }
+  },
+  "coming_soon": {
+    "analytics_title": "Phân Tích Nâng Cao",
+    "analytics_desc": "Chuyển đổi thiết bị, phân tích khách quay lại, và tóm tắt đánh giá bằng AI sẽ ra mắt ở giai đoạn 3.",
+    "subscriptions_title": "Gói Dịch Vụ",
+    "subscriptions_desc": "Quản lý đơn hàng giá NFC, gói gia hạn, và phần cứng bổ sung từ không gian này.",
+    "settings_title": "Cài Đặt",
+    "settings_desc": "Tuỳ chọn cửa hàng, khoá webhook và điểm đến review sẽ được cấu hình tại đây.",
+    "default_title": "Tính Năng Đang Phát Triển",
+    "default_desc": "Module này đang được chuẩn bị cho bảng điều khiển Nexora Touch."
   }
 }

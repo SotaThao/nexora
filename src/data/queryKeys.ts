@@ -36,6 +36,8 @@ export const qk = {
   userProfile:              () => ['userProfile'],
   verifiedStatus:           () => ['userProfile', 'verifiedStatus'],
   kycInitialize:            () => ['userProfile', 'kycInitialize'],
+  kybIframeInitialize:      (language = 'en') => ['userProfile', 'kybIframeInitialize', language],
+  kybRegister:              () => ['userProfile', 'kybRegister'],
 
   // Merchant Staff Management
   merchantStaff:       (statusFilter?: string, pageNumber?: number, pageSize?: number) => {

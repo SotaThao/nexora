@@ -1,4 +1,5 @@
 import React from 'react'
+import BackToDashboardButton from '../BackToDashboardButton'
 
 /**
  * ReviewRouting — shows Google and Yelp review links after a positive review.
@@ -91,12 +92,13 @@ export default function ReviewRouting({ t, reviewLinks, setStep, handleTrackExte
       </div>
 
       <div className="space-y-4 text-center pt-2">
+        <BackToDashboardButton />
         <button
           type="button"
           onClick={() => setStep('final_done')}
           className="text-xs font-bold text-nexoraSubtle hover:text-nexoraText transition"
         >
-          Maybe later
+          {t('customer.maybe_later_btn')}
         </button>
         <p className="text-[10px] text-nexoraSubtle font-medium italic mt-2">
           {t('customer.final_success_desc')}
