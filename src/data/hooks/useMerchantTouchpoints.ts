@@ -32,6 +32,7 @@ export function useCreateTouchpoint() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantTouchpoints() })
       queryClient.invalidateQueries({ queryKey: qk.dashboardOverview() })
+      queryClient.invalidateQueries({ queryKey: qk.dashboardTipsChart() })
       queryClient.invalidateQueries({ queryKey: qk.merchantSetup() })
     },
   })
@@ -45,6 +46,7 @@ export function useDeleteTouchpoint() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantTouchpoints() })
       queryClient.invalidateQueries({ queryKey: qk.dashboardOverview() })
+      queryClient.invalidateQueries({ queryKey: qk.dashboardTipsChart() })
       queryClient.invalidateQueries({ queryKey: qk.merchantSetup() })
     },
   })

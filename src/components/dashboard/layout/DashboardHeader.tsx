@@ -30,6 +30,7 @@ export default function DashboardHeader({
   setNotifications,
   isNotiDropdownOpen,
   setIsNotiDropdownOpen,
+  isNotificationsLoading = false,
   onNavigateMenu,
   staff,
   transactions,
@@ -359,9 +360,14 @@ export default function DashboardHeader({
                 )}
               </div>
               <div className="flex-grow overflow-y-auto max-h-[380px] divide-y divide-nexoraBorder">
-                {notifications && notifications.length > 0 ? (
+                {isNotificationsLoading ? (
+                  <div className="py-12 text-center text-nexoraSubtle flex flex-col items-center justify-center">
+                    <Bell className="h-8 w-8 text-nexoraBorder mb-2 animate-pulse" />
+                    <p className="text-xs font-semibold">{t('common.loading')}</p>
+                  </div>
+                ) : notifications && notifications.length > 0 ? (
                   notifications.map((item) => {
-                    const typeLower = (item.type || '').toLowerCase()
+                    const typeLower = (item.type || '').toLowerCase().replace(/[\s_-]+/g, '')
                     const IconComponent = {
                       tip_success: Wallet,
                       feedback_alert: AlertTriangle,
@@ -372,6 +378,8 @@ export default function DashboardHeader({
                       staff_link_request: UserCheck,
                       staff_joined: UserCheck,
                       staffjoined: UserCheck,
+                      staffinviteaccepted: UserCheck,
+                      staffpublicjoinrequest: UserCheck,
                     }[typeLower] || Bell
 
                     const iconColor = {
@@ -384,6 +392,8 @@ export default function DashboardHeader({
                       staff_link_request: 'bg-nexoraBrand text-white',
                       staff_joined: 'bg-nexoraBrand text-white',
                       staffjoined: 'bg-nexoraBrand text-white',
+                      staffinviteaccepted: 'bg-nexoraBrand text-white',
+                      staffpublicjoinrequest: 'bg-nexoraBrand text-white',
                     }[typeLower] || 'bg-nexoraBrand text-white'
 
                     const isUnread = !item.read

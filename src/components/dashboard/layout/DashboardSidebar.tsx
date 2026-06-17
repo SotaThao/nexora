@@ -6,12 +6,14 @@ import { ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { visibleMenuItems } from '../constants'
 import MenuIcon from '../../ui/MenuIcon'
+import { getSubscriptionSidebarCopy } from '../../../utils/subscriptionDisplay'
 
 export default function DashboardSidebar({
   activeMenu,
   setActiveMenu,
   businessName,
   profile,
+  subscription = null,
   settingsTab,
   setSettingsTab,
   isProfileExpanded,
@@ -34,6 +36,11 @@ export default function DashboardSidebar({
   const activeSubTab = searchParams.get('tab')
   const [isTipsExpanded, setIsTipsExpanded] = useState(activeMenu === 'tips')
   const [isTouchpointsExpanded, setIsTouchpointsExpanded] = useState(activeMenu === 'touchpoints')
+  const subscriptionCopy = getSubscriptionSidebarCopy(
+    subscription ?? profile?.subscription,
+    t,
+    currentLanguage,
+  )
 
   useEffect(() => {
     if (activeMenu === 'tips') {
@@ -122,14 +129,16 @@ export default function DashboardSidebar({
         <div className="text-[10px] font-extrabold uppercase tracking-wider text-white/45">
           {t('dashboard.sidebar.current_plan_header')}
         </div>
-        {hasKyb ? (
+        {subscriptionCopy.planLabel ? (
           <>
             <div className="mt-1 text-sm font-black text-white">
-              {t('dashboard.sidebar.plan_name')}
+              {subscriptionCopy.planLabel}
             </div>
-            <div className="mt-1 text-xs text-white/55">
-              {t('dashboard.sidebar.renews_text')}
-            </div>
+            {subscriptionCopy.detailLabel ? (
+              <div className="mt-1 text-xs text-white/55">
+                {subscriptionCopy.detailLabel}
+              </div>
+            ) : null}
           </>
         ) : (
           <div className="mt-1 text-xs font-semibold text-rose-400">
