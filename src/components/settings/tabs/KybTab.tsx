@@ -1,23 +1,22 @@
 import React, { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { Building2, ChevronDown, Loader2, RotateCcw, ShieldCheck } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { UserKybStatus } from '../../../constants/userVerifyStatus'
-import type { KybCustomerProfileResponse } from '../../../data/repositories/profileSettings'
+import type { KybIframeInitializeResponse } from '../../../data/repositories/profileSettings'
 import { useKybInfo, useRegisterKyb } from '../../../data/hooks/useProfileSettings'
 
 const APPROVED_STATUSES = new Set(['kyb_approved', 'verified_pro'])
 
-function resolveCustomerId(profile: LooseObject) {
-  return profile?.id ?? profile?.customerId ?? profile?.vlinkpayCustomerId ?? null
-}
-
-function hasKybSubmission(kybInfo?: KybCustomerProfileResponse | null) {
+function hasKybSubmission(kybInfo?: KybIframeInitializeResponse | null) {
   if (!kybInfo) return false
-  return (kybInfo.kybProfile?.length ?? 0) > 0
+  return Boolean(kybInfo.identityId)
 }
 
-function shouldRequestKybCamera(status?: number) {
-  return status === UserKybStatus.None || status === UserKybStatus.Rejected
+function shouldRequestKybCamera(verificationStatus: string) {
+  return (
+    verificationStatus === 'basic' ||
+    verificationStatus === 'kyb_rejected' ||
+    verificationStatus === 'rejected'
+  )
 }
 
 async function requestCameraPermission() {
@@ -55,7 +54,7 @@ export default function KybTab({
   verificationStatus,
   portalRef,
 }: KybTabProps) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const [isAccordionOpen, setIsAccordionOpen] = useState(true)
   const [isIframeLoading, setIsIframeLoading] = useState(false)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -63,14 +62,13 @@ export default function KybTab({
   const autoLoadAttemptedRef = useRef(false)
 
   const isApproved = APPROVED_STATUSES.has(verificationStatus)
-  const customerId = resolveCustomerId(profile)
 
   const {
     data: kybInfo,
     isLoading: isLoadingKybInfo,
     isError: isKybInfoError,
     refetch: refetchKybInfo,
-  } = useKybInfo({ customerId, enabled: !isApproved })
+  } = useKybInfo({ language: currentLanguage, enabled: !isApproved })
 
   const {
     mutate: loadKybForm,
@@ -80,7 +78,6 @@ export default function KybTab({
     reset: resetPortal,
   } = useRegisterKyb()
 
-  const kybStatus = kybInfo?.status
   const hasSubmittedKyb = hasKybSubmission(kybInfo)
   const iframeUrl = portalData?.url
   const hasUrl = Boolean(iframeUrl)
@@ -113,7 +110,7 @@ export default function KybTab({
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
     timeoutRef.current = window.setTimeout(() => setIsIframeLoading(false), 30000)
 
-    const shouldRequestCamera = shouldRequestKybCamera(kybStatus)
+    const shouldRequestCamera = shouldRequestKybCamera(verificationStatus)
 
     if (shouldRequestCamera && !cameraRequestedRef.current) {
       cameraRequestedRef.current = true
@@ -123,7 +120,7 @@ export default function KybTab({
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
     }
-  }, [hasUrl, iframeUrl, kybStatus])
+  }, [hasUrl, iframeUrl, verificationStatus])
 
   const handleIframeLoad = () => {
     if (timeoutRef.current) {

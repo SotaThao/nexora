@@ -4,8 +4,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import profileSettingsRepository, {
-  type KybCustomerProfileResponse,
-  type RegisterKybResponse,
+  type InitializeKybResponse,
+  type KybIframeInitializeResponse,
 } from '../repositories/profileSettings'
 import { useSessionRole } from '../../auth/useSessionRole'
 import type { UserProfile } from '../../types/domain'
@@ -36,18 +36,21 @@ export function useVerifiedStatus({ enabled = true } = {}) {
   })
 }
 
-/** KYB dossier — GET /customers/customers/kyb/{customerId} */
+/** KYB iframe session — POST /api/v1/UserProfile/iframe/initialize */
 export function useKybInfo({
-  customerId,
+  language = 'en',
   enabled = true,
 }: {
-  customerId?: string | number | null
+  language?: string
   enabled?: boolean
 } = {}) {
-  return useQuery<KybCustomerProfileResponse>({
-    queryKey: qk.kybInfo(customerId),
-    queryFn: () => profileSettingsRepository.getKybInfo(customerId!),
-    enabled: enabled && customerId != null && customerId !== '',
+  return useQuery<KybIframeInitializeResponse>({
+    queryKey: qk.kybIframeInitialize(language),
+    queryFn: () => profileSettingsRepository.initializeKybIframe({
+      viewType: 'Identity',
+      language,
+    }),
+    enabled,
     refetchOnWindowFocus: false,
   })
 }
@@ -61,10 +64,10 @@ export function useKycInitialize({ enabled = false } = {}) {
   })
 }
 
-/** POST /customers/customers/kyb/register — VLINKPAY KYB iframe portal. */
+/** POST /api/v1/UserProfile/kyb/initialize — KYB iframe portal URL. */
 export function useRegisterKyb() {
-  return useMutation<RegisterKybResponse, Error, void>({
-    mutationFn: () => profileSettingsRepository.registerKyb(),
+  return useMutation<InitializeKybResponse, Error, void>({
+    mutationFn: () => profileSettingsRepository.initializeKyb(),
   })
 }
 
