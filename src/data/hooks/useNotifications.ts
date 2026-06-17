@@ -6,10 +6,13 @@ import { qk } from '../queryKeys'
 import notificationsRepository from '../repositories/notifications'
 import type { NotificationRecord, NotificationsPage } from '../../types/domain'
 
-export function useNotifications() {
+export function useNotifications({ enabled: callerEnabled = true } = {}) {
   return useQuery<NotificationRecord[]>({
     queryKey: qk.notifications(),
     queryFn: () => notificationsRepository.list(),
+    enabled: callerEnabled,
+    staleTime: 30_000,
+    refetchOnMount: false,
   })
 }
 

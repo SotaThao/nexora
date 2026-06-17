@@ -383,6 +383,7 @@
       "avg_tip": "Típ Trung Bình",
       "total_reviews": "Tổng Đánh Giá",
       "vs_last_week": "so với tuần trước",
+      "no_comparison": "Chưa có dữ liệu kỳ trước",
       "scans": "Lượt Quét QR/NFC",
       "reviews": "Lượt Đánh Giá",
       "avg_rating": "Đánh Giá Trung Bình",
@@ -392,6 +393,7 @@
     "review_kpi": {
       "google_reviews": "Đánh giá Google",
       "yelp_reviews": "Đánh giá Yelp",
+      "staff_reviews": "Đánh giá {name}",
       "response_rate": "Tỷ lệ Phản hồi",
       "returning_customers": "Khách quay lại",
       "great": "Tuyệt vời!",
@@ -476,6 +478,7 @@
       "assign_staff": "Gán nhân viên phục vụ:",
       "no_staff_assigned": "-- Không gán (Típ chung cho cửa hàng) --",
       "download_print_qr": "Tải Xuống QR In Ấn (PDF)",
+      "print_qr": "In Mã QR",
       "customer_view_test": "Thử Giao Diện Khách Quét ›",
       "tp_name_placeholder": "Ví dụ: Ghế Manicure 05",
       "device_id_label": "Serial thiết bị / Mã NFC"
@@ -1232,7 +1235,13 @@
       "overview": {
         "Overview": {
           "custom": "Tự chọn",
-          "copiedNfcRedirectLink": "Đã sao chép link chuyển hướng NFC vào clipboard!"
+          "copiedNfcRedirectLink": "Đã sao chép link chuyển hướng NFC vào clipboard!",
+          "qr_download_failed": "Không thể tải mã QR. Vui lòng thử lại.",
+          "gateway_empty_title": "Chưa có điểm chạm",
+          "gateway_empty_desc": "Tạo touchpoint để sinh Master QR và cổng NFC cho cửa hàng.",
+          "gateway_empty_action": "Thêm Touchpoint",
+          "reviews_empty_title": "Chưa có dữ liệu đánh giá",
+          "reviews_empty_desc": "Chỉ số đánh giá sẽ hiển thị khi khách hàng bắt đầu để lại phản hồi."
         },
         "SetupGuideBanner": {
           "gettingStarted": "Bắt đầu sử dụng",
@@ -1243,7 +1252,14 @@
         "TipsOverTimePanel": {
           "custom": "Tự chọn",
           "from": "Từ ngày:",
-          "to": "Đến ngày:"
+          "to": "Đến ngày:",
+          "empty_title": "Chưa có tip trong khoảng thời gian này",
+          "empty_desc": "Biểu đồ sẽ hiển thị khi khách hàng bắt đầu tip qua các điểm chạm của bạn."
+        },
+        "StaffLeaderboardPanel": {
+          "empty_title": "Chưa có bảng xếp hạng nhân viên",
+          "empty_desc": "Thêm nhân viên để xem thứ hạng hiệu suất trên leaderboard.",
+          "empty_action": "Quản lý nhân viên"
         }
       },
       "views": {

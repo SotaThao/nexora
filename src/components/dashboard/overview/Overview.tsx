@@ -1,13 +1,20 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
-import { Calendar, QrCode, Eye, Download, Sparkles, Pointer, Star } from 'lucide-react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { Calendar, QrCode, Eye, Download, Sparkles, Pointer, Star, MessageSquare } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
+import { useDownloadTouchpointQr } from '../../../data/hooks/useMerchantTouchpoints'
+import { downloadQrCode } from '../../../utils/qrUtils'
+import { buildQrImageUrl, toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
 import { formatCurrency } from '../utils'
 import Panel from '../../ui/Panel'
 import KpiCard from '../../ui/KpiCard'
+import { SkeletonKpiCard } from '../../ui/skeleton'
+import Skeleton from '../../ui/skeleton/Skeleton'
 import TipsOverTimePanel from './TipsOverTimePanel'
 import StaffLeaderboardPanel from './StaffLeaderboardPanel'
 import SetupGuideBanner from './SetupGuideBanner'
+import OverviewEmptyState from './OverviewEmptyState'
+import OverviewSkeleton from './OverviewSkeleton'
 
 function renderStars(rating) {
   const stars = []
@@ -32,6 +39,7 @@ function renderStars(rating) {
 
 function Overview({
   metrics,
+  kpiDeltas,
   activeKpi,
   setActiveKpi,
   chartRange,
@@ -45,17 +53,31 @@ function Overview({
   setSelectedStaff,
   onOpenTouchpoints,
   onOpenReviews,
+  onOpenStaff,
   businessName,
   previewQr,
   touchpoints = [],
   hasKyb = true,
   hasSetup = true,
-  onStartSetup
+  onStartSetup,
+  isLoading = false,
+  isTransactionsLoading = false,
+  isTouchpointsLoading = false,
+  reviewsPage = null,
+  isReviewsPending = false,
 }) {
   const { currentLanguage, t } = useTranslation()
   const { showToast } = useNotification()
+  const downloadTouchpointQrMutation = useDownloadTouchpointQr()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [isMasterQrDownloading, setIsMasterQrDownloading] = useState(false)
   const dropdownRef = useRef(null)
+
+  const reviewsSummary = useMemo(() => {
+    const items = reviewsPage?.items ?? []
+    const totalCount = reviewsPage?.totalCount ?? items.length
+    return { totalCount, items }
+  }, [reviewsPage])
 
   // The "Master Store QR" (general pool tips) must point to a REAL backing
   // touch point — there is no store-level "general" touch page on the API
@@ -63,21 +85,55 @@ function Overview({
   // touch point (the lobby/master created at onboarding), else the first one.
   const masterTouchpoint =
     (touchpoints || []).find((tp) => tp.type === 'FrontDesk') || (touchpoints || [])[0] || null
-  let masterTouchUrl = ''
-  if (masterTouchpoint?.url) {
-    try {
-      masterTouchUrl = `${window.location.origin}${new URL(masterTouchpoint.url).pathname}`
-    } catch {
-      masterTouchUrl = masterTouchpoint.url
+
+  const masterQrLink = useMemo(() => {
+    if (masterTouchpoint?.url) {
+      return toLocalCustomerTouchUrl(String(masterTouchpoint.url))
     }
-  }
+
+    const businessSlug = (businessName || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+    const touchSlug = masterTouchpoint?.slug || 'general'
+    return `${window.location.origin}/touch/${businessSlug}/${touchSlug}`
+  }, [masterTouchpoint, businessName])
+
+  const masterQrPreviewUrl = useMemo(
+    () => buildQrImageUrl(masterQrLink, 150, masterTouchpoint?.qrImageUrl),
+    [masterQrLink, masterTouchpoint?.qrImageUrl],
+  )
+
   const masterQrTarget = {
     name: 'Master Welcome QR',
     subtitle: 'Store Main Portal',
     slug: masterTouchpoint?.slug || 'general',
     url: masterTouchpoint?.url || null,
+    qrImageUrl: masterTouchpoint?.qrImageUrl || null,
     isActive: true,
   }
+
+  const handleDownloadMasterQr = useCallback(async () => {
+    setIsMasterQrDownloading(true)
+    try {
+      if (masterTouchpoint?.id) {
+        await downloadTouchpointQrMutation.mutateAsync({
+          id: masterTouchpoint.id,
+          format: 'png',
+        })
+      } else {
+        await downloadQrCode(buildQrImageUrl(masterQrLink, 1000), 'master-qr.png')
+      }
+      showToast(t('components.SettingsView.qrCodeDownloaded'), 'success')
+    } catch {
+      showToast(t('components.dashboard.overview.Overview.qr_download_failed'), 'error')
+    } finally {
+      setIsMasterQrDownloading(false)
+    }
+  }, [
+    masterTouchpoint?.id,
+    masterQrLink,
+    downloadTouchpointQrMutation,
+    showToast,
+    t,
+  ])
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -106,9 +162,9 @@ function Overview({
       return d.toISOString().split('T')[0];
     };
 
-    let refEndDate = '2026-05-26';
+    let refEndDate = chartEndDate || new Date().toISOString().split('T')[0];
     if (transactions && transactions.length > 0) {
-      let maxDate = '1970-01-01';
+      let maxDate = refEndDate;
       transactions.forEach(tx => {
         if (tx.dateTime) {
           const dateStr = tx.dateTime.split(' ')[0];
@@ -117,7 +173,7 @@ function Overview({
           }
         }
       });
-      if (maxDate !== '1970-01-01') refEndDate = maxDate;
+      refEndDate = maxDate;
     }
 
     return [
@@ -146,7 +202,7 @@ function Overview({
         label: t('components.dashboard.overview.Overview.custom')
       }
     ];
-  }, [transactions, currentLanguage]);
+  }, [transactions, chartEndDate, currentLanguage]);
 
   const selectedLabel = useMemo(() => {
     if (chartRange === 'Custom') {
@@ -163,6 +219,23 @@ function Overview({
     const opt = dateRangeOptions.find(o => o.value === chartRange);
     return opt ? opt.label : dateRangeOptions[0].label;
   }, [chartRange, chartStartDate, chartEndDate, dateRangeOptions, currentLanguage]);
+
+  const hasReviewData = reviewsSummary.totalCount > 0
+
+  const hasMasterGateway = Boolean(masterTouchpoint)
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8">
+        {!hasSetup && (
+          <div className="mb-6">
+            <SetupGuideBanner onStartSetup={onStartSetup} />
+          </div>
+        )}
+        <OverviewSkeleton />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-8">
@@ -219,34 +292,40 @@ function Overview({
 
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard
-          label={t('dashboard.kpi.total_tips')}
-          value={formatCurrency(metrics.totalTips)}
-          delta="18.5%"
-          active={activeKpi === 'tips'}
-          onClick={() => setActiveKpi('tips')}
-        />
-        <KpiCard
-          label={t('dashboard.kpi.total_transactions')}
-          value={metrics.totalTransactions.toString()}
-          delta="16.7%"
-          active={activeKpi === 'transactions'}
-          onClick={() => setActiveKpi('transactions')}
-        />
-        <KpiCard
-          label={t('dashboard.kpi.avg_tip')}
-          value={formatCurrency(metrics.averageTip)}
-          delta="9.3%"
-          active={activeKpi === 'avg_tip'}
-          onClick={() => setActiveKpi('avg_tip')}
-        />
-        <KpiCard
-          label={t('dashboard.kpi.total_reviews')}
-          value={metrics.totalReviews.toString()}
-          delta="20.4%"
-          active={activeKpi === 'reviews'}
-          onClick={() => setActiveKpi('reviews')}
-        />
+        {isTransactionsLoading ? (
+          Array.from({ length: 4 }, (_, index) => <SkeletonKpiCard key={index} />)
+        ) : (
+          <>
+            <KpiCard
+              label={t('dashboard.kpi.total_tips')}
+              value={formatCurrency(metrics.totalTips)}
+              deltaPercent={kpiDeltas?.totalTips ?? null}
+              active={activeKpi === 'tips'}
+              onClick={() => setActiveKpi('tips')}
+            />
+            <KpiCard
+              label={t('dashboard.kpi.total_transactions')}
+              value={metrics.totalTransactions.toString()}
+              deltaPercent={kpiDeltas?.totalTransactions ?? null}
+              active={activeKpi === 'transactions'}
+              onClick={() => setActiveKpi('transactions')}
+            />
+            <KpiCard
+              label={t('dashboard.kpi.avg_tip')}
+              value={formatCurrency(metrics.averageTip)}
+              deltaPercent={kpiDeltas?.averageTip ?? null}
+              active={activeKpi === 'avg_tip'}
+              onClick={() => setActiveKpi('avg_tip')}
+            />
+            <KpiCard
+              label={t('dashboard.kpi.total_reviews')}
+              value={reviewsSummary.totalCount.toString()}
+              deltaPercent={kpiDeltas?.totalReviews ?? null}
+              active={activeKpi === 'reviews'}
+              onClick={() => setActiveKpi('reviews')}
+            />
+          </>
+        )}
       </div>
 
       {/* Panels Grid */}
@@ -258,10 +337,15 @@ function Overview({
           chartEndDate={chartEndDate}
           setChartStartDate={setChartStartDate}
           setChartEndDate={setChartEndDate}
-          transactions={transactions}
-          hasKyb={hasKyb}
         />
-        <StaffLeaderboardPanel selectedStaff={selectedStaff} setSelectedStaff={setSelectedStaff} hasKyb={hasKyb} />
+        <StaffLeaderboardPanel
+          selectedStaff={selectedStaff}
+          setSelectedStaff={setSelectedStaff}
+          hasKyb={hasKyb}
+          chartStartDate={chartStartDate}
+          chartEndDate={chartEndDate}
+          onOpenStaff={onOpenStaff}
+        />
       </div>
 
       {/* Master Gateways Panel */}
@@ -274,6 +358,23 @@ function Overview({
         </p>
 
         <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
+          {isTouchpointsLoading ? (
+            <>
+              <Skeleton height={196} borderRadius={12} />
+              <Skeleton height={196} borderRadius={12} />
+            </>
+          ) : !hasMasterGateway ? (
+            <div className="md:col-span-2">
+              <OverviewEmptyState
+                icon={QrCode}
+                title={t('components.dashboard.overview.Overview.gateway_empty_title')}
+                description={t('components.dashboard.overview.Overview.gateway_empty_desc')}
+                actionLabel={t('components.dashboard.overview.Overview.gateway_empty_action')}
+                onAction={onOpenTouchpoints}
+              />
+            </div>
+          ) : (
+            <>
           {/* Master QR section */}
           <div className="rounded-xl border border-nexoraBorder bg-nexoraCanvas p-5 flex flex-col md:flex-row justify-between gap-5">
             <div className="flex-grow flex flex-col justify-between">
@@ -307,17 +408,9 @@ function Overview({
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&data=${encodeURIComponent(
-                      (masterTouchUrl || `${window.location.origin}/touch/${(businessName || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}/general`)
-                    )}`
-                    const link = document.createElement('a')
-                    link.href = qrUrl
-                    link.download = 'master-qr.png'
-                    link.target = '_blank'
-                    link.click()
-                  }}
-                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white hover:bg-nexoraBrandDark transition cursor-pointer"
+                  onClick={handleDownloadMasterQr}
+                  disabled={isMasterQrDownloading || downloadTouchpointQrMutation.isPending}
+                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white hover:bg-nexoraBrandDark transition cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <Download className="h-4 w-4" />
                   {t('dashboard.master_gateway.btn_download')}
@@ -331,9 +424,7 @@ function Overview({
               className="flex-shrink-0 mx-auto md:mx-0 w-28 h-28 rounded-lg bg-white border border-nexoraBorder/80 p-2 flex items-center justify-center shadow-sm relative overflow-hidden cursor-pointer hover:border-nexoraBrand transition select-none group"
             >
               <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-                  (masterTouchUrl || `${window.location.origin}/touch/${(businessName || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}/general`)
-                )}`}
+                src={masterQrPreviewUrl}
                 alt="Master QR Code Preview"
                 className="h-full w-full object-contain group-hover:scale-105 transition duration-200"
               />
@@ -370,7 +461,7 @@ function Overview({
                 <button
                   type="button"
                   onClick={() => {
-                    const nfcUrl = (masterTouchUrl || `${window.location.origin}/touch/${(businessName || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}/general`)
+                    const nfcUrl = masterQrLink
                     navigator.clipboard.writeText(nfcUrl)
                     showToast(t('components.dashboard.overview.Overview.copiedNfcRedirectLink'), 'success')
                   }}
@@ -387,7 +478,7 @@ function Overview({
                       version: "1.0",
                       platform: "nexora-touch",
                       businessName: businessName,
-                      gatewayUrl: (masterTouchUrl || `${window.location.origin}/touch/${(businessName || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}/general`),
+                      gatewayUrl: masterQrLink,
                       nfcTagId: "master-nfc-general"
                     }
                     const blob = new Blob([JSON.stringify(configData, null, 2)], { type: 'application/json' })
@@ -418,80 +509,49 @@ function Overview({
               </div>
             </div>
           </div>
+            </>
+          )}
         </div>
       </Panel>
 
-      {/* Review KPI Cards (Bottom Grid) */}
+      {/* Review cards from API — one card per review item */}
+      {isReviewsPending ? (
+        <Panel className="p-8 text-center text-xs font-semibold text-nexoraMuted">
+          {t('common.loading')}
+        </Panel>
+      ) : !hasReviewData ? (
+        <OverviewEmptyState
+          icon={MessageSquare}
+          title={t('components.dashboard.overview.Overview.reviews_empty_title')}
+          description={t('components.dashboard.overview.Overview.reviews_empty_desc')}
+          actionLabel={onOpenReviews ? t('dashboard.menu.reviews') : undefined}
+          onAction={onOpenReviews}
+        />
+      ) : (
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Google Reviews */}
-        <Panel className="p-5 flex flex-col justify-between min-h-[140px] hover:shadow-premium transition">
-          <div>
-            <div className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
-              {t('dashboard.review_kpi.google_reviews')}
+        {reviewsSummary.items.map((review) => (
+          <Panel
+            key={review.id}
+            className="p-5 flex flex-col justify-between min-h-[140px] hover:shadow-premium transition"
+          >
+            <div>
+              <div className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
+                {t('dashboard.review_kpi.staff_reviews', { name: review.staffName })}
+              </div>
+              <div className="mt-2 text-2xl font-black text-nexoraText tracking-tight">
+                {review.rating}
+              </div>
             </div>
-            <div className="mt-2 text-2xl font-black text-nexoraText tracking-tight">
-              {metrics.googleRating}
+            <div className="mt-4 space-y-1">
+              {renderStars(review.rating || 0)}
+              <div className="text-xs text-nexoraMuted mt-0.5">
+                {review.routingType}
+              </div>
             </div>
-          </div>
-          <div className="mt-4 space-y-1">
-            {renderStars(metrics.googleRating)}
-            <div className="text-xs text-nexoraMuted mt-0.5">
-              {t('dashboard.review_kpi.reviews_count', { count: metrics.googleReviews })}
-            </div>
-          </div>
-        </Panel>
-
-        {/* Yelp Reviews */}
-        <Panel className="p-5 flex flex-col justify-between min-h-[140px] hover:shadow-premium transition">
-          <div>
-            <div className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
-              {t('dashboard.review_kpi.yelp_reviews')}
-            </div>
-            <div className="mt-2 text-2xl font-black text-nexoraText tracking-tight">
-              {metrics.yelpRating}
-            </div>
-          </div>
-          <div className="mt-4 space-y-1">
-            {renderStars(metrics.yelpRating)}
-            <div className="text-xs text-nexoraMuted mt-0.5">
-              {t('dashboard.review_kpi.reviews_count', { count: metrics.yelpReviews })}
-            </div>
-          </div>
-        </Panel>
-
-        {/* Response Rate */}
-        <Panel className="p-5 flex flex-col justify-between min-h-[140px] hover:shadow-premium transition">
-          <div>
-            <div className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
-              {t('dashboard.review_kpi.response_rate')}
-            </div>
-            <div className="mt-2 text-2xl font-black text-nexoraText tracking-tight">
-              {metrics.responseRate}%
-            </div>
-          </div>
-          <div className="mt-4 flex items-center gap-1.5 text-xs font-bold text-emerald-600">
-            <span>{t('dashboard.review_kpi.great')}</span>
-          </div>
-        </Panel>
-
-        {/* Returning Customers */}
-        <Panel className="p-5 flex flex-col justify-between min-h-[140px] hover:shadow-premium transition">
-          <div>
-            <div className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
-              {t('dashboard.review_kpi.returning_customers')}
-            </div>
-            <div className="mt-2 text-2xl font-black text-nexoraText tracking-tight">
-              {metrics.returningCustomers}%
-            </div>
-          </div>
-          <div className="mt-4 flex items-center gap-1.5 text-xs font-bold text-emerald-600">
-            <span>▲ {metrics.returningCustomersDelta}%</span>
-            <span className="text-nexoraMuted font-semibold">
-              {t('dashboard.kpi.vs_last_week')}
-            </span>
-          </div>
-        </Panel>
+          </Panel>
+        ))}
       </div>
+      )}
     </div>
   )
 }

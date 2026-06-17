@@ -8,7 +8,9 @@ import type {
   DashboardOverviewApiDto,
   DashboardOverviewMetrics,
   DashboardStaffMetricApiDto,
+  DashboardTipsChartApiDto,
   StaffLeaderboardRow,
+  TipsChartDayMetric,
 } from '../../types/repositories'
 
 type HttpClient = typeof httpClient
@@ -16,7 +18,29 @@ type HttpClient = typeof httpClient
 interface DateRangeParams {
   startDate?: string
   endDate?: string
+  dateFrom?: string
+  dateTo?: string
   [key: string]: string | number | boolean | null | undefined
+}
+
+function toDashboardDateParams(params: DateRangeParams = {}) {
+  const dateFrom = params.dateFrom || params.startDate
+  const dateTo = params.dateTo || params.endDate
+  return {
+    ...(dateFrom ? { dateFrom } : {}),
+    ...(dateTo ? { dateTo } : {}),
+  }
+}
+
+function toTipsChartDateParams(params: DateRangeParams = {}) {
+  const startDate = params.startDate || params.dateFrom
+  const endDate = params.endDate || params.dateTo
+  if (!startDate || !endDate) return {}
+
+  return {
+    DateFrom: `${startDate}T00:00:00.000Z`,
+    DateTo: `${endDate}T23:59:59.999Z`,
+  }
 }
 
 interface ListApiResponse<T> {
@@ -29,28 +53,26 @@ export function createDashboardRepository(client: HttpClient = httpClient) {
       try {
         const response = await client.get<DashboardOverviewApiDto>(
           '/api/v1/merchant/dashboard/overview',
-          { params },
+          { params: toDashboardDateParams(params) },
         )
 
+        const tips = response.tipsSummary
+        const scans = response.scansSummary
+        const reviews = response.reviewsSummary
+
         return {
-          totalTips: response.totalTipAmount || response.totalTips || 0,
-          totalTransactions: response.tipCount || response.totalTransactions || 0,
-          averageTip: response.averageTip || 0,
-          totalReviews: response.totalReviews || 0,
-          scans: response.totalScans || 0,
-          conversionRate: response.conversionRate || 0,
-          publicReviews: response.publicReviews || 0,
-          privateReviews: response.privateReviews || 0,
-          averageRating: response.averageRating || 0,
-          googleClicks: response.googleClicks || 0,
-          yelpClicks: response.yelpClicks || 0,
-          googleRating: response.googleRating || response.averageRating || 0,
-          googleReviews: response.googleReviews || response.publicReviews || 0,
-          yelpRating: response.yelpRating || response.averageRating || 0,
-          yelpReviews: response.yelpReviews || 0,
-          responseRate: response.responseRate || 0,
-          returningCustomers: response.returningCustomers || 0,
-          returningCustomersDelta: response.returningCustomersDelta || 0,
+          totalTips: tips?.totalAmount ?? 0,
+          totalTransactions: tips?.totalCount ?? 0,
+          averageTip: tips?.avgAmount ?? 0,
+          totalReviews: reviews?.totalCount ?? 0,
+          scans: scans?.totalPageViews ?? 0,
+          conversionRate: scans?.conversionRate ?? 0,
+          averageRating: reviews?.avgRating ?? 0,
+          googleClicks: reviews?.googleClickCount ?? 0,
+          yelpClicks: reviews?.yelpClickCount ?? 0,
+          count4To5Stars: reviews?.count4To5Stars ?? 0,
+          count1To3Stars: reviews?.count1To3Stars ?? 0,
+          previousPeriodComparison: tips?.previousPeriodComparison ?? null,
         }
       } catch (err: unknown) {
         if (isApiError(err) && err.status === 404) {
@@ -61,26 +83,56 @@ export function createDashboardRepository(client: HttpClient = httpClient) {
     },
 
     async getStaffMetrics(params: DateRangeParams = {}): Promise<StaffLeaderboardRow[]> {
-      const response = await client.get<DashboardStaffMetricApiDto[] | ListApiResponse<DashboardStaffMetricApiDto>>(
-        '/api/v1/merchant/dashboard/staff',
-        { params },
-      )
-      const raw = Array.isArray(response) ? response : (response.data || [])
-      return raw.map((s) => ({
-        id: s.staffId || s.id || '',
-        name: s.staffName || s.name || '',
-        tips: s.tipsCollected || s.tips || 0,
-        rating: s.avgRating || s.rating || 0,
-        totalReviews: s.totalReviews || 0,
-      }))
+      try {
+        const response = await client.get<DashboardStaffMetricApiDto[] | ListApiResponse<DashboardStaffMetricApiDto>>(
+          '/api/v1/merchant/dashboard/staff',
+          { params: toDashboardDateParams(params) },
+        )
+        const raw = Array.isArray(response) ? response : (response.data || [])
+        return raw.map((s) => ({
+          id: s.staffProfileId || s.staffId || s.id || '',
+          name: s.displayName || s.staffName || s.name || '',
+          tips: s.tipTotal ?? s.tipsCollected ?? s.tips ?? 0,
+          rating: s.avgRating ?? s.rating ?? 0,
+          totalReviews: s.reviewCount ?? s.totalReviews ?? 0,
+        }))
+      } catch (err: unknown) {
+        if (isApiError(err) && (err.status === 404 || err.status === 403)) {
+          return []
+        }
+        throw err
+      }
     },
 
     async getTouchpointMetrics(params: DateRangeParams = {}): Promise<LooseObject[]> {
       const response = await client.get<LooseObject[] | ListApiResponse<LooseObject>>(
         '/api/v1/merchant/dashboard/touchpoints',
-        { params },
+        { params: toDashboardDateParams(params) },
       )
       return Array.isArray(response) ? response : (response.data || [])
+    },
+
+    async getTipsChart(params: DateRangeParams = {}): Promise<TipsChartDayMetric[]> {
+      try {
+        const response = await client.get<
+          DashboardTipsChartApiDto[] | ListApiResponse<DashboardTipsChartApiDto>
+        >(
+          '/api/v1/merchant/dashboard/tips-chart',
+          { params: toTipsChartDateParams(params) },
+        )
+        const raw = Array.isArray(response) ? response : (response.data || [])
+        return raw.map((point) => ({
+          date: point.date,
+          totalAmount: point.totalAmount ?? 0,
+          tipCount: point.tipCount ?? 0,
+          avgAmount: point.avgAmount ?? 0,
+        }))
+      } catch (err: unknown) {
+        if (isApiError(err) && (err.status === 404 || err.status === 403)) {
+          return []
+        }
+        throw err
+      }
     },
   }
 }

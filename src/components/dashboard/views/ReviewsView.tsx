@@ -5,15 +5,29 @@ import { renderTextWithGoldStars } from '../utils'
 import Panel from '../../ui/Panel'
 import CustomSelect from '../../CustomSelect'
 
-function ReviewsView({ reviews, staff, filter, setFilter, setupData }) {
+function ReviewsView({ reviews, staff, filter, setFilter, setupData, isLoading = false }) {
   const { t } = useTranslation()
   const [sourceFilter, setSourceFilter] = useState('all')
   const [starFilter, setStarFilter] = useState('all')
 
-  // Reviews filtered ONLY by staff/technician, used for calculating filter counts
   const reviewsByStaff = useMemo(() => {
-    return reviews.filter((review) => filter === 'all' || review.staffId === filter)
-  }, [reviews, filter])
+    return reviews.filter((review) => {
+      if (filter === 'all') return true
+      if (!staff?.length) return true
+
+      const member = staff.find((s) => s.id === filter)
+      if (!member) {
+        return review.staffName?.toLowerCase() === String(filter).toLowerCase()
+      }
+
+      const staffName = review.staffName?.toLowerCase() ?? ''
+      return (
+        staffName === member.nickname?.toLowerCase() ||
+        staffName === member.fullName?.toLowerCase() ||
+        review.staffId === filter
+      )
+    })
+  }, [reviews, filter, staff])
 
   const stats = useMemo(() => {
     if (!reviewsByStaff || reviewsByStaff.length === 0) {
@@ -89,11 +103,11 @@ function ReviewsView({ reviews, staff, filter, setFilter, setupData }) {
       // 1. Source / Rating Filter
       let matchesSource = true
       if (sourceFilter === 'google') {
-        matchesSource = review.category?.toLowerCase().includes('google')
+        matchesSource = Boolean(review.googleClickedAt) || review.category?.toLowerCase().includes('google')
       } else if (sourceFilter === 'yelp') {
-        matchesSource = review.category?.toLowerCase().includes('yelp')
+        matchesSource = Boolean(review.yelpClickedAt) || review.category?.toLowerCase().includes('yelp')
       } else if (sourceFilter === 'low_stars') {
-        matchesSource = review.rating <= 3
+        matchesSource = (review.rating || 0) <= 3
       }
 
       // 2. Star Filter
@@ -225,15 +239,20 @@ function ReviewsView({ reviews, staff, filter, setFilter, setupData }) {
       </div>
 
       <div className="space-y-3">
-        {filtered.length === 0 ? (
+        {isLoading ? (
+          <Panel className="p-8 text-center text-nexoraMuted font-medium text-xs">
+            {t('common.loading')}
+          </Panel>
+        ) : filtered.length === 0 ? (
           <Panel className="p-8 text-center text-nexoraMuted font-medium text-xs">
             {t('staff_detail.no_reviews_matching')}
           </Panel>
         ) : (
           filtered.map((review) => {
-            const isGoogle = review.category?.toLowerCase().includes('google')
-            const isYelp = review.category?.toLowerCase().includes('yelp')
-            const isInternal = !isGoogle && !isYelp
+            const isGoogle = Boolean(review.googleClickedAt) || review.category?.toLowerCase().includes('google')
+            const isYelp = Boolean(review.yelpClickedAt) || review.category?.toLowerCase().includes('yelp')
+            const isPrivate = review.routingType?.toLowerCase() === 'private' || review.category === 'private'
+            const isPublic = review.routingType?.toLowerCase() === 'public'
 
             return (
               <Panel key={review.id} className="p-4 hover:shadow-premium transition-shadow duration-200">
@@ -292,10 +311,15 @@ function ReviewsView({ reviews, staff, filter, setFilter, setupData }) {
                         <ExternalLink className="h-3 w-3 text-nexoraMuted" />
                       </a>
                     )}
-                    {isInternal && (
+                    {isPrivate && (
                       <span className="inline-flex items-center gap-1.5 rounded-lg bg-rose-50 border border-rose-100 text-rose-700 px-2.5 py-1.5 text-[10px] font-extrabold uppercase select-none">
                         <Lock className="h-3 w-3" />
                         {t('staff_detail.private_recovery')}
+                      </span>
+                    )}
+                    {isPublic && !isGoogle && !isYelp && (
+                      <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 border border-emerald-100 text-emerald-700 px-2.5 py-1.5 text-[10px] font-extrabold uppercase select-none">
+                        {review.routingType}
                       </span>
                     )}
                   </div>

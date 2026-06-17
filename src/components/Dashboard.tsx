@@ -19,7 +19,8 @@ import { useTouchpoints, useCreateTouchpoint, useDeleteTouchpoint, useDownloadTo
 import { useMerchantStaff } from '../data/hooks/useMerchantStaff'
 import { useChartDateRange } from '../hooks/useChartDateRange'
 import { useTransactions } from '../data/hooks/useTransactions'
-import { useReviews } from '../data/hooks/useReviews'
+import { useDashboardOverview } from '../data/hooks/useDashboard'
+import { useDashboardReviews, DASHBOARD_REVIEWS_LIST_QUERY } from '../data/hooks/useReviews'
 import { useNotifications, useMarkNotificationRead } from '../data/hooks/useNotifications'
 import { useProfileSettings, useSaveProfileSettings } from '../data/hooks/useProfileSettings'
 import { useMerchantSetup, useSaveMerchantSetup } from '../data/hooks/useMerchantSetup'
@@ -81,20 +82,46 @@ export default function Dashboard({
     navigate('/onboarding')
   }, [navigate, onStartSetup])
   const [processingFee, setProcessingFee] = useState(3.0)
+  const [isNotiDropdownOpen, setIsNotiDropdownOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const hasSearchQuery = Boolean(searchQuery.trim())
+  const needsMerchantStaffList =
+    hasSearchQuery ||
+    ['staff', 'reviews', 'reports', 'tips', 'analytics'].includes(activeMenu)
+  const needsNotificationsList = isNotiDropdownOpen
+  const needsTransactions =
+    hasSearchQuery ||
+    ['tips', 'reports', 'analytics'].includes(activeMenu)
+  const needsDashboardReviews =
+    activeMenu === 'overview' ||
+    activeMenu === 'reviews' ||
+    hasSearchQuery ||
+    activeMenu === 'staff'
+  const needsInviteLink = activeMenu === 'staff'
 
   // ---------------------------------------------------------------------------
-  // Server-state hooks (TanStack Query)
+  // Server-state hooks (TanStack Query) — lazy per active tab where possible
   // ---------------------------------------------------------------------------
-  const { data: transactionsData } = useTransactions()
-  const { data: reviewsData } = useReviews()
-  const { data: notificationsData } = useNotifications()
+  const { data: transactionsData, isLoading: isTransactionsLoading } = useTransactions({
+    enabled: needsTransactions,
+  })
+  const { data: reviewsPage, isPending: isReviewsPending } = useDashboardReviews(
+    DASHBOARD_REVIEWS_LIST_QUERY,
+    { enabled: needsDashboardReviews },
+  )
+  const { data: notificationsData, isLoading: isNotificationsLoading, isFetching: isNotificationsFetching } = useNotifications({
+    enabled: needsNotificationsList,
+  })
   const { data: profileSettingsData } = useProfileSettings()
   const { data: merchantSetupData } = useMerchantSetup()
-  const { data: merchantStaffData, isLoading: isStaffLoading } = useMerchantStaff()
+  const { data: merchantStaffData, isLoading: isStaffLoading } = useMerchantStaff({
+    enabled: needsMerchantStaffList,
+  })
   const {
     data: inviteLinkSetting,
     isLoading: isInviteLinkSettingLoading,
-  } = useMerchantInviteLinkSetting({ enabled: userRole === 'owner' })
+  } = useMerchantInviteLinkSetting({ enabled: userRole === 'owner' && needsInviteLink })
 
   const markNotificationReadMutation = useMarkNotificationRead()
   const saveMerchantSetupMutation = useSaveMerchantSetup()
@@ -103,7 +130,7 @@ export default function Dashboard({
   // Derived read data (with fallbacks so UI is never empty on first load)
   // ---------------------------------------------------------------------------
   const transactions = transactionsData ?? []
-  const reviews = reviewsData ?? []
+  const reviews = reviewsPage?.items ?? []
 
   // Notifications — thin local mirror so UI updates optimistically.
   // Server-generated notifications come from GET /api/v1/notifications.
@@ -175,10 +202,8 @@ export default function Dashboard({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileSettingsData, hasKyb, userEmail, verificationStatus, businessLogo])
 
-  const [isNotiDropdownOpen, setIsNotiDropdownOpen] = useState(false)
-
   // Use API hooks for Touchpoints
-  const { data: touchpointsData } = useTouchpoints()
+  const { data: touchpointsData, isLoading: isTouchpointsLoading } = useTouchpoints()
   const touchpoints = touchpointsData?.items || []
   const createTouchpointMutation = useCreateTouchpoint()
   const deleteTouchpointMutation = useDeleteTouchpoint()
@@ -189,9 +214,15 @@ export default function Dashboard({
   const [newTouchpoint, setNewTouchpoint] = useState({ name: '', type: 'Table QR' })
   const [isAddTouchpointModalOpen, setIsAddTouchpointModalOpen] = useState(false)
   const [addTouchpointPrefill, setAddTouchpointPrefill] = useState<any | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
   const [activeKpi, setActiveKpi] = useState('tips')
   const { chartRange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate, handleChartRangeChange } = useChartDateRange(transactions)
+
+  const { data: overviewMetricsData, isLoading: isOverviewApiLoading } = useDashboardOverview({
+    startDate: chartStartDate,
+    endDate: chartEndDate,
+  })
+
+  const isOverviewLoading = isOverviewApiLoading || (needsTransactions && isTransactionsLoading)
 
   const [selectedLeaderboardStaff, setSelectedLeaderboardStaff] = useState<any | null>(null)
 
@@ -355,36 +386,35 @@ export default function Dashboard({
     )
   }, [transactions, searchQuery])
 
-  const filteredTxsForMetrics = useMemo(() => {
-    return transactions.filter(tx => {
-      if (!tx.dateTime) return false;
-      const date = tx.dateTime.split(' ')[0];
-      return date >= chartStartDate && date <= chartEndDate;
-    });
-  }, [transactions, chartStartDate, chartEndDate]);
+  const emptyOverviewMetrics = {
+    totalTips: 0,
+    totalTransactions: 0,
+    averageTip: 0,
+    totalReviews: 0,
+    scans: 0,
+    conversionRate: 0,
+    averageRating: 0,
+    googleClicks: 0,
+    yelpClicks: 0,
+    count4To5Stars: 0,
+    count1To3Stars: 0,
+    previousPeriodComparison: null,
+  }
 
   const metrics = useMemo(() => {
-    const totalTips = filteredTxsForMetrics
-      .filter(tx => tx.status === 'Success')
-      .reduce((sum, tx) => sum + (tx.amount || 0), 0);
-    const totalTransactions = filteredTxsForMetrics.length;
-    const averageTip = totalTransactions === 0 ? 0 : totalTips / totalTransactions;
-
-    // Standard fallbacks — show real computed values (zeros if no data)
-    return {
-      totalTips,
-      totalTransactions,
-      averageTip,
-      totalReviews: 0,
-      googleRating: 0,
-      googleReviews: 0,
-      yelpRating: 0,
-      yelpReviews: 0,
-      responseRate: 0,
-      returningCustomers: 0,
-      returningCustomersDelta: 0
+    if (!overviewMetricsData) {
+      return emptyOverviewMetrics
     }
-  }, [filteredTxsForMetrics]);
+
+    return overviewMetricsData
+  }, [overviewMetricsData])
+
+  const kpiDeltas = useMemo(() => ({
+    totalTips: metrics.previousPeriodComparison,
+    totalTransactions: null,
+    averageTip: null,
+    totalReviews: null,
+  }), [metrics.previousPeriodComparison]);
 
 
   const addTouchpoint = async (name, type, deviceId) => {
@@ -453,12 +483,17 @@ export default function Dashboard({
     })
   }
 
-  const handleSelectLeaderboardStaff = (nickname) => {
-    setSelectedLeaderboardStaff(nickname)
-    const member = staff.find((s) => s.nickname === nickname || s.fullName.toLowerCase().includes(nickname.toLowerCase().split(' ')[0]))
-    if (member) {
-      navigate(`/dashboard/staff/${member.id}`)
-    }
+  const handleSelectLeaderboardStaff = (staffKey) => {
+    setSelectedLeaderboardStaff(staffKey)
+    if (!staffKey) return
+
+    const member = staff.find((s) =>
+      String(s.id) === String(staffKey) ||
+      String(s.staffProfileId) === String(staffKey) ||
+      s.nickname === staffKey ||
+      s.fullName?.toLowerCase().includes(String(staffKey).toLowerCase().split(' ')[0])
+    )
+    navigate(`/dashboard/staff/${member?.id || staffKey}`)
   }
 
   // ---------------------------------------------------------------------------
@@ -480,7 +515,10 @@ export default function Dashboard({
 
   const dashboardCtx = {
     metrics, activeKpi, setActiveKpi, chartRange, handleChartRangeChange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate,
+    kpiDeltas,
     transactions, selectedLeaderboardStaff, handleSelectLeaderboardStaff, businessName, businessSlug, previewQr, hasKyb, hasSetup, onStartSetup: handleStartSetup,
+    isOverviewLoading, isTransactionsLoading, isTouchpointsLoading,
+    reviewsPage, isReviewsPending,
     inviteLinkSetting, isInviteLinkSettingLoading,
     filteredStaff, pendingStaff, staff, staffLoading, openApproveStaff, openAddStaff, openEditStaff, deleteStaff, toggleStaff, toggleStaffTipsFlow,
     handleLinkStaff, handleInviteStaff, handleResendInvite, handleAcceptJoinRequest, handleDeclineJoinRequest, handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
@@ -530,10 +568,11 @@ export default function Dashboard({
             setSettingsTab(tab)
           }}
           onLogout={onLogout}
-          notifications={notifications}
+          notifications={notificationsData ?? notifications}
           setNotifications={handleSetNotifications}
           isNotiDropdownOpen={isNotiDropdownOpen}
           setIsNotiDropdownOpen={setIsNotiDropdownOpen}
+          isNotificationsLoading={isNotificationsLoading || isNotificationsFetching}
           onNavigateMenu={handleNavigateMenu}
           staff={staff}
           transactions={transactions}
