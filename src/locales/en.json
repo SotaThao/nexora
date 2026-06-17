@@ -353,6 +353,8 @@
       "plan_name": "Pro Plan",
       "no_plan": "No Plan yet",
       "renews_text": "Renews on Jun 20, 2024",
+      "renews_on": "Renews on {{date}}",
+      "trial_ends": "Trial ends {{date}}",
       "manage_plan": "Manage Plan"
     },
     "menu": {
@@ -387,6 +389,7 @@
       "avg_tip": "Average Tip",
       "total_reviews": "Total Reviews",
       "vs_last_week": "vs last week",
+      "no_comparison": "No prior period data",
       "scans": "QR/NFC Scans",
       "reviews": "Reviews",
       "avg_rating": "Average Star Rating",
@@ -396,6 +399,7 @@
     "review_kpi": {
       "google_reviews": "Google Reviews",
       "yelp_reviews": "Yelp Reviews",
+      "staff_reviews": "{name} Reviews",
       "response_rate": "Response Rate",
       "returning_customers": "Returning Customers",
       "great": "Great!",
@@ -480,6 +484,7 @@
       "assign_staff": "Assign staff member:",
       "no_staff_assigned": "-- General QR (Store Pool Tips) --",
       "download_print_qr": "Download Print QR (PDF)",
+      "print_qr": "Print QR",
       "customer_view_test": "Simulate Customer Scan ›",
       "tp_name_placeholder": "e.g. Manicure Chair 05",
       "device_id_label": "Hardware Serial / NFC ID"
@@ -1236,7 +1241,13 @@
       "overview": {
         "Overview": {
           "custom": "Custom",
-          "copiedNfcRedirectLink": "Copied NFC redirect link to clipboard!"
+          "copiedNfcRedirectLink": "Copied NFC redirect link to clipboard!",
+          "qr_download_failed": "Could not download QR code. Please try again.",
+          "gateway_empty_title": "No touchpoints configured",
+          "gateway_empty_desc": "Create a touchpoint to generate your Master QR and NFC gateway.",
+          "gateway_empty_action": "Add Touchpoint",
+          "reviews_empty_title": "No review data yet",
+          "reviews_empty_desc": "Review metrics will appear once customers start leaving feedback."
         },
         "SetupGuideBanner": {
           "gettingStarted": "Getting Started",
@@ -1247,7 +1258,14 @@
         "TipsOverTimePanel": {
           "custom": "Custom",
           "from": "From:",
-          "to": "To:"
+          "to": "To:",
+          "empty_title": "No tips in this period",
+          "empty_desc": "Tips will appear here once customers start tipping through your touchpoints."
+        },
+        "StaffLeaderboardPanel": {
+          "empty_title": "No staff rankings yet",
+          "empty_desc": "Add staff members to see performance rankings on your leaderboard.",
+          "empty_action": "Manage Staff"
         }
       },
       "views": {

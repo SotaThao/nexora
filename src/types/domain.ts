@@ -313,6 +313,13 @@ export interface ReviewRecord extends DomainEntity {
   [key: string]: unknown
 }
 
+export interface UserSubscription {
+  plan?: string
+  status?: string
+  trialEndsAt?: string | null
+  currentPeriodEnd?: string | null
+}
+
 export interface UserProfile {
   id?: string
   fullName?: string
@@ -337,6 +344,7 @@ export interface UserProfile {
   staffId?: string
   hasCompletedOnboarding?: boolean
   referralCode?: string
+  subscription?: UserSubscription | null
   [key: string]: unknown
 }
 

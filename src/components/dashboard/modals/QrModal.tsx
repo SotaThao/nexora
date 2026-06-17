@@ -1,7 +1,7 @@
-import { X, ShieldAlert, ShieldCheck, Download } from 'lucide-react'
+import { X, ShieldAlert, ShieldCheck, Printer } from 'lucide-react'
 import IconButton from '../../ui/IconButton'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
+import { buildQrImageUrl, toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
 
 const slugify = (str = '') => str.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 
@@ -10,9 +10,6 @@ function QrModal({ target, businessName, onClose }) {
   if (!target) return null
 
   const businessSlug = slugify(businessName || '')
-  // Prefer the canonical customer URL returned by the API (GET touchpoints →
-  // `url`), which carries the real business + touch-point slugs. Keep query
-  // params such as staffProfileId so staff QR skips the picker step.
   let qrUrl = ''
   if (target.url) {
     qrUrl = toLocalCustomerTouchUrl(target.url)
@@ -20,6 +17,8 @@ function QrModal({ target, businessName, onClose }) {
   if (!qrUrl) {
     qrUrl = `${window.location.origin}/touch/${businessSlug}/${target.slug}`
   }
+
+  const qrImageSrc = buildQrImageUrl(qrUrl, 150, target.qrImageUrl)
 
   const isStaff = Boolean(
     target.isStaffQr ||
@@ -52,7 +51,6 @@ function QrModal({ target, businessName, onClose }) {
           </div>
         )}
         <div className="mx-auto mt-5 flex aspect-[2/3] w-44 flex-col items-center justify-between rounded-2xl bg-nexoraCanvas border border-nexoraBorder/80 p-4 text-nexoraText shadow-md qr-print-card">
-          {/* Nexora Branding Header inside Card */}
           <div className="flex items-center gap-1 justify-center qr-print-brand-header">
             <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-3.5 w-3.5 object-contain qr-print-brand-logo" />
             <span className="text-[8px] font-black tracking-wider text-slate-800 qr-print-brand-text">NEXORA</span>
@@ -67,10 +65,9 @@ function QrModal({ target, businessName, onClose }) {
             </div>
           </div>
 
-          {/* Real Scan-Ready QR Code */}
           <div className="h-28 w-28 rounded-lg bg-white border border-nexoraBorder/60 p-2 flex items-center justify-center shadow-inner qr-print-qr-wrapper">
             <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrUrl)}`}
+              src={qrImageSrc}
               alt="Scan QR code to tip and review"
               className="h-full w-full object-contain qr-print-qr-image"
             />
@@ -91,11 +88,12 @@ function QrModal({ target, businessName, onClose }) {
         </p>
 
         <button
+          type="button"
           onClick={() => window.print()}
           className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white hover:bg-opacity-90 transition no-print"
         >
-          <Download className="h-4 w-4" />
-          {t('dashboard.modals.download_print_qr')}
+          <Printer className="h-4 w-4" />
+          {t('dashboard.modals.print_qr')}
         </button>
       </div>
     </div>

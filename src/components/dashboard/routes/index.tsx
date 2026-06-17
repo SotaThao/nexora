@@ -20,6 +20,7 @@ export function OverviewRoute() {
   return (
     <Overview
       metrics={ctx.metrics}
+      kpiDeltas={ctx.kpiDeltas}
       activeKpi={ctx.activeKpi}
       setActiveKpi={ctx.setActiveKpi}
       chartRange={ctx.chartRange}
@@ -33,12 +34,18 @@ export function OverviewRoute() {
       setSelectedStaff={ctx.handleSelectLeaderboardStaff}
       onOpenTouchpoints={() => navigate('/dashboard/touchpoints')}
       onOpenReviews={() => navigate('/dashboard/reviews')}
+      onOpenStaff={() => navigate('/dashboard/staff')}
       businessName={ctx.businessName}
       previewQr={ctx.previewQr}
       touchpoints={ctx.touchpoints}
       hasKyb={ctx.hasKyb}
       hasSetup={ctx.hasSetup}
       onStartSetup={ctx.onStartSetup}
+      isLoading={ctx.isOverviewLoading}
+      isTransactionsLoading={ctx.isTransactionsLoading}
+      isTouchpointsLoading={ctx.isTouchpointsLoading}
+      reviewsPage={ctx.reviewsPage}
+      isReviewsPending={ctx.isReviewsPending}
     />
   )
 }
@@ -85,7 +92,15 @@ export function StaffDetailRoute() {
   const { staffId } = useParams()
   const navigate = useNavigate()
   
-  const member = ctx.staff.find((m) => String(m.id) === String(staffId))
+  const member = ctx.staff.find((m) =>
+    String(m.id) === String(staffId) ||
+    String(m.staffProfileId) === String(staffId)
+  )
+
+  if (ctx.staffLoading) {
+    return null
+  }
+
   if (!member) {
     return <Navigate to="/dashboard/staff" replace />
   }
@@ -162,9 +177,11 @@ export function TouchpointsRoute() {
 
 export function ReviewsRoute() {
   const ctx = useOutletContext<LooseObject>()
+
   return (
     <ReviewsView
-      reviews={ctx.filteredReviews}
+      reviews={ctx.reviewsPage?.items ?? []}
+      isLoading={ctx.isReviewsPending}
       staff={ctx.staff}
       filter={ctx.reviewFilterStaff}
       setFilter={ctx.setReviewFilterStaff}

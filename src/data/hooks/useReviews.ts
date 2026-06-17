@@ -6,17 +6,29 @@ import { qk } from '../queryKeys'
 import reviewsRepository from '../repositories/reviews'
 import { useSessionRole } from '../../auth/useSessionRole'
 import type { ReviewRecord } from '../../types/domain'
+import type { DashboardReviewsPage, DashboardReviewsQuery } from '../../types/repositories'
 import type { ResolveReviewVars } from '../../types/hooks'
 
-const EMPTY_FILTERS = {}
+const EMPTY_QUERY: DashboardReviewsQuery = {}
 
-export function useDashboardReviews(filters: LooseObject = EMPTY_FILTERS, { enabled: callerEnabled = true } = {}) {
+export const DASHBOARD_REVIEWS_LIST_QUERY: DashboardReviewsQuery = {
+  pageNumber: 1,
+  pageSize: 20,
+}
+
+export function useDashboardReviews(
+  query: DashboardReviewsQuery = DASHBOARD_REVIEWS_LIST_QUERY,
+  { enabled: callerEnabled = true } = {},
+) {
   const { isOwner } = useSessionRole()
-  return useQuery<ReviewRecord[]>({
-    queryKey: qk.dashboardReviews(filters),
-    queryFn: () => reviewsRepository.list(filters),
+
+  return useQuery<DashboardReviewsPage>({
+    queryKey: qk.dashboardReviews(query),
+    queryFn: () => reviewsRepository.listPaged(query),
     enabled: isOwner && callerEnabled,
     retry: false,
+    staleTime: 30_000,
+    refetchOnMount: false,
   })
 }
 
@@ -30,12 +42,15 @@ export function useResolveReview() {
   })
 }
 
-/** @deprecated */
-export function useReviews({ enabled: callerEnabled = true } = {}) {
+/** @deprecated Prefer useDashboardReviews */
+export function useReviews(
+  query: DashboardReviewsQuery = EMPTY_QUERY,
+  { enabled: callerEnabled = true } = {},
+) {
   const { isOwner } = useSessionRole()
   return useQuery<ReviewRecord[]>({
     queryKey: qk.reviews(),
-    queryFn: () => reviewsRepository.list(),
+    queryFn: () => reviewsRepository.list(query),
     enabled: isOwner && callerEnabled,
     retry: false,
   })
