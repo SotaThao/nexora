@@ -1,10 +1,14 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import {
   useMerchantPaymentMethods,
   useUpdateMerchantPaymentMethod,
   useToggleMerchantPaymentMethod
 } from '../../../data/hooks/useMerchantPaymentMethods'
+import { useDeleteAccount } from '../../../data/hooks/useProfileSettings'
+import { useNotification } from '../../../contexts/NotificationContext'
+import useAuth from '../../../auth/useAuth'
 import {
   User,
   Building2,
@@ -102,10 +106,14 @@ export default function ProfileTab({
   onShowQr,
 }) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const { showConfirm } = useNotification()
+  const { logout } = useAuth()
 
   const { data: apiPaymentMethods = [] } = useMerchantPaymentMethods()
   const toggleMutation = useToggleMerchantPaymentMethod()
   const updateMutation = useUpdateMerchantPaymentMethod()
+  const deleteAccountMutation = useDeleteAccount()
 
   // Local state for the payment method edit modal
   const [editingMethod, setEditingMethod] = useState<any | null>(null)
@@ -188,6 +196,24 @@ export default function ProfileTab({
     }
     setEditQrFile(null)
     setEditQrCode(null)
+  }
+
+  const handleDeleteAccount = async () => {
+    if (deleteAccountMutation.isPending) return
+
+    const confirmed = await showConfirm(
+      t('components.settings.tabs.ProfileTab.deleteAccountConfirmMessage'),
+      t('components.settings.tabs.ProfileTab.deleteAccountConfirmTitle'),
+    )
+    if (!confirmed) return
+
+    try {
+      await deleteAccountMutation.mutateAsync()
+      await logout()
+      navigate('/login', { replace: true })
+    } catch {
+      showToast(t('components.settings.tabs.ProfileTab.deleteAccountFailed'), 'error')
+    }
   }
 
   return (
@@ -274,6 +300,18 @@ export default function ProfileTab({
                   </button>
                 </div>
               </div>
+            </div>
+            <div className="w-full mt-4 border-t border-nexoraRule pt-4">
+              <button
+                type="button"
+                onClick={() => void handleDeleteAccount()}
+                disabled={deleteAccountMutation.isPending}
+                className="w-full h-10 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 transition text-[10px] font-black uppercase tracking-wider disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {deleteAccountMutation.isPending
+                  ? t('common.processing')
+                  : t('components.settings.tabs.ProfileTab.deleteAccount')}
+              </button>
             </div>
           </div>
 

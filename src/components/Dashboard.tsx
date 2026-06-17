@@ -469,14 +469,17 @@ export default function Dashboard({
       ? target.slug
       : (staffName ? `staff-${slugify(staffName)}` : slugify(target.name || target.id || 'general'))
 
+    const isStaffPersonalQr = Boolean(staffName && target.staffProfileId)
+
     setQrTarget({
-      name: target.name || `Personal QR - ${staffName}`,
+      ...(isStaffPersonalQr ? {} : { touchpointId: target.id }),
+      name: target.name || (staffName ? `Personal QR - ${staffName}` : 'Touchpoint QR'),
       subtitle: target.position || target.type || 'Staff QR',
       slug: finalSlug,
       url: target.url ? toLocalCustomerTouchUrl(target.url) : null,
       qrImageUrl: target.qrImageUrl || null,
       isActive: target.isActive !== undefined ? target.isActive : true,
-      isStaffQr: Boolean(staffName && target.staffProfileId),
+      isStaffQr: isStaffPersonalQr,
     })
   }
 

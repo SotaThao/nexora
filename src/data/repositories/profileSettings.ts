@@ -90,6 +90,10 @@ export function createProfileSettingsRepository(client: HttpClient = httpClient)
       return client.put<LooseObject>('/api/v1/staff/profile', dto)
     },
 
+    async deleteAccount(): Promise<void> {
+      await client.post('/api/v1/UserProfile/delete-account', {})
+    },
+
     async save(_settings: LooseObject): Promise<void> {
       // deprecated
     },

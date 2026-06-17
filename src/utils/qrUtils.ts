@@ -4,33 +4,30 @@
  * never call fetch() directly.
  */
 
+import { downloadFromUrl, downloadBlob, type DownloadResult } from './downloadFile'
+import merchantTouchpointsRepository from '../data/repositories/merchantTouchpoints'
+
 /**
- * Downloads a QR code image from a remote URL and triggers a browser
- * "Save As" prompt.
+ * Downloads a QR code image from a remote URL.
+ * On iOS/Android uses the native share sheet so users can save to Photos.
  *
  * @param {string} qrUrl    - The remote image URL to download
  * @param {string} filename - Suggested filename (e.g. 'referral-qr-left.png')
- * @returns {Promise<void>}
+ * @returns {Promise<DownloadResult>}
  * @throws {Error} Re-throws after cleanup so callers can handle fallback
  */
-export async function downloadQrCode(qrUrl, filename = 'qr-code.png') {
-  const response = await fetch(qrUrl)
+export async function downloadQrCode(
+  qrUrl: string,
+  filename = 'qr-code.png',
+): Promise<DownloadResult> {
+  return downloadFromUrl(qrUrl, filename)
+}
 
-  if (!response.ok) {
-    throw new Error(`QR download failed: ${response.status} ${response.statusText}`)
-  }
-
-  const blob = await response.blob()
-  const blobUrl = URL.createObjectURL(blob)
-
-  try {
-    const link = document.createElement('a')
-    link.href = blobUrl
-    link.download = filename
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-  } finally {
-    URL.revokeObjectURL(blobUrl)
-  }
+export async function downloadTouchpointQrFile(
+  touchpointId: string,
+  filename: string,
+  format: 'png' | 'pdf' = 'png',
+): Promise<DownloadResult> {
+  const blob = await merchantTouchpointsRepository.downloadQr(touchpointId, format)
+  return downloadBlob(blob, filename)
 }

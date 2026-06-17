@@ -38,8 +38,10 @@ export default function SettingsView({
 
   const handleSaveQr = async (qrUrl) => {
     try {
-      await downloadQrCode(qrUrl, `referral-qr-${selectedLeg}.png`)
-      form.showToast(t('components.SettingsView.qrCodeDownloaded'))
+      const result = await downloadQrCode(qrUrl, `referral-qr-${selectedLeg}.png`)
+      if (result !== 'cancelled') {
+        form.showToast(t('components.SettingsView.qrCodeDownloaded'))
+      }
     } catch {
       window.open(qrUrl, '_blank')
     }

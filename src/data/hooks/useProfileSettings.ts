@@ -109,6 +109,16 @@ export function useUpdateStaffProfile() {
   })
 }
 
+export function useDeleteAccount() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, void>({
+    mutationFn: () => profileSettingsRepository.deleteAccount(),
+    onSuccess: () => {
+      queryClient.clear()
+    },
+  })
+}
+
 /** @deprecated */
 export function useSaveProfileSettings() {
   const queryClient = useQueryClient()

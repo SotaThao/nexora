@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import merchantTouchpointsRepository from '../repositories/merchantTouchpoints'
 import { AuthContext } from '../../auth/AuthContext'
+import { downloadBlob } from '../../utils/downloadFile'
 import type { TouchpointPage } from '../../types/domain'
 import type { CreateTouchpointVars, DownloadTouchpointQrVars } from '../../types/hooks'
 import type { TouchpointCreateResult } from '../../types/repositories'
@@ -52,16 +53,10 @@ export function useDeleteTouchpoint() {
 
 export function useDownloadTouchpointQr() {
   return useMutation<Blob, Error, DownloadTouchpointQrVars>({
-    mutationFn: ({ id, format = 'png' }) => merchantTouchpointsRepository.downloadQr(id, format),
-    onSuccess: (blob, { format = 'png' }) => {
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.setAttribute('download', `qr-code.${format}`)
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(url)
+    mutationFn: async ({ id, format = 'png' }) => {
+      const blob = await merchantTouchpointsRepository.downloadQr(id, format)
+      await downloadBlob(blob, `qr-code-${id}.${format}`)
+      return blob
     },
   })
 }

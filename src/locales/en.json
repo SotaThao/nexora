@@ -312,6 +312,7 @@
     "desc_step_3": "Everything is ready! You can print your QR kit and launch the Nexora dashboard.",
     "download_explain": "We have prepared all your salon QR codes as a high-quality print PDF/ZIP. Customers just need to scan to Tip & Review.",
     "download_btn": "Print QR Kit",
+    "print_btn": "Print ›",
     "config_checklist_title": "Setup Configuration Checklist",
     "chk_business": "Business: {name} ({industry})",
     "chk_routing": "Google/Yelp Routing: Linked",
@@ -513,6 +514,7 @@
       "tp_staff_empty": "No active staff available. Add staff before creating a Staff QR touchpoint.",
       "no_staff_assigned": "-- General QR (Store Pool Tips) --",
       "download_print_qr": "Download Print QR (PDF)",
+      "print_qr_btn": "Print QR",
       "customer_view_test": "Simulate Customer Scan ›",
       "tp_name_placeholder": "e.g. Manicure Chair 05",
       "device_id_label": "Hardware Serial / NFC ID"
@@ -1511,7 +1513,11 @@
           "cancel": "CANCEL",
           "save": "SAVE",
           "phGoogleReviewUrl": "https://g.page/r/.../review",
-          "phYelpUrl": "https://www.yelp.com/biz/..."
+          "phYelpUrl": "https://www.yelp.com/biz/...",
+          "deleteAccount": "Delete Account",
+          "deleteAccountConfirmTitle": "Delete account permanently?",
+          "deleteAccountConfirmMessage": "This action cannot be undone. Your account and related data will be permanently deleted.",
+          "deleteAccountFailed": "Unable to delete account. Please try again."
         },
         "KybTab": {
           "iframeTitle": "Know your business",

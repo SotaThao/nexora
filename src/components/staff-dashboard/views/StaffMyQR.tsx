@@ -1,6 +1,6 @@
 // StaffMyQR — referral QR tab + per-business tipping QR tab.
 import { useCallback, useMemo, useState } from 'react'
-import { Share2, Copy, QrCode, X, Loader2, CheckCircle2, XCircle, Store, Clock, Link2 } from 'lucide-react'
+import { Share2, Copy, QrCode, X, Loader2, CheckCircle2, XCircle, Store, Clock, Link2, Download } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import { useStaffBusinessTipQrs } from '../../../data/hooks/useStaffSelf'
@@ -10,6 +10,7 @@ import { isApiError } from '../../../types/domain'
 import type { StaffBusinessTipQr } from '../../../types/domain'
 import { shareUrl } from '../../../utils/shareUrl'
 import { buildQrImageUrl } from '../../../utils/staffTipUrl'
+import { downloadQrCode } from '../../../utils/qrUtils'
 import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import { SkeletonLayout } from '../../ui/skeleton'
 
@@ -139,6 +140,7 @@ export default function StaffMyQR() {
   const [scanStatus, setScanStatus] = useState<'idle' | 'checking' | 'success' | 'error'>('idle')
   const [customInviteLink, setCustomInviteLink] = useState('')
   const [zoomedQr, setZoomedQr] = useState<ZoomedQr | null>(null)
+  const [isSavingQr, setIsSavingQr] = useState(false)
   const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null)
 
   const staffCode = (account.staffCode || staffMember.id || '').trim()
@@ -234,6 +236,24 @@ export default function StaffMyQR() {
     },
     [showToast, t],
   )
+
+  const handleDownloadZoomedQr = useCallback(async () => {
+    if (!zoomedQr?.url || isSavingQr) return
+
+    setIsSavingQr(true)
+    try {
+      const qrImageUrl = buildQrImageUrl(zoomedQr.url, 600)
+      const safeName = (zoomedQr.title || 'tipping-qr').replace(/\s+/g, '-').toLowerCase()
+      const result = await downloadQrCode(qrImageUrl, `${safeName}-qr.png`)
+      if (result !== 'cancelled') {
+        showToast(t('components.SettingsView.qrCodeDownloaded'), 'success')
+      }
+    } catch {
+      showToast(t('components.staff_dashboard.views.StaffMyQR.shareFailed'), 'error')
+    } finally {
+      setIsSavingQr(false)
+    }
+  }, [isSavingQr, showToast, t, zoomedQr])
 
   const handleOpenScan = () => {
     setShowScanner(true)
@@ -733,6 +753,16 @@ export default function StaffMyQR() {
                 </button>
               </div>
             </div>
+
+            <button
+              type="button"
+              onClick={handleDownloadZoomedQr}
+              disabled={isSavingQr}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-nexoraElectric to-nexoraViolet py-3 text-sm font-extrabold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSavingQr ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              {t('dashboard.master_gateway.btn_download')}
+            </button>
 
             <div className="border-t border-slate-100 pt-2">
               <a

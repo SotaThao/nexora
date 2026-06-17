@@ -312,6 +312,7 @@
     "desc_step_3": "Mọi thứ đã sẵn sàng! Bạn có thể in bộ mã QR và vào Dashboard Nexora.",
     "download_explain": "Chúng tôi đã chuẩn bị toàn bộ mã QR của tiệm thành tệp PDF/ZIP in ấn chất lượng cao. Khách hàng chỉ cần quét để Típ & Review.",
     "download_btn": "In QR Kit",
+    "print_btn": "In ›",
     "config_checklist_title": "Kiểm tra cấu hình",
     "chk_business": "Cửa hàng: {name} ({industry})",
     "chk_routing": "Google/Yelp Routing: Đã liên kết",
@@ -513,6 +514,7 @@
       "tp_staff_empty": "Chưa có nhân viên active. Hãy thêm nhân viên trước khi tạo touchpoint Staff QR.",
       "no_staff_assigned": "-- Không gán (Típ chung cho cửa hàng) --",
       "download_print_qr": "Tải Xuống QR In Ấn (PDF)",
+      "print_qr_btn": "In Mã QR",
       "customer_view_test": "Thử Giao Diện Khách Quét ›",
       "tp_name_placeholder": "Ví dụ: Ghế Manicure 05",
       "device_id_label": "Serial thiết bị / Mã NFC"
@@ -1511,7 +1513,11 @@
           "cancel": "HỦY",
           "save": "LƯU LẠI",
           "phGoogleReviewUrl": "https://g.page/r/.../review",
-          "phYelpUrl": "https://www.yelp.com/biz/..."
+          "phYelpUrl": "https://www.yelp.com/biz/...",
+          "deleteAccount": "Xóa tài khoản",
+          "deleteAccountConfirmTitle": "Xóa tài khoản vĩnh viễn?",
+          "deleteAccountConfirmMessage": "Thao tác này không thể hoàn tác. Tài khoản và dữ liệu liên quan sẽ bị xóa vĩnh viễn.",
+          "deleteAccountFailed": "Không thể xóa tài khoản. Vui lòng thử lại."
         },
         "KybTab": {
           "iframeTitle": "Cổng xác minh KYB VLINKPAY",

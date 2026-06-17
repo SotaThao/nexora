@@ -1,6 +1,8 @@
-import React from 'react'
-import { Download, CheckCircle2, ShieldCheck } from 'lucide-react'
+import React, { useState } from 'react'
+import { Download, CheckCircle2, ShieldCheck, Loader2 } from 'lucide-react'
 import { getCustomerAppBaseUrl } from '../../../utils/webUrlBase'
+import { downloadQrCode } from '../../../utils/qrUtils'
+import { shouldUseMobileDownloadFlow } from '../../../utils/downloadFile'
 
 export default function Step3Download({
   t,
@@ -11,6 +13,27 @@ export default function Step3Download({
   isConsentChecked,
   setIsConsentChecked
 }) {
+  const [isSaving, setIsSaving] = useState(false)
+  const useMobileDownload = shouldUseMobileDownloadFlow()
+
+  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(
+    `${getCustomerAppBaseUrl()}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}`,
+  )}`
+
+  const handleDownload = async () => {
+    if (isSaving) return
+    if (!useMobileDownload) {
+      window.print()
+      return
+    }
+
+    setIsSaving(true)
+    try {
+      await downloadQrCode(qrImageUrl, `${(businessInfo.name || 'nexora').replace(/\s+/g, '-').toLowerCase()}-qr.png`)
+    } finally {
+      setIsSaving(false)
+    }
+  }
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="border-b border-nexoraRule pb-4 mb-4">
@@ -83,17 +106,27 @@ export default function Step3Download({
 
           <div className="space-y-3">
             <button
-              onClick={() => window.print()}
-              className="w-full flex items-center justify-between p-3.5 rounded-xl border border-nexoraBorder bg-white hover:bg-nexoraCanvas transition text-left shadow-sm"
+              type="button"
+              onClick={handleDownload}
+              disabled={isSaving}
+              className="w-full flex items-center justify-between p-3.5 rounded-xl border border-nexoraBorder bg-white hover:bg-nexoraCanvas transition text-left shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <span className="h-8 w-8 rounded-lg bg-nexoraBrandSoft flex items-center justify-center shrink-0"><Download className="h-[18px] w-[18px] text-nexoraBrand" /></span>
+                <span className="h-8 w-8 rounded-lg bg-nexoraBrandSoft flex items-center justify-center shrink-0">
+                  {isSaving ? (
+                    <Loader2 className="h-[18px] w-[18px] animate-spin text-nexoraBrand" />
+                  ) : (
+                    <Download className="h-[18px] w-[18px] text-nexoraBrand" />
+                  )}
+                </span>
                 <div className="min-w-0">
                   <div className="text-xs font-bold text-nexoraText truncate">{t('setup.download_btn')}</div>
                   <div className="text-[10px] text-nexoraSubtle truncate sm:whitespace-normal">{t('setup.download_explain')}</div>
                 </div>
               </div>
-              <span className="text-xs text-nexoraSubtle font-bold shrink-0 whitespace-nowrap ml-4">Print ›</span>
+              <span className="text-xs text-nexoraSubtle font-bold shrink-0 whitespace-nowrap ml-4">
+                {useMobileDownload ? t('dashboard.master_gateway.btn_download') : t('setup.print_btn')}
+              </span>
             </button>
           </div>
 
