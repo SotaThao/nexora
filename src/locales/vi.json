@@ -405,7 +405,14 @@
       "internal_feedback": "Phản hồi Nội bộ",
       "review_source": "Nguồn đánh giá",
       "star_rating": "Số sao đánh giá",
-      "all_stars": "Tất cả sao"
+      "all_stars": "Tất cả sao",
+      "response_rate_label": {
+        "excellent": "Xuất sắc",
+        "good": "Tốt",
+        "fair": "Trung bình",
+        "needs_improvement": "Cần cải thiện",
+        "poor": "Kém"
+      }
     },
     "chart": {
       "tips_over_time": "Tiền Típ Theo Thời Gian",

@@ -37,15 +37,6 @@ function renderStars(rating) {
   return <div className="flex gap-0.5">{stars}</div>
 }
 
-const EMPTY_REVIEW_METRICS = {
-  googleRating: 0,
-  googleReviewCount: 0,
-  yelpRating: 0,
-  yelpReviewCount: 0,
-  responseRate: 0,
-  returningCustomers: 0,
-}
-
 function formatRatingValue(value) {
   const num = Number(value) || 0
   return num.toFixed(1)
@@ -56,6 +47,18 @@ function toPercentValue(value) {
   const percent = num <= 1 ? num * 100 : num
   const rounded = Math.round(percent * 10) / 10
   return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1)
+}
+
+function getResponseRateLabelText(label, t) {
+  if (!label) return null
+  const map = {
+    EXCELLENT: t('dashboard.review_kpi.response_rate_label.excellent'),
+    GOOD: t('dashboard.review_kpi.response_rate_label.good'),
+    FAIR: t('dashboard.review_kpi.response_rate_label.fair'),
+    NEEDS_IMPROVEMENT: t('dashboard.review_kpi.response_rate_label.needs_improvement'),
+    POOR: t('dashboard.review_kpi.response_rate_label.poor'),
+  }
+  return map[label] || label
 }
 
 function ReviewMetricCard({ label, value, footer, deltaPercent = null, showComparison = false }) {
@@ -282,6 +285,17 @@ function Overview({
     const opt = dateRangeOptions.find(o => o.value === chartRange);
     return opt ? opt.label : dateRangeOptions[0].label;
   }, [chartRange, chartStartDate, chartEndDate, dateRangeOptions, currentLanguage]);
+
+  const reviewMetrics = useMemo(() => ({
+    googleRating: metrics.googleAvgRating ?? 0,
+    googleReviewCount: metrics.googleReviewCount ?? 0,
+    yelpRating: metrics.yelpAvgRating ?? 0,
+    yelpReviewCount: metrics.yelpReviewCount ?? 0,
+    responseRate: metrics.responseRate ?? 0,
+    responseRateLabel: metrics.responseRateLabel ?? null,
+    returningCustomers: metrics.returningCustomerRate ?? 0,
+    returningCustomersDelta: metrics.returningCustomerRateChangeVsLastWeek ?? 0,
+  }), [metrics])
 
   const hasMasterGateway = Boolean(masterTouchpoint)
 
@@ -559,39 +573,46 @@ function Overview({
         </div>
       </Panel>
 
-      {/* Review metrics — Google / Yelp / Response / Returning (API pending → zeros) */}
+      {/* Review metrics — Google / Yelp / Response / Returning */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <ReviewMetricCard
           label={t('dashboard.review_kpi.google_reviews')}
-          value={formatRatingValue(EMPTY_REVIEW_METRICS.googleRating)}
+          value={formatRatingValue(reviewMetrics.googleRating)}
           footer={(
             <>
-              {renderStars(EMPTY_REVIEW_METRICS.googleRating)}
+              {renderStars(reviewMetrics.googleRating)}
               <div className="text-xs text-nexoraMuted">
-                {t('dashboard.review_kpi.reviews_count', { count: EMPTY_REVIEW_METRICS.googleReviewCount })}
+                {t('dashboard.review_kpi.reviews_count', { count: reviewMetrics.googleReviewCount })}
               </div>
             </>
           )}
         />
         <ReviewMetricCard
           label={t('dashboard.review_kpi.yelp_reviews')}
-          value={formatRatingValue(EMPTY_REVIEW_METRICS.yelpRating)}
+          value={formatRatingValue(reviewMetrics.yelpRating)}
           footer={(
             <>
-              {renderStars(EMPTY_REVIEW_METRICS.yelpRating)}
+              {renderStars(reviewMetrics.yelpRating)}
               <div className="text-xs text-nexoraMuted">
-                {t('dashboard.review_kpi.reviews_count', { count: EMPTY_REVIEW_METRICS.yelpReviewCount })}
+                {t('dashboard.review_kpi.reviews_count', { count: reviewMetrics.yelpReviewCount })}
               </div>
             </>
           )}
         />
         <ReviewMetricCard
           label={t('dashboard.review_kpi.response_rate')}
-          value={`${toPercentValue(EMPTY_REVIEW_METRICS.responseRate)}%`}
+          value={`${toPercentValue(reviewMetrics.responseRate)}%`}
+          footer={reviewMetrics.responseRateLabel ? (
+            <div className="text-xs font-bold text-nexoraMuted">
+              {getResponseRateLabelText(reviewMetrics.responseRateLabel, t)}
+            </div>
+          ) : null}
         />
         <ReviewMetricCard
           label={t('dashboard.review_kpi.returning_customers')}
-          value={`${toPercentValue(EMPTY_REVIEW_METRICS.returningCustomers)}%`}
+          value={`${toPercentValue(reviewMetrics.returningCustomers)}%`}
+          deltaPercent={reviewMetrics.returningCustomersDelta}
+          showComparison
         />
       </div>
     </div>

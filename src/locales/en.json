@@ -405,7 +405,14 @@
       "internal_feedback": "Internal Feedback",
       "review_source": "Review Source",
       "star_rating": "Star Rating",
-      "all_stars": "All Stars"
+      "all_stars": "All Stars",
+      "response_rate_label": {
+        "excellent": "Excellent",
+        "good": "Good",
+        "fair": "Fair",
+        "needs_improvement": "Needs Improvement",
+        "poor": "Poor"
+      }
     },
     "chart": {
       "tips_over_time": "Tips Over Time",
