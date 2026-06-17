@@ -104,6 +104,12 @@ export interface DashboardStaffMetricApiDto {
 }
 
 export interface StaffLeaderboardRow {
+  id: string
+  name: string
+  tips: number
+  rating: number
+  totalReviews: number
+}
 
 export interface DashboardTipsChartApiDto {
   date: string

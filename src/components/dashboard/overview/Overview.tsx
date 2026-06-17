@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
-import { Calendar, QrCode, Eye, Download, Sparkles, Pointer, Star, MessageSquare } from 'lucide-react'
+import { Calendar, QrCode, Eye, Download, Sparkles, Pointer, Star } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { useDownloadTouchpointQr } from '../../../data/hooks/useMerchantTouchpoints'
@@ -35,6 +35,69 @@ function renderStars(rating) {
     )
   }
   return <div className="flex gap-0.5">{stars}</div>
+}
+
+const EMPTY_REVIEW_METRICS = {
+  googleRating: 0,
+  googleReviewCount: 0,
+  yelpRating: 0,
+  yelpReviewCount: 0,
+  responseRate: 0,
+  returningCustomers: 0,
+}
+
+function formatRatingValue(value) {
+  const num = Number(value) || 0
+  return num.toFixed(1)
+}
+
+function toPercentValue(value) {
+  const num = Number(value) || 0
+  const percent = num <= 1 ? num * 100 : num
+  const rounded = Math.round(percent * 10) / 10
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1)
+}
+
+function ReviewMetricCard({ label, value, footer, deltaPercent = null, showComparison = false }) {
+  const { t } = useTranslation()
+  const hasDelta = deltaPercent != null && !Number.isNaN(deltaPercent)
+  const isPositive = hasDelta ? deltaPercent >= 0 : true
+
+  return (
+    <Panel className="flex min-h-[140px] flex-col justify-between p-5 transition hover:shadow-premium">
+      <div>
+        <div className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
+          {label}
+        </div>
+        <div className="mt-2 text-2xl font-black tracking-tight text-nexoraText">
+          {value}
+        </div>
+      </div>
+      <div className="mt-4 flex min-h-5 flex-col justify-end gap-1">
+        {footer}
+        {showComparison ? (
+          hasDelta ? (
+            <div
+              className={`flex items-center gap-1.5 text-xs font-bold ${
+                isPositive ? 'text-emerald-600' : 'text-red-600'
+              }`}
+            >
+              <span>
+                {isPositive ? '▲' : '▼'} {Math.abs(deltaPercent).toFixed(1)}%
+              </span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-nexoraSubtle/80">
+                {t('dashboard.kpi.vs_last_week')}
+              </span>
+            </div>
+          ) : (
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-nexoraSubtle/80">
+              {t('dashboard.kpi.no_comparison')}
+            </span>
+          )
+        ) : null}
+      </div>
+    </Panel>
+  )
 }
 
 function Overview({
@@ -219,8 +282,6 @@ function Overview({
     const opt = dateRangeOptions.find(o => o.value === chartRange);
     return opt ? opt.label : dateRangeOptions[0].label;
   }, [chartRange, chartStartDate, chartEndDate, dateRangeOptions, currentLanguage]);
-
-  const hasReviewData = reviewsSummary.totalCount > 0
 
   const hasMasterGateway = Boolean(masterTouchpoint)
 
@@ -472,24 +533,8 @@ function Overview({
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    const slugify = (str) => str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-                    const configData = {
-                      version: "1.0",
-                      platform: "nexora-touch",
-                      businessName: businessName,
-                      gatewayUrl: masterQrLink,
-                      nfcTagId: "master-nfc-general"
-                    }
-                    const blob = new Blob([JSON.stringify(configData, null, 2)], { type: 'application/json' })
-                    const url = URL.createObjectURL(blob)
-                    const link = document.createElement('a')
-                    link.href = url
-                    link.download = `${slugify(businessName)}-nfc-config.json`
-                    link.click()
-                    URL.revokeObjectURL(url)
-                  }}
-                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white hover:bg-nexoraBrandDark transition cursor-pointer"
+                  disabled
+                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white transition cursor-not-allowed opacity-60"
                 >
                   <Download className="h-4 w-4" />
                   {t('dashboard.master_gateway.btn_download_config')}
@@ -514,44 +559,41 @@ function Overview({
         </div>
       </Panel>
 
-      {/* Review cards from API — one card per review item */}
-      {isReviewsPending ? (
-        <Panel className="p-8 text-center text-xs font-semibold text-nexoraMuted">
-          {t('common.loading')}
-        </Panel>
-      ) : !hasReviewData ? (
-        <OverviewEmptyState
-          icon={MessageSquare}
-          title={t('components.dashboard.overview.Overview.reviews_empty_title')}
-          description={t('components.dashboard.overview.Overview.reviews_empty_desc')}
-          actionLabel={onOpenReviews ? t('dashboard.menu.reviews') : undefined}
-          onAction={onOpenReviews}
-        />
-      ) : (
+      {/* Review metrics — Google / Yelp / Response / Returning (API pending → zeros) */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {reviewsSummary.items.map((review) => (
-          <Panel
-            key={review.id}
-            className="p-5 flex flex-col justify-between min-h-[140px] hover:shadow-premium transition"
-          >
-            <div>
-              <div className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
-                {t('dashboard.review_kpi.staff_reviews', { name: review.staffName })}
+        <ReviewMetricCard
+          label={t('dashboard.review_kpi.google_reviews')}
+          value={formatRatingValue(EMPTY_REVIEW_METRICS.googleRating)}
+          footer={(
+            <>
+              {renderStars(EMPTY_REVIEW_METRICS.googleRating)}
+              <div className="text-xs text-nexoraMuted">
+                {t('dashboard.review_kpi.reviews_count', { count: EMPTY_REVIEW_METRICS.googleReviewCount })}
               </div>
-              <div className="mt-2 text-2xl font-black text-nexoraText tracking-tight">
-                {review.rating}
+            </>
+          )}
+        />
+        <ReviewMetricCard
+          label={t('dashboard.review_kpi.yelp_reviews')}
+          value={formatRatingValue(EMPTY_REVIEW_METRICS.yelpRating)}
+          footer={(
+            <>
+              {renderStars(EMPTY_REVIEW_METRICS.yelpRating)}
+              <div className="text-xs text-nexoraMuted">
+                {t('dashboard.review_kpi.reviews_count', { count: EMPTY_REVIEW_METRICS.yelpReviewCount })}
               </div>
-            </div>
-            <div className="mt-4 space-y-1">
-              {renderStars(review.rating || 0)}
-              <div className="text-xs text-nexoraMuted mt-0.5">
-                {review.routingType}
-              </div>
-            </div>
-          </Panel>
-        ))}
+            </>
+          )}
+        />
+        <ReviewMetricCard
+          label={t('dashboard.review_kpi.response_rate')}
+          value={`${toPercentValue(EMPTY_REVIEW_METRICS.responseRate)}%`}
+        />
+        <ReviewMetricCard
+          label={t('dashboard.review_kpi.returning_customers')}
+          value={`${toPercentValue(EMPTY_REVIEW_METRICS.returningCustomers)}%`}
+        />
       </div>
-      )}
     </div>
   )
 }

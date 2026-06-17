@@ -349,6 +349,8 @@
       "plan_name": "Pro Plan",
       "no_plan": "No Plan yet",
       "renews_text": "Renews on Jun 20, 2024",
+      "renews_on": "Renews on {{date}}",
+      "trial_ends": "Trial ends {{date}}",
       "manage_plan": "Manage Plan"
     },
     "menu": {

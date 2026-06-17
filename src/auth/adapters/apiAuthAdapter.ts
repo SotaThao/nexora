@@ -1,6 +1,7 @@
 import { tokenStore } from '../tokenStore'
 import httpClient from '../../lib/httpClient'
 import { clearAuthQueryCache, seedAuthQueryCache } from '../../data/seedAuthQueryCache'
+import profileSettingsRepository from '../../data/repositories/profileSettings'
 import { logger } from '../../utils/logger'
 import type {
   AuthSession,
@@ -188,11 +189,17 @@ async function resolveAuthSession(): Promise<AuthSession | null> {
   }
 
   if (!getProfilePromise) {
-    getProfilePromise = httpClient
-      .get<UserProfile>('/api/v1/userprofile/me')
+    getProfilePromise = profileSettingsRepository
+      .get()
+      .then((profile) => {
+        if (!profile) {
+          throw new Error('User profile not found')
+        }
+        return profile
+      })
       .finally(() => {
         getProfilePromise = null
-      }) as Promise<UserProfile>
+      })
   }
   const profile = await getProfilePromise
   const isBusiness = isBusinessProfile(profile)

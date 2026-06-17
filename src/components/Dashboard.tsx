@@ -197,7 +197,10 @@ export default function Dashboard({
       // No saved settings — build from setup data / merchant setup query.
       const storeInfo = setupData?.businessInfo || merchantSetupData?.businessInfo
       const reviewInfo = setupData?.reviewLinks || merchantSetupData?.reviewLinks
-      setProfile(buildFallbackProfile(storeInfo, reviewInfo))
+      setProfile((prev) => ({
+        ...buildFallbackProfile(storeInfo, reviewInfo),
+        subscription: prev?.subscription ?? null,
+      }))
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileSettingsData, hasKyb, userEmail, verificationStatus, businessLogo])
@@ -227,6 +230,7 @@ export default function Dashboard({
   const [selectedLeaderboardStaff, setSelectedLeaderboardStaff] = useState<any | null>(null)
 
   const businessName = profile?.businessName || setupData?.businessInfo?.name || merchantSetupData?.businessInfo?.name || ''
+  const userSubscription = profileSettingsData?.subscription ?? profile?.subscription ?? null
   const businessSlug =
     merchantSetupData?.businessInfo?.slug ||
     setupData?.businessInfo?.slug ||
@@ -538,6 +542,7 @@ export default function Dashboard({
         setActiveMenu={handleNavigateMenu}
         businessName={businessName}
         profile={profile}
+        subscription={userSubscription}
         settingsTab={settingsTab}
         setSettingsTab={setSettingsTab}
         isProfileExpanded={isProfileExpanded}
@@ -611,6 +616,7 @@ export default function Dashboard({
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
         profile={profile}
+        subscription={userSubscription}
         businessName={businessName}
         activeMenu={activeMenu}
         setActiveMenu={handleNavigateMenu}

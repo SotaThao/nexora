@@ -349,6 +349,8 @@
       "plan_name": "Gói Pro",
       "no_plan": "Chưa có gói",
       "renews_text": "Gia hạn vào 20/06/2024",
+      "renews_on": "Gia hạn vào {{date}}",
+      "trial_ends": "Dùng thử đến {{date}}",
       "manage_plan": "Quản lý gói"
     },
     "menu": {
