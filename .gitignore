@@ -50,3 +50,5 @@ pr_body.md
 .pnpm-store/
 
 .DS_Store
+
+*.test.tsx
