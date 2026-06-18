@@ -95,6 +95,8 @@
       "pending_unlink_body": "Liên kết với {business} đang được gỡ. Mã QR tip tạm thời không dùng được.",
       "qr_unavailable_title": "Chưa có mã QR tip",
       "qr_unavailable_body": "Mã QR tip tại {business} chưa kích hoạt. Liên hệ chủ tiệm hoặc quét QR giới thiệu để liên kết.",
+      "touchpoint_missing_title": "Chưa có đường link tip",
+      "touchpoint_missing_body": "Tiệm chưa cấu hình touchpoint nên chưa thể tạo link tip cá nhân của bạn. Vui lòng liên hệ {business} để hoàn tất thiết lập.",
       "referral_unavailable_title": "Chưa có Staff ID",
       "referral_unavailable_body": "Mã QR giới thiệu cá nhân sẽ hiện khi hồ sơ staff được thiết lập xong. Vui lòng thử lại sau giây lát.",
       "note": "QR theo tiệm được lưu theo business_staff_link_id để không bị lẫn khi bạn làm ở nhiều tiệm."
@@ -409,7 +411,14 @@
       "internal_feedback": "Phản hồi Nội bộ",
       "review_source": "Nguồn đánh giá",
       "star_rating": "Số sao đánh giá",
-      "all_stars": "Tất cả sao"
+      "all_stars": "Tất cả sao",
+      "response_rate_label": {
+        "excellent": "Xuất sắc",
+        "good": "Tốt",
+        "fair": "Trung bình",
+        "needs_improvement": "Cần cải thiện",
+        "poor": "Kém"
+      }
     },
     "chart": {
       "tips_over_time": "Tiền Típ Theo Thời Gian",

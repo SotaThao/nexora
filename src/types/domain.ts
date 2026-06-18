@@ -150,6 +150,8 @@ export interface StaffBusinessLink {
   tipUrl?: string | null
   /** Hosted QR PNG from touchpoint API (from API when available). */
   qrImageUrl?: string | null
+  /** True when BE returned touchPoints: [] and no touchpoint slug/URL is available yet. */
+  touchPointsMissing?: boolean
 }
 
 export interface StaffBusinessTipQr {
@@ -164,6 +166,8 @@ export interface StaffBusinessTipQr {
   linkStatusLabel: string | null
   roleLabel: string | null
   logoUrl: string | null
+  /** True when the business has no touchpoint data to build a tipping link. */
+  tipLinkIncomplete?: boolean
 }
 
 export interface TipCountAmount {

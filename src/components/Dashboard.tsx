@@ -402,6 +402,14 @@ export default function Dashboard({
     yelpClicks: 0,
     count4To5Stars: 0,
     count1To3Stars: 0,
+    responseRate: 0,
+    responseRateLabel: null,
+    googleAvgRating: null,
+    googleReviewCount: null,
+    yelpAvgRating: null,
+    yelpReviewCount: null,
+    returningCustomerRate: 0,
+    returningCustomerRateChangeVsLastWeek: 0,
     previousPeriodComparison: null,
   }
 
