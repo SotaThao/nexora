@@ -95,6 +95,7 @@ export function StaffRoute() {
       }}
       // Pagination props
       pageNumber={ctx.activeStaffPage}
+      pageSize={ctx.activeStaffPageSize}
       totalPages={ctx.activeStaffTotalPages}
       totalCount={ctx.activeStaffTotalCount}
       hasNextPage={ctx.activeStaffHasNext}
@@ -199,10 +200,18 @@ export function ReviewsRoute() {
     <ReviewsView
       reviews={ctx.reviewsPage?.items ?? []}
       isLoading={ctx.isReviewsPending}
-      staff={ctx.staff}
+      isFetching={ctx.reviewsListFetching}
+      staff={ctx.filteredStaff}
       filter={ctx.reviewFilterStaff}
       setFilter={ctx.setReviewFilterStaff}
       setupData={ctx.setupData}
+      pageNumber={ctx.activeReviewsPage}
+      pageSize={ctx.activeReviewsPageSize}
+      totalPages={ctx.activeReviewsTotalPages}
+      totalCount={ctx.activeReviewsTotalCount}
+      hasNextPage={ctx.activeReviewsHasNext}
+      hasPreviousPage={ctx.activeReviewsHasPrev}
+      onPageChange={ctx.setActiveReviewsPage}
     />
   )
 }

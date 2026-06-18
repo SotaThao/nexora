@@ -28,6 +28,9 @@ export default function DashboardHeader({
   onLogout,
   notifications,
   setNotifications,
+  onMarkAllNotificationsRead,
+  isMarkAllNotificationsReadPending = false,
+  unreadCount = 0,
   isNotiDropdownOpen,
   setIsNotiDropdownOpen,
   isNotificationsLoading = false,
@@ -64,11 +67,8 @@ export default function DashboardHeader({
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [setIsNotiDropdownOpen, setIsSearchFocused, setIsHeaderDropdownOpen])
 
-  const unreadCount = notifications ? notifications.filter((n) => !n.read).length : 0
-
   const handleMarkAllAsRead = () => {
-    const updated = notifications.map((n) => ({ ...n, read: true }))
-    setNotifications(updated)
+    onMarkAllNotificationsRead?.()
   }
 
   const handleNotificationClick = (item) => {
@@ -353,7 +353,8 @@ export default function DashboardHeader({
                   <button
                     type="button"
                     onClick={handleMarkAllAsRead}
-                    className="text-[10px] font-bold text-nexoraBrand hover:underline"
+                    disabled={isMarkAllNotificationsReadPending}
+                    className="text-[10px] font-bold text-nexoraBrand hover:underline disabled:opacity-50"
                   >
                     {t('dashboard.notifications.mark_all_read')}
                   </button>

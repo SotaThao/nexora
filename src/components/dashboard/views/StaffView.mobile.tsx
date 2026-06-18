@@ -1,11 +1,12 @@
 import { useState, useMemo } from 'react'
-import { AlertCircle, Plus, Trash2, User, QrCode, Edit2, Link, Copy, X, Share2, Eye, Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { AlertCircle, Plus, Trash2, User, QrCode, Edit2, Link, Copy, X, Share2, Eye, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { useSearchMerchantStaff, StatusFilter } from '../../../data/hooks/useMerchantStaff'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
+import Pagination from '../../ui/Pagination'
 
 function isPendingMember(member) {
   const status = member?.status
@@ -188,7 +189,7 @@ function StaffMemberCard({
                   if (onApproveClick) {
                     onApproveClick(member)
                   } else if (onAcceptJoin) {
-                    onAcceptJoin(member.id)
+                    onAcceptJoin(member)
                   }
                 }}
                 className="px-2.5 py-1.5 text-[10px] font-extrabold border border-emerald-200 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition"
@@ -197,7 +198,7 @@ function StaffMemberCard({
               </button>
               <button
                 type="button"
-                onClick={() => onDeclineJoin && onDeclineJoin(member.id)}
+                onClick={() => onDeclineJoin && onDeclineJoin(member)}
                 className="px-2.5 py-1.5 text-[10px] font-extrabold border border-rose-200 bg-rose-50 text-rose-700 rounded-lg hover:bg-rose-100 transition"
               >
                 {t('components.dashboard.views.StaffView.reject')}
@@ -219,7 +220,7 @@ function StaffMemberCard({
                   if (onApproveClick) {
                     onApproveClick(member)
                   } else if (onAcceptJoin) {
-                    onAcceptJoin(member.id)
+                    onAcceptJoin(member)
                   }
                 }}
                 className="px-2.5 py-1.5 text-[10px] font-extrabold border border-emerald-200 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition"
@@ -228,7 +229,7 @@ function StaffMemberCard({
               </button>
               <button
                 type="button"
-                onClick={() => onDeclineJoin && onDeclineJoin(member.id)}
+                onClick={() => onDeclineJoin && onDeclineJoin(member)}
                 className="px-2.5 py-1.5 text-[10px] font-extrabold border border-rose-200 bg-rose-50 text-rose-700 rounded-lg hover:bg-rose-100 transition"
               >
                 {t('components.dashboard.views.StaffView.reject')}
@@ -239,14 +240,14 @@ function StaffMemberCard({
             <>
               <button
                 type="button"
-                onClick={() => onAcceptUnlink && onAcceptUnlink(member.id)}
+                onClick={() => onAcceptUnlink && onAcceptUnlink(member)}
                 className="px-2.5 py-1.5 text-[10px] font-extrabold border border-rose-200 bg-rose-50 text-rose-700 rounded-lg hover:bg-rose-100 transition"
               >
                 {t('components.dashboard.views.StaffView.approveUnlink')}
               </button>
               <button
                 type="button"
-                onClick={() => onDeclineUnlink && onDeclineUnlink(member.id)}
+                onClick={() => onDeclineUnlink && onDeclineUnlink(member)}
                 className="px-2.5 py-1.5 text-[10px] font-extrabold border border-slate-200 bg-white text-slate-700 rounded-lg hover:bg-slate-50 transition"
               >
                 {t('components.dashboard.views.StaffView.reject')}
@@ -307,7 +308,8 @@ function StaffView({
   totalCount = 0,
   hasNextPage = false,
   hasPreviousPage = false,
-  onPageChange
+  onPageChange,
+  pageSize = 10,
 }) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
@@ -627,7 +629,7 @@ function StaffView({
                         </button>
                         <button
                           type="button"
-                          onClick={() => onDeclineJoin && onDeclineJoin(member.id)}
+                          onClick={() => onDeclineJoin && onDeclineJoin(member)}
                           className="px-3 py-1.5 text-xs font-bold border border-rose-200 bg-rose-50 text-rose-700 rounded-lg hover:bg-rose-100 transition shadow-sm"
                         >
                           {t('components.dashboard.views.StaffView.reject')}
@@ -742,77 +744,17 @@ function StaffView({
             </div>
           )}
 
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between border-t border-slate-100 px-4 py-4 sm:px-6 mt-6">
-              <div className="flex flex-1 justify-between sm:hidden">
-                <button
-                  onClick={() => hasPreviousPage && onPageChange(pageNumber - 1)}
-                  disabled={!hasPreviousPage}
-                  className={`relative inline-flex items-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition active:scale-95 ${
-                    !hasPreviousPage ? 'opacity-50 cursor-not-allowed active:scale-100' : ''
-                  }`}
-                >
-                  {t('common.previous') || 'Previous'}
-                </button>
-                <button
-                  onClick={() => hasNextPage && onPageChange(pageNumber + 1)}
-                  disabled={!hasNextPage}
-                  className={`relative ml-3 inline-flex items-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition active:scale-95 ${
-                    !hasNextPage ? 'opacity-50 cursor-not-allowed active:scale-100' : ''
-                  }`}
-                >
-                  {t('common.next') || 'Next'}
-                </button>
-              </div>
-              <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-xs text-slate-500 font-semibold">
-                    {t('common.pagination_showing')} <span className="font-extrabold text-slate-800">{(pageNumber - 1) * 9 + 1}</span> {t('common.pagination_to')}{' '}
-                    <span className="font-extrabold text-slate-800">
-                      {Math.min(pageNumber * 9, totalCount)}
-                    </span>{' '}
-                    {t('common.pagination_of')} <span className="font-extrabold text-slate-800">{totalCount}</span> {t('common.pagination_results')}
-                  </p>
-                </div>
-                <div>
-                  <nav className="isolate inline-flex -space-x-px rounded-lg shadow-sm border border-slate-200 overflow-hidden bg-white" aria-label="Pagination">
-                    <button
-                      onClick={() => hasPreviousPage && onPageChange(pageNumber - 1)}
-                      disabled={!hasPreviousPage}
-                      className={`relative inline-flex items-center px-3 py-2 text-slate-400 hover:bg-slate-50 transition ${
-                        !hasPreviousPage ? 'opacity-50 cursor-not-allowed' : ''
-                      }`}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </button>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                      <button
-                        key={p}
-                        onClick={() => onPageChange(p)}
-                        className={`relative inline-flex items-center px-3.5 py-2 text-xs font-bold transition ${
-                          p === pageNumber
-                            ? 'bg-nexoraBrand text-white'
-                            : 'text-slate-700 hover:bg-slate-50 border-l border-slate-100'
-                        }`}
-                      >
-                        {p}
-                      </button>
-                    ))}
-                    <button
-                      onClick={() => hasNextPage && onPageChange(pageNumber + 1)}
-                      disabled={!hasNextPage}
-                      className={`relative inline-flex items-center px-3 py-2 text-slate-400 hover:bg-slate-50 transition border-l border-slate-100 ${
-                        !hasNextPage ? 'opacity-50 cursor-not-allowed' : ''
-                      }`}
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                  </nav>
-                </div>
-              </div>
-            </div>
-          )}
+          <Pagination
+            pageNumber={pageNumber}
+            pageSize={pageSize}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            hasNextPage={hasNextPage}
+            hasPreviousPage={hasPreviousPage}
+            onPageChange={onPageChange}
+            isLoading={isFetching}
+            className="mt-6"
+          />
         </div>
       </div>
 
