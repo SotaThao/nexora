@@ -45,3 +45,6 @@ debug.log
 .agent-rules
 .cursorrules
 pr_body.md
+
+.vscode/
+.pnpm-store/
