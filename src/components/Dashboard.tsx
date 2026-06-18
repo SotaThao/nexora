@@ -87,6 +87,7 @@ export default function Dashboard({
   const [processingFee, setProcessingFee] = useState(3.0)
   const [isNotiDropdownOpen, setIsNotiDropdownOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [reviewsPageNumber, setReviewsPageNumber] = useState(1)
 
   const hasSearchQuery = Boolean(searchQuery.trim())
   const needsMerchantStaffList =

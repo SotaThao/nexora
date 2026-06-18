@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Star, ExternalLink, Lock, Loader2 } from 'lucide-react'
+import { Star, ExternalLink, Lock, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { renderTextWithGoldStars } from '../utils'
 import Panel from '../../ui/Panel'
@@ -259,7 +259,7 @@ function ReviewsView({
               onChange={(event) => setFilter(event.target.value)}
               options={[
                 { value: 'all', label: t('staff_detail.tab_all') },
-                ...staffFilterOptions,
+                ...staff.map((member) => ({ value: member.id, label: member.fullName || member.nickname }))
               ]}
             />
           </div>
@@ -374,6 +374,7 @@ function ReviewsView({
           className="rounded-xl border border-nexoraBorder/60 bg-white shadow-sm"
         />
       </div>
+
     </div>
   )
 }

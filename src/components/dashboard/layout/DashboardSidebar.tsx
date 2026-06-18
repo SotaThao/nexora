@@ -64,9 +64,9 @@ export default function DashboardSidebar({
         <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsProfileExpanded(!isProfileExpanded)}>
           <div className="flex items-center gap-3 min-w-0">
             {profile.avatar && !profile.avatar.includes('unsplash.com') ? (
-              <img src={profile.avatar} alt="" className="h-10 w-10 rounded-full border border-white/10 object-cover" />
+              <img src={profile.avatar} alt="" className="h-10 w-10 shrink-0 rounded-full border border-white/10 object-cover" />
             ) : (
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-sm font-extrabold uppercase">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-sm font-extrabold uppercase">
                 {(businessName || profile.email || '').slice(0, 2).toUpperCase() || '?'}
               </div>
             )}
