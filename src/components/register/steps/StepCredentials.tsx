@@ -60,7 +60,7 @@ export default function StepCredentials(props) {
 
         {errors.submit && (
           <div className="p-3 bg-red-50 text-red-700 text-xs rounded-lg border border-red-200 text-center font-medium">
-            {errors.submit}
+            {t(errors.submit)}
           </div>
         )}
 
@@ -206,11 +206,25 @@ export default function StepCredentials(props) {
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value)
-                    if (errors.email) setErrors({ ...errors, email: '' })
+                    setErrors(prev => ({
+                      ...prev,
+                      email: '',
+                      confirmEmail: confirmEmail.trim() && e.target.value.trim().toLowerCase() !== confirmEmail.trim().toLowerCase()
+                        ? 'register.errors.email_mismatch'
+                        : '',
+                    }))
+                  }}
+                  onBlur={(e) => {
+                    const val = e.target.value.trim()
+                    if (!val) {
+                      setErrors(prev => ({ ...prev, email: 'register.errors.email_required' }))
+                    } else if (!/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(val)) {
+                      setErrors(prev => ({ ...prev, email: 'register.errors.email_invalid' }))
+                    }
                   }}
                 />
               </div>
-              {errors.email && <span className="text-xs text-red-500 mt-1 block">{errors.email}</span>}
+              {errors.email && <span className="text-xs text-red-500 mt-1 block">{t(errors.email)}</span>}
             </div>
 
             {/* Confirm Email Input */}
@@ -227,11 +241,16 @@ export default function StepCredentials(props) {
                   value={confirmEmail}
                   onChange={(e) => {
                     setConfirmEmail(e.target.value)
-                    if (errors.confirmEmail) setErrors({ ...errors, confirmEmail: '' })
+                    if (errors.confirmEmail) setErrors(prev => ({ ...prev, confirmEmail: '' }))
+                  }}
+                  onBlur={(e) => {
+                    if (e.target.value.trim() && e.target.value.trim().toLowerCase() !== email.trim().toLowerCase()) {
+                      setErrors(prev => ({ ...prev, confirmEmail: 'register.errors.email_mismatch' }))
+                    }
                   }}
                 />
               </div>
-              {errors.confirmEmail && <span className="text-xs text-red-500 mt-1 block">{errors.confirmEmail}</span>}
+              {errors.confirmEmail && <span className="text-xs text-red-500 mt-1 block">{t(errors.confirmEmail)}</span>}
             </div>
 
             {/* Password Input */}
@@ -248,7 +267,15 @@ export default function StepCredentials(props) {
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value)
-                    if (errors.password) setErrors({ ...errors, password: '' })
+                    if (errors.password) setErrors(prev => ({ ...prev, password: '' }))
+                  }}
+                  onBlur={(e) => {
+                    const val = e.target.value
+                    if (!val) {
+                      setErrors(prev => ({ ...prev, password: 'register.errors.password_required' }))
+                    } else if (val.length < 6) {
+                      setErrors(prev => ({ ...prev, password: 'register.errors.password_short' }))
+                    }
                   }}
                 />
                 <button
@@ -259,7 +286,7 @@ export default function StepCredentials(props) {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              {errors.password && <span className="text-xs text-red-500 mt-1 block">{errors.password}</span>}
+              {errors.password && <span className="text-xs text-red-500 mt-1 block">{t(errors.password)}</span>}
             </div>
 
             {/* Referral Code Input */}

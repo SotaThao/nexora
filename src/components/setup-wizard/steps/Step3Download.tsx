@@ -34,7 +34,7 @@ export default function Step3Download({
             </div>
 
             <div className="w-full text-center">
-              <div className="text-[10px] font-extrabold uppercase text-nexoraBrand tracking-wide qr-print-biz-name mx-auto">General Lobby QR</div>
+              <div className="text-[10px] font-extrabold uppercase text-nexoraBrand tracking-wide qr-print-biz-name mx-auto">{t('components.SetupWizard.generalLobbyQr')}</div>
               <div className="text-[7.5px] font-bold text-nexoraMuted qr-print-staff-info mx-auto">{businessInfo.name || 'Your Spa Salon'}</div>
             </div>
 
@@ -55,7 +55,7 @@ export default function Step3Download({
 
             <div className="flex items-center gap-1 text-[7.5px] font-bold text-nexoraSubtle qr-print-footer">
               <ShieldCheck className="h-2.5 w-2.5 text-nexoraBrand shrink-0" />
-              <span>Secure redirect by VLINKPAY</span>
+              <span>{t('components.SetupWizard.secureRedirect')}</span>
             </div>
           </div>
         </div>
@@ -92,7 +92,7 @@ export default function Step3Download({
                   <div className="text-[10px] text-nexoraSubtle truncate sm:whitespace-normal">{t('setup.download_explain')}</div>
                 </div>
               </div>
-              <span className="text-xs text-nexoraSubtle font-bold shrink-0 whitespace-nowrap ml-4">Print ›</span>
+              <span className="text-xs text-nexoraSubtle font-bold shrink-0 whitespace-nowrap ml-4">{t('setup.print_action')} ›</span>
             </button>
           </div>
 

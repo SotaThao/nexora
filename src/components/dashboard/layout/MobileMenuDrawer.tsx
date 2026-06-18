@@ -3,11 +3,13 @@ import { X, ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import IconButton from '../../ui/IconButton'
 import MenuIcon from '../../ui/MenuIcon'
+import { getSubscriptionSidebarCopy } from '../../../utils/subscriptionDisplay'
 
 export default function MobileMenuDrawer({
   isOpen,
   onClose,
   profile,
+  subscription = null,
   businessName,
   activeMenu,
   setActiveMenu,
@@ -29,7 +31,12 @@ export default function MobileMenuDrawer({
   menuItemsToDisplay,
   navigateMenu,
 }) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
+  const subscriptionCopy = getSubscriptionSidebarCopy(
+    subscription ?? profile?.subscription,
+    t,
+    currentLanguage,
+  )
 
   if (!isOpen) return null
 
@@ -120,14 +127,16 @@ export default function MobileMenuDrawer({
             <div className="text-[9px] font-extrabold uppercase tracking-wider text-white/45">
               {t('dashboard.sidebar.current_plan_header')}
             </div>
-            {hasKyb ? (
+            {subscriptionCopy.planLabel ? (
               <>
                 <div className="mt-0.5 text-xs font-black text-white">
-                  {t('dashboard.sidebar.plan_name')}
+                  {subscriptionCopy.planLabel}
                 </div>
-                <div className="mt-0.5 text-[10px] text-white/55">
-                  {t('dashboard.sidebar.renews_text')}
-                </div>
+                {subscriptionCopy.detailLabel ? (
+                  <div className="mt-0.5 text-[10px] text-white/55">
+                    {subscriptionCopy.detailLabel}
+                  </div>
+                ) : null}
               </>
             ) : (
               <div className="mt-0.5 text-[10px] font-semibold text-rose-400">

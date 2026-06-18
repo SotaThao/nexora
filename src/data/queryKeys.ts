@@ -26,6 +26,7 @@ export const qk = {
   dashboardOverview:        () => ['dashboard', 'overview'],
   dashboardStaff:           () => ['dashboard', 'staff'],
   dashboardTouchpoints:     () => ['dashboard', 'touchpoints'],
+  dashboardTipsChart:       () => ['dashboard', 'tipsChart'],
   dashboardReviews:         (filters = EMPTY) => ['dashboard', 'reviews', filters],
   
   // Notifications
@@ -36,6 +37,8 @@ export const qk = {
   userProfile:              () => ['userProfile'],
   verifiedStatus:           () => ['userProfile', 'verifiedStatus'],
   kycInitialize:            () => ['userProfile', 'kycInitialize'],
+  kybIframeInitialize:      (language = 'en') => ['userProfile', 'kybIframeInitialize', language],
+  kybRegister:              () => ['userProfile', 'kybRegister'],
 
   // Merchant Staff Management
   merchantStaff:       (statusFilter?: string, pageNumber?: number, pageSize?: number) => {

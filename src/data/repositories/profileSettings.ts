@@ -4,11 +4,62 @@
 
 import httpClient from '../../lib/httpClient'
 import { isApiError } from '../../types/domain'
-import type { UserProfile } from '../../types/domain'
+import type { UserProfile, UserSubscription } from '../../types/domain'
 import type { UpdateStaffProfileDto, UpdateUserProfileDto } from '../../types/repositories'
 import { getUserProfileImageUrl } from '../../utils/userProfileImage'
 
 type HttpClient = typeof httpClient
+
+export type KybIframeInitializeCommand = {
+  viewType?: 'NetworkTree' | 'Identity' | 'Profile' | 'Wallet'
+  language?: string
+}
+
+/** POST /api/v1/UserProfile/iframe/initialize */
+export type KybIframeInitializeResponse = {
+  identityId?: string
+  viewType?: string
+  url?: string
+}
+
+/** POST /api/v1/UserProfile/kyb/initialize */
+export type InitializeKybResponse = {
+  url?: string
+}
+
+/** @deprecated Use InitializeKybResponse */
+export type RegisterKybResponse = InitializeKybResponse
+
+function normalizeSubscription(raw: LooseObject | null | undefined): UserSubscription | null {
+  const business = raw?.business as LooseObject | undefined
+  const sub =
+    raw?.subscription ??
+    raw?.Subscription ??
+    business?.subscription ??
+    business?.Subscription
+  if (!sub || typeof sub !== 'object') return null
+
+  const plan = sub.plan ?? sub.Plan
+  if (!plan) return null
+
+  return {
+    plan: String(plan),
+    status: sub.status ?? sub.Status ? String(sub.status ?? sub.Status) : undefined,
+    trialEndsAt: sub.trialEndsAt ?? sub.TrialEndsAt ?? null,
+    currentPeriodEnd: sub.currentPeriodEnd ?? sub.CurrentPeriodEnd ?? null,
+  }
+}
+
+function normalizeUserProfile(response: UserProfile): UserProfile {
+  const subscription = normalizeSubscription(response as LooseObject)
+  const profileImageUrl = getUserProfileImageUrl(response)
+
+  return {
+    ...response,
+    ...(subscription ? { subscription } : {}),
+    ...(profileImageUrl ? { profileImageUrl } : {}),
+  }
+}
 
 export function createProfileSettingsRepository(client: HttpClient = httpClient) {
   return {
@@ -16,10 +67,7 @@ export function createProfileSettingsRepository(client: HttpClient = httpClient)
       try {
         const response = await client.get<UserProfile>('/api/v1/userprofile/me')
         if (!response) return null
-        const profileImageUrl = getUserProfileImageUrl(response)
-        return profileImageUrl
-          ? { ...response, profileImageUrl }
-          : response
+        return normalizeUserProfile(response)
       } catch (err: unknown) {
         if (isApiError(err) && (err.errorCode === 'COMMON_NOT_FOUND' || err.status === 404)) {
           return null
@@ -32,8 +80,34 @@ export function createProfileSettingsRepository(client: HttpClient = httpClient)
       return client.get<LooseObject>('/api/v1/userprofile/verified-status')
     },
 
+    /** POST /api/v1/UserProfile/iframe/initialize — existing KYB iframe session. */
+    async initializeKybIframe(
+      command: KybIframeInitializeCommand = {},
+    ): Promise<KybIframeInitializeResponse> {
+      try {
+        return await client.post<KybIframeInitializeResponse>(
+          '/api/v1/userprofile/iframe/initialize',
+          {
+            viewType: command.viewType ?? 'Identity',
+            language: command.language ?? 'en',
+          },
+        )
+      } catch (err: unknown) {
+        if (isApiError(err) && (err.status === 404 || err.errorCode === 'COMMON_NOT_FOUND')) {
+          return {}
+        }
+        throw err
+      }
+    },
+
+    /** KYC only — staff personal verification. */
     async initializeKyc(): Promise<{ url?: string }> {
       return client.post<{ url?: string }>('/api/v1/userprofile/kyc/initialize')
+    },
+
+    /** POST /api/v1/UserProfile/kyb/initialize — start or resume KYB iframe portal. */
+    async initializeKyb(): Promise<InitializeKybResponse> {
+      return client.post<InitializeKybResponse>('/api/v1/userprofile/kyb/initialize', {})
     },
 
     async updateUserProfile(dto: UpdateUserProfileDto): Promise<LooseObject> {

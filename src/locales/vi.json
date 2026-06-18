@@ -117,6 +117,8 @@
       "pending_unlink_body": "Liên kết với {business} đang được gỡ. Mã QR tip tạm thời không dùng được.",
       "qr_unavailable_title": "Chưa có mã QR tip",
       "qr_unavailable_body": "Mã QR tip tại {business} chưa kích hoạt. Liên hệ chủ tiệm hoặc quét QR giới thiệu để liên kết.",
+      "touchpoint_missing_title": "Chưa có đường link tip",
+      "touchpoint_missing_body": "Tiệm chưa cấu hình touchpoint nên chưa thể tạo link tip cá nhân của bạn. Vui lòng liên hệ {business} để hoàn tất thiết lập.",
       "referral_unavailable_title": "Chưa có Staff ID",
       "referral_unavailable_body": "Mã QR giới thiệu cá nhân sẽ hiện khi hồ sơ staff được thiết lập xong. Vui lòng thử lại sau giây lát."
     },
@@ -217,7 +219,10 @@
     "gateway_sub": "Cổng định tuyến Phản hồi & Típ thông minh",
     "sso_integration_title": "Tích hợp VLINKPAY SSO:",
     "sso_integration_desc": "Bạn sẽ sử dụng tài khoản doanh nghiệp đã đăng ký tại hệ thống thanh toán VLINKPAY để đăng nhập nhanh.",
-    "email_label": "Email or username",
+    "secure_access": "Truy Cập Bảo Mật",
+    "sign_in_title": "Đăng nhập NEXORA",
+    "forgot_password": "Quên mật khẩu?",
+    "email_label": "Email hoặc tên đăng nhập",
     "password_label": "Mật khẩu",
     "email_placeholder": "owner@yourstore.com",
     "password_placeholder": "••••••••",
@@ -235,7 +240,7 @@
   },
   "setup": {
     "col_staff": "Nhân viên",
-    "title_step_1": "Bước 1: Thiết Lập Cửa Hàng & Định Tuyến Review",
+    "title_step_1": "Bước 1: Thiết Lập Cửa Hàng & Định Tuyến Đánh Giá",
     "desc_step_1": "Cấu hình thông tin cơ bản của tiệm và các cổng định tuyến phản hồi thông minh.",
     "store_info_title": "Thông Tin Cửa Hàng",
     "required_badge": "* Bắt buộc",
@@ -250,15 +255,15 @@
     "store_address": "Địa Chỉ Hoạt Động *",
     "store_address_placeholder": "Nhập địa chỉ chính xác...",
     "store_phone": "Số Điện Thoại *",
-    "store_website": "Website (Tùy chọn)",
+    "store_website": "Trang Web (Tùy chọn)",
     "store_logo": "Logo Doanh Nghiệp",
     "store_payment_title": "Phương thức nhận tiền của tiệm",
-    "logo_hint": "Logo vuông (Max 5MB)",
-    "review_routing_title": "Review Routing (Định tuyến review)",
+    "logo_hint": "Logo vuông (Tối đa 5MB)",
+    "review_routing_title": "Định Tuyến Đánh Giá",
     "review_routing_policy": "Châm ngôn: Khách hài lòng (4-5★) được đưa thẳng sang Google/Yelp. Khách chưa hài lòng (1-3★) sẽ được định tuyến gửi biểu mẫu đóng góp kín về Email quản trị dưới đây để xử lý kín.",
-    "google_review_link": "Google Review Link (Tùy chọn)",
-    "yelp_review_link": "Yelp Review Link (Tùy chọn)",
-    "facebook_link": "Facebook Link (Tùy chọn)",
+    "google_review_link": "Liên kết Đánh Giá Google (Tùy chọn)",
+    "yelp_review_link": "Liên kết Đánh Giá Yelp (Tùy chọn)",
+    "facebook_link": "Liên kết Facebook (Tùy chọn)",
     "feedback_email": "Email Nhận Góp Ý Kín (1-3★) (Tùy chọn)",
     "title_step_2": "Bước 2: Quản Lý Nhân Viên & Điểm Chạm QR",
     "desc_step_2": "Thêm thợ của bạn. Hệ thống sẽ tự động phát sinh mã QR tương ứng để dán tại ghế hoặc chia sẻ.",
@@ -299,15 +304,16 @@
     "tp_front_default": "Quầy Lễ Tân / Trạm Chính",
     "tp_personal_default": "QR Cá Nhân - {name}",
     "title_step_3": "Bước 3: In QR & Hoàn Tất Cấu Hình",
-    "desc_step_3": "Mọi thứ đã sẵn sàng! Bạn có thể in bộ mã QR và vào Dashboard Nexora.",
-    "download_explain": "Chúng tôi đã chuẩn bị toàn bộ mã QR của tiệm thành tệp PDF/ZIP in ấn chất lượng cao. Khách hàng chỉ cần quét để Típ & Review.",
-    "download_btn": "In QR Kit",
+    "desc_step_3": "Mọi thứ đã sẵn sàng! Bạn có thể in bộ mã QR và vào Bảng Điều Khiển Nexora.",
+    "download_explain": "Chúng tôi đã chuẩn bị toàn bộ mã QR của tiệm thành tệp PDF/ZIP in ấn chất lượng cao. Khách hàng chỉ cần quét để Típ & Đánh Giá.",
+    "download_btn": "In Bộ Kit QR",
     "config_checklist_title": "Kiểm tra cấu hình",
     "chk_business": "Cửa hàng: {name} ({industry})",
-    "chk_routing": "Google/Yelp Routing: Đã liên kết",
+    "chk_routing": "Google/Yelp Định Tuyến: Đã liên kết",
     "chk_staff": "Nhân viên: {count} kỹ thuật viên liên kết ví",
-    "chk_touchpoints": "Điểm chạm: {count} QR Station được phát sinh",
-    "launch_dashboard_btn": "Vào Dashboard",
+    "chk_touchpoints": "Điểm chạm: {count} điểm QR được tạo",
+    "print_action": "In ấn",
+    "launch_dashboard_btn": "Vào Bảng Điều Khiển",
     "errors": {
       "name_required": "Tên cửa hàng là bắt buộc",
       "address_required": "Địa chỉ là bắt buộc",
@@ -329,14 +335,14 @@
       "field_required": "Vui lòng nhập trường này.",
       "user_not_merchant": "Người dùng không phải là merchant."
     },
-    "step_name_1": "Cửa hàng & Review",
+    "step_name_1": "Cửa hàng & Đánh Giá",
     "step_name_2": "Nhân viên & QR",
-    "step_name_3": "Download & Hoàn tất",
+    "step_name_3": "Tải xuống & Hoàn tất",
     "onboarding_stage": "Onboarding Stage",
     "back_to_login": "Quay lại Đăng nhập",
     "prefill_demo_data": "Prefill Demo Data",
     "payout_methods": "Phương thức nhận tiền",
-    "payout_account": "Payout account",
+    "payout_account": "Tài khoản nhận tiền",
     "setup_wallet_title": "Thiết lập tài khoản {wallet}",
     "payout_input_label": "Tài khoản {wallet} của bạn {field} *",
     "qr_code_optional": "Mã QR Code (tùy chọn)",
@@ -372,6 +378,8 @@
       "plan_name": "Gói Pro",
       "no_plan": "Chưa có gói",
       "renews_text": "Gia hạn vào 20/06/2024",
+      "renews_on": "Gia hạn vào {{date}}",
+      "trial_ends": "Dùng thử đến {{date}}",
       "manage_plan": "Quản lý gói"
     },
     "menu": {
@@ -406,6 +414,7 @@
       "avg_tip": "Típ Trung Bình",
       "total_reviews": "Tổng Đánh Giá",
       "vs_last_week": "so với tuần trước",
+      "no_comparison": "Chưa có dữ liệu kỳ trước",
       "scans": "Lượt Quét QR/NFC",
       "reviews": "Lượt Đánh Giá",
       "avg_rating": "Đánh Giá Trung Bình",
@@ -415,6 +424,7 @@
     "review_kpi": {
       "google_reviews": "Đánh giá Google",
       "yelp_reviews": "Đánh giá Yelp",
+      "staff_reviews": "Đánh giá {name}",
       "response_rate": "Tỷ lệ Phản hồi",
       "returning_customers": "Khách quay lại",
       "great": "Tuyệt vời!",
@@ -424,7 +434,14 @@
       "internal_feedback": "Phản hồi Nội bộ",
       "review_source": "Nguồn đánh giá",
       "star_rating": "Số sao đánh giá",
-      "all_stars": "Tất cả sao"
+      "all_stars": "Tất cả sao",
+      "response_rate_label": {
+        "excellent": "Xuất sắc",
+        "good": "Tốt",
+        "fair": "Trung bình",
+        "needs_improvement": "Cần cải thiện",
+        "poor": "Kém"
+      }
     },
     "chart": {
       "tips_over_time": "Tiền Típ Theo Thời Gian",
@@ -493,12 +510,16 @@
       "add_btn": "Thêm Điểm Chạm",
       "tp_name_required": "Vui lòng nhập tên điểm chạm.",
       "tp_added_success": "Đã thêm điểm chạm \"{name}\" thành công!",
+      "tp_add_failed": "Thêm điểm chạm thất bại. Vui lòng thử lại.",
       "view_qr_title": "Mã QR cho {name}",
       "view_qr_desc": "Khách hàng quét mã này để típ và viết đánh giá trực tiếp cho nhân viên được gán.",
       "assign_staff": "Gán nhân viên phục vụ:",
       "no_staff_assigned": "-- Không gán (Típ chung cho cửa hàng) --",
       "download_print_qr": "Tải Xuống QR In Ấn (PDF)",
-      "customer_view_test": "Thử Giao Diện Khách Quét ›"
+      "print_qr": "In Mã QR",
+      "customer_view_test": "Thử Giao Diện Khách Quét ›",
+      "tp_name_placeholder": "Ví dụ: Ghế Manicure 05",
+      "device_id_label": "Serial thiết bị / Mã NFC"
     },
     "settings_panel": {
       "title": "Cấu Hình Hệ Thống Nexora",
@@ -549,11 +570,15 @@
         "stations": "Điểm Chạm QR",
         "devices": "Thiết Bị Vật Lý"
       },
-      "open_link": "Thử nghiệm luồng trạm"
+      "open_link": "Thử nghiệm luồng trạm",
+      "empty_title": "Chưa có trạm QR nào",
+      "empty_desc": "Tạo touchpoint đầu tiên để bắt đầu nhận lượt quét và tiền tip."
     },
     "devices": {
       "subtitle": "Quản lý các trạm đứng salon vật lý, mã đặt bàn và điểm chạm thông minh.",
       "add_btn": "Thêm Thiết Bị Mới",
+      "empty_title": "Chưa có thiết bị phần cứng",
+      "empty_desc": "Thêm thiết bị QR hoặc NFC để quản lý trạm và theo dõi lượt quét.",
       "location": "Vị trí",
       "scans": "Lượt quét",
       "last_scan": "Lần quét cuối",
@@ -864,15 +889,15 @@
     "create_account": "Tạo tài khoản",
     "role_select_title": "Chọn loại tài khoản",
     "role_select_desc": "Vui lòng chọn vai trò phù hợp để cấu hình giao diện của bạn.",
-    "role_business_title": "Business",
+    "role_business_title": "Doanh Nghiệp",
     "role_business_desc": "Quản lý thông tin cửa hàng, nhân viên, touchpoints, định tuyến đánh giá và xem thống kê tiệm.",
-    "role_personal_title": "Personal",
+    "role_personal_title": "Cá Nhân",
     "role_personal_desc": "Tự quản lý tài khoản cá nhân, ví nhận tiền, theo dõi tiền tip và chia sẻ mã QR cá nhân.",
     "fullname_label": "Họ và tên *",
     "fullname_placeholder": "Ví dụ: Mia Tran",
     "staff_success_title": "Đăng ký Tài khoản Cá nhân thành công!",
     "staff_success_desc": "Tài khoản cá nhân của bạn đã được tạo. Bạn không cần xác minh KYB doanh nghiệp để bắt đầu.",
-    "need_invite_link": "Bạn cần có link invite từ một tiệm (Business) để trở thành thợ.",
+    "need_invite_link": "Bạn cần có liên kết mời từ một tiệm (Doanh Nghiệp) để trở thành thợ.",
     "staff_id_label": "Mã Personal ID của bạn:",
     "staff_linking_instructions": "Cung cấp mã Personal ID này cho Chủ tiệm/Salon để họ liên kết bạn vào danh sách của tiệm.",
     "staff_login_btn": "Đăng nhập vào Bảng điều khiển Cá nhân",
@@ -1053,6 +1078,7 @@
     "business_name_required": "Tên tiệm là bắt buộc.",
     "business_invalid_slug_format": "Định dạng đường dẫn URL không hợp lệ.",
     "user_not_merchant": "Tài khoản của bạn không có vai trò chủ tiệm.",
+    "touchpoint_starter_limit_reached": "Gói Starter đã đạt giới hạn: bạn chỉ có thể tạo tối đa 3 điểm chạm. Vui lòng nâng cấp gói để thêm nhiều hơn.",
     "image_file_size_exceeded": "Kích thước ảnh vượt quá giới hạn cho phép 10MB.",
     "image_unsupported_file_type": "Định dạng ảnh không hỗ trợ. Vui lòng tải lên PNG, JPEG hoặc WebP.",
     "image_upload_failed": "Tải ảnh lên thất bại.",
@@ -1296,7 +1322,13 @@
       "overview": {
         "Overview": {
           "custom": "Tự chọn",
-          "copiedNfcRedirectLink": "Đã sao chép link chuyển hướng NFC vào clipboard!"
+          "copiedNfcRedirectLink": "Đã sao chép link chuyển hướng NFC vào clipboard!",
+          "qr_download_failed": "Không thể tải mã QR. Vui lòng thử lại.",
+          "gateway_empty_title": "Chưa có điểm chạm",
+          "gateway_empty_desc": "Tạo touchpoint để sinh Master QR và cổng NFC cho cửa hàng.",
+          "gateway_empty_action": "Thêm Touchpoint",
+          "reviews_empty_title": "Chưa có dữ liệu đánh giá",
+          "reviews_empty_desc": "Chỉ số đánh giá sẽ hiển thị khi khách hàng bắt đầu để lại phản hồi."
         },
         "SetupGuideBanner": {
           "gettingStarted": "Bắt đầu sử dụng",
@@ -1307,7 +1339,14 @@
         "TipsOverTimePanel": {
           "custom": "Tự chọn",
           "from": "Từ ngày:",
-          "to": "Đến ngày:"
+          "to": "Đến ngày:",
+          "empty_title": "Chưa có tip trong khoảng thời gian này",
+          "empty_desc": "Biểu đồ sẽ hiển thị khi khách hàng bắt đầu tip qua các điểm chạm của bạn."
+        },
+        "StaffLeaderboardPanel": {
+          "empty_title": "Chưa có bảng xếp hạng nhân viên",
+          "empty_desc": "Thêm nhân viên để xem thứ hạng hiệu suất trên leaderboard.",
+          "empty_action": "Quản lý nhân viên"
         }
       },
       "views": {
@@ -1528,6 +1567,15 @@
           "phYelpUrl": "https://www.yelp.com/biz/..."
         },
         "KybTab": {
+          "iframeTitle": "Cổng xác minh KYB VLINKPAY",
+          "verifyYourBusiness": "Xác minh doanh nghiệp của bạn",
+          "subtitle": "Hoàn thành <b>KYB</b> và khám phá trải nghiệm đẳng cấp tiếp theo cùng <b>Nexora Touch</b>",
+          "getStarted": "Bắt đầu",
+          "tabKybTitle": "Tại sao xác minh KYB lại quan trọng",
+          "tabKybContent": "Hoàn thành quá trình xác minh KYB đảm bảo doanh nghiệp của bạn tuân thủ đầy đủ các yêu cầu quy định, cho phép truy cập tất cả tính năng và lợi ích của Nexora Touch, bao gồm xử lý thanh toán, thông tin chi tiết doanh nghiệp và nhiều hơn nữa. Quá trình này cũng bảo vệ doanh nghiệp khỏi gian lận và củng cố niềm tin với khách hàng.",
+          "retry": "Thử lại",
+          "networkError": "Không thể tải cổng KYB. Vui lòng kiểm tra kết nối và thử lại.",
+          "serverError": "Không thể khởi tạo cổng KYB. Vui lòng thử lại sau.",
           "closeForm": "Đóng Form",
           "submittingKybDetails": "Đang gửi thông tin xác thực...",
           "legalBusinessName": "Tên pháp lý doanh nghiệp",
@@ -1934,8 +1982,8 @@
     "auth": {
       "AuthGraphicPanel": {
         "badge": "NEXORA TOUCH",
-        "merchantOsLabel": "Merchant OS",
-        "headline": "Tips, QR, NFC",
+        "merchantOsLabel": "Hệ Thống Merchant",
+        "headline": "Tiền Tip, QR, NFC",
         "statTips": "Tiền tip",
         "statReviews": "Đánh giá",
         "statFlow": "Liên tục",

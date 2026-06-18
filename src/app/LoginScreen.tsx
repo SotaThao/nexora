@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Lock, Mail, Sparkles, Eye, EyeOff } from 'lucide-react'
+import { Lock, Mail, Eye, EyeOff } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import AuthGraphicPanel from '../components/auth/AuthGraphicPanel'
 import SecondaryButton from '../components/ui/SecondaryButton'
@@ -7,9 +7,6 @@ import { useAuth } from '../auth/useAuth'
 import { useTranslation } from '../contexts/LanguageContext'
 import { getErrorI18nKey } from '../data/errorCodes'
 import { getApiErrorCode } from '../types/domain'
-import { isDemoToolsEnabled } from './demoTools'
-import { useSaveMerchantSetup } from '../data/hooks/useMerchantSetup'
-import { logger } from '../utils/logger'
 
 function GoogleIcon() {
   return (
@@ -35,15 +32,31 @@ export default function LoginScreen() {
   const { login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const saveMerchantSetupMutation = useSaveMerchantSetup()
-
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loginError, setLoginError] = useState(location.state?.loginError || '')
+  const [fieldErrorKeys, setFieldErrorKeys] = useState<{ email?: string; password?: string }>({})
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
   const handleLoginSubmit = () => {
+    const newFieldErrorKeys: { email?: string; password?: string } = {}
+    if (!email.trim()) {
+      newFieldErrorKeys.email = 'register.errors.email_required'
+    } else if (!/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email.trim())) {
+      newFieldErrorKeys.email = 'register.errors.email_invalid'
+    }
+    if (!password) {
+      newFieldErrorKeys.password = 'register.errors.password_required'
+    } else if (password.length < 6) {
+      newFieldErrorKeys.password = 'register.errors.password_short'
+    }
+    if (Object.keys(newFieldErrorKeys).length > 0) {
+      setFieldErrorKeys(newFieldErrorKeys)
+      setLoginError('')
+      return
+    }
+    setFieldErrorKeys({})
     setIsLoading(true)
     setLoginError('')
 
@@ -102,17 +115,6 @@ export default function LoginScreen() {
     }
   }
 
-  const handleQuickDemoLogin = (demoSetup) => {
-    saveMerchantSetupMutation.mutate(demoSetup, {
-      onSuccess: () => {
-        navigate('/dashboard')
-      },
-      onError: (err) => {
-        logger.error('Failed to save demo setup', err)
-      },
-    })
-  }
-
   return (
     <div className="min-h-dvh flex items-center justify-center bg-nexoraCanvas relative overflow-x-hidden overflow-y-auto text-nexoraText px-4 pt-[max(1.5rem,env(safe-area-inset-top,0px))] pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] sm:pt-10 sm:pb-10 selection:bg-nexoraBrandSoft selection:text-nexoraBrand">
       {/* Language Switcher */}
@@ -151,8 +153,8 @@ export default function LoginScreen() {
           ) : (
             <form onSubmit={(e) => { e.preventDefault(); handleLoginSubmit(); }} className="space-y-5">
               <div className="space-y-1">
-                <p className="text-[11px] font-black uppercase tracking-wider text-nexoraBrand">Secure Access</p>
-                <h1 className="text-2xl font-black text-nexoraText sm:text-3xl">Sign in to NEXORA</h1>
+                <p className="text-[11px] font-black uppercase tracking-wider text-nexoraBrand">{t('login.secure_access')}</p>
+                <h1 className="text-2xl font-black text-nexoraText sm:text-3xl">{t('login.sign_in_title')}</h1>
               </div>
 
               {loginError && (
@@ -169,11 +171,15 @@ export default function LoginScreen() {
                     <input
                       type="email"
                       placeholder={t('login.email_placeholder')}
-                      className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg pl-10 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all"
+                      className={`w-full bg-nexoraCanvas border ${fieldErrorKeys.email ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} rounded-lg pl-10 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all`}
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value)
+                        if (fieldErrorKeys.email) setFieldErrorKeys(prev => ({ ...prev, email: undefined }))
+                      }}
                     />
                   </div>
+                  {fieldErrorKeys.email && <span className="text-xs text-nexoraDanger mt-1 block">{t(fieldErrorKeys.email)}</span>}
                 </div>
 
                 <div>
@@ -184,7 +190,7 @@ export default function LoginScreen() {
                       onClick={() => navigate('/forgot-password')}
                       className="text-[10px] font-bold text-nexoraBrand hover:underline focus:outline-none transition-all"
                     >
-                      Forgot Password?
+                      {t('login.forgot_password')}
                     </button>
                   </div>
                   <div className="relative">
@@ -192,9 +198,12 @@ export default function LoginScreen() {
                     <input
                       type={showPassword ? "text" : "password"}
                       placeholder={t('login.password_placeholder')}
-                      className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg pl-10 pr-10 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all"
+                      className={`w-full bg-nexoraCanvas border ${fieldErrorKeys.password ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} rounded-lg pl-10 pr-10 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all`}
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        setPassword(e.target.value)
+                        if (fieldErrorKeys.password) setFieldErrorKeys(prev => ({ ...prev, password: undefined }))
+                      }}
                     />
                     <button
                       type="button"
@@ -204,6 +213,7 @@ export default function LoginScreen() {
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
+                  {fieldErrorKeys.password && <span className="text-xs text-nexoraDanger mt-1 block">{t(fieldErrorKeys.password)}</span>}
                 </div>
               </div>
 
@@ -224,46 +234,6 @@ export default function LoginScreen() {
                 <SecondaryButton onClick={() => triggerSimulation('new_register')}>
                   {t('login.register_btn')}
                 </SecondaryButton>
-
-                {isDemoToolsEnabled && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      // Prefill and login directly to Dashboard
-                      const demoSetup = {
-                      businessInfo: {
-                        name: 'Demo Nail Spa',
-                        industry: 'Nail Salon',
-                        address: '123 Demo Street, Suite 100',
-                        phone: '',
-                        website: '',
-                        logo: null,
-                        paymentAccounts: {
-                          venmo: '',
-                          cashapp: '',
-                          zelle: '',
-                          vlinkpay: ''
-                        }
-                      },
-                      reviewLinks: {
-                        googleReview: '',
-                        yelpReview: '',
-                        facebookReview: '',
-                        feedbackEmail: ''
-                      },
-                      staffList: [],
-                      touchPoints: [
-                        { id: 'tp-main', name: 'Business Main Lobby QR', type: 'Business Main' },
-                        { id: 'tp-front', name: 'Reception Front Desk', type: 'Front Desk' },
-                      ]
-                      }
-                      handleQuickDemoLogin(demoSetup)
-                    }}
-                    className="min-h-11 py-2 border border-nexoraBrand/20 hover:border-nexoraBrand text-nexoraBrand bg-nexoraBrandSoft/40 hover:bg-nexoraBrandSoft text-xs font-semibold rounded-lg hidden lg:flex items-center justify-center gap-1 transition-all"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-nexoraBrand" /> {t('login.enter_dashboard_btn')}
-                  </button>
-                )}
               </div>
             </form>
           )}

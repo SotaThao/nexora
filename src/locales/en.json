@@ -117,6 +117,8 @@
       "pending_unlink_body": "Your link with {business} is being removed. The tipping QR is temporarily unavailable.",
       "qr_unavailable_title": "Tipping QR not available",
       "qr_unavailable_body": "Your tipping QR for {business} is not active yet. Please contact the salon owner or scan their referral QR to link.",
+      "touchpoint_missing_title": "Tipping link not ready",
+      "touchpoint_missing_body": "This salon has not finished setting up its touchpoint, so your personal tipping link is not available yet. Please contact {business} to complete setup.",
       "referral_unavailable_title": "Staff ID not ready",
       "referral_unavailable_body": "Your personal referral QR will appear once your staff profile is fully set up. Please try again in a moment."
     },
@@ -217,6 +219,9 @@
     "gateway_sub": "Smart Tip & Google Review Filtration Gateway",
     "sso_integration_title": "VLINKPAY SSO Integration:",
     "sso_integration_desc": "You will use your registered VLINKPAY business account to log in quickly.",
+    "secure_access": "Secure Access",
+    "sign_in_title": "Sign in to NEXORA",
+    "forgot_password": "Forgot Password?",
     "email_label": "Email or username",
     "password_label": "Password",
     "email_placeholder": "owner@yourstore.com",
@@ -307,6 +312,7 @@
     "chk_routing": "Google/Yelp Routing: Linked",
     "chk_staff": "Staff: {count} technicians with linked wallets",
     "chk_touchpoints": "Touch Points: {count} QR Stations generated",
+    "print_action": "Print",
     "launch_dashboard_btn": "Launch Dashboard",
     "errors": {
       "name_required": "Store name is required",
@@ -372,6 +378,8 @@
       "plan_name": "Pro Plan",
       "no_plan": "No Plan yet",
       "renews_text": "Renews on Jun 20, 2024",
+      "renews_on": "Renews on {{date}}",
+      "trial_ends": "Trial ends {{date}}",
       "manage_plan": "Manage Plan"
     },
     "menu": {
@@ -406,6 +414,7 @@
       "avg_tip": "Average Tip",
       "total_reviews": "Total Reviews",
       "vs_last_week": "vs last week",
+      "no_comparison": "No prior period data",
       "scans": "QR/NFC Scans",
       "reviews": "Reviews",
       "avg_rating": "Average Star Rating",
@@ -415,6 +424,7 @@
     "review_kpi": {
       "google_reviews": "Google Reviews",
       "yelp_reviews": "Yelp Reviews",
+      "staff_reviews": "{name} Reviews",
       "response_rate": "Response Rate",
       "returning_customers": "Returning Customers",
       "great": "Great!",
@@ -424,7 +434,14 @@
       "internal_feedback": "Internal Feedback",
       "review_source": "Review Source",
       "star_rating": "Star Rating",
-      "all_stars": "All Stars"
+      "all_stars": "All Stars",
+      "response_rate_label": {
+        "excellent": "Excellent",
+        "good": "Good",
+        "fair": "Fair",
+        "needs_improvement": "Needs Improvement",
+        "poor": "Poor"
+      }
     },
     "chart": {
       "tips_over_time": "Tips Over Time",
@@ -493,12 +510,16 @@
       "add_btn": "Add Touch Point",
       "tp_name_required": "Please enter a touch point name.",
       "tp_added_success": "Touch point \"{name}\" added successfully!",
+      "tp_add_failed": "Failed to add touch point. Please try again.",
       "view_qr_title": "QR Code for {name}",
       "view_qr_desc": "Customers scan this code to Tip & Review directly for the assigned staff member.",
       "assign_staff": "Assign staff member:",
       "no_staff_assigned": "-- General QR (Store Pool Tips) --",
       "download_print_qr": "Download Print QR (PDF)",
-      "customer_view_test": "Simulate Customer Scan ›"
+      "print_qr": "Print QR",
+      "customer_view_test": "Simulate Customer Scan ›",
+      "tp_name_placeholder": "e.g. Manicure Chair 05",
+      "device_id_label": "Hardware Serial / NFC ID"
     },
     "settings_panel": {
       "title": "Nexora Gateway Configuration",
@@ -549,11 +570,15 @@
         "stations": "QR Stations",
         "devices": "Hardware Devices"
       },
-      "open_link": "Test station flow"
+      "open_link": "Test station flow",
+      "empty_title": "No QR stations yet",
+      "empty_desc": "Create your first touchpoint to start receiving scans and tips."
     },
     "devices": {
       "subtitle": "Manage physical salon stands, tabletop codes, and smart taps.",
       "add_btn": "Add New Device",
+      "empty_title": "No hardware devices yet",
+      "empty_desc": "Add a QR or NFC device to manage stations and scan activity.",
       "location": "Location",
       "scans": "Scans",
       "last_scan": "Last Scan",
@@ -1053,6 +1078,7 @@
     "business_name_required": "Business name is required.",
     "business_invalid_slug_format": "The URL slug format is invalid.",
     "user_not_merchant": "Your account is not registered as a merchant.",
+    "touchpoint_starter_limit_reached": "Starter plan limit reached: you can only create up to 3 touch points. Please upgrade your plan to add more.",
     "image_file_size_exceeded": "The image file size exceeds the 10MB limit.",
     "image_unsupported_file_type": "Unsupported file format. Please upload PNG, JPEG, or WebP.",
     "image_upload_failed": "Failed to upload the image.",
@@ -1296,7 +1322,13 @@
       "overview": {
         "Overview": {
           "custom": "Custom",
-          "copiedNfcRedirectLink": "Copied NFC redirect link to clipboard!"
+          "copiedNfcRedirectLink": "Copied NFC redirect link to clipboard!",
+          "qr_download_failed": "Could not download QR code. Please try again.",
+          "gateway_empty_title": "No touchpoints configured",
+          "gateway_empty_desc": "Create a touchpoint to generate your Master QR and NFC gateway.",
+          "gateway_empty_action": "Add Touchpoint",
+          "reviews_empty_title": "No review data yet",
+          "reviews_empty_desc": "Review metrics will appear once customers start leaving feedback."
         },
         "SetupGuideBanner": {
           "gettingStarted": "Getting Started",
@@ -1307,7 +1339,14 @@
         "TipsOverTimePanel": {
           "custom": "Custom",
           "from": "From:",
-          "to": "To:"
+          "to": "To:",
+          "empty_title": "No tips in this period",
+          "empty_desc": "Tips will appear here once customers start tipping through your touchpoints."
+        },
+        "StaffLeaderboardPanel": {
+          "empty_title": "No staff rankings yet",
+          "empty_desc": "Add staff members to see performance rankings on your leaderboard.",
+          "empty_action": "Manage Staff"
         }
       },
       "views": {
@@ -1528,6 +1567,15 @@
           "phYelpUrl": "https://www.yelp.com/biz/..."
         },
         "KybTab": {
+          "iframeTitle": "Know your business",
+          "verifyYourBusiness": "Verify Your Business",
+          "subtitle": "Complete your <b>KYB</b> and explore the next level of experience with <b>Nexora Touch</b>",
+          "getStarted": "Get Started",
+          "tabKybTitle": "Why KYB Verification Is Important",
+          "tabKybContent": "Completing the KYB verification ensures your business is fully compliant with regulatory requirements, providing you access to all the features and benefits of Nexora Touch, including payment processing, business insights, and more. This process also protects your business from fraudulent activities and strengthens trust with your customers.",
+          "retry": "Retry",
+          "networkError": "Unable to load KYB portal. Please check your connection and try again.",
+          "serverError": "Unable to initialize KYB portal. Please try again later.",
           "closeForm": "Close Form",
           "submittingKybDetails": "Submitting KYB details...",
           "legalBusinessName": "Legal Business Name",
