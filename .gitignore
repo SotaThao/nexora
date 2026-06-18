@@ -48,3 +48,5 @@ pr_body.md
 
 .vscode/
 .pnpm-store/
+
+.DS_Store
