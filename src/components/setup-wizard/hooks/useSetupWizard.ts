@@ -171,21 +171,27 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
     setErrors({})
   }
 
-  // Handle file logo selection
+  const uploadLogoFromFile = async (file) => {
+    if (!file) return
+    try {
+      const response = await uploadLogoMutation.mutateAsync(file)
+      const finalUrl =
+        typeof response === 'string'
+          ? response
+          : (response as { imageUrl?: string } | null)?.imageUrl || ''
+      setBusinessInfo(prev => ({ ...prev, logo: finalUrl }))
+      if (errors.logo) setErrors(prev => ({ ...prev, logo: '' }))
+    } catch (err: unknown) {
+      setErrors(prev => ({ ...prev, logo: getApiErrorCode(err, 'Logo upload failed') }))
+    }
+  }
+
+  const handleLogoFile = uploadLogoFromFile
+
+  // Handle file logo selection (web file input fallback)
   const handleLogoChange = async (e) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0]
-      try {
-        const response = await uploadLogoMutation.mutateAsync(file)
-        const finalUrl =
-          typeof response === 'string'
-            ? response
-            : (response as { imageUrl?: string } | null)?.imageUrl || ''
-        setBusinessInfo(prev => ({ ...prev, logo: finalUrl }))
-        if (errors.logo) setErrors(prev => ({ ...prev, logo: '' }))
-      } catch (err: unknown) {
-        setErrors(prev => ({ ...prev, logo: getApiErrorCode(err, 'Logo upload failed') }))
-      }
+    if (e.target.files?.[0]) {
+      await uploadLogoFromFile(e.target.files[0])
     }
   }
 
@@ -576,6 +582,7 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
     setErrors,
     // handlers
     prefillDemo,
+    handleLogoFile,
     handleLogoChange,
     validateStep,
     handleNext,

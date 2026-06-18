@@ -28,6 +28,7 @@ import { useMerchantInviteLinkSetting } from '../data/hooks/useMerchantSettings'
 import DashboardHeader from './dashboard/layout/DashboardHeader'
 import DashboardSidebar from './dashboard/layout/DashboardSidebar'
 import MobileMenuDrawer from './dashboard/layout/MobileMenuDrawer'
+import MobileBottomNav from './dashboard/layout/MobileBottomNav'
 import Overview from './dashboard/overview/Overview'
 import StaffView from './dashboard/views/StaffView'
 import ReviewsView from './dashboard/views/ReviewsView'
@@ -526,6 +527,7 @@ export default function Dashboard({
   }
 
   const dashboardCtx = {
+    profile, onNavigateMenu: handleNavigateMenu,
     metrics, activeKpi, setActiveKpi, chartRange, handleChartRangeChange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate,
     kpiDeltas,
     transactions, selectedLeaderboardStaff, handleSelectLeaderboardStaff, businessName, businessSlug, previewQr, hasKyb, hasSetup, onStartSetup: handleStartSetup,
@@ -597,7 +599,7 @@ export default function Dashboard({
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
         />
 
-        <main className="min-h-dvh p-4 sm:p-6 lg:p-7">
+        <main className="min-h-dvh p-4 pb-24 sm:p-6 sm:pb-24 lg:p-7 lg:pb-7">
           {activeMenu !== 'overview' && (
             <button
               onClick={() => handleNavigateMenu('overview')}
@@ -612,13 +614,15 @@ export default function Dashboard({
 
       <button
         onClick={() => document.documentElement.classList.toggle('dark')}
-        className="fixed bottom-4 right-4 z-40 flex h-10 w-10 items-center justify-center rounded-full border border-nexoraBorder bg-nexoraSurface text-nexoraMuted shadow-lg"
+        className="fixed bottom-4 right-4 z-40 hidden lg:flex h-10 w-10 items-center justify-center rounded-full border border-nexoraBorder bg-nexoraSurface text-nexoraMuted shadow-lg"
         title="Toggle theme hook"
         aria-label="Toggle theme hook"
       >
         <Sun className="h-4 w-4 dark:hidden" />
         <Moon className="hidden h-4 w-4 dark:block" />
       </button>
+
+      <MobileBottomNav activeMenu={activeMenu} onNavigate={handleNavigateMenu} />
 
       <MobileMenuDrawer
         isOpen={isMobileMenuOpen}

@@ -3,6 +3,7 @@ import {
   Building2, Upload, MapPin, Globe, ShieldCheck, HelpCircle
 } from 'lucide-react'
 import CustomSelect from '../../CustomSelect'
+import ImageFileInput from '../../ui/ImageFileInput'
 import CountryCodeSelect, { formatNationalNumber, parsePhone } from '../../CountryCodeSelect'
 import { renderTextWithGoldStars } from '../constants'
 import { renderLabel } from '../../../contexts/LanguageContext'
@@ -18,7 +19,7 @@ export default function Step1BusinessInfo({
   setReviewLinks,
   errors,
   setErrors,
-  handleLogoChange
+  handleLogoFile
 }) {
   const phoneParsed = useMemo(() => parsePhone(businessInfo.phone), [businessInfo.phone])
 
@@ -54,11 +55,10 @@ export default function Step1BusinessInfo({
                   <Upload className="w-4 h-4 text-nexoraSubtle" />
                 )}
                 {!isSsoLocked && (
-                  <input
-                    type="file"
-                    accept="image/*"
+                  <ImageFileInput
+                    as="div"
                     className="absolute inset-0 opacity-0 cursor-pointer"
-                    onChange={handleLogoChange}
+                    onPickFile={handleLogoFile}
                   />
                 )}
               </div>

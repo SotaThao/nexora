@@ -12,6 +12,8 @@ import { shareUrl } from '../../../utils/shareUrl'
 import { buildQrImageUrl } from '../../../utils/staffTipUrl'
 import { SkeletonLayout } from '../../ui/skeleton'
 
+type LooseObject = Record<string, any>
+
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 
 type QrTab = 'referral' | 'tipping'
@@ -430,14 +432,6 @@ export default function StaffMyQR() {
                       {t('staff_dashboard.qr.business_sub')}
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleOpenScan}
-                    className="flex shrink-0 items-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-3 py-1.5 text-xs font-bold text-nexoraBrand shadow-sm transition hover:bg-slate-50"
-                  >
-                    <QrCode className="h-3.5 w-3.5" />
-                    <span>{t('components.staff_dashboard.views.StaffMyQR.scanSalonQr')}</span>
-                  </button>
                 </div>
 
                 <div className="flex flex-wrap gap-2">

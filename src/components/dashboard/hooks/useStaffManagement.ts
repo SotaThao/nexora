@@ -51,6 +51,7 @@ export function normaliseMember(member) {
     payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member),
     // Preserve API identifiers
     staffLinkId: member.staffLinkId ?? null,
+    linkId: member.linkId ?? member.staffLinkId ?? member.id ?? null,
     inviteId: member.inviteId ?? null,
     staffProfileId: member.staffProfileId ?? null,
     staffCode: member.staffCode ?? null,
@@ -95,7 +96,7 @@ export function useStaffManagement({
 
   // Staff comes from the API query (useMerchantStaff) passed in as staffData.
   // No more local setStaff — the query cache is the source of truth.
-  const staff = staffData ?? []
+  const staff = Array.isArray(staffData) ? staffData : (staffData?.items ?? [])
 
   const [errors, setErrors] = useState<LooseObject>({})
   const [staffForm, setStaffForm] = useState<StaffFormState>({
@@ -415,9 +416,9 @@ export function useStaffManagement({
 
   /**
    * Delete a staff roster entry.
-   * - Pending invite items → cancel via DELETE /api/v1/merchant/staff/invites/{inviteId}
+   * - Pending invite items ΓåÆ cancel via DELETE /api/v1/merchant/staff/invites/{inviteId}
    *   (v3.3 dedicated endpoint).
-   * - Linked staff items → unlink via DELETE /api/v1/merchant/staff/{staffLinkId}.
+   * - Linked staff items ΓåÆ unlink via DELETE /api/v1/merchant/staff/{staffLinkId}.
    */
   const deleteStaff = async (id) => {
     const member = staff.find(s => s.id === id)

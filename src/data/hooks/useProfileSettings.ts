@@ -8,7 +8,7 @@ import profileSettingsRepository, {
   type KybIframeInitializeResponse,
 } from '../repositories/profileSettings'
 import { useSessionRole } from '../../auth/useSessionRole'
-import type { UserProfile } from '../../types/domain'
+import type { LooseObject, UserProfile } from '../../types/domain'
 import type { UpdateStaffProfileDto, UpdateUserProfileDto } from '../../types/repositories'
 
 export function useProfileSettings({ enabled: callerEnabled = true } = {}) {

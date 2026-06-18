@@ -3,6 +3,7 @@ import httpClient from '../../lib/httpClient'
 import { clearAuthQueryCache, seedAuthQueryCache } from '../../data/seedAuthQueryCache'
 import profileSettingsRepository from '../../data/repositories/profileSettings'
 import { logger } from '../../utils/logger'
+
 import type {
   AuthSession,
   AuthTokens,
@@ -218,10 +219,10 @@ export const apiAuthAdapter = {
     )
 
     tokenStore.set({
-      accessToken: res.accessToken,
-      refreshToken: res.refreshToken,
-      tokenType: res.tokenType,
-      expiresIn: res.expiresIn,
+      accessToken: (res as AuthTokens).accessToken,
+      refreshToken: (res as AuthTokens).refreshToken,
+      tokenType: (res as AuthTokens).tokenType,
+      expiresIn: (res as AuthTokens).expiresIn,
     })
 
     return this.getSession()
@@ -275,7 +276,7 @@ export const apiAuthAdapter = {
       { refreshToken: tokens.refreshToken },
       { anonymous: true },
     )
-    tokenStore.set(res)
+    tokenStore.set(res as any)
     return this.getSession()
   },
 
