@@ -103,7 +103,7 @@
       "tab_tipping": "Tip QR",
       "share_tip": "Share Tip QR",
       "copy_tip_link": "Copy Tip Link",
-      "business_title": "Business Staff QR",
+      "business_title": "Staff QR",
       "business_sub": "Dedicated QR for tips/reviews at this business",
       "note": "Per-business QR is stored by business_staff_link_id so it is never confused when you work at multiple businesses.",
       "no_linked_businesses": "No linked businesses yet. Scan a salon referral QR to join.",

@@ -96,7 +96,7 @@ export function useStaffManagement({
 
   // Staff comes from the API query (useMerchantStaff) passed in as staffData.
   // No more local setStaff — the query cache is the source of truth.
-  const staff = staffData ?? []
+  const staff = Array.isArray(staffData) ? staffData : (staffData?.items ?? [])
 
   const [errors, setErrors] = useState<LooseObject>({})
   const [staffForm, setStaffForm] = useState<StaffFormState>({

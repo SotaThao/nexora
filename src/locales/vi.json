@@ -103,7 +103,7 @@
       "tab_tipping": "QR Nhận tip",
       "share_tip": "Chia sẻ QR tip",
       "copy_tip_link": "Sao chép link tip",
-      "business_title": "QR theo tiệm",
+      "business_title": "Staff QR",
       "business_sub": "QR riêng cho tip/đánh giá tại tiệm này",
       "note": "QR theo tiệm được lưu theo business_staff_link_id để không bị lẫn khi bạn làm ở nhiều tiệm.",
       "no_linked_businesses": "Chưa liên kết tiệm nào. Quét QR giới thiệu của tiệm để gửi yêu cầu tham gia.",
