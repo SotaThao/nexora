@@ -85,6 +85,7 @@ export default function Dashboard({
   const [processingFee, setProcessingFee] = useState(3.0)
   const [isNotiDropdownOpen, setIsNotiDropdownOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [reviewsPageNumber, setReviewsPageNumber] = useState(1)
 
   const hasSearchQuery = Boolean(searchQuery.trim())
   const needsMerchantStaffList =
@@ -108,7 +109,7 @@ export default function Dashboard({
     enabled: needsTransactions,
   })
   const { data: reviewsPage, isPending: isReviewsPending } = useDashboardReviews(
-    DASHBOARD_REVIEWS_LIST_QUERY,
+    { pageNumber: reviewsPageNumber, pageSize: 20 },
     { enabled: needsDashboardReviews },
   )
   const { data: notificationsData, isLoading: isNotificationsLoading, isFetching: isNotificationsFetching } = useNotifications({
@@ -539,6 +540,7 @@ export default function Dashboard({
     setInviteShareDefaultName, setInviteShareDefaultContact, setIsInviteShareOpen,
     filteredTouchpoints, setAddTouchpointPrefill, setIsAddTouchpointModalOpen, deleteTouchpoint, toggleTouchpointStatus, linkDevice, devices, handleAddDevice, handleDeleteDevice, handleToggleDeviceStatus,
     reviews, filteredReviews, reviewFilterStaff, setReviewFilterStaff, setupData: setupData ?? merchantSetupData,
+    reviewsPageNumber, setReviewsPageNumber,
     tipsTab, setTipsTab, processingFee, setProcessingFee,
     filteredTransactions, touchpoints,
     verificationStatus, requireKyb, userEmail, onKybSuccess, settingsTab, setSettingsTab,
