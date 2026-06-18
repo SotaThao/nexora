@@ -4,11 +4,39 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { renderTextWithGoldStars } from '../utils'
 import Panel from '../../ui/Panel'
 import CustomSelect from '../../CustomSelect'
+import Pagination from '../../ui/Pagination'
 
-function ReviewsView({ reviews, reviewsPage, pageNumber, setPageNumber, staff, filter, setFilter, setupData, isLoading = false }) {
+function ReviewsView({
+  reviews,
+  staff,
+  filter,
+  setFilter,
+  setupData,
+  isLoading = false,
+  isFetching = false,
+  pageNumber = 1,
+  pageSize = 10,
+  totalPages = 1,
+  totalCount = 0,
+  hasNextPage = false,
+  hasPreviousPage = false,
+  onPageChange = () => {},
+}) {
   const { t } = useTranslation()
   const [sourceFilter, setSourceFilter] = useState('all')
   const [starFilter, setStarFilter] = useState('all')
+
+  const staffFilterOptions = useMemo(() => {
+    return (staff ?? []).map((member) => ({
+      value: member.id,
+      label:
+        member.nickname?.trim() ||
+        member.fullName?.trim() ||
+        member.position?.trim() ||
+        member.staffCode?.trim() ||
+        t('setup.col_staff'),
+    }))
+  }, [staff, t])
 
   const reviewsByStaff = useMemo(() => {
     return reviews.filter((review) => {
@@ -238,7 +266,12 @@ function ReviewsView({ reviews, reviewsPage, pageNumber, setPageNumber, staff, f
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="relative space-y-3">
+        {isFetching && filtered.length > 0 && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/60">
+            <Loader2 className="h-6 w-6 animate-spin text-nexoraBrand" />
+          </div>
+        )}
         {isLoading ? (
           <Panel className="p-8 text-center text-nexoraMuted font-medium text-xs">
             {t('common.loading')}
@@ -328,6 +361,18 @@ function ReviewsView({ reviews, reviewsPage, pageNumber, setPageNumber, staff, f
             )
           })
         )}
+
+        <Pagination
+          pageNumber={pageNumber}
+          pageSize={pageSize}
+          totalPages={totalPages}
+          totalCount={totalCount}
+          hasNextPage={hasNextPage}
+          hasPreviousPage={hasPreviousPage}
+          onPageChange={onPageChange}
+          isLoading={isFetching}
+          className="rounded-xl border border-nexoraBorder/60 bg-white shadow-sm"
+        />
       </div>
 
       {/* Pagination Controls */}

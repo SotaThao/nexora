@@ -6,6 +6,7 @@ import { useSearchMerchantStaff } from '../../../data/hooks/useMerchantStaff'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
+import Pagination from '../../ui/Pagination'
 
 function StaffView({
   staff,
@@ -31,7 +32,15 @@ function StaffView({
   onDeclineJoin,
   onAcceptUnlink,
   onDeclineUnlink,
-  onOpenInviteShare
+  onOpenInviteShare,
+  isFetching = false,
+  pageNumber = 1,
+  pageSize = 10,
+  totalPages = 1,
+  totalCount = 0,
+  hasNextPage = false,
+  hasPreviousPage = false,
+  onPageChange,
 }) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
@@ -334,7 +343,7 @@ function StaffView({
                           {t('components.dashboard.views.StaffView.reviewAndApprove')}
                         </button>
                         <button
-                          onClick={() => onDeclineJoin && onDeclineJoin(member.id)}
+                          onClick={() => onDeclineJoin && onDeclineJoin(member)}
                           className="px-3 py-1.5 text-xs font-bold border border-rose-200 bg-rose-50 text-rose-700 rounded-lg hover:bg-rose-100 transition shadow-sm"
                         >
                           {t('components.dashboard.views.StaffView.decline')}
@@ -385,7 +394,12 @@ function StaffView({
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto relative">
+          {isFetching && sortedStaff.length > 0 && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60">
+              <Loader2 className="h-6 w-6 animate-spin text-nexoraBrand" />
+            </div>
+          )}
           <table className="w-full border-collapse text-left text-sm">
             <thead>
               <tr className="bg-slate-50 text-[10px] font-extrabold uppercase text-nexoraMuted border-b border-nexoraRule">
@@ -414,7 +428,19 @@ function StaffView({
               </tr>
             </thead>
             <tbody>
-              {sortedStaff.map((member, index) => {
+              {isLoading && sortedStaff.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-5 py-12 text-center">
+                    <Loader2 className="mx-auto h-6 w-6 animate-spin text-nexoraBrand" />
+                  </td>
+                </tr>
+              ) : sortedStaff.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-5 py-12 text-center text-sm font-bold text-nexoraMuted">
+                    {t('setup.col_staff')}
+                  </td>
+                </tr>
+              ) : sortedStaff.map((member, index) => {
                 const wallets = getWalletBadges(member)
                 const isPendingSetup = member.status === 'Pending Setup'
                 const isPendingAcceptance = member.status === 'Pending Acceptance'
@@ -539,13 +565,13 @@ function StaffView({
                       {isPendingAcceptance && (
                         <div className="flex justify-end gap-2">
                           <button
-                            onClick={() => onAcceptJoin && onAcceptJoin(member.id)}
+                            onClick={() => onAcceptJoin && onAcceptJoin(member)}
                             className="px-2.5 py-1 text-[10px] font-extrabold border border-emerald-200 bg-emerald-50 text-emerald-700 rounded hover:bg-emerald-100 transition"
                           >
                             {t('components.dashboard.views.StaffView.accept')}
                           </button>
                           <button
-                            onClick={() => onDeclineJoin && onDeclineJoin(member.id)}
+                            onClick={() => onDeclineJoin && onDeclineJoin(member)}
                             className="px-2.5 py-1 text-[10px] font-extrabold border border-rose-200 bg-rose-50 text-rose-700 rounded hover:bg-rose-100 transition"
                           >
                             {t('components.dashboard.views.StaffView.decline')}
@@ -556,13 +582,13 @@ function StaffView({
                       {isPendingUnlink && (
                         <div className="flex justify-end gap-2">
                           <button
-                            onClick={() => onAcceptUnlink && onAcceptUnlink(member.id)}
+                            onClick={() => onAcceptUnlink && onAcceptUnlink(member)}
                             className="px-2.5 py-1 text-[10px] font-extrabold border border-rose-200 bg-rose-50 text-rose-700 rounded hover:bg-rose-100 transition cursor-pointer"
                           >
                             {t('components.dashboard.views.StaffView.approveUnlink')}
                           </button>
                           <button
-                            onClick={() => onDeclineUnlink && onDeclineUnlink(member.id)}
+                            onClick={() => onDeclineUnlink && onDeclineUnlink(member)}
                             className="px-2.5 py-1 text-[10px] font-extrabold border border-slate-200 bg-white text-slate-700 rounded hover:bg-slate-50 transition cursor-pointer"
                           >
                             {t('components.dashboard.views.StaffView.reject')}
@@ -593,6 +619,18 @@ function StaffView({
             </tbody>
           </table>
         </div>
+
+        <Pagination
+          pageNumber={pageNumber}
+          pageSize={pageSize}
+          totalPages={totalPages}
+          totalCount={totalCount}
+          hasNextPage={hasNextPage}
+          hasPreviousPage={hasPreviousPage}
+          onPageChange={onPageChange}
+          isLoading={isFetching}
+          className="mt-0 border-t-0"
+        />
       </div>
 
       {/* Large Join QR Modal */}

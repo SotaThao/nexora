@@ -13,8 +13,8 @@ export { StatusFilter }
 
 export function useMerchantStaff({
   statusFilter,
-  pageNumber,
-  pageSize,
+  pageNumber = 1,
+  pageSize = 10,
   enabled = true,
 }: {
   statusFilter?: string

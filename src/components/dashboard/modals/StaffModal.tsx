@@ -440,22 +440,22 @@ function StaffModal({
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_phone')}</label>
-                <div className="mt-1 flex rounded-lg shadow-sm opacity-70 pointer-events-none">
+              <div className="min-w-0">
+                <label className="flex h-4 items-center text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_phone')}</label>
+                <div className="mt-1 flex h-10 w-full overflow-hidden rounded-lg shadow-sm opacity-70 pointer-events-none">
                   <CountryCodeSelect value={phoneParsed.countryCode} onChange={() => {}} disabled />
                   <input
-                    className="h-full w-full min-w-0 border-transparent bg-transparent px-3 text-right text-sm font-semibold text-nexoraText outline-none"
-                    value={phoneParsed.nationalNumber}
+                    className="h-10 w-full min-w-0 rounded-r-lg border border-l-0 border-nexoraBorder bg-nexoraCanvas px-3 text-sm font-semibold text-nexoraText outline-none"
+                    value={formatNationalNumber(phoneParsed.nationalNumber, phoneParsed.countryCode)}
                     readOnly
                     placeholder={t('setup.staff_phone_placeholder')}
                   />
                 </div>
                 {errors.phone && <p className="mt-1 text-[10px] font-bold text-nexoraDanger">{errors.phone}</p>}
               </div>
-              <div>
-                <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_email')}</label>
-                <input className="mt-1 h-10 w-full rounded-lg border border-transparent bg-nexoraCanvas px-3 text-sm font-semibold text-nexoraText outline-none cursor-not-allowed" value={form.email || ''} readOnly placeholder={t('setup.staff_email_placeholder')} />
+              <div className="min-w-0">
+                <label className="flex h-4 items-center text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_email')}</label>
+                <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas px-3 text-sm font-semibold text-nexoraText outline-none cursor-not-allowed" value={form.email || ''} readOnly placeholder={t('setup.staff_email_placeholder')} />
                 {errors.email && <p className="mt-1 text-[10px] font-bold text-nexoraDanger">{errors.email}</p>}
               </div>
             </div>

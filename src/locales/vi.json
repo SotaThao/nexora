@@ -1201,6 +1201,7 @@
           "resendInviteSuccess": "Đã gửi lại link thiết lập thành công tới {name}!",
           "resendInviteFailed": "Gửi lại thất bại: {error}",
           "joinAccepted": "Đã chấp nhận thợ {name} vào tiệm!",
+          "joinDeclined": "Đã từ chối yêu cầu tham gia của {name}.",
           "acceptFailed": "Chấp nhận thất bại: {error}",
           "declineJoinConfirm": "Bạn có chắc chắn muốn từ chối yêu cầu tham gia của thợ {name}?",
           "declineFailed": "Từ chối thất bại: {error}",

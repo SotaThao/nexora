@@ -6,6 +6,7 @@ import { useStaffTips } from '../../../data/hooks/useStaffSelf'
 import { PAYOUT_UI_LABELS, payoutTypeToUiKey } from '../../../data/paymentMethodTypes'
 import type { StaffTipItem } from '../../../types/domain'
 import { SkeletonLayout } from '../../ui/skeleton'
+import Pagination from '../../ui/Pagination'
 import { STAFF_TIPS_SKELETON } from '../skeletons/staffDashboardSkeletons'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
@@ -127,29 +128,17 @@ export default function StaffTips() {
           </div>
         )}
 
-        {totalPages > 1 ? (
-          <div className="mt-3 flex items-center justify-between gap-3 border-t border-nexoraBorder pt-3">
-            <button
-              type="button"
-              disabled={!canGoPrev || isFetching}
-              onClick={() => setPageNumber((page) => Math.max(1, page - 1))}
-              className="rounded-lg border border-nexoraBorder px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-nexoraMuted transition hover:bg-nexoraCanvas disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {t('common.back')}
-            </button>
-            <span className="text-[10px] font-semibold text-nexoraSubtle">
-              {t('staff_dashboard.tips.page_of', { page: pageNumber, total: totalPages })}
-            </span>
-            <button
-              type="button"
-              disabled={!canGoNext || isFetching}
-              onClick={() => setPageNumber((page) => page + 1)}
-              className="rounded-lg border border-nexoraBorder px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-nexoraMuted transition hover:bg-nexoraCanvas disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {t('common.next')}
-            </button>
-          </div>
-        ) : null}
+        <Pagination
+          pageNumber={pageNumber}
+          pageSize={PAGE_SIZE}
+          totalPages={totalPages}
+          hasNextPage={canGoNext}
+          hasPreviousPage={canGoPrev}
+          onPageChange={setPageNumber}
+          isLoading={isFetching}
+          variant="simple"
+          className="mt-3"
+        />
       </section>
 
       <section className={panel}>
