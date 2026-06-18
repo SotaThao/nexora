@@ -231,7 +231,7 @@ function ReviewsView({ reviews, staff, filter, setFilter, setupData, isLoading =
               onChange={(event) => setFilter(event.target.value)}
               options={[
                 { value: 'all', label: t('staff_detail.tab_all') },
-                ...staff.map((member) => ({ value: member.id, label: member.nickname }))
+                ...staff.map((member) => ({ value: member.id, label: member.fullName || member.nickname }))
               ]}
             />
           </div>
