@@ -2051,6 +2051,61 @@
       "onboarding_required": "Please complete your profile setup before joining this salon."
     }
   },
+  "manage_plan": {
+    "eyebrow": "Transparent Value Layouts",
+    "title": "Find the Perfect Alignment for Your Team",
+    "subtitle": "Launch immediately with zero-cost Smart QR checkout cards and automated reviews, then scale to full co-op channels.",
+    "current_plan": "Current Plan",
+    "plans": {
+      "lite": {
+        "name": "Lite Pack (Free)",
+        "badge": "Free",
+        "tagline": "For salons with 5 staff or fewer. Requires KYB validation.",
+        "price": "$0",
+        "price_note": "/ mo",
+        "cta": "Sign Up Free (KYB Required)",
+        "f1": "Up to 5 active specialists",
+        "f2": "Mandatory KYB Verification",
+        "f3": "Basic tabletop Smart QR",
+        "f4": "Direct peer-to-peer tip routing"
+      },
+      "starter": {
+        "name": "Starter Pack",
+        "tagline": "Perfect for micro booths & independent practitioners",
+        "price": "$29",
+        "price_note": "/ mo",
+        "cta": "Get Started Now",
+        "f1": "Branded tabletop QR placements",
+        "f2": "Instant peer tip direct routing",
+        "f3": "Google review automated channels",
+        "f4": "Basic monthly transactional reviews"
+      },
+      "pro": {
+        "name": "Professional Pro",
+        "badge": "Recommended For Salons",
+        "tagline": "Brilliant choice for growing teams & local boutique hubs",
+        "price": "$79",
+        "price_note": "/ mo",
+        "cta": "Select Pro Tier",
+        "f1": "Includes every Starter plan feature",
+        "f2": "Custom technician roster logins",
+        "f3": "Automatic direct tip processing pipelines",
+        "f4": "Adjustable B2B rewards rules panel",
+        "f5": "Client profile classification tool"
+      },
+      "enterprise": {
+        "name": "Enterprise Group",
+        "tagline": "Tailored for prominent multi-location boutique franchises",
+        "price": "Custom Scale",
+        "price_note": "/ tailored quote",
+        "cta": "Contact Success Sales",
+        "f1": "Full multi-location organizational dashboards",
+        "f2": "Direct API checkout point-of-sale syncs",
+        "f3": "Premium solid brass NFC station plaques",
+        "f4": "24/7 dedicated enterprise success managers"
+      }
+    }
+  },
   "coming_soon": {
     "analytics_title": "Advanced Analytics",
     "analytics_desc": "Device conversion, return customer cohorts, and AI review summaries are planned for phase 3.",

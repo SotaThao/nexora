@@ -2051,6 +2051,61 @@
       "onboarding_required": "Vui lòng hoàn tất hồ sơ cá nhân trước khi gia nhập tiệm."
     }
   },
+  "manage_plan": {
+    "eyebrow": "Bố Cục Giá Trị Minh Bạch",
+    "title": "Tìm Gói Phù Hợp Nhất Cho Đội Ngũ Của Bạn",
+    "subtitle": "Bắt đầu ngay với thẻ thanh toán Smart QR miễn phí và đánh giá tự động, sau đó mở rộng lên kênh hợp tác toàn diện.",
+    "current_plan": "Gói hiện tại",
+    "plans": {
+      "lite": {
+        "name": "Gói Lite (Miễn Phí)",
+        "badge": "Miễn Phí",
+        "tagline": "Dành cho salon có từ 5 nhân viên trở xuống. Yêu cầu xác minh KYB.",
+        "price": "$0",
+        "price_note": "/ tháng",
+        "cta": "Đăng Ký Miễn Phí (Cần KYB)",
+        "f1": "Tối đa 5 chuyên viên hoạt động",
+        "f2": "Bắt buộc xác minh KYB",
+        "f3": "Smart QR để bàn cơ bản",
+        "f4": "Định tuyến tip ngang hàng trực tiếp"
+      },
+      "starter": {
+        "name": "Gói Starter",
+        "tagline": "Hoàn hảo cho gian hàng nhỏ & chuyên viên tự do",
+        "price": "$29",
+        "price_note": "/ tháng",
+        "cta": "Bắt Đầu Ngay",
+        "f1": "Đặt mã QR thương hiệu trên bàn",
+        "f2": "Định tuyến tip ngang hàng tức thì",
+        "f3": "Kênh đánh giá Google tự động",
+        "f4": "Báo cáo giao dịch hàng tháng cơ bản"
+      },
+      "pro": {
+        "name": "Gói Professional Pro",
+        "badge": "Khuyên Dùng Cho Salon",
+        "tagline": "Lựa chọn tuyệt vời cho đội ngũ đang phát triển & boutique địa phương",
+        "price": "$79",
+        "price_note": "/ tháng",
+        "cta": "Chọn Gói Pro",
+        "f1": "Bao gồm mọi tính năng gói Starter",
+        "f2": "Tài khoản đăng nhập riêng cho từng kỹ thuật viên",
+        "f3": "Quy trình xử lý tip trực tiếp tự động",
+        "f4": "Bảng quy tắc thưởng B2B tùy chỉnh",
+        "f5": "Công cụ phân loại hồ sơ khách hàng"
+      },
+      "enterprise": {
+        "name": "Gói Enterprise",
+        "tagline": "Dành cho chuỗi boutique nhiều chi nhánh quy mô lớn",
+        "price": "Báo Giá Riêng",
+        "price_note": "/ theo yêu cầu",
+        "cta": "Liên Hệ Bộ Phận Sales",
+        "f1": "Bảng điều khiển tổ chức đa chi nhánh",
+        "f2": "Đồng bộ API thanh toán POS trực tiếp",
+        "f3": "Bảng NFC đồng thau cao cấp tại quầy",
+        "f4": "Quản lý thành công doanh nghiệp 24/7"
+      }
+    }
+  },
   "coming_soon": {
     "analytics_title": "Phân Tích Nâng Cao",
     "analytics_desc": "Chuyển đổi thiết bị, phân tích khách quay lại, và tóm tắt đánh giá bằng AI sẽ ra mắt ở giai đoạn 3.",
