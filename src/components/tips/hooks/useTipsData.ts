@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from '../../../contexts/LanguageContext';
 
-export function useTipsData({ transactions, chartStartDate, chartEndDate, chartRange }) {
+export function useTipsData({ transactions, metrics, tipsChartData, chartStartDate, chartEndDate, chartRange }) {
   const { t, currentLanguage } = useTranslation();
 
   const filteredTxsForOverview = useMemo(() => {
@@ -12,8 +12,8 @@ export function useTipsData({ transactions, chartStartDate, chartEndDate, chartR
   }, [transactions, chartStartDate, chartEndDate]);
 
   const totalVolume = useMemo(() => {
-    return filteredTxsForOverview.reduce((sum, tx) => sum + (tx.amount || 0), 0);
-  }, [filteredTxsForOverview]);
+    return metrics?.totalTips ?? 0;
+  }, [metrics]);
 
   const directTips = useMemo(() => {
     return filteredTxsForOverview
@@ -34,9 +34,8 @@ export function useTipsData({ transactions, chartStartDate, chartEndDate, chartR
   }, [filteredTxsForOverview]);
 
   const averageTip = useMemo(() => {
-    if (filteredTxsForOverview.length === 0) return 0;
-    return totalVolume / filteredTxsForOverview.length;
-  }, [filteredTxsForOverview, totalVolume]);
+    return metrics?.averageTip ?? 0;
+  }, [metrics]);
 
   const pendingCount = useMemo(() => {
     return filteredTxsForOverview.filter(tx => tx.status === 'Pending').length;
@@ -73,8 +72,25 @@ export function useTipsData({ transactions, chartStartDate, chartEndDate, chartR
   }, [filteredTxsForOverview]);
 
   const chartBars = useMemo(() => {
-    const txList = filteredTxsForOverview.filter(tx => tx.status === 'Success');
+    if (tipsChartData && tipsChartData.length > 0) {
+      return tipsChartData.map(d => {
+        const pDate = new Date(d.date + (d.date.includes('T') ? '' : 'T00:00:00'));
+        let label = '';
+        if (chartRange === '7 Days') {
+          const daysOfWeek = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+          label = t(`common.days.${daysOfWeek[pDate.getDay()]}`);
+        } else {
+          const monthNames = currentLanguage === 'vi'
+            ? ['Th 1', 'Th 2', 'Th 3', 'Th 4', 'Th 5', 'Th 6', 'Th 7', 'Th 8', 'Th 9', 'Th 10', 'Th 11', 'Th 12']
+            : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          label = `${monthNames[pDate.getMonth()]} ${pDate.getDate()}`;
+        }
+        return { label, value: d.totalAmount };
+      });
+    }
 
+    // Fallback if no real chart data
+    const txList = filteredTxsForOverview.filter(tx => tx.status === 'Success');
     if (txList.length > 0) {
       if (chartRange === '7 Days') {
         const dates = [];
@@ -156,7 +172,7 @@ export function useTipsData({ transactions, chartStartDate, chartEndDate, chartR
         });
       }
     }
-  }, [filteredTxsForOverview, chartStartDate, chartEndDate, chartRange, t, currentLanguage, totalVolumeInRange]);
+  }, [tipsChartData, filteredTxsForOverview, chartStartDate, chartEndDate, chartRange, t, currentLanguage, totalVolumeInRange]);
 
   const svgMetrics = useMemo(() => {
     if (chartBars.length === 0) return null;

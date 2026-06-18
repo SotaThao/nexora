@@ -225,6 +225,8 @@ export function TipsRoute() {
     <TipsView
       transactions={ctx.transactions}
       staff={ctx.staff}
+      metrics={ctx.metrics}
+      tipsChartData={ctx.tipsChartData}
       activeTab={tab}
       onTabChange={(t) => setSp({ tab: t }, { replace: true })}
       processingFee={ctx.processingFee}
