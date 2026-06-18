@@ -1201,6 +1201,7 @@
           "resendInviteSuccess": "Setup link successfully resent to {name}!",
           "resendInviteFailed": "Resend failed: {error}",
           "joinAccepted": "Accepted technician {name} to salon!",
+          "joinDeclined": "Declined join request from {name}.",
           "acceptFailed": "Accept failed: {error}",
           "declineJoinConfirm": "Are you sure you want to decline join request from {name}?",
           "declineFailed": "Decline failed: {error}",

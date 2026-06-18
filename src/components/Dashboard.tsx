@@ -16,12 +16,12 @@ import { useDevices } from './dashboard/hooks/useDevices'
 import { useKybGate } from '../contexts/KybGateContext'
 import { useStaffManagement } from './dashboard/hooks/useStaffManagement'
 import { useTouchpoints, useCreateTouchpoint, useDeleteTouchpoint, useDownloadTouchpointQr } from '../data/hooks/useMerchantTouchpoints'
-import { useMerchantStaff } from '../data/hooks/useMerchantStaff'
+import { useMerchantStaff, StatusFilter } from '../data/hooks/useMerchantStaff'
 import { useChartDateRange } from '../hooks/useChartDateRange'
 import { useTransactions } from '../data/hooks/useTransactions'
 import { useDashboardOverview } from '../data/hooks/useDashboard'
 import { useDashboardReviews, DASHBOARD_REVIEWS_LIST_QUERY } from '../data/hooks/useReviews'
-import { useNotifications, useMarkNotificationRead } from '../data/hooks/useNotifications'
+import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead, useUnreadCount } from '../data/hooks/useNotifications'
 import { useProfileSettings, useSaveProfileSettings } from '../data/hooks/useProfileSettings'
 import { useMerchantSetup, useSaveMerchantSetup } from '../data/hooks/useMerchantSetup'
 import { useMerchantInviteLinkSetting } from '../data/hooks/useMerchantSettings'
@@ -44,6 +44,8 @@ import StaffModal from './dashboard/modals/StaffModal'
 import QrModal from './dashboard/modals/QrModal'
 import InviteShareModal from './dashboard/modals/InviteShareModal'
 import AddTouchpointModal from './dashboard/modals/AddTouchpointModal'
+import { usePagination } from '../hooks/usePagination'
+import { DEFAULT_PAGE_SIZE, STAFF_FILTER_LIST_PAGE_SIZE } from '../constants/pagination'
 
 
 export default function Dashboard({
@@ -100,6 +102,26 @@ export default function Dashboard({
     hasSearchQuery ||
     activeMenu === 'staff'
   const needsInviteLink = activeMenu === 'staff'
+  const isStaffTab = activeMenu === 'staff'
+  const isReviewsTab = activeMenu === 'reviews'
+  const staffPagination = usePagination({ pageSize: DEFAULT_PAGE_SIZE })
+  const reviewsPagination = usePagination({ pageSize: DEFAULT_PAGE_SIZE })
+
+  useEffect(() => {
+    if (!isStaffTab) staffPagination.reset()
+  }, [isStaffTab, staffPagination.reset])
+
+  useEffect(() => {
+    if (!isReviewsTab) reviewsPagination.reset()
+  }, [isReviewsTab, reviewsPagination.reset])
+
+  const reviewsListQuery = useMemo(
+    () => ({
+      pageNumber: isReviewsTab ? reviewsPagination.pageNumber : 1,
+      pageSize: isReviewsTab ? reviewsPagination.pageSize : DASHBOARD_REVIEWS_LIST_QUERY.pageSize,
+    }),
+    [isReviewsTab, reviewsPagination.pageNumber, reviewsPagination.pageSize],
+  )
 
   // ---------------------------------------------------------------------------
   // Server-state hooks (TanStack Query) — lazy per active tab where possible
@@ -107,17 +129,27 @@ export default function Dashboard({
   const { data: transactionsData, isLoading: isTransactionsLoading } = useTransactions({
     enabled: needsTransactions,
   })
-  const { data: reviewsPage, isPending: isReviewsPending } = useDashboardReviews(
-    DASHBOARD_REVIEWS_LIST_QUERY,
-    { enabled: needsDashboardReviews },
-  )
+  const {
+    data: reviewsPage,
+    isPending: isReviewsPending,
+    isFetching: isReviewsFetching,
+  } = useDashboardReviews(reviewsListQuery, { enabled: needsDashboardReviews })
+  const { data: apiUnreadCount = 0 } = useUnreadCount()
   const { data: notificationsData, isLoading: isNotificationsLoading, isFetching: isNotificationsFetching } = useNotifications({
     enabled: needsNotificationsList,
   })
   const { data: profileSettingsData } = useProfileSettings()
   const { data: merchantSetupData } = useMerchantSetup()
-  const { data: merchantStaffData, isLoading: isStaffLoading } = useMerchantStaff({
+  const { data: merchantStaffData, isLoading: isStaffLoading, isFetching: isStaffFetching } = useMerchantStaff({
     enabled: needsMerchantStaffList,
+    pageNumber: isStaffTab ? staffPagination.pageNumber : 1,
+    pageSize: isStaffTab ? staffPagination.pageSize : STAFF_FILTER_LIST_PAGE_SIZE,
+  })
+  const { data: pendingStaffPage } = useMerchantStaff({
+    enabled: isStaffTab,
+    statusFilter: StatusFilter.Pending,
+    pageNumber: 1,
+    pageSize: 50,
   })
   const {
     data: inviteLinkSetting,
@@ -125,6 +157,7 @@ export default function Dashboard({
   } = useMerchantInviteLinkSetting({ enabled: userRole === 'owner' && needsInviteLink })
 
   const markNotificationReadMutation = useMarkNotificationRead()
+  const markAllNotificationsReadMutation = useMarkAllNotificationsRead()
   const saveMerchantSetupMutation = useSaveMerchantSetup()
 
   // ---------------------------------------------------------------------------
@@ -143,6 +176,10 @@ export default function Dashboard({
     if (notificationsData === undefined) return
     setNotifications(notificationsData)
   }, [notificationsData])
+
+  const unreadCount = notifications.length > 0
+    ? notifications.filter((n) => !n.read).length
+    : apiUnreadCount
 
   // Profile — thin local mirror with complex initialisation / override rules.
   const buildFallbackProfile = (storeInfo, reviewInfo) => ({
@@ -215,6 +252,10 @@ export default function Dashboard({
   const { devices, setDevices, handleAddDevice, handleDeleteDevice, handleToggleDeviceStatus } = useDevices()
   const [qrTarget, setQrTarget] = useState<any | null>(null)
   const [reviewFilterStaff, setReviewFilterStaff] = useState('all')
+  const handleReviewFilterStaffChange = useCallback((value) => {
+    setReviewFilterStaff(value)
+    reviewsPagination.setPage(1)
+  }, [reviewsPagination.setPage])
   const [newTouchpoint, setNewTouchpoint] = useState({ name: '', type: 'Table QR' })
   const [isAddTouchpointModalOpen, setIsAddTouchpointModalOpen] = useState(false)
   const [addTouchpointPrefill, setAddTouchpointPrefill] = useState<any | null>(null)
@@ -316,11 +357,12 @@ export default function Dashboard({
   }, [staff, searchQuery])
 
   const pendingStaff = useMemo(() => {
-    return staff.filter(member => 
-      (member.status === 'Pending Acceptance' || member.status === 'Pending') && 
+    const source = isStaffTab ? (pendingStaffPage?.items ?? []) : staff
+    return source.filter((member) =>
+      (member.status === 'Pending Acceptance' || member.status === 'Pending' || member.status === 'Pending Setup') &&
       (member.itemType === 'link' || member.itemType === 'invite')
     )
-  }, [staff])
+  }, [isStaffTab, pendingStaffPage, staff])
 
   const filteredTouchpoints = useMemo(() => {
     if (!searchQuery) return touchpoints
@@ -526,6 +568,15 @@ export default function Dashboard({
     setNotifications(next)
   }
 
+  const handleMarkAllNotificationsRead = () => {
+    const hasUnread = notifications.some((n) => !n.read && !n.isRead)
+    if (!hasUnread || markAllNotificationsReadMutation.isPending) return
+    markAllNotificationsReadMutation.mutate()
+    setNotifications((current) =>
+      current.map((n) => ({ ...n, read: true, isRead: true })),
+    )
+  }
+
   const dashboardCtx = {
     profile, onNavigateMenu: handleNavigateMenu,
     metrics, activeKpi, setActiveKpi, chartRange, handleChartRangeChange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate,
@@ -538,11 +589,28 @@ export default function Dashboard({
     handleLinkStaff, handleInviteStaff, handleResendInvite, handleAcceptJoinRequest, handleDeclineJoinRequest, handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     setInviteShareDefaultName, setInviteShareDefaultContact, setIsInviteShareOpen,
     filteredTouchpoints, setAddTouchpointPrefill, setIsAddTouchpointModalOpen, deleteTouchpoint, toggleTouchpointStatus, linkDevice, devices, handleAddDevice, handleDeleteDevice, handleToggleDeviceStatus,
-    reviews, filteredReviews, reviewFilterStaff, setReviewFilterStaff, setupData: setupData ?? merchantSetupData,
+    reviews, filteredReviews, reviewFilterStaff, setReviewFilterStaff: handleReviewFilterStaffChange, setupData: setupData ?? merchantSetupData,
+    activeReviewsPage: reviewsPagination.pageNumber,
+    activeReviewsPageSize: reviewsPagination.pageSize,
+    activeReviewsTotalPages: reviewsPage?.totalPages ?? 1,
+    activeReviewsTotalCount: reviewsPage?.totalCount ?? 0,
+    activeReviewsHasNext: reviewsPage?.hasNextPage ?? false,
+    activeReviewsHasPrev: reviewsPage?.hasPreviousPage ?? false,
+    setActiveReviewsPage: reviewsPagination.setPage,
+    reviewsListFetching: isReviewsFetching,
     tipsTab, setTipsTab, processingFee, setProcessingFee,
     filteredTransactions, touchpoints,
     verificationStatus, requireKyb, userEmail, onKybSuccess, settingsTab, setSettingsTab,
-    currentStaffId
+    currentStaffId,
+    activeStaffPage: staffPagination.pageNumber,
+    activeStaffPageSize: staffPagination.pageSize,
+    activeStaffTotalPages: merchantStaffData?.totalPages ?? 1,
+    activeStaffTotalCount: merchantStaffData?.totalCount ?? 0,
+    activeStaffHasNext: merchantStaffData?.hasNextPage ?? false,
+    activeStaffHasPrev: merchantStaffData?.hasPreviousPage ?? false,
+    setActiveStaffPage: staffPagination.setPage,
+    staffListLoading: isStaffLoading,
+    staffListFetching: isStaffFetching,
   }
 
   return (
@@ -585,6 +653,9 @@ export default function Dashboard({
           onLogout={onLogout}
           notifications={notificationsData ?? notifications}
           setNotifications={handleSetNotifications}
+          onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
+          isMarkAllNotificationsReadPending={markAllNotificationsReadMutation.isPending}
+          unreadCount={unreadCount}
           isNotiDropdownOpen={isNotiDropdownOpen}
           setIsNotiDropdownOpen={setIsNotiDropdownOpen}
           isNotificationsLoading={isNotificationsLoading || isNotificationsFetching}
@@ -678,7 +749,7 @@ export default function Dashboard({
         isApproveMode={true}
         onDecline={() => {
           if (approvingStaffMember) {
-            handleDeclineJoinRequest(approvingStaffMember.id)
+            handleDeclineJoinRequest(approvingStaffMember)
           }
           setIsApproveModalOpen(false)
         }}
@@ -693,7 +764,7 @@ export default function Dashboard({
         }}
         onSave={() => {
           if (approvingStaffMember) {
-            handleAcceptJoinRequest(approvingStaffMember.id)
+            handleAcceptJoinRequest(approvingStaffMember)
           }
           setIsApproveModalOpen(false)
         }}
