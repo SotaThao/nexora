@@ -14,13 +14,29 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 
 import SetupGuideBanner from './SetupGuideBanner'
 
-function initials(name) {
-  return String(name || '')
-    .split(' ')
-    .map((p) => p[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
+function twoInitials(name) {
+  const parts = String(name || '').trim().split(/\s+/).filter(Boolean)
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
+  return String(name || '').slice(0, 2).toUpperCase() || '?'
+}
+
+/* Avatar — same rule as desktop StaffView: photo if available, else initials
+   in an indigo circle (2 characters). */
+function StaffAvatar({ avatar, nickname, fullName }) {
+  if (avatar) {
+    return (
+      <img
+        src={avatar}
+        alt=""
+        className="h-11 w-11 shrink-0 rounded-full border border-nexoraBorder object-cover"
+      />
+    )
+  }
+  return (
+    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-sm font-extrabold text-indigo-600">
+      {twoInitials(nickname || fullName)}
+    </span>
+  )
 }
 
 function fmtMoney(value) {
@@ -149,7 +165,9 @@ function Overview({
     name: item.fullName || item.invitedEmail || item.invitedPhone || k('staff_member'),
     via: item.itemType === 'link' ? k('via_link_request') : k('via_invite'),
     sub: item.position || k('technician'),
-    avatarColor: ['bg-nexoraBrand', 'bg-nexoraViolet', 'bg-nexoraElectric'][i % 3],
+    avatar: item.avatar,
+    nickname: item.nickname,
+    fullName: item.fullName,
     rawItem: item,
   }))
 
@@ -163,6 +181,9 @@ function Overview({
       sub: m.position || (kind === 'pending' ? k('status_pending') : kind === 'active' ? k('status_active') : k('status_inactive')),
       kind,
       label: kind === 'active' ? k('status_active') : kind === 'pending' ? k('status_pending') : k('status_inactive'),
+      avatar: m.avatar,
+      nickname: m.nickname,
+      fullName: m.fullName,
     }
   })
 
@@ -270,9 +291,7 @@ function Overview({
           <div className="divide-y divide-nexoraBorder">
             {displayPending.map((item) => (
               <div key={item.id} className="flex items-center gap-3 py-3">
-                <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-black text-white ${item.avatarColor}`}>
-                  {initials(item.name)}
-                </span>
+                <StaffAvatar avatar={item.avatar} nickname={item.nickname} fullName={item.fullName} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[15px] font-bold text-nexoraText">{item.name}</p>
                   <p className="text-[13px] text-nexoraMuted">{item.via}</p>
@@ -298,7 +317,7 @@ function Overview({
           <div className="divide-y divide-nexoraBorder">
             {staffStatus.map((m) => (
               <div key={m.id} className="flex items-center gap-3 py-3">
-                <span className="h-11 w-11 shrink-0 rounded-full bg-gradient-to-br from-nexoraLavender to-nexoraBrand" />
+                <StaffAvatar avatar={m.avatar} nickname={m.nickname} fullName={m.fullName} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[15px] font-bold text-nexoraText">{m.name}</p>
                   <p className="truncate text-[13px] text-nexoraMuted">{m.sub}</p>

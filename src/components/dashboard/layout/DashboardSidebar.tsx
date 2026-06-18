@@ -48,12 +48,8 @@ export default function DashboardSidebar({
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col bg-nexoraSidebar px-5 py-7 text-white lg:flex">
       {/* Logo block */}
-      <div className="flex items-center gap-3 px-2">
-        <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-12 w-12 shrink-0 object-contain" />
-        <div className="min-w-0">
-          <div className="text-2xl font-extrabold leading-none tracking-normal">{t('dashboard.sidebar.console_title')}</div>
-          <div className="mt-1 text-sm font-semibold text-white/65">{t('dashboard.sidebar.console_subtitle')}</div>
-        </div>
+      <div className="flex items-center px-2">
+        <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="w-44 h-auto max-w-full object-contain" />
       </div>
 
       {/* Expandable Profile Card */}

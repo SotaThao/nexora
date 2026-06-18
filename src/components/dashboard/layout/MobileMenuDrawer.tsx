@@ -43,12 +43,8 @@ export default function MobileMenuDrawer({
       />
       <aside className="relative flex h-full w-[min(84vw,320px)] flex-col bg-nexoraSidebar px-5 py-6 text-white shadow-2xl">
         <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-10 w-10 object-contain" />
-            <div>
-              <div className="text-xl font-extrabold leading-none">{t('dashboard.sidebar.console_title')}</div>
-              <div className="mt-1 text-xs text-white/60">{t('dashboard.sidebar.console_subtitle')}</div>
-            </div>
+          <div className="flex items-center">
+            <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="w-40 h-auto max-w-full object-contain" />
           </div>
           <IconButton label="Close menu" onClick={onClose} className="text-white hover:bg-white/10">
             <X className="h-5 w-5" />

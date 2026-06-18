@@ -14,7 +14,9 @@
       "pay": "Thanh toán",
       "profile": "Hồ sơ",
       "profile_account": "Cài đặt",
-      "profile_kyc": "KYC"
+      "profile_kyc": "KYC",
+      "tab_home": "Trang chủ",
+      "tab_qr": "QR của tôi"
     },
     "titles": {
       "home": "Dashboard",

@@ -159,7 +159,7 @@ export default function DashboardHeader({
         >
           <Menu className="h-5 w-5" />
         </button>
-        <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-9 w-9 shrink-0 object-contain" />
+        <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="h-8 w-auto max-w-[150px] shrink-0 object-contain" />
       </div>
 
       {/* Search Input with Suggestions Dropdown */}

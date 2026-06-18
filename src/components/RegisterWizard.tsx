@@ -106,11 +106,7 @@ export default function RegisterWizard() {
       <div className="max-w-4xl mx-auto px-4 py-8 relative z-10 flex flex-col justify-center min-h-dvh">
         {/* Branding header */}
         <div className="text-center mb-6">
-          <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="w-12 h-12 mx-auto object-contain mb-2" />
-          <h2 className="font-sans text-xl font-bold tracking-wide sm:text-2xl text-nexoraText">
-            NEXORA <span className="ml-1.5 inline-flex align-middle text-nexoraBrand font-sans text-xs tracking-widest font-black uppercase bg-nexoraBrand/10 px-2 py-0.5 rounded border border-nexoraBrand/30">TOUCH</span>
-          </h2>
-          <p className="text-xs text-nexoraSubtle font-light tracking-wide mt-1">{t('components.RegisterWizard.subtitle')}</p>
+          <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="h-12 w-auto max-w-[220px] mx-auto object-contain" />
         </div>
 
         {/* Wizard Steps indicator */}

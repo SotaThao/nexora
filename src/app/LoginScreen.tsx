@@ -137,14 +137,8 @@ export default function LoginScreen() {
         {/* Left Column: Login Card */}
         <div className="lg:col-span-5 flex flex-col justify-between p-5 sm:p-8 xl:p-10 relative overflow-hidden">
           {/* VLINKPAY branding logo */}
-          <div className="mb-8 flex items-center gap-3">
-            <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="w-11 h-11 object-contain" />
-            <div>
-              <h2 className="font-sans text-xl font-bold tracking-wide sm:text-2xl">
-                NEXORA <span className="ml-1.5 inline-flex align-middle text-nexoraBrand font-sans text-xs tracking-widest font-black uppercase bg-nexoraBrand/10 px-2 py-0.5 rounded border border-nexoraBrand/30">TOUCH</span>
-              </h2>
-              <p className="text-xs text-nexoraMuted mt-1">{t('login.gateway_sub')}</p>
-            </div>
+          <div className="mb-8 flex items-center">
+            <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="h-11 w-auto max-w-[200px] object-contain" />
           </div>
 
           {isLoading ? (

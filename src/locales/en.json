@@ -14,7 +14,9 @@
       "pay": "Pay",
       "profile": "Profile",
       "profile_account": "Setting",
-      "profile_kyc": "KYC"
+      "profile_kyc": "KYC",
+      "tab_home": "Home",
+      "tab_qr": "My QR"
     },
     "titles": {
       "home": "Dashboard",
