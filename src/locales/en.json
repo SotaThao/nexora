@@ -95,6 +95,8 @@
       "pending_unlink_body": "Your link with {business} is being removed. The tipping QR is temporarily unavailable.",
       "qr_unavailable_title": "Tipping QR not available",
       "qr_unavailable_body": "Your tipping QR for {business} is not active yet. Please contact the salon owner or scan their referral QR to link.",
+      "touchpoint_missing_title": "Tipping link not ready",
+      "touchpoint_missing_body": "This salon has not finished setting up its touchpoint, so your personal tipping link is not available yet. Please contact {business} to complete setup.",
       "referral_unavailable_title": "Staff ID not ready",
       "referral_unavailable_body": "Your personal referral QR will appear once your staff profile is fully set up. Please try again in a moment.",
       "note": "Per-business QR is stored by business_staff_link_id so it is never confused when you work at multiple businesses."

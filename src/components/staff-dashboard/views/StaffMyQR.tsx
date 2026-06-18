@@ -28,7 +28,11 @@ function getBusinessStatusLabel(biz: StaffBusinessTipQr): string {
 
 function isBusinessActive(biz: StaffBusinessTipQr): boolean {
   const label = getBusinessStatusLabel(biz).toLowerCase()
-  return label === 'active' && Boolean(biz.tipUrl)
+  return label === 'active' && Boolean(biz.tipUrl) && !biz.tipLinkIncomplete
+}
+
+function isTouchPointLinkIncomplete(biz: StaffBusinessTipQr): boolean {
+  return Boolean(biz.tipLinkIncomplete)
 }
 
 function isBusinessPendingLink(biz: StaffBusinessTipQr): boolean {
@@ -92,6 +96,14 @@ function getInactiveTipQrCopy(
   biz: StaffBusinessTipQr,
   t: (key: string) => string,
 ): { title: string; description: string; showScanCta: boolean; icon: typeof Store } {
+  if (isTouchPointLinkIncomplete(biz)) {
+    return {
+      icon: Link2,
+      title: t('staff_dashboard.qr.touchpoint_missing_title'),
+      description: t('staff_dashboard.qr.touchpoint_missing_body', { business: biz.businessName }),
+      showScanCta: false,
+    }
+  }
   if (isBusinessPendingApproval(biz)) {
     return {
       icon: Clock,

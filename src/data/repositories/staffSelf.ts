@@ -84,6 +84,11 @@ function normalizeStaffBusinessLink(b: StaffBusinessApiDto): StaffBusinessLink {
     null
   const tipUrl = b.tipUrl ?? b.url ?? preferredTouchPoint?.url ?? null
   const qrImageUrl = b.qrImageUrl ?? preferredTouchPoint?.qrImageUrl ?? null
+  const touchPointsMissing =
+    Array.isArray(b.touchPoints) &&
+    b.touchPoints.length === 0 &&
+    !touchPointSlug?.trim() &&
+    !tipUrl?.trim()
 
   return {
     businessId: b.businessId ?? '',
@@ -102,6 +107,7 @@ function normalizeStaffBusinessLink(b: StaffBusinessApiDto): StaffBusinessLink {
     masterTouchPointSlug: b.masterTouchPointSlug ?? touchPointSlug,
     tipUrl,
     qrImageUrl,
+    touchPointsMissing,
   }
 }
 
