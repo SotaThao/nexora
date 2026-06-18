@@ -54,3 +54,6 @@ pr_body.md
 *.test.tsx
 
 package-lock.json
+
+js-to-ts-migration-guide.md
+pnpm-workspace.yaml
