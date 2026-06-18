@@ -12,6 +12,7 @@ import SettingsView from '../../SettingsView'
 import AnalyticsView from '../../AnalyticsView'
 import SupportView from '../../SupportView'
 import ComingSoon from '../views/ComingSoon'
+import ManagePlanView from '../views/ManagePlanView'
 import StaffDetailView from '../../StaffDetailView'
 
 export function OverviewRoute() {
@@ -265,8 +266,15 @@ export function SupportRoute() {
 }
 
 export function SubscriptionsRoute() {
+  const ctx = useOutletContext<LooseObject>()
   const navigate = useNavigate()
-  return <ComingSoon activeMenu="subscriptions" onBack={() => navigate('/dashboard')} />
+  const currentPlanId = ctx?.profile?.subscription?.plan ?? null
+  return (
+    <ManagePlanView
+      currentPlanId={currentPlanId}
+      onSelectPlan={() => navigate('/dashboard/support')}
+    />
+  )
 }
 
 export function FallbackRoute() {
