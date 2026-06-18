@@ -161,6 +161,11 @@
     }
   },
   "common": {
+    "coming_soon": "Coming soon",
+    "pagination_showing": "Showing",
+    "pagination_to": "to",
+    "pagination_of": "of",
+    "pagination_results": "results",
     "active": "Active",
     "inactive": "Inactive",
     "back": "Back",

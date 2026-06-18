@@ -161,6 +161,11 @@
     }
   },
   "common": {
+    "coming_soon": "Sắp ra mắt",
+    "pagination_showing": "Đang xem từ",
+    "pagination_to": "đến",
+    "pagination_of": "trong tổng số",
+    "pagination_results": "kết quả",
     "active": "Đang hoạt động",
     "inactive": "Ngừng hoạt động",
     "back": "Quay lại",

@@ -505,7 +505,7 @@ function Overview({
               />
               <div className="absolute inset-0 bg-nexoraBrand/80 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-1 text-white select-none">
                 <QrCode className="h-5 w-5" />
-                <span className="text-[9px] font-black uppercase tracking-wider">PREVIEW</span>
+                <span className="text-[9px] font-black uppercase tracking-wider">{t('components.dashboard.views.StaffView.preview')}</span>
               </div>
             </div>
           </div>

@@ -238,7 +238,7 @@ export default function LoginScreen() {
                 >
                   <span className="flex items-center justify-center gap-2">
                     <GoogleIcon />
-                    <span className="hidden sm:inline">Coming soon</span>
+                    <span className="hidden sm:inline">{t('common.coming_soon')}</span>
                   </span>
                 </button>
                 <button
@@ -249,7 +249,7 @@ export default function LoginScreen() {
                 >
                   <span className="flex items-center justify-center gap-2">
                     <AppleBrandIcon />
-                    <span className="hidden sm:inline">Coming soon</span>
+                    <span className="hidden sm:inline">{t('common.coming_soon')}</span>
                   </span>
                 </button>
               </div>

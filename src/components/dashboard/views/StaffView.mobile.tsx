@@ -506,7 +506,7 @@ function StaffView({
             )}
             <div className="absolute inset-0 bg-nexoraBrand/80 rounded-xl flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-white select-none">
               <QrCode className="h-5 w-5" />
-              <span className="text-[9px] font-black uppercase tracking-wider">PREVIEW</span>
+              <span className="text-[9px] font-black uppercase tracking-wider">{t('components.dashboard.views.StaffView.preview')}</span>
             </div>
           </div>
         </div>
@@ -768,11 +768,11 @@ function StaffView({
               <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
                 <div>
                   <p className="text-xs text-slate-500 font-semibold">
-                    Showing <span className="font-extrabold text-slate-800">{(pageNumber - 1) * 9 + 1}</span> to{' '}
+                    {t('common.pagination_showing')} <span className="font-extrabold text-slate-800">{(pageNumber - 1) * 9 + 1}</span> {t('common.pagination_to')}{' '}
                     <span className="font-extrabold text-slate-800">
                       {Math.min(pageNumber * 9, totalCount)}
                     </span>{' '}
-                    of <span className="font-extrabold text-slate-800">{totalCount}</span> results
+                    {t('common.pagination_of')} <span className="font-extrabold text-slate-800">{totalCount}</span> {t('common.pagination_results')}
                   </p>
                 </div>
                 <div>
