@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import IconButton from '../../ui/IconButton'
+import HeaderEcosystem from './HeaderEcosystem'
 
 export default function DashboardHeader({
   searchQuery,
@@ -327,6 +328,8 @@ export default function DashboardHeader({
             EN
           </button>
         </div>
+
+        <HeaderEcosystem />
 
         {/* Notifications Icon and Dropdown */}
         <div className="relative hidden sm:inline-flex" ref={dropdownRef}>

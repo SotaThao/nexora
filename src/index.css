@@ -464,3 +464,19 @@ button:focus-visible, a:focus-visible {
   animation: highlight-pulse 2s infinite ease-in-out;
 }
 
+@keyframes eco-image-pulse {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-eco-pulse img {
+  animation: eco-image-pulse 0.48s ease-out;
+}
+

@@ -32,6 +32,9 @@ export const qk = {
   // Notifications
   notificationsUnreadCount: () => ['notifications', 'unreadCount'],
   notificationsList:      (filters = EMPTY) => ['notifications', 'list', filters],
+
+  // Client ecosystem (header SSO)
+  ecosystems:             () => ['ecosystems'],
   
   // Profile (Staff/Personal)
   userProfile:              () => ['userProfile'],

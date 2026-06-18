@@ -373,7 +373,11 @@
     },
     "header": {
       "search_placeholder": "Search tech, station, review...",
-      "add_tp": "Add New Touch Point"
+      "add_tp": "Add New Touch Point",
+      "ecosystem": "Ecosystem",
+      "ecosystem_loading": "Loading ecosystem...",
+      "no_ecosystem": "No ecosystem available",
+      "coming_soon_badge": "Coming Soon"
     },
     "notifications": {
       "title": "Notifications",

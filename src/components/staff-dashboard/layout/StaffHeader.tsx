@@ -4,6 +4,7 @@ import { Bell, Menu, Settings, ShieldCheck, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import { useUnreadCount } from '../../../data/hooks/useNotifications'
+import HeaderEcosystem from '../../dashboard/layout/HeaderEcosystem'
 
 export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu, onLogout }) {
   const { currentLanguage, setLanguage, t } = useTranslation()
@@ -68,6 +69,8 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
             EN
           </button>
         </div>
+
+        <HeaderEcosystem />
 
         {/* Notifications bell */}
         <button
