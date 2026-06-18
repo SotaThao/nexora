@@ -56,7 +56,7 @@ export default function DashboardSidebar({
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col bg-nexoraSidebar px-5 py-7 text-white lg:flex">
       {/* Logo block */}
       <div className="flex items-center px-2">
-        <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="w-44 h-auto max-w-full object-contain" />
+        <img src="/assets/logo-nexora-white-vertical.png" alt="Nexora Logo" className="w-44 h-auto max-w-full object-contain" />
       </div>
 
       {/* Expandable Profile Card */}

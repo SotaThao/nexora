@@ -16,7 +16,7 @@ export default function StaffSidebar({ activeScreen, onNavigate, onLogout, isOpe
       {/* Brand */}
       <div className="flex items-center justify-between px-2">
         <div className="flex items-center">
-          <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="w-44 h-auto max-w-full object-contain" />
+          <img src="/assets/logo-nexora-white-vertical.png" alt="Nexora Logo" className="w-44 h-auto max-w-full object-contain" />
         </div>
         {isMobile && (
           <button

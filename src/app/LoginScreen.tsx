@@ -139,8 +139,8 @@ export default function LoginScreen() {
         {/* Left Column: Login Card */}
         <div className="lg:col-span-5 flex flex-col justify-between p-5 sm:p-8 xl:p-10 relative overflow-hidden">
           {/* VLINKPAY branding logo */}
-          <div className="mb-8 flex items-center">
-            <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="h-11 w-auto max-w-[200px] object-contain" />
+          <div className="mb-8 flex items-center justify-center">
+            <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="h-[66px] w-auto max-w-[300px] object-contain" />
           </div>
 
           {isLoading ? (
@@ -227,6 +227,31 @@ export default function LoginScreen() {
               <div className="relative hidden py-1 text-center sm:block">
                 <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-nexoraBorder"></div></div>
                 <span className="relative bg-white px-3 text-[10px] text-nexoraSubtle font-bold uppercase tracking-wider">{t('login.social_auth_divider')}</span>
+              </div>
+
+              <div className="flex items-center justify-center gap-3 sm:grid sm:grid-cols-2 pb-2">
+                <button
+                  type="button"
+                  disabled
+                  aria-label={t('login.continue_google')}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-nexoraBorder bg-gray-50 p-0 text-xs font-bold text-nexoraSubtle shadow-nexora-card transition-all opacity-60 cursor-not-allowed sm:min-h-11 sm:w-auto sm:rounded-lg sm:px-4 sm:py-2 sm:shadow-none"
+                >
+                  <span className="flex items-center justify-center gap-2">
+                    <GoogleIcon />
+                    <span className="hidden sm:inline">Coming soon</span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  disabled
+                  aria-label={t('login.continue_apple')}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-nexoraBorder bg-gray-50 p-0 text-xs font-bold text-nexoraSubtle shadow-nexora-card transition-all opacity-60 cursor-not-allowed sm:min-h-11 sm:w-auto sm:rounded-lg sm:px-4 sm:py-2 sm:shadow-none"
+                >
+                  <span className="flex items-center justify-center gap-2">
+                    <AppleBrandIcon />
+                    <span className="hidden sm:inline">Coming soon</span>
+                  </span>
+                </button>
               </div>
  
               {/* Quick login / registration options */}
