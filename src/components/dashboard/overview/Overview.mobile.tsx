@@ -156,7 +156,7 @@ function Overview({
 
   const activeStaff = (staff || []).filter((m) => m.status === 'Active' || m.active === true)
   const pendingCount = (pendingStaff || []).length
-  const rating = Number(metrics.googleRating || 0)
+  const rating = Number(metrics.averageRating || 0)
   const totalReviews = Number(metrics.totalReviews || 0)
 
   // Pending confirmations list (real pending staff/invites)
@@ -200,7 +200,6 @@ function Overview({
       {/* ── Greeting ─────────────────────────────────────────────────────── */}
       <div className="pt-1">
         <h1 className="text-2xl font-black tracking-tight text-nexoraText">{greeting}</h1>
-        <p className="mt-1 text-sm text-nexoraMuted">{businessName || t('staff_dashboard.home.performance_subtitle')}</p>
       </div>
 
       {/* ── Hero: Money Saved ────────────────────────────────────────────── */}

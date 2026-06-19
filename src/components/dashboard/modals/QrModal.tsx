@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { useState } from 'react'
 import { X, ShieldAlert, ShieldCheck, Download, Printer, Loader2 } from 'lucide-react'
 import IconButton from '../../ui/IconButton'
@@ -8,12 +7,6 @@ import { toLocalCustomerTouchUrl, buildQrImageUrl } from '../../../utils/staffTi
 import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import { downloadQrCode, downloadTouchpointQrFile } from '../../../utils/qrUtils'
 import { shouldUseMobileDownloadFlow } from '../../../utils/downloadFile'
-=======
-import { X, ShieldAlert, ShieldCheck, Printer } from 'lucide-react'
-import IconButton from '../../ui/IconButton'
-import { useTranslation } from '../../../contexts/LanguageContext'
-import { buildQrImageUrl, toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
->>>>>>> origin/dev
 
 const slugify = (str = '') => str.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 
@@ -37,8 +30,6 @@ function QrModal({ target, businessName, onClose }) {
   if (!qrUrl) {
     qrUrl = `${getWebUrlOrigin()}/touch/${businessSlug}/${target.slug}`
   }
-
-  const qrImageSrc = buildQrImageUrl(qrUrl, 150, target.qrImageUrl)
 
   const isStaff = Boolean(
     target.isStaffQr ||
@@ -118,22 +109,6 @@ function QrModal({ target, businessName, onClose }) {
             <X className="h-4 w-4" />
           </IconButton>
         </div>
-<<<<<<< HEAD
-=======
-        <h2 className="mt-1 text-lg font-extrabold text-nexoraText qr-print-title">{target.name}</h2>
-        <p className="text-xs text-nexoraMuted qr-print-subtitle">{target.subtitle}</p>
-        {!target.isActive && (
-          <div className="mt-3 flex items-center justify-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-[10px] font-bold text-amber-700 no-print">
-            <ShieldAlert className="h-3.5 w-3.5" />
-            This personal QR is blocked while the staff member is inactive.
-          </div>
-        )}
-        <div className="mx-auto mt-5 flex aspect-[2/3] w-44 flex-col items-center justify-between rounded-2xl bg-nexoraCanvas border border-nexoraBorder/80 p-4 text-nexoraText shadow-md qr-print-card">
-          <div className="flex items-center gap-1 justify-center qr-print-brand-header">
-            <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-3.5 w-3.5 object-contain qr-print-brand-logo" />
-            <span className="text-[8px] font-black tracking-wider text-slate-800 qr-print-brand-text">NEXORA</span>
-          </div>
->>>>>>> origin/dev
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 text-center sm:px-6">
           {!target.isActive && (
@@ -176,7 +151,6 @@ function QrModal({ target, businessName, onClose }) {
             </div>
           </div>
 
-<<<<<<< HEAD
           <p className="mt-4 break-all rounded-lg bg-nexoraCanvas px-3 py-2 text-left text-[10px] font-mono leading-relaxed text-nexoraMuted qr-print-url">
             {qrUrl.replace(/^https?:\/\//, '')}
           </p>
@@ -208,38 +182,6 @@ function QrModal({ target, businessName, onClose }) {
             </button>
           )}
         </div>
-=======
-          <div className="h-28 w-28 rounded-lg bg-white border border-nexoraBorder/60 p-2 flex items-center justify-center shadow-inner qr-print-qr-wrapper">
-            <img
-              src={qrImageSrc}
-              alt="Scan QR code to tip and review"
-              className="h-full w-full object-contain qr-print-qr-image"
-            />
-          </div>
-
-          <div className="text-[8px] font-extrabold uppercase text-nexoraMuted tracking-wider qr-print-scan-text leading-tight mx-auto">
-            {t('customer.scan_to_tip_review')}
-          </div>
-
-          <div className="flex items-center gap-1 text-[7.5px] font-bold text-nexoraSubtle qr-print-footer">
-            <ShieldCheck className="h-2.5 w-2.5 text-nexoraBrand shrink-0" />
-            <span>Secure redirect by VLINKPAY</span>
-          </div>
-        </div>
-
-        <p className="mt-4 rounded-lg bg-nexoraCanvas px-3 py-2 text-[10px] font-mono text-nexoraMuted select-all qr-print-url">
-          {qrUrl.replace(/^https?:\/\//, '')}
-        </p>
-
-        <button
-          type="button"
-          onClick={() => window.print()}
-          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white hover:bg-opacity-90 transition no-print"
-        >
-          <Printer className="h-4 w-4" />
-          {t('dashboard.modals.print_qr')}
-        </button>
->>>>>>> origin/dev
       </div>
     </div>
   )

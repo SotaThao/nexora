@@ -1,4 +1,4 @@
-// DashboardSidebar — left nav: brand, profile card, plan card, menu w/ tips sub-tabs.
+// DashboardSidebar — left nav: brand, profile card, plan card, menu w/ tips & touchpoints sub-tabs.
 // Extracted from Dashboard.jsx (Group 2 refactor).
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -24,26 +24,31 @@ export default function DashboardSidebar({
   onLogout,
   tipsTab = 'overview',
   setTipsTab,
+  touchpointsTab = 'stations',
+  setTouchpointsTab,
   userRole = 'owner'
 }) {
   const { currentLanguage, setLanguage, t } = useTranslation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  // Sub-tabs are URL-driven (?tab=) so the sidebar highlight stays in sync with
+  // the rendered route content (TipsRoute / TouchpointsRoute read the same param).
   const activeSubTab = searchParams.get('tab')
   const [isTipsExpanded, setIsTipsExpanded] = useState(activeMenu === 'tips')
-<<<<<<< HEAD
-=======
   const [isTouchpointsExpanded, setIsTouchpointsExpanded] = useState(activeMenu === 'touchpoints')
   const subscriptionCopy = getSubscriptionSidebarCopy(
     subscription ?? profile?.subscription,
     t,
     currentLanguage,
   )
->>>>>>> origin/dev
 
   useEffect(() => {
     if (activeMenu === 'tips') {
       setIsTipsExpanded(true)
+      setIsTouchpointsExpanded(false)
+    } else if (activeMenu === 'touchpoints') {
+      setIsTouchpointsExpanded(true)
+      setIsTipsExpanded(false)
     }
   }, [activeMenu])
 
@@ -179,6 +184,9 @@ export default function DashboardSidebar({
                   if (id === 'tips') {
                     setIsTipsExpanded(!isTipsExpanded)
                   }
+                  if (id === 'touchpoints') {
+                    setIsTouchpointsExpanded(!isTouchpointsExpanded)
+                  }
                 }}
                 className={`flex h-12 w-full items-center justify-between rounded-lg px-4 text-left text-sm font-bold transition ${
                   isActive
@@ -190,9 +198,12 @@ export default function DashboardSidebar({
                   <MenuIcon item={item} active={isActive} />
                   <span className="truncate">{localizedLabel}</span>
                 </div>
-                {(id === 'tips') && (
+                {(id === 'tips' || id === 'touchpoints') && (
                   <div className="text-white/50 shrink-0">
-                    {isTipsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    {id === 'tips'
+                      ? (isTipsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)
+                      : (isTouchpointsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)
+                    }
                   </div>
                 )}
               </button>
@@ -227,6 +238,33 @@ export default function DashboardSidebar({
                 </div>
               )}
 
+              {id === 'touchpoints' && isTouchpointsExpanded && (
+                <div className="ml-9 mt-1 space-y-1 border-l border-white/10 pl-3 animate-fadeIn">
+                  {[
+                    { id: 'stations', label: t('dashboard.touchpoints.tabs.stations') },
+                    { id: 'devices', label: t('dashboard.touchpoints.tabs.devices') }
+                  ].map(sub => {
+                    const isSubActive = activeMenu === 'touchpoints' && (activeSubTab || 'stations') === sub.id
+                    return (
+                      <button
+                        key={sub.id}
+                        type="button"
+                        onClick={() => {
+                          navigate(`/dashboard/touchpoints?tab=${sub.id}`, { replace: true })
+                        }}
+                        className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
+                          isSubActive
+                            ? 'text-brandCyan font-extrabold'
+                            : 'text-white/60 hover:bg-white/5 hover:text-white'
+                        }`}
+                      >
+                        <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+                        <span>{sub.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </React.Fragment>
           )
         })

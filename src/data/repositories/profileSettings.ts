@@ -118,8 +118,9 @@ export function createProfileSettingsRepository(client: HttpClient = httpClient)
       return client.put<LooseObject>('/api/v1/staff/profile', dto)
     },
 
+    /** POST /api/v1/UserProfile/delete-account — permanently delete the authenticated user account. */
     async deleteAccount(): Promise<void> {
-      await client.post('/api/v1/UserProfile/delete-account', {})
+      await client.post('/api/v1/userprofile/delete-account', {})
     },
 
     async save(_settings: LooseObject): Promise<void> {

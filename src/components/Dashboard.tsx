@@ -70,6 +70,8 @@ export default function Dashboard({
     isMobileMenuOpen, setIsMobileMenuOpen,
     tipsTab, setTipsTab,
     isTipsMobileExpanded, setIsTipsMobileExpanded,
+    touchpointsTab, setTouchpointsTab,
+    isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded,
     settingsTab, setSettingsTab,
     isProfileExpanded, setIsProfileExpanded,
     handleNavigateMenu, navigateMenu
@@ -86,12 +88,14 @@ export default function Dashboard({
   const [processingFee, setProcessingFee] = useState(3.0)
   const [isNotiDropdownOpen, setIsNotiDropdownOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [isAddTouchpointModalOpen, setIsAddTouchpointModalOpen] = useState(false)
   const [reviewsPageNumber, setReviewsPageNumber] = useState(1)
 
   const hasSearchQuery = Boolean(searchQuery.trim())
   const needsMerchantStaffList =
     hasSearchQuery ||
-    ['staff', 'reviews', 'reports', 'tips', 'analytics'].includes(activeMenu)
+    isAddTouchpointModalOpen ||
+    ['staff', 'reviews', 'reports', 'tips', 'analytics', 'touchpoints'].includes(activeMenu)
   const needsNotificationsList = isNotiDropdownOpen
   const needsTransactions =
     hasSearchQuery ||
@@ -140,33 +144,16 @@ export default function Dashboard({
   })
   const { data: profileSettingsData } = useProfileSettings()
   const { data: merchantSetupData } = useMerchantSetup()
-<<<<<<< HEAD
-  const [activeStaffPage, setActiveStaffPage] = useState(1)
-  const [activeStaffPageSize] = useState(9)
-  const {
-    data: staffListData,
-    isLoading: isStaffListLoading,
-    isFetching: isStaffListFetching,
-  } = useMerchantStaff({
-    statusFilter: StatusFilter.Active,
-    pageNumber: activeStaffPage,
-    pageSize: activeStaffPageSize,
-=======
   const { data: merchantStaffData, isLoading: isStaffLoading, isFetching: isStaffFetching } = useMerchantStaff({
     enabled: needsMerchantStaffList,
     pageNumber: isStaffTab ? staffPagination.pageNumber : 1,
     pageSize: isStaffTab ? staffPagination.pageSize : STAFF_FILTER_LIST_PAGE_SIZE,
->>>>>>> origin/dev
   })
   const { data: pendingStaffPage } = useMerchantStaff({
     enabled: isStaffTab,
     statusFilter: StatusFilter.Pending,
     pageNumber: 1,
-<<<<<<< HEAD
-    pageSize: 100,
-=======
     pageSize: 50,
->>>>>>> origin/dev
   })
   const {
     data: inviteLinkSetting,
@@ -274,7 +261,6 @@ export default function Dashboard({
     reviewsPagination.setPage(1)
   }, [reviewsPagination.setPage])
   const [newTouchpoint, setNewTouchpoint] = useState({ name: '', type: 'Table QR' })
-  const [isAddTouchpointModalOpen, setIsAddTouchpointModalOpen] = useState(false)
   const [addTouchpointPrefill, setAddTouchpointPrefill] = useState<any | null>(null)
   const [activeKpi, setActiveKpi] = useState('tips')
   const { chartRange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate, handleChartRangeChange } = useChartDateRange(transactions)
@@ -497,23 +483,18 @@ export default function Dashboard({
     if (!finalName) return
 
     const apiType = mapTouchpointTypeToApi(finalType)
-    const resolvedAssignedStaffProfileId = resolveAssignedStaffProfileId(apiType, assignedStaffProfileId)
+    const resolvedAssignedStaffProfileId = resolveAssignedStaffProfileId(
+      apiType,
+      assignedStaffProfileId,
+    )
 
-    const payload = {
+    await createTouchpointMutation.mutateAsync({
       name: finalName,
-<<<<<<< HEAD
       type: apiType,
       ...(resolvedAssignedStaffProfileId
         ? { assignedStaffProfileId: resolvedAssignedStaffProfileId }
         : {}),
-    }
-
-    await createTouchpointMutation.mutateAsync(payload)
-=======
-      type: finalType === 'Table QR' ? 'Table' : finalType === 'Front Desk' ? 'FrontDesk' : finalType === 'Receipt QR' ? 'Receipt' : finalType === 'Staff QR' ? 'StaffCard' : 'Table',
-      // If we supported hardware linkage, we would map finalDeviceId here.
     })
->>>>>>> origin/dev
     
     setNewTouchpoint({ name: '', type: 'Table QR' })
   }
@@ -557,17 +538,14 @@ export default function Dashboard({
       ? target.slug
       : (staffName ? `staff-${slugify(staffName)}` : slugify(target.name || target.id || 'general'))
 
-    const isStaffPersonalQr = Boolean(staffName && target.staffProfileId)
-
     setQrTarget({
-      ...(isStaffPersonalQr ? {} : { touchpointId: target.id }),
-      name: target.name || (staffName ? `Personal QR - ${staffName}` : 'Touchpoint QR'),
+      name: target.name || `Personal QR - ${staffName}`,
       subtitle: target.position || target.type || 'Staff QR',
       slug: finalSlug,
       url: target.url ? toLocalCustomerTouchUrl(target.url) : null,
       qrImageUrl: target.qrImageUrl || null,
       isActive: target.isActive !== undefined ? target.isActive : true,
-      isStaffQr: isStaffPersonalQr,
+      isStaffQr: Boolean(staffName && target.staffProfileId),
     })
   }
 
@@ -622,10 +600,7 @@ export default function Dashboard({
     handleLinkStaff, handleInviteStaff, handleResendInvite, handleAcceptJoinRequest, handleDeclineJoinRequest, handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     setInviteShareDefaultName, setInviteShareDefaultContact, setIsInviteShareOpen,
     filteredTouchpoints, setAddTouchpointPrefill, setIsAddTouchpointModalOpen, deleteTouchpoint, toggleTouchpointStatus, linkDevice, devices, handleAddDevice, handleDeleteDevice, handleToggleDeviceStatus,
-<<<<<<< HEAD
-    activeStaffList: staffListData?.items ?? [],
-    reviews, filteredReviews, reviewFilterStaff, setReviewFilterStaff, setupData: setupData ?? merchantSetupData,
-=======
+    activeStaffList: staff,
     reviews, filteredReviews, reviewFilterStaff, setReviewFilterStaff: handleReviewFilterStaffChange, setupData: setupData ?? merchantSetupData,
     activeReviewsPage: reviewsPagination.pageNumber,
     activeReviewsPageSize: reviewsPagination.pageSize,
@@ -635,7 +610,6 @@ export default function Dashboard({
     activeReviewsHasPrev: reviewsPage?.hasPreviousPage ?? false,
     setActiveReviewsPage: reviewsPagination.setPage,
     reviewsListFetching: isReviewsFetching,
->>>>>>> origin/dev
     tipsTab, setTipsTab, processingFee, setProcessingFee,
     filteredTransactions, touchpoints,
     verificationStatus, requireKyb, userEmail, onKybSuccess, settingsTab, setSettingsTab,
@@ -669,6 +643,8 @@ export default function Dashboard({
         onLogout={onLogout}
         tipsTab={tipsTab}
         setTipsTab={setTipsTab}
+        touchpointsTab={touchpointsTab}
+        setTouchpointsTab={setTouchpointsTab}
         userRole={userRole}
       />
 
@@ -706,12 +682,7 @@ export default function Dashboard({
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
         />
 
-        <div
-          className="h-[calc(4rem+var(--app-safe-area-top))] lg:hidden"
-          aria-hidden="true"
-        />
-
-        <main className="min-h-dvh p-4 sm:p-6 lg:p-7 lg:pb-7 max-lg:min-h-[calc(100svh-4rem-var(--app-safe-area-top))] max-lg:pb-[calc(1.5rem+4rem+var(--app-safe-area-bottom))]">
+        <main className="min-h-dvh p-4 pb-24 sm:p-6 sm:pb-24 lg:p-7 lg:pb-7">
           {activeMenu !== 'overview' && (
             <button
               onClick={() => handleNavigateMenu('overview')}
@@ -750,8 +721,12 @@ export default function Dashboard({
         setIsProfileExpanded={setIsProfileExpanded}
         tipsTab={tipsTab}
         setTipsTab={setTipsTab}
+        touchpointsTab={touchpointsTab}
+        setTouchpointsTab={setTouchpointsTab}
         isTipsMobileExpanded={isTipsMobileExpanded}
         setIsTipsMobileExpanded={setIsTipsMobileExpanded}
+        isTouchpointsMobileExpanded={isTouchpointsMobileExpanded}
+        setIsTouchpointsMobileExpanded={setIsTouchpointsMobileExpanded}
         hasKyb={hasKyb}
         userRole={userRole}
         onLogout={onLogout}
@@ -814,11 +789,12 @@ export default function Dashboard({
       <AddTouchpointModal
         open={isAddTouchpointModalOpen}
         initialValues={addTouchpointPrefill}
-        activeStaff={staffListData?.items ?? []}
+        activeStaff={staff}
         onClose={() => setIsAddTouchpointModalOpen(false)}
         onAdd={async (name, type, deviceId, assignedStaffProfileId) => {
           await addTouchpoint(name, type, deviceId, assignedStaffProfileId)
           handleNavigateMenu('touchpoints')
+          setTouchpointsTab('stations')
         }}
       />
 

@@ -45,11 +45,7 @@ export default function MobileMenuDrawer({
         onClick={onClose}
       />
       <aside
-        className="relative flex h-full w-[min(84vw,320px)] flex-col bg-nexoraSidebar px-5 py-6 text-white shadow-2xl"
-        style={{
-          paddingTop: 'calc(1.5rem + var(--app-safe-area-top))',
-          paddingBottom: 'calc(1.5rem + var(--app-safe-area-bottom))',
-        }}
+        className="mobile-drawer-safe relative flex h-full w-[min(84vw,320px)] flex-col bg-nexoraSidebar px-5 text-white shadow-2xl"
       >
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center">

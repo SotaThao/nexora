@@ -149,6 +149,7 @@ export function resolveStaffTipQr(
   source: StaffTipQrSource,
   staffProfileId?: string | null,
   origin = getWebUrlOrigin(),
+  { allowDefaultTouchPointSlug = true }: { allowDefaultTouchPointSlug?: boolean } = {},
 ): ResolvedStaffTipQr {
   const businessSlug =
     source.businessSlug || slugify(source.businessName || '')

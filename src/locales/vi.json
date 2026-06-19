@@ -1742,6 +1742,7 @@
           "kyc": "Xác thực KYC",
           "change": "Thay đổi",
           "signOutAccount": "Đăng xuất tài khoản",
+          "deleteAccountTitle": "Xóa tài khoản",
           "signOutFromThe": "Đăng xuất khỏi phiên làm việc hiện tại và quay về màn hình đăng nhập.",
           "closeForm": "Đóng Form",
           "submittingKycDetails": "Đang gửi hồ sơ xác thực...",

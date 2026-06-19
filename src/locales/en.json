@@ -1742,6 +1742,7 @@
           "kyc": "KYC",
           "change": "Change",
           "signOutAccount": "Sign Out Account",
+          "deleteAccountTitle": "Delete Account",
           "signOutFromThe": "Sign out from the current active session and return to the login screen.",
           "closeForm": "Close Form",
           "submittingKycDetails": "Submitting KYC details...",

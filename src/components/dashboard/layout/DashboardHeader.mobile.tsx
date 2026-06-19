@@ -269,7 +269,7 @@ export default function DashboardHeader({
   )
 
   return (
-    <header className="sticky top-0 z-20 border-b border-nexoraBorder bg-nexoraSurface/90 backdrop-blur-md">
+    <header className="safe-area-top sticky top-0 z-20 border-b border-nexoraBorder bg-nexoraSurface/90 backdrop-blur-md">
 
       {/* ── Mobile header ──────────────────────────────────────────────────── */}
       <div className="flex min-h-16 items-center justify-between px-4 lg:hidden">

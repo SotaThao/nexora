@@ -138,7 +138,7 @@ export default function StaffSidebar({ activeScreen, onNavigate, onLogout, isOpe
             aria-label="Close navigation menu"
             onClick={onClose}
           />
-          <aside className="relative flex h-full w-[min(84vw,320px)] flex-col bg-nexoraSidebar px-5 py-6 text-white shadow-2xl animate-scaleIn">
+          <aside className="mobile-drawer-safe relative flex h-full w-[min(84vw,320px)] flex-col bg-nexoraSidebar px-5 text-white shadow-2xl animate-scaleIn">
             {renderContent(true)}
           </aside>
         </div>
