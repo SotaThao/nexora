@@ -73,9 +73,18 @@ export interface PaymentMethodDto {
 export interface TouchpointRecord {
   id?: string
   name?: string
+  slug?: string | null
   type?: string
-  qrImageUrl?: string
-  assignedStaffProfileId?: string
+  url?: string | null
+  qrImageUrl?: string | null
+  isActive?: boolean
+  assignedStaffProfileId?: string | null
+  createdAt?: string | null
+  /** Normalized from API `totalScans` */
+  scans?: number
+  /** Normalized from API `totalRevenue` */
+  revenue?: number
+  deviceId?: string | null
   [key: string]: unknown
 }
 
@@ -150,6 +159,8 @@ export interface StaffBusinessLink {
   tipUrl?: string | null
   /** Hosted QR PNG from touchpoint API (from API when available). */
   qrImageUrl?: string | null
+  /** True when BE returned touchPoints: [] and no touchpoint slug/URL is available yet. */
+  touchPointsMissing?: boolean
 }
 
 export interface StaffBusinessTipQr {
@@ -164,6 +175,8 @@ export interface StaffBusinessTipQr {
   linkStatusLabel: string | null
   roleLabel: string | null
   logoUrl: string | null
+  /** True when the business has no touchpoint data to build a tipping link. */
+  tipLinkIncomplete?: boolean
 }
 
 export interface TipCountAmount {
@@ -313,6 +326,13 @@ export interface ReviewRecord extends DomainEntity {
   [key: string]: unknown
 }
 
+export interface UserSubscription {
+  plan?: string
+  status?: string
+  trialEndsAt?: string | null
+  currentPeriodEnd?: string | null
+}
+
 export interface UserProfile {
   id?: string
   fullName?: string
@@ -337,6 +357,7 @@ export interface UserProfile {
   staffId?: string
   hasCompletedOnboarding?: boolean
   referralCode?: string
+  subscription?: UserSubscription | null
   [key: string]: unknown
 }
 

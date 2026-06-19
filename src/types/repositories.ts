@@ -38,40 +38,55 @@ export interface BusinessApiDto {
   feedbackEmail?: string
 }
 
-export interface DashboardOverviewApiDto {
-  totalTipAmount?: number
-  totalTips?: number
-  tipCount?: number
-  totalTransactions?: number
-  averageTip?: number
-  totalReviews?: number
-  totalScans?: number
-  conversionRate?: number
-  publicReviews?: number
-  privateReviews?: number
-  averageRating?: number
-  googleClicks?: number
-  yelpClicks?: number
-  googleRating?: number
-  googleReviews?: number
-  yelpRating?: number
-  yelpReviews?: number
-  responseRate?: number
-  returningCustomers?: number
-  returningCustomersDelta?: number
+export interface TipsSummaryApiDto {
+  totalAmount?: number
+  totalCount?: number
+  avgAmount?: number
+  previousPeriodComparison?: number | null
 }
 
-export interface DashboardStaffMetricApiDto {
-  staffId?: string
-  id?: string
-  staffName?: string
-  name?: string
-  tipsCollected?: number
-  tips?: number
-  avgRating?: number
-  rating?: number
-  totalReviews?: number
+export interface ScansSummaryApiDto {
+  totalPageViews?: number
+  conversionRate?: number
 }
+
+export interface ReviewsSummaryApiDto {
+  totalCount?: number
+  avgRating?: number
+  count4To5Stars?: number
+  count1To3Stars?: number
+  googleClickCount?: number
+  yelpClickCount?: number
+  responseRate?: number
+  responseRateLabel?: DashboardResponseRateLabel | string
+}
+
+export interface PlatformReviewsApiDto {
+  googleAvgRating?: number | null
+  googleReviewCount?: number | null
+  yelpAvgRating?: number | null
+  yelpReviewCount?: number | null
+}
+
+export interface CustomersSummaryApiDto {
+  returningCustomerRate?: number
+  returningCustomerRateChangeVsLastWeek?: number
+}
+
+export interface DashboardOverviewApiDto {
+  tipsSummary?: TipsSummaryApiDto
+  scansSummary?: ScansSummaryApiDto
+  reviewsSummary?: ReviewsSummaryApiDto
+  platformReviews?: PlatformReviewsApiDto
+  customersSummary?: CustomersSummaryApiDto
+}
+
+export type DashboardResponseRateLabel =
+  | 'EXCELLENT'
+  | 'GOOD'
+  | 'FAIR'
+  | 'NEEDS_IMPROVEMENT'
+  | 'POOR'
 
 export interface DashboardOverviewMetrics {
   totalTips: number
@@ -80,18 +95,43 @@ export interface DashboardOverviewMetrics {
   totalReviews: number
   scans: number
   conversionRate: number
-  publicReviews: number
-  privateReviews: number
   averageRating: number
   googleClicks: number
   yelpClicks: number
-  googleRating: number
-  googleReviews: number
-  yelpRating: number
-  yelpReviews: number
+  count4To5Stars: number
+  count1To3Stars: number
   responseRate: number
-  returningCustomers: number
-  returningCustomersDelta: number
+  responseRateLabel: DashboardResponseRateLabel | string | null
+  googleAvgRating: number | null
+  googleReviewCount: number | null
+  yelpAvgRating: number | null
+  yelpReviewCount: number | null
+  returningCustomerRate: number
+  returningCustomerRateChangeVsLastWeek: number
+  previousPeriodComparison: number | null
+}
+
+export interface DashboardKpiDeltas {
+  totalTips: number | null
+  totalTransactions: number | null
+  averageTip: number | null
+  totalReviews: number | null
+}
+
+export interface DashboardStaffMetricApiDto {
+  staffProfileId?: string
+  staffId?: string
+  id?: string
+  displayName?: string
+  staffName?: string
+  name?: string
+  tipTotal?: number
+  tipsCollected?: number
+  tips?: number
+  avgRating?: number
+  rating?: number
+  reviewCount?: number
+  totalReviews?: number
 }
 
 export interface StaffLeaderboardRow {
@@ -100,6 +140,56 @@ export interface StaffLeaderboardRow {
   tips: number
   rating: number
   totalReviews: number
+}
+
+export interface DashboardTipsChartApiDto {
+  date: string
+  totalAmount: number
+  tipCount: number
+  avgAmount: number
+}
+
+export interface TipsChartDayMetric {
+  date: string
+  totalAmount: number
+  tipCount: number
+  avgAmount: number
+}
+
+export type DashboardReviewRoutingType = 'Public' | 'Private' | 'Skipped'
+
+export interface DashboardReviewApiDto {
+  id?: string
+  rating?: number
+  comment?: string
+  staffName?: string
+  touchPointName?: string
+  routingType?: DashboardReviewRoutingType | string
+  googleClickedAt?: string | null
+  yelpClickedAt?: string | null
+  isResolved?: boolean
+  customerEmail?: string
+  customerName?: string
+  createdAt?: string
+}
+
+export interface DashboardReviewsPage {
+  items: ReviewRecord[]
+  pageNumber: number
+  totalPages: number
+  totalCount: number
+  hasPreviousPage: boolean
+  hasNextPage: boolean
+}
+
+export interface DashboardReviewsQuery {
+  startDate?: string
+  endDate?: string
+  dateFrom?: string
+  dateTo?: string
+  routingType?: DashboardReviewRoutingType | null
+  pageNumber?: number
+  pageSize?: number
 }
 
 export interface StaffPaymentMethodApiDto {
@@ -195,6 +285,7 @@ export interface TipApiDto {
   paymentMethod?: string
   staffName?: string
   staffProfileId?: string | null
+  staffCode?: string | null
   touchPointName?: string
   touchPointId?: string | null
   createdAt?: string
@@ -279,6 +370,21 @@ export interface CreateBusinessResult {
 export interface ImageUploadResult {
   imageUrl?: string
   fileUrl?: string
+}
+
+export interface TouchpointApiDto {
+  id?: string
+  name?: string
+  slug?: string | null
+  type?: string
+  url?: string | null
+  qrImageUrl?: string | null
+  isActive?: boolean
+  assignedStaffProfileId?: string | null
+  createdAt?: string | null
+  totalScans?: number
+  totalRevenue?: number
+  deviceId?: string | null
 }
 
 export interface TouchpointCreateResult {

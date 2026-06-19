@@ -464,3 +464,29 @@ button:focus-visible, a:focus-visible {
   animation: highlight-pulse 2s infinite ease-in-out;
 }
 
+/* "Recommended for salons" ribbon badge on the plan page — a soft glow pulse
+   draws attention to the featured tier; hover gives a gentle lift/scale.
+   Centering transform lives here so the keyframe can stay box-shadow-only
+   (avoids fighting Tailwind's translate utilities). */
+@keyframes recommend-glow {
+  0%, 100% {
+    box-shadow: 0 3px 12px rgba(43, 89, 255, 0.30);
+  }
+  50% {
+    box-shadow: 0 7px 24px rgba(142, 77, 248, 0.55);
+  }
+}
+.plan-recommend-badge {
+  transform: translate(-50%, -50%);
+  animation: recommend-glow 2.4s ease-in-out infinite;
+  transition: transform 0.25s ease;
+}
+.plan-recommend-badge:hover {
+  transform: translate(-50%, -50%) scale(1.06);
+}
+@media (prefers-reduced-motion: reduce) {
+  .plan-recommend-badge {
+    animation: none;
+  }
+}
+

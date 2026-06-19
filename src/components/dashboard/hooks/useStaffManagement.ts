@@ -51,6 +51,7 @@ export function normaliseMember(member) {
     payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member),
     // Preserve API identifiers
     staffLinkId: member.staffLinkId ?? null,
+    linkId: member.linkId ?? member.staffLinkId ?? member.id ?? null,
     inviteId: member.inviteId ?? null,
     staffProfileId: member.staffProfileId ?? null,
     staffCode: member.staffCode ?? null,
@@ -93,9 +94,24 @@ export function useStaffManagement({
   // Falls back to errors.unknown_error for unmapped server codes.
   const errMsg = (err: unknown) => t(getErrorI18nKey(getApiErrorCode(err)))
 
+  const resolveStaffMember = (memberOrId: unknown) => {
+    if (memberOrId && typeof memberOrId === 'object') return memberOrId
+    const id = String(memberOrId ?? '')
+    if (!id) return null
+    return staff.find((item) =>
+      item.id === id ||
+      item.staffLinkId === id ||
+      item.linkId === id ||
+      item.inviteId === id,
+    ) ?? null
+  }
+
+  const getStaffLinkId = (member: { staffLinkId?: string | null; linkId?: string | null; id?: string | null }) =>
+    member.staffLinkId || member.linkId || member.id || null
+
   // Staff comes from the API query (useMerchantStaff) passed in as staffData.
   // No more local setStaff — the query cache is the source of truth.
-  const staff = staffData ?? []
+  const staff = Array.isArray(staffData) ? staffData : (staffData?.items ?? [])
 
   const [errors, setErrors] = useState<LooseObject>({})
   const [staffForm, setStaffForm] = useState<StaffFormState>({
@@ -330,10 +346,10 @@ export function useStaffManagement({
    * Accept a join request — update status to Active.
    * Calls PUT /api/v1/merchant/staff/{staffLinkId}/status.
    */
-  const handleAcceptJoinRequest = (staffId) => {
-    const member = staff.find(s => s.id === staffId)
-    const linkId = member?.staffLinkId || member?.id
-    if (!linkId) return
+  const handleAcceptJoinRequest = (memberOrId) => {
+    const member = resolveStaffMember(memberOrId)
+    const linkId = member ? getStaffLinkId(member) : null
+    if (!member || !linkId) return
 
     approveLinkMutation.mutate(linkId, {
       onSuccess: () => {
@@ -346,78 +362,88 @@ export function useStaffManagement({
   }
 
   /**
-   * Decline a join request — reject the pending link.
-   * Calls PUT /api/v1/merchant/staff/links/{linkId}/reject (the status-update
-   * route only accepts "Active" | "Inactive" and 400s on "Rejected").
+   * Decline a join request.
+   * - Pending invite  -> DELETE /api/v1/merchant/staff/invites/{inviteId}
+   * - Pending link    -> PUT /api/v1/merchant/staff/links/{linkId}/reject
    */
-  const handleDeclineJoinRequest = async (staffId) => {
-    const member = staff.find(s => s.id === staffId)
+  const handleDeclineJoinRequest = async (memberOrId) => {
+    const member = resolveStaffMember(memberOrId)
     if (!member) return
+
+    if (member.itemType === 'invite' && member.inviteId) {
+      await handleCancelInvite(member)
+      return
+    }
 
     const ok = await showConfirm(t('components.dashboard.hooks.useStaffManagement.declineJoinConfirm', { name: member.fullName }))
     if (!ok) return
 
-    const linkId = member.staffLinkId || member.id
-    if (linkId) {
-      rejectLinkMutation.mutate(linkId, {
-        onError: (err) => {
-          showToast(t('components.dashboard.hooks.useStaffManagement.declineFailed', { error: errMsg(err) }), 'error')
-        }
-      })
-    }
+    const linkId = getStaffLinkId(member)
+    if (!linkId) return
+
+    rejectLinkMutation.mutate(linkId, {
+      onSuccess: () => {
+        showToast(t('components.dashboard.hooks.useStaffManagement.joinDeclined', { name: member.fullName }), 'success')
+      },
+      onError: (err) => {
+        showToast(t('components.dashboard.hooks.useStaffManagement.declineFailed', { error: errMsg(err) }), 'error')
+      }
+    })
   }
 
   /**
    * Accept an unlink request — remove the staff link.
    * Calls DELETE /api/v1/merchant/staff/{staffLinkId}.
    */
-  const handleAcceptUnlinkRequest = async (staffId) => {
-    const member = staff.find(s => s.id === staffId)
+  const handleAcceptUnlinkRequest = async (memberOrId) => {
+    const member = resolveStaffMember(memberOrId)
     if (!member) return
 
     const ok = await showConfirm(t('components.dashboard.hooks.useStaffManagement.approveUnlinkConfirm', { name: member.fullName }))
     if (!ok) return
 
-    if (member.id) {
-      removeStaffMutation.mutate(member.id, {
-        onSuccess: () => {
-          showToast(t('components.dashboard.hooks.useStaffManagement.staffUnlinkedSuccessfully'), 'success')
-        },
-        onError: (err) => {
-          showToast(t('components.dashboard.hooks.useStaffManagement.unlinkFailed', { error: errMsg(err) }), 'error')
-        }
-      })
-    }
+    const staffLinkId = getStaffLinkId(member)
+    if (!staffLinkId) return
+
+    removeStaffMutation.mutate(staffLinkId, {
+      onSuccess: () => {
+        showToast(t('components.dashboard.hooks.useStaffManagement.staffUnlinkedSuccessfully'), 'success')
+      },
+      onError: (err) => {
+        showToast(t('components.dashboard.hooks.useStaffManagement.unlinkFailed', { error: errMsg(err) }), 'error')
+      }
+    })
   }
 
   /**
    * Decline an unlink request — update status back to Active.
    * Calls PUT /api/v1/merchant/staff/{staffLinkId}/status.
    */
-  const handleDeclineUnlinkRequest = async (staffId) => {
-    const member = staff.find(s => s.id === staffId)
+  const handleDeclineUnlinkRequest = async (memberOrId) => {
+    const member = resolveStaffMember(memberOrId)
     if (!member) return
 
     const ok = await showConfirm(t('components.dashboard.hooks.useStaffManagement.declineUnlinkConfirm', { name: member.fullName }))
     if (!ok) return
 
-    if (member.id) {
-      updateStatusMutation.mutate({ staffLinkId: member.id, status: 'Active' }, {
-        onSuccess: () => {
-          showToast(t('components.dashboard.hooks.useStaffManagement.declinedUnlinkRequest'), 'success')
-        },
-        onError: (err) => {
-          showToast(t('components.dashboard.hooks.useStaffManagement.declineFailed', { error: errMsg(err) }), 'error')
-        }
-      })
-    }
+    const staffLinkId = getStaffLinkId(member)
+    if (!staffLinkId) return
+
+    updateStatusMutation.mutate({ staffLinkId, status: 'Active' }, {
+      onSuccess: () => {
+        showToast(t('components.dashboard.hooks.useStaffManagement.declinedUnlinkRequest'), 'success')
+      },
+      onError: (err) => {
+        showToast(t('components.dashboard.hooks.useStaffManagement.declineFailed', { error: errMsg(err) }), 'error')
+      }
+    })
   }
 
   /**
    * Delete a staff roster entry.
-   * - Pending invite items → cancel via DELETE /api/v1/merchant/staff/invites/{inviteId}
+   * - Pending invite items ΓåÆ cancel via DELETE /api/v1/merchant/staff/invites/{inviteId}
    *   (v3.3 dedicated endpoint).
-   * - Linked staff items → unlink via DELETE /api/v1/merchant/staff/{staffLinkId}.
+   * - Linked staff items ΓåÆ unlink via DELETE /api/v1/merchant/staff/{staffLinkId}.
    */
   const deleteStaff = async (id) => {
     const member = staff.find(s => s.id === id)

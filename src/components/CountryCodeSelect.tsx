@@ -52,6 +52,21 @@ export const getCountryByDialCode = (dialCode) => {
   return COUNTRY_CODES.find(c => c.dialCode === dialCode) || COUNTRY_CODES.find(c => c.code === 'US')
 }
 
+export const getDefaultDialCode = (appLanguage) => {
+  if (appLanguage === 'vi') return '+84'
+  if (typeof navigator === 'undefined') return '+1'
+
+  const locale = (navigator.language || 'en-US').toLowerCase()
+  const region = locale.split('-')[1]?.toUpperCase()
+  if (region) {
+    const matched = COUNTRY_CODES.find((country) => country.code === region)
+    if (matched) return matched.dialCode
+  }
+  if (locale.startsWith('vi')) return '+84'
+
+  return '+1'
+}
+
 export const formatNationalNumber = (nationalNumber, dialCode) => {
   let digits = nationalNumber.replace(/\D/g, '')
   // E.164 allows up to 15 digits total; don't truncate valid longer numbers.

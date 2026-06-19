@@ -78,6 +78,7 @@ export default function AppRouter() {
         <Route path="/register" element={<RegisterWizard />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/account/reset-password" element={<ResetPassword />} />
         
         <Route path="/touch/:businessSlug/:touchPointSlug" element={<CustomerFlow />} />
         <Route path="/invite" element={<InviteRoute />} />
@@ -98,7 +99,7 @@ export default function AppRouter() {
               <Dashboard
                  userEmail={session?.email}
                  userRole="owner"
-                 verificationStatus={session?.verificationStatus || 'unverified'}
+                 verificationStatus={(session?.verificationStatus as string) || 'unverified'}
                  hasKyb={session?.verificationStatus === 'kyb_approved'}
                  onLogout={logout}
               />

@@ -11,10 +11,12 @@
       "my_qr": "Link & Tip",
       "tips": "Tips",
       "reviews": "Reviews",
-      "pay": "Payout Methods",
-      "profile": "Settings",
+      "pay": "Payout Setup",
+      "profile": "Profile",
       "profile_account": "Setting",
-      "profile_kyc": "KYC"
+      "profile_kyc": "KYC",
+      "tab_home": "Home",
+      "tab_qr": "My QR"
     },
     "titles": {
       "home": "Dashboard",
@@ -30,21 +32,41 @@
       "inactive": "Inactive"
     },
     "home": {
-      "today_tips": "Today Tips",
+      "greeting_morning": "Good morning, {name} 👋",
+      "greeting_afternoon": "Good afternoon, {name} 👋",
+      "greeting_evening": "Good evening, {name} 👋",
+      "greeting_night": "Hello, {name} 👋",
+      "performance_subtitle": "Here's your performance today",
+      "today_tips": "Today's Tips",
       "this_month": "This Month",
       "pending": "Pending",
       "rating": "Rating",
       "tips_count": "{count} tips",
+      "tips_plus": "+ {count} tips",
+      "awaiting_confirm": "{count} awaiting confirmation",
       "need_confirm": "Need confirm",
       "pending_confirmations": "Pending Confirmations",
       "no_pending": "No pending confirmations.",
       "confirm": "Confirm",
       "confirm_all": "Confirm All Received",
+      "view_all": "View all",
+      "manage": "Manage",
+      "your_linked_businesses": "Your Linked Businesses",
       "confirm_success": "Tip receipt confirmed.",
       "confirm_failed": "Could not confirm tip receipt.",
       "confirm_partial": "Confirmed {{count}} tip(s). Some items could not be confirmed.",
       "linked_businesses": "Linked Businesses",
-      "display_name": "Display name"
+      "display_name": "Display name",
+      "via_method": "via {method}",
+      "anonymous_customer": "Customer",
+      "quick_qr": "My QR",
+      "quick_tips": "Tips",
+      "quick_reviews": "Reviews",
+      "quick_payments": "Payments",
+      "quick_refer": "Refer & Earn",
+      "refer_title": "Invite fellow nail techs",
+      "refer_subtitle": "Earn $10 for each friend who joins!",
+      "invite_now": "Invite Now"
     },
     "tips": {
       "activity": "Tip Activity",
@@ -81,9 +103,9 @@
       "tab_tipping": "Tip QR",
       "share_tip": "Share Tip QR",
       "copy_tip_link": "Copy Tip Link",
-      "business_title": "Business Staff QR",
+      "business_title": "Staff QR",
       "business_sub": "Dedicated QR for tips/reviews at this business",
-      "note": "Customers tip via the salon touchpoint (/touch/{businessSlug}/{touchPointSlug}) with ?staffProfileId= to pre-select you. sessionId is created on the customer's device when they open the link — never embed it in the QR.",
+      "note": "Per-business QR is stored by business_staff_link_id so it is never confused when you work at multiple businesses.",
       "no_linked_businesses": "No linked businesses yet. Scan a salon referral QR to join.",
       "no_linked_businesses_title": "No salon linked yet",
       "no_linked_businesses_body": "You need to link with a salon before you can receive tips via QR. Scan the salon's referral QR or ask the owner to invite you.",
@@ -95,9 +117,10 @@
       "pending_unlink_body": "Your link with {business} is being removed. The tipping QR is temporarily unavailable.",
       "qr_unavailable_title": "Tipping QR not available",
       "qr_unavailable_body": "Your tipping QR for {business} is not active yet. Please contact the salon owner or scan their referral QR to link.",
+      "touchpoint_missing_title": "Tipping link not ready",
+      "touchpoint_missing_body": "This salon has not finished setting up its touchpoint, so your personal tipping link is not available yet. Please contact {business} to complete setup.",
       "referral_unavailable_title": "Staff ID not ready",
-      "referral_unavailable_body": "Your personal referral QR will appear once your staff profile is fully set up. Please try again in a moment.",
-      "note": "Per-business QR is stored by business_staff_link_id so it is never confused when you work at multiple businesses."
+      "referral_unavailable_body": "Your personal referral QR will appear once your staff profile is fully set up. Please try again in a moment."
     },
     "profile": {
       "title": "Personal Account",
@@ -138,10 +161,16 @@
     }
   },
   "common": {
+    "coming_soon": "Coming soon",
+    "pagination_showing": "Showing",
+    "pagination_to": "to",
+    "pagination_of": "of",
+    "pagination_results": "results",
     "active": "Active",
     "inactive": "Inactive",
     "back": "Back",
     "next": "Next",
+    "previous": "Previous",
     "cancel": "Cancel",
     "confirm": "Confirm",
     "save": "Save",
@@ -195,6 +224,9 @@
     "gateway_sub": "Smart Tip & Google Review Filtration Gateway",
     "sso_integration_title": "VLINKPAY SSO Integration:",
     "sso_integration_desc": "You will use your registered VLINKPAY business account to log in quickly.",
+    "secure_access": "Secure Access",
+    "sign_in_title": "Sign in to NEXORA",
+    "forgot_password": "Forgot Password?",
     "email_label": "Email or username",
     "password_label": "Password",
     "email_placeholder": "owner@yourstore.com",
@@ -240,7 +272,7 @@
     "feedback_email": "Private Feedback Email (1-3★)",
     "title_step_2": "Step 2: Staff Management & QR Touchpoints",
     "desc_step_2": "Add your technicians. The system automatically generates corresponding QR codes to place at tables or share.",
-    "add_staff_title": "Add New Staff Member",
+    "add_staff_title": "Add New",
     "linked_wallets": "Linked Payment Wallets",
     "staff_fullname": "Full Name (Internal) *",
     "staff_fullname_placeholder": "e.g., Mia Tran",
@@ -285,6 +317,7 @@
     "chk_routing": "Google/Yelp Routing: Linked",
     "chk_staff": "Staff: {count} technicians with linked wallets",
     "chk_touchpoints": "Touch Points: {count} QR Stations generated",
+    "print_action": "Print",
     "launch_dashboard_btn": "Launch Dashboard",
     "errors": {
       "name_required": "Store name is required",
@@ -300,6 +333,7 @@
       "staff_name_required": "Full name is required",
       "staff_nickname_required": "Display name is required",
       "staff_email_invalid": "Invalid email address format.",
+      "staff_phone_invalid": "Invalid phone number.",
       "staff_payment_required": "Required: Must link at least 1 payment wallet (Venmo, Cash App, Zelle, or VLINKPAY).",
       "store_payment_required": "Required: Must link at least 1 payment wallet for the store (Venmo, Cash App, Zelle, or VLINKPAY).",
       "tp_name_required": "Touch point name is required",
@@ -349,6 +383,8 @@
       "plan_name": "Pro Plan",
       "no_plan": "No Plan yet",
       "renews_text": "Renews on Jun 20, 2024",
+      "renews_on": "Renews on {{date}}",
+      "trial_ends": "Trial ends {{date}}",
       "manage_plan": "Manage Plan"
     },
     "menu": {
@@ -383,6 +419,7 @@
       "avg_tip": "Average Tip",
       "total_reviews": "Total Reviews",
       "vs_last_week": "vs last week",
+      "no_comparison": "No prior period data",
       "scans": "QR/NFC Scans",
       "reviews": "Reviews",
       "avg_rating": "Average Star Rating",
@@ -392,6 +429,7 @@
     "review_kpi": {
       "google_reviews": "Google Reviews",
       "yelp_reviews": "Yelp Reviews",
+      "staff_reviews": "{name} Reviews",
       "response_rate": "Response Rate",
       "returning_customers": "Returning Customers",
       "great": "Great!",
@@ -401,7 +439,14 @@
       "internal_feedback": "Internal Feedback",
       "review_source": "Review Source",
       "star_rating": "Star Rating",
-      "all_stars": "All Stars"
+      "all_stars": "All Stars",
+      "response_rate_label": {
+        "excellent": "Excellent",
+        "good": "Good",
+        "fair": "Fair",
+        "needs_improvement": "Needs Improvement",
+        "poor": "Poor"
+      }
     },
     "chart": {
       "tips_over_time": "Tips Over Time",
@@ -453,18 +498,23 @@
       "all_touchpoints": "All Touch Points",
       "all_payments": "All Payment Methods",
       "all_statuses": "All Statuses",
+      "filter_staff_type": "Staff Type",
+      "all_staff_types": "All Types",
+      "multi_staff_only": "Multi-staff tips",
+      "single_staff_only": "Single-staff tips",
       "filter_search": "Search",
       "search_placeholder": "Search ID, staff, touchpoint...",
       "modal_title": "Transaction Details",
       "receipt_qr": "Receipt QR Code",
       "scan_to_view": "Scan to view details or customer receipt",
-      "staff_id": "Staff ID"
+      "staff_id": "Staff ID",
+      "staff_code": "Staff Code"
     },
     "modals": {
       "add_tp_title": "Add New Touch Point",
       "tp_name_label": "Touch Point Name (e.g. Manicure Chair 05)",
       "tp_name_placeholder": "e.g. Manicure Chair 05",
-      "device_id_label": "Hardware Serial / Device ID (Optional)",
+      "device_id_label": "Hardware Serial / NFC ID",
       "device_id_placeholder": "e.g. NFC-105, QR-Table-01",
       "tp_type_label": "Station Type",
       "add_btn": "Add Touch Point",
@@ -476,6 +526,7 @@
       "assign_staff": "Assign staff member:",
       "no_staff_assigned": "-- General QR (Store Pool Tips) --",
       "download_print_qr": "Download Print QR (PDF)",
+      "print_qr": "Print QR",
       "customer_view_test": "Simulate Customer Scan ›",
       "tp_name_placeholder": "e.g. Manicure Chair 05",
       "device_id_label": "Hardware Serial / NFC ID"
@@ -531,7 +582,9 @@
       },
       "open_link": "Test station flow",
       "empty_title": "No QR stations yet",
-      "empty_desc": "Create your first touchpoint to start receiving scans and tips."
+      "empty_desc": "Create your first touchpoint to start receiving scans and tips.",
+      "toggle_enabled": "Touchpoint activated successfully.",
+      "toggle_disabled": "Touchpoint deactivated successfully."
     },
     "devices": {
       "subtitle": "Manage physical salon stands, tabletop codes, and smart taps.",
@@ -564,13 +617,41 @@
       },
       "form": {
         "title": "Submit Support Ticket",
-        "subject_label": "Subject",
-        "subject_placeholder": "e.g., NFC Terminal not responding",
-        "description_label": "Describe Issue",
-        "description_placeholder": "Provide details about the issue you are experiencing...",
+        "full_name_label": "Full Name",
+        "full_name_placeholder": "Enter your full name",
+        "full_name_required": "Full name is required.",
+        "email_label": "Email",
+        "email_placeholder": "Enter your email address",
+        "email_required": "Email is required.",
+        "email_invalid": "Please enter a valid email address.",
+        "phone_label": "Phone Number",
+        "phone_placeholder": "Enter your phone number (optional)",
+        "support_type_label": "Support Type",
+        "support_type_placeholder": "Select a support type",
+        "support_type_required": "Please select a support type.",
+        "support_type_min_length": "Support type is required.",
+        "support_options": {
+          "payment": "Payment Gateway",
+          "pos": "Free POS System Info",
+          "website": "Business Website",
+          "marketing": "Marketing",
+          "other": "Other"
+        },
+        "message_label": "Message",
+        "message_placeholder": "Provide details about the issue you are experiencing...",
+        "message_required": "Please describe the issue.",
+        "message_min_length": "Message must be at least {min} characters.",
+        "message_max_length": "Message must be at most {max} characters.",
+        "message_helper": "Required · {min}–{max} characters",
+        "length_counter": "At least {min} characters required ({count}/{min})",
+        "length_counter_with_max": "{count}/{max} characters (min {min})",
+        "captcha_not_ready": "Security verification is loading. Please try again in a moment.",
+        "captcha_error": "Security verification failed. Please refresh the page and try again.",
         "submit_btn": "Submit Ticket",
+        "submitting_btn": "Submitting...",
         "success_msg": "Ticket submitted successfully! Our team will contact you shortly.",
-        "error_msg": "Please fill in all fields."
+        "error_msg": "Please fix the highlighted fields and try again.",
+        "submit_error_msg": "Could not submit your ticket. Please try again."
       },
       "faq": {
         "title": "Frequently Asked Questions",
@@ -677,6 +758,53 @@
       "charts_will_render": "Charts will render when live transaction data is available.",
       "pending_api_short": "Pending API...",
       "transactions_unavailable": "Transaction history is unavailable pending API endpoint."
+    },
+    "owner_home": {
+      "money_saved_title": "Money Saved This Month",
+      "money_saved_subtitle": "Estimated card processing fees avoided from direct tips.",
+      "view_savings": "View Savings",
+      "export_report": "Export Report",
+      "kpi_direct_tips": "Direct Tips",
+      "kpi_active_staff": "Active Staff",
+      "kpi_pending": "Pending",
+      "kpi_reviews": "Reviews",
+      "tips_count": "+{count} tips",
+      "no_tips_yet": "No tips yet",
+      "staff_active": "{count} active",
+      "need_action": "Need action",
+      "all_clear": "All clear",
+      "reviews_total": "{count} total",
+      "no_reviews_yet": "No reviews yet",
+      "quick_actions": "Quick Actions",
+      "manage": "Manage",
+      "quick_add_qr": "Add QR",
+      "quick_add_staff": "Add Staff",
+      "quick_tips": "Tips",
+      "quick_reports": "Reports",
+      "staff_status_title": "Staff Status",
+      "no_staff": "No staff yet",
+      "status_active": "Active",
+      "status_pending": "Pending",
+      "status_inactive": "Inactive",
+      "qr_performance_title": "QR Performance",
+      "no_qr": "No QR touch points yet",
+      "view": "View",
+      "touchpoint": "Touch point",
+      "savings_summary_title": "Savings Summary",
+      "details": "Details",
+      "this_month": "This Month",
+      "this_year": "This Year",
+      "fee_basis": "{tips} × 3%",
+      "estimated_saved": "Estimated saved",
+      "staff_member": "Staff member",
+      "via_link_request": "Link request",
+      "via_invite": "Invite sent",
+      "technician": "Technician",
+      "nav_home": "Home",
+      "nav_staff": "Staff",
+      "nav_tips": "Tips",
+      "nav_qr": "QR",
+      "nav_profile": "Profile"
     }
   },
   "staff_detail": {
@@ -721,8 +849,9 @@
   },
   "customer": {
     "header_subtitle": "Nexora Touch Secure Gate",
-    "select_staff_title": "Choose your service provider",
-    "select_staff_subtitle": "Select the staff who served you.",
+    "select_staff_title": "Who served you today?",
+    "select_staff_subtitle": "Select the staff member you'd like to tip.",
+    "inline_tip_label": "Tip amount",
     "search_staff_placeholder": "Search staff...",
     "no_staff_found": "No staff members found.",
     "step_form_title": "Add a Tip for {name}",
@@ -733,6 +862,7 @@
     "feedback_label": "Leave a comment (optional)",
     "feedback_placeholder": "Anna did an amazing job! I love my nails!",
     "pay_btn": "Next",
+    "tip_review_payment_title": "Review tip & choose payment",
     "payment_title": "How would you like to pay?",
     "payment_desc": "Choose your preferred payment method.",
     "payment_empty_title": "No payment methods available",
@@ -764,10 +894,15 @@
     "final_success_title": "Thank You!",
     "final_success_desc": "Help us grow by leaving a review on Google or Yelp.",
     "send_new_btn": "Send New Submission",
+    "back_home_btn": "Home",
     "tip_success_title": "Thank You!",
     "tip_success_prefix": "Your tip of ",
     "tip_success_sent": " has been sent to ",
     "tip_success_sub": "We appreciate you!",
+    "tips_summary_title": "Tip Sent!",
+    "tips_summary_via": "via",
+    "tips_summary_review_cta": "Leave a Review",
+    "tips_summary_skip": "Skip",
     "done": "Done",
     "invalid_tip": "Please enter a valid tip amount greater than 0.",
     "secure_footer": "Secure SSL Redirect Gateway",
@@ -927,6 +1062,8 @@
   "staff_invite": {
     "total_linked": "Total Staff Linked",
     "pending_invites": "Pending Invites",
+    "connected_label": "Connected",
+    "awaiting_label": "Awaiting confirmation",
     "setup_complete": "Payment Setup Complete",
     "self_setup": "Staff Self-Setup",
     "option_a_title": "Option A — Link Existing Staff ID",
@@ -972,9 +1109,16 @@
   },
   "errors": {
     "unknown_error": "An unknown error occurred. Please try again.",
+    "contact_request_message_min_length": "Your message is too short. Please enter at least {min} characters describing the issue.",
+    "contact_request_message_max_length": "Your message is too long. Please keep it under {max} characters.",
+    "contact_request_message_required": "Please describe the issue before submitting.",
+    "contact_request_support_type_min_length": "Please select a support type.",
+    "contact_request_support_type_required": "Support type is required.",
     "user_login_invalid_username_or_password": "Invalid username or password.",
     "user_account_inactive": "Your account is currently inactive. Please contact support.",
+    "user_account_incomplete": "Your account is incomplete. Please activate your account.",
     "user_email_already_exists": "This email address is already registered.",
+    "user_signup_failed": "Registration failed. Please check your information and try again.",
     "auth_passwords_do_not_match": "Passwords do not match.",
     "user_feature_signup_disabled": "Registration is currently disabled.",
     "user_invalid_email_verification_token": "The email verification token is invalid.",
@@ -982,6 +1126,8 @@
     "user_email_already_verified": "This email address has already been verified.",
     "user_not_found": "User account not found.",
     "user_password_reset_token_expired": "The password reset link has expired.",
+    "user_password_reset_token_required": "The password reset link is invalid. Please request a new reset link.",
+    "user_failed_to_reset_password": "Unable to reset password. The link may be invalid, expired, or already used. Please request a new reset link.",
     "user_invalid_refresh_token": "Session expired. Please sign in again.",
     "auth_user_not_authenticated": "You must be logged in to access this resource.",
     "business_already_exists": "A business setup already exists for this account.",
@@ -1106,6 +1252,7 @@
           "resendInviteSuccess": "Setup link successfully resent to {name}!",
           "resendInviteFailed": "Resend failed: {error}",
           "joinAccepted": "Accepted technician {name} to salon!",
+          "joinDeclined": "Declined join request from {name}.",
           "acceptFailed": "Accept failed: {error}",
           "declineJoinConfirm": "Are you sure you want to decline join request from {name}?",
           "declineFailed": "Decline failed: {error}",
@@ -1223,16 +1370,26 @@
           "review_count": "{count} reviews"
         },
         "TransactionDetailModal": {
-          "tippingQrCode": "TIPPING QR CODE",
-          "scanToTipThis": "Scan to tip this staff member",
-          "tippingLinkCopiedTo": "Tipping link copied to clipboard!",
-          "shareLink": "Share Link"
+          "tippingQrCode": "TOUCH POINT QR",
+          "scanToTipTouchPoint": "Scan to tip and review at this touch point",
+          "tippingLinkCopiedTo": "Touch point link copied to clipboard!",
+          "shareLink": "Share Link",
+          "staffBreakdown": "Staff breakdown",
+          "recipients": "{count} recipients",
+          "multiStaffTip": "Multi-staff tip transaction",
+          "singleStaffTip": "Single-staff tip transaction"
         }
       },
       "overview": {
         "Overview": {
           "custom": "Custom",
-          "copiedNfcRedirectLink": "Copied NFC redirect link to clipboard!"
+          "copiedNfcRedirectLink": "Copied NFC redirect link to clipboard!",
+          "qr_download_failed": "Could not download QR code. Please try again.",
+          "gateway_empty_title": "No touchpoints configured",
+          "gateway_empty_desc": "Create a touchpoint to generate your Master QR and NFC gateway.",
+          "gateway_empty_action": "Add Touchpoint",
+          "reviews_empty_title": "No review data yet",
+          "reviews_empty_desc": "Review metrics will appear once customers start leaving feedback."
         },
         "SetupGuideBanner": {
           "gettingStarted": "Getting Started",
@@ -1243,7 +1400,14 @@
         "TipsOverTimePanel": {
           "custom": "Custom",
           "from": "From:",
-          "to": "To:"
+          "to": "To:",
+          "empty_title": "No tips in this period",
+          "empty_desc": "Tips will appear here once customers start tipping through your touchpoints."
+        },
+        "StaffLeaderboardPanel": {
+          "empty_title": "No staff rankings yet",
+          "empty_desc": "Add staff members to see performance rankings on your leaderboard.",
+          "empty_action": "Manage Staff"
         }
       },
       "views": {
@@ -1289,6 +1453,7 @@
           "pendingAcceptance": "Pending Acceptance",
           "pendingUnlink": "Pending Unlink",
           "accept": "Accept",
+          "approve": "Approve",
           "approveUnlink": "Approve Unlink",
           "reject": "Reject",
           "joinQrCode": "JOIN QR CODE",
@@ -1303,13 +1468,14 @@
     "register": {
       "hooks": {
         "useRegisterForm": {
-          "invalidOtpTryAgain": "Invalid OTP. Try again with 1234.",
+          "invalidOtpTryAgain": "Invalid verification code. Please check and try again.",
+          "invalidCodeTipEnter": "Invalid verification code. Please check and try again.",
           "thisFieldIsRequired": "This field is required.",
           "newJoinRequest": "New Join Request",
           "justNow": "Just now",
           "accountType": "Account Type",
           "credentials": "Credentials",
-          "activateOtp": "Activate OTP",
+          "activateOtp": "Activate Account",
           "profileSetup": "Profile Setup",
           "payoutSetup": "Payout Setup",
           "success": "Success"
@@ -1341,6 +1507,7 @@
         "StepCredentials": {
           "activateAccountEnterOtp": "Activate Account (Enter OTP)",
           "enterTheOtpCode": "Enter the OTP code sent to your email to activate your account.",
+          "otpSentToEmail": "OTP sent to email",
           "enterOtpCode": "Enter OTP Code *",
           "resendVerificationCode": "Resend Verification Code",
           "verifyAndActivate": "Verify & Activate",
@@ -1351,9 +1518,11 @@
         "StepOtpVerify": {
           "activateAccountEnterOtp": "Activate Account (Enter OTP)",
           "enterTheOtpCode": "Enter the OTP code sent to your email to activate your account.",
+          "otpSentToEmail": "OTP sent to email",
           "enterOtpCode": "Enter OTP Code *",
           "resendVerificationCode": "Resend Verification Code",
           "verifyAndActivate": "Verify & Activate",
+          "processing": "Processing...",
           "phExampleOtp": "e.g. 1234"
         },
         "StepPayoutSetup": {
@@ -1915,7 +2084,9 @@
       "newPassword": "New Password",
       "confirmPassword": "Confirm Password",
       "resetPassword": "Reset Password",
-      "backToSignIn": "Back to Sign In"
+      "backToSignIn": "Back to Sign In",
+      "token_required": "Reset token is required.",
+      "requestNewLink": "Request a new reset link"
     },
     "TouchpointsView": {
       "phExampleDeviceIds": "e.g. NFC-105, QR-Table-01",
@@ -1940,6 +2111,61 @@
       "incorrect_password": "Incorrect password.",
       "business_account_not_allowed": "Only personal accounts can accept salon invitations. Please sign in with a personal account.",
       "onboarding_required": "Please complete your profile setup before joining this salon."
+    }
+  },
+  "manage_plan": {
+    "eyebrow": "Transparent Value Layouts",
+    "title": "Find the Perfect Alignment for Your Team",
+    "subtitle": "Launch immediately with zero-cost Smart QR checkout cards and automated reviews, then scale to full co-op channels.",
+    "current_plan": "Current Plan",
+    "plans": {
+      "lite": {
+        "name": "Lite Pack (Free)",
+        "badge": "Free",
+        "tagline": "For salons with 5 staff or fewer. Requires KYB validation.",
+        "price": "$0",
+        "price_note": "/ mo",
+        "cta": "Sign Up Free (KYB Required)",
+        "f1": "Up to 5 active specialists",
+        "f2": "Mandatory KYB Verification",
+        "f3": "Basic tabletop Smart QR",
+        "f4": "Direct peer-to-peer tip routing"
+      },
+      "starter": {
+        "name": "Starter Pack",
+        "tagline": "Perfect for micro booths & independent practitioners",
+        "price": "$29",
+        "price_note": "/ mo",
+        "cta": "Get Started Now",
+        "f1": "Branded tabletop QR placements",
+        "f2": "Instant peer tip direct routing",
+        "f3": "Google review automated channels",
+        "f4": "Basic monthly transactional reviews"
+      },
+      "pro": {
+        "name": "Professional Pro",
+        "badge": "Recommended For Salons",
+        "tagline": "Brilliant choice for growing teams & local boutique hubs",
+        "price": "$79",
+        "price_note": "/ mo",
+        "cta": "Select Pro Tier",
+        "f1": "Includes every Starter plan feature",
+        "f2": "Custom technician roster logins",
+        "f3": "Automatic direct tip processing pipelines",
+        "f4": "Adjustable B2B rewards rules panel",
+        "f5": "Client profile classification tool"
+      },
+      "enterprise": {
+        "name": "Enterprise Group",
+        "tagline": "Tailored for prominent multi-location boutique franchises",
+        "price": "Custom Scale",
+        "price_note": "/ tailored quote",
+        "cta": "Contact Success Sales",
+        "f1": "Full multi-location organizational dashboards",
+        "f2": "Direct API checkout point-of-sale syncs",
+        "f3": "Premium solid brass NFC station plaques",
+        "f4": "24/7 dedicated enterprise success managers"
+      }
     }
   },
   "coming_soon": {

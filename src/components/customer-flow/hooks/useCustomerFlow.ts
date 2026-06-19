@@ -446,31 +446,6 @@ export default function useCustomerFlow() {
   }
 
   /**
-   * Validates tip amounts and navigates to payment step.
-   * @param {Event} e - Form submit event.
-   */
-  const handleNextToPayment = (e) => {
-    e.preventDefault()
-    const MIN_TIP = 1, MAX_TIP = 500
-    let total = 0
-    for (const member of selectedStaffMembers) {
-      const selTip = selectedTips[member.id] !== undefined ? selectedTips[member.id] : 15
-      const amount = selTip === 'custom' ? Number(customTips[member.id]) : selTip
-      if (isNaN(amount) || amount < MIN_TIP) {
-        showToast(t('customer.tip_min_error', { amount: `$${MIN_TIP.toFixed(2)}` }), 'error'); return
-      }
-      if (amount > MAX_TIP) {
-        showToast(t('customer.tip_max_error', { amount: `$${MAX_TIP.toFixed(2)}` }), 'error'); return
-      }
-      total += amount
-    }
-    if (total > MAX_TIP) {
-      showToast(t('customer.tip_total_max_error', { amount: `$${MAX_TIP.toFixed(2)}` }), 'error'); return
-    }
-    setStep('payment')
-  }
-
-  /**
    * Handles wallet selection and initiates tip payment.
    * Single staff → POST /api/v1/touch/tip
    * Multi staff  → POST /api/v1/tips/multi-staff
@@ -487,12 +462,12 @@ export default function useCustomerFlow() {
         const touchPointId = touchPageData?.touchPoint?.id
         if (!touchPointId) {
           showToast(t('customer.multi_staff_missing_touchpoint'), 'error')
-          setStep('payment')
+          setStep('tip_amount')
           return
         }
         if (!businessId) {
           showToast(t('customer.multi_staff_missing_business'), 'error')
-          setStep('payment')
+          setStep('tip_amount')
           return
         }
 
@@ -502,7 +477,7 @@ export default function useCustomerFlow() {
         )
         if (!businessPaymentMethodId) {
           showToast(t('customer.multi_staff_missing_payment_method'), 'error')
-          setStep('payment')
+          setStep('tip_amount')
           return
         }
 
@@ -544,7 +519,7 @@ export default function useCustomerFlow() {
     } catch (err) {
       logger.error('Failed to create tip', err)
       showToast(getApiErrorMessage(err, t('errors.generic')), 'error')
-      setStep('payment')
+      setStep('tip_amount')
     }
   }
 
@@ -608,15 +583,6 @@ export default function useCustomerFlow() {
     setStep('final_done')
   }
 
-  const handleReset = () => {
-    setSelectedStaffMembers([])
-    setStep('select_staff')
-    setSelectedTips({})
-    setCustomTips({}); setRating(5); setComment(''); setSelectedTags([])
-    setSelectedWallet(''); setSelectedWalletObj(null); setTipRefNumber('')
-    setCurrentTipId(null); setCurrentReviewId(null); setPaymentLinkData(null)
-  }
-
   // To preserve backwards compatibility with tests and consumers, we export 'isApiMode' as true
   return {
     currentLanguage, setLanguage, t, showToast,
@@ -632,9 +598,9 @@ export default function useCustomerFlow() {
     selectedTags, setSelectedTags, selectedWallet, setSelectedWallet,
     isProcessing, setIsProcessing, selectedWalletObj, setSelectedWalletObj,
     tipRefNumber, setTipRefNumber, currentTipId, currentReviewId,
-    handleTagToggle, handleRatingChange, handleToggleStaff, handleNextToPayment,
+    handleTagToggle, handleRatingChange, handleToggleStaff,
     handlePay, handleConfirmTip, handleSkipTip, handleSubmitFeedback,
-    handleTrackExternalReview, handleReset, paymentLinkData,
+    handleTrackExternalReview, paymentLinkData,
     scannedTouchpoint: null,
   }
 }

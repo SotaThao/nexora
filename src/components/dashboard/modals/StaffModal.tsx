@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { X, Upload, Eye, AlertTriangle, QrCode, Loader2, CheckCircle2, XCircle, Star, HelpCircle } from 'lucide-react'
 import IconButton from '../../ui/IconButton'
-import { parsePhone } from '../../CountryCodeSelect'
+import ImageFileInput from '../../ui/ImageFileInput'
+import CountryCodeSelect, { parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
 import { WalletLogos, DEFAULT_PAYOUT_CONFIGS } from '../constants'
 import { useTranslation, renderLabel } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -134,15 +135,9 @@ function StaffModal({
 
   const phoneParsed = parsePhone(form?.phone || '')
 
-  const handleAvatarChange = (event) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    const reader = new FileReader()
-    reader.onload = () => {
-      setForm({ ...form, avatar: reader.result })
-    }
-    reader.readAsDataURL(file)
+  const handleAvatarPick = (dataUrl) => {
+    if (!dataUrl) return
+    setForm({ ...form, avatar: dataUrl })
   }
 
   const handleToggleWallet = (walletKey) => {
@@ -373,10 +368,14 @@ function StaffModal({
                   )}
                 </div>
                 <div className="flex flex-wrap gap-2 items-center">
-                  <label className="inline-flex h-9 cursor-not-allowed opacity-50 items-center gap-2 rounded-lg border border-nexoraBorder px-3 text-xs font-bold text-nexoraText bg-nexoraCanvas">
+                  <ImageFileInput
+                    as="label"
+                    className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-nexoraBorder px-3 text-xs font-bold text-nexoraText transition hover:bg-nexoraCanvas"
+                    onPick={handleAvatarPick}
+                  >
                     <Upload className="h-4 w-4 text-nexoraBrand" />
                     Upload photo
-                  </label>
+                  </ImageFileInput>
                   {(form.nexoraStaffId || form.id) && (
                     <button
                       type="button"
@@ -441,24 +440,22 @@ function StaffModal({
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_phone')}</label>
-                <div className="mt-1 flex h-10 overflow-hidden rounded-lg bg-nexoraCanvas opacity-70 pointer-events-none">
-                  <div className="flex h-full w-14 shrink-0 items-center justify-center border-r border-nexoraRule text-sm font-semibold text-nexoraText">
-                    {phoneParsed.countryCode}
-                  </div>
+              <div className="min-w-0">
+                <label className="flex h-4 items-center text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_phone')}</label>
+                <div className="mt-1 flex h-10 w-full overflow-hidden rounded-lg shadow-sm opacity-70 pointer-events-none">
+                  <CountryCodeSelect value={phoneParsed.countryCode} onChange={() => {}} disabled />
                   <input
-                    className="h-full w-full min-w-0 border-transparent bg-transparent px-3 text-right text-sm font-semibold text-nexoraText outline-none"
-                    value={phoneParsed.nationalNumber}
+                    className="h-10 w-full min-w-0 rounded-r-lg border border-l-0 border-nexoraBorder bg-nexoraCanvas px-3 text-sm font-semibold text-nexoraText outline-none"
+                    value={formatNationalNumber(phoneParsed.nationalNumber, phoneParsed.countryCode)}
                     readOnly
                     placeholder={t('setup.staff_phone_placeholder')}
                   />
                 </div>
                 {errors.phone && <p className="mt-1 text-[10px] font-bold text-nexoraDanger">{errors.phone}</p>}
               </div>
-              <div>
-                <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_email')}</label>
-                <input className="mt-1 h-10 w-full rounded-lg border border-transparent bg-nexoraCanvas px-3 text-sm font-semibold text-nexoraText outline-none cursor-not-allowed" value={form.email || ''} readOnly placeholder={t('setup.staff_email_placeholder')} />
+              <div className="min-w-0">
+                <label className="flex h-4 items-center text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_email')}</label>
+                <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas px-3 text-sm font-semibold text-nexoraText outline-none cursor-not-allowed" value={form.email || ''} readOnly placeholder={t('setup.staff_email_placeholder')} />
                 {errors.email && <p className="mt-1 text-[10px] font-bold text-nexoraDanger">{errors.email}</p>}
               </div>
             </div>

@@ -3,6 +3,7 @@ import {
   Building2, Upload, MapPin, Globe, ShieldCheck, HelpCircle
 } from 'lucide-react'
 import CustomSelect from '../../CustomSelect'
+import ImageFileInput from '../../ui/ImageFileInput'
 import CountryCodeSelect, { formatNationalNumber, parsePhone } from '../../CountryCodeSelect'
 import { renderTextWithGoldStars } from '../constants'
 import { renderLabel } from '../../../contexts/LanguageContext'
@@ -18,7 +19,7 @@ export default function Step1BusinessInfo({
   setReviewLinks,
   errors,
   setErrors,
-  handleLogoChange
+  handleLogoFile
 }) {
   const phoneParsed = useMemo(() => parsePhone(businessInfo.phone), [businessInfo.phone])
 
@@ -43,25 +44,35 @@ export default function Step1BusinessInfo({
             <span className="text-[10px] text-red-500 font-bold bg-red-50 px-1.5 py-0.5 rounded">{t('setup.required_badge')}</span>
           </div>
 
-          {/* Logo uploader compact row */}
+          {/* Logo uploader */}
           <div>
             <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">{renderLabel(t('setup.store_logo'))}</label>
             <div className="flex items-center gap-3">
-              <div className={`w-12 h-12 rounded-xl border border-dashed border-nexoraBorder bg-nexoraCanvas flex items-center justify-center p-1 relative group shadow-sm ${isSsoLocked ? 'bg-slate-100 cursor-not-allowed border-slate-200' : 'cursor-pointer hover:border-nexoraBrand transition'}`}>
-                {businessInfo.logo ? (
-                  <img src={businessInfo.logo} alt="Store logo" className="w-full h-full object-contain rounded-lg" />
-                ) : (
-                  <Upload className="w-4 h-4 text-nexoraSubtle" />
-                )}
-                {!isSsoLocked && (
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                    onChange={handleLogoChange}
-                  />
-                )}
-              </div>
+              {!isSsoLocked ? (
+                <ImageFileInput
+                  as="label"
+                  className="flex h-12 w-12 cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-dashed border-nexoraBorder bg-nexoraCanvas p-1 shadow-sm transition hover:border-nexoraBrand"
+                  onPick={(dataUrl) => {
+                    setBusinessInfo({ ...businessInfo, logo: dataUrl })
+                    if (errors.logo) setErrors({ ...errors, logo: '' })
+                  }}
+                  onPickFile={handleLogoFile}
+                >
+                  {businessInfo.logo ? (
+                    <img src={businessInfo.logo} alt="Store logo" className="h-full w-full rounded-lg object-contain" />
+                  ) : (
+                    <Upload className="h-4 w-4 text-nexoraSubtle" />
+                  )}
+                </ImageFileInput>
+              ) : (
+                <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl border border-dashed border-slate-200 bg-slate-100 p-1 shadow-sm">
+                  {businessInfo.logo ? (
+                    <img src={businessInfo.logo} alt="Store logo" className="h-full w-full rounded-lg object-contain" />
+                  ) : (
+                    <Upload className="h-4 w-4 text-nexoraSubtle" />
+                  )}
+                </div>
+              )}
               <span className="text-[10px] text-nexoraSubtle">{t('setup.logo_hint')}</span>
             </div>
             {errors.logo && <span className="text-xs text-red-500 mt-1 block">{errors.logo}</span>}
@@ -185,14 +196,16 @@ export default function Step1BusinessInfo({
                   type="url"
                   disabled={isSsoLocked}
                   placeholder={t('components.setup_wizard.steps.Step1BusinessInfo.phWebsite')}
-                  className={`w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white ${isSsoLocked ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : ''} rounded-lg pl-11 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
+                  className={`w-full bg-nexoraCanvas border ${errors.website ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} ${isSsoLocked ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : ''} rounded-lg pl-11 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
                   value={businessInfo.website}
                   onChange={(e) => {
                     if (isSsoLocked) return
                     setBusinessInfo({ ...businessInfo, website: e.target.value })
+                    if (errors.website) setErrors({ ...errors, website: '' })
                   }}
                 />
               </div>
+              {errors.website && <span className="text-xs text-red-500 mt-1 block">{errors.website}</span>}
             </div>
           </div>
 

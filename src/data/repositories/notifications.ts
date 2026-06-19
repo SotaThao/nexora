@@ -36,8 +36,10 @@ interface UnreadCountResponse {
 const STAFF_NOTIFICATION_TYPES = new Set([
   'staff_accepted_invite',
   'staffacceptedinvite',
+  'staffinviteaccepted',
   'stafflinkrequest',
   'staff_link_request',
+  'staffpublicjoinrequest',
   'staff_joined',
   'staffjoined',
 ])
@@ -61,16 +63,22 @@ const TYPE_TO_LINK_TAB: Record<string, string> = {
  */
 function extractStaffIdFromUrl(url: string | null | undefined): string | null {
   if (!url) return null
+  const requestMatch = url.match(/\/merchant\/staff\/requests\/([^/?#]+)/i)
+  if (requestMatch?.[1]) return requestMatch[1]
   const match = url.match(/\/(?:merchant\/)?staff(?:\/links)?\/([^/?#]+)/i)
   return match?.[1] || null
 }
 
+function normalizeNotificationType(type: string): string {
+  return type.toLowerCase().replace(/[\s_-]+/g, '')
+}
+
 function normalizeNotification(item: NotificationApiDto): NotificationRecord {
   const isRead = Boolean(item.isRead ?? item.read)
-  const message = item.message ?? item.body ?? ''
+  const body = item.body ?? item.message ?? ''
   const createdAt = item.createdAt ?? ''
   const type = item.type || 'info'
-  const typeLower = type.toLowerCase()
+  const typeLower = normalizeNotificationType(type)
 
   // Derive linkTab and staffId for navigation on click
   let linkTab: string | undefined
@@ -85,6 +93,7 @@ function normalizeNotification(item: NotificationApiDto): NotificationRecord {
     // Fallback: try to derive linkTab from actionUrl path
     const urlMatch = item.actionUrl.match(/\/dashboard\/([^/?#]+)/i)
     if (urlMatch) linkTab = urlMatch[1]
+    if (item.actionUrl.includes('/merchant/staff')) linkTab = 'staff'
   }
 
   return {
@@ -107,20 +116,23 @@ function normalizeNotificationsPage(
   pageNumber: number,
 ): NotificationsPage {
   if (Array.isArray(response)) {
+    const items = response.map(normalizeNotification)
     return {
-      items: response.map(normalizeNotification),
+      items,
       pageNumber,
       totalPages: 1,
-      totalCount: response.length,
+      totalCount: items.length,
       hasPreviousPage: false,
       hasNextPage: false,
     }
   }
+
+  const items = (response.items ?? []).map(normalizeNotification)
   return {
-    items: (response.items ?? []).map(normalizeNotification),
+    items,
     pageNumber: response.pageNumber ?? pageNumber,
     totalPages: response.totalPages ?? 1,
-    totalCount: response.totalCount ?? 0,
+    totalCount: response.totalCount ?? items.length,
     hasPreviousPage: response.hasPreviousPage ?? false,
     hasNextPage: response.hasNextPage ?? false,
   }
