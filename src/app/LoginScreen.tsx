@@ -44,8 +44,6 @@ export default function LoginScreen() {
     const newFieldErrorKeys: { email?: string; password?: string } = {}
     if (!email.trim()) {
       newFieldErrorKeys.email = 'register.errors.email_required'
-    } else if (!/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email.trim())) {
-      newFieldErrorKeys.email = 'register.errors.email_invalid'
     }
     if (!password) {
       newFieldErrorKeys.password = 'register.errors.password_required'
@@ -177,7 +175,7 @@ export default function LoginScreen() {
                   <div className="relative">
                     <Mail className="absolute left-3 top-3 w-4 h-4 text-nexoraSubtle" />
                     <input
-                      type="email"
+                      type="text"
                       placeholder={t('login.email_placeholder')}
                       className={`w-full bg-nexoraCanvas border ${fieldErrorKeys.email ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} rounded-lg pl-10 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all`}
                       value={email}

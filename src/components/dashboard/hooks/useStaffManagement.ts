@@ -4,7 +4,6 @@
 import { useState } from 'react'
 import { DEFAULT_PAYOUT_CONFIGS } from '../constants'
 import { getPayoutConfigsFromMember } from '../utils'
-import { isPhoneValid } from '../../CountryCodeSelect'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import {
@@ -20,6 +19,7 @@ import {
 import { EMPTY_STAFF_FORM, type StaffFormState } from '../../../types/forms'
 import { getApiErrorCode } from '../../../types/domain'
 import { getErrorI18nKey } from '../../../data/errorCodes'
+import { isValidEmail, isValidPhone } from '../../../utils/validation'
 
 /**
  * Normalise a raw staff-list member into the shape the dashboard uses.
@@ -195,10 +195,10 @@ export function useStaffManagement({
   const saveStaff = () => {
     const nextErrors: LooseObject = {}
     if (!staffForm.fullName.trim()) nextErrors.fullName = t('components.dashboard.hooks.useStaffManagement.fullNameRequired')
-    if (staffForm.email?.trim() && !/\S+@\S+\.\S+/.test(staffForm.email.trim())) {
+    if (staffForm.email?.trim() && !isValidEmail(staffForm.email)) {
       nextErrors.email = t('setup.errors.staff_email_invalid')
     }
-    if (staffForm.phone?.trim() && !isPhoneValid(staffForm.phone.trim())) {
+    if (staffForm.phone?.trim() && !isValidPhone(staffForm.phone)) {
       nextErrors.phone = t('setup.errors.staff_phone_invalid')
     }
     if (Object.keys(nextErrors).length) {
@@ -221,10 +221,10 @@ export function useStaffManagement({
     if (!formDetails.email.trim() && !formDetails.phone.trim()) {
       nextErrors.email = t('components.dashboard.hooks.useStaffManagement.phoneOrEmailRequired')
     } else {
-      if (formDetails.email?.trim() && !/\S+@\S+\.\S+/.test(formDetails.email.trim())) {
+      if (formDetails.email?.trim() && !isValidEmail(formDetails.email)) {
         nextErrors.email = t('setup.errors.staff_email_invalid')
       }
-      if (formDetails.phone?.trim() && !isPhoneValid(formDetails.phone.trim())) {
+      if (formDetails.phone?.trim() && !isValidPhone(formDetails.phone)) {
         nextErrors.phone = t('setup.errors.staff_phone_invalid')
       }
     }

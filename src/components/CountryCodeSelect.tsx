@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { ChevronDown, Search } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
+import { isValidPhone } from '../utils/validation'
 
 export const COUNTRY_CODES = [
   { name: 'United States', code: 'US', dialCode: '+1', flag: '🇺🇸' },
@@ -25,7 +26,7 @@ export const COUNTRY_CODES = [
   { name: 'Indonesia', code: 'ID', dialCode: '+62', flag: '🇮🇩' },
 ]
 
-import { AsYouType, isValidPhoneNumber } from 'libphonenumber-js'
+import { AsYouType } from 'libphonenumber-js'
 
 export const parsePhone = (phoneStr) => {
   if (!phoneStr) return { countryCode: '+1', nationalNumber: '' }
@@ -87,19 +88,7 @@ export const formatNationalNumber = (nationalNumber, dialCode) => {
   return formatter.input(digits)
 }
 
-export const isPhoneValid = (phoneStr) => {
-  if (!phoneStr) return false
-
-  // Custom requirement: always accept if it has at least 10 digits
-  const digits = phoneStr.replace(/\D/g, '')
-  if (digits.length >= 10) return true
-
-  try {
-    return isValidPhoneNumber(phoneStr)
-  } catch (e) {
-    return false
-  }
-}
+export const isPhoneValid = isValidPhone
 
 export default function CountryCodeSelect({
   value,
