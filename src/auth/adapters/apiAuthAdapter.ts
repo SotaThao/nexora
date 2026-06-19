@@ -9,6 +9,7 @@ import type {
   AuthTokens,
   LoginCredentials,
   SignupCredentials,
+  SignupResponse,
 } from '../../types/auth'
 import type { StaffProfile, UserProfile } from '../../types/domain'
 import { isApiError } from '../../types/domain'
@@ -285,10 +286,10 @@ export const apiAuthAdapter = {
     clearAuthQueryCache()
   },
 
-  async signup(credentials: SignupCredentials): Promise<unknown> {
+  async signup(credentials: SignupCredentials): Promise<SignupResponse | null> {
     const { email, confirmEmail, password, confirmPassword, firstName, lastName, type, profileType } =
       credentials
-    return httpClient.post(
+    return httpClient.post<SignupResponse>(
       '/api/v1/authentication/signup',
       { email, confirmEmail, password, confirmPassword, firstName, lastName, type: type || profileType },
       { anonymous: true },

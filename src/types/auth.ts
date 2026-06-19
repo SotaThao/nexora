@@ -43,6 +43,25 @@ export interface SignupCredentials {
   profileType?: string
 }
 
+export interface SignupResponse {
+  isSuccess?: boolean
+  email?: string
+  userId?: string
+  message?: string
+  errorCode?: string | null
+  otp?: string | number
+  otpCode?: string | number
+  verificationCode?: string | number
+  verificationOtp?: string | number
+  verificationToken?: string | number
+  emailVerificationToken?: string | number
+  token?: string | number
+  data?: Record<string, unknown>
+  result?: Record<string, unknown>
+  payload?: Record<string, unknown>
+  [key: string]: unknown
+}
+
 export interface LoginCredentials {
   email: string
   password: string

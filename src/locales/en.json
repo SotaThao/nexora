@@ -11,7 +11,7 @@
       "my_qr": "Link & Tip",
       "tips": "Tips",
       "reviews": "Reviews",
-      "pay": "Pay",
+      "pay": "Payout Setup",
       "profile": "Profile",
       "profile_account": "Setting",
       "profile_kyc": "KYC",
@@ -849,6 +849,7 @@
     "header_subtitle": "Nexora Touch Secure Gate",
     "select_staff_title": "Who served you today?",
     "select_staff_subtitle": "Select the staff member you'd like to tip.",
+    "inline_tip_label": "Tip amount",
     "search_staff_placeholder": "Search staff...",
     "no_staff_found": "No staff members found.",
     "step_form_title": "Add a Tip for {name}",
@@ -859,6 +860,7 @@
     "feedback_label": "Leave a comment (optional)",
     "feedback_placeholder": "Anna did an amazing job! I love my nails!",
     "pay_btn": "Next",
+    "tip_review_payment_title": "Review tip & choose payment",
     "payment_title": "How would you like to pay?",
     "payment_desc": "Choose your preferred payment method.",
     "payment_empty_title": "No payment methods available",
@@ -894,6 +896,10 @@
     "tip_success_prefix": "Your tip of ",
     "tip_success_sent": " has been sent to ",
     "tip_success_sub": "We appreciate you!",
+    "tips_summary_title": "Tip Sent!",
+    "tips_summary_via": "via",
+    "tips_summary_review_cta": "Leave a Review",
+    "tips_summary_skip": "Skip",
     "done": "Done",
     "invalid_tip": "Please enter a valid tip amount greater than 0.",
     "secure_footer": "Secure SSL Redirect Gateway",
@@ -1455,13 +1461,14 @@
     "register": {
       "hooks": {
         "useRegisterForm": {
-          "invalidOtpTryAgain": "Invalid OTP. Try again with 1234.",
+          "invalidOtpTryAgain": "Invalid verification code. Please check and try again.",
+          "invalidCodeTipEnter": "Invalid verification code. Please check and try again.",
           "thisFieldIsRequired": "This field is required.",
           "newJoinRequest": "New Join Request",
           "justNow": "Just now",
           "accountType": "Account Type",
           "credentials": "Credentials",
-          "activateOtp": "Activate OTP",
+          "activateOtp": "Activate Account",
           "profileSetup": "Profile Setup",
           "payoutSetup": "Payout Setup",
           "success": "Success"
@@ -1493,6 +1500,7 @@
         "StepCredentials": {
           "activateAccountEnterOtp": "Activate Account (Enter OTP)",
           "enterTheOtpCode": "Enter the OTP code sent to your email to activate your account.",
+          "otpSentToEmail": "OTP sent to email",
           "enterOtpCode": "Enter OTP Code *",
           "resendVerificationCode": "Resend Verification Code",
           "verifyAndActivate": "Verify & Activate",
@@ -1503,9 +1511,11 @@
         "StepOtpVerify": {
           "activateAccountEnterOtp": "Activate Account (Enter OTP)",
           "enterTheOtpCode": "Enter the OTP code sent to your email to activate your account.",
+          "otpSentToEmail": "OTP sent to email",
           "enterOtpCode": "Enter OTP Code *",
           "resendVerificationCode": "Resend Verification Code",
           "verifyAndActivate": "Verify & Activate",
+          "processing": "Processing...",
           "phExampleOtp": "e.g. 1234"
         },
         "StepPayoutSetup": {
