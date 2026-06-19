@@ -847,8 +847,8 @@
   },
   "customer": {
     "header_subtitle": "Cổng Kết Nối Thanh Toán An Toàn Nexora",
-    "select_staff_title": "Chọn người phục vụ bạn",
-    "select_staff_subtitle": "Chọn nhân viên đã phục vụ bạn.",
+    "select_staff_title": "Ai đã phục vụ bạn hôm nay?",
+    "select_staff_subtitle": "Chọn nhân viên bạn muốn gửi tips.",
     "search_staff_placeholder": "Tìm nhân viên...",
     "no_staff_found": "Không tìm thấy nhân viên.",
     "step_form_title": "Thêm Tiền Típ cho {name}",
