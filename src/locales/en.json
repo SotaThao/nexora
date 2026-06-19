@@ -45,6 +45,7 @@
       "tips_count": "{count} tips",
       "tips_plus": "+ {count} tips",
       "awaiting_confirm": "{count} awaiting confirmation",
+      "all_clear": "All clear!",
       "need_confirm": "Need confirm",
       "pending_confirmations": "Pending Confirmations",
       "no_pending": "No pending confirmations.",

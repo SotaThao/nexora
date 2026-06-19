@@ -11,7 +11,6 @@ import {
   Gift,
   CreditCard,
   MessageSquare,
-  ChevronRight,
   CheckCircle2,
   Wallet,
 } from 'lucide-react'
@@ -19,6 +18,7 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import { useConfirmStaffTipsReceipt } from '../../../data/hooks/useStaffSelf'
 import { useStaffHomeData } from '../hooks/useStaffHomeData'
+import MobileKpiCard, { MOBILE_KPI_GRID_CLASS } from '../../ui/MobileKpiCard'
 import { SkeletonLayout } from '../../ui/skeleton'
 import { STAFF_HOME_SKELETON } from '../skeletons/staffDashboardSkeletons'
 
@@ -27,46 +27,16 @@ function formatTipAmount(amount) {
 }
 
 function renderStars(rating) {
+  const filled = Math.round(Number(rating) || 0)
   return (
-    <div className="flex gap-0.5">
+    <div className="flex items-center gap-0.5">
       {[1, 2, 3, 4, 5].map((i) => (
         <Star
           key={i}
-          className={`h-3.5 w-3.5 ${i <= Math.round(rating) ? 'fill-amber-400 text-amber-400' : 'text-amber-200'}`}
+          className={`h-3.5 w-3.5 ${i <= filled ? 'fill-[#fbbf24] text-[#fbbf24]' : 'text-[#fde68a]'}`}
         />
       ))}
     </div>
-  )
-}
-
-/* ─── KPI Card (icon + label + chevron, big value, trend) ─────────────────── */
-function KpiCard({ icon, iconBg, label, value, trend = null, trendColor = 'text-nexoraSuccess', onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="rounded-3xl border border-nexoraBorder bg-white p-4 text-left shadow-nexora-card transition-all duration-200 hover:shadow-premium hover:-translate-y-0.5 focus:outline-none active:scale-[0.98]"
-    >
-      <div className="flex items-center justify-between">
-        <span className={`flex h-11 w-11 items-center justify-center rounded-2xl text-white ${iconBg}`}>{icon}</span>
-        <ChevronRight className="h-4 w-4 text-nexoraSubtle" />
-      </div>
-      <p className="mt-3 text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">{label}</p>
-      <p className="mt-0.5 text-2xl font-black tracking-tight text-nexoraText">{value}</p>
-      {trend ? (typeof trend === 'string' ? <p className={`mt-0.5 text-[13px] font-bold ${trendColor}`}>{trend}</p> : <div className="mt-1">{trend}</div>) : null}
-    </button>
-  )
-}
-
-/* ─── Quick Action ───────────────────────────────────────────────────────── */
-function QuickAction({ icon, label, onClick, bg, iconColor }) {
-  return (
-    <button type="button" onClick={onClick} className="flex flex-col items-center gap-2 focus:outline-none group">
-      <span className={`flex h-[52px] w-[52px] items-center justify-center rounded-2xl shadow-nexora-soft transition-all duration-200 group-hover:scale-105 group-active:scale-95 ${bg}`}>
-        <span className={iconColor}>{icon}</span>
-      </span>
-      <span className="text-[11px] font-bold text-nexoraText">{label}</span>
-    </button>
   )
 }
 
@@ -104,49 +74,40 @@ export default function StaffHome() {
       </div>
 
       {/* ── KPI 2×2 ──────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-3">
-        <KpiCard
-          icon={<DollarSign className="h-5 w-5" />}
-          iconBg="bg-gradient-to-br from-emerald-400 to-emerald-500"
+      <div className={MOBILE_KPI_GRID_CLASS}>
+        <MobileKpiCard
+          theme="green"
+          icon={<DollarSign className="h-[18px] w-[18px]" strokeWidth={2.5} />}
           label={t('staff_dashboard.home.today_tips')}
           value={formatTipAmount(kpis.todayTips)}
           trend={kpis.todayCount > 0 ? t('staff_dashboard.home.tips_plus', { count: kpis.todayCount }) : t('staff_dashboard.home.tips_count', { count: 0 })}
-          trendColor="text-nexoraSuccess"
           onClick={() => go('tips')}
         />
-        <KpiCard
-          icon={<Calendar className="h-5 w-5" />}
-          iconBg="bg-gradient-to-br from-nexoraBrand to-nexoraViolet"
+        <MobileKpiCard
+          theme="purple"
+          icon={<Calendar className="h-[18px] w-[18px]" strokeWidth={2.5} />}
           label={t('staff_dashboard.home.this_month')}
           value={formatTipAmount(kpis.monthTips)}
+          trend={kpis.monthCount > 0 ? t('staff_dashboard.home.tips_plus', { count: kpis.monthCount }) : t('staff_dashboard.home.tips_count', { count: 0 })}
           onClick={() => go('tips')}
         />
-        <KpiCard
-          icon={<Clock className="h-5 w-5" />}
-          iconBg="bg-gradient-to-br from-amber-400 to-amber-500"
+        <MobileKpiCard
+          theme="amber"
+          icon={<Clock className="h-[18px] w-[18px]" strokeWidth={2.5} />}
           label={t('staff_dashboard.home.pending')}
           value={formatTipAmount(pendingAmount)}
-          trend={kpis.pendingCount > 0 ? t('staff_dashboard.home.awaiting_confirm', { count: kpis.pendingCount }) : t('staff_dashboard.home.no_pending')}
-          trendColor={kpis.pendingCount > 0 ? 'text-nexoraWarning' : 'text-nexoraSuccess'}
+          trend={kpis.pendingCount > 0 ? t('staff_dashboard.home.awaiting_confirm', { count: kpis.pendingCount }) : t('staff_dashboard.home.all_clear')}
+          trendColor={kpis.pendingCount > 0 ? 'text-amber-600' : 'text-emerald-600'}
           onClick={() => go('tips')}
         />
-        <KpiCard
-          icon={<Star className="h-5 w-5 fill-white" />}
-          iconBg="bg-gradient-to-br from-blue-400 to-indigo-500"
+        <MobileKpiCard
+          theme="blue"
+          icon={<Star className="h-[18px] w-[18px] fill-white text-white" strokeWidth={2.5} />}
           label={t('staff_dashboard.home.rating')}
           value={kpis.rating > 0 ? Number(kpis.rating).toFixed(1) : '—'}
-          trend={renderStars(kpis.rating || 0)}
+          trend={kpis.rating > 0 ? renderStars(kpis.rating) : null}
           onClick={() => go('reviews')}
         />
-      </div>
-
-      {/* ── Quick Actions ────────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-1 rounded-3xl border border-nexoraBorder bg-white p-4 shadow-nexora-card">
-        <QuickAction icon={<QrCode className="h-5 w-5" />} label={t('staff_dashboard.home.quick_qr')} bg="bg-purple-100" iconColor="text-purple-600" onClick={() => go('qr')} />
-        <QuickAction icon={<DollarSign className="h-5 w-5" />} label={t('staff_dashboard.home.quick_tips')} bg="bg-emerald-100" iconColor="text-emerald-600" onClick={() => go('tips')} />
-        <QuickAction icon={<MessageSquare className="h-5 w-5" />} label={t('staff_dashboard.home.quick_reviews')} bg="bg-blue-100" iconColor="text-blue-600" onClick={() => go('reviews')} />
-        <QuickAction icon={<CreditCard className="h-5 w-5" />} label={t('staff_dashboard.home.quick_payments')} bg="bg-indigo-100" iconColor="text-indigo-600" onClick={() => go('pay')} />
-        <QuickAction icon={<Gift className="h-5 w-5" />} label={t('staff_dashboard.home.quick_refer')} bg="bg-pink-100" iconColor="text-pink-600" onClick={() => go('profile')} />
       </div>
 
       {/* ── Pending Confirmations ────────────────────────────────────────── */}

@@ -45,6 +45,7 @@
       "tips_count": "{count} lượt tip",
       "tips_plus": "+ {count} lượt tip",
       "awaiting_confirm": "{count} đang chờ xác nhận",
+      "all_clear": "Đã xong!",
       "need_confirm": "Cần xác nhận",
       "pending_confirmations": "Tip chờ xác nhận",
       "no_pending": "Không có tip nào chờ xác nhận.",
