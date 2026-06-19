@@ -40,7 +40,7 @@ export default function TipsSavingsTab({
             {t('dashboard.tips.savings.active_payouts')}
           </small>
           <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">
-            {new Set(transactions.map(tx => tx.staffId)).size}
+            {new Set(transactions.map(tx => tx.staffProfileId)).size}
           </h3>
           <span className="mt-1.5 block text-[11px] font-bold text-mutedGrey dark:text-slate-400">
             {t('dashboard.tips.savings.active_payouts_sub')}
