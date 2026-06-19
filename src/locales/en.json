@@ -507,7 +507,8 @@
       "modal_title": "Transaction Details",
       "receipt_qr": "Receipt QR Code",
       "scan_to_view": "Scan to view details or customer receipt",
-      "staff_id": "Staff ID"
+      "staff_id": "Staff ID",
+      "staff_code": "Staff Code"
     },
     "modals": {
       "add_tp_title": "Add New Touch Point",

@@ -507,7 +507,8 @@
       "modal_title": "Chi tiết giao dịch",
       "receipt_qr": "Mã QR biên nhận",
       "scan_to_view": "Quét để xem chi tiết hoặc hóa đơn khách hàng",
-      "staff_id": "Mã nhân viên"
+      "staff_id": "Mã nhân viên",
+      "staff_code": "Mã Staff"
     },
     "modals": {
       "add_tp_title": "Thêm Điểm Chạm Mới",

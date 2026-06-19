@@ -21,6 +21,8 @@ import DevicesView from './DevicesView'
 import { useTouchpoints } from '../data/hooks/useMerchantTouchpoints'
 import { usePagination } from '../hooks/usePagination'
 import { DEFAULT_PAGE_SIZE, STAFF_FILTER_LIST_PAGE_SIZE } from '../constants/pagination'
+import { buildQrImageUrl, toLocalCustomerTouchUrl } from '../utils/staffTipUrl'
+import { formatCurrency } from './dashboard/utils'
 
 function Panel({ children, className = '' }) {
   return (
@@ -158,7 +160,7 @@ export default function TouchpointsView({
       point.isActive !== false
   ).length
 
-  const totalScans = kpiTouchpoints.reduce((sum, point) => sum + (point.scans || 0), 0)
+  const totalScans = kpiTouchpoints.reduce((sum, point) => sum + (point.scans ?? 0), 0)
 
   const deviceIssues = kpiTouchpoints.filter(
     (point) => point.deviceId && point.isActive === false
@@ -343,26 +345,17 @@ export default function TouchpointsView({
             ) : null}
             {!isLoading && touchpoints.map((point) => {
               const isPointActive = point.isActive !== false
-              // Use the canonical customer URL from the API (`url`, with real
-              // business + touch-point slugs). Keep the current origin so it
-              // resolves in dev (localhost) and deployed envs. Fall back to the
-              // slug only if the API didn't return a url.
               let qrUrl = ''
               if (point.url) {
-                try {
-                  qrUrl = `${window.location.origin}${new URL(point.url).pathname}`
-                } catch {
-                  qrUrl = point.url
-                }
+                qrUrl = toLocalCustomerTouchUrl(String(point.url))
               }
-              if (!qrUrl) {
-                qrUrl = `${window.location.origin}/touch/${point.slug || point.id}`
+              if (!qrUrl && point.slug) {
+                qrUrl = `${window.location.origin}/touch/${point.slug}`
               }
-              
-              // Calculate dynamic revenue
-              const revenue = transactions
-                .filter((tx) => tx.status === 'Success' && (tx.touchpoint === point.name || tx.touchpoint === point.id))
-                .reduce((sum, tx) => sum + (tx.amount || 0), 0)
+
+              const scans = point.scans ?? 0
+              const revenue = point.revenue ?? 0
+              const qrImageSrc = buildQrImageUrl(qrUrl, 150, point.qrImageUrl)
 
               return (
                 <Panel key={point.id} className="p-3.5 flex gap-4 hover:shadow-premium transition-all duration-300 group border border-nexoraBorder relative overflow-hidden min-h-[160px]">
@@ -376,7 +369,7 @@ export default function TouchpointsView({
                     title={t('dashboard.modals.download_print_qr')}
                   >
                     <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrUrl)}`}
+                      src={qrImageSrc}
                       alt="Scan QR"
                       className={`h-full w-full object-contain transition-opacity duration-200 ${isPointActive ? 'opacity-100' : 'opacity-30 filter grayscale'}`}
                     />
@@ -548,10 +541,10 @@ export default function TouchpointsView({
                     {/* Bottom Section: Compact Metrics */}
                     <div className="mt-2 pt-2 border-t border-nexoraRule dark:border-white/5 flex items-center justify-between text-[11px] font-bold text-nexoraMuted">
                       <div>
-                        {t('dashboard.touchpoint_stats.scans')}: <span className="font-black text-nexoraText">{point.scans || 0}</span>
+                        {t('dashboard.touchpoint_stats.scans')}: <span className="font-black text-nexoraText">{scans}</span>
                       </div>
                       <div>
-                        {t('dashboard.touchpoint_stats.revenue')}: <span className="font-black text-nexoraSuccess">${revenue.toFixed(2)}</span>
+                        {t('dashboard.touchpoint_stats.revenue')}: <span className="font-black text-nexoraSuccess">{formatCurrency(revenue)}</span>
                       </div>
                     </div>
                   </div>

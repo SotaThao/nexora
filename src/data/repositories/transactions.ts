@@ -54,6 +54,7 @@ function normalizeTip(tip: TipApiDto): TransactionRecord {
     paymentMethod: tip.paymentMethod ?? '',
     staffName: tip.staffName ?? '',
     staffProfileId: tip.staffProfileId ?? null,
+    staffCode: tip.staffCode ?? null,
     touchpoint: tip.touchPointName ?? '',
     touchPointId: tip.touchPointId ?? null,
     dateTime: tip.createdAt ?? '',

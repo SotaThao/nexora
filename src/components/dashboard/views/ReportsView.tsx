@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { CreditCard, Coins, CheckCircle, Clock, XCircle, AlertCircle } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { formatCurrency } from '../utils'
+import { formatCurrency, formatTransactionDateTime } from '../utils'
 import { WalletLogos } from '../constants'
 import TransactionFilter from '../../TransactionFilter'
 import Pagination from '../../ui/Pagination'
@@ -85,7 +85,7 @@ function formatStaffCell(tx) {
 }
 
 function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [], businessName = '', businessSlug = '' }) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
 
   // Filter States
   const [dateRangePreset, setDateRangePreset] = useState('all')
@@ -333,7 +333,9 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
                   className="border-t border-nexoraRule hover:bg-slate-50 transition-colors cursor-pointer select-none"
                 >
                   <td className="px-4 py-3 font-bold text-nexoraText">{tx.id}</td>
-                  <td className="px-4 py-3 text-nexoraMuted">{tx.dateTime}</td>
+                  <td className="px-4 py-3 text-nexoraMuted">
+                    {formatTransactionDateTime(tx.dateTime, currentLanguage)}
+                  </td>
                   <td className="px-4 py-3 font-extrabold text-nexoraText">{formatCurrency(tx.amount)}</td>
                   <td className="px-4 py-3">{formatStaffCell(tx)}</td>
                   <td className="px-4 py-3">{tx.touchpoint}</td>

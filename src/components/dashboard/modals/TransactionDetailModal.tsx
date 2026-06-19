@@ -2,18 +2,40 @@ import { useMemo, useState } from 'react'
 import { X, Share2, CreditCard, Coins } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
-import { formatCurrency } from '../utils'
+import { formatCurrency, formatTransactionDateTime } from '../utils'
 import { WalletLogos } from '../constants'
 import { logger } from '../../../utils/logger'
 import { buildQrImageUrl, slugify, toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
 import QrModal from './QrModal'
 
-function normalizeTipItems(tx) {
+function buildStaffCodeLookup(staff = []) {
+  const map = new Map()
+  for (const member of staff) {
+    const profileId = member.staffProfileId || member.id
+    const code = member.staffCode?.trim()
+    if (profileId && code) {
+      map.set(profileId, code)
+    }
+  }
+  return map
+}
+
+function resolveStaffCode(staffProfileId, staffCodeByProfileId, directCode) {
+  const fromTx = typeof directCode === 'string' ? directCode.trim() : ''
+  if (fromTx) return fromTx
+  if (staffProfileId && staffCodeByProfileId.has(staffProfileId)) {
+    return staffCodeByProfileId.get(staffProfileId)
+  }
+  return ''
+}
+
+function normalizeTipItems(tx, staffCodeByProfileId = new Map()) {
   if (!Array.isArray(tx?.tipItems)) return []
   return tx.tipItems
     .map((item) => ({
       staffProfileId: item?.staffProfileId ?? '',
       staffName: item?.staffName ?? '',
+      staffCode: resolveStaffCode(item?.staffProfileId, staffCodeByProfileId, item?.staffCode),
       amount: item?.amount ?? 0,
     }))
     .filter((item) => item.staffProfileId || item.staffName)
@@ -54,6 +76,19 @@ function resolveTouchPointQrUrl({
   if (!resolvedBusinessSlug || !touchPointSlug) return null
 
   return `${origin}/touch/${resolvedBusinessSlug}/${touchPointSlug}`
+}
+
+function renderStaffCodeLine(code, t) {
+  return (
+    <p className="mt-1 flex flex-wrap items-center gap-1.5">
+      <span className="text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
+        {t('dashboard.activity_log.staff_code')}
+      </span>
+      <span className="inline-flex rounded-md border border-nexoraBrand/20 bg-nexoraBrandSoft px-2 py-0.5 font-mono text-xs font-extrabold tracking-wide text-nexoraBrand">
+        {code || 'N/A'}
+      </span>
+    </p>
+  )
 }
 
 function getPaymentMethodLogo(method) {
@@ -107,11 +142,15 @@ export default function TransactionDetailModal({
   touchpoints = [],
   staff = [],
 }) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
   const [qrTarget, setQrTarget] = useState(null)
 
-  const tipItems = useMemo(() => normalizeTipItems(selectedTx), [selectedTx])
+  const staffCodeByProfileId = useMemo(() => buildStaffCodeLookup(staff), [staff])
+  const tipItems = useMemo(
+    () => normalizeTipItems(selectedTx, staffCodeByProfileId),
+    [selectedTx, staffCodeByProfileId],
+  )
   const isMultiStaff = Boolean(selectedTx?.isMultiStaff && tipItems.length > 0)
   const touchpoint = useMemo(
     () => findTouchpointForTx(selectedTx, touchpoints),
@@ -189,6 +228,11 @@ export default function TransactionDetailModal({
 
   const singleStaffProfileId = selectedTx.staffProfileId
   const singleStaffName = selectedTx.staffName
+  const singleStaffCode = resolveStaffCode(
+    singleStaffProfileId,
+    staffCodeByProfileId,
+    selectedTx.staffCode,
+  )
 
   return (
     <>
@@ -243,7 +287,9 @@ export default function TransactionDetailModal({
                 <span className="text-[10px] font-bold text-nexoraMuted block">
                   {t('dashboard.activity_log.col_time')}
                 </span>
-                <span className="font-semibold text-nexoraText block mt-0.5">{selectedTx.dateTime}</span>
+                <span className="font-semibold text-nexoraText block mt-0.5">
+                  {formatTransactionDateTime(selectedTx.dateTime, currentLanguage)}
+                </span>
               </div>
               <div>
                 <span className="text-[10px] font-bold text-nexoraMuted block">
@@ -268,9 +314,7 @@ export default function TransactionDetailModal({
                   <span className="font-semibold text-nexoraText block mt-0.5">
                     {singleStaffName || '—'}
                   </span>
-                  <span className="font-mono text-[10px] text-slate-400 block mt-0.5 break-all">
-                    {t('dashboard.activity_log.staff_id')}: {singleStaffProfileId || 'N/A'}
-                  </span>
+                  {renderStaffCodeLine(singleStaffCode, t)}
                 </div>
               ) : null}
             </div>
@@ -293,9 +337,7 @@ export default function TransactionDetailModal({
                     className="rounded-lg border border-nexoraBorder bg-white p-3"
                   >
                     <p className="text-xs font-bold text-nexoraText truncate">{item.staffName || '—'}</p>
-                    <p className="font-mono text-[10px] text-slate-400 mt-0.5 break-all">
-                      {t('dashboard.activity_log.staff_id')}: {item.staffProfileId || 'N/A'}
-                    </p>
+                    {renderStaffCodeLine(item.staffCode, t)}
                     <p className="text-sm font-extrabold text-nexoraBrand mt-1.5">
                       {formatCurrency(item.amount)}
                     </p>
