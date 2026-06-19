@@ -155,7 +155,7 @@ export default function DashboardSidebar({
           const menuItemsToDisplay = userRole === 'staff'
             ? [
                 { id: 'overview', label: t('components.dashboard.layout.DashboardSidebar.myDashboard'), icon: visibleMenuItems.find(i => i.id === 'overview')?.icon, image: visibleMenuItems.find(i => i.id === 'overview')?.image },
-                { id: 'support', label: t('dashboard.menu.support'), icon: visibleMenuItems.find(i => i.id === 'support')?.icon }
+                { id: 'support', label: t('dashboard.menu.support'), icon: visibleMenuItems.find(i => i.id === 'support')?.icon, image: visibleMenuItems.find(i => i.id === 'support')?.image }
               ]
             : visibleMenuItems
 

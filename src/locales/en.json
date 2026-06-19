@@ -130,7 +130,6 @@
       "phone": "Phone",
       "email": "Email",
       "bio": "Bio",
-      "bio_tooltip": "[TODO: tooltip copy] Explain why the bio matters.",
       "identity_note": "Full name, phone and email come from your business record. Update your display name and bio here.",
       "save": "Save Account",
       "saved": "Saved ✓",

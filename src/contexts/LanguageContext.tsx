@@ -15,8 +15,9 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   const [currentLanguage, setCurrentLanguageState] = useState<AppLanguage>(() => {
     const saved = localStorage.getItem('nexora_lang')
     if (saved === 'en' || saved === 'vi') return saved
-    // Default to Vietnamese when the user has no saved preference.
-    return 'vi'
+    // Fallback to browser language or default to 'en'
+    const browserLang = navigator.language || (navigator as Navigator & { userLanguage?: string }).userLanguage
+    return browserLang?.startsWith('vi') ? 'vi' : 'en'
   })
 
   const setLanguage = (lang: AppLanguage) => {

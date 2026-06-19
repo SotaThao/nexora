@@ -57,7 +57,7 @@ export default {
         nexoraText: '#0B1220',
         nexoraMuted: '#4D5870',
         nexoraSubtle: '#7A8296',
-        nexoraSidebar: '#101633',
+        nexoraSidebar: '#081F49',
         nexoraSidebarPanel: '#202641',
         nexoraBrand: '#4648D8',
         nexoraBrandDark: '#393BC8',

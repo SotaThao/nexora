@@ -1,6 +1,6 @@
 // StaffHeader — top bar: brand (mobile), language switch, notifications bell, profile dropdown.
 import { useState, useRef, useEffect } from 'react'
-import { Bell, Menu, Settings, ShieldCheck, LogOut } from 'lucide-react'
+import { Menu, Settings, ShieldCheck, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import { useUnreadCount } from '../../../data/hooks/useNotifications'
@@ -62,7 +62,12 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
             activeScreen === 'notifications' ? 'text-nexoraBrand' : 'text-nexoraText'
           }`}
         >
-          <Bell className="h-5 w-5" />
+          <img
+            src="/assets/menu/notification.png"
+            alt=""
+            className="h-5 w-5 object-contain"
+            aria-hidden="true"
+          />
           {unreadCount > 0 && (
             <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-black text-white ring-2 ring-white">
               {unreadCount > 99 ? '99+' : unreadCount}

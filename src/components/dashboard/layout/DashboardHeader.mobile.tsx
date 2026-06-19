@@ -298,7 +298,12 @@ export default function DashboardHeader({
               className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-nexoraBorder bg-white text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"
               aria-label="Notifications"
             >
-              <Bell className="h-5 w-5" />
+              <img
+                src="/assets/menu/notification.png"
+                alt=""
+                className="h-5 w-5 object-contain"
+                aria-hidden="true"
+              />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-0.5 rounded-full flex items-center justify-center text-[9px] font-black text-white bg-red-500 ring-2 ring-white">
                   {unreadCount > 99 ? '99+' : unreadCount}
@@ -433,7 +438,12 @@ export default function DashboardHeader({
               onClick={() => setIsNotiDropdownOpen(!isNotiDropdownOpen)}
               className="relative"
             >
-              <Bell className="h-5 w-5" />
+              <img
+                src="/assets/menu/notification.png"
+                alt=""
+                className="h-5 w-5 object-contain"
+                aria-hidden="true"
+              />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center text-[9px] font-black text-white bg-red-500 ring-2 ring-white shadow-sm">
                   {unreadCount > 99 ? '99+' : unreadCount}

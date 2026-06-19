@@ -1,5 +1,5 @@
 // StaffHeader — top bar: menu, brand, notifications bell, profile.
-import { Bell, Menu } from 'lucide-react'
+import { Menu } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import { useUnreadCount } from '../../../data/hooks/useNotifications'
@@ -34,7 +34,12 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
               activeScreen === 'notifications' ? 'text-nexoraBrand' : 'text-nexoraText'
             }`}
           >
-            <Bell className="h-5 w-5" />
+            <img
+              src="/assets/menu/notification.png"
+              alt=""
+              className="h-5 w-5 object-contain"
+              aria-hidden="true"
+            />
             {unreadCount > 0 && (
               <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
             )}
@@ -75,7 +80,12 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
               activeScreen === 'notifications' ? 'text-nexoraBrand' : 'text-nexoraText'
             }`}
           >
-            <Bell className="h-5 w-5" />
+            <img
+              src="/assets/menu/notification.png"
+              alt=""
+              className="h-5 w-5 object-contain"
+              aria-hidden="true"
+            />
             {unreadCount > 0 && (
               <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-black text-white ring-2 ring-white">
                 {unreadCount > 99 ? '99+' : unreadCount}
