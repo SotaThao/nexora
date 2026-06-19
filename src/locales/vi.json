@@ -45,7 +45,6 @@
       "tips_count": "{count} lượt tip",
       "tips_plus": "+ {count} lượt tip",
       "awaiting_confirm": "{count} đang chờ xác nhận",
-      "all_clear": "Đã xong!",
       "need_confirm": "Cần xác nhận",
       "pending_confirmations": "Tip chờ xác nhận",
       "no_pending": "Không có tip nào chờ xác nhận.",
@@ -321,9 +320,9 @@
     "tp_front_default": "Quầy Lễ Tân / Trạm Chính",
     "tp_personal_default": "QR Cá Nhân - {name}",
     "title_step_3": "Bước 3: In QR & Hoàn Tất Cấu Hình",
-    "desc_step_3": "Mọi thứ đã sẵn sàng! Bạn có thể in bộ mã QR và vào Dashboard Nexora.",
-    "download_explain": "Chúng tôi đã chuẩn bị toàn bộ mã QR của tiệm thành tệp PDF/ZIP in ấn chất lượng cao. Khách hàng chỉ cần quét để Típ & Review.",
-    "download_btn": "In QR Kit",
+    "desc_step_3": "Mọi thứ đã sẵn sàng! Bạn có thể in bộ mã QR và vào Bảng Điều Khiển Nexora.",
+    "download_explain": "Chúng tôi đã chuẩn bị toàn bộ mã QR của tiệm thành tệp PDF/ZIP in ấn chất lượng cao. Khách hàng chỉ cần quét để Típ & Đánh Giá.",
+    "download_btn": "In Bộ Kit QR",
     "print_btn": "In ›",
     "config_checklist_title": "Kiểm tra cấu hình",
     "chk_business": "Cửa hàng: {name} ({industry})",
@@ -512,16 +511,16 @@
       "all_touchpoints": "Tất cả điểm chạm",
       "all_payments": "Tất cả phương thức",
       "all_statuses": "Tất cả trạng thái",
-      "filter_staff_type": "Loại tip",
-      "all_staff_types": "Tất cả loại",
-      "multi_staff_only": "Tip nhiều nhân viên",
-      "single_staff_only": "Tip một nhân viên",
       "filter_search": "Tìm kiếm",
       "search_placeholder": "Tìm mã GD, nhân viên, điểm chạm...",
       "modal_title": "Chi tiết giao dịch",
       "receipt_qr": "Mã QR biên nhận",
       "scan_to_view": "Quét để xem chi tiết hoặc hóa đơn khách hàng",
       "staff_id": "Mã nhân viên",
+      "filter_staff_type": "Loại tip",
+      "all_staff_types": "Tất cả loại",
+      "multi_staff_only": "Tip nhiều nhân viên",
+      "single_staff_only": "Tip một nhân viên",
       "staff_code": "Mã Staff"
     },
     "modals": {
@@ -631,6 +630,13 @@
       },
       "form": {
         "title": "Gửi Yêu Cầu Hỗ Trợ",
+        "subject_label": "Tiêu đề",
+        "subject_placeholder": "Ví dụ: Thiết bị NFC không phản hồi",
+        "description_label": "Mô tả sự cố",
+        "description_placeholder": "Cung cấp thông tin chi tiết về sự cố bạn đang gặp phải...",
+        "submit_btn": "Gửi Yêu Cầu",
+        "success_msg": "Yêu cầu đã được gửi thành công! Đội ngũ của chúng tôi sẽ liên hệ với bạn sớm nhất có thể.",
+        "error_msg": "Vui lòng sửa các trường được đánh dấu và thử lại.",
         "full_name_label": "Họ và tên",
         "full_name_placeholder": "Nhập họ và tên của bạn",
         "full_name_required": "Vui lòng nhập họ và tên.",
@@ -661,10 +667,7 @@
         "length_counter_with_max": "{count}/{max} ký tự (tối thiểu {min})",
         "captcha_not_ready": "Đang tải xác minh bảo mật. Vui lòng thử lại sau giây lát.",
         "captcha_error": "Xác minh bảo mật thất bại. Vui lòng tải lại trang và thử lại.",
-        "submit_btn": "Gửi Yêu Cầu",
         "submitting_btn": "Đang gửi...",
-        "success_msg": "Yêu cầu đã được gửi thành công! Đội ngũ của chúng tôi sẽ liên hệ với bạn sớm nhất có thể.",
-        "error_msg": "Vui lòng sửa các trường được đánh dấu và thử lại.",
         "submit_error_msg": "Không thể gửi yêu cầu. Vui lòng thử lại."
       },
       "faq": {
@@ -865,7 +868,6 @@
     "header_subtitle": "Cổng Kết Nối Thanh Toán An Toàn Nexora",
     "select_staff_title": "Ai đã phục vụ bạn hôm nay?",
     "select_staff_subtitle": "Chọn nhân viên bạn muốn gửi tips.",
-    "inline_tip_label": "Số tiền tips",
     "search_staff_placeholder": "Tìm nhân viên...",
     "no_staff_found": "Không tìm thấy nhân viên.",
     "step_form_title": "Thêm Tiền Típ cho {name}",
@@ -876,7 +878,6 @@
     "feedback_label": "Để lại bình luận (không bắt buộc)",
     "feedback_placeholder": "Anna đã làm rất tuyệt! Tôi rất yêu bộ móng này!",
     "pay_btn": "Tiếp theo",
-    "tip_review_payment_title": "Kiểm tra tip & chọn thanh toán",
     "payment_title": "Bạn muốn thanh toán bằng cách nào?",
     "payment_desc": "Chọn phương thức thanh toán yêu thích.",
     "payment_empty_title": "Chưa có phương thức thanh toán",
@@ -913,10 +914,6 @@
     "tip_success_prefix": "Khoản tiền típ ",
     "tip_success_sent": " của bạn đã được gửi tới ",
     "tip_success_sub": "Chúng tôi rất trân trọng bạn!",
-    "tips_summary_title": "Đã gửi Tips!",
-    "tips_summary_via": "qua",
-    "tips_summary_review_cta": "Đánh giá ngay",
-    "tips_summary_skip": "Bỏ qua",
     "done": "Hoàn tất",
     "invalid_tip": "Vui lòng nhập số tiền típ hợp lệ lớn hơn 0.",
     "secure_footer": "Cổng kết nối SSL chuyển hướng an toàn",
@@ -944,7 +941,13 @@
     "scan_to_tip_review": "Quét để Típ & Đánh giá",
     "tip_min_error": "Tiền típ tối thiểu là {amount}.",
     "tip_max_error": "Tiền típ không được vượt quá {amount}.",
-    "tip_total_max_error": "Tổng tiền típ không được vượt quá {amount}."
+    "tip_total_max_error": "Tổng tiền típ không được vượt quá {amount}.",
+    "inline_tip_label": "Số tiền tips",
+    "tip_review_payment_title": "Kiểm tra tip & chọn thanh toán",
+    "tips_summary_title": "Đã gửi Tips!",
+    "tips_summary_via": "qua",
+    "tips_summary_review_cta": "Đánh giá ngay",
+    "tips_summary_skip": "Bỏ qua"
   },
   "register": {
     "create_account": "Tạo tài khoản",
@@ -1123,11 +1126,6 @@
   },
   "errors": {
     "unknown_error": "Đã xảy ra lỗi không xác định. Vui lòng thử lại.",
-    "contact_request_message_min_length": "Nội dung quá ngắn. Vui lòng nhập ít nhất {min} ký tự mô tả sự cố.",
-    "contact_request_message_max_length": "Nội dung quá dài. Vui lòng giữ dưới {max} ký tự.",
-    "contact_request_message_required": "Vui lòng mô tả sự cố trước khi gửi.",
-    "contact_request_support_type_min_length": "Vui lòng chọn loại hỗ trợ.",
-    "contact_request_support_type_required": "Vui lòng chọn loại hỗ trợ.",
     "user_login_invalid_username_or_password": "Tên đăng nhập hoặc mật khẩu không chính xác.",
     "user_account_inactive": "Tài khoản của bạn hiện đang bị khóa. Vui lòng liên hệ hỗ trợ.",
     "user_email_already_exists": "Địa chỉ email này đã được đăng ký trước đó.",
@@ -1167,7 +1165,12 @@
     "common_internal_server_error": "Đã xảy ra lỗi hệ thống bên trong.",
     "generic": "Đã xảy ra lỗi",
     "touchpoint_not_found": "Không tìm thấy trang",
-    "touchpoint_not_found_desc": "Không thể tải điểm chạm này."
+    "touchpoint_not_found_desc": "Không thể tải điểm chạm này.",
+    "contact_request_message_min_length": "Nội dung quá ngắn. Vui lòng nhập ít nhất {min} ký tự mô tả sự cố.",
+    "contact_request_message_max_length": "Nội dung quá dài. Vui lòng giữ dưới {max} ký tự.",
+    "contact_request_message_required": "Vui lòng mô tả sự cố trước khi gửi.",
+    "contact_request_support_type_min_length": "Vui lòng chọn loại hỗ trợ.",
+    "contact_request_support_type_required": "Vui lòng chọn loại hỗ trợ."
   },
   "components": {
     "common": {
@@ -1489,7 +1492,6 @@
       "hooks": {
         "useRegisterForm": {
           "invalidOtpTryAgain": "Mã xác thực không hợp lệ. Vui lòng kiểm tra và thử lại.",
-          "invalidCodeTipEnter": "Mã xác thực không hợp lệ. Vui lòng kiểm tra và thử lại.",
           "thisFieldIsRequired": "Trường này là bắt buộc.",
           "newJoinRequest": "Yêu cầu gia nhập mới",
           "justNow": "Vừa xong",
@@ -1498,7 +1500,8 @@
           "activateOtp": "Kích hoạt tài khoản",
           "profileSetup": "Hồ sơ cá nhân",
           "payoutSetup": "Cấu hình ví",
-          "success": "Hoàn tất"
+          "success": "Hoàn tất",
+          "invalidCodeTipEnter": "Mã xác thực không hợp lệ. Vui lòng kiểm tra và thử lại."
         }
       },
       "modals": {
@@ -1527,23 +1530,23 @@
         "StepCredentials": {
           "activateAccountEnterOtp": "Kích hoạt tài khoản (Nhập OTP)",
           "enterTheOtpCode": "Nhập mã OTP được gửi tới email của bạn để kích hoạt tài khoản.",
-          "otpSentToEmail": "OTP đã gửi tới email",
           "enterOtpCode": "Nhập mã OTP *",
           "resendVerificationCode": "Gửi lại mã xác thực",
           "verifyAndActivate": "Xác minh & Kích hoạt",
           "processing": "Đang xử lý...",
           "register": "Đăng ký",
-          "phExampleOtp": "vd: 1234"
+          "phExampleOtp": "vd: 1234",
+          "otpSentToEmail": "OTP đã gửi tới email"
         },
         "StepOtpVerify": {
           "activateAccountEnterOtp": "Kích hoạt tài khoản (Nhập OTP)",
           "enterTheOtpCode": "Nhập mã OTP được gửi tới email của bạn để kích hoạt tài khoản.",
-          "otpSentToEmail": "OTP đã gửi tới email",
           "enterOtpCode": "Nhập mã OTP *",
           "resendVerificationCode": "Gửi lại mã xác thực",
           "verifyAndActivate": "Xác minh & Kích hoạt",
-          "processing": "Đang xử lý...",
-          "phExampleOtp": "vd: 1234"
+          "phExampleOtp": "vd: 1234",
+          "otpSentToEmail": "OTP đã gửi tới email",
+          "processing": "Đang xử lý..."
         },
         "StepPayoutSetup": {
           "payoutConfiguration": "Cấu hình ví nhận tiền",
@@ -2119,7 +2122,7 @@
       "backToSignIn": "Quay lại Đăng nhập"
     },
     "TouchpointsView": {
-      "phExampleDeviceIds": "vd: NFC-105, QR-Ban-01",
+      "phExampleDeviceIds": "vd: NFC-105, QR-Table-01",
       "phDeviceId": "Mã thiết bị (vd: NFC-105)",
       "scanQrAlt": "Quét mã QR",
       "previewQr": "Xem trước",

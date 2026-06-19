@@ -8,7 +8,7 @@ import { resolveQrToAppPath } from '../../../utils/qrNavigate'
 
 const NAV_ITEMS = [
   { id: 'overview', label: 'Home', Icon: Home },
-  { id: 'touchpoints', label: 'My QR', Icon: QrCode },
+  { id: 'touchpoints', label: 'QR', Icon: QrCode },
   { id: 'tips', label: 'Tips', Icon: CircleDollarSign },
   { id: 'reviews', label: 'Reviews', Icon: Star },
 ]

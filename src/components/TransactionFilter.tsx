@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { SlidersHorizontal, RotateCcw, Search, ChevronDown } from 'lucide-react'
+import React from 'react'
+import { SlidersHorizontal, RotateCcw, Search } from 'lucide-react'
 import CustomSelect from './CustomSelect'
 import { useTranslation } from '../contexts/LanguageContext'
 
@@ -26,29 +26,23 @@ export default function TransactionFilter({
   setEndDate,
   resetFilters,
   staffOptions = [],
-  touchpointOptions = [],
-  paymentOptions,
-  statusOptions,
+  touchpointOptions = []
 }) {
   const { t } = useTranslation()
-  const [isExpanded, setIsExpanded] = useState(false)
 
-  const resolvedPaymentOptions = paymentOptions ?? [
+  const paymentOptions = [
     { value: 'all', label: t('dashboard.activity_log.all_payments') },
-    { value: 'CashApp', label: 'Cash App' },
     { value: 'Venmo', label: 'Venmo' },
+    { value: 'Cash App', label: 'Cash App' },
     { value: 'Zelle', label: 'Zelle' },
-    { value: 'PayPal', label: 'PayPal' },
-    { value: 'AppleCash', label: 'Apple Cash' },
-    { value: 'Other', label: 'Other' },
+    { value: 'VLINKPAY', label: 'VLINKPAY' }
   ]
 
-  const resolvedStatusOptions = statusOptions ?? [
+  const statusOptions = [
     { value: 'all', label: t('dashboard.activity_log.all_statuses') },
-    { value: 'Initiated', label: 'Initiated' },
-    { value: 'Confirmed', label: 'Confirmed' },
-    { value: 'Skipped', label: 'Skipped' },
-    { value: 'Completed', label: 'Completed' },
+    { value: 'Success', label: 'Success' },
+    { value: 'Pending', label: 'Pending' },
+    { value: 'Failed', label: 'Failed' }
   ]
 
   const datePresetOptions = [
@@ -61,39 +55,23 @@ export default function TransactionFilter({
   ]
 
   return (
-    <div className="rounded-xl border border-nexoraBorder bg-white p-4 shadow-sm">
-      <div
-        className={`flex items-center justify-between ${isExpanded ? 'border-b border-nexoraRule pb-3 mb-4' : ''}`}
-      >
-        <button
-          type="button"
-          onClick={() => setIsExpanded((prev) => !prev)}
-          className="flex flex-1 items-center gap-2 text-left cursor-pointer select-none"
-          aria-expanded={isExpanded}
-        >
-          <SlidersHorizontal className="h-4 w-4 text-nexoraBrand shrink-0" />
+    <div className="rounded-xl border border-nexoraBorder bg-white p-4 shadow-sm space-y-4">
+      <div className="flex items-center justify-between border-b border-nexoraRule pb-3">
+        <div className="flex items-center gap-2">
+          <SlidersHorizontal className="h-4 w-4 text-nexoraBrand" />
           <h3 className="text-xs font-bold uppercase tracking-wider text-nexoraText">
             {t('dashboard.activity_log.filter_title')}
           </h3>
-          <ChevronDown
-            className={`h-4 w-4 text-nexoraMuted transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-          />
-        </button>
+        </div>
         <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            resetFilters()
-          }}
-          className="flex items-center gap-1.5 text-xs font-bold text-nexoraMuted hover:text-nexoraBrand transition-colors cursor-pointer select-none ml-3 shrink-0"
+          onClick={resetFilters}
+          className="flex items-center gap-1.5 text-xs font-bold text-nexoraMuted hover:text-nexoraBrand transition-colors cursor-pointer select-none"
         >
           <RotateCcw className="h-3.5 w-3.5" />
           {t('dashboard.activity_log.filter_reset')}
         </button>
       </div>
 
-      {isExpanded && (
-        <>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
         {/* Search Query */}
         <div className="flex flex-col gap-1.5">
@@ -192,7 +170,7 @@ export default function TransactionFilter({
             size="sm"
             value={selectedPayment}
             onChange={(e) => setSelectedPayment(e.target.value)}
-            options={resolvedPaymentOptions}
+            options={paymentOptions}
           />
         </div>
 
@@ -205,7 +183,7 @@ export default function TransactionFilter({
             size="sm"
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            options={resolvedStatusOptions}
+            options={statusOptions}
           />
         </div>
       </div>
@@ -236,8 +214,6 @@ export default function TransactionFilter({
             />
           </div>
         </div>
-      )}
-        </>
       )}
     </div>
   )

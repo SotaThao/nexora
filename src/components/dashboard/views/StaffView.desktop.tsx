@@ -4,6 +4,7 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { useSearchMerchantStaff } from '../../../data/hooks/useMerchantStaff'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
+import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
 import Pagination from '../../ui/Pagination'
@@ -60,7 +61,7 @@ function StaffView({
   const publicInviteLink = useMemo(
     () => publicInviteEnabled
       ? buildPublicInviteLink({
-        origin: window.location.origin,
+        origin: getWebUrlOrigin(),
         businessName,
         businessSlug,
         referralCode: inviteLinkSetting?.referralCode ?? '',

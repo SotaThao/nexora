@@ -168,6 +168,7 @@ function Overview({
   )
 
   const masterQrTarget = {
+    id: masterTouchpoint?.id || null,
     name: 'Master Welcome QR',
     subtitle: 'Store Main Portal',
     slug: masterTouchpoint?.slug || 'general',

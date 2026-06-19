@@ -1,5 +1,4 @@
 import React from 'react'
-import BackToDashboardButton from '../BackToDashboardButton'
 
 /**
  * ReviewRouting — shows Google and Yelp review links after a positive review.
@@ -92,7 +91,6 @@ export default function ReviewRouting({ t, reviewLinks, setStep, handleTrackExte
       </div>
 
       <div className="space-y-4 text-center pt-2">
-        <BackToDashboardButton />
         <button
           type="button"
           onClick={() => setStep('final_done')}

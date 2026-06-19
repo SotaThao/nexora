@@ -1,3 +1,4 @@
+import { useMemo, useCallback, useState } from 'react'
 import {
   QrCode,
   Star,
@@ -9,8 +10,14 @@ import {
   UserPlus,
   ChevronRight,
   PiggyBank,
+  Eye,
+  Download,
 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { useNotification } from '../../../contexts/NotificationContext'
+import { useDownloadTouchpointQr } from '../../../data/hooks/useMerchantTouchpoints'
+import { downloadQrCode } from '../../../utils/qrUtils'
+import { buildQrImageUrl, toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
 
 import SetupGuideBanner from './SetupGuideBanner'
 
@@ -131,10 +138,70 @@ function Overview({
   staff = [],
   metricsMonth = null,
   metricsYear = null,
+  isTouchpointsLoading = false,
 }: any) {
   const { t } = useTranslation()
+  const { showToast } = useNotification()
+  const downloadTouchpointQrMutation = useDownloadTouchpointQr()
+  const [isMasterQrDownloading, setIsMasterQrDownloading] = useState(false)
   const k = (key: string, vars?: Record<string, string | number>) =>
     t(`dashboard.owner_home.${key}`, vars)
+
+  const masterTouchpoint =
+    (touchpoints || []).find((tp) => tp.type === 'FrontDesk') || (touchpoints || [])[0] || null
+
+  const masterQrLink = useMemo(() => {
+    if (masterTouchpoint?.url) {
+      return toLocalCustomerTouchUrl(String(masterTouchpoint.url))
+    }
+
+    const businessSlug = (businessName || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+    const touchSlug = masterTouchpoint?.slug || 'general'
+    return `${window.location.origin}/touch/${businessSlug}/${touchSlug}`
+  }, [masterTouchpoint, businessName])
+
+  const masterQrPreviewUrl = useMemo(
+    () => buildQrImageUrl(masterQrLink, 150, masterTouchpoint?.qrImageUrl),
+    [masterQrLink, masterTouchpoint?.qrImageUrl],
+  )
+
+  const masterQrTarget = useMemo(
+    () => ({
+      id: masterTouchpoint?.id || null,
+      name: 'Master Welcome QR',
+      subtitle: 'Store Main Portal',
+      slug: masterTouchpoint?.slug || 'general',
+      url: masterTouchpoint?.url || null,
+      qrImageUrl: masterTouchpoint?.qrImageUrl || null,
+      isActive: true,
+    }),
+    [masterTouchpoint],
+  )
+
+  const handleDownloadMasterQr = useCallback(async () => {
+    setIsMasterQrDownloading(true)
+    try {
+      if (masterTouchpoint?.id) {
+        await downloadTouchpointQrMutation.mutateAsync({
+          id: masterTouchpoint.id,
+          format: 'png',
+        })
+      } else {
+        await downloadQrCode(buildQrImageUrl(masterQrLink, 1000), 'master-qr.png')
+      }
+      showToast(t('components.SettingsView.qrCodeDownloaded'), 'success')
+    } catch {
+      showToast(t('components.dashboard.overview.Overview.qr_download_failed'), 'error')
+    } finally {
+      setIsMasterQrDownloading(false)
+    }
+  }, [
+    masterTouchpoint?.id,
+    masterQrLink,
+    downloadTouchpointQrMutation,
+    showToast,
+    t,
+  ])
 
   const firstName = profile?.fullName?.split(' ')[0] || profile?.email?.split('@')[0] || 'Owner'
   const greeting = (() => {
@@ -154,7 +221,7 @@ function Overview({
 
   const activeStaff = (staff || []).filter((m) => m.status === 'Active' || m.active === true)
   const pendingCount = (pendingStaff || []).length
-  const rating = Number(metrics.googleRating || 0)
+  const rating = Number(metrics.averageRating || 0)
   const totalReviews = Number(metrics.totalReviews || 0)
 
   // Pending confirmations list (real pending staff/invites)
@@ -198,7 +265,6 @@ function Overview({
       {/* ── Greeting ─────────────────────────────────────────────────────── */}
       <div className="pt-1">
         <h1 className="text-2xl font-black tracking-tight text-nexoraText">{greeting}</h1>
-        <p className="mt-1 text-sm text-nexoraMuted">{businessName || t('staff_dashboard.home.performance_subtitle')}</p>
       </div>
 
       {/* ── Hero: Money Saved ────────────────────────────────────────────── */}
@@ -267,13 +333,84 @@ function Overview({
         />
       </div>
 
+      {/* ── Master Store QR ──────────────────────────────────────────────── */}
+      <Panel
+        title={t('dashboard.master_gateway.qr_title')}
+        action={masterTouchpoint ? t('dashboard.master_gateway.btn_open') : undefined}
+        onAction={masterTouchpoint ? () => previewQr?.(masterQrTarget) : undefined}
+      >
+        {isTouchpointsLoading ? (
+          <div className="flex items-center gap-4 py-2">
+            <div className="h-24 w-24 shrink-0 animate-pulse rounded-2xl bg-nexoraSurfaceMuted" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <div className="h-3 w-3/4 animate-pulse rounded bg-nexoraSurfaceMuted" />
+              <div className="h-3 w-full animate-pulse rounded bg-nexoraSurfaceMuted" />
+            </div>
+          </div>
+        ) : !masterTouchpoint ? (
+          <div className="py-2 text-center">
+            <p className="text-[13px] text-nexoraMuted">{t('components.dashboard.overview.Overview.gateway_empty_desc')}</p>
+            <button
+              type="button"
+              onClick={() => onNavigateMenu?.('touchpoints')}
+              className="mt-3 rounded-full border border-nexoraBorder px-4 py-2 text-[13px] font-bold text-nexoraBrand"
+            >
+              {t('components.dashboard.overview.Overview.gateway_empty_action')}
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-start gap-4">
+            <button
+              type="button"
+              onClick={() => previewQr?.(masterQrTarget)}
+              className="group relative flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl border border-nexoraBorder bg-white p-2 shadow-inner"
+            >
+              <img
+                src={masterQrPreviewUrl}
+                alt={t('dashboard.master_gateway.qr_title')}
+                className="h-full w-full object-contain transition group-active:scale-95"
+              />
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-2xl bg-nexoraBrand/80 text-white opacity-0 transition group-hover:opacity-100">
+                <Eye className="h-4 w-4" />
+                <span className="text-[9px] font-black uppercase tracking-wider">
+                  {t('components.dashboard.views.StaffView.preview')}
+                </span>
+              </div>
+            </button>
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] font-bold text-nexoraText">{t('dashboard.master_gateway.qr_desc')}</p>
+              <p className="mt-1 text-[12px] leading-relaxed text-nexoraMuted">{t('dashboard.master_gateway.qr_body')}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => previewQr?.(masterQrTarget)}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-full border border-nexoraBorder bg-white px-3 text-[12px] font-bold text-nexoraText"
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                  {t('dashboard.master_gateway.btn_open')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleDownloadMasterQr()}
+                  disabled={isMasterQrDownloading || downloadTouchpointQrMutation.isPending}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-full bg-nexoraBrand px-3 text-[12px] font-bold text-white disabled:opacity-60"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  {t('dashboard.master_gateway.btn_download')}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </Panel>
+
       {/* ── Quick Actions ────────────────────────────────────────────────── */}
       <Panel title={k('quick_actions')} action={k('manage')} onAction={() => onNavigateMenu?.('touchpoints')}>
         <div className="grid grid-cols-4 gap-2">
           <QuickAction
             icon={<QrCode className="h-6 w-6" />}
             label={k('quick_add_qr')}
-            onClick={() => previewQr?.({ name: 'Master Welcome QR', subtitle: 'Store Main Portal', slug: 'general', isActive: true })}
+            onClick={() => previewQr?.(masterQrTarget)}
           />
           <QuickAction icon={<UserPlus className="h-6 w-6" />} label={k('quick_add_staff')} onClick={() => onNavigateMenu?.('staff')} />
           <QuickAction icon={<DollarSign className="h-6 w-6" />} label={k('quick_tips')} onClick={() => onNavigateMenu?.('tips')} />

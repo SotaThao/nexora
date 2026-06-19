@@ -6,7 +6,7 @@ interface ImportMetaEnv {
   readonly VITE_ENABLE_DEMO_TOOLS?: string
   readonly VITE_TOUCH_BUSINESS_ID?: string
   readonly VITE_TOUCH_BUSINESS_ID_MAP?: string
-  readonly VITE_RECAPTCHA_KEY?: string
+  readonly VITE_VLINKPAY_WEB_URL_BASE?: string
   readonly DEV: boolean
   readonly PROD: boolean
   readonly MODE: string

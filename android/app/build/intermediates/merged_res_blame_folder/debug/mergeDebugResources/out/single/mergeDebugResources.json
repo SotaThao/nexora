@@ -1,7 +1,7 @@
 [
     {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/mipmap-xxhdpi_ic_launcher.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/mipmap-xxhdpi/ic_launcher.png"
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/mipmap-mdpi_ic_launcher_background.png.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/mipmap-mdpi/ic_launcher_background.png"
     },
     {
         "merged": "net.vlinkgroup.nexora.app-debug-52:/drawable-land-night-xxxhdpi_splash.png.flat",
@@ -12,28 +12,8 @@
         "source": "net.vlinkgroup.nexora.app-main-54:/drawable-land-xxxhdpi/splash.png"
     },
     {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/drawable-port-night-xhdpi_splash.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/drawable-port-night-xhdpi/splash.png"
-    },
-    {
         "merged": "net.vlinkgroup.nexora.app-debug-52:/drawable-port-night-xhdpi_splash.png.flat",
         "source": "net.vlinkgroup.nexora.app-main-54:/drawable-port-night-xhdpi/splash.png"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/layout_activity_main.xml.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/layout/activity_main.xml"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/mipmap-ldpi_ic_launcher_background.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/mipmap-ldpi/ic_launcher_background.png"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/drawable-land-xxhdpi_splash.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/drawable-land-xxhdpi/splash.png"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/mipmap-xhdpi_ic_launcher.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/mipmap-xhdpi/ic_launcher.png"
     },
     {
         "merged": "net.vlinkgroup.nexora.app-debug-52:/drawable-port-xhdpi_splash.png.flat",
@@ -44,96 +24,52 @@
         "source": "net.vlinkgroup.nexora.app-main-54:/drawable-port-night-xxhdpi/splash.png"
     },
     {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/mipmap-ldpi_ic_launcher.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/mipmap-ldpi/ic_launcher.png"
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/mipmap-hdpi/ic_launcher.png"
     },
     {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/xml_config.xml.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/xml/config.xml"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/drawable-land-night-mdpi_splash.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/drawable-land-night-mdpi/splash.png"
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/mipmap-hdpi_ic_launcher_round.png.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/mipmap-hdpi/ic_launcher_round.png"
     },
     {
         "merged": "net.vlinkgroup.nexora.app-debug-52:/drawable-night_splash.png.flat",
         "source": "net.vlinkgroup.nexora.app-main-54:/drawable-night/splash.png"
     },
     {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/mipmap-xxxhdpi_ic_launcher_foreground.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/mipmap-xxxhdpi/ic_launcher_foreground.png"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/drawable-port-xxxhdpi_splash.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/drawable-port-xxxhdpi/splash.png"
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/mipmap-mdpi_ic_launcher_round.png.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/mipmap-mdpi/ic_launcher_round.png"
     },
     {
         "merged": "net.vlinkgroup.nexora.app-debug-52:/drawable-port-night-ldpi_splash.png.flat",
         "source": "net.vlinkgroup.nexora.app-main-54:/drawable-port-night-ldpi/splash.png"
     },
     {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/mipmap-hdpi_ic_launcher_round.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/mipmap-hdpi/ic_launcher_round.png"
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/xml_config.xml.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/xml/config.xml"
+    },
+    {
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/mipmap-ldpi_ic_launcher_foreground.png.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/mipmap-ldpi/ic_launcher_foreground.png"
     },
     {
         "merged": "net.vlinkgroup.nexora.app-debug-52:/drawable_splash.png.flat",
         "source": "net.vlinkgroup.nexora.app-main-54:/drawable/splash.png"
     },
     {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/drawable-land-xhdpi_splash.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/drawable-land-xhdpi/splash.png"
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/drawable_splash_screen.xml.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/drawable/splash_screen.xml"
     },
     {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/drawable-port-xxhdpi_splash.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/drawable-port-xxhdpi/splash.png"
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/xml_file_paths.xml.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/xml/file_paths.xml"
     },
     {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/mipmap-hdpi_ic_launcher_foreground.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/mipmap-hdpi/ic_launcher_foreground.png"
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/mipmap-xxxhdpi_ic_launcher_round.png.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/mipmap-xxxhdpi/ic_launcher_round.png"
     },
     {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/mipmap-xxhdpi_ic_launcher_background.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/mipmap-xxhdpi/ic_launcher_background.png"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/drawable-land-xxxhdpi_splash.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/drawable-land-xxxhdpi/splash.png"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/mipmap-hdpi_ic_launcher_background.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/mipmap-hdpi/ic_launcher_background.png"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/drawable-land-night-xxxhdpi_splash.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/drawable-land-night-xxxhdpi/splash.png"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/drawable-port-night-mdpi_splash.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/drawable-port-night-mdpi/splash.png"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/mipmap-hdpi_ic_launcher.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/mipmap-hdpi/ic_launcher.png"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/drawable-port-night-xxhdpi_splash.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/drawable-port-night-xxhdpi/splash.png"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/drawable-port-night-hdpi_splash.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/drawable-port-night-hdpi/splash.png"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/mipmap-anydpi-v26_ic_launcher.xml.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/mipmap-anydpi-v26/ic_launcher.xml"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/drawable_ic_launcher_background.xml.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/drawable/ic_launcher_background.xml"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/drawable-port-xhdpi_splash.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/drawable-port-xhdpi/splash.png"
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/mipmap-xxxhdpi/ic_launcher.png"
     },
     {
         "merged": "net.vlinkgroup.nexora.app-debug-52:/drawable-port-night-hdpi_splash.png.flat",
@@ -144,48 +80,40 @@
         "source": "net.vlinkgroup.nexora.app-main-54:/drawable-port-night-mdpi/splash.png"
     },
     {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/drawable-night_splash.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/drawable-night/splash.png"
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/mipmap-xxhdpi_ic_launcher_foreground.png.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/mipmap-xxhdpi/ic_launcher_foreground.png"
     },
     {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/mipmap-xhdpi_ic_launcher_foreground.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/mipmap-xhdpi/ic_launcher_foreground.png"
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/layout_activity_main.xml.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/layout/activity_main.xml"
     },
     {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/drawable-port-night-ldpi_splash.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/drawable-port-night-ldpi/splash.png"
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/mipmap-mdpi_ic_launcher_foreground.png.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/mipmap-mdpi/ic_launcher_foreground.png"
     },
     {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/drawable-port-ldpi_splash.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/drawable-port-ldpi/splash.png"
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/mipmap-xxhdpi/ic_launcher.png"
     },
     {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/mipmap-mdpi_ic_launcher.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/mipmap-mdpi/ic_launcher.png"
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/mipmap-hdpi_ic_launcher_background.png.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/mipmap-hdpi/ic_launcher_background.png"
     },
     {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/drawable-land-night-xhdpi_splash.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/drawable-land-night-xhdpi/splash.png"
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/mipmap-xxxhdpi_ic_launcher_foreground.png.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/mipmap-xxxhdpi/ic_launcher_foreground.png"
     },
     {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/drawable-port-hdpi_splash.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/drawable-port-hdpi/splash.png"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/mipmap-xhdpi_ic_launcher_round.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/mipmap-xhdpi/ic_launcher_round.png"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/mipmap-xxxhdpi_ic_launcher.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/mipmap-xxxhdpi/ic_launcher.png"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/drawable-port-mdpi_splash.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/drawable-port-mdpi/splash.png"
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/mipmap-ldpi_ic_launcher_round.png.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/mipmap-ldpi/ic_launcher_round.png"
     },
     {
         "merged": "net.vlinkgroup.nexora.app-debug-52:/drawable-port-mdpi_splash.png.flat",
         "source": "net.vlinkgroup.nexora.app-main-54:/drawable-port-mdpi/splash.png"
+    },
+    {
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/mipmap-xxhdpi_ic_launcher_round.png.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/mipmap-xxhdpi/ic_launcher_round.png"
     },
     {
         "merged": "net.vlinkgroup.nexora.app-debug-52:/drawable-port-xxhdpi_splash.png.flat",
@@ -196,20 +124,16 @@
         "source": "net.vlinkgroup.nexora.app-main-54:/drawable-land-hdpi/splash.png"
     },
     {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/mipmap-mdpi_ic_launcher_foreground.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/mipmap-mdpi/ic_launcher_foreground.png"
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/mipmap-xhdpi_ic_launcher_round.png.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/mipmap-xhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/mipmap-xhdpi_ic_launcher_background.png.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/mipmap-xhdpi/ic_launcher_background.png"
     },
     {
         "merged": "net.vlinkgroup.nexora.app-debug-52:/drawable-land-mdpi_splash.png.flat",
         "source": "net.vlinkgroup.nexora.app-main-54:/drawable-land-mdpi/splash.png"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/drawable-land-hdpi_splash.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/drawable-land-hdpi/splash.png"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/mipmap-xxhdpi_ic_launcher_round.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/mipmap-xxhdpi/ic_launcher_round.png"
     },
     {
         "merged": "net.vlinkgroup.nexora.app-debug-52:/drawable-port-hdpi_splash.png.flat",
@@ -220,52 +144,36 @@
         "source": "net.vlinkgroup.nexora.app-main-54:/drawable-port-ldpi/splash.png"
     },
     {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/mipmap-xxhdpi_ic_launcher_foreground.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/mipmap-xxhdpi/ic_launcher_foreground.png"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/drawable-v24_ic_launcher_foreground.xml.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/drawable-v24/ic_launcher_foreground.xml"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/mipmap-mdpi_ic_launcher_round.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/mipmap-mdpi/ic_launcher_round.png"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/drawable-land-mdpi_splash.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/drawable-land-mdpi/splash.png"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/mipmap-ldpi_ic_launcher_round.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/mipmap-ldpi/ic_launcher_round.png"
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/mipmap-xhdpi_ic_launcher_foreground.png.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/mipmap-xhdpi/ic_launcher_foreground.png"
     },
     {
         "merged": "net.vlinkgroup.nexora.app-debug-52:/drawable-land-night-xhdpi_splash.png.flat",
         "source": "net.vlinkgroup.nexora.app-main-54:/drawable-land-night-xhdpi/splash.png"
     },
     {
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/mipmap-ldpi_ic_launcher_background.png.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/mipmap-ldpi/ic_launcher_background.png"
+    },
+    {
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
         "merged": "net.vlinkgroup.nexora.app-debug-52:/drawable-land-xhdpi_splash.png.flat",
         "source": "net.vlinkgroup.nexora.app-main-54:/drawable-land-xhdpi/splash.png"
+    },
+    {
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/mipmap-xxxhdpi_ic_launcher_background.png.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/mipmap-xxxhdpi/ic_launcher_background.png"
     },
     {
         "merged": "net.vlinkgroup.nexora.app-debug-52:/drawable-land-xxhdpi_splash.png.flat",
         "source": "net.vlinkgroup.nexora.app-main-54:/drawable-land-xxhdpi/splash.png"
     },
     {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/mipmap-xxxhdpi_ic_launcher_round.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/mipmap-xxxhdpi/ic_launcher_round.png"
-    },
-    {
         "merged": "net.vlinkgroup.nexora.app-debug-52:/drawable-port-xxxhdpi_splash.png.flat",
         "source": "net.vlinkgroup.nexora.app-main-54:/drawable-port-xxxhdpi/splash.png"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/drawable-land-night-xxhdpi_splash.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/drawable-land-night-xxhdpi/splash.png"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/xml_file_paths.xml.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/xml/file_paths.xml"
     },
     {
         "merged": "net.vlinkgroup.nexora.app-debug-52:/drawable-land-night-ldpi_splash.png.flat",
@@ -276,59 +184,43 @@
         "source": "net.vlinkgroup.nexora.app-main-54:/drawable-land-ldpi/splash.png"
     },
     {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/drawable_splash.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/drawable/splash.png"
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/mipmap-mdpi_ic_launcher.png.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/mipmap-mdpi/ic_launcher.png"
     },
     {
         "merged": "net.vlinkgroup.nexora.app-debug-52:/drawable-port-night-xxxhdpi_splash.png.flat",
         "source": "net.vlinkgroup.nexora.app-main-54:/drawable-port-night-xxxhdpi/splash.png"
     },
     {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/drawable-land-night-hdpi_splash.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/drawable-land-night-hdpi/splash.png"
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/mipmap-xhdpi/ic_launcher.png"
     },
     {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/mipmap-mdpi_ic_launcher_background.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/mipmap-mdpi/ic_launcher_background.png"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/mipmap-xxxhdpi_ic_launcher_background.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/mipmap-xxxhdpi/ic_launcher_background.png"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/drawable-land-ldpi_splash.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/drawable-land-ldpi/splash.png"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/mipmap-ldpi_ic_launcher_foreground.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/mipmap-ldpi/ic_launcher_foreground.png"
-    },
-    {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/mipmap-xhdpi_ic_launcher_background.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/mipmap-xhdpi/ic_launcher_background.png"
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/mipmap-ldpi_ic_launcher.png.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/mipmap-ldpi/ic_launcher.png"
     },
     {
         "merged": "net.vlinkgroup.nexora.app-debug-52:/drawable-land-night-mdpi_splash.png.flat",
         "source": "net.vlinkgroup.nexora.app-main-54:/drawable-land-night-mdpi/splash.png"
     },
     {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/drawable-land-night-ldpi_splash.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/drawable-land-night-ldpi/splash.png"
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/mipmap-anydpi-v26/ic_launcher_round.xml"
     },
     {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/drawable-port-night-xxxhdpi_splash.png.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/drawable-port-night-xxxhdpi/splash.png"
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/mipmap-hdpi_ic_launcher_foreground.png.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/mipmap-hdpi/ic_launcher_foreground.png"
     },
     {
         "merged": "net.vlinkgroup.nexora.app-debug-52:/drawable-land-night-xxhdpi_splash.png.flat",
         "source": "net.vlinkgroup.nexora.app-main-54:/drawable-land-night-xxhdpi/splash.png"
     },
     {
-        "merged": "net.vlinkgroup.nexora.app-debug-52:/drawable-land-night-hdpi_splash.png.flat",
-        "source": "net.vlinkgroup.nexora.app-main-54:/drawable-land-night-hdpi/splash.png"
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/mipmap-xxhdpi_ic_launcher_background.png.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/mipmap-xxhdpi/ic_launcher_background.png"
     },
     {
-        "merged": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-debug-52:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
-        "source": "/Users/macmini/.gradle/daemon/8.13/net.vlinkgroup.nexora.app-main-54:/mipmap-anydpi-v26/ic_launcher_round.xml"
+        "merged": "net.vlinkgroup.nexora.app-debug-52:/drawable-land-night-hdpi_splash.png.flat",
+        "source": "net.vlinkgroup.nexora.app-main-54:/drawable-land-night-hdpi/splash.png"
     }
 ]

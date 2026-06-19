@@ -17,7 +17,7 @@
       "profile_account": "Setting",
       "profile_kyc": "KYC",
       "tab_home": "Home",
-      "tab_qr": "My QR"
+      "tab_qr": "QR"
     },
     "titles": {
       "home": "Dashboard",
@@ -45,7 +45,6 @@
       "tips_count": "{count} tips",
       "tips_plus": "+ {count} tips",
       "awaiting_confirm": "{count} awaiting confirmation",
-      "all_clear": "All clear!",
       "need_confirm": "Need confirm",
       "pending_confirmations": "Pending Confirmations",
       "no_pending": "No pending confirmations.",
@@ -61,7 +60,7 @@
       "display_name": "Display name",
       "via_method": "via {method}",
       "anonymous_customer": "Customer",
-      "quick_qr": "My QR",
+      "quick_qr": "QR",
       "quick_tips": "Tips",
       "quick_reviews": "Reviews",
       "quick_payments": "Payments",
@@ -512,16 +511,16 @@
       "all_touchpoints": "All Touch Points",
       "all_payments": "All Payment Methods",
       "all_statuses": "All Statuses",
-      "filter_staff_type": "Staff Type",
-      "all_staff_types": "All Types",
-      "multi_staff_only": "Multi-staff tips",
-      "single_staff_only": "Single-staff tips",
       "filter_search": "Search",
       "search_placeholder": "Search ID, staff, touchpoint...",
       "modal_title": "Transaction Details",
       "receipt_qr": "Receipt QR Code",
       "scan_to_view": "Scan to view details or customer receipt",
       "staff_id": "Staff ID",
+      "filter_staff_type": "Staff Type",
+      "all_staff_types": "All Types",
+      "multi_staff_only": "Multi-staff tips",
+      "single_staff_only": "Single-staff tips",
       "staff_code": "Staff Code"
     },
     "modals": {
@@ -631,6 +630,13 @@
       },
       "form": {
         "title": "Submit Support Ticket",
+        "subject_label": "Subject",
+        "subject_placeholder": "e.g., NFC Terminal not responding",
+        "description_label": "Describe Issue",
+        "description_placeholder": "Provide details about the issue you are experiencing...",
+        "submit_btn": "Submit Ticket",
+        "success_msg": "Ticket submitted successfully! Our team will contact you shortly.",
+        "error_msg": "Please fix the highlighted fields and try again.",
         "full_name_label": "Full Name",
         "full_name_placeholder": "Enter your full name",
         "full_name_required": "Full name is required.",
@@ -661,10 +667,7 @@
         "length_counter_with_max": "{count}/{max} characters (min {min})",
         "captcha_not_ready": "Security verification is loading. Please try again in a moment.",
         "captcha_error": "Security verification failed. Please refresh the page and try again.",
-        "submit_btn": "Submit Ticket",
         "submitting_btn": "Submitting...",
-        "success_msg": "Ticket submitted successfully! Our team will contact you shortly.",
-        "error_msg": "Please fix the highlighted fields and try again.",
         "submit_error_msg": "Could not submit your ticket. Please try again."
       },
       "faq": {
@@ -865,7 +868,6 @@
     "header_subtitle": "Nexora Touch Secure Gate",
     "select_staff_title": "Who served you today?",
     "select_staff_subtitle": "Select the staff member you'd like to tip.",
-    "inline_tip_label": "Tip amount",
     "search_staff_placeholder": "Search staff...",
     "no_staff_found": "No staff members found.",
     "step_form_title": "Add a Tip for {name}",
@@ -876,7 +878,6 @@
     "feedback_label": "Leave a comment (optional)",
     "feedback_placeholder": "Anna did an amazing job! I love my nails!",
     "pay_btn": "Next",
-    "tip_review_payment_title": "Review tip & choose payment",
     "payment_title": "How would you like to pay?",
     "payment_desc": "Choose your preferred payment method.",
     "payment_empty_title": "No payment methods available",
@@ -913,10 +914,6 @@
     "tip_success_prefix": "Your tip of ",
     "tip_success_sent": " has been sent to ",
     "tip_success_sub": "We appreciate you!",
-    "tips_summary_title": "Tip Sent!",
-    "tips_summary_via": "via",
-    "tips_summary_review_cta": "Leave a Review",
-    "tips_summary_skip": "Skip",
     "done": "Done",
     "invalid_tip": "Please enter a valid tip amount greater than 0.",
     "secure_footer": "Secure SSL Redirect Gateway",
@@ -944,7 +941,13 @@
     "scan_to_tip_review": "Scan to Tip & Review",
     "tip_min_error": "Tip must be at least {amount}.",
     "tip_max_error": "Tip cannot exceed {amount}.",
-    "tip_total_max_error": "Total tips cannot exceed {amount}."
+    "tip_total_max_error": "Total tips cannot exceed {amount}.",
+    "inline_tip_label": "Tip amount",
+    "tip_review_payment_title": "Review tip & choose payment",
+    "tips_summary_title": "Tip Sent!",
+    "tips_summary_via": "via",
+    "tips_summary_review_cta": "Leave a Review",
+    "tips_summary_skip": "Skip"
   },
   "register": {
     "create_account": "Create Account",
@@ -1123,11 +1126,6 @@
   },
   "errors": {
     "unknown_error": "An unknown error occurred. Please try again.",
-    "contact_request_message_min_length": "Your message is too short. Please enter at least {min} characters describing the issue.",
-    "contact_request_message_max_length": "Your message is too long. Please keep it under {max} characters.",
-    "contact_request_message_required": "Please describe the issue before submitting.",
-    "contact_request_support_type_min_length": "Please select a support type.",
-    "contact_request_support_type_required": "Support type is required.",
     "user_login_invalid_username_or_password": "Invalid username or password.",
     "user_account_inactive": "Your account is currently inactive. Please contact support.",
     "user_email_already_exists": "This email address is already registered.",
@@ -1167,7 +1165,12 @@
     "common_internal_server_error": "An internal server error occurred.",
     "generic": "Something went wrong",
     "touchpoint_not_found": "Page Not Found",
-    "touchpoint_not_found_desc": "This touch point could not be loaded."
+    "touchpoint_not_found_desc": "This touch point could not be loaded.",
+    "contact_request_message_min_length": "Your message is too short. Please enter at least {min} characters describing the issue.",
+    "contact_request_message_max_length": "Your message is too long. Please keep it under {max} characters.",
+    "contact_request_message_required": "Please describe the issue before submitting.",
+    "contact_request_support_type_min_length": "Please select a support type.",
+    "contact_request_support_type_required": "Support type is required."
   },
   "components": {
     "common": {
@@ -1489,7 +1492,6 @@
       "hooks": {
         "useRegisterForm": {
           "invalidOtpTryAgain": "Invalid verification code. Please check and try again.",
-          "invalidCodeTipEnter": "Invalid verification code. Please check and try again.",
           "thisFieldIsRequired": "This field is required.",
           "newJoinRequest": "New Join Request",
           "justNow": "Just now",
@@ -1498,7 +1500,8 @@
           "activateOtp": "Activate Account",
           "profileSetup": "Profile Setup",
           "payoutSetup": "Payout Setup",
-          "success": "Success"
+          "success": "Success",
+          "invalidCodeTipEnter": "Invalid verification code. Please check and try again."
         }
       },
       "modals": {
@@ -1527,23 +1530,23 @@
         "StepCredentials": {
           "activateAccountEnterOtp": "Activate Account (Enter OTP)",
           "enterTheOtpCode": "Enter the OTP code sent to your email to activate your account.",
-          "otpSentToEmail": "OTP sent to email",
           "enterOtpCode": "Enter OTP Code *",
           "resendVerificationCode": "Resend Verification Code",
           "verifyAndActivate": "Verify & Activate",
           "processing": "Processing...",
           "register": "Register",
-          "phExampleOtp": "e.g. 1234"
+          "phExampleOtp": "e.g. 1234",
+          "otpSentToEmail": "OTP sent to email"
         },
         "StepOtpVerify": {
           "activateAccountEnterOtp": "Activate Account (Enter OTP)",
           "enterTheOtpCode": "Enter the OTP code sent to your email to activate your account.",
-          "otpSentToEmail": "OTP sent to email",
           "enterOtpCode": "Enter OTP Code *",
           "resendVerificationCode": "Resend Verification Code",
           "verifyAndActivate": "Verify & Activate",
-          "processing": "Processing...",
-          "phExampleOtp": "e.g. 1234"
+          "phExampleOtp": "e.g. 1234",
+          "otpSentToEmail": "OTP sent to email",
+          "processing": "Processing..."
         },
         "StepPayoutSetup": {
           "payoutConfiguration": "Payout Configuration",

@@ -49,7 +49,7 @@ export default function CustomerFlow() {
       {/* Glow effects */}
       <div className="absolute top-0 left-0 w-full h-[30%] bg-gradient-to-b from-blue-50/50 to-transparent pointer-events-none" />
 
-      <BackToDashboardHeaderButton />
+      {step !== 'google_yelp_review' && <BackToDashboardHeaderButton />}
 
       {/* Language Switcher */}
       <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-nexoraBorder shadow-sm">

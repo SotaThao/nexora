@@ -21,6 +21,10 @@ export default function MobileMenuDrawer({
   setTipsTab,
   isTipsMobileExpanded,
   setIsTipsMobileExpanded,
+  touchpointsTab,
+  setTouchpointsTab,
+  isTouchpointsMobileExpanded,
+  setIsTouchpointsMobileExpanded,
   hasKyb,
   userRole,
   onLogout,
@@ -175,6 +179,9 @@ export default function MobileMenuDrawer({
                     if (id === 'tips') {
                       navigateMenu(id)
                       setIsTipsMobileExpanded(!isTipsMobileExpanded)
+                    } else if (id === 'touchpoints') {
+                      navigateMenu(id)
+                      setIsTouchpointsMobileExpanded(!isTouchpointsMobileExpanded)
                     } else {
                       navigateMenu(id)
                     }
@@ -189,9 +196,12 @@ export default function MobileMenuDrawer({
                     <MenuIcon item={item} active={isActive} />
                     <span>{localizedLabel}</span>
                   </div>
-                  {(id === 'tips') && (
+                  {(id === 'tips' || id === 'touchpoints') && (
                     <div className="text-white/50 shrink-0">
-                      {isTipsMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      {id === 'tips'
+                        ? (isTipsMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)
+                        : (isTouchpointsMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)
+                      }
                     </div>
                   )}
                 </button>
