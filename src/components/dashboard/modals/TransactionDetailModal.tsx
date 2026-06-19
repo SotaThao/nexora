@@ -5,7 +5,7 @@ import { useNotification } from '../../../contexts/NotificationContext'
 import { formatCurrency } from '../utils'
 import { WalletLogos } from '../constants'
 import { logger } from '../../../utils/logger'
-import { resolveMerchantStaffTipQr, buildQrImageUrl } from '../../../utils/staffTipUrl'
+import { buildQrImageUrl, slugify, toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
 import QrModal from './QrModal'
 
 function normalizeTipItems(tx) {
@@ -30,8 +30,18 @@ function findTouchpointForTx(tx, touchpoints = []) {
   )
 }
 
-function findStaffMember(staffProfileId, staff = []) {
-  return staff.find((member) => member.staffProfileId === staffProfileId) ?? null
+function resolveTouchPointQrUrl(touchpoint, businessName = '') {
+  const origin = typeof window !== 'undefined' ? window.location.origin : ''
+
+  if (touchpoint?.url) {
+    return toLocalCustomerTouchUrl(String(touchpoint.url), origin)
+  }
+
+  const businessSlug = slugify(businessName)
+  const touchPointSlug = touchpoint?.slug || touchpoint?.id
+  if (!businessSlug || !touchPointSlug) return null
+
+  return `${origin}/touch/${businessSlug}/${touchPointSlug}`
 }
 
 function getPaymentMethodLogo(method) {
@@ -90,72 +100,65 @@ export default function TransactionDetailModal({
 
   const tipItems = useMemo(() => normalizeTipItems(selectedTx), [selectedTx])
   const isMultiStaff = Boolean(selectedTx?.isMultiStaff && tipItems.length > 0)
+  const touchpoint = useMemo(
+    () => findTouchpointForTx(selectedTx, touchpoints),
+    [selectedTx, touchpoints],
+  )
+  const touchPointQrUrl = useMemo(
+    () => resolveTouchPointQrUrl(touchpoint, businessName),
+    [touchpoint, businessName],
+  )
 
   if (!selectedTx) return null
 
-  const openStaffQr = (staffProfileId, staffName) => {
-    if (!staffProfileId) return
-    const member = findStaffMember(staffProfileId, staff)
-    const masterTouchpoint = findTouchpointForTx(selectedTx, touchpoints)
-    const staffTipQr = resolveMerchantStaffTipQr(staffProfileId, {
-      businessName,
-      masterTouchpoint,
-    })
-    if (!staffTipQr?.tipUrl) return
+  const touchPointName = touchpoint?.name || selectedTx.touchpoint || 'Touch Point'
+
+  const openTouchPointQr = () => {
+    if (!touchPointQrUrl) return
 
     setQrTarget({
-      name: `Personal QR - ${staffName || member?.fullName || 'Staff'}`,
-      subtitle: member?.position || 'Staff QR',
-      slug: staffTipQr.touchPointSlug,
-      url: staffTipQr.tipUrl,
-      qrImageUrl: staffTipQr.qrImageUrl,
-      isActive: member?.isActive !== false,
-      isStaffQr: true,
+      name: touchPointName,
+      subtitle: businessName,
+      slug: touchpoint?.slug || touchpoint?.id || '',
+      url: touchPointQrUrl,
+      qrImageUrl: touchpoint?.qrImageUrl,
+      isActive: touchpoint?.isActive !== false,
+      isStaffQr: false,
     })
   }
 
-  const buildShareUrl = (staffProfileId) => {
-    const masterTouchpoint = findTouchpointForTx(selectedTx, touchpoints)
-    return resolveMerchantStaffTipQr(staffProfileId, {
-      businessName,
-      masterTouchpoint,
-    })?.tipUrl
-  }
-
-  const handleShare = async (staffProfileId, staffName) => {
-    const shareUrl = buildShareUrl(staffProfileId)
-    if (!shareUrl) return
+  const handleShareTouchPoint = async () => {
+    if (!touchPointQrUrl) return
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Tip ${staffName}`,
-          url: shareUrl,
+          title: touchPointName,
+          url: touchPointQrUrl,
         })
       } catch (err) {
         logger.error(err)
       }
     } else {
-      await navigator.clipboard.writeText(shareUrl)
+      await navigator.clipboard.writeText(touchPointQrUrl)
       showToast(t('components.dashboard.modals.TransactionDetailModal.tippingLinkCopiedTo'), 'success')
     }
   }
 
-  const renderQrThumb = (staffProfileId, staffName, size = 80) => {
-    const shareUrl = buildShareUrl(staffProfileId)
-    if (!shareUrl) return null
-    const qrImageSrc = buildQrImageUrl(shareUrl, size)
+  const renderQrThumb = (size = 80) => {
+    if (!touchPointQrUrl) return null
+    const qrImageSrc = buildQrImageUrl(touchPointQrUrl, size, touchpoint?.qrImageUrl)
 
     return (
       <button
         type="button"
-        onClick={() => openStaffQr(staffProfileId, staffName)}
+        onClick={openTouchPointQr}
         className="group flex shrink-0 flex-col items-center gap-1 rounded-lg border border-slate-200 bg-white p-1.5 shadow-sm transition hover:border-nexoraBrand hover:shadow-md cursor-pointer"
         title={t('components.dashboard.views.StaffView.clickToEnlarge')}
       >
         <img
           src={qrImageSrc}
-          alt={`QR for ${staffName}`}
+          alt={`QR for ${touchPointName}`}
           className="h-16 w-16 object-contain"
         />
         <span className="text-[8px] font-bold uppercase tracking-wider text-nexoraMuted group-hover:text-nexoraBrand">
@@ -268,44 +271,36 @@ export default function TransactionDetailModal({
                 {tipItems.map((item) => (
                   <div
                     key={item.staffProfileId || item.staffName}
-                    className="flex items-center gap-3 rounded-lg border border-nexoraBorder bg-white p-3"
+                    className="rounded-lg border border-nexoraBorder bg-white p-3"
                   >
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold text-nexoraText truncate">{item.staffName || '—'}</p>
-                      <p className="font-mono text-[10px] text-slate-400 mt-0.5 break-all">
-                        {t('dashboard.activity_log.staff_id')}: {item.staffProfileId || 'N/A'}
-                      </p>
-                      <p className="text-sm font-extrabold text-nexoraBrand mt-1.5">
-                        {formatCurrency(item.amount)}
-                      </p>
-                      {item.staffProfileId ? (
-                        <button
-                          type="button"
-                          onClick={() => handleShare(item.staffProfileId, item.staffName)}
-                          className="mt-2 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer"
-                        >
-                          <Share2 className="h-3 w-3" />
-                          {t('components.dashboard.modals.TransactionDetailModal.shareLink')}
-                        </button>
-                      ) : null}
-                    </div>
-                    {item.staffProfileId ? renderQrThumb(item.staffProfileId, item.staffName) : null}
+                    <p className="text-xs font-bold text-nexoraText truncate">{item.staffName || '—'}</p>
+                    <p className="font-mono text-[10px] text-slate-400 mt-0.5 break-all">
+                      {t('dashboard.activity_log.staff_id')}: {item.staffProfileId || 'N/A'}
+                    </p>
+                    <p className="text-sm font-extrabold text-nexoraBrand mt-1.5">
+                      {formatCurrency(item.amount)}
+                    </p>
                   </div>
                 ))}
               </div>
-            ) : singleStaffProfileId ? (
+            ) : null}
+
+            {touchPointQrUrl ? (
               <div className="flex gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100 items-center">
-                {renderQrThumb(singleStaffProfileId, singleStaffName, 160)}
+                {renderQrThumb(160)}
                 <div className="flex flex-col text-left min-w-0">
                   <span className="text-[9px] font-black uppercase text-nexoraMuted tracking-widest">
                     {t('components.dashboard.modals.TransactionDetailModal.tippingQrCode')}
                   </span>
                   <span className="text-[11px] text-slate-500 mt-1 leading-normal">
-                    {t('components.dashboard.modals.TransactionDetailModal.scanToTipThis')}
+                    {t('components.dashboard.modals.TransactionDetailModal.scanToTipTouchPoint')}
                   </span>
+                  <p className="mt-1 break-all font-mono text-[10px] text-slate-400 select-all">
+                    {touchPointQrUrl.replace(/^https?:\/\//, '')}
+                  </p>
                   <button
                     type="button"
-                    onClick={() => handleShare(singleStaffProfileId, singleStaffName)}
+                    onClick={handleShareTouchPoint}
                     className="mt-2.5 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-[10px] font-black uppercase tracking-wider text-indigo-600 transition-colors w-max cursor-pointer"
                   >
                     <Share2 className="h-3 w-3" />

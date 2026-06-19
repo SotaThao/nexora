@@ -238,7 +238,6 @@ export default function MobileMenuDrawer({
                   <div className="ml-9 mt-1 space-y-1 border-l border-white/10 pl-3 animate-fadeIn">
                     {[
                       { id: 'stations', label: t('dashboard.touchpoints.tabs.stations') },
-                      { id: 'devices', label: t('dashboard.touchpoints.tabs.devices') }
                     ].map(sub => {
                       const isSubActive = activeMenu === 'touchpoints' && touchpointsTab === sub.id
                       return (

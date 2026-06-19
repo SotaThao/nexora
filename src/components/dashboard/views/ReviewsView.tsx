@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Star, ExternalLink, Lock, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Star, ExternalLink, Lock, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { renderTextWithGoldStars } from '../utils'
 import Panel from '../../ui/Panel'

@@ -1,22 +1,26 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
 import {
   Plus,
   Trash2,
   QrCode,
   ShieldAlert,
   HelpCircle,
-  CheckCircle,
   Check,
   X,
   Smartphone,
   Layers,
   Activity,
   AlertOctagon,
-  ExternalLink
+  ExternalLink,
+  Loader2
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
 import CustomSelect from './CustomSelect'
+import Pagination from './ui/Pagination'
 import DevicesView from './DevicesView'
+import { useTouchpoints } from '../data/hooks/useMerchantTouchpoints'
+import { usePagination } from '../hooks/usePagination'
+import { DEFAULT_PAGE_SIZE, STAFF_FILTER_LIST_PAGE_SIZE } from '../constants/pagination'
 
 function Panel({ children, className = '' }) {
   return (
@@ -41,7 +45,6 @@ function IconButton({ label, children, className = '', ...props }) {
 }
 
 export default function TouchpointsView({
-  touchpoints = [],
   onOpenAddModal,
   onDelete,
   onQr,
@@ -57,15 +60,48 @@ export default function TouchpointsView({
   onTabChange
 }) {
   const { t } = useTranslation()
-  const [localActiveSubTab, setLocalActiveSubTab] = useState('stations') // 'stations' or 'devices'
+  const [localActiveSubTab, setLocalActiveSubTab] = useState('stations')
   const activeSubTab = propActiveSubTab !== undefined ? propActiveSubTab : localActiveSubTab
   const setActiveSubTab = onTabChange !== undefined ? onTabChange : setLocalActiveSubTab
   const [deleteConfirmId, setDeleteConfirmId] = useState<any | null>(null)
 
-  // Local state for the Add Touchpoint form
+  // Local state for the Add Touchpoint form (name also drives list filter via API)
   const [name, setName] = useState('')
   const [type, setType] = useState('Table QR')
   const [deviceId, setDeviceId] = useState('')
+  const [debouncedNameFilter, setDebouncedNameFilter] = useState('')
+  const { pageNumber, pageSize, setPage, reset: resetPage } = usePagination({ pageSize: DEFAULT_PAGE_SIZE })
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedNameFilter(name.trim()), 400)
+    return () => window.clearTimeout(timer)
+  }, [name])
+
+  useEffect(() => {
+    resetPage()
+  }, [debouncedNameFilter, resetPage])
+
+  const listQuery = useMemo(() => ({
+    PageNumber: pageNumber,
+    PageSize: pageSize,
+    ...(debouncedNameFilter ? { Name: debouncedNameFilter } : {}),
+  }), [pageNumber, pageSize, debouncedNameFilter])
+
+  const {
+    data: touchpointsPage,
+    isLoading,
+    isFetching,
+  } = useTouchpoints(listQuery)
+  const { data: touchpointsStatsPage } = useTouchpoints(
+    { PageNumber: 1, PageSize: STAFF_FILTER_LIST_PAGE_SIZE },
+  )
+
+  const touchpoints = touchpointsPage?.items ?? []
+  const statsTouchpoints = touchpointsStatsPage?.items ?? touchpoints
+  const totalCount = touchpointsPage?.totalCount ?? 0
+  const totalPages = touchpointsPage?.totalPages ?? 1
+  const hasNextPage = touchpointsPage?.hasNextPage ?? false
+  const hasPreviousPage = touchpointsPage?.hasPreviousPage ?? false
 
   // Local state for Linking Devices
   const [linkingPointId, setLinkingPointId] = useState<any | null>(null)
@@ -112,20 +148,21 @@ export default function TouchpointsView({
   }
 
   // Calculate dynamic Hardware KPIs
-  const totalTouchpoints = touchpoints.length
+  const kpiTouchpoints = statsTouchpoints ?? touchpoints
+  const totalTouchpoints = totalCount ?? kpiTouchpoints.length
 
-  const activeNfcStands = touchpoints.filter(
+  const activeNfcStands = kpiTouchpoints.filter(
     (point) =>
       point.deviceId &&
       point.deviceId.trim().toUpperCase().startsWith('NFC') &&
       point.isActive !== false
   ).length
 
-  const totalScans = touchpoints.reduce((sum, point) => sum + (point.scans || 0), 0)
+  const totalScans = kpiTouchpoints.reduce((sum, point) => sum + (point.scans || 0), 0)
 
-  const deviceIssues = touchpoints.filter(
+  const deviceIssues = kpiTouchpoints.filter(
     (point) => point.deviceId && point.isActive === false
-  ).length || 1
+  ).length
 
   return (
     <div className="space-y-6">
@@ -143,18 +180,22 @@ export default function TouchpointsView({
         {/* Navigation Tabs */}
         <div className="flex flex-wrap gap-1 bg-nexoraSurfaceMuted dark:bg-luxuryCoal p-1 rounded-xl border border-nexoraBorder dark:border-luxuryGold/10">
           {[
-            { id: 'stations', label: t('dashboard.touchpoints.tabs.stations') },
-            { id: 'devices', label: t('dashboard.touchpoints.tabs.devices') }
+            { id: 'stations', label: t('dashboard.touchpoints.tabs.stations'), disabled: false },
+            { id: 'devices', label: t('dashboard.touchpoints.tabs.devices'), disabled: true }
           ].map(tab => (
             <button
               key={tab.id}
               type="button"
-              onClick={() => setActiveSubTab(tab.id)}
+              disabled={tab.disabled}
+              onClick={() => !tab.disabled && setActiveSubTab(tab.id)}
               className={`h-9 rounded-lg px-4 text-xs font-bold transition-all min-w-[44px] ${
-                activeSubTab === tab.id
-                  ? 'bg-white dark:bg-luxuryBlack text-luxuryGold shadow-sm font-black'
-                  : 'text-nexoraMuted hover:text-nexoraText dark:text-slate-400 dark:hover:text-white'
+                tab.disabled
+                  ? 'cursor-not-allowed opacity-45 text-nexoraMuted'
+                  : activeSubTab === tab.id
+                    ? 'bg-white dark:bg-luxuryBlack text-luxuryGold shadow-sm font-black'
+                    : 'text-nexoraMuted hover:text-nexoraText dark:text-slate-400 dark:hover:text-white'
               }`}
+              title={tab.disabled ? t('common.coming_soon') : undefined}
             >
               {tab.label}
             </button>
@@ -226,12 +267,17 @@ export default function TouchpointsView({
                 <label className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
                   {t('dashboard.modals.tp_name_label')}
                 </label>
-                <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder={t('dashboard.modals.tp_name_placeholder')}
-                  className="h-11 w-full rounded-flox-inputs border border-nexoraBorder dark:border-luxuryGold/18 bg-white dark:bg-luxuryCoal px-3 text-base text-nexoraText outline-none focus:border-nexoraBrand dark:focus:border-luxuryGold"
-                />
+                <div className="relative">
+                  <input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder={t('dashboard.modals.tp_name_placeholder')}
+                    className="h-11 w-full rounded-flox-inputs border border-nexoraBorder dark:border-luxuryGold/18 bg-white dark:bg-luxuryCoal px-3 pr-10 text-base text-nexoraText outline-none focus:border-nexoraBrand dark:focus:border-luxuryGold"
+                  />
+                  {isFetching && !isLoading ? (
+                    <Loader2 className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-nexoraBrand" />
+                  ) : null}
+                </div>
               </div>
 
               <div className="space-y-1.5">
@@ -276,7 +322,11 @@ export default function TouchpointsView({
 
           {/* Touchpoint Cards Grid */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {touchpoints.length === 0 && (
+            {isLoading ? (
+              <Panel className="md:col-span-2 xl:col-span-3 flex items-center justify-center py-16">
+                <Loader2 className="h-7 w-7 animate-spin text-nexoraBrand" />
+              </Panel>
+            ) : touchpoints.length === 0 ? (
               <Panel className="md:col-span-2 xl:col-span-3 border-dashed border-nexoraBorder/80">
                 <div className="mx-auto flex max-w-xl flex-col items-center gap-4 px-6 py-12 text-center sm:gap-5 sm:py-14">
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-nexoraBrandSoft to-brandCyan/20 dark:from-nexoraBrand/20 dark:to-brandCyan/20 text-nexoraBrand shadow-sm ring-1 ring-nexoraBrand/10">
@@ -290,8 +340,8 @@ export default function TouchpointsView({
                   </p>
                 </div>
               </Panel>
-            )}
-            {touchpoints.map((point) => {
+            ) : null}
+            {!isLoading && touchpoints.map((point) => {
               const isPointActive = point.isActive !== false
               // Use the canonical customer URL from the API (`url`, with real
               // business + touch-point slugs). Keep the current origin so it
@@ -473,12 +523,8 @@ export default function TouchpointsView({
                             {point.deviceId ? (
                               <button
                                 type="button"
-                                onClick={() => {
-                                  setHighlightedDeviceId(point.deviceId)
-                                  setActiveSubTab('devices')
-                                }}
-                                className="flex items-center gap-1.5 bg-gradient-to-r from-nexoraBrand/10 to-brandCyan/10 text-nexoraBrand dark:text-luxuryGold px-2 py-1 rounded-full border border-nexoraBrand/20 text-[9.5px] font-black uppercase tracking-wider truncate cursor-pointer hover:scale-[1.03] active:scale-95 transition-all select-none"
-                                title="Click to view hardware details"
+                                className="flex items-center gap-1.5 bg-gradient-to-r from-nexoraBrand/10 to-brandCyan/10 text-nexoraBrand dark:text-luxuryGold px-2 py-1 rounded-full border border-nexoraBrand/20 text-[9.5px] font-black uppercase tracking-wider truncate cursor-default select-none"
+                                title={point.deviceId}
                               >
                                 <Smartphone className="h-3.5 w-3.5 text-nexoraBrand dark:text-luxuryGold" />
                                 <span>{point.deviceId}</span>
@@ -513,6 +559,20 @@ export default function TouchpointsView({
               )
             })}
           </div>
+
+          {!isLoading && totalPages > 1 && (
+            <Pagination
+              pageNumber={pageNumber}
+              pageSize={pageSize}
+              totalPages={totalPages}
+              totalCount={totalCount ?? touchpoints.length}
+              hasNextPage={hasNextPage}
+              hasPreviousPage={hasPreviousPage}
+              onPageChange={setPage}
+              isLoading={isFetching}
+              className="pt-2"
+            />
+          )}
 
           {/* Custom Delete Confirmation Modal */}
           {deleteConfirmId && (
