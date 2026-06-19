@@ -52,6 +52,7 @@ pr_body.md
 .DS_Store
 
 *.test.tsx
+*.test.ts
 
 package-lock.json
 

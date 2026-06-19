@@ -1,53 +1,22 @@
 import React from 'react';
-import { CheckCircle } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { useTranslation } from '../../../contexts/LanguageContext';
-import { formatUSD } from '../../../utils/tipsFormatters';
 
-export default function TipsPayoutsTab({ staffPayouts }) {
+export default function TipsPayoutsTab() {
   const { t } = useTranslation();
 
   return (
-    <div className="card-elevated">
-      <h4 className="text-sm font-black text-inkBlue dark:text-white uppercase tracking-wider mb-6">
-        {t('dashboard.tips.payouts.title')}
-      </h4>
-
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs">
-          <thead>
-            <tr className="border-b border-nexoraBorder dark:border-white/5 text-mutedGrey dark:text-slate-400 uppercase tracking-widest text-[10px]">
-              <th className="py-3 px-3">{t('dashboard.tips.payouts.col_staff')}</th>
-              <th className="py-3 px-3">{t('dashboard.tips.payouts.col_method')}</th>
-              <th className="py-3 px-3">{t('dashboard.tips.payouts.col_amount')}</th>
-              <th className="py-3 px-3">{t('dashboard.tips.payouts.col_status')}</th>
-              <th className="py-3 px-3">{t('dashboard.tips.payouts.col_activity')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {staffPayouts.map(payout => (
-              <tr key={payout.id} className="border-b border-nexoraBorder/50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5">
-                <td className="py-3.5 px-3 font-bold text-inkBlue dark:text-white flex items-center gap-2">
-                  <div className="h-6 w-6 flex items-center justify-center rounded-full bg-slate-100 dark:bg-white/5 text-[10px] font-black text-luxuryGold">
-                    {payout.staffName.charAt(0)}
-                  </div>
-                  {payout.staffName}
-                </td>
-                <td className="py-3.5 px-3">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-slate-100 dark:bg-white/5 text-mutedGrey dark:text-slate-400">
-                    {payout.method}
-                  </span>
-                </td>
-                <td className="py-3.5 px-3 font-black text-luxuryGold">{formatUSD(payout.totalAmount)}</td>
-                <td className="py-3.5 px-3">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                    <CheckCircle className="h-3 w-3" /> {t('dashboard.tips.payouts.status_direct')}
-                  </span>
-                </td>
-                <td className="py-3.5 px-3 text-mutedGrey dark:text-slate-400">{payout.lastDate}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div className="card-elevated flex min-h-[400px] items-center justify-center">
+      <div className="max-w-md text-center">
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl border border-nexoraBorder dark:border-white/10 bg-white dark:bg-luxuryCoal text-nexoraBrand dark:text-luxuryGold">
+          <Sparkles className="h-9 w-9" />
+        </div>
+        <h2 className="mt-5 text-xl font-black text-inkBlue dark:text-white tracking-tight">
+          {t('coming_soon.default_title')}
+        </h2>
+        <p className="mt-2 text-sm text-mutedGrey dark:text-slate-400">
+          {t('coming_soon.default_desc')}
+        </p>
       </div>
     </div>
   );
