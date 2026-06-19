@@ -253,7 +253,7 @@ export function TipsRoute() {
 
 export function ReportsRoute() {
   const ctx = useOutletContext<LooseObject>()
-  return <ReportsView staff={ctx.staff} touchpoints={ctx.touchpoints} businessName={ctx.businessName} />
+  return <ReportsView staff={ctx.staff} touchpoints={ctx.touchpoints} businessName={ctx.businessName} businessSlug={ctx.businessSlug} />
 }
 
 export function AnalyticsRoute() {

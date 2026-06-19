@@ -84,7 +84,7 @@ function formatStaffCell(tx) {
   return '—'
 }
 
-function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [], businessName = '' }) {
+function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [], businessName = '', businessSlug = '' }) {
   const { t } = useTranslation()
 
   // Filter States
@@ -383,6 +383,7 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
           selectedTx={selectedTx}
           onClose={() => setSelectedTx(null)}
           businessName={businessName}
+          businessSlug={businessSlug}
           touchpoints={touchpoints}
           staff={staff}
         />

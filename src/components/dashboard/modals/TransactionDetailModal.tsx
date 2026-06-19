@@ -21,27 +21,39 @@ function normalizeTipItems(tx) {
 
 function findTouchpointForTx(tx, touchpoints = []) {
   if (!touchpoints.length) return null
+  const txTouchpointName = (tx?.touchpoint || '').trim().toLowerCase()
   return (
     touchpoints.find((tp) => tp.id === tx.touchPointId) ||
     touchpoints.find((tp) => tp.name === tx.touchpoint) ||
+    touchpoints.find((tp) => slugify(tp.name || '') === slugify(txTouchpointName)) ||
     touchpoints.find((tp) => tp.type === 'FrontDesk') ||
     touchpoints[0] ||
     null
   )
 }
 
-function resolveTouchPointQrUrl(touchpoint, businessName = '') {
+function resolveTouchPointQrUrl({
+  touchpoint,
+  tx,
+  businessName = '',
+  businessSlug = '',
+}) {
   const origin = typeof window !== 'undefined' ? window.location.origin : ''
 
   if (touchpoint?.url) {
     return toLocalCustomerTouchUrl(String(touchpoint.url), origin)
   }
 
-  const businessSlug = slugify(businessName)
-  const touchPointSlug = touchpoint?.slug || touchpoint?.id
-  if (!businessSlug || !touchPointSlug) return null
+  const resolvedBusinessSlug = businessSlug || slugify(businessName)
+  const touchPointSlug =
+    touchpoint?.slug ||
+    touchpoint?.id ||
+    (tx?.touchpoint ? slugify(tx.touchpoint) : '') ||
+    (touchpoint?.name ? slugify(touchpoint.name) : '')
 
-  return `${origin}/touch/${businessSlug}/${touchPointSlug}`
+  if (!resolvedBusinessSlug || !touchPointSlug) return null
+
+  return `${origin}/touch/${resolvedBusinessSlug}/${touchPointSlug}`
 }
 
 function getPaymentMethodLogo(method) {
@@ -91,6 +103,7 @@ export default function TransactionDetailModal({
   selectedTx,
   onClose,
   businessName = '',
+  businessSlug = '',
   touchpoints = [],
   staff = [],
 }) {
@@ -105,8 +118,14 @@ export default function TransactionDetailModal({
     [selectedTx, touchpoints],
   )
   const touchPointQrUrl = useMemo(
-    () => resolveTouchPointQrUrl(touchpoint, businessName),
-    [touchpoint, businessName],
+    () =>
+      resolveTouchPointQrUrl({
+        touchpoint,
+        tx: selectedTx,
+        businessName,
+        businessSlug,
+      }),
+    [touchpoint, selectedTx, businessName, businessSlug],
   )
 
   if (!selectedTx) return null
