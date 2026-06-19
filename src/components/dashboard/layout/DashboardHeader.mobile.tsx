@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import IconButton from '../../ui/IconButton'
+import LanguageSwitcher from '../../ui/LanguageSwitcher'
 
 export default function DashboardHeader({
   searchQuery,
@@ -44,7 +45,7 @@ export default function DashboardHeader({
   userRole = 'owner',
   onOpenMobileMenu
 }) {
-  const { currentLanguage, setLanguage, t } = useTranslation()
+  const { t } = useTranslation()
   const dropdownRef = useRef(null)
   const mobileDropdownRef = useRef(null)
   const searchRef = useRef(null)
@@ -283,29 +284,12 @@ export default function DashboardHeader({
           >
             <Menu className="h-5 w-5" />
           </button>
-          <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="h-8 w-auto max-w-[140px] object-contain" />
         </div>
 
         {/* Right: lang + bell + avatar */}
         <div className="flex items-center gap-2">
           {/* Language Switcher (mobile) */}
-          <div className="flex items-center bg-nexoraSurfaceMuted border border-nexoraBorder px-1.5 py-0.5 rounded-lg">
-            <button
-              type="button"
-              onClick={() => setLanguage('vi')}
-              className={`text-[9px] font-bold px-1.5 py-0.5 rounded transition ${currentLanguage === 'vi' ? 'bg-nexoraBrand text-white' : 'text-nexoraMuted'}`}
-            >
-              VI
-            </button>
-            <span className="text-nexoraBorder text-[9px] mx-0.5">|</span>
-            <button
-              type="button"
-              onClick={() => setLanguage('en')}
-              className={`text-[9px] font-bold px-1.5 py-0.5 rounded transition ${currentLanguage === 'en' ? 'bg-nexoraBrand text-white' : 'text-nexoraMuted'}`}
-            >
-              EN
-            </button>
-          </div>
+          <LanguageSwitcher />
 
           <div className="relative" ref={mobileDropdownRef}>
             <button
@@ -440,23 +424,7 @@ export default function DashboardHeader({
 
         <div className="flex shrink-0 items-center gap-4">
           {/* Language Switcher */}
-          <div className="flex items-center gap-1 bg-nexoraSurfaceMuted border border-nexoraBorder px-2.5 py-1 rounded-lg">
-            <button
-              type="button"
-              onClick={() => setLanguage('vi')}
-              className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition ${currentLanguage === 'vi' ? 'bg-nexoraBrand text-white' : 'text-nexoraMuted hover:text-nexoraText'}`}
-            >
-              VI
-            </button>
-            <span className="text-nexoraBorder text-[10px]">|</span>
-            <button
-              type="button"
-              onClick={() => setLanguage('en')}
-              className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition ${currentLanguage === 'en' ? 'bg-nexoraBrand text-white' : 'text-nexoraMuted hover:text-nexoraText'}`}
-            >
-              EN
-            </button>
-          </div>
+          <LanguageSwitcher />
 
           {/* Notifications */}
           <div className="relative" ref={dropdownRef}>

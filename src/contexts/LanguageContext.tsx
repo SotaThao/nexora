@@ -15,9 +15,8 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   const [currentLanguage, setCurrentLanguageState] = useState<AppLanguage>(() => {
     const saved = localStorage.getItem('nexora_lang')
     if (saved === 'en' || saved === 'vi') return saved
-    // Fallback to browser language or default to 'vi'
-    const browserLang = navigator.language || (navigator as Navigator & { userLanguage?: string }).userLanguage
-    return browserLang?.startsWith('vi') ? 'vi' : 'en'
+    // Default to Vietnamese when the user has no saved preference.
+    return 'vi'
   })
 
   const setLanguage = (lang: AppLanguage) => {
@@ -44,7 +43,11 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
 
     if (typeof value === 'string') {
       return Object.entries(variables).reduce((acc, [k, v]) => {
-        return acc.replace(new RegExp(`{${k}}`, 'g'), String(v))
+        const replacement = String(v)
+        // Support both {{key}} (i18next-style) and {key} placeholders.
+        return acc
+          .replace(new RegExp(`{{\\s*${k}\\s*}}`, 'g'), replacement)
+          .replace(new RegExp(`{\\s*${k}\\s*}`, 'g'), replacement)
       }, value)
     }
 

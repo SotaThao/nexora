@@ -18,6 +18,7 @@ import { useVerifiedStatus } from '../../../data/hooks/useProfileSettings'
 import { useUploadImage } from '../../../data/hooks/useMerchantSetup'
 import { logger } from '../../../utils/logger'
 import StaffKycOverview from './StaffKycOverview'
+import Tooltip from '../../ui/Tooltip'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 const labelCls = 'mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-nexoraSubtle'
@@ -210,7 +211,10 @@ export default function StaffProfile() {
       {activeTab === 'profile' && (
         <>
           <section className={panel}>
-            <h3 className="mb-4 text-base font-extrabold text-nexoraText">{t('staff_dashboard.profile.title')}</h3>
+            <h3 className="mb-4 flex items-center gap-1.5 text-base font-extrabold text-nexoraText">
+              {t('staff_dashboard.profile.title')}
+              <Tooltip content={t('staff_dashboard.profile.title_tooltip')} />
+            </h3>
 
             {/* Avatar Section */}
             <div className="flex flex-col items-center mb-6">
@@ -277,7 +281,10 @@ export default function StaffProfile() {
                 </div>
               </div>
               <div>
-                <label className={labelCls}>{t('staff_dashboard.profile.bio')}</label>
+                <label className={`${labelCls} flex items-center gap-1.5`}>
+                  {t('staff_dashboard.profile.bio')}
+                  <Tooltip content={t('staff_dashboard.profile.bio_tooltip')} />
+                </label>
                 <textarea
                   className={`${inputCls} h-24 resize-none`}
                   value={bio}
