@@ -8,6 +8,9 @@ import TipsPayoutsTab from './tips/tabs/TipsPayoutsTab';
 
 export default function TipsView({
   transactions = [],
+  staff = [],
+  metrics,
+  tipsChartData,
   activeTab: propActiveTab,
   onTabChange,
   processingFee: propProcessingFee,
@@ -28,7 +31,7 @@ export default function TipsView({
   const { chartRange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate, handleChartRangeChange } =
     useChartDateRange(transactions);
 
-  const tipsData = useTipsData({ transactions, chartStartDate, chartEndDate, chartRange });
+  const tipsData = useTipsData({ transactions, metrics, tipsChartData, chartStartDate, chartEndDate, chartRange });
 
   const activePoint = hoverIndex !== null && tipsData.svgMetrics
     ? tipsData.svgMetrics.points[hoverIndex]
@@ -106,6 +109,7 @@ export default function TipsView({
       {activeTab === 'payouts' && (
         <TipsPayoutsTab staffPayouts={tipsData.staffPayouts} />
       )}
+
     </div>
   );
 }

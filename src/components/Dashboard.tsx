@@ -19,7 +19,7 @@ import { useTouchpoints, useCreateTouchpoint, useDeleteTouchpoint, useDownloadTo
 import { useMerchantStaff, StatusFilter } from '../data/hooks/useMerchantStaff'
 import { useChartDateRange } from '../hooks/useChartDateRange'
 import { useTransactions } from '../data/hooks/useTransactions'
-import { useDashboardOverview } from '../data/hooks/useDashboard'
+import { useDashboardOverview, useDashboardTipsChart, useDashboardOverviewCurrentMonth, useDashboardOverviewCurrentYear } from '../data/hooks/useDashboard'
 import { useDashboardReviews, DASHBOARD_REVIEWS_LIST_QUERY } from '../data/hooks/useReviews'
 import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead, useUnreadCount } from '../data/hooks/useNotifications'
 import { useProfileSettings, useSaveProfileSettings } from '../data/hooks/useProfileSettings'
@@ -280,6 +280,13 @@ export default function Dashboard({
   const { chartRange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate, handleChartRangeChange } = useChartDateRange(transactions)
 
   const { data: overviewMetricsData, isLoading: isOverviewApiLoading } = useDashboardOverview({
+    startDate: chartStartDate,
+    endDate: chartEndDate,
+  })
+  const { data: metricsMonthData } = useDashboardOverviewCurrentMonth()
+  const { data: metricsYearData } = useDashboardOverviewCurrentYear()
+
+  const { data: tipsChartData, isLoading: isTipsChartLoading } = useDashboardTipsChart({
     startDate: chartStartDate,
     endDate: chartEndDate,
   })
@@ -553,7 +560,9 @@ export default function Dashboard({
 
   const dashboardCtx = {
     profile, onNavigateMenu: handleNavigateMenu,
-    metrics, activeKpi, setActiveKpi, chartRange, handleChartRangeChange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate,
+    metrics, tipsChartData, activeKpi, setActiveKpi, chartRange, handleChartRangeChange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate,
+    metricsMonth: metricsMonthData ?? null,
+    metricsYear: metricsYearData ?? null,
     kpiDeltas,
     transactions, selectedLeaderboardStaff, handleSelectLeaderboardStaff, businessName, businessSlug, previewQr, hasKyb, hasSetup, onStartSetup: handleStartSetup,
     isOverviewLoading, isTransactionsLoading, isTouchpointsLoading,

@@ -129,6 +129,8 @@ function Overview({
   onApproveClick,
   pendingStaff = [],
   staff = [],
+  metricsMonth = null,
+  metricsYear = null,
 }: any) {
   const { t } = useTranslation()
   const k = (key: string, vars?: Record<string, string | number>) =>
@@ -142,15 +144,11 @@ function Overview({
     return t('staff_dashboard.home.greeting_evening', { name: firstName })
   })()
 
-  // ── Derived metrics from real data ──────────────────────────────────────
-  const successTxs = (transactions || []).filter((tx) => tx.status === 'Success' || tx.status === 'success')
-  const monthPrefix = new Date().toISOString().slice(0, 7)
-  const yearPrefix = new Date().toISOString().slice(0, 4)
-  const monthTxs = successTxs.filter((tx) => tx.dateTime?.startsWith(monthPrefix))
-  const yearTxs = successTxs.filter((tx) => tx.dateTime?.startsWith(yearPrefix))
-  const monthTips = monthTxs.reduce((s, tx) => s + Number(tx.amount || 0), 0)
-  const yearTips = yearTxs.reduce((s, tx) => s + Number(tx.amount || 0), 0)
+  // ── Derived metrics from overview API (month & year) ────────────────────
   const FEE_RATE = 0.03
+  const monthTips = metricsMonth?.totalTips ?? 0
+  const monthTxCount = metricsMonth?.totalTransactions ?? 0
+  const yearTips = metricsYear?.totalTips ?? 0
   const moneySavedMonth = monthTips * FEE_RATE
   const moneySavedYear = yearTips * FEE_RATE
 
@@ -236,7 +234,7 @@ function Overview({
           iconBg="bg-gradient-to-br from-emerald-400 to-emerald-500"
           label={k('kpi_direct_tips')}
           value={fmtMoney(monthTips)}
-          trend={monthTxs.length > 0 ? k('tips_count', { count: monthTxs.length }) : k('no_tips_yet')}
+          trend={monthTxCount > 0 ? k('tips_count', { count: monthTxCount }) : k('no_tips_yet')}
           trendColor="text-nexoraSuccess"
           onClick={() => setActiveKpi?.('tips')}
         />
