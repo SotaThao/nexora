@@ -12,6 +12,7 @@ import SettingsView from '../../SettingsView'
 import AnalyticsView from '../../AnalyticsView'
 import SupportView from '../../SupportView'
 import ComingSoon from '../views/ComingSoon'
+import ManagePlanView from '../views/ManagePlanView'
 import StaffDetailView from '../../StaffDetailView'
 
 export function OverviewRoute() {
@@ -28,6 +29,7 @@ export function OverviewRoute() {
         setChartEndDate: ctx.setChartEndDate,
       } as any)}
       metrics={ctx.metrics}
+      kpiDeltas={ctx.kpiDeltas}
       activeKpi={ctx.activeKpi}
       setActiveKpi={ctx.setActiveKpi}
       transactions={ctx.transactions}
@@ -35,6 +37,7 @@ export function OverviewRoute() {
       setSelectedStaff={ctx.handleSelectLeaderboardStaff}
       onOpenTouchpoints={() => navigate('/dashboard/touchpoints')}
       onOpenReviews={() => navigate('/dashboard/reviews')}
+      onOpenStaff={() => navigate('/dashboard/staff')}
       businessName={ctx.businessName}
       previewQr={ctx.previewQr}
       touchpoints={ctx.touchpoints}
@@ -45,6 +48,12 @@ export function OverviewRoute() {
       onNavigateMenu={ctx.onNavigateMenu}
       onApproveClick={ctx.openApproveStaff}
       pendingStaff={ctx.pendingStaff}
+      staff={ctx.staff}
+      isLoading={ctx.isOverviewLoading}
+      isTransactionsLoading={ctx.isTransactionsLoading}
+      isTouchpointsLoading={ctx.isTouchpointsLoading}
+      reviewsPage={ctx.reviewsPage}
+      isReviewsPending={ctx.isReviewsPending}
     />
   )
 }
@@ -86,6 +95,7 @@ export function StaffRoute() {
       }}
       // Pagination props
       pageNumber={ctx.activeStaffPage}
+      pageSize={ctx.activeStaffPageSize}
       totalPages={ctx.activeStaffTotalPages}
       totalCount={ctx.activeStaffTotalCount}
       hasNextPage={ctx.activeStaffHasNext}
@@ -100,7 +110,15 @@ export function StaffDetailRoute() {
   const { staffId } = useParams()
   const navigate = useNavigate()
   
-  const member = ctx.staff.find((m) => String(m.id) === String(staffId))
+  const member = ctx.staff.find((m) =>
+    String(m.id) === String(staffId) ||
+    String(m.staffProfileId) === String(staffId)
+  )
+
+  if (ctx.staffLoading) {
+    return null
+  }
+
   if (!member) {
     return <Navigate to="/dashboard/staff" replace />
   }
@@ -170,13 +188,26 @@ export function TouchpointsRoute() {
 
 export function ReviewsRoute() {
   const ctx = useOutletContext<LooseObject>()
+
   return (
     <ReviewsView
-      reviews={ctx.filteredReviews}
-      staff={ctx.staff}
+      reviews={ctx.reviewsPage?.items ?? []}
+      reviewsPage={ctx.reviewsPage}
+      pageNumber={ctx.reviewsPageNumber}
+      setPageNumber={ctx.setReviewsPageNumber}
+      isLoading={ctx.isReviewsPending}
+      isFetching={ctx.reviewsListFetching}
+      staff={ctx.filteredStaff}
       filter={ctx.reviewFilterStaff}
       setFilter={ctx.setReviewFilterStaff}
       setupData={ctx.setupData}
+      pageNumber={ctx.activeReviewsPage}
+      pageSize={ctx.activeReviewsPageSize}
+      totalPages={ctx.activeReviewsTotalPages}
+      totalCount={ctx.activeReviewsTotalCount}
+      hasNextPage={ctx.activeReviewsHasNext}
+      hasPreviousPage={ctx.activeReviewsHasPrev}
+      onPageChange={ctx.setActiveReviewsPage}
     />
   )
 }
@@ -240,8 +271,15 @@ export function SupportRoute() {
 }
 
 export function SubscriptionsRoute() {
+  const ctx = useOutletContext<LooseObject>()
   const navigate = useNavigate()
-  return <ComingSoon activeMenu="subscriptions" onBack={() => navigate('/dashboard')} />
+  const currentPlanId = ctx?.profile?.subscription?.plan ?? null
+  return (
+    <ManagePlanView
+      currentPlanId={currentPlanId}
+      onSelectPlan={() => navigate('/dashboard/support')}
+    />
+  )
 }
 
 export function FallbackRoute() {

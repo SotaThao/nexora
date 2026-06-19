@@ -1,7 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
-import { useQueryClient } from '@tanstack/react-query'
-
 
 // 2. Third-party
 import { Filter, Moon, Settings, ShieldAlert, Sun, Check, Link } from 'lucide-react'
@@ -22,14 +20,16 @@ import { useTouchpoints, useCreateTouchpoint, useDeleteTouchpoint, useDownloadTo
 import { useMerchantStaff, StatusFilter } from '../data/hooks/useMerchantStaff'
 import { useChartDateRange } from '../hooks/useChartDateRange'
 import { useTransactions } from '../data/hooks/useTransactions'
-import { useReviews } from '../data/hooks/useReviews'
-import { useNotifications, useMarkNotificationRead } from '../data/hooks/useNotifications'
+import { useDashboardOverview } from '../data/hooks/useDashboard'
+import { useDashboardReviews, DASHBOARD_REVIEWS_LIST_QUERY } from '../data/hooks/useReviews'
+import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead, useUnreadCount } from '../data/hooks/useNotifications'
 import { useProfileSettings, useSaveProfileSettings } from '../data/hooks/useProfileSettings'
 import { useMerchantSetup, useSaveMerchantSetup } from '../data/hooks/useMerchantSetup'
 import { useMerchantInviteLinkSetting } from '../data/hooks/useMerchantSettings'
 import DashboardHeader from './dashboard/layout/DashboardHeader'
 import DashboardSidebar from './dashboard/layout/DashboardSidebar'
 import MobileMenuDrawer from './dashboard/layout/MobileMenuDrawer'
+import MobileBottomNav from './dashboard/layout/MobileBottomNav'
 import Overview from './dashboard/overview/Overview'
 import StaffView from './dashboard/views/StaffView'
 import ReviewsView from './dashboard/views/ReviewsView'
@@ -45,7 +45,8 @@ import StaffModal from './dashboard/modals/StaffModal'
 import QrModal from './dashboard/modals/QrModal'
 import InviteShareModal from './dashboard/modals/InviteShareModal'
 import AddTouchpointModal from './dashboard/modals/AddTouchpointModal'
-import MobileBottomNav from './dashboard/layout/MobileBottomNav'
+import { usePagination } from '../hooks/usePagination'
+import { DEFAULT_PAGE_SIZE, STAFF_FILTER_LIST_PAGE_SIZE } from '../constants/pagination'
 
 
 export default function Dashboard({
@@ -62,7 +63,6 @@ export default function Dashboard({
   onStartSetup = null,
 }) {
   const { currentLanguage, t } = useTranslation()
-  const queryClient = useQueryClient()
   const { showToast, showConfirm } = useNotification()
   const { requireKyb } = useKybGate()
   const {
@@ -84,15 +84,63 @@ export default function Dashboard({
     navigate('/onboarding')
   }, [navigate, onStartSetup])
   const [processingFee, setProcessingFee] = useState(3.0)
+  const [isNotiDropdownOpen, setIsNotiDropdownOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [reviewsPageNumber, setReviewsPageNumber] = useState(1)
+
+  const hasSearchQuery = Boolean(searchQuery.trim())
+  const needsMerchantStaffList =
+    hasSearchQuery ||
+    ['staff', 'reviews', 'reports', 'tips', 'analytics'].includes(activeMenu)
+  const needsNotificationsList = isNotiDropdownOpen
+  const needsTransactions =
+    hasSearchQuery ||
+    ['tips', 'reports', 'analytics'].includes(activeMenu)
+  const needsDashboardReviews =
+    activeMenu === 'overview' ||
+    activeMenu === 'reviews' ||
+    hasSearchQuery ||
+    activeMenu === 'staff'
+  const needsInviteLink = activeMenu === 'staff'
+  const isStaffTab = activeMenu === 'staff'
+  const isReviewsTab = activeMenu === 'reviews'
+  const staffPagination = usePagination({ pageSize: DEFAULT_PAGE_SIZE })
+  const reviewsPagination = usePagination({ pageSize: DEFAULT_PAGE_SIZE })
+
+  useEffect(() => {
+    if (!isStaffTab) staffPagination.reset()
+  }, [isStaffTab, staffPagination.reset])
+
+  useEffect(() => {
+    if (!isReviewsTab) reviewsPagination.reset()
+  }, [isReviewsTab, reviewsPagination.reset])
+
+  const reviewsListQuery = useMemo(
+    () => ({
+      pageNumber: isReviewsTab ? reviewsPagination.pageNumber : 1,
+      pageSize: isReviewsTab ? reviewsPagination.pageSize : DASHBOARD_REVIEWS_LIST_QUERY.pageSize,
+    }),
+    [isReviewsTab, reviewsPagination.pageNumber, reviewsPagination.pageSize],
+  )
 
   // ---------------------------------------------------------------------------
-  // Server-state hooks (TanStack Query)
+  // Server-state hooks (TanStack Query) — lazy per active tab where possible
   // ---------------------------------------------------------------------------
-  const { data: transactionsData } = useTransactions()
-  const { data: reviewsData } = useReviews()
-  const { data: notificationsData } = useNotifications()
+  const { data: transactionsData, isLoading: isTransactionsLoading } = useTransactions({
+    enabled: needsTransactions,
+  })
+  const {
+    data: reviewsPage,
+    isPending: isReviewsPending,
+    isFetching: isReviewsFetching,
+  } = useDashboardReviews(reviewsListQuery, { enabled: needsDashboardReviews })
+  const { data: apiUnreadCount = 0 } = useUnreadCount()
+  const { data: notificationsData, isLoading: isNotificationsLoading, isFetching: isNotificationsFetching } = useNotifications({
+    enabled: needsNotificationsList,
+  })
   const { data: profileSettingsData } = useProfileSettings()
   const { data: merchantSetupData } = useMerchantSetup()
+<<<<<<< HEAD
   const [activeStaffPage, setActiveStaffPage] = useState(1)
   const [activeStaffPageSize] = useState(9)
   const {
@@ -103,25 +151,37 @@ export default function Dashboard({
     statusFilter: StatusFilter.Active,
     pageNumber: activeStaffPage,
     pageSize: activeStaffPageSize,
+=======
+  const { data: merchantStaffData, isLoading: isStaffLoading, isFetching: isStaffFetching } = useMerchantStaff({
+    enabled: needsMerchantStaffList,
+    pageNumber: isStaffTab ? staffPagination.pageNumber : 1,
+    pageSize: isStaffTab ? staffPagination.pageSize : STAFF_FILTER_LIST_PAGE_SIZE,
+>>>>>>> origin/dev
   })
-  const { data: pendingStaffData, isLoading: isPendingStaffLoading } = useMerchantStaff({
+  const { data: pendingStaffPage } = useMerchantStaff({
+    enabled: isStaffTab,
     statusFilter: StatusFilter.Pending,
     pageNumber: 1,
+<<<<<<< HEAD
     pageSize: 100,
+=======
+    pageSize: 50,
+>>>>>>> origin/dev
   })
   const {
     data: inviteLinkSetting,
     isLoading: isInviteLinkSettingLoading,
-  } = useMerchantInviteLinkSetting({ enabled: userRole === 'owner' })
+  } = useMerchantInviteLinkSetting({ enabled: userRole === 'owner' && needsInviteLink })
 
   const markNotificationReadMutation = useMarkNotificationRead()
+  const markAllNotificationsReadMutation = useMarkAllNotificationsRead()
   const saveMerchantSetupMutation = useSaveMerchantSetup()
 
   // ---------------------------------------------------------------------------
   // Derived read data (with fallbacks so UI is never empty on first load)
   // ---------------------------------------------------------------------------
   const transactions = transactionsData ?? []
-  const reviews = reviewsData ?? []
+  const reviews = reviewsPage?.items ?? []
 
   // Notifications — thin local mirror so UI updates optimistically.
   // Server-generated notifications come from GET /api/v1/notifications.
@@ -133,6 +193,10 @@ export default function Dashboard({
     if (notificationsData === undefined) return
     setNotifications(notificationsData)
   }, [notificationsData])
+
+  const unreadCount = notifications.length > 0
+    ? notifications.filter((n) => !n.read).length
+    : apiUnreadCount
 
   // Profile — thin local mirror with complex initialisation / override rules.
   const buildFallbackProfile = (storeInfo, reviewInfo) => ({
@@ -188,15 +252,16 @@ export default function Dashboard({
       // No saved settings — build from setup data / merchant setup query.
       const storeInfo = setupData?.businessInfo || merchantSetupData?.businessInfo
       const reviewInfo = setupData?.reviewLinks || merchantSetupData?.reviewLinks
-      setProfile(buildFallbackProfile(storeInfo, reviewInfo))
+      setProfile((prev) => ({
+        ...buildFallbackProfile(storeInfo, reviewInfo),
+        subscription: prev?.subscription ?? null,
+      }))
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileSettingsData, hasKyb, userEmail, verificationStatus, businessLogo])
 
-  const [isNotiDropdownOpen, setIsNotiDropdownOpen] = useState(false)
-
   // Use API hooks for Touchpoints
-  const { data: touchpointsData } = useTouchpoints()
+  const { data: touchpointsData, isLoading: isTouchpointsLoading } = useTouchpoints()
   const touchpoints = touchpointsData?.items || []
   const createTouchpointMutation = useCreateTouchpoint()
   const deleteTouchpointMutation = useDeleteTouchpoint()
@@ -204,31 +269,31 @@ export default function Dashboard({
   const { devices, setDevices, handleAddDevice, handleDeleteDevice, handleToggleDeviceStatus } = useDevices()
   const [qrTarget, setQrTarget] = useState<any | null>(null)
   const [reviewFilterStaff, setReviewFilterStaff] = useState('all')
+  const handleReviewFilterStaffChange = useCallback((value) => {
+    setReviewFilterStaff(value)
+    reviewsPagination.setPage(1)
+  }, [reviewsPagination.setPage])
   const [newTouchpoint, setNewTouchpoint] = useState({ name: '', type: 'Table QR' })
   const [isAddTouchpointModalOpen, setIsAddTouchpointModalOpen] = useState(false)
   const [addTouchpointPrefill, setAddTouchpointPrefill] = useState<any | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
   const [activeKpi, setActiveKpi] = useState('tips')
   const { chartRange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate, handleChartRangeChange } = useChartDateRange(transactions)
+
+  const { data: overviewMetricsData, isLoading: isOverviewApiLoading } = useDashboardOverview({
+    startDate: chartStartDate,
+    endDate: chartEndDate,
+  })
+
+  const isOverviewLoading = isOverviewApiLoading || (needsTransactions && isTransactionsLoading)
 
   const [selectedLeaderboardStaff, setSelectedLeaderboardStaff] = useState<any | null>(null)
 
   const businessName = profile?.businessName || setupData?.businessInfo?.name || merchantSetupData?.businessInfo?.name || ''
+  const userSubscription = profileSettingsData?.subscription ?? profile?.subscription ?? null
   const businessSlug =
     merchantSetupData?.businessInfo?.slug ||
     setupData?.businessInfo?.slug ||
     slugify(businessName || 'business')
-
-  const combinedStaffData = useMemo(() => {
-    const byId = new Map()
-    for (const member of staffListData?.items ?? []) {
-      if (member?.id != null) byId.set(member.id, member)
-    }
-    for (const member of pendingStaffData?.items ?? []) {
-      if (member?.id != null) byId.set(member.id, member)
-    }
-    return Array.from(byId.values())
-  }, [staffListData, pendingStaffData])
 
   const {
     staff,
@@ -244,11 +309,11 @@ export default function Dashboard({
     inviteShareDefaultContact, setInviteShareDefaultContact,
     resetStaffForm, openAddStaff, openApproveStaff, openEditStaff, closeStaffModal,
     saveStaff, sendSetupLinkFromModal, handleLinkStaff, handleInviteStaff,
-    handleResendInvite, handleCancelInvite,
+    handleResendInvite,
     handleAcceptJoinRequest, handleDeclineJoinRequest, deleteStaff, toggleStaff, toggleStaffTipsFlow,
     handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     inviteStaffMutation,
-  } = useStaffManagement({ staffData: combinedStaffData, isStaffLoading: isStaffListLoading || isPendingStaffLoading, businessName })
+  } = useStaffManagement({ staffData: merchantStaffData, isStaffLoading, businessName })
 
   // Sync touchpoints removed (now handled by React Query cache)
 
@@ -293,8 +358,12 @@ export default function Dashboard({
 
   // Filter lists based on searchQuery
   const filteredStaff = useMemo(() => {
-    const visibleStaff = staffListData?.items ?? []
-
+    const isPendingRequest = (member) => 
+      (member.status === 'Pending Acceptance' || member.status === 'Pending') && 
+      (member.itemType === 'link' || member.itemType === 'invite')
+      
+    const visibleStaff = staff.filter(member => !isPendingRequest(member))
+    
     if (!searchQuery) return visibleStaff
     const query = searchQuery.toLowerCase().trim()
     return visibleStaff.filter(member =>
@@ -302,9 +371,15 @@ export default function Dashboard({
       (member.nickname && member.nickname.toLowerCase().includes(query)) ||
       member.position?.toLowerCase().includes(query)
     )
-  }, [staffListData, searchQuery])
+  }, [staff, searchQuery])
 
-  const pendingStaff = pendingStaffData?.items ?? []
+  const pendingStaff = useMemo(() => {
+    const source = isStaffTab ? (pendingStaffPage?.items ?? []) : staff
+    return source.filter((member) =>
+      (member.status === 'Pending Acceptance' || member.status === 'Pending' || member.status === 'Pending Setup') &&
+      (member.itemType === 'link' || member.itemType === 'invite')
+    )
+  }, [isStaffTab, pendingStaffPage, staff])
 
   const filteredTouchpoints = useMemo(() => {
     if (!searchQuery) return touchpoints
@@ -375,36 +450,43 @@ export default function Dashboard({
     )
   }, [transactions, searchQuery])
 
-  const filteredTxsForMetrics = useMemo(() => {
-    return transactions.filter(tx => {
-      if (!tx.dateTime) return false;
-      const date = tx.dateTime.split(' ')[0];
-      return date >= chartStartDate && date <= chartEndDate;
-    });
-  }, [transactions, chartStartDate, chartEndDate]);
+  const emptyOverviewMetrics = {
+    totalTips: 0,
+    totalTransactions: 0,
+    averageTip: 0,
+    totalReviews: 0,
+    scans: 0,
+    conversionRate: 0,
+    averageRating: 0,
+    googleClicks: 0,
+    yelpClicks: 0,
+    count4To5Stars: 0,
+    count1To3Stars: 0,
+    responseRate: 0,
+    responseRateLabel: null,
+    googleAvgRating: null,
+    googleReviewCount: null,
+    yelpAvgRating: null,
+    yelpReviewCount: null,
+    returningCustomerRate: 0,
+    returningCustomerRateChangeVsLastWeek: 0,
+    previousPeriodComparison: null,
+  }
 
   const metrics = useMemo(() => {
-    const totalTips = filteredTxsForMetrics
-      .filter(tx => tx.status === 'Success')
-      .reduce((sum, tx) => sum + (tx.amount || 0), 0);
-    const totalTransactions = filteredTxsForMetrics.length;
-    const averageTip = totalTransactions === 0 ? 0 : totalTips / totalTransactions;
-
-    // Standard fallbacks — show real computed values (zeros if no data)
-    return {
-      totalTips,
-      totalTransactions,
-      averageTip,
-      totalReviews: 0,
-      googleRating: 0,
-      googleReviews: 0,
-      yelpRating: 0,
-      yelpReviews: 0,
-      responseRate: 0,
-      returningCustomers: 0,
-      returningCustomersDelta: 0
+    if (!overviewMetricsData) {
+      return emptyOverviewMetrics
     }
-  }, [filteredTxsForMetrics]);
+
+    return overviewMetricsData
+  }, [overviewMetricsData])
+
+  const kpiDeltas = useMemo(() => ({
+    totalTips: metrics.previousPeriodComparison,
+    totalTransactions: null,
+    averageTip: null,
+    totalReviews: null,
+  }), [metrics.previousPeriodComparison]);
 
 
   const addTouchpoint = async (name, type, deviceId, assignedStaffProfileId) => {
@@ -419,6 +501,7 @@ export default function Dashboard({
 
     const payload = {
       name: finalName,
+<<<<<<< HEAD
       type: apiType,
       ...(resolvedAssignedStaffProfileId
         ? { assignedStaffProfileId: resolvedAssignedStaffProfileId }
@@ -426,6 +509,11 @@ export default function Dashboard({
     }
 
     await createTouchpointMutation.mutateAsync(payload)
+=======
+      type: finalType === 'Table QR' ? 'Table' : finalType === 'Front Desk' ? 'FrontDesk' : finalType === 'Receipt QR' ? 'Receipt' : finalType === 'Staff QR' ? 'StaffCard' : 'Table',
+      // If we supported hardware linkage, we would map finalDeviceId here.
+    })
+>>>>>>> origin/dev
     
     setNewTouchpoint({ name: '', type: 'Table QR' })
   }
@@ -483,12 +571,17 @@ export default function Dashboard({
     })
   }
 
-  const handleSelectLeaderboardStaff = (nickname) => {
-    setSelectedLeaderboardStaff(nickname)
-    const member = staff.find((s) => s.nickname === nickname || s.fullName.toLowerCase().includes(nickname.toLowerCase().split(' ')[0]))
-    if (member) {
-      navigate(`/dashboard/staff/${member.id}`)
-    }
+  const handleSelectLeaderboardStaff = (staffKey) => {
+    setSelectedLeaderboardStaff(staffKey)
+    if (!staffKey) return
+
+    const member = staff.find((s) =>
+      String(s.id) === String(staffKey) ||
+      String(s.staffProfileId) === String(staffKey) ||
+      s.nickname === staffKey ||
+      s.fullName?.toLowerCase().includes(String(staffKey).toLowerCase().split(' ')[0])
+    )
+    navigate(`/dashboard/staff/${member?.id || staffKey}`)
   }
 
   // ---------------------------------------------------------------------------
@@ -508,31 +601,54 @@ export default function Dashboard({
     setNotifications(next)
   }
 
+  const handleMarkAllNotificationsRead = () => {
+    const hasUnread = notifications.some((n) => !n.read && !n.isRead)
+    if (!hasUnread || markAllNotificationsReadMutation.isPending) return
+    markAllNotificationsReadMutation.mutate()
+    setNotifications((current) =>
+      current.map((n) => ({ ...n, read: true, isRead: true })),
+    )
+  }
+
   const dashboardCtx = {
+    profile, onNavigateMenu: handleNavigateMenu,
     metrics, activeKpi, setActiveKpi, chartRange, handleChartRangeChange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate,
+    kpiDeltas,
     transactions, selectedLeaderboardStaff, handleSelectLeaderboardStaff, businessName, businessSlug, previewQr, hasKyb, hasSetup, onStartSetup: handleStartSetup,
+    isOverviewLoading, isTransactionsLoading, isTouchpointsLoading,
+    reviewsPage, isReviewsPending,
     inviteLinkSetting, isInviteLinkSettingLoading,
     filteredStaff, pendingStaff, staff, staffLoading, openApproveStaff, openAddStaff, openEditStaff, deleteStaff, toggleStaff, toggleStaffTipsFlow,
     handleLinkStaff, handleInviteStaff, handleResendInvite, handleAcceptJoinRequest, handleDeclineJoinRequest, handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     setInviteShareDefaultName, setInviteShareDefaultContact, setIsInviteShareOpen,
     filteredTouchpoints, setAddTouchpointPrefill, setIsAddTouchpointModalOpen, deleteTouchpoint, toggleTouchpointStatus, linkDevice, devices, handleAddDevice, handleDeleteDevice, handleToggleDeviceStatus,
+<<<<<<< HEAD
     activeStaffList: staffListData?.items ?? [],
     reviews, filteredReviews, reviewFilterStaff, setReviewFilterStaff, setupData: setupData ?? merchantSetupData,
+=======
+    reviews, filteredReviews, reviewFilterStaff, setReviewFilterStaff: handleReviewFilterStaffChange, setupData: setupData ?? merchantSetupData,
+    activeReviewsPage: reviewsPagination.pageNumber,
+    activeReviewsPageSize: reviewsPagination.pageSize,
+    activeReviewsTotalPages: reviewsPage?.totalPages ?? 1,
+    activeReviewsTotalCount: reviewsPage?.totalCount ?? 0,
+    activeReviewsHasNext: reviewsPage?.hasNextPage ?? false,
+    activeReviewsHasPrev: reviewsPage?.hasPreviousPage ?? false,
+    setActiveReviewsPage: reviewsPagination.setPage,
+    reviewsListFetching: isReviewsFetching,
+>>>>>>> origin/dev
     tipsTab, setTipsTab, processingFee, setProcessingFee,
     filteredTransactions, touchpoints,
     verificationStatus, requireKyb, userEmail, onKybSuccess, settingsTab, setSettingsTab,
     currentStaffId,
-    profile,
-    onNavigateMenu: handleNavigateMenu,
-    // Pagination fields for active staff
-    activeStaffPage,
-    setActiveStaffPage,
-    activeStaffTotalPages: staffListData?.totalPages ?? 1,
-    activeStaffTotalCount: staffListData?.totalCount ?? 0,
-    activeStaffHasNext: staffListData?.hasNextPage ?? false,
-    activeStaffHasPrev: staffListData?.hasPreviousPage ?? false,
-    staffListLoading: isStaffListLoading,
-    staffListFetching: isStaffListFetching,
+    activeStaffPage: staffPagination.pageNumber,
+    activeStaffPageSize: staffPagination.pageSize,
+    activeStaffTotalPages: merchantStaffData?.totalPages ?? 1,
+    activeStaffTotalCount: merchantStaffData?.totalCount ?? 0,
+    activeStaffHasNext: merchantStaffData?.hasNextPage ?? false,
+    activeStaffHasPrev: merchantStaffData?.hasPreviousPage ?? false,
+    setActiveStaffPage: staffPagination.setPage,
+    staffListLoading: isStaffLoading,
+    staffListFetching: isStaffFetching,
   }
 
   return (
@@ -542,6 +658,7 @@ export default function Dashboard({
         setActiveMenu={handleNavigateMenu}
         businessName={businessName}
         profile={profile}
+        subscription={userSubscription}
         settingsTab={settingsTab}
         setSettingsTab={setSettingsTab}
         isProfileExpanded={isProfileExpanded}
@@ -570,10 +687,14 @@ export default function Dashboard({
             setSettingsTab(tab)
           }}
           onLogout={onLogout}
-          notifications={notifications}
+          notifications={notificationsData ?? notifications}
           setNotifications={handleSetNotifications}
+          onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
+          isMarkAllNotificationsReadPending={markAllNotificationsReadMutation.isPending}
+          unreadCount={unreadCount}
           isNotiDropdownOpen={isNotiDropdownOpen}
           setIsNotiDropdownOpen={setIsNotiDropdownOpen}
+          isNotificationsLoading={isNotificationsLoading || isNotificationsFetching}
           onNavigateMenu={handleNavigateMenu}
           staff={staff}
           transactions={transactions}
@@ -619,6 +740,7 @@ export default function Dashboard({
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
         profile={profile}
+        subscription={userSubscription}
         businessName={businessName}
         activeMenu={activeMenu}
         setActiveMenu={handleNavigateMenu}
@@ -664,10 +786,9 @@ export default function Dashboard({
         isApproveMode={true}
         onDecline={() => {
           if (approvingStaffMember) {
-            handleDeclineJoinRequest(approvingStaffMember.id)
+            handleDeclineJoinRequest(approvingStaffMember)
           }
           setIsApproveModalOpen(false)
-          queryClient.invalidateQueries({ queryKey: ['merchantStaff'] })
         }}
         form={staffForm}
         errors={errors}
@@ -677,14 +798,12 @@ export default function Dashboard({
         onClose={() => {
           setIsApproveModalOpen(false)
           resetStaffForm()
-          queryClient.invalidateQueries({ queryKey: ['merchantStaff'] })
         }}
         onSave={() => {
           if (approvingStaffMember) {
-            handleAcceptJoinRequest(approvingStaffMember.id)
+            handleAcceptJoinRequest(approvingStaffMember)
           }
           setIsApproveModalOpen(false)
-          queryClient.invalidateQueries({ queryKey: ['merchantStaff'] })
         }}
         onOpenInviteShare={() => {}}
         reviews={reviews}

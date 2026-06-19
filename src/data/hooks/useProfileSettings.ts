@@ -12,17 +12,14 @@ import type { LooseObject, UserProfile } from '../../types/domain'
 import type { UpdateStaffProfileDto, UpdateUserProfileDto } from '../../types/repositories'
 
 export function useProfileSettings({ enabled: callerEnabled = true } = {}) {
-  const queryClient = useQueryClient()
   const { isAuthenticated } = useSessionRole()
-  const hasCachedProfile = queryClient.getQueryData(qk.userProfile()) !== undefined
 
   return useQuery<UserProfile | null>({
     queryKey: qk.userProfile(),
     queryFn: () => profileSettingsRepository.get(),
-    enabled: isAuthenticated && callerEnabled && !hasCachedProfile,
-    initialData: () => queryClient.getQueryData<UserProfile | null>(qk.userProfile()),
-    staleTime: Infinity,
-    refetchOnMount: false,
+    enabled: isAuthenticated && callerEnabled,
+    staleTime: 30_000,
+    refetchOnMount: true,
     refetchOnWindowFocus: false,
   })
 }

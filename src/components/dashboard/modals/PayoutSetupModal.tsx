@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { X, Camera, FolderOpen, AlertTriangle, Bitcoin } from 'lucide-react'
 import { useTranslation, renderLabel } from '../../../contexts/LanguageContext'
 import ImageFileInput from '../../ui/ImageFileInput'
-import { captureQrImage } from '../../../native/imagePicker'
+import { captureQrImage } from '../../../utils/qrCode'
 import BankWireAccountForm from '../../payout/BankWireAccountForm'
 import {
   getBankWireBeneficiaryName,

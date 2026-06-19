@@ -1,9 +1,10 @@
-// StaffHeader — top bar: menu, brand, notifications bell, profile.
-import { Bell, Menu } from 'lucide-react'
-import { useTranslation } from '../../../contexts/LanguageContext'
-import { useStaffAccount } from '../../../contexts/StaffAccountContext'
-import { useUnreadCount } from '../../../data/hooks/useNotifications'
+// Platform switcher: desktop (dev UI) vs mobile (app-master UI).
+// Both variants receive the same props from StaffDashboard.
+import { useIsMobileUI } from '../../../hooks/useIsMobileUI'
+import StaffHeaderDesktop from './StaffHeader.desktop'
+import StaffHeaderMobile from './StaffHeader.mobile'
 
+<<<<<<< HEAD
 export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu }) {
   const { currentLanguage, setLanguage, t } = useTranslation()
   const { staffMember, account } = useStaffAccount()
@@ -121,4 +122,10 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
       </div>
     </header>
   )
+=======
+export default function StaffHeader(props: any) {
+  return useIsMobileUI()
+    ? <StaffHeaderMobile {...props} />
+    : <StaffHeaderDesktop {...props} />
+>>>>>>> origin/dev
 }

@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { dashboardRepository } from '../repositories/dashboard'
 import { qk } from '../queryKeys'
-import type { DashboardOverviewMetrics, StaffLeaderboardRow } from '../../types/repositories'
+import type { DashboardOverviewMetrics, StaffLeaderboardRow, TipsChartDayMetric } from '../../types/repositories'
 
 const EMPTY_PARAMS = {}
 
@@ -15,7 +15,6 @@ export function useDashboardOverview(params: DateRangeParams = EMPTY_PARAMS) {
   return useQuery<DashboardOverviewMetrics | null>({
     queryKey: [...qk.dashboardOverview(), params],
     queryFn: () => dashboardRepository.getOverview(params),
-    staleTime: 5 * 60 * 1000,
   })
 }
 
@@ -23,7 +22,7 @@ export function useDashboardStaff(params: DateRangeParams = EMPTY_PARAMS) {
   return useQuery<StaffLeaderboardRow[]>({
     queryKey: [...qk.dashboardStaff(), params],
     queryFn: () => dashboardRepository.getStaffMetrics(params),
-    staleTime: 5 * 60 * 1000,
+    retry: false,
   })
 }
 
@@ -31,6 +30,16 @@ export function useDashboardTouchpoints(params: DateRangeParams = EMPTY_PARAMS) 
   return useQuery<LooseObject[]>({
     queryKey: [...qk.dashboardTouchpoints(), params],
     queryFn: () => dashboardRepository.getTouchpointMetrics(params),
-    staleTime: 5 * 60 * 1000,
+  })
+}
+
+export function useDashboardTipsChart(params: DateRangeParams = EMPTY_PARAMS) {
+  const enabled = Boolean(params.startDate && params.endDate)
+
+  return useQuery<TipsChartDayMetric[]>({
+    queryKey: [...qk.dashboardTipsChart(), params],
+    queryFn: () => dashboardRepository.getTipsChart(params),
+    enabled,
+    retry: false,
   })
 }

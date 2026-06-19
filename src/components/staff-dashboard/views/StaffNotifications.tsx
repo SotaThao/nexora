@@ -1,5 +1,4 @@
 // StaffNotifications — notification feed + push preferences.
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bell, Check, Star, Users, Wallet, XCircle } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
@@ -8,7 +7,7 @@ import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import {
   useMarkAllNotificationsRead,
   useMarkNotificationRead,
-  useNotificationsPage,
+  useNotifications,
   useUnreadCount,
 } from '../../../data/hooks/useNotifications'
 import type { NotificationRecord } from '../../../types/domain'
@@ -21,7 +20,6 @@ import {
 } from '../../../data/hooks/useStaffSelf'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm sm:p-5'
-const PAGE_SIZE = 20
 const notificationRowBase = 'flex w-full items-start gap-3 px-3 py-3 text-left transition'
 const listRowBase = 'px-3 py-3'
 
@@ -189,12 +187,7 @@ export default function StaffNotifications() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { account, setPushPreference } = useStaffAccount()
-  const [pageNumber, setPageNumber] = useState(1)
-  const {
-    data: notificationsPage = null,
-    isPending,
-    isFetching,
-  } = useNotificationsPage({ pageNumber, pageSize: PAGE_SIZE })
+  const { data: notifications = [], isPending } = useNotifications()
   const { data: unreadCount = 0 } = useUnreadCount()
   const markReadMutation = useMarkNotificationRead()
   const markAllReadMutation = useMarkAllNotificationsRead()
@@ -223,14 +216,9 @@ export default function StaffNotifications() {
     navigate(target)
   }
 
-  if (isPending && !notificationsPage) {
+  if (isPending) {
     return <SkeletonLayout blocks={STAFF_NOTIFICATIONS_SKELETON} />
   }
-
-  const notifications = notificationsPage?.items ?? []
-  const totalPages = notificationsPage?.totalPages ?? 0
-  const canGoPrev = notificationsPage?.hasPreviousPage ?? pageNumber > 1
-  const canGoNext = notificationsPage?.hasNextPage ?? (totalPages > 0 && pageNumber < totalPages)
 
   const renderNotification = (n: NotificationRecord) => {
     if (n.type === 'StaffLinkRequest') {
@@ -291,34 +279,9 @@ export default function StaffNotifications() {
         {notifications.length === 0 ? (
           <p className="py-6 text-center text-xs text-nexoraSubtle">{t('staff_dashboard.notifications.empty')}</p>
         ) : (
-          <>
-            <div className={`space-y-1 ${isFetching ? 'opacity-70' : ''}`}>
-              {notifications.map(renderNotification)}
-            </div>
-            {totalPages > 1 && (
-              <div className="mt-3 flex items-center justify-between gap-2 border-t border-nexoraBorder pt-3">
-                <button
-                  type="button"
-                  onClick={() => setPageNumber((p) => Math.max(1, p - 1))}
-                  disabled={!canGoPrev || isFetching}
-                  className="rounded-lg border border-nexoraBorder px-3 py-1.5 text-xs font-bold text-nexoraText transition hover:bg-nexoraCanvas disabled:opacity-40"
-                >
-                  {t('common.back')}
-                </button>
-                <span className="text-xs text-nexoraMuted">
-                  {t('staff_dashboard.tips.page_of', { page: pageNumber, total: totalPages })}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setPageNumber((p) => p + 1)}
-                  disabled={!canGoNext || isFetching}
-                  className="rounded-lg border border-nexoraBorder px-3 py-1.5 text-xs font-bold text-nexoraText transition hover:bg-nexoraCanvas disabled:opacity-40"
-                >
-                  {t('common.next')}
-                </button>
-              </div>
-            )}
-          </>
+          <div className="space-y-1">
+            {notifications.map(renderNotification)}
+          </div>
         )}
       </section>
 

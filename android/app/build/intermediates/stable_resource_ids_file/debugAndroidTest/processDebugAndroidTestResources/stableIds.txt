@@ -1,0 +1,2 @@
+net.vlinkgroup.nexora.test:style/WhiteBackgroundTheme = 0x7f010001
+net.vlinkgroup.nexora.test:style/WhiteBackgroundDialogTheme = 0x7f010000

@@ -1,23 +1,10 @@
-// DashboardHeader — top bar: search w/ suggestions, language switch, notifications, profile menu.
-// Extracted from Dashboard.jsx (Group 2 refactor).
-import { useEffect, useMemo, useRef, useState } from 'react'
-import {
-  AlertTriangle,
-  Bell,
-  ClipboardList,
-  LogOut,
-  Menu,
-  Plus,
-  Pointer,
-  Search,
-  Star,
-  UserCheck,
-  Users,
-  Wallet
-} from 'lucide-react'
-import { useTranslation } from '../../../contexts/LanguageContext'
-import IconButton from '../../ui/IconButton'
+// Platform switcher: desktop (dev UI) vs mobile (app-master UI).
+// Both variants receive the same props from Dashboard.
+import { useIsMobileUI } from '../../../hooks/useIsMobileUI'
+import DashboardHeaderDesktop from './DashboardHeader.desktop'
+import DashboardHeaderMobile from './DashboardHeader.mobile'
 
+<<<<<<< HEAD
 export default function DashboardHeader({
   searchQuery,
   setSearchQuery,
@@ -510,4 +497,10 @@ export default function DashboardHeader({
       </div>
     </header>
   )
+=======
+export default function DashboardHeader(props: any) {
+  return useIsMobileUI()
+    ? <DashboardHeaderMobile {...props} />
+    : <DashboardHeaderDesktop {...props} />
+>>>>>>> origin/dev
 }

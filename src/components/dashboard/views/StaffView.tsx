@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { useState, useMemo } from 'react'
 import { AlertCircle, Plus, Trash2, User, QrCode, Edit2, Link, Copy, X, Share2, Eye, Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
@@ -7,11 +8,20 @@ import { buildPublicInviteLink } from '../../../utils/inviteRef'
 import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
+=======
+// Platform switcher: desktop (dev UI) vs mobile (app-master UI).
+// Both variants receive the same props from StaffRoute.
+import { useIsMobileUI } from '../../../hooks/useIsMobileUI'
+import StaffViewDesktop from './StaffView.desktop'
+import StaffViewMobile from './StaffView.mobile'
+>>>>>>> origin/dev
 
-function isPendingMember(member) {
-  const status = member?.status
-  return status === StatusFilter.Pending || status === 'Pending Setup' || status === 'Pending'
+export default function StaffView(props: any) {
+  return useIsMobileUI()
+    ? <StaffViewMobile {...props} />
+    : <StaffViewDesktop {...props} />
 }
+<<<<<<< HEAD
 
 function isPendingInviteMember(member) {
   return member?.itemType === 'invite' && isPendingMember(member)
@@ -845,3 +855,5 @@ function StaffView({
 }
 
 export default StaffView
+=======
+>>>>>>> origin/dev

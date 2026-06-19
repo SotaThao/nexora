@@ -45,3 +45,15 @@ debug.log
 .agent-rules
 .cursorrules
 pr_body.md
+
+.vscode/
+.pnpm-store/
+
+.DS_Store
+
+*.test.tsx
+
+package-lock.json
+
+js-to-ts-migration-guide.md
+pnpm-workspace.yaml

@@ -15,7 +15,9 @@
       "profile": "Hồ sơ",
       "scan": "Quét QR",
       "profile_account": "Cài đặt",
-      "profile_kyc": "KYC"
+      "profile_kyc": "KYC",
+      "tab_home": "Trang chủ",
+      "tab_qr": "QR của tôi"
     },
     "titles": {
       "home": "Dashboard",
@@ -111,9 +113,9 @@
       "tab_tipping": "QR Nhận tip",
       "share_tip": "Chia sẻ QR tip",
       "copy_tip_link": "Sao chép link tip",
-      "business_title": "QR theo tiệm",
+      "business_title": "Staff QR",
       "business_sub": "QR riêng cho tip/đánh giá tại tiệm này",
-      "note": "Khách tip qua touchpoint của tiệm (/touch/{businessSlug}/{touchPointSlug}) kèm ?staffProfileId= để chọn sẵn bạn. sessionId được tạo trên thiết bị khách khi mở link — không gắn vào mã QR.",
+      "note": "QR theo tiệm được lưu theo business_staff_link_id để không bị lẫn khi bạn làm ở nhiều tiệm.",
       "no_linked_businesses": "Chưa liên kết tiệm nào. Quét QR giới thiệu của tiệm để gửi yêu cầu tham gia.",
       "no_linked_businesses_title": "Chưa liên kết tiệm nào",
       "no_linked_businesses_body": "Bạn cần liên kết với tiệm trước khi nhận tip qua QR. Quét mã QR giới thiệu của tiệm hoặc nhờ chủ tiệm mời bạn.",
@@ -125,9 +127,10 @@
       "pending_unlink_body": "Liên kết với {business} đang được gỡ. Mã QR tip tạm thời không dùng được.",
       "qr_unavailable_title": "Chưa có mã QR tip",
       "qr_unavailable_body": "Mã QR tip tại {business} chưa kích hoạt. Liên hệ chủ tiệm hoặc quét QR giới thiệu để liên kết.",
+      "touchpoint_missing_title": "Chưa có đường link tip",
+      "touchpoint_missing_body": "Tiệm chưa cấu hình touchpoint nên chưa thể tạo link tip cá nhân của bạn. Vui lòng liên hệ {business} để hoàn tất thiết lập.",
       "referral_unavailable_title": "Chưa có Staff ID",
-      "referral_unavailable_body": "Mã QR giới thiệu cá nhân sẽ hiện khi hồ sơ staff được thiết lập xong. Vui lòng thử lại sau giây lát.",
-      "note": "QR theo tiệm được lưu theo business_staff_link_id để không bị lẫn khi bạn làm ở nhiều tiệm."
+      "referral_unavailable_body": "Mã QR giới thiệu cá nhân sẽ hiện khi hồ sơ staff được thiết lập xong. Vui lòng thử lại sau giây lát."
     },
     "profile": {
       "title": "Tài khoản cá nhân",
@@ -169,6 +172,11 @@
   },
   "common": {
     "close": "Đóng",
+    "coming_soon": "Sắp ra mắt",
+    "pagination_showing": "Đang xem từ",
+    "pagination_to": "đến",
+    "pagination_of": "trong tổng số",
+    "pagination_results": "kết quả",
     "active": "Đang hoạt động",
     "inactive": "Ngừng hoạt động",
     "back": "Quay lại",
@@ -227,7 +235,10 @@
     "gateway_sub": "Cổng định tuyến Phản hồi & Típ thông minh",
     "sso_integration_title": "Tích hợp VLINKPAY SSO:",
     "sso_integration_desc": "Bạn sẽ sử dụng tài khoản doanh nghiệp đã đăng ký tại hệ thống thanh toán VLINKPAY để đăng nhập nhanh.",
-    "email_label": "Email or username",
+    "secure_access": "Truy Cập Bảo Mật",
+    "sign_in_title": "Đăng nhập NEXORA",
+    "forgot_password": "Quên mật khẩu?",
+    "email_label": "Email hoặc tên đăng nhập",
     "password_label": "Mật khẩu",
     "email_placeholder": "owner@yourstore.com",
     "password_placeholder": "••••••••",
@@ -245,7 +256,7 @@
   },
   "setup": {
     "col_staff": "Nhân viên",
-    "title_step_1": "Bước 1: Thiết Lập Cửa Hàng & Định Tuyến Review",
+    "title_step_1": "Bước 1: Thiết Lập Cửa Hàng & Định Tuyến Đánh Giá",
     "desc_step_1": "Cấu hình thông tin cơ bản của tiệm và các cổng định tuyến phản hồi thông minh.",
     "store_info_title": "Thông Tin Cửa Hàng",
     "required_badge": "* Bắt buộc",
@@ -260,15 +271,15 @@
     "store_address": "Địa Chỉ Hoạt Động *",
     "store_address_placeholder": "Nhập địa chỉ chính xác...",
     "store_phone": "Số Điện Thoại *",
-    "store_website": "Website (Tùy chọn)",
+    "store_website": "Trang Web (Tùy chọn)",
     "store_logo": "Logo Doanh Nghiệp",
     "store_payment_title": "Phương thức nhận tiền của tiệm",
-    "logo_hint": "Logo vuông (Max 5MB)",
-    "review_routing_title": "Review Routing (Định tuyến review)",
+    "logo_hint": "Logo vuông (Tối đa 5MB)",
+    "review_routing_title": "Định Tuyến Đánh Giá",
     "review_routing_policy": "Châm ngôn: Khách hài lòng (4-5★) được đưa thẳng sang Google/Yelp. Khách chưa hài lòng (1-3★) sẽ được định tuyến gửi biểu mẫu đóng góp kín về Email quản trị dưới đây để xử lý kín.",
-    "google_review_link": "Google Review Link (Tùy chọn)",
-    "yelp_review_link": "Yelp Review Link (Tùy chọn)",
-    "facebook_link": "Facebook Link (Tùy chọn)",
+    "google_review_link": "Liên kết Đánh Giá Google (Tùy chọn)",
+    "yelp_review_link": "Liên kết Đánh Giá Yelp (Tùy chọn)",
+    "facebook_link": "Liên kết Facebook (Tùy chọn)",
     "feedback_email": "Email Nhận Góp Ý Kín (1-3★) (Tùy chọn)",
     "title_step_2": "Bước 2: Quản Lý Nhân Viên & Điểm Chạm QR",
     "desc_step_2": "Thêm thợ của bạn. Hệ thống sẽ tự động phát sinh mã QR tương ứng để dán tại ghế hoặc chia sẻ.",
@@ -315,10 +326,11 @@
     "print_btn": "In ›",
     "config_checklist_title": "Kiểm tra cấu hình",
     "chk_business": "Cửa hàng: {name} ({industry})",
-    "chk_routing": "Google/Yelp Routing: Đã liên kết",
+    "chk_routing": "Google/Yelp Định Tuyến: Đã liên kết",
     "chk_staff": "Nhân viên: {count} kỹ thuật viên liên kết ví",
-    "chk_touchpoints": "Điểm chạm: {count} QR Station được phát sinh",
-    "launch_dashboard_btn": "Vào Dashboard",
+    "chk_touchpoints": "Điểm chạm: {count} điểm QR được tạo",
+    "print_action": "In ấn",
+    "launch_dashboard_btn": "Vào Bảng Điều Khiển",
     "errors": {
       "name_required": "Tên cửa hàng là bắt buộc",
       "address_required": "Địa chỉ là bắt buộc",
@@ -340,14 +352,14 @@
       "field_required": "Vui lòng nhập trường này.",
       "user_not_merchant": "Người dùng không phải là merchant."
     },
-    "step_name_1": "Cửa hàng & Review",
+    "step_name_1": "Cửa hàng & Đánh Giá",
     "step_name_2": "Nhân viên & QR",
-    "step_name_3": "Download & Hoàn tất",
+    "step_name_3": "Tải xuống & Hoàn tất",
     "onboarding_stage": "Onboarding Stage",
     "back_to_login": "Quay lại Đăng nhập",
     "prefill_demo_data": "Prefill Demo Data",
     "payout_methods": "Phương thức nhận tiền",
-    "payout_account": "Payout account",
+    "payout_account": "Tài khoản nhận tiền",
     "setup_wallet_title": "Thiết lập tài khoản {wallet}",
     "payout_input_label": "Tài khoản {wallet} của bạn {field} *",
     "qr_code_optional": "Mã QR Code (tùy chọn)",
@@ -383,6 +395,8 @@
       "plan_name": "Gói Pro",
       "no_plan": "Chưa có gói",
       "renews_text": "Gia hạn vào 20/06/2024",
+      "renews_on": "Gia hạn vào {{date}}",
+      "trial_ends": "Dùng thử đến {{date}}",
       "manage_plan": "Quản lý gói"
     },
     "menu": {
@@ -418,6 +432,7 @@
       "avg_tip": "Típ Trung Bình",
       "total_reviews": "Tổng Đánh Giá",
       "vs_last_week": "so với tuần trước",
+      "no_comparison": "Chưa có dữ liệu kỳ trước",
       "scans": "Lượt Quét QR/NFC",
       "reviews": "Lượt Đánh Giá",
       "avg_rating": "Đánh Giá Trung Bình",
@@ -427,6 +442,7 @@
     "review_kpi": {
       "google_reviews": "Đánh giá Google",
       "yelp_reviews": "Đánh giá Yelp",
+      "staff_reviews": "Đánh giá {name}",
       "response_rate": "Tỷ lệ Phản hồi",
       "returning_customers": "Khách quay lại",
       "great": "Tuyệt vời!",
@@ -436,7 +452,14 @@
       "internal_feedback": "Phản hồi Nội bộ",
       "review_source": "Nguồn đánh giá",
       "star_rating": "Số sao đánh giá",
-      "all_stars": "Tất cả sao"
+      "all_stars": "Tất cả sao",
+      "response_rate_label": {
+        "excellent": "Xuất sắc",
+        "good": "Tốt",
+        "fair": "Trung bình",
+        "needs_improvement": "Cần cải thiện",
+        "poor": "Kém"
+      }
     },
     "chart": {
       "tips_over_time": "Tiền Típ Theo Thời Gian",
@@ -499,7 +522,7 @@
       "add_tp_title": "Thêm Điểm Chạm Mới",
       "tp_name_label": "Tên điểm chạm (Ví dụ: Ghế Manicure 05)",
       "tp_name_placeholder": "Ví dụ: Ghế Manicure 05",
-      "device_id_label": "Serial phần cứng / ID Thiết bị (Tùy chọn)",
+      "device_id_label": "Serial thiết bị / Mã NFC",
       "device_id_placeholder": "Ví dụ: NFC-105, QR-Table-01",
       "tp_type_label": "Loại vị trí",
       "add_btn": "Thêm Điểm Chạm",
@@ -515,9 +538,8 @@
       "no_staff_assigned": "-- Không gán (Típ chung cho cửa hàng) --",
       "download_print_qr": "Tải Xuống QR In Ấn (PDF)",
       "print_qr_btn": "In Mã QR",
-      "customer_view_test": "Thử Giao Diện Khách Quét ›",
-      "tp_name_placeholder": "Ví dụ: Ghế Manicure 05",
-      "device_id_label": "Serial thiết bị / Mã NFC"
+      "print_qr": "In Mã QR",
+      "customer_view_test": "Thử Giao Diện Khách Quét ›"
     },
     "settings_panel": {
       "title": "Cấu Hình Hệ Thống Nexora",
@@ -716,6 +738,53 @@
       "charts_will_render": "Biểu đồ sẽ hiển thị khi có dữ liệu giao dịch thật.",
       "pending_api_short": "Pending API...",
       "transactions_unavailable": "Lịch sử giao dịch chưa khả dụng trong quá trình kết nối API."
+    },
+    "owner_home": {
+      "money_saved_title": "Tiền tiết kiệm tháng này",
+      "money_saved_subtitle": "Ước tính phí xử lý thẻ tránh được nhờ tip trực tiếp.",
+      "view_savings": "Xem tiết kiệm",
+      "export_report": "Xuất báo cáo",
+      "kpi_direct_tips": "Tip trực tiếp",
+      "kpi_active_staff": "Nhân viên",
+      "kpi_pending": "Chờ xử lý",
+      "kpi_reviews": "Đánh giá",
+      "tips_count": "+{count} tip",
+      "no_tips_yet": "Chưa có tip",
+      "staff_active": "{count} đang hoạt động",
+      "need_action": "Cần xử lý",
+      "all_clear": "Đã xong",
+      "reviews_total": "{count} đánh giá",
+      "no_reviews_yet": "Chưa có đánh giá",
+      "quick_actions": "Thao tác nhanh",
+      "manage": "Quản lý",
+      "quick_add_qr": "Thêm QR",
+      "quick_add_staff": "Thêm NV",
+      "quick_tips": "Tip",
+      "quick_reports": "Báo cáo",
+      "staff_status_title": "Trạng thái nhân viên",
+      "no_staff": "Chưa có nhân viên",
+      "status_active": "Hoạt động",
+      "status_pending": "Chờ",
+      "status_inactive": "Ngừng",
+      "qr_performance_title": "Hiệu suất QR",
+      "no_qr": "Chưa có điểm chạm QR",
+      "view": "Xem",
+      "touchpoint": "Điểm chạm",
+      "savings_summary_title": "Tổng kết tiết kiệm",
+      "details": "Chi tiết",
+      "this_month": "Tháng này",
+      "this_year": "Năm nay",
+      "fee_basis": "{tips} × 3%",
+      "estimated_saved": "Ước tính tiết kiệm",
+      "staff_member": "Nhân viên",
+      "via_link_request": "Yêu cầu liên kết",
+      "via_invite": "Đã gửi lời mời",
+      "technician": "Kỹ thuật viên",
+      "nav_home": "Trang chủ",
+      "nav_staff": "Nhân viên",
+      "nav_tips": "Tip",
+      "nav_qr": "QR",
+      "nav_profile": "Hồ sơ"
     }
   },
   "staff_detail": {
@@ -841,15 +910,15 @@
     "create_account": "Tạo tài khoản",
     "role_select_title": "Chọn loại tài khoản",
     "role_select_desc": "Vui lòng chọn vai trò phù hợp để cấu hình giao diện của bạn.",
-    "role_business_title": "Business",
+    "role_business_title": "Doanh Nghiệp",
     "role_business_desc": "Quản lý thông tin cửa hàng, nhân viên, touchpoints, định tuyến đánh giá và xem thống kê tiệm.",
-    "role_personal_title": "Personal",
+    "role_personal_title": "Cá Nhân",
     "role_personal_desc": "Tự quản lý tài khoản cá nhân, ví nhận tiền, theo dõi tiền tip và chia sẻ mã QR cá nhân.",
     "fullname_label": "Họ và tên *",
     "fullname_placeholder": "Ví dụ: Mia Tran",
     "staff_success_title": "Đăng ký Tài khoản Cá nhân thành công!",
     "staff_success_desc": "Tài khoản cá nhân của bạn đã được tạo. Bạn không cần xác minh KYB doanh nghiệp để bắt đầu.",
-    "need_invite_link": "Bạn cần có link invite từ một tiệm (Business) để trở thành thợ.",
+    "need_invite_link": "Bạn cần có liên kết mời từ một tiệm (Doanh Nghiệp) để trở thành thợ.",
     "staff_id_label": "Mã Personal ID của bạn:",
     "staff_linking_instructions": "Cung cấp mã Personal ID này cho Chủ tiệm/Salon để họ liên kết bạn vào danh sách của tiệm.",
     "staff_login_btn": "Đăng nhập vào Bảng điều khiển Cá nhân",
@@ -1158,6 +1227,7 @@
           "resendInviteSuccess": "Đã gửi lại link thiết lập thành công tới {name}!",
           "resendInviteFailed": "Gửi lại thất bại: {error}",
           "joinAccepted": "Đã chấp nhận thợ {name} vào tiệm!",
+          "joinDeclined": "Đã từ chối yêu cầu tham gia của {name}.",
           "acceptFailed": "Chấp nhận thất bại: {error}",
           "declineJoinConfirm": "Bạn có chắc chắn muốn từ chối yêu cầu tham gia của thợ {name}?",
           "declineFailed": "Từ chối thất bại: {error}",
@@ -1284,7 +1354,13 @@
       "overview": {
         "Overview": {
           "custom": "Tự chọn",
-          "copiedNfcRedirectLink": "Đã sao chép link chuyển hướng NFC vào clipboard!"
+          "copiedNfcRedirectLink": "Đã sao chép link chuyển hướng NFC vào clipboard!",
+          "qr_download_failed": "Không thể tải mã QR. Vui lòng thử lại.",
+          "gateway_empty_title": "Chưa có điểm chạm",
+          "gateway_empty_desc": "Tạo touchpoint để sinh Master QR và cổng NFC cho cửa hàng.",
+          "gateway_empty_action": "Thêm Touchpoint",
+          "reviews_empty_title": "Chưa có dữ liệu đánh giá",
+          "reviews_empty_desc": "Chỉ số đánh giá sẽ hiển thị khi khách hàng bắt đầu để lại phản hồi."
         },
         "SetupGuideBanner": {
           "gettingStarted": "Bắt đầu sử dụng",
@@ -1295,7 +1371,14 @@
         "TipsOverTimePanel": {
           "custom": "Tự chọn",
           "from": "Từ ngày:",
-          "to": "Đến ngày:"
+          "to": "Đến ngày:",
+          "empty_title": "Chưa có tip trong khoảng thời gian này",
+          "empty_desc": "Biểu đồ sẽ hiển thị khi khách hàng bắt đầu tip qua các điểm chạm của bạn."
+        },
+        "StaffLeaderboardPanel": {
+          "empty_title": "Chưa có bảng xếp hạng nhân viên",
+          "empty_desc": "Thêm nhân viên để xem thứ hạng hiệu suất trên leaderboard.",
+          "empty_action": "Quản lý nhân viên"
         }
       },
       "views": {
@@ -1942,8 +2025,8 @@
     "auth": {
       "AuthGraphicPanel": {
         "badge": "NEXORA TOUCH",
-        "merchantOsLabel": "Merchant OS",
-        "headline": "Tips, QR, NFC",
+        "merchantOsLabel": "Hệ Thống Merchant",
+        "headline": "Tiền Tip, QR, NFC",
         "statTips": "Tiền tip",
         "statReviews": "Đánh giá",
         "statFlow": "Liên tục",
@@ -2011,6 +2094,61 @@
       "incorrect_password": "Mật khẩu không chính xác.",
       "business_account_not_allowed": "Chỉ tài khoản cá nhân (Personal) mới có thể chấp nhận lời mời tiệm. Vui lòng đăng nhập bằng tài khoản cá nhân.",
       "onboarding_required": "Vui lòng hoàn tất hồ sơ cá nhân trước khi gia nhập tiệm."
+    }
+  },
+  "manage_plan": {
+    "eyebrow": "Bố Cục Giá Trị Minh Bạch",
+    "title": "Tìm Gói Phù Hợp Nhất Cho Đội Ngũ Của Bạn",
+    "subtitle": "Bắt đầu ngay với thẻ thanh toán Smart QR miễn phí và đánh giá tự động, sau đó mở rộng lên kênh hợp tác toàn diện.",
+    "current_plan": "Gói hiện tại",
+    "plans": {
+      "lite": {
+        "name": "Gói Lite (Miễn Phí)",
+        "badge": "Miễn Phí",
+        "tagline": "Dành cho salon có từ 5 nhân viên trở xuống. Yêu cầu xác minh KYB.",
+        "price": "$0",
+        "price_note": "/ tháng",
+        "cta": "Đăng Ký Miễn Phí (Cần KYB)",
+        "f1": "Tối đa 5 chuyên viên hoạt động",
+        "f2": "Bắt buộc xác minh KYB",
+        "f3": "Smart QR để bàn cơ bản",
+        "f4": "Định tuyến tip ngang hàng trực tiếp"
+      },
+      "starter": {
+        "name": "Gói Starter",
+        "tagline": "Hoàn hảo cho gian hàng nhỏ & chuyên viên tự do",
+        "price": "$29",
+        "price_note": "/ tháng",
+        "cta": "Bắt Đầu Ngay",
+        "f1": "Đặt mã QR thương hiệu trên bàn",
+        "f2": "Định tuyến tip ngang hàng tức thì",
+        "f3": "Kênh đánh giá Google tự động",
+        "f4": "Báo cáo giao dịch hàng tháng cơ bản"
+      },
+      "pro": {
+        "name": "Gói Professional Pro",
+        "badge": "Khuyên Dùng Cho Salon",
+        "tagline": "Lựa chọn tuyệt vời cho đội ngũ đang phát triển & boutique địa phương",
+        "price": "$79",
+        "price_note": "/ tháng",
+        "cta": "Chọn Gói Pro",
+        "f1": "Bao gồm mọi tính năng gói Starter",
+        "f2": "Tài khoản đăng nhập riêng cho từng kỹ thuật viên",
+        "f3": "Quy trình xử lý tip trực tiếp tự động",
+        "f4": "Bảng quy tắc thưởng B2B tùy chỉnh",
+        "f5": "Công cụ phân loại hồ sơ khách hàng"
+      },
+      "enterprise": {
+        "name": "Gói Enterprise",
+        "tagline": "Dành cho chuỗi boutique nhiều chi nhánh quy mô lớn",
+        "price": "Báo Giá Riêng",
+        "price_note": "/ theo yêu cầu",
+        "cta": "Liên Hệ Bộ Phận Sales",
+        "f1": "Bảng điều khiển tổ chức đa chi nhánh",
+        "f2": "Đồng bộ API thanh toán POS trực tiếp",
+        "f3": "Bảng NFC đồng thau cao cấp tại quầy",
+        "f4": "Quản lý thành công doanh nghiệp 24/7"
+      }
     }
   },
   "coming_soon": {

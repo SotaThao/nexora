@@ -35,10 +35,28 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loginError, setLoginError] = useState(location.state?.loginError || '')
+  const [fieldErrorKeys, setFieldErrorKeys] = useState<{ email?: string; password?: string }>({})
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
   const handleLoginSubmit = () => {
+    const newFieldErrorKeys: { email?: string; password?: string } = {}
+    if (!email.trim()) {
+      newFieldErrorKeys.email = 'register.errors.email_required'
+    } else if (!/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email.trim())) {
+      newFieldErrorKeys.email = 'register.errors.email_invalid'
+    }
+    if (!password) {
+      newFieldErrorKeys.password = 'register.errors.password_required'
+    } else if (password.length < 6) {
+      newFieldErrorKeys.password = 'register.errors.password_short'
+    }
+    if (Object.keys(newFieldErrorKeys).length > 0) {
+      setFieldErrorKeys(newFieldErrorKeys)
+      setLoginError('')
+      return
+    }
+    setFieldErrorKeys({})
     setIsLoading(true)
     setLoginError('')
 
@@ -121,14 +139,8 @@ export default function LoginScreen() {
         {/* Left Column: Login Card */}
         <div className="lg:col-span-5 flex flex-col justify-between p-5 sm:p-8 xl:p-10 relative overflow-hidden">
           {/* VLINKPAY branding logo */}
-          <div className="mb-8 flex items-center gap-3">
-            <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="w-11 h-11 object-contain" />
-            <div>
-              <h2 className="font-sans text-xl font-bold tracking-wide sm:text-2xl">
-                NEXORA <span className="ml-1.5 inline-flex align-middle text-nexoraBrand font-sans text-xs tracking-widest font-black uppercase bg-nexoraBrand/10 px-2 py-0.5 rounded border border-nexoraBrand/30">TOUCH</span>
-              </h2>
-              <p className="text-xs text-nexoraMuted mt-1">{t('login.gateway_sub')}</p>
-            </div>
+          <div className="mb-8 flex items-center justify-center">
+            <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="h-[66px] w-auto max-w-[300px] object-contain" />
           </div>
 
           {isLoading ? (
@@ -141,8 +153,8 @@ export default function LoginScreen() {
           ) : (
             <form onSubmit={(e) => { e.preventDefault(); handleLoginSubmit(); }} className="space-y-5">
               <div className="space-y-1">
-                <p className="text-[11px] font-black uppercase tracking-wider text-nexoraBrand">Secure Access</p>
-                <h1 className="text-2xl font-black text-nexoraText sm:text-3xl">Sign in to NEXORA</h1>
+                <p className="text-[11px] font-black uppercase tracking-wider text-nexoraBrand">{t('login.secure_access')}</p>
+                <h1 className="text-2xl font-black text-nexoraText sm:text-3xl">{t('login.sign_in_title')}</h1>
               </div>
 
               {loginError && (
@@ -159,11 +171,15 @@ export default function LoginScreen() {
                     <input
                       type="email"
                       placeholder={t('login.email_placeholder')}
-                      className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg pl-10 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all"
+                      className={`w-full bg-nexoraCanvas border ${fieldErrorKeys.email ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} rounded-lg pl-10 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all`}
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value)
+                        if (fieldErrorKeys.email) setFieldErrorKeys(prev => ({ ...prev, email: undefined }))
+                      }}
                     />
                   </div>
+                  {fieldErrorKeys.email && <span className="text-xs text-nexoraDanger mt-1 block">{t(fieldErrorKeys.email)}</span>}
                 </div>
 
                 <div>
@@ -174,7 +190,7 @@ export default function LoginScreen() {
                       onClick={() => navigate('/forgot-password')}
                       className="text-[10px] font-bold text-nexoraBrand hover:underline focus:outline-none transition-all"
                     >
-                      Forgot Password?
+                      {t('login.forgot_password')}
                     </button>
                   </div>
                   <div className="relative">
@@ -182,9 +198,12 @@ export default function LoginScreen() {
                     <input
                       type={showPassword ? "text" : "password"}
                       placeholder={t('login.password_placeholder')}
-                      className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg pl-10 pr-10 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all"
+                      className={`w-full bg-nexoraCanvas border ${fieldErrorKeys.password ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} rounded-lg pl-10 pr-10 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all`}
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        setPassword(e.target.value)
+                        if (fieldErrorKeys.password) setFieldErrorKeys(prev => ({ ...prev, password: undefined }))
+                      }}
                     />
                     <button
                       type="button"
@@ -194,6 +213,7 @@ export default function LoginScreen() {
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
+                  {fieldErrorKeys.password && <span className="text-xs text-nexoraDanger mt-1 block">{t(fieldErrorKeys.password)}</span>}
                 </div>
               </div>
 
@@ -207,6 +227,31 @@ export default function LoginScreen() {
               <div className="relative hidden py-1 text-center sm:block">
                 <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-nexoraBorder"></div></div>
                 <span className="relative bg-white px-3 text-[10px] text-nexoraSubtle font-bold uppercase tracking-wider">{t('login.social_auth_divider')}</span>
+              </div>
+
+              <div className="flex items-center justify-center gap-3 sm:grid sm:grid-cols-2 pb-2">
+                <button
+                  type="button"
+                  disabled
+                  aria-label={t('login.continue_google')}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-nexoraBorder bg-gray-50 p-0 text-xs font-bold text-nexoraSubtle shadow-nexora-card transition-all opacity-60 cursor-not-allowed sm:min-h-11 sm:w-auto sm:rounded-lg sm:px-4 sm:py-2 sm:shadow-none"
+                >
+                  <span className="flex items-center justify-center gap-2">
+                    <GoogleIcon />
+                    <span className="hidden sm:inline">{t('common.coming_soon')}</span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  disabled
+                  aria-label={t('login.continue_apple')}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-nexoraBorder bg-gray-50 p-0 text-xs font-bold text-nexoraSubtle shadow-nexora-card transition-all opacity-60 cursor-not-allowed sm:min-h-11 sm:w-auto sm:rounded-lg sm:px-4 sm:py-2 sm:shadow-none"
+                >
+                  <span className="flex items-center justify-center gap-2">
+                    <AppleBrandIcon />
+                    <span className="hidden sm:inline">{t('common.coming_soon')}</span>
+                  </span>
+                </button>
               </div>
  
               {/* Quick login / registration options */}

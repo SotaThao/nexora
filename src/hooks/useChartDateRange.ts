@@ -16,6 +16,10 @@ const RANGE_OFFSETS = {
   '365 Days': 364,
 }
 
+function todayUtcDateString() {
+  return new Date().toISOString().split('T')[0]
+}
+
 /**
  * Shared hook that manages chart date-range state derived from a transactions array.
  *
@@ -25,7 +29,7 @@ const RANGE_OFFSETS = {
 export function useChartDateRange(transactions) {
   // Derive the reference end date from the transactions array
   const refEndDate = useMemo(() => {
-    if (!transactions || transactions.length === 0) return '2026-05-26'
+    if (!transactions || transactions.length === 0) return todayUtcDateString()
     let maxDate = '1970-01-01'
     transactions.forEach(tx => {
       if (tx.dateTime) {
@@ -35,7 +39,7 @@ export function useChartDateRange(transactions) {
         }
       }
     })
-    return maxDate === '1970-01-01' ? '2026-05-26' : maxDate
+    return maxDate === '1970-01-01' ? todayUtcDateString() : maxDate
   }, [transactions])
 
   const [chartRange, setChartRange] = useState('7 Days')

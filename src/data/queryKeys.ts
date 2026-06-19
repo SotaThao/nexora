@@ -26,6 +26,7 @@ export const qk = {
   dashboardOverview:        () => ['dashboard', 'overview'],
   dashboardStaff:           () => ['dashboard', 'staff'],
   dashboardTouchpoints:     () => ['dashboard', 'touchpoints'],
+  dashboardTipsChart:       () => ['dashboard', 'tipsChart'],
   dashboardReviews:         (filters = EMPTY) => ['dashboard', 'reviews', filters],
   
   // Notifications

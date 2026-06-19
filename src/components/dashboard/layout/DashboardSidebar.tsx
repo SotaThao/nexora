@@ -6,12 +6,14 @@ import { ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { visibleMenuItems } from '../constants'
 import MenuIcon from '../../ui/MenuIcon'
+import { getSubscriptionSidebarCopy } from '../../../utils/subscriptionDisplay'
 
 export default function DashboardSidebar({
   activeMenu,
   setActiveMenu,
   businessName,
   profile,
+  subscription = null,
   settingsTab,
   setSettingsTab,
   isProfileExpanded,
@@ -29,6 +31,15 @@ export default function DashboardSidebar({
   const [searchParams] = useSearchParams()
   const activeSubTab = searchParams.get('tab')
   const [isTipsExpanded, setIsTipsExpanded] = useState(activeMenu === 'tips')
+<<<<<<< HEAD
+=======
+  const [isTouchpointsExpanded, setIsTouchpointsExpanded] = useState(activeMenu === 'touchpoints')
+  const subscriptionCopy = getSubscriptionSidebarCopy(
+    subscription ?? profile?.subscription,
+    t,
+    currentLanguage,
+  )
+>>>>>>> origin/dev
 
   useEffect(() => {
     if (activeMenu === 'tips') {
@@ -39,12 +50,8 @@ export default function DashboardSidebar({
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col bg-nexoraSidebar px-5 py-7 text-white lg:flex">
       {/* Logo block */}
-      <div className="flex items-center gap-3 px-2">
-        <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-12 w-12 shrink-0 object-contain" />
-        <div className="min-w-0">
-          <div className="text-2xl font-extrabold leading-none tracking-normal">{t('dashboard.sidebar.console_title')}</div>
-          <div className="mt-1 text-sm font-semibold text-white/65">{t('dashboard.sidebar.console_subtitle')}</div>
-        </div>
+      <div className="flex items-center px-2">
+        <img src="/assets/logo-nexora-white-vertical.png" alt="Nexora Logo" className="w-44 h-auto max-w-full object-contain" />
       </div>
 
       {/* Expandable Profile Card */}
@@ -52,9 +59,9 @@ export default function DashboardSidebar({
         <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsProfileExpanded(!isProfileExpanded)}>
           <div className="flex items-center gap-3 min-w-0">
             {profile.avatar && !profile.avatar.includes('unsplash.com') ? (
-              <img src={profile.avatar} alt="" className="h-10 w-10 rounded-full border border-white/10 object-cover" />
+              <img src={profile.avatar} alt="" className="h-10 w-10 shrink-0 rounded-full border border-white/10 object-cover" />
             ) : (
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-sm font-extrabold uppercase">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-sm font-extrabold uppercase">
                 {(businessName || profile.email || '').slice(0, 2).toUpperCase() || '?'}
               </div>
             )}
@@ -113,14 +120,16 @@ export default function DashboardSidebar({
         <div className="text-[10px] font-extrabold uppercase tracking-wider text-white/45">
           {t('dashboard.sidebar.current_plan_header')}
         </div>
-        {hasKyb ? (
+        {subscriptionCopy.planLabel ? (
           <>
             <div className="mt-1 text-sm font-black text-white">
-              {t('dashboard.sidebar.plan_name')}
+              {subscriptionCopy.planLabel}
             </div>
-            <div className="mt-1 text-xs text-white/55">
-              {t('dashboard.sidebar.renews_text')}
-            </div>
+            {subscriptionCopy.detailLabel ? (
+              <div className="mt-1 text-xs text-white/55">
+                {subscriptionCopy.detailLabel}
+              </div>
+            ) : null}
           </>
         ) : (
           <div className="mt-1 text-xs font-semibold text-rose-400">

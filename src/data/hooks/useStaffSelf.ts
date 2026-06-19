@@ -80,7 +80,12 @@ export function useStaffBusinessTipQrs({ enabled: callerEnabled = true } = {}) {
           }
         }
 
-        const resolved = resolveStaffTipQr(biz, staffProfileId, origin)
+        const resolved = resolveStaffTipQr(
+          biz,
+          staffProfileId,
+          origin,
+          { allowDefaultTouchPointSlug: !biz.touchPointsMissing },
+        )
         return {
           businessId: biz.businessId,
           businessName: biz.businessName,
@@ -88,18 +93,24 @@ export function useStaffBusinessTipQrs({ enabled: callerEnabled = true } = {}) {
             account.displayNamesByBusiness?.[biz.businessId] || account.defaultDisplayName,
           businessSlug: resolved.businessSlug,
           touchPointSlug: resolved.touchPointSlug,
-          tipUrl: resolved.tipUrl,
+          tipUrl: biz.touchPointsMissing ? null : resolved.tipUrl,
           qrImageUrl: resolved.qrImageUrl ?? biz.qrImageUrl ?? null,
           linkStatus: biz.linkStatus,
           linkStatusLabel: biz.linkStatusLabel,
           roleLabel: biz.roleLabel,
           logoUrl: biz.logoUrl,
+          tipLinkIncomplete: Boolean(biz.touchPointsMissing),
         } satisfies StaffBusinessTipQr
       })
     }
 
     return businesses.map((biz) => {
-      const resolved = resolveStaffTipQr(biz, staffProfileId, origin)
+      const resolved = resolveStaffTipQr(
+        biz,
+        staffProfileId,
+        origin,
+        { allowDefaultTouchPointSlug: !biz.touchPointsMissing },
+      )
       return {
         businessId: biz.businessId,
         businessName: biz.businessName,
@@ -107,12 +118,13 @@ export function useStaffBusinessTipQrs({ enabled: callerEnabled = true } = {}) {
           account.displayNamesByBusiness?.[biz.businessId] || account.defaultDisplayName,
         businessSlug: resolved.businessSlug,
         touchPointSlug: resolved.touchPointSlug,
-        tipUrl: resolved.tipUrl,
+        tipUrl: biz.touchPointsMissing ? null : resolved.tipUrl,
         qrImageUrl: resolved.qrImageUrl ?? biz.qrImageUrl ?? null,
         linkStatus: biz.linkStatus,
         linkStatusLabel: biz.linkStatusLabel,
         roleLabel: biz.roleLabel,
         logoUrl: biz.logoUrl,
+        tipLinkIncomplete: Boolean(biz.touchPointsMissing),
       } satisfies StaffBusinessTipQr
     })
   }, [

@@ -3,7 +3,7 @@ import { AlertTriangle, Camera, FolderOpen, X } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { WalletLogos } from './constants'
 import ImageFileInput from '../ui/ImageFileInput'
-import { captureQrImage } from '../../native/imagePicker'
+import { captureQrImage } from '../../utils/qrCode'
 import BankWireAccountForm from '../payout/BankWireAccountForm'
 import {
   getBankWireBeneficiaryName,

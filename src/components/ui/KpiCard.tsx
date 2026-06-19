@@ -2,9 +2,11 @@
 import { useTranslation } from '../../contexts/LanguageContext'
 import { useCountUp } from '../dashboard/utils'
 
-export default function KpiCard({ label, value, delta, active = false, onClick }) {
+export default function KpiCard({ label, value, deltaPercent = null, active = false, onClick }) {
   const animatedValue = useCountUp(value)
   const { t } = useTranslation()
+  const hasDelta = deltaPercent != null && !Number.isNaN(deltaPercent)
+  const isPositive = hasDelta ? deltaPercent >= 0 : true
 
   return (
     <button
@@ -24,11 +26,21 @@ export default function KpiCard({ label, value, delta, active = false, onClick }
           {animatedValue}
         </div>
       </div>
-      <div className="mt-4 flex items-center gap-1.5 text-xs font-bold text-emerald-600">
-        <span>▲ {delta}</span>
-        <span className="text-nexoraSubtle/80 font-semibold uppercase tracking-wider text-[10px]">
-          {t('dashboard.kpi.vs_last_week')}
-        </span>
+      <div className="mt-4 flex min-h-5 items-center gap-1.5 text-xs font-bold">
+        {hasDelta ? (
+          <>
+            <span className={isPositive ? 'text-emerald-600' : 'text-red-600'}>
+              {isPositive ? '▲' : '▼'} {Math.abs(deltaPercent).toFixed(1)}%
+            </span>
+            <span className="text-nexoraSubtle/80 font-semibold uppercase tracking-wider text-[10px]">
+              {t('dashboard.kpi.vs_last_week')}
+            </span>
+          </>
+        ) : (
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-nexoraSubtle/80">
+            {t('dashboard.kpi.no_comparison')}
+          </span>
+        )}
       </div>
     </button>
   )
