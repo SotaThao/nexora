@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { getApiErrorCode, isApiError } from '../../../types/domain'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
@@ -14,30 +14,30 @@ const normalizePhone = (raw) => {
 import { MOCK_NEXORA_STAFF_PROFILES } from '../../staff-registration/hooks/useStaffRegistration'
 import { useReplaceAllPendingAccounts, usePendingAccounts } from '../../../data/hooks/usePendingAccounts'
 import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
-import { useNotifications, useAddNotification } from '../../../data/hooks/useNotifications'
+import { useAddNotification } from '../../../data/hooks/useNotifications'
 import { logger } from '../../../utils/logger'
 import apiAuthAdapter from '../../../auth/adapters/apiAuthAdapter'
 import { getSignupOtp } from '../../../auth/signupOtp'
+import { savePendingRegistration, clearPendingRegistration } from '../../../auth/pendingRegistration'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { useCompletePersonalOnboarding } from '../../../data/hooks/usePersonalOnboarding'
 
-export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onKybSuccess = () => {}, isRedirectedFromSession, initialStep = 0, initialRole = 'personal' }) {
+export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onKybSuccess = () => {}, isRedirectedFromSession, initialStep = 0, initialRole = 'personal', resumeOtpVerification = false, resumeEmail = '', resumePassword = '', resumeRole = null }) {
   const { t, currentLanguage, setLanguage, renderLabel } = useTranslation()
   const replaceAllPendingAccountsMutation = useReplaceAllPendingAccounts()
   const pendingAccountsQuery = usePendingAccounts()
   const merchantSetupQuery = useMerchantSetup()
   const saveMerchantSetupMutation = useSaveMerchantSetup()
 
-  useNotifications()
   const addNotificationMutation = useAddNotification()
   const completePersonalOnboardingMutation = useCompletePersonalOnboarding()
-  const [currentStep, setCurrentStep] = useState(initialStep)
-  const [role, setRole] = useState(initialRole)
+  const [currentStep, setCurrentStep] = useState(resumeOtpVerification ? 2 : initialStep)
+  const [role, setRole] = useState(resumeRole || initialRole)
 
   // Step 1 states
-  const [email, setEmail] = useState(ssoEmail || '')
-  const [confirmEmail, setConfirmEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [email, setEmail] = useState(resumeEmail || ssoEmail || '')
+  const [confirmEmail, setConfirmEmail] = useState(resumeEmail || '')
+  const [password, setPassword] = useState(resumePassword || '')
   const [showPassword, setShowPassword] = useState(false)
   const [referralCode, setReferralCode] = useState('')
   const [fullName, setFullName] = useState('')
@@ -90,6 +90,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   // Validation errors
   const [errors, setErrors] = useState<LooseObject>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const resumeVerificationSentRef = useRef(false)
 
   const handleSimulateVerify = () => {
     setErrors({})
@@ -134,6 +135,33 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         setErrors({ submit: i18nKey })
       })
   }
+
+  useEffect(() => {
+    if (!resumeOtpVerification || !resumeEmail.trim()) return undefined
+    if (resumeVerificationSentRef.current) return undefined
+
+    resumeVerificationSentRef.current = true
+    let cancelled = false
+
+    const resumeVerification = async () => {
+      try {
+        await apiAuthAdapter.resendVerificationEmail({ email: resumeEmail.trim().toLowerCase() })
+        if (cancelled) return
+        setResendMessage(t('register.resend_verification_success'))
+        setResendTimer(60)
+      } catch (err) {
+        if (cancelled) return
+        resumeVerificationSentRef.current = false
+        const code = getApiErrorCode(err, 'HTTP_ERROR')
+        setOtpError(t(getErrorI18nKey(code)))
+      }
+    }
+
+    resumeVerification()
+    return () => {
+      cancelled = true
+    }
+  }, [resumeOtpVerification, resumeEmail, t])
 
   useEffect(() => {
     let interval = null
@@ -200,6 +228,11 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       setSimToken(signupOtp || simToken)
       setResendMessage('')
       setIsVerificationPending(false)
+      savePendingRegistration({
+        email: email.trim().toLowerCase(),
+        password,
+        role,
+      })
       setCurrentStep(2)
     } catch (err) {
       const errorsMap: LooseObject = {}
@@ -246,6 +279,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         password
       })
 
+      clearPendingRegistration()
       setOtpError('')
 
       if (role === 'business') {

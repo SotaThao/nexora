@@ -51,6 +51,7 @@ export default function TouchpointsView({
   onDelete,
   onQr,
   onToggleStatus,
+  togglingTouchpointId = null,
   onLinkDevice,
   transactions = [],
   businessName = '',
@@ -345,6 +346,7 @@ export default function TouchpointsView({
             ) : null}
             {!isLoading && touchpoints.map((point) => {
               const isPointActive = point.isActive !== false
+              const isToggling = togglingTouchpointId === point.id
               let qrUrl = ''
               if (point.url) {
                 qrUrl = toLocalCustomerTouchUrl(String(point.url))
@@ -424,16 +426,24 @@ export default function TouchpointsView({
                     {/* Middle Section: Active / Inactive Toggle */}
                     <div className="flex items-center gap-2 mt-1">
                       <button
+                        type="button"
+                        disabled={isToggling}
                         onClick={() => onToggleStatus && onToggleStatus(point.id)}
-                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                          isPointActive ? 'bg-nexoraBrand' : 'bg-nexoraBorder'
-                        }`}
+                        className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:cursor-wait ${
+                          isToggling ? 'opacity-70' : 'cursor-pointer'
+                        } ${isPointActive ? 'bg-nexoraBrand' : 'bg-nexoraBorder'}`}
                       >
-                        <span
-                          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                            isPointActive ? 'translate-x-4' : 'translate-x-0'
-                          }`}
-                        />
+                        {isToggling ? (
+                          <span className="absolute inset-0 flex items-center justify-center">
+                            <Loader2 className="h-3 w-3 animate-spin text-white" />
+                          </span>
+                        ) : (
+                          <span
+                            className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                              isPointActive ? 'translate-x-4' : 'translate-x-0'
+                            }`}
+                          />
+                        )}
                       </button>
                       <span className={`text-[10px] font-extrabold uppercase tracking-wider ${isPointActive ? 'text-nexoraSuccess' : 'text-nexoraSubtle'}`}>
                         {isPointActive ? t('dashboard.touchpoint_stats.active') : t('dashboard.touchpoint_stats.inactive')}
