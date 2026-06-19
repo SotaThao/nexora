@@ -16,7 +16,7 @@ export default function TipsView({
   processingFee: propProcessingFee,
   setProcessingFee: propSetProcessingFee
 }) {
-  const { t, currentLanguage } = useTranslation();
+  const { t } = useTranslation();
   const [localActiveTab, setLocalActiveTab] = useState('overview');
   const activeTab = propActiveTab !== undefined ? propActiveTab : localActiveTab;
   const setActiveTab = onTabChange !== undefined ? onTabChange : setLocalActiveTab;

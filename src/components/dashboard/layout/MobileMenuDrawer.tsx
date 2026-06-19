@@ -63,9 +63,9 @@ export default function MobileMenuDrawer({
           <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsProfileExpanded(!isProfileExpanded)}>
             <div className="flex items-center gap-3 min-w-0">
               {profile.avatar && !profile.avatar.includes('unsplash.com') ? (
-                <img src={profile.avatar} alt="" className="h-9 w-9 rounded-full border border-white/10 object-cover" />
+                <img src={profile.avatar} alt="" className="h-9 w-9 shrink-0 rounded-full border border-white/10 object-cover" />
               ) : (
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-xs font-extrabold uppercase">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-xs font-extrabold uppercase">
                   {(businessName || profile.email || '').slice(0, 2).toUpperCase() || '?'}
                 </div>
               )}
@@ -238,7 +238,6 @@ export default function MobileMenuDrawer({
                   <div className="ml-9 mt-1 space-y-1 border-l border-white/10 pl-3 animate-fadeIn">
                     {[
                       { id: 'stations', label: t('dashboard.touchpoints.tabs.stations') },
-                      { id: 'devices', label: t('dashboard.touchpoints.tabs.devices') }
                     ].map(sub => {
                       const isSubActive = activeMenu === 'touchpoints' && touchpointsTab === sub.id
                       return (

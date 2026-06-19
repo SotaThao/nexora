@@ -285,6 +285,7 @@ export interface TipApiDto {
   paymentMethod?: string
   staffName?: string
   staffProfileId?: string | null
+  staffCode?: string | null
   touchPointName?: string
   touchPointId?: string | null
   createdAt?: string
@@ -369,6 +370,21 @@ export interface CreateBusinessResult {
 export interface ImageUploadResult {
   imageUrl?: string
   fileUrl?: string
+}
+
+export interface TouchpointApiDto {
+  id?: string
+  name?: string
+  slug?: string | null
+  type?: string
+  url?: string | null
+  qrImageUrl?: string | null
+  isActive?: boolean
+  assignedStaffProfileId?: string | null
+  createdAt?: string | null
+  totalScans?: number
+  totalRevenue?: number
+  deviceId?: string | null
 }
 
 export interface TouchpointCreateResult {
