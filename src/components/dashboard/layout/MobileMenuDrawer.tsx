@@ -51,7 +51,7 @@ export default function MobileMenuDrawer({
       <aside className="relative flex h-full w-[min(84vw,320px)] flex-col bg-nexoraSidebar px-5 py-6 text-white shadow-2xl">
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center">
-            <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="w-40 h-auto max-w-full object-contain" />
+            <img src="/assets/logo-nexora-white-vertical.png" alt="Nexora Logo" className="w-40 h-auto max-w-full object-contain" />
           </div>
           <IconButton label="Close menu" onClick={onClose} className="text-white hover:bg-white/10">
             <X className="h-5 w-5" />

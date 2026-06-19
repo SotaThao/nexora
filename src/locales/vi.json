@@ -11,7 +11,7 @@
       "my_qr": "Mã QR",
       "tips": "Tiền tip",
       "reviews": "Đánh giá",
-      "pay": "Thanh toán",
+      "pay": "Cài đặt thanh toán",
       "profile": "Hồ sơ",
       "profile_account": "Cài đặt",
       "profile_kyc": "KYC",
@@ -847,8 +847,9 @@
   },
   "customer": {
     "header_subtitle": "Cổng Kết Nối Thanh Toán An Toàn Nexora",
-    "select_staff_title": "Chọn người phục vụ bạn",
-    "select_staff_subtitle": "Chọn nhân viên đã phục vụ bạn.",
+    "select_staff_title": "Ai đã phục vụ bạn hôm nay?",
+    "select_staff_subtitle": "Chọn nhân viên bạn muốn gửi tips.",
+    "inline_tip_label": "Số tiền tips",
     "search_staff_placeholder": "Tìm nhân viên...",
     "no_staff_found": "Không tìm thấy nhân viên.",
     "step_form_title": "Thêm Tiền Típ cho {name}",
@@ -859,6 +860,7 @@
     "feedback_label": "Để lại bình luận (không bắt buộc)",
     "feedback_placeholder": "Anna đã làm rất tuyệt! Tôi rất yêu bộ móng này!",
     "pay_btn": "Tiếp theo",
+    "tip_review_payment_title": "Kiểm tra tip & chọn thanh toán",
     "payment_title": "Bạn muốn thanh toán bằng cách nào?",
     "payment_desc": "Chọn phương thức thanh toán yêu thích.",
     "payment_empty_title": "Chưa có phương thức thanh toán",
@@ -894,6 +896,10 @@
     "tip_success_prefix": "Khoản tiền típ ",
     "tip_success_sent": " của bạn đã được gửi tới ",
     "tip_success_sub": "Chúng tôi rất trân trọng bạn!",
+    "tips_summary_title": "Đã gửi Tips!",
+    "tips_summary_via": "qua",
+    "tips_summary_review_cta": "Đánh giá ngay",
+    "tips_summary_skip": "Bỏ qua",
     "done": "Hoàn tất",
     "invalid_tip": "Vui lòng nhập số tiền típ hợp lệ lớn hơn 0.",
     "secure_footer": "Cổng kết nối SSL chuyển hướng an toàn",
@@ -1455,13 +1461,14 @@
     "register": {
       "hooks": {
         "useRegisterForm": {
-          "invalidOtpTryAgain": "Mã OTP không chính xác. Thử lại với 1234.",
+          "invalidOtpTryAgain": "Mã xác thực không hợp lệ. Vui lòng kiểm tra và thử lại.",
+          "invalidCodeTipEnter": "Mã xác thực không hợp lệ. Vui lòng kiểm tra và thử lại.",
           "thisFieldIsRequired": "Trường này là bắt buộc.",
           "newJoinRequest": "Yêu cầu gia nhập mới",
           "justNow": "Vừa xong",
           "accountType": "Chọn vai trò",
           "credentials": "Thông tin đăng ký",
-          "activateOtp": "Kích hoạt OTP",
+          "activateOtp": "Kích hoạt tài khoản",
           "profileSetup": "Hồ sơ cá nhân",
           "payoutSetup": "Cấu hình ví",
           "success": "Hoàn tất"
@@ -1493,6 +1500,7 @@
         "StepCredentials": {
           "activateAccountEnterOtp": "Kích hoạt tài khoản (Nhập OTP)",
           "enterTheOtpCode": "Nhập mã OTP được gửi tới email của bạn để kích hoạt tài khoản.",
+          "otpSentToEmail": "OTP đã gửi tới email",
           "enterOtpCode": "Nhập mã OTP *",
           "resendVerificationCode": "Gửi lại mã xác thực",
           "verifyAndActivate": "Xác minh & Kích hoạt",
@@ -1503,9 +1511,11 @@
         "StepOtpVerify": {
           "activateAccountEnterOtp": "Kích hoạt tài khoản (Nhập OTP)",
           "enterTheOtpCode": "Nhập mã OTP được gửi tới email của bạn để kích hoạt tài khoản.",
+          "otpSentToEmail": "OTP đã gửi tới email",
           "enterOtpCode": "Nhập mã OTP *",
           "resendVerificationCode": "Gửi lại mã xác thực",
           "verifyAndActivate": "Xác minh & Kích hoạt",
+          "processing": "Đang xử lý...",
           "phExampleOtp": "vd: 1234"
         },
         "StepPayoutSetup": {
