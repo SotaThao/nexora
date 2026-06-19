@@ -213,7 +213,6 @@ export default function DashboardSidebar({
                   {[
                     { id: 'overview', label: t('dashboard.tips.tabs.overview') },
                     { id: 'savings', label: t('dashboard.tips.tabs.savings') },
-                    { id: 'transactions', label: t('dashboard.tips.tabs.transactions') },
                     { id: 'payouts', label: t('dashboard.tips.tabs.payouts') }
                   ].map(sub => {
                     const isSubActive = activeMenu === 'tips' && (activeSubTab || 'overview') === sub.id

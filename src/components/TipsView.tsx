@@ -2,28 +2,23 @@ import React, { useState, useRef } from 'react';
 import { useTranslation } from '../contexts/LanguageContext';
 import { useChartDateRange } from '../hooks/useChartDateRange';
 import { useTipsData } from './tips/hooks/useTipsData';
-import { useTipsFilters } from './tips/hooks/useTipsFilters';
 import TipsOverviewTab from './tips/tabs/TipsOverviewTab';
 import TipsSavingsTab from './tips/tabs/TipsSavingsTab';
-import TipsTransactionsTab from './tips/tabs/TipsTransactionsTab';
 import TipsPayoutsTab from './tips/tabs/TipsPayoutsTab';
-import TransactionDetailModal from './dashboard/modals/TransactionDetailModal';
 
 export default function TipsView({
   transactions = [],
-  staff = [],
   activeTab: propActiveTab,
   onTabChange,
   processingFee: propProcessingFee,
   setProcessingFee: propSetProcessingFee
 }) {
-  const { t, currentLanguage } = useTranslation();
+  const { t } = useTranslation();
   const [localActiveTab, setLocalActiveTab] = useState('overview');
   const activeTab = propActiveTab !== undefined ? propActiveTab : localActiveTab;
   const setActiveTab = onTabChange !== undefined ? onTabChange : setLocalActiveTab;
 
   const [hoverIndex, setHoverIndex] = useState<any | null>(null);
-  const [selectedTx, setSelectedTx] = useState<any | null>(null);
   const [monthlyVolume, setMonthlyVolume] = useState(5000);
   const [localProcessingFee, setLocalProcessingFee] = useState(3.0);
   const processingFee = propProcessingFee !== undefined ? propProcessingFee : localProcessingFee;
@@ -34,7 +29,6 @@ export default function TipsView({
     useChartDateRange(transactions);
 
   const tipsData = useTipsData({ transactions, chartStartDate, chartEndDate, chartRange });
-  const filters = useTipsFilters({ transactions, staff });
 
   const activePoint = hoverIndex !== null && tipsData.svgMetrics
     ? tipsData.svgMetrics.points[hoverIndex]
@@ -58,7 +52,6 @@ export default function TipsView({
           {[
             { id: 'overview', label: t('dashboard.tips.tabs.overview') },
             { id: 'savings', label: t('dashboard.tips.tabs.savings') },
-            { id: 'transactions', label: t('dashboard.tips.tabs.transactions') },
             { id: 'payouts', label: t('dashboard.tips.tabs.payouts') }
           ].map(tab => (
             <button
@@ -110,45 +103,8 @@ export default function TipsView({
         />
       )}
 
-      {activeTab === 'transactions' && (
-        <TipsTransactionsTab
-          filteredTransactions={filters.filteredTransactions}
-          setSelectedTx={setSelectedTx}
-          searchQuery={filters.searchQuery}
-          setSearchQuery={filters.setSearchQuery}
-          dateRangePreset={filters.dateRangePreset}
-          setDateRangePreset={filters.setDateRangePreset}
-          minAmount={filters.minAmount}
-          setMinAmount={filters.setMinAmount}
-          maxAmount={filters.maxAmount}
-          setMaxAmount={filters.setMaxAmount}
-          selectedStaff={filters.selectedStaff}
-          setSelectedStaff={filters.setSelectedStaff}
-          selectedTouchpoint={filters.selectedTouchpoint}
-          setSelectedTouchpoint={filters.setSelectedTouchpoint}
-          selectedPayment={filters.selectedPayment}
-          setSelectedPayment={filters.setSelectedPayment}
-          selectedStatus={filters.selectedStatus}
-          setSelectedStatus={filters.setSelectedStatus}
-          startDate={filters.startDate}
-          setStartDate={filters.setStartDate}
-          endDate={filters.endDate}
-          setEndDate={filters.setEndDate}
-          resetFilters={filters.resetFilters}
-          staffOptions={filters.staffOptions}
-          touchpointOptions={filters.touchpointOptions}
-        />
-      )}
-
       {activeTab === 'payouts' && (
         <TipsPayoutsTab staffPayouts={tipsData.staffPayouts} />
-      )}
-
-      {selectedTx && (
-        <TransactionDetailModal
-          selectedTx={selectedTx}
-          onClose={() => setSelectedTx(null)}
-        />
       )}
     </div>
   );

@@ -26,23 +26,28 @@ export default function TransactionFilter({
   setEndDate,
   resetFilters,
   staffOptions = [],
-  touchpointOptions = []
+  touchpointOptions = [],
+  paymentOptions,
+  statusOptions,
 }) {
   const { t } = useTranslation()
 
-  const paymentOptions = [
+  const resolvedPaymentOptions = paymentOptions ?? [
     { value: 'all', label: t('dashboard.activity_log.all_payments') },
+    { value: 'CashApp', label: 'Cash App' },
     { value: 'Venmo', label: 'Venmo' },
-    { value: 'Cash App', label: 'Cash App' },
     { value: 'Zelle', label: 'Zelle' },
-    { value: 'VLINKPAY', label: 'VLINKPAY' }
+    { value: 'PayPal', label: 'PayPal' },
+    { value: 'AppleCash', label: 'Apple Cash' },
+    { value: 'Other', label: 'Other' },
   ]
 
-  const statusOptions = [
+  const resolvedStatusOptions = statusOptions ?? [
     { value: 'all', label: t('dashboard.activity_log.all_statuses') },
-    { value: 'Success', label: 'Success' },
-    { value: 'Pending', label: 'Pending' },
-    { value: 'Failed', label: 'Failed' }
+    { value: 'Initiated', label: 'Initiated' },
+    { value: 'Confirmed', label: 'Confirmed' },
+    { value: 'Skipped', label: 'Skipped' },
+    { value: 'Completed', label: 'Completed' },
   ]
 
   const datePresetOptions = [
@@ -170,7 +175,7 @@ export default function TransactionFilter({
             size="sm"
             value={selectedPayment}
             onChange={(e) => setSelectedPayment(e.target.value)}
-            options={paymentOptions}
+            options={resolvedPaymentOptions}
           />
         </div>
 
@@ -183,7 +188,7 @@ export default function TransactionFilter({
             size="sm"
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            options={statusOptions}
+            options={resolvedStatusOptions}
           />
         </div>
       </div>

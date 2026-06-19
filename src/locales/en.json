@@ -498,6 +498,10 @@
       "all_touchpoints": "All Touch Points",
       "all_payments": "All Payment Methods",
       "all_statuses": "All Statuses",
+      "filter_staff_type": "Staff Type",
+      "all_staff_types": "All Types",
+      "multi_staff_only": "Multi-staff tips",
+      "single_staff_only": "Single-staff tips",
       "filter_search": "Search",
       "search_placeholder": "Search ID, staff, touchpoint...",
       "modal_title": "Transaction Details",
@@ -1322,7 +1326,11 @@
           "tippingQrCode": "TIPPING QR CODE",
           "scanToTipThis": "Scan to tip this staff member",
           "tippingLinkCopiedTo": "Tipping link copied to clipboard!",
-          "shareLink": "Share Link"
+          "shareLink": "Share Link",
+          "staffBreakdown": "Staff breakdown",
+          "recipients": "{count} recipients",
+          "multiStaffTip": "Multi-staff tip transaction",
+          "singleStaffTip": "Single-staff tip transaction"
         }
       },
       "overview": {

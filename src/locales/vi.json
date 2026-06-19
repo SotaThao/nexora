@@ -498,6 +498,10 @@
       "all_touchpoints": "Tất cả điểm chạm",
       "all_payments": "Tất cả phương thức",
       "all_statuses": "Tất cả trạng thái",
+      "filter_staff_type": "Loại tip",
+      "all_staff_types": "Tất cả loại",
+      "multi_staff_only": "Tip nhiều nhân viên",
+      "single_staff_only": "Tip một nhân viên",
       "filter_search": "Tìm kiếm",
       "search_placeholder": "Tìm mã GD, nhân viên, điểm chạm...",
       "modal_title": "Chi tiết giao dịch",
@@ -1322,7 +1326,11 @@
           "tippingQrCode": "MÃ QR NHẬN TÍP",
           "scanToTipThis": "Quét để chuyển khoản tiền típ cho nhân viên này",
           "tippingLinkCopiedTo": "Đã sao chép liên kết nhận típ!",
-          "shareLink": "Chia sẻ liên kết"
+          "shareLink": "Chia sẻ liên kết",
+          "staffBreakdown": "Phân bổ theo nhân viên",
+          "recipients": "{count} người nhận",
+          "multiStaffTip": "Giao dịch tip nhiều nhân viên",
+          "singleStaffTip": "Giao dịch tip một nhân viên"
         }
       },
       "overview": {

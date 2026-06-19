@@ -1,16 +1,91 @@
-import { useState, useMemo } from 'react'
-import { logger } from '../../../utils/logger'
-import { CreditCard, Coins, X, QrCode, Share2, CheckCircle, Clock, XCircle, AlertCircle } from 'lucide-react'
-import { useNotification } from '../../../contexts/NotificationContext'
+import { useState, useMemo, useEffect } from 'react'
+import { CreditCard, Coins, CheckCircle, Clock, XCircle, AlertCircle } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { formatCurrency } from '../utils'
-import CustomSelect from '../../CustomSelect'
 import { WalletLogos } from '../constants'
 import TransactionFilter from '../../TransactionFilter'
+import Pagination from '../../ui/Pagination'
+import TransactionDetailModal from '../modals/TransactionDetailModal'
+import { usePagination } from '../../../hooks/usePagination'
+import { DEFAULT_PAGE_SIZE, STAFF_FILTER_LIST_PAGE_SIZE } from '../../../constants/pagination'
+import { useTransactionsPaginated } from '../../../data/hooks/useTransactions'
+import { useMerchantStaff } from '../../../data/hooks/useMerchantStaff'
+import { useTouchpoints } from '../../../data/hooks/useMerchantTouchpoints'
+import type { TransactionsListQuery } from '../../../data/repositories/transactions'
+import ReportsTableSkeleton from './ReportsTableSkeleton'
 
-function ReportsView({ transactions, staff = [], touchpoints = [] }) {
-  const { t, currentLanguage } = useTranslation()
-  const { showToast } = useNotification()
+function toIsoDate(date: Date) {
+  return date.toISOString().split('T')[0]
+}
+
+function toApiDateTime(dateStr: string, endOfDay = false) {
+  if (!dateStr) return undefined
+  if (dateStr.includes('T')) return dateStr
+  return endOfDay ? `${dateStr}T23:59:59` : `${dateStr}T00:00:00`
+}
+
+function resolveDateRange(
+  preset: string,
+  startDate: string,
+  endDate: string,
+): Pick<TransactionsListQuery, 'dateFrom' | 'dateTo'> {
+  const today = new Date()
+
+  if (preset === 'today') {
+    const value = toIsoDate(today)
+    return { dateFrom: toApiDateTime(value), dateTo: toApiDateTime(value, true) }
+  }
+  if (preset === 'yesterday') {
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+    const value = toIsoDate(yesterday)
+    return { dateFrom: toApiDateTime(value), dateTo: toApiDateTime(value, true) }
+  }
+  if (preset === '7days') {
+    const limit = new Date(today)
+    limit.setDate(limit.getDate() - 7)
+    return {
+      dateFrom: toApiDateTime(toIsoDate(limit)),
+      dateTo: toApiDateTime(toIsoDate(today), true),
+    }
+  }
+  if (preset === '30days') {
+    const limit = new Date(today)
+    limit.setDate(limit.getDate() - 30)
+    return {
+      dateFrom: toApiDateTime(toIsoDate(limit)),
+      dateTo: toApiDateTime(toIsoDate(today), true),
+    }
+  }
+  if (preset === 'custom') {
+    return {
+      dateFrom: startDate ? toApiDateTime(startDate) : undefined,
+      dateTo: endDate ? toApiDateTime(endDate, true) : undefined,
+    }
+  }
+  return {}
+}
+
+function getStaffDisplayName(member) {
+  return (
+    member.nickname?.trim() ||
+    member.fullName?.trim() ||
+    member.staffCode?.trim() ||
+    member.email?.trim() ||
+    'Staff'
+  )
+}
+
+function formatStaffCell(tx) {
+  if (tx.staffName) return tx.staffName
+  if (tx.isMultiStaff && Array.isArray(tx.tipItems) && tx.tipItems.length > 0) {
+    return tx.tipItems.map((item) => item.staffName).filter(Boolean).join(', ')
+  }
+  return '—'
+}
+
+function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [], businessName = '' }) {
+  const { t } = useTranslation()
 
   // Filter States
   const [dateRangePreset, setDateRangePreset] = useState('all')
@@ -23,7 +98,23 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
   const [selectedPayment, setSelectedPayment] = useState('all')
   const [selectedStatus, setSelectedStatus] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [selectedTx, setSelectedTx] = useState<any | null>(null)
+  const { pageNumber, pageSize, setPage, reset: resetPage } = usePagination({ pageSize: DEFAULT_PAGE_SIZE })
+
+  const { data: staffPage } = useMerchantStaff({
+    pageNumber: 1,
+    pageSize: STAFF_FILTER_LIST_PAGE_SIZE,
+  })
+  const { data: touchpointsPage } = useTouchpoints({ PageNumber: 1, PageSize: 100 })
+
+  const staff = staffPage?.items?.length ? staffPage.items : staffProp
+  const touchpoints = touchpointsPage?.items?.length ? touchpointsPage.items : touchpointsProp
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSearch(searchQuery.trim()), 400)
+    return () => window.clearTimeout(timer)
+  }, [searchQuery])
 
   const resetFilters = () => {
     setDateRangePreset('all')
@@ -40,7 +131,7 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
 
   const renderStatusBadge = (status) => {
     const s = (status || '').toLowerCase();
-    if (s === 'success' || s === 'succeeded' || s === 'hoàn thành' || s === 'thành công') {
+    if (s === 'success' || s === 'succeeded' || s === 'confirmed' || s === 'completed' || s === 'hoàn thành' || s === 'thành công') {
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100/50 dark:border-emerald-500/20">
           <CheckCircle className="h-3 w-3" />
@@ -48,7 +139,7 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
         </span>
       );
     }
-    if (s === 'pending' || s === 'processing' || s === 'đang chờ') {
+    if (s === 'pending' || s === 'processing' || s === 'initiated' || s === 'đang chờ') {
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-100/50 dark:border-amber-500/20">
           <Clock className="h-3 w-3" />
@@ -56,7 +147,7 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
         </span>
       );
     }
-    if (s === 'failed' || s === 'thất bại' || s === 'lỗi') {
+    if (s === 'failed' || s === 'skipped' || s === 'thất bại' || s === 'lỗi') {
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-100/50 dark:border-rose-500/20">
           <XCircle className="h-3 w-3" />
@@ -86,119 +177,94 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
     return <CreditCard className="h-[18px] w-[18px] text-slate-500" />
   }
 
-  // Filter logic
+  const apiQuery = useMemo<TransactionsListQuery>(() => ({
+    pageNumber,
+    pageSize,
+    ...resolveDateRange(dateRangePreset, startDate, endDate),
+    ...(selectedStaff !== 'all' ? { staffProfileId: selectedStaff } : {}),
+    ...(selectedTouchpoint !== 'all' ? { touchPointId: selectedTouchpoint } : {}),
+    ...(selectedPayment !== 'all' ? { paymentMethod: selectedPayment } : {}),
+    ...(selectedStatus !== 'all' ? { status: selectedStatus } : {}),
+    ...(debouncedSearch ? { staffSearch: debouncedSearch } : {}),
+  }), [
+    pageNumber,
+    pageSize,
+    dateRangePreset,
+    startDate,
+    endDate,
+    selectedStaff,
+    selectedTouchpoint,
+    selectedPayment,
+    selectedStatus,
+    debouncedSearch,
+  ])
+
+  const {
+    data: transactionsPage,
+    isPending,
+    isFetching,
+  } = useTransactionsPaginated(apiQuery)
+
+  const transactions = transactionsPage?.items ?? []
+  const totalCount = transactionsPage?.totalCount ?? 0
+  const totalPages = Math.max(1, transactionsPage?.totalPages ?? 1)
+  const hasNextPage = transactionsPage?.hasNextPage ?? false
+  const hasPreviousPage = transactionsPage?.hasPreviousPage ?? false
+
+  // Amount filter only — not supported by tips API
   const filtered = useMemo(() => {
-    return transactions.filter(tx => {
-      // 1. Date filter
-      if (dateRangePreset !== 'all') {
-        const txDateStr = tx.dateTime.split(' ')[0]
-
-        if (dateRangePreset === 'today') {
-          const todayStr = new Date().toISOString().split('T')[0]
-          if (txDateStr !== todayStr) return false
-        } else if (dateRangePreset === 'yesterday') {
-          const yesterday = new Date()
-          yesterday.setDate(yesterday.getDate() - 1)
-          const yesterdayStr = yesterday.toISOString().split('T')[0]
-          if (txDateStr !== yesterdayStr) return false
-        } else if (dateRangePreset === '7days') {
-          const limit = new Date()
-          limit.setDate(limit.getDate() - 7)
-          const limitStr = limit.toISOString().split('T')[0]
-          if (txDateStr < limitStr) return false
-        } else if (dateRangePreset === '30days') {
-          const limit = new Date()
-          limit.setDate(limit.getDate() - 30)
-          const limitStr = limit.toISOString().split('T')[0]
-          if (txDateStr < limitStr) return false
-        } else if (dateRangePreset === 'custom') {
-          if (startDate && txDateStr < startDate) return false
-          if (endDate && txDateStr > endDate) return false
-        }
-      }
-
-      // 2. Amount filter
+    return transactions.filter((tx) => {
       if (minAmount && tx.amount < parseFloat(minAmount)) return false
       if (maxAmount && tx.amount > parseFloat(maxAmount)) return false
-
-      // 3. Staff filter
-      if (selectedStaff !== 'all' && tx.staffName !== selectedStaff) return false
-
-      // 4. Touchpoint filter
-      if (selectedTouchpoint !== 'all' && tx.touchpoint !== selectedTouchpoint) return false
-
-      // 5. Payment method filter
-      if (selectedPayment !== 'all' && tx.paymentMethod.toLowerCase() !== selectedPayment.toLowerCase()) return false
-
-      // 6. Status filter
-      if (selectedStatus !== 'all' && tx.status.toLowerCase() !== selectedStatus.toLowerCase()) return false
-
-      // 7. Search query filter
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase()
-        const matchId = tx.id.toLowerCase().includes(q)
-        const matchStaff = (tx.staffName || '').toLowerCase().includes(q)
-        const matchTouchpoint = (tx.touchpoint || '').toLowerCase().includes(q)
-        const matchPayment = (tx.paymentMethod || '').toLowerCase().includes(q)
-        if (!matchId && !matchStaff && !matchTouchpoint && !matchPayment) {
-          return false
-        }
-      }
-
       return true
     })
-  }, [transactions, dateRangePreset, startDate, endDate, minAmount, maxAmount, selectedStaff, selectedTouchpoint, selectedPayment, selectedStatus, searchQuery])
+  }, [transactions, minAmount, maxAmount])
 
-  // Options memoization
+  useEffect(() => {
+    resetPage()
+  }, [
+    dateRangePreset,
+    startDate,
+    endDate,
+    minAmount,
+    maxAmount,
+    selectedStaff,
+    selectedTouchpoint,
+    selectedPayment,
+    selectedStatus,
+    debouncedSearch,
+    resetPage,
+  ])
+
+  useEffect(() => {
+    if (pageNumber > totalPages) {
+      setPage(totalPages)
+    }
+  }, [pageNumber, totalPages, setPage])
+
   const staffOptions = useMemo(() => {
+    const eligibleStaff = (staff || []).filter(
+      (member) => member.staffProfileId && member.isActive !== false,
+    )
     return [
       { value: 'all', label: t('dashboard.activity_log.all_staff') },
-      ...(staff || []).map(member => ({ value: member.nickname, label: member.nickname }))
+      ...eligibleStaff.map((member) => ({
+        value: member.staffProfileId,
+        label: getStaffDisplayName(member),
+      })),
     ]
   }, [staff, t])
 
   const touchpointOptions = useMemo(() => {
-    const uniqueFromTx = Array.from(new Set(transactions.map(tx => tx.touchpoint)))
-    const uniquePoints = Array.from(new Set([
-      ...(touchpoints || []).map(tp => tp.name),
-      ...uniqueFromTx
-    ])).filter(Boolean)
-
     return [
       { value: 'all', label: t('dashboard.activity_log.all_touchpoints') },
-      ...uniquePoints.map(name => ({ value: name, label: name }))
+      ...(touchpoints || [])
+        .filter((point) => point.id && point.name)
+        .map((point) => ({ value: point.id, label: point.name })),
     ]
-  }, [touchpoints, transactions, t])
+  }, [touchpoints, t])
 
-  const paymentOptions = [
-    { value: 'all', label: t('dashboard.activity_log.all_payments') },
-    { value: 'Venmo', label: 'Venmo' },
-    { value: 'Cash App', label: 'Cash App' },
-    { value: 'Zelle', label: 'Zelle' },
-    { value: 'VLINKPAY', label: 'VLINKPAY' }
-  ]
-
-  const statusOptions = [
-    { value: 'all', label: t('dashboard.activity_log.all_statuses') },
-    { value: 'Success', label: 'Success' },
-    { value: 'Pending', label: 'Pending' },
-    { value: 'Failed', label: 'Failed' }
-  ]
-
-  const datePresetOptions = [
-    { value: 'all', label: t('dashboard.activity_log.preset_all') },
-    { value: 'today', label: t('dashboard.activity_log.preset_today') },
-    { value: 'yesterday', label: t('dashboard.activity_log.preset_yesterday') },
-    { value: '7days', label: t('dashboard.activity_log.preset_7days') },
-    { value: '30days', label: t('dashboard.activity_log.preset_30days') },
-    { value: 'custom', label: t('dashboard.activity_log.preset_custom') }
-  ]
-
-  const statusColorClass = (status) => {
-    if (status?.toLowerCase() === 'success') return 'text-emerald-600 font-semibold'
-    if (status?.toLowerCase() === 'failed') return 'text-rose-600 font-semibold'
-    return 'text-amber-600 font-semibold'
-  }
+  const showTableSkeleton = (isPending && !transactionsPage) || isFetching
 
   return (
     <div className="space-y-5">
@@ -251,7 +317,9 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
             </tr>
           </thead>
           <tbody>
-            {filtered.length === 0 ? (
+            {showTableSkeleton ? (
+              <ReportsTableSkeleton rows={pageSize} />
+            ) : filtered.length === 0 ? (
               <tr>
                 <td colSpan={8} className="px-4 py-8 text-center text-nexoraMuted font-medium">
                   {t('dashboard.activity_log.empty_activity')}
@@ -267,7 +335,7 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
                   <td className="px-4 py-3 font-bold text-nexoraText">{tx.id}</td>
                   <td className="px-4 py-3 text-nexoraMuted">{tx.dateTime}</td>
                   <td className="px-4 py-3 font-extrabold text-nexoraText">{formatCurrency(tx.amount)}</td>
-                  <td className="px-4 py-3">{tx.staffName}</td>
+                  <td className="px-4 py-3">{formatStaffCell(tx)}</td>
                   <td className="px-4 py-3">{tx.touchpoint}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
@@ -294,118 +362,31 @@ function ReportsView({ transactions, staff = [], touchpoints = [] }) {
             )}
           </tbody>
         </table>
+
+        {totalCount > 0 && (
+          <Pagination
+            pageNumber={pageNumber}
+            pageSize={pageSize}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            hasNextPage={hasNextPage}
+            hasPreviousPage={hasPreviousPage}
+            onPageChange={setPage}
+            isLoading={isFetching}
+            className="mt-0 border-t-0"
+          />
+        )}
       </div>
 
-      {/* Detailed Transaction modal */}
-      {selectedTx && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-white rounded-2xl border border-nexoraBorder shadow-2xl p-6 relative overflow-hidden transition-all duration-300 transform scale-100">
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-nexoraBorder pb-4 mb-4">
-              <div>
-                <span className="text-[10px] font-black uppercase text-nexoraMuted tracking-wider">
-                  {t('dashboard.activity_log.modal_title')}
-                </span>
-                <h4 className="text-sm font-extrabold text-nexoraText mt-0.5">{selectedTx.id}</h4>
-              </div>
-              <button
-                onClick={() => setSelectedTx(null)}
-                className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-nexoraMuted hover:text-nexoraText transition-colors cursor-pointer"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="space-y-5">
-              {/* Hero Amount & Status */}
-              <div className="flex flex-col items-center justify-center py-4 bg-slate-50 rounded-xl border border-slate-100">
-                <span className="text-[10px] font-bold text-nexoraMuted uppercase tracking-wider">
-                  {t('dashboard.activity_log.col_amount')}
-                </span>
-                <h3 className="text-3xl font-black text-nexoraText mt-1">
-                  {formatCurrency(selectedTx.amount)}
-                </h3>
-                {renderStatusBadge(selectedTx.status)}
-              </div>
-
-              {/* Data Table / Details Grid */}
-              <div className="grid grid-cols-2 gap-x-4 gap-y-4 text-xs border-t border-nexoraBorder pt-4">
-                <div>
-                  <span className="text-[10px] font-bold text-nexoraMuted block">
-                    {t('dashboard.activity_log.col_time')}
-                  </span>
-                  <span className="font-semibold text-nexoraText block mt-0.5">{selectedTx.dateTime}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold text-nexoraMuted block">
-                    {t('dashboard.activity_log.col_payment')}
-                  </span>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    {getPaymentMethodLogo(selectedTx.paymentMethod)}
-                    <span className="font-semibold text-nexoraText">{selectedTx.paymentMethod}</span>
-                  </div>
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold text-nexoraMuted block">
-                    {t('dashboard.activity_log.col_staff')}
-                  </span>
-                  <span className="font-semibold text-nexoraText block mt-0.5">{selectedTx.staffName}</span>
-                  <span className="font-mono text-[10px] text-slate-400 block mt-0.5">
-                    ID: {selectedTx.staffId || 'N/A'}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold text-nexoraMuted block">
-                    {t('dashboard.activity_log.col_tp')}
-                  </span>
-                  <span className="font-semibold text-nexoraText block mt-0.5">{selectedTx.touchpoint}</span>
-                </div>
-              </div>
-
-              {/* Tipping QR utility footer */}
-              <div className="flex gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100 items-center">
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(`${window.location.origin}${window.location.pathname}?flow=customer&tech=staff/${encodeURIComponent(selectedTx.staffId)}`)}`}
-                  alt="Staff Tipping QR"
-                  className="h-20 w-20 object-contain bg-white p-1 rounded-lg border border-slate-200 shadow-sm shrink-0"
-                />
-                <div className="flex flex-col text-left">
-                  <span className="text-[9px] font-black uppercase text-nexoraMuted tracking-widest">
-                    {t('components.dashboard.views.ReportsView.tippingQrCode')}
-                  </span>
-                  <span className="text-[11px] text-slate-500 mt-1 leading-normal">
-                    {t('components.dashboard.views.ReportsView.scanToTipThis')}
-                  </span>
-                  {/* Share Link Button */}
-                  <button
-                    onClick={async () => {
-                      const shareUrl = `${window.location.origin}${window.location.pathname}?flow=customer&tech=staff/${encodeURIComponent(selectedTx.staffId)}`;
-                      if (navigator.share) {
-                        try {
-                          await navigator.share({
-                            title: 'Tip ' + selectedTx.staffName,
-                            url: shareUrl
-                          });
-                        } catch (err) {
-                          logger.error(err);
-                        }
-                      } else {
-                        navigator.clipboard.writeText(shareUrl);
-                        showToast(t('components.dashboard.views.ReportsView.tippingLinkCopiedTo'), 'success');
-                      }
-                    }}
-                    className="mt-2.5 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-[10px] font-black uppercase tracking-wider text-indigo-600 transition-colors w-max cursor-pointer"
-                  >
-                    <Share2 className="h-3 w-3" />
-                    {t('components.dashboard.views.ReportsView.shareLink')}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {selectedTx ? (
+        <TransactionDetailModal
+          selectedTx={selectedTx}
+          onClose={() => setSelectedTx(null)}
+          businessName={businessName}
+          touchpoints={touchpoints}
+          staff={staff}
+        />
+      ) : null}
     </div>
   )
 }

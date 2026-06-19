@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useOutletContext, useNavigate, useParams, Navigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 
@@ -222,12 +222,18 @@ export function ReviewsRoute() {
 export function TipsRoute() {
   const ctx = useOutletContext<LooseObject>()
   const [sp, setSp] = useSearchParams()
-  const tab = sp.get('tab') || 'overview'
+  const rawTab = sp.get('tab') || 'overview'
+  const tab = rawTab === 'transactions' ? 'overview' : rawTab
+
+  useEffect(() => {
+    if (rawTab === 'transactions') {
+      setSp({ tab: 'overview' }, { replace: true })
+    }
+  }, [rawTab, setSp])
 
   return (
     <TipsView
       transactions={ctx.transactions}
-      staff={ctx.staff}
       activeTab={tab}
       onTabChange={(t) => setSp({ tab: t }, { replace: true })}
       processingFee={ctx.processingFee}
@@ -238,7 +244,7 @@ export function TipsRoute() {
 
 export function ReportsRoute() {
   const ctx = useOutletContext<LooseObject>()
-  return <ReportsView transactions={ctx.filteredTransactions} staff={ctx.staff} touchpoints={ctx.touchpoints} />
+  return <ReportsView staff={ctx.staff} touchpoints={ctx.touchpoints} businessName={ctx.businessName} />
 }
 
 export function AnalyticsRoute() {
