@@ -4,7 +4,7 @@
 import { useState } from 'react'
 import { Info } from 'lucide-react'
 
-export default function Tooltip({ content, children, className = '' }) {
+export default function Tooltip({ content, children, className = '', ariaLabel = 'More information' }) {
   const [open, setOpen] = useState(false)
 
   if (!content) return null
@@ -17,7 +17,7 @@ export default function Tooltip({ content, children, className = '' }) {
     >
       <button
         type="button"
-        aria-label="More information"
+        aria-label={ariaLabel}
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
         onClick={(e) => { e.preventDefault(); setOpen((v) => !v) }}
