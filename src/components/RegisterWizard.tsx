@@ -11,6 +11,7 @@ import StepSuccess from './register/steps/StepSuccess'
 import TermsModal from './register/modals/TermsModal'
 import PayoutEditModal from './register/modals/PayoutEditModal'
 import apiAuthAdapter from '../auth/adapters/apiAuthAdapter'
+import { loadPendingRegistration } from '../auth/pendingRegistration'
 import { useClearMerchantSetup } from '../data/hooks/useMerchantSetup'
 import { useClearProfileSettings } from '../data/hooks/useProfileSettings'
 import { logger } from '../utils/logger'
@@ -23,6 +24,13 @@ export default function RegisterWizard() {
 
   const showPersonalSuccessPopup = location.state?.showPersonalSuccessPopup || false
   const ssoEmail = location.state?.ssoEmail || ''
+  const pendingRegistration = loadPendingRegistration(location.state?.resumeEmail)
+  const resumeOtpVerification = !showPersonalSuccessPopup && (
+    Boolean(location.state?.resumeOtpVerification) || Boolean(pendingRegistration)
+  )
+  const resumeEmail = location.state?.resumeEmail || pendingRegistration?.email || ''
+  const resumePassword = location.state?.resumePassword || pendingRegistration?.password || ''
+  const resumeRole = location.state?.resumeRole || pendingRegistration?.role || null
 
   const handleRegisterAndLogin = async (registeredEmail) => {
     clearMerchantSetupMutation.mutate()
@@ -54,6 +62,10 @@ export default function RegisterWizard() {
     isRedirectedFromSession: !!ssoEmail,
     initialStep: showPersonalSuccessPopup ? 3 : 0,
     initialRole: showPersonalSuccessPopup ? 'personal' : 'personal',
+    resumeOtpVerification,
+    resumeEmail,
+    resumePassword,
+    resumeRole,
     onBackToLogin: () => {
       if (ssoEmail) {
         navigate(-1)

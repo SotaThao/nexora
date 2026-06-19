@@ -19,6 +19,9 @@ import {
   getPayoutConfigsFromMember
 } from '../constants'
 import { getApiErrorCode } from '../../../types/domain'
+import { getDefaultDialCode } from '../../CountryCodeSelect'
+
+const isValidHttpUrl = (value) => /^https?:\/\/.+/i.test(String(value || '').trim())
 
 export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, hasKyb }) {
   const { currentLanguage, setLanguage, t } = useTranslation()
@@ -36,7 +39,7 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
     name: initialBusinessInfo?.name || '',
     industry: initialBusinessInfo?.industry || 'Nail Salon',
     address: initialBusinessInfo?.address || '',
-    phone: initialBusinessInfo?.phone || '',
+    phone: initialBusinessInfo?.phone || `${getDefaultDialCode(currentLanguage)} `,
     website: initialBusinessInfo?.website || '',
     logo: initialBusinessInfo?.logo || null,
     paymentAccounts: {
@@ -204,6 +207,10 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
       if (!businessInfo.name.trim()) newErrors.name = t('setup.errors.name_required')
       if (!businessInfo.address.trim()) newErrors.address = t('setup.errors.address_required')
       if (!businessInfo.phone.trim()) newErrors.phone = t('setup.errors.phone_required')
+
+      if (businessInfo.website?.trim() && !isValidHttpUrl(businessInfo.website)) {
+        newErrors.website = t('setup.errors.url_protocol')
+      }
 
       // Review Links validation (Optional)
       if (reviewLinks.googleReview && reviewLinks.googleReview.trim() && !reviewLinks.googleReview.startsWith('http')) {

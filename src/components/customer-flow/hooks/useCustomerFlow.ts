@@ -583,15 +583,6 @@ export default function useCustomerFlow() {
     setStep('final_done')
   }
 
-  const handleReset = () => {
-    setSelectedStaffMembers([])
-    setStep('select_staff')
-    setSelectedTips({})
-    setCustomTips({}); setRating(5); setComment(''); setSelectedTags([])
-    setSelectedWallet(''); setSelectedWalletObj(null); setTipRefNumber('')
-    setCurrentTipId(null); setCurrentReviewId(null); setPaymentLinkData(null)
-  }
-
   // To preserve backwards compatibility with tests and consumers, we export 'isApiMode' as true
   return {
     currentLanguage, setLanguage, t, showToast,
@@ -609,7 +600,7 @@ export default function useCustomerFlow() {
     tipRefNumber, setTipRefNumber, currentTipId, currentReviewId,
     handleTagToggle, handleRatingChange, handleToggleStaff,
     handlePay, handleConfirmTip, handleSkipTip, handleSubmitFeedback,
-    handleTrackExternalReview, handleReset, paymentLinkData,
+    handleTrackExternalReview, paymentLinkData,
     scannedTouchpoint: null,
   }
 }

@@ -78,6 +78,7 @@ export default function AppRouter() {
         <Route path="/register" element={<RegisterWizard />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/account/reset-password" element={<ResetPassword />} />
         
         <Route path="/touch/:businessSlug/:touchPointSlug" element={<CustomerFlow />} />
         <Route path="/invite" element={<InviteRoute />} />

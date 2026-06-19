@@ -34,7 +34,6 @@ export default function CustomerFlow() {
     positiveTagKeys, negativeTagKeys, selectedTags, handleTagToggle,
     comment, setComment, handleSubmitFeedback,
     reviewLinks,
-    handleReset,
     handleSkipTip,
     handleConfirmTip,
     handleTrackExternalReview,
@@ -214,7 +213,7 @@ export default function CustomerFlow() {
               )}
 
               {step === 'final_done' && (
-                <FinalDone t={t} handleReset={handleReset} rating={rating} />
+                <FinalDone t={t} rating={rating} />
               )}
             </>
           )}

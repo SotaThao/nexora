@@ -31,7 +31,7 @@ export default function RootRedirect() {
     }
 
     if (action === 'reset-password') {
-      navigate('/reset-password?' + searchParams.toString(), { replace: true })
+      navigate('/account/reset-password?' + searchParams.toString(), { replace: true })
       return
     }
 
