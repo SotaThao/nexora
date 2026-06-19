@@ -582,7 +582,9 @@
       },
       "open_link": "Test station flow",
       "empty_title": "No QR stations yet",
-      "empty_desc": "Create your first touchpoint to start receiving scans and tips."
+      "empty_desc": "Create your first touchpoint to start receiving scans and tips.",
+      "toggle_enabled": "Touchpoint activated successfully.",
+      "toggle_disabled": "Touchpoint deactivated successfully."
     },
     "devices": {
       "subtitle": "Manage physical salon stands, tabletop codes, and smart taps.",
@@ -892,7 +894,7 @@
     "final_success_title": "Thank You!",
     "final_success_desc": "Help us grow by leaving a review on Google or Yelp.",
     "send_new_btn": "Send New Submission",
-    "back_home_btn": "Back Home",
+    "back_home_btn": "Home",
     "tip_success_title": "Thank You!",
     "tip_success_prefix": "Your tip of ",
     "tip_success_sent": " has been sent to ",

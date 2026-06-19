@@ -582,7 +582,9 @@
       },
       "open_link": "Thử nghiệm luồng trạm",
       "empty_title": "Chưa có trạm QR nào",
-      "empty_desc": "Tạo touchpoint đầu tiên để bắt đầu nhận lượt quét và tiền tip."
+      "empty_desc": "Tạo touchpoint đầu tiên để bắt đầu nhận lượt quét và tiền tip.",
+      "toggle_enabled": "Đã bật touchpoint thành công.",
+      "toggle_disabled": "Đã tắt touchpoint thành công."
     },
     "devices": {
       "subtitle": "Quản lý các trạm đứng salon vật lý, mã đặt bàn và điểm chạm thông minh.",
@@ -892,7 +894,7 @@
     "final_success_title": "Cảm ơn bạn!",
     "final_success_desc": "Giúp chúng tôi phát triển bằng cách đánh giá trên Google hoặc Yelp.",
     "send_new_btn": "Gửi Thêm Lượt Mới",
-    "back_home_btn": "Về trang chủ",
+    "back_home_btn": "Home",
     "tip_success_title": "Cảm ơn bạn!",
     "tip_success_prefix": "Khoản tiền típ ",
     "tip_success_sent": " của bạn đã được gửi tới ",
