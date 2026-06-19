@@ -213,7 +213,6 @@ export default function DashboardSidebar({
                   {[
                     { id: 'overview', label: t('dashboard.tips.tabs.overview') },
                     { id: 'savings', label: t('dashboard.tips.tabs.savings') },
-                    { id: 'transactions', label: t('dashboard.tips.tabs.transactions') },
                     { id: 'payouts', label: t('dashboard.tips.tabs.payouts') }
                   ].map(sub => {
                     const isSubActive = activeMenu === 'tips' && (activeSubTab || 'overview') === sub.id
@@ -242,7 +241,6 @@ export default function DashboardSidebar({
                 <div className="ml-9 mt-1 space-y-1 border-l border-white/10 pl-3 animate-fadeIn">
                   {[
                     { id: 'stations', label: t('dashboard.touchpoints.tabs.stations') },
-                    { id: 'devices', label: t('dashboard.touchpoints.tabs.devices') }
                   ].map(sub => {
                     const isSubActive = activeMenu === 'touchpoints' && (activeSubTab || 'stations') === sub.id
                     return (

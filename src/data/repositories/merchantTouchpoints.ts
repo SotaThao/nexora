@@ -4,7 +4,7 @@
 import httpClient from '../../lib/httpClient'
 import { isApiError } from '../../types/domain'
 import type { TouchpointPage, TouchpointRecord } from '../../types/domain'
-import type { TouchpointCreateResult } from '../../types/repositories'
+import type { TouchpointApiDto, TouchpointCreateResult } from '../../types/repositories'
 
 type HttpClient = typeof httpClient
 
@@ -29,6 +29,54 @@ const EMPTY_PAGE: TouchpointPage = {
   hasPreviousPage: false,
 }
 
+function normalizeTouchpoint(dto: TouchpointApiDto): TouchpointRecord {
+  return {
+    id: dto.id,
+    name: dto.name ?? '',
+    slug: dto.slug ?? null,
+    type: dto.type ?? '',
+    url: dto.url ?? null,
+    qrImageUrl: dto.qrImageUrl ?? null,
+    isActive: dto.isActive ?? true,
+    assignedStaffProfileId: dto.assignedStaffProfileId ?? null,
+    createdAt: dto.createdAt ?? null,
+    scans: dto.totalScans ?? 0,
+    revenue: dto.totalRevenue ?? 0,
+    deviceId: dto.deviceId ?? null,
+  }
+}
+
+function normalizeTouchpointPage(
+  res: TouchpointPage | TouchpointApiDto[] | null | undefined,
+): TouchpointPage {
+  if (!res) return EMPTY_PAGE
+
+  if (Array.isArray(res)) {
+    const items = res.map(normalizeTouchpoint)
+    return {
+      items,
+      pageNumber: 1,
+      totalPages: items.length > 0 ? 1 : 0,
+      totalCount: items.length,
+      hasNextPage: false,
+      hasPreviousPage: false,
+    }
+  }
+
+  const items = (res.items ?? []).map((item) =>
+    normalizeTouchpoint(item as TouchpointApiDto),
+  )
+
+  return {
+    items,
+    pageNumber: res.pageNumber ?? 1,
+    totalPages: res.totalPages ?? 0,
+    totalCount: res.totalCount ?? items.length,
+    hasNextPage: res.hasNextPage ?? false,
+    hasPreviousPage: res.hasPreviousPage ?? false,
+  }
+}
+
 export function createMerchantTouchpointsRepository(client: HttpClient = httpClient) {
   return {
     async getTouchpoints(params: TouchpointQueryParams = {}): Promise<TouchpointPage> {
@@ -40,30 +88,15 @@ export function createMerchantTouchpointsRepository(client: HttpClient = httpCli
       const queryString = queryParams.toString()
       const url = `/api/v1/merchant/touchpoints${queryString ? `?${queryString}` : ''}`
 
-      let res: TouchpointPage | TouchpointRecord[] | null
       try {
-        res = await client.get<TouchpointPage | TouchpointRecord[]>(url)
+        const res = await client.get<TouchpointPage | TouchpointApiDto[]>(url)
+        return normalizeTouchpointPage(res)
       } catch (err: unknown) {
         if (isApiError(err) && err.status === 404) {
           return EMPTY_PAGE
         }
         throw err
       }
-
-      if (!res) return EMPTY_PAGE
-
-      if (Array.isArray(res)) {
-        return {
-          items: res,
-          pageNumber: 1,
-          totalPages: 1,
-          totalCount: res.length,
-          hasNextPage: false,
-          hasPreviousPage: false,
-        }
-      }
-
-      return res
     },
 
     async createTouchpoint(dto: CreateTouchpointDto): Promise<TouchpointCreateResult> {

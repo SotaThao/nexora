@@ -12,7 +12,8 @@ const EMPTY = {}
 export const qk = {
   merchantSetup:    ()         => ['merchantSetup'],
   profileSettings:  ()         => ['profileSettings'],
-  transactions:     ()         => ['transactions'],
+  transactions:            () => ['transactions'],
+  transactionsPaginated:   (filters = EMPTY) => ['transactions', 'paginated', filters],
   reviews:          ()         => ['reviews'],
   notifications:    ()         => ['notifications'],
   pendingAccounts:  ()         => ['pendingAccounts'],

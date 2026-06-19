@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { buildAffiliateReferralUrl, getProfileReferralCode } from '../../../utils/affiliateReferral'
 import {
   useMerchantPaymentMethods,
   useUpdateMerchantPaymentMethod,
@@ -102,6 +103,20 @@ export default function ProfileTab({
   onShowQr,
 }) {
   const { t } = useTranslation()
+  const referralCode = useMemo(() => getProfileReferralCode(profile), [profile])
+  const referralUrl = useMemo(
+    () => buildAffiliateReferralUrl({ referralCode }),
+    [referralCode],
+  )
+  const referralDisplay = useMemo(() => {
+    if (!referralUrl) {
+      return t('components.staff_registration.hooks.useStaffRegistration.profileReferralCodeMissing')
+    }
+    const compactUrl = referralUrl.replace(/^https?:\/\//, '')
+    if (referralCode.length <= 8) return compactUrl
+    const maskedRef = `${referralCode.slice(0, 3)}...${referralCode.slice(-3)}`
+    return compactUrl.replace(referralCode, maskedRef)
+  }, [referralCode, referralUrl, t])
 
   const { data: apiPaymentMethods = [] } = useMerchantPaymentMethods()
   const toggleMutation = useToggleMerchantPaymentMethod()
@@ -238,17 +253,16 @@ export default function ProfileTab({
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
                 <span className="text-nexoraMuted font-bold">Referral Link:</span>
                 <div className="flex items-center gap-1 self-end sm:self-auto min-w-0">
-                  <span className="text-nexoraText font-extrabold" title={`https://nexora.com/?ref=${profile.referralId}`}>
-                    {profile.referralId && profile.referralId.length > 8
-                      ? `nexora.com/?ref=${profile.referralId.substring(0, 3)}...${profile.referralId.substring(profile.referralId.length - 3)}`
-                      : `nexora.com/?ref=${profile.referralId}`}
+                  <span className="text-nexoraText font-extrabold" title={referralUrl || referralDisplay}>
+                    {referralDisplay}
                   </span>
                   
                   {/* Copy Button */}
                   <button
                     type="button"
-                    onClick={() => handleCopy(`https://nexora.com/?ref=${profile.referralId}`, 'ref')}
-                    className="text-blue-500 hover:text-blue-600 font-bold text-[10px] uppercase hover:underline ml-2 flex items-center gap-1 shrink-0"
+                    disabled={!referralUrl}
+                    onClick={() => handleCopy(referralUrl, 'ref')}
+                    className="text-blue-500 hover:text-blue-600 font-bold text-[10px] uppercase hover:underline ml-2 flex items-center gap-1 shrink-0 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {copiedId === 'ref' ? (
                       <>

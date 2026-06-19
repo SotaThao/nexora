@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Loader2, RotateCcw, ShieldCheck } from 'lucide-react'
+import { IdCard, Loader2, RotateCcw } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { UserVerifyStatus } from '../../../constants/userVerifyStatus'
 import { useKycInitialize, useVerifiedStatus } from '../../../data/hooks/useProfileSettings'
@@ -79,7 +79,7 @@ export default function StaffKycOverview() {
         !shouldInitialize && (
           <div className="flex flex-col items-center justify-center py-6 space-y-6">
             <div className="flex h-28 w-28 items-center justify-center rounded-full bg-nexoraBrand/10 text-nexoraBrand">
-              <ShieldCheck className="h-14 w-14" />
+              <IdCard className="h-14 w-14" />
             </div>
 
             <div className="text-center space-y-4 max-w-2xl">
