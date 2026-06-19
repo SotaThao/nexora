@@ -1,11 +1,12 @@
 // StaffHeader — top bar: menu, brand, notifications bell, profile.
-import { Bell, Menu } from 'lucide-react'
+import { Menu } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import { useUnreadCount } from '../../../data/hooks/useNotifications'
+import LanguageSwitcher from '../../ui/LanguageSwitcher'
 
 export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu }) {
-  const { currentLanguage, setLanguage, t } = useTranslation()
+  const { t } = useTranslation()
   const { staffMember, account } = useStaffAccount()
   const { data: unreadCount = 0 } = useUnreadCount()
   const displayName = account.defaultDisplayName || staffMember.fullName || 'Staff'
@@ -13,7 +14,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
   return (
     <header className="sticky top-0 z-20 border-b border-nexoraBorder bg-nexoraSurface">
       {/* Mobile top bar */}
-      <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 px-4 py-3 lg:hidden">
+      <div className="flex items-center justify-between gap-2 px-4 py-3 lg:hidden">
         <button
           type="button"
           onClick={onOpenMobileMenu}
@@ -23,11 +24,8 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
           <Menu className="h-5 w-5" />
         </button>
 
-        <div className="flex justify-center">
-          <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="h-8 w-auto max-w-[140px] object-contain" />
-        </div>
-
         <div className="flex items-center justify-end gap-2">
+          <LanguageSwitcher />
           <button
             type="button"
             onClick={() => onNavigate('notifications')}
@@ -36,7 +34,12 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
               activeScreen === 'notifications' ? 'text-nexoraBrand' : 'text-nexoraText'
             }`}
           >
-            <Bell className="h-5 w-5" />
+            <img
+              src="/assets/menu/notification.png"
+              alt=""
+              className="h-5 w-5 object-contain"
+              aria-hidden="true"
+            />
             {unreadCount > 0 && (
               <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
             )}
@@ -67,23 +70,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
         </div>
 
         <div className="flex shrink-0 items-center gap-3">
-          <div className="flex items-center gap-1 rounded-lg border border-nexoraBorder bg-nexoraSurfaceMuted px-2.5 py-1">
-            <button
-              type="button"
-              onClick={() => setLanguage('vi')}
-              className={`rounded px-1.5 py-0.5 text-[10px] font-bold transition ${currentLanguage === 'vi' ? 'bg-nexoraBrand text-white' : 'text-nexoraMuted hover:text-nexoraText'}`}
-            >
-              VI
-            </button>
-            <span className="text-[10px] text-nexoraBorder">|</span>
-            <button
-              type="button"
-              onClick={() => setLanguage('en')}
-              className={`rounded px-1.5 py-0.5 text-[10px] font-bold transition ${currentLanguage === 'en' ? 'bg-nexoraBrand text-white' : 'text-nexoraMuted hover:text-nexoraText'}`}
-            >
-              EN
-            </button>
-          </div>
+          <LanguageSwitcher />
 
           <button
             type="button"
@@ -93,7 +80,12 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
               activeScreen === 'notifications' ? 'text-nexoraBrand' : 'text-nexoraText'
             }`}
           >
-            <Bell className="h-5 w-5" />
+            <img
+              src="/assets/menu/notification.png"
+              alt=""
+              className="h-5 w-5 object-contain"
+              aria-hidden="true"
+            />
             {unreadCount > 0 && (
               <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-black text-white ring-2 ring-white">
                 {unreadCount > 99 ? '99+' : unreadCount}

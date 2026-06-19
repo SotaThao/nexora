@@ -124,11 +124,13 @@
     },
     "profile": {
       "title": "Personal Account",
+      "title_tooltip": "Full name, phone, and email identify your staff account. Your display name and bio are shown to customers on tip screens.",
       "full_name": "Full Name",
       "display_name": "Default Display Name",
       "phone": "Phone",
       "email": "Email",
       "bio": "Bio",
+      "bio_tooltip": "Use a short intro customers can recognize: your specialty, style, or a friendly note. This helps customers pick the right technician before tipping.",
       "identity_note": "Full name, phone and email come from your business record. Update your display name and bio here.",
       "save": "Save Account",
       "saved": "Saved ✓",

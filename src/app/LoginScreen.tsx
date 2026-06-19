@@ -159,7 +159,6 @@ export default function LoginScreen() {
 
           <form onSubmit={(e) => { e.preventDefault(); handleLoginSubmit(); }} className="space-y-5">
               <div className="space-y-1">
-                <p className="text-[11px] font-black uppercase tracking-wider text-nexoraBrand">{t('login.secure_access')}</p>
                 <h1 className="text-2xl font-black text-nexoraText sm:text-3xl">{t('login.sign_in_title')}</h1>
               </div>
 

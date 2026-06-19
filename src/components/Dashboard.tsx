@@ -360,7 +360,7 @@ export default function Dashboard({
   const menuItemsToDisplay = userRole === 'staff'
     ? [
         { id: 'overview', label: t('components.dashboardRoot.myDashboard'), icon: MENU_ITEMS.find(i => i.id === 'overview')?.icon, image: MENU_ITEMS.find(i => i.id === 'overview')?.image },
-        { id: 'support', label: t('dashboard.menu.support'), icon: MENU_ITEMS.find(i => i.id === 'support')?.icon }
+        { id: 'support', label: t('dashboard.menu.support'), icon: MENU_ITEMS.find(i => i.id === 'support')?.icon, image: MENU_ITEMS.find(i => i.id === 'support')?.image }
       ]
     : MENU_ITEMS
 

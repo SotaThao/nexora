@@ -124,11 +124,13 @@
     },
     "profile": {
       "title": "Tài khoản cá nhân",
+      "title_tooltip": "Họ tên, số điện thoại và email dùng để nhận diện tài khoản nhân viên. Tên hiển thị và giới thiệu sẽ hiện cho khách trên màn hình tip.",
       "full_name": "Họ và tên",
       "display_name": "Tên hiển thị mặc định",
       "phone": "Số điện thoại",
       "email": "Email",
       "bio": "Giới thiệu",
+      "bio_tooltip": "Viết một lời giới thiệu ngắn để khách dễ nhận ra bạn: chuyên môn, phong cách hoặc lời chào thân thiện. Nội dung này giúp khách chọn đúng thợ trước khi tip.",
       "identity_note": "Họ tên, số điện thoại và email lấy từ hồ sơ tại tiệm. Cập nhật tên hiển thị và giới thiệu tại đây.",
       "save": "Lưu tài khoản",
       "saved": "Đã lưu ✓",
