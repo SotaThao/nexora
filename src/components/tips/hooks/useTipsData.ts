@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useTranslation } from '../../../contexts/LanguageContext';
+import { isDirectP2pMethod, payoutTypeToUiKey, PAYOUT_UI_LABELS } from '../../../data/paymentMethodTypes';
 
 export function useTipsData({ transactions, metrics, tipsChartData, chartStartDate, chartEndDate, chartRange }) {
   const { t, currentLanguage } = useTranslation();
@@ -17,7 +18,7 @@ export function useTipsData({ transactions, metrics, tipsChartData, chartStartDa
 
   const directTips = useMemo(() => {
     return filteredTxsForOverview
-      .filter(tx => ['Zelle', 'Cash App', 'Venmo', 'VLINKPAY'].includes(tx.paymentMethod))
+      .filter(tx => isDirectP2pMethod(tx.paymentMethod ?? ''))
       .reduce((sum, tx) => sum + (tx.amount || 0), 0);
   }, [filteredTxsForOverview]);
 
@@ -42,7 +43,7 @@ export function useTipsData({ transactions, metrics, tipsChartData, chartStartDa
   }, [filteredTxsForOverview]);
 
   const tippedStaffCount = useMemo(() => {
-    return new Set(filteredTxsForOverview.map(tx => tx.staffId).filter(Boolean)).size;
+    return new Set(filteredTxsForOverview.map(tx => tx.staffProfileId).filter(Boolean)).size;
   }, [filteredTxsForOverview]);
 
   const staffPayouts = useMemo(() => {
@@ -206,30 +207,40 @@ export function useTipsData({ transactions, metrics, tipsChartData, chartStartDa
     : [];
 
   const donutSegments = useMemo(() => {
-    const methods = { Zelle: 0, 'Cash App': 0, Venmo: 0, VLINKPAY: 0, Card: 0, Crypto: 0 };
+    const grouped: Record<string, number> = {};
     transactions.forEach(tx => {
-      if (methods[tx.paymentMethod] !== undefined) {
-        methods[tx.paymentMethod] += tx.amount || 0;
+      const key = payoutTypeToUiKey(tx.paymentMethod ?? '');
+      if (key) {
+        grouped[key] = (grouped[key] ?? 0) + (tx.amount || 0);
       }
     });
-    const total = Object.values(methods).reduce((a, b) => a + b, 0) || 1;
+    const total = Object.values(grouped).reduce((a, b) => a + b, 0) || 1;
     let accumulatedAngle = 0;
-    const colors = {
-      Zelle: '#d4af37',
-      'Cash App': '#00B873',
-      Venmo: '#32D7FF',
-      VLINKPAY: '#4648D8',
-      Card: '#687385',
-      Crypto: '#F59E0B'
+    const SEGMENT_COLORS: Record<string, string> = {
+      zelle:     '#d4af37',
+      cashapp:   '#00B873',
+      venmo:     '#32D7FF',
+      vlinkpay:  '#4648D8',
+      paypal:    '#003087',
+      applecash: '#000000',
+      bankwire:  '#687385',
+      crypto:    '#F59E0B',
     };
-    return Object.entries(methods)
+    return Object.entries(grouped)
       .filter(([, val]) => val > 0)
-      .map(([name, val]) => {
+      .map(([key, val]) => {
         const percentage = (val / total) * 100;
         const angle = (val / total) * 360;
         const startAngle = accumulatedAngle;
         accumulatedAngle += angle;
-        return { name, value: val, percentage, startAngle, endAngle: accumulatedAngle, color: colors[name] || '#cbd5e1' };
+        return {
+          name: PAYOUT_UI_LABELS[key] ?? key,
+          value: val,
+          percentage,
+          startAngle,
+          endAngle: accumulatedAngle,
+          color: SEGMENT_COLORS[key] || '#cbd5e1',
+        };
       });
   }, [transactions]);
 
