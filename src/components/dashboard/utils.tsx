@@ -27,6 +27,47 @@ export function formatCurrency(value) {
   }).format(value)
 }
 
+function parseApiDateTime(value) {
+  const raw = String(value).trim()
+  if (!raw) return null
+
+  if (/[zZ]$/.test(raw) || /[+-]\d{2}:\d{2}$/.test(raw)) {
+    const date = new Date(raw)
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+
+  if (raw.includes(' ') && !raw.includes('T')) {
+    const isoUtc = `${raw.replace(' ', 'T')}Z`
+    const date = new Date(isoUtc)
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}T/.test(raw)) {
+    const date = new Date(`${raw}Z`)
+    if (!Number.isNaN(date.getTime())) return date
+  }
+
+  const date = new Date(raw)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+export function formatTransactionDateTime(value, locale = 'en') {
+  const date = parseApiDateTime(value)
+  if (!date) return value ? String(value).trim() : '—'
+
+  const intlLocale = locale === 'vi' ? 'vi-VN' : 'en-US'
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
+
+  return new Intl.DateTimeFormat(intlLocale, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone,
+  }).format(date)
+}
+
 export function walletLabels(accounts) {
   return Object.entries(accounts)
     .filter(([, value]) => value)

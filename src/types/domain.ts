@@ -73,9 +73,18 @@ export interface PaymentMethodDto {
 export interface TouchpointRecord {
   id?: string
   name?: string
+  slug?: string | null
   type?: string
-  qrImageUrl?: string
-  assignedStaffProfileId?: string
+  url?: string | null
+  qrImageUrl?: string | null
+  isActive?: boolean
+  assignedStaffProfileId?: string | null
+  createdAt?: string | null
+  /** Normalized from API `totalScans` */
+  scans?: number
+  /** Normalized from API `totalRevenue` */
+  revenue?: number
+  deviceId?: string | null
   [key: string]: unknown
 }
 
