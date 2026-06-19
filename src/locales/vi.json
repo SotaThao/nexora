@@ -130,6 +130,7 @@
       "phone": "Số điện thoại",
       "email": "Email",
       "bio": "Giới thiệu",
+      "bio_tooltip": "Viết một lời giới thiệu ngắn để khách dễ nhận ra bạn: chuyên môn, phong cách hoặc lời chào thân thiện. Nội dung này giúp khách chọn đúng thợ trước khi tip.",
       "identity_note": "Họ tên, số điện thoại và email lấy từ hồ sơ tại tiệm. Cập nhật tên hiển thị và giới thiệu tại đây.",
       "save": "Lưu tài khoản",
       "saved": "Đã lưu ✓",
