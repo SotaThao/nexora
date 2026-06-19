@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { useTranslation } from '../../../contexts/LanguageContext';
+import { isDirectP2pMethod, payoutTypeToUiKey, PAYOUT_UI_LABELS } from '../../../data/paymentMethodTypes';
 
-export function useTipsData({ transactions, chartStartDate, chartEndDate, chartRange }) {
+export function useTipsData({ transactions, metrics, tipsChartData, chartStartDate, chartEndDate, chartRange }) {
   const { t, currentLanguage } = useTranslation();
 
   const filteredTxsForOverview = useMemo(() => {
@@ -12,12 +13,12 @@ export function useTipsData({ transactions, chartStartDate, chartEndDate, chartR
   }, [transactions, chartStartDate, chartEndDate]);
 
   const totalVolume = useMemo(() => {
-    return filteredTxsForOverview.reduce((sum, tx) => sum + (tx.amount || 0), 0);
-  }, [filteredTxsForOverview]);
+    return metrics?.totalTips ?? 0;
+  }, [metrics]);
 
   const directTips = useMemo(() => {
     return filteredTxsForOverview
-      .filter(tx => ['Zelle', 'Cash App', 'Venmo', 'VLINKPAY'].includes(tx.paymentMethod))
+      .filter(tx => isDirectP2pMethod(tx.paymentMethod ?? ''))
       .reduce((sum, tx) => sum + (tx.amount || 0), 0);
   }, [filteredTxsForOverview]);
 
@@ -34,16 +35,15 @@ export function useTipsData({ transactions, chartStartDate, chartEndDate, chartR
   }, [filteredTxsForOverview]);
 
   const averageTip = useMemo(() => {
-    if (filteredTxsForOverview.length === 0) return 0;
-    return totalVolume / filteredTxsForOverview.length;
-  }, [filteredTxsForOverview, totalVolume]);
+    return metrics?.averageTip ?? 0;
+  }, [metrics]);
 
   const pendingCount = useMemo(() => {
     return filteredTxsForOverview.filter(tx => tx.status === 'Pending').length;
   }, [filteredTxsForOverview]);
 
   const tippedStaffCount = useMemo(() => {
-    return new Set(filteredTxsForOverview.map(tx => tx.staffId).filter(Boolean)).size;
+    return new Set(filteredTxsForOverview.map(tx => tx.staffProfileId).filter(Boolean)).size;
   }, [filteredTxsForOverview]);
 
   const staffPayouts = useMemo(() => {
@@ -73,8 +73,25 @@ export function useTipsData({ transactions, chartStartDate, chartEndDate, chartR
   }, [filteredTxsForOverview]);
 
   const chartBars = useMemo(() => {
-    const txList = filteredTxsForOverview.filter(tx => tx.status === 'Success');
+    if (tipsChartData && tipsChartData.length > 0) {
+      return tipsChartData.map(d => {
+        const pDate = new Date(d.date + (d.date.includes('T') ? '' : 'T00:00:00'));
+        let label = '';
+        if (chartRange === '7 Days') {
+          const daysOfWeek = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+          label = t(`common.days.${daysOfWeek[pDate.getDay()]}`);
+        } else {
+          const monthNames = currentLanguage === 'vi'
+            ? ['Th 1', 'Th 2', 'Th 3', 'Th 4', 'Th 5', 'Th 6', 'Th 7', 'Th 8', 'Th 9', 'Th 10', 'Th 11', 'Th 12']
+            : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          label = `${monthNames[pDate.getMonth()]} ${pDate.getDate()}`;
+        }
+        return { label, value: d.totalAmount };
+      });
+    }
 
+    // Fallback if no real chart data
+    const txList = filteredTxsForOverview.filter(tx => tx.status === 'Success');
     if (txList.length > 0) {
       if (chartRange === '7 Days') {
         const dates = [];
@@ -156,7 +173,7 @@ export function useTipsData({ transactions, chartStartDate, chartEndDate, chartR
         });
       }
     }
-  }, [filteredTxsForOverview, chartStartDate, chartEndDate, chartRange, t, currentLanguage, totalVolumeInRange]);
+  }, [tipsChartData, filteredTxsForOverview, chartStartDate, chartEndDate, chartRange, t, currentLanguage, totalVolumeInRange]);
 
   const svgMetrics = useMemo(() => {
     if (chartBars.length === 0) return null;
@@ -190,30 +207,40 @@ export function useTipsData({ transactions, chartStartDate, chartEndDate, chartR
     : [];
 
   const donutSegments = useMemo(() => {
-    const methods = { Zelle: 0, 'Cash App': 0, Venmo: 0, VLINKPAY: 0, Card: 0, Crypto: 0 };
+    const grouped: Record<string, number> = {};
     transactions.forEach(tx => {
-      if (methods[tx.paymentMethod] !== undefined) {
-        methods[tx.paymentMethod] += tx.amount || 0;
+      const key = payoutTypeToUiKey(tx.paymentMethod ?? '');
+      if (key) {
+        grouped[key] = (grouped[key] ?? 0) + (tx.amount || 0);
       }
     });
-    const total = Object.values(methods).reduce((a, b) => a + b, 0) || 1;
+    const total = Object.values(grouped).reduce((a, b) => a + b, 0) || 1;
     let accumulatedAngle = 0;
-    const colors = {
-      Zelle: '#d4af37',
-      'Cash App': '#00B873',
-      Venmo: '#32D7FF',
-      VLINKPAY: '#4648D8',
-      Card: '#687385',
-      Crypto: '#F59E0B'
+    const SEGMENT_COLORS: Record<string, string> = {
+      zelle:     '#d4af37',
+      cashapp:   '#00B873',
+      venmo:     '#32D7FF',
+      vlinkpay:  '#4648D8',
+      paypal:    '#003087',
+      applecash: '#000000',
+      bankwire:  '#687385',
+      crypto:    '#F59E0B',
     };
-    return Object.entries(methods)
+    return Object.entries(grouped)
       .filter(([, val]) => val > 0)
-      .map(([name, val]) => {
+      .map(([key, val]) => {
         const percentage = (val / total) * 100;
         const angle = (val / total) * 360;
         const startAngle = accumulatedAngle;
         accumulatedAngle += angle;
-        return { name, value: val, percentage, startAngle, endAngle: accumulatedAngle, color: colors[name] || '#cbd5e1' };
+        return {
+          name: PAYOUT_UI_LABELS[key] ?? key,
+          value: val,
+          percentage,
+          startAngle,
+          endAngle: accumulatedAngle,
+          color: SEGMENT_COLORS[key] || '#cbd5e1',
+        };
       });
   }, [transactions]);
 

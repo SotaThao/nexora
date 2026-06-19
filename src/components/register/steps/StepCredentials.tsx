@@ -1,5 +1,5 @@
 import React from 'react'
-import { Mail, Lock, Eye, EyeOff, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, ArrowRight, Copy, Loader2 } from 'lucide-react'
 
 export default function StepCredentials(props) {
   const {
@@ -38,6 +38,11 @@ export default function StepCredentials(props) {
     handleSimulateVerify,
     handleResendVerification,
   } = props
+
+  const handleCopyEmail = () => {
+    if (!email || !navigator.clipboard) return
+    navigator.clipboard.writeText(email)
+  }
 
   if (isVerificationPending) {
     return (
@@ -116,6 +121,31 @@ export default function StepCredentials(props) {
           <form onSubmit={handleVerifyOtp} className="space-y-4 max-w-md mx-auto">
             <div>
               <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
+                {renderLabel(t('components.register.steps.StepCredentials.otpSentToEmail'))}
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 w-4 h-4 text-nexoraSubtle" />
+                <input
+                  type="email"
+                  readOnly
+                  value={email}
+                  className="w-full bg-slate-50 border border-nexoraBorder rounded-lg pl-10 pr-12 py-2.5 text-sm font-semibold text-nexoraText focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleCopyEmail}
+                  disabled={!email}
+                  aria-label={t('common.copy')}
+                  title={t('common.copy')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-md text-nexoraSubtle transition hover:bg-white hover:text-nexoraBrand disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <Copy className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
                 {renderLabel(t('components.register.steps.StepCredentials.enterOtpCode'))}
               </label>
               <input
@@ -140,7 +170,7 @@ export default function StepCredentials(props) {
                   : (
                     <button
                       type="button"
-                      onClick={() => setResendTimer(30)}
+                      onClick={handleResendVerification}
                       className="text-nexoraBrand hover:underline"
                     >
                       {t('components.register.steps.StepCredentials.resendVerificationCode')}
@@ -148,21 +178,9 @@ export default function StepCredentials(props) {
                   )
                 }
               </span>
-            </div>
-
-            {/* Simulator Helper */}
-            <div className="p-3 border border-dashed border-nexoraBrand/30 bg-nexoraBrandSoft/30 rounded-xl flex items-center justify-between gap-3 max-w-xs mx-auto">
-              <span className="text-[10px] text-nexoraBrand font-bold">Simulator Helper:</span>
-              <button
-                type="button"
-                onClick={() => {
-                  setOtpCode('1234')
-                  setOtpError('')
-                }}
-                className="px-2.5 py-1 bg-nexoraBrand text-white rounded text-[10px] font-black uppercase hover:bg-opacity-90 shadow-sm"
-              >
-                Auto-fill (1234)
-              </button>
+              {resendMessage && (
+                <p className="text-xs text-green-600 font-semibold mt-1">{resendMessage}</p>
+              )}
             </div>
 
             <div className="pt-4 flex flex-col sm:flex-row gap-3">
@@ -175,9 +193,19 @@ export default function StepCredentials(props) {
               </button>
               <button
                 type="submit"
-                className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all"
+                disabled={isSubmitting}
+                className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {t('components.register.steps.StepCredentials.verifyAndActivate')} <ArrowRight className="w-4 h-4" />
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    {t('components.register.steps.StepCredentials.processing')}
+                  </>
+                ) : (
+                  <>
+                    {t('components.register.steps.StepCredentials.verifyAndActivate')} <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
               </button>
             </div>
           </form>

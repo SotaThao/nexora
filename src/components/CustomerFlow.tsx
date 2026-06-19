@@ -3,7 +3,6 @@ import { ShieldCheck, AlertTriangle } from 'lucide-react'
 import useCustomerFlow from './customer-flow/hooks/useCustomerFlow'
 import SelectStaff from './customer-flow/steps/SelectStaff'
 import TipAmount from './customer-flow/steps/TipAmount'
-import Payment from './customer-flow/steps/Payment'
 import WalletDetails from './customer-flow/steps/WalletDetails'
 import Processing from './customer-flow/steps/Processing'
 import SuccessPayment from './customer-flow/steps/SuccessPayment'
@@ -27,8 +26,8 @@ export default function CustomerFlow() {
     filteredStaff, selectedStaffMembers, searchQuery, setSearchQuery, handleToggleStaff,
     step, setStep,
     selectedTips, setSelectedTips, customTips, setCustomTips,
-    activeTipAmount, tipScreenTitle, initialStaffMember, handleNextToPayment,
-    selectedStaffHasAnyPayment, businessPaymentAccounts,
+    activeTipAmount, initialStaffMember,
+    businessPaymentAccounts,
     availablePaymentWalletKeys, isPaymentMethodsLoading, multiStaffPaymentBlocked,
     setSelectedWalletObj, setSelectedWallet, setTipRefNumber,
     selectedWalletObj, qrCodeVal, tipRefNumber, handlePay,
@@ -136,36 +135,28 @@ export default function CustomerFlow() {
                   selectedStaffMembers={selectedStaffMembers}
                   handleToggleStaff={handleToggleStaff}
                   setStep={setStep}
+                  selectedTips={selectedTips}
+                  setSelectedTips={setSelectedTips}
+                  customTips={customTips}
+                  setCustomTips={setCustomTips}
                 />
               )}
 
               {step === 'tip_amount' && selectedStaffMembers.length > 0 && (
                 <TipAmount
                   t={t}
-                  currentLanguage={currentLanguage}
-                  tipScreenTitle={tipScreenTitle}
                   selectedStaffMembers={selectedStaffMembers}
                   selectedTips={selectedTips}
-                  setSelectedTips={setSelectedTips}
                   customTips={customTips}
-                  setCustomTips={setCustomTips}
                   activeTipAmount={activeTipAmount}
                   initialStaffMember={initialStaffMember}
                   setStep={setStep}
-                  handleNextToPayment={handleNextToPayment}
-                />
-              )}
-
-              {step === 'payment' && (
-                <Payment
-                  t={t}
                   availablePaymentWalletKeys={availablePaymentWalletKeys}
                   isPaymentMethodsLoading={isPaymentMethodsLoading}
                   multiStaffPaymentBlocked={multiStaffPaymentBlocked}
                   setSelectedWalletObj={setSelectedWalletObj}
                   setSelectedWallet={setSelectedWallet}
                   setTipRefNumber={setTipRefNumber}
-                  setStep={setStep}
                   isApiMode={isApiMode}
                   handlePay={handlePay}
                 />
@@ -203,6 +194,7 @@ export default function CustomerFlow() {
                   t={t}
                   selectedStaffMembers={selectedStaffMembers}
                   activeTipAmount={activeTipAmount}
+                  selectedWalletObj={selectedWalletObj}
                   setStep={setStep}
                 />
               )}

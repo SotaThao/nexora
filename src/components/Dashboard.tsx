@@ -20,7 +20,7 @@ import { useTouchpoints, useCreateTouchpoint, useDeleteTouchpoint, useDownloadTo
 import { useMerchantStaff, StatusFilter } from '../data/hooks/useMerchantStaff'
 import { useChartDateRange } from '../hooks/useChartDateRange'
 import { useTransactions } from '../data/hooks/useTransactions'
-import { useDashboardOverview } from '../data/hooks/useDashboard'
+import { useDashboardOverview, useDashboardTipsChart, useDashboardOverviewCurrentMonth, useDashboardOverviewCurrentYear } from '../data/hooks/useDashboard'
 import { useDashboardReviews, DASHBOARD_REVIEWS_LIST_QUERY } from '../data/hooks/useReviews'
 import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead, useUnreadCount } from '../data/hooks/useNotifications'
 import { useProfileSettings, useSaveProfileSettings } from '../data/hooks/useProfileSettings'
@@ -108,6 +108,7 @@ export default function Dashboard({
   const needsInviteLink = activeMenu === 'staff'
   const isStaffTab = activeMenu === 'staff'
   const isReviewsTab = activeMenu === 'reviews'
+  const isTouchpointsTab = activeMenu === 'touchpoints'
   const staffPagination = usePagination({ pageSize: DEFAULT_PAGE_SIZE })
   const reviewsPagination = usePagination({ pageSize: DEFAULT_PAGE_SIZE })
 
@@ -126,6 +127,18 @@ export default function Dashboard({
     }),
     [isReviewsTab, reviewsPagination.pageNumber, reviewsPagination.pageSize],
   )
+
+  const needsTouchpointsList =
+    (activeMenu === 'overview' || hasSearchQuery) && !isTouchpointsTab
+
+  const touchpointsListQuery = useMemo(() => {
+    const trimmedName = searchQuery.trim()
+    return {
+      PageNumber: 1,
+      PageSize: STAFF_FILTER_LIST_PAGE_SIZE,
+      ...(trimmedName ? { Name: trimmedName } : {}),
+    }
+  }, [searchQuery])
 
   // ---------------------------------------------------------------------------
   // Server-state hooks (TanStack Query) — lazy per active tab where possible
@@ -248,7 +261,10 @@ export default function Dashboard({
   }, [profileSettingsData, hasKyb, userEmail, verificationStatus, businessLogo])
 
   // Use API hooks for Touchpoints
-  const { data: touchpointsData, isLoading: isTouchpointsLoading } = useTouchpoints()
+  const {
+    data: touchpointsData,
+    isLoading: isTouchpointsLoading,
+  } = useTouchpoints(touchpointsListQuery, { enabled: needsTouchpointsList })
   const touchpoints = touchpointsData?.items || []
   const createTouchpointMutation = useCreateTouchpoint()
   const deleteTouchpointMutation = useDeleteTouchpoint()
@@ -266,6 +282,13 @@ export default function Dashboard({
   const { chartRange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate, handleChartRangeChange } = useChartDateRange(transactions)
 
   const { data: overviewMetricsData, isLoading: isOverviewApiLoading } = useDashboardOverview({
+    startDate: chartStartDate,
+    endDate: chartEndDate,
+  })
+  const { data: metricsMonthData } = useDashboardOverviewCurrentMonth()
+  const { data: metricsYearData } = useDashboardOverviewCurrentYear()
+
+  const { data: tipsChartData, isLoading: isTipsChartLoading } = useDashboardTipsChart({
     startDate: chartStartDate,
     endDate: chartEndDate,
   })
@@ -367,50 +390,7 @@ export default function Dashboard({
     )
   }, [isStaffTab, pendingStaffPage, staff])
 
-  const filteredTouchpoints = useMemo(() => {
-    if (!searchQuery) return touchpoints
-    const query = searchQuery.toLowerCase().trim()
-    const normalize = (value) =>
-      String(value ?? '')
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[\s_-]+/g, '')
-    const compactQuery = normalize(query)
-
-    const toReadableType = (rawType) => {
-      const value = String(rawType ?? '').toLowerCase()
-      if (value === 'frontdesk') return 'front desk'
-      if (value === 'staffcard') return 'staff qr'
-      if (value === 'receipt') return 'receipt qr'
-      if (value === 'table') return 'table qr'
-      return value
-    }
-
-    return touchpoints.filter((point) => {
-      const isActive = point?.isActive !== false
-      const readableStatus = isActive ? 'active' : 'inactive'
-      const readableType = toReadableType(point?.type)
-
-      return (
-        String(point?.name ?? '').toLowerCase().includes(query) ||
-        String(point?.type ?? '').toLowerCase().includes(query) ||
-        readableType.includes(query) ||
-        (point?.staffName && String(point.staffName).toLowerCase().includes(query)) ||
-        String(point?.deviceId ?? '').toLowerCase().includes(query) ||
-        String(point?.slug ?? '').toLowerCase().includes(query) ||
-        String(point?.id ?? '').toLowerCase().includes(query) ||
-        String(point?.url ?? '').toLowerCase().includes(query) ||
-        readableStatus.includes(query) ||
-        normalize(point?.name).includes(compactQuery) ||
-        normalize(point?.deviceId).includes(compactQuery) ||
-        normalize(point?.slug).includes(compactQuery) ||
-        normalize(point?.type).includes(compactQuery) ||
-        normalize(readableType).includes(compactQuery) ||
-        normalize(readableStatus).includes(compactQuery)
-      )
-    })
-  }, [touchpoints, searchQuery])
+  const filteredTouchpoints = touchpoints
 
   const filteredReviews = useMemo(() => {
     if (!searchQuery) return reviews
@@ -590,7 +570,9 @@ export default function Dashboard({
 
   const dashboardCtx = {
     profile, onNavigateMenu: handleNavigateMenu,
-    metrics, activeKpi, setActiveKpi, chartRange, handleChartRangeChange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate,
+    metrics, tipsChartData, activeKpi, setActiveKpi, chartRange, handleChartRangeChange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate,
+    metricsMonth: metricsMonthData ?? null,
+    metricsYear: metricsYearData ?? null,
     kpiDeltas,
     transactions, selectedLeaderboardStaff, handleSelectLeaderboardStaff, businessName, businessSlug, previewQr, hasKyb, hasSetup, onStartSetup: handleStartSetup,
     isOverviewLoading, isTransactionsLoading, isTouchpointsLoading,

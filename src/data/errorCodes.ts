@@ -40,6 +40,13 @@ export const errorCodeToI18nKey = {
   STAFF_INVITE_EXPIRED: 'errors.staff_invite_expired',
   STAFF_PROFILE_NOT_FOUND: 'errors.staff_profile_not_found',
 
+  // Support / contact requests
+  CONTACT_REQUEST_SUPPORT_TYPE_MIN_LENGTH: 'errors.contact_request_support_type_min_length',
+  CONTACT_REQUEST_SUPPORT_TYPE_REQUIRED: 'errors.contact_request_support_type_required',
+  CONTACT_REQUEST_MESSAGE_MIN_LENGTH: 'errors.contact_request_message_min_length',
+  CONTACT_REQUEST_MESSAGE_MAX_LENGTH: 'errors.contact_request_message_max_length',
+  CONTACT_REQUEST_MESSAGE_REQUIRED: 'errors.contact_request_message_required',
+
   // Common
   COMMON_VALIDATION_ERROR: 'errors.common_validation_error',
   COMMON_NOT_FOUND: 'errors.common_not_found',

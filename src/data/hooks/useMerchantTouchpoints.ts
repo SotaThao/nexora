@@ -14,14 +14,17 @@ interface TouchpointQueryParams {
   Name?: string
 }
 
-export function useTouchpoints(params: TouchpointQueryParams = {}) {
+export function useTouchpoints(
+  params: TouchpointQueryParams = {},
+  { enabled = true }: { enabled?: boolean } = {},
+) {
   const auth = useContext(AuthContext)
   const isOwner = auth?.status === 'authenticated' && auth?.session?.role === 'owner'
 
   return useQuery<TouchpointPage>({
     queryKey: [...qk.merchantTouchpoints(), params],
     queryFn: () => merchantTouchpointsRepository.getTouchpoints(params),
-    enabled: isOwner,
+    enabled: isOwner && enabled,
   })
 }
 

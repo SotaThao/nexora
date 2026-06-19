@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useOutletContext, useNavigate, useParams, Navigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 
@@ -11,6 +11,7 @@ import ReportsView from '../views/ReportsView'
 import SettingsView from '../../SettingsView'
 import AnalyticsView from '../../AnalyticsView'
 import SupportView from '../../SupportView'
+import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3'
 import ComingSoon from '../views/ComingSoon'
 import ManagePlanView from '../views/ManagePlanView'
 import StaffDetailView from '../../StaffDetailView'
@@ -54,6 +55,8 @@ export function OverviewRoute() {
       isTouchpointsLoading={ctx.isTouchpointsLoading}
       reviewsPage={ctx.reviewsPage}
       isReviewsPending={ctx.isReviewsPending}
+      metricsMonth={ctx.metricsMonth}
+      metricsYear={ctx.metricsYear}
     />
   )
 }
@@ -167,10 +170,17 @@ export function StaffRoleRoute() {
 
 export function TouchpointsRoute() {
   const ctx = useOutletContext<LooseObject>()
+  const [sp, setSp] = useSearchParams()
+  const tab = sp.get('tab') || 'stations'
+
+  useEffect(() => {
+    if (tab === 'devices') {
+      setSp({ tab: 'stations' }, { replace: true })
+    }
+  }, [tab, setSp])
 
   return (
     <TouchpointsView
-      touchpoints={ctx.filteredTouchpoints}
       onOpenAddModal={(prefill) => {
         ctx.setAddTouchpointPrefill(prefill || null)
         ctx.setIsAddTouchpointModalOpen(true)
@@ -180,8 +190,16 @@ export function TouchpointsRoute() {
       onToggleStatus={ctx.toggleTouchpointStatus}
       onLinkDevice={ctx.linkDevice}
       transactions={ctx.transactions}
+      businessName={ctx.businessName}
       devices={ctx.devices}
-      activeStaff={ctx.activeStaffList ?? []}
+      onAddDevice={ctx.handleAddDevice}
+      onDeleteDevice={ctx.handleDeleteDevice}
+      onToggleDeviceStatus={ctx.handleToggleDeviceStatus}
+      activeSubTab={tab === 'devices' ? 'stations' : tab}
+      onTabChange={(nextTab) => {
+        if (nextTab === 'devices') return
+        setSp({ tab: nextTab }, { replace: true })
+      }}
     />
   )
 }
@@ -212,12 +230,21 @@ export function ReviewsRoute() {
 export function TipsRoute() {
   const ctx = useOutletContext<LooseObject>()
   const [sp, setSp] = useSearchParams()
-  const tab = sp.get('tab') || 'overview'
+  const rawTab = sp.get('tab') || 'overview'
+  const tab = rawTab === 'transactions' ? 'overview' : rawTab
+
+  useEffect(() => {
+    if (rawTab === 'transactions') {
+      setSp({ tab: 'overview' }, { replace: true })
+    }
+  }, [rawTab, setSp])
 
   return (
     <TipsView
       transactions={ctx.transactions}
       staff={ctx.staff}
+      metrics={ctx.metrics}
+      tipsChartData={ctx.tipsChartData}
       activeTab={tab}
       onTabChange={(t) => setSp({ tab: t }, { replace: true })}
       processingFee={ctx.processingFee}
@@ -228,7 +255,7 @@ export function TipsRoute() {
 
 export function ReportsRoute() {
   const ctx = useOutletContext<LooseObject>()
-  return <ReportsView transactions={ctx.filteredTransactions} staff={ctx.staff} touchpoints={ctx.touchpoints} />
+  return <ReportsView staff={ctx.staff} touchpoints={ctx.touchpoints} businessName={ctx.businessName} businessSlug={ctx.businessSlug} />
 }
 
 export function AnalyticsRoute() {
@@ -264,7 +291,18 @@ export function SettingsRoute() {
 }
 
 export function SupportRoute() {
-  return <SupportView />
+  const { currentLanguage } = useTranslation()
+  const recaptchaKey = import.meta.env.VITE_RECAPTCHA_KEY
+
+  if (!recaptchaKey) {
+    return <SupportView recaptchaEnabled={false} />
+  }
+
+  return (
+    <GoogleReCaptchaProvider reCaptchaKey={recaptchaKey} language={currentLanguage}>
+      <SupportView recaptchaEnabled />
+    </GoogleReCaptchaProvider>
+  )
 }
 
 export function SubscriptionsRoute() {

@@ -49,7 +49,7 @@ export default function MobileMenuDrawer({
       >
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center">
-            <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="w-40 h-auto max-w-full object-contain" />
+            <img src="/assets/logo-nexora-white-vertical.png" alt="Nexora Logo" className="w-40 h-auto max-w-full object-contain" />
           </div>
           <IconButton label="Close menu" onClick={onClose} className="text-white hover:bg-white/10">
             <X className="h-5 w-5" />
@@ -201,7 +201,6 @@ export default function MobileMenuDrawer({
                     {[
                       { id: 'overview', label: t('dashboard.tips.tabs.overview') },
                       { id: 'savings', label: t('dashboard.tips.tabs.savings') },
-                      { id: 'transactions', label: t('dashboard.tips.tabs.transactions') },
                       { id: 'payouts', label: t('dashboard.tips.tabs.payouts') }
                     ].map(sub => {
                       const isSubActive = activeMenu === 'tips' && tipsTab === sub.id
@@ -227,6 +226,33 @@ export default function MobileMenuDrawer({
                   </div>
                 )}
 
+                {id === 'touchpoints' && isTouchpointsMobileExpanded && (
+                  <div className="ml-9 mt-1 space-y-1 border-l border-white/10 pl-3 animate-fadeIn">
+                    {[
+                      { id: 'stations', label: t('dashboard.touchpoints.tabs.stations') },
+                    ].map(sub => {
+                      const isSubActive = activeMenu === 'touchpoints' && touchpointsTab === sub.id
+                      return (
+                        <button
+                          key={sub.id}
+                          type="button"
+                          onClick={() => {
+                            setTouchpointsTab(sub.id)
+                            navigateMenu('touchpoints')
+                          }}
+                          className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
+                            isSubActive
+                              ? 'text-brandCyan font-extrabold'
+                              : 'text-white/60 hover:bg-white/5 hover:text-white'
+                          }`}
+                        >
+                          <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+                          <span>{sub.label}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
               </React.Fragment>
             )
           })}

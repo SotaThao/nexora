@@ -17,6 +17,7 @@ import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useM
 import { useNotifications, useAddNotification } from '../../../data/hooks/useNotifications'
 import { logger } from '../../../utils/logger'
 import apiAuthAdapter from '../../../auth/adapters/apiAuthAdapter'
+import { getSignupOtp } from '../../../auth/signupOtp'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { useCompletePersonalOnboarding } from '../../../data/hooks/usePersonalOnboarding'
 
@@ -152,7 +153,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
 
   const phoneParsed = useMemo(() => parsePhone(phone), [phone])
 
-  const handleStep1Next = (e) => {
+  const handleStep1Next = async (e) => {
     e.preventDefault()
     const newErrors: LooseObject = {}
 
@@ -182,58 +183,25 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     setErrors({})
     setIsSubmitting(true)
 
-    apiAuthAdapter.signup({
-      email: email.trim().toLowerCase(),
-      confirmEmail: confirmEmail.trim().toLowerCase(),
-      password,
-      confirmPassword: password,
-      firstName: email.split('@')[0],
-      lastName: 'User',
-      // profileType enum per signup API docs is "Merchant" | "User" (not "Personal").
-      profileType: role === 'business' ? 'Merchant' : 'User'
-    }).then(() => {
-      // Send verification email right after successful signup
-      return apiAuthAdapter.resendVerificationEmail({ email: email.trim().toLowerCase() })
-        .catch(err => {
-          // If the backend auto-verifies in DEV, or rate limits because it already sent it, handle gracefully
-          if (isApiError(err) && err.errorCode === 'USER_EMAIL_ALREADY_VERIFIED') {
-            return 'ALREADY_VERIFIED'
-          }
-          if (isApiError(err) && err.errorCode === 'COMMON_RATE_LIMIT_EXCEEDED') {
-            return 'RATE_LIMITED' // Treat as success, email was sent by signup or rate limited
-          }
-          throw err
-        })
-    }).then((resStatus) => {
-      if (resStatus === 'ALREADY_VERIFIED') {
-        // Auto-login to get tokens for subsequent protected calls
-        apiAuthAdapter.login({ email: email.trim().toLowerCase(), password })
-          .then(async () => {
-            setVerifySuccess(true)
-            // Business will handle API setup in the Setup Wizard
-            setTimeout(() => {
-              if (role === 'business') {
-                if (onRegisterAndLogin) onRegisterAndLogin(email.trim().toLowerCase())
-                else if (onRegisterSuccess) onRegisterSuccess()
-              } else {
-                setIsVerificationPending(false)
-                setCurrentStep(3)
-              }
-            }, 1500)
-          })
-          .catch(err => {
-            logger.error('Auto-login failed after auto-verify:', err)
-            const code = getApiErrorCode(err, 'HTTP_ERROR')
-            const i18nKey = getErrorI18nKey(code)
-            setErrors({ email: i18nKey })
-          })
-          .finally(() => setIsSubmitting(false))
-      } else {
-        setIsVerificationPending(false)
-        setIsSubmitting(false)
-        setCurrentStep(2)
-      }
-    }).catch((err) => {
+    try {
+      const signupResponse = await apiAuthAdapter.signup({
+        email: email.trim().toLowerCase(),
+        confirmEmail: confirmEmail.trim().toLowerCase(),
+        password,
+        confirmPassword: password,
+        firstName: email.split('@')[0],
+        lastName: 'User',
+        // profileType enum per signup API docs is "Merchant" | "User" (not "Personal").
+        profileType: role === 'business' ? 'Merchant' : 'User'
+      })
+      const signupOtp = getSignupOtp(signupResponse)
+
+      setOtpCode(signupOtp)
+      setSimToken(signupOtp || simToken)
+      setResendMessage('')
+      setIsVerificationPending(false)
+      setCurrentStep(2)
+    } catch (err) {
       const errorsMap: LooseObject = {}
       const code = getApiErrorCode(err, 'HTTP_ERROR')
       const i18nKey = getErrorI18nKey(code)
@@ -243,13 +211,41 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         errorsMap.email = i18nKey || 'errors.unknown_error'
       }
       setErrors(errorsMap)
+    } finally {
       setIsSubmitting(false)
-    })
+    }
   }
 
-  const handleVerifyOtp = (e) => {
+  const handleVerifyOtp = async (e) => {
     e.preventDefault()
-    if (otpCode === '1234') {
+    const token = otpCode.trim()
+
+    if (!token) {
+      setOtpError(t('components.register.hooks.useRegisterForm.invalidCodeTipEnter'))
+      return
+    }
+
+    setOtpError('')
+    setErrors({})
+    setIsSubmitting(true)
+
+    try {
+      try {
+        await apiAuthAdapter.verifyEmail({
+          token,
+          email: email.trim().toLowerCase()
+        })
+      } catch (err) {
+        if (!isApiError(err) || err.errorCode !== 'USER_EMAIL_ALREADY_VERIFIED') {
+          throw err
+        }
+      }
+
+      await apiAuthAdapter.login({
+        email: email.trim().toLowerCase(),
+        password
+      })
+
       setOtpError('')
 
       if (role === 'business') {
@@ -295,8 +291,13 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         setShowOtpInput(false)
         setCurrentStep(3)
       }
-    } else {
-      setOtpError(t('components.register.hooks.useRegisterForm.invalidOtpTryAgain'))
+    } catch (err) {
+      logger.error('Verify account activation failed', err)
+      const code = getApiErrorCode(err, 'HTTP_ERROR')
+      const i18nKey = getErrorI18nKey(code)
+      setOtpError(t(i18nKey))
+    } finally {
+      setIsSubmitting(false)
     }
   }
 

@@ -7,10 +7,10 @@ import {
   Gift,
   FileBarChart,
   UserPlus,
+  ChevronRight,
   PiggyBank,
 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import MobileKpiCard, { MOBILE_KPI_GRID_CLASS } from '../../ui/MobileKpiCard'
 
 import SetupGuideBanner from './SetupGuideBanner'
 
@@ -47,6 +47,27 @@ function fmtMoney(value) {
 
 function clampPct(n) {
   return Math.max(0, Math.min(100, n))
+}
+
+/* ─── KPI Card (mockup style: icon + label + chevron, big value, trend) ───── */
+function KpiCard({ icon, iconBg, label, value, trend, trendColor = 'text-nexoraSuccess', onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-3xl border border-nexoraBorder bg-white p-4 text-left shadow-nexora-card transition-all duration-200 hover:shadow-premium hover:-translate-y-0.5 focus:outline-none active:scale-[0.98]"
+    >
+      <div className="flex items-center justify-between">
+        <span className={`flex h-11 w-11 items-center justify-center rounded-2xl text-white ${iconBg}`}>
+          {icon}
+        </span>
+        <ChevronRight className="h-4 w-4 text-nexoraSubtle" />
+      </div>
+      <p className="mt-3 text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">{label}</p>
+      <p className="mt-0.5 text-2xl font-black tracking-tight text-nexoraText">{value}</p>
+      {trend && <p className={`mt-0.5 text-[13px] font-bold ${trendColor}`}>{trend}</p>}
+    </button>
+  )
 }
 
 /* ─── Quick Action ───────────────────────────────────────────────────────── */
@@ -108,6 +129,8 @@ function Overview({
   onApproveClick,
   pendingStaff = [],
   staff = [],
+  metricsMonth = null,
+  metricsYear = null,
 }: any) {
   const { t } = useTranslation()
   const k = (key: string, vars?: Record<string, string | number>) =>
@@ -121,21 +144,17 @@ function Overview({
     return t('staff_dashboard.home.greeting_evening', { name: firstName })
   })()
 
-  // ── Derived metrics from real data ──────────────────────────────────────
-  const successTxs = (transactions || []).filter((tx) => tx.status === 'Success' || tx.status === 'success')
-  const monthPrefix = new Date().toISOString().slice(0, 7)
-  const yearPrefix = new Date().toISOString().slice(0, 4)
-  const monthTxs = successTxs.filter((tx) => tx.dateTime?.startsWith(monthPrefix))
-  const yearTxs = successTxs.filter((tx) => tx.dateTime?.startsWith(yearPrefix))
-  const monthTips = monthTxs.reduce((s, tx) => s + Number(tx.amount || 0), 0)
-  const yearTips = yearTxs.reduce((s, tx) => s + Number(tx.amount || 0), 0)
+  // ── Derived metrics from overview API (month & year) ────────────────────
   const FEE_RATE = 0.03
+  const monthTips = metricsMonth?.totalTips ?? 0
+  const monthTxCount = metricsMonth?.totalTransactions ?? 0
+  const yearTips = metricsYear?.totalTips ?? 0
   const moneySavedMonth = monthTips * FEE_RATE
   const moneySavedYear = yearTips * FEE_RATE
 
   const activeStaff = (staff || []).filter((m) => m.status === 'Active' || m.active === true)
   const pendingCount = (pendingStaff || []).length
-  const rating = Number(metrics.averageRating || 0)
+  const rating = Number(metrics.googleRating || 0)
   const totalReviews = Number(metrics.totalReviews || 0)
 
   // Pending confirmations list (real pending staff/invites)
@@ -179,6 +198,7 @@ function Overview({
       {/* ── Greeting ─────────────────────────────────────────────────────── */}
       <div className="pt-1">
         <h1 className="text-2xl font-black tracking-tight text-nexoraText">{greeting}</h1>
+        <p className="mt-1 text-sm text-nexoraMuted">{businessName || t('staff_dashboard.home.performance_subtitle')}</p>
       </div>
 
       {/* ── Hero: Money Saved ────────────────────────────────────────────── */}
@@ -208,38 +228,41 @@ function Overview({
       </section>
 
       {/* ── KPI 2×2 ──────────────────────────────────────────────────────── */}
-      <div className={MOBILE_KPI_GRID_CLASS}>
-        <MobileKpiCard
-          theme="green"
-          icon={<DollarSign className="h-[18px] w-[18px]" strokeWidth={2.5} />}
+      <div className="grid grid-cols-2 gap-3">
+        <KpiCard
+          icon={<DollarSign className="h-5 w-5" />}
+          iconBg="bg-gradient-to-br from-emerald-400 to-emerald-500"
           label={k('kpi_direct_tips')}
           value={fmtMoney(monthTips)}
-          trend={monthTxs.length > 0 ? k('tips_count', { count: monthTxs.length }) : k('no_tips_yet')}
+          trend={monthTxCount > 0 ? k('tips_count', { count: monthTxCount }) : k('no_tips_yet')}
+          trendColor="text-nexoraSuccess"
           onClick={() => setActiveKpi?.('tips')}
         />
-        <MobileKpiCard
-          theme="purple"
-          icon={<Users className="h-[18px] w-[18px]" strokeWidth={2.5} />}
+        <KpiCard
+          icon={<Users className="h-5 w-5" />}
+          iconBg="bg-gradient-to-br from-nexoraBrand to-nexoraViolet"
           label={k('kpi_active_staff')}
           value={String((staff || []).length)}
           trend={k('staff_active', { count: activeStaff.length })}
+          trendColor="text-nexoraBrand"
           onClick={() => onNavigateMenu?.('staff')}
         />
-        <MobileKpiCard
-          theme="amber"
-          icon={<Clock className="h-[18px] w-[18px]" strokeWidth={2.5} />}
+        <KpiCard
+          icon={<Clock className="h-5 w-5" />}
+          iconBg="bg-gradient-to-br from-amber-400 to-amber-500"
           label={k('kpi_pending')}
           value={String(pendingCount)}
           trend={pendingCount > 0 ? k('need_action') : k('all_clear')}
-          trendColor={pendingCount > 0 ? 'text-amber-600' : 'text-emerald-600'}
+          trendColor={pendingCount > 0 ? 'text-nexoraWarning' : 'text-nexoraSuccess'}
           onClick={() => onNavigateMenu?.('staff')}
         />
-        <MobileKpiCard
-          theme="blue"
-          icon={<Star className="h-[18px] w-[18px] fill-white text-white" strokeWidth={2.5} />}
+        <KpiCard
+          icon={<Star className="h-5 w-5 fill-white" />}
+          iconBg="bg-gradient-to-br from-blue-400 to-indigo-500"
           label={k('kpi_reviews')}
           value={rating > 0 ? rating.toFixed(1) : '—'}
           trend={totalReviews > 0 ? k('reviews_total', { count: totalReviews }) : k('no_reviews_yet')}
+          trendColor="text-nexoraBrand"
           onClick={() => onOpenReviews?.()}
         />
       </div>
