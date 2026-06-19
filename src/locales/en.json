@@ -582,7 +582,9 @@
       },
       "open_link": "Test station flow",
       "empty_title": "No QR stations yet",
-      "empty_desc": "Create your first touchpoint to start receiving scans and tips."
+      "empty_desc": "Create your first touchpoint to start receiving scans and tips.",
+      "toggle_enabled": "Touchpoint activated successfully.",
+      "toggle_disabled": "Touchpoint deactivated successfully."
     },
     "devices": {
       "subtitle": "Manage physical salon stands, tabletop codes, and smart taps.",
@@ -892,6 +894,7 @@
     "final_success_title": "Thank You!",
     "final_success_desc": "Help us grow by leaving a review on Google or Yelp.",
     "send_new_btn": "Send New Submission",
+    "back_home_btn": "Home",
     "tip_success_title": "Thank You!",
     "tip_success_prefix": "Your tip of ",
     "tip_success_sent": " has been sent to ",
@@ -1113,7 +1116,9 @@
     "contact_request_support_type_required": "Support type is required.",
     "user_login_invalid_username_or_password": "Invalid username or password.",
     "user_account_inactive": "Your account is currently inactive. Please contact support.",
+    "user_account_incomplete": "Your account is incomplete. Please activate your account.",
     "user_email_already_exists": "This email address is already registered.",
+    "user_signup_failed": "Registration failed. Please check your information and try again.",
     "auth_passwords_do_not_match": "Passwords do not match.",
     "user_feature_signup_disabled": "Registration is currently disabled.",
     "user_invalid_email_verification_token": "The email verification token is invalid.",
@@ -1121,6 +1126,8 @@
     "user_email_already_verified": "This email address has already been verified.",
     "user_not_found": "User account not found.",
     "user_password_reset_token_expired": "The password reset link has expired.",
+    "user_password_reset_token_required": "The password reset link is invalid. Please request a new reset link.",
+    "user_failed_to_reset_password": "Unable to reset password. The link may be invalid, expired, or already used. Please request a new reset link.",
     "user_invalid_refresh_token": "Session expired. Please sign in again.",
     "auth_user_not_authenticated": "You must be logged in to access this resource.",
     "business_already_exists": "A business setup already exists for this account.",
@@ -2077,7 +2084,9 @@
       "newPassword": "New Password",
       "confirmPassword": "Confirm Password",
       "resetPassword": "Reset Password",
-      "backToSignIn": "Back to Sign In"
+      "backToSignIn": "Back to Sign In",
+      "token_required": "Reset token is required.",
+      "requestNewLink": "Request a new reset link"
     },
     "TouchpointsView": {
       "phExampleDeviceIds": "e.g. NFC-105, QR-Table-01",

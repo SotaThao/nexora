@@ -188,6 +188,7 @@ export function TouchpointsRoute() {
       onDelete={(id) => ctx.deleteTouchpoint(id)}
       onQr={ctx.previewQr}
       onToggleStatus={ctx.toggleTouchpointStatus}
+      togglingTouchpointId={ctx.togglingTouchpointId}
       onLinkDevice={ctx.linkDevice}
       transactions={ctx.transactions}
       businessName={ctx.businessName}
