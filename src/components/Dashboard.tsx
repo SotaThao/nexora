@@ -661,7 +661,7 @@ export default function Dashboard({
               onClick={() => handleNavigateMenu('overview')}
               className="mb-5 inline-flex h-9 items-center rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-extrabold text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"
             >
-              Back to Dashboard
+              {t('dashboard.back_to_dashboard')}
             </button>
           )}
           <Outlet context={dashboardCtx} />

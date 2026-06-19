@@ -20,8 +20,7 @@ import {
 } from '../constants'
 import { getApiErrorCode } from '../../../types/domain'
 import { getDefaultDialCode } from '../../CountryCodeSelect'
-
-const isValidHttpUrl = (value) => /^https?:\/\/.+/i.test(String(value || '').trim())
+import { isValidEmail, isValidHttpUrl } from '../../../utils/validation'
 
 export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, hasKyb }) {
   const { currentLanguage, setLanguage, t } = useTranslation()
@@ -213,19 +212,19 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
       }
 
       // Review Links validation (Optional)
-      if (reviewLinks.googleReview && reviewLinks.googleReview.trim() && !reviewLinks.googleReview.startsWith('http')) {
+      if (reviewLinks.googleReview?.trim() && !isValidHttpUrl(reviewLinks.googleReview)) {
         newErrors.googleReview = t('setup.errors.url_protocol')
       }
 
-      if (reviewLinks.yelpReview && reviewLinks.yelpReview.trim() && !reviewLinks.yelpReview.startsWith('http')) {
+      if (reviewLinks.yelpReview?.trim() && !isValidHttpUrl(reviewLinks.yelpReview)) {
         newErrors.yelpReview = t('setup.errors.url_protocol')
       }
 
-      if (reviewLinks.facebookReview && reviewLinks.facebookReview.trim() && !reviewLinks.facebookReview.startsWith('http')) {
+      if (reviewLinks.facebookReview?.trim() && !isValidHttpUrl(reviewLinks.facebookReview)) {
         newErrors.facebookReview = t('setup.errors.url_invalid')
       }
 
-      if (reviewLinks.feedbackEmail && reviewLinks.feedbackEmail.trim() && !/\S+@\S+\.\S+/.test(reviewLinks.feedbackEmail)) {
+      if (reviewLinks.feedbackEmail?.trim() && !isValidEmail(reviewLinks.feedbackEmail)) {
         newErrors.feedbackEmail = t('setup.errors.email_invalid')
       }
     }
@@ -314,7 +313,7 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
     const staffErrors: LooseObject = {}
     if (!newStaff.fullName.trim()) staffErrors.staffFullName = t('setup.errors.staff_name_required')
     if (!newStaff.nickname.trim()) staffErrors.staffNickname = t('setup.errors.staff_nickname_required')
-    if (newStaff.email?.trim() && !/\S+@\S+\.\S+/.test(newStaff.email.trim())) {
+    if (newStaff.email?.trim() && !isValidEmail(newStaff.email)) {
       staffErrors.staffEmail = t('setup.errors.staff_email_invalid')
     }
 

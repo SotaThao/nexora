@@ -2,20 +2,97 @@ import { ShieldAlert, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "../../../contexts/LanguageContext";
 import {
-  useMerchantSetup,
-  useSaveMerchantSetup,
-  useUploadImage,
+  useUpdateBusiness,
+  useUpdateBusinessInfo,
+  useUpdateReviewLinks,
 } from "../../../data/hooks/useMerchantSetup";
 import {
   useProfileSettings,
-  useSaveProfileSettings,
+  useUpdateAddress,
+  useUpdateAvatar,
+  useUpdateBasicInfo,
   useUpdateUserProfile,
 } from "../../../data/hooks/useProfileSettings";
 import { logger } from "../../../utils/logger";
+import { getUserProfileImageUrl } from "../../../utils/userProfileImage";
 import {
-  buildUpdateUserProfileDto,
-  getUserProfileImageUrl,
-} from "../../../utils/userProfileImage";
+  isValidEmail,
+  isValidHttpUrl,
+  isValidPhone,
+} from "../../../utils/validation";
+
+type SettingsFormErrors = Record<string, string>;
+
+const formValue = (input: unknown) => String(input ?? "").trim();
+
+const isAdultDob = (input: unknown) => {
+  const dob = formValue(input);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dob)) return false;
+  const birthDate = new Date(`${dob}T00:00:00`);
+  if (Number.isNaN(birthDate.getTime())) return false;
+
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  if (
+    today.getMonth() < birthDate.getMonth() ||
+    (today.getMonth() === birthDate.getMonth() &&
+      today.getDate() < birthDate.getDate())
+  ) {
+    age -= 1;
+  }
+  return birthDate <= today && age >= 18;
+};
+
+const validateBasicForm = (form: LooseObject): SettingsFormErrors => {
+  const errors: SettingsFormErrors = {};
+  const fullName = formValue(form.fullName);
+  if (!fullName) errors.fullName = "required";
+  else if (fullName.length < 2 || !/\p{L}/u.test(fullName)) errors.fullName = "invalid";
+  if (!formValue(form.dob)) errors.dob = "required";
+  else if (!isAdultDob(form.dob)) errors.dob = "adultDob";
+  if (!formValue(form.phone)) errors.phone = "required";
+  else if (!isValidPhone(form.phone)) errors.phone = "phone";
+  return errors;
+};
+
+const validateAddressForm = (form: LooseObject): SettingsFormErrors => {
+  const errors: SettingsFormErrors = {};
+  ["street", "city", "zipCode", "country"].forEach((field) => {
+    if (!formValue(form[field])) errors[field] = "required";
+  });
+  if (formValue(form.street) && formValue(form.street).length < 3) errors.street = "invalid";
+  if (formValue(form.city) && formValue(form.city).length < 2) errors.city = "invalid";
+  if (formValue(form.state) && formValue(form.state).length < 2) errors.state = "invalid";
+  if (
+    formValue(form.zipCode) &&
+    !/^[\p{L}\d][\p{L}\d -]{1,11}$/u.test(formValue(form.zipCode))
+  ) {
+    errors.zipCode = "postalCode";
+  }
+  if (formValue(form.country) && formValue(form.country).length < 2) errors.country = "invalid";
+  return errors;
+};
+
+const validateBusinessForm = (form: LooseObject): SettingsFormErrors => {
+  const errors: SettingsFormErrors = {};
+  if (!formValue(form.businessName)) errors.businessName = "required";
+  else if (formValue(form.businessName).length < 2) errors.businessName = "invalid";
+  if (!formValue(form.businessPhone)) errors.businessPhone = "required";
+  else if (!isValidPhone(form.businessPhone)) errors.businessPhone = "phone";
+  if (!formValue(form.businessEmail)) errors.businessEmail = "required";
+  else if (!isValidEmail(form.businessEmail)) errors.businessEmail = "email";
+  if (formValue(form.businessWebsite) && !isValidHttpUrl(form.businessWebsite)) {
+    errors.businessWebsite = "url";
+  }
+  return errors;
+};
+
+const validateReviewsForm = (form: LooseObject): SettingsFormErrors => {
+  const errors: SettingsFormErrors = {};
+  if (formValue(form.googleReview) && !isValidHttpUrl(form.googleReview)) errors.googleReview = "url";
+  if (formValue(form.yelpReview) && !isValidHttpUrl(form.yelpReview)) errors.yelpReview = "url";
+  return errors;
+};
 
 const DEFAULT_PROFILE = {
   username: "",
@@ -80,11 +157,13 @@ export default function useSettingsForm({
 }) {
   const { t, currentLanguage } = useTranslation();
   const profileSettingsQuery = useProfileSettings();
-  const saveProfileSettingsMutation = useSaveProfileSettings();
   const updateUserProfileMutation = useUpdateUserProfile();
-  const uploadImageMutation = useUploadImage();
-  const merchantSetupQuery = useMerchantSetup();
-  const saveMerchantSetupMutation = useSaveMerchantSetup();
+  const updateBasicInfoMutation = useUpdateBasicInfo();
+  const updateAddressMutation = useUpdateAddress();
+  const updateAvatarMutation = useUpdateAvatar();
+  const updateBusinessMutation = useUpdateBusiness();
+  const updateBusinessInfoMutation = useUpdateBusinessInfo();
+  const updateReviewLinksMutation = useUpdateReviewLinks();
   const [activeTab, setActiveTab] = useState(initialTab); // profile | kyb
 
   useEffect(() => {
@@ -154,24 +233,35 @@ export default function useSettingsForm({
   // Edit states for different cards
   const [isEditingBasic, setIsEditingBasic] = useState(false);
   const [basicForm, setBasicForm] = useState<LooseObject>({});
+  const [basicErrors, setBasicErrors] = useState<SettingsFormErrors>({});
 
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [addressForm, setAddressForm] = useState<LooseObject>({});
+  const [addressErrors, setAddressErrors] = useState<SettingsFormErrors>({});
 
   const [isEditingBusiness, setIsEditingBusiness] = useState(false);
   const [businessForm, setBusinessForm] = useState<LooseObject>({});
+  const [businessErrors, setBusinessErrors] = useState<SettingsFormErrors>({});
 
   const [isEditingReviews, setIsEditingReviews] = useState(false);
   const [reviewsForm, setReviewsForm] = useState({
     googleReview: "",
     yelpReview: "",
   });
+  const [reviewsErrors, setReviewsErrors] = useState<SettingsFormErrors>({});
 
   const [editingMethod, setEditingMethod] = useState<any | null>(null);
   const [editValue, setEditValue] = useState("");
   const [editQrCode, setEditQrCode] = useState("");
   const [isCapturing, setIsCapturing] = useState(false);
   const [modalError, setModalError] = useState("");
+
+  useEffect(() => {
+    if (!hasKyb) return;
+    setIsEditingBasic(false);
+    setIsEditingAddress(false);
+    setIsEditingBusiness(false);
+  }, [hasKyb]);
 
   // Load profile settings + business profile into the form.
   //
@@ -189,13 +279,16 @@ export default function useSettingsForm({
     setProfile((prev) => {
       let next = { ...prev };
       if (profileSettingsQuery.data) {
-        const profileImageUrl = getUserProfileImageUrl(
-          profileSettingsQuery.data,
-        );
+        const d = profileSettingsQuery.data as LooseObject;
+        const profileImageUrl = getUserProfileImageUrl(profileSettingsQuery.data);
         next = {
           ...next,
-          ...profileSettingsQuery.data,
+          ...d,
           avatar: profileImageUrl || next.avatar || null,
+          phone: (d.phoneNumber as string) || (d.phone as string) || next.phone || '',
+          street: (d.address as string) || (d.street as string) || next.street || '',
+          dob: (d.dateOfBirth as string) || (d.dob as string) || next.dob || '',
+          referralId: (d.referralCode as string) || (d.referralId as string) || next.referralId || '',
         };
       }
       if (setupData) {
@@ -230,12 +323,6 @@ export default function useSettingsForm({
 
   const saveProfile = (updatedProfile) => {
     setProfile(updatedProfile);
-    saveProfileSettingsMutation.mutate(updatedProfile);
-    showToast(
-      t(
-        "components.settings.hooks.useSettingsForm.settingsUpdatedSuccessfully",
-      ),
-    );
   };
 
   const showToast = (msg) => {
@@ -255,6 +342,8 @@ export default function useSettingsForm({
 
   // --- Edit Actions ---
   const startEditBasic = () => {
+    if (hasKyb) return;
+    setBasicErrors({});
     setBasicForm({
       fullName: profile.fullName,
       dob: profile.dob,
@@ -263,18 +352,53 @@ export default function useSettingsForm({
     setIsEditingBasic(true);
   };
 
+  // Build the base DTO from persisted API data so required fields are never empty.
+  const getApiProfileBase = () => {
+    const d = profileSettingsQuery.data || {};
+    return {
+      firstName: (d.firstName as string) || '',
+      lastName: (d.lastName as string) || '',
+      phoneNumber: (d.phoneNumber as string) || '',
+      city: (d.city as string) || '',
+      state: (d.state as string) || '',
+      country: (d.country as string) || '',
+      zipCode: (d.zipCode as string) || '',
+      address: (d.address as string) || '',
+    };
+  };
+
   const saveBasic = (e) => {
     e.preventDefault();
-    saveProfile({
-      ...profile,
-      fullName: basicForm.fullName,
-      dob: basicForm.dob,
-      phone: basicForm.phone,
+    if (hasKyb) return;
+    const errors = validateBasicForm(basicForm);
+    setBasicErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
+    const fullName = String(basicForm.fullName || '').trim();
+    const phone = String(basicForm.phone || '').trim();
+    const dto = {
+      firstName: fullName.split(' ')[0] || fullName,
+      lastName: fullName.split(' ').slice(1).join(' ') || undefined,
+      phoneNumber: phone || undefined,
+      dateOfBirth: basicForm.dob || undefined,
+    };
+    updateBasicInfoMutation.mutate(dto, {
+      onSuccess: () => {
+        saveProfile({
+          ...profile,
+          fullName,
+          dob: basicForm.dob,
+          phone,
+        });
+        showToast(t("components.settings.hooks.useSettingsForm.settingsUpdatedSuccessfully"));
+        setIsEditingBasic(false);
+      },
     });
-    setIsEditingBasic(false);
   };
 
   const startEditAddress = () => {
+    if (hasKyb) return;
+    setAddressErrors({});
     setAddressForm({
       street: profile.street,
       city: profile.city,
@@ -287,18 +411,37 @@ export default function useSettingsForm({
 
   const saveAddress = (e) => {
     e.preventDefault();
-    saveProfile({
-      ...profile,
-      street: addressForm.street,
-      city: addressForm.city,
-      state: addressForm.state,
-      zipCode: addressForm.zipCode,
-      country: addressForm.country,
+    if (hasKyb) return;
+    const errors = validateAddressForm(addressForm);
+    setAddressErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
+    const dto = {
+      address: String(addressForm.street || '').trim() || undefined,
+      city: String(addressForm.city || '').trim() || undefined,
+      state: String(addressForm.state || '').trim() || undefined,
+      zipCode: String(addressForm.zipCode || '').trim() || undefined,
+      country: String(addressForm.country || '').trim() || undefined,
+    };
+    updateAddressMutation.mutate(dto, {
+      onSuccess: () => {
+        saveProfile({
+          ...profile,
+          street: addressForm.street,
+          city: addressForm.city,
+          state: addressForm.state,
+          zipCode: addressForm.zipCode,
+          country: addressForm.country,
+        });
+        showToast(t("components.settings.hooks.useSettingsForm.settingsUpdatedSuccessfully"));
+        setIsEditingAddress(false);
+      },
     });
-    setIsEditingAddress(false);
   };
 
   const startEditBusiness = () => {
+    if (hasKyb) return;
+    setBusinessErrors({});
     setBusinessForm({
       businessName: profile.businessName,
       businessPhone: profile.businessPhone,
@@ -310,34 +453,40 @@ export default function useSettingsForm({
 
   const saveBusiness = (e) => {
     e.preventDefault();
-    saveProfile({
-      ...profile,
-      businessName: businessForm.businessName,
-      businessPhone: businessForm.businessPhone,
-      businessEmail: businessForm.businessEmail,
-      businessWebsite: businessForm.businessWebsite,
-    });
+    if (hasKyb) return;
+    const errors = validateBusinessForm(businessForm);
+    setBusinessErrors(errors);
+    if (Object.keys(errors).length > 0) return;
 
-    // Update merchantSetup businessInfo via repository to synchronize with other views
-    const currentSetup = merchantSetupQuery.data;
-    if (currentSetup) {
-      const updatedSetup = {
-        ...currentSetup,
-        businessInfo: {
-          ...(currentSetup.businessInfo || {}),
-          name: businessForm.businessName,
-          phone: businessForm.businessPhone,
-          businessEmail: businessForm.businessEmail,
-          website: businessForm.businessWebsite,
+    const businessName = String(businessForm.businessName || "").trim();
+    const businessPhone = String(businessForm.businessPhone || "").trim();
+    const businessEmail = String(businessForm.businessEmail || "").trim();
+    const businessWebsite = String(businessForm.businessWebsite || "").trim();
+    updateBusinessInfoMutation.mutate(
+      {
+        name: businessName,
+        phone: businessPhone || undefined,
+        feedbackEmail: businessEmail || undefined,
+        website: businessWebsite || undefined,
+      },
+      {
+        onSuccess: () => {
+          saveProfile({
+            ...profile,
+            businessName,
+            businessPhone,
+            businessEmail,
+            businessWebsite,
+          });
+          showToast(t("components.settings.hooks.useSettingsForm.settingsUpdatedSuccessfully"));
+          setIsEditingBusiness(false);
         },
-      };
-      saveMerchantSetupMutation.mutate(updatedSetup);
-    }
-
-    setIsEditingBusiness(false);
+      },
+    );
   };
 
   const startEditReviews = () => {
+    setReviewsErrors({});
     setReviewsForm({
       googleReview: profile.googleReview || "",
       yelpReview: profile.yelpReview || "",
@@ -347,28 +496,29 @@ export default function useSettingsForm({
 
   const saveReviews = (e) => {
     e.preventDefault();
-    const updatedProfile = {
-      ...profile,
-      googleReview: reviewsForm.googleReview,
-      yelpReview: reviewsForm.yelpReview,
-    };
-    saveProfile(updatedProfile);
+    const errors = validateReviewsForm(reviewsForm);
+    setReviewsErrors(errors);
+    if (Object.keys(errors).length > 0) return;
 
-    // Update merchantSetup reviewLinks via repository to synchronize with other views
-    const currentSetup = merchantSetupQuery.data;
-    if (currentSetup) {
-      const updatedSetup = {
-        ...currentSetup,
-        reviewLinks: {
-          ...(currentSetup.reviewLinks || {}),
-          googleReview: reviewsForm.googleReview,
-          yelpReview: reviewsForm.yelpReview,
+    const googleReview = reviewsForm.googleReview.trim();
+    const yelpReview = reviewsForm.yelpReview.trim();
+    updateReviewLinksMutation.mutate(
+      {
+        googleReviewUrl: googleReview,
+        yelpUrl: yelpReview,
+      },
+      {
+        onSuccess: () => {
+          saveProfile({
+            ...profile,
+            googleReview,
+            yelpReview,
+          });
+          showToast(t("components.settings.hooks.useSettingsForm.settingsUpdatedSuccessfully"));
+          setIsEditingReviews(false);
         },
-      };
-      saveMerchantSetupMutation.mutate(updatedSetup);
-    }
-
-    setIsEditingReviews(false);
+      },
+    );
   };
 
   const handleToggleMethod = (key) => {
@@ -439,21 +589,6 @@ export default function useSettingsForm({
       payoutToggles: updatedToggles,
     };
     saveProfile(updatedProfile);
-
-    // Update merchantSetup businessInfo paymentAccounts via repository to synchronize with other views
-    const currentSetup = merchantSetupQuery.data;
-    if (currentSetup) {
-      const updatedSetup = {
-        ...currentSetup,
-        businessInfo: {
-          ...(currentSetup.businessInfo || {}),
-          paymentAccounts: updatedAccounts,
-          payoutQrCodes: updatedQrCodes,
-        },
-      };
-      saveMerchantSetupMutation.mutate(updatedSetup);
-    }
-
     setEditingMethod(null);
   };
 
@@ -462,17 +597,8 @@ export default function useSettingsForm({
     if (!file) return;
 
     try {
-      const uploaded = await uploadImageMutation.mutateAsync(file);
-      const profileImageUrl = uploaded.imageUrl || uploaded.fileUrl || "";
-      if (!profileImageUrl) {
-        throw new Error("IMAGE_UPLOAD_FAILED");
-      }
-
-      await updateUserProfileMutation.mutateAsync(
-        buildUpdateUserProfileDto(profile, { profileImageUrl }),
-      );
-
-      setProfile((prev) => ({ ...prev, avatar: profileImageUrl }));
+      const result = await updateAvatarMutation.mutateAsync(file);
+      setProfile((prev) => ({ ...prev, avatar: result.avatarUrl }));
       showToast(
         t(
           "components.staff_dashboard.views.StaffProfile.avatarUpdatedSuccessfully",
@@ -668,18 +794,26 @@ export default function useSettingsForm({
     setIsEditingBasic,
     basicForm,
     setBasicForm,
+    basicErrors,
+    setBasicErrors,
     isEditingAddress,
     setIsEditingAddress,
     addressForm,
     setAddressForm,
+    addressErrors,
+    setAddressErrors,
     isEditingBusiness,
     setIsEditingBusiness,
     businessForm,
     setBusinessForm,
+    businessErrors,
+    setBusinessErrors,
     isEditingReviews,
     setIsEditingReviews,
     reviewsForm,
     setReviewsForm,
+    reviewsErrors,
+    setReviewsErrors,
     editingMethod,
     setEditingMethod,
     editValue,

@@ -405,6 +405,7 @@
       "search_placeholder": "Search tech, station, review...",
       "add_tp": "Add New Touch Point"
     },
+    "back_to_dashboard": "Back to Dashboard",
     "notifications": {
       "title": "Notifications",
       "mark_all_read": "Mark all read",
@@ -1590,6 +1591,24 @@
       },
       "tabs": {
         "ProfileTab": {
+          "edit": "Edit",
+          "businessOwner": "Business Owner",
+          "username": "Username",
+          "email": "Email",
+          "referralLink": "Referral Link",
+          "copied": "Copied",
+          "copy": "Copy",
+          "showQr": "Show QR",
+          "notConfigured": "Not Configured",
+          "streetAddress": "Street Address",
+          "city": "City",
+          "stateProvince": "State / Province",
+          "zipCode": "ZIP Code",
+          "businessPhone": "Business Phone",
+          "businessEmail": "Business Email",
+          "website": "Website",
+          "googleReviewLink": "Google Review Link",
+          "yelpReviewLink": "Yelp Review Link",
           "payoutMethods": "Payout Methods",
           "payoutAccount": "Payout account",
           "methodNotConfigured": "Method is not configured.",
@@ -1629,7 +1648,19 @@
           "cancel": "CANCEL",
           "save": "SAVE",
           "phGoogleReviewUrl": "https://g.page/r/.../review",
-          "phYelpUrl": "https://www.yelp.com/biz/..."
+          "phYelpUrl": "https://www.yelp.com/biz/...",
+          "validation": {
+            "required": "This field is required.",
+            "invalid": "Please enter a valid value.",
+            "adultDob": "You must be at least 18 years old.",
+            "phone": "Please enter a valid phone number.",
+            "email": "Please enter a valid email address.",
+            "emailOrPhone": "Please enter a valid email address or phone number.",
+            "url": "Enter a complete URL starting with http:// or https://.",
+            "postalCode": "Please enter a valid ZIP or postal code.",
+            "venmo": "Enter a valid Venmo username starting with @.",
+            "cashapp": "Enter a valid Cash App cashtag starting with $."
+          }
         },
         "KybTab": {
           "iframeTitle": "Know your business",

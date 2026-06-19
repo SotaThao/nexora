@@ -103,6 +103,14 @@ export function createMerchantsRepository(client: HttpClient = httpClient) {
       return imagesRepository.uploadAndGetUrl(file)
     },
 
+    async updateBusiness(dto: LooseObject): Promise<void> {
+      await client.put('/api/v1/merchant/business', dto)
+    },
+
+    async updateBusinessInfo(dto: { name: string; phone?: string; feedbackEmail?: string; website?: string }): Promise<void> {
+      await client.put('/api/v1/merchant/business/info', dto)
+    },
+
     async updateReviewLinks(dto: LooseObject): Promise<void> {
       await client.put('/api/v1/merchant/business/review-links', dto)
     },
