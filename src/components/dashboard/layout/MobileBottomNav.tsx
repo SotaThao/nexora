@@ -1,16 +1,17 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Home, QrCode, CircleDollarSign, Star, ScanLine } from 'lucide-react'
+import { Home, Users, CircleDollarSign, QrCode, UserCircle, ScanLine } from 'lucide-react'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import AppQrScanner from '../../common/AppQrScanner'
 import { resolveQrToAppPath } from '../../../utils/qrNavigate'
 
 const NAV_ITEMS = [
-  { id: 'overview', label: 'Home', Icon: Home },
-  { id: 'touchpoints', label: 'QR', Icon: QrCode },
-  { id: 'tips', label: 'Tips', Icon: CircleDollarSign },
-  { id: 'reviews', label: 'Reviews', Icon: Star },
+  { id: 'overview',    labelKey: 'nav_home',    Icon: Home,             image: '/assets/menu/dashboard.png' },
+  { id: 'staff',       labelKey: 'nav_staff',   Icon: Users,            image: '/assets/menu/staff.png' },
+  { id: 'tips',        labelKey: 'nav_tips',    Icon: CircleDollarSign, image: '/assets/menu/tips.png' },
+  { id: 'touchpoints', labelKey: 'nav_qr',      Icon: QrCode,           image: '/assets/menu/touchpoint.png' },
+  { id: 'settings',    labelKey: 'nav_profile', Icon: UserCircle,       image: '/assets/menu/setting.png' },
 ]
 
 export default function MobileBottomNav({ activeMenu, onNavigate }) {
@@ -32,22 +33,39 @@ export default function MobileBottomNav({ activeMenu, onNavigate }) {
   const before = NAV_ITEMS.slice(0, 2)
   const after = NAV_ITEMS.slice(2)
 
-  function renderItem({ id, label, Icon }) {
+  function renderItem({ id, labelKey, Icon, image }) {
     const isActive = activeMenu === id
     return (
       <button
         key={id}
         type="button"
         onClick={() => onNavigate(id)}
-        className="flex flex-1 flex-col items-center justify-end gap-1 pb-2.5 pt-1 focus:outline-none active:scale-95 transition-transform"
+        className="flex flex-1 flex-col items-center justify-center gap-1 h-full focus:outline-none active:scale-95 transition-transform"
       >
-        <Icon
-          className={`h-5 w-5 transition-colors duration-200 ${isActive ? 'text-nexoraBrand' : 'text-gray-400'}`}
-          strokeWidth={isActive ? 2.5 : 1.8}
-          fill={isActive && id === 'overview' ? 'currentColor' : 'none'}
-        />
-        <span className={`text-[10px] font-bold transition-colors duration-200 ${isActive ? 'text-nexoraBrand' : 'text-gray-400'}`}>
-          {label}
+        {image ? (
+          <img
+            src={image}
+            alt=""
+            className={`h-[22px] w-[22px] object-contain transition-opacity duration-200 ${
+              isActive ? 'opacity-100' : 'opacity-70'
+            }`}
+            aria-hidden="true"
+          />
+        ) : (
+          <Icon
+            className={`h-[22px] w-[22px] transition-colors duration-200 ${
+              isActive ? 'text-nexoraBrand' : 'text-nexoraSubtle'
+            }`}
+            strokeWidth={isActive ? 2.5 : 1.9}
+            fill={isActive && id === 'overview' ? 'currentColor' : 'none'}
+          />
+        )}
+        <span
+          className={`text-[11px] font-bold transition-colors duration-200 ${
+            isActive ? 'text-nexoraBrand' : 'text-nexoraSubtle'
+          }`}
+        >
+          {t(`dashboard.owner_home.${labelKey}`)}
         </span>
       </button>
     )
@@ -56,8 +74,11 @@ export default function MobileBottomNav({ activeMenu, onNavigate }) {
   return (
     <>
       <nav
-        className="fixed bottom-0 left-0 right-0 z-30 bg-white lg:hidden"
-        style={{ paddingBottom: 'var(--app-safe-area-bottom)', boxShadow: '0 -4px 20px rgba(0,0,0,0.08)' }}
+        className="fixed bottom-0 left-0 right-0 z-30 border-t border-nexoraBorder bg-white/95 backdrop-blur-md lg:hidden"
+        style={{
+          paddingBottom: 'var(--app-safe-area-bottom, env(safe-area-inset-bottom, 0px))',
+          boxShadow: '0 -8px 28px rgba(15,23,42,0.08)',
+        }}
       >
         <button
           type="button"
@@ -71,15 +92,17 @@ export default function MobileBottomNav({ activeMenu, onNavigate }) {
           <ScanLine className="h-6 w-6 text-white" strokeWidth={2} />
         </button>
 
-        <div className="flex items-stretch h-16 px-2">
+        <div className="flex items-center justify-around h-[68px] px-2">
           {before.map(renderItem)}
 
           <button
             type="button"
             onClick={() => setScannerOpen(true)}
-            className="flex flex-1 flex-col items-center justify-end pb-2.5 focus:outline-none active:scale-95 transition-transform"
+            className="flex flex-1 flex-col items-center justify-center gap-1 h-full focus:outline-none active:scale-95 transition-transform"
           >
-            <span className="text-[10px] font-bold text-gray-400">{t('dashboard.menu.scan')}</span>
+            <span className="text-[11px] font-bold text-nexoraSubtle">
+              {t('dashboard.menu.scan')}
+            </span>
           </button>
 
           {after.map(renderItem)}

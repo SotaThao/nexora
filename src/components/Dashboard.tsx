@@ -362,7 +362,7 @@ export default function Dashboard({
   const menuItemsToDisplay = userRole === 'staff'
     ? [
         { id: 'overview', label: t('components.dashboardRoot.myDashboard'), icon: MENU_ITEMS.find(i => i.id === 'overview')?.icon, image: MENU_ITEMS.find(i => i.id === 'overview')?.image },
-        { id: 'support', label: t('dashboard.menu.support'), icon: MENU_ITEMS.find(i => i.id === 'support')?.icon }
+        { id: 'support', label: t('dashboard.menu.support'), icon: MENU_ITEMS.find(i => i.id === 'support')?.icon, image: MENU_ITEMS.find(i => i.id === 'support')?.image }
       ]
     : MENU_ITEMS
 
@@ -672,7 +672,7 @@ export default function Dashboard({
               onClick={() => handleNavigateMenu('overview')}
               className="mb-5 inline-flex h-9 items-center rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-extrabold text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"
             >
-              Back to Dashboard
+              {t('dashboard.back_to_dashboard')}
             </button>
           )}
           <Outlet context={dashboardCtx} />

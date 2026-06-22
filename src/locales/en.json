@@ -134,11 +134,13 @@
     },
     "profile": {
       "title": "Personal Account",
+      "title_tooltip": "Full name, phone, and email identify your staff account. Your display name and bio are shown to customers on tip screens.",
       "full_name": "Full Name",
       "display_name": "Default Display Name",
       "phone": "Phone",
       "email": "Email",
       "bio": "Bio",
+      "bio_tooltip": "Use a short intro customers can recognize: your specialty, style, or a friendly note. This helps customers pick the right technician before tipping.",
       "identity_note": "Full name, phone and email come from your business record. Update your display name and bio here.",
       "save": "Save Account",
       "saved": "Saved ✓",
@@ -418,6 +420,7 @@
       "search_placeholder": "Search tech, station, review...",
       "add_tp": "Add New Touch Point"
     },
+    "back_to_dashboard": "Back to Dashboard",
     "notifications": {
       "title": "Notifications",
       "mark_all_read": "Mark all read",
@@ -1620,6 +1623,24 @@
       },
       "tabs": {
         "ProfileTab": {
+          "edit": "Edit",
+          "businessOwner": "Business Owner",
+          "username": "Username",
+          "email": "Email",
+          "referralLink": "Referral Link",
+          "copied": "Copied",
+          "copy": "Copy",
+          "showQr": "Show QR",
+          "notConfigured": "Not Configured",
+          "streetAddress": "Street Address",
+          "city": "City",
+          "stateProvince": "State / Province",
+          "zipCode": "ZIP Code",
+          "businessPhone": "Business Phone",
+          "businessEmail": "Business Email",
+          "website": "Website",
+          "googleReviewLink": "Google Review Link",
+          "yelpReviewLink": "Yelp Review Link",
           "payoutMethods": "Payout Methods",
           "payoutAccount": "Payout account",
           "methodNotConfigured": "Method is not configured.",
@@ -1663,7 +1684,19 @@
           "deleteAccount": "Delete Account",
           "deleteAccountConfirmTitle": "Delete account permanently?",
           "deleteAccountConfirmMessage": "This action cannot be undone. Your account and related data will be permanently deleted.",
-          "deleteAccountFailed": "Unable to delete account. Please try again."
+          "deleteAccountFailed": "Unable to delete account. Please try again.",
+          "validation": {
+            "required": "This field is required.",
+            "invalid": "Please enter a valid value.",
+            "adultDob": "You must be at least 18 years old.",
+            "phone": "Please enter a valid phone number.",
+            "email": "Please enter a valid email address.",
+            "emailOrPhone": "Please enter a valid email address or phone number.",
+            "url": "Enter a complete URL starting with http:// or https://.",
+            "postalCode": "Please enter a valid ZIP or postal code.",
+            "venmo": "Enter a valid Venmo username starting with @.",
+            "cashapp": "Enter a valid Cash App cashtag starting with $."
+          }
         },
         "KybTab": {
           "iframeTitle": "Know your business",

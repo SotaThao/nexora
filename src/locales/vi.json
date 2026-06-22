@@ -134,11 +134,13 @@
     },
     "profile": {
       "title": "Tài khoản cá nhân",
+      "title_tooltip": "Họ tên, số điện thoại và email dùng để nhận diện tài khoản nhân viên. Tên hiển thị và giới thiệu sẽ hiện cho khách trên màn hình tip.",
       "full_name": "Họ và tên",
       "display_name": "Tên hiển thị mặc định",
       "phone": "Số điện thoại",
       "email": "Email",
       "bio": "Giới thiệu",
+      "bio_tooltip": "Viết một lời giới thiệu ngắn để khách dễ nhận ra bạn: chuyên môn, phong cách hoặc lời chào thân thiện. Nội dung này giúp khách chọn đúng thợ trước khi tip.",
       "identity_note": "Họ tên, số điện thoại và email lấy từ hồ sơ tại tiệm. Cập nhật tên hiển thị và giới thiệu tại đây.",
       "save": "Lưu tài khoản",
       "saved": "Đã lưu ✓",
@@ -415,9 +417,10 @@
       "scan": "Quét QR"
     },
     "header": {
-      "search_placeholder": "Tìm thợ, bàn ghế, review...",
+      "search_placeholder": "Tìm thợ, bàn ghế, đánh giá...",
       "add_tp": "Thêm Điểm Chạm"
     },
+    "back_to_dashboard": "Quay lại Bảng Điều Khiển",
     "notifications": {
       "title": "Thông báo",
       "mark_all_read": "Đọc tất cả",
@@ -1620,6 +1623,24 @@
       },
       "tabs": {
         "ProfileTab": {
+          "edit": "Chỉnh sửa",
+          "businessOwner": "Chủ doanh nghiệp",
+          "username": "Tên đăng nhập",
+          "email": "Email",
+          "referralLink": "Liên kết giới thiệu",
+          "copied": "Đã sao chép",
+          "copy": "Sao chép",
+          "showQr": "Hiện mã QR",
+          "notConfigured": "Chưa cấu hình",
+          "streetAddress": "Địa chỉ đường/phố",
+          "city": "Thành phố",
+          "stateProvince": "Bang/Tỉnh",
+          "zipCode": "Mã bưu chính",
+          "businessPhone": "Số điện thoại doanh nghiệp",
+          "businessEmail": "Email doanh nghiệp",
+          "website": "Trang web",
+          "googleReviewLink": "Liên kết đánh giá Google",
+          "yelpReviewLink": "Liên kết đánh giá Yelp",
           "payoutMethods": "Phương thức thanh toán",
           "payoutAccount": "Tài khoản",
           "methodNotConfigured": "Phương thức chưa được cấu hình.",
@@ -1663,7 +1684,19 @@
           "deleteAccount": "Xóa tài khoản",
           "deleteAccountConfirmTitle": "Xóa tài khoản vĩnh viễn?",
           "deleteAccountConfirmMessage": "Thao tác này không thể hoàn tác. Tài khoản và dữ liệu liên quan sẽ bị xóa vĩnh viễn.",
-          "deleteAccountFailed": "Không thể xóa tài khoản. Vui lòng thử lại."
+          "deleteAccountFailed": "Không thể xóa tài khoản. Vui lòng thử lại.",
+          "validation": {
+            "required": "Vui lòng nhập trường này.",
+            "invalid": "Vui lòng nhập giá trị hợp lệ.",
+            "adultDob": "Bạn phải đủ 18 tuổi.",
+            "phone": "Vui lòng nhập số điện thoại hợp lệ.",
+            "email": "Vui lòng nhập địa chỉ email hợp lệ.",
+            "emailOrPhone": "Vui lòng nhập email hoặc số điện thoại hợp lệ.",
+            "url": "Nhập URL đầy đủ, bắt đầu bằng http:// hoặc https://.",
+            "postalCode": "Vui lòng nhập mã bưu chính hợp lệ.",
+            "venmo": "Nhập tên Venmo hợp lệ, bắt đầu bằng @.",
+            "cashapp": "Nhập Cashtag hợp lệ, bắt đầu bằng $."
+          }
         },
         "KybTab": {
           "iframeTitle": "Cổng xác minh KYB VLINKPAY",
@@ -2074,12 +2107,12 @@
     },
     "SettingsView": {
       "qrCodeDownloaded": "Đã tải xuống mã QR!",
-      "settingsConfiguration": "Cấu Hinh Cài Đặt",
+      "settingsConfiguration": "Cấu Hình Cài Đặt",
       "manageYourOwnerCredentials": "Quản lý thông tin tài khoản chủ sở hữu, địa chỉ cửa hàng và cấu hình xác thực pháp lý (KYB).",
       "account": "Tài khoản",
       "kyb": "Xác thực KYB",
-      "affiliateLink": "Affiliate Link",
-      "affiliateLink2": "Liên kết Affiliate",
+      "affiliateLink": "Liên kết giới thiệu",
+      "affiliateLink2": "Liên kết giới thiệu",
       "registerANewMember": "Đăng ký Thành viên Mới",
       "shareThisLinkTo": "Chia sẻ liên kết này để mời thành viên mới gia nhập mạng lưới của bạn.",
       "selectPlacementLeg": "Chọn Nhánh Xếp Lập",
