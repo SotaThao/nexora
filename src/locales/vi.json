@@ -74,7 +74,9 @@
       "total_count": "{{count}} tip",
       "page_of": "Trang {{page}} / {{total}}",
       "multi_staff": "Nhiều thợ",
-      "via_shop_account": "Gửi qua tài khoản tiệm",
+      "your_share": "Phần của bạn",
+      "via_business_pending": "Chờ {{business}} xác nhận",
+      "via_business_confirmed": "{{business}} đã xác nhận",
       "status": {
         "initiated": "Đã khởi tạo",
         "confirmed": "Đã xác nhận",

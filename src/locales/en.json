@@ -74,7 +74,9 @@
       "total_count": "{{count}} tips",
       "page_of": "Page {{page}} of {{total}}",
       "multi_staff": "Multi-staff",
-      "via_shop_account": "Sent to shop account",
+      "your_share": "Your share",
+      "via_business_pending": "Awaiting {{business}}",
+      "via_business_confirmed": "Confirmed by {{business}}",
       "status": {
         "initiated": "Initiated",
         "confirmed": "Confirmed",

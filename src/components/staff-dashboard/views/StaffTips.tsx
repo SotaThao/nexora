@@ -102,9 +102,16 @@ export default function StaffTips() {
             {tips.map((tip) => (
               <div key={tip.id} className="flex items-center justify-between gap-3 py-3">
                 <div className="min-w-0 flex-1">
-                  <span className="text-sm font-bold text-nexoraText">
-                    {formatTipAmount(tipDisplayAmount(tip))}
-                  </span>
+                  <div className="flex flex-wrap items-baseline gap-x-2">
+                    <span className="text-sm font-bold text-nexoraText">
+                      {formatTipAmount(tipDisplayAmount(tip))}
+                    </span>
+                    {tip.isMultiStaff ? (
+                      <span className="text-[10px] font-semibold text-nexoraSubtle">
+                        {t('staff_dashboard.tips.your_share')}
+                      </span>
+                    ) : null}
+                  </div>
                   <div className="mt-0.5 truncate text-xs text-nexoraMuted">{tipMetaLine(tip)}</div>
                   {tip.createdAt ? (
                     <div className="mt-0.5 text-[10px] font-semibold text-nexoraSubtle">
@@ -113,8 +120,19 @@ export default function StaffTips() {
                   ) : null}
                 </div>
                 {tip.isMultiStaff ? (
-                  <span className="shrink-0 whitespace-nowrap rounded-full bg-nexoraBrandSoft/60 px-2.5 py-1 text-[11px] font-black text-nexoraBrand">
-                    {t('staff_dashboard.tips.via_shop_account')}
+                  <span
+                    className={`max-w-[150px] shrink-0 truncate rounded-full px-2.5 py-1 text-[11px] font-black ${
+                      tip.merchantConfirmedAt
+                        ? 'bg-emerald-50 text-emerald-600'
+                        : 'bg-amber-50 text-amber-700'
+                    }`}
+                  >
+                    {t(
+                      tip.merchantConfirmedAt
+                        ? 'staff_dashboard.tips.via_business_confirmed'
+                        : 'staff_dashboard.tips.via_business_pending',
+                      { business: tip.businessName || '' },
+                    )}
                   </span>
                 ) : (
                   <span
