@@ -7,6 +7,7 @@ import { PAYOUT_UI_LABELS, payoutTypeToUiKey } from '../../../data/paymentMethod
 import type { StaffTipItem } from '../../../types/domain'
 import { SkeletonLayout } from '../../ui/skeleton'
 import Pagination from '../../ui/Pagination'
+import Tooltip from '../../ui/Tooltip'
 import { STAFF_TIPS_SKELETON } from '../skeletons/staffDashboardSkeletons'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
@@ -47,8 +48,10 @@ function tipDisplayAmount(tip: StaffTipItem) {
   return tip.amount > 0 ? tip.amount : tip.totalAmount
 }
 
+// Staff only needs: which business + how it was paid. Business name first;
+// touchpoint is dropped to keep the row clean.
 function tipMetaLine(tip: StaffTipItem) {
-  return [paymentMethodLabel(tip.paymentMethod), tip.businessName, tip.touchPointName]
+  return [tip.businessName, paymentMethodLabel(tip.paymentMethod)]
     .filter(Boolean)
     .join(' · ')
 }
@@ -66,6 +69,11 @@ export default function StaffTips() {
     if (tip.statusLabel?.trim()) return tip.statusLabel.trim()
     const key = String(tip.status || '').toLowerCase()
     return t(`staff_dashboard.tips.status.${key}`) || tip.status
+  }
+
+  const statusHelp = (tip: StaffTipItem) => {
+    const key = String(tip.status || '').toLowerCase()
+    return t(`staff_dashboard.tips.status_help.${key}`, { defaultValue: '' })
   }
 
   if (isPending && !tipsPage) {
@@ -102,16 +110,9 @@ export default function StaffTips() {
             {tips.map((tip) => (
               <div key={tip.id} className="flex items-center justify-between gap-3 py-3">
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-baseline gap-x-2">
-                    <span className="text-sm font-bold text-nexoraText">
-                      {formatTipAmount(tipDisplayAmount(tip))}
-                    </span>
-                    {tip.isMultiStaff ? (
-                      <span className="text-[10px] font-semibold text-nexoraSubtle">
-                        {t('staff_dashboard.tips.your_share')}
-                      </span>
-                    ) : null}
-                  </div>
+                  <span className="text-sm font-bold text-nexoraText">
+                    {formatTipAmount(tipDisplayAmount(tip))}
+                  </span>
                   <div className="mt-0.5 truncate text-xs text-nexoraMuted">{tipMetaLine(tip)}</div>
                   {tip.createdAt ? (
                     <div className="mt-0.5 text-[10px] font-semibold text-nexoraSubtle">
@@ -119,30 +120,19 @@ export default function StaffTips() {
                     </div>
                   ) : null}
                 </div>
-                {tip.isMultiStaff ? (
+                <div className="flex shrink-0 items-center gap-1">
                   <span
-                    className={`max-w-[150px] shrink-0 truncate rounded-full px-2.5 py-1 text-[11px] font-black ${
-                      tip.merchantConfirmedAt
-                        ? 'bg-emerald-50 text-emerald-600'
-                        : 'bg-amber-50 text-amber-700'
-                    }`}
-                  >
-                    {t(
-                      tip.merchantConfirmedAt
-                        ? 'staff_dashboard.tips.via_business_confirmed'
-                        : 'staff_dashboard.tips.via_business_pending',
-                      { business: tip.businessName || '' },
-                    )}
-                  </span>
-                ) : (
-                  <span
-                    className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black ${
+                    className={`rounded-full px-2.5 py-1 text-[11px] font-black ${
                       STATUS_STYLE[tip.status] || 'bg-nexoraCanvas text-nexoraMuted'
                     }`}
                   >
                     {statusLabel(tip)}
                   </span>
-                )}
+                  <Tooltip
+                    content={statusHelp(tip)}
+                    ariaLabel={t('staff_dashboard.tips.status_help_aria')}
+                  />
+                </div>
               </div>
             ))}
           </div>

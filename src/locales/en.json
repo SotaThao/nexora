@@ -74,9 +74,6 @@
       "total_count": "{{count}} tips",
       "page_of": "Page {{page}} of {{total}}",
       "multi_staff": "Multi-staff",
-      "your_share": "Your share",
-      "via_business_pending": "Awaiting {{business}}",
-      "via_business_confirmed": "Confirmed by {{business}}",
       "status": {
         "initiated": "Initiated",
         "confirmed": "Confirmed",
@@ -85,6 +82,15 @@
         "pending": "Pending",
         "verified": "Verified"
       },
+      "status_help": {
+        "initiated": "The customer started this tip but hasn't confirmed payment yet.",
+        "confirmed": "Payment confirmed — you'll receive this tip.",
+        "skipped": "The customer chose not to tip.",
+        "completed": "This tip has been received and completed.",
+        "pending": "Waiting for payment confirmation.",
+        "verified": "This tip has been verified."
+      },
+      "status_help_aria": "What this status means",
       "ai_insight": "AI Insight",
       "ai_insight_body": "Your average tip for Pedicure is 21%, which is 6% higher than the salon average."
     },
