@@ -1,5 +1,6 @@
 import { ShieldAlert, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "../../../contexts/LanguageContext";
 import {
   useUpdateBusiness,
@@ -13,6 +14,7 @@ import {
   useUpdateBasicInfo,
   useUpdateUserProfile,
 } from "../../../data/hooks/useProfileSettings";
+import { qk } from "../../../data/queryKeys";
 import { logger } from "../../../utils/logger";
 import { getUserProfileImageUrl } from "../../../utils/userProfileImage";
 import {
@@ -156,6 +158,7 @@ export default function useSettingsForm({
   openKybPortal,
 }) {
   const { t, currentLanguage } = useTranslation();
+  const queryClient = useQueryClient();
   const profileSettingsQuery = useProfileSettings();
   const updateUserProfileMutation = useUpdateUserProfile();
   const updateBasicInfoMutation = useUpdateBasicInfo();
@@ -173,6 +176,10 @@ export default function useSettingsForm({
   }, [initialTab]);
 
   const handleTabChange = (tab) => {
+    if (tab === 'profile' && activeTab === 'kyb') {
+      queryClient.invalidateQueries({ queryKey: qk.userProfile() });
+      queryClient.invalidateQueries({ queryKey: qk.verifiedStatus() });
+    }
     setActiveTab(tab);
     if (onTabChange) onTabChange(tab);
   };
