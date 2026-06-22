@@ -74,6 +74,10 @@
       "total_count": "{{count}} tip",
       "page_of": "Trang {{page}} / {{total}}",
       "multi_staff": "Nhiều thợ",
+      "via_business_pending": "Chờ xác nhận",
+      "via_business_confirmed": "Đã xác nhận",
+      "via_business_pending_help": "Đang chờ {{business}} xác nhận và chi trả phần của bạn.",
+      "via_business_confirmed_help": "{{business}} đã xác nhận tip này — phần của bạn sẽ được chi trả.",
       "status": {
         "initiated": "Đã khởi tạo",
         "confirmed": "Đã xác nhận",
@@ -82,6 +86,15 @@
         "pending": "Chờ xử lý",
         "verified": "Đã xác minh"
       },
+      "status_help": {
+        "initiated": "Khách đã tạo tip nhưng chưa xác nhận thanh toán.",
+        "confirmed": "Đã xác nhận thanh toán — bạn sẽ nhận được tip này.",
+        "skipped": "Khách đã chọn không tip.",
+        "completed": "Tip này đã được nhận và hoàn tất.",
+        "pending": "Đang chờ xác nhận thanh toán.",
+        "verified": "Tip này đã được xác minh."
+      },
+      "status_help_aria": "Trạng thái này nghĩa là gì",
       "ai_insight": "Phân tích AI",
       "ai_insight_body": "Tip trung bình cho dịch vụ Pedicure của bạn là 21%, cao hơn 6% so với mức trung bình của tiệm."
     },
