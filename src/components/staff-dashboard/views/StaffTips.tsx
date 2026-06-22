@@ -40,8 +40,11 @@ function paymentMethodLabel(method: string | null | undefined) {
   return PAYOUT_UI_LABELS[uiKey] || method
 }
 
+// Show the amount THIS staff received, not the group total. For a multi-staff tip,
+// `amount` is the signed-in staff's share and `totalAmount` is the full split total —
+// displaying totalAmount would overstate every member's earnings.
 function tipDisplayAmount(tip: StaffTipItem) {
-  return tip.totalAmount > 0 ? tip.totalAmount : tip.amount
+  return tip.amount > 0 ? tip.amount : tip.totalAmount
 }
 
 function tipMetaLine(tip: StaffTipItem) {
