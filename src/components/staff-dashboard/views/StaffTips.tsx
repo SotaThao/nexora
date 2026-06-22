@@ -4,6 +4,7 @@ import { Sparkles } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffTips } from '../../../data/hooks/useStaffSelf'
 import { PAYOUT_UI_LABELS, payoutTypeToUiKey } from '../../../data/paymentMethodTypes'
+import { WalletLogos } from '../../dashboard/constants'
 import type { StaffTipItem } from '../../../types/domain'
 import { SkeletonLayout } from '../../ui/skeleton'
 import Pagination from '../../ui/Pagination'
@@ -123,8 +124,14 @@ export default function StaffTips() {
                       {formatTipAmount(tipDisplayAmount(tip))}
                     </span>
                     {tip.paymentMethod ? (
-                      <span className="text-[13px] font-medium text-nexoraMuted">
-                        · {paymentMethodLabel(tip.paymentMethod)}
+                      <span className="flex items-center gap-1 text-[13px] font-medium text-nexoraMuted">
+                        ·
+                        {WalletLogos[payoutTypeToUiKey(tip.paymentMethod) as keyof typeof WalletLogos] ? (
+                          <span className="flex items-center [&>svg]:h-3.5 [&>svg]:w-3.5 [&>img]:h-3.5 [&>img]:w-3.5">
+                            {WalletLogos[payoutTypeToUiKey(tip.paymentMethod) as keyof typeof WalletLogos]}
+                          </span>
+                        ) : null}
+                        {paymentMethodLabel(tip.paymentMethod)}
                       </span>
                     ) : null}
                   </div>
