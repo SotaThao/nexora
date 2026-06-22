@@ -74,6 +74,10 @@
       "total_count": "{{count}} tips",
       "page_of": "Page {{page}} of {{total}}",
       "multi_staff": "Multi-staff",
+      "via_business_pending": "Awaiting {{business}}",
+      "via_business_confirmed": "Confirmed by {{business}}",
+      "via_business_pending_help": "Waiting for {{business}} to confirm and pay out your share.",
+      "via_business_confirmed_help": "{{business}} confirmed this tip — your share will be paid out.",
       "status": {
         "initiated": "Initiated",
         "confirmed": "Confirmed",

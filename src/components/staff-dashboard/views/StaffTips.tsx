@@ -71,7 +71,17 @@ export default function StaffTips() {
     return t(`staff_dashboard.tips.status.${key}`) || tip.status
   }
 
-  const statusHelp = (tip: StaffTipItem) => {
+  // Tooltip text: multi-staff explains the business-confirm step (with business
+  // name); single-staff explains the tip status.
+  const statusTooltip = (tip: StaffTipItem) => {
+    if (tip.isMultiStaff) {
+      return t(
+        tip.merchantConfirmedAt
+          ? 'staff_dashboard.tips.via_business_confirmed_help'
+          : 'staff_dashboard.tips.via_business_pending_help',
+        { business: tip.businessName || '' },
+      )
+    }
     const key = String(tip.status || '').toLowerCase()
     return t(`staff_dashboard.tips.status_help.${key}`, { defaultValue: '' })
   }
@@ -121,15 +131,33 @@ export default function StaffTips() {
                   ) : null}
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
-                  <span
-                    className={`rounded-full px-2.5 py-1 text-[11px] font-black ${
-                      STATUS_STYLE[tip.status] || 'bg-nexoraCanvas text-nexoraMuted'
-                    }`}
-                  >
-                    {statusLabel(tip)}
-                  </span>
+                  {tip.isMultiStaff ? (
+                    <span
+                      className={`max-w-[140px] truncate rounded-full px-2.5 py-1 text-[11px] font-black ${
+                        tip.merchantConfirmedAt
+                          ? 'bg-emerald-50 text-emerald-600'
+                          : 'bg-amber-50 text-amber-700'
+                      }`}
+                    >
+                      {t(
+                        tip.merchantConfirmedAt
+                          ? 'staff_dashboard.tips.via_business_confirmed'
+                          : 'staff_dashboard.tips.via_business_pending',
+                        { business: tip.businessName || '' },
+                      )}
+                    </span>
+                  ) : (
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-black ${
+                        STATUS_STYLE[tip.status] || 'bg-nexoraCanvas text-nexoraMuted'
+                      }`}
+                    >
+                      {statusLabel(tip)}
+                    </span>
+                  )}
                   <Tooltip
-                    content={statusHelp(tip)}
+                    align="end"
+                    content={statusTooltip(tip)}
                     ariaLabel={t('staff_dashboard.tips.status_help_aria')}
                   />
                 </div>
