@@ -4,6 +4,7 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffReviews } from '../../../data/hooks/useStaffSelf'
 import type { StaffReviewItem } from '../../../types/domain'
 import { SkeletonLayout } from '../../ui/skeleton'
+import Pagination from '../../ui/Pagination'
 import { STAFF_REVIEWS_SKELETON } from '../skeletons/staffDashboardSkeletons'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-5 shadow-sm'
@@ -175,32 +176,17 @@ export default function StaffReviews() {
           </div>
         )}
 
-        {totalPages > 1 ? (
-          <div className="mt-4 flex items-center justify-between gap-3 border-t border-nexoraBorder pt-4">
-            <button
-              type="button"
-              disabled={!canGoPrev || isFetching}
-              onClick={() => setPageNumber((page) => Math.max(1, page - 1))}
-              className="rounded-lg border border-nexoraBorder px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-nexoraMuted transition hover:bg-nexoraCanvas disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {t('common.back')}
-            </button>
-            <span className="text-[10px] font-semibold text-nexoraSubtle">
-              {t('components.staff_dashboard.views.StaffReviews.pageOf', {
-                page: pageNumber,
-                total: totalPages,
-              })}
-            </span>
-            <button
-              type="button"
-              disabled={!canGoNext || isFetching}
-              onClick={() => setPageNumber((page) => page + 1)}
-              className="rounded-lg border border-nexoraBorder px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-nexoraMuted transition hover:bg-nexoraCanvas disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {t('common.next')}
-            </button>
-          </div>
-        ) : null}
+        <Pagination
+          pageNumber={pageNumber}
+          pageSize={PAGE_SIZE}
+          totalPages={totalPages}
+          hasNextPage={canGoNext}
+          hasPreviousPage={canGoPrev}
+          onPageChange={setPageNumber}
+          isLoading={isFetching}
+          variant="simple"
+          className="mt-4"
+        />
       </section>
 
       <section className={`${panel} bg-nexoraBrandSoft/20 border-nexoraBrand/20`}>

@@ -8,13 +8,16 @@ import {
   ShieldAlert,
   ShieldX,
   Clock,
+  Trash2,
 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import { useStaffLinkedBusinesses } from '../hooks/useStaffLinkedBusinesses'
-import { useOutletContext, useSearchParams } from 'react-router-dom'
+import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
 import { UserVerifyStatus } from '../../../constants/userVerifyStatus'
-import { useVerifiedStatus } from '../../../data/hooks/useProfileSettings'
+import { useDeleteAccount, useVerifiedStatus } from '../../../data/hooks/useProfileSettings'
+import { useNotification } from '../../../contexts/NotificationContext'
+import useAuth from '../../../auth/useAuth'
 import { useUploadImage } from '../../../data/hooks/useMerchantSetup'
 import { logger } from '../../../utils/logger'
 import StaffKycOverview from './StaffKycOverview'
@@ -26,9 +29,13 @@ const readOnlyCls = 'w-full rounded-xl border border-nexoraBorder bg-nexoraCanva
 
 export default function StaffProfile() {
   const { currentLanguage, t } = useTranslation()
+  const navigate = useNavigate()
+  const { logout } = useAuth()
+  const { showConfirm } = useNotification()
   const { staffMember, account, saveProfile, setBusinessDisplayName } = useStaffAccount()
   const { linkedBusinesses } = useStaffLinkedBusinesses()
   const { onLogout } = useOutletContext<LooseObject>()
+  const deleteAccountMutation = useDeleteAccount()
   const [searchParams] = useSearchParams()
 
   const tabFromUrl = searchParams.get('tab')
@@ -88,6 +95,24 @@ export default function StaffProfile() {
     })
     setSaved(true)
     showToast(t('components.staff_dashboard.views.StaffProfile.accountChangesSavedSuccessfully'))
+  }
+
+  const handleDeleteAccount = async () => {
+    if (deleteAccountMutation.isPending) return
+
+    const confirmed = await showConfirm(
+      t('components.settings.tabs.ProfileTab.deleteAccountConfirmMessage'),
+      t('components.settings.tabs.ProfileTab.deleteAccountConfirmTitle'),
+    )
+    if (!confirmed) return
+
+    try {
+      await deleteAccountMutation.mutateAsync()
+      await logout()
+      navigate('/login', { replace: true })
+    } catch {
+      showToast(t('components.settings.tabs.ProfileTab.deleteAccountFailed'))
+    }
   }
 
   const handleAvatarChange = async (e) => {
@@ -311,6 +336,26 @@ export default function StaffProfile() {
                 </div>
               ))}
             </div>
+          </section>
+
+          <section className={panel}>
+            <h3 className="mb-3 text-base font-extrabold text-nexoraDangerDark dark:text-red-400">
+              {t('components.staff_dashboard.views.StaffProfile.deleteAccountTitle')}
+            </h3>
+            <p className="mb-4 text-xs text-nexoraSubtle">
+              {t('components.settings.tabs.ProfileTab.deleteAccountConfirmMessage')}
+            </p>
+            <button
+              type="button"
+              onClick={() => void handleDeleteAccount()}
+              disabled={deleteAccountMutation.isPending}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 py-3 text-sm font-extrabold text-rose-700 transition hover:bg-rose-100 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <Trash2 className="h-4.5 w-4.5" />
+              {deleteAccountMutation.isPending
+                ? t('common.processing')
+                : t('components.settings.tabs.ProfileTab.deleteAccount')}
+            </button>
           </section>
 
           <section className={panel}>

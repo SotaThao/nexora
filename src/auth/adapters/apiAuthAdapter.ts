@@ -1,14 +1,15 @@
 import { tokenStore } from '../tokenStore'
 import httpClient from '../../lib/httpClient'
 import { clearAuthQueryCache, seedAuthQueryCache } from '../../data/seedAuthQueryCache'
-import { logger } from '../../utils/logger'
 import profileSettingsRepository from '../../data/repositories/profileSettings'
+import { logger } from '../../utils/logger'
 
 import type {
   AuthSession,
   AuthTokens,
   LoginCredentials,
   SignupCredentials,
+  SignupResponse,
 } from '../../types/auth'
 import type { StaffProfile, UserProfile } from '../../types/domain'
 import { isApiError } from '../../types/domain'
@@ -190,11 +191,17 @@ async function resolveAuthSession(): Promise<AuthSession | null> {
   }
 
   if (!getProfilePromise) {
-    getProfilePromise = httpClient
-      .get<UserProfile>('/api/v1/userprofile/me')
+    getProfilePromise = profileSettingsRepository
+      .get()
+      .then((profile) => {
+        if (!profile) {
+          throw new Error('User profile not found')
+        }
+        return profile
+      })
       .finally(() => {
         getProfilePromise = null
-      }) as Promise<UserProfile>
+      })
   }
   const profile = await getProfilePromise
   const isBusiness = isBusinessProfile(profile)
@@ -279,10 +286,10 @@ export const apiAuthAdapter = {
     clearAuthQueryCache()
   },
 
-  async signup(credentials: SignupCredentials): Promise<unknown> {
+  async signup(credentials: SignupCredentials): Promise<SignupResponse | null> {
     const { email, confirmEmail, password, confirmPassword, firstName, lastName, type, profileType } =
       credentials
-    return httpClient.post(
+    return httpClient.post<SignupResponse>(
       '/api/v1/authentication/signup',
       { email, confirmEmail, password, confirmPassword, firstName, lastName, type: type || profileType },
       { anonymous: true },

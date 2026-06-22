@@ -1,9 +1,9 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { getApiErrorCode, isApiError } from '../../../types/domain'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
 import { serializeBankWireAccount } from '../../payout/bankWireAccount'
-import { captureQrImage } from '../../../native/imagePicker'
+import { captureQrImage } from '../../../utils/qrCode'
 
 const normalizePhone = (raw) => {
   if (!raw) return ''
@@ -14,29 +14,30 @@ const normalizePhone = (raw) => {
 import { MOCK_NEXORA_STAFF_PROFILES } from '../../staff-registration/hooks/useStaffRegistration'
 import { useReplaceAllPendingAccounts, usePendingAccounts } from '../../../data/hooks/usePendingAccounts'
 import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
-import { useNotifications, useAddNotification } from '../../../data/hooks/useNotifications'
+import { useAddNotification } from '../../../data/hooks/useNotifications'
 import { logger } from '../../../utils/logger'
 import apiAuthAdapter from '../../../auth/adapters/apiAuthAdapter'
+import { getSignupOtp } from '../../../auth/signupOtp'
+import { savePendingRegistration, clearPendingRegistration } from '../../../auth/pendingRegistration'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { useCompletePersonalOnboarding } from '../../../data/hooks/usePersonalOnboarding'
 
-export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onKybSuccess = () => {}, isRedirectedFromSession, initialStep = 0, initialRole = 'personal' }) {
+export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onKybSuccess = () => {}, isRedirectedFromSession, initialStep = 0, initialRole = 'personal', resumeOtpVerification = false, resumeEmail = '', resumePassword = '', resumeRole = null }) {
   const { t, currentLanguage, setLanguage, renderLabel } = useTranslation()
   const replaceAllPendingAccountsMutation = useReplaceAllPendingAccounts()
   const pendingAccountsQuery = usePendingAccounts()
   const merchantSetupQuery = useMerchantSetup()
   const saveMerchantSetupMutation = useSaveMerchantSetup()
 
-  useNotifications()
   const addNotificationMutation = useAddNotification()
   const completePersonalOnboardingMutation = useCompletePersonalOnboarding()
-  const [currentStep, setCurrentStep] = useState(initialStep)
-  const [role, setRole] = useState(initialRole)
+  const [currentStep, setCurrentStep] = useState(resumeOtpVerification ? 2 : initialStep)
+  const [role, setRole] = useState(resumeRole || initialRole)
 
   // Step 1 states
-  const [email, setEmail] = useState(ssoEmail || '')
-  const [confirmEmail, setConfirmEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [email, setEmail] = useState(resumeEmail || ssoEmail || '')
+  const [confirmEmail, setConfirmEmail] = useState(resumeEmail || '')
+  const [password, setPassword] = useState(resumePassword || '')
   const [showPassword, setShowPassword] = useState(false)
   const [referralCode, setReferralCode] = useState('')
   const [fullName, setFullName] = useState('')
@@ -89,6 +90,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   // Validation errors
   const [errors, setErrors] = useState<LooseObject>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const resumeVerificationSentRef = useRef(false)
 
   const handleSimulateVerify = () => {
     setErrors({})
@@ -115,7 +117,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         logger.error('handleSimulateVerify error:', err)
         const code = getApiErrorCode(err, 'HTTP_ERROR')
         const i18nKey = getErrorI18nKey(code)
-        setErrors({ submit: t(i18nKey) })
+        setErrors({ submit: i18nKey })
       })
   }
 
@@ -130,9 +132,36 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       .catch((err) => {
         const code = getApiErrorCode(err, 'HTTP_ERROR')
         const i18nKey = getErrorI18nKey(code)
-        setErrors({ submit: t(i18nKey) })
+        setErrors({ submit: i18nKey })
       })
   }
+
+  useEffect(() => {
+    if (!resumeOtpVerification || !resumeEmail.trim()) return undefined
+    if (resumeVerificationSentRef.current) return undefined
+
+    resumeVerificationSentRef.current = true
+    let cancelled = false
+
+    const resumeVerification = async () => {
+      try {
+        await apiAuthAdapter.resendVerificationEmail({ email: resumeEmail.trim().toLowerCase() })
+        if (cancelled) return
+        setResendMessage(t('register.resend_verification_success'))
+        setResendTimer(60)
+      } catch (err) {
+        if (cancelled) return
+        resumeVerificationSentRef.current = false
+        const code = getApiErrorCode(err, 'HTTP_ERROR')
+        setOtpError(t(getErrorI18nKey(code)))
+      }
+    }
+
+    resumeVerification()
+    return () => {
+      cancelled = true
+    }
+  }, [resumeOtpVerification, resumeEmail, t])
 
   useEffect(() => {
     let interval = null
@@ -152,26 +181,26 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
 
   const phoneParsed = useMemo(() => parsePhone(phone), [phone])
 
-  const handleStep1Next = (e) => {
+  const handleStep1Next = async (e) => {
     e.preventDefault()
     const newErrors: LooseObject = {}
 
     if (!email.trim()) {
-      newErrors.email = t('register.errors.email_required')
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = t('register.errors.email_invalid')
+      newErrors.email = 'register.errors.email_required'
+    } else if (!/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email.trim())) {
+      newErrors.email = 'register.errors.email_invalid'
     }
 
     if (!confirmEmail.trim()) {
-      newErrors.confirmEmail = t('register.errors.confirm_email_required')
+      newErrors.confirmEmail = 'register.errors.confirm_email_required'
     } else if (confirmEmail.trim().toLowerCase() !== email.trim().toLowerCase()) {
-      newErrors.confirmEmail = t('register.errors.email_mismatch')
+      newErrors.confirmEmail = 'register.errors.email_mismatch'
     }
 
     if (!password) {
-      newErrors.password = t('register.errors.password_required')
+      newErrors.password = 'register.errors.password_required'
     } else if (password.length < 6) {
-      newErrors.password = t('register.errors.password_short')
+      newErrors.password = 'register.errors.password_short'
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -182,70 +211,75 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     setErrors({})
     setIsSubmitting(true)
 
-    apiAuthAdapter.signup({
-      email: email.trim().toLowerCase(),
-      confirmEmail: confirmEmail.trim().toLowerCase(),
-      password,
-      confirmPassword: password,
-      firstName: email.split('@')[0],
-      lastName: 'User',
-      // profileType enum per signup API docs is "Merchant" | "User" (not "Personal").
-      profileType: role === 'business' ? 'Merchant' : 'User'
-    }).then(() => {
-      // Send verification email right after successful signup
-      return apiAuthAdapter.resendVerificationEmail({ email: email.trim().toLowerCase() })
-        .catch(err => {
-          // If the backend auto-verifies in DEV, or rate limits because it already sent it, handle gracefully
-          if (isApiError(err) && err.errorCode === 'USER_EMAIL_ALREADY_VERIFIED') {
-            return 'ALREADY_VERIFIED'
-          }
-          if (isApiError(err) && err.errorCode === 'COMMON_RATE_LIMIT_EXCEEDED') {
-            return 'RATE_LIMITED' // Treat as success, email was sent by signup or rate limited
-          }
-          throw err
-        })
-    }).then((resStatus) => {
-      if (resStatus === 'ALREADY_VERIFIED') {
-        // Auto-login to get tokens for subsequent protected calls
-        apiAuthAdapter.login({ email: email.trim().toLowerCase(), password })
-          .then(async () => {
-            setVerifySuccess(true)
-            // Business will handle API setup in the Setup Wizard
-            setTimeout(() => {
-              if (role === 'business') {
-                if (onRegisterAndLogin) onRegisterAndLogin(email.trim().toLowerCase())
-                else if (onRegisterSuccess) onRegisterSuccess()
-              } else {
-                setIsVerificationPending(false)
-                setCurrentStep(3)
-              }
-            }, 1500)
-          })
-          .catch(err => {
-            logger.error('Auto-login failed after auto-verify:', err)
-            const code = getApiErrorCode(err, 'HTTP_ERROR')
-            const i18nKey = getErrorI18nKey(code)
-            setErrors({ email: t(i18nKey) })
-          })
-          .finally(() => setIsSubmitting(false))
-      } else {
-        setIsVerificationPending(false)
-        setIsSubmitting(false)
-        setCurrentStep(2)
-      }
-    }).catch((err) => {
+    try {
+      const signupResponse = await apiAuthAdapter.signup({
+        email: email.trim().toLowerCase(),
+        confirmEmail: confirmEmail.trim().toLowerCase(),
+        password,
+        confirmPassword: password,
+        firstName: email.split('@')[0],
+        lastName: 'User',
+        // profileType enum per signup API docs is "Merchant" | "User" (not "Personal").
+        profileType: role === 'business' ? 'Merchant' : 'User'
+      })
+      const signupOtp = getSignupOtp(signupResponse)
+
+      setOtpCode(signupOtp)
+      setSimToken(signupOtp || simToken)
+      setResendMessage('')
+      setIsVerificationPending(false)
+      savePendingRegistration({
+        email: email.trim().toLowerCase(),
+        password,
+        role,
+      })
+      setCurrentStep(2)
+    } catch (err) {
       const errorsMap: LooseObject = {}
       const code = getApiErrorCode(err, 'HTTP_ERROR')
       const i18nKey = getErrorI18nKey(code)
-      errorsMap.email = t(i18nKey) || t('errors.unknown_error')
+      if (code === 'AUTH_PASSWORDS_DO_NOT_MATCH') {
+        errorsMap.confirmEmail = 'register.errors.email_mismatch'
+      } else {
+        errorsMap.email = i18nKey || 'errors.unknown_error'
+      }
       setErrors(errorsMap)
+    } finally {
       setIsSubmitting(false)
-    })
+    }
   }
 
-  const handleVerifyOtp = (e) => {
+  const handleVerifyOtp = async (e) => {
     e.preventDefault()
-    if (otpCode === '1234') {
+    const token = otpCode.trim()
+
+    if (!token) {
+      setOtpError(t('components.register.hooks.useRegisterForm.invalidCodeTipEnter'))
+      return
+    }
+
+    setOtpError('')
+    setErrors({})
+    setIsSubmitting(true)
+
+    try {
+      try {
+        await apiAuthAdapter.verifyEmail({
+          token,
+          email: email.trim().toLowerCase()
+        })
+      } catch (err) {
+        if (!isApiError(err) || err.errorCode !== 'USER_EMAIL_ALREADY_VERIFIED') {
+          throw err
+        }
+      }
+
+      await apiAuthAdapter.login({
+        email: email.trim().toLowerCase(),
+        password
+      })
+
+      clearPendingRegistration()
       setOtpError('')
 
       if (role === 'business') {
@@ -291,8 +325,13 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         setShowOtpInput(false)
         setCurrentStep(3)
       }
-    } else {
-      setOtpError(t('components.register.hooks.useRegisterForm.invalidOtpTryAgain'))
+    } catch (err) {
+      logger.error('Verify account activation failed', err)
+      const code = getApiErrorCode(err, 'HTTP_ERROR')
+      const i18nKey = getErrorI18nKey(code)
+      setOtpError(t(i18nKey))
+    } finally {
+      setIsSubmitting(false)
     }
   }
 

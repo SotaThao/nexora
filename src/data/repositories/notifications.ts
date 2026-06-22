@@ -36,8 +36,10 @@ interface UnreadCountResponse {
 const STAFF_NOTIFICATION_TYPES = new Set([
   'staff_accepted_invite',
   'staffacceptedinvite',
+  'staffinviteaccepted',
   'stafflinkrequest',
   'staff_link_request',
+  'staffpublicjoinrequest',
   'staff_joined',
   'staffjoined',
 ])
@@ -61,8 +63,14 @@ const TYPE_TO_LINK_TAB: Record<string, string> = {
  */
 function extractStaffIdFromUrl(url: string | null | undefined): string | null {
   if (!url) return null
+  const requestMatch = url.match(/\/merchant\/staff\/requests\/([^/?#]+)/i)
+  if (requestMatch?.[1]) return requestMatch[1]
   const match = url.match(/\/(?:merchant\/)?staff(?:\/links)?\/([^/?#]+)/i)
   return match?.[1] || null
+}
+
+function normalizeNotificationType(type: string): string {
+  return type.toLowerCase().replace(/[\s_-]+/g, '')
 }
 
 function normalizeNotification(item: NotificationApiDto): NotificationRecord {
@@ -70,7 +78,7 @@ function normalizeNotification(item: NotificationApiDto): NotificationRecord {
   const body = item.body ?? item.message ?? ''
   const createdAt = item.createdAt ?? ''
   const type = item.type || 'info'
-  const typeLower = type.toLowerCase()
+  const typeLower = normalizeNotificationType(type)
 
   // Derive linkTab and staffId for navigation on click
   let linkTab: string | undefined
@@ -85,6 +93,7 @@ function normalizeNotification(item: NotificationApiDto): NotificationRecord {
     // Fallback: try to derive linkTab from actionUrl path
     const urlMatch = item.actionUrl.match(/\/dashboard\/([^/?#]+)/i)
     if (urlMatch) linkTab = urlMatch[1]
+    if (item.actionUrl.includes('/merchant/staff')) linkTab = 'staff'
   }
 
   return {

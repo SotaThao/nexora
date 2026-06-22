@@ -1,0 +1,7 @@
+net.vlinkgroup.nexora.test.app-tracing-1.2.0-0 /Users/macmini/.gradle/caches/8.13/transforms/48d89b16ed84f7aa87f4010b1381ca63/transformed/tracing-1.2.0/res
+net.vlinkgroup.nexora.test.app-core-1.7.0-1 /Users/macmini/.gradle/caches/8.13/transforms/76d4db31123a1972b541df62af5d8fbd/transformed/core-1.7.0/res
+net.vlinkgroup.nexora.test.app-androidTest-2 /Users/macmini/Working/vlink-nexora-fe/android/app/build/generated/res/resValues/androidTest/debug
+net.vlinkgroup.nexora.test.app-updated_navigation_xml-3 /Users/macmini/Working/vlink-nexora-fe/android/app/build/generated/updated_navigation_xml/debugAndroidTest
+net.vlinkgroup.nexora.test.app-mergeDebugAndroidTestResources-4 /Users/macmini/Working/vlink-nexora-fe/android/app/build/intermediates/incremental/debugAndroidTest/mergeDebugAndroidTestResources/merged.dir
+net.vlinkgroup.nexora.test.app-mergeDebugAndroidTestResources-5 /Users/macmini/Working/vlink-nexora-fe/android/app/build/intermediates/incremental/debugAndroidTest/mergeDebugAndroidTestResources/stripped.dir
+net.vlinkgroup.nexora.test.app-debugAndroidTest-6 /Users/macmini/Working/vlink-nexora-fe/android/app/build/intermediates/merged_res/debugAndroidTest/mergeDebugAndroidTestResources

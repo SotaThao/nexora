@@ -6,12 +6,11 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import AppQrScanner from '../../common/AppQrScanner'
 import { resolveQrToAppPath } from '../../../utils/qrNavigate'
 
-// Profile removed — accessible via dashboard settings route
 const NAV_ITEMS = [
-  { id: 'overview',    label: 'Home',    Icon: Home },
-  { id: 'touchpoints', label: 'My QR',   Icon: QrCode },
-  { id: 'tips',        label: 'Tips',    Icon: CircleDollarSign },
-  { id: 'reviews',     label: 'Reviews', Icon: Star },
+  { id: 'overview', label: 'Home', Icon: Home },
+  { id: 'touchpoints', label: 'QR', Icon: QrCode },
+  { id: 'tips', label: 'Tips', Icon: CircleDollarSign },
+  { id: 'reviews', label: 'Reviews', Icon: Star },
 ]
 
 export default function MobileBottomNav({ activeMenu, onNavigate }) {
@@ -30,7 +29,6 @@ export default function MobileBottomNav({ activeMenu, onNavigate }) {
     navigate(path)
   }
 
-  // [overview, touchpoints] | SCAN | [tips, reviews]
   const before = NAV_ITEMS.slice(0, 2)
   const after = NAV_ITEMS.slice(2)
 
@@ -61,7 +59,6 @@ export default function MobileBottomNav({ activeMenu, onNavigate }) {
         className="fixed bottom-0 left-0 right-0 z-30 bg-white lg:hidden"
         style={{ paddingBottom: 'var(--app-safe-area-bottom)', boxShadow: '0 -4px 20px rgba(0,0,0,0.08)' }}
       >
-        {/* Floating scan circle — centered above the nav bar top edge */}
         <button
           type="button"
           onClick={() => setScannerOpen(true)}
@@ -77,7 +74,6 @@ export default function MobileBottomNav({ activeMenu, onNavigate }) {
         <div className="flex items-stretch h-16 px-2">
           {before.map(renderItem)}
 
-          {/* Center label slot */}
           <button
             type="button"
             onClick={() => setScannerOpen(true)}

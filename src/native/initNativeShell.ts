@@ -1,6 +1,31 @@
 import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core'
 import { CapacitorUpdater } from '@capgo/capacitor-updater'
 
+function syncSafeAreaInsets() {
+  if (typeof document === 'undefined' || !document.body) return
+
+  const probe = document.createElement('div')
+  probe.style.cssText =
+    'position:fixed;top:0;left:0;visibility:hidden;pointer-events:none;' +
+    'padding-top:env(safe-area-inset-top);padding-right:env(safe-area-inset-right);' +
+    'padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);'
+  document.body.appendChild(probe)
+
+  const computed = getComputedStyle(probe)
+  const setInset = (name: string, value: string) => {
+    if (value && value !== '0px') {
+      document.documentElement.style.setProperty(name, value)
+    }
+  }
+
+  setInset('--safe-area-inset-top', computed.paddingTop)
+  setInset('--safe-area-inset-right', computed.paddingRight)
+  setInset('--safe-area-inset-bottom', computed.paddingBottom)
+  setInset('--safe-area-inset-left', computed.paddingLeft)
+
+  document.body.removeChild(probe)
+}
+
 export async function initNativeShell() {
   if (!Capacitor.isNativePlatform()) {
     return
@@ -8,6 +33,10 @@ export async function initNativeShell() {
 
   document.documentElement.classList.add('capacitor-native')
   document.documentElement.dataset.capacitorPlatform = Capacitor.getPlatform()
+
+  syncSafeAreaInsets()
+  window.addEventListener('resize', syncSafeAreaInsets)
+  window.addEventListener('orientationchange', syncSafeAreaInsets)
 
   try {
     await CapacitorUpdater.notifyAppReady()
@@ -21,4 +50,6 @@ export async function initNativeShell() {
   } catch {
     // SystemBars is unavailable on some webview builds during early boot.
   }
+
+  syncSafeAreaInsets()
 }

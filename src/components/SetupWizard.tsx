@@ -107,14 +107,8 @@ export default function SetupWizard() {
 
         {/* Header */}
         <header className="flex flex-col md:flex-row md:items-center justify-between border-b border-nexoraBorder pb-6 mb-8 gap-4">
-          <div className="flex min-w-0 items-center gap-3">
-            <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="w-10 h-10 shrink-0 object-contain" />
-            <div className="min-w-0">
-              <h1 className="font-sans text-xl font-bold tracking-wide sm:text-2xl text-nexoraText">
-                NEXORA <span className="ml-1 inline-flex align-middle text-nexoraBrand font-sans text-xs tracking-widest font-black uppercase bg-nexoraBrand/10 px-2 py-0.5 rounded border border-nexoraBrand/30 sm:ml-2">TOUCH</span>
-              </h1>
-              <p className="text-xs text-nexoraSubtle font-light">{t('components.SetupWizard.byVlinkpayTech')}</p>
-            </div>
+          <div className="flex min-w-0 items-center">
+            <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="h-11 w-auto max-w-[200px] object-contain" />
           </div>
 
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">

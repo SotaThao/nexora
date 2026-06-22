@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useOutletContext, useNavigate, useParams, Navigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 
@@ -11,7 +11,9 @@ import ReportsView from '../views/ReportsView'
 import SettingsView from '../../SettingsView'
 import AnalyticsView from '../../AnalyticsView'
 import SupportView from '../../SupportView'
+import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3'
 import ComingSoon from '../views/ComingSoon'
+import ManagePlanView from '../views/ManagePlanView'
 import StaffDetailView from '../../StaffDetailView'
 
 export function OverviewRoute() {
@@ -28,6 +30,7 @@ export function OverviewRoute() {
         setChartEndDate: ctx.setChartEndDate,
       } as any)}
       metrics={ctx.metrics}
+      kpiDeltas={ctx.kpiDeltas}
       activeKpi={ctx.activeKpi}
       setActiveKpi={ctx.setActiveKpi}
       transactions={ctx.transactions}
@@ -35,6 +38,7 @@ export function OverviewRoute() {
       setSelectedStaff={ctx.handleSelectLeaderboardStaff}
       onOpenTouchpoints={() => navigate('/dashboard/touchpoints')}
       onOpenReviews={() => navigate('/dashboard/reviews')}
+      onOpenStaff={() => navigate('/dashboard/staff')}
       businessName={ctx.businessName}
       previewQr={ctx.previewQr}
       touchpoints={ctx.touchpoints}
@@ -45,6 +49,14 @@ export function OverviewRoute() {
       onNavigateMenu={ctx.onNavigateMenu}
       onApproveClick={ctx.openApproveStaff}
       pendingStaff={ctx.pendingStaff}
+      staff={ctx.staff}
+      isLoading={ctx.isOverviewLoading}
+      isTransactionsLoading={ctx.isTransactionsLoading}
+      isTouchpointsLoading={ctx.isTouchpointsLoading}
+      reviewsPage={ctx.reviewsPage}
+      isReviewsPending={ctx.isReviewsPending}
+      metricsMonth={ctx.metricsMonth}
+      metricsYear={ctx.metricsYear}
     />
   )
 }
@@ -86,6 +98,7 @@ export function StaffRoute() {
       }}
       // Pagination props
       pageNumber={ctx.activeStaffPage}
+      pageSize={ctx.activeStaffPageSize}
       totalPages={ctx.activeStaffTotalPages}
       totalCount={ctx.activeStaffTotalCount}
       hasNextPage={ctx.activeStaffHasNext}
@@ -100,7 +113,15 @@ export function StaffDetailRoute() {
   const { staffId } = useParams()
   const navigate = useNavigate()
   
-  const member = ctx.staff.find((m) => String(m.id) === String(staffId))
+  const member = ctx.staff.find((m) =>
+    String(m.id) === String(staffId) ||
+    String(m.staffProfileId) === String(staffId)
+  )
+
+  if (ctx.staffLoading) {
+    return null
+  }
+
   if (!member) {
     return <Navigate to="/dashboard/staff" replace />
   }
@@ -149,10 +170,17 @@ export function StaffRoleRoute() {
 
 export function TouchpointsRoute() {
   const ctx = useOutletContext<LooseObject>()
+  const [sp, setSp] = useSearchParams()
+  const tab = sp.get('tab') || 'stations'
+
+  useEffect(() => {
+    if (tab === 'devices') {
+      setSp({ tab: 'stations' }, { replace: true })
+    }
+  }, [tab, setSp])
 
   return (
     <TouchpointsView
-      touchpoints={ctx.filteredTouchpoints}
       onOpenAddModal={(prefill) => {
         ctx.setAddTouchpointPrefill(prefill || null)
         ctx.setIsAddTouchpointModalOpen(true)
@@ -160,23 +188,42 @@ export function TouchpointsRoute() {
       onDelete={(id) => ctx.deleteTouchpoint(id)}
       onQr={ctx.previewQr}
       onToggleStatus={ctx.toggleTouchpointStatus}
+      togglingTouchpointId={ctx.togglingTouchpointId}
       onLinkDevice={ctx.linkDevice}
       transactions={ctx.transactions}
+      businessName={ctx.businessName}
       devices={ctx.devices}
-      activeStaff={ctx.activeStaffList ?? []}
+      onAddDevice={ctx.handleAddDevice}
+      onDeleteDevice={ctx.handleDeleteDevice}
+      onToggleDeviceStatus={ctx.handleToggleDeviceStatus}
+      activeSubTab={tab === 'devices' ? 'stations' : tab}
+      onTabChange={(nextTab) => {
+        if (nextTab === 'devices') return
+        setSp({ tab: nextTab }, { replace: true })
+      }}
     />
   )
 }
 
 export function ReviewsRoute() {
   const ctx = useOutletContext<LooseObject>()
+
   return (
     <ReviewsView
-      reviews={ctx.filteredReviews}
-      staff={ctx.staff}
+      reviews={ctx.reviewsPage?.items ?? []}
+      isLoading={ctx.isReviewsPending}
+      isFetching={ctx.reviewsListFetching}
+      staff={ctx.filteredStaff}
       filter={ctx.reviewFilterStaff}
       setFilter={ctx.setReviewFilterStaff}
       setupData={ctx.setupData}
+      pageNumber={ctx.activeReviewsPage}
+      pageSize={ctx.activeReviewsPageSize}
+      totalPages={ctx.activeReviewsTotalPages}
+      totalCount={ctx.activeReviewsTotalCount}
+      hasNextPage={ctx.activeReviewsHasNext}
+      hasPreviousPage={ctx.activeReviewsHasPrev}
+      onPageChange={ctx.setActiveReviewsPage}
     />
   )
 }
@@ -184,12 +231,21 @@ export function ReviewsRoute() {
 export function TipsRoute() {
   const ctx = useOutletContext<LooseObject>()
   const [sp, setSp] = useSearchParams()
-  const tab = sp.get('tab') || 'overview'
+  const rawTab = sp.get('tab') || 'overview'
+  const tab = rawTab === 'transactions' ? 'overview' : rawTab
+
+  useEffect(() => {
+    if (rawTab === 'transactions') {
+      setSp({ tab: 'overview' }, { replace: true })
+    }
+  }, [rawTab, setSp])
 
   return (
     <TipsView
       transactions={ctx.transactions}
       staff={ctx.staff}
+      metrics={ctx.metrics}
+      tipsChartData={ctx.tipsChartData}
       activeTab={tab}
       onTabChange={(t) => setSp({ tab: t }, { replace: true })}
       processingFee={ctx.processingFee}
@@ -200,7 +256,7 @@ export function TipsRoute() {
 
 export function ReportsRoute() {
   const ctx = useOutletContext<LooseObject>()
-  return <ReportsView transactions={ctx.filteredTransactions} staff={ctx.staff} touchpoints={ctx.touchpoints} />
+  return <ReportsView staff={ctx.staff} touchpoints={ctx.touchpoints} businessName={ctx.businessName} businessSlug={ctx.businessSlug} />
 }
 
 export function AnalyticsRoute() {
@@ -236,12 +292,30 @@ export function SettingsRoute() {
 }
 
 export function SupportRoute() {
-  return <SupportView />
+  const { currentLanguage } = useTranslation()
+  const recaptchaKey = import.meta.env.VITE_RECAPTCHA_KEY
+
+  if (!recaptchaKey) {
+    return <SupportView recaptchaEnabled={false} />
+  }
+
+  return (
+    <GoogleReCaptchaProvider reCaptchaKey={recaptchaKey} language={currentLanguage}>
+      <SupportView recaptchaEnabled />
+    </GoogleReCaptchaProvider>
+  )
 }
 
 export function SubscriptionsRoute() {
+  const ctx = useOutletContext<LooseObject>()
   const navigate = useNavigate()
-  return <ComingSoon activeMenu="subscriptions" onBack={() => navigate('/dashboard')} />
+  const currentPlanId = ctx?.profile?.subscription?.plan ?? null
+  return (
+    <ManagePlanView
+      currentPlanId={currentPlanId}
+      onSelectPlan={() => navigate('/dashboard/support')}
+    />
+  )
 }
 
 export function FallbackRoute() {

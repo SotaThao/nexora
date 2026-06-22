@@ -3,7 +3,7 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
 import { serializeBankWireAccount } from '../../payout/bankWireAccount'
-import { captureQrImage } from '../../../native/imagePicker'
+import { captureQrImage } from '../../../utils/qrCode'
 
 const normalizePhone = (raw) => {
   if (!raw) return ''
@@ -34,6 +34,7 @@ import { useMerchantSetup, useSaveMerchantSetup, useUploadImage } from '../../..
 import { useNotifications, useAddNotification } from '../../../data/hooks/useNotifications'
 import { useStaffInviteInfo, useAcceptStaffInvite, usePublicMerchantInvite } from '../../../data/hooks/useStaffInvites'
 import { apiAuthAdapter } from '../../../auth/adapters/apiAuthAdapter'
+import { getSignupOtp } from '../../../auth/signupOtp'
 import { staffPaymentMethodsRepository } from '../../../data/repositories/staffPaymentMethods'
 import { staffInvitesRepository } from '../../../data/repositories/staffInvites'
 import profileSettingsRepository from '../../../data/repositories/profileSettings'
@@ -411,7 +412,11 @@ export default function useStaffRegistration({ inviteData }) {
         lastName,
         type: 'User'
       })
-      .then(() => {
+      .then((signupResponse) => {
+        const signupOtp = getSignupOtp(signupResponse)
+        if (signupOtp) {
+          setOtpCode(signupOtp)
+        }
         proceedToOtp()
       })
       .catch((err) => {
@@ -816,7 +821,7 @@ export default function useStaffRegistration({ inviteData }) {
   }
 
   const saveSelectedPaymentMethods = async () => {
-    let methods: import('../../types/domain').PaymentMethodDto[] = []
+    let methods: import('../../../types/domain').PaymentMethodDto[] = []
     try {
       methods = await staffPaymentMethodsRepository.getAll()
     } catch (pmErr: unknown) {

@@ -88,12 +88,14 @@ export function buildStaffTipCustomerUrl({
   touchPointSlug,
   staffProfileId,
   canonicalUrl,
+  allowDefaultTouchPointSlug = true,
 }: {
   origin: string
   businessSlug?: string | null
   touchPointSlug?: string | null
   staffProfileId?: string | null
   canonicalUrl?: string | null
+  allowDefaultTouchPointSlug?: boolean
 }): string | null {
   let pathname = ''
 
@@ -106,9 +108,10 @@ export function buildStaffTipCustomerUrl({
     } catch {
       return null
     }
-  } else if (businessSlug) {
-    const slug = touchPointSlug || DEFAULT_MASTER_TOUCH_POINT_SLUG
-    pathname = `/touch/${businessSlug}/${slug}`
+  } else if (businessSlug && touchPointSlug) {
+    pathname = `/touch/${businessSlug}/${touchPointSlug}`
+  } else if (businessSlug && allowDefaultTouchPointSlug) {
+    pathname = `/touch/${businessSlug}/${DEFAULT_MASTER_TOUCH_POINT_SLUG}`
   } else {
     return null
   }
@@ -146,6 +149,7 @@ export function resolveStaffTipQr(
   source: StaffTipQrSource,
   staffProfileId?: string | null,
   origin = getWebUrlOrigin(),
+  { allowDefaultTouchPointSlug = true }: { allowDefaultTouchPointSlug?: boolean } = {},
 ): ResolvedStaffTipQr {
   const businessSlug =
     source.businessSlug || slugify(source.businessName || '')
@@ -161,6 +165,7 @@ export function resolveStaffTipQr(
     touchPointSlug,
     staffProfileId,
     canonicalUrl: source.tipUrl || source.url || null,
+    allowDefaultTouchPointSlug,
   })
 
   let resolvedTouchSlug = touchPointSlug || ''
@@ -179,7 +184,7 @@ export function resolveStaffTipQr(
     }
   }
 
-  if (!resolvedTouchSlug) {
+  if (!resolvedTouchSlug && allowDefaultTouchPointSlug) {
     resolvedTouchSlug = DEFAULT_MASTER_TOUCH_POINT_SLUG
   }
 

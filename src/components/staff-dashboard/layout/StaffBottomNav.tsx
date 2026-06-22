@@ -24,7 +24,6 @@ export default function StaffBottomNav({ activeScreen, onNavigate }) {
     navigate(path)
   }
 
-  // [home, qr] | SCAN | [tips, reviews]
   const before = STAFF_BOTTOM_NAV_ITEMS.slice(0, 2)
   const after = STAFF_BOTTOM_NAV_ITEMS.slice(2)
 
@@ -50,8 +49,6 @@ export default function StaffBottomNav({ activeScreen, onNavigate }) {
   return (
     <>
       <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-nexoraBorder bg-nexoraSurface shadow-[0_-4px_20px_rgba(11,18,32,0.06)] pb-[env(safe-area-inset-bottom)] lg:hidden">
-
-        {/* Floating scan circle — centered above the nav bar top edge */}
         <button
           type="button"
           onClick={() => setScannerOpen(true)}
@@ -67,7 +64,6 @@ export default function StaffBottomNav({ activeScreen, onNavigate }) {
         <div className="mx-auto flex max-w-lg">
           {before.map(renderItem)}
 
-          {/* Center label slot — icon slot is occupied by the floating button above */}
           <button
             type="button"
             onClick={() => setScannerOpen(true)}

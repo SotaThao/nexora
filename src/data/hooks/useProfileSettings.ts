@@ -12,17 +12,14 @@ import type { LooseObject, UserProfile } from '../../types/domain'
 import type { UpdateStaffProfileDto, UpdateUserProfileDto } from '../../types/repositories'
 
 export function useProfileSettings({ enabled: callerEnabled = true } = {}) {
-  const queryClient = useQueryClient()
   const { isAuthenticated } = useSessionRole()
-  const hasCachedProfile = queryClient.getQueryData(qk.userProfile()) !== undefined
 
   return useQuery<UserProfile | null>({
     queryKey: qk.userProfile(),
     queryFn: () => profileSettingsRepository.get(),
-    enabled: isAuthenticated && callerEnabled && !hasCachedProfile,
-    initialData: () => queryClient.getQueryData<UserProfile | null>(qk.userProfile()),
-    staleTime: Infinity,
-    refetchOnMount: false,
+    enabled: isAuthenticated && callerEnabled,
+    staleTime: 30_000,
+    refetchOnMount: true,
     refetchOnWindowFocus: false,
   })
 }
@@ -105,6 +102,16 @@ export function useUpdateStaffProfile() {
     mutationFn: (dto) => profileSettingsRepository.updateStaffProfile(dto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.staffProfile() })
+    },
+  })
+}
+
+export function useDeleteAccount() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, void>({
+    mutationFn: () => profileSettingsRepository.deleteAccount(),
+    onSuccess: () => {
+      queryClient.clear()
     },
   })
 }

@@ -4,7 +4,7 @@
 
 import httpClient from '../../lib/httpClient'
 import { isApiError } from '../../types/domain'
-import type { UserProfile } from '../../types/domain'
+import type { UserProfile, UserSubscription } from '../../types/domain'
 import type { UpdateStaffProfileDto, UpdateUserProfileDto } from '../../types/repositories'
 import { getUserProfileImageUrl } from '../../utils/userProfileImage'
 
@@ -30,16 +30,44 @@ export type InitializeKybResponse = {
 /** @deprecated Use InitializeKybResponse */
 export type RegisterKybResponse = InitializeKybResponse
 
+function normalizeSubscription(raw: LooseObject | null | undefined): UserSubscription | null {
+  const business = raw?.business as LooseObject | undefined
+  const sub =
+    raw?.subscription ??
+    raw?.Subscription ??
+    business?.subscription ??
+    business?.Subscription
+  if (!sub || typeof sub !== 'object') return null
+
+  const plan = sub.plan ?? sub.Plan
+  if (!plan) return null
+
+  return {
+    plan: String(plan),
+    status: sub.status ?? sub.Status ? String(sub.status ?? sub.Status) : undefined,
+    trialEndsAt: sub.trialEndsAt ?? sub.TrialEndsAt ?? null,
+    currentPeriodEnd: sub.currentPeriodEnd ?? sub.CurrentPeriodEnd ?? null,
+  }
+}
+
+function normalizeUserProfile(response: UserProfile): UserProfile {
+  const subscription = normalizeSubscription(response as LooseObject)
+  const profileImageUrl = getUserProfileImageUrl(response)
+
+  return {
+    ...response,
+    ...(subscription ? { subscription } : {}),
+    ...(profileImageUrl ? { profileImageUrl } : {}),
+  }
+}
+
 export function createProfileSettingsRepository(client: HttpClient = httpClient) {
   return {
     async get(): Promise<UserProfile | null> {
       try {
         const response = await client.get<UserProfile>('/api/v1/userprofile/me')
         if (!response) return null
-        const profileImageUrl = getUserProfileImageUrl(response)
-        return profileImageUrl
-          ? { ...response, profileImageUrl }
-          : response
+        return normalizeUserProfile(response)
       } catch (err: unknown) {
         if (isApiError(err) && (err.errorCode === 'COMMON_NOT_FOUND' || err.status === 404)) {
           return null
@@ -88,6 +116,11 @@ export function createProfileSettingsRepository(client: HttpClient = httpClient)
 
     async updateStaffProfile(dto: UpdateStaffProfileDto): Promise<LooseObject> {
       return client.put<LooseObject>('/api/v1/staff/profile', dto)
+    },
+
+    /** POST /api/v1/UserProfile/delete-account — permanently delete the authenticated user account. */
+    async deleteAccount(): Promise<void> {
+      await client.post('/api/v1/userprofile/delete-account', {})
     },
 
     async save(_settings: LooseObject): Promise<void> {

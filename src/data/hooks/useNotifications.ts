@@ -1,16 +1,92 @@
 /**
  * useNotifications — TanStack Query hooks for the notifications domain.
  */
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import notificationsRepository from '../repositories/notifications'
 import type { NotificationRecord, NotificationsPage } from '../../types/domain'
 
-export function useNotifications() {
+function isNotificationUnread(notification: NotificationRecord | undefined): boolean {
+  if (!notification) return false
+  return !notification.read && !notification.isRead
+}
+
+function findNotificationInCache(
+  queryClient: QueryClient,
+  id: string,
+): NotificationRecord | undefined {
+  const list = queryClient.getQueryData<NotificationRecord[]>(qk.notifications())
+  const fromList = list?.find((item) => item.id === id)
+  if (fromList) return fromList
+
+  const pagedQueries = queryClient.getQueriesData<NotificationsPage>({
+    queryKey: ['notifications', 'list'],
+  })
+  for (const [, page] of pagedQueries) {
+    const fromPage = page?.items.find((item) => item.id === id)
+    if (fromPage) return fromPage
+  }
+
+  return undefined
+}
+
+function markNotificationReadInRecord(notification: NotificationRecord): NotificationRecord {
+  return { ...notification, read: true, isRead: true }
+}
+
+function patchNotificationReadInCache(queryClient: QueryClient, id: string) {
+  const target = findNotificationInCache(queryClient, id)
+  if (isNotificationUnread(target)) {
+    queryClient.setQueryData<number>(qk.notificationsUnreadCount(), (current = 0) =>
+      Math.max(0, current - 1),
+    )
+  }
+
+  queryClient.setQueryData<NotificationRecord[]>(qk.notifications(), (current) =>
+    current?.map((item) => (item.id === id ? markNotificationReadInRecord(item) : item)),
+  )
+
+  queryClient.setQueriesData<NotificationsPage>(
+    { queryKey: ['notifications', 'list'] },
+    (current) =>
+      current
+        ? {
+            ...current,
+            items: current.items.map((item) =>
+              item.id === id ? markNotificationReadInRecord(item) : item,
+            ),
+          }
+        : current,
+  )
+}
+
+function patchAllNotificationsReadInCache(queryClient: QueryClient) {
+  queryClient.setQueryData<number>(qk.notificationsUnreadCount(), 0)
+
+  queryClient.setQueryData<NotificationRecord[]>(qk.notifications(), (current) =>
+    current?.map(markNotificationReadInRecord),
+  )
+
+  queryClient.setQueriesData<NotificationsPage>(
+    { queryKey: ['notifications', 'list'] },
+    (current) =>
+      current
+        ? {
+            ...current,
+            items: current.items.map(markNotificationReadInRecord),
+          }
+        : current,
+  )
+}
+
+export function useNotifications({ enabled: callerEnabled = true } = {}) {
   return useQuery<NotificationRecord[]>({
     queryKey: qk.notifications(),
-    queryFn: () => notificationsRepository.list() as Promise<NotificationRecord[]>,
-    staleTime: 2 * 60_000, // 2 min — avoid refetch on every remount
+    queryFn: () => notificationsRepository.list(),
+    enabled: callerEnabled,
+    staleTime: 30_000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   })
 }
 
@@ -40,8 +116,8 @@ export function useMarkNotificationRead() {
   const queryClient = useQueryClient()
   return useMutation<void, Error, string>({
     mutationFn: (id) => notificationsRepository.markRead(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+    onMutate: (id) => {
+      patchNotificationReadInCache(queryClient, id)
     },
   })
 }
@@ -50,8 +126,8 @@ export function useMarkAllNotificationsRead() {
   const queryClient = useQueryClient()
   return useMutation<void, Error, void>({
     mutationFn: () => notificationsRepository.markAllRead(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+    onMutate: () => {
+      patchAllNotificationsReadInCache(queryClient)
     },
   })
 }
