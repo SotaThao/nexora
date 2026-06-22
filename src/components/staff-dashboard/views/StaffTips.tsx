@@ -48,12 +48,10 @@ function tipDisplayAmount(tip: StaffTipItem) {
   return tip.amount > 0 ? tip.amount : tip.totalAmount
 }
 
-// Staff only needs: which business + how it was paid. Business name first;
+// Staff only needs: which business. Payment method is moved up next to amount;
 // touchpoint is dropped to keep the row clean.
 function tipMetaLine(tip: StaffTipItem) {
-  return [tip.businessName, paymentMethodLabel(tip.paymentMethod)]
-    .filter(Boolean)
-    .join(' · ')
+  return tip.businessName || ''
 }
 
 export default function StaffTips() {
@@ -120,10 +118,19 @@ export default function StaffTips() {
             {tips.map((tip) => (
               <div key={tip.id} className="flex items-center justify-between gap-3 py-3">
                 <div className="min-w-0 flex-1">
-                  <span className="text-sm font-bold text-nexoraText">
-                    {formatTipAmount(tipDisplayAmount(tip))}
-                  </span>
-                  <div className="mt-0.5 truncate text-xs text-nexoraMuted">{tipMetaLine(tip)}</div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-sm font-bold text-nexoraText">
+                      {formatTipAmount(tipDisplayAmount(tip))}
+                    </span>
+                    {tip.paymentMethod ? (
+                      <span className="text-[13px] font-medium text-nexoraMuted">
+                        · {paymentMethodLabel(tip.paymentMethod)}
+                      </span>
+                    ) : null}
+                  </div>
+                  {tipMetaLine(tip) ? (
+                    <div className="mt-0.5 truncate text-xs text-nexoraMuted">{tipMetaLine(tip)}</div>
+                  ) : null}
                   {tip.createdAt ? (
                     <div className="mt-0.5 text-[10px] font-semibold text-nexoraSubtle">
                       {formatTipDate(tip.createdAt)}

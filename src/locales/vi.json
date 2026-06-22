@@ -74,8 +74,8 @@
       "total_count": "{{count}} tip",
       "page_of": "Trang {{page}} / {{total}}",
       "multi_staff": "Nhiều thợ",
-      "via_business_pending": "Chờ {{business}} xác nhận",
-      "via_business_confirmed": "{{business}} đã xác nhận",
+      "via_business_pending": "Chờ xác nhận",
+      "via_business_confirmed": "Đã xác nhận",
       "via_business_pending_help": "Đang chờ {{business}} xác nhận và chi trả phần của bạn.",
       "via_business_confirmed_help": "{{business}} đã xác nhận tip này — phần của bạn sẽ được chi trả.",
       "status": {
