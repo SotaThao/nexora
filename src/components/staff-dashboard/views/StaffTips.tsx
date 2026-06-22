@@ -102,16 +102,9 @@ export default function StaffTips() {
             {tips.map((tip) => (
               <div key={tip.id} className="flex items-center justify-between gap-3 py-3">
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm font-bold text-nexoraText">
-                      {formatTipAmount(tipDisplayAmount(tip))}
-                    </span>
-                    {tip.isMultiStaff ? (
-                      <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-violet-600">
-                        {t('staff_dashboard.tips.multi_staff')}
-                      </span>
-                    ) : null}
-                  </div>
+                  <span className="text-sm font-bold text-nexoraText">
+                    {formatTipAmount(tipDisplayAmount(tip))}
+                  </span>
                   <div className="mt-0.5 truncate text-xs text-nexoraMuted">{tipMetaLine(tip)}</div>
                   {tip.createdAt ? (
                     <div className="mt-0.5 text-[10px] font-semibold text-nexoraSubtle">
@@ -119,13 +112,19 @@ export default function StaffTips() {
                     </div>
                   ) : null}
                 </div>
-                <span
-                  className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black ${
-                    STATUS_STYLE[tip.status] || 'bg-nexoraCanvas text-nexoraMuted'
-                  }`}
-                >
-                  {statusLabel(tip)}
-                </span>
+                {tip.isMultiStaff ? (
+                  <span className="shrink-0 whitespace-nowrap rounded-full bg-nexoraBrandSoft/60 px-2.5 py-1 text-[11px] font-black text-nexoraBrand">
+                    {t('staff_dashboard.tips.via_shop_account')}
+                  </span>
+                ) : (
+                  <span
+                    className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black ${
+                      STATUS_STYLE[tip.status] || 'bg-nexoraCanvas text-nexoraMuted'
+                    }`}
+                  >
+                    {statusLabel(tip)}
+                  </span>
+                )}
               </div>
             ))}
           </div>

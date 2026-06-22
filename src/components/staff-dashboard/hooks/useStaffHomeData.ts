@@ -74,13 +74,18 @@ export function useStaffHomeData() {
 
   const pendingTips = useMemo(
     () =>
-      (pendingTipsPage?.items ?? []).map((tip) => ({
-        id: tip.id,
-        amount: tipDisplayAmount(tip.amount, tip.totalAmount),
-        paymentMethod: paymentMethodLabel(tip.paymentMethod),
-        touchpoint:
-          [tip.touchPointName, tip.businessName].filter(Boolean).join(' · ') || '—',
-      })),
+      (pendingTipsPage?.items ?? [])
+        // Multi-staff tips are confirmed by the merchant (money goes to the shop
+        // account, distributed later) — the staff never confirms them, so they
+        // are excluded from the staff's pending list. See US-024.
+        .filter((tip) => !tip.isMultiStaff)
+        .map((tip) => ({
+          id: tip.id,
+          amount: tipDisplayAmount(tip.amount, tip.totalAmount),
+          paymentMethod: paymentMethodLabel(tip.paymentMethod),
+          touchpoint:
+            [tip.touchPointName, tip.businessName].filter(Boolean).join(' · ') || '—',
+        })),
     [pendingTipsPage],
   )
 
