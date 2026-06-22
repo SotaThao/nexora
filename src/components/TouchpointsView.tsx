@@ -22,6 +22,7 @@ import { useTouchpoints } from '../data/hooks/useMerchantTouchpoints'
 import { usePagination } from '../hooks/usePagination'
 import { DEFAULT_PAGE_SIZE, STAFF_FILTER_LIST_PAGE_SIZE } from '../constants/pagination'
 import { buildQrImageUrl, toLocalCustomerTouchUrl } from '../utils/staffTipUrl'
+import { getWebUrlOrigin } from '../utils/webUrlBase'
 import { formatCurrency } from './dashboard/utils'
 
 function Panel({ children, className = '' }) {
@@ -352,7 +353,7 @@ export default function TouchpointsView({
                 qrUrl = toLocalCustomerTouchUrl(String(point.url))
               }
               if (!qrUrl && point.slug) {
-                qrUrl = `${window.location.origin}/touch/${point.slug}`
+                qrUrl = `${getWebUrlOrigin()}/touch/${point.slug}`
               }
 
               const scans = point.scans ?? 0

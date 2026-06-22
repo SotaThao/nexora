@@ -40,13 +40,7 @@ export default function FinalDone({ t, handleReset, rating = 5 }) {
             {t('customer.send_new_btn')}
           </button>
         ) : null}
-        <button
-          type="button"
-          onClick={handleBackHome}
-          className="w-full py-3.5 bg-gradient-to-r from-nexoraBrand to-indigo-600 hover:opacity-95 active:scale-[0.98] transition-all text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-indigo-600/25 flex items-center justify-center"
-        >
-          {t('customer.back_home_btn')}
-        </button>
+        
       </div>
     </div>
   )

@@ -6,7 +6,9 @@ import { formatCurrency, formatTransactionDateTime } from '../utils'
 import { WalletLogos } from '../constants'
 import { logger } from '../../../utils/logger'
 import { buildQrImageUrl, slugify, toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
+import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import QrModal from './QrModal'
+import CopyableTransactionId from '../../ui/CopyableTransactionId'
 
 function buildStaffCodeLookup(staff = []) {
   const map = new Map()
@@ -60,7 +62,7 @@ function resolveTouchPointQrUrl({
   businessName = '',
   businessSlug = '',
 }) {
-  const origin = typeof window !== 'undefined' ? window.location.origin : ''
+  const origin = getWebUrlOrigin()
 
   if (touchpoint?.url) {
     return toLocalCustomerTouchUrl(String(touchpoint.url), origin)
@@ -279,9 +281,14 @@ export default function TransactionDetailModal({
                 <span className="text-[10px] font-bold text-nexoraMuted block">
                   {t('dashboard.activity_log.col_id')}
                 </span>
-                <span className="font-mono text-[11px] font-semibold text-nexoraText block mt-0.5 break-all">
-                  {selectedTx.id}
-                </span>
+                <CopyableTransactionId
+                  id={selectedTx.id}
+                  className="mt-0.5"
+                  head={12}
+                  tail={6}
+                  copyLabel={t('common.copy')}
+                  copiedLabel={t('common.copied')}
+                />
               </div>
               <div>
                 <span className="text-[10px] font-bold text-nexoraMuted block">

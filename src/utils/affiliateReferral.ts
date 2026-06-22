@@ -1,3 +1,5 @@
+import { getWebUrlOrigin } from './webUrlBase'
+
 type ReferralProfile = {
   referralCode?: string | null
   refCode?: string | null
@@ -9,7 +11,7 @@ export function getProfileReferralCode(profile: ReferralProfile = {}) {
 }
 
 export function buildAffiliateReferralUrl({
-  origin = typeof window !== 'undefined' ? window.location.origin : '',
+  origin = getWebUrlOrigin(),
   referralCode,
   leg,
 }: {

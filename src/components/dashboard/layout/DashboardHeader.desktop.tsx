@@ -18,6 +18,7 @@ import {
 import { useTranslation } from '../../../contexts/LanguageContext'
 import IconButton from '../../ui/IconButton'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
+import { truncateTransactionId } from '../../ui/CopyableTransactionId'
 
 export default function DashboardHeader({
   searchQuery,
@@ -235,7 +236,9 @@ export default function DashboardHeader({
                   >
                     <div className="flex items-center gap-2">
                       <ClipboardList className="h-3.5 w-3.5 text-nexoraBrand shrink-0" />
-                      <span className="font-bold text-nexoraText">{tx.id}</span>
+                      <span className="font-bold text-nexoraText font-mono" title={tx.id}>
+                        {truncateTransactionId(tx.id)}
+                      </span>
                       <span className="text-[10px] text-nexoraMuted">({tx.staffName} - ${tx.amount})</span>
                     </div>
                     <span className="text-[10px] font-bold text-nexoraBrand uppercase tracking-wider">Xem GD ›</span>

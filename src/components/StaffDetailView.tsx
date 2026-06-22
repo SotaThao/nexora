@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
 import { logger } from '../utils/logger'
+import CopyableTransactionId from './ui/CopyableTransactionId'
 
 // Helper to format values as USD currency
 function formatCurrency(value) {
@@ -775,7 +776,9 @@ export default function StaffDetailView({
               <tbody>
                 {stats.recentTransactions.map((tx) => (
                   <tr key={tx.id} className="border-t border-nexoraRule hover:bg-slate-50/50">
-                    <td className="px-4 py-3.5 font-bold text-nexoraText">{tx.id}</td>
+                    <td className="px-4 py-3.5">
+                      <CopyableTransactionId id={tx.id} copyLabel={t('common.copy')} copiedLabel={t('common.copied')} />
+                    </td>
                     <td className="px-4 py-3.5 text-nexoraMuted">{tx.dateTime}</td>
                     <td className="px-4 py-3.5 font-black text-nexoraText">{formatCurrency(tx.amount)}</td>
                     <td className="px-4 py-3.5 text-nexoraMuted">{tx.touchpoint}</td>

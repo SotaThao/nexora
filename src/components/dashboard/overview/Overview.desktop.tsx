@@ -5,6 +5,7 @@ import { useNotification } from '../../../contexts/NotificationContext'
 import { useDownloadTouchpointQr } from '../../../data/hooks/useMerchantTouchpoints'
 import { downloadQrCode } from '../../../utils/qrUtils'
 import { buildQrImageUrl, toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
+import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import { formatCurrency } from '../utils'
 import Panel from '../../ui/Panel'
 import KpiCard from '../../ui/KpiCard'
@@ -159,7 +160,7 @@ function Overview({
 
     const businessSlug = (businessName || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
     const touchSlug = masterTouchpoint?.slug || 'general'
-    return `${window.location.origin}/touch/${businessSlug}/${touchSlug}`
+    return `${getWebUrlOrigin()}/touch/${businessSlug}/${touchSlug}`
   }, [masterTouchpoint, businessName])
 
   const masterQrPreviewUrl = useMemo(

@@ -13,6 +13,7 @@ import { useMerchantStaff } from '../../../data/hooks/useMerchantStaff'
 import { useTouchpoints } from '../../../data/hooks/useMerchantTouchpoints'
 import type { TransactionsListQuery } from '../../../data/repositories/transactions'
 import ReportsTableSkeleton from './ReportsTableSkeleton'
+import CopyableTransactionId from '../../ui/CopyableTransactionId'
 
 function toIsoDate(date: Date) {
   return date.toISOString().split('T')[0]
@@ -306,7 +307,7 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
         <table className="w-full min-w-[780px] text-left text-xs">
           <thead className="bg-nexoraCanvas text-[10px] font-extrabold uppercase text-nexoraMuted">
             <tr>
-              <th className="px-4 py-3">{t('dashboard.activity_log.col_id')}</th>
+              <th className="px-4 py-3 w-[9.5rem]">{t('dashboard.activity_log.col_id')}</th>
               <th className="px-4 py-3">{t('dashboard.activity_log.col_time')}</th>
               <th className="px-4 py-3">{t('dashboard.activity_log.col_amount')}</th>
               <th className="px-4 py-3">{t('dashboard.activity_log.col_staff')}</th>
@@ -332,7 +333,13 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
                   onClick={() => setSelectedTx(tx)}
                   className="border-t border-nexoraRule hover:bg-slate-50 transition-colors cursor-pointer select-none"
                 >
-                  <td className="px-4 py-3 font-bold text-nexoraText">{tx.id}</td>
+                  <td className="px-4 py-3 w-[9.5rem] max-w-[9.5rem]">
+                    <CopyableTransactionId
+                      id={tx.id}
+                      copyLabel={t('common.copy')}
+                      copiedLabel={t('common.copied')}
+                    />
+                  </td>
                   <td className="px-4 py-3 text-nexoraMuted">
                     {formatTransactionDateTime(tx.dateTime, currentLanguage)}
                   </td>
