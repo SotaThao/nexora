@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Home, Users, CircleDollarSign, QrCode, UserCircle, ScanLine } from 'lucide-react'
+import { Home, Users, CircleDollarSign, QrCode, ScanLine } from 'lucide-react'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import AppQrScanner from '../../common/AppQrScanner'
@@ -11,7 +11,6 @@ const NAV_ITEMS = [
   { id: 'staff',       labelKey: 'nav_staff',   Icon: Users,            image: '/assets/menu/staff.png' },
   { id: 'tips',        labelKey: 'nav_tips',    Icon: CircleDollarSign, image: '/assets/menu/tips.png' },
   { id: 'touchpoints', labelKey: 'nav_qr',      Icon: QrCode,           image: '/assets/menu/touchpoint.png' },
-  { id: 'settings',    labelKey: 'nav_profile', Icon: UserCircle,       image: '/assets/menu/setting.png' },
 ]
 
 export default function MobileBottomNav({ activeMenu, onNavigate }) {
@@ -40,7 +39,7 @@ export default function MobileBottomNav({ activeMenu, onNavigate }) {
         key={id}
         type="button"
         onClick={() => onNavigate(id)}
-        className="flex flex-1 flex-col items-center justify-center gap-1 h-full focus:outline-none active:scale-95 transition-transform"
+        className="flex flex-1 min-w-0 flex-col items-center justify-center gap-1 h-full focus:outline-none active:scale-95 transition-transform"
       >
         {image ? (
           <img
@@ -80,26 +79,22 @@ export default function MobileBottomNav({ activeMenu, onNavigate }) {
           boxShadow: '0 -8px 28px rgba(15,23,42,0.08)',
         }}
       >
-        <button
-          type="button"
-          onClick={() => setScannerOpen(true)}
-          className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10
-                     w-14 h-14 rounded-full bg-nexoraBrand
-                     shadow-[0_4px_16px_rgba(0,0,0,0.18),0_0_0_3px_#fff]
-                     flex items-center justify-center active:scale-95 transition-transform"
-          aria-label={t('components.common.AppQrScanner.title')}
-        >
-          <ScanLine className="h-6 w-6 text-white" strokeWidth={2} />
-        </button>
-
-        <div className="flex items-center justify-around h-[68px] px-2">
+        <div className="flex items-center h-[68px] px-2">
           {before.map(renderItem)}
 
           <button
             type="button"
             onClick={() => setScannerOpen(true)}
-            className="flex flex-1 flex-col items-center justify-center gap-1 h-full focus:outline-none active:scale-95 transition-transform"
+            aria-label={t('components.common.AppQrScanner.title')}
+            className="relative flex flex-1 min-w-0 flex-col items-center justify-center gap-1 h-full focus:outline-none active:scale-95 transition-transform"
           >
+            <span
+              className="absolute top-0 left-1/2 z-10 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-nexoraBrand shadow-[0_4px_16px_rgba(0,0,0,0.18),0_0_0_3px_#fff] active:scale-95 transition-transform"
+              aria-hidden="true"
+            >
+              <ScanLine className="h-6 w-6 text-white" strokeWidth={2} />
+            </span>
+            <span className="h-[22px]" aria-hidden="true" />
             <span className="text-[11px] font-bold text-nexoraSubtle">
               {t('dashboard.menu.scan')}
             </span>
