@@ -15,19 +15,20 @@ import { useDashboardNavigation } from './dashboard/hooks/useDashboardNavigation
 import { useDevices } from './dashboard/hooks/useDevices'
 import { useKybGate } from '../contexts/KybGateContext'
 import { useStaffManagement } from './dashboard/hooks/useStaffManagement'
-import { useTouchpoints, useCreateTouchpoint, useDeleteTouchpoint, useDownloadTouchpointQr } from '../data/hooks/useMerchantTouchpoints'
-import { useMerchantStaff } from '../data/hooks/useMerchantStaff'
+import { useTouchpoints, useCreateTouchpoint, useDeleteTouchpoint, useToggleTouchpoint, useDownloadTouchpointQr } from '../data/hooks/useMerchantTouchpoints'
+import { useMerchantStaff, StatusFilter } from '../data/hooks/useMerchantStaff'
 import { useChartDateRange } from '../hooks/useChartDateRange'
 import { useTransactions } from '../data/hooks/useTransactions'
-import { useDashboardOverview } from '../data/hooks/useDashboard'
+import { useDashboardOverview, useDashboardTipsChart, useDashboardOverviewCurrentMonth, useDashboardOverviewCurrentYear } from '../data/hooks/useDashboard'
 import { useDashboardReviews, DASHBOARD_REVIEWS_LIST_QUERY } from '../data/hooks/useReviews'
-import { useNotifications, useMarkNotificationRead } from '../data/hooks/useNotifications'
+import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead, useUnreadCount } from '../data/hooks/useNotifications'
 import { useProfileSettings, useSaveProfileSettings } from '../data/hooks/useProfileSettings'
 import { useMerchantSetup, useSaveMerchantSetup } from '../data/hooks/useMerchantSetup'
 import { useMerchantInviteLinkSetting } from '../data/hooks/useMerchantSettings'
 import DashboardHeader from './dashboard/layout/DashboardHeader'
 import DashboardSidebar from './dashboard/layout/DashboardSidebar'
 import MobileMenuDrawer from './dashboard/layout/MobileMenuDrawer'
+import MobileBottomNav from './dashboard/layout/MobileBottomNav'
 import Overview from './dashboard/overview/Overview'
 import StaffView from './dashboard/views/StaffView'
 import ReviewsView from './dashboard/views/ReviewsView'
@@ -43,6 +44,8 @@ import StaffModal from './dashboard/modals/StaffModal'
 import QrModal from './dashboard/modals/QrModal'
 import InviteShareModal from './dashboard/modals/InviteShareModal'
 import AddTouchpointModal from './dashboard/modals/AddTouchpointModal'
+import { usePagination } from '../hooks/usePagination'
+import { DEFAULT_PAGE_SIZE, STAFF_FILTER_LIST_PAGE_SIZE } from '../constants/pagination'
 
 
 export default function Dashboard({
@@ -84,6 +87,7 @@ export default function Dashboard({
   const [processingFee, setProcessingFee] = useState(3.0)
   const [isNotiDropdownOpen, setIsNotiDropdownOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [reviewsPageNumber, setReviewsPageNumber] = useState(1)
 
   const hasSearchQuery = Boolean(searchQuery.trim())
   const needsMerchantStaffList =
@@ -99,6 +103,39 @@ export default function Dashboard({
     hasSearchQuery ||
     activeMenu === 'staff'
   const needsInviteLink = activeMenu === 'staff'
+  const isStaffTab = activeMenu === 'staff'
+  const isReviewsTab = activeMenu === 'reviews'
+  const isTouchpointsTab = activeMenu === 'touchpoints'
+  const staffPagination = usePagination({ pageSize: DEFAULT_PAGE_SIZE })
+  const reviewsPagination = usePagination({ pageSize: DEFAULT_PAGE_SIZE })
+
+  useEffect(() => {
+    if (!isStaffTab) staffPagination.reset()
+  }, [isStaffTab, staffPagination.reset])
+
+  useEffect(() => {
+    if (!isReviewsTab) reviewsPagination.reset()
+  }, [isReviewsTab, reviewsPagination.reset])
+
+  const reviewsListQuery = useMemo(
+    () => ({
+      pageNumber: isReviewsTab ? reviewsPagination.pageNumber : 1,
+      pageSize: isReviewsTab ? reviewsPagination.pageSize : DASHBOARD_REVIEWS_LIST_QUERY.pageSize,
+    }),
+    [isReviewsTab, reviewsPagination.pageNumber, reviewsPagination.pageSize],
+  )
+
+  const needsTouchpointsList =
+    (activeMenu === 'overview' || hasSearchQuery) && !isTouchpointsTab
+
+  const touchpointsListQuery = useMemo(() => {
+    const trimmedName = searchQuery.trim()
+    return {
+      PageNumber: 1,
+      PageSize: STAFF_FILTER_LIST_PAGE_SIZE,
+      ...(trimmedName ? { Name: trimmedName } : {}),
+    }
+  }, [searchQuery])
 
   // ---------------------------------------------------------------------------
   // Server-state hooks (TanStack Query) — lazy per active tab where possible
@@ -106,17 +143,27 @@ export default function Dashboard({
   const { data: transactionsData, isLoading: isTransactionsLoading } = useTransactions({
     enabled: needsTransactions,
   })
-  const { data: reviewsPage, isPending: isReviewsPending } = useDashboardReviews(
-    DASHBOARD_REVIEWS_LIST_QUERY,
-    { enabled: needsDashboardReviews },
-  )
+  const {
+    data: reviewsPage,
+    isPending: isReviewsPending,
+    isFetching: isReviewsFetching,
+  } = useDashboardReviews(reviewsListQuery, { enabled: needsDashboardReviews })
+  const { data: apiUnreadCount = 0 } = useUnreadCount()
   const { data: notificationsData, isLoading: isNotificationsLoading, isFetching: isNotificationsFetching } = useNotifications({
     enabled: needsNotificationsList,
   })
   const { data: profileSettingsData } = useProfileSettings()
   const { data: merchantSetupData } = useMerchantSetup()
-  const { data: merchantStaffData, isLoading: isStaffLoading } = useMerchantStaff({
+  const { data: merchantStaffData, isLoading: isStaffLoading, isFetching: isStaffFetching } = useMerchantStaff({
     enabled: needsMerchantStaffList,
+    pageNumber: isStaffTab ? staffPagination.pageNumber : 1,
+    pageSize: isStaffTab ? staffPagination.pageSize : STAFF_FILTER_LIST_PAGE_SIZE,
+  })
+  const { data: pendingStaffPage } = useMerchantStaff({
+    enabled: isStaffTab,
+    statusFilter: StatusFilter.Pending,
+    pageNumber: 1,
+    pageSize: 50,
   })
   const {
     data: inviteLinkSetting,
@@ -124,6 +171,7 @@ export default function Dashboard({
   } = useMerchantInviteLinkSetting({ enabled: userRole === 'owner' && needsInviteLink })
 
   const markNotificationReadMutation = useMarkNotificationRead()
+  const markAllNotificationsReadMutation = useMarkAllNotificationsRead()
   const saveMerchantSetupMutation = useSaveMerchantSetup()
 
   // ---------------------------------------------------------------------------
@@ -142,6 +190,10 @@ export default function Dashboard({
     if (notificationsData === undefined) return
     setNotifications(notificationsData)
   }, [notificationsData])
+
+  const unreadCount = notifications.length > 0
+    ? notifications.filter((n) => !n.read).length
+    : apiUnreadCount
 
   // Profile — thin local mirror with complex initialisation / override rules.
   const buildFallbackProfile = (storeInfo, reviewInfo) => ({
@@ -206,14 +258,22 @@ export default function Dashboard({
   }, [profileSettingsData, hasKyb, userEmail, verificationStatus, businessLogo])
 
   // Use API hooks for Touchpoints
-  const { data: touchpointsData, isLoading: isTouchpointsLoading } = useTouchpoints()
+  const {
+    data: touchpointsData,
+    isLoading: isTouchpointsLoading,
+  } = useTouchpoints(touchpointsListQuery, { enabled: needsTouchpointsList })
   const touchpoints = touchpointsData?.items || []
   const createTouchpointMutation = useCreateTouchpoint()
   const deleteTouchpointMutation = useDeleteTouchpoint()
+  const toggleTouchpointMutation = useToggleTouchpoint()
 
   const { devices, setDevices, handleAddDevice, handleDeleteDevice, handleToggleDeviceStatus } = useDevices()
   const [qrTarget, setQrTarget] = useState<any | null>(null)
   const [reviewFilterStaff, setReviewFilterStaff] = useState('all')
+  const handleReviewFilterStaffChange = useCallback((value) => {
+    setReviewFilterStaff(value)
+    reviewsPagination.setPage(1)
+  }, [reviewsPagination.setPage])
   const [newTouchpoint, setNewTouchpoint] = useState({ name: '', type: 'Table QR' })
   const [isAddTouchpointModalOpen, setIsAddTouchpointModalOpen] = useState(false)
   const [addTouchpointPrefill, setAddTouchpointPrefill] = useState<any | null>(null)
@@ -221,6 +281,13 @@ export default function Dashboard({
   const { chartRange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate, handleChartRangeChange } = useChartDateRange(transactions)
 
   const { data: overviewMetricsData, isLoading: isOverviewApiLoading } = useDashboardOverview({
+    startDate: chartStartDate,
+    endDate: chartEndDate,
+  })
+  const { data: metricsMonthData } = useDashboardOverviewCurrentMonth()
+  const { data: metricsYearData } = useDashboardOverviewCurrentYear()
+
+  const { data: tipsChartData, isLoading: isTipsChartLoading } = useDashboardTipsChart({
     startDate: chartStartDate,
     endDate: chartEndDate,
   })
@@ -293,7 +360,7 @@ export default function Dashboard({
   const menuItemsToDisplay = userRole === 'staff'
     ? [
         { id: 'overview', label: t('components.dashboardRoot.myDashboard'), icon: MENU_ITEMS.find(i => i.id === 'overview')?.icon, image: MENU_ITEMS.find(i => i.id === 'overview')?.image },
-        { id: 'support', label: t('dashboard.menu.support'), icon: MENU_ITEMS.find(i => i.id === 'support')?.icon }
+        { id: 'support', label: t('dashboard.menu.support'), icon: MENU_ITEMS.find(i => i.id === 'support')?.icon, image: MENU_ITEMS.find(i => i.id === 'support')?.image }
       ]
     : MENU_ITEMS
 
@@ -315,56 +382,14 @@ export default function Dashboard({
   }, [staff, searchQuery])
 
   const pendingStaff = useMemo(() => {
-    return staff.filter(member => 
-      (member.status === 'Pending Acceptance' || member.status === 'Pending') && 
+    const source = isStaffTab ? (pendingStaffPage?.items ?? []) : staff
+    return source.filter((member) =>
+      (member.status === 'Pending Acceptance' || member.status === 'Pending' || member.status === 'Pending Setup') &&
       (member.itemType === 'link' || member.itemType === 'invite')
     )
-  }, [staff])
+  }, [isStaffTab, pendingStaffPage, staff])
 
-  const filteredTouchpoints = useMemo(() => {
-    if (!searchQuery) return touchpoints
-    const query = searchQuery.toLowerCase().trim()
-    const normalize = (value) =>
-      String(value ?? '')
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[\s_-]+/g, '')
-    const compactQuery = normalize(query)
-
-    const toReadableType = (rawType) => {
-      const value = String(rawType ?? '').toLowerCase()
-      if (value === 'frontdesk') return 'front desk'
-      if (value === 'staffcard') return 'staff qr'
-      if (value === 'receipt') return 'receipt qr'
-      if (value === 'table') return 'table qr'
-      return value
-    }
-
-    return touchpoints.filter((point) => {
-      const isActive = point?.isActive !== false
-      const readableStatus = isActive ? 'active' : 'inactive'
-      const readableType = toReadableType(point?.type)
-
-      return (
-        String(point?.name ?? '').toLowerCase().includes(query) ||
-        String(point?.type ?? '').toLowerCase().includes(query) ||
-        readableType.includes(query) ||
-        (point?.staffName && String(point.staffName).toLowerCase().includes(query)) ||
-        String(point?.deviceId ?? '').toLowerCase().includes(query) ||
-        String(point?.slug ?? '').toLowerCase().includes(query) ||
-        String(point?.id ?? '').toLowerCase().includes(query) ||
-        String(point?.url ?? '').toLowerCase().includes(query) ||
-        readableStatus.includes(query) ||
-        normalize(point?.name).includes(compactQuery) ||
-        normalize(point?.deviceId).includes(compactQuery) ||
-        normalize(point?.slug).includes(compactQuery) ||
-        normalize(point?.type).includes(compactQuery) ||
-        normalize(readableType).includes(compactQuery) ||
-        normalize(readableStatus).includes(compactQuery)
-      )
-    })
-  }, [touchpoints, searchQuery])
+  const filteredTouchpoints = touchpoints
 
   const filteredReviews = useMemo(() => {
     if (!searchQuery) return reviews
@@ -402,6 +427,14 @@ export default function Dashboard({
     yelpClicks: 0,
     count4To5Stars: 0,
     count1To3Stars: 0,
+    responseRate: 0,
+    responseRateLabel: null,
+    googleAvgRating: null,
+    googleReviewCount: null,
+    yelpAvgRating: null,
+    yelpReviewCount: null,
+    returningCustomerRate: 0,
+    returningCustomerRateChangeVsLastWeek: 0,
     previousPeriodComparison: null,
   }
 
@@ -442,7 +475,8 @@ export default function Dashboard({
   }
 
   const toggleTouchpointStatus = (id) => {
-    // Toggle not supported by API yet. Use delete.
+    if (toggleTouchpointMutation.isPending) return
+    toggleTouchpointMutation.mutate(id)
   }
 
   const deleteTouchpoint = (id) => {
@@ -517,8 +551,20 @@ export default function Dashboard({
     setNotifications(next)
   }
 
+  const handleMarkAllNotificationsRead = () => {
+    const hasUnread = notifications.some((n) => !n.read && !n.isRead)
+    if (!hasUnread || markAllNotificationsReadMutation.isPending) return
+    markAllNotificationsReadMutation.mutate()
+    setNotifications((current) =>
+      current.map((n) => ({ ...n, read: true, isRead: true })),
+    )
+  }
+
   const dashboardCtx = {
-    metrics, activeKpi, setActiveKpi, chartRange, handleChartRangeChange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate,
+    profile, onNavigateMenu: handleNavigateMenu,
+    metrics, tipsChartData, activeKpi, setActiveKpi, chartRange, handleChartRangeChange, chartStartDate, chartEndDate, setChartStartDate, setChartEndDate,
+    metricsMonth: metricsMonthData ?? null,
+    metricsYear: metricsYearData ?? null,
     kpiDeltas,
     transactions, selectedLeaderboardStaff, handleSelectLeaderboardStaff, businessName, businessSlug, previewQr, hasKyb, hasSetup, onStartSetup: handleStartSetup,
     isOverviewLoading, isTransactionsLoading, isTouchpointsLoading,
@@ -527,12 +573,29 @@ export default function Dashboard({
     filteredStaff, pendingStaff, staff, staffLoading, openApproveStaff, openAddStaff, openEditStaff, deleteStaff, toggleStaff, toggleStaffTipsFlow,
     handleLinkStaff, handleInviteStaff, handleResendInvite, handleAcceptJoinRequest, handleDeclineJoinRequest, handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     setInviteShareDefaultName, setInviteShareDefaultContact, setIsInviteShareOpen,
-    filteredTouchpoints, setAddTouchpointPrefill, setIsAddTouchpointModalOpen, deleteTouchpoint, toggleTouchpointStatus, linkDevice, devices, handleAddDevice, handleDeleteDevice, handleToggleDeviceStatus,
-    reviews, filteredReviews, reviewFilterStaff, setReviewFilterStaff, setupData: setupData ?? merchantSetupData,
+    filteredTouchpoints, setAddTouchpointPrefill, setIsAddTouchpointModalOpen, deleteTouchpoint, toggleTouchpointStatus, togglingTouchpointId: toggleTouchpointMutation.isPending ? toggleTouchpointMutation.variables : null, linkDevice, devices, handleAddDevice, handleDeleteDevice, handleToggleDeviceStatus,
+    reviews, filteredReviews, reviewFilterStaff, setReviewFilterStaff: handleReviewFilterStaffChange, setupData: setupData ?? merchantSetupData,
+    activeReviewsPage: reviewsPagination.pageNumber,
+    activeReviewsPageSize: reviewsPagination.pageSize,
+    activeReviewsTotalPages: reviewsPage?.totalPages ?? 1,
+    activeReviewsTotalCount: reviewsPage?.totalCount ?? 0,
+    activeReviewsHasNext: reviewsPage?.hasNextPage ?? false,
+    activeReviewsHasPrev: reviewsPage?.hasPreviousPage ?? false,
+    setActiveReviewsPage: reviewsPagination.setPage,
+    reviewsListFetching: isReviewsFetching,
     tipsTab, setTipsTab, processingFee, setProcessingFee,
     filteredTransactions, touchpoints,
     verificationStatus, requireKyb, userEmail, onKybSuccess, settingsTab, setSettingsTab,
-    currentStaffId
+    currentStaffId,
+    activeStaffPage: staffPagination.pageNumber,
+    activeStaffPageSize: staffPagination.pageSize,
+    activeStaffTotalPages: merchantStaffData?.totalPages ?? 1,
+    activeStaffTotalCount: merchantStaffData?.totalCount ?? 0,
+    activeStaffHasNext: merchantStaffData?.hasNextPage ?? false,
+    activeStaffHasPrev: merchantStaffData?.hasPreviousPage ?? false,
+    setActiveStaffPage: staffPagination.setPage,
+    staffListLoading: isStaffLoading,
+    staffListFetching: isStaffFetching,
   }
 
   return (
@@ -575,6 +638,9 @@ export default function Dashboard({
           onLogout={onLogout}
           notifications={notificationsData ?? notifications}
           setNotifications={handleSetNotifications}
+          onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
+          isMarkAllNotificationsReadPending={markAllNotificationsReadMutation.isPending}
+          unreadCount={unreadCount}
           isNotiDropdownOpen={isNotiDropdownOpen}
           setIsNotiDropdownOpen={setIsNotiDropdownOpen}
           isNotificationsLoading={isNotificationsLoading || isNotificationsFetching}
@@ -589,13 +655,13 @@ export default function Dashboard({
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
         />
 
-        <main className="min-h-dvh p-4 sm:p-6 lg:p-7">
+        <main className="min-h-dvh p-4 pb-24 sm:p-6 sm:pb-24 lg:p-7 lg:pb-7">
           {activeMenu !== 'overview' && (
             <button
               onClick={() => handleNavigateMenu('overview')}
               className="mb-5 inline-flex h-9 items-center rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-extrabold text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"
             >
-              Back to Dashboard
+              {t('dashboard.back_to_dashboard')}
             </button>
           )}
           <Outlet context={dashboardCtx} />
@@ -604,13 +670,15 @@ export default function Dashboard({
 
       <button
         onClick={() => document.documentElement.classList.toggle('dark')}
-        className="fixed bottom-4 right-4 z-40 flex h-10 w-10 items-center justify-center rounded-full border border-nexoraBorder bg-nexoraSurface text-nexoraMuted shadow-lg"
+        className="fixed bottom-4 right-4 z-40 hidden lg:flex h-10 w-10 items-center justify-center rounded-full border border-nexoraBorder bg-nexoraSurface text-nexoraMuted shadow-lg"
         title="Toggle theme hook"
         aria-label="Toggle theme hook"
       >
         <Sun className="h-4 w-4 dark:hidden" />
         <Moon className="hidden h-4 w-4 dark:block" />
       </button>
+
+      <MobileBottomNav activeMenu={activeMenu} onNavigate={handleNavigateMenu} />
 
       <MobileMenuDrawer
         isOpen={isMobileMenuOpen}
@@ -666,7 +734,7 @@ export default function Dashboard({
         isApproveMode={true}
         onDecline={() => {
           if (approvingStaffMember) {
-            handleDeclineJoinRequest(approvingStaffMember.id)
+            handleDeclineJoinRequest(approvingStaffMember)
           }
           setIsApproveModalOpen(false)
         }}
@@ -681,7 +749,7 @@ export default function Dashboard({
         }}
         onSave={() => {
           if (approvingStaffMember) {
-            handleAcceptJoinRequest(approvingStaffMember.id)
+            handleAcceptJoinRequest(approvingStaffMember)
           }
           setIsApproveModalOpen(false)
         }}

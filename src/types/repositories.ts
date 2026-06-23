@@ -57,13 +57,36 @@ export interface ReviewsSummaryApiDto {
   count1To3Stars?: number
   googleClickCount?: number
   yelpClickCount?: number
+  responseRate?: number
+  responseRateLabel?: DashboardResponseRateLabel | string
+}
+
+export interface PlatformReviewsApiDto {
+  googleAvgRating?: number | null
+  googleReviewCount?: number | null
+  yelpAvgRating?: number | null
+  yelpReviewCount?: number | null
+}
+
+export interface CustomersSummaryApiDto {
+  returningCustomerRate?: number
+  returningCustomerRateChangeVsLastWeek?: number
 }
 
 export interface DashboardOverviewApiDto {
   tipsSummary?: TipsSummaryApiDto
   scansSummary?: ScansSummaryApiDto
   reviewsSummary?: ReviewsSummaryApiDto
+  platformReviews?: PlatformReviewsApiDto
+  customersSummary?: CustomersSummaryApiDto
 }
+
+export type DashboardResponseRateLabel =
+  | 'EXCELLENT'
+  | 'GOOD'
+  | 'FAIR'
+  | 'NEEDS_IMPROVEMENT'
+  | 'POOR'
 
 export interface DashboardOverviewMetrics {
   totalTips: number
@@ -77,6 +100,14 @@ export interface DashboardOverviewMetrics {
   yelpClicks: number
   count4To5Stars: number
   count1To3Stars: number
+  responseRate: number
+  responseRateLabel: DashboardResponseRateLabel | string | null
+  googleAvgRating: number | null
+  googleReviewCount: number | null
+  yelpAvgRating: number | null
+  yelpReviewCount: number | null
+  returningCustomerRate: number
+  returningCustomerRateChangeVsLastWeek: number
   previousPeriodComparison: number | null
 }
 
@@ -254,6 +285,7 @@ export interface TipApiDto {
   paymentMethod?: string
   staffName?: string
   staffProfileId?: string | null
+  staffCode?: string | null
   touchPointName?: string
   touchPointId?: string | null
   createdAt?: string
@@ -338,6 +370,21 @@ export interface CreateBusinessResult {
 export interface ImageUploadResult {
   imageUrl?: string
   fileUrl?: string
+}
+
+export interface TouchpointApiDto {
+  id?: string
+  name?: string
+  slug?: string | null
+  type?: string
+  url?: string | null
+  qrImageUrl?: string | null
+  isActive?: boolean
+  assignedStaffProfileId?: string | null
+  createdAt?: string | null
+  totalScans?: number
+  totalRevenue?: number
+  deviceId?: string | null
 }
 
 export interface TouchpointCreateResult {

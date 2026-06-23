@@ -30,16 +30,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<AuthSession | null>(null)
   const [status, setStatus] = useState<AuthStatus>('loading')
 
-  // On mount: restore session from the adapter
-  useEffect(() => {
-    authAdapter.getSession().then((existing) => {
-      setSession(existing || null)
-      setStatus(existing ? 'authenticated' : 'anonymous')
-    }).catch(() => {
-      setSession(null)
-      setStatus('anonymous')
-    })
+  // Shared promise to deduplicate concurrent getSession() calls
+  const sessionPromiseRef = React.useRef(null)
+
+  const resolveSession = useCallback(() => {
+    if (!sessionPromiseRef.current) {
+      sessionPromiseRef.current = authAdapter.getSession()
+        .then((existing) => {
+          setSession(existing || null)
+          setStatus(existing ? 'authenticated' : 'anonymous')
+          return existing
+        })
+        .catch(() => {
+          setSession(null)
+          setStatus('anonymous')
+          return null
+        })
+        .finally(() => {
+          sessionPromiseRef.current = null
+        })
+    }
+    return sessionPromiseRef.current
   }, [])
+
+  // On mount: restore session from the adapter (single call)
+  useEffect(() => {
+    resolveSession()
+  }, [resolveSession])
 
   // Subscribe to tokenStore updates — when tokens are cleared (e.g. 401
   // refresh failure), transition to anonymous without a page reload.
@@ -49,23 +66,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setSession(null)
         setStatus('anonymous')
       } else {
+        // Only fetch session if we don't have one yet
         setSession((prev) => {
-          if (!prev) {
-            authAdapter.getSession().then((newSession) => {
-              setSession(newSession)
-              setStatus(newSession ? 'authenticated' : 'anonymous')
-            }).catch(() => {
-              setSession(null)
-              setStatus('anonymous')
-            })
-          }
+          if (!prev) resolveSession()
           return prev
         })
       }
     })
 
     return unsubscribe
-  }, [])
+  }, [resolveSession])
 
   const login = useCallback(async (credentials: LoginCredentials) => {
     const newSession = await authAdapter.login(credentials)

@@ -1,7 +1,7 @@
 /**
  * useReviews — TanStack Query hooks for the reviews domain.
  */
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import reviewsRepository from '../repositories/reviews'
 import { useSessionRole } from '../../auth/useSessionRole'
@@ -29,6 +29,7 @@ export function useDashboardReviews(
     retry: false,
     staleTime: 30_000,
     refetchOnMount: false,
+    placeholderData: keepPreviousData,
   })
 }
 

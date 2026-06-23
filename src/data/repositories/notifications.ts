@@ -75,7 +75,7 @@ function normalizeNotificationType(type: string): string {
 
 function normalizeNotification(item: NotificationApiDto): NotificationRecord {
   const isRead = Boolean(item.isRead ?? item.read)
-  const message = item.message ?? item.body ?? ''
+  const body = item.body ?? item.message ?? ''
   const createdAt = item.createdAt ?? ''
   const type = item.type || 'info'
   const typeLower = normalizeNotificationType(type)
@@ -100,8 +100,8 @@ function normalizeNotification(item: NotificationApiDto): NotificationRecord {
     id: item.id ?? '',
     type,
     title: item.title || '',
-    message,
-    body: message,
+    message: body,
+    body,
     actionUrl: item.actionUrl ?? null,
     isRead,
     read: isRead,
@@ -116,20 +116,23 @@ function normalizeNotificationsPage(
   pageNumber: number,
 ): NotificationsPage {
   if (Array.isArray(response)) {
+    const items = response.map(normalizeNotification)
     return {
-      items: response.map(normalizeNotification),
+      items,
       pageNumber,
       totalPages: 1,
-      totalCount: response.length,
+      totalCount: items.length,
       hasPreviousPage: false,
       hasNextPage: false,
     }
   }
+
+  const items = (response.items ?? []).map(normalizeNotification)
   return {
-    items: (response.items ?? []).map(normalizeNotification),
+    items,
     pageNumber: response.pageNumber ?? pageNumber,
     totalPages: response.totalPages ?? 1,
-    totalCount: response.totalCount ?? 0,
+    totalCount: response.totalCount ?? items.length,
     hasPreviousPage: response.hasPreviousPage ?? false,
     hasNextPage: response.hasNextPage ?? false,
   }

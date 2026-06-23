@@ -21,7 +21,7 @@ import {
   usePublicBusinessPaymentMethods,
 } from '../../../data/hooks/usePublicTouch'
 import { PAYOUT_UI_LABELS, payoutTypeToUiKey } from '../../../data/paymentMethodTypes'
-import type { PaymentMethodDto } from '../../../types/domain'
+import type { PaymentMethodDto, ReviewLinks } from '../../../types/domain'
 
 function walletNameToKey(walletName: string): string {
   const match = Object.entries(PAYOUT_UI_LABELS).find(([, label]) => label === walletName)
@@ -102,6 +102,51 @@ function getApiErrorMessage(err: unknown, fallback: string): string {
     if (apiErr.errorCode && apiErr.errorCode !== 'HTTP_ERROR') return apiErr.errorCode
   }
   return fallback
+}
+
+function firstNonEmptyString(...values: unknown[]): string {
+  for (const value of values) {
+    if (typeof value === 'string' && value.trim()) return value.trim()
+  }
+  return ''
+}
+
+function resolveCustomerReviewLinks(source: LooseObject | null | undefined): ReviewLinks {
+  const business = source?.business || source?.businessInfo || {}
+  const reviewLinks = source?.reviewLinks || business.reviewLinks || {}
+
+  return {
+    googleReview: firstNonEmptyString(
+      business.googleReviewUrl,
+      business.googleReview,
+      business.googleReviewLink,
+      reviewLinks.googleReview,
+      reviewLinks.googleReviewUrl,
+      reviewLinks.googleReviewLink,
+      source?.googleReviewUrl,
+      source?.googleReview,
+      source?.googleReviewLink,
+    ),
+    yelpReview: firstNonEmptyString(
+      business.yelpUrl,
+      business.yelpReview,
+      business.yelpReviewUrl,
+      business.yelpReviewLink,
+      reviewLinks.yelpReview,
+      reviewLinks.yelpUrl,
+      reviewLinks.yelpReviewUrl,
+      reviewLinks.yelpReviewLink,
+      source?.yelpUrl,
+      source?.yelpReview,
+      source?.yelpReviewUrl,
+      source?.yelpReviewLink,
+    ),
+    feedbackEmail: firstNonEmptyString(
+      business.feedbackEmail,
+      reviewLinks.feedbackEmail,
+      source?.feedbackEmail,
+    ),
+  }
 }
 
 /**
@@ -190,17 +235,11 @@ export default function useCustomerFlow() {
 
   const initialStaffMember = null // No auto-select since 'techSlug' simulation is removed
 
-  const reviewLinks = useMemo(() => {
-    const defaultLinks = { googleReview: '', yelpReview: '', feedbackEmail: '' }
-    if (touchPageData?.business) {
-      return {
-        googleReview: touchPageData.business.googleReviewUrl || '',
-        yelpReview: touchPageData.business.yelpUrl || '',
-        feedbackEmail: touchPageData.business.feedbackEmail || '',
-      }
-    }
-    return defaultLinks
-  }, [touchPageData])
+  const touchReviewLinks = useMemo(
+    () => resolveCustomerReviewLinks(touchPageData),
+    [touchPageData],
+  )
+  const hasTouchReviewLinks = Boolean(touchReviewLinks.googleReview || touchReviewLinks.yelpReview)
 
   // ── Local state ──
   const [selectedStaffMembers, setSelectedStaffMembers] = useState<any[]>([])
@@ -251,16 +290,29 @@ export default function useCustomerFlow() {
   )
 
   const merchantSetupQuery = useMerchantSetup({
-    enabled: Boolean(touchRoute?.businessSlug && !touchBusinessId),
+    enabled: Boolean(touchRoute?.businessSlug && (!touchBusinessId || !hasTouchReviewLinks)),
   })
 
   const merchantProfileBusinessId = useMemo(() => {
     const info = merchantSetupQuery.data?.businessInfo as LooseObject | undefined
     const profileId = info?.businessId || info?.id
     if (!profileId || !touchRoute?.businessSlug) return null
+    if (touchBusinessId && String(profileId) === String(touchBusinessId)) return String(profileId)
     const profileSlug = slugify(String(info?.slug || info?.name || ''))
     return profileSlug === touchRoute.businessSlug ? String(profileId) : null
-  }, [merchantSetupQuery.data, touchRoute?.businessSlug])
+  }, [merchantSetupQuery.data, touchBusinessId, touchRoute?.businessSlug])
+
+  const merchantSetupReviewLinks = useMemo(
+    () => merchantProfileBusinessId
+      ? resolveCustomerReviewLinks(merchantSetupQuery.data as LooseObject | null | undefined)
+      : { googleReview: '', yelpReview: '', feedbackEmail: '' },
+    [merchantSetupQuery.data, merchantProfileBusinessId],
+  )
+  const reviewLinks = useMemo(() => ({
+    googleReview: touchReviewLinks.googleReview || merchantSetupReviewLinks.googleReview || '',
+    yelpReview: touchReviewLinks.yelpReview || merchantSetupReviewLinks.yelpReview || '',
+    feedbackEmail: touchReviewLinks.feedbackEmail || merchantSetupReviewLinks.feedbackEmail || '',
+  }), [touchReviewLinks, merchantSetupReviewLinks])
 
   const merchantBusinessQuery = useQuery({
     queryKey: ['merchantBusinessContext', touchRoute?.businessSlug],
@@ -446,31 +498,6 @@ export default function useCustomerFlow() {
   }
 
   /**
-   * Validates tip amounts and navigates to payment step.
-   * @param {Event} e - Form submit event.
-   */
-  const handleNextToPayment = (e) => {
-    e.preventDefault()
-    const MIN_TIP = 1, MAX_TIP = 500
-    let total = 0
-    for (const member of selectedStaffMembers) {
-      const selTip = selectedTips[member.id] !== undefined ? selectedTips[member.id] : 15
-      const amount = selTip === 'custom' ? Number(customTips[member.id]) : selTip
-      if (isNaN(amount) || amount < MIN_TIP) {
-        showToast(t('customer.tip_min_error', { amount: `$${MIN_TIP.toFixed(2)}` }), 'error'); return
-      }
-      if (amount > MAX_TIP) {
-        showToast(t('customer.tip_max_error', { amount: `$${MAX_TIP.toFixed(2)}` }), 'error'); return
-      }
-      total += amount
-    }
-    if (total > MAX_TIP) {
-      showToast(t('customer.tip_total_max_error', { amount: `$${MAX_TIP.toFixed(2)}` }), 'error'); return
-    }
-    setStep('payment')
-  }
-
-  /**
    * Handles wallet selection and initiates tip payment.
    * Single staff → POST /api/v1/touch/tip
    * Multi staff  → POST /api/v1/tips/multi-staff
@@ -487,12 +514,12 @@ export default function useCustomerFlow() {
         const touchPointId = touchPageData?.touchPoint?.id
         if (!touchPointId) {
           showToast(t('customer.multi_staff_missing_touchpoint'), 'error')
-          setStep('payment')
+          setStep('tip_amount')
           return
         }
         if (!businessId) {
           showToast(t('customer.multi_staff_missing_business'), 'error')
-          setStep('payment')
+          setStep('tip_amount')
           return
         }
 
@@ -502,7 +529,7 @@ export default function useCustomerFlow() {
         )
         if (!businessPaymentMethodId) {
           showToast(t('customer.multi_staff_missing_payment_method'), 'error')
-          setStep('payment')
+          setStep('tip_amount')
           return
         }
 
@@ -544,7 +571,7 @@ export default function useCustomerFlow() {
     } catch (err) {
       logger.error('Failed to create tip', err)
       showToast(getApiErrorMessage(err, t('errors.generic')), 'error')
-      setStep('payment')
+      setStep('tip_amount')
     }
   }
 
@@ -608,15 +635,6 @@ export default function useCustomerFlow() {
     setStep('final_done')
   }
 
-  const handleReset = () => {
-    setSelectedStaffMembers([])
-    setStep('select_staff')
-    setSelectedTips({})
-    setCustomTips({}); setRating(5); setComment(''); setSelectedTags([])
-    setSelectedWallet(''); setSelectedWalletObj(null); setTipRefNumber('')
-    setCurrentTipId(null); setCurrentReviewId(null); setPaymentLinkData(null)
-  }
-
   // To preserve backwards compatibility with tests and consumers, we export 'isApiMode' as true
   return {
     currentLanguage, setLanguage, t, showToast,
@@ -632,9 +650,9 @@ export default function useCustomerFlow() {
     selectedTags, setSelectedTags, selectedWallet, setSelectedWallet,
     isProcessing, setIsProcessing, selectedWalletObj, setSelectedWalletObj,
     tipRefNumber, setTipRefNumber, currentTipId, currentReviewId,
-    handleTagToggle, handleRatingChange, handleToggleStaff, handleNextToPayment,
+    handleTagToggle, handleRatingChange, handleToggleStaff,
     handlePay, handleConfirmTip, handleSkipTip, handleSubmitFeedback,
-    handleTrackExternalReview, handleReset, paymentLinkData,
+    handleTrackExternalReview, paymentLinkData,
     scannedTouchpoint: null,
   }
 }

@@ -3,6 +3,7 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
 import { serializeBankWireAccount } from '../../payout/bankWireAccount'
+import { captureQrImage } from '../../../utils/qrCode'
 
 const normalizePhone = (raw) => {
   if (!raw) return ''
@@ -33,6 +34,7 @@ import { useMerchantSetup, useSaveMerchantSetup, useUploadImage } from '../../..
 import { useNotifications, useAddNotification } from '../../../data/hooks/useNotifications'
 import { useStaffInviteInfo, useAcceptStaffInvite, usePublicMerchantInvite } from '../../../data/hooks/useStaffInvites'
 import { apiAuthAdapter } from '../../../auth/adapters/apiAuthAdapter'
+import { getSignupOtp } from '../../../auth/signupOtp'
 import { staffPaymentMethodsRepository } from '../../../data/repositories/staffPaymentMethods'
 import { staffInvitesRepository } from '../../../data/repositories/staffInvites'
 import profileSettingsRepository from '../../../data/repositories/profileSettings'
@@ -410,7 +412,11 @@ export default function useStaffRegistration({ inviteData }) {
         lastName,
         type: 'User'
       })
-      .then(() => {
+      .then((signupResponse) => {
+        const signupOtp = getSignupOtp(signupResponse)
+        if (signupOtp) {
+          setOtpCode(signupOtp)
+        }
         proceedToOtp()
       })
       .catch((err) => {
@@ -539,25 +545,18 @@ export default function useStaffRegistration({ inviteData }) {
     setEditingMethod(null)
   }
 
-  const handleModalFileChange = (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      setEditQrCode(typeof reader.result === 'string' ? reader.result : '')
-    }
-    reader.readAsDataURL(file)
+  const handleModalImagePick = (dataUrl) => {
+    if (dataUrl) setEditQrCode(dataUrl)
   }
 
-  const handleModalTakePhoto = () => {
+  const handleModalTakePhoto = async () => {
     setIsCapturing(true)
-    setTimeout(() => {
-      const mockQr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-        editValue || ''
-      )}`
-      setEditQrCode(mockQr)
+    try {
+      const dataUrl = await captureQrImage({ fallbackValue: editValue || '' })
+      if (dataUrl) setEditQrCode(dataUrl)
+    } finally {
       setIsCapturing(false)
-    }, 800)
+    }
   }
 
   const handleModalClearQr = () => {
@@ -724,8 +723,8 @@ export default function useStaffRegistration({ inviteData }) {
         return
       }
 
-      // Step 5: Already onboarded - fetch full profile + payment methods, show confirm screen
-      let paymentMethods: import('../../types/domain').PaymentMethodDto[] = []
+      // Step 5: Already onboarded → fetch full profile + payment methods, show confirm screen
+      let paymentMethods: import('../../../types/domain').PaymentMethodDto[] = []
       try {
         // Staff profile may not exist yet (not linked to any business), so handle 404
         paymentMethods = await staffPaymentMethodsRepository.getAll()
@@ -822,7 +821,7 @@ export default function useStaffRegistration({ inviteData }) {
   }
 
   const saveSelectedPaymentMethods = async () => {
-    let methods: import('../../types/domain').PaymentMethodDto[] = []
+    let methods: import('../../../types/domain').PaymentMethodDto[] = []
     try {
       methods = await staffPaymentMethodsRepository.getAll()
     } catch (pmErr: unknown) {
@@ -1228,7 +1227,7 @@ export default function useStaffRegistration({ inviteData }) {
     handleToggleMethod,
     handleEditPayoutAccount,
     savePayoutAccount,
-    handleModalFileChange,
+    handleModalImagePick,
     handleModalTakePhoto,
     handleModalClearQr,
     handleLinkExistingProfile,

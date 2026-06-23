@@ -12,6 +12,8 @@ import { shareUrl } from '../../../utils/shareUrl'
 import { buildQrImageUrl } from '../../../utils/staffTipUrl'
 import { SkeletonLayout } from '../../ui/skeleton'
 
+type LooseObject = Record<string, any>
+
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 
 type QrTab = 'referral' | 'tipping'
@@ -28,7 +30,11 @@ function getBusinessStatusLabel(biz: StaffBusinessTipQr): string {
 
 function isBusinessActive(biz: StaffBusinessTipQr): boolean {
   const label = getBusinessStatusLabel(biz).toLowerCase()
-  return label === 'active' && Boolean(biz.tipUrl)
+  return label === 'active' && Boolean(biz.tipUrl) && !biz.tipLinkIncomplete
+}
+
+function isTouchPointLinkIncomplete(biz: StaffBusinessTipQr): boolean {
+  return Boolean(biz.tipLinkIncomplete)
 }
 
 function isBusinessPendingLink(biz: StaffBusinessTipQr): boolean {
@@ -92,6 +98,14 @@ function getInactiveTipQrCopy(
   biz: StaffBusinessTipQr,
   t: (key: string) => string,
 ): { title: string; description: string; showScanCta: boolean; icon: typeof Store } {
+  if (isTouchPointLinkIncomplete(biz)) {
+    return {
+      icon: Link2,
+      title: t('staff_dashboard.qr.touchpoint_missing_title'),
+      description: t('staff_dashboard.qr.touchpoint_missing_body', { business: biz.businessName }),
+      showScanCta: false,
+    }
+  }
   if (isBusinessPendingApproval(biz)) {
     return {
       icon: Clock,
@@ -418,14 +432,6 @@ export default function StaffMyQR() {
                       {t('staff_dashboard.qr.business_sub')}
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleOpenScan}
-                    className="flex shrink-0 items-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-3 py-1.5 text-xs font-bold text-nexoraBrand shadow-sm transition hover:bg-slate-50"
-                  >
-                    <QrCode className="h-3.5 w-3.5" />
-                    <span>{t('components.staff_dashboard.views.StaffMyQR.scanSalonQr')}</span>
-                  </button>
                 </div>
 
                 <div className="flex flex-wrap gap-2">

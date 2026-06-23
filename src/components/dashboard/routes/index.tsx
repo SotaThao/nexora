@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useOutletContext, useNavigate, useParams, Navigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 
@@ -11,7 +11,9 @@ import ReportsView from '../views/ReportsView'
 import SettingsView from '../../SettingsView'
 import AnalyticsView from '../../AnalyticsView'
 import SupportView from '../../SupportView'
+import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3'
 import ComingSoon from '../views/ComingSoon'
+import ManagePlanView from '../views/ManagePlanView'
 import StaffDetailView from '../../StaffDetailView'
 
 export function OverviewRoute() {
@@ -19,16 +21,18 @@ export function OverviewRoute() {
   const navigate = useNavigate()
   return (
     <Overview
+      {...({
+        chartRange: ctx.chartRange,
+        setChartRange: ctx.handleChartRangeChange,
+        chartStartDate: ctx.chartStartDate,
+        chartEndDate: ctx.chartEndDate,
+        setChartStartDate: ctx.setChartStartDate,
+        setChartEndDate: ctx.setChartEndDate,
+      } as any)}
       metrics={ctx.metrics}
       kpiDeltas={ctx.kpiDeltas}
       activeKpi={ctx.activeKpi}
       setActiveKpi={ctx.setActiveKpi}
-      chartRange={ctx.chartRange}
-      setChartRange={ctx.handleChartRangeChange}
-      chartStartDate={ctx.chartStartDate}
-      chartEndDate={ctx.chartEndDate}
-      setChartStartDate={ctx.setChartStartDate}
-      setChartEndDate={ctx.setChartEndDate}
       transactions={ctx.transactions}
       selectedStaff={ctx.selectedLeaderboardStaff}
       setSelectedStaff={ctx.handleSelectLeaderboardStaff}
@@ -41,14 +45,22 @@ export function OverviewRoute() {
       hasKyb={ctx.hasKyb}
       hasSetup={ctx.hasSetup}
       onStartSetup={ctx.onStartSetup}
+      profile={ctx.profile}
+      onNavigateMenu={ctx.onNavigateMenu}
+      onApproveClick={ctx.openApproveStaff}
+      pendingStaff={ctx.pendingStaff}
+      staff={ctx.staff}
       isLoading={ctx.isOverviewLoading}
       isTransactionsLoading={ctx.isTransactionsLoading}
       isTouchpointsLoading={ctx.isTouchpointsLoading}
       reviewsPage={ctx.reviewsPage}
       isReviewsPending={ctx.isReviewsPending}
+      metricsMonth={ctx.metricsMonth}
+      metricsYear={ctx.metricsYear}
     />
   )
 }
+
 
 export function StaffRoute() {
   const ctx = useOutletContext<LooseObject>()
@@ -58,7 +70,8 @@ export function StaffRoute() {
       staff={ctx.filteredStaff}
       pendingStaff={ctx.pendingStaff}
       allStaff={ctx.staff}
-      isLoading={ctx.staffLoading}
+      isLoading={ctx.staffListLoading ?? ctx.staffLoading}
+      isFetching={ctx.staffListFetching}
       onApproveClick={ctx.openApproveStaff}
       onAdd={ctx.openAddStaff}
       onEdit={ctx.openEditStaff}
@@ -83,6 +96,14 @@ export function StaffRoute() {
         ctx.setInviteShareDefaultContact('')
         ctx.setIsInviteShareOpen(true)
       }}
+      // Pagination props
+      pageNumber={ctx.activeStaffPage}
+      pageSize={ctx.activeStaffPageSize}
+      totalPages={ctx.activeStaffTotalPages}
+      totalCount={ctx.activeStaffTotalCount}
+      hasNextPage={ctx.activeStaffHasNext}
+      hasPreviousPage={ctx.activeStaffHasPrev}
+      onPageChange={ctx.setActiveStaffPage}
     />
   )
 }
@@ -152,9 +173,14 @@ export function TouchpointsRoute() {
   const [sp, setSp] = useSearchParams()
   const tab = sp.get('tab') || 'stations'
 
+  useEffect(() => {
+    if (tab === 'devices') {
+      setSp({ tab: 'stations' }, { replace: true })
+    }
+  }, [tab, setSp])
+
   return (
     <TouchpointsView
-      touchpoints={ctx.filteredTouchpoints}
       onOpenAddModal={(prefill) => {
         ctx.setAddTouchpointPrefill(prefill || null)
         ctx.setIsAddTouchpointModalOpen(true)
@@ -162,6 +188,7 @@ export function TouchpointsRoute() {
       onDelete={(id) => ctx.deleteTouchpoint(id)}
       onQr={ctx.previewQr}
       onToggleStatus={ctx.toggleTouchpointStatus}
+      togglingTouchpointId={ctx.togglingTouchpointId}
       onLinkDevice={ctx.linkDevice}
       transactions={ctx.transactions}
       businessName={ctx.businessName}
@@ -169,8 +196,11 @@ export function TouchpointsRoute() {
       onAddDevice={ctx.handleAddDevice}
       onDeleteDevice={ctx.handleDeleteDevice}
       onToggleDeviceStatus={ctx.handleToggleDeviceStatus}
-      activeSubTab={tab}
-      onTabChange={(t) => setSp({ tab: t }, { replace: true })}
+      activeSubTab={tab === 'devices' ? 'stations' : tab}
+      onTabChange={(nextTab) => {
+        if (nextTab === 'devices') return
+        setSp({ tab: nextTab }, { replace: true })
+      }}
     />
   )
 }
@@ -182,10 +212,18 @@ export function ReviewsRoute() {
     <ReviewsView
       reviews={ctx.reviewsPage?.items ?? []}
       isLoading={ctx.isReviewsPending}
-      staff={ctx.staff}
+      isFetching={ctx.reviewsListFetching}
+      staff={ctx.filteredStaff}
       filter={ctx.reviewFilterStaff}
       setFilter={ctx.setReviewFilterStaff}
       setupData={ctx.setupData}
+      pageNumber={ctx.activeReviewsPage}
+      pageSize={ctx.activeReviewsPageSize}
+      totalPages={ctx.activeReviewsTotalPages}
+      totalCount={ctx.activeReviewsTotalCount}
+      hasNextPage={ctx.activeReviewsHasNext}
+      hasPreviousPage={ctx.activeReviewsHasPrev}
+      onPageChange={ctx.setActiveReviewsPage}
     />
   )
 }
@@ -193,12 +231,21 @@ export function ReviewsRoute() {
 export function TipsRoute() {
   const ctx = useOutletContext<LooseObject>()
   const [sp, setSp] = useSearchParams()
-  const tab = sp.get('tab') || 'overview'
+  const rawTab = sp.get('tab') || 'overview'
+  const tab = rawTab === 'transactions' ? 'overview' : rawTab
+
+  useEffect(() => {
+    if (rawTab === 'transactions') {
+      setSp({ tab: 'overview' }, { replace: true })
+    }
+  }, [rawTab, setSp])
 
   return (
     <TipsView
       transactions={ctx.transactions}
       staff={ctx.staff}
+      metrics={ctx.metrics}
+      tipsChartData={ctx.tipsChartData}
       activeTab={tab}
       onTabChange={(t) => setSp({ tab: t }, { replace: true })}
       processingFee={ctx.processingFee}
@@ -209,7 +256,7 @@ export function TipsRoute() {
 
 export function ReportsRoute() {
   const ctx = useOutletContext<LooseObject>()
-  return <ReportsView transactions={ctx.filteredTransactions} staff={ctx.staff} touchpoints={ctx.touchpoints} />
+  return <ReportsView staff={ctx.staff} touchpoints={ctx.touchpoints} businessName={ctx.businessName} businessSlug={ctx.businessSlug} />
 }
 
 export function AnalyticsRoute() {
@@ -231,6 +278,7 @@ export function SettingsRoute() {
 
   return (
     <SettingsView
+      {...({ onBlockedFeatureClick: ctx.requireKyb } as any)}
       setupData={ctx.setupData}
       hasKyb={ctx.hasKyb}
       verificationStatus={ctx.verificationStatus}
@@ -244,12 +292,30 @@ export function SettingsRoute() {
 }
 
 export function SupportRoute() {
-  return <SupportView />
+  const { currentLanguage } = useTranslation()
+  const recaptchaKey = import.meta.env.VITE_RECAPTCHA_KEY
+
+  if (!recaptchaKey) {
+    return <SupportView recaptchaEnabled={false} />
+  }
+
+  return (
+    <GoogleReCaptchaProvider reCaptchaKey={recaptchaKey} language={currentLanguage}>
+      <SupportView recaptchaEnabled />
+    </GoogleReCaptchaProvider>
+  )
 }
 
 export function SubscriptionsRoute() {
+  const ctx = useOutletContext<LooseObject>()
   const navigate = useNavigate()
-  return <ComingSoon activeMenu="subscriptions" onBack={() => navigate('/dashboard')} />
+  const currentPlanId = ctx?.profile?.subscription?.plan ?? null
+  return (
+    <ManagePlanView
+      currentPlanId={currentPlanId}
+      onSelectPlan={() => navigate('/dashboard/support')}
+    />
+  )
 }
 
 export function FallbackRoute() {

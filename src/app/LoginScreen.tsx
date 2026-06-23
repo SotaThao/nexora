@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Lock, Mail, Eye, EyeOff } from 'lucide-react'
+import { Lock, Mail, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import AuthGraphicPanel from '../components/auth/AuthGraphicPanel'
 import SecondaryButton from '../components/ui/SecondaryButton'
@@ -7,6 +7,7 @@ import { useAuth } from '../auth/useAuth'
 import { useTranslation } from '../contexts/LanguageContext'
 import { getErrorI18nKey } from '../data/errorCodes'
 import { getApiErrorCode } from '../types/domain'
+import { loadPendingRegistration } from '../auth/pendingRegistration'
 
 function GoogleIcon() {
   return (
@@ -39,12 +40,10 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
-  const handleLoginSubmit = () => {
+  const handleLoginSubmit = async () => {
     const newFieldErrorKeys: { email?: string; password?: string } = {}
     if (!email.trim()) {
       newFieldErrorKeys.email = 'register.errors.email_required'
-    } else if (!/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email.trim())) {
-      newFieldErrorKeys.email = 'register.errors.email_invalid'
     }
     if (!password) {
       newFieldErrorKeys.password = 'register.errors.password_required'
@@ -60,48 +59,59 @@ export default function LoginScreen() {
     setIsLoading(true)
     setLoginError('')
 
-    setTimeout(async () => {
+    const credentials = {
+      email: email.trim().toLowerCase(),
+      password,
+    }
+
+    try {
+      const newSession = await login(credentials)
+      // Onboarding completion is independent of KYB/verification status.
+      // A business that finished onboarding but hasn't done KYB has
+      // verificationStatus 'basic'/'unverified' — that must NOT force the
+      // onboarding wizard (KYB has its own gate). Rely only on the real
+      // onboarding signal (hasCompletedOnboarding, derived from account
+      // status Active / kyb_approved / explicit flag in apiAuthAdapter).
+      const needsOnboarding =
+        newSession.clearMerchantSetup ||
+        newSession.hasCompletedOnboarding === false
+
+      // Staff dashboard requires BOTH: a real StaffProfile (accepted invite)
+      // AND persisted onboarding data on the backend. Otherwise the user
+      // must finish registration/onboarding first.
+      const isStaffReady =
+        Boolean(newSession.staffId) ||
+        (newSession.hasStaffProfile && newSession.hasCompletedOnboarding)
+
+      if ((newSession.role === 'personal' || newSession.role === 'staff') && !isStaffReady) {
+        navigate('/register', { state: { showPersonalSuccessPopup: true, ssoEmail: newSession.email } })
+      } else if (newSession.flag === '!personal' || newSession.role === 'personal' || newSession.role === 'staff') {
+        navigate('/staff')
+      } else if (needsOnboarding) {
+        navigate('/onboarding')
+      } else {
+        navigate('/dashboard')
+      }
+    } catch (err: unknown) {
+      const errorCode = getApiErrorCode(err, 'unknown_error')
+      if (errorCode === 'USER_ACCOUNT_INCOMPLETE') {
+        const normalizedEmail = credentials.email
+        const pendingRegistration = loadPendingRegistration(normalizedEmail)
+        navigate('/register', {
+          state: {
+            resumeOtpVerification: true,
+            resumeEmail: normalizedEmail,
+            resumePassword: password,
+            resumeRole: pendingRegistration?.role || 'personal',
+          },
+        })
+        return
+      }
+      const i18nKey = getErrorI18nKey(errorCode)
+      setLoginError(t(i18nKey))
+    } finally {
       setIsLoading(false)
-
-      const credentials = {
-        email: email.trim().toLowerCase(),
-        password,
-      }
-
-      try {
-        const newSession = await login(credentials)
-        // Onboarding completion is independent of KYB/verification status.
-        // A business that finished onboarding but hasn't done KYB has
-        // verificationStatus 'basic'/'unverified' — that must NOT force the
-        // onboarding wizard (KYB has its own gate). Rely only on the real
-        // onboarding signal (hasCompletedOnboarding, derived from account
-        // status Active / kyb_approved / explicit flag in apiAuthAdapter).
-        const needsOnboarding =
-          newSession.clearMerchantSetup ||
-          newSession.hasCompletedOnboarding === false
-
-        // Staff dashboard requires BOTH: a real StaffProfile (accepted invite)
-        // AND persisted onboarding data on the backend. Otherwise the user
-        // must finish registration/onboarding first.
-        const isStaffReady =
-          Boolean(newSession.staffId) ||
-          (newSession.hasStaffProfile && newSession.hasCompletedOnboarding)
-
-        if ((newSession.role === 'personal' || newSession.role === 'staff') && !isStaffReady) {
-          navigate('/register', { state: { showPersonalSuccessPopup: true, ssoEmail: newSession.email } })
-        } else if (newSession.flag === '!personal' || newSession.role === 'personal' || newSession.role === 'staff') {
-          navigate('/staff')
-        } else if (needsOnboarding) {
-          navigate('/onboarding')
-        } else {
-          navigate('/dashboard')
-        }
-      } catch (err: unknown) {
-        const errorCode = getApiErrorCode(err, 'unknown_error')
-        const i18nKey = getErrorI18nKey(errorCode)
-        setLoginError(t(i18nKey))
-      }
-    }, 800)
+    }
   }
 
   const triggerSimulation = (scenario) => {
@@ -116,19 +126,23 @@ export default function LoginScreen() {
   }
 
   return (
-    <div className="min-h-dvh flex items-center justify-center bg-nexoraCanvas relative overflow-x-hidden overflow-y-auto text-nexoraText px-4 py-6 sm:py-10 selection:bg-nexoraBrandSoft selection:text-nexoraBrand">
+    <div className="min-h-dvh flex items-center justify-center bg-nexoraCanvas relative overflow-x-hidden overflow-y-auto text-nexoraText px-4 pt-[max(1.5rem,env(safe-area-inset-top,0px))] pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] sm:pt-10 sm:pb-10 selection:bg-nexoraBrandSoft selection:text-nexoraBrand">
       {/* Language Switcher */}
-      <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-nexoraBorder shadow-sm">
+      <div className="absolute top-[max(1rem,env(safe-area-inset-top,0px))] right-[max(1rem,env(safe-area-inset-right,0px))] z-50 flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-nexoraBorder shadow-sm">
         <button
+          type="button"
+          disabled={isLoading}
           onClick={() => setLanguage('vi')}
-          className={`text-xs font-bold px-2 py-0.5 rounded transition ${currentLanguage === 'vi' ? 'bg-nexoraBrand text-white' : 'text-nexoraSubtle hover:text-nexoraText'}`}
+          className={`text-xs font-bold px-2 py-0.5 rounded transition disabled:opacity-50 disabled:cursor-not-allowed ${currentLanguage === 'vi' ? 'bg-nexoraBrand text-white' : 'text-nexoraSubtle hover:text-nexoraText'}`}
         >
           VI
         </button>
         <span className="text-nexoraBorder text-xs">|</span>
         <button
+          type="button"
+          disabled={isLoading}
           onClick={() => setLanguage('en')}
-          className={`text-xs font-bold px-2 py-0.5 rounded transition ${currentLanguage === 'en' ? 'bg-nexoraBrand text-white' : 'text-nexoraSubtle hover:text-nexoraText'}`}
+          className={`text-xs font-bold px-2 py-0.5 rounded transition disabled:opacity-50 disabled:cursor-not-allowed ${currentLanguage === 'en' ? 'bg-nexoraBrand text-white' : 'text-nexoraSubtle hover:text-nexoraText'}`}
         >
           EN
         </button>
@@ -139,27 +153,12 @@ export default function LoginScreen() {
         {/* Left Column: Login Card */}
         <div className="lg:col-span-5 flex flex-col justify-between p-5 sm:p-8 xl:p-10 relative overflow-hidden">
           {/* VLINKPAY branding logo */}
-          <div className="mb-8 flex items-center gap-3">
-            <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="w-11 h-11 object-contain" />
-            <div>
-              <h2 className="font-sans text-xl font-bold tracking-wide sm:text-2xl">
-                NEXORA <span className="ml-1.5 inline-flex align-middle text-nexoraBrand font-sans text-xs tracking-widest font-black uppercase bg-nexoraBrand/10 px-2 py-0.5 rounded border border-nexoraBrand/30">TOUCH</span>
-              </h2>
-              <p className="text-xs text-nexoraMuted mt-1">{t('login.gateway_sub')}</p>
-            </div>
+          <div className="mb-8 flex items-center justify-center">
+            <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="h-[66px] w-auto max-w-[300px] object-contain" />
           </div>
 
-          {isLoading ? (
-            <div className="py-16 flex flex-col items-center justify-center space-y-4">
-              <div className="w-10 h-10 border-4 border-nexoraBrand/20 border-t-nexoraBrand rounded-full animate-spin"></div>
-              <p className="text-xs text-nexoraBrand font-semibold uppercase tracking-wider animate-pulse">
-                {t('login.connecting_sso')}
-              </p>
-            </div>
-          ) : (
-            <form onSubmit={(e) => { e.preventDefault(); handleLoginSubmit(); }} className="space-y-5">
+          <form onSubmit={(e) => { e.preventDefault(); handleLoginSubmit(); }} className="space-y-5">
               <div className="space-y-1">
-                <p className="text-[11px] font-black uppercase tracking-wider text-nexoraBrand">{t('login.secure_access')}</p>
                 <h1 className="text-2xl font-black text-nexoraText sm:text-3xl">{t('login.sign_in_title')}</h1>
               </div>
 
@@ -175,10 +174,11 @@ export default function LoginScreen() {
                   <div className="relative">
                     <Mail className="absolute left-3 top-3 w-4 h-4 text-nexoraSubtle" />
                     <input
-                      type="email"
+                      type="text"
                       placeholder={t('login.email_placeholder')}
                       className={`w-full bg-nexoraCanvas border ${fieldErrorKeys.email ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} rounded-lg pl-10 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all`}
                       value={email}
+                      disabled={isLoading}
                       onChange={(e) => {
                         setEmail(e.target.value)
                         if (fieldErrorKeys.email) setFieldErrorKeys(prev => ({ ...prev, email: undefined }))
@@ -193,8 +193,9 @@ export default function LoginScreen() {
                     <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider">{t('login.password_label')}</label>
                     <button
                       type="button"
+                      disabled={isLoading}
                       onClick={() => navigate('/forgot-password')}
-                      className="text-[10px] font-bold text-nexoraBrand hover:underline focus:outline-none transition-all"
+                      className="text-[10px] font-bold text-nexoraBrand hover:underline focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline"
                     >
                       {t('login.forgot_password')}
                     </button>
@@ -206,6 +207,7 @@ export default function LoginScreen() {
                       placeholder={t('login.password_placeholder')}
                       className={`w-full bg-nexoraCanvas border ${fieldErrorKeys.password ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} rounded-lg pl-10 pr-10 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all`}
                       value={password}
+                      disabled={isLoading}
                       onChange={(e) => {
                         setPassword(e.target.value)
                         if (fieldErrorKeys.password) setFieldErrorKeys(prev => ({ ...prev, password: undefined }))
@@ -213,8 +215,9 @@ export default function LoginScreen() {
                     />
                     <button
                       type="button"
+                      disabled={isLoading}
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-3 text-nexoraSubtle hover:text-nexoraText focus:outline-none"
+                      className="absolute right-3 top-3 text-nexoraSubtle hover:text-nexoraText focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -225,9 +228,17 @@ export default function LoginScreen() {
 
               <button
                 type="submit"
-                className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 transition-opacity text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_14px_rgba(43,89,255,0.25)]"
+                disabled={isLoading}
+                className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed transition-opacity text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_14px_rgba(43,89,255,0.25)]"
               >
-                {t('login.login_btn')}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    {t('common.loading')}
+                  </>
+                ) : (
+                  t('login.login_btn')
+                )}
               </button>
 
               <div className="relative hidden py-1 text-center sm:block">
@@ -235,39 +246,42 @@ export default function LoginScreen() {
                 <span className="relative bg-white px-3 text-[10px] text-nexoraSubtle font-bold uppercase tracking-wider">{t('login.social_auth_divider')}</span>
               </div>
 
-              <div className="flex items-center justify-center gap-3 sm:grid sm:grid-cols-2">
+              <div className="flex items-center justify-center gap-3 sm:grid sm:grid-cols-2 pb-2">
                 <button
                   type="button"
-                  onClick={() => triggerSimulation('sso_with_kyb')}
+                  disabled
                   aria-label={t('login.continue_google')}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-nexoraBorder bg-white p-0 text-xs font-bold text-nexoraText shadow-nexora-card transition-all hover:border-nexoraBrand hover:bg-nexoraCanvas sm:min-h-11 sm:w-auto sm:rounded-lg sm:px-4 sm:py-2 sm:shadow-none"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-nexoraBorder bg-gray-50 p-0 text-xs font-bold text-nexoraSubtle shadow-nexora-card transition-all opacity-60 cursor-not-allowed sm:min-h-11 sm:w-auto sm:rounded-lg sm:px-4 sm:py-2 sm:shadow-none"
                 >
                   <span className="flex items-center justify-center gap-2">
                     <GoogleIcon />
-                    <span className="hidden sm:inline">{t('login.continue_google')}</span>
+                    <span className="hidden sm:inline">{t('common.coming_soon')}</span>
                   </span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => triggerSimulation('sso_with_kyb')}
+                  disabled
                   aria-label={t('login.continue_apple')}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-nexoraBorder bg-white p-0 text-xs font-bold text-nexoraText shadow-nexora-card transition-all hover:border-nexoraBrand hover:bg-nexoraCanvas sm:min-h-11 sm:w-auto sm:rounded-lg sm:px-4 sm:py-2 sm:shadow-none"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-nexoraBorder bg-gray-50 p-0 text-xs font-bold text-nexoraSubtle shadow-nexora-card transition-all opacity-60 cursor-not-allowed sm:min-h-11 sm:w-auto sm:rounded-lg sm:px-4 sm:py-2 sm:shadow-none"
                 >
                   <span className="flex items-center justify-center gap-2">
                     <AppleBrandIcon />
-                    <span className="hidden sm:inline">{t('login.continue_apple')}</span>
+                    <span className="hidden sm:inline">{t('common.coming_soon')}</span>
                   </span>
                 </button>
               </div>
-
+ 
               {/* Quick login / registration options */}
               <div className="grid grid-cols-1 gap-3">
-                <SecondaryButton onClick={() => triggerSimulation('new_register')}>
+                <SecondaryButton
+                  disabled={isLoading}
+                  className={isLoading ? 'opacity-60 cursor-not-allowed' : ''}
+                  onClick={() => triggerSimulation('new_register')}
+                >
                   {t('login.register_btn')}
                 </SecondaryButton>
               </div>
             </form>
-          )}
 
         </div>
 

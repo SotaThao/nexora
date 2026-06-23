@@ -285,7 +285,7 @@ export default function WalletDetails({
 
         <button
           type="button"
-          onClick={() => setStep('payment')}
+          onClick={() => setStep('tip_amount')}
           className="w-full py-3 bg-nexoraCanvas border border-nexoraBorder hover:bg-nexoraSurfaceMuted transition text-nexoraMuted font-extrabold text-xs uppercase tracking-wider rounded-xl"
         >
           {t('components.customer_flow.steps.WalletDetails.goBack')}

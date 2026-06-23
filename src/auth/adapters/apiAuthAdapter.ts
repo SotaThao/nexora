@@ -3,11 +3,13 @@ import httpClient from '../../lib/httpClient'
 import { clearAuthQueryCache, seedAuthQueryCache } from '../../data/seedAuthQueryCache'
 import profileSettingsRepository from '../../data/repositories/profileSettings'
 import { logger } from '../../utils/logger'
+
 import type {
   AuthSession,
   AuthTokens,
   LoginCredentials,
   SignupCredentials,
+  SignupResponse,
 } from '../../types/auth'
 import type { StaffProfile, UserProfile } from '../../types/domain'
 import { isApiError } from '../../types/domain'
@@ -69,6 +71,20 @@ function extractKybStatus(source: KybSource): string | null {
   if (typeof source !== 'object') return normalizeKybStatus(source)
 
   const record = source as Record<string, unknown>
+  const profileType = String(record.profileType ?? record.userType ?? '').trim().toLowerCase()
+  const isMerchant = profileType === PROFILE_TYPE_MERCHANT.toLowerCase()
+  const status = String(record.status ?? '').trim().toLowerCase()
+
+  if (
+    isMerchant &&
+    (record.isKycVerified === true ||
+      record.isKYCVerified === true ||
+      record.isKybVerified === true ||
+      record.isKYBVerified === true)
+  ) {
+    return 'kyb_approved'
+  }
+
   const explicitKybKeys = [
     'businessKybStatus',
     'kybStatus',
@@ -218,10 +234,10 @@ export const apiAuthAdapter = {
     )
 
     tokenStore.set({
-      accessToken: res.accessToken,
-      refreshToken: res.refreshToken,
-      tokenType: res.tokenType,
-      expiresIn: res.expiresIn,
+      accessToken: (res as AuthTokens).accessToken,
+      refreshToken: (res as AuthTokens).refreshToken,
+      tokenType: (res as AuthTokens).tokenType,
+      expiresIn: (res as AuthTokens).expiresIn,
     })
 
     return this.getSession()
@@ -275,7 +291,7 @@ export const apiAuthAdapter = {
       { refreshToken: tokens.refreshToken },
       { anonymous: true },
     )
-    tokenStore.set(res)
+    tokenStore.set(res as any)
     return this.getSession()
   },
 
@@ -284,10 +300,10 @@ export const apiAuthAdapter = {
     clearAuthQueryCache()
   },
 
-  async signup(credentials: SignupCredentials): Promise<unknown> {
+  async signup(credentials: SignupCredentials): Promise<SignupResponse | null> {
     const { email, confirmEmail, password, confirmPassword, firstName, lastName, type, profileType } =
       credentials
-    return httpClient.post(
+    return httpClient.post<SignupResponse>(
       '/api/v1/authentication/signup',
       { email, confirmEmail, password, confirmPassword, firstName, lastName, type: type || profileType },
       { anonymous: true },

@@ -59,6 +59,8 @@ export function createDashboardRepository(client: HttpClient = httpClient) {
         const tips = response.tipsSummary
         const scans = response.scansSummary
         const reviews = response.reviewsSummary
+        const platformReviews = response.platformReviews
+        const customers = response.customersSummary
 
         return {
           totalTips: tips?.totalAmount ?? 0,
@@ -72,6 +74,14 @@ export function createDashboardRepository(client: HttpClient = httpClient) {
           yelpClicks: reviews?.yelpClickCount ?? 0,
           count4To5Stars: reviews?.count4To5Stars ?? 0,
           count1To3Stars: reviews?.count1To3Stars ?? 0,
+          responseRate: reviews?.responseRate ?? 0,
+          responseRateLabel: reviews?.responseRateLabel ?? null,
+          googleAvgRating: platformReviews?.googleAvgRating ?? null,
+          googleReviewCount: platformReviews?.googleReviewCount ?? null,
+          yelpAvgRating: platformReviews?.yelpAvgRating ?? null,
+          yelpReviewCount: platformReviews?.yelpReviewCount ?? null,
+          returningCustomerRate: customers?.returningCustomerRate ?? 0,
+          returningCustomerRateChangeVsLastWeek: customers?.returningCustomerRateChangeVsLastWeek ?? 0,
           previousPeriodComparison: tips?.previousPeriodComparison ?? null,
         }
       } catch (err: unknown) {

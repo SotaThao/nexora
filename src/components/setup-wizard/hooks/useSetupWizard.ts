@@ -19,6 +19,8 @@ import {
   getPayoutConfigsFromMember
 } from '../constants'
 import { getApiErrorCode } from '../../../types/domain'
+import { getDefaultDialCode } from '../../CountryCodeSelect'
+import { isValidEmail, isValidHttpUrl } from '../../../utils/validation'
 
 export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, hasKyb }) {
   const { currentLanguage, setLanguage, t } = useTranslation()
@@ -36,7 +38,7 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
     name: initialBusinessInfo?.name || '',
     industry: initialBusinessInfo?.industry || 'Nail Salon',
     address: initialBusinessInfo?.address || '',
-    phone: initialBusinessInfo?.phone || '',
+    phone: initialBusinessInfo?.phone || `${getDefaultDialCode(currentLanguage)} `,
     website: initialBusinessInfo?.website || '',
     logo: initialBusinessInfo?.logo || null,
     paymentAccounts: {
@@ -171,21 +173,27 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
     setErrors({})
   }
 
-  // Handle file logo selection
+  const uploadLogoFromFile = async (file) => {
+    if (!file) return
+    try {
+      const response = await uploadLogoMutation.mutateAsync(file)
+      const finalUrl =
+        typeof response === 'string'
+          ? response
+          : (response as { imageUrl?: string } | null)?.imageUrl || ''
+      setBusinessInfo(prev => ({ ...prev, logo: finalUrl }))
+      if (errors.logo) setErrors(prev => ({ ...prev, logo: '' }))
+    } catch (err: unknown) {
+      setErrors(prev => ({ ...prev, logo: getApiErrorCode(err, 'Logo upload failed') }))
+    }
+  }
+
+  const handleLogoFile = uploadLogoFromFile
+
+  // Handle file logo selection (web file input fallback)
   const handleLogoChange = async (e) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0]
-      try {
-        const response = await uploadLogoMutation.mutateAsync(file)
-        const finalUrl =
-          typeof response === 'string'
-            ? response
-            : (response as { imageUrl?: string } | null)?.imageUrl || ''
-        setBusinessInfo(prev => ({ ...prev, logo: finalUrl }))
-        if (errors.logo) setErrors(prev => ({ ...prev, logo: '' }))
-      } catch (err: unknown) {
-        setErrors(prev => ({ ...prev, logo: getApiErrorCode(err, 'Logo upload failed') }))
-      }
+    if (e.target.files?.[0]) {
+      await uploadLogoFromFile(e.target.files[0])
     }
   }
 
@@ -199,20 +207,24 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
       if (!businessInfo.address.trim()) newErrors.address = t('setup.errors.address_required')
       if (!businessInfo.phone.trim()) newErrors.phone = t('setup.errors.phone_required')
 
+      if (businessInfo.website?.trim() && !isValidHttpUrl(businessInfo.website)) {
+        newErrors.website = t('setup.errors.url_protocol')
+      }
+
       // Review Links validation (Optional)
-      if (reviewLinks.googleReview && reviewLinks.googleReview.trim() && !reviewLinks.googleReview.startsWith('http')) {
+      if (reviewLinks.googleReview?.trim() && !isValidHttpUrl(reviewLinks.googleReview)) {
         newErrors.googleReview = t('setup.errors.url_protocol')
       }
 
-      if (reviewLinks.yelpReview && reviewLinks.yelpReview.trim() && !reviewLinks.yelpReview.startsWith('http')) {
+      if (reviewLinks.yelpReview?.trim() && !isValidHttpUrl(reviewLinks.yelpReview)) {
         newErrors.yelpReview = t('setup.errors.url_protocol')
       }
 
-      if (reviewLinks.facebookReview && reviewLinks.facebookReview.trim() && !reviewLinks.facebookReview.startsWith('http')) {
+      if (reviewLinks.facebookReview?.trim() && !isValidHttpUrl(reviewLinks.facebookReview)) {
         newErrors.facebookReview = t('setup.errors.url_invalid')
       }
 
-      if (reviewLinks.feedbackEmail && reviewLinks.feedbackEmail.trim() && !/\S+@\S+\.\S+/.test(reviewLinks.feedbackEmail)) {
+      if (reviewLinks.feedbackEmail?.trim() && !isValidEmail(reviewLinks.feedbackEmail)) {
         newErrors.feedbackEmail = t('setup.errors.email_invalid')
       }
     }
@@ -301,7 +313,7 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
     const staffErrors: LooseObject = {}
     if (!newStaff.fullName.trim()) staffErrors.staffFullName = t('setup.errors.staff_name_required')
     if (!newStaff.nickname.trim()) staffErrors.staffNickname = t('setup.errors.staff_nickname_required')
-    if (newStaff.email?.trim() && !/\S+@\S+\.\S+/.test(newStaff.email.trim())) {
+    if (newStaff.email?.trim() && !isValidEmail(newStaff.email)) {
       staffErrors.staffEmail = t('setup.errors.staff_email_invalid')
     }
 
@@ -576,6 +588,7 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
     setErrors,
     // handlers
     prefillDemo,
+    handleLogoFile,
     handleLogoChange,
     validateStep,
     handleNext,

@@ -8,7 +8,7 @@ import profileSettingsRepository, {
   type KybIframeInitializeResponse,
 } from '../repositories/profileSettings'
 import { useSessionRole } from '../../auth/useSessionRole'
-import type { UserProfile } from '../../types/domain'
+import type { LooseObject, UserProfile } from '../../types/domain'
 import type { UpdateStaffProfileDto, UpdateUserProfileDto } from '../../types/repositories'
 
 export function useProfileSettings({ enabled: callerEnabled = true } = {}) {
@@ -91,6 +91,45 @@ export function useUpdateUserProfile() {
             : prev
         ))
       }
+      queryClient.invalidateQueries({ queryKey: qk.userProfile() })
+    },
+  })
+}
+
+export function useUpdateBasicInfo() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, { firstName: string; lastName?: string; phoneNumber?: string; dateOfBirth?: string }>({
+    mutationFn: (dto) => profileSettingsRepository.updateBasicInfo(dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.userProfile() })
+    },
+  })
+}
+
+export function useUpdateAddress() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, { address?: string; city?: string; state?: string; zipCode?: string; country?: string }>({
+    mutationFn: (dto) => profileSettingsRepository.updateAddress(dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.userProfile() })
+    },
+  })
+}
+
+export function useUpdateAvatar() {
+  const queryClient = useQueryClient()
+  return useMutation<{ avatarUrl: string }, Error, File>({
+    mutationFn: (file) => profileSettingsRepository.updateAvatar(file),
+    onSuccess: (data) => {
+      queryClient.setQueryData(qk.userProfile(), (prev: UserProfile | null | undefined) =>
+        prev
+          ? {
+              ...prev,
+              profileImageUrl: data.avatarUrl,
+              profileImage: { imageUrl: data.avatarUrl, thumbnailUrl: data.avatarUrl },
+            }
+          : prev,
+      )
       queryClient.invalidateQueries({ queryKey: qk.userProfile() })
     },
   })
