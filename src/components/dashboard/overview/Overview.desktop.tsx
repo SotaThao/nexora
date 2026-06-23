@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
-import { Calendar, QrCode, Eye, Download, Sparkles, Pointer, Star } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Calendar, QrCode, Eye, Download, Sparkles, Pointer, Star, Hourglass } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { useDownloadTouchpointQr } from '../../../data/hooks/useMerchantTouchpoints'
 import { downloadQrCode } from '../../../utils/qrUtils'
 import { buildQrImageUrl, toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
-import { formatCurrency } from '../utils'
+import { formatCurrency, isAwaitingShopConfirmation } from '../utils'
 import Panel from '../../ui/Panel'
 import KpiCard from '../../ui/KpiCard'
 import { SkeletonKpiCard } from '../../ui/skeleton'
@@ -134,7 +135,13 @@ function Overview({
 }) {
   const { currentLanguage, t } = useTranslation()
   const { showToast } = useNotification()
+  const navigate = useNavigate()
   const downloadTouchpointQrMutation = useDownloadTouchpointQr()
+
+  const pendingConfirmCount = useMemo(
+    () => (transactions || []).filter(isAwaitingShopConfirmation).length,
+    [transactions],
+  )
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isMasterQrDownloading, setIsMasterQrDownloading] = useState(false)
   const dropdownRef = useRef(null)
@@ -316,12 +323,33 @@ function Overview({
     <div className="space-y-8">
       {!hasSetup && (
         <div className="mb-6">
-          <SetupGuideBanner
-            onStartSetup={onStartSetup}
-          />
+          <SetupGuideBanner onStartSetup={onStartSetup} />
         </div>
       )}
-      
+
+      {pendingConfirmCount > 0 && (
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-violet-100 bg-violet-50/70 px-4 py-3">
+          <div className="flex items-center gap-2.5">
+            <Hourglass className="h-4 w-4 shrink-0 text-violet-500" />
+            <div>
+              <p className="text-xs font-bold text-violet-800">
+                {pendingConfirmCount} tip{pendingConfirmCount > 1 ? 's' : ''} chờ xác nhận
+              </p>
+              <p className="text-[10px] text-violet-600 mt-0.5">
+                Customer đã chuyển tiền vào tài khoản tiệm, cần bạn xác nhận để ghi nhận cho thợ
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/dashboard/reports')}
+            className="shrink-0 rounded-lg bg-violet-600 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-white hover:bg-violet-700 transition cursor-pointer whitespace-nowrap"
+          >
+            Xem →
+          </button>
+        </div>
+      )}
+
       {/* Header Overview Row */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between" ref={dropdownRef}>
         <h1 className="text-xl font-extrabold tracking-tight text-nexoraText uppercase">
