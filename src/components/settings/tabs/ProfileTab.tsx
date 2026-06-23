@@ -24,6 +24,7 @@ import {
   QrCode
 } from 'lucide-react'
 import { isValidEmail, isValidPhone } from '../../../utils/validation'
+import CountryCodeSelect, { formatNationalNumber, parsePhone } from '../../CountryCodeSelect'
 
 const PayoutLogos = {
   zelle: (
@@ -80,6 +81,8 @@ const validatePayoutAccount = (method, input) => {
   return account.length >= 3 ? '' : 'invalid'
 }
 
+const KYB_EDITABLE_STATUSES = new Set(['basic', 'kyb_rejected', 'rejected'])
+
 export default function ProfileTab({
   profile,
   copiedId,
@@ -108,6 +111,8 @@ export default function ProfileTab({
   reviewsErrors,
   setReviewsErrors,
   hasKyb,
+  verificationStatus = 'basic',
+  canEditProfile = true,
   currentLanguage,
   showToast,
   handleCopy,
@@ -123,6 +128,7 @@ export default function ProfileTab({
   formatDOB,
   onShowQr,
 }) {
+  const canEditKybFields = canEditProfile
   const { t } = useTranslation()
   const referralCode = useMemo(() => getProfileReferralCode(profile), [profile])
   const referralUrl = useMemo(
@@ -429,7 +435,7 @@ export default function ProfileTab({
                 <User className="h-4 w-4 text-nexoraBrand" />
                 {t('components.settings.tabs.ProfileTab.basicInformation')}
               </h4>
-              {!isEditingBasic && !hasKyb && (
+              {!isEditingBasic && canEditKybFields && (
                 <button
                   type="button"
                   onClick={startEditBasic}
@@ -504,18 +510,35 @@ export default function ProfileTab({
                       </div>
                     </div>
                   </label>
-                  <input
-                    id="settings-phone"
-                    type="tel"
-                    className={inputClass(basicErrors.phone)}
-                    value={basicForm.phone}
-                    aria-invalid={Boolean(basicErrors.phone)}
-                    aria-describedby={basicErrors.phone ? 'settings-phone-error' : undefined}
-                    onChange={(e) => {
-                      setBasicForm({ ...basicForm, phone: e.target.value })
-                      clearError(setBasicErrors, 'phone')
-                    }}
-                  />
+                  <div className="mt-1 flex rounded-lg shadow-sm">
+                    <CountryCodeSelect
+                      value={parsePhone(basicForm.phone).countryCode}
+                      onChange={(newCode) => {
+                        const { nationalNumber } = parsePhone(basicForm.phone)
+                        const reFormatted = formatNationalNumber(nationalNumber, newCode)
+                        setBasicForm({ ...basicForm, phone: `${newCode} ${reFormatted}`.trim() })
+                        clearError(setBasicErrors, 'phone')
+                      }}
+                    />
+                    <input
+                      id="settings-phone"
+                      type="text"
+                      className={`h-10 w-full min-w-0 rounded-r-lg border border-l-0 bg-nexoraCanvas focus:bg-white px-3.5 text-xs text-nexoraText outline-none transition-all ${
+                        basicErrors.phone
+                          ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/15'
+                          : 'border-nexoraBorder focus:border-nexoraBrand'
+                      }`}
+                      value={formatNationalNumber(parsePhone(basicForm.phone).nationalNumber, parsePhone(basicForm.phone).countryCode)}
+                      aria-invalid={Boolean(basicErrors.phone)}
+                      aria-describedby={basicErrors.phone ? 'settings-phone-error' : undefined}
+                      onChange={(e) => {
+                        const { countryCode } = parsePhone(basicForm.phone)
+                        const formatted = formatNationalNumber(e.target.value, countryCode)
+                        setBasicForm({ ...basicForm, phone: `${countryCode} ${formatted}`.trim() })
+                        clearError(setBasicErrors, 'phone')
+                      }}
+                    />
+                  </div>
                   <FieldError id="settings-phone-error" error={basicErrors.phone} />
                 </div>
                 <div className="flex gap-2 pt-2 justify-end">
@@ -559,7 +582,7 @@ export default function ProfileTab({
                 <MapPin className="h-4 w-4 text-rose-500" />
                 {t('components.settings.tabs.ProfileTab.addressDetails')}
               </h4>
-              {!isEditingAddress && !hasKyb && (
+              {!isEditingAddress && canEditKybFields && (
                 <button
                   type="button"
                   onClick={startEditAddress}
@@ -715,7 +738,7 @@ export default function ProfileTab({
                 <Building2 className="h-4 w-4 text-purple-500" />
                 {t('components.settings.tabs.ProfileTab.businessInformation')}
               </h4>
-              {!isEditingBusiness && !hasKyb && (
+              {!isEditingBusiness && canEditKybFields && (
                 <button
                   type="button"
                   onClick={startEditBusiness}
