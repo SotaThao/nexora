@@ -2,6 +2,7 @@ import React from 'react'
 import { Check } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useRegisterForm } from './register/hooks/useRegisterForm'
+import LanguageSwitcher from './ui/LanguageSwitcher'
 import StepRoleSelect from './register/steps/StepRoleSelect'
 import StepCredentials from './register/steps/StepCredentials'
 import StepOtpVerify from './register/steps/StepOtpVerify'
@@ -107,20 +108,8 @@ export default function RegisterWizard() {
       <div className="absolute bottom-1/4 right-1/4 h-64 w-64 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(43,89,255,0.02)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-[450px] sm:w-[450px]"></div>
 
       {/* Language Switcher */}
-      <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-nexoraBorder shadow-sm">
-        <button
-          onClick={() => setLanguage('vi')}
-          className={`text-xs font-bold px-2 py-0.5 rounded transition ${currentLanguage === 'vi' ? 'bg-nexoraBrand text-white' : 'text-nexoraSubtle hover:text-nexoraText'}`}
-        >
-          VI
-        </button>
-        <span className="text-nexoraBorder text-xs">|</span>
-        <button
-          onClick={() => setLanguage('en')}
-          className={`text-xs font-bold px-2 py-0.5 rounded transition ${currentLanguage === 'en' ? 'bg-nexoraBrand text-white' : 'text-nexoraSubtle hover:text-nexoraText'}`}
-        >
-          EN
-        </button>
+      <div className="absolute top-4 right-4 z-50">
+        <LanguageSwitcher />
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8 relative z-10 flex flex-col justify-center min-h-dvh">
@@ -179,7 +168,7 @@ export default function RegisterWizard() {
           {currentStep === 0 && <StepRoleSelect {...form} />}
           {currentStep === 1 && <StepCredentials {...form} />}
           {currentStep === 2 && <StepOtpVerify {...form} />}
-          {currentStep === 3 && role === 'personal' && <StepSuccess {...form} />}
+          {currentStep === 3 && role === 'personal' && <StepSuccess {...form} handleCompleteSetup={undefined} />}
         </div>
       </div>
 

@@ -10,16 +10,18 @@ export default function StepProfileSetup({
   phoneParsed,
   bio, setBio,
   avatar, setAvatar,
+  handleAvatarFileChange,
   position, setPosition,
   email,
   generatedStaffId,
   setCurrentStep,
+  handleProfileSetupSubmit,
   t,
   currentLanguage,
   renderLabel,
 }) {
   return (
-    <div className="p-6 sm:p-10 space-y-6 animate-fadeIn">
+    <div className="p-6 sm:p-8 animate-fadeIn max-w-xl mx-auto">
       <div>
         <h3 className="text-lg font-bold text-nexoraText">
           {t('components.register.steps.StepProfileSetup.personalProfileSetup')}
@@ -29,7 +31,7 @@ export default function StepProfileSetup({
         </p>
       </div>
 
-      <form onSubmit={(e) => { e.preventDefault(); setCurrentStep(3); }} className="space-y-4 max-w-xl mx-auto">
+      <form onSubmit={(e) => { e.preventDefault(); handleProfileSetupSubmit(); }} className="space-y-4 mt-6">
         {/* Avatar section */}
         <div className="flex items-center gap-4 border-b border-nexoraBorder pb-4">
           <div className="relative">
@@ -57,7 +59,7 @@ export default function StepProfileSetup({
               <ImageFileInput
                 as="label"
                 className="h-9 px-4 rounded-lg bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white flex items-center justify-center gap-1.5 cursor-pointer text-xs font-bold transition shadow-sm"
-                onPick={setAvatar}
+                onPickFile={handleAvatarFileChange}
               >
                 <Upload className="h-3.5 w-3.5" />
                 <span>{t('common.upload_photo')}</span>

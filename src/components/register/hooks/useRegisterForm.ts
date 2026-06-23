@@ -13,7 +13,7 @@ const normalizePhone = (raw) => {
 }
 import { MOCK_NEXORA_STAFF_PROFILES } from '../../staff-registration/hooks/useStaffRegistration'
 import { useReplaceAllPendingAccounts, usePendingAccounts } from '../../../data/hooks/usePendingAccounts'
-import { useMerchantSetup, useSaveMerchantSetup } from '../../../data/hooks/useMerchantSetup'
+import { useMerchantSetup, useSaveMerchantSetup, useUploadImage } from '../../../data/hooks/useMerchantSetup'
 import { useAddNotification } from '../../../data/hooks/useNotifications'
 import { logger } from '../../../utils/logger'
 import apiAuthAdapter from '../../../auth/adapters/apiAuthAdapter'
@@ -21,6 +21,7 @@ import { getSignupOtp } from '../../../auth/signupOtp'
 import { savePendingRegistration, clearPendingRegistration } from '../../../auth/pendingRegistration'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { useCompletePersonalOnboarding } from '../../../data/hooks/usePersonalOnboarding'
+import { useCreateStaffProfile } from '../../../data/hooks/useProfileSettings'
 
 export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onKybSuccess = () => {}, isRedirectedFromSession, initialStep = 0, initialRole = 'personal', resumeOtpVerification = false, autoSendVerificationOnResume = false, resumeEmail = '', resumePassword = '', resumeRole = null }) {
   const { t, currentLanguage, setLanguage, renderLabel } = useTranslation()
@@ -28,9 +29,11 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const pendingAccountsQuery = usePendingAccounts()
   const merchantSetupQuery = useMerchantSetup()
   const saveMerchantSetupMutation = useSaveMerchantSetup()
+  const uploadImageMutation = useUploadImage()
 
   const addNotificationMutation = useAddNotification()
   const completePersonalOnboardingMutation = useCompletePersonalOnboarding()
+  const createStaffProfileMutation = useCreateStaffProfile()
   const [currentStep, setCurrentStep] = useState(resumeOtpVerification ? 2 : initialStep)
   const [role, setRole] = useState(resumeRole || initialRole)
 
@@ -91,6 +94,27 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const [errors, setErrors] = useState<LooseObject>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const resumeVerificationSentRef = useRef(false)
+
+  const handleToggleTerms = () => {
+    setTermsAccepted(!termsAccepted)
+    if (errors.terms) {
+      setErrors({ ...errors, terms: undefined })
+    }
+  }
+
+  const handleAvatarFileChange = async (file: File) => {
+    if (!file) return
+    try {
+      const uploaded = await uploadImageMutation.mutateAsync(file)
+      const uploadedUrl = uploaded.imageUrl || uploaded.fileUrl || ''
+      if (uploadedUrl) {
+        setAvatar(uploadedUrl)
+        return
+      }
+    } catch (err: unknown) {
+      console.error('Failed to upload staff avatar', err)
+    }
+  }
 
   const handleSimulateVerify = () => {
     setErrors({})
@@ -325,7 +349,11 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         replaceAllPendingAccountsMutation.mutate(filtered)
 
         setShowOtpInput(false)
-        setCurrentStep(3)
+        if (onRegisterAndLogin) {
+          onRegisterAndLogin(email.trim().toLowerCase())
+        } else if (onRegisterSuccess) {
+          onRegisterSuccess()
+        }
       }
     } catch (err) {
       logger.error('Verify account activation failed', err)
@@ -438,7 +466,32 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     setEditQrCode('')
   }
 
+  const handleProfileSetupSubmit = async () => {
+    const isApiMode = import.meta.env.VITE_DATA_SOURCE === 'api'
+    if (isApiMode) {
+      try {
+        await createStaffProfileMutation.mutateAsync({
+          displayName: nickname.trim() || email.split('@')[0],
+          position: position,
+          bio: bio,
+          photoUrl: avatar
+        })
+      } catch (err: unknown) {
+        logger.error('Failed to create staff profile during onboarding', err)
+      }
+    }
+    setCurrentStep(4)
+  }
+
   const handlePersonalRegisterSubmit = async () => {
+    // Validate payout method
+    const hasConfiguredPayout = Object.values(payouts).some(p => p.enabled && p.value.trim())
+    if (!hasConfiguredPayout) {
+      setErrors({ payout: t('components.register.hooks.useRegisterForm.thisFieldIsRequired') })
+      return
+    }
+    setErrors(prev => ({ ...prev, payout: '' }))
+
     const isApiMode = import.meta.env.VITE_DATA_SOURCE === 'api'
 
     let staffId = generatedStaffId
@@ -475,7 +528,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
           paymentAccounts: {},
           payoutConfigs: payouts
         })
-        setCurrentStep(4)
+        setCurrentStep(5)
       } catch (err: unknown) {
         logger.error('Failed to complete API onboarding', err)
         setErrors({ submit: t('register.errors.onboarding_failed') })
@@ -574,7 +627,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       logger.error('Failed to update merchant setup during registration', e)
     }
 
-    setCurrentStep(4)
+    setCurrentStep(5)
   }
 
   const handleCopyStaffId = () => {
@@ -698,6 +751,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     // handlers
     handleStep1Next,
     handleVerifyOtp,
+    handleProfileSetupSubmit,
     handleVlinkpayIdChange,
     handleToggleMethod,
     handleEditPayoutAccount,
@@ -715,5 +769,6 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     onRegisterAndLogin,
     onKybSuccess,
     isRedirectedFromSession,
+    handleAvatarFileChange,
   }
 }

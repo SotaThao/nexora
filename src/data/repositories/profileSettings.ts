@@ -132,6 +132,10 @@ export function createProfileSettingsRepository(client: HttpClient = httpClient)
       return client.put<LooseObject>('/api/v1/staff/profile', dto)
     },
 
+    async createStaffProfile(dto: UpdateStaffProfileDto): Promise<LooseObject> {
+      return client.post<LooseObject>('/api/v1/staff/profile', dto)
+    },
+
     async save(_settings: LooseObject): Promise<void> {
       // deprecated
     },

@@ -1545,25 +1545,25 @@
       },
       "steps": {
         "StepCredentials": {
-          "activateAccountEnterOtp": "Kích hoạt tài khoản (Nhập OTP)",
-          "enterTheOtpCode": "Nhập mã OTP được gửi tới email của bạn để kích hoạt tài khoản.",
-          "otpSentToEmail": "OTP đã gửi tới email",
-          "enterOtpCode": "Nhập mã OTP *",
+          "activateAccountEnterOtp": "Kích hoạt tài khoản",
+          "enterTheOtpCode": "Mã xác thực đã gửi tới {{email}}",
+          "otpSentToEmail": "Mã xác thực đã gửi tới",
+          "enterOtpCode": "Nhập mã xác thực",
           "resendVerificationCode": "Gửi lại mã xác thực",
           "verifyAndActivate": "Xác minh & Kích hoạt",
           "processing": "Đang xử lý...",
           "register": "Đăng ký",
-          "phExampleOtp": "vd: 1234"
+          "phExampleOtp": "Nhập mã 6 số"
         },
         "StepOtpVerify": {
-          "activateAccountEnterOtp": "Kích hoạt tài khoản (Nhập OTP)",
-          "enterTheOtpCode": "Nhập mã OTP được gửi tới email của bạn để kích hoạt tài khoản.",
-          "otpSentToEmail": "OTP đã gửi tới email",
-          "enterOtpCode": "Nhập mã OTP *",
+          "activateAccountEnterOtp": "Kích hoạt tài khoản",
+          "enterTheOtpCode": "Mã xác thực đã gửi tới {{email}}",
+          "otpSentToEmail": "Mã xác thực đã gửi tới",
+          "enterOtpCode": "Nhập mã xác thực",
           "resendVerificationCode": "Gửi lại mã xác thực",
           "verifyAndActivate": "Xác minh & Kích hoạt",
           "processing": "Đang xử lý...",
-          "phExampleOtp": "vd: 1234"
+          "phExampleOtp": "Nhập mã 6 số"
         },
         "StepPayoutSetup": {
           "payoutConfiguration": "Cấu hình ví nhận tiền",
@@ -1582,7 +1582,7 @@
           "phoneNumber": "Số điện thoại *",
           "emailAddress": "Địa chỉ Email",
           "roleSpeciality": "Chuyên môn / Vai trò",
-          "nexoraStaffId": "Mã thợ NEXORA",
+          "nexoraStaffId": "NEXORA ID",
           "shortBioShowsOn": "Lời chào / Tiểu sử ngắn (Hiển thị cho khách hàng gửi tip)",
           "phFullName": "vd: Lisa Marie Tran",
           "phNickname": "vd: Lisa T.",
@@ -1910,7 +1910,7 @@
     "staff_registration": {
       "hooks": {
         "useStaffRegistration": {
-          "nexoraStaffIdNot": "Không tìm thấy NEXORA Staff ID này.",
+          "nexoraStaffIdNot": "Không tìm thấy NEXORA ID này.",
           "emailIsRequired": "Email không được để trống",
           "emailIsInvalid": "Email không hợp lệ",
           "emailsDoNotMatch": "Email nhập lại không khớp",
@@ -1941,8 +1941,8 @@
           "password": "Mật khẩu *",
           "referralLinkSalon": "Tên tiệm - Mã giới thiệu",
           "label1ActivateAccount": "1. Kích hoạt tài khoản",
-          "enterTheOtpCode": "Nhập mã OTP được gửi tới email của bạn để kích hoạt tài khoản.",
-          "enterOtpCode": "Nhập mã OTP *",
+          "enterTheOtpCode": "Mã xác thực đã gửi tới {{email}}",
+          "enterOtpCode": "Nhập mã xác thực",
           "verifyAndActivate": "Xác minh & Kích hoạt",
           "privacyPolicy": "Chính sách bảo mật",
           "termsOfService": "Điều khoản dịch vụ",
@@ -1973,7 +1973,7 @@
           "walletPlaceholder_venmo": "Nhập @username Venmo...",
           "walletPlaceholder_cashapp": "Nhập $cashtag Cash App...",
           "walletPlaceholder_applecash": "Nhập số điện thoại Apple Cash...",
-          "nexoraStaffId": "NEXORA Staff ID",
+          "nexoraStaffId": "NEXORA ID",
           "pendingRegister": "Chờ đăng ký",
           "consentRequired": "Bạn phải chấp nhận cả hai điều khoản trước khi kích hoạt tài khoản."
         },
@@ -1998,7 +1998,7 @@
           "pending": "CHỜ DUYỆT",
           "pendingApproval": "Chờ duyệt",
           "staffLinkCopiedTo": "Đã sao chép liên kết của thợ!",
-          "joinRequestMessage": "Mã thợ NEXORA của bạn là {staffId}. Yêu cầu liên kết với {businessName} đã được gửi thành công. Vui lòng chờ chủ tiệm duyệt để kích hoạt QR nhận tiền tip.",
+          "joinRequestMessage": "NEXORA ID của bạn là {staffId}. Yêu cầu liên kết với {businessName} đã được gửi thành công. Vui lòng chờ chủ tiệm duyệt để kích hoạt QR nhận tiền tip.",
           "joinedTodayRole": "Gia nhập: Hôm nay • Vai trò: {role}",
           "nexoraId": "NEXORA ID",
           "copyStaffLink": "SAO CHÉP STAFF LINK"

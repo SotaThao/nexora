@@ -1545,25 +1545,25 @@
       },
       "steps": {
         "StepCredentials": {
-          "activateAccountEnterOtp": "Activate Account (Enter OTP)",
-          "enterTheOtpCode": "Enter the OTP code sent to your email to activate your account.",
-          "otpSentToEmail": "OTP sent to email",
-          "enterOtpCode": "Enter OTP Code *",
+          "activateAccountEnterOtp": "Activate Account",
+          "enterTheOtpCode": "Verification code sent to {{email}}",
+          "otpSentToEmail": "Verification code sent to",
+          "enterOtpCode": "Enter verification code",
           "resendVerificationCode": "Resend Verification Code",
           "verifyAndActivate": "Verify & Activate",
           "processing": "Processing...",
           "register": "Register",
-          "phExampleOtp": "e.g. 1234"
+          "phExampleOtp": "Enter 6-digit code"
         },
         "StepOtpVerify": {
-          "activateAccountEnterOtp": "Activate Account (Enter OTP)",
-          "enterTheOtpCode": "Enter the OTP code sent to your email to activate your account.",
-          "otpSentToEmail": "OTP sent to email",
-          "enterOtpCode": "Enter OTP Code *",
+          "activateAccountEnterOtp": "Activate Account",
+          "enterTheOtpCode": "Verification code sent to {{email}}",
+          "otpSentToEmail": "Verification code sent to",
+          "enterOtpCode": "Enter verification code",
           "resendVerificationCode": "Resend Verification Code",
           "verifyAndActivate": "Verify & Activate",
           "processing": "Processing...",
-          "phExampleOtp": "e.g. 1234"
+          "phExampleOtp": "Enter 6-digit code"
         },
         "StepPayoutSetup": {
           "payoutConfiguration": "Payout Configuration",
@@ -1571,7 +1571,8 @@
           "autoFill": "Auto-Fill",
           "notConfigured": "Not Configured",
           "configure": "Configure",
-          "saveAndActivate": "Save & Activate"
+          "saveAndActivate": "Save & Activate",
+          "nexoraId": "NEXORA ID"
         },
         "StepProfileSetup": {
           "personalProfileSetup": "Personal Profile Setup",
@@ -1582,7 +1583,7 @@
           "phoneNumber": "Phone Number *",
           "emailAddress": "Email Address",
           "roleSpeciality": "Role / Speciality",
-          "nexoraStaffId": "NEXORA Staff ID",
+          "nexoraStaffId": "NEXORA ID",
           "shortBioShowsOn": "Short Bio (Shows on customer tip screen)",
           "phFullName": "e.g. Lisa Marie Tran",
           "phNickname": "e.g. Lisa T.",
@@ -1910,7 +1911,7 @@
     "staff_registration": {
       "hooks": {
         "useStaffRegistration": {
-          "nexoraStaffIdNot": "NEXORA Staff ID not found.",
+          "nexoraStaffIdNot": "NEXORA ID not found.",
           "emailIsRequired": "Email is required",
           "emailIsInvalid": "Email is invalid",
           "emailsDoNotMatch": "Emails do not match",
@@ -1941,8 +1942,8 @@
           "password": "Password *",
           "referralLinkSalon": "Business Name - Referral Code",
           "label1ActivateAccount": "1. Activate Account",
-          "enterTheOtpCode": "Enter the OTP code sent to your email to activate your account.",
-          "enterOtpCode": "Enter OTP Code *",
+          "enterTheOtpCode": "Verification code sent to {{email}}",
+          "enterOtpCode": "Enter verification code",
           "verifyAndActivate": "Verify & Activate",
           "privacyPolicy": "Privacy Policy",
           "termsOfService": "Terms of Service",
@@ -1953,7 +1954,7 @@
           "phExampleEmail": "e.g. name@example.com",
           "phPassword": "••••••••",
           "phReferralCode": "Enter referral code...",
-          "phExampleOtp": "e.g. 1234"
+          "phExampleOtp": "Enter 6-digit code"
         },
         "StepPayments": {
           "label3PayoutConfigurations": "3. Payout Configurations",
@@ -1973,7 +1974,7 @@
           "walletPlaceholder_venmo": "Enter Venmo @username...",
           "walletPlaceholder_cashapp": "Enter Cash App $cashtag...",
           "walletPlaceholder_applecash": "Enter Apple Cash phone number...",
-          "nexoraStaffId": "NEXORA Staff ID",
+          "nexoraStaffId": "NEXORA ID",
           "pendingRegister": "Pending Register",
           "consentRequired": "You must accept both agreements before activating your account."
         },
@@ -1998,7 +1999,7 @@
           "pending": "PENDING",
           "pendingApproval": "Pending Approval",
           "staffLinkCopiedTo": "Staff link copied to clipboard!",
-          "joinRequestMessage": "Your NEXORA Staff ID is {staffId}. Your request to link with {businessName} has been successfully submitted. Please ask the salon owner to approve your request to activate your tipping QR.",
+          "joinRequestMessage": "Your NEXORA ID is {staffId}. Your request to link with {businessName} has been successfully submitted. Please ask the salon owner to approve your request to activate your tipping QR.",
           "joinedTodayRole": "Joined: Today • Role: {role}",
           "nexoraId": "NEXORA ID",
           "copyStaffLink": "COPY STAFF LINK"
