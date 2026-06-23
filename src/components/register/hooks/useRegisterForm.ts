@@ -22,7 +22,7 @@ import { savePendingRegistration, clearPendingRegistration } from '../../../auth
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { useCompletePersonalOnboarding } from '../../../data/hooks/usePersonalOnboarding'
 
-export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onKybSuccess = () => {}, isRedirectedFromSession, initialStep = 0, initialRole = 'personal', resumeOtpVerification = false, resumeEmail = '', resumePassword = '', resumeRole = null }) {
+export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onKybSuccess = () => {}, isRedirectedFromSession, initialStep = 0, initialRole = 'personal', resumeOtpVerification = false, autoSendVerificationOnResume = false, resumeEmail = '', resumePassword = '', resumeRole = null }) {
   const { t, currentLanguage, setLanguage, renderLabel } = useTranslation()
   const replaceAllPendingAccountsMutation = useReplaceAllPendingAccounts()
   const pendingAccountsQuery = usePendingAccounts()
@@ -137,7 +137,9 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   }
 
   useEffect(() => {
-    if (!resumeOtpVerification || !resumeEmail.trim()) return undefined
+    // Chỉ tự gửi lại verification email ở luồng login-resume rõ ràng. KHÔNG tự gửi
+    // ngay sau signup (signup đã trigger OTP) — tránh gửi OTP trùng khi reload bước OTP.
+    if (!autoSendVerificationOnResume || !resumeEmail.trim()) return undefined
     if (resumeVerificationSentRef.current) return undefined
 
     resumeVerificationSentRef.current = true
@@ -161,7 +163,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     return () => {
       cancelled = true
     }
-  }, [resumeOtpVerification, resumeEmail, t])
+  }, [autoSendVerificationOnResume, resumeEmail, t])
 
   useEffect(() => {
     let interval = null
