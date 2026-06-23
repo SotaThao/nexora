@@ -145,6 +145,16 @@ export function useUpdateStaffProfile() {
   })
 }
 
+export function useCreateStaffProfile() {
+  const queryClient = useQueryClient()
+  return useMutation<LooseObject, Error, UpdateStaffProfileDto>({
+    mutationFn: (dto) => profileSettingsRepository.createStaffProfile(dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.staffProfile() })
+    },
+  })
+}
+
 /** @deprecated */
 export function useSaveProfileSettings() {
   const queryClient = useQueryClient()

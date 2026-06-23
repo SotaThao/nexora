@@ -27,36 +27,16 @@ export default function StepOtpVerify({
           {t('components.register.steps.StepOtpVerify.activateAccountEnterOtp')}
         </h3>
         <p className="text-xs text-nexoraSubtle mt-1 leading-relaxed">
-          {t('components.register.steps.StepOtpVerify.enterTheOtpCode')}
+          {t('components.register.steps.StepOtpVerify.enterTheOtpCode').split('{{email}}').map((part, i, arr) => (
+            <React.Fragment key={i}>
+              {part}
+              {i < arr.length - 1 && <span className="font-bold text-nexoraText">{email}</span>}
+            </React.Fragment>
+          ))}
         </p>
       </div>
 
       <form onSubmit={handleVerifyOtp} className="space-y-4 max-w-md mx-auto">
-        <div>
-          <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-            {renderLabel(t('components.register.steps.StepOtpVerify.otpSentToEmail'))}
-          </label>
-          <div className="relative">
-            <Mail className="absolute left-3 top-3 w-4 h-4 text-nexoraSubtle" />
-            <input
-              type="email"
-              readOnly
-              value={email}
-              className="w-full bg-slate-50 border border-nexoraBorder rounded-lg pl-10 pr-12 py-2.5 text-sm font-semibold text-nexoraText focus:outline-none"
-            />
-            <button
-              type="button"
-              onClick={handleCopyEmail}
-              disabled={!email}
-              aria-label={t('common.copy')}
-              title={t('common.copy')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-md text-nexoraSubtle transition hover:bg-white hover:text-nexoraBrand disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <Copy className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-
         <div>
           <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
             {renderLabel(t('components.register.steps.StepOtpVerify.enterOtpCode'))}

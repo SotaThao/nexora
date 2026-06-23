@@ -84,7 +84,11 @@ export default function LoginScreen() {
         (newSession.hasStaffProfile && newSession.hasCompletedOnboarding)
 
       if ((newSession.role === 'personal' || newSession.role === 'staff') && !isStaffReady) {
-        navigate('/register', { state: { showPersonalSuccessPopup: true, ssoEmail: newSession.email } })
+        if (!newSession.hasCompletedOnboarding) {
+          navigate('/onboarding')
+        } else {
+          navigate('/register', { state: { showPersonalSuccessPopup: true, ssoEmail: newSession.email } })
+        }
       } else if (newSession.flag === '!personal' || newSession.role === 'personal' || newSession.role === 'staff') {
         navigate('/staff')
       } else if (needsOnboarding) {

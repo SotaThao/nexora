@@ -11,9 +11,10 @@ export default function StepPayoutSetup({
   handlePersonalRegisterSubmit,
   currentLanguage,
   t,
+  errors,
 }) {
   return (
-    <div className="p-6 sm:p-10 space-y-6 animate-fadeIn">
+    <div className="p-6 sm:p-8 space-y-6 animate-fadeIn max-w-xl mx-auto">
       <div className="flex items-center justify-between border-b border-nexoraBorder pb-3">
         <div>
           <h3 className="text-lg font-bold text-nexoraText">
@@ -85,7 +86,7 @@ export default function StepPayoutSetup({
           <span className="h-7 w-7 rounded-lg bg-nexoraBrand/10 border border-nexoraBrand/20 flex items-center justify-center shrink-0">
             <img src="/assets/nexora-logo.png" alt="Nexora" className="h-4 w-4 object-contain" />
           </span>
-          <span className="text-nexoraSubtle font-bold">NEXORA Staff ID</span>
+          <span className="text-nexoraSubtle font-bold">NEXORA ID</span>
         </div>
         <span className="text-nexoraText font-extrabold font-mono bg-white border border-nexoraBorder px-2.5 py-1 rounded-lg">
           {generatedStaffId || 'Pending'}
@@ -93,6 +94,11 @@ export default function StepPayoutSetup({
       </div>
 
       {/* Action Buttons */}
+      {errors?.payout && (
+        <div className="text-red-500 text-xs text-center pb-2 font-semibold">
+          {errors.payout}
+        </div>
+      )}
       <div className="pt-4 flex flex-col sm:flex-row gap-3">
         <button
           type="button"
