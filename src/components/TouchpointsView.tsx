@@ -22,6 +22,8 @@ import { useTouchpoints } from '../data/hooks/useMerchantTouchpoints'
 import { usePagination } from '../hooks/usePagination'
 import { DEFAULT_PAGE_SIZE, STAFF_FILTER_LIST_PAGE_SIZE } from '../constants/pagination'
 import { buildQrImageUrl, toLocalCustomerTouchUrl } from '../utils/staffTipUrl'
+import { getWebUrlOrigin } from '../utils/webUrlBase'
+import ToggleSwitch from './ui/ToggleSwitch'
 import { formatCurrency } from './dashboard/utils'
 
 function Panel({ children, className = '' }) {
@@ -352,7 +354,7 @@ export default function TouchpointsView({
                 qrUrl = toLocalCustomerTouchUrl(String(point.url))
               }
               if (!qrUrl && point.slug) {
-                qrUrl = `${window.location.origin}/touch/${point.slug}`
+                qrUrl = `${getWebUrlOrigin()}/touch/${point.slug}`
               }
 
               const scans = point.scans ?? 0
@@ -425,26 +427,13 @@ export default function TouchpointsView({
      
                     {/* Middle Section: Active / Inactive Toggle */}
                     <div className="flex items-center gap-2 mt-1">
-                      <button
-                        type="button"
-                        disabled={isToggling}
-                        onClick={() => onToggleStatus && onToggleStatus(point.id)}
-                        className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:cursor-wait ${
-                          isToggling ? 'opacity-70' : 'cursor-pointer'
-                        } ${isPointActive ? 'bg-nexoraBrand' : 'bg-nexoraBorder'}`}
-                      >
-                        {isToggling ? (
-                          <span className="absolute inset-0 flex items-center justify-center">
-                            <Loader2 className="h-3 w-3 animate-spin text-white" />
-                          </span>
-                        ) : (
-                          <span
-                            className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                              isPointActive ? 'translate-x-4' : 'translate-x-0'
-                            }`}
-                          />
-                        )}
-                      </button>
+                      <ToggleSwitch
+                        checked={isPointActive}
+                        loading={isToggling}
+                        onChange={() => onToggleStatus && onToggleStatus(point.id)}
+                        activeColor="bg-nexoraBrand"
+                        inactiveColor="bg-nexoraBorder"
+                      />
                       <span className={`text-[10px] font-extrabold uppercase tracking-wider ${isPointActive ? 'text-nexoraSuccess' : 'text-nexoraSubtle'}`}>
                         {isPointActive ? t('dashboard.touchpoint_stats.active') : t('dashboard.touchpoint_stats.inactive')}
                       </span>

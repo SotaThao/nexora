@@ -8,6 +8,7 @@ import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
 import Pagination from '../../ui/Pagination'
+import ToggleSwitch from '../../ui/ToggleSwitch'
 
 function isPendingMember(member) {
   const status = member?.status
@@ -20,23 +21,6 @@ function isPendingInviteMember(member) {
 
 function isPendingLinkMember(member) {
   return member?.itemType === 'link' && member?.status === StatusFilter.Accepted
-}
-
-function ToggleSwitch({ checked, onChange, activeColor = 'bg-emerald-500', title }) {
-  return (
-    <button
-      type="button"
-      onClick={onChange}
-      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${checked ? activeColor : 'bg-slate-300'}`}
-      title={title}
-    >
-      <span
-        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-          checked ? 'translate-x-4' : 'translate-x-0'
-        }`}
-      />
-    </button>
-  )
 }
 
 function StaffMemberCard({

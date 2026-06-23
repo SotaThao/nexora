@@ -33,6 +33,9 @@ export const qk = {
   // Notifications
   notificationsUnreadCount: () => ['notifications', 'unreadCount'],
   notificationsList:      (filters = EMPTY) => ['notifications', 'list', filters],
+
+  // Client ecosystem (header SSO)
+  ecosystems:             () => ['ecosystems'],
   
   // Profile (Staff/Personal)
   userProfile:              () => ['userProfile'],
@@ -71,7 +74,6 @@ export const qk = {
   // Staff Self (own staff profile + linked businesses)
   staffProfile:        ()      => ['staffProfile'],
   staffBusinesses:     ()      => ['staffBusinesses'],
-  staffBusinessQrCodes: ()     => ['staffBusinessQrCodes'],
   staffDashboardSummary: ()    => ['staffDashboardSummary'],
   staffReviews:          (filters = EMPTY) => ['staffReviews', filters],
   staffTips:             (filters = EMPTY) => ['staffTips', filters],

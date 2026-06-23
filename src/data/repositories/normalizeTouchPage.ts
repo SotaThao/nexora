@@ -40,10 +40,19 @@ function readEmbeddedPaymentMethods(raw: LooseObject): PaymentMethodDto[] {
   return Array.isArray(candidates) ? candidates.map(normalizePaymentMethodDto) : []
 }
 
+function firstNonEmptyString(...values: unknown[]): string {
+  for (const value of values) {
+    if (typeof value === 'string' && value.trim()) return value.trim()
+  }
+  return ''
+}
+
 export function normalizeTouchPageData(raw: LooseObject | null | undefined): LooseObject | null {
   if (!raw) return null
 
   const business = raw.business || {}
+  const businessReviewLinks = business.reviewLinks || {}
+  const rootReviewLinks = raw.reviewLinks || {}
   const businessId =
     readBusinessIdFromObject(business) ||
     readBusinessIdFromObject(raw.businessProfile) ||
@@ -54,6 +63,45 @@ export function normalizeTouchPageData(raw: LooseObject | null | undefined): Loo
 
   const businessPaymentMethods = readEmbeddedPaymentMethods(raw)
   const resolvedBusinessId = businessId || readBusinessIdFromObject(business.profile)
+  const googleReviewUrl = firstNonEmptyString(
+    business.googleReviewUrl,
+    business.googleReview,
+    business.googleReviewLink,
+    business.reviewGoogleUrl,
+    businessReviewLinks.googleReview,
+    businessReviewLinks.googleReviewUrl,
+    businessReviewLinks.googleReviewLink,
+    raw.googleReviewUrl,
+    raw.googleReview,
+    raw.googleReviewLink,
+    rootReviewLinks.googleReview,
+    rootReviewLinks.googleReviewUrl,
+    rootReviewLinks.googleReviewLink,
+  )
+  const yelpUrl = firstNonEmptyString(
+    business.yelpUrl,
+    business.yelpReview,
+    business.yelpReviewUrl,
+    business.yelpReviewLink,
+    businessReviewLinks.yelpReview,
+    businessReviewLinks.yelpUrl,
+    businessReviewLinks.yelpReviewUrl,
+    businessReviewLinks.yelpReviewLink,
+    raw.yelpUrl,
+    raw.yelpReview,
+    raw.yelpReviewUrl,
+    raw.yelpReviewLink,
+    rootReviewLinks.yelpReview,
+    rootReviewLinks.yelpUrl,
+    rootReviewLinks.yelpReviewUrl,
+    rootReviewLinks.yelpReviewLink,
+  )
+  const feedbackEmail = firstNonEmptyString(
+    business.feedbackEmail,
+    businessReviewLinks.feedbackEmail,
+    raw.feedbackEmail,
+    rootReviewLinks.feedbackEmail,
+  )
 
   return {
     ...raw,
@@ -62,6 +110,15 @@ export function normalizeTouchPageData(raw: LooseObject | null | undefined): Loo
     business: {
       ...business,
       id: resolvedBusinessId || readBusinessIdFromObject(business),
+      googleReviewUrl,
+      yelpUrl,
+      feedbackEmail,
+      reviewLinks: {
+        ...businessReviewLinks,
+        googleReview: googleReviewUrl,
+        yelpReview: yelpUrl,
+        feedbackEmail,
+      },
     },
   }
 }

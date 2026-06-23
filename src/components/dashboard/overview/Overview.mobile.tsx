@@ -12,13 +12,15 @@ import {
   PiggyBank,
   Eye,
   Download,
+  Hourglass,
 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { useDownloadTouchpointQr } from '../../../data/hooks/useMerchantTouchpoints'
 import { downloadQrCode } from '../../../utils/qrUtils'
 import { buildQrImageUrl, toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
-
+import { getWebUrlOrigin } from '../../../utils/webUrlBase'
+import { isAwaitingShopConfirmation } from '../utils'
 import SetupGuideBanner from './SetupGuideBanner'
 
 function twoInitials(name) {
@@ -157,7 +159,7 @@ function Overview({
 
     const businessSlug = (businessName || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
     const touchSlug = masterTouchpoint?.slug || 'general'
-    return `${window.location.origin}/touch/${businessSlug}/${touchSlug}`
+    return `${getWebUrlOrigin()}/touch/${businessSlug}/${touchSlug}`
   }, [masterTouchpoint, businessName])
 
   const masterQrPreviewUrl = useMemo(
@@ -218,6 +220,11 @@ function Overview({
   const yearTips = metricsYear?.totalTips ?? 0
   const moneySavedMonth = monthTips * FEE_RATE
   const moneySavedYear = yearTips * FEE_RATE
+
+  const pendingConfirmCount = useMemo(
+    () => (transactions || []).filter(isAwaitingShopConfirmation).length,
+    [transactions],
+  )
 
   const activeStaff = (staff || []).filter((m) => m.status === 'Active' || m.active === true)
   const pendingCount = (pendingStaff || []).length
@@ -292,6 +299,27 @@ function Overview({
           </div>
         </div>
       </section>
+
+      {pendingConfirmCount > 0 && (
+        <button
+          type="button"
+          onClick={() => onNavigateMenu?.('reports')}
+          className="flex w-full items-center gap-3 rounded-2xl border border-violet-100 bg-violet-50 px-4 py-3 text-left active:scale-[0.98] transition cursor-pointer"
+        >
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-100">
+            <Hourglass className="h-4 w-4 text-violet-600" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-violet-800">
+              {t('merchant_dashboard.tips.pending_banner_title', { count: pendingConfirmCount })}
+            </p>
+            <p className="text-[10px] text-violet-500 mt-0.5 truncate">
+              {t('merchant_dashboard.tips.pending_card_hint')}
+            </p>
+          </div>
+          <ChevronRight className="h-4 w-4 shrink-0 text-violet-400" />
+        </button>
+      )}
 
       {/* ── KPI 2×2 ──────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-3">

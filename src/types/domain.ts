@@ -305,6 +305,7 @@ export interface DomainEntity {
 export interface TransactionRecord extends DomainEntity {
   amount?: number
   status?: string
+  statusLabel?: string | null
   staff?: StaffMember | string
   staffId?: string
   staffName?: string
@@ -315,9 +316,17 @@ export interface TransactionRecord extends DomainEntity {
   touchpoint?: string
   touchPointId?: string | null
   confirmedAt?: string | null
+  staffConfirmedAt?: string | null
+  merchantConfirmedAt?: string | null
   isMultiStaff?: boolean
   tipItems?: unknown[]
   [key: string]: unknown
+}
+
+/** Result of POST /api/v1/merchant/tips/confirm-receipt (see US-025). */
+export interface MerchantTipsConfirmReceiptResult {
+  confirmedCount: number
+  failedIds: string[]
 }
 
 export interface ReviewRecord extends DomainEntity {
@@ -405,6 +414,17 @@ export function isApiError(err: unknown): err is ApiError {
     'errorCode' in err &&
     typeof (err as ApiError).errorCode === 'string'
   )
+}
+
+export interface EcosystemItem {
+  id: string
+  name: string
+  url: string
+  logoUrl?: string | null
+}
+
+export interface EcosystemSignInResult {
+  redirectUrl: string | null
 }
 
 export function getApiErrorCode(err: unknown, fallback = 'HTTP_ERROR'): string {

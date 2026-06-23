@@ -1,5 +1,3 @@
-import { Capacitor } from '@capacitor/core'
-
 /**
  * Base origin for customer-facing URLs embedded in QR codes and share links.
  * Set via VITE_VLINKPAY_WEB_URL_BASE (e.g. https://test-web.nexoratouch.com).
@@ -9,10 +7,17 @@ function isNativeShellOrigin(origin: string): boolean {
   if (/^(capacitor|ionic|file):\/\//i.test(origin)) return true
   try {
     const { hostname } = new URL(origin)
-    return Capacitor.isNativePlatform() && hostname === 'localhost'
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      const platform =
+        typeof document !== 'undefined'
+          ? document.documentElement?.dataset?.capacitorPlatform
+          : undefined
+      return Boolean(platform)
+    }
   } catch {
     return true
   }
+  return false
 }
 
 export function getWebUrlOrigin(): string {

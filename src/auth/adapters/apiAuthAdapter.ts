@@ -71,6 +71,20 @@ function extractKybStatus(source: KybSource): string | null {
   if (typeof source !== 'object') return normalizeKybStatus(source)
 
   const record = source as Record<string, unknown>
+  const profileType = String(record.profileType ?? record.userType ?? '').trim().toLowerCase()
+  const isMerchant = profileType === PROFILE_TYPE_MERCHANT.toLowerCase()
+  const status = String(record.status ?? '').trim().toLowerCase()
+
+  if (
+    isMerchant &&
+    (record.isKycVerified === true ||
+      record.isKYCVerified === true ||
+      record.isKybVerified === true ||
+      record.isKYBVerified === true)
+  ) {
+    return 'kyb_approved'
+  }
+
   const explicitKybKeys = [
     'businessKybStatus',
     'kybStatus',

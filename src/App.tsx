@@ -1,12 +1,16 @@
 import React, { useEffect } from 'react'
 import { Capacitor } from '@capacitor/core'
 import { Keyboard } from '@capacitor/keyboard'
+import { useLocation } from 'react-router-dom'
 import AppRouter from './app/AppRouter'
 import { initStorage } from './utils/storage'
 import { KybGateProvider } from './contexts/KybGateContext'
 import { logger } from './utils/logger'
 
 export default function App() {
+  const location = useLocation()
+  const isPublicHome = location.pathname === '/'
+
   useEffect(() => {
     initStorage()
 
@@ -21,7 +25,13 @@ export default function App() {
 
   return (
     <KybGateProvider>
-      <div className="min-h-dvh bg-nexoraCanvas text-inkBlue font-sans antialiased">
+      <div
+        className={
+          isPublicHome
+            ? 'min-h-dvh'
+            : 'min-h-dvh bg-nexoraCanvas text-inkBlue font-sans antialiased'
+        }
+      >
         <AppRouter />
       </div>
     </KybGateProvider>

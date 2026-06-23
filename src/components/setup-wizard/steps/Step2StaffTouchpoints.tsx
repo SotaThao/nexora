@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import CustomSelect from '../../CustomSelect'
 import CountryCodeSelect, { parsePhone } from '../../CountryCodeSelect'
+import ToggleSwitch from '../../ui/ToggleSwitch'
 import { WalletLogos, getTouchpointIcon } from '../constants'
 import { renderLabel } from '../../../contexts/LanguageContext'
 import { getCustomerAppBaseUrl } from '../../../utils/webUrlBase'
@@ -78,19 +79,13 @@ export default function Step2StaffTouchpoints({
                   return (
                     <div key={wallet.key} className="flex items-center justify-between py-3.5">
                       <div className="flex items-center gap-3">
-                        <button
-                          type="button"
-                          onClick={() => handleToggleWallet(wallet.key)}
-                          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                            config.enabled ? 'bg-amber-600' : 'bg-slate-200'
-                          }`}
-                        >
-                          <span
-                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                              config.enabled ? 'translate-x-5' : 'translate-x-0'
-                            }`}
-                          />
-                        </button>
+                        <ToggleSwitch
+                          checked={config.enabled}
+                          onChange={() => handleToggleWallet(wallet.key)}
+                          size="md"
+                          activeColor="bg-amber-600"
+                          inactiveColor="bg-slate-200"
+                        />
                         <div className="flex items-center gap-2">
                           <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-50 shrink-0">
                             {WalletLogos[wallet.key]}

@@ -68,6 +68,24 @@ export function formatTransactionDateTime(value, locale = 'en') {
   }).format(date)
 }
 
+// US-025 — owner confirm receipt for shop-account / multi-staff tips.
+//
+// A tip is eligible for owner confirmation when the customer has confirmed the
+// transfer (status `Confirmed`) into the shop account (multi-staff routing) and
+// the owner has not yet confirmed receipt. Single-staff direct-to-staff tips are
+// confirmed by the staff member (US-024) and never appear in the owner queue.
+export function isAwaitingShopConfirmation(tx) {
+  if (!tx?.isMultiStaff) return false
+  if (tx.merchantConfirmedAt) return false
+  const status = String(tx.status || '').toLowerCase()
+  return status === 'confirmed'
+}
+
+// A shop-account tip the owner has already confirmed received.
+export function isShopConfirmed(tx) {
+  return Boolean(tx?.isMultiStaff && tx?.merchantConfirmedAt)
+}
+
 export function walletLabels(accounts) {
   return Object.entries(accounts)
     .filter(([, value]) => value)
