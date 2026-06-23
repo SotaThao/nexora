@@ -18,6 +18,7 @@ import {
 import { useTranslation } from '../../../contexts/LanguageContext'
 import IconButton from '../../ui/IconButton'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
+import HeaderEcosystem from './HeaderEcosystem'
 
 export default function DashboardHeader({
   searchQuery,
@@ -100,6 +101,13 @@ export default function DashboardHeader({
   // Calculate search suggestions
   const suggestions = useMemo(() => {
     const query = searchQuery.toLowerCase().trim()
+    const normalize = (value) =>
+      String(value ?? '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[\s_-]+/g, '')
+    const normalizedQuery = normalize(query)
     if (!query) return null
 
     const matchedStaff = (staff || []).filter(s =>
@@ -121,10 +129,20 @@ export default function DashboardHeader({
       String(r.rating).includes(query)
     ).slice(0, 3)
 
-    const matchedTps = (touchpoints || []).filter(tp =>
-      tp.name.toLowerCase().includes(query) ||
-      tp.type.toLowerCase().includes(query)
-    ).slice(0, 3)
+    const matchedTps = (touchpoints || []).filter((tp) => {
+      const name = String(tp?.name ?? '')
+      const type = String(tp?.type ?? '')
+      const deviceId = String(tp?.deviceId ?? '')
+      const slug = String(tp?.slug ?? '')
+      return (
+        name.toLowerCase().includes(query) ||
+        type.toLowerCase().includes(query) ||
+        deviceId.toLowerCase().includes(query) ||
+        slug.toLowerCase().includes(query) ||
+        normalize(name).includes(normalizedQuery) ||
+        normalize(type).includes(normalizedQuery)
+      )
+    }).slice(0, 3)
 
     const totalCount = matchedStaff.length + matchedTxs.length + matchedReviews.length + matchedTps.length
 
@@ -162,17 +180,34 @@ export default function DashboardHeader({
           </div>
         ) : notifications && notifications.length > 0 ? (
           notifications.map((item) => {
+            const typeLower = (item.type || '').toLowerCase().replace(/[\s_-]+/g, '')
             const IconComponent = {
               tip_success: Wallet,
               feedback_alert: AlertTriangle,
-              review_good: Star
-            }[item.type] || Bell
+              review_good: Star,
+              staff_accepted_invite: UserCheck,
+              staffacceptedinvite: UserCheck,
+              stafflinkrequest: UserCheck,
+              staff_link_request: UserCheck,
+              staff_joined: UserCheck,
+              staffjoined: UserCheck,
+              staffinviteaccepted: UserCheck,
+              staffpublicjoinrequest: UserCheck,
+            }[typeLower] || Bell
 
             const iconColor = {
               tip_success: 'bg-emerald-500 text-white',
               feedback_alert: 'bg-amber-500 text-white',
-              review_good: 'bg-luxuryGold text-white'
-            }[item.type] || 'bg-nexoraBrand text-white'
+              review_good: 'bg-luxuryGold text-white',
+              staff_accepted_invite: 'bg-nexoraBrand text-white',
+              staffacceptedinvite: 'bg-nexoraBrand text-white',
+              stafflinkrequest: 'bg-nexoraBrand text-white',
+              staff_link_request: 'bg-nexoraBrand text-white',
+              staff_joined: 'bg-nexoraBrand text-white',
+              staffjoined: 'bg-nexoraBrand text-white',
+              staffinviteaccepted: 'bg-nexoraBrand text-white',
+              staffpublicjoinrequest: 'bg-nexoraBrand text-white',
+            }[typeLower] || 'bg-nexoraBrand text-white'
 
             const isUnread = !item.read
             return (
@@ -223,7 +258,7 @@ export default function DashboardHeader({
         <img src={profile.avatar} alt="" className="h-full w-full object-cover" />
       ) : (
         <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-sm font-bold text-white uppercase">
-          {(profile.email || '').slice(0, 2).toUpperCase() || '?'}
+          {(businessName || profile.email || '').slice(0, 2).toUpperCase() || '?'}
         </div>
       )}
     </>
@@ -284,12 +319,14 @@ export default function DashboardHeader({
           >
             <Menu className="h-5 w-5" />
           </button>
+          <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-9 w-9 shrink-0 object-contain" />
         </div>
 
         {/* Right: lang + bell + avatar */}
         <div className="flex items-center gap-2">
-          {/* Language Switcher (mobile) */}
           <LanguageSwitcher />
+
+          <HeaderEcosystem />
 
           <div className="relative" ref={mobileDropdownRef}>
             <button
@@ -342,6 +379,13 @@ export default function DashboardHeader({
               setIsSearchFocused(true)
             }}
             onFocus={() => setIsSearchFocused(true)}
+            onKeyDown={(event) => {
+              if (event.key !== 'Enter') return
+              if (suggestions?.touchpoints?.length > 0) {
+                onNavigateMenu('touchpoints')
+                setIsSearchFocused(false)
+              }
+            }}
           />
 
           {isSearchFocused && searchQuery.trim() !== '' && (
@@ -428,8 +472,9 @@ export default function DashboardHeader({
         </div>
 
         <div className="flex shrink-0 items-center gap-4">
-          {/* Language Switcher */}
           <LanguageSwitcher />
+
+          <HeaderEcosystem />
 
           {/* Notifications */}
           <div className="relative" ref={dropdownRef}>

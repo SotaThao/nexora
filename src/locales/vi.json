@@ -418,7 +418,11 @@
     },
     "header": {
       "search_placeholder": "Tìm thợ, bàn ghế, đánh giá...",
-      "add_tp": "Thêm Điểm Chạm"
+      "add_tp": "Thêm Điểm Chạm",
+      "ecosystem": "Hệ sinh thái",
+      "ecosystem_loading": "Đang tải hệ sinh thái...",
+      "no_ecosystem": "Không có hệ sinh thái nào",
+      "coming_soon_badge": "Sắp ra mắt"
     },
     "back_to_dashboard": "Quay lại Bảng Điều Khiển",
     "notifications": {
