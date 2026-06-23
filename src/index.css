@@ -7,15 +7,15 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Global text-based input focus ring styling */
-input[type="text"]:focus, 
-input[type="email"]:focus, 
-input[type="password"]:focus, 
-input[type="tel"]:focus, 
-input[type="number"]:focus, 
-input[type="search"]:focus, 
-textarea:focus,
-select:focus {
+/* Global text-based input focus ring styling — skip marketing homepage */
+body:not(.homepage-active) input[type="text"]:focus, 
+body:not(.homepage-active) input[type="email"]:focus, 
+body:not(.homepage-active) input[type="password"]:focus, 
+body:not(.homepage-active) input[type="tel"]:focus, 
+body:not(.homepage-active) input[type="number"]:focus, 
+body:not(.homepage-active) input[type="search"]:focus, 
+body:not(.homepage-active) textarea:focus,
+body:not(.homepage-active) select:focus {
   outline: none !important;
   box-shadow: 0 0 0 2px rgba(70, 72, 216, 0.2) !important; /* nexoraBrand/20 */
   border-color: theme('colors.nexoraBrand') !important;
@@ -24,18 +24,18 @@ select:focus {
 
 /* Prevent iOS Safari from zooming on input focus by ensuring font-size is at least 16px on iOS devices (portrait and landscape) */
 @supports (-webkit-touch-callout: none) {
-  input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
-  textarea,
-  select {
+  body:not(.homepage-active) input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
+  body:not(.homepage-active) textarea,
+  body:not(.homepage-active) select {
     font-size: 16px !important;
   }
 }
 
 /* Prevent zoom on all other mobile browsers on narrow viewports */
 @media screen and (max-width: 767px) {
-  input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
-  textarea,
-  select {
+  body:not(.homepage-active) input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
+  body:not(.homepage-active) textarea,
+  body:not(.homepage-active) select {
     font-size: 16px !important;
   }
 }
@@ -44,7 +44,8 @@ select:focus {
 
 
 /* Keyboard focus visibility for buttons and links */
-button:focus-visible, a:focus-visible {
+body:not(.homepage-active) button:focus-visible,
+body:not(.homepage-active) a:focus-visible {
   outline: none !important;
   box-shadow: 0 0 0 2px rgba(70, 72, 216, 0.4) !important;
 }
