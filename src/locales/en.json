@@ -1,4 +1,23 @@
 {
+  "merchant_dashboard": {
+    "tips": {
+      "awaiting_shop_confirmation": "Awaiting shop confirmation",
+      "confirm_receipt": "Confirm receipt",
+      "confirm_receipt_help": "The customer transferred this tip into your shop account. Confirm once the money has arrived so each staff member's share is recorded.",
+      "confirmed_help": "You confirmed this tip was received on {{time}}.",
+      "confirm_success": "Tip receipt confirmed.",
+      "confirm_failed": "Could not confirm tip receipt.",
+      "confirm_partial": "Confirmed {{count}} tip(s). Some items could not be confirmed.",
+      "pending_banner_title": "{{count}} tip(s) awaiting confirmation",
+      "pending_banner_desc": "The customer transferred the money into your shop account. Confirm receipt so each staff member's share is recorded.",
+      "pending_view_cta": "View",
+      "pending_card_hint": "Tap to view and confirm receipt",
+      "pending_callout_text": "{{count}} tip(s) need confirmation of receipt into your shop account.",
+      "pending_filtering": "Filtering.",
+      "pending_filter_apply": "Filter now",
+      "pending_filter_clear": "Clear filter"
+    }
+  },
   "staff_dashboard": {
     "brand": {
       "title": "NEXORA",

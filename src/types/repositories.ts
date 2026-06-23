@@ -282,6 +282,7 @@ export interface TipApiDto {
   id?: string
   amount?: number
   status?: string
+  statusLabel?: string | null
   paymentMethod?: string
   staffName?: string
   staffProfileId?: string | null
@@ -290,6 +291,8 @@ export interface TipApiDto {
   touchPointId?: string | null
   createdAt?: string
   confirmedAt?: string | null
+  staffConfirmedAt?: string | null
+  merchantConfirmedAt?: string | null
   isMultiStaff?: boolean
   tipItems?: unknown[]
 }
