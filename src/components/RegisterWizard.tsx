@@ -25,9 +25,16 @@ export default function RegisterWizard() {
   const showPersonalSuccessPopup = location.state?.showPersonalSuccessPopup || false
   const ssoEmail = location.state?.ssoEmail || ''
   const pendingRegistration = loadPendingRegistration(location.state?.resumeEmail)
+  // `resumeOtpVerification` chỉ điều khiển nhảy thẳng tới bước OTP + prefill.
+  // Việc TỰ ĐỘNG gửi lại email xác thực chỉ được phép ở luồng login-resume rõ ràng
+  // (`location.state.resumeOtpVerification`), KHÔNG phải ngay sau khi đăng ký — vì
+  // signup đã tự gửi OTP. Một `pendingRegistration` vừa lưu (vừa signup) nếu không
+  // tách ra sẽ khiến reload bước OTP gọi lại `send-verification-email` → OTP trùng.
+  const resumeFromLogin = Boolean(location.state?.resumeOtpVerification)
   const resumeOtpVerification = !showPersonalSuccessPopup && (
-    Boolean(location.state?.resumeOtpVerification) || Boolean(pendingRegistration)
+    resumeFromLogin || Boolean(pendingRegistration)
   )
+  const autoSendVerificationOnResume = !showPersonalSuccessPopup && resumeFromLogin
   const resumeEmail = location.state?.resumeEmail || pendingRegistration?.email || ''
   const resumePassword = location.state?.resumePassword || pendingRegistration?.password || ''
   const resumeRole = location.state?.resumeRole || pendingRegistration?.role || null
@@ -63,6 +70,7 @@ export default function RegisterWizard() {
     initialStep: showPersonalSuccessPopup ? 3 : 0,
     initialRole: showPersonalSuccessPopup ? 'personal' : 'personal',
     resumeOtpVerification,
+    autoSendVerificationOnResume,
     resumeEmail,
     resumePassword,
     resumeRole,
