@@ -5,6 +5,7 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import { useUnreadCount } from '../../../data/hooks/useNotifications'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
+import HeaderEcosystem from '../../dashboard/layout/HeaderEcosystem'
 
 export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu, onLogout }) {
   const { t } = useTranslation()
@@ -42,6 +43,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
         >
           <Menu className="h-5 w-5" />
         </button>
+        <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-9 w-9 shrink-0 object-contain" />
       </div>
 
       {/* Screen title (desktop) */}
@@ -52,6 +54,8 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
       <div className="flex shrink-0 items-center gap-2 sm:gap-3">
         {/* Language switch */}
         <LanguageSwitcher />
+
+        <HeaderEcosystem />
 
         {/* Notifications bell */}
         <button
