@@ -330,8 +330,8 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
               : <Bell className="h-4 w-4 shrink-0 text-amber-600" />
             }
             <p className={`text-xs ${showPendingOnly ? 'text-violet-800' : 'text-amber-800'}`}>
-              <span className="font-bold">{pendingConfirmCount} tip</span> cần xác nhận nhận tiền từ tài khoản tiệm.
-              {showPendingOnly && <span className="ml-1 font-normal opacity-70">Đang lọc.</span>}
+              {t('merchant_dashboard.tips.pending_callout_text', { count: pendingConfirmCount })}
+              {showPendingOnly && <span className="ml-1 font-normal opacity-70">{t('merchant_dashboard.tips.pending_filtering')}</span>}
             </p>
           </div>
           <button
@@ -343,7 +343,7 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
                 : 'bg-amber-500 text-white hover:bg-amber-600'
             }`}
           >
-            {showPendingOnly ? 'Bỏ lọc' : 'Lọc ngay'}
+            {showPendingOnly ? t('merchant_dashboard.tips.pending_filter_clear') : t('merchant_dashboard.tips.pending_filter_apply')}
           </button>
         </div>
       )}

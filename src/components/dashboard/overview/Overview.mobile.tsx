@@ -244,10 +244,10 @@ function Overview({
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-bold text-violet-800">
-              {pendingConfirmCount} tip{pendingConfirmCount > 1 ? 's' : ''} chờ xác nhận
+              {t('merchant_dashboard.tips.pending_banner_title', { count: pendingConfirmCount })}
             </p>
             <p className="text-[10px] text-violet-500 mt-0.5 truncate">
-              Nhấn để xem và confirm nhận tiền
+              {t('merchant_dashboard.tips.pending_card_hint')}
             </p>
           </div>
           <ChevronRight className="h-4 w-4 shrink-0 text-violet-400" />

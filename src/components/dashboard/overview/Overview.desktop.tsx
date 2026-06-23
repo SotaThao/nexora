@@ -333,10 +333,10 @@ function Overview({
             <Hourglass className="h-4 w-4 shrink-0 text-violet-500" />
             <div>
               <p className="text-xs font-bold text-violet-800">
-                {pendingConfirmCount} tip{pendingConfirmCount > 1 ? 's' : ''} chờ xác nhận
+                {t('merchant_dashboard.tips.pending_banner_title', { count: pendingConfirmCount })}
               </p>
               <p className="text-[10px] text-violet-600 mt-0.5">
-                Customer đã chuyển tiền vào tài khoản tiệm, cần bạn xác nhận để ghi nhận cho thợ
+                {t('merchant_dashboard.tips.pending_banner_desc')}
               </p>
             </div>
           </div>
@@ -345,7 +345,7 @@ function Overview({
             onClick={() => navigate('/dashboard/reports')}
             className="shrink-0 rounded-lg bg-violet-600 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-white hover:bg-violet-700 transition cursor-pointer whitespace-nowrap"
           >
-            Xem →
+            {t('merchant_dashboard.tips.pending_view_cta')} →
           </button>
         </div>
       )}
