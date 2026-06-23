@@ -1571,7 +1571,8 @@
           "autoFill": "Auto-Fill",
           "notConfigured": "Not Configured",
           "configure": "Configure",
-          "saveAndActivate": "Save & Activate"
+          "saveAndActivate": "Save & Activate",
+          "nexoraId": "NEXORA ID"
         },
         "StepProfileSetup": {
           "personalProfileSetup": "Personal Profile Setup",

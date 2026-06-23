@@ -86,7 +86,7 @@ export default function StepPayoutSetup({
           <span className="h-7 w-7 rounded-lg bg-nexoraBrand/10 border border-nexoraBrand/20 flex items-center justify-center shrink-0">
             <img src="/assets/nexora-logo.png" alt="Nexora" className="h-4 w-4 object-contain" />
           </span>
-          <span className="text-nexoraSubtle font-bold">NEXORA ID</span>
+          <span className="text-nexoraSubtle font-bold">{t('components.register.steps.StepPayoutSetup.nexoraId')}</span>
         </div>
         <span className="text-nexoraText font-extrabold font-mono bg-white border border-nexoraBorder px-2.5 py-1 rounded-lg">
           {generatedStaffId || 'Pending'}
