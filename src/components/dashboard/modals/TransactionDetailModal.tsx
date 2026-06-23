@@ -1,12 +1,18 @@
 import { useMemo, useState } from 'react'
-import { X, Share2, CreditCard, Coins } from 'lucide-react'
+import { X, Share2, CreditCard, Coins, CheckCircle, Hourglass, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
-import { formatCurrency, formatTransactionDateTime } from '../utils'
+import {
+  formatCurrency,
+  formatTransactionDateTime,
+  isAwaitingShopConfirmation,
+  isShopConfirmed,
+} from '../utils'
 import { WalletLogos } from '../constants'
 import { logger } from '../../../utils/logger'
 import { buildQrImageUrl, slugify, toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
 import { getWebUrlOrigin } from '../../../utils/webUrlBase'
+import { useConfirmMerchantTipsReceipt } from '../../../data/hooks/useTransactions'
 import QrModal from './QrModal'
 import CopyableTransactionId from '../../ui/CopyableTransactionId'
 
@@ -80,16 +86,11 @@ function resolveTouchPointQrUrl({
   return `${origin}/touch/${resolvedBusinessSlug}/${touchPointSlug}`
 }
 
-function renderStaffCodeLine(code, t) {
+function renderStaffCodeBadge(code) {
   return (
-    <p className="mt-1 flex flex-wrap items-center gap-1.5">
-      <span className="text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
-        {t('dashboard.activity_log.staff_code')}
-      </span>
-      <span className="inline-flex rounded-md border border-nexoraBrand/20 bg-nexoraBrandSoft px-2 py-0.5 font-mono text-xs font-extrabold tracking-wide text-nexoraBrand">
-        {code || 'N/A'}
-      </span>
-    </p>
+    <span className="inline-flex rounded-md border border-nexoraBrand/20 bg-nexoraBrandSoft px-2 py-0.5 font-mono text-xs font-extrabold tracking-wide text-nexoraBrand">
+      {code || 'N/A'}
+    </span>
   )
 }
 
@@ -106,7 +107,17 @@ function getPaymentMethodLogo(method) {
   return <CreditCard className="h-[18px] w-[18px] text-slate-500" />
 }
 
-function renderStatusBadge(status, t) {
+
+function renderStatusBadge(tx, t) {
+  if (isAwaitingShopConfirmation(tx)) {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-violet-50 text-violet-600 border border-violet-100/50 mt-2">
+        <Hourglass className="h-3 w-3" />
+        {t('merchant_dashboard.tips.awaiting_shop_confirmation')}
+      </span>
+    )
+  }
+  const status = tx?.status
   const s = (status || '').toLowerCase()
   if (s === 'success' || s === 'succeeded' || s === 'confirmed' || s === 'completed') {
     return (
@@ -147,6 +158,7 @@ export default function TransactionDetailModal({
   const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
   const [qrTarget, setQrTarget] = useState(null)
+  const confirmReceiptMutation = useConfirmMerchantTipsReceipt()
 
   const staffCodeByProfileId = useMemo(() => buildStaffCodeLookup(staff), [staff])
   const tipItems = useMemo(
@@ -213,17 +225,19 @@ export default function TransactionDetailModal({
       <button
         type="button"
         onClick={openTouchPointQr}
-        className="group flex shrink-0 flex-col items-center gap-1 rounded-lg border border-slate-200 bg-white p-1.5 shadow-sm transition hover:border-nexoraBrand hover:shadow-md cursor-pointer"
+        className="group relative shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white p-1.5 shadow-sm transition hover:border-nexoraBrand hover:shadow-md cursor-pointer"
         title={t('components.dashboard.views.StaffView.clickToEnlarge')}
       >
         <img
           src={qrImageSrc}
           alt={`QR for ${touchPointName}`}
-          className="h-16 w-16 object-contain"
+          className="h-20 w-20 object-contain"
         />
-        <span className="text-[8px] font-bold uppercase tracking-wider text-nexoraMuted group-hover:text-nexoraBrand">
-          {t('components.dashboard.views.StaffView.clickToEnlarge')}
-        </span>
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-lg bg-nexoraBrand/80 opacity-0 transition-opacity group-hover:opacity-100">
+          <span className="text-[9px] font-black uppercase tracking-widest text-white">
+            PREVIEW
+          </span>
+        </div>
       </button>
     )
   }
@@ -235,6 +249,21 @@ export default function TransactionDetailModal({
     staffCodeByProfileId,
     selectedTx.staffCode,
   )
+
+  const awaitingShopConfirmation = isAwaitingShopConfirmation(selectedTx)
+  const shopConfirmed = isShopConfirmed(selectedTx)
+  const isConfirming = confirmReceiptMutation.isPending
+
+  const handleConfirmReceipt = () => {
+    if (!selectedTx?.id || isConfirming) return
+    confirmReceiptMutation.mutate([selectedTx.id], {
+      onSuccess: (result) => {
+        // Close only when the tip was fully confirmed; on partial/full failure
+        // keep the modal open so the owner sees the unchanged pending state.
+        if (result.failedIds.length === 0) onClose()
+      },
+    })
+  }
 
   return (
     <>
@@ -268,16 +297,13 @@ export default function TransactionDetailModal({
               <h3 className="text-3xl font-black text-nexoraText mt-1">
                 {formatCurrency(selectedTx.amount)}
               </h3>
-              {isMultiStaff ? (
-                <span className="mt-2 rounded-full bg-violet-50 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-violet-600 border border-violet-100">
-                  {t('staff_dashboard.tips.multi_staff')}
-                </span>
-              ) : null}
-              {renderStatusBadge(selectedTx.status, t)}
+
+              {renderStatusBadge(selectedTx, t)}
             </div>
 
             <div className="grid grid-cols-2 gap-x-4 gap-y-4 text-xs border-t border-nexoraBorder pt-4">
-              <div className="col-span-2">
+              {/* Row 1: ID | Date */}
+              <div>
                 <span className="text-[10px] font-bold text-nexoraMuted block">
                   {t('dashboard.activity_log.col_id')}
                 </span>
@@ -298,6 +324,7 @@ export default function TransactionDetailModal({
                   {formatTransactionDateTime(selectedTx.dateTime, currentLanguage)}
                 </span>
               </div>
+              {/* Row 2: Payment Method | Touch Point */}
               <div>
                 <span className="text-[10px] font-bold text-nexoraMuted block">
                   {t('dashboard.activity_log.col_payment')}
@@ -307,21 +334,22 @@ export default function TransactionDetailModal({
                   <span className="font-semibold text-nexoraText">{selectedTx.paymentMethod}</span>
                 </div>
               </div>
-              <div className={isMultiStaff ? 'col-span-2' : ''}>
+              <div>
                 <span className="text-[10px] font-bold text-nexoraMuted block">
                   {t('dashboard.activity_log.col_tp')}
                 </span>
                 <span className="font-semibold text-nexoraText block mt-0.5">{selectedTx.touchpoint || '—'}</span>
               </div>
+              {/* Row 3 (single-staff only): Staff */}
               {!isMultiStaff ? (
-                <div>
+                <div className="col-span-2">
                   <span className="text-[10px] font-bold text-nexoraMuted block">
                     {t('dashboard.activity_log.col_staff')}
                   </span>
-                  <span className="font-semibold text-nexoraText block mt-0.5">
-                    {singleStaffName || '—'}
+                  <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                    <span className="font-semibold text-nexoraText">{singleStaffName || '—'}</span>
+                    {renderStaffCodeBadge(singleStaffCode)}
                   </span>
-                  {renderStaffCodeLine(singleStaffCode, t)}
                 </div>
               ) : null}
             </div>
@@ -341,15 +369,52 @@ export default function TransactionDetailModal({
                 {tipItems.map((item) => (
                   <div
                     key={item.staffProfileId || item.staffName}
-                    className="rounded-lg border border-nexoraBorder bg-white p-3"
+                    className="flex items-center justify-between gap-3 rounded-lg border border-nexoraBorder bg-white px-3 py-2.5"
                   >
-                    <p className="text-xs font-bold text-nexoraText truncate">{item.staffName || '—'}</p>
-                    {renderStaffCodeLine(item.staffCode, t)}
-                    <p className="text-sm font-extrabold text-nexoraBrand mt-1.5">
+                    <div className="min-w-0 flex flex-wrap items-center gap-1.5">
+                      <span className="text-xs font-bold text-nexoraText">{item.staffName || '—'}</span>
+                      {renderStaffCodeBadge(item.staffCode)}
+                    </div>
+                    <p className="text-xl font-black text-nexoraBrand shrink-0">
                       {formatCurrency(item.amount)}
                     </p>
                   </div>
                 ))}
+              </div>
+            ) : null}
+
+            {awaitingShopConfirmation ? (
+              <div className="rounded-xl border border-violet-100 bg-violet-50/60 p-4 space-y-3">
+                <div className="flex items-start gap-2">
+                  <Hourglass className="h-4 w-4 shrink-0 text-violet-500 mt-0.5" />
+                  <p className="text-[11px] leading-normal text-violet-700">
+                    {t('merchant_dashboard.tips.confirm_receipt_help')}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={isConfirming}
+                  onClick={handleConfirmReceipt}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white transition-colors hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+                >
+                  {isConfirming ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <CheckCircle className="h-4 w-4" />
+                  )}
+                  {t('merchant_dashboard.tips.confirm_receipt')}
+                </button>
+              </div>
+            ) : null}
+
+            {shopConfirmed ? (
+              <div className="flex items-start gap-2 rounded-xl border border-emerald-100 bg-emerald-50/60 p-4">
+                <CheckCircle className="h-4 w-4 shrink-0 text-emerald-500 mt-0.5" />
+                <p className="text-[11px] leading-normal text-emerald-700">
+                  {t('merchant_dashboard.tips.confirmed_help', {
+                    time: formatTransactionDateTime(selectedTx.merchantConfirmedAt, currentLanguage),
+                  })}
+                </p>
               </div>
             ) : null}
 
@@ -363,9 +428,6 @@ export default function TransactionDetailModal({
                   <span className="text-[11px] text-slate-500 mt-1 leading-normal">
                     {t('components.dashboard.modals.TransactionDetailModal.scanToTipTouchPoint')}
                   </span>
-                  <p className="mt-1 break-all font-mono text-[10px] text-slate-400 select-all">
-                    {touchPointQrUrl.replace(/^https?:\/\//, '')}
-                  </p>
                   <button
                     type="button"
                     onClick={handleShareTouchPoint}

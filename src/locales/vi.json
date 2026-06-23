@@ -1,4 +1,23 @@
 {
+  "merchant_dashboard": {
+    "tips": {
+      "awaiting_shop_confirmation": "Chờ tiệm xác nhận",
+      "confirm_receipt": "Xác nhận đã nhận",
+      "confirm_receipt_help": "Khách đã chuyển khoản tip này vào tài khoản tiệm. Hãy xác nhận khi tiền đã vào tài khoản để phần tip của từng nhân viên được ghi nhận.",
+      "confirmed_help": "Bạn đã xác nhận đã nhận tip này vào {{time}}.",
+      "confirm_success": "Đã xác nhận nhận tip.",
+      "confirm_failed": "Không thể xác nhận nhận tip.",
+      "confirm_partial": "Đã xác nhận {{count}} tip. Một số mục không xác nhận được.",
+      "pending_banner_title": "{{count}} tip chờ xác nhận",
+      "pending_banner_desc": "Khách đã chuyển tiền vào tài khoản tiệm, cần bạn xác nhận để ghi nhận cho thợ.",
+      "pending_view_cta": "Xem",
+      "pending_card_hint": "Nhấn để xem và xác nhận nhận tiền",
+      "pending_callout_text": "{{count}} tip cần xác nhận nhận tiền từ tài khoản tiệm.",
+      "pending_filtering": "Đang lọc.",
+      "pending_filter_apply": "Lọc ngay",
+      "pending_filter_clear": "Bỏ lọc"
+    }
+  },
   "staff_dashboard": {
     "brand": {
       "title": "NEXORA",
@@ -84,6 +103,10 @@
       "total_count": "{{count}} tip",
       "page_of": "Trang {{page}} / {{total}}",
       "multi_staff": "Nhiều thợ",
+      "via_business_pending": "Chờ xác nhận",
+      "via_business_confirmed": "Đã xác nhận",
+      "via_business_pending_help": "Đang chờ {{business}} xác nhận và chi trả phần của bạn.",
+      "via_business_confirmed_help": "{{business}} đã xác nhận tip này — phần của bạn sẽ được chi trả.",
       "status": {
         "initiated": "Đã khởi tạo",
         "confirmed": "Đã xác nhận",
@@ -92,6 +115,15 @@
         "pending": "Chờ xử lý",
         "verified": "Đã xác minh"
       },
+      "status_help": {
+        "initiated": "Khách đã tạo tip nhưng chưa xác nhận thanh toán.",
+        "confirmed": "Đã xác nhận thanh toán — bạn sẽ nhận được tip này.",
+        "skipped": "Khách đã chọn không tip.",
+        "completed": "Tip này đã được nhận và hoàn tất.",
+        "pending": "Đang chờ xác nhận thanh toán.",
+        "verified": "Tip này đã được xác minh."
+      },
+      "status_help_aria": "Trạng thái này nghĩa là gì",
       "ai_insight": "Phân tích AI",
       "ai_insight_body": "Tip trung bình cho dịch vụ Pedicure của bạn là 21%, cao hơn 6% so với mức trung bình của tiệm."
     },
@@ -418,7 +450,11 @@
     },
     "header": {
       "search_placeholder": "Tìm thợ, bàn ghế, đánh giá...",
-      "add_tp": "Thêm Điểm Chạm"
+      "add_tp": "Thêm Điểm Chạm",
+      "ecosystem": "Hệ sinh thái",
+      "ecosystem_loading": "Đang tải hệ sinh thái...",
+      "no_ecosystem": "Không có hệ sinh thái nào",
+      "coming_soon_badge": "Sắp ra mắt"
     },
     "back_to_dashboard": "Quay lại Bảng Điều Khiển",
     "notifications": {
@@ -724,8 +760,9 @@
         "est_savings_annual_suffix": "mỗi năm.",
         "per_month": "/tháng",
         "recent_payouts": "Giao Dịch Trực Tiếp Gần Đây",
-        "col_time": "Thời gian",
+        "col_time": "Ngày",
         "col_staff": "Nhân viên",
+        "multi_tips": "Multi-tips",
         "col_amount": "Số tiền",
         "col_method": "Ví gửi",
         "col_status": "Trạng thái",

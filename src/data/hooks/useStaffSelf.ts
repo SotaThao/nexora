@@ -153,6 +153,14 @@ export function useConfirmStaffTipsReceipt() {
       queryClient.invalidateQueries({ queryKey: qk.staffDashboardSummary() })
 
       if (result.failedIds.length > 0) {
+        // All requested tips failed (e.g. backend rejected every id) — surface a
+        // clear error instead of the softer "partial" warning. See BE gap doc:
+        // API/jun 2026/backend-gaps/staff-confirm-receipt-gap-260622.md
+        if (result.confirmedCount === 0) {
+          showToast(t('staff_dashboard.home.confirm_failed'), 'error')
+          return
+        }
+
         showToast(
           t('staff_dashboard.home.confirm_partial', { count: result.confirmedCount }),
           'warning',

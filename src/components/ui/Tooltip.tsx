@@ -4,10 +4,15 @@
 import { useState } from 'react'
 import { Info } from 'lucide-react'
 
-export default function Tooltip({ content, children, className = '', ariaLabel = 'More information' }) {
+export default function Tooltip({ content, children, className = '', ariaLabel = 'More information', align = 'center' }) {
   const [open, setOpen] = useState(false)
 
   if (!content) return null
+
+  // Anchor the popup so it never overflows the viewport. Use `align="end"` for
+  // triggers near the right edge (popup opens leftward), `start` for the left edge.
+  const alignClass =
+    align === 'end' ? 'right-0' : align === 'start' ? 'left-0' : 'left-1/2 -translate-x-1/2'
 
   return (
     <span
@@ -28,7 +33,7 @@ export default function Tooltip({ content, children, className = '', ariaLabel =
       {open && (
         <span
           role="tooltip"
-          className="absolute left-1/2 top-full z-50 mt-1.5 w-56 -translate-x-1/2 rounded-lg border border-nexoraBorder bg-nexoraSurface px-3 py-2 text-[11px] font-medium leading-snug text-nexoraText shadow-lg"
+          className={`absolute top-full z-50 mt-1.5 w-56 max-w-[calc(100vw-2rem)] rounded-lg border border-nexoraBorder bg-nexoraSurface px-3 py-2 text-[11px] font-medium leading-snug text-nexoraText shadow-lg ${alignClass}`}
         >
           {content}
         </span>

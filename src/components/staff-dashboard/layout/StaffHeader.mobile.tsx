@@ -4,6 +4,7 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import { useUnreadCount } from '../../../data/hooks/useNotifications'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
+import HeaderEcosystem from '../../dashboard/layout/HeaderEcosystem'
 
 export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu }) {
   const { t } = useTranslation()
@@ -15,17 +16,22 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
     <header className="safe-area-top sticky top-0 z-20 border-b border-nexoraBorder bg-nexoraSurface">
       {/* Mobile top bar */}
       <div className="flex items-center justify-between gap-2 px-4 py-3 lg:hidden">
-        <button
-          type="button"
-          onClick={onOpenMobileMenu}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-nexoraText transition hover:bg-nexoraCanvas"
-          aria-label="Open navigation menu"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onOpenMobileMenu}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-nexoraText transition hover:bg-nexoraCanvas"
+            aria-label="Open navigation menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-9 w-9 shrink-0 object-contain" />
+        </div>
 
         <div className="flex items-center justify-end gap-2">
           <LanguageSwitcher />
+
+          <HeaderEcosystem />
           <button
             type="button"
             onClick={() => onNavigate('notifications')}
@@ -71,6 +77,8 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
 
         <div className="flex shrink-0 items-center gap-3">
           <LanguageSwitcher />
+
+          <HeaderEcosystem />
 
           <button
             type="button"

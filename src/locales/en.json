@@ -1,4 +1,23 @@
 {
+  "merchant_dashboard": {
+    "tips": {
+      "awaiting_shop_confirmation": "Awaiting shop confirmation",
+      "confirm_receipt": "Confirm receipt",
+      "confirm_receipt_help": "The customer transferred this tip into your shop account. Confirm once the money has arrived so each staff member's share is recorded.",
+      "confirmed_help": "You confirmed this tip was received on {{time}}.",
+      "confirm_success": "Tip receipt confirmed.",
+      "confirm_failed": "Could not confirm tip receipt.",
+      "confirm_partial": "Confirmed {{count}} tip(s). Some items could not be confirmed.",
+      "pending_banner_title": "{{count}} tip(s) awaiting confirmation",
+      "pending_banner_desc": "The customer transferred the money into your shop account. Confirm receipt so each staff member's share is recorded.",
+      "pending_view_cta": "View",
+      "pending_card_hint": "Tap to view and confirm receipt",
+      "pending_callout_text": "{{count}} tip(s) need confirmation of receipt into your shop account.",
+      "pending_filtering": "Filtering.",
+      "pending_filter_apply": "Filter now",
+      "pending_filter_clear": "Clear filter"
+    }
+  },
   "staff_dashboard": {
     "brand": {
       "title": "NEXORA",
@@ -84,6 +103,10 @@
       "total_count": "{{count}} tips",
       "page_of": "Page {{page}} of {{total}}",
       "multi_staff": "Multi-staff",
+      "via_business_pending": "Awaiting",
+      "via_business_confirmed": "Confirmed",
+      "via_business_pending_help": "Waiting for {{business}} to confirm and pay out your share.",
+      "via_business_confirmed_help": "{{business}} confirmed this tip — your share will be paid out.",
       "status": {
         "initiated": "Initiated",
         "confirmed": "Confirmed",
@@ -92,6 +115,15 @@
         "pending": "Pending",
         "verified": "Verified"
       },
+      "status_help": {
+        "initiated": "The customer started this tip but hasn't confirmed payment yet.",
+        "confirmed": "Payment confirmed — you'll receive this tip.",
+        "skipped": "The customer chose not to tip.",
+        "completed": "This tip has been received and completed.",
+        "pending": "Waiting for payment confirmation.",
+        "verified": "This tip has been verified."
+      },
+      "status_help_aria": "What this status means",
       "ai_insight": "AI Insight",
       "ai_insight_body": "Your average tip for Pedicure is 21%, which is 6% higher than the salon average."
     },
@@ -418,7 +450,11 @@
     },
     "header": {
       "search_placeholder": "Search tech, station, review...",
-      "add_tp": "Add New Touch Point"
+      "add_tp": "Add New Touch Point",
+      "ecosystem": "Ecosystem",
+      "ecosystem_loading": "Loading ecosystem...",
+      "no_ecosystem": "No ecosystem available",
+      "coming_soon_badge": "Coming Soon"
     },
     "back_to_dashboard": "Back to Dashboard",
     "notifications": {
@@ -724,8 +760,9 @@
         "est_savings_annual_suffix": "each year.",
         "per_month": "/month",
         "recent_payouts": "Recent Direct Payouts",
-        "col_time": "Time",
+        "col_time": "Date",
         "col_staff": "Technician",
+        "multi_tips": "Multi-tips",
         "col_amount": "Amount",
         "col_method": "Wallet",
         "col_status": "Status",

@@ -5,14 +5,24 @@ import { useStaffLinkedBusinesses } from './useStaffLinkedBusinesses'
 
 const PENDING_TIPS_PAGE_SIZE = 50
 
+// Tip lifecycle: Initiated (customer chose tip, not yet paid) -> Confirmed
+// (customer confirmed external payment) -> staff/merchant confirm receipt -> Completed.
+// "Pending Confirmations" = tips the customer has paid (Confirmed) that are still
+// awaiting the staff's receipt confirmation. Filtering by Initiated is wrong: staff
+// cannot confirm receipt of money not yet sent, so confirm-receipt rejects those ids.
+const PENDING_CONFIRMATION_STATUS = 'Confirmed'
+
 function paymentMethodLabel(method: string | null | undefined) {
   if (!method) return '—'
   const uiKey = payoutTypeToUiKey(method)
   return PAYOUT_UI_LABELS[uiKey] || method
 }
 
+// Show the amount THIS staff received, not the group total. For a multi-staff tip,
+// `amount` is the signed-in staff's share and `totalAmount` is the full split total —
+// displaying totalAmount would overstate every member's earnings.
 function tipDisplayAmount(amount: number, totalAmount: number) {
-  return totalAmount > 0 ? totalAmount : amount
+  return amount > 0 ? amount : totalAmount
 }
 
 /** Home tab data — summary KPIs + pending tips + linked businesses. */
@@ -30,7 +40,7 @@ export function useStaffHomeData() {
   } = useStaffTips({
     pageNumber: 1,
     pageSize: PENDING_TIPS_PAGE_SIZE,
-    status: 'Initiated',
+    status: PENDING_CONFIRMATION_STATUS,
   })
 
   const { linkedBusinesses, isLoading: isBusinessesLoading } = useStaffLinkedBusinesses()
@@ -64,13 +74,18 @@ export function useStaffHomeData() {
 
   const pendingTips = useMemo(
     () =>
-      (pendingTipsPage?.items ?? []).map((tip) => ({
-        id: tip.id,
-        amount: tipDisplayAmount(tip.amount, tip.totalAmount),
-        paymentMethod: paymentMethodLabel(tip.paymentMethod),
-        touchpoint:
-          [tip.touchPointName, tip.businessName].filter(Boolean).join(' · ') || '—',
-      })),
+      (pendingTipsPage?.items ?? [])
+        // Multi-staff tips are confirmed by the merchant (money goes to the shop
+        // account, distributed later) — the staff never confirms them, so they
+        // are excluded from the staff's pending list. See US-024.
+        .filter((tip) => !tip.isMultiStaff)
+        .map((tip) => ({
+          id: tip.id,
+          amount: tipDisplayAmount(tip.amount, tip.totalAmount),
+          paymentMethod: paymentMethodLabel(tip.paymentMethod),
+          touchpoint:
+            [tip.touchPointName, tip.businessName].filter(Boolean).join(' · ') || '—',
+        })),
     [pendingTipsPage],
   )
 
