@@ -8,6 +8,7 @@ import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
 import Pagination from '../../ui/Pagination'
+import ToggleSwitch from '../../ui/ToggleSwitch'
 
 function StaffView({
   staff,
@@ -511,37 +512,22 @@ function StaffView({
                         </span>
                       )}
                       {!isPending && (
-                        <button
-                          onClick={() => onToggle(member.id)}
-                          className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                            member.isActive ? 'bg-emerald-500' : 'bg-slate-300'
-                          }`}
+                        <ToggleSwitch
+                          checked={Boolean(member.isActive)}
+                          onChange={() => onToggle(member.id)}
                           title={member.isActive ? t('common.active') : t('common.inactive')}
-                        >
-                          <span
-                            className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                              member.isActive ? 'translate-x-4' : 'translate-x-0'
-                            }`}
-                          />
-                        </button>
+                        />
                       )}
                     </td>
 
                     <td className="px-5 py-4">
                       {!isPending && (
-                        <button
-                          onClick={() => onToggleTipsFlow(member.id)}
-                          className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                            member.showInTipsFlow !== false ? 'bg-blue-500' : 'bg-slate-300'
-                          }`}
+                        <ToggleSwitch
+                          checked={member.showInTipsFlow !== false}
+                          onChange={() => onToggleTipsFlow(member.id)}
+                          activeColor="bg-blue-500"
                           title={member.showInTipsFlow !== false ? 'Show' : 'Hide'}
-                        >
-                          <span
-                            className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                              member.showInTipsFlow !== false ? 'translate-x-4' : 'translate-x-0'
-                            }`}
-                          />
-                        </button>
+                        />
                       )}
                       {isPending && (
                         <span className="text-[10px] text-slate-400 font-bold italic">-</span>

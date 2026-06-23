@@ -10,6 +10,7 @@ import {
 import type { PaymentMethodDto } from '../../../types/domain'
 import { SkeletonLayout } from '../../ui/skeleton'
 import PayoutSetupModal from '../../dashboard/modals/PayoutSetupModal'
+import ToggleSwitch from '../../ui/ToggleSwitch'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 
@@ -50,25 +51,6 @@ const PayoutLogos = {
   ),
   crypto: (
     <Bitcoin className="h-[18px] w-[18px] text-amber-500 shrink-0" />
-  )
-}
-
-function Toggle({ on, onChange, label }) {
-  return (
-    <button
-      type="button"
-      onClick={() => onChange(!on)}
-      aria-label={label}
-      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-        on ? 'bg-emerald-500' : 'bg-nexoraBorder'
-      }`}
-    >
-      <span
-        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition duration-200 ease-in-out ${
-          on ? 'translate-x-4' : 'translate-x-0'
-        }`}
-      />
-    </button>
   )
 }
 
@@ -155,10 +137,12 @@ export default function StaffPay() {
               return (
                 <div key={method.id} className="flex items-center justify-between py-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <Toggle
-                      on={!!method.isActive}
+                    <ToggleSwitch
+                      checked={!!method.isActive}
                       onChange={() => handleToggleMethod(method)}
-                      label={`Toggle ${label}`}
+                      ariaLabel={`Toggle ${label}`}
+                      activeColor="bg-emerald-500"
+                      inactiveColor="bg-nexoraBorder"
                     />
 
                     <div className="flex items-center gap-2.5 min-w-0">

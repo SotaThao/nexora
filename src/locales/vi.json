@@ -1719,6 +1719,7 @@
           "phGoogleReviewUrl": "https://g.page/r/.../review",
           "phYelpUrl": "https://www.yelp.com/biz/...",
           "deleteAccount": "Xóa tài khoản",
+          "deleteAccountTitle": "Xóa tài khoản",
           "deleteAccountConfirmTitle": "Xóa tài khoản vĩnh viễn?",
           "deleteAccountConfirmMessage": "Thao tác này không thể hoàn tác. Tài khoản và dữ liệu liên quan sẽ bị xóa vĩnh viễn.",
           "deleteAccountFailed": "Không thể xóa tài khoản. Vui lòng thử lại.",

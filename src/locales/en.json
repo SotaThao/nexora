@@ -1719,6 +1719,7 @@
           "phGoogleReviewUrl": "https://g.page/r/.../review",
           "phYelpUrl": "https://www.yelp.com/biz/...",
           "deleteAccount": "Delete Account",
+          "deleteAccountTitle": "Delete Account",
           "deleteAccountConfirmTitle": "Delete account permanently?",
           "deleteAccountConfirmMessage": "This action cannot be undone. Your account and related data will be permanently deleted.",
           "deleteAccountFailed": "Unable to delete account. Please try again.",

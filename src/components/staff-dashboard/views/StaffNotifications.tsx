@@ -12,6 +12,7 @@ import {
 } from '../../../data/hooks/useNotifications'
 import type { NotificationRecord } from '../../../types/domain'
 import { SkeletonLayout } from '../../ui/skeleton'
+import ToggleSwitch from '../../ui/ToggleSwitch'
 import { STAFF_NOTIFICATIONS_SKELETON } from '../skeletons/staffDashboardSkeletons'
 import {
   useAcceptStaffLinkRequest,
@@ -64,19 +65,6 @@ function resolveStaffNotificationActionUrl(actionUrl: string | null | undefined)
   const suffix = queryOrHashIndex === -1 ? '' : trimmed.slice(queryOrHashIndex)
   const resolvedPath = STAFF_ACTION_URL_ALIASES[pathPart] || pathPart
   return `${resolvedPath}${suffix}`
-}
-
-function Toggle({ on, onChange }) {
-  return (
-    <button
-      type="button"
-      onClick={() => onChange(!on)}
-      className={`relative h-6 w-11 shrink-0 rounded-full transition ${on ? 'bg-emerald-500' : 'bg-nexoraBorder'}`}
-      aria-pressed={on}
-    >
-      <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${on ? 'left-[22px]' : 'left-0.5'}`} />
-    </button>
-  )
 }
 
 const PREF_KEYS = ['tipConfirmations', 'reviews', 'businessInvites']
@@ -291,7 +279,13 @@ export default function StaffNotifications() {
           {PREF_KEYS.map((key) => (
             <div key={key} className={`flex items-center justify-between gap-3 ${listRowBase}`}>
               <span className="text-sm font-bold text-nexoraText">{t(`staff_dashboard.notifications.pref.${key}`)}</span>
-              <Toggle on={!!account.pushPreferences?.[key]} onChange={(v) => setPushPreference(key, v)} />
+              <ToggleSwitch
+                checked={!!account.pushPreferences?.[key]}
+                onChange={() => setPushPreference(key, !account.pushPreferences?.[key])}
+                size="md"
+                activeColor="bg-emerald-500"
+                inactiveColor="bg-nexoraBorder"
+              />
             </div>
           ))}
         </div>

@@ -1,5 +1,9 @@
 import React, { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import useAuth from '../../../auth/useAuth'
+import { useNotification } from '../../../contexts/NotificationContext'
+import { useDeleteAccount } from '../../../data/hooks/useProfileSettings'
 import { buildAffiliateReferralUrl, getProfileReferralCode } from '../../../utils/affiliateReferral'
 import {
   useMerchantPaymentMethods,
@@ -21,8 +25,10 @@ import {
   FolderOpen,
   AlertTriangle,
   X,
-  QrCode
+  QrCode,
+  Trash2,
 } from 'lucide-react'
+import ToggleSwitch from '../../ui/ToggleSwitch'
 import { isValidEmail, isValidPhone } from '../../../utils/validation'
 
 const PayoutLogos = {
@@ -124,6 +130,10 @@ export default function ProfileTab({
   onShowQr,
 }) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const { logout } = useAuth()
+  const { showConfirm } = useNotification()
+  const deleteAccountMutation = useDeleteAccount()
   const referralCode = useMemo(() => getProfileReferralCode(profile), [profile])
   const referralUrl = useMemo(
     () => buildAffiliateReferralUrl({ referralCode }),
@@ -249,6 +259,24 @@ export default function ProfileTab({
     setEditQrCode(null)
   }
 
+  const handleDeleteAccount = async () => {
+    if (deleteAccountMutation.isPending) return
+
+    const confirmed = await showConfirm(
+      t('components.settings.tabs.ProfileTab.deleteAccountConfirmMessage'),
+      t('components.settings.tabs.ProfileTab.deleteAccountConfirmTitle'),
+    )
+    if (!confirmed) return
+
+    try {
+      await deleteAccountMutation.mutateAsync()
+      await logout()
+      navigate('/login', { replace: true })
+    } catch {
+      showToast(t('components.settings.tabs.ProfileTab.deleteAccountFailed'), 'error')
+    }
+  }
+
   return (
     <>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
@@ -352,21 +380,13 @@ export default function ProfileTab({
                 return (
                 <div key={item.key} className="flex items-center justify-between py-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    {/* Toggle Switch */}
-                    <button
-                      type="button"
-                      onClick={() => handleToggleMethod(item.key)}
-                      aria-label={`Toggle ${item.label}`}
-                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                        methodData.isActive ? 'bg-amber-600' : 'bg-slate-200'
-                      }`}
-                    >
-                      <span
-                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                          methodData.isActive ? 'translate-x-4' : 'translate-x-0'
-                        }`}
-                      />
-                    </button>
+                    <ToggleSwitch
+                      checked={methodData.isActive}
+                      onChange={() => handleToggleMethod(item.key)}
+                      ariaLabel={`Toggle ${item.label}`}
+                      activeColor="bg-amber-600"
+                      inactiveColor="bg-slate-200"
+                    />
 
                     {/* Logo and Label */}
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -983,6 +1003,26 @@ export default function ProfileTab({
 
         </div>
 
+      </div>
+
+      <div className="rounded-xl border border-rose-200 bg-white shadow-sm p-6 animate-fadeIn">
+        <h3 className="mb-3 text-base font-extrabold text-nexoraDangerDark">
+          {t('components.settings.tabs.ProfileTab.deleteAccountTitle')}
+        </h3>
+        <p className="mb-4 text-xs text-nexoraSubtle">
+          {t('components.settings.tabs.ProfileTab.deleteAccountConfirmMessage')}
+        </p>
+        <button
+          type="button"
+          onClick={() => void handleDeleteAccount()}
+          disabled={deleteAccountMutation.isPending}
+          className="flex w-full max-w-md items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 py-3 text-sm font-extrabold text-rose-700 transition hover:bg-rose-100 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          <Trash2 className="h-4.5 w-4.5" />
+          {deleteAccountMutation.isPending
+            ? t('common.processing')
+            : t('components.settings.tabs.ProfileTab.deleteAccount')}
+        </button>
       </div>
 
       {/* Payout Account Edit Custom Modal Popup */}

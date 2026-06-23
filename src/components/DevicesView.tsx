@@ -13,6 +13,7 @@ import {
   ToggleRight
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
+import ToggleSwitch from './ui/ToggleSwitch'
 
 function Panel({ children, className = '', id }: { children: React.ReactNode; className?: string; id?: string }) {
   return (
@@ -268,19 +269,12 @@ export default function DevicesView({
                 </span>
 
                 <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => onToggleDeviceStatus && onToggleDeviceStatus(device.id)}
-                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                      isActive ? 'bg-nexoraBrand' : 'bg-nexoraBorder'
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                        isActive ? 'translate-x-4' : 'translate-x-0'
-                      }`}
-                    />
-                  </button>
+                  <ToggleSwitch
+                    checked={isActive}
+                    onChange={() => onToggleDeviceStatus && onToggleDeviceStatus(device.id)}
+                    activeColor="bg-nexoraBrand"
+                    inactiveColor="bg-nexoraBorder"
+                  />
                   <span className={`text-[10px] font-extrabold uppercase tracking-wider ${isActive ? 'text-nexoraSuccess' : 'text-nexoraSubtle'}`}>
                     {isActive ? t('common.active') : t('common.inactive')}
                   </span>

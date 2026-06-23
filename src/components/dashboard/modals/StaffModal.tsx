@@ -9,6 +9,7 @@ import { useNotification } from '../../../contexts/NotificationContext'
 import PayoutSetupModal from './PayoutSetupModal'
 import StaffReviewsDetailModal from './StaffReviewsDetailModal'
 import StaffQrScannerModal from './StaffQrScannerModal'
+import ToggleSwitch from '../../ui/ToggleSwitch'
 import { useSearchMerchantStaff } from '../../../data/hooks/useMerchantStaff'
 import { buildStaffReviewSummary } from './staffModalReviewUtils'
 
@@ -480,19 +481,14 @@ function StaffModal({
                     return (
                       <div key={wallet.key} className="flex items-center justify-between py-3">
                         <div className="flex items-center gap-3">
-                          <button
-                            type="button"
-                            disabled={true}
-                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-not-allowed rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                              config.enabled ? 'bg-nexoraWarning' : 'bg-nexoraBorder'
-                            }`}
-                          >
-                            <span
-                              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                                config.enabled ? 'translate-x-5' : 'translate-x-0'
-                              }`}
-                            />
-                          </button>
+                          <ToggleSwitch
+                            checked={config.enabled}
+                            onChange={() => {}}
+                            disabled
+                            size="md"
+                            activeColor="bg-nexoraWarning"
+                            inactiveColor="bg-nexoraBorder"
+                          />
                           <div className="flex items-center gap-2">
                             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-nexoraCanvas shrink-0">
                               {WalletLogos[wallet.key]}
@@ -521,19 +517,13 @@ function StaffModal({
                 <label className="text-xs font-extrabold text-nexoraText block">{t('setup.show_in_tips_flow')}</label>
                 <p className="text-[10px] text-nexoraMuted leading-relaxed mt-0.5">{t('setup.show_in_tips_flow_desc')}</p>
               </div>
-              <button
-                type="button"
-                onClick={() => setForm({ ...form, showInTipsFlow: !form.showInTipsFlow })}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                  form.showInTipsFlow ? 'bg-nexoraBrand' : 'bg-nexoraBorder'
-                }`}
-              >
-                <span
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                    form.showInTipsFlow ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
-              </button>
+              <ToggleSwitch
+                checked={form.showInTipsFlow}
+                onChange={() => setForm({ ...form, showInTipsFlow: !form.showInTipsFlow })}
+                size="md"
+                activeColor="bg-nexoraBrand"
+                inactiveColor="bg-nexoraBorder"
+              />
             </div>
           </div>
         </div>

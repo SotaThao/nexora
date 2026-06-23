@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Edit2, Loader2 } from 'lucide-react'
+import ToggleSwitch from '../../ui/ToggleSwitch'
 
 const PayoutLogos = {
   zelle: (
@@ -77,21 +78,13 @@ export default function StepPayments({
           return (
             <div key={method.key} className="flex items-center justify-between py-3">
               <div className="flex items-center gap-3 min-w-0">
-                {/* Toggle Switch on Left */}
-                <button
-                  type="button"
-                  onClick={() => handleToggleMethod(method.key)}
-                  aria-label={`Toggle ${method.label}`}
-                  className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                    cfg.enabled ? 'bg-nexoraBrand' : 'bg-nexoraBorder'
-                  }`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                      cfg.enabled ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
+                <ToggleSwitch
+                  checked={cfg.enabled}
+                  onChange={() => handleToggleMethod(method.key)}
+                  ariaLabel={`Toggle ${method.label}`}
+                  activeColor="bg-nexoraBrand"
+                  inactiveColor="bg-nexoraBorder"
+                />
 
                 {/* Logo + Label in Middle */}
                 <div className="flex items-center gap-2.5 min-w-0">

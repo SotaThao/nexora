@@ -4,6 +4,12 @@
   font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
+/* Fixed header offset — matches header .h-20 + safe area */
+.homepage-header-spacer {
+  height: calc(5rem + var(--app-safe-area-top, env(safe-area-inset-top, 0px)));
+  flex-shrink: 0;
+}
+
 .custom-gradient {
   background: linear-gradient(135deg, #d93cff 0%, #6c4df6 45%, #16c9ff 100%);
 }
@@ -189,7 +195,7 @@ html {
 }
 
 .ds-section {
-  scroll-margin-top: 96px;
+  scroll-margin-top: calc(5rem + var(--app-safe-area-top, env(safe-area-inset-top, 0px)));
 }
 
 /* Unified interactive behavior */
@@ -689,8 +695,12 @@ nav a:focus-visible {
     height: 72px;
   }
 
+  .homepage-header-spacer {
+    height: calc(4.5rem + var(--app-safe-area-top, env(safe-area-inset-top, 0px)));
+  }
+
   section {
-    scroll-margin-top: 80px;
+    scroll-margin-top: calc(72px + var(--app-safe-area-top, env(safe-area-inset-top, 0px)));
   }
 
   h2 {
@@ -743,6 +753,14 @@ nav a:focus-visible {
 
   header .h-20 {
     height: 64px;
+  }
+
+  .homepage-header-spacer {
+    height: calc(4rem + var(--app-safe-area-top, env(safe-area-inset-top, 0px)));
+  }
+
+  section {
+    scroll-margin-top: calc(64px + var(--app-safe-area-top, env(safe-area-inset-top, 0px)));
   }
 
   header img {

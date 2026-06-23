@@ -1,11 +1,14 @@
 /** Homepage section component */
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useHomePageBridge } from '../context/HomePageBridgeContext'
 import LucideIcon from '../ui/LucideIcon'
+import ToggleSwitch from '../../ui/ToggleSwitch'
 
 export default function HomePageHeroSection() {
   const navigate = useNavigate()
   const { hp, planCta, onLogout } = useHomePageBridge()
+  const [chloeOnline, setChloeOnline] = useState(true)
 
   return (
     <>
@@ -325,12 +328,18 @@ export default function HomePageHeroSection() {
                             <span className="text-[9px] text-muted font-bold" data-i18n="staff-role">LEAD NAIL ART SPECIALIST</span>
                           </div>
                         </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input defaultChecked className="sr-only peer ds-field" id="staff-active-toggle" onChange={(e) => hp.toggleStaffStatus('Chloe', e.currentTarget.checked)} type="checkbox" />
-                          <div className="w-7 h-4 bg-slate-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-green after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all">
-                          </div>
+                        <div className="flex items-center">
+                          <ToggleSwitch
+                            checked={chloeOnline}
+                            onChange={() => {
+                              const next = !chloeOnline
+                              setChloeOnline(next)
+                              hp.toggleStaffStatus('Chloe', next)
+                            }}
+                            activeColor="bg-emerald-500"
+                          />
                           <span className="ml-1 text-[9px] font-extrabold text-slate-500 uppercase">ONLINE</span>
-                        </label>
+                        </div>
                       </div>
                       
                       <div className="bg-gradient-to-r from-purple to-indigo-600 text-white p-4 rounded-2xl shadow-md space-y-2">

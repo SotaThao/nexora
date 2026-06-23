@@ -9,7 +9,7 @@ export default function HomePageHeaderSection() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-line">
+      <header className="safe-area-top fixed top-0 inset-x-0 z-50 bg-white/90 backdrop-blur-md border-b border-line">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-2 sm:gap-4">
             <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
               
@@ -91,6 +91,7 @@ export default function HomePageHeaderSection() {
             <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-pricing" href="#pricing" onClick={() => { hp.toggleMobileMenu() }}>Pricing</a>
           </div>
         </header>
+      <div className="homepage-header-spacer" aria-hidden="true" />
     </>
   )
 }
