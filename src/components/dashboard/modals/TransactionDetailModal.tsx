@@ -84,16 +84,11 @@ function resolveTouchPointQrUrl({
   return `${origin}/touch/${resolvedBusinessSlug}/${touchPointSlug}`
 }
 
-function renderStaffCodeLine(code, t) {
+function renderStaffCodeBadge(code) {
   return (
-    <p className="mt-1 flex flex-wrap items-center gap-1.5">
-      <span className="text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
-        {t('dashboard.activity_log.staff_code')}
-      </span>
-      <span className="inline-flex rounded-md border border-nexoraBrand/20 bg-nexoraBrandSoft px-2 py-0.5 font-mono text-xs font-extrabold tracking-wide text-nexoraBrand">
-        {code || 'N/A'}
-      </span>
-    </p>
+    <span className="inline-flex rounded-md border border-nexoraBrand/20 bg-nexoraBrandSoft px-2 py-0.5 font-mono text-xs font-extrabold tracking-wide text-nexoraBrand">
+      {code || 'N/A'}
+    </span>
   )
 }
 
@@ -232,17 +227,19 @@ export default function TransactionDetailModal({
       <button
         type="button"
         onClick={openTouchPointQr}
-        className="group flex shrink-0 flex-col items-center gap-1 rounded-lg border border-slate-200 bg-white p-1.5 shadow-sm transition hover:border-nexoraBrand hover:shadow-md cursor-pointer"
+        className="group relative shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white p-1.5 shadow-sm transition hover:border-nexoraBrand hover:shadow-md cursor-pointer"
         title={t('components.dashboard.views.StaffView.clickToEnlarge')}
       >
         <img
           src={qrImageSrc}
           alt={`QR for ${touchPointName}`}
-          className="h-16 w-16 object-contain"
+          className="h-20 w-20 object-contain"
         />
-        <span className="text-[8px] font-bold uppercase tracking-wider text-nexoraMuted group-hover:text-nexoraBrand">
-          {t('components.dashboard.views.StaffView.clickToEnlarge')}
-        </span>
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-lg bg-nexoraBrand/80 opacity-0 transition-opacity group-hover:opacity-100">
+          <span className="text-[9px] font-black uppercase tracking-widest text-white">
+            PREVIEW
+          </span>
+        </div>
       </button>
     )
   }
@@ -349,10 +346,10 @@ export default function TransactionDetailModal({
                   <span className="text-[10px] font-bold text-nexoraMuted block">
                     {t('dashboard.activity_log.col_staff')}
                   </span>
-                  <span className="font-semibold text-nexoraText block mt-0.5">
-                    {singleStaffName || '—'}
+                  <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                    <span className="font-semibold text-nexoraText">{singleStaffName || '—'}</span>
+                    {renderStaffCodeBadge(singleStaffCode)}
                   </span>
-                  {renderStaffCodeLine(singleStaffCode, t)}
                 </div>
               ) : null}
             </div>
@@ -374,9 +371,9 @@ export default function TransactionDetailModal({
                     key={item.staffProfileId || item.staffName}
                     className="flex items-center justify-between gap-3 rounded-lg border border-nexoraBorder bg-white px-3 py-2.5"
                   >
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-nexoraText truncate">{item.staffName || '—'}</p>
-                      {renderStaffCodeLine(item.staffCode, t)}
+                    <div className="min-w-0 flex flex-wrap items-center gap-1.5">
+                      <span className="text-xs font-bold text-nexoraText">{item.staffName || '—'}</span>
+                      {renderStaffCodeBadge(item.staffCode)}
                     </div>
                     <p className="text-xl font-black text-nexoraBrand shrink-0">
                       {formatCurrency(item.amount)}
@@ -431,9 +428,6 @@ export default function TransactionDetailModal({
                   <span className="text-[11px] text-slate-500 mt-1 leading-normal">
                     {t('components.dashboard.modals.TransactionDetailModal.scanToTipTouchPoint')}
                   </span>
-                  <p className="mt-1 break-all font-mono text-[10px] text-slate-400 select-all">
-                    {touchPointQrUrl.replace(/^https?:\/\//, '')}
-                  </p>
                   <button
                     type="button"
                     onClick={handleShareTouchPoint}
