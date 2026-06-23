@@ -74,6 +74,10 @@
       "total_count": "{{count}} tips",
       "page_of": "Page {{page}} of {{total}}",
       "multi_staff": "Multi-staff",
+      "via_business_pending": "Awaiting",
+      "via_business_confirmed": "Confirmed",
+      "via_business_pending_help": "Waiting for {{business}} to confirm and pay out your share.",
+      "via_business_confirmed_help": "{{business}} confirmed this tip — your share will be paid out.",
       "status": {
         "initiated": "Initiated",
         "confirmed": "Confirmed",
@@ -82,6 +86,15 @@
         "pending": "Pending",
         "verified": "Verified"
       },
+      "status_help": {
+        "initiated": "The customer started this tip but hasn't confirmed payment yet.",
+        "confirmed": "Payment confirmed — you'll receive this tip.",
+        "skipped": "The customer chose not to tip.",
+        "completed": "This tip has been received and completed.",
+        "pending": "Waiting for payment confirmation.",
+        "verified": "This tip has been verified."
+      },
+      "status_help_aria": "What this status means",
       "ai_insight": "AI Insight",
       "ai_insight_body": "Your average tip for Pedicure is 21%, which is 6% higher than the salon average."
     },
@@ -405,7 +418,11 @@
     },
     "header": {
       "search_placeholder": "Search tech, station, review...",
-      "add_tp": "Add New Touch Point"
+      "add_tp": "Add New Touch Point",
+      "ecosystem": "Ecosystem",
+      "ecosystem_loading": "Loading ecosystem...",
+      "no_ecosystem": "No ecosystem available",
+      "coming_soon_badge": "Coming Soon"
     },
     "back_to_dashboard": "Back to Dashboard",
     "notifications": {
@@ -705,8 +722,9 @@
         "est_savings_annual_suffix": "each year.",
         "per_month": "/month",
         "recent_payouts": "Recent Direct Payouts",
-        "col_time": "Time",
+        "col_time": "Date",
         "col_staff": "Technician",
+        "multi_tips": "Multi-tips",
         "col_amount": "Amount",
         "col_method": "Wallet",
         "col_status": "Status",

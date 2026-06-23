@@ -77,8 +77,7 @@ function extractKybStatus(source: KybSource): string | null {
 
   if (
     isMerchant &&
-    (status === 'verified' ||
-      record.isKycVerified === true ||
+    (record.isKycVerified === true ||
       record.isKYCVerified === true ||
       record.isKybVerified === true ||
       record.isKYBVerified === true)

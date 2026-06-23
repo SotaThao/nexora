@@ -18,6 +18,7 @@ import {
 import { useTranslation } from '../../../contexts/LanguageContext'
 import IconButton from '../../ui/IconButton'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
+import HeaderEcosystem from './HeaderEcosystem'
 
 export default function DashboardHeader({
   searchQuery,
@@ -161,6 +162,7 @@ export default function DashboardHeader({
         >
           <Menu className="h-5 w-5" />
         </button>
+        <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-9 w-9 shrink-0 object-contain" />
       </div>
 
       {/* Search Input with Suggestions Dropdown */}
@@ -311,6 +313,8 @@ export default function DashboardHeader({
       <div className="flex shrink-0 items-center gap-2 sm:gap-4">
         {/* Language Switcher */}
         <LanguageSwitcher />
+
+        <HeaderEcosystem />
 
         {/* Notifications Icon and Dropdown */}
         <div className="relative hidden sm:inline-flex" ref={dropdownRef}>

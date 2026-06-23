@@ -407,6 +407,17 @@ export function isApiError(err: unknown): err is ApiError {
   )
 }
 
+export interface EcosystemItem {
+  id: string
+  name: string
+  url: string
+  logoUrl?: string | null
+}
+
+export interface EcosystemSignInResult {
+  redirectUrl: string | null
+}
+
 export function getApiErrorCode(err: unknown, fallback = 'HTTP_ERROR'): string {
   return isApiError(err) ? err.errorCode : fallback
 }

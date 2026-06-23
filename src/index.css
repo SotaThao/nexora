@@ -16,9 +16,18 @@ body:not(.homepage-active) input[type="number"]:focus,
 body:not(.homepage-active) input[type="search"]:focus, 
 body:not(.homepage-active) textarea:focus,
 body:not(.homepage-active) select:focus {
+/* Global text-based input focus ring styling */
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="tel"]:focus,
+input[type="number"]:focus,
+input[type="search"]:focus,
+textarea:focus,
+select:focus {
   outline: none !important;
   box-shadow: 0 0 0 2px rgba(70, 72, 216, 0.2) !important; /* nexoraBrand/20 */
-  border-color: theme('colors.nexoraBrand') !important;
+  border-color: theme("colors.nexoraBrand") !important;
   transition: all 0.15s ease-in-out;
 }
 
@@ -27,6 +36,11 @@ body:not(.homepage-active) select:focus {
   body:not(.homepage-active) input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
   body:not(.homepage-active) textarea,
   body:not(.homepage-active) select {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not(
+      [type="button"]
+    ):not([type="file"]),
+  textarea,
+  select {
     font-size: 16px !important;
   }
 }
@@ -36,16 +50,20 @@ body:not(.homepage-active) select:focus {
   body:not(.homepage-active) input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
   body:not(.homepage-active) textarea,
   body:not(.homepage-active) select {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not(
+      [type="button"]
+    ):not([type="file"]),
+  textarea,
+  select {
     font-size: 16px !important;
   }
 }
 
-
-
-
 /* Keyboard focus visibility for buttons and links */
 body:not(.homepage-active) button:focus-visible,
 body:not(.homepage-active) a:focus-visible {
+button:focus-visible,
+a:focus-visible {
   outline: none !important;
   box-shadow: 0 0 0 2px rgba(70, 72, 216, 0.4) !important;
 }
@@ -59,7 +77,7 @@ body:not(.homepage-active) a:focus-visible {
   background: rgba(0, 0, 0, 0.05);
 }
 ::-webkit-scrollbar-thumb {
-  background: #32D7FF;
+  background: #32d7ff;
   border-radius: 99px;
 }
 
@@ -115,13 +133,12 @@ body:not(.homepage-active) a:focus-visible {
     width: 28px;
     height: 28px;
     object-fit: contain;
-    filter:
-      brightness(1.15)
-      saturate(1.2)
-      contrast(1.05)
+    filter: brightness(1.15) saturate(1.2) contrast(1.05)
       drop-shadow(0 0 3px rgba(255, 66, 215, 0.3))
       drop-shadow(0 0 6px rgba(50, 215, 255, 0.2));
-    transition: filter 0.2s ease, transform 0.2s ease;
+    transition:
+      filter 0.2s ease,
+      transform 0.2s ease;
   }
 
   .sidebar-icon-wrap {
@@ -137,10 +154,7 @@ body:not(.homepage-active) a:focus-visible {
   /* Hover state — brighter glow + subtle scale */
   button:hover .sidebar-icon,
   .sidebar-icon--active {
-    filter:
-      brightness(1.3)
-      saturate(1.35)
-      contrast(1.1)
+    filter: brightness(1.3) saturate(1.35) contrast(1.1)
       drop-shadow(0 0 4px rgba(255, 66, 215, 0.45))
       drop-shadow(0 0 8px rgba(50, 215, 255, 0.35))
       drop-shadow(0 0 12px rgba(138, 92, 255, 0.25));
@@ -162,11 +176,11 @@ body:not(.homepage-active) a:focus-visible {
   /* 1. Ghost Button */
   .btn-ghost {
     background-color: transparent;
-    color: #0B1C30; /* Nexora Ink Blue */
+    color: #0b1c30; /* Nexora Ink Blue */
     border: 1px solid #e2e8f0; /* Flox Slate Gray */
     border-radius: 6px; /* flox-buttons */
     padding: 4px 6px;
-    font-family: 'Inter', sans-serif;
+    font-family: "Inter", sans-serif;
     font-size: 14px;
     font-weight: 500;
     transition: all 0.2s ease-in-out;
@@ -190,7 +204,7 @@ body:not(.homepage-active) a:focus-visible {
     border: 1px solid #f3f3f3; /* Light Fog */
     border-radius: 12px; /* flox-cards radius */
     padding: 12px 25px;
-    font-family: 'Inter', sans-serif;
+    font-family: "Inter", sans-serif;
     font-size: 14px;
     font-weight: 500;
     transition: all 0.2s ease-in-out;
@@ -215,10 +229,13 @@ body:not(.homepage-active) a:focus-visible {
     border: 1px solid #f3f3f3;
     border-radius: 12px;
     padding: 12px 25px;
-    font-family: 'Inter', sans-serif;
+    font-family: "Inter", sans-serif;
     font-size: 14px;
     font-weight: 600;
-    box-shadow: rgba(255, 255, 255, 0.2) 0px -2px 1px 0px inset, rgba(255, 255, 255, 0.1) 0px 4px 16px 0px inset, rgba(0, 0, 0, 0.08) 0px 6px 16px 0px;
+    box-shadow:
+      rgba(255, 255, 255, 0.2) 0px -2px 1px 0px inset,
+      rgba(255, 255, 255, 0.1) 0px 4px 16px 0px inset,
+      rgba(0, 0, 0, 0.08) 0px 6px 16px 0px;
     transition: all 0.2s ease-in-out;
   }
   .btn-primary-action:hover {
@@ -238,11 +255,15 @@ body:not(.homepage-active) a:focus-visible {
 
   /* 4. Gradient Call-to-Action Button */
   .btn-gradient-cta {
-    background: linear-gradient(92deg, #d4af37 -9.21%, #32D7FF 104.14%); /* Nexora Gold-Cyan Gradient */
+    background: linear-gradient(
+      92deg,
+      #d4af37 -9.21%,
+      #32d7ff 104.14%
+    ); /* Nexora Gold-Cyan Gradient */
     color: #ffffff;
     border-radius: 12px;
     padding: 12px 25px;
-    font-family: 'Inter', sans-serif;
+    font-family: "Inter", sans-serif;
     font-size: 14px;
     font-weight: 600;
     transition: opacity 0.2s ease-in-out;
@@ -271,13 +292,13 @@ body:not(.homepage-active) a:focus-visible {
     border-radius: 12px;
     padding: 24px;
     border: 1px solid #dde5ef;
-    font-family: 'GeistMono', 'Fira Code', monospace;
+    font-family: "GeistMono", "Fira Code", monospace;
     box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
   }
   .dark .card-code-block {
     background-color: #11100d; /* Nexora Coal */
     border: 1px solid rgba(212, 175, 55, 0.18);
-    color: #32D7FF; /* Cyan text */
+    color: #32d7ff; /* Cyan text */
     box-shadow: none;
   }
 
@@ -306,13 +327,13 @@ body:not(.homepage-active) a:focus-visible {
 /* Print styles for QR Code Stand */
 @media print {
   /* Hide all screen-only parts of the dashboard and other components */
-  aside, 
-  .lg\:pl-72, 
-  main, 
-  header, 
-  footer, 
-  .no-print, 
-  button, 
+  aside,
+  .lg\:pl-72,
+  main,
+  header,
+  footer,
+  .no-print,
+  button,
   a,
   .fixed.bottom-4 {
     display: none !important;
@@ -323,14 +344,19 @@ body:not(.homepage-active) a:focus-visible {
   }
 
   /* Reset body and html for print */
-  html, body {
+  html,
+  body {
     width: 100% !important;
     height: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
     background: #ffffff !important;
     color: #0f172a !important;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+    font-family:
+      "Inter",
+      system-ui,
+      -apple-system,
+      sans-serif !important;
   }
 
   @page {
@@ -381,8 +407,8 @@ body:not(.homepage-active) a:focus-visible {
 
   /* Card wrapper - set to standard 4x6 inches */
   .qr-print-card {
-    width: 4.0in !important;
-    height: 6.0in !important;
+    width: 4in !important;
+    height: 6in !important;
     background: #ffffff !important;
     border: 1.5px dashed #cbd5e1 !important; /* Guide for scissors/cutting */
     border-radius: 0.25in !important;
@@ -501,7 +527,8 @@ body:not(.homepage-active) a:focus-visible {
 }
 
 @keyframes highlight-pulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.4);
     border-color: rgba(212, 175, 55, 0.8) !important;
   }
@@ -514,13 +541,30 @@ body:not(.homepage-active) a:focus-visible {
   animation: highlight-pulse 2s infinite ease-in-out;
 }
 
+@keyframes eco-image-pulse {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-eco-pulse img {
+  animation: eco-image-pulse 0.48s ease-out;
+}
+
 /* "Recommended for salons" ribbon badge on the plan page — a soft glow pulse
    draws attention to the featured tier; hover gives a gentle lift/scale.
    Centering transform lives here so the keyframe can stay box-shadow-only
    (avoids fighting Tailwind's translate utilities). */
 @keyframes recommend-glow {
-  0%, 100% {
-    box-shadow: 0 3px 12px rgba(43, 89, 255, 0.30);
+  0%,
+  100% {
+    box-shadow: 0 3px 12px rgba(43, 89, 255, 0.3);
   }
   50% {
     box-shadow: 0 7px 24px rgba(142, 77, 248, 0.55);
@@ -539,4 +583,3 @@ body:not(.homepage-active) a:focus-visible {
     animation: none;
   }
 }
-

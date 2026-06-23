@@ -4,7 +4,7 @@ import { useIsMobileUI } from '../../../hooks/useIsMobileUI'
 import DashboardHeaderDesktop from './DashboardHeader.desktop'
 import DashboardHeaderMobile from './DashboardHeader.mobile'
 
-export default function DashboardHeader(props: any) {
+export default function DashboardHeader(props) {
   return useIsMobileUI()
     ? <DashboardHeaderMobile {...props} />
     : <DashboardHeaderDesktop {...props} />
