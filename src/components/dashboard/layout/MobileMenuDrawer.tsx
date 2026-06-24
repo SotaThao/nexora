@@ -1,5 +1,5 @@
 import React from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import MenuIcon from '../../ui/MenuIcon'
@@ -253,6 +253,7 @@ export default function MobileMenuDrawer({
                   <div className="ml-9 mt-1 space-y-1 border-l border-white/15 pl-3 animate-fadeIn">
                     {[
                       { id: 'stations', label: t('dashboard.touchpoints.tabs.stations') },
+                      { id: 'devices', label: t('dashboard.touchpoints.tabs.devices') },
                     ].map(sub => {
                       const isSubActive = activeMenu === 'touchpoints' && (activeSubTab || 'stations') === sub.id
                       return (

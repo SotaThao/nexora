@@ -65,6 +65,13 @@ export const qk = {
   // Merchant Touchpoints
   merchantTouchpoints: ()      => ['merchantTouchpoints'],
 
+  // Merchant Physical Cards (QR/NFC hardware)
+  merchantPhysicalCards: (filters = EMPTY) => ['merchantPhysicalCards', filters],
+  merchantPhysicalCardDetail: (helpCode?: string | null) => ['merchantPhysicalCards', 'detail', helpCode ?? ''],
+  resolveQrCode: (cardCode?: string | null) => ['publicQr', 'resolve', cardCode ?? ''],
+  publicPhysicalCardHelp: (helpCode?: string | null, authMode?: string | null) =>
+    ['publicPhysicalCardHelp', helpCode ?? '', authMode ?? ''],
+
   // Merchant Payment Methods
   merchantPaymentMethods: ()   => ['merchantPaymentMethods'],
 

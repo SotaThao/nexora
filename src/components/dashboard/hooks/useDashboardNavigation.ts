@@ -24,6 +24,12 @@ export function useDashboardNavigation() {
     setIsTipsMobileExpanded(activeMenu === 'tips')
     setIsTouchpointsMobileExpanded(activeMenu === 'touchpoints')
   }, [isMobileMenuOpen, activeMenu])
+  useEffect(() => {
+    if (activeMenu === 'tips') {
+      setIsTipsMobileExpanded(true)
+      setIsTouchpointsMobileExpanded(false)
+    }
+  }, [activeMenu])
 
   const buildMenuRoute = (menuId: string, tab?: string) => {
     const base = menuId === 'overview' ? '/dashboard' : `/dashboard/${menuId}`

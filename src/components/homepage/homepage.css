@@ -459,11 +459,11 @@ html {
 }
 
 /* Global readable interaction */
-:where(a, button, input, select, textarea, [role="button"]) {
+.nx-homepage :where(a, button, input, select, textarea, [role="button"]) {
   touch-action: manipulation;
 }
 
-:where(button, a[href], input, select, textarea) {
+.nx-homepage :where(button, a[href], input, select, textarea) {
   transition:
     color 220ms var(--nx-ease-standard),
     background-color 220ms var(--nx-ease-standard),
@@ -474,14 +474,14 @@ html {
     opacity 220ms var(--nx-ease-standard);
 }
 
-:where(button, a[href], input, select, textarea):focus-visible {
+.nx-homepage :where(button, a[href], input, select, textarea):focus-visible {
   outline: none !important;
   box-shadow: var(--nx-ring-strong) !important;
   border-color: var(--nx-color-purple) !important;
 }
 
 /* Button contrast system */
-:where(button, a[href]) {
+.nx-homepage :where(button, a[href]) {
   min-height: 36px;
 }
 
@@ -947,16 +947,16 @@ nav a:focus-visible {
 }
 
 @media (hover: none) and (pointer: coarse) {
-  :where(button, a[href]) {
+  .nx-homepage :where(button, a[href]) {
     min-height: 44px;
   }
 
-  :where(button, a[href]):active {
+  .nx-homepage :where(button, a[href]):active {
     transform: scale(0.97) !important;
     filter: brightness(0.98);
   }
 
-  :where(.bg-white, .bg-slate-50)[class*="border"][class*="rounded"]:hover {
+  .nx-homepage :where(.bg-white, .bg-slate-50)[class*="border"][class*="rounded"]:hover {
     transform: none;
     box-shadow: var(--nx-shadow-xs);
   }
