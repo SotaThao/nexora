@@ -257,6 +257,7 @@ export default function useCustomerFlow() {
   const [currentTipId, setCurrentTipId] = useState<any | null>(null)
   const [currentReviewId, setCurrentReviewId] = useState<any | null>(null)
   const [paymentLinkData, setPaymentLinkData] = useState<any | null>(null)
+  const [tipPaymentMethodsData, setTipPaymentMethodsData] = useState<any[] | null>(null)
 
   useEffect(() => {
     if (didApplyStaffPreselect.current || activeStaffList.length === 0) return
@@ -544,8 +545,16 @@ export default function useCustomerFlow() {
           businessPaymentMethodId,
           tipItems,
         })
-        setCurrentTipId(result?.tipId || result?.id)
+        const tipId = result?.tipId || result?.id
+        setCurrentTipId(tipId)
         setPaymentLinkData(null)
+        try {
+          const methods = await publicTouchRepository.getTipPaymentMethods(String(tipId))
+          setTipPaymentMethodsData(Array.isArray(methods) ? methods : null)
+        } catch (methodsErr) {
+          logger.error('Failed to fetch tip payment methods', methodsErr)
+          setTipPaymentMethodsData(null)
+        }
         setStep('wallet_details')
         return
       }
@@ -554,18 +563,16 @@ export default function useCustomerFlow() {
       const amount = getStaffTipAmount(member.id, selectedTips, customTips)
       const result = await createTipMutation.mutateAsync({
         touchPointId: touchPageData?.touchPoint?.id, staffProfileId: member.id,
-        amount, paymentMethod: walletName, sessionId,
+        amount, paymentMethod: resolvedWalletKey, sessionId,
       })
-      setCurrentTipId(result?.id || result?.tipId)
+      const tipId = result?.id || result?.tipId
+      setCurrentTipId(tipId)
       try {
-        const linkData = await publicTouchRepository.getPaymentLink({
-          staffId: member.id,
-          method: walletName,
-          amount,
-        })
-        setPaymentLinkData(linkData)
-      } catch (linkErr) {
-        logger.error('Failed to fetch payment link', linkErr)
+        const methods = await publicTouchRepository.getTipPaymentMethods(String(tipId))
+        setTipPaymentMethodsData(Array.isArray(methods) ? methods : null)
+      } catch (methodsErr) {
+        logger.error('Failed to fetch tip payment methods', methodsErr)
+        setTipPaymentMethodsData(null)
       }
       setStep('wallet_details')
     } catch (err) {
@@ -652,7 +659,7 @@ export default function useCustomerFlow() {
     tipRefNumber, setTipRefNumber, currentTipId, currentReviewId,
     handleTagToggle, handleRatingChange, handleToggleStaff,
     handlePay, handleConfirmTip, handleSkipTip, handleSubmitFeedback,
-    handleTrackExternalReview, paymentLinkData,
+    handleTrackExternalReview, paymentLinkData, tipPaymentMethodsData,
     scannedTouchpoint: null,
   }
 }

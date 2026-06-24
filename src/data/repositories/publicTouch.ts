@@ -38,6 +38,13 @@ export function createPublicTouchRepository(client: HttpClient = httpClient) {
       return normalizeTouchPageData(raw)
     },
 
+    async getTipPaymentMethods(tipId: string) {
+      return client.get<Array<{ id: string; type: string; accountInfo: string; imageUrl: string }>>(
+        `/api/v1/tips/${encodeURIComponent(tipId)}/payment-methods`,
+        { anonymous: true },
+      )
+    },
+
     async getPaymentLink({
       staffId,
       method,
