@@ -44,6 +44,9 @@ export const errorCodeToI18nKey = {
   STAFF_INVITE_EXPIRED: 'errors.staff_invite_expired',
   STAFF_PROFILE_NOT_FOUND: 'errors.staff_profile_not_found',
 
+  // Physical cards (QR/NFC hardware)
+  PHYSICAL_CARD_NOT_FOUND: 'errors.physical_card_not_found',
+
   // Support / contact requests
   CONTACT_REQUEST_SUPPORT_TYPE_MIN_LENGTH: 'errors.contact_request_support_type_min_length',
   CONTACT_REQUEST_SUPPORT_TYPE_REQUIRED: 'errors.contact_request_support_type_required',

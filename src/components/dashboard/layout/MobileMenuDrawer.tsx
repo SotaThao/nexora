@@ -1,4 +1,5 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import MenuIcon from '../../ui/MenuIcon'
@@ -31,6 +32,7 @@ export default function MobileMenuDrawer({
   navigateMenu,
 }) {
   const { t, currentLanguage } = useTranslation()
+  const navigate = useNavigate()
   const subscriptionCopy = getSubscriptionSidebarCopy(
     subscription ?? profile?.subscription,
     t,
@@ -240,6 +242,7 @@ export default function MobileMenuDrawer({
                   <div className="ml-9 mt-1 space-y-1 border-l border-white/15 pl-3 animate-fadeIn">
                     {[
                       { id: 'stations', label: t('dashboard.touchpoints.tabs.stations') },
+                      { id: 'devices', label: t('dashboard.touchpoints.tabs.devices') },
                     ].map(sub => {
                       const isSubActive = activeMenu === 'touchpoints' && touchpointsTab === sub.id
                       return (
@@ -248,7 +251,8 @@ export default function MobileMenuDrawer({
                           type="button"
                           onClick={() => {
                             setTouchpointsTab(sub.id)
-                            navigateMenu('touchpoints')
+                            navigate(`/dashboard/touchpoints?tab=${sub.id}`)
+                            onClose()
                           }}
                           className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
                             isSubActive
