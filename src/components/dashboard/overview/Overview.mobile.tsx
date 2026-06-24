@@ -12,6 +12,7 @@ import {
   PiggyBank,
   Hourglass,
 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { isAwaitingShopConfirmation } from '../utils'
 import SetupGuideBanner from './SetupGuideBanner'
@@ -135,6 +136,7 @@ function Overview({
   metricsYear = null,
 }: any) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const k = (key: string, vars?: Record<string, string | number>) =>
     t(`dashboard.owner_home.${key}`, vars)
 
@@ -236,7 +238,7 @@ function Overview({
       {pendingConfirmCount > 0 && (
         <button
           type="button"
-          onClick={() => onNavigateMenu?.('reports')}
+          onClick={() => navigate('/dashboard/reports?status=AwaitingShopConfirmation')}
           className="flex w-full items-center gap-3 rounded-2xl border border-violet-100 bg-violet-50 px-4 py-3 text-left active:scale-[0.98] transition cursor-pointer"
         >
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-100">
