@@ -88,6 +88,43 @@ export interface TouchpointRecord {
   [key: string]: unknown
 }
 
+export interface PhysicalCardRecord {
+  id: string
+  cardCode: string
+  helpCode?: string | null
+  linkedTouchPointId?: string | null
+  touchPointName?: string | null
+  linkedAt?: string | null
+}
+
+export interface PhysicalCardDetail {
+  id: string
+  cardCode: string
+  helpCode: string
+  isActive: boolean
+  linkedTouchPointId?: string | null
+  touchPointName?: string | null
+  touchPointUrl?: string | null
+  linkedAt?: string | null
+}
+
+export interface QrTouchPointRef {
+  id: string
+  name: string
+  slug: string
+  type?: string
+  businessId?: string
+  businessName?: string
+  businessSlug: string
+}
+
+export interface ResolveQrCodePayload {
+  status: string
+  touchPoint: QrTouchPointRef | null
+}
+
+export type PhysicalCardPage = PaginatedResponse<PhysicalCardRecord>
+
 export type TouchpointPage = PaginatedResponse<TouchpointRecord>
 
 export interface NotificationRecord {

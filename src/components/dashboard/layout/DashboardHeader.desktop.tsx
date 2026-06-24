@@ -16,6 +16,7 @@ import {
   Wallet
 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { formatNotificationDateTime } from '../utils'
 import IconButton from '../../ui/IconButton'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import HeaderEcosystem from './HeaderEcosystem'
@@ -46,7 +47,7 @@ export default function DashboardHeader({
   userRole = 'owner',
   onOpenMobileMenu
 }) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const dropdownRef = useRef(null)
   const searchRef = useRef(null)
   const headerDropdownRef = useRef(null)
@@ -412,7 +413,9 @@ export default function DashboardHeader({
                             }`}>
                               {item.title}
                             </span>
-                            <span className="text-[10px] text-nexoraSubtle shrink-0 font-medium">{item.time}</span>
+                            <span className="text-[10px] text-nexoraSubtle shrink-0 font-medium">
+                              {formatNotificationDateTime(item.createdAt || item.time, currentLanguage)}
+                            </span>
                           </div>
                           <p className={`text-[11px] leading-normal mt-1 break-words ${
                             isUnread ? 'font-semibold text-nexoraText' : 'font-medium text-nexoraMuted'

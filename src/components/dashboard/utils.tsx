@@ -51,21 +51,39 @@ function parseApiDateTime(value) {
   return Number.isNaN(date.getTime()) ? null : date
 }
 
-export function formatTransactionDateTime(value, locale = 'en') {
-  const date = parseApiDateTime(value)
-  if (!date) return value ? String(value).trim() : '—'
-
+function formatDateTimeWithUserTimeZone(date, locale, options) {
   const intlLocale = locale === 'vi' ? 'vi-VN' : 'en-US'
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
   return new Intl.DateTimeFormat(intlLocale, {
+    ...options,
+    timeZone,
+  }).format(date)
+}
+
+export function formatTransactionDateTime(value, locale = 'en') {
+  const date = parseApiDateTime(value)
+  if (!date) return value ? String(value).trim() : '—'
+
+  return formatDateTimeWithUserTimeZone(date, locale, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
-    timeZone,
-  }).format(date)
+  })
+}
+
+export function formatNotificationDateTime(value, locale = 'en') {
+  const date = parseApiDateTime(value)
+  if (!date) return value ? String(value).trim() : ''
+
+  return formatDateTimeWithUserTimeZone(date, locale, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
 }
 
 export function walletLabels(accounts) {

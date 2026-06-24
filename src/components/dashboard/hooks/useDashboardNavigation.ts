@@ -22,8 +22,12 @@ export function useDashboardNavigation() {
     } else if (activeMenu === 'touchpoints') {
       setIsTouchpointsMobileExpanded(true)
       setIsTipsMobileExpanded(false)
+      const tab = new URLSearchParams(location.search).get('tab')
+      if (tab === 'stations' || tab === 'devices') {
+        setTouchpointsTab(tab)
+      }
     }
-  }, [activeMenu])
+  }, [activeMenu, location.search])
 
   const handleNavigateMenu = (menuId) => {
     const route = menuId === 'overview' ? '/dashboard' : `/dashboard/${menuId}`

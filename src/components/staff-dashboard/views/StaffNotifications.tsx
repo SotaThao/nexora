@@ -13,6 +13,7 @@ import {
 import type { NotificationRecord } from '../../../types/domain'
 import { SkeletonLayout } from '../../ui/skeleton'
 import { STAFF_NOTIFICATIONS_SKELETON } from '../skeletons/staffDashboardSkeletons'
+import { formatNotificationDateTime } from '../../dashboard/utils'
 import {
   useAcceptStaffLinkRequest,
   useRejectStaffLinkRequest,
@@ -80,18 +81,6 @@ function Toggle({ on, onChange }) {
 }
 
 const PREF_KEYS = ['tipConfirmations', 'reviews', 'businessInvites']
-
-function formatCreatedAt(iso: string | undefined) {
-  if (!iso) return ''
-  const date = new Date(iso)
-  if (Number.isNaN(date.getTime())) return ''
-  return date.toLocaleString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  })
-}
 
 function StaffLinkRequestNotification({
   notification,
@@ -184,7 +173,7 @@ function StaffLinkRequestNotification({
 }
 
 export default function StaffNotifications() {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const navigate = useNavigate()
   const { account, setPushPreference } = useStaffAccount()
   const { data: notifications = [], isPending } = useNotifications()
@@ -251,8 +240,10 @@ export default function StaffNotifications() {
           {message ? (
             <p className="mt-0.5 text-xs leading-normal text-nexoraMuted">{message}</p>
           ) : null}
-          {n.createdAt ? (
-            <p className="mt-1 text-[10px] text-nexoraSubtle">{formatCreatedAt(n.createdAt)}</p>
+          {(n.createdAt || n.time) ? (
+            <p className="mt-1 text-[10px] text-nexoraSubtle">
+              {formatNotificationDateTime(n.createdAt || n.time, currentLanguage)}
+            </p>
           ) : null}
         </div>
         {!n.read && <span className="ml-auto mt-1 h-2 w-2 shrink-0 rounded-full bg-nexoraBrand" />}
