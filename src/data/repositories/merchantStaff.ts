@@ -2,7 +2,7 @@
  * merchantStaffRepository — API implementation for staff management.
  */
 import httpClient from '../../lib/httpClient'
-import type { StaffMember, StaffSearchResult } from '../../types/domain'
+import type { PaymentMethodDto, StaffMember, StaffSearchResult } from '../../types/domain'
 import type {
   MerchantStaffInvite,
   StaffInviteDetailApiDto,
@@ -66,17 +66,21 @@ export function normalizePaymentMethods(
 }
 
 export function normalizeStaffListItem(dto: StaffListItemApiDto): StaffMember {
+  const isWaitingStaffAcceptance = dto.status === 'WaitingStaffAcceptance'
+  const isPendingLinkStatus =
+    dto.status === 'Pending' ||
+    isWaitingStaffAcceptance
   const isActive = dto.status === 'Active' || dto.status === 'Accepted'
   const displayName = dto.displayName ?? ''
   const { payoutConfigs, paymentAccounts } = normalizePaymentMethods(dto.paymentMethods, displayName)
   const itemType =
     dto.itemType ??
     (dto.inviteId ? 'invite' : undefined) ??
-    (dto.linkId || dto.staffLinkId || dto.status === 'Pending' ? 'link' : undefined)
+    (dto.linkId || dto.staffLinkId || isPendingLinkStatus ? 'link' : undefined)
   const status =
     itemType === 'invite' && dto.status === 'Pending'
       ? 'Pending Setup'
-      : itemType === 'link' && dto.status === 'Pending'
+      : itemType === 'link' && isPendingLinkStatus
         ? 'Pending Acceptance'
         : (dto.status ?? null)
 
@@ -97,6 +101,8 @@ export function normalizeStaffListItem(dto: StaffListItemApiDto): StaffMember {
     fullName: displayName,
     avatar: dto.photoUrl ?? null,
     status,
+    apiStatus: dto.status ?? null,
+    isWaitingStaffAcceptance,
     isActive,
     showInTipsFlow: isActive,
     position: dto.position ?? null,
@@ -139,12 +145,27 @@ export function normalizeStaffInvite(
 }
 
 export function normalizeStaffSearchResult(dto: StaffSearchResultApiDto): StaffSearchResult {
+  const paymentMethods: PaymentMethodDto[] = (dto.paymentMethods ?? []).map((method) => {
+    const type = method?.type ?? ''
+    const accountInfo = method?.accountInfo ?? null
+    const imageUrl = method?.imageUrl ?? null
+    return {
+      type,
+      uiKey: PAYOUT_TYPE_TO_KEY[type],
+      isActive: !!method?.isActive,
+      accountInfo,
+      imageUrl,
+      isConfigured: Boolean((accountInfo && String(accountInfo).trim()) || (imageUrl && String(imageUrl).trim())),
+    }
+  })
+
   return {
     staffProfileId: dto.staffProfileId,
     staffCode: dto.staffCode ?? null,
-    fullName: dto.displayName ?? '',
+    fullName: dto.displayName ?? dto.fullName ?? '',
     avatar: dto.photoUrl ?? null,
     position: dto.position ?? null,
+    paymentMethods,
   }
 }
 

@@ -1,6 +1,10 @@
 import { useState, useEffect, useMemo } from 'react'
 import { X, HelpCircle, Loader2 } from 'lucide-react'
 import IconButton from '../../ui/IconButton'
+import CountryCodeSelect, {
+  formatNationalNumber,
+  parsePhone,
+} from '../../CountryCodeSelect'
 import {
   getDefaultDialCode,
   isValidPhoneE164,
@@ -37,6 +41,24 @@ function getSearchQueryPayload(value: string, fallbackDialCode: string) {
   return trimmed
 }
 
+function formatInvitePhoneNational(nationalNumber: string, dialCode: string): string {
+  const formatted = formatNationalNumber(nationalNumber, dialCode)
+  // Keep VN display consistent with requested style: 0385-478-857
+  if (dialCode === '+84') return formatted.replace(/[\s\u2009]+/g, '-')
+  return formatted
+}
+
+function resolveDialCodeFromInput(value: string, fallbackDialCode: string): string {
+  const trimmed = value.trim()
+  if (!trimmed) return fallbackDialCode
+  if (trimmed.startsWith('+')) {
+    return parsePhone(trimmed).countryCode || fallbackDialCode
+  }
+  const digits = trimmed.replace(/\D/g, '')
+  if (digits.startsWith('0')) return '+84'
+  return fallbackDialCode
+}
+
 type AddStaffModalProps = {
   open: boolean
   onClose: () => void
@@ -57,10 +79,12 @@ function AddStaffModal({
   const { t, currentLanguage } = useTranslation()
   const [activeTab, setActiveTab] = useState<'link' | 'invite'>('invite')
   const [inviteErrors, setInviteErrors] = useState<Record<string, string>>({})
-  const defaultDialCode = useMemo(() => getDefaultDialCode(currentLanguage), [currentLanguage])
+  // Default phone country should follow device/browser locale, not UI language.
+  const defaultDialCode = useMemo(() => getDefaultDialCode(undefined), [])
 
   // Link tab
   const [searchInput, setSearchInput] = useState('')
+  const [searchDialCode, setSearchDialCode] = useState(defaultDialCode)
   const [activeSearchQuery, setActiveSearchQuery] = useState('')
   const [selectedRole, setSelectedRole] = useState(DEFAULT_ROLE)
   const [searchResult, setSearchResult] = useState<StaffSearchResult | null>(null)
@@ -71,15 +95,24 @@ function AddStaffModal({
   const [inviteContact, setInviteContact] = useState('')
   const [inviteRole, setInviteRole] = useState(DEFAULT_ROLE)
   const [inviteMethod, setInviteMethod] = useState('Email')
+  const [inviteDialCode, setInviteDialCode] = useState(defaultDialCode)
 
-  const { data: searchResults, isLoading: isSearching, isFetched } = useSearchMerchantStaff(activeSearchQuery, {
+  const {
+    data: searchResults,
+    isLoading,
+    isFetching,
+    isFetched,
+    refetch: refetchSearchResults,
+  } = useSearchMerchantStaff(activeSearchQuery, {
     enabled: open && activeSearchQuery.trim().length > 0,
   })
+  const isSearching = isLoading || isFetching
 
   useEffect(() => {
     if (!open) {
       setActiveTab('invite')
       setSearchInput('')
+      setSearchDialCode(defaultDialCode)
       setActiveSearchQuery('')
       setSearchResult(null)
       setSearchError('')
@@ -88,6 +121,7 @@ function AddStaffModal({
       setInviteContact('')
       setInviteRole(DEFAULT_ROLE)
       setInviteMethod('Email')
+      setInviteDialCode(defaultDialCode)
       setInviteErrors({})
     }
   }, [open, defaultDialCode])
@@ -115,22 +149,40 @@ function AddStaffModal({
     }
 
     const kind = getSearchInputKind(query)
+    const searchFallbackDialCode = resolveDialCodeFromInput(query, searchDialCode || defaultDialCode)
     if (kind === 'email' && !isValidEmail(query)) {
       setSearchError(t('setup.errors.staff_email_invalid'))
       return
     }
-    if (kind === 'phone' && !isValidPhoneE164(query, defaultDialCode)) {
+    if (kind === 'phone' && !isValidPhoneE164(query, searchFallbackDialCode)) {
       setSearchError(t('setup.errors.staff_phone_invalid'))
       return
     }
 
+    const nextQuery = getSearchQueryPayload(query, searchFallbackDialCode)
     setSearchResult(null)
     setSearchError('')
-    setActiveSearchQuery(getSearchQueryPayload(query, defaultDialCode))
+
+    if (nextQuery === activeSearchQuery) {
+      void refetchSearchResults()
+      return
+    }
+    setActiveSearchQuery(nextQuery)
   }
 
   const handleSearchInputChange = (value: string) => {
-    setSearchInput(value)
+    const kind = getSearchInputKind(value)
+    if (kind === 'phone') {
+      const nextDialCode = resolveDialCodeFromInput(value, searchDialCode || defaultDialCode)
+      const parsed = parsePhone(
+        value.trim().startsWith('+') ? value : `${nextDialCode}${value.replace(/\D/g, '')}`,
+      )
+      const formatted = formatInvitePhoneNational(parsed.nationalNumber, nextDialCode)
+      setSearchDialCode(nextDialCode)
+      setSearchInput(formatted)
+    } else {
+      setSearchInput(value)
+    }
     if (searchError) setSearchError('')
   }
 
@@ -154,7 +206,24 @@ function AddStaffModal({
     }`
 
   const handleContactChange = (value: string) => {
-    setInviteContact(value)
+    const kind = getContactKind(value)
+    if (kind === 'phone') {
+      const nextDialCode = resolveDialCodeFromInput(value, inviteDialCode || defaultDialCode)
+      const parsed = parsePhone(
+        value.trim().startsWith('+') ? value : `${nextDialCode}${value.replace(/\D/g, '')}`,
+      )
+      const formatted = formatInvitePhoneNational(parsed.nationalNumber, nextDialCode)
+      setInviteDialCode(nextDialCode)
+      setInviteContact(formatted)
+    } else {
+      setInviteContact(value)
+    }
+    clearInviteError('contact')
+  }
+
+  const handlePhoneContactChange = (value: string) => {
+    const formatted = formatInvitePhoneNational(value, inviteDialCode)
+    setInviteContact(formatted)
     clearInviteError('contact')
   }
 
@@ -172,7 +241,7 @@ function AddStaffModal({
       return ''
     }
 
-    if (!isValidPhoneE164(trimmed, defaultDialCode)) {
+    if (!isValidPhoneE164(trimmed, inviteDialCode)) {
       return t('setup.errors.staff_phone_invalid')
     }
     return ''
@@ -183,7 +252,7 @@ function AddStaffModal({
     if (getContactKind(trimmed) === 'email') {
       return trimmed.toLowerCase()
     }
-    return normalizePhoneForApi(trimmed, defaultDialCode)
+    return normalizePhoneForApi(trimmed, inviteDialCode)
   }
 
   const handleLinkRequest = () => {
@@ -202,8 +271,8 @@ function AddStaffModal({
     const contactError = validateInviteContact()
     if (contactError) {
       nextErrors.contact = contactError
-    } else if (inviteMethod === 'Email' && getContactKind(inviteContact.trim()) !== 'email') {
-      nextErrors.contact = t('components.dashboard.modals.AddStaffModal.emailRequiredForMethod')
+    } else if (inviteMethod === 'SMS' && getContactKind(inviteContact.trim()) === 'email') {
+      nextErrors.contact = t('setup.errors.staff_phone_invalid')
     }
 
     if (Object.keys(nextErrors).length) {
@@ -214,6 +283,8 @@ function AddStaffModal({
     setInviteErrors({})
     onInviteStaff(inviteName, getInviteContactPayload(), inviteRole, inviteMethod, { onSuccess: onClose })
   }
+
+  const activeSearchPaymentMethods = (searchResult?.paymentMethods ?? []).filter((method) => method.isActive)
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-nexoraText/70 p-4 py-6 backdrop-blur-sm sm:items-center">
@@ -259,14 +330,14 @@ function AddStaffModal({
         </div>
 
         {activeTab === 'invite' ? (
-          <form className="mt-5 space-y-2" onSubmit={handleInviteSubmit}>
+          <form className="mt-5 space-y-4" onSubmit={handleInviteSubmit}>
             <p className="text-sm text-nexoraMuted leading-snug">
               {t('staff_invite.option_b_desc')}
             </p>
 
             <div>
-              <div className="space-y-1">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
                   <label className={fieldLabelClass}>
                     {t('components.dashboard.modals.AddStaffModal.staff_name')}
                   </label>
@@ -288,21 +359,44 @@ function AddStaffModal({
                     )}
                   </div>
                   <div>
-                    <input
-                      type="text"
-                      inputMode={getContactKind(inviteContact) === 'phone' ? 'tel' : 'email'}
-                      className={`rounded-lg px-3 ${inputClass(Boolean(inviteErrors.contact))}`}
-                      value={inviteContact}
-                      onChange={(e) => handleContactChange(e.target.value)}
-                      placeholder={t('components.dashboard.modals.AddStaffModal.phone_or_email_placeholder')}
-                      autoComplete="off"
-                    />
+                    {inviteMethod === 'SMS' ? (
+                      <div className="flex h-10 w-full overflow-hidden rounded-lg">
+                        <CountryCodeSelect
+                          value={inviteDialCode}
+                          onChange={(newCode) => {
+                            const phoneParsed = parsePhone(inviteContact)
+                            const reFormatted = formatInvitePhoneNational(phoneParsed.nationalNumber, newCode)
+                            setInviteDialCode(newCode)
+                            setInviteContact(reFormatted)
+                            clearInviteError('contact')
+                          }}
+                        />
+                        <input
+                          type="tel"
+                          className={`rounded-r-lg px-3 ${inputClass(Boolean(inviteErrors.contact), 'border-l-0')}`}
+                          value={formatNationalNumber(parsePhone(inviteContact).nationalNumber, inviteDialCode)}
+                          onChange={(e) => handlePhoneContactChange(e.target.value)}
+                          placeholder={t('components.dashboard.modals.InviteShareModal.phExamplePhone')}
+                          autoComplete="off"
+                        />
+                      </div>
+                    ) : (
+                      <input
+                        type="text"
+                        inputMode={getContactKind(inviteContact) === 'phone' ? 'tel' : 'email'}
+                        className={`rounded-lg px-3 ${inputClass(Boolean(inviteErrors.contact))}`}
+                        value={inviteContact}
+                        onChange={(e) => handleContactChange(e.target.value)}
+                        placeholder={t('components.dashboard.modals.AddStaffModal.phone_or_email_placeholder')}
+                        autoComplete="off"
+                      />
+                    )}
                     {inviteErrors.contact && (
                       <p className={fieldErrorClass}>{inviteErrors.contact}</p>
                     )}
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
                   <label className={fieldLabelClass}>
                     {t('components.dashboard.modals.AddStaffModal.role')}
                   </label>
@@ -315,57 +409,61 @@ function AddStaffModal({
                     onChange={(e) => setInviteRole(e.target.value)}
                     placeholder={t('components.dashboard.modals.AddStaffModal.role_placeholder')}
                   />
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setInviteMethod('Email')
-                        clearInviteError('contact')
-                      }}
-                      className={`h-10 rounded-lg border text-xs font-bold transition flex items-center justify-center ${
-                        inviteMethod === 'Email'
-                          ? 'border-nexoraBrand bg-nexoraBrandSoft text-nexoraBrand'
-                          : 'border-nexoraBorder bg-white text-nexoraMuted hover:bg-slate-50'
-                      }`}
-                    >
-                      {t('components.dashboard.modals.InviteShareModal.methodEmail')}
-                    </button>
-                    <button
-                      type="button"
-                      disabled
-                      className="h-10 rounded-lg border border-nexoraBorder bg-slate-50 text-slate-400 cursor-not-allowed flex flex-col items-center justify-center opacity-80"
-                    >
-                      <span className="text-xs font-bold">{t('components.dashboard.modals.InviteShareModal.methodSms')}</span>
-                      <span className="text-[9px] font-medium normal-case opacity-80 -mt-0.5">
-                        {t('components.dashboard.modals.InviteShareModal.methodSmsComingSoon')}
-                      </span>
-                    </button>
-                  </div>
+                  <select
+                    className={`rounded-lg px-3 ${inputClass(false)}`}
+                    value={inviteMethod}
+                    onChange={(e) => {
+                      const nextMethod = e.target.value
+                      setInviteMethod(nextMethod)
+                      clearInviteError('contact')
+
+                      if (nextMethod === 'SMS') {
+                        const parsed = parsePhone(inviteContact)
+                        const nextDialCode = parsed.countryCode || inviteDialCode || defaultDialCode
+                        const formatted = formatInvitePhoneNational(parsed.nationalNumber, nextDialCode)
+                        setInviteDialCode(nextDialCode)
+                        setInviteContact(formatted)
+                        return
+                      }
+
+                      if (getContactKind(inviteContact) === 'phone') {
+                        setInviteContact('')
+                      }
+                    }}
+                  >
+                    <option value="Email">{t('components.dashboard.modals.InviteShareModal.methodEmail')}</option>
+                    <option value="SMS" disabled>
+                      {`${t('components.dashboard.modals.InviteShareModal.methodSms')} (${t('components.dashboard.modals.InviteShareModal.methodSmsComingSoon')})`}
+                    </option>
+                  </select>
                 </div>
               </div>
 
-              <button
-                type="submit"
-                disabled={isInviting}
-                className="mt-2 inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-2.5 text-xs font-bold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {isInviting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                {t('components.dashboard.modals.AddStaffModal.send_setup_link')}
-              </button>
             </div>
 
             <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-xs text-slate-600 leading-relaxed">
               {t('components.dashboard.modals.AddStaffModal.invite_info')}
             </div>
+
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={isInviting}
+                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-2.5 text-xs font-bold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isInviting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                {t('components.dashboard.modals.AddStaffModal.send_setup_link')}
+              </button>
+            </div>
           </form>
         ) : (
-          <div className="mt-5 space-y-2">
+          <div className="mt-5 space-y-4">
             <p className="text-sm text-nexoraMuted leading-snug">
               {t('staff_invite.option_a_desc')}
             </p>
 
             <div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
                 <label className={fieldLabelClass}>
                   <span>{t('staff_invite.search_placeholder')}</span>
                   <span className="inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-indigo-50 text-[10px] font-black text-indigo-600">
@@ -394,16 +492,6 @@ function AddStaffModal({
                   placeholder={t('components.dashboard.modals.AddStaffModal.role_placeholder')}
                 />
               </div>
-
-              <button
-                type="button"
-                onClick={handleSearch}
-                disabled={isSearching}
-                className="mt-2 inline-flex items-center gap-2 rounded-lg bg-nexoraBrand px-4 py-2.5 text-xs font-bold text-white transition hover:bg-opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {isSearching && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                {t('staff_invite.search_btn')}
-              </button>
             </div>
 
             {searchResult && (
@@ -417,6 +505,18 @@ function AddStaffModal({
                     })}
                     {searchResult.position ? ` • ${searchResult.position}` : ''}
                   </p>
+                  {activeSearchPaymentMethods.length > 0 && (
+                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                      {activeSearchPaymentMethods.map((method, idx) => (
+                        <span
+                          key={`${method.type || 'method'}-${idx}`}
+                          className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700"
+                        >
+                          {method.type || 'Payment'}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <button
                   type="button"
@@ -432,6 +532,18 @@ function AddStaffModal({
 
             <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-xs text-slate-600 leading-relaxed">
               {t('components.dashboard.modals.AddStaffModal.link_info')}
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={handleSearch}
+                disabled={isSearching}
+                className="inline-flex items-center gap-2 rounded-lg bg-nexoraBrand px-4 py-2.5 text-xs font-bold text-white transition hover:bg-opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSearching && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                {t('staff_invite.search_btn')}
+              </button>
             </div>
           </div>
         )}

@@ -173,6 +173,7 @@ export interface StaffSearchResult {
   fullName: string
   avatar: string | null
   position: string | null
+  paymentMethods: PaymentMethodDto[]
 }
 
 export interface StaffBusinessLink {
