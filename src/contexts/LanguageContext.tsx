@@ -15,9 +15,7 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   const [currentLanguage, setCurrentLanguageState] = useState<AppLanguage>(() => {
     const saved = localStorage.getItem('nexora_lang')
     if (saved === 'en' || saved === 'vi') return saved
-    // Fallback to browser language or default to 'en'
-    const browserLang = navigator.language || (navigator as Navigator & { userLanguage?: string }).userLanguage
-    return browserLang?.startsWith('vi') ? 'vi' : 'en'
+    return 'en'
   })
 
   const setLanguage = (lang: AppLanguage) => {
@@ -29,7 +27,7 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
 
   // Translation helper with dot notation and interpolation support
   const t: LanguageContextValue['t'] = (key, variables: TranslationVariables = {}) => {
-    const dictionary = translations[currentLanguage] || translations['vi']
+    const dictionary = translations[currentLanguage] || translations.en
     const keys = key.split('.')
     let value: unknown = dictionary
     

@@ -41,6 +41,7 @@ import TipsView from './TipsView'
 import TouchpointsView from './TouchpointsView'
 import StaffDetailView from './StaffDetailView'
 import StaffModal from './dashboard/modals/StaffModal'
+import AddStaffModal from './dashboard/modals/AddStaffModal'
 import QrModal from './dashboard/modals/QrModal'
 import InviteShareModal from './dashboard/modals/InviteShareModal'
 import AddTouchpointModal from './dashboard/modals/AddTouchpointModal'
@@ -310,17 +311,20 @@ export default function Dashboard({
     errors, setErrors,
     editingStaffId, setEditingStaffId,
     isStaffModalOpen, setIsStaffModalOpen,
+    isAddStaffModalOpen,
     isApproveModalOpen, setIsApproveModalOpen,
     approvingStaffMember, setApprovingStaffMember,
     isInviteShareOpen, setIsInviteShareOpen,
     inviteShareDefaultName, setInviteShareDefaultName,
     inviteShareDefaultContact, setInviteShareDefaultContact,
-    resetStaffForm, openAddStaff, openApproveStaff, openEditStaff, closeStaffModal,
+    resetStaffForm, openAddStaff, closeAddStaffModal, openApproveStaff, openEditStaff, closeStaffModal,
     saveStaff, sendSetupLinkFromModal, handleLinkStaff, handleInviteStaff,
     handleResendInvite,
     handleAcceptJoinRequest, handleDeclineJoinRequest, deleteStaff, toggleStaff, toggleStaffTipsFlow,
     handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     inviteStaffMutation,
+    linkRequestMutation,
+    updateStatusMutation,
   } = useStaffManagement({ staffData: merchantStaffData, isStaffLoading, businessName })
 
   // Sync touchpoints removed (now handled by React Query cache)
@@ -596,6 +600,7 @@ export default function Dashboard({
     setActiveStaffPage: staffPagination.setPage,
     staffListLoading: isStaffLoading,
     staffListFetching: isStaffFetching,
+    togglingStaffId: updateStatusMutation.isPending ? updateStatusMutation.variables?.staffLinkId ?? null : null,
   }
 
   return (
@@ -707,8 +712,17 @@ export default function Dashboard({
         navigateMenu={navigateMenu}
       />
 
+      <AddStaffModal
+        open={isAddStaffModalOpen}
+        onClose={closeAddStaffModal}
+        onLinkStaff={handleLinkStaff}
+        onInviteStaff={handleInviteStaff}
+        isLinking={linkRequestMutation.isPending}
+        isInviting={inviteStaffMutation.isPending}
+      />
+
       <StaffModal
-        open={isStaffModalOpen}
+        open={isStaffModalOpen && Boolean(editingStaffId)}
         editing={Boolean(editingStaffId)}
         onDecline={closeStaffModal}
         form={staffForm}

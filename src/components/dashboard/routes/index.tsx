@@ -80,8 +80,6 @@ export function StaffRoute() {
       onToggle={ctx.toggleStaff}
       onToggleTipsFlow={ctx.toggleStaffTipsFlow}
       onViewDetail={(id) => navigate(`/dashboard/staff/${id}`)}
-      onLinkStaff={ctx.handleLinkStaff}
-      onInviteStaff={ctx.handleInviteStaff}
       onResendInvite={ctx.handleResendInvite}
       businessName={ctx.businessName}
       businessSlug={ctx.businessSlug}
@@ -104,6 +102,7 @@ export function StaffRoute() {
       hasNextPage={ctx.activeStaffHasNext}
       hasPreviousPage={ctx.activeStaffHasPrev}
       onPageChange={ctx.setActiveStaffPage}
+      togglingStaffId={ctx.togglingStaffId}
     />
   )
 }
