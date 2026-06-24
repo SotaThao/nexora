@@ -22,7 +22,7 @@ export default function StepProfileSetup({
 }) {
   return (
     <div className="p-6 sm:p-8 animate-fadeIn max-w-xl mx-auto">
-      <div>
+      <div className="text-center">
         <h3 className="text-lg font-bold text-nexoraText">
           {t('components.register.steps.StepProfileSetup.personalProfileSetup')}
         </h3>
@@ -148,33 +148,18 @@ export default function StepProfileSetup({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Role / Specialty */}
-          <div>
-            <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-              {t('components.register.steps.StepProfileSetup.roleSpeciality')}
-            </label>
-            <input
-              type="text"
-              placeholder={t('components.register.steps.StepProfileSetup.phPosition')}
-              className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
-              value={position}
-              onChange={(e) => setPosition(e.target.value)}
-            />
-          </div>
-
-          {/* Staff ID */}
-          <div>
-            <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-              {t('components.register.steps.StepProfileSetup.nexoraStaffId')}
-            </label>
-            <input
-              type="text"
-              disabled
-              className="w-full bg-nexoraCanvas border border-nexoraBorder rounded-lg px-4 py-2.5 text-sm text-nexoraSubtle font-mono font-bold cursor-not-allowed"
-              value={generatedStaffId || 'Pending'}
-            />
-          </div>
+        {/* Role / Specialty */}
+        <div>
+          <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
+            {t('components.register.steps.StepProfileSetup.roleSpeciality')}
+          </label>
+          <input
+            type="text"
+            placeholder={t('components.register.steps.StepProfileSetup.phPosition')}
+            className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
+            value={position}
+            onChange={(e) => setPosition(e.target.value)}
+          />
         </div>
 
         {/* Short Bio */}
