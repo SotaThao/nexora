@@ -39,7 +39,7 @@ function renderTextWithGoldStars(text) {
     return (
       <span key={index}>
         {part}
-        <span className="text-luxuryGold ml-flox-4 inline-block font-normal">★</span>
+        <span className="text-luxuryGold ml-flox-4 inline font-normal">★</span>
       </span>
     )
   })
@@ -811,7 +811,7 @@ export default function StaffDetailView({
             <p className="text-xs text-nexoraMuted mt-0.5">{t('staff_detail.reviews_desc')}</p>
           </div>
 
-          <div className="flex gap-1.5 self-start">
+          <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5 scrollbar-none sm:mx-0 sm:px-0 sm:pb-0">
             {[
               { id: 'all', label: t('staff_detail.tab_all') },
               { id: 'google', label: t('staff_detail.tab_google') },
@@ -819,8 +819,9 @@ export default function StaffDetailView({
             ].map((tab) => (
               <button
                 key={tab.id}
+                type="button"
                 onClick={() => setReviewFilter(tab.id)}
-                className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold uppercase transition ${
+                className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-[10px] font-extrabold uppercase transition ${
                   reviewFilter === tab.id
                     ? 'bg-nexoraBrand text-white shadow-sm'
                     : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'

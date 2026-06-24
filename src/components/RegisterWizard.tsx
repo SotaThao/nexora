@@ -109,10 +109,10 @@ export default function RegisterWizard() {
       <div className="absolute bottom-1/4 right-1/4 h-64 w-64 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(43,89,255,0.02)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-[450px] sm:w-[450px]"></div>
 
       {/* Language Switcher */}
-      <div className="absolute top-4 right-4 z-50">
+      <div className="absolute top-[max(1rem,var(--app-safe-area-top))] right-[max(1rem,var(--app-safe-area-right))] z-50">
         <LanguageSwitcher />
       </div>
-      <HomepageLink className="top-4 left-4" />
+      <HomepageLink />
 
       <div className="max-w-4xl mx-auto px-4 py-8 relative z-10 flex flex-col justify-center min-h-dvh">
         {/* Branding header */}

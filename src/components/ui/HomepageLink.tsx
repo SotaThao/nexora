@@ -33,7 +33,7 @@ export default function HomepageLink({
 
   return (
     <div
-      className={`absolute top-[max(1rem,env(safe-area-inset-top,0px))] left-[max(1rem,env(safe-area-inset-left,0px))] z-50 ${className}`}
+      className={`absolute top-[max(1rem,var(--app-safe-area-top))] left-[max(1rem,var(--app-safe-area-left))] z-50 ${className}`}
     >
       <Link
         to="/"
