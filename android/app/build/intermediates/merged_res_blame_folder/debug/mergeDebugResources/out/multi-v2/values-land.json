@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "net.vlinkgroup.nexora.app-mergeDebugResources-50:/values-land/values-land.xml",
+            "outputFile": "net.vlinkgroup.nexora.app-mergeDebugResources-60:/values-land/values-land.xml",
             "map": [
                 {
                     "source": "/Users/macmini/.gradle/caches/8.13/transforms/78f63496ca6c2b1b2261ea3b35dee3bb/transformed/material-1.13.0/res/values-land/values-land.xml",

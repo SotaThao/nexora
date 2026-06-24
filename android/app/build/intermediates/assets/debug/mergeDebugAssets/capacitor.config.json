@@ -10,7 +10,8 @@
 	"ios": {
 		"contentInset": "never",
 		"scrollEnabled": true,
-		"initialFocus": false
+		"initialFocus": false,
+		"handleApplicationNotifications": false
 	},
 	"plugins": {
 		"CapacitorHttp": {

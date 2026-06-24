@@ -1,5 +1,6 @@
 import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core'
 import { CapacitorUpdater } from '@capgo/capacitor-updater'
+import { initOneSignal } from './onesignal'
 
 function syncSafeAreaInsets() {
   if (typeof document === 'undefined' || !document.body) return
@@ -43,6 +44,8 @@ export async function initNativeShell() {
   } catch {
     // Updater may be unavailable during early boot on some builds.
   }
+
+  await initOneSignal()
 
   try {
     await SystemBars.setStyle({ style: SystemBarsStyle.Dark })

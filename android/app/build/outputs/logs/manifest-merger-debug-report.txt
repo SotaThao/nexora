@@ -11,15 +11,16 @@ INJECTED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/Androi
 	android:name
 		ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:24:13-62
 manifest
-ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:2:1-39:12
-INJECTED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:2:1-39:12
-INJECTED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:2:1-39:12
-INJECTED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:2:1-39:12
+ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:2:1-40:12
+INJECTED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:2:1-40:12
+INJECTED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:2:1-40:12
+INJECTED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:2:1-40:12
 MERGED from [:capacitor-camera] /Users/macmini/Working/vlink-nexora-fe/node_modules/.pnpm/@capacitor+camera@8.2.0_@capacitor+core@8.4.0/node_modules/@capacitor/camera/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-19:12
 MERGED from [:capacitor-filesystem] /Users/macmini/Working/vlink-nexora-fe/node_modules/.pnpm/@capacitor+filesystem@8.1.2_@capacitor+core@8.4.0/node_modules/@capacitor/filesystem/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-7:12
 MERGED from [:capacitor-keyboard] /Users/macmini/Working/vlink-nexora-fe/node_modules/.pnpm/@capacitor+keyboard@8.0.5_@capacitor+core@8.4.0/node_modules/@capacitor/keyboard/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-7:12
 MERGED from [:capacitor-share] /Users/macmini/Working/vlink-nexora-fe/node_modules/.pnpm/@capacitor+share@8.0.1_@capacitor+core@8.4.0/node_modules/@capacitor/share/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-7:12
 MERGED from [:capgo-capacitor-updater] /Users/macmini/Working/vlink-nexora-fe/node_modules/.pnpm/@capgo+capacitor-updater@8.49.4_@capacitor+core@8.4.0/node_modules/@capgo/capacitor-updater/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-10:12
+MERGED from [:onesignal-capacitor-plugin] /Users/macmini/Working/vlink-nexora-fe/node_modules/.pnpm/@onesignal+capacitor-plugin@1.1.3_@capacitor+core@8.4.0/node_modules/@onesignal/capacitor-plugin/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-7:12
 MERGED from [:capacitor-android] /Users/macmini/Working/vlink-nexora-fe/node_modules/.pnpm/@capacitor+android@8.4.0_@capacitor+core@8.4.0/node_modules/@capacitor/android/capacitor/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-7:12
 MERGED from [:capacitor-cordova-android-plugins] /Users/macmini/Working/vlink-nexora-fe/android/capacitor-cordova-android-plugins/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:2:1-11:12
 MERGED from [androidx.appcompat:appcompat-resources:1.7.1] /Users/macmini/.gradle/caches/8.13/transforms/79f044f4e62fa8357047bd8fbc8427ff/transformed/appcompat-resources-1.7.1/AndroidManifest.xml:2:1-7:12
@@ -27,26 +28,37 @@ MERGED from [org.apache.cordova:framework:14.0.1] /Users/macmini/.gradle/caches/
 MERGED from [io.ionic.libs:ioncamera-android:1.0.1] /Users/macmini/.gradle/caches/8.13/transforms/e3e26467e1e2de44cf893e2c3231ba75/transformed/ioncamera-android-1.0.1/AndroidManifest.xml:2:1-47:12
 MERGED from [com.google.android.material:material:1.13.0] /Users/macmini/.gradle/caches/8.13/transforms/78f63496ca6c2b1b2261ea3b35dee3bb/transformed/material-1.13.0/AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.constraintlayout:constraintlayout:2.2.0] /Users/macmini/.gradle/caches/8.13/transforms/e23df55cd2235755d25754ae4984f32b/transformed/constraintlayout-2.2.0/AndroidManifest.xml:2:1-9:12
+MERGED from [com.onesignal:OneSignal:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/7999feb170b469d4b316c07946b36b9a/transformed/OneSignal-5.9.5/AndroidManifest.xml:2:1-7:12
+MERGED from [com.onesignal:in-app-messages:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6fbe34157679354be8f2a2e1644a7d2f/transformed/in-app-messages-5.9.5/AndroidManifest.xml:2:1-7:12
+MERGED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:2:1-111:12
+MERGED from [com.onesignal:location:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/b4c39171584483c38b12c9ff7734d337/transformed/location-5.9.5/AndroidManifest.xml:2:1-10:12
+MERGED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:2:1-49:12
 MERGED from [androidx.appcompat:appcompat:1.7.1] /Users/macmini/.gradle/caches/8.13/transforms/6e739ddea7a97550b749c5d606e5a636/transformed/appcompat-1.7.1/AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.coordinatorlayout:coordinatorlayout:1.3.0] /Users/macmini/.gradle/caches/8.13/transforms/2509827bdbbcb2bf23f2d1478e8464bc/transformed/coordinatorlayout-1.3.0/AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.core:core-splashscreen:1.0.1] /Users/macmini/.gradle/caches/8.13/transforms/e22b2c8272d76fb51499f647fc2d46df/transformed/core-splashscreen-1.0.1/AndroidManifest.xml:17:1-24:12
 MERGED from [com.google.android.play:app-update-ktx:2.1.0] /Users/macmini/.gradle/caches/8.13/transforms/0a0bb1242ca35dd01c1669552d364691/transformed/app-update-ktx-2.1.0/AndroidManifest.xml:2:1-14:12
 MERGED from [androidx.viewpager2:viewpager2:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/792d02244eaefcdc532d5dc5ba75182b/transformed/viewpager2-1.0.0/AndroidManifest.xml:17:1-24:12
 MERGED from [com.google.android.play:app-update:2.1.0] /Users/macmini/.gradle/caches/8.13/transforms/05ddaabfced3fa611f7c28b15f16b46d/transformed/app-update-2.1.0/AndroidManifest.xml:2:1-14:12
-MERGED from [com.google.android.gms:play-services-tasks:18.4.1] /Users/macmini/.gradle/caches/8.13/transforms/3335a0f1cddac3be6b7b5608870fa9e7/transformed/play-services-tasks-18.4.1/AndroidManifest.xml:2:1-6:12
-MERGED from [com.google.android.gms:play-services-basement:18.10.0] /Users/macmini/.gradle/caches/8.13/transforms/f916deead8b3798d82297393f5d65c4b/transformed/play-services-basement-18.10.0/AndroidManifest.xml:16:1-26:12
-MERGED from [androidx.fragment:fragment:1.8.9] /Users/macmini/.gradle/caches/8.13/transforms/30cf3e7aa10a2199a0323a51321a47a9/transformed/fragment-1.8.9/AndroidManifest.xml:2:1-7:12
-MERGED from [io.ionic.libs:ionfilesystem-android:1.1.0] /Users/macmini/.gradle/caches/8.13/transforms/b408b368d508a50895bfe1757f8693b2/transformed/ionfilesystem-android-1.1.0/AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.activity:activity-ktx:1.11.0] /Users/macmini/.gradle/caches/8.13/transforms/03e95077f90a4f7030324ba28cb7e7be/transformed/activity-ktx-1.11.0/AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.activity:activity:1.11.0] /Users/macmini/.gradle/caches/8.13/transforms/743bb7457c32149d52760c5405370a9b/transformed/activity-1.11.0/AndroidManifest.xml:17:1-22:12
-MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/cd77dc32e1e5db99790b659a9635fa21/transformed/cursoradapter-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:17:1-66:12
+MERGED from [com.google.firebase:firebase-installations:17.2.0] /Users/macmini/.gradle/caches/8.13/transforms/0a9a57e03824f3dbfbd95b793f29727b/transformed/firebase-installations-17.2.0/AndroidManifest.xml:2:1-24:12
+MERGED from [com.google.firebase:firebase-common-ktx:21.0.0] /Users/macmini/.gradle/caches/8.13/transforms/ba4ba6fe21f1f5da3f1fbbbf61c927dd/transformed/firebase-common-ktx-21.0.0/AndroidManifest.xml:2:1-18:12
+MERGED from [com.google.firebase:firebase-common:21.0.0] /Users/macmini/.gradle/caches/8.13/transforms/e2a94c603328c409d5d31ce2a5c11ccc/transformed/firebase-common-21.0.0/AndroidManifest.xml:15:1-41:12
+MERGED from [com.google.firebase:firebase-iid-interop:17.1.0] /Users/macmini/.gradle/caches/8.13/transforms/53fdb3aa4ec30ac5f188cf01e42d0243/transformed/firebase-iid-interop-17.1.0/AndroidManifest.xml:2:1-10:12
+MERGED from [com.google.android.gms:play-services-base:18.0.1] /Users/macmini/.gradle/caches/8.13/transforms/9b1b9572bccb720e41bb0148b629383f/transformed/play-services-base-18.0.1/AndroidManifest.xml:16:1-24:12
+MERGED from [com.google.android.gms:play-services-cloud-messaging:17.2.0] /Users/macmini/.gradle/caches/8.13/transforms/87520d4fb0f3c52d49a90483c3bbfab4/transformed/play-services-cloud-messaging-17.2.0/AndroidManifest.xml:2:1-13:12
+MERGED from [com.google.firebase:firebase-installations-interop:17.1.1] /Users/macmini/.gradle/caches/8.13/transforms/68f261a3c304266c9fdd2d3e901252c4/transformed/firebase-installations-interop-17.1.1/AndroidManifest.xml:15:1-19:12
 MERGED from [androidx.emoji2:emoji2-views-helper:1.3.0] /Users/macmini/.gradle/caches/8.13/transforms/04889e333db7ec233aeeddf61eaf4941/transformed/emoji2-views-helper-1.3.0/AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.emoji2:emoji2:1.3.0] /Users/macmini/.gradle/caches/8.13/transforms/d87f631865c2334ef0780c82f5efd8ca/transformed/emoji2-1.3.0/AndroidManifest.xml:17:1-35:12
 MERGED from [androidx.webkit:webkit:1.14.0] /Users/macmini/.gradle/caches/8.13/transforms/b2a588f6995a72362c220a846d445188/transformed/webkit-1.14.0/AndroidManifest.xml:2:1-7:12
+MERGED from [io.ionic.libs:ionfilesystem-android:1.1.0] /Users/macmini/.gradle/caches/8.13/transforms/b408b368d508a50895bfe1757f8693b2/transformed/ionfilesystem-android-1.1.0/AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.graphics:graphics-shapes-android:1.0.1] /Users/macmini/.gradle/caches/8.13/transforms/e070ffd3a08b199fec0963eec7c82d92/transformed/graphics-shapes-release/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.work:work-runtime-ktx:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/6b2f53c727ca7a04e908dcd61890cdd5/transformed/work-runtime-ktx-2.10.5/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.work:work-runtime:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/d59273809589eef1015d77ddb3cd9459/transformed/work-runtime-2.10.5/AndroidManifest.xml:17:1-145:12
+MERGED from [com.google.android.gms:play-services-stats:17.0.2] /Users/macmini/.gradle/caches/8.13/transforms/6b2fb82375de471ffc08e44a07bfbdc8/transformed/play-services-stats-17.0.2/AndroidManifest.xml:2:1-9:12
+MERGED from [androidx.legacy:legacy-support-core-utils:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/73018946941f193732bf33e2b4934854/transformed/legacy-support-core-utils-1.0.0/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.loader:loader:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/73264e631197a35ffe6dda20001baa07/transformed/loader-1.0.0/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.camera:camera-core:1.4.2] /Users/macmini/.gradle/caches/8.13/transforms/e2aad2f28c5f11e5d805e0ffceefc656/transformed/camera-core-1.4.2/AndroidManifest.xml:17:1-36:12
+MERGED from [androidx.activity:activity-ktx:1.11.0] /Users/macmini/.gradle/caches/8.13/transforms/03e95077f90a4f7030324ba28cb7e7be/transformed/activity-ktx-1.11.0/AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.lifecycle:lifecycle-runtime-ktx-android:2.10.0] /Users/macmini/.gradle/caches/8.13/transforms/a50bc0c4080433373c1c6311fe33f987/transformed/lifecycle-runtime-ktx/AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0] /Users/macmini/.gradle/caches/8.13/transforms/55b2329da588976009724c5c0180dbd6/transformed/lifecycle-viewmodel-ktx-2.10.0/AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.10.0] /Users/macmini/.gradle/caches/8.13/transforms/d401456c4619ca3502e51234cd2fd8bb/transformed/lifecycle-viewmodel-2.10.0/AndroidManifest.xml:2:1-5:12
@@ -69,20 +81,38 @@ MERGED from [androidx.transition:transition:1.5.0] /Users/macmini/.gradle/caches
 MERGED from [androidx.dynamicanimation:dynamicanimation:1.1.0] /Users/macmini/.gradle/caches/8.13/transforms/a3d509ba538e9002ab2230f601b21317/transformed/dynamicanimation-1.1.0/AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.recyclerview:recyclerview:1.2.1] /Users/macmini/.gradle/caches/8.13/transforms/02096629bcfe79761214b4afa153c0dd/transformed/recyclerview-1.2.1/AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.customview:customview:1.1.0] /Users/macmini/.gradle/caches/8.13/transforms/403bb466b12df9a4d1f2f0d1feb2095d/transformed/customview-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.browser:browser:1.3.0] /Users/macmini/.gradle/caches/8.13/transforms/9d6cb07ad0ba3d201889cf927b4cc0d4/transformed/browser-1.3.0/AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.core:core:1.17.0] /Users/macmini/.gradle/caches/8.13/transforms/75d122a7336cfe2ef1bce419fef040f9/transformed/core-1.17.0/AndroidManifest.xml:17:1-30:12
+MERGED from [com.onesignal:otel:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/8df974613e1277440cb5a0a239b8a585/transformed/otel-5.9.5/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.room:room-runtime:2.6.1] /Users/macmini/.gradle/caches/8.13/transforms/e5661e3adb581f0870f63a699d375068/transformed/room-runtime-2.6.1/AndroidManifest.xml:17:1-31:12
+MERGED from [androidx.room:room-ktx:2.6.1] /Users/macmini/.gradle/caches/8.13/transforms/9c1472e0c29843d596107d6dbcb42697/transformed/room-ktx-2.6.1/AndroidManifest.xml:17:1-22:12
+MERGED from [com.google.android.gms:play-services-tasks:18.4.1] /Users/macmini/.gradle/caches/8.13/transforms/3335a0f1cddac3be6b7b5608870fa9e7/transformed/play-services-tasks-18.4.1/AndroidManifest.xml:2:1-6:12
+MERGED from [com.google.firebase:firebase-measurement-connector:19.0.0] /Users/macmini/.gradle/caches/8.13/transforms/9af63c3400b60b711e3f0698fad9ac3d/transformed/firebase-measurement-connector-19.0.0/AndroidManifest.xml:17:1-25:12
+MERGED from [com.google.android.gms:play-services-basement:18.10.0] /Users/macmini/.gradle/caches/8.13/transforms/f916deead8b3798d82297393f5d65c4b/transformed/play-services-basement-18.10.0/AndroidManifest.xml:16:1-26:12
+MERGED from [androidx.fragment:fragment:1.8.9] /Users/macmini/.gradle/caches/8.13/transforms/30cf3e7aa10a2199a0323a51321a47a9/transformed/fragment-1.8.9/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.activity:activity:1.11.0] /Users/macmini/.gradle/caches/8.13/transforms/743bb7457c32149d52760c5405370a9b/transformed/activity-1.11.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/cd77dc32e1e5db99790b659a9635fa21/transformed/cursoradapter-1.0.0/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.exifinterface:exifinterface:1.4.1] /Users/macmini/.gradle/caches/8.13/transforms/7df2bf0653d4fe21ee02f03cd59405a2/transformed/exifinterface-1.4.1/AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.profileinstaller:profileinstaller:1.4.0] /Users/macmini/.gradle/caches/8.13/transforms/6eb6a4011618c7538402373e1ab71c9c/transformed/profileinstaller-1.4.0/AndroidManifest.xml:17:1-55:12
-MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/macmini/.gradle/caches/8.13/transforms/c2cb70c88676b816fad7e6e558934b88/transformed/startup-runtime-1.1.1/AndroidManifest.xml:17:1-33:12
 MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /Users/macmini/.gradle/caches/8.13/transforms/6d137bd19ff91626433014c52dc1af63/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:17:1-27:12
 MERGED from [androidx.interpolator:interpolator:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/300d2a46224fabbdd19fec6d6a729241/transformed/interpolator-1.0.0/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.tracing:tracing-ktx:1.2.0] /Users/macmini/.gradle/caches/8.13/transforms/ffe0d8cb8b29320aa32d9a7c04da5bec/transformed/tracing-ktx-1.2.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.profileinstaller:profileinstaller:1.4.0] /Users/macmini/.gradle/caches/8.13/transforms/6eb6a4011618c7538402373e1ab71c9c/transformed/profileinstaller-1.4.0/AndroidManifest.xml:17:1-55:12
+MERGED from [com.squareup.okhttp3:okhttp-android:5.2.1] /Users/macmini/.gradle/caches/8.13/transforms/2e162e5c15f43043707e190876221ced/transformed/okhttp-release/AndroidManifest.xml:2:1-22:12
+MERGED from [androidx.startup:startup-runtime:1.2.0] /Users/macmini/.gradle/caches/8.13/transforms/2e0691e982c16735cedecc9013166db7/transformed/startup-runtime-1.2.0/AndroidManifest.xml:17:1-31:12
 MERGED from [androidx.tracing:tracing:1.2.0] /Users/macmini/.gradle/caches/8.13/transforms/48d89b16ed84f7aa87f4010b1381ca63/transformed/tracing-1.2.0/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.cardview:cardview:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/305b00288f6f3dba21d0eed083833b14/transformed/cardview-1.0.0/AndroidManifest.xml:17:1-22:12
-MERGED from [androidx.room:room-runtime:2.6.1] /Users/macmini/.gradle/caches/8.13/transforms/e5661e3adb581f0870f63a699d375068/transformed/room-runtime-2.6.1/AndroidManifest.xml:17:1-31:12
-MERGED from [androidx.room:room-ktx:2.6.1] /Users/macmini/.gradle/caches/8.13/transforms/9c1472e0c29843d596107d6dbcb42697/transformed/room-ktx-2.6.1/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.arch.core:core-runtime:2.2.0] /Users/macmini/.gradle/caches/8.13/transforms/b036afec189a6deeebe60c1a16b97b3b/transformed/core-runtime-2.2.0/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.sqlite:sqlite-framework:2.4.0] /Users/macmini/.gradle/caches/8.13/transforms/5cdc88d15e25c345fc705755fde5dd83/transformed/sqlite-framework-2.4.0/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.sqlite:sqlite:2.4.0] /Users/macmini/.gradle/caches/8.13/transforms/893c4ec0e444512b99cd41bc7efc0923/transformed/sqlite-2.4.0/AndroidManifest.xml:17:1-22:12
+MERGED from [com.google.firebase:firebase-components:18.0.0] /Users/macmini/.gradle/caches/8.13/transforms/7dc13e52b7a847150224767b8dd77d98/transformed/firebase-components-18.0.0/AndroidManifest.xml:15:1-20:12
+MERGED from [com.google.firebase:firebase-datatransport:18.2.0] /Users/macmini/.gradle/caches/8.13/transforms/8291305ff20e069029f12c5529ea75d5/transformed/firebase-datatransport-18.2.0/AndroidManifest.xml:15:1-31:12
+MERGED from [com.google.android.datatransport:transport-backend-cct:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/238197561de43ad389aa550afa1d5709/transformed/transport-backend-cct-3.1.9/AndroidManifest.xml:15:1-37:12
+MERGED from [com.google.firebase:firebase-encoders-json:18.0.0] /Users/macmini/.gradle/caches/8.13/transforms/1fd980b39e3af8e413f921eadeb0d195/transformed/firebase-encoders-json-18.0.0/AndroidManifest.xml:15:1-23:12
+MERGED from [com.google.android.datatransport:transport-runtime:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/0472d52ee4a3ef974a61dbdf0bb8e5bf/transformed/transport-runtime-3.1.9/AndroidManifest.xml:15:1-41:12
+MERGED from [com.google.android.datatransport:transport-api:3.1.0] /Users/macmini/.gradle/caches/8.13/transforms/cb79aa1a85fd142c1a9d7eb0285a5f7f/transformed/transport-api-3.1.0/AndroidManifest.xml:15:1-20:12
+MERGED from [androidx.documentfile:documentfile:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/e451b178f9cf68a965e39e9b103c5342/transformed/documentfile-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/e0e4558e3096def214135f21ce0fd21a/transformed/localbroadcastmanager-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.print:print:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/f13d3288e2d6a33c69194aed671ca576/transformed/print-1.0.0/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.annotation:annotation-experimental:1.4.1] /Users/macmini/.gradle/caches/8.13/transforms/3fe53e3b109ead54de5971e66bb6d328/transformed/annotation-experimental-1.4.1/AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.core:core-viewtree:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/27c03da2ee8e0cb487c78427311cfbee/transformed/core-viewtree-1.0.0/AndroidManifest.xml:2:1-7:12
 MERGED from [com.google.android.play:core-common:2.0.3] /Users/macmini/.gradle/caches/8.13/transforms/9886badb9cd34ecbd6cdce503b64c8c6/transformed/core-common-2.0.3/AndroidManifest.xml:2:1-21:12
@@ -107,32 +137,60 @@ MERGED from [com.google.android.material:material:1.13.0] /Users/macmini/.gradle
 MERGED from [com.google.android.material:material:1.13.0] /Users/macmini/.gradle/caches/8.13/transforms/78f63496ca6c2b1b2261ea3b35dee3bb/transformed/material-1.13.0/AndroidManifest.xml:22:5-20
 MERGED from [androidx.constraintlayout:constraintlayout:2.2.0] /Users/macmini/.gradle/caches/8.13/transforms/e23df55cd2235755d25754ae4984f32b/transformed/constraintlayout-2.2.0/AndroidManifest.xml:7:5-20
 MERGED from [androidx.constraintlayout:constraintlayout:2.2.0] /Users/macmini/.gradle/caches/8.13/transforms/e23df55cd2235755d25754ae4984f32b/transformed/constraintlayout-2.2.0/AndroidManifest.xml:7:5-20
+MERGED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:46:5-109:19
+MERGED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:46:5-109:19
+MERGED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:15:5-47:19
+MERGED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:15:5-47:19
 MERGED from [com.google.android.play:app-update-ktx:2.1.0] /Users/macmini/.gradle/caches/8.13/transforms/0a0bb1242ca35dd01c1669552d364691/transformed/app-update-ktx-2.1.0/AndroidManifest.xml:11:5-12:19
 MERGED from [com.google.android.play:app-update-ktx:2.1.0] /Users/macmini/.gradle/caches/8.13/transforms/0a0bb1242ca35dd01c1669552d364691/transformed/app-update-ktx-2.1.0/AndroidManifest.xml:11:5-12:19
 MERGED from [com.google.android.play:app-update:2.1.0] /Users/macmini/.gradle/caches/8.13/transforms/05ddaabfced3fa611f7c28b15f16b46d/transformed/app-update-2.1.0/AndroidManifest.xml:11:5-12:19
 MERGED from [com.google.android.play:app-update:2.1.0] /Users/macmini/.gradle/caches/8.13/transforms/05ddaabfced3fa611f7c28b15f16b46d/transformed/app-update-2.1.0/AndroidManifest.xml:11:5-12:19
-MERGED from [com.google.android.gms:play-services-tasks:18.4.1] /Users/macmini/.gradle/caches/8.13/transforms/3335a0f1cddac3be6b7b5608870fa9e7/transformed/play-services-tasks-18.4.1/AndroidManifest.xml:5:5-20
-MERGED from [com.google.android.gms:play-services-tasks:18.4.1] /Users/macmini/.gradle/caches/8.13/transforms/3335a0f1cddac3be6b7b5608870fa9e7/transformed/play-services-tasks-18.4.1/AndroidManifest.xml:5:5-20
-MERGED from [com.google.android.gms:play-services-basement:18.10.0] /Users/macmini/.gradle/caches/8.13/transforms/f916deead8b3798d82297393f5d65c4b/transformed/play-services-basement-18.10.0/AndroidManifest.xml:20:5-24:19
-MERGED from [com.google.android.gms:play-services-basement:18.10.0] /Users/macmini/.gradle/caches/8.13/transforms/f916deead8b3798d82297393f5d65c4b/transformed/play-services-basement-18.10.0/AndroidManifest.xml:20:5-24:19
+MERGED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:28:5-64:19
+MERGED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:28:5-64:19
+MERGED from [com.google.firebase:firebase-installations:17.2.0] /Users/macmini/.gradle/caches/8.13/transforms/0a9a57e03824f3dbfbd95b793f29727b/transformed/firebase-installations-17.2.0/AndroidManifest.xml:11:5-22:19
+MERGED from [com.google.firebase:firebase-installations:17.2.0] /Users/macmini/.gradle/caches/8.13/transforms/0a9a57e03824f3dbfbd95b793f29727b/transformed/firebase-installations-17.2.0/AndroidManifest.xml:11:5-22:19
+MERGED from [com.google.firebase:firebase-common-ktx:21.0.0] /Users/macmini/.gradle/caches/8.13/transforms/ba4ba6fe21f1f5da3f1fbbbf61c927dd/transformed/firebase-common-ktx-21.0.0/AndroidManifest.xml:8:5-16:19
+MERGED from [com.google.firebase:firebase-common-ktx:21.0.0] /Users/macmini/.gradle/caches/8.13/transforms/ba4ba6fe21f1f5da3f1fbbbf61c927dd/transformed/firebase-common-ktx-21.0.0/AndroidManifest.xml:8:5-16:19
+MERGED from [com.google.firebase:firebase-common:21.0.0] /Users/macmini/.gradle/caches/8.13/transforms/e2a94c603328c409d5d31ce2a5c11ccc/transformed/firebase-common-21.0.0/AndroidManifest.xml:22:5-39:19
+MERGED from [com.google.firebase:firebase-common:21.0.0] /Users/macmini/.gradle/caches/8.13/transforms/e2a94c603328c409d5d31ce2a5c11ccc/transformed/firebase-common-21.0.0/AndroidManifest.xml:22:5-39:19
+MERGED from [com.google.firebase:firebase-iid-interop:17.1.0] /Users/macmini/.gradle/caches/8.13/transforms/53fdb3aa4ec30ac5f188cf01e42d0243/transformed/firebase-iid-interop-17.1.0/AndroidManifest.xml:7:5-8:19
+MERGED from [com.google.firebase:firebase-iid-interop:17.1.0] /Users/macmini/.gradle/caches/8.13/transforms/53fdb3aa4ec30ac5f188cf01e42d0243/transformed/firebase-iid-interop-17.1.0/AndroidManifest.xml:7:5-8:19
+MERGED from [com.google.android.gms:play-services-base:18.0.1] /Users/macmini/.gradle/caches/8.13/transforms/9b1b9572bccb720e41bb0148b629383f/transformed/play-services-base-18.0.1/AndroidManifest.xml:19:5-23:19
+MERGED from [com.google.android.gms:play-services-base:18.0.1] /Users/macmini/.gradle/caches/8.13/transforms/9b1b9572bccb720e41bb0148b629383f/transformed/play-services-base-18.0.1/AndroidManifest.xml:19:5-23:19
 MERGED from [androidx.emoji2:emoji2:1.3.0] /Users/macmini/.gradle/caches/8.13/transforms/d87f631865c2334ef0780c82f5efd8ca/transformed/emoji2-1.3.0/AndroidManifest.xml:23:5-33:19
 MERGED from [androidx.emoji2:emoji2:1.3.0] /Users/macmini/.gradle/caches/8.13/transforms/d87f631865c2334ef0780c82f5efd8ca/transformed/emoji2-1.3.0/AndroidManifest.xml:23:5-33:19
 MERGED from [androidx.work:work-runtime:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/d59273809589eef1015d77ddb3cd9459/transformed/work-runtime-2.10.5/AndroidManifest.xml:28:5-143:19
 MERGED from [androidx.work:work-runtime:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/d59273809589eef1015d77ddb3cd9459/transformed/work-runtime-2.10.5/AndroidManifest.xml:28:5-143:19
+MERGED from [com.google.android.gms:play-services-stats:17.0.2] /Users/macmini/.gradle/caches/8.13/transforms/6b2fb82375de471ffc08e44a07bfbdc8/transformed/play-services-stats-17.0.2/AndroidManifest.xml:7:5-20
+MERGED from [com.google.android.gms:play-services-stats:17.0.2] /Users/macmini/.gradle/caches/8.13/transforms/6b2fb82375de471ffc08e44a07bfbdc8/transformed/play-services-stats-17.0.2/AndroidManifest.xml:7:5-20
 MERGED from [androidx.camera:camera-core:1.4.2] /Users/macmini/.gradle/caches/8.13/transforms/e2aad2f28c5f11e5d805e0ffceefc656/transformed/camera-core-1.4.2/AndroidManifest.xml:23:5-34:19
 MERGED from [androidx.camera:camera-core:1.4.2] /Users/macmini/.gradle/caches/8.13/transforms/e2aad2f28c5f11e5d805e0ffceefc656/transformed/camera-core-1.4.2/AndroidManifest.xml:23:5-34:19
 MERGED from [androidx.lifecycle:lifecycle-process:2.10.0] /Users/macmini/.gradle/caches/8.13/transforms/a1f00b17aabff6dbca2cc3451f623af3/transformed/lifecycle-process-2.10.0/AndroidManifest.xml:23:5-33:19
 MERGED from [androidx.lifecycle:lifecycle-process:2.10.0] /Users/macmini/.gradle/caches/8.13/transforms/a1f00b17aabff6dbca2cc3451f623af3/transformed/lifecycle-process-2.10.0/AndroidManifest.xml:23:5-33:19
 MERGED from [androidx.core:core:1.17.0] /Users/macmini/.gradle/caches/8.13/transforms/75d122a7336cfe2ef1bce419fef040f9/transformed/core-1.17.0/AndroidManifest.xml:28:5-89
 MERGED from [androidx.core:core:1.17.0] /Users/macmini/.gradle/caches/8.13/transforms/75d122a7336cfe2ef1bce419fef040f9/transformed/core-1.17.0/AndroidManifest.xml:28:5-89
-MERGED from [androidx.profileinstaller:profileinstaller:1.4.0] /Users/macmini/.gradle/caches/8.13/transforms/6eb6a4011618c7538402373e1ab71c9c/transformed/profileinstaller-1.4.0/AndroidManifest.xml:23:5-53:19
-MERGED from [androidx.profileinstaller:profileinstaller:1.4.0] /Users/macmini/.gradle/caches/8.13/transforms/6eb6a4011618c7538402373e1ab71c9c/transformed/profileinstaller-1.4.0/AndroidManifest.xml:23:5-53:19
-MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/macmini/.gradle/caches/8.13/transforms/c2cb70c88676b816fad7e6e558934b88/transformed/startup-runtime-1.1.1/AndroidManifest.xml:25:5-31:19
-MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/macmini/.gradle/caches/8.13/transforms/c2cb70c88676b816fad7e6e558934b88/transformed/startup-runtime-1.1.1/AndroidManifest.xml:25:5-31:19
-MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /Users/macmini/.gradle/caches/8.13/transforms/6d137bd19ff91626433014c52dc1af63/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:24:5-25:19
-MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /Users/macmini/.gradle/caches/8.13/transforms/6d137bd19ff91626433014c52dc1af63/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:24:5-25:19
 MERGED from [androidx.room:room-runtime:2.6.1] /Users/macmini/.gradle/caches/8.13/transforms/e5661e3adb581f0870f63a699d375068/transformed/room-runtime-2.6.1/AndroidManifest.xml:23:5-29:19
 MERGED from [androidx.room:room-runtime:2.6.1] /Users/macmini/.gradle/caches/8.13/transforms/e5661e3adb581f0870f63a699d375068/transformed/room-runtime-2.6.1/AndroidManifest.xml:23:5-29:19
+MERGED from [com.google.android.gms:play-services-tasks:18.4.1] /Users/macmini/.gradle/caches/8.13/transforms/3335a0f1cddac3be6b7b5608870fa9e7/transformed/play-services-tasks-18.4.1/AndroidManifest.xml:5:5-20
+MERGED from [com.google.android.gms:play-services-tasks:18.4.1] /Users/macmini/.gradle/caches/8.13/transforms/3335a0f1cddac3be6b7b5608870fa9e7/transformed/play-services-tasks-18.4.1/AndroidManifest.xml:5:5-20
+MERGED from [com.google.firebase:firebase-measurement-connector:19.0.0] /Users/macmini/.gradle/caches/8.13/transforms/9af63c3400b60b711e3f0698fad9ac3d/transformed/firebase-measurement-connector-19.0.0/AndroidManifest.xml:22:5-23:19
+MERGED from [com.google.firebase:firebase-measurement-connector:19.0.0] /Users/macmini/.gradle/caches/8.13/transforms/9af63c3400b60b711e3f0698fad9ac3d/transformed/firebase-measurement-connector-19.0.0/AndroidManifest.xml:22:5-23:19
+MERGED from [com.google.android.gms:play-services-basement:18.10.0] /Users/macmini/.gradle/caches/8.13/transforms/f916deead8b3798d82297393f5d65c4b/transformed/play-services-basement-18.10.0/AndroidManifest.xml:20:5-24:19
+MERGED from [com.google.android.gms:play-services-basement:18.10.0] /Users/macmini/.gradle/caches/8.13/transforms/f916deead8b3798d82297393f5d65c4b/transformed/play-services-basement-18.10.0/AndroidManifest.xml:20:5-24:19
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /Users/macmini/.gradle/caches/8.13/transforms/6d137bd19ff91626433014c52dc1af63/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:24:5-25:19
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /Users/macmini/.gradle/caches/8.13/transforms/6d137bd19ff91626433014c52dc1af63/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:24:5-25:19
+MERGED from [androidx.profileinstaller:profileinstaller:1.4.0] /Users/macmini/.gradle/caches/8.13/transforms/6eb6a4011618c7538402373e1ab71c9c/transformed/profileinstaller-1.4.0/AndroidManifest.xml:23:5-53:19
+MERGED from [androidx.profileinstaller:profileinstaller:1.4.0] /Users/macmini/.gradle/caches/8.13/transforms/6eb6a4011618c7538402373e1ab71c9c/transformed/profileinstaller-1.4.0/AndroidManifest.xml:23:5-53:19
+MERGED from [com.squareup.okhttp3:okhttp-android:5.2.1] /Users/macmini/.gradle/caches/8.13/transforms/2e162e5c15f43043707e190876221ced/transformed/okhttp-release/AndroidManifest.xml:10:5-20:19
+MERGED from [com.squareup.okhttp3:okhttp-android:5.2.1] /Users/macmini/.gradle/caches/8.13/transforms/2e162e5c15f43043707e190876221ced/transformed/okhttp-release/AndroidManifest.xml:10:5-20:19
+MERGED from [androidx.startup:startup-runtime:1.2.0] /Users/macmini/.gradle/caches/8.13/transforms/2e0691e982c16735cedecc9013166db7/transformed/startup-runtime-1.2.0/AndroidManifest.xml:23:5-29:19
+MERGED from [androidx.startup:startup-runtime:1.2.0] /Users/macmini/.gradle/caches/8.13/transforms/2e0691e982c16735cedecc9013166db7/transformed/startup-runtime-1.2.0/AndroidManifest.xml:23:5-29:19
+MERGED from [com.google.firebase:firebase-datatransport:18.2.0] /Users/macmini/.gradle/caches/8.13/transforms/8291305ff20e069029f12c5529ea75d5/transformed/firebase-datatransport-18.2.0/AndroidManifest.xml:21:5-29:19
+MERGED from [com.google.firebase:firebase-datatransport:18.2.0] /Users/macmini/.gradle/caches/8.13/transforms/8291305ff20e069029f12c5529ea75d5/transformed/firebase-datatransport-18.2.0/AndroidManifest.xml:21:5-29:19
+MERGED from [com.google.android.datatransport:transport-backend-cct:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/238197561de43ad389aa550afa1d5709/transformed/transport-backend-cct-3.1.9/AndroidManifest.xml:27:5-35:19
+MERGED from [com.google.android.datatransport:transport-backend-cct:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/238197561de43ad389aa550afa1d5709/transformed/transport-backend-cct-3.1.9/AndroidManifest.xml:27:5-35:19
+MERGED from [com.google.android.datatransport:transport-runtime:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/0472d52ee4a3ef974a61dbdf0bb8e5bf/transformed/transport-runtime-3.1.9/AndroidManifest.xml:25:5-39:19
+MERGED from [com.google.android.datatransport:transport-runtime:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/0472d52ee4a3ef974a61dbdf0bb8e5bf/transformed/transport-runtime-3.1.9/AndroidManifest.xml:25:5-39:19
 MERGED from [com.google.android.play:core-common:2.0.3] /Users/macmini/.gradle/caches/8.13/transforms/9886badb9cd34ecbd6cdce503b64c8c6/transformed/core-common-2.0.3/AndroidManifest.xml:11:5-19:19
 MERGED from [com.google.android.play:core-common:2.0.3] /Users/macmini/.gradle/caches/8.13/transforms/9886badb9cd34ecbd6cdce503b64c8c6/transformed/core-common-2.0.3/AndroidManifest.xml:11:5-19:19
 	android:requestLegacyExternalStorage
@@ -179,24 +237,42 @@ ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidMa
 		ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:19:27-74
 uses-permission#android.permission.INTERNET
 ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:34:5-67
+MERGED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:11:5-67
+MERGED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:11:5-67
+MERGED from [com.google.firebase:firebase-installations:17.2.0] /Users/macmini/.gradle/caches/8.13/transforms/0a9a57e03824f3dbfbd95b793f29727b/transformed/firebase-installations-17.2.0/AndroidManifest.xml:8:5-67
+MERGED from [com.google.firebase:firebase-installations:17.2.0] /Users/macmini/.gradle/caches/8.13/transforms/0a9a57e03824f3dbfbd95b793f29727b/transformed/firebase-installations-17.2.0/AndroidManifest.xml:8:5-67
+MERGED from [com.google.android.gms:play-services-cloud-messaging:17.2.0] /Users/macmini/.gradle/caches/8.13/transforms/87520d4fb0f3c52d49a90483c3bbfab4/transformed/play-services-cloud-messaging-17.2.0/AndroidManifest.xml:8:5-67
+MERGED from [com.google.android.gms:play-services-cloud-messaging:17.2.0] /Users/macmini/.gradle/caches/8.13/transforms/87520d4fb0f3c52d49a90483c3bbfab4/transformed/play-services-cloud-messaging-17.2.0/AndroidManifest.xml:8:5-67
+MERGED from [com.squareup.okhttp3:okhttp-android:5.2.1] /Users/macmini/.gradle/caches/8.13/transforms/2e162e5c15f43043707e190876221ced/transformed/okhttp-release/AndroidManifest.xml:8:5-67
+MERGED from [com.squareup.okhttp3:okhttp-android:5.2.1] /Users/macmini/.gradle/caches/8.13/transforms/2e162e5c15f43043707e190876221ced/transformed/okhttp-release/AndroidManifest.xml:8:5-67
+MERGED from [com.google.android.datatransport:transport-backend-cct:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/238197561de43ad389aa550afa1d5709/transformed/transport-backend-cct-3.1.9/AndroidManifest.xml:25:5-67
+MERGED from [com.google.android.datatransport:transport-backend-cct:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/238197561de43ad389aa550afa1d5709/transformed/transport-backend-cct-3.1.9/AndroidManifest.xml:25:5-67
 	android:name
 		ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:34:22-64
 uses-permission#android.permission.CAMERA
 ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:35:5-65
 	android:name
 		ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:35:22-62
+uses-permission#android.permission.POST_NOTIFICATIONS
+ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:36:5-77
+MERGED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:15:5-77
+MERGED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:15:5-77
+MERGED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:23:5-77
+MERGED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:23:5-77
+	android:name
+		ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:36:22-74
 uses-feature#android.hardware.camera
-ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:37:5-85
+ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:38:5-85
 	android:required
-		ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:37:58-82
+		ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:38:58-82
 	android:name
-		ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:37:19-57
+		ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:38:19-57
 uses-feature#android.hardware.camera.autofocus
-ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:38:5-95
+ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:39:5-95
 	android:required
-		ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:38:68-92
+		ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:39:68-92
 	android:name
-		ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:38:19-67
+		ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:39:19-67
 meta-data#android.support.FILE_PROVIDER_PATHS
 ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:28:13-112
 	android:resource
@@ -217,6 +293,8 @@ MERGED from [:capacitor-share] /Users/macmini/Working/vlink-nexora-fe/node_modul
 MERGED from [:capacitor-share] /Users/macmini/Working/vlink-nexora-fe/node_modules/.pnpm/@capacitor+share@8.0.1_@capacitor+core@8.4.0/node_modules/@capacitor/share/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
 MERGED from [:capgo-capacitor-updater] /Users/macmini/Working/vlink-nexora-fe/node_modules/.pnpm/@capgo+capacitor-updater@8.49.4_@capacitor+core@8.4.0/node_modules/@capgo/capacitor-updater/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
 MERGED from [:capgo-capacitor-updater] /Users/macmini/Working/vlink-nexora-fe/node_modules/.pnpm/@capgo+capacitor-updater@8.49.4_@capacitor+core@8.4.0/node_modules/@capgo/capacitor-updater/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
+MERGED from [:onesignal-capacitor-plugin] /Users/macmini/Working/vlink-nexora-fe/node_modules/.pnpm/@onesignal+capacitor-plugin@1.1.3_@capacitor+core@8.4.0/node_modules/@onesignal/capacitor-plugin/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
+MERGED from [:onesignal-capacitor-plugin] /Users/macmini/Working/vlink-nexora-fe/node_modules/.pnpm/@onesignal+capacitor-plugin@1.1.3_@capacitor+core@8.4.0/node_modules/@onesignal/capacitor-plugin/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
 MERGED from [:capacitor-android] /Users/macmini/Working/vlink-nexora-fe/node_modules/.pnpm/@capacitor+android@8.4.0_@capacitor+core@8.4.0/node_modules/@capacitor/android/capacitor/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
 MERGED from [:capacitor-android] /Users/macmini/Working/vlink-nexora-fe/node_modules/.pnpm/@capacitor+android@8.4.0_@capacitor+core@8.4.0/node_modules/@capacitor/android/capacitor/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:5:5-44
 MERGED from [:capacitor-cordova-android-plugins] /Users/macmini/Working/vlink-nexora-fe/android/capacitor-cordova-android-plugins/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:6:5-44
@@ -231,6 +309,16 @@ MERGED from [com.google.android.material:material:1.13.0] /Users/macmini/.gradle
 MERGED from [com.google.android.material:material:1.13.0] /Users/macmini/.gradle/caches/8.13/transforms/78f63496ca6c2b1b2261ea3b35dee3bb/transformed/material-1.13.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.constraintlayout:constraintlayout:2.2.0] /Users/macmini/.gradle/caches/8.13/transforms/e23df55cd2235755d25754ae4984f32b/transformed/constraintlayout-2.2.0/AndroidManifest.xml:5:5-44
 MERGED from [androidx.constraintlayout:constraintlayout:2.2.0] /Users/macmini/.gradle/caches/8.13/transforms/e23df55cd2235755d25754ae4984f32b/transformed/constraintlayout-2.2.0/AndroidManifest.xml:5:5-44
+MERGED from [com.onesignal:OneSignal:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/7999feb170b469d4b316c07946b36b9a/transformed/OneSignal-5.9.5/AndroidManifest.xml:5:5-44
+MERGED from [com.onesignal:OneSignal:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/7999feb170b469d4b316c07946b36b9a/transformed/OneSignal-5.9.5/AndroidManifest.xml:5:5-44
+MERGED from [com.onesignal:in-app-messages:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6fbe34157679354be8f2a2e1644a7d2f/transformed/in-app-messages-5.9.5/AndroidManifest.xml:5:5-44
+MERGED from [com.onesignal:in-app-messages:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6fbe34157679354be8f2a2e1644a7d2f/transformed/in-app-messages-5.9.5/AndroidManifest.xml:5:5-44
+MERGED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:5:5-44
+MERGED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:5:5-44
+MERGED from [com.onesignal:location:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/b4c39171584483c38b12c9ff7734d337/transformed/location-5.9.5/AndroidManifest.xml:8:5-44
+MERGED from [com.onesignal:location:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/b4c39171584483c38b12c9ff7734d337/transformed/location-5.9.5/AndroidManifest.xml:8:5-44
+MERGED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:6:5-8:54
+MERGED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:6:5-8:54
 MERGED from [androidx.appcompat:appcompat:1.7.1] /Users/macmini/.gradle/caches/8.13/transforms/6e739ddea7a97550b749c5d606e5a636/transformed/appcompat-1.7.1/AndroidManifest.xml:5:5-44
 MERGED from [androidx.appcompat:appcompat:1.7.1] /Users/macmini/.gradle/caches/8.13/transforms/6e739ddea7a97550b749c5d606e5a636/transformed/appcompat-1.7.1/AndroidManifest.xml:5:5-44
 MERGED from [androidx.coordinatorlayout:coordinatorlayout:1.3.0] /Users/macmini/.gradle/caches/8.13/transforms/2509827bdbbcb2bf23f2d1478e8464bc/transformed/coordinatorlayout-1.3.0/AndroidManifest.xml:5:5-44
@@ -243,34 +331,46 @@ MERGED from [androidx.viewpager2:viewpager2:1.0.0] /Users/macmini/.gradle/caches
 MERGED from [androidx.viewpager2:viewpager2:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/792d02244eaefcdc532d5dc5ba75182b/transformed/viewpager2-1.0.0/AndroidManifest.xml:20:5-22:41
 MERGED from [com.google.android.play:app-update:2.1.0] /Users/macmini/.gradle/caches/8.13/transforms/05ddaabfced3fa611f7c28b15f16b46d/transformed/app-update-2.1.0/AndroidManifest.xml:7:5-9:41
 MERGED from [com.google.android.play:app-update:2.1.0] /Users/macmini/.gradle/caches/8.13/transforms/05ddaabfced3fa611f7c28b15f16b46d/transformed/app-update-2.1.0/AndroidManifest.xml:7:5-9:41
-MERGED from [com.google.android.gms:play-services-tasks:18.4.1] /Users/macmini/.gradle/caches/8.13/transforms/3335a0f1cddac3be6b7b5608870fa9e7/transformed/play-services-tasks-18.4.1/AndroidManifest.xml:4:5-43
-MERGED from [com.google.android.gms:play-services-tasks:18.4.1] /Users/macmini/.gradle/caches/8.13/transforms/3335a0f1cddac3be6b7b5608870fa9e7/transformed/play-services-tasks-18.4.1/AndroidManifest.xml:4:5-43
-MERGED from [com.google.android.gms:play-services-basement:18.10.0] /Users/macmini/.gradle/caches/8.13/transforms/f916deead8b3798d82297393f5d65c4b/transformed/play-services-basement-18.10.0/AndroidManifest.xml:18:5-43
-MERGED from [com.google.android.gms:play-services-basement:18.10.0] /Users/macmini/.gradle/caches/8.13/transforms/f916deead8b3798d82297393f5d65c4b/transformed/play-services-basement-18.10.0/AndroidManifest.xml:18:5-43
-MERGED from [androidx.fragment:fragment:1.8.9] /Users/macmini/.gradle/caches/8.13/transforms/30cf3e7aa10a2199a0323a51321a47a9/transformed/fragment-1.8.9/AndroidManifest.xml:5:5-44
-MERGED from [androidx.fragment:fragment:1.8.9] /Users/macmini/.gradle/caches/8.13/transforms/30cf3e7aa10a2199a0323a51321a47a9/transformed/fragment-1.8.9/AndroidManifest.xml:5:5-44
-MERGED from [io.ionic.libs:ionfilesystem-android:1.1.0] /Users/macmini/.gradle/caches/8.13/transforms/b408b368d508a50895bfe1757f8693b2/transformed/ionfilesystem-android-1.1.0/AndroidManifest.xml:5:5-44
-MERGED from [io.ionic.libs:ionfilesystem-android:1.1.0] /Users/macmini/.gradle/caches/8.13/transforms/b408b368d508a50895bfe1757f8693b2/transformed/ionfilesystem-android-1.1.0/AndroidManifest.xml:5:5-44
-MERGED from [androidx.activity:activity-ktx:1.11.0] /Users/macmini/.gradle/caches/8.13/transforms/03e95077f90a4f7030324ba28cb7e7be/transformed/activity-ktx-1.11.0/AndroidManifest.xml:5:5-44
-MERGED from [androidx.activity:activity-ktx:1.11.0] /Users/macmini/.gradle/caches/8.13/transforms/03e95077f90a4f7030324ba28cb7e7be/transformed/activity-ktx-1.11.0/AndroidManifest.xml:5:5-44
-MERGED from [androidx.activity:activity:1.11.0] /Users/macmini/.gradle/caches/8.13/transforms/743bb7457c32149d52760c5405370a9b/transformed/activity-1.11.0/AndroidManifest.xml:20:5-44
-MERGED from [androidx.activity:activity:1.11.0] /Users/macmini/.gradle/caches/8.13/transforms/743bb7457c32149d52760c5405370a9b/transformed/activity-1.11.0/AndroidManifest.xml:20:5-44
-MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/cd77dc32e1e5db99790b659a9635fa21/transformed/cursoradapter-1.0.0/AndroidManifest.xml:20:5-44
-MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/cd77dc32e1e5db99790b659a9635fa21/transformed/cursoradapter-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:20:5-44
+MERGED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:20:5-44
+MERGED from [com.google.firebase:firebase-installations:17.2.0] /Users/macmini/.gradle/caches/8.13/transforms/0a9a57e03824f3dbfbd95b793f29727b/transformed/firebase-installations-17.2.0/AndroidManifest.xml:5:5-44
+MERGED from [com.google.firebase:firebase-installations:17.2.0] /Users/macmini/.gradle/caches/8.13/transforms/0a9a57e03824f3dbfbd95b793f29727b/transformed/firebase-installations-17.2.0/AndroidManifest.xml:5:5-44
+MERGED from [com.google.firebase:firebase-common-ktx:21.0.0] /Users/macmini/.gradle/caches/8.13/transforms/ba4ba6fe21f1f5da3f1fbbbf61c927dd/transformed/firebase-common-ktx-21.0.0/AndroidManifest.xml:5:5-44
+MERGED from [com.google.firebase:firebase-common-ktx:21.0.0] /Users/macmini/.gradle/caches/8.13/transforms/ba4ba6fe21f1f5da3f1fbbbf61c927dd/transformed/firebase-common-ktx-21.0.0/AndroidManifest.xml:5:5-44
+MERGED from [com.google.firebase:firebase-common:21.0.0] /Users/macmini/.gradle/caches/8.13/transforms/e2a94c603328c409d5d31ce2a5c11ccc/transformed/firebase-common-21.0.0/AndroidManifest.xml:19:5-44
+MERGED from [com.google.firebase:firebase-common:21.0.0] /Users/macmini/.gradle/caches/8.13/transforms/e2a94c603328c409d5d31ce2a5c11ccc/transformed/firebase-common-21.0.0/AndroidManifest.xml:19:5-44
+MERGED from [com.google.firebase:firebase-iid-interop:17.1.0] /Users/macmini/.gradle/caches/8.13/transforms/53fdb3aa4ec30ac5f188cf01e42d0243/transformed/firebase-iid-interop-17.1.0/AndroidManifest.xml:5:5-44
+MERGED from [com.google.firebase:firebase-iid-interop:17.1.0] /Users/macmini/.gradle/caches/8.13/transforms/53fdb3aa4ec30ac5f188cf01e42d0243/transformed/firebase-iid-interop-17.1.0/AndroidManifest.xml:5:5-44
+MERGED from [com.google.android.gms:play-services-base:18.0.1] /Users/macmini/.gradle/caches/8.13/transforms/9b1b9572bccb720e41bb0148b629383f/transformed/play-services-base-18.0.1/AndroidManifest.xml:18:5-43
+MERGED from [com.google.android.gms:play-services-base:18.0.1] /Users/macmini/.gradle/caches/8.13/transforms/9b1b9572bccb720e41bb0148b629383f/transformed/play-services-base-18.0.1/AndroidManifest.xml:18:5-43
+MERGED from [com.google.android.gms:play-services-cloud-messaging:17.2.0] /Users/macmini/.gradle/caches/8.13/transforms/87520d4fb0f3c52d49a90483c3bbfab4/transformed/play-services-cloud-messaging-17.2.0/AndroidManifest.xml:5:5-44
+MERGED from [com.google.android.gms:play-services-cloud-messaging:17.2.0] /Users/macmini/.gradle/caches/8.13/transforms/87520d4fb0f3c52d49a90483c3bbfab4/transformed/play-services-cloud-messaging-17.2.0/AndroidManifest.xml:5:5-44
+MERGED from [com.google.firebase:firebase-installations-interop:17.1.1] /Users/macmini/.gradle/caches/8.13/transforms/68f261a3c304266c9fdd2d3e901252c4/transformed/firebase-installations-interop-17.1.1/AndroidManifest.xml:17:5-44
+MERGED from [com.google.firebase:firebase-installations-interop:17.1.1] /Users/macmini/.gradle/caches/8.13/transforms/68f261a3c304266c9fdd2d3e901252c4/transformed/firebase-installations-interop-17.1.1/AndroidManifest.xml:17:5-44
 MERGED from [androidx.emoji2:emoji2-views-helper:1.3.0] /Users/macmini/.gradle/caches/8.13/transforms/04889e333db7ec233aeeddf61eaf4941/transformed/emoji2-views-helper-1.3.0/AndroidManifest.xml:5:5-44
 MERGED from [androidx.emoji2:emoji2-views-helper:1.3.0] /Users/macmini/.gradle/caches/8.13/transforms/04889e333db7ec233aeeddf61eaf4941/transformed/emoji2-views-helper-1.3.0/AndroidManifest.xml:5:5-44
 MERGED from [androidx.emoji2:emoji2:1.3.0] /Users/macmini/.gradle/caches/8.13/transforms/d87f631865c2334ef0780c82f5efd8ca/transformed/emoji2-1.3.0/AndroidManifest.xml:21:5-44
 MERGED from [androidx.emoji2:emoji2:1.3.0] /Users/macmini/.gradle/caches/8.13/transforms/d87f631865c2334ef0780c82f5efd8ca/transformed/emoji2-1.3.0/AndroidManifest.xml:21:5-44
 MERGED from [androidx.webkit:webkit:1.14.0] /Users/macmini/.gradle/caches/8.13/transforms/b2a588f6995a72362c220a846d445188/transformed/webkit-1.14.0/AndroidManifest.xml:5:5-44
 MERGED from [androidx.webkit:webkit:1.14.0] /Users/macmini/.gradle/caches/8.13/transforms/b2a588f6995a72362c220a846d445188/transformed/webkit-1.14.0/AndroidManifest.xml:5:5-44
+MERGED from [io.ionic.libs:ionfilesystem-android:1.1.0] /Users/macmini/.gradle/caches/8.13/transforms/b408b368d508a50895bfe1757f8693b2/transformed/ionfilesystem-android-1.1.0/AndroidManifest.xml:5:5-44
+MERGED from [io.ionic.libs:ionfilesystem-android:1.1.0] /Users/macmini/.gradle/caches/8.13/transforms/b408b368d508a50895bfe1757f8693b2/transformed/ionfilesystem-android-1.1.0/AndroidManifest.xml:5:5-44
 MERGED from [androidx.graphics:graphics-shapes-android:1.0.1] /Users/macmini/.gradle/caches/8.13/transforms/e070ffd3a08b199fec0963eec7c82d92/transformed/graphics-shapes-release/AndroidManifest.xml:5:5-44
 MERGED from [androidx.graphics:graphics-shapes-android:1.0.1] /Users/macmini/.gradle/caches/8.13/transforms/e070ffd3a08b199fec0963eec7c82d92/transformed/graphics-shapes-release/AndroidManifest.xml:5:5-44
+MERGED from [androidx.work:work-runtime-ktx:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/6b2f53c727ca7a04e908dcd61890cdd5/transformed/work-runtime-ktx-2.10.5/AndroidManifest.xml:20:5-44
+MERGED from [androidx.work:work-runtime-ktx:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/6b2f53c727ca7a04e908dcd61890cdd5/transformed/work-runtime-ktx-2.10.5/AndroidManifest.xml:20:5-44
 MERGED from [androidx.work:work-runtime:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/d59273809589eef1015d77ddb3cd9459/transformed/work-runtime-2.10.5/AndroidManifest.xml:21:5-44
 MERGED from [androidx.work:work-runtime:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/d59273809589eef1015d77ddb3cd9459/transformed/work-runtime-2.10.5/AndroidManifest.xml:21:5-44
+MERGED from [com.google.android.gms:play-services-stats:17.0.2] /Users/macmini/.gradle/caches/8.13/transforms/6b2fb82375de471ffc08e44a07bfbdc8/transformed/play-services-stats-17.0.2/AndroidManifest.xml:5:5-44
+MERGED from [com.google.android.gms:play-services-stats:17.0.2] /Users/macmini/.gradle/caches/8.13/transforms/6b2fb82375de471ffc08e44a07bfbdc8/transformed/play-services-stats-17.0.2/AndroidManifest.xml:5:5-44
+MERGED from [androidx.legacy:legacy-support-core-utils:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/73018946941f193732bf33e2b4934854/transformed/legacy-support-core-utils-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.legacy:legacy-support-core-utils:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/73018946941f193732bf33e2b4934854/transformed/legacy-support-core-utils-1.0.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.loader:loader:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/73264e631197a35ffe6dda20001baa07/transformed/loader-1.0.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.loader:loader:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/73264e631197a35ffe6dda20001baa07/transformed/loader-1.0.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.camera:camera-core:1.4.2] /Users/macmini/.gradle/caches/8.13/transforms/e2aad2f28c5f11e5d805e0ffceefc656/transformed/camera-core-1.4.2/AndroidManifest.xml:21:5-44
 MERGED from [androidx.camera:camera-core:1.4.2] /Users/macmini/.gradle/caches/8.13/transforms/e2aad2f28c5f11e5d805e0ffceefc656/transformed/camera-core-1.4.2/AndroidManifest.xml:21:5-44
+MERGED from [androidx.activity:activity-ktx:1.11.0] /Users/macmini/.gradle/caches/8.13/transforms/03e95077f90a4f7030324ba28cb7e7be/transformed/activity-ktx-1.11.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.activity:activity-ktx:1.11.0] /Users/macmini/.gradle/caches/8.13/transforms/03e95077f90a4f7030324ba28cb7e7be/transformed/activity-ktx-1.11.0/AndroidManifest.xml:5:5-44
 MERGED from [androidx.lifecycle:lifecycle-runtime-ktx-android:2.10.0] /Users/macmini/.gradle/caches/8.13/transforms/a50bc0c4080433373c1c6311fe33f987/transformed/lifecycle-runtime-ktx/AndroidManifest.xml:5:5-44
 MERGED from [androidx.lifecycle:lifecycle-runtime-ktx-android:2.10.0] /Users/macmini/.gradle/caches/8.13/transforms/a50bc0c4080433373c1c6311fe33f987/transformed/lifecycle-runtime-ktx/AndroidManifest.xml:5:5-44
 MERGED from [androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0] /Users/macmini/.gradle/caches/8.13/transforms/55b2329da588976009724c5c0180dbd6/transformed/lifecycle-viewmodel-ktx-2.10.0/AndroidManifest.xml:5:5-44
@@ -315,40 +415,78 @@ MERGED from [androidx.recyclerview:recyclerview:1.2.1] /Users/macmini/.gradle/ca
 MERGED from [androidx.recyclerview:recyclerview:1.2.1] /Users/macmini/.gradle/caches/8.13/transforms/02096629bcfe79761214b4afa153c0dd/transformed/recyclerview-1.2.1/AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.customview:customview:1.1.0] /Users/macmini/.gradle/caches/8.13/transforms/403bb466b12df9a4d1f2f0d1feb2095d/transformed/customview-1.1.0/AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.customview:customview:1.1.0] /Users/macmini/.gradle/caches/8.13/transforms/403bb466b12df9a4d1f2f0d1feb2095d/transformed/customview-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.browser:browser:1.3.0] /Users/macmini/.gradle/caches/8.13/transforms/9d6cb07ad0ba3d201889cf927b4cc0d4/transformed/browser-1.3.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.browser:browser:1.3.0] /Users/macmini/.gradle/caches/8.13/transforms/9d6cb07ad0ba3d201889cf927b4cc0d4/transformed/browser-1.3.0/AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.core:core:1.17.0] /Users/macmini/.gradle/caches/8.13/transforms/75d122a7336cfe2ef1bce419fef040f9/transformed/core-1.17.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.core:core:1.17.0] /Users/macmini/.gradle/caches/8.13/transforms/75d122a7336cfe2ef1bce419fef040f9/transformed/core-1.17.0/AndroidManifest.xml:20:5-44
+MERGED from [com.onesignal:otel:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/8df974613e1277440cb5a0a239b8a585/transformed/otel-5.9.5/AndroidManifest.xml:5:5-44
+MERGED from [com.onesignal:otel:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/8df974613e1277440cb5a0a239b8a585/transformed/otel-5.9.5/AndroidManifest.xml:5:5-44
+MERGED from [androidx.room:room-runtime:2.6.1] /Users/macmini/.gradle/caches/8.13/transforms/e5661e3adb581f0870f63a699d375068/transformed/room-runtime-2.6.1/AndroidManifest.xml:21:5-44
+MERGED from [androidx.room:room-runtime:2.6.1] /Users/macmini/.gradle/caches/8.13/transforms/e5661e3adb581f0870f63a699d375068/transformed/room-runtime-2.6.1/AndroidManifest.xml:21:5-44
+MERGED from [androidx.room:room-ktx:2.6.1] /Users/macmini/.gradle/caches/8.13/transforms/9c1472e0c29843d596107d6dbcb42697/transformed/room-ktx-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.room:room-ktx:2.6.1] /Users/macmini/.gradle/caches/8.13/transforms/9c1472e0c29843d596107d6dbcb42697/transformed/room-ktx-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [com.google.android.gms:play-services-tasks:18.4.1] /Users/macmini/.gradle/caches/8.13/transforms/3335a0f1cddac3be6b7b5608870fa9e7/transformed/play-services-tasks-18.4.1/AndroidManifest.xml:4:5-43
+MERGED from [com.google.android.gms:play-services-tasks:18.4.1] /Users/macmini/.gradle/caches/8.13/transforms/3335a0f1cddac3be6b7b5608870fa9e7/transformed/play-services-tasks-18.4.1/AndroidManifest.xml:4:5-43
+MERGED from [com.google.firebase:firebase-measurement-connector:19.0.0] /Users/macmini/.gradle/caches/8.13/transforms/9af63c3400b60b711e3f0698fad9ac3d/transformed/firebase-measurement-connector-19.0.0/AndroidManifest.xml:20:5-44
+MERGED from [com.google.firebase:firebase-measurement-connector:19.0.0] /Users/macmini/.gradle/caches/8.13/transforms/9af63c3400b60b711e3f0698fad9ac3d/transformed/firebase-measurement-connector-19.0.0/AndroidManifest.xml:20:5-44
+MERGED from [com.google.android.gms:play-services-basement:18.10.0] /Users/macmini/.gradle/caches/8.13/transforms/f916deead8b3798d82297393f5d65c4b/transformed/play-services-basement-18.10.0/AndroidManifest.xml:18:5-43
+MERGED from [com.google.android.gms:play-services-basement:18.10.0] /Users/macmini/.gradle/caches/8.13/transforms/f916deead8b3798d82297393f5d65c4b/transformed/play-services-basement-18.10.0/AndroidManifest.xml:18:5-43
+MERGED from [androidx.fragment:fragment:1.8.9] /Users/macmini/.gradle/caches/8.13/transforms/30cf3e7aa10a2199a0323a51321a47a9/transformed/fragment-1.8.9/AndroidManifest.xml:5:5-44
+MERGED from [androidx.fragment:fragment:1.8.9] /Users/macmini/.gradle/caches/8.13/transforms/30cf3e7aa10a2199a0323a51321a47a9/transformed/fragment-1.8.9/AndroidManifest.xml:5:5-44
+MERGED from [androidx.activity:activity:1.11.0] /Users/macmini/.gradle/caches/8.13/transforms/743bb7457c32149d52760c5405370a9b/transformed/activity-1.11.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.activity:activity:1.11.0] /Users/macmini/.gradle/caches/8.13/transforms/743bb7457c32149d52760c5405370a9b/transformed/activity-1.11.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/cd77dc32e1e5db99790b659a9635fa21/transformed/cursoradapter-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/cd77dc32e1e5db99790b659a9635fa21/transformed/cursoradapter-1.0.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.exifinterface:exifinterface:1.4.1] /Users/macmini/.gradle/caches/8.13/transforms/7df2bf0653d4fe21ee02f03cd59405a2/transformed/exifinterface-1.4.1/AndroidManifest.xml:5:5-44
 MERGED from [androidx.exifinterface:exifinterface:1.4.1] /Users/macmini/.gradle/caches/8.13/transforms/7df2bf0653d4fe21ee02f03cd59405a2/transformed/exifinterface-1.4.1/AndroidManifest.xml:5:5-44
-MERGED from [androidx.profileinstaller:profileinstaller:1.4.0] /Users/macmini/.gradle/caches/8.13/transforms/6eb6a4011618c7538402373e1ab71c9c/transformed/profileinstaller-1.4.0/AndroidManifest.xml:21:5-44
-MERGED from [androidx.profileinstaller:profileinstaller:1.4.0] /Users/macmini/.gradle/caches/8.13/transforms/6eb6a4011618c7538402373e1ab71c9c/transformed/profileinstaller-1.4.0/AndroidManifest.xml:21:5-44
-MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/macmini/.gradle/caches/8.13/transforms/c2cb70c88676b816fad7e6e558934b88/transformed/startup-runtime-1.1.1/AndroidManifest.xml:21:5-23:41
-MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/macmini/.gradle/caches/8.13/transforms/c2cb70c88676b816fad7e6e558934b88/transformed/startup-runtime-1.1.1/AndroidManifest.xml:21:5-23:41
 MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /Users/macmini/.gradle/caches/8.13/transforms/6d137bd19ff91626433014c52dc1af63/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /Users/macmini/.gradle/caches/8.13/transforms/6d137bd19ff91626433014c52dc1af63/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.interpolator:interpolator:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/300d2a46224fabbdd19fec6d6a729241/transformed/interpolator-1.0.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.interpolator:interpolator:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/300d2a46224fabbdd19fec6d6a729241/transformed/interpolator-1.0.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.tracing:tracing-ktx:1.2.0] /Users/macmini/.gradle/caches/8.13/transforms/ffe0d8cb8b29320aa32d9a7c04da5bec/transformed/tracing-ktx-1.2.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.tracing:tracing-ktx:1.2.0] /Users/macmini/.gradle/caches/8.13/transforms/ffe0d8cb8b29320aa32d9a7c04da5bec/transformed/tracing-ktx-1.2.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.profileinstaller:profileinstaller:1.4.0] /Users/macmini/.gradle/caches/8.13/transforms/6eb6a4011618c7538402373e1ab71c9c/transformed/profileinstaller-1.4.0/AndroidManifest.xml:21:5-44
+MERGED from [androidx.profileinstaller:profileinstaller:1.4.0] /Users/macmini/.gradle/caches/8.13/transforms/6eb6a4011618c7538402373e1ab71c9c/transformed/profileinstaller-1.4.0/AndroidManifest.xml:21:5-44
+MERGED from [com.squareup.okhttp3:okhttp-android:5.2.1] /Users/macmini/.gradle/caches/8.13/transforms/2e162e5c15f43043707e190876221ced/transformed/okhttp-release/AndroidManifest.xml:6:5-44
+MERGED from [com.squareup.okhttp3:okhttp-android:5.2.1] /Users/macmini/.gradle/caches/8.13/transforms/2e162e5c15f43043707e190876221ced/transformed/okhttp-release/AndroidManifest.xml:6:5-44
+MERGED from [androidx.startup:startup-runtime:1.2.0] /Users/macmini/.gradle/caches/8.13/transforms/2e0691e982c16735cedecc9013166db7/transformed/startup-runtime-1.2.0/AndroidManifest.xml:21:5-44
+MERGED from [androidx.startup:startup-runtime:1.2.0] /Users/macmini/.gradle/caches/8.13/transforms/2e0691e982c16735cedecc9013166db7/transformed/startup-runtime-1.2.0/AndroidManifest.xml:21:5-44
 MERGED from [androidx.tracing:tracing:1.2.0] /Users/macmini/.gradle/caches/8.13/transforms/48d89b16ed84f7aa87f4010b1381ca63/transformed/tracing-1.2.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.tracing:tracing:1.2.0] /Users/macmini/.gradle/caches/8.13/transforms/48d89b16ed84f7aa87f4010b1381ca63/transformed/tracing-1.2.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.cardview:cardview:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/305b00288f6f3dba21d0eed083833b14/transformed/cardview-1.0.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.cardview:cardview:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/305b00288f6f3dba21d0eed083833b14/transformed/cardview-1.0.0/AndroidManifest.xml:20:5-44
-MERGED from [androidx.room:room-runtime:2.6.1] /Users/macmini/.gradle/caches/8.13/transforms/e5661e3adb581f0870f63a699d375068/transformed/room-runtime-2.6.1/AndroidManifest.xml:21:5-44
-MERGED from [androidx.room:room-runtime:2.6.1] /Users/macmini/.gradle/caches/8.13/transforms/e5661e3adb581f0870f63a699d375068/transformed/room-runtime-2.6.1/AndroidManifest.xml:21:5-44
-MERGED from [androidx.room:room-ktx:2.6.1] /Users/macmini/.gradle/caches/8.13/transforms/9c1472e0c29843d596107d6dbcb42697/transformed/room-ktx-2.6.1/AndroidManifest.xml:20:5-44
-MERGED from [androidx.room:room-ktx:2.6.1] /Users/macmini/.gradle/caches/8.13/transforms/9c1472e0c29843d596107d6dbcb42697/transformed/room-ktx-2.6.1/AndroidManifest.xml:20:5-44
 MERGED from [androidx.arch.core:core-runtime:2.2.0] /Users/macmini/.gradle/caches/8.13/transforms/b036afec189a6deeebe60c1a16b97b3b/transformed/core-runtime-2.2.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.arch.core:core-runtime:2.2.0] /Users/macmini/.gradle/caches/8.13/transforms/b036afec189a6deeebe60c1a16b97b3b/transformed/core-runtime-2.2.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.sqlite:sqlite-framework:2.4.0] /Users/macmini/.gradle/caches/8.13/transforms/5cdc88d15e25c345fc705755fde5dd83/transformed/sqlite-framework-2.4.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.sqlite:sqlite-framework:2.4.0] /Users/macmini/.gradle/caches/8.13/transforms/5cdc88d15e25c345fc705755fde5dd83/transformed/sqlite-framework-2.4.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.sqlite:sqlite:2.4.0] /Users/macmini/.gradle/caches/8.13/transforms/893c4ec0e444512b99cd41bc7efc0923/transformed/sqlite-2.4.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.sqlite:sqlite:2.4.0] /Users/macmini/.gradle/caches/8.13/transforms/893c4ec0e444512b99cd41bc7efc0923/transformed/sqlite-2.4.0/AndroidManifest.xml:20:5-44
+MERGED from [com.google.firebase:firebase-components:18.0.0] /Users/macmini/.gradle/caches/8.13/transforms/7dc13e52b7a847150224767b8dd77d98/transformed/firebase-components-18.0.0/AndroidManifest.xml:18:5-44
+MERGED from [com.google.firebase:firebase-components:18.0.0] /Users/macmini/.gradle/caches/8.13/transforms/7dc13e52b7a847150224767b8dd77d98/transformed/firebase-components-18.0.0/AndroidManifest.xml:18:5-44
+MERGED from [com.google.firebase:firebase-datatransport:18.2.0] /Users/macmini/.gradle/caches/8.13/transforms/8291305ff20e069029f12c5529ea75d5/transformed/firebase-datatransport-18.2.0/AndroidManifest.xml:18:5-44
+MERGED from [com.google.firebase:firebase-datatransport:18.2.0] /Users/macmini/.gradle/caches/8.13/transforms/8291305ff20e069029f12c5529ea75d5/transformed/firebase-datatransport-18.2.0/AndroidManifest.xml:18:5-44
+MERGED from [com.google.android.datatransport:transport-backend-cct:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/238197561de43ad389aa550afa1d5709/transformed/transport-backend-cct-3.1.9/AndroidManifest.xml:18:5-20:41
+MERGED from [com.google.android.datatransport:transport-backend-cct:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/238197561de43ad389aa550afa1d5709/transformed/transport-backend-cct-3.1.9/AndroidManifest.xml:18:5-20:41
+MERGED from [com.google.firebase:firebase-encoders-json:18.0.0] /Users/macmini/.gradle/caches/8.13/transforms/1fd980b39e3af8e413f921eadeb0d195/transformed/firebase-encoders-json-18.0.0/AndroidManifest.xml:19:5-21:41
+MERGED from [com.google.firebase:firebase-encoders-json:18.0.0] /Users/macmini/.gradle/caches/8.13/transforms/1fd980b39e3af8e413f921eadeb0d195/transformed/firebase-encoders-json-18.0.0/AndroidManifest.xml:19:5-21:41
+MERGED from [com.google.android.datatransport:transport-runtime:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/0472d52ee4a3ef974a61dbdf0bb8e5bf/transformed/transport-runtime-3.1.9/AndroidManifest.xml:18:5-20:41
+MERGED from [com.google.android.datatransport:transport-runtime:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/0472d52ee4a3ef974a61dbdf0bb8e5bf/transformed/transport-runtime-3.1.9/AndroidManifest.xml:18:5-20:41
+MERGED from [com.google.android.datatransport:transport-api:3.1.0] /Users/macmini/.gradle/caches/8.13/transforms/cb79aa1a85fd142c1a9d7eb0285a5f7f/transformed/transport-api-3.1.0/AndroidManifest.xml:18:5-44
+MERGED from [com.google.android.datatransport:transport-api:3.1.0] /Users/macmini/.gradle/caches/8.13/transforms/cb79aa1a85fd142c1a9d7eb0285a5f7f/transformed/transport-api-3.1.0/AndroidManifest.xml:18:5-44
+MERGED from [androidx.documentfile:documentfile:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/e451b178f9cf68a965e39e9b103c5342/transformed/documentfile-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.documentfile:documentfile:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/e451b178f9cf68a965e39e9b103c5342/transformed/documentfile-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/e0e4558e3096def214135f21ce0fd21a/transformed/localbroadcastmanager-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/e0e4558e3096def214135f21ce0fd21a/transformed/localbroadcastmanager-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.print:print:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/f13d3288e2d6a33c69194aed671ca576/transformed/print-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.print:print:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/f13d3288e2d6a33c69194aed671ca576/transformed/print-1.0.0/AndroidManifest.xml:20:5-44
 MERGED from [androidx.annotation:annotation-experimental:1.4.1] /Users/macmini/.gradle/caches/8.13/transforms/3fe53e3b109ead54de5971e66bb6d328/transformed/annotation-experimental-1.4.1/AndroidManifest.xml:5:5-44
 MERGED from [androidx.annotation:annotation-experimental:1.4.1] /Users/macmini/.gradle/caches/8.13/transforms/3fe53e3b109ead54de5971e66bb6d328/transformed/annotation-experimental-1.4.1/AndroidManifest.xml:5:5-44
 MERGED from [androidx.core:core-viewtree:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/27c03da2ee8e0cb487c78427311cfbee/transformed/core-viewtree-1.0.0/AndroidManifest.xml:5:5-44
 MERGED from [androidx.core:core-viewtree:1.0.0] /Users/macmini/.gradle/caches/8.13/transforms/27c03da2ee8e0cb487c78427311cfbee/transformed/core-viewtree-1.0.0/AndroidManifest.xml:5:5-44
 MERGED from [com.google.android.play:core-common:2.0.3] /Users/macmini/.gradle/caches/8.13/transforms/9886badb9cd34ecbd6cdce503b64c8c6/transformed/core-common-2.0.3/AndroidManifest.xml:7:5-9:41
 MERGED from [com.google.android.play:core-common:2.0.3] /Users/macmini/.gradle/caches/8.13/transforms/9886badb9cd34ecbd6cdce503b64c8c6/transformed/core-common-2.0.3/AndroidManifest.xml:7:5-9:41
+	tools:overrideLibrary
+		ADDED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:8:9-51
 	android:targetSdkVersion
 		INJECTED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml
 	android:minSdkVersion
@@ -429,48 +567,414 @@ ADDED from [io.ionic.libs:ioncamera-android:1.0.1] /Users/macmini/.gradle/caches
 		ADDED from [io.ionic.libs:ioncamera-android:1.0.1] /Users/macmini/.gradle/caches/8.13/transforms/e3e26467e1e2de44cf893e2c3231ba75/transformed/ioncamera-android-1.0.1/AndroidManifest.xml:39:13-37
 	android:name
 		ADDED from [io.ionic.libs:ioncamera-android:1.0.1] /Users/macmini/.gradle/caches/8.13/transforms/e3e26467e1e2de44cf893e2c3231ba75/transformed/ioncamera-android-1.0.1/AndroidManifest.xml:37:13-74
-meta-data#com.google.android.gms.version
-ADDED from [com.google.android.gms:play-services-basement:18.10.0] /Users/macmini/.gradle/caches/8.13/transforms/f916deead8b3798d82297393f5d65c4b/transformed/play-services-basement-18.10.0/AndroidManifest.xml:21:9-23:69
-	android:value
-		ADDED from [com.google.android.gms:play-services-basement:18.10.0] /Users/macmini/.gradle/caches/8.13/transforms/f916deead8b3798d82297393f5d65c4b/transformed/play-services-basement-18.10.0/AndroidManifest.xml:23:13-66
+permission#${applicationId}.permission.C2D_MESSAGE
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:8:5-10:47
+	android:protectionLevel
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:10:9-44
 	android:name
-		ADDED from [com.google.android.gms:play-services-basement:18.10.0] /Users/macmini/.gradle/caches/8.13/transforms/f916deead8b3798d82297393f5d65c4b/transformed/play-services-basement-18.10.0/AndroidManifest.xml:22:13-58
-provider#androidx.startup.InitializationProvider
-ADDED from [androidx.emoji2:emoji2:1.3.0] /Users/macmini/.gradle/caches/8.13/transforms/d87f631865c2334ef0780c82f5efd8ca/transformed/emoji2-1.3.0/AndroidManifest.xml:24:9-32:20
-MERGED from [androidx.work:work-runtime:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/d59273809589eef1015d77ddb3cd9459/transformed/work-runtime-2.10.5/AndroidManifest.xml:29:9-37:20
-MERGED from [androidx.work:work-runtime:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/d59273809589eef1015d77ddb3cd9459/transformed/work-runtime-2.10.5/AndroidManifest.xml:29:9-37:20
-MERGED from [androidx.lifecycle:lifecycle-process:2.10.0] /Users/macmini/.gradle/caches/8.13/transforms/a1f00b17aabff6dbca2cc3451f623af3/transformed/lifecycle-process-2.10.0/AndroidManifest.xml:24:9-32:20
-MERGED from [androidx.lifecycle:lifecycle-process:2.10.0] /Users/macmini/.gradle/caches/8.13/transforms/a1f00b17aabff6dbca2cc3451f623af3/transformed/lifecycle-process-2.10.0/AndroidManifest.xml:24:9-32:20
-MERGED from [androidx.profileinstaller:profileinstaller:1.4.0] /Users/macmini/.gradle/caches/8.13/transforms/6eb6a4011618c7538402373e1ab71c9c/transformed/profileinstaller-1.4.0/AndroidManifest.xml:24:9-32:20
-MERGED from [androidx.profileinstaller:profileinstaller:1.4.0] /Users/macmini/.gradle/caches/8.13/transforms/6eb6a4011618c7538402373e1ab71c9c/transformed/profileinstaller-1.4.0/AndroidManifest.xml:24:9-32:20
-MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/macmini/.gradle/caches/8.13/transforms/c2cb70c88676b816fad7e6e558934b88/transformed/startup-runtime-1.1.1/AndroidManifest.xml:26:9-30:34
-MERGED from [androidx.startup:startup-runtime:1.1.1] /Users/macmini/.gradle/caches/8.13/transforms/c2cb70c88676b816fad7e6e558934b88/transformed/startup-runtime-1.1.1/AndroidManifest.xml:26:9-30:34
-	tools:node
-		ADDED from [androidx.emoji2:emoji2:1.3.0] /Users/macmini/.gradle/caches/8.13/transforms/d87f631865c2334ef0780c82f5efd8ca/transformed/emoji2-1.3.0/AndroidManifest.xml:28:13-31
-	android:authorities
-		ADDED from [androidx.emoji2:emoji2:1.3.0] /Users/macmini/.gradle/caches/8.13/transforms/d87f631865c2334ef0780c82f5efd8ca/transformed/emoji2-1.3.0/AndroidManifest.xml:26:13-68
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:9:9-63
+permission#net.vlinkgroup.nexora.permission.C2D_MESSAGE
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:8:5-10:47
+	android:protectionLevel
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:10:9-44
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:9:9-63
+uses-permission#${applicationId}.permission.C2D_MESSAGE
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:12:5-79
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:12:22-76
+uses-permission#net.vlinkgroup.nexora.permission.C2D_MESSAGE
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:12:5-79
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:12:22-76
+uses-permission#android.permission.WAKE_LOCK
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:16:5-68
+MERGED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:24:5-68
+MERGED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:24:5-68
+MERGED from [com.google.android.gms:play-services-cloud-messaging:17.2.0] /Users/macmini/.gradle/caches/8.13/transforms/87520d4fb0f3c52d49a90483c3bbfab4/transformed/play-services-cloud-messaging-17.2.0/AndroidManifest.xml:9:5-68
+MERGED from [com.google.android.gms:play-services-cloud-messaging:17.2.0] /Users/macmini/.gradle/caches/8.13/transforms/87520d4fb0f3c52d49a90483c3bbfab4/transformed/play-services-cloud-messaging-17.2.0/AndroidManifest.xml:9:5-68
+MERGED from [androidx.work:work-runtime:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/d59273809589eef1015d77ddb3cd9459/transformed/work-runtime-2.10.5/AndroidManifest.xml:23:5-68
+MERGED from [androidx.work:work-runtime:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/d59273809589eef1015d77ddb3cd9459/transformed/work-runtime-2.10.5/AndroidManifest.xml:23:5-68
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:16:22-65
+uses-permission#com.google.android.c2dm.permission.RECEIVE
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:17:5-82
+MERGED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:26:5-82
+MERGED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:26:5-82
+MERGED from [com.google.android.gms:play-services-cloud-messaging:17.2.0] /Users/macmini/.gradle/caches/8.13/transforms/87520d4fb0f3c52d49a90483c3bbfab4/transformed/play-services-cloud-messaging-17.2.0/AndroidManifest.xml:11:5-82
+MERGED from [com.google.android.gms:play-services-cloud-messaging:17.2.0] /Users/macmini/.gradle/caches/8.13/transforms/87520d4fb0f3c52d49a90483c3bbfab4/transformed/play-services-cloud-messaging-17.2.0/AndroidManifest.xml:11:5-82
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:17:22-79
+uses-permission#android.permission.VIBRATE
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:22:5-66
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:22:22-63
+uses-permission#android.permission.RECEIVE_BOOT_COMPLETED
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:27:5-81
+MERGED from [androidx.work:work-runtime:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/d59273809589eef1015d77ddb3cd9459/transformed/work-runtime-2.10.5/AndroidManifest.xml:25:5-81
+MERGED from [androidx.work:work-runtime:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/d59273809589eef1015d77ddb3cd9459/transformed/work-runtime-2.10.5/AndroidManifest.xml:25:5-81
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:27:22-78
+uses-permission#com.sec.android.provider.badge.permission.READ
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:29:5-86
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:29:22-83
+uses-permission#com.sec.android.provider.badge.permission.WRITE
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:30:5-87
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:30:22-84
+uses-permission#com.htc.launcher.permission.READ_SETTINGS
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:31:5-81
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:31:22-78
+uses-permission#com.htc.launcher.permission.UPDATE_SHORTCUT
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:32:5-83
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:32:22-80
+uses-permission#com.sonyericsson.home.permission.BROADCAST_BADGE
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:33:5-88
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:33:22-85
+uses-permission#com.sonymobile.home.permission.PROVIDER_INSERT_BADGE
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:34:5-92
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:34:22-89
+uses-permission#com.anddoes.launcher.permission.UPDATE_COUNT
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:35:5-84
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:35:22-81
+uses-permission#com.majeur.launcher.permission.UPDATE_BADGE
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:36:5-83
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:36:22-80
+uses-permission#com.huawei.android.launcher.permission.CHANGE_BADGE
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:37:5-91
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:37:22-88
+uses-permission#com.huawei.android.launcher.permission.READ_SETTINGS
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:38:5-92
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:38:22-89
+uses-permission#com.huawei.android.launcher.permission.WRITE_SETTINGS
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:39:5-93
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:39:22-90
+uses-permission#android.permission.READ_APP_BADGE
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:40:5-73
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:40:22-70
+uses-permission#com.oppo.launcher.permission.READ_SETTINGS
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:41:5-82
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:41:22-79
+uses-permission#com.oppo.launcher.permission.WRITE_SETTINGS
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:42:5-83
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:42:22-80
+uses-permission#me.everything.badger.permission.BADGE_COUNT_READ
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:43:5-88
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:43:22-85
+uses-permission#me.everything.badger.permission.BADGE_COUNT_WRITE
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:44:5-89
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:44:22-86
+receiver#com.onesignal.notifications.receivers.FCMBroadcastReceiver
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:47:9-58:20
 	android:exported
-		ADDED from [androidx.emoji2:emoji2:1.3.0] /Users/macmini/.gradle/caches/8.13/transforms/d87f631865c2334ef0780c82f5efd8ca/transformed/emoji2-1.3.0/AndroidManifest.xml:27:13-37
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:49:13-36
+	android:permission
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:50:13-73
 	android:name
-		ADDED from [androidx.emoji2:emoji2:1.3.0] /Users/macmini/.gradle/caches/8.13/transforms/d87f631865c2334ef0780c82f5efd8ca/transformed/emoji2-1.3.0/AndroidManifest.xml:25:13-67
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:48:13-86
+intent-filter#action:name:com.google.android.c2dm.intent.RECEIVE+category:name:${applicationId}
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:53:13-57:29
+	android:priority
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:53:28-50
+intent-filter#action:name:com.google.android.c2dm.intent.RECEIVE+category:name:net.vlinkgroup.nexora
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:53:13-57:29
+	android:priority
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:53:28-50
+action#com.google.android.c2dm.intent.RECEIVE
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:54:17-81
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:54:25-78
+category#${applicationId}
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:56:17-61
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:56:27-58
+category#net.vlinkgroup.nexora
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:56:17-61
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:56:27-58
+service#com.onesignal.notifications.services.HmsMessageServiceOneSignal
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:60:9-66:19
+	android:exported
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:62:13-37
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:61:13-91
+intent-filter#action:name:com.huawei.push.action.MESSAGING_EVENT
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:63:13-65:29
+action#com.huawei.push.action.MESSAGING_EVENT
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:64:17-81
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:64:25-78
+activity#com.onesignal.NotificationOpenedActivityHMS
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:67:9-75:20
+	android:noHistory
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:70:13-37
+	android:exported
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:69:13-36
+	android:theme
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:71:13-72
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:68:13-71
+intent-filter#action:name:android.intent.action.VIEW
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:72:13-74:29
+action#android.intent.action.VIEW
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:73:17-69
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:73:25-66
+receiver#com.onesignal.notifications.receivers.NotificationDismissReceiver
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:77:9-79:39
+	android:exported
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:79:13-36
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:78:13-93
+receiver#com.onesignal.notifications.receivers.BootUpReceiver
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:80:9-87:20
+	android:exported
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:82:13-36
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:81:13-80
+intent-filter#action:name:android.intent.action.BOOT_COMPLETED+action:name:android.intent.action.QUICKBOOT_POWERON
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:83:13-86:29
+action#android.intent.action.BOOT_COMPLETED
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:84:17-79
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:84:25-76
+action#android.intent.action.QUICKBOOT_POWERON
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:85:17-82
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:85:25-79
+receiver#com.onesignal.notifications.receivers.UpgradeReceiver
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:88:9-94:20
+	android:exported
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:90:13-36
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:89:13-81
+intent-filter#action:name:android.intent.action.MY_PACKAGE_REPLACED
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:91:13-93:29
+action#android.intent.action.MY_PACKAGE_REPLACED
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:92:17-84
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:92:25-81
+activity#com.onesignal.notifications.activities.NotificationOpenedActivity
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:96:9-102:75
+	android:excludeFromRecents
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:98:13-46
+	android:noHistory
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:100:13-37
+	android:exported
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:99:13-36
+	android:theme
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:102:13-72
+	android:taskAffinity
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:101:13-36
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:97:13-93
+activity#com.onesignal.notifications.activities.NotificationOpenedActivityAndroid22AndOlder
+ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:103:9-108:75
+	android:excludeFromRecents
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:105:13-46
+	android:noHistory
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:107:13-37
+	android:exported
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:106:13-36
+	android:theme
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:108:13-72
+	android:name
+		ADDED from [com.onesignal:notifications:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/e95a0911f755c1dc84024cb0e2cb24b7/transformed/notifications-5.9.5/AndroidManifest.xml:104:13-110
+uses-permission#android.permission.ACCESS_NETWORK_STATE
+ADDED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:12:5-79
+MERGED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:22:5-79
+MERGED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:22:5-79
+MERGED from [com.google.firebase:firebase-installations:17.2.0] /Users/macmini/.gradle/caches/8.13/transforms/0a9a57e03824f3dbfbd95b793f29727b/transformed/firebase-installations-17.2.0/AndroidManifest.xml:7:5-79
+MERGED from [com.google.firebase:firebase-installations:17.2.0] /Users/macmini/.gradle/caches/8.13/transforms/0a9a57e03824f3dbfbd95b793f29727b/transformed/firebase-installations-17.2.0/AndroidManifest.xml:7:5-79
+MERGED from [com.google.android.gms:play-services-cloud-messaging:17.2.0] /Users/macmini/.gradle/caches/8.13/transforms/87520d4fb0f3c52d49a90483c3bbfab4/transformed/play-services-cloud-messaging-17.2.0/AndroidManifest.xml:7:5-79
+MERGED from [com.google.android.gms:play-services-cloud-messaging:17.2.0] /Users/macmini/.gradle/caches/8.13/transforms/87520d4fb0f3c52d49a90483c3bbfab4/transformed/play-services-cloud-messaging-17.2.0/AndroidManifest.xml:7:5-79
+MERGED from [androidx.work:work-runtime:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/d59273809589eef1015d77ddb3cd9459/transformed/work-runtime-2.10.5/AndroidManifest.xml:24:5-79
+MERGED from [androidx.work:work-runtime:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/d59273809589eef1015d77ddb3cd9459/transformed/work-runtime-2.10.5/AndroidManifest.xml:24:5-79
+MERGED from [com.google.android.datatransport:transport-backend-cct:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/238197561de43ad389aa550afa1d5709/transformed/transport-backend-cct-3.1.9/AndroidManifest.xml:24:5-79
+MERGED from [com.google.android.datatransport:transport-backend-cct:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/238197561de43ad389aa550afa1d5709/transformed/transport-backend-cct-3.1.9/AndroidManifest.xml:24:5-79
+MERGED from [com.google.android.datatransport:transport-runtime:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/0472d52ee4a3ef974a61dbdf0bb8e5bf/transformed/transport-runtime-3.1.9/AndroidManifest.xml:22:5-79
+MERGED from [com.google.android.datatransport:transport-runtime:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/0472d52ee4a3ef974a61dbdf0bb8e5bf/transformed/transport-runtime-3.1.9/AndroidManifest.xml:22:5-79
+	android:name
+		ADDED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:12:22-76
+service#com.onesignal.core.services.SyncJobService
+ADDED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:16:9-19:72
+	android:exported
+		ADDED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:18:13-37
+	android:permission
+		ADDED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:19:13-69
+	android:name
+		ADDED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:17:13-70
+service#com.onesignal.SyncJobService
+ADDED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:22:9-26:19
+	android:exported
+		ADDED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:24:13-37
+	android:permission
+		ADDED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:25:13-69
+	android:name
+		ADDED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:23:13-56
+activity#com.onesignal.core.activities.PermissionsActivity
+ADDED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:28:9-31:75
+	android:exported
+		ADDED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:30:13-37
+	android:theme
+		ADDED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:31:13-72
+	android:name
+		ADDED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:29:13-77
+provider#androidx.startup.InitializationProvider
+ADDED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:38:9-46:20
+MERGED from [androidx.emoji2:emoji2:1.3.0] /Users/macmini/.gradle/caches/8.13/transforms/d87f631865c2334ef0780c82f5efd8ca/transformed/emoji2-1.3.0/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.emoji2:emoji2:1.3.0] /Users/macmini/.gradle/caches/8.13/transforms/d87f631865c2334ef0780c82f5efd8ca/transformed/emoji2-1.3.0/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.work:work-runtime:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/d59273809589eef1015d77ddb3cd9459/transformed/work-runtime-2.10.5/AndroidManifest.xml:29:9-37:20
+MERGED from [androidx.work:work-runtime:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/d59273809589eef1015d77ddb3cd9459/transformed/work-runtime-2.10.5/AndroidManifest.xml:29:9-37:20
+MERGED from [androidx.lifecycle:lifecycle-process:2.10.0] /Users/macmini/.gradle/caches/8.13/transforms/a1f00b17aabff6dbca2cc3451f623af3/transformed/lifecycle-process-2.10.0/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.lifecycle:lifecycle-process:2.10.0] /Users/macmini/.gradle/caches/8.13/transforms/a1f00b17aabff6dbca2cc3451f623af3/transformed/lifecycle-process-2.10.0/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.profileinstaller:profileinstaller:1.4.0] /Users/macmini/.gradle/caches/8.13/transforms/6eb6a4011618c7538402373e1ab71c9c/transformed/profileinstaller-1.4.0/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.profileinstaller:profileinstaller:1.4.0] /Users/macmini/.gradle/caches/8.13/transforms/6eb6a4011618c7538402373e1ab71c9c/transformed/profileinstaller-1.4.0/AndroidManifest.xml:24:9-32:20
+MERGED from [com.squareup.okhttp3:okhttp-android:5.2.1] /Users/macmini/.gradle/caches/8.13/transforms/2e162e5c15f43043707e190876221ced/transformed/okhttp-release/AndroidManifest.xml:11:9-19:20
+MERGED from [com.squareup.okhttp3:okhttp-android:5.2.1] /Users/macmini/.gradle/caches/8.13/transforms/2e162e5c15f43043707e190876221ced/transformed/okhttp-release/AndroidManifest.xml:11:9-19:20
+MERGED from [androidx.startup:startup-runtime:1.2.0] /Users/macmini/.gradle/caches/8.13/transforms/2e0691e982c16735cedecc9013166db7/transformed/startup-runtime-1.2.0/AndroidManifest.xml:24:9-28:34
+MERGED from [androidx.startup:startup-runtime:1.2.0] /Users/macmini/.gradle/caches/8.13/transforms/2e0691e982c16735cedecc9013166db7/transformed/startup-runtime-1.2.0/AndroidManifest.xml:24:9-28:34
+	tools:node
+		ADDED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:42:13-31
+	android:authorities
+		ADDED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:40:13-68
+	android:exported
+		ADDED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:41:13-37
+	android:name
+		ADDED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:39:13-67
+meta-data#com.onesignal.core.internal.application.impl.ActivityLifecycleInitializer
+ADDED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:43:13-45:52
+	android:value
+		ADDED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:45:17-49
+	android:name
+		ADDED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:44:17-105
+receiver#com.google.firebase.iid.FirebaseInstanceIdReceiver
+ADDED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:29:9-40:20
+	android:exported
+		ADDED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:31:13-36
+	android:permission
+		ADDED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:32:13-73
+	android:name
+		ADDED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:30:13-78
+intent-filter#action:name:com.google.android.c2dm.intent.RECEIVE
+ADDED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:33:13-35:29
+meta-data#com.google.android.gms.cloudmessaging.FINISHED_AFTER_HANDLED
+ADDED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:37:13-39:40
+	android:value
+		ADDED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:39:17-37
+	android:name
+		ADDED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:38:17-92
+service#com.google.firebase.messaging.FirebaseMessagingService
+ADDED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:46:9-53:19
+	android:exported
+		ADDED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:49:13-37
+	android:directBootAware
+		ADDED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:48:13-43
+	android:name
+		ADDED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:47:13-82
+intent-filter#action:name:com.google.firebase.MESSAGING_EVENT
+ADDED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:50:13-52:29
+	android:priority
+		ADDED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:50:28-51
+action#com.google.firebase.MESSAGING_EVENT
+ADDED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:51:17-78
+	android:name
+		ADDED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:51:25-75
+service#com.google.firebase.components.ComponentDiscoveryService
+ADDED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:54:9-63:19
+MERGED from [com.google.firebase:firebase-installations:17.2.0] /Users/macmini/.gradle/caches/8.13/transforms/0a9a57e03824f3dbfbd95b793f29727b/transformed/firebase-installations-17.2.0/AndroidManifest.xml:12:9-21:19
+MERGED from [com.google.firebase:firebase-installations:17.2.0] /Users/macmini/.gradle/caches/8.13/transforms/0a9a57e03824f3dbfbd95b793f29727b/transformed/firebase-installations-17.2.0/AndroidManifest.xml:12:9-21:19
+MERGED from [com.google.firebase:firebase-common-ktx:21.0.0] /Users/macmini/.gradle/caches/8.13/transforms/ba4ba6fe21f1f5da3f1fbbbf61c927dd/transformed/firebase-common-ktx-21.0.0/AndroidManifest.xml:9:9-15:19
+MERGED from [com.google.firebase:firebase-common-ktx:21.0.0] /Users/macmini/.gradle/caches/8.13/transforms/ba4ba6fe21f1f5da3f1fbbbf61c927dd/transformed/firebase-common-ktx-21.0.0/AndroidManifest.xml:9:9-15:19
+MERGED from [com.google.firebase:firebase-common:21.0.0] /Users/macmini/.gradle/caches/8.13/transforms/e2a94c603328c409d5d31ce2a5c11ccc/transformed/firebase-common-21.0.0/AndroidManifest.xml:30:9-38:19
+MERGED from [com.google.firebase:firebase-common:21.0.0] /Users/macmini/.gradle/caches/8.13/transforms/e2a94c603328c409d5d31ce2a5c11ccc/transformed/firebase-common-21.0.0/AndroidManifest.xml:30:9-38:19
+MERGED from [com.google.firebase:firebase-datatransport:18.2.0] /Users/macmini/.gradle/caches/8.13/transforms/8291305ff20e069029f12c5529ea75d5/transformed/firebase-datatransport-18.2.0/AndroidManifest.xml:22:9-28:19
+MERGED from [com.google.firebase:firebase-datatransport:18.2.0] /Users/macmini/.gradle/caches/8.13/transforms/8291305ff20e069029f12c5529ea75d5/transformed/firebase-datatransport-18.2.0/AndroidManifest.xml:22:9-28:19
+	android:exported
+		ADDED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:56:13-37
+	tools:targetApi
+		ADDED from [com.google.firebase:firebase-common:21.0.0] /Users/macmini/.gradle/caches/8.13/transforms/e2a94c603328c409d5d31ce2a5c11ccc/transformed/firebase-common-21.0.0/AndroidManifest.xml:34:13-32
+	android:directBootAware
+		ADDED from [com.google.firebase:firebase-common:21.0.0] /Users/macmini/.gradle/caches/8.13/transforms/e2a94c603328c409d5d31ce2a5c11ccc/transformed/firebase-common-21.0.0/AndroidManifest.xml:32:13-43
+	android:name
+		ADDED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:55:13-84
+meta-data#com.google.firebase.components:com.google.firebase.messaging.FirebaseMessagingKtxRegistrar
+ADDED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:57:13-59:85
+	android:value
+		ADDED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:59:17-82
+	android:name
+		ADDED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:58:17-122
+meta-data#com.google.firebase.components:com.google.firebase.messaging.FirebaseMessagingRegistrar
+ADDED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:60:13-62:85
+	android:value
+		ADDED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:62:17-82
+	android:name
+		ADDED from [com.google.firebase:firebase-messaging:24.0.0] /Users/macmini/.gradle/caches/8.13/transforms/633f9c21c1bdac753e6ab812efa491d5/transformed/firebase-messaging-24.0.0/AndroidManifest.xml:61:17-119
+meta-data#com.google.firebase.components:com.google.firebase.installations.FirebaseInstallationsKtxRegistrar
+ADDED from [com.google.firebase:firebase-installations:17.2.0] /Users/macmini/.gradle/caches/8.13/transforms/0a9a57e03824f3dbfbd95b793f29727b/transformed/firebase-installations-17.2.0/AndroidManifest.xml:15:13-17:85
+	android:value
+		ADDED from [com.google.firebase:firebase-installations:17.2.0] /Users/macmini/.gradle/caches/8.13/transforms/0a9a57e03824f3dbfbd95b793f29727b/transformed/firebase-installations-17.2.0/AndroidManifest.xml:17:17-82
+	android:name
+		ADDED from [com.google.firebase:firebase-installations:17.2.0] /Users/macmini/.gradle/caches/8.13/transforms/0a9a57e03824f3dbfbd95b793f29727b/transformed/firebase-installations-17.2.0/AndroidManifest.xml:16:17-130
+meta-data#com.google.firebase.components:com.google.firebase.installations.FirebaseInstallationsRegistrar
+ADDED from [com.google.firebase:firebase-installations:17.2.0] /Users/macmini/.gradle/caches/8.13/transforms/0a9a57e03824f3dbfbd95b793f29727b/transformed/firebase-installations-17.2.0/AndroidManifest.xml:18:13-20:85
+	android:value
+		ADDED from [com.google.firebase:firebase-installations:17.2.0] /Users/macmini/.gradle/caches/8.13/transforms/0a9a57e03824f3dbfbd95b793f29727b/transformed/firebase-installations-17.2.0/AndroidManifest.xml:20:17-82
+	android:name
+		ADDED from [com.google.firebase:firebase-installations:17.2.0] /Users/macmini/.gradle/caches/8.13/transforms/0a9a57e03824f3dbfbd95b793f29727b/transformed/firebase-installations-17.2.0/AndroidManifest.xml:19:17-127
+meta-data#com.google.firebase.components:com.google.firebase.ktx.FirebaseCommonLegacyRegistrar
+ADDED from [com.google.firebase:firebase-common-ktx:21.0.0] /Users/macmini/.gradle/caches/8.13/transforms/ba4ba6fe21f1f5da3f1fbbbf61c927dd/transformed/firebase-common-ktx-21.0.0/AndroidManifest.xml:12:13-14:85
+	android:value
+		ADDED from [com.google.firebase:firebase-common-ktx:21.0.0] /Users/macmini/.gradle/caches/8.13/transforms/ba4ba6fe21f1f5da3f1fbbbf61c927dd/transformed/firebase-common-ktx-21.0.0/AndroidManifest.xml:14:17-82
+	android:name
+		ADDED from [com.google.firebase:firebase-common-ktx:21.0.0] /Users/macmini/.gradle/caches/8.13/transforms/ba4ba6fe21f1f5da3f1fbbbf61c927dd/transformed/firebase-common-ktx-21.0.0/AndroidManifest.xml:13:17-116
+provider#com.google.firebase.provider.FirebaseInitProvider
+ADDED from [com.google.firebase:firebase-common:21.0.0] /Users/macmini/.gradle/caches/8.13/transforms/e2a94c603328c409d5d31ce2a5c11ccc/transformed/firebase-common-21.0.0/AndroidManifest.xml:23:9-28:39
+	android:authorities
+		ADDED from [com.google.firebase:firebase-common:21.0.0] /Users/macmini/.gradle/caches/8.13/transforms/e2a94c603328c409d5d31ce2a5c11ccc/transformed/firebase-common-21.0.0/AndroidManifest.xml:25:13-72
+	android:exported
+		ADDED from [com.google.firebase:firebase-common:21.0.0] /Users/macmini/.gradle/caches/8.13/transforms/e2a94c603328c409d5d31ce2a5c11ccc/transformed/firebase-common-21.0.0/AndroidManifest.xml:27:13-37
+	android:directBootAware
+		ADDED from [com.google.firebase:firebase-common:21.0.0] /Users/macmini/.gradle/caches/8.13/transforms/e2a94c603328c409d5d31ce2a5c11ccc/transformed/firebase-common-21.0.0/AndroidManifest.xml:26:13-43
+	android:initOrder
+		ADDED from [com.google.firebase:firebase-common:21.0.0] /Users/macmini/.gradle/caches/8.13/transforms/e2a94c603328c409d5d31ce2a5c11ccc/transformed/firebase-common-21.0.0/AndroidManifest.xml:28:13-36
+	android:name
+		ADDED from [com.google.firebase:firebase-common:21.0.0] /Users/macmini/.gradle/caches/8.13/transforms/e2a94c603328c409d5d31ce2a5c11ccc/transformed/firebase-common-21.0.0/AndroidManifest.xml:24:13-77
+meta-data#com.google.firebase.components:com.google.firebase.FirebaseCommonKtxRegistrar
+ADDED from [com.google.firebase:firebase-common:21.0.0] /Users/macmini/.gradle/caches/8.13/transforms/e2a94c603328c409d5d31ce2a5c11ccc/transformed/firebase-common-21.0.0/AndroidManifest.xml:35:13-37:85
+	android:value
+		ADDED from [com.google.firebase:firebase-common:21.0.0] /Users/macmini/.gradle/caches/8.13/transforms/e2a94c603328c409d5d31ce2a5c11ccc/transformed/firebase-common-21.0.0/AndroidManifest.xml:37:17-82
+	android:name
+		ADDED from [com.google.firebase:firebase-common:21.0.0] /Users/macmini/.gradle/caches/8.13/transforms/e2a94c603328c409d5d31ce2a5c11ccc/transformed/firebase-common-21.0.0/AndroidManifest.xml:36:17-109
+activity#com.google.android.gms.common.api.GoogleApiActivity
+ADDED from [com.google.android.gms:play-services-base:18.0.1] /Users/macmini/.gradle/caches/8.13/transforms/9b1b9572bccb720e41bb0148b629383f/transformed/play-services-base-18.0.1/AndroidManifest.xml:20:9-22:45
+	android:exported
+		ADDED from [com.google.android.gms:play-services-base:18.0.1] /Users/macmini/.gradle/caches/8.13/transforms/9b1b9572bccb720e41bb0148b629383f/transformed/play-services-base-18.0.1/AndroidManifest.xml:22:19-43
+	android:theme
+		ADDED from [com.google.android.gms:play-services-base:18.0.1] /Users/macmini/.gradle/caches/8.13/transforms/9b1b9572bccb720e41bb0148b629383f/transformed/play-services-base-18.0.1/AndroidManifest.xml:21:19-78
+	android:name
+		ADDED from [com.google.android.gms:play-services-base:18.0.1] /Users/macmini/.gradle/caches/8.13/transforms/9b1b9572bccb720e41bb0148b629383f/transformed/play-services-base-18.0.1/AndroidManifest.xml:20:19-85
 meta-data#androidx.emoji2.text.EmojiCompatInitializer
 ADDED from [androidx.emoji2:emoji2:1.3.0] /Users/macmini/.gradle/caches/8.13/transforms/d87f631865c2334ef0780c82f5efd8ca/transformed/emoji2-1.3.0/AndroidManifest.xml:29:13-31:52
 	android:value
 		ADDED from [androidx.emoji2:emoji2:1.3.0] /Users/macmini/.gradle/caches/8.13/transforms/d87f631865c2334ef0780c82f5efd8ca/transformed/emoji2-1.3.0/AndroidManifest.xml:31:17-49
 	android:name
 		ADDED from [androidx.emoji2:emoji2:1.3.0] /Users/macmini/.gradle/caches/8.13/transforms/d87f631865c2334ef0780c82f5efd8ca/transformed/emoji2-1.3.0/AndroidManifest.xml:30:17-75
-uses-permission#android.permission.WAKE_LOCK
-ADDED from [androidx.work:work-runtime:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/d59273809589eef1015d77ddb3cd9459/transformed/work-runtime-2.10.5/AndroidManifest.xml:23:5-68
-	android:name
-		ADDED from [androidx.work:work-runtime:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/d59273809589eef1015d77ddb3cd9459/transformed/work-runtime-2.10.5/AndroidManifest.xml:23:22-65
-uses-permission#android.permission.ACCESS_NETWORK_STATE
-ADDED from [androidx.work:work-runtime:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/d59273809589eef1015d77ddb3cd9459/transformed/work-runtime-2.10.5/AndroidManifest.xml:24:5-79
-	android:name
-		ADDED from [androidx.work:work-runtime:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/d59273809589eef1015d77ddb3cd9459/transformed/work-runtime-2.10.5/AndroidManifest.xml:24:22-76
-uses-permission#android.permission.RECEIVE_BOOT_COMPLETED
-ADDED from [androidx.work:work-runtime:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/d59273809589eef1015d77ddb3cd9459/transformed/work-runtime-2.10.5/AndroidManifest.xml:25:5-81
-	android:name
-		ADDED from [androidx.work:work-runtime:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/d59273809589eef1015d77ddb3cd9459/transformed/work-runtime-2.10.5/AndroidManifest.xml:25:22-78
 uses-permission#android.permission.FOREGROUND_SERVICE
 ADDED from [androidx.work:work-runtime:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/d59273809589eef1015d77ddb3cd9459/transformed/work-runtime-2.10.5/AndroidManifest.xml:26:5-77
 	android:name
@@ -633,10 +1137,6 @@ ADDED from [androidx.work:work-runtime:2.10.5] /Users/macmini/.gradle/caches/8.1
 		ADDED from [androidx.work:work-runtime:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/d59273809589eef1015d77ddb3cd9459/transformed/work-runtime-2.10.5/AndroidManifest.xml:111:13-88
 intent-filter#action:name:android.intent.action.BOOT_COMPLETED+action:name:android.intent.action.TIMEZONE_CHANGED+action:name:android.intent.action.TIME_SET
 ADDED from [androidx.work:work-runtime:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/d59273809589eef1015d77ddb3cd9459/transformed/work-runtime-2.10.5/AndroidManifest.xml:116:13-120:29
-action#android.intent.action.BOOT_COMPLETED
-ADDED from [androidx.work:work-runtime:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/d59273809589eef1015d77ddb3cd9459/transformed/work-runtime-2.10.5/AndroidManifest.xml:117:17-79
-	android:name
-		ADDED from [androidx.work:work-runtime:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/d59273809589eef1015d77ddb3cd9459/transformed/work-runtime-2.10.5/AndroidManifest.xml:117:25-76
 action#android.intent.action.TIME_SET
 ADDED from [androidx.work:work-runtime:2.10.5] /Users/macmini/.gradle/caches/8.13/transforms/d59273809589eef1015d77ddb3cd9459/transformed/work-runtime-2.10.5/AndroidManifest.xml:118:17-73
 	android:name
@@ -719,6 +1219,22 @@ uses-permission#net.vlinkgroup.nexora.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
 ADDED from [androidx.core:core:1.17.0] /Users/macmini/.gradle/caches/8.13/transforms/75d122a7336cfe2ef1bce419fef040f9/transformed/core-1.17.0/AndroidManifest.xml:26:5-97
 	android:name
 		ADDED from [androidx.core:core:1.17.0] /Users/macmini/.gradle/caches/8.13/transforms/75d122a7336cfe2ef1bce419fef040f9/transformed/core-1.17.0/AndroidManifest.xml:26:22-94
+service#androidx.room.MultiInstanceInvalidationService
+ADDED from [androidx.room:room-runtime:2.6.1] /Users/macmini/.gradle/caches/8.13/transforms/e5661e3adb581f0870f63a699d375068/transformed/room-runtime-2.6.1/AndroidManifest.xml:24:9-28:63
+	android:exported
+		ADDED from [androidx.room:room-runtime:2.6.1] /Users/macmini/.gradle/caches/8.13/transforms/e5661e3adb581f0870f63a699d375068/transformed/room-runtime-2.6.1/AndroidManifest.xml:27:13-37
+	tools:ignore
+		ADDED from [androidx.room:room-runtime:2.6.1] /Users/macmini/.gradle/caches/8.13/transforms/e5661e3adb581f0870f63a699d375068/transformed/room-runtime-2.6.1/AndroidManifest.xml:28:13-60
+	android:directBootAware
+		ADDED from [androidx.room:room-runtime:2.6.1] /Users/macmini/.gradle/caches/8.13/transforms/e5661e3adb581f0870f63a699d375068/transformed/room-runtime-2.6.1/AndroidManifest.xml:26:13-43
+	android:name
+		ADDED from [androidx.room:room-runtime:2.6.1] /Users/macmini/.gradle/caches/8.13/transforms/e5661e3adb581f0870f63a699d375068/transformed/room-runtime-2.6.1/AndroidManifest.xml:25:13-74
+meta-data#com.google.android.gms.version
+ADDED from [com.google.android.gms:play-services-basement:18.10.0] /Users/macmini/.gradle/caches/8.13/transforms/f916deead8b3798d82297393f5d65c4b/transformed/play-services-basement-18.10.0/AndroidManifest.xml:21:9-23:69
+	android:value
+		ADDED from [com.google.android.gms:play-services-basement:18.10.0] /Users/macmini/.gradle/caches/8.13/transforms/f916deead8b3798d82297393f5d65c4b/transformed/play-services-basement-18.10.0/AndroidManifest.xml:23:13-66
+	android:name
+		ADDED from [com.google.android.gms:play-services-basement:18.10.0] /Users/macmini/.gradle/caches/8.13/transforms/f916deead8b3798d82297393f5d65c4b/transformed/play-services-basement-18.10.0/AndroidManifest.xml:22:13-58
 meta-data#androidx.profileinstaller.ProfileInstallerInitializer
 ADDED from [androidx.profileinstaller:profileinstaller:1.4.0] /Users/macmini/.gradle/caches/8.13/transforms/6eb6a4011618c7538402373e1ab71c9c/transformed/profileinstaller-1.4.0/AndroidManifest.xml:29:13-31:52
 	android:value
@@ -761,16 +1277,46 @@ action#androidx.profileinstaller.action.BENCHMARK_OPERATION
 ADDED from [androidx.profileinstaller:profileinstaller:1.4.0] /Users/macmini/.gradle/caches/8.13/transforms/6eb6a4011618c7538402373e1ab71c9c/transformed/profileinstaller-1.4.0/AndroidManifest.xml:50:17-95
 	android:name
 		ADDED from [androidx.profileinstaller:profileinstaller:1.4.0] /Users/macmini/.gradle/caches/8.13/transforms/6eb6a4011618c7538402373e1ab71c9c/transformed/profileinstaller-1.4.0/AndroidManifest.xml:50:25-92
-service#androidx.room.MultiInstanceInvalidationService
-ADDED from [androidx.room:room-runtime:2.6.1] /Users/macmini/.gradle/caches/8.13/transforms/e5661e3adb581f0870f63a699d375068/transformed/room-runtime-2.6.1/AndroidManifest.xml:24:9-28:63
-	android:exported
-		ADDED from [androidx.room:room-runtime:2.6.1] /Users/macmini/.gradle/caches/8.13/transforms/e5661e3adb581f0870f63a699d375068/transformed/room-runtime-2.6.1/AndroidManifest.xml:27:13-37
-	tools:ignore
-		ADDED from [androidx.room:room-runtime:2.6.1] /Users/macmini/.gradle/caches/8.13/transforms/e5661e3adb581f0870f63a699d375068/transformed/room-runtime-2.6.1/AndroidManifest.xml:28:13-60
-	android:directBootAware
-		ADDED from [androidx.room:room-runtime:2.6.1] /Users/macmini/.gradle/caches/8.13/transforms/e5661e3adb581f0870f63a699d375068/transformed/room-runtime-2.6.1/AndroidManifest.xml:26:13-43
+meta-data#okhttp3.internal.platform.PlatformInitializer
+ADDED from [com.squareup.okhttp3:okhttp-android:5.2.1] /Users/macmini/.gradle/caches/8.13/transforms/2e162e5c15f43043707e190876221ced/transformed/okhttp-release/AndroidManifest.xml:16:13-18:52
+	android:value
+		ADDED from [com.squareup.okhttp3:okhttp-android:5.2.1] /Users/macmini/.gradle/caches/8.13/transforms/2e162e5c15f43043707e190876221ced/transformed/okhttp-release/AndroidManifest.xml:18:17-49
 	android:name
-		ADDED from [androidx.room:room-runtime:2.6.1] /Users/macmini/.gradle/caches/8.13/transforms/e5661e3adb581f0870f63a699d375068/transformed/room-runtime-2.6.1/AndroidManifest.xml:25:13-74
+		ADDED from [com.squareup.okhttp3:okhttp-android:5.2.1] /Users/macmini/.gradle/caches/8.13/transforms/2e162e5c15f43043707e190876221ced/transformed/okhttp-release/AndroidManifest.xml:17:17-77
+meta-data#com.google.firebase.components:com.google.firebase.datatransport.TransportRegistrar
+ADDED from [com.google.firebase:firebase-datatransport:18.2.0] /Users/macmini/.gradle/caches/8.13/transforms/8291305ff20e069029f12c5529ea75d5/transformed/firebase-datatransport-18.2.0/AndroidManifest.xml:25:13-27:85
+	android:value
+		ADDED from [com.google.firebase:firebase-datatransport:18.2.0] /Users/macmini/.gradle/caches/8.13/transforms/8291305ff20e069029f12c5529ea75d5/transformed/firebase-datatransport-18.2.0/AndroidManifest.xml:27:17-82
+	android:name
+		ADDED from [com.google.firebase:firebase-datatransport:18.2.0] /Users/macmini/.gradle/caches/8.13/transforms/8291305ff20e069029f12c5529ea75d5/transformed/firebase-datatransport-18.2.0/AndroidManifest.xml:26:17-115
+service#com.google.android.datatransport.runtime.backends.TransportBackendDiscovery
+ADDED from [com.google.android.datatransport:transport-backend-cct:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/238197561de43ad389aa550afa1d5709/transformed/transport-backend-cct-3.1.9/AndroidManifest.xml:28:9-34:19
+MERGED from [com.google.android.datatransport:transport-runtime:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/0472d52ee4a3ef974a61dbdf0bb8e5bf/transformed/transport-runtime-3.1.9/AndroidManifest.xml:36:9-38:40
+MERGED from [com.google.android.datatransport:transport-runtime:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/0472d52ee4a3ef974a61dbdf0bb8e5bf/transformed/transport-runtime-3.1.9/AndroidManifest.xml:36:9-38:40
+	android:exported
+		ADDED from [com.google.android.datatransport:transport-backend-cct:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/238197561de43ad389aa550afa1d5709/transformed/transport-backend-cct-3.1.9/AndroidManifest.xml:30:13-37
+	android:name
+		ADDED from [com.google.android.datatransport:transport-backend-cct:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/238197561de43ad389aa550afa1d5709/transformed/transport-backend-cct-3.1.9/AndroidManifest.xml:29:13-103
+meta-data#backend:com.google.android.datatransport.cct.CctBackendFactory
+ADDED from [com.google.android.datatransport:transport-backend-cct:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/238197561de43ad389aa550afa1d5709/transformed/transport-backend-cct-3.1.9/AndroidManifest.xml:31:13-33:39
+	android:value
+		ADDED from [com.google.android.datatransport:transport-backend-cct:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/238197561de43ad389aa550afa1d5709/transformed/transport-backend-cct-3.1.9/AndroidManifest.xml:33:17-36
+	android:name
+		ADDED from [com.google.android.datatransport:transport-backend-cct:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/238197561de43ad389aa550afa1d5709/transformed/transport-backend-cct-3.1.9/AndroidManifest.xml:32:17-94
+service#com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService
+ADDED from [com.google.android.datatransport:transport-runtime:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/0472d52ee4a3ef974a61dbdf0bb8e5bf/transformed/transport-runtime-3.1.9/AndroidManifest.xml:26:9-30:19
+	android:exported
+		ADDED from [com.google.android.datatransport:transport-runtime:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/0472d52ee4a3ef974a61dbdf0bb8e5bf/transformed/transport-runtime-3.1.9/AndroidManifest.xml:28:13-37
+	android:permission
+		ADDED from [com.google.android.datatransport:transport-runtime:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/0472d52ee4a3ef974a61dbdf0bb8e5bf/transformed/transport-runtime-3.1.9/AndroidManifest.xml:29:13-69
+	android:name
+		ADDED from [com.google.android.datatransport:transport-runtime:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/0472d52ee4a3ef974a61dbdf0bb8e5bf/transformed/transport-runtime-3.1.9/AndroidManifest.xml:27:13-117
+receiver#com.google.android.datatransport.runtime.scheduling.jobscheduling.AlarmManagerSchedulerBroadcastReceiver
+ADDED from [com.google.android.datatransport:transport-runtime:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/0472d52ee4a3ef974a61dbdf0bb8e5bf/transformed/transport-runtime-3.1.9/AndroidManifest.xml:32:9-34:40
+	android:exported
+		ADDED from [com.google.android.datatransport:transport-runtime:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/0472d52ee4a3ef974a61dbdf0bb8e5bf/transformed/transport-runtime-3.1.9/AndroidManifest.xml:34:13-37
+	android:name
+		ADDED from [com.google.android.datatransport:transport-runtime:3.1.9] /Users/macmini/.gradle/caches/8.13/transforms/0472d52ee4a3ef974a61dbdf0bb8e5bf/transformed/transport-runtime-3.1.9/AndroidManifest.xml:33:13-132
 activity#com.google.android.play.core.common.PlayCoreDialogWrapperActivity
 ADDED from [com.google.android.play:core-common:2.0.3] /Users/macmini/.gradle/caches/8.13/transforms/9886badb9cd34ecbd6cdce503b64c8c6/transformed/core-common-2.0.3/AndroidManifest.xml:14:9-18:65
 	android:stateNotNeeded

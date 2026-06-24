@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "net.vlinkgroup.nexora.app-mergeDebugResources-50:/values-watch-v20/values-watch-v20.xml",
+            "outputFile": "net.vlinkgroup.nexora.app-mergeDebugResources-60:/values-watch-v20/values-watch-v20.xml",
             "map": [
                 {
                     "source": "/Users/macmini/.gradle/caches/8.13/transforms/e22b2c8272d76fb51499f647fc2d46df/transformed/core-splashscreen-1.0.1/res/values-watch-v20/values-watch-v20.xml",
