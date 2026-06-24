@@ -22,7 +22,7 @@ export default function RequireStaffReady({ children }) {
     (session?.hasStaffProfile && session?.hasCompletedOnboarding)
 
   if (session && !isStaffReady) {
-    return <Navigate to="/register" replace />
+    return <Navigate to="/onboarding" replace />
   }
 
   return children

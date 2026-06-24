@@ -105,7 +105,8 @@ function normalizeNotification(item: NotificationApiDto): NotificationRecord {
     actionUrl: item.actionUrl ?? null,
     isRead,
     read: isRead,
-    time: new Date(createdAt).toLocaleString(),
+    createdAt: createdAt || undefined,
+    time: createdAt,
     ...(linkTab ? { linkTab } : {}),
     ...(staffId ? { staffId } : {}),
   }

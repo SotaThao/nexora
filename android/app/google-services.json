@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "874053223527",
+    "project_id": "nexora-touch",
+    "storage_bucket": "nexora-touch.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:874053223527:android:c2327f74fed997db5640c2",
+        "android_client_info": {
+          "package_name": "net.vlinkgroup.nexora"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCYAhqYHsMmDtOBxw54LDekkdh1bTJdhC8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

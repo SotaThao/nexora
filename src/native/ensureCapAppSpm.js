@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
+import { ensureIosOneSignalPlist } from './ensureIosOneSignal.js'
 
 const capAppRoot = join(process.cwd(), 'ios/App/CapApp-SPM')
 const sourceFile = join(capAppRoot, 'Sources/CapApp-SPM/CapApp-SPM.swift')
@@ -43,3 +44,5 @@ for (const file of files) {
   mkdirSync(dirname(file.path), { recursive: true })
   writeFileSync(file.path, file.content)
 }
+
+ensureIosOneSignalPlist()

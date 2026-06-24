@@ -13,6 +13,7 @@ import SkeletonProvider from './components/ui/skeleton/SkeletonProvider'
 import { QueryClientProvider } from '@tanstack/react-query'
 import queryClient from './lib/queryClient'
 import { AuthProvider } from './auth/AuthProvider'
+import OneSignalAuthBridge from './native/OneSignalAuthBridge'
 
 const ReactQueryDevtools = import.meta.env.DEV
   ? lazy(() =>
@@ -27,6 +28,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
+          <OneSignalAuthBridge />
           <LanguageProvider>
             <NotificationProvider>
               <BrowserRouter

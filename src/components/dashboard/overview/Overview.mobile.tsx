@@ -1,13 +1,10 @@
 import { useMemo, useCallback, useState } from 'react'
 import {
-  QrCode,
   Star,
   Clock,
   DollarSign,
   Users,
   Gift,
-  FileBarChart,
-  UserPlus,
   ChevronRight,
   PiggyBank,
   Eye,
@@ -79,12 +76,19 @@ function KpiCard({ icon, iconBg, label, value, trend, trendColor = 'text-nexoraS
   )
 }
 
+const QUICK_ACTION_MENU_ICONS = {
+  qr: '/assets/menu/touchpoint.png',
+  staff: '/assets/menu/staff.png',
+  tips: '/assets/menu/tips.png',
+  reports: '/assets/menu/transaction.png',
+}
+
 /* ─── Quick Action ───────────────────────────────────────────────────────── */
-function QuickAction({ icon, label, onClick }) {
+function QuickAction({ imageSrc, label, onClick }) {
   return (
     <button type="button" onClick={onClick} className="flex flex-col items-center gap-2 focus:outline-none group">
-      <span className="flex h-[60px] w-[60px] items-center justify-center rounded-[22px] border border-nexoraBorder bg-gradient-to-b from-white to-nexoraSurfaceMuted text-nexoraBrand shadow-nexora-soft transition-all duration-200 group-hover:scale-105 group-active:scale-95">
-        {icon}
+      <span className="flex h-[60px] w-[60px] items-center justify-center rounded-[22px] border border-nexoraBorder bg-gradient-to-b from-white to-nexoraSurfaceMuted shadow-nexora-soft transition-all duration-200 group-hover:scale-105 group-active:scale-95">
+        <img src={imageSrc} alt="" className="h-7 w-7 object-contain" aria-hidden="true" />
       </span>
       <span className="text-[12px] font-bold text-nexoraText">{label}</span>
     </button>
@@ -433,18 +437,18 @@ function Overview({
       </Panel>
 
       {/* ── Quick Actions ────────────────────────────────────────────────── */}
-      <Panel title={k('quick_actions')} action={k('manage')} onAction={() => onNavigateMenu?.('touchpoints')}>
+      {/* <Panel title={k('quick_actions')} action={k('manage')} onAction={() => onNavigateMenu?.('touchpoints')}>
         <div className="grid grid-cols-4 gap-2">
           <QuickAction
-            icon={<QrCode className="h-6 w-6" />}
+            imageSrc={QUICK_ACTION_MENU_ICONS.qr}
             label={k('quick_add_qr')}
             onClick={() => previewQr?.(masterQrTarget)}
           />
-          <QuickAction icon={<UserPlus className="h-6 w-6" />} label={k('quick_add_staff')} onClick={() => onNavigateMenu?.('staff')} />
-          <QuickAction icon={<DollarSign className="h-6 w-6" />} label={k('quick_tips')} onClick={() => onNavigateMenu?.('tips')} />
-          <QuickAction icon={<FileBarChart className="h-6 w-6" />} label={k('quick_reports')} onClick={() => onNavigateMenu?.('reports')} />
+          <QuickAction imageSrc={QUICK_ACTION_MENU_ICONS.staff} label={k('quick_add_staff')} onClick={() => onNavigateMenu?.('staff')} />
+          <QuickAction imageSrc={QUICK_ACTION_MENU_ICONS.tips} label={k('quick_tips')} onClick={() => onNavigateMenu?.('tips')} />
+          <QuickAction imageSrc={QUICK_ACTION_MENU_ICONS.reports} label={k('quick_reports')} onClick={() => onNavigateMenu?.('reports')} />
         </div>
-      </Panel>
+      </Panel> */}
 
       {/* ── Pending Confirmations ────────────────────────────────────────── */}
       <Panel title={t('staff_dashboard.home.pending_confirmations')} action={t('staff_dashboard.home.view_all')} onAction={() => onNavigateMenu?.('staff')}>

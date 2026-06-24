@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { Smartphone } from 'lucide-react'
 import useStaffRegistration, { MOCK_NEXORA_STAFF_PROFILES } from './staff-registration/hooks/useStaffRegistration'
+import LanguageSwitcher from './ui/LanguageSwitcher'
+import HomepageLink from './ui/HomepageLink'
 import StepWelcome from './staff-registration/steps/StepWelcome'
 import StepOtpVerify from './staff-registration/steps/StepOtpVerify'
 import StepProfile from './staff-registration/steps/StepProfile'
@@ -38,21 +40,10 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
       <div className="absolute bottom-1/4 right-1/4 h-80 w-80 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(43,89,255,0.03)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-96 sm:w-96"></div>
 
       {/* Language Switcher */}
-      <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-nexoraBorder shadow-sm">
-        <button
-          onClick={() => reg.setLanguage('vi')}
-          className={`text-xs font-bold px-2 py-0.5 rounded transition ${reg.currentLanguage === 'vi' ? 'bg-nexoraBrand text-white' : 'text-nexoraSubtle hover:text-nexoraText'}`}
-        >
-          VI
-        </button>
-        <span className="text-nexoraBorder text-xs">|</span>
-        <button
-          onClick={() => reg.setLanguage('en')}
-          className={`text-xs font-bold px-2 py-0.5 rounded transition ${reg.currentLanguage === 'en' ? 'bg-nexoraBrand text-white' : 'text-nexoraSubtle hover:text-nexoraText'}`}
-        >
-          EN
-        </button>
+      <div className="absolute top-[max(1rem,var(--app-safe-area-top))] right-[max(1rem,var(--app-safe-area-right))] z-50">
+        <LanguageSwitcher />
       </div>
+      <HomepageLink />
 
       <div className="max-w-xl mx-auto px-4">
         {/* Onboarding Wizard Portal Container */}

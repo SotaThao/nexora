@@ -1,5 +1,5 @@
 import { ShieldAlert, ShieldCheck } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "../../../contexts/LanguageContext";
 import {
@@ -13,6 +13,7 @@ import {
   useUpdateAvatar,
   useUpdateBasicInfo,
   useUpdateUserProfile,
+  useVerifiedStatus,
 } from "../../../data/hooks/useProfileSettings";
 import { qk } from "../../../data/queryKeys";
 import { logger } from "../../../utils/logger";
@@ -146,6 +147,8 @@ const DEFAULT_PROFILE = {
   yelpReview: "",
 };
 
+const KYB_EDITABLE_STATUSES = new Set(['basic', 'kyb_rejected', 'rejected'])
+
 export default function useSettingsForm({
   setupData,
   hasKyb,
@@ -167,6 +170,16 @@ export default function useSettingsForm({
   const updateBusinessMutation = useUpdateBusiness();
   const updateBusinessInfoMutation = useUpdateBusinessInfo();
   const updateReviewLinksMutation = useUpdateReviewLinks();
+  const { data: verifiedStatusData } = useVerifiedStatus();
+
+  // Editing is allowed only when KYB has not been submitted or was rejected.
+  // verifiedStatusData.status comes from SSO live: None | Review | Rejected | Verified
+  const canEditProfile = useMemo(() => {
+    if (!KYB_EDITABLE_STATUSES.has(verificationStatus)) return false;
+    if (!verifiedStatusData) return true; // still loading — keep current behavior
+    return verifiedStatusData.status === 'None' || verifiedStatusData.status === 'Rejected';
+  }, [verificationStatus, verifiedStatusData]);
+
   const [activeTab, setActiveTab] = useState(initialTab); // profile | kyb
 
   useEffect(() => {
@@ -264,11 +277,11 @@ export default function useSettingsForm({
   const [modalError, setModalError] = useState("");
 
   useEffect(() => {
-    if (!hasKyb) return;
+    if (canEditProfile) return;
     setIsEditingBasic(false);
     setIsEditingAddress(false);
     setIsEditingBusiness(false);
-  }, [hasKyb]);
+  }, [canEditProfile]);
 
   // Load profile settings + business profile into the form.
   //
@@ -308,7 +321,7 @@ export default function useSettingsForm({
           businessWebsite: setupData.businessInfo?.website || "",
           businessEmail:
             setupData.reviewLinks?.feedbackEmail || next.businessEmail || "",
-          street: setupData.businessInfo?.address || next.street || "",
+          street: next.street || setupData.businessInfo?.address || "",
           googleReview: setupData.reviewLinks?.googleReview || "",
           yelpReview: setupData.reviewLinks?.yelpReview || "",
           paymentAccounts:
@@ -349,7 +362,7 @@ export default function useSettingsForm({
 
   // --- Edit Actions ---
   const startEditBasic = () => {
-    if (hasKyb) return;
+    if (!canEditProfile) return;
     setBasicErrors({});
     setBasicForm({
       fullName: profile.fullName,
@@ -376,7 +389,7 @@ export default function useSettingsForm({
 
   const saveBasic = (e) => {
     e.preventDefault();
-    if (hasKyb) return;
+    if (!canEditProfile) return;
     const errors = validateBasicForm(basicForm);
     setBasicErrors(errors);
     if (Object.keys(errors).length > 0) return;
@@ -404,7 +417,7 @@ export default function useSettingsForm({
   };
 
   const startEditAddress = () => {
-    if (hasKyb) return;
+    if (!canEditProfile) return;
     setAddressErrors({});
     setAddressForm({
       street: profile.street,
@@ -418,7 +431,7 @@ export default function useSettingsForm({
 
   const saveAddress = (e) => {
     e.preventDefault();
-    if (hasKyb) return;
+    if (!canEditProfile) return;
     const errors = validateAddressForm(addressForm);
     setAddressErrors(errors);
     if (Object.keys(errors).length > 0) return;
@@ -447,7 +460,7 @@ export default function useSettingsForm({
   };
 
   const startEditBusiness = () => {
-    if (hasKyb) return;
+    if (!canEditProfile) return;
     setBusinessErrors({});
     setBusinessForm({
       businessName: profile.businessName,
@@ -460,7 +473,7 @@ export default function useSettingsForm({
 
   const saveBusiness = (e) => {
     e.preventDefault();
-    if (hasKyb) return;
+    if (!canEditProfile) return;
     const errors = validateBusinessForm(businessForm);
     setBusinessErrors(errors);
     if (Object.keys(errors).length > 0) return;
@@ -852,5 +865,6 @@ export default function useSettingsForm({
     formatDOB,
     getStatusCardDetails,
     currentLanguage,
+    canEditProfile,
   };
 }

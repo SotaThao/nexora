@@ -172,12 +172,7 @@ export function TouchpointsRoute() {
   const ctx = useOutletContext<LooseObject>()
   const [sp, setSp] = useSearchParams()
   const tab = sp.get('tab') || 'stations'
-
-  useEffect(() => {
-    if (tab === 'devices') {
-      setSp({ tab: 'stations' }, { replace: true })
-    }
-  }, [tab, setSp])
+  const activeSubTab = tab === 'devices' ? 'devices' : 'stations'
 
   return (
     <TouchpointsView
@@ -196,9 +191,8 @@ export function TouchpointsRoute() {
       onAddDevice={ctx.handleAddDevice}
       onDeleteDevice={ctx.handleDeleteDevice}
       onToggleDeviceStatus={ctx.handleToggleDeviceStatus}
-      activeSubTab={tab === 'devices' ? 'stations' : tab}
+      activeSubTab={activeSubTab}
       onTabChange={(nextTab) => {
-        if (nextTab === 'devices') return
         setSp({ tab: nextTab }, { replace: true })
       }}
     />

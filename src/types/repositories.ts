@@ -390,6 +390,58 @@ export interface TouchpointApiDto {
   deviceId?: string | null
 }
 
+export interface PhysicalCardApiDto {
+  id?: string
+  cardCode?: string
+  helpCode?: string | null
+  linkedTouchPointId?: string | null
+  touchPointName?: string | null
+  linkedAt?: string | null
+}
+
+export interface LinkPhysicalCardResult {
+  cardCode: string
+  linkedTouchPointId: string
+  touchPointName: string
+  linkedAt: string
+}
+
+export interface UnlinkPhysicalCardResult {
+  cardCode: string
+  unlinkedAt: string
+}
+
+export interface PhysicalCardDetailApiDto {
+  id?: string
+  cardCode?: string
+  helpCode?: string
+  isActive?: boolean
+  linkedTouchPointId?: string | null
+  touchPointName?: string | null
+  touchPointUrl?: string | null
+  linkedAt?: string | null
+}
+
+export interface QrTouchPointApiDto {
+  id?: string
+  name?: string
+  slug?: string
+  type?: string
+  businessId?: string
+  businessName?: string
+  businessSlug?: string
+}
+
+export interface ResolveQrCodeResult {
+  status?: string
+  touchPoint?: QrTouchPointApiDto | null
+}
+
+export interface SendPhysicalCardSupportResult {
+  supportRequestId: string
+  submittedAt: string
+}
+
 export interface TouchpointCreateResult {
   touchPointId: string
   qrImageUrl: string

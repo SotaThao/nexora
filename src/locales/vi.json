@@ -214,6 +214,7 @@
     "active": "Đang hoạt động",
     "inactive": "Ngừng hoạt động",
     "back": "Quay lại",
+    "back_to_homepage": "Trang chủ",
     "previous": "Trước",
     "next": "Tiếp theo",
     "cancel": "Hủy",
@@ -434,6 +435,7 @@
       "manage_plan": "Quản lý gói"
     },
     "menu": {
+      "home": "Trang chủ",
       "dashboard": "Bảng Điều Khiển",
       "staff": "Nhân Viên",
       "tips": "Tiền Típ",
@@ -638,7 +640,37 @@
       "empty_title": "Chưa có trạm QR nào",
       "empty_desc": "Tạo touchpoint đầu tiên để bắt đầu nhận lượt quét và tiền tip.",
       "toggle_enabled": "Đã bật touchpoint thành công.",
-      "toggle_disabled": "Đã tắt touchpoint thành công."
+      "toggle_disabled": "Đã tắt touchpoint thành công.",
+      "link_success": "Liên kết thiết bị thành công.",
+      "unlink_success": "Hủy liên kết thiết bị thành công.",
+      "no_matching_cards": "Không tìm thấy thiết bị phù hợp",
+      "linked_to": "Đã liên kết với {{name}}",
+      "unlink_btn": "Hủy liên kết",
+      "unlink_confirm_title": "Xác nhận hủy liên kết",
+      "unlink_confirm_desc": "Hủy liên kết thiết bị \"{device}\" khỏi touchpoint \"{name}\"? Trạm sẽ chỉ dùng QR in giấy cho đến khi bạn liên kết thiết bị mới.",
+      "link_device_btn": "Liên kết thiết bị",
+      "link_device_required": "Vui lòng nhập mã thiết bị.",
+      "hardware": {
+        "linked_devices": "Thiết bị đã liên kết",
+        "unlinked_devices": "Thiết bị chưa liên kết"
+      },
+      "physical_card": {
+        "view_detail": "Xem chi tiết thiết bị",
+        "detail_title": "Chi tiết thiết bị",
+        "detail_error": "Không thể tải chi tiết thiết bị.",
+        "card_code": "Mã thẻ",
+        "help_code": "Mã hỗ trợ",
+        "status": "Trạng thái",
+        "linked_at": "Liên kết lúc",
+        "not_linked_yet": "Chưa liên kết",
+        "touchpoint": "Touchpoint đã liên kết",
+        "support_title": "Yêu cầu hỗ trợ thiết bị",
+        "support_desc": "Mô tả sự cố với thiết bị này. Đội ngũ sẽ xử lý theo mã hỗ trợ.",
+        "support_placeholder": "Mô tả sự cố với thiết bị...",
+        "support_submit": "Gửi yêu cầu hỗ trợ",
+        "support_success": "Đã gửi yêu cầu hỗ trợ thành công.",
+        "close": "Đóng"
+      }
     },
     "devices": {
       "subtitle": "Quản lý các trạm đứng salon vật lý, mã đặt bàn và điểm chạm thông minh.",
@@ -859,7 +891,7 @@
       "via_link_request": "Yêu cầu liên kết",
       "via_invite": "Đã gửi lời mời",
       "technician": "Kỹ thuật viên",
-      "nav_home": "Trang chủ",
+      "nav_home": "Tổng quan",
       "nav_staff": "Nhân viên",
       "nav_tips": "Tip",
       "nav_qr": "QR",
@@ -1190,6 +1222,7 @@
     "business_invalid_slug_format": "Định dạng đường dẫn URL không hợp lệ.",
     "user_not_merchant": "Tài khoản của bạn không có vai trò chủ tiệm.",
     "touchpoint_starter_limit_reached": "Gói Starter đã đạt giới hạn: bạn chỉ có thể tạo tối đa 3 điểm chạm. Vui lòng nâng cấp gói để thêm nhiều hơn.",
+    "physical_card_not_found": "Không tìm thấy thiết bị thẻ vật lý này. Vui lòng kiểm tra mã thẻ và thử lại.",
     "image_file_size_exceeded": "Kích thước ảnh vượt quá giới hạn cho phép 10MB.",
     "image_unsupported_file_type": "Định dạng ảnh không hỗ trợ. Vui lòng tải lên PNG, JPEG hoặc WebP.",
     "image_upload_failed": "Tải ảnh lên thất bại.",
@@ -1575,9 +1608,6 @@
       },
       "steps": {
         "StepCredentials": {
-          "activateAccountEnterOtp": "Kích hoạt tài khoản (Nhập OTP)",
-          "enterTheOtpCode": "Nhập mã OTP được gửi tới email của bạn để kích hoạt tài khoản.",
-          "enterOtpCode": "Nhập mã OTP *",
           "resendVerificationCode": "Gửi lại mã xác thực",
           "verifyAndActivate": "Xác minh & Kích hoạt",
           "processing": "Đang xử lý...",
@@ -1586,14 +1616,14 @@
           "otpSentToEmail": "OTP đã gửi tới email"
         },
         "StepOtpVerify": {
-          "activateAccountEnterOtp": "Kích hoạt tài khoản (Nhập OTP)",
-          "enterTheOtpCode": "Nhập mã OTP được gửi tới email của bạn để kích hoạt tài khoản.",
-          "enterOtpCode": "Nhập mã OTP *",
+          "activateAccountEnterOtp": "Kích hoạt tài khoản",
+          "enterTheOtpCode": "Mã xác thực đã gửi tới {{email}}",
+          "otpSentToEmail": "Mã xác thực đã gửi tới",
+          "enterOtpCode": "Nhập mã xác thực",
           "resendVerificationCode": "Gửi lại mã xác thực",
           "verifyAndActivate": "Xác minh & Kích hoạt",
-          "phExampleOtp": "vd: 1234",
-          "otpSentToEmail": "OTP đã gửi tới email",
-          "processing": "Đang xử lý..."
+          "processing": "Đang xử lý...",
+          "phExampleOtp": "Nhập mã 6 số"
         },
         "StepPayoutSetup": {
           "payoutConfiguration": "Cấu hình ví nhận tiền",
@@ -1612,7 +1642,7 @@
           "phoneNumber": "Số điện thoại *",
           "emailAddress": "Địa chỉ Email",
           "roleSpeciality": "Chuyên môn / Vai trò",
-          "nexoraStaffId": "Mã thợ NEXORA",
+          "nexoraStaffId": "NEXORA ID",
           "shortBioShowsOn": "Lời chào / Tiểu sử ngắn (Hiển thị cho khách hàng gửi tip)",
           "phFullName": "vd: Lisa Marie Tran",
           "phNickname": "vd: Lisa T.",
@@ -1953,7 +1983,7 @@
     "staff_registration": {
       "hooks": {
         "useStaffRegistration": {
-          "nexoraStaffIdNot": "Không tìm thấy NEXORA Staff ID này.",
+          "nexoraStaffIdNot": "Không tìm thấy NEXORA ID này.",
           "emailIsRequired": "Email không được để trống",
           "emailIsInvalid": "Email không hợp lệ",
           "emailsDoNotMatch": "Email nhập lại không khớp",
@@ -1984,8 +2014,8 @@
           "password": "Mật khẩu *",
           "referralLinkSalon": "Tên tiệm - Mã giới thiệu",
           "label1ActivateAccount": "1. Kích hoạt tài khoản",
-          "enterTheOtpCode": "Nhập mã OTP được gửi tới email của bạn để kích hoạt tài khoản.",
-          "enterOtpCode": "Nhập mã OTP *",
+          "enterTheOtpCode": "Mã xác thực đã gửi tới {{email}}",
+          "enterOtpCode": "Nhập mã xác thực",
           "verifyAndActivate": "Xác minh & Kích hoạt",
           "privacyPolicy": "Chính sách bảo mật",
           "termsOfService": "Điều khoản dịch vụ",
@@ -2016,7 +2046,7 @@
           "walletPlaceholder_venmo": "Nhập @username Venmo...",
           "walletPlaceholder_cashapp": "Nhập $cashtag Cash App...",
           "walletPlaceholder_applecash": "Nhập số điện thoại Apple Cash...",
-          "nexoraStaffId": "NEXORA Staff ID",
+          "nexoraStaffId": "NEXORA ID",
           "pendingRegister": "Chờ đăng ký",
           "consentRequired": "Bạn phải chấp nhận cả hai điều khoản trước khi kích hoạt tài khoản."
         },
@@ -2041,7 +2071,7 @@
           "pending": "CHỜ DUYỆT",
           "pendingApproval": "Chờ duyệt",
           "staffLinkCopiedTo": "Đã sao chép liên kết của thợ!",
-          "joinRequestMessage": "Mã thợ NEXORA của bạn là {staffId}. Yêu cầu liên kết với {businessName} đã được gửi thành công. Vui lòng chờ chủ tiệm duyệt để kích hoạt QR nhận tiền tip.",
+          "joinRequestMessage": "NEXORA ID của bạn là {staffId}. Yêu cầu liên kết với {businessName} đã được gửi thành công. Vui lòng chờ chủ tiệm duyệt để kích hoạt QR nhận tiền tip.",
           "joinedTodayRole": "Gia nhập: Hôm nay • Vai trò: {role}",
           "nexoraId": "NEXORA ID",
           "copyStaffLink": "SAO CHÉP STAFF LINK"
@@ -2286,6 +2316,26 @@
         "f3": "Bảng NFC đồng thau cao cấp tại quầy",
         "f4": "Quản lý thành công doanh nghiệp 24/7"
       }
+    }
+  },
+  "public": {
+    "qr": {
+      "invalid_code_title": "Mã QR không hợp lệ",
+      "invalid_code_desc": "Liên kết này thiếu mã thiết bị. Vui lòng quét lại mã QR.",
+      "unavailable_title": "Không thể mở mã QR",
+      "not_found": "Không tìm thấy mã thiết bị này. Mã có thể không hợp lệ hoặc đã bị huỷ đăng ký.",
+      "inactive": "Thiết bị này hiện không hoạt động. Vui lòng liên hệ cửa hàng để được hỗ trợ.",
+      "unlinked": "Thiết bị này chưa được liên kết với touchpoint. Vui lòng yêu cầu merchant liên kết trước.",
+      "unavailable": "Mã QR này hiện không thể mở touchpoint. Vui lòng thử lại sau hoặc liên hệ hỗ trợ."
+    },
+    "help_qr": {
+      "title": "Hỗ trợ thiết bị",
+      "invalid_code": "Liên kết hỗ trợ thiếu mã thiết bị.",
+      "detail_partial_title": "Thông tin thiết bị bị giới hạn",
+      "detail_partial_desc": "Không thể tải đầy đủ thông tin thiết bị, nhưng bạn vẫn có thể gửi yêu cầu hỗ trợ bằng mã help bên dưới.",
+      "support_desc": "Mô tả sự cố với thiết bị vật lý này. Đội ngũ sẽ liên hệ lại dựa trên mã help trên thẻ.",
+      "support_success": "Đã gửi yêu cầu hỗ trợ thành công.",
+      "support_success_desc": "Cảm ơn bạn. Đội ngũ sẽ xem xét và liên hệ lại nếu cần."
     }
   },
   "coming_soon": {

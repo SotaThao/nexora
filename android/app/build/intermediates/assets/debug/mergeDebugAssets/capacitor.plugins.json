@@ -18,5 +18,9 @@
 	{
 		"pkg": "@capgo/capacitor-updater",
 		"classpath": "ee.forgr.capacitor_updater.CapacitorUpdaterPlugin"
+	},
+	{
+		"pkg": "@onesignal/capacitor-plugin",
+		"classpath": "com.onesignal.capacitor.OneSignalCapacitorPlugin"
 	}
 ]
