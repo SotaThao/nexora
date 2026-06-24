@@ -1,4 +1,5 @@
 import React from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { ChevronLeft, ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import MenuIcon from '../../ui/MenuIcon'
@@ -17,12 +18,8 @@ export default function MobileMenuDrawer({
   setSettingsTab,
   isProfileExpanded,
   setIsProfileExpanded,
-  tipsTab,
-  setTipsTab,
   isTipsMobileExpanded,
   setIsTipsMobileExpanded,
-  touchpointsTab,
-  setTouchpointsTab,
   isTouchpointsMobileExpanded,
   setIsTouchpointsMobileExpanded,
   hasKyb,
@@ -32,11 +29,39 @@ export default function MobileMenuDrawer({
   navigateMenu,
 }) {
   const { t, currentLanguage } = useTranslation()
+  const [searchParams] = useSearchParams()
+  const activeSubTab = searchParams.get('tab')
   const subscriptionCopy = getSubscriptionSidebarCopy(
     subscription ?? profile?.subscription,
     t,
     currentLanguage,
   )
+
+  const handleMenuClick = (id: string) => {
+    if (id === 'tips') {
+      if (activeMenu === 'tips') {
+        setIsTipsMobileExpanded((prev) => !prev)
+      } else {
+        navigateMenu('tips', { closeDrawer: false })
+        setIsTipsMobileExpanded(true)
+        setIsTouchpointsMobileExpanded(false)
+      }
+      return
+    }
+
+    if (id === 'touchpoints') {
+      if (activeMenu === 'touchpoints') {
+        setIsTouchpointsMobileExpanded((prev) => !prev)
+      } else {
+        navigateMenu('touchpoints', { closeDrawer: false })
+        setIsTouchpointsMobileExpanded(true)
+        setIsTipsMobileExpanded(false)
+      }
+      return
+    }
+
+    navigateMenu(id)
+  }
 
   if (!isOpen) return null
 
@@ -176,17 +201,7 @@ export default function MobileMenuDrawer({
               <React.Fragment key={id}>
                 <button
                   type="button"
-                  onClick={() => {
-                    if (id === 'tips') {
-                      navigateMenu(id)
-                      setIsTipsMobileExpanded(!isTipsMobileExpanded)
-                    } else if (id === 'touchpoints') {
-                      navigateMenu(id)
-                      setIsTouchpointsMobileExpanded(!isTouchpointsMobileExpanded)
-                    } else {
-                      navigateMenu(id)
-                    }
-                  }}
+                  onClick={() => handleMenuClick(id)}
                   className={`flex min-h-11 w-full items-center justify-between rounded-lg px-4 text-left text-sm font-bold transition ${
                     isActive
                       ? 'bg-gradient-to-r from-nexoraElectric to-nexoraViolet text-white shadow-lg shadow-nexoraElectric/20'
@@ -214,15 +229,12 @@ export default function MobileMenuDrawer({
                       { id: 'savings', label: t('dashboard.tips.tabs.savings') },
                       { id: 'payouts', label: t('dashboard.tips.tabs.payouts') }
                     ].map(sub => {
-                      const isSubActive = activeMenu === 'tips' && tipsTab === sub.id
+                      const isSubActive = activeMenu === 'tips' && (activeSubTab || 'overview') === sub.id
                       return (
                         <button
                           key={sub.id}
                           type="button"
-                          onClick={() => {
-                            setTipsTab(sub.id)
-                            navigateMenu('tips')
-                          }}
+                          onClick={() => navigateMenu('tips', { tab: sub.id })}
                           className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
                             isSubActive
                               ? 'text-brandCyan font-extrabold'
@@ -242,15 +254,12 @@ export default function MobileMenuDrawer({
                     {[
                       { id: 'stations', label: t('dashboard.touchpoints.tabs.stations') },
                     ].map(sub => {
-                      const isSubActive = activeMenu === 'touchpoints' && touchpointsTab === sub.id
+                      const isSubActive = activeMenu === 'touchpoints' && (activeSubTab || 'stations') === sub.id
                       return (
                         <button
                           key={sub.id}
                           type="button"
-                          onClick={() => {
-                            setTouchpointsTab(sub.id)
-                            navigateMenu('touchpoints')
-                          }}
+                          onClick={() => navigateMenu('touchpoints', { tab: sub.id })}
                           className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
                             isSubActive
                               ? 'text-brandCyan font-extrabold'

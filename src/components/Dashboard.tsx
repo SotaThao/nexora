@@ -68,9 +68,7 @@ export default function Dashboard({
   const {
     activeMenu,
     isMobileMenuOpen, setIsMobileMenuOpen,
-    tipsTab, setTipsTab,
     isTipsMobileExpanded, setIsTipsMobileExpanded,
-    touchpointsTab, setTouchpointsTab,
     isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded,
     settingsTab, setSettingsTab,
     isProfileExpanded, setIsProfileExpanded,
@@ -594,7 +592,7 @@ export default function Dashboard({
     activeReviewsHasPrev: reviewsPage?.hasPreviousPage ?? false,
     setActiveReviewsPage: reviewsPagination.setPage,
     reviewsListFetching: isReviewsFetching,
-    tipsTab, setTipsTab, processingFee, setProcessingFee,
+    processingFee, setProcessingFee,
     filteredTransactions, touchpoints,
     verificationStatus, requireKyb, userEmail, onKybSuccess, settingsTab, setSettingsTab,
     currentStaffId,
@@ -625,10 +623,6 @@ export default function Dashboard({
         verificationStatus={verificationStatus}
         onBlockedFeatureClick={requireKyb}
         onLogout={onLogout}
-        tipsTab={tipsTab}
-        setTipsTab={setTipsTab}
-        touchpointsTab={touchpointsTab}
-        setTouchpointsTab={setTouchpointsTab}
         userRole={userRole}
       />
 
@@ -703,10 +697,6 @@ export default function Dashboard({
         setSettingsTab={setSettingsTab}
         isProfileExpanded={isProfileExpanded}
         setIsProfileExpanded={setIsProfileExpanded}
-        tipsTab={tipsTab}
-        setTipsTab={setTipsTab}
-        touchpointsTab={touchpointsTab}
-        setTouchpointsTab={setTouchpointsTab}
         isTipsMobileExpanded={isTipsMobileExpanded}
         setIsTipsMobileExpanded={setIsTipsMobileExpanded}
         isTouchpointsMobileExpanded={isTouchpointsMobileExpanded}
@@ -777,8 +767,7 @@ export default function Dashboard({
         onClose={() => setIsAddTouchpointModalOpen(false)}
         onAdd={async (name, type, deviceId, assignedStaffProfileId) => {
           await addTouchpoint(name, type, deviceId, assignedStaffProfileId)
-          handleNavigateMenu('touchpoints')
-          setTouchpointsTab('stations')
+          handleNavigateMenu('touchpoints', 'stations')
         }}
       />
 

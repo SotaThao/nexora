@@ -1,6 +1,6 @@
 // DashboardSidebar — left nav: brand, profile card, plan card, menu w/ tips & touchpoints sub-tabs.
 // Extracted from Dashboard.jsx (Group 2 refactor).
-import React, { useEffect, useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
@@ -23,10 +23,6 @@ export default function DashboardSidebar({
   verificationStatus = 'kyb_approved',
   onBlockedFeatureClick,
   onLogout,
-  tipsTab = 'overview',
-  setTipsTab,
-  touchpointsTab = 'stations',
-  setTouchpointsTab,
   userRole = 'owner'
 }) {
   const { currentLanguage, setLanguage, t } = useTranslation()
@@ -37,21 +33,44 @@ export default function DashboardSidebar({
   const activeSubTab = searchParams.get('tab')
   const [isTipsExpanded, setIsTipsExpanded] = useState(activeMenu === 'tips')
   const [isTouchpointsExpanded, setIsTouchpointsExpanded] = useState(activeMenu === 'touchpoints')
+
+  useEffect(() => {
+    setIsTipsExpanded(activeMenu === 'tips')
+    setIsTouchpointsExpanded(activeMenu === 'touchpoints')
+  }, [activeMenu])
   const subscriptionCopy = getSubscriptionSidebarCopy(
     subscription ?? profile?.subscription,
     t,
     currentLanguage,
   )
 
-  useEffect(() => {
-    if (activeMenu === 'tips') {
-      setIsTipsExpanded(true)
-      setIsTouchpointsExpanded(false)
-    } else if (activeMenu === 'touchpoints') {
-      setIsTouchpointsExpanded(true)
-      setIsTipsExpanded(false)
+  const handleMenuClick = (id: string) => {
+    if (id === 'tips') {
+      if (activeMenu === 'tips') {
+        setIsTipsExpanded((prev) => !prev)
+      } else {
+        setActiveMenu('tips')
+        setIsTipsExpanded(true)
+        setIsTouchpointsExpanded(false)
+      }
+      return
     }
-  }, [activeMenu])
+
+    if (id === 'touchpoints') {
+      if (activeMenu === 'touchpoints') {
+        setIsTouchpointsExpanded((prev) => !prev)
+      } else {
+        setActiveMenu('touchpoints')
+        setIsTouchpointsExpanded(true)
+        setIsTipsExpanded(false)
+      }
+      return
+    }
+
+    setActiveMenu(id)
+    setIsTipsExpanded(false)
+    setIsTouchpointsExpanded(false)
+  }
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col bg-nexoraSidebar px-5 py-7 text-white lg:flex">
@@ -179,15 +198,8 @@ export default function DashboardSidebar({
           return (
             <React.Fragment key={id}>
               <button
-                onClick={() => {
-                  setActiveMenu(id)
-                  if (id === 'tips') {
-                    setIsTipsExpanded(!isTipsExpanded)
-                  }
-                  if (id === 'touchpoints') {
-                    setIsTouchpointsExpanded(!isTouchpointsExpanded)
-                  }
-                }}
+                type="button"
+                onClick={() => handleMenuClick(id)}
                 className={`flex h-12 w-full items-center justify-between rounded-lg px-4 text-left text-sm font-bold transition ${
                   isActive
                     ? 'bg-gradient-to-r from-nexoraElectric to-nexoraViolet text-white shadow-lg shadow-nexoraElectric/20'
