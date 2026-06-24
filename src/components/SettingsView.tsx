@@ -157,6 +157,8 @@ export default function SettingsView({
             reviewsErrors={form.reviewsErrors}
             setReviewsErrors={form.setReviewsErrors}
             hasKyb={hasKyb}
+            verificationStatus={verificationStatus}
+            canEditProfile={form.canEditProfile}
             currentLanguage={form.currentLanguage}
             showToast={form.showToast}
             handleCopy={form.handleCopy}

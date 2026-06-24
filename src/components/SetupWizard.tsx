@@ -12,6 +12,9 @@ import Step2StaffTouchpoints from './setup-wizard/steps/Step2StaffTouchpoints'
 import Step3Download from './setup-wizard/steps/Step3Download'
 import PayoutSetupModal from './setup-wizard/PayoutSetupModal'
 import { getCustomerAppBaseUrl } from '../utils/webUrlBase'
+import PersonalSetupWizard from './setup-wizard/PersonalSetupWizard'
+import usePersonalSetupWizard from './setup-wizard/hooks/usePersonalSetupWizard'
+import LanguageSwitcher from './ui/LanguageSwitcher'
 
 export { renderTextWithGoldStars, getTouchpointIcon } from './setup-wizard/constants'
 
@@ -45,6 +48,15 @@ export default function SetupWizard() {
     onBackToLogin: handleBackToLogin, 
     hasKyb: isKyb 
   })
+
+  const personalWizard = usePersonalSetupWizard({
+    onBackToLogin: handleBackToLogin
+  })
+
+  if (session?.role === 'staff' || session?.role === 'personal') {
+    return <PersonalSetupWizard wizard={personalWizard} />
+  }
+
   const {
     currentLanguage, setLanguage, t,
     currentStep, setCurrentStep, isSsoLocked,
@@ -112,33 +124,7 @@ export default function SetupWizard() {
           </div>
 
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
-            {handleBackToLogin && (
-              <button
-                onClick={handleBackToLogin}
-                className="min-h-11 text-xs flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-flox-inputs border border-nexoraBorder text-nexoraSubtle hover:text-nexoraText bg-white hover:bg-nexoraCanvas transition-all font-semibold shadow-sm"
-              >
-                <LogIn className="w-3.5 h-3.5" />
-                {t('setup.back_to_login')}
-              </button>
-            )}
-            {/* Language Switcher */}
-            <div className="flex items-center gap-1.5 bg-white border border-nexoraBorder px-3 py-1.5 rounded-flox-inputs min-h-11 shadow-sm">
-              <button
-                type="button"
-                onClick={() => setLanguage('vi')}
-                className={`text-xs font-bold px-2 py-0.5 rounded transition ${currentLanguage === 'vi' ? 'bg-nexoraBrand text-white' : 'text-nexoraSubtle hover:text-nexoraText'}`}
-              >
-                VI
-              </button>
-              <span className="text-nexoraBorder text-xs">|</span>
-              <button
-                type="button"
-                onClick={() => setLanguage('en')}
-                className={`text-xs font-bold px-2 py-0.5 rounded transition ${currentLanguage === 'en' ? 'bg-nexoraBrand text-white' : 'text-nexoraSubtle hover:text-nexoraText'}`}
-              >
-                EN
-              </button>
-            </div>
+            <LanguageSwitcher />
           </div>
         </header>
 

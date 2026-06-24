@@ -88,7 +88,7 @@ export default function AppRouter() {
         <Route path="/staff/invite/:token" element={<InviteRoute />} />
         
         <Route path="/onboarding" element={
-          <RequireAuth role="owner">
+          <RequireAuth>
             <SetupWizard />
           </RequireAuth>
         } />
