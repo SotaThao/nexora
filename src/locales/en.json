@@ -627,7 +627,37 @@
       "empty_title": "No QR stations yet",
       "empty_desc": "Create your first touchpoint to start receiving scans and tips.",
       "toggle_enabled": "Touchpoint activated successfully.",
-      "toggle_disabled": "Touchpoint deactivated successfully."
+      "toggle_disabled": "Touchpoint deactivated successfully.",
+      "link_success": "Device linked successfully.",
+      "unlink_success": "Device unlinked successfully.",
+      "no_matching_cards": "No matching devices",
+      "linked_to": "Linked to {{name}}",
+      "unlink_btn": "Unlink",
+      "unlink_confirm_title": "Confirm Unlink Device",
+      "unlink_confirm_desc": "Unlink device \"{device}\" from touchpoint \"{name}\"? The station will only use paper QR until you link a new device.",
+      "link_device_btn": "Link Device",
+      "link_device_required": "Device ID is required.",
+      "hardware": {
+        "linked_devices": "Linked Devices",
+        "unlinked_devices": "Unlinked Devices"
+      },
+      "physical_card": {
+        "view_detail": "View device details",
+        "detail_title": "Device Details",
+        "detail_error": "Unable to load device details.",
+        "card_code": "Card Code",
+        "help_code": "Help Code",
+        "status": "Status",
+        "linked_at": "Linked At",
+        "not_linked_yet": "Not linked yet",
+        "touchpoint": "Linked Touchpoint",
+        "support_title": "Request Device Support",
+        "support_desc": "Describe the issue with this device. Our team will follow up using the help code.",
+        "support_placeholder": "Describe the issue with this device...",
+        "support_submit": "Send Support Request",
+        "support_success": "Support request submitted successfully.",
+        "close": "Close"
+      }
     },
     "devices": {
       "subtitle": "Manage physical salon stands, tabletop codes, and smart taps.",
@@ -1179,6 +1209,7 @@
     "business_invalid_slug_format": "The URL slug format is invalid.",
     "user_not_merchant": "Your account is not registered as a merchant.",
     "touchpoint_starter_limit_reached": "Starter plan limit reached: you can only create up to 3 touch points. Please upgrade your plan to add more.",
+    "physical_card_not_found": "This physical card was not found. Please check the card code and try again.",
     "image_file_size_exceeded": "The image file size exceeds the 10MB limit.",
     "image_unsupported_file_type": "Unsupported file format. Please upload PNG, JPEG, or WebP.",
     "image_upload_failed": "Failed to upload the image.",
@@ -2241,6 +2272,26 @@
         "f3": "Premium solid brass NFC station plaques",
         "f4": "24/7 dedicated enterprise success managers"
       }
+    }
+  },
+  "public": {
+    "qr": {
+      "invalid_code_title": "Invalid QR Code",
+      "invalid_code_desc": "This link is missing a device code. Please scan the QR code again.",
+      "unavailable_title": "QR Code Unavailable",
+      "not_found": "This device code was not found. It may be invalid or no longer registered.",
+      "inactive": "This device is currently inactive. Please contact the business for assistance.",
+      "unlinked": "This device is not linked to a touchpoint yet. Please ask the merchant to link it first.",
+      "unavailable": "This QR code cannot open a touchpoint right now. Please try again later or contact support."
+    },
+    "help_qr": {
+      "title": "Device Support",
+      "invalid_code": "This help link is missing a device code.",
+      "detail_partial_title": "Device information limited",
+      "detail_partial_desc": "We could not load full device details, but you can still submit a support request using the help code below.",
+      "support_desc": "Describe the issue with this physical device. Our team will follow up using the help code on this card.",
+      "support_success": "Support request submitted successfully.",
+      "support_success_desc": "Thank you. Our team will review your request and follow up if needed."
     }
   },
   "coming_soon": {

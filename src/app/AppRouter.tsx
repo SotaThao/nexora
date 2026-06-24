@@ -30,6 +30,8 @@ const StaffNotifications = lazy(() => import('../components/staff-dashboard/view
 const ForgotPassword = lazy(() => import('../components/ForgotPassword'))
 const ResetPassword = lazy(() => import('../components/ResetPassword'))
 const LoginScreen = lazy(() => import('./LoginScreen'))
+const QrRedirectPage = lazy(() => import('../components/public/QrRedirectPage'))
+const HelpQrPage = lazy(() => import('../components/public/HelpQrPage'))
 
 // Bridges the URL (path token / legacy ?flow=staff-invite biz) to the wizard's
 // inviteData prop. A real token → API-backed invite; otherwise the legacy
@@ -81,6 +83,8 @@ export default function AppRouter() {
         <Route path="/account/reset-password" element={<ResetPassword />} />
         
         <Route path="/touch/:businessSlug/:touchPointSlug" element={<CustomerFlow />} />
+        <Route path="/qr/:code" element={<QrRedirectPage />} />
+        <Route path="/help/qr/:code" element={<HelpQrPage />} />
         <Route path="/invite" element={<InviteRoute />} />
         <Route path="/invite/:token" element={<InviteRoute />} />
         <Route path="/invite/public/:businessSlug" element={<InviteRoute />} />

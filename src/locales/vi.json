@@ -627,7 +627,37 @@
       "empty_title": "Chưa có trạm QR nào",
       "empty_desc": "Tạo touchpoint đầu tiên để bắt đầu nhận lượt quét và tiền tip.",
       "toggle_enabled": "Đã bật touchpoint thành công.",
-      "toggle_disabled": "Đã tắt touchpoint thành công."
+      "toggle_disabled": "Đã tắt touchpoint thành công.",
+      "link_success": "Liên kết thiết bị thành công.",
+      "unlink_success": "Hủy liên kết thiết bị thành công.",
+      "no_matching_cards": "Không tìm thấy thiết bị phù hợp",
+      "linked_to": "Đã liên kết với {{name}}",
+      "unlink_btn": "Hủy liên kết",
+      "unlink_confirm_title": "Xác nhận hủy liên kết",
+      "unlink_confirm_desc": "Hủy liên kết thiết bị \"{device}\" khỏi touchpoint \"{name}\"? Trạm sẽ chỉ dùng QR in giấy cho đến khi bạn liên kết thiết bị mới.",
+      "link_device_btn": "Liên kết thiết bị",
+      "link_device_required": "Vui lòng nhập mã thiết bị.",
+      "hardware": {
+        "linked_devices": "Thiết bị đã liên kết",
+        "unlinked_devices": "Thiết bị chưa liên kết"
+      },
+      "physical_card": {
+        "view_detail": "Xem chi tiết thiết bị",
+        "detail_title": "Chi tiết thiết bị",
+        "detail_error": "Không thể tải chi tiết thiết bị.",
+        "card_code": "Mã thẻ",
+        "help_code": "Mã hỗ trợ",
+        "status": "Trạng thái",
+        "linked_at": "Liên kết lúc",
+        "not_linked_yet": "Chưa liên kết",
+        "touchpoint": "Touchpoint đã liên kết",
+        "support_title": "Yêu cầu hỗ trợ thiết bị",
+        "support_desc": "Mô tả sự cố với thiết bị này. Đội ngũ sẽ xử lý theo mã hỗ trợ.",
+        "support_placeholder": "Mô tả sự cố với thiết bị...",
+        "support_submit": "Gửi yêu cầu hỗ trợ",
+        "support_success": "Đã gửi yêu cầu hỗ trợ thành công.",
+        "close": "Đóng"
+      }
     },
     "devices": {
       "subtitle": "Quản lý các trạm đứng salon vật lý, mã đặt bàn và điểm chạm thông minh.",
@@ -1179,6 +1209,7 @@
     "business_invalid_slug_format": "Định dạng đường dẫn URL không hợp lệ.",
     "user_not_merchant": "Tài khoản của bạn không có vai trò chủ tiệm.",
     "touchpoint_starter_limit_reached": "Gói Starter đã đạt giới hạn: bạn chỉ có thể tạo tối đa 3 điểm chạm. Vui lòng nâng cấp gói để thêm nhiều hơn.",
+    "physical_card_not_found": "Không tìm thấy thiết bị thẻ vật lý này. Vui lòng kiểm tra mã thẻ và thử lại.",
     "image_file_size_exceeded": "Kích thước ảnh vượt quá giới hạn cho phép 10MB.",
     "image_unsupported_file_type": "Định dạng ảnh không hỗ trợ. Vui lòng tải lên PNG, JPEG hoặc WebP.",
     "image_upload_failed": "Tải ảnh lên thất bại.",
@@ -2240,6 +2271,26 @@
         "f3": "Bảng NFC đồng thau cao cấp tại quầy",
         "f4": "Quản lý thành công doanh nghiệp 24/7"
       }
+    }
+  },
+  "public": {
+    "qr": {
+      "invalid_code_title": "Mã QR không hợp lệ",
+      "invalid_code_desc": "Liên kết này thiếu mã thiết bị. Vui lòng quét lại mã QR.",
+      "unavailable_title": "Không thể mở mã QR",
+      "not_found": "Không tìm thấy mã thiết bị này. Mã có thể không hợp lệ hoặc đã bị huỷ đăng ký.",
+      "inactive": "Thiết bị này hiện không hoạt động. Vui lòng liên hệ cửa hàng để được hỗ trợ.",
+      "unlinked": "Thiết bị này chưa được liên kết với touchpoint. Vui lòng yêu cầu merchant liên kết trước.",
+      "unavailable": "Mã QR này hiện không thể mở touchpoint. Vui lòng thử lại sau hoặc liên hệ hỗ trợ."
+    },
+    "help_qr": {
+      "title": "Hỗ trợ thiết bị",
+      "invalid_code": "Liên kết hỗ trợ thiếu mã thiết bị.",
+      "detail_partial_title": "Thông tin thiết bị bị giới hạn",
+      "detail_partial_desc": "Không thể tải đầy đủ thông tin thiết bị, nhưng bạn vẫn có thể gửi yêu cầu hỗ trợ bằng mã help bên dưới.",
+      "support_desc": "Mô tả sự cố với thiết bị vật lý này. Đội ngũ sẽ liên hệ lại dựa trên mã help trên thẻ.",
+      "support_success": "Đã gửi yêu cầu hỗ trợ thành công.",
+      "support_success_desc": "Cảm ơn bạn. Đội ngũ sẽ xem xét và liên hệ lại nếu cần."
     }
   },
   "coming_soon": {
