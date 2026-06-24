@@ -195,8 +195,8 @@ export interface DashboardReviewsQuery {
 export interface StaffPaymentMethodApiDto {
   type?: string
   isActive?: boolean
-  accountInfo?: string
-  imageUrl?: string
+  accountInfo?: string | null
+  imageUrl?: string | null
 }
 
 export interface StaffListItemApiDto {
@@ -233,9 +233,11 @@ export interface StaffListItemApiDto {
 export interface StaffSearchResultApiDto {
   staffProfileId: string
   staffCode?: string | null
-  displayName?: string
+  displayName?: string | null
+  fullName?: string | null
   photoUrl?: string | null
   position?: string | null
+  paymentMethods?: StaffPaymentMethodApiDto[]
 }
 
 /** v3.3 — `GET /merchant/staff/invites` item (StaffInviteListItemDto). */

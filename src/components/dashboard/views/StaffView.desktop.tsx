@@ -7,6 +7,10 @@ import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
 import Pagination from '../../ui/Pagination'
 
+function isWaitingStaffAcceptance(member) {
+  return member?.apiStatus === 'WaitingStaffAcceptance' || member?.status === 'WaitingStaffAcceptance'
+}
+
 function StaffView({
   staff,
   pendingStaff = [],
@@ -246,6 +250,7 @@ function StaffView({
               <tbody>
                 {pendingStaff.map((member, index) => {
                   const wallets = getWalletBadges(member)
+                  const waitingStaffResponse = isWaitingStaffAcceptance(member)
                   return (
                     <tr key={member.id || index} className="border-b border-nexoraRule last:border-0 hover:bg-slate-50/40 transition">
                       <td className="px-5 py-4">
@@ -280,18 +285,26 @@ function StaffView({
                         </div>
                       </td>
                       <td className="px-5 py-4 text-right">
-                        <button
-                          onClick={() => onApproveClick && onApproveClick(member)}
-                          className="px-3.5 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition shadow-sm mr-2"
-                        >
-                          {t('components.dashboard.views.StaffView.reviewAndApprove')}
-                        </button>
-                        <button
-                          onClick={() => onDeclineJoin && onDeclineJoin(member)}
-                          className="px-3 py-1.5 text-xs font-bold border border-rose-200 bg-rose-50 text-rose-700 rounded-lg hover:bg-rose-100 transition shadow-sm"
-                        >
-                          {t('components.dashboard.views.StaffView.decline')}
-                        </button>
+                        {waitingStaffResponse ? (
+                          <span className="text-[10px] font-bold text-slate-500 italic">
+                            {t('components.dashboard.views.StaffView.pendingAcceptance')}
+                          </span>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => onApproveClick && onApproveClick(member)}
+                              className="px-3.5 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition shadow-sm mr-2"
+                            >
+                              {t('components.dashboard.views.StaffView.reviewAndApprove')}
+                            </button>
+                            <button
+                              onClick={() => onDeclineJoin && onDeclineJoin(member)}
+                              className="px-3 py-1.5 text-xs font-bold border border-rose-200 bg-rose-50 text-rose-700 rounded-lg hover:bg-rose-100 transition shadow-sm"
+                            >
+                              {t('components.dashboard.views.StaffView.decline')}
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   )
@@ -388,6 +401,7 @@ function StaffView({
                 const wallets = getWalletBadges(member)
                 const isPendingSetup = member.status === 'Pending Setup'
                 const isPendingAcceptance = member.status === 'Pending Acceptance'
+                const waitingStaffResponse = isWaitingStaffAcceptance(member)
                 const isPendingUnlink = member.status === 'Pending Unlink'
                 const isPending = isPendingSetup || isPendingAcceptance || isPendingUnlink
                 const isToggling = togglingStaffId === member.id
@@ -511,7 +525,7 @@ function StaffView({
                         </div>
                       )}
 
-                      {isPendingAcceptance && (
+                      {isPendingAcceptance && !waitingStaffResponse && (
                         <div className="flex justify-end gap-2">
                           <button
                             onClick={() => onAcceptJoin && onAcceptJoin(member)}
@@ -526,6 +540,11 @@ function StaffView({
                             {t('components.dashboard.views.StaffView.decline')}
                           </button>
                         </div>
+                      )}
+                      {isPendingAcceptance && waitingStaffResponse && (
+                        <span className="text-[10px] font-bold text-slate-500 italic">
+                          {t('components.dashboard.views.StaffView.pendingAcceptance')}
+                        </span>
                       )}
 
                       {isPendingUnlink && (

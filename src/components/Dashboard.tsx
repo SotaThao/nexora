@@ -371,7 +371,11 @@ export default function Dashboard({
   // Filter lists based on searchQuery
   const filteredStaff = useMemo(() => {
     const isPendingRequest = (member) => 
-      (member.status === 'Pending Acceptance' || member.status === 'Pending') && 
+      (
+        member.status === 'Pending Acceptance' ||
+        member.status === 'Pending' ||
+        member.status === 'WaitingStaffAcceptance'
+      ) && 
       (member.itemType === 'link' || member.itemType === 'invite')
       
     const visibleStaff = staff.filter(member => !isPendingRequest(member))
@@ -386,10 +390,28 @@ export default function Dashboard({
   }, [staff, searchQuery])
 
   const pendingStaff = useMemo(() => {
-    const source = isStaffTab ? (pendingStaffPage?.items ?? []) : staff
-    return source.filter((member) =>
-      (member.status === 'Pending Acceptance' || member.status === 'Pending' || member.status === 'Pending Setup') &&
-      (member.itemType === 'link' || member.itemType === 'invite')
+    const statusSet = new Set([
+      'Pending Acceptance',
+      'Pending',
+      'Pending Setup',
+      'WaitingStaffAcceptance',
+    ])
+    const mergedSource = isStaffTab
+      ? [...(pendingStaffPage?.items ?? []), ...staff]
+      : staff
+    const deduped = mergedSource.filter((member, index, arr) => {
+      const memberId = member.id || member.linkId || member.staffLinkId || member.inviteId
+      if (!memberId) return true
+      return arr.findIndex((item) => {
+        const itemId = item.id || item.linkId || item.staffLinkId || item.inviteId
+        return itemId === memberId
+      }) === index
+    })
+
+    return deduped.filter(
+      (member) =>
+        statusSet.has(member.status) &&
+        (member.itemType === 'link' || member.itemType === 'invite'),
     )
   }, [isStaffTab, pendingStaffPage, staff])
 

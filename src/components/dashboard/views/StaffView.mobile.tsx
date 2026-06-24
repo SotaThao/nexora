@@ -10,7 +10,13 @@ import Pagination from '../../ui/Pagination'
 
 function isPendingMember(member) {
   const status = member?.status
-  return status === StatusFilter.Pending || status === 'Pending Setup' || status === 'Pending'
+  return (
+    status === StatusFilter.Pending ||
+    status === 'Pending' ||
+    status === 'Pending Setup' ||
+    status === 'Pending Acceptance' ||
+    status === 'WaitingStaffAcceptance'
+  )
 }
 
 function isPendingInviteMember(member) {
@@ -18,7 +24,14 @@ function isPendingInviteMember(member) {
 }
 
 function isPendingLinkMember(member) {
-  return member?.itemType === 'link' && member?.status === StatusFilter.Accepted
+  return (
+    member?.itemType === 'link' &&
+    (member?.status === 'Pending Acceptance' || member?.status === 'WaitingStaffAcceptance')
+  )
+}
+
+function isWaitingStaffAcceptance(member) {
+  return member?.apiStatus === 'WaitingStaffAcceptance' || member?.status === 'WaitingStaffAcceptance'
 }
 
 function ToggleSwitch({ checked, onChange, activeColor = 'bg-emerald-500', title, disabled = false }) {
@@ -61,6 +74,7 @@ function StaffMemberCard({
   onQr,
   onEdit
 }) {
+  const waitingStaffResponse = isWaitingStaffAcceptance(member)
   const stripClass = isPendingInvite
     ? 'bg-amber-400'
     : isPendingLink
@@ -216,7 +230,7 @@ function StaffMemberCard({
               </button>
             </>
           )}
-          {isPendingLink && (
+          {isPendingLink && !waitingStaffResponse && (
             <>
               <button
                 type="button"
@@ -239,6 +253,11 @@ function StaffMemberCard({
                 {t('components.dashboard.views.StaffView.reject')}
               </button>
             </>
+          )}
+          {isPendingLink && waitingStaffResponse && (
+            <span className="text-[10px] font-bold text-slate-500 italic">
+              {t('components.dashboard.views.StaffView.pendingAcceptance')}
+            </span>
           )}
           {isPendingUnlink && (
             <>
@@ -535,6 +554,7 @@ function StaffView({
               <tbody>
                 {pendingStaff.map((member, index) => {
                   const wallets = getWalletBadges(member)
+                  const waitingStaffResponse = isWaitingStaffAcceptance(member)
                   return (
                     <tr key={member.id || index} className="border-b border-nexoraRule last:border-0 hover:bg-slate-50/40 transition">
                       <td className="px-5 py-4">
@@ -569,20 +589,28 @@ function StaffView({
                         </div>
                       </td>
                       <td className="px-5 py-4 text-right">
-                        <button
-                          type="button"
-                          onClick={() => onApproveClick && onApproveClick(member)}
-                          className="px-3.5 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition shadow-sm mr-2"
-                        >
-                          {t('components.dashboard.views.StaffView.approve')}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onDeclineJoin && onDeclineJoin(member)}
-                          className="px-3 py-1.5 text-xs font-bold border border-rose-200 bg-rose-50 text-rose-700 rounded-lg hover:bg-rose-100 transition shadow-sm"
-                        >
-                          {t('components.dashboard.views.StaffView.reject')}
-                        </button>
+                        {waitingStaffResponse ? (
+                          <span className="text-[10px] font-bold text-slate-500 italic">
+                            {t('components.dashboard.views.StaffView.pendingAcceptance')}
+                          </span>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => onApproveClick && onApproveClick(member)}
+                              className="px-3.5 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition shadow-sm mr-2"
+                            >
+                              {t('components.dashboard.views.StaffView.approve')}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => onDeclineJoin && onDeclineJoin(member)}
+                              className="px-3 py-1.5 text-xs font-bold border border-rose-200 bg-rose-50 text-rose-700 rounded-lg hover:bg-rose-100 transition shadow-sm"
+                            >
+                              {t('components.dashboard.views.StaffView.reject')}
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   )
