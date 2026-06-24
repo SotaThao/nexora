@@ -123,7 +123,8 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       .then(() => {
         setVerifySuccess(true)
         // Auto-login to get tokens for subsequent protected calls (Step 2, 3, 4)
-        return apiAuthAdapter.login({ email: email.trim().toLowerCase(), password })
+        // using signInForInviteAccept to prevent fetching staff profile prematurely
+        return apiAuthAdapter.signInForInviteAccept({ email: email.trim().toLowerCase(), password })
       })
       .then(async () => {
         // Business creation is handled by Setup Wizard (onboarding), not here.
@@ -300,7 +301,8 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         }
       }
 
-      await apiAuthAdapter.login({
+      // Use signInForInviteAccept to avoid fetching staff profile prematurely
+      await apiAuthAdapter.signInForInviteAccept({
         email: email.trim().toLowerCase(),
         password
       })
@@ -349,11 +351,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         replaceAllPendingAccountsMutation.mutate(filtered)
 
         setShowOtpInput(false)
-        if (onRegisterAndLogin) {
-          onRegisterAndLogin(email.trim().toLowerCase())
-        } else if (onRegisterSuccess) {
-          onRegisterSuccess()
-        }
+        setCurrentStep(3)
       }
     } catch (err) {
       logger.error('Verify account activation failed', err)
@@ -480,7 +478,12 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         logger.error('Failed to create staff profile during onboarding', err)
       }
     }
-    setCurrentStep(4)
+    
+    if (onRegisterAndLogin) {
+      onRegisterAndLogin(email.trim().toLowerCase())
+    } else if (onRegisterSuccess) {
+      onRegisterSuccess()
+    }
   }
 
   const handlePersonalRegisterSubmit = async () => {
@@ -649,7 +652,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         case 0: return t('components.register.hooks.useRegisterForm.accountType')
         case 1: return t('components.register.hooks.useRegisterForm.credentials')
         case 2: return t('components.register.hooks.useRegisterForm.activateOtp')
-        case 3: return t('components.register.hooks.useRegisterForm.success')
+        case 3: return t('components.register.hooks.useRegisterForm.profileSetup')
         default: return ''
       }
     }

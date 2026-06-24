@@ -46,6 +46,10 @@
       "profile": "Settings",
       "notifications": "Notifications"
     },
+    "missing_payout_toast": "Please set up your payout method to receive TIPS.",
+    "missing_payout_title": "Action Required",
+    "missing_payout_heading": "Set Up Your Payout Method",
+    "setup_payout_now": "Set Up Payout Methods",
     "status": {
       "active": "Active",
       "inactive": "Inactive"
@@ -991,7 +995,7 @@
     "agree_terms": "I agree to the Nexora Touch Terms & Conditions",
     "terms_error": "You must agree to the Terms & Conditions to proceed.",
     "terms_title": "Terms & Conditions",
-    "title_step_1": "Step 2: Create New Account",
+    "title_step_1": "Create New Account",
     "desc_step_1": "Create your Nexora Touch credentials to get started.",
     "email_label": "Email Address *",
     "email_placeholder": "partner@yourstore.com",
@@ -1584,7 +1588,7 @@
           "emailAddress": "Email Address",
           "roleSpeciality": "Role / Speciality",
           "nexoraStaffId": "NEXORA ID",
-          "shortBioShowsOn": "Short Bio (Shows on customer tip screen)",
+          "shortBioShowsOn": "Short Bio",
           "phFullName": "e.g. Lisa Marie Tran",
           "phNickname": "e.g. Lisa T.",
           "phPhone": "e.g. 408-555-1234",

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useProfileSettings, useUpdateStaffProfile, useCreateStaffProfile, useUpdateBasicInfo } from '../../../data/hooks/useProfileSettings'
+import { useCompletePersonalOnboarding } from '../../../data/hooks/usePersonalOnboarding'
 import { useAuth } from '../../../auth/useAuth'
 import { parsePhone } from '../../CountryCodeSelect'
 import { captureQrImage } from '../../../utils/qrCode'
@@ -15,6 +16,7 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
   const updateStaffProfileMutation = useUpdateStaffProfile()
   const updateBasicInfoMutation = useUpdateBasicInfo()
   const uploadImageMutation = useUploadImage()
+  const completePersonalOnboardingMutation = useCompletePersonalOnboarding()
 
   const [currentStep, setCurrentStep] = useState(1)
   const [errors, setErrors] = useState<any>({})
@@ -28,7 +30,7 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
   const [position, setPosition] = useState('Nail Technician')
   
   const email = session?.email || ''
-  const generatedStaffId = session?.id || ''
+  const generatedStaffId = userProfile?.staffProfile?.staffCode || ''
   
   const phoneParsed = parsePhone(phone)
 
@@ -58,36 +60,10 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
   }, [userProfile])
 
   const handleProfileSetupSubmit = async () => {
-    // Only validate and go to step 2 visually. Do NOT call API yet.
-    if (!fullName.trim() || !nickname.trim() || !phone.trim() || !phoneParsed?.isValid) {
+    if (!fullName.trim() || !nickname.trim() || !phone.trim()) {
       setErrors({ submit: t('register.errors.profile_setup_failed') })
       return
     }
-    setErrors({ ...errors, submit: undefined })
-    setCurrentStep(2)
-  }
-
-  const handleAvatarFileChange = async (file: File) => {
-    if (!file) return
-    try {
-      const uploaded = await uploadImageMutation.mutateAsync(file)
-      const uploadedUrl = uploaded.imageUrl || uploaded.fileUrl || ''
-      if (uploadedUrl) {
-        setAvatar(uploadedUrl)
-      }
-    } catch (err: unknown) {
-      console.error('Failed to upload staff avatar', err)
-    }
-  }
-
-  const handlePersonalRegisterSubmit = async () => {
-    // Validate payout method
-    const hasConfiguredPayout = Object.values(payouts).some((p: any) => p.enabled && p.value.trim())
-    if (!hasConfiguredPayout) {
-      setErrors({ payout: t('components.register.hooks.useRegisterForm.thisFieldIsRequired') })
-      return
-    }
-    setErrors({ ...errors, payout: '' })
 
     try {
       const parsedName = nickname.trim() || email.split('@')[0]
@@ -119,8 +95,49 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
         })
       }
 
-      // For now, assume payout is saved or handled, and move to success
-      // In a real app, you might save payout config via an API here.
+      setErrors({ ...errors, submit: undefined })
+      setCurrentStep(2)
+    } catch (err) {
+      setErrors({ submit: t('register.errors.profile_setup_failed') })
+    }
+  }
+
+  const handleAvatarFileChange = async (file: File) => {
+    if (!file) return
+    try {
+      const uploaded = await uploadImageMutation.mutateAsync(file)
+      const uploadedUrl = uploaded.imageUrl || uploaded.fileUrl || ''
+      if (uploadedUrl) {
+        setAvatar(uploadedUrl)
+      }
+    } catch (err: unknown) {
+      console.error('Failed to upload staff avatar', err)
+    }
+  }
+
+  const handlePersonalRegisterSubmit = async () => {
+    // Validate payout method
+    const hasConfiguredPayout = Object.values(payouts).some((p: any) => p.enabled && p.value.trim())
+    if (!hasConfiguredPayout) {
+      setErrors({ payout: t('components.register.hooks.useRegisterForm.thisFieldIsRequired') })
+      return
+    }
+    setErrors({ ...errors, payout: '' })
+
+    try {
+      // Call Payout APIs
+      await completePersonalOnboardingMutation.mutateAsync({
+        accountData: {
+          fullName: fullName.trim(),
+          nickname: nickname.trim() || email.split('@')[0],
+          phone,
+          position
+        },
+        paymentAccounts: {},
+        payoutConfigs: payouts
+      })
+
+      // Move to success
       setCurrentStep(3)
     } catch (err) {
       setErrors({ submit: t('register.errors.profile_setup_failed') })
