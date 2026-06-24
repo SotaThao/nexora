@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { AlertCircle, Plus, Trash2, User, QrCode, Edit2, Link, Copy, X, Share2, Eye, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
-import { useSearchMerchantStaff, StatusFilter } from '../../../data/hooks/useMerchantStaff'
+import { StatusFilter } from '../../../data/hooks/useMerchantStaff'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
@@ -21,12 +21,13 @@ function isPendingLinkMember(member) {
   return member?.itemType === 'link' && member?.status === StatusFilter.Accepted
 }
 
-function ToggleSwitch({ checked, onChange, activeColor = 'bg-emerald-500', title }) {
+function ToggleSwitch({ checked, onChange, activeColor = 'bg-emerald-500', title, disabled = false }) {
   return (
     <button
       type="button"
       onClick={onChange}
-      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${checked ? activeColor : 'bg-slate-300'}`}
+      disabled={disabled}
+      className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${checked ? activeColor : 'bg-slate-300'} ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
       title={title}
     >
       <span
@@ -49,6 +50,7 @@ function StaffMemberCard({
   onViewDetail,
   onToggle,
   onToggleTipsFlow,
+  isToggling = false,
   onResendInvite,
   onDelete,
   onApproveClick,
@@ -163,6 +165,7 @@ function StaffMemberCard({
               <ToggleSwitch
                 checked={member.isActive}
                 onChange={() => onToggle(member.id)}
+                disabled={isToggling}
                 title={member.isActive ? t('common.active') : t('common.inactive')}
               />
             </div>
@@ -173,6 +176,7 @@ function StaffMemberCard({
               <ToggleSwitch
                 checked={member.showInTipsFlow !== false}
                 onChange={() => onToggleTipsFlow(member.id)}
+                disabled={isToggling}
                 activeColor="bg-blue-500"
                 title={member.showInTipsFlow !== false ? 'Show' : 'Hide'}
               />
@@ -290,8 +294,6 @@ function StaffView({
   onToggle,
   onToggleTipsFlow,
   onViewDetail,
-  onLinkStaff,
-  onInviteStaff,
   onResendInvite,
   businessName,
   businessSlug,
@@ -310,21 +312,13 @@ function StaffView({
   hasPreviousPage = false,
   onPageChange,
   pageSize = 10,
+  togglingStaffId = null,
 }) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
-  const [activeTab, setActiveTab] = useState('link') // 'link' | 'invite'
   const [largeJoinQrOpen, setLargeJoinQrOpen] = useState(false)
   const [sortBy, setSortBy] = useState('name-asc') // 'name-asc' | 'name-desc' | 'date-newest' | 'date-oldest' | 'status-active'
 
-  // Option A (Link) states
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedRole, setSelectedRole] = useState('Nail Technician')
-  const [searchResult, setSearchResult] = useState(null)
-  const [searchError, setSearchError] = useState('')
-
-  // API search hook (enabled only when query is non-empty)
-  const { data: searchResults, isLoading: isSearching } = useSearchMerchantStaff(searchQuery.trim())
   const publicInviteEnabled = Boolean(inviteLinkSetting?.isEnabled && inviteLinkSetting?.referralCode)
   const publicInviteLink = useMemo(
     () => publicInviteEnabled
@@ -384,54 +378,9 @@ function StaffView({
       showToast(t('components.dashboard.views.StaffView.linkCopiedToClipboard'), 'success')
     }
   }
-  const [inviteName, setInviteName] = useState('')
-  const [inviteContact, setInviteContact] = useState('')
-  const [inviteRole, setInviteRole] = useState('Nail Technician')
-  const [inviteMethod, setInviteMethod] = useState('SMS')
-
   // Calculate Metrics
   const totalLinked = staff ? staff.length : 0
   const pendingCount = pendingStaff ? pendingStaff.length : 0
-  const paymentCompleteCount = allStaff.filter(s => {
-    return Object.values(s.paymentAccounts || {}).some(val => val && (val as string).trim() !== '')
-  }).length
-  const paymentCompletePct = allStaff.length ? Math.round((paymentCompleteCount / allStaff.length) * 100) : 100
-
-  // Option A Search - uses API results from useSearchMerchantStaff
-  const handleSearch = () => {
-    setSearchError('')
-    setSearchResult(null)
-    const query = searchQuery.trim()
-    if (!query) return
-
-    // searchResults comes from the API hook (debounced by TanStack Query)
-    if (searchResults && searchResults.length > 0) {
-      // Take the first result as the match
-      setSearchResult(searchResults[0])
-    } else {
-      setSearchError(t('components.dashboard.views.StaffView.noStaffProfileFound'))
-    }
-  }
-
-  // Option A Link Request - sends to API via mutation
-  const handleLinkRequest = () => {
-    if (!searchResult) return
-    onLinkStaff(searchResult)
-    setSearchResult(null)
-    setSearchQuery('')
-  }
-
-  // Option B Submit Invite
-  const handleInviteSubmit = (e) => {
-    e.preventDefault()
-    if (!inviteName.trim() || !inviteContact.trim()) {
-      showToast(t('components.dashboard.views.StaffView.pleaseEnterBothName'), 'warning')
-      return
-    }
-    onInviteStaff(inviteName, inviteContact, inviteRole, inviteMethod)
-    setInviteName('')
-    setInviteContact('')
-  }
 
   // Resend invite - calls API via mutation prop
   const handleResendInvite = (member) => {
@@ -723,6 +672,7 @@ function StaffView({
                     onViewDetail={onViewDetail}
                     onToggle={onToggle}
                     onToggleTipsFlow={onToggleTipsFlow}
+                    isToggling={togglingStaffId === member.id}
                     onResendInvite={handleResendInvite}
                     onDelete={onDelete}
                     onApproveClick={onApproveClick}

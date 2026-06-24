@@ -40,6 +40,7 @@ export const errorCodeToI18nKey = {
   INVITE_LINK_DISABLED: 'errors.invite_link_disabled',
   STAFF_INVITE_ALREADY_EXISTS: 'errors.staff_invite_already_exists',
   STAFF_ALREADY_LINKED: 'errors.staff_already_linked',
+  STAFF_ALREADY_LINKED_TO_BUSINESS: 'errors.staff_already_linked_to_business',
   STAFF_INVITE_NOT_FOUND: 'errors.staff_invite_not_found',
   STAFF_INVITE_EXPIRED: 'errors.staff_invite_expired',
   STAFF_PROFILE_NOT_FOUND: 'errors.staff_profile_not_found',

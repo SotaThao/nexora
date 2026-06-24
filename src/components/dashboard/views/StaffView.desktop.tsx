@@ -1,8 +1,7 @@
 import { useState, useMemo } from 'react'
-import { AlertCircle, Plus, HelpCircle, Trash2, User, QrCode, Edit2, Link, Copy, X, Share2, Eye, Loader2 } from 'lucide-react'
+import { AlertCircle, Plus, HelpCircle, Trash2, User, QrCode, Edit2, Link, Copy, X, Share2, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
-import { useSearchMerchantStaff } from '../../../data/hooks/useMerchantStaff'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
@@ -21,8 +20,6 @@ function StaffView({
   onToggle,
   onToggleTipsFlow,
   onViewDetail,
-  onLinkStaff,
-  onInviteStaff,
   onResendInvite,
   businessName,
   businessSlug,
@@ -41,21 +38,13 @@ function StaffView({
   hasNextPage = false,
   hasPreviousPage = false,
   onPageChange,
+  togglingStaffId = null,
 }) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
-  const [activeTab, setActiveTab] = useState('link') // 'link' | 'invite'
   const [largeJoinQrOpen, setLargeJoinQrOpen] = useState(false)
   const [sortBy, setSortBy] = useState('name-asc') // 'name-asc' | 'name-desc' | 'date-newest' | 'date-oldest' | 'status-active'
 
-  // Option A (Link) states
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedRole, setSelectedRole] = useState('Nail Technician')
-  const [searchResult, setSearchResult] = useState<any | null>(null)
-  const [searchError, setSearchError] = useState('')
-
-  // API search hook (enabled only when query is non-empty)
-  const { data: searchResults, isLoading: isSearching } = useSearchMerchantStaff(searchQuery.trim())
   const publicInviteEnabled = Boolean(inviteLinkSetting?.isEnabled && inviteLinkSetting?.referralCode)
   const publicInviteLink = useMemo(
     () => publicInviteEnabled
@@ -115,54 +104,9 @@ function StaffView({
       showToast(t('components.dashboard.views.StaffView.linkCopiedToClipboard'), 'success')
     }
   }
-  const [inviteName, setInviteName] = useState('')
-  const [inviteContact, setInviteContact] = useState('')
-  const [inviteRole, setInviteRole] = useState('Nail Technician')
-  const [inviteMethod, setInviteMethod] = useState('SMS')
-
   // Calculate Metrics
   const totalLinked = staff ? staff.length : 0
   const pendingCount = pendingStaff ? pendingStaff.length : 0
-  const paymentCompleteCount = allStaff.filter(s => {
-    return Object.values(s.paymentAccounts || {}).some(val => val && String(val).trim() !== '')
-  }).length
-  const paymentCompletePct = allStaff.length ? Math.round((paymentCompleteCount / allStaff.length) * 100) : 100
-
-  // Option A Search - uses API results from useSearchMerchantStaff
-  const handleSearch = () => {
-    setSearchError('')
-    setSearchResult(null)
-    const query = searchQuery.trim()
-    if (!query) return
-
-    // searchResults comes from the API hook (debounced by TanStack Query)
-    if (searchResults && searchResults.length > 0) {
-      // Take the first result as the match
-      setSearchResult(searchResults[0])
-    } else {
-      setSearchError(t('components.dashboard.views.StaffView.noStaffProfileFound'))
-    }
-  }
-
-  // Option A Link Request - sends to API via mutation
-  const handleLinkRequest = () => {
-    if (!searchResult) return
-    onLinkStaff(searchResult)
-    setSearchResult(null)
-    setSearchQuery('')
-  }
-
-  // Option B Submit Invite
-  const handleInviteSubmit = (e) => {
-    e.preventDefault()
-    if (!inviteName.trim() || !inviteContact.trim()) {
-      showToast(t('components.dashboard.views.StaffView.pleaseEnterBothName'), 'warning')
-      return
-    }
-    onInviteStaff(inviteName, inviteContact, inviteRole, inviteMethod)
-    setInviteName('')
-    setInviteContact('')
-  }
 
   // Resend invite - calls API via mutation prop
   const handleResendInvite = (member) => {
@@ -446,6 +390,7 @@ function StaffView({
                 const isPendingAcceptance = member.status === 'Pending Acceptance'
                 const isPendingUnlink = member.status === 'Pending Unlink'
                 const isPending = isPendingSetup || isPendingAcceptance || isPendingUnlink
+                const isToggling = togglingStaffId === member.id
 
                 return (
                   <tr key={member.id || index} className="border-b border-nexoraRule last:border-0 hover:bg-slate-50/40 transition">
@@ -511,10 +456,12 @@ function StaffView({
                       )}
                       {!isPending && (
                         <button
+                          type="button"
                           onClick={() => onToggle(member.id)}
-                          className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                          disabled={isToggling}
+                          className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                             member.isActive ? 'bg-emerald-500' : 'bg-slate-300'
-                          }`}
+                          } ${isToggling ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                           title={member.isActive ? t('common.active') : t('common.inactive')}
                         >
                           <span
@@ -529,10 +476,12 @@ function StaffView({
                     <td className="px-5 py-4">
                       {!isPending && (
                         <button
+                          type="button"
                           onClick={() => onToggleTipsFlow(member.id)}
-                          className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                          disabled={isToggling}
+                          className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                             member.showInTipsFlow !== false ? 'bg-blue-500' : 'bg-slate-300'
-                          }`}
+                          } ${isToggling ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                           title={member.showInTipsFlow !== false ? 'Show' : 'Hide'}
                         >
                           <span

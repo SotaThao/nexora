@@ -120,6 +120,7 @@ export function useStaffManagement({
   })
   const [editingStaffId, setEditingStaffId] = useState<any | null>(null)
   const [isStaffModalOpen, setIsStaffModalOpen] = useState(false)
+  const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false)
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false)
   const [approvingStaffMember, setApprovingStaffMember] = useState<any | null>(null)
   const [isInviteShareOpen, setIsInviteShareOpen] = useState(false)
@@ -136,8 +137,11 @@ export function useStaffManagement({
   }
 
   const openAddStaff = () => {
-    resetStaffForm()
-    setIsStaffModalOpen(true)
+    setIsAddStaffModalOpen(true)
+  }
+
+  const closeAddStaffModal = () => {
+    setIsAddStaffModalOpen(false)
   }
 
   const openApproveStaff = (member) => {
@@ -256,7 +260,7 @@ export function useStaffManagement({
    * Link an existing staff profile from search results.
    * Calls POST /api/v1/merchant/staff/link-request/{staffProfileId}.
    */
-  const handleLinkStaff = (searchResult) => {
+  const handleLinkStaff = (searchResult, _role?, { onSuccess } = {}) => {
     if (!searchResult?.staffProfileId) return
 
     linkRequestMutation.mutate({
@@ -265,6 +269,7 @@ export function useStaffManagement({
     }, {
       onSuccess: () => {
         showToast(t('components.dashboard.hooks.useStaffManagement.linkRequestSent', { name: searchResult.fullName }), 'success')
+        onSuccess?.()
       },
       onError: (err) => {
         showToast(t('components.dashboard.hooks.useStaffManagement.linkRequestFailed', { error: errMsg(err) }), 'error')
@@ -273,10 +278,10 @@ export function useStaffManagement({
   }
 
   /**
-   * Invite new staff (from StaffView invite tab).
+   * Invite new staff (from Add Staff modal).
    * Calls POST /api/v1/merchant/staff/invite.
    */
-  const handleInviteStaff = (name, contact, role) => {
+  const handleInviteStaff = (name, contact, role, _method?, { onSuccess } = {}) => {
     const isEmail = contact.includes('@')
 
     inviteStaffMutation.mutate({
@@ -287,6 +292,7 @@ export function useStaffManagement({
     }, {
       onSuccess: () => {
         showToast(t('components.dashboard.hooks.useStaffManagement.inviteSent', { name: name.trim() }), 'success')
+        onSuccess?.()
       },
       onError: (err) => {
         showToast(t('components.dashboard.hooks.useStaffManagement.inviteFailed', { error: errMsg(err) }), 'error')
@@ -480,6 +486,9 @@ export function useStaffManagement({
   const toggleStaff = (id) => {
     const member = staff.find(s => s.id === id)
     if (!member?.id) return
+    if (updateStatusMutation.isPending && updateStatusMutation.variables?.staffLinkId === member.id) {
+      return
+    }
 
     const newStatus = member.isActive ? 'Inactive' : 'Active'
     updateStatusMutation.mutate({ staffLinkId: member.id, status: newStatus }, {
@@ -497,6 +506,9 @@ export function useStaffManagement({
   const toggleStaffTipsFlow = (id) => {
     const member = staff.find(s => s.id === id)
     if (!member?.id) return
+    if (updateStatusMutation.isPending && updateStatusMutation.variables?.staffLinkId === member.id) {
+      return
+    }
 
     const newStatus = member.showInTipsFlow ? 'Inactive' : 'Active'
     updateStatusMutation.mutate({ staffLinkId: member.id, status: newStatus }, {
@@ -513,12 +525,13 @@ export function useStaffManagement({
     errors, setErrors,
     editingStaffId, setEditingStaffId,
     isStaffModalOpen, setIsStaffModalOpen,
+    isAddStaffModalOpen, setIsAddStaffModalOpen,
     isApproveModalOpen, setIsApproveModalOpen,
     approvingStaffMember, setApprovingStaffMember,
     isInviteShareOpen, setIsInviteShareOpen,
     inviteShareDefaultName, setInviteShareDefaultName,
     inviteShareDefaultContact, setInviteShareDefaultContact,
-    resetStaffForm, openAddStaff, openApproveStaff, openEditStaff, closeStaffModal,
+    resetStaffForm, openAddStaff, closeAddStaffModal, openApproveStaff, openEditStaff, closeStaffModal,
     saveStaff, sendSetupLinkFromModal, handleLinkStaff, handleInviteStaff,
     handleResendInvite, handleCancelInvite,
     handleAcceptJoinRequest, handleDeclineJoinRequest, deleteStaff, toggleStaff, toggleStaffTipsFlow,
