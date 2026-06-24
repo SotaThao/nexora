@@ -298,10 +298,10 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
 
   const statusOptions = useMemo(() => [
     { value: 'all', label: t('dashboard.activity_log.all_statuses') },
-    { value: 'Initiated', label: 'Initiated' },
-    { value: 'Confirmed', label: 'Confirmed' },
-    { value: 'Skipped', label: 'Skipped' },
-    { value: 'Completed', label: 'Completed' },
+    { value: 'Initiated', label: t('dashboard.activity_log.status_initiated') },
+    { value: 'Confirmed', label: t('dashboard.activity_log.status_confirmed') },
+    { value: 'Skipped', label: t('dashboard.activity_log.status_skipped') },
+    { value: 'Completed', label: t('dashboard.activity_log.status_completed') },
     { value: AWAITING_STATUS, label: t('merchant_dashboard.tips.awaiting_shop_confirmation') },
   ], [t])
 
