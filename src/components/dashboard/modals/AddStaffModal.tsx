@@ -11,6 +11,8 @@ import { useSearchMerchantStaff } from '../../../data/hooks/useMerchantStaff'
 import { isValidEmail } from '../../../utils/validation'
 import type { StaffSearchResult } from '../../../types/domain'
 
+const DEFAULT_ROLE = 'Nail Technician'
+
 function getContactKind(value: string): 'email' | 'phone' | 'unknown' {
   const trimmed = value.trim()
   if (!trimmed) return 'unknown'
@@ -60,14 +62,14 @@ function AddStaffModal({
   // Link tab
   const [searchInput, setSearchInput] = useState('')
   const [activeSearchQuery, setActiveSearchQuery] = useState('')
-  const [selectedRole, setSelectedRole] = useState('')
+  const [selectedRole, setSelectedRole] = useState(DEFAULT_ROLE)
   const [searchResult, setSearchResult] = useState<StaffSearchResult | null>(null)
   const [searchError, setSearchError] = useState('')
 
   // Invite tab
   const [inviteName, setInviteName] = useState('')
   const [inviteContact, setInviteContact] = useState('')
-  const [inviteRole, setInviteRole] = useState('')
+  const [inviteRole, setInviteRole] = useState(DEFAULT_ROLE)
   const [inviteMethod, setInviteMethod] = useState('Email')
 
   const { data: searchResults, isLoading: isSearching, isFetched } = useSearchMerchantStaff(activeSearchQuery, {
@@ -81,10 +83,10 @@ function AddStaffModal({
       setActiveSearchQuery('')
       setSearchResult(null)
       setSearchError('')
-      setSelectedRole('')
+      setSelectedRole(DEFAULT_ROLE)
       setInviteName('')
       setInviteContact('')
-      setInviteRole('')
+      setInviteRole(DEFAULT_ROLE)
       setInviteMethod('Email')
       setInviteErrors({})
     }
