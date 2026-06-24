@@ -2,6 +2,7 @@ import React from 'react'
 import { ChevronLeft, ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import MenuIcon from '../../ui/MenuIcon'
+import HomepageLink from '../../ui/HomepageLink'
 import { getSubscriptionSidebarCopy } from '../../../utils/subscriptionDisplay'
 
 export default function MobileMenuDrawer({
@@ -155,6 +156,7 @@ export default function MobileMenuDrawer({
         )}
 
         <nav className="flex-1 space-y-1.5 overflow-y-auto pr-1">
+          <HomepageLink variant="menu" onNavigate={onClose} />
           {menuItemsToDisplay.filter((item) => item.id !== 'settings').map((item) => {
             const { id, label } = item
             const isActive = activeMenu === id

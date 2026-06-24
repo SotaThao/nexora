@@ -214,6 +214,7 @@
     "active": "Active",
     "inactive": "Inactive",
     "back": "Back",
+    "back_to_homepage": "Home",
     "next": "Next",
     "previous": "Previous",
     "cancel": "Cancel",
@@ -434,6 +435,7 @@
       "manage_plan": "Manage Plan"
     },
     "menu": {
+      "home": "Home",
       "dashboard": "Dashboard",
       "staff": "Staff",
       "tips": "Tips",
@@ -859,7 +861,7 @@
       "via_link_request": "Link request",
       "via_invite": "Invite sent",
       "technician": "Technician",
-      "nav_home": "Home",
+      "nav_home": "Dashboard",
       "nav_staff": "Staff",
       "nav_tips": "Tips",
       "nav_qr": "QR",

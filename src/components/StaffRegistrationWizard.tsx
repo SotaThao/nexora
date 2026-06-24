@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Smartphone } from 'lucide-react'
 import useStaffRegistration, { MOCK_NEXORA_STAFF_PROFILES } from './staff-registration/hooks/useStaffRegistration'
 import LanguageSwitcher from './ui/LanguageSwitcher'
+import HomepageLink from './ui/HomepageLink'
 import StepWelcome from './staff-registration/steps/StepWelcome'
 import StepOtpVerify from './staff-registration/steps/StepOtpVerify'
 import StepProfile from './staff-registration/steps/StepProfile'
@@ -42,6 +43,7 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
       <div className="absolute top-4 right-4 z-50">
         <LanguageSwitcher />
       </div>
+      <HomepageLink className="top-4 left-4" />
 
       <div className="max-w-xl mx-auto px-4">
         {/* Onboarding Wizard Portal Container */}

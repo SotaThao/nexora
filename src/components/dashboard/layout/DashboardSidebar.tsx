@@ -6,6 +6,7 @@ import { ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { visibleMenuItems } from '../constants'
 import MenuIcon from '../../ui/MenuIcon'
+import HomepageLink from '../../ui/HomepageLink'
 import { getSubscriptionSidebarCopy } from '../../../utils/subscriptionDisplay'
 
 export default function DashboardSidebar({
@@ -151,6 +152,7 @@ export default function DashboardSidebar({
 
       {/* Navigation Menu */}
       <nav className="mt-6 flex-1 space-y-1.5 overflow-y-auto pr-1">
+        <HomepageLink variant="menu" />
         {(() => {
           const menuItemsToDisplay = userRole === 'staff'
             ? [

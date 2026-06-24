@@ -5,6 +5,7 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { STAFF_MENU_ITEMS } from '../constants'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import MenuIcon from '../../ui/MenuIcon'
+import HomepageLink from '../../ui/HomepageLink'
 
 export default function StaffSidebar({ activeScreen, onNavigate, onLogout, isOpen, onClose }) {
   const { t } = useTranslation()
@@ -80,6 +81,10 @@ export default function StaffSidebar({ activeScreen, onNavigate, onLogout, isOpe
 
       {/* Navigation */}
       <nav className="mt-6 flex-1 space-y-1.5 overflow-y-auto pr-1">
+        <HomepageLink
+          variant="menu"
+          onNavigate={isMobile && onClose ? onClose : undefined}
+        />
         {STAFF_MENU_ITEMS.map((item) => {
           const isActive = activeScreen === item.id
           return (

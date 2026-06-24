@@ -214,6 +214,7 @@
     "active": "Đang hoạt động",
     "inactive": "Ngừng hoạt động",
     "back": "Quay lại",
+    "back_to_homepage": "Trang chủ",
     "previous": "Trước",
     "next": "Tiếp theo",
     "cancel": "Hủy",
@@ -434,6 +435,7 @@
       "manage_plan": "Quản lý gói"
     },
     "menu": {
+      "home": "Trang chủ",
       "dashboard": "Bảng Điều Khiển",
       "staff": "Nhân Viên",
       "tips": "Tiền Típ",
@@ -859,7 +861,7 @@
       "via_link_request": "Yêu cầu liên kết",
       "via_invite": "Đã gửi lời mời",
       "technician": "Kỹ thuật viên",
-      "nav_home": "Trang chủ",
+      "nav_home": "Tổng quan",
       "nav_staff": "Nhân viên",
       "nav_tips": "Tip",
       "nav_qr": "QR",

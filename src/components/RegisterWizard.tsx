@@ -3,6 +3,7 @@ import { Check } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useRegisterForm } from './register/hooks/useRegisterForm'
 import LanguageSwitcher from './ui/LanguageSwitcher'
+import HomepageLink from './ui/HomepageLink'
 import StepRoleSelect from './register/steps/StepRoleSelect'
 import StepCredentials from './register/steps/StepCredentials'
 import StepOtpVerify from './register/steps/StepOtpVerify'
@@ -111,6 +112,7 @@ export default function RegisterWizard() {
       <div className="absolute top-4 right-4 z-50">
         <LanguageSwitcher />
       </div>
+      <HomepageLink className="top-4 left-4" />
 
       <div className="max-w-4xl mx-auto px-4 py-8 relative z-10 flex flex-col justify-center min-h-dvh">
         {/* Branding header */}
