@@ -1,4 +1,4 @@
-import { isValidPhoneNumber } from "libphonenumber-js";
+import { isPossiblePhoneNumber } from "libphonenumber-js";
 
 const value = (input: unknown) => String(input ?? "").trim();
 
@@ -12,7 +12,7 @@ export const isValidPhone = (input: unknown) => {
   if (digits.length < 7 || digits.length > 15) return false;
 
   try {
-    return isValidPhoneNumber(phone);
+    return isPossiblePhoneNumber(phone);
   } catch {
     return digits.length >= 10 && digits.length <= 15;
   }
