@@ -16,7 +16,10 @@ import {
   Wallet
 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { formatNotificationDateTime } from '../utils'
 import IconButton from '../../ui/IconButton'
+import LanguageSwitcher from '../../ui/LanguageSwitcher'
+import HeaderEcosystem from './HeaderEcosystem'
 
 export default function DashboardHeader({
   searchQuery,
@@ -44,7 +47,7 @@ export default function DashboardHeader({
   userRole = 'owner',
   onOpenMobileMenu
 }) {
-  const { currentLanguage, setLanguage, t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const dropdownRef = useRef(null)
   const searchRef = useRef(null)
   const headerDropdownRef = useRef(null)
@@ -310,23 +313,9 @@ export default function DashboardHeader({
 
       <div className="flex shrink-0 items-center gap-2 sm:gap-4">
         {/* Language Switcher */}
-        <div className="flex items-center gap-1 bg-nexoraSurfaceMuted border border-nexoraBorder px-2.5 py-1 rounded-lg">
-          <button
-            type="button"
-            onClick={() => setLanguage('vi')}
-            className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition ${currentLanguage === 'vi' ? 'bg-nexoraBrand text-white' : 'text-nexoraMuted hover:text-nexoraText'}`}
-          >
-            VI
-          </button>
-          <span className="text-nexoraBorder text-[10px]">|</span>
-          <button
-            type="button"
-            onClick={() => setLanguage('en')}
-            className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition ${currentLanguage === 'en' ? 'bg-nexoraBrand text-white' : 'text-nexoraMuted hover:text-nexoraText'}`}
-          >
-            EN
-          </button>
-        </div>
+        <LanguageSwitcher />
+
+        <HeaderEcosystem />
 
         {/* Notifications Icon and Dropdown */}
         <div className="relative hidden sm:inline-flex" ref={dropdownRef}>
@@ -335,7 +324,12 @@ export default function DashboardHeader({
             onClick={() => setIsNotiDropdownOpen(!isNotiDropdownOpen)}
             className="relative"
           >
-            <Bell className="h-5 w-5" />
+            <img
+              src="/assets/menu/notification.png"
+              alt=""
+              className="h-5 w-5 object-contain"
+              aria-hidden="true"
+            />
             {unreadCount > 0 && (
               <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center text-[9px] font-black text-white bg-red-500 ring-2 ring-white shadow-sm">
                 {unreadCount > 99 ? '99+' : unreadCount}
@@ -419,7 +413,9 @@ export default function DashboardHeader({
                             }`}>
                               {item.title}
                             </span>
-                            <span className="text-[10px] text-nexoraSubtle shrink-0 font-medium">{item.time}</span>
+                            <span className="text-[10px] text-nexoraSubtle shrink-0 font-medium">
+                              {formatNotificationDateTime(item.createdAt || item.time, currentLanguage)}
+                            </span>
                           </div>
                           <p className={`text-[11px] leading-normal mt-1 break-words ${
                             isUnread ? 'font-semibold text-nexoraText' : 'font-medium text-nexoraMuted'

@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import {
   QrCode,
   Star,
@@ -9,9 +10,11 @@ import {
   UserPlus,
   ChevronRight,
   PiggyBank,
+  Hourglass,
 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
-
+import { isAwaitingShopConfirmation } from '../utils'
 import SetupGuideBanner from './SetupGuideBanner'
 
 function twoInitials(name) {
@@ -133,6 +136,7 @@ function Overview({
   metricsYear = null,
 }: any) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const k = (key: string, vars?: Record<string, string | number>) =>
     t(`dashboard.owner_home.${key}`, vars)
 
@@ -151,6 +155,11 @@ function Overview({
   const yearTips = metricsYear?.totalTips ?? 0
   const moneySavedMonth = monthTips * FEE_RATE
   const moneySavedYear = yearTips * FEE_RATE
+
+  const pendingConfirmCount = useMemo(
+    () => (transactions || []).filter(isAwaitingShopConfirmation).length,
+    [transactions],
+  )
 
   const activeStaff = (staff || []).filter((m) => m.status === 'Active' || m.active === true)
   const pendingCount = (pendingStaff || []).length
@@ -198,7 +207,6 @@ function Overview({
       {/* ── Greeting ─────────────────────────────────────────────────────── */}
       <div className="pt-1">
         <h1 className="text-2xl font-black tracking-tight text-nexoraText">{greeting}</h1>
-        <p className="mt-1 text-sm text-nexoraMuted">{businessName || t('staff_dashboard.home.performance_subtitle')}</p>
       </div>
 
       {/* ── Hero: Money Saved ────────────────────────────────────────────── */}
@@ -226,6 +234,27 @@ function Overview({
           </div>
         </div>
       </section>
+
+      {pendingConfirmCount > 0 && (
+        <button
+          type="button"
+          onClick={() => navigate('/dashboard/reports?status=AwaitingShopConfirmation')}
+          className="flex w-full items-center gap-3 rounded-2xl border border-violet-100 bg-violet-50 px-4 py-3 text-left active:scale-[0.98] transition cursor-pointer"
+        >
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-100">
+            <Hourglass className="h-4 w-4 text-violet-600" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-violet-800">
+              {t('merchant_dashboard.tips.pending_banner_title', { count: pendingConfirmCount })}
+            </p>
+            <p className="text-[10px] text-violet-500 mt-0.5 truncate">
+              {t('merchant_dashboard.tips.pending_card_hint')}
+            </p>
+          </div>
+          <ChevronRight className="h-4 w-4 shrink-0 text-violet-400" />
+        </button>
+      )}
 
       {/* ── KPI 2×2 ──────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-3">

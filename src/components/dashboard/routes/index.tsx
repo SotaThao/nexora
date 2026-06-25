@@ -80,8 +80,6 @@ export function StaffRoute() {
       onToggle={ctx.toggleStaff}
       onToggleTipsFlow={ctx.toggleStaffTipsFlow}
       onViewDetail={(id) => navigate(`/dashboard/staff/${id}`)}
-      onLinkStaff={ctx.handleLinkStaff}
-      onInviteStaff={ctx.handleInviteStaff}
       onResendInvite={ctx.handleResendInvite}
       businessName={ctx.businessName}
       businessSlug={ctx.businessSlug}
@@ -104,6 +102,7 @@ export function StaffRoute() {
       hasNextPage={ctx.activeStaffHasNext}
       hasPreviousPage={ctx.activeStaffHasPrev}
       onPageChange={ctx.setActiveStaffPage}
+      togglingStaffId={ctx.togglingStaffId}
     />
   )
 }
@@ -172,12 +171,7 @@ export function TouchpointsRoute() {
   const ctx = useOutletContext<LooseObject>()
   const [sp, setSp] = useSearchParams()
   const tab = sp.get('tab') || 'stations'
-
-  useEffect(() => {
-    if (tab === 'devices') {
-      setSp({ tab: 'stations' }, { replace: true })
-    }
-  }, [tab, setSp])
+  const activeSubTab = tab === 'devices' ? 'devices' : 'stations'
 
   return (
     <TouchpointsView
@@ -196,9 +190,8 @@ export function TouchpointsRoute() {
       onAddDevice={ctx.handleAddDevice}
       onDeleteDevice={ctx.handleDeleteDevice}
       onToggleDeviceStatus={ctx.handleToggleDeviceStatus}
-      activeSubTab={tab === 'devices' ? 'stations' : tab}
+      activeSubTab={activeSubTab}
       onTabChange={(nextTab) => {
-        if (nextTab === 'devices') return
         setSp({ tab: nextTab }, { replace: true })
       }}
     />

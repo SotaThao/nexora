@@ -1,12 +1,14 @@
 // StaffHeader — top bar: brand (mobile), language switch, notifications bell, profile dropdown.
 import { useState, useRef, useEffect } from 'react'
-import { Bell, Menu, Settings, ShieldCheck, LogOut } from 'lucide-react'
+import { Menu, Settings, ShieldCheck, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import { useUnreadCount } from '../../../data/hooks/useNotifications'
+import LanguageSwitcher from '../../ui/LanguageSwitcher'
+import HeaderEcosystem from '../../dashboard/layout/HeaderEcosystem'
 
 export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu, onLogout }) {
-  const { currentLanguage, setLanguage, t } = useTranslation()
+  const { t } = useTranslation()
   const { staffMember, account } = useStaffAccount()
   const { data: unreadCount = 0 } = useUnreadCount()
   const displayName = account.defaultDisplayName || staffMember.fullName || 'Staff'
@@ -31,7 +33,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
 
   return (
     <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between gap-3 border-b border-nexoraBorder bg-nexoraSurface px-4 sm:px-5">
-      {/* Brand (mobile only — sidebar shows it on desktop) */}
+      {/* Menu trigger (mobile only — sidebar shows nav on desktop) */}
       <div className="flex min-w-0 items-center gap-3 lg:hidden">
         <button
           type="button"
@@ -41,7 +43,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
         >
           <Menu className="h-5 w-5" />
         </button>
-        <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="h-8 w-auto max-w-[150px] shrink-0 object-contain" />
+        <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-9 w-9 shrink-0 object-contain" />
       </div>
 
       {/* Screen title (desktop) */}
@@ -51,23 +53,9 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
 
       <div className="flex shrink-0 items-center gap-2 sm:gap-3">
         {/* Language switch */}
-        <div className="flex items-center gap-1 rounded-lg border border-nexoraBorder bg-nexoraSurfaceMuted px-2.5 py-1">
-          <button
-            type="button"
-            onClick={() => setLanguage('vi')}
-            className={`rounded px-1.5 py-0.5 text-[10px] font-bold transition ${currentLanguage === 'vi' ? 'bg-nexoraBrand text-white' : 'text-nexoraMuted hover:text-nexoraText'}`}
-          >
-            VI
-          </button>
-          <span className="text-[10px] text-nexoraBorder">|</span>
-          <button
-            type="button"
-            onClick={() => setLanguage('en')}
-            className={`rounded px-1.5 py-0.5 text-[10px] font-bold transition ${currentLanguage === 'en' ? 'bg-nexoraBrand text-white' : 'text-nexoraMuted hover:text-nexoraText'}`}
-          >
-            EN
-          </button>
-        </div>
+        <LanguageSwitcher />
+
+        <HeaderEcosystem />
 
         {/* Notifications bell */}
         <button
@@ -78,7 +66,12 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
             activeScreen === 'notifications' ? 'text-nexoraBrand' : 'text-nexoraText'
           }`}
         >
-          <Bell className="h-5 w-5" />
+          <img
+            src="/assets/menu/notification.png"
+            alt=""
+            className="h-5 w-5 object-contain"
+            aria-hidden="true"
+          />
           {unreadCount > 0 && (
             <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-black text-white ring-2 ring-white">
               {unreadCount > 99 ? '99+' : unreadCount}

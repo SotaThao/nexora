@@ -16,8 +16,10 @@ import { useOutletContext, useSearchParams } from 'react-router-dom'
 import { UserVerifyStatus } from '../../../constants/userVerifyStatus'
 import { useVerifiedStatus } from '../../../data/hooks/useProfileSettings'
 import { useUploadImage } from '../../../data/hooks/useMerchantSetup'
+import { useStaffProfileView } from '../../../data/hooks/useStaffProfileView'
 import { logger } from '../../../utils/logger'
 import StaffKycOverview from './StaffKycOverview'
+import Tooltip from '../../ui/Tooltip'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 const labelCls = 'mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-nexoraSubtle'
@@ -26,9 +28,10 @@ const readOnlyCls = 'w-full rounded-xl border border-nexoraBorder bg-nexoraCanva
 
 export default function StaffProfile() {
   const { currentLanguage, t } = useTranslation()
-  const { staffMember, account, saveProfile, setBusinessDisplayName } = useStaffAccount()
+  const { staffMember, saveProfile, setBusinessDisplayName } = useStaffAccount()
   const { linkedBusinesses } = useStaffLinkedBusinesses()
-  const { onLogout } = useOutletContext<LooseObject>()
+  const { data: profileView, isLoading: isProfileLoading } = useStaffProfileView()
+  const { onLogout } = useOutletContext<LooseObject>() || {}
   const [searchParams] = useSearchParams()
 
   const tabFromUrl = searchParams.get('tab')
@@ -38,27 +41,33 @@ export default function StaffProfile() {
     if (tabFromUrl === 'kyc') setActiveTab('kyc')
     else if (tabFromUrl === 'account' || !tabFromUrl) setActiveTab('profile')
   }, [tabFromUrl])
-  const [displayName, setDisplayName] = useState(account.defaultDisplayName || '')
-  const [bio, setBio] = useState(account.bio || '')
-  const [fullName, setFullName] = useState(account.fullName || staffMember.fullName || '')
-  const [phone, setPhone] = useState(account.phone || staffMember.phone || '')
+  const [displayName, setDisplayName] = useState('')
+  const [bio, setBio] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [phone, setPhone] = useState('')
   const [saved, setSaved] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const avatarObjectUrlRef = useRef<string | null>(null)
   const uploadImageMutation = useUploadImage()
 
-  const displayAvatar = avatarPreview || account.avatar
+  const displayAvatar = avatarPreview || profileView.avatar
 
   const { data: verifyStatusData } = useVerifiedStatus({ enabled: activeTab === 'kyc' })
   const verifyStatus = verifyStatusData?.status
 
   useEffect(() => {
-    setDisplayName(account.defaultDisplayName || '')
-    setBio(account.bio || '')
-    setFullName(account.fullName || staffMember.fullName || '')
-    setPhone(account.phone || staffMember.phone || '')
-  }, [account.defaultDisplayName, account.bio, account.fullName, staffMember.fullName, account.phone, staffMember.phone])
+    setDisplayName(profileView.displayName || '')
+    setBio(profileView.bio || '')
+    setFullName(profileView.fullName || '')
+    setPhone(profileView.phone || '')
+    setSaved(false)
+  }, [
+    profileView.displayName,
+    profileView.bio,
+    profileView.fullName,
+    profileView.phone,
+  ])
 
   useEffect(() => {
     return () => {
@@ -69,10 +78,10 @@ export default function StaffProfile() {
   }, [])
 
   useEffect(() => {
-    if (account.avatar && avatarPreview && avatarPreview === account.avatar) {
+    if (profileView.avatar && avatarPreview && avatarPreview === profileView.avatar) {
       setAvatarPreview(null)
     }
-  }, [account.avatar, avatarPreview])
+  }, [profileView.avatar, avatarPreview])
 
   const showToast = (msg) => {
     setToastMessage(msg)
@@ -118,7 +127,7 @@ export default function StaffProfile() {
       showToast(t('components.staff_dashboard.views.StaffProfile.avatarUpdatedSuccessfully'))
     } catch (err) {
       logger.error('[StaffProfile] Failed to upload avatar', err)
-      setAvatarPreview(account.avatar || null)
+      setAvatarPreview(profileView.avatar || null)
       if (avatarObjectUrlRef.current) {
         URL.revokeObjectURL(avatarObjectUrlRef.current)
         avatarObjectUrlRef.current = null
@@ -209,8 +218,22 @@ export default function StaffProfile() {
 
       {activeTab === 'profile' && (
         <>
+          {isProfileLoading ? (
+            <section className={panel}>
+              <div className="animate-pulse space-y-4">
+                <div className="mx-auto h-24 w-24 rounded-full bg-nexoraSurfaceMuted" />
+                <div className="h-10 rounded-xl bg-nexoraSurfaceMuted" />
+                <div className="h-10 rounded-xl bg-nexoraSurfaceMuted" />
+                <div className="h-24 rounded-xl bg-nexoraSurfaceMuted" />
+              </div>
+            </section>
+          ) : (
+          <>
           <section className={panel}>
-            <h3 className="mb-4 text-base font-extrabold text-nexoraText">{t('staff_dashboard.profile.title')}</h3>
+            <h3 className="mb-4 flex items-center gap-1.5 text-base font-extrabold text-nexoraText">
+              {t('staff_dashboard.profile.title')}
+              <Tooltip content={t('staff_dashboard.profile.title_tooltip')} />
+            </h3>
 
             {/* Avatar Section */}
             <div className="flex flex-col items-center mb-6">
@@ -238,7 +261,7 @@ export default function StaffProfile() {
                 {fullName || displayName}
               </span>
               <span className="text-[10px] text-nexoraSubtle">
-                {t('staff_dashboard.staff_id')}: {account.staffCode || staffMember.id}
+                {t('staff_dashboard.staff_id')}: {profileView.staffCode || staffMember.id}
               </span>
             </div>
 
@@ -249,6 +272,7 @@ export default function StaffProfile() {
                   type="text"
                   className={inputCls}
                   value={fullName}
+                  placeholder={t('staff_dashboard.profile.ph_full_name')}
                   onChange={(e) => { setFullName(e.target.value); setSaved(false) }}
                 />
               </div>
@@ -258,6 +282,7 @@ export default function StaffProfile() {
                   type="text"
                   className={inputCls}
                   value={displayName}
+                  placeholder={t('staff_dashboard.profile.ph_display_name')}
                   onChange={(e) => { setDisplayName(e.target.value); setSaved(false) }}
                 />
               </div>
@@ -268,19 +293,24 @@ export default function StaffProfile() {
                     type="text"
                     className={inputCls}
                     value={phone}
+                    placeholder={t('staff_dashboard.profile.ph_phone')}
                     onChange={(e) => { setPhone(e.target.value); setSaved(false) }}
                   />
                 </div>
                 <div>
                   <label className={labelCls}>{t('staff_dashboard.profile.email')}</label>
-                  <div className={readOnlyCls}>{staffMember.email || '—'}</div>
+                  <div className={readOnlyCls}>{profileView.email || staffMember.email || '—'}</div>
                 </div>
               </div>
               <div>
-                <label className={labelCls}>{t('staff_dashboard.profile.bio')}</label>
+                <label className={`${labelCls} flex items-center gap-1.5`}>
+                  {t('staff_dashboard.profile.bio')}
+                  <Tooltip content={t('staff_dashboard.profile.bio_tooltip')} />
+                </label>
                 <textarea
                   className={`${inputCls} h-24 resize-none`}
                   value={bio}
+                  placeholder={t('staff_dashboard.profile.ph_bio')}
                   onChange={(e) => { setBio(e.target.value); setSaved(false) }}
                 />
               </div>
@@ -297,21 +327,24 @@ export default function StaffProfile() {
             </button>
           </section>
 
-          <section className={panel}>
-            <h3 className="mb-3 text-base font-extrabold text-nexoraText">{t('staff_dashboard.profile.business_names')}</h3>
-            <div className="space-y-3">
-              {linkedBusinesses.map((biz) => (
-                <div key={biz.businessStaffLinkId}>
-                  <label className={labelCls}>{biz.businessName}</label>
-                  <input
-                    className={inputCls}
-                    value={biz.displayName}
-                    onChange={(e) => setBusinessDisplayName(biz.businessStaffLinkId, e.target.value)}
-                  />
-                </div>
-              ))}
-            </div>
-          </section>
+          {linkedBusinesses.length > 0 ? (
+            <section className={panel}>
+              <h3 className="mb-3 text-base font-extrabold text-nexoraText">{t('staff_dashboard.profile.business_names')}</h3>
+              <div className="space-y-3">
+                {linkedBusinesses.map((biz) => (
+                  <div key={biz.businessStaffLinkId}>
+                    <label className={labelCls}>{biz.businessName}</label>
+                    <input
+                      className={inputCls}
+                      value={biz.displayName}
+                      placeholder={t('staff_dashboard.profile.ph_business_display_name')}
+                      onChange={(e) => setBusinessDisplayName(biz.businessStaffLinkId, e.target.value)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
 
           <section className={panel}>
             <h3 className="mb-3 text-base font-extrabold text-nexoraDangerDark dark:text-red-400">
@@ -329,6 +362,8 @@ export default function StaffProfile() {
               {t('staff_dashboard.sign_out')}
             </button>
           </section>
+          </>
+          )}
         </>
       )}
 

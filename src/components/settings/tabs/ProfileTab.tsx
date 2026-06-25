@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { buildAffiliateReferralUrl, getProfileReferralCode } from '../../../utils/affiliateReferral'
 import {
@@ -23,6 +24,15 @@ import {
   X,
   QrCode
 } from 'lucide-react'
+import { isValidEmail, isValidPhone } from '../../../utils/validation'
+import CountryCodeSelect, { formatNationalNumber, parsePhone } from '../../CountryCodeSelect'
+import CameraCapture from '../../ui/CameraCapture'
+import {
+  getPaymentMethodDisplayName,
+  payoutTypeToUiKey,
+} from '../../../data/paymentMethodTypes'
+import { formatPaymentMethodAccountDisplay } from '../../payout/bankWireAccount'
+import type { PaymentMethodDto } from '../../../types/domain'
 
 const PayoutLogos = {
   zelle: (
@@ -55,17 +65,25 @@ const PayoutLogos = {
     <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-black" xmlns="http://www.w3.org/2000/svg">
       <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83zM15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.22.67-2.94 1.51-.62.73-1.16 1.87-1.02 2.98 1.11.09 2.25-.56 2.97-1.43z" />
     </svg>
-  )
+  ),
+  vlinkpay: (
+    <img src="/assets/vlinkpay-logo.png" alt="VLINKPAY Logo" className="h-[18px] w-[18px] object-contain" />
+  ),
 }
 
-const payoutMethodsList = [
-  { key: 'zelle', label: 'Zelle', placeholder: 'Enter Zelle email/phone...' },
-  { key: 'bankwire', label: 'Bank Wire', placeholder: 'Enter Bank Wire routing - account...' },
-  { key: 'paypal', label: 'PayPal', placeholder: 'Enter PayPal email...' },
-  { key: 'venmo', label: 'Venmo', placeholder: 'Enter Venmo @username...' },
-  { key: 'cashapp', label: 'Cash App', placeholder: 'Enter Cash App $cashtag...' },
-  { key: 'applecash', label: 'Apple Cash', placeholder: 'Enter Apple Cash phone number...' }
-]
+const validatePayoutAccount = (method, input) => {
+  const account = String(input || '').trim()
+  if (!account) return 'required'
+
+  if (method === 'zelle') return isValidEmail(account) || isValidPhone(account) ? '' : 'emailOrPhone'
+  if (method === 'paypal') return isValidEmail(account) ? '' : 'email'
+  if (method === 'venmo') return /^@[A-Za-z0-9_]{2,30}$/.test(account) ? '' : 'venmo'
+  if (method === 'cashapp') return /^\$[A-Za-z][A-Za-z0-9_]{1,19}$/.test(account) ? '' : 'cashapp'
+  if (method === 'applecash') return isValidPhone(account) ? '' : 'phone'
+  return account.length >= 3 ? '' : 'invalid'
+}
+
+const KYB_EDITABLE_STATUSES = new Set(['basic', 'kyb_rejected', 'rejected'])
 
 export default function ProfileTab({
   profile,
@@ -74,19 +92,29 @@ export default function ProfileTab({
   setIsEditingBasic,
   basicForm,
   setBasicForm,
+  basicErrors,
+  setBasicErrors,
   isEditingAddress,
   setIsEditingAddress,
   addressForm,
   setAddressForm,
+  addressErrors,
+  setAddressErrors,
   isEditingBusiness,
   setIsEditingBusiness,
   businessForm,
   setBusinessForm,
+  businessErrors,
+  setBusinessErrors,
   isEditingReviews,
   setIsEditingReviews,
   reviewsForm,
   setReviewsForm,
+  reviewsErrors,
+  setReviewsErrors,
   hasKyb,
+  verificationStatus = 'basic',
+  canEditProfile = true,
   currentLanguage,
   showToast,
   handleCopy,
@@ -102,6 +130,7 @@ export default function ProfileTab({
   formatDOB,
   onShowQr,
 }) {
+  const canEditKybFields = canEditProfile
   const { t } = useTranslation()
   const referralCode = useMemo(() => getProfileReferralCode(profile), [profile])
   const referralUrl = useMemo(
@@ -117,6 +146,28 @@ export default function ProfileTab({
     const maskedRef = `${referralCode.slice(0, 3)}...${referralCode.slice(-3)}`
     return compactUrl.replace(referralCode, maskedRef)
   }, [referralCode, referralUrl, t])
+  const inputClass = (error?: string) =>
+    `mt-1 h-10 w-full rounded-lg border bg-nexoraCanvas focus:bg-white px-3.5 text-xs text-nexoraText outline-none transition-all ${
+      error
+        ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/15'
+        : 'border-nexoraBorder focus:border-nexoraBrand'
+    }`
+  const validationMessage = (error: string) =>
+    t(`components.settings.tabs.ProfileTab.validation.${error}`)
+  const clearError = (setter, field: string) => {
+    setter((current) => {
+      if (!current[field]) return current
+      const next = { ...current }
+      delete next[field]
+      return next
+    })
+  }
+  const FieldError = ({ id, error }: { id: string; error?: string }) =>
+    error ? (
+      <p id={id} role="alert" className="mt-1 text-[10px] font-bold text-rose-500">
+        {validationMessage(error)}
+      </p>
+    ) : null
 
   const { data: apiPaymentMethods = [] } = useMerchantPaymentMethods()
   const toggleMutation = useToggleMerchantPaymentMethod()
@@ -128,16 +179,41 @@ export default function ProfileTab({
   const [editQrCode, setEditQrCode] = useState<any | null>(null)
   const [editQrFile, setEditQrFile] = useState(null)
   const [isCapturing, setIsCapturing] = useState(false)
+  const [isCameraOpen, setIsCameraOpen] = useState(false)
   const [modalError, setModalError] = useState('')
 
-  const getMethod = (key) => apiPaymentMethods.find(m => m.type?.toLowerCase() === key.toLowerCase()) || { type: key, isActive: false, isConfigured: false, accountInfo: '', id: undefined, imageUrl: null, accountName: null }
+  const getMethodUiKey = (method: PaymentMethodDto) =>
+    method.uiKey || payoutTypeToUiKey(method.type || '')
 
-  const handleToggleMethod = (key) => {
+  const displayedPaymentMethods = apiPaymentMethods.filter(
+    (m) => getMethodUiKey(m) !== 'bankwire'
+  )
+
+  const getMethod = (key: string) =>
+    apiPaymentMethods.find((m) => getMethodUiKey(m) === key) || {
+      type: key,
+      isActive: false,
+      isConfigured: false,
+      accountInfo: '',
+      id: undefined,
+      imageUrl: null,
+      accountName: null,
+    }
+
+  const handleToggleMethod = (key: string, isCurrentlyActive: boolean) => {
     const methodData = getMethod(key)
+    const nextActive = !isCurrentlyActive
+
+    if (nextActive && !(methodData.isConfigured && methodData.accountInfo?.trim())) {
+      handleEditPayoutAccount(key)
+      return
+    }
+
     if (!methodData.id) {
       showToast(t('components.settings.tabs.ProfileTab.methodNotConfigured'), 'error')
       return
     }
+
     toggleMutation.mutate(methodData.id)
   }
 
@@ -152,8 +228,9 @@ export default function ProfileTab({
 
   const savePayoutAccount = (e) => {
     e.preventDefault()
-    if (!editValue.trim()) {
-      setModalError(t('components.settings.tabs.ProfileTab.pleaseEnterAccountDetails'))
+    const validationError = validatePayoutAccount(editingMethod, editValue)
+    if (validationError) {
+      setModalError(validationMessage(validationError))
       return
     }
     const methodData = getMethod(editingMethod)
@@ -190,11 +267,7 @@ export default function ProfileTab({
   }
 
   const handleModalTakePhoto = () => {
-    setIsCapturing(true)
-    setTimeout(() => {
-      setEditQrCode('https://via.placeholder.com/300?text=Mock+Camera+QR')
-      setIsCapturing(false)
-    }, 1500)
+    setIsCameraOpen(true)
   }
 
   const handleModalClearQr = () => {
@@ -228,7 +301,7 @@ export default function ProfileTab({
                 </div>
               )}
               <label className="absolute inset-0 rounded-full bg-black/40 text-white text-[9px] font-black uppercase flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
-                Edit
+                {t('components.settings.tabs.ProfileTab.edit')}
                 <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
               </label>
             </div>
@@ -236,22 +309,22 @@ export default function ProfileTab({
               {profile.businessName || profile.email}
             </div>
             <span className="mt-1 inline-block bg-orange-50 text-orange-600 border border-orange-100 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full">
-              Business Owner
+              {t('components.settings.tabs.ProfileTab.businessOwner')}
             </span>
 
             <div className="w-full mt-6 space-y-3.5 text-xs text-left border-t border-nexoraRule pt-4">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 gap-1">
-                <span className="text-nexoraMuted font-bold">Username:</span>
+                <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.username')}:</span>
                 <span className="text-nexoraText font-extrabold">{profile.username}</span>
               </div>
 
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                <span className="text-nexoraMuted font-bold">Email:</span>
+                <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.email')}:</span>
                 <span className="text-nexoraText font-extrabold truncate" title={profile.email}>{profile.email}</span>
               </div>
 
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                <span className="text-nexoraMuted font-bold">Referral Link:</span>
+                <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.referralLink')}:</span>
                 <div className="flex items-center gap-1 self-end sm:self-auto min-w-0">
                   <span className="text-nexoraText font-extrabold" title={referralUrl || referralDisplay}>
                     {referralDisplay}
@@ -267,12 +340,12 @@ export default function ProfileTab({
                     {copiedId === 'ref' ? (
                       <>
                         <Check className="h-3 w-3 text-emerald-600" />
-                        <span className="text-emerald-500">Copied</span>
+                        <span className="text-emerald-500">{t('components.settings.tabs.ProfileTab.copied')}</span>
                       </>
                     ) : (
                       <>
                         <Copy className="h-3 w-3" />
-                        <span>Copy</span>
+                        <span>{t('components.settings.tabs.ProfileTab.copy')}</span>
                       </>
                     )}
                   </button>
@@ -284,7 +357,7 @@ export default function ProfileTab({
                     className="text-blue-500 hover:text-blue-600 font-bold text-[10px] uppercase hover:underline ml-2 flex items-center gap-1 shrink-0"
                   >
                     <QrCode className="h-3 w-3" />
-                    <span>Show QR</span>
+                    <span>{t('components.settings.tabs.ProfileTab.showQr')}</span>
                   </button>
                 </div>
               </div>
@@ -303,23 +376,25 @@ export default function ProfileTab({
             </div>
 
             <div className="divide-y divide-slate-100">
-              {payoutMethodsList.filter(item => item.key !== 'bankwire').map((item) => {
-                const methodData = getMethod(item.key)
+              {displayedPaymentMethods.map((method) => {
+                const uiKey = getMethodUiKey(method)
+                const label = method.name || getPaymentMethodDisplayName(method.type || '')
+                const accountDisplay = formatPaymentMethodAccountDisplay(uiKey, method.accountInfo)
                 return (
-                <div key={item.key} className="flex items-center justify-between py-3">
+                <div key={method.id || uiKey} className="flex items-center justify-between py-3">
                   <div className="flex items-center gap-3 min-w-0">
                     {/* Toggle Switch */}
                     <button
                       type="button"
-                      onClick={() => handleToggleMethod(item.key)}
-                      aria-label={`Toggle ${item.label}`}
+                      onClick={() => handleToggleMethod(uiKey, method.isActive)}
+                      aria-label={`Toggle ${label}`}
                       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                        methodData.isActive ? 'bg-amber-600' : 'bg-slate-200'
+                        method.isActive ? 'bg-amber-600' : 'bg-slate-200'
                       }`}
                     >
                       <span
                         className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                          methodData.isActive ? 'translate-x-4' : 'translate-x-0'
+                          method.isActive ? 'translate-x-4' : 'translate-x-0'
                         }`}
                       />
                     </button>
@@ -327,17 +402,17 @@ export default function ProfileTab({
                     {/* Logo and Label */}
                     <div className="flex items-center gap-2.5 min-w-0">
                       <span className="h-7 w-7 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
-                        {PayoutLogos[item.key]}
+                        {PayoutLogos[uiKey]}
                       </span>
                       <div className="min-w-0">
-                        <div className="text-xs font-bold text-slate-800">{item.label}</div>
-                        {methodData.isConfigured ? (
+                        <div className="text-xs font-bold text-slate-800">{label}</div>
+                        {method.isConfigured ? (
                           <div className="text-[10px] text-slate-500 font-mono mt-0.5 truncate max-w-[110px] sm:max-w-[150px]">
-                            {methodData.accountInfo}
+                            {accountDisplay}
                           </div>
                         ) : (
                           <div className="text-[10px] text-slate-300 italic font-medium mt-0.5">
-                            Not Configured
+                            {t('components.settings.tabs.ProfileTab.notConfigured')}
                           </div>
                         )}
                       </div>
@@ -347,8 +422,8 @@ export default function ProfileTab({
                   {/* Edit button */}
                   <button
                     type="button"
-                    onClick={() => handleEditPayoutAccount(item.key)}
-                    aria-label={`Edit ${item.label} Payout Account`}
+                    onClick={() => handleEditPayoutAccount(uiKey)}
+                    aria-label={`Edit ${label} Payout Account`}
                     className="flex items-center gap-1 text-[10px] font-bold text-amber-600 hover:text-amber-700 transition shrink-0 ml-2"
                   >
                     <Edit2 className="h-3 w-3" />
@@ -356,19 +431,6 @@ export default function ProfileTab({
                   </button>
                 </div>
               )})}
-            </div>
-
-            {/* VLINKPAY ID display at the bottom */}
-            <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-xs">
-              <div className="flex items-center gap-2">
-                <span className="h-7 w-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
-                  <img src="/assets/vlinkpay-logo.png" alt="VLINKPAY Logo" className="h-4.5 w-4.5 object-contain animate-pulse" />
-                </span>
-                <span className="text-nexoraMuted font-bold">VLINKPAY ID</span>
-              </div>
-              <span className="text-nexoraText font-extrabold font-mono bg-slate-50 border border-slate-200 px-2 py-0.5 rounded">
-                {getMethod('vlinkpay').accountInfo || 'Pending KYB'}
-              </span>
             </div>
 
           </div>
@@ -385,7 +447,7 @@ export default function ProfileTab({
                 <User className="h-4 w-4 text-nexoraBrand" />
                 {t('components.settings.tabs.ProfileTab.basicInformation')}
               </h4>
-              {!isEditingBasic && !hasKyb && (
+              {!isEditingBasic && canEditKybFields && (
                 <button
                   type="button"
                   onClick={startEditBasic}
@@ -398,10 +460,10 @@ export default function ProfileTab({
             </div>
 
             {isEditingBasic ? (
-              <form onSubmit={saveBasic} className="space-y-4">
+              <form onSubmit={saveBasic} noValidate className="space-y-4">
                 <div>
                   <label className="flex items-center text-[10px] font-extrabold uppercase text-nexoraMuted gap-1">
-                    <span>Full Name</span>
+                    <span>{t('components.settings.tabs.ProfileTab.fullName')}</span>
                     <div className="relative group inline-block normal-case font-normal text-nexoraSubtle">
                       <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
@@ -411,12 +473,18 @@ export default function ProfileTab({
                     </div>
                   </label>
                   <input
+                    id="settings-full-name"
                     type="text"
-                    required
-                    className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas focus:bg-white px-3.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand transition-all"
+                    className={inputClass(basicErrors.fullName)}
                     value={basicForm.fullName}
-                    onChange={(e) => setBasicForm({ ...basicForm, fullName: e.target.value })}
+                    aria-invalid={Boolean(basicErrors.fullName)}
+                    aria-describedby={basicErrors.fullName ? 'settings-full-name-error' : undefined}
+                    onChange={(e) => {
+                      setBasicForm({ ...basicForm, fullName: e.target.value })
+                      clearError(setBasicErrors, 'fullName')
+                    }}
                   />
+                  <FieldError id="settings-full-name-error" error={basicErrors.fullName} />
                 </div>
                 <div>
                   <label className="flex items-center text-[10px] font-extrabold uppercase text-nexoraMuted gap-1">
@@ -430,12 +498,18 @@ export default function ProfileTab({
                     </div>
                   </label>
                   <input
+                    id="settings-dob"
                     type="date"
-                    required
-                    className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas focus:bg-white px-3.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand transition-all"
+                    className={inputClass(basicErrors.dob)}
                     value={basicForm.dob}
-                    onChange={(e) => setBasicForm({ ...basicForm, dob: e.target.value })}
+                    aria-invalid={Boolean(basicErrors.dob)}
+                    aria-describedby={basicErrors.dob ? 'settings-dob-error' : undefined}
+                    onChange={(e) => {
+                      setBasicForm({ ...basicForm, dob: e.target.value })
+                      clearError(setBasicErrors, 'dob')
+                    }}
                   />
+                  <FieldError id="settings-dob-error" error={basicErrors.dob} />
                 </div>
                 <div>
                   <label className="flex items-center text-[10px] font-extrabold uppercase text-nexoraMuted gap-1">
@@ -448,13 +522,36 @@ export default function ProfileTab({
                       </div>
                     </div>
                   </label>
-                  <input
-                    type="text"
-                    required
-                    className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas focus:bg-white px-3.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand transition-all"
-                    value={basicForm.phone}
-                    onChange={(e) => setBasicForm({ ...basicForm, phone: e.target.value })}
-                  />
+                  <div className="mt-1 flex rounded-lg shadow-sm">
+                    <CountryCodeSelect
+                      value={parsePhone(basicForm.phone).countryCode}
+                      onChange={(newCode) => {
+                        const { nationalNumber } = parsePhone(basicForm.phone)
+                        const reFormatted = formatNationalNumber(nationalNumber, newCode)
+                        setBasicForm({ ...basicForm, phone: `${newCode} ${reFormatted}`.trim() })
+                        clearError(setBasicErrors, 'phone')
+                      }}
+                    />
+                    <input
+                      id="settings-phone"
+                      type="text"
+                      className={`h-10 w-full min-w-0 rounded-r-lg border border-l-0 bg-nexoraCanvas focus:bg-white px-3.5 text-xs text-nexoraText outline-none transition-all ${
+                        basicErrors.phone
+                          ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/15'
+                          : 'border-nexoraBorder focus:border-nexoraBrand'
+                      }`}
+                      value={formatNationalNumber(parsePhone(basicForm.phone).nationalNumber, parsePhone(basicForm.phone).countryCode)}
+                      aria-invalid={Boolean(basicErrors.phone)}
+                      aria-describedby={basicErrors.phone ? 'settings-phone-error' : undefined}
+                      onChange={(e) => {
+                        const { countryCode } = parsePhone(basicForm.phone)
+                        const formatted = formatNationalNumber(e.target.value, countryCode)
+                        setBasicForm({ ...basicForm, phone: `${countryCode} ${formatted}`.trim() })
+                        clearError(setBasicErrors, 'phone')
+                      }}
+                    />
+                  </div>
+                  <FieldError id="settings-phone-error" error={basicErrors.phone} />
                 </div>
                 <div className="flex gap-2 pt-2 justify-end">
                   <button
@@ -462,13 +559,13 @@ export default function ProfileTab({
                     onClick={() => setIsEditingBasic(false)}
                     className="px-3 py-1.5 border border-slate-200 rounded text-[10px] font-bold text-slate-500 hover:bg-slate-50"
                   >
-                    Cancel
+                    {t('components.settings.tabs.ProfileTab.cancel')}
                   </button>
                   <button
                     type="submit"
                     className="px-3 py-1.5 bg-nexoraBrand hover:bg-nexoraBrandDark text-white rounded text-[10px] font-bold"
                   >
-                    Save
+                    {t('components.settings.tabs.ProfileTab.save')}
                   </button>
                 </div>
               </form>
@@ -497,7 +594,7 @@ export default function ProfileTab({
                 <MapPin className="h-4 w-4 text-rose-500" />
                 {t('components.settings.tabs.ProfileTab.addressDetails')}
               </h4>
-              {!isEditingAddress && !hasKyb && (
+              {!isEditingAddress && canEditKybFields && (
                 <button
                   type="button"
                   onClick={startEditAddress}
@@ -510,10 +607,10 @@ export default function ProfileTab({
             </div>
 
             {isEditingAddress ? (
-              <form onSubmit={saveAddress} className="space-y-4">
+              <form onSubmit={saveAddress} noValidate className="space-y-4">
                 <div>
                   <label className="flex items-center text-[10px] font-extrabold uppercase text-nexoraMuted gap-1">
-                    <span>Street Address</span>
+                    <span>{t('components.settings.tabs.ProfileTab.streetAddress')}</span>
                     <div className="relative group inline-block normal-case font-normal text-nexoraSubtle">
                       <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
@@ -523,54 +620,85 @@ export default function ProfileTab({
                     </div>
                   </label>
                   <input
+                    id="settings-street"
                     type="text"
-                    required
-                    className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas focus:bg-white px-3.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand transition-all"
+                    className={inputClass(addressErrors.street)}
                     value={addressForm.street}
-                    onChange={(e) => setAddressForm({ ...addressForm, street: e.target.value })}
+                    aria-invalid={Boolean(addressErrors.street)}
+                    aria-describedby={addressErrors.street ? 'settings-street-error' : undefined}
+                    onChange={(e) => {
+                      setAddressForm({ ...addressForm, street: e.target.value })
+                      clearError(setAddressErrors, 'street')
+                    }}
                   />
+                  <FieldError id="settings-street-error" error={addressErrors.street} />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">City</label>
+                    <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('components.settings.tabs.ProfileTab.city')}</label>
                     <input
+                       id="settings-city"
                        type="text"
-                       required
-                       className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas focus:bg-white px-3.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand transition-all"
+                       className={inputClass(addressErrors.city)}
                        value={addressForm.city}
-                       onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
+                       aria-invalid={Boolean(addressErrors.city)}
+                       aria-describedby={addressErrors.city ? 'settings-city-error' : undefined}
+                       onChange={(e) => {
+                         setAddressForm({ ...addressForm, city: e.target.value })
+                         clearError(setAddressErrors, 'city')
+                       }}
                     />
+                    <FieldError id="settings-city-error" error={addressErrors.city} />
                   </div>
                   <div>
-                    <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">State / Province</label>
+                    <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('components.settings.tabs.ProfileTab.stateProvince')}</label>
                     <input
+                      id="settings-state"
                       type="text"
-                      className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas focus:bg-white px-3.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand transition-all"
+                      className={inputClass(addressErrors.state)}
                       value={addressForm.state}
-                      onChange={(e) => setAddressForm({ ...addressForm, state: e.target.value })}
+                      aria-invalid={Boolean(addressErrors.state)}
+                      aria-describedby={addressErrors.state ? 'settings-state-error' : undefined}
+                      onChange={(e) => {
+                        setAddressForm({ ...addressForm, state: e.target.value })
+                        clearError(setAddressErrors, 'state')
+                      }}
                     />
+                    <FieldError id="settings-state-error" error={addressErrors.state} />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">Zip Code</label>
+                    <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('components.settings.tabs.ProfileTab.zipCode')}</label>
                     <input
+                      id="settings-zip-code"
                       type="text"
-                      required
-                      className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas focus:bg-white px-3.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand transition-all"
+                      className={inputClass(addressErrors.zipCode)}
                       value={addressForm.zipCode}
-                      onChange={(e) => setAddressForm({ ...addressForm, zipCode: e.target.value })}
+                      aria-invalid={Boolean(addressErrors.zipCode)}
+                      aria-describedby={addressErrors.zipCode ? 'settings-zip-code-error' : undefined}
+                      onChange={(e) => {
+                        setAddressForm({ ...addressForm, zipCode: e.target.value })
+                        clearError(setAddressErrors, 'zipCode')
+                      }}
                     />
+                    <FieldError id="settings-zip-code-error" error={addressErrors.zipCode} />
                   </div>
                   <div>
-                    <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">Country</label>
+                    <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('components.settings.tabs.ProfileTab.country')}</label>
                     <input
+                      id="settings-country"
                       type="text"
-                      required
-                      className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas focus:bg-white px-3.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand transition-all"
+                      className={inputClass(addressErrors.country)}
                       value={addressForm.country}
-                      onChange={(e) => setAddressForm({ ...addressForm, country: e.target.value })}
+                      aria-invalid={Boolean(addressErrors.country)}
+                      aria-describedby={addressErrors.country ? 'settings-country-error' : undefined}
+                      onChange={(e) => {
+                        setAddressForm({ ...addressForm, country: e.target.value })
+                        clearError(setAddressErrors, 'country')
+                      }}
                     />
+                    <FieldError id="settings-country-error" error={addressErrors.country} />
                   </div>
                 </div>
                 <div className="flex gap-2 pt-2 justify-end">
@@ -579,13 +707,13 @@ export default function ProfileTab({
                     onClick={() => setIsEditingAddress(false)}
                     className="px-3 py-1.5 border border-slate-200 rounded text-[10px] font-bold text-slate-500 hover:bg-slate-50"
                   >
-                    Cancel
+                    {t('components.settings.tabs.ProfileTab.cancel')}
                   </button>
                   <button
                     type="submit"
                     className="px-3 py-1.5 bg-nexoraBrand hover:bg-nexoraBrandDark text-white rounded text-[10px] font-bold"
                   >
-                    Save
+                    {t('components.settings.tabs.ProfileTab.save')}
                   </button>
                 </div>
               </form>
@@ -604,7 +732,7 @@ export default function ProfileTab({
                   <span className="text-nexoraText font-extrabold">{profile.state || 'N/A'}</span>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                  <span className="text-nexoraMuted font-bold">Zip Code</span>
+                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.zipCode')}</span>
                   <span className="text-nexoraText font-extrabold font-mono">{profile.zipCode}</span>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
@@ -622,7 +750,7 @@ export default function ProfileTab({
                 <Building2 className="h-4 w-4 text-purple-500" />
                 {t('components.settings.tabs.ProfileTab.businessInformation')}
               </h4>
-              {!isEditingBusiness && !hasKyb && (
+              {!isEditingBusiness && canEditKybFields && (
                 <button
                   type="button"
                   onClick={startEditBusiness}
@@ -635,10 +763,10 @@ export default function ProfileTab({
             </div>
 
             {isEditingBusiness ? (
-              <form onSubmit={saveBusiness} className="space-y-4">
+              <form onSubmit={saveBusiness} noValidate className="space-y-4">
                 <div>
                   <label className="flex items-center text-[10px] font-extrabold uppercase text-nexoraMuted gap-1">
-                    <span>Business Name</span>
+                    <span>{t('components.settings.tabs.ProfileTab.businessName')}</span>
                     <div className="relative group inline-block normal-case font-normal text-nexoraSubtle">
                       <HelpCircle className="w-3.5 h-3.5 hover:text-nexoraBrand cursor-help transition-colors" />
                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-black text-white text-[10px] p-2.5 rounded-lg shadow-xl z-50 text-center leading-normal">
@@ -648,43 +776,69 @@ export default function ProfileTab({
                     </div>
                   </label>
                   <input
+                    id="settings-business-name"
                     type="text"
-                    required
-                    className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas focus:bg-white px-3.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand transition-all"
+                    className={inputClass(businessErrors.businessName)}
                     value={businessForm.businessName}
-                    onChange={(e) => setBusinessForm({ ...businessForm, businessName: e.target.value })}
+                    aria-invalid={Boolean(businessErrors.businessName)}
+                    aria-describedby={businessErrors.businessName ? 'settings-business-name-error' : undefined}
+                    onChange={(e) => {
+                      setBusinessForm({ ...businessForm, businessName: e.target.value })
+                      clearError(setBusinessErrors, 'businessName')
+                    }}
                   />
+                  <FieldError id="settings-business-name-error" error={businessErrors.businessName} />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">Business Phone</label>
+                    <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('components.settings.tabs.ProfileTab.businessPhone')}</label>
                     <input
-                      type="text"
-                      required
-                      className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas focus:bg-white px-3.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand transition-all"
+                      id="settings-business-phone"
+                      type="tel"
+                      className={inputClass(businessErrors.businessPhone)}
                       value={businessForm.businessPhone}
-                      onChange={(e) => setBusinessForm({ ...businessForm, businessPhone: e.target.value })}
+                      aria-invalid={Boolean(businessErrors.businessPhone)}
+                      aria-describedby={businessErrors.businessPhone ? 'settings-business-phone-error' : undefined}
+                      onChange={(e) => {
+                        setBusinessForm({ ...businessForm, businessPhone: e.target.value })
+                        clearError(setBusinessErrors, 'businessPhone')
+                      }}
                     />
+                    <FieldError id="settings-business-phone-error" error={businessErrors.businessPhone} />
                   </div>
                   <div>
-                    <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">Business Email</label>
+                    <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('components.settings.tabs.ProfileTab.businessEmail')}</label>
                     <input
+                      id="settings-business-email"
                       type="email"
-                      required
-                      className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas focus:bg-white px-3.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand transition-all"
+                      className={inputClass(businessErrors.businessEmail)}
                       value={businessForm.businessEmail}
-                      onChange={(e) => setBusinessForm({ ...businessForm, businessEmail: e.target.value })}
+                      aria-invalid={Boolean(businessErrors.businessEmail)}
+                      aria-describedby={businessErrors.businessEmail ? 'settings-business-email-error' : undefined}
+                      onChange={(e) => {
+                        setBusinessForm({ ...businessForm, businessEmail: e.target.value })
+                        clearError(setBusinessErrors, 'businessEmail')
+                      }}
                     />
+                    <FieldError id="settings-business-email-error" error={businessErrors.businessEmail} />
                   </div>
                 </div>
                 <div>
-                  <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">Website</label>
+                  <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('components.settings.tabs.ProfileTab.website')}</label>
                   <input
-                    type="text"
-                    className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas focus:bg-white px-3.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand transition-all"
+                    id="settings-business-website"
+                    type="url"
+                    className={inputClass(businessErrors.businessWebsite)}
                     value={businessForm.businessWebsite}
-                    onChange={(e) => setBusinessForm({ ...businessForm, businessWebsite: e.target.value })}
+                    aria-invalid={Boolean(businessErrors.businessWebsite)}
+                    aria-describedby={businessErrors.businessWebsite ? 'settings-business-website-error' : undefined}
+                    placeholder="https://example.com"
+                    onChange={(e) => {
+                      setBusinessForm({ ...businessForm, businessWebsite: e.target.value })
+                      clearError(setBusinessErrors, 'businessWebsite')
+                    }}
                   />
+                  <FieldError id="settings-business-website-error" error={businessErrors.businessWebsite} />
                 </div>
                 <div className="flex gap-2 pt-2 justify-end">
                   <button
@@ -692,13 +846,13 @@ export default function ProfileTab({
                     onClick={() => setIsEditingBusiness(false)}
                     className="px-3 py-1.5 border border-slate-200 rounded text-[10px] font-bold text-slate-500 hover:bg-slate-50"
                   >
-                    Cancel
+                    {t('components.settings.tabs.ProfileTab.cancel')}
                   </button>
                   <button
                     type="submit"
                     className="px-3 py-1.5 bg-nexoraBrand hover:bg-nexoraBrandDark text-white rounded text-[10px] font-bold"
                   >
-                    Save
+                    {t('components.settings.tabs.ProfileTab.save')}
                   </button>
                 </div>
               </form>
@@ -713,11 +867,11 @@ export default function ProfileTab({
                   <span className="text-nexoraText font-extrabold">{profile.businessPhone}</span>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                  <span className="text-nexoraMuted font-bold">Email</span>
+                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.email')}</span>
                   <span className="text-nexoraText font-extrabold">{profile.businessEmail}</span>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 sm:py-1 border-t border-slate-50 gap-1">
-                  <span className="text-nexoraMuted font-bold">Website</span>
+                  <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.website')}</span>
                   {profile.businessWebsite ? (
                     <a
                       href={profile.businessWebsite}
@@ -775,28 +929,40 @@ export default function ProfileTab({
               </div>
 
               {isEditingReviews ? (
-                <form onSubmit={saveReviews} className="space-y-4">
+                <form onSubmit={saveReviews} noValidate className="space-y-4">
                   <div>
-                    <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">Google Review Link</label>
+                    <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('components.settings.tabs.ProfileTab.googleReviewLink')}</label>
                     <input
+                      id="settings-google-review"
                       type="url"
-                      required
-                      className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas focus:bg-white px-3.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand transition-all"
+                      className={inputClass(reviewsErrors.googleReview)}
                       value={reviewsForm.googleReview}
-                      onChange={(e) => setReviewsForm({ ...reviewsForm, googleReview: e.target.value })}
+                      aria-invalid={Boolean(reviewsErrors.googleReview)}
+                      aria-describedby={reviewsErrors.googleReview ? 'settings-google-review-error' : undefined}
+                      onChange={(e) => {
+                        setReviewsForm({ ...reviewsForm, googleReview: e.target.value })
+                        clearError(setReviewsErrors, 'googleReview')
+                      }}
                       placeholder={t('components.settings.tabs.ProfileTab.phGoogleReviewUrl')}
                     />
+                    <FieldError id="settings-google-review-error" error={reviewsErrors.googleReview} />
                   </div>
                   <div>
-                    <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">Yelp Review Link</label>
+                    <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('components.settings.tabs.ProfileTab.yelpReviewLink')}</label>
                     <input
+                      id="settings-yelp-review"
                       type="url"
-                      required
-                      className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas focus:bg-white px-3.5 text-xs text-nexoraText outline-none focus:border-nexoraBrand transition-all"
+                      className={inputClass(reviewsErrors.yelpReview)}
                       value={reviewsForm.yelpReview}
-                      onChange={(e) => setReviewsForm({ ...reviewsForm, yelpReview: e.target.value })}
+                      aria-invalid={Boolean(reviewsErrors.yelpReview)}
+                      aria-describedby={reviewsErrors.yelpReview ? 'settings-yelp-review-error' : undefined}
+                      onChange={(e) => {
+                        setReviewsForm({ ...reviewsForm, yelpReview: e.target.value })
+                        clearError(setReviewsErrors, 'yelpReview')
+                      }}
                       placeholder={t('components.settings.tabs.ProfileTab.phYelpUrl')}
                     />
+                    <FieldError id="settings-yelp-review-error" error={reviewsErrors.yelpReview} />
                   </div>
                   <div className="flex gap-2 pt-2 justify-end">
                     <button
@@ -804,20 +970,20 @@ export default function ProfileTab({
                       onClick={() => setIsEditingReviews(false)}
                       className="px-3 py-1.5 border border-slate-200 rounded text-[10px] font-bold text-slate-500 hover:bg-slate-50"
                     >
-                      Cancel
+                      {t('components.settings.tabs.ProfileTab.cancel')}
                     </button>
                     <button
                       type="submit"
                       className="px-3 py-1.5 bg-nexoraBrand hover:bg-nexoraBrandDark text-white rounded text-[10px] font-bold"
                     >
-                      Save
+                      {t('components.settings.tabs.ProfileTab.save')}
                     </button>
                   </div>
                 </form>
               ) : (
                 <div className="space-y-3.5 text-xs">
                   <div className="flex flex-col py-1.5 border-b border-slate-50 gap-1">
-                    <span className="text-nexoraMuted font-bold">Google Review Link</span>
+                    <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.googleReviewLink')}</span>
                     {profile.googleReview ? (
                       <a
                         href={profile.googleReview}
@@ -828,11 +994,11 @@ export default function ProfileTab({
                         {profile.googleReview} <ExternalLink className="h-3 w-3 shrink-0" />
                       </a>
                     ) : (
-                      <span className="text-nexoraSubtle font-medium">Not Configured</span>
+                      <span className="text-nexoraSubtle font-medium">{t('components.settings.tabs.ProfileTab.notConfigured')}</span>
                     )}
                   </div>
                   <div className="flex flex-col py-1.5 border-b border-slate-50 gap-1">
-                    <span className="text-nexoraMuted font-bold">Yelp Review Link</span>
+                    <span className="text-nexoraMuted font-bold">{t('components.settings.tabs.ProfileTab.yelpReviewLink')}</span>
                     {profile.yelpReview ? (
                       <a
                         href={profile.yelpReview}
@@ -843,7 +1009,7 @@ export default function ProfileTab({
                         {profile.yelpReview} <ExternalLink className="h-3 w-3 shrink-0" />
                       </a>
                     ) : (
-                      <span className="text-nexoraSubtle font-medium">Not Configured</span>
+                      <span className="text-nexoraSubtle font-medium">{t('components.settings.tabs.ProfileTab.notConfigured')}</span>
                     )}
                   </div>
                 </div>
@@ -862,7 +1028,8 @@ export default function ProfileTab({
           paypal: 'PayPal',
           venmo: 'Venmo',
           cashapp: 'Cash App',
-          applecash: 'Apple Cash'
+          applecash: 'Apple Cash',
+          vlinkpay: 'VLINKPAY Wallet',
         }
 
         const walletFields = {
@@ -880,12 +1047,13 @@ export default function ProfileTab({
           paypal: t('components.settings.tabs.ProfileTab.enterPaypalEmail'),
           venmo: t('components.settings.tabs.ProfileTab.enterVenmoUsername'),
           cashapp: t('components.settings.tabs.ProfileTab.enterCashAppCashtag'),
-          applecash: t('components.settings.tabs.ProfileTab.enterAppleCashPhone')
+          applecash: t('components.settings.tabs.ProfileTab.enterAppleCashPhone'),
+          vlinkpay: t('components.dashboard.modals.PayoutSetupModal.placeholderVlinkpay'),
         }
 
-        return (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl border border-slate-100 max-w-sm w-full shadow-2xl p-6 relative overflow-hidden animate-scaleIn text-left space-y-4.5">
+        return createPortal(
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+            <div className={`bg-white rounded-3xl border border-slate-100 max-w-sm w-full shadow-2xl relative overflow-hidden animate-scaleIn text-left ${isCameraOpen ? 'h-[480px]' : 'p-6 space-y-4.5'}`}>
 
               {/* Header */}
               <div className="flex items-center gap-3.5 border-b border-slate-100 pb-3">
@@ -905,7 +1073,7 @@ export default function ProfileTab({
               </div>
 
               {/* Form Content */}
-              <form onSubmit={savePayoutAccount} className="space-y-4">
+              <form onSubmit={savePayoutAccount} noValidate className="space-y-4">
                 {/* Account Identifier Input */}
                 <div>
                   <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
@@ -915,9 +1083,10 @@ export default function ProfileTab({
                   </label>
                   <input
                     type="text"
-                    required
                     autoFocus
                     value={editValue}
+                    aria-invalid={Boolean(modalError)}
+                    aria-describedby={modalError ? 'settings-payout-error' : undefined}
                     onChange={(e) => {
                       setEditValue(e.target.value)
                       setModalError('')
@@ -927,7 +1096,7 @@ export default function ProfileTab({
                       modalError ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20' : ''
                     }`}
                   />
-                  {modalError && <p className="mt-1 text-[10px] font-bold text-rose-500">{modalError}</p>}
+                  {modalError && <p id="settings-payout-error" role="alert" className="mt-1 text-[10px] font-bold text-rose-500">{modalError}</p>}
                 </div>
 
                 {/* QR Code Optional Upload */}
@@ -1011,9 +1180,19 @@ export default function ProfileTab({
                   </button>
                 </div>
               </form>
+
+              {isCameraOpen && (
+                <CameraCapture
+                  onCapture={(dataUrl) => {
+                    setEditQrCode(dataUrl)
+                    setIsCameraOpen(false)
+                  }}
+                  onCancel={() => setIsCameraOpen(false)}
+                />
+              )}
             </div>
           </div>
-        );
+        , document.body);
       })()}
     </>
   )

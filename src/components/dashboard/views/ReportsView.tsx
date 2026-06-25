@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect } from 'react'
-import { CreditCard, Coins, CheckCircle, Clock, XCircle, AlertCircle } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
+import { CreditCard, Coins, CheckCircle, Clock, XCircle, AlertCircle, Hourglass } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { formatCurrency, formatTransactionDateTime } from '../utils'
+import { formatCurrency, formatTransactionDateTime, isAwaitingShopConfirmation } from '../utils'
 import { WalletLogos } from '../constants'
 import TransactionFilter from '../../TransactionFilter'
 import Pagination from '../../ui/Pagination'
@@ -66,6 +67,12 @@ function resolveDateRange(
   return {}
 }
 
+// Sentinel status-filter value for tips the customer paid into the shop
+// account that still need the owner to confirm receipt. Not a real API
+// status — it maps to { status: 'Confirmed', isMultiStaff: true } plus the
+// client-side isAwaitingShopConfirmation predicate.
+const AWAITING_STATUS = 'AwaitingShopConfirmation'
+
 function getStaffDisplayName(member) {
   return (
     member.nickname?.trim() ||
@@ -87,6 +94,11 @@ function formatStaffCell(tx) {
 function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [], businessName = '', businessSlug = '' }) {
   const { t, currentLanguage } = useTranslation()
 
+  // Allow deep-linking the awaiting-confirmation filter, e.g. the dashboard
+  // overview "View" banner navigates to /dashboard/reports?status=AwaitingShopConfirmation.
+  const [searchParams] = useSearchParams()
+  const initialStatus = searchParams.get('status') === AWAITING_STATUS ? AWAITING_STATUS : 'all'
+
   // Filter States
   const [dateRangePreset, setDateRangePreset] = useState('all')
   const [startDate, setStartDate] = useState('')
@@ -96,11 +108,15 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
   const [selectedStaff, setSelectedStaff] = useState('all')
   const [selectedTouchpoint, setSelectedTouchpoint] = useState('all')
   const [selectedPayment, setSelectedPayment] = useState('all')
-  const [selectedStatus, setSelectedStatus] = useState('all')
+  const [selectedStatus, setSelectedStatus] = useState(initialStatus)
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [selectedTx, setSelectedTx] = useState<any | null>(null)
   const { pageNumber, pageSize, setPage, reset: resetPage } = usePagination({ pageSize: DEFAULT_PAGE_SIZE })
+
+  // Awaiting-confirmation is driven by the visible Status filter, not a
+  // separate toggle, so the criteria is transparent and clears via Reset.
+  const isAwaitingFilter = selectedStatus === AWAITING_STATUS
 
   const { data: staffPage } = useMerchantStaff({
     pageNumber: 1,
@@ -129,7 +145,16 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
     setSearchQuery('')
   }
 
-  const renderStatusBadge = (status) => {
+  const renderStatusBadge = (tx) => {
+    if (isAwaitingShopConfirmation(tx)) {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-100/50 dark:border-violet-500/20">
+          <Hourglass className="h-3 w-3" />
+          {t('merchant_dashboard.tips.awaiting_shop_confirmation')}
+        </span>
+      );
+    }
+    const status = tx?.status;
     const s = (status || '').toLowerCase();
     if (s === 'success' || s === 'succeeded' || s === 'confirmed' || s === 'completed' || s === 'hoàn thành' || s === 'thành công') {
       return (
@@ -184,7 +209,11 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
     ...(selectedStaff !== 'all' ? { staffProfileId: selectedStaff } : {}),
     ...(selectedTouchpoint !== 'all' ? { touchPointId: selectedTouchpoint } : {}),
     ...(selectedPayment !== 'all' ? { paymentMethod: selectedPayment } : {}),
-    ...(selectedStatus !== 'all' ? { status: selectedStatus } : {}),
+    ...(isAwaitingFilter
+      ? { status: 'Confirmed', isMultiStaff: true }
+      : selectedStatus !== 'all'
+        ? { status: selectedStatus }
+        : {}),
     ...(debouncedSearch ? { staffSearch: debouncedSearch } : {}),
   }), [
     pageNumber,
@@ -196,6 +225,7 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
     selectedTouchpoint,
     selectedPayment,
     selectedStatus,
+    isAwaitingFilter,
     debouncedSearch,
   ])
 
@@ -212,13 +242,15 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
   const hasPreviousPage = transactionsPage?.hasPreviousPage ?? false
 
   // Amount filter only — not supported by tips API
+  // For the awaiting-confirmation filter, also refine client-side to the exact eligibility predicate
   const filtered = useMemo(() => {
     return transactions.filter((tx) => {
       if (minAmount && tx.amount < parseFloat(minAmount)) return false
       if (maxAmount && tx.amount > parseFloat(maxAmount)) return false
+      if (isAwaitingFilter && !isAwaitingShopConfirmation(tx)) return false
       return true
     })
-  }, [transactions, minAmount, maxAmount])
+  }, [transactions, minAmount, maxAmount, isAwaitingFilter])
 
   useEffect(() => {
     resetPage()
@@ -264,6 +296,15 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
     ]
   }, [touchpoints, t])
 
+  const statusOptions = useMemo(() => [
+    { value: 'all', label: t('dashboard.activity_log.all_statuses') },
+    { value: 'Initiated', label: t('dashboard.activity_log.status_initiated') },
+    { value: 'Confirmed', label: t('dashboard.activity_log.status_confirmed') },
+    { value: 'Skipped', label: t('dashboard.activity_log.status_skipped') },
+    { value: 'Completed', label: t('dashboard.activity_log.status_completed') },
+    { value: AWAITING_STATUS, label: t('merchant_dashboard.tips.awaiting_shop_confirmation') },
+  ], [t])
+
   const showTableSkeleton = (isPending && !transactionsPage) || isFetching
 
   return (
@@ -299,8 +340,8 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
         resetFilters={resetFilters}
         staffOptions={staffOptions}
         touchpointOptions={touchpointOptions}
+        statusOptions={statusOptions}
       />
-
 
       <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-white">
         <table className="w-full min-w-[780px] text-left text-xs">
@@ -346,7 +387,7 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    {renderStatusBadge(tx.status)}
+                    {renderStatusBadge(tx)}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <button

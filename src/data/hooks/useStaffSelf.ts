@@ -54,54 +54,14 @@ export function useStaffBusinessTipQrs({ enabled: callerEnabled = true } = {}) {
   const staffProfileId = staffProfile?.id?.trim() || null
 
   const businessesQuery = useStaffBusinesses({ enabled: isStaff && callerEnabled })
-  const qrCodesQuery = useQuery<StaffBusinessTipQr[] | null>({
-    queryKey: [...qk.staffBusinessQrCodes(), staffProfileId],
-    queryFn: () => staffSelfRepository.getMyBusinessQrCodes(staffProfileId),
-    enabled: isStaff && callerEnabled,
-  })
 
+  // Staff tip QRs are generated client-side from the linked businesses
+  // (businessSlug + touchPointSlug + staffProfileId). The API spec has no
+  // per-staff QR endpoint (GET /staff/business-qr-codes 404s), so we rely
+  // solely on resolveStaffTipQr. See US-023.
   const businessTipQrs = useMemo(() => {
     const businesses = businessesQuery.data ?? []
-    const dedicatedQr = qrCodesQuery.data
     const origin = typeof window !== 'undefined' ? window.location.origin : ''
-
-    if (dedicatedQr?.length) {
-      const byBusinessId = new Map(dedicatedQr.map((item) => [item.businessId, item]))
-      return businesses.map((biz) => {
-        const fromApi = byBusinessId.get(biz.businessId)
-        if (fromApi) {
-          return {
-            ...fromApi,
-            displayName:
-              fromApi.displayName ||
-              account.displayNamesByBusiness?.[biz.businessId] ||
-              account.defaultDisplayName,
-          }
-        }
-
-        const resolved = resolveStaffTipQr(
-          biz,
-          staffProfileId,
-          origin,
-          { allowDefaultTouchPointSlug: !biz.touchPointsMissing },
-        )
-        return {
-          businessId: biz.businessId,
-          businessName: biz.businessName,
-          displayName:
-            account.displayNamesByBusiness?.[biz.businessId] || account.defaultDisplayName,
-          businessSlug: resolved.businessSlug,
-          touchPointSlug: resolved.touchPointSlug,
-          tipUrl: biz.touchPointsMissing ? null : resolved.tipUrl,
-          qrImageUrl: resolved.qrImageUrl ?? biz.qrImageUrl ?? null,
-          linkStatus: biz.linkStatus,
-          linkStatusLabel: biz.linkStatusLabel,
-          roleLabel: biz.roleLabel,
-          logoUrl: biz.logoUrl,
-          tipLinkIncomplete: Boolean(biz.touchPointsMissing),
-        } satisfies StaffBusinessTipQr
-      })
-    }
 
     return businesses.map((biz) => {
       const resolved = resolveStaffTipQr(
@@ -128,7 +88,6 @@ export function useStaffBusinessTipQrs({ enabled: callerEnabled = true } = {}) {
     })
   }, [
     businessesQuery.data,
-    qrCodesQuery.data,
     staffProfileId,
     account.displayNamesByBusiness,
     account.defaultDisplayName,
@@ -136,8 +95,8 @@ export function useStaffBusinessTipQrs({ enabled: callerEnabled = true } = {}) {
 
   return {
     businessTipQrs,
-    isLoading: businessesQuery.isPending || qrCodesQuery.isPending,
-    isFetching: businessesQuery.isFetching || qrCodesQuery.isFetching,
+    isLoading: businessesQuery.isPending,
+    isFetching: businessesQuery.isFetching,
   }
 }
 
@@ -193,6 +152,14 @@ export function useConfirmStaffTipsReceipt() {
       queryClient.invalidateQueries({ queryKey: qk.staffDashboardSummary() })
 
       if (result.failedIds.length > 0) {
+        // All requested tips failed (e.g. backend rejected every id) — surface a
+        // clear error instead of the softer "partial" warning. See BE gap doc:
+        // API/jun 2026/backend-gaps/staff-confirm-receipt-gap-260622.md
+        if (result.confirmedCount === 0) {
+          showToast(t('staff_dashboard.home.confirm_failed'), 'error')
+          return
+        }
+
         showToast(
           t('staff_dashboard.home.confirm_partial', { count: result.confirmedCount }),
           'warning',

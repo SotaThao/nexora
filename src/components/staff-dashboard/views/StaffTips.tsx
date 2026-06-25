@@ -4,9 +4,11 @@ import { Sparkles } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffTips } from '../../../data/hooks/useStaffSelf'
 import { PAYOUT_UI_LABELS, payoutTypeToUiKey } from '../../../data/paymentMethodTypes'
+import { WalletLogos } from '../../dashboard/constants'
 import type { StaffTipItem } from '../../../types/domain'
 import { SkeletonLayout } from '../../ui/skeleton'
 import Pagination from '../../ui/Pagination'
+import Tooltip from '../../ui/Tooltip'
 import { STAFF_TIPS_SKELETON } from '../skeletons/staffDashboardSkeletons'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
@@ -40,14 +42,17 @@ function paymentMethodLabel(method: string | null | undefined) {
   return PAYOUT_UI_LABELS[uiKey] || method
 }
 
+// Show the amount THIS staff received, not the group total. For a multi-staff tip,
+// `amount` is the signed-in staff's share and `totalAmount` is the full split total —
+// displaying totalAmount would overstate every member's earnings.
 function tipDisplayAmount(tip: StaffTipItem) {
-  return tip.totalAmount > 0 ? tip.totalAmount : tip.amount
+  return tip.amount > 0 ? tip.amount : tip.totalAmount
 }
 
+// Staff only needs: which business. Payment method is moved up next to amount;
+// touchpoint is dropped to keep the row clean.
 function tipMetaLine(tip: StaffTipItem) {
-  return [paymentMethodLabel(tip.paymentMethod), tip.businessName, tip.touchPointName]
-    .filter(Boolean)
-    .join(' · ')
+  return tip.businessName || ''
 }
 
 export default function StaffTips() {
@@ -63,6 +68,21 @@ export default function StaffTips() {
     if (tip.statusLabel?.trim()) return tip.statusLabel.trim()
     const key = String(tip.status || '').toLowerCase()
     return t(`staff_dashboard.tips.status.${key}`) || tip.status
+  }
+
+  // Tooltip text: multi-staff explains the business-confirm step (with business
+  // name); single-staff explains the tip status.
+  const statusTooltip = (tip: StaffTipItem) => {
+    if (tip.isMultiStaff) {
+      return t(
+        tip.merchantConfirmedAt
+          ? 'staff_dashboard.tips.via_business_confirmed_help'
+          : 'staff_dashboard.tips.via_business_pending_help',
+        { business: tip.businessName || '' },
+      )
+    }
+    const key = String(tip.status || '').toLowerCase()
+    return t(`staff_dashboard.tips.status_help.${key}`, { defaultValue: '' })
   }
 
   if (isPending && !tipsPage) {
@@ -99,30 +119,62 @@ export default function StaffTips() {
             {tips.map((tip) => (
               <div key={tip.id} className="flex items-center justify-between gap-3 py-3">
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex items-baseline gap-1.5">
                     <span className="text-sm font-bold text-nexoraText">
                       {formatTipAmount(tipDisplayAmount(tip))}
                     </span>
-                    {tip.isMultiStaff ? (
-                      <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-violet-600">
-                        {t('staff_dashboard.tips.multi_staff')}
+                    {tip.paymentMethod ? (
+                      <span className="flex items-center gap-1 text-[13px] font-medium text-nexoraMuted">
+                        ·
+                        {WalletLogos[payoutTypeToUiKey(tip.paymentMethod) as keyof typeof WalletLogos] ? (
+                          <span className="flex items-center [&>svg]:h-3.5 [&>svg]:w-3.5 [&>img]:h-3.5 [&>img]:w-3.5">
+                            {WalletLogos[payoutTypeToUiKey(tip.paymentMethod) as keyof typeof WalletLogos]}
+                          </span>
+                        ) : null}
+                        {paymentMethodLabel(tip.paymentMethod)}
                       </span>
                     ) : null}
                   </div>
-                  <div className="mt-0.5 truncate text-xs text-nexoraMuted">{tipMetaLine(tip)}</div>
+                  {tipMetaLine(tip) ? (
+                    <div className="mt-0.5 truncate text-xs text-nexoraMuted">{tipMetaLine(tip)}</div>
+                  ) : null}
                   {tip.createdAt ? (
                     <div className="mt-0.5 text-[10px] font-semibold text-nexoraSubtle">
                       {formatTipDate(tip.createdAt)}
                     </div>
                   ) : null}
                 </div>
-                <span
-                  className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black ${
-                    STATUS_STYLE[tip.status] || 'bg-nexoraCanvas text-nexoraMuted'
-                  }`}
-                >
-                  {statusLabel(tip)}
-                </span>
+                <div className="flex shrink-0 items-center gap-1">
+                  {tip.isMultiStaff ? (
+                    <span
+                      className={`max-w-[140px] truncate rounded-full px-2.5 py-1 text-[11px] font-black ${
+                        tip.merchantConfirmedAt
+                          ? 'bg-emerald-50 text-emerald-600'
+                          : 'bg-amber-50 text-amber-700'
+                      }`}
+                    >
+                      {t(
+                        tip.merchantConfirmedAt
+                          ? 'staff_dashboard.tips.via_business_confirmed'
+                          : 'staff_dashboard.tips.via_business_pending',
+                        { business: tip.businessName || '' },
+                      )}
+                    </span>
+                  ) : (
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-black ${
+                        STATUS_STYLE[tip.status] || 'bg-nexoraCanvas text-nexoraMuted'
+                      }`}
+                    >
+                      {statusLabel(tip)}
+                    </span>
+                  )}
+                  <Tooltip
+                    align="end"
+                    content={statusTooltip(tip)}
+                    ariaLabel={t('staff_dashboard.tips.status_help_aria')}
+                  />
+                </div>
               </div>
             ))}
           </div>

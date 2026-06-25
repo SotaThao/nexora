@@ -3,6 +3,7 @@ import { Lock, Mail, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import AuthGraphicPanel from '../components/auth/AuthGraphicPanel'
 import SecondaryButton from '../components/ui/SecondaryButton'
+import BackToHomeButton from '../components/ui/BackToHomeButton'
 import { useAuth } from '../auth/useAuth'
 import { useTranslation } from '../contexts/LanguageContext'
 import { getErrorI18nKey } from '../data/errorCodes'
@@ -44,8 +45,6 @@ export default function LoginScreen() {
     const newFieldErrorKeys: { email?: string; password?: string } = {}
     if (!email.trim()) {
       newFieldErrorKeys.email = 'register.errors.email_required'
-    } else if (!/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email.trim())) {
-      newFieldErrorKeys.email = 'register.errors.email_invalid'
     }
     if (!password) {
       newFieldErrorKeys.password = 'register.errors.password_required'
@@ -86,7 +85,11 @@ export default function LoginScreen() {
         (newSession.hasStaffProfile && newSession.hasCompletedOnboarding)
 
       if ((newSession.role === 'personal' || newSession.role === 'staff') && !isStaffReady) {
-        navigate('/register', { state: { showPersonalSuccessPopup: true, ssoEmail: newSession.email } })
+        if (!newSession.hasCompletedOnboarding) {
+          navigate('/onboarding')
+        } else {
+          navigate('/register', { state: { showPersonalSuccessPopup: true, ssoEmail: newSession.email } })
+        }
       } else if (newSession.flag === '!personal' || newSession.role === 'personal' || newSession.role === 'staff') {
         navigate('/staff')
       } else if (needsOnboarding) {
@@ -129,6 +132,10 @@ export default function LoginScreen() {
 
   return (
     <div className="min-h-dvh flex items-center justify-center bg-nexoraCanvas relative overflow-x-hidden overflow-y-auto text-nexoraText px-4 pt-[max(1.5rem,env(safe-area-inset-top,0px))] pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] sm:pt-10 sm:pb-10 selection:bg-nexoraBrandSoft selection:text-nexoraBrand">
+      <div className="absolute top-[max(1rem,env(safe-area-inset-top,0px))] left-[max(1rem,env(safe-area-inset-left,0px))] z-50">
+        <BackToHomeButton disabled={isLoading} />
+      </div>
+
       {/* Language Switcher */}
       <div className="absolute top-[max(1rem,env(safe-area-inset-top,0px))] right-[max(1rem,env(safe-area-inset-right,0px))] z-50 flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-nexoraBorder shadow-sm">
         <button
@@ -161,7 +168,6 @@ export default function LoginScreen() {
 
           <form onSubmit={(e) => { e.preventDefault(); handleLoginSubmit(); }} className="space-y-5">
               <div className="space-y-1">
-                <p className="text-[11px] font-black uppercase tracking-wider text-nexoraBrand">{t('login.secure_access')}</p>
                 <h1 className="text-2xl font-black text-nexoraText sm:text-3xl">{t('login.sign_in_title')}</h1>
               </div>
 
@@ -177,7 +183,7 @@ export default function LoginScreen() {
                   <div className="relative">
                     <Mail className="absolute left-3 top-3 w-4 h-4 text-nexoraSubtle" />
                     <input
-                      type="email"
+                      type="text"
                       placeholder={t('login.email_placeholder')}
                       className={`w-full bg-nexoraCanvas border ${fieldErrorKeys.email ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} rounded-lg pl-10 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle transition-all`}
                       value={email}

@@ -4,7 +4,7 @@ import { useIsMobileUI } from '../../../hooks/useIsMobileUI'
 import StaffHeaderDesktop from './StaffHeader.desktop'
 import StaffHeaderMobile from './StaffHeader.mobile'
 
-export default function StaffHeader(props: any) {
+export default function StaffHeader(props) {
   return useIsMobileUI()
     ? <StaffHeaderMobile {...props} />
     : <StaffHeaderDesktop {...props} />

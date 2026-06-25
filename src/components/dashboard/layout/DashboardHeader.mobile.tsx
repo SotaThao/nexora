@@ -16,7 +16,10 @@ import {
   Wallet
 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { formatNotificationDateTime } from '../utils'
 import IconButton from '../../ui/IconButton'
+import LanguageSwitcher from '../../ui/LanguageSwitcher'
+import HeaderEcosystem from './HeaderEcosystem'
 
 export default function DashboardHeader({
   searchQuery,
@@ -44,7 +47,7 @@ export default function DashboardHeader({
   userRole = 'owner',
   onOpenMobileMenu
 }) {
-  const { currentLanguage, setLanguage, t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const dropdownRef = useRef(null)
   const mobileDropdownRef = useRef(null)
   const searchRef = useRef(null)
@@ -99,6 +102,13 @@ export default function DashboardHeader({
   // Calculate search suggestions
   const suggestions = useMemo(() => {
     const query = searchQuery.toLowerCase().trim()
+    const normalize = (value) =>
+      String(value ?? '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[\s_-]+/g, '')
+    const normalizedQuery = normalize(query)
     if (!query) return null
 
     const matchedStaff = (staff || []).filter(s =>
@@ -120,10 +130,20 @@ export default function DashboardHeader({
       String(r.rating).includes(query)
     ).slice(0, 3)
 
-    const matchedTps = (touchpoints || []).filter(tp =>
-      tp.name.toLowerCase().includes(query) ||
-      tp.type.toLowerCase().includes(query)
-    ).slice(0, 3)
+    const matchedTps = (touchpoints || []).filter((tp) => {
+      const name = String(tp?.name ?? '')
+      const type = String(tp?.type ?? '')
+      const deviceId = String(tp?.deviceId ?? '')
+      const slug = String(tp?.slug ?? '')
+      return (
+        name.toLowerCase().includes(query) ||
+        type.toLowerCase().includes(query) ||
+        deviceId.toLowerCase().includes(query) ||
+        slug.toLowerCase().includes(query) ||
+        normalize(name).includes(normalizedQuery) ||
+        normalize(type).includes(normalizedQuery)
+      )
+    }).slice(0, 3)
 
     const totalCount = matchedStaff.length + matchedTxs.length + matchedReviews.length + matchedTps.length
 
@@ -161,17 +181,34 @@ export default function DashboardHeader({
           </div>
         ) : notifications && notifications.length > 0 ? (
           notifications.map((item) => {
+            const typeLower = (item.type || '').toLowerCase().replace(/[\s_-]+/g, '')
             const IconComponent = {
               tip_success: Wallet,
               feedback_alert: AlertTriangle,
-              review_good: Star
-            }[item.type] || Bell
+              review_good: Star,
+              staff_accepted_invite: UserCheck,
+              staffacceptedinvite: UserCheck,
+              stafflinkrequest: UserCheck,
+              staff_link_request: UserCheck,
+              staff_joined: UserCheck,
+              staffjoined: UserCheck,
+              staffinviteaccepted: UserCheck,
+              staffpublicjoinrequest: UserCheck,
+            }[typeLower] || Bell
 
             const iconColor = {
               tip_success: 'bg-emerald-500 text-white',
               feedback_alert: 'bg-amber-500 text-white',
-              review_good: 'bg-luxuryGold text-white'
-            }[item.type] || 'bg-nexoraBrand text-white'
+              review_good: 'bg-luxuryGold text-white',
+              staff_accepted_invite: 'bg-nexoraBrand text-white',
+              staffacceptedinvite: 'bg-nexoraBrand text-white',
+              stafflinkrequest: 'bg-nexoraBrand text-white',
+              staff_link_request: 'bg-nexoraBrand text-white',
+              staff_joined: 'bg-nexoraBrand text-white',
+              staffjoined: 'bg-nexoraBrand text-white',
+              staffinviteaccepted: 'bg-nexoraBrand text-white',
+              staffpublicjoinrequest: 'bg-nexoraBrand text-white',
+            }[typeLower] || 'bg-nexoraBrand text-white'
 
             const isUnread = !item.read
             return (
@@ -195,7 +232,9 @@ export default function DashboardHeader({
                     }`}>
                       {item.title}
                     </span>
-                    <span className="text-[10px] text-nexoraSubtle shrink-0 font-medium">{item.time}</span>
+                    <span className="text-[10px] text-nexoraSubtle shrink-0 font-medium">
+                      {formatNotificationDateTime(item.createdAt || item.time, currentLanguage)}
+                    </span>
                   </div>
                   <p className={`text-[11px] leading-normal mt-1 break-words ${
                     isUnread ? 'font-semibold text-nexoraText' : 'font-medium text-nexoraMuted'
@@ -222,7 +261,7 @@ export default function DashboardHeader({
         <img src={profile.avatar} alt="" className="h-full w-full object-cover" />
       ) : (
         <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-sm font-bold text-white uppercase">
-          {(profile.email || '').slice(0, 2).toUpperCase() || '?'}
+          {(businessName || profile.email || '').slice(0, 2).toUpperCase() || '?'}
         </div>
       )}
     </>
@@ -283,29 +322,14 @@ export default function DashboardHeader({
           >
             <Menu className="h-5 w-5" />
           </button>
-          <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="h-8 w-auto max-w-[140px] object-contain" />
+          <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-9 w-9 shrink-0 object-contain" />
         </div>
 
         {/* Right: lang + bell + avatar */}
         <div className="flex items-center gap-2">
-          {/* Language Switcher (mobile) */}
-          <div className="flex items-center bg-nexoraSurfaceMuted border border-nexoraBorder px-1.5 py-0.5 rounded-lg">
-            <button
-              type="button"
-              onClick={() => setLanguage('vi')}
-              className={`text-[9px] font-bold px-1.5 py-0.5 rounded transition ${currentLanguage === 'vi' ? 'bg-nexoraBrand text-white' : 'text-nexoraMuted'}`}
-            >
-              VI
-            </button>
-            <span className="text-nexoraBorder text-[9px] mx-0.5">|</span>
-            <button
-              type="button"
-              onClick={() => setLanguage('en')}
-              className={`text-[9px] font-bold px-1.5 py-0.5 rounded transition ${currentLanguage === 'en' ? 'bg-nexoraBrand text-white' : 'text-nexoraMuted'}`}
-            >
-              EN
-            </button>
-          </div>
+          <LanguageSwitcher />
+
+          <HeaderEcosystem />
 
           <div className="relative" ref={mobileDropdownRef}>
             <button
@@ -314,7 +338,12 @@ export default function DashboardHeader({
               className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-nexoraBorder bg-white text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"
               aria-label="Notifications"
             >
-              <Bell className="h-5 w-5" />
+              <img
+                src="/assets/menu/notification.png"
+                alt=""
+                className="h-5 w-5 object-contain"
+                aria-hidden="true"
+              />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-0.5 rounded-full flex items-center justify-center text-[9px] font-black text-white bg-red-500 ring-2 ring-white">
                   {unreadCount > 99 ? '99+' : unreadCount}
@@ -353,6 +382,13 @@ export default function DashboardHeader({
               setIsSearchFocused(true)
             }}
             onFocus={() => setIsSearchFocused(true)}
+            onKeyDown={(event) => {
+              if (event.key !== 'Enter') return
+              if (suggestions?.touchpoints?.length > 0) {
+                onNavigateMenu('touchpoints')
+                setIsSearchFocused(false)
+              }
+            }}
           />
 
           {isSearchFocused && searchQuery.trim() !== '' && (
@@ -439,24 +475,9 @@ export default function DashboardHeader({
         </div>
 
         <div className="flex shrink-0 items-center gap-4">
-          {/* Language Switcher */}
-          <div className="flex items-center gap-1 bg-nexoraSurfaceMuted border border-nexoraBorder px-2.5 py-1 rounded-lg">
-            <button
-              type="button"
-              onClick={() => setLanguage('vi')}
-              className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition ${currentLanguage === 'vi' ? 'bg-nexoraBrand text-white' : 'text-nexoraMuted hover:text-nexoraText'}`}
-            >
-              VI
-            </button>
-            <span className="text-nexoraBorder text-[10px]">|</span>
-            <button
-              type="button"
-              onClick={() => setLanguage('en')}
-              className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition ${currentLanguage === 'en' ? 'bg-nexoraBrand text-white' : 'text-nexoraMuted hover:text-nexoraText'}`}
-            >
-              EN
-            </button>
-          </div>
+          <LanguageSwitcher />
+
+          <HeaderEcosystem />
 
           {/* Notifications */}
           <div className="relative" ref={dropdownRef}>
@@ -465,7 +486,12 @@ export default function DashboardHeader({
               onClick={() => setIsNotiDropdownOpen(!isNotiDropdownOpen)}
               className="relative"
             >
-              <Bell className="h-5 w-5" />
+              <img
+                src="/assets/menu/notification.png"
+                alt=""
+                className="h-5 w-5 object-contain"
+                aria-hidden="true"
+              />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center text-[9px] font-black text-white bg-red-500 ring-2 ring-white shadow-sm">
                   {unreadCount > 99 ? '99+' : unreadCount}

@@ -1,5 +1,5 @@
 import React from 'react'
-import { CheckCircle } from 'lucide-react'
+import { CheckCircle, Copy } from 'lucide-react'
 import { WALLET_KEYS } from '../constants'
 
 function getMemberTipAmount(
@@ -16,6 +16,62 @@ function walletAccentColor(walletKey: string): string {
   if (walletKey === WALLET_KEYS.VENMO) return '#008CFF'
   if (walletKey === WALLET_KEYS.CASHAPP) return '#00D632'
   return '#475569'
+}
+
+function isPhoneNumber(value: string): boolean {
+  return /^[\d\s\-\(\)\+\.]{7,}$/.test(value?.trim() ?? '')
+}
+
+function getCopyButtonLabel(walletKey: string, accountVal: string, t: (key: string) => string): string {
+  if (walletKey === WALLET_KEYS.VENMO) return t('components.customer_flow.steps.WalletDetails.copyUsername')
+  if (walletKey === WALLET_KEYS.CASHAPP) return t('components.customer_flow.steps.WalletDetails.copyCashTag')
+  if (isPhoneNumber(accountVal)) return t('components.customer_flow.steps.WalletDetails.copyPhoneNumber')
+  return t('components.customer_flow.steps.WalletDetails.copyEmail')
+}
+
+function getOpenAppStep(walletKey: string, walletName: string, t: (key: string) => string): string {
+  if (walletKey === WALLET_KEYS.ZELLE) return t('components.customer_flow.steps.WalletDetails.stepOpenApp_zelle')
+  if (walletKey === WALLET_KEYS.PAYPAL) return t('components.customer_flow.steps.WalletDetails.stepOpenApp_paypal')
+  if (walletKey === WALLET_KEYS.VENMO) return t('components.customer_flow.steps.WalletDetails.stepOpenApp_venmo')
+  if (walletKey === WALLET_KEYS.CASHAPP) return t('components.customer_flow.steps.WalletDetails.stepOpenApp_cashapp')
+  if (walletKey === WALLET_KEYS.APPLECASH) return t('components.customer_flow.steps.WalletDetails.stepOpenApp_applecash')
+  return t('components.customer_flow.steps.WalletDetails.stepOpenApp_default')
+}
+
+function buildInstructionSteps(
+  walletKey: string,
+  walletName: string,
+  accountVal: string,
+  recipientName: string,
+  amount: number,
+  t: (key: string, params?: Record<string, string | number>) => string,
+): React.ReactNode[] {
+  const step1Key = walletKey === WALLET_KEYS.VENMO
+    ? 'components.customer_flow.steps.WalletDetails.stepCopyUsername'
+    : walletKey === WALLET_KEYS.CASHAPP
+      ? 'components.customer_flow.steps.WalletDetails.stepCopyCashTag'
+      : isPhoneNumber(accountVal)
+        ? 'components.customer_flow.steps.WalletDetails.stepCopyPhone'
+        : 'components.customer_flow.steps.WalletDetails.stepCopyEmail'
+
+  const step1Full = t(step1Key, { name: recipientName, wallet: walletName })
+  const step3Full = t('components.customer_flow.steps.WalletDetails.stepSendAmount', { amount: amount.toFixed(2), name: recipientName })
+  const step4Full = t('components.customer_flow.steps.WalletDetails.stepConfirm')
+  const confirmLabel = t('components.customer_flow.steps.WalletDetails.yesISentThe')
+
+  const boldParts = (text: string, bolds: string[]): React.ReactNode => {
+    const pattern = new RegExp(`(${bolds.map(b => b.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`)
+    return text.split(pattern).map((part, i) =>
+      bolds.includes(part) ? <strong key={i}>{part}</strong> : part
+    )
+  }
+
+  return [
+    boldParts(step1Full, [`${recipientName}'s`]),
+    getOpenAppStep(walletKey, walletName, t),
+    boldParts(step3Full, [`$${amount.toFixed(2)}`, recipientName]),
+    boldParts(step4Full, [confirmLabel]),
+  ]
 }
 
 function CopyField({
@@ -47,8 +103,9 @@ function CopyField({
               navigator.clipboard.writeText(value)
               showToast(t('common.copied'), 'success')
             }}
-            className="text-[10px] font-bold text-nexoraBrand hover:text-nexoraBrand/80 px-2 py-1 rounded bg-nexoraBrandSoft/40 hover:bg-nexoraBrandSoft transition shrink-0"
+            className="text-nexoraBrand hover:text-nexoraBrand/80 px-2 py-1.5 rounded bg-nexoraBrandSoft/40 hover:bg-nexoraBrandSoft transition shrink-0 flex items-center gap-1 text-[10px] font-bold"
           >
+            <Copy className="h-3.5 w-3.5" />
             {t('common.copy')}
           </button>
         ) : null}
@@ -80,11 +137,34 @@ export default function WalletDetails({
   isApiMode,
   setStep,
   paymentLinkData,
+  tipPaymentMethodsData,
 }) {
   const isMultiStaff = selectedStaffMembers.length > 1
   const accentColor = walletAccentColor(selectedWalletObj.key)
 
-  const apiAccountVal = (() => {
+  const getFieldLabel = () => {
+    if (selectedWalletObj.key === WALLET_KEYS.ZELLE) return t('components.customer_flow.steps.WalletDetails.emailPhone')
+    if (selectedWalletObj.key === WALLET_KEYS.VENMO) return t('components.customer_flow.steps.WalletDetails.venmoUsername')
+    if (selectedWalletObj.key === WALLET_KEYS.CASHAPP) return t('components.customer_flow.steps.WalletDetails.cashTag')
+    if (selectedWalletObj.key === WALLET_KEYS.PAYPAL) return t('components.customer_flow.steps.WalletDetails.paypalEmailPhone')
+    if (selectedWalletObj.key === WALLET_KEYS.BANKWIRE) return t('components.customer_flow.steps.WalletDetails.bankDetails')
+    return t('components.customer_flow.steps.WalletDetails.account')
+  }
+
+  // Prefer account info from the tip payment methods API response
+  const tipApiAccountVal = (() => {
+    if (!Array.isArray(tipPaymentMethodsData) || tipPaymentMethodsData.length === 0) return null
+    const match = tipPaymentMethodsData.find(
+      (pm) => (pm.type || '').toLowerCase() === selectedWalletObj.key.toLowerCase()
+        || (pm.type || '').toLowerCase().replace(/\s+/g, '') === selectedWalletObj.key.toLowerCase(),
+    )
+    return match?.accountInfo || null
+  })()
+
+  const legacyAccountVal = (() => {
+    if (isMultiStaff) return businessPaymentAccounts?.[selectedWalletObj.key] || null
+    const staffVal = selectedStaffMembers[0]?.paymentAccounts?.[selectedWalletObj.key] || null
+    if (staffVal) return staffVal
     if (!paymentLinkData) return null
     const key = selectedWalletObj.key
     if (key === WALLET_KEYS.ZELLE) return paymentLinkData.zellePhone || paymentLinkData.zelleEmail || null
@@ -104,18 +184,7 @@ export default function WalletDetails({
     return null
   })()
 
-  const getFieldLabel = () => {
-    if (selectedWalletObj.key === WALLET_KEYS.ZELLE) return t('components.customer_flow.steps.WalletDetails.emailPhone')
-    if (selectedWalletObj.key === WALLET_KEYS.VENMO) return t('components.customer_flow.steps.WalletDetails.venmoUsername')
-    if (selectedWalletObj.key === WALLET_KEYS.CASHAPP) return t('components.customer_flow.steps.WalletDetails.cashTag')
-    if (selectedWalletObj.key === WALLET_KEYS.PAYPAL) return t('components.customer_flow.steps.WalletDetails.paypalEmailPhone')
-    if (selectedWalletObj.key === WALLET_KEYS.BANKWIRE) return t('components.customer_flow.steps.WalletDetails.bankDetails')
-    return t('components.customer_flow.steps.WalletDetails.account')
-  }
-
-  const accountVal = isMultiStaff
-    ? businessPaymentAccounts?.[selectedWalletObj.key] || null
-    : (selectedStaffMembers[0]?.paymentAccounts?.[selectedWalletObj.key] || apiAccountVal)
+  const accountVal = tipApiAccountVal || legacyAccountVal
 
   const noteText = isMultiStaff
     ? (currentTipId ? `TIP-${String(currentTipId).slice(0, 8).toUpperCase()}` : `TIP-NEXORA-${tipRefNumber}`)
@@ -130,8 +199,8 @@ export default function WalletDetails({
     : selectedStaffMembers[0].fullName
 
   const title = isMultiStaff
-    ? t('components.customer_flow.steps.WalletDetails.multiStaffTitle', { wallet: selectedWalletObj.name })
-    : t('components.customer_flow.steps.WalletDetails.singleStaffTitle', { wallet: selectedWalletObj.name })
+    ? t('components.customer_flow.steps.WalletDetails.multiStaffTitle', { wallet: selectedWalletObj.name, amount: activeTipAmount.toFixed(2), business: bizName || recipientName })
+    : t('components.customer_flow.steps.WalletDetails.singleStaffTitle', { wallet: selectedWalletObj.name, amount: activeTipAmount.toFixed(2), recipient: recipientName })
 
   const subtitle = isMultiStaff
     ? t('components.customer_flow.steps.WalletDetails.multiStaffSubtitle', { business: bizName || recipientName })
@@ -246,16 +315,7 @@ export default function WalletDetails({
 
         <div className="w-full border-t border-dashed border-nexoraBorder/60 my-1" />
 
-        <div className="w-full space-y-3.5">
-          <CopyField
-            label={isMultiStaff
-              ? t('components.customer_flow.steps.WalletDetails.businessName')
-              : t('components.customer_flow.steps.WalletDetails.name')}
-            value={recipientFullName}
-            showToast={showToast}
-            t={t}
-          />
-
+        <div className="w-full space-y-4">
           <CopyField
             label={getFieldLabel()}
             value={accountVal || ''}
@@ -263,13 +323,25 @@ export default function WalletDetails({
             t={t}
           />
 
-          <CopyField
-            label={t('components.customer_flow.steps.WalletDetails.noteRequired')}
-            value={noteText}
-            showToast={showToast}
-            t={t}
-            valueClassName="text-sm font-black text-red-600 font-mono tracking-wide"
-          />
+          {accountVal && selectedWalletObj.key !== WALLET_KEYS.BANKWIRE ? (
+            <ol className="space-y-2.5 pt-1">
+              {buildInstructionSteps(
+                selectedWalletObj.key,
+                selectedWalletObj.name,
+                accountVal,
+                recipientName,
+                activeTipAmount,
+                t,
+              ).map((step, i) => (
+                <li key={i} className="flex items-start gap-3">
+                  <span className="flex-shrink-0 h-6 w-6 rounded-full bg-nexoraCanvas border border-nexoraBorder text-nexoraSubtle font-black text-[11px] flex items-center justify-center">
+                    {i + 1}
+                  </span>
+                  <span className="text-sm text-nexoraText leading-snug pt-0.5">{step}</span>
+                </li>
+              ))}
+            </ol>
+          ) : null}
         </div>
       </div>
 

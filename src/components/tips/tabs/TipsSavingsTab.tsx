@@ -2,6 +2,7 @@ import React from 'react';
 import { TrendingUp, Calculator, CheckCircle } from 'lucide-react';
 import { useTranslation } from '../../../contexts/LanguageContext';
 import { formatUSD, getPaymentMethodLogo } from '../../../utils/tipsFormatters';
+import { formatTransactionDateTime } from '../../dashboard/utils';
 
 export default function TipsSavingsTab({
   directTips,
@@ -11,7 +12,7 @@ export default function TipsSavingsTab({
   setMonthlyVolume,
   transactions,
 }) {
-  const { t } = useTranslation();
+  const { t, currentLanguage } = useTranslation();
 
   return (
     <div className="space-y-6">
@@ -137,8 +138,14 @@ export default function TipsSavingsTab({
               <tbody>
                 {transactions.slice(0, 5).map(tx => (
                   <tr key={tx.id} className="border-b border-nexoraBorder/50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5">
-                    <td className="py-3.5 px-2 font-medium text-mutedGrey dark:text-slate-400">{tx.dateTime.split(' ')[1]}</td>
-                    <td className="py-3.5 px-2 font-bold text-inkBlue dark:text-white">{tx.staffName}</td>
+                    <td className="py-3.5 px-2 font-medium text-mutedGrey dark:text-slate-400 whitespace-nowrap">
+                      {formatTransactionDateTime(tx.dateTime, currentLanguage)}
+                    </td>
+                    <td className="py-3.5 px-2 font-bold text-inkBlue dark:text-white">
+                      {tx.isMultiStaff || (Array.isArray(tx.tipItems) && tx.tipItems.length > 1)
+                        ? t('dashboard.tips.savings.multi_tips')
+                        : tx.staffName}
+                    </td>
                     <td className="py-3.5 px-2 font-black text-luxuryGold">{formatUSD(tx.amount)}</td>
                     <td className="py-3.5 px-2 font-semibold text-inkBlue dark:text-white">
                       <div className="flex items-center gap-1.5">

@@ -33,6 +33,9 @@ export const qk = {
   // Notifications
   notificationsUnreadCount: () => ['notifications', 'unreadCount'],
   notificationsList:      (filters = EMPTY) => ['notifications', 'list', filters],
+
+  // Client ecosystem (header SSO)
+  ecosystems:             () => ['ecosystems'],
   
   // Profile (Staff/Personal)
   userProfile:              () => ['userProfile'],
@@ -62,6 +65,13 @@ export const qk = {
   // Merchant Touchpoints
   merchantTouchpoints: ()      => ['merchantTouchpoints'],
 
+  // Merchant Physical Cards (QR/NFC hardware)
+  merchantPhysicalCards: (filters = EMPTY) => ['merchantPhysicalCards', filters],
+  merchantPhysicalCardDetail: (helpCode?: string | null) => ['merchantPhysicalCards', 'detail', helpCode ?? ''],
+  resolveQrCode: (cardCode?: string | null) => ['publicQr', 'resolve', cardCode ?? ''],
+  publicPhysicalCardHelp: (helpCode?: string | null, authMode?: string | null) =>
+    ['publicPhysicalCardHelp', helpCode ?? '', authMode ?? ''],
+
   // Merchant Payment Methods
   merchantPaymentMethods: ()   => ['merchantPaymentMethods'],
 
@@ -71,7 +81,6 @@ export const qk = {
   // Staff Self (own staff profile + linked businesses)
   staffProfile:        ()      => ['staffProfile'],
   staffBusinesses:     ()      => ['staffBusinesses'],
-  staffBusinessQrCodes: ()     => ['staffBusinessQrCodes'],
   staffDashboardSummary: ()    => ['staffDashboardSummary'],
   staffReviews:          (filters = EMPTY) => ['staffReviews', filters],
   staffTips:             (filters = EMPTY) => ['staffTips', filters],

@@ -10,17 +10,19 @@ export default function StepProfileSetup({
   phoneParsed,
   bio, setBio,
   avatar, setAvatar,
+  handleAvatarFileChange,
   position, setPosition,
   email,
   generatedStaffId,
   setCurrentStep,
+  handleProfileSetupSubmit,
   t,
   currentLanguage,
   renderLabel,
 }) {
   return (
-    <div className="p-6 sm:p-10 space-y-6 animate-fadeIn">
-      <div>
+    <div className="p-6 sm:p-8 animate-fadeIn max-w-xl mx-auto">
+      <div className="text-center">
         <h3 className="text-lg font-bold text-nexoraText">
           {t('components.register.steps.StepProfileSetup.personalProfileSetup')}
         </h3>
@@ -29,7 +31,7 @@ export default function StepProfileSetup({
         </p>
       </div>
 
-      <form onSubmit={(e) => { e.preventDefault(); setCurrentStep(3); }} className="space-y-4 max-w-xl mx-auto">
+      <form onSubmit={(e) => { e.preventDefault(); handleProfileSetupSubmit(); }} className="space-y-4 mt-6">
         {/* Avatar section */}
         <div className="flex items-center gap-4 border-b border-nexoraBorder pb-4">
           <div className="relative">
@@ -57,7 +59,7 @@ export default function StepProfileSetup({
               <ImageFileInput
                 as="label"
                 className="h-9 px-4 rounded-lg bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white flex items-center justify-center gap-1.5 cursor-pointer text-xs font-bold transition shadow-sm"
-                onPick={setAvatar}
+                onPickFile={handleAvatarFileChange}
               >
                 <Upload className="h-3.5 w-3.5" />
                 <span>{t('common.upload_photo')}</span>
@@ -146,33 +148,18 @@ export default function StepProfileSetup({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Role / Specialty */}
-          <div>
-            <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-              {t('components.register.steps.StepProfileSetup.roleSpeciality')}
-            </label>
-            <input
-              type="text"
-              placeholder={t('components.register.steps.StepProfileSetup.phPosition')}
-              className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
-              value={position}
-              onChange={(e) => setPosition(e.target.value)}
-            />
-          </div>
-
-          {/* Staff ID */}
-          <div>
-            <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-              {t('components.register.steps.StepProfileSetup.nexoraStaffId')}
-            </label>
-            <input
-              type="text"
-              disabled
-              className="w-full bg-nexoraCanvas border border-nexoraBorder rounded-lg px-4 py-2.5 text-sm text-nexoraSubtle font-mono font-bold cursor-not-allowed"
-              value={generatedStaffId || 'Pending'}
-            />
-          </div>
+        {/* Role / Specialty */}
+        <div>
+          <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
+            {t('components.register.steps.StepProfileSetup.roleSpeciality')}
+          </label>
+          <input
+            type="text"
+            placeholder={t('components.register.steps.StepProfileSetup.phPosition')}
+            className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
+            value={position}
+            onChange={(e) => setPosition(e.target.value)}
+          />
         </div>
 
         {/* Short Bio */}

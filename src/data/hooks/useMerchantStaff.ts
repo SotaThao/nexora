@@ -1,7 +1,7 @@
 /**
  * TanStack Query hooks for merchant staff management.
  */
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, keepPreviousData, type QueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import merchantStaffRepository, { StatusFilter } from '../repositories/merchantStaff'
 import type { StaffListPage } from '../repositories/merchantStaff'
@@ -10,6 +10,42 @@ import type { MerchantStaffInvite, StaffInvitesQuery } from '../../types/reposit
 import type { StaffInviteParams, StaffLinkRequestParams, StaffReorderItem, UpdateStaffStatusVars } from '../../types/hooks'
 
 export { StatusFilter }
+
+function staffMemberMatchesLinkId(member: StaffMember, staffLinkId: string): boolean {
+  return (
+    member.id === staffLinkId ||
+    member.staffLinkId === staffLinkId ||
+    member.linkId === staffLinkId
+  )
+}
+
+function patchStaffStatusInCache(
+  queryClient: QueryClient,
+  staffLinkId: string,
+  status: string,
+) {
+  const isActive = status === 'Active' || status === 'Accepted'
+  const nextStatus = isActive ? 'Active' : 'Inactive'
+
+  queryClient.setQueriesData<StaffListPage>(
+    { queryKey: ['merchantStaff'] },
+    (current) => {
+      if (!current?.items?.length) return current
+      return {
+        ...current,
+        items: current.items.map((item) =>
+          staffMemberMatchesLinkId(item, staffLinkId)
+            ? { ...item, status: nextStatus, isActive, showInTipsFlow: isActive }
+            : item,
+        ),
+      }
+    },
+  )
+}
+
+function snapshotMerchantStaffQueries(queryClient: QueryClient) {
+  return queryClient.getQueriesData<StaffListPage>({ queryKey: ['merchantStaff'] })
+}
 
 export function useMerchantStaff({
   statusFilter,
@@ -104,10 +140,21 @@ export function useSendStaffLinkRequest() {
 
 export function useUpdateMerchantStaffStatus() {
   const queryClient = useQueryClient()
-  return useMutation<void, Error, UpdateStaffStatusVars>({
+  return useMutation<void, Error, UpdateStaffStatusVars, { previousQueries: ReturnType<typeof snapshotMerchantStaffQueries> }>({
     mutationFn: ({ staffLinkId, status }) =>
       merchantStaffRepository.updateStatus(staffLinkId, status),
-    onSuccess: () => {
+    onMutate: async ({ staffLinkId, status }) => {
+      await queryClient.cancelQueries({ queryKey: qk.merchantStaff() })
+      const previousQueries = snapshotMerchantStaffQueries(queryClient)
+      patchStaffStatusInCache(queryClient, staffLinkId, status)
+      return { previousQueries }
+    },
+    onError: (_err, _vars, context) => {
+      context?.previousQueries?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data)
+      })
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
     },
   })

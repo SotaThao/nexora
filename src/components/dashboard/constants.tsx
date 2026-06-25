@@ -59,15 +59,21 @@ export const DEFAULT_PAYOUT_CONFIGS = {
 }
 
 export const MENU_ITEMS = [
-  { id: 'overview', label: 'Dashboard', icon: LayoutDashboard, image: '/assets/menu/conversion.png' },
-  { id: 'staff', label: 'Staff', icon: Users },
+  { id: 'overview', label: 'Dashboard', icon: LayoutDashboard, image: '/assets/menu/dashboard.png' },
+  { id: 'staff', label: 'Staff', icon: Users, image: '/assets/menu/staff.png' },
   { id: 'tips', label: 'Tips', icon: Wallet, image: '/assets/menu/tips.png' },
-  { id: 'reviews', label: 'Reviews', icon: Star, image: '/assets/menu/review.png' },
-  { id: 'reports', label: 'Transactions', icon: ClipboardList },
-  { id: 'touchpoints', label: 'Touch Points', icon: Pointer },
-  { id: 'analytics', label: 'Analytics', icon: BarChart3, image: '/assets/menu/star.png' },
-  { id: 'settings', label: 'Settings', icon: Settings },
-  { id: 'support', label: 'Support', icon: HelpCircle }
+  { id: 'reviews', label: 'Reviews', icon: Star, image: '/assets/menu/reviews.png' },
+  { id: 'reports', label: 'Transactions', icon: ClipboardList, image: '/assets/menu/transaction.png' },
+  { id: 'touchpoints', label: 'Touch Points', icon: Pointer, image: '/assets/menu/touchpoint.png' },
+  { id: 'analytics', label: 'Analytics', icon: BarChart3, image: '/assets/menu/analytics.png' },
+  { id: 'settings', label: 'Settings', icon: Settings, image: '/assets/menu/setting.png' },
+  { id: 'support', label: 'Support', icon: HelpCircle, image: '/assets/menu/support.png' }
 ]
 
 export const visibleMenuItems = MENU_ITEMS
+
+export const PUBLIC_HOME_MENU_ITEM = {
+  id: 'public-home',
+  label: 'Home',
+  image: '/assets/menu/home.png',
+}
