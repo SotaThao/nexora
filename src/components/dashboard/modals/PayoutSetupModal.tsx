@@ -4,6 +4,7 @@ import { useTranslation, renderLabel } from '../../../contexts/LanguageContext'
 import ImageFileInput from '../../ui/ImageFileInput'
 import BankWireAccountForm from '../../payout/BankWireAccountForm'
 import CameraCapture from '../../ui/CameraCapture'
+import { readImageFileAsDataUrl } from '../../../utils/imageFile'
 import {
   getBankWireBeneficiaryName,
   isBankWireAccountComplete,
@@ -52,6 +53,7 @@ function PayoutSetupModal({
   const [isCapturing, setIsCapturing] = useState(false)
   const [isCameraOpen, setIsCameraOpen] = useState(false)
   const [error, setError] = useState('')
+  const [uploadError, setUploadError] = useState('')
 
   useEffect(() => {
     setValue(initialValue || '')
@@ -59,6 +61,7 @@ function PayoutSetupModal({
     setQrFile(null)
     setAccountName(staffName || '')
     setError('')
+    setUploadError('')
     setIsCameraOpen(false)
   }, [open, walletKey, initialValue, initialQrCode, staffName])
 
@@ -106,13 +109,28 @@ function PayoutSetupModal({
     crypto: t('components.dashboard.modals.PayoutSetupModal.placeholderCrypto')
   }
 
-  const handleImagePick = (dataUrl) => {
-    if (readOnly || !dataUrl) return
-    setQrCode(dataUrl)
+  const handleImageFilePick = async (file: File) => {
+    if (readOnly || !file) return
+
+    const isImage = typeof file.type === 'string' && file.type.startsWith('image/')
+    if (!isImage) {
+      setUploadError(t('setup.errors.image_only'))
+      return
+    }
+
+    try {
+      const dataUrl = await readImageFileAsDataUrl(file)
+      setUploadError('')
+      setQrFile(file)
+      setQrCode(String(dataUrl || ''))
+    } catch {
+      setUploadError(t('setup.errors.image_only'))
+    }
   }
 
   const handleTakePhoto = () => {
     if (readOnly) return
+    setUploadError('')
     setIsCameraOpen(true)
   }
 
@@ -121,6 +139,7 @@ function PayoutSetupModal({
     if (qrCode?.startsWith('blob:')) {
       URL.revokeObjectURL(qrCode)
     }
+    setUploadError('')
     setQrFile(null)
     setQrCode('')
   }
@@ -296,7 +315,7 @@ function PayoutSetupModal({
                 <ImageFileInput
                   as="label"
                   className="flex flex-col items-center justify-center py-5 border border-dashed border-slate-200 hover:border-nexoraBrand rounded-xl bg-slate-50 hover:bg-slate-50/50 transition gap-1.5 cursor-pointer"
-                  onPick={handleImagePick}
+                  onPickFile={handleImageFilePick}
                   disabled={readOnly}
                 >
                   <FolderOpen className="w-5 h-5 text-nexoraBrand" />
@@ -309,6 +328,9 @@ function PayoutSetupModal({
                 {t('setup.uploader_hint')}
               </p>
             )}
+            {uploadError ? (
+              <p className="mt-1 text-[10px] font-bold text-rose-500">{uploadError}</p>
+            ) : null}
           </div>
           </>
           )}
@@ -335,7 +357,7 @@ function PayoutSetupModal({
           {!readOnly && (
             <button
               onClick={handleSubmit}
-              disabled={isSaving}
+              disabled={isSaving || Boolean(uploadError)}
               className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-sm transition"
             >
               {t(isBankWire ? 'common.update' : 'components.dashboard.modals.PayoutSetupModal.save')}

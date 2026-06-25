@@ -1,6 +1,8 @@
 // StaffMyQR — referral QR tab + per-business tipping QR tab.
-import { useCallback, useMemo, useState } from 'react'
-import { Share2, Copy, QrCode, X, Loader2, CheckCircle2, XCircle, Store, Clock, Link2 } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Share2, Copy, QrCode, X, Loader2, Store, Clock, Link2 } from 'lucide-react'
+import jsQR from 'jsqr'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import { useStaffBusinessTipQrs } from '../../../data/hooks/useStaffSelf'
@@ -22,6 +24,42 @@ type ZoomedQr = {
   url: string
   title: string
   subtitle?: string
+}
+
+type ScannerCameraState = 'loading' | 'ready' | 'permission_denied' | 'unavailable'
+
+function extractReferralCodeFromQrText(value: string): string {
+  const text = value.trim()
+  if (!text) return ''
+
+  try {
+    const parsed = new URL(text)
+    const queryRef =
+      parsed.searchParams.get('ref') ||
+      parsed.searchParams.get('referralCode') ||
+      parsed.searchParams.get('code')
+    if (queryRef?.trim()) return queryRef.trim()
+
+    const segments = parsed.pathname.split('/').filter(Boolean)
+    const last = segments[segments.length - 1] || ''
+    if (/^[a-zA-Z0-9_-]{4,80}$/.test(last)) return last
+  } catch {
+    // Non-URL payloads can still be plain referral codes.
+  }
+
+  return /^[a-zA-Z0-9_-]{4,80}$/.test(text) ? text : ''
+}
+
+function extractUrlFromQrText(value: string): URL | null {
+  const text = value.trim()
+  if (!text) return null
+  try {
+    const parsed = new URL(text)
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null
+    return parsed
+  } catch {
+    return null
+  }
 }
 
 function getBusinessStatusLabel(biz: StaffBusinessTipQr): string {
@@ -139,6 +177,7 @@ function getInactiveTipQrCopy(
 }
 
 export default function StaffMyQR() {
+  const navigate = useNavigate()
   const { t, currentLanguage } = useTranslation()
   const { staffMember, account } = useStaffAccount()
   const { businessTipQrs, isLoading: isTipQrLoading } = useStaffBusinessTipQrs()
@@ -147,10 +186,15 @@ export default function StaffMyQR() {
 
   const [activeTab, setActiveTab] = useState<QrTab>('referral')
   const [showScanner, setShowScanner] = useState(false)
-  const [scanStatus, setScanStatus] = useState<'idle' | 'checking' | 'success' | 'error'>('idle')
-  const [customInviteLink, setCustomInviteLink] = useState('')
+  const [scannerCameraState, setScannerCameraState] = useState<ScannerCameraState>('loading')
+  const [isSubmittingScan, setIsSubmittingScan] = useState(false)
   const [zoomedQr, setZoomedQr] = useState<ZoomedQr | null>(null)
   const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null)
+  const scannerVideoRef = useRef<HTMLVideoElement | null>(null)
+  const scannerStreamRef = useRef<MediaStream | null>(null)
+  const scannerCanvasRef = useRef<HTMLCanvasElement | null>(null)
+  const scannerFrameRef = useRef<number | null>(null)
+  const lastScanAtRef = useRef(0)
 
   const staffCode = (account.staffCode || staffMember.id || '').trim()
   const staffLink = useMemo(
@@ -189,11 +233,11 @@ export default function StaffMyQR() {
 
   const handleCopyReferral = useCallback(() => {
     copyText(
-      staffLink,
+      staffCode,
       'components.staff_dashboard.views.StaffMyQR.linkCopiedToClipboard',
       'components.staff_dashboard.views.StaffMyQR.copyFailed',
     )
-  }, [copyText, staffLink])
+  }, [copyText, staffCode])
 
   const handleShareReferral = useCallback(async () => {
     if (!staffLink) {
@@ -248,41 +292,184 @@ export default function StaffMyQR() {
 
   const handleOpenScan = () => {
     setShowScanner(true)
-    setScanStatus('idle')
-    setCustomInviteLink('')
+    setScannerCameraState('loading')
+    setIsSubmittingScan(false)
   }
 
-  const handleUrlOrTextSubmit = async () => {
-    if (joinPublicInviteMutation.isPending) return
-
-    setScanStatus('checking')
-    try {
-      await joinPublicInviteMutation.mutateAsync()
-      setScanStatus('success')
-      showToast(t('components.staff_dashboard.views.StaffMyQR.joinRequestSent'), 'success')
-      setTimeout(() => {
-        setShowScanner(false)
-        setScanStatus('idle')
-        setCustomInviteLink('')
-      }, 1000)
-    } catch (err: unknown) {
-      setScanStatus('error')
-      const isAlreadyLinked =
-        isApiError(err) &&
-        (err.errorCode === 'STAFF_ALREADY_LINKED_TO_BUSINESS' ||
-          err.errorCode === 'STAFF_INVITE_ALREADY_EXISTS')
-      const isMissingReferralCode =
-        isApiError(err) && err.errorCode === 'REFERRAL_CODE_REQUIRED'
-      showToast(
-        isMissingReferralCode
-          ? t('components.staff_dashboard.views.StaffMyQR.profileReferralCodeMissing')
-          : isAlreadyLinked
-            ? t('components.staff_dashboard.views.StaffMyQR.alreadyLinkedOrRequested')
-            : t('components.staff_dashboard.views.StaffMyQR.joinRequestFailed'),
-        'error',
-      )
+  useEffect(() => {
+    if (!showScanner) {
+      scannerStreamRef.current?.getTracks().forEach((track) => track.stop())
+      scannerStreamRef.current = null
+      if (scannerFrameRef.current != null) {
+        window.cancelAnimationFrame(scannerFrameRef.current)
+        scannerFrameRef.current = null
+      }
+      if (scannerVideoRef.current) {
+        scannerVideoRef.current.srcObject = null
+      }
+      return
     }
-  }
+
+    let cancelled = false
+
+    const startScannerCamera = async () => {
+      setScannerCameraState('loading')
+
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setScannerCameraState('unavailable')
+        return
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' } },
+          audio: false,
+        })
+
+        if (cancelled) {
+          stream.getTracks().forEach((track) => track.stop())
+          return
+        }
+
+        scannerStreamRef.current = stream
+        if (scannerVideoRef.current) {
+          scannerVideoRef.current.srcObject = stream
+          await scannerVideoRef.current.play()
+        }
+        setScannerCameraState('ready')
+      } catch (err: unknown) {
+        if (cancelled) return
+        const name = err instanceof DOMException ? err.name : ''
+        if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+          setScannerCameraState('permission_denied')
+        } else {
+          setScannerCameraState('unavailable')
+        }
+      }
+    }
+
+    startScannerCamera()
+
+    return () => {
+      cancelled = true
+      scannerStreamRef.current?.getTracks().forEach((track) => track.stop())
+      scannerStreamRef.current = null
+      if (scannerFrameRef.current != null) {
+        window.cancelAnimationFrame(scannerFrameRef.current)
+        scannerFrameRef.current = null
+      }
+      if (scannerVideoRef.current) {
+        scannerVideoRef.current.srcObject = null
+      }
+    }
+  }, [showScanner])
+
+  useEffect(() => {
+    if (!showScanner || scannerCameraState !== 'ready' || isSubmittingScan) return
+    const video = scannerVideoRef.current
+    if (!video) return
+
+    if (!scannerCanvasRef.current) {
+      scannerCanvasRef.current = document.createElement('canvas')
+    }
+    const canvas = scannerCanvasRef.current
+    const context = canvas.getContext('2d', { willReadFrequently: true })
+    if (!context) return
+
+    let cancelled = false
+
+    const submitReferralCode = async (referralCode: string) => {
+      setIsSubmittingScan(true)
+      setScannerCameraState('loading')
+      try {
+        await joinPublicInviteMutation.mutateAsync(referralCode)
+        showToast(t('components.staff_dashboard.views.StaffMyQR.joinRequestSent'), 'success')
+        setTimeout(() => {
+          setShowScanner(false)
+          setScannerCameraState('loading')
+          setIsSubmittingScan(false)
+        }, 900)
+      } catch (err: unknown) {
+        const isAlreadyLinked =
+          isApiError(err) &&
+          (err.errorCode === 'STAFF_ALREADY_LINKED_TO_BUSINESS' ||
+            err.errorCode === 'STAFF_INVITE_ALREADY_EXISTS')
+        const isMissingReferralCode =
+          isApiError(err) && err.errorCode === 'REFERRAL_CODE_REQUIRED'
+        showToast(
+          isMissingReferralCode
+            ? t('components.staff_dashboard.views.StaffMyQR.profileReferralCodeMissing')
+            : isAlreadyLinked
+              ? t('components.staff_dashboard.views.StaffMyQR.alreadyLinkedOrRequested')
+              : t('components.staff_dashboard.views.StaffMyQR.joinRequestFailed'),
+          'error',
+        )
+        setIsSubmittingScan(false)
+        setScannerCameraState('ready')
+      }
+    }
+
+    const handleScannedUrl = (parsedUrl: URL) => {
+      setIsSubmittingScan(true)
+      setShowScanner(false)
+      setScannerCameraState('loading')
+
+      if (parsedUrl.origin === window.location.origin) {
+        navigate(`${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`)
+        return
+      }
+      window.open(parsedUrl.toString(), '_blank', 'noopener,noreferrer')
+    }
+
+    const loop = () => {
+      if (cancelled || isSubmittingScan) return
+      scannerFrameRef.current = window.requestAnimationFrame(loop)
+
+      const now = Date.now()
+      if (now - lastScanAtRef.current < 180) return
+      lastScanAtRef.current = now
+
+      if (!video.videoWidth || !video.videoHeight) return
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+      context.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+      const imageData = context.getImageData(0, 0, canvas.width, canvas.height)
+      const detected = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: 'attemptBoth',
+      })
+      if (!detected?.data) return
+
+      const referralCode = extractReferralCodeFromQrText(detected.data)
+      if (referralCode) {
+        if (scannerFrameRef.current != null) {
+          window.cancelAnimationFrame(scannerFrameRef.current)
+          scannerFrameRef.current = null
+        }
+        submitReferralCode(referralCode)
+        return
+      }
+
+      const parsedUrl = extractUrlFromQrText(detected.data)
+      if (parsedUrl) {
+        if (scannerFrameRef.current != null) {
+          window.cancelAnimationFrame(scannerFrameRef.current)
+          scannerFrameRef.current = null
+        }
+        handleScannedUrl(parsedUrl)
+      }
+    }
+
+    scannerFrameRef.current = window.requestAnimationFrame(loop)
+
+    return () => {
+      cancelled = true
+      if (scannerFrameRef.current != null) {
+        window.cancelAnimationFrame(scannerFrameRef.current)
+        scannerFrameRef.current = null
+      }
+    }
+  }, [isSubmittingScan, joinPublicInviteMutation, navigate, scannerCameraState, showScanner, showToast, t])
 
   const renderStatusBadge = (biz: StaffBusinessTipQr) => {
     const status = getBusinessStatusLabel(biz)
@@ -367,8 +554,19 @@ export default function StaffMyQR() {
               <div className="mx-auto my-4 flex h-44 w-44 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-nexoraBorder/60 bg-white p-3.5 shadow-sm select-none">
                 <img src={referralQrImageSrc} alt="Scan QR" className="h-full w-full object-contain" />
               </div>
-              <div className="text-sm font-bold text-nexoraText">
-                {t('staff_dashboard.staff_id')}: {staffCode}
+              <div className="flex items-center justify-center gap-2 text-sm font-bold text-nexoraText">
+                <span>
+                  {t('staff_dashboard.staff_id')}: {staffCode}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopyReferral}
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-nexoraBorder bg-nexoraSurface text-nexoraBrand transition hover:bg-nexoraCanvas"
+                  aria-label={t('staff_dashboard.qr.copy_link')}
+                  title={t('staff_dashboard.qr.copy_link')}
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                </button>
               </div>
               <div className="mt-3 space-y-2">
                 <button
@@ -378,14 +576,6 @@ export default function StaffMyQR() {
                 >
                   <Share2 className="h-4 w-4" />
                   {t('staff_dashboard.qr.share')}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCopyReferral}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-nexoraBorder bg-nexoraSurface py-3 text-sm font-bold text-nexoraBrand transition hover:bg-nexoraCanvas"
-                >
-                  <Copy className="h-4 w-4" />
-                  {t('staff_dashboard.qr.copy_link')}
                 </button>
               </div>
             </>
@@ -622,12 +812,13 @@ export default function StaffMyQR() {
 
       {showScanner && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-          <div className="relative w-full max-w-sm animate-scaleUp space-y-5 overflow-hidden rounded-3xl border border-slate-100 bg-white p-6 text-center text-slate-800 shadow-2xl">
+          <div className="relative w-full max-w-md animate-scaleUp space-y-5 overflow-hidden rounded-3xl border border-slate-100 bg-white p-6 text-center text-slate-800 shadow-2xl">
             <button
               type="button"
               onClick={() => {
                 setShowScanner(false)
-                setScanStatus('idle')
+                setScannerCameraState('loading')
+                setIsSubmittingScan(false)
               }}
               className="absolute right-4 top-4 rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
               title="Close Scanner"
@@ -644,51 +835,37 @@ export default function StaffMyQR() {
               </p>
             </div>
 
-            <div className="relative mx-auto flex h-44 w-44 items-center justify-center overflow-hidden rounded-2xl border-2 border-slate-100 bg-slate-50 shadow-inner">
+            <div className="relative mx-auto flex h-64 w-64 items-center justify-center overflow-hidden rounded-2xl border-2 border-slate-100 bg-slate-50 shadow-inner">
               <div className="absolute left-3 top-3 h-4 w-4 rounded-tl-sm border-l-2 border-t-2 border-amber-500" />
               <div className="absolute right-3 top-3 h-4 w-4 rounded-tr-sm border-r-2 border-t-2 border-amber-500" />
               <div className="absolute bottom-3 left-3 h-4 w-4 rounded-bl-sm border-b-2 border-l-2 border-amber-500" />
               <div className="absolute bottom-3 right-3 h-4 w-4 rounded-br-sm border-b-2 border-r-2 border-amber-500" />
 
-              {scanStatus === 'checking' ? (
+              {(scannerCameraState === 'loading' || isSubmittingScan) && (
                 <Loader2 className="h-16 w-16 animate-spin text-amber-500" />
-              ) : scanStatus === 'success' ? (
-                <CheckCircle2 className="h-16 w-16 animate-scaleUp text-emerald-500" />
-              ) : scanStatus === 'error' ? (
-                <XCircle className="h-16 w-16 text-rose-500" />
-              ) : (
-                <QrCode className="h-16 w-16 animate-pulse text-slate-300 opacity-80" />
               )}
 
-              {scanStatus === 'idle' && (
+              <video
+                ref={scannerVideoRef}
+                playsInline
+                muted
+                className={`h-full w-full object-cover ${scannerCameraState === 'ready' ? 'block' : 'hidden'}`}
+              />
+
+              {scannerCameraState !== 'ready' && scannerCameraState !== 'loading' && !isSubmittingScan ? (
+                <QrCode className="h-16 w-16 animate-pulse text-slate-300 opacity-80" />
+              ) : null}
+
+              {scannerCameraState === 'ready' && (
                 <div className="animate-scannerLaser absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-amber-500 to-transparent shadow-[0_0_8px_#f59e0b]" />
               )}
             </div>
 
-            <div className="space-y-2 text-left">
-              <label className="text-[9px] font-black uppercase tracking-wider text-slate-400">
-                {t('components.staff_dashboard.views.StaffMyQR.orEnterInviteLink')}
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder={t('components.staff_dashboard.views.StaffMyQR.pasteSalonInviteLink')}
-                  className="h-9 flex-grow rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs text-slate-700 focus:border-amber-500 focus:outline-none"
-                  value={customInviteLink}
-                  onChange={(e) => setCustomInviteLink(e.target.value)}
-                />
-                <button
-                  type="button"
-                  onClick={() => handleUrlOrTextSubmit()}
-                  disabled={joinPublicInviteMutation.isPending}
-                  className="h-9 rounded-xl bg-slate-800 px-3 text-xs font-bold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {joinPublicInviteMutation.isPending
-                    ? t('common.processing')
-                    : t('components.staff_dashboard.views.StaffMyQR.send')}
-                </button>
-              </div>
-            </div>
+            {scannerCameraState !== 'ready' && scannerCameraState !== 'loading' ? (
+              <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-center text-[11px] font-semibold text-slate-500">
+                {t('components.staff_dashboard.views.StaffMyQR.cameraScanNotAvailableYet')}
+              </p>
+            ) : null}
           </div>
         </div>
       )}

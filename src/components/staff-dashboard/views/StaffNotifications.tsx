@@ -1,9 +1,9 @@
 // StaffNotifications — notification feed + push preferences.
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, Check, Star, Users, Wallet, XCircle } from 'lucide-react'
+import { Bell, CheckCircle2, Star, Users, Wallet, X } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
-import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import {
   useMarkAllNotificationsRead,
   useMarkNotificationRead,
@@ -17,12 +17,10 @@ import { formatNotificationDateTime } from '../../dashboard/utils'
 import {
   useAcceptStaffLinkRequest,
   useRejectStaffLinkRequest,
-  useStaffLinkRequest,
 } from '../../../data/hooks/useStaffSelf'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm sm:p-5'
 const notificationRowBase = 'flex w-full items-start gap-3 px-3 py-3 text-left transition'
-const listRowBase = 'px-3 py-3'
 
 function notificationRowClass(read: boolean, hasAction = false) {
   if (read) {
@@ -67,21 +65,6 @@ function resolveStaffNotificationActionUrl(actionUrl: string | null | undefined)
   return `${resolvedPath}${suffix}`
 }
 
-function Toggle({ on, onChange }) {
-  return (
-    <button
-      type="button"
-      onClick={() => onChange(!on)}
-      className={`relative h-6 w-11 shrink-0 rounded-full transition ${on ? 'bg-emerald-500' : 'bg-nexoraBorder'}`}
-      aria-pressed={on}
-    >
-      <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${on ? 'left-[22px]' : 'left-0.5'}`} />
-    </button>
-  )
-}
-
-const PREF_KEYS = ['tipConfirmations', 'reviews', 'businessInvites']
-
 function StaffLinkRequestNotification({
   notification,
   onRead,
@@ -91,83 +74,97 @@ function StaffLinkRequestNotification({
 }) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
+  const [isReadLocal, setIsReadLocal] = useState(Boolean(notification.read))
+  const [actionState, setActionState] = useState<'idle' | 'accepted' | 'rejected'>('idle')
   const linkId = getStaffLinkRequestId(notification)
-  const detailQuery = useStaffLinkRequest(linkId)
   const acceptMutation = useAcceptStaffLinkRequest()
   const rejectMutation = useRejectStaffLinkRequest()
-  const detail = detailQuery.data
   const isPending = acceptMutation.isPending || rejectMutation.isPending
-  const businessName = detail?.businessName || notification.title || t('staff_dashboard.notifications.link_request_business_fallback')
+  const businessName = notification.title || t('staff_dashboard.notifications.link_request_business_fallback')
+
+  useEffect(() => {
+    setIsReadLocal(Boolean(notification.read))
+  }, [notification.read])
 
   const handleAccept = () => {
     if (!linkId) return
+    setActionState('accepted')
+    setIsReadLocal(true)
+    if (!notification.read) onRead(notification.id)
     acceptMutation.mutate(linkId, {
       onSuccess: () => {
-        onRead(notification.id)
         showToast(t('staff_dashboard.notifications.link_request_accepted'), 'success')
       },
-      onError: () => showToast(t('staff_dashboard.notifications.link_request_accept_failed'), 'error'),
+      onError: () => {
+        setActionState('idle')
+        setIsReadLocal(Boolean(notification.read))
+        showToast(t('staff_dashboard.notifications.link_request_accept_failed'), 'error')
+      },
     })
   }
 
   const handleReject = () => {
     if (!linkId) return
+    setActionState('rejected')
+    setIsReadLocal(true)
+    if (!notification.read) onRead(notification.id)
     rejectMutation.mutate(linkId, {
       onSuccess: () => {
-        onRead(notification.id)
         showToast(t('staff_dashboard.notifications.link_request_rejected'), 'success')
       },
-      onError: () => showToast(t('staff_dashboard.notifications.link_request_reject_failed'), 'error'),
+      onError: () => {
+        setActionState('idle')
+        setIsReadLocal(Boolean(notification.read))
+        showToast(t('staff_dashboard.notifications.link_request_reject_failed'), 'error')
+      },
     })
   }
 
   return (
-    <div className={notificationRowClass(notification.read)}>
-      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-nexoraBrand text-white ${notification.read ? 'opacity-60' : ''}`}>
+    <div className={notificationRowClass(isReadLocal)}>
+      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-nexoraBrand text-white ${isReadLocal ? 'opacity-60' : ''}`}>
         <Bell className="h-4 w-4" />
       </span>
       <div className="min-w-0 flex-1">
-        <div className={`text-sm ${notification.read ? 'font-bold text-nexoraMuted' : 'font-extrabold text-nexoraText'}`}>
+        <div className={`text-sm ${isReadLocal ? 'font-bold text-nexoraMuted' : 'font-extrabold text-nexoraText'}`}>
           {t('staff_dashboard.notifications.link_request_title')}
         </div>
         <p className="mt-0.5 text-xs leading-normal text-nexoraMuted">
-          {detailQuery.isLoading
-            ? t('common.loading')
-            : t('staff_dashboard.notifications.link_request_message', { businessName })}
+          {t('staff_dashboard.notifications.link_request_message', { businessName })}
         </p>
-        {detail?.businessRole && (
-          <p className="mt-1 text-[11px] font-bold text-nexoraSubtle">
-            {t('staff_dashboard.notifications.link_request_role', { role: detail.businessRole })}
-          </p>
-        )}
-        {linkId ? (
-          <div className="mt-3 flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={handleAccept}
-              disabled={isPending || detail?.status === 'Active'}
-              className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-nexoraBrand px-4 text-xs font-extrabold text-white transition hover:bg-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <Check className="h-4 w-4" />
-              {t('staff_dashboard.notifications.accept_link_request')}
-            </button>
-            <button
-              type="button"
-              onClick={handleReject}
-              disabled={isPending || detail?.status === 'Rejected'}
-              className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-nexoraDanger/20 bg-nexoraDanger/10 px-4 text-xs font-extrabold text-nexoraDanger transition hover:bg-nexoraDanger/15 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <XCircle className="h-4 w-4" />
-              {t('staff_dashboard.notifications.reject_link_request')}
-            </button>
-          </div>
-        ) : (
+        {!linkId ? (
           <p className="mt-2 text-xs font-bold text-nexoraDanger">
             {t('staff_dashboard.notifications.link_request_missing_id')}
           </p>
-        )}
+        ) : null}
       </div>
-      {!notification.read && <span className="ml-auto mt-1 h-2 w-2 shrink-0 rounded-full bg-nexoraBrand" />}
+      {linkId && actionState === 'idle' && !isReadLocal ? (
+        <div className="ml-2 flex shrink-0 items-center gap-2 self-center">
+          <button
+            type="button"
+            onClick={handleAccept}
+            disabled={isPending}
+            aria-label={t('staff_dashboard.notifications.accept_link_request')}
+            title={t('staff_dashboard.notifications.accept_link_request')}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-emerald-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-100 hover:text-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <CheckCircle2 className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={handleReject}
+            disabled={isPending}
+            aria-label={t('staff_dashboard.notifications.reject_link_request')}
+            title={t('staff_dashboard.notifications.reject_link_request')}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-rose-100 hover:text-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          {!isReadLocal && <span className="h-2 w-2 shrink-0 rounded-full bg-nexoraBrand" />}
+        </div>
+      ) : (
+        !isReadLocal && <span className="ml-auto mt-1 h-2 w-2 shrink-0 rounded-full bg-nexoraBrand" />
+      )}
     </div>
   )
 }
@@ -175,7 +172,6 @@ function StaffLinkRequestNotification({
 export default function StaffNotifications() {
   const { t, currentLanguage } = useTranslation()
   const navigate = useNavigate()
-  const { account, setPushPreference } = useStaffAccount()
   const { data: notifications = [], isPending } = useNotifications()
   const { data: unreadCount = 0 } = useUnreadCount()
   const markReadMutation = useMarkNotificationRead()
@@ -276,17 +272,6 @@ export default function StaffNotifications() {
         )}
       </section>
 
-      <section className={panel}>
-        <h3 className="mb-3 text-base font-extrabold text-nexoraText">{t('staff_dashboard.notifications.push_prefs')}</h3>
-        <div className="space-y-1">
-          {PREF_KEYS.map((key) => (
-            <div key={key} className={`flex items-center justify-between gap-3 ${listRowBase}`}>
-              <span className="text-sm font-bold text-nexoraText">{t(`staff_dashboard.notifications.pref.${key}`)}</span>
-              <Toggle on={!!account.pushPreferences?.[key]} onChange={(v) => setPushPreference(key, v)} />
-            </div>
-          ))}
-        </div>
-      </section>
     </div>
   )
 }

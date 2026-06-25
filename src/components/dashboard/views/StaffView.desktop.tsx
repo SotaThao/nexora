@@ -4,12 +4,22 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
+import { PAYOUT_UI_DISPLAY_ORDER, PAYOUT_UI_LABELS } from '../../../data/paymentMethodTypes'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
 import Pagination from '../../ui/Pagination'
 
 function isWaitingStaffAcceptance(member) {
   return member?.apiStatus === 'WaitingStaffAcceptance' || member?.status === 'WaitingStaffAcceptance'
+}
+
+function isRejectedStaff(member) {
+  return member?.status === 'StaffRejected' || member?.apiStatus === 'StaffRejected'
+}
+
+const PAYMENT_ACCOUNT_LABELS = {
+  ...PAYOUT_UI_LABELS,
+  vlinkpay: 'VLINKPAY',
 }
 
 function StaffView({
@@ -74,8 +84,13 @@ function StaffView({
     ? t('components.dashboard.views.StaffView.inviteLinkLoading')
     : t('components.dashboard.views.StaffView.inviteLinkDisabled')
 
-    const sortedStaff = useMemo(() => {
-    return [...staff].sort((a, b) => {
+  const rejectedStaff = useMemo(
+    () => (staff || []).filter((member) => isRejectedStaff(member)),
+    [staff],
+  )
+
+  const sortedStaff = useMemo(() => {
+    return [...(staff || []).filter((member) => !isRejectedStaff(member))].sort((a, b) => {
       if (sortBy === 'name-asc') {
         return a.fullName.localeCompare(b.fullName)
       }
@@ -120,6 +135,7 @@ function StaffView({
   // Calculate Metrics
   const totalLinked = staff ? staff.length : 0
   const pendingCount = pendingStaff ? pendingStaff.length : 0
+  const activeStaffCount = sortedStaff.filter((member) => member.isActive).length
 
   // Resend invite - calls API via mutation prop
   const handleResendInvite = (member) => {
@@ -130,13 +146,16 @@ function StaffView({
 
   // Helper to extract wallet labels
   const getWalletBadges = (member) => {
-    const list = []
-    if (member.paymentAccounts?.zelle) list.push('Zelle')
-    if (member.paymentAccounts?.cashapp) list.push('Cash App')
-    if (member.paymentAccounts?.venmo) list.push('Venmo')
-    if (member.paymentAccounts?.vlinkpay) list.push('VLINKPAY')
-    if (member.paymentAccounts?.paypal) list.push('PayPal')
-    return list
+    const accounts = member?.paymentAccounts || {}
+    return Object.entries(accounts)
+      .filter(([, value]) => Boolean(value))
+      .map(([key]) => key.toLowerCase())
+      .sort((a, b) => {
+        const ai = PAYOUT_UI_DISPLAY_ORDER.indexOf(a)
+        const bi = PAYOUT_UI_DISPLAY_ORDER.indexOf(b)
+        return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
+      })
+      .map((key) => PAYMENT_ACCOUNT_LABELS[key] || key)
   }
 
   return (
@@ -293,27 +312,98 @@ function StaffView({
                           )}
                         </div>
                       </td>
-                      <td className="px-5 py-4 text-right">
+                      <td className="px-5 py-4">
                         {waitingStaffResponse ? (
-                          <span className="text-[10px] font-bold text-slate-500 italic">
+                          <span className="block text-[10px] font-bold text-slate-500 italic text-right">
                             {t('components.dashboard.views.StaffView.pendingAcceptance')}
                           </span>
                         ) : (
-                          <>
+                          <div className="flex flex-wrap items-center justify-end gap-2">
                             <button
+                              type="button"
                               onClick={() => onApproveClick && onApproveClick(member)}
-                              className="px-3.5 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition shadow-sm mr-2"
+                              className="whitespace-nowrap px-3.5 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition shadow-sm"
                             >
                               {t('components.dashboard.views.StaffView.reviewAndApprove')}
                             </button>
                             <button
+                              type="button"
                               onClick={() => onDeclineJoin && onDeclineJoin(member)}
-                              className="px-3 py-1.5 text-xs font-bold border border-rose-200 bg-rose-50 text-rose-700 rounded-lg hover:bg-rose-100 transition shadow-sm"
+                              className="whitespace-nowrap px-3 py-1.5 text-xs font-bold border border-rose-200 bg-rose-50 text-rose-700 rounded-lg hover:bg-rose-100 transition shadow-sm"
                             >
                               {t('components.dashboard.views.StaffView.decline')}
                             </button>
-                          </>
+                          </div>
                         )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Rejected Staff Section */}
+      {rejectedStaff.length > 0 && (
+        <div className="rounded-xl border border-rose-200 bg-rose-50/40 overflow-hidden shadow-sm">
+          <div className="px-5 py-4 border-b border-rose-200 bg-rose-50 flex items-center justify-between">
+            <h3 className="text-xs font-black uppercase text-rose-800 tracking-wider flex items-center gap-1.5">
+              <AlertCircle className="h-4 w-4 text-rose-700" />
+              {t('components.dashboard.views.StaffView.rejectedStaff')} ({rejectedStaff.length})
+            </h3>
+          </div>
+          <div className="overflow-x-auto bg-white">
+            <table className="w-full border-collapse text-left text-sm">
+              <thead>
+                <tr className="bg-slate-50 text-[10px] font-extrabold uppercase text-nexoraMuted border-b border-nexoraRule">
+                  <th className="px-5 py-3">{t('setup.col_staff')}</th>
+                  <th className="px-5 py-3">{t('staff_invite.col_flow')}</th>
+                  <th className="px-5 py-3">{t('setup.linked_wallets')}</th>
+                  <th className="px-5 py-3 text-right">{t('dashboard.top_touchpoints.manage')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rejectedStaff.map((member, index) => {
+                  const wallets = getWalletBadges(member)
+                  return (
+                    <tr key={member.id || index} className="border-b border-nexoraRule last:border-0 hover:bg-slate-50/40 transition">
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          {member.avatar ? (
+                            <img src={member.avatar} alt="" className="h-10 w-10 rounded-full border border-nexoraBorder object-cover" />
+                          ) : (
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 text-sm font-extrabold text-rose-700">
+                              {member.nickname?.charAt(0) || member.fullName?.charAt(0) || 'N'}
+                            </div>
+                          )}
+                          <div>
+                            <div className="font-extrabold text-nexoraText">{member.fullName}</div>
+                            <div className="text-xs text-nexoraMuted">{member.position}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className="text-xs text-slate-500 font-semibold">
+                          {member.flowType || (t('components.dashboard.views.StaffView.directAddition'))}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex flex-wrap gap-1.5">
+                          {wallets.length > 0 ? (
+                            wallets.map((wallet) => (
+                              <span key={wallet} className="rounded px-2 py-0.5 text-[10px] font-bold bg-nexoraCanvas text-nexoraBrand border border-nexoraBrand/10">{wallet}</span>
+                            ))
+                          ) : (
+                            <span className="text-[10px] text-slate-400 font-bold italic">{t('components.dashboard.views.StaffView.noWallets')}</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        <span className="inline-flex rounded-full bg-rose-50 text-rose-700 px-2.5 py-0.5 text-[10px] font-extrabold uppercase border border-rose-100">
+                          {t('components.dashboard.views.StaffView.rejected')}
+                        </span>
                       </td>
                     </tr>
                   )
@@ -402,8 +492,13 @@ function StaffView({
                 </tr>
               ) : sortedStaff.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-12 text-center text-sm font-bold text-nexoraMuted">
-                    {t('setup.col_staff')}
+                  <td colSpan={6} className="px-5 py-12">
+                    <div className="flex flex-col items-center justify-center gap-2 text-center">
+                      <User className="h-8 w-8 text-nexoraSubtle" />
+                      <p className="text-sm font-extrabold text-nexoraMuted">
+                        {t('components.dashboard.views.StaffView.noStaffProfileFound')}
+                      </p>
+                    </div>
                   </td>
                 </tr>
               ) : sortedStaff.map((member, index) => {
@@ -597,17 +692,19 @@ function StaffView({
           </table>
         </div>
 
-        <Pagination
-          pageNumber={pageNumber}
-          pageSize={pageSize}
-          totalPages={totalPages}
-          totalCount={totalCount}
-          hasNextPage={hasNextPage}
-          hasPreviousPage={hasPreviousPage}
-          onPageChange={onPageChange}
-          isLoading={isFetching}
-          className="mt-0 border-t-0"
-        />
+        {activeStaffCount > 0 ? (
+          <Pagination
+            pageNumber={pageNumber}
+            pageSize={pageSize}
+            totalPages={totalPages}
+            totalCount={activeStaffCount}
+            hasNextPage={hasNextPage}
+            hasPreviousPage={hasPreviousPage}
+            onPageChange={onPageChange}
+            isLoading={isFetching}
+            className="mt-0 border-t-0"
+          />
+        ) : null}
       </div>
 
       {/* Large Join QR Modal */}

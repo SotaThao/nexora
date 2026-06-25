@@ -417,6 +417,11 @@ export default function Dashboard({
 
   const filteredTouchpoints = touchpoints
 
+  const displayStaffTotalCount = filteredStaff.length
+  const displayStaffTotalPages = Math.max(1, Math.ceil(displayStaffTotalCount / staffPagination.pageSize))
+  const displayStaffHasNext = staffPagination.pageNumber < displayStaffTotalPages
+  const displayStaffHasPrev = staffPagination.pageNumber > 1
+
   const filteredReviews = useMemo(() => {
     if (!searchQuery) return reviews
     const query = searchQuery.toLowerCase().trim()
@@ -615,10 +620,10 @@ export default function Dashboard({
     currentStaffId,
     activeStaffPage: staffPagination.pageNumber,
     activeStaffPageSize: staffPagination.pageSize,
-    activeStaffTotalPages: merchantStaffData?.totalPages ?? 1,
-    activeStaffTotalCount: merchantStaffData?.totalCount ?? 0,
-    activeStaffHasNext: merchantStaffData?.hasNextPage ?? false,
-    activeStaffHasPrev: merchantStaffData?.hasPreviousPage ?? false,
+    activeStaffTotalPages: displayStaffTotalPages,
+    activeStaffTotalCount: displayStaffTotalCount,
+    activeStaffHasNext: displayStaffHasNext,
+    activeStaffHasPrev: displayStaffHasPrev,
     setActiveStaffPage: staffPagination.setPage,
     staffListLoading: isStaffLoading,
     staffListFetching: isStaffFetching,

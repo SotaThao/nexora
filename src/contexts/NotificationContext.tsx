@@ -1,94 +1,118 @@
-import React, { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
-import { CheckCircle2, AlertTriangle, XCircle, Info, X } from 'lucide-react'
-import { useTranslation } from './LanguageContext'
-import type { NotificationContextValue, ToastType } from '../types/contexts'
+import { AlertTriangle, CheckCircle2, Info, X, XCircle } from "lucide-react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useState,
+  type ReactNode,
+} from "react";
+import type { NotificationContextValue, ToastType } from "../types/contexts";
+import { useTranslation } from "./LanguageContext";
 
 interface ToastItem {
-  id: number
-  message: string
-  type: ToastType
+  id: number;
+  message: string;
+  type: ToastType;
 }
 
 interface ConfirmState {
-  message: string
-  title: string
-  resolve: (val: boolean) => void
+  message: string;
+  title: string;
+  resolve: (val: boolean) => void;
 }
 
-const NotificationContext = createContext<NotificationContextValue | null>(null)
+const NotificationContext = createContext<NotificationContextValue | null>(
+  null,
+);
 
 interface NotificationProviderProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 export function NotificationProvider({ children }: NotificationProviderProps) {
-  const [toasts, setToasts] = useState<ToastItem[]>([])
-  const [confirmState, setConfirmState] = useState<ConfirmState | null>(null)
-  const { t } = useTranslation()
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
+  const { t } = useTranslation();
 
-  const showToast = useCallback<NotificationContextValue['showToast']>((message, type = 'success', duration = 3000) => {
-    const id = Date.now() + Math.random()
-    setToasts((prev) => [...prev, { id, message, type }])
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id))
-    }, duration)
-  }, [])
+  const showToast = useCallback<NotificationContextValue["showToast"]>(
+    (message, type = "success", duration = 3000) => {
+      const id = Date.now() + Math.random();
+      setToasts((prev) => [...prev, { id, message, type }]);
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+      }, duration);
+    },
+    [],
+  );
 
-  const showConfirm = useCallback<NotificationContextValue['showConfirm']>((message, title = '') => {
-    return new Promise<boolean>((resolve) => {
-      setConfirmState({
-        message,
-        title,
-        resolve: (val) => {
-          setConfirmState(null)
-          resolve(val)
-        }
-      })
-    })
-  }, [])
+  const showConfirm = useCallback<NotificationContextValue["showConfirm"]>(
+    (message, title = "") => {
+      return new Promise<boolean>((resolve) => {
+        setConfirmState({
+          message,
+          title,
+          resolve: (val) => {
+            setConfirmState(null);
+            resolve(val);
+          },
+        });
+      });
+    },
+    [],
+  );
 
   const removeToast = useCallback((id) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id))
-  }, [])
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
 
   return (
     <NotificationContext.Provider value={{ showToast, showConfirm }}>
       {children}
-      
+
       {/* Sleek Premium Toast Overlay */}
-      <div className="fixed top-5 left-4 right-4 sm:left-auto sm:right-5 sm:max-w-sm z-[99999] flex flex-col gap-3 pointer-events-none">
+      <div className="fixed z-[99999] flex w-[calc(100%-1rem)] max-w-sm -translate-x-1/2 flex-col gap-3 pointer-events-none left-1/2 bottom-[max(0.75rem,env(safe-area-inset-bottom))] sm:left-auto sm:right-5 sm:top-5 sm:bottom-auto sm:w-full sm:translate-x-0">
         {toasts.map((toast) => {
-          const Icon = {
-            success: CheckCircle2,
-            error: XCircle,
-            warning: AlertTriangle,
-            info: Info
-          }[toast.type] || Info
+          const Icon =
+            {
+              success: CheckCircle2,
+              error: XCircle,
+              warning: AlertTriangle,
+              info: Info,
+            }[toast.type] || Info;
 
-          const colors = {
-            success: 'border-emerald-100 bg-emerald-50/95 text-emerald-950 shadow-emerald-100/20',
-            error: 'border-rose-100 bg-rose-50/95 text-rose-950 shadow-rose-100/20',
-            warning: 'border-amber-100 bg-amber-50/95 text-amber-950 shadow-amber-100/20',
-            info: 'border-indigo-100 bg-indigo-50/95 text-indigo-950 shadow-indigo-100/20'
-          }[toast.type] || 'border-slate-100 bg-white/95 text-slate-900 shadow-slate-100/20'
+          const colors =
+            {
+              success:
+                "border-emerald-100 bg-emerald-50/95 text-emerald-950 shadow-emerald-100/20",
+              error:
+                "border-rose-100 bg-rose-50/95 text-rose-950 shadow-rose-100/20",
+              warning:
+                "border-amber-100 bg-amber-50/95 text-amber-950 shadow-amber-100/20",
+              info: "border-indigo-100 bg-indigo-50/95 text-indigo-950 shadow-indigo-100/20",
+            }[toast.type] ||
+            "border-slate-100 bg-white/95 text-slate-900 shadow-slate-100/20";
 
-          const iconColor = {
-            success: 'text-emerald-500',
-            error: 'text-rose-500',
-            warning: 'text-amber-500',
-            info: 'text-indigo-500'
-          }[toast.type] || 'text-slate-500'
+          const iconColor =
+            {
+              success: "text-emerald-500",
+              error: "text-rose-500",
+              warning: "text-amber-500",
+              info: "text-indigo-500",
+            }[toast.type] || "text-slate-500";
 
           return (
             <div
               key={toast.id}
               className={`flex gap-3 items-start p-4 rounded-xl border shadow-xl backdrop-blur-md pointer-events-auto transform transition-all duration-300 animate-slide-in-right ${colors}`}
               style={{
-                animation: 'toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+                animation:
+                  "toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards",
               }}
             >
               <Icon className={`h-5 w-5 shrink-0 ${iconColor}`} />
-              <p className="text-xs font-bold leading-normal flex-grow">{toast.message}</p>
+              <p className="text-xs font-bold leading-normal flex-grow">
+                {toast.message}
+              </p>
               <button
                 type="button"
                 onClick={() => removeToast(toast.id)}
@@ -97,17 +121,18 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
                 <X className="h-4 w-4" />
               </button>
             </div>
-          )
+          );
         })}
       </div>
 
       {/* Sleek Premium Confirm Dialog Overlay */}
       {confirmState && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[99998] flex items-center justify-center p-4">
-          <div 
+          <div
             className="bg-white border border-slate-100 shadow-2xl rounded-2xl max-w-sm w-full overflow-hidden p-6 transform transition-all duration-300 animate-scale-in"
             style={{
-              animation: 'confirmScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+              animation:
+                "confirmScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards",
             }}
           >
             {confirmState.title && (
@@ -124,20 +149,20 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
                 onClick={() => confirmState.resolve(false)}
                 className="px-4.5 py-2.5 rounded-xl border border-slate-200 text-[10px] font-extrabold uppercase tracking-wider text-slate-600 hover:bg-slate-50 transition-colors"
               >
-                {t('common.cancel') || 'Hủy'}
+                {t("common.cancel") || "Hủy"}
               </button>
               <button
                 type="button"
                 onClick={() => confirmState.resolve(true)}
                 className="px-4.5 py-2.5 rounded-xl bg-nexoraBrand text-white text-[10px] font-extrabold uppercase tracking-wider hover:bg-nexoraBrand/90 transition-colors shadow-sm"
               >
-                {t('common.confirm') || 'Xác nhận'}
+                {t("common.confirm") || "Xác nhận"}
               </button>
             </div>
           </div>
         </div>
       )}
-      
+
       {/* CSS Keyframes injected directly for compatibility */}
       <style>{`
         @keyframes toastSlideIn {
@@ -162,13 +187,15 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
         }
       `}</style>
     </NotificationContext.Provider>
-  )
+  );
 }
 
 export function useNotification() {
-  const context = useContext(NotificationContext)
+  const context = useContext(NotificationContext);
   if (!context) {
-    throw new Error('useNotification must be used within a NotificationProvider')
+    throw new Error(
+      "useNotification must be used within a NotificationProvider",
+    );
   }
-  return context
+  return context;
 }

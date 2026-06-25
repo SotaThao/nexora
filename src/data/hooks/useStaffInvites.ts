@@ -45,14 +45,18 @@ export function useAcceptStaffInvite() {
 export function useJoinPublicInvite() {
   const queryClient = useQueryClient()
 
-  return useMutation<void, Error, void>({
-    mutationFn: async () => {
+  return useMutation<void, Error, string | undefined>({
+    mutationFn: async (referralCodeOverride) => {
       let profile = queryClient.getQueryData<UserProfile | null>(qk.userProfile())
       if (!profile) {
         profile = await profileSettingsRepository.get()
       }
 
       const payload = buildJoinPublicInvitePayload(profile)
+      const referralCode = referralCodeOverride?.trim()
+      if (referralCode) {
+        payload.referralCode = referralCode
+      }
       if (!payload.referralCode) {
         throw Object.assign(new Error('REFERRAL_CODE_REQUIRED'), {
           errorCode: 'REFERRAL_CODE_REQUIRED',
