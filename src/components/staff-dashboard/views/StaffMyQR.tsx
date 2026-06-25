@@ -4,12 +4,17 @@ import { Share2, Copy, QrCode, X, Loader2, CheckCircle2, XCircle, Store, Clock, 
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import { useStaffBusinessTipQrs } from '../../../data/hooks/useStaffSelf'
+import { useNotifications, useMarkNotificationRead } from '../../../data/hooks/useNotifications'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { useJoinPublicInvite } from '../../../data/hooks/useStaffInvites'
+import StaffLinkRequestCard, { getStaffLinkRequestId } from './StaffLinkRequestCard'
 import { isApiError } from '../../../types/domain'
 import type { StaffBusinessTipQr } from '../../../types/domain'
 import { shareUrl } from '../../../utils/shareUrl'
 import { buildQrImageUrl } from '../../../utils/staffTipUrl'
+import { useQueries } from '@tanstack/react-query'
+import { qk } from '../../../data/queryKeys'
+import staffSelfRepository from '../../../data/repositories/staffSelf'
 import { SkeletonLayout } from '../../ui/skeleton'
 
 type LooseObject = Record<string, any>
@@ -96,7 +101,7 @@ function QrEmptyState({
 
 function getInactiveTipQrCopy(
   biz: StaffBusinessTipQr,
-  t: (key: string) => string,
+  t: (key: string, params?: Record<string, string | number>) => string,
 ): { title: string; description: string; showScanCta: boolean; icon: typeof Store } {
   if (isTouchPointLinkIncomplete(biz)) {
     return {
@@ -142,8 +147,34 @@ export default function StaffMyQR() {
   const { t, currentLanguage } = useTranslation()
   const { staffMember, account } = useStaffAccount()
   const { businessTipQrs, isLoading: isTipQrLoading } = useStaffBusinessTipQrs()
-  const { showToast } = useNotification()
+  const { showToast, showConfirm } = useNotification()
   const joinPublicInviteMutation = useJoinPublicInvite()
+  const { data: notifications = [] } = useNotifications()
+  const markNotificationRead = useMarkNotificationRead()
+  const linkRequests = useMemo(
+    () => notifications.filter((n) => n.type === 'StaffLinkRequest'),
+    [notifications],
+  )
+
+  const linkRequestQueries = useQueries({
+    queries: linkRequests.map((n) => {
+      const linkId = getStaffLinkRequestId(n)
+      return {
+        queryKey: qk.staffLinkRequest(linkId),
+        queryFn: () => staffSelfRepository.getLinkRequest(linkId || ''),
+        enabled: !!linkId,
+      }
+    }),
+  })
+
+  const pendingLinkRequests = useMemo(() => {
+    return linkRequests.filter((n, i) => {
+      const query = linkRequestQueries[i]
+      if (query.isPending) return true
+      if (query.isSuccess && query.data?.status === 'WaitingStaffAcceptance') return true
+      return false
+    })
+  }, [linkRequests, linkRequestQueries])
 
   const [activeTab, setActiveTab] = useState<QrTab>('referral')
   const [showScanner, setShowScanner] = useState(false)
@@ -252,6 +283,18 @@ export default function StaffMyQR() {
     setCustomInviteLink('')
   }
 
+  const handleUnlink = async (biz: StaffBusinessTipQr) => {
+    const confirmed = await showConfirm(
+      t('components.staff_dashboard.views.StaffMyQR.unlinkConfirm', { business: biz.businessName }),
+      t('components.staff_dashboard.views.StaffMyQR.unlinkConfirmTitle'),
+    )
+    if (!confirmed) return
+    // No staff-side unlink endpoint exists yet (only merchant-side DELETE /merchant/staff/{staffLinkId}).
+    // TODO(BE): call the staff unlink / request-unlink endpoint once it is available, then invalidate
+    // qk.staffBusinesses(). For now we surface a clear message instead of guessing the contract.
+    showToast(t('components.staff_dashboard.views.StaffMyQR.unlinkUnavailable'), 'info')
+  }
+
   const handleUrlOrTextSubmit = async () => {
     if (joinPublicInviteMutation.isPending) return
 
@@ -357,8 +400,29 @@ export default function StaffMyQR() {
       </div>
 
       {activeTab === 'referral' && (
-        <section className={`${panel} text-center`}>
-          <h3 className="text-base font-extrabold text-nexoraText">
+        <div className="space-y-4">
+          <section className={panel}>
+            <h3 className="mb-3 text-base font-extrabold text-nexoraText">
+              {t('staff_dashboard.qr.link_requests_title')}
+            </h3>
+            <div className="space-y-2">
+              {pendingLinkRequests.length === 0 ? (
+                <div className="py-8 text-center text-sm text-nexoraMuted bg-slate-50/50 rounded-xl border border-dashed border-nexoraBorder">
+                  {t('staff_dashboard.qr.no_link_requests')}
+                </div>
+              ) : (
+                pendingLinkRequests.map((n) => (
+                  <StaffLinkRequestCard
+                    key={n.id}
+                    notification={n}
+                    onResolved={(id) => markNotificationRead.mutate(id)}
+                  />
+                ))
+              )}
+            </div>
+          </section>
+          <section className={`${panel} text-center`}>
+            <h3 className="text-base font-extrabold text-nexoraText">
             {t('staff_dashboard.qr.personal_title')}
           </h3>
           <p className="mt-1 text-xs text-nexoraMuted">{t('staff_dashboard.qr.personal_sub')}</p>
@@ -399,6 +463,7 @@ export default function StaffMyQR() {
             </div>
           )}
         </section>
+        </div>
       )}
 
       {activeTab === 'tipping' && (
@@ -546,60 +611,69 @@ export default function StaffMyQR() {
                 </section>
               )}
 
-              {businessTipQrs.length > 1 && (
-                <section className={panel}>
-                  <h4 className="mb-3 text-sm font-extrabold text-nexoraText">
+              <section className={panel}>
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <h4 className="text-base font-extrabold text-nexoraText">
                     {t('staff_dashboard.home.linked_businesses')}
                   </h4>
-                  <div className="divide-y divide-nexoraBorder">
-                    {businessTipQrs.map((biz) => (
-                      <div
-                        key={biz.businessId}
-                        className="flex items-center justify-between gap-3 py-3 last:border-0"
-                      >
+                </div>
+
+                <div className="divide-y divide-nexoraBorder">
+                  {pendingLinkRequests.map((n) => (
+                    <StaffLinkRequestCard
+                      key={n.id}
+                      notification={n}
+                      onResolved={(id) => markNotificationRead.mutate(id)}
+                      variant="list-item"
+                    />
+                  ))}
+                  {businessTipQrs.map((biz) => (
+                    <div
+                      key={biz.businessId}
+                      className="flex flex-col gap-3 py-3 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-nexoraBrandSoft text-nexoraBrand">
+                          {biz.logoUrl ? (
+                            <img src={biz.logoUrl} alt={biz.businessName} className="h-full w-full object-cover" />
+                          ) : (
+                            <span className="text-lg font-bold uppercase">{biz.businessName.substring(0, 2)}</span>
+                          )}
+                        </div>
                         <button
                           type="button"
                           onClick={() => setSelectedBusinessId(biz.businessId)}
-                          className="min-w-0 flex-1 text-left"
+                          className="min-w-0 text-left"
                         >
                           <div className="truncate text-sm font-bold text-nexoraText">
-                            {biz.displayName || staffMember.nickname} @ {biz.businessName}
+                            {biz.businessName}
                           </div>
                           <div className="truncate text-xs text-nexoraMuted">
-                            {isBusinessActive(biz)
-                              ? biz.tipUrl.replace(/^https?:\/\//, '')
-                              : getBusinessStatusLabel(biz)}
+                            {t('staff_dashboard.notifications.link_request_role', { role: biz.roleLabel || 'Staff' })}
                           </div>
                         </button>
-                        {isBusinessActive(biz) ? (
+                      </div>
+
+                      <div className="flex shrink-0 items-center gap-2 self-end sm:self-auto">
+                        {renderStatusBadge(biz)}
+                        {isBusinessActive(biz) && (
                           <button
                             type="button"
-                            onClick={() =>
-                              setZoomedQr({
-                                url: biz.tipUrl,
-                                title: biz.businessName,
-                              })
-                            }
-                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-nexoraBorder bg-white shadow-sm"
+                            onClick={() => handleUnlink(biz)}
+                            className="rounded-lg border border-nexoraDanger/20 bg-nexoraDanger/10 px-3 py-1.5 text-xs font-extrabold text-nexoraDanger transition hover:bg-nexoraDanger/15"
                           >
-                            <img
-                              src={buildQrImageUrl(biz.tipUrl, 80, biz.qrImageUrl)}
-                              alt=""
-                              className="h-7 w-7 object-contain"
-                            />
+                            {t('components.staff_dashboard.views.StaffMyQR.unlink')}
                           </button>
-                        ) : (
-                          renderStatusBadge(biz)
                         )}
                       </div>
-                    ))}
-                  </div>
-                </section>
-              )}
+                    </div>
+                  ))}
+                </div>
 
-              <p className="rounded-xl border border-dashed border-nexoraBorder bg-nexoraCanvas p-3 text-xs leading-relaxed text-nexoraMuted">
-                {t('staff_dashboard.qr.note')}
-              </p>
+                <p className="mt-3 rounded-xl border border-dashed border-nexoraBorder bg-nexoraCanvas p-3 text-xs leading-relaxed text-nexoraMuted">
+                  {t('staff_dashboard.qr.note')}
+                </p>
+              </section>
             </>
           )}
         </>
