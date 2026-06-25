@@ -260,12 +260,18 @@ export function useStaffManagement({
    * Link an existing staff profile from search results.
    * Calls POST /api/v1/merchant/staff/link-request/{staffProfileId}.
    */
-  const handleLinkStaff = (searchResult, _role?, { onSuccess } = {}) => {
+  const handleLinkStaff = (searchResult, role?, { onSuccess } = {}) => {
     if (!searchResult?.staffProfileId) return
+
+    const roleAtBusiness =
+      (typeof role === 'string' ? role.trim() : '') ||
+      String(searchResult.position || searchResult.roleAtBusiness || '').trim() ||
+      'Nail Technician'
 
     linkRequestMutation.mutate({
       staffProfileId: searchResult.staffProfileId,
       staffCode: searchResult.staffCode ?? null,
+      roleAtBusiness,
     }, {
       onSuccess: () => {
         showToast(t('components.dashboard.hooks.useStaffManagement.linkRequestSent', { name: searchResult.fullName }), 'success')
