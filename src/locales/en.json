@@ -1228,6 +1228,7 @@
     "image_file_size_exceeded": "The image file size exceeds the 10MB limit.",
     "image_unsupported_file_type": "Unsupported file format. Please upload PNG, JPEG, or WebP.",
     "image_upload_failed": "Failed to upload the image.",
+    "image_invalid_image_file": "Invalid image file. Please upload a valid PNG, JPEG, or WebP image.",
     "business_logo_upload_failed": "Failed to upload the business logo.",
     "referral_code_required": "No referral code found. Please open the salon's invite link or QR again.",
     "referral_code_invalid": "This invite link is not valid. Please ask the salon for a new one.",

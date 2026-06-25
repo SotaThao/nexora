@@ -221,11 +221,11 @@ export default function CountryCodeSelect({
         type="button"
         disabled={disabled}
         onClick={() => !disabled && setIsOpen(!isOpen)}
-        className={`h-10 flex items-center gap-1.5 px-3 border border-nexoraBorder border-r-0 bg-nexoraCanvas rounded-l-lg text-xs font-bold text-nexoraText hover:bg-slate-100 transition-colors focus:outline-none select-none
-          ${disabled ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : 'cursor-pointer'}`}
+        className={`h-10 flex items-center gap-1.5 px-3 border border-nexoraBorder border-r-0 rounded-l-lg text-xs font-bold text-nexoraText transition-colors focus:outline-none select-none
+          ${disabled ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : 'bg-slate-50 hover:bg-slate-100 cursor-pointer'}`}
       >
-        <span className="text-sm">{selectedCountry.flag}</span>
-        <span className="font-bold font-mono">{selectedCountry.dialCode}</span>
+        <span className="text-xs font-bold leading-none">{selectedCountry.code}</span>
+        <span className="font-bold font-mono leading-none">{selectedCountry.dialCode}</span>
         <ChevronDown 
           className={`w-3.5 h-3.5 text-nexoraMuted shrink-0 transition-transform duration-200
             ${isOpen ? 'rotate-180 text-nexoraBrand' : ''}`} 
