@@ -6,11 +6,10 @@ import { makeDefaultStaffAccount } from '../components/staff-dashboard/data/staf
 import { useSaveStaffAccount as useSaveStaffAccountQuery } from '../data/hooks/useStaffAccount'
 import profileSettingsRepository from '../data/repositories/profileSettings'
 import staffSelfRepository from '../data/repositories/staffSelf'
-import { useUpdateUserProfile, useUpdateStaffProfile } from '../data/hooks/useProfileSettings'
+import { useUpdateStaffProfile } from '../data/hooks/useProfileSettings'
 import { useAuth } from '../auth/useAuth'
 import { qk } from '../data/queryKeys'
-import { buildUpdateUserProfileDto } from '../utils/userProfileImage'
-import { mapStaffProfileView } from '../utils/mapStaffProfileView'
+import { buildUpdateStaffProfileDto, mapStaffProfileView } from '../utils/mapStaffProfileView'
 
 const StaffAccountContext = createContext<StaffAccountContextValue | null>(null)
 
@@ -28,7 +27,6 @@ export function StaffAccountProvider({ staffId = null, children }: StaffAccountP
   const queryClient = useQueryClient()
 
   const saveStaffAccountMutation = useSaveStaffAccountQuery()
-  const updateUserProfileMutation = useUpdateUserProfile()
   const updateStaffProfileMutation = useUpdateStaffProfile()
 
   // Subscribe to auth-bootstrapped profile cache (no network unless cache miss).
@@ -121,52 +119,30 @@ export function StaffAccountProvider({ staffId = null, children }: StaffAccountP
         updateAccount(accountPatch)
       }
 
-      if (patch.fullName !== undefined || patch.phone !== undefined) {
-        updateUserProfileMutation.mutate(
-          buildUpdateUserProfileDto(
-            { ...account, ...userProfile, fullName: patch.fullName ?? account.fullName, phone: patch.phone ?? account.phone },
-            patch,
-          ),
-          {
-            onError: (err) => logger.error('[StaffAccountContext] Failed to persist user profile', err),
-          },
-        )
-      }
-      if (patch.defaultDisplayName !== undefined || patch.bio !== undefined) {
-        const displayName = (patch.defaultDisplayName ?? account.defaultDisplayName ?? account.fullName ?? '').trim()
-        if (displayName) {
-          updateStaffProfileMutation.mutate({
-            displayName,
-            bio: patch.bio ?? account.bio ?? '',
-          }, {
-            onError: (err) => logger.error('[StaffAccountContext] Failed to persist staff profile', err),
-          })
-        }
-      }
-      if (avatar !== undefined || photoUrl !== undefined) {
-        const profileImageUrl = String(photoUrl ?? avatar ?? '').trim()
-        updateUserProfileMutation.mutate(
-          buildUpdateUserProfileDto(
-            { ...account, ...userProfile },
-            { ...patch, profileImageUrl },
-          ),
-          {
-            onError: (err) => logger.error('[StaffAccountContext] Failed to persist user avatar', err),
-          },
-        )
-        const displayName = (account.defaultDisplayName ?? account.fullName ?? '').trim()
-        if (displayName && profileImageUrl) {
-          updateStaffProfileMutation.mutate({
-            displayName,
-            bio: account.bio ?? '',
-            photoUrl: profileImageUrl,
-          }, {
-            onError: (err) => logger.error('[StaffAccountContext] Failed to persist staff photo', err),
-          })
-        }
-      }
+      const hasProfileFields =
+        patch.fullName !== undefined
+        || patch.phone !== undefined
+        || patch.defaultDisplayName !== undefined
+        || patch.displayName !== undefined
+        || patch.bio !== undefined
+        || patch.position !== undefined
+        || avatar !== undefined
+        || photoUrl !== undefined
+
+      if (!hasProfileFields) return
+
+      const dto = buildUpdateStaffProfileDto(
+        { account, userProfile, staffProfile },
+        { ...patch, avatar: photoUrl ?? avatar ?? patch.avatar },
+      )
+
+      if (!dto.displayName) return
+
+      updateStaffProfileMutation.mutate(dto, {
+        onError: (err) => logger.error('[StaffAccountContext] Failed to persist staff profile', err),
+      })
     },
-    [updateAccount, account, userProfile, updateUserProfileMutation, updateStaffProfileMutation]
+    [updateAccount, account, userProfile, staffProfile, updateStaffProfileMutation]
   )
 
   const setBusinessDisplayName = useCallback(

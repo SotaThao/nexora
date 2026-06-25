@@ -22,6 +22,7 @@ import { savePendingRegistration, clearPendingRegistration } from '../../../auth
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { useCompletePersonalOnboarding } from '../../../data/hooks/usePersonalOnboarding'
 import { useCreateStaffProfile } from '../../../data/hooks/useProfileSettings'
+import { buildUpdateStaffProfileDto } from '../../../utils/mapStaffProfileView'
 
 export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onKybSuccess = () => {}, isRedirectedFromSession, initialStep = 0, initialRole = 'personal', resumeOtpVerification = false, autoSendVerificationOnResume = false, resumeEmail = '', resumePassword = '', resumeRole = null }) {
   const { t, currentLanguage, setLanguage, renderLabel } = useTranslation()
@@ -468,12 +469,15 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     const isApiMode = import.meta.env.VITE_DATA_SOURCE === 'api'
     if (isApiMode) {
       try {
-        await createStaffProfileMutation.mutateAsync({
-          displayName: nickname.trim() || email.split('@')[0],
-          position: position,
-          bio: bio,
-          photoUrl: avatar
+        const dto = buildUpdateStaffProfileDto({}, {
+          fullName: fullName.trim(),
+          defaultDisplayName: nickname.trim() || email.split('@')[0],
+          position,
+          bio,
+          avatar,
+          phone,
         })
+        await createStaffProfileMutation.mutateAsync(dto)
       } catch (err: unknown) {
         logger.error('Failed to create staff profile during onboarding', err)
       }

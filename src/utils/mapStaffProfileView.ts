@@ -1,4 +1,5 @@
 import type { StaffProfile, UserProfile } from '../types/domain'
+import type { UpdateStaffProfileDto } from '../types/repositories'
 import { getUserProfileImageUrl } from './userProfileImage'
 
 /** Unified staff profile view — merges GET /userprofile/me + GET /staff/profile. */
@@ -30,6 +31,75 @@ function resolveStaffPhotoUrl(staffProfile: StaffProfile | null | undefined): st
   return typeof photoUrl === 'string' && photoUrl.trim() ? photoUrl.trim() : null
 }
 
+function resolveStaffIdentityNames(staffProfile: StaffProfile | null | undefined): {
+  firstName: string
+  lastName: string
+  fullName: string
+} {
+  const firstName = String(staffProfile?.firstName || '').trim()
+  const lastName = String(staffProfile?.lastName || '').trim()
+  const fullName = `${firstName} ${lastName}`.trim()
+  return { firstName, lastName, fullName }
+}
+
+export function buildUpdateStaffProfileDto(
+  sources: {
+    account?: LooseObject
+    userProfile?: UserProfile | null
+    staffProfile?: StaffProfile | null
+  },
+  patch: LooseObject = {},
+): UpdateStaffProfileDto {
+  const account = sources.account ?? {}
+  const userProfile = sources.userProfile ?? null
+  const staffProfile = sources.staffProfile ?? null
+  const staffIdentity = resolveStaffIdentityNames(staffProfile)
+
+  const fullName = String(
+    patch.fullName
+      ?? account.fullName
+      ?? staffIdentity.fullName
+      ?? resolveUserFullName(userProfile)
+      ?? '',
+  ).trim()
+  const firstName = String(
+    patch.firstName ?? (fullName ? fullName.split(' ')[0] : staffIdentity.firstName || userProfile?.firstName) ?? '',
+  ).trim()
+  const lastName = String(
+    patch.lastName
+      ?? (fullName ? fullName.split(' ').slice(1).join(' ') : staffIdentity.lastName || userProfile?.lastName)
+      ?? '',
+  ).trim()
+  const displayName = String(
+    patch.defaultDisplayName
+      ?? patch.displayName
+      ?? account.defaultDisplayName
+      ?? staffProfile?.displayName
+      ?? fullName
+      ?? '',
+  ).trim()
+  const photoUrl = String(
+    patch.photoUrl
+      ?? patch.avatar
+      ?? account.avatar
+      ?? resolveStaffPhotoUrl(staffProfile)
+      ?? getUserProfileImageUrl(userProfile)
+      ?? '',
+  ).trim()
+
+  return {
+    displayName,
+    position: String(patch.position ?? account.position ?? staffProfile?.position ?? '').trim() || undefined,
+    bio: String(patch.bio ?? account.bio ?? staffProfile?.bio ?? '').trim(),
+    photoUrl: photoUrl || undefined,
+    firstName,
+    lastName,
+    phone: String(
+      patch.phone ?? account.phone ?? staffProfile?.phone ?? userProfile?.phoneNumber ?? '',
+    ).trim(),
+  }
+}
+
 /**
  * Map user identity (userprofile/me) and staff professional profile (staff/profile)
  * into one shape for the staff settings profile screen.
@@ -38,7 +108,8 @@ export function mapStaffProfileView(
   userProfile: UserProfile | null | undefined,
   staffProfile: StaffProfile | null | undefined,
 ): StaffProfileView {
-  const fullName = resolveUserFullName(userProfile)
+  const staffIdentity = resolveStaffIdentityNames(staffProfile)
+  const fullName = staffIdentity.fullName || resolveUserFullName(userProfile)
   const userAvatar = getUserProfileImageUrl(userProfile)
   const staffPhoto = resolveStaffPhotoUrl(staffProfile)
 
@@ -47,9 +118,9 @@ export function mapStaffProfileView(
     staffCode: staffProfile?.staffCode ? String(staffProfile.staffCode) : null,
     email: String(userProfile?.email || '').trim(),
     fullName,
-    firstName: String(userProfile?.firstName || '').trim(),
-    lastName: String(userProfile?.lastName || '').trim(),
-    phone: String(userProfile?.phoneNumber || '').trim(),
+    firstName: staffIdentity.firstName || String(userProfile?.firstName || '').trim(),
+    lastName: staffIdentity.lastName || String(userProfile?.lastName || '').trim(),
+    phone: String(staffProfile?.phone ?? userProfile?.phoneNumber ?? '').trim(),
     displayName: String(staffProfile?.displayName || fullName || userProfile?.firstName || '').trim(),
     bio: String(staffProfile?.bio || '').trim(),
     position: staffProfile?.position ? String(staffProfile.position).trim() : null,
