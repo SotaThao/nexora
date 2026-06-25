@@ -485,7 +485,7 @@ export default function StaffMyQR() {
                             subtitle: selectedBusiness.touchPointSlug,
                           })
                         }
-                        className="mx-auto my-4 flex h-44 w-44 items-center justify-center overflow-hidden rounded-xl border border-nexoraBorder/60 bg-white p-3.5 shadow-sm transition hover:scale-[1.02]"
+                        className="group relative mx-auto my-4 flex h-44 w-44 items-center justify-center overflow-hidden rounded-xl border border-nexoraBorder/60 bg-white p-3.5 shadow-sm transition hover:scale-[1.02]"
                         title={t('components.staff_dashboard.views.StaffMyQR.clickToEnlargeTipping')}
                       >
                         <img
@@ -497,11 +497,26 @@ export default function StaffMyQR() {
                           alt="Tipping QR"
                           className="h-full w-full object-contain"
                         />
+                        <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-nexoraBrand/75 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                          <span className="rounded-lg bg-white/20 px-3 py-1 text-[11px] font-black uppercase tracking-widest text-white backdrop-blur-sm">
+                            PREVIEW
+                          </span>
+                        </div>
                       </button>
 
-                      <p className="break-all rounded-xl border border-nexoraBorder bg-nexoraCanvas px-3 py-2 text-left font-mono text-[10px] text-nexoraMuted">
-                        {selectedBusiness.tipUrl.replace(/^https?:\/\//, '')}
-                      </p>
+                      <div className="flex items-center gap-2 rounded-xl border border-nexoraBorder bg-nexoraCanvas p-1.5">
+                        <span className="min-w-0 flex-1 truncate pl-1.5 font-mono text-[10px] text-nexoraMuted">
+                          {selectedBusiness.tipUrl.replace(/^https?:\/\//, '')}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyTipUrl(selectedBusiness.tipUrl)}
+                          className="flex h-7 shrink-0 items-center gap-1 rounded-lg bg-slate-800 px-3 text-[10px] font-bold text-white transition hover:bg-slate-700"
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                          <span>{t('components.staff_dashboard.views.StaffMyQR.copy')}</span>
+                        </button>
+                      </div>
 
                       <div className="mt-3 space-y-2">
                         <button
@@ -737,16 +752,6 @@ export default function StaffMyQR() {
               </div>
             </div>
 
-            <div className="border-t border-slate-100 pt-2">
-              <a
-                href={zoomedQr.url}
-                target="_blank"
-                rel="opener"
-                className="inline-flex w-full items-center justify-center gap-1 rounded-xl bg-nexoraBrandSoft py-2 text-[11px] font-black tracking-wide text-nexoraBrand transition hover:underline"
-              >
-                <span>{t('components.staff_dashboard.views.StaffMyQR.openTippingPageSimulate')}</span>
-              </a>
-            </div>
           </div>
         </div>
       )}
