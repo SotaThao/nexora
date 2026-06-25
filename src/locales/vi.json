@@ -1762,6 +1762,7 @@
           "businessName": "Tên doanh nghiệp",
           "phone": "Số điện thoại",
           "locationMap": "Bản đồ vị trí",
+          "locationMapEmpty": "Thêm địa chỉ để hiển thị vị trí cửa hàng trên bản đồ.",
           "reviewLinks": "Liên kết đánh giá",
           "emailPhone": "email/SĐT",
           "details": "chi tiết",

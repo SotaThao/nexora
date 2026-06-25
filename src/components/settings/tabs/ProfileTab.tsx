@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { buildAffiliateReferralUrl, getProfileReferralCode } from '../../../utils/affiliateReferral'
+import { buildGoogleMapsEmbedUrl, formatAddressForMap } from '../../../utils/mapUrl'
 import {
   useMerchantPaymentMethods,
   useUpdateMerchantPaymentMethod,
@@ -146,6 +147,24 @@ export default function ProfileTab({
     const maskedRef = `${referralCode.slice(0, 3)}...${referralCode.slice(-3)}`
     return compactUrl.replace(referralCode, maskedRef)
   }, [referralCode, referralUrl, t])
+
+  const locationMapSource = isEditingAddress ? addressForm : profile
+  const locationMapQuery = useMemo(
+    () =>
+      formatAddressForMap({
+        street: locationMapSource.street,
+        city: locationMapSource.city,
+        state: locationMapSource.state,
+        zipCode: locationMapSource.zipCode,
+        country: locationMapSource.country,
+      }),
+    [locationMapSource],
+  )
+  const locationMapEmbedUrl = useMemo(
+    () => buildGoogleMapsEmbedUrl(locationMapQuery),
+    [locationMapQuery],
+  )
+
   const inputClass = (error?: string) =>
     `mt-1 h-10 w-full rounded-lg border bg-nexoraCanvas focus:bg-white px-3.5 text-xs text-nexoraText outline-none transition-all ${
       error
@@ -891,13 +910,23 @@ export default function ProfileTab({
                 </h4>
               </div>
               <div className="h-[220px] w-full rounded-lg border border-slate-200 overflow-hidden bg-slate-100">
-                <iframe
-                  title="Business Location Map"
-                  src="https://maps.google.com/maps?q=Palm%20Beach,%20QLD,%20Australia&t=&z=14&ie=UTF8&iwloc=&output=embed"
-                  className="w-full h-full border-0 grayscale-[10%]"
-                  allowFullScreen
-                  loading="lazy"
-                ></iframe>
+                {locationMapEmbedUrl ? (
+                  <iframe
+                    key={locationMapQuery}
+                    title="Business Location Map"
+                    src={locationMapEmbedUrl}
+                    className="w-full h-full border-0 grayscale-[10%]"
+                    allowFullScreen
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-4 text-center">
+                    <MapPin className="h-8 w-8 text-slate-300" />
+                    <p className="text-[11px] font-semibold text-slate-500">
+                      {t('components.settings.tabs.ProfileTab.locationMapEmpty')}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
