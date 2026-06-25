@@ -8,12 +8,13 @@ export const isValidEmail = (input: unknown) =>
 export const isValidPhone = (input: unknown) => {
   const phone = value(input);
   if (!phone) return false;
-  if (phone.replace(/\D/g, "").length >= 10) return true;
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length < 7 || digits.length > 15) return false;
 
   try {
     return isValidPhoneNumber(phone);
   } catch {
-    return false;
+    return digits.length >= 10 && digits.length <= 15;
   }
 };
 

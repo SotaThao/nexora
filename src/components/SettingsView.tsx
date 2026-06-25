@@ -66,14 +66,6 @@ export default function SettingsView({
 
   return (
     <div className="w-full space-y-6 animate-fadeIn pb-24 select-none">
-      {/* Toast Notification */}
-      {form.toastMessage && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs font-semibold shadow-2xl flex items-center gap-2 animate-bounce">
-          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          {form.toastMessage}
-        </div>
-      )}
-
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-nexoraRule pb-4">
         <div>
