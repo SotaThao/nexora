@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { buildAffiliateReferralUrl, getProfileReferralCode } from '../../../utils/affiliateReferral'
 import {
@@ -184,7 +185,9 @@ export default function ProfileTab({
   const getMethodUiKey = (method: PaymentMethodDto) =>
     method.uiKey || payoutTypeToUiKey(method.type || '')
 
-  const displayedPaymentMethods = apiPaymentMethods
+  const displayedPaymentMethods = apiPaymentMethods.filter(
+    (m) => getMethodUiKey(m) !== 'bankwire'
+  )
 
   const getMethod = (key: string) =>
     apiPaymentMethods.find((m) => getMethodUiKey(m) === key) || {
@@ -1040,8 +1043,8 @@ export default function ProfileTab({
           vlinkpay: t('components.dashboard.modals.PayoutSetupModal.placeholderVlinkpay'),
         }
 
-        return (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        return createPortal(
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
             <div className={`bg-white rounded-3xl border border-slate-100 max-w-sm w-full shadow-2xl relative overflow-hidden animate-scaleIn text-left ${isCameraOpen ? 'h-[480px]' : 'p-6 space-y-4.5'}`}>
 
               {/* Header */}
@@ -1181,7 +1184,7 @@ export default function ProfileTab({
               )}
             </div>
           </div>
-        );
+        , document.body);
       })()}
     </>
   )

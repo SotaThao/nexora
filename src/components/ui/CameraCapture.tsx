@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react'
 import { Camera, X, RotateCcw, Check } from 'lucide-react'
+import { useTranslation } from '../../contexts/LanguageContext'
 
 interface CameraCaptureProps {
   onCapture: (dataUrl: string) => void
@@ -7,6 +8,7 @@ interface CameraCaptureProps {
 }
 
 export default function CameraCapture({ onCapture, onCancel }: CameraCaptureProps) {
+  const { t } = useTranslation()
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -82,7 +84,7 @@ export default function CameraCapture({ onCapture, onCancel }: CameraCaptureProp
             onClick={cancel}
             className="mt-2 rounded-xl bg-white/10 px-6 py-2.5 text-sm font-bold text-white hover:bg-white/20 transition"
           >
-            Đóng
+            {t('setup.close')}
           </button>
         </div>
       ) : (
