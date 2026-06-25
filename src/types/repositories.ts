@@ -501,6 +501,9 @@ export interface UpdateStaffProfileDto {
   position?: string
   bio?: string
   photoUrl?: string
+  firstName?: string
+  lastName?: string
+  phone?: string
 }
 
 export interface AcceptStaffInviteDto {
