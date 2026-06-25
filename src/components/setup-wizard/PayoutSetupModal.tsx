@@ -9,6 +9,18 @@ import {
   getBankWireBeneficiaryName,
   isBankWireAccountComplete,
 } from '../payout/bankWireAccount'
+import { isValidEmail, isValidPhone } from '../../utils/validation'
+
+const validatePayoutAccount = (method, input) => {
+  const account = String(input || '').trim()
+  if (!account) return 'required'
+  if (method === 'zelle') return isValidEmail(account) || isValidPhone(account) ? '' : 'emailOrPhone'
+  if (method === 'paypal') return isValidEmail(account) ? '' : 'email'
+  if (method === 'venmo') return /^@[A-Za-z0-9_]{2,30}$/.test(account) ? '' : 'venmo'
+  if (method === 'cashapp') return /^\$[A-Za-z][A-Za-z0-9_]{1,19}$/.test(account) ? '' : 'cashapp'
+  if (method === 'applecash') return isValidPhone(account) ? '' : 'phone'
+  return account.length >= 3 ? '' : 'invalid'
+}
 
 export default function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrCode, onClose, onSubmit }) {
   const { t } = useTranslation()
@@ -73,8 +85,9 @@ export default function PayoutSetupModal({ open, walletKey, staffName, initialVa
       onSubmit(value, '', getBankWireBeneficiaryName(value) || accountName)
       return
     }
-    if (!value.trim()) {
-      setError(t('setup.errors.field_required'))
+    const validationKey = validatePayoutAccount(walletKey, value)
+    if (validationKey) {
+      setError(t(`components.settings.tabs.ProfileTab.validation.${validationKey}`))
       return
     }
     onSubmit(value, qrCode, accountName)

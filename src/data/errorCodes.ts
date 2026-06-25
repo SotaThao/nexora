@@ -28,6 +28,7 @@ export const errorCodeToI18nKey = {
   IMAGE_FILE_SIZE_EXCEEDED: 'errors.image_file_size_exceeded',
   IMAGE_UNSUPPORTED_FILE_TYPE: 'errors.image_unsupported_file_type',
   IMAGE_UPLOAD_FAILED: 'errors.image_upload_failed',
+  IMAGE_INVALID_IMAGE_FILE: 'errors.image_invalid_image_file',
   BUSINESS_LOGO_UPLOAD_FAILED: 'errors.business_logo_upload_failed',
 
   // Staff invite & public referral (US-014). Exact server codes pending BE

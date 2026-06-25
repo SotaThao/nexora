@@ -416,6 +416,9 @@ export interface StaffProfile {
   bio?: string
   photo?: string
   photoUrl?: string
+  firstName?: string
+  lastName?: string
+  phone?: string
   isProfileComplete?: boolean
   [key: string]: unknown
 }

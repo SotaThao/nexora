@@ -13,6 +13,9 @@ import type {
 } from '../../types/auth'
 import type { StaffProfile, UserProfile } from '../../types/domain'
 import { isApiError } from '../../types/domain'
+import { mapUserVerifyStatusToKybStatus } from '../../utils/kybStatus'
+
+export { mapUserVerifyStatusToKybStatus } from '../../utils/kybStatus'
 
 // /api/v1/userprofile/me returns `userType`; /api/v1/userprofile/verified-status returns `profileType`.
 // Both fields are checked so either endpoint's response shape is accepted.
@@ -95,6 +98,11 @@ function extractKybStatus(source: KybSource): string | null {
   for (const key of explicitKybKeys) {
     const status = normalizeKybStatus(record[key] as KybSource, { isExplicitKybField: true })
     if (status) return status
+  }
+
+  if (isMerchant) {
+    const verifyStatus = mapUserVerifyStatusToKybStatus(record.status)
+    if (verifyStatus) return verifyStatus
   }
 
   return (
