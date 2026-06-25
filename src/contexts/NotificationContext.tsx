@@ -56,7 +56,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       {children}
       
       {/* Sleek Premium Toast Overlay */}
-      <div className="fixed top-5 right-5 z-[99999] flex flex-col gap-3 max-w-sm w-full pointer-events-none">
+      <div className="fixed z-[99999] flex w-[calc(100%-1rem)] max-w-sm -translate-x-1/2 flex-col gap-3 pointer-events-none left-1/2 bottom-[max(0.75rem,env(safe-area-inset-bottom))] sm:left-auto sm:right-5 sm:top-5 sm:bottom-auto sm:w-full sm:translate-x-0">
         {toasts.map((toast) => {
           const Icon = {
             success: CheckCircle2,

@@ -8,6 +8,7 @@ import {
   ShieldAlert,
   ShieldX,
   Clock,
+  Loader2,
 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
@@ -25,6 +26,14 @@ const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shado
 const labelCls = 'mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-nexoraSubtle'
 const inputCls = 'w-full rounded-xl border border-nexoraBorder bg-nexoraSurface px-3 py-2.5 text-sm text-nexoraText outline-none focus:border-nexoraBrand transition-all'
 const readOnlyCls = 'w-full rounded-xl border border-nexoraBorder bg-nexoraCanvas px-3 py-2.5 text-sm font-medium text-nexoraMuted select-text'
+const STAFF_PHONE_PATTERN = /^\d{4}-\d{3}-\d{3}$/
+
+function formatStaffPhone(value: string) {
+  const digits = value.replace(/\D/g, '').slice(0, 10)
+  if (digits.length <= 4) return digits
+  if (digits.length <= 7) return `${digits.slice(0, 4)}-${digits.slice(4)}`
+  return `${digits.slice(0, 4)}-${digits.slice(4, 7)}-${digits.slice(7)}`
+}
 
 export default function StaffProfile() {
   const { currentLanguage, t } = useTranslation()
@@ -47,9 +56,13 @@ export default function StaffProfile() {
   const [phone, setPhone] = useState('')
   const [saved, setSaved] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
+  const [isSavingProfile, setIsSavingProfile] = useState(false)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const avatarObjectUrlRef = useRef<string | null>(null)
   const uploadImageMutation = useUploadImage()
+  const phoneError = phone.trim() && !STAFF_PHONE_PATTERN.test(phone.trim())
+    ? t('setup.errors.staff_phone_invalid')
+    : ''
 
   const displayAvatar = avatarPreview || profileView.avatar
 
@@ -60,7 +73,7 @@ export default function StaffProfile() {
     setDisplayName(profileView.displayName || '')
     setBio(profileView.bio || '')
     setFullName(profileView.fullName || '')
-    setPhone(profileView.phone || '')
+    setPhone(formatStaffPhone(profileView.phone || ''))
     setSaved(false)
   }, [
     profileView.displayName,
@@ -88,15 +101,26 @@ export default function StaffProfile() {
     setTimeout(() => setToastMessage(''), 3000)
   }
 
-  const handleSave = () => {
-    saveProfile({
-      defaultDisplayName: displayName,
-      bio,
-      fullName,
-      phone
-    })
-    setSaved(true)
-    showToast(t('components.staff_dashboard.views.StaffProfile.accountChangesSavedSuccessfully'))
+  const handleSave = async () => {
+    const normalizedPhone = phone.trim()
+    if (phoneError) {
+      return
+    }
+    setIsSavingProfile(true)
+    try {
+      await saveProfile({
+        defaultDisplayName: displayName,
+        bio,
+        fullName,
+        phone: normalizedPhone
+      })
+      setSaved(true)
+      showToast(t('components.staff_dashboard.views.StaffProfile.accountChangesSavedSuccessfully'))
+    } catch {
+      showToast(t('errors.unknown_error'))
+    } finally {
+      setIsSavingProfile(false)
+    }
   }
 
   const handleAvatarChange = async (e) => {
@@ -291,11 +315,14 @@ export default function StaffProfile() {
                   <label className={labelCls}>{t('staff_dashboard.profile.phone')}</label>
                   <input
                     type="text"
-                    className={inputCls}
+                    className={`${inputCls} ${phoneError ? 'border-rose-500 focus:border-rose-500' : ''}`}
                     value={phone}
-                    placeholder={t('staff_dashboard.profile.ph_phone')}
-                    onChange={(e) => { setPhone(e.target.value); setSaved(false) }}
+                    placeholder="0385-478-857"
+                    onChange={(e) => { setPhone(formatStaffPhone(e.target.value)); setSaved(false) }}
                   />
+                  {phoneError ? (
+                    <p className="mt-1 text-[10px] font-bold text-rose-500">{phoneError}</p>
+                  ) : null}
                 </div>
                 <div>
                   <label className={labelCls}>{t('staff_dashboard.profile.email')}</label>
@@ -303,9 +330,13 @@ export default function StaffProfile() {
                 </div>
               </div>
               <div>
-                <label className={`${labelCls} flex items-center gap-1.5`}>
-                  {t('staff_dashboard.profile.bio')}
-                  <Tooltip content={t('staff_dashboard.profile.bio_tooltip')} />
+                <label className={`${labelCls} mb-2 inline-flex items-center gap-1.5`}>
+                  <span>{t('staff_dashboard.profile.bio')}</span>
+                  <Tooltip
+                    content={t('staff_dashboard.profile.bio_tooltip')}
+                    align="start"
+                    className="shrink-0"
+                  />
                 </label>
                 <textarea
                   className={`${inputCls} h-24 resize-none`}
@@ -321,9 +352,17 @@ export default function StaffProfile() {
             <button
               type="button"
               onClick={handleSave}
-              className="mt-4 w-full rounded-xl bg-gradient-to-r from-nexoraElectric to-nexoraViolet py-3 text-sm font-extrabold text-white transition hover:opacity-90 cursor-pointer"
+              disabled={Boolean(phoneError) || isSavingProfile}
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-nexoraElectric to-nexoraViolet py-3 text-sm font-extrabold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {saved ? t('staff_dashboard.profile.saved') : t('staff_dashboard.profile.save')}
+              {isSavingProfile ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>{t('common.loading')}</span>
+                </>
+              ) : (
+                <span>{saved ? t('staff_dashboard.profile.saved') : t('staff_dashboard.profile.save')}</span>
+              )}
             </button>
           </section>
 
