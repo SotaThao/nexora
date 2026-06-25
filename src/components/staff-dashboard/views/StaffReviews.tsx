@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Star, Lock, HelpCircle, MessageSquare } from 'lucide-react'
+import { Star, MessageSquare } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffReviews } from '../../../data/hooks/useStaffSelf'
 import type { StaffReviewItem } from '../../../types/domain'
@@ -189,22 +189,6 @@ export default function StaffReviews() {
         />
       </section>
 
-      <section className={`${panel} bg-nexoraBrandSoft/20 border-nexoraBrand/20`}>
-        <div className="flex items-start gap-3">
-          <div className="p-2 bg-white rounded-lg shadow-sm">
-            <Lock className="h-4 w-4 text-nexoraBrand" />
-          </div>
-          <div>
-            <h4 className="text-sm font-bold text-nexoraText flex items-center gap-1.5">
-              {t('components.staff_dashboard.views.StaffReviews.identitySecured')}
-              <HelpCircle className="h-3.5 w-3.5 text-nexoraSubtle" />
-            </h4>
-            <p className="text-xs text-nexoraMuted mt-1 leading-relaxed">
-              {t('components.staff_dashboard.views.StaffReviews.internal')}
-            </p>
-          </div>
-        </div>
-      </section>
     </div>
   )
 }

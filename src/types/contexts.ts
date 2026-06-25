@@ -51,7 +51,7 @@ export interface StaffAccountContextValue {
   confirmTip?: (tipId: string) => void
   confirmAllPending?: (tipIds?: string[]) => void
   setPayoutMethod?: (key: string, patch: LooseObject) => void
-  saveProfile?: (patch: DomainRecord) => void
+  saveProfile?: (patch: DomainRecord) => void | Promise<void>
   setBusinessDisplayName?: (linkId: string, name: string) => void
   setPushPreference?: (key: string, value: boolean) => void
   markNotificationRead?: (notiId: string) => void

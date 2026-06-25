@@ -219,12 +219,20 @@ export default function ProfileTab({
       accountName: null,
     }
 
-  const handleToggleMethod = (key) => {
+  const handleToggleMethod = (key: string, isCurrentlyActive: boolean) => {
     const methodData = getMethod(key)
+    const nextActive = !isCurrentlyActive
+
+    if (nextActive && !(methodData.isConfigured && methodData.accountInfo?.trim())) {
+      handleEditPayoutAccount(key)
+      return
+    }
+
     if (!methodData.id) {
       showToast(t('components.settings.tabs.ProfileTab.methodNotConfigured'), 'error')
       return
     }
+
     toggleMutation.mutate(methodData.id)
   }
 
@@ -260,7 +268,7 @@ export default function ProfileTab({
         onSuccess: () => {
           setEditingMethod(null)
           if (!methodData.isActive) {
-            toggleMutation.mutate(methodData.id)
+            toggleMutation.mutate({ id: methodData.id, silentSuccessToast: true })
           }
         }
       }
@@ -397,7 +405,7 @@ export default function ProfileTab({
                     {/* Toggle Switch */}
                     <button
                       type="button"
-                      onClick={() => handleToggleMethod(uiKey)}
+                      onClick={() => handleToggleMethod(uiKey, method.isActive)}
                       aria-label={`Toggle ${label}`}
                       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                         method.isActive ? 'bg-amber-600' : 'bg-slate-200'

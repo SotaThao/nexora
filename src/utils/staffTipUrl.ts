@@ -8,6 +8,7 @@
  * sessionId is generated in the browser when the customer opens the page — never embed it in QR links.
  * touchPointSlug is the business touch point (e.g. master-store / FrontDesk), not staff-{code}.
  */
+import { buildPublicQrImageUrl } from '../data/repositories/publicQr'
 
 /** Fallback when BE has not yet returned a touch-point slug on /staff/businesses. */
 export const DEFAULT_MASTER_TOUCH_POINT_SLUG = 'master-store'
@@ -200,5 +201,6 @@ export function buildQrImageUrl(
   qrImageUrl?: string | null,
 ): string {
   if (qrImageUrl) return qrImageUrl
-  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(tipUrl)}`
+  if (!tipUrl) return ''
+  return buildPublicQrImageUrl(tipUrl, size)
 }

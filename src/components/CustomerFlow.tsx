@@ -135,7 +135,9 @@ export default function CustomerFlow() {
                   t={t}
                   selectedStaffMembers={selectedStaffMembers}
                   selectedTips={selectedTips}
+                  setSelectedTips={setSelectedTips}
                   customTips={customTips}
+                  setCustomTips={setCustomTips}
                   activeTipAmount={activeTipAmount}
                   initialStaffMember={initialStaffMember}
                   setStep={setStep}

@@ -13,6 +13,7 @@ import Step3Download from './setup-wizard/steps/Step3Download'
 import PayoutSetupModal from './setup-wizard/PayoutSetupModal'
 import PersonalSetupWizard from './setup-wizard/PersonalSetupWizard'
 import usePersonalSetupWizard from './setup-wizard/hooks/usePersonalSetupWizard'
+import { buildPublicQrImageUrl } from '../data/repositories/publicQr'
 import LanguageSwitcher from './ui/LanguageSwitcher'
 
 export { renderTextWithGoldStars, getTouchpointIcon } from './setup-wizard/constants'
@@ -344,9 +345,10 @@ export default function SetupWizard() {
 
                 <div className="h-28 w-28 rounded-lg bg-white border border-nexoraBorder/60 p-2 flex items-center justify-center shadow-inner qr-print-qr-wrapper">
                   <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-                      `${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}&tech=tp/${previewingTp.id}`
-                    )}`}
+                    src={buildPublicQrImageUrl(
+                      `${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}&tech=tp/${previewingTp.id}`,
+                      150,
+                    )}
                     alt="QR Preview"
                     className="h-full w-full object-contain qr-print-qr-image"
                   />
@@ -400,9 +402,10 @@ export default function SetupWizard() {
 
             <div className="qr-print-qr-wrapper">
               <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-                  `${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}`
-                )}`}
+                src={buildPublicQrImageUrl(
+                  `${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}`,
+                  150,
+                )}
                 alt="Scan QR code to tip and review"
                 className="qr-print-qr-image"
               />
