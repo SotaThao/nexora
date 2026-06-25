@@ -6,12 +6,17 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import { useStaffBusinessTipQrs } from '../../../data/hooks/useStaffSelf'
+import { useNotifications, useMarkNotificationRead } from '../../../data/hooks/useNotifications'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { useJoinPublicInvite } from '../../../data/hooks/useStaffInvites'
+import StaffLinkRequestCard, { getStaffLinkRequestId } from './StaffLinkRequestCard'
 import { isApiError } from '../../../types/domain'
 import type { StaffBusinessTipQr } from '../../../types/domain'
 import { shareUrl } from '../../../utils/shareUrl'
 import { buildQrImageUrl } from '../../../utils/staffTipUrl'
+import { useQueries } from '@tanstack/react-query'
+import { qk } from '../../../data/queryKeys'
+import staffSelfRepository from '../../../data/repositories/staffSelf'
 import { SkeletonLayout } from '../../ui/skeleton'
 
 type LooseObject = Record<string, any>
@@ -183,6 +188,32 @@ export default function StaffMyQR() {
   const { businessTipQrs, isLoading: isTipQrLoading } = useStaffBusinessTipQrs()
   const { showToast, showConfirm } = useNotification()
   const joinPublicInviteMutation = useJoinPublicInvite()
+  const { data: notifications = [] } = useNotifications()
+  const markNotificationRead = useMarkNotificationRead()
+  const linkRequests = useMemo(
+    () => notifications.filter((n) => n.type === 'StaffLinkRequest'),
+    [notifications],
+  )
+
+  const linkRequestQueries = useQueries({
+    queries: linkRequests.map((n) => {
+      const linkId = getStaffLinkRequestId(n)
+      return {
+        queryKey: qk.staffLinkRequest(linkId),
+        queryFn: () => staffSelfRepository.getLinkRequest(linkId || ''),
+        enabled: !!linkId,
+      }
+    }),
+  })
+
+  const pendingLinkRequests = useMemo(() => {
+    return linkRequests.filter((n, i) => {
+      const query = linkRequestQueries[i]
+      if (query.isPending) return true
+      if (query.isSuccess && query.data?.status === 'WaitingStaffAcceptance') return true
+      return false
+    })
+  }, [linkRequests, linkRequestQueries])
 
   const [activeTab, setActiveTab] = useState<QrTab>('referral')
   const [showScanner, setShowScanner] = useState(false)
@@ -307,6 +338,9 @@ export default function StaffMyQR() {
     // qk.staffBusinesses(). For now we surface a clear message instead of guessing the contract.
     showToast(t('components.staff_dashboard.views.StaffMyQR.unlinkUnavailable'), 'info')
   }
+
+  const handleUrlOrTextSubmit = async () => {
+    if (joinPublicInviteMutation.isPending) return
 
   useEffect(() => {
     if (!showScanner) {
@@ -557,6 +591,26 @@ export default function StaffMyQR() {
 
       {activeTab === 'referral' && (
         <div className="space-y-4">
+          <section className={panel}>
+            <h3 className="mb-3 text-base font-extrabold text-nexoraText">
+              {t('staff_dashboard.qr.link_requests_title')}
+            </h3>
+            <div className="space-y-2">
+              {pendingLinkRequests.length === 0 ? (
+                <div className="py-8 text-center text-sm text-nexoraMuted bg-slate-50/50 rounded-xl border border-dashed border-nexoraBorder">
+                  {t('staff_dashboard.qr.no_link_requests')}
+                </div>
+              ) : (
+                pendingLinkRequests.map((n) => (
+                  <StaffLinkRequestCard
+                    key={n.id}
+                    notification={n}
+                    onResolved={(id) => markNotificationRead.mutate(id)}
+                  />
+                ))
+              )}
+            </div>
+          </section>
           <section className={`${panel} text-center`}>
             <h3 className="text-base font-extrabold text-nexoraText">
             {t('staff_dashboard.qr.personal_title')}
@@ -773,10 +827,18 @@ export default function StaffMyQR() {
                 </div>
 
                 <div className="divide-y divide-nexoraBorder">
+                  {pendingLinkRequests.map((n) => (
+                    <StaffLinkRequestCard
+                      key={n.id}
+                      notification={n}
+                      onResolved={(id) => markNotificationRead.mutate(id)}
+                      variant="list-item"
+                    />
+                  ))}
                   {businessTipQrs.map((biz) => (
                     <div
                       key={biz.businessId}
-                      className="flex items-center justify-between gap-3 py-3 last:pb-0"
+                      className="flex flex-col gap-3 py-3 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div className="flex min-w-0 items-center gap-3">
                         <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-nexoraBrandSoft text-nexoraBrand">
@@ -800,7 +862,7 @@ export default function StaffMyQR() {
                         </button>
                       </div>
 
-                      <div className="flex shrink-0 items-center gap-2">
+                      <div className="flex shrink-0 items-center gap-2 self-end sm:self-auto">
                         {renderStatusBadge(biz)}
                         {isBusinessActive(biz) && (
                           <button
@@ -816,7 +878,9 @@ export default function StaffMyQR() {
                   ))}
                 </div>
 
-
+                <p className="mt-3 rounded-xl border border-dashed border-nexoraBorder bg-nexoraCanvas p-3 text-xs leading-relaxed text-nexoraMuted">
+                  {t('staff_dashboard.qr.note')}
+                </p>
               </section>
             </>
           )}
