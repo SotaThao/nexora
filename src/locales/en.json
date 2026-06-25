@@ -189,7 +189,7 @@
       "review_title": "New {rating}-star review",
       "link_request_title": "Salon link request",
       "link_request_message": "{businessName} wants to link your staff profile.",
-      "link_request_role": "Role: {role}",
+      "link_request_role": "Position: {role}",
       "link_request_business_fallback": "A salon",
       "accept_link_request": "Accept",
       "reject_link_request": "Decline",

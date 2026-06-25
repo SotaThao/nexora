@@ -279,6 +279,7 @@ export function normalizeStaffLinkRequestDetail(dto: StaffLinkRequestDetailApiDt
     businessRole: dto.businessRole ?? null,
     requestedAt: dto.requestedAt ?? null,
     status: dto.status ?? null,
+    roleAtBusiness: dto.roleAtBusiness ?? null,
   }
 }
 

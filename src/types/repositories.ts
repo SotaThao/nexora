@@ -330,6 +330,7 @@ export interface StaffLinkRequestDetailApiDto {
   businessRole?: string | null
   requestedAt?: string | null
   status?: string | null
+  roleAtBusiness?: string | null
 }
 
 export interface InviteInfoApiDto {
@@ -466,6 +467,7 @@ export interface StaffInviteResult {
 export interface StaffLinkRequestParams {
   staffProfileId: string
   staffCode?: string | null
+  roleAtBusiness?: string | null
 }
 
 export interface InviteLinkSettingDto {

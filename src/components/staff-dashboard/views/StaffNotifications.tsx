@@ -137,7 +137,7 @@ function StaffLinkRequestNotification({
         </p>
         {detail?.businessRole && (
           <p className="mt-1 text-[11px] font-bold text-nexoraSubtle">
-            {t('staff_dashboard.notifications.link_request_role', { role: detail.businessRole })}
+            {t('staff_dashboard.notifications.link_request_role', { role: detail.roleAtBusiness })}
           </p>
         )}
         {linkId ? (
