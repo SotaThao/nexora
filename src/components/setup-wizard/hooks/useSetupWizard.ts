@@ -21,6 +21,7 @@ import {
   getPayoutConfigsFromMember
 } from '../constants'
 import { getApiErrorCode } from '../../../types/domain'
+import { getErrorI18nKey } from '../../../data/errorCodes'
 import { getDefaultDialCode } from '../../CountryCodeSelect'
 import { isValidEmail, isValidHttpUrl } from '../../../utils/validation'
 
@@ -201,7 +202,7 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
       setBusinessInfo(prev => ({ ...prev, logo: finalUrl }))
       if (errors.logo) setErrors(prev => ({ ...prev, logo: '' }))
     } catch (err: unknown) {
-      setErrors(prev => ({ ...prev, logo: getApiErrorCode(err, 'Logo upload failed') }))
+      setErrors(prev => ({ ...prev, logo: t(getErrorI18nKey(getApiErrorCode(err, 'IMAGE_UPLOAD_FAILED'))) }))
     }
   }
 
