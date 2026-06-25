@@ -564,9 +564,19 @@ export default function StaffMyQR() {
                         />
                       </button>
 
-                      <p className="break-all rounded-xl border border-nexoraBorder bg-nexoraCanvas px-3 py-2 text-left font-mono text-[10px] text-nexoraMuted">
-                        {selectedBusiness.tipUrl.replace(/^https?:\/\//, '')}
-                      </p>
+                      <div className="flex items-center justify-between gap-2 overflow-hidden rounded-xl border border-nexoraBorder bg-slate-50 p-1.5 shadow-inner">
+                        <span className="min-w-0 flex-1 truncate pl-2 font-mono text-[10px] text-slate-500">
+                          {selectedBusiness.tipUrl.replace(/^https?:\/\//, '')}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyTipUrl(selectedBusiness.tipUrl)}
+                          className="flex h-7 shrink-0 items-center gap-1 rounded-lg bg-slate-800 px-3 text-[10px] font-bold text-white transition hover:bg-slate-700"
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                          <span>{t('components.staff_dashboard.views.StaffMyQR.copy')}</span>
+                        </button>
+                      </div>
 
                       <div className="mt-3 space-y-2">
                         <button
@@ -630,7 +640,7 @@ export default function StaffMyQR() {
                   {businessTipQrs.map((biz) => (
                     <div
                       key={biz.businessId}
-                      className="flex flex-col gap-3 py-3 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
+                      className="flex items-center justify-between gap-3 py-3 last:pb-0"
                     >
                       <div className="flex min-w-0 items-center gap-3">
                         <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-nexoraBrandSoft text-nexoraBrand">
@@ -654,7 +664,7 @@ export default function StaffMyQR() {
                         </button>
                       </div>
 
-                      <div className="flex shrink-0 items-center gap-2 self-end sm:self-auto">
+                      <div className="flex shrink-0 items-center gap-2">
                         {renderStatusBadge(biz)}
                         {isBusinessActive(biz) && (
                           <button
@@ -670,9 +680,7 @@ export default function StaffMyQR() {
                   ))}
                 </div>
 
-                <p className="mt-3 rounded-xl border border-dashed border-nexoraBorder bg-nexoraCanvas p-3 text-xs leading-relaxed text-nexoraMuted">
-                  {t('staff_dashboard.qr.note')}
-                </p>
+
               </section>
             </>
           )}
