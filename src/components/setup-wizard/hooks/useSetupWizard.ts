@@ -4,12 +4,14 @@ import {
   useCreateBusiness,
   useUploadLogo,
   useUpdateReviewLinks,
-  useCompleteOnboarding
+  useCompleteOnboarding,
+  useMerchantSetup,
 } from '../../../data/hooks/useMerchantSetup'
 import {
   useMerchantPaymentMethods,
   useSaveMerchantPayoutConfigs
 } from '../../../data/hooks/useMerchantPaymentMethods'
+import { payoutTypeToUiKey } from '../../../data/paymentMethodTypes'
 import { useCreateTouchpoint } from '../../../data/hooks/useMerchantTouchpoints'
 import {
   DEMO_BUSINESS,
@@ -20,8 +22,7 @@ import {
 } from '../constants'
 import { getApiErrorCode } from '../../../types/domain'
 import { getDefaultDialCode } from '../../CountryCodeSelect'
-
-const isValidHttpUrl = (value) => /^https?:\/\/.+/i.test(String(value || '').trim())
+import { isValidEmail, isValidHttpUrl } from '../../../utils/validation'
 
 export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, hasKyb }) {
   const { currentLanguage, setLanguage, t } = useTranslation()
@@ -31,6 +32,7 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
   const completeOnboardingMutation = useCompleteOnboarding()
   const savePayoutConfigsMutation = useSaveMerchantPayoutConfigs()
   const createTouchpointMutation = useCreateTouchpoint()
+  const merchantSetupQuery = useMerchantSetup()
   const [currentStep, setCurrentStep] = useState(1) // 1, 2, 3
   const isSsoLocked = !!hasKyb // Lock fields ONLY if business is already KYB approved
 
@@ -100,10 +102,24 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
 
   // Merchant consent checkbox
   const [isConsentChecked, setIsConsentChecked] = useState(false)
+  const [isStepSaving, setIsStepSaving] = useState(false)
 
-  // Merchant payment methods are pre-seeded by the backend after the business
-  // exists. For new onboarding, defer the fetch until the step-2 submit creates
-  // the business so step 1 can be revisited without touching the backend.
+  // Resume onboarding when a business record already exists server-side.
+  useEffect(() => {
+    const existing = merchantSetupQuery.data?.businessInfo
+    if (!existing?.businessId) return
+    setBusinessInfo((prev) =>
+      prev.businessId
+        ? prev
+        : {
+            ...prev,
+            businessId: existing.businessId,
+            customSlug: existing.slug || prev.customSlug,
+          },
+    )
+  }, [merchantSetupQuery.data])
+
+  // Payment methods are pre-seeded after the business exists (created at step 1 → 2).
   const merchantPaymentMethodsQuery = useMerchantPaymentMethods({
     enabled: currentStep >= 2 && !!(hasKyb || businessInfo.businessId),
   })
@@ -117,7 +133,7 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
       const configs = { ...(prev.payoutConfigs || DEFAULT_PAYOUT_CONFIGS) }
       let changed = false
       for (const method of methods) {
-        const key = (method.type || '').toLowerCase()
+        const key = payoutTypeToUiKey(method.type || '')
         const existing = configs[key]
         if (!existing || existing.value.trim()) continue
         if (!method.accountInfo && !method.isActive) continue
@@ -213,19 +229,19 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
       }
 
       // Review Links validation (Optional)
-      if (reviewLinks.googleReview && reviewLinks.googleReview.trim() && !reviewLinks.googleReview.startsWith('http')) {
+      if (reviewLinks.googleReview?.trim() && !isValidHttpUrl(reviewLinks.googleReview)) {
         newErrors.googleReview = t('setup.errors.url_protocol')
       }
 
-      if (reviewLinks.yelpReview && reviewLinks.yelpReview.trim() && !reviewLinks.yelpReview.startsWith('http')) {
+      if (reviewLinks.yelpReview?.trim() && !isValidHttpUrl(reviewLinks.yelpReview)) {
         newErrors.yelpReview = t('setup.errors.url_protocol')
       }
 
-      if (reviewLinks.facebookReview && reviewLinks.facebookReview.trim() && !reviewLinks.facebookReview.startsWith('http')) {
+      if (reviewLinks.facebookReview?.trim() && !isValidHttpUrl(reviewLinks.facebookReview)) {
         newErrors.facebookReview = t('setup.errors.url_invalid')
       }
 
-      if (reviewLinks.feedbackEmail && reviewLinks.feedbackEmail.trim() && !/\S+@\S+\.\S+/.test(reviewLinks.feedbackEmail)) {
+      if (reviewLinks.feedbackEmail?.trim() && !isValidEmail(reviewLinks.feedbackEmail)) {
         newErrors.feedbackEmail = t('setup.errors.email_invalid')
       }
     }
@@ -238,32 +254,68 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
     return Object.keys(newErrors).length === 0
   }
 
-  const persistSetupDraft = async () => {
-    try {
-      if (!businessInfo.businessId) {
-        const businessDto = {
-          name: businessInfo.name,
-          businessType: businessInfo.industry,
-          address: businessInfo.address,
-          phone: businessInfo.phone,
-          website: businessInfo.website,
-          logoUrl: businessInfo.logo
-        }
-        const res = await createBusinessMutation.mutateAsync(businessDto)
-        setBusinessInfo(prev => ({
-          ...prev,
-          businessId: res.businessId,
-          customSlug: res.slug
-        }))
-      }
+  const mapPersistError = (err: unknown) => {
+    const newErrors: LooseObject = {}
+    const code = getApiErrorCode(err)
+    if (code === 'BUSINESS_NAME_REQUIRED') {
+      newErrors.name = t('setup.errors.name_required')
+    } else if (code === 'USER_NOT_MERCHANT') {
+      newErrors.submit = t('setup.errors.user_not_merchant')
+      setTimeout(() => {
+        onBackToLogin?.()
+      }, 3000)
+    } else {
+      newErrors.submit = getApiErrorCode(err, 'Failed to save onboarding setup.')
+    }
+    setErrors((prev) => ({ ...prev, ...newErrors }))
+    return false
+  }
 
-      const linksDto = {
+  const ensureBusinessCreated = async () => {
+    if (businessInfo.businessId) return businessInfo.businessId
+
+    const businessDto = {
+      name: businessInfo.name,
+      businessType: businessInfo.industry,
+      address: businessInfo.address,
+      phone: businessInfo.phone,
+      website: businessInfo.website,
+      logoUrl: businessInfo.logo,
+    }
+    const res = await createBusinessMutation.mutateAsync(businessDto)
+    setBusinessInfo((prev) => ({
+      ...prev,
+      businessId: res.businessId,
+      customSlug: res.slug,
+    }))
+    return res.businessId
+  }
+
+  const persistStep1Draft = async () => {
+    try {
+      await ensureBusinessCreated()
+      await updateReviewLinksMutation.mutateAsync({
         googleReviewUrl: reviewLinks.googleReview,
         yelpUrl: reviewLinks.yelpReview,
         facebookUrl: reviewLinks.facebookReview,
-        feedbackEmail: reviewLinks.feedbackEmail
-      }
-      await updateReviewLinksMutation.mutateAsync(linksDto)
+        feedbackEmail: reviewLinks.feedbackEmail,
+      })
+      return true
+    } catch (err: unknown) {
+      return mapPersistError(err)
+    }
+  }
+
+  const persistSetupDraft = async () => {
+    try {
+      await ensureBusinessCreated()
+
+      await updateReviewLinksMutation.mutateAsync({
+        googleReviewUrl: reviewLinks.googleReview,
+        yelpUrl: reviewLinks.yelpReview,
+        facebookUrl: reviewLinks.facebookReview,
+        feedbackEmail: reviewLinks.feedbackEmail,
+      })
       await savePayoutConfigsMutation.mutateAsync(businessInfo.payoutConfigs)
 
       try {
@@ -274,35 +326,29 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
 
       return true
     } catch (err: unknown) {
-      const newErrors: LooseObject = {}
-      const code = getApiErrorCode(err)
-      if (code === 'BUSINESS_NAME_REQUIRED') {
-        newErrors.name = t('setup.errors.name_required')
-      } else if (code === 'USER_NOT_MERCHANT') {
-        newErrors.submit = t('setup.errors.user_not_merchant')
-        setTimeout(() => {
-          onBackToLogin?.()
-        }, 3000)
-      } else {
-        newErrors.submit = getApiErrorCode(err, 'Failed to save onboarding setup.')
-      }
-      setErrors({
-        ...errors,
-        ...newErrors
-      })
-      return false
+      return mapPersistError(err)
     }
   }
 
   const handleNext = async () => {
     if (!validateStep()) return
 
-    if (currentStep === 2) {
-      const saved = await persistSetupDraft()
-      if (!saved) return
-    }
+    setIsStepSaving(true)
+    try {
+      if (currentStep === 1) {
+        const saved = await persistStep1Draft()
+        if (!saved) return
+      }
 
-    setCurrentStep(prev => prev + 1)
+      if (currentStep === 2) {
+        const saved = await persistSetupDraft()
+        if (!saved) return
+      }
+
+      setCurrentStep((prev) => prev + 1)
+    } finally {
+      setIsStepSaving(false)
+    }
   }
 
   const handleBack = () => {
@@ -314,7 +360,7 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
     const staffErrors: LooseObject = {}
     if (!newStaff.fullName.trim()) staffErrors.staffFullName = t('setup.errors.staff_name_required')
     if (!newStaff.nickname.trim()) staffErrors.staffNickname = t('setup.errors.staff_nickname_required')
-    if (newStaff.email?.trim() && !/\S+@\S+\.\S+/.test(newStaff.email.trim())) {
+    if (newStaff.email?.trim() && !isValidEmail(newStaff.email)) {
       staffErrors.staffEmail = t('setup.errors.staff_email_invalid')
     }
 
@@ -551,9 +597,11 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
     currentStep,
     setCurrentStep,
     isSsoLocked,
+    isStepSaving,
     // business
     businessInfo,
     setBusinessInfo,
+    merchantPaymentMethods: merchantPaymentMethodsQuery.data ?? [],
     // review links
     reviewLinks,
     setReviewLinks,

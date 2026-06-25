@@ -22,7 +22,11 @@ export function createStaffAccountsRepository() {
         return null
       }
 
-      const paymentMethods = await staffPaymentMethodsRepository.getAll()
+      const paymentMethods = await queryClient.fetchQuery({
+        queryKey: qk.staffPaymentMethods(),
+        queryFn: () => staffPaymentMethodsRepository.getAll(),
+        staleTime: 1000 * 60 * 5, // 5 minutes
+      })
       // Profile is bootstrapped once during auth (seedAuthQueryCache) and via useProfileSettings.
       const profile = queryClient.getQueryData<UserProfile | null>(qk.userProfile()) ?? null
       if (!profile) return null

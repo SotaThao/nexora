@@ -108,7 +108,7 @@ export function createMerchantTouchpointsRepository(client: HttpClient = httpCli
     },
 
     async toggleTouchpoint(id: string): Promise<void> {
-      await client.put(`/api/v1/merchant/touchpoint/toggle/${id}`)
+      await client.put(`/api/v1/merchant/touchpoints/toggle/${id}`)
     },
 
     async downloadQr(id: string, format: 'png' | 'pdf' = 'png'): Promise<Blob> {

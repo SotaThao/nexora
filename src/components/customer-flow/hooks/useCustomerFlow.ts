@@ -21,7 +21,7 @@ import {
   usePublicBusinessPaymentMethods,
 } from '../../../data/hooks/usePublicTouch'
 import { PAYOUT_UI_LABELS, payoutTypeToUiKey } from '../../../data/paymentMethodTypes'
-import type { PaymentMethodDto } from '../../../types/domain'
+import type { PaymentMethodDto, ReviewLinks } from '../../../types/domain'
 
 function walletNameToKey(walletName: string): string {
   const match = Object.entries(PAYOUT_UI_LABELS).find(([, label]) => label === walletName)
@@ -52,21 +52,41 @@ function getStaffTipAmount(
   return selTip === 'custom' ? Number(customTips[memberId]) || 0 : Number(selTip)
 }
 
-function collectStaffPaymentKeys(staffMembers: Array<{ availablePaymentMethods?: string[] }>): Set<string> {
-  const keys = new Set<string>()
+function collectStaffPaymentKeys(staffMembers: Array<{ availablePaymentMethods?: string[] }>): string[] {
+  const keys: string[] = []
+  const seen = new Set<string>()
   for (const staff of staffMembers) {
     for (const method of staff.availablePaymentMethods || []) {
-      keys.add(payoutTypeToUiKey(method))
+      const key = payoutTypeToUiKey(method)
+      if (seen.has(key)) continue
+      seen.add(key)
+      keys.push(key)
     }
   }
   return keys
 }
 
-function collectBusinessPaymentKeys(methods: PaymentMethodDto[]): Set<string> {
-  const keys = new Set<string>()
+function collectStaffPaymentKeysForMember(staff: { availablePaymentMethods?: string[] }): string[] {
+  const keys: string[] = []
+  const seen = new Set<string>()
+  for (const method of staff.availablePaymentMethods || []) {
+    const key = payoutTypeToUiKey(method)
+    if (seen.has(key)) continue
+    seen.add(key)
+    keys.push(key)
+  }
+  return keys
+}
+
+function collectBusinessPaymentKeys(methods: PaymentMethodDto[]): string[] {
+  const keys: string[] = []
+  const seen = new Set<string>()
   for (const pm of methods) {
     if (!pm.id || pm.isActive === false) continue
-    keys.add(payoutTypeToUiKey(pm.type || pm.name || ''))
+    const key = payoutTypeToUiKey(pm.type || pm.name || '')
+    if (seen.has(key)) continue
+    seen.add(key)
+    keys.push(key)
   }
   return keys
 }
@@ -75,17 +95,17 @@ function buildAvailablePaymentWalletKeys(
   selectedStaffMembers: Array<{ availablePaymentMethods?: string[] }>,
   effectivePaymentMethods: PaymentMethodDto[],
   isMultiStaff: boolean,
-): Set<string> {
+): string[] {
   if (!isMultiStaff && selectedStaffMembers.length === 1) {
-    const staffKeys = collectStaffPaymentKeys(selectedStaffMembers)
-    if (staffKeys.size > 0) return staffKeys
+    const staffKeys = collectStaffPaymentKeysForMember(selectedStaffMembers[0])
+    if (staffKeys.length > 0) return staffKeys
   }
 
   const businessKeys = collectBusinessPaymentKeys(effectivePaymentMethods)
-  if (businessKeys.size > 0) return businessKeys
+  if (businessKeys.length > 0) return businessKeys
 
   if (isMultiStaff) {
-    return new Set<string>()
+    return []
   }
 
   return collectStaffPaymentKeys(selectedStaffMembers)
@@ -102,6 +122,51 @@ function getApiErrorMessage(err: unknown, fallback: string): string {
     if (apiErr.errorCode && apiErr.errorCode !== 'HTTP_ERROR') return apiErr.errorCode
   }
   return fallback
+}
+
+function firstNonEmptyString(...values: unknown[]): string {
+  for (const value of values) {
+    if (typeof value === 'string' && value.trim()) return value.trim()
+  }
+  return ''
+}
+
+function resolveCustomerReviewLinks(source: LooseObject | null | undefined): ReviewLinks {
+  const business = source?.business || source?.businessInfo || {}
+  const reviewLinks = source?.reviewLinks || business.reviewLinks || {}
+
+  return {
+    googleReview: firstNonEmptyString(
+      business.googleReviewUrl,
+      business.googleReview,
+      business.googleReviewLink,
+      reviewLinks.googleReview,
+      reviewLinks.googleReviewUrl,
+      reviewLinks.googleReviewLink,
+      source?.googleReviewUrl,
+      source?.googleReview,
+      source?.googleReviewLink,
+    ),
+    yelpReview: firstNonEmptyString(
+      business.yelpUrl,
+      business.yelpReview,
+      business.yelpReviewUrl,
+      business.yelpReviewLink,
+      reviewLinks.yelpReview,
+      reviewLinks.yelpUrl,
+      reviewLinks.yelpReviewUrl,
+      reviewLinks.yelpReviewLink,
+      source?.yelpUrl,
+      source?.yelpReview,
+      source?.yelpReviewUrl,
+      source?.yelpReviewLink,
+    ),
+    feedbackEmail: firstNonEmptyString(
+      business.feedbackEmail,
+      reviewLinks.feedbackEmail,
+      source?.feedbackEmail,
+    ),
+  }
 }
 
 /**
@@ -190,17 +255,11 @@ export default function useCustomerFlow() {
 
   const initialStaffMember = null // No auto-select since 'techSlug' simulation is removed
 
-  const reviewLinks = useMemo(() => {
-    const defaultLinks = { googleReview: '', yelpReview: '', feedbackEmail: '' }
-    if (touchPageData?.business) {
-      return {
-        googleReview: touchPageData.business.googleReviewUrl || '',
-        yelpReview: touchPageData.business.yelpUrl || '',
-        feedbackEmail: touchPageData.business.feedbackEmail || '',
-      }
-    }
-    return defaultLinks
-  }, [touchPageData])
+  const touchReviewLinks = useMemo(
+    () => resolveCustomerReviewLinks(touchPageData),
+    [touchPageData],
+  )
+  const hasTouchReviewLinks = Boolean(touchReviewLinks.googleReview || touchReviewLinks.yelpReview)
 
   // ── Local state ──
   const [selectedStaffMembers, setSelectedStaffMembers] = useState<any[]>([])
@@ -218,6 +277,7 @@ export default function useCustomerFlow() {
   const [currentTipId, setCurrentTipId] = useState<any | null>(null)
   const [currentReviewId, setCurrentReviewId] = useState<any | null>(null)
   const [paymentLinkData, setPaymentLinkData] = useState<any | null>(null)
+  const [tipPaymentMethodsData, setTipPaymentMethodsData] = useState<any[] | null>(null)
 
   useEffect(() => {
     if (didApplyStaffPreselect.current || activeStaffList.length === 0) return
@@ -251,16 +311,29 @@ export default function useCustomerFlow() {
   )
 
   const merchantSetupQuery = useMerchantSetup({
-    enabled: Boolean(touchRoute?.businessSlug && !touchBusinessId),
+    enabled: Boolean(touchRoute?.businessSlug && (!touchBusinessId || !hasTouchReviewLinks)),
   })
 
   const merchantProfileBusinessId = useMemo(() => {
     const info = merchantSetupQuery.data?.businessInfo as LooseObject | undefined
     const profileId = info?.businessId || info?.id
     if (!profileId || !touchRoute?.businessSlug) return null
+    if (touchBusinessId && String(profileId) === String(touchBusinessId)) return String(profileId)
     const profileSlug = slugify(String(info?.slug || info?.name || ''))
     return profileSlug === touchRoute.businessSlug ? String(profileId) : null
-  }, [merchantSetupQuery.data, touchRoute?.businessSlug])
+  }, [merchantSetupQuery.data, touchBusinessId, touchRoute?.businessSlug])
+
+  const merchantSetupReviewLinks = useMemo(
+    () => merchantProfileBusinessId
+      ? resolveCustomerReviewLinks(merchantSetupQuery.data as LooseObject | null | undefined)
+      : { googleReview: '', yelpReview: '', feedbackEmail: '' },
+    [merchantSetupQuery.data, merchantProfileBusinessId],
+  )
+  const reviewLinks = useMemo(() => ({
+    googleReview: touchReviewLinks.googleReview || merchantSetupReviewLinks.googleReview || '',
+    yelpReview: touchReviewLinks.yelpReview || merchantSetupReviewLinks.yelpReview || '',
+    feedbackEmail: touchReviewLinks.feedbackEmail || merchantSetupReviewLinks.feedbackEmail || '',
+  }), [touchReviewLinks, merchantSetupReviewLinks])
 
   const merchantBusinessQuery = useQuery({
     queryKey: ['merchantBusinessContext', touchRoute?.businessSlug],
@@ -492,8 +565,16 @@ export default function useCustomerFlow() {
           businessPaymentMethodId,
           tipItems,
         })
-        setCurrentTipId(result?.tipId || result?.id)
+        const tipId = result?.tipId || result?.id
+        setCurrentTipId(tipId)
         setPaymentLinkData(null)
+        try {
+          const methods = await publicTouchRepository.getTipPaymentMethods(String(tipId))
+          setTipPaymentMethodsData(Array.isArray(methods) ? methods : null)
+        } catch (methodsErr) {
+          logger.error('Failed to fetch tip payment methods', methodsErr)
+          setTipPaymentMethodsData(null)
+        }
         setStep('wallet_details')
         return
       }
@@ -502,18 +583,16 @@ export default function useCustomerFlow() {
       const amount = getStaffTipAmount(member.id, selectedTips, customTips)
       const result = await createTipMutation.mutateAsync({
         touchPointId: touchPageData?.touchPoint?.id, staffProfileId: member.id,
-        amount, paymentMethod: walletName, sessionId,
+        amount, paymentMethod: resolvedWalletKey, sessionId,
       })
-      setCurrentTipId(result?.id || result?.tipId)
+      const tipId = result?.id || result?.tipId
+      setCurrentTipId(tipId)
       try {
-        const linkData = await publicTouchRepository.getPaymentLink({
-          staffId: member.id,
-          method: walletName,
-          amount,
-        })
-        setPaymentLinkData(linkData)
-      } catch (linkErr) {
-        logger.error('Failed to fetch payment link', linkErr)
+        const methods = await publicTouchRepository.getTipPaymentMethods(String(tipId))
+        setTipPaymentMethodsData(Array.isArray(methods) ? methods : null)
+      } catch (methodsErr) {
+        logger.error('Failed to fetch tip payment methods', methodsErr)
+        setTipPaymentMethodsData(null)
       }
       setStep('wallet_details')
     } catch (err) {
@@ -600,7 +679,7 @@ export default function useCustomerFlow() {
     tipRefNumber, setTipRefNumber, currentTipId, currentReviewId,
     handleTagToggle, handleRatingChange, handleToggleStaff,
     handlePay, handleConfirmTip, handleSkipTip, handleSubmitFeedback,
-    handleTrackExternalReview, paymentLinkData,
+    handleTrackExternalReview, paymentLinkData, tipPaymentMethodsData,
     scannedTouchpoint: null,
   }
 }

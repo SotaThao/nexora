@@ -11,6 +11,10 @@ import Step1BusinessInfo from './setup-wizard/steps/Step1BusinessInfo'
 import Step2StaffTouchpoints from './setup-wizard/steps/Step2StaffTouchpoints'
 import Step3Download from './setup-wizard/steps/Step3Download'
 import PayoutSetupModal from './setup-wizard/PayoutSetupModal'
+import PersonalSetupWizard from './setup-wizard/PersonalSetupWizard'
+import usePersonalSetupWizard from './setup-wizard/hooks/usePersonalSetupWizard'
+import { buildPublicQrImageUrl } from '../data/repositories/publicQr'
+import LanguageSwitcher from './ui/LanguageSwitcher'
 
 export { renderTextWithGoldStars, getTouchpointIcon } from './setup-wizard/constants'
 
@@ -44,10 +48,20 @@ export default function SetupWizard() {
     onBackToLogin: handleBackToLogin, 
     hasKyb: isKyb 
   })
+
+  const personalWizard = usePersonalSetupWizard({
+    onBackToLogin: handleBackToLogin
+  })
+
+  if (session?.role === 'staff' || session?.role === 'personal') {
+    return <PersonalSetupWizard wizard={personalWizard} />
+  }
+
   const {
     currentLanguage, setLanguage, t,
-    currentStep, setCurrentStep, isSsoLocked,
+    currentStep, setCurrentStep, isSsoLocked, isStepSaving,
     businessInfo, setBusinessInfo,
+    merchantPaymentMethods,
     reviewLinks, setReviewLinks,
     staffList,
     newStaff, setNewStaff,
@@ -108,33 +122,7 @@ export default function SetupWizard() {
           </div>
 
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
-            {handleBackToLogin && (
-              <button
-                onClick={handleBackToLogin}
-                className="min-h-11 text-xs flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-flox-inputs border border-nexoraBorder text-nexoraSubtle hover:text-nexoraText bg-white hover:bg-nexoraCanvas transition-all font-semibold shadow-sm"
-              >
-                <LogIn className="w-3.5 h-3.5" />
-                {t('setup.back_to_login')}
-              </button>
-            )}
-            {/* Language Switcher */}
-            <div className="flex items-center gap-1.5 bg-white border border-nexoraBorder px-3 py-1.5 rounded-flox-inputs min-h-11 shadow-sm">
-              <button
-                type="button"
-                onClick={() => setLanguage('vi')}
-                className={`text-xs font-bold px-2 py-0.5 rounded transition ${currentLanguage === 'vi' ? 'bg-nexoraBrand text-white' : 'text-nexoraSubtle hover:text-nexoraText'}`}
-              >
-                VI
-              </button>
-              <span className="text-nexoraBorder text-xs">|</span>
-              <button
-                type="button"
-                onClick={() => setLanguage('en')}
-                className={`text-xs font-bold px-2 py-0.5 rounded transition ${currentLanguage === 'en' ? 'bg-nexoraBrand text-white' : 'text-nexoraSubtle hover:text-nexoraText'}`}
-              >
-                EN
-              </button>
-            </div>
+            <LanguageSwitcher />
           </div>
         </header>
 
@@ -235,6 +223,7 @@ export default function SetupWizard() {
                 setEditingTpType={setEditingTpType}
                 errors={errors}
                 businessInfo={businessInfo}
+                merchantPaymentMethods={merchantPaymentMethods}
                 handleAddStaff={handleAddStaff}
                 handleToggleWallet={handleToggleWallet}
                 openPayoutSetup={openPayoutSetup}
@@ -282,9 +271,10 @@ export default function SetupWizard() {
               {currentStep < 3 ? (
                 <button
                   onClick={handleNext}
-                  className="min-h-11 w-full justify-center px-6 py-2.5 rounded-flox-buttons bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 transition-opacity text-white font-extrabold text-sm flex items-center gap-1.5 transition-all shadow-[0_4px_14px_rgba(43,89,255,0.25)] sm:w-auto"
+                  disabled={isStepSaving}
+                  className="min-h-11 w-full justify-center px-6 py-2.5 rounded-flox-buttons bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 transition-opacity text-white font-extrabold text-sm flex items-center gap-1.5 transition-all shadow-[0_4px_14px_rgba(43,89,255,0.25)] sm:w-auto disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {t('common.next')} <ArrowRight className="w-4 h-4" />
+                  {isStepSaving ? t('common.saving') : t('common.next')} {!isStepSaving && <ArrowRight className="w-4 h-4" />}
                 </button>
               ) : (
                 <button
@@ -355,9 +345,10 @@ export default function SetupWizard() {
 
                 <div className="h-28 w-28 rounded-lg bg-white border border-nexoraBorder/60 p-2 flex items-center justify-center shadow-inner qr-print-qr-wrapper">
                   <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-                      `${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}&tech=tp/${previewingTp.id}`
-                    )}`}
+                    src={buildPublicQrImageUrl(
+                      `${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}&tech=tp/${previewingTp.id}`,
+                      150,
+                    )}
                     alt="QR Preview"
                     className="h-full w-full object-contain qr-print-qr-image"
                   />
@@ -411,9 +402,10 @@ export default function SetupWizard() {
 
             <div className="qr-print-qr-wrapper">
               <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-                  `${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}`
-                )}`}
+                src={buildPublicQrImageUrl(
+                  `${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}`,
+                  150,
+                )}
                 alt="Scan QR code to tip and review"
                 className="qr-print-qr-image"
               />

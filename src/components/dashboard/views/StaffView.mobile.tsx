@@ -2,15 +2,22 @@ import { useState, useMemo } from 'react'
 import { AlertCircle, Plus, Trash2, User, QrCode, Edit2, Link, Copy, X, Share2, Eye, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
-import { useSearchMerchantStaff, StatusFilter } from '../../../data/hooks/useMerchantStaff'
+import { StatusFilter } from '../../../data/hooks/useMerchantStaff'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
+import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
 import Pagination from '../../ui/Pagination'
 
 function isPendingMember(member) {
   const status = member?.status
-  return status === StatusFilter.Pending || status === 'Pending Setup' || status === 'Pending'
+  return (
+    status === StatusFilter.Pending ||
+    status === 'Pending' ||
+    status === 'Pending Setup' ||
+    status === 'Pending Acceptance' ||
+    status === 'WaitingStaffAcceptance'
+  )
 }
 
 function isPendingInviteMember(member) {
@@ -18,15 +25,23 @@ function isPendingInviteMember(member) {
 }
 
 function isPendingLinkMember(member) {
-  return member?.itemType === 'link' && member?.status === StatusFilter.Accepted
+  return (
+    member?.itemType === 'link' &&
+    (member?.status === 'Pending Acceptance' || member?.status === 'WaitingStaffAcceptance')
+  )
 }
 
-function ToggleSwitch({ checked, onChange, activeColor = 'bg-emerald-500', title }) {
+function isWaitingStaffAcceptance(member) {
+  return member?.apiStatus === 'WaitingStaffAcceptance' || member?.status === 'WaitingStaffAcceptance'
+}
+
+function ToggleSwitch({ checked, onChange, activeColor = 'bg-emerald-500', title, disabled = false }) {
   return (
     <button
       type="button"
       onClick={onChange}
-      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${checked ? activeColor : 'bg-slate-300'}`}
+      disabled={disabled}
+      className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${checked ? activeColor : 'bg-slate-300'} ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
       title={title}
     >
       <span
@@ -49,6 +64,7 @@ function StaffMemberCard({
   onViewDetail,
   onToggle,
   onToggleTipsFlow,
+  isToggling = false,
   onResendInvite,
   onDelete,
   onApproveClick,
@@ -59,6 +75,7 @@ function StaffMemberCard({
   onQr,
   onEdit
 }) {
+  const waitingStaffResponse = isWaitingStaffAcceptance(member)
   const stripClass = isPendingInvite
     ? 'bg-amber-400'
     : isPendingLink
@@ -163,6 +180,7 @@ function StaffMemberCard({
               <ToggleSwitch
                 checked={member.isActive}
                 onChange={() => onToggle(member.id)}
+                disabled={isToggling}
                 title={member.isActive ? t('common.active') : t('common.inactive')}
               />
             </div>
@@ -173,6 +191,7 @@ function StaffMemberCard({
               <ToggleSwitch
                 checked={member.showInTipsFlow !== false}
                 onChange={() => onToggleTipsFlow(member.id)}
+                disabled={isToggling}
                 activeColor="bg-blue-500"
                 title={member.showInTipsFlow !== false ? 'Show' : 'Hide'}
               />
@@ -212,7 +231,7 @@ function StaffMemberCard({
               </button>
             </>
           )}
-          {isPendingLink && (
+          {isPendingLink && !waitingStaffResponse && (
             <>
               <button
                 type="button"
@@ -235,6 +254,11 @@ function StaffMemberCard({
                 {t('components.dashboard.views.StaffView.reject')}
               </button>
             </>
+          )}
+          {isPendingLink && waitingStaffResponse && (
+            <span className="text-[10px] font-bold text-slate-500 italic">
+              {t('components.dashboard.views.StaffView.pendingAcceptance')}
+            </span>
           )}
           {isPendingUnlink && (
             <>
@@ -290,8 +314,6 @@ function StaffView({
   onToggle,
   onToggleTipsFlow,
   onViewDetail,
-  onLinkStaff,
-  onInviteStaff,
   onResendInvite,
   businessName,
   businessSlug,
@@ -310,21 +332,13 @@ function StaffView({
   hasPreviousPage = false,
   onPageChange,
   pageSize = 10,
+  togglingStaffId = null,
 }) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
-  const [activeTab, setActiveTab] = useState('link') // 'link' | 'invite'
   const [largeJoinQrOpen, setLargeJoinQrOpen] = useState(false)
   const [sortBy, setSortBy] = useState('name-asc') // 'name-asc' | 'name-desc' | 'date-newest' | 'date-oldest' | 'status-active'
 
-  // Option A (Link) states
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedRole, setSelectedRole] = useState('Nail Technician')
-  const [searchResult, setSearchResult] = useState(null)
-  const [searchError, setSearchError] = useState('')
-
-  // API search hook (enabled only when query is non-empty)
-  const { data: searchResults, isLoading: isSearching } = useSearchMerchantStaff(searchQuery.trim())
   const publicInviteEnabled = Boolean(inviteLinkSetting?.isEnabled && inviteLinkSetting?.referralCode)
   const publicInviteLink = useMemo(
     () => publicInviteEnabled
@@ -336,6 +350,14 @@ function StaffView({
       })
       : '',
     [businessName, businessSlug, inviteLinkSetting?.referralCode, publicInviteEnabled],
+  )
+  const publicInviteQrSrc = useMemo(
+    () => (publicInviteEnabled && publicInviteLink ? buildPublicQrImageUrl(publicInviteLink, 150) : ''),
+    [publicInviteEnabled, publicInviteLink],
+  )
+  const publicInviteQrLargeSrc = useMemo(
+    () => (publicInviteEnabled && publicInviteLink ? buildPublicQrImageUrl(publicInviteLink, 300) : ''),
+    [publicInviteEnabled, publicInviteLink],
   )
   const publicInviteUnavailableText = isInviteLinkSettingLoading
     ? t('components.dashboard.views.StaffView.inviteLinkLoading')
@@ -384,54 +406,9 @@ function StaffView({
       showToast(t('components.dashboard.views.StaffView.linkCopiedToClipboard'), 'success')
     }
   }
-  const [inviteName, setInviteName] = useState('')
-  const [inviteContact, setInviteContact] = useState('')
-  const [inviteRole, setInviteRole] = useState('Nail Technician')
-  const [inviteMethod, setInviteMethod] = useState('SMS')
-
   // Calculate Metrics
   const totalLinked = staff ? staff.length : 0
   const pendingCount = pendingStaff ? pendingStaff.length : 0
-  const paymentCompleteCount = allStaff.filter(s => {
-    return Object.values(s.paymentAccounts || {}).some(val => val && (val as string).trim() !== '')
-  }).length
-  const paymentCompletePct = allStaff.length ? Math.round((paymentCompleteCount / allStaff.length) * 100) : 100
-
-  // Option A Search - uses API results from useSearchMerchantStaff
-  const handleSearch = () => {
-    setSearchError('')
-    setSearchResult(null)
-    const query = searchQuery.trim()
-    if (!query) return
-
-    // searchResults comes from the API hook (debounced by TanStack Query)
-    if (searchResults && searchResults.length > 0) {
-      // Take the first result as the match
-      setSearchResult(searchResults[0])
-    } else {
-      setSearchError(t('components.dashboard.views.StaffView.noStaffProfileFound'))
-    }
-  }
-
-  // Option A Link Request - sends to API via mutation
-  const handleLinkRequest = () => {
-    if (!searchResult) return
-    onLinkStaff(searchResult)
-    setSearchResult(null)
-    setSearchQuery('')
-  }
-
-  // Option B Submit Invite
-  const handleInviteSubmit = (e) => {
-    e.preventDefault()
-    if (!inviteName.trim() || !inviteContact.trim()) {
-      showToast(t('components.dashboard.views.StaffView.pleaseEnterBothName'), 'warning')
-      return
-    }
-    onInviteStaff(inviteName, inviteContact, inviteRole, inviteMethod)
-    setInviteName('')
-    setInviteContact('')
-  }
 
   // Resend invite - calls API via mutation prop
   const handleResendInvite = (member) => {
@@ -499,7 +476,7 @@ function StaffView({
           >
             {publicInviteEnabled ? (
               <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(publicInviteLink)}`}
+                src={publicInviteQrSrc}
                 alt={t('components.dashboard.views.StaffView.scanToJoinAlt')}
                 className="h-full w-full object-contain"
               />
@@ -586,6 +563,7 @@ function StaffView({
               <tbody>
                 {pendingStaff.map((member, index) => {
                   const wallets = getWalletBadges(member)
+                  const waitingStaffResponse = isWaitingStaffAcceptance(member)
                   return (
                     <tr key={member.id || index} className="border-b border-nexoraRule last:border-0 hover:bg-slate-50/40 transition">
                       <td className="px-5 py-4">
@@ -620,20 +598,28 @@ function StaffView({
                         </div>
                       </td>
                       <td className="px-5 py-4 text-right">
-                        <button
-                          type="button"
-                          onClick={() => onApproveClick && onApproveClick(member)}
-                          className="px-3.5 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition shadow-sm mr-2"
-                        >
-                          {t('components.dashboard.views.StaffView.approve')}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onDeclineJoin && onDeclineJoin(member)}
-                          className="px-3 py-1.5 text-xs font-bold border border-rose-200 bg-rose-50 text-rose-700 rounded-lg hover:bg-rose-100 transition shadow-sm"
-                        >
-                          {t('components.dashboard.views.StaffView.reject')}
-                        </button>
+                        {waitingStaffResponse ? (
+                          <span className="text-[10px] font-bold text-slate-500 italic">
+                            {t('components.dashboard.views.StaffView.pendingAcceptance')}
+                          </span>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => onApproveClick && onApproveClick(member)}
+                              className="px-3.5 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition shadow-sm mr-2"
+                            >
+                              {t('components.dashboard.views.StaffView.approve')}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => onDeclineJoin && onDeclineJoin(member)}
+                              className="px-3 py-1.5 text-xs font-bold border border-rose-200 bg-rose-50 text-rose-700 rounded-lg hover:bg-rose-100 transition shadow-sm"
+                            >
+                              {t('components.dashboard.views.StaffView.reject')}
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   )
@@ -723,6 +709,7 @@ function StaffView({
                     onViewDetail={onViewDetail}
                     onToggle={onToggle}
                     onToggleTipsFlow={onToggleTipsFlow}
+                    isToggling={togglingStaffId === member.id}
                     onResendInvite={handleResendInvite}
                     onDelete={onDelete}
                     onApproveClick={onApproveClick}
@@ -782,7 +769,7 @@ function StaffView({
 
             <div className="h-64 w-64 rounded-2xl bg-slate-50 border border-slate-200 p-4 flex items-center justify-center shadow-inner bg-white mb-4">
               <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(publicInviteLink)}`}
+                src={publicInviteQrLargeSrc}
                 alt={t('components.dashboard.views.StaffView.scanToJoinAlt')}
                 className="h-full w-full object-contain"
               />

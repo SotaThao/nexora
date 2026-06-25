@@ -1,7 +1,10 @@
 import React from 'react'
 import { Check } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useAuth } from '../auth/useAuth'
 import { useRegisterForm } from './register/hooks/useRegisterForm'
+import LanguageSwitcher from './ui/LanguageSwitcher'
+import BackToHomeButton from './ui/BackToHomeButton'
 import StepRoleSelect from './register/steps/StepRoleSelect'
 import StepCredentials from './register/steps/StepCredentials'
 import StepOtpVerify from './register/steps/StepOtpVerify'
@@ -19,15 +22,23 @@ import { logger } from '../utils/logger'
 export default function RegisterWizard() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { refreshSession } = useAuth()
   const clearMerchantSetupMutation = useClearMerchantSetup()
   const clearProfileSettingsMutation = useClearProfileSettings()
 
   const showPersonalSuccessPopup = location.state?.showPersonalSuccessPopup || false
   const ssoEmail = location.state?.ssoEmail || ''
   const pendingRegistration = loadPendingRegistration(location.state?.resumeEmail)
+  // `resumeOtpVerification` chỉ điều khiển nhảy thẳng tới bước OTP + prefill.
+  // Việc TỰ ĐỘNG gửi lại email xác thực chỉ được phép ở luồng login-resume rõ ràng
+  // (`location.state.resumeOtpVerification`), KHÔNG phải ngay sau khi đăng ký — vì
+  // signup đã tự gửi OTP. Một `pendingRegistration` vừa lưu (vừa signup) nếu không
+  // tách ra sẽ khiến reload bước OTP gọi lại `send-verification-email` → OTP trùng.
+  const resumeFromLogin = Boolean(location.state?.resumeOtpVerification)
   const resumeOtpVerification = !showPersonalSuccessPopup && (
-    Boolean(location.state?.resumeOtpVerification) || Boolean(pendingRegistration)
+    resumeFromLogin || Boolean(pendingRegistration)
   )
+  const autoSendVerificationOnResume = !showPersonalSuccessPopup && resumeFromLogin
   const resumeEmail = location.state?.resumeEmail || pendingRegistration?.email || ''
   const resumePassword = location.state?.resumePassword || pendingRegistration?.password || ''
   const resumeRole = location.state?.resumeRole || pendingRegistration?.role || null
@@ -49,12 +60,16 @@ export default function RegisterWizard() {
     }
 
     try {
-      await apiAuthAdapter.getSession()
+      await refreshSession()
     } catch (e) {
       logger.error('Failed to get session in handleRegisterAndLogin', e)
     }
     
-    navigate('/onboarding', { state: { ssoPrefillData, isNewRegistration: true } })
+    if (form.role === 'personal') {
+      navigate('/staff', { replace: true })
+    } else {
+      navigate('/onboarding', { state: { ssoPrefillData, isNewRegistration: true } })
+    }
   }
 
   const formProps = {
@@ -63,15 +78,12 @@ export default function RegisterWizard() {
     initialStep: showPersonalSuccessPopup ? 3 : 0,
     initialRole: showPersonalSuccessPopup ? 'personal' : 'personal',
     resumeOtpVerification,
+    autoSendVerificationOnResume,
     resumeEmail,
     resumePassword,
     resumeRole,
     onBackToLogin: () => {
-      if (ssoEmail) {
-        navigate(-1)
-      } else {
-        navigate('/login')
-      }
+      navigate(-1)
     },
     onRegisterSuccess: () => navigate('/login'),
     onRegisterAndLogin: handleRegisterAndLogin,
@@ -98,27 +110,21 @@ export default function RegisterWizard() {
       <div className="absolute top-1/4 left-1/4 h-56 w-56 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(66,72,216,0.04)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-96 sm:w-96"></div>
       <div className="absolute bottom-1/4 right-1/4 h-64 w-64 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(43,89,255,0.02)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-[450px] sm:w-[450px]"></div>
 
+      <div className="absolute top-4 left-4 z-50">
+        <BackToHomeButton />
+      </div>
+
       {/* Language Switcher */}
-      <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-nexoraBorder shadow-sm">
-        <button
-          onClick={() => setLanguage('vi')}
-          className={`text-xs font-bold px-2 py-0.5 rounded transition ${currentLanguage === 'vi' ? 'bg-nexoraBrand text-white' : 'text-nexoraSubtle hover:text-nexoraText'}`}
-        >
-          VI
-        </button>
-        <span className="text-nexoraBorder text-xs">|</span>
-        <button
-          onClick={() => setLanguage('en')}
-          className={`text-xs font-bold px-2 py-0.5 rounded transition ${currentLanguage === 'en' ? 'bg-nexoraBrand text-white' : 'text-nexoraSubtle hover:text-nexoraText'}`}
-        >
-          EN
-        </button>
+      <div className="absolute top-4 right-4 z-50">
+        <LanguageSwitcher />
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8 relative z-10 flex flex-col justify-center min-h-dvh">
         {/* Branding header */}
         <div className="text-center mb-6">
-          <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="h-12 w-auto max-w-[220px] mx-auto object-contain" />
+          <a href="/" className="inline-block">
+            <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="h-12 w-auto max-w-[220px] mx-auto object-contain" />
+          </a>
         </div>
 
         {/* Wizard Steps indicator */}
@@ -171,7 +177,7 @@ export default function RegisterWizard() {
           {currentStep === 0 && <StepRoleSelect {...form} />}
           {currentStep === 1 && <StepCredentials {...form} />}
           {currentStep === 2 && <StepOtpVerify {...form} />}
-          {currentStep === 3 && role === 'personal' && <StepSuccess {...form} />}
+          {currentStep === 3 && role === 'personal' && <StepProfileSetup {...form} />}
         </div>
       </div>
 

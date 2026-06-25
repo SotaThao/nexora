@@ -6,6 +6,7 @@ interface ImageFileInputProps extends React.HTMLAttributes<HTMLElement> {
   onPickFile?: (file: File) => void
   disabled?: boolean
   source?: string
+  capture?: 'environment' | 'user' | boolean
   className?: string
   inputClassName?: string
   children?: React.ReactNode
@@ -18,6 +19,7 @@ export default function ImageFileInput({
   disabled = false,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   source = 'photos',
+  capture,
   className = '',
   inputClassName = 'sr-only',
   children = null,
@@ -76,6 +78,7 @@ export default function ImageFileInput({
         ref={inputRef}
         type="file"
         accept="image/*"
+        capture={capture as any}
         className={inputClassName}
         onChange={handleWebChange}
         disabled={disabled}

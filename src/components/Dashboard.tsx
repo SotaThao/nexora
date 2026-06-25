@@ -41,6 +41,7 @@ import TipsView from './TipsView'
 import TouchpointsView from './TouchpointsView'
 import StaffDetailView from './StaffDetailView'
 import StaffModal from './dashboard/modals/StaffModal'
+import AddStaffModal from './dashboard/modals/AddStaffModal'
 import QrModal from './dashboard/modals/QrModal'
 import InviteShareModal from './dashboard/modals/InviteShareModal'
 import AddTouchpointModal from './dashboard/modals/AddTouchpointModal'
@@ -310,17 +311,20 @@ export default function Dashboard({
     errors, setErrors,
     editingStaffId, setEditingStaffId,
     isStaffModalOpen, setIsStaffModalOpen,
+    isAddStaffModalOpen,
     isApproveModalOpen, setIsApproveModalOpen,
     approvingStaffMember, setApprovingStaffMember,
     isInviteShareOpen, setIsInviteShareOpen,
     inviteShareDefaultName, setInviteShareDefaultName,
     inviteShareDefaultContact, setInviteShareDefaultContact,
-    resetStaffForm, openAddStaff, openApproveStaff, openEditStaff, closeStaffModal,
+    resetStaffForm, openAddStaff, closeAddStaffModal, openApproveStaff, openEditStaff, closeStaffModal,
     saveStaff, sendSetupLinkFromModal, handleLinkStaff, handleInviteStaff,
     handleResendInvite,
     handleAcceptJoinRequest, handleDeclineJoinRequest, deleteStaff, toggleStaff, toggleStaffTipsFlow,
     handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     inviteStaffMutation,
+    linkRequestMutation,
+    updateStatusMutation,
   } = useStaffManagement({ staffData: merchantStaffData, isStaffLoading, businessName })
 
   // Sync touchpoints removed (now handled by React Query cache)
@@ -360,14 +364,18 @@ export default function Dashboard({
   const menuItemsToDisplay = userRole === 'staff'
     ? [
         { id: 'overview', label: t('components.dashboardRoot.myDashboard'), icon: MENU_ITEMS.find(i => i.id === 'overview')?.icon, image: MENU_ITEMS.find(i => i.id === 'overview')?.image },
-        { id: 'support', label: t('dashboard.menu.support'), icon: MENU_ITEMS.find(i => i.id === 'support')?.icon }
+        { id: 'support', label: t('dashboard.menu.support'), icon: MENU_ITEMS.find(i => i.id === 'support')?.icon, image: MENU_ITEMS.find(i => i.id === 'support')?.image }
       ]
     : MENU_ITEMS
 
   // Filter lists based on searchQuery
   const filteredStaff = useMemo(() => {
     const isPendingRequest = (member) => 
-      (member.status === 'Pending Acceptance' || member.status === 'Pending') && 
+      (
+        member.status === 'Pending Acceptance' ||
+        member.status === 'Pending' ||
+        member.status === 'WaitingStaffAcceptance'
+      ) && 
       (member.itemType === 'link' || member.itemType === 'invite')
       
     const visibleStaff = staff.filter(member => !isPendingRequest(member))
@@ -382,10 +390,28 @@ export default function Dashboard({
   }, [staff, searchQuery])
 
   const pendingStaff = useMemo(() => {
-    const source = isStaffTab ? (pendingStaffPage?.items ?? []) : staff
-    return source.filter((member) =>
-      (member.status === 'Pending Acceptance' || member.status === 'Pending' || member.status === 'Pending Setup') &&
-      (member.itemType === 'link' || member.itemType === 'invite')
+    const statusSet = new Set([
+      'Pending Acceptance',
+      'Pending',
+      'Pending Setup',
+      'WaitingStaffAcceptance',
+    ])
+    const mergedSource = isStaffTab
+      ? [...(pendingStaffPage?.items ?? []), ...staff]
+      : staff
+    const deduped = mergedSource.filter((member, index, arr) => {
+      const memberId = member.id || member.linkId || member.staffLinkId || member.inviteId
+      if (!memberId) return true
+      return arr.findIndex((item) => {
+        const itemId = item.id || item.linkId || item.staffLinkId || item.inviteId
+        return itemId === memberId
+      }) === index
+    })
+
+    return deduped.filter(
+      (member) =>
+        statusSet.has(member.status) &&
+        (member.itemType === 'link' || member.itemType === 'invite'),
     )
   }, [isStaffTab, pendingStaffPage, staff])
 
@@ -596,6 +622,7 @@ export default function Dashboard({
     setActiveStaffPage: staffPagination.setPage,
     staffListLoading: isStaffLoading,
     staffListFetching: isStaffFetching,
+    togglingStaffId: updateStatusMutation.isPending ? updateStatusMutation.variables?.staffLinkId ?? null : null,
   }
 
   return (
@@ -661,7 +688,7 @@ export default function Dashboard({
               onClick={() => handleNavigateMenu('overview')}
               className="mb-5 inline-flex h-9 items-center rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-extrabold text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"
             >
-              Back to Dashboard
+              {t('dashboard.back_to_dashboard')}
             </button>
           )}
           <Outlet context={dashboardCtx} />
@@ -707,8 +734,17 @@ export default function Dashboard({
         navigateMenu={navigateMenu}
       />
 
+      <AddStaffModal
+        open={isAddStaffModalOpen}
+        onClose={closeAddStaffModal}
+        onLinkStaff={handleLinkStaff}
+        onInviteStaff={handleInviteStaff}
+        isLinking={linkRequestMutation.isPending}
+        isInviting={inviteStaffMutation.isPending}
+      />
+
       <StaffModal
-        open={isStaffModalOpen}
+        open={isStaffModalOpen && Boolean(editingStaffId)}
         editing={Boolean(editingStaffId)}
         onDecline={closeStaffModal}
         form={staffForm}

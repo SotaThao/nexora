@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { visibleMenuItems } from '../constants'
+import { visibleMenuItems, PUBLIC_HOME_MENU_ITEM } from '../constants'
 import MenuIcon from '../../ui/MenuIcon'
 import { getSubscriptionSidebarCopy } from '../../../utils/subscriptionDisplay'
 
@@ -54,17 +54,12 @@ export default function DashboardSidebar({
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col bg-nexoraSidebar px-5 py-7 text-white lg:flex">
-      {/* Logo block */}
-      <div className="flex items-center px-2">
-        <img src="/assets/logo-nexora-white-vertical.png" alt="Nexora Logo" className="w-44 h-auto max-w-full object-contain" />
-      </div>
-
       {/* Expandable Profile Card */}
-      <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-4 shrink-0">
+      <div className="rounded-xl border border-white/15 bg-white/5 p-4 shrink-0">
         <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsProfileExpanded(!isProfileExpanded)}>
           <div className="flex items-center gap-3 min-w-0">
             {profile.avatar && !profile.avatar.includes('unsplash.com') ? (
-              <img src={profile.avatar} alt="" className="h-10 w-10 shrink-0 rounded-full border border-white/10 object-cover" />
+              <img src={profile.avatar} alt="" className="h-10 w-10 shrink-0 rounded-full border border-white/15 object-cover" />
             ) : (
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-sm font-extrabold uppercase">
                 {(businessName || profile.email || '').slice(0, 2).toUpperCase() || '?'}
@@ -72,14 +67,17 @@ export default function DashboardSidebar({
             )}
             <div className="min-w-0">
               {/* Top line: business name when present (same bold style), else
-                  fall back to owner name / email. Email always shown below. */}
+                  fall back to owner name / email. Email shown below only when
+                  there is no business name to avoid redundant identity lines. */}
               <div className="flex items-center gap-1 min-w-0">
                 <div className="truncate text-sm font-bold text-white">{businessName || profile.fullName || profile.email}</div>
               </div>
-              <div className="text-[10px] text-white/40 truncate mt-0.5">{profile.email}</div>
+              {!businessName && (
+                <div className="text-[10px] text-white/60 truncate mt-0.5">{profile.email}</div>
+              )}
             </div>
           </div>
-          <div className="text-white/70 hover:text-white transition ml-2">
+          <div className="text-white/85 hover:text-white transition ml-2">
             {isProfileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </div>
         </div>
@@ -95,7 +93,7 @@ export default function DashboardSidebar({
               className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
                 activeMenu === 'settings' && settingsTab === 'profile'
                   ? 'text-brandCyan font-extrabold'
-                  : 'text-white/60 hover:bg-white/5 hover:text-white'
+                  : 'text-white/75 hover:bg-white/5 hover:text-white'
               }`}
             >
               <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === 'settings' && settingsTab === 'profile' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
@@ -109,7 +107,7 @@ export default function DashboardSidebar({
               className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
                 activeMenu === 'settings' && settingsTab === 'kyb'
                   ? 'text-brandCyan font-extrabold'
-                  : 'text-white/60 hover:bg-white/5 hover:text-white'
+                  : 'text-white/75 hover:bg-white/5 hover:text-white'
               }`}
             >
               <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === 'settings' && settingsTab === 'kyb' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
@@ -121,7 +119,7 @@ export default function DashboardSidebar({
 
       {/* Card 2: Current Plan & Manage Plan */}
       {userRole !== 'staff' && (
-        <div className="mt-3 rounded-xl border border-white/10 bg-white/5 p-4 shrink-0">
+        <div className="mt-3 rounded-xl border border-white/15 bg-white/5 p-4 shrink-0">
         <div className="text-[10px] font-extrabold uppercase tracking-wider text-white/45">
           {t('dashboard.sidebar.current_plan_header')}
         </div>
@@ -153,11 +151,22 @@ export default function DashboardSidebar({
 
       {/* Navigation Menu */}
       <nav className="mt-6 flex-1 space-y-1.5 overflow-y-auto pr-1">
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          className="flex h-12 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-bold text-white/85 transition hover:bg-white/5 hover:text-white"
+        >
+          <MenuIcon item={PUBLIC_HOME_MENU_ITEM} active={false} />
+          <span className="truncate">{t('dashboard.menu.home')}</span>
+        </button>
+
+        <div className="my-1 border-t border-white/10" />
+
         {(() => {
           const menuItemsToDisplay = userRole === 'staff'
             ? [
                 { id: 'overview', label: t('components.dashboard.layout.DashboardSidebar.myDashboard'), icon: visibleMenuItems.find(i => i.id === 'overview')?.icon, image: visibleMenuItems.find(i => i.id === 'overview')?.image },
-                { id: 'support', label: t('dashboard.menu.support'), icon: visibleMenuItems.find(i => i.id === 'support')?.icon }
+                { id: 'support', label: t('dashboard.menu.support'), icon: visibleMenuItems.find(i => i.id === 'support')?.icon, image: visibleMenuItems.find(i => i.id === 'support')?.image }
               ]
             : visibleMenuItems
 
@@ -191,7 +200,7 @@ export default function DashboardSidebar({
                 className={`flex h-12 w-full items-center justify-between rounded-lg px-4 text-left text-sm font-bold transition ${
                   isActive
                     ? 'bg-gradient-to-r from-nexoraElectric to-nexoraViolet text-white shadow-lg shadow-nexoraElectric/20'
-                    : 'text-white/70 hover:bg-white/5 hover:text-white'
+                    : 'text-white/85 hover:bg-white/5 hover:text-white'
                 }`}
               >
                 <div className="flex items-center gap-3 min-w-0">
@@ -209,7 +218,7 @@ export default function DashboardSidebar({
               </button>
 
               {id === 'tips' && isTipsExpanded && (
-                <div className="ml-9 mt-1 space-y-1 border-l border-white/10 pl-3 animate-fadeIn">
+                <div className="ml-9 mt-1 space-y-1 border-l border-white/15 pl-3 animate-fadeIn">
                   {[
                     { id: 'overview', label: t('dashboard.tips.tabs.overview') },
                     { id: 'savings', label: t('dashboard.tips.tabs.savings') },
@@ -226,7 +235,7 @@ export default function DashboardSidebar({
                         className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
                           isSubActive
                             ? 'text-brandCyan font-extrabold'
-                            : 'text-white/60 hover:bg-white/5 hover:text-white'
+                            : 'text-white/75 hover:bg-white/5 hover:text-white'
                         }`}
                       >
                         <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
@@ -238,9 +247,10 @@ export default function DashboardSidebar({
               )}
 
               {id === 'touchpoints' && isTouchpointsExpanded && (
-                <div className="ml-9 mt-1 space-y-1 border-l border-white/10 pl-3 animate-fadeIn">
+                <div className="ml-9 mt-1 space-y-1 border-l border-white/15 pl-3 animate-fadeIn">
                   {[
                     { id: 'stations', label: t('dashboard.touchpoints.tabs.stations') },
+                    { id: 'devices', label: t('dashboard.touchpoints.tabs.devices') },
                   ].map(sub => {
                     const isSubActive = activeMenu === 'touchpoints' && (activeSubTab || 'stations') === sub.id
                     return (
@@ -253,7 +263,7 @@ export default function DashboardSidebar({
                         className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
                           isSubActive
                             ? 'text-brandCyan font-extrabold'
-                            : 'text-white/60 hover:bg-white/5 hover:text-white'
+                            : 'text-white/75 hover:bg-white/5 hover:text-white'
                         }`}
                       >
                         <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
@@ -270,7 +280,7 @@ export default function DashboardSidebar({
       </nav>
 
       {/* Bottom Sign Out */}
-      <div className="mt-auto pt-4 border-t border-white/10 shrink-0">
+      <div className="mt-auto pt-4 border-t border-white/15 shrink-0">
         <button onClick={onLogout} className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-white/65 transition hover:text-white w-full">
           <LogOut className="h-4 w-4" />
           {t('dashboard.sidebar.sign_out')}

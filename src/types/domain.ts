@@ -88,6 +88,43 @@ export interface TouchpointRecord {
   [key: string]: unknown
 }
 
+export interface PhysicalCardRecord {
+  id: string
+  cardCode: string
+  helpCode?: string | null
+  linkedTouchPointId?: string | null
+  touchPointName?: string | null
+  linkedAt?: string | null
+}
+
+export interface PhysicalCardDetail {
+  id: string
+  cardCode: string
+  helpCode: string
+  isActive: boolean
+  linkedTouchPointId?: string | null
+  touchPointName?: string | null
+  touchPointUrl?: string | null
+  linkedAt?: string | null
+}
+
+export interface QrTouchPointRef {
+  id: string
+  name: string
+  slug: string
+  type?: string
+  businessId?: string
+  businessName?: string
+  businessSlug: string
+}
+
+export interface ResolveQrCodePayload {
+  status: string
+  touchPoint: QrTouchPointRef | null
+}
+
+export type PhysicalCardPage = PaginatedResponse<PhysicalCardRecord>
+
 export type TouchpointPage = PaginatedResponse<TouchpointRecord>
 
 export interface NotificationRecord {
@@ -136,6 +173,7 @@ export interface StaffSearchResult {
   fullName: string
   avatar: string | null
   position: string | null
+  paymentMethods: PaymentMethodDto[]
 }
 
 export interface StaffBusinessLink {
@@ -305,6 +343,7 @@ export interface DomainEntity {
 export interface TransactionRecord extends DomainEntity {
   amount?: number
   status?: string
+  statusLabel?: string | null
   staff?: StaffMember | string
   staffId?: string
   staffName?: string
@@ -315,9 +354,17 @@ export interface TransactionRecord extends DomainEntity {
   touchpoint?: string
   touchPointId?: string | null
   confirmedAt?: string | null
+  staffConfirmedAt?: string | null
+  merchantConfirmedAt?: string | null
   isMultiStaff?: boolean
   tipItems?: unknown[]
   [key: string]: unknown
+}
+
+/** Result of POST /api/v1/merchant/tips/confirm-receipt (see US-025). */
+export interface MerchantTipsConfirmReceiptResult {
+  confirmedCount: number
+  failedIds: string[]
 }
 
 export interface ReviewRecord extends DomainEntity {
@@ -365,8 +412,11 @@ export interface StaffProfile {
   id?: string
   staffCode?: string
   displayName?: string
+  position?: string
   bio?: string
   photo?: string
+  photoUrl?: string
+  isProfileComplete?: boolean
   [key: string]: unknown
 }
 
@@ -405,6 +455,17 @@ export function isApiError(err: unknown): err is ApiError {
     'errorCode' in err &&
     typeof (err as ApiError).errorCode === 'string'
   )
+}
+
+export interface EcosystemItem {
+  id: string
+  name: string
+  url: string
+  logoUrl?: string | null
+}
+
+export interface EcosystemSignInResult {
+  redirectUrl: string | null
 }
 
 export function getApiErrorCode(err: unknown, fallback = 'HTTP_ERROR'): string {

@@ -195,8 +195,8 @@ export interface DashboardReviewsQuery {
 export interface StaffPaymentMethodApiDto {
   type?: string
   isActive?: boolean
-  accountInfo?: string
-  imageUrl?: string
+  accountInfo?: string | null
+  imageUrl?: string | null
 }
 
 export interface StaffListItemApiDto {
@@ -233,9 +233,11 @@ export interface StaffListItemApiDto {
 export interface StaffSearchResultApiDto {
   staffProfileId: string
   staffCode?: string | null
-  displayName?: string
+  displayName?: string | null
+  fullName?: string | null
   photoUrl?: string | null
   position?: string | null
+  paymentMethods?: StaffPaymentMethodApiDto[]
 }
 
 /** v3.3 — `GET /merchant/staff/invites` item (StaffInviteListItemDto). */
@@ -282,6 +284,7 @@ export interface TipApiDto {
   id?: string
   amount?: number
   status?: string
+  statusLabel?: string | null
   paymentMethod?: string
   staffName?: string
   staffProfileId?: string | null
@@ -290,6 +293,8 @@ export interface TipApiDto {
   touchPointId?: string | null
   createdAt?: string
   confirmedAt?: string | null
+  staffConfirmedAt?: string | null
+  merchantConfirmedAt?: string | null
   isMultiStaff?: boolean
   tipItems?: unknown[]
 }
@@ -385,6 +390,58 @@ export interface TouchpointApiDto {
   totalScans?: number
   totalRevenue?: number
   deviceId?: string | null
+}
+
+export interface PhysicalCardApiDto {
+  id?: string
+  cardCode?: string
+  helpCode?: string | null
+  linkedTouchPointId?: string | null
+  touchPointName?: string | null
+  linkedAt?: string | null
+}
+
+export interface LinkPhysicalCardResult {
+  cardCode: string
+  linkedTouchPointId: string
+  touchPointName: string
+  linkedAt: string
+}
+
+export interface UnlinkPhysicalCardResult {
+  cardCode: string
+  unlinkedAt: string
+}
+
+export interface PhysicalCardDetailApiDto {
+  id?: string
+  cardCode?: string
+  helpCode?: string
+  isActive?: boolean
+  linkedTouchPointId?: string | null
+  touchPointName?: string | null
+  touchPointUrl?: string | null
+  linkedAt?: string | null
+}
+
+export interface QrTouchPointApiDto {
+  id?: string
+  name?: string
+  slug?: string
+  type?: string
+  businessId?: string
+  businessName?: string
+  businessSlug?: string
+}
+
+export interface ResolveQrCodeResult {
+  status?: string
+  touchPoint?: QrTouchPointApiDto | null
+}
+
+export interface SendPhysicalCardSupportResult {
+  supportRequestId: string
+  submittedAt: string
 }
 
 export interface TouchpointCreateResult {

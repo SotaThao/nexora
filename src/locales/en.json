@@ -1,4 +1,23 @@
 {
+  "merchant_dashboard": {
+    "tips": {
+      "awaiting_shop_confirmation": "Awaiting shop confirmation",
+      "confirm_receipt": "Confirm receipt",
+      "confirm_receipt_help": "The customer transferred this tip into your shop account. Confirm once the money has arrived so each staff member's share is recorded.",
+      "confirmed_help": "You confirmed this tip was received on {{time}}.",
+      "confirm_success": "Tip receipt confirmed.",
+      "confirm_failed": "Could not confirm tip receipt.",
+      "confirm_partial": "Confirmed {{count}} tip(s). Some items could not be confirmed.",
+      "pending_banner_title": "{{count}} tip(s) awaiting confirmation",
+      "pending_banner_desc": "The customer transferred the money into your shop account. Confirm receipt so each staff member's share is recorded.",
+      "pending_view_cta": "View",
+      "pending_card_hint": "Tap to view and confirm receipt",
+      "pending_callout_text": "{{count}} tip(s) need confirmation of receipt into your shop account.",
+      "pending_filtering": "Filtering.",
+      "pending_filter_apply": "Filter now",
+      "pending_filter_clear": "Clear filter"
+    }
+  },
   "staff_dashboard": {
     "brand": {
       "title": "NEXORA",
@@ -27,6 +46,10 @@
       "profile": "Settings",
       "notifications": "Notifications"
     },
+    "missing_payout_toast": "Please set up your payout method to receive TIPS.",
+    "missing_payout_title": "Action Required",
+    "missing_payout_heading": "Set Up Your Payout Method",
+    "setup_payout_now": "Set Up Payout Methods",
     "status": {
       "active": "Active",
       "inactive": "Inactive"
@@ -74,6 +97,10 @@
       "total_count": "{{count}} tips",
       "page_of": "Page {{page}} of {{total}}",
       "multi_staff": "Multi-staff",
+      "via_business_pending": "Awaiting",
+      "via_business_confirmed": "Confirmed",
+      "via_business_pending_help": "Waiting for {{business}} to confirm and pay out your share.",
+      "via_business_confirmed_help": "{{business}} confirmed this tip — your share will be paid out.",
       "status": {
         "initiated": "Initiated",
         "confirmed": "Confirmed",
@@ -82,6 +109,15 @@
         "pending": "Pending",
         "verified": "Verified"
       },
+      "status_help": {
+        "initiated": "The customer started this tip but hasn't confirmed payment yet.",
+        "confirmed": "Payment confirmed — you'll receive this tip.",
+        "skipped": "The customer chose not to tip.",
+        "completed": "This tip has been received and completed.",
+        "pending": "Waiting for payment confirmation.",
+        "verified": "This tip has been verified."
+      },
+      "status_help_aria": "What this status means",
       "ai_insight": "AI Insight",
       "ai_insight_body": "Your average tip for Pedicure is 21%, which is 6% higher than the salon average."
     },
@@ -124,15 +160,25 @@
     },
     "profile": {
       "title": "Personal Account",
+      "title_tooltip": "Full name, phone, and email identify your staff account. Your display name and bio are shown to customers on tip screens.",
       "full_name": "Full Name",
-      "display_name": "Default Display Name",
+      "display_name": "Display Name",
       "phone": "Phone",
       "email": "Email",
       "bio": "Bio",
+      "bio_tooltip": "Use a short intro customers can recognize: your specialty, style, or a friendly note. This helps customers pick the right technician before tipping.",
       "identity_note": "Full name, phone and email come from your business record. Update your display name and bio here.",
       "save": "Save Account",
       "saved": "Saved ✓",
-      "business_names": "Business Display Names"
+      "business_names": "Business Display Names",
+      "ph_full_name": "e.g. Lisa Marie Tran",
+      "ph_display_name": "e.g. Lisa T.",
+      "ph_phone": "e.g. 408-555-1234",
+      "ph_bio": "Welcome to my chair! I specialize in luxury nail art and spa treatments...",
+      "ph_business_display_name": "Name shown to customers at this salon",
+      "business_names_empty_title": "No linked salons yet",
+      "business_names_empty_body": "Link with a salon first. Once approved, you can set how your name appears to customers at each business here.",
+      "business_names_empty_action": "Go to Link & Tip"
     },
     "notifications": {
       "empty": "No notifications.",
@@ -169,10 +215,12 @@
     "active": "Active",
     "inactive": "Inactive",
     "back": "Back",
+    "back_to_home": "Back to Home",
     "next": "Next",
     "previous": "Previous",
     "cancel": "Cancel",
     "confirm": "Confirm",
+    "retake": "Retake",
     "save": "Save",
     "update": "Update",
     "delete": "Delete",
@@ -272,7 +320,7 @@
     "feedback_email": "Private Feedback Email (1-3★)",
     "title_step_2": "Step 2: Staff Management & QR Touchpoints",
     "desc_step_2": "Add your technicians. The system automatically generates corresponding QR codes to place at tables or share.",
-    "add_staff_title": "Add New",
+    "add_staff_title": "Add Staff",
     "linked_wallets": "Linked Payment Wallets",
     "staff_fullname": "Full Name (Internal) *",
     "staff_fullname_placeholder": "e.g., Mia Tran",
@@ -388,6 +436,7 @@
       "manage_plan": "Manage Plan"
     },
     "menu": {
+      "home": "Home",
       "dashboard": "Dashboard",
       "staff": "Staff",
       "tips": "Tips",
@@ -403,8 +452,13 @@
     },
     "header": {
       "search_placeholder": "Search tech, station, review...",
-      "add_tp": "Add New Touch Point"
+      "add_tp": "Add New Touch Point",
+      "ecosystem": "Ecosystem",
+      "ecosystem_loading": "Loading ecosystem...",
+      "no_ecosystem": "No ecosystem available",
+      "coming_soon_badge": "Coming Soon"
     },
+    "back_to_dashboard": "Back to Dashboard",
     "notifications": {
       "title": "Notifications",
       "mark_all_read": "Mark all read",
@@ -494,12 +548,16 @@
       "preset_custom": "Custom Range",
       "start_date": "Start Date",
       "end_date": "End Date",
-      "all_staff": "All Staff",
-      "all_touchpoints": "All Touch Points",
-      "all_payments": "All Payment Methods",
-      "all_statuses": "All Statuses",
+      "all_staff": "All",
+      "all_touchpoints": "All",
+      "all_payments": "All",
+      "all_statuses": "All",
+      "status_initiated": "Initiated",
+      "status_confirmed": "Confirmed",
+      "status_skipped": "Skipped",
+      "status_completed": "Completed",
       "filter_staff_type": "Staff Type",
-      "all_staff_types": "All Types",
+      "all_staff_types": "All",
       "multi_staff_only": "Multi-staff tips",
       "single_staff_only": "Single-staff tips",
       "filter_search": "Search",
@@ -584,7 +642,37 @@
       "empty_title": "No QR stations yet",
       "empty_desc": "Create your first touchpoint to start receiving scans and tips.",
       "toggle_enabled": "Touchpoint activated successfully.",
-      "toggle_disabled": "Touchpoint deactivated successfully."
+      "toggle_disabled": "Touchpoint deactivated successfully.",
+      "link_success": "Device linked successfully.",
+      "unlink_success": "Device unlinked successfully.",
+      "no_matching_cards": "No matching devices",
+      "linked_to": "Linked to {{name}}",
+      "unlink_btn": "Unlink",
+      "unlink_confirm_title": "Confirm Unlink Device",
+      "unlink_confirm_desc": "Unlink device \"{device}\" from touchpoint \"{name}\"? The station will only use paper QR until you link a new device.",
+      "link_device_btn": "Link Device",
+      "link_device_required": "Device ID is required.",
+      "hardware": {
+        "linked_devices": "Linked Devices",
+        "unlinked_devices": "Unlinked Devices"
+      },
+      "physical_card": {
+        "view_detail": "View device details",
+        "detail_title": "Device Details",
+        "detail_error": "Unable to load device details.",
+        "card_code": "Card Code",
+        "help_code": "Help Code",
+        "status": "Status",
+        "linked_at": "Linked At",
+        "not_linked_yet": "Not linked yet",
+        "touchpoint": "Linked Touchpoint",
+        "support_title": "Request Device Support",
+        "support_desc": "Describe the issue with this device. Our team will follow up using the help code.",
+        "support_placeholder": "Describe the issue with this device...",
+        "support_submit": "Send Support Request",
+        "support_success": "Support request submitted successfully.",
+        "close": "Close"
+      }
     },
     "devices": {
       "subtitle": "Manage physical salon stands, tabletop codes, and smart taps.",
@@ -702,8 +790,9 @@
         "est_savings_annual_suffix": "each year.",
         "per_month": "/month",
         "recent_payouts": "Recent Direct Payouts",
-        "col_time": "Time",
+        "col_time": "Date",
         "col_staff": "Technician",
+        "multi_tips": "Multi-tips",
         "col_amount": "Amount",
         "col_method": "Wallet",
         "col_status": "Status",
@@ -951,7 +1040,7 @@
     "agree_terms": "I agree to the Nexora Touch Terms & Conditions",
     "terms_error": "You must agree to the Terms & Conditions to proceed.",
     "terms_title": "Terms & Conditions",
-    "title_step_1": "Step 2: Create New Account",
+    "title_step_1": "Create New Account",
     "desc_step_1": "Create your Nexora Touch credentials to get started.",
     "email_label": "Email Address *",
     "email_placeholder": "partner@yourstore.com",
@@ -1135,6 +1224,7 @@
     "business_invalid_slug_format": "The URL slug format is invalid.",
     "user_not_merchant": "Your account is not registered as a merchant.",
     "touchpoint_starter_limit_reached": "Starter plan limit reached: you can only create up to 3 touch points. Please upgrade your plan to add more.",
+    "physical_card_not_found": "This physical card was not found. Please check the card code and try again.",
     "image_file_size_exceeded": "The image file size exceeds the 10MB limit.",
     "image_unsupported_file_type": "Unsupported file format. Please upload PNG, JPEG, or WebP.",
     "image_upload_failed": "Failed to upload the image.",
@@ -1146,9 +1236,13 @@
     "invite_link_disabled": "The salon's public invite link is currently disabled.",
     "staff_invite_already_exists": "An invite has already been sent to this person.",
     "staff_already_linked": "This technician is already linked to your salon.",
+    "staff_already_linked_to_business": "This staff member is already linked to your business.",
     "staff_invite_not_found": "This invite could not be found.",
     "staff_invite_expired": "This invite has expired.",
     "staff_profile_not_found": "Staff profile not found.",
+    "staff_display_name_required": "Display name is required.",
+    "staff_display_name_too_short": "Display name must be at least 2 characters.",
+    "staff_display_name_too_long": "Display name must be at most 100 characters.",
     "common_validation_error": "Validation failed. Please check your inputs.",
     "common_not_found": "The requested resource was not found.",
     "common_unauthorized": "Unauthorized access.",
@@ -1214,17 +1308,34 @@
           "bankDetails": "Bank details",
           "account": "Account",
           "noteRequired": "Note (Required)",
-          "yesISentThe": "Yes, I Sent The Tip",
-          "multiStaffTitle": "Send combined tip via {wallet}",
+          "yesISentThe": "I Sent Tip",
+          "multiStaffTitle": "Send ${amount} to {business} with {wallet}",
           "multiStaffSubtitle": "Open your bank app and send one payment to {business}. Your tip will be split among the selected providers.",
           "tipBreakdown": "Tip breakdown",
           "totalCombinedTip": "Total combined tip",
           "goBack": "Go Back",
-          "singleStaffTitle": "Send Tip via {wallet}",
+          "singleStaffTitle": "Send ${amount} to {recipient} with {wallet}",
           "singleStaffSubtitle_zelle": "Open your bank app and send to {recipient}.",
           "singleStaffSubtitle_venmo": "Open your Venmo app and send to {recipient}.",
           "singleStaffSubtitle_cashapp": "Open your Cash App and send to {recipient}.",
-          "singleStaffSubtitle_default": "Open your wallet app and send to {recipient}."
+          "singleStaffSubtitle_default": "Open your wallet app and send to {recipient}.",
+          "copyPhoneNumber": "Copy Phone Number",
+          "copyEmail": "Copy Email",
+          "copyUsername": "Copy Username",
+          "copyCashTag": "Copy Cash Tag",
+          "copyAccount": "Copy Account",
+          "stepCopyPhone": "Copy {name}'s {wallet} phone number.",
+          "stepCopyEmail": "Copy {name}'s {wallet} email.",
+          "stepCopyUsername": "Copy {name}'s {wallet} username.",
+          "stepCopyCashTag": "Copy {name}'s Cash Tag.",
+          "stepOpenApp_zelle": "Open your bank app or Zelle app.",
+          "stepOpenApp_paypal": "Open your PayPal app.",
+          "stepOpenApp_venmo": "Open your Venmo app.",
+          "stepOpenApp_cashapp": "Open your Cash App.",
+          "stepOpenApp_applecash": "Open your Wallet app.",
+          "stepOpenApp_default": "Open your wallet app.",
+          "stepSendAmount": "Send exactly ${amount} to {name}.",
+          "stepConfirm": "Come back here and tap I Sent Tip."
         }
       }
     },
@@ -1317,6 +1428,27 @@
           "noQrCodeUploaded": "No QR code uploaded",
           "thisInformationWasEntered": "This information was entered by the technician. Salon Owner has view-only access.",
           "save": "SAVE"
+        },
+        "AddStaffModal": {
+          "title": "Add Staff",
+          "tab_link": "Link Existing Staff",
+          "tab_invite": "Invite New Staff",
+          "role_at_business": "Role at Business",
+          "staff_name": "Staff Name",
+          "staff_name_placeholder": "Example: Lisa Tran",
+          "phone_or_email": "Phone or Email",
+          "phone_or_email_placeholder": "e.g. lisa@example.com or +1 407-555-0123",
+          "role": "Role",
+          "role_placeholder": "Example: Nail Technician",
+          "send_setup_link": "Send Setup Link",
+          "staff_id_label": "Staff ID: {code}",
+          "link_info": "After you send a link request, the staff member must accept before they appear as active in your business.",
+          "invite_info": "Staff receives a link to complete their NEXORA Tip Profile. After setup, they are automatically linked to your business.",
+          "staff_name_required": "Staff name is required.",
+          "contact_required": "Phone or email is required.",
+          "search_required": "Please enter a Staff ID, phone number, or email to search.",
+          "emailRequiredForMethod": "Please enter an email address when Email is selected as the invite method.",
+          "phoneRequiredForMethod": "Please enter a phone number when SMS is selected as the invite method."
         },
         "StaffModal": {
           "staffProfileVerifiedAuto": "Staff Profile Verified! Auto-filled profile details.",
@@ -1505,25 +1637,25 @@
       },
       "steps": {
         "StepCredentials": {
-          "activateAccountEnterOtp": "Activate Account (Enter OTP)",
-          "enterTheOtpCode": "Enter the OTP code sent to your email to activate your account.",
-          "otpSentToEmail": "OTP sent to email",
-          "enterOtpCode": "Enter OTP Code *",
+          "activateAccountEnterOtp": "Activate Account",
+          "enterTheOtpCode": "Verification code sent to {{email}}",
+          "otpSentToEmail": "Verification code sent to",
+          "enterOtpCode": "Enter verification code",
           "resendVerificationCode": "Resend Verification Code",
           "verifyAndActivate": "Verify & Activate",
           "processing": "Processing...",
           "register": "Register",
-          "phExampleOtp": "e.g. 1234"
+          "phExampleOtp": "Enter 6-digit code"
         },
         "StepOtpVerify": {
-          "activateAccountEnterOtp": "Activate Account (Enter OTP)",
-          "enterTheOtpCode": "Enter the OTP code sent to your email to activate your account.",
-          "otpSentToEmail": "OTP sent to email",
-          "enterOtpCode": "Enter OTP Code *",
+          "activateAccountEnterOtp": "Activate Account",
+          "enterTheOtpCode": "Verification code sent to {{email}}",
+          "otpSentToEmail": "Verification code sent to",
+          "enterOtpCode": "Enter verification code",
           "resendVerificationCode": "Resend Verification Code",
           "verifyAndActivate": "Verify & Activate",
           "processing": "Processing...",
-          "phExampleOtp": "e.g. 1234"
+          "phExampleOtp": "Enter 6-digit code"
         },
         "StepPayoutSetup": {
           "payoutConfiguration": "Payout Configuration",
@@ -1531,7 +1663,8 @@
           "autoFill": "Auto-Fill",
           "notConfigured": "Not Configured",
           "configure": "Configure",
-          "saveAndActivate": "Save & Activate"
+          "saveAndActivate": "Save & Activate",
+          "nexoraId": "NEXORA ID"
         },
         "StepProfileSetup": {
           "personalProfileSetup": "Personal Profile Setup",
@@ -1542,8 +1675,8 @@
           "phoneNumber": "Phone Number *",
           "emailAddress": "Email Address",
           "roleSpeciality": "Role / Speciality",
-          "nexoraStaffId": "NEXORA Staff ID",
-          "shortBioShowsOn": "Short Bio (Shows on customer tip screen)",
+          "nexoraStaffId": "NEXORA ID",
+          "shortBioShowsOn": "Short Bio",
           "phFullName": "e.g. Lisa Marie Tran",
           "phNickname": "e.g. Lisa T.",
           "phPhone": "e.g. 408-555-1234",
@@ -1590,6 +1723,24 @@
       },
       "tabs": {
         "ProfileTab": {
+          "edit": "Edit",
+          "businessOwner": "Business Owner",
+          "username": "Username",
+          "email": "Email",
+          "referralLink": "Referral Link",
+          "copied": "Copied",
+          "copy": "Copy",
+          "showQr": "Show QR",
+          "notConfigured": "Not Configured",
+          "streetAddress": "Street Address",
+          "city": "City",
+          "stateProvince": "State / Province",
+          "zipCode": "ZIP Code",
+          "businessPhone": "Business Phone",
+          "businessEmail": "Business Email",
+          "website": "Website",
+          "googleReviewLink": "Google Review Link",
+          "yelpReviewLink": "Yelp Review Link",
           "payoutMethods": "Payout Methods",
           "payoutAccount": "Payout account",
           "methodNotConfigured": "Method is not configured.",
@@ -1629,7 +1780,19 @@
           "cancel": "CANCEL",
           "save": "SAVE",
           "phGoogleReviewUrl": "https://g.page/r/.../review",
-          "phYelpUrl": "https://www.yelp.com/biz/..."
+          "phYelpUrl": "https://www.yelp.com/biz/...",
+          "validation": {
+            "required": "This field is required.",
+            "invalid": "Please enter a valid value.",
+            "adultDob": "You must be at least 18 years old.",
+            "phone": "Please enter a valid phone number.",
+            "email": "Please enter a valid email address.",
+            "emailOrPhone": "Please enter a valid email address or phone number.",
+            "url": "Enter a complete URL starting with http:// or https://.",
+            "postalCode": "Please enter a valid ZIP or postal code.",
+            "venmo": "Enter a valid Venmo username starting with @.",
+            "cashapp": "Enter a valid Cash App cashtag starting with $."
+          }
         },
         "KybTab": {
           "iframeTitle": "Know your business",
@@ -1840,7 +2003,7 @@
     "staff_registration": {
       "hooks": {
         "useStaffRegistration": {
-          "nexoraStaffIdNot": "NEXORA Staff ID not found.",
+          "nexoraStaffIdNot": "NEXORA ID not found.",
           "emailIsRequired": "Email is required",
           "emailIsInvalid": "Email is invalid",
           "emailsDoNotMatch": "Emails do not match",
@@ -1871,8 +2034,8 @@
           "password": "Password *",
           "referralLinkSalon": "Business Name - Referral Code",
           "label1ActivateAccount": "1. Activate Account",
-          "enterTheOtpCode": "Enter the OTP code sent to your email to activate your account.",
-          "enterOtpCode": "Enter OTP Code *",
+          "enterTheOtpCode": "Verification code sent to {{email}}",
+          "enterOtpCode": "Enter verification code",
           "verifyAndActivate": "Verify & Activate",
           "privacyPolicy": "Privacy Policy",
           "termsOfService": "Terms of Service",
@@ -1883,7 +2046,7 @@
           "phExampleEmail": "e.g. name@example.com",
           "phPassword": "••••••••",
           "phReferralCode": "Enter referral code...",
-          "phExampleOtp": "e.g. 1234"
+          "phExampleOtp": "Enter 6-digit code"
         },
         "StepPayments": {
           "label3PayoutConfigurations": "3. Payout Configurations",
@@ -1903,7 +2066,7 @@
           "walletPlaceholder_venmo": "Enter Venmo @username...",
           "walletPlaceholder_cashapp": "Enter Cash App $cashtag...",
           "walletPlaceholder_applecash": "Enter Apple Cash phone number...",
-          "nexoraStaffId": "NEXORA Staff ID",
+          "nexoraStaffId": "NEXORA ID",
           "pendingRegister": "Pending Register",
           "consentRequired": "You must accept both agreements before activating your account."
         },
@@ -1921,14 +2084,17 @@
           "phPhone": "e.g. 408-555-1234",
           "phExampleEmail": "e.g. name@example.com",
           "phPosition": "e.g. Acrylic Specialist",
-          "phBio": "Welcome to my chair! I specialize in luxury nail art, acrylic extensions, and hot stone spa treatments..."
+          "phBio": "Welcome to my chair! I specialize in luxury nail art, acrylic extensions, and hot stone spa treatments...",
+          "displayNameMinLength": "Display name must be at least 2 characters.",
+          "displayNameHint": "Shown to customers when they tip you. 2–100 characters.",
+          "nicknameHint": "Short name visible on the tip screen. 2–100 characters."
         },
         "StepSuccess": {
           "joinRequestSubmitted": "Join Request Submitted!",
           "pending": "PENDING",
           "pendingApproval": "Pending Approval",
           "staffLinkCopiedTo": "Staff link copied to clipboard!",
-          "joinRequestMessage": "Your NEXORA Staff ID is {staffId}. Your request to link with {businessName} has been successfully submitted. Please ask the salon owner to approve your request to activate your tipping QR.",
+          "joinRequestMessage": "Your NEXORA ID is {staffId}. Your request to link with {businessName} has been successfully submitted. Please ask the salon owner to approve your request to activate your tipping QR.",
           "joinedTodayRole": "Joined: Today • Role: {role}",
           "nexoraId": "NEXORA ID",
           "copyStaffLink": "COPY STAFF LINK"
@@ -2166,6 +2332,26 @@
         "f3": "Premium solid brass NFC station plaques",
         "f4": "24/7 dedicated enterprise success managers"
       }
+    }
+  },
+  "public": {
+    "qr": {
+      "invalid_code_title": "Invalid QR Code",
+      "invalid_code_desc": "This link is missing a device code. Please scan the QR code again.",
+      "unavailable_title": "QR Code Unavailable",
+      "not_found": "This device code was not found. It may be invalid or no longer registered.",
+      "inactive": "This device is currently inactive. Please contact the business for assistance.",
+      "unlinked": "This device is not linked to a touchpoint yet. Please ask the merchant to link it first.",
+      "unavailable": "This QR code cannot open a touchpoint right now. Please try again later or contact support."
+    },
+    "help_qr": {
+      "title": "Device Support",
+      "invalid_code": "This help link is missing a device code.",
+      "detail_partial_title": "Device information limited",
+      "detail_partial_desc": "We could not load full device details, but you can still submit a support request using the help code below.",
+      "support_desc": "Describe the issue with this physical device. Our team will follow up using the help code on this card.",
+      "support_success": "Support request submitted successfully.",
+      "support_success_desc": "Thank you. Our team will review your request and follow up if needed."
     }
   },
   "coming_soon": {

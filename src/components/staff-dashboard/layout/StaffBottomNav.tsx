@@ -4,11 +4,11 @@ import { Home, QrCode, CircleDollarSign, Star, User } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 
 const NAV_ITEMS = [
-  { id: 'home',    icon: Home,             labelKey: 'staff_dashboard.nav.tab_home' },
-  { id: 'qr',      icon: QrCode,           labelKey: 'staff_dashboard.nav.tab_qr' },
-  { id: 'tips',    icon: CircleDollarSign, labelKey: 'staff_dashboard.nav.tips' },
-  { id: 'reviews', icon: Star,             labelKey: 'staff_dashboard.nav.reviews' },
-  { id: 'profile', icon: User,             labelKey: 'staff_dashboard.nav.profile' },
+  { id: 'home',    icon: Home,             image: '/assets/menu/dashboard.png',  labelKey: 'staff_dashboard.nav.tab_home' },
+  { id: 'qr',      icon: QrCode,           image: '/assets/menu/touchpoint.png', labelKey: 'staff_dashboard.nav.tab_qr' },
+  { id: 'tips',    icon: CircleDollarSign, image: '/assets/menu/tips.png',       labelKey: 'staff_dashboard.nav.tips' },
+  { id: 'reviews', icon: Star,             image: '/assets/menu/reviews.png',    labelKey: 'staff_dashboard.nav.reviews' },
+  { id: 'profile', icon: User,             image: '/assets/menu/setting.png',    labelKey: 'staff_dashboard.nav.profile' },
 ]
 
 export default function StaffBottomNav({ activeScreen, onNavigate }) {
@@ -30,11 +30,22 @@ export default function StaffBottomNav({ activeScreen, onNavigate }) {
               }`}
               aria-current={isActive ? 'page' : undefined}
             >
-              <Icon
-                className="h-[22px] w-[22px]"
-                strokeWidth={isActive ? 2.5 : 1.9}
-                fill={isActive && item.id === 'home' ? 'currentColor' : 'none'}
-              />
+              {item.image ? (
+                <img
+                  src={item.image}
+                  alt=""
+                  className={`h-[22px] w-[22px] object-contain transition-opacity ${
+                    isActive ? 'opacity-100' : 'opacity-70'
+                  }`}
+                  aria-hidden="true"
+                />
+              ) : (
+                <Icon
+                  className="h-[22px] w-[22px]"
+                  strokeWidth={isActive ? 2.5 : 1.9}
+                  fill={isActive && item.id === 'home' ? 'currentColor' : 'none'}
+                />
+              )}
               <span className="truncate px-0.5">{t(item.labelKey)}</span>
             </button>
           )

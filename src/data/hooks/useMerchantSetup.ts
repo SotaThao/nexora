@@ -108,6 +108,28 @@ export function useUploadImage() {
   })
 }
 
+export function useUpdateBusiness() {
+  const queryClient = useQueryClient()
+
+  return useMutation<void, Error, LooseObject>({
+    mutationFn: (dto) => merchantsRepository.updateBusiness(dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantSetup() })
+    },
+  })
+}
+
+export function useUpdateBusinessInfo() {
+  const queryClient = useQueryClient()
+
+  return useMutation<void, Error, { name: string; phone?: string; feedbackEmail?: string; website?: string }>({
+    mutationFn: (dto) => merchantsRepository.updateBusinessInfo(dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.merchantSetup() })
+    },
+  })
+}
+
 export function useUpdateReviewLinks() {
   const queryClient = useQueryClient()
 

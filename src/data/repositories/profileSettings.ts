@@ -114,8 +114,26 @@ export function createProfileSettingsRepository(client: HttpClient = httpClient)
       return client.put<LooseObject>('/api/v1/userprofile/update', dto)
     },
 
+    async updateBasicInfo(dto: { firstName: string; lastName?: string; phoneNumber?: string; dateOfBirth?: string }): Promise<void> {
+      await client.put('/api/v1/userprofile/basic-info', dto)
+    },
+
+    async updateAddress(dto: { address?: string; city?: string; state?: string; zipCode?: string; country?: string }): Promise<void> {
+      await client.put('/api/v1/userprofile/address', dto)
+    },
+
+    async updateAvatar(file: File): Promise<{ avatarUrl: string }> {
+      const formData = new FormData()
+      formData.append('avatar', file)
+      return client.upload<{ avatarUrl: string }>('/api/v1/userprofile/avatar', formData, 'PUT')
+    },
+
     async updateStaffProfile(dto: UpdateStaffProfileDto): Promise<LooseObject> {
       return client.put<LooseObject>('/api/v1/staff/profile', dto)
+    },
+
+    async createStaffProfile(dto: UpdateStaffProfileDto): Promise<LooseObject> {
+      return client.post<LooseObject>('/api/v1/staff/profile', dto)
     },
 
     async save(_settings: LooseObject): Promise<void> {
