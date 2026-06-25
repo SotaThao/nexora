@@ -52,21 +52,41 @@ function getStaffTipAmount(
   return selTip === 'custom' ? Number(customTips[memberId]) || 0 : Number(selTip)
 }
 
-function collectStaffPaymentKeys(staffMembers: Array<{ availablePaymentMethods?: string[] }>): Set<string> {
-  const keys = new Set<string>()
+function collectStaffPaymentKeys(staffMembers: Array<{ availablePaymentMethods?: string[] }>): string[] {
+  const keys: string[] = []
+  const seen = new Set<string>()
   for (const staff of staffMembers) {
     for (const method of staff.availablePaymentMethods || []) {
-      keys.add(payoutTypeToUiKey(method))
+      const key = payoutTypeToUiKey(method)
+      if (seen.has(key)) continue
+      seen.add(key)
+      keys.push(key)
     }
   }
   return keys
 }
 
-function collectBusinessPaymentKeys(methods: PaymentMethodDto[]): Set<string> {
-  const keys = new Set<string>()
+function collectStaffPaymentKeysForMember(staff: { availablePaymentMethods?: string[] }): string[] {
+  const keys: string[] = []
+  const seen = new Set<string>()
+  for (const method of staff.availablePaymentMethods || []) {
+    const key = payoutTypeToUiKey(method)
+    if (seen.has(key)) continue
+    seen.add(key)
+    keys.push(key)
+  }
+  return keys
+}
+
+function collectBusinessPaymentKeys(methods: PaymentMethodDto[]): string[] {
+  const keys: string[] = []
+  const seen = new Set<string>()
   for (const pm of methods) {
     if (!pm.id || pm.isActive === false) continue
-    keys.add(payoutTypeToUiKey(pm.type || pm.name || ''))
+    const key = payoutTypeToUiKey(pm.type || pm.name || '')
+    if (seen.has(key)) continue
+    seen.add(key)
+    keys.push(key)
   }
   return keys
 }
@@ -75,17 +95,17 @@ function buildAvailablePaymentWalletKeys(
   selectedStaffMembers: Array<{ availablePaymentMethods?: string[] }>,
   effectivePaymentMethods: PaymentMethodDto[],
   isMultiStaff: boolean,
-): Set<string> {
+): string[] {
   if (!isMultiStaff && selectedStaffMembers.length === 1) {
-    const staffKeys = collectStaffPaymentKeys(selectedStaffMembers)
-    if (staffKeys.size > 0) return staffKeys
+    const staffKeys = collectStaffPaymentKeysForMember(selectedStaffMembers[0])
+    if (staffKeys.length > 0) return staffKeys
   }
 
   const businessKeys = collectBusinessPaymentKeys(effectivePaymentMethods)
-  if (businessKeys.size > 0) return businessKeys
+  if (businessKeys.length > 0) return businessKeys
 
   if (isMultiStaff) {
-    return new Set<string>()
+    return []
   }
 
   return collectStaffPaymentKeys(selectedStaffMembers)

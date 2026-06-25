@@ -25,6 +25,12 @@ import {
 } from 'lucide-react'
 import { isValidEmail, isValidPhone } from '../../../utils/validation'
 import CountryCodeSelect, { formatNationalNumber, parsePhone } from '../../CountryCodeSelect'
+import {
+  getPaymentMethodDisplayName,
+  payoutTypeToUiKey,
+} from '../../../data/paymentMethodTypes'
+import { formatPaymentMethodAccountDisplay } from '../../payout/bankWireAccount'
+import type { PaymentMethodDto } from '../../../types/domain'
 
 const PayoutLogos = {
   zelle: (
@@ -57,17 +63,11 @@ const PayoutLogos = {
     <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-black" xmlns="http://www.w3.org/2000/svg">
       <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83zM15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.22.67-2.94 1.51-.62.73-1.16 1.87-1.02 2.98 1.11.09 2.25-.56 2.97-1.43z" />
     </svg>
-  )
+  ),
+  vlinkpay: (
+    <img src="/assets/vlinkpay-logo.png" alt="VLINKPAY Logo" className="h-[18px] w-[18px] object-contain" />
+  ),
 }
-
-const payoutMethodsList = [
-  { key: 'zelle', label: 'Zelle', placeholder: 'Enter Zelle email/phone...' },
-  { key: 'bankwire', label: 'Bank Wire', placeholder: 'Enter Bank Wire routing - account...' },
-  { key: 'paypal', label: 'PayPal', placeholder: 'Enter PayPal email...' },
-  { key: 'venmo', label: 'Venmo', placeholder: 'Enter Venmo @username...' },
-  { key: 'cashapp', label: 'Cash App', placeholder: 'Enter Cash App $cashtag...' },
-  { key: 'applecash', label: 'Apple Cash', placeholder: 'Enter Apple Cash phone number...' }
-]
 
 const validatePayoutAccount = (method, input) => {
   const account = String(input || '').trim()
@@ -179,7 +179,21 @@ export default function ProfileTab({
   const [isCapturing, setIsCapturing] = useState(false)
   const [modalError, setModalError] = useState('')
 
-  const getMethod = (key) => apiPaymentMethods.find(m => m.type?.toLowerCase() === key.toLowerCase()) || { type: key, isActive: false, isConfigured: false, accountInfo: '', id: undefined, imageUrl: null, accountName: null }
+  const getMethodUiKey = (method: PaymentMethodDto) =>
+    method.uiKey || payoutTypeToUiKey(method.type || '')
+
+  const displayedPaymentMethods = apiPaymentMethods
+
+  const getMethod = (key: string) =>
+    apiPaymentMethods.find((m) => getMethodUiKey(m) === key) || {
+      type: key,
+      isActive: false,
+      isConfigured: false,
+      accountInfo: '',
+      id: undefined,
+      imageUrl: null,
+      accountName: null,
+    }
 
   const handleToggleMethod = (key) => {
     const methodData = getMethod(key)
@@ -353,23 +367,25 @@ export default function ProfileTab({
             </div>
 
             <div className="divide-y divide-slate-100">
-              {payoutMethodsList.filter(item => item.key !== 'bankwire').map((item) => {
-                const methodData = getMethod(item.key)
+              {displayedPaymentMethods.map((method) => {
+                const uiKey = getMethodUiKey(method)
+                const label = method.name || getPaymentMethodDisplayName(method.type || '')
+                const accountDisplay = formatPaymentMethodAccountDisplay(uiKey, method.accountInfo)
                 return (
-                <div key={item.key} className="flex items-center justify-between py-3">
+                <div key={method.id || uiKey} className="flex items-center justify-between py-3">
                   <div className="flex items-center gap-3 min-w-0">
                     {/* Toggle Switch */}
                     <button
                       type="button"
-                      onClick={() => handleToggleMethod(item.key)}
-                      aria-label={`Toggle ${item.label}`}
+                      onClick={() => handleToggleMethod(uiKey)}
+                      aria-label={`Toggle ${label}`}
                       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                        methodData.isActive ? 'bg-amber-600' : 'bg-slate-200'
+                        method.isActive ? 'bg-amber-600' : 'bg-slate-200'
                       }`}
                     >
                       <span
                         className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                          methodData.isActive ? 'translate-x-4' : 'translate-x-0'
+                          method.isActive ? 'translate-x-4' : 'translate-x-0'
                         }`}
                       />
                     </button>
@@ -377,13 +393,13 @@ export default function ProfileTab({
                     {/* Logo and Label */}
                     <div className="flex items-center gap-2.5 min-w-0">
                       <span className="h-7 w-7 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
-                        {PayoutLogos[item.key]}
+                        {PayoutLogos[uiKey]}
                       </span>
                       <div className="min-w-0">
-                        <div className="text-xs font-bold text-slate-800">{item.label}</div>
-                        {methodData.isConfigured ? (
+                        <div className="text-xs font-bold text-slate-800">{label}</div>
+                        {method.isConfigured ? (
                           <div className="text-[10px] text-slate-500 font-mono mt-0.5 truncate max-w-[110px] sm:max-w-[150px]">
-                            {methodData.accountInfo}
+                            {accountDisplay}
                           </div>
                         ) : (
                           <div className="text-[10px] text-slate-300 italic font-medium mt-0.5">
@@ -397,8 +413,8 @@ export default function ProfileTab({
                   {/* Edit button */}
                   <button
                     type="button"
-                    onClick={() => handleEditPayoutAccount(item.key)}
-                    aria-label={`Edit ${item.label} Payout Account`}
+                    onClick={() => handleEditPayoutAccount(uiKey)}
+                    aria-label={`Edit ${label} Payout Account`}
                     className="flex items-center gap-1 text-[10px] font-bold text-amber-600 hover:text-amber-700 transition shrink-0 ml-2"
                   >
                     <Edit2 className="h-3 w-3" />
@@ -406,19 +422,6 @@ export default function ProfileTab({
                   </button>
                 </div>
               )})}
-            </div>
-
-            {/* VLINKPAY ID display at the bottom */}
-            <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-xs">
-              <div className="flex items-center gap-2">
-                <span className="h-7 w-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
-                  <img src="/assets/vlinkpay-logo.png" alt="VLINKPAY Logo" className="h-4.5 w-4.5 object-contain animate-pulse" />
-                </span>
-                <span className="text-nexoraMuted font-bold">VLINKPAY ID</span>
-              </div>
-              <span className="text-nexoraText font-extrabold font-mono bg-slate-50 border border-slate-200 px-2 py-0.5 rounded">
-                {getMethod('vlinkpay').accountInfo || 'Pending KYB'}
-              </span>
             </div>
 
           </div>
@@ -1016,7 +1019,8 @@ export default function ProfileTab({
           paypal: 'PayPal',
           venmo: 'Venmo',
           cashapp: 'Cash App',
-          applecash: 'Apple Cash'
+          applecash: 'Apple Cash',
+          vlinkpay: 'VLINKPAY Wallet',
         }
 
         const walletFields = {
@@ -1034,7 +1038,8 @@ export default function ProfileTab({
           paypal: t('components.settings.tabs.ProfileTab.enterPaypalEmail'),
           venmo: t('components.settings.tabs.ProfileTab.enterVenmoUsername'),
           cashapp: t('components.settings.tabs.ProfileTab.enterCashAppCashtag'),
-          applecash: t('components.settings.tabs.ProfileTab.enterAppleCashPhone')
+          applecash: t('components.settings.tabs.ProfileTab.enterAppleCashPhone'),
+          vlinkpay: t('components.dashboard.modals.PayoutSetupModal.placeholderVlinkpay'),
         }
 
         return (

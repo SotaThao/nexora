@@ -58,8 +58,9 @@ export default function SetupWizard() {
 
   const {
     currentLanguage, setLanguage, t,
-    currentStep, setCurrentStep, isSsoLocked,
+    currentStep, setCurrentStep, isSsoLocked, isStepSaving,
     businessInfo, setBusinessInfo,
+    merchantPaymentMethods,
     reviewLinks, setReviewLinks,
     staffList,
     newStaff, setNewStaff,
@@ -221,6 +222,7 @@ export default function SetupWizard() {
                 setEditingTpType={setEditingTpType}
                 errors={errors}
                 businessInfo={businessInfo}
+                merchantPaymentMethods={merchantPaymentMethods}
                 handleAddStaff={handleAddStaff}
                 handleToggleWallet={handleToggleWallet}
                 openPayoutSetup={openPayoutSetup}
@@ -268,9 +270,10 @@ export default function SetupWizard() {
               {currentStep < 3 ? (
                 <button
                   onClick={handleNext}
-                  className="min-h-11 w-full justify-center px-6 py-2.5 rounded-flox-buttons bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 transition-opacity text-white font-extrabold text-sm flex items-center gap-1.5 transition-all shadow-[0_4px_14px_rgba(43,89,255,0.25)] sm:w-auto"
+                  disabled={isStepSaving}
+                  className="min-h-11 w-full justify-center px-6 py-2.5 rounded-flox-buttons bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 transition-opacity text-white font-extrabold text-sm flex items-center gap-1.5 transition-all shadow-[0_4px_14px_rgba(43,89,255,0.25)] sm:w-auto disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {t('common.next')} <ArrowRight className="w-4 h-4" />
+                  {isStepSaving ? t('common.saving') : t('common.next')} {!isStepSaving && <ArrowRight className="w-4 h-4" />}
                 </button>
               ) : (
                 <button

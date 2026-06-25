@@ -36,10 +36,11 @@ import { useStaffInviteInfo, useAcceptStaffInvite, usePublicMerchantInvite } fro
 import { apiAuthAdapter } from '../../../auth/adapters/apiAuthAdapter'
 import { getSignupOtp } from '../../../auth/signupOtp'
 import { staffPaymentMethodsRepository } from '../../../data/repositories/staffPaymentMethods'
+import { payoutTypeToUiKey } from '../../../data/paymentMethodTypes'
 import { staffInvitesRepository } from '../../../data/repositories/staffInvites'
 import profileSettingsRepository from '../../../data/repositories/profileSettings'
 import httpClient from '../../../lib/httpClient'
-import { getApiErrorCode, isApiError, type UserProfile } from '../../../types/domain'
+import { getApiErrorCode, isApiError, type PaymentMethodDto, type UserProfile } from '../../../types/domain'
 
 const MOCK_NEXORA_STAFF_PROFILES: Record<string, LooseObject> = {}
 
@@ -165,6 +166,7 @@ export default function useStaffRegistration({ inviteData }) {
   const [isProfileSubmitting, setIsProfileSubmitting] = useState(false)
   const [isActivating, setIsActivating] = useState(false)
   const [isRegisterSubmitting, setIsRegisterSubmitting] = useState(false)
+  const [staffPaymentMethods, setStaffPaymentMethods] = useState<PaymentMethodDto[]>([])
 
   // Setup initial values from inviteData (merchant dashboard simulation) or API metadata
   useEffect(() => {
@@ -231,6 +233,50 @@ export default function useStaffRegistration({ inviteData }) {
       return () => clearInterval(interval)
     }
   }, [step, resendTimer])
+
+  useEffect(() => {
+    if (step !== 3 || !usesApiRegistration) return
+
+    let cancelled = false
+    staffPaymentMethodsRepository.getAll()
+      .then((methods) => {
+        if (cancelled) return
+        setStaffPaymentMethods(methods)
+        setPayouts((prev) => {
+          const next = { ...prev }
+          for (const pm of methods) {
+            const key = pm.uiKey || payoutTypeToUiKey(pm.type || '')
+            if (!key) continue
+            const existing = next[key]
+            if (!existing) {
+              next[key] = {
+                enabled: pm.isActive,
+                value: pm.accountInfo || '',
+                qrCode: pm.imageUrl || '',
+                accountName: fullName || '',
+              }
+              continue
+            }
+            if (!existing.value.trim() && pm.accountInfo) {
+              next[key] = {
+                ...existing,
+                enabled: pm.isActive,
+                value: pm.accountInfo || '',
+                qrCode: pm.imageUrl || existing.qrCode,
+              }
+            }
+          }
+          return next
+        })
+      })
+      .catch((err: unknown) => {
+        logger.warn('Could not fetch payment methods for registration step', err)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [step, usesApiRegistration, fullName])
 
   // Helper to autofill profile based on a mock profile
   const autofillFromProfile = (profile) => {
@@ -734,14 +780,15 @@ export default function useStaffRegistration({ inviteData }) {
 
       const payoutConfigs = {}
       paymentMethods.forEach(pm => {
-        const typeLower = pm.type.toLowerCase()
-        payoutConfigs[typeLower] = {
+        const key = pm.uiKey || payoutTypeToUiKey(pm.type || '')
+        payoutConfigs[key] = {
           enabled: pm.isActive,
           value: pm.accountInfo || '',
           qrCode: pm.imageUrl || '',
           accountName: profileData.fullName || '',
         }
       })
+      setStaffPaymentMethods(paymentMethods)
 
       const vlinkpayMethod = paymentMethods.find(m => m.type.toLowerCase() === 'vlinkpay')
       const vlinkpayIdVal = vlinkpayMethod ? vlinkpayMethod.accountInfo : ''
@@ -1200,6 +1247,7 @@ export default function useStaffRegistration({ inviteData }) {
     nexoraStatus, setNexoraStatus,
     // payouts
     payouts, setPayouts,
+    staffPaymentMethods,
     editingMethod, setEditingMethod,
     editValue, setEditValue,
     editQrCode, setEditQrCode,
