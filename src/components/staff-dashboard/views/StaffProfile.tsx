@@ -10,6 +10,13 @@ import {
   Clock,
 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { useNotification } from '../../../contexts/NotificationContext'
+import CountryCodeSelect, {
+  formatNationalNumber,
+  parsePhone,
+  isValidPhoneE164,
+  getDefaultDialCode,
+} from '../../CountryCodeSelect'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import { useStaffLinkedBusinesses } from '../hooks/useStaffLinkedBusinesses'
 import { useOutletContext, useSearchParams } from 'react-router-dom'
@@ -28,6 +35,7 @@ const readOnlyCls = 'w-full rounded-xl border border-nexoraBorder bg-nexoraCanva
 
 export default function StaffProfile() {
   const { currentLanguage, t } = useTranslation()
+  const { showToast: notify } = useNotification()
   const { staffMember, saveProfile, setBusinessDisplayName } = useStaffAccount()
   const { linkedBusinesses } = useStaffLinkedBusinesses()
   const { data: profileView, isLoading: isProfileLoading } = useStaffProfileView()
@@ -45,8 +53,9 @@ export default function StaffProfile() {
   const [bio, setBio] = useState('')
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')
+  const [dialCode, setDialCode] = useState(() => getDefaultDialCode(currentLanguage))
   const [saved, setSaved] = useState(false)
-  const [toastMessage, setToastMessage] = useState('')
+  const [errors, setErrors] = useState<Record<string, string>>({})
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const avatarObjectUrlRef = useRef<string | null>(null)
   const uploadImageMutation = useUploadImage()
@@ -60,7 +69,10 @@ export default function StaffProfile() {
     setDisplayName(profileView.displayName || '')
     setBio(profileView.bio || '')
     setFullName(profileView.fullName || '')
-    setPhone(profileView.phone || '')
+    const savedPhone = profileView.phone || ''
+    const parsed = parsePhone(savedPhone)
+    setDialCode(parsed.countryCode)
+    setPhone(formatNationalNumber(parsed.nationalNumber, parsed.countryCode))
     setSaved(false)
   }, [
     profileView.displayName,
@@ -83,17 +95,34 @@ export default function StaffProfile() {
     }
   }, [profileView.avatar, avatarPreview])
 
-  const showToast = (msg) => {
-    setToastMessage(msg)
-    setTimeout(() => setToastMessage(''), 3000)
+  const showToast = (msg: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+    notify(msg, type)
+  }
+
+  const fullPhone = `${dialCode} ${phone}`.trim()
+
+  const validate = () => {
+    const errs: Record<string, string> = {}
+    if (!fullName.trim()) errs.fullName = t('staff_dashboard.profile.error_full_name_required')
+    if (!displayName.trim()) errs.displayName = t('staff_dashboard.profile.error_display_name_required')
+    if (!phone.trim()) errs.phone = t('staff_dashboard.profile.error_phone_required')
+    else if (!isValidPhoneE164(fullPhone, dialCode)) errs.phone = t('staff_dashboard.profile.error_phone_invalid')
+    if (bio.length > 300) errs.bio = t('staff_dashboard.profile.error_bio_too_long')
+    return errs
   }
 
   const handleSave = () => {
+    const errs = validate()
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs)
+      return
+    }
+    setErrors({})
     saveProfile({
       defaultDisplayName: displayName,
       bio,
       fullName,
-      phone
+      phone: fullPhone,
     })
     setSaved(true)
     showToast(t('components.staff_dashboard.views.StaffProfile.accountChangesSavedSuccessfully'))
@@ -182,14 +211,6 @@ export default function StaffProfile() {
 
   return (
     <div className="space-y-4">
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs font-semibold shadow-2xl flex items-center gap-2 animate-bounce">
-          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          {toastMessage}
-        </div>
-      )}
-
       {/* Tab Navigation */}
       <div className="flex gap-2 pb-2">
         <button
@@ -267,35 +288,54 @@ export default function StaffProfile() {
 
             <div className="space-y-3">
               <div>
-                <label className={labelCls}>{t('staff_dashboard.profile.full_name')}</label>
+                <label className={labelCls}>{t('staff_dashboard.profile.full_name')} <span className="text-rose-500">*</span></label>
                 <input
                   type="text"
-                  className={inputCls}
+                  className={`${inputCls} ${errors.fullName ? 'border-rose-500 focus:border-rose-500' : ''}`}
                   value={fullName}
                   placeholder={t('staff_dashboard.profile.ph_full_name')}
-                  onChange={(e) => { setFullName(e.target.value); setSaved(false) }}
+                  onChange={(e) => { setFullName(e.target.value); setSaved(false); setErrors((p) => { const n = {...p}; delete n.fullName; return n }) }}
                 />
+                {errors.fullName && <p className="mt-1 text-[10px] font-bold text-rose-500">{errors.fullName}</p>}
               </div>
               <div>
-                <label className={labelCls}>{t('staff_dashboard.profile.display_name')}</label>
+                <label className={labelCls}>{t('staff_dashboard.profile.display_name')} <span className="text-rose-500">*</span></label>
                 <input
                   type="text"
-                  className={inputCls}
+                  className={`${inputCls} ${errors.displayName ? 'border-rose-500 focus:border-rose-500' : ''}`}
                   value={displayName}
                   placeholder={t('staff_dashboard.profile.ph_display_name')}
-                  onChange={(e) => { setDisplayName(e.target.value); setSaved(false) }}
+                  onChange={(e) => { setDisplayName(e.target.value); setSaved(false); setErrors((p) => { const n = {...p}; delete n.displayName; return n }) }}
                 />
+                {errors.displayName && <p className="mt-1 text-[10px] font-bold text-rose-500">{errors.displayName}</p>}
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <label className={labelCls}>{t('staff_dashboard.profile.phone')}</label>
-                  <input
-                    type="text"
-                    className={inputCls}
-                    value={phone}
-                    placeholder={t('staff_dashboard.profile.ph_phone')}
-                    onChange={(e) => { setPhone(e.target.value); setSaved(false) }}
-                  />
+                  <label className={labelCls}>{t('staff_dashboard.profile.phone')} <span className="text-rose-500">*</span></label>
+                  <div className="flex rounded-lg shadow-sm">
+                    <CountryCodeSelect
+                      value={dialCode}
+                      onChange={(newCode) => {
+                        const digits = phone.replace(/\D/g, '')
+                        setDialCode(newCode)
+                        setPhone(formatNationalNumber(digits, newCode))
+                        setErrors((p) => { const n = {...p}; delete n.phone; return n })
+                      }}
+                    />
+                    <input
+                      type="text"
+                      className={`h-10 w-full min-w-0 rounded-r-lg border border-l-0 bg-nexoraSurface px-3.5 text-sm text-nexoraText outline-none focus:border-nexoraBrand transition-all ${errors.phone ? 'border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/15' : 'border-nexoraBorder'}`}
+                      value={phone}
+                      placeholder={t('staff_dashboard.profile.ph_phone')}
+                      onChange={(e) => {
+                        const formatted = formatNationalNumber(e.target.value, dialCode)
+                        setPhone(formatted)
+                        setSaved(false)
+                        setErrors((p) => { const n = {...p}; delete n.phone; return n })
+                      }}
+                    />
+                  </div>
+                  {errors.phone && <p className="mt-1 text-[10px] font-bold text-rose-500">{errors.phone}</p>}
                 </div>
                 <div>
                   <label className={labelCls}>{t('staff_dashboard.profile.email')}</label>
@@ -308,11 +348,17 @@ export default function StaffProfile() {
                   <Tooltip content={t('staff_dashboard.profile.bio_tooltip')} />
                 </label>
                 <textarea
-                  className={`${inputCls} h-24 resize-none`}
+                  className={`${inputCls} h-24 resize-none ${errors.bio ? 'border-rose-500 focus:border-rose-500' : ''}`}
                   value={bio}
                   placeholder={t('staff_dashboard.profile.ph_bio')}
-                  onChange={(e) => { setBio(e.target.value); setSaved(false) }}
+                  onChange={(e) => { setBio(e.target.value); setSaved(false); setErrors((p) => { const n = {...p}; delete n.bio; return n }) }}
                 />
+                <div className="flex justify-between items-center mt-1">
+                  {errors.bio
+                    ? <p className="text-[10px] font-bold text-rose-500">{errors.bio}</p>
+                    : <span />}
+                  <span className={`text-[10px] ${bio.length > 300 ? 'text-rose-500 font-bold' : 'text-nexoraSubtle'}`}>{bio.length}/300</span>
+                </div>
               </div>
             </div>
 
