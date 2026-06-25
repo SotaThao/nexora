@@ -75,7 +75,7 @@ export default function Step1BusinessInfo({
               )}
               <span className="text-[10px] text-nexoraSubtle">{t('setup.logo_hint')}</span>
             </div>
-            {errors.logo && <span className="text-xs text-red-500 mt-1 block">{errors.logo}</span>}
+            {errors.logo && <span className="text-xs text-red-500 mt-1 block">{t(errors.logo)}</span>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -102,7 +102,7 @@ export default function Step1BusinessInfo({
                   if (errors.name) setErrors({ ...errors, name: '' })
                 }}
               />
-              {errors.name && <span className="text-xs text-red-500 mt-1 block">{errors.name}</span>}
+              {errors.name && <span className="text-xs text-red-500 mt-1 block">{t(errors.name)}</span>}
             </div>
 
             <div>
@@ -154,7 +154,7 @@ export default function Step1BusinessInfo({
                 }}
               />
             </div>
-            {errors.address && <span className="text-xs text-red-500 mt-1 block">{errors.address}</span>}
+            {errors.address && <span className="text-xs text-red-500 mt-1 block">{t(errors.address)}</span>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -185,7 +185,7 @@ export default function Step1BusinessInfo({
                   }}
                 />
               </div>
-              {errors.phone && <span className="text-xs text-red-500 mt-1 block">{errors.phone}</span>}
+              {errors.phone && <span className="text-xs text-red-500 mt-1 block">{t(errors.phone)}</span>}
             </div>
 
             <div>
@@ -205,7 +205,7 @@ export default function Step1BusinessInfo({
                   }}
                 />
               </div>
-              {errors.website && <span className="text-xs text-red-500 mt-1 block">{errors.website}</span>}
+              {errors.website && <span className="text-xs text-red-500 mt-1 block">{t(errors.website)}</span>}
             </div>
           </div>
 
@@ -237,7 +237,7 @@ export default function Step1BusinessInfo({
                 if (errors.googleReview) setErrors({ ...errors, googleReview: '' })
               }}
             />
-            {errors.googleReview && <span className="text-xs text-red-500 mt-1 block">{errors.googleReview}</span>}
+            {errors.googleReview && <span className="text-xs text-red-500 mt-1 block">{t(errors.googleReview)}</span>}
           </div>
 
           <div>
@@ -252,7 +252,7 @@ export default function Step1BusinessInfo({
                 if (errors.yelpReview) setErrors({ ...errors, yelpReview: '' })
               }}
             />
-            {errors.yelpReview && <span className="text-xs text-red-500 mt-1 block">{errors.yelpReview}</span>}
+            {errors.yelpReview && <span className="text-xs text-red-500 mt-1 block">{t(errors.yelpReview)}</span>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -279,7 +279,7 @@ export default function Step1BusinessInfo({
                   if (errors.feedbackEmail) setErrors({ ...errors, feedbackEmail: '' })
                 }}
               />
-              {errors.feedbackEmail && <span className="text-xs text-red-500 mt-1 block">{errors.feedbackEmail}</span>}
+              {errors.feedbackEmail && <span className="text-xs text-red-500 mt-1 block">{t(errors.feedbackEmail)}</span>}
             </div>
           </div>
         </div>
