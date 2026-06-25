@@ -4,6 +4,7 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { StatusFilter } from '../../../data/hooks/useMerchantStaff'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
+import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
 import Pagination from '../../ui/Pagination'
@@ -350,6 +351,14 @@ function StaffView({
       : '',
     [businessName, businessSlug, inviteLinkSetting?.referralCode, publicInviteEnabled],
   )
+  const publicInviteQrSrc = useMemo(
+    () => (publicInviteEnabled && publicInviteLink ? buildPublicQrImageUrl(publicInviteLink, 150) : ''),
+    [publicInviteEnabled, publicInviteLink],
+  )
+  const publicInviteQrLargeSrc = useMemo(
+    () => (publicInviteEnabled && publicInviteLink ? buildPublicQrImageUrl(publicInviteLink, 300) : ''),
+    [publicInviteEnabled, publicInviteLink],
+  )
   const publicInviteUnavailableText = isInviteLinkSettingLoading
     ? t('components.dashboard.views.StaffView.inviteLinkLoading')
     : t('components.dashboard.views.StaffView.inviteLinkDisabled')
@@ -467,7 +476,7 @@ function StaffView({
           >
             {publicInviteEnabled ? (
               <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(publicInviteLink)}`}
+                src={publicInviteQrSrc}
                 alt={t('components.dashboard.views.StaffView.scanToJoinAlt')}
                 className="h-full w-full object-contain"
               />
@@ -760,7 +769,7 @@ function StaffView({
 
             <div className="h-64 w-64 rounded-2xl bg-slate-50 border border-slate-200 p-4 flex items-center justify-center shadow-inner bg-white mb-4">
               <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(publicInviteLink)}`}
+                src={publicInviteQrLargeSrc}
                 alt={t('components.dashboard.views.StaffView.scanToJoinAlt')}
                 className="h-full w-full object-contain"
               />

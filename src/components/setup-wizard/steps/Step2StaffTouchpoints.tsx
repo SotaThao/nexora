@@ -13,6 +13,7 @@ import {
   PAYOUT_UI_LABELS,
 } from '../../../data/paymentMethodTypes'
 import type { PaymentMethodDto } from '../../../types/domain'
+import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 
 export default function Step2StaffTouchpoints({
   t,
@@ -186,7 +187,7 @@ export default function Step2StaffTouchpoints({
             <div className="space-y-2 overflow-y-auto pr-1 max-h-[220px] lg:max-h-[440px]">
               {touchPoints.map((tp) => {
                 const qrUrl = `${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}&tech=tp/${tp.id}`
-                const qrCodeSrc = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrUrl)}`
+                const qrCodeSrc = buildPublicQrImageUrl(qrUrl, 150)
 
                 if (tp.id === editingTpId) {
                   return (
