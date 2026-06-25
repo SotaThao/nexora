@@ -838,7 +838,7 @@ export default function StaffMyQR() {
                   {businessTipQrs.map((biz) => (
                     <div
                       key={biz.businessId}
-                      className="flex flex-col gap-3 py-3 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
+                      className="flex items-center justify-between gap-3 py-3 last:pb-0"
                     >
                       <div className="flex min-w-0 items-center gap-3">
                         <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-nexoraBrandSoft text-nexoraBrand">
@@ -862,7 +862,7 @@ export default function StaffMyQR() {
                         </button>
                       </div>
 
-                      <div className="flex shrink-0 items-center gap-2 self-end sm:self-auto">
+                      <div className="flex shrink-0 items-center gap-2">
                         {renderStatusBadge(biz)}
                         {isBusinessActive(biz) && (
                           <button
@@ -878,9 +878,7 @@ export default function StaffMyQR() {
                   ))}
                 </div>
 
-                <p className="mt-3 rounded-xl border border-dashed border-nexoraBorder bg-nexoraCanvas p-3 text-xs leading-relaxed text-nexoraMuted">
-                  {t('staff_dashboard.qr.note')}
-                </p>
+
               </section>
             </>
           )}

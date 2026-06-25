@@ -73,8 +73,8 @@ export default function StaffLinkRequestCard({
   }
 
   const containerClass = variant === 'card'
-    ? "flex flex-col gap-3 rounded-xl border border-nexoraBorder bg-white p-3.5 sm:flex-row sm:items-center sm:justify-between"
-    : "flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between"
+    ? "flex items-center justify-between gap-3 rounded-xl border border-nexoraBorder bg-white p-3.5"
+    : "flex items-center justify-between gap-3 py-3"
 
   return (
     <div className={containerClass}>
