@@ -127,7 +127,7 @@ export default function StaffPay() {
         onSuccess: () => {
           setActiveMethod(null)
           if (!activeMethod.isActive) {
-            toggleMutation.mutate(activeMethod.id!)
+            toggleMutation.mutate({ id: activeMethod.id!, silentSuccessToast: true })
           }
         },
       },

@@ -300,6 +300,7 @@ export interface StaffLinkRequestDetail {
   businessRole: string | null
   requestedAt: string | null
   status: string | null
+  roleAtBusiness: string | null
 }
 
 export interface StaffAccountView {

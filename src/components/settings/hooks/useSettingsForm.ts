@@ -1,5 +1,6 @@
 import { ShieldAlert, ShieldCheck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useNotification } from "../../../contexts/NotificationContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "../../../contexts/LanguageContext";
 import { resolveEffectiveKybStatus } from "../../../utils/kybStatus";
@@ -163,6 +164,7 @@ export default function useSettingsForm({
   openKybPortal,
 }) {
   const { t, currentLanguage } = useTranslation();
+  const { showToast: notify } = useNotification();
   const queryClient = useQueryClient();
   const profileSettingsQuery = useProfileSettings();
   const updateUserProfileMutation = useUpdateUserProfile();
@@ -264,7 +266,6 @@ export default function useSettingsForm({
     return DEFAULT_PROFILE;
   });
   const [copiedId, setCopiedId] = useState<any | null>(null);
-  const [toastMessage, setToastMessage] = useState("");
 
   // Edit states for different cards
   const [isEditingBasic, setIsEditingBasic] = useState(false);
@@ -361,11 +362,8 @@ export default function useSettingsForm({
     setProfile(updatedProfile);
   };
 
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage("");
-    }, 3000);
+  const showToast = (msg: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+    notify(msg, type);
   };
 
   const handleCopy = (text, id) => {
@@ -822,7 +820,6 @@ export default function useSettingsForm({
     // profile state
     profile,
     copiedId,
-    toastMessage,
     // edit states
     isEditingBasic,
     setIsEditingBasic,

@@ -1,4 +1,5 @@
 // StaffNotifications — notification feed + push preferences.
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bell, Star, Users, Wallet } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
@@ -55,7 +56,7 @@ function resolveStaffNotificationActionUrl(actionUrl: string | null | undefined)
   return `${resolvedPath}${suffix}`
 }
 
-function Toggle({ on, onChange }) {
+function Toggle({ on, onChange }: { on: boolean; onChange: (value: boolean) => void }) {
   return (
     <button
       type="button"
@@ -68,7 +69,7 @@ function Toggle({ on, onChange }) {
   )
 }
 
-const PREF_KEYS = ['tipConfirmations', 'reviews', 'businessInvites']
+const PREF_KEYS = ['tipConfirmations', 'reviews', 'businessInvites'] as const
 
 export default function StaffNotifications() {
   const { t, currentLanguage } = useTranslation()

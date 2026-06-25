@@ -268,7 +268,7 @@ export default function ProfileTab({
         onSuccess: () => {
           setEditingMethod(null)
           if (!methodData.isActive) {
-            toggleMutation.mutate(methodData.id)
+            toggleMutation.mutate({ id: methodData.id, silentSuccessToast: true })
           }
         }
       }

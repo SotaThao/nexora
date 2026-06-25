@@ -566,6 +566,7 @@ function StaffModal({
                       staffProfileId: form.staffProfileId,
                       staffCode: form.nexoraStaffId || null,
                       fullName: form.fullName,
+                      roleAtBusiness: form.position,
                     })
                     onClose()
                   }}
