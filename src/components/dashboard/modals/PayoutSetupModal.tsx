@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import { X, Camera, FolderOpen, AlertTriangle, Bitcoin } from 'lucide-react'
 import { useTranslation, renderLabel } from '../../../contexts/LanguageContext'
 import ImageFileInput from '../../ui/ImageFileInput'
-import { captureQrImage } from '../../../utils/qrCode'
 import BankWireAccountForm from '../../payout/BankWireAccountForm'
+import CameraCapture from '../../ui/CameraCapture'
 import {
   getBankWireBeneficiaryName,
   isBankWireAccountComplete,
@@ -38,6 +38,7 @@ function PayoutSetupModal({
   const [qrFile, setQrFile] = useState(null)
   const [accountName, setAccountName] = useState(staffName || '')
   const [isCapturing, setIsCapturing] = useState(false)
+  const [isCameraOpen, setIsCameraOpen] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -46,6 +47,7 @@ function PayoutSetupModal({
     setQrFile(null)
     setAccountName(staffName || '')
     setError('')
+    setIsCameraOpen(false)
   }, [open, walletKey, initialValue, initialQrCode, staffName])
 
   useEffect(() => {
@@ -97,15 +99,9 @@ function PayoutSetupModal({
     setQrCode(dataUrl)
   }
 
-  const handleTakePhoto = async () => {
+  const handleTakePhoto = () => {
     if (readOnly) return
-    setIsCapturing(true)
-    try {
-      const dataUrl = await captureQrImage({ fallbackValue: value || '' })
-      if (dataUrl) setQrCode(dataUrl)
-    } finally {
-      setIsCapturing(false)
-    }
+    setIsCameraOpen(true)
   }
 
   const handleClearQr = () => {
@@ -187,7 +183,7 @@ function PayoutSetupModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 text-left">
-      <div data-testid="payout-setup-modal" className={`bg-white rounded-3xl border border-slate-100 w-full shadow-2xl p-6 relative overflow-hidden animate-scaleUp space-y-4.5 ${isBankWire ? 'max-w-md' : 'max-w-sm'}`}>
+      <div data-testid="payout-setup-modal" className={`bg-white rounded-3xl border border-slate-100 w-full shadow-2xl relative overflow-hidden animate-scaleUp ${isCameraOpen ? 'max-w-sm h-[480px]' : `p-6 space-y-4.5 ${isBankWire ? 'max-w-md' : 'max-w-sm'}`}`}>
         <div className="flex items-center gap-3.5 border-b border-slate-100 pb-3">
           <span className="h-11 w-11 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 shadow-sm">
             {PayoutLogos[walletKey]}
@@ -333,6 +329,15 @@ function PayoutSetupModal({
             </button>
           )}
         </div>
+        {isCameraOpen && (
+          <CameraCapture
+            onCapture={(dataUrl) => {
+              setQrCode(dataUrl)
+              setIsCameraOpen(false)
+            }}
+            onCancel={() => setIsCameraOpen(false)}
+          />
+        )}
       </div>
     </div>
   )

@@ -25,6 +25,7 @@ import {
 } from 'lucide-react'
 import { isValidEmail, isValidPhone } from '../../../utils/validation'
 import CountryCodeSelect, { formatNationalNumber, parsePhone } from '../../CountryCodeSelect'
+import CameraCapture from '../../ui/CameraCapture'
 
 const PayoutLogos = {
   zelle: (
@@ -177,6 +178,7 @@ export default function ProfileTab({
   const [editQrCode, setEditQrCode] = useState<any | null>(null)
   const [editQrFile, setEditQrFile] = useState(null)
   const [isCapturing, setIsCapturing] = useState(false)
+  const [isCameraOpen, setIsCameraOpen] = useState(false)
   const [modalError, setModalError] = useState('')
 
   const getMethod = (key) => apiPaymentMethods.find(m => m.type?.toLowerCase() === key.toLowerCase()) || { type: key, isActive: false, isConfigured: false, accountInfo: '', id: undefined, imageUrl: null, accountName: null }
@@ -240,11 +242,7 @@ export default function ProfileTab({
   }
 
   const handleModalTakePhoto = () => {
-    setIsCapturing(true)
-    setTimeout(() => {
-      setEditQrCode('https://via.placeholder.com/300?text=Mock+Camera+QR')
-      setIsCapturing(false)
-    }, 1500)
+    setIsCameraOpen(true)
   }
 
   const handleModalClearQr = () => {
@@ -1039,7 +1037,7 @@ export default function ProfileTab({
 
         return (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl border border-slate-100 max-w-sm w-full shadow-2xl p-6 relative overflow-hidden animate-scaleIn text-left space-y-4.5">
+            <div className={`bg-white rounded-3xl border border-slate-100 max-w-sm w-full shadow-2xl relative overflow-hidden animate-scaleIn text-left ${isCameraOpen ? 'h-[480px]' : 'p-6 space-y-4.5'}`}>
 
               {/* Header */}
               <div className="flex items-center gap-3.5 border-b border-slate-100 pb-3">
@@ -1166,6 +1164,16 @@ export default function ProfileTab({
                   </button>
                 </div>
               </form>
+
+              {isCameraOpen && (
+                <CameraCapture
+                  onCapture={(dataUrl) => {
+                    setEditQrCode(dataUrl)
+                    setIsCameraOpen(false)
+                  }}
+                  onCancel={() => setIsCameraOpen(false)}
+                />
+              )}
             </div>
           </div>
         );

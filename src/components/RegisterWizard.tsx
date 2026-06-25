@@ -82,11 +82,7 @@ export default function RegisterWizard() {
     resumePassword,
     resumeRole,
     onBackToLogin: () => {
-      if (ssoEmail) {
-        navigate(-1)
-      } else {
-        navigate('/login')
-      }
+      navigate(-1)
     },
     onRegisterSuccess: () => navigate('/login'),
     onRegisterAndLogin: handleRegisterAndLogin,
@@ -121,7 +117,9 @@ export default function RegisterWizard() {
       <div className="max-w-4xl mx-auto px-4 py-8 relative z-10 flex flex-col justify-center min-h-dvh">
         {/* Branding header */}
         <div className="text-center mb-6">
-          <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="h-12 w-auto max-w-[220px] mx-auto object-contain" />
+          <a href="/" className="inline-block">
+            <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="h-12 w-auto max-w-[220px] mx-auto object-contain" />
+          </a>
         </div>
 
         {/* Wizard Steps indicator */}
