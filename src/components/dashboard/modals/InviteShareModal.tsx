@@ -4,6 +4,7 @@ import IconButton from '../../ui/IconButton'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
+import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 
 function InviteShareModal({
   open,
@@ -51,6 +52,14 @@ function InviteShareModal({
       })
       : '',
     [businessName, businessSlug, inviteLinkSetting?.referralCode, publicInviteEnabled],
+  )
+  const publicJoinQrSmallUrl = useMemo(
+    () => (publicInviteEnabled && publicJoinLink ? buildPublicQrImageUrl(publicJoinLink, 150) : ''),
+    [publicInviteEnabled, publicJoinLink],
+  )
+  const publicJoinQrLargeUrl = useMemo(
+    () => (publicInviteEnabled && publicJoinLink ? buildPublicQrImageUrl(publicJoinLink, 300) : ''),
+    [publicInviteEnabled, publicJoinLink],
   )
   const publicInviteUnavailableText = isInviteLinkSettingLoading
     ? t('components.dashboard.modals.InviteShareModal.inviteLinkLoading')
@@ -101,7 +110,7 @@ function InviteShareModal({
             >
               {publicInviteEnabled ? (
                 <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(publicJoinLink)}`}
+                  src={publicJoinQrSmallUrl}
                   alt={t('components.dashboard.modals.InviteShareModal.joinQrAlt')}
                   className="h-full w-full object-contain"
                 />
@@ -275,7 +284,7 @@ function InviteShareModal({
 
             <div className="h-64 w-64 rounded-2xl bg-slate-50 border border-slate-200 p-4 flex items-center justify-center shadow-inner bg-white mb-4">
               <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(publicJoinLink)}`}
+                src={publicJoinQrLargeUrl}
                 alt={t('components.dashboard.modals.InviteShareModal.scanToJoinAlt')}
                 className="h-full w-full object-contain"
               />
