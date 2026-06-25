@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { ChevronDown, Search } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
 import { isValidPhone } from '../utils/validation'
-import { AsYouType, isValidPhoneNumber } from 'libphonenumber-js'
+import { AsYouType, isPossiblePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js'
 
 /** Narrow gap between phone digit groups in inputs (thinner than a normal space). */
 export const PHONE_GROUP_SEP = '\u2009'
@@ -139,7 +139,7 @@ export const isValidPhoneE164 = (value: string, fallbackDialCode: string) => {
   if (countryCode === '+1' && nationalDigits.length !== 10) return false
 
   try {
-    return isValidPhoneNumber(e164)
+    return isPossiblePhoneNumber(e164)
   } catch {
     return false
   }
