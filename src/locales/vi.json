@@ -162,7 +162,7 @@
       "title": "Tài khoản cá nhân",
       "title_tooltip": "Họ tên, số điện thoại và email dùng để nhận diện tài khoản nhân viên. Tên hiển thị và giới thiệu sẽ hiện cho khách trên màn hình tip.",
       "full_name": "Họ và tên",
-      "display_name": "Tên hiển thị mặc định",
+      "display_name": "Tên hiển thị",
       "phone": "Số điện thoại",
       "email": "Email",
       "bio": "Giới thiệu",
@@ -170,7 +170,15 @@
       "identity_note": "Họ tên, số điện thoại và email lấy từ hồ sơ tại tiệm. Cập nhật tên hiển thị và giới thiệu tại đây.",
       "save": "Lưu tài khoản",
       "saved": "Đã lưu ✓",
-      "business_names": "Tên hiển thị theo tiệm"
+      "business_names": "Tên hiển thị theo tiệm",
+      "ph_full_name": "vd: Lisa Marie Tran",
+      "ph_display_name": "vd: Lisa T.",
+      "ph_phone": "vd: 408-555-1234",
+      "ph_bio": "Chào mừng đến ghế của tôi! Tôi chuyên nail nghệ thuật và liệu pháp spa...",
+      "ph_business_display_name": "Tên hiển thị cho khách tại tiệm này",
+      "business_names_empty_title": "Chưa liên kết tiệm nào",
+      "business_names_empty_body": "Hãy liên kết với tiệm trước. Sau khi được duyệt, bạn có thể đặt tên hiển thị cho khách ở từng tiệm tại đây.",
+      "business_names_empty_action": "Đến Link & Tip"
     },
     "notifications": {
       "empty": "Không có thông báo.",
@@ -1229,6 +1237,9 @@
     "staff_invite_not_found": "Không tìm thấy lời mời này.",
     "staff_invite_expired": "Lời mời này đã hết hạn.",
     "staff_profile_not_found": "Không tìm thấy hồ sơ thợ.",
+    "staff_display_name_required": "Vui lòng nhập tên hiển thị.",
+    "staff_display_name_too_short": "Tên hiển thị phải có ít nhất 2 ký tự.",
+    "staff_display_name_too_long": "Tên hiển thị không được quá 100 ký tự.",
     "common_validation_error": "Dữ liệu nhập vào chưa hợp lệ. Vui lòng kiểm tra lại.",
     "common_not_found": "Không tìm thấy tài nguyên yêu cầu.",
     "common_unauthorized": "Truy cập chưa được xác thực.",
@@ -2069,7 +2080,10 @@
           "phPhone": "vd: 408-555-1234",
           "phExampleEmail": "vd: name@example.com",
           "phPosition": "vd: Chuyên viên Acrylic",
-          "phBio": "Chào mừng đến với ghế của tôi! Tôi chuyên về nail nghệ thuật cao cấp, nối móng acrylic, và liệu pháp spa đá nóng..."
+          "phBio": "Chào mừng đến với ghế của tôi! Tôi chuyên về nail nghệ thuật cao cấp, nối móng acrylic, và liệu pháp spa đá nóng...",
+          "displayNameMinLength": "Tên hiển thị phải có ít nhất 2 ký tự.",
+          "displayNameHint": "Hiển thị cho khách khi tip bạn. Từ 2–100 ký tự.",
+          "nicknameHint": "Tên ngắn hiển thị trên màn hình tip. Từ 2–100 ký tự."
         },
         "StepSuccess": {
           "joinRequestSubmitted": "Yêu cầu gia nhập đã gửi!",

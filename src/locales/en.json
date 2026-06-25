@@ -162,7 +162,7 @@
       "title": "Personal Account",
       "title_tooltip": "Full name, phone, and email identify your staff account. Your display name and bio are shown to customers on tip screens.",
       "full_name": "Full Name",
-      "display_name": "Default Display Name",
+      "display_name": "Display Name",
       "phone": "Phone",
       "email": "Email",
       "bio": "Bio",
@@ -170,7 +170,15 @@
       "identity_note": "Full name, phone and email come from your business record. Update your display name and bio here.",
       "save": "Save Account",
       "saved": "Saved ✓",
-      "business_names": "Business Display Names"
+      "business_names": "Business Display Names",
+      "ph_full_name": "e.g. Lisa Marie Tran",
+      "ph_display_name": "e.g. Lisa T.",
+      "ph_phone": "e.g. 408-555-1234",
+      "ph_bio": "Welcome to my chair! I specialize in luxury nail art and spa treatments...",
+      "ph_business_display_name": "Name shown to customers at this salon",
+      "business_names_empty_title": "No linked salons yet",
+      "business_names_empty_body": "Link with a salon first. Once approved, you can set how your name appears to customers at each business here.",
+      "business_names_empty_action": "Go to Link & Tip"
     },
     "notifications": {
       "empty": "No notifications.",
@@ -1229,6 +1237,9 @@
     "staff_invite_not_found": "This invite could not be found.",
     "staff_invite_expired": "This invite has expired.",
     "staff_profile_not_found": "Staff profile not found.",
+    "staff_display_name_required": "Display name is required.",
+    "staff_display_name_too_short": "Display name must be at least 2 characters.",
+    "staff_display_name_too_long": "Display name must be at most 100 characters.",
     "common_validation_error": "Validation failed. Please check your inputs.",
     "common_not_found": "The requested resource was not found.",
     "common_unauthorized": "Unauthorized access.",
@@ -2070,7 +2081,10 @@
           "phPhone": "e.g. 408-555-1234",
           "phExampleEmail": "e.g. name@example.com",
           "phPosition": "e.g. Acrylic Specialist",
-          "phBio": "Welcome to my chair! I specialize in luxury nail art, acrylic extensions, and hot stone spa treatments..."
+          "phBio": "Welcome to my chair! I specialize in luxury nail art, acrylic extensions, and hot stone spa treatments...",
+          "displayNameMinLength": "Display name must be at least 2 characters.",
+          "displayNameHint": "Shown to customers when they tip you. 2–100 characters.",
+          "nicknameHint": "Short name visible on the tip screen. 2–100 characters."
         },
         "StepSuccess": {
           "joinRequestSubmitted": "Join Request Submitted!",
