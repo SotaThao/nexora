@@ -1,11 +1,13 @@
 import { useEffect } from 'react'
+import { getStoredAppLanguage } from '../../utils/appLanguage'
 import HomePageView from './HomePageView'
 
 const PAGE_TITLE = 'NEXORA TOUCH — Smarter Tips. Faster Reviews. Stronger Growth.'
 
 export default function HomePage() {
   useEffect(() => {
-    document.documentElement.lang = 'en'
+    const lang = getStoredAppLanguage()
+    document.documentElement.lang = lang === 'vi' ? 'vi' : 'en'
     const previousTitle = document.title
     document.title = PAGE_TITLE
     document.body.classList.add('homepage-active')

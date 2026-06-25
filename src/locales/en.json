@@ -207,6 +207,7 @@
     "active": "Active",
     "inactive": "Inactive",
     "back": "Back",
+    "back_to_home": "Back to Home",
     "next": "Next",
     "previous": "Previous",
     "cancel": "Cancel",
@@ -426,6 +427,7 @@
       "manage_plan": "Manage Plan"
     },
     "menu": {
+      "home": "Home",
       "dashboard": "Dashboard",
       "staff": "Staff",
       "tips": "Tips",

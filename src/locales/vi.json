@@ -207,6 +207,7 @@
     "active": "Đang hoạt động",
     "inactive": "Ngừng hoạt động",
     "back": "Quay lại",
+    "back_to_home": "Về trang chủ",
     "previous": "Trước",
     "next": "Tiếp theo",
     "cancel": "Hủy",
@@ -426,6 +427,7 @@
       "manage_plan": "Quản lý gói"
     },
     "menu": {
+      "home": "Trang chủ",
       "dashboard": "Bảng Điều Khiển",
       "staff": "Nhân Viên",
       "tips": "Tiền Típ",
