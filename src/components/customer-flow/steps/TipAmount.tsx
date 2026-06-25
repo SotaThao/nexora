@@ -1,6 +1,8 @@
 import React from 'react'
 import { getWalletOptions } from './Payment'
 
+const QUICK_TIP_AMOUNTS = [5, 10, 15, 20, 30]
+
 function resolveStaffTipAmount(memberId, selectedTips, customTips) {
   const selTip = selectedTips[memberId] !== undefined ? selectedTips[memberId] : 15
   return selTip === 'custom' ? Number(customTips[memberId]) || 0 : Number(selTip)
@@ -10,7 +12,9 @@ export default function TipAmount({
   t,
   selectedStaffMembers,
   selectedTips,
+  setSelectedTips,
   customTips,
+  setCustomTips,
   activeTipAmount,
   initialStaffMember,
   setStep,
@@ -47,6 +51,8 @@ export default function TipAmount({
     }
   }
 
+  const canEditTips = typeof setSelectedTips === 'function' && typeof setCustomTips === 'function'
+
   return (
     <div className="space-y-4 animate-fadeIn">
       <div className="text-center space-y-1.5">
@@ -56,38 +62,94 @@ export default function TipAmount({
       </div>
 
       <div className="overflow-hidden rounded-xl border border-nexoraBorder bg-white shadow-sm">
-        <div className="max-h-[180px] overflow-y-auto divide-y divide-nexoraBorder/70">
-          {staffTipRows.map(({ member, amount }) => (
-            <div
-              key={member.id}
-              className="flex items-center justify-between gap-3 px-3.5 py-3"
-            >
-              <div className="flex min-w-0 items-center gap-3">
-                {member.avatar ? (
-                  <img
-                    src={member.avatar}
-                    alt=""
-                    className="h-8 w-8 rounded-full object-cover border border-nexoraBorder shrink-0"
-                  />
-                ) : (
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-tr from-nexoraElectric to-nexoraViolet text-xs font-black text-white shrink-0 shadow-sm">
-                    {member.nickname?.charAt(0)}
+        <div className="divide-y divide-nexoraBorder/70">
+          {staffTipRows.map(({ member, amount }) => {
+            const selTip = selectedTips[member.id] !== undefined ? selectedTips[member.id] : 15
+            const custTip = customTips[member.id] || ''
+            return (
+              <div key={member.id} className="px-3.5 py-3 space-y-2.5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    {member.avatar ? (
+                      <img
+                        src={member.avatar}
+                        alt=""
+                        className="h-8 w-8 rounded-full object-cover border border-nexoraBorder shrink-0"
+                      />
+                    ) : (
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-tr from-nexoraElectric to-nexoraViolet text-xs font-black text-white shrink-0 shadow-sm">
+                        {member.nickname?.charAt(0)}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <h4 className="truncate text-xs font-extrabold text-nexoraText">
+                        {member.fullName || member.nickname}
+                      </h4>
+                      <p className="mt-0.5 truncate text-[10px] font-semibold text-nexoraSubtle">
+                        {member.position}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="shrink-0 text-sm font-black text-nexoraBrand">
+                    ${amount.toFixed(2)}
+                  </div>
+                </div>
+
+                {canEditTips && (
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-bold text-nexoraSubtle uppercase tracking-wider">
+                      {t('customer.inline_tip_label')}
+                    </p>
+                    <div className="grid grid-cols-6 gap-1.5">
+                      {QUICK_TIP_AMOUNTS.map((val) => (
+                        <button
+                          key={val}
+                          type="button"
+                          onClick={() => setSelectedTips({ ...selectedTips, [member.id]: val })}
+                          className={`py-1.5 rounded-lg text-[11px] font-black transition-all ${
+                            selTip === val
+                              ? 'bg-nexoraBrand text-white shadow shadow-nexoraBrand/30'
+                              : 'bg-nexoraCanvas hover:bg-slate-50 text-nexoraText border border-nexoraBorder/60'
+                          }`}
+                        >
+                          ${val}
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedTips({ ...selectedTips, [member.id]: 'custom' })
+                          if (!customTips[member.id]) {
+                            setCustomTips({ ...customTips, [member.id]: '' })
+                          }
+                        }}
+                        className={`py-1.5 rounded-lg text-[11px] font-black transition-all ${
+                          selTip === 'custom'
+                            ? 'bg-nexoraBrand text-white shadow shadow-nexoraBrand/30'
+                            : 'bg-nexoraCanvas hover:bg-slate-50 text-nexoraText border border-nexoraBorder/60'
+                        }`}
+                      >
+                        {t('customer.custom_tip_btn')}
+                      </button>
+                    </div>
+                    {selTip === 'custom' && (
+                      <div className="relative">
+                        <span className="absolute left-3 top-2.5 text-xs font-extrabold text-nexoraSubtle">$</span>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          placeholder={t('components.customer_flow.steps.TipAmount.phAmount')}
+                          className="w-full bg-white border border-nexoraBorder focus:border-nexoraBrand rounded-lg pl-7 pr-3 py-2 text-xs font-extrabold text-nexoraText focus:outline-none transition-all"
+                          value={custTip}
+                          onChange={(e) => setCustomTips({ ...customTips, [member.id]: e.target.value })}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
-                <div className="min-w-0">
-                  <h4 className="truncate text-xs font-extrabold text-nexoraText">
-                    {member.fullName || member.nickname}
-                  </h4>
-                  <p className="mt-0.5 truncate text-[10px] font-semibold text-nexoraSubtle">
-                    {member.position}
-                  </p>
-                </div>
               </div>
-              <div className="shrink-0 text-sm font-black text-nexoraBrand">
-                ${amount.toFixed(2)}
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
         <div className="flex items-center justify-between border-t border-nexoraBrandSoft bg-nexoraBrandSoft/35 px-3.5 py-3">
           <div>

@@ -203,7 +203,7 @@ export default function StaffHome() {
           <h2 className="text-[17px] font-black tracking-tight text-nexoraText">{t('staff_dashboard.home.linked_businesses')}</h2>
         </div>
         {(linkedBusinesses || []).length === 0 ? (
-          <p className="py-4 text-center text-[13px] text-nexoraSubtle">{t('staff_dashboard.home.no_pending')}</p>
+          <p className="py-4 text-center text-[13px] text-nexoraSubtle">{t('staff_dashboard.qr.no_linked_businesses')}</p>
         ) : (
           <div className="divide-y divide-nexoraBorder">
             {linkedBusinesses.map((biz) => (

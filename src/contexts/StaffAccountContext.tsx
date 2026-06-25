@@ -113,7 +113,7 @@ export function StaffAccountProvider({ staffId = null, children }: StaffAccountP
   )
 
   const saveProfile = useCallback(
-    (patch) => {
+    async (patch) => {
       const { avatar, photoUrl, ...accountPatch } = patch
       if (Object.keys(accountPatch).length > 0) {
         updateAccount(accountPatch)
@@ -138,9 +138,12 @@ export function StaffAccountProvider({ staffId = null, children }: StaffAccountP
 
       if (!dto.displayName) return
 
-      updateStaffProfileMutation.mutate(dto, {
-        onError: (err) => logger.error('[StaffAccountContext] Failed to persist staff profile', err),
-      })
+      try {
+        await updateStaffProfileMutation.mutateAsync(dto)
+      } catch (err) {
+        logger.error('[StaffAccountContext] Failed to persist staff profile', err)
+        throw err
+      }
     },
     [updateAccount, account, userProfile, staffProfile, updateStaffProfileMutation]
   )
