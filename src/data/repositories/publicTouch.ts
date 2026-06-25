@@ -14,6 +14,8 @@ const PAYMENT_METHOD_MAP: Record<string, string> = {
   Zelle: 'Zelle',
   PayPal: 'PayPal',
   AppleCash: 'AppleCash',
+  BankWire: 'BankWire',
+  bankwire: 'BankWire',
 }
 
 function toWireMethod(uiMethod: string): string {

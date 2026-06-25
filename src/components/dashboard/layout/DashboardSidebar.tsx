@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { visibleMenuItems } from '../constants'
+import { visibleMenuItems, PUBLIC_HOME_MENU_ITEM } from '../constants'
 import MenuIcon from '../../ui/MenuIcon'
 import { getSubscriptionSidebarCopy } from '../../../utils/subscriptionDisplay'
 
@@ -151,6 +151,17 @@ export default function DashboardSidebar({
 
       {/* Navigation Menu */}
       <nav className="mt-6 flex-1 space-y-1.5 overflow-y-auto pr-1">
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          className="flex h-12 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-bold text-white/85 transition hover:bg-white/5 hover:text-white"
+        >
+          <MenuIcon item={PUBLIC_HOME_MENU_ITEM} active={false} />
+          <span className="truncate">{t('dashboard.menu.home')}</span>
+        </button>
+
+        <div className="my-1 border-t border-white/10" />
+
         {(() => {
           const menuItemsToDisplay = userRole === 'staff'
             ? [

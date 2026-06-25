@@ -2,6 +2,7 @@
  * Auth header sync for homepage — used by HomePageBridgeProvider.
  * Plan CTA routing for pricing / consulting buttons.
  */
+import { getStoredAppLanguage } from '../../utils/appLanguage'
 import type { AuthSession } from '../../types/auth'
 
 type AuthStatus = 'loading' | 'authenticated' | 'anonymous'
@@ -45,7 +46,7 @@ export function syncHomePageAuthHeader(
 
     if (dashLink) {
       const key = dashPath === '/staff' ? 'header-staff' : 'header-dashboard'
-      const lang = localStorage.getItem('nexora_homepage_lang') === 'vi' ? 'vi' : 'en'
+      const lang = getStoredAppLanguage()
       const labels: Record<string, Record<string, string>> = {
         en: { 'header-dashboard': 'Dashboard', 'header-staff': 'Staff' },
         vi: { 'header-dashboard': 'Tổng quan', 'header-staff': 'Cổng thợ' },

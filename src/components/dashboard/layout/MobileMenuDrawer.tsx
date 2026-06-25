@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import MenuIcon from '../../ui/MenuIcon'
+import { PUBLIC_HOME_MENU_ITEM } from '../constants'
 import { getSubscriptionSidebarCopy } from '../../../utils/subscriptionDisplay'
 
 export default function MobileMenuDrawer({
@@ -158,6 +159,20 @@ export default function MobileMenuDrawer({
         )}
 
         <nav className="flex-1 space-y-1.5 overflow-y-auto pr-1">
+          <button
+            type="button"
+            onClick={() => {
+              navigate('/')
+              onClose()
+            }}
+            className="flex min-h-11 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-bold text-white/85 transition hover:bg-white/5 hover:text-white"
+          >
+            <MenuIcon item={PUBLIC_HOME_MENU_ITEM} active={false} />
+            <span>{t('dashboard.menu.home')}</span>
+          </button>
+
+          <div className="my-1 border-t border-white/10" />
+
           {menuItemsToDisplay.filter((item) => item.id !== 'settings').map((item) => {
             const { id, label } = item
             const isActive = activeMenu === id

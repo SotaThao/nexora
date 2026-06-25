@@ -4,7 +4,6 @@ import type { PaymentMethodDto } from '../../types/domain'
 import {
   PAYOUT_UI_LABELS,
   payoutTypeToUiKey,
-  sortPaymentMethodsByUiOrder,
 } from '../paymentMethodTypes'
 
 type HttpClient = typeof httpClient
@@ -43,8 +42,7 @@ export function createStaffPaymentMethodsRepository(client: HttpClient = httpCli
     async getAll(): Promise<PaymentMethodDto[]> {
       try {
         const res = await client.get<StaffPaymentMethodApiDto[]>('/api/v1/staff/payment-methods')
-        const items = Array.isArray(res) ? res.map(normalizeStaffPaymentMethod) : []
-        return sortPaymentMethodsByUiOrder(items)
+        return Array.isArray(res) ? res.map(normalizeStaffPaymentMethod) : []
       } catch (err: unknown) {
         if (isApiError(err) && err.status === 404) return []
         throw err

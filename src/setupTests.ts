@@ -3,6 +3,7 @@ import React, { type ReactElement, type ReactNode } from 'react'
 import { vi } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { RenderOptions, RenderResult } from '@testing-library/react'
+import { LanguageProvider } from './contexts/LanguageContext'
 
 vi.mock('./contexts/NotificationContext', () => ({
   NotificationProvider: ({ children }: { children: ReactNode }) => children,
@@ -54,7 +55,11 @@ vi.mock('@testing-library/react', async (importActual) => {
       const inner = UserWrapper
         ? React.createElement(UserWrapper, null, children)
         : children
-      return React.createElement(QueryClientProvider, { client: testQueryClient }, inner)
+      return React.createElement(
+        LanguageProvider,
+        null,
+        React.createElement(QueryClientProvider, { client: testQueryClient }, inner),
+      )
     }
     return actual.render(ui, { ...rest, wrapper: Wrapper })
   }

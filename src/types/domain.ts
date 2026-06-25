@@ -412,8 +412,11 @@ export interface StaffProfile {
   id?: string
   staffCode?: string
   displayName?: string
+  position?: string
   bio?: string
   photo?: string
+  photoUrl?: string
+  isProfileComplete?: boolean
   [key: string]: unknown
 }
 
