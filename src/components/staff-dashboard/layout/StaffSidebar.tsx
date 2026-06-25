@@ -1,13 +1,16 @@
 // StaffSidebar — desktop (≥1024px) left nav and mobile drawer for the staff dashboard.
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { LogOut, ChevronLeft, ChevronDown, ChevronUp } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { STAFF_MENU_ITEMS } from '../constants'
+import { PUBLIC_HOME_MENU_ITEM } from '../../dashboard/constants'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import MenuIcon from '../../ui/MenuIcon'
 
 export default function StaffSidebar({ activeScreen, onNavigate, onLogout, isOpen, onClose }) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const { staffMember, account } = useStaffAccount()
   const displayName = account.defaultDisplayName || staffMember.fullName || 'Staff'
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
@@ -80,6 +83,20 @@ export default function StaffSidebar({ activeScreen, onNavigate, onLogout, isOpe
 
       {/* Navigation */}
       <nav className="mt-6 flex-1 space-y-1.5 overflow-y-auto pr-1">
+        <button
+          type="button"
+          onClick={() => {
+            navigate('/')
+            if (isMobile && onClose) onClose()
+          }}
+          className="flex h-12 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-bold text-white/85 transition hover:bg-white/5 hover:text-white"
+        >
+          <MenuIcon item={PUBLIC_HOME_MENU_ITEM} active={false} />
+          <span className="truncate">{t('dashboard.menu.home')}</span>
+        </button>
+
+        <div className="my-1 border-t border-white/10" />
+
         {STAFF_MENU_ITEMS.map((item) => {
           const isActive = activeScreen === item.id
           return (

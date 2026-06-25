@@ -1,6 +1,11 @@
-import React, { createContext, useState, useContext, type ReactNode } from 'react'
+import React, { createContext, useState, useContext, useEffect, type ReactNode } from 'react'
 import en from '../locales/en.json'
 import vi from '../locales/vi.json'
+import {
+  APP_LANGUAGE_CHANGE_EVENT,
+  getStoredAppLanguage,
+  setStoredAppLanguage,
+} from '../utils/appLanguage'
 import type { AppLanguage, LanguageContextValue, TranslationVariables } from '../types/contexts'
 
 const translations = { en, vi }
@@ -12,16 +17,26 @@ interface LanguageProviderProps {
 }
 
 export function LanguageProvider({ children }: LanguageProviderProps) {
-  const [currentLanguage, setCurrentLanguageState] = useState<AppLanguage>(() => {
-    const saved = localStorage.getItem('nexora_lang')
-    if (saved === 'en' || saved === 'vi') return saved
-    return 'en'
-  })
+  const [currentLanguage, setCurrentLanguageState] = useState<AppLanguage>(() =>
+    getStoredAppLanguage(),
+  )
+
+  useEffect(() => {
+    const handleLanguageChange = (event: Event) => {
+      const lang = (event as CustomEvent<{ lang: AppLanguage }>).detail?.lang
+      if (lang === 'en' || lang === 'vi') {
+        setCurrentLanguageState(lang)
+      }
+    }
+
+    window.addEventListener(APP_LANGUAGE_CHANGE_EVENT, handleLanguageChange)
+    return () => window.removeEventListener(APP_LANGUAGE_CHANGE_EVENT, handleLanguageChange)
+  }, [])
 
   const setLanguage = (lang: AppLanguage) => {
     if (lang === 'en' || lang === 'vi') {
       setCurrentLanguageState(lang)
-      localStorage.setItem('nexora_lang', lang)
+      setStoredAppLanguage(lang)
     }
   }
 
