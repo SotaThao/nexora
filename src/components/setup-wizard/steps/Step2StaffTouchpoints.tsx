@@ -1,12 +1,18 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import {
   Plus, Trash2, AlertTriangle, HelpCircle,
   QrCode, Users, Edit2, Search
 } from 'lucide-react'
 import CustomSelect from '../../CustomSelect'
 import CountryCodeSelect, { parsePhone } from '../../CountryCodeSelect'
-import { WalletLogos, getTouchpointIcon } from '../constants'
+import { WalletLogos, DEFAULT_PAYOUT_CONFIGS, getTouchpointIcon } from '../constants'
 import { renderLabel } from '../../../contexts/LanguageContext'
+import {
+  getPaymentMethodDisplayName,
+  payoutTypeToUiKey,
+  PAYOUT_UI_LABELS,
+} from '../../../data/paymentMethodTypes'
+import type { PaymentMethodDto } from '../../../types/domain'
 
 export default function Step2StaffTouchpoints({
   t,
@@ -34,9 +40,24 @@ export default function Step2StaffTouchpoints({
   handleRemoveTouchpoint,
   handleStartEditTouchpoint,
   handleSaveTouchpoint,
-  setPreviewingTp
+  setPreviewingTp,
+  merchantPaymentMethods = [],
 }) {
   const newStaffPhoneParsed = parsePhone(newStaff.phone || '')
+
+  const displayPaymentMethods = useMemo(() => {
+    if (merchantPaymentMethods.length > 0) {
+      return merchantPaymentMethods.map((method: PaymentMethodDto) => ({
+        key: method.uiKey || payoutTypeToUiKey(method.type || ''),
+        name: method.name || getPaymentMethodDisplayName(method.type || ''),
+      }))
+    }
+
+    return Object.keys(DEFAULT_PAYOUT_CONFIGS).map((key) => ({
+        key,
+        name: PAYOUT_UI_LABELS[key] || key,
+      }))
+  }, [merchantPaymentMethods])
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -64,14 +85,7 @@ export default function Step2StaffTouchpoints({
 
             <div className="mt-4">
               <div className="divide-y divide-slate-100 rounded-xl border border-nexoraBorder bg-white px-4">
-                {[
-                  { name: 'Zelle', key: 'zelle' },
-                  { name: 'Bank Wire', key: 'bankwire' },
-                  { name: 'PayPal', key: 'paypal' },
-                  { name: 'Venmo', key: 'venmo' },
-                  { name: 'Cash App', key: 'cashapp' },
-                  { name: 'Apple Cash', key: 'applecash' }
-                ].filter(wallet => wallet.key !== 'bankwire').map((wallet) => {
+                {displayPaymentMethods.map((wallet) => {
                   const config = (businessInfo.payoutConfigs && businessInfo.payoutConfigs[wallet.key]) || { enabled: false, value: '', qrCode: '' }
 
                   return (

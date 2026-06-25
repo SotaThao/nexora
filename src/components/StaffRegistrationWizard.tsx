@@ -210,6 +210,7 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
               setStep={reg.setStep}
               isDemoToolsEnabled={isDemoToolsEnabled}
               isSubmitting={reg.isActivating}
+              paymentMethods={reg.staffPaymentMethods}
             />
           )}
 
