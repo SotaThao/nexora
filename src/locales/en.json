@@ -1764,6 +1764,7 @@
           "businessName": "Business Name",
           "phone": "Phone",
           "locationMap": "Location Map",
+          "locationMapEmpty": "Add your address to display your business location on the map.",
           "reviewLinks": "Review Links",
           "emailPhone": "email/phone",
           "details": "details",
