@@ -17,6 +17,7 @@ import {
 } from "../../../data/hooks/useProfileSettings";
 import { qk } from "../../../data/queryKeys";
 import { logger } from "../../../utils/logger";
+import { buildPublicQrImageUrl } from "../../../data/repositories/publicQr";
 import { getUserProfileImageUrl } from "../../../utils/userProfileImage";
 import {
   isValidEmail,
@@ -573,9 +574,7 @@ export default function useSettingsForm({
   const handleModalTakePhoto = () => {
     setIsCapturing(true);
     setTimeout(() => {
-      const mockQr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-        editValue || "",
-      )}`;
+      const mockQr = buildPublicQrImageUrl(editValue || "", 200);
       setEditQrCode(mockQr);
       setIsCapturing(false);
     }, 800);
