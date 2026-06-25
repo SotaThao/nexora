@@ -2,6 +2,7 @@ import { ShieldAlert, ShieldCheck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "../../../contexts/LanguageContext";
+import { resolveEffectiveKybStatus } from "../../../utils/kybStatus";
 import {
   useUpdateBusiness,
   useUpdateBusinessInfo,
@@ -173,21 +174,35 @@ export default function useSettingsForm({
   const updateReviewLinksMutation = useUpdateReviewLinks();
   const { data: verifiedStatusData } = useVerifiedStatus();
 
+  const [activeTab, setActiveTab] = useState(initialTab); // profile | kyb
+
+  const effectiveVerificationStatus = useMemo(
+    () => resolveEffectiveKybStatus(
+      verificationStatus,
+      verifiedStatusData?.status as string | undefined,
+    ),
+    [verifiedStatusData?.status, verificationStatus],
+  )
+
   // Editing is allowed only when KYB has not been submitted or was rejected.
   // verifiedStatusData.status comes from SSO live: None | Review | Rejected | Verified
   const canEditProfile = useMemo(() => {
-    if (!KYB_EDITABLE_STATUSES.has(verificationStatus)) return false;
+    if (!KYB_EDITABLE_STATUSES.has(effectiveVerificationStatus)) return false;
     if (!verifiedStatusData) return true; // still loading — keep current behavior
     return verifiedStatusData.status === 'None' || verifiedStatusData.status === 'Rejected';
-  }, [verificationStatus, verifiedStatusData]);
-
-  const [activeTab, setActiveTab] = useState(initialTab); // profile | kyb
+  }, [effectiveVerificationStatus, verifiedStatusData]);
 
   useEffect(() => {
     if (initialTab) {
       setActiveTab(initialTab);
     }
   }, [initialTab]);
+
+  useEffect(() => {
+    if (activeTab === 'kyb') {
+      queryClient.invalidateQueries({ queryKey: qk.verifiedStatus() });
+    }
+  }, [activeTab, queryClient]);
 
   const handleTabChange = (tab) => {
     if (tab === 'profile' && activeTab === 'kyb') {
@@ -649,7 +664,7 @@ export default function useSettingsForm({
   };
 
   const getStatusCardDetails = () => {
-    switch (verificationStatus) {
+    switch (effectiveVerificationStatus) {
       case "basic":
         return {
           bgClass: "bg-blue-50/70 border-blue-200 text-blue-900",
@@ -863,6 +878,7 @@ export default function useSettingsForm({
     handleAvatarChange,
     formatDOB,
     getStatusCardDetails,
+    effectiveVerificationStatus,
     currentLanguage,
     canEditProfile,
   };

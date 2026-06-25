@@ -154,7 +154,7 @@ export default function SettingsView({
             reviewsErrors={form.reviewsErrors}
             setReviewsErrors={form.setReviewsErrors}
             hasKyb={hasKyb}
-            verificationStatus={verificationStatus}
+            verificationStatus={form.effectiveVerificationStatus}
             canEditProfile={form.canEditProfile}
             currentLanguage={form.currentLanguage}
             showToast={form.showToast}
@@ -177,7 +177,7 @@ export default function SettingsView({
           <KybTab
             profile={form.profile}
             cardDetails={cardDetails}
-            verificationStatus={verificationStatus}
+            verificationStatus={form.effectiveVerificationStatus}
             showToast={form.showToast}
             portalRef={kybPortalRef}
           />
