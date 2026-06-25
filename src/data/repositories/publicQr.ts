@@ -48,7 +48,23 @@ export function createPublicQrRepository(client: HttpClient = httpClient) {
       )
       return normalizeResolveQrCodeResult(res)
     },
+
+    /** GET /api/v1/public/qr — generates QR image bytes for arbitrary content. */
+    async generateQrCode(content: string, size = 300): Promise<Blob> {
+      return client.getBlob('/api/v1/public/qr', {
+        anonymous: true,
+        params: { content, size },
+      })
+    },
   }
+}
+
+const apiBaseUrl = (import.meta.env?.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
+
+/** Public QR image URL for use in `<img src>` (anonymous GET). */
+export function buildPublicQrImageUrl(content: string, size = 300): string {
+  const params = new URLSearchParams({ content, size: String(size) })
+  return `${apiBaseUrl}/api/v1/public/qr?${params.toString()}`
 }
 
 export const publicQrRepository = createPublicQrRepository()

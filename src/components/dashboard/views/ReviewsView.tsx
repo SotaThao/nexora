@@ -305,7 +305,7 @@ function ReviewsView({
                       </div>
                       <span className="text-xs font-extrabold text-nexoraWarning">{review.rating}.0★</span>
                     </div>
-                    <p className="text-sm text-nexoraText">"{review.comment}"</p>
+                    <p className="text-sm text-nexoraText">{review.comment}</p>
                     <p className="text-xs text-nexoraMuted">{review.staffName} - {review.date}</p>
                   </div>
 
