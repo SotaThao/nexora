@@ -313,6 +313,8 @@ export default function App() {
     } else if (scenario === 'staff_dashboard') {
       setLoggedInStaffId('NEX-STAFF-MIA0123')
       setView('staff-dashboard')
+    } else if (scenario === 'customer') {
+      setView('customer')
     }
   }
 

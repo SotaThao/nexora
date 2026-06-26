@@ -30,7 +30,7 @@ export default function SimulationPanel({
         <div className="space-y-2.5">
           {/* Scenario 0: Customer Tips Demo */}
           <button
-            onClick={() => window.location.href = '/tip-flow.html'}
+            onClick={() => onTriggerSimulation('customer')}
             className="w-full text-left p-3 rounded-xl border-2 border-nexoraBrand bg-nexoraBrandSoft/10 hover:bg-nexoraBrandSoft/30 transition flex items-start gap-3 group"
           >
             <span className="h-6 w-6 rounded-lg bg-nexoraBrand text-white flex items-center justify-center font-bold text-xs shrink-0">✨</span>
