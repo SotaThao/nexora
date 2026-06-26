@@ -155,7 +155,7 @@ export default function TipsSavingsTab({
                     </td>
                     <td className="py-3.5 px-2">
                       <span className="inline-flex items-center gap-1 text-[10px] font-bold text-brandCyan">
-                        <CheckCircle className="h-3 w-3" /> {t('dashboard.tips.savings.status_success')}
+                        <CheckCircle className="h-3 w-3" /> {t('dashboard.tips.savings.status_completed')}
                       </span>
                     </td>
                   </tr>
