@@ -167,7 +167,7 @@ export default function TipAmount({
           const selTip = selectedTips[member.id] !== undefined ? selectedTips[member.id] : 5;
           const custTip = customTips[member.id] || '';
           return (
-            <div key={member.id} className="flex flex-col gap-3 p-4 bg-white border border-nexoraBorder rounded-[16px] shadow-sm">
+            <div key={member.id} className="flex flex-col gap-4 p-4 bg-white border border-nexoraBorder rounded-[16px] shadow-sm">
               <div className="flex items-center gap-3">
                 {member.avatar ? (
                   <img src={member.avatar} alt="" className="h-10 w-10 rounded-full object-cover border border-nexoraBorder shrink-0" />
@@ -176,24 +176,10 @@ export default function TipAmount({
                     {member.nickname.charAt(0)}
                   </div>
                 )}
-                <span className="font-bold text-nexoraText text-sm flex-1">{member.nickname}</span>
-                
-                <div className="relative w-28">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-extrabold text-nexoraText">$</span>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    placeholder="0"
-                    value={selTip === 'custom' ? custTip : selTip}
-                    onChange={(e) => {
-                      setSelectedTips({ ...selectedTips, [member.id]: 'custom' });
-                      setCustomTips({ ...customTips, [member.id]: e.target.value });
-                    }}
-                    className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand rounded-lg pl-6 pr-2 py-2 text-right text-sm font-extrabold text-nexoraText focus:outline-none transition-all"
-                  />
-                </div>
+                <span className="font-bold text-nexoraText text-base flex-1">{member.nickname}</span>
               </div>
 
+              {/* Quick Tips */}
               <div className="grid grid-cols-4 gap-2">
                 {[5, 10, 15, 20].map(val => (
                   <button
@@ -203,15 +189,31 @@ export default function TipAmount({
                       setSelectedTips({ ...selectedTips, [member.id]: val });
                       setCustomTips({ ...customTips, [member.id]: '' });
                     }}
-                    className={`py-2 rounded-lg text-[13px] font-extrabold transition-all duration-200 ${
+                    className={`py-3 rounded-xl text-sm font-extrabold transition-all duration-200 ${
                       selTip === val
                         ? 'bg-nexoraBrand text-white shadow-md border-transparent'
-                        : 'bg-white hover:bg-slate-50 text-nexoraText border border-nexoraBorder'
+                        : 'bg-white hover:bg-slate-50 text-nexoraText border border-nexoraBorder shadow-sm'
                     }`}
                   >
                     ${val}
                   </button>
                 ))}
+              </div>
+
+              {/* Custom Input */}
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-extrabold text-nexoraText">$</span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  placeholder="0.00"
+                  value={selTip === 'custom' ? custTip : selTip}
+                  onChange={(e) => {
+                    setSelectedTips({ ...selectedTips, [member.id]: 'custom' });
+                    setCustomTips({ ...customTips, [member.id]: e.target.value });
+                  }}
+                  className="w-full bg-white border border-nexoraBorder focus:border-nexoraBrand rounded-xl pl-10 pr-4 py-3 text-xl font-extrabold text-nexoraText focus:outline-none transition-all shadow-sm"
+                />
               </div>
             </div>
           );
