@@ -54,8 +54,10 @@ export default function CustomerFlow() {
         
         {/* Header */}
         <header className="bg-white px-5 py-3.5 flex justify-between items-center border-b border-slate-200 z-10 shrink-0">
-          <div className="font-extrabold text-[14px] text-slate-900 uppercase">{bizName}</div>
-          <div className="font-medium text-[14px] text-slate-900">Tip & Review</div>
+          <div className="flex items-center">
+            <img src="/assets/nexora-logo.png" alt="Nexora" className="h-[24px] w-auto object-contain" />
+          </div>
+          <div className="font-medium text-[15px] text-slate-900">Tip & Review</div>
         </header>
 
         {/* Content Area */}
