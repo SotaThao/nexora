@@ -209,9 +209,7 @@ export default function StaffMyQR() {
   const pendingLinkRequests = useMemo(() => {
     return linkRequests.filter((n, i) => {
       const query = linkRequestQueries[i]
-      if (query.isPending) return true
-      if (query.isSuccess && query.data?.status === 'WaitingStaffAcceptance') return true
-      return false
+      return query.isSuccess && query.data?.status === 'WaitingStaffAcceptance'
     })
   }, [linkRequests, linkRequestQueries])
 
@@ -619,26 +617,22 @@ export default function StaffMyQR() {
 
       {activeTab === 'referral' && (
         <div className="space-y-4">
-          <section className={panel}>
-            <h3 className="mb-3 text-base font-extrabold text-nexoraText">
-              {t('staff_dashboard.qr.link_requests_title')}
-            </h3>
-            <div className="space-y-2">
-              {pendingLinkRequests.length === 0 ? (
-                <div className="py-8 text-center text-sm text-nexoraMuted bg-slate-50/50 rounded-xl border border-dashed border-nexoraBorder">
-                  {t('staff_dashboard.qr.no_link_requests')}
-                </div>
-              ) : (
-                pendingLinkRequests.map((n) => (
+          {pendingLinkRequests.length > 0 && (
+            <section className={panel}>
+              <h3 className="mb-3 text-base font-extrabold text-nexoraText">
+                {t('staff_dashboard.qr.link_requests_title')}
+              </h3>
+              <div className="space-y-2">
+                {pendingLinkRequests.map((n) => (
                   <StaffLinkRequestCard
                     key={n.id}
                     notification={n}
                     onResolved={(id) => markNotificationRead.mutate(id)}
                   />
-                ))
-              )}
-            </div>
-          </section>
+                ))}
+              </div>
+            </section>
+          )}
           <section className={`${panel} text-center`}>
             <h3 className="text-base font-extrabold text-nexoraText">
             {t('staff_dashboard.qr.personal_title')}
