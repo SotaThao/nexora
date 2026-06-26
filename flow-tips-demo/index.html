@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Flow Tips – Nexora Touch</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#eef0f6;color:#1a1a2e}
+header{background:#fff;border-bottom:1px solid #e0e4ef;padding:18px 36px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.logo{width:34px;height:34px;background:linear-gradient(135deg,#6C4EFF,#8B5CF6);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px}
+header h1{font-size:17px;font-weight:700}
+.badge{margin-left:auto;background:#f0edff;color:#6C4EFF;border:1px solid #d4caff;border-radius:20px;padding:4px 13px;font-size:11px;font-weight:600}
+main{max-width:1200px;margin:0 auto;padding:36px 36px 72px}
+.pt{font-size:26px;font-weight:800;margin-bottom:6px}
+.ps{font-size:13px;color:#666;margin-bottom:32px}
+.lg{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:36px}
+.li{background:#fff;border:1px solid #e0e4ef;border-radius:20px;padding:5px 14px;font-size:11px;font-weight:600;color:#444;display:flex;align-items:center;gap:7px}
+.ld{width:9px;height:9px;border-radius:50%}
+.fs{margin-bottom:48px}
+.fh{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.fn{width:30px;height:30px;border-radius:50%;color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ft{font-size:17px;font-weight:700}
+.fd{font-size:12px;color:#888;margin-left:42px;margin-bottom:16px}
+.sr{display:flex;align-items:flex-start;padding:28px 32px;background:#fff;border-radius:18px;box-shadow:0 4px 20px rgba(108,78,255,.06);border:1px solid #e8eaf2;overflow-x:auto;gap:0}
+.sw{display:flex;align-items:center;flex-shrink:0}
+.sc{cursor:pointer;transition:transform .2s}
+.sc:hover{transform:translateY(-4px)}
+.sf{width:140px;height:280px;border-radius:20px;border:5px solid #1a1a2e;background:#f8f9ff;box-shadow:0 6px 20px rgba(0,0,0,.11);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;position:relative;overflow:hidden}
+.sf::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:50px;height:7px;background:#1a1a2e;border-radius:0 0 7px 7px;z-index:5}
+.sf-icon{font-size:32px;opacity:.6}
+.sf-label{font-size:10px;color:#888;font-weight:600;text-align:center;padding:0 12px;line-height:1.4}
+.sf-bar{width:80%;height:6px;background:#e0e4ef;border-radius:3px;margin-top:4px}
+.sf-bar2{width:60%;height:6px;background:#e0e4ef;border-radius:3px}
+.sl{text-align:center;margin-top:8px;font-size:10px;color:#999;font-weight:600}
+.ar{display:flex;align-items:center;padding:0 10px;flex-shrink:0;margin-top:-30px}
+.al{width:36px;height:2px;background:linear-gradient(90deg,#b0a8e0,#6C4EFF);position:relative}
+.al::after{content:"";position:absolute;right:-1px;top:50%;transform:translateY(-50%);border:5px solid transparent;border-left:8px solid #6C4EFF}
+.step-num{position:absolute;top:12px;right:10px;width:18px;height:18px;border-radius:50%;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;color:#fff}
+.sr::-webkit-scrollbar{height:3px}.sr::-webkit-scrollbar-track{background:#f0f0f0;border-radius:2px}.sr::-webkit-scrollbar-thumb{background:#c0b8e8;border-radius:2px}
+</style>
+</head>
+<body>
+<header>
+<div class="logo">N</div>
+<h1>Nexora Touch — Flow Tips</h1>
+<span class="badge">Demo v1.0</span>
+</header>
+<main>
+<p class="pt">User Flow: Tips &amp; Review</p>
+<p class="ps">4 luồng thanh toán tip từ ứng dụng Nexora Touch.</p>
+<div class="lg">
+<div class="li"><span class="ld" style="background:#6C4EFF"></span>Quét STAFF QR trực tiếp</div>
+<div class="li"><span class="ld" style="background:#10B981"></span>Quét Business QR – 1 thợ</div>
+<div class="li"><span class="ld" style="background:#F59E0B"></span>Multi-tips: Chia đều</div>
+<div class="li"><span class="ld" style="background:#EF4444"></span>Multi-tips: Tips riêng</div>
+</div>
+<div class="fs">
+<div class="fh"><div class="fn" style="background:#6C4EFF">1</div><div class="ft">Quét trực tiếp STAFF QR</div></div>
+<p class="fd">Khách quét QR của nhân viên → chọn tip → chọn phương thức → hoàn tất &amp; đánh giá</p>
+<div class="sr">
+<div class="sw"><div class="sc"><div class="sf" style="background:linear-gradient(160deg,#f0edff,#e8f4ff)"><div class="step-num" style="background:#6C4EFF">1</div><div class="sf-icon">💳</div><div class="sf-label">Chọn mức tip<br/>$5 · $10 · $15 · $20</div><div class="sf-bar"></div><div class="sf-bar2"></div></div><div class="sl">Chọn tip</div></div></div>
+<div class="ar"><div class="al"></div></div>
+<div class="sw"><div class="sc"><div class="sf" style="background:linear-gradient(160deg,#e8fff4,#f0edff)"><div class="step-num" style="background:#6C4EFF">2</div><div class="sf-icon">⚡</div><div class="sf-label">Chọn phương thức<br/>Zelle · Venmo · Cash App</div><div class="sf-bar"></div><div class="sf-bar2"></div></div><div class="sl">Xác nhận &amp; thanh toán</div></div></div>
+<div class="ar"><div class="al"></div></div>
+<div class="sw"><div class="sc"><div class="sf" style="background:linear-gradient(160deg,#fff4e8,#fffde8)"><div class="step-num" style="background:#6C4EFF">3</div><div class="sf-icon">✅</div><div class="sf-label">Tip Sent!<br/>Đánh giá dịch vụ</div><div class="sf-bar"></div><div class="sf-bar2"></div></div><div class="sl">Hoàn tất &amp; đánh giá</div></div></div>
+</div>
+</div>
+<div class="fs">
+<div class="fh"><div class="fn" style="background:#10B981">2</div><div class="ft">Quét Business QR: Quét 1 thợ</div></div>
+<p class="fd">Khách quét QR salon → chọn nhân viên → chọn tip → thanh toán → đánh giá</p>
+<div class="sr">
+<div class="sw"><div class="sc"><div class="sf" style="background:linear-gradient(160deg,#e8fff4,#f0fff8)"><div class="step-num" style="background:#10B981">1</div><div class="sf-icon">👥</div><div class="sf-label">Who served you today?<br/>Chọn nhân viên</div><div class="sf-bar"></div><div class="sf-bar2"></div></div><div class="sl">Chọn nhân viên</div></div></div>
+<div class="ar"><div class="al"></div></div>
+<div class="sw"><div class="sc"><div class="sf" style="background:linear-gradient(160deg,#f0edff,#e8f4ff)"><div class="step-num" style="background:#10B981">2</div><div class="sf-icon">💳</div><div class="sf-label">Chọn mức tip<br/>$5 · $10 · $15 · $20</div><div class="sf-bar"></div><div class="sf-bar2"></div></div><div class="sl">Chọn tip</div></div></div>
+<div class="ar"><div class="al"></div></div>
+<div class="sw"><div class="sc"><div class="sf" style="background:linear-gradient(160deg,#e8fff4,#f0edff)"><div class="step-num" style="background:#10B981">3</div><div class="sf-icon">⚡</div><div class="sf-label">Chọn phương thức<br/>Zelle · Venmo · PayPal</div><div class="sf-bar"></div><div class="sf-bar2"></div></div><div class="sl">Xác nhận &amp; thanh toán</div></div></div>
+<div class="ar"><div class="al"></div></div>
+<div class="sw"><div class="sc"><div class="sf" style="background:linear-gradient(160deg,#fff4e8,#fffde8)"><div class="step-num" style="background:#10B981">4</div><div class="sf-icon">✅</div><div class="sf-label">Tip Sent!<br/>Đánh giá dịch vụ</div><div class="sf-bar"></div><div class="sf-bar2"></div></div><div class="sl">Hoàn tất &amp; đánh giá</div></div></div>
+</div>
+</div>
+<div class="fs">
+<div class="fh"><div class="fn" style="background:#F59E0B">3</div><div class="ft">Multi-tips: Chia đều Tips</div></div>
+<p class="fd">Chọn nhiều nhân viên → chia đều tip → chọn phương thức → hoàn tất &amp; đánh giá</p>
+<div class="sr">
+<div class="sw"><div class="sc"><div class="sf" style="background:linear-gradient(160deg,#fffde8,#fff8e0)"><div class="step-num" style="background:#F59E0B">1</div><div class="sf-icon">👥</div><div class="sf-label">Chọn nhiều thợ<br/>David + Sunny</div><div class="sf-bar"></div><div class="sf-bar2"></div></div><div class="sl">Chọn nhân viên</div></div></div>
+<div class="ar"><div class="al"></div></div>
+<div class="sw"><div class="sc"><div class="sf" style="background:linear-gradient(160deg,#fff4e8,#fffde8)"><div class="step-num" style="background:#F59E0B">2</div><div class="sf-icon">🔀</div><div class="sf-label">Chia đều<br/>$30 ÷ 2 = $15/người</div><div class="sf-bar"></div><div class="sf-bar2"></div></div><div class="sl">Chia đều tip</div></div></div>
+<div class="ar"><div class="al"></div></div>
+<div class="sw"><div class="sc"><div class="sf" style="background:linear-gradient(160deg,#e8fff4,#f0edff)"><div class="step-num" style="background:#F59E0B">3</div><div class="sf-icon">⚡</div><div class="sf-label">Chọn phương thức<br/>Zelle · Venmo · PayPal</div><div class="sf-bar"></div><div class="sf-bar2"></div></div><div class="sl">Xác nhận &amp; thanh toán</div></div></div>
+<div class="ar"><div class="al"></div></div>
+<div class="sw"><div class="sc"><div class="sf" style="background:linear-gradient(160deg,#fff4e8,#fffde8)"><div class="step-num" style="background:#F59E0B">4</div><div class="sf-icon">✅</div><div class="sf-label">Tip Sent!<br/>David $15 · Sunny $15</div><div class="sf-bar"></div><div class="sf-bar2"></div></div><div class="sl">Hoàn tất &amp; đánh giá</div></div></div>
+</div>
+</div>
+<div class="fs">
+<div class="fh"><div class="fn" style="background:#EF4444">4</div><div class="ft">Multi-tips: Tips riêng từng người</div></div>
+<p class="fd">Chọn nhiều nhân viên → đặt tip riêng cho từng người → thanh toán → đánh giá</p>
+<div class="sr">
+<div class="sw"><div class="sc"><div class="sf" style="background:linear-gradient(160deg,#fff0f0,#ffe8e8)"><div class="step-num" style="background:#EF4444">1</div><div class="sf-icon">🎯</div><div class="sf-label">Tip riêng từng thợ<br/>David $15 · Sunny $20</div><div class="sf-bar"></div><div class="sf-bar2"></div></div><div class="sl">Tip riêng từng thợ</div></div></div>
+<div class="ar"><div class="al"></div></div>
+<div class="sw"><div class="sc"><div class="sf" style="background:linear-gradient(160deg,#e8fff4,#f0edff)"><div class="step-num" style="background:#EF4444">2</div><div class="sf-icon">⚡</div><div class="sf-label">Chọn phương thức<br/>Zelle · Venmo · PayPal</div><div class="sf-bar"></div><div class="sf-bar2"></div></div><div class="sl">Xác nhận &amp; thanh toán</div></div></div>
+<div class="ar"><div class="al"></div></div>
+<div class="sw"><div class="sc"><div class="sf" style="background:linear-gradient(160deg,#fff4e8,#fffde8)"><div class="step-num" style="background:#EF4444">3</div><div class="sf-icon">✅</div><div class="sf-label">Tip Sent!<br/>David $15 · Sunny $20</div><div class="sf-bar"></div><div class="sf-bar2"></div></div><div class="sl">Hoàn tất &amp; đánh giá</div></div></div>
+</div>
+</div>
+</main>
+</body>
+</html>
