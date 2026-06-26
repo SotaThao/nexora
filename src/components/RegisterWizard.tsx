@@ -18,12 +18,17 @@ import { loadPendingRegistration } from '../auth/pendingRegistration'
 import { useClearMerchantSetup } from '../data/hooks/useMerchantSetup'
 import { useClearProfileSettings } from '../data/hooks/useProfileSettings'
 import { logger } from '../utils/logger'
+import { saveRefCode, getSavedRefCode } from '../utils/affiliateReferral'
 
 export default function RegisterWizard() {
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams] = useSearchParams()
-  const refFromUrl = searchParams.get('ref') || ''
+  const urlRef = searchParams.get('ref') || ''
+  // If a new ref code arrives via URL, persist it (overwrite previous).
+  // Fall back to whatever was previously saved in storage.
+  if (urlRef) saveRefCode(urlRef)
+  const refFromUrl = urlRef || getSavedRefCode()
   const { refreshSession } = useAuth()
   const clearMerchantSetupMutation = useClearMerchantSetup()
   const clearProfileSettingsMutation = useClearProfileSettings()
