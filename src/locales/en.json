@@ -815,7 +815,8 @@
         "col_amount": "Amount",
         "col_method": "Wallet",
         "col_status": "Status",
-        "status_success": "Success"
+        "status_success": "Success",
+        "status_completed": "Completed"
       },
       "ledger": {
         "title": "Tip Transactions",

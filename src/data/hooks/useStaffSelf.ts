@@ -82,6 +82,7 @@ export function useStaffBusinessTipQrs({ enabled: callerEnabled = true } = {}) {
         linkStatus: biz.linkStatus,
         linkStatusLabel: biz.linkStatusLabel,
         roleLabel: biz.roleLabel,
+        roleAtBusiness: biz.roleAtBusiness,
         logoUrl: biz.logoUrl,
         tipLinkIncomplete: Boolean(biz.touchPointsMissing),
       } satisfies StaffBusinessTipQr

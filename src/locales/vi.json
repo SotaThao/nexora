@@ -815,7 +815,8 @@
         "col_amount": "Số tiền",
         "col_method": "Ví gửi",
         "col_status": "Trạng thái",
-        "status_success": "Thành công"
+        "status_success": "Thành công",
+        "status_completed": "Hoàn thành"
       },
       "ledger": {
         "title": "Giao dịch tip",
