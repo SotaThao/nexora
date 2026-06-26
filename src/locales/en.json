@@ -1232,6 +1232,7 @@
     "touchpoint_starter_limit_reached": "Starter plan limit reached: you can only create up to 3 touch points. Please upgrade your plan to add more.",
     "physical_card_not_found": "This physical card was not found. Please check the card code and try again.",
     "image_file_size_exceeded": "The image file size exceeds the 10MB limit.",
+    "image_file_size_exceeded_5mb": "The image file size exceeds the 5MB limit.",
     "image_unsupported_file_type": "Unsupported file format. Please upload PNG, JPEG, or WebP.",
     "image_upload_failed": "Failed to upload the image.",
     "image_invalid_image_file": "Invalid image file. Please upload a valid PNG, JPEG, or WebP image.",
