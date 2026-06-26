@@ -209,9 +209,7 @@ export default function StaffMyQR() {
   const pendingLinkRequests = useMemo(() => {
     return linkRequests.filter((n, i) => {
       const query = linkRequestQueries[i]
-      if (query.isPending) return true
-      if (query.isSuccess && query.data?.status === 'WaitingStaffAcceptance') return true
-      return false
+      return query.isSuccess && query.data?.status === 'WaitingStaffAcceptance'
     })
   }, [linkRequests, linkRequestQueries])
 
