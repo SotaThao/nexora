@@ -45,7 +45,6 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const [showPassword, setShowPassword] = useState(false)
   const [referralCode, setReferralCode] = useState('')
   const [fullName, setFullName] = useState('')
-  const [termsAccepted, setTermsAccepted] = useState(true)
   const [showTermsModal, setShowTermsModal] = useState(false)
   const [modalType, setModalType] = useState('terms')
   const [nickname, setNickname] = useState('')
@@ -95,13 +94,6 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const [errors, setErrors] = useState<LooseObject>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const resumeVerificationSentRef = useRef(false)
-
-  const handleToggleTerms = () => {
-    setTermsAccepted(!termsAccepted)
-    if (errors.terms) {
-      setErrors({ ...errors, terms: undefined })
-    }
-  }
 
   const AVATAR_MAX_SIZE = 5 * 1024 * 1024
   const AVATAR_ALLOWED_TYPES = ['image/jpeg', 'image/png']
@@ -701,8 +693,6 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     setReferralCode,
     fullName,
     setFullName,
-    termsAccepted,
-    setTermsAccepted,
     showTermsModal,
     setShowTermsModal,
     modalType,
