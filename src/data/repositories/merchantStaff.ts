@@ -5,6 +5,8 @@ import httpClient from '../../lib/httpClient'
 import type { PaymentMethodDto, StaffMember, StaffSearchResult } from '../../types/domain'
 import type {
   MerchantStaffInvite,
+  MerchantStaffDetailStats,
+  MerchantStaffDetailStatsApiDto,
   StaffInviteDetailApiDto,
   StaffInviteListItemApiDto,
   StaffInviteParams,
@@ -13,9 +15,14 @@ import type {
   StaffLinkRequestParams,
   StaffListItemApiDto,
   StaffPaymentMethodApiDto,
+  StaffPeriodStatsApiDto,
+  StaffRecentReviewApiDto,
+  StaffRecentTipApiDto,
   StaffReorderItem,
   StaffSearchResultApiDto,
+  StaffStatsDateParams,
 } from '../../types/repositories'
+import type { ReviewRecord, TransactionRecord } from '../../types/domain'
 
 type HttpClient = typeof httpClient
 
@@ -180,6 +187,80 @@ export interface StaffListPage {
   hasPreviousPage: boolean
 }
 
+function toStatsQueryParams({ dateFrom, dateTo }: StaffStatsDateParams = {}) {
+  const params: Record<string, string> = {}
+  if (dateFrom) params.dateFrom = dateFrom
+  if (dateTo) params.dateTo = dateTo
+  return params
+}
+
+function normalizeAllTimeStats(dto: StaffPeriodStatsApiDto | undefined) {
+  return {
+    tipsCollected: dto?.tipsCollected ?? 0,
+    tipCount: dto?.tipCount ?? 0,
+    averageRating: dto?.averageRating ?? 0,
+    totalReviews: dto?.totalReviews ?? 0,
+    reviewsRouted: dto?.reviewsRouted ?? 0,
+    totalQrScans: dto?.totalQrScans ?? 0,
+    qrToTipConversionRate: dto?.qrToTipConversionRate ?? 0,
+  }
+}
+
+function deriveStaffReviewCategory(routingType?: string) {
+  const routing = String(routingType ?? '').toLowerCase()
+  if (routing === 'private') return 'private'
+  if (routing === 'public') return 'public'
+  if (routing === 'skipped') return 'skipped'
+  return 'internal'
+}
+
+function normalizeRecentTip(dto: StaffRecentTipApiDto): TransactionRecord {
+  const amount = dto.amount ?? 0
+  const totalAmount = dto.totalAmount ?? amount
+  return {
+    id: dto.id ?? '',
+    amount: amount > 0 ? amount : totalAmount,
+    status: 'Confirmed',
+    paymentMethod: dto.paymentMethod ?? '',
+    touchpoint: dto.touchPointName ?? '',
+    dateTime: dto.createdAt ?? '',
+    isMultiStaff: dto.isMultiStaff ?? false,
+  }
+}
+
+function normalizeRecentReview(dto: StaffRecentReviewApiDto): ReviewRecord {
+  const createdAt = dto.createdAt ?? ''
+  const routingType = dto.routingType
+  return {
+    id: dto.id ?? '',
+    rating: dto.rating ?? 0,
+    comment: dto.comment ?? '',
+    customerName: dto.customerName ?? '',
+    routingType,
+    category: deriveStaffReviewCategory(routingType),
+    date: createdAt ? new Date(createdAt).toLocaleString() : '',
+    createdAt,
+  }
+}
+
+function normalizeStaffDetailStats(dto: MerchantStaffDetailStatsApiDto): MerchantStaffDetailStats {
+  const periodDto = dto.period
+  return {
+    allTime: normalizeAllTimeStats(dto.allTime),
+    period: {
+      ...normalizeAllTimeStats(periodDto),
+      tipsChangePercent: periodDto?.tipsChangePercent ?? 0,
+      tipsTrend: (periodDto?.tipsTrend ?? []).map((point) => ({
+        date: point.date ?? '',
+        totalAmount: point.totalAmount ?? 0,
+        tipCount: point.tipCount ?? 0,
+      })),
+    },
+    recentTips: (dto.recentTips ?? []).map(normalizeRecentTip),
+    recentReviews: (dto.recentReviews ?? []).map(normalizeRecentReview),
+  }
+}
+
 interface StaffListApiResponse {
   items?: StaffListItemApiDto[]
   pageNumber?: number
@@ -273,6 +354,17 @@ export function createMerchantStaffRepository(client: HttpClient = httpClient) {
         `/api/v1/merchant/staff/${encodeURIComponent(staffCode)}`,
       )
       return normalizeStaffListItem(dto)
+    },
+
+    async getStats(
+      staffProfileId: string,
+      params: StaffStatsDateParams = {},
+    ): Promise<MerchantStaffDetailStats> {
+      const dto = await client.get<MerchantStaffDetailStatsApiDto>(
+        `/api/v1/merchant/staff/${encodeURIComponent(staffProfileId)}/stats`,
+        { params: toStatsQueryParams(params) },
+      )
+      return normalizeStaffDetailStats(dto)
     },
 
     async search(q: string): Promise<StaffSearchResult[]> {

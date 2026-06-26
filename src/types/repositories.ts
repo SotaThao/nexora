@@ -249,6 +249,87 @@ export interface StaffSearchResultApiDto {
   paymentMethods?: StaffPaymentMethodApiDto[]
 }
 
+/** `GET /merchant/staff/{staffProfileId}/stats` — API DTOs. */
+export interface StaffTipsTrendPointApiDto {
+  date?: string
+  totalAmount?: number
+  tipCount?: number
+}
+
+export interface StaffAllTimeStatsApiDto {
+  tipsCollected?: number
+  tipCount?: number
+  averageRating?: number
+  totalReviews?: number
+  reviewsRouted?: number
+  totalQrScans?: number
+  qrToTipConversionRate?: number
+}
+
+export interface StaffPeriodStatsApiDto extends StaffAllTimeStatsApiDto {
+  tipsChangePercent?: number
+  tipsTrend?: StaffTipsTrendPointApiDto[]
+}
+
+export interface StaffRecentTipApiDto {
+  id?: string
+  amount?: number
+  totalAmount?: number
+  paymentMethod?: string
+  isMultiStaff?: boolean
+  touchPointName?: string
+  createdAt?: string
+}
+
+export interface StaffRecentReviewApiDto {
+  id?: string
+  rating?: number
+  comment?: string | null
+  customerName?: string | null
+  routingType?: string
+  createdAt?: string
+}
+
+export interface MerchantStaffDetailStatsApiDto {
+  allTime?: StaffAllTimeStatsApiDto
+  period?: StaffPeriodStatsApiDto
+  recentTips?: StaffRecentTipApiDto[]
+  recentReviews?: StaffRecentReviewApiDto[]
+}
+
+export interface StaffStatsDateParams {
+  dateFrom?: string
+  dateTo?: string
+}
+
+export interface StaffTipsTrendPoint {
+  date: string
+  totalAmount: number
+  tipCount: number
+}
+
+export interface StaffAllTimeStats {
+  tipsCollected: number
+  tipCount: number
+  averageRating: number
+  totalReviews: number
+  reviewsRouted: number
+  totalQrScans: number
+  qrToTipConversionRate: number
+}
+
+export interface StaffPeriodStats extends StaffAllTimeStats {
+  tipsChangePercent: number
+  tipsTrend: StaffTipsTrendPoint[]
+}
+
+export interface MerchantStaffDetailStats {
+  allTime: StaffAllTimeStats
+  period: StaffPeriodStats
+  recentTips: TransactionRecord[]
+  recentReviews: ReviewRecord[]
+}
+
 /** v3.3 — `GET /merchant/staff/invites` item (StaffInviteListItemDto). */
 export interface StaffInviteListItemApiDto {
   id?: string
