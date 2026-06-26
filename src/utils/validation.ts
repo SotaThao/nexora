@@ -11,8 +11,10 @@ export const isValidPhone = (input: unknown) => {
   const digits = phone.replace(/\D/g, "");
   if (digits.length < 7 || digits.length > 15) return false;
 
+  // Normalize thin spaces (U+2009) used by phone formatters before validation
+  const normalizedPhone = phone.replace(/ /g, " ");
   try {
-    return isPossiblePhoneNumber(phone);
+    return isPossiblePhoneNumber(normalizedPhone);
   } catch {
     return digits.length >= 10 && digits.length <= 15;
   }

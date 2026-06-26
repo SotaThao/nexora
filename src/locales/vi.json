@@ -1237,6 +1237,7 @@
     "touchpoint_starter_limit_reached": "Gói Starter đã đạt giới hạn: bạn chỉ có thể tạo tối đa 3 điểm chạm. Vui lòng nâng cấp gói để thêm nhiều hơn.",
     "physical_card_not_found": "Không tìm thấy thiết bị thẻ vật lý này. Vui lòng kiểm tra mã thẻ và thử lại.",
     "image_file_size_exceeded": "Kích thước ảnh vượt quá giới hạn cho phép 10MB.",
+    "image_file_size_exceeded_5mb": "Kích thước ảnh vượt quá giới hạn cho phép 5MB.",
     "image_unsupported_file_type": "Định dạng ảnh không hỗ trợ. Vui lòng tải lên PNG, JPEG hoặc WebP.",
     "image_upload_failed": "Tải ảnh lên thất bại.",
     "image_invalid_image_file": "File ảnh không hợp lệ. Vui lòng tải lên ảnh PNG, JPEG hoặc WebP.",
