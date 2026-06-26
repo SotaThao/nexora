@@ -342,6 +342,34 @@ export default function StaffMyQR() {
   const handleUrlOrTextSubmit = async () => {
     if (joinPublicInviteMutation.isPending) return
 
+    setIsSubmittingScan(true)
+    try {
+      await joinPublicInviteMutation.mutateAsync(undefined)
+      showToast(t('components.staff_dashboard.views.StaffMyQR.joinRequestSent'), 'success')
+      setTimeout(() => {
+        setShowScanner(false)
+        setScannerCameraState('loading')
+        setIsSubmittingScan(false)
+      }, 900)
+    } catch (err: unknown) {
+      const isAlreadyLinked =
+        isApiError(err) &&
+        (err.errorCode === 'STAFF_ALREADY_LINKED_TO_BUSINESS' ||
+          err.errorCode === 'STAFF_INVITE_ALREADY_EXISTS')
+      const isMissingReferralCode =
+        isApiError(err) && err.errorCode === 'REFERRAL_CODE_REQUIRED'
+      showToast(
+        isMissingReferralCode
+          ? t('components.staff_dashboard.views.StaffMyQR.profileReferralCodeMissing')
+          : isAlreadyLinked
+            ? t('components.staff_dashboard.views.StaffMyQR.alreadyLinkedOrRequested')
+            : t('components.staff_dashboard.views.StaffMyQR.joinRequestFailed'),
+        'error',
+      )
+      setIsSubmittingScan(false)
+    }
+  }
+
   useEffect(() => {
     if (!showScanner) {
       scannerStreamRef.current?.getTracks().forEach((track) => track.stop())

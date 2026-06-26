@@ -59,17 +59,6 @@ function resolveStaffNotificationActionUrl(
   return `${resolvedPath}${suffix}`;
 }
 
-function resolveStaffNotificationActionUrl(actionUrl: string | null | undefined): string | null {
-  if (!actionUrl?.trim()) return null
-  const trimmed = actionUrl.trim()
-  if (/^https?:\/\//i.test(trimmed)) return trimmed
-
-  const queryOrHashIndex = trimmed.search(/[?#]/)
-  const pathPart = queryOrHashIndex === -1 ? trimmed : trimmed.slice(0, queryOrHashIndex)
-  const suffix = queryOrHashIndex === -1 ? '' : trimmed.slice(queryOrHashIndex)
-  const resolvedPath = STAFF_ACTION_URL_ALIASES[pathPart] || pathPart
-  return `${resolvedPath}${suffix}`
-}
 
 function Toggle({ on, onChange }) {
   return (
