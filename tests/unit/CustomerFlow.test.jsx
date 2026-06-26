@@ -22,13 +22,18 @@ describe('CustomerFlow Component Unit Tests', () => {
     expect(nextBtn1).toBeInTheDocument();
     fireEvent.click(nextBtn1);
 
-    // Click Next to advance from tip_amount to payment
-    const nextBtn2 = screen.getByRole('button', { name: /Next/i });
-    expect(nextBtn2).toBeInTheDocument();
-    fireEvent.click(nextBtn2);
+    // Verify we are now on the Tip & Pay screen
+    // It should have the "CHOOSE PAYMENT METHOD" button disabled/enabled
+    const choosePaymentBtn = screen.getByText(/CHOOSE PAYMENT METHOD/i);
+    expect(choosePaymentBtn).toBeInTheDocument();
 
-    // Verify we are now on the payment gateway selection step
-    expect(screen.getByText(/How would you like to pay\?/i)).toBeInTheDocument();
+    // Select a payment method (Zelle)
+    const zelleBtn = screen.getByText('Zelle');
+    expect(zelleBtn).toBeInTheDocument();
+    fireEvent.click(zelleBtn);
+
+    // Verify the submit button text updated
+    expect(screen.getByText(/I SENT TIP VIA ZELLE/i)).toBeInTheDocument();
   });
 
   it('blocks the flow and shows warning when the scanned touchpoint is inactive', () => {
