@@ -193,8 +193,9 @@ export function useApproveMerchantStaffLink() {
   const queryClient = useQueryClient()
   return useMutation<void, Error, string>({
     mutationFn: (linkId) => merchantStaffRepository.approveLink(linkId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: qk.merchantStaff() })
+      await queryClient.refetchQueries({ queryKey: qk.merchantStaff() })
     },
   })
 }

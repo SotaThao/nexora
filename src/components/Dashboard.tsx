@@ -94,7 +94,8 @@ export default function Dashboard({
   const needsMerchantStaffList =
     hasSearchQuery ||
     isAddTouchpointModalOpen ||
-    ['staff', 'reviews', 'reports', 'tips', 'analytics', 'touchpoints'].includes(activeMenu)
+    ['overview', 'staff', 'reviews', 'reports', 'tips', 'analytics', 'touchpoints'].includes(activeMenu)
+  const needsPendingStaffList = activeMenu === 'overview' || activeMenu === 'staff'
   const needsNotificationsList = isNotiDropdownOpen
   const needsTransactions =
     hasSearchQuery ||
@@ -162,7 +163,7 @@ export default function Dashboard({
     pageSize: isStaffTab ? staffPagination.pageSize : STAFF_FILTER_LIST_PAGE_SIZE,
   })
   const { data: pendingStaffPage } = useMerchantStaff({
-    enabled: isStaffTab,
+    enabled: needsPendingStaffList,
     statusFilter: StatusFilter.WaitingStaffAcceptance,
     pageNumber: 1,
     pageSize: 50,
@@ -397,7 +398,7 @@ export default function Dashboard({
       'Pending Setup',
       'WaitingStaffAcceptance',
     ])
-    const mergedSource = isStaffTab
+    const mergedSource = needsPendingStaffList
       ? [...(pendingStaffPage?.items ?? []), ...staff]
       : staff
     const deduped = mergedSource.filter((member, index, arr) => {
@@ -414,7 +415,7 @@ export default function Dashboard({
         statusSet.has(member.status) &&
         (member.itemType === 'link' || member.itemType === 'invite'),
     )
-  }, [isStaffTab, pendingStaffPage, staff])
+  }, [needsPendingStaffList, pendingStaffPage, staff])
 
   const filteredTouchpoints = touchpoints
 

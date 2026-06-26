@@ -148,9 +148,13 @@ export function useConfirmStaffTipsReceipt() {
 
   return useMutation<StaffTipsConfirmReceiptResult, Error, string[]>({
     mutationFn: (tipIds) => staffSelfRepository.confirmTipsReceipt(tipIds),
-    onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ['staffTips'] })
-      queryClient.invalidateQueries({ queryKey: qk.staffDashboardSummary() })
+    onSuccess: async (result) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staffTips'] }),
+        queryClient.invalidateQueries({ queryKey: qk.staffDashboardSummary() }),
+        queryClient.refetchQueries({ queryKey: ['staffTips'] }),
+        queryClient.refetchQueries({ queryKey: qk.staffDashboardSummary() }),
+      ])
 
       if (result.failedIds.length > 0) {
         // All requested tips failed (e.g. backend rejected every id) — surface a

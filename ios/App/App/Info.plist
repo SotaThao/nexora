@@ -32,6 +32,8 @@
 	<string>Nexora needs permission to save photos you capture in the app.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Nexora needs photo library access so you can upload images.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Nexora needs your location to show your business on the map and provide localized services.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
