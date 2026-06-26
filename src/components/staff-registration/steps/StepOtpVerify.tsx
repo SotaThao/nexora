@@ -330,7 +330,7 @@ function TermsModal({ open, onClose, modalType, t, currentLanguage }) {
           {Array.isArray(legalSections) && legalSections.map((section) => (
             <React.Fragment key={section.title}>
               <h4 className="font-extrabold text-nexoraText">{section.title}</h4>
-              <p>{section.body}</p>
+              <p className="whitespace-pre-line">{section.body}</p>
             </React.Fragment>
           ))}
         </div>

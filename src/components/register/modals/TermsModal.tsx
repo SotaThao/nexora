@@ -36,7 +36,7 @@ export default function TermsModal({ open, onClose, modalType }) {
           {Array.isArray(legalSections) && legalSections.map((section) => (
             <React.Fragment key={section.title}>
               <h4 className="font-extrabold text-slate-800">{section.title}</h4>
-              <p>{section.body}</p>
+              <p className="whitespace-pre-line">{section.body}</p>
             </React.Fragment>
           ))}
         </div>
