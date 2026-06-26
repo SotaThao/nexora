@@ -43,7 +43,7 @@ export default function StaffLinkRequestCard({
     detail?.businessName ||
     notification.title ||
     t('staff_dashboard.notifications.link_request_business_fallback')
-  const role = detail?.businessRole || null
+  const role = detail?.roleAtBusiness || null
 
   const handleAccept = () => {
     if (!linkId) return

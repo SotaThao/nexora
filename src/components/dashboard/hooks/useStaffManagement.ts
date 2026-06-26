@@ -162,8 +162,9 @@ export function useStaffManagement({
       venmo: member.paymentAccounts?.venmo || '',
       cashapp: member.paymentAccounts?.cashapp || '',
       zelle: member.paymentAccounts?.zelle || '',
-      vlinkpay: member.paymentAccounts?.vlinkpay || '',
+      vlinkpay: '',
       nexoraStaffId: member.staffCode || '',
+      staffProfileId: member.staffProfileId || '',
       showInTipsFlow: member.showInTipsFlow !== false,
       payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member)
     })
@@ -182,8 +183,9 @@ export function useStaffManagement({
       venmo: member.paymentAccounts?.venmo || '',
       cashapp: member.paymentAccounts?.cashapp || '',
       zelle: member.paymentAccounts?.zelle || '',
-      vlinkpay: member.paymentAccounts?.vlinkpay || '',
+      vlinkpay: '',
       nexoraStaffId: member.staffCode || '',
+      staffProfileId: member.staffProfileId || '',
       showInTipsFlow: member.showInTipsFlow !== false,
       payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member)
     })
