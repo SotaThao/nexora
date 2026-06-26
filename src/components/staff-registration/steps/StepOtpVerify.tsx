@@ -287,13 +287,7 @@ export default function StepOtpVerify({
       )}
       <TermsModal
         open={showTermsModal}
-        currentLanguage={currentLanguage}
         onClose={() => setShowTermsModal(false)}
-        onAccept={() => {
-          setTermsAccepted(true)
-          setRegErrors(prev => ({ ...prev, terms: '' }))
-          setShowTermsModal(false)
-        }}
         modalType={modalType}
         t={t}
       />
@@ -302,7 +296,7 @@ export default function StepOtpVerify({
 }
 
 // Terms & Conditions Modal Overlay
-function TermsModal({ open, currentLanguage, onClose, onAccept, modalType, t }) {
+function TermsModal({ open, onClose, modalType, t }) {
   const legalSections = t(`register.legal.${modalType}.sections`)
 
   if (!open) return null
@@ -338,20 +332,13 @@ function TermsModal({ open, currentLanguage, onClose, onAccept, modalType, t }) 
         </div>
 
         {/* Footer action buttons */}
-        <div className="flex justify-end gap-3 border-t border-nexoraRule pt-4 mt-auto">
+        <div className="flex justify-end border-t border-nexoraRule pt-4 mt-auto">
           <button
             type="button"
             onClick={onClose}
             className="px-4 py-2 border border-nexoraBorder text-nexoraMuted rounded-xl font-bold hover:bg-nexoraSurfaceMuted transition"
           >
             {t('components.staff_registration.steps.StepOtpVerify.close')}
-          </button>
-          <button
-            type="button"
-            onClick={onAccept}
-          className="px-5 py-2 bg-nexoraText hover:bg-nexoraText/90 text-white rounded-xl font-bold transition shadow-sm"
-          >
-            {t('components.staff_registration.steps.StepOtpVerify.iAccept')}
           </button>
         </div>
       </div>
