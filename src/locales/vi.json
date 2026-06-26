@@ -601,9 +601,7 @@
       "no_staff_assigned": "-- Không gán (Típ chung cho cửa hàng) --",
       "download_print_qr": "Tải Xuống QR In Ấn (PDF)",
       "print_qr": "In Mã QR",
-      "customer_view_test": "Thử Giao Diện Khách Quét ›",
-      "tp_name_placeholder": "Ví dụ: Ghế Manicure 05",
-      "device_id_label": "Serial thiết bị / Mã NFC"
+      "customer_view_test": "Thử Giao Diện Khách Quét ›"
     },
     "settings_panel": {
       "title": "Cấu Hình Hệ Thống Nexora",
@@ -1126,40 +1124,116 @@
       "privacy": {
         "sections": [
           {
-            "title": "1. Thu thập thông tin",
-            "body": "Chúng tôi thu thập họ tên, email, số điện thoại và thông tin thanh toán để vận hành luồng nhận típ."
+            "title": "1. Giới Thiệu",
+            "body": "NEXORA TOUCH LLC (\"Nexora\", \"chúng tôi\") vận hành nền tảng NEXORA TOUCH — dịch vụ nhận tip và đánh giá kỹ thuật số dành cho các doanh nghiệp dịch vụ. Chính Sách Bảo Mật này mô tả cách chúng tôi thu thập, sử dụng và chia sẻ thông tin khi bạn sử dụng Dịch Vụ. Bằng cách sử dụng Dịch Vụ, bạn đồng ý với các thực hành được mô tả trong Chính Sách này."
           },
           {
-            "title": "2. Bảo mật dữ liệu",
-            "body": "Dữ liệu cá nhân và thông tin ví được bảo vệ và chỉ dùng cho định tuyến giao dịch."
+            "title": "2. Thông Tin Chúng Tôi Thu Thập",
+            "body": "Thông tin bạn cung cấp: thông tin tài khoản (họ tên, email, số điện thoại), thông tin doanh nghiệp (đối với merchant), nội dung bạn tải lên (ảnh hồ sơ, logo doanh nghiệp). Thông tin thu thập tự động: dữ liệu sử dụng, địa chỉ IP, thông tin thiết bị và trình duyệt, hoạt động phiên được thu thập qua nền tảng và Google Analytics. Tương tác của khách hàng: khi khách hàng sử dụng luồng tip với tư cách khách (guest), chúng tôi ghi lại dữ liệu phiên ẩn danh (touch point đã truy cập, số tiền tip, xếp hạng). Chúng tôi không thu thập tên, số điện thoại hoặc thông tin thanh toán của khách hàng."
           },
           {
-            "title": "3. Quyền của bạn",
-            "body": "Bạn có thể xem, cập nhật hoặc yêu cầu xóa thông tin tài khoản trong dashboard."
+            "title": "3. Cách Chúng Tôi Sử Dụng Thông Tin",
+            "body": "Chúng tôi sử dụng thông tin đã thu thập để: Vận hành và cải thiện Dịch Vụ; Quản lý tài khoản và liên lạc với người dùng; Gửi thông báo giao dịch (email và thông báo đẩy); Phát hiện gian lận và thực thi Điều Khoản Dịch Vụ; Phân tích việc sử dụng và hiệu suất nền tảng; Tuân thủ nghĩa vụ pháp lý."
+          },
+          {
+            "title": "4. Cách Chúng Tôi Chia Sẻ Thông Tin",
+            "body": "Chúng tôi không bán thông tin cá nhân của bạn. Chúng tôi chỉ chia sẻ thông tin với các nhà cung cấp dịch vụ bên thứ ba đáng tin cậy hỗ trợ chúng tôi vận hành nền tảng, bao gồm phân tích, gửi email, thông báo đẩy và cơ sở hạ tầng đám mây. Các nhà cung cấp này bị ràng buộc theo hợp đồng chỉ sử dụng thông tin của bạn khi cần thiết để thực hiện dịch vụ thay mặt chúng tôi. Chúng tôi cũng có thể tiết lộ thông tin để tuân thủ nghĩa vụ pháp lý hoặc để bảo vệ quyền và sự an toàn của người dùng."
+          },
+          {
+            "title": "5. Thông Tin Thanh Toán",
+            "body": "Nexora không thu thập, lưu trữ hoặc xử lý bất kỳ thông tin thanh toán nào. Tip được gửi trực tiếp giữa khách hàng và nhân viên thông qua các ứng dụng thanh toán bên thứ ba. Chúng tôi không có quyền truy cập vào thông tin tài chính, số tài khoản ngân hàng hoặc thông tin thẻ."
+          },
+          {
+            "title": "6. Lưu Trữ Dữ Liệu",
+            "body": "Chúng tôi lưu giữ thông tin cá nhân của bạn chỉ trong thời gian cần thiết để cung cấp Dịch Vụ hoặc theo yêu cầu của pháp luật. Bạn có thể yêu cầu xóa tài khoản và dữ liệu bất cứ lúc nào bằng cách liên hệ support@nexoratouch.com."
+          },
+          {
+            "title": "7. Quyền Của Bạn",
+            "body": "Tùy thuộc vào vị trí của bạn, bạn có thể có quyền truy cập, sửa, xóa hoặc chuyển dữ liệu cá nhân, và phản đối hoặc hạn chế một số hoạt động xử lý nhất định. Người dùng tại EU/EEA (GDPR): truy cập, chỉnh sửa, xóa, chuyển dữ liệu, hạn chế và phản đối. Cư dân California (CCPA): quyền biết, xóa, sửa và từ chối bán (chúng tôi không bán dữ liệu). Để thực hiện các quyền của bạn, liên hệ support@nexoratouch.com. Chúng tôi sẽ phản hồi trong vòng 30 ngày."
+          },
+          {
+            "title": "8. Cookie và Theo Dõi",
+            "body": "Chúng tôi sử dụng cookie thiết yếu (cần thiết cho xác thực và quản lý phiên) và cookie phân tích (Google Analytics). Bạn có thể từ chối theo dõi của Google Analytics bằng cách cài đặt Tiện ích từ chối Google Analytics hoặc điều chỉnh cài đặt trình duyệt."
+          },
+          {
+            "title": "9. Quyền Riêng Tư Của Trẻ Em",
+            "body": "Dịch Vụ của chúng tôi không hướng đến trẻ em dưới 13 tuổi. Chúng tôi không cố ý thu thập thông tin cá nhân từ trẻ em dưới 13 tuổi. Nếu bạn cho rằng trẻ em đã cung cấp thông tin cho chúng tôi, liên hệ support@nexoratouch.com và chúng tôi sẽ xóa ngay."
+          },
+          {
+            "title": "10. Bảo Mật",
+            "body": "Chúng tôi triển khai các biện pháp bảo vệ kỹ thuật và hành chính hợp lý để bảo vệ thông tin của bạn, bao gồm truyền dữ liệu được mã hóa và cơ sở hạ tầng đám mây an toàn. Không có phương thức truyền nào hoàn toàn an toàn và chúng tôi không thể đảm bảo bảo mật tuyệt đối."
+          },
+          {
+            "title": "11. Thay Đổi Chính Sách Này",
+            "body": "Chúng tôi có thể cập nhật Chính Sách này theo thời gian. Các thay đổi quan trọng sẽ được thông báo qua email hoặc thông báo trong ứng dụng. Việc tiếp tục sử dụng Dịch Vụ đồng nghĩa với việc chấp nhận Chính Sách được cập nhật."
+          },
+          {
+            "title": "12. Liên Hệ Chúng Tôi",
+            "body": "NEXORA TOUCH LLC\nEmail: support@nexoratouch.com\nĐịa chỉ: 9793 Westheimer Rd Suite A Houston TX 77042"
           }
         ]
       },
       "terms": {
         "sections": [
           {
-            "title": "1. Giới thiệu và đồng ý",
-            "body": "Khi sử dụng Nexora Touch, bạn đồng ý tuân thủ các điều khoản dịch vụ này."
+            "title": "1. Chấp Nhận Điều Khoản",
+            "body": "Bằng cách truy cập hoặc sử dụng nền tảng, trang web hoặc ứng dụng NEXORA TOUCH (gọi chung là \"Dịch Vụ\"), bạn đồng ý bị ràng buộc bởi các Điều Khoản này. Nếu bạn không đồng ý, vui lòng ngừng sử dụng Dịch Vụ. Chúng tôi có quyền sửa đổi các Điều Khoản này bất cứ lúc nào. Việc tiếp tục sử dụng Dịch Vụ sau khi thay đổi có hiệu lực đồng nghĩa với việc chấp nhận Điều Khoản mới."
           },
           {
-            "title": "2. Tài khoản cá nhân",
-            "body": "Bạn chịu trách nhiệm bảo mật thông tin đăng nhập và đảm bảo thông tin ví nhận tiền chính xác."
+            "title": "2. Mô Tả Dịch Vụ",
+            "body": "NEXORA TOUCH là nền tảng nhận tip và đánh giá kỹ thuật số dành cho các doanh nghiệp dịch vụ, cho phép khách hàng gửi tip cho nhân viên và để lại đánh giá qua mã QR hoặc NFC. Nền tảng kết nối merchant, nhân viên và khách hàng mà không đóng vai trò là trung gian thanh toán."
           },
           {
-            "title": "3. Tiền típ và thanh toán",
-            "body": "Tiền típ được chuyển đến phương thức nhận tiền đã cấu hình. Giao dịch hoàn tất là cuối cùng."
+            "title": "3. Điều Kiện Tham Gia",
+            "body": "Để sử dụng Dịch Vụ, bạn phải đủ 13 tuổi trở lên và, nếu đăng ký với tư cách merchant, được phép hợp pháp để điều hành doanh nghiệp tại khu vực pháp lý của mình. Bằng cách sử dụng Dịch Vụ, bạn xác nhận rằng mình đáp ứng các yêu cầu này."
           },
           {
-            "title": "4. Quyền riêng tư",
-            "body": "Dữ liệu chỉ được dùng để vận hành luồng típ, hiển thị cho khách hàng và ghi nhận lịch sử giao dịch."
+            "title": "4. Tài Khoản Người Dùng",
+            "body": "Bạn có trách nhiệm bảo mật thông tin đăng nhập và chịu trách nhiệm về mọi hoạt động diễn ra trong tài khoản của mình. Thông báo ngay cho chúng tôi về bất kỳ truy cập trái phép nào tại support@nexoratouch.com. Merchant có thể quản lý hồ sơ doanh nghiệp, nhân viên và touch point của mình. Nhân viên sở hữu và kiểm soát thông tin thanh toán riêng của họ — merchant không thể xem hoặc sửa đổi thông tin này."
           },
           {
-            "title": "5. Cập nhật điều khoản",
-            "body": "Chúng tôi có thể cập nhật điều khoản và công bố thay đổi trong cổng thông tin."
+            "title": "5. Thanh Toán và Tip",
+            "body": "Nexora chỉ là một nền tảng. Chúng tôi không xử lý, giữ, chuyển khoản hay bảo đảm bất kỳ khoản thanh toán nào. Tip được khách hàng gửi trực tiếp cho nhân viên thông qua các ứng dụng thanh toán bên thứ ba (như Cash App, Venmo, Zelle, PayPal). Nexora không tham gia vào các giao dịch này. Nexora không chịu trách nhiệm về bất kỳ lỗi thanh toán, tranh chấp hoặc tổn thất tài chính nào phát sinh từ các giao dịch tip giữa người dùng. Người dùng có trách nhiệm tự giải quyết tranh chấp thanh toán với bên kia. Nhân viên có trách nhiệm đảm bảo thông tin thanh toán của mình chính xác và tuân thủ nghĩa vụ thuế phát sinh từ các khoản tip nhận được."
+          },
+          {
+            "title": "6. Gói Đăng Ký",
+            "body": "Quyền truy cập các tính năng nền tảng của merchant được điều chỉnh bởi gói đăng ký đang có hiệu lực tại thời điểm sử dụng. Chi tiết gói, giá cả và giới hạn tính năng được hiển thị tại thời điểm mua hàng. Chúng tôi có quyền cập nhật giá có thông báo trước."
+          },
+          {
+            "title": "7. Hành Vi Bị Cấm",
+            "body": "Bạn đồng ý không: Cung cấp thông tin sai sự thật, gian lận hoặc gây nhầm lẫn; Giả mạo bất kỳ cá nhân hoặc tổ chức nào; Thao túng dữ liệu tip hoặc đánh giá; Tải lên mã độc hại hoặc cố gắng truy cập trái phép; Sử dụng nền tảng cho bất kỳ mục đích bất hợp pháp nào; Tạo nhiều tài khoản để vượt qua giới hạn nền tảng."
+          },
+          {
+            "title": "8. Sở Hữu Trí Tuệ",
+            "body": "Tất cả nội dung, phần mềm và nhãn hiệu thuộc về Nexora vẫn là tài sản của chúng tôi. Bằng cách tải nội dung lên nền tảng, bạn cấp cho chúng tôi giấy phép có giới hạn, không độc quyền để hiển thị nội dung đó chỉ nhằm mục đích cung cấp Dịch Vụ."
+          },
+          {
+            "title": "9. Từ Chối Bảo Đảm",
+            "body": "DỊCH VỤ ĐƯỢC CUNG CẤP \"NGUYÊN TRẠNG\" MÀ KHÔNG CÓ BẢO ĐẢM DƯỚI BẤT KỲ HÌNH THỨC NÀO. CHÚNG TÔI TỪ CHỐI TẤT CẢ CÁC BẢO ĐẢM, RÕ RÀNG HOẶC NGỤ Ý, BAO GỒM BẢO ĐẢM VỀ KHẢ NĂNG THƯƠNG MẠI VÀ SỰ PHÙ HỢP CHO MỤC ĐÍCH CỤ THỂ. CHÚNG TÔI KHÔNG BẢO ĐẢM RẰNG DỊCH VỤ SẼ KHÔNG BỊ GIÁN ĐOẠN, KHÔNG CÓ LỖI, HOẶC BẤT KỲ ỨNG DỤNG THANH TOÁN BÊN THỨ BA NÀO SẼ HOẠT ĐỘNG NHƯ MONG ĐỢI."
+          },
+          {
+            "title": "10. Giới Hạn Trách Nhiệm",
+            "body": "TRONG PHẠM VI TỐI ĐA ĐƯỢC PHÉP THEO PHÁP LUẬT, NEXORA KHÔNG CHỊU TRÁCH NHIỆM VỀ BẤT KỲ THIỆT HẠI GIÁN TIẾP, NGẪU NHIÊN, ĐẶC BIỆT HOẶC HẬU QUẢ NÀO, BAO GỒM MẤT TIP, DOANH THU HOẶC TRANH CHẤP TÀI CHÍNH GIỮA NGƯỜI DÙNG. TỔNG TRÁCH NHIỆM CỦA CHÚNG TÔI KHÔNG VƯỢT QUÁ SỐ TIỀN BẠN ĐÃ THANH TOÁN TRONG 12 THÁNG TRƯỚC KHIẾU NẠI, HOẶC 100 USD, TÙY THEO SỐ NÀO LỚN HƠN."
+          },
+          {
+            "title": "11. Bồi Thường",
+            "body": "Bạn đồng ý bồi thường và giữ vô hại NEXORA TOUCH LLC và các cán bộ, nhân viên, đại diện của chúng tôi khỏi bất kỳ khiếu nại, thiệt hại hoặc chi phí nào phát sinh từ việc bạn sử dụng Dịch Vụ hoặc vi phạm các Điều Khoản này."
+          },
+          {
+            "title": "12. Chấm Dứt",
+            "body": "Chúng tôi có thể đình chỉ hoặc chấm dứt tài khoản của bạn khi vi phạm các Điều Khoản này. Bạn có thể đóng tài khoản bất cứ lúc nào bằng cách liên hệ support@nexoratouch.com."
+          },
+          {
+            "title": "13. Luật Điều Chỉnh",
+            "body": "Các Điều Khoản này được điều chỉnh bởi luật pháp Hoa Kỳ. Khi áp dụng, luật bảo vệ người tiêu dùng địa phương cũng có thể được áp dụng. Các tranh chấp không thể giải quyết không chính thức sẽ được đưa ra trọng tài cá nhân bắt buộc."
+          },
+          {
+            "title": "14. Thay Đổi Điều Khoản",
+            "body": "Chúng tôi có thể cập nhật các Điều Khoản này bất cứ lúc nào. Các thay đổi quan trọng sẽ được thông báo qua email hoặc thông báo trong ứng dụng."
+          },
+          {
+            "title": "15. Liên Hệ Chúng Tôi",
+            "body": "NEXORA TOUCH LLC\nEmail: support@nexoratouch.com\nĐịa chỉ: 9793 Westheimer Rd Suite A Houston TX 77042"
           }
         ]
       }
