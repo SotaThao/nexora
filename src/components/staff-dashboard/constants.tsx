@@ -14,3 +14,26 @@ export const STAFF_MENU_ITEMS = [
 export const STAFF_BOTTOM_NAV_ITEMS = STAFF_MENU_ITEMS.filter((item) => item.id !== 'pay')
 
 export const STAFF_SCREENS = ['home', 'qr', 'tips', 'reviews', 'pay', 'profile', 'notifications']
+
+// Maps a notification type to the staff screen it should open from the header bell.
+// Link notifications (incoming requests + approved/accepted/joined) all land on the
+// Salon Link & Tips screen ('qr') — that page hosts the Accept/Decline CTAs for
+// pending requests and the linked-business list for everything else.
+const STAFF_NOTIFICATION_SCREEN: Record<string, string> = {
+  tip: 'tips',
+  tipsuccess: 'tips',
+  review: 'reviews',
+  reviewgood: 'reviews',
+  feedbackalert: 'reviews',
+  stafflinkrequest: 'qr',
+  stafflinkapproved: 'qr',
+  stafflinkaccepted: 'qr',
+  staffinviteaccepted: 'qr',
+  staffacceptedinvite: 'qr',
+  staffjoined: 'qr',
+}
+
+export function resolveStaffNotificationScreen(type: string | null | undefined): string {
+  const key = (type || '').toLowerCase().replace(/[\s_-]+/g, '')
+  return STAFF_NOTIFICATION_SCREEN[key] || 'notifications'
+}
