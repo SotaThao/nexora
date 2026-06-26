@@ -436,6 +436,10 @@
     "taking_photo": "Đang chụp ảnh..."
   },
   "dashboard": {
+    "action_required": "CẦN THAO TÁC",
+    "setup_payout_method_title": "Cài đặt Phương thức nhận tiền",
+    "setup_payout_method_desc": "Cài đặt phương thức nhận tiền để mở khóa tính năng tip nhiều thợ.",
+    "setup_payout_btn": "CÀI ĐẶT NHẬN TIỀN",
     "activity": {
       "station_scanned": "Quét Trạm {station}",
       "vip_nfc_tapped": "Chạm NFC VIP",

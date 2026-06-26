@@ -436,6 +436,10 @@
     "taking_photo": "Taking photo..."
   },
   "dashboard": {
+    "action_required": "ACTION REQUIRED",
+    "setup_payout_method_title": "Set Up Your Payout Method",
+    "setup_payout_method_desc": "Set up your payout method to unlock multi-staff tipping.",
+    "setup_payout_btn": "SET UP PAYOUT METHODS",
     "activity": {
       "station_scanned": "Station {station} scanned",
       "vip_nfc_tapped": "VIP NFC tapped",
