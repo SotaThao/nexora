@@ -3,11 +3,8 @@ import { ShieldCheck, AlertTriangle } from 'lucide-react'
 import useCustomerFlow from './customer-flow/hooks/useCustomerFlow'
 import SelectStaff from './customer-flow/steps/SelectStaff'
 import TipAmount from './customer-flow/steps/TipAmount'
-import Payment from './customer-flow/steps/Payment'
-import WalletDetails from './customer-flow/steps/WalletDetails'
 import Processing from './customer-flow/steps/Processing'
 import SuccessPayment from './customer-flow/steps/SuccessPayment'
-import LeaveReview from './customer-flow/steps/LeaveReview'
 import ReviewRouting from './customer-flow/steps/ReviewRouting'
 import FinalDone from './customer-flow/steps/FinalDone'
 
@@ -20,7 +17,7 @@ export default function CustomerFlow() {
     filteredStaff, selectedStaffMembers, searchQuery, setSearchQuery, handleToggleStaff,
     step, setStep,
     selectedTips, setSelectedTips, customTips, setCustomTips,
-    activeTipAmount, tipScreenTitle, initialStaffMember, handleNextToPayment,
+    activeTipAmount, tipScreenTitle, initialStaffMember,
     selectedStaffHasAnyPayment, businessPaymentAccounts,
     setSelectedWalletObj, setSelectedWallet, setTipRefNumber,
     selectedWalletObj, qrCodeVal, tipRefNumber, handlePay,
@@ -33,41 +30,46 @@ export default function CustomerFlow() {
   } = flow
 
   return (
-    <div className="min-h-dvh bg-nexoraCanvas text-nexoraText font-sans flex flex-col justify-between selection:bg-nexoraBrandSoft selection:text-nexoraBrand pb-8 relative">
-      {/* Glow effects */}
-      <div className="absolute top-0 left-0 w-full h-[30%] bg-gradient-to-b from-blue-50/50 to-transparent pointer-events-none" />
-
-      {/* Language Switcher */}
-      <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-nexoraBorder shadow-sm">
+    <div className="min-h-dvh bg-[#F8FAFC] text-slate-900 font-sans flex items-center justify-center p-4 relative">
+      
+      {/* Language Switcher - Floating outside the mobile container */}
+      <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-200 shadow-sm">
         <button
           onClick={() => setLanguage('vi')}
-          className={`text-xs font-bold px-2 py-0.5 rounded transition ${currentLanguage === 'vi' ? 'bg-nexoraBrand text-white' : 'text-nexoraSubtle hover:text-nexoraText'}`}
+          className={`text-xs font-bold px-2 py-0.5 rounded transition ${currentLanguage === 'vi' ? 'bg-[#6C4DE6] text-white' : 'text-slate-500 hover:text-slate-900'}`}
         >
           VI
         </button>
-        <span className="text-nexoraBorder text-xs">|</span>
+        <span className="text-slate-300 text-xs">|</span>
         <button
           onClick={() => setLanguage('en')}
-          className={`text-xs font-bold px-2 py-0.5 rounded transition ${currentLanguage === 'en' ? 'bg-nexoraBrand text-white' : 'text-nexoraSubtle hover:text-nexoraText'}`}
+          className={`text-xs font-bold px-2 py-0.5 rounded transition ${currentLanguage === 'en' ? 'bg-[#6C4DE6] text-white' : 'text-slate-500 hover:text-slate-900'}`}
         >
           EN
         </button>
       </div>
 
-      {/* Body content */}
-      <main className="flex-grow flex items-center justify-center p-4 relative z-10">
-        <div className="w-full max-w-md bg-white border border-nexoraBorder rounded-2xl p-6 shadow-premium space-y-6">
+      {/* Mobile App Container */}
+      <div className="w-full max-w-[390px] h-[844px] max-h-[90vh] bg-[#F8FAFC] rounded-[24px] shadow-[0_20px_40px_rgba(0,0,0,0.08)] flex flex-col relative overflow-hidden border border-slate-200">
+        
+        {/* Header */}
+        <header className="bg-white px-5 py-3.5 flex justify-between items-center border-b border-slate-200 z-10 shrink-0">
+          <div className="font-extrabold text-[14px] text-slate-900 uppercase">{bizName}</div>
+          <div className="font-medium text-[14px] text-slate-900">Tip & Review</div>
+        </header>
 
+        {/* Content Area */}
+        <main className="flex-1 overflow-y-auto px-5 pt-6 pb-[100px] no-scrollbar">
           {scannedTouchpoint && scannedTouchpoint.isActive === false ? (
             <div className="text-center space-y-6 py-6 animate-fadeIn flex flex-col items-center">
               <div className="h-16 w-16 bg-amber-100 rounded-full flex items-center justify-center shadow-inner mb-2 animate-bounce">
                 <AlertTriangle className="h-8 w-8 text-amber-600 animate-pulse" />
               </div>
               <div className="space-y-2">
-                <h3 className="font-extrabold text-lg text-nexoraText">
+                <h3 className="font-extrabold text-lg text-slate-900">
                   {t('dashboard.touchpoint_stats.inactive_warning_title') || 'Station Inactive'}
                 </h3>
-                <p className="text-xs text-nexoraMuted leading-relaxed px-4">
+                <p className="text-xs text-slate-500 leading-relaxed px-4">
                   {t('dashboard.touchpoint_stats.inactive_warning_desc') || 'This QR touchpoint is currently disabled by the owner.'}
                 </p>
               </div>
@@ -75,7 +77,7 @@ export default function CustomerFlow() {
                 onClick={() => {
                   window.location.href = `${window.location.origin}${window.location.pathname}?biz=${encodeURIComponent(bizName)}`
                 }}
-                className="w-full mt-4 py-3 bg-nexoraCanvas border border-nexoraBorder hover:bg-nexoraSurfaceMuted text-nexoraText font-extrabold text-xs uppercase tracking-wider rounded-xl transition"
+                className="w-full mt-4 py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-900 font-extrabold text-xs uppercase tracking-wider rounded-xl transition"
               >
                 {t('common.back') || 'Go Back'}
               </button>
@@ -85,6 +87,7 @@ export default function CustomerFlow() {
               {step === 'select_staff' && (
                 <SelectStaff
                   t={t}
+                  currentLanguage={currentLanguage}
                   searchQuery={searchQuery}
                   setSearchQuery={setSearchQuery}
                   filteredStaff={filteredStaff}
@@ -107,37 +110,17 @@ export default function CustomerFlow() {
                   activeTipAmount={activeTipAmount}
                   initialStaffMember={initialStaffMember}
                   setStep={setStep}
-                  handleNextToPayment={handleNextToPayment}
-                />
-              )}
-
-              {step === 'payment' && (
-                <Payment
-                  t={t}
-                  selectedStaffMembers={selectedStaffMembers}
                   selectedStaffHasAnyPayment={selectedStaffHasAnyPayment}
                   businessPaymentAccounts={businessPaymentAccounts}
+                  selectedWalletObj={selectedWalletObj}
                   setSelectedWalletObj={setSelectedWalletObj}
                   setSelectedWallet={setSelectedWallet}
                   setTipRefNumber={setTipRefNumber}
-                  setStep={setStep}
-                />
-              )}
-
-              {step === 'wallet_details' && selectedWalletObj && (
-                <WalletDetails
-                  t={t}
-                  currentLanguage={currentLanguage}
-                  selectedWalletObj={selectedWalletObj}
-                  selectedStaffMembers={selectedStaffMembers}
                   bizName={bizName}
-                  activeTipAmount={activeTipAmount}
                   qrCodeVal={qrCodeVal}
-                  businessPaymentAccounts={businessPaymentAccounts}
                   tipRefNumber={tipRefNumber}
                   showToast={showToast}
                   handlePay={handlePay}
-                  setStep={setStep}
                 />
               )}
 
@@ -148,15 +131,13 @@ export default function CustomerFlow() {
               {step === 'success_payment' && (
                 <SuccessPayment
                   t={t}
+                  currentLanguage={currentLanguage}
                   selectedStaffMembers={selectedStaffMembers}
                   activeTipAmount={activeTipAmount}
-                  setStep={setStep}
-                />
-              )}
-
-              {step === 'leave_review' && (
-                <LeaveReview
-                  t={t}
+                  selectedWallet={selectedWallet}
+                  selectedTips={selectedTips}
+                  customTips={customTips}
+                  bizName={bizName}
                   rating={rating}
                   handleRatingChange={handleRatingChange}
                   positiveTagKeys={positiveTagKeys}
@@ -183,16 +164,21 @@ export default function CustomerFlow() {
               )}
             </>
           )}
-        </div>
-      </main>
+        </main>
+      </div>
 
-      {/* Footer */}
-      <footer className="text-center space-y-2 relative z-10">
-        <div className="flex items-center justify-center gap-1.5 text-xs text-nexoraSubtle">
-          <ShieldCheck className="h-4 w-4 text-nexoraBrand" /> {t('customer.secure_footer')}
-        </div>
-        <p className="text-[10px] text-nexoraSubtle/70">{t('customer.copyright')}</p>
-      </footer>
+      <style dangerouslySetInnerHTML={{__html: `
+        .no-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .no-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .no-scrollbar::-webkit-scrollbar-thumb {
+          background: #CBD5E1;
+          border-radius: 4px;
+        }
+      `}} />
     </div>
   )
 }

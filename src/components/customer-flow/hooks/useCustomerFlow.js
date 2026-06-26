@@ -296,8 +296,8 @@ export default function useCustomerFlow() {
     return currentLanguage === 'vi' ? 'Thêm tiền Tip cho nhân viên' : 'Add tips for your providers'
   }, [selectedStaffMembers, currentLanguage, t])
 
-  const handleNextToPayment = (e) => {
-    e.preventDefault()
+  const handlePay = (walletName) => {
+    // Validate tips before proceeding
     for (const member of selectedStaffMembers) {
       const selTip = selectedTips[member.id] !== undefined ? selectedTips[member.id] : 15
       if (selTip === 'custom') {
@@ -313,10 +313,7 @@ export default function useCustomerFlow() {
         }
       }
     }
-    setStep('payment')
-  }
 
-  const handlePay = (walletName) => {
     setSelectedWallet(walletName)
     setStep('processing')
     setIsProcessing(true)
@@ -485,7 +482,6 @@ export default function useCustomerFlow() {
     handleTagToggle,
     handleRatingChange,
     handleToggleStaff,
-    handleNextToPayment,
     handlePay,
     handleSubmitFeedback,
     handleReset,
