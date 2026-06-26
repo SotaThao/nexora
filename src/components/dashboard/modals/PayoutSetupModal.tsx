@@ -19,7 +19,6 @@ const validatePayoutAccount = (method: string, input: unknown) => {
   if (method === 'zelle') return isValidEmail(account) || isValidPhone(account) ? '' : 'emailOrPhone'
   if (method === 'paypal') return isValidEmail(account) ? '' : 'email'
   if (method === 'venmo') return /^@[A-Za-z0-9_]{2,30}$/.test(account) ? '' : 'venmo'
-  if (method === 'cashapp') return /^\$[A-Za-z][A-Za-z0-9_]{1,19}$/.test(account) ? '' : 'cashapp'
   if (method === 'applecash') return isValidPhone(account) ? '' : 'phone'
   return account.length >= 3 ? '' : 'invalid'
 }

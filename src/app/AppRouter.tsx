@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from 'react'
+import React, { Suspense } from 'react'
 import { Routes, Route, Navigate, useParams, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import RequireAuth from './RequireAuth'
 import RequireOnboarded from './RequireOnboarded'
@@ -6,6 +6,7 @@ import RequireStaffReady from './RequireStaffReady'
 import RootRedirect from './RootRedirect'
 import LoadingScreen from './LoadingScreen'
 import ErrorBoundary from '../components/ui/ErrorBoundary'
+import lazyWithRetry from './lazyWithRetry'
 import { isDemoToolsEnabled } from './demoTools'
 import { useAuth } from '../auth/useAuth'
 import {
@@ -14,24 +15,24 @@ import {
   SettingsRoute, SupportRoute, SubscriptionsRoute, FallbackRoute
 } from '../components/dashboard/routes'
 
-const SetupWizard = lazy(() => import('../components/SetupWizard'))
-const Dashboard = lazy(() => import('../components/Dashboard'))
-const CustomerFlow = lazy(() => import('../components/CustomerFlow'))
-const RegisterWizard = lazy(() => import('../components/RegisterWizard'))
-const StaffRegistrationWizard = lazy(() => import('../components/StaffRegistrationWizard'))
-const StaffDashboard = lazy(() => import('../components/staff-dashboard/StaffDashboard'))
-const StaffHome = lazy(() => import('../components/staff-dashboard/views/StaffHome'))
-const StaffMyQR = lazy(() => import('../components/staff-dashboard/views/StaffMyQR'))
-const StaffTips = lazy(() => import('../components/staff-dashboard/views/StaffTips'))
-const StaffReviews = lazy(() => import('../components/staff-dashboard/views/StaffReviews'))
-const StaffPay = lazy(() => import('../components/staff-dashboard/views/StaffPay'))
-const StaffProfile = lazy(() => import('../components/staff-dashboard/views/StaffProfile'))
-const StaffNotifications = lazy(() => import('../components/staff-dashboard/views/StaffNotifications'))
-const ForgotPassword = lazy(() => import('../components/ForgotPassword'))
-const ResetPassword = lazy(() => import('../components/ResetPassword'))
-const LoginScreen = lazy(() => import('./LoginScreen'))
-const QrRedirectPage = lazy(() => import('../components/public/QrRedirectPage'))
-const HelpQrPage = lazy(() => import('../components/public/HelpQrPage'))
+const SetupWizard = lazyWithRetry(() => import('../components/SetupWizard'))
+const Dashboard = lazyWithRetry(() => import('../components/Dashboard'))
+const CustomerFlow = lazyWithRetry(() => import('../components/CustomerFlow'))
+const RegisterWizard = lazyWithRetry(() => import('../components/RegisterWizard'))
+const StaffRegistrationWizard = lazyWithRetry(() => import('../components/StaffRegistrationWizard'))
+const StaffDashboard = lazyWithRetry(() => import('../components/staff-dashboard/StaffDashboard'))
+const StaffHome = lazyWithRetry(() => import('../components/staff-dashboard/views/StaffHome'))
+const StaffMyQR = lazyWithRetry(() => import('../components/staff-dashboard/views/StaffMyQR'))
+const StaffTips = lazyWithRetry(() => import('../components/staff-dashboard/views/StaffTips'))
+const StaffReviews = lazyWithRetry(() => import('../components/staff-dashboard/views/StaffReviews'))
+const StaffPay = lazyWithRetry(() => import('../components/staff-dashboard/views/StaffPay'))
+const StaffProfile = lazyWithRetry(() => import('../components/staff-dashboard/views/StaffProfile'))
+const StaffNotifications = lazyWithRetry(() => import('../components/staff-dashboard/views/StaffNotifications'))
+const ForgotPassword = lazyWithRetry(() => import('../components/ForgotPassword'))
+const ResetPassword = lazyWithRetry(() => import('../components/ResetPassword'))
+const LoginScreen = lazyWithRetry(() => import('./LoginScreen'))
+const QrRedirectPage = lazyWithRetry(() => import('../components/public/QrRedirectPage'))
+const HelpQrPage = lazyWithRetry(() => import('../components/public/HelpQrPage'))
 
 // Bridges the URL (path token / legacy ?flow=staff-invite biz) to the wizard's
 // inviteData prop. A real token → API-backed invite; otherwise the legacy
