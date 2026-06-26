@@ -16,24 +16,8 @@ import ComingSoon from '../views/ComingSoon'
 import ManagePlanView from '../views/ManagePlanView'
 import StaffDetailView from '../../StaffDetailView'
 import { useMerchantStaffByCode } from '../../../data/hooks/useMerchantStaff'
-import { useTransactionsPaginated } from '../../../data/hooks/useTransactions'
-import { useDashboardReviews } from '../../../data/hooks/useReviews'
 import { normaliseMember } from '../hooks/useStaffManagement'
 import { SkeletonList } from '../../ui/skeleton'
-
-function staffRecordMatchesMember(member, record) {
-  if (!member || !record) return false
-  const profileId = member.staffProfileId
-  const staffCode = member.staffCode
-  const linkId = member.id || member.linkId
-  const name = member.fullName || member.nickname
-
-  if (profileId && record.staffProfileId === profileId) return true
-  if (staffCode && record.staffCode === staffCode) return true
-  if (linkId && (record.staffId === linkId || record.id === linkId)) return true
-  if (name && record.staffName === name) return true
-  return false
-}
 
 export function OverviewRoute() {
   const ctx = useOutletContext<LooseObject>()
@@ -148,27 +132,7 @@ export function StaffDetailRoute() {
   )
 
   const resolvedMember = staffMember ?? fallbackMember
-  const staffProfileId = resolvedMember?.staffProfileId
-
-  const { data: tipsPage, isLoading: isTipsLoading } = useTransactionsPaginated(
-    { staffProfileId, pageNumber: 1, pageSize: 100 },
-    { enabled: !!staffProfileId },
-  )
-
-  const { data: reviewsPage } = useDashboardReviews(
-    { pageNumber: 1, pageSize: 100 },
-    { enabled: !!resolvedMember },
-  )
-
-  const transactions = useMemo(() => {
-    if (tipsPage?.items?.length) return tipsPage.items
-    return (ctx.transactions ?? []).filter((tx) => staffRecordMatchesMember(resolvedMember, tx))
-  }, [tipsPage?.items, ctx.transactions, resolvedMember])
-
-  const reviews = useMemo(() => {
-    const source = reviewsPage?.items?.length ? reviewsPage.items : (ctx.reviews ?? [])
-    return source.filter((rev) => staffRecordMatchesMember(resolvedMember, rev))
-  }, [reviewsPage?.items, ctx.reviews, resolvedMember])
+  const staffProfileId = resolvedMember?.staffProfileId ?? null
 
   if (isStaffDetailLoading || (!resolvedMember && ctx.staffLoading)) {
     return (
@@ -185,11 +149,9 @@ export function StaffDetailRoute() {
   return (
     <StaffDetailView
       staffMember={normaliseMember(resolvedMember)}
+      staffProfileId={staffProfileId}
       onBack={() => navigate('/dashboard/staff')}
-      transactions={transactions}
-      reviews={reviews}
-      isTipsLoading={isTipsLoading}
-      onEdit={ctx.openEditStaff}
+      onViewStaff={ctx.openViewStaff}
       onQr={ctx.previewQr}
       onDelete={ctx.deleteStaff}
     />
@@ -215,10 +177,9 @@ export function StaffRoleRoute() {
   return (
     <StaffDetailView
       staffMember={member}
+      staffProfileId={member.staffProfileId ?? null}
       onBack={null}
-      transactions={ctx.transactions}
-      reviews={ctx.reviews}
-      onEdit={ctx.openEditStaff}
+      onViewStaff={ctx.openViewStaff}
       onQr={ctx.previewQr}
       onDelete={null}
     />

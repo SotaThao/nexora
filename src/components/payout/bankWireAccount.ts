@@ -1,3 +1,5 @@
+import { formatPayoutPhoneDisplay, shouldUsePayoutPhoneInput } from './payoutPhone'
+
 export interface BankWireAccountDetails {
   beneficiaryName: string
   bankName: string
@@ -77,6 +79,10 @@ export function formatPaymentMethodAccountDisplay(
     const beneficiaryName = getBankWireBeneficiaryName(raw)
     if (beneficiaryName) return beneficiaryName
     return formatBankWireAccountSummary(raw) || raw
+  }
+
+  if (shouldUsePayoutPhoneInput(uiKey, raw)) {
+    return formatPayoutPhoneDisplay(raw)
   }
 
   return raw

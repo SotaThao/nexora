@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:staging": "vite --mode staging",
     "build": "pnpm run build:prod",
     "build:dev": "vite build --mode development",
     "build:test": "vite build --mode test",

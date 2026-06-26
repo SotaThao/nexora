@@ -5,7 +5,7 @@ import {
   Check,
   ClipboardList,
   Copy,
-  Edit2,
+  Eye,
   QrCode,
   Star,
   Trash2,
@@ -17,6 +17,7 @@ import { useTranslation } from '../contexts/LanguageContext'
 import { logger } from '../utils/logger'
 import { formatTransactionDateTime, formatCurrency } from './dashboard/utils'
 import { buildChartPoints, getBezierPath } from './dashboard/overview/chartUtils'
+import { useMerchantStaffStats } from '../data/hooks/useMerchantStaff'
 
 
 function formatIsoDate(date) {
@@ -61,6 +62,52 @@ function staffRecordMatchesMember(member, record) {
   return false
 }
 
+function buildChartFromTipsTrend(tipsTrend, range, startDate, endDate, t, currentLanguage) {
+  if (!tipsTrend?.length) return []
+
+  if (range === '7 Days') {
+    const daysOfWeek = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
+    return tipsTrend.map((point) => {
+      const dateObj = new Date(`${point.date}T00:00:00`)
+      const dayIndex = dateObj.getDay()
+      const label = t(`common.days.${daysOfWeek[dayIndex]}`)
+      return { label, value: point.totalAmount ?? 0 }
+    })
+  }
+
+  const start = new Date(`${startDate}T00:00:00`)
+  const end = new Date(`${endDate}T00:00:00`)
+  const totalTime = end.getTime() - start.getTime()
+  const pointsCount = 5
+  const monthNames = currentLanguage === 'vi'
+    ? ['Th 1', 'Th 2', 'Th 3', 'Th 4', 'Th 5', 'Th 6', 'Th 7', 'Th 8', 'Th 9', 'Th 10', 'Th 11', 'Th 12']
+    : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+  const chartPoints = []
+  for (let i = 0; i < pointsCount; i++) {
+    const intervalStart = new Date(start.getTime() + (totalTime / pointsCount) * i)
+    const intervalEnd = new Date(start.getTime() + (totalTime / pointsCount) * (i + 1))
+
+    const value = tipsTrend
+      .filter((point) => {
+        const pointDate = new Date(`${point.date}T00:00:00`)
+        return !Number.isNaN(pointDate.getTime()) && pointDate >= intervalStart && pointDate < intervalEnd
+      })
+      .reduce((sum, point) => sum + (point.totalAmount ?? 0), 0)
+
+    let label = ''
+    if (range === '30 Days') {
+      label = i === pointsCount - 1
+        ? t('components.StaffDetailView.today')
+        : `${t('components.StaffDetailView.week')} ${i + 1}`
+    } else {
+      label = `${monthNames[intervalStart.getMonth()]} ${intervalStart.getDate()}`
+    }
+    chartPoints.push({ label, value })
+  }
+  return chartPoints
+}
+
 // Helper to render text with styled star rating symbols (★) in luxuryGold and 4px space
 function renderTextWithGoldStars(text) {
   if (!text) return null
@@ -80,11 +127,12 @@ function renderTextWithGoldStars(text) {
 
 export default function StaffDetailView({
   staffMember,
+  staffProfileId = null,
   onBack,
   transactions = [],
   reviews = [],
   isTipsLoading = false,
-  onEdit,
+  onViewStaff,
   onQr,
   onDelete
 }) {
@@ -99,6 +147,20 @@ export default function StaffDetailView({
   const [startDate, setStartDate] = useState(initialRange.startDate)
   const [endDate, setEndDate] = useState(initialRange.endDate)
 
+  const statsDateRange = useMemo(() => ({
+    dateFrom: `${startDate}T00:00:00.000Z`,
+    dateTo: `${endDate}T23:59:59.999Z`,
+  }), [startDate, endDate])
+
+  const {
+    data: staffStats,
+    isLoading: isStatsLoading,
+    isFetching: isStatsFetching,
+  } = useMerchantStaffStats(staffProfileId, statsDateRange, { enabled: !!staffProfileId })
+
+  const usesApiStats = !!staffProfileId
+  const isMetricsLoading = usesApiStats ? (isStatsLoading || isStatsFetching) : isTipsLoading
+
   const handleRangeChange = (newRange) => {
     setRange(newRange)
     if (newRange !== 'Custom') {
@@ -108,9 +170,22 @@ export default function StaffDetailView({
     }
   }
 
-  // 1. Calculate statistics from API-backed staff profile, tips, and reviews
+  // 1. Calculate statistics from API stats or legacy tips/reviews lists
   const stats = useMemo(() => {
     if (!staffMember) return null
+
+    if (usesApiStats && staffStats) {
+      const { period, allTime } = staffStats
+      return {
+        totalTips: period.tipsCollected,
+        averageRating: Number(allTime.averageRating ?? 0).toFixed(2),
+        totalReviews: allTime.reviewsRouted,
+        specialty: staffMember.roleAtBusiness || staffMember.position || '',
+        recentTransactions: staffStats.recentTips,
+        filteredReviews: staffStats.recentReviews,
+        tipsTrend: period.tipsTrend,
+      }
+    }
 
     const staffTx = transactions.filter((tx) => staffRecordMatchesMember(staffMember, tx))
     const staffReviews = reviews.filter((rev) => staffRecordMatchesMember(staffMember, rev))
@@ -144,12 +219,17 @@ export default function StaffDetailView({
       specialty: staffMember.roleAtBusiness || staffMember.position || '',
       recentTransactions: staffTxFiltered,
       filteredReviews: staffReviewsFiltered,
+      tipsTrend: null,
     }
-  }, [staffMember, transactions, reviews, startDate, endDate])
+  }, [staffMember, usesApiStats, staffStats, transactions, reviews, startDate, endDate])
 
   // 2. Generate tips over time data for SVG chart
   const chartData = useMemo(() => {
     if (!stats) return []
+
+    if (usesApiStats && stats.tipsTrend) {
+      return buildChartFromTipsTrend(stats.tipsTrend, range, startDate, endDate, t, currentLanguage)
+    }
 
     const txList = stats.recentTransactions.filter(
       (tx) => tx.status === 'Success' || tx.status === 'Confirmed',
@@ -210,7 +290,7 @@ export default function StaffDetailView({
       chartPoints.push({ label, value })
     }
     return chartPoints
-  }, [stats, t, range, startDate, endDate, currentLanguage])
+  }, [stats, usesApiStats, t, range, startDate, endDate, currentLanguage])
 
   const { points: chartPoints, max: chartMax, width: chartWidth, height: chartHeight } = useMemo(
     () => buildChartPoints(chartData),
@@ -226,7 +306,24 @@ export default function StaffDetailView({
     [chartMax],
   )
 
-  if (!staffMember || !stats) {
+  if (!staffMember) {
+    return (
+      <div className="flex h-64 flex-col items-center justify-center space-y-3 nexora-card p-6">
+        <div className="text-sm font-semibold text-nexoraMuted">{t('staff_detail.not_found')}</div>
+        <button onClick={onBack} className="nexora-primary-button">{t('staff_detail.back_to_directory')}</button>
+      </div>
+    )
+  }
+
+  if (usesApiStats && isStatsLoading && !staffStats) {
+    return (
+      <div className="nexora-card p-6">
+        <div className="h-64 animate-pulse rounded-lg bg-nexoraSurfaceMuted" />
+      </div>
+    )
+  }
+
+  if (!stats) {
     return (
       <div className="flex h-64 flex-col items-center justify-center space-y-3 nexora-card p-6">
         <div className="text-sm font-semibold text-nexoraMuted">{t('staff_detail.not_found')}</div>
@@ -248,7 +345,9 @@ export default function StaffDetailView({
 
   // Filter reviews feed by category tab
   const displayReviews = (() => {
-    const allMatching = reviews.filter((r) => staffRecordMatchesMember(staffMember, r))
+    const allMatching = usesApiStats && staffStats
+      ? staffStats.recentReviews
+      : reviews.filter((r) => staffRecordMatchesMember(staffMember, r))
 
     if (reviewFilter === 'all') return allMatching
     if (reviewFilter === 'google') return allMatching.filter((r) => r.category === 'google' || r.rating >= 4)
@@ -358,12 +457,14 @@ export default function StaffDetailView({
             >
               <QrCode className="h-4 w-4 text-brandCyan" /> {t('staff_detail.personal_qr')}
             </button>
-            <button
-              onClick={() => onEdit(staffMember)}
-              className="inline-flex h-10 items-center gap-2 rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-bold text-nexoraText shadow-sm hover:bg-nexoraSurfaceMuted transition"
-            >
-              <Edit2 className="h-4 w-4 text-luxuryGold" /> {t('staff_detail.edit_profile')}
-            </button>
+            {onViewStaff && (
+              <button
+                onClick={() => onViewStaff(staffMember)}
+                className="inline-flex h-10 items-center gap-2 rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-bold text-nexoraText shadow-sm hover:bg-nexoraSurfaceMuted transition"
+              >
+                <Eye className="h-4 w-4 text-nexoraBrand" /> {t('common.view_detail')}
+              </button>
+            )}
             {onDelete && (
               <button
                 onClick={() => onDelete(staffMember.id)}
@@ -388,7 +489,7 @@ export default function StaffDetailView({
           </div>
           <p className="mt-4 text-[10px] font-bold uppercase tracking-wider text-nexoraMuted">{t('staff_detail.tips_collected')}</p>
           <p className="mt-1 text-2xl font-black text-nexoraText">
-            {isTipsLoading ? '—' : formatCurrency(stats.totalTips)}
+            {isMetricsLoading ? '—' : formatCurrency(stats.totalTips)}
           </p>
         </div>
 
@@ -625,7 +726,9 @@ export default function StaffDetailView({
           </div>
 
           <div className="space-y-3">
-            {Object.entries(staffMember.paymentAccounts || {}).map(([key, value]) => {
+            {Object.entries(staffMember.paymentAccounts || {})
+              .filter(([key]) => key !== 'bankwire')
+              .map(([key, value]) => {
               const label = {
                 venmo: 'Venmo',
                 cashapp: 'Cash App',
