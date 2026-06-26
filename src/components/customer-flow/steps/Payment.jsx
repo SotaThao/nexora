@@ -49,19 +49,18 @@ export default function Payment({
 }) {
   return (
     <div className="space-y-6 animate-fadeIn">
-      <div className="text-center space-y-1">
-        <h3 className="font-extrabold text-lg text-nexoraText">{t('customer.payment_title')}</h3>
-        <p className="text-xs text-nexoraMuted">{t('customer.payment_desc')}</p>
+      <div className="text-left space-y-1 mb-4">
+        <h3 className="font-extrabold text-[11px] text-nexoraSubtle uppercase tracking-wider">PAYMENT METHOD</h3>
       </div>
 
-      <div className="space-y-3">
+      <div className="grid grid-cols-3 gap-3">
         {[
-          { name: 'Zelle', key: 'zelle', color: 'bg-[#7414CA] hover:bg-[#5f10a6] text-white', logo: WalletLogos.zelle },
-          { name: 'Bank Wire', key: 'bankwire', color: 'bg-[#475569] hover:bg-[#334155] text-white', logo: WalletLogos.bankwire },
-          { name: 'PayPal', key: 'paypal', color: 'bg-[#003087] hover:bg-[#002466] text-white', logo: WalletLogos.paypal },
-          { name: 'Venmo', key: 'venmo', color: 'bg-[#008CFF] hover:bg-[#007ad6] text-white', logo: WalletLogos.venmo },
-          { name: 'Cash App', key: 'cashapp', color: 'bg-[#00D632] hover:bg-[#00b52a] text-white', logo: WalletLogos.cashapp },
-          { name: 'Apple Pay', key: 'applecash', color: 'bg-black hover:opacity-90 text-white', logo: WalletLogos.applepay }
+          { name: 'Zelle', key: 'zelle', color: '#7414CA', logo: WalletLogos.zelle },
+          { name: 'Venmo', key: 'venmo', color: '#008CFF', logo: WalletLogos.venmo },
+          { name: 'Cash App', key: 'cashapp', color: '#00D632', logo: WalletLogos.cashapp },
+          { name: 'Apple Cash', key: 'applecash', color: '#000000', logo: WalletLogos.applepay },
+          { name: 'Paypal', key: 'paypal', color: '#003087', logo: WalletLogos.paypal },
+          { name: 'VLINKPAY', key: 'vlinkpay', color: '#2B59FF', logo: WalletLogos.bankwire }
         ].filter(wallet => {
           if (selectedStaffMembers.length === 1) {
             const staff = selectedStaffMembers[0]
@@ -82,15 +81,15 @@ export default function Payment({
                 setTipRefNumber(Math.floor(1000 + Math.random() * 9000).toString())
                 setStep('wallet_details')
               }}
-              className="w-full flex items-center justify-between p-4 rounded-xl font-bold text-sm bg-white border border-nexoraBorder hover:bg-nexoraCanvas text-nexoraText shadow-sm transition"
+              className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white border border-nexoraBorder hover:border-nexoraBrand/40 hover:bg-nexoraCanvas text-nexoraText shadow-sm transition-all duration-200 group"
             >
-              <div className="flex items-center gap-3">
-                <span className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${wallet.color}`}>
-                  {wallet.logo}
-                </span>
-                <span>{wallet.name}</span>
+              <div 
+                className="w-10 h-10 rounded-full flex items-center justify-center mb-2 shadow-sm transition-transform group-hover:scale-105"
+                style={{ backgroundColor: wallet.color }}
+              >
+                {wallet.logo}
               </div>
-              <span className="text-xs text-nexoraSubtle font-medium">{t('customer.choose_chevron')}</span>
+              <span className="text-[10px] font-extrabold text-nexoraText tracking-tight">{wallet.name}</span>
             </button>
           )
         })}

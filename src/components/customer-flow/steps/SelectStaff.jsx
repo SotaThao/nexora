@@ -34,7 +34,7 @@ export default function SelectStaff({
       </div>
 
       {/* Staff cards */}
-      <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
+      <div className="grid grid-cols-2 gap-3 max-h-[320px] overflow-y-auto pr-1 pb-16">
         {filteredStaff.length > 0 ? (
           filteredStaff.map((member) => {
             const isSelected = selectedStaffMembers.some(s => s.id === member.id)
@@ -45,44 +45,45 @@ export default function SelectStaff({
                 onClick={() => {
                   handleToggleStaff(member)
                 }}
-                className={`w-full flex items-center justify-between p-4 bg-white border rounded-xl text-left transition-all duration-200 shadow-sm hover:shadow group ${
+                className={`relative flex flex-col items-center text-center p-4 bg-white border rounded-[16px] transition-all duration-200 shadow-sm hover:shadow group ${
                   isSelected
-                    ? 'border-nexoraBrand bg-nexoraBrandSoft/10'
+                    ? 'border-nexoraBrand bg-nexoraBrandSoft/10 shadow-[0_4px_12px_rgba(108,77,230,0.1)]'
                     : 'border-nexoraBorder hover:border-nexoraBrand/40 hover:bg-nexoraCanvas'
                 }`}
               >
-                <div className="flex items-center gap-3.5 min-w-0">
-                  {member.avatar ? (
-                    <img
-                      src={member.avatar}
-                      alt=""
-                      className="h-12 w-12 rounded-full object-cover border border-nexoraBorder shrink-0"
-                    />
-                  ) : (
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-tr from-[#2B59FF] to-[#8E4DF8] text-sm font-extrabold text-white shrink-0 shadow-sm group-hover:scale-105 transition-transform">
-                      {member.nickname.charAt(0)}
-                    </div>
-                  )}
-                  <div className="min-w-0">
-                    <h4 className="font-extrabold text-nexoraText text-sm group-hover:text-nexoraBrand transition-colors truncate">
-                      {member.fullName}
-                    </h4>
-                    <p className="text-xs text-nexoraSubtle font-semibold truncate mt-0.5">
-                      {member.position}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center shrink-0">
+                <div className="absolute top-2 left-2">
                   <div className={`h-5 w-5 rounded-full flex items-center justify-center border transition-all ${
                     isSelected
                       ? 'bg-nexoraBrand border-nexoraBrand text-white scale-110'
                       : 'border-nexoraBorder group-hover:border-nexoraBrand/60 bg-white'
                   }`}>
                     {isSelected && (
-                      <Check className="w-3.5 h-3.5 stroke-[3px]" />
+                      <Check className="w-3 h-3 stroke-[3px]" />
                     )}
                   </div>
+                </div>
+
+                <div className="mb-3">
+                  {member.avatar ? (
+                    <img
+                      src={member.avatar}
+                      alt=""
+                      className="h-14 w-14 rounded-full object-cover border border-nexoraBorder shrink-0"
+                    />
+                  ) : (
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-[#2B59FF] to-[#8E4DF8] text-base font-extrabold text-white shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                      {member.nickname.charAt(0)}
+                    </div>
+                  )}
+                </div>
+
+                <div className="min-w-0 w-full px-1">
+                  <h4 className="font-bold text-nexoraText text-[13px] leading-tight group-hover:text-nexoraBrand transition-colors truncate">
+                    {member.fullName}
+                  </h4>
+                  <p className="text-[11px] text-nexoraSubtle font-medium truncate mt-0.5">
+                    {member.position}
+                  </p>
                 </div>
               </button>
             )
