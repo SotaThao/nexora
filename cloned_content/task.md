@@ -1,0 +1,4 @@
+- `[x]` 1. Initialize Next.js project `nexora`.
+- `[x]` 2. Extract image assets (VLINKPAY, Apple Cash, Paypal, Zelle, Venmo, CashApp, Bitcoin Nail Bar Logo) using Figma Console MCP and save to `public/images`.
+- `[x]` 3. Port UI logic from `tip-flow.html` into `src/app/page.js` and `src/app/globals.css`.
+- `[x]` 4. Initialize git and push to `SotaThao/nexora` (Prepared locally, requires manual push due to GitHub Auth).

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexora - Tip & Review</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #F8FAFC;
+            --bg-card: #FFFFFF;
+            --bg-card-selected: #F5F3FF;
+            --border-default: #E2E8F0;
+            --border-selected: #6C4DE6;
+            --text-main: #0F172A;
+            --text-muted: #64748B;
+            --primary-gradient: linear-gradient(90deg, #2B59FF 0%, #8E4DE8 100%);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .mobile-container {
+            width: 100%;
+            max-width: 390px;
+            background-color: var(--bg-body);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            height: 844px;
+            max-height: 90vh;
+        }
+
+        /* Header */
+        .header {
+            background-color: #fff;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-default);
+            z-index: 10;
+        }
+
+        .header .brand {
+            font-weight: 800;
+            font-size: 14px;
+            color: #0F172A;
+        }
+
+        .header .title {
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--text-main);
+        }
+
+        /* Main Content */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 20px 32px;
+            padding-bottom: 100px; /* Space for footer */
+        }
+
+        .page-title {
+            text-align: center;
+            margin-bottom: 8px;
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
+        }
+
+        .page-subtitle {
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+
+        /* Search */
+        .search-container {
+            background: #fff;
+            border: 1px solid var(--border-default);
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            transition: var(--transition);
+        }
+
+        .search-container:focus-within {
+            border-color: #8E4DE8;
+            box-shadow: 0 0 0 3px rgba(142, 77, 232, 0.1);
+        }
+
+        .search-container svg {
+            color: var(--text-muted);
+            width: 16px;
+            height: 16px;
+        }
+
+        .search-container input {
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 13px;
+            color: var(--text-main);
+            background: transparent;
+        }
+
+        .search-container input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Grid */
+        .staff-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .staff-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-default);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .staff-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.04);
+        }
+
+        .staff-card.selected {
+            background: var(--bg-card-selected);
+            border-color: var(--border-selected);
+        }
+
+        .radio-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 1px solid #CBD5E1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .staff-card.selected .radio-btn {
+            background: var(--border-selected);
+            border-color: var(--border-selected);
+        }
+
+        .radio-btn svg {
+            opacity: 0;
+            width: 10px;
+            height: 10px;
+            color: #fff;
+            transition: var(--transition);
+        }
+
+        .staff-card.selected .radio-btn svg {
+            opacity: 1;
+        }
+
+        .avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            margin-top: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        /* Avatar Gradients */
+        .avatar-1 { background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%); }
+        .avatar-2 { background: linear-gradient(135deg, #06B6D4 0%, #0284C7 100%); }
+        .avatar-3 { background: linear-gradient(135deg, #EC4899 0%, #E11D48 100%); }
+        .avatar-4 { background: linear-gradient(135deg, #F59E0B 0%, #DC2626 100%); }
+        .avatar-5 { background: linear-gradient(135deg, #6366F1 0%, #3B82F6 100%); }
+        .avatar-6 { background: linear-gradient(135deg, #10B981 0%, #059669 100%); }
+
+        .staff-name {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: var(--text-main);
+        }
+
+        .staff-role {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: center;
+            font-weight: 500;
+        }
+
+        /* Footer */
+        .footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(180deg, rgba(248, 250, 252, 0) 0%, #F8FAFC 20%);
+        }
+
+        .btn-next {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background: var(--primary-gradient);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 8px 16px rgba(142, 77, 232, 0.2);
+        }
+
+        .btn-next:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px rgba(142, 77, 232, 0.3);
+        }
+
+        .btn-next:active {
+            transform: translateY(0);
+        }
+        
+        /* Custom Scrollbar */
+        .content::-webkit-scrollbar {
+            width: 4px;
+        }
+        .content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .content::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="brand">BITCOIN NAIL BAR</div>
+            <div class="title">Tip & Review</div>
+        </header>
+
+        <!-- Content -->
+        <main class="content">
+            <h1 class="page-title">WHO SERVED YOU TODAY?</h1>
+            <p class="page-subtitle">Select the staff member you'd like to tip.</p>
+
+            <div class="search-container">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" placeholder="Search staff...">
+            </div>
+
+            <div class="staff-grid">
+                <!-- Staff 1 -->
+                <div class="staff-card selected" onclick="selectStaff(this)">
+                    <div class="radio-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div class="avatar avatar-1">D</div>
+                    <div class="staff-name">David L.</div>
+                    <div class="staff-role">Nail Technician</div>
+                </div>
+
+                <!-- Staff 2 -->
+                <div class="staff-card" onclick="selectStaff(this)">
+                    <div class="radio-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div class="avatar avatar-2">S</div>
+                    <div class="staff-name">Sunny K.</div>
+                    <div class="staff-role">Senior Gel Specialist</div>
+                </div>
+
+                <!-- Staff 3 -->
+                <div class="staff-card" onclick="selectStaff(this)">
+                    <div class="radio-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div class="avatar avatar-3">J</div>
+                    <div class="staff-name">Jenny T.</div>
+                    <div class="staff-role">Senior Nail Technician</div>
+                </div>
+
+                <!-- Staff 4 -->
+                <div class="staff-card" onclick="selectStaff(this)">
+                    <div class="radio-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div class="avatar avatar-4">K</div>
+                    <div class="staff-name">Kevin V.</div>
+                    <div class="staff-role">Acrylic & Gel Specialist</div>
+                </div>
+
+                <!-- Staff 5 -->
+                <div class="staff-card" onclick="selectStaff(this)">
+                    <div class="radio-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div class="avatar avatar-5">M</div>
+                    <div class="staff-name">Mary S.</div>
+                    <div class="staff-role">Nail Technician</div>
+                </div>
+
+                <!-- Staff 6 -->
+                <div class="staff-card" onclick="selectStaff(this)">
+                    <div class="radio-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div class="avatar avatar-6">L</div>
+                    <div class="staff-name">Lisa N.</div>
+                    <div class="staff-role">Gel & Extensions</div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <button class="btn-next">
+                tiếp theo
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </button>
+        </footer>
+    </div>
+
+    <script>
+        function selectStaff(element) {
+            // Remove selected class from all cards
+            document.querySelectorAll('.staff-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            // Add selected class to clicked card
+            element.classList.add('selected');
+        }
+    </script>
+</body>
+</html>
