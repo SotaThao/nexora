@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Eye, EyeOff, X, Loader2 } from 'lucide-react'
 import { renderLabel } from '../../../contexts/LanguageContext'
+import enLocale from '../../../locales/en.json'
+import viLocale from '../../../locales/vi.json'
 
 export default function StepOtpVerify({
   showOtpInput,
@@ -290,14 +292,16 @@ export default function StepOtpVerify({
         onClose={() => setShowTermsModal(false)}
         modalType={modalType}
         t={t}
+        currentLanguage={currentLanguage}
       />
     </>
   )
 }
 
 // Terms & Conditions Modal Overlay
-function TermsModal({ open, onClose, modalType, t }) {
-  const legalSections = t(`register.legal.${modalType}.sections`)
+function TermsModal({ open, onClose, modalType, t, currentLanguage }) {
+  const dict = currentLanguage === 'vi' ? viLocale : enLocale
+  const legalSections = dict.register.legal[modalType as 'privacy' | 'terms']?.sections ?? []
 
   if (!open) return null
   return (

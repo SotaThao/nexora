@@ -1,10 +1,13 @@
 import React from 'react'
 import { X } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import enLocale from '../../../locales/en.json'
+import viLocale from '../../../locales/vi.json'
 
 export default function TermsModal({ open, onClose, modalType }) {
-  const { t } = useTranslation()
-  const legalSections = t(`register.legal.${modalType}.sections`)
+  const { t, currentLanguage } = useTranslation()
+  const dict = currentLanguage === 'vi' ? viLocale : enLocale
+  const legalSections = dict.register.legal[modalType as 'privacy' | 'terms']?.sections ?? []
 
   if (!open) return null
   return (
