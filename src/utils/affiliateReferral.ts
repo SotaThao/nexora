@@ -1,3 +1,18 @@
+import { storage } from './storage'
+
+const REF_CODE_KEY = 'referral_ref_code'
+
+export function saveRefCode(code: string) {
+  const trimmed = code.trim()
+  if (trimmed) {
+    storage.setItem(REF_CODE_KEY, trimmed)
+  }
+}
+
+export function getSavedRefCode(): string {
+  return storage.getItem(REF_CODE_KEY) || ''
+}
+
 type ReferralProfile = {
   referralCode?: string | null
   refCode?: string | null

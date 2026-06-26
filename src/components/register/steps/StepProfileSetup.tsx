@@ -1,7 +1,7 @@
 import React from 'react'
 import { Upload, X, ArrowLeft, ArrowRight } from 'lucide-react'
 import ImageFileInput from '../../ui/ImageFileInput'
-import CountryCodeSelect, { formatNationalNumber, isPhoneValid } from '../../CountryCodeSelect'
+import CountryCodeSelect, { formatNationalNumber } from '../../CountryCodeSelect'
 
 export default function StepProfileSetup({
   nickname, setNickname,
@@ -85,13 +85,18 @@ export default function StepProfileSetup({
               type="text"
               placeholder={t('components.register.steps.StepProfileSetup.phFullName')}
               required
-              className="w-full bg-white border border-nexoraBorder focus:border-nexoraBrand rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
+              className={`w-full bg-white border rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all ${
+                errors?.fullName ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'
+              }`}
               value={fullName}
               onChange={(e) => {
                 setFullName(e.target.value)
                 if (!nickname) setNickname(e.target.value.split(' ')[0] + '.')
               }}
             />
+            {errors?.fullName && (
+              <span className="text-[10px] text-red-500 mt-1 block">{t(errors.fullName)}</span>
+            )}
           </div>
 
           {/* Display Nickname */}
@@ -103,10 +108,15 @@ export default function StepProfileSetup({
               type="text"
               placeholder={t('components.register.steps.StepProfileSetup.phNickname')}
               required
-              className="w-full bg-white border border-nexoraBorder focus:border-nexoraBrand rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
+              className={`w-full bg-white border rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all ${
+                errors?.nickname ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'
+              }`}
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
             />
+            {errors?.nickname && (
+              <span className="text-[10px] text-red-500 mt-1 block">{t(errors.nickname)}</span>
+            )}
           </div>
         </div>
 
@@ -126,7 +136,9 @@ export default function StepProfileSetup({
               />
               <input
                 type="text"
-                className="h-10 w-full bg-white border border-l-0 border-nexoraBorder focus:border-nexoraBrand rounded-r-lg px-4 text-sm text-nexoraText focus:outline-none transition-all min-w-0"
+                className={`h-10 w-full bg-white border border-l-0 rounded-r-lg px-4 text-sm text-nexoraText focus:outline-none transition-all min-w-0 ${
+                  errors?.phone ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'
+                }`}
                 value={formatNationalNumber(phoneParsed.nationalNumber, phoneParsed.countryCode)}
                 onChange={(e) => {
                   const formatted = formatNationalNumber(e.target.value, phoneParsed.countryCode)
@@ -136,6 +148,9 @@ export default function StepProfileSetup({
                 required
               />
             </div>
+            {errors?.phone && (
+              <span className="text-[10px] text-red-500 mt-1 block">{t(errors.phone)}</span>
+            )}
           </div>
 
           {/* Email Address (View-Only) */}
