@@ -199,6 +199,13 @@ export interface StaffPaymentMethodApiDto {
   imageUrl?: string | null
 }
 
+export interface StaffInviteSummaryApiDto {
+  id?: string
+  invitedAt?: string | null
+  expiresAt?: string | null
+  status?: string | null
+}
+
 export interface StaffListItemApiDto {
   id?: string
   linkId?: string
@@ -218,6 +225,7 @@ export interface StaffListItemApiDto {
   photoUrl?: string | null
   status?: string
   position?: string | null
+  roleAtBusiness?: string | null
   bio?: string | null
   invitedEmail?: string | null
   invitedPhone?: string | null
@@ -226,6 +234,7 @@ export interface StaffListItemApiDto {
   email?: string | null
   phone?: string | null
   paymentMethods?: StaffPaymentMethodApiDto[]
+  invites?: StaffInviteSummaryApiDto[]
   staffProfile?: { phoneNumber?: string; phone?: string; email?: string }
   user?: { phoneNumber?: string; phone?: string; email?: string }
 }

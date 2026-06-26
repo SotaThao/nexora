@@ -105,8 +105,10 @@ export function normalizeStaffListItem(dto: StaffListItemApiDto): StaffMember {
     isWaitingStaffAcceptance,
     isActive,
     showInTipsFlow: isActive,
-    position: dto.position ?? null,
+    position: dto.position ?? dto.roleAtBusiness ?? null,
+    roleAtBusiness: dto.roleAtBusiness ?? null,
     bio: dto.bio ?? null,
+    invites: dto.invites ?? [],
     invitedEmail: dto.invitedEmail ?? null,
     invitedPhone: dto.invitedPhone ?? null,
     phone:

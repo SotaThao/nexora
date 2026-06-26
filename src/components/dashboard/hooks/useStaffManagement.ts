@@ -1,7 +1,7 @@
 // Staff roster + staff-modal/form state and all staff CRUD handlers for the
 // Dashboard. Refactored to use API mutation hooks instead of local setStaff().
 // Extracted from Dashboard.jsx (Group 5).
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { DEFAULT_PAYOUT_CONFIGS } from '../constants'
 import { getPayoutConfigsFromMember } from '../utils'
 import { useTranslation } from '../../../contexts/LanguageContext'
@@ -59,6 +59,10 @@ export function normaliseMember(member) {
     source: member.source ?? null,
     itemType: member.itemType ?? null,
     sortOrder: member.sortOrder ?? 0,
+    tipCount: member.tipCount ?? 0,
+    averageRating: member.averageRating ?? 0,
+    joinedDate: member.joinedDate ?? null,
+    roleAtBusiness: member.roleAtBusiness ?? null,
   }
 }
 
@@ -119,6 +123,7 @@ export function useStaffManagement({
     payoutConfigs: { ...DEFAULT_PAYOUT_CONFIGS },
   })
   const [editingStaffId, setEditingStaffId] = useState<any | null>(null)
+  const [isStaffViewOnly, setIsStaffViewOnly] = useState(false)
   const [isStaffModalOpen, setIsStaffModalOpen] = useState(false)
   const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false)
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false)
@@ -133,6 +138,7 @@ export function useStaffManagement({
       payoutConfigs: { ...DEFAULT_PAYOUT_CONFIGS },
     })
     setEditingStaffId(null)
+    setIsStaffViewOnly(false)
     setErrors({})
   }
 
@@ -165,8 +171,7 @@ export function useStaffManagement({
     setIsApproveModalOpen(true)
   }
 
-  const openEditStaff = (member) => {
-    setEditingStaffId(member.id)
+  const populateStaffForm = (member) => {
     setStaffForm({
       fullName: member.fullName,
       nickname: member.nickname || member.fullName?.split(' ')[0] || '',
@@ -183,6 +188,19 @@ export function useStaffManagement({
       payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member)
     })
     setErrors({})
+  }
+
+  const openEditStaff = (member) => {
+    setIsStaffViewOnly(false)
+    setEditingStaffId(member.id)
+    populateStaffForm(member)
+    setIsStaffModalOpen(true)
+  }
+
+  const openViewStaff = (member) => {
+    setIsStaffViewOnly(true)
+    setEditingStaffId(member.id)
+    populateStaffForm(member)
     setIsStaffModalOpen(true)
   }
 
@@ -516,13 +534,34 @@ export function useStaffManagement({
       return
     }
 
-    const newStatus = member.showInTipsFlow ? 'Inactive' : 'Active'
+    const willShowInTipsFlow = member.showInTipsFlow === false
+    const newStatus = member.showInTipsFlow !== false ? 'Inactive' : 'Active'
+    const displayName = member.fullName || member.nickname || t('components.dashboard.hooks.useStaffManagement.thisPerson')
+
     updateStatusMutation.mutate({ staffLinkId: member.id, status: newStatus }, {
+      onSuccess: () => {
+        showToast(
+          willShowInTipsFlow
+            ? t('components.dashboard.hooks.useStaffManagement.tipsFlowShown', { name: displayName })
+            : t('components.dashboard.hooks.useStaffManagement.tipsFlowHidden', { name: displayName }),
+          'success',
+        )
+      },
       onError: (err) => {
         showToast(t('components.dashboard.hooks.useStaffManagement.tipsFlowUpdateFailed', { error: errMsg(err) }), 'error')
       }
     })
   }
+
+  useEffect(() => {
+    if (!isStaffModalOpen || !editingStaffId) return
+    const member = staff.find((item) => item.id === editingStaffId)
+    if (!member) return
+    setStaffForm((prev) => ({
+      ...prev,
+      showInTipsFlow: member.showInTipsFlow !== false,
+    }))
+  }, [staff, editingStaffId, isStaffModalOpen])
 
   return {
     staff,
@@ -530,6 +569,7 @@ export function useStaffManagement({
     staffForm, setStaffForm,
     errors, setErrors,
     editingStaffId, setEditingStaffId,
+    isStaffViewOnly,
     isStaffModalOpen, setIsStaffModalOpen,
     isAddStaffModalOpen, setIsAddStaffModalOpen,
     isApproveModalOpen, setIsApproveModalOpen,
@@ -537,7 +577,7 @@ export function useStaffManagement({
     isInviteShareOpen, setIsInviteShareOpen,
     inviteShareDefaultName, setInviteShareDefaultName,
     inviteShareDefaultContact, setInviteShareDefaultContact,
-    resetStaffForm, openAddStaff, closeAddStaffModal, openApproveStaff, openEditStaff, closeStaffModal,
+    resetStaffForm, openAddStaff, closeAddStaffModal, openApproveStaff, openEditStaff, openViewStaff, closeStaffModal,
     saveStaff, sendSetupLinkFromModal, handleLinkStaff, handleInviteStaff,
     handleResendInvite, handleCancelInvite,
     handleAcceptJoinRequest, handleDeclineJoinRequest, deleteStaff, toggleStaff, toggleStaffTipsFlow,
