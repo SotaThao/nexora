@@ -1224,6 +1224,7 @@
     "user_account_inactive": "Your account is currently inactive. Please contact support.",
     "user_account_incomplete": "Your account is incomplete. Please activate your account.",
     "user_email_already_exists": "This email address is already registered.",
+    "user_invalid_referral_code": "The referral code you entered is not valid. Please check the code and try again.",
     "user_signup_failed": "Registration failed. Please check your information and try again.",
     "auth_passwords_do_not_match": "Passwords do not match.",
     "user_feature_signup_disabled": "Registration is currently disabled.",

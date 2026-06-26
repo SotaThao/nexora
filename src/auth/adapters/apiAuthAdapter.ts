@@ -342,7 +342,9 @@ export const apiAuthAdapter = {
       lastName,
       type,
       profileType,
+      referralCode,
     } = credentials;
+    const trimmedReferralCode = referralCode?.trim();
     return httpClient.post<SignupResponse>(
       "/api/v1/authentication/signup",
       {
@@ -353,6 +355,7 @@ export const apiAuthAdapter = {
         firstName,
         lastName,
         type: type || profileType,
+        ...(trimmedReferralCode ? { referralCode: trimmedReferralCode } : {}),
       },
       { anonymous: true },
     );

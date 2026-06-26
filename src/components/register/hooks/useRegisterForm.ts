@@ -22,6 +22,10 @@ import { useCreateStaffProfile } from "../../../data/hooks/useProfileSettings";
 import { getApiErrorCode, isApiError } from "../../../types/domain";
 import { logger } from "../../../utils/logger";
 import { buildUpdateStaffProfileDto } from "../../../utils/mapStaffProfileView";
+import {
+  getPhoneFieldError,
+  getRequiredFieldError,
+} from "../../../utils/onboardingFieldValidation";
 import { captureQrImage } from "../../../utils/qrCode";
 import { formatNationalNumber, parsePhone } from "../../CountryCodeSelect";
 import { MOCK_NEXORA_STAFF_PROFILES } from "../../staff-registration/hooks/useStaffRegistration";
@@ -299,6 +303,7 @@ export function useRegisterForm({
     setIsSubmitting(true);
 
     try {
+      const trimmedReferralCode = referralCode.trim();
       const signupResponse = await apiAuthAdapter.signup({
         email: email.trim().toLowerCase(),
         confirmEmail: confirmEmail.trim().toLowerCase(),
@@ -308,6 +313,7 @@ export function useRegisterForm({
         lastName: "User",
         // profileType enum per signup API docs is "Merchant" | "User" (not "Personal").
         profileType: role === "business" ? "Merchant" : "User",
+        ...(trimmedReferralCode ? { referralCode: trimmedReferralCode } : {}),
       });
       const signupOtp = getSignupOtp(signupResponse);
 
@@ -327,6 +333,8 @@ export function useRegisterForm({
       const i18nKey = getErrorI18nKey(code);
       if (code === "AUTH_PASSWORDS_DO_NOT_MATCH") {
         errorsMap.confirmEmail = "register.errors.email_mismatch";
+      } else if (code === "USER_INVALID_REFERRAL_CODE") {
+        errorsMap.referralCode = i18nKey || "errors.unknown_error";
       } else {
         errorsMap.email = i18nKey || "errors.unknown_error";
       }
@@ -546,6 +554,28 @@ export function useRegisterForm({
   };
 
   const handleProfileSetupSubmit = async () => {
+    const fieldErrors: Record<string, string> = {};
+
+    const fullNameError = getRequiredFieldError(
+      fullName,
+      "setup.errors.staff_name_required",
+    );
+    if (fullNameError) fieldErrors.fullName = fullNameError;
+
+    const nicknameError = getRequiredFieldError(
+      nickname,
+      "setup.errors.staff_nickname_required",
+    );
+    if (nicknameError) fieldErrors.nickname = nicknameError;
+
+    const phoneError = getPhoneFieldError(phone, { requireValue: true });
+    if (phoneError) fieldErrors.phone = phoneError;
+
+    if (Object.keys(fieldErrors).length > 0) {
+      setErrors(fieldErrors);
+      return;
+    }
+
     const isApiMode = import.meta.env.VITE_DATA_SOURCE === "api";
     if (isApiMode) {
       try {
@@ -563,9 +593,12 @@ export function useRegisterForm({
         await createStaffProfileMutation.mutateAsync(dto);
       } catch (err: unknown) {
         logger.error("Failed to create staff profile during onboarding", err);
+        setErrors({ submit: "register.errors.profile_setup_failed" });
+        return;
       }
     }
 
+    setErrors({});
     if (onRegisterAndLogin) {
       onRegisterAndLogin(email.trim().toLowerCase());
     } else if (onRegisterSuccess) {
