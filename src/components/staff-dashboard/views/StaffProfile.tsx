@@ -465,17 +465,14 @@ export default function StaffProfile() {
                       </div>
                     </div>
                   </div>
-                  <div>
-                    <label
-                      className={`${labelCls} mb-2 inline-flex items-center gap-1.5`}
-                    >
+                  <div className="overflow-visible">
+                    <label className={`${labelCls} !flex items-center gap-1.5 overflow-visible`}>
+                      {t("staff_dashboard.profile.bio")}
                       <Tooltip
-                        content={t("staff_dashboard.profile.bio_tooltip")}
                         align="start"
-                        className="shrink-0"
-                      >
-                        <span>{t("staff_dashboard.profile.bio")}</span>
-                      </Tooltip>
+                        placement="top"
+                        content={t("staff_dashboard.profile.bio_tooltip")}
+                      />
                     </label>
                     <textarea
                       className={`${inputCls} h-24 resize-none ${errors.bio ? "border-rose-500 focus:border-rose-500" : ""}`}
