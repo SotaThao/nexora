@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { AlertCircle, Plus, Trash2, User, QrCode, Edit2, Link, Copy, X, Share2, Eye, Loader2 } from 'lucide-react'
+import { AlertCircle, Plus, Trash2, User, QrCode, Eye, Link, Copy, X, Share2, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { StatusFilter } from '../../../data/hooks/useMerchantStaff'
@@ -73,7 +73,7 @@ function StaffMemberCard({
   onAcceptUnlink,
   onDeclineUnlink,
   onQr,
-  onEdit
+  onViewStaff
 }) {
   const waitingStaffResponse = isWaitingStaffAcceptance(member)
   const stripClass = isPendingInvite
@@ -94,7 +94,7 @@ function StaffMemberCard({
         <div className="flex items-start gap-3 pt-1">
           <button
             type="button"
-            onClick={() => onViewDetail(member.id)}
+            onClick={() => onViewDetail(member)}
             className="flex items-center gap-3 flex-1 min-w-0 text-left group"
           >
             {member.avatar ? (
@@ -280,14 +280,14 @@ function StaffMemberCard({
           )}
           {!isPending && (
             <>
-              <IconButton label={t('staff_detail.joined_gateway')} onClick={() => onViewDetail(member.id)} className="hover:text-nexoraBrand">
+              <IconButton label={t('staff_detail.joined_gateway')} onClick={() => onViewDetail(member)} className="hover:text-nexoraBrand">
                 <User className="h-4 w-4" />
               </IconButton>
               <IconButton label={t('staff_detail.personal_qr')} onClick={() => onQr(member)}>
                 <QrCode className="h-4 w-4" />
               </IconButton>
-              <IconButton label={t('common.edit')} onClick={() => onEdit(member)}>
-                <Edit2 className="h-4 w-4" />
+              <IconButton label={t('common.view_detail')} onClick={() => onViewStaff(member)}>
+                <Eye className="h-4 w-4" />
               </IconButton>
               <IconButton label={t('common.delete')} onClick={() => onDelete(member.id)} className="hover:text-rose-600">
                 <Trash2 className="h-4 w-4" />
@@ -308,7 +308,7 @@ function StaffView({
   isFetching = false,
   onApproveClick,
   onAdd,
-  onEdit,
+  onViewStaff,
   onDelete,
   onQr,
   onToggle,
@@ -718,7 +718,7 @@ function StaffView({
                     onAcceptUnlink={onAcceptUnlink}
                     onDeclineUnlink={onDeclineUnlink}
                     onQr={onQr}
-                    onEdit={onEdit}
+                    onViewStaff={onViewStaff}
                   />
                 )
               })}

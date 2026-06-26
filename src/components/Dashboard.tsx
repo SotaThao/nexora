@@ -310,6 +310,7 @@ export default function Dashboard({
     staffForm, setStaffForm,
     errors, setErrors,
     editingStaffId, setEditingStaffId,
+    isStaffViewOnly,
     isStaffModalOpen, setIsStaffModalOpen,
     isAddStaffModalOpen,
     isApproveModalOpen, setIsApproveModalOpen,
@@ -317,7 +318,7 @@ export default function Dashboard({
     isInviteShareOpen, setIsInviteShareOpen,
     inviteShareDefaultName, setInviteShareDefaultName,
     inviteShareDefaultContact, setInviteShareDefaultContact,
-    resetStaffForm, openAddStaff, closeAddStaffModal, openApproveStaff, openEditStaff, closeStaffModal,
+    resetStaffForm, openAddStaff, closeAddStaffModal, openApproveStaff, openEditStaff, openViewStaff, closeStaffModal,
     saveStaff, sendSetupLinkFromModal, handleLinkStaff, handleInviteStaff,
     handleResendInvite,
     handleAcceptJoinRequest, handleDeclineJoinRequest, deleteStaff, toggleStaff, toggleStaffTipsFlow,
@@ -557,7 +558,7 @@ export default function Dashboard({
       s.nickname === staffKey ||
       s.fullName?.toLowerCase().includes(String(staffKey).toLowerCase().split(' ')[0])
     )
-    navigate(`/dashboard/staff/${member?.id || staffKey}`)
+    navigate(`/dashboard/staff/${member?.staffCode || member?.id || staffKey}`)
   }
 
   // ---------------------------------------------------------------------------
@@ -596,7 +597,7 @@ export default function Dashboard({
     isOverviewLoading, isTransactionsLoading, isTouchpointsLoading,
     reviewsPage, isReviewsPending,
     inviteLinkSetting, isInviteLinkSettingLoading,
-    filteredStaff, pendingStaff, staff, staffLoading, openApproveStaff, openAddStaff, openEditStaff, deleteStaff, toggleStaff, toggleStaffTipsFlow,
+    filteredStaff, pendingStaff, staff, staffLoading, openApproveStaff, openAddStaff, openEditStaff, openViewStaff, deleteStaff, toggleStaff, toggleStaffTipsFlow,
     handleLinkStaff, handleInviteStaff, handleResendInvite, handleAcceptJoinRequest, handleDeclineJoinRequest, handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     setInviteShareDefaultName, setInviteShareDefaultContact, setIsInviteShareOpen,
     filteredTouchpoints, setAddTouchpointPrefill, setIsAddTouchpointModalOpen, deleteTouchpoint, toggleTouchpointStatus, togglingTouchpointId: toggleTouchpointMutation.isPending ? toggleTouchpointMutation.variables : null, linkDevice, devices, handleAddDevice, handleDeleteDevice, handleToggleDeviceStatus,
@@ -746,6 +747,10 @@ export default function Dashboard({
       <StaffModal
         open={isStaffModalOpen && Boolean(editingStaffId)}
         editing={Boolean(editingStaffId)}
+        viewOnly={isStaffViewOnly}
+        staffLinkId={editingStaffId}
+        onToggleTipsFlow={toggleStaffTipsFlow}
+        isTogglingTipsFlow={updateStatusMutation.isPending && updateStatusMutation.variables?.staffLinkId === editingStaffId}
         onDecline={closeStaffModal}
         form={staffForm}
         errors={errors}

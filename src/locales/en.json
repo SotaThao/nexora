@@ -225,6 +225,8 @@
     "update": "Update",
     "delete": "Delete",
     "edit": "Edit",
+    "view_detail": "View Detail",
+    "close": "Close",
     "copy": "Copy",
     "copied": "Copied!",
     "loading": "Loading...",
@@ -1373,7 +1375,9 @@
           "declineUnlinkConfirm": "Are you sure you want to decline unlink request from {name}?",
           "deleteFailed": "Delete failed: {error}",
           "statusUpdateFailed": "Status update failed: {error}",
-          "tipsFlowUpdateFailed": "Tips flow update failed: {error}"
+          "tipsFlowUpdateFailed": "Tips flow update failed: {error}",
+          "tipsFlowShown": "{name} is now shown in Tips Flow.",
+          "tipsFlowHidden": "{name} is now hidden from Tips Flow."
         }
       },
       "layout": {
@@ -1437,6 +1441,8 @@
           "role_at_business": "Role at Business",
           "staff_name": "Staff Name",
           "staff_name_placeholder": "Example: Lisa Tran",
+          "staff_email": "Email",
+          "staff_email_placeholder": "e.g. lisa@example.com",
           "phone_or_email": "Phone or Email",
           "phone_or_email_placeholder": "e.g. lisa@example.com or +1 407-555-0123",
           "role": "Role",
@@ -1446,6 +1452,7 @@
           "link_info": "After you send a link request, the staff member must accept before they appear as active in your business.",
           "invite_info": "Staff receives a link to complete their NEXORA Tip Profile. After setup, they are automatically linked to your business.",
           "staff_name_required": "Staff name is required.",
+          "email_required": "Email is required.",
           "contact_required": "Phone or email is required.",
           "search_required": "Please enter a Staff ID, phone number, or email to search.",
           "emailRequiredForMethod": "Please enter an email address when Email is selected as the invite method.",

@@ -3,12 +3,10 @@ import { X, HelpCircle, Loader2 } from 'lucide-react'
 import IconButton from '../../ui/IconButton'
 import CountryCodeSelect, {
   formatNationalNumber,
-  parsePhone,
-} from '../../CountryCodeSelect'
-import {
   getDefaultDialCode,
   isValidPhoneE164,
   normalizePhoneForApi,
+  parsePhone,
 } from '../../CountryCodeSelect'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useSearchMerchantStaff } from '../../../data/hooks/useMerchantStaff'
@@ -16,14 +14,6 @@ import { isValidEmail } from '../../../utils/validation'
 import type { StaffSearchResult } from '../../../types/domain'
 
 const DEFAULT_ROLE = 'Nail Technician'
-
-function getContactKind(value: string): 'email' | 'phone' | 'unknown' {
-  const trimmed = value.trim()
-  if (!trimmed) return 'unknown'
-  if (trimmed.includes('@')) return 'email'
-  if (/[a-zA-Z]/.test(trimmed)) return 'email'
-  return 'phone'
-}
 
 function getSearchInputKind(value: string): 'email' | 'phone' | 'staffId' | 'unknown' {
   const trimmed = value.trim()
@@ -76,7 +66,7 @@ function AddStaffModal({
   isLinking = false,
   isInviting = false,
 }: AddStaffModalProps) {
-  const { t, currentLanguage } = useTranslation()
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<'link' | 'invite'>('invite')
   const [inviteErrors, setInviteErrors] = useState<Record<string, string>>({})
   // Default phone country should follow device/browser locale, not UI language.
@@ -196,7 +186,8 @@ function AddStaffModal({
   }
 
   const fieldErrorClass = 'mt-1 text-xs font-semibold leading-snug text-nexoraDanger'
-  const fieldLabelClass = 'flex min-h-8 items-end gap-1.5 text-[10px] font-extrabold uppercase text-nexoraMuted leading-snug'
+  const fieldLabelClass = 'block text-[10px] font-extrabold uppercase text-nexoraMuted leading-snug mb-1'
+  const fieldWrapClass = 'min-w-0'
 
   const inputClass = (hasError: boolean, extra = '') =>
     `${extra} h-10 w-full border bg-white text-sm font-semibold text-nexoraText outline-none transition ${
@@ -205,19 +196,20 @@ function AddStaffModal({
         : 'border-nexoraBorder focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20'
     }`
 
-  const handleContactChange = (value: string) => {
-    const kind = getContactKind(value)
-    if (kind === 'phone') {
-      const nextDialCode = resolveDialCodeFromInput(value, inviteDialCode || defaultDialCode)
-      const parsed = parsePhone(
-        value.trim().startsWith('+') ? value : `${nextDialCode}${value.replace(/\D/g, '')}`,
-      )
-      const formatted = formatInvitePhoneNational(parsed.nationalNumber, nextDialCode)
-      setInviteDialCode(nextDialCode)
-      setInviteContact(formatted)
-    } else {
+  const handleInviteContactChange = (value: string) => {
+    if (inviteMethod === 'Email') {
       setInviteContact(value)
+      clearInviteError('contact')
+      return
     }
+
+    const nextDialCode = resolveDialCodeFromInput(value, inviteDialCode || defaultDialCode)
+    const parsed = parsePhone(
+      value.trim().startsWith('+') ? value : `${nextDialCode}${value.replace(/\D/g, '')}`,
+    )
+    const formatted = formatInvitePhoneNational(parsed.nationalNumber, nextDialCode)
+    setInviteDialCode(nextDialCode)
+    setInviteContact(formatted)
     clearInviteError('contact')
   }
 
@@ -230,28 +222,27 @@ function AddStaffModal({
   const validateInviteContact = () => {
     const trimmed = inviteContact.trim()
     if (!trimmed) {
-      return t('components.dashboard.modals.AddStaffModal.contact_required')
+      return inviteMethod === 'Email'
+        ? t('components.dashboard.modals.AddStaffModal.email_required')
+        : t('components.dashboard.modals.AddStaffModal.contact_required')
     }
 
-    const kind = getContactKind(trimmed)
-    if (kind === 'email') {
+    if (inviteMethod === 'Email') {
       if (!isValidEmail(trimmed)) {
-        return t('setup.errors.staff_email_invalid')
+        return t('components.dashboard.modals.AddStaffModal.emailRequiredForMethod')
       }
       return ''
     }
 
     if (!isValidPhoneE164(trimmed, inviteDialCode)) {
-      return t('setup.errors.staff_phone_invalid')
+      return t('components.dashboard.modals.AddStaffModal.phoneRequiredForMethod')
     }
     return ''
   }
 
   const getInviteContactPayload = () => {
     const trimmed = inviteContact.trim()
-    if (getContactKind(trimmed) === 'email') {
-      return trimmed.toLowerCase()
-    }
+    if (inviteMethod === 'Email') return trimmed.toLowerCase()
     return normalizePhoneForApi(trimmed, inviteDialCode)
   }
 
@@ -271,8 +262,6 @@ function AddStaffModal({
     const contactError = validateInviteContact()
     if (contactError) {
       nextErrors.contact = contactError
-    } else if (inviteMethod === 'SMS' && getContactKind(inviteContact.trim()) === 'email') {
-      nextErrors.contact = t('setup.errors.staff_phone_invalid')
     }
 
     if (Object.keys(nextErrors).length) {
@@ -336,15 +325,12 @@ function AddStaffModal({
             </p>
 
             <div>
-              <div className="space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
-                  <label className={fieldLabelClass}>
-                    {t('components.dashboard.modals.AddStaffModal.staff_name')}
-                  </label>
-                  <label className={fieldLabelClass}>
-                    {t('components.dashboard.modals.AddStaffModal.phone_or_email')}
-                  </label>
-                  <div>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className={fieldWrapClass}>
+                    <label className={fieldLabelClass}>
+                      {t('components.dashboard.modals.AddStaffModal.staff_name')}
+                    </label>
                     <input
                       className={`rounded-lg px-3 ${inputClass(Boolean(inviteErrors.name))}`}
                       value={inviteName}
@@ -358,7 +344,10 @@ function AddStaffModal({
                       <p className={fieldErrorClass}>{inviteErrors.name}</p>
                     )}
                   </div>
-                  <div>
+                  <div className={fieldWrapClass}>
+                    <label className={fieldLabelClass}>
+                      {t('components.dashboard.modals.AddStaffModal.phone_or_email')}
+                    </label>
                     {inviteMethod === 'SMS' ? (
                       <div className="flex h-10 w-full overflow-hidden rounded-lg">
                         <CountryCodeSelect
@@ -382,13 +371,13 @@ function AddStaffModal({
                       </div>
                     ) : (
                       <input
-                        type="text"
-                        inputMode={getContactKind(inviteContact) === 'phone' ? 'tel' : 'email'}
+                        type="email"
+                        inputMode="email"
+                        autoComplete="email"
                         className={`rounded-lg px-3 ${inputClass(Boolean(inviteErrors.contact))}`}
                         value={inviteContact}
-                        onChange={(e) => handleContactChange(e.target.value)}
+                        onChange={(e) => handleInviteContactChange(e.target.value)}
                         placeholder={t('components.dashboard.modals.AddStaffModal.phone_or_email_placeholder')}
-                        autoComplete="off"
                       />
                     )}
                     {inviteErrors.contact && (
@@ -396,46 +385,42 @@ function AddStaffModal({
                     )}
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
-                  <label className={fieldLabelClass}>
-                    {t('components.dashboard.modals.AddStaffModal.role')}
-                  </label>
-                  <label className={fieldLabelClass}>
-                    {t('staff_invite.invite_method')}
-                  </label>
-                  <input
-                    className={`rounded-lg px-3 ${inputClass(false)}`}
-                    value={inviteRole}
-                    onChange={(e) => setInviteRole(e.target.value)}
-                    placeholder={t('components.dashboard.modals.AddStaffModal.role_placeholder')}
-                  />
-                  <select
-                    className={`rounded-lg px-3 ${inputClass(false)}`}
-                    value={inviteMethod}
-                    onChange={(e) => {
-                      const nextMethod = e.target.value
-                      setInviteMethod(nextMethod)
-                      clearInviteError('contact')
-
-                      if (nextMethod === 'SMS') {
-                        const parsed = parsePhone(inviteContact)
-                        const nextDialCode = parsed.countryCode || inviteDialCode || defaultDialCode
-                        const formatted = formatInvitePhoneNational(parsed.nationalNumber, nextDialCode)
-                        setInviteDialCode(nextDialCode)
-                        setInviteContact(formatted)
-                        return
-                      }
-
-                      if (getContactKind(inviteContact) === 'phone') {
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className={fieldWrapClass}>
+                    <label className={fieldLabelClass}>
+                      {t('components.dashboard.modals.AddStaffModal.role')}
+                    </label>
+                    <input
+                      className={`rounded-lg px-3 ${inputClass(false)}`}
+                      value={inviteRole}
+                      onChange={(e) => setInviteRole(e.target.value)}
+                      placeholder={t('components.dashboard.modals.AddStaffModal.role_placeholder')}
+                    />
+                  </div>
+                  <div className={fieldWrapClass}>
+                    <label className={fieldLabelClass}>
+                      {t('staff_invite.invite_method')}
+                    </label>
+                    <select
+                      className={`rounded-lg px-3 ${inputClass(false)}`}
+                      value={inviteMethod}
+                      onChange={(e) => {
+                        const nextMethod = e.target.value
+                        setInviteMethod(nextMethod)
+                        clearInviteError('contact')
                         setInviteContact('')
-                      }
-                    }}
-                  >
-                    <option value="Email">{t('components.dashboard.modals.InviteShareModal.methodEmail')}</option>
-                    <option value="SMS" disabled>
-                      {`${t('components.dashboard.modals.InviteShareModal.methodSms')} (${t('components.dashboard.modals.InviteShareModal.methodSmsComingSoon')})`}
-                    </option>
-                  </select>
+
+                        if (nextMethod === 'SMS') {
+                          setInviteDialCode(defaultDialCode)
+                        }
+                      }}
+                    >
+                      <option value="Email">{t('components.dashboard.modals.InviteShareModal.methodEmail')}</option>
+                      <option value="SMS" disabled>
+                        {`${t('components.dashboard.modals.InviteShareModal.methodSms')} (${t('components.dashboard.modals.InviteShareModal.methodSmsComingSoon')})`}
+                      </option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -463,17 +448,14 @@ function AddStaffModal({
             </p>
 
             <div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
-                <label className={fieldLabelClass}>
-                  <span>{t('staff_invite.search_placeholder')}</span>
-                  <span className="inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-indigo-50 text-[10px] font-black text-indigo-600">
-                    <HelpCircle className="h-3 w-3" />
-                  </span>
-                </label>
-                <label className={fieldLabelClass}>
-                  {t('components.dashboard.modals.AddStaffModal.role_at_business')}
-                </label>
-                <div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className={fieldWrapClass}>
+                  <label className={`${fieldLabelClass} flex items-center gap-1.5`}>
+                    <span>{t('staff_invite.search_placeholder')}</span>
+                    <span className="inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-indigo-50 text-[10px] font-black text-indigo-600">
+                      <HelpCircle className="h-3 w-3" />
+                    </span>
+                  </label>
                   <input
                     className={`rounded-lg px-3 ${inputClass(Boolean(searchError))}`}
                     value={searchInput}
@@ -485,12 +467,17 @@ function AddStaffModal({
                     <p className={fieldErrorClass}>{searchError}</p>
                   )}
                 </div>
-                <input
-                  className={`rounded-lg px-3 ${inputClass(false)}`}
-                  value={selectedRole}
-                  onChange={(e) => setSelectedRole(e.target.value)}
-                  placeholder={t('components.dashboard.modals.AddStaffModal.role_placeholder')}
-                />
+                <div className={fieldWrapClass}>
+                  <label className={fieldLabelClass}>
+                    {t('components.dashboard.modals.AddStaffModal.role_at_business')}
+                  </label>
+                  <input
+                    className={`rounded-lg px-3 ${inputClass(false)}`}
+                    value={selectedRole}
+                    onChange={(e) => setSelectedRole(e.target.value)}
+                    placeholder={t('components.dashboard.modals.AddStaffModal.role_placeholder')}
+                  />
+                </div>
               </div>
             </div>
 
