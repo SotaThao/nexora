@@ -431,9 +431,9 @@ export default function ProfileTab({
                 <div key={method.id || uiKey} className="flex items-center justify-between py-3">
                   <div className="flex items-center gap-3 min-w-0">
                     <ToggleSwitch
-                      checked={methodData.isActive}
-                      onChange={() => handleToggleMethod(item.key)}
-                      ariaLabel={`Toggle ${item.label}`}
+                      checked={!!method.isActive}
+                      onChange={() => handleToggleMethod(uiKey, !!method.isActive)}
+                      ariaLabel={`Toggle ${label}`}
                       activeColor="bg-amber-600"
                       inactiveColor="bg-slate-200"
                     />
