@@ -128,6 +128,16 @@ export function useSearchMerchantStaff(q: string, { enabled = true } = {}) {
   })
 }
 
+/** Staff detail by staffCode (`GET /merchant/staff/{staffCode}`). */
+export function useMerchantStaffByCode(staffCode?: string | null, { enabled = true } = {}) {
+  return useQuery<StaffMember>({
+    queryKey: qk.merchantStaffByCode(staffCode),
+    queryFn: () => merchantStaffRepository.getByStaffCode(staffCode!),
+    enabled: enabled && !!staffCode,
+    retry: false,
+  })
+}
+
 export function useSendStaffLinkRequest() {
   const queryClient = useQueryClient()
   return useMutation<void, Error, string | StaffLinkRequestParams>({

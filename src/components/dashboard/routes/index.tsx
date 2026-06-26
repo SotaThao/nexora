@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { useOutletContext, useNavigate, useParams, Navigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 
@@ -15,6 +15,25 @@ import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3'
 import ComingSoon from '../views/ComingSoon'
 import ManagePlanView from '../views/ManagePlanView'
 import StaffDetailView from '../../StaffDetailView'
+import { useMerchantStaffByCode } from '../../../data/hooks/useMerchantStaff'
+import { useTransactionsPaginated } from '../../../data/hooks/useTransactions'
+import { useDashboardReviews } from '../../../data/hooks/useReviews'
+import { normaliseMember } from '../hooks/useStaffManagement'
+import { SkeletonList } from '../../ui/skeleton'
+
+function staffRecordMatchesMember(member, record) {
+  if (!member || !record) return false
+  const profileId = member.staffProfileId
+  const staffCode = member.staffCode
+  const linkId = member.id || member.linkId
+  const name = member.fullName || member.nickname
+
+  if (profileId && record.staffProfileId === profileId) return true
+  if (staffCode && record.staffCode === staffCode) return true
+  if (linkId && (record.staffId === linkId || record.id === linkId)) return true
+  if (name && record.staffName === name) return true
+  return false
+}
 
 export function OverviewRoute() {
   const ctx = useOutletContext<LooseObject>()
@@ -74,12 +93,12 @@ export function StaffRoute() {
       isFetching={ctx.staffListFetching}
       onApproveClick={ctx.openApproveStaff}
       onAdd={ctx.openAddStaff}
-      onEdit={ctx.openEditStaff}
+      onViewStaff={ctx.openViewStaff}
       onDelete={ctx.deleteStaff}
       onQr={ctx.previewQr}
       onToggle={ctx.toggleStaff}
       onToggleTipsFlow={ctx.toggleStaffTipsFlow}
-      onViewDetail={(id) => navigate(`/dashboard/staff/${id}`)}
+      onViewDetail={(member) => navigate(`/dashboard/staff/${member.staffCode || member.id}`)}
       onResendInvite={ctx.handleResendInvite}
       businessName={ctx.businessName}
       businessSlug={ctx.businessSlug}
@@ -109,28 +128,67 @@ export function StaffRoute() {
 
 export function StaffDetailRoute() {
   const ctx = useOutletContext<LooseObject>()
-  const { staffId } = useParams()
+  const { staffId: staffKey } = useParams()
   const navigate = useNavigate()
-  
-  const member = ctx.staff.find((m) =>
-    String(m.id) === String(staffId) ||
-    String(m.staffProfileId) === String(staffId)
+
+  const {
+    data: staffMember,
+    isLoading: isStaffDetailLoading,
+    isError: isStaffDetailError,
+  } = useMerchantStaffByCode(staffKey)
+
+  const fallbackMember = useMemo(
+    () => ctx.staff.find((m) =>
+      String(m.id) === String(staffKey) ||
+      String(m.staffProfileId) === String(staffKey) ||
+      String(m.staffCode) === String(staffKey) ||
+      String(m.linkId) === String(staffKey),
+    ),
+    [ctx.staff, staffKey],
   )
 
-  if (ctx.staffLoading) {
-    return null
+  const resolvedMember = staffMember ?? fallbackMember
+  const staffProfileId = resolvedMember?.staffProfileId
+
+  const { data: tipsPage, isLoading: isTipsLoading } = useTransactionsPaginated(
+    { staffProfileId, pageNumber: 1, pageSize: 100 },
+    { enabled: !!staffProfileId },
+  )
+
+  const { data: reviewsPage } = useDashboardReviews(
+    { pageNumber: 1, pageSize: 100 },
+    { enabled: !!resolvedMember },
+  )
+
+  const transactions = useMemo(() => {
+    if (tipsPage?.items?.length) return tipsPage.items
+    return (ctx.transactions ?? []).filter((tx) => staffRecordMatchesMember(resolvedMember, tx))
+  }, [tipsPage?.items, ctx.transactions, resolvedMember])
+
+  const reviews = useMemo(() => {
+    const source = reviewsPage?.items?.length ? reviewsPage.items : (ctx.reviews ?? [])
+    return source.filter((rev) => staffRecordMatchesMember(resolvedMember, rev))
+  }, [reviewsPage?.items, ctx.reviews, resolvedMember])
+
+  if (isStaffDetailLoading || (!resolvedMember && ctx.staffLoading)) {
+    return (
+      <div className="nexora-card p-6">
+        <SkeletonList count={3} showAvatar lines={2} />
+      </div>
+    )
   }
 
-  if (!member) {
+  if ((isStaffDetailError && !fallbackMember) || !resolvedMember) {
     return <Navigate to="/dashboard/staff" replace />
   }
 
   return (
     <StaffDetailView
-      staffMember={member}
+      staffMember={normaliseMember(resolvedMember)}
       onBack={() => navigate('/dashboard/staff')}
-      transactions={ctx.transactions}
-      reviews={ctx.reviews}
+      transactions={transactions}
+      reviews={reviews}
+      isTipsLoading={isTipsLoading}
       onEdit={ctx.openEditStaff}
       onQr={ctx.previewQr}
       onDelete={ctx.deleteStaff}

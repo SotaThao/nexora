@@ -31,6 +31,7 @@ export default function Step2StaffTouchpoints({
   setEditingTpId,
   editingTpName,
   setEditingTpName,
+  editingTpNameError,
   editingTpType,
   setEditingTpType,
   errors,
@@ -50,10 +51,12 @@ export default function Step2StaffTouchpoints({
 
   const displayPaymentMethods = useMemo(() => {
     if (merchantPaymentMethods.length > 0) {
-      return merchantPaymentMethods.map((method: PaymentMethodDto) => ({
-        key: method.uiKey || payoutTypeToUiKey(method.type || ''),
-        name: method.name || getPaymentMethodDisplayName(method.type || ''),
-      }))
+      return merchantPaymentMethods
+        .map((method: PaymentMethodDto) => ({
+          key: method.uiKey || payoutTypeToUiKey(method.type || ''),
+          name: method.name || getPaymentMethodDisplayName(method.type || ''),
+        }))
+        .filter((m) => m.key !== 'other')
     }
 
     return Object.keys(DEFAULT_PAYOUT_CONFIGS).map((key) => ({
@@ -198,11 +201,12 @@ export default function Step2StaffTouchpoints({
                           </label>
                           <input
                             type="text"
-                            className="w-full bg-white border border-nexoraBorder rounded-lg px-3 py-1.5 text-xs text-nexoraText focus:outline-none focus:border-nexoraBrand transition-all"
+                            className={`w-full bg-white border ${editingTpNameError ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'} rounded-lg px-3 py-1.5 text-xs text-nexoraText focus:outline-none transition-all`}
                             value={editingTpName}
                             onChange={(e) => setEditingTpName(e.target.value)}
                             placeholder={t('setup.tp_name_placeholder')}
                           />
+                          {editingTpNameError && <span className="text-xs text-red-500 mt-1 block">{t(editingTpNameError)}</span>}
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-1">

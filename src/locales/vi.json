@@ -247,6 +247,8 @@
     "update": "Cập nhật",
     "delete": "Xóa",
     "edit": "Sửa",
+    "view_detail": "Xem chi tiết",
+    "close": "Đóng",
     "copy": "Sao chép",
     "copied": "Đã sao chép!",
     "loading": "Đang tải...",
@@ -1416,7 +1418,9 @@
           "declineUnlinkConfirm": "Bạn có chắc chắn muốn từ chối yêu cầu hủy liên kết của thợ {name}?",
           "deleteFailed": "Xóa thất bại: {error}",
           "statusUpdateFailed": "Cập nhật trạng thái thất bại: {error}",
-          "tipsFlowUpdateFailed": "Cập nhật tips flow thất bại: {error}"
+          "tipsFlowUpdateFailed": "Cập nhật tips flow thất bại: {error}",
+          "tipsFlowShown": "{name} đã được hiển thị trong Tips Flow.",
+          "tipsFlowHidden": "{name} đã được ẩn khỏi Tips Flow."
         }
       },
       "layout": {
@@ -1480,6 +1484,8 @@
           "role_at_business": "Vai trò tại tiệm",
           "staff_name": "Tên nhân viên",
           "staff_name_placeholder": "Ví dụ: Lisa Tran",
+          "staff_email": "Email",
+          "staff_email_placeholder": "VD: lisa@example.com",
           "phone_or_email": "Số điện thoại hoặc Email",
           "phone_or_email_placeholder": "VD: lisa@example.com hoặc +1 407-555-0123",
           "role": "Vai trò",
@@ -1489,6 +1495,7 @@
           "link_info": "Sau khi gửi yêu cầu liên kết, thợ phải chấp nhận thì mới hiển thị active trong tiệm.",
           "invite_info": "Thợ nhận link hoàn tất NEXORA Tip Profile. Sau khi xong, hệ thống tự liên kết vào tiệm.",
           "staff_name_required": "Vui lòng nhập tên nhân viên.",
+          "email_required": "Vui lòng nhập email.",
           "contact_required": "Vui lòng nhập số điện thoại hoặc email.",
           "search_required": "Vui lòng nhập Mã nhân viên, số điện thoại hoặc email để tìm kiếm.",
           "emailRequiredForMethod": "Vui lòng nhập email khi chọn phương thức mời là Email.",

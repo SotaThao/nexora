@@ -22,6 +22,7 @@ const STAFF_QR_SCAN_PROFILES = [
 function StaffModal({
   open,
   editing,
+  viewOnly = false,
   isApproveMode = false,
   onDecline,
   form,
@@ -33,6 +34,9 @@ function StaffModal({
   onSave,
   onLinkStaff,
   onOpenInviteShare,
+  onToggleTipsFlow,
+  isTogglingTipsFlow = false,
+  staffLinkId = null,
   reviews: reviewsProp = null,
   merchantSetupData = null
 }) {
@@ -49,7 +53,18 @@ function StaffModal({
   const [idInput, setIdInput] = useState(() => form.vlinkpay || form.nexoraStaffId || '')
   const [searchQuery, setSearchQuery] = useState('')
   const [lastHandledSearchQuery, setLastHandledSearchQuery] = useState('')
-  const isReviewOnly = isApproveMode
+  const isReviewOnly = isApproveMode || viewOnly
+  const readOnlyInputClass = 'border-nexoraBorder bg-nexoraCanvas cursor-not-allowed'
+  const canToggleTipsFlowViaApi = (viewOnly || editing) && Boolean(staffLinkId) && Boolean(onToggleTipsFlow)
+
+  const handleShowInTipsFlowToggle = () => {
+    if (isApproveMode || isTogglingTipsFlow) return
+    if (canToggleTipsFlowViaApi) {
+      onToggleTipsFlow(staffLinkId)
+      return
+    }
+    setForm({ ...form, showInTipsFlow: !form.showInTipsFlow })
+  }
 
   useEffect(() => {
     setIdInput(form.vlinkpay || form.nexoraStaffId || '')
@@ -247,7 +262,7 @@ function StaffModal({
           <h2 className="text-lg font-extrabold text-nexoraText">
             {isApproveMode
               ? (t('components.dashboard.modals.StaffModal.reviewJoinRequest'))
-              : (editing ? t('common.edit') : t('setup.add_staff_title'))}
+              : (viewOnly ? t('common.view_detail') : (editing ? t('common.edit') : t('setup.add_staff_title')))}
           </h2>
           <IconButton label={t('common.close')} onClick={onClose}>
             <X className="h-4 w-4" />
@@ -369,14 +384,16 @@ function StaffModal({
                   )}
                 </div>
                 <div className="flex flex-wrap gap-2 items-center">
-                  <ImageFileInput
-                    as="label"
-                    className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-nexoraBorder px-3 text-xs font-bold text-nexoraText transition hover:bg-nexoraCanvas"
-                    onPick={handleAvatarPick}
-                  >
-                    <Upload className="h-4 w-4 text-nexoraBrand" />
-                    Upload photo
-                  </ImageFileInput>
+                  {!isReviewOnly && (
+                    <ImageFileInput
+                      as="label"
+                      className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-nexoraBorder px-3 text-xs font-bold text-nexoraText transition hover:bg-nexoraCanvas"
+                      onPick={handleAvatarPick}
+                    >
+                      <Upload className="h-4 w-4 text-nexoraBrand" />
+                      {t('common.upload_photo')}
+                    </ImageFileInput>
+                  )}
                   {(form.nexoraStaffId || form.id) && (
                     <button
                       type="button"
@@ -402,8 +419,11 @@ function StaffModal({
             <div>
               <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{renderLabel(t('setup.staff_fullname'))}</label>
               <input
-                className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-white px-3 text-sm font-semibold text-nexoraText outline-none transition focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20"
+                className={`mt-1 h-10 w-full rounded-lg border px-3 text-sm font-semibold text-nexoraText outline-none transition ${
+                  isReviewOnly ? readOnlyInputClass : 'border-nexoraBorder bg-white focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20'
+                }`}
                 value={form.fullName}
+                readOnly={isReviewOnly}
                 onChange={(event) => setForm(prev => ({ ...prev, fullName: event.target.value }))}
                 placeholder={t('components.dashboard.modals.StaffModal.phFullName')}
               />
@@ -422,8 +442,11 @@ function StaffModal({
                   </div>
                 </label>
                 <input
-                  className="mt-1 h-10 w-full min-w-0 rounded-lg border border-nexoraBorder bg-white px-3 text-sm font-semibold text-nexoraText outline-none transition focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20"
+                  className={`mt-1 h-10 w-full min-w-0 rounded-lg border px-3 text-sm font-semibold text-nexoraText outline-none transition ${
+                    isReviewOnly ? readOnlyInputClass : 'border-nexoraBorder bg-white focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20'
+                  }`}
                   value={form.nickname}
+                  readOnly={isReviewOnly}
                   onChange={(event) => setForm(prev => ({ ...prev, nickname: event.target.value }))}
                   placeholder={t('components.dashboard.modals.StaffModal.phNickname')}
                 />
@@ -432,8 +455,11 @@ function StaffModal({
               <div className="min-w-0">
                 <label className="flex h-4 items-center text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_position')}</label>
                 <input
-                  className="mt-1 h-10 w-full min-w-0 rounded-lg border border-nexoraBorder bg-white px-3 text-sm font-semibold text-nexoraText outline-none transition focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20"
+                  className={`mt-1 h-10 w-full min-w-0 rounded-lg border px-3 text-sm font-semibold text-nexoraText outline-none transition ${
+                    isReviewOnly ? readOnlyInputClass : 'border-nexoraBorder bg-white focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20'
+                  }`}
                   value={form.position}
+                  readOnly={isReviewOnly}
                   onChange={(event) => setForm(prev => ({ ...prev, position: event.target.value }))}
                   placeholder={t('components.dashboard.modals.StaffModal.phPosition')}
                 />
@@ -517,13 +543,20 @@ function StaffModal({
                 <label className="text-xs font-extrabold text-nexoraText block">{t('setup.show_in_tips_flow')}</label>
                 <p className="text-[10px] text-nexoraMuted leading-relaxed mt-0.5">{t('setup.show_in_tips_flow_desc')}</p>
               </div>
-              <ToggleSwitch
-                checked={form.showInTipsFlow}
-                onChange={() => setForm({ ...form, showInTipsFlow: !form.showInTipsFlow })}
-                size="md"
-                activeColor="bg-nexoraBrand"
-                inactiveColor="bg-nexoraBorder"
-              />
+              <button
+                type="button"
+                disabled={isApproveMode || isTogglingTipsFlow}
+                onClick={handleShowInTipsFlowToggle}
+                className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  form.showInTipsFlow ? 'bg-nexoraBrand' : 'bg-nexoraBorder'
+                } ${isApproveMode || isTogglingTipsFlow ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    form.showInTipsFlow ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
             </div>
           </div>
         </div>
@@ -545,6 +578,8 @@ function StaffModal({
                 {t('components.dashboard.modals.StaffModal.approveAccept')}
               </button>
             </>
+          ) : viewOnly ? (
+            <button onClick={onClose} className="rounded-lg border border-nexoraBorder px-4 py-2 text-xs font-bold text-nexoraMuted">{t('common.close')}</button>
           ) : (
             <>
               <button onClick={onClose} className="rounded-lg border border-nexoraBorder px-4 py-2 text-xs font-bold text-nexoraMuted">{t('common.cancel')}</button>

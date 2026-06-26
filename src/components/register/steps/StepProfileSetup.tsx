@@ -85,7 +85,7 @@ export default function StepProfileSetup({
               type="text"
               placeholder={t('components.register.steps.StepProfileSetup.phFullName')}
               required
-              className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
+              className="w-full bg-white border border-nexoraBorder focus:border-nexoraBrand rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
               value={fullName}
               onChange={(e) => {
                 setFullName(e.target.value)
@@ -103,7 +103,7 @@ export default function StepProfileSetup({
               type="text"
               placeholder={t('components.register.steps.StepProfileSetup.phNickname')}
               required
-              className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
+              className="w-full bg-white border border-nexoraBorder focus:border-nexoraBrand rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
             />
@@ -126,7 +126,7 @@ export default function StepProfileSetup({
               />
               <input
                 type="text"
-                className="h-10 w-full bg-nexoraCanvas border border-l-0 border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-r-lg px-4 text-sm text-nexoraText focus:outline-none transition-all min-w-0"
+                className="h-10 w-full bg-white border border-l-0 border-nexoraBorder focus:border-nexoraBrand rounded-r-lg px-4 text-sm text-nexoraText focus:outline-none transition-all min-w-0"
                 value={formatNationalNumber(phoneParsed.nationalNumber, phoneParsed.countryCode)}
                 onChange={(e) => {
                   const formatted = formatNationalNumber(e.target.value, phoneParsed.countryCode)
@@ -160,7 +160,7 @@ export default function StepProfileSetup({
           <input
             type="text"
             placeholder={t('components.register.steps.StepProfileSetup.phPosition')}
-            className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
+            className="w-full bg-white border border-nexoraBorder focus:border-nexoraBrand rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
             value={position}
             onChange={(e) => setPosition(e.target.value)}
           />
@@ -172,7 +172,7 @@ export default function StepProfileSetup({
             {t('components.register.steps.StepProfileSetup.shortBioShowsOn')}
           </label>
           <textarea
-            className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg p-3 text-sm text-nexoraText focus:outline-none transition-all min-h-[70px]"
+            className="w-full bg-white border border-nexoraBorder focus:border-nexoraBrand rounded-lg p-3 text-sm text-nexoraText focus:outline-none transition-all min-h-[70px]"
             placeholder={t('components.register.steps.StepProfileSetup.phBio')}
             value={bio}
             onChange={(e) => setBio(e.target.value)}

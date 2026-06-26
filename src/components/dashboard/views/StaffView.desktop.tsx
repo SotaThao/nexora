@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { AlertCircle, Plus, HelpCircle, Trash2, User, QrCode, Edit2, Link, Copy, X, Share2, Loader2 } from 'lucide-react'
+import { AlertCircle, Plus, HelpCircle, Trash2, User, QrCode, Eye, Link, Copy, X, Share2, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
@@ -31,7 +31,7 @@ function StaffView({
   isLoading = false,
   onApproveClick,
   onAdd,
-  onEdit,
+  onViewStaff,
   onDelete,
   onQr,
   onToggle,
@@ -515,7 +515,7 @@ function StaffView({
                 return (
                   <tr key={member.id || index} className="border-b border-nexoraRule last:border-0 hover:bg-slate-50/40 transition">
                     <td className="px-5 py-4">
-                      <div className="flex items-center gap-3 cursor-pointer group" onClick={() => onViewDetail(member.id)}>
+                      <div className="flex items-center gap-3 cursor-pointer group" onClick={() => onViewDetail(member)}>
                         {member.avatar ? (
                           <img src={member.avatar} alt="" className="h-10 w-10 rounded-full border border-nexoraBorder object-cover group-hover:opacity-85 transition" />
                         ) : (
@@ -655,14 +655,14 @@ function StaffView({
 
                       {!isPending && (
                         <div className="flex justify-end gap-1.5">
-                          <IconButton label={t('staff_detail.joined_gateway')} onClick={() => onViewDetail(member.id)} className="hover:text-nexoraBrand">
+                          <IconButton label={t('staff_detail.joined_gateway')} onClick={() => onViewDetail(member)} className="hover:text-nexoraBrand">
                             <User className="h-4 w-4" />
                           </IconButton>
                           <IconButton label={t('staff_detail.personal_qr')} onClick={() => onQr(member)}>
                             <QrCode className="h-4 w-4" />
                           </IconButton>
-                          <IconButton label={t('common.edit')} onClick={() => onEdit(member)}>
-                            <Edit2 className="h-4 w-4" />
+                          <IconButton label={t('common.view_detail')} onClick={() => onViewStaff(member)}>
+                            <Eye className="h-4 w-4" />
                           </IconButton>
                           <IconButton label={t('common.delete')} onClick={() => onDelete(member.id)} className="hover:text-rose-600">
                             <Trash2 className="h-4 w-4" />
