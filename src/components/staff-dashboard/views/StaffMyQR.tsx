@@ -236,8 +236,8 @@ export default function StaffMyQR() {
     [staffCode],
   )
   const referralQrImageSrc = useMemo(
-    () => (staffLink ? buildQrImageUrl(staffLink, 200) : ''),
-    [staffLink],
+    () => (staffCode ? buildQrImageUrl(staffCode, 200) : ''),
+    [staffCode],
   )
 
   const selectedBusiness = useMemo(() => {
@@ -644,7 +644,7 @@ export default function StaffMyQR() {
             {t('staff_dashboard.qr.personal_title')}
           </h3>
           <p className="mt-1 text-xs text-nexoraMuted">{t('staff_dashboard.qr.personal_sub')}</p>
-          {staffLink ? (
+          {staffCode ? (
             <>
               <div className="mx-auto my-4 flex h-44 w-44 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-nexoraBorder/60 bg-white p-3.5 shadow-sm select-none">
                 <img src={referralQrImageSrc} alt="Scan QR" className="h-full w-full object-contain" />

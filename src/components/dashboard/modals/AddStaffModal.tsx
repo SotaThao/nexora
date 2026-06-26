@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
-import { X, HelpCircle, Loader2 } from 'lucide-react'
+import { X, HelpCircle, Loader2, Camera } from 'lucide-react'
 import IconButton from '../../ui/IconButton'
+import StaffQrScannerModal from './StaffQrScannerModal'
 import CountryCodeSelect, {
   formatNationalNumber,
   getDefaultDialCode,
@@ -79,6 +80,7 @@ function AddStaffModal({
   const [selectedRole, setSelectedRole] = useState(DEFAULT_ROLE)
   const [searchResult, setSearchResult] = useState<StaffSearchResult | null>(null)
   const [searchError, setSearchError] = useState('')
+  const [showScanner, setShowScanner] = useState(false)
 
   // Invite tab
   const [inviteName, setInviteName] = useState('')
@@ -106,6 +108,7 @@ function AddStaffModal({
       setActiveSearchQuery('')
       setSearchResult(null)
       setSearchError('')
+      setShowScanner(false)
       setSelectedRole(DEFAULT_ROLE)
       setInviteName('')
       setInviteContact('')
@@ -131,25 +134,25 @@ function AddStaffModal({
 
   if (!open) return null
 
-  const handleSearch = () => {
-    const query = searchInput.trim()
-    if (!query) {
+  const triggerStaffSearch = (query: string) => {
+    const trimmed = query.trim()
+    if (!trimmed) {
       setSearchError(t('components.dashboard.modals.AddStaffModal.search_required'))
       return
     }
 
-    const kind = getSearchInputKind(query)
-    const searchFallbackDialCode = resolveDialCodeFromInput(query, searchDialCode || defaultDialCode)
-    if (kind === 'email' && !isValidEmail(query)) {
+    const kind = getSearchInputKind(trimmed)
+    const searchFallbackDialCode = resolveDialCodeFromInput(trimmed, searchDialCode || defaultDialCode)
+    if (kind === 'email' && !isValidEmail(trimmed)) {
       setSearchError(t('setup.errors.staff_email_invalid'))
       return
     }
-    if (kind === 'phone' && !isValidPhoneE164(query, searchFallbackDialCode)) {
+    if (kind === 'phone' && !isValidPhoneE164(trimmed, searchFallbackDialCode)) {
       setSearchError(t('setup.errors.staff_phone_invalid'))
       return
     }
 
-    const nextQuery = getSearchQueryPayload(query, searchFallbackDialCode)
+    const nextQuery = getSearchQueryPayload(trimmed, searchFallbackDialCode)
     setSearchResult(null)
     setSearchError('')
 
@@ -158,6 +161,16 @@ function AddStaffModal({
       return
     }
     setActiveSearchQuery(nextQuery)
+  }
+
+  const handleSearch = () => {
+    triggerStaffSearch(searchInput)
+  }
+
+  const handleQrScanResult = (staffCode: string) => {
+    setShowScanner(false)
+    setSearchInput(staffCode)
+    triggerStaffSearch(staffCode)
   }
 
   const handleSearchInputChange = (value: string) => {
@@ -456,13 +469,22 @@ function AddStaffModal({
                       <HelpCircle className="h-3 w-3" />
                     </span>
                   </label>
-                  <input
-                    className={`rounded-lg px-3 ${inputClass(Boolean(searchError))}`}
-                    value={searchInput}
-                    onChange={(e) => handleSearchInputChange(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    placeholder="NEX-STF-839201"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      className={`min-w-0 flex-1 rounded-lg px-3 ${inputClass(Boolean(searchError))}`}
+                      value={searchInput}
+                      onChange={(e) => handleSearchInputChange(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                      placeholder="NEX-STF-839201"
+                    />
+                    <IconButton
+                      label={t('components.dashboard.modals.StaffModal.scanQrCode')}
+                      onClick={() => setShowScanner(true)}
+                      className="shrink-0 border border-nexoraBrand bg-nexoraBrandSoft text-nexoraBrand hover:bg-nexoraBrand/10"
+                    >
+                      <Camera className="h-4 w-4" />
+                    </IconButton>
+                  </div>
                   {searchError && (
                     <p className={fieldErrorClass}>{searchError}</p>
                   )}
@@ -535,6 +557,13 @@ function AddStaffModal({
           </div>
         )}
       </div>
+
+      <StaffQrScannerModal
+        open={showScanner}
+        scanTarget="staff"
+        onClose={() => setShowScanner(false)}
+        onScan={handleQrScanResult}
+      />
     </div>
   )
 }
