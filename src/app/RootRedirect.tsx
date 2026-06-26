@@ -53,6 +53,15 @@ export default function RootRedirect() {
       return
     }
 
+    // Bare ?ref=CODE (no action/flow) → send to /register?ref=CODE
+    const refCode = searchParams.get('ref')
+    if (!action && refCode) {
+      const params = new URLSearchParams()
+      params.set('ref', refCode)
+      navigate(`/register?${params.toString()}`, { replace: true })
+      return
+    }
+
     setIsProcessingDeepLink(false)
   }, [searchParams, navigate, t])
 

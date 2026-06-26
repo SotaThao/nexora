@@ -24,7 +24,7 @@ import { useCompletePersonalOnboarding } from '../../../data/hooks/usePersonalOn
 import { useCreateStaffProfile } from '../../../data/hooks/useProfileSettings'
 import { buildUpdateStaffProfileDto } from '../../../utils/mapStaffProfileView'
 
-export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onKybSuccess = () => {}, isRedirectedFromSession, initialStep = 0, initialRole = 'personal', resumeOtpVerification = false, autoSendVerificationOnResume = false, resumeEmail = '', resumePassword = '', resumeRole = null }) {
+export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onKybSuccess = () => {}, isRedirectedFromSession, initialStep = 0, initialRole = 'personal', resumeOtpVerification = false, autoSendVerificationOnResume = false, resumeEmail = '', resumePassword = '', resumeRole = null, initialRefCode = '' }) {
   const { t, currentLanguage, setLanguage, renderLabel } = useTranslation()
   const replaceAllPendingAccountsMutation = useReplaceAllPendingAccounts()
   const pendingAccountsQuery = usePendingAccounts()
@@ -43,7 +43,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const [confirmEmail, setConfirmEmail] = useState(resumeEmail || '')
   const [password, setPassword] = useState(resumePassword || '')
   const [showPassword, setShowPassword] = useState(false)
-  const [referralCode, setReferralCode] = useState('')
+  const [referralCode, setReferralCode] = useState(initialRefCode)
   const [fullName, setFullName] = useState('')
   const [termsAccepted, setTermsAccepted] = useState(true)
   const [showTermsModal, setShowTermsModal] = useState(false)
@@ -699,6 +699,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     setShowPassword,
     referralCode,
     setReferralCode,
+    initialRefCode,
     fullName,
     setFullName,
     termsAccepted,

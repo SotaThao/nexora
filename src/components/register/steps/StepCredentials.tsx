@@ -9,6 +9,7 @@ export default function StepCredentials(props) {
     password, setPassword,
     showPassword, setShowPassword,
     referralCode, setReferralCode,
+    refCodeReadOnly,
     errors, setErrors,
     isSubmitting,
     ssoEmail,
@@ -305,9 +306,15 @@ export default function StepCredentials(props) {
               <input
                 type="text"
                 placeholder={t('register.referral_code_placeholder')}
-                className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
+                readOnly={refCodeReadOnly}
+                disabled={refCodeReadOnly}
+                className={`w-full border rounded-lg px-4 py-2.5 text-sm focus:outline-none transition-all ${
+                  refCodeReadOnly
+                    ? 'bg-blue-50/50 border-nexoraBorder text-nexoraSubtle cursor-not-allowed'
+                    : 'bg-nexoraCanvas border-nexoraBorder focus:border-nexoraBrand focus:bg-white text-nexoraText'
+                }`}
                 value={referralCode}
-                onChange={(e) => setReferralCode(e.target.value)}
+                onChange={(e) => { if (!refCodeReadOnly) setReferralCode(e.target.value) }}
               />
             </div>
 
