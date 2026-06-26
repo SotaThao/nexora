@@ -94,6 +94,7 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
   const [editingTpId, setEditingTpId] = useState<any | null>(null)
   const [editingTpName, setEditingTpName] = useState('')
   const [editingTpType, setEditingTpType] = useState('Table QR')
+  const [editingTpNameError, setEditingTpNameError] = useState('')
 
   // QR preview modal state
   const [previewingTp, setPreviewingTp] = useState<any | null>(null)
@@ -522,13 +523,16 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
     setEditingTpId(tp.id)
     setEditingTpName(tp.name)
     setEditingTpType(tp.type)
+    setEditingTpNameError('')
   }
 
   // Step 2: Save Edited Touch Point
   const handleSaveTouchpoint = (id) => {
     if (!editingTpName.trim()) {
+      setEditingTpNameError('setup.errors.tp_name_required')
       return
     }
+    setEditingTpNameError('')
     setTouchPoints(prev => prev.map(tp => {
       if (tp.id === id) {
         const updated = {
@@ -620,6 +624,7 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
     setEditingTpId,
     editingTpName,
     setEditingTpName,
+    editingTpNameError,
     editingTpType,
     setEditingTpType,
     previewingTp,
