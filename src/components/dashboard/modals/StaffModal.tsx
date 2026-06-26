@@ -390,7 +390,7 @@ function StaffModal({
                       onPick={handleAvatarPick}
                     >
                       <Upload className="h-4 w-4 text-nexoraBrand" />
-                      Upload photo
+                      {t('common.upload_photo')}
                     </ImageFileInput>
                   )}
                   {(form.nexoraStaffId || form.id) && (
