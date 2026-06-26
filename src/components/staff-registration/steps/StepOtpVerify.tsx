@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Eye, EyeOff, X, Loader2 } from 'lucide-react'
 import { renderLabel } from '../../../contexts/LanguageContext'
+import enLocale from '../../../locales/en.json'
+import viLocale from '../../../locales/vi.json'
 
 export default function StepOtpVerify({
   showOtpInput,
@@ -287,23 +289,19 @@ export default function StepOtpVerify({
       )}
       <TermsModal
         open={showTermsModal}
-        currentLanguage={currentLanguage}
         onClose={() => setShowTermsModal(false)}
-        onAccept={() => {
-          setTermsAccepted(true)
-          setRegErrors(prev => ({ ...prev, terms: '' }))
-          setShowTermsModal(false)
-        }}
         modalType={modalType}
         t={t}
+        currentLanguage={currentLanguage}
       />
     </>
   )
 }
 
 // Terms & Conditions Modal Overlay
-function TermsModal({ open, currentLanguage, onClose, onAccept, modalType, t }) {
-  const legalSections = t(`register.legal.${modalType}.sections`)
+function TermsModal({ open, onClose, modalType, t, currentLanguage }) {
+  const dict = currentLanguage === 'vi' ? viLocale : enLocale
+  const legalSections = dict.register.legal[modalType as 'privacy' | 'terms']?.sections ?? []
 
   if (!open) return null
   return (
@@ -338,20 +336,13 @@ function TermsModal({ open, currentLanguage, onClose, onAccept, modalType, t }) 
         </div>
 
         {/* Footer action buttons */}
-        <div className="flex justify-end gap-3 border-t border-nexoraRule pt-4 mt-auto">
+        <div className="flex justify-end border-t border-nexoraRule pt-4 mt-auto">
           <button
             type="button"
             onClick={onClose}
             className="px-4 py-2 border border-nexoraBorder text-nexoraMuted rounded-xl font-bold hover:bg-nexoraSurfaceMuted transition"
           >
             {t('components.staff_registration.steps.StepOtpVerify.close')}
-          </button>
-          <button
-            type="button"
-            onClick={onAccept}
-          className="px-5 py-2 bg-nexoraText hover:bg-nexoraText/90 text-white rounded-xl font-bold transition shadow-sm"
-          >
-            {t('components.staff_registration.steps.StepOtpVerify.iAccept')}
           </button>
         </div>
       </div>

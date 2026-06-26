@@ -101,7 +101,7 @@ export default function RegisterWizard() {
   const form = useRegisterForm(formProps)
   const {
     currentStep, role, currentLanguage, setLanguage, t, getStepName,
-    showTermsModal, setShowTermsModal, setTermsAccepted, setErrors,
+    showTermsModal, setShowTermsModal, setErrors,
     modalType,
     editingMethod, setEditingMethod,
     editValue, setEditValue,
@@ -193,13 +193,7 @@ export default function RegisterWizard() {
       {/* Terms & Conditions Modal Overlay */}
       <TermsModal
         open={showTermsModal}
-        currentLanguage={currentLanguage}
         onClose={() => setShowTermsModal(false)}
-        onAccept={() => {
-          setTermsAccepted(true)
-          setErrors(prev => ({ ...prev, terms: '' }))
-          setShowTermsModal(false)
-        }}
         modalType={modalType}
       />
 

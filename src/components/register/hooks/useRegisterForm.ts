@@ -832,8 +832,6 @@ export function useRegisterForm({
     setReferralCode,
     fullName,
     setFullName,
-    termsAccepted,
-    setTermsAccepted,
     showTermsModal,
     setShowTermsModal,
     modalType,
