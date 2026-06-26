@@ -68,7 +68,7 @@ export default function SetupWizard() {
     touchPoints,
     newTouchpoint, setNewTouchpoint,
     editingTpId, setEditingTpId,
-    editingTpName, setEditingTpName,
+    editingTpName, setEditingTpName, editingTpNameError,
     editingTpType, setEditingTpType,
     previewingTp, setPreviewingTp,
     payoutSetupOpen, setPayoutSetupOpen,
@@ -219,6 +219,7 @@ export default function SetupWizard() {
                 setEditingTpId={setEditingTpId}
                 editingTpName={editingTpName}
                 setEditingTpName={setEditingTpName}
+                editingTpNameError={editingTpNameError}
                 editingTpType={editingTpType}
                 setEditingTpType={setEditingTpType}
                 errors={errors}
