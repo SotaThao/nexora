@@ -23,7 +23,7 @@ import {
 import { getApiErrorCode } from '../../../types/domain'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { getDefaultDialCode } from '../../CountryCodeSelect'
-import { isValidEmail, isValidHttpUrl } from '../../../utils/validation'
+import { isValidEmail, isValidHttpUrl, isValidPhone } from '../../../utils/validation'
 
 export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, hasKyb }) {
   const { currentLanguage, setLanguage, t } = useTranslation()
@@ -224,7 +224,11 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
       // Store Info validation
       if (!businessInfo.name.trim()) newErrors.name = 'setup.errors.name_required'
       if (!businessInfo.address.trim()) newErrors.address = 'setup.errors.address_required'
-      if (!businessInfo.phone.trim()) newErrors.phone = 'setup.errors.phone_required'
+      if (!businessInfo.phone.trim()) {
+        newErrors.phone = 'setup.errors.phone_required'
+      } else if (!isValidPhone(businessInfo.phone)) {
+        newErrors.phone = 'setup.errors.staff_phone_invalid'
+      }
 
       if (businessInfo.website?.trim() && !isValidHttpUrl(businessInfo.website)) {
         newErrors.website = 'setup.errors.url_protocol'
@@ -249,7 +253,11 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
     }
 
     if (currentStep === 2) {
-      // Staff has been removed; no validation needed for step 2 right now
+      if (!businessInfo.phone.trim()) {
+        newErrors.phone = 'setup.errors.phone_required'
+      } else if (!isValidPhone(businessInfo.phone)) {
+        newErrors.phone = 'setup.errors.staff_phone_invalid'
+      }
     }
 
     setErrors(newErrors)
@@ -333,7 +341,15 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
   }
 
   const handleNext = async () => {
-    if (!validateStep()) return
+    const hasPhoneError =
+      !businessInfo.phone.trim() || !isValidPhone(businessInfo.phone)
+
+    if (!validateStep()) {
+      if (hasPhoneError && currentStep === 2) {
+        setCurrentStep(1)
+      }
+      return
+    }
 
     setIsStepSaving(true)
     try {

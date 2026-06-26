@@ -1,7 +1,12 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Upload, X, ArrowLeft, ArrowRight } from 'lucide-react'
 import ImageFileInput from '../../ui/ImageFileInput'
-import CountryCodeSelect, { formatNationalNumber, isPhoneValid } from '../../CountryCodeSelect'
+import CountryCodeSelect, { formatNationalNumber } from '../../CountryCodeSelect'
+import { getPhoneFieldError, getRequiredFieldError } from '../../../utils/onboardingFieldValidation'
+
+function shouldValidateLive(touched: boolean, currentError?: string) {
+  return touched || Boolean(currentError)
+}
 
 export default function StepProfileSetup({
   nickname, setNickname,
@@ -17,10 +22,51 @@ export default function StepProfileSetup({
   setCurrentStep,
   handleProfileSetupSubmit,
   errors,
+  setErrors,
   t,
   currentLanguage,
   renderLabel,
 }) {
+  const [touched, setTouched] = useState({
+    fullName: false,
+    nickname: false,
+    phone: false,
+  })
+
+  const patchError = (field: string, message: string) => {
+    setErrors((prev) => {
+      const next = { ...prev }
+      if (message) next[field] = message
+      else delete next[field]
+      return next
+    })
+  }
+
+  const syncFullNameError = (value: string, force = false) => {
+    if (!shouldValidateLive(touched.fullName, errors?.fullName) && !force) return
+    patchError(
+      'fullName',
+      getRequiredFieldError(value, 'setup.errors.staff_name_required'),
+    )
+  }
+
+  const syncNicknameError = (value: string, force = false) => {
+    if (!shouldValidateLive(touched.nickname, errors?.nickname) && !force) return
+    patchError(
+      'nickname',
+      getRequiredFieldError(value, 'setup.errors.staff_nickname_required'),
+    )
+  }
+
+  const syncPhoneError = (value: string, force = false) => {
+    if (!shouldValidateLive(touched.phone, errors?.phone) && !force) return
+    const hasDigits = value.replace(/\D/g, '').length > 0
+    patchError(
+      'phone',
+      getPhoneFieldError(value, { requireValue: !hasDigits || force }),
+    )
+  }
+
   return (
     <div className="p-6 sm:p-8 animate-fadeIn max-w-xl mx-auto">
       <div className="text-center">
@@ -84,14 +130,27 @@ export default function StepProfileSetup({
             <input
               type="text"
               placeholder={t('components.register.steps.StepProfileSetup.phFullName')}
-              required
-              className="w-full bg-white border border-nexoraBorder focus:border-nexoraBrand rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
+              className={`w-full bg-white border rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all ${
+                errors?.fullName
+                  ? 'border-red-300 focus:border-red-500'
+                  : 'border-nexoraBorder focus:border-nexoraBrand'
+              }`}
               value={fullName}
               onChange={(e) => {
-                setFullName(e.target.value)
-                if (!nickname) setNickname(e.target.value.split(' ')[0] + '.')
+                const nextValue = e.target.value
+                setFullName(nextValue)
+                if (!nickname) setNickname(nextValue.split(' ')[0] + '.')
+                setTouched((prev) => ({ ...prev, fullName: true }))
+                syncFullNameError(nextValue, true)
+              }}
+              onBlur={() => {
+                setTouched((prev) => ({ ...prev, fullName: true }))
+                syncFullNameError(fullName, true)
               }}
             />
+            {errors?.fullName && (
+              <span className="text-[10px] text-red-500 mt-1 block">{t(errors.fullName)}</span>
+            )}
           </div>
 
           {/* Display Nickname */}
@@ -102,11 +161,26 @@ export default function StepProfileSetup({
             <input
               type="text"
               placeholder={t('components.register.steps.StepProfileSetup.phNickname')}
-              required
-              className="w-full bg-white border border-nexoraBorder focus:border-nexoraBrand rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
+              className={`w-full bg-white border rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all ${
+                errors?.nickname
+                  ? 'border-red-300 focus:border-red-500'
+                  : 'border-nexoraBorder focus:border-nexoraBrand'
+              }`}
               value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
+              onChange={(e) => {
+                const nextValue = e.target.value
+                setNickname(nextValue)
+                setTouched((prev) => ({ ...prev, nickname: true }))
+                syncNicknameError(nextValue, true)
+              }}
+              onBlur={() => {
+                setTouched((prev) => ({ ...prev, nickname: true }))
+                syncNicknameError(nickname, true)
+              }}
             />
+            {errors?.nickname && (
+              <span className="text-[10px] text-red-500 mt-1 block">{t(errors.nickname)}</span>
+            )}
           </div>
         </div>
 
@@ -121,21 +195,37 @@ export default function StepProfileSetup({
                 value={phoneParsed.countryCode}
                 onChange={(newCode) => {
                   const reFormatted = formatNationalNumber(phoneParsed.nationalNumber, newCode)
-                  setPhone(`${newCode} ${reFormatted}`.trim())
+                  const nextPhone = `${newCode} ${reFormatted}`.trim()
+                  setPhone(nextPhone)
+                  setTouched((prev) => ({ ...prev, phone: true }))
+                  syncPhoneError(nextPhone, true)
                 }}
               />
               <input
                 type="text"
-                className="h-10 w-full bg-white border border-l-0 border-nexoraBorder focus:border-nexoraBrand rounded-r-lg px-4 text-sm text-nexoraText focus:outline-none transition-all min-w-0"
+                className={`h-10 w-full bg-white border border-l-0 rounded-r-lg px-4 text-sm text-nexoraText focus:outline-none transition-all min-w-0 ${
+                  errors?.phone
+                    ? 'border-red-300 focus:border-red-500'
+                    : 'border-nexoraBorder focus:border-nexoraBrand'
+                }`}
                 value={formatNationalNumber(phoneParsed.nationalNumber, phoneParsed.countryCode)}
                 onChange={(e) => {
                   const formatted = formatNationalNumber(e.target.value, phoneParsed.countryCode)
-                  setPhone(`${phoneParsed.countryCode} ${formatted}`.trim())
+                  const nextPhone = `${phoneParsed.countryCode} ${formatted}`.trim()
+                  setPhone(nextPhone)
+                  setTouched((prev) => ({ ...prev, phone: true }))
+                  syncPhoneError(nextPhone, true)
+                }}
+                onBlur={() => {
+                  setTouched((prev) => ({ ...prev, phone: true }))
+                  syncPhoneError(phone, true)
                 }}
                 placeholder={t('components.register.steps.StepProfileSetup.phPhone')}
-                required
               />
             </div>
+            {errors?.phone && (
+              <span className="text-[10px] text-red-500 mt-1 block">{t(errors.phone)}</span>
+            )}
           </div>
 
           {/* Email Address (View-Only) */}
@@ -190,8 +280,7 @@ export default function StepProfileSetup({
           </button>
           <button
             type="submit"
-            disabled={!fullName.trim() || !nickname.trim() || !phone.trim() || !isPhoneValid(phone)}
-            className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all disabled:opacity-50"
+            className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all"
           >
             {t('common.next')} <ArrowRight className="w-4 h-4" />
           </button>
