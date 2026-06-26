@@ -19,33 +19,74 @@ import { formatTransactionDateTime, formatCurrency } from './dashboard/utils'
 import { buildChartPoints, getBezierPath } from './dashboard/overview/chartUtils'
 import { useMerchantStaffStats } from '../data/hooks/useMerchantStaff'
 
+const RANGE_DAY_OFFSETS = {
+  '7 Days': 6,
+  '30 Days': 29,
+  '90 Days': 89,
+  '180 Days': 179,
+  '365 Days': 364,
+}
 
-function formatIsoDate(date) {
-  return date.toISOString().split('T')[0]
+function toLocalIsoDate(date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function getLocalDateRange(dayOffset) {
+  const end = new Date()
+  const start = new Date()
+  start.setDate(end.getDate() - dayOffset)
+  return {
+    startDate: toLocalIsoDate(start),
+    endDate: toLocalIsoDate(end),
+  }
+}
+
+function localDateBoundsToApiRange(startDate, endDate) {
+  const [startYear, startMonth, startDay] = startDate.split('-').map(Number)
+  const [endYear, endMonth, endDay] = endDate.split('-').map(Number)
+
+  return {
+    dateFrom: new Date(startYear, startMonth - 1, startDay, 0, 0, 0, 0).toISOString(),
+    dateTo: new Date(endYear, endMonth - 1, endDay, 23, 59, 59, 999).toISOString(),
+  }
+}
+
+function parseReviewDateTime(value) {
+  const raw = String(value ?? '').trim()
+  if (!raw) return null
+
+  if (/[zZ]$/.test(raw) || /[+-]\d{2}:\d{2}$/.test(raw)) {
+    const date = new Date(raw)
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+
+  if (raw.includes(' ') && !raw.includes('T')) {
+    const date = new Date(`${raw.replace(' ', 'T')}Z`)
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}T/.test(raw)) {
+    const date = new Date(`${raw}Z`)
+    if (!Number.isNaN(date.getTime())) return date
+  }
+
+  const date = new Date(raw)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+function isWithinLocalDateRange(value, startDate, endDate) {
+  const date = parseReviewDateTime(value)
+  if (!date) return false
+  const localDate = toLocalIsoDate(date)
+  return localDate >= startDate && localDate <= endDate
 }
 
 function getRangeDates(range) {
-  const end = new Date()
-  const start = new Date()
-
-  if (range === '7 Days') {
-    start.setDate(end.getDate() - 6)
-  } else if (range === '30 Days') {
-    start.setDate(end.getDate() - 29)
-  } else if (range === '90 Days') {
-    start.setDate(end.getDate() - 89)
-  } else if (range === '180 Days') {
-    start.setDate(end.getDate() - 179)
-  } else if (range === '365 Days') {
-    start.setDate(end.getDate() - 364)
-  } else {
-    start.setDate(end.getDate() - 6)
-  }
-
-  return {
-    startDate: formatIsoDate(start),
-    endDate: formatIsoDate(end),
-  }
+  const offset = RANGE_DAY_OFFSETS[range] ?? 6
+  return getLocalDateRange(offset)
 }
 
 function staffRecordMatchesMember(member, record) {
@@ -147,10 +188,10 @@ export default function StaffDetailView({
   const [startDate, setStartDate] = useState(initialRange.startDate)
   const [endDate, setEndDate] = useState(initialRange.endDate)
 
-  const statsDateRange = useMemo(() => ({
-    dateFrom: `${startDate}T00:00:00.000Z`,
-    dateTo: `${endDate}T23:59:59.999Z`,
-  }), [startDate, endDate])
+  const statsDateRange = useMemo(
+    () => localDateBoundsToApiRange(startDate, endDate),
+    [startDate, endDate],
+  )
 
   const {
     data: staffStats,
@@ -190,15 +231,13 @@ export default function StaffDetailView({
     const staffTx = transactions.filter((tx) => staffRecordMatchesMember(staffMember, tx))
     const staffReviews = reviews.filter((rev) => staffRecordMatchesMember(staffMember, rev))
 
-    const staffTxFiltered = staffTx.filter((tx) => {
-      const rawDate = tx.dateTime?.split('T')[0] || tx.dateTime?.split(' ')[0] || ''
-      return rawDate >= startDate && rawDate <= endDate
-    })
+    const staffTxFiltered = staffTx.filter((tx) =>
+      isWithinLocalDateRange(tx.dateTime, startDate, endDate),
+    )
 
-    const staffReviewsFiltered = staffReviews.filter((rev) => {
-      const rawDate = rev.createdAt?.split('T')[0] || rev.date?.split(',')[0] || rev.date || ''
-      return rawDate >= startDate && rawDate <= endDate
-    })
+    const staffReviewsFiltered = staffReviews.filter((rev) =>
+      isWithinLocalDateRange(rev.createdAt || rev.date, startDate, endDate),
+    )
 
     const totalTips = staffTxFiltered.reduce(
       (sum, tx) => (tx.status === 'Success' || tx.status === 'Confirmed' ? sum + tx.amount : sum),
@@ -896,7 +935,7 @@ export default function StaffDetailView({
                     {rev.comment}
                   </p>
                   <p className="text-[10px] text-nexoraSubtle font-medium">
-                    Logged: {rev.date}
+                    Logged: {formatTransactionDateTime(rev.createdAt || rev.date, currentLanguage)}
                   </p>
                 </div>
 
