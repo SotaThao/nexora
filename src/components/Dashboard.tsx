@@ -18,6 +18,11 @@ import { useKybGate } from '../contexts/KybGateContext'
 import { useStaffManagement } from './dashboard/hooks/useStaffManagement'
 import { useTouchpoints, useCreateTouchpoint, useDeleteTouchpoint, useToggleTouchpoint, useDownloadTouchpointQr } from '../data/hooks/useMerchantTouchpoints'
 import { useMerchantStaff, StatusFilter } from '../data/hooks/useMerchantStaff'
+import { useRefetchMerchantMenuQueries } from '../data/hooks/useRefetchOnMenuChange'
+import {
+  isMerchantConfirmablePending,
+  isPendingStaffMember,
+} from '../utils/merchantStaffPending'
 import { useChartDateRange } from '../hooks/useChartDateRange'
 import { useTransactions } from '../data/hooks/useTransactions'
 import { useDashboardOverview, useDashboardTipsChart, useDashboardOverviewCurrentMonth, useDashboardOverviewCurrentYear } from '../data/hooks/useDashboard'
@@ -99,6 +104,7 @@ export default function Dashboard({
   const needsNotificationsList = isNotiDropdownOpen
   const needsTransactions =
     hasSearchQuery ||
+    activeMenu === 'overview' ||
     ['tips', 'reports', 'analytics'].includes(activeMenu)
   const needsDashboardReviews =
     activeMenu === 'overview' ||
@@ -109,6 +115,7 @@ export default function Dashboard({
   const isStaffTab = activeMenu === 'staff'
   const isReviewsTab = activeMenu === 'reviews'
   const isTouchpointsTab = activeMenu === 'touchpoints'
+  useRefetchMerchantMenuQueries(activeMenu)
   const staffPagination = usePagination({ pageSize: DEFAULT_PAGE_SIZE })
   const reviewsPagination = usePagination({ pageSize: DEFAULT_PAGE_SIZE })
 
@@ -162,8 +169,14 @@ export default function Dashboard({
     pageNumber: isStaffTab ? staffPagination.pageNumber : 1,
     pageSize: isStaffTab ? staffPagination.pageSize : STAFF_FILTER_LIST_PAGE_SIZE,
   })
-  const { data: pendingStaffPage } = useMerchantStaff({
+  const { data: pendingStatusPage } = useMerchantStaff({
     enabled: needsPendingStaffList,
+    statusFilter: StatusFilter.Pending,
+    pageNumber: 1,
+    pageSize: 50,
+  })
+  const { data: waitingStaffPage } = useMerchantStaff({
+    enabled: needsPendingStaffList && activeMenu === 'staff',
     statusFilter: StatusFilter.WaitingStaffAcceptance,
     pageNumber: 1,
     pageSize: 50,
@@ -391,16 +404,22 @@ export default function Dashboard({
     )
   }, [staff, searchQuery])
 
+  const overviewPendingStaff = useMemo(() => {
+    if (!needsPendingStaffList) return []
+    return (pendingStatusPage?.items ?? []).filter(isMerchantConfirmablePending)
+  }, [needsPendingStaffList, pendingStatusPage])
+
   const pendingStaff = useMemo(() => {
-    const statusSet = new Set([
-      'Pending Acceptance',
-      'Pending',
-      'Pending Setup',
-      'WaitingStaffAcceptance',
-    ])
-    const mergedSource = needsPendingStaffList
-      ? [...(pendingStaffPage?.items ?? []), ...staff]
-      : staff
+    if (!needsPendingStaffList) return []
+
+    const mergedSource =
+      activeMenu === 'overview'
+        ? overviewPendingStaff
+        : [
+            ...(pendingStatusPage?.items ?? []),
+            ...(waitingStaffPage?.items ?? []),
+          ]
+
     const deduped = mergedSource.filter((member, index, arr) => {
       const memberId = member.id || member.linkId || member.staffLinkId || member.inviteId
       if (!memberId) return true
@@ -410,12 +429,14 @@ export default function Dashboard({
       }) === index
     })
 
-    return deduped.filter(
-      (member) =>
-        statusSet.has(member.status) &&
-        (member.itemType === 'link' || member.itemType === 'invite'),
-    )
-  }, [needsPendingStaffList, pendingStaffPage, staff])
+    return deduped.filter(isPendingStaffMember)
+  }, [
+    activeMenu,
+    needsPendingStaffList,
+    overviewPendingStaff,
+    pendingStatusPage,
+    waitingStaffPage,
+  ])
 
   const filteredTouchpoints = touchpoints
 

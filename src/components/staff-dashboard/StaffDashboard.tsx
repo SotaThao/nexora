@@ -16,6 +16,7 @@ import StaffNotifications from './views/StaffNotifications'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { useSessionRole } from '../../auth/useSessionRole'
 import { useStaffPaymentMethods } from '../../data/hooks/useStaffPaymentMethods'
+import { useRefetchStaffMenuQueries } from '../../data/hooks/useRefetchOnMenuChange'
 const SCREENS = {
   home: StaffHome,
   qr: StaffMyQR,
@@ -35,6 +36,7 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
   const [showPayoutBanner, setShowPayoutBanner] = useState(false)
   
   const activeScreen = location.pathname.split('/')[2] || 'home'
+  useRefetchStaffMenuQueries(activeScreen)
   
   const handleNavigate = (screen, params?: Record<string, string>) => {
     const path = screen === 'home' ? '/staff' : `/staff/${screen}`

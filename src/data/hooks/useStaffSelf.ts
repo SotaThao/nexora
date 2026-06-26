@@ -2,7 +2,7 @@
  * useStaffSelf — TanStack Query hooks for the staff self-service domain.
  */
 import { useMemo } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import staffSelfRepository from '../repositories/staffSelf'
 import { useSessionRole } from '../../auth/useSessionRole'
@@ -107,6 +107,7 @@ export function useStaffDashboardSummary({ enabled: callerEnabled = true } = {})
     queryKey: qk.staffDashboardSummary(),
     queryFn: () => staffSelfRepository.getDashboardSummary(),
     enabled: isStaff && callerEnabled,
+    refetchOnMount: true,
   })
 }
 
@@ -120,6 +121,7 @@ export function useStaffReviews({
     queryKey: qk.staffReviews({ pageNumber, pageSize }),
     queryFn: () => staffSelfRepository.getReviews({ pageNumber, pageSize }),
     enabled: isStaff && callerEnabled,
+    refetchOnMount: true,
   })
 }
 
@@ -138,6 +140,7 @@ export function useStaffTips({
     queryKey: qk.staffTips(filters),
     queryFn: () => staffSelfRepository.getTips(filters),
     enabled: isStaff && callerEnabled,
+    refetchOnMount: true,
   })
 }
 
@@ -146,20 +149,45 @@ export function useConfirmStaffTipsReceipt() {
   const { showToast } = useNotification()
   const { t } = useTranslation()
 
-  return useMutation<StaffTipsConfirmReceiptResult, Error, string[]>({
+  return useMutation<
+    StaffTipsConfirmReceiptResult,
+    Error,
+    string[],
+    { previousTips: ReturnType<QueryClient['getQueriesData']> }
+  >({
     mutationFn: (tipIds) => staffSelfRepository.confirmTipsReceipt(tipIds),
-    onSuccess: async (result) => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['staffTips'] }),
-        queryClient.invalidateQueries({ queryKey: qk.staffDashboardSummary() }),
-        queryClient.refetchQueries({ queryKey: ['staffTips'] }),
-        queryClient.refetchQueries({ queryKey: qk.staffDashboardSummary() }),
-      ])
-
+    onMutate: async (tipIds) => {
+      await queryClient.cancelQueries({ queryKey: ['staffTips'] })
+      const previousTips = queryClient.getQueriesData<StaffTipsPage>({ queryKey: ['staffTips'] })
+      const ids = new Set(tipIds)
+      queryClient.setQueriesData<StaffTipsPage>(
+        { queryKey: ['staffTips'] },
+        (current) => {
+          if (!current?.items?.length) return current
+          const items = current.items.filter((tip) => !ids.has(tip.id))
+          const removed = current.items.length - items.length
+          if (removed === 0) return current
+          return {
+            ...current,
+            items,
+            totalCount: Math.max(0, (current.totalCount ?? current.items.length) - removed),
+          }
+        },
+      )
+      return { previousTips }
+    },
+    onError: (err, _tipIds, context) => {
+      context?.previousTips?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data)
+      })
+      showToast(err.message || t('staff_dashboard.home.confirm_failed'), 'error')
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: ['staffTips'] })
+      void queryClient.invalidateQueries({ queryKey: qk.staffDashboardSummary() })
+    },
+    onSuccess: (result) => {
       if (result.failedIds.length > 0) {
-        // All requested tips failed (e.g. backend rejected every id) — surface a
-        // clear error instead of the softer "partial" warning. See BE gap doc:
-        // API/jun 2026/backend-gaps/staff-confirm-receipt-gap-260622.md
         if (result.confirmedCount === 0) {
           showToast(t('staff_dashboard.home.confirm_failed'), 'error')
           return
@@ -173,9 +201,6 @@ export function useConfirmStaffTipsReceipt() {
       }
 
       showToast(t('staff_dashboard.home.confirm_success'), 'success')
-    },
-    onError: (err) => {
-      showToast(err.message || t('staff_dashboard.home.confirm_failed'), 'error')
     },
   })
 }

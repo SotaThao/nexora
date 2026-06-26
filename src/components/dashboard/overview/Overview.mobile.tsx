@@ -19,6 +19,7 @@ import { downloadQrCode } from '../../../utils/qrUtils'
 import { buildQrImageUrl, toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
 import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import { isAwaitingShopConfirmation } from '../utils'
+import { isMerchantConfirmablePending } from '../../../utils/merchantStaffPending'
 import SetupGuideBanner from './SetupGuideBanner'
 
 function twoInitials(name) {
@@ -237,8 +238,11 @@ function Overview({
   const rating = Number(metrics.averageRating || 0)
   const totalReviews = Number(metrics.totalReviews || 0)
 
-  // Pending confirmations list (real pending staff/invites)
-  const displayPending = (pendingStaff || []).slice(0, 3).map((item, i) => ({
+  // Pending confirmations — only link requests awaiting merchant approval (pending state).
+  const displayPending = (pendingStaff || [])
+    .filter(isMerchantConfirmablePending)
+    .slice(0, 3)
+    .map((item, i) => ({
     id: item.id ?? i,
     name: item.fullName || item.invitedEmail || item.invitedPhone || k('staff_member'),
     via: item.itemType === 'link' ? k('via_link_request') : k('via_invite'),
@@ -264,8 +268,6 @@ function Overview({
       fullName: m.fullName,
     }
   })
-
-  const activeTouchpoints = (touchpoints || []).slice(0, 3)
 
   return (
     <div className="space-y-5 pb-8">
@@ -492,25 +494,6 @@ function Overview({
                   <p className="truncate text-[13px] text-nexoraMuted">{m.sub}</p>
                 </div>
                 <StatusPill kind={m.kind} label={m.label} />
-              </div>
-            ))}
-          </div>
-        )}
-      </Panel>
-
-      {/* ── QR Performance ───────────────────────────────────────────────── */}
-      <Panel title={k('qr_performance_title')} action={k('view')} onAction={() => onNavigateMenu?.('touchpoints')}>
-        {activeTouchpoints.length === 0 ? (
-          <p className="py-4 text-center text-[13px] text-nexoraSubtle">{k('no_qr')}</p>
-        ) : (
-          <div className="divide-y divide-nexoraBorder">
-            {activeTouchpoints.map((tp) => (
-              <div key={tp.id || tp.slug} className="flex items-center justify-between gap-3 py-3">
-                <div className="min-w-0">
-                  <p className="truncate text-[15px] font-bold text-nexoraText">{tp.name || tp.slug}</p>
-                  <p className="truncate text-[13px] text-nexoraMuted">{tp.type || k('touchpoint')}</p>
-                </div>
-                <StatusPill kind="active" label={t('common.active')} />
               </div>
             ))}
           </div>
