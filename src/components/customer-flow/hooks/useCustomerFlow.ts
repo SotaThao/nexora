@@ -641,7 +641,8 @@ export default function useCustomerFlow() {
         comment: cleanComment || (rating >= 4 ? 'Good service' : 'Needs improvement'),
       })
       setCurrentReviewId(result?.id || result?.reviewId)
-      setStep(rating >= 4 ? 'google_yelp_review' : 'final_done')
+      const hasReviewLinks = Boolean(reviewLinks.googleReview || reviewLinks.yelpReview)
+      setStep(rating >= 4 && hasReviewLinks ? 'google_yelp_review' : 'final_done')
     } catch (err) {
       logger.error('Failed to submit review', err)
       showToast(t('errors.generic'), 'error')

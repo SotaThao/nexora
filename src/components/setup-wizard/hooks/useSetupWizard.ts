@@ -202,7 +202,7 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
       setBusinessInfo(prev => ({ ...prev, logo: finalUrl }))
       if (errors.logo) setErrors(prev => ({ ...prev, logo: '' }))
     } catch (err: unknown) {
-      setErrors(prev => ({ ...prev, logo: t(getErrorI18nKey(getApiErrorCode(err, 'IMAGE_UPLOAD_FAILED'))) }))
+      setErrors(prev => ({ ...prev, logo: getErrorI18nKey(getApiErrorCode(err, 'IMAGE_UPLOAD_FAILED')) }))
     }
   }
 
@@ -221,29 +221,29 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
 
     if (currentStep === 1) {
       // Store Info validation
-      if (!businessInfo.name.trim()) newErrors.name = t('setup.errors.name_required')
-      if (!businessInfo.address.trim()) newErrors.address = t('setup.errors.address_required')
-      if (!businessInfo.phone.trim()) newErrors.phone = t('setup.errors.phone_required')
+      if (!businessInfo.name.trim()) newErrors.name = 'setup.errors.name_required'
+      if (!businessInfo.address.trim()) newErrors.address = 'setup.errors.address_required'
+      if (!businessInfo.phone.trim()) newErrors.phone = 'setup.errors.phone_required'
 
       if (businessInfo.website?.trim() && !isValidHttpUrl(businessInfo.website)) {
-        newErrors.website = t('setup.errors.url_protocol')
+        newErrors.website = 'setup.errors.url_protocol'
       }
 
       // Review Links validation (Optional)
       if (reviewLinks.googleReview?.trim() && !isValidHttpUrl(reviewLinks.googleReview)) {
-        newErrors.googleReview = t('setup.errors.url_protocol')
+        newErrors.googleReview = 'setup.errors.url_protocol'
       }
 
       if (reviewLinks.yelpReview?.trim() && !isValidHttpUrl(reviewLinks.yelpReview)) {
-        newErrors.yelpReview = t('setup.errors.url_protocol')
+        newErrors.yelpReview = 'setup.errors.url_protocol'
       }
 
       if (reviewLinks.facebookReview?.trim() && !isValidHttpUrl(reviewLinks.facebookReview)) {
-        newErrors.facebookReview = t('setup.errors.url_invalid')
+        newErrors.facebookReview = 'setup.errors.url_invalid'
       }
 
       if (reviewLinks.feedbackEmail?.trim() && !isValidEmail(reviewLinks.feedbackEmail)) {
-        newErrors.feedbackEmail = t('setup.errors.email_invalid')
+        newErrors.feedbackEmail = 'setup.errors.email_invalid'
       }
     }
 
@@ -259,9 +259,9 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
     const newErrors: LooseObject = {}
     const code = getApiErrorCode(err)
     if (code === 'BUSINESS_NAME_REQUIRED') {
-      newErrors.name = t('setup.errors.name_required')
+      newErrors.name = 'setup.errors.name_required'
     } else if (code === 'USER_NOT_MERCHANT') {
-      newErrors.submit = t('setup.errors.user_not_merchant')
+      newErrors.submit = 'setup.errors.user_not_merchant'
       setTimeout(() => {
         onBackToLogin?.()
       }, 3000)

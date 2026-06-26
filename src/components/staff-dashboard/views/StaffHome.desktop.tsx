@@ -111,25 +111,31 @@ export default function StaffHome() {
       {/* Linked businesses */}
       <section className={panel}>
         <h3 className="mb-3 text-base font-extrabold text-nexoraText">{t('staff_dashboard.home.linked_businesses')}</h3>
-        <div className="divide-y divide-nexoraBorder">
-          {linkedBusinesses.map((biz) => (
-            <div key={biz.businessStaffLinkId} className="flex items-center justify-between gap-3 py-3">
-              <div className="min-w-0">
-                <div className="truncate text-sm font-bold text-nexoraText">{biz.businessName}</div>
-                <div className="truncate text-xs text-nexoraMuted">
-                  {t('staff_dashboard.home.display_name')}: {biz.displayName}
+        {linkedBusinesses.length === 0 ? (
+          <p className="py-4 text-center text-xs text-nexoraSubtle">
+            {t('staff_dashboard.qr.no_linked_businesses')}
+          </p>
+        ) : (
+          <div className="divide-y divide-nexoraBorder">
+            {linkedBusinesses.map((biz) => (
+              <div key={biz.businessStaffLinkId} className="flex items-center justify-between gap-3 py-3">
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-bold text-nexoraText">{biz.businessName}</div>
+                  <div className="truncate text-xs text-nexoraMuted">
+                    {t('staff_dashboard.home.display_name')}: {biz.displayName}
+                  </div>
                 </div>
+                <span
+                  className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black ${
+                    biz.status === 'Active' ? 'bg-emerald-50 text-emerald-600' : 'bg-nexoraCanvas text-nexoraMuted'
+                  }`}
+                >
+                  {biz.status === 'Active' ? t('staff_dashboard.status.active') : t('staff_dashboard.status.inactive')}
+                </span>
               </div>
-              <span
-                className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black ${
-                  biz.status === 'Active' ? 'bg-emerald-50 text-emerald-600' : 'bg-nexoraCanvas text-nexoraMuted'
-                }`}
-              >
-                {biz.status === 'Active' ? t('staff_dashboard.status.active') : t('staff_dashboard.status.inactive')}
-              </span>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   )

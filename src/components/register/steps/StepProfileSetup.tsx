@@ -16,6 +16,7 @@ export default function StepProfileSetup({
   generatedStaffId,
   setCurrentStep,
   handleProfileSetupSubmit,
+  errors,
   t,
   currentLanguage,
   renderLabel,
@@ -68,6 +69,9 @@ export default function StepProfileSetup({
             <span className="text-[10px] text-nexoraSubtle">
               {t('components.register.steps.StepProfileSetup.acceptedFormatsJpgPng')}
             </span>
+            {errors?.avatar && (
+              <span className="text-[10px] text-red-500 font-medium">{t(errors.avatar)}</span>
+            )}
           </div>
         </div>
 

@@ -27,8 +27,7 @@ export const STAFF_REVIEWS_SKELETON: SkeletonBlockConfig[] = [
   { type: 'panel', rows: 4, listProps: { lines: 3 } },
 ]
 
-/** `/staff/notifications` — feed + push preference toggles. */
+/** `/staff/notifications` — notification feed. */
 export const STAFF_NOTIFICATIONS_SKELETON: SkeletonBlockConfig[] = [
   { type: 'panel', rows: 4, listProps: { lines: 2 } },
-  { type: 'panel', rows: 3, listProps: { lines: 1 } },
 ]

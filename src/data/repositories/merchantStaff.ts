@@ -285,7 +285,11 @@ export function createMerchantStaffRepository(client: HttpClient = httpClient) {
       const dto = typeof params === 'string'
         ? { staffProfileId: params }
         : params
-      await client.post(`/api/v1/merchant/staff/link-request/${encodeURIComponent(dto.staffProfileId)}`)
+      const roleAtBusiness = dto.roleAtBusiness?.trim()
+      await client.post(
+        `/api/v1/merchant/staff/link-request/${encodeURIComponent(dto.staffProfileId)}`,
+        roleAtBusiness ? { roleAtBusiness } : undefined,
+      )
     },
 
     async approveLink(linkId: string): Promise<void> {

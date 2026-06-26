@@ -103,8 +103,22 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     }
   }
 
+  const AVATAR_MAX_SIZE = 5 * 1024 * 1024
+  const AVATAR_ALLOWED_TYPES = ['image/jpeg', 'image/png']
+
   const handleAvatarFileChange = async (file: File) => {
     if (!file) return
+
+    if (!AVATAR_ALLOWED_TYPES.includes(file.type)) {
+      setErrors(prev => ({ ...prev, avatar: 'errors.image_unsupported_file_type' }))
+      return
+    }
+    if (file.size > AVATAR_MAX_SIZE) {
+      setErrors(prev => ({ ...prev, avatar: 'errors.image_file_size_exceeded_5mb' }))
+      return
+    }
+
+    setErrors(prev => ({ ...prev, avatar: undefined }))
     try {
       const uploaded = await uploadImageMutation.mutateAsync(file)
       const uploadedUrl = uploaded.imageUrl || uploaded.fileUrl || ''
@@ -113,7 +127,8 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         return
       }
     } catch (err: unknown) {
-      console.error('Failed to upload staff avatar', err)
+      logger.error('Failed to upload staff avatar', err)
+      setErrors(prev => ({ ...prev, avatar: 'errors.image_upload_failed' }))
     }
   }
 

@@ -1,4 +1,4 @@
-import { isValidPhoneNumber } from "libphonenumber-js";
+import { isPossiblePhoneNumber } from "libphonenumber-js";
 
 const value = (input: unknown) => String(input ?? "").trim();
 
@@ -8,12 +8,15 @@ export const isValidEmail = (input: unknown) =>
 export const isValidPhone = (input: unknown) => {
   const phone = value(input);
   if (!phone) return false;
-  if (phone.replace(/\D/g, "").length >= 10) return true;
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length < 7 || digits.length > 15) return false;
 
+  // Normalize thin spaces (U+2009) used by phone formatters before validation
+  const normalizedPhone = phone.replace(/ /g, " ");
   try {
-    return isValidPhoneNumber(phone);
+    return isPossiblePhoneNumber(normalizedPhone);
   } catch {
-    return false;
+    return digits.length >= 10 && digits.length <= 15;
   }
 };
 
