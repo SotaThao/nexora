@@ -1,8 +1,7 @@
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { QrCode, Copy, Check, X, Download } from 'lucide-react'
 import useSettingsForm from './settings/hooks/useSettingsForm'
 import ProfileTab from './settings/tabs/ProfileTab'
-import KybTab from './settings/tabs/KybTab'
 import { downloadQrCode, buildPublicQrImageUrl } from '../utils/qrUtils'
 import { buildAffiliateReferralUrl, getProfileReferralCode } from '../utils/affiliateReferral'
 import { useTranslation } from '../contexts/LanguageContext'
@@ -18,7 +17,6 @@ export default function SettingsView({
   verificationStatus = hasKyb ? 'kyb_approved' : 'basic'
 }) {
   const { t } = useTranslation()
-  const kybPortalRef = useRef(null)
   const form = useSettingsForm({
     setupData,
     hasKyb,
@@ -28,7 +26,6 @@ export default function SettingsView({
     onTabChange,
     onKybSuccess,
     verificationStatus,
-    openKybPortal: () => kybPortalRef.current?.openPortal(),
   })
 
   const [showQrModal, setShowQrModal] = useState(false)
@@ -63,8 +60,6 @@ export default function SettingsView({
     form.handleTabChange(tab)
   }
 
-  const cardDetails = form.getStatusCardDetails()
-
   return (
     <div className="w-full space-y-6 animate-fadeIn pb-24 select-none">
       {/* Header */}
@@ -94,12 +89,9 @@ export default function SettingsView({
         </button>
         <button
           type="button"
-          onClick={() => handleTabChange('kyb')}
-          className={`px-4 py-2 rounded-lg text-xs font-extrabold uppercase transition ${
-            form.activeTab === 'kyb'
-              ? 'bg-nexoraBrand text-white shadow-sm'
-              : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
-          }`}
+          disabled
+          aria-disabled="true"
+          className="px-4 py-2 rounded-lg text-xs font-extrabold uppercase cursor-not-allowed bg-nexoraSurfaceMuted text-nexoraMuted opacity-60"
         >
           {t('components.SettingsView.kyb')}
         </button>
@@ -164,16 +156,6 @@ export default function SettingsView({
             handleAvatarChange={form.handleAvatarChange}
             formatDOB={form.formatDOB}
             onShowQr={() => setShowQrModal(true)}
-          />
-        )}
-
-        {form.activeTab === 'kyb' && (
-          <KybTab
-            profile={form.profile}
-            cardDetails={cardDetails}
-            verificationStatus={form.effectiveVerificationStatus}
-            showToast={form.showToast}
-            portalRef={kybPortalRef}
           />
         )}
 

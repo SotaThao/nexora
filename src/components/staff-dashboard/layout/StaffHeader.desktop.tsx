@@ -216,8 +216,9 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleProfileNav('kyc')}
-                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-nexoraText transition hover:bg-nexoraCanvas"
+                  disabled
+                  aria-disabled="true"
+                  className="flex w-full cursor-not-allowed items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-nexoraMuted opacity-60"
                 >
                   <ShieldCheck className="h-4 w-4 text-nexoraMuted" />
                   <span>{t('staff_dashboard.nav.profile_kyc')}</span>

@@ -533,7 +533,8 @@ export default function useStaffRegistration({ inviteData }) {
         confirmPassword: regPassword,
         firstName,
         lastName,
-        type: 'User'
+        type: 'User',
+        ...(inviteRefCode?.trim() ? { referralCode: inviteRefCode.trim() } : {}),
       })
       .then((signupResponse) => {
         const signupOtp = getSignupOtp(signupResponse)

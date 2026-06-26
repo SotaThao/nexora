@@ -309,11 +309,21 @@ export const apiAuthAdapter = {
   },
 
   async signup(credentials: SignupCredentials): Promise<SignupResponse | null> {
-    const { email, confirmEmail, password, confirmPassword, firstName, lastName, type, profileType } =
+    const { email, confirmEmail, password, confirmPassword, firstName, lastName, type, profileType, referralCode } =
       credentials
+    const trimmedReferralCode = referralCode?.trim()
     return httpClient.post<SignupResponse>(
       '/api/v1/authentication/signup',
-      { email, confirmEmail, password, confirmPassword, firstName, lastName, type: type || profileType },
+      {
+        email,
+        confirmEmail,
+        password,
+        confirmPassword,
+        firstName,
+        lastName,
+        type: type || profileType,
+        ...(trimmedReferralCode ? { referralCode: trimmedReferralCode } : {}),
+      },
       { anonymous: true },
     )
   },

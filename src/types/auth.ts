@@ -41,6 +41,7 @@ export interface SignupCredentials {
   lastName: string
   type?: string
   profileType?: string
+  referralCode?: string
 }
 
 export interface SignupResponse {

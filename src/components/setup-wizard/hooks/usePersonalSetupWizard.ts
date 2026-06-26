@@ -6,6 +6,7 @@ import { useAuth } from '../../../auth/useAuth'
 import { parsePhone } from '../../CountryCodeSelect'
 import { captureQrImage } from '../../../utils/qrCode'
 import { useUploadImage } from '../../../data/hooks/useMerchantSetup'
+import { getPhoneFieldError, getRequiredFieldError } from '../../../utils/onboardingFieldValidation'
 
 export default function usePersonalSetupWizard({ onBackToLogin }) {
   const { t, currentLanguage, setLanguage, renderLabel } = useTranslation()
@@ -60,8 +61,21 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
   }, [userProfile])
 
   const handleProfileSetupSubmit = async () => {
-    if (!fullName.trim() || !nickname.trim() || !phone.trim()) {
-      setErrors({ submit: t('register.errors.profile_setup_failed') })
+    const fieldErrors: Record<string, string> = {}
+
+    if (!fullName.trim()) {
+      fieldErrors.fullName = getRequiredFieldError(fullName, 'setup.errors.staff_name_required')
+    }
+    if (!nickname.trim()) {
+      fieldErrors.nickname = getRequiredFieldError(nickname, 'setup.errors.staff_nickname_required')
+    }
+    const phoneError = getPhoneFieldError(phone, { requireValue: true })
+    if (phoneError) {
+      fieldErrors.phone = phoneError
+    }
+
+    if (Object.keys(fieldErrors).length > 0) {
+      setErrors(fieldErrors)
       return
     }
 
@@ -95,7 +109,7 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
         })
       }
 
-      setErrors({ ...errors, submit: undefined })
+      setErrors({})
       setCurrentStep(2)
     } catch (err) {
       setErrors({ submit: t('register.errors.profile_setup_failed') })

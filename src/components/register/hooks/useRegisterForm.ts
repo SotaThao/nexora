@@ -23,8 +23,9 @@ import { getErrorI18nKey } from '../../../data/errorCodes'
 import { useCompletePersonalOnboarding } from '../../../data/hooks/usePersonalOnboarding'
 import { useCreateStaffProfile } from '../../../data/hooks/useProfileSettings'
 import { buildUpdateStaffProfileDto } from '../../../utils/mapStaffProfileView'
+import { getPhoneFieldError, getRequiredFieldError } from '../../../utils/onboardingFieldValidation'
 
-export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onKybSuccess = () => {}, isRedirectedFromSession, initialStep = 0, initialRole = 'personal', resumeOtpVerification = false, autoSendVerificationOnResume = false, resumeEmail = '', resumePassword = '', resumeRole = null }) {
+export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onKybSuccess = () => {}, isRedirectedFromSession, initialStep = 0, initialRole = 'personal', resumeOtpVerification = false, autoSendVerificationOnResume = false, resumeEmail = '', resumePassword = '', resumeRole = null, initialRefCode = '' }) {
   const { t, currentLanguage, setLanguage, renderLabel } = useTranslation()
   const replaceAllPendingAccountsMutation = useReplaceAllPendingAccounts()
   const pendingAccountsQuery = usePendingAccounts()
@@ -43,9 +44,8 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const [confirmEmail, setConfirmEmail] = useState(resumeEmail || '')
   const [password, setPassword] = useState(resumePassword || '')
   const [showPassword, setShowPassword] = useState(false)
-  const [referralCode, setReferralCode] = useState('')
+  const [referralCode, setReferralCode] = useState(initialRefCode)
   const [fullName, setFullName] = useState('')
-  const [termsAccepted, setTermsAccepted] = useState(true)
   const [showTermsModal, setShowTermsModal] = useState(false)
   const [modalType, setModalType] = useState('terms')
   const [nickname, setNickname] = useState('')
@@ -95,13 +95,6 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const [errors, setErrors] = useState<LooseObject>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const resumeVerificationSentRef = useRef(false)
-
-  const handleToggleTerms = () => {
-    setTermsAccepted(!termsAccepted)
-    if (errors.terms) {
-      setErrors({ ...errors, terms: undefined })
-    }
-  }
 
   const AVATAR_MAX_SIZE = 5 * 1024 * 1024
   const AVATAR_ALLOWED_TYPES = ['image/jpeg', 'image/png']
@@ -255,6 +248,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     setIsSubmitting(true)
 
     try {
+      const trimmedReferralCode = referralCode.trim()
       const signupResponse = await apiAuthAdapter.signup({
         email: email.trim().toLowerCase(),
         confirmEmail: confirmEmail.trim().toLowerCase(),
@@ -263,7 +257,8 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         firstName: email.split('@')[0],
         lastName: 'User',
         // profileType enum per signup API docs is "Merchant" | "User" (not "Personal").
-        profileType: role === 'business' ? 'Merchant' : 'User'
+        profileType: role === 'business' ? 'Merchant' : 'User',
+        ...(trimmedReferralCode ? { referralCode: trimmedReferralCode } : {}),
       })
       const signupOtp = getSignupOtp(signupResponse)
 
@@ -283,6 +278,8 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       const i18nKey = getErrorI18nKey(code)
       if (code === 'AUTH_PASSWORDS_DO_NOT_MATCH') {
         errorsMap.confirmEmail = 'register.errors.email_mismatch'
+      } else if (code === 'USER_INVALID_REFERRAL_CODE') {
+        errorsMap.referralCode = i18nKey || 'errors.unknown_error'
       } else {
         errorsMap.email = i18nKey || 'errors.unknown_error'
       }
@@ -481,6 +478,22 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   }
 
   const handleProfileSetupSubmit = async () => {
+    const fieldErrors: LooseObject = {}
+
+    const fullNameError = getRequiredFieldError(fullName, 'setup.errors.staff_name_required')
+    if (fullNameError) fieldErrors.fullName = fullNameError
+
+    const nicknameError = getRequiredFieldError(nickname, 'setup.errors.staff_nickname_required')
+    if (nicknameError) fieldErrors.nickname = nicknameError
+
+    const phoneError = getPhoneFieldError(phone, { requireValue: true })
+    if (phoneError) fieldErrors.phone = phoneError
+
+    if (Object.keys(fieldErrors).length > 0) {
+      setErrors(fieldErrors)
+      return
+    }
+
     const isApiMode = import.meta.env.VITE_DATA_SOURCE === 'api'
     if (isApiMode) {
       try {
@@ -495,9 +508,12 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         await createStaffProfileMutation.mutateAsync(dto)
       } catch (err: unknown) {
         logger.error('Failed to create staff profile during onboarding', err)
+        setErrors({ submit: 'register.errors.profile_setup_failed' })
+        return
       }
     }
-    
+
+    setErrors({})
     if (onRegisterAndLogin) {
       onRegisterAndLogin(email.trim().toLowerCase())
     } else if (onRegisterSuccess) {
@@ -699,10 +715,9 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     setShowPassword,
     referralCode,
     setReferralCode,
+    initialRefCode,
     fullName,
     setFullName,
-    termsAccepted,
-    setTermsAccepted,
     showTermsModal,
     setShowTermsModal,
     modalType,

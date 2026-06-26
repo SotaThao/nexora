@@ -299,6 +299,7 @@ export const StatusFilter = {
   InActive: 'InActive',
   Rejected: 'Rejected',
   Accepted: 'Accepted',
+  WaitingStaffAcceptance: 'WaitingStaffAcceptance',
 } as const
 
 export function createMerchantStaffRepository(client: HttpClient = httpClient) {

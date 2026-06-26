@@ -21,6 +21,10 @@ import { useConfirmStaffTipsReceipt } from '../../../data/hooks/useStaffSelf'
 import { useStaffHomeData } from '../hooks/useStaffHomeData'
 import { SkeletonLayout } from '../../ui/skeleton'
 import { STAFF_HOME_SKELETON } from '../skeletons/staffDashboardSkeletons'
+import {
+  getStaffBusinessLinkStatusPresentation,
+  resolveStaffBusinessLinkStatusLabel,
+} from '../../../utils/staffBusinessLinkStatus'
 
 function formatTipAmount(amount) {
   return `$${Number(amount || 0).toFixed(amount % 1 === 0 ? 0 : 2)}`
@@ -206,7 +210,10 @@ export default function StaffHome() {
           <p className="py-4 text-center text-[13px] text-nexoraSubtle">{t('staff_dashboard.qr.no_linked_businesses')}</p>
         ) : (
           <div className="divide-y divide-nexoraBorder">
-            {linkedBusinesses.map((biz) => (
+            {linkedBusinesses.map((biz) => {
+              const statusLabel = resolveStaffBusinessLinkStatusLabel(biz)
+              const statusPresentation = getStaffBusinessLinkStatusPresentation(statusLabel)
+              return (
               <div key={biz.businessStaffLinkId} className="flex items-center gap-3 py-3">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-nexoraSidebar to-nexoraBrand text-sm font-black text-white">
                   {(biz.businessName || '?').slice(0, 2).toUpperCase()}
@@ -218,14 +225,14 @@ export default function StaffHome() {
                   </p>
                 </div>
                 <span
-                  className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-black ${
-                    biz.status === 'Active' ? 'bg-emerald-50 text-emerald-600' : 'bg-nexoraCanvas text-nexoraMuted'
-                  }`}
+                  className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-black ${statusPresentation.className}`}
                 >
-                  {biz.status === 'Active' ? t('staff_dashboard.status.active') : t('staff_dashboard.status.inactive')}
+                  {statusPresentation.translationKey
+                    ? t(statusPresentation.translationKey)
+                    : statusLabel}
                 </span>
               </div>
-            ))}
+            )})}
           </div>
         )}
       </div>

@@ -180,7 +180,7 @@ export default function StaffDetailView({
       return {
         totalTips: period.tipsCollected,
         averageRating: Number(allTime.averageRating ?? 0).toFixed(2),
-        totalReviews: allTime.reviewsRouted,
+        totalReviews: period.totalReviews ?? allTime.totalReviews ?? 0,
         specialty: staffMember.roleAtBusiness || staffMember.position || '',
         recentTransactions: staffStats.recentTips,
         filteredReviews: staffStats.recentReviews,
@@ -515,8 +515,10 @@ export default function StaffDetailView({
               <ClipboardList className="h-5 w-5" />
             </div>
           </div>
-          <p className="mt-4 text-[10px] font-bold uppercase tracking-wider text-nexoraMuted">{t('staff_detail.reviews_routed')}</p>
-          <p className="mt-1 text-2xl font-black text-nexoraText">{t('staff_detail.reviews_count', { count: stats.totalReviews })}</p>
+          <p className="mt-4 text-[10px] font-bold uppercase tracking-wider text-nexoraMuted">{t('staff_detail.total_reviews')}</p>
+          <p className="mt-1 text-2xl font-black text-nexoraText">
+            {isMetricsLoading ? '—' : stats.totalReviews}
+          </p>
         </div>
       </div>
 
