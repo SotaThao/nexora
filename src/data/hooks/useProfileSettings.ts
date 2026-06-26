@@ -61,10 +61,15 @@ export function useKycInitialize({ enabled = false } = {}) {
   })
 }
 
-/** POST /api/v1/UserProfile/kyb/initialize — KYB iframe portal URL. */
+/** @deprecated KYB iframe uses POST /api/v1/UserProfile/iframe/initialize — prefer useKybInfo. */
 export function useRegisterKyb() {
   return useMutation<InitializeKybResponse, Error, void>({
-    mutationFn: () => profileSettingsRepository.initializeKyb(),
+    mutationFn: async () => {
+      const response = await profileSettingsRepository.initializeKybIframe({
+        viewType: 'Identity',
+      })
+      return { url: response.url }
+    },
   })
 }
 
@@ -141,6 +146,7 @@ export function useUpdateStaffProfile() {
     mutationFn: (dto) => profileSettingsRepository.updateStaffProfile(dto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.staffProfile() })
+      queryClient.invalidateQueries({ queryKey: qk.userProfile() })
     },
   })
 }

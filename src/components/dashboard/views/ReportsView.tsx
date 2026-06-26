@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
-import { CreditCard, Coins, CheckCircle, Clock, XCircle, AlertCircle, Hourglass, Bell } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
+import { CreditCard, Coins, CheckCircle, Clock, XCircle, AlertCircle, Hourglass } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { formatCurrency, formatTransactionDateTime, isAwaitingShopConfirmation } from '../utils'
 import { WalletLogos } from '../constants'
@@ -8,7 +9,7 @@ import Pagination from '../../ui/Pagination'
 import TransactionDetailModal from '../modals/TransactionDetailModal'
 import { usePagination } from '../../../hooks/usePagination'
 import { DEFAULT_PAGE_SIZE, STAFF_FILTER_LIST_PAGE_SIZE } from '../../../constants/pagination'
-import { useTransactionsPaginated, useTransactions } from '../../../data/hooks/useTransactions'
+import { useTransactionsPaginated } from '../../../data/hooks/useTransactions'
 import { useMerchantStaff } from '../../../data/hooks/useMerchantStaff'
 import { useTouchpoints } from '../../../data/hooks/useMerchantTouchpoints'
 import type { TransactionsListQuery } from '../../../data/repositories/transactions'
@@ -67,6 +68,12 @@ function resolveDateRange(
   return {}
 }
 
+// Sentinel status-filter value for tips the customer paid into the shop
+// account that still need the owner to confirm receipt. Not a real API
+// status — it maps to { status: 'Confirmed', isMultiStaff: true } plus the
+// client-side isAwaitingShopConfirmation predicate.
+const AWAITING_STATUS = 'AwaitingShopConfirmation'
+
 function getStaffDisplayName(member) {
   return (
     member.nickname?.trim() ||
@@ -88,6 +95,11 @@ function formatStaffCell(tx) {
 function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [], businessName = '', businessSlug = '' }) {
   const { t, currentLanguage } = useTranslation()
 
+  // Allow deep-linking the awaiting-confirmation filter, e.g. the dashboard
+  // overview "View" banner navigates to /dashboard/reports?status=AwaitingShopConfirmation.
+  const [searchParams] = useSearchParams()
+  const initialStatus = searchParams.get('status') === AWAITING_STATUS ? AWAITING_STATUS : 'all'
+
   // Filter States
   const [dateRangePreset, setDateRangePreset] = useState('all')
   const [startDate, setStartDate] = useState('')
@@ -97,18 +109,15 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
   const [selectedStaff, setSelectedStaff] = useState('all')
   const [selectedTouchpoint, setSelectedTouchpoint] = useState('all')
   const [selectedPayment, setSelectedPayment] = useState('all')
-  const [selectedStatus, setSelectedStatus] = useState('all')
+  const [selectedStatus, setSelectedStatus] = useState(initialStatus)
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [selectedTx, setSelectedTx] = useState<any | null>(null)
-  const [showPendingOnly, setShowPendingOnly] = useState(false)
   const { pageNumber, pageSize, setPage, reset: resetPage } = usePagination({ pageSize: DEFAULT_PAGE_SIZE })
 
-  const { data: allTransactions = [] } = useTransactions()
-  const pendingConfirmCount = useMemo(
-    () => allTransactions.filter(isAwaitingShopConfirmation).length,
-    [allTransactions],
-  )
+  // Awaiting-confirmation is driven by the visible Status filter, not a
+  // separate toggle, so the criteria is transparent and clears via Reset.
+  const isAwaitingFilter = selectedStatus === AWAITING_STATUS
 
   const { data: staffPage } = useMerchantStaff({
     pageNumber: 1,
@@ -201,9 +210,12 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
     ...(selectedStaff !== 'all' ? { staffProfileId: selectedStaff } : {}),
     ...(selectedTouchpoint !== 'all' ? { touchPointId: selectedTouchpoint } : {}),
     ...(selectedPayment !== 'all' ? { paymentMethod: selectedPayment } : {}),
-    ...(selectedStatus !== 'all' ? { status: selectedStatus } : {}),
+    ...(isAwaitingFilter
+      ? { status: 'Confirmed', isMultiStaff: true }
+      : selectedStatus !== 'all'
+        ? { status: selectedStatus }
+        : {}),
     ...(debouncedSearch ? { staffSearch: debouncedSearch } : {}),
-    ...(showPendingOnly ? { isMultiStaff: true } : {}),
   }), [
     pageNumber,
     pageSize,
@@ -214,8 +226,8 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
     selectedTouchpoint,
     selectedPayment,
     selectedStatus,
+    isAwaitingFilter,
     debouncedSearch,
-    showPendingOnly,
   ])
 
   const {
@@ -231,15 +243,15 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
   const hasPreviousPage = transactionsPage?.hasPreviousPage ?? false
 
   // Amount filter only — not supported by tips API
-  // When showPendingOnly, also refine client-side to exact eligibility predicate
+  // For the awaiting-confirmation filter, also refine client-side to the exact eligibility predicate
   const filtered = useMemo(() => {
     return transactions.filter((tx) => {
       if (minAmount && tx.amount < parseFloat(minAmount)) return false
       if (maxAmount && tx.amount > parseFloat(maxAmount)) return false
-      if (showPendingOnly && !isAwaitingShopConfirmation(tx)) return false
+      if (isAwaitingFilter && !isAwaitingShopConfirmation(tx)) return false
       return true
     })
-  }, [transactions, minAmount, maxAmount, showPendingOnly])
+  }, [transactions, minAmount, maxAmount, isAwaitingFilter])
 
   useEffect(() => {
     resetPage()
@@ -254,7 +266,6 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
     selectedPayment,
     selectedStatus,
     debouncedSearch,
-    showPendingOnly,
     resetPage,
   ])
 
@@ -285,6 +296,15 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
         .map((point) => ({ value: point.id, label: point.name })),
     ]
   }, [touchpoints, t])
+
+  const statusOptions = useMemo(() => [
+    { value: 'all', label: t('dashboard.activity_log.all_statuses') },
+    { value: 'Initiated', label: t('dashboard.activity_log.status_initiated') },
+    { value: 'Confirmed', label: t('dashboard.activity_log.status_confirmed') },
+    { value: 'Skipped', label: t('dashboard.activity_log.status_skipped') },
+    { value: 'Completed', label: t('dashboard.activity_log.status_completed') },
+    { value: AWAITING_STATUS, label: t('merchant_dashboard.tips.awaiting_shop_confirmation') },
+  ], [t])
 
   const showTableSkeleton = (isPending && !transactionsPage) || isFetching
 
@@ -321,33 +341,8 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
         resetFilters={resetFilters}
         staffOptions={staffOptions}
         touchpointOptions={touchpointOptions}
+        statusOptions={statusOptions}
       />
-
-      {pendingConfirmCount > 0 && (
-        <div className={`flex items-center justify-between gap-3 rounded-xl border px-4 py-3 transition-colors ${showPendingOnly ? 'border-violet-200 bg-violet-50' : 'border-amber-200 bg-amber-50/80'}`}>
-          <div className="flex items-center gap-2.5">
-            {showPendingOnly
-              ? <Hourglass className="h-4 w-4 shrink-0 text-violet-500" />
-              : <Bell className="h-4 w-4 shrink-0 text-amber-600" />
-            }
-            <p className={`text-xs ${showPendingOnly ? 'text-violet-800' : 'text-amber-800'}`}>
-              {t('merchant_dashboard.tips.pending_callout_text', { count: pendingConfirmCount })}
-              {showPendingOnly && <span className="ml-1 font-normal opacity-70">{t('merchant_dashboard.tips.pending_filtering')}</span>}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowPendingOnly((v) => !v)}
-            className={`shrink-0 rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide transition cursor-pointer whitespace-nowrap ${
-              showPendingOnly
-                ? 'bg-violet-100 text-violet-700 hover:bg-violet-200'
-                : 'bg-amber-500 text-white hover:bg-amber-600'
-            }`}
-          >
-            {showPendingOnly ? t('merchant_dashboard.tips.pending_filter_clear') : t('merchant_dashboard.tips.pending_filter_apply')}
-          </button>
-        </div>
-      )}
 
       <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-white">
         <table className="w-full min-w-[780px] text-left text-xs">

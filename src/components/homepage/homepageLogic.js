@@ -2,18 +2,12 @@
  * Homepage interactive logic — simulator, Tax IQ, i18n, modals.
  * Wired from HomePageBridgeContext via getHomePageHandlers().
  */
+import { getStoredAppLanguage, setStoredAppLanguage } from '../../utils/appLanguage.js'
+
 let __homepageClickOutside = null
 
-const HOMEPAGE_LANG_STORAGE_KEY = 'nexora_homepage_lang'
-
 export function getInitialHomePageLanguage() {
-  try {
-    const saved = localStorage.getItem(HOMEPAGE_LANG_STORAGE_KEY)
-    if (saved === 'en' || saved === 'vi') return saved
-  } catch {
-    // localStorage unavailable (SSR/tests)
-  }
-  return 'en'
+  return getStoredAppLanguage()
 }
 
 const translations = {
@@ -968,11 +962,7 @@ function toggleMobileMenu() {
 export function changeLanguage(lang) {
   appState.currentLanguage = lang
 
-  try {
-    localStorage.setItem(HOMEPAGE_LANG_STORAGE_KEY, lang)
-  } catch {
-    // ignore
-  }
+  setStoredAppLanguage(lang)
 
   if (typeof document !== 'undefined') {
     document.documentElement.lang = lang === 'vi' ? 'vi' : 'en'

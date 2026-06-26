@@ -71,3 +71,9 @@ export const MENU_ITEMS = [
 ]
 
 export const visibleMenuItems = MENU_ITEMS
+
+export const PUBLIC_HOME_MENU_ITEM = {
+  id: 'public-home',
+  label: 'Home',
+  image: '/assets/menu/home.png',
+}

@@ -1,17 +1,24 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Upload, Loader2, CheckCircle2, XCircle, QrCode, HelpCircle, X } from 'lucide-react'
 import CountryCodeSelect, { formatNationalNumber, isPhoneValid } from '../../CountryCodeSelect'
 import { renderLabel } from '../../../contexts/LanguageContext'
+import { getErrorI18nKey } from '../../../data/errorCodes'
+import { getStaffDisplayNameErrorCode, STAFF_DISPLAY_NAME_MAX_LENGTH } from '../../../utils/staffDisplayName'
 
 
 export default function StepProfile({
   fullName, setFullName,
+  fullNameError = '',
+  setFullNameError,
+  staffDisplayNameMinLength = 2,
+  staffDisplayNameMaxLength = STAFF_DISPLAY_NAME_MAX_LENGTH,
   nickname, setNickname,
   position, setPosition,
   phone, setPhone,
   email, setEmail,
   avatar, setAvatar,
   onAvatarFileChange,
+  onAvatarRemove,
   isAvatarUploading = false,
   bio, setBio,
   staffId,
@@ -25,6 +32,70 @@ export default function StepProfile({
   onSubmit,
   isSubmitting = false,
 }) {
+  const [fullNameTouched, setFullNameTouched] = useState(false)
+  const [nicknameTouched, setNicknameTouched] = useState(false)
+  const [nicknameError, setNicknameError] = useState('')
+
+  const resolveDisplayFieldError = (value) => {
+    const errorCode = getStaffDisplayNameErrorCode(value)
+    return errorCode ? t(getErrorI18nKey(errorCode)) : ''
+  }
+
+  const visibleFullNameError = fullNameError || (fullNameTouched ? resolveDisplayFieldError(fullName) : '')
+  const visibleNicknameError = nicknameError || (nicknameTouched ? resolveDisplayFieldError(nickname) : '')
+
+  const syncFullNameError = (value = fullName, touched = fullNameTouched) => {
+    if (!setFullNameError) return
+    if (touched) {
+      setFullNameError(resolveDisplayFieldError(value))
+    } else if (fullNameError) {
+      setFullNameError('')
+    }
+  }
+
+  const syncNicknameError = (value = nickname, touched = nicknameTouched) => {
+    if (touched) {
+      setNicknameError(resolveDisplayFieldError(value))
+    } else if (nicknameError) {
+      setNicknameError('')
+    }
+  }
+
+  const handleFullNameBlur = () => {
+    setFullNameTouched(true)
+    syncFullNameError(fullName, true)
+  }
+
+  const handleNicknameBlur = () => {
+    setNicknameTouched(true)
+    syncNicknameError(nickname, true)
+  }
+
+  const handleNext = () => {
+    setFullNameTouched(true)
+    setNicknameTouched(true)
+
+    const fullNameMessage = resolveDisplayFieldError(fullName)
+    const nicknameMessage = resolveDisplayFieldError(nickname)
+
+    if (fullNameMessage) {
+      setFullNameError?.(fullNameMessage)
+    } else {
+      setFullNameError?.('')
+    }
+
+    if (nicknameMessage) {
+      setNicknameError(nicknameMessage)
+    } else {
+      setNicknameError('')
+    }
+
+    if (fullNameMessage || nicknameMessage) return
+
+    if (onSubmit) onSubmit()
+    else setStep(3)
+  }
+
   return (
     <div className="space-y-5 py-2">
       <div className="border-b border-nexoraRule pb-2">
@@ -44,7 +115,7 @@ export default function StepProfile({
                   <img src={avatar} alt="" className="h-16 w-16 rounded-full object-cover border border-nexoraBorder ring-2 ring-nexoraBrand/20" />
                   <button
                     type="button"
-                    onClick={() => setAvatar(null)}
+                    onClick={() => (onAvatarRemove ? onAvatarRemove() : setAvatar(null))}
                     className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 hover:bg-red-600 text-white transition shadow duration-150 cursor-pointer"
                     title={t('common.remove_photo')}
                   >
@@ -95,15 +166,33 @@ export default function StepProfile({
             </label>
             <input
               type="text"
-              className="mt-1.5 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:outline-none transition-all"
+              className={`mt-1.5 h-10 w-full rounded-lg border px-3 text-xs outline-none focus:ring-2 focus:outline-none transition-all ${
+                visibleFullNameError
+                  ? 'border-red-400 focus:border-red-500 focus:ring-red-500/20'
+                  : 'border-nexoraBorder focus:border-nexoraBrand focus:ring-nexoraBrand/20'
+              }`}
               placeholder={t('components.staff_registration.steps.StepProfile.phFullName')}
               value={fullName}
               onChange={(e) => {
-                setFullName(e.target.value)
-                if (!nickname) setNickname(e.target.value.split(' ')[0] + '.')
+                const nextValue = e.target.value
+                setFullName(nextValue)
+                if (fullNameTouched) syncFullNameError(nextValue, true)
+                else if (fullNameError) setFullNameError?.('')
+                if (!nickname) setNickname(nextValue.split(' ')[0] + '.')
               }}
+              onBlur={handleFullNameBlur}
               required
+              minLength={staffDisplayNameMinLength}
+              maxLength={staffDisplayNameMaxLength}
+              aria-invalid={Boolean(visibleFullNameError)}
             />
+            {visibleFullNameError ? (
+              <p className="mt-1 text-[10px] font-medium text-red-500">{visibleFullNameError}</p>
+            ) : (
+              <p className="mt-1 text-[10px] text-nexoraSubtle">
+                {t('components.staff_registration.steps.StepProfile.displayNameHint')}
+              </p>
+            )}
           </div>
           <div>
             <label className="flex items-center text-[10px] font-black uppercase text-nexoraSubtle tracking-wider gap-1 h-4">
@@ -119,12 +208,32 @@ export default function StepProfile({
             <input
               id="profile-nickname"
               type="text"
-              className="mt-1.5 h-10 w-full rounded-lg border border-nexoraBorder px-3 text-xs outline-none focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:outline-none transition-all"
+              className={`mt-1.5 h-10 w-full rounded-lg border px-3 text-xs outline-none focus:ring-2 focus:outline-none transition-all ${
+                visibleNicknameError
+                  ? 'border-red-400 focus:border-red-500 focus:ring-red-500/20'
+                  : 'border-nexoraBorder focus:border-nexoraBrand focus:ring-nexoraBrand/20'
+              }`}
               placeholder={t('components.staff_registration.steps.StepProfile.phNickname')}
               value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
+              onChange={(e) => {
+                const nextValue = e.target.value
+                setNickname(nextValue)
+                if (nicknameTouched) syncNicknameError(nextValue, true)
+                else if (nicknameError) setNicknameError('')
+              }}
+              onBlur={handleNicknameBlur}
               required
+              minLength={staffDisplayNameMinLength}
+              maxLength={staffDisplayNameMaxLength}
+              aria-invalid={Boolean(visibleNicknameError)}
             />
+            {visibleNicknameError ? (
+              <p className="mt-1 text-[10px] font-medium text-red-500">{visibleNicknameError}</p>
+            ) : (
+              <p className="mt-1 text-[10px] text-nexoraSubtle">
+                {t('components.staff_registration.steps.StepProfile.nicknameHint')}
+              </p>
+            )}
           </div>
         </div>
 
@@ -215,8 +324,8 @@ export default function StepProfile({
         </button>
         <button
           type="button"
-          onClick={onSubmit || (() => setStep(3))}
-          disabled={isSubmitting || !fullName.trim() || !phone.trim() || !isPhoneValid(phone)}
+          onClick={handleNext}
+          disabled={isSubmitting || !phone.trim() || !isPhoneValid(phone)}
           className="flex-grow h-10 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-bold text-xs uppercase tracking-wider rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
         >
           {isSubmitting ? (

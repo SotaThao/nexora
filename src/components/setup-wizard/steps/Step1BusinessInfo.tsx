@@ -75,7 +75,7 @@ export default function Step1BusinessInfo({
               )}
               <span className="text-[10px] text-nexoraSubtle">{t('setup.logo_hint')}</span>
             </div>
-            {errors.logo && <span className="text-xs text-red-500 mt-1 block">{errors.logo}</span>}
+            {errors.logo && <span className="text-xs text-red-500 mt-1 block">{t(errors.logo)}</span>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -94,7 +94,7 @@ export default function Step1BusinessInfo({
                 type="text"
                 disabled={isSsoLocked}
                 placeholder={t('setup.store_name_placeholder')}
-                className={`w-full bg-nexoraCanvas border ${errors.name ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} ${isSsoLocked ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : ''} rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
+                className={`w-full border ${errors.name ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'} ${isSsoLocked ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : 'bg-white'} rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
                 value={businessInfo.name}
                 onChange={(e) => {
                   if (isSsoLocked) return
@@ -102,13 +102,13 @@ export default function Step1BusinessInfo({
                   if (errors.name) setErrors({ ...errors, name: '' })
                 }}
               />
-              {errors.name && <span className="text-xs text-red-500 mt-1 block">{errors.name}</span>}
+              {errors.name && <span className="text-xs text-red-500 mt-1 block">{t(errors.name)}</span>}
             </div>
 
             <div>
               <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">{renderLabel(t('setup.business_category'))}</label>
               <CustomSelect
-                buttonClass="bg-nexoraCanvas focus:bg-white"
+                buttonClass="bg-white"
                 disabled={isSsoLocked}
                 value={businessInfo.industry}
                 onChange={(e) => {
@@ -145,7 +145,7 @@ export default function Step1BusinessInfo({
                 type="text"
                 disabled={isSsoLocked}
                 placeholder={t('setup.store_address_placeholder')}
-                className={`w-full bg-nexoraCanvas border ${errors.address ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} ${isSsoLocked ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : ''} rounded-lg pl-11 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
+                className={`w-full border ${errors.address ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'} ${isSsoLocked ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : 'bg-white'} rounded-lg pl-11 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
                 value={businessInfo.address}
                 onChange={(e) => {
                   if (isSsoLocked) return
@@ -154,7 +154,7 @@ export default function Step1BusinessInfo({
                 }}
               />
             </div>
-            {errors.address && <span className="text-xs text-red-500 mt-1 block">{errors.address}</span>}
+            {errors.address && <span className="text-xs text-red-500 mt-1 block">{t(errors.address)}</span>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -175,7 +175,7 @@ export default function Step1BusinessInfo({
                   type="text"
                   disabled={isSsoLocked}
                   placeholder={t('components.setup_wizard.steps.Step1BusinessInfo.phPhone')}
-                  className={`w-full bg-nexoraCanvas border border-l-0 ${errors.phone ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} ${isSsoLocked ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : ''} rounded-r-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all min-w-0`}
+                  className={`w-full h-10 border border-l-0 ${errors.phone ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'} ${isSsoLocked ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : 'bg-white'} rounded-r-lg px-4 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all min-w-0`}
                   value={formatNationalNumber(phoneParsed.nationalNumber, phoneParsed.countryCode)}
                   onChange={(e) => {
                     if (isSsoLocked) return
@@ -185,7 +185,7 @@ export default function Step1BusinessInfo({
                   }}
                 />
               </div>
-              {errors.phone && <span className="text-xs text-red-500 mt-1 block">{errors.phone}</span>}
+              {errors.phone && <span className="text-xs text-red-500 mt-1 block">{t(errors.phone)}</span>}
             </div>
 
             <div>
@@ -196,7 +196,7 @@ export default function Step1BusinessInfo({
                   type="url"
                   disabled={isSsoLocked}
                   placeholder={t('components.setup_wizard.steps.Step1BusinessInfo.phWebsite')}
-                  className={`w-full bg-nexoraCanvas border ${errors.website ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} ${isSsoLocked ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : ''} rounded-lg pl-11 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
+                  className={`w-full border ${errors.website ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'} ${isSsoLocked ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : 'bg-white'} rounded-lg pl-11 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
                   value={businessInfo.website}
                   onChange={(e) => {
                     if (isSsoLocked) return
@@ -205,7 +205,7 @@ export default function Step1BusinessInfo({
                   }}
                 />
               </div>
-              {errors.website && <span className="text-xs text-red-500 mt-1 block">{errors.website}</span>}
+              {errors.website && <span className="text-xs text-red-500 mt-1 block">{t(errors.website)}</span>}
             </div>
           </div>
 
@@ -230,14 +230,14 @@ export default function Step1BusinessInfo({
             <input
               type="url"
               placeholder={t('components.setup_wizard.steps.Step1BusinessInfo.phGoogleReviewUrl')}
-              className={`w-full bg-nexoraCanvas border ${errors.googleReview ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
+              className={`w-full bg-white border ${errors.googleReview ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'} rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
               value={reviewLinks.googleReview}
               onChange={(e) => {
                 setReviewLinks({ ...reviewLinks, googleReview: e.target.value })
                 if (errors.googleReview) setErrors({ ...errors, googleReview: '' })
               }}
             />
-            {errors.googleReview && <span className="text-xs text-red-500 mt-1 block">{errors.googleReview}</span>}
+            {errors.googleReview && <span className="text-xs text-red-500 mt-1 block">{t(errors.googleReview)}</span>}
           </div>
 
           <div>
@@ -245,14 +245,14 @@ export default function Step1BusinessInfo({
             <input
               type="url"
               placeholder={t('components.setup_wizard.steps.Step1BusinessInfo.phYelpUrl')}
-              className={`w-full bg-nexoraCanvas border ${errors.yelpReview ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
+              className={`w-full bg-white border ${errors.yelpReview ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'} rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
               value={reviewLinks.yelpReview}
               onChange={(e) => {
                 setReviewLinks({ ...reviewLinks, yelpReview: e.target.value })
                 if (errors.yelpReview) setErrors({ ...errors, yelpReview: '' })
               }}
             />
-            {errors.yelpReview && <span className="text-xs text-red-500 mt-1 block">{errors.yelpReview}</span>}
+            {errors.yelpReview && <span className="text-xs text-red-500 mt-1 block">{t(errors.yelpReview)}</span>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -261,7 +261,7 @@ export default function Step1BusinessInfo({
               <input
                 type="url"
                 placeholder={t('components.setup_wizard.steps.Step1BusinessInfo.phFacebookUrl')}
-                className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all"
+                className="w-full bg-white border border-nexoraBorder focus:border-nexoraBrand rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all"
                 value={reviewLinks.facebookReview}
                 onChange={(e) => setReviewLinks({ ...reviewLinks, facebookReview: e.target.value })}
               />
@@ -272,14 +272,14 @@ export default function Step1BusinessInfo({
               <input
                 type="email"
                 placeholder={t('components.setup_wizard.steps.Step1BusinessInfo.phManagerEmail')}
-                className={`w-full bg-nexoraCanvas border ${errors.feedbackEmail ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand focus:bg-white'} rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
+                className={`w-full bg-white border ${errors.feedbackEmail ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'} rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
                 value={reviewLinks.feedbackEmail}
                 onChange={(e) => {
                   setReviewLinks({ ...reviewLinks, feedbackEmail: e.target.value })
                   if (errors.feedbackEmail) setErrors({ ...errors, feedbackEmail: '' })
                 }}
               />
-              {errors.feedbackEmail && <span className="text-xs text-red-500 mt-1 block">{errors.feedbackEmail}</span>}
+              {errors.feedbackEmail && <span className="text-xs text-red-500 mt-1 block">{t(errors.feedbackEmail)}</span>}
             </div>
           </div>
         </div>

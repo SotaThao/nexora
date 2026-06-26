@@ -3,7 +3,7 @@ import { QrCode, Copy, Check, X, Download } from 'lucide-react'
 import useSettingsForm from './settings/hooks/useSettingsForm'
 import ProfileTab from './settings/tabs/ProfileTab'
 import KybTab from './settings/tabs/KybTab'
-import { downloadQrCode } from '../utils/qrUtils'
+import { downloadQrCode, buildPublicQrImageUrl } from '../utils/qrUtils'
 import { buildAffiliateReferralUrl, getProfileReferralCode } from '../utils/affiliateReferral'
 import { useTranslation } from '../contexts/LanguageContext'
 
@@ -46,8 +46,7 @@ export default function SettingsView({
     () => buildAffiliateReferralUrl({ referralCode, leg: selectedLeg }),
     [referralCode, selectedLeg],
   )
-  const qrCodeUrl = (url: string) =>
-    `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}`
+  const qrCodeUrl = (url: string) => (url ? buildPublicQrImageUrl(url, 250) : '')
 
   const handleSaveQr = async (qrUrl) => {
     try {
@@ -68,14 +67,6 @@ export default function SettingsView({
 
   return (
     <div className="w-full space-y-6 animate-fadeIn pb-24 select-none">
-      {/* Toast Notification */}
-      {form.toastMessage && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs font-semibold shadow-2xl flex items-center gap-2 animate-bounce">
-          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          {form.toastMessage}
-        </div>
-      )}
-
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-nexoraRule pb-4">
         <div>
@@ -157,7 +148,7 @@ export default function SettingsView({
             reviewsErrors={form.reviewsErrors}
             setReviewsErrors={form.setReviewsErrors}
             hasKyb={hasKyb}
-            verificationStatus={verificationStatus}
+            verificationStatus={form.effectiveVerificationStatus}
             canEditProfile={form.canEditProfile}
             currentLanguage={form.currentLanguage}
             showToast={form.showToast}
@@ -180,7 +171,7 @@ export default function SettingsView({
           <KybTab
             profile={form.profile}
             cardDetails={cardDetails}
-            verificationStatus={verificationStatus}
+            verificationStatus={form.effectiveVerificationStatus}
             showToast={form.showToast}
             portalRef={kybPortalRef}
           />
@@ -202,7 +193,7 @@ export default function SettingsView({
                 <div className="bg-slate-50 p-4 border border-slate-200 rounded-2xl flex items-center justify-center h-[240px] w-[240px] shadow-sm hover:shadow-md transition">
                   {baseReferralUrl ? (
                     <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(baseReferralUrl)}`}
+                      src={buildPublicQrImageUrl(baseReferralUrl, 220)}
                       alt="Referral Link QR Code"
                       className="h-full w-full object-contain rounded-lg"
                     />
@@ -351,7 +342,7 @@ export default function SettingsView({
               <div className="bg-slate-50 p-4 border border-slate-200 rounded-xl flex items-center justify-center h-[240px] w-[240px]">
                 {referralUrl ? (
                   <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(referralUrl)}`}
+                    src={buildPublicQrImageUrl(referralUrl, 220)}
                     alt="Referral Link QR Code"
                     className="h-full w-full object-contain rounded"
                   />

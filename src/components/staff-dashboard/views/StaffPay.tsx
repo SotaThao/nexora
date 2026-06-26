@@ -1,5 +1,5 @@
 // StaffPay — staff self-managed payout methods (owner cannot edit these).
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Bitcoin, Edit2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import {
@@ -11,6 +11,7 @@ import type { PaymentMethodDto } from '../../../types/domain'
 import { SkeletonLayout } from '../../ui/skeleton'
 import PayoutSetupModal from '../../dashboard/modals/PayoutSetupModal'
 import ToggleSwitch from '../../ui/ToggleSwitch'
+import { formatPaymentMethodAccountDisplay } from '../../payout/bankWireAccount'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 
@@ -66,15 +67,24 @@ export default function StaffPay() {
 
   const [activeMethod, setActiveMethod] = useState<PaymentMethodDto | null>(null)
 
-  const paymentMethods = useMemo(
-    () => apiPaymentMethods.filter((method) => Boolean(method.id && method.uiKey) && method.uiKey !== 'bankwire'),
-    [apiPaymentMethods],
-  )
-
   const isLoading = isPending || isFetching
 
-  const handleToggleMethod = (method: PaymentMethodDto) => {
+  const isMethodSetUp = (method: PaymentMethodDto) =>
+    Boolean(method.isConfigured && method.accountInfo?.trim())
+
+  const handleToggleMethod = (method: PaymentMethodDto, nextActive: boolean) => {
     if (!method.id) return
+
+    if (!nextActive) {
+      toggleMutation.mutate(method.id)
+      return
+    }
+
+    if (!isMethodSetUp(method)) {
+      setActiveMethod(method)
+      return
+    }
+
     toggleMutation.mutate(method.id)
   }
 
@@ -99,7 +109,7 @@ export default function StaffPay() {
         onSuccess: () => {
           setActiveMethod(null)
           if (!activeMethod.isActive) {
-            toggleMutation.mutate(activeMethod.id!)
+            toggleMutation.mutate({ id: activeMethod.id!, silentSuccessToast: true })
           }
         },
       },
@@ -125,13 +135,13 @@ export default function StaffPay() {
       <section className={panel}>
         <p className="text-xs text-nexoraMuted">{t('staff_dashboard.pay.owner_note')}</p>
 
-        {paymentMethods.length === 0 ? (
+        {apiPaymentMethods.length === 0 ? (
           <p className="mt-4 py-6 text-center text-xs text-nexoraSubtle">
             {t('staff_dashboard.pay.empty')}
           </p>
         ) : (
           <div className="mt-4 divide-y divide-nexoraBorder">
-            {paymentMethods.map((method) => {
+            {apiPaymentMethods.map((method) => {
               const uiKey = method.uiKey || ''
               const label = method.name || method.type
               return (
@@ -153,7 +163,7 @@ export default function StaffPay() {
                         <div className="text-xs font-bold text-nexoraText">{label}</div>
                         {method.isConfigured && method.accountInfo ? (
                           <div className="mt-0.5 max-w-[120px] truncate font-mono text-[10px] text-nexoraMuted sm:max-w-[200px]">
-                            {method.accountInfo}
+                            {formatPaymentMethodAccountDisplay(method.uiKey || '', method.accountInfo)}
                           </div>
                         ) : (
                           <div className="mt-0.5 text-[10px] font-medium italic text-slate-300">

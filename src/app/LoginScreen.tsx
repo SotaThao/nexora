@@ -3,12 +3,12 @@ import { Lock, Mail, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import AuthGraphicPanel from '../components/auth/AuthGraphicPanel'
 import SecondaryButton from '../components/ui/SecondaryButton'
+import HomepageLink from '../components/ui/HomepageLink'
 import { useAuth } from '../auth/useAuth'
 import { useTranslation } from '../contexts/LanguageContext'
 import { getErrorI18nKey } from '../data/errorCodes'
 import { getApiErrorCode } from '../types/domain'
 import { loadPendingRegistration } from '../auth/pendingRegistration'
-import HomepageLink from '../components/ui/HomepageLink'
 
 function GoogleIcon() {
   return (

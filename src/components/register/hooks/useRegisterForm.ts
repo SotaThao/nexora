@@ -22,6 +22,7 @@ import { savePendingRegistration, clearPendingRegistration } from '../../../auth
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { useCompletePersonalOnboarding } from '../../../data/hooks/usePersonalOnboarding'
 import { useCreateStaffProfile } from '../../../data/hooks/useProfileSettings'
+import { buildUpdateStaffProfileDto } from '../../../utils/mapStaffProfileView'
 
 export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onKybSuccess = () => {}, isRedirectedFromSession, initialStep = 0, initialRole = 'personal', resumeOtpVerification = false, autoSendVerificationOnResume = false, resumeEmail = '', resumePassword = '', resumeRole = null }) {
   const { t, currentLanguage, setLanguage, renderLabel } = useTranslation()
@@ -102,8 +103,22 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     }
   }
 
+  const AVATAR_MAX_SIZE = 5 * 1024 * 1024
+  const AVATAR_ALLOWED_TYPES = ['image/jpeg', 'image/png']
+
   const handleAvatarFileChange = async (file: File) => {
     if (!file) return
+
+    if (!AVATAR_ALLOWED_TYPES.includes(file.type)) {
+      setErrors(prev => ({ ...prev, avatar: 'errors.image_unsupported_file_type' }))
+      return
+    }
+    if (file.size > AVATAR_MAX_SIZE) {
+      setErrors(prev => ({ ...prev, avatar: 'errors.image_file_size_exceeded_5mb' }))
+      return
+    }
+
+    setErrors(prev => ({ ...prev, avatar: undefined }))
     try {
       const uploaded = await uploadImageMutation.mutateAsync(file)
       const uploadedUrl = uploaded.imageUrl || uploaded.fileUrl || ''
@@ -112,7 +127,8 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         return
       }
     } catch (err: unknown) {
-      console.error('Failed to upload staff avatar', err)
+      logger.error('Failed to upload staff avatar', err)
+      setErrors(prev => ({ ...prev, avatar: 'errors.image_upload_failed' }))
     }
   }
 
@@ -123,7 +139,8 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       .then(() => {
         setVerifySuccess(true)
         // Auto-login to get tokens for subsequent protected calls (Step 2, 3, 4)
-        return apiAuthAdapter.login({ email: email.trim().toLowerCase(), password })
+        // using signInForInviteAccept to prevent fetching staff profile prematurely
+        return apiAuthAdapter.signInForInviteAccept({ email: email.trim().toLowerCase(), password })
       })
       .then(async () => {
         // Business creation is handled by Setup Wizard (onboarding), not here.
@@ -300,7 +317,8 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         }
       }
 
-      await apiAuthAdapter.login({
+      // Use signInForInviteAccept to avoid fetching staff profile prematurely
+      await apiAuthAdapter.signInForInviteAccept({
         email: email.trim().toLowerCase(),
         password
       })
@@ -349,11 +367,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         replaceAllPendingAccountsMutation.mutate(filtered)
 
         setShowOtpInput(false)
-        if (onRegisterAndLogin) {
-          onRegisterAndLogin(email.trim().toLowerCase())
-        } else if (onRegisterSuccess) {
-          onRegisterSuccess()
-        }
+        setCurrentStep(3)
       }
     } catch (err) {
       logger.error('Verify account activation failed', err)
@@ -470,17 +484,25 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     const isApiMode = import.meta.env.VITE_DATA_SOURCE === 'api'
     if (isApiMode) {
       try {
-        await createStaffProfileMutation.mutateAsync({
-          displayName: nickname.trim() || email.split('@')[0],
-          position: position,
-          bio: bio,
-          photoUrl: avatar
+        const dto = buildUpdateStaffProfileDto({}, {
+          fullName: fullName.trim(),
+          defaultDisplayName: nickname.trim() || email.split('@')[0],
+          position,
+          bio,
+          avatar,
+          phone,
         })
+        await createStaffProfileMutation.mutateAsync(dto)
       } catch (err: unknown) {
         logger.error('Failed to create staff profile during onboarding', err)
       }
     }
-    setCurrentStep(4)
+    
+    if (onRegisterAndLogin) {
+      onRegisterAndLogin(email.trim().toLowerCase())
+    } else if (onRegisterSuccess) {
+      onRegisterSuccess()
+    }
   }
 
   const handlePersonalRegisterSubmit = async () => {
@@ -649,7 +671,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         case 0: return t('components.register.hooks.useRegisterForm.accountType')
         case 1: return t('components.register.hooks.useRegisterForm.credentials')
         case 2: return t('components.register.hooks.useRegisterForm.activateOtp')
-        case 3: return t('components.register.hooks.useRegisterForm.success')
+        case 3: return t('components.register.hooks.useRegisterForm.profileSetup')
         default: return ''
       }
     }

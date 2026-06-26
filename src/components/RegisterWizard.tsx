@@ -1,6 +1,7 @@
 import React from 'react'
 import { Check } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useAuth } from '../auth/useAuth'
 import { useRegisterForm } from './register/hooks/useRegisterForm'
 import LanguageSwitcher from './ui/LanguageSwitcher'
 import HomepageLink from './ui/HomepageLink'
@@ -21,6 +22,7 @@ import { logger } from '../utils/logger'
 export default function RegisterWizard() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { refreshSession } = useAuth()
   const clearMerchantSetupMutation = useClearMerchantSetup()
   const clearProfileSettingsMutation = useClearProfileSettings()
 
@@ -58,12 +60,16 @@ export default function RegisterWizard() {
     }
 
     try {
-      await apiAuthAdapter.getSession()
+      await refreshSession()
     } catch (e) {
       logger.error('Failed to get session in handleRegisterAndLogin', e)
     }
     
-    navigate('/onboarding', { state: { ssoPrefillData, isNewRegistration: true } })
+    if (form.role === 'personal') {
+      navigate('/staff', { replace: true })
+    } else {
+      navigate('/onboarding', { state: { ssoPrefillData, isNewRegistration: true } })
+    }
   }
 
   const formProps = {
@@ -77,11 +83,7 @@ export default function RegisterWizard() {
     resumePassword,
     resumeRole,
     onBackToLogin: () => {
-      if (ssoEmail) {
-        navigate(-1)
-      } else {
-        navigate('/login')
-      }
+      navigate(-1)
     },
     onRegisterSuccess: () => navigate('/login'),
     onRegisterAndLogin: handleRegisterAndLogin,
@@ -117,7 +119,9 @@ export default function RegisterWizard() {
       <div className="max-w-4xl mx-auto px-4 py-8 relative z-10 flex flex-col justify-center min-h-dvh">
         {/* Branding header */}
         <div className="text-center mb-6">
-          <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="h-12 w-auto max-w-[220px] mx-auto object-contain" />
+          <a href="/" className="inline-block">
+            <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="h-12 w-auto max-w-[220px] mx-auto object-contain" />
+          </a>
         </div>
 
         {/* Wizard Steps indicator */}
@@ -170,7 +174,7 @@ export default function RegisterWizard() {
           {currentStep === 0 && <StepRoleSelect {...form} />}
           {currentStep === 1 && <StepCredentials {...form} />}
           {currentStep === 2 && <StepOtpVerify {...form} />}
-          {currentStep === 3 && role === 'personal' && <StepSuccess {...form} handleCompleteSetup={undefined} />}
+          {currentStep === 3 && role === 'personal' && <StepProfileSetup {...form} />}
         </div>
       </div>
 

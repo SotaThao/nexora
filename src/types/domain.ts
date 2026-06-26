@@ -173,6 +173,7 @@ export interface StaffSearchResult {
   fullName: string
   avatar: string | null
   position: string | null
+  paymentMethods: PaymentMethodDto[]
 }
 
 export interface StaffBusinessLink {
@@ -299,6 +300,7 @@ export interface StaffLinkRequestDetail {
   businessRole: string | null
   requestedAt: string | null
   status: string | null
+  roleAtBusiness: string | null
 }
 
 export interface StaffAccountView {
@@ -411,8 +413,14 @@ export interface StaffProfile {
   id?: string
   staffCode?: string
   displayName?: string
+  position?: string
   bio?: string
   photo?: string
+  photoUrl?: string
+  firstName?: string
+  lastName?: string
+  phone?: string
+  isProfileComplete?: boolean
   [key: string]: unknown
 }
 

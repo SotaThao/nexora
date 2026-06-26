@@ -16,13 +16,14 @@ export default function StepProfileSetup({
   generatedStaffId,
   setCurrentStep,
   handleProfileSetupSubmit,
+  errors,
   t,
   currentLanguage,
   renderLabel,
 }) {
   return (
     <div className="p-6 sm:p-8 animate-fadeIn max-w-xl mx-auto">
-      <div>
+      <div className="text-center">
         <h3 className="text-lg font-bold text-nexoraText">
           {t('components.register.steps.StepProfileSetup.personalProfileSetup')}
         </h3>
@@ -68,6 +69,9 @@ export default function StepProfileSetup({
             <span className="text-[10px] text-nexoraSubtle">
               {t('components.register.steps.StepProfileSetup.acceptedFormatsJpgPng')}
             </span>
+            {errors?.avatar && (
+              <span className="text-[10px] text-red-500 font-medium">{t(errors.avatar)}</span>
+            )}
           </div>
         </div>
 
@@ -148,33 +152,18 @@ export default function StepProfileSetup({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Role / Specialty */}
-          <div>
-            <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-              {t('components.register.steps.StepProfileSetup.roleSpeciality')}
-            </label>
-            <input
-              type="text"
-              placeholder={t('components.register.steps.StepProfileSetup.phPosition')}
-              className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
-              value={position}
-              onChange={(e) => setPosition(e.target.value)}
-            />
-          </div>
-
-          {/* Staff ID */}
-          <div>
-            <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-              {t('components.register.steps.StepProfileSetup.nexoraStaffId')}
-            </label>
-            <input
-              type="text"
-              disabled
-              className="w-full bg-nexoraCanvas border border-nexoraBorder rounded-lg px-4 py-2.5 text-sm text-nexoraSubtle font-mono font-bold cursor-not-allowed"
-              value={generatedStaffId || 'Pending'}
-            />
-          </div>
+        {/* Role / Specialty */}
+        <div>
+          <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
+            {t('components.register.steps.StepProfileSetup.roleSpeciality')}
+          </label>
+          <input
+            type="text"
+            placeholder={t('components.register.steps.StepProfileSetup.phPosition')}
+            className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
+            value={position}
+            onChange={(e) => setPosition(e.target.value)}
+          />
         </div>
 
         {/* Short Bio */}

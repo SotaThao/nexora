@@ -1,6 +1,11 @@
-import React, { createContext, useState, useContext, type ReactNode } from 'react'
+import React, { createContext, useState, useContext, useEffect, type ReactNode } from 'react'
 import en from '../locales/en.json'
 import vi from '../locales/vi.json'
+import {
+  APP_LANGUAGE_CHANGE_EVENT,
+  getStoredAppLanguage,
+  setStoredAppLanguage,
+} from '../utils/appLanguage'
 import type { AppLanguage, LanguageContextValue, TranslationVariables } from '../types/contexts'
 
 const translations = { en, vi }
@@ -12,24 +17,32 @@ interface LanguageProviderProps {
 }
 
 export function LanguageProvider({ children }: LanguageProviderProps) {
-  const [currentLanguage, setCurrentLanguageState] = useState<AppLanguage>(() => {
-    const saved = localStorage.getItem('nexora_lang')
-    if (saved === 'en' || saved === 'vi') return saved
-    // Fallback to browser language or default to 'en'
-    const browserLang = navigator.language || (navigator as Navigator & { userLanguage?: string }).userLanguage
-    return browserLang?.startsWith('vi') ? 'vi' : 'en'
-  })
+  const [currentLanguage, setCurrentLanguageState] = useState<AppLanguage>(() =>
+    getStoredAppLanguage(),
+  )
+
+  useEffect(() => {
+    const handleLanguageChange = (event: Event) => {
+      const lang = (event as CustomEvent<{ lang: AppLanguage }>).detail?.lang
+      if (lang === 'en' || lang === 'vi') {
+        setCurrentLanguageState(lang)
+      }
+    }
+
+    window.addEventListener(APP_LANGUAGE_CHANGE_EVENT, handleLanguageChange)
+    return () => window.removeEventListener(APP_LANGUAGE_CHANGE_EVENT, handleLanguageChange)
+  }, [])
 
   const setLanguage = (lang: AppLanguage) => {
     if (lang === 'en' || lang === 'vi') {
       setCurrentLanguageState(lang)
-      localStorage.setItem('nexora_lang', lang)
+      setStoredAppLanguage(lang)
     }
   }
 
   // Translation helper with dot notation and interpolation support
   const t: LanguageContextValue['t'] = (key, variables: TranslationVariables = {}) => {
-    const dictionary = translations[currentLanguage] || translations['vi']
+    const dictionary = translations[currentLanguage] || translations.en
     const keys = key.split('.')
     let value: unknown = dictionary
     

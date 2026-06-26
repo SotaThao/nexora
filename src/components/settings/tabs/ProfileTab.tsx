@@ -1,10 +1,12 @@
 import React, { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { createPortal } from 'react-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import useAuth from '../../../auth/useAuth'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { useDeleteAccount } from '../../../data/hooks/useProfileSettings'
 import { buildAffiliateReferralUrl, getProfileReferralCode } from '../../../utils/affiliateReferral'
+import { buildGoogleMapsEmbedUrl, formatAddressForMap } from '../../../utils/mapUrl'
 import {
   useMerchantPaymentMethods,
   useUpdateMerchantPaymentMethod,
@@ -31,6 +33,13 @@ import {
 import ToggleSwitch from '../../ui/ToggleSwitch'
 import { isValidEmail, isValidPhone } from '../../../utils/validation'
 import CountryCodeSelect, { formatNationalNumber, parsePhone } from '../../CountryCodeSelect'
+import CameraCapture from '../../ui/CameraCapture'
+import {
+  getPaymentMethodDisplayName,
+  payoutTypeToUiKey,
+} from '../../../data/paymentMethodTypes'
+import { formatPaymentMethodAccountDisplay } from '../../payout/bankWireAccount'
+import type { PaymentMethodDto } from '../../../types/domain'
 
 const PayoutLogos = {
   zelle: (
@@ -63,17 +72,11 @@ const PayoutLogos = {
     <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-black" xmlns="http://www.w3.org/2000/svg">
       <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83zM15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.22.67-2.94 1.51-.62.73-1.16 1.87-1.02 2.98 1.11.09 2.25-.56 2.97-1.43z" />
     </svg>
-  )
+  ),
+  vlinkpay: (
+    <img src="/assets/vlinkpay-logo.png" alt="VLINKPAY Logo" className="h-[18px] w-[18px] object-contain" />
+  ),
 }
-
-const payoutMethodsList = [
-  { key: 'zelle', label: 'Zelle', placeholder: 'Enter Zelle email/phone...' },
-  { key: 'bankwire', label: 'Bank Wire', placeholder: 'Enter Bank Wire routing - account...' },
-  { key: 'paypal', label: 'PayPal', placeholder: 'Enter PayPal email...' },
-  { key: 'venmo', label: 'Venmo', placeholder: 'Enter Venmo @username...' },
-  { key: 'cashapp', label: 'Cash App', placeholder: 'Enter Cash App $cashtag...' },
-  { key: 'applecash', label: 'Apple Cash', placeholder: 'Enter Apple Cash phone number...' }
-]
 
 const validatePayoutAccount = (method, input) => {
   const account = String(input || '').trim()
@@ -154,6 +157,24 @@ export default function ProfileTab({
     const maskedRef = `${referralCode.slice(0, 3)}...${referralCode.slice(-3)}`
     return compactUrl.replace(referralCode, maskedRef)
   }, [referralCode, referralUrl, t])
+
+  const locationMapSource = isEditingAddress ? addressForm : profile
+  const locationMapQuery = useMemo(
+    () =>
+      formatAddressForMap({
+        street: locationMapSource.street,
+        city: locationMapSource.city,
+        state: locationMapSource.state,
+        zipCode: locationMapSource.zipCode,
+        country: locationMapSource.country,
+      }),
+    [locationMapSource],
+  )
+  const locationMapEmbedUrl = useMemo(
+    () => buildGoogleMapsEmbedUrl(locationMapQuery),
+    [locationMapQuery],
+  )
+
   const inputClass = (error?: string) =>
     `mt-1 h-10 w-full rounded-lg border bg-nexoraCanvas focus:bg-white px-3.5 text-xs text-nexoraText outline-none transition-all ${
       error
@@ -187,16 +208,41 @@ export default function ProfileTab({
   const [editQrCode, setEditQrCode] = useState<any | null>(null)
   const [editQrFile, setEditQrFile] = useState(null)
   const [isCapturing, setIsCapturing] = useState(false)
+  const [isCameraOpen, setIsCameraOpen] = useState(false)
   const [modalError, setModalError] = useState('')
 
-  const getMethod = (key) => apiPaymentMethods.find(m => m.type?.toLowerCase() === key.toLowerCase()) || { type: key, isActive: false, isConfigured: false, accountInfo: '', id: undefined, imageUrl: null, accountName: null }
+  const getMethodUiKey = (method: PaymentMethodDto) =>
+    method.uiKey || payoutTypeToUiKey(method.type || '')
 
-  const handleToggleMethod = (key) => {
+  const displayedPaymentMethods = apiPaymentMethods.filter(
+    (m) => getMethodUiKey(m) !== 'bankwire'
+  )
+
+  const getMethod = (key: string) =>
+    apiPaymentMethods.find((m) => getMethodUiKey(m) === key) || {
+      type: key,
+      isActive: false,
+      isConfigured: false,
+      accountInfo: '',
+      id: undefined,
+      imageUrl: null,
+      accountName: null,
+    }
+
+  const handleToggleMethod = (key: string, isCurrentlyActive: boolean) => {
     const methodData = getMethod(key)
+    const nextActive = !isCurrentlyActive
+
+    if (nextActive && !(methodData.isConfigured && methodData.accountInfo?.trim())) {
+      handleEditPayoutAccount(key)
+      return
+    }
+
     if (!methodData.id) {
       showToast(t('components.settings.tabs.ProfileTab.methodNotConfigured'), 'error')
       return
     }
+
     toggleMutation.mutate(methodData.id)
   }
 
@@ -232,7 +278,7 @@ export default function ProfileTab({
         onSuccess: () => {
           setEditingMethod(null)
           if (!methodData.isActive) {
-            toggleMutation.mutate(methodData.id)
+            toggleMutation.mutate({ id: methodData.id, silentSuccessToast: true })
           }
         }
       }
@@ -250,11 +296,7 @@ export default function ProfileTab({
   }
 
   const handleModalTakePhoto = () => {
-    setIsCapturing(true)
-    setTimeout(() => {
-      setEditQrCode('https://via.placeholder.com/300?text=Mock+Camera+QR')
-      setIsCapturing(false)
-    }, 1500)
+    setIsCameraOpen(true)
   }
 
   const handleModalClearQr = () => {
@@ -381,10 +423,12 @@ export default function ProfileTab({
             </div>
 
             <div className="divide-y divide-slate-100">
-              {payoutMethodsList.filter(item => item.key !== 'bankwire').map((item) => {
-                const methodData = getMethod(item.key)
+              {displayedPaymentMethods.map((method) => {
+                const uiKey = getMethodUiKey(method)
+                const label = method.name || getPaymentMethodDisplayName(method.type || '')
+                const accountDisplay = formatPaymentMethodAccountDisplay(uiKey, method.accountInfo)
                 return (
-                <div key={item.key} className="flex items-center justify-between py-3">
+                <div key={method.id || uiKey} className="flex items-center justify-between py-3">
                   <div className="flex items-center gap-3 min-w-0">
                     <ToggleSwitch
                       checked={methodData.isActive}
@@ -397,13 +441,13 @@ export default function ProfileTab({
                     {/* Logo and Label */}
                     <div className="flex items-center gap-2.5 min-w-0">
                       <span className="h-7 w-7 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
-                        {PayoutLogos[item.key]}
+                        {PayoutLogos[uiKey]}
                       </span>
                       <div className="min-w-0">
-                        <div className="text-xs font-bold text-slate-800">{item.label}</div>
-                        {methodData.isConfigured ? (
+                        <div className="text-xs font-bold text-slate-800">{label}</div>
+                        {method.isConfigured ? (
                           <div className="text-[10px] text-slate-500 font-mono mt-0.5 truncate max-w-[110px] sm:max-w-[150px]">
-                            {methodData.accountInfo}
+                            {accountDisplay}
                           </div>
                         ) : (
                           <div className="text-[10px] text-slate-300 italic font-medium mt-0.5">
@@ -417,8 +461,8 @@ export default function ProfileTab({
                   {/* Edit button */}
                   <button
                     type="button"
-                    onClick={() => handleEditPayoutAccount(item.key)}
-                    aria-label={`Edit ${item.label} Payout Account`}
+                    onClick={() => handleEditPayoutAccount(uiKey)}
+                    aria-label={`Edit ${label} Payout Account`}
                     className="flex items-center gap-1 text-[10px] font-bold text-amber-600 hover:text-amber-700 transition shrink-0 ml-2"
                   >
                     <Edit2 className="h-3 w-3" />
@@ -426,19 +470,6 @@ export default function ProfileTab({
                   </button>
                 </div>
               )})}
-            </div>
-
-            {/* VLINKPAY ID display at the bottom */}
-            <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-xs">
-              <div className="flex items-center gap-2">
-                <span className="h-7 w-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
-                  <img src="/assets/vlinkpay-logo.png" alt="VLINKPAY Logo" className="h-4.5 w-4.5 object-contain animate-pulse" />
-                </span>
-                <span className="text-nexoraMuted font-bold">VLINKPAY ID</span>
-              </div>
-              <span className="text-nexoraText font-extrabold font-mono bg-slate-50 border border-slate-200 px-2 py-0.5 rounded">
-                {getMethod('vlinkpay').accountInfo || 'Pending KYB'}
-              </span>
             </div>
 
           </div>
@@ -907,13 +938,23 @@ export default function ProfileTab({
                 </h4>
               </div>
               <div className="h-[220px] w-full rounded-lg border border-slate-200 overflow-hidden bg-slate-100">
-                <iframe
-                  title="Business Location Map"
-                  src="https://maps.google.com/maps?q=Palm%20Beach,%20QLD,%20Australia&t=&z=14&ie=UTF8&iwloc=&output=embed"
-                  className="w-full h-full border-0 grayscale-[10%]"
-                  allowFullScreen
-                  loading="lazy"
-                ></iframe>
+                {locationMapEmbedUrl ? (
+                  <iframe
+                    key={locationMapQuery}
+                    title="Business Location Map"
+                    src={locationMapEmbedUrl}
+                    className="w-full h-full border-0 grayscale-[10%]"
+                    allowFullScreen
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-4 text-center">
+                    <MapPin className="h-8 w-8 text-slate-300" />
+                    <p className="text-[11px] font-semibold text-slate-500">
+                      {t('components.settings.tabs.ProfileTab.locationMapEmpty')}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1056,7 +1097,8 @@ export default function ProfileTab({
           paypal: 'PayPal',
           venmo: 'Venmo',
           cashapp: 'Cash App',
-          applecash: 'Apple Cash'
+          applecash: 'Apple Cash',
+          vlinkpay: 'VLINKPAY Wallet',
         }
 
         const walletFields = {
@@ -1074,12 +1116,13 @@ export default function ProfileTab({
           paypal: t('components.settings.tabs.ProfileTab.enterPaypalEmail'),
           venmo: t('components.settings.tabs.ProfileTab.enterVenmoUsername'),
           cashapp: t('components.settings.tabs.ProfileTab.enterCashAppCashtag'),
-          applecash: t('components.settings.tabs.ProfileTab.enterAppleCashPhone')
+          applecash: t('components.settings.tabs.ProfileTab.enterAppleCashPhone'),
+          vlinkpay: t('components.dashboard.modals.PayoutSetupModal.placeholderVlinkpay'),
         }
 
-        return (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl border border-slate-100 max-w-sm w-full shadow-2xl p-6 relative overflow-hidden animate-scaleIn text-left space-y-4.5">
+        return createPortal(
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+            <div className={`bg-white rounded-3xl border border-slate-100 max-w-sm w-full shadow-2xl relative overflow-hidden animate-scaleIn text-left ${isCameraOpen ? 'h-[480px]' : 'p-6 space-y-4.5'}`}>
 
               {/* Header */}
               <div className="flex items-center gap-3.5 border-b border-slate-100 pb-3">
@@ -1206,9 +1249,19 @@ export default function ProfileTab({
                   </button>
                 </div>
               </form>
+
+              {isCameraOpen && (
+                <CameraCapture
+                  onCapture={(dataUrl) => {
+                    setEditQrCode(dataUrl)
+                    setIsCameraOpen(false)
+                  }}
+                  onCancel={() => setIsCameraOpen(false)}
+                />
+              )}
             </div>
           </div>
-        );
+        , document.body);
       })()}
     </>
   )

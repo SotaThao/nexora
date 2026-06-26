@@ -191,12 +191,14 @@ jobs:
             --build-arg VITE_GOOGLE_MAPS_MAP_ID="${{ vars.VITE_GOOGLE_MAPS_MAP_ID }}" \
             --build-arg VITE_VLINKPAY_WEB_URL_BASE="${{ vars.VITE_VLINKPAY_WEB_URL_BASE }}" \
             --tag $REGISTRY/$IMAGE_NAME:${{ needs.resolve-environment.outputs.deploy_path }}-${{ github.sha }} \
+            --tag $REGISTRY/$IMAGE_NAME:${{ needs.resolve-environment.outputs.deploy_path }}-latest \
             .
 
       - name: Push Docker Image
         run: |
           echo "*********** Push Nexora Frontend ***********"
           docker push $REGISTRY/$IMAGE_NAME:${{ needs.resolve-environment.outputs.deploy_path }}-${{ github.sha }}
+          docker push $REGISTRY/$IMAGE_NAME:${{ needs.resolve-environment.outputs.deploy_path }}-latest
 
   deploy:
     environment: ${{ needs.resolve-environment.outputs.github_environment }}

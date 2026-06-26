@@ -192,7 +192,7 @@ export default function StepCredentials(props) {
         </div>
       ) : (
         <>
-          <div>
+          <div className="text-center max-w-md mx-auto">
             <h3 className="text-lg font-bold text-nexoraText">{t('register.title_step_1')}</h3>
             <p className="text-xs text-nexoraSubtle mt-1">{t('register.desc_step_1')}</p>
           </div>

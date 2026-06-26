@@ -1,14 +1,17 @@
 // StaffSidebar — desktop (≥1024px) left nav and mobile drawer for the staff dashboard.
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { LogOut, ChevronLeft, ChevronDown, ChevronUp } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { STAFF_MENU_ITEMS } from '../constants'
+import { PUBLIC_HOME_MENU_ITEM } from '../../dashboard/constants'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
 
 export default function StaffSidebar({ activeScreen, onNavigate, onLogout, isOpen, onClose }) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const { staffMember, account } = useStaffAccount()
   const displayName = account.defaultDisplayName || staffMember.fullName || 'Staff'
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)

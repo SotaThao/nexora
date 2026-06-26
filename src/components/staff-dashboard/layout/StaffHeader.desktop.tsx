@@ -1,25 +1,41 @@
 // StaffHeader — top bar: brand (mobile), language switch, notifications bell, profile dropdown.
 import { useState, useRef, useEffect } from 'react'
-import { Menu, Settings, ShieldCheck, LogOut } from 'lucide-react'
+import { AlertTriangle, Bell, LogOut, Menu, Settings, ShieldCheck, Star, UserCheck, Wallet } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
-import { useUnreadCount } from '../../../data/hooks/useNotifications'
+import {
+  useMarkAllNotificationsRead,
+  useMarkNotificationRead,
+  useNotifications,
+  useUnreadCount,
+} from '../../../data/hooks/useNotifications'
+import { formatNotificationDateTime } from '../../dashboard/utils'
+import { resolveStaffNotificationScreen } from '../constants'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import HeaderEcosystem from '../../dashboard/layout/HeaderEcosystem'
 
 export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu, onLogout }) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const { staffMember, account } = useStaffAccount()
   const { data: unreadCount = 0 } = useUnreadCount()
   const displayName = account.defaultDisplayName || staffMember.fullName || 'Staff'
 
   const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [isNotiOpen, setIsNotiOpen] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
+  const notiRef = useRef<HTMLDivElement>(null)
+
+  const { data: notifications, isLoading: isNotificationsLoading } = useNotifications({ enabled: isNotiOpen })
+  const { mutate: markRead } = useMarkNotificationRead()
+  const { mutate: markAllRead, isPending: isMarkAllPending } = useMarkAllNotificationsRead()
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
         setIsProfileOpen(false)
+      }
+      if (notiRef.current && !notiRef.current.contains(e.target as Node)) {
+        setIsNotiOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -29,6 +45,12 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
   const handleProfileNav = (tab: string) => {
     onNavigate('profile', { tab })
     setIsProfileOpen(false)
+  }
+
+  const handleNotificationClick = (item) => {
+    if (!item.read) markRead(item.id)
+    setIsNotiOpen(false)
+    onNavigate(resolveStaffNotificationScreen(item.type))
   }
 
   return (
@@ -52,32 +74,106 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
       </div>
 
       <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-        {/* Language switch */}
         <LanguageSwitcher />
 
         <HeaderEcosystem />
 
-        {/* Notifications bell */}
-        <button
-          type="button"
-          onClick={() => onNavigate('notifications')}
-          aria-label={t('staff_dashboard.titles.notifications')}
-          className={`relative flex h-10 w-10 items-center justify-center rounded-full border border-nexoraBorder transition hover:bg-nexoraCanvas ${
-            activeScreen === 'notifications' ? 'text-nexoraBrand' : 'text-nexoraText'
-          }`}
-        >
-          <img
-            src="/assets/menu/notification.png"
-            alt=""
-            className="h-5 w-5 object-contain"
-            aria-hidden="true"
-          />
-          {unreadCount > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-black text-white ring-2 ring-white">
-              {unreadCount > 99 ? '99+' : unreadCount}
-            </span>
+        {/* Notifications bell + dropdown */}
+        <div ref={notiRef} className="relative">
+          <button
+            type="button"
+            onClick={() => setIsNotiOpen((v) => !v)}
+            aria-label={t('staff_dashboard.titles.notifications')}
+            className={`relative flex h-10 w-10 items-center justify-center rounded-full border transition hover:bg-nexoraCanvas ${
+              isNotiOpen ? 'border-nexoraBrand ring-2 ring-nexoraBrand/30' : 'border-nexoraBorder'
+            }`}
+          >
+            <img src="/assets/menu/notification.png" alt="" className="h-5 w-5 object-contain" aria-hidden="true" />
+            {unreadCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-black text-white ring-2 ring-white">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </button>
+
+          {isNotiOpen && (
+            <div className="absolute right-0 top-12 z-50 flex max-h-[460px] w-80 flex-col overflow-hidden rounded-xl border border-nexoraBorder bg-white shadow-2xl animate-fadeIn">
+              <div className="flex items-center justify-between border-b border-nexoraBorder bg-nexoraSurfaceMuted px-4 py-3">
+                <span className="text-xs font-black uppercase tracking-wider text-nexoraText">
+                  {t('staff_dashboard.titles.notifications')} ({unreadCount})
+                </span>
+                {unreadCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => markAllRead()}
+                    disabled={isMarkAllPending}
+                    className="text-[10px] font-bold text-nexoraBrand hover:underline disabled:opacity-50"
+                  >
+                    {t('staff_dashboard.notifications.mark_all_read')}
+                  </button>
+                )}
+              </div>
+
+              <div className="max-h-[380px] flex-grow divide-y divide-nexoraBorder overflow-y-auto">
+                {isNotificationsLoading ? (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <Bell className="mb-2 h-8 w-8 animate-pulse text-nexoraBorder" />
+                    <p className="text-xs font-semibold text-nexoraSubtle">{t('common.loading')}</p>
+                  </div>
+                ) : notifications && notifications.length > 0 ? (
+                  notifications.map((item) => {
+                    const typeLower = (item.type || '').toLowerCase().replace(/[\s_-]+/g, '')
+                    const IconComponent = ({
+                      tip_success: Wallet, tipsuccess: Wallet,
+                      feedback_alert: AlertTriangle, feedbackalert: AlertTriangle,
+                      review_good: Star, reviewgood: Star,
+                      staff_accepted_invite: UserCheck, staffacceptedinvite: UserCheck,
+                      stafflinkrequest: UserCheck, staff_link_request: UserCheck,
+                    } as Record<string, typeof Bell>)[typeLower] ?? Bell
+                    const iconColor = ({
+                      tip_success: 'bg-emerald-500 text-white', tipsuccess: 'bg-emerald-500 text-white',
+                      feedback_alert: 'bg-amber-500 text-white', feedbackalert: 'bg-amber-500 text-white',
+                      review_good: 'bg-yellow-400 text-white', reviewgood: 'bg-yellow-400 text-white',
+                    } as Record<string, string>)[typeLower] ?? 'bg-nexoraBrand text-white'
+                    const isUnread = !item.read
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => handleNotificationClick(item)}
+                        className={`relative flex w-full items-start gap-3 border-b border-nexoraBorder/50 p-3.5 text-left transition-colors last:border-0 hover:bg-nexoraCanvas ${
+                          isUnread ? 'bg-nexoraBrandSoft/40' : 'bg-white'
+                        }`}
+                      >
+                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${iconColor} ${!isUnread ? 'opacity-60' : ''}`}>
+                          <IconComponent className="h-4 w-4" />
+                        </span>
+                        <div className="min-w-0 flex-grow">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className={`truncate text-xs ${isUnread ? 'font-extrabold text-nexoraText' : 'font-bold text-nexoraMuted'}`}>
+                              {item.title}
+                            </span>
+                            <span className="shrink-0 text-[10px] font-medium text-nexoraSubtle">
+                              {formatNotificationDateTime(item.createdAt || item.time, currentLanguage)}
+                            </span>
+                          </div>
+                          <p className={`mt-1 break-words text-[11px] leading-normal ${isUnread ? 'font-semibold text-nexoraText' : 'font-medium text-nexoraMuted'}`}>
+                            {item.message}
+                          </p>
+                        </div>
+                      </button>
+                    )
+                  })
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <Bell className="mb-2 h-8 w-8 text-nexoraBorder" />
+                    <p className="text-xs font-semibold text-nexoraSubtle">{t('staff_dashboard.notifications.empty')}</p>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
-        </button>
+        </div>
 
         {/* Profile avatar + dropdown */}
         <div ref={profileRef} className="relative">
@@ -100,7 +196,6 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
 
           {isProfileOpen && (
             <div className="absolute right-0 top-12 z-50 w-52 rounded-xl border border-nexoraBorder bg-nexoraSurface shadow-lg animate-fadeIn">
-              {/* User info */}
               <div className="border-b border-nexoraBorder px-4 py-3">
                 <div className="truncate text-sm font-bold text-nexoraText">
                   {account.fullName || staffMember.fullName || displayName}
@@ -110,7 +205,6 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
                 </div>
               </div>
 
-              {/* Menu items */}
               <div className="p-1.5 space-y-0.5">
                 <button
                   type="button"
@@ -130,7 +224,6 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
                 </button>
               </div>
 
-              {/* Sign out */}
               <div className="border-t border-nexoraBorder p-1.5">
                 <button
                   type="button"

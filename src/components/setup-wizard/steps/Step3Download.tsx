@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Download, CheckCircle2, ShieldCheck, Loader2 } from 'lucide-react'
 import { getCustomerAppBaseUrl } from '../../../utils/webUrlBase'
+import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 import { downloadQrCode } from '../../../utils/qrUtils'
 import { shouldUseMobileDownloadFlow } from '../../../utils/downloadFile'
 
@@ -16,9 +17,10 @@ export default function Step3Download({
   const [isSaving, setIsSaving] = useState(false)
   const useMobileDownload = shouldUseMobileDownloadFlow()
 
-  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(
+  const qrImageUrl = buildPublicQrImageUrl(
     `${getCustomerAppBaseUrl()}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}`,
-  )}`
+    600,
+  )
 
   const handleDownload = async () => {
     if (isSaving) return
@@ -65,9 +67,10 @@ export default function Step3Download({
             {/* Real generated QR code scan preview */}
             <div className="h-28 w-28 rounded-lg bg-white border border-nexoraBorder/60 p-2 flex items-center justify-center shadow-inner qr-print-qr-wrapper">
               <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-                  `${getCustomerAppBaseUrl()}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}`
-                )}`}
+                src={buildPublicQrImageUrl(
+                  `${getCustomerAppBaseUrl()}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}`,
+                  150,
+                )}
                 alt="QR Preview"
                 className="h-full w-full object-contain qr-print-qr-image"
               />

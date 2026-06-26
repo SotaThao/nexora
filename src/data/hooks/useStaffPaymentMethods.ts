@@ -57,10 +57,17 @@ export function useToggleStaffPaymentMethod() {
   const { showToast } = useNotification()
   const { t } = useTranslation()
 
-  return useMutation<PaymentMethodDto, Error, string>({
-    mutationFn: (id) => staffPaymentMethodsRepository.toggle(id),
-    onSuccess: (method) => {
+  return useMutation<
+    PaymentMethodDto,
+    Error,
+    string | { id: string; silentSuccessToast?: boolean }
+  >({
+    mutationFn: (vars) =>
+      staffPaymentMethodsRepository.toggle(typeof vars === 'string' ? vars : vars.id),
+    onSuccess: (method, vars) => {
       queryClient.invalidateQueries({ queryKey: qk.staffPaymentMethods() })
+      const silentSuccessToast = typeof vars === 'string' ? false : Boolean(vars.silentSuccessToast)
+      if (silentSuccessToast) return
       showToast(
         t(method.isActive ? 'payment_methods.toggle_enabled' : 'payment_methods.toggle_disabled'),
         'success',

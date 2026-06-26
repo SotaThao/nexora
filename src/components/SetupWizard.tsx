@@ -14,6 +14,7 @@ import PayoutSetupModal from './setup-wizard/PayoutSetupModal'
 import { getCustomerAppBaseUrl } from '../utils/webUrlBase'
 import PersonalSetupWizard from './setup-wizard/PersonalSetupWizard'
 import usePersonalSetupWizard from './setup-wizard/hooks/usePersonalSetupWizard'
+import { buildPublicQrImageUrl } from '../data/repositories/publicQr'
 import LanguageSwitcher from './ui/LanguageSwitcher'
 
 export { renderTextWithGoldStars, getTouchpointIcon } from './setup-wizard/constants'
@@ -59,8 +60,9 @@ export default function SetupWizard() {
 
   const {
     currentLanguage, setLanguage, t,
-    currentStep, setCurrentStep, isSsoLocked,
+    currentStep, setCurrentStep, isSsoLocked, isStepSaving,
     businessInfo, setBusinessInfo,
+    merchantPaymentMethods,
     reviewLinks, setReviewLinks,
     staffList,
     newStaff, setNewStaff,
@@ -225,6 +227,7 @@ export default function SetupWizard() {
                 setEditingTpType={setEditingTpType}
                 errors={errors}
                 businessInfo={businessInfo}
+                merchantPaymentMethods={merchantPaymentMethods}
                 handleAddStaff={handleAddStaff}
                 handleToggleWallet={handleToggleWallet}
                 openPayoutSetup={openPayoutSetup}
@@ -272,9 +275,10 @@ export default function SetupWizard() {
               {currentStep < 3 ? (
                 <button
                   onClick={handleNext}
-                  className="min-h-11 w-full justify-center px-6 py-2.5 rounded-flox-buttons bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 transition-opacity text-white font-extrabold text-sm flex items-center gap-1.5 transition-all shadow-[0_4px_14px_rgba(43,89,255,0.25)] sm:w-auto"
+                  disabled={isStepSaving}
+                  className="min-h-11 w-full justify-center px-6 py-2.5 rounded-flox-buttons bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 transition-opacity text-white font-extrabold text-sm flex items-center gap-1.5 transition-all shadow-[0_4px_14px_rgba(43,89,255,0.25)] sm:w-auto disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {t('common.next')} <ArrowRight className="w-4 h-4" />
+                  {isStepSaving ? t('common.saving') : t('common.next')} {!isStepSaving && <ArrowRight className="w-4 h-4" />}
                 </button>
               ) : (
                 <button
@@ -345,9 +349,10 @@ export default function SetupWizard() {
 
                 <div className="h-28 w-28 rounded-lg bg-white border border-nexoraBorder/60 p-2 flex items-center justify-center shadow-inner qr-print-qr-wrapper">
                   <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-                      `${getCustomerAppBaseUrl()}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}&tech=tp/${previewingTp.id}`
-                    )}`}
+                    src={buildPublicQrImageUrl(
+                      `${getCustomerAppBaseUrl()}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}&tech=tp/${previewingTp.id}`,
+                      150,
+                    )}
                     alt="QR Preview"
                     className="h-full w-full object-contain qr-print-qr-image"
                   />
@@ -401,9 +406,10 @@ export default function SetupWizard() {
 
             <div className="qr-print-qr-wrapper">
               <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-                  `${getCustomerAppBaseUrl()}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}`
-                )}`}
+                src={buildPublicQrImageUrl(
+                  `${getCustomerAppBaseUrl()}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}`,
+                  150,
+                )}
                 alt="Scan QR code to tip and review"
                 className="qr-print-qr-image"
               />

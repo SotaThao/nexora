@@ -344,7 +344,7 @@ function Overview({
           </div>
           <button
             type="button"
-            onClick={() => navigate('/dashboard/reports')}
+            onClick={() => navigate('/dashboard/reports?status=AwaitingShopConfirmation')}
             className="shrink-0 rounded-lg bg-violet-600 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-white hover:bg-violet-700 transition cursor-pointer whitespace-nowrap"
           >
             {t('merchant_dashboard.tips.pending_view_cta')} →

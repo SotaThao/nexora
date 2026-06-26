@@ -10,31 +10,31 @@ importers:
     dependencies:
       '@capacitor/android':
         specifier: ^8.4.0
-        version: 8.4.0(@capacitor/core@8.4.0)
+        version: 8.4.1(@capacitor/core@8.4.1)
       '@capacitor/camera':
         specifier: ^8.2.0
-        version: 8.2.0(@capacitor/core@8.4.0)
+        version: 8.2.0(@capacitor/core@8.4.1)
       '@capacitor/core':
         specifier: ^8.4.0
-        version: 8.4.0
+        version: 8.4.1
       '@capacitor/filesystem':
         specifier: ^8.0.0
-        version: 8.1.2(@capacitor/core@8.4.0)
+        version: 8.1.2(@capacitor/core@8.4.1)
       '@capacitor/ios':
         specifier: ^8.4.0
-        version: 8.4.0(@capacitor/core@8.4.0)
+        version: 8.4.1(@capacitor/core@8.4.1)
       '@capacitor/keyboard':
         specifier: ^8.0.3
-        version: 8.0.5(@capacitor/core@8.4.0)
+        version: 8.0.5(@capacitor/core@8.4.1)
       '@capacitor/share':
         specifier: ^8.0.0
-        version: 8.0.1(@capacitor/core@8.4.0)
+        version: 8.0.1(@capacitor/core@8.4.1)
       '@capgo/capacitor-updater':
         specifier: ^8.49.0
-        version: 8.49.4(@capacitor/core@8.4.0)
+        version: 8.49.7(@capacitor/core@8.4.1)
       '@onesignal/capacitor-plugin':
         specifier: ^1.1.3
-        version: 1.1.3(@capacitor/core@8.4.0)
+        version: 1.1.3(@capacitor/core@8.4.1)
       '@tanstack/react-query':
         specifier: ^5.0.0
         version: 5.101.0(react@18.3.1)
@@ -74,7 +74,7 @@ importers:
         version: 3.0.5(@types/node@25.9.3)(typescript@6.0.3)
       '@capacitor/cli':
         specifier: ^8.4.0
-        version: 8.4.0
+        version: 8.4.1
       '@tanstack/react-query-devtools':
         specifier: ^5.0.0
         version: 5.101.0(@tanstack/react-query@5.101.0(react@18.3.1))(react@18.3.1)
@@ -245,8 +245,8 @@ packages:
     resolution: {integrity: sha512-ctxtJ/eA+t+6q2++vj5j7FYX3nRu311q1wfYH3xjlLOsczhlhxAg2FWNUXhpGvAw3BWo1xBcvOV6/YLc2r5FJw==}
     hasBin: true
 
-  '@capacitor/android@8.4.0':
-    resolution: {integrity: sha512-K1ZPkQzvRzPEALz9nBdLx5p5nAPzp5fsTYWk7LRiKZeH/NXqjDvqfTv7lrLgrziQNoDeaL6ijg64oBREzXiV+g==}
+  '@capacitor/android@8.4.1':
+    resolution: {integrity: sha512-igtDCJ7QQn0P2qHFD9p4KXaa6V1b2PRNt+MxjVwtjTm/BJvqmiazOJq6rPjwFSZnfHm6iFoZk8TfzHd44pyBGw==}
     peerDependencies:
       '@capacitor/core': ^8.4.0
 
@@ -265,21 +265,21 @@ packages:
     engines: {node: '>=16.0.0'}
     hasBin: true
 
-  '@capacitor/cli@8.4.0':
-    resolution: {integrity: sha512-5Z9RKHxiqJYRTLrfMeZmzR4qrlg5B85MxsWZ5goyXsLkO3bgpW9a1qV/6fR1SX9s5gwLza5y7PZVwITl/hDJ7g==}
+  '@capacitor/cli@8.4.1':
+    resolution: {integrity: sha512-t7F2s7fFHCq113xgrggrmK6ctV0/8E5YfLNVLfPHp4GCTDO+tly9fZvWPf2/sOI8lMm18dLT43qbXLRTz/OZgw==}
     engines: {node: '>=22.0.0'}
     hasBin: true
 
-  '@capacitor/core@8.4.0':
-    resolution: {integrity: sha512-LrS1xPIrqLtJABBIPDGXxxKmI9OyesrzWw8DiHbxhSC9JoiLUleUAJlX1a0LWIVLRbuY4Szgf9huFeRqYH2SAQ==}
+  '@capacitor/core@8.4.1':
+    resolution: {integrity: sha512-xqhOGLbTAYeOWK+IDUNSjQJAPapQjRHrIcgk9PYp52or9zFTaaMko31uNi16N6W+CRJ8VrRram6fOYILkBG2Hg==}
 
   '@capacitor/filesystem@8.1.2':
     resolution: {integrity: sha512-doaaMfGoFR2hWU6aV6u83I+5ZsGyJVq+Gz4r9lMpJzUKMm1eMu0hLnFdV1aXZlU9FlK/RndFrVD8oRZfNOqWgQ==}
     peerDependencies:
       '@capacitor/core': '>=8.0.0'
 
-  '@capacitor/ios@8.4.0':
-    resolution: {integrity: sha512-tnwstEdbTJ2nHAfoAwnurXgYRscWeLY+IIGdz69o24gN2Crfj9Xc0TWo8L5uFLF1LmpbUywH1IT0U1oHV8c+CA==}
+  '@capacitor/ios@8.4.1':
+    resolution: {integrity: sha512-EgcAk7NYheHMTyP3CUrA65qKs4D2UEAKgw44HI6Uk3dTw6KjLQkdLOQWvbeRncHaZ2gklfOojUoc5DlSw2lhYg==}
     peerDependencies:
       '@capacitor/core': ^8.4.0
 
@@ -296,8 +296,8 @@ packages:
   '@capacitor/synapse@1.0.4':
     resolution: {integrity: sha512-/C1FUo8/OkKuAT4nCIu/34ny9siNHr9qtFezu4kxm6GY1wNFxrCFWjfYx5C1tUhVGz3fxBABegupkpjXvjCHrw==}
 
-  '@capgo/capacitor-updater@8.49.4':
-    resolution: {integrity: sha512-5eWAmKP096lHkWa9WS945yOljHDksalHhlhwzFMo0osGir30W87O1x28Oo6qmcfW2/I1LVjtYfXYfYVRKeJ6Bg==}
+  '@capgo/capacitor-updater@8.49.7':
+    resolution: {integrity: sha512-zewMYUiiSMxn4CB3yF0y7gB/I8fks06vXdhq3bRwmFFW/nwtgi37uGYgfn5x5PmURWbLfI43ds6wKE/D/4SFAg==}
     peerDependencies:
       '@capacitor/core': ^8.0.0
 
@@ -1241,6 +1241,7 @@ packages:
   conventional-changelog-core@4.2.4:
     resolution: {integrity: sha512-gDVS+zVJHE2v4SLc6B0sLsPiloR0ygU7HaDW14aNJE1v4SlqJPILPl/aJC7YdtRE4CybBf8gDwObBvKha8Xlyg==}
     engines: {node: '>=10'}
+    deprecated: Deprecated and no longer maintained. Please use conventional-changelog instead.
 
   conventional-changelog-ember@2.0.9:
     resolution: {integrity: sha512-ulzIReoZEvZCBDhcNYfDIsLTHzYHc7awh+eI44ZtV5cx6LVxLlVtEmcO+2/kGIHGtw+qVabJYjdI5cJOQgXh1A==}
@@ -1624,7 +1625,7 @@ packages:
   git-raw-commits@2.0.11:
     resolution: {integrity: sha512-VnctFhw+xfj8Va1xtfEqCUD2XDrbAPSJx+hSrE5K7fGdjZruW7XV+QOrN7LF/RJyvspRiD2I0asWsxFp0ya26A==}
     engines: {node: '>=10'}
-    deprecated: This package is no longer maintained. For the JavaScript API, please use @conventional-changelog/git-client instead.
+    deprecated: Deprecated and no longer maintained. Use @conventional-changelog/git-client instead.
     hasBin: true
 
   git-remote-origin-url@2.0.0:
@@ -1634,7 +1635,7 @@ packages:
   git-semver-tags@4.1.1:
     resolution: {integrity: sha512-OWyMt5zBe7xFs8vglMmhM9lRQzCWL3WjHtxNNfJTMngGym7pC1kh8sP6jevfydJ6LP3ZvGxfb6ABYgPUM0mtsA==}
     engines: {node: '>=10'}
-    deprecated: This package is no longer maintained. For the JavaScript API, please use @conventional-changelog/git-client instead.
+    deprecated: Deprecated and no longer maintained. Use @conventional-changelog/git-client instead.
     hasBin: true
 
   gitconfiglocal@1.0.0:
@@ -2498,8 +2499,8 @@ packages:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
     hasBin: true
 
-  semver@7.8.4:
-    resolution: {integrity: sha512-rUCObTnP32Q08R2uuIrt7r9PlEonuTmtuXYcW6s5kjdlj3xbnwe+21yXptAUYcMAABLkYYTtnmzb3w3EDZfueA==}
+  semver@7.8.5:
+    resolution: {integrity: sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA==}
     engines: {node: '>=10'}
     hasBin: true
 
@@ -3195,9 +3196,9 @@ snapshots:
     dependencies:
       css-tree: 3.2.1
 
-  '@capacitor/android@8.4.0(@capacitor/core@8.4.0)':
+  '@capacitor/android@8.4.1(@capacitor/core@8.4.1)':
     dependencies:
-      '@capacitor/core': 8.4.0
+      '@capacitor/core': 8.4.1
 
   '@capacitor/assets@3.0.5(@types/node@25.9.3)(typescript@6.0.3)':
     dependencies:
@@ -3224,9 +3225,9 @@ snapshots:
       - supports-color
       - typescript
 
-  '@capacitor/camera@8.2.0(@capacitor/core@8.4.0)':
+  '@capacitor/camera@8.2.0(@capacitor/core@8.4.1)':
     dependencies:
-      '@capacitor/core': 8.4.0
+      '@capacitor/core': 8.4.1
 
   '@capacitor/cli@5.7.8':
     dependencies:
@@ -3243,14 +3244,14 @@ snapshots:
       plist: 3.1.1
       prompts: 2.4.2
       rimraf: 4.4.1
-      semver: 7.8.4
+      semver: 7.8.5
       tar: 6.2.1
       tslib: 2.8.1
       xml2js: 0.5.0
     transitivePeerDependencies:
       - supports-color
 
-  '@capacitor/cli@8.4.0':
+  '@capacitor/cli@8.4.1':
     dependencies:
       '@ionic/cli-framework-output': 2.2.8
       '@ionic/utils-subprocess': 3.0.1
@@ -3265,39 +3266,39 @@ snapshots:
       plist: 3.1.1
       prompts: 2.4.2
       rimraf: 6.1.3
-      semver: 7.8.4
+      semver: 7.8.5
       tar: 7.5.16
       tslib: 2.8.1
       xml2js: 0.6.2
     transitivePeerDependencies:
       - supports-color
 
-  '@capacitor/core@8.4.0':
+  '@capacitor/core@8.4.1':
     dependencies:
       tslib: 2.8.1
 
-  '@capacitor/filesystem@8.1.2(@capacitor/core@8.4.0)':
+  '@capacitor/filesystem@8.1.2(@capacitor/core@8.4.1)':
     dependencies:
-      '@capacitor/core': 8.4.0
+      '@capacitor/core': 8.4.1
       '@capacitor/synapse': 1.0.4
 
-  '@capacitor/ios@8.4.0(@capacitor/core@8.4.0)':
+  '@capacitor/ios@8.4.1(@capacitor/core@8.4.1)':
     dependencies:
-      '@capacitor/core': 8.4.0
+      '@capacitor/core': 8.4.1
 
-  '@capacitor/keyboard@8.0.5(@capacitor/core@8.4.0)':
+  '@capacitor/keyboard@8.0.5(@capacitor/core@8.4.1)':
     dependencies:
-      '@capacitor/core': 8.4.0
+      '@capacitor/core': 8.4.1
 
-  '@capacitor/share@8.0.1(@capacitor/core@8.4.0)':
+  '@capacitor/share@8.0.1(@capacitor/core@8.4.1)':
     dependencies:
-      '@capacitor/core': 8.4.0
+      '@capacitor/core': 8.4.1
 
   '@capacitor/synapse@1.0.4': {}
 
-  '@capgo/capacitor-updater@8.49.4(@capacitor/core@8.4.0)':
+  '@capgo/capacitor-updater@8.49.7(@capacitor/core@8.4.1)':
     dependencies:
-      '@capacitor/core': 8.4.0
+      '@capacitor/core': 8.4.1
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
@@ -3577,9 +3578,9 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
 
-  '@onesignal/capacitor-plugin@1.1.3(@capacitor/core@8.4.0)':
+  '@onesignal/capacitor-plugin@1.1.3(@capacitor/core@8.4.1)':
     dependencies:
-      '@capacitor/core': 8.4.0
+      '@capacitor/core': 8.4.1
 
   '@prettier/plugin-xml@2.2.0':
     dependencies:
@@ -5013,7 +5014,7 @@ snapshots:
 
   node-abi@3.92.0:
     dependencies:
-      semver: 7.8.4
+      semver: 7.8.5
 
   node-addon-api@6.1.0: {}
 
@@ -5039,7 +5040,7 @@ snapshots:
     dependencies:
       hosted-git-info: 4.1.0
       is-core-module: 2.16.2
-      semver: 7.8.4
+      semver: 7.8.5
       validate-npm-package-license: 3.0.4
 
   normalize-path@3.0.0: {}
@@ -5431,7 +5432,7 @@ snapshots:
 
   semver@6.3.1: {}
 
-  semver@7.8.4: {}
+  semver@7.8.5: {}
 
   set-blocking@2.0.0: {}
 
@@ -5441,7 +5442,7 @@ snapshots:
       detect-libc: 2.1.2
       node-addon-api: 6.1.0
       prebuild-install: 7.1.3
-      semver: 7.8.4
+      semver: 7.8.5
       simple-get: 4.0.1
       tar-fs: 3.1.2
       tunnel-agent: 0.6.0

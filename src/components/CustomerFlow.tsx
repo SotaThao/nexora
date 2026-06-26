@@ -31,7 +31,7 @@ export default function CustomerFlow() {
     availablePaymentWalletKeys, isPaymentMethodsLoading, multiStaffPaymentBlocked,
     setSelectedWalletObj, setSelectedWallet, setTipRefNumber,
     selectedWalletObj, qrCodeVal, tipRefNumber, handlePay,
-    selectedWallet, paymentLinkData, currentTipId,
+    selectedWallet, paymentLinkData, tipPaymentMethodsData, currentTipId,
     rating, handleRatingChange,
     positiveTagKeys, negativeTagKeys, selectedTags, handleTagToggle,
     comment, setComment, handleSubmitFeedback,
@@ -146,7 +146,9 @@ export default function CustomerFlow() {
                   t={t}
                   selectedStaffMembers={selectedStaffMembers}
                   selectedTips={selectedTips}
+                  setSelectedTips={setSelectedTips}
                   customTips={customTips}
+                  setCustomTips={setCustomTips}
                   activeTipAmount={activeTipAmount}
                   initialStaffMember={initialStaffMember}
                   setStep={setStep}
@@ -181,6 +183,7 @@ export default function CustomerFlow() {
                   isApiMode={isApiMode}
                   setStep={setStep}
                   paymentLinkData={paymentLinkData}
+                  tipPaymentMethodsData={tipPaymentMethodsData}
                 />
               )}
 

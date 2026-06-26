@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from 'react'
+import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
@@ -14,14 +14,6 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import queryClient from './lib/queryClient'
 import { AuthProvider } from './auth/AuthProvider'
 import OneSignalAuthBridge from './native/OneSignalAuthBridge'
-
-const ReactQueryDevtools = import.meta.env.DEV
-  ? lazy(() =>
-      import('@tanstack/react-query-devtools').then((mod) => ({
-        default: mod.ReactQueryDevtools,
-      })),
-    )
-  : null
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -40,11 +32,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                 <SkeletonProvider>
                   <App />
                 </SkeletonProvider>
-                {ReactQueryDevtools ? (
-                  <Suspense fallback={null}>
-                    <ReactQueryDevtools initialIsOpen={false} />
-                  </Suspense>
-                ) : null}
               </BrowserRouter>
             </NotificationProvider>
           </LanguageProvider>
