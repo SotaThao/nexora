@@ -5,6 +5,7 @@ import { useCompletePersonalOnboarding } from '../../../data/hooks/usePersonalOn
 import { useAuth } from '../../../auth/useAuth'
 import { parsePhone } from '../../CountryCodeSelect'
 import { captureQrImage } from '../../../utils/qrCode'
+import { getPayoutValidationMessage } from '../../payout/validatePayoutAccount'
 import { useUploadImage } from '../../../data/hooks/useMerchantSetup'
 import { getPhoneFieldError, getRequiredFieldError } from '../../../utils/onboardingFieldValidation'
 
@@ -181,6 +182,14 @@ export default function usePersonalSetupWizard({ onBackToLogin }) {
     if (!editValue.trim() && !editQrCode) {
       setModalError(t('components.register.modals.PayoutEditModal.pleaseEnterHandleOrQr'))
       return
+    }
+
+    if (editValue.trim()) {
+      const validationMessage = getPayoutValidationMessage(t, editingMethod, editValue)
+      if (validationMessage) {
+        setModalError(validationMessage)
+        return
+      }
     }
 
     setPayouts(prev => ({
