@@ -1,10 +1,13 @@
 import React from 'react'
 import { X } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import enLocale from '../../../locales/en.json'
+import viLocale from '../../../locales/vi.json'
 
-export default function TermsModal({ open, currentLanguage, onClose, onAccept, modalType }) {
-  const { t } = useTranslation()
-  const legalSections = t(`register.legal.${modalType}.sections`)
+export default function TermsModal({ open, onClose, modalType }) {
+  const { t, currentLanguage } = useTranslation()
+  const dict = currentLanguage === 'vi' ? viLocale : enLocale
+  const legalSections = dict.register.legal[modalType as 'privacy' | 'terms']?.sections ?? []
 
   if (!open) return null
   return (
@@ -14,8 +17,8 @@ export default function TermsModal({ open, currentLanguage, onClose, onAccept, m
         <div className="flex items-center justify-between border-b border-slate-100 pb-4">
           <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">
             {modalType === 'privacy'
-              ? (t('components.register.modals.TermsModal.privacyPolicy'))
-              : (t('components.register.modals.TermsModal.termsOfService'))
+              ? t('components.register.modals.TermsModal.privacyPolicy')
+              : t('components.register.modals.TermsModal.termsOfService')
             }
           </h3>
           <button
@@ -38,21 +41,14 @@ export default function TermsModal({ open, currentLanguage, onClose, onAccept, m
           ))}
         </div>
 
-        {/* Footer action buttons */}
-        <div className="flex justify-end gap-3 border-t border-slate-100 pt-4 mt-auto">
+        {/* Footer */}
+        <div className="flex justify-end border-t border-slate-100 pt-4 mt-auto">
           <button
             type="button"
             onClick={onClose}
             className="px-4 py-2 border border-slate-200 text-slate-500 rounded-xl font-bold hover:bg-slate-50 transition"
           >
             {t('components.register.modals.TermsModal.close')}
-          </button>
-          <button
-            type="button"
-            onClick={onAccept}
-            className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition shadow-sm"
-          >
-            {t('components.register.modals.TermsModal.iAccept')}
           </button>
         </div>
       </div>
