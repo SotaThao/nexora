@@ -52,7 +52,11 @@
     },
     "status": {
       "active": "Đang hoạt động",
-      "inactive": "Ngừng hoạt động"
+      "inactive": "Ngừng hoạt động",
+      "pending": "Đang chờ",
+      "rejected": "Đã từ chối",
+      "pending_approval": "Chờ duyệt",
+      "pending_unlink": "Chờ hủy liên kết"
     },
     "home": {
       "greeting_morning": "Chào buổi sáng, {name} 👋",
@@ -943,6 +947,7 @@
     "delete_tech": "Xóa Thợ",
     "tips_collected": "Tiền Típ Đã Nhận",
     "avg_rating": "Điểm Sao Trung Bình",
+    "total_reviews": "Tổng Đánh Giá",
     "reviews_routed": "Đánh Giá Đã Định Tuyến",
     "conversion_rate": "Tỷ Lệ Quét Sang Típ",
     "scans": "{count} lượt quét",
@@ -1298,6 +1303,7 @@
     "user_account_inactive": "Tài khoản của bạn hiện đang bị khóa. Vui lòng liên hệ hỗ trợ.",
     "user_account_incomplete": "Tài khoản chưa hoàn tất. Vui lòng kích hoạt tài khoản của bạn.",
     "user_email_already_exists": "Địa chỉ email này đã được đăng ký trước đó.",
+    "user_invalid_referral_code": "Mã giới thiệu không hợp lệ. Vui lòng kiểm tra lại mã và thử lại.",
     "user_signup_failed": "Đăng ký thất bại. Vui lòng kiểm tra thông tin và thử lại.",
     "auth_passwords_do_not_match": "Mật khẩu xác nhận không khớp.",
     "user_feature_signup_disabled": "Tính năng đăng ký hiện tại đang tạm khóa.",

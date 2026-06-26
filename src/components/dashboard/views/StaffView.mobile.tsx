@@ -373,11 +373,6 @@ function StaffView({
     ? t('components.dashboard.views.StaffView.inviteLinkLoading')
     : t('components.dashboard.views.StaffView.inviteLinkDisabled')
 
-  const rejectedStaff = useMemo(
-    () => (staff || []).filter((member) => isRejectedStaff(member)),
-    [staff],
-  )
-
   const sortedStaff = useMemo(() => {
     return [...(staff ?? []).filter((member) => !isRejectedStaff(member))].sort((a, b) => {
       if (sortBy === 'name-asc') {
@@ -649,42 +644,6 @@ function StaffView({
         </div>
       )}
 
-      {/* Rejected Staff Section */}
-      {rejectedStaff.length > 0 && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50/40 overflow-hidden shadow-sm">
-          <div className="px-5 py-4 border-b border-rose-200 bg-rose-50 flex items-center justify-between">
-            <h3 className="text-xs font-black uppercase text-rose-800 tracking-wider flex items-center gap-1.5">
-              <AlertCircle className="h-4 w-4 text-rose-700" />
-              {t('components.dashboard.views.StaffView.rejectedStaff')} ({rejectedStaff.length})
-            </h3>
-          </div>
-          <div className="p-4 space-y-3">
-            {rejectedStaff.map((member) => (
-              <div key={member.id} className="rounded-xl border border-rose-100 bg-white p-3.5 shadow-sm">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="min-w-0 flex items-center gap-3">
-                    {member.avatar ? (
-                      <img src={member.avatar} alt="" className="h-10 w-10 rounded-full border border-nexoraBorder object-cover" />
-                    ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 text-sm font-extrabold text-rose-700">
-                        {member.nickname?.charAt(0) || member.fullName?.charAt(0) || 'N'}
-                      </div>
-                    )}
-                    <div className="min-w-0">
-                      <p className="truncate font-extrabold text-nexoraText">{member.fullName}</p>
-                      <p className="truncate text-xs text-nexoraMuted">{member.position}</p>
-                    </div>
-                  </div>
-                  <span className="inline-flex shrink-0 rounded-full bg-rose-50 text-rose-700 px-2.5 py-0.5 text-[10px] font-extrabold uppercase border border-rose-100">
-                    {t('components.dashboard.views.StaffView.rejected')}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* 3. Upgraded Staff Invite & Link Status Table */}
       <div className="rounded-xl border border-nexoraBorder bg-white overflow-hidden shadow-sm">
         <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-nexoraRule bg-slate-50/50">
@@ -788,12 +747,12 @@ function StaffView({
             </div>
           )}
 
-          {activeStaffCount > 0 ? (
+          {totalCount > 0 && totalPages > 1 ? (
             <Pagination
               pageNumber={pageNumber}
               pageSize={pageSize}
               totalPages={totalPages}
-              totalCount={activeStaffCount}
+              totalCount={totalCount}
               hasNextPage={hasNextPage}
               hasPreviousPage={hasPreviousPage}
               onPageChange={onPageChange}

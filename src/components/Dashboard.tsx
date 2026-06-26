@@ -162,7 +162,7 @@ export default function Dashboard({
   })
   const { data: pendingStaffPage } = useMerchantStaff({
     enabled: isStaffTab,
-    statusFilter: StatusFilter.Pending,
+    statusFilter: StatusFilter.WaitingStaffAcceptance,
     pageNumber: 1,
     pageSize: 50,
   })
@@ -418,10 +418,24 @@ export default function Dashboard({
 
   const filteredTouchpoints = touchpoints
 
-  const displayStaffTotalCount = filteredStaff.length
-  const displayStaffTotalPages = Math.max(1, Math.ceil(displayStaffTotalCount / staffPagination.pageSize))
-  const displayStaffHasNext = staffPagination.pageNumber < displayStaffTotalPages
-  const displayStaffHasPrev = staffPagination.pageNumber > 1
+  const displayStaffTotalCount = searchQuery
+    ? filteredStaff.length
+    : (merchantStaffData?.totalCount ?? filteredStaff.length)
+  const displayStaffTotalPages = searchQuery
+    ? Math.max(1, Math.ceil(displayStaffTotalCount / staffPagination.pageSize))
+    : (merchantStaffData?.totalPages ?? Math.max(1, Math.ceil(displayStaffTotalCount / staffPagination.pageSize)))
+  const displayStaffHasNext = searchQuery
+    ? staffPagination.pageNumber < displayStaffTotalPages
+    : (merchantStaffData?.hasNextPage ?? staffPagination.pageNumber < displayStaffTotalPages)
+  const displayStaffHasPrev = searchQuery
+    ? staffPagination.pageNumber > 1
+    : (merchantStaffData?.hasPreviousPage ?? staffPagination.pageNumber > 1)
+
+  useEffect(() => {
+    const apiTotalPages = merchantStaffData?.totalPages
+    if (!isStaffTab || !apiTotalPages || staffPagination.pageNumber <= apiTotalPages) return
+    staffPagination.setPage(apiTotalPages)
+  }, [isStaffTab, merchantStaffData?.totalPages, staffPagination.pageNumber, staffPagination.setPage])
 
   const filteredReviews = useMemo(() => {
     if (!searchQuery) return reviews

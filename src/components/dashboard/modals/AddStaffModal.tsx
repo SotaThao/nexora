@@ -505,7 +505,17 @@ function AddStaffModal({
 
             {searchResult && (
               <div className="flex flex-col sm:flex-row sm:items-center gap-4 rounded-2xl border border-nexoraBorder bg-slate-50/80 p-4">
-                <div className="h-14 w-14 shrink-0 rounded-full bg-gradient-to-br from-orange-200 to-nexoraBrand" />
+                {searchResult.avatar ? (
+                  <img
+                    src={searchResult.avatar}
+                    alt=""
+                    className="h-14 w-14 shrink-0 rounded-full border border-nexoraBorder object-cover"
+                  />
+                ) : (
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-orange-200 to-nexoraBrand text-lg font-extrabold text-white">
+                    {(searchResult.fullName || 'N').charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <p className="font-extrabold text-nexoraText">{searchResult.fullName}</p>
                   <p className="text-xs text-nexoraMuted mt-0.5">
