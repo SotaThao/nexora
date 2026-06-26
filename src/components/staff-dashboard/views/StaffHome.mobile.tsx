@@ -210,7 +210,7 @@ export default function StaffHome() {
           <p className="py-4 text-center text-[13px] text-nexoraSubtle">{t('staff_dashboard.qr.no_linked_businesses')}</p>
         ) : (
           <div className="divide-y divide-nexoraBorder">
-            {linkedBusinesses.map((biz) => {
+            {linkedBusinesses.filter((biz) => resolveStaffBusinessLinkStatusLabel(biz).toLowerCase() === 'active').map((biz) => {
               const statusLabel = resolveStaffBusinessLinkStatusLabel(biz)
               const statusPresentation = getStaffBusinessLinkStatusPresentation(statusLabel)
               return (
