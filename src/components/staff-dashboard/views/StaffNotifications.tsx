@@ -1,24 +1,18 @@
-// StaffNotifications — notification feed.
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Bell, CheckCircle2, Star, Users, Wallet, X } from "lucide-react";
-import { useTranslation } from "../../../contexts/LanguageContext";
-import { useNotification } from "../../../contexts/NotificationContext";
+// StaffNotifications — notification feed + push preferences.
+import { useNavigate } from 'react-router-dom'
+import { Bell, Star, Users, Wallet } from 'lucide-react'
+import { useTranslation } from '../../../contexts/LanguageContext'
+import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import {
   useMarkAllNotificationsRead,
   useMarkNotificationRead,
   useNotifications,
   useUnreadCount,
-} from "../../../data/hooks/useNotifications";
-import {
-  useAcceptStaffLinkRequest,
-  useRejectStaffLinkRequest,
-  useStaffLinkRequest,
-} from "../../../data/hooks/useStaffSelf";
-import type { NotificationRecord } from "../../../types/domain";
-import { formatNotificationDateTime } from "../../dashboard/utils";
-import { SkeletonLayout } from "../../ui/skeleton";
-import { STAFF_NOTIFICATIONS_SKELETON } from "../skeletons/staffDashboardSkeletons";
+} from '../../../data/hooks/useNotifications'
+import type { NotificationRecord } from '../../../types/domain'
+import { SkeletonLayout } from '../../ui/skeleton'
+import { STAFF_NOTIFICATIONS_SKELETON } from '../skeletons/staffDashboardSkeletons'
+import { formatNotificationDateTime } from '../../dashboard/utils'
 
 const panel =
   "rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm sm:p-5";
@@ -46,14 +40,6 @@ function notificationIcon(type: string) {
   return TYPE_ICON[type] || Bell;
 }
 
-function getStaffLinkRequestId(notification: NotificationRecord) {
-  if (notification.referenceId) return notification.referenceId;
-  const match = String(notification.actionUrl || "").match(
-    /\/staff\/link-requests\/([^/?#]+)/i,
-  );
-  return match?.[1] || null;
-}
-
 const STAFF_ACTION_URL_ALIASES: Record<string, string> = {
   "/staff/businesses": "/staff",
 };
@@ -73,149 +59,21 @@ function resolveStaffNotificationActionUrl(
   return `${resolvedPath}${suffix}`;
 }
 
-function StaffLinkRequestNotification({
-  notification,
-  onRead,
-}: {
-  notification: NotificationRecord;
-  onRead: (id: string) => void;
-}) {
-  const { t } = useTranslation();
-  const { showToast } = useNotification();
-  const [isReadLocal, setIsReadLocal] = useState(Boolean(notification.read));
-  const [actionState, setActionState] = useState<
-    "idle" | "accepted" | "rejected"
-  >("idle");
-  const linkId = getStaffLinkRequestId(notification);
-  const detailQuery = useStaffLinkRequest(linkId);
-  const acceptMutation = useAcceptStaffLinkRequest();
-  const rejectMutation = useRejectStaffLinkRequest();
-  const detail = detailQuery.data;
-  const isPending = acceptMutation.isPending || rejectMutation.isPending;
-  const businessName =
-    detail?.businessName ||
-    notification.title ||
-    t("staff_dashboard.notifications.link_request_business_fallback");
-  const isActionDisabled =
-    isPending || detail?.status === "Active" || detail?.status === "Rejected";
 
-  useEffect(() => {
-    setIsReadLocal(Boolean(notification.read));
-  }, [notification.read]);
-
-  const handleAccept = () => {
-    if (!linkId) return;
-    setActionState("accepted");
-    setIsReadLocal(true);
-    if (!notification.read) onRead(notification.id);
-    acceptMutation.mutate(linkId, {
-      onSuccess: () => {
-        showToast(
-          t("staff_dashboard.notifications.link_request_accepted"),
-          "success",
-        );
-      },
-      onError: () => {
-        setActionState("idle");
-        setIsReadLocal(Boolean(notification.read));
-        showToast(
-          t("staff_dashboard.notifications.link_request_accept_failed"),
-          "error",
-        );
-      },
-    });
-  };
-
-  const handleReject = () => {
-    if (!linkId) return;
-    setActionState("rejected");
-    setIsReadLocal(true);
-    if (!notification.read) onRead(notification.id);
-    rejectMutation.mutate(linkId, {
-      onSuccess: () => {
-        showToast(
-          t("staff_dashboard.notifications.link_request_rejected"),
-          "success",
-        );
-      },
-      onError: () => {
-        setActionState("idle");
-        setIsReadLocal(Boolean(notification.read));
-        showToast(
-          t("staff_dashboard.notifications.link_request_reject_failed"),
-          "error",
-        );
-      },
-    });
-  };
-
+function Toggle({ on, onChange }) {
   return (
-    <div className={notificationRowClass(isReadLocal)}>
-      <span
-        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-nexoraBrand text-white ${isReadLocal ? "opacity-60" : ""}`}
-      >
-        <Bell className="h-4 w-4" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <div
-          className={`text-sm ${isReadLocal ? "font-bold text-nexoraMuted" : "font-extrabold text-nexoraText"}`}
-        >
-          {t("staff_dashboard.notifications.link_request_title")}
-        </div>
-        <p className="mt-0.5 text-xs leading-normal text-nexoraMuted">
-          {detailQuery.isLoading
-            ? t("common.loading")
-            : t("staff_dashboard.notifications.link_request_message", {
-                businessName,
-              })}
-        </p>
-        {detail?.businessRole && (
-          <p className="mt-1 text-[11px] font-bold text-nexoraSubtle">
-            {t("staff_dashboard.notifications.link_request_role", {
-              role: detail.roleAtBusiness,
-            })}
-          </p>
-        )}
-        {!linkId ? (
-          <p className="mt-2 text-xs font-bold text-nexoraDanger">
-            {t("staff_dashboard.notifications.link_request_missing_id")}
-          </p>
-        ) : null}
-      </div>
-      {linkId && actionState === "idle" && !isReadLocal ? (
-        <div className="ml-2 flex shrink-0 items-center gap-2 self-center">
-          <button
-            type="button"
-            onClick={handleAccept}
-            disabled={isActionDisabled}
-            aria-label={t("staff_dashboard.notifications.accept_link_request")}
-            title={t("staff_dashboard.notifications.accept_link_request")}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-emerald-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-100 hover:text-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <CheckCircle2 className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={handleReject}
-            disabled={isActionDisabled}
-            aria-label={t("staff_dashboard.notifications.reject_link_request")}
-            title={t("staff_dashboard.notifications.reject_link_request")}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-600 shadow-sm transition hover:-translate-y-0.5 hover:bg-rose-100 hover:text-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <X className="h-4 w-4" />
-          </button>
-          {!isReadLocal && (
-            <span className="h-2 w-2 shrink-0 rounded-full bg-nexoraBrand" />
-          )}
-        </div>
-      ) : (
-        !isReadLocal && (
-          <span className="ml-auto mt-1 h-2 w-2 shrink-0 rounded-full bg-nexoraBrand" />
-        )
-      )}
-    </div>
-  );
+    <button
+      type="button"
+      onClick={() => onChange(!on)}
+      className={`relative h-6 w-11 shrink-0 rounded-full transition ${on ? 'bg-emerald-500' : 'bg-nexoraBorder'}`}
+      aria-pressed={on}
+    >
+      <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${on ? 'left-[22px]' : 'left-0.5'}`} />
+    </button>
+  )
 }
+
+const PREF_KEYS = ['tipConfirmations', 'reviews', 'businessInvites']
 
 export default function StaffNotifications() {
   const { t, currentLanguage } = useTranslation();
@@ -238,8 +96,14 @@ export default function StaffNotifications() {
   const handleNotificationClick = (notification: NotificationRecord) => {
     if (!notification.read) handleMarkRead(notification.id);
 
-    const target = resolveStaffNotificationActionUrl(notification.actionUrl);
-    if (!target) return;
+    // Salon link requests are actioned (Accept/Decline) on the Salon Link & Tips page.
+    if (notification.type === 'StaffLinkRequest') {
+      navigate('/staff/qr')
+      return
+    }
+
+    const target = resolveStaffNotificationActionUrl(notification.actionUrl)
+    if (!target) return
 
     if (/^https?:\/\//i.test(target)) {
       window.location.assign(target);
@@ -254,21 +118,11 @@ export default function StaffNotifications() {
   }
 
   const renderNotification = (n: NotificationRecord) => {
-    if (n.type === "StaffLinkRequest") {
-      return (
-        <StaffLinkRequestNotification
-          key={n.id}
-          notification={n}
-          onRead={handleMarkRead}
-        />
-      );
-    }
-
-    const Icon = notificationIcon(n.type);
-    const title =
-      n.title?.trim() || t("staff_dashboard.notifications.generic_title");
-    const message = (n.message || n.body || "").trim();
-    const hasAction = Boolean(resolveStaffNotificationActionUrl(n.actionUrl));
+    const Icon = notificationIcon(n.type)
+    const title = n.title?.trim() || t('staff_dashboard.notifications.generic_title')
+    const message = (n.message || n.body || '').trim()
+    const hasAction =
+      n.type === 'StaffLinkRequest' || Boolean(resolveStaffNotificationActionUrl(n.actionUrl))
 
     return (
       <button
