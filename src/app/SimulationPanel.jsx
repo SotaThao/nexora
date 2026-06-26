@@ -28,6 +28,26 @@ export default function SimulationPanel({
         </div>
 
         <div className="space-y-2.5">
+          {/* Scenario 0: Customer Tips Demo */}
+          <button
+            onClick={() => window.location.href = '/tip-flow.html'}
+            className="w-full text-left p-3 rounded-xl border-2 border-nexoraBrand bg-nexoraBrandSoft/10 hover:bg-nexoraBrandSoft/30 transition flex items-start gap-3 group"
+          >
+            <span className="h-6 w-6 rounded-lg bg-nexoraBrand text-white flex items-center justify-center font-bold text-xs shrink-0">✨</span>
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-nexoraBrand flex items-center gap-1.5">
+                {currentLanguage === 'vi' ? 'Trải nghiệm Flow Tip Dành Cho Khách Hàng' : 'Customer Tips Flow Experience'}
+                <ChevronRight className="w-3 h-3 text-nexoraBrand group-hover:translate-x-0.5 transition-transform" />
+              </div>
+              <p className="text-[9px] text-slate-600 mt-0.5 font-medium">
+                {currentLanguage === 'vi'
+                  ? 'Mở giao diện khách hàng (End-user) quét mã QR, chia Tip và đánh giá dịch vụ.'
+                  : 'Open the end-user interface for scanning QR codes, splitting tips, and reviewing service.'
+                }
+              </p>
+            </div>
+          </button>
+
           {/* Scenario 1: SSO with KYB */}
           <button
             onClick={() => onTriggerSimulation('sso_with_kyb')}
