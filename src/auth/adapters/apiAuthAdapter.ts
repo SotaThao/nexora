@@ -128,6 +128,34 @@ async function getBusinessKybStatus(profile: UserProfile): Promise<string> {
 }
 
 /**
+ * Check whether the authenticated merchant has already created a business
+ * profile via POST /api/v1/merchant/business.
+ *
+ * Returns false only on an explicit 404 / 403 / BUSINESS_NOT_FOUND response,
+ * which means the business profile does not exist yet (SSO first-login,
+ * incomplete registration, etc.). For any other error we optimistically
+ * return true so a transient network hiccup does not force the user back
+ * into the onboarding wizard.
+ */
+async function checkBusinessProfileExists(): Promise<boolean> {
+  try {
+    const res = await httpClient.get<Record<string, unknown>>('/api/v1/merchant/business')
+    return Boolean(res && (res as Record<string, unknown>).id)
+  } catch (err: unknown) {
+    if (
+      isApiError(err) &&
+      (err.status === 404 ||
+        err.status === 403 ||
+        (err as Record<string, unknown>).errorCode === 'BUSINESS_NOT_FOUND')
+    ) {
+      return false
+    }
+    logger.error('Failed to check business profile existence', err)
+    return true
+  }
+}
+
+/**
  * Fetch the authenticated user's own StaffProfile (live Swagger:
  * GET /api/v1/staff/profile → StaffProfileDto { staffCode, displayName, ... }).
  * Returns null when no StaffProfile is linked (404 STAFF_PROFILE_NOT_FOUND).
@@ -156,6 +184,7 @@ function mapProfileToSession(
   profile: UserProfile,
   kybStatus: string | null,
   staffProfile: StaffProfile | null = null,
+  hasBusiness: boolean = true,
 ): AuthSession {
   let accountType: string = ACCOUNT_TYPE.PERSONAL
   let flag = `!${ACCOUNT_TYPE.PERSONAL}`
@@ -188,10 +217,15 @@ function mapProfileToSession(
     hasStaffProfile: Boolean(staffProfile),
     staffCode: staffProfile?.staffCode || null,
     accountStatus,
+    // For business accounts, the business profile must exist before onboarding
+    // can be considered complete. This ensures SSO users (and any merchant
+    // whose profile was never created) are redirected to /onboarding rather
+    // than landing on an empty dashboard.
     hasCompletedOnboarding: isBusiness
-      ? accountStatus === 'Active' ||
-        kybStatus === 'kyb_approved' ||
-        Boolean(profile.hasCompletedOnboarding)
+      ? hasBusiness &&
+        (accountStatus === 'Active' ||
+          kybStatus === 'kyb_approved' ||
+          Boolean(profile.hasCompletedOnboarding))
       : Boolean(
           ((profile.firstName ?? '') as string).trim() ||
             ((profile.lastName ?? '') as string).trim(),
@@ -200,6 +234,7 @@ function mapProfileToSession(
       ? kybStatus || KYB_STATUS_BASIC
       : (profile.status as string | undefined) || 'unverified',
     ssoPrefillData: null,
+    hasBusiness: isBusiness ? hasBusiness : undefined,
   }
 }
 
@@ -227,10 +262,16 @@ async function resolveAuthSession(): Promise<AuthSession | null> {
   }
   const profile = await getProfilePromise
   const isBusiness = isBusinessProfile(profile)
-  const kybStatus = isBusiness ? await getBusinessKybStatus(profile) : null
+
+  // For business accounts run both checks in parallel to avoid sequential latency.
+  const [kybStatus, hasBusiness] = await Promise.all([
+    isBusiness ? getBusinessKybStatus(profile) : Promise.resolve<string | null>(null),
+    isBusiness ? checkBusinessProfileExists() : Promise.resolve(true),
+  ])
+
   const staffProfile = isBusiness ? null : await fetchStaffProfile()
   seedAuthQueryCache({ userProfile: profile, staffProfile })
-  return mapProfileToSession(profile, kybStatus, staffProfile)
+  return mapProfileToSession(profile, kybStatus, staffProfile, hasBusiness)
 }
 
 export const apiAuthAdapter = {

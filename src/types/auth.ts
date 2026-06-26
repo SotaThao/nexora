@@ -27,6 +27,8 @@ export interface AuthSession {
   staffCode?: string | null
   accountStatus?: string | null
   hasCompletedOnboarding?: boolean
+  /** True when GET /api/v1/merchant/business returned a profile; undefined for non-owner sessions. */
+  hasBusiness?: boolean
   verificationStatus?: string
   ssoPrefillData?: SsoPrefillData | null
   [key: string]: unknown
