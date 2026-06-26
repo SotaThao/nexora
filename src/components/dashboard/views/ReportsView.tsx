@@ -156,7 +156,15 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
     }
     const status = tx?.status;
     const s = (status || '').toLowerCase();
-    if (s === 'success' || s === 'succeeded' || s === 'confirmed' || s === 'completed' || s === 'hoàn thành' || s === 'thành công') {
+    if (s === 'completed' || s === 'hoàn thành') {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100/50 dark:border-emerald-500/20">
+          <CheckCircle className="h-3 w-3" />
+          {status}
+        </span>
+      );
+    }
+    if (s === 'success' || s === 'succeeded' || s === 'confirmed' || s === 'thành công') {
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100/50 dark:border-emerald-500/20">
           <CheckCircle className="h-3 w-3" />

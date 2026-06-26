@@ -71,6 +71,10 @@ function getBusinessStatusLabel(biz: StaffBusinessTipQr): string {
   return biz.linkStatusLabel || biz.linkStatus || 'Active'
 }
 
+function getBusinessRoleLabel(biz: StaffBusinessTipQr): string {
+  return biz.roleAtBusiness?.trim() || biz.roleLabel || 'Staff'
+}
+
 function isBusinessActive(biz: StaffBusinessTipQr): boolean {
   const label = getBusinessStatusLabel(biz).toLowerCase()
   return label === 'active' && Boolean(biz.tipUrl) && !biz.tipLinkIncomplete
@@ -873,7 +877,7 @@ export default function StaffMyQR() {
                             {biz.businessName}
                           </div>
                           <div className="truncate text-xs text-nexoraMuted">
-                            {t('staff_dashboard.notifications.link_request_role', { role: biz.roleLabel || 'Staff' })}
+                            {t('staff_dashboard.notifications.link_request_role', { role: getBusinessRoleLabel(biz) })}
                           </div>
                         </button>
                       </div>
