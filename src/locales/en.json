@@ -52,7 +52,11 @@
     "setup_payout_now": "Set Up Payout Methods",
     "status": {
       "active": "Active",
-      "inactive": "Inactive"
+      "inactive": "Inactive",
+      "pending": "Pending",
+      "rejected": "Rejected",
+      "pending_approval": "Pending Approval",
+      "pending_unlink": "Pending Unlink"
     },
     "home": {
       "greeting_morning": "Good morning, {name} 👋",
@@ -943,6 +947,7 @@
     "delete_tech": "Delete Tech",
     "tips_collected": "Tips Collected",
     "avg_rating": "Average Star Rating",
+    "total_reviews": "Total Reviews",
     "reviews_routed": "Reviews Sent",
     "conversion_rate": "QR-to-Tip Conversion",
     "scans": "{count} scans",

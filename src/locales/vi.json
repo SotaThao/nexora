@@ -52,7 +52,11 @@
     },
     "status": {
       "active": "Đang hoạt động",
-      "inactive": "Ngừng hoạt động"
+      "inactive": "Ngừng hoạt động",
+      "pending": "Đang chờ",
+      "rejected": "Đã từ chối",
+      "pending_approval": "Chờ duyệt",
+      "pending_unlink": "Chờ hủy liên kết"
     },
     "home": {
       "greeting_morning": "Chào buổi sáng, {name} 👋",
@@ -943,6 +947,7 @@
     "delete_tech": "Xóa Thợ",
     "tips_collected": "Tiền Típ Đã Nhận",
     "avg_rating": "Điểm Sao Trung Bình",
+    "total_reviews": "Tổng Đánh Giá",
     "reviews_routed": "Đánh Giá Đã Định Tuyến",
     "conversion_rate": "Tỷ Lệ Quét Sang Típ",
     "scans": "{count} lượt quét",
