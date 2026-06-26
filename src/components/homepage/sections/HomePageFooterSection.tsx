@@ -1,11 +1,14 @@
 /** Homepage section component */
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useHomePageBridge } from '../context/HomePageBridgeContext'
 import LucideIcon from '../ui/LucideIcon'
+import TermsModal from '../../register/modals/TermsModal'
 
 export default function HomePageFooterSection() {
   const navigate = useNavigate()
   const { hp, planCta, onLogout } = useHomePageBridge()
+  const [legalModal, setLegalModal] = useState<{ open: boolean; type: 'terms' | 'privacy' }>({ open: false, type: 'terms' })
 
   return (
     <>
@@ -38,7 +41,8 @@ export default function HomePageFooterSection() {
             </div>
             <div className="pt-3 sm:pt-6 flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-3 text-center">
               <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 sm:gap-x-5 sm:gap-y-2">
-                <a className="text-[10px] sm:text-xs text-slate-400 hover:text-white transition-colors ds-control ds-link" data-i18n="footer-link-1" href="#">Privacy Policy</a>
+                <button type="button" className="text-[10px] sm:text-xs text-slate-400 hover:text-white transition-colors ds-control ds-link" onClick={() => setLegalModal({ open: true, type: 'terms' })}>Terms of Service</button>
+                <button type="button" className="text-[10px] sm:text-xs text-slate-400 hover:text-white transition-colors ds-control ds-link" data-i18n="footer-link-1" onClick={() => setLegalModal({ open: true, type: 'privacy' })}>Privacy Policy</button>
                 <a className="text-[10px] sm:text-xs text-slate-400 hover:text-white transition-colors ds-control ds-link" data-i18n="footer-link-2" href="#">Ecosystem Guidelines</a>
                 <a className="text-[10px] sm:text-xs text-slate-400 hover:text-white transition-colors ds-control ds-link" data-i18n="footer-link-3" href="https://cryptomap360.com/#ecosystem" target="_blank" rel="noopener">VLINKPAY Financial Infrastructure</a>
               </div>
@@ -48,6 +52,11 @@ export default function HomePageFooterSection() {
             </div>
           </div>
         </footer>
+      <TermsModal
+        open={legalModal.open}
+        onClose={() => setLegalModal(prev => ({ ...prev, open: false }))}
+        modalType={legalModal.type}
+      />
     </>
   )
 }
