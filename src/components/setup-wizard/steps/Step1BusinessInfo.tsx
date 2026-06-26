@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo } from 'react'
 import {
   Building2, Upload, MapPin, Globe, ShieldCheck, HelpCircle
 } from 'lucide-react'
@@ -7,7 +7,6 @@ import ImageFileInput from '../../ui/ImageFileInput'
 import CountryCodeSelect, { formatNationalNumber, parsePhone } from '../../CountryCodeSelect'
 import { renderTextWithGoldStars } from '../constants'
 import { renderLabel } from '../../../contexts/LanguageContext'
-import { getPhoneFieldError } from '../../../utils/onboardingFieldValidation'
 
 
 export default function Step1BusinessInfo({
@@ -23,26 +22,6 @@ export default function Step1BusinessInfo({
   handleLogoFile
 }) {
   const phoneParsed = useMemo(() => parsePhone(businessInfo.phone), [businessInfo.phone])
-  const [phoneTouched, setPhoneTouched] = useState(false)
-
-  const syncPhoneError = (nextPhone: string, force = false) => {
-    if (!phoneTouched && !errors.phone && !force) return
-    const hasDigits = nextPhone.replace(/\D/g, '').length > 0
-    const message = getPhoneFieldError(nextPhone, { requireValue: !hasDigits || force })
-    setErrors((prev) => {
-      const next = { ...prev }
-      if (message) next.phone = message
-      else delete next.phone
-      return next
-    })
-  }
-
-  const handlePhoneChange = (nextPhone: string) => {
-    if (isSsoLocked) return
-    setBusinessInfo({ ...businessInfo, phone: nextPhone })
-    setPhoneTouched(true)
-    syncPhoneError(nextPhone, true)
-  }
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -185,8 +164,10 @@ export default function Step1BusinessInfo({
                 <CountryCodeSelect
                   value={phoneParsed.countryCode}
                   onChange={(newCode) => {
+                    if (isSsoLocked) return
                     const reFormatted = formatNationalNumber(phoneParsed.nationalNumber, newCode)
-                    handlePhoneChange(`${newCode} ${reFormatted}`.trim())
+                    setBusinessInfo({ ...businessInfo, phone: `${newCode} ${reFormatted}`.trim() })
+                    if (errors.phone) setErrors({ ...errors, phone: '' })
                   }}
                   disabled={isSsoLocked}
                 />
@@ -197,12 +178,10 @@ export default function Step1BusinessInfo({
                   className={`w-full h-10 border border-l-0 ${errors.phone ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'} ${isSsoLocked ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : 'bg-white'} rounded-r-lg px-4 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all min-w-0`}
                   value={formatNationalNumber(phoneParsed.nationalNumber, phoneParsed.countryCode)}
                   onChange={(e) => {
+                    if (isSsoLocked) return
                     const formatted = formatNationalNumber(e.target.value, phoneParsed.countryCode)
-                    handlePhoneChange(`${phoneParsed.countryCode} ${formatted}`.trim())
-                  }}
-                  onBlur={() => {
-                    setPhoneTouched(true)
-                    syncPhoneError(businessInfo.phone, true)
+                    setBusinessInfo({ ...businessInfo, phone: `${phoneParsed.countryCode} ${formatted}`.trim() })
+                    if (errors.phone) setErrors({ ...errors, phone: '' })
                   }}
                 />
               </div>

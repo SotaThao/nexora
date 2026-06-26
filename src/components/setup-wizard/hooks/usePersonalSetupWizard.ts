@@ -7,7 +7,6 @@ import { parsePhone } from '../../CountryCodeSelect'
 import { captureQrImage } from '../../../utils/qrCode'
 import { useUploadImage } from '../../../data/hooks/useMerchantSetup'
 import { getPhoneFieldError, getRequiredFieldError } from '../../../utils/onboardingFieldValidation'
-import { getPhoneFieldError, getRequiredFieldError } from '../../../utils/onboardingFieldValidation'
 
 export default function usePersonalSetupWizard({ onBackToLogin }) {
   const { t, currentLanguage, setLanguage, renderLabel } = useTranslation()
