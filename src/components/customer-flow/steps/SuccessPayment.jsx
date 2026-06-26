@@ -156,8 +156,8 @@ export default function SuccessPayment({
         <div className="bg-yellow-50 border border-yellow-200/50 rounded-[16px] p-5 shadow-sm space-y-4">
           <div className="flex justify-between items-start">
             <div>
-              <h3 className="font-extrabold text-[13px] text-nexoraText">{t('customer.review_title')}</h3>
-              <p className="text-[11px] font-medium text-nexoraSubtle">{t('customer.review_desc')}</p>
+              <h3 className="font-extrabold text-[13px] text-nexoraText">{currentLanguage === 'vi' ? 'Đánh giá dịch vụ' : 'Rate your experience'}</h3>
+              <p className="text-[11px] font-medium text-nexoraSubtle">{currentLanguage === 'vi' ? 'Chia sẻ trải nghiệm của bạn' : 'Share your thoughts with us'}</p>
             </div>
             <span className="text-[11px] font-extrabold text-nexoraBrand">{currentLanguage === 'vi' ? 'Rất tốt' : 'Excellent'}</span>
           </div>
@@ -205,7 +205,7 @@ export default function SuccessPayment({
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            placeholder={t('customer.review_placeholder')}
+            placeholder={currentLanguage === 'vi' ? 'Nhập đánh giá của bạn (tùy chọn)' : 'Tell us more (optional)'}
             className="w-full bg-white border border-nexoraBorder focus:border-nexoraBrand rounded-xl p-3 text-xs font-medium text-nexoraText focus:outline-none transition-all resize-none shadow-sm"
             rows="3"
           />
@@ -218,7 +218,7 @@ export default function SuccessPayment({
           onClick={handleSubmitFeedback}
           className="w-full min-h-[52px] bg-gradient-to-r from-[#5B21B6] to-[#6D28D9] hover:opacity-95 text-white font-extrabold text-[12px] uppercase tracking-wider rounded-[12px] shadow-[0_4px_16px_rgba(109,40,217,0.25)] transition-all"
         >
-          {t('customer.submit_review') || 'GỬI ĐÁNH GIÁ'}
+          {currentLanguage === 'vi' ? 'GỬI ĐÁNH GIÁ' : 'SUBMIT REVIEW'}
         </button>
 
         <button
@@ -228,7 +228,7 @@ export default function SuccessPayment({
           }}
           className="w-full py-3 bg-transparent text-nexoraMuted hover:text-nexoraText font-bold text-xs uppercase tracking-wider rounded-xl transition-colors"
         >
-          {t('common.skip') || 'BỎ QUA'}
+          {currentLanguage === 'vi' ? 'BỎ QUA' : 'SKIP'}
         </button>
       </div>
     </div>

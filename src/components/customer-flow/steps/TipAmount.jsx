@@ -103,34 +103,8 @@ export default function TipAmount({
     
     return (
       <>
-        {/* Custom Input Field */}
-        <div className="relative mb-6">
-          <span className="absolute left-6 top-1/2 -translate-y-1/2 text-[28px] font-extrabold text-nexoraText">$</span>
-          <input
-            type="number"
-            inputMode="decimal"
-            placeholder="0.00"
-            value={isMulti ? combineCustom : (customTips[selectedStaffMembers[0]?.id] || '')}
-            onChange={(e) => {
-              if (isMulti) {
-                setCombineTip('custom');
-                setCombineCustom(e.target.value);
-              } else {
-                setSelectedTips({ ...selectedTips, [selectedStaffMembers[0].id]: 'custom' });
-                setCustomTips({ ...customTips, [selectedStaffMembers[0].id]: e.target.value });
-              }
-            }}
-            className="w-full bg-white border border-nexoraBorder focus:border-nexoraBrand rounded-[16px] pl-[52px] pr-4 py-5 text-[28px] font-extrabold text-nexoraText focus:outline-none transition-all shadow-sm"
-          />
-          {isMulti && tipMode === 'combine' && activeTipAmount > 0 && (
-            <div className="absolute -bottom-6 left-0 right-0 text-center text-[11px] font-bold text-nexoraBrand">
-              = ${(activeTipAmount / selectedStaffMembers.length).toFixed(2)} / {currentLanguage === 'vi' ? 'người' : 'person'}
-            </div>
-          )}
-        </div>
-
         {/* Quick Tips */}
-        <div className={`grid grid-cols-4 gap-2.5 ${isMulti && tipMode === 'combine' ? 'mt-8' : ''}`}>
+        <div className={`grid grid-cols-4 gap-2.5 mb-6`}>
           {(isMulti ? [10, 20, 30, 40] : [5, 10, 15, 20]).map(val => (
             <button
               key={val}
@@ -153,6 +127,34 @@ export default function TipAmount({
               ${val}
             </button>
           ))}
+        </div>
+
+        {/* Custom Input Field */}
+        <div className="relative mb-6">
+          <span className="absolute left-6 top-1/2 -translate-y-1/2 text-[28px] font-extrabold text-nexoraText">$</span>
+          <input
+            type="number"
+            inputMode="decimal"
+            placeholder="0.00"
+            value={isMulti 
+              ? (combineTip === 'custom' ? combineCustom : combineTip)
+              : (selectedTips[selectedStaffMembers[0]?.id] === 'custom' ? (customTips[selectedStaffMembers[0]?.id] || '') : selectedTips[selectedStaffMembers[0]?.id])}
+            onChange={(e) => {
+              if (isMulti) {
+                setCombineTip('custom');
+                setCombineCustom(e.target.value);
+              } else {
+                setSelectedTips({ ...selectedTips, [selectedStaffMembers[0].id]: 'custom' });
+                setCustomTips({ ...customTips, [selectedStaffMembers[0].id]: e.target.value });
+              }
+            }}
+            className="w-full bg-white border border-nexoraBorder focus:border-nexoraBrand rounded-[16px] pl-[52px] pr-4 py-5 text-[28px] font-extrabold text-nexoraText focus:outline-none transition-all shadow-sm"
+          />
+          {isMulti && tipMode === 'combine' && activeTipAmount > 0 && (
+            <div className="absolute -bottom-6 left-0 right-0 text-center text-[11px] font-bold text-nexoraBrand">
+              = ${(activeTipAmount / selectedStaffMembers.length).toFixed(2)} / {currentLanguage === 'vi' ? 'người' : 'person'}
+            </div>
+          )}
         </div>
       </>
     );
