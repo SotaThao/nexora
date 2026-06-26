@@ -21,6 +21,7 @@ import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import { isAwaitingShopConfirmation } from '../utils'
 import { isMerchantConfirmablePending } from '../../../utils/merchantStaffPending'
 import SetupGuideBanner from './SetupGuideBanner'
+import PayoutSetupWarningBanner from './PayoutSetupWarningBanner'
 
 function twoInitials(name) {
   const parts = String(name || '').trim().split(/\s+/).filter(Boolean)
@@ -275,6 +276,10 @@ function Overview({
         <div className="mb-1">
           <SetupGuideBanner onStartSetup={onStartSetup} />
         </div>
+      )}
+
+      {hasSetup && (
+        <PayoutSetupWarningBanner />
       )}
 
       {/* ── Greeting ─────────────────────────────────────────────────────── */}

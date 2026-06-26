@@ -26,7 +26,7 @@ export function useStaffLinkedBusinesses({ enabled = true } = {}) {
       linkStatus: b.linkStatus,
       linkStatusLabel: b.linkStatusLabel,
       logoUrl: b.logoUrl,
-      role: b.roleLabel || b.role || null,
+      role: b.roleAtBusiness?.trim() || b.roleLabel || b.role || null,
       linkedAt: b.linkedAt,
     }))
   }, [staffBusinesses, account.displayNamesByBusiness, account.defaultDisplayName])

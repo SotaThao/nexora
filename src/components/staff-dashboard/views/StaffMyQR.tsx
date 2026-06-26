@@ -73,6 +73,10 @@ function getBusinessStatusLabel(biz: StaffBusinessTipQr): string {
   return biz.linkStatusLabel || biz.linkStatus || 'Active'
 }
 
+function getBusinessRoleLabel(biz: StaffBusinessTipQr): string {
+  return biz.roleAtBusiness?.trim() || biz.roleLabel || 'Staff'
+}
+
 function isBusinessActive(biz: StaffBusinessTipQr): boolean {
   const label = getBusinessStatusLabel(biz).toLowerCase()
   return label === 'active' && Boolean(biz.tipUrl) && !biz.tipLinkIncomplete
@@ -241,11 +245,13 @@ export default function StaffMyQR() {
     [staffCode],
   )
 
+  const activeTipQrs = useMemo(() => businessTipQrs.filter(isBusinessActive), [businessTipQrs])
+
   const selectedBusiness = useMemo(() => {
-    if (!businessTipQrs.length) return null
-    const match = businessTipQrs.find((biz) => biz.businessId === selectedBusinessId)
-    return match || businessTipQrs[0]
-  }, [businessTipQrs, selectedBusinessId])
+    if (!activeTipQrs.length) return null
+    const match = activeTipQrs.find((biz) => biz.businessId === selectedBusinessId)
+    return match || activeTipQrs[0]
+  }, [activeTipQrs, selectedBusinessId])
 
   const copyText = useCallback(
     async (text: string, successKey: string, failKey: string) => {
@@ -736,7 +742,7 @@ export default function StaffMyQR() {
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  {businessTipQrs.map((biz) => {
+                  {activeTipQrs.map((biz) => {
                     const isSelected = selectedBusiness?.businessId === biz.businessId
                     return (
                       <button
@@ -870,15 +876,7 @@ export default function StaffMyQR() {
                 </div>
 
                 <div className="divide-y divide-nexoraBorder">
-                  {pendingLinkRequests.map((n) => (
-                    <StaffLinkRequestCard
-                      key={n.id}
-                      notification={n}
-                      onResolved={(id) => markNotificationRead.mutate(id)}
-                      variant="list-item"
-                    />
-                  ))}
-                  {businessTipQrs.map((biz) => (
+                  {activeTipQrs.map((biz) => (
                     <div
                       key={biz.businessId}
                       className="flex items-center justify-between gap-3 py-3 last:pb-0"
@@ -900,7 +898,7 @@ export default function StaffMyQR() {
                             {biz.businessName}
                           </div>
                           <div className="truncate text-xs text-nexoraMuted">
-                            {t('staff_dashboard.notifications.link_request_role', { role: biz.roleLabel || 'Staff' })}
+                            {t('staff_dashboard.notifications.link_request_role', { role: getBusinessRoleLabel(biz) })}
                           </div>
                         </button>
                       </div>

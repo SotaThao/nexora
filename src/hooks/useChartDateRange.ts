@@ -33,7 +33,7 @@ export function useChartDateRange(transactions) {
     let maxDate = '1970-01-01'
     transactions.forEach(tx => {
       if (tx.dateTime) {
-        const dateStr = tx.dateTime.split(' ')[0]
+        const dateStr = tx.dateTime.split('T')[0].split(' ')[0]
         if (dateStr > maxDate && dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
           maxDate = dateStr
         }

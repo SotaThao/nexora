@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 
 // 2. Third-party
-import { Filter, Moon, Settings, ShieldAlert, Sun, Check, Link } from 'lucide-react'
+import { Filter, Settings, ShieldAlert, Check, Link } from 'lucide-react'
 
 // 3. Internal — utils → contexts → data/constants → hooks → layout → views → modals → ui
 import { logger } from '../utils/logger'
@@ -741,16 +741,6 @@ export default function Dashboard({
           <Outlet context={dashboardCtx} />
         </main>
       </div>
-
-      <button
-        onClick={() => document.documentElement.classList.toggle('dark')}
-        className="fixed bottom-4 right-4 z-40 hidden lg:flex h-10 w-10 items-center justify-center rounded-full border border-nexoraBorder bg-nexoraSurface text-nexoraMuted shadow-lg"
-        title="Toggle theme hook"
-        aria-label="Toggle theme hook"
-      >
-        <Sun className="h-4 w-4 dark:hidden" />
-        <Moon className="hidden h-4 w-4 dark:block" />
-      </button>
 
       <MobileBottomNav activeMenu={activeMenu} onNavigate={handleNavigateMenu} />
 
