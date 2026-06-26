@@ -6,10 +6,10 @@ import { makeDefaultStaffAccount } from '../components/staff-dashboard/data/staf
 import { useSaveStaffAccount as useSaveStaffAccountQuery } from '../data/hooks/useStaffAccount'
 import profileSettingsRepository from '../data/repositories/profileSettings'
 import staffSelfRepository from '../data/repositories/staffSelf'
-import { useUpdateUserProfile, useUpdateStaffProfile } from '../data/hooks/useProfileSettings'
+import { useUpdateStaffProfile } from '../data/hooks/useProfileSettings'
 import { useAuth } from '../auth/useAuth'
 import { qk } from '../data/queryKeys'
-import { buildUpdateUserProfileDto, getUserProfileImageUrl } from '../utils/userProfileImage'
+import { buildUpdateStaffProfileDto, mapStaffProfileView } from '../utils/mapStaffProfileView'
 
 const StaffAccountContext = createContext<StaffAccountContextValue | null>(null)
 
@@ -27,7 +27,6 @@ export function StaffAccountProvider({ staffId = null, children }: StaffAccountP
   const queryClient = useQueryClient()
 
   const saveStaffAccountMutation = useSaveStaffAccountQuery()
-  const updateUserProfileMutation = useUpdateUserProfile()
   const updateStaffProfileMutation = useUpdateStaffProfile()
 
   // Subscribe to auth-bootstrapped profile cache (no network unless cache miss).
@@ -45,14 +44,13 @@ export function StaffAccountProvider({ staffId = null, children }: StaffAccountP
   const staffProfile = staffProfileRaw as DomainRecord | null
 
   const staffMember = useMemo(() => {
-    const apiFullName = (userProfile?.fullName || '').trim()
-      || `${userProfile?.firstName ?? ''} ${userProfile?.lastName ?? ''}`.trim()
+    const mapped = mapStaffProfileView(userProfile as DomainRecord | null, staffProfile as DomainRecord | null)
     return {
-      id: staffId || session?.staffId || session?.staffCode || '',
-      fullName: apiFullName || session?.displayName || '',
-      nickname: staffProfile?.displayName || session?.displayName || '',
-      email: userProfile?.email || session?.email || '',
-      phone: userProfile?.phoneNumber || '',
+      id: staffId || mapped.staffCode || session?.staffId || session?.staffCode || '',
+      fullName: mapped.fullName || session?.displayName || '',
+      nickname: mapped.displayName || session?.displayName || '',
+      email: mapped.email || session?.email || '',
+      phone: mapped.phone || '',
       isActive: true,
       showInTipsFlow: true,
       paymentAccounts: {},
@@ -61,19 +59,19 @@ export function StaffAccountProvider({ staffId = null, children }: StaffAccountP
 
   const account = useMemo(() => {
     const base = makeDefaultStaffAccount(staffMember) as DomainRecord
+    const mapped = mapStaffProfileView(userProfile as DomainRecord | null, staffProfile as DomainRecord | null)
     if (!userProfile && !staffProfile) return base
 
-    const apiFullName = (userProfile?.fullName || '').trim()
-      || `${userProfile?.firstName ?? ''} ${userProfile?.lastName ?? ''}`.trim()
     return {
       ...base,
-      fullName: base.fullName || apiFullName,
-      phone: base.phone || userProfile?.phoneNumber || '',
-      email: base.email || userProfile?.email || '',
-      defaultDisplayName: base.defaultDisplayName || staffProfile?.displayName || userProfile?.firstName || apiFullName,
-      bio: base.bio || staffProfile?.bio || '',
-      avatar: base.avatar || getUserProfileImageUrl(userProfile) || staffProfile?.photoUrl || staffProfile?.photo || null,
-      staffCode: staffProfile?.staffCode || base.staffCode || session?.staffCode || null,
+      fullName: mapped.fullName || base.fullName,
+      phone: mapped.phone || base.phone,
+      email: mapped.email || base.email,
+      defaultDisplayName: mapped.displayName || base.defaultDisplayName,
+      bio: mapped.bio || base.bio,
+      avatar: mapped.avatar || base.avatar,
+      staffCode: mapped.staffCode || base.staffCode || session?.staffCode || null,
+      position: mapped.position || base.position || null,
     }
   }, [staffMember, userProfile, staffProfile, session?.staffCode])
 
@@ -115,48 +113,39 @@ export function StaffAccountProvider({ staffId = null, children }: StaffAccountP
   )
 
   const saveProfile = useCallback(
-    (patch) => {
+    async (patch) => {
       const { avatar, photoUrl, ...accountPatch } = patch
       if (Object.keys(accountPatch).length > 0) {
         updateAccount(accountPatch)
       }
 
-      if (patch.fullName !== undefined || patch.phone !== undefined) {
-        updateUserProfileMutation.mutate(
-          buildUpdateUserProfileDto(
-            { ...account, ...userProfile, fullName: patch.fullName ?? account.fullName, phone: patch.phone ?? account.phone },
-            patch,
-          ),
-          {
-            onError: (err) => logger.error('[StaffAccountContext] Failed to persist user profile', err),
-          },
-        )
-      }
-      if (patch.defaultDisplayName !== undefined || patch.bio !== undefined) {
-        const displayName = (patch.defaultDisplayName ?? account.defaultDisplayName ?? account.fullName ?? '').trim()
-        if (displayName) {
-          updateStaffProfileMutation.mutate({
-            displayName,
-            bio: patch.bio ?? account.bio ?? '',
-          }, {
-            onError: (err) => logger.error('[StaffAccountContext] Failed to persist staff profile', err),
-          })
-        }
-      }
-      if (avatar !== undefined || photoUrl !== undefined) {
-        const profileImageUrl = String(photoUrl ?? avatar ?? '').trim()
-        updateUserProfileMutation.mutate(
-          buildUpdateUserProfileDto(
-            { ...account, ...userProfile },
-            { ...patch, profileImageUrl },
-          ),
-          {
-            onError: (err) => logger.error('[StaffAccountContext] Failed to persist user avatar', err),
-          },
-        )
+      const hasProfileFields =
+        patch.fullName !== undefined
+        || patch.phone !== undefined
+        || patch.defaultDisplayName !== undefined
+        || patch.displayName !== undefined
+        || patch.bio !== undefined
+        || patch.position !== undefined
+        || avatar !== undefined
+        || photoUrl !== undefined
+
+      if (!hasProfileFields) return
+
+      const dto = buildUpdateStaffProfileDto(
+        { account, userProfile, staffProfile },
+        { ...patch, avatar: photoUrl ?? avatar ?? patch.avatar },
+      )
+
+      if (!dto.displayName) return
+
+      try {
+        await updateStaffProfileMutation.mutateAsync(dto)
+      } catch (err) {
+        logger.error('[StaffAccountContext] Failed to persist staff profile', err)
+        throw err
       }
     },
-    [updateAccount, account, userProfile, updateUserProfileMutation, updateStaffProfileMutation]
+    [updateAccount, account, userProfile, staffProfile, updateStaffProfileMutation]
   )
 
   const setBusinessDisplayName = useCallback(

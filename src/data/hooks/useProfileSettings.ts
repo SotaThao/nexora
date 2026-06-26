@@ -4,25 +4,22 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import profileSettingsRepository, {
-  type KybCustomerProfileResponse,
-  type RegisterKybResponse,
+  type InitializeKybResponse,
+  type KybIframeInitializeResponse,
 } from '../repositories/profileSettings'
 import { useSessionRole } from '../../auth/useSessionRole'
-import type { UserProfile } from '../../types/domain'
+import type { LooseObject, UserProfile } from '../../types/domain'
 import type { UpdateStaffProfileDto, UpdateUserProfileDto } from '../../types/repositories'
 
 export function useProfileSettings({ enabled: callerEnabled = true } = {}) {
-  const queryClient = useQueryClient()
   const { isAuthenticated } = useSessionRole()
-  const hasCachedProfile = queryClient.getQueryData(qk.userProfile()) !== undefined
 
   return useQuery<UserProfile | null>({
     queryKey: qk.userProfile(),
     queryFn: () => profileSettingsRepository.get(),
-    enabled: isAuthenticated && callerEnabled && !hasCachedProfile,
-    initialData: () => queryClient.getQueryData<UserProfile | null>(qk.userProfile()),
-    staleTime: Infinity,
-    refetchOnMount: false,
+    enabled: isAuthenticated && callerEnabled,
+    staleTime: 30_000,
+    refetchOnMount: true,
     refetchOnWindowFocus: false,
   })
 }
@@ -36,18 +33,21 @@ export function useVerifiedStatus({ enabled = true } = {}) {
   })
 }
 
-/** KYB dossier — GET /customers/customers/kyb/{customerId} */
+/** KYB iframe session — POST /api/v1/UserProfile/iframe/initialize */
 export function useKybInfo({
-  customerId,
+  language = 'en',
   enabled = true,
 }: {
-  customerId?: string | number | null
+  language?: string
   enabled?: boolean
 } = {}) {
-  return useQuery<KybCustomerProfileResponse>({
-    queryKey: qk.kybInfo(customerId),
-    queryFn: () => profileSettingsRepository.getKybInfo(customerId!),
-    enabled: enabled && customerId != null && customerId !== '',
+  return useQuery<KybIframeInitializeResponse>({
+    queryKey: qk.kybIframeInitialize(language),
+    queryFn: () => profileSettingsRepository.initializeKybIframe({
+      viewType: 'Identity',
+      language,
+    }),
+    enabled,
     refetchOnWindowFocus: false,
   })
 }
@@ -61,10 +61,15 @@ export function useKycInitialize({ enabled = false } = {}) {
   })
 }
 
-/** POST /customers/customers/kyb/register — VLINKPAY KYB iframe portal. */
+/** @deprecated KYB iframe uses POST /api/v1/UserProfile/iframe/initialize — prefer useKybInfo. */
 export function useRegisterKyb() {
-  return useMutation<RegisterKybResponse, Error, void>({
-    mutationFn: () => profileSettingsRepository.registerKyb(),
+  return useMutation<InitializeKybResponse, Error, void>({
+    mutationFn: async () => {
+      const response = await profileSettingsRepository.initializeKybIframe({
+        viewType: 'Identity',
+      })
+      return { url: response.url }
+    },
   })
 }
 
@@ -96,10 +101,60 @@ export function useUpdateUserProfile() {
   })
 }
 
+export function useUpdateBasicInfo() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, { firstName: string; lastName?: string; phoneNumber?: string; dateOfBirth?: string }>({
+    mutationFn: (dto) => profileSettingsRepository.updateBasicInfo(dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.userProfile() })
+    },
+  })
+}
+
+export function useUpdateAddress() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, { address?: string; city?: string; state?: string; zipCode?: string; country?: string }>({
+    mutationFn: (dto) => profileSettingsRepository.updateAddress(dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.userProfile() })
+    },
+  })
+}
+
+export function useUpdateAvatar() {
+  const queryClient = useQueryClient()
+  return useMutation<{ avatarUrl: string }, Error, File>({
+    mutationFn: (file) => profileSettingsRepository.updateAvatar(file),
+    onSuccess: (data) => {
+      queryClient.setQueryData(qk.userProfile(), (prev: UserProfile | null | undefined) =>
+        prev
+          ? {
+              ...prev,
+              profileImageUrl: data.avatarUrl,
+              profileImage: { imageUrl: data.avatarUrl, thumbnailUrl: data.avatarUrl },
+            }
+          : prev,
+      )
+      queryClient.invalidateQueries({ queryKey: qk.userProfile() })
+    },
+  })
+}
+
 export function useUpdateStaffProfile() {
   const queryClient = useQueryClient()
   return useMutation<LooseObject, Error, UpdateStaffProfileDto>({
     mutationFn: (dto) => profileSettingsRepository.updateStaffProfile(dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.staffProfile() })
+      queryClient.invalidateQueries({ queryKey: qk.userProfile() })
+    },
+  })
+}
+
+export function useCreateStaffProfile() {
+  const queryClient = useQueryClient()
+  return useMutation<LooseObject, Error, UpdateStaffProfileDto>({
+    mutationFn: (dto) => profileSettingsRepository.createStaffProfile(dto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.staffProfile() })
     },

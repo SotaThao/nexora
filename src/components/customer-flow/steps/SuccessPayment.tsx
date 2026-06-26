@@ -1,53 +1,98 @@
 import React from 'react'
-import { Check } from 'lucide-react'
+import { CheckCircle, Star } from 'lucide-react'
 
 export default function SuccessPayment({
   t,
   selectedStaffMembers,
   activeTipAmount,
+  selectedWalletObj,
   setStep,
 }) {
   return (
     <div className="text-center space-y-6 animate-fadeIn py-4 flex flex-col items-center">
-      <div className="h-20 w-20 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/20 mb-2">
-        <Check className="h-10 w-10 text-white stroke-[4]" />
+      <div className="h-16 w-16 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/20">
+        <CheckCircle className="h-8 w-8 text-white" />
       </div>
 
-      <div className="space-y-3">
-        <h3 className="font-extrabold text-2xl text-nexoraText tracking-tight">
-          {t('customer.payment_success_title')}
-        </h3>
-        <p className="text-sm text-nexoraMuted font-medium px-4 leading-relaxed">
-          {(() => {
-            const namesStr = selectedStaffMembers.map(s => s.fullName.split(' ')[0]).join(', ')
-            const descTemplate = t('customer.payment_success_desc', {
-              name: namesStr
-            })
-            const parts = descTemplate.split('{amount}')
-            if (parts.length === 2) {
-              return (
-                <>
-                  {parts[0]}
-                  <span className="font-bold text-nexoraText">${Number(activeTipAmount).toFixed(2)}</span>
-                  {parts[1]}
-                </>
-              )
-            }
-            return descTemplate
-          })()}
-        </p>
-        <p className="text-xs text-nexoraSubtle font-semibold tracking-wide pt-1 uppercase">
-          {t('customer.tip_success_sub')}
-        </p>
+      <h3 className="font-extrabold text-2xl text-nexoraText tracking-tight">
+        {t('customer.tips_summary_title')}
+      </h3>
+
+      <div className="w-full bg-nexoraCanvas border border-nexoraBorder rounded-2xl p-5 space-y-4 text-left shadow-sm">
+        <div className="space-y-3">
+          {selectedStaffMembers.map((member) => (
+            <div key={member.id} className="flex items-center gap-3">
+              {member.avatar ? (
+                <img
+                  src={member.avatar}
+                  alt=""
+                  className="h-10 w-10 rounded-full object-cover border border-nexoraBorder shrink-0"
+                />
+              ) : (
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-nexoraElectric to-nexoraViolet text-sm font-extrabold text-white shrink-0">
+                  {member.nickname?.charAt(0)}
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="font-extrabold text-sm text-nexoraText truncate">{member.fullName}</p>
+                <p className="text-[11px] text-nexoraSubtle font-semibold truncate">{member.position}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="border-t border-nexoraBorder/60" />
+
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold text-nexoraSubtle uppercase tracking-wider">
+            {t('components.customer_flow.steps.TipAmount.totalTip')}
+          </span>
+          <span className="text-2xl font-black text-nexoraBrand">
+            ${Number(activeTipAmount).toFixed(2)}
+          </span>
+        </div>
+
+        {selectedWalletObj && (
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs font-bold text-nexoraSubtle uppercase tracking-wider">
+              {t('customer.tips_summary_via')}
+            </span>
+            <span className="flex items-center gap-2 text-xs font-extrabold text-nexoraText min-w-0">
+              {selectedWalletObj.logo ? (
+                <span className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 ${selectedWalletObj.color}`}>
+                  {selectedWalletObj.logo}
+                </span>
+              ) : null}
+              <span className="truncate">
+                {selectedWalletObj.label || selectedWalletObj.name || selectedWalletObj.key || '-'}
+              </span>
+            </span>
+          </div>
+        )}
       </div>
 
-      <button
-        type="button"
-        onClick={() => setStep('leave_review')}
-        className="w-full mt-4 py-3.5 bg-gradient-to-r from-nexoraBrand to-indigo-600 hover:opacity-95 active:scale-[0.98] transition-all text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-indigo-600/25 flex items-center justify-center"
-      >
-        {t('customer.done')}
-      </button>
+      <div className="flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map(i => (
+          <Star key={i} className="w-5 h-5 fill-amber-400 text-amber-400" />
+        ))}
+      </div>
+
+      <div className="w-full space-y-3">
+        <button
+          type="button"
+          onClick={() => setStep('leave_review')}
+          className="w-full py-3.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 active:scale-[0.98] transition-all text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-nexoraElectric/25"
+        >
+          {t('customer.tips_summary_review_cta')}
+        </button>
+        <button
+          type="button"
+          onClick={() => setStep('final_done')}
+          className="w-full text-xs font-bold text-nexoraSubtle hover:text-nexoraText transition"
+        >
+          {t('customer.tips_summary_skip')}
+        </button>
+      </div>
     </div>
   )
 }

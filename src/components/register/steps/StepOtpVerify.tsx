@@ -1,16 +1,25 @@
 import React from 'react'
-import { ArrowLeft, ArrowRight } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Copy, Loader2, Mail } from 'lucide-react'
 
 export default function StepOtpVerify({
+  email,
   otpCode, setOtpCode,
   otpError, setOtpError,
-  resendTimer, setResendTimer,
+  resendTimer,
+  resendMessage,
+  errors = {} as LooseObject,
+  isSubmitting = false,
   handleVerifyOtp,
+  handleResendVerification,
   setCurrentStep,
-  currentLanguage,
   t,
   renderLabel,
 }) {
+  const handleCopyEmail = () => {
+    if (!email || !navigator.clipboard) return
+    navigator.clipboard.writeText(email)
+  }
+
   return (
     <div className="p-6 sm:p-10 space-y-6 animate-fadeIn">
       <div className="text-center max-w-md mx-auto">
@@ -18,7 +27,12 @@ export default function StepOtpVerify({
           {t('components.register.steps.StepOtpVerify.activateAccountEnterOtp')}
         </h3>
         <p className="text-xs text-nexoraSubtle mt-1 leading-relaxed">
-          {t('components.register.steps.StepOtpVerify.enterTheOtpCode')}
+          {t('components.register.steps.StepOtpVerify.enterTheOtpCode').split('{{email}}').map((part, i, arr) => (
+            <React.Fragment key={i}>
+              {part}
+              {i < arr.length - 1 && <span className="font-bold text-nexoraText">{email}</span>}
+            </React.Fragment>
+          ))}
         </p>
       </div>
 
@@ -49,7 +63,7 @@ export default function StepOtpVerify({
               : (
                 <button
                   type="button"
-                  onClick={() => setResendTimer(30)}
+                  onClick={handleResendVerification}
                   className="text-nexoraBrand hover:underline"
                 >
                   {t('components.register.steps.StepOtpVerify.resendVerificationCode')}
@@ -57,22 +71,16 @@ export default function StepOtpVerify({
               )
             }
           </span>
+          {resendMessage && (
+            <p className="text-xs text-green-600 font-semibold mt-1">{resendMessage}</p>
+          )}
         </div>
 
-        {/* Simulator Helper */}
-        <div className="p-3 border border-dashed border-nexoraBrand/30 bg-nexoraBrandSoft/30 rounded-xl flex items-center justify-between gap-3 max-w-xs mx-auto">
-          <span className="text-[10px] text-nexoraBrand font-bold">Simulator Helper:</span>
-          <button
-            type="button"
-            onClick={() => {
-              setOtpCode('1234')
-              setOtpError('')
-            }}
-            className="px-2.5 py-1 bg-nexoraElectric text-white rounded text-[10px] font-black uppercase hover:bg-opacity-90 shadow-sm animate-pulse"
-          >
-            Auto-fill (1234)
-          </button>
-        </div>
+        {errors.submit && (
+          <div className="p-3 bg-red-50 text-red-700 text-xs rounded-lg border border-red-200 text-center font-medium">
+            {t(errors.submit)}
+          </div>
+        )}
 
         <div className="pt-4 flex flex-col sm:flex-row gap-3">
           <button
@@ -84,9 +92,19 @@ export default function StepOtpVerify({
           </button>
           <button
             type="submit"
-            className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all"
+            disabled={isSubmitting}
+            className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            {t('components.register.steps.StepOtpVerify.verifyAndActivate')} <ArrowRight className="w-4 h-4" />
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                {t('components.register.steps.StepOtpVerify.processing')}
+              </>
+            ) : (
+              <>
+                {t('components.register.steps.StepOtpVerify.verifyAndActivate')} <ArrowRight className="w-4 h-4" />
+              </>
+            )}
           </button>
         </div>
       </form>

@@ -73,11 +73,57 @@ export interface PaymentMethodDto {
 export interface TouchpointRecord {
   id?: string
   name?: string
+  slug?: string | null
   type?: string
-  qrImageUrl?: string
-  assignedStaffProfileId?: string
+  url?: string | null
+  qrImageUrl?: string | null
+  isActive?: boolean
+  assignedStaffProfileId?: string | null
+  createdAt?: string | null
+  /** Normalized from API `totalScans` */
+  scans?: number
+  /** Normalized from API `totalRevenue` */
+  revenue?: number
+  deviceId?: string | null
   [key: string]: unknown
 }
+
+export interface PhysicalCardRecord {
+  id: string
+  cardCode: string
+  helpCode?: string | null
+  linkedTouchPointId?: string | null
+  touchPointName?: string | null
+  linkedAt?: string | null
+}
+
+export interface PhysicalCardDetail {
+  id: string
+  cardCode: string
+  helpCode: string
+  isActive: boolean
+  linkedTouchPointId?: string | null
+  touchPointName?: string | null
+  touchPointUrl?: string | null
+  linkedAt?: string | null
+}
+
+export interface QrTouchPointRef {
+  id: string
+  name: string
+  slug: string
+  type?: string
+  businessId?: string
+  businessName?: string
+  businessSlug: string
+}
+
+export interface ResolveQrCodePayload {
+  status: string
+  touchPoint: QrTouchPointRef | null
+}
+
+export type PhysicalCardPage = PaginatedResponse<PhysicalCardRecord>
 
 export type TouchpointPage = PaginatedResponse<TouchpointRecord>
 
@@ -127,6 +173,7 @@ export interface StaffSearchResult {
   fullName: string
   avatar: string | null
   position: string | null
+  paymentMethods: PaymentMethodDto[]
 }
 
 export interface StaffBusinessLink {
@@ -150,6 +197,8 @@ export interface StaffBusinessLink {
   tipUrl?: string | null
   /** Hosted QR PNG from touchpoint API (from API when available). */
   qrImageUrl?: string | null
+  /** True when BE returned touchPoints: [] and no touchpoint slug/URL is available yet. */
+  touchPointsMissing?: boolean
 }
 
 export interface StaffBusinessTipQr {
@@ -164,6 +213,8 @@ export interface StaffBusinessTipQr {
   linkStatusLabel: string | null
   roleLabel: string | null
   logoUrl: string | null
+  /** True when the business has no touchpoint data to build a tipping link. */
+  tipLinkIncomplete?: boolean
 }
 
 export interface TipCountAmount {
@@ -249,6 +300,7 @@ export interface StaffLinkRequestDetail {
   businessRole: string | null
   requestedAt: string | null
   status: string | null
+  roleAtBusiness: string | null
 }
 
 export interface StaffAccountView {
@@ -292,6 +344,7 @@ export interface DomainEntity {
 export interface TransactionRecord extends DomainEntity {
   amount?: number
   status?: string
+  statusLabel?: string | null
   staff?: StaffMember | string
   staffId?: string
   staffName?: string
@@ -302,15 +355,30 @@ export interface TransactionRecord extends DomainEntity {
   touchpoint?: string
   touchPointId?: string | null
   confirmedAt?: string | null
+  staffConfirmedAt?: string | null
+  merchantConfirmedAt?: string | null
   isMultiStaff?: boolean
   tipItems?: unknown[]
   [key: string]: unknown
+}
+
+/** Result of POST /api/v1/merchant/tips/confirm-receipt (see US-025). */
+export interface MerchantTipsConfirmReceiptResult {
+  confirmedCount: number
+  failedIds: string[]
 }
 
 export interface ReviewRecord extends DomainEntity {
   rating?: number
   comment?: string
   [key: string]: unknown
+}
+
+export interface UserSubscription {
+  plan?: string
+  status?: string
+  trialEndsAt?: string | null
+  currentPeriodEnd?: string | null
 }
 
 export interface UserProfile {
@@ -337,6 +405,7 @@ export interface UserProfile {
   staffId?: string
   hasCompletedOnboarding?: boolean
   referralCode?: string
+  subscription?: UserSubscription | null
   [key: string]: unknown
 }
 
@@ -344,8 +413,14 @@ export interface StaffProfile {
   id?: string
   staffCode?: string
   displayName?: string
+  position?: string
   bio?: string
   photo?: string
+  photoUrl?: string
+  firstName?: string
+  lastName?: string
+  phone?: string
+  isProfileComplete?: boolean
   [key: string]: unknown
 }
 
@@ -384,6 +459,17 @@ export function isApiError(err: unknown): err is ApiError {
     'errorCode' in err &&
     typeof (err as ApiError).errorCode === 'string'
   )
+}
+
+export interface EcosystemItem {
+  id: string
+  name: string
+  url: string
+  logoUrl?: string | null
+}
+
+export interface EcosystemSignInResult {
+  redirectUrl: string | null
 }
 
 export function getApiErrorCode(err: unknown, fallback = 'HTTP_ERROR'): string {

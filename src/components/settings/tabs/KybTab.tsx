@@ -1,23 +1,16 @@
 import React, { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { Building2, ChevronDown, Loader2, RotateCcw, ShieldCheck } from 'lucide-react'
+import { Loader2, RotateCcw } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { UserKybStatus } from '../../../constants/userVerifyStatus'
-import type { KybCustomerProfileResponse } from '../../../data/repositories/profileSettings'
-import { useKybInfo, useRegisterKyb } from '../../../data/hooks/useProfileSettings'
+import { useKybInfo } from '../../../data/hooks/useProfileSettings'
 
 const APPROVED_STATUSES = new Set(['kyb_approved', 'verified_pro'])
 
-function resolveCustomerId(profile: LooseObject) {
-  return profile?.id ?? profile?.customerId ?? profile?.vlinkpayCustomerId ?? null
-}
-
-function hasKybSubmission(kybInfo?: KybCustomerProfileResponse | null) {
-  if (!kybInfo) return false
-  return (kybInfo.kybProfile?.length ?? 0) > 0
-}
-
-function shouldRequestKybCamera(status?: number) {
-  return status === UserKybStatus.None || status === UserKybStatus.Rejected
+function shouldRequestKybCamera(verificationStatus: string) {
+  return (
+    verificationStatus === 'basic' ||
+    verificationStatus === 'kyb_rejected' ||
+    verificationStatus === 'rejected'
+  )
 }
 
 async function requestCameraPermission() {
@@ -50,47 +43,32 @@ type KybTabProps = {
 }
 
 export default function KybTab({
-  profile,
   cardDetails,
   verificationStatus,
   portalRef,
 }: KybTabProps) {
-  const { t } = useTranslation()
-  const [isAccordionOpen, setIsAccordionOpen] = useState(true)
+  const { t, currentLanguage } = useTranslation()
   const [isIframeLoading, setIsIframeLoading] = useState(false)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const cameraRequestedRef = useRef(false)
-  const autoLoadAttemptedRef = useRef(false)
 
   const isApproved = APPROVED_STATUSES.has(verificationStatus)
-  const customerId = resolveCustomerId(profile)
 
   const {
     data: kybInfo,
     isLoading: isLoadingKybInfo,
+    isFetching: isFetchingKybInfo,
     isError: isKybInfoError,
     refetch: refetchKybInfo,
-  } = useKybInfo({ customerId, enabled: !isApproved })
+  } = useKybInfo({ language: currentLanguage })
 
-  const {
-    mutate: loadKybForm,
-    data: portalData,
-    isPending: isLoadingForm,
-    isError: isInitError,
-    reset: resetPortal,
-  } = useRegisterKyb()
-
-  const kybStatus = kybInfo?.status
-  const hasSubmittedKyb = hasKybSubmission(kybInfo)
-  const iframeUrl = portalData?.url
+  const iframeUrl = kybInfo?.url
   const hasUrl = Boolean(iframeUrl)
-  const isLoadingScreen = !isApproved && isLoadingKybInfo
-  const isBusy = isLoadingScreen || isLoadingForm
+  const isBusy = isLoadingKybInfo || (isFetchingKybInfo && !hasUrl)
 
   const onLoadKybForm = useCallback(() => {
     refetchKybInfo()
-    loadKybForm()
-  }, [loadKybForm, refetchKybInfo])
+  }, [refetchKybInfo])
 
   const openPortal = useCallback(() => {
     onLoadKybForm()
@@ -99,21 +77,13 @@ export default function KybTab({
   useImperativeHandle(portalRef, () => ({ openPortal }), [openPortal])
 
   useEffect(() => {
-    if (isApproved || isLoadingKybInfo || autoLoadAttemptedRef.current) return
-    if (!kybInfo || !hasSubmittedKyb) return
-
-    autoLoadAttemptedRef.current = true
-    onLoadKybForm()
-  }, [isApproved, isLoadingKybInfo, kybInfo, hasSubmittedKyb, onLoadKybForm])
-
-  useEffect(() => {
     if (!hasUrl) return
 
     setIsIframeLoading(true)
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
     timeoutRef.current = window.setTimeout(() => setIsIframeLoading(false), 30000)
 
-    const shouldRequestCamera = shouldRequestKybCamera(kybStatus)
+    const shouldRequestCamera = shouldRequestKybCamera(verificationStatus)
 
     if (shouldRequestCamera && !cameraRequestedRef.current) {
       cameraRequestedRef.current = true
@@ -123,7 +93,7 @@ export default function KybTab({
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
     }
-  }, [hasUrl, iframeUrl, kybStatus])
+  }, [hasUrl, iframeUrl, verificationStatus])
 
   const handleIframeLoad = () => {
     if (timeoutRef.current) {
@@ -134,16 +104,12 @@ export default function KybTab({
   }
 
   const handleRetry = () => {
-    resetPortal()
-    autoLoadAttemptedRef.current = false
     onLoadKybForm()
   }
 
-  const showLanding = !isApproved && !isBusy && !hasUrl && !isInitError
-  const showIframe = !isApproved && !isBusy && !isInitError && hasUrl
-  const showInitError = !isApproved && !isBusy && isInitError
-  const showMissingUrl =
-    !isApproved && !isBusy && !isInitError && !hasUrl && hasSubmittedKyb && !showLanding
+  const showIframe = !isBusy && !isKybInfoError && hasUrl
+  const showInitError = !isBusy && isKybInfoError
+  const showMissingUrl = !isBusy && !isKybInfoError && !hasUrl
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -184,34 +150,7 @@ export default function KybTab({
         </div>
       )}
 
-      {isApproved && (
-        <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 space-y-3 animate-fadeIn">
-          <div className="flex items-center gap-3 border-b border-nexoraRule pb-3">
-            <Building2 className="h-5 w-5 text-emerald-600" />
-            <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider">
-              {t('components.settings.tabs.KybTab.registeredCompanyDossier')}
-            </h4>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-            <div className="flex flex-col gap-1">
-              <span className="text-nexoraMuted font-semibold">
-                {t('components.settings.tabs.KybTab.legalBusinessName')}
-              </span>
-              <span className="text-nexoraText font-extrabold">
-                {profile.businessName || profile.fullName || '—'}
-              </span>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-nexoraMuted font-semibold">
-                {t('components.settings.tabs.KybTab.representativeOwnerName')}
-              </span>
-              <span className="text-nexoraText font-extrabold">{profile.fullName || '—'}</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {!isApproved && isKybInfoError && (
+      {isKybInfoError && (
         <div className="flex justify-end">
           <button
             type="button"
@@ -228,56 +167,6 @@ export default function KybTab({
         <div className="flex h-[calc(100vh-320px)] min-h-[400px] flex-col items-center justify-center gap-3">
           <Loader2 className="h-6 w-6 animate-spin text-nexoraBrand" />
           <span className="text-sm text-nexoraMuted">{t('common.loading')}</span>
-        </div>
-      )}
-
-      {showLanding && (
-        <div className="flex flex-col items-center justify-center py-6 space-y-6 animate-fadeIn">
-          <div className="flex h-28 w-28 items-center justify-center rounded-full bg-nexoraBrand/10 text-nexoraBrand">
-            <ShieldCheck className="h-14 w-14" />
-          </div>
-
-          <div className="text-center space-y-3 max-w-2xl px-4">
-            <h2 className="text-lg font-extrabold text-nexoraText">
-              {t('components.settings.tabs.KybTab.verifyYourBusiness')}
-            </h2>
-            <p
-              className="text-sm text-nexoraMuted leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: t('components.settings.tabs.KybTab.subtitle') }}
-            />
-          </div>
-
-          <button
-            type="button"
-            onClick={openPortal}
-            disabled={isLoadingForm}
-            className="rounded-xl bg-nexoraBrand hover:bg-nexoraBrandDark text-white px-10 py-3 text-sm font-bold transition min-w-[237px] flex items-center justify-center gap-2 disabled:opacity-60"
-          >
-            {isLoadingForm && <Loader2 className="h-4 w-4 animate-spin" />}
-            {t('components.settings.tabs.KybTab.getStarted')}
-          </button>
-
-          <div className="w-full max-w-3xl rounded-xl border border-nexoraBorder bg-nexoraCanvas/60 overflow-hidden mt-4">
-            <button
-              type="button"
-              onClick={() => setIsAccordionOpen((prev) => !prev)}
-              className="w-full flex items-center justify-between px-5 py-4 text-left bg-slate-100/80 hover:bg-slate-100 transition"
-            >
-              <span className="text-sm font-bold text-nexoraText">
-                {t('components.settings.tabs.KybTab.tabKybTitle')}
-              </span>
-              <ChevronDown
-                className={`h-5 w-5 text-nexoraMuted transition-transform duration-200 ${
-                  isAccordionOpen ? 'rotate-180' : ''
-                }`}
-              />
-            </button>
-            {isAccordionOpen && (
-              <div className="px-5 py-4 text-left text-sm text-nexoraMuted leading-relaxed border-t border-nexoraBorder/60 bg-white/50">
-                <p>{t('components.settings.tabs.KybTab.tabKybContent')}</p>
-              </div>
-            )}
-          </div>
         </div>
       )}
 

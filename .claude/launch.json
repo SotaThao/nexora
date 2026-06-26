@@ -2,10 +2,11 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "vite-demo",
+      "name": "dev",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["dev"],
-      "port": 5173,
+      "port": 3000,
+      "autoPort": true,
       "env": {
         "VITE_ENABLE_DEMO_TOOLS": "true"
       }

@@ -1,7 +1,10 @@
 import React from 'react'
 import { Check } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useAuth } from '../auth/useAuth'
 import { useRegisterForm } from './register/hooks/useRegisterForm'
+import LanguageSwitcher from './ui/LanguageSwitcher'
+import BackToHomeButton from './ui/BackToHomeButton'
 import StepRoleSelect from './register/steps/StepRoleSelect'
 import StepCredentials from './register/steps/StepCredentials'
 import StepOtpVerify from './register/steps/StepOtpVerify'
@@ -11,6 +14,7 @@ import StepSuccess from './register/steps/StepSuccess'
 import TermsModal from './register/modals/TermsModal'
 import PayoutEditModal from './register/modals/PayoutEditModal'
 import apiAuthAdapter from '../auth/adapters/apiAuthAdapter'
+import { loadPendingRegistration } from '../auth/pendingRegistration'
 import { useClearMerchantSetup } from '../data/hooks/useMerchantSetup'
 import { useClearProfileSettings } from '../data/hooks/useProfileSettings'
 import { logger } from '../utils/logger'
@@ -18,11 +22,26 @@ import { logger } from '../utils/logger'
 export default function RegisterWizard() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { refreshSession } = useAuth()
   const clearMerchantSetupMutation = useClearMerchantSetup()
   const clearProfileSettingsMutation = useClearProfileSettings()
 
   const showPersonalSuccessPopup = location.state?.showPersonalSuccessPopup || false
   const ssoEmail = location.state?.ssoEmail || ''
+  const pendingRegistration = loadPendingRegistration(location.state?.resumeEmail)
+  // `resumeOtpVerification` chỉ điều khiển nhảy thẳng tới bước OTP + prefill.
+  // Việc TỰ ĐỘNG gửi lại email xác thực chỉ được phép ở luồng login-resume rõ ràng
+  // (`location.state.resumeOtpVerification`), KHÔNG phải ngay sau khi đăng ký — vì
+  // signup đã tự gửi OTP. Một `pendingRegistration` vừa lưu (vừa signup) nếu không
+  // tách ra sẽ khiến reload bước OTP gọi lại `send-verification-email` → OTP trùng.
+  const resumeFromLogin = Boolean(location.state?.resumeOtpVerification)
+  const resumeOtpVerification = !showPersonalSuccessPopup && (
+    resumeFromLogin || Boolean(pendingRegistration)
+  )
+  const autoSendVerificationOnResume = !showPersonalSuccessPopup && resumeFromLogin
+  const resumeEmail = location.state?.resumeEmail || pendingRegistration?.email || ''
+  const resumePassword = location.state?.resumePassword || pendingRegistration?.password || ''
+  const resumeRole = location.state?.resumeRole || pendingRegistration?.role || null
 
   const handleRegisterAndLogin = async (registeredEmail) => {
     clearMerchantSetupMutation.mutate()
@@ -41,12 +60,16 @@ export default function RegisterWizard() {
     }
 
     try {
-      await apiAuthAdapter.getSession()
+      await refreshSession()
     } catch (e) {
       logger.error('Failed to get session in handleRegisterAndLogin', e)
     }
     
-    navigate('/onboarding', { state: { ssoPrefillData, isNewRegistration: true } })
+    if (form.role === 'personal') {
+      navigate('/staff', { replace: true })
+    } else {
+      navigate('/onboarding', { state: { ssoPrefillData, isNewRegistration: true } })
+    }
   }
 
   const formProps = {
@@ -54,15 +77,17 @@ export default function RegisterWizard() {
     isRedirectedFromSession: !!ssoEmail,
     initialStep: showPersonalSuccessPopup ? 3 : 0,
     initialRole: showPersonalSuccessPopup ? 'personal' : 'personal',
+    resumeOtpVerification,
+    autoSendVerificationOnResume,
+    resumeEmail,
+    resumePassword,
+    resumeRole,
     onBackToLogin: () => {
-      if (ssoEmail) {
-        navigate(-1)
-      } else {
-        navigate('/login')
-      }
+      navigate(-1)
     },
     onRegisterSuccess: () => navigate('/login'),
-    onRegisterAndLogin: handleRegisterAndLogin
+    onRegisterAndLogin: handleRegisterAndLogin,
+    onKybSuccess: () => {}
   }
 
   const form = useRegisterForm(formProps)
@@ -75,7 +100,7 @@ export default function RegisterWizard() {
     editQrCode, setEditQrCode,
     editAccountName, setEditAccountName,
     isCapturing, modalError, setModalError,
-    savePayoutAccount, handleModalFileChange, handleModalTakePhoto, handleModalClearQr,
+    savePayoutAccount, handleModalImagePick, handleModalTakePhoto, handleModalClearQr,
   } = form
 
 
@@ -85,31 +110,21 @@ export default function RegisterWizard() {
       <div className="absolute top-1/4 left-1/4 h-56 w-56 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(66,72,216,0.04)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-96 sm:w-96"></div>
       <div className="absolute bottom-1/4 right-1/4 h-64 w-64 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[rgba(43,89,255,0.02)] via-transparent to-transparent blur-3xl pointer-events-none sm:h-[450px] sm:w-[450px]"></div>
 
+      <div className="absolute top-4 left-4 z-50">
+        <BackToHomeButton />
+      </div>
+
       {/* Language Switcher */}
-      <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-nexoraBorder shadow-sm">
-        <button
-          onClick={() => setLanguage('vi')}
-          className={`text-xs font-bold px-2 py-0.5 rounded transition ${currentLanguage === 'vi' ? 'bg-nexoraBrand text-white' : 'text-nexoraSubtle hover:text-nexoraText'}`}
-        >
-          VI
-        </button>
-        <span className="text-nexoraBorder text-xs">|</span>
-        <button
-          onClick={() => setLanguage('en')}
-          className={`text-xs font-bold px-2 py-0.5 rounded transition ${currentLanguage === 'en' ? 'bg-nexoraBrand text-white' : 'text-nexoraSubtle hover:text-nexoraText'}`}
-        >
-          EN
-        </button>
+      <div className="absolute top-4 right-4 z-50">
+        <LanguageSwitcher />
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8 relative z-10 flex flex-col justify-center min-h-dvh">
         {/* Branding header */}
         <div className="text-center mb-6">
-          <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="w-12 h-12 mx-auto object-contain mb-2" />
-          <h2 className="font-sans text-xl font-bold tracking-wide sm:text-2xl text-nexoraText">
-            NEXORA <span className="ml-1.5 inline-flex align-middle text-nexoraBrand font-sans text-xs tracking-widest font-black uppercase bg-nexoraBrand/10 px-2 py-0.5 rounded border border-nexoraBrand/30">TOUCH</span>
-          </h2>
-          <p className="text-xs text-nexoraSubtle font-light tracking-wide mt-1">{t('components.RegisterWizard.subtitle')}</p>
+          <a href="/" className="inline-block">
+            <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="h-12 w-auto max-w-[220px] mx-auto object-contain" />
+          </a>
         </div>
 
         {/* Wizard Steps indicator */}
@@ -162,7 +177,7 @@ export default function RegisterWizard() {
           {currentStep === 0 && <StepRoleSelect {...form} />}
           {currentStep === 1 && <StepCredentials {...form} />}
           {currentStep === 2 && <StepOtpVerify {...form} />}
-          {currentStep === 3 && role === 'personal' && <StepSuccess {...form} />}
+          {currentStep === 3 && role === 'personal' && <StepProfileSetup {...form} />}
         </div>
       </div>
 
@@ -180,24 +195,24 @@ export default function RegisterWizard() {
       />
 
       {/* Payout Configuration Edit Modal Overlay */}
-      <PayoutEditModal
-        editingMethod={editingMethod}
-        setEditingMethod={setEditingMethod}
-        editValue={editValue}
-        setEditValue={setEditValue}
-        editQrCode={editQrCode}
-        setEditQrCode={setEditQrCode}
-        editAccountName={editAccountName}
-        setEditAccountName={setEditAccountName}
-        isCapturing={isCapturing}
-        modalError={modalError}
-        setModalError={setModalError}
-        currentLanguage={currentLanguage}
-        savePayoutAccount={savePayoutAccount}
-        handleModalFileChange={handleModalFileChange}
-        handleModalTakePhoto={handleModalTakePhoto}
-        handleModalClearQr={handleModalClearQr}
-      />
+      {React.createElement(PayoutEditModal as any, {
+        editingMethod,
+        setEditingMethod,
+        editValue,
+        setEditValue,
+        editQrCode,
+        setEditQrCode,
+        editAccountName,
+        setEditAccountName,
+        isCapturing,
+        modalError,
+        setModalError,
+        currentLanguage,
+        savePayoutAccount,
+        handleModalImagePick,
+        handleModalTakePhoto,
+        handleModalClearQr,
+      })}
     </div>
   )
 }

@@ -1,22 +1,41 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   Plus,
   Trash2,
   QrCode,
   ShieldAlert,
   HelpCircle,
-  CheckCircle,
   Check,
   X,
   Smartphone,
   Layers,
   Activity,
   AlertOctagon,
-  ExternalLink
+  ExternalLink,
+  Loader2,
+  Eye,
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
 import CustomSelect from './CustomSelect'
-import DevicesView from './DevicesView'
+import Pagination from './ui/Pagination'
+import { useTouchpoints } from '../data/hooks/useMerchantTouchpoints'
+import {
+  usePhysicalCards,
+  useLinkPhysicalCard,
+  useUnlinkPhysicalCard,
+} from '../data/hooks/useMerchantPhysicalCards'
+import { usePagination } from '../hooks/usePagination'
+import { DEFAULT_PAGE_SIZE, STAFF_FILTER_LIST_PAGE_SIZE } from '../constants/pagination'
+import { buildQrImageUrl, toLocalCustomerTouchUrl } from '../utils/staffTipUrl'
+import { formatCurrency, formatTransactionDateTime } from './dashboard/utils'
+import PhysicalCardDetailModal from './dashboard/modals/PhysicalCardDetailModal'
+
+function isLinkedTouchPointId(value: unknown): boolean {
+  if (value == null || value === '') return false
+  const id = String(value).trim()
+  if (!id || id === '00000000-0000-0000-0000-000000000000') return false
+  return true
+}
 
 function Panel({ children, className = '' }) {
   return (
@@ -41,11 +60,11 @@ function IconButton({ label, children, className = '', ...props }) {
 }
 
 export default function TouchpointsView({
-  touchpoints = [],
   onOpenAddModal,
   onDelete,
   onQr,
   onToggleStatus,
+  togglingTouchpointId = null,
   onLinkDevice,
   transactions = [],
   businessName = '',
@@ -56,38 +75,163 @@ export default function TouchpointsView({
   activeSubTab: propActiveSubTab,
   onTabChange
 }) {
-  const { t } = useTranslation()
-  const [localActiveSubTab, setLocalActiveSubTab] = useState('stations') // 'stations' or 'devices'
+  const { t, currentLanguage } = useTranslation()
+  const [localActiveSubTab, setLocalActiveSubTab] = useState('stations')
   const activeSubTab = propActiveSubTab !== undefined ? propActiveSubTab : localActiveSubTab
   const setActiveSubTab = onTabChange !== undefined ? onTabChange : setLocalActiveSubTab
   const [deleteConfirmId, setDeleteConfirmId] = useState<any | null>(null)
+  const [unlinkConfirmPoint, setUnlinkConfirmPoint] = useState<any | null>(null)
+  const [detailHelpCode, setDetailHelpCode] = useState<string | null>(null)
 
-  // Local state for the Add Touchpoint form
+  // Local state for the Add Touchpoint form (name also drives list filter via API)
   const [name, setName] = useState('')
   const [type, setType] = useState('Table QR')
   const [deviceId, setDeviceId] = useState('')
+  const [debouncedNameFilter, setDebouncedNameFilter] = useState('')
+  const [debouncedDeviceIdFilter, setDebouncedDeviceIdFilter] = useState('')
+  const { pageNumber, pageSize, setPage, reset: resetPage } = usePagination({ pageSize: DEFAULT_PAGE_SIZE })
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedNameFilter(name.trim()), 400)
+    return () => window.clearTimeout(timer)
+  }, [name])
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedDeviceIdFilter(deviceId.trim()), 400)
+    return () => window.clearTimeout(timer)
+  }, [deviceId])
+
+  useEffect(() => {
+    resetPage()
+  }, [debouncedNameFilter, debouncedDeviceIdFilter, resetPage])
+
+  const hasDeviceFilter = Boolean(debouncedDeviceIdFilter)
+
+  const listQuery = useMemo(() => ({
+    PageNumber: hasDeviceFilter ? 1 : pageNumber,
+    PageSize: hasDeviceFilter ? STAFF_FILTER_LIST_PAGE_SIZE : pageSize,
+    ...(debouncedNameFilter ? { Name: debouncedNameFilter } : {}),
+  }), [pageNumber, pageSize, debouncedNameFilter, hasDeviceFilter])
+
+  const {
+    data: touchpointsPage,
+    isLoading,
+    isFetching,
+  } = useTouchpoints(listQuery)
+  const { data: touchpointsStatsPage } = useTouchpoints(
+    { PageNumber: 1, PageSize: STAFF_FILTER_LIST_PAGE_SIZE },
+  )
+
+  const touchpoints = touchpointsPage?.items ?? []
+  const statsTouchpoints = touchpointsStatsPage?.items ?? touchpoints
+  const totalCount = touchpointsPage?.totalCount ?? 0
+  const totalPages = touchpointsPage?.totalPages ?? 1
+  const hasNextPage = touchpointsPage?.hasNextPage ?? false
+  const hasPreviousPage = touchpointsPage?.hasPreviousPage ?? false
 
   // Local state for Linking Devices
   const [linkingPointId, setLinkingPointId] = useState<any | null>(null)
   const [linkInputVal, setLinkInputVal] = useState('')
+  const [linkInputError, setLinkInputError] = useState('')
+
+  const linkPhysicalCardMutation = useLinkPhysicalCard()
+  const unlinkPhysicalCardMutation = useUnlinkPhysicalCard()
+
+  const physicalCardsQuery = useMemo(
+    () => ({ PageNumber: 1, PageSize: STAFF_FILTER_LIST_PAGE_SIZE }),
+    [],
+  )
+  const {
+    data: physicalCardsPage,
+    isLoading: isPhysicalCardsLoading,
+  } = usePhysicalCards(physicalCardsQuery)
+
+  const physicalCards = physicalCardsPage?.items ?? []
+
+  const cardCodeByTouchPointId = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const card of physicalCards) {
+      if (card.linkedTouchPointId && card.cardCode) {
+        map.set(card.linkedTouchPointId, card.cardCode)
+      }
+    }
+    return map
+  }, [physicalCards])
+
+  const helpCodeByTouchPointId = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const card of physicalCards) {
+      if (card.linkedTouchPointId && card.helpCode) {
+        map.set(card.linkedTouchPointId, card.helpCode)
+      }
+    }
+    return map
+  }, [physicalCards])
+
+  const touchpointsWithLinks = useMemo(
+    () => touchpoints.map((point) => ({
+      ...point,
+      deviceId: cardCodeByTouchPointId.get(point.id) ?? point.deviceId ?? null,
+    })),
+    [touchpoints, cardCodeByTouchPointId],
+  )
+
+  const statsTouchpointsWithLinks = useMemo(
+    () => (statsTouchpoints ?? touchpoints).map((point) => ({
+      ...point,
+      deviceId: cardCodeByTouchPointId.get(point.id) ?? point.deviceId ?? null,
+    })),
+    [statsTouchpoints, touchpoints, cardCodeByTouchPointId],
+  )
+
+  const linkedTouchPointIdsMatchingDevice = useMemo(() => {
+    if (!debouncedDeviceIdFilter) return null
+    const query = debouncedDeviceIdFilter.toLowerCase()
+    const ids = new Set<string>()
+    for (const card of physicalCards) {
+      const cardCode = String(card.cardCode ?? '').toLowerCase()
+      const helpCode = String(card.helpCode ?? '').toLowerCase()
+      if ((cardCode.includes(query) || helpCode.includes(query)) && card.linkedTouchPointId) {
+        ids.add(card.linkedTouchPointId)
+      }
+    }
+    return ids
+  }, [physicalCards, debouncedDeviceIdFilter])
+
+  const filteredTouchpointsWithLinks = useMemo(() => {
+    if (!debouncedDeviceIdFilter) return touchpointsWithLinks
+
+    const query = debouncedDeviceIdFilter.toLowerCase()
+    return touchpointsWithLinks.filter((point) => {
+      if (linkedTouchPointIdsMatchingDevice?.has(point.id)) return true
+
+      const device = String(point.deviceId ?? '').toLowerCase()
+      const helpCode = String(helpCodeByTouchPointId.get(point.id) ?? '').toLowerCase()
+      const pointName = String(point.name ?? '').toLowerCase()
+      return device.includes(query) || helpCode.includes(query) || pointName.includes(query)
+    })
+  }, [
+    touchpointsWithLinks,
+    debouncedDeviceIdFilter,
+    helpCodeByTouchPointId,
+    linkedTouchPointIdsMatchingDevice,
+  ])
+
+  const displayedTouchpoints = useMemo(() => {
+    if (!hasDeviceFilter) return filteredTouchpointsWithLinks
+    const start = (pageNumber - 1) * pageSize
+    return filteredTouchpointsWithLinks.slice(start, start + pageSize)
+  }, [filteredTouchpointsWithLinks, hasDeviceFilter, pageNumber, pageSize])
+
+  const displayTotalCount = hasDeviceFilter ? filteredTouchpointsWithLinks.length : totalCount
+  const displayTotalPages = hasDeviceFilter
+    ? Math.max(1, Math.ceil(filteredTouchpointsWithLinks.length / pageSize))
+    : totalPages
+  const displayHasNextPage = hasDeviceFilter ? pageNumber < displayTotalPages : hasNextPage
+  const displayHasPreviousPage = hasDeviceFilter ? pageNumber > 1 : hasPreviousPage
 
   // Highlighting selected device
   const [highlightedDeviceId, setHighlightedDeviceId] = useState<any | null>(null)
-  
-  // Suggestion overlay state
-  const [showSuggestions, setShowSuggestions] = useState(false)
-  const suggestionRef = useRef(null)
-
-  // Click outside suggestions dropdown listener
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (suggestionRef.current && !suggestionRef.current.contains(event.target)) {
-        setShowSuggestions(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
 
   const handleAdd = () => {
     // Hand off to the Add Touch Point modal, prefilled with anything typed here.
@@ -100,32 +244,63 @@ export default function TouchpointsView({
 
   const handleStartLink = (point) => {
     setLinkingPointId(point.id)
-    setLinkInputVal(point.deviceId || '')
+    setLinkInputVal('')
+    setLinkInputError('')
   }
 
-  const handleSaveLink = (pointId) => {
-    if (onLinkDevice) {
-      onLinkDevice(pointId, linkInputVal.trim())
+  const handleSaveLink = async (pointId) => {
+    const cardCode = linkInputVal.trim()
+    if (!cardCode) {
+      setLinkInputError(t('dashboard.touchpoints.link_device_required'))
+      return
     }
-    setLinkingPointId(null)
-    setLinkInputVal('')
+
+    setLinkInputError('')
+    try {
+      await linkPhysicalCardMutation.mutateAsync({ cardCode, touchPointId: pointId })
+      if (onLinkDevice) {
+        onLinkDevice(pointId, cardCode)
+      }
+      setLinkingPointId(null)
+      setLinkInputVal('')
+      setLinkInputError('')
+    } catch {
+      // Toast handled in mutation hook
+    }
+  }
+
+  const handleUnlink = async (point) => {
+    const cardCode = point.deviceId?.trim()
+    if (!cardCode || unlinkPhysicalCardMutation.isPending) return
+
+    try {
+      await unlinkPhysicalCardMutation.mutateAsync(cardCode)
+      setUnlinkConfirmPoint(null)
+      if (linkingPointId === point.id) {
+        setLinkingPointId(null)
+        setLinkInputVal('')
+      }
+    } catch {
+      // Toast handled in mutation hook
+    }
   }
 
   // Calculate dynamic Hardware KPIs
-  const totalTouchpoints = touchpoints.length
+  const kpiTouchpoints = statsTouchpointsWithLinks
+  const totalTouchpoints = totalCount ?? kpiTouchpoints.length
 
-  const activeNfcStands = touchpoints.filter(
+  const activeNfcStands = kpiTouchpoints.filter(
     (point) =>
       point.deviceId &&
       point.deviceId.trim().toUpperCase().startsWith('NFC') &&
       point.isActive !== false
   ).length
 
-  const totalScans = touchpoints.reduce((sum, point) => sum + (point.scans || 0), 0)
+  const totalScans = kpiTouchpoints.reduce((sum, point) => sum + (point.scans ?? 0), 0)
 
-  const deviceIssues = touchpoints.filter(
+  const deviceIssues = kpiTouchpoints.filter(
     (point) => point.deviceId && point.isActive === false
-  ).length || 1
+  ).length
 
   return (
     <div className="space-y-6">
@@ -143,18 +318,22 @@ export default function TouchpointsView({
         {/* Navigation Tabs */}
         <div className="flex flex-wrap gap-1 bg-nexoraSurfaceMuted dark:bg-luxuryCoal p-1 rounded-xl border border-nexoraBorder dark:border-luxuryGold/10">
           {[
-            { id: 'stations', label: t('dashboard.touchpoints.tabs.stations') },
-            { id: 'devices', label: t('dashboard.touchpoints.tabs.devices') }
+            { id: 'stations', label: t('dashboard.touchpoints.tabs.stations'), disabled: false },
+            { id: 'devices', label: t('dashboard.touchpoints.tabs.devices'), disabled: false }
           ].map(tab => (
             <button
               key={tab.id}
               type="button"
-              onClick={() => setActiveSubTab(tab.id)}
+              disabled={tab.disabled}
+              onClick={() => !tab.disabled && setActiveSubTab(tab.id)}
               className={`h-9 rounded-lg px-4 text-xs font-bold transition-all min-w-[44px] ${
-                activeSubTab === tab.id
-                  ? 'bg-white dark:bg-luxuryBlack text-luxuryGold shadow-sm font-black'
-                  : 'text-nexoraMuted hover:text-nexoraText dark:text-slate-400 dark:hover:text-white'
+                tab.disabled
+                  ? 'cursor-not-allowed opacity-45 text-nexoraMuted'
+                  : activeSubTab === tab.id
+                    ? 'bg-white dark:bg-luxuryBlack text-luxuryGold shadow-sm font-black'
+                    : 'text-nexoraMuted hover:text-nexoraText dark:text-slate-400 dark:hover:text-white'
               }`}
+              title={tab.disabled ? t('common.coming_soon') : undefined}
             >
               {tab.label}
             </button>
@@ -226,24 +405,34 @@ export default function TouchpointsView({
                 <label className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
                   {t('dashboard.modals.tp_name_label')}
                 </label>
-                <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder={t('dashboard.modals.tp_name_placeholder')}
-                  className="h-11 w-full rounded-flox-inputs border border-nexoraBorder dark:border-luxuryGold/18 bg-white dark:bg-luxuryCoal px-3 text-base text-nexoraText outline-none focus:border-nexoraBrand dark:focus:border-luxuryGold"
-                />
+                <div className="relative">
+                  <input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder={t('dashboard.modals.tp_name_placeholder')}
+                    className="h-11 w-full rounded-flox-inputs border border-nexoraBorder dark:border-luxuryGold/18 bg-white dark:bg-luxuryCoal px-3 pr-10 text-base text-nexoraText outline-none focus:border-nexoraBrand dark:focus:border-luxuryGold"
+                  />
+                  {isFetching && !isLoading ? (
+                    <Loader2 className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-nexoraBrand" />
+                  ) : null}
+                </div>
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
                   {t('dashboard.modals.device_id_label')}
                 </label>
-                <input
-                  value={deviceId}
-                  onChange={(e) => setDeviceId(e.target.value)}
-                  placeholder={t('components.TouchpointsView.phExampleDeviceIds')}
-                  className="h-11 w-full rounded-flox-inputs border border-nexoraBorder dark:border-luxuryGold/18 bg-white dark:bg-luxuryCoal px-3 text-base text-nexoraText outline-none focus:border-nexoraBrand dark:focus:border-luxuryGold"
-                />
+                <div className="relative">
+                  <input
+                    value={deviceId}
+                    onChange={(e) => setDeviceId(e.target.value)}
+                    placeholder={t('components.TouchpointsView.phExampleDeviceIds')}
+                    className="h-11 w-full rounded-flox-inputs border border-nexoraBorder dark:border-luxuryGold/18 bg-white dark:bg-luxuryCoal px-3 pr-10 text-base text-nexoraText outline-none focus:border-nexoraBrand dark:focus:border-luxuryGold"
+                  />
+                  {isFetching && !isLoading && debouncedDeviceIdFilter ? (
+                    <Loader2 className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-nexoraBrand" />
+                  ) : null}
+                </div>
               </div>
 
               <div className="space-y-1.5">
@@ -276,7 +465,11 @@ export default function TouchpointsView({
 
           {/* Touchpoint Cards Grid */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {touchpoints.length === 0 && (
+            {isLoading ? (
+              <Panel className="md:col-span-2 xl:col-span-3 flex items-center justify-center py-16">
+                <Loader2 className="h-7 w-7 animate-spin text-nexoraBrand" />
+              </Panel>
+            ) : displayedTouchpoints.length === 0 ? (
               <Panel className="md:col-span-2 xl:col-span-3 border-dashed border-nexoraBorder/80">
                 <div className="mx-auto flex max-w-xl flex-col items-center gap-4 px-6 py-12 text-center sm:gap-5 sm:py-14">
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-nexoraBrandSoft to-brandCyan/20 dark:from-nexoraBrand/20 dark:to-brandCyan/20 text-nexoraBrand shadow-sm ring-1 ring-nexoraBrand/10">
@@ -290,43 +483,35 @@ export default function TouchpointsView({
                   </p>
                 </div>
               </Panel>
-            )}
-            {touchpoints.map((point) => {
+            ) : null}
+            {!isLoading && displayedTouchpoints.map((point) => {
               const isPointActive = point.isActive !== false
-              // Use the canonical customer URL from the API (`url`, with real
-              // business + touch-point slugs). Keep the current origin so it
-              // resolves in dev (localhost) and deployed envs. Fall back to the
-              // slug only if the API didn't return a url.
+              const isToggling = togglingTouchpointId === point.id
               let qrUrl = ''
               if (point.url) {
-                try {
-                  qrUrl = `${window.location.origin}${new URL(point.url).pathname}`
-                } catch {
-                  qrUrl = point.url
-                }
+                qrUrl = toLocalCustomerTouchUrl(String(point.url))
               }
-              if (!qrUrl) {
-                qrUrl = `${window.location.origin}/touch/${point.slug || point.id}`
+              if (!qrUrl && point.slug) {
+                qrUrl = `${window.location.origin}/touch/${point.slug}`
               }
-              
-              // Calculate dynamic revenue
-              const revenue = transactions
-                .filter((tx) => tx.status === 'Success' && (tx.touchpoint === point.name || tx.touchpoint === point.id))
-                .reduce((sum, tx) => sum + (tx.amount || 0), 0)
+
+              const scans = point.scans ?? 0
+              const revenue = point.revenue ?? 0
+              const qrImageSrc = buildQrImageUrl(qrUrl, 150, point.qrImageUrl)
 
               return (
-                <Panel key={point.id} className="p-3.5 flex gap-4 hover:shadow-premium transition-all duration-300 group border border-nexoraBorder relative overflow-hidden min-h-[160px]">
+                <Panel key={point.id} className="p-3.5 flex flex-col sm:flex-row gap-3 sm:gap-4 hover:shadow-premium transition-all duration-300 group border border-nexoraBorder relative overflow-visible min-h-0 sm:min-h-[160px]">
                   {/* Subtle top decoration strip */}
                   <div className={`absolute top-0 left-0 right-0 h-1 transition-colors ${isPointActive ? 'bg-gradient-to-r from-nexoraBrand to-floxElectricViolet' : 'bg-nexoraBorder'}`} />
                   
                   {/* Left Column: QR Code Box */}
                   <div 
                     onClick={() => isPointActive && onQr && onQr(point)}
-                    className="relative w-[115px] h-[115px] rounded-xl bg-white border border-nexoraBorder/60 p-2 flex items-center justify-center shadow-sm cursor-pointer hover:border-nexoraBrand transition-all hover:scale-[1.03] active:scale-95 group/qr select-none overflow-hidden shrink-0 self-center"
+                    className="relative w-[115px] h-[115px] rounded-xl bg-white border border-nexoraBorder/60 p-2 flex items-center justify-center shadow-sm cursor-pointer hover:border-nexoraBrand transition-all hover:scale-[1.03] active:scale-95 group/qr select-none overflow-hidden shrink-0 self-center mx-auto sm:mx-0"
                     title={t('dashboard.modals.download_print_qr')}
                   >
                     <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrUrl)}`}
+                      src={qrImageSrc}
                       alt="Scan QR"
                       className={`h-full w-full object-contain transition-opacity duration-200 ${isPointActive ? 'opacity-100' : 'opacity-30 filter grayscale'}`}
                     />
@@ -345,7 +530,7 @@ export default function TouchpointsView({
                   </div>
 
                   {/* Right Column: Details */}
-                  <div className="flex-grow flex flex-col justify-between min-w-0 py-0.5">
+                  <div className="flex-grow flex flex-col justify-between min-w-0 py-0.5 overflow-visible">
                     {/* Top Section: Title & Delete Button */}
                     <div className="space-y-1">
                       <div className="flex items-center justify-between gap-2">
@@ -381,16 +566,24 @@ export default function TouchpointsView({
                     {/* Middle Section: Active / Inactive Toggle */}
                     <div className="flex items-center gap-2 mt-1">
                       <button
+                        type="button"
+                        disabled={isToggling}
                         onClick={() => onToggleStatus && onToggleStatus(point.id)}
-                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                          isPointActive ? 'bg-nexoraBrand' : 'bg-nexoraBorder'
-                        }`}
+                        className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:cursor-wait ${
+                          isToggling ? 'opacity-70' : 'cursor-pointer'
+                        } ${isPointActive ? 'bg-nexoraBrand' : 'bg-nexoraBorder'}`}
                       >
-                        <span
-                          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                            isPointActive ? 'translate-x-4' : 'translate-x-0'
-                          }`}
-                        />
+                        {isToggling ? (
+                          <span className="absolute inset-0 flex items-center justify-center">
+                            <Loader2 className="h-3 w-3 animate-spin text-white" />
+                          </span>
+                        ) : (
+                          <span
+                            className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                              isPointActive ? 'translate-x-4' : 'translate-x-0'
+                            }`}
+                          />
+                        )}
                       </button>
                       <span className={`text-[10px] font-extrabold uppercase tracking-wider ${isPointActive ? 'text-nexoraSuccess' : 'text-nexoraSubtle'}`}>
                         {isPointActive ? t('dashboard.touchpoint_stats.active') : t('dashboard.touchpoint_stats.inactive')}
@@ -398,114 +591,121 @@ export default function TouchpointsView({
                     </div>
 
                     {/* Linked Hardware Display & Link Device Action */}
-                    <div className="mt-2 pt-2 border-t border-nexoraRule dark:border-white/5 space-y-1">
-                      {linkingPointId === point.id ? (
-                        <div className="flex items-center gap-1.5 flex-grow">
-                          <div className="relative flex-grow" ref={suggestionRef}>
+                    <div className="mt-2 pt-2 border-t border-nexoraRule dark:border-white/5 space-y-2 overflow-visible">
+                      {linkingPointId === point.id && !point.deviceId ? (
+                        <div className="flex items-start gap-2 min-w-0">
+                          <div className="flex-1 min-w-0 space-y-1">
                             <input
                               type="text"
                               value={linkInputVal}
                               onChange={(e) => {
                                 setLinkInputVal(e.target.value)
-                                setShowSuggestions(true)
+                                if (linkInputError) setLinkInputError('')
                               }}
-                              onFocus={() => setShowSuggestions(true)}
                               placeholder={t('components.TouchpointsView.phDeviceId')}
-                              className="h-9 w-full rounded-flox-inputs border border-nexoraBorder dark:border-luxuryGold/18 bg-white dark:bg-luxuryCoal px-2 text-base text-nexoraText outline-none focus:border-nexoraBrand"
+                              className={`h-11 w-full rounded-flox-inputs border bg-white dark:bg-luxuryCoal px-3 text-sm text-nexoraText outline-none focus:border-nexoraBrand ${
+                                linkInputError
+                                  ? 'border-nexoraDanger'
+                                  : 'border-nexoraBorder dark:border-luxuryGold/18'
+                              }`}
                               autoFocus
                             />
-                            {showSuggestions && (
-                              <div className="absolute left-0 right-0 mt-1 z-50 bg-white dark:bg-luxuryCoal border border-nexoraBorder dark:border-luxuryGold/18 rounded-lg shadow-premium max-h-48 overflow-y-auto py-1 text-xs">
-                                {devices.filter(d => 
-                                  !linkInputVal ||
-                                  d.deviceId.toLowerCase().includes(linkInputVal.toLowerCase()) ||
-                                  d.location.toLowerCase().includes(linkInputVal.toLowerCase())
-                                ).map((device) => (
-                                  <button
-                                    key={device.id}
-                                    type="button"
-                                    onClick={() => {
-                                      setLinkInputVal(device.deviceId)
-                                      setShowSuggestions(false)
-                                    }}
-                                    className="w-full text-left px-3 py-2 hover:bg-nexoraSurfaceMuted dark:hover:bg-luxuryBlack transition-colors flex flex-col gap-0.5 cursor-pointer"
-                                  >
-                                    <span className="font-extrabold text-nexoraText dark:text-white font-mono">{device.deviceId}</span>
-                                    <span className="text-[10px] text-nexoraSubtle">{device.location} ({device.type})</span>
-                                  </button>
-                                ))}
-                                {devices.filter(d => 
-                                  !linkInputVal ||
-                                  d.deviceId.toLowerCase().includes(linkInputVal.toLowerCase()) ||
-                                  d.location.toLowerCase().includes(linkInputVal.toLowerCase())
-                                ).length === 0 && (
-                                  <div className="px-3 py-2 text-nexoraSubtle italic text-center">
-                                    No matching devices
-                                  </div>
-                                )}
-                              </div>
-                            )}
+                            {linkInputError ? (
+                              <p className="text-[11px] font-semibold text-nexoraDanger">{linkInputError}</p>
+                            ) : null}
                           </div>
                           <button
-                            onClick={() => {
-                              handleSaveLink(point.id)
-                              setShowSuggestions(false)
-                            }}
-                            className="h-9 w-9 flex items-center justify-center rounded-flox-buttons bg-nexoraSuccess text-white hover:bg-nexoraSuccess/90 active:scale-95 shrink-0"
-                            title="Confirm"
+                            type="button"
+                            onClick={() => handleSaveLink(point.id)}
+                            disabled={linkPhysicalCardMutation.isPending}
+                            aria-label={t('common.confirm')}
+                            title={t('common.confirm')}
+                            className="h-11 w-11 flex items-center justify-center rounded-flox-buttons bg-nexoraSuccess text-white hover:bg-nexoraSuccess/90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                           >
-                            <Check className="h-4 w-4" />
+                            {linkPhysicalCardMutation.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Check className="h-4 w-4" />
+                            )}
                           </button>
                           <button
+                            type="button"
                             onClick={() => {
                               setLinkingPointId(null)
-                              setShowSuggestions(false)
+                              setLinkInputVal('')
+                              setLinkInputError('')
                             }}
-                            className="h-9 w-9 flex items-center justify-center rounded-flox-buttons bg-nexoraRule dark:bg-white/10 text-nexoraMuted dark:text-nexoraSubtle hover:bg-nexoraBorder dark:hover:bg-white/20 active:scale-95 shrink-0"
-                            title="Cancel"
+                            aria-label={t('common.cancel')}
+                            title={t('common.cancel')}
+                            className="h-11 w-11 flex items-center justify-center rounded-flox-buttons bg-nexoraRule dark:bg-white/10 text-nexoraMuted dark:text-nexoraSubtle hover:bg-nexoraBorder dark:hover:bg-white/20 active:scale-95 shrink-0"
                           >
                             <X className="h-4 w-4" />
                           </button>
                         </div>
                       ) : (
-                        <div className="flex items-center justify-between gap-1 min-h-[44px]">
-                          <div className="text-[10px] font-bold text-nexoraMuted truncate flex items-center gap-1 min-w-0 flex-grow">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="min-w-0 flex-1">
                             {point.deviceId ? (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setHighlightedDeviceId(point.deviceId)
-                                  setActiveSubTab('devices')
-                                }}
-                                className="flex items-center gap-1.5 bg-gradient-to-r from-nexoraBrand/10 to-brandCyan/10 text-nexoraBrand dark:text-luxuryGold px-2 py-1 rounded-full border border-nexoraBrand/20 text-[9.5px] font-black uppercase tracking-wider truncate cursor-pointer hover:scale-[1.03] active:scale-95 transition-all select-none"
-                                title="Click to view hardware details"
+                              <div
+                                className="inline-flex max-w-full min-w-0 items-center gap-1.5 bg-gradient-to-r from-nexoraBrand/10 to-brandCyan/10 text-nexoraBrand dark:text-luxuryGold px-2.5 py-1.5 rounded-full border border-nexoraBrand/20 text-[9.5px] font-black uppercase tracking-wider"
+                                title={point.deviceId}
                               >
-                                <Smartphone className="h-3.5 w-3.5 text-nexoraBrand dark:text-luxuryGold" />
-                                <span>{point.deviceId}</span>
-                              </button>
+                                <Smartphone className="h-3.5 w-3.5 shrink-0 text-nexoraBrand dark:text-luxuryGold" />
+                                <span className="truncate">{point.deviceId}</span>
+                              </div>
                             ) : (
-                              <span className="text-nexoraSubtle italic text-[9.5px]">
-                                Only Paper QR / Chỉ dùng QR in giấy
+                              <span className="text-nexoraSubtle italic text-[9.5px] leading-relaxed">
+                                {t('dashboard.touchpoints.paper_qr_only')}
                               </span>
                             )}
                           </div>
-                          <button
-                            onClick={() => handleStartLink(point)}
-                            className="h-11 px-2.5 text-[10px] font-black uppercase tracking-wider text-nexoraBrand dark:text-luxuryGold hover:underline focus:outline-none flex items-center justify-center shrink-0 ml-auto"
-                          >
-                            {point.deviceId ? 'Edit Link' : 'Link Device'}
-                          </button>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {point.deviceId && helpCodeByTouchPointId.get(point.id) ? (
+                              <button
+                                type="button"
+                                onClick={() => setDetailHelpCode(helpCodeByTouchPointId.get(point.id) ?? null)}
+                                aria-label={t('dashboard.touchpoints.physical_card.view_detail')}
+                                title={t('dashboard.touchpoints.physical_card.view_detail')}
+                                className="inline-flex h-11 w-11 items-center justify-center rounded-flox-buttons border border-nexoraBorder dark:border-luxuryGold/18 text-nexoraBrand dark:text-luxuryGold hover:bg-nexoraBrand/5 dark:hover:bg-luxuryGold/10 transition"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </button>
+                            ) : null}
+                            {point.deviceId ? (
+                              <button
+                                type="button"
+                                onClick={() => setUnlinkConfirmPoint(point)}
+                                disabled={unlinkPhysicalCardMutation.isPending}
+                                className="h-11 px-3 text-[10px] font-black uppercase tracking-wider text-nexoraDanger border border-nexoraDanger/20 rounded-flox-buttons hover:bg-nexoraDanger/5 focus:outline-none flex items-center justify-center disabled:opacity-50 whitespace-nowrap"
+                              >
+                                {unlinkPhysicalCardMutation.isPending &&
+                                unlinkPhysicalCardMutation.variables === point.deviceId ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  t('dashboard.touchpoints.unlink_btn')
+                                )}
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleStartLink(point)}
+                                className="h-11 px-3 text-[10px] font-black uppercase tracking-wider text-nexoraBrand dark:text-luxuryGold border border-nexoraBrand/20 dark:border-luxuryGold/20 rounded-flox-buttons hover:bg-nexoraBrand/5 dark:hover:bg-luxuryGold/5 focus:outline-none flex items-center justify-center whitespace-nowrap"
+                              >
+                                {t('dashboard.touchpoints.link_device_btn')}
+                              </button>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
 
                     {/* Bottom Section: Compact Metrics */}
-                    <div className="mt-2 pt-2 border-t border-nexoraRule dark:border-white/5 flex items-center justify-between text-[11px] font-bold text-nexoraMuted">
+                    <div className="mt-2 pt-2 border-t border-nexoraRule dark:border-white/5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] font-bold text-nexoraMuted">
                       <div>
-                        {t('dashboard.touchpoint_stats.scans')}: <span className="font-black text-nexoraText">{point.scans || 0}</span>
+                        {t('dashboard.touchpoint_stats.scans')}: <span className="font-black text-nexoraText">{scans}</span>
                       </div>
                       <div>
-                        {t('dashboard.touchpoint_stats.revenue')}: <span className="font-black text-nexoraSuccess">${revenue.toFixed(2)}</span>
+                        {t('dashboard.touchpoint_stats.revenue')}: <span className="font-black text-nexoraSuccess">{formatCurrency(revenue)}</span>
                       </div>
                     </div>
                   </div>
@@ -513,6 +713,57 @@ export default function TouchpointsView({
               )
             })}
           </div>
+
+          {!isLoading && displayTotalPages > 1 && (
+            <Pagination
+              pageNumber={pageNumber}
+              pageSize={pageSize}
+              totalPages={displayTotalPages}
+              totalCount={displayTotalCount ?? displayedTouchpoints.length}
+              hasNextPage={displayHasNextPage}
+              hasPreviousPage={displayHasPreviousPage}
+              onPageChange={setPage}
+              isLoading={isFetching}
+              className="pt-2"
+            />
+          )}
+
+          {unlinkConfirmPoint ? (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+              <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-luxuryCoal border border-nexoraBorder dark:border-luxuryGold/18 p-7 sm:p-8 shadow-2xl animate-scaleUp">
+                <h3 className="text-lg sm:text-xl font-extrabold text-nexoraText">
+                  {t('dashboard.touchpoints.unlink_confirm_title')}
+                </h3>
+                <p className="mt-4 text-sm sm:text-base text-nexoraMuted leading-relaxed">
+                  {t('dashboard.touchpoints.unlink_confirm_desc', {
+                    device: unlinkConfirmPoint.deviceId || '',
+                    name: unlinkConfirmPoint.name || '',
+                  })}
+                </p>
+                <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end border-t border-nexoraRule dark:border-white/10 pt-5">
+                  <button
+                    type="button"
+                    onClick={() => setUnlinkConfirmPoint(null)}
+                    disabled={unlinkPhysicalCardMutation.isPending}
+                    className="rounded-lg border border-nexoraBorder px-5 py-2.5 text-sm font-bold text-nexoraMuted hover:bg-nexoraSurfaceMuted dark:hover:bg-white/10 transition min-h-[44px] disabled:opacity-50"
+                  >
+                    {t('common.cancel')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleUnlink(unlinkConfirmPoint)}
+                    disabled={unlinkPhysicalCardMutation.isPending}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-nexoraDanger px-5 py-2.5 text-sm font-bold text-white hover:bg-nexoraDanger/90 transition min-h-[44px] disabled:opacity-50"
+                  >
+                    {unlinkPhysicalCardMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : null}
+                    {t('dashboard.touchpoints.unlink_btn')}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
 
           {/* Custom Delete Confirmation Modal */}
           {deleteConfirmId && (
@@ -550,14 +801,146 @@ export default function TouchpointsView({
       )}
 
       {activeSubTab === 'devices' && (
-        <DevicesView
-          devices={devices}
-          onAddDevice={onAddDevice}
-          onDeleteDevice={onDeleteDevice}
-          onToggleDeviceStatus={onToggleDeviceStatus}
-          highlightedDeviceId={highlightedDeviceId}
-        />
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <Panel className="p-4 flex items-center justify-between border-l-4 border-l-nexoraBrand">
+              <div className="space-y-1">
+                <p className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
+                  {t('dashboard.devices.kpi.qr_devices')}
+                </p>
+                <p className="text-2xl font-black text-nexoraText font-mono tracking-tight">{physicalCards.length}</p>
+              </div>
+              <div className="p-2.5 bg-nexoraBrandSoft dark:bg-nexoraBrand/10 text-nexoraBrand rounded-flox-buttons">
+                <Smartphone className="h-5 w-5" />
+              </div>
+            </Panel>
+            <Panel className="p-4 flex items-center justify-between border-l-4 border-l-nexoraSuccess">
+              <div className="space-y-1">
+                <p className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
+                  {t('dashboard.touchpoints.hardware.linked_devices')}
+                </p>
+                <p className="text-2xl font-black text-nexoraText font-mono tracking-tight">
+                  {physicalCards.filter((card) => isLinkedTouchPointId(card.linkedTouchPointId)).length}
+                </p>
+              </div>
+              <div className="p-2.5 bg-nexoraSuccess/10 text-nexoraSuccess rounded-flox-buttons">
+                <Check className="h-5 w-5" />
+              </div>
+            </Panel>
+            <Panel className="p-4 flex items-center justify-between border-l-4 border-l-amber-500">
+              <div className="space-y-1">
+                <p className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
+                  {t('dashboard.touchpoints.hardware.unlinked_devices')}
+                </p>
+                <p className="text-2xl font-black text-nexoraText font-mono tracking-tight">
+                  {physicalCards.filter((card) => !isLinkedTouchPointId(card.linkedTouchPointId)).length}
+                </p>
+              </div>
+              <div className="p-2.5 bg-amber-500/10 text-amber-600 rounded-flox-buttons">
+                <AlertOctagon className="h-5 w-5" />
+              </div>
+            </Panel>
+          </div>
+
+          {isPhysicalCardsLoading ? (
+            <Panel className="flex items-center justify-center py-16">
+              <Loader2 className="h-7 w-7 animate-spin text-nexoraBrand" />
+            </Panel>
+          ) : physicalCards.length === 0 ? (
+            <Panel className="border-dashed border-nexoraBorder/80">
+              <div className="mx-auto flex max-w-xl flex-col items-center gap-4 px-6 py-12 text-center sm:gap-5 sm:py-14">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-nexoraBrandSoft to-brandCyan/20 text-nexoraBrand shadow-sm ring-1 ring-nexoraBrand/10">
+                  <Smartphone className="h-7 w-7" />
+                </div>
+                <h3 className="text-lg font-extrabold text-nexoraText">
+                  {t('dashboard.devices.empty_title')}
+                </h3>
+                <p className="max-w-md text-sm leading-relaxed text-nexoraMuted">
+                  {t('dashboard.devices.empty_desc')}
+                </p>
+              </div>
+            </Panel>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {physicalCards.map((card) => {
+                const isLinked = isLinkedTouchPointId(card.linkedTouchPointId)
+                const linkedAtLabel = card.linkedAt
+                  ? formatTransactionDateTime(card.linkedAt, currentLanguage)
+                  : t('dashboard.touchpoints.physical_card.not_linked_yet')
+
+                return (
+                  <Panel key={card.id || card.cardCode || card.helpCode} className="p-4 space-y-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 space-y-1">
+                        <p className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
+                          {t('dashboard.touchpoints.physical_card.card_code')}
+                        </p>
+                        <p className="font-mono text-sm font-extrabold text-nexoraText break-all">
+                          {card.cardCode || '—'}
+                        </p>
+                      </div>
+                      <span
+                        className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wide ${
+                          isLinked
+                            ? 'bg-nexoraSuccess/10 text-nexoraSuccess'
+                            : 'bg-nexoraSurfaceMuted text-nexoraSubtle'
+                        }`}
+                      >
+                        {isLinked
+                          ? t('dashboard.touchpoint_stats.active')
+                          : t('dashboard.touchpoints.physical_card.not_linked_yet')}
+                      </span>
+                    </div>
+
+                    <div className="space-y-3 text-sm">
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
+                          {t('dashboard.touchpoints.physical_card.help_code')}
+                        </p>
+                        <p className="mt-1 font-mono font-bold text-nexoraText break-all">{card.helpCode || '—'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
+                          {t('dashboard.touchpoints.physical_card.touchpoint')}
+                        </p>
+                        <p className={`mt-1 font-bold break-all ${card.touchPointName ? 'text-nexoraText' : 'text-nexoraSubtle italic font-normal'}`}>
+                          {card.touchPointName || t('dashboard.touchpoints.physical_card.not_linked_yet')}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
+                          {t('dashboard.touchpoints.physical_card.linked_at')}
+                        </p>
+                        <p className={`mt-1 text-sm ${card.linkedAt ? 'font-bold text-nexoraText' : 'text-nexoraSubtle italic font-normal'}`}>
+                          {linkedAtLabel}
+                        </p>
+                      </div>
+                    </div>
+
+                    {card.helpCode ? (
+                      <button
+                        type="button"
+                        onClick={() => setDetailHelpCode(card.helpCode ?? null)}
+                        className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-flox-buttons border border-nexoraBorder dark:border-luxuryGold/18 px-3 text-xs font-bold uppercase tracking-wide text-nexoraBrand dark:text-luxuryGold hover:bg-nexoraBrandSoft/40 transition"
+                      >
+                        <Eye className="h-4 w-4" />
+                        {t('dashboard.touchpoints.physical_card.view_detail')}
+                      </button>
+                    ) : null}
+                  </Panel>
+                )
+              })}
+            </div>
+          )}
+        </div>
       )}
+
+      {detailHelpCode ? (
+        <PhysicalCardDetailModal
+          helpCode={detailHelpCode}
+          onClose={() => setDetailHelpCode(null)}
+        />
+      ) : null}
     </div>
   )
 }

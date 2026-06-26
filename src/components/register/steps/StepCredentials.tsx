@@ -1,5 +1,5 @@
 import React from 'react'
-import { Mail, Lock, Eye, EyeOff, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, ArrowRight, Copy, Loader2 } from 'lucide-react'
 
 export default function StepCredentials(props) {
   const {
@@ -39,6 +39,11 @@ export default function StepCredentials(props) {
     handleResendVerification,
   } = props
 
+  const handleCopyEmail = () => {
+    if (!email || !navigator.clipboard) return
+    navigator.clipboard.writeText(email)
+  }
+
   if (isVerificationPending) {
     return (
       <div className="p-6 sm:p-10 space-y-6 animate-fadeIn">
@@ -60,7 +65,7 @@ export default function StepCredentials(props) {
 
         {errors.submit && (
           <div className="p-3 bg-red-50 text-red-700 text-xs rounded-lg border border-red-200 text-center font-medium">
-            {errors.submit}
+            {t(errors.submit)}
           </div>
         )}
 
@@ -109,7 +114,12 @@ export default function StepCredentials(props) {
               {t('components.register.steps.StepCredentials.activateAccountEnterOtp')}
             </h3>
             <p className="text-xs text-nexoraSubtle mt-1 leading-relaxed">
-              {t('components.register.steps.StepCredentials.enterTheOtpCode')}
+              {t('components.register.steps.StepCredentials.enterTheOtpCode').split('{{email}}').map((part, i, arr) => (
+                <React.Fragment key={i}>
+                  {part}
+                  {i < arr.length - 1 && <span className="font-bold text-nexoraText">{email}</span>}
+                </React.Fragment>
+              ))}
             </p>
           </div>
 
@@ -140,7 +150,7 @@ export default function StepCredentials(props) {
                   : (
                     <button
                       type="button"
-                      onClick={() => setResendTimer(30)}
+                      onClick={handleResendVerification}
                       className="text-nexoraBrand hover:underline"
                     >
                       {t('components.register.steps.StepCredentials.resendVerificationCode')}
@@ -148,21 +158,9 @@ export default function StepCredentials(props) {
                   )
                 }
               </span>
-            </div>
-
-            {/* Simulator Helper */}
-            <div className="p-3 border border-dashed border-nexoraBrand/30 bg-nexoraBrandSoft/30 rounded-xl flex items-center justify-between gap-3 max-w-xs mx-auto">
-              <span className="text-[10px] text-nexoraBrand font-bold">Simulator Helper:</span>
-              <button
-                type="button"
-                onClick={() => {
-                  setOtpCode('1234')
-                  setOtpError('')
-                }}
-                className="px-2.5 py-1 bg-nexoraBrand text-white rounded text-[10px] font-black uppercase hover:bg-opacity-90 shadow-sm"
-              >
-                Auto-fill (1234)
-              </button>
+              {resendMessage && (
+                <p className="text-xs text-green-600 font-semibold mt-1">{resendMessage}</p>
+              )}
             </div>
 
             <div className="pt-4 flex flex-col sm:flex-row gap-3">
@@ -175,16 +173,26 @@ export default function StepCredentials(props) {
               </button>
               <button
                 type="submit"
-                className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all"
+                disabled={isSubmitting}
+                className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {t('components.register.steps.StepCredentials.verifyAndActivate')} <ArrowRight className="w-4 h-4" />
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    {t('components.register.steps.StepCredentials.processing')}
+                  </>
+                ) : (
+                  <>
+                    {t('components.register.steps.StepCredentials.verifyAndActivate')} <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
               </button>
             </div>
           </form>
         </div>
       ) : (
         <>
-          <div>
+          <div className="text-center max-w-md mx-auto">
             <h3 className="text-lg font-bold text-nexoraText">{t('register.title_step_1')}</h3>
             <p className="text-xs text-nexoraSubtle mt-1">{t('register.desc_step_1')}</p>
           </div>
@@ -197,7 +205,7 @@ export default function StepCredentials(props) {
                 {renderLabel(t('register.email_label'))}
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 w-4 h-4 text-nexoraSubtle" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-nexoraSubtle" />
                 <input
                   type="email"
                   placeholder={t('register.email_placeholder')}
@@ -206,11 +214,25 @@ export default function StepCredentials(props) {
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value)
-                    if (errors.email) setErrors({ ...errors, email: '' })
+                    setErrors(prev => ({
+                      ...prev,
+                      email: '',
+                      confirmEmail: confirmEmail.trim() && e.target.value.trim().toLowerCase() !== confirmEmail.trim().toLowerCase()
+                        ? 'register.errors.email_mismatch'
+                        : '',
+                    }))
+                  }}
+                  onBlur={(e) => {
+                    const val = e.target.value.trim()
+                    if (!val) {
+                      setErrors(prev => ({ ...prev, email: 'register.errors.email_required' }))
+                    } else if (!/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(val)) {
+                      setErrors(prev => ({ ...prev, email: 'register.errors.email_invalid' }))
+                    }
                   }}
                 />
               </div>
-              {errors.email && <span className="text-xs text-red-500 mt-1 block">{errors.email}</span>}
+              {errors.email && <span className="text-xs text-red-500 mt-1 block">{t(errors.email)}</span>}
             </div>
 
             {/* Confirm Email Input */}
@@ -219,7 +241,7 @@ export default function StepCredentials(props) {
                 {renderLabel(t('register.confirm_email_label'))}
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 w-4 h-4 text-nexoraSubtle" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-nexoraSubtle" />
                 <input
                   type="email"
                   placeholder={t('register.confirm_email_placeholder')}
@@ -227,11 +249,16 @@ export default function StepCredentials(props) {
                   value={confirmEmail}
                   onChange={(e) => {
                     setConfirmEmail(e.target.value)
-                    if (errors.confirmEmail) setErrors({ ...errors, confirmEmail: '' })
+                    if (errors.confirmEmail) setErrors(prev => ({ ...prev, confirmEmail: '' }))
+                  }}
+                  onBlur={(e) => {
+                    if (e.target.value.trim() && e.target.value.trim().toLowerCase() !== email.trim().toLowerCase()) {
+                      setErrors(prev => ({ ...prev, confirmEmail: 'register.errors.email_mismatch' }))
+                    }
                   }}
                 />
               </div>
-              {errors.confirmEmail && <span className="text-xs text-red-500 mt-1 block">{errors.confirmEmail}</span>}
+              {errors.confirmEmail && <span className="text-xs text-red-500 mt-1 block">{t(errors.confirmEmail)}</span>}
             </div>
 
             {/* Password Input */}
@@ -240,7 +267,7 @@ export default function StepCredentials(props) {
                 {renderLabel(t('register.password_label'))}
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 w-4 h-4 text-nexoraSubtle" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-nexoraSubtle" />
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder={t('register.password_placeholder')}
@@ -248,18 +275,26 @@ export default function StepCredentials(props) {
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value)
-                    if (errors.password) setErrors({ ...errors, password: '' })
+                    if (errors.password) setErrors(prev => ({ ...prev, password: '' }))
+                  }}
+                  onBlur={(e) => {
+                    const val = e.target.value
+                    if (!val) {
+                      setErrors(prev => ({ ...prev, password: 'register.errors.password_required' }))
+                    } else if (val.length < 6) {
+                      setErrors(prev => ({ ...prev, password: 'register.errors.password_short' }))
+                    }
                   }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-nexoraSubtle hover:text-nexoraText transition"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-nexoraSubtle hover:text-nexoraText transition"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              {errors.password && <span className="text-xs text-red-500 mt-1 block">{errors.password}</span>}
+              {errors.password && <span className="text-xs text-red-500 mt-1 block">{t(errors.password)}</span>}
             </div>
 
             {/* Referral Code Input */}

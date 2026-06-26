@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
 import { serializeBankWireAccount } from '../../payout/bankWireAccount'
+import { captureQrImage } from '../../../utils/qrCode'
 
 const normalizePhone = (raw) => {
   if (!raw) return ''
@@ -12,8 +13,9 @@ const normalizePhone = (raw) => {
 }
 
 const imageUrlOrNull = (value) => {
-  if (!value || String(value).startsWith('data:')) return null
-  return value
+  const str = String(value || '')
+  if (!str || str.startsWith('data:') || str.startsWith('blob:')) return null
+  return str
 }
 
 const buildVlinkpayId = (name = 'STAFF') => {
@@ -33,11 +35,21 @@ import { useMerchantSetup, useSaveMerchantSetup, useUploadImage } from '../../..
 import { useNotifications, useAddNotification } from '../../../data/hooks/useNotifications'
 import { useStaffInviteInfo, useAcceptStaffInvite, usePublicMerchantInvite } from '../../../data/hooks/useStaffInvites'
 import { apiAuthAdapter } from '../../../auth/adapters/apiAuthAdapter'
+import { getSignupOtp } from '../../../auth/signupOtp'
 import { staffPaymentMethodsRepository } from '../../../data/repositories/staffPaymentMethods'
+import { payoutTypeToUiKey } from '../../../data/paymentMethodTypes'
 import { staffInvitesRepository } from '../../../data/repositories/staffInvites'
 import profileSettingsRepository from '../../../data/repositories/profileSettings'
 import httpClient from '../../../lib/httpClient'
-import { getApiErrorCode, isApiError, type UserProfile } from '../../../types/domain'
+import { imagesRepository } from '../../../data/repositories/images'
+import { getApiErrorCode, isApiError, type PaymentMethodDto, type UserProfile } from '../../../types/domain'
+import { getErrorI18nKey } from '../../../data/errorCodes'
+import {
+  getStaffDisplayNameErrorCode,
+  isStaffDisplayNameValid,
+  STAFF_DISPLAY_NAME_MIN_LENGTH,
+  STAFF_DISPLAY_NAME_MAX_LENGTH,
+} from '../../../utils/staffDisplayName'
 
 const MOCK_NEXORA_STAFF_PROFILES: Record<string, LooseObject> = {}
 
@@ -118,11 +130,14 @@ export default function useStaffRegistration({ inviteData }) {
 
   // Profile states
   const [fullName, setFullName] = useState('')
+  const [fullNameError, setFullNameError] = useState('')
   const [nickname, setNickname] = useState('')
   const [position, setPosition] = useState('Nail Technician')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [avatar, setAvatar] = useState('')
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null)
+  const avatarPreviewUrlRef = useRef<string | null>(null)
   const [bio, setBio] = useState('')
   const [staffId, setStaffId] = useState('')
   const [vlinkpayId, setVlinkpayId] = useState('')
@@ -139,8 +154,19 @@ export default function useStaffRegistration({ inviteData }) {
     return () => {
       if (vlinkpayTimeout) clearTimeout(vlinkpayTimeout)
       if (nexoraTimeout) clearTimeout(nexoraTimeout)
+      if (avatarPreviewUrlRef.current) {
+        URL.revokeObjectURL(avatarPreviewUrlRef.current)
+        avatarPreviewUrlRef.current = null
+      }
     }
   }, [vlinkpayTimeout, nexoraTimeout])
+
+  const revokeAvatarPreview = () => {
+    if (avatarPreviewUrlRef.current) {
+      URL.revokeObjectURL(avatarPreviewUrlRef.current)
+      avatarPreviewUrlRef.current = null
+    }
+  }
 
   // Payout Methods Toggles & Values
   const [payouts, setPayouts] = useState({
@@ -163,6 +189,7 @@ export default function useStaffRegistration({ inviteData }) {
   const [isProfileSubmitting, setIsProfileSubmitting] = useState(false)
   const [isActivating, setIsActivating] = useState(false)
   const [isRegisterSubmitting, setIsRegisterSubmitting] = useState(false)
+  const [staffPaymentMethods, setStaffPaymentMethods] = useState<PaymentMethodDto[]>([])
 
   // Setup initial values from inviteData (merchant dashboard simulation) or API metadata
   useEffect(() => {
@@ -229,6 +256,50 @@ export default function useStaffRegistration({ inviteData }) {
       return () => clearInterval(interval)
     }
   }, [step, resendTimer])
+
+  useEffect(() => {
+    if (step !== 3 || !usesApiRegistration) return
+
+    let cancelled = false
+    staffPaymentMethodsRepository.getAll()
+      .then((methods) => {
+        if (cancelled) return
+        setStaffPaymentMethods(methods)
+        setPayouts((prev) => {
+          const next = { ...prev }
+          for (const pm of methods) {
+            const key = pm.uiKey || payoutTypeToUiKey(pm.type || '')
+            if (!key) continue
+            const existing = next[key]
+            if (!existing) {
+              next[key] = {
+                enabled: pm.isActive,
+                value: pm.accountInfo || '',
+                qrCode: pm.imageUrl || '',
+                accountName: fullName || '',
+              }
+              continue
+            }
+            if (!existing.value.trim() && pm.accountInfo) {
+              next[key] = {
+                ...existing,
+                enabled: pm.isActive,
+                value: pm.accountInfo || '',
+                qrCode: pm.imageUrl || existing.qrCode,
+              }
+            }
+          }
+          return next
+        })
+      })
+      .catch((err: unknown) => {
+        logger.warn('Could not fetch payment methods for registration step', err)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [step, usesApiRegistration, fullName])
 
   // Helper to autofill profile based on a mock profile
   const autofillFromProfile = (profile) => {
@@ -333,6 +404,16 @@ export default function useStaffRegistration({ inviteData }) {
 
   const handleAvatarFileChange = async (file) => {
     if (!file) return
+
+    if (isPublicInvite) {
+      revokeAvatarPreview()
+      const objectUrl = URL.createObjectURL(file)
+      avatarPreviewUrlRef.current = objectUrl
+      setPendingAvatarFile(file)
+      setAvatar(objectUrl)
+      return
+    }
+
     try {
       const uploaded = await uploadImageMutation.mutateAsync(file)
       const uploadedUrl = uploaded.imageUrl || uploaded.fileUrl || ''
@@ -345,6 +426,50 @@ export default function useStaffRegistration({ inviteData }) {
       logger.error('Failed to upload staff avatar', err)
       showToast(t('errors.image_upload_failed'), 'error')
     }
+  }
+
+  const handleAvatarRemove = () => {
+    revokeAvatarPreview()
+    setPendingAvatarFile(null)
+    setAvatar(null)
+  }
+
+  const validateProfileDisplayName = (name = fullName) => {
+    const errorCode = getStaffDisplayNameErrorCode(name)
+    if (!errorCode) {
+      setFullNameError('')
+      return true
+    }
+    setFullNameError(t(getErrorI18nKey(errorCode)))
+    return false
+  }
+
+  const isDisplayNameValidationError = (err: unknown) => {
+    if (!isApiError(err)) return false
+    return (
+      err.errorCode === 'STAFF_DISPLAY_NAME_TOO_SHORT' ||
+      err.errorCode === 'STAFF_DISPLAY_NAME_TOO_LONG' ||
+      err.errorCode === 'STAFF_DISPLAY_NAME_REQUIRED'
+    )
+  }
+
+  const handleDisplayNameApiError = (err: unknown) => {
+    if (!isDisplayNameValidationError(err)) return false
+    const errorCode = getApiErrorCode(err, 'STAFF_DISPLAY_NAME_TOO_SHORT')
+    setFullNameError(t(getErrorI18nKey(errorCode)))
+    setStep(2)
+    showToast(t(getErrorI18nKey(errorCode)), 'error')
+    return true
+  }
+
+  const getJoinRequestErrorMessage = (err: unknown) => {
+    const errorCode = getApiErrorCode(err, '')
+    if (errorCode && errorCode !== 'HTTP_ERROR') {
+      return t(getErrorI18nKey(errorCode))
+    }
+    return t('components.staff_registration.hooks.useStaffRegistration.joinRequestFailed', {
+      error: getApiErrorCode(err, 'Unknown error'),
+    })
   }
 
   // Handle opening scanner modal
@@ -410,7 +535,11 @@ export default function useStaffRegistration({ inviteData }) {
         lastName,
         type: 'User'
       })
-      .then(() => {
+      .then((signupResponse) => {
+        const signupOtp = getSignupOtp(signupResponse)
+        if (signupOtp) {
+          setOtpCode(signupOtp)
+        }
         proceedToOtp()
       })
       .catch((err) => {
@@ -539,25 +668,18 @@ export default function useStaffRegistration({ inviteData }) {
     setEditingMethod(null)
   }
 
-  const handleModalFileChange = (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      setEditQrCode(typeof reader.result === 'string' ? reader.result : '')
-    }
-    reader.readAsDataURL(file)
+  const handleModalImagePick = (dataUrl) => {
+    if (dataUrl) setEditQrCode(dataUrl)
   }
 
-  const handleModalTakePhoto = () => {
+  const handleModalTakePhoto = async () => {
     setIsCapturing(true)
-    setTimeout(() => {
-      const mockQr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-        editValue || ''
-      )}`
-      setEditQrCode(mockQr)
+    try {
+      const dataUrl = await captureQrImage({ fallbackValue: editValue || '' })
+      if (dataUrl) setEditQrCode(dataUrl)
+    } finally {
       setIsCapturing(false)
-    }, 800)
+    }
   }
 
   const handleModalClearQr = () => {
@@ -578,8 +700,10 @@ export default function useStaffRegistration({ inviteData }) {
       setIsRegisterSubmitting(true)
       try {
         let finalDisplayName = (linkedProfile.fullName || '').trim()
-        if (finalDisplayName.length < 2) {
-          finalDisplayName = 'Staff Member'
+        if (!isStaffDisplayNameValid(finalDisplayName)) {
+          const errorCode = getStaffDisplayNameErrorCode(finalDisplayName) || 'STAFF_DISPLAY_NAME_TOO_SHORT'
+          showToast(t(getErrorI18nKey(errorCode)), 'error')
+          return
         }
 
         await acceptInviteMutation.mutateAsync({
@@ -637,15 +761,17 @@ export default function useStaffRegistration({ inviteData }) {
       }
 
       logger.error('Failed to join public invite', err)
+      if (handleDisplayNameApiError(err)) {
+        setIsRegisterSubmitting(false)
+        return
+      }
       const isAlreadyLinked =
         isApiError(err) &&
         (err.errorCode === 'STAFF_ALREADY_LINKED_TO_BUSINESS' ||
           err.errorCode === 'STAFF_INVITE_ALREADY_EXISTS')
       const errorMsg = isAlreadyLinked
         ? t('components.staff_registration.hooks.useStaffRegistration.alreadyLinkedOrRequested')
-        : t('components.staff_registration.hooks.useStaffRegistration.joinRequestFailed', {
-          error: getApiErrorCode(err, 'Unknown error'),
-        })
+        : getJoinRequestErrorMessage(err)
       showToast(errorMsg, 'error')
       setIsRegisterSubmitting(false)
       return
@@ -724,8 +850,8 @@ export default function useStaffRegistration({ inviteData }) {
         return
       }
 
-      // Step 5: Already onboarded - fetch full profile + payment methods, show confirm screen
-      let paymentMethods: import('../../types/domain').PaymentMethodDto[] = []
+      // Step 5: Already onboarded → fetch full profile + payment methods, show confirm screen
+      let paymentMethods: import('../../../types/domain').PaymentMethodDto[] = []
       try {
         // Staff profile may not exist yet (not linked to any business), so handle 404
         paymentMethods = await staffPaymentMethodsRepository.getAll()
@@ -735,14 +861,15 @@ export default function useStaffRegistration({ inviteData }) {
 
       const payoutConfigs = {}
       paymentMethods.forEach(pm => {
-        const typeLower = pm.type.toLowerCase()
-        payoutConfigs[typeLower] = {
+        const key = pm.uiKey || payoutTypeToUiKey(pm.type || '')
+        payoutConfigs[key] = {
           enabled: pm.isActive,
           value: pm.accountInfo || '',
           qrCode: pm.imageUrl || '',
           accountName: profileData.fullName || '',
         }
       })
+      setStaffPaymentMethods(paymentMethods)
 
       const vlinkpayMethod = paymentMethods.find(m => m.type.toLowerCase() === 'vlinkpay')
       const vlinkpayIdVal = vlinkpayMethod ? vlinkpayMethod.accountInfo : ''
@@ -822,7 +949,7 @@ export default function useStaffRegistration({ inviteData }) {
   }
 
   const saveSelectedPaymentMethods = async () => {
-    let methods: import('../../types/domain').PaymentMethodDto[] = []
+    let methods: import('../../../types/domain').PaymentMethodDto[] = []
     try {
       methods = await staffPaymentMethodsRepository.getAll()
     } catch (pmErr: unknown) {
@@ -856,8 +983,21 @@ export default function useStaffRegistration({ inviteData }) {
   const handleProfileSubmit = async () => {
     if (usesApiRegistration) {
       if (isProfileSubmitting) return
+      if (!validateProfileDisplayName()) return
       setIsProfileSubmitting(true)
       try {
+        if (isPublicInvite && pendingAvatarFile) {
+          const uploaded = await imagesRepository.publicUpload(pendingAvatarFile)
+          const uploadedUrl = uploaded.imageUrl || uploaded.fileUrl || ''
+          if (!uploadedUrl) {
+            showToast(t('errors.image_upload_failed'), 'error')
+            return
+          }
+          revokeAvatarPreview()
+          setPendingAvatarFile(null)
+          setAvatar(uploadedUrl)
+        }
+
         // --- Existing-account link flow (needsOnboarding): persist profile
         // to backend without accepting invite yet. Acceptance happens at
         // the final confirm screen (handleLinkExistingProfile).
@@ -929,10 +1069,14 @@ export default function useStaffRegistration({ inviteData }) {
         setStep(3)
       } catch (err: unknown) {
         logger.error('Failed to accept invite or login', err)
-        showToast(
-          currentLanguage === 'vi' ? `Lỗi: ${getApiErrorCode(err, 'Không thể tạo hồ sơ')}` : `Error: ${getApiErrorCode(err, 'Failed to create profile')}`,
-          'error'
-        )
+        if (handleDisplayNameApiError(err)) return
+        const errorCode = getApiErrorCode(err, '')
+        const message = errorCode && errorCode !== 'HTTP_ERROR'
+          ? t(getErrorI18nKey(errorCode))
+          : (currentLanguage === 'vi'
+            ? `Lỗi: ${getApiErrorCode(err, 'Không thể tạo hồ sơ')}`
+            : `Error: ${getApiErrorCode(err, 'Failed to create profile')}`)
+        showToast(message, 'error')
       } finally {
         setIsProfileSubmitting(false)
       }
@@ -1013,6 +1157,10 @@ export default function useStaffRegistration({ inviteData }) {
 
     if (isPublicInvite) {
       if (isActivating) return
+      if (!validateProfileDisplayName(finalStaffMember.fullName)) {
+        setStep(2)
+        return
+      }
       setIsActivating(true)
       try {
         await staffInvitesRepository.joinPublicInvite(
@@ -1043,12 +1191,9 @@ export default function useStaffRegistration({ inviteData }) {
         }
 
         logger.error('Failed to join public invite', err)
-        showToast(
-          t('components.staff_registration.hooks.useStaffRegistration.joinRequestFailed', {
-            error: getApiErrorCode(err, 'Unknown error'),
-          }),
-          'error',
-        )
+        if (handleDisplayNameApiError(err)) return
+
+        showToast(getJoinRequestErrorMessage(err), 'error')
       } finally {
         setIsActivating(false)
       }
@@ -1167,7 +1312,7 @@ export default function useStaffRegistration({ inviteData }) {
     isSelfServe,
     isApiInvite,
     isProfileSubmitting,
-    isAvatarUploading: uploadImageMutation.isPending,
+    isAvatarUploading: isPublicInvite ? false : uploadImageMutation.isPending,
     isActivating,
     isInviteLoading,
     isInviteError,
@@ -1186,12 +1331,14 @@ export default function useStaffRegistration({ inviteData }) {
     regErrors, setRegErrors,
     termsAccepted, setTermsAccepted,
     // profile
-    fullName, setFullName,
+    fullName, setFullName, fullNameError, setFullNameError,
+    staffDisplayNameMinLength: STAFF_DISPLAY_NAME_MIN_LENGTH,
+    staffDisplayNameMaxLength: STAFF_DISPLAY_NAME_MAX_LENGTH,
     nickname, setNickname,
     position, setPosition,
     phone, setPhone,
     email, setEmail,
-    avatar, setAvatar, handleAvatarFileChange,
+    avatar, setAvatar, handleAvatarFileChange, handleAvatarRemove,
     bio, setBio,
     staffId, setStaffId,
     vlinkpayId, setVlinkpayId,
@@ -1201,6 +1348,7 @@ export default function useStaffRegistration({ inviteData }) {
     nexoraStatus, setNexoraStatus,
     // payouts
     payouts, setPayouts,
+    staffPaymentMethods,
     editingMethod, setEditingMethod,
     editValue, setEditValue,
     editQrCode, setEditQrCode,
@@ -1228,7 +1376,7 @@ export default function useStaffRegistration({ inviteData }) {
     handleToggleMethod,
     handleEditPayoutAccount,
     savePayoutAccount,
-    handleModalFileChange,
+    handleModalImagePick,
     handleModalTakePhoto,
     handleModalClearQr,
     handleLinkExistingProfile,

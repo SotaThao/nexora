@@ -211,7 +211,12 @@ export default function StepOtpVerify({
               {t('components.staff_registration.steps.StepOtpVerify.label1ActivateAccount')}
             </h3>
             <p className="text-xs text-nexoraMuted leading-relaxed max-w-sm mx-auto">
-              {t('components.staff_registration.steps.StepOtpVerify.enterTheOtpCode')}
+              {t('components.staff_registration.steps.StepOtpVerify.enterTheOtpCode').split('{{email}}').map((part, i, arr) => (
+                <React.Fragment key={i}>
+                  {part}
+                  {i < arr.length - 1 && <span className="font-bold text-nexoraText">{regEmail}</span>}
+                </React.Fragment>
+              ))}
             </p>
           </div>
 

@@ -2,11 +2,27 @@ import React, { useState, useEffect } from 'react'
 import { AlertTriangle, Camera, FolderOpen, X } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { WalletLogos } from './constants'
+import ImageFileInput from '../ui/ImageFileInput'
+import { captureQrImage } from '../../utils/qrCode'
 import BankWireAccountForm from '../payout/BankWireAccountForm'
+import PayoutAccountIdentifierInput from '../payout/PayoutAccountIdentifierInput'
+import { formatPayoutPhoneDisplay } from '../payout/payoutPhone'
 import {
   getBankWireBeneficiaryName,
   isBankWireAccountComplete,
 } from '../payout/bankWireAccount'
+import { isValidEmail, isValidPhone } from '../../utils/validation'
+
+const validatePayoutAccount = (method, input) => {
+  const account = String(input || '').trim()
+  if (!account) return 'required'
+  if (method === 'zelle') return isValidEmail(account) || isValidPhone(account) ? '' : 'emailOrPhone'
+  if (method === 'paypal') return isValidEmail(account) ? '' : 'email'
+  if (method === 'venmo') return /^@[A-Za-z0-9_]{2,30}$/.test(account) ? '' : 'venmo'
+  if (method === 'cashapp') return /^\$[A-Za-z][A-Za-z0-9_]{1,19}$/.test(account) ? '' : 'cashapp'
+  if (method === 'applecash') return isValidPhone(account) ? '' : 'phone'
+  return account.length >= 3 ? '' : 'invalid'
+}
 
 export default function PayoutSetupModal({ open, walletKey, staffName, initialValue, initialQrCode, onClose, onSubmit }) {
   const { t } = useTranslation()
@@ -44,25 +60,18 @@ export default function PayoutSetupModal({ open, walletKey, staffName, initialVa
     applecash: 'Enter phone number...'
   }
 
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      setQrCode(reader.result)
-    }
-    reader.readAsDataURL(file)
+  const handleImagePick = (dataUrl) => {
+    if (dataUrl) setQrCode(dataUrl)
   }
 
-  const handleTakePhoto = () => {
+  const handleTakePhoto = async () => {
     setIsCapturing(true)
-    setTimeout(() => {
-      const mockQr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-        value || ''
-      )}`
-      setQrCode(mockQr)
+    try {
+      const dataUrl = await captureQrImage({ fallbackValue: value || '' })
+      if (dataUrl) setQrCode(dataUrl)
+    } finally {
       setIsCapturing(false)
-    }, 800)
+    }
   }
 
   const handleClearQr = () => {
@@ -78,8 +87,9 @@ export default function PayoutSetupModal({ open, walletKey, staffName, initialVa
       onSubmit(value, '', getBankWireBeneficiaryName(value) || accountName)
       return
     }
-    if (!value.trim()) {
-      setError(t('setup.errors.field_required'))
+    const validationKey = validatePayoutAccount(walletKey, value)
+    if (validationKey) {
+      setError(t(`components.settings.tabs.ProfileTab.validation.${validationKey}`))
       return
     }
     onSubmit(value, qrCode, accountName)
@@ -133,17 +143,15 @@ export default function PayoutSetupModal({ open, walletKey, staffName, initialVa
             <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
               {t('components.setup_wizard.PayoutSetupModal.accountIdentifier')}
             </label>
-            <input
-              type="text"
+            <PayoutAccountIdentifierInput
+              walletKey={walletKey}
               value={value}
-              onChange={(e) => {
-                setValue(e.target.value)
+              hasError={Boolean(error)}
+              placeholder={walletPlaceholders[walletKey]}
+              onChange={(nextValue) => {
+                setValue(nextValue)
                 setError('')
               }}
-              placeholder={walletPlaceholders[walletKey]}
-              className={`w-full bg-slate-50 border border-slate-200 focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:bg-white rounded-xl px-3.5 h-11 text-xs text-slate-800 focus:outline-none transition-all ${
-                error ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20' : ''
-              }`}
             />
             {error && <p className="mt-1 text-[10px] font-bold text-rose-500">{error}</p>}
           </div>
@@ -170,7 +178,9 @@ export default function PayoutSetupModal({ open, walletKey, staffName, initialVa
                 </button>
                 <div className="text-center">
                   <div className="text-sm font-extrabold text-slate-800">{accountName}</div>
-                  <div className="text-[10px] font-semibold text-slate-400 mt-0.5">{value}</div>
+                  <div className="text-[10px] font-semibold text-slate-400 mt-0.5">
+                    {formatPayoutPhoneDisplay(value) || value}
+                  </div>
                 </div>
                 <div className="my-3 flex h-28 w-28 items-center justify-center border border-slate-100 bg-white p-1 rounded-lg">
                   <img src={qrCode} alt="Payout QR Code" className="h-full w-full object-contain" />
@@ -189,13 +199,14 @@ export default function PayoutSetupModal({ open, walletKey, staffName, initialVa
                   <Camera className="w-5 h-5 text-nexoraBrand" />
                   <span className="text-[11px] font-bold text-slate-600">{t('setup.take_photo')}</span>
                 </button>
-                <label
+                <ImageFileInput
+                  as="label"
                   className="flex flex-col items-center justify-center py-5 border border-dashed border-slate-200 hover:border-nexoraBrand rounded-xl bg-slate-50 hover:bg-slate-50/50 transition gap-1.5 cursor-pointer"
+                  onPick={handleImagePick}
                 >
                   <FolderOpen className="w-5 h-5 text-nexoraBrand" />
                   <span className="text-[11px] font-bold text-slate-600">{t('setup.choose_file')}</span>
-                  <input type="file" accept="image/*" className="sr-only" onChange={handleFileChange} />
-                </label>
+                </ImageFileInput>
               </div>
             )}
             {!qrCode && (

@@ -38,40 +38,55 @@ export interface BusinessApiDto {
   feedbackEmail?: string
 }
 
-export interface DashboardOverviewApiDto {
-  totalTipAmount?: number
-  totalTips?: number
-  tipCount?: number
-  totalTransactions?: number
-  averageTip?: number
-  totalReviews?: number
-  totalScans?: number
-  conversionRate?: number
-  publicReviews?: number
-  privateReviews?: number
-  averageRating?: number
-  googleClicks?: number
-  yelpClicks?: number
-  googleRating?: number
-  googleReviews?: number
-  yelpRating?: number
-  yelpReviews?: number
-  responseRate?: number
-  returningCustomers?: number
-  returningCustomersDelta?: number
+export interface TipsSummaryApiDto {
+  totalAmount?: number
+  totalCount?: number
+  avgAmount?: number
+  previousPeriodComparison?: number | null
 }
 
-export interface DashboardStaffMetricApiDto {
-  staffId?: string
-  id?: string
-  staffName?: string
-  name?: string
-  tipsCollected?: number
-  tips?: number
-  avgRating?: number
-  rating?: number
-  totalReviews?: number
+export interface ScansSummaryApiDto {
+  totalPageViews?: number
+  conversionRate?: number
 }
+
+export interface ReviewsSummaryApiDto {
+  totalCount?: number
+  avgRating?: number
+  count4To5Stars?: number
+  count1To3Stars?: number
+  googleClickCount?: number
+  yelpClickCount?: number
+  responseRate?: number
+  responseRateLabel?: DashboardResponseRateLabel | string
+}
+
+export interface PlatformReviewsApiDto {
+  googleAvgRating?: number | null
+  googleReviewCount?: number | null
+  yelpAvgRating?: number | null
+  yelpReviewCount?: number | null
+}
+
+export interface CustomersSummaryApiDto {
+  returningCustomerRate?: number
+  returningCustomerRateChangeVsLastWeek?: number
+}
+
+export interface DashboardOverviewApiDto {
+  tipsSummary?: TipsSummaryApiDto
+  scansSummary?: ScansSummaryApiDto
+  reviewsSummary?: ReviewsSummaryApiDto
+  platformReviews?: PlatformReviewsApiDto
+  customersSummary?: CustomersSummaryApiDto
+}
+
+export type DashboardResponseRateLabel =
+  | 'EXCELLENT'
+  | 'GOOD'
+  | 'FAIR'
+  | 'NEEDS_IMPROVEMENT'
+  | 'POOR'
 
 export interface DashboardOverviewMetrics {
   totalTips: number
@@ -80,18 +95,43 @@ export interface DashboardOverviewMetrics {
   totalReviews: number
   scans: number
   conversionRate: number
-  publicReviews: number
-  privateReviews: number
   averageRating: number
   googleClicks: number
   yelpClicks: number
-  googleRating: number
-  googleReviews: number
-  yelpRating: number
-  yelpReviews: number
+  count4To5Stars: number
+  count1To3Stars: number
   responseRate: number
-  returningCustomers: number
-  returningCustomersDelta: number
+  responseRateLabel: DashboardResponseRateLabel | string | null
+  googleAvgRating: number | null
+  googleReviewCount: number | null
+  yelpAvgRating: number | null
+  yelpReviewCount: number | null
+  returningCustomerRate: number
+  returningCustomerRateChangeVsLastWeek: number
+  previousPeriodComparison: number | null
+}
+
+export interface DashboardKpiDeltas {
+  totalTips: number | null
+  totalTransactions: number | null
+  averageTip: number | null
+  totalReviews: number | null
+}
+
+export interface DashboardStaffMetricApiDto {
+  staffProfileId?: string
+  staffId?: string
+  id?: string
+  displayName?: string
+  staffName?: string
+  name?: string
+  tipTotal?: number
+  tipsCollected?: number
+  tips?: number
+  avgRating?: number
+  rating?: number
+  reviewCount?: number
+  totalReviews?: number
 }
 
 export interface StaffLeaderboardRow {
@@ -102,11 +142,68 @@ export interface StaffLeaderboardRow {
   totalReviews: number
 }
 
+export interface DashboardTipsChartApiDto {
+  date: string
+  totalAmount: number
+  tipCount: number
+  avgAmount: number
+}
+
+export interface TipsChartDayMetric {
+  date: string
+  totalAmount: number
+  tipCount: number
+  avgAmount: number
+}
+
+export type DashboardReviewRoutingType = 'Public' | 'Private' | 'Skipped'
+
+export interface DashboardReviewApiDto {
+  id?: string
+  rating?: number
+  comment?: string
+  staffName?: string
+  touchPointName?: string
+  routingType?: DashboardReviewRoutingType | string
+  googleClickedAt?: string | null
+  yelpClickedAt?: string | null
+  isResolved?: boolean
+  customerEmail?: string
+  customerName?: string
+  createdAt?: string
+}
+
+export interface DashboardReviewsPage {
+  items: ReviewRecord[]
+  pageNumber: number
+  totalPages: number
+  totalCount: number
+  hasPreviousPage: boolean
+  hasNextPage: boolean
+}
+
+export interface DashboardReviewsQuery {
+  startDate?: string
+  endDate?: string
+  dateFrom?: string
+  dateTo?: string
+  routingType?: DashboardReviewRoutingType | null
+  pageNumber?: number
+  pageSize?: number
+}
+
 export interface StaffPaymentMethodApiDto {
   type?: string
   isActive?: boolean
-  accountInfo?: string
-  imageUrl?: string
+  accountInfo?: string | null
+  imageUrl?: string | null
+}
+
+export interface StaffInviteSummaryApiDto {
+  id?: string
+  invitedAt?: string | null
+  expiresAt?: string | null
+  status?: string | null
 }
 
 export interface StaffListItemApiDto {
@@ -128,6 +225,7 @@ export interface StaffListItemApiDto {
   photoUrl?: string | null
   status?: string
   position?: string | null
+  roleAtBusiness?: string | null
   bio?: string | null
   invitedEmail?: string | null
   invitedPhone?: string | null
@@ -136,6 +234,7 @@ export interface StaffListItemApiDto {
   email?: string | null
   phone?: string | null
   paymentMethods?: StaffPaymentMethodApiDto[]
+  invites?: StaffInviteSummaryApiDto[]
   staffProfile?: { phoneNumber?: string; phone?: string; email?: string }
   user?: { phoneNumber?: string; phone?: string; email?: string }
 }
@@ -143,9 +242,92 @@ export interface StaffListItemApiDto {
 export interface StaffSearchResultApiDto {
   staffProfileId: string
   staffCode?: string | null
-  displayName?: string
+  displayName?: string | null
+  fullName?: string | null
   photoUrl?: string | null
   position?: string | null
+  paymentMethods?: StaffPaymentMethodApiDto[]
+}
+
+/** `GET /merchant/staff/{staffProfileId}/stats` — API DTOs. */
+export interface StaffTipsTrendPointApiDto {
+  date?: string
+  totalAmount?: number
+  tipCount?: number
+}
+
+export interface StaffAllTimeStatsApiDto {
+  tipsCollected?: number
+  tipCount?: number
+  averageRating?: number
+  totalReviews?: number
+  reviewsRouted?: number
+  totalQrScans?: number
+  qrToTipConversionRate?: number
+}
+
+export interface StaffPeriodStatsApiDto extends StaffAllTimeStatsApiDto {
+  tipsChangePercent?: number
+  tipsTrend?: StaffTipsTrendPointApiDto[]
+}
+
+export interface StaffRecentTipApiDto {
+  id?: string
+  amount?: number
+  totalAmount?: number
+  paymentMethod?: string
+  isMultiStaff?: boolean
+  touchPointName?: string
+  createdAt?: string
+}
+
+export interface StaffRecentReviewApiDto {
+  id?: string
+  rating?: number
+  comment?: string | null
+  customerName?: string | null
+  routingType?: string
+  createdAt?: string
+}
+
+export interface MerchantStaffDetailStatsApiDto {
+  allTime?: StaffAllTimeStatsApiDto
+  period?: StaffPeriodStatsApiDto
+  recentTips?: StaffRecentTipApiDto[]
+  recentReviews?: StaffRecentReviewApiDto[]
+}
+
+export interface StaffStatsDateParams {
+  dateFrom?: string
+  dateTo?: string
+}
+
+export interface StaffTipsTrendPoint {
+  date: string
+  totalAmount: number
+  tipCount: number
+}
+
+export interface StaffAllTimeStats {
+  tipsCollected: number
+  tipCount: number
+  averageRating: number
+  totalReviews: number
+  reviewsRouted: number
+  totalQrScans: number
+  qrToTipConversionRate: number
+}
+
+export interface StaffPeriodStats extends StaffAllTimeStats {
+  tipsChangePercent: number
+  tipsTrend: StaffTipsTrendPoint[]
+}
+
+export interface MerchantStaffDetailStats {
+  allTime: StaffAllTimeStats
+  period: StaffPeriodStats
+  recentTips: TransactionRecord[]
+  recentReviews: ReviewRecord[]
 }
 
 /** v3.3 — `GET /merchant/staff/invites` item (StaffInviteListItemDto). */
@@ -192,13 +374,17 @@ export interface TipApiDto {
   id?: string
   amount?: number
   status?: string
+  statusLabel?: string | null
   paymentMethod?: string
   staffName?: string
   staffProfileId?: string | null
+  staffCode?: string | null
   touchPointName?: string
   touchPointId?: string | null
   createdAt?: string
   confirmedAt?: string | null
+  staffConfirmedAt?: string | null
+  merchantConfirmedAt?: string | null
   isMultiStaff?: boolean
   tipItems?: unknown[]
 }
@@ -234,6 +420,7 @@ export interface StaffLinkRequestDetailApiDto {
   businessRole?: string | null
   requestedAt?: string | null
   status?: string | null
+  roleAtBusiness?: string | null
 }
 
 export interface InviteInfoApiDto {
@@ -281,6 +468,73 @@ export interface ImageUploadResult {
   fileUrl?: string
 }
 
+export interface TouchpointApiDto {
+  id?: string
+  name?: string
+  slug?: string | null
+  type?: string
+  url?: string | null
+  qrImageUrl?: string | null
+  isActive?: boolean
+  assignedStaffProfileId?: string | null
+  createdAt?: string | null
+  totalScans?: number
+  totalRevenue?: number
+  deviceId?: string | null
+}
+
+export interface PhysicalCardApiDto {
+  id?: string
+  cardCode?: string
+  helpCode?: string | null
+  linkedTouchPointId?: string | null
+  touchPointName?: string | null
+  linkedAt?: string | null
+}
+
+export interface LinkPhysicalCardResult {
+  cardCode: string
+  linkedTouchPointId: string
+  touchPointName: string
+  linkedAt: string
+}
+
+export interface UnlinkPhysicalCardResult {
+  cardCode: string
+  unlinkedAt: string
+}
+
+export interface PhysicalCardDetailApiDto {
+  id?: string
+  cardCode?: string
+  helpCode?: string
+  isActive?: boolean
+  linkedTouchPointId?: string | null
+  touchPointName?: string | null
+  touchPointUrl?: string | null
+  linkedAt?: string | null
+}
+
+export interface QrTouchPointApiDto {
+  id?: string
+  name?: string
+  slug?: string
+  type?: string
+  businessId?: string
+  businessName?: string
+  businessSlug?: string
+}
+
+export interface ResolveQrCodeResult {
+  status?: string
+  touchPoint?: QrTouchPointApiDto | null
+}
+
+export interface SendPhysicalCardSupportResult {
+  supportRequestId: string
+  submittedAt: string
+}
+
 export interface TouchpointCreateResult {
   touchPointId: string
   qrImageUrl: string
@@ -303,6 +557,7 @@ export interface StaffInviteResult {
 export interface StaffLinkRequestParams {
   staffProfileId: string
   staffCode?: string | null
+  roleAtBusiness?: string | null
 }
 
 export interface InviteLinkSettingDto {
@@ -338,6 +593,9 @@ export interface UpdateStaffProfileDto {
   position?: string
   bio?: string
   photoUrl?: string
+  firstName?: string
+  lastName?: string
+  phone?: string
 }
 
 export interface AcceptStaffInviteDto {

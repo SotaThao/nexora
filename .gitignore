@@ -1,5 +1,6 @@
 node_modules/
 dist/
+.vite/
 .vercel/
 .env
 !.env.development
@@ -45,3 +46,16 @@ debug.log
 .agent-rules
 .cursorrules
 pr_body.md
+
+.vscode/
+.pnpm-store/
+
+.DS_Store
+
+*.test.tsx
+*.test.ts
+
+package-lock.json
+
+js-to-ts-migration-guide.md
+pnpm-workspace.yaml

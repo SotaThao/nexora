@@ -1,5 +1,6 @@
 import React from 'react'
 import { Download, CheckCircle2, ShieldCheck } from 'lucide-react'
+import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 
 export default function Step3Download({
   t,
@@ -34,16 +35,17 @@ export default function Step3Download({
             </div>
 
             <div className="w-full text-center">
-              <div className="text-[10px] font-extrabold uppercase text-nexoraBrand tracking-wide qr-print-biz-name mx-auto">General Lobby QR</div>
+              <div className="text-[10px] font-extrabold uppercase text-nexoraBrand tracking-wide qr-print-biz-name mx-auto">{t('components.SetupWizard.generalLobbyQr')}</div>
               <div className="text-[7.5px] font-bold text-nexoraMuted qr-print-staff-info mx-auto">{businessInfo.name || 'Your Spa Salon'}</div>
             </div>
 
             {/* Real generated QR code scan preview */}
             <div className="h-28 w-28 rounded-lg bg-white border border-nexoraBorder/60 p-2 flex items-center justify-center shadow-inner qr-print-qr-wrapper">
               <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-                  `${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}`
-                )}`}
+                src={buildPublicQrImageUrl(
+                  `${window.location.origin}${window.location.pathname}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}`,
+                  150,
+                )}
                 alt="QR Preview"
                 className="h-full w-full object-contain qr-print-qr-image"
               />
@@ -55,7 +57,7 @@ export default function Step3Download({
 
             <div className="flex items-center gap-1 text-[7.5px] font-bold text-nexoraSubtle qr-print-footer">
               <ShieldCheck className="h-2.5 w-2.5 text-nexoraBrand shrink-0" />
-              <span>Secure redirect by VLINKPAY</span>
+              <span>{t('components.SetupWizard.secureRedirect')}</span>
             </div>
           </div>
         </div>
@@ -92,7 +94,7 @@ export default function Step3Download({
                   <div className="text-[10px] text-nexoraSubtle truncate sm:whitespace-normal">{t('setup.download_explain')}</div>
                 </div>
               </div>
-              <span className="text-xs text-nexoraSubtle font-bold shrink-0 whitespace-nowrap ml-4">Print ›</span>
+              <span className="text-xs text-nexoraSubtle font-bold shrink-0 whitespace-nowrap ml-4">{t('setup.print_action')} ›</span>
             </button>
           </div>
 

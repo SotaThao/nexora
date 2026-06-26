@@ -1,10 +1,9 @@
 // Staff roster + staff-modal/form state and all staff CRUD handlers for the
 // Dashboard. Refactored to use API mutation hooks instead of local setStaff().
 // Extracted from Dashboard.jsx (Group 5).
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { DEFAULT_PAYOUT_CONFIGS } from '../constants'
 import { getPayoutConfigsFromMember } from '../utils'
-import { isPhoneValid } from '../../CountryCodeSelect'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import {
@@ -20,6 +19,7 @@ import {
 import { EMPTY_STAFF_FORM, type StaffFormState } from '../../../types/forms'
 import { getApiErrorCode } from '../../../types/domain'
 import { getErrorI18nKey } from '../../../data/errorCodes'
+import { isValidEmail, isValidPhone } from '../../../utils/validation'
 
 /**
  * Normalise a raw staff-list member into the shape the dashboard uses.
@@ -51,6 +51,7 @@ export function normaliseMember(member) {
     payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member),
     // Preserve API identifiers
     staffLinkId: member.staffLinkId ?? null,
+    linkId: member.linkId ?? member.staffLinkId ?? member.id ?? null,
     inviteId: member.inviteId ?? null,
     staffProfileId: member.staffProfileId ?? null,
     staffCode: member.staffCode ?? null,
@@ -58,6 +59,10 @@ export function normaliseMember(member) {
     source: member.source ?? null,
     itemType: member.itemType ?? null,
     sortOrder: member.sortOrder ?? 0,
+    tipCount: member.tipCount ?? 0,
+    averageRating: member.averageRating ?? 0,
+    joinedDate: member.joinedDate ?? null,
+    roleAtBusiness: member.roleAtBusiness ?? null,
   }
 }
 
@@ -93,9 +98,24 @@ export function useStaffManagement({
   // Falls back to errors.unknown_error for unmapped server codes.
   const errMsg = (err: unknown) => t(getErrorI18nKey(getApiErrorCode(err)))
 
+  const resolveStaffMember = (memberOrId: unknown) => {
+    if (memberOrId && typeof memberOrId === 'object') return memberOrId
+    const id = String(memberOrId ?? '')
+    if (!id) return null
+    return staff.find((item) =>
+      item.id === id ||
+      item.staffLinkId === id ||
+      item.linkId === id ||
+      item.inviteId === id,
+    ) ?? null
+  }
+
+  const getStaffLinkId = (member: { staffLinkId?: string | null; linkId?: string | null; id?: string | null }) =>
+    member.staffLinkId || member.linkId || member.id || null
+
   // Staff comes from the API query (useMerchantStaff) passed in as staffData.
   // No more local setStaff — the query cache is the source of truth.
-  const staff = staffData ?? []
+  const staff = Array.isArray(staffData) ? staffData : (staffData?.items ?? [])
 
   const [errors, setErrors] = useState<LooseObject>({})
   const [staffForm, setStaffForm] = useState<StaffFormState>({
@@ -103,7 +123,9 @@ export function useStaffManagement({
     payoutConfigs: { ...DEFAULT_PAYOUT_CONFIGS },
   })
   const [editingStaffId, setEditingStaffId] = useState<any | null>(null)
+  const [isStaffViewOnly, setIsStaffViewOnly] = useState(false)
   const [isStaffModalOpen, setIsStaffModalOpen] = useState(false)
+  const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false)
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false)
   const [approvingStaffMember, setApprovingStaffMember] = useState<any | null>(null)
   const [isInviteShareOpen, setIsInviteShareOpen] = useState(false)
@@ -116,12 +138,16 @@ export function useStaffManagement({
       payoutConfigs: { ...DEFAULT_PAYOUT_CONFIGS },
     })
     setEditingStaffId(null)
+    setIsStaffViewOnly(false)
     setErrors({})
   }
 
   const openAddStaff = () => {
-    resetStaffForm()
-    setIsStaffModalOpen(true)
+    setIsAddStaffModalOpen(true)
+  }
+
+  const closeAddStaffModal = () => {
+    setIsAddStaffModalOpen(false)
   }
 
   const openApproveStaff = (member) => {
@@ -136,8 +162,9 @@ export function useStaffManagement({
       venmo: member.paymentAccounts?.venmo || '',
       cashapp: member.paymentAccounts?.cashapp || '',
       zelle: member.paymentAccounts?.zelle || '',
-      vlinkpay: member.paymentAccounts?.vlinkpay || '',
+      vlinkpay: '',
       nexoraStaffId: member.staffCode || '',
+      staffProfileId: member.staffProfileId || '',
       showInTipsFlow: member.showInTipsFlow !== false,
       payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member)
     })
@@ -145,8 +172,7 @@ export function useStaffManagement({
     setIsApproveModalOpen(true)
   }
 
-  const openEditStaff = (member) => {
-    setEditingStaffId(member.id)
+  const populateStaffForm = (member) => {
     setStaffForm({
       fullName: member.fullName,
       nickname: member.nickname || member.fullName?.split(' ')[0] || '',
@@ -157,12 +183,26 @@ export function useStaffManagement({
       venmo: member.paymentAccounts?.venmo || '',
       cashapp: member.paymentAccounts?.cashapp || '',
       zelle: member.paymentAccounts?.zelle || '',
-      vlinkpay: member.paymentAccounts?.vlinkpay || '',
+      vlinkpay: '',
       nexoraStaffId: member.staffCode || '',
+      staffProfileId: member.staffProfileId || '',
       showInTipsFlow: member.showInTipsFlow !== false,
       payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member)
     })
     setErrors({})
+  }
+
+  const openEditStaff = (member) => {
+    setIsStaffViewOnly(false)
+    setEditingStaffId(member.id)
+    populateStaffForm(member)
+    setIsStaffModalOpen(true)
+  }
+
+  const openViewStaff = (member) => {
+    setIsStaffViewOnly(true)
+    setEditingStaffId(member.id)
+    populateStaffForm(member)
     setIsStaffModalOpen(true)
   }
 
@@ -179,10 +219,10 @@ export function useStaffManagement({
   const saveStaff = () => {
     const nextErrors: LooseObject = {}
     if (!staffForm.fullName.trim()) nextErrors.fullName = t('components.dashboard.hooks.useStaffManagement.fullNameRequired')
-    if (staffForm.email?.trim() && !/\S+@\S+\.\S+/.test(staffForm.email.trim())) {
+    if (staffForm.email?.trim() && !isValidEmail(staffForm.email)) {
       nextErrors.email = t('setup.errors.staff_email_invalid')
     }
-    if (staffForm.phone?.trim() && !isPhoneValid(staffForm.phone.trim())) {
+    if (staffForm.phone?.trim() && !isValidPhone(staffForm.phone)) {
       nextErrors.phone = t('setup.errors.staff_phone_invalid')
     }
     if (Object.keys(nextErrors).length) {
@@ -205,10 +245,10 @@ export function useStaffManagement({
     if (!formDetails.email.trim() && !formDetails.phone.trim()) {
       nextErrors.email = t('components.dashboard.hooks.useStaffManagement.phoneOrEmailRequired')
     } else {
-      if (formDetails.email?.trim() && !/\S+@\S+\.\S+/.test(formDetails.email.trim())) {
+      if (formDetails.email?.trim() && !isValidEmail(formDetails.email)) {
         nextErrors.email = t('setup.errors.staff_email_invalid')
       }
-      if (formDetails.phone?.trim() && !isPhoneValid(formDetails.phone.trim())) {
+      if (formDetails.phone?.trim() && !isValidPhone(formDetails.phone)) {
         nextErrors.phone = t('setup.errors.staff_phone_invalid')
       }
     }
@@ -240,15 +280,22 @@ export function useStaffManagement({
    * Link an existing staff profile from search results.
    * Calls POST /api/v1/merchant/staff/link-request/{staffProfileId}.
    */
-  const handleLinkStaff = (searchResult) => {
+  const handleLinkStaff = (searchResult, role?, { onSuccess } = {}) => {
     if (!searchResult?.staffProfileId) return
+
+    const roleAtBusiness =
+      (typeof role === 'string' ? role.trim() : '') ||
+      String(searchResult.position || searchResult.roleAtBusiness || '').trim() ||
+      'Nail Technician'
 
     linkRequestMutation.mutate({
       staffProfileId: searchResult.staffProfileId,
       staffCode: searchResult.staffCode ?? null,
+      roleAtBusiness,
     }, {
       onSuccess: () => {
         showToast(t('components.dashboard.hooks.useStaffManagement.linkRequestSent', { name: searchResult.fullName }), 'success')
+        onSuccess?.()
       },
       onError: (err) => {
         showToast(t('components.dashboard.hooks.useStaffManagement.linkRequestFailed', { error: errMsg(err) }), 'error')
@@ -257,10 +304,10 @@ export function useStaffManagement({
   }
 
   /**
-   * Invite new staff (from StaffView invite tab).
+   * Invite new staff (from Add Staff modal).
    * Calls POST /api/v1/merchant/staff/invite.
    */
-  const handleInviteStaff = (name, contact, role) => {
+  const handleInviteStaff = (name, contact, role, _method?, { onSuccess } = {}) => {
     const isEmail = contact.includes('@')
 
     inviteStaffMutation.mutate({
@@ -271,6 +318,7 @@ export function useStaffManagement({
     }, {
       onSuccess: () => {
         showToast(t('components.dashboard.hooks.useStaffManagement.inviteSent', { name: name.trim() }), 'success')
+        onSuccess?.()
       },
       onError: (err) => {
         showToast(t('components.dashboard.hooks.useStaffManagement.inviteFailed', { error: errMsg(err) }), 'error')
@@ -330,10 +378,10 @@ export function useStaffManagement({
    * Accept a join request — update status to Active.
    * Calls PUT /api/v1/merchant/staff/{staffLinkId}/status.
    */
-  const handleAcceptJoinRequest = (staffId) => {
-    const member = staff.find(s => s.id === staffId)
-    const linkId = member?.staffLinkId || member?.id
-    if (!linkId) return
+  const handleAcceptJoinRequest = (memberOrId) => {
+    const member = resolveStaffMember(memberOrId)
+    const linkId = member ? getStaffLinkId(member) : null
+    if (!member || !linkId) return
 
     approveLinkMutation.mutate(linkId, {
       onSuccess: () => {
@@ -346,78 +394,88 @@ export function useStaffManagement({
   }
 
   /**
-   * Decline a join request — reject the pending link.
-   * Calls PUT /api/v1/merchant/staff/links/{linkId}/reject (the status-update
-   * route only accepts "Active" | "Inactive" and 400s on "Rejected").
+   * Decline a join request.
+   * - Pending invite  -> DELETE /api/v1/merchant/staff/invites/{inviteId}
+   * - Pending link    -> PUT /api/v1/merchant/staff/links/{linkId}/reject
    */
-  const handleDeclineJoinRequest = async (staffId) => {
-    const member = staff.find(s => s.id === staffId)
+  const handleDeclineJoinRequest = async (memberOrId) => {
+    const member = resolveStaffMember(memberOrId)
     if (!member) return
+
+    if (member.itemType === 'invite' && member.inviteId) {
+      await handleCancelInvite(member)
+      return
+    }
 
     const ok = await showConfirm(t('components.dashboard.hooks.useStaffManagement.declineJoinConfirm', { name: member.fullName }))
     if (!ok) return
 
-    const linkId = member.staffLinkId || member.id
-    if (linkId) {
-      rejectLinkMutation.mutate(linkId, {
-        onError: (err) => {
-          showToast(t('components.dashboard.hooks.useStaffManagement.declineFailed', { error: errMsg(err) }), 'error')
-        }
-      })
-    }
+    const linkId = getStaffLinkId(member)
+    if (!linkId) return
+
+    rejectLinkMutation.mutate(linkId, {
+      onSuccess: () => {
+        showToast(t('components.dashboard.hooks.useStaffManagement.joinDeclined', { name: member.fullName }), 'success')
+      },
+      onError: (err) => {
+        showToast(t('components.dashboard.hooks.useStaffManagement.declineFailed', { error: errMsg(err) }), 'error')
+      }
+    })
   }
 
   /**
    * Accept an unlink request — remove the staff link.
    * Calls DELETE /api/v1/merchant/staff/{staffLinkId}.
    */
-  const handleAcceptUnlinkRequest = async (staffId) => {
-    const member = staff.find(s => s.id === staffId)
+  const handleAcceptUnlinkRequest = async (memberOrId) => {
+    const member = resolveStaffMember(memberOrId)
     if (!member) return
 
     const ok = await showConfirm(t('components.dashboard.hooks.useStaffManagement.approveUnlinkConfirm', { name: member.fullName }))
     if (!ok) return
 
-    if (member.id) {
-      removeStaffMutation.mutate(member.id, {
-        onSuccess: () => {
-          showToast(t('components.dashboard.hooks.useStaffManagement.staffUnlinkedSuccessfully'), 'success')
-        },
-        onError: (err) => {
-          showToast(t('components.dashboard.hooks.useStaffManagement.unlinkFailed', { error: errMsg(err) }), 'error')
-        }
-      })
-    }
+    const staffLinkId = getStaffLinkId(member)
+    if (!staffLinkId) return
+
+    removeStaffMutation.mutate(staffLinkId, {
+      onSuccess: () => {
+        showToast(t('components.dashboard.hooks.useStaffManagement.staffUnlinkedSuccessfully'), 'success')
+      },
+      onError: (err) => {
+        showToast(t('components.dashboard.hooks.useStaffManagement.unlinkFailed', { error: errMsg(err) }), 'error')
+      }
+    })
   }
 
   /**
    * Decline an unlink request — update status back to Active.
    * Calls PUT /api/v1/merchant/staff/{staffLinkId}/status.
    */
-  const handleDeclineUnlinkRequest = async (staffId) => {
-    const member = staff.find(s => s.id === staffId)
+  const handleDeclineUnlinkRequest = async (memberOrId) => {
+    const member = resolveStaffMember(memberOrId)
     if (!member) return
 
     const ok = await showConfirm(t('components.dashboard.hooks.useStaffManagement.declineUnlinkConfirm', { name: member.fullName }))
     if (!ok) return
 
-    if (member.id) {
-      updateStatusMutation.mutate({ staffLinkId: member.id, status: 'Active' }, {
-        onSuccess: () => {
-          showToast(t('components.dashboard.hooks.useStaffManagement.declinedUnlinkRequest'), 'success')
-        },
-        onError: (err) => {
-          showToast(t('components.dashboard.hooks.useStaffManagement.declineFailed', { error: errMsg(err) }), 'error')
-        }
-      })
-    }
+    const staffLinkId = getStaffLinkId(member)
+    if (!staffLinkId) return
+
+    updateStatusMutation.mutate({ staffLinkId, status: 'Active' }, {
+      onSuccess: () => {
+        showToast(t('components.dashboard.hooks.useStaffManagement.declinedUnlinkRequest'), 'success')
+      },
+      onError: (err) => {
+        showToast(t('components.dashboard.hooks.useStaffManagement.declineFailed', { error: errMsg(err) }), 'error')
+      }
+    })
   }
 
   /**
    * Delete a staff roster entry.
-   * - Pending invite items → cancel via DELETE /api/v1/merchant/staff/invites/{inviteId}
+   * - Pending invite items ΓåÆ cancel via DELETE /api/v1/merchant/staff/invites/{inviteId}
    *   (v3.3 dedicated endpoint).
-   * - Linked staff items → unlink via DELETE /api/v1/merchant/staff/{staffLinkId}.
+   * - Linked staff items ΓåÆ unlink via DELETE /api/v1/merchant/staff/{staffLinkId}.
    */
   const deleteStaff = async (id) => {
     const member = staff.find(s => s.id === id)
@@ -454,6 +512,9 @@ export function useStaffManagement({
   const toggleStaff = (id) => {
     const member = staff.find(s => s.id === id)
     if (!member?.id) return
+    if (updateStatusMutation.isPending && updateStatusMutation.variables?.staffLinkId === member.id) {
+      return
+    }
 
     const newStatus = member.isActive ? 'Inactive' : 'Active'
     updateStatusMutation.mutate({ staffLinkId: member.id, status: newStatus }, {
@@ -471,14 +532,38 @@ export function useStaffManagement({
   const toggleStaffTipsFlow = (id) => {
     const member = staff.find(s => s.id === id)
     if (!member?.id) return
+    if (updateStatusMutation.isPending && updateStatusMutation.variables?.staffLinkId === member.id) {
+      return
+    }
 
-    const newStatus = member.showInTipsFlow ? 'Inactive' : 'Active'
+    const willShowInTipsFlow = member.showInTipsFlow === false
+    const newStatus = member.showInTipsFlow !== false ? 'Inactive' : 'Active'
+    const displayName = member.fullName || member.nickname || t('components.dashboard.hooks.useStaffManagement.thisPerson')
+
     updateStatusMutation.mutate({ staffLinkId: member.id, status: newStatus }, {
+      onSuccess: () => {
+        showToast(
+          willShowInTipsFlow
+            ? t('components.dashboard.hooks.useStaffManagement.tipsFlowShown', { name: displayName })
+            : t('components.dashboard.hooks.useStaffManagement.tipsFlowHidden', { name: displayName }),
+          'success',
+        )
+      },
       onError: (err) => {
         showToast(t('components.dashboard.hooks.useStaffManagement.tipsFlowUpdateFailed', { error: errMsg(err) }), 'error')
       }
     })
   }
+
+  useEffect(() => {
+    if (!isStaffModalOpen || !editingStaffId) return
+    const member = staff.find((item) => item.id === editingStaffId)
+    if (!member) return
+    setStaffForm((prev) => ({
+      ...prev,
+      showInTipsFlow: member.showInTipsFlow !== false,
+    }))
+  }, [staff, editingStaffId, isStaffModalOpen])
 
   return {
     staff,
@@ -486,13 +571,15 @@ export function useStaffManagement({
     staffForm, setStaffForm,
     errors, setErrors,
     editingStaffId, setEditingStaffId,
+    isStaffViewOnly,
     isStaffModalOpen, setIsStaffModalOpen,
+    isAddStaffModalOpen, setIsAddStaffModalOpen,
     isApproveModalOpen, setIsApproveModalOpen,
     approvingStaffMember, setApprovingStaffMember,
     isInviteShareOpen, setIsInviteShareOpen,
     inviteShareDefaultName, setInviteShareDefaultName,
     inviteShareDefaultContact, setInviteShareDefaultContact,
-    resetStaffForm, openAddStaff, openApproveStaff, openEditStaff, closeStaffModal,
+    resetStaffForm, openAddStaff, closeAddStaffModal, openApproveStaff, openEditStaff, openViewStaff, closeStaffModal,
     saveStaff, sendSetupLinkFromModal, handleLinkStaff, handleInviteStaff,
     handleResendInvite, handleCancelInvite,
     handleAcceptJoinRequest, handleDeclineJoinRequest, deleteStaff, toggleStaff, toggleStaffTipsFlow,

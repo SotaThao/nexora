@@ -4,6 +4,7 @@ import IconButton from '../../ui/IconButton'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
+import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 
 function InviteShareModal({
   open,
@@ -39,20 +40,26 @@ function InviteShareModal({
   }, [open, defaultName, defaultContact])
 
   const publicInviteEnabled = Boolean(inviteLinkSetting?.isEnabled && inviteLinkSetting?.referralCode)
-  // Directed email invite vs open QR/link - drives the URL `source` tag (AC #10).
-  const linkSource = inviteMethod === 'Email' && contact.trim() ? 'email_invite' : 'public_link'
-  const joinLink = useMemo(
+  const publicJoinLink = useMemo(
     () => publicInviteEnabled
       ? buildPublicInviteLink({
         origin: window.location.origin,
         businessName,
         businessSlug,
         referralCode: inviteLinkSetting?.referralCode ?? '',
-        email: inviteMethod === 'Email' && contact ? contact.trim() : null,
-        source: linkSource,
+        email: null,
+        source: 'public_link',
       })
       : '',
-    [businessName, businessSlug, contact, inviteLinkSetting?.referralCode, inviteMethod, linkSource, publicInviteEnabled],
+    [businessName, businessSlug, inviteLinkSetting?.referralCode, publicInviteEnabled],
+  )
+  const publicJoinQrSmallUrl = useMemo(
+    () => (publicInviteEnabled && publicJoinLink ? buildPublicQrImageUrl(publicJoinLink, 150) : ''),
+    [publicInviteEnabled, publicJoinLink],
+  )
+  const publicJoinQrLargeUrl = useMemo(
+    () => (publicInviteEnabled && publicJoinLink ? buildPublicQrImageUrl(publicJoinLink, 300) : ''),
+    [publicInviteEnabled, publicJoinLink],
   )
   const publicInviteUnavailableText = isInviteLinkSettingLoading
     ? t('components.dashboard.modals.InviteShareModal.inviteLinkLoading')
@@ -103,7 +110,7 @@ function InviteShareModal({
             >
               {publicInviteEnabled ? (
                 <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(joinLink)}`}
+                  src={publicJoinQrSmallUrl}
                   alt={t('components.dashboard.modals.InviteShareModal.joinQrAlt')}
                   className="h-full w-full object-contain"
                 />
@@ -125,7 +132,7 @@ function InviteShareModal({
                 <input
                   type="text"
                   readOnly
-                  value={publicInviteEnabled ? joinLink : publicInviteUnavailableText}
+                  value={publicInviteEnabled ? publicJoinLink : publicInviteUnavailableText}
                   className="h-8 flex-grow bg-white border border-slate-200 rounded px-2.5 text-[10px] text-slate-500 font-mono focus:outline-none"
                 />
                 <button
@@ -133,7 +140,7 @@ function InviteShareModal({
                   disabled={!publicInviteEnabled}
                   onClick={() => {
                     if (!publicInviteEnabled) return
-                    navigator.clipboard.writeText(joinLink)
+                    navigator.clipboard.writeText(publicJoinLink)
                     showToast(t('components.dashboard.modals.InviteShareModal.joinLinkCopiedTo'), 'success')
                   }}
                   className={`h-8 px-3 bg-slate-800 text-white rounded text-[10px] font-black uppercase transition font-sans ${publicInviteEnabled ? 'hover:bg-slate-700' : 'cursor-not-allowed opacity-50'}`}
@@ -143,7 +150,7 @@ function InviteShareModal({
               </div>
               <div className="flex flex-wrap items-center justify-center gap-1.5 pt-1">
                 <span className="rounded bg-white px-2 py-0.5 text-[9px] font-black uppercase text-slate-500 border border-slate-200">
-                  {linkSource}
+                  public_link
                 </span>
                 <span className="rounded bg-white px-2 py-0.5 text-[9px] font-black uppercase text-slate-500 border border-slate-200">
                   {inviteLinkSetting?.referralCode || t('components.dashboard.modals.InviteShareModal.disabled')}
@@ -277,7 +284,7 @@ function InviteShareModal({
 
             <div className="h-64 w-64 rounded-2xl bg-slate-50 border border-slate-200 p-4 flex items-center justify-center shadow-inner bg-white mb-4">
               <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(joinLink)}`}
+                src={publicJoinQrLargeUrl}
                 alt={t('components.dashboard.modals.InviteShareModal.scanToJoinAlt')}
                 className="h-full w-full object-contain"
               />
@@ -289,12 +296,12 @@ function InviteShareModal({
 
             <div className="w-full bg-slate-50 rounded-xl border border-slate-200 p-2.5 flex items-center justify-between gap-2">
               <span className="text-[10px] text-slate-400 font-mono truncate max-w-[210px]">
-                {joinLink}
+                {publicJoinLink}
               </span>
               <button
                 type="button"
                 onClick={() => {
-                  navigator.clipboard.writeText(joinLink)
+                  navigator.clipboard.writeText(publicJoinLink)
                   showToast(t('components.dashboard.modals.InviteShareModal.joinLinkCopiedTo'), 'success')
                 }}
                 className="h-7 px-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[10px] font-bold transition flex items-center gap-1 shrink-0 font-sans"

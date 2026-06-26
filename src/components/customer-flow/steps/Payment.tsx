@@ -1,6 +1,8 @@
 import React from 'react'
+import { Bitcoin } from 'lucide-react'
+import { PAYOUT_UI_LABELS } from '../../../data/paymentMethodTypes'
 
-const WalletLogos = {
+export const WalletLogos = {
   venmo: (
     <svg viewBox="0 0 448 512" className="h-[18px] w-[18px] fill-white" xmlns="http://www.w3.org/2000/svg">
       <path d="M381.4 105.3c11 18.1 15.9 36.7 15.9 60.3 0 75.1-64.1 172.7-116.2 241.2h-118.8l-47.6-285 104.1-9.9 25.3 202.8c23.5-38.4 52.6-98.7 52.6-139.7 0-22.5-3.9-37.8-9.9-50.4z" />
@@ -35,6 +37,43 @@ const WalletLogos = {
       <span className="font-black text-[10px] tracking-tighter ml-[1px] leading-none select-none">Pay</span>
     </div>
   ),
+  vlinkpay: (
+    <img src="/assets/vlinkpay-logo.png" alt="VLINKPAY" className="h-[18px] w-[18px] object-contain" />
+  ),
+  crypto: (
+    <Bitcoin className="h-[18px] w-[18px] text-white" />
+  ),
+}
+
+const WALLET_CATALOG = {
+  zelle: { name: 'Zelle', key: 'zelle', color: 'bg-walletZelle hover:bg-walletZelleDark text-white', logo: WalletLogos.zelle },
+  bankwire: { name: 'Bank Wire', key: 'bankwire', color: 'bg-slate-600 hover:bg-slate-700 text-white', logo: WalletLogos.bankwire },
+  paypal: { name: 'PayPal', key: 'paypal', color: 'bg-walletPaypal hover:bg-walletPaypalDark text-white', logo: WalletLogos.paypal },
+  venmo: { name: 'Venmo', key: 'venmo', color: 'bg-walletVenmo hover:bg-walletVenmoDark text-white', logo: WalletLogos.venmo },
+  cashapp: { name: 'Cash App', key: 'cashapp', color: 'bg-walletCashapp hover:bg-walletCashappDark text-white', logo: WalletLogos.cashapp },
+  applecash: { name: 'Apple Cash', key: 'applecash', color: 'bg-black hover:opacity-90 text-white', logo: WalletLogos.applepay },
+  vlinkpay: { name: 'VLINKPAY Wallet', key: 'vlinkpay', color: 'bg-blue-600 hover:bg-blue-700 text-white', logo: WalletLogos.vlinkpay },
+  crypto: { name: 'Crypto Wallet', key: 'crypto', color: 'bg-amber-500 hover:bg-amber-600 text-white', logo: WalletLogos.crypto },
+}
+
+function normalizeWalletKeys(availablePaymentWalletKeys) {
+  if (Array.isArray(availablePaymentWalletKeys)) return availablePaymentWalletKeys
+  if (availablePaymentWalletKeys instanceof Set) return Array.from(availablePaymentWalletKeys)
+  return []
+}
+
+export function getWalletOptions(availablePaymentWalletKeys) {
+  return normalizeWalletKeys(availablePaymentWalletKeys).map((key) => {
+    const catalog = WALLET_CATALOG[key]
+    if (catalog) return catalog
+    const label = PAYOUT_UI_LABELS[key] || key
+    return {
+      name: label,
+      key,
+      color: 'bg-slate-600 hover:bg-slate-700 text-white',
+      logo: WalletLogos[key] || WalletLogos.crypto,
+    }
+  })
 }
 
 export default function Payment({
@@ -49,14 +88,7 @@ export default function Payment({
   isApiMode,
   handlePay,
 }) {
-  const walletOptions = [
-    { name: 'Zelle', key: 'zelle', color: 'bg-walletZelle hover:bg-walletZelleDark text-white', logo: WalletLogos.zelle },
-    { name: 'Bank Wire', key: 'bankwire', color: 'bg-slate-600 hover:bg-slate-700 text-white', logo: WalletLogos.bankwire },
-    { name: 'PayPal', key: 'paypal', color: 'bg-walletPaypal hover:bg-walletPaypalDark text-white', logo: WalletLogos.paypal },
-    { name: 'Venmo', key: 'venmo', color: 'bg-walletVenmo hover:bg-walletVenmoDark text-white', logo: WalletLogos.venmo },
-    { name: 'Cash App', key: 'cashapp', color: 'bg-walletCashapp hover:bg-walletCashappDark text-white', logo: WalletLogos.cashapp },
-    { name: 'Apple Pay', key: 'applecash', color: 'bg-black hover:opacity-90 text-white', logo: WalletLogos.applepay },
-  ].filter((wallet) => availablePaymentWalletKeys?.has(wallet.key))
+  const walletOptions = getWalletOptions(availablePaymentWalletKeys)
 
   return (
     <div className="space-y-6 animate-fadeIn">

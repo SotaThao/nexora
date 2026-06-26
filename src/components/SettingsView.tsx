@@ -1,9 +1,10 @@
-import React, { useRef, useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 import { QrCode, Copy, Check, X, Download } from 'lucide-react'
 import useSettingsForm from './settings/hooks/useSettingsForm'
 import ProfileTab from './settings/tabs/ProfileTab'
 import KybTab from './settings/tabs/KybTab'
-import { downloadQrCode } from '../utils/qrUtils'
+import { downloadQrCode, buildPublicQrImageUrl } from '../utils/qrUtils'
+import { buildAffiliateReferralUrl, getProfileReferralCode } from '../utils/affiliateReferral'
 import { useTranslation } from '../contexts/LanguageContext'
 
 export default function SettingsView({
@@ -33,8 +34,19 @@ export default function SettingsView({
   const [showQrModal, setShowQrModal] = useState(false)
   const [selectedLeg, setSelectedLeg] = useState('left')
 
-  const referralUrl = `https://nexora.com/?ref=${form.profile.referralId || '640B5FBF'}&leg=${selectedLeg}`
-  const baseReferralUrl = `https://nexora.com/?ref=${form.profile.referralId || '640B5FBF'}`
+  const referralCode = useMemo(
+    () => getProfileReferralCode(form.profile),
+    [form.profile],
+  )
+  const baseReferralUrl = useMemo(
+    () => buildAffiliateReferralUrl({ referralCode }),
+    [referralCode],
+  )
+  const referralUrl = useMemo(
+    () => buildAffiliateReferralUrl({ referralCode, leg: selectedLeg }),
+    [referralCode, selectedLeg],
+  )
+  const qrCodeUrl = (url: string) => (url ? buildPublicQrImageUrl(url, 250) : '')
 
   const handleSaveQr = async (qrUrl) => {
     try {
@@ -53,14 +65,6 @@ export default function SettingsView({
 
   return (
     <div className="w-full space-y-6 animate-fadeIn pb-24 select-none">
-      {/* Toast Notification */}
-      {form.toastMessage && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs font-semibold shadow-2xl flex items-center gap-2 animate-bounce">
-          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          {form.toastMessage}
-        </div>
-      )}
-
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-nexoraRule pb-4">
         <div>
@@ -121,19 +125,29 @@ export default function SettingsView({
             setIsEditingBasic={form.setIsEditingBasic}
             basicForm={form.basicForm}
             setBasicForm={form.setBasicForm}
+            basicErrors={form.basicErrors}
+            setBasicErrors={form.setBasicErrors}
             isEditingAddress={form.isEditingAddress}
             setIsEditingAddress={form.setIsEditingAddress}
             addressForm={form.addressForm}
             setAddressForm={form.setAddressForm}
+            addressErrors={form.addressErrors}
+            setAddressErrors={form.setAddressErrors}
             isEditingBusiness={form.isEditingBusiness}
             setIsEditingBusiness={form.setIsEditingBusiness}
             businessForm={form.businessForm}
             setBusinessForm={form.setBusinessForm}
+            businessErrors={form.businessErrors}
+            setBusinessErrors={form.setBusinessErrors}
             isEditingReviews={form.isEditingReviews}
             setIsEditingReviews={form.setIsEditingReviews}
             reviewsForm={form.reviewsForm}
             setReviewsForm={form.setReviewsForm}
+            reviewsErrors={form.reviewsErrors}
+            setReviewsErrors={form.setReviewsErrors}
             hasKyb={hasKyb}
+            verificationStatus={form.effectiveVerificationStatus}
+            canEditProfile={form.canEditProfile}
             currentLanguage={form.currentLanguage}
             showToast={form.showToast}
             handleCopy={form.handleCopy}
@@ -155,7 +169,7 @@ export default function SettingsView({
           <KybTab
             profile={form.profile}
             cardDetails={cardDetails}
-            verificationStatus={verificationStatus}
+            verificationStatus={form.effectiveVerificationStatus}
             showToast={form.showToast}
             portalRef={kybPortalRef}
           />
@@ -175,34 +189,45 @@ export default function SettingsView({
               {/* QR Code Container */}
               <div className="flex justify-center mb-2">
                 <div className="bg-slate-50 p-4 border border-slate-200 rounded-2xl flex items-center justify-center h-[240px] w-[240px] shadow-sm hover:shadow-md transition">
-                  <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(baseReferralUrl)}`}
-                    alt="Referral Link QR Code"
-                    className="h-full w-full object-contain rounded-lg"
-                  />
+                  {baseReferralUrl ? (
+                    <img
+                      src={buildPublicQrImageUrl(baseReferralUrl, 220)}
+                      alt="Referral Link QR Code"
+                      className="h-full w-full object-contain rounded-lg"
+                    />
+                  ) : (
+                    <span className="text-xs font-bold text-nexoraMuted text-center px-4">
+                      {t('components.staff_registration.hooks.useStaffRegistration.profileReferralCodeMissing')}
+                    </span>
+                  )}
                 </div>
               </div>
 
               {/* Clickable Referral URL Link */}
               <div className="text-center mb-4 max-w-xs sm:max-w-md min-w-0 px-2">
-                <a
-                  href={baseReferralUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 hover:text-blue-600 underline text-[11px] font-bold break-all"
-                >
-                  {baseReferralUrl}
-                </a>
+                {baseReferralUrl ? (
+                  <a
+                    href={baseReferralUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:text-blue-600 underline text-[11px] font-bold break-all"
+                  >
+                    {baseReferralUrl}
+                  </a>
+                ) : (
+                  <span className="text-[11px] font-bold text-nexoraMuted">
+                    {t('components.staff_registration.hooks.useStaffRegistration.profileReferralCodeMissing')}
+                  </span>
+                )}
               </div>
 
               {/* Buttons: Download QR & Copy Link */}
               <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs sm:max-w-md justify-center">
                 <button
                   type="button"
-                  onClick={() => handleSaveQr(
-                    `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(baseReferralUrl)}`
-                  )}
-                  className="flex-1 flex items-center justify-center gap-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs uppercase tracking-wider py-3 rounded-xl transition active:scale-[0.98] shadow-sm"
+                  disabled={!baseReferralUrl}
+                  onClick={() => handleSaveQr(qrCodeUrl(baseReferralUrl))}
+                  className="flex-1 flex items-center justify-center gap-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs uppercase tracking-wider py-3 rounded-xl transition active:scale-[0.98] shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Download className="h-4 w-4 text-slate-500" />
                   <span>Download QR</span>
@@ -210,8 +235,9 @@ export default function SettingsView({
 
                 <button
                   type="button"
+                  disabled={!baseReferralUrl}
                   onClick={() => form.handleCopy(baseReferralUrl, 'inline-ref')}
-                  className="flex-1 flex items-center justify-center gap-2 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-bold text-xs uppercase tracking-wider py-3 rounded-xl transition active:scale-[0.98] shadow-sm shadow-indigo-500/10"
+                  className="flex-1 flex items-center justify-center gap-2 bg-nexoraBrand hover:bg-nexoraBrandDark text-white font-bold text-xs uppercase tracking-wider py-3 rounded-xl transition active:scale-[0.98] shadow-sm shadow-indigo-500/10 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {form.copiedId === 'inline-ref' ? (
                     <>
@@ -312,25 +338,26 @@ export default function SettingsView({
             {/* QR Code Display */}
             <div className="flex justify-center my-3">
               <div className="bg-slate-50 p-4 border border-slate-200 rounded-xl flex items-center justify-center h-[240px] w-[240px]">
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
-                    `https://nexora.com/?ref=${form.profile.referralId || '640B5FBF'}&leg=${selectedLeg}`
-                  )}`}
-                  alt="Referral Link QR Code"
-                  className="h-full w-full object-contain rounded"
-                />
+                {referralUrl ? (
+                  <img
+                    src={buildPublicQrImageUrl(referralUrl, 220)}
+                    alt="Referral Link QR Code"
+                    className="h-full w-full object-contain rounded"
+                  />
+                ) : (
+                  <span className="text-xs font-bold text-nexoraMuted text-center px-4">
+                    {t('components.staff_registration.hooks.useStaffRegistration.profileReferralCodeMissing')}
+                  </span>
+                )}
               </div>
             </div>
 
             {/* Save QR Button */}
             <button
               type="button"
-              onClick={() => handleSaveQr(
-                `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(
-                  `https://nexora.com/?ref=${form.profile.referralId || '640B5FBF'}&leg=${selectedLeg}`
-                )}`
-              )}
-              className="w-full bg-nexoraWarning hover:bg-nexoraWarning text-black font-extrabold text-xs uppercase tracking-wider py-3.5 rounded-xl transition active:scale-[0.98] shadow-md shadow-amber-500/10"
+              disabled={!referralUrl}
+              onClick={() => handleSaveQr(qrCodeUrl(referralUrl))}
+              className="w-full bg-nexoraWarning hover:bg-nexoraWarning text-black font-extrabold text-xs uppercase tracking-wider py-3.5 rounded-xl transition active:scale-[0.98] shadow-md shadow-amber-500/10 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Save QR
             </button>

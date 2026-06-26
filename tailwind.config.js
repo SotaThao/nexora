@@ -1,12 +1,18 @@
 /** @type {import('tailwindcss').Config} */
+import colors from 'tailwindcss/colors'
+
 export default {
   darkMode: 'class',
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
+    "./src/components/homepage/**/*.{html,js,jsx,tsx}",
   ],
   theme: {
     extend: {
+      screens: {
+        xs: '400px',
+      },
       colors: {
         // Nexora Brand Colors (UNCHANGED)
         luxuryBlack: '#050505',      /* Obsidian Deep Black */
@@ -57,7 +63,7 @@ export default {
         nexoraText: '#0B1220',
         nexoraMuted: '#4D5870',
         nexoraSubtle: '#7A8296',
-        nexoraSidebar: '#101633',
+        nexoraSidebar: '#081F49',
         nexoraSidebarPanel: '#202641',
         nexoraBrand: '#4648D8',
         nexoraBrandDark: '#393BC8',
@@ -67,6 +73,16 @@ export default {
         nexoraDanger: '#EF4444',
         nexoraTeal: '#12B886',
         nexoraLavender: '#A8A9F3',
+
+        // Homepage landing palette (scripts/homepage-source)
+        navy: '#0f1638',
+        ink: '#101322',
+        line: '#e9ecf4',
+        muted: '#667085',
+        purple: { ...colors.purple, DEFAULT: '#6c4df6' },
+        blue: { ...colors.blue, DEFAULT: '#16b7ff' },
+        green: { ...colors.green, DEFAULT: '#05b86a' },
+        gold: '#ffb547',
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],

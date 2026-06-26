@@ -2,7 +2,9 @@ export const errorCodeToI18nKey = {
   // Auth
   USER_LOGIN_INVALID_USERNAME_OR_PASSWORD: 'errors.user_login_invalid_username_or_password',
   USER_ACCOUNT_INACTIVE: 'errors.user_account_inactive',
+  USER_ACCOUNT_INCOMPLETE: 'errors.user_account_incomplete',
   USER_EMAIL_ALREADY_EXISTS: 'errors.user_email_already_exists',
+  USER_SIGNUP_FAILED: 'errors.user_signup_failed',
   AUTH_PASSWORDS_DO_NOT_MATCH: 'errors.auth_passwords_do_not_match',
   USER_FEATURE_SIGNUP_DISABLED: 'errors.user_feature_signup_disabled',
   USER_INVALID_EMAIL_VERIFICATION_TOKEN: 'errors.user_invalid_email_verification_token',
@@ -10,6 +12,8 @@ export const errorCodeToI18nKey = {
   USER_EMAIL_ALREADY_VERIFIED: 'errors.user_email_already_verified',
   USER_NOT_FOUND: 'errors.user_not_found',
   USER_PASSWORD_RESET_TOKEN_EXPIRED: 'errors.user_password_reset_token_expired',
+  USER_PASSWORD_RESET_TOKEN_REQUIRED: 'errors.user_password_reset_token_required',
+  USER_FAILED_TO_RESET_PASSWORD: 'errors.user_failed_to_reset_password',
   USER_INVALID_REFRESH_TOKEN: 'errors.user_invalid_refresh_token',
   AUTH_USER_NOT_AUTHENTICATED: 'errors.auth_user_not_authenticated',
 
@@ -24,6 +28,7 @@ export const errorCodeToI18nKey = {
   IMAGE_FILE_SIZE_EXCEEDED: 'errors.image_file_size_exceeded',
   IMAGE_UNSUPPORTED_FILE_TYPE: 'errors.image_unsupported_file_type',
   IMAGE_UPLOAD_FAILED: 'errors.image_upload_failed',
+  IMAGE_INVALID_IMAGE_FILE: 'errors.image_invalid_image_file',
   BUSINESS_LOGO_UPLOAD_FAILED: 'errors.business_logo_upload_failed',
 
   // Staff invite & public referral (US-014). Exact server codes pending BE
@@ -36,9 +41,23 @@ export const errorCodeToI18nKey = {
   INVITE_LINK_DISABLED: 'errors.invite_link_disabled',
   STAFF_INVITE_ALREADY_EXISTS: 'errors.staff_invite_already_exists',
   STAFF_ALREADY_LINKED: 'errors.staff_already_linked',
+  STAFF_ALREADY_LINKED_TO_BUSINESS: 'errors.staff_already_linked_to_business',
   STAFF_INVITE_NOT_FOUND: 'errors.staff_invite_not_found',
   STAFF_INVITE_EXPIRED: 'errors.staff_invite_expired',
   STAFF_PROFILE_NOT_FOUND: 'errors.staff_profile_not_found',
+  STAFF_DISPLAY_NAME_REQUIRED: 'errors.staff_display_name_required',
+  STAFF_DISPLAY_NAME_TOO_SHORT: 'errors.staff_display_name_too_short',
+  STAFF_DISPLAY_NAME_TOO_LONG: 'errors.staff_display_name_too_long',
+
+  // Physical cards (QR/NFC hardware)
+  PHYSICAL_CARD_NOT_FOUND: 'errors.physical_card_not_found',
+
+  // Support / contact requests
+  CONTACT_REQUEST_SUPPORT_TYPE_MIN_LENGTH: 'errors.contact_request_support_type_min_length',
+  CONTACT_REQUEST_SUPPORT_TYPE_REQUIRED: 'errors.contact_request_support_type_required',
+  CONTACT_REQUEST_MESSAGE_MIN_LENGTH: 'errors.contact_request_message_min_length',
+  CONTACT_REQUEST_MESSAGE_MAX_LENGTH: 'errors.contact_request_message_max_length',
+  CONTACT_REQUEST_MESSAGE_REQUIRED: 'errors.contact_request_message_required',
 
   // Common
   COMMON_VALIDATION_ERROR: 'errors.common_validation_error',

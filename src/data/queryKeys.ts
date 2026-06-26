@@ -12,7 +12,8 @@ const EMPTY = {}
 export const qk = {
   merchantSetup:    ()         => ['merchantSetup'],
   profileSettings:  ()         => ['profileSettings'],
-  transactions:     ()         => ['transactions'],
+  transactions:            () => ['transactions'],
+  transactionsPaginated:   (filters = EMPTY) => ['transactions', 'paginated', filters],
   reviews:          ()         => ['reviews'],
   notifications:    ()         => ['notifications'],
   pendingAccounts:  ()         => ['pendingAccounts'],
@@ -26,21 +27,30 @@ export const qk = {
   dashboardOverview:        () => ['dashboard', 'overview'],
   dashboardStaff:           () => ['dashboard', 'staff'],
   dashboardTouchpoints:     () => ['dashboard', 'touchpoints'],
+  dashboardTipsChart:       () => ['dashboard', 'tipsChart'],
   dashboardReviews:         (filters = EMPTY) => ['dashboard', 'reviews', filters],
   
   // Notifications
   notificationsUnreadCount: () => ['notifications', 'unreadCount'],
   notificationsList:      (filters = EMPTY) => ['notifications', 'list', filters],
+
+  // Client ecosystem (header SSO)
+  ecosystems:             () => ['ecosystems'],
   
   // Profile (Staff/Personal)
   userProfile:              () => ['userProfile'],
   verifiedStatus:           () => ['userProfile', 'verifiedStatus'],
   kycInitialize:            () => ['userProfile', 'kycInitialize'],
-  kybInfo:                  (customerId?: string | number | null) => ['userProfile', 'kybInfo', customerId ?? 'unknown'],
+  kybIframeInitialize:      (language = 'en') => ['userProfile', 'kybIframeInitialize', language],
   kybRegister:              () => ['userProfile', 'kybRegister'],
 
   // Merchant Staff Management
-  merchantStaff:       ()      => ['merchantStaff'],
+  merchantStaff:       (statusFilter?: string, pageNumber?: number, pageSize?: number) => {
+    const key: unknown[] = ['merchantStaff']
+    if (statusFilter) key.push(statusFilter)
+    if (pageNumber !== undefined || pageSize !== undefined) key.push({ pageNumber, pageSize })
+    return key
+  },
   merchantStaffSearch: (q)     => ['merchantStaff', 'search', q],
   // v3.3 — MerchantStaff invite lifecycle + staff-by-code detail.
   // Note: all are prefixed with 'merchantStaff' so invalidating qk.merchantStaff()
@@ -48,12 +58,21 @@ export const qk = {
   merchantStaffInvites: (filters = EMPTY) => ['merchantStaff', 'invites', filters],
   merchantStaffInvite:  (inviteId)        => ['merchantStaff', 'invite', inviteId],
   merchantStaffByCode:  (staffCode)       => ['merchantStaff', 'byCode', staffCode],
+  merchantStaffStats:   (staffProfileId, filters = EMPTY) =>
+    ['merchantStaff', 'stats', staffProfileId, filters],
   staffInvite:         (token)   => ['staffInvite', token],
   publicMerchantInvite: (ref)    => ['publicMerchantInvite', ref],
   merchantInviteLink:  ()      => ['merchantSettings', 'inviteLink'],
 
   // Merchant Touchpoints
   merchantTouchpoints: ()      => ['merchantTouchpoints'],
+
+  // Merchant Physical Cards (QR/NFC hardware)
+  merchantPhysicalCards: (filters = EMPTY) => ['merchantPhysicalCards', filters],
+  merchantPhysicalCardDetail: (helpCode?: string | null) => ['merchantPhysicalCards', 'detail', helpCode ?? ''],
+  resolveQrCode: (cardCode?: string | null) => ['publicQr', 'resolve', cardCode ?? ''],
+  publicPhysicalCardHelp: (helpCode?: string | null, authMode?: string | null) =>
+    ['publicPhysicalCardHelp', helpCode ?? '', authMode ?? ''],
 
   // Merchant Payment Methods
   merchantPaymentMethods: ()   => ['merchantPaymentMethods'],
@@ -64,7 +83,6 @@ export const qk = {
   // Staff Self (own staff profile + linked businesses)
   staffProfile:        ()      => ['staffProfile'],
   staffBusinesses:     ()      => ['staffBusinesses'],
-  staffBusinessQrCodes: ()     => ['staffBusinessQrCodes'],
   staffDashboardSummary: ()    => ['staffDashboardSummary'],
   staffReviews:          (filters = EMPTY) => ['staffReviews', filters],
   staffTips:             (filters = EMPTY) => ['staffTips', filters],

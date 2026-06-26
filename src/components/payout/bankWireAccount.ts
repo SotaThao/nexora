@@ -1,3 +1,5 @@
+import { formatPayoutPhoneDisplay, shouldUsePayoutPhoneInput } from './payoutPhone'
+
 export interface BankWireAccountDetails {
   beneficiaryName: string
   bankName: string
@@ -63,4 +65,25 @@ export function formatBankWireAccountSummary(value?: string | null): string {
   const accountNumber = details.accountNumber.trim()
   if (!bankName && !routingNumber && !accountNumber) return ''
   return [bankName, routingNumber, accountNumber].filter(Boolean).join(' / ')
+}
+
+/** Human-readable payout account label for list UI (bank wire → beneficiary name). */
+export function formatPaymentMethodAccountDisplay(
+  uiKey: string,
+  accountInfo?: string | null,
+): string {
+  const raw = String(accountInfo || '').trim()
+  if (!raw) return ''
+
+  if (uiKey === 'bankwire' || raw.startsWith(BANK_WIRE_PREFIX)) {
+    const beneficiaryName = getBankWireBeneficiaryName(raw)
+    if (beneficiaryName) return beneficiaryName
+    return formatBankWireAccountSummary(raw) || raw
+  }
+
+  if (shouldUsePayoutPhoneInput(uiKey, raw)) {
+    return formatPayoutPhoneDisplay(raw)
+  }
+
+  return raw
 }

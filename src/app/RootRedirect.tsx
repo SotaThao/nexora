@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from 'react'
-import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
+import React, { lazy, Suspense, useEffect, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 import LoadingScreen from './LoadingScreen'
 import apiAuthAdapter from '../auth/adapters/apiAuthAdapter'
 import { useTranslation } from '../contexts/LanguageContext'
 
+const HomePage = lazy(() => import('../components/homepage/HomePage'))
+
 export default function RootRedirect() {
-  const { session, status } = useAuth()
+  const { status } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { t } = useTranslation()
@@ -31,7 +33,7 @@ export default function RootRedirect() {
     }
 
     if (action === 'reset-password') {
-      navigate('/reset-password?' + searchParams.toString(), { replace: true })
+      navigate('/account/reset-password?' + searchParams.toString(), { replace: true })
       return
     }
 
@@ -58,15 +60,9 @@ export default function RootRedirect() {
     return <LoadingScreen />
   }
 
-  if (status !== 'authenticated' || !session) {
-    return <Navigate to="/login" replace />
-  }
-
-  const isStaffSession = session.flag === '!personal' || session.role === 'personal' || session.role === 'staff'
-
-  if (isStaffSession) {
-    return <Navigate to="/staff" replace />
-  }
-
-  return <Navigate to="/dashboard" replace />
+  return (
+    <Suspense fallback={<LoadingScreen />}>
+      <HomePage />
+    </Suspense>
+  )
 }

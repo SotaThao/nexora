@@ -1,5 +1,6 @@
 import React from 'react'
 import { Upload, X, ArrowLeft, ArrowRight } from 'lucide-react'
+import ImageFileInput from '../../ui/ImageFileInput'
 import CountryCodeSelect, { formatNationalNumber, isPhoneValid } from '../../CountryCodeSelect'
 
 export default function StepProfileSetup({
@@ -9,17 +10,20 @@ export default function StepProfileSetup({
   phoneParsed,
   bio, setBio,
   avatar, setAvatar,
+  handleAvatarFileChange,
   position, setPosition,
   email,
   generatedStaffId,
   setCurrentStep,
+  handleProfileSetupSubmit,
+  errors,
   t,
   currentLanguage,
   renderLabel,
 }) {
   return (
-    <div className="p-6 sm:p-10 space-y-6 animate-fadeIn">
-      <div>
+    <div className="p-6 sm:p-8 animate-fadeIn max-w-xl mx-auto">
+      <div className="text-center">
         <h3 className="text-lg font-bold text-nexoraText">
           {t('components.register.steps.StepProfileSetup.personalProfileSetup')}
         </h3>
@@ -28,7 +32,7 @@ export default function StepProfileSetup({
         </p>
       </div>
 
-      <form onSubmit={(e) => { e.preventDefault(); setCurrentStep(3); }} className="space-y-4 max-w-xl mx-auto">
+      <form onSubmit={(e) => { e.preventDefault(); handleProfileSetupSubmit(); }} className="space-y-4 mt-6">
         {/* Avatar section */}
         <div className="flex items-center gap-4 border-b border-nexoraBorder pb-4">
           <div className="relative">
@@ -53,27 +57,21 @@ export default function StepProfileSetup({
 
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center gap-2">
-              <label className="h-9 px-4 rounded-lg bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white flex items-center justify-center gap-1.5 cursor-pointer text-xs font-bold transition shadow-sm">
+              <ImageFileInput
+                as="label"
+                className="h-9 px-4 rounded-lg bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white flex items-center justify-center gap-1.5 cursor-pointer text-xs font-bold transition shadow-sm"
+                onPickFile={handleAvatarFileChange}
+              >
                 <Upload className="h-3.5 w-3.5" />
                 <span>{t('common.upload_photo')}</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0]
-                    if (file) {
-                      const reader = new FileReader()
-                      reader.onload = () => setAvatar(reader.result)
-                      reader.readAsDataURL(file)
-                    }
-                  }}
-                />
-              </label>
+              </ImageFileInput>
             </div>
             <span className="text-[10px] text-nexoraSubtle">
               {t('components.register.steps.StepProfileSetup.acceptedFormatsJpgPng')}
             </span>
+            {errors?.avatar && (
+              <span className="text-[10px] text-red-500 font-medium">{t(errors.avatar)}</span>
+            )}
           </div>
         </div>
 
@@ -87,7 +85,7 @@ export default function StepProfileSetup({
               type="text"
               placeholder={t('components.register.steps.StepProfileSetup.phFullName')}
               required
-              className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
+              className="w-full bg-white border border-nexoraBorder focus:border-nexoraBrand rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
               value={fullName}
               onChange={(e) => {
                 setFullName(e.target.value)
@@ -105,7 +103,7 @@ export default function StepProfileSetup({
               type="text"
               placeholder={t('components.register.steps.StepProfileSetup.phNickname')}
               required
-              className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
+              className="w-full bg-white border border-nexoraBorder focus:border-nexoraBrand rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
             />
@@ -128,7 +126,7 @@ export default function StepProfileSetup({
               />
               <input
                 type="text"
-                className="h-10 w-full bg-nexoraCanvas border border-l-0 border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-r-lg px-4 text-sm text-nexoraText focus:outline-none transition-all min-w-0"
+                className="h-10 w-full bg-white border border-l-0 border-nexoraBorder focus:border-nexoraBrand rounded-r-lg px-4 text-sm text-nexoraText focus:outline-none transition-all min-w-0"
                 value={formatNationalNumber(phoneParsed.nationalNumber, phoneParsed.countryCode)}
                 onChange={(e) => {
                   const formatted = formatNationalNumber(e.target.value, phoneParsed.countryCode)
@@ -154,33 +152,18 @@ export default function StepProfileSetup({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Role / Specialty */}
-          <div>
-            <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-              {t('components.register.steps.StepProfileSetup.roleSpeciality')}
-            </label>
-            <input
-              type="text"
-              placeholder={t('components.register.steps.StepProfileSetup.phPosition')}
-              className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
-              value={position}
-              onChange={(e) => setPosition(e.target.value)}
-            />
-          </div>
-
-          {/* Staff ID */}
-          <div>
-            <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
-              {t('components.register.steps.StepProfileSetup.nexoraStaffId')}
-            </label>
-            <input
-              type="text"
-              disabled
-              className="w-full bg-nexoraCanvas border border-nexoraBorder rounded-lg px-4 py-2.5 text-sm text-nexoraSubtle font-mono font-bold cursor-not-allowed"
-              value={generatedStaffId || 'Pending'}
-            />
-          </div>
+        {/* Role / Specialty */}
+        <div>
+          <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">
+            {t('components.register.steps.StepProfileSetup.roleSpeciality')}
+          </label>
+          <input
+            type="text"
+            placeholder={t('components.register.steps.StepProfileSetup.phPosition')}
+            className="w-full bg-white border border-nexoraBorder focus:border-nexoraBrand rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
+            value={position}
+            onChange={(e) => setPosition(e.target.value)}
+          />
         </div>
 
         {/* Short Bio */}
@@ -189,7 +172,7 @@ export default function StepProfileSetup({
             {t('components.register.steps.StepProfileSetup.shortBioShowsOn')}
           </label>
           <textarea
-            className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg p-3 text-sm text-nexoraText focus:outline-none transition-all min-h-[70px]"
+            className="w-full bg-white border border-nexoraBorder focus:border-nexoraBrand rounded-lg p-3 text-sm text-nexoraText focus:outline-none transition-all min-h-[70px]"
             placeholder={t('components.register.steps.StepProfileSetup.phBio')}
             value={bio}
             onChange={(e) => setBio(e.target.value)}

@@ -2,9 +2,11 @@
  * merchantStaffRepository — API implementation for staff management.
  */
 import httpClient from '../../lib/httpClient'
-import type { StaffMember, StaffSearchResult } from '../../types/domain'
+import type { PaymentMethodDto, StaffMember, StaffSearchResult } from '../../types/domain'
 import type {
   MerchantStaffInvite,
+  MerchantStaffDetailStats,
+  MerchantStaffDetailStatsApiDto,
   StaffInviteDetailApiDto,
   StaffInviteListItemApiDto,
   StaffInviteParams,
@@ -13,9 +15,14 @@ import type {
   StaffLinkRequestParams,
   StaffListItemApiDto,
   StaffPaymentMethodApiDto,
+  StaffPeriodStatsApiDto,
+  StaffRecentReviewApiDto,
+  StaffRecentTipApiDto,
   StaffReorderItem,
   StaffSearchResultApiDto,
+  StaffStatsDateParams,
 } from '../../types/repositories'
+import type { ReviewRecord, TransactionRecord } from '../../types/domain'
 
 type HttpClient = typeof httpClient
 
@@ -66,22 +73,27 @@ export function normalizePaymentMethods(
 }
 
 export function normalizeStaffListItem(dto: StaffListItemApiDto): StaffMember {
+  const isWaitingStaffAcceptance = dto.status === 'WaitingStaffAcceptance'
+  const isPendingLinkStatus =
+    dto.status === 'Pending' ||
+    isWaitingStaffAcceptance
   const isActive = dto.status === 'Active' || dto.status === 'Accepted'
   const displayName = dto.displayName ?? ''
   const { payoutConfigs, paymentAccounts } = normalizePaymentMethods(dto.paymentMethods, displayName)
   const itemType =
     dto.itemType ??
     (dto.inviteId ? 'invite' : undefined) ??
-    (dto.linkId || dto.staffLinkId || dto.status === 'Pending' ? 'link' : undefined)
+    (dto.linkId || dto.staffLinkId || isPendingLinkStatus ? 'link' : undefined)
   const status =
     itemType === 'invite' && dto.status === 'Pending'
       ? 'Pending Setup'
-      : itemType === 'link' && dto.status === 'Pending'
+      : itemType === 'link' && isPendingLinkStatus
         ? 'Pending Acceptance'
         : (dto.status ?? null)
 
   return {
     id: dto.id ?? dto.linkId ?? dto.inviteId,
+    linkId: dto.linkId ?? dto.staffLinkId ?? dto.id ?? null,
     staffLinkId: itemType === 'link' ? (dto.staffLinkId ?? dto.linkId ?? dto.id) : null,
     inviteId: itemType === 'invite' ? (dto.inviteId ?? dto.id) : null,
     staffProfileId: dto.staffProfileId ?? null,
@@ -96,10 +108,14 @@ export function normalizeStaffListItem(dto: StaffListItemApiDto): StaffMember {
     fullName: displayName,
     avatar: dto.photoUrl ?? null,
     status,
+    apiStatus: dto.status ?? null,
+    isWaitingStaffAcceptance,
     isActive,
     showInTipsFlow: isActive,
-    position: dto.position ?? null,
+    position: dto.position ?? dto.roleAtBusiness ?? null,
+    roleAtBusiness: dto.roleAtBusiness ?? null,
     bio: dto.bio ?? null,
+    invites: dto.invites ?? [],
     invitedEmail: dto.invitedEmail ?? null,
     invitedPhone: dto.invitedPhone ?? null,
     phone:
@@ -138,25 +154,158 @@ export function normalizeStaffInvite(
 }
 
 export function normalizeStaffSearchResult(dto: StaffSearchResultApiDto): StaffSearchResult {
+  const paymentMethods: PaymentMethodDto[] = (dto.paymentMethods ?? []).map((method) => {
+    const type = method?.type ?? ''
+    const accountInfo = method?.accountInfo ?? null
+    const imageUrl = method?.imageUrl ?? null
+    return {
+      type,
+      uiKey: PAYOUT_TYPE_TO_KEY[type],
+      isActive: !!method?.isActive,
+      accountInfo,
+      imageUrl,
+      isConfigured: Boolean((accountInfo && String(accountInfo).trim()) || (imageUrl && String(imageUrl).trim())),
+    }
+  })
+
   return {
     staffProfileId: dto.staffProfileId,
     staffCode: dto.staffCode ?? null,
-    fullName: dto.displayName ?? '',
+    fullName: dto.displayName ?? dto.fullName ?? '',
     avatar: dto.photoUrl ?? null,
     position: dto.position ?? null,
+    paymentMethods,
+  }
+}
+
+export interface StaffListPage {
+  items: StaffMember[]
+  pageNumber: number
+  totalPages: number
+  totalCount: number
+  hasNextPage: boolean
+  hasPreviousPage: boolean
+}
+
+function toStatsQueryParams({ dateFrom, dateTo }: StaffStatsDateParams = {}) {
+  const params: Record<string, string> = {}
+  if (dateFrom) params.dateFrom = dateFrom
+  if (dateTo) params.dateTo = dateTo
+  return params
+}
+
+function normalizeAllTimeStats(dto: StaffPeriodStatsApiDto | undefined) {
+  return {
+    tipsCollected: dto?.tipsCollected ?? 0,
+    tipCount: dto?.tipCount ?? 0,
+    averageRating: dto?.averageRating ?? 0,
+    totalReviews: dto?.totalReviews ?? 0,
+    reviewsRouted: dto?.reviewsRouted ?? 0,
+    totalQrScans: dto?.totalQrScans ?? 0,
+    qrToTipConversionRate: dto?.qrToTipConversionRate ?? 0,
+  }
+}
+
+function deriveStaffReviewCategory(routingType?: string) {
+  const routing = String(routingType ?? '').toLowerCase()
+  if (routing === 'private') return 'private'
+  if (routing === 'public') return 'public'
+  if (routing === 'skipped') return 'skipped'
+  return 'internal'
+}
+
+function normalizeRecentTip(dto: StaffRecentTipApiDto): TransactionRecord {
+  const amount = dto.amount ?? 0
+  const totalAmount = dto.totalAmount ?? amount
+  return {
+    id: dto.id ?? '',
+    amount: amount > 0 ? amount : totalAmount,
+    status: 'Confirmed',
+    paymentMethod: dto.paymentMethod ?? '',
+    touchpoint: dto.touchPointName ?? '',
+    dateTime: dto.createdAt ?? '',
+    isMultiStaff: dto.isMultiStaff ?? false,
+  }
+}
+
+function normalizeRecentReview(dto: StaffRecentReviewApiDto): ReviewRecord {
+  const createdAt = dto.createdAt ?? ''
+  const routingType = dto.routingType
+  return {
+    id: dto.id ?? '',
+    rating: dto.rating ?? 0,
+    comment: dto.comment ?? '',
+    customerName: dto.customerName ?? '',
+    routingType,
+    category: deriveStaffReviewCategory(routingType),
+    date: createdAt ? new Date(createdAt).toLocaleString() : '',
+    createdAt,
+  }
+}
+
+function normalizeStaffDetailStats(dto: MerchantStaffDetailStatsApiDto): MerchantStaffDetailStats {
+  const periodDto = dto.period
+  return {
+    allTime: normalizeAllTimeStats(dto.allTime),
+    period: {
+      ...normalizeAllTimeStats(periodDto),
+      tipsChangePercent: periodDto?.tipsChangePercent ?? 0,
+      tipsTrend: (periodDto?.tipsTrend ?? []).map((point) => ({
+        date: point.date ?? '',
+        totalAmount: point.totalAmount ?? 0,
+        tipCount: point.tipCount ?? 0,
+      })),
+    },
+    recentTips: (dto.recentTips ?? []).map(normalizeRecentTip),
+    recentReviews: (dto.recentReviews ?? []).map(normalizeRecentReview),
   }
 }
 
 interface StaffListApiResponse {
   items?: StaffListItemApiDto[]
+  pageNumber?: number
+  totalPages?: number
+  totalCount?: number
+  hasNextPage?: boolean
+  hasPreviousPage?: boolean
 }
+
+export const StatusFilter = {
+  Pending: 'Pending',
+  Active: 'Active',
+  InActive: 'InActive',
+  Rejected: 'Rejected',
+  Accepted: 'Accepted',
+} as const
 
 export function createMerchantStaffRepository(client: HttpClient = httpClient) {
   return {
-    async list(): Promise<StaffMember[]> {
-      const data = await client.get<StaffListItemApiDto[] | StaffListApiResponse>('/api/v1/merchant/staff')
-      const items = Array.isArray(data) ? data : (data?.items ?? [])
-      return items.map(normalizeStaffListItem)
+    async list(statusFilter?: string, pageNumber = 1, pageSize = 10): Promise<StaffListPage> {
+      let url = '/api/v1/merchant/staff'
+      const queryParams: string[] = []
+      if (statusFilter) {
+        queryParams.push(`StatusFilter=${encodeURIComponent(statusFilter)}`)
+      }
+      if (pageNumber !== undefined) {
+        queryParams.push(`PageNumber=${pageNumber}`)
+      }
+      if (pageSize !== undefined) {
+        queryParams.push(`PageSize=${pageSize}`)
+      }
+      if (queryParams.length > 0) {
+        url += `?${queryParams.join('&')}`
+      }
+      const data = await client.get<StaffListItemApiDto[] | StaffListApiResponse>(url)
+      const page = Array.isArray(data) ? null : data
+      const items = Array.isArray(data) ? data : (page?.items ?? [])
+      return {
+        items: items.map(normalizeStaffListItem),
+        pageNumber: page?.pageNumber ?? pageNumber,
+        totalPages: page?.totalPages ?? 1,
+        totalCount: page?.totalCount ?? items.length,
+        hasNextPage: page?.hasNextPage ?? false,
+        hasPreviousPage: page?.hasPreviousPage ?? false,
+      }
     },
 
     async invite({ name, email, phone, position }: StaffInviteParams): Promise<StaffInviteResult> {
@@ -168,8 +317,8 @@ export function createMerchantStaffRepository(client: HttpClient = httpClient) {
       })
     },
 
-    async resendInvite(inviteId: string): Promise<void> {
-      await client.post(`/api/v1/merchant/staff/${encodeURIComponent(inviteId)}/resend`)
+    async resendInvite(linkId: string): Promise<void> {
+      await client.post(`/api/v1/merchant/staff/${encodeURIComponent(linkId)}/resend-invite`)
     },
 
     // v3.3 — invite lifecycle management.
@@ -207,6 +356,17 @@ export function createMerchantStaffRepository(client: HttpClient = httpClient) {
       return normalizeStaffListItem(dto)
     },
 
+    async getStats(
+      staffProfileId: string,
+      params: StaffStatsDateParams = {},
+    ): Promise<MerchantStaffDetailStats> {
+      const dto = await client.get<MerchantStaffDetailStatsApiDto>(
+        `/api/v1/merchant/staff/${encodeURIComponent(staffProfileId)}/stats`,
+        { params: toStatsQueryParams(params) },
+      )
+      return normalizeStaffDetailStats(dto)
+    },
+
     async search(q: string): Promise<StaffSearchResult[]> {
       const data = await client.get<StaffSearchResultApiDto[] | { items?: StaffSearchResultApiDto[] }>(
         `/api/v1/merchant/staff/search?q=${encodeURIComponent(q)}`,
@@ -219,7 +379,11 @@ export function createMerchantStaffRepository(client: HttpClient = httpClient) {
       const dto = typeof params === 'string'
         ? { staffProfileId: params }
         : params
-      await client.post(`/api/v1/merchant/staff/link-request/${encodeURIComponent(dto.staffProfileId)}`)
+      const roleAtBusiness = dto.roleAtBusiness?.trim()
+      await client.post(
+        `/api/v1/merchant/staff/link-request/${encodeURIComponent(dto.staffProfileId)}`,
+        roleAtBusiness ? { roleAtBusiness } : undefined,
+      )
     },
 
     async approveLink(linkId: string): Promise<void> {

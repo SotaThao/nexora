@@ -43,3 +43,29 @@ export function sortPaymentMethodsByUiOrder<T extends { uiKey?: string }>(method
     return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
   })
 }
+
+/** UI keys whose payment flow routes directly P2P (no platform processing fee). */
+export const DIRECT_P2P_UI_KEYS = new Set([
+  'zelle',
+  'venmo',
+  'cashapp',
+  'applecash',
+  'vlinkpay',
+])
+
+/**
+ * Returns true when the given raw API paymentMethod string (e.g. "CashApp",
+ * "Venmo") maps to a direct P2P method.
+ */
+export function isDirectP2pMethod(apiType: string): boolean {
+  return DIRECT_P2P_UI_KEYS.has(payoutTypeToUiKey(apiType))
+}
+
+/**
+ * Returns the human-readable display label for a raw API paymentMethod
+ * string. Falls back to the original string when there is no mapping.
+ */
+export function getPaymentMethodDisplayName(apiType: string): string {
+  const uiKey = payoutTypeToUiKey(apiType)
+  return PAYOUT_UI_LABELS[uiKey] ?? apiType
+}

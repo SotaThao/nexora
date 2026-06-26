@@ -222,7 +222,7 @@ export default function DevicesView({
           return (
             <Panel
               key={device.id}
-              id={`device-card-${device.deviceId}`}
+              {...{ id: `device-card-${device.deviceId}` } as any}
               className={`p-4 flex flex-col justify-between hover:shadow-premium transition-all duration-500 border relative overflow-hidden min-h-[170px] ${
                 isHighlighted
                   ? 'border-luxuryGold ring-2 ring-luxuryGold bg-luxuryGold/5 dark:bg-luxuryGold/5 scale-[1.03] animate-highlight shadow-premium'

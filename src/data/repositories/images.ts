@@ -9,8 +9,25 @@ export function createImagesRepository(client = httpClient) {
       return client.upload<ImageUploadResult>('/api/v1/images/upload', formData, 'POST')
     },
 
+    async publicUpload(file: File): Promise<ImageUploadResult> {
+      const formData = new FormData()
+      formData.append('file', file)
+      return client.upload<ImageUploadResult>('/api/v1/images/public/upload', formData, 'POST')
+    },
+
     async uploadAndGetUrl(file: File): Promise<string> {
       const res = await this.upload(file)
+      const url = res?.imageUrl || res?.fileUrl
+      if (!url) {
+        const err = new Error('IMAGE_UPLOAD_FAILED') as Error & { errorCode?: string }
+        err.errorCode = 'IMAGE_UPLOAD_FAILED'
+        throw err
+      }
+      return url
+    },
+
+    async publicUploadAndGetUrl(file: File): Promise<string> {
+      const res = await this.publicUpload(file)
       const url = res?.imageUrl || res?.fileUrl
       if (!url) {
         const err = new Error('IMAGE_UPLOAD_FAILED') as Error & { errorCode?: string }
