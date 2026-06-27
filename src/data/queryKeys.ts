@@ -74,6 +74,7 @@ export const qk = {
 
   // Merchant Payment Methods
   merchantPaymentMethods: ()   => ['merchantPaymentMethods'],
+  merchantPaymentQr: ()        => ['merchantPaymentQr'],
 
   // Staff Payment Methods
   staffPaymentMethods: ()      => ['staffPaymentMethods'],
@@ -89,6 +90,7 @@ export const qk = {
   // Public Customer Touch
   customerTouch: (businessSlug, touchPointSlug, sessionId) => ['customerTouch', businessSlug, touchPointSlug, sessionId],
   publicBusinessPaymentMethods: (businessId) => ['publicBusinessPaymentMethods', businessId],
+  publicDirectPaymentPage: (businessId) => ['publicDirectPaymentPage', businessId],
 }
 
 /** Maps localStorage domain keys → TanStack Query key arrays (storage event bridge). */

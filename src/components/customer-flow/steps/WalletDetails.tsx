@@ -138,6 +138,8 @@ export default function WalletDetails({
   setStep,
   paymentLinkData,
   tipPaymentMethodsData,
+  backStep = 'tip_amount',
+  paymentMode = false,
 }) {
   const isMultiStaff = selectedStaffMembers.length > 1
   const accentColor = walletAccentColor(selectedWalletObj.key)
@@ -198,7 +200,13 @@ export default function WalletDetails({
     ? bizName
     : selectedStaffMembers[0].fullName
 
-  const title = isMultiStaff
+  const title = paymentMode
+    ? t('direct_payment.wallet_title', {
+      wallet: selectedWalletObj.name,
+      amount: activeTipAmount.toFixed(2),
+      recipient: recipientName,
+    })
+    : isMultiStaff
     ? t('components.customer_flow.steps.WalletDetails.multiStaffTitle', { wallet: selectedWalletObj.name, amount: activeTipAmount.toFixed(2), business: bizName || recipientName })
     : t('components.customer_flow.steps.WalletDetails.singleStaffTitle', { wallet: selectedWalletObj.name, amount: activeTipAmount.toFixed(2), recipient: recipientName })
 
@@ -247,7 +255,9 @@ export default function WalletDetails({
             ${activeTipAmount.toFixed(2)}
           </div>
           <p className="text-[10px] text-nexoraSubtle font-semibold tracking-wider uppercase">
-            {isMultiStaff
+            {paymentMode
+              ? t('direct_payment.total_payment')
+              : isMultiStaff
               ? t('components.customer_flow.steps.WalletDetails.totalCombinedTip')
               : t('components.customer_flow.steps.WalletDetails.tipAmount')}
           </p>
@@ -352,12 +362,12 @@ export default function WalletDetails({
           className="w-full py-4 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-95 active:scale-[0.99] transition-all text-white font-extrabold text-sm uppercase tracking-wider rounded-xl shadow-lg shadow-nexoraElectric/25 flex items-center justify-center gap-1.5"
         >
           <CheckCircle className="h-5 w-5" />
-          {t('components.customer_flow.steps.WalletDetails.yesISentThe')}
+          {t(paymentMode ? 'direct_payment.confirm_sent' : 'components.customer_flow.steps.WalletDetails.yesISentThe')}
         </button>
 
         <button
           type="button"
-          onClick={() => setStep('tip_amount')}
+          onClick={() => setStep(backStep)}
           className="w-full py-3 bg-nexoraCanvas border border-nexoraBorder hover:bg-nexoraSurfaceMuted transition text-nexoraMuted font-extrabold text-xs uppercase tracking-wider rounded-xl"
         >
           {t('components.customer_flow.steps.WalletDetails.goBack')}

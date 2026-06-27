@@ -17,6 +17,7 @@ import {
 const SetupWizard = lazy(() => import('../components/SetupWizard'))
 const Dashboard = lazy(() => import('../components/Dashboard'))
 const CustomerFlow = lazy(() => import('../components/CustomerFlow'))
+const DirectPaymentFlow = lazy(() => import('../components/DirectPaymentFlow'))
 const RegisterWizard = lazy(() => import('../components/RegisterWizard'))
 const StaffRegistrationWizard = lazy(() => import('../components/StaffRegistrationWizard'))
 const StaffDashboard = lazy(() => import('../components/staff-dashboard/StaffDashboard'))
@@ -83,6 +84,7 @@ export default function AppRouter() {
         <Route path="/account/reset-password" element={<ResetPassword />} />
         
         <Route path="/touch/:businessSlug/:touchPointSlug" element={<CustomerFlow />} />
+        <Route path="/pay/:businessId" element={<DirectPaymentFlow />} />
         <Route path="/qr/:code" element={<QrRedirectPage />} />
         <Route path="/help/qr/:code" element={<HelpQrPage />} />
         <Route path="/invite" element={<InviteRoute />} />

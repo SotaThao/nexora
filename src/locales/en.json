@@ -1032,6 +1032,27 @@
     "tip_max_error": "Tip cannot exceed {amount}.",
     "tip_total_max_error": "Total tips cannot exceed {amount}."
   },
+  "direct_payment": {
+    "review_payment_title": "Review payment & choose method",
+    "review_payment_desc": "Pay this business directly. No account required.",
+    "amount_label": "Payment amount",
+    "custom_amount_placeholder": "Enter amount",
+    "total_payment": "Total payment",
+    "amount_range_hint": "$1.00 – $10,000.00",
+    "pay_to_business": "Pay to business",
+    "default_business": "Business",
+    "no_methods_title": "No payment methods available",
+    "no_methods_desc": "This business has not configured an active payout method yet. Please contact the store.",
+    "amount_too_low": "Minimum payment is ${min}.00",
+    "amount_too_high": "Maximum payment is ${max}.00",
+    "page_not_found_title": "Payment page unavailable",
+    "page_not_found_desc": "This business could not be found or direct payments are not enabled.",
+    "success_title": "Payment sent!",
+    "success_desc": "Your payment of ${amount} to {business} has been recorded. The business will confirm receipt shortly.",
+    "success_footer": "You can close this page. Thank you!",
+    "wallet_title": "Send ${amount} via {wallet} to {recipient}",
+    "confirm_sent": "Yes, I paid"
+  },
   "register": {
     "create_account": "Create Account",
     "role_select_title": "Choose Account Type",
@@ -1736,6 +1757,27 @@
           "uploadAdditionalDocuments": "Upload Additional Documents"
         }
       },
+      "SettingsTipQrPanel": {
+        "description": "Your store's default payment QR. Customers scan it to pay your business directly — no account required. Money goes to the payout methods you configure in the Payout Methods tab.",
+        "stepScan": "Customer scans this QR code",
+        "stepAmount": "Customer enters the payment amount",
+        "stepMethod": "Customer chooses one of your active payout methods",
+        "stepConfirm": "Customer confirms they sent the payment; you acknowledge receipt in your payment history",
+        "activeMethodsLabel": "{{count}} active payout method(s) shown to customers",
+        "previewQr": "Preview QR",
+        "copyLink": "Copy payment link",
+        "downloadQr": "Download QR",
+        "emptyTitle": "Configure payout methods first",
+        "emptyDesc": "Turn on at least one payout method with account details before sharing your payment QR with customers.",
+        "emptyAction": "Set up payout methods",
+        "defaultQrTitle": "Direct Payment QR",
+        "qrAlt": "Merchant direct payment QR code",
+        "scanCaption": "Scan to pay this business",
+        "merchantNote": "This QR opens your direct payment page (/pay/{businessId}). It is separate from staff tip touch-point QR codes.",
+        "loadErrorTitle": "Could not load payment QR",
+        "loadErrorDesc": "We couldn't fetch your payment link. Check your connection and try again.",
+        "retry": "Try again"
+      },
       "tabs": {
         "ProfileTab": {
           "edit": "Edit",
@@ -1757,6 +1799,9 @@
           "googleReviewLink": "Google Review Link",
           "yelpReviewLink": "Yelp Review Link",
           "payoutMethods": "Payout Methods",
+          "payoutMethodsTab": "Payout Methods",
+          "paymentQrTab": "Payment QR",
+          "tipQrTab": "Payment QR",
           "payoutAccount": "Payout account",
           "methodNotConfigured": "Method is not configured.",
           "pleaseEnterAccountDetails": "Please enter account details.",

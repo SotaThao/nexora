@@ -56,6 +56,12 @@ export interface CreateTipVars {
   sessionId: string
 }
 
+export interface CreateDirectPaymentVars {
+  businessId: string
+  businessPaymentMethodId: string
+  amount: number
+}
+
 export interface SkipTipVars {
   touchPointId: string
   staffProfileId: string

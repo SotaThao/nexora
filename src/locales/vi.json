@@ -1032,6 +1032,27 @@
     "tip_max_error": "Tiền típ không được vượt quá {amount}.",
     "tip_total_max_error": "Tổng tiền típ không được vượt quá {amount}."
   },
+  "direct_payment": {
+    "review_payment_title": "Xem lại & chọn phương thức thanh toán",
+    "review_payment_desc": "Thanh toán trực tiếp cho tiệm. Khách không cần tài khoản.",
+    "amount_label": "Số tiền thanh toán",
+    "custom_amount_placeholder": "Nhập số tiền",
+    "total_payment": "Tổng thanh toán",
+    "amount_range_hint": "$1.00 – $10,000.00",
+    "pay_to_business": "Thanh toán cho tiệm",
+    "default_business": "Doanh nghiệp",
+    "no_methods_title": "Chưa có phương thức thanh toán",
+    "no_methods_desc": "Tiệm chưa cấu hình phương thức nhận tiền đang bật. Vui lòng liên hệ quầy.",
+    "amount_too_low": "Số tiền tối thiểu là ${min}.00",
+    "amount_too_high": "Số tiền tối đa là ${max}.00",
+    "page_not_found_title": "Không mở được trang thanh toán",
+    "page_not_found_desc": "Không tìm thấy doanh nghiệp hoặc thanh toán trực tiếp chưa được bật.",
+    "success_title": "Đã gửi thanh toán!",
+    "success_desc": "Thanh toán ${amount} cho {business} đã được ghi nhận. Tiệm sẽ xác nhận đã nhận tiền sớm.",
+    "success_footer": "Bạn có thể đóng trang này. Cảm ơn bạn!",
+    "wallet_title": "Gửi ${amount} qua {wallet} tới {recipient}",
+    "confirm_sent": "Tôi đã thanh toán"
+  },
   "register": {
     "create_account": "Tạo tài khoản",
     "role_select_title": "Chọn loại tài khoản",
@@ -1735,6 +1756,27 @@
           "uploadAdditionalDocuments": "Tải lên tài liệu bổ sung"
         }
       },
+      "SettingsTipQrPanel": {
+        "description": "Mã QR thanh toán mặc định của tiệm. Khách quét để trả tiền trực tiếp cho doanh nghiệp — không cần tài khoản. Tiền vào các phương thức nhận tiền bạn cấu hình ở tab Phương thức nhận tiền.",
+        "stepScan": "Khách quét mã QR này",
+        "stepAmount": "Khách nhập số tiền thanh toán",
+        "stepMethod": "Khách chọn một phương thức nhận tiền đang bật",
+        "stepConfirm": "Khách xác nhận đã chuyển khoản; bạn xác nhận đã nhận tiền trong lịch sử thanh toán",
+        "activeMethodsLabel": "{{count}} phương thức nhận tiền đang hiển thị cho khách",
+        "previewQr": "Xem QR",
+        "copyLink": "Sao chép link thanh toán",
+        "downloadQr": "Tải QR",
+        "emptyTitle": "Cần cấu hình phương thức nhận tiền trước",
+        "emptyDesc": "Bật ít nhất một phương thức nhận tiền và nhập thông tin tài khoản trước khi chia sẻ QR thanh toán cho khách.",
+        "emptyAction": "Thiết lập phương thức nhận tiền",
+        "defaultQrTitle": "QR Thanh toán trực tiếp",
+        "qrAlt": "Mã QR thanh toán trực tiếp cho merchant",
+        "scanCaption": "Quét để thanh toán cho tiệm",
+        "merchantNote": "QR này mở trang thanh toán trực tiếp (/pay/{businessId}). Khác với QR tip nhân viên qua touch point.",
+        "loadErrorTitle": "Không tải được QR thanh toán",
+        "loadErrorDesc": "Không lấy được link thanh toán. Kiểm tra kết nối và thử lại.",
+        "retry": "Thử lại"
+      },
       "tabs": {
         "ProfileTab": {
           "edit": "Chỉnh sửa",
@@ -1756,6 +1798,9 @@
           "googleReviewLink": "Liên kết đánh giá Google",
           "yelpReviewLink": "Liên kết đánh giá Yelp",
           "payoutMethods": "Phương thức thanh toán",
+          "payoutMethodsTab": "Phương thức nhận tiền",
+          "paymentQrTab": "QR Thanh toán",
+          "tipQrTab": "QR Thanh toán",
           "payoutAccount": "Tài khoản",
           "methodNotConfigured": "Phương thức chưa được cấu hình.",
           "pleaseEnterAccountDetails": "Vui lòng nhập thông tin tài khoản.",

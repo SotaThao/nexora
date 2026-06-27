@@ -70,6 +70,36 @@ export interface PaymentMethodDto {
   name?: string
 }
 
+/** Merchant direct-payment QR — GET /api/v1/merchant/payments/qr */
+export interface MerchantPaymentQr {
+  paymentUrl: string
+  businessId: string
+}
+
+/** Public direct-payment page — GET /api/v1/public/merchant/{businessId}/payment */
+export interface PublicDirectPaymentMethod {
+  id: string
+  type: string
+  uiKey?: string
+  accountInfo: string
+  imageUrl?: string | null
+}
+
+export interface PublicDirectPaymentPage {
+  businessId: string
+  businessName: string
+  logoUrl?: string | null
+  paymentUrl: string
+  paymentMethods: PublicDirectPaymentMethod[]
+}
+
+export interface CreateDirectPaymentResult {
+  paymentId: string
+  amount: number
+  type: number
+  paymentMethod: PublicDirectPaymentMethod
+}
+
 export interface TouchpointRecord {
   id?: string
   name?: string
@@ -383,6 +413,8 @@ export interface UserSubscription {
 
 export interface UserProfile {
   id?: string
+  /** Nested business summary from GET /api/v1/userprofile/me (BusinessSummaryDto). */
+  business?: MerchantBusinessInfo | null
   fullName?: string
   firstName?: string
   lastName?: string
