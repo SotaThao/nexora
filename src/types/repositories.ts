@@ -36,6 +36,8 @@ export interface BusinessApiDto {
   yelpUrl?: string
   facebookUrl?: string
   feedbackEmail?: string
+  isPublic?: boolean
+  onboardingStep?: number
 }
 
 export interface TipsSummaryApiDto {
