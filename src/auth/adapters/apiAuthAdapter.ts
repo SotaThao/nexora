@@ -13,6 +13,7 @@ import type {
 } from '../../types/auth'
 import type { StaffProfile, UserProfile } from '../../types/domain'
 import { isApiError } from '../../types/domain'
+import type { BusinessApiDto } from '../../types/repositories'
 import { mapUserVerifyStatusToKybStatus } from '../../utils/kybStatus'
 
 export { mapUserVerifyStatusToKybStatus } from '../../utils/kybStatus'
@@ -23,6 +24,14 @@ const PROFILE_TYPE_MERCHANT = 'Merchant'
 
 // KYB status sentinel returned when no explicit status is available.
 const KYB_STATUS_BASIC = 'basic'
+
+// Merchant onboarding wizard final step (POST complete-onboarding).
+const MERCHANT_ONBOARDING_FINAL_STEP = 5
+
+interface BusinessOnboardingState {
+  hasBusiness: boolean
+  hasCompletedOnboarding: boolean
+}
 
 // Session account types and roles.
 const ACCOUNT_TYPE = { PERSONAL: 'personal', BUSINESS: 'business' } as const
@@ -127,31 +136,56 @@ async function getBusinessKybStatus(profile: UserProfile): Promise<string> {
   }
 }
 
+function hasBusinessIdentity(business: BusinessApiDto | null | undefined): boolean {
+  return Boolean(business?.id || business?.businessId)
+}
+
+/** Merchant onboarding is complete only when the business is public and on the final wizard step. */
+function isMerchantOnboardingComplete(business: BusinessApiDto): boolean {
+  return (
+    business.isPublic === true &&
+    Number(business.onboardingStep) === MERCHANT_ONBOARDING_FINAL_STEP
+  )
+}
+
 /**
- * Check whether the authenticated merchant has already created a business
- * profile via POST /api/v1/merchant/business.
+ * Resolve merchant business existence and onboarding completion from
+ * GET /api/v1/merchant/business.
  *
- * Returns false only on an explicit 404 / 403 / BUSINESS_NOT_FOUND response,
- * which means the business profile does not exist yet (SSO first-login,
- * incomplete registration, etc.). For any other error we optimistically
- * return true so a transient network hiccup does not force the user back
- * into the onboarding wizard.
+ * Onboarding is incomplete when isPublic is false or onboardingStep is not 5.
+ * Returns hasBusiness=false on 404 / 403 / BUSINESS_NOT_FOUND (SSO first-login).
+ * Other errors fail open so transient network issues do not block the dashboard.
  */
-async function checkBusinessProfileExists(): Promise<boolean> {
+async function getBusinessOnboardingState(): Promise<BusinessOnboardingState> {
+  const notFound: BusinessOnboardingState = {
+    hasBusiness: false,
+    hasCompletedOnboarding: false,
+  }
+  const optimisticComplete: BusinessOnboardingState = {
+    hasBusiness: true,
+    hasCompletedOnboarding: true,
+  }
+
   try {
-    const res = await httpClient.get<Record<string, unknown>>('/api/v1/merchant/business')
-    return Boolean(res && (res as Record<string, unknown>).id)
+    const res = await httpClient.get<BusinessApiDto>('/api/v1/merchant/business')
+    if (!hasBusinessIdentity(res)) {
+      return notFound
+    }
+    return {
+      hasBusiness: true,
+      hasCompletedOnboarding: isMerchantOnboardingComplete(res),
+    }
   } catch (err: unknown) {
     if (
       isApiError(err) &&
       (err.status === 404 ||
         err.status === 403 ||
-        (err as Record<string, unknown>).errorCode === 'BUSINESS_NOT_FOUND')
+        err.errorCode === 'BUSINESS_NOT_FOUND')
     ) {
-      return false
+      return notFound
     }
-    logger.error('Failed to check business profile existence', err)
-    return true
+    logger.error('Failed to check business onboarding state', err)
+    return optimisticComplete
   }
 }
 
@@ -185,6 +219,7 @@ function mapProfileToSession(
   kybStatus: string | null,
   staffProfile: StaffProfile | null = null,
   hasBusiness: boolean = true,
+  merchantOnboardingComplete: boolean = true,
 ): AuthSession {
   let accountType: string = ACCOUNT_TYPE.PERSONAL
   let flag = `!${ACCOUNT_TYPE.PERSONAL}`
@@ -217,15 +252,10 @@ function mapProfileToSession(
     hasStaffProfile: Boolean(staffProfile),
     staffCode: staffProfile?.staffCode || null,
     accountStatus,
-    // For business accounts, the business profile must exist before onboarding
-    // can be considered complete. This ensures SSO users (and any merchant
-    // whose profile was never created) are redirected to /onboarding rather
-    // than landing on an empty dashboard.
+    // Merchant onboarding requires an existing business profile with
+    // isPublic=true and onboardingStep=5 (see getBusinessOnboardingState).
     hasCompletedOnboarding: isBusiness
-      ? hasBusiness &&
-        (accountStatus === 'Active' ||
-          kybStatus === 'kyb_approved' ||
-          Boolean(profile.hasCompletedOnboarding))
+      ? hasBusiness && merchantOnboardingComplete
       : Boolean(
           ((profile.firstName ?? '') as string).trim() ||
             ((profile.lastName ?? '') as string).trim(),
@@ -264,14 +294,24 @@ async function resolveAuthSession(): Promise<AuthSession | null> {
   const isBusiness = isBusinessProfile(profile)
 
   // For business accounts run both checks in parallel to avoid sequential latency.
-  const [kybStatus, hasBusiness] = await Promise.all([
+  const defaultBusinessState: BusinessOnboardingState = {
+    hasBusiness: true,
+    hasCompletedOnboarding: true,
+  }
+  const [kybStatus, businessOnboarding] = await Promise.all([
     isBusiness ? getBusinessKybStatus(profile) : Promise.resolve<string | null>(null),
-    isBusiness ? checkBusinessProfileExists() : Promise.resolve(true),
+    isBusiness ? getBusinessOnboardingState() : Promise.resolve(defaultBusinessState),
   ])
 
   const staffProfile = isBusiness ? null : await fetchStaffProfile()
   seedAuthQueryCache({ userProfile: profile, staffProfile })
-  return mapProfileToSession(profile, kybStatus, staffProfile, hasBusiness)
+  return mapProfileToSession(
+    profile,
+    kybStatus,
+    staffProfile,
+    businessOnboarding.hasBusiness,
+    businessOnboarding.hasCompletedOnboarding,
+  )
 }
 
 export const apiAuthAdapter = {
