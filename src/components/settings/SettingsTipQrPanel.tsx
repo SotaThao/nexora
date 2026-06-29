@@ -37,6 +37,7 @@ export default function SettingsTipQrPanel({
   t,
   onConfigurePayoutMethods,
   variant = 'default',
+  hideUrlCode = false,
 }) {
   const navigate = useNavigate()
   const isCompact = variant === 'compact'
@@ -187,7 +188,7 @@ export default function SettingsTipQrPanel({
             ))}
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-5">
             <button
               type="button"
               onClick={() => setShowPreview(true)}
@@ -212,33 +213,35 @@ export default function SettingsTipQrPanel({
               </div>
             </button>
 
-            <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-              <div className="space-y-1">
+            <div className="flex min-w-0 flex-1 flex-col gap-3">
+              <div className="space-y-1.5">
                 <h3 className="text-sm font-extrabold text-nexoraText">
                   {businessName || t('components.settings.SettingsTipQrPanel.defaultQrTitle')}
                 </h3>
-                {paymentPageUrl ? (
-                  <a
-                    href={paymentPageUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex max-w-full items-center gap-1 text-[10px] font-bold text-blue-500 hover:text-blue-600"
-                  >
-                    <span className="truncate">{paymentPageUrl.replace(/^https?:\/\//, '')}</span>
-                    <ExternalLink className="h-3 w-3 shrink-0" />
-                  </a>
-                ) : null}
+                {hideUrlCode ? null : (
+                  paymentPageUrl ? (
+                    <a
+                      href={paymentPageUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex max-w-full items-center gap-1 text-[10px] font-bold text-blue-500 hover:text-blue-600"
+                    >
+                      <span className="truncate">{paymentPageUrl.replace(/^https?:\/\//, '')}</span>
+                      <ExternalLink className="h-3 w-3 shrink-0" />
+                    </a>
+                  ) : null
+                )}
                 <p className="text-[10px] text-nexoraMuted">
                   {t('components.settings.SettingsTipQrPanel.scanCaption')}
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
                 <button
                   type="button"
                   disabled={!paymentPageUrl}
                   onClick={() => handleCopy(paymentPageUrl, 'direct-payment-url')}
-                  className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-3 text-[11px] font-bold text-nexoraText transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-3 text-[11px] font-bold text-nexoraText transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {copiedId === 'direct-payment-url' ? (
                     <>
@@ -248,7 +251,7 @@ export default function SettingsTipQrPanel({
                   ) : (
                     <>
                       <Copy className="h-3.5 w-3.5" />
-                      <span>{t('components.settings.SettingsTipQrPanel.copyLink')}</span>
+                  <span className="truncate">{t('components.settings.SettingsTipQrPanel.copyLink')}</span>
                     </>
                   )}
                 </button>
@@ -256,22 +259,22 @@ export default function SettingsTipQrPanel({
                   type="button"
                   disabled={!paymentPageUrl || isDownloading}
                   onClick={handleDownloadQr}
-                  className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-amber-600 px-3 text-[11px] font-bold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-amber-600 px-3 text-[11px] font-bold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isDownloading ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
                     <Download className="h-3.5 w-3.5" />
                   )}
-                  <span>{t('components.settings.SettingsTipQrPanel.downloadQr')}</span>
+                  <span className="truncate">{t('components.settings.SettingsTipQrPanel.downloadQr')}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => navigate('/dashboard/reports?tab=direct_payments')}
-                  className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-nexoraBrand/20 bg-nexoraBrandSoft px-3 text-[11px] font-bold text-nexoraBrand transition hover:bg-nexoraBrand/10"
+                  className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-nexoraBrand/20 bg-nexoraBrandSoft px-3 text-[11px] font-bold text-nexoraBrand transition hover:bg-nexoraBrand/10"
                 >
                   <ClipboardList className="h-3.5 w-3.5" />
-                  <span>{t('components.settings.SettingsTipQrPanel.viewHistory')}</span>
+                  <span className="truncate">{t('components.settings.SettingsTipQrPanel.viewHistory')}</span>
                 </button>
               </div>
             </div>
@@ -495,9 +498,11 @@ export default function SettingsTipQrPanel({
               />
             </div>
 
-            <p className="rounded-lg bg-slate-50 px-3 py-2 text-[10px] font-mono text-slate-500 break-all">
-              {paymentPageUrl.replace(/^https?:\/\//, '')}
-            </p>
+            {hideUrlCode ? null : (
+              <p className="rounded-lg bg-slate-50 px-3 py-2 text-[10px] font-mono text-slate-500 break-all">
+                {paymentPageUrl.replace(/^https?:\/\//, '')}
+              </p>
+            )}
 
             <p className="mt-3 text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
               {t('components.settings.SettingsTipQrPanel.scanCaption')}

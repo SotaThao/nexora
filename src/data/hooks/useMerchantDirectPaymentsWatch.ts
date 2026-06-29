@@ -41,21 +41,31 @@ export function useMerchantDirectPaymentsWatch({ enabled = true } = {}) {
   const [ackNoticePayment, setAckNoticePayment] = useState<MerchantPaymentRecord | null>(null)
   const ackNoticePaymentRef = useRef(ackNoticePayment)
   const selectedPaymentIdRef = useRef<string | null>(null)
+  const isViewingDirectPaymentsRef = useRef(false)
   const closedAckIdsRef = useRef(new Set<string>())
 
-  const selectedPaymentId = useMemo(() => {
-    if (!location.pathname.includes('/dashboard/reports')) return null
-    return new URLSearchParams(location.search).get('paymentId')
+  const { selectedPaymentId, isViewingDirectPayments } = useMemo(() => {
+    if (!location.pathname.includes('/dashboard/reports')) {
+      return { selectedPaymentId: null, isViewingDirectPayments: false }
+    }
+    const params = new URLSearchParams(location.search)
+    const isDirectPaymentsTab = params.get('tab') === 'direct_payments'
+    return {
+      selectedPaymentId: params.get('paymentId'),
+      isViewingDirectPayments: isDirectPaymentsTab,
+    }
   }, [location.pathname, location.search])
 
   ackNoticePaymentRef.current = ackNoticePayment
   selectedPaymentIdRef.current = selectedPaymentId
+  isViewingDirectPaymentsRef.current = isViewingDirectPayments
 
   useEffect(() => {
     closedAckIdsRef.current.clear()
   }, [location.pathname, location.search])
 
   const tryShowAckNotice = useCallback((payment: MerchantPaymentRecord) => {
+    if (isViewingDirectPaymentsRef.current) return
     if (selectedPaymentIdRef.current) return
     if (!needsMerchantAcknowledge(payment)) return
     if (closedAckIdsRef.current.has(payment.id)) return
@@ -63,6 +73,7 @@ export function useMerchantDirectPaymentsWatch({ enabled = true } = {}) {
     if (ackNoticePaymentRef.current?.id === payment.id) return
 
     scheduleAckNoticeUpdate(() => {
+      if (isViewingDirectPaymentsRef.current) return
       if (selectedPaymentIdRef.current) return
       if (!shouldPromptAckNotice(payment.id)) return
       setAckNoticePayment(payment)
@@ -70,20 +81,26 @@ export function useMerchantDirectPaymentsWatch({ enabled = true } = {}) {
   }, [])
 
   useEffect(() => {
+    if (isViewingDirectPayments && ackNoticePayment) {
+      setAckNoticePayment(null)
+      return
+    }
+
     if (!selectedPaymentId || !ackNoticePayment) return
     if (ackNoticePayment.id === selectedPaymentId) {
       setAckNoticePayment(null)
     }
-  }, [selectedPaymentId, ackNoticePayment])
+  }, [selectedPaymentId, isViewingDirectPayments, ackNoticePayment])
 
   useEffect(() => {
+    if (isViewingDirectPayments) return
     if (selectedPaymentId) return
 
     const newestPending = pickNewestPendingAckPayment(payments, needsMerchantAcknowledge)
     if (!newestPending) return
 
     tryShowAckNotice(newestPending)
-  }, [payments, selectedPaymentId, location.pathname, location.search, tryShowAckNotice])
+  }, [payments, selectedPaymentId, isViewingDirectPayments, location.pathname, location.search, tryShowAckNotice])
 
   const closeAckNotice = useCallback(() => {
     if (ackNoticePayment) closedAckIdsRef.current.add(ackNoticePayment.id)

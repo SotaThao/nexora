@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Share2, Copy, Check, QrCode, X, Loader2, Store, Clock, Link2, CreditCard } from 'lucide-react'
 import jsQR from 'jsqr'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import { useStaffBusinessTipQrs } from '../../../data/hooks/useStaffSelf'
@@ -252,6 +252,7 @@ function getInactiveTipQrCopy(
 
 export default function StaffMyQR() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { t, currentLanguage } = useTranslation()
   const { staffMember, account } = useStaffAccount()
   const { businessTipQrs, isLoading: isTipQrLoading } = useStaffBusinessTipQrs()
@@ -303,6 +304,20 @@ export default function StaffMyQR() {
   const scannerCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const scannerFrameRef = useRef<number | null>(null)
   const lastScanAtRef = useRef(0)
+
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    if (tab === 'referral' || tab === 'tipping' || tab === 'payment') {
+      setActiveTab(tab)
+    }
+  }, [searchParams])
+
+  const handleTabChange = useCallback((tab: QrTab) => {
+    setActiveTab(tab)
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.set('tab', tab)
+    setSearchParams(nextParams, { replace: true })
+  }, [searchParams, setSearchParams])
 
   const staffCode = (account.staffCode || staffMember.id || '').trim()
   const staffLink = useMemo(
@@ -733,7 +748,7 @@ export default function StaffMyQR() {
       <div className="flex gap-2 pb-1">
         <button
           type="button"
-          onClick={() => setActiveTab('referral')}
+          onClick={() => handleTabChange('referral')}
           className={`flex-1 px-2 py-2 rounded-lg text-[10px] sm:text-xs font-extrabold uppercase transition ${
             activeTab === 'referral'
               ? 'bg-nexoraBrand text-white shadow-sm'
@@ -744,18 +759,7 @@ export default function StaffMyQR() {
         </button>
         <button
           type="button"
-          onClick={() => setActiveTab('tipping')}
-          className={`flex-1 px-2 py-2 rounded-lg text-[10px] sm:text-xs font-extrabold uppercase transition ${
-            activeTab === 'tipping'
-              ? 'bg-nexoraBrand text-white shadow-sm'
-              : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
-          }`}
-        >
-          {t('staff_dashboard.qr.tab_tipping')}
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('payment')}
+          onClick={() => handleTabChange('payment')}
           className={`flex-1 px-2 py-2 rounded-lg text-[10px] sm:text-xs font-extrabold uppercase transition ${
             activeTab === 'payment'
               ? 'bg-nexoraBrand text-white shadow-sm'
@@ -763,6 +767,17 @@ export default function StaffMyQR() {
           }`}
         >
           {t('staff_dashboard.qr.tab_payment')}
+        </button>
+        <button
+          type="button"
+          onClick={() => handleTabChange('tipping')}
+          className={`flex-1 px-2 py-2 rounded-lg text-[10px] sm:text-xs font-extrabold uppercase transition ${
+            activeTab === 'tipping'
+              ? 'bg-nexoraBrand text-white shadow-sm'
+              : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
+          }`}
+        >
+          {t('staff_dashboard.qr.tab_tipping')}
         </button>
       </div>
 

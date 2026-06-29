@@ -9,6 +9,10 @@ export default function DirectPaymentSuccess({
   successDescKey = 'direct_payment.success_desc',
 }) {
   const recipient = businessName || t('direct_payment.default_business')
+  const formattedAmount = activeAmount.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
 
   return (
     <div className="flex animate-fadeIn flex-col items-center space-y-6 py-4 text-center">
@@ -22,7 +26,7 @@ export default function DirectPaymentSuccess({
         </h3>
         <p className="text-xs leading-relaxed text-nexoraMuted">
           {t(successDescKey, {
-            amount: activeAmount.toFixed(2),
+            amount: formattedAmount,
             business: recipient,
             name: recipient,
           })}
@@ -35,7 +39,7 @@ export default function DirectPaymentSuccess({
             {t('direct_payment.total_payment')}
           </span>
           <span className="text-2xl font-black text-nexoraBrand">
-            ${activeAmount.toFixed(2)}
+            ${formattedAmount}
           </span>
         </div>
 

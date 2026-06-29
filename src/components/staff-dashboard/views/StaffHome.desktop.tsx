@@ -1,5 +1,6 @@
 // StaffHome — KPI overview, pending tip confirmations, linked businesses.
 import { CheckCircle2, Star } from 'lucide-react'
+import { useOutletContext } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useConfirmStaffTipsReceipt } from '../../../data/hooks/useStaffSelf'
 import { useStaffHomeData } from '../hooks/useStaffHomeData'
@@ -42,9 +43,13 @@ function renderStars(rating) {
 
 export default function StaffHome() {
   const { t } = useTranslation()
+  const { onNavigate } = useOutletContext<any>() || {}
   const confirmTipsMutation = useConfirmStaffTipsReceipt()
   const { kpis, isHomeLoading, isPendingTipsFetching, pendingTips, linkedBusinesses } =
     useStaffHomeData()
+  const activeLinkedBusinesses = linkedBusinesses.filter(
+    (biz) => resolveStaffBusinessLinkStatusLabel(biz).toLowerCase() === 'active',
+  )
 
   const isConfirming = confirmTipsMutation.isPending
 
@@ -78,6 +83,27 @@ export default function StaffHome() {
           value={kpis.rating > 0 ? Number(kpis.rating).toFixed(1) : '—'}
           sub={kpis.rating > 0 ? renderStars(kpis.rating) : null}
         />
+      </section>
+
+      {/* Pay QR quick section */}
+      <section className={panel}>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="text-base font-extrabold text-nexoraText">
+              {t('staff_dashboard.qr.payment_title')}
+            </h3>
+            <p className="mt-1 text-xs text-nexoraMuted">
+              {t('staff_dashboard.qr.payment_sub')}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => onNavigate?.('qr', { tab: 'payment' })}
+            className="shrink-0 rounded-xl bg-gradient-to-r from-nexoraElectric to-nexoraViolet px-4 py-2.5 text-xs font-extrabold text-white transition hover:opacity-90"
+          >
+            {t('staff_dashboard.qr.tab_payment')}
+          </button>
+        </div>
       </section>
 
       {/* Pending confirmations */}
@@ -128,13 +154,13 @@ export default function StaffHome() {
       {/* Linked businesses */}
       <section className={panel}>
         <h3 className="mb-3 text-base font-extrabold text-nexoraText">{t('staff_dashboard.home.linked_businesses')}</h3>
-        {linkedBusinesses.length === 0 ? (
+        {activeLinkedBusinesses.length === 0 ? (
           <p className="py-4 text-center text-xs text-nexoraSubtle">
             {t('staff_dashboard.qr.no_linked_businesses')}
           </p>
         ) : (
           <div className="divide-y divide-nexoraBorder">
-            {linkedBusinesses.filter((biz) => resolveStaffBusinessLinkStatusLabel(biz).toLowerCase() === 'active').map((biz) => {
+            {activeLinkedBusinesses.map((biz) => {
               const statusLabel = resolveStaffBusinessLinkStatusLabel(biz)
               const statusPresentation = getStaffBusinessLinkStatusPresentation(statusLabel)
               return (

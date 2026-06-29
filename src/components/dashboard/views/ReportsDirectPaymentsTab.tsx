@@ -224,8 +224,6 @@ export default function ReportsDirectPaymentsTab({
 
   return (
     <div className="space-y-4 sm:space-y-5">
-      <p className="text-xs leading-relaxed text-nexoraMuted">{t('merchant_payments.description')}</p>
-
       <DirectPaymentStatusLegend t={t} />
 
       {pendingAckPayments.length > 0 ? (

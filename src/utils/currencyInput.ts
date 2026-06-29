@@ -1,5 +1,5 @@
 export const DIRECT_PAYMENT_MIN_AMOUNT = 1
-export const DIRECT_PAYMENT_MAX_AMOUNT = 1_000_000
+export const DIRECT_PAYMENT_MAX_AMOUNT = 10_000
 export const STAFF_DIRECT_PAYMENT_MAX_AMOUNT = 10_000
 
 export function formatUsdAmount(amount: number): string {

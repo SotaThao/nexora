@@ -6,8 +6,8 @@ export const STAFF_MENU_ITEMS = [
   { id: 'home', icon: LayoutDashboard, image: '/assets/menu/dashboard.png', labelKey: 'staff_dashboard.nav.home' },
   { id: 'qr', icon: QrCode, image: '/assets/menu/touchpoint.png', labelKey: 'staff_dashboard.nav.my_qr' },
   { id: 'tips', icon: Wallet, image: '/assets/menu/tips.png', labelKey: 'staff_dashboard.nav.tips' },
-  { id: 'reviews', icon: Star, image: '/assets/menu/reviews.png', labelKey: 'staff_dashboard.nav.reviews' },
   { id: 'payments', icon: ClipboardList, image: '/assets/menu/transaction.png', labelKey: 'staff_dashboard.nav.payments' },
+  { id: 'reviews', icon: Star, image: '/assets/menu/reviews.png', labelKey: 'staff_dashboard.nav.reviews' },
   { id: 'pay', icon: CreditCard, image: '/assets/menu/analytics.png', labelKey: 'staff_dashboard.nav.pay' },
   { id: 'profile', icon: Settings, image: '/assets/menu/setting.png', labelKey: 'staff_dashboard.nav.profile' },
 ]

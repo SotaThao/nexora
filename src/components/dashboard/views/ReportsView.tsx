@@ -359,7 +359,7 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
       <div className="flex flex-col gap-4 border-b border-nexoraBorder pb-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-extrabold text-nexoraText">{t('dashboard.menu.transactions')}</h2>
-          <p className="mt-1 text-xs text-nexoraMuted">
+          <p className="mt-1 max-w-[22rem] text-xs leading-relaxed text-nexoraMuted">
             {activeTab === REPORTS_TAB_DIRECT_PAYMENTS
               ? t('merchant_payments.description')
               : t('dashboard.activity_log.title')}

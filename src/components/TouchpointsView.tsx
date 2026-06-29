@@ -16,12 +16,10 @@ import {
   Loader2,
   Eye,
   Coins,
-  CreditCard,
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
 import { useNotification } from '../contexts/NotificationContext'
 import CustomSelect from './CustomSelect'
-import SettingsTipQrPanel from './settings/SettingsTipQrPanel'
 import Pagination from './ui/Pagination'
 import { useTouchpoints } from '../data/hooks/useMerchantTouchpoints'
 import {
@@ -87,11 +85,8 @@ export default function TouchpointsView({
   const navigate = useNavigate()
   const [copiedId, setCopiedId] = useState(null)
   const [localActiveSubTab, setLocalActiveSubTab] = useState('stations')
-  const [localStationsSection, setLocalStationsSection] = useState('tip')
   const activeSubTab = propActiveSubTab !== undefined ? propActiveSubTab : localActiveSubTab
   const setActiveSubTab = onTabChange !== undefined ? onTabChange : setLocalActiveSubTab
-  const activeStationsSection = onStationsSectionChange ? stationsSection : localStationsSection
-  const setStationsSection = onStationsSectionChange || setLocalStationsSection
   const [deleteConfirmId, setDeleteConfirmId] = useState<any | null>(null)
   const [unlinkConfirmPoint, setUnlinkConfirmPoint] = useState<any | null>(null)
   const [detailHelpCode, setDetailHelpCode] = useState<string | null>(null)
@@ -339,86 +334,15 @@ export default function TouchpointsView({
             {t('setup.qr_touchpoints_desc')}
           </p>
         </div>
-        
-        {/* Navigation Tabs */}
-        <div className="flex flex-wrap gap-1 bg-nexoraSurfaceMuted dark:bg-luxuryCoal p-1 rounded-xl border border-nexoraBorder dark:border-luxuryGold/10">
-          {[
-            { id: 'stations', label: t('dashboard.touchpoints.tabs.stations'), disabled: false },
-            { id: 'devices', label: t('dashboard.touchpoints.tabs.devices'), disabled: false }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              type="button"
-              disabled={tab.disabled}
-              onClick={() => !tab.disabled && setActiveSubTab(tab.id)}
-              className={`h-9 rounded-lg px-4 text-xs font-bold transition-all min-w-[44px] ${
-                tab.disabled
-                  ? 'cursor-not-allowed opacity-45 text-nexoraMuted'
-                  : activeSubTab === tab.id
-                    ? 'bg-white dark:bg-luxuryBlack text-luxuryGold shadow-sm font-black'
-                    : 'text-nexoraMuted hover:text-nexoraText dark:text-slate-400 dark:hover:text-white'
-              }`}
-              title={tab.disabled ? t('common.coming_soon') : undefined}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
       </div>
 
       {activeSubTab === 'stations' && (
         <>
           <div className="space-y-3">
-            <div
-              className="flex gap-2 rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted p-1.5"
-              role="tablist"
-              aria-label={t('dashboard.touchpoints.tabs.stations')}
-            >
-              {[
-                { id: 'tip', label: t('dashboard.touchpoints.stations_sections.tip'), icon: Coins },
-                { id: 'payment', label: t('dashboard.touchpoints.stations_sections.payment'), icon: CreditCard },
-              ].map((section) => {
-                const Icon = section.icon
-                const isActive = activeStationsSection === section.id
-                return (
-                  <button
-                    key={section.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={isActive}
-                    onClick={() => setStationsSection(section.id)}
-                    className={`flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-[10px] font-extrabold uppercase tracking-wide transition sm:text-xs ${
-                      isActive
-                        ? 'bg-nexoraBrand text-white shadow-md shadow-nexoraBrand/25 ring-2 ring-nexoraBrand/20'
-                        : 'bg-transparent text-nexoraMuted hover:bg-white/70 hover:text-nexoraText'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" />
-                    <span>{section.label}</span>
-                  </button>
-                )
-              })}
-            </div>
             <p className="text-xs leading-relaxed text-nexoraMuted">
-              {activeStationsSection === 'payment'
-                ? t('dashboard.touchpoints.stations_sections.payment_desc')
-                : t('dashboard.touchpoints.stations_sections.tip_desc')}
+              {t('dashboard.touchpoints.stations_sections.tip_desc')}
             </p>
           </div>
-
-          {activeStationsSection === 'payment' ? (
-            <Panel className="p-3.5">
-              <SettingsTipQrPanel
-                variant="compact"
-                businessName={businessName}
-                showToast={showToast}
-                handleCopy={handleCopy}
-                copiedId={copiedId}
-                t={t}
-                onConfigurePayoutMethods={() => navigate('/dashboard/settings?tab=payout')}
-              />
-            </Panel>
-          ) : (
         <>
           {/* Hardware KPIs */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -875,7 +799,6 @@ export default function TouchpointsView({
             </div>
           )}
         </>
-          )}
         </>
       )}
 
