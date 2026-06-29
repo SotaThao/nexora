@@ -76,6 +76,7 @@ const ACCENT_MAP: Partial<Record<string, string>> = {
 }
 
 export interface EcosystemCatalogEntry {
+  id: string | null
   brandKey: string
   name: string
   url: string
@@ -90,6 +91,7 @@ export function buildEcosystemCatalog(apiItems: EcosystemItem[] = []): Ecosystem
       ? ''
       : fromApi?.url?.trim() || FALLBACK_URL_MAP[brandKey] || ''
     return {
+      id: fromApi?.id ?? null,
       brandKey,
       name: fromApi?.name ?? brandKey,
       url,
@@ -131,6 +133,29 @@ export function getEcosystemAccent(name: string): string {
   const brandKey = resolveEcosystemBrandKey(name)
   if (brandKey && ACCENT_MAP[brandKey]) return ACCENT_MAP[brandKey]!
   return ACCENT_MAP[name.trim().toLowerCase()] ?? '51 102 255'
+}
+
+/** True when API returns a navigable absolute HTTPS URL for ecosystem SSO. */
+export function isValidEcosystemRedirectUrl(url: string | null | undefined): url is string {
+  if (url == null) return false
+  const trimmed = url.trim()
+  if (!trimmed || trimmed === '#' || trimmed === '/') return false
+  try {
+    const parsed = new URL(trimmed)
+    return parsed.protocol === 'https:' && Boolean(parsed.hostname)
+  } catch {
+    return false
+  }
+}
+
+export function closeWindowIfOpen(targetWindow: Window | null): void {
+  if (targetWindow && !targetWindow.closed) {
+    try {
+      targetWindow.close()
+    } catch {
+      // popup may be blocked from script close
+    }
+  }
 }
 
 export function openUrlInNewTab(url: string): void {
