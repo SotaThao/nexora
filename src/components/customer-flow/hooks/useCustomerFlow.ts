@@ -366,8 +366,9 @@ export default function useCustomerFlow() {
 
   const touchPagePaymentMethods = touchPageData?.businessPaymentMethods ?? []
   const effectivePaymentMethods = useMemo(() => {
+    if (publicPaymentMethods.length > 0) return publicPaymentMethods
     if (touchPagePaymentMethods.length > 0) return touchPagePaymentMethods
-    return publicPaymentMethods
+    return []
   }, [touchPagePaymentMethods, publicPaymentMethods])
 
   const isMultiStaffSelection = selectedStaffMembers.length > 1

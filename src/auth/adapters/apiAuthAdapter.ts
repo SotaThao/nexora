@@ -31,6 +31,7 @@ const MERCHANT_ONBOARDING_FINAL_STEP = 5
 interface BusinessOnboardingState {
   hasBusiness: boolean
   hasCompletedOnboarding: boolean
+  rawBusiness?: BusinessApiDto
 }
 
 // Session account types and roles.
@@ -174,6 +175,7 @@ async function getBusinessOnboardingState(): Promise<BusinessOnboardingState> {
     return {
       hasBusiness: true,
       hasCompletedOnboarding: isMerchantOnboardingComplete(res),
+      rawBusiness: res,
     }
   } catch (err: unknown) {
     if (
@@ -304,7 +306,11 @@ async function resolveAuthSession(): Promise<AuthSession | null> {
   ])
 
   const staffProfile = isBusiness ? null : await fetchStaffProfile()
-  seedAuthQueryCache({ userProfile: profile, staffProfile })
+  seedAuthQueryCache({ 
+    userProfile: profile, 
+    staffProfile, 
+    rawBusiness: businessOnboarding.rawBusiness 
+  })
   return mapProfileToSession(
     profile,
     kybStatus,
