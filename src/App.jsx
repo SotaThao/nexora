@@ -5,7 +5,6 @@ import { MOCK_SSO_KYB_PROFILE, MOCK_SSO_NO_KYB_EMAIL } from './app/mockSso'
 import { useTranslation } from './contexts/LanguageContext'
 import { storage, initStorage } from './utils/storage'
 import { useNotification } from './contexts/NotificationContext'
-import ResumeCard from './components/ResumeCard'
 
 const localStorage = storage
 const sessionStorage = storage
@@ -51,10 +50,6 @@ export default function App() {
     const params = new URLSearchParams(window.location.search)
     if (params.get('flow') === 'customer') {
       setView('customer')
-      return
-    }
-    if (params.get('flow') === 'resume' || params.get('flow') === 'portfolio') {
-      setView('resume')
       return
     }
     if (params.get('flow') === 'staff-invite') {
@@ -457,9 +452,7 @@ export default function App() {
 
   return (
     <div className="min-h-dvh bg-[#F8FAFC] text-[#0B1C30] font-sans antialiased">
-      {view === 'resume' ? (
-        <ResumeCard />
-      ) : view === 'login' ? (
+      {view === 'login' ? (
         <LoginScreen
           email={email}
           setEmail={setEmail}

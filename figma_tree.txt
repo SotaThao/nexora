@@ -1,0 +1,94 @@
+screen-2 (FRAME)
+  content (FRAME)
+    Container (FRAME)
+      Container (FRAME)
+        Image (Bitcoin Nail Bar) (FRAME)
+        Text (FRAME)
+          Tip & Review (TEXT) -> Tip & Review
+    body (FRAME)
+      staff-row (FRAME)
+        avatars (FRAME)
+          avatar (FRAME)
+            D (TEXT) -> D
+          avatar (FRAME)
+            S (TEXT) -> S
+        David, Sunny (TEXT) -> David, Sunny
+      tabs (FRAME)
+        tab-inactive (FRAME)
+          Chia đều (TEXT) -> Chia đều
+        tab-active (FRAME)
+          Tip riêng từng thợ (TEXT) -> Tip riêng từng thợ
+      amount (FRAME)
+        Container (FRAME)
+          Container (FRAME)
+            Container (FRAME)
+              Container (FRAME)
+                D (TEXT) -> D
+              Text (FRAME)
+                David (TEXT) -> David
+              Container (FRAME)
+                Button (FRAME)
+                  $5 (TEXT) -> $5
+                Button (FRAME)
+                  $10 (TEXT) -> $10
+                Button (FRAME)
+                  $15 (TEXT) -> $15
+                Button (FRAME)
+                  $20 (TEXT) -> $20
+              Container (FRAME)
+                Number Input (FRAME)
+                  0 (TEXT) -> 0
+                $ (TEXT) -> $
+            Container (FRAME)
+              Container (FRAME)
+                S (TEXT) -> S
+              Text (FRAME)
+                Sunny (TEXT) -> Sunny
+              Container (FRAME)
+                Button (FRAME)
+                  $5 (TEXT) -> $5
+                Button (FRAME)
+                  $10 (TEXT) -> $10
+                Button (FRAME)
+                  $15 (TEXT) -> $15
+                Button (FRAME)
+                  $20 (TEXT) -> $20
+              Container (FRAME)
+                Number Input (FRAME)
+                  0 (TEXT) -> 0
+                $ (TEXT) -> $
+          Container:margin (FRAME)
+            Container (FRAME)
+              Text (FRAME)
+                Tổng (TEXT) -> Tổng
+              Text (FRAME)
+                $0 (TEXT) -> $0
+      payment (FRAME)
+        PHƯƠNG THỨC THANH TOÁN (TEXT) -> PHƯƠNG THỨC THANH TOÁN
+        payment-grid (FRAME)
+          row-1 (FRAME)
+            Payment methods (INSTANCE)
+              Zelle (INSTANCE)
+              Zelle (TEXT) -> Zelle
+            Payment methods (INSTANCE)
+              Venmo (INSTANCE)
+              Zelle (TEXT) -> Venmo
+            Payment methods (INSTANCE)
+              Cash App (INSTANCE)
+              Zelle (TEXT) -> Cash App
+          row-2 (FRAME)
+            Payment methods (INSTANCE)
+              Apple Cash (INSTANCE)
+              Zelle (TEXT) -> Apple Cash
+            Payment methods (INSTANCE)
+              Paypal (INSTANCE)
+              Zelle (TEXT) -> Paypal
+            Payment methods (INSTANCE)
+              VLINKPAY (INSTANCE)
+              Zelle (TEXT) -> VLINKPAY
+      copy-info (FRAME)
+  footer (FRAME)
+    Button (FRAME)
+      Next  (TEXT) -> chọn phương thức thanh toán
+    skip (FRAME)
+      QUAY LẠI (TEXT) -> QUAY LẠI
