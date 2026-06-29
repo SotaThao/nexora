@@ -1,11 +1,19 @@
 /** Homepage section component */
 import { useNavigate } from 'react-router-dom'
 import { useHomePageBridge } from '../context/HomePageBridgeContext'
+import { useTranslation } from '../../../contexts/LanguageContext'
 import LucideIcon from '../ui/LucideIcon'
+
+const VIDEO_IDS: Record<string, string> = {
+  en: 'ghegM-w3NAM',
+  vi: 'SCMEBiQHIsk',
+}
 
 export default function HomePageVideoSection() {
   const navigate = useNavigate()
   const { hp, planCta, onLogout } = useHomePageBridge()
+  const { currentLanguage } = useTranslation()
+  const videoId = VIDEO_IDS[currentLanguage] ?? VIDEO_IDS.en
 
   return (
     <>
@@ -29,7 +37,7 @@ export default function HomePageVideoSection() {
                 <span className="text-xs mt-1 max-w-sm text-center" data-i18n="vt-start-sub">Walk through instant peer QR routing, Google ratings optimization, and B2B workflows.</span>
               </div>
               
-              <iframe allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen className="w-full h-full absolute inset-0" frameBorder="0" id="intro-video-iframe" src="https://www.youtube.com/embed/ghegM-w3NAM?autoplay=0&amp;loop=1&amp;playlist=ghegM-w3NAM"></iframe>
+              <iframe allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen className="w-full h-full absolute inset-0" frameBorder="0" id="intro-video-iframe" src={`https://www.youtube.com/embed/${videoId}?autoplay=0&loop=1&playlist=${videoId}`}></iframe>
             </div>
           </div>
         </section>
