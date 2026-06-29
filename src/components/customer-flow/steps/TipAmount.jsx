@@ -254,26 +254,20 @@ export default function TipAmount({
             </div>
 
             <div className="flex gap-4 items-center">
-              {/* QR Code */}
-              {qrCodeVal ? (
-                <img src={qrCodeVal} className="w-24 h-24 rounded-xl border border-black/5 bg-white p-1 shadow-sm shrink-0 object-contain" alt="QR Code" />
-              ) : (
-                <div className="w-24 h-24 rounded-xl border border-black/5 bg-white flex flex-col items-center justify-center shadow-sm shrink-0">
-                  <span className="text-[10px] text-nexoraSubtle font-medium">QR CODE</span>
-                </div>
-              )}
+              {/* Symbolic QR Code */}
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=VLK:0x3f9A8b2C1d4E5f6A7B8C9D0E1F2A3B4C5D6E7F8&color=047857" className="w-24 h-24 rounded-xl border border-[#A7F3D0] bg-white p-1.5 shadow-sm shrink-0 object-contain" alt="QR Code" />
 
               {/* Address Info */}
               <div className="flex-1 flex flex-col gap-1.5 overflow-hidden">
                 <span className="text-[11px] font-medium text-[#059669] opacity-80">
                   {currentLanguage === 'vi' ? 'Địa chỉ ví' : 'Wallet Address'}
                 </span>
-                <span className="text-[13px] font-black text-nexoraText break-all leading-tight">
-                  {accountVal || 'N/A'}
+                <span className="text-[12px] font-bold text-nexoraText break-all leading-tight">
+                  VLK:0x3f9A8b2C1d4E5f6A7B8C9D0E1F2A3B4C5D6E7F8
                 </span>
                 <button 
                   onClick={() => {
-                    navigator.clipboard.writeText(accountVal || getRecipientName());
+                    navigator.clipboard.writeText("VLK:0x3f9A8b2C1d4E5f6A7B8C9D0E1F2A3B4C5D6E7F8");
                     showToast(t('common.copied') || 'Copied!', 'success');
                   }}
                   className="mt-1 flex items-center justify-center gap-1.5 w-full bg-white border border-[#A7F3D0] text-[#059669] py-1.5 rounded-xl text-[12px] font-bold shadow-sm hover:bg-[#D1FAE5] transition-colors"
@@ -289,11 +283,11 @@ export default function TipAmount({
           <div className="p-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-[12px] text-[#475569] text-[12px] font-medium leading-relaxed">
             {currentLanguage === 'vi' ? (
               <>
-                (1) Quét QR hoặc copy địa chỉ ví &middot; (2) Mở VLinkPay &amp; chuyển <strong>${activeTipAmount.toFixed(2)}</strong> &middot; (3) Sau đó nhấn xác nhận bên dưới
+                (1) Quét QR hoặc copy địa chỉ ví &middot; (2) Mở ví điện tử của bạn và chuyển <strong>${activeTipAmount.toFixed(2)}</strong> &middot; (3) Xác nhận đã chuyển
               </>
             ) : (
               <>
-                (1) Scan QR or copy wallet address &middot; (2) Open VLinkPay &amp; send <strong>${activeTipAmount.toFixed(2)}</strong> &middot; (3) Then click confirm below
+                (1) Scan QR or copy wallet address &middot; (2) Open your e-wallet and send <strong>${activeTipAmount.toFixed(2)}</strong> &middot; (3) Confirm below
               </>
             )}
           </div>
