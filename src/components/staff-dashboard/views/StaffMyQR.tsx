@@ -275,14 +275,13 @@ export default function StaffMyQR() {
   }, [copyText, staffCode])
 
   const handleShareReferral = useCallback(async () => {
-    if (!staffLink) {
+    if (!staffCode) {
       showToast(t('components.staff_dashboard.views.StaffMyQR.staffCodeUnavailable'), 'error')
       return
     }
 
     try {
       const result = await shareUrl({
-        url: staffLink,
         title: t('staff_dashboard.qr.share'),
         text: staffCode,
       })
@@ -293,7 +292,7 @@ export default function StaffMyQR() {
     } catch {
       showToast(t('components.staff_dashboard.views.StaffMyQR.shareFailed'), 'error')
     }
-  }, [staffCode, staffLink, showToast, t])
+  }, [staffCode, showToast, t])
 
   const handleCopyTipUrl = useCallback(
     (tipUrl: string) => {
@@ -661,16 +660,6 @@ export default function StaffMyQR() {
                   title={t('staff_dashboard.qr.copy_link')}
                 >
                   <Copy className="h-3.5 w-3.5" />
-                </button>
-              </div>
-              <div className="mt-3 space-y-2">
-                <button
-                  type="button"
-                  onClick={handleShareReferral}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-nexoraElectric to-nexoraViolet py-3 text-sm font-extrabold text-white transition hover:opacity-90"
-                >
-                  <Share2 className="h-4 w-4" />
-                  {t('staff_dashboard.qr.share')}
                 </button>
               </div>
             </>

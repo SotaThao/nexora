@@ -537,13 +537,15 @@ export default function TouchpointsView({
                         <h3 className="font-extrabold text-sm text-nexoraText leading-snug truncate" title={point.name}>
                           {point.name}
                         </h3>
-                        <IconButton 
-                          label={t('common.delete')} 
-                          onClick={() => setDeleteConfirmId(point.id)} 
-                          className="text-nexoraDanger hover:opacity-85 hover:bg-nexoraDanger/10 p-1 rounded transition shrink-0 h-9 w-9"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </IconButton>
+                        {point.type !== 'FrontDesk' && point.slug !== 'master-store' && (
+                          <IconButton 
+                            label={t('common.delete')} 
+                            onClick={() => setDeleteConfirmId(point.id)} 
+                            className="text-nexoraDanger hover:opacity-85 hover:bg-nexoraDanger/10 p-1 rounded transition shrink-0 h-9 w-9"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </IconButton>
+                        )}
                       </div>
                       <div className="flex items-center gap-1.5 min-w-0">
                         <p className="text-[9.5px] font-mono text-nexoraSubtle select-all truncate flex-grow">

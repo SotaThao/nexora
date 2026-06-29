@@ -11,7 +11,6 @@ import ReportsView from '../views/ReportsView'
 import SettingsView from '../../SettingsView'
 import AnalyticsView from '../../AnalyticsView'
 import SupportView from '../../SupportView'
-import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3'
 import ComingSoon from '../views/ComingSoon'
 import ManagePlanView from '../views/ManagePlanView'
 import StaffDetailView from '../../StaffDetailView'
@@ -312,18 +311,7 @@ export function SettingsRoute() {
 }
 
 export function SupportRoute() {
-  const { currentLanguage } = useTranslation()
-  const recaptchaKey = import.meta.env.VITE_RECAPTCHA_KEY
-
-  if (!recaptchaKey) {
-    return <SupportView recaptchaEnabled={false} />
-  }
-
-  return (
-    <GoogleReCaptchaProvider reCaptchaKey={recaptchaKey} language={currentLanguage}>
-      <SupportView recaptchaEnabled />
-    </GoogleReCaptchaProvider>
-  )
+  return <SupportView />
 }
 
 export function SubscriptionsRoute() {
