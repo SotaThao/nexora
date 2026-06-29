@@ -4,7 +4,9 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { useEcosystemSignIn, useEcosystems } from '../../../data/hooks/useEcosystem'
 import {
   buildEcosystemCatalog,
+  closeWindowIfOpen,
   isComingSoonEcosystem,
+  isValidEcosystemRedirectUrl,
   openUrlInNewTab,
   openWindowOrFallback,
   updateWindowUrl,
@@ -55,24 +57,30 @@ export default function HeaderEcosystem() {
     if (isComingSoonEcosystem(ecosystem)) return
 
     if (!isAuthenticated) {
-      openUrlInNewTab(ecosystem.url)
+      if (isValidEcosystemRedirectUrl(ecosystem.url)) {
+        openUrlInNewTab(ecosystem.url)
+      }
       return
     }
+
+    if (!ecosystem.id) return
 
     setSelectedName(ecosystem.name)
     const newTab = openWindowOrFallback('about:blank')
 
-    if (!newTab) {
-      setSelectedName(null)
-      openUrlInNewTab(ecosystem.url)
-      return
-    }
-
     try {
-      const response = await signInMutation.mutateAsync({ name: ecosystem.brandKey })
-      updateWindowUrl(newTab, response.redirectUrl || ecosystem.url)
+      const response = await signInMutation.mutateAsync({ id: ecosystem.id })
+      if (isValidEcosystemRedirectUrl(response.redirectUrl)) {
+        if (newTab && !newTab.closed) {
+          updateWindowUrl(newTab, response.redirectUrl)
+        } else {
+          openUrlInNewTab(response.redirectUrl)
+        }
+        return
+      }
+      closeWindowIfOpen(newTab)
     } catch {
-      updateWindowUrl(newTab, ecosystem.url)
+      closeWindowIfOpen(newTab)
     } finally {
       setSelectedName(null)
     }
