@@ -74,80 +74,80 @@ export default function SuccessPayment({
 
   return (
     <div className="flex flex-col h-full animate-fadeIn pb-4">
-      <div className="flex-grow space-y-4">
+      <div className="flex-grow space-y-3 pb-2">
         
         {/* Success Banner */}
-        <div className="flex items-center gap-3 animate-pop bg-white rounded-xl border border-slate-100 shadow-sm px-4 py-3">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-md shadow-emerald-200 shrink-0">
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
+        <div className="flex items-center gap-3 animate-pop bg-white rounded-xl border border-slate-100 shadow-sm px-3 py-2">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-md shadow-emerald-200 shrink-0">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
           </div>
           <div>
-            <h1 className="text-lg font-black text-slate-800">Tip Sent! 🎉</h1>
-            <p className="text-xs text-slate-400">{currentLanguage === 'vi' ? 'Cảm ơn sự hào phóng của bạn' : 'Thank you for your generosity!'}</p>
+            <h1 className="text-base font-black text-slate-800">Tip Sent! 🎉</h1>
+            <p className="text-[11px] text-slate-400">{currentLanguage === 'vi' ? 'Cảm ơn sự hào phóng của bạn' : 'Thank you for your generosity!'}</p>
           </div>
         </div>
 
         {/* Tip Summary Box */}
-        <div className="bg-white border border-nexoraBorder rounded-[16px] p-4 shadow-sm">
+        <div className="bg-white border border-nexoraBorder rounded-[14px] p-3 shadow-sm">
           {isMulti ? (
             <>
-              <div className="flex items-center gap-3 border-b border-nexoraBorder pb-3 mb-3">
-                <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white font-extrabold text-sm shrink-0 shadow-sm">
+              <div className="flex items-center gap-2.5 border-b border-nexoraBorder pb-2 mb-2">
+                <div className="w-7 h-7 rounded-full bg-orange-500 flex items-center justify-center text-white font-extrabold text-xs shrink-0 shadow-sm">
                   {bizName.charAt(0)}
                 </div>
                 <div>
-                  <h4 className="font-extrabold text-[13px] text-nexoraText leading-tight">{bizName}</h4>
-                  <p className="text-[11px] text-nexoraSubtle font-medium">{selectedStaffMembers.map(s => s.nickname).join(', ')}</p>
+                  <h4 className="font-extrabold text-[12px] text-nexoraText leading-tight">{bizName}</h4>
+                  <p className="text-[10px] text-nexoraSubtle font-medium truncate max-w-[200px]">{selectedStaffMembers.map(s => s.nickname).join(', ')}</p>
                 </div>
               </div>
-              <div className="space-y-2.5">
+              <div className="space-y-1.5">
                 {selectedStaffMembers.map(member => {
                   const selTip = selectedTips[member.id];
                   const tipAmt = selTip === 'custom' ? Number(customTips[member.id]) || 0 : selTip || 0;
                   return (
-                    <div key={member.id} className="flex justify-between items-center">
+                    <div key={member.id} className="flex justify-between items-center h-[32px]">
                       <div className="flex items-center gap-2">
                         {member.avatar ? (
-                          <img src={member.avatar} className="w-6 h-6 rounded-full border border-nexoraBorder" />
+                          <img src={member.avatar} className="w-5 h-5 rounded-full border border-nexoraBorder" />
                         ) : (
-                          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-tr from-[#2B59FF] to-[#8E4DF8] text-[9px] font-extrabold text-white">
+                          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-tr from-[#2B59FF] to-[#8E4DF8] text-[9px] font-extrabold text-white">
                             {member.nickname.charAt(0)}
                           </div>
                         )}
-                        <span className="text-xs font-bold text-nexoraText">{member.nickname}</span>
+                        <span className="text-[11px] font-bold text-nexoraText">{member.nickname}</span>
                       </div>
-                      <span className="text-xs font-extrabold text-nexoraText">${tipAmt.toFixed(2)}</span>
+                      <span className="text-[11px] font-extrabold text-nexoraText">${tipAmt.toFixed(2)}</span>
                     </div>
                   );
                 })}
               </div>
             </>
           ) : (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
               {selectedStaffMembers[0].avatar ? (
-                <img src={selectedStaffMembers[0].avatar} className="w-10 h-10 rounded-full border border-nexoraBorder" />
+                <img src={selectedStaffMembers[0].avatar} className="w-8 h-8 rounded-full border border-nexoraBorder" />
               ) : (
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-[#2B59FF] to-[#8E4DF8] text-xs font-extrabold text-white">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-tr from-[#2B59FF] to-[#8E4DF8] text-[11px] font-extrabold text-white">
                   {selectedStaffMembers[0].nickname.charAt(0)}
                 </div>
               )}
               <div className="flex-1">
-                <h4 className="font-extrabold text-[13px] text-nexoraText leading-tight">{selectedStaffMembers[0].fullName}</h4>
-                <p className="text-[11px] text-nexoraSubtle font-medium">{selectedStaffMembers[0].position}</p>
+                <h4 className="font-extrabold text-[12px] text-nexoraText leading-tight">{selectedStaffMembers[0].fullName}</h4>
+                <p className="text-[10px] text-nexoraSubtle font-medium">{selectedStaffMembers[0].position}</p>
               </div>
             </div>
           )}
 
-          <div className="flex justify-between items-end mt-4 pt-4 border-t border-dashed border-nexoraBorder">
-            <div>
-              <span className="block text-[10px] font-bold text-nexoraSubtle uppercase tracking-wider mb-1">TOTAL TIP</span>
-              <span className="text-[20px] font-black text-emerald-600">${activeTipAmount.toFixed(2)}</span>
+          <div className="flex justify-between items-end mt-3 pt-3 border-t border-dashed border-nexoraBorder">
+            <div className="flex flex-col">
+              <span className="block text-[9px] font-bold text-nexoraSubtle uppercase tracking-wider mb-0.5">TOTAL TIP</span>
+              <span className="text-[16px] font-black text-emerald-600 leading-none">${activeTipAmount.toFixed(2)}</span>
             </div>
-            <div className="flex items-center gap-1.5 bg-nexoraCanvas/50 border border-nexoraBorder px-2.5 py-1.5 rounded-lg shadow-sm">
+            <div className="flex items-center gap-1.5 bg-nexoraCanvas/50 border border-nexoraBorder px-2 py-1 rounded-[6px] shadow-sm">
               {WalletLogos[walletKey]}
-              <span className="text-[11px] font-bold text-nexoraText">{selectedWallet}</span>
+              <span className="text-[10px] font-bold text-nexoraText">{selectedWallet}</span>
             </div>
           </div>
         </div>
@@ -185,7 +185,10 @@ export default function SuccessPayment({
             ))}
           </div>
 
-          <div className="flex flex-wrap gap-2 pt-2">
+          <div className="flex gap-2 pt-2 pb-1 overflow-x-auto whitespace-nowrap no-scrollbar" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+            <style dangerouslySetInnerHTML={{__html: `
+              .no-scrollbar::-webkit-scrollbar { display: none; }
+            `}} />
             {(rating >= 4 ? positiveTagKeys : negativeTagKeys).map(key => {
               const tagText = rating >= 4 
                 ? t(`customer.tags_positive.${key}`) 
@@ -196,7 +199,7 @@ export default function SuccessPayment({
                   key={key}
                   type="button"
                   onClick={() => handleTagToggle(key)}
-                  className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all flex items-center gap-1.5 border ${
+                  className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-bold transition-all flex items-center gap-1.5 border h-[32px] ${
                     isSelected 
                       ? (rating >= 4 ? 'bg-yellow-100 text-yellow-800 border-yellow-300' : 'bg-red-100 text-red-800 border-red-300')
                       : 'bg-white text-nexoraSubtle border-nexoraBorder hover:bg-nexoraCanvas'
@@ -213,20 +216,19 @@ export default function SuccessPayment({
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 placeholder={currentLanguage === 'vi' ? 'Nhập nhận xét hoặc chọn gợi ý bên trên...' : 'Tell us more (optional)'}
-                className="w-full text-sm text-slate-700 border border-slate-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:border-nexoraBrand placeholder-slate-300 transition"
-                rows="2"
+                className="w-full text-[13px] text-slate-700 border border-slate-200 rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/10 placeholder-slate-300 transition-all duration-200 min-h-[52px] focus:min-h-[96px]"
               />
           </div>
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex gap-2 pt-2">
-        <div className="relative group flex-1">
-          <div className="absolute -inset-1 bg-gradient-to-r from-nexoraBrand to-[#16b7ff] rounded-full blur-sm opacity-50 group-hover:opacity-70 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
+      {/* Action Buttons (Sticky Footer) */}
+      <div className="absolute left-0 right-0 bottom-0 z-50 grid grid-cols-[1fr_88px] gap-3 px-4 pt-3 bg-white/94 backdrop-blur-md border-t border-slate-200/80 shadow-[0_-10px_30px_rgba(15,23,42,0.08)]" style={{ paddingBottom: 'calc(16px + env(safe-area-inset-bottom))' }}>
+        <div className="relative group">
+          <div className="absolute -inset-1 bg-gradient-to-r from-nexoraBrand to-[#16b7ff] rounded-[18px] blur-sm opacity-50 group-hover:opacity-70 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
           <button
             onClick={handleSubmitFeedback}
-            className="relative w-full flex items-center justify-center gap-1.5 bg-gradient-to-r from-nexoraBrand to-[#4f46e5] hover:bg-nexoraBrand/90 text-white font-extrabold text-[13px] py-3 px-4 rounded-full shadow-md transition-all duration-300 active:scale-95"
+            className="relative w-full flex items-center justify-center gap-1.5 bg-gradient-to-r from-nexoraBrand to-[#4f46e5] hover:bg-nexoraBrand/90 text-white font-extrabold text-[13px] py-3.5 px-4 rounded-[16px] shadow-[0_10px_24px_rgba(79,70,229,0.25)] transition-all duration-300 active:scale-95 h-[52px]"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
             {currentLanguage === 'vi' ? 'Gửi đánh giá' : 'Submit review'}
@@ -238,7 +240,7 @@ export default function SuccessPayment({
             if (rating >= 4) setStep('google_yelp_review');
             else setStep('final_done');
           }}
-          className="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-nexoraBrand text-[13px] font-extrabold rounded-full shadow-sm border border-slate-200/80 transition-all duration-300 active:scale-95"
+          className="w-full h-[52px] bg-[#eef2f7] hover:bg-[#e2e8f0] text-slate-600 hover:text-nexoraBrand text-[13px] font-extrabold rounded-[16px] transition-all duration-300 active:scale-95"
         >
           {currentLanguage === 'vi' ? 'Bỏ qua' : 'Skip'}
         </button>
