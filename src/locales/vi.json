@@ -1933,7 +1933,7 @@
             "adultDob": "Bạn phải đủ 18 tuổi.",
             "phone": "Vui lòng nhập số điện thoại hợp lệ.",
             "email": "Vui lòng nhập địa chỉ email hợp lệ.",
-            "emailOrPhone": "Vui lòng nhập email hoặc số điện thoại hợp lệ.",
+            "emailOrPhone": "Nhập email hợp lệ hoặc số điện thoại Mỹ (10 chữ số, ví dụ: john@gmail.com hoặc 4085551234).",
             "url": "Nhập URL đầy đủ, bắt đầu bằng http:// hoặc https://.",
             "postalCode": "Vui lòng nhập mã bưu chính hợp lệ.",
             "venmo": "Nhập tên Venmo hợp lệ, bắt đầu bằng @.",

@@ -4,6 +4,7 @@ import { useNotification } from '../../../contexts/NotificationContext'
 import { parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
 import { serializeBankWireAccount } from '../../payout/bankWireAccount'
 import { captureQrImage } from '../../../utils/qrCode'
+import { getPayoutValidationMessage } from '../../payout/validatePayoutAccount'
 
 const normalizePhone = (raw) => {
   if (!raw) return ''
@@ -657,6 +658,13 @@ export default function useStaffRegistration({ inviteData }) {
       setModalError(t('components.staff_registration.hooks.useStaffRegistration.thisFieldIsRequired'))
       return
     }
+
+    const validationMessage = getPayoutValidationMessage(t, editingMethod, editValue)
+    if (validationMessage) {
+      setModalError(validationMessage)
+      return
+    }
+
     setPayouts(prev => ({
       ...prev,
       [editingMethod]: {

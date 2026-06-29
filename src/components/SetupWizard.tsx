@@ -44,10 +44,11 @@ export default function SetupWizard() {
     navigate('/dashboard')
   }
 
-  const wizard = useSetupWizard({ 
-    initialBusinessInfo: ssoPrefillData, 
-    onBackToLogin: handleBackToLogin, 
-    hasKyb: isKyb 
+  const wizard = useSetupWizard({
+    initialBusinessInfo: ssoPrefillData,
+    onBackToLogin: handleBackToLogin,
+    hasKyb: isKyb,
+    hasCompletedOnboarding: session?.hasCompletedOnboarding === true,
   })
 
   const personalWizard = usePersonalSetupWizard({
