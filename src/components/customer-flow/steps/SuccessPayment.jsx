@@ -185,10 +185,7 @@ export default function SuccessPayment({
             ))}
           </div>
 
-          <div className="flex gap-2 pt-2 pb-1 overflow-x-auto whitespace-nowrap no-scrollbar" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
-            <style dangerouslySetInnerHTML={{__html: `
-              .no-scrollbar::-webkit-scrollbar { display: none; }
-            `}} />
+          <div className="flex flex-wrap gap-2 pt-2 pb-1">
             {(rating >= 4 ? positiveTagKeys : negativeTagKeys).map(key => {
               const tagText = rating >= 4 
                 ? t(`customer.tags_positive.${key}`) 
