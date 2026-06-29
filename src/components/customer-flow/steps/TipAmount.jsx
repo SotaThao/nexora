@@ -162,7 +162,7 @@ export default function TipAmount({
             </div>
           )}
         </div>
-      </div>
+      </>
     );
   };
 
