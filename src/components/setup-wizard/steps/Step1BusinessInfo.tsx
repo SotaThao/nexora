@@ -140,7 +140,7 @@ export default function Step1BusinessInfo({
               </div>
             </label>
             <div className="relative">
-              <MapPin className="absolute left-3.5 top-3.5 w-4 h-4 text-nexoraSubtle" />
+              <MapPin className="absolute left-3.5 top-3.5 w-4 h-4 text-nexoraSubtle z-10 pointer-events-none" />
               <input
                 type="text"
                 disabled={isSsoLocked}
@@ -191,7 +191,7 @@ export default function Step1BusinessInfo({
             <div>
               <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">{renderLabel(t('setup.store_website'))}</label>
               <div className="relative">
-                <Globe className="absolute left-3.5 top-3.5 w-4 h-4 text-nexoraSubtle" />
+                <Globe className="absolute left-3.5 top-3.5 w-4 h-4 text-nexoraSubtle z-10 pointer-events-none" />
                 <input
                   type="url"
                   disabled={isSsoLocked}

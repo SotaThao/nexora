@@ -56,24 +56,34 @@ export default function StaffSidebar({ activeScreen, onNavigate, onLogout, isOpe
         {isProfileExpanded && (
           <div className="mt-3.5 pt-3 border-t border-white/5 space-y-1 animate-fadeIn">
             {[
-              { tab: 'account', labelKey: 'staff_dashboard.nav.profile_account' },
-              { tab: 'kyc', labelKey: 'staff_dashboard.nav.profile_kyc' },
-            ].map(({ tab, labelKey }) => {
-              const isSubActive = activeScreen === 'profile'
+              { tab: 'account', labelKey: 'staff_dashboard.nav.profile_account', disabled: false },
+              { tab: 'kyc', labelKey: 'staff_dashboard.nav.profile_kyc', disabled: true },
+            ].map(({ tab, labelKey, disabled }) => {
+              const isSubActive = activeScreen === 'profile' && tab === 'account'
               return (
                 <button
                   key={tab}
                   type="button"
+                  disabled={disabled}
+                  aria-disabled={disabled || undefined}
                   onClick={() => {
+                    if (disabled) return
                     onNavigate('profile', { tab })
                     if (isMobile && onClose) onClose()
                   }}
                   className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
-                    isSubActive ? 'text-brandCyan font-extrabold' : 'text-white/75 hover:bg-white/5 hover:text-white'
+                    disabled
+                      ? 'cursor-not-allowed text-white/40 opacity-60'
+                      : isSubActive
+                        ? 'text-brandCyan font-extrabold'
+                        : 'text-white/75 hover:bg-white/5 hover:text-white'
                   }`}
                 >
                   <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
-                  <span>{t(labelKey)}</span>
+                  <span>
+                    {t(labelKey)}
+                    {disabled ? ` (${t('common.coming_soon')})` : ''}
+                  </span>
                 </button>
               )
             })}

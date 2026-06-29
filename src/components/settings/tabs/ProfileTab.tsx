@@ -25,7 +25,7 @@ import {
   X,
   QrCode
 } from 'lucide-react'
-import { isValidEmail, isValidPhone } from '../../../utils/validation'
+import { validatePayoutAccount } from '../../payout/validatePayoutAccount'
 import CountryCodeSelect, { formatNationalNumber, parsePhone } from '../../CountryCodeSelect'
 import CameraCapture from '../../ui/CameraCapture'
 import {
@@ -72,20 +72,6 @@ const PayoutLogos = {
     <img src="/assets/vlinkpay-logo.png" alt="VLINKPAY Logo" className="h-[18px] w-[18px] object-contain" />
   ),
 }
-
-const validatePayoutAccount = (method, input) => {
-  const account = String(input || '').trim()
-  if (!account) return 'required'
-
-  if (method === 'zelle') return isValidEmail(account) || isValidPhone(account) ? '' : 'emailOrPhone'
-  if (method === 'paypal') return isValidEmail(account) ? '' : 'email'
-  if (method === 'venmo') return /^@[A-Za-z0-9_]{2,30}$/.test(account) ? '' : 'venmo'
-  if (method === 'cashapp') return /^\$[A-Za-z][A-Za-z0-9_]{1,19}$/.test(account) ? '' : 'cashapp'
-  if (method === 'applecash') return isValidPhone(account) ? '' : 'phone'
-  return account.length >= 3 ? '' : 'invalid'
-}
-
-const KYB_EDITABLE_STATUSES = new Set(['basic', 'kyb_rejected', 'rejected'])
 
 export default function ProfileTab({
   profile,

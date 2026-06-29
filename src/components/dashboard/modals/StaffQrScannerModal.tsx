@@ -1,21 +1,172 @@
-import { X, QrCode } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { X, QrCode, Loader2 } from 'lucide-react'
+import jsQR from 'jsqr'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { extractStaffSearchValueFromQrText } from '../../../utils/staffQrScan'
+
+type ScannerCameraState = 'loading' | 'ready' | 'permission_denied' | 'unavailable'
+
+type StaffQrScannerModalProps = {
+  open: boolean
+  scanTarget?: string | null
+  onClose: () => void
+  onScan: (value: string) => void
+}
 
 function StaffQrScannerModal({
   open,
   scanTarget,
   onClose,
-  scanProfiles = [],
-  onScanProfile,
-}) {
+  onScan,
+}: StaffQrScannerModalProps) {
   const { t } = useTranslation()
+  const [cameraState, setCameraState] = useState<ScannerCameraState>('loading')
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const frameRef = useRef<number | null>(null)
+  const lastScanAtRef = useRef(0)
+  const hasScannedRef = useRef(false)
+  const onScanRef = useRef(onScan)
+  onScanRef.current = onScan
+
+  useEffect(() => {
+    if (!open) {
+      hasScannedRef.current = false
+      streamRef.current?.getTracks().forEach((track) => track.stop())
+      streamRef.current = null
+      if (frameRef.current != null) {
+        window.cancelAnimationFrame(frameRef.current)
+        frameRef.current = null
+      }
+      if (videoRef.current) {
+        videoRef.current.srcObject = null
+      }
+      setCameraState('loading')
+      return
+    }
+
+    let cancelled = false
+
+    const startCamera = async () => {
+      setCameraState('loading')
+
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setCameraState('unavailable')
+        return
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' } },
+          audio: false,
+        })
+
+        if (cancelled) {
+          stream.getTracks().forEach((track) => track.stop())
+          return
+        }
+
+        streamRef.current = stream
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream
+          await videoRef.current.play()
+        }
+        setCameraState('ready')
+      } catch (err: unknown) {
+        if (cancelled) return
+        const name = err instanceof DOMException ? err.name : ''
+        if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+          setCameraState('permission_denied')
+        } else {
+          setCameraState('unavailable')
+        }
+      }
+    }
+
+    startCamera()
+
+    return () => {
+      cancelled = true
+      streamRef.current?.getTracks().forEach((track) => track.stop())
+      streamRef.current = null
+      if (frameRef.current != null) {
+        window.cancelAnimationFrame(frameRef.current)
+        frameRef.current = null
+      }
+      if (videoRef.current) {
+        videoRef.current.srcObject = null
+      }
+    }
+  }, [open])
+
+  useEffect(() => {
+    if (!open || cameraState !== 'ready' || hasScannedRef.current) return
+
+    const video = videoRef.current
+    if (!video) return
+
+    if (!canvasRef.current) {
+      canvasRef.current = document.createElement('canvas')
+    }
+    const canvas = canvasRef.current
+    const context = canvas.getContext('2d', { willReadFrequently: true })
+    if (!context) return
+
+    let cancelled = false
+
+    const loop = () => {
+      if (cancelled || hasScannedRef.current) return
+      frameRef.current = window.requestAnimationFrame(loop)
+
+      const now = Date.now()
+      if (now - lastScanAtRef.current < 180) return
+      lastScanAtRef.current = now
+
+      if (!video.videoWidth || !video.videoHeight) return
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+      context.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+      const imageData = context.getImageData(0, 0, canvas.width, canvas.height)
+      const detected = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: 'attemptBoth',
+      })
+      if (!detected?.data) return
+
+      const parsed = extractStaffSearchValueFromQrText(detected.data)
+      if (!parsed) return
+
+      hasScannedRef.current = true
+      if (frameRef.current != null) {
+        window.cancelAnimationFrame(frameRef.current)
+        frameRef.current = null
+      }
+      onScanRef.current(parsed)
+    }
+
+    frameRef.current = window.requestAnimationFrame(loop)
+
+    return () => {
+      cancelled = true
+      if (frameRef.current != null) {
+        window.cancelAnimationFrame(frameRef.current)
+        frameRef.current = null
+      }
+    }
+  }, [cameraState, open])
 
   if (!open) return null
 
-  const [primaryProfile, ...secondaryProfiles] = scanProfiles
+  const cameraErrorMessage =
+    cameraState === 'permission_denied'
+      ? t('common.camera_permission_denied')
+      : cameraState === 'unavailable'
+        ? t('common.camera_not_available')
+        : ''
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
       <style>{`
         @keyframes scannerLaser {
           0% { top: 0%; opacity: 0.8; }
@@ -27,95 +178,63 @@ function StaffQrScannerModal({
         }
       `}</style>
 
-      <div className="bg-white border border-slate-100 rounded-3xl max-w-sm w-full p-6 text-center space-y-5 relative overflow-hidden text-slate-800 shadow-2xl animate-scaleUp">
-        {/* Close Button */}
+      <div className="relative w-full max-w-sm animate-scaleUp space-y-5 overflow-hidden rounded-3xl border border-slate-100 bg-white p-6 text-center text-slate-800 shadow-2xl">
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 text-slate-400 hover:text-slate-700 transition p-1.5 rounded-full hover:bg-slate-100"
+          className="absolute right-4 top-4 rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
           title="Close Scanner"
         >
           <X className="h-4 w-4" />
         </button>
 
-        {/* Header */}
         <div className="space-y-1 text-center">
           <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">
             {t('components.dashboard.modals.StaffQrScannerModal.scanQrCode')}
           </h3>
-          <p className="text-[10px] text-slate-500 font-medium text-center">
+          <p className="text-center text-[10px] font-medium text-slate-500">
             {scanTarget === 'staff'
-              ? (t('components.dashboard.modals.StaffQrScannerModal.scanNexoraPersonalId'))
-              : (t('components.dashboard.modals.StaffQrScannerModal.scanVlinkpayIdTo'))}
+              ? t('components.dashboard.modals.StaffQrScannerModal.scanNexoraPersonalId')
+              : t('components.dashboard.modals.StaffQrScannerModal.scanVlinkpayIdTo')}
           </p>
         </div>
 
-        {/* Scanning viewport */}
-        <div className="relative h-48 w-48 mx-auto rounded-2xl border-2 border-slate-100 bg-slate-50 overflow-hidden flex items-center justify-center shadow-inner">
-          {/* Corner brackets */}
-          <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-amber-500 rounded-tl-sm"></div>
-          <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-amber-500 rounded-tr-sm"></div>
-          <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-amber-500 rounded-bl-sm"></div>
-          <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-amber-500 rounded-br-sm"></div>
+        <div className="relative mx-auto flex h-64 w-64 items-center justify-center overflow-hidden rounded-2xl border-2 border-slate-100 bg-slate-50 shadow-inner">
+          <div className="absolute left-3 top-3 h-4 w-4 rounded-tl-sm border-l-2 border-t-2 border-amber-500" />
+          <div className="absolute right-3 top-3 h-4 w-4 rounded-tr-sm border-r-2 border-t-2 border-amber-500" />
+          <div className="absolute bottom-3 left-3 h-4 w-4 rounded-bl-sm border-b-2 border-l-2 border-amber-500" />
+          <div className="absolute bottom-3 right-3 h-4 w-4 rounded-br-sm border-b-2 border-r-2 border-amber-500" />
 
-          {/* QR icon background */}
-          <QrCode className="h-20 w-20 text-slate-300 opacity-80 animate-pulse" />
+          {cameraState === 'loading' && (
+            <Loader2 className="h-16 w-16 animate-spin text-amber-500" />
+          )}
 
-          {/* Laser line */}
-          <div className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-amber-500 to-transparent shadow-[0_0_8px_#f59e0b] animate-scannerLaser"></div>
+          <video
+            ref={videoRef}
+            playsInline
+            muted
+            className={`h-full w-full object-cover ${cameraState === 'ready' ? 'block' : 'hidden'}`}
+          />
+
+          {cameraState !== 'ready' && cameraState !== 'loading' && (
+            <QrCode className="h-16 w-16 animate-pulse text-slate-300 opacity-80" />
+          )}
+
+          {cameraState === 'ready' && (
+            <div className="animate-scannerLaser absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-amber-500 to-transparent shadow-[0_0_8px_#f59e0b]" />
+          )}
         </div>
 
-        {/* Helper Text */}
-        <p className="text-[10px] text-slate-500 font-medium max-w-xs mx-auto text-center">
-          {t('components.dashboard.modals.StaffQrScannerModal.pointTheCameraAt')}
+        <p className="mx-auto max-w-xs text-center text-[10px] font-medium text-slate-500">
+          {cameraState === 'loading'
+            ? t('common.camera_starting')
+            : cameraErrorMessage || t('components.dashboard.modals.StaffQrScannerModal.pointTheCameraAt')}
         </p>
 
-        {/* Quick simulation buttons */}
-        <div className="space-y-2 pt-2 border-t border-slate-100">
-          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block text-center">
-            {t('components.dashboard.modals.StaffQrScannerModal.simulateQrScan')}
-          </span>
-
-          <div className="flex flex-col gap-2">
-            {/* Standard Successful Scan button */}
-            <button
-              type="button"
-              onClick={() => primaryProfile && onScanProfile(primaryProfile.staffCode)}
-              disabled={!primaryProfile}
-              className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-colors shadow-sm"
-            >
-              {primaryProfile
-                ? t('components.dashboard.modals.StaffQrScannerModal.simulateProfileLabel', {
-                  name: primaryProfile.displayName,
-                  code: primaryProfile.staffCode,
-                })
-                : t('components.dashboard.modals.StaffQrScannerModal.simulateSuccessfulScan')}
-            </button>
-
-            {/* Additional quick options */}
-            <div className="grid grid-cols-2 gap-2">
-              {secondaryProfiles.map((profile) => (
-                <button
-                  key={profile.key}
-                  type="button"
-                  onClick={() => onScanProfile(profile.staffCode)}
-                  className="py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg text-[10px] font-bold transition-colors"
-                >
-                  {t('components.dashboard.modals.StaffQrScannerModal.simulateProfileLabel', {
-                    name: profile.displayName,
-                    code: profile.staffCode,
-                  })}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Cancel Button */}
         <button
           type="button"
           onClick={onClose}
-          className="w-full py-2 border border-slate-200 hover:bg-slate-50 text-slate-500 hover:text-slate-700 rounded-xl text-xs font-bold transition"
+          className="w-full rounded-xl border border-slate-200 py-2 text-xs font-bold text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
         >
           {t('components.dashboard.modals.StaffQrScannerModal.cancel')}
         </button>

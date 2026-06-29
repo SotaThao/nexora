@@ -255,6 +255,7 @@ export interface StaffBusinessLink {
   logoUrl: string | null
   role: string | null
   roleLabel: string | null
+  roleAtBusiness: string | null
   linkStatus: string | null
   linkStatusLabel: string | null
   linkedAt: string | null
@@ -282,6 +283,7 @@ export interface StaffBusinessTipQr {
   linkStatus: string | null
   linkStatusLabel: string | null
   roleLabel: string | null
+  roleAtBusiness: string | null
   logoUrl: string | null
   /** True when the business has no touchpoint data to build a tipping link. */
   tipLinkIncomplete?: boolean

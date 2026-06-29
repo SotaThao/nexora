@@ -37,6 +37,7 @@ export default function CustomerFlow() {
     handleSkipTip,
     handleConfirmTip,
     handleTrackExternalReview,
+    canSelectMultipleStaff,
   } = flow
 
   return (
@@ -127,6 +128,7 @@ export default function CustomerFlow() {
                   setSelectedTips={setSelectedTips}
                   customTips={customTips}
                   setCustomTips={setCustomTips}
+                  canSelectMultipleStaff={canSelectMultipleStaff}
                 />
               )}
 

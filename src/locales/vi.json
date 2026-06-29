@@ -52,7 +52,11 @@
     },
     "status": {
       "active": "Đang hoạt động",
-      "inactive": "Ngừng hoạt động"
+      "inactive": "Ngừng hoạt động",
+      "pending": "Đang chờ",
+      "rejected": "Đã từ chối",
+      "pending_approval": "Chờ duyệt",
+      "pending_unlink": "Chờ hủy liên kết"
     },
     "home": {
       "greeting_morning": "Chào buổi sáng, {name} 👋",
@@ -157,7 +161,7 @@
       "qr_unavailable_title": "Chưa có mã QR tip",
       "qr_unavailable_body": "Mã QR tip tại {business} chưa kích hoạt. Liên hệ chủ tiệm hoặc quét QR giới thiệu để liên kết.",
       "touchpoint_missing_title": "Chưa có đường link tip",
-      "touchpoint_missing_body": "Tiệm chưa cấu hình touchpoint nên chưa thể tạo link tip cá nhân của bạn. Vui lòng liên hệ {business} để hoàn tất thiết lập.",
+      "touchpoint_missing_body": "Tiệm chưa cấu hình trạm nên chưa thể tạo link tip cá nhân của bạn. Vui lòng liên hệ {business} để hoàn tất thiết lập.",
       "referral_unavailable_title": "Chưa có Staff ID",
       "referral_unavailable_body": "Mã QR giới thiệu cá nhân sẽ hiện khi hồ sơ staff được thiết lập xong. Vui lòng thử lại sau giây lát."
     },
@@ -235,8 +239,13 @@
     "update": "Cập nhật",
     "delete": "Xóa",
     "edit": "Sửa",
+    "view_detail": "Xem chi tiết",
+    "close": "Đóng",
     "copy": "Sao chép",
     "copied": "Đã sao chép!",
+    "camera_starting": "Đang mở camera...",
+    "camera_not_available": "Không tìm thấy camera trên thiết bị này.",
+    "camera_permission_denied": "Trình duyệt đã chặn quyền truy cập camera.",
     "loading": "Đang tải...",
     "processing": "Đang xử lý...",
     "saving": "Đang lưu...",
@@ -247,7 +256,7 @@
     "inactive_status": "Ngừng hoạt động",
     "yes": "Có",
     "no": "Không",
-    "tips_flow": "Tips Flow",
+    "tips_flow": "Cho phép Tip",
     "show_in_tips": "Hiện trong Tips",
     "hide_in_tips": "Ẩn trong Tips",
     "days": {
@@ -279,7 +288,7 @@
   },
   "login": {
     "title": "NEXORA TOUCH",
-    "gateway_sub": "Cổng định tuyến Phản hồi & Típ thông minh",
+    "gateway_sub": "Bộ lọc Phản hồi & Típ thông minh",
     "sso_integration_title": "Tích hợp VLINKPAY SSO:",
     "sso_integration_desc": "Bạn sẽ sử dụng tài khoản doanh nghiệp đã đăng ký tại hệ thống thanh toán VLINKPAY để đăng nhập nhanh.",
     "secure_access": "Truy Cập Bảo Mật",
@@ -304,7 +313,7 @@
   "setup": {
     "col_staff": "Nhân viên",
     "title_step_1": "Bước 1: Thiết Lập Cửa Hàng & Định Tuyến Đánh Giá",
-    "desc_step_1": "Cấu hình thông tin cơ bản của tiệm và các cổng định tuyến phản hồi thông minh.",
+    "desc_step_1": "Thiết lập hồ sơ tiệm cơ bản và định tuyến đánh giá thông minh.",
     "store_info_title": "Thông Tin Cửa Hàng",
     "required_badge": "* Bắt buộc",
     "store_name": "Tên Cửa Hàng *",
@@ -323,15 +332,15 @@
     "store_payment_title": "Phương thức nhận tiền của tiệm",
     "logo_hint": "Logo vuông (Tối đa 5MB)",
     "review_routing_title": "Định Tuyến Đánh Giá",
-    "review_routing_policy": "Châm ngôn: Khách hài lòng (4-5★) được đưa thẳng sang Google/Yelp. Khách chưa hài lòng (1-3★) sẽ được định tuyến gửi biểu mẫu đóng góp kín về Email quản trị dưới đây để xử lý kín.",
+    "review_routing_policy": "Chính sách: Khách hài lòng (4-5★) được đưa tới Google/Yelp. Khách chưa hài lòng (1-3★) gửi phản hồi riêng tư trực tiếp cho bạn qua email bên dưới.",
     "google_review_link": "Liên kết Đánh Giá Google (Tùy chọn)",
     "yelp_review_link": "Liên kết Đánh Giá Yelp (Tùy chọn)",
     "facebook_link": "Liên kết Facebook (Tùy chọn)",
     "feedback_email": "Email Nhận Góp Ý Kín (1-3★) (Tùy chọn)",
-    "title_step_2": "Bước 2: Quản Lý Nhân Viên & Điểm Chạm QR",
+    "title_step_2": "Bước 2: Quản Lý Nhân Viên & Mã QR",
     "desc_step_2": "Thêm thợ của bạn. Hệ thống sẽ tự động phát sinh mã QR tương ứng để dán tại ghế hoặc chia sẻ.",
     "add_staff_title": "Thêm Nhân Viên",
-    "linked_wallets": "Ví Nhận Tiền Liên Kết",
+    "linked_wallets": "Phương thức thanh toán",
     "staff_fullname": "Họ Tên Đầy Đủ (Nội bộ) *",
     "staff_fullname_placeholder": "Ví dụ: Mia Tran",
     "staff_displayname": "Tên hiển thị *",
@@ -351,18 +360,18 @@
     "wallet_cashapp_placeholder": "$cashtag",
     "wallet_vlinkpay": "VLINKPAY ID (Tùy chọn)",
     "add_staff_btn": "Thêm Nhân Viên",
-    "show_in_tips_flow": "Hiển thị trong Tips Flow",
+    "show_in_tips_flow": "Hiển thị trong Tips",
     "show_in_tips_flow_desc": "Nếu tắt, nhân viên này sẽ không hiển thị trong danh sách nhân viên của mã QR tổng.",
     "staff_directory_title": "Danh Sách Kỹ Thuật Viên",
     "total_staff_count": "Tổng số nhân sự: {count}",
     "staff_directory_empty": "Chưa có nhân viên nào được thêm. Vui lòng thêm phía bên trái.",
-    "qr_touchpoints_title": "Cấu Hình Điểm Chạm QR (Touch Points)",
+    "qr_touchpoints_title": "Danh mục trạm QR",
     "qr_touchpoints_desc": "Các mã QR dán tại ghế, quầy thanh toán hoặc in ở hóa đơn.",
-    "tp_name": "Tên Điểm Chạm *",
+    "tp_name": "Tên trạm *",
     "tp_name_placeholder": "Ví dụ: Service Chair 01...",
-    "tp_type": "Loại Điểm Chạm",
-    "add_tp_btn": "Thêm Điểm Chạm",
-    "active_tp_count": "{count} Điểm chạm hoạt động",
+    "tp_type": "Loại trạm",
+    "add_tp_btn": "Thêm trạm",
+    "active_tp_count": "{count} trạm đang hoạt động",
     "tp_lobby_default": "QR Sảnh Chờ / Tipping Chung",
     "tp_front_default": "Quầy Lễ Tân / Trạm Chính",
     "tp_personal_default": "QR Cá Nhân - {name}",
@@ -374,7 +383,7 @@
     "chk_business": "Cửa hàng: {name} ({industry})",
     "chk_routing": "Google/Yelp Định Tuyến: Đã liên kết",
     "chk_staff": "Nhân viên: {count} kỹ thuật viên liên kết ví",
-    "chk_touchpoints": "Điểm chạm: {count} điểm QR được tạo",
+    "chk_touchpoints": "Trạm: {count} mã QR đã tạo",
     "print_action": "In ấn",
     "launch_dashboard_btn": "Vào Bảng Điều Khiển",
     "errors": {
@@ -394,7 +403,7 @@
       "staff_phone_invalid": "Số điện thoại không hợp lệ.",
       "staff_payment_required": "Yêu cầu: Phải liên kết ít nhất 1 ví nhận tiền (Venmo, Cash App, Zelle, hoặc VLINKPAY).",
       "store_payment_required": "Yêu cầu: Phải liên kết ít nhất 1 ví nhận tiền cho cửa hàng (Venmo, Cash App, Zelle, hoặc VLINKPAY).",
-      "tp_name_required": "Tên điểm chạm là bắt buộc",
+      "tp_name_required": "Cần nhập tên trạm",
       "field_required": "Vui lòng nhập trường này.",
       "image_only": "Loại file không hợp lệ. Vui lòng chỉ tải lên file hình ảnh.",
       "user_not_merchant": "Người dùng không phải là merchant."
@@ -427,10 +436,14 @@
     "taking_photo": "Đang chụp ảnh..."
   },
   "dashboard": {
+    "action_required": "CẦN THAO TÁC",
+    "setup_payout_method_title": "Cài đặt Phương thức nhận tiền",
+    "setup_payout_method_desc": "Cài đặt phương thức nhận tiền để mở khóa tính năng tip nhiều thợ.",
+    "setup_payout_btn": "CÀI ĐẶT NHẬN TIỀN",
     "activity": {
       "station_scanned": "Quét Trạm {station}",
       "vip_nfc_tapped": "Chạm NFC VIP",
-      "five_star_routed": "Đánh giá 5★ định tuyến"
+      "five_star_routed": "Đánh giá 5★ đã gửi"
     },
     "sidebar": {
       "console_title": "NEXORA",
@@ -454,17 +467,17 @@
       "payments": "Thanh toán QR",
       "reviews": "Đánh Giá",
       "transactions": "Giao Dịch",
-      "touchpoints": "Quản Lý Điểm Chạm",
+      "touchpoints": "Trạm & Mã QR",
       "qr_nfc": "Thiết bị QR / NFC",
       "analytics": "Phân Tích",
       "settings": "Cài Đặt",
       "business_setting": "Cài đặt",
-      "kyb": "KYB",
+      "kyb": "Xác minh doanh nghiệp",
       "support": "Hỗ Trợ"
     },
     "header": {
       "search_placeholder": "Tìm thợ, bàn ghế, đánh giá...",
-      "add_tp": "Thêm Điểm Chạm",
+      "add_tp": "Thêm trạm mới",
       "ecosystem": "Hệ sinh thái",
       "ecosystem_loading": "Đang tải hệ sinh thái...",
       "no_ecosystem": "Không có hệ sinh thái nào",
@@ -485,7 +498,7 @@
       "avg_tip": "Típ Trung Bình",
       "total_reviews": "Tổng Đánh Giá",
       "vs_last_week": "so với tuần trước",
-      "no_comparison": "Chưa có dữ liệu kỳ trước",
+      "no_comparison": "Chưa có dữ liệu",
       "scans": "Lượt Quét QR/NFC",
       "reviews": "Lượt Đánh Giá",
       "avg_rating": "Đánh Giá Trung Bình",
@@ -496,13 +509,13 @@
       "google_reviews": "Đánh giá Google",
       "yelp_reviews": "Đánh giá Yelp",
       "staff_reviews": "Đánh giá {name}",
-      "response_rate": "Tỷ lệ Phản hồi",
+      "response_rate": "Tỷ lệ phản hồi đánh giá",
       "returning_customers": "Khách quay lại",
       "great": "Tuyệt vời!",
       "reviews_count": "{count} lượt đánh giá",
       "low_stars_filter": "3★ trở xuống",
       "avg_rating": "Đánh giá Trung bình",
-      "internal_feedback": "Phản hồi Nội bộ",
+      "internal_feedback": "Phản hồi riêng tư",
       "review_source": "Nguồn đánh giá",
       "star_rating": "Số sao đánh giá",
       "all_stars": "Tất cả sao",
@@ -529,7 +542,7 @@
       "rating_label": "Sao"
     },
     "top_touchpoints": {
-      "title": "Điểm Chạm Hiệu Quả Nhất",
+      "title": "Trạm hàng đầu",
       "manage": "Quản lý",
       "scans": "{count} quét",
       "conversion": "{pct}% chuyển đổi"
@@ -541,12 +554,12 @@
       }
     },
     "activity_log": {
-      "title": "Lịch Sử Hoạt Động Giao Dịch Gần Đây",
+      "title": "Giao dịch tip gần đây",
       "col_id": "Mã GD",
       "col_time": "Thời gian",
       "col_amount": "Số tiền",
       "col_staff": "Nhân viên",
-      "col_tp": "Điểm chạm",
+      "col_tp": "Trạm",
       "col_payment": "Phương thức",
       "col_status": "Trạng thái",
       "empty_activity": "Chưa có hoạt động giao dịch nào phát sinh.",
@@ -555,7 +568,7 @@
       "filter_date": "Thời gian",
       "filter_amount": "Số tiền",
       "filter_staff": "Nhân viên",
-      "filter_tp": "Điểm chạm",
+      "filter_tp": "Trạm",
       "filter_payment": "Phương thức",
       "filter_status": "Trạng thái",
       "preset_all": "Tất cả thời gian",
@@ -579,7 +592,7 @@
       "multi_staff_only": "Tip nhiều nhân viên",
       "single_staff_only": "Tip một nhân viên",
       "filter_search": "Tìm kiếm",
-      "search_placeholder": "Tìm mã GD, nhân viên, điểm chạm...",
+      "search_placeholder": "Tìm mã GD, nhân viên, trạm...",
       "modal_title": "Chi tiết giao dịch",
       "receipt_qr": "Mã QR biên nhận",
       "scan_to_view": "Quét để xem chi tiết hoặc hóa đơn khách hàng",
@@ -587,25 +600,23 @@
       "staff_code": "Mã Staff"
     },
     "modals": {
-      "add_tp_title": "Thêm Điểm Chạm Mới",
-      "tp_name_label": "Tên điểm chạm (Ví dụ: Ghế Manicure 05)",
+      "add_tp_title": "Thêm trạm mới",
+      "tp_name_label": "Tên trạm (vd. Ghế Manicure 05)",
       "tp_name_placeholder": "Ví dụ: Ghế Manicure 05",
       "device_id_label": "Serial thiết bị / Mã NFC",
       "device_id_placeholder": "Ví dụ: NFC-105, QR-Table-01",
       "tp_type_label": "Loại vị trí",
-      "add_btn": "Thêm Điểm Chạm",
-      "tp_name_required": "Vui lòng nhập tên điểm chạm.",
-      "tp_added_success": "Đã thêm điểm chạm \"{name}\" thành công!",
-      "tp_add_failed": "Thêm điểm chạm thất bại. Vui lòng thử lại.",
+      "add_btn": "Thêm trạm",
+      "tp_name_required": "Vui lòng nhập tên trạm.",
+      "tp_added_success": "Đã thêm trạm \"{name}\" thành công!",
+      "tp_add_failed": "Không thể thêm trạm. Vui lòng thử lại.",
       "view_qr_title": "Mã QR cho {name}",
       "view_qr_desc": "Khách hàng quét mã này để típ và viết đánh giá trực tiếp cho nhân viên được gán.",
       "assign_staff": "Gán nhân viên phục vụ:",
       "no_staff_assigned": "-- Không gán (Típ chung cho cửa hàng) --",
       "download_print_qr": "Tải Xuống QR In Ấn (PDF)",
       "print_qr": "In Mã QR",
-      "customer_view_test": "Thử Giao Diện Khách Quét ›",
-      "tp_name_placeholder": "Ví dụ: Ghế Manicure 05",
-      "device_id_label": "Serial thiết bị / Mã NFC"
+      "customer_view_test": "Thử Giao Diện Khách Quét ›"
     },
     "settings_panel": {
       "title": "Cấu Hình Hệ Thống Nexora",
@@ -616,19 +627,19 @@
       "address": "Địa chỉ",
       "google_review": "Đường dẫn Google Review",
       "yelp_review": "Đường dẫn Yelp Review",
-      "feedback_email": "Email nhận góp ý kín",
+      "feedback_email": "Email phản hồi riêng tư",
       "save_changes": "Lưu cấu hình",
       "settings_success": "Đã lưu cấu hình cài đặt hệ thống!"
     },
     "master_gateway": {
-      "title": "Cổng kết nối Master QR & NFC",
-      "subtitle": "Điểm chào đón khách hàng nhanh chóng và thuận tiện cho việc Típ & Review.",
-      "qr_title": "Mã QR Cửa Hàng (Master)",
-      "qr_desc": "Dán tại quầy lễ tân / tipping chung",
+      "title": "Mã QR & NFC của tiệm",
+      "subtitle": "Chia sẻ các mã QR này để nhận típ và đánh giá.",
+      "qr_title": "Mã QR tiệm",
+      "qr_desc": "Quầy lễ tân – tất cả kỹ thuật viên",
       "qr_body": "Đặt mã QR này tại quầy đón khách. Khách hàng quét mã này để chọn nhân viên phục vụ và để lại đánh giá.",
-      "nfc_title": "Thiết Bị NFC (Master)",
-      "nfc_desc": "Liên kết cấu hình chạm để típ & review",
-      "nfc_body": "Ghi đường dẫn URL này vào thiết bị NFC của tiệm. Khách hàng chỉ cần chạm điện thoại để truy cập nhanh cổng thanh toán.",
+      "nfc_title": "Thẻ NFC chạm",
+      "nfc_desc": "Liên kết Chạm-để-Tip",
+      "nfc_body": "Ghi URL này vào thẻ NFC để bàn. Khách chạm điện thoại để tip hoặc đánh giá ngay.",
       "btn_open": "Xem Mã QR",
       "btn_download": "Tải Mã QR",
       "btn_open_nfc": "Thử NFC Link",
@@ -642,32 +653,33 @@
       "status": "Trạng thái",
       "active": "Hoạt động",
       "inactive": "Tạm dừng",
-      "inactive_warning_title": "Điểm chạm ngưng hoạt động",
-      "inactive_warning_desc": "Điểm chạm QR này hiện đang tạm dừng hoạt động bởi cửa hàng.",
+      "inactive_warning_title": "Trạm ngưng hoạt động",
+      "inactive_warning_desc": "Trạm QR này hiện đang tạm dừng hoạt động bởi cửa hàng.",
       "delete_confirm_title": "Xác nhận xóa",
-      "delete_confirm": "Bạn có chắc chắn muốn xóa điểm chạm này? Thao tác này không thể hoàn tác.",
-      "total_touchpoints": "Tổng Điểm Chạm",
+      "delete_confirm": "Bạn có chắc muốn xóa trạm này? Hành động này không thể hoàn tác.",
+      "total_touchpoints": "Tổng số trạm",
       "active_nfc": "Trạm NFC Đang Hoạt Động",
       "total_scans": "Tổng Lượt Quét",
       "device_issues": "Sự Cố Thiết Bị"
     },
     "touchpoints": {
       "tabs": {
-        "stations": "Điểm Chạm QR",
+        "stations": "Trạm QR",
         "devices": "Thiết Bị Vật Lý"
       },
       "open_link": "Thử nghiệm luồng trạm",
       "empty_title": "Chưa có trạm QR nào",
-      "empty_desc": "Tạo touchpoint đầu tiên để bắt đầu nhận lượt quét và tiền tip.",
-      "toggle_enabled": "Đã bật touchpoint thành công.",
-      "toggle_disabled": "Đã tắt touchpoint thành công.",
+      "empty_desc": "Tạo trạm đầu tiên để bắt đầu nhận lượt quét và tip.",
+      "paper_qr_only": "Chỉ dùng QR in giấy",
+      "toggle_enabled": "Đã bật trạm thành công.",
+      "toggle_disabled": "Đã tắt trạm thành công.",
       "link_success": "Liên kết thiết bị thành công.",
       "unlink_success": "Hủy liên kết thiết bị thành công.",
       "no_matching_cards": "Không tìm thấy thiết bị phù hợp",
       "linked_to": "Đã liên kết với {{name}}",
       "unlink_btn": "Hủy liên kết",
       "unlink_confirm_title": "Xác nhận hủy liên kết",
-      "unlink_confirm_desc": "Hủy liên kết thiết bị \"{device}\" khỏi touchpoint \"{name}\"? Trạm sẽ chỉ dùng QR in giấy cho đến khi bạn liên kết thiết bị mới.",
+      "unlink_confirm_desc": "Hủy liên kết thiết bị \"{device}\" khỏi trạm \"{name}\"? Trạm sẽ chỉ dùng QR in giấy cho đến khi bạn liên kết thiết bị mới.",
       "link_device_btn": "Liên kết thiết bị",
       "link_device_required": "Vui lòng nhập mã thiết bị.",
       "hardware": {
@@ -683,7 +695,7 @@
         "status": "Trạng thái",
         "linked_at": "Liên kết lúc",
         "not_linked_yet": "Chưa liên kết",
-        "touchpoint": "Touchpoint đã liên kết",
+        "touchpoint": "Trạm đã liên kết",
         "support_title": "Yêu cầu hỗ trợ thiết bị",
         "support_desc": "Mô tả sự cố với thiết bị này. Đội ngũ sẽ xử lý theo mã hỗ trợ.",
         "support_placeholder": "Mô tả sự cố với thiết bị...",
@@ -693,7 +705,7 @@
       }
     },
     "devices": {
-      "subtitle": "Quản lý các trạm đứng salon vật lý, mã đặt bàn và điểm chạm thông minh.",
+      "subtitle": "Quản lý các trạm đứng salon vật lý, mã đặt bàn và trạm thông minh.",
       "add_btn": "Thêm Thiết Bị Mới",
       "empty_title": "Chưa có thiết bị phần cứng",
       "empty_desc": "Thêm thiết bị QR hoặc NFC để quản lý trạm và theo dõi lượt quét.",
@@ -714,7 +726,7 @@
       }
     },
     "support": {
-      "subtitle": "Nhận hỗ trợ về các thiết bị QR/NFC hoặc cấu hình tài khoản của bạn.",
+      "subtitle": "Cần trợ giúp? Chúng tôi hỗ trợ về tài khoản, mã QR hoặc thiết bị NFC của bạn.",
       "kpi": {
         "open_tickets": "Yêu Cầu Đang Mở",
         "resolved_tickets": "Đã Giải Quyết",
@@ -762,9 +774,9 @@
       "faq": {
         "title": "Câu Hỏi Thường Gặp",
         "q1": "Làm thế nào để tạo mã QR?",
-        "a1": "Truy cập tab Quản Lý Điểm Chạm, nhấp vào \"+ Thêm Điểm Chạm\", nhập tên trạm và gán cho nhân viên nếu cần. Mã QR được tạo ngay lập tức và có thể in hoặc mô phỏng.",
-        "q2": "Tiền típ trực tiếp hoạt động thế nào?",
-        "a2": "Các điểm chạm Nexora chuyển tiếp tiền típ trực tiếp đến địa chỉ Venmo, Zelle, Cash App hoặc VLINKPAY được liên kết của kỹ thuật viên. Tiền sẽ chuyển thẳng vào tài khoản của họ mà không có độ trễ xử lý hoặc sự can thiệp từ chủ tiệm.",
+        "a1": "Truy cập tab Trạm, nhấp vào \"+ Add New Station\", nhập tên trạm và gán cho nhân viên nếu cần. Mã QR được tạo ngay lập tức và có thể in hoặc mô phỏng.",
+        "q2": "Tip trực tiếp hoạt động thế nào?",
+        "a2": "Trạm Nexora gửi tip trực tiếp đến địa chỉ Venmo, Zelle, Cash App hoặc VLINKPAY được liên kết của kỹ thuật viên. Tiền sẽ chuyển thẳng vào tài khoản của họ mà không có độ trễ xử lý hoặc sự can thiệp từ chủ tiệm.",
         "q3": "Làm thế nào để thiết lập Ví VLINKPAY?",
         "a3": "Điều hướng đến Cài đặt -> tab Hồ sơ, cuộn xuống Phương thức nhận tiền và nhập định danh Ví VLINKPAY của bạn. Sau khi được xác minh, khách hàng sẽ thấy VLINKPAY dưới dạng tùy chọn típ trực tiếp.",
         "q4": "Làm thế nào để đặt mua đế dựng NFC?",
@@ -772,7 +784,7 @@
       }
     },
     "tips": {
-      "description": "Quản lý doanh thu típ, thống kê tiết kiệm phí và giao dịch trực tiếp.",
+      "description": "Quản lý doanh thu tip, tiết kiệm trực tiếp và chi trả trực tiếp cho nhân viên.",
       "tabs": {
         "overview": "Tổng quan",
         "savings": "Tiết kiệm phí",
@@ -781,23 +793,23 @@
       },
       "kpi": {
         "total_revenue": "Tổng Doanh Thu Típ",
-        "direct_p2p": "Típ Trực Tiếp (P2P)",
+        "direct_p2p": "Tip trực tiếp",
         "card_tips": "Típ Qua Thẻ",
         "crypto_tips": "Típ Crypto",
         "total_tips_circle": "Tổng Típ"
       },
       "charts": {
         "weekly_title": "Biểu Đồ Tiền Típ Tuần Này",
-        "method_split": "Tỷ Lệ Phương Thức Típ"
+        "method_split": "Khách đã trả thế nào"
       },
       "savings": {
-        "direct_routed": "Típ Trực Tiếp Routed",
-        "direct_routed_sub": "Tránh cổng thẻ",
-        "fees_avoided": "Phí Xử Lý Tránh Được",
+        "direct_routed": "Tip trực tiếp đã nhận",
+        "direct_routed_sub": "Không phí thẻ tín dụng",
+        "fees_avoided": "Phí tiết kiệm",
         "fees_avoided_sub": "Ước tính mức 3% phí thẻ",
-        "active_payouts": "Số Thợ Nhận Trực Tiếp",
-        "active_payouts_sub": "Nhận trực tiếp tức thời",
-        "duration_label": "Thời Gian Nhận Típ",
+        "active_payouts": "Người nhận tip trực tiếp",
+        "active_payouts_sub": "Nhận tức thì, không chờ",
+        "duration_label": "Tốc độ chi trả",
         "duration_value": "Tức Thời",
         "duration_sub": "Không giữ tiền, không phí ẩn",
         "calculator_title": "Tính Phí Tiết Kiệm Ước Tính",
@@ -814,15 +826,16 @@
         "col_amount": "Số tiền",
         "col_method": "Ví gửi",
         "col_status": "Trạng thái",
-        "status_success": "Thành công"
+        "status_success": "Thành công",
+        "status_completed": "Hoàn thành"
       },
       "ledger": {
-        "title": "Nhật Ký Típ Doanh Nghiệp",
+        "title": "Giao dịch tip",
         "search_placeholder": "Tìm thợ, khách hàng, trạm...",
-        "col_id": "Mã GD",
+        "col_id": "Mã giao dịch",
         "col_time": "Ngày & Giờ",
         "col_staff": "Nhân viên",
-        "col_tp": "Điểm chạm",
+        "col_tp": "Trạm",
         "col_amount": "Số tiền",
         "col_method": "Hình thức",
         "col_status": "Trạng thái",
@@ -831,31 +844,31 @@
         "empty": "Không tìm thấy giao dịch nào phù hợp."
       },
       "payouts": {
-        "title": "Hồ Sơ Thanh Toán Tích Lũy Thợ",
+        "title": "Tổng hợp chi trả nhân viên",
         "col_staff": "Tên thợ",
         "col_method": "Cổng nhận chính",
         "col_amount": "Tích lũy đã nhận",
         "col_status": "Trạng thái giải ngân",
         "col_activity": "Hoạt động cuối",
-        "status_direct": "Trả trực tiếp (P2P)"
+        "status_direct": "Đã trả trực tiếp"
       }
     },
     "analytics": {
-      "description": "Xem số liệu phân tích chuyên sâu về doanh thu típ, hiệu suất thợ và điểm chạm.",
+      "description": "Xem phân tích chi tiết về lượng tip, xếp hạng nhân viên và hiệu suất trạm.",
       "kpi": {
         "total_volume": "Tổng Doanh Số",
         "transactions_count": "Số Giao Dịch",
-        "transactions_unit": "GD",
+        "transactions_unit": "Giao dịch",
         "avg_tip": "Típ Trung Bình",
-        "fees_avoided": "Phí Xử Lý Tránh Được"
+        "fees_avoided": "Phí tiết kiệm"
       },
       "charts": {
         "daily_revenue": "Biểu Đồ Doanh Thu Theo Ngày",
-        "wallet_share": "Phần Trăm Theo Ví"
+        "wallet_share": "Tip được trả thế nào"
       },
       "leaderboards": {
         "staff": "Bảng Xếp Hạng Nhân Viên",
-        "touchpoints": "Hiệu Suất Điểm Chạm QR",
+        "touchpoints": "Hiệu suất trạm",
         "tips_count_label": "lượt nhận típ",
         "scans_count_label": "lượt quét"
       }
@@ -868,7 +881,7 @@
     },
     "owner_home": {
       "money_saved_title": "Tiền tiết kiệm tháng này",
-      "money_saved_subtitle": "Ước tính phí xử lý thẻ tránh được nhờ tip trực tiếp.",
+      "money_saved_subtitle": "Ước tính phí xử lý thẻ tiết kiệm được từ tip trực tiếp.",
       "view_savings": "Xem tiết kiệm",
       "export_report": "Xuất báo cáo",
       "kpi_direct_tips": "Tip trực tiếp",
@@ -894,9 +907,9 @@
       "status_pending": "Chờ",
       "status_inactive": "Ngừng",
       "qr_performance_title": "Hiệu suất QR",
-      "no_qr": "Chưa có điểm chạm QR",
+      "no_qr": "Chưa có trạm QR nào",
       "view": "Xem",
-      "touchpoint": "Điểm chạm",
+      "touchpoint": "Trạm",
       "savings_summary_title": "Tổng kết tiết kiệm",
       "details": "Chi tiết",
       "this_month": "Tháng này",
@@ -924,33 +937,34 @@
     "not_configured": "Chưa thiết lập",
     "copy": "Sao chép",
     "copied": "Đã chép!",
-    "recent_ledger": "Sổ Nhật Ký Típ Gần Đây",
+    "recent_ledger": "Giao dịch tip gần đây",
     "col_id": "Mã GD",
     "col_date": "Ngày giờ",
     "col_amount": "Số tiền",
-    "col_station": "Trạm / Điểm chạm",
+    "col_station": "Trạm",
     "col_method": "Thanh toán",
     "col_status": "Trạng thái",
     "no_tips_yet": "Chưa có khoản tiền típ nào được ghi nhận cho kỹ thuật viên này.",
     "no_tips_desc": "Tiền típ trực tiếp qua mã QR cá nhân sẽ hiển thị ở đây theo thời gian thực.",
     "filtered_reviews": "Đánh Giá Khách Hàng Được Lọc",
-    "reviews_desc": "Đánh giá từ khách quét mã QR Điểm Chạm của kỹ thuật viên này.",
+    "reviews_desc": "Đánh giá từ khách khi quét trạm riêng của kỹ thuật viên này.",
     "tab_all": "Tất cả",
     "tab_google": "Google/Yelp (4-5★)",
     "tab_private": "Góp ý nội bộ (1-3★)",
     "no_reviews_matching": "Không có đánh giá nào phù hợp với bộ lọc cho thợ này.",
     "no_reviews_desc": "Các đánh giá của khách hàng khớp với bộ lọc sẽ hiển thị tại đây.",
-    "joined_gateway": "Đã tham gia Nexora Touch Gateway",
+    "joined_gateway": "Đã tham gia Nexora Touch",
     "personal_qr": "QR Cá Nhân",
     "edit_profile": "Sửa Hồ Sơ",
     "delete_tech": "Xóa Thợ",
     "tips_collected": "Tiền Típ Đã Nhận",
     "avg_rating": "Điểm Sao Trung Bình",
+    "total_reviews": "Tổng Đánh Giá",
     "reviews_routed": "Đánh Giá Đã Định Tuyến",
     "conversion_rate": "Tỷ Lệ Quét Sang Típ",
     "scans": "{count} lượt quét",
     "reviews_count": "{count} đánh giá",
-    "publicly_routed": "Đã định tuyến công khai",
+    "publicly_routed": "Đã chia sẻ công khai",
     "private_recovery": "Góp ý nội bộ",
     "no_chart_data": "Không có dữ liệu biểu đồ."
   },
@@ -976,7 +990,7 @@
     "payment_empty_desc": "Tiệm chưa cấu hình phương thức thanh toán cho luồng tip này. Vui lòng hỏi nhân viên hoặc thử lại sau.",
     "multi_staff_missing_business": "Không thể tip nhiều người vì thiếu business ID từ touch page. Backend cần trả business.id trong GET /touch/{slug}/{slug}.",
     "multi_staff_missing_payment_method": "Tiệm chưa có phương thức thanh toán active cho ví đã chọn.",
-    "multi_staff_missing_touchpoint": "Thiếu thông tin touch point. Vui lòng tải lại trang và thử lại.",
+    "multi_staff_missing_touchpoint": "Thiếu thông tin trạm. Vui lòng tải lại và thử lại.",
     "pay_via": "{name}",
     "choose_chevron": "Chọn ›",
     "not_supported": "Không hỗ trợ",
@@ -1091,7 +1105,7 @@
     "role_select_title": "Chọn loại tài khoản",
     "role_select_desc": "Vui lòng chọn vai trò phù hợp để cấu hình giao diện của bạn.",
     "role_business_title": "Doanh Nghiệp",
-    "role_business_desc": "Quản lý thông tin cửa hàng, nhân viên, touchpoints, định tuyến đánh giá và xem thống kê tiệm.",
+    "role_business_desc": "Quản lý thông tin cửa hàng, nhân viên, trạm, định tuyến đánh giá và xem thống kê tiệm.",
     "role_personal_title": "Cá Nhân",
     "role_personal_desc": "Tự quản lý tài khoản cá nhân, ví nhận tiền, theo dõi tiền tip và chia sẻ mã QR cá nhân.",
     "fullname_label": "Họ và tên *",
@@ -1174,47 +1188,123 @@
       "privacy": {
         "sections": [
           {
-            "title": "1. Thu thập thông tin",
-            "body": "Chúng tôi thu thập họ tên, email, số điện thoại và thông tin thanh toán để vận hành luồng nhận típ."
+            "title": "1. Giới Thiệu",
+            "body": "NEXORA TOUCH LLC (\"Nexora\", \"chúng tôi\") vận hành nền tảng NEXORA TOUCH — dịch vụ nhận tip và đánh giá kỹ thuật số dành cho các doanh nghiệp dịch vụ. Chính Sách Bảo Mật này mô tả cách chúng tôi thu thập, sử dụng và chia sẻ thông tin khi bạn sử dụng Dịch Vụ. Bằng cách sử dụng Dịch Vụ, bạn đồng ý với các thực hành được mô tả trong Chính Sách này."
           },
           {
-            "title": "2. Bảo mật dữ liệu",
-            "body": "Dữ liệu cá nhân và thông tin ví được bảo vệ và chỉ dùng cho định tuyến giao dịch."
+            "title": "2. Thông Tin Chúng Tôi Thu Thập",
+            "body": "Thông tin bạn cung cấp: thông tin tài khoản (họ tên, email, số điện thoại), thông tin doanh nghiệp (đối với merchant), nội dung bạn tải lên (ảnh hồ sơ, logo doanh nghiệp). Thông tin thu thập tự động: dữ liệu sử dụng, địa chỉ IP, thông tin thiết bị và trình duyệt, hoạt động phiên được thu thập qua nền tảng và Google Analytics. Tương tác của khách hàng: khi khách hàng sử dụng luồng tip với tư cách khách (guest), chúng tôi ghi lại dữ liệu phiên ẩn danh (touch point đã truy cập, số tiền tip, xếp hạng). Chúng tôi không thu thập tên, số điện thoại hoặc thông tin thanh toán của khách hàng."
           },
           {
-            "title": "3. Quyền của bạn",
-            "body": "Bạn có thể xem, cập nhật hoặc yêu cầu xóa thông tin tài khoản trong dashboard."
+            "title": "3. Cách Chúng Tôi Sử Dụng Thông Tin",
+            "body": "Chúng tôi sử dụng thông tin đã thu thập để: Vận hành và cải thiện Dịch Vụ; Quản lý tài khoản và liên lạc với người dùng; Gửi thông báo giao dịch (email và thông báo đẩy); Phát hiện gian lận và thực thi Điều Khoản Dịch Vụ; Phân tích việc sử dụng và hiệu suất nền tảng; Tuân thủ nghĩa vụ pháp lý."
+          },
+          {
+            "title": "4. Cách Chúng Tôi Chia Sẻ Thông Tin",
+            "body": "Chúng tôi không bán thông tin cá nhân của bạn. Chúng tôi chỉ chia sẻ thông tin với các nhà cung cấp dịch vụ bên thứ ba đáng tin cậy hỗ trợ chúng tôi vận hành nền tảng, bao gồm phân tích, gửi email, thông báo đẩy và cơ sở hạ tầng đám mây. Các nhà cung cấp này bị ràng buộc theo hợp đồng chỉ sử dụng thông tin của bạn khi cần thiết để thực hiện dịch vụ thay mặt chúng tôi. Chúng tôi cũng có thể tiết lộ thông tin để tuân thủ nghĩa vụ pháp lý hoặc để bảo vệ quyền và sự an toàn của người dùng."
+          },
+          {
+            "title": "5. Thông Tin Thanh Toán",
+            "body": "Nexora không thu thập, lưu trữ hoặc xử lý bất kỳ thông tin thanh toán nào. Tip được gửi trực tiếp giữa khách hàng và nhân viên thông qua các ứng dụng thanh toán bên thứ ba. Chúng tôi không có quyền truy cập vào thông tin tài chính, số tài khoản ngân hàng hoặc thông tin thẻ."
+          },
+          {
+            "title": "6. Lưu Trữ Dữ Liệu",
+            "body": "Chúng tôi lưu giữ thông tin cá nhân của bạn chỉ trong thời gian cần thiết để cung cấp Dịch Vụ hoặc theo yêu cầu của pháp luật. Bạn có thể yêu cầu xóa tài khoản và dữ liệu bất cứ lúc nào bằng cách liên hệ support@nexoratouch.com."
+          },
+          {
+            "title": "7. Quyền Của Bạn",
+            "body": "Tùy thuộc vào vị trí của bạn, bạn có thể có quyền truy cập, sửa, xóa hoặc chuyển dữ liệu cá nhân, và phản đối hoặc hạn chế một số hoạt động xử lý nhất định. Người dùng tại EU/EEA (GDPR): truy cập, chỉnh sửa, xóa, chuyển dữ liệu, hạn chế và phản đối. Cư dân California (CCPA): quyền biết, xóa, sửa và từ chối bán (chúng tôi không bán dữ liệu). Để thực hiện các quyền của bạn, liên hệ support@nexoratouch.com. Chúng tôi sẽ phản hồi trong vòng 30 ngày."
+          },
+          {
+            "title": "8. Cookie và Theo Dõi",
+            "body": "Chúng tôi sử dụng cookie thiết yếu (cần thiết cho xác thực và quản lý phiên) và cookie phân tích (Google Analytics). Bạn có thể từ chối theo dõi của Google Analytics bằng cách cài đặt Tiện ích từ chối Google Analytics hoặc điều chỉnh cài đặt trình duyệt."
+          },
+          {
+            "title": "9. Quyền Riêng Tư Của Trẻ Em",
+            "body": "Dịch Vụ của chúng tôi không hướng đến trẻ em dưới 13 tuổi. Chúng tôi không cố ý thu thập thông tin cá nhân từ trẻ em dưới 13 tuổi. Nếu bạn cho rằng trẻ em đã cung cấp thông tin cho chúng tôi, liên hệ support@nexoratouch.com và chúng tôi sẽ xóa ngay."
+          },
+          {
+            "title": "10. Bảo Mật",
+            "body": "Chúng tôi triển khai các biện pháp bảo vệ kỹ thuật và hành chính hợp lý để bảo vệ thông tin của bạn, bao gồm truyền dữ liệu được mã hóa và cơ sở hạ tầng đám mây an toàn. Không có phương thức truyền nào hoàn toàn an toàn và chúng tôi không thể đảm bảo bảo mật tuyệt đối."
+          },
+          {
+            "title": "11. Thay Đổi Chính Sách Này",
+            "body": "Chúng tôi có thể cập nhật Chính Sách này theo thời gian. Các thay đổi quan trọng sẽ được thông báo qua email hoặc thông báo trong ứng dụng. Việc tiếp tục sử dụng Dịch Vụ đồng nghĩa với việc chấp nhận Chính Sách được cập nhật."
+          },
+          {
+            "title": "12. Liên Hệ Chúng Tôi",
+            "body": "NEXORA TOUCH LLC\nEmail: support@nexoratouch.com\nĐịa chỉ: 9793 Westheimer Rd Suite A Houston TX 77042"
           }
         ]
       },
       "terms": {
         "sections": [
           {
-            "title": "1. Giới thiệu và đồng ý",
-            "body": "Khi sử dụng Nexora Touch, bạn đồng ý tuân thủ các điều khoản dịch vụ này."
+            "title": "1. Chấp Nhận Điều Khoản",
+            "body": "Bằng cách truy cập hoặc sử dụng nền tảng, trang web hoặc ứng dụng NEXORA TOUCH (gọi chung là \"Dịch Vụ\"), bạn đồng ý bị ràng buộc bởi các Điều Khoản này. Nếu bạn không đồng ý, vui lòng ngừng sử dụng Dịch Vụ. Chúng tôi có quyền sửa đổi các Điều Khoản này bất cứ lúc nào. Việc tiếp tục sử dụng Dịch Vụ sau khi thay đổi có hiệu lực đồng nghĩa với việc chấp nhận Điều Khoản mới."
           },
           {
-            "title": "2. Tài khoản cá nhân",
-            "body": "Bạn chịu trách nhiệm bảo mật thông tin đăng nhập và đảm bảo thông tin ví nhận tiền chính xác."
+            "title": "2. Mô Tả Dịch Vụ",
+            "body": "NEXORA TOUCH là nền tảng nhận tip và đánh giá kỹ thuật số dành cho các doanh nghiệp dịch vụ, cho phép khách hàng gửi tip cho nhân viên và để lại đánh giá qua mã QR hoặc NFC. Nền tảng kết nối merchant, nhân viên và khách hàng mà không đóng vai trò là trung gian thanh toán."
           },
           {
-            "title": "3. Tiền típ và thanh toán",
-            "body": "Tiền típ được chuyển đến phương thức nhận tiền đã cấu hình. Giao dịch hoàn tất là cuối cùng."
+            "title": "3. Điều Kiện Tham Gia",
+            "body": "Để sử dụng Dịch Vụ, bạn phải đủ 13 tuổi trở lên và, nếu đăng ký với tư cách merchant, được phép hợp pháp để điều hành doanh nghiệp tại khu vực pháp lý của mình. Bằng cách sử dụng Dịch Vụ, bạn xác nhận rằng mình đáp ứng các yêu cầu này."
           },
           {
-            "title": "4. Quyền riêng tư",
-            "body": "Dữ liệu chỉ được dùng để vận hành luồng típ, hiển thị cho khách hàng và ghi nhận lịch sử giao dịch."
+            "title": "4. Tài Khoản Người Dùng",
+            "body": "Bạn có trách nhiệm bảo mật thông tin đăng nhập và chịu trách nhiệm về mọi hoạt động diễn ra trong tài khoản của mình. Thông báo ngay cho chúng tôi về bất kỳ truy cập trái phép nào tại support@nexoratouch.com. Merchant có thể quản lý hồ sơ doanh nghiệp, nhân viên và touch point của mình. Nhân viên sở hữu và kiểm soát thông tin thanh toán riêng của họ — merchant không thể xem hoặc sửa đổi thông tin này."
           },
           {
-            "title": "5. Cập nhật điều khoản",
-            "body": "Chúng tôi có thể cập nhật điều khoản và công bố thay đổi trong cổng thông tin."
+            "title": "5. Thanh Toán và Tip",
+            "body": "Nexora chỉ là một nền tảng. Chúng tôi không xử lý, giữ, chuyển khoản hay bảo đảm bất kỳ khoản thanh toán nào. Tip được khách hàng gửi trực tiếp cho nhân viên thông qua các ứng dụng thanh toán bên thứ ba (như Cash App, Venmo, Zelle, PayPal). Nexora không tham gia vào các giao dịch này. Nexora không chịu trách nhiệm về bất kỳ lỗi thanh toán, tranh chấp hoặc tổn thất tài chính nào phát sinh từ các giao dịch tip giữa người dùng. Người dùng có trách nhiệm tự giải quyết tranh chấp thanh toán với bên kia. Nhân viên có trách nhiệm đảm bảo thông tin thanh toán của mình chính xác và tuân thủ nghĩa vụ thuế phát sinh từ các khoản tip nhận được."
+          },
+          {
+            "title": "6. Gói Đăng Ký",
+            "body": "Quyền truy cập các tính năng nền tảng của merchant được điều chỉnh bởi gói đăng ký đang có hiệu lực tại thời điểm sử dụng. Chi tiết gói, giá cả và giới hạn tính năng được hiển thị tại thời điểm mua hàng. Chúng tôi có quyền cập nhật giá có thông báo trước."
+          },
+          {
+            "title": "7. Hành Vi Bị Cấm",
+            "body": "Bạn đồng ý không: Cung cấp thông tin sai sự thật, gian lận hoặc gây nhầm lẫn; Giả mạo bất kỳ cá nhân hoặc tổ chức nào; Thao túng dữ liệu tip hoặc đánh giá; Tải lên mã độc hại hoặc cố gắng truy cập trái phép; Sử dụng nền tảng cho bất kỳ mục đích bất hợp pháp nào; Tạo nhiều tài khoản để vượt qua giới hạn nền tảng."
+          },
+          {
+            "title": "8. Sở Hữu Trí Tuệ",
+            "body": "Tất cả nội dung, phần mềm và nhãn hiệu thuộc về Nexora vẫn là tài sản của chúng tôi. Bằng cách tải nội dung lên nền tảng, bạn cấp cho chúng tôi giấy phép có giới hạn, không độc quyền để hiển thị nội dung đó chỉ nhằm mục đích cung cấp Dịch Vụ."
+          },
+          {
+            "title": "9. Từ Chối Bảo Đảm",
+            "body": "DỊCH VỤ ĐƯỢC CUNG CẤP \"NGUYÊN TRẠNG\" MÀ KHÔNG CÓ BẢO ĐẢM DƯỚI BẤT KỲ HÌNH THỨC NÀO. CHÚNG TÔI TỪ CHỐI TẤT CẢ CÁC BẢO ĐẢM, RÕ RÀNG HOẶC NGỤ Ý, BAO GỒM BẢO ĐẢM VỀ KHẢ NĂNG THƯƠNG MẠI VÀ SỰ PHÙ HỢP CHO MỤC ĐÍCH CỤ THỂ. CHÚNG TÔI KHÔNG BẢO ĐẢM RẰNG DỊCH VỤ SẼ KHÔNG BỊ GIÁN ĐOẠN, KHÔNG CÓ LỖI, HOẶC BẤT KỲ ỨNG DỤNG THANH TOÁN BÊN THỨ BA NÀO SẼ HOẠT ĐỘNG NHƯ MONG ĐỢI."
+          },
+          {
+            "title": "10. Giới Hạn Trách Nhiệm",
+            "body": "TRONG PHẠM VI TỐI ĐA ĐƯỢC PHÉP THEO PHÁP LUẬT, NEXORA KHÔNG CHỊU TRÁCH NHIỆM VỀ BẤT KỲ THIỆT HẠI GIÁN TIẾP, NGẪU NHIÊN, ĐẶC BIỆT HOẶC HẬU QUẢ NÀO, BAO GỒM MẤT TIP, DOANH THU HOẶC TRANH CHẤP TÀI CHÍNH GIỮA NGƯỜI DÙNG. TỔNG TRÁCH NHIỆM CỦA CHÚNG TÔI KHÔNG VƯỢT QUÁ SỐ TIỀN BẠN ĐÃ THANH TOÁN TRONG 12 THÁNG TRƯỚC KHIẾU NẠI, HOẶC 100 USD, TÙY THEO SỐ NÀO LỚN HƠN."
+          },
+          {
+            "title": "11. Bồi Thường",
+            "body": "Bạn đồng ý bồi thường và giữ vô hại NEXORA TOUCH LLC và các cán bộ, nhân viên, đại diện của chúng tôi khỏi bất kỳ khiếu nại, thiệt hại hoặc chi phí nào phát sinh từ việc bạn sử dụng Dịch Vụ hoặc vi phạm các Điều Khoản này."
+          },
+          {
+            "title": "12. Chấm Dứt",
+            "body": "Chúng tôi có thể đình chỉ hoặc chấm dứt tài khoản của bạn khi vi phạm các Điều Khoản này. Bạn có thể đóng tài khoản bất cứ lúc nào bằng cách liên hệ support@nexoratouch.com."
+          },
+          {
+            "title": "13. Luật Điều Chỉnh",
+            "body": "Các Điều Khoản này được điều chỉnh bởi luật pháp Hoa Kỳ. Khi áp dụng, luật bảo vệ người tiêu dùng địa phương cũng có thể được áp dụng. Các tranh chấp không thể giải quyết không chính thức sẽ được đưa ra trọng tài cá nhân bắt buộc."
+          },
+          {
+            "title": "14. Thay Đổi Điều Khoản",
+            "body": "Chúng tôi có thể cập nhật các Điều Khoản này bất cứ lúc nào. Các thay đổi quan trọng sẽ được thông báo qua email hoặc thông báo trong ứng dụng."
+          },
+          {
+            "title": "15. Liên Hệ Chúng Tôi",
+            "body": "NEXORA TOUCH LLC\nEmail: support@nexoratouch.com\nĐịa chỉ: 9793 Westheimer Rd Suite A Houston TX 77042"
           }
         ]
       }
     }
   },
   "staff_invite": {
-    "total_linked": "Tổng thợ liên kết",
+    "total_linked": "Tổng nhân viên",
     "pending_invites": "Lời mời đang chờ",
     "connected_label": "Đã kết nối",
     "awaiting_label": "Chờ xác nhận",
@@ -1230,8 +1320,8 @@
     "link_request_btn": "Gửi yêu cầu liên kết",
     "mobile_preview_title": "Thợ tự setup - Mobile Preview",
     "invite_method": "Cách thức gửi",
-    "invite_status_table": "Trạng thái Lời mời & Liên kết",
-    "col_flow": "Luồng đi",
+    "invite_status_table": "Đội ngũ của bạn",
+    "col_flow": "Cách tham gia",
     "action_resend": "Gửi lại lời mời",
     "action_cancel": "Hủy yêu cầu",
     "active_today": "{count} thợ hoạt động hôm nay",
@@ -1272,6 +1362,7 @@
     "user_account_inactive": "Tài khoản của bạn hiện đang bị khóa. Vui lòng liên hệ hỗ trợ.",
     "user_account_incomplete": "Tài khoản chưa hoàn tất. Vui lòng kích hoạt tài khoản của bạn.",
     "user_email_already_exists": "Địa chỉ email này đã được đăng ký trước đó.",
+    "user_invalid_referral_code": "Mã giới thiệu không hợp lệ. Vui lòng kiểm tra lại mã và thử lại.",
     "user_signup_failed": "Đăng ký thất bại. Vui lòng kiểm tra thông tin và thử lại.",
     "auth_passwords_do_not_match": "Mật khẩu xác nhận không khớp.",
     "user_feature_signup_disabled": "Tính năng đăng ký hiện tại đang tạm khóa.",
@@ -1289,7 +1380,7 @@
     "business_name_required": "Tên tiệm là bắt buộc.",
     "business_invalid_slug_format": "Định dạng đường dẫn URL không hợp lệ.",
     "user_not_merchant": "Tài khoản của bạn không có vai trò chủ tiệm.",
-    "touchpoint_starter_limit_reached": "Gói Starter đã đạt giới hạn: bạn chỉ có thể tạo tối đa 3 điểm chạm. Vui lòng nâng cấp gói để thêm nhiều hơn.",
+    "touchpoint_starter_limit_reached": "Đã đạt giới hạn gói Starter: bạn chỉ tạo được tối đa 3 trạm. Nâng cấp gói để thêm.",
     "physical_card_not_found": "Không tìm thấy thiết bị thẻ vật lý này. Vui lòng kiểm tra mã thẻ và thử lại.",
     "image_file_size_exceeded": "Kích thước ảnh vượt quá giới hạn cho phép 10MB.",
     "image_file_size_exceeded_5mb": "Kích thước ảnh vượt quá giới hạn cho phép 5MB.",
@@ -1324,7 +1415,7 @@
     "payment_invalid_payment_method": "Phương thức thanh toán không hợp lệ hoặc chưa được cấu hình. Vui lòng chọn phương thức khác.",
     "generic": "Đã xảy ra lỗi",
     "touchpoint_not_found": "Không tìm thấy trang",
-    "touchpoint_not_found_desc": "Không thể tải điểm chạm này."
+    "touchpoint_not_found_desc": "Không thể tải trạm này."
   },
   "components": {
     "payout": {
@@ -1351,14 +1442,14 @@
         },
         "useSimulationHandlers": {
           "touchpointStaffPersonalQr": "QR cá nhân nhân viên",
-          "touchpointQr": "Điểm chạm QR",
+          "touchpointQr": "Trạm QR",
           "touchpointLobby": "QR chào mừng sảnh",
           "tipReceivedTitle": "Nhận tip mới ({amount})",
           "tipReceivedMessage": "{name} nhận tip {amount} qua {method} tại {touchpoint}.",
           "reviewGoodComment": "Dịch vụ tốt",
           "reviewBadComment": "Cần cải thiện",
           "reviewTitleGood": "Đánh giá mới ({rating}★)",
-          "reviewTitleInternal": "Phản hồi nội bộ mới ({rating}★)",
+          "reviewTitleInternal": "Phản hồi riêng tư mới ({rating}★)",
           "reviewMessage": "Khách để lại phản hồi cho {name}: \"{comment}\"",
           "justNow": "Vừa xong"
         }
@@ -1445,7 +1536,9 @@
           "declineUnlinkConfirm": "Bạn có chắc chắn muốn từ chối yêu cầu hủy liên kết của thợ {name}?",
           "deleteFailed": "Xóa thất bại: {error}",
           "statusUpdateFailed": "Cập nhật trạng thái thất bại: {error}",
-          "tipsFlowUpdateFailed": "Cập nhật tips flow thất bại: {error}"
+          "tipsFlowUpdateFailed": "Cập nhật tips flow thất bại: {error}",
+          "tipsFlowShown": "{name} đã được hiển thị trong Tips Flow.",
+          "tipsFlowHidden": "{name} đã được ẩn khỏi Tips Flow."
         }
       },
       "layout": {
@@ -1509,6 +1602,8 @@
           "role_at_business": "Vai trò tại tiệm",
           "staff_name": "Tên nhân viên",
           "staff_name_placeholder": "Ví dụ: Lisa Tran",
+          "staff_email": "Email",
+          "staff_email_placeholder": "VD: lisa@example.com",
           "phone_or_email": "Số điện thoại hoặc Email",
           "phone_or_email_placeholder": "VD: lisa@example.com hoặc +1 407-555-0123",
           "role": "Vai trò",
@@ -1516,8 +1611,9 @@
           "send_setup_link": "Gửi link thiết lập",
           "staff_id_label": "Mã nhân viên: {code}",
           "link_info": "Sau khi gửi yêu cầu liên kết, thợ phải chấp nhận thì mới hiển thị active trong tiệm.",
-          "invite_info": "Thợ nhận link hoàn tất NEXORA Tip Profile. Sau khi xong, hệ thống tự liên kết vào tiệm.",
+          "invite_info": "Nhân viên nhận liên kết để hoàn tất Hồ sơ Tip NEXORA. Sau khi thiết lập, họ sẽ được thêm vào tiệm của bạn.",
           "staff_name_required": "Vui lòng nhập tên nhân viên.",
+          "email_required": "Vui lòng nhập email.",
           "contact_required": "Vui lòng nhập số điện thoại hoặc email.",
           "search_required": "Vui lòng nhập Mã nhân viên, số điện thoại hoặc email để tìm kiếm.",
           "emailRequiredForMethod": "Vui lòng nhập email khi chọn phương thức mời là Email.",
@@ -1555,7 +1651,7 @@
           "scanQrCode": "Quét Mã QR Nhận Diện",
           "scanNexoraPersonalId": "Quét mã NEXORA Personal ID để liên kết tài khoản",
           "scanVlinkpayIdTo": "Quét mã VLINKPAY ID để tự động điền thông tin tài khoản",
-          "pointTheCameraAt": "Hướng camera về phía mã QR hoặc chọn giả lập quét thành công bên dưới.",
+          "pointTheCameraAt": "Hướng camera về mã QR của thợ để quét mã nhận diện.",
           "simulateQrScan": "Giả lập quét QR",
           "simulateSuccessfulScan": "Giả lập Quét Lisa Tran",
           "simulateProfileLabel": "{name} ({code})",
@@ -1575,9 +1671,9 @@
           "review_count": "{count} ??nh gi?"
         },
         "TransactionDetailModal": {
-          "tippingQrCode": "MÃ QR ĐIỂM CHẠM",
-          "scanToTipTouchPoint": "Quét để tip và đánh giá tại điểm chạm này",
-          "tippingLinkCopiedTo": "Đã sao chép liên kết điểm chạm!",
+          "tippingQrCode": "MÃ QR TRẠM",
+          "scanToTipTouchPoint": "Quét để tip và đánh giá tại trạm này",
+          "tippingLinkCopiedTo": "Đã sao chép liên kết trạm!",
           "shareLink": "Chia sẻ liên kết",
           "staffBreakdown": "Phân bổ theo nhân viên",
           "recipients": "{count} người nhận",
@@ -1590,16 +1686,16 @@
           "custom": "Tự chọn",
           "copiedNfcRedirectLink": "Đã sao chép link chuyển hướng NFC vào clipboard!",
           "qr_download_failed": "Không thể tải mã QR. Vui lòng thử lại.",
-          "gateway_empty_title": "Chưa có điểm chạm",
-          "gateway_empty_desc": "Tạo touchpoint để sinh Master QR và cổng NFC cho cửa hàng.",
-          "gateway_empty_action": "Thêm Touchpoint",
+          "gateway_empty_title": "Chưa có trạm",
+          "gateway_empty_desc": "Tạo trạm để sinh mã QR và NFC cho cửa hàng.",
+          "gateway_empty_action": "Thêm Trạm",
           "reviews_empty_title": "Chưa có dữ liệu đánh giá",
           "reviews_empty_desc": "Chỉ số đánh giá sẽ hiển thị khi khách hàng bắt đầu để lại phản hồi."
         },
         "SetupGuideBanner": {
           "gettingStarted": "Bắt đầu sử dụng",
           "welcomeToNexora": "Chào mừng đến với Nexora!",
-          "yourBusinessAccountIs": "Tài khoản doanh nghiệp của bạn đã sẵn sàng. Hãy dành 2 phút để thiết lập thông tin cửa hàng, danh sách nhân viên và các điểm chạm QR để bắt đầu nhận đánh giá và tiền tip.",
+          "yourBusinessAccountIs": "Tài khoản doanh nghiệp của bạn đã sẵn sàng. Hãy dành 2 phút để thiết lập thông tin cửa hàng, danh sách nhân viên và mã QR để bắt đầu nhận đánh giá và tiền tip.",
           "completeStoreSetup": "Hoàn tất cài đặt cửa hàng"
         },
         "TipsOverTimePanel": {
@@ -1607,7 +1703,7 @@
           "from": "Từ ngày:",
           "to": "Đến ngày:",
           "empty_title": "Chưa có tip trong khoảng thời gian này",
-          "empty_desc": "Biểu đồ sẽ hiển thị khi khách hàng bắt đầu tip qua các điểm chạm của bạn."
+          "empty_desc": "Tip sẽ hiện ở đây khi khách bắt đầu tip qua mã QR của bạn."
         },
         "StaffLeaderboardPanel": {
           "empty_title": "Chưa có bảng xếp hạng nhân viên",
@@ -1633,14 +1729,14 @@
           "noStaffProfileFound": "Không tìm thấy hồ sơ nhân viên phù hợp.",
           "pleaseEnterBothName": "Vui lòng điền đầy đủ Tên và phương thức liên hệ.",
           "clickToEnlarge": "Click để phóng to",
-          "technicianJoinLinkAnd": "LIÊN KẾT GIA NHẬP (REFERRAL LINK)",
-          "shareThisReferralLink": "Chia sẻ liên kết này hoặc cho thợ quét mã QR để tự đăng ký/liên kết tài khoản vào tiệm.",
+          "technicianJoinLinkAnd": "LIÊN KẾT MỜI NHÂN VIÊN",
+          "shareThisReferralLink": "Chia sẻ liên kết hoặc mã QR này để kỹ thuật viên tạo tài khoản và tham gia tiệm của bạn.",
           "joinLinkCopiedTo": "Đã sao chép liên kết gia nhập!",
           "copy": "Sao chép",
           "share": "Mời",
           "pendingJoinRequests": "Yêu cầu gia nhập chờ duyệt",
-          "rejectedStaff": "Nhân viên bị từ chối",
-          "directAddition": "Khởi tạo trực tiếp",
+          "rejectedStaff": "Yêu cầu bị từ chối",
+          "directAddition": "Được tiệm thêm",
           "pending": "Chưa cấu hình",
           "reviewAndApprove": "Xem & Duyệt",
           "decline": "Từ chối",
@@ -1651,7 +1747,7 @@
           "dateOldest": "Ngày: Cũ nhất",
           "statusActive": "Trạng thái hoạt động",
           "clickPillToToggle": "Nhấp vào chip để đổi trạng thái hoạt động",
-          "tipsFlow": "Tips Flow",
+          "tipsFlow": "Cho phép Tip",
           "clickPillToShow": "Nhấp vào chip để ẩn/hiển thị thợ trên QR tiệm",
           "linkedDate": "Ngày liên kết: ",
           "noWallets": "Không có ví",
@@ -1661,7 +1757,7 @@
           "accept": "Chấp nhận",
           "approve": "Duyệt",
           "approveUnlink": "Duyệt hủy",
-          "rejected": "Đã từ chối",
+          "rejected": "Bị từ chối",
           "reject": "Từ chối",
           "joinQrCode": "MÃ QR GIA NHẬP",
           "haveTechniciansScanThis": "Cho thợ quét mã này bằng camera điện thoại để tự đăng ký hoặc liên kết tài khoản vào tiệm.",
@@ -1770,13 +1866,13 @@
           "kybVerificationSuccessful": "Xác thực KYB thành công!",
           "settingsUpdatedSuccessfully": "Đã cập nhật cài đặt thành công!",
           "copiedToClipboard": "Đã sao chép vào bộ nhớ tạm!",
-          "basicAccountStatus": "HỒ SƠ CƠ BẢN",
-          "yourProfileIsActive": "Hồ sơ của bạn chỉ hoạt động cho nhận tiền típ trực tiếp P2P (Venmo, Cash App, Zelle) và đánh giá của khách hàng. Các tính năng xử lý tài chính nâng cao (Ví VLINKPAY, Xử lý Thẻ Tín Dụng, Merchant ATM) đã bị Khóa.",
+          "basicAccountStatus": "TRẠNG THÁI XÁC MINH TÀI KHOẢN",
+          "yourProfileIsActive": "Hồ sơ của bạn đang hoạt động cho tip trực tiếp (Venmo, Cash App, Zelle) và đánh giá khách hàng. Các tính năng tài chính nâng cao (Ví VLINKPAY, xử lý thẻ tín dụng, Merchant ATM) cần xác minh để mở khóa.",
           "completeBusinessVerification": "Hoàn tất Xác minh Doanh nghiệp",
           "liteVerificationPendingReview": "ĐANG CHỜ XÁC MINH LITE",
           "liteVerificationPendingReview2": "Lite Verification đang chờ xem duyệt.",
           "verifiedLite": "ĐÃ XÁC THỰC LITE",
-          "verifiedLiteP2pTipping": "Đã xác thực Lite. Bật nhận tiền típ P2P. Hoàn thành KYB đầy đủ để mở khóa xử lý thẻ tín dụng.",
+          "verifiedLiteP2pTipping": "Đã xác minh cơ bản. Tip trực tiếp đã bật. Hoàn tất xác minh doanh nghiệp để mở khóa xử lý thẻ tín dụng.",
           "businessVerificationRequired": "YÊU CẦU XÁC MINH DOANH NGHIỆP",
           "businessVerificationRequiredYou": "Yêu cầu Xác minh Doanh nghiệp. Bạn phải xác minh doanh nghiệp của mình để kích hoạt xử lý thẻ.",
           "businessVerificationPending": "ĐANG CHỜ XÁC MINH DOANH NGHIỆP",
@@ -1887,7 +1983,7 @@
             "adultDob": "Bạn phải đủ 18 tuổi.",
             "phone": "Vui lòng nhập số điện thoại hợp lệ.",
             "email": "Vui lòng nhập địa chỉ email hợp lệ.",
-            "emailOrPhone": "Vui lòng nhập email hoặc số điện thoại hợp lệ.",
+            "emailOrPhone": "Nhập email hợp lệ hoặc số điện thoại Mỹ (10 chữ số, ví dụ: john@gmail.com hoặc 4085551234).",
             "url": "Nhập URL đầy đủ, bắt đầu bằng http:// hoặc https://.",
             "postalCode": "Vui lòng nhập mã bưu chính hợp lệ.",
             "venmo": "Nhập tên Venmo hợp lệ, bắt đầu bằng @.",
@@ -1899,7 +1995,7 @@
           "verifyYourBusiness": "Xác minh doanh nghiệp của bạn",
           "subtitle": "Hoàn thành <b>KYB</b> và khám phá trải nghiệm đẳng cấp tiếp theo cùng <b>Nexora Touch</b>",
           "getStarted": "Bắt đầu",
-          "tabKybTitle": "Tại sao xác minh KYB lại quan trọng",
+          "tabKybTitle": "Vì sao cần xác minh doanh nghiệp",
           "tabKybContent": "Hoàn thành quá trình xác minh KYB đảm bảo doanh nghiệp của bạn tuân thủ đầy đủ các yêu cầu quy định, cho phép truy cập tất cả tính năng và lợi ích của Nexora Touch, bao gồm xử lý thanh toán, thông tin chi tiết doanh nghiệp và nhiều hơn nữa. Quá trình này cũng bảo vệ doanh nghiệp khỏi gian lận và củng cố niềm tin với khách hàng.",
           "retry": "Thử lại",
           "networkError": "Không thể tải cổng KYB. Vui lòng kiểm tra kết nối và thử lại.",
@@ -1922,11 +2018,11 @@
           "uploadedComplianceDocuments": "Hồ sơ tài liệu xác thực",
           "legalDisclosuresAndTerms": "Công bố pháp lý & Điều khoản",
           "label1IrsIncomeReporting": "1. Báo cáo thu nhập IRS",
-          "under1099KRegulations": "Theo quy định 1099-K của IRS, thu nhập từ tiền típ được xử lý qua các cổng này phải báo cáo thuế hàng năm.",
+          "under1099KRegulations": "Theo quy định 1099-K của IRS, thu nhập từ tiền típ được xử lý qua các kênh này phải báo cáo thuế hàng năm.",
           "label2SavingsDisclaimer": "2. Tuyên bố miễn trừ tiết kiệm",
           "estimatedProcessingSavingsAre": "Mức tiết kiệm chi phí xử lý ước tính được tính toán so với phí đại lý tiêu chuẩn ngành và không được bảo đảm.",
           "label3TermsOfService": "3. Điều khoản dịch vụ",
-          "usageConstitutesAgreementWith": "Việc sử dụng dịch vụ đồng nghĩa với việc đồng ý với các điều khoản tuân thủ doanh nghiệp và chính sách thẩm định của VLINKPAY.",
+          "usageConstitutesAgreementWith": "Việc sử dụng đồng nghĩa với việc đồng ý các điều khoản tuân thủ và chính sách thương nhân của VLINKPAY.",
           "phLegalName": "vd: Doanh nghiệp của bạn LLC",
           "phTaxId": "vd: XX-XXXXXXX",
           "phRepName": "Họ và tên người đại diện",
@@ -1962,13 +2058,13 @@
           "phManagerEmail": "manager@yourstore.com"
         },
         "Step2StaffTouchpoints": {
-          "step2PayoutAnd": "Bước 2: Thanh Toán & Điểm Chạm QR",
+          "step2PayoutAnd": "Bước 2: Thanh Toán & Mã QR",
           "setUpPayoutMethods": "Thiết lập các phương thức thanh toán và các vị trí dán mã QR (ví dụ: quầy lễ tân, bàn làm việc, xe đẩy) tại tiệm.",
           "setUpPaymentMethods": "Thiết lập các phương thức thanh toán để nhận tiền vào tài khoản tiệm.",
-          "nameThisSpecificTouch": "Đặt tên cho điểm chạm cụ thể này (ví dụ: Bàn 1, Ghế 3) để theo dõi vị trí nhận tiền tip và phản hồi."
+          "nameThisSpecificTouch": "Đặt tên cho trạm cụ thể (vd. Bàn 1, Trạm 3) để theo dõi tip và phản hồi theo vị trí."
         },
         "Step3Download": {
-          "iHerebyConsentTo": "Tôi đồng ý với Điều khoản dịch vụ người bán của VLINKPAY, yêu cầu báo cáo thuế IRS 1099-K và chính sách thẩm định của doanh nghiệp. Tôi xác nhận rằng tất cả thông tin đăng ký là chính xác."
+          "iHerebyConsentTo": "Tôi đồng ý với Điều khoản dịch vụ người bán của VLINKPAY, yêu cầu báo cáo thuế IRS 1099-K và chính sách tuân thủ của doanh nghiệp. Tôi xác nhận rằng tất cả thông tin đăng ký là chính xác."
         }
       }
     },
@@ -2021,7 +2117,7 @@
           "avatarUpdatedSuccessfully": "Đã cập nhật ảnh đại diện!",
           "allFieldsAreRequired": "Vui lòng điền đầy đủ tất cả các trường.",
           "kycVerificationSuccessful": "Xác thực KYC thành công!",
-          "basicAccountStatus": "HỒ SƠ CƠ BẢN",
+          "basicAccountStatus": "TRẠNG THÁI XÁC MINH TÀI KHOẢN",
           "yourProfileIsActive": "Hồ sơ của bạn chỉ hoạt động ở mức cơ bản để nhận tiền típ và nhận xét. Hãy hoàn tất xác minh KYC cá nhân để mở khóa các tính năng tài chính của Ví VLINKPAY ID và rút tiền nhanh 24/7.",
           "completeKycVerification": "Hoàn tất Xác minh KYC",
           "personalProfileVerifiedKyc": "TÀI KHOẢN ĐÃ XÁC THỰC (KYC APPROVED)",
@@ -2080,7 +2176,7 @@
           "andExploreNextLevel": "và trải nghiệm đầy đủ các tính năng với",
           "nexora": "Nexora Touch",
           "getStarted": "Bắt đầu",
-          "whyKycMatters": "Tại sao xác minh KYC quan trọng",
+          "whyKycMatters": "Vì sao cần xác minh",
           "kycDescription": "Bằng việc hoàn tất quy trình này, bạn giúp chúng tôi duy trì môi trường an toàn và bảo mật cho tất cả",
           "kycDescriptionContinued": "thành viên. Xác minh KYC cũng cho phép bạn sử dụng đầy đủ nền tảng, bao gồm hạn mức giao dịch cao hơn và các tính năng bổ sung.",
           "networkError": "Không thể tải cổng KYC. Vui lòng kiểm tra kết nối và thử lại.",
@@ -2302,10 +2398,10 @@
     },
     "SettingsView": {
       "qrCodeDownloaded": "Đã tải xuống mã QR!",
-      "settingsConfiguration": "Cấu Hình Cài Đặt",
-      "manageYourOwnerCredentials": "Quản lý thông tin tài khoản chủ sở hữu, địa chỉ cửa hàng và cấu hình xác thực pháp lý (KYB).",
+      "settingsConfiguration": "Cài đặt tài khoản",
+      "manageYourOwnerCredentials": "Quản lý thông tin tài khoản, phương thức chi trả, thông tin doanh nghiệp và xác minh tuân thủ.",
       "account": "Tài khoản",
-      "kyb": "Xác thực KYB",
+      "kyb": "Xác minh doanh nghiệp",
       "affiliateLink": "Liên kết giới thiệu",
       "affiliateLink2": "Liên kết giới thiệu",
       "registerANewMember": "Đăng ký Thành viên Mới",
@@ -2321,7 +2417,7 @@
         "headline": "Tiền Tip, QR, NFC",
         "statTips": "Tiền tip",
         "statReviews": "Đánh giá",
-        "statFlow": "Liên tục",
+        "statFlow": "Cách tham gia",
         "footer": "Xác thực merchant tích hợp VLINKPAY"
       }
     },
@@ -2399,7 +2495,7 @@
         "f1": "Tối đa 5 chuyên viên hoạt động",
         "f2": "Bắt buộc xác minh KYB",
         "f3": "Smart QR để bàn cơ bản",
-        "f4": "Định tuyến tip ngang hàng trực tiếp"
+        "f4": "Chi trả tip trực tiếp"
       },
       "starter": {
         "name": "Gói Starter",
@@ -2445,8 +2541,8 @@
       "unavailable_title": "Không thể mở mã QR",
       "not_found": "Không tìm thấy mã thiết bị này. Mã có thể không hợp lệ hoặc đã bị huỷ đăng ký.",
       "inactive": "Thiết bị này hiện không hoạt động. Vui lòng liên hệ cửa hàng để được hỗ trợ.",
-      "unlinked": "Thiết bị này chưa được liên kết với touchpoint. Vui lòng yêu cầu merchant liên kết trước.",
-      "unavailable": "Mã QR này hiện không thể mở touchpoint. Vui lòng thử lại sau hoặc liên hệ hỗ trợ."
+      "unlinked": "Thiết bị này chưa được liên kết với trạm. Vui lòng yêu cầu merchant liên kết trước.",
+      "unavailable": "Mã QR này hiện không thể mở trạm. Vui lòng thử lại sau hoặc liên hệ hỗ trợ."
     },
     "help_qr": {
       "title": "Hỗ trợ thiết bị",

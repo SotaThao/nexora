@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { AlertCircle, Plus, HelpCircle, Trash2, User, QrCode, Edit2, Link, Copy, X, Share2, Loader2 } from 'lucide-react'
+import { AlertCircle, Plus, HelpCircle, Trash2, User, QrCode, Eye, Link, Copy, X, Share2, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
@@ -29,7 +29,7 @@ function StaffView({
   isLoading = false,
   onApproveClick,
   onAdd,
-  onEdit,
+  onViewStaff,
   onDelete,
   onQr,
   onToggle,
@@ -83,11 +83,6 @@ function StaffView({
   const publicInviteUnavailableText = isInviteLinkSettingLoading
     ? t('components.dashboard.views.StaffView.inviteLinkLoading')
     : t('components.dashboard.views.StaffView.inviteLinkDisabled')
-
-  const rejectedStaff = useMemo(
-    () => (staff || []).filter((member) => isRejectedStaff(member)),
-    [staff],
-  )
 
   const sortedStaff = useMemo(() => {
     return [...(staff || []).filter((member) => !isRejectedStaff(member))].sort((a, b) => {
@@ -345,75 +340,6 @@ function StaffView({
         </div>
       )}
 
-      {/* Rejected Staff Section */}
-      {rejectedStaff.length > 0 && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50/40 overflow-hidden shadow-sm">
-          <div className="px-5 py-4 border-b border-rose-200 bg-rose-50 flex items-center justify-between">
-            <h3 className="text-xs font-black uppercase text-rose-800 tracking-wider flex items-center gap-1.5">
-              <AlertCircle className="h-4 w-4 text-rose-700" />
-              {t('components.dashboard.views.StaffView.rejectedStaff')} ({rejectedStaff.length})
-            </h3>
-          </div>
-          <div className="overflow-x-auto bg-white">
-            <table className="w-full border-collapse text-left text-sm">
-              <thead>
-                <tr className="bg-slate-50 text-[10px] font-extrabold uppercase text-nexoraMuted border-b border-nexoraRule">
-                  <th className="px-5 py-3">{t('setup.col_staff')}</th>
-                  <th className="px-5 py-3">{t('staff_invite.col_flow')}</th>
-                  <th className="px-5 py-3">{t('setup.linked_wallets')}</th>
-                  <th className="px-5 py-3 text-right">{t('dashboard.top_touchpoints.manage')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rejectedStaff.map((member, index) => {
-                  const wallets = getWalletBadges(member)
-                  return (
-                    <tr key={member.id || index} className="border-b border-nexoraRule last:border-0 hover:bg-slate-50/40 transition">
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-3">
-                          {member.avatar ? (
-                            <img src={member.avatar} alt="" className="h-10 w-10 rounded-full border border-nexoraBorder object-cover" />
-                          ) : (
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 text-sm font-extrabold text-rose-700">
-                              {member.nickname?.charAt(0) || member.fullName?.charAt(0) || 'N'}
-                            </div>
-                          )}
-                          <div>
-                            <div className="font-extrabold text-nexoraText">{member.fullName}</div>
-                            <div className="text-xs text-nexoraMuted">{member.position}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-5 py-4">
-                        <span className="text-xs text-slate-500 font-semibold">
-                          {member.flowType || (t('components.dashboard.views.StaffView.directAddition'))}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="flex flex-wrap gap-1.5">
-                          {wallets.length > 0 ? (
-                            wallets.map((wallet) => (
-                              <span key={wallet} className="rounded px-2 py-0.5 text-[10px] font-bold bg-nexoraCanvas text-nexoraBrand border border-nexoraBrand/10">{wallet}</span>
-                            ))
-                          ) : (
-                            <span className="text-[10px] text-slate-400 font-bold italic">{t('components.dashboard.views.StaffView.noWallets')}</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-5 py-4 text-right">
-                        <span className="inline-flex rounded-full bg-rose-50 text-rose-700 px-2.5 py-0.5 text-[10px] font-extrabold uppercase border border-rose-100">
-                          {t('components.dashboard.views.StaffView.rejected')}
-                        </span>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
       {/* 3. Upgraded Staff Invite & Link Status Table */}
       <div className="rounded-xl border border-nexoraBorder bg-white overflow-hidden shadow-sm">
         <div className="px-5 py-4 border-b border-nexoraRule bg-slate-50/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -513,7 +439,7 @@ function StaffView({
                 return (
                   <tr key={member.id || index} className="border-b border-nexoraRule last:border-0 hover:bg-slate-50/40 transition">
                     <td className="px-5 py-4">
-                      <div className="flex items-center gap-3 cursor-pointer group" onClick={() => onViewDetail(member.id)}>
+                      <div className="flex items-center gap-3 cursor-pointer group" onClick={() => onViewDetail(member)}>
                         {member.avatar ? (
                           <img src={member.avatar} alt="" className="h-10 w-10 rounded-full border border-nexoraBorder object-cover group-hover:opacity-85 transition" />
                         ) : (
@@ -670,14 +596,14 @@ function StaffView({
 
                       {!isPending && (
                         <div className="flex justify-end gap-1.5">
-                          <IconButton label={t('staff_detail.joined_gateway')} onClick={() => onViewDetail(member.id)} className="hover:text-nexoraBrand">
+                          <IconButton label={t('staff_detail.joined_gateway')} onClick={() => onViewDetail(member)} className="hover:text-nexoraBrand">
                             <User className="h-4 w-4" />
                           </IconButton>
                           <IconButton label={t('staff_detail.personal_qr')} onClick={() => onQr(member)}>
                             <QrCode className="h-4 w-4" />
                           </IconButton>
-                          <IconButton label={t('common.edit')} onClick={() => onEdit(member)}>
-                            <Edit2 className="h-4 w-4" />
+                          <IconButton label={t('common.view_detail')} onClick={() => onViewStaff(member)}>
+                            <Eye className="h-4 w-4" />
                           </IconButton>
                           <IconButton label={t('common.delete')} onClick={() => onDelete(member.id)} className="hover:text-rose-600">
                             <Trash2 className="h-4 w-4" />
@@ -692,12 +618,12 @@ function StaffView({
           </table>
         </div>
 
-        {activeStaffCount > 0 ? (
+        {totalCount > 0 && totalPages > 1 ? (
           <Pagination
             pageNumber={pageNumber}
             pageSize={pageSize}
             totalPages={totalPages}
-            totalCount={activeStaffCount}
+            totalCount={totalCount}
             hasNextPage={hasNextPage}
             hasPreviousPage={hasPreviousPage}
             onPageChange={onPageChange}

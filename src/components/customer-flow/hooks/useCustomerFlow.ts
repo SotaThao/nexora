@@ -411,6 +411,25 @@ export default function useCustomerFlow() {
     effectivePaymentMethods.length,
   ])
 
+  const canSelectMultipleStaff = useMemo(() => {
+    const resolvingMerchantProfile =
+      !touchBusinessId &&
+      (merchantSetupQuery.isLoading || merchantBusinessQuery.isLoading)
+    if (resolvingMerchantProfile && !businessId) return true
+    if (!businessId) return false
+    if (!publicMethodsQuery.isLoading && effectivePaymentMethods.length === 0) {
+      return false
+    }
+    return true
+  }, [
+    businessId,
+    touchBusinessId,
+    merchantSetupQuery.isLoading,
+    merchantBusinessQuery.isLoading,
+    publicMethodsQuery.isLoading,
+    effectivePaymentMethods.length,
+  ])
+
   const isPaymentMethodsLoading =
     publicMethodsQuery.isLoading ||
     (!touchBusinessId && (merchantSetupQuery.isLoading || merchantBusinessQuery.isLoading))
@@ -682,5 +701,6 @@ export default function useCustomerFlow() {
     handlePay, handleConfirmTip, handleSkipTip, handleSubmitFeedback,
     handleTrackExternalReview, paymentLinkData, tipPaymentMethodsData,
     scannedTouchpoint: null,
+    canSelectMultipleStaff,
   }
 }

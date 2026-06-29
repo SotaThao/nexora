@@ -12,15 +12,10 @@ import StaffQrScannerModal from './StaffQrScannerModal'
 import { useSearchMerchantStaff } from '../../../data/hooks/useMerchantStaff'
 import { buildStaffReviewSummary } from './staffModalReviewUtils'
 
-const STAFF_QR_SCAN_PROFILES = [
-  { key: 'lisa', displayName: 'Lisa Tran', staffCode: 'LISA1102' },
-  { key: 'anna', displayName: 'Anna Nguyen', staffCode: 'ANNA0921' },
-  { key: 'hanna', displayName: 'Hanna Nguyen', staffCode: 'HN1148' },
-]
-
 function StaffModal({
   open,
   editing,
+  viewOnly = false,
   isApproveMode = false,
   onDecline,
   form,
@@ -32,6 +27,9 @@ function StaffModal({
   onSave,
   onLinkStaff,
   onOpenInviteShare,
+  onToggleTipsFlow,
+  isTogglingTipsFlow = false,
+  staffLinkId = null,
   reviews: reviewsProp = null,
   merchantSetupData = null
 }) {
@@ -45,14 +43,32 @@ function StaffModal({
   const [showScanner, setShowScanner] = useState(false)
   const [scanTarget, setScanTarget] = useState<any | null>(null) // 'staff' | 'vlinkpay' | 'combined'
 
-  const [idInput, setIdInput] = useState(() => form.vlinkpay || form.nexoraStaffId || '')
+  const isReviewOnly = isApproveMode || viewOnly
+
+  const [idInput, setIdInput] = useState(() =>
+    isReviewOnly ? (form.nexoraStaffId || form.vlinkpay || '') : (form.vlinkpay || form.nexoraStaffId || ''),
+  )
   const [searchQuery, setSearchQuery] = useState('')
   const [lastHandledSearchQuery, setLastHandledSearchQuery] = useState('')
-  const isReviewOnly = isApproveMode
+  const readOnlyInputClass = 'border-nexoraBorder bg-nexoraCanvas cursor-not-allowed'
+  const canToggleTipsFlowViaApi = (viewOnly || editing) && Boolean(staffLinkId) && Boolean(onToggleTipsFlow)
+
+  const handleShowInTipsFlowToggle = () => {
+    if (isApproveMode || isTogglingTipsFlow) return
+    if (canToggleTipsFlowViaApi) {
+      onToggleTipsFlow(staffLinkId)
+      return
+    }
+    setForm({ ...form, showInTipsFlow: !form.showInTipsFlow })
+  }
 
   useEffect(() => {
-    setIdInput(form.vlinkpay || form.nexoraStaffId || '')
-  }, [form.vlinkpay, form.nexoraStaffId])
+    setIdInput(
+      isReviewOnly
+        ? (form.nexoraStaffId || form.vlinkpay || '')
+        : (form.vlinkpay || form.nexoraStaffId || ''),
+    )
+  }, [form.vlinkpay, form.nexoraStaffId, isReviewOnly])
 
   // Verification states
   const [vlinkpayStatus, setVlinkpayStatus] = useState('idle') // 'idle' | 'checking' | 'success' | 'error'
@@ -216,8 +232,8 @@ function StaffModal({
     setShowScanner(true)
   }
 
-  const handleSimulatedProfileScan = (staffCode) => {
-    handleCombinedIdChange(staffCode)
+  const handleQrScanResult = (value: string) => {
+    handleCombinedIdChange(value)
     setShowScanner(false)
     setScanTarget(null)
   }
@@ -246,7 +262,7 @@ function StaffModal({
           <h2 className="text-lg font-extrabold text-nexoraText">
             {isApproveMode
               ? (t('components.dashboard.modals.StaffModal.reviewJoinRequest'))
-              : (editing ? t('common.edit') : t('setup.add_staff_title'))}
+              : (viewOnly ? t('common.view_detail') : (editing ? t('common.edit') : t('setup.add_staff_title')))}
           </h2>
           <IconButton label={t('common.close')} onClick={onClose}>
             <X className="h-4 w-4" />
@@ -368,14 +384,16 @@ function StaffModal({
                   )}
                 </div>
                 <div className="flex flex-wrap gap-2 items-center">
-                  <ImageFileInput
-                    as="label"
-                    className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-nexoraBorder px-3 text-xs font-bold text-nexoraText transition hover:bg-nexoraCanvas"
-                    onPick={handleAvatarPick}
-                  >
-                    <Upload className="h-4 w-4 text-nexoraBrand" />
-                    Upload photo
-                  </ImageFileInput>
+                  {!isReviewOnly && (
+                    <ImageFileInput
+                      as="label"
+                      className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-nexoraBorder px-3 text-xs font-bold text-nexoraText transition hover:bg-nexoraCanvas"
+                      onPick={handleAvatarPick}
+                    >
+                      <Upload className="h-4 w-4 text-nexoraBrand" />
+                      {t('common.upload_photo')}
+                    </ImageFileInput>
+                  )}
                   {(form.nexoraStaffId || form.id) && (
                     <button
                       type="button"
@@ -401,8 +419,11 @@ function StaffModal({
             <div>
               <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{renderLabel(t('setup.staff_fullname'))}</label>
               <input
-                className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-white px-3 text-sm font-semibold text-nexoraText outline-none transition focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20"
+                className={`mt-1 h-10 w-full rounded-lg border px-3 text-sm font-semibold text-nexoraText outline-none transition ${
+                  isReviewOnly ? readOnlyInputClass : 'border-nexoraBorder bg-white focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20'
+                }`}
                 value={form.fullName}
+                readOnly={isReviewOnly}
                 onChange={(event) => setForm(prev => ({ ...prev, fullName: event.target.value }))}
                 placeholder={t('components.dashboard.modals.StaffModal.phFullName')}
               />
@@ -421,8 +442,11 @@ function StaffModal({
                   </div>
                 </label>
                 <input
-                  className="mt-1 h-10 w-full min-w-0 rounded-lg border border-nexoraBorder bg-white px-3 text-sm font-semibold text-nexoraText outline-none transition focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20"
+                  className={`mt-1 h-10 w-full min-w-0 rounded-lg border px-3 text-sm font-semibold text-nexoraText outline-none transition ${
+                    isReviewOnly ? readOnlyInputClass : 'border-nexoraBorder bg-white focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20'
+                  }`}
                   value={form.nickname}
+                  readOnly={isReviewOnly}
                   onChange={(event) => setForm(prev => ({ ...prev, nickname: event.target.value }))}
                   placeholder={t('components.dashboard.modals.StaffModal.phNickname')}
                 />
@@ -431,8 +455,11 @@ function StaffModal({
               <div className="min-w-0">
                 <label className="flex h-4 items-center text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_position')}</label>
                 <input
-                  className="mt-1 h-10 w-full min-w-0 rounded-lg border border-nexoraBorder bg-white px-3 text-sm font-semibold text-nexoraText outline-none transition focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20"
+                  className={`mt-1 h-10 w-full min-w-0 rounded-lg border px-3 text-sm font-semibold text-nexoraText outline-none transition ${
+                    isReviewOnly ? readOnlyInputClass : 'border-nexoraBorder bg-white focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20'
+                  }`}
                   value={form.position}
+                  readOnly={isReviewOnly}
                   onChange={(event) => setForm(prev => ({ ...prev, position: event.target.value }))}
                   placeholder={t('components.dashboard.modals.StaffModal.phPosition')}
                 />
@@ -516,6 +543,7 @@ function StaffModal({
               {errors.payment && <p className="mt-2 flex items-center gap-1 text-xs font-bold text-nexoraDanger"><AlertTriangle className="h-3.5 w-3.5" />{errors.payment}</p>}
             </div>
 
+            {!isApproveMode && (
             <div className="flex items-center justify-between rounded-lg border border-nexoraBorder bg-nexoraCanvas p-3.5 mt-2">
               <div>
                 <label className="text-xs font-extrabold text-nexoraText block">{t('setup.show_in_tips_flow')}</label>
@@ -523,10 +551,11 @@ function StaffModal({
               </div>
               <button
                 type="button"
-                onClick={() => setForm({ ...form, showInTipsFlow: !form.showInTipsFlow })}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                disabled={isTogglingTipsFlow}
+                onClick={handleShowInTipsFlowToggle}
+                className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                   form.showInTipsFlow ? 'bg-nexoraBrand' : 'bg-nexoraBorder'
-                }`}
+                } ${isTogglingTipsFlow ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
               >
                 <span
                   className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
@@ -535,6 +564,7 @@ function StaffModal({
                 />
               </button>
             </div>
+            )}
           </div>
         </div>
         <div className="mt-6 flex justify-end gap-2 border-t border-nexoraRule pt-4">
@@ -543,18 +573,20 @@ function StaffModal({
               <button
                 type="button"
                 onClick={onDecline}
-                className="rounded-lg border border-nexoraDanger/20 bg-nexoraDanger/10 px-4 py-2 text-xs font-bold text-nexoraDanger hover:bg-nexoraDanger/15 transition"
+                className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-bold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100"
               >
                 {t('components.dashboard.modals.StaffModal.decline')}
               </button>
               <button
                 type="button"
                 onClick={onSave}
-                className="rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white hover:bg-nexoraBrandDark transition animate-pulse"
+                className="rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white transition hover:bg-nexoraBrandDark hover:shadow-md"
               >
                 {t('components.dashboard.modals.StaffModal.approveAccept')}
               </button>
             </>
+          ) : viewOnly ? (
+            <button onClick={onClose} className="rounded-lg border border-nexoraBorder px-4 py-2 text-xs font-bold text-nexoraMuted">{t('common.close')}</button>
           ) : (
             <>
               <button onClick={onClose} className="rounded-lg border border-nexoraBorder px-4 py-2 text-xs font-bold text-nexoraMuted">{t('common.cancel')}</button>
@@ -613,8 +645,7 @@ function StaffModal({
         open={showScanner}
         scanTarget={scanTarget}
         onClose={() => { setShowScanner(false); setScanTarget(null) }}
-        scanProfiles={STAFF_QR_SCAN_PROFILES}
-        onScanProfile={handleSimulatedProfileScan}
+        onScan={handleQrScanResult}
       />
     </div>
   )

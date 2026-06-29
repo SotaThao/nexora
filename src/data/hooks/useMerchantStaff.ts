@@ -6,7 +6,12 @@ import { qk } from '../queryKeys'
 import merchantStaffRepository, { StatusFilter } from '../repositories/merchantStaff'
 import type { StaffListPage } from '../repositories/merchantStaff'
 import type { StaffMember, StaffSearchResult } from '../../types/domain'
-import type { MerchantStaffInvite, StaffInvitesQuery } from '../../types/repositories'
+import type {
+  MerchantStaffInvite,
+  MerchantStaffDetailStats,
+  StaffInvitesQuery,
+  StaffStatsDateParams,
+} from '../../types/repositories'
 import type { StaffInviteParams, StaffLinkRequestParams, StaffReorderItem, UpdateStaffStatusVars } from '../../types/hooks'
 
 export { StatusFilter }
@@ -125,6 +130,30 @@ export function useSearchMerchantStaff(q: string, { enabled = true } = {}) {
     queryKey: qk.merchantStaffSearch(q),
     queryFn: () => merchantStaffRepository.search(q),
     enabled: enabled && !!q && q.trim().length > 0,
+  })
+}
+
+/** Staff detail by staffCode (`GET /merchant/staff/{staffCode}`). */
+export function useMerchantStaffByCode(staffCode?: string | null, { enabled = true } = {}) {
+  return useQuery<StaffMember>({
+    queryKey: qk.merchantStaffByCode(staffCode),
+    queryFn: () => merchantStaffRepository.getByStaffCode(staffCode!),
+    enabled: enabled && !!staffCode,
+    retry: false,
+  })
+}
+
+/** Staff detail stats (`GET /merchant/staff/{staffProfileId}/stats`). */
+export function useMerchantStaffStats(
+  staffProfileId?: string | null,
+  dateRange: StaffStatsDateParams = {},
+  { enabled = true } = {},
+) {
+  return useQuery<MerchantStaffDetailStats>({
+    queryKey: qk.merchantStaffStats(staffProfileId, dateRange),
+    queryFn: () => merchantStaffRepository.getStats(staffProfileId!, dateRange),
+    enabled: enabled && !!staffProfileId,
+    placeholderData: keepPreviousData,
   })
 }
 

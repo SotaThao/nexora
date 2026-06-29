@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 
 // 2. Third-party
-import { Filter, Moon, Settings, ShieldAlert, Sun, Check, Link } from 'lucide-react'
+import { Filter, Settings, ShieldAlert, Check, Link } from 'lucide-react'
 
 // 3. Internal — utils → contexts → data/constants → hooks → layout → views → modals → ui
 import { logger } from '../utils/logger'
@@ -162,7 +162,7 @@ export default function Dashboard({
   })
   const { data: pendingStaffPage } = useMerchantStaff({
     enabled: isStaffTab,
-    statusFilter: StatusFilter.Pending,
+    statusFilter: StatusFilter.WaitingStaffAcceptance,
     pageNumber: 1,
     pageSize: 50,
   })
@@ -310,6 +310,7 @@ export default function Dashboard({
     staffForm, setStaffForm,
     errors, setErrors,
     editingStaffId, setEditingStaffId,
+    isStaffViewOnly,
     isStaffModalOpen, setIsStaffModalOpen,
     isAddStaffModalOpen,
     isApproveModalOpen, setIsApproveModalOpen,
@@ -317,7 +318,7 @@ export default function Dashboard({
     isInviteShareOpen, setIsInviteShareOpen,
     inviteShareDefaultName, setInviteShareDefaultName,
     inviteShareDefaultContact, setInviteShareDefaultContact,
-    resetStaffForm, openAddStaff, closeAddStaffModal, openApproveStaff, openEditStaff, closeStaffModal,
+    resetStaffForm, openAddStaff, closeAddStaffModal, openApproveStaff, openEditStaff, openViewStaff, closeStaffModal,
     saveStaff, sendSetupLinkFromModal, handleLinkStaff, handleInviteStaff,
     handleResendInvite,
     handleAcceptJoinRequest, handleDeclineJoinRequest, deleteStaff, toggleStaff, toggleStaffTipsFlow,
@@ -417,10 +418,24 @@ export default function Dashboard({
 
   const filteredTouchpoints = touchpoints
 
-  const displayStaffTotalCount = filteredStaff.length
-  const displayStaffTotalPages = Math.max(1, Math.ceil(displayStaffTotalCount / staffPagination.pageSize))
-  const displayStaffHasNext = staffPagination.pageNumber < displayStaffTotalPages
-  const displayStaffHasPrev = staffPagination.pageNumber > 1
+  const displayStaffTotalCount = searchQuery
+    ? filteredStaff.length
+    : (merchantStaffData?.totalCount ?? filteredStaff.length)
+  const displayStaffTotalPages = searchQuery
+    ? Math.max(1, Math.ceil(displayStaffTotalCount / staffPagination.pageSize))
+    : (merchantStaffData?.totalPages ?? Math.max(1, Math.ceil(displayStaffTotalCount / staffPagination.pageSize)))
+  const displayStaffHasNext = searchQuery
+    ? staffPagination.pageNumber < displayStaffTotalPages
+    : (merchantStaffData?.hasNextPage ?? staffPagination.pageNumber < displayStaffTotalPages)
+  const displayStaffHasPrev = searchQuery
+    ? staffPagination.pageNumber > 1
+    : (merchantStaffData?.hasPreviousPage ?? staffPagination.pageNumber > 1)
+
+  useEffect(() => {
+    const apiTotalPages = merchantStaffData?.totalPages
+    if (!isStaffTab || !apiTotalPages || staffPagination.pageNumber <= apiTotalPages) return
+    staffPagination.setPage(apiTotalPages)
+  }, [isStaffTab, merchantStaffData?.totalPages, staffPagination.pageNumber, staffPagination.setPage])
 
   const filteredReviews = useMemo(() => {
     if (!searchQuery) return reviews
@@ -562,7 +577,7 @@ export default function Dashboard({
       s.nickname === staffKey ||
       s.fullName?.toLowerCase().includes(String(staffKey).toLowerCase().split(' ')[0])
     )
-    navigate(`/dashboard/staff/${member?.id || staffKey}`)
+    navigate(`/dashboard/staff/${member?.staffCode || member?.id || staffKey}`)
   }
 
   // ---------------------------------------------------------------------------
@@ -601,7 +616,7 @@ export default function Dashboard({
     isOverviewLoading, isTransactionsLoading, isTouchpointsLoading,
     reviewsPage, isReviewsPending,
     inviteLinkSetting, isInviteLinkSettingLoading,
-    filteredStaff, pendingStaff, staff, staffLoading, openApproveStaff, openAddStaff, openEditStaff, deleteStaff, toggleStaff, toggleStaffTipsFlow,
+    filteredStaff, pendingStaff, staff, staffLoading, openApproveStaff, openAddStaff, openEditStaff, openViewStaff, deleteStaff, toggleStaff, toggleStaffTipsFlow,
     handleLinkStaff, handleInviteStaff, handleResendInvite, handleAcceptJoinRequest, handleDeclineJoinRequest, handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     setInviteShareDefaultName, setInviteShareDefaultContact, setIsInviteShareOpen,
     filteredTouchpoints, setAddTouchpointPrefill, setIsAddTouchpointModalOpen, deleteTouchpoint, toggleTouchpointStatus, togglingTouchpointId: toggleTouchpointMutation.isPending ? toggleTouchpointMutation.variables : null, linkDevice, devices, handleAddDevice, handleDeleteDevice, handleToggleDeviceStatus,
@@ -700,16 +715,6 @@ export default function Dashboard({
         </main>
       </div>
 
-      <button
-        onClick={() => document.documentElement.classList.toggle('dark')}
-        className="fixed bottom-4 right-4 z-40 hidden lg:flex h-10 w-10 items-center justify-center rounded-full border border-nexoraBorder bg-nexoraSurface text-nexoraMuted shadow-lg"
-        title="Toggle theme hook"
-        aria-label="Toggle theme hook"
-      >
-        <Sun className="h-4 w-4 dark:hidden" />
-        <Moon className="hidden h-4 w-4 dark:block" />
-      </button>
-
       <MobileBottomNav activeMenu={activeMenu} onNavigate={handleNavigateMenu} />
 
       <MobileMenuDrawer
@@ -751,6 +756,10 @@ export default function Dashboard({
       <StaffModal
         open={isStaffModalOpen && Boolean(editingStaffId)}
         editing={Boolean(editingStaffId)}
+        viewOnly={isStaffViewOnly}
+        staffLinkId={editingStaffId}
+        onToggleTipsFlow={toggleStaffTipsFlow}
+        isTogglingTipsFlow={updateStatusMutation.isPending && updateStatusMutation.variables?.staffLinkId === editingStaffId}
         onDecline={closeStaffModal}
         form={staffForm}
         errors={errors}

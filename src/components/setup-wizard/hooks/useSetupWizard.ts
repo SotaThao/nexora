@@ -25,7 +25,12 @@ import { getErrorI18nKey } from '../../../data/errorCodes'
 import { getDefaultDialCode } from '../../CountryCodeSelect'
 import { isValidEmail, isValidHttpUrl } from '../../../utils/validation'
 
-export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, hasKyb }) {
+export default function useSetupWizard({
+  initialBusinessInfo,
+  onBackToLogin,
+  hasKyb,
+  hasCompletedOnboarding = false,
+}) {
   const { currentLanguage, setLanguage, t } = useTranslation()
   const createBusinessMutation = useCreateBusiness()
   const uploadLogoMutation = useUploadLogo()
@@ -35,7 +40,9 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
   const createTouchpointMutation = useCreateTouchpoint()
   const merchantSetupQuery = useMerchantSetup()
   const [currentStep, setCurrentStep] = useState(1) // 1, 2, 3
-  const isSsoLocked = !!hasKyb // Lock fields ONLY if business is already KYB approved
+  // Lock verified SSO store-info only after onboarding is done. Merchants with
+  // kyb_approved but isPublic=false / onboardingStep≠5 must still edit step 1.
+  const isSsoLocked = !!hasKyb && hasCompletedOnboarding === true
 
   // State for all steps
   const [businessInfo, setBusinessInfo] = useState({
@@ -94,6 +101,7 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
   const [editingTpId, setEditingTpId] = useState<any | null>(null)
   const [editingTpName, setEditingTpName] = useState('')
   const [editingTpType, setEditingTpType] = useState('Table QR')
+  const [editingTpNameError, setEditingTpNameError] = useState('')
 
   // QR preview modal state
   const [previewingTp, setPreviewingTp] = useState<any | null>(null)
@@ -522,13 +530,16 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
     setEditingTpId(tp.id)
     setEditingTpName(tp.name)
     setEditingTpType(tp.type)
+    setEditingTpNameError('')
   }
 
   // Step 2: Save Edited Touch Point
   const handleSaveTouchpoint = (id) => {
     if (!editingTpName.trim()) {
+      setEditingTpNameError('setup.errors.tp_name_required')
       return
     }
+    setEditingTpNameError('')
     setTouchPoints(prev => prev.map(tp => {
       if (tp.id === id) {
         const updated = {
@@ -620,6 +631,7 @@ export default function useSetupWizard({ initialBusinessInfo, onBackToLogin, has
     setEditingTpId,
     editingTpName,
     setEditingTpName,
+    editingTpNameError,
     editingTpType,
     setEditingTpType,
     previewingTp,
