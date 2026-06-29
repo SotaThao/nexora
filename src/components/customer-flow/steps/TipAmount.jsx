@@ -249,7 +249,7 @@ export default function TipAmount({
                 {currentLanguage === 'vi' ? 'TÀI KHOẢN VLINKPAY' : 'VLINKPAY ACCOUNT'}
               </span>
               <span className="bg-[#D1FAE5] text-[#059669] px-2.5 py-1 rounded-full text-[11px] font-extrabold">
-                VLinkPay
+                VLINKPAY
               </span>
             </div>
 
