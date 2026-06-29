@@ -36,6 +36,11 @@ const WalletLogos = {
       <span className="font-black text-[10px] tracking-tighter ml-[1px] leading-none select-none">Pay</span>
     </div>
   ),
+  vlinkpay: (
+    <div className="w-[18px] h-[18px] rounded-full overflow-hidden flex items-center justify-center shrink-0">
+      <img src="/assets/vlinkpay-logo.png" alt="VLINKPAY" className="w-full h-full object-contain bg-white" />
+    </div>
+  ),
 }
 
 export default function TipAmount({
@@ -364,7 +369,7 @@ export default function TipAmount({
             { name: 'Cash App', key: 'cashapp', color: '#00D632', logo: WalletLogos.cashapp },
             { name: 'Apple Cash', key: 'applecash', color: '#000000', logo: WalletLogos.applepay },
             { name: 'Paypal', key: 'paypal', color: '#003087', logo: WalletLogos.paypal },
-            { name: 'VLINKPAY', key: 'vlinkpay', color: '#2B59FF', logo: WalletLogos.bankwire }
+            { name: 'VLINKPAY', key: 'vlinkpay', color: '#2B59FF', logo: WalletLogos.vlinkpay }
           ].filter(wallet => {
             if (selectedStaffMembers.length === 1) {
               const staff = selectedStaffMembers[0]

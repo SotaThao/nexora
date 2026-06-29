@@ -39,10 +39,8 @@ const WalletLogos = {
     </div>
   ),
   vlinkpay: (
-    <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: '#2B59FF' }}>
-      <svg viewBox="0 0 24 24" className="h-[10px] w-[10px] fill-white" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2L1 7v2h22V7L12 2zm0 18H3v-8h3v8h3v-8h3v8h3v-8h3v8h3v-8h3v8h3v-8h3v8h-3zm-11 2h22v2H1v-2z" />
-      </svg>
+    <div className="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center shrink-0">
+      <img src="/assets/vlinkpay-logo.png" alt="VLINKPAY" className="w-full h-full object-contain" />
     </div>
   ),
 }
