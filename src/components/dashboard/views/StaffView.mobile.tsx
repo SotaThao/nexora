@@ -551,7 +551,7 @@ function StaffView({
                         url: publicInviteLink
                       })
                     } catch (error) {
-                      console.error('Error sharing:', error)
+                      // ignore
                     }
                   } else {
                     navigator.clipboard.writeText(publicInviteLink)
