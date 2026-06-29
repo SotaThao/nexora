@@ -242,6 +242,68 @@ export default function TipAmount({
       ? selectedStaffMembers[0].paymentAccounts?.[selectedWalletObj.key]
       : businessPaymentAccounts?.[selectedWalletObj.key];
 
+    if (selectedWalletObj.key === 'vlinkpay') {
+      return (
+        <div className="mt-4 flex flex-col gap-3 animate-fadeIn">
+          {/* VLINKPAY Green Card */}
+          <div className="p-4 rounded-[16px] border border-[#A7F3D0] bg-[#ECFDF5] flex flex-col gap-3">
+            <div className="flex justify-between items-center">
+              <span className="font-extrabold text-[12px] text-[#047857] uppercase tracking-wider">
+                {currentLanguage === 'vi' ? 'TÀI KHOẢN VLINKPAY' : 'VLINKPAY ACCOUNT'}
+              </span>
+              <span className="bg-[#D1FAE5] text-[#059669] px-2.5 py-1 rounded-full text-[11px] font-extrabold">
+                VLinkPay
+              </span>
+            </div>
+
+            <div className="flex gap-4 items-center">
+              {/* QR Code */}
+              {qrCodeVal ? (
+                <img src={qrCodeVal} className="w-24 h-24 rounded-xl border border-black/5 bg-white p-1 shadow-sm shrink-0 object-contain" alt="QR Code" />
+              ) : (
+                <div className="w-24 h-24 rounded-xl border border-black/5 bg-white flex flex-col items-center justify-center shadow-sm shrink-0">
+                  <span className="text-[10px] text-nexoraSubtle font-medium">QR CODE</span>
+                </div>
+              )}
+
+              {/* Address Info */}
+              <div className="flex-1 flex flex-col gap-1.5 overflow-hidden">
+                <span className="text-[11px] font-medium text-[#059669] opacity-80">
+                  {currentLanguage === 'vi' ? 'Địa chỉ ví' : 'Wallet Address'}
+                </span>
+                <span className="text-[13px] font-black text-nexoraText break-all leading-tight">
+                  {accountVal || 'N/A'}
+                </span>
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(accountVal || getRecipientName());
+                    showToast(t('common.copied') || 'Copied!', 'success');
+                  }}
+                  className="mt-1 flex items-center justify-center gap-1.5 w-full bg-white border border-[#A7F3D0] text-[#059669] py-1.5 rounded-xl text-[12px] font-bold shadow-sm hover:bg-[#D1FAE5] transition-colors"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  {currentLanguage === 'vi' ? 'Sao chép địa chỉ ví' : 'Copy wallet address'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Instruction Box */}
+          <div className="p-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-[12px] text-[#475569] text-[12px] font-medium leading-relaxed">
+            {currentLanguage === 'vi' ? (
+              <>
+                (1) Quét QR hoặc copy địa chỉ ví &middot; (2) Mở VLinkPay &amp; chuyển <strong>${activeTipAmount.toFixed(2)}</strong> &middot; (3) Sau đó nhấn xác nhận bên dưới
+              </>
+            ) : (
+              <>
+                (1) Scan QR or copy wallet address &middot; (2) Open VLinkPay &amp; send <strong>${activeTipAmount.toFixed(2)}</strong> &middot; (3) Then click confirm below
+              </>
+            )}
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="mt-4 p-4 border rounded-[16px] flex flex-col gap-3 relative animate-fadeIn" style={{ backgroundColor: selectedWalletObj.key === 'applecash' ? '#F8F8F8' : `${selectedWalletObj.color}15`, borderColor: selectedWalletObj.color }}>
         <div className="flex justify-between items-center px-3 py-2.5 rounded-xl" style={{ backgroundColor: selectedWalletObj.color, color: 'white' }}>
