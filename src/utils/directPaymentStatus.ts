@@ -1,10 +1,22 @@
-import { PaymentStatus, type MerchantPaymentRecord, type PaymentStatusValue } from '../types/domain'
+import {
+  PaymentStatus,
+  type DirectPaymentStatusSnapshot,
+  type MerchantPaymentRecord,
+  type PaymentStatusValue,
+  type StaffPaymentRecord,
+} from '../types/domain'
+
+export type DirectPaymentStatusVariant = 'merchant' | 'staff'
 
 export const DIRECT_PAYMENT_STATUS_ORDER: PaymentStatusValue[] = [
   PaymentStatus.Initiated,
   PaymentStatus.Confirmed,
   PaymentStatus.Completed,
 ]
+
+function statusKeyPrefix(variant: DirectPaymentStatusVariant): string {
+  return variant === 'staff' ? 'staff_payments' : 'merchant_payments'
+}
 
 export function normalizePaymentStatusValue(status: unknown): PaymentStatusValue {
   if (status === 'Initiated' || status === 0 || status === '0') return PaymentStatus.Initiated
@@ -17,25 +29,33 @@ export function normalizePaymentStatusValue(status: unknown): PaymentStatusValue
   return PaymentStatus.Initiated
 }
 
-export function getDirectPaymentStatusLabelKey(status: PaymentStatusValue): string {
+export function getDirectPaymentStatusLabelKey(
+  status: PaymentStatusValue,
+  variant: DirectPaymentStatusVariant = 'merchant',
+): string {
+  const prefix = statusKeyPrefix(variant)
   switch (status) {
     case PaymentStatus.Confirmed:
-      return 'merchant_payments.status_confirmed'
+      return `${prefix}.status_confirmed`
     case PaymentStatus.Completed:
-      return 'merchant_payments.status_completed'
+      return `${prefix}.status_completed`
     default:
-      return 'merchant_payments.status_initiated'
+      return `${prefix}.status_initiated`
   }
 }
 
-export function getDirectPaymentStatusDescKey(status: PaymentStatusValue): string {
+export function getDirectPaymentStatusDescKey(
+  status: PaymentStatusValue,
+  variant: DirectPaymentStatusVariant = 'merchant',
+): string {
+  const prefix = statusKeyPrefix(variant)
   switch (status) {
     case PaymentStatus.Confirmed:
-      return 'merchant_payments.status_confirmed_desc'
+      return `${prefix}.status_confirmed_desc`
     case PaymentStatus.Completed:
-      return 'merchant_payments.status_completed_desc'
+      return `${prefix}.status_completed_desc`
     default:
-      return 'merchant_payments.status_initiated_desc'
+      return `${prefix}.status_initiated_desc`
   }
 }
 
@@ -65,4 +85,34 @@ export function isDirectPaymentRecordCompleted(
     isDirectPaymentCompleted(normalizePaymentStatusValue(payment.status)) ||
     Boolean(payment.merchantConfirmedAt)
   )
+}
+
+/** Customer sent money — staff must PATCH /acknowledge (Confirmed → Completed). */
+export function needsStaffAcknowledge(
+  payment: Pick<StaffPaymentRecord, 'status' | 'customerConfirmedAt' | 'staffConfirmedAt'>,
+): boolean {
+  if (payment.staffConfirmedAt) return false
+  const status = normalizePaymentStatusValue(payment.status)
+  if (status === PaymentStatus.Completed) return false
+  if (status === PaymentStatus.Confirmed) return true
+  return Boolean(payment.customerConfirmedAt)
+}
+
+export function isStaffDirectPaymentRecordCompleted(
+  payment: Pick<StaffPaymentRecord, 'status' | 'staffConfirmedAt'>,
+): boolean {
+  return (
+    isDirectPaymentCompleted(normalizePaymentStatusValue(payment.status)) ||
+    Boolean(payment.staffConfirmedAt)
+  )
+}
+
+/** Status API returned Confirmed and recipient has not acknowledged receipt yet. */
+export function needsAcknowledgeFromStatusSnapshot(
+  snapshot: Pick<DirectPaymentStatusSnapshot, 'status' | 'merchantConfirmedAt' | 'customerConfirmedAt'>,
+): boolean {
+  const status = normalizePaymentStatusValue(snapshot.status)
+  if (status !== PaymentStatus.Confirmed) return false
+  if (snapshot.merchantConfirmedAt) return false
+  return true
 }

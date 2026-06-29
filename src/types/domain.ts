@@ -76,6 +76,12 @@ export interface MerchantPaymentQr {
   businessId: string
 }
 
+/** Staff direct-payment QR — GET /api/v1/staff/payments/qr */
+export interface StaffPaymentQr {
+  paymentUrl: string
+  staffProfileId: string
+}
+
 /** Public direct-payment page — GET /api/v1/public/merchant/{businessId}/payment */
 export interface PublicDirectPaymentMethod {
   id: string
@@ -89,6 +95,15 @@ export interface PublicDirectPaymentPage {
   businessId: string
   businessName: string
   logoUrl?: string | null
+  paymentUrl: string
+  paymentMethods: PublicDirectPaymentMethod[]
+}
+
+/** Public staff direct-payment page — GET /api/v1/public/staff/{staffProfileId}/payment */
+export interface PublicStaffDirectPaymentPage {
+  staffProfileId: string
+  displayName: string
+  photoUrl?: string | null
   paymentUrl: string
   paymentMethods: PublicDirectPaymentMethod[]
 }
@@ -111,9 +126,10 @@ export interface DirectPaymentStatusSnapshot {
   merchantConfirmedAt?: string | null
 }
 
-/** PaymentType enum — DirectPayment = 0 per direct-payment-qr-flow spec. */
+/** PaymentType enum — DirectPayment = 0, StaffDirectPayment = 1 per direct-payment QR specs. */
 export const PaymentType = {
   DirectPayment: 0,
+  StaffDirectPayment: 1,
 } as const
 
 /** PaymentStatus enum — direct-payment-qr-flow state machine. */
@@ -142,6 +158,30 @@ export interface MerchantPaymentRecord {
 
 export interface MerchantPaymentsListPage {
   items: MerchantPaymentRecord[]
+  pageNumber: number
+  pageSize: number
+  totalPages: number
+  totalCount: number
+  hasNextPage: boolean
+  hasPreviousPage: boolean
+}
+
+/** Staff payment ledger item — GET /api/v1/staff/payments */
+export interface StaffPaymentRecord {
+  id: string
+  type: number
+  amount: number
+  status: PaymentStatusValue
+  paymentMethodType: string
+  createdAt: string
+  customerConfirmedAt?: string | null
+  staffConfirmedAt?: string | null
+  accountInfo?: string | null
+  imageUrl?: string | null
+}
+
+export interface StaffPaymentsListPage {
+  items: StaffPaymentRecord[]
   pageNumber: number
   pageSize: number
   totalPages: number

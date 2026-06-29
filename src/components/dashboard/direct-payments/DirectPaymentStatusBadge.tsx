@@ -25,11 +25,13 @@ export function DirectPaymentStatusBadge({
   t,
   className = '',
   size = 'sm',
+  variant = 'merchant',
 }: {
   status: PaymentStatusValue
   t: (key: string) => string
   className?: string
   size?: 'sm' | 'md'
+  variant?: 'merchant' | 'staff'
 }) {
   const tone = resolveTone(status)
   const Icon = tone === 'completed' ? CheckCircle : tone === 'confirmed' ? Hourglass : Clock
@@ -38,20 +40,32 @@ export function DirectPaymentStatusBadge({
 
   return (
     <span
-      title={t(getDirectPaymentStatusDescKey(status))}
+      title={t(getDirectPaymentStatusDescKey(status, variant))}
       className={`inline-flex max-w-full items-center gap-1 rounded-full border font-bold ${padding} ${textSize} ${TONE_CLASS[tone]} ${className}`}
     >
       <Icon className="h-3 w-3 shrink-0" />
-      <span className="truncate">{t(getDirectPaymentStatusLabelKey(status))}</span>
+      <span className="truncate">{t(getDirectPaymentStatusLabelKey(status, variant))}</span>
     </span>
   )
 }
 
-export function DirectPaymentStatusLegend({ t }: { t: (key: string) => string }) {
+export function DirectPaymentStatusLegend({
+  t,
+  variant = 'merchant',
+}: {
+  t: (key: string) => string
+  variant?: 'merchant' | 'staff'
+}) {
+  const prefix = variant === 'staff' ? 'staff_payments' : 'merchant_payments'
+  const confirmedActionKey =
+    variant === 'staff'
+      ? 'staff_payments.status_confirmed_staff_action'
+      : 'merchant_payments.status_confirmed_merchant_action'
+
   return (
     <div className="rounded-xl border border-nexoraBorder bg-nexoraCanvas/50 p-3 sm:p-4">
       <p className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
-        {t('merchant_payments.status_flow_title')}
+        {t(`${prefix}.status_flow_title`)}
       </p>
       <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
         {DIRECT_PAYMENT_STATUS_ORDER.map((status) => (
@@ -60,12 +74,12 @@ export function DirectPaymentStatusLegend({ t }: { t: (key: string) => string })
             className="rounded-lg border border-nexoraBorder/70 bg-white px-3 py-2.5"
           >
             <div className="flex items-center gap-2">
-              <DirectPaymentStatusBadge status={status} t={t} />
+              <DirectPaymentStatusBadge status={status} t={t} variant={variant} />
             </div>
             <p className="mt-1.5 text-[11px] leading-relaxed text-nexoraMuted">
               {status === PaymentStatus.Confirmed
-                ? t('merchant_payments.status_confirmed_merchant_action')
-                : t(getDirectPaymentStatusDescKey(status))}
+                ? t(confirmedActionKey)
+                : t(getDirectPaymentStatusDescKey(status, variant))}
             </p>
           </div>
         ))}

@@ -82,6 +82,9 @@ export const qk = {
 
   // Staff Payment Methods
   staffPaymentMethods: ()      => ['staffPaymentMethods'],
+  staffPaymentQr: ()          => ['staffPaymentQr'],
+  staffPaymentsList: (filters = EMPTY) => ['staffPayments', 'list', filters],
+  staffPaymentDetail: (paymentId: string) => ['staffPayments', 'detail', paymentId],
 
   // Staff Self (own staff profile + linked businesses)
   staffProfile:        ()      => ['staffProfile'],
@@ -95,6 +98,7 @@ export const qk = {
   customerTouch: (businessSlug, touchPointSlug, sessionId) => ['customerTouch', businessSlug, touchPointSlug, sessionId],
   publicBusinessPaymentMethods: (businessId) => ['publicBusinessPaymentMethods', businessId],
   publicDirectPaymentPage: (businessId) => ['publicDirectPaymentPage', businessId],
+  publicStaffDirectPaymentPage: (staffProfileId: string) => ['publicStaffDirectPaymentPage', staffProfileId],
   publicPaymentStatus: (paymentId: string) => ['publicPayment', 'status', paymentId],
 }
 

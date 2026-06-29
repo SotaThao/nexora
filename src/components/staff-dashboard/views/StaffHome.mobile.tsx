@@ -149,7 +149,7 @@ export default function StaffHome() {
         <QuickAction icon={<QrCode className="h-5 w-5" />} label={t('staff_dashboard.home.quick_qr')} bg="bg-purple-100" iconColor="text-purple-600" onClick={() => go('qr')} />
         <QuickAction icon={<DollarSign className="h-5 w-5" />} label={t('staff_dashboard.home.quick_tips')} bg="bg-emerald-100" iconColor="text-emerald-600" onClick={() => go('tips')} />
         <QuickAction icon={<MessageSquare className="h-5 w-5" />} label={t('staff_dashboard.home.quick_reviews')} bg="bg-blue-100" iconColor="text-blue-600" onClick={() => go('reviews')} />
-        <QuickAction icon={<CreditCard className="h-5 w-5" />} label={t('staff_dashboard.home.quick_payments')} bg="bg-indigo-100" iconColor="text-indigo-600" onClick={() => go('pay')} />
+        <QuickAction icon={<CreditCard className="h-5 w-5" />} label={t('staff_dashboard.home.quick_payments')} bg="bg-indigo-100" iconColor="text-indigo-600" onClick={() => go('payments')} />
         <QuickAction icon={<Gift className="h-5 w-5" />} label={t('staff_dashboard.home.quick_refer')} bg="bg-pink-100" iconColor="text-pink-600" onClick={() => go('profile')} />
       </div>
 

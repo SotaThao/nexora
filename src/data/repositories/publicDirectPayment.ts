@@ -6,6 +6,7 @@ import type {
   PublicDirectPaymentMethod,
   PublicDirectPaymentPage,
 } from '../../types/domain'
+import { PaymentType } from '../../types/domain'
 import { normalizePaymentStatusValue } from '../../utils/directPaymentStatus'
 
 type HttpClient = typeof httpClient
@@ -66,6 +67,14 @@ function normalizeCreatePaymentResult(raw: Record<string, unknown> | null | unde
   }
 }
 
+function normalizePaymentType(value: unknown): number {
+  if (value === 'StaffDirectPayment' || value === 1 || value === '1') return PaymentType.StaffDirectPayment
+  if (value === 'DirectPayment' || value === 0 || value === '0') return PaymentType.DirectPayment
+  const num = Number(value)
+  if (num === PaymentType.StaffDirectPayment || num === PaymentType.DirectPayment) return num
+  return PaymentType.DirectPayment
+}
+
 function normalizePaymentStatusSnapshot(
   raw: Record<string, unknown> | null | undefined,
 ): DirectPaymentStatusSnapshot | null {
@@ -76,7 +85,7 @@ function normalizePaymentStatusSnapshot(
   return {
     paymentId,
     status: normalizePaymentStatusValue(readField<number | string>(raw, 'status', 'Status')),
-    type: Number(readField<number>(raw, 'type', 'Type') ?? 0),
+    type: normalizePaymentType(readField<number | string>(raw, 'type', 'Type')),
     amount: Number(readField<number>(raw, 'amount', 'Amount') ?? 0),
     createdAt: readField<string>(raw, 'createdAt', 'CreatedAt') ?? '',
     customerConfirmedAt: readField<string | null>(raw, 'customerConfirmedAt', 'CustomerConfirmedAt') ?? null,

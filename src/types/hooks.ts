@@ -62,6 +62,12 @@ export interface CreateDirectPaymentVars {
   amount: number
 }
 
+export interface CreateStaffDirectPaymentVars {
+  staffProfileId: string
+  staffPaymentMethodId: string
+  amount: number
+}
+
 export interface SkipTipVars {
   touchPointId: string
   staffProfileId: string

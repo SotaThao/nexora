@@ -1,5 +1,5 @@
 import { useContext } from 'react'
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient, type Query } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import merchantPaymentsRepository from '../repositories/merchantPayments'
 import type { MerchantPaymentsListQuery } from '../repositories/merchantPayments'
@@ -29,7 +29,13 @@ export function useMerchantPaymentQr({ enabled = true } = {}) {
 
 export function useMerchantPaymentsList(
   query: MerchantPaymentsListQuery,
-  { enabled = true } = {},
+  {
+    enabled = true,
+    refetchInterval = false as
+      | number
+      | false
+      | ((query: Query<MerchantPaymentsListPage>) => number | false),
+  } = {},
 ) {
   const canFetch = useIsOwner(enabled)
 
@@ -39,6 +45,8 @@ export function useMerchantPaymentsList(
     enabled: canFetch,
     placeholderData: keepPreviousData,
     retry: false,
+    refetchInterval,
+    refetchIntervalInBackground: false,
   })
 }
 

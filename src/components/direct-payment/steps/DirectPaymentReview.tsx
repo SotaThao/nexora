@@ -7,6 +7,13 @@ export default function DirectPaymentReview({
   t,
   businessName,
   logoUrl,
+  recipientName,
+  recipientSubtitle,
+  amountRangeHint,
+  reviewTitle,
+  reviewDesc,
+  noMethodsTitle,
+  noMethodsDesc,
   selectedAmount,
   setSelectedAmount,
   customAmount,
@@ -17,13 +24,21 @@ export default function DirectPaymentReview({
   onSelectWallet,
   disablePaymentSelection,
 }) {
+  const name = recipientName || businessName || t('direct_payment.default_business')
+  const subtitle = recipientSubtitle || t('direct_payment.pay_to_business')
+  const rangeHint = amountRangeHint || t('direct_payment.amount_range_hint')
+  const title = reviewTitle || t('direct_payment.review_payment_title')
+  const desc = reviewDesc || t('direct_payment.review_payment_desc')
+  const emptyMethodsTitle = noMethodsTitle || t('direct_payment.no_methods_title')
+  const emptyMethodsDesc = noMethodsDesc || t('direct_payment.no_methods_desc')
+
   return (
     <div className="space-y-4 animate-fadeIn">
       <div className="text-center space-y-1.5">
         <h2 className="font-sans text-lg font-black tracking-wide text-nexoraText uppercase">
-          {t('direct_payment.review_payment_title')}
+          {title}
         </h2>
-        <p className="text-xs text-nexoraMuted">{t('direct_payment.review_payment_desc')}</p>
+        <p className="text-xs text-nexoraMuted">{desc}</p>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-nexoraBorder bg-white shadow-sm">
@@ -36,15 +51,15 @@ export default function DirectPaymentReview({
             />
           ) : (
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-nexoraElectric to-nexoraViolet text-sm font-black text-white shrink-0">
-              {(businessName || '?').slice(0, 1).toUpperCase()}
+              {(name || '?').slice(0, 1).toUpperCase()}
             </div>
           )}
           <div className="min-w-0 text-left">
             <h4 className="truncate text-sm font-extrabold text-nexoraText">
-              {businessName || t('direct_payment.default_business')}
+              {name}
             </h4>
             <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-nexoraSubtle">
-              {t('direct_payment.pay_to_business')}
+              {subtitle}
             </p>
           </div>
         </div>
@@ -102,7 +117,7 @@ export default function DirectPaymentReview({
               {t('direct_payment.total_payment')}
             </h4>
             <p className="mt-0.5 text-[10px] font-semibold text-nexoraMuted">
-              {t('direct_payment.amount_range_hint')}
+              {rangeHint}
             </p>
           </div>
           <div className="text-lg font-black text-nexoraBrand">
@@ -139,8 +154,8 @@ export default function DirectPaymentReview({
 
         {!isLoadingMethods && walletOptions.length === 0 ? (
           <div className="rounded-xl border border-nexoraBorder bg-nexoraCanvas/70 px-4 py-3 text-center">
-            <p className="text-sm font-bold text-nexoraText">{t('direct_payment.no_methods_title')}</p>
-            <p className="mt-1 text-xs leading-relaxed text-nexoraMuted">{t('direct_payment.no_methods_desc')}</p>
+            <p className="text-sm font-bold text-nexoraText">{emptyMethodsTitle}</p>
+            <p className="mt-1 text-xs leading-relaxed text-nexoraMuted">{emptyMethodsDesc}</p>
           </div>
         ) : null}
       </div>

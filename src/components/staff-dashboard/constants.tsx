@@ -1,5 +1,5 @@
 // Staff dashboard navigation constants.
-import { LayoutDashboard, QrCode, Wallet, CreditCard, Settings, Star } from 'lucide-react'
+import { LayoutDashboard, QrCode, Wallet, CreditCard, ClipboardList, Settings, Star } from 'lucide-react'
 
 // Bottom-nav / sidebar items. Notifications is reached via the header bell.
 export const STAFF_MENU_ITEMS = [
@@ -7,13 +7,35 @@ export const STAFF_MENU_ITEMS = [
   { id: 'qr', icon: QrCode, image: '/assets/menu/touchpoint.png', labelKey: 'staff_dashboard.nav.my_qr' },
   { id: 'tips', icon: Wallet, image: '/assets/menu/tips.png', labelKey: 'staff_dashboard.nav.tips' },
   { id: 'reviews', icon: Star, image: '/assets/menu/reviews.png', labelKey: 'staff_dashboard.nav.reviews' },
-  { id: 'pay', icon: CreditCard, image: '/assets/menu/transaction.png', labelKey: 'staff_dashboard.nav.pay' },
-  { id: 'profile', icon: Settings, image: '/assets/menu/setting.png', labelKey: 'staff_dashboard.nav.profile' }
+  { id: 'payments', icon: ClipboardList, image: '/assets/menu/transaction.png', labelKey: 'staff_dashboard.nav.payments' },
+  { id: 'pay', icon: CreditCard, image: '/assets/menu/analytics.png', labelKey: 'staff_dashboard.nav.pay' },
+  { id: 'profile', icon: Settings, image: '/assets/menu/setting.png', labelKey: 'staff_dashboard.nav.profile' },
 ]
 
-export const STAFF_BOTTOM_NAV_ITEMS = STAFF_MENU_ITEMS.filter((item) => item.id !== 'pay')
+export const STAFF_BOTTOM_NAV_ITEMS = STAFF_MENU_ITEMS.filter(
+  (item) => item.id !== 'pay' && item.id !== 'payments',
+)
 
-export const STAFF_SCREENS = ['home', 'qr', 'tips', 'reviews', 'pay', 'profile', 'notifications']
+export const STAFF_SCREENS = ['home', 'qr', 'tips', 'reviews', 'pay', 'payments', 'profile', 'notifications']
+
+const STAFF_ACTION_URL_ALIASES: Record<string, string> = {
+  '/staff/businesses': '/staff',
+}
+
+export function resolveStaffNotificationActionUrl(
+  actionUrl: string | null | undefined,
+): string | null {
+  if (!actionUrl?.trim()) return null
+  const trimmed = actionUrl.trim()
+  if (/^https?:\/\//i.test(trimmed)) return trimmed
+
+  const queryOrHashIndex = trimmed.search(/[?#]/)
+  const pathPart =
+    queryOrHashIndex === -1 ? trimmed : trimmed.slice(0, queryOrHashIndex)
+  const suffix = queryOrHashIndex === -1 ? '' : trimmed.slice(queryOrHashIndex)
+  const resolvedPath = STAFF_ACTION_URL_ALIASES[pathPart] || pathPart
+  return `${resolvedPath}${suffix}`
+}
 
 // Maps a notification type to the staff screen it should open from the header bell.
 // Link notifications (incoming requests + approved/accepted/joined) all land on the
@@ -31,9 +53,34 @@ const STAFF_NOTIFICATION_SCREEN: Record<string, string> = {
   staffinviteaccepted: 'qr',
   staffacceptedinvite: 'qr',
   staffjoined: 'qr',
+  directpaymentreceived: 'payments',
+  paymentreceived: 'payments',
 }
 
 export function resolveStaffNotificationScreen(type: string | null | undefined): string {
   const key = (type || '').toLowerCase().replace(/[\s_-]+/g, '')
   return STAFF_NOTIFICATION_SCREEN[key] || 'notifications'
+}
+
+export function navigateStaffNotification(
+  notification: { type?: string | null; actionUrl?: string | null },
+  navigate: (path: string) => void,
+  fallbackNavigate: (screen: string) => void,
+) {
+  if (notification.type === 'StaffLinkRequest') {
+    navigate('/staff/qr')
+    return
+  }
+
+  const target = resolveStaffNotificationActionUrl(notification.actionUrl)
+  if (target) {
+    if (/^https?:\/\//i.test(target)) {
+      window.location.assign(target)
+    } else {
+      navigate(target)
+    }
+    return
+  }
+
+  fallbackNavigate(resolveStaffNotificationScreen(notification.type))
 }

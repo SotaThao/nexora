@@ -6,7 +6,10 @@ export default function DirectPaymentSuccess({
   businessName,
   activeAmount,
   selectedWalletObj,
+  successDescKey = 'direct_payment.success_desc',
 }) {
+  const recipient = businessName || t('direct_payment.default_business')
+
   return (
     <div className="flex animate-fadeIn flex-col items-center space-y-6 py-4 text-center">
       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/20">
@@ -18,9 +21,10 @@ export default function DirectPaymentSuccess({
           {t('direct_payment.success_title')}
         </h3>
         <p className="text-xs leading-relaxed text-nexoraMuted">
-          {t('direct_payment.success_desc', {
+          {t(successDescKey, {
             amount: activeAmount.toFixed(2),
-            business: businessName || t('direct_payment.default_business'),
+            business: recipient,
+            name: recipient,
           })}
         </p>
       </div>

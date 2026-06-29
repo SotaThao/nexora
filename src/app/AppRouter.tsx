@@ -40,6 +40,9 @@ const CustomerFlow = lazyWithRetry(() => import("../components/CustomerFlow"));
 const DirectPaymentFlow = lazyWithRetry(
   () => import("../components/DirectPaymentFlow"),
 );
+const StaffDirectPaymentFlow = lazyWithRetry(
+  () => import("../components/StaffDirectPaymentFlow"),
+);
 const RegisterWizard = lazyWithRetry(
   () => import("../components/RegisterWizard"),
 );
@@ -69,6 +72,9 @@ const StaffProfile = lazyWithRetry(
 );
 const StaffNotifications = lazyWithRetry(
   () => import("../components/staff-dashboard/views/StaffNotifications"),
+);
+const StaffPayments = lazyWithRetry(
+  () => import("../components/staff-dashboard/views/StaffPayments"),
 );
 const ForgotPassword = lazyWithRetry(
   () => import("../components/ForgotPassword"),
@@ -128,6 +134,10 @@ function PaymentsRedirect() {
   return <Navigate to={target} replace />;
 }
 
+function StaffFallbackRoute() {
+  return <Navigate to="/staff" replace />;
+}
+
 export default function AppRouter() {
   const { session, logout } = useAuth();
   const location = useLocation();
@@ -147,6 +157,7 @@ export default function AppRouter() {
             path="/touch/:businessSlug/:touchPointSlug"
             element={<CustomerFlow />}
           />
+          <Route path="/pay/staff/:staffProfileId" element={<StaffDirectPaymentFlow />} />
           <Route path="/pay/:businessId" element={<DirectPaymentFlow />} />
           <Route path="/qr/:code" element={<QrRedirectPage />} />
           <Route path="/help/qr/:code" element={<HelpQrPage />} />
@@ -221,9 +232,11 @@ export default function AppRouter() {
             <Route path="tips" element={<StaffTips />} />
             <Route path="reviews" element={<StaffReviews />} />
             <Route path="pay" element={<StaffPay />} />
+            <Route path="payments" element={<StaffPayments />} />
+            <Route path="payments/:paymentId" element={<StaffPayments />} />
             <Route path="profile" element={<StaffProfile />} />
             <Route path="notifications" element={<StaffNotifications />} />
-            <Route path="*" element={<FallbackRoute />} />
+            <Route path="*" element={<StaffFallbackRoute />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

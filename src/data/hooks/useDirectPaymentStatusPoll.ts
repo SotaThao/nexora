@@ -7,10 +7,13 @@ import { PaymentStatus } from '../../types/domain'
 import {
   mergePaymentWithStatusSnapshot,
   resolveDirectPaymentStatusPollInterval,
+  shouldPollDirectPaymentAckWatch,
   shouldPollDirectPaymentStatus,
   syncDirectPaymentStatusToCache,
+  DIRECT_PAYMENT_STATUS_POLL_MS,
 } from '../utils/syncDirectPaymentStatus'
-import { normalizePaymentStatusValue } from '../../utils/directPaymentStatus'
+import { normalizePaymentStatusValue, needsAcknowledgeFromStatusSnapshot } from '../../utils/directPaymentStatus'
+import { collectPaymentsForAckWatch } from '../../utils/directPaymentAckNotice'
 
 function useSyncStatusSnapshot(paymentId: string | null | undefined, snapshot?: DirectPaymentStatusSnapshot) {
   const queryClient = useQueryClient()
@@ -23,7 +26,14 @@ function useSyncStatusSnapshot(paymentId: string | null | undefined, snapshot?: 
 
 type PollSeed = Pick<MerchantPaymentRecord, 'status' | 'customerConfirmedAt' | 'merchantConfirmedAt'>
 
-/** Poll public status for one payment while Initiated. */
+type AckStatusPollPayment = {
+  id: string
+  status: unknown
+  customerConfirmedAt?: string | null
+  merchantConfirmedAt?: string | null
+}
+
+/** Poll public status for one Confirmed payment (awaiting receipt ack). */
 export function useDirectPaymentStatusPoll(
   paymentId?: string | null,
   {
@@ -61,6 +71,102 @@ export function useDirectPaymentStatusPoll(
   return query
 }
 
+/** Poll the newest Confirmed payment that still needs receipt acknowledgement (detail views). */
+export function useConfirmedDirectPaymentStatusPoll(
+  payment: AckStatusPollPayment | null | undefined,
+) {
+  const seedStatus = payment ? normalizePaymentStatusValue(payment.status) : undefined
+  const pollSeed: PollSeed | null = payment
+    ? {
+        status: seedStatus!,
+        customerConfirmedAt: payment.customerConfirmedAt,
+        merchantConfirmedAt: payment.merchantConfirmedAt ?? null,
+      }
+    : null
+
+  return useDirectPaymentStatusPoll(payment?.id, {
+    enabled: Boolean(payment),
+    seedStatus,
+    seedPayment: pollSeed,
+  })
+}
+
+type AckWatchPollPayment = AckStatusPollPayment & {
+  createdAt?: string
+}
+
+/** Global watcher — poll every payment needing ack watch; fire when status API is Confirmed. */
+export function useDirectPaymentsAckWatchPolls<T extends AckWatchPollPayment>(
+  payments: T[] = [],
+  {
+    needsAck,
+    onCustomerConfirmed,
+  }: {
+    needsAck: (payment: T) => boolean
+    onCustomerConfirmed?: (snapshot: DirectPaymentStatusSnapshot) => void
+  },
+) {
+  const queryClient = useQueryClient()
+  const onCustomerConfirmedRef = useRef(onCustomerConfirmed)
+
+  useEffect(() => {
+    onCustomerConfirmedRef.current = onCustomerConfirmed
+  }, [onCustomerConfirmed])
+
+  const watchPayments = useMemo(
+    () => collectPaymentsForAckWatch(payments, needsAck),
+    [payments, needsAck],
+  )
+
+  const queries = useQueries({
+    queries: watchPayments.map((payment) => {
+      const seedStatus = normalizePaymentStatusValue(payment.status)
+      const pollSeed: PollSeed = {
+        status: seedStatus,
+        customerConfirmedAt: payment.customerConfirmedAt,
+        merchantConfirmedAt: payment.merchantConfirmedAt ?? null,
+      }
+
+      return {
+        queryKey: qk.publicPaymentStatus(payment.id),
+        queryFn: () => publicDirectPaymentRepository.getPaymentStatus(payment.id),
+        enabled: shouldPollDirectPaymentAckWatch(seedStatus, pollSeed),
+        retry: false,
+        refetchInterval: (q: { state: { data?: DirectPaymentStatusSnapshot } }) => {
+          const snapshot = q.state.data
+          const mergedStatus = snapshot
+            ? normalizePaymentStatusValue(snapshot.status)
+            : seedStatus
+          return shouldPollDirectPaymentAckWatch(mergedStatus, pollSeed)
+            ? DIRECT_PAYMENT_STATUS_POLL_MS
+            : false
+        },
+        refetchIntervalInBackground: false,
+      }
+    }),
+  })
+
+  useEffect(() => {
+    queries.forEach((result, index) => {
+      const payment = watchPayments[index]
+      if (!payment || !result.data) return
+
+      syncDirectPaymentStatusToCache(queryClient, payment.id, result.data)
+
+      if (
+        needsAcknowledgeFromStatusSnapshot(result.data) &&
+        onCustomerConfirmedRef.current
+      ) {
+        const handler = onCustomerConfirmedRef.current
+        const payload = result.data
+        queueMicrotask(() => handler(payload))
+      }
+    })
+  }, [queries, watchPayments, queryClient])
+
+  return { watchPayments, queries }
+}
+
 type CustomerConfirmedHandler = (payment: MerchantPaymentRecord) => void
 
 function pickNewestInitiatedPayment(payments: MerchantPaymentRecord[]): MerchantPaymentRecord | null {
@@ -79,7 +185,10 @@ function pickNewestInitiatedPayment(payments: MerchantPaymentRecord[]): Merchant
 /** Poll the newest Initiated payment; fires when status API reports Confirmed. */
 export function useInitiatedDirectPaymentStatusPolls(
   payments: MerchantPaymentRecord[] = [],
-  { onCustomerConfirmed }: { onCustomerConfirmed?: CustomerConfirmedHandler } = {},
+  {
+    onCustomerConfirmed,
+    enabled = true,
+  }: { onCustomerConfirmed?: CustomerConfirmedHandler; enabled?: boolean } = {},
 ) {
   const queryClient = useQueryClient()
   const previousStatusRef = useRef(new Map<string, number>())
@@ -95,8 +204,8 @@ export function useInitiatedDirectPaymentStatusPolls(
   )
 
   const pollableIds = useMemo(
-    () => (initiatedPaymentToTrack ? [initiatedPaymentToTrack.id] : []),
-    [initiatedPaymentToTrack],
+    () => (enabled && initiatedPaymentToTrack ? [initiatedPaymentToTrack.id] : []),
+    [enabled, initiatedPaymentToTrack],
   )
 
   const paymentById = useMemo(() => {
@@ -156,7 +265,9 @@ export function useInitiatedDirectPaymentStatusPolls(
         nextStatus === PaymentStatus.Confirmed &&
         onCustomerConfirmedRef.current
       ) {
-        onCustomerConfirmedRef.current(merged)
+        const handler = onCustomerConfirmedRef.current
+        const payload = merged
+        queueMicrotask(() => handler(payload))
       }
     })
   }, [queries, pollableIds, paymentById, queryClient])
