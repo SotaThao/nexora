@@ -537,13 +537,6 @@ export default function TipAmount({
             : (currentLanguage === 'vi' ? `TÔI ĐÃ GỬI TÍP QUA ${selectedWalletObj.name.toUpperCase()} RỒI` : `I SENT TIP VIA ${selectedWalletObj.name.toUpperCase()}`)
           }
         </button>
-
-        <button
-          onClick={() => setStep('select_staff')}
-          className="w-full h-[40px] bg-transparent text-slate-500 hover:text-slate-800 font-bold text-xs uppercase tracking-wider rounded-[12px] transition-colors active:scale-95"
-        >
-          {currentLanguage === 'vi' ? 'QUAY LẠI' : 'GO BACK'}
-        </button>
       </div>
     </div>
   )
