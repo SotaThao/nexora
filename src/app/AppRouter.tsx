@@ -68,6 +68,14 @@ function InviteRoute() {
   )
 }
 
+function PaymentsRedirect() {
+  const { paymentId } = useParams()
+  const target = paymentId
+    ? `/dashboard/reports?tab=direct_payments&paymentId=${encodeURIComponent(paymentId)}`
+    : '/dashboard/reports?tab=direct_payments'
+  return <Navigate to={target} replace />
+}
+
 export default function AppRouter() {
   const { session, logout } = useAuth()
   const location = useLocation()
@@ -116,6 +124,8 @@ export default function AppRouter() {
           <Route path="staff" element={<StaffRoute />} />
           <Route path="staff/:staffId" element={<StaffDetailRoute />} />
           <Route path="tips" element={<TipsRoute />} />
+          <Route path="payments" element={<PaymentsRedirect />} />
+          <Route path="payments/:paymentId" element={<PaymentsRedirect />} />
           <Route path="reviews" element={<ReviewsRoute />} />
           <Route path="reports" element={<ReportsRoute />} />
           <Route path="touchpoints" element={<TouchpointsRoute />} />

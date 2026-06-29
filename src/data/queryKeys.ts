@@ -75,6 +75,8 @@ export const qk = {
   // Merchant Payment Methods
   merchantPaymentMethods: ()   => ['merchantPaymentMethods'],
   merchantPaymentQr: ()        => ['merchantPaymentQr'],
+  merchantPaymentsList: (filters = EMPTY) => ['merchantPayments', 'list', filters],
+  merchantPaymentDetail: (paymentId: string) => ['merchantPayments', 'detail', paymentId],
 
   // Staff Payment Methods
   staffPaymentMethods: ()      => ['staffPaymentMethods'],

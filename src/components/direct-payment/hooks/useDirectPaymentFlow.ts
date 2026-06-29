@@ -12,12 +12,19 @@ import { payoutTypeToUiKey, sortPaymentMethodsByUiOrder } from '../../../data/pa
 import { getApiErrorCode } from '../../../types/domain'
 import { logger } from '../../../utils/logger'
 import { getWalletOptions } from '../../customer-flow/steps/Payment'
+import {
+  DIRECT_PAYMENT_MAX_AMOUNT,
+  DIRECT_PAYMENT_MIN_AMOUNT,
+  formatUsdAmount,
+  parseDirectPaymentAmountInput,
+  sanitizeDirectPaymentAmountInput,
+} from '../../../utils/currencyInput'
 
-const MIN_AMOUNT = 1
-const MAX_AMOUNT = 10000
+const MIN_AMOUNT = DIRECT_PAYMENT_MIN_AMOUNT
+const MAX_AMOUNT = DIRECT_PAYMENT_MAX_AMOUNT
 
 function resolveAmount(selectedAmount: number | 'custom', customAmount: string): number {
-  if (selectedAmount === 'custom') return Number(customAmount) || 0
+  if (selectedAmount === 'custom') return parseDirectPaymentAmountInput(customAmount)
   return Number(selectedAmount) || 0
 }
 
@@ -93,15 +100,19 @@ export default function useDirectPaymentFlow() {
 
   const validateAmount = useCallback(() => {
     if (Number.isNaN(activeAmount) || activeAmount < MIN_AMOUNT) {
-      showToast(t('direct_payment.amount_too_low', { min: MIN_AMOUNT }), 'error')
+      showToast(t('direct_payment.amount_too_low', { min: formatUsdAmount(MIN_AMOUNT) }), 'error')
       return false
     }
     if (activeAmount > MAX_AMOUNT) {
-      showToast(t('direct_payment.amount_too_high', { max: MAX_AMOUNT }), 'error')
+      showToast(t('direct_payment.amount_too_high', { max: formatUsdAmount(MAX_AMOUNT) }), 'error')
       return false
     }
     return true
   }, [activeAmount, showToast, t])
+
+  const handleCustomAmountChange = useCallback((raw: string) => {
+    setCustomAmount(sanitizeDirectPaymentAmountInput(raw, MAX_AMOUNT))
+  }, [])
 
   const handleSelectWallet = useCallback(
     async (wallet: { methodId?: string; name?: string; key?: string; apiMethod?: unknown }) => {
@@ -173,7 +184,10 @@ export default function useDirectPaymentFlow() {
     setSelectedAmount,
     customAmount,
     setCustomAmount,
+    handleCustomAmountChange,
     activeAmount,
+    minAmount: MIN_AMOUNT,
+    maxAmount: MAX_AMOUNT,
     walletOptions,
     selectedWalletObj,
     selectedWallet,

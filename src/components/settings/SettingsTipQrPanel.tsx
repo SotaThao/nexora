@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   QrCode,
   Copy,
@@ -11,6 +12,7 @@ import {
   X,
   Printer,
   AlertCircle,
+  ClipboardList,
 } from 'lucide-react'
 import { useProfileSettings } from '../../data/hooks/useProfileSettings'
 import { useMerchantPaymentQr } from '../../data/hooks/useMerchantPayments'
@@ -35,6 +37,7 @@ export default function SettingsTipQrPanel({
   t,
   onConfigurePayoutMethods,
 }) {
+  const navigate = useNavigate()
   const {
     data: userProfile,
     isLoading: isProfileLoading,
@@ -291,6 +294,15 @@ export default function SettingsTipQrPanel({
             {t('components.settings.SettingsTipQrPanel.downloadQr')}
           </button>
         </div>
+
+        <button
+          type="button"
+          onClick={() => navigate('/dashboard/reports?tab=direct_payments')}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-nexoraBrand/20 bg-nexoraBrandSoft px-3 py-2.5 text-[10px] font-bold uppercase tracking-wide text-nexoraBrand transition hover:bg-nexoraBrand/10"
+        >
+          <ClipboardList className="h-3.5 w-3.5" />
+          {t('components.settings.SettingsTipQrPanel.viewHistory')}
+        </button>
 
         <p className="text-[10px] leading-relaxed text-nexoraMuted">
           {t('components.settings.SettingsTipQrPanel.merchantNote')}

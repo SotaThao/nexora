@@ -1,4 +1,5 @@
 import React from 'react'
+import { formatUsdAmount } from '../../../utils/currencyInput'
 
 const QUICK_AMOUNTS = [5, 10, 15, 20, 30, 50]
 
@@ -9,7 +10,7 @@ export default function DirectPaymentReview({
   selectedAmount,
   setSelectedAmount,
   customAmount,
-  setCustomAmount,
+  onCustomAmountChange,
   activeAmount,
   walletOptions,
   isLoadingMethods,
@@ -88,7 +89,8 @@ export default function DirectPaymentReview({
                 placeholder={t('direct_payment.custom_amount_placeholder')}
                 className="w-full rounded-lg border border-nexoraBorder bg-white py-2 pl-7 pr-3 text-xs font-extrabold text-nexoraText outline-none transition-all focus:border-nexoraBrand"
                 value={customAmount}
-                onChange={(event) => setCustomAmount(event.target.value)}
+                onChange={(event) => onCustomAmountChange(event.target.value)}
+                aria-label={t('direct_payment.amount_label')}
               />
             </div>
           ) : null}
@@ -104,7 +106,7 @@ export default function DirectPaymentReview({
             </p>
           </div>
           <div className="text-lg font-black text-nexoraBrand">
-            ${activeAmount.toFixed(2)}
+            {formatUsdAmount(activeAmount > 0 ? activeAmount : 0)}
           </div>
         </div>
       </div>

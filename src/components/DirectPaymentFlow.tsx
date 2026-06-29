@@ -3,6 +3,7 @@ import { ShieldCheck, AlertTriangle } from 'lucide-react'
 import { getErrorI18nKey } from '../data/errorCodes'
 import { getApiErrorCode, isApiError } from '../types/domain'
 import useDirectPaymentFlow from './direct-payment/hooks/useDirectPaymentFlow'
+import { DIRECT_PAYMENT_MAX_AMOUNT, DIRECT_PAYMENT_MIN_AMOUNT } from '../utils/currencyInput'
 import DirectPaymentReview from './direct-payment/steps/DirectPaymentReview'
 import WalletDetails from './customer-flow/steps/WalletDetails'
 import Processing from './customer-flow/steps/Processing'
@@ -24,7 +25,7 @@ export default function DirectPaymentFlow() {
     selectedAmount,
     setSelectedAmount,
     customAmount,
-    setCustomAmount,
+    handleCustomAmountChange,
     activeAmount,
     walletOptions,
     selectedWalletObj,
@@ -38,7 +39,9 @@ export default function DirectPaymentFlow() {
   } = flow
 
   const disablePaymentSelection =
-    activeAmount < 1 || activeAmount > 10000 || Number.isNaN(activeAmount)
+    activeAmount < DIRECT_PAYMENT_MIN_AMOUNT
+    || activeAmount > DIRECT_PAYMENT_MAX_AMOUNT
+    || Number.isNaN(activeAmount)
 
   const pageErrorContent = useMemo(() => {
     if (!pageQuery.isError) return null
@@ -112,7 +115,7 @@ export default function DirectPaymentFlow() {
                   selectedAmount={selectedAmount}
                   setSelectedAmount={setSelectedAmount}
                   customAmount={customAmount}
-                  setCustomAmount={setCustomAmount}
+                  onCustomAmountChange={handleCustomAmountChange}
                   activeAmount={activeAmount}
                   walletOptions={walletOptions}
                   isLoadingMethods={false}

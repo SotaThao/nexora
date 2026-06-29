@@ -115,6 +115,30 @@ export const PaymentStatus = {
 export type PaymentTypeValue = (typeof PaymentType)[keyof typeof PaymentType]
 export type PaymentStatusValue = (typeof PaymentStatus)[keyof typeof PaymentStatus]
 
+/** Merchant payment ledger item — GET /api/v1/merchant/payments */
+export interface MerchantPaymentRecord {
+  id: string
+  type: number
+  amount: number
+  status: PaymentStatusValue
+  paymentMethodType: string
+  createdAt: string
+  customerConfirmedAt?: string | null
+  merchantConfirmedAt?: string | null
+  accountInfo?: string | null
+  imageUrl?: string | null
+}
+
+export interface MerchantPaymentsListPage {
+  items: MerchantPaymentRecord[]
+  pageNumber: number
+  pageSize: number
+  totalPages: number
+  totalCount: number
+  hasNextPage: boolean
+  hasPreviousPage: boolean
+}
+
 export interface TouchpointRecord {
   id?: string
   name?: string
@@ -188,6 +212,7 @@ export interface NotificationRecord {
   time: string
   staffId?: string
   linkTab?: string
+  paymentId?: string
   [key: string]: unknown
 }
 
