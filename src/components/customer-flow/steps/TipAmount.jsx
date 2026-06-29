@@ -415,9 +415,19 @@ export default function TipAmount({
                   <p className="text-xs text-nexoraSubtle font-medium">{selectedStaffMembers[0].position}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-1 bg-yellow-50 text-yellow-600 px-2.5 py-1 rounded-full border border-yellow-200">
-                <Star className="w-3.5 h-3.5 fill-current" />
-                <span className="text-[11px] font-bold">5.0</span>
+              <div className="flex flex-col items-end gap-1.5 shrink-0">
+                <div className="flex items-center gap-1 bg-[#F0FDF4] text-[#16A34A] px-2 py-0.5 rounded-full border border-[#bbf7d0]">
+                  <Star className="w-3 h-3 fill-current" />
+                  <span className="text-[10px] font-extrabold">5.0</span>
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => setStep('select_staff')}
+                  className="flex items-center gap-1 px-2.5 py-1 bg-nexoraBrandSoft/10 text-nexoraBrand rounded-lg hover:bg-nexoraBrandSoft/20 transition-colors"
+                >
+                  <Users className="w-3 h-3" />
+                  <span className="text-[10px] font-bold">{currentLanguage === 'vi' ? 'Sửa lựa chọn' : 'Edit'}</span>
+                </button>
               </div>
             </div>
           )}
