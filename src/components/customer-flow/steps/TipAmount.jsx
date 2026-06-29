@@ -90,11 +90,12 @@ export default function TipAmount({
         totalAmount = combineTip;
       }
 
-      const perPersonAmount = totalAmount / selectedStaffMembers.length;
+      const splitAmount = totalAmount / selectedStaffMembers.length;
 
-      selectedStaffMembers.forEach(member => {
-        newTips[member.id] = 'custom';
-        newCustomTips[member.id] = perPersonAmount.toFixed(2);
+      selectedStaffMembers.forEach(m => {
+        newTips[m.id] = 'custom';
+        // Remove trailing zeros (e.g. 5.00 -> 5, 2.50 -> 2.5)
+        newCustomTips[m.id] = parseFloat(splitAmount.toFixed(2)).toString();
       });
       setSelectedTips(newTips);
       setCustomTips(newCustomTips);
@@ -136,19 +137,21 @@ export default function TipAmount({
         <div className="relative mb-3">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xl font-bold text-slate-400">$</span>
           <input
-            type="number"
+            type="text"
             inputMode="decimal"
-            placeholder="0.00"
+            pattern="[0-9]*"
+            placeholder="0"
             value={isMulti 
               ? (combineTip === 'custom' ? combineCustom : combineTip)
               : (selectedTips[selectedStaffMembers[0]?.id] === 'custom' ? (customTips[selectedStaffMembers[0]?.id] || '') : selectedTips[selectedStaffMembers[0]?.id])}
             onChange={(e) => {
+              const val = e.target.value.replace(/[^0-9.]/g, '');
               if (isMulti) {
                 setCombineTip('custom');
-                setCombineCustom(e.target.value);
+                setCombineCustom(val);
               } else {
                 setSelectedTips({ ...selectedTips, [selectedStaffMembers[0].id]: 'custom' });
-                setCustomTips({ ...customTips, [selectedStaffMembers[0].id]: e.target.value });
+                setCustomTips({ ...customTips, [selectedStaffMembers[0].id]: val });
               }
             }}
             className="w-full text-center pl-8 pr-3 py-2.5 text-2xl font-bold text-slate-800 bg-white border-2 border-slate-200 focus:border-nexoraBrand rounded-lg focus:outline-none transition-all placeholder-slate-200"
@@ -204,13 +207,15 @@ export default function TipAmount({
                 <div className="relative w-14 shrink-0">
                   <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-400 pointer-events-none">$</span>
                   <input
-                    type="number"
+                    type="text"
                     inputMode="decimal"
+                    pattern="[0-9]*"
                     placeholder="0"
                     value={selTip === 'custom' ? custTip : ''}
                     onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9.]/g, '');
                       setSelectedTips({ ...selectedTips, [member.id]: 'custom' });
-                      setCustomTips({ ...customTips, [member.id]: e.target.value });
+                      setCustomTips({ ...customTips, [member.id]: val });
                     }}
                     className={`w-full bg-white border-2 ${selTip === 'custom' ? 'border-nexoraBrand' : 'border-slate-200'} focus:border-nexoraBrand rounded-md pl-4 pr-1 h-[26px] text-xs font-bold text-slate-800 focus:outline-none transition-all text-right`}
                   />
