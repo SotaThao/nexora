@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { ArrowRight, Star, Copy } from 'lucide-react'
+import { ArrowRight, Star, Copy, Users } from 'lucide-react'
 
 const WalletLogos = {
   venmo: (
@@ -345,21 +345,29 @@ export default function TipAmount({
         {/* Header - Staff Info */}
         <div className="mb-3 flex flex-col items-center">
           {isMulti ? (
-            <div className="flex flex-col items-center">
-              <div className="flex -space-x-3 mb-1.5">
+            <div className="flex items-center justify-between w-full bg-white border border-slate-100 p-2.5 rounded-[14px] shadow-sm">
+              <div className="flex items-start gap-2.5">
                 {selectedStaffMembers.map(m => (
-                  m.avatar ? (
-                    <img key={m.id} src={m.avatar} className="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover" />
-                  ) : (
-                    <div key={m.id} className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-[#2B59FF] to-[#8E4DF8] text-xs font-extrabold text-white border-2 border-white shadow-sm">
-                      {m.nickname.charAt(0)}
-                    </div>
-                  )
+                  <div key={m.id} className="flex flex-col items-center gap-1">
+                    {m.avatar ? (
+                      <img src={m.avatar} className="w-9 h-9 rounded-[10px] object-cover shadow-sm border border-slate-100" />
+                    ) : (
+                      <div className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-gradient-to-tr from-[#2B59FF] to-[#8E4DF8] text-[13px] font-extrabold text-white shadow-sm">
+                        {m.nickname.charAt(0)}
+                      </div>
+                    )}
+                    <span className="text-[10px] font-bold text-slate-600 truncate max-w-[40px] text-center">{m.nickname}</span>
+                  </div>
                 ))}
               </div>
-              <h3 className="font-bold text-nexoraText text-[14px]">
-                {selectedStaffMembers.map(s => s.nickname).join(', ')}
-              </h3>
+              <button 
+                type="button"
+                onClick={() => setStep('select_staff')}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-nexoraBrandSoft/10 text-nexoraBrand rounded-lg hover:bg-nexoraBrandSoft/20 transition-colors shrink-0"
+              >
+                <Users className="w-3.5 h-3.5" />
+                <span className="text-[11px] font-bold">{currentLanguage === 'vi' ? 'Sửa lựa chọn' : 'Edit selection'}</span>
+              </button>
             </div>
           ) : (
             <div className="flex items-center w-full bg-white border border-nexoraBorder p-3 rounded-[14px] shadow-sm">
