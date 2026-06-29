@@ -255,7 +255,7 @@ export default function TipAmount({
 
             <div className="flex gap-4 items-center">
               {/* Symbolic QR Code */}
-              <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=VLK:0x3f9A8b2C1d4E5f6A7B8C9D0E1F2A3B4C5D6E7F8&color=047857" className="w-24 h-24 rounded-xl border border-[#A7F3D0] bg-white p-1.5 shadow-sm shrink-0 object-contain" alt="QR Code" />
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=VLK:0x3f9A8b2C1d4E5f6A7B8C9D0E1F2A3B4C5D6E7F8&color=000000" className="w-24 h-24 rounded-xl border border-[#A7F3D0] bg-white p-1.5 shadow-sm shrink-0 object-contain" alt="QR Code" />
 
               {/* Address Info */}
               <div className="flex-1 flex flex-col gap-1.5 overflow-hidden">
