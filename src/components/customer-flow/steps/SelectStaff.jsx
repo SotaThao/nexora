@@ -50,50 +50,50 @@ export default function SelectStaff({
                 key={member.id}
                 type="button"
                 onClick={() => handleToggleStaff(member)}
-                className={`relative flex flex-col items-center p-4 rounded-[16px] border transition-all duration-300 text-center group ${
+                className={`relative flex flex-col items-center p-3 rounded-xl border-2 transition-all duration-200 text-center gap-2 group ${
                   isSelected
-                    ? 'bg-[#F5F3FF] border-[#6C4DE6] shadow-[0_2px_8px_rgba(108,77,230,0.15)]'
-                    : 'bg-white border-slate-200 hover:shadow-[0_4px_12px_rgba(0,0,0,0.04)]'
+                    ? 'bg-nexoraBrandSoft/10 border-nexoraBrand shadow-[0_0_0_3px_rgba(108,77,230,0.15)]'
+                    : 'bg-white border-slate-100 hover:border-nexoraBrand/40 hover:bg-slate-50 hover:-translate-y-[1px]'
                 }`}
               >
-                {/* Radio Button */}
-                <div className={`absolute top-3 right-3 w-[20px] h-[20px] rounded-full border flex items-center justify-center transition-all ${
-                  isSelected ? 'bg-[#6C4DE6] border-[#6C4DE6]' : 'border-slate-300 bg-transparent group-hover:border-slate-400'
+                {/* Radio Button -> Check Icon */}
+                <div className={`absolute top-2 right-2 w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center transition-all ${
+                  isSelected ? 'bg-nexoraBrand border-nexoraBrand' : 'border-slate-300 bg-transparent group-hover:border-slate-400'
                 }`}>
                   <svg 
                     viewBox="0 0 24 24" 
                     fill="none" 
                     stroke="currentColor" 
-                    strokeWidth="3.5" 
+                    strokeWidth="3" 
                     strokeLinecap="round" 
                     strokeLinejoin="round"
-                    className={`w-[10px] h-[10px] text-white transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0'}`}
+                    className={`w-2.5 h-2.5 text-white transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0'}`}
                   >
-                    <polyline points="20 6 9 17 4 12"></polyline>
+                    <path d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
 
                 {/* Avatar */}
-                <div className="mb-2">
+                <div className="w-14 h-14 shrink-0">
                   {member.avatar ? (
                     <img
                       src={member.avatar}
                       alt={member.fullName}
-                      className={`w-14 h-14 ${isSelected ? 'rounded-[16px]' : 'rounded-full'} object-cover border border-slate-100 shrink-0 transition-all`}
+                      className="w-full h-full rounded-2xl object-cover shadow-sm"
                     />
                   ) : (
-                    <div className={`flex h-14 w-14 items-center justify-center ${isSelected ? 'rounded-[16px]' : 'rounded-full'} ${bgColor} text-[24px] font-[700] text-white shrink-0 transition-all`}>
+                    <div className={`w-full h-full rounded-2xl ${bgColor} flex items-center justify-center text-white text-xl font-bold shadow-sm select-none`}>
                       {member.nickname.charAt(0)}
                     </div>
                   )}
                 </div>
 
                 {/* Info */}
-                <div className="w-full">
-                  <h4 className="font-[800] text-[14px] text-slate-900 leading-tight truncate">
+                <div className="w-full min-w-0">
+                  <h4 className="font-bold text-[13px] text-slate-800 leading-tight truncate">
                     {member.fullName}
                   </h4>
-                  <p className="text-[12px] text-slate-400 font-medium truncate mt-0.5">
+                  <p className="text-[11px] text-slate-400 font-medium truncate mt-0.5">
                     {member.position}
                   </p>
                 </div>
@@ -110,22 +110,27 @@ export default function SelectStaff({
 
       {/* Floating Button Footer (No white background) */}
       <div className="absolute bottom-6 left-5 right-5 z-20">
-        <button
-          type="button"
-          disabled={selectedStaffMembers.length === 0}
-          onClick={() => setStep('tip_amount')}
-          className={`w-full min-h-[56px] flex items-center justify-center gap-2 rounded-[12px] text-[13px] font-[800] tracking-widest uppercase transition-all duration-300 ${
-            selectedStaffMembers.length > 0
-              ? 'bg-[#7B5CFF] text-white shadow-[0_8px_20px_rgba(123,92,255,0.3)] hover:opacity-95 transform hover:-translate-y-0.5'
-              : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-          }`}
-        >
-          {currentLanguage === 'vi' ? 'Tiếp theo' : 'Next'}
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="ml-1">
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-            <polyline points="12 5 19 12 12 19"></polyline>
-          </svg>
-        </button>
+        <div className="relative group">
+          {selectedStaffMembers.length > 0 && (
+            <div className="absolute -inset-1 bg-gradient-to-r from-nexoraBrand to-[#16b7ff] rounded-full blur-md opacity-60 group-hover:opacity-80 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
+          )}
+          <button
+            type="button"
+            disabled={selectedStaffMembers.length === 0}
+            onClick={() => setStep('tip_amount')}
+            className={`relative w-full py-3.5 flex items-center justify-center gap-2 rounded-full text-sm font-extrabold tracking-wide uppercase transition-all duration-300 active:scale-95 ${
+              selectedStaffMembers.length > 0
+                ? 'bg-gradient-to-r from-nexoraBrand to-[#4f46e5] text-white hover:scale-[1.02]'
+                : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+            }`}
+          >
+            {currentLanguage === 'vi' ? 'Tiếp theo' : 'Next'}
+            {selectedStaffMembers.length > 1 && ` (${selectedStaffMembers.length})`}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="ml-1">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   )

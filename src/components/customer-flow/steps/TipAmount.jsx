@@ -107,7 +107,7 @@ export default function TipAmount({
     return (
       <>
         {/* Quick Tips */}
-        <div className={`grid grid-cols-4 gap-2 mb-3`}>
+        <div className={`grid grid-cols-4 gap-1.5 mb-2.5`}>
           {(isMulti ? [10, 20, 30, 40] : [5, 10, 15, 20]).map(val => (
             <button
               key={val}
@@ -121,10 +121,10 @@ export default function TipAmount({
                   setCustomTips({ ...customTips, [selectedStaffMembers[0].id]: '' });
                 }
               }}
-              className={`py-2 rounded-xl text-[14px] font-extrabold transition-all duration-200 ${
+              className={`py-1.5 rounded-lg border-2 text-[14px] font-semibold transition-all duration-150 ${
                 activeVal === val
-                  ? 'bg-nexoraBrand text-white shadow-[0_4px_12px_rgba(108,77,230,0.25)] border-transparent'
-                  : 'bg-white hover:bg-slate-50 text-nexoraText border border-nexoraBorder shadow-sm'
+                  ? 'bg-nexoraBrand text-white border-nexoraBrand'
+                  : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
               }`}
             >
               ${val}
@@ -134,7 +134,7 @@ export default function TipAmount({
 
         {/* Custom Input Field */}
         <div className="relative mb-3">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-extrabold text-nexoraText">$</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xl font-bold text-slate-400">$</span>
           <input
             type="number"
             inputMode="decimal"
@@ -151,7 +151,7 @@ export default function TipAmount({
                 setCustomTips({ ...customTips, [selectedStaffMembers[0].id]: e.target.value });
               }
             }}
-            className="w-full bg-white border border-nexoraBorder focus:border-nexoraBrand rounded-[14px] pl-10 pr-4 py-3 text-xl font-extrabold text-nexoraText focus:outline-none transition-all shadow-sm"
+            className="w-full text-center pl-8 pr-3 py-2.5 text-2xl font-bold text-slate-800 bg-white border-2 border-slate-200 focus:border-nexoraBrand rounded-lg focus:outline-none transition-all placeholder-slate-200"
           />
           {isMulti && tipMode === 'combine' && activeTipAmount > 0 && (
             <div className="absolute -bottom-5 left-0 right-0 text-center text-[10px] font-bold text-nexoraBrand">
@@ -191,18 +191,18 @@ export default function TipAmount({
                       setSelectedTips({ ...selectedTips, [member.id]: val });
                       setCustomTips({ ...customTips, [member.id]: '' });
                     }}
-                    className={`h-8 px-2 rounded-[8px] text-[12px] font-extrabold transition-all duration-200 min-w-[34px] flex items-center justify-center shrink-0 ${
+                    className={`flex-1 border-2 rounded-md py-1 text-xs font-semibold transition-all duration-150 ${
                       selTip === val
-                        ? 'bg-nexoraBrand text-white shadow-sm border-transparent'
-                        : 'bg-white hover:bg-slate-50 text-nexoraText border border-nexoraBorder shadow-sm'
+                        ? 'bg-nexoraBrand text-white border-nexoraBrand'
+                        : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
                     }`}
                   >
                     ${val}
                   </button>
                 ))}
 
-                <div className="relative w-[50px] shrink-0">
-                  <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-[11px] font-extrabold text-[#94A3B8]">$</span>
+                <div className="relative w-14 shrink-0">
+                  <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-400 pointer-events-none">$</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -212,7 +212,7 @@ export default function TipAmount({
                       setSelectedTips({ ...selectedTips, [member.id]: 'custom' });
                       setCustomTips({ ...customTips, [member.id]: e.target.value });
                     }}
-                    className={`w-full bg-white border ${selTip === 'custom' ? 'border-nexoraBrand ring-1 ring-nexoraBrand/20' : 'border-nexoraBorder shadow-sm'} focus:border-nexoraBrand rounded-[8px] pl-4 pr-1.5 h-8 text-[12px] font-extrabold text-nexoraText focus:outline-none transition-all text-right`}
+                    className={`w-full bg-white border-2 ${selTip === 'custom' ? 'border-nexoraBrand' : 'border-slate-200'} focus:border-nexoraBrand rounded-md pl-4 pr-1 h-[26px] text-xs font-bold text-slate-800 focus:outline-none transition-all text-right`}
                   />
                 </div>
               </div>
@@ -388,24 +388,24 @@ export default function TipAmount({
 
         {/* Multi-tips Toggle */}
         {isMulti && (
-          <div className="flex p-1 bg-nexoraCanvas border border-nexoraBorder rounded-[10px] mb-4">
+          <div className="flex p-0.5 bg-slate-100 rounded-lg mb-3">
             <button
               type="button"
               onClick={() => setTipMode('combine')}
-              className={`flex-1 py-1.5 text-[12px] font-extrabold rounded-[6px] transition-all duration-200 ${
-                tipMode === 'combine' ? 'bg-white shadow-sm text-nexoraBrand' : 'text-nexoraSubtle hover:text-nexoraText'
+              className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all duration-200 ${
+                tipMode === 'combine' ? 'bg-white shadow-sm text-nexoraBrand' : 'text-slate-500 hover:text-slate-700'
               }`}
             >
-              {currentLanguage === 'vi' ? 'Chia Đều' : 'Split Evenly'}
+              {currentLanguage === 'vi' ? 'Chia đều' : 'Split Evenly'}
             </button>
             <button
               type="button"
               onClick={() => setTipMode('split')}
-              className={`flex-1 py-1.5 text-[12px] font-extrabold rounded-[6px] transition-all duration-200 ${
-                tipMode === 'split' ? 'bg-white shadow-sm text-nexoraBrand' : 'text-nexoraSubtle hover:text-nexoraText'
+              className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all duration-200 ${
+                tipMode === 'split' ? 'bg-white shadow-sm text-nexoraBrand' : 'text-slate-500 hover:text-slate-700'
               }`}
             >
-              {currentLanguage === 'vi' ? 'Tip Riêng Lẻ' : 'Separate Tips'}
+              {currentLanguage === 'vi' ? 'Tip riêng từng thợ' : 'Separate Tips'}
             </button>
           </div>
         )}
@@ -449,19 +449,19 @@ export default function TipAmount({
                   setSelectedWallet(wallet.name)
                   setTipRefNumber(Math.floor(1000 + Math.random() * 9000).toString())
                 }}
-                className={`flex flex-col items-center justify-center p-2 rounded-xl bg-white border transition-all duration-200 group shadow-sm ${
+                className={`flex flex-col items-center justify-center p-1.5 rounded-lg bg-white border-2 transition-all duration-200 group ${
                   isSelected 
-                    ? 'border-nexoraBrand bg-nexoraBrandSoft/5 shadow-[0_4px_12px_rgba(108,77,230,0.15)] ring-1 ring-nexoraBrand/20' 
-                    : 'border-nexoraBorder hover:border-nexoraBrand/40 hover:bg-nexoraCanvas'
+                    ? 'border-nexoraBrand outline outline-2 outline-offset-2 outline-nexoraBrand scale-105 shadow-sm' 
+                    : 'border-slate-100 hover:border-slate-300 hover:scale-[1.02]'
                 }`}
               >
                 <div 
-                  className="w-8 h-8 rounded-full flex items-center justify-center mb-1.5 shadow-sm transition-transform group-hover:scale-105"
+                  className="w-10 h-10 rounded-full flex items-center justify-center mb-1 overflow-hidden"
                   style={{ backgroundColor: wallet.iconBg || wallet.color }}
                 >
                   {wallet.logo}
                 </div>
-                <span className="text-[10px] font-extrabold text-nexoraText tracking-tight">{wallet.name}</span>
+                <span className="text-[10px] font-medium text-slate-600 tracking-tight">{wallet.name}</span>
               </button>
             )
           })}
