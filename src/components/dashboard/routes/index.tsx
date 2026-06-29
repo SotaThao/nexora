@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { useOutletContext, useNavigate, useParams, Navigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 
@@ -15,6 +15,9 @@ import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3'
 import ComingSoon from '../views/ComingSoon'
 import ManagePlanView from '../views/ManagePlanView'
 import StaffDetailView from '../../StaffDetailView'
+import { useMerchantStaffByCode } from '../../../data/hooks/useMerchantStaff'
+import { normaliseMember } from '../hooks/useStaffManagement'
+import { SkeletonList } from '../../ui/skeleton'
 
 export function OverviewRoute() {
   const ctx = useOutletContext<LooseObject>()
@@ -74,12 +77,12 @@ export function StaffRoute() {
       isFetching={ctx.staffListFetching}
       onApproveClick={ctx.openApproveStaff}
       onAdd={ctx.openAddStaff}
-      onEdit={ctx.openEditStaff}
+      onViewStaff={ctx.openViewStaff}
       onDelete={ctx.deleteStaff}
       onQr={ctx.previewQr}
       onToggle={ctx.toggleStaff}
       onToggleTipsFlow={ctx.toggleStaffTipsFlow}
-      onViewDetail={(id) => navigate(`/dashboard/staff/${id}`)}
+      onViewDetail={(member) => navigate(`/dashboard/staff/${member.staffCode || member.id}`)}
       onResendInvite={ctx.handleResendInvite}
       businessName={ctx.businessName}
       businessSlug={ctx.businessSlug}
@@ -109,29 +112,46 @@ export function StaffRoute() {
 
 export function StaffDetailRoute() {
   const ctx = useOutletContext<LooseObject>()
-  const { staffId } = useParams()
+  const { staffId: staffKey } = useParams()
   const navigate = useNavigate()
-  
-  const member = ctx.staff.find((m) =>
-    String(m.id) === String(staffId) ||
-    String(m.staffProfileId) === String(staffId)
+
+  const {
+    data: staffMember,
+    isLoading: isStaffDetailLoading,
+    isError: isStaffDetailError,
+  } = useMerchantStaffByCode(staffKey)
+
+  const fallbackMember = useMemo(
+    () => ctx.staff.find((m) =>
+      String(m.id) === String(staffKey) ||
+      String(m.staffProfileId) === String(staffKey) ||
+      String(m.staffCode) === String(staffKey) ||
+      String(m.linkId) === String(staffKey),
+    ),
+    [ctx.staff, staffKey],
   )
 
-  if (ctx.staffLoading) {
-    return null
+  const resolvedMember = staffMember ?? fallbackMember
+  const staffProfileId = resolvedMember?.staffProfileId ?? null
+
+  if (isStaffDetailLoading || (!resolvedMember && ctx.staffLoading)) {
+    return (
+      <div className="nexora-card p-6">
+        <SkeletonList count={3} showAvatar lines={2} />
+      </div>
+    )
   }
 
-  if (!member) {
+  if ((isStaffDetailError && !fallbackMember) || !resolvedMember) {
     return <Navigate to="/dashboard/staff" replace />
   }
 
   return (
     <StaffDetailView
-      staffMember={member}
+      staffMember={normaliseMember(resolvedMember)}
+      staffProfileId={staffProfileId}
       onBack={() => navigate('/dashboard/staff')}
-      transactions={ctx.transactions}
-      reviews={ctx.reviews}
-      onEdit={ctx.openEditStaff}
+      onViewStaff={ctx.openViewStaff}
       onQr={ctx.previewQr}
       onDelete={ctx.deleteStaff}
     />
@@ -157,10 +177,9 @@ export function StaffRoleRoute() {
   return (
     <StaffDetailView
       staffMember={member}
+      staffProfileId={member.staffProfileId ?? null}
       onBack={null}
-      transactions={ctx.transactions}
-      reviews={ctx.reviews}
-      onEdit={ctx.openEditStaff}
+      onViewStaff={ctx.openViewStaff}
       onQr={ctx.previewQr}
       onDelete={null}
     />
@@ -269,6 +288,14 @@ export function SettingsRoute() {
   const { tab = 'profile' } = useParams()
   const navigate = useNavigate()
 
+  useEffect(() => {
+    if (tab === 'kyb') {
+      navigate('/dashboard/settings/profile', { replace: true })
+    }
+  }, [tab, navigate])
+
+  const initialTab = tab === 'kyb' ? 'profile' : tab
+
   return (
     <SettingsView
       {...({ onBlockedFeatureClick: ctx.requireKyb } as any)}
@@ -277,8 +304,8 @@ export function SettingsRoute() {
       verificationStatus={ctx.verificationStatus}
       userEmail={ctx.userEmail}
       onKybRequired={ctx.requireKyb}
-      initialTab={tab}
-      onTabChange={(t) => navigate(`/dashboard/settings/${t}`)}
+      initialTab={initialTab}
+      onTabChange={(nextTab) => navigate(`/dashboard/settings/${nextTab}`)}
       onKybSuccess={ctx.onKybSuccess}
     />
   )

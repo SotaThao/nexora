@@ -3,6 +3,8 @@ import { X, Camera, FolderOpen, AlertTriangle } from 'lucide-react'
 import { renderLabel, useTranslation } from '../../../contexts/LanguageContext'
 import ImageFileInput from '../../ui/ImageFileInput'
 import BankWireAccountForm from '../../payout/BankWireAccountForm'
+import PayoutAccountIdentifierInput from '../../payout/PayoutAccountIdentifierInput'
+import { formatPayoutPhoneDisplay } from '../../payout/payoutPhone'
 
 const PayoutLogos = {
   zelle: (
@@ -126,17 +128,15 @@ export default function PayoutEditModal({
                 field: walletFields[editingMethod]
               }))}
             </label>
-            <input
-              type="text"
+            <PayoutAccountIdentifierInput
+              walletKey={editingMethod}
               value={editValue}
-              onChange={(e) => {
-                setEditValue(e.target.value)
+              hasError={Boolean(modalError)}
+              placeholder={walletPlaceholders[editingMethod]}
+              onChange={(nextValue) => {
+                setEditValue(nextValue)
                 setModalError('')
               }}
-              placeholder={walletPlaceholders[editingMethod]}
-              className={`w-full bg-slate-50 border border-slate-200 focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:bg-white rounded-xl px-3.5 h-11 text-xs text-slate-800 focus:outline-none transition-all ${
-                modalError ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20' : ''
-              }`}
             />
             {modalError && <p className="mt-1 text-[10px] font-bold text-rose-500">{modalError}</p>}
           </div>
@@ -168,7 +168,9 @@ export default function PayoutEditModal({
                 </button>
                 <div className="text-center">
                   <div className="text-sm font-extrabold text-slate-800">{editAccountName}</div>
-                  <div className="text-[10px] font-semibold text-slate-400 mt-0.5">{editValue}</div>
+                  <div className="text-[10px] font-semibold text-slate-400 mt-0.5">
+                    {formatPayoutPhoneDisplay(editValue) || editValue}
+                  </div>
                 </div>
                 <div className="my-3 flex h-28 w-28 items-center justify-center border border-slate-100 bg-white p-1 rounded-lg">
                   <img src={editQrCode} alt="Payout QR Code" className="h-full w-full object-contain" />

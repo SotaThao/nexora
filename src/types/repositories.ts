@@ -36,6 +36,8 @@ export interface BusinessApiDto {
   yelpUrl?: string
   facebookUrl?: string
   feedbackEmail?: string
+  isPublic?: boolean
+  onboardingStep?: number
 }
 
 export interface TipsSummaryApiDto {
@@ -199,6 +201,13 @@ export interface StaffPaymentMethodApiDto {
   imageUrl?: string | null
 }
 
+export interface StaffInviteSummaryApiDto {
+  id?: string
+  invitedAt?: string | null
+  expiresAt?: string | null
+  status?: string | null
+}
+
 export interface StaffListItemApiDto {
   id?: string
   linkId?: string
@@ -218,6 +227,7 @@ export interface StaffListItemApiDto {
   photoUrl?: string | null
   status?: string
   position?: string | null
+  roleAtBusiness?: string | null
   bio?: string | null
   invitedEmail?: string | null
   invitedPhone?: string | null
@@ -226,6 +236,7 @@ export interface StaffListItemApiDto {
   email?: string | null
   phone?: string | null
   paymentMethods?: StaffPaymentMethodApiDto[]
+  invites?: StaffInviteSummaryApiDto[]
   staffProfile?: { phoneNumber?: string; phone?: string; email?: string }
   user?: { phoneNumber?: string; phone?: string; email?: string }
 }
@@ -238,6 +249,87 @@ export interface StaffSearchResultApiDto {
   photoUrl?: string | null
   position?: string | null
   paymentMethods?: StaffPaymentMethodApiDto[]
+}
+
+/** `GET /merchant/staff/{staffProfileId}/stats` — API DTOs. */
+export interface StaffTipsTrendPointApiDto {
+  date?: string
+  totalAmount?: number
+  tipCount?: number
+}
+
+export interface StaffAllTimeStatsApiDto {
+  tipsCollected?: number
+  tipCount?: number
+  averageRating?: number
+  totalReviews?: number
+  reviewsRouted?: number
+  totalQrScans?: number
+  qrToTipConversionRate?: number
+}
+
+export interface StaffPeriodStatsApiDto extends StaffAllTimeStatsApiDto {
+  tipsChangePercent?: number
+  tipsTrend?: StaffTipsTrendPointApiDto[]
+}
+
+export interface StaffRecentTipApiDto {
+  id?: string
+  amount?: number
+  totalAmount?: number
+  paymentMethod?: string
+  isMultiStaff?: boolean
+  touchPointName?: string
+  createdAt?: string
+}
+
+export interface StaffRecentReviewApiDto {
+  id?: string
+  rating?: number
+  comment?: string | null
+  customerName?: string | null
+  routingType?: string
+  createdAt?: string
+}
+
+export interface MerchantStaffDetailStatsApiDto {
+  allTime?: StaffAllTimeStatsApiDto
+  period?: StaffPeriodStatsApiDto
+  recentTips?: StaffRecentTipApiDto[]
+  recentReviews?: StaffRecentReviewApiDto[]
+}
+
+export interface StaffStatsDateParams {
+  dateFrom?: string
+  dateTo?: string
+}
+
+export interface StaffTipsTrendPoint {
+  date: string
+  totalAmount: number
+  tipCount: number
+}
+
+export interface StaffAllTimeStats {
+  tipsCollected: number
+  tipCount: number
+  averageRating: number
+  totalReviews: number
+  reviewsRouted: number
+  totalQrScans: number
+  qrToTipConversionRate: number
+}
+
+export interface StaffPeriodStats extends StaffAllTimeStats {
+  tipsChangePercent: number
+  tipsTrend: StaffTipsTrendPoint[]
+}
+
+export interface MerchantStaffDetailStats {
+  allTime: StaffAllTimeStats
+  period: StaffPeriodStats
+  recentTips: TransactionRecord[]
+  recentReviews: ReviewRecord[]
 }
 
 /** v3.3 — `GET /merchant/staff/invites` item (StaffInviteListItemDto). */

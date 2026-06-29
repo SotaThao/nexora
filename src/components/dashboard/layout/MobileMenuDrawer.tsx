@@ -108,19 +108,12 @@ export default function MobileMenuDrawer({
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setActiveMenu('settings')
-                  setSettingsTab('kyb')
-                  onClose()
-                }}
-                className={`flex h-8 w-full items-center gap-2.5 rounded-lg px-2 text-left text-xs font-bold transition ${
-                  activeMenu === 'settings' && settingsTab === 'kyb'
-                    ? 'text-brandCyan font-extrabold'
-                    : 'text-white/75 hover:bg-white/5 hover:text-white'
-                }`}
+                disabled
+                aria-disabled="true"
+                className="flex h-8 w-full cursor-not-allowed items-center gap-2.5 rounded-lg px-2 text-left text-xs font-bold text-white/40 opacity-60"
               >
-                <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === 'settings' && settingsTab === 'kyb' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
-                <span>{t('dashboard.menu.kyb')}</span>
+                <div className="h-1.5 w-1.5 rounded-full bg-white/20" />
+                <span>{t('dashboard.menu.kyb')} ({t('common.coming_soon')})</span>
               </button>
             </div>
           )}

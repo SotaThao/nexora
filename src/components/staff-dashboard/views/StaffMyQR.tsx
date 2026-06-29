@@ -71,6 +71,10 @@ function getBusinessStatusLabel(biz: StaffBusinessTipQr): string {
   return biz.linkStatusLabel || biz.linkStatus || 'Active'
 }
 
+function getBusinessRoleLabel(biz: StaffBusinessTipQr): string {
+  return biz.roleAtBusiness?.trim() || biz.roleLabel || 'Staff'
+}
+
 function isBusinessActive(biz: StaffBusinessTipQr): boolean {
   const label = getBusinessStatusLabel(biz).toLowerCase()
   return label === 'active' && Boolean(biz.tipUrl) && !biz.tipLinkIncomplete
@@ -209,9 +213,7 @@ export default function StaffMyQR() {
   const pendingLinkRequests = useMemo(() => {
     return linkRequests.filter((n, i) => {
       const query = linkRequestQueries[i]
-      if (query.isPending) return true
-      if (query.isSuccess && query.data?.status === 'WaitingStaffAcceptance') return true
-      return false
+      return query.isSuccess && query.data?.status === 'WaitingStaffAcceptance'
     })
   }, [linkRequests, linkRequestQueries])
 
@@ -236,15 +238,17 @@ export default function StaffMyQR() {
     [staffCode],
   )
   const referralQrImageSrc = useMemo(
-    () => (staffLink ? buildQrImageUrl(staffLink, 200) : ''),
-    [staffLink],
+    () => (staffCode ? buildQrImageUrl(staffCode, 200) : ''),
+    [staffCode],
   )
 
+  const activeTipQrs = useMemo(() => businessTipQrs.filter(isBusinessActive), [businessTipQrs])
+
   const selectedBusiness = useMemo(() => {
-    if (!businessTipQrs.length) return null
-    const match = businessTipQrs.find((biz) => biz.businessId === selectedBusinessId)
-    return match || businessTipQrs[0]
-  }, [businessTipQrs, selectedBusinessId])
+    if (!activeTipQrs.length) return null
+    const match = activeTipQrs.find((biz) => biz.businessId === selectedBusinessId)
+    return match || activeTipQrs[0]
+  }, [activeTipQrs, selectedBusinessId])
 
   const copyText = useCallback(
     async (text: string, successKey: string, failKey: string) => {
@@ -619,32 +623,28 @@ export default function StaffMyQR() {
 
       {activeTab === 'referral' && (
         <div className="space-y-4">
-          <section className={panel}>
-            <h3 className="mb-3 text-base font-extrabold text-nexoraText">
-              {t('staff_dashboard.qr.link_requests_title')}
-            </h3>
-            <div className="space-y-2">
-              {pendingLinkRequests.length === 0 ? (
-                <div className="py-8 text-center text-sm text-nexoraMuted bg-slate-50/50 rounded-xl border border-dashed border-nexoraBorder">
-                  {t('staff_dashboard.qr.no_link_requests')}
-                </div>
-              ) : (
-                pendingLinkRequests.map((n) => (
+          {pendingLinkRequests.length > 0 && (
+            <section className={panel}>
+              <h3 className="mb-3 text-base font-extrabold text-nexoraText">
+                {t('staff_dashboard.qr.link_requests_title')}
+              </h3>
+              <div className="space-y-2">
+                {pendingLinkRequests.map((n) => (
                   <StaffLinkRequestCard
                     key={n.id}
                     notification={n}
                     onResolved={(id) => markNotificationRead.mutate(id)}
                   />
-                ))
-              )}
-            </div>
-          </section>
+                ))}
+              </div>
+            </section>
+          )}
           <section className={`${panel} text-center`}>
             <h3 className="text-base font-extrabold text-nexoraText">
             {t('staff_dashboard.qr.personal_title')}
           </h3>
           <p className="mt-1 text-xs text-nexoraMuted">{t('staff_dashboard.qr.personal_sub')}</p>
-          {staffLink ? (
+          {staffCode ? (
             <>
               <div className="mx-auto my-4 flex h-44 w-44 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-nexoraBorder/60 bg-white p-3.5 shadow-sm select-none">
                 <img src={referralQrImageSrc} alt="Scan QR" className="h-full w-full object-contain" />
@@ -721,7 +721,7 @@ export default function StaffMyQR() {
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  {businessTipQrs.map((biz) => {
+                  {activeTipQrs.map((biz) => {
                     const isSelected = selectedBusiness?.businessId === biz.businessId
                     return (
                       <button
@@ -855,15 +855,7 @@ export default function StaffMyQR() {
                 </div>
 
                 <div className="divide-y divide-nexoraBorder">
-                  {pendingLinkRequests.map((n) => (
-                    <StaffLinkRequestCard
-                      key={n.id}
-                      notification={n}
-                      onResolved={(id) => markNotificationRead.mutate(id)}
-                      variant="list-item"
-                    />
-                  ))}
-                  {businessTipQrs.map((biz) => (
+                  {activeTipQrs.map((biz) => (
                     <div
                       key={biz.businessId}
                       className="flex items-center justify-between gap-3 py-3 last:pb-0"
@@ -885,7 +877,7 @@ export default function StaffMyQR() {
                             {biz.businessName}
                           </div>
                           <div className="truncate text-xs text-nexoraMuted">
-                            {t('staff_dashboard.notifications.link_request_role', { role: biz.roleLabel || 'Staff' })}
+                            {t('staff_dashboard.notifications.link_request_role', { role: getBusinessRoleLabel(biz) })}
                           </div>
                         </button>
                       </div>

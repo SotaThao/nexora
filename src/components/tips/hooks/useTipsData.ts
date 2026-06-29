@@ -7,7 +7,7 @@ export function useTipsData({ transactions, metrics, tipsChartData, chartStartDa
 
   const filteredTxsForOverview = useMemo(() => {
     return transactions.filter(tx => {
-      const date = tx.dateTime.split(' ')[0];
+      const date = tx.dateTime.split('T')[0].split(' ')[0];
       return date >= chartStartDate && date <= chartEndDate;
     });
   }, [transactions, chartStartDate, chartEndDate]);
@@ -18,19 +18,19 @@ export function useTipsData({ transactions, metrics, tipsChartData, chartStartDa
 
   const directTips = useMemo(() => {
     return filteredTxsForOverview
-      .filter(tx => isDirectP2pMethod(tx.paymentMethod ?? ''))
+      .filter(tx => isDirectP2pMethod(tx.paymentMethod ?? '') && (tx.status === 'Success' || tx.status === 'Completed'))
       .reduce((sum, tx) => sum + (tx.amount || 0), 0);
   }, [filteredTxsForOverview]);
 
   const cardTips = useMemo(() => {
     return filteredTxsForOverview
-      .filter(tx => tx.paymentMethod === 'Card')
+      .filter(tx => tx.paymentMethod === 'Card' && (tx.status === 'Success' || tx.status === 'Completed'))
       .reduce((sum, tx) => sum + (tx.amount || 0), 0);
   }, [filteredTxsForOverview]);
 
   const cryptoTips = useMemo(() => {
     return filteredTxsForOverview
-      .filter(tx => tx.paymentMethod === 'Crypto')
+      .filter(tx => tx.paymentMethod === 'Crypto' && (tx.status === 'Success' || tx.status === 'Completed'))
       .reduce((sum, tx) => sum + (tx.amount || 0), 0);
   }, [filteredTxsForOverview]);
 
@@ -56,8 +56,8 @@ export function useTipsData({ transactions, metrics, tipsChartData, chartStartDa
           staffName: tx.staffName || 'Staff Member',
           method: tx.paymentMethod || 'Zelle',
           totalAmount: 0,
-          status: tx.status === 'Success' ? 'Paid Directly' : 'Pending',
-          lastDate: tx.dateTime ? tx.dateTime.split(' ')[0] : 'N/A'
+          status: tx.status === 'Success' || tx.status === 'Completed' ? 'Paid Directly' : 'Pending',
+          lastDate: tx.dateTime ? tx.dateTime.split('T')[0].split(' ')[0] : 'N/A'
         };
       }
       grouped[staffId].totalAmount += tx.amount || 0;
@@ -91,7 +91,7 @@ export function useTipsData({ transactions, metrics, tipsChartData, chartStartDa
     }
 
     // Fallback if no real chart data
-    const txList = filteredTxsForOverview.filter(tx => tx.status === 'Success');
+    const txList = filteredTxsForOverview.filter(tx => tx.status === 'Success' || tx.status === 'Completed');
     if (txList.length > 0) {
       if (chartRange === '7 Days') {
         const dates = [];
@@ -122,7 +122,9 @@ export function useTipsData({ transactions, metrics, tipsChartData, chartStartDa
           const intervalEnd = new Date(start.getTime() + (totalTime / pointsCount) * (i + 1));
           const value = txList
             .filter(tx => {
-              const txDate = new Date(tx.dateTime.replace(' ', 'T') + ':00');
+              // Ensure we don't append :00 if it's already an ISO string or has seconds
+              const normalizedDateStr = tx.dateTime.includes('T') ? tx.dateTime : tx.dateTime.replace(' ', 'T') + (tx.dateTime.split(':').length <= 2 ? ':00' : '');
+              const txDate = new Date(normalizedDateStr);
               return txDate >= intervalStart && txDate < intervalEnd;
             })
             .reduce((sum, tx) => sum + tx.amount, 0);

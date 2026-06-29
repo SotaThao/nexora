@@ -14,6 +14,7 @@ import Skeleton from '../../ui/skeleton/Skeleton'
 import TipsOverTimePanel from './TipsOverTimePanel'
 import StaffLeaderboardPanel from './StaffLeaderboardPanel'
 import SetupGuideBanner from './SetupGuideBanner'
+import PayoutSetupWarningBanner from './PayoutSetupWarningBanner'
 import OverviewEmptyState from './OverviewEmptyState'
 import OverviewSkeleton from './OverviewSkeleton'
 
@@ -325,6 +326,10 @@ function Overview({
         <div className="mb-6">
           <SetupGuideBanner onStartSetup={onStartSetup} />
         </div>
+      )}
+
+      {hasSetup && (
+        <PayoutSetupWarningBanner />
       )}
 
       {pendingConfirmCount > 0 && (

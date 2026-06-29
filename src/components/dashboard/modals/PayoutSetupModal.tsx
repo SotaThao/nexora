@@ -3,24 +3,15 @@ import { X, Camera, FolderOpen, AlertTriangle, Bitcoin } from 'lucide-react'
 import { useTranslation, renderLabel } from '../../../contexts/LanguageContext'
 import ImageFileInput from '../../ui/ImageFileInput'
 import BankWireAccountForm from '../../payout/BankWireAccountForm'
+import PayoutAccountIdentifierInput from '../../payout/PayoutAccountIdentifierInput'
+import { formatPayoutPhoneDisplay } from '../../payout/payoutPhone'
 import CameraCapture from '../../ui/CameraCapture'
 import { readImageFileAsDataUrl } from '../../../utils/imageFile'
 import {
   getBankWireBeneficiaryName,
   isBankWireAccountComplete,
 } from '../../payout/bankWireAccount'
-import { isValidEmail, isValidPhone } from '../../../utils/validation'
-
-const validatePayoutAccount = (method: string, input: unknown) => {
-  const account = String(input || '').trim()
-  if (!account) return 'required'
-  if (method === 'zelle') return isValidEmail(account) || isValidPhone(account) ? '' : 'emailOrPhone'
-  if (method === 'paypal') return isValidEmail(account) ? '' : 'email'
-  if (method === 'venmo') return /^@[A-Za-z0-9_]{2,30}$/.test(account) ? '' : 'venmo'
-  if (method === 'cashapp') return /^\$[A-Za-z][A-Za-z0-9_]{1,19}$/.test(account) ? '' : 'cashapp'
-  if (method === 'applecash') return isValidPhone(account) ? '' : 'phone'
-  return account.length >= 3 ? '' : 'invalid'
-}
+import { validatePayoutAccount } from '../../payout/validatePayoutAccount'
 
 interface PayoutSetupModalProps {
   open: boolean
@@ -253,18 +244,16 @@ function PayoutSetupModal({
             <label className="block text-[10px] font-extrabold uppercase text-slate-500 tracking-wider mb-2">
               {renderLabel(t('components.dashboard.modals.PayoutSetupModal.accountIdentifier'))}
             </label>
-            <input
-              type="text"
+            <PayoutAccountIdentifierInput
+              walletKey={walletKey}
               disabled={readOnly}
               value={value}
-              onChange={(e) => {
-                setValue(e.target.value)
+              hasError={Boolean(error)}
+              placeholder={walletPlaceholders[walletKey]}
+              onChange={(nextValue) => {
+                setValue(nextValue)
                 setError('')
               }}
-              placeholder={walletPlaceholders[walletKey]}
-              className={`w-full bg-slate-50 border border-slate-200 focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:bg-white rounded-xl px-3.5 h-11 text-xs text-slate-800 focus:outline-none transition-all ${
-                error ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20' : ''
-              } ${readOnly ? 'bg-slate-100 text-slate-400 cursor-not-allowed border-slate-200' : ''}`}
             />
             {error && <p className="mt-1 text-[10px] font-bold text-rose-500">{error}</p>}
           </div>
@@ -288,7 +277,9 @@ function PayoutSetupModal({
                 )}
                 <div className="text-center">
                   <div className="text-sm font-extrabold text-slate-800">{accountName}</div>
-                  <div className="text-[10px] font-semibold text-slate-400 mt-0.5">{value}</div>
+                  <div className="text-[10px] font-semibold text-slate-400 mt-0.5">
+                    {formatPayoutPhoneDisplay(value) || value}
+                  </div>
                 </div>
                 <div className="my-3 flex h-28 w-28 items-center justify-center border border-slate-100 bg-white p-1 rounded-lg">
                   <img src={qrCode} alt="Payout QR Code" className="h-full w-full object-contain" />

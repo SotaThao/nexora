@@ -121,7 +121,14 @@ function renderStatusBadge(tx, t) {
   }
   const status = tx?.status
   const s = (status || '').toLowerCase()
-  if (s === 'success' || s === 'succeeded' || s === 'confirmed' || s === 'completed') {
+  if (s === 'completed') {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100/50 mt-2">
+        {status}
+      </span>
+    )
+  }
+  if (s === 'success' || s === 'succeeded' || s === 'confirmed') {
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100/50 mt-2">
         {t('components.dashboard.views.ReportsView.success')}

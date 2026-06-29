@@ -285,13 +285,6 @@ export default function DashboardHeader({
           >
             {t('dashboard.menu.business_setting')}
           </button>
-          <button
-            type="button"
-            onClick={() => { onNavigateSettingsTab('kyb'); setIsHeaderDropdownOpen(false) }}
-            className="flex w-full items-center px-4 py-2 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition text-left"
-          >
-            {t('dashboard.menu.kyb')}
-          </button>
         </div>
       )}
       <div className="py-1">
