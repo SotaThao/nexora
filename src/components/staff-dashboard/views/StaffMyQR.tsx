@@ -275,14 +275,13 @@ export default function StaffMyQR() {
   }, [copyText, staffCode])
 
   const handleShareReferral = useCallback(async () => {
-    if (!staffLink) {
+    if (!staffCode) {
       showToast(t('components.staff_dashboard.views.StaffMyQR.staffCodeUnavailable'), 'error')
       return
     }
 
     try {
       const result = await shareUrl({
-        url: staffLink,
         title: t('staff_dashboard.qr.share'),
         text: staffCode,
       })
@@ -293,7 +292,7 @@ export default function StaffMyQR() {
     } catch {
       showToast(t('components.staff_dashboard.views.StaffMyQR.shareFailed'), 'error')
     }
-  }, [staffCode, staffLink, showToast, t])
+  }, [staffCode, showToast, t])
 
   const handleCopyTipUrl = useCallback(
     (tipUrl: string) => {
