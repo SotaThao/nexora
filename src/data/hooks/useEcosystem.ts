@@ -19,7 +19,7 @@ export function useEcosystemSignIn() {
   return useMutation<
     EcosystemSignInResult,
     Error,
-    { name: string; path?: string | null }
+    { id: string; path?: string | null }
   >({
     mutationFn: (params) => ecosystemRepository.signIn(params),
   })
