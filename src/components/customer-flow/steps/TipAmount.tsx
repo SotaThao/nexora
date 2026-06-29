@@ -33,8 +33,8 @@ export default function TipAmount({
     amount: resolveStaffTipAmount(member.id, selectedTips, customTips),
   }))
 
-  const hasInvalidAmount = staffTipRows.some(({ amount }) => Number.isNaN(amount) || amount < 0 || amount > 500)
-  const isTotalInvalid = activeTipAmount <= 0 || activeTipAmount > 500
+  const hasInvalidAmount = staffTipRows.some(({ amount }) => Number.isNaN(amount) || amount < 0 || amount > 10000)
+  const isTotalInvalid = activeTipAmount <= 0 || activeTipAmount > 10000
   const disablePaymentSelection = hasInvalidAmount || isTotalInvalid
 
   const handleSelectWallet = (wallet) => {
