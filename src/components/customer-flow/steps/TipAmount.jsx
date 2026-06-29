@@ -37,9 +37,7 @@ const WalletLogos = {
     </div>
   ),
   vlinkpay: (
-    <div className="w-[18px] h-[18px] rounded-full overflow-hidden flex items-center justify-center shrink-0">
-      <img src="/assets/vlinkpay-logo.png" alt="VLINKPAY" className="w-full h-full object-contain bg-white" />
-    </div>
+    <img src="/assets/vlinkpay-logo.png" alt="VLINKPAY" className="w-[28px] h-[28px] object-contain" />
   ),
 }
 
@@ -431,7 +429,7 @@ export default function TipAmount({
             { name: 'Cash App', key: 'cashapp', color: '#00D632', logo: WalletLogos.cashapp },
             { name: 'Apple Cash', key: 'applecash', color: '#000000', logo: WalletLogos.applepay },
             { name: 'Paypal', key: 'paypal', color: '#003087', logo: WalletLogos.paypal },
-            { name: 'VLINKPAY', key: 'vlinkpay', color: '#2B59FF', logo: WalletLogos.vlinkpay }
+            { name: 'VLINKPAY', key: 'vlinkpay', color: '#2B59FF', iconBg: '#FFFFFF', logo: WalletLogos.vlinkpay }
           ].filter(wallet => {
             if (selectedStaffMembers.length === 1) {
               const staff = selectedStaffMembers[0]
@@ -460,7 +458,7 @@ export default function TipAmount({
               >
                 <div 
                   className="w-10 h-10 rounded-full flex items-center justify-center mb-2 shadow-sm transition-transform group-hover:scale-105"
-                  style={{ backgroundColor: wallet.color }}
+                  style={{ backgroundColor: wallet.iconBg || wallet.color }}
                 >
                   {wallet.logo}
                 </div>
