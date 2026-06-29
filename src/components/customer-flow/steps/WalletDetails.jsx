@@ -194,6 +194,41 @@ export default function WalletDetails({
               </div>
             );
           })()}
+
+          {/* Instructional Steps */}
+          <div className="bg-blue-50/50 border border-blue-100 rounded-xl px-4 py-3 text-[11px] font-medium text-blue-800 text-center leading-relaxed mt-2">
+            {(() => {
+              const isVi = currentLanguage === 'vi';
+              if (selectedWalletObj.key === 'zelle') {
+                return isVi
+                  ? '(1) Copy email Zelle · (2) Mở Zelle & chuyển tiền · (3) Sau đó nhấn xác nhận bên dưới'
+                  : '(1) Copy Zelle email · (2) Open Zelle & send tip · (3) Then click confirm below';
+              }
+              if (selectedWalletObj.key === 'venmo') {
+                return isVi
+                  ? '(1) Copy tên Venmo · (2) Mở Venmo & chuyển tiền · (3) Sau đó nhấn xác nhận bên dưới'
+                  : '(1) Copy Venmo name · (2) Open Venmo & send tip · (3) Then click confirm below';
+              }
+              if (selectedWalletObj.key === 'cashapp') {
+                return isVi
+                  ? '(1) Copy Cash Tag · (2) Mở Cash App & chuyển tiền · (3) Sau đó nhấn xác nhận bên dưới'
+                  : '(1) Copy Cash Tag · (2) Open Cash App & send tip · (3) Then click confirm below';
+              }
+              if (selectedWalletObj.key === 'applepay' || selectedWalletObj.key === 'apple') {
+                return isVi
+                  ? '(1) Copy số điện thoại · (2) Mở Apple Cash & chuyển tiền · (3) Sau đó nhấn xác nhận bên dưới'
+                  : '(1) Copy phone number · (2) Open Apple Cash & send tip · (3) Then click confirm below';
+              }
+              if (selectedWalletObj.key === 'paypal') {
+                return isVi
+                  ? '(1) Copy email PayPal · (2) Mở PayPal & chuyển tiền · (3) Sau đó nhấn xác nhận bên dưới'
+                  : '(1) Copy PayPal email · (2) Open PayPal & send tip · (3) Then click confirm below';
+              }
+              return isVi
+                ? '(1) Copy thông tin · (2) Mở ứng dụng & chuyển tiền · (3) Sau đó nhấn xác nhận bên dưới'
+                : '(1) Copy details · (2) Open app & send tip · (3) Then click confirm below';
+            })()}
+          </div>
         </div>
       </div>
 

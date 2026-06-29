@@ -612,7 +612,7 @@
   },
   "customer": {
     "header_subtitle": "Nexora Touch Secure Gate",
-    "select_staff_title": "Choose your service provider",
+    "select_staff_title": "Who served you today?",
     "select_staff_subtitle": "Select the staff who served you.",
     "search_staff_placeholder": "Search staff...",
     "no_staff_found": "No staff members found.",

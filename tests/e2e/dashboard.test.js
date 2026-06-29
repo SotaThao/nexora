@@ -156,7 +156,7 @@ describe('Nexora Touch E2E Test Suite (CloakBrowser)', () => {
     await page.goto('http://localhost:3000/?flow=customer&biz=Golden+Glow+Nail+Spa');
 
     // Wait for the staff selection screen to render
-    await page.waitForSelector('text=Choose your service provider');
+    await page.waitForSelector('text=Who served you today?');
 
     // Search for "Mia"
     await page.fill('input[placeholder*="Search"]', 'Mia');
@@ -186,7 +186,7 @@ describe('Nexora Touch E2E Test Suite (CloakBrowser)', () => {
     await page.goto('http://localhost:3000/?flow=customer&biz=Golden+Glow+Nail+Spa');
 
     // Wait for the staff selection screen to render
-    await page.waitForSelector('text=Choose your service provider');
+    await page.waitForSelector('text=Who served you today?');
 
     // Search for "Hanna" (Hanna Nguyen is inactive by default in CustomerFlow.jsx)
     await page.fill('input[placeholder*="Search"]', 'Hanna');

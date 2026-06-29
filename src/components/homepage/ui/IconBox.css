@@ -1,0 +1,23 @@
+:root {
+  --icon-primary: #1B63FF;
+  --icon-secondary: #28D6B3;
+  --icon-bg-primary: #EEF5FF;
+  --icon-bg-secondary: #E9FBF7;
+  --text-primary: #101828;
+  --text-secondary: #667085;
+}
+
+.icon-box {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--icon-bg-primary), var(--icon-bg-secondary));
+  color: var(--icon-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-box svg {
+  /* Dimensions and stroke controlled by Lucide props */
+}
