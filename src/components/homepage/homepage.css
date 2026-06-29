@@ -875,20 +875,6 @@ nav a:focus-visible {
     min-height: 40px;
   }
 
-  .nx-homepage input,
-  .nx-homepage select,
-  .nx-homepage textarea,
-  .nx-homepage button {
-    font-size: 16px;
-    /* avoids iOS zoom on form focus */
-  }
-
-  .text-\[9px\],
-  .text-\[10px\],
-  .text-\[11px\],
-  .text-xs {
-    /* keep tiny labels readable on mobile without breaking Tailwind utilities too much */
-  }
 
   /* Savings stats labels 80% */
   [data-i18n="calc-stat-1"],
