@@ -162,72 +162,75 @@ export default function TipAmount({
             </div>
           )}
         </div>
-      </>
+      </div>
     );
   };
 
   const renderSplitBody = () => {
+    const isScrollable = selectedStaffMembers.length >= 4;
     return (
-      <div className="flex flex-col gap-2.5 bg-white border border-nexoraBorder rounded-[16px] p-3 shadow-sm mb-3">
-        {selectedStaffMembers.map((member) => {
-          const selTip = selectedTips[member.id] !== undefined ? selectedTips[member.id] : 5;
-          const custTip = customTips[member.id] || '';
-          return (
-            <div key={member.id} className="flex items-center gap-2 w-full">
-              <div className="flex items-center gap-2 w-[85px] shrink-0">
-                {member.avatar ? (
-                  <img src={member.avatar} alt="" className="h-8 w-8 rounded-[10px] object-cover border border-nexoraBorder shrink-0" />
-                ) : (
-                  <div className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-gradient-to-tr from-[#2B59FF] to-[#8E4DF8] text-[13px] font-extrabold text-white shrink-0">
-                    {member.nickname.charAt(0)}
+      <div className="flex flex-col bg-white border border-nexoraBorder rounded-[16px] shadow-sm mb-3 overflow-hidden">
+        <div className={`flex flex-col gap-0 pt-1 pb-1 ${isScrollable ? 'max-h-[220px] overflow-y-auto no-scrollbar' : ''}`}>
+          {selectedStaffMembers.map((member, index) => {
+            const selTip = selectedTips[member.id] !== undefined ? selectedTips[member.id] : 5;
+            const custTip = customTips[member.id] || '';
+            const isDense = selectedStaffMembers.length >= 3;
+            return (
+              <div key={member.id} className={`flex items-center gap-2 w-full px-3 py-2 ${index !== selectedStaffMembers.length - 1 ? 'border-b border-slate-50' : ''}`}>
+                <div className={`flex items-center gap-2 ${isDense ? 'w-[70px]' : 'w-[85px]'} shrink-0`}>
+                  {member.avatar ? (
+                    <img src={member.avatar} alt="" className={`${isDense ? 'h-6 w-6 rounded-full' : 'h-8 w-8 rounded-[10px]'} object-cover border border-nexoraBorder shrink-0`} />
+                  ) : (
+                    <div className={`flex ${isDense ? 'h-6 w-6 rounded-full text-[10px]' : 'h-8 w-8 rounded-[10px] text-[13px]'} items-center justify-center bg-gradient-to-tr from-[#2B59FF] to-[#8E4DF8] font-extrabold text-white shrink-0`}>
+                      {member.nickname.charAt(0)}
+                    </div>
+                  )}
+                  <span className={`font-bold text-nexoraText ${isDense ? 'text-[11px]' : 'text-[12px]'} truncate`}>{member.nickname}</span>
+                </div>
+
+                <div className={`flex items-center flex-1 justify-end ${isDense ? 'gap-1' : 'gap-1.5'}`}>
+                  {[5, 10, 15, 20].map(val => (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => {
+                        setSelectedTips({ ...selectedTips, [member.id]: val });
+                        setCustomTips({ ...customTips, [member.id]: '' });
+                      }}
+                      className={`flex-1 border rounded-md ${isDense ? 'py-0.5 text-[11px]' : 'py-1 text-xs'} font-semibold transition-all duration-150 ${
+                        selTip === val
+                          ? 'bg-nexoraBrand text-white border-nexoraBrand'
+                          : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                      }`}
+                    >
+                      ${val}
+                    </button>
+                  ))}
+
+                  <div className={`relative ${isDense ? 'w-11' : 'w-14'} shrink-0`}>
+                    <span className="absolute left-1 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 pointer-events-none">$</span>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      pattern="[0-9]*"
+                      placeholder="0"
+                      value={selTip === 'custom' ? custTip : ''}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9.]/g, '');
+                        setSelectedTips({ ...selectedTips, [member.id]: 'custom' });
+                        setCustomTips({ ...customTips, [member.id]: val });
+                      }}
+                      className={`w-full bg-white border ${selTip === 'custom' ? 'border-nexoraBrand' : 'border-slate-200'} focus:border-nexoraBrand rounded-md pl-3 pr-1 ${isDense ? 'h-[22px]' : 'h-[26px]'} text-[11px] font-bold text-slate-800 focus:outline-none transition-all text-right`}
+                    />
                   </div>
-                )}
-                <span className="font-bold text-nexoraText text-[12px] truncate">{member.nickname}</span>
-              </div>
-
-              <div className="flex items-center gap-1.5 flex-1 justify-end">
-                {[5, 10, 15, 20].map(val => (
-                  <button
-                    key={val}
-                    type="button"
-                    onClick={() => {
-                      setSelectedTips({ ...selectedTips, [member.id]: val });
-                      setCustomTips({ ...customTips, [member.id]: '' });
-                    }}
-                    className={`flex-1 border-2 rounded-md py-1 text-xs font-semibold transition-all duration-150 ${
-                      selTip === val
-                        ? 'bg-nexoraBrand text-white border-nexoraBrand'
-                        : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
-                    }`}
-                  >
-                    ${val}
-                  </button>
-                ))}
-
-                <div className="relative w-14 shrink-0">
-                  <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-400 pointer-events-none">$</span>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    pattern="[0-9]*"
-                    placeholder="0"
-                    value={selTip === 'custom' ? custTip : ''}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/[^0-9.]/g, '');
-                      setSelectedTips({ ...selectedTips, [member.id]: 'custom' });
-                      setCustomTips({ ...customTips, [member.id]: val });
-                    }}
-                    className={`w-full bg-white border-2 ${selTip === 'custom' ? 'border-nexoraBrand' : 'border-slate-200'} focus:border-nexoraBrand rounded-md pl-4 pr-1 h-[26px] text-xs font-bold text-slate-800 focus:outline-none transition-all text-right`}
-                  />
                 </div>
               </div>
-            </div>
-          );
-        })}
-        <hr className="border-nexoraBorder border-dashed my-1" />
-        <div className="flex justify-between items-center">
-           <span className="font-bold text-xs uppercase text-nexoraSubtle">{currentLanguage === 'vi' ? 'TỔNG' : 'TOTAL'}</span>
-           <span className="font-black text-[17px] text-nexoraText">${activeTipAmount.toFixed(2)}</span>
+            );
+          })}
+        </div>
+        <div className="bg-slate-50 px-3 py-2 border-t border-slate-100 flex justify-between items-center shrink-0">
+           <span className="font-bold text-[11px] uppercase text-nexoraSubtle">{currentLanguage === 'vi' ? 'TỔNG' : 'TOTAL'}</span>
+           <span className="font-black text-[15px] text-nexoraText">${activeTipAmount.toFixed(2)}</span>
         </div>
       </div>
     );
@@ -248,26 +251,26 @@ export default function TipAmount({
       return (
         <div className="mt-4 flex flex-col gap-3 animate-fadeIn">
           {/* VLINKPAY Green Card */}
-          <div className="p-4 rounded-[16px] border border-[#A7F3D0] bg-[#ECFDF5] flex flex-col gap-3">
+          <div className="p-3.5 rounded-[16px] border border-[#A7F3D0] bg-[#ECFDF5] flex flex-col gap-2.5">
             <div className="flex justify-between items-center">
-              <span className="font-extrabold text-[12px] text-[#047857] uppercase tracking-wider">
+              <span className="font-extrabold text-[11px] text-[#047857] uppercase tracking-wider">
                 {currentLanguage === 'vi' ? 'TÀI KHOẢN VLINKPAY' : 'VLINKPAY ACCOUNT'}
               </span>
-              <span className="bg-[#D1FAE5] text-[#059669] px-2.5 py-1 rounded-full text-[11px] font-extrabold">
+              <span className="bg-[#D1FAE5] text-[#059669] px-2 py-0.5 rounded-full text-[10px] font-extrabold">
                 VLINKPAY
               </span>
             </div>
 
-            <div className="flex gap-4 items-center">
+            <div className="flex gap-3 items-center">
               {/* Symbolic QR Code */}
-              <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=VLK:0x3f9A8b2C1d4E5f6A7B8C9D0E1F2A3B4C5D6E7F8&color=000000" className="w-24 h-24 rounded-xl border border-[#A7F3D0] bg-white p-1.5 shadow-sm shrink-0 object-contain" alt="QR Code" />
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=VLK:0x3f9A8b2C1d4E5f6A7B8C9D0E1F2A3B4C5D6E7F8&color=000000" className="w-[72px] h-[72px] rounded-xl border border-[#A7F3D0] bg-white p-1 shadow-sm shrink-0 object-contain" alt="QR Code" />
 
               {/* Address Info */}
-              <div className="flex-1 flex flex-col gap-1.5 overflow-hidden">
-                <span className="text-[11px] font-medium text-[#059669] opacity-80">
+              <div className="flex-1 flex flex-col justify-center overflow-hidden">
+                <span className="text-[10px] font-medium text-[#059669] opacity-80 mb-0.5">
                   {currentLanguage === 'vi' ? 'Địa chỉ ví' : 'Wallet Address'}
                 </span>
-                <span className="text-[12px] font-bold text-nexoraText break-all leading-tight">
+                <span className="text-[12px] font-bold text-nexoraText break-all leading-tight mb-2">
                   VLK:0x3f9A8b2C1d4E5f6A7B8C9D0E1F2A3B4C5D6E7F8
                 </span>
                 <button 
@@ -275,10 +278,10 @@ export default function TipAmount({
                     navigator.clipboard.writeText("VLK:0x3f9A8b2C1d4E5f6A7B8C9D0E1F2A3B4C5D6E7F8");
                     showToast(t('common.copied') || 'Copied!', 'success');
                   }}
-                  className="mt-1 flex items-center justify-center gap-1.5 w-full bg-white border border-[#A7F3D0] text-[#059669] py-1.5 rounded-xl text-[12px] font-bold shadow-sm hover:bg-[#D1FAE5] transition-colors"
+                  className="flex items-center justify-center gap-1.5 w-full bg-white border border-[#A7F3D0] text-[#059669] py-1.5 rounded-lg text-[11px] font-bold shadow-sm hover:bg-[#D1FAE5] transition-colors"
                 >
                   <Copy className="w-3.5 h-3.5" />
-                  {currentLanguage === 'vi' ? 'Sao chép địa chỉ ví' : 'Copy wallet address'}
+                  {currentLanguage === 'vi' ? 'Sao chép' : 'Copy address'}
                 </button>
               </div>
             </div>
@@ -339,33 +342,60 @@ export default function TipAmount({
   const isTipValid = activeTipAmount > 0;
 
   return (
-    <div className="flex flex-col h-full animate-fadeIn">
-      <div className="flex-grow">
+    <div className="flex flex-col h-full animate-fadeIn pb-[100px]">
+      <div className="flex-grow pb-4">
         {/* Header - Staff Info */}
         <div className="mb-3 flex flex-col items-center">
           {isMulti ? (
             <div className="flex items-center justify-between w-full bg-white border border-slate-100 p-2.5 rounded-[14px] shadow-sm">
-              <div className="flex items-start gap-2.5">
-                {selectedStaffMembers.map(m => (
-                  <div key={m.id} className="flex flex-col items-center gap-1">
-                    {m.avatar ? (
-                      <img src={m.avatar} className="w-9 h-9 rounded-[10px] object-cover shadow-sm border border-slate-100" />
-                    ) : (
-                      <div className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-gradient-to-tr from-[#2B59FF] to-[#8E4DF8] text-[13px] font-extrabold text-white shadow-sm">
-                        {m.nickname.charAt(0)}
-                      </div>
-                    )}
-                    <span className="text-[10px] font-bold text-slate-600 truncate max-w-[40px] text-center">{m.nickname}</span>
-                  </div>
-                ))}
+              <div className="flex items-center gap-2.5">
+                {selectedStaffMembers.length >= 3 ? (
+                  <>
+                    <div className="flex -space-x-2.5 ml-1">
+                      {selectedStaffMembers.slice(0, 3).map((m, i) => (
+                        <div key={m.id} className="relative rounded-full border-2 border-white overflow-hidden shadow-sm w-8 h-8" style={{ zIndex: 10 - i }}>
+                          {m.avatar ? (
+                            <img src={m.avatar} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center bg-gradient-to-tr from-[#2B59FF] to-[#8E4DF8] text-[10px] font-extrabold text-white">
+                              {m.nickname.charAt(0)}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex flex-col ml-1">
+                      <span className="text-[12px] font-extrabold text-slate-800 leading-tight">
+                        {selectedStaffMembers.length} {currentLanguage === 'vi' ? 'nhân viên' : 'staff selected'}
+                      </span>
+                      <span className="text-[10px] font-medium text-slate-500 truncate max-w-[110px]">
+                        {selectedStaffMembers.slice(0, 2).map(m => m.nickname).join(', ')}
+                        {selectedStaffMembers.length > 2 && ` +${selectedStaffMembers.length - 2}`}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  selectedStaffMembers.map(m => (
+                    <div key={m.id} className="flex flex-col items-center gap-1">
+                      {m.avatar ? (
+                        <img src={m.avatar} className="w-9 h-9 rounded-[10px] object-cover shadow-sm border border-slate-100" />
+                      ) : (
+                        <div className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-gradient-to-tr from-[#2B59FF] to-[#8E4DF8] text-[13px] font-extrabold text-white shadow-sm">
+                          {m.nickname.charAt(0)}
+                        </div>
+                      )}
+                      <span className="text-[10px] font-bold text-slate-600 truncate max-w-[40px] text-center">{m.nickname}</span>
+                    </div>
+                  ))
+                )}
               </div>
               <button 
                 type="button"
                 onClick={() => setStep('select_staff')}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-nexoraBrandSoft/10 text-nexoraBrand rounded-lg hover:bg-nexoraBrandSoft/20 transition-colors shrink-0"
+                className="flex items-center gap-1 px-2.5 py-1.5 bg-nexoraBrandSoft/10 text-nexoraBrand rounded-lg hover:bg-nexoraBrandSoft/20 transition-colors shrink-0"
               >
                 <Users className="w-3.5 h-3.5" />
-                <span className="text-[11px] font-bold">{currentLanguage === 'vi' ? 'Sửa lựa chọn' : 'Edit selection'}</span>
+                <span className="text-[11px] font-bold">{currentLanguage === 'vi' ? 'Sửa' : 'Edit'}</span>
               </button>
             </div>
           ) : (
@@ -479,19 +509,18 @@ export default function TipAmount({
 
       </div>
 
-      {/* Bottom Footer */}
-      <div className="mt-4">
+      {/* Bottom Footer (Sticky) */}
+      <div className="absolute left-0 right-0 bottom-0 z-50 flex flex-col gap-2 px-4 pt-3 bg-white/94 backdrop-blur-md border-t border-slate-200/80 shadow-[0_-10px_30px_rgba(15,23,42,0.08)]" style={{ paddingBottom: 'calc(16px + env(safe-area-inset-bottom))' }}>
         <button
           onClick={() => {
             if (!selectedWalletObj) {
-              // Scroll to payment methods or show error
               showToast(currentLanguage === 'vi' ? 'Vui lòng chọn phương thức thanh toán' : 'Please select a payment method', 'error')
               return;
             }
             handlePay(selectedWalletObj.name)
           }}
           disabled={!isTipValid}
-          className="w-full min-h-[48px] py-3 bg-gradient-to-r from-[#5B21B6] to-[#6D28D9] hover:opacity-90 disabled:opacity-50 disabled:from-slate-400 disabled:to-slate-400 text-white font-extrabold text-[12px] uppercase tracking-wider rounded-[10px] flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(109,40,217,0.25)] transition-all mb-2"
+          className="w-full h-[52px] bg-gradient-to-r from-[#5B21B6] to-[#6D28D9] hover:opacity-90 disabled:opacity-50 disabled:from-slate-400 disabled:to-slate-400 text-white font-extrabold text-[12px] uppercase tracking-wider rounded-[16px] flex items-center justify-center gap-2 shadow-[0_10px_24px_rgba(109,40,217,0.25)] transition-all active:scale-95"
         >
           {!selectedWalletObj 
             ? (currentLanguage === 'vi' ? 'CHỌN PHƯƠNG THỨC THANH TOÁN' : 'CHOOSE PAYMENT METHOD')
@@ -501,7 +530,7 @@ export default function TipAmount({
 
         <button
           onClick={() => setStep('select_staff')}
-          className="w-full py-2 bg-transparent text-nexoraMuted hover:text-nexoraText font-bold text-xs uppercase tracking-wider rounded-xl transition-colors"
+          className="w-full h-[40px] bg-transparent text-slate-500 hover:text-slate-800 font-bold text-xs uppercase tracking-wider rounded-[12px] transition-colors active:scale-95"
         >
           {currentLanguage === 'vi' ? 'QUAY LẠI' : 'GO BACK'}
         </button>
