@@ -436,6 +436,10 @@
     "taking_photo": "Đang chụp ảnh..."
   },
   "dashboard": {
+    "action_required": "CẦN THAO TÁC",
+    "setup_payout_method_title": "Cài đặt Phương thức nhận tiền",
+    "setup_payout_method_desc": "Cài đặt phương thức nhận tiền để mở khóa tính năng tip nhiều thợ.",
+    "setup_payout_btn": "CÀI ĐẶT NHẬN TIỀN",
     "activity": {
       "station_scanned": "Quét Trạm {station}",
       "vip_nfc_tapped": "Chạm NFC VIP",
@@ -815,7 +819,8 @@
         "col_amount": "Số tiền",
         "col_method": "Ví gửi",
         "col_status": "Trạng thái",
-        "status_success": "Thành công"
+        "status_success": "Thành công",
+        "status_completed": "Hoàn thành"
       },
       "ledger": {
         "title": "Giao dịch tip",
@@ -1893,7 +1898,7 @@
             "adultDob": "Bạn phải đủ 18 tuổi.",
             "phone": "Vui lòng nhập số điện thoại hợp lệ.",
             "email": "Vui lòng nhập địa chỉ email hợp lệ.",
-            "emailOrPhone": "Vui lòng nhập email hoặc số điện thoại hợp lệ.",
+            "emailOrPhone": "Nhập email hợp lệ hoặc số điện thoại Mỹ (10 chữ số, ví dụ: john@gmail.com hoặc 4085551234).",
             "url": "Nhập URL đầy đủ, bắt đầu bằng http:// hoặc https://.",
             "postalCode": "Vui lòng nhập mã bưu chính hợp lệ.",
             "venmo": "Nhập tên Venmo hợp lệ, bắt đầu bằng @.",

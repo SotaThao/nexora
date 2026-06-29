@@ -4,6 +4,7 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
 import { serializeBankWireAccount } from '../../payout/bankWireAccount'
 import { captureQrImage } from '../../../utils/qrCode'
+import { getPayoutValidationMessage } from '../../payout/validatePayoutAccount'
 
 const normalizePhone = (raw) => {
   if (!raw) return ''
@@ -447,6 +448,13 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       setModalError(t('components.register.hooks.useRegisterForm.thisFieldIsRequired'))
       return
     }
+
+    const validationMessage = getPayoutValidationMessage(t, editingMethod, editValue)
+    if (validationMessage) {
+      setModalError(validationMessage)
+      return
+    }
+
     setPayouts(prev => ({
       ...prev,
       [editingMethod]: {

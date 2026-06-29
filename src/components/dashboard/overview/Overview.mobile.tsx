@@ -16,6 +16,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { isAwaitingShopConfirmation } from '../utils'
 import SetupGuideBanner from './SetupGuideBanner'
+import PayoutSetupWarningBanner from './PayoutSetupWarningBanner'
 
 function twoInitials(name) {
   const parts = String(name || '').trim().split(/\s+/).filter(Boolean)
@@ -202,6 +203,10 @@ function Overview({
         <div className="mb-1">
           <SetupGuideBanner onStartSetup={onStartSetup} />
         </div>
+      )}
+
+      {hasSetup && (
+        <PayoutSetupWarningBanner />
       )}
 
       {/* ── Greeting ─────────────────────────────────────────────────────── */}

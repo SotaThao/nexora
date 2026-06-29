@@ -1,7 +1,7 @@
 import React from 'react'
 import { Upload, X, ArrowLeft, ArrowRight } from 'lucide-react'
 import ImageFileInput from '../../ui/ImageFileInput'
-import CountryCodeSelect, { formatNationalNumber } from '../../CountryCodeSelect'
+import CountryCodeSelect, { formatNationalNumber, isPhoneValid } from '../../CountryCodeSelect'
 
 export default function StepProfileSetup({
   nickname, setNickname,

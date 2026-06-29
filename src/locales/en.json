@@ -436,6 +436,10 @@
     "taking_photo": "Taking photo..."
   },
   "dashboard": {
+    "action_required": "ACTION REQUIRED",
+    "setup_payout_method_title": "Set Up Your Payout Method",
+    "setup_payout_method_desc": "Set up your payout method to unlock multi-staff tipping.",
+    "setup_payout_btn": "SET UP PAYOUT METHODS",
     "activity": {
       "station_scanned": "Station {station} scanned",
       "vip_nfc_tapped": "VIP NFC tapped",
@@ -815,7 +819,8 @@
         "col_amount": "Amount",
         "col_method": "Wallet",
         "col_status": "Status",
-        "status_success": "Success"
+        "status_success": "Success",
+        "status_completed": "Completed"
       },
       "ledger": {
         "title": "Tip Transactions",
@@ -1894,7 +1899,7 @@
             "adultDob": "You must be at least 18 years old.",
             "phone": "Please enter a valid phone number.",
             "email": "Please enter a valid email address.",
-            "emailOrPhone": "Please enter a valid email address or phone number.",
+            "emailOrPhone": "Enter a valid email or US mobile number (10 digits, e.g. john@gmail.com or 4085551234).",
             "url": "Enter a complete URL starting with http:// or https://.",
             "postalCode": "Please enter a valid ZIP or postal code.",
             "venmo": "Enter a valid Venmo username starting with @.",

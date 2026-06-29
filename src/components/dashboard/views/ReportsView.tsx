@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { CreditCard, Coins, CheckCircle, Clock, XCircle, AlertCircle, Hourglass } from 'lucide-react'
+import { CreditCard, Coins, CheckCircle, Clock, XCircle, AlertCircle } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { formatCurrency, formatTransactionDateTime, isAwaitingShopConfirmation } from '../utils'
 import { WalletLogos } from '../constants'
@@ -146,21 +146,29 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
   }
 
   const renderStatusBadge = (tx) => {
-    if (isAwaitingShopConfirmation(tx)) {
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-100/50 dark:border-violet-500/20">
-          <Hourglass className="h-3 w-3" />
-          {t('merchant_dashboard.tips.awaiting_shop_confirmation')}
-        </span>
-      );
-    }
     const status = tx?.status;
     const s = (status || '').toLowerCase();
-    if (s === 'success' || s === 'succeeded' || s === 'confirmed' || s === 'completed' || s === 'hoàn thành' || s === 'thành công') {
+    if (s === 'completed' || s === 'hoàn thành') {
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100/50 dark:border-emerald-500/20">
           <CheckCircle className="h-3 w-3" />
-          {t('components.dashboard.views.ReportsView.success')}
+          {status}
+        </span>
+      );
+    }
+    if (s === 'confirmed') {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-100/50 dark:border-violet-500/20">
+          <CheckCircle className="h-3 w-3" />
+          {status}
+        </span>
+      );
+    }
+    if (s === 'success' || s === 'succeeded' || s === 'thành công') {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100/50 dark:border-emerald-500/20">
+          <CheckCircle className="h-3 w-3" />
+          {status}
         </span>
       );
     }
@@ -168,7 +176,7 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-100/50 dark:border-amber-500/20">
           <Clock className="h-3 w-3" />
-          {t('components.dashboard.views.ReportsView.pending')}
+          {status}
         </span>
       );
     }
@@ -176,7 +184,7 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-100/50 dark:border-rose-500/20">
           <XCircle className="h-3 w-3" />
-          {t('components.dashboard.views.ReportsView.failed')}
+          {status}
         </span>
       );
     }
