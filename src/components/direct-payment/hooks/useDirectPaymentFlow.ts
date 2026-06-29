@@ -7,21 +7,14 @@ import {
   useCreateDirectPayment,
   useDirectPaymentPage,
 } from '../../../data/hooks/usePublicDirectPayment'
+import { getErrorI18nKey } from '../../../data/errorCodes'
 import { payoutTypeToUiKey, sortPaymentMethodsByUiOrder } from '../../../data/paymentMethodTypes'
+import { getApiErrorCode } from '../../../types/domain'
 import { logger } from '../../../utils/logger'
 import { getWalletOptions } from '../../customer-flow/steps/Payment'
 
 const MIN_AMOUNT = 1
 const MAX_AMOUNT = 10000
-
-function getApiErrorMessage(err: unknown, fallback: string): string {
-  if (err && typeof err === 'object') {
-    const apiErr = err as { message?: string; errorCode?: string }
-    if (apiErr.message) return apiErr.message
-    if (apiErr.errorCode && apiErr.errorCode !== 'HTTP_ERROR') return apiErr.errorCode
-  }
-  return fallback
-}
 
 function resolveAmount(selectedAmount: number | 'custom', customAmount: string): number {
   if (selectedAmount === 'custom') return Number(customAmount) || 0
@@ -138,7 +131,7 @@ export default function useDirectPaymentFlow() {
         setStep('wallet_details')
       } catch (err) {
         logger.error('Failed to create direct payment', err)
-        showToast(getApiErrorMessage(err, t('errors.generic')), 'error')
+        showToast(t(getErrorI18nKey(getApiErrorCode(err, 'unknown_error'))), 'error')
         setStep('review')
       }
     },
@@ -160,7 +153,7 @@ export default function useDirectPaymentFlow() {
       setStep('success')
     } catch (err) {
       logger.error('Failed to confirm direct payment', err)
-      showToast(getApiErrorMessage(err, t('errors.generic')), 'error')
+      showToast(t(getErrorI18nKey(getApiErrorCode(err, 'unknown_error'))), 'error')
     }
   }, [confirmPaymentMutation, currentPaymentId, showToast, t])
 

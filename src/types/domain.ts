@@ -100,6 +100,21 @@ export interface CreateDirectPaymentResult {
   paymentMethod: PublicDirectPaymentMethod
 }
 
+/** PaymentType enum — DirectPayment = 0 per direct-payment-qr-flow spec. */
+export const PaymentType = {
+  DirectPayment: 0,
+} as const
+
+/** PaymentStatus enum — direct-payment-qr-flow state machine. */
+export const PaymentStatus = {
+  Initiated: 0,
+  Confirmed: 1,
+  Completed: 2,
+} as const
+
+export type PaymentTypeValue = (typeof PaymentType)[keyof typeof PaymentType]
+export type PaymentStatusValue = (typeof PaymentStatus)[keyof typeof PaymentStatus]
+
 export interface TouchpointRecord {
   id?: string
   name?: string

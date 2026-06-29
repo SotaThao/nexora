@@ -19,10 +19,18 @@ export const errorCodeToI18nKey = {
 
   // Business
   BUSINESS_ALREADY_EXISTS: 'errors.business_already_exists',
+  BUSINESS_NOT_FOUND: 'errors.business_not_found',
   BUSINESS_NAME_REQUIRED: 'errors.business_name_required',
   BUSINESS_INVALID_SLUG_FORMAT: 'errors.business_invalid_slug_format',
   USER_NOT_MERCHANT: 'errors.user_not_merchant',
   TOUCHPOINT_STARTER_LIMIT_REACHED: 'errors.touchpoint_starter_limit_reached',
+
+  // Direct payment (US-60 / direct-payment-qr-flow)
+  PAYMENT_NOT_FOUND: 'errors.payment_not_found',
+  PAYMENT_INVALID_STATUS: 'errors.payment_invalid_status',
+  PAYMENT_AMOUNT_TOO_LOW: 'errors.payment_amount_too_low',
+  PAYMENT_AMOUNT_TOO_HIGH: 'errors.payment_amount_too_high',
+  PAYMENT_INVALID_PAYMENT_METHOD: 'errors.payment_invalid_payment_method',
 
   // Image
   IMAGE_FILE_SIZE_EXCEEDED: 'errors.image_file_size_exceeded',

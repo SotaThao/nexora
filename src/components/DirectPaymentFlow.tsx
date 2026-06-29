@@ -1,5 +1,7 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { ShieldCheck, AlertTriangle } from 'lucide-react'
+import { getErrorI18nKey } from '../data/errorCodes'
+import { getApiErrorCode, isApiError } from '../types/domain'
 import useDirectPaymentFlow from './direct-payment/hooks/useDirectPaymentFlow'
 import DirectPaymentReview from './direct-payment/steps/DirectPaymentReview'
 import WalletDetails from './customer-flow/steps/WalletDetails'
@@ -38,6 +40,27 @@ export default function DirectPaymentFlow() {
   const disablePaymentSelection =
     activeAmount < 1 || activeAmount > 10000 || Number.isNaN(activeAmount)
 
+  const pageErrorContent = useMemo(() => {
+    if (!pageQuery.isError) return null
+    const err = pageQuery.error
+    const code = getApiErrorCode(err, '')
+    const status = isApiError(err) ? err.status : 0
+
+    if (code === 'BUSINESS_NOT_FOUND' || status === 404) {
+      return {
+        title: t('direct_payment.page_not_found_title'),
+        desc: t('direct_payment.page_not_found_desc'),
+      }
+    }
+    if (code === 'COMMON_RATE_LIMIT_EXCEEDED' || status === 429) {
+      const message = t('errors.common_rate_limit_exceeded')
+      return { title: message, desc: message }
+    }
+
+    const message = t(getErrorI18nKey(code || 'unknown_error'))
+    return { title: message, desc: t('errors.generic') }
+  }, [pageQuery.isError, pageQuery.error, t])
+
   return (
     <div className="relative flex min-h-dvh flex-col justify-between bg-nexoraCanvas pb-8 font-sans text-nexoraText selection:bg-nexoraBrandSoft selection:text-nexoraBrand">
       <div className="pointer-events-none absolute left-0 top-0 h-[30%] w-full bg-gradient-to-b from-blue-50/50 to-transparent" />
@@ -69,13 +92,13 @@ export default function DirectPaymentFlow() {
             </div>
           ) : null}
 
-          {pageQuery.isError ? (
+          {pageErrorContent ? (
             <div className="space-y-4 py-12 text-center animate-fadeIn">
               <AlertTriangle className="mx-auto h-12 w-12 text-nexoraDanger" />
               <h3 className="text-lg font-extrabold text-nexoraText">
-                {t('direct_payment.page_not_found_title')}
+                {pageErrorContent.title}
               </h3>
-              <p className="text-xs text-nexoraMuted">{t('direct_payment.page_not_found_desc')}</p>
+              <p className="text-xs text-nexoraMuted">{pageErrorContent.desc}</p>
             </div>
           ) : null}
 
