@@ -1298,6 +1298,7 @@
     "return_merchant": "Go to Personal Dashboard"
   },
   "errors": {
+    "TIP_AMOUNT_TOO_HIGH": "Tip amount is too high.",
     "unknown_error": "An unknown error occurred. Please try again.",
     "contact_request_message_min_length": "Your message is too short. Please enter at least {min} characters describing the issue.",
     "contact_request_message_max_length": "Your message is too long. Please keep it under {max} characters.",
@@ -1398,7 +1399,8 @@
         "TipAmount": {
           "totalTip": "Total Tip",
           "provider_count": "For {count} provider(s)",
-          "phAmount": "0.00"
+          "phAmount": "0.00",
+          "minTipErr": "* Minimum tip amount is $1"
         },
         "WalletDetails": {
           "tipAmount": "Tip Amount",

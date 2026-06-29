@@ -1298,6 +1298,7 @@
     "return_merchant": "Đi tới Bảng điều khiển Personal"
   },
   "errors": {
+    "TIP_AMOUNT_TOO_HIGH": "Số tiền tip quá lớn.",
     "unknown_error": "Đã xảy ra lỗi không xác định. Vui lòng thử lại.",
     "contact_request_message_min_length": "Nội dung quá ngắn. Vui lòng nhập ít nhất {min} ký tự mô tả sự cố.",
     "contact_request_message_max_length": "Nội dung quá dài. Vui lòng giữ dưới {max} ký tự.",
@@ -1398,7 +1399,8 @@
         "TipAmount": {
           "totalTip": "Tổng tiền Tip",
           "provider_count": "Cho {count} nhân viên",
-          "phAmount": "0.00"
+          "phAmount": "0.00",
+          "minTipErr": "* Thấp nhất là $1"
         },
         "WalletDetails": {
           "tipAmount": "Số tiền chuyển khoản",
