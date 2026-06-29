@@ -2,9 +2,11 @@ import httpClient from '../../lib/httpClient'
 import { payoutTypeToUiKey } from '../paymentMethodTypes'
 import type {
   CreateDirectPaymentResult,
+  DirectPaymentStatusSnapshot,
   PublicDirectPaymentMethod,
   PublicDirectPaymentPage,
 } from '../../types/domain'
+import { normalizePaymentStatusValue } from '../../utils/directPaymentStatus'
 
 type HttpClient = typeof httpClient
 
@@ -64,6 +66,24 @@ function normalizeCreatePaymentResult(raw: Record<string, unknown> | null | unde
   }
 }
 
+function normalizePaymentStatusSnapshot(
+  raw: Record<string, unknown> | null | undefined,
+): DirectPaymentStatusSnapshot | null {
+  if (!raw) return null
+  const paymentId = readField<string>(raw, 'paymentId', 'PaymentId') ?? readField<string>(raw, 'id', 'Id') ?? ''
+  if (!paymentId) return null
+
+  return {
+    paymentId,
+    status: normalizePaymentStatusValue(readField<number | string>(raw, 'status', 'Status')),
+    type: Number(readField<number>(raw, 'type', 'Type') ?? 0),
+    amount: Number(readField<number>(raw, 'amount', 'Amount') ?? 0),
+    createdAt: readField<string>(raw, 'createdAt', 'CreatedAt') ?? '',
+    customerConfirmedAt: readField<string | null>(raw, 'customerConfirmedAt', 'CustomerConfirmedAt') ?? null,
+    merchantConfirmedAt: readField<string | null>(raw, 'merchantConfirmedAt', 'MerchantConfirmedAt') ?? null,
+  }
+}
+
 export function createPublicDirectPaymentRepository(client: HttpClient = httpClient) {
   return {
     async getPaymentPage(businessId: string): Promise<PublicDirectPaymentPage> {
@@ -95,6 +115,18 @@ export function createPublicDirectPaymentRepository(client: HttpClient = httpCli
         {},
         { anonymous: true },
       )
+    },
+
+    async getPaymentStatus(paymentId: string): Promise<DirectPaymentStatusSnapshot> {
+      const res = await client.get<Record<string, unknown>>(
+        `/api/v1/public/payments/${encodeURIComponent(paymentId)}/status`,
+        { anonymous: true },
+      )
+      const snapshot = normalizePaymentStatusSnapshot(res)
+      if (!snapshot) {
+        throw new Error('PAYMENT_NOT_FOUND')
+      }
+      return snapshot
     },
   }
 }

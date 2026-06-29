@@ -39,21 +39,21 @@ export function DirectPaymentStatusBadge({
   return (
     <span
       title={t(getDirectPaymentStatusDescKey(status))}
-      className={`inline-flex items-center gap-1 rounded-full border font-bold ${padding} ${textSize} ${TONE_CLASS[tone]} ${className}`}
+      className={`inline-flex max-w-full items-center gap-1 rounded-full border font-bold ${padding} ${textSize} ${TONE_CLASS[tone]} ${className}`}
     >
-      <Icon className="h-3 w-3" />
-      {t(getDirectPaymentStatusLabelKey(status))}
+      <Icon className="h-3 w-3 shrink-0" />
+      <span className="truncate">{t(getDirectPaymentStatusLabelKey(status))}</span>
     </span>
   )
 }
 
 export function DirectPaymentStatusLegend({ t }: { t: (key: string) => string }) {
   return (
-    <div className="rounded-xl border border-nexoraBorder bg-nexoraCanvas/50 p-4">
+    <div className="rounded-xl border border-nexoraBorder bg-nexoraCanvas/50 p-3 sm:p-4">
       <p className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
         {t('merchant_payments.status_flow_title')}
       </p>
-      <div className="mt-3 grid gap-2 sm:grid-cols-3">
+      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
         {DIRECT_PAYMENT_STATUS_ORDER.map((status) => (
           <div
             key={status}

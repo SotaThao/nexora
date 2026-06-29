@@ -68,14 +68,21 @@ function normalizeListPage(
     .map((item) => normalizeMerchantPayment(item))
     .filter((item): item is MerchantPaymentRecord => Boolean(item))
 
+  const pageNumber = Number(readField<number>(source, 'pageNumber', 'PageNumber') ?? 1)
+  const pageSize = Number(readField<number>(source, 'pageSize', 'PageSize') ?? fallbackPageSize)
+  const totalPages = Math.max(1, Number(readField<number>(source, 'totalPages', 'TotalPages') ?? 1))
+  const totalCount = Number(readField<number>(source, 'totalCount', 'TotalCount') ?? items.length)
+  const hasNextPageField = readField<boolean>(source, 'hasNextPage', 'HasNextPage')
+  const hasPreviousPageField = readField<boolean>(source, 'hasPreviousPage', 'HasPreviousPage')
+
   return {
     items,
-    pageNumber: Number(readField<number>(source, 'pageNumber', 'PageNumber') ?? 1),
-    pageSize: Number(readField<number>(source, 'pageSize', 'PageSize') ?? fallbackPageSize),
-    totalPages: Number(readField<number>(source, 'totalPages', 'TotalPages') ?? 1),
-    totalCount: Number(readField<number>(source, 'totalCount', 'TotalCount') ?? items.length),
-    hasNextPage: Boolean(readField<boolean>(source, 'hasNextPage', 'HasNextPage')),
-    hasPreviousPage: Boolean(readField<boolean>(source, 'hasPreviousPage', 'HasPreviousPage')),
+    pageNumber,
+    pageSize,
+    totalPages,
+    totalCount,
+    hasNextPage: hasNextPageField ?? pageNumber < totalPages,
+    hasPreviousPage: hasPreviousPageField ?? pageNumber > 1,
   }
 }
 

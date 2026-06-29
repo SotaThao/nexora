@@ -366,7 +366,7 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
           </p>
         </div>
 
-        <div className="flex gap-1 rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted p-1">
+        <div className="flex w-full gap-1 rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted p-1 sm:w-auto">
           {[
             { id: REPORTS_TAB_TIPS, label: t('dashboard.reports.tabs.tips') },
             { id: REPORTS_TAB_DIRECT_PAYMENTS, label: t('dashboard.reports.tabs.direct_payments') },
@@ -375,7 +375,7 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`h-9 rounded-lg px-4 text-xs font-bold transition-all ${
+              className={`h-9 min-w-0 flex-1 rounded-lg px-2 text-[10px] font-bold transition-all sm:flex-none sm:px-4 sm:text-xs ${
                 activeTab === tab.id
                   ? 'bg-white text-nexoraBrand shadow-sm font-black'
                   : 'text-nexoraMuted hover:text-nexoraText'

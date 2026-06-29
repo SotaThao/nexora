@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Plus,
   Trash2,
@@ -14,9 +15,13 @@ import {
   ExternalLink,
   Loader2,
   Eye,
+  Coins,
+  CreditCard,
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
+import { useNotification } from '../contexts/NotificationContext'
 import CustomSelect from './CustomSelect'
+import SettingsTipQrPanel from './settings/SettingsTipQrPanel'
 import Pagination from './ui/Pagination'
 import { useTouchpoints } from '../data/hooks/useMerchantTouchpoints'
 import {
@@ -73,12 +78,20 @@ export default function TouchpointsView({
   onDeleteDevice,
   onToggleDeviceStatus,
   activeSubTab: propActiveSubTab,
-  onTabChange
+  onTabChange,
+  stationsSection = 'tip',
+  onStationsSectionChange,
 }) {
   const { t, currentLanguage } = useTranslation()
+  const { showToast } = useNotification()
+  const navigate = useNavigate()
+  const [copiedId, setCopiedId] = useState(null)
   const [localActiveSubTab, setLocalActiveSubTab] = useState('stations')
+  const [localStationsSection, setLocalStationsSection] = useState('tip')
   const activeSubTab = propActiveSubTab !== undefined ? propActiveSubTab : localActiveSubTab
   const setActiveSubTab = onTabChange !== undefined ? onTabChange : setLocalActiveSubTab
+  const activeStationsSection = onStationsSectionChange ? stationsSection : localStationsSection
+  const setStationsSection = onStationsSectionChange || setLocalStationsSection
   const [deleteConfirmId, setDeleteConfirmId] = useState<any | null>(null)
   const [unlinkConfirmPoint, setUnlinkConfirmPoint] = useState<any | null>(null)
   const [detailHelpCode, setDetailHelpCode] = useState<string | null>(null)
@@ -285,6 +298,18 @@ export default function TouchpointsView({
     }
   }
 
+  const handleCopy = useCallback(async (text, id) => {
+    if (!text) return
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedId(id)
+      showToast(t('components.settings.tabs.ProfileTab.copied'), 'success')
+      window.setTimeout(() => setCopiedId(null), 2000)
+    } catch {
+      showToast(t('components.dashboard.overview.Overview.copy_failed'), 'error')
+    }
+  }, [showToast, t])
+
   // Calculate dynamic Hardware KPIs
   const kpiTouchpoints = statsTouchpointsWithLinks
   const totalTouchpoints = totalCount ?? kpiTouchpoints.length
@@ -342,6 +367,58 @@ export default function TouchpointsView({
       </div>
 
       {activeSubTab === 'stations' && (
+        <>
+          <div className="space-y-3">
+            <div
+              className="flex gap-2 rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted p-1.5"
+              role="tablist"
+              aria-label={t('dashboard.touchpoints.tabs.stations')}
+            >
+              {[
+                { id: 'tip', label: t('dashboard.touchpoints.stations_sections.tip'), icon: Coins },
+                { id: 'payment', label: t('dashboard.touchpoints.stations_sections.payment'), icon: CreditCard },
+              ].map((section) => {
+                const Icon = section.icon
+                const isActive = activeStationsSection === section.id
+                return (
+                  <button
+                    key={section.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    onClick={() => setStationsSection(section.id)}
+                    className={`flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-[10px] font-extrabold uppercase tracking-wide transition sm:text-xs ${
+                      isActive
+                        ? 'bg-nexoraBrand text-white shadow-md shadow-nexoraBrand/25 ring-2 ring-nexoraBrand/20'
+                        : 'bg-transparent text-nexoraMuted hover:bg-white/70 hover:text-nexoraText'
+                    }`}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span>{section.label}</span>
+                  </button>
+                )
+              })}
+            </div>
+            <p className="text-xs leading-relaxed text-nexoraMuted">
+              {activeStationsSection === 'payment'
+                ? t('dashboard.touchpoints.stations_sections.payment_desc')
+                : t('dashboard.touchpoints.stations_sections.tip_desc')}
+            </p>
+          </div>
+
+          {activeStationsSection === 'payment' ? (
+            <Panel className="p-3.5">
+              <SettingsTipQrPanel
+                variant="compact"
+                businessName={businessName}
+                showToast={showToast}
+                handleCopy={handleCopy}
+                copiedId={copiedId}
+                t={t}
+                onConfigurePayoutMethods={() => navigate('/dashboard/settings?tab=payout')}
+              />
+            </Panel>
+          ) : (
         <>
           {/* Hardware KPIs */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -796,6 +873,8 @@ export default function TouchpointsView({
                 </div>
               </div>
             </div>
+          )}
+        </>
           )}
         </>
       )}

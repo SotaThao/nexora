@@ -667,6 +667,12 @@
         "stations": "Trạm QR",
         "devices": "Thiết Bị Vật Lý"
       },
+      "stations_sections": {
+        "tip": "QR Nhận tip",
+        "payment": "QR Thanh toán",
+        "tip_desc": "Tạo và quản lý trạm QR nhận tip. Khách quét để tip cho nhân viên.",
+        "payment_desc": "QR thanh toán trực tiếp cho tiệm. Khách trả tiền cho doanh nghiệp — tách biệt với QR tip."
+      },
       "open_link": "Thử nghiệm luồng trạm",
       "empty_title": "Chưa có trạm QR nào",
       "empty_desc": "Tạo trạm đầu tiên để bắt đầu nhận lượt quét và tip.",
@@ -1093,12 +1099,20 @@
     "status_flow_title": "Trạng thái thanh toán",
     "col_action": "Thao tác",
     "view_detail": "Xem chi tiết",
+    "waiting_customer_confirm": "Đang chờ khách xác nhận đã chuyển khoản…",
     "confirm_receipt": "Xác nhận đã nhận tiền",
     "confirm_receipt_help": "Khách đã xác nhận đã chuyển khoản. Hãy xác nhận khi tiền đã vào tài khoản của bạn.",
     "confirmed_help": "Bạn đã xác nhận nhận tiền lúc {{time}}.",
     "confirm_success": "Đã xác nhận nhận thanh toán.",
+    "confirm_failed": "Không thể xác nhận thanh toán.",
     "empty": "Chưa có thanh toán QR nào. Hãy chia sẻ QR thanh toán để bắt đầu nhận tiền.",
-    "view_history": "Xem lịch sử thanh toán"
+    "view_history": "Xem lịch sử thanh toán",
+    "pending_ack_banner_title": "{{count}} thanh toán cần bạn xác nhận",
+    "pending_ack_banner_desc": "Khách đã xác nhận đã chuyển khoản. Mở từng giao dịch và bấm “Xác nhận đã nhận tiền” khi tiền đã vào tài khoản.",
+    "pending_ack_banner_action": "Xem ngay",
+    "ack_notice_title": "Thông báo nhận tiền",
+    "ack_notice_desc": "Khách đã xác nhận đã chuyển khoản. Vui lòng kiểm tra tiền đã vào tài khoản, sau đó xác nhận đã nhận.",
+    "ack_notice_desc_many": "Có {{count}} thanh toán đang chờ bạn xác nhận. Hãy xem giao dịch mới nhất trước."
   },
   "register": {
     "create_account": "Tạo tài khoản",

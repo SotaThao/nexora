@@ -100,6 +100,17 @@ export interface CreateDirectPaymentResult {
   paymentMethod: PublicDirectPaymentMethod
 }
 
+/** GET /api/v1/public/payments/{paymentId}/status — lightweight status poll */
+export interface DirectPaymentStatusSnapshot {
+  paymentId: string
+  status: PaymentStatusValue
+  type: number
+  amount: number
+  createdAt: string
+  customerConfirmedAt?: string | null
+  merchantConfirmedAt?: string | null
+}
+
 /** PaymentType enum — DirectPayment = 0 per direct-payment-qr-flow spec. */
 export const PaymentType = {
   DirectPayment: 0,

@@ -46,6 +46,7 @@ export default function MerchantPaymentDetailModal({
   const paymentStatus = payment ? normalizePaymentStatusValue(payment.status) : PaymentStatus.Initiated
   const awaitingAck = payment ? needsMerchantAcknowledge(payment) : false
   const completed = payment ? isDirectPaymentRecordCompleted(payment) : false
+  const waitingCustomer = payment ? paymentStatus === PaymentStatus.Initiated : false
 
   const handleAcknowledge = () => {
     if (!payment?.id || isAcknowledging || !onAcknowledge) return
@@ -53,8 +54,8 @@ export default function MerchantPaymentDetailModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-      <div className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-nexoraBorder bg-white p-6 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/60 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="relative max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-2xl border border-nexoraBorder bg-white p-4 shadow-2xl sm:rounded-2xl sm:p-6">
         <div className="mb-4 flex items-center justify-between border-b border-nexoraBorder pb-4">
           <div>
             <span className="text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
@@ -151,6 +152,15 @@ export default function MerchantPaymentDetailModal({
                 </>
               ) : null}
             </div>
+
+            {waitingCustomer ? (
+              <div className="flex items-center gap-2 rounded-xl border border-amber-100 bg-amber-50/70 px-3 py-2.5">
+                <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-amber-600" />
+                <p className="text-[11px] leading-normal text-amber-800">
+                  {t('merchant_payments.waiting_customer_confirm')}
+                </p>
+              </div>
+            ) : null}
 
             {awaitingAck && onAcknowledge ? (
               <div className="space-y-3 rounded-xl border border-violet-100 bg-violet-50/50 p-4">

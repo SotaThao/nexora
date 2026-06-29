@@ -33,7 +33,9 @@ import RequireStaffReady from "./RequireStaffReady";
 import RootRedirect from "./RootRedirect";
 
 const SetupWizard = lazyWithRetry(() => import("../components/SetupWizard"));
-const Dashboard = lazyWithRetry(() => import("../components/Dashboard"));
+const DashboardOwnerShell = lazyWithRetry(
+  () => import("../components/dashboard/layout/DashboardOwnerShell"),
+);
 const CustomerFlow = lazyWithRetry(() => import("../components/CustomerFlow"));
 const DirectPaymentFlow = lazyWithRetry(
   () => import("../components/DirectPaymentFlow"),
@@ -171,7 +173,7 @@ export default function AppRouter() {
             element={
               <RequireAuth role="owner">
                 <RequireOnboarded>
-                  <Dashboard
+                  <DashboardOwnerShell
                     userEmail={session?.email}
                     userRole="owner"
                     verificationStatus={

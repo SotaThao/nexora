@@ -667,6 +667,12 @@
         "stations": "QR Stations",
         "devices": "Hardware Devices"
       },
+      "stations_sections": {
+        "tip": "Tip QR",
+        "payment": "Payment QR",
+        "tip_desc": "Create and manage tip stations. Customers scan to tip your staff.",
+        "payment_desc": "Your store's direct payment QR. Customers pay your business directly — separate from tip stations."
+      },
       "open_link": "Test station flow",
       "empty_title": "No QR stations yet",
       "empty_desc": "Create your first station to start receiving scans and tips.",
@@ -1093,12 +1099,20 @@
     "status_flow_title": "Payment status",
     "col_action": "Action",
     "view_detail": "View details",
+    "waiting_customer_confirm": "Waiting for the customer to confirm they sent the payment…",
     "confirm_receipt": "Confirm payment received",
     "confirm_receipt_help": "The customer confirmed they sent this payment. Confirm once the money is in your account.",
     "confirmed_help": "You confirmed receipt on {{time}}.",
     "confirm_success": "Payment marked as received.",
+    "confirm_failed": "Could not confirm payment.",
     "empty": "No direct payments yet. Share your payment QR to start receiving payments.",
-    "view_history": "View payment history"
+    "view_history": "View payment history",
+    "pending_ack_banner_title": "{{count}} payment(s) need your confirmation",
+    "pending_ack_banner_desc": "The customer confirmed they sent money. Open each payment and tap “Confirm payment received” once it arrives in your account.",
+    "pending_ack_banner_action": "Review now",
+    "ack_notice_title": "Payment received notification",
+    "ack_notice_desc": "A customer confirmed they sent a payment. Please verify the money arrived, then confirm receipt.",
+    "ack_notice_desc_many": "{{count}} payments are waiting for your confirmation. Review the latest one first."
   },
   "register": {
     "create_account": "Create Account",
