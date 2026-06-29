@@ -330,10 +330,38 @@ export default function TipAmount({
           </div>
         )}
 
-        <p className="text-[11px] text-center font-medium opacity-80" style={{ color: selectedWalletObj.key === 'applecash' ? '#666' : selectedWalletObj.color }}>
-          {currentLanguage === 'vi' 
-            ? `Cô/chú gửi qua ${selectedWalletObj.name} - ${getRecipientName()} & chuyển $${activeTipAmount.toFixed(2)} - Cú Soạn để nhân viên nhận tiền được`
-            : `Please send $${activeTipAmount.toFixed(2)} to ${getRecipientName()} via ${selectedWalletObj.name}.`}
+        <p className="text-[11px] text-center font-medium mt-1" style={{ color: selectedWalletObj.key === 'applecash' ? '#666' : selectedWalletObj.color }}>
+          {(() => {
+            const isVi = currentLanguage === 'vi';
+            if (selectedWalletObj.key === 'zelle') {
+              return isVi
+                ? '(1) Copy email Zelle · (2) Mở Zelle & chuyển tiền · (3) Sau đó nhấn xác nhận bên dưới'
+                : '(1) Copy Zelle email · (2) Open Zelle & send tip · (3) Then click confirm below';
+            }
+            if (selectedWalletObj.key === 'venmo') {
+              return isVi
+                ? '(1) Copy tên Venmo · (2) Mở Venmo & chuyển tiền · (3) Sau đó nhấn xác nhận bên dưới'
+                : '(1) Copy Venmo name · (2) Open Venmo & send tip · (3) Then click confirm below';
+            }
+            if (selectedWalletObj.key === 'cashapp') {
+              return isVi
+                ? '(1) Copy Cash Tag · (2) Mở Cash App & chuyển tiền · (3) Sau đó nhấn xác nhận bên dưới'
+                : '(1) Copy Cash Tag · (2) Open Cash App & send tip · (3) Then click confirm below';
+            }
+            if (selectedWalletObj.key === 'applepay' || selectedWalletObj.key === 'applecash') {
+              return isVi
+                ? '(1) Copy số điện thoại · (2) Mở Apple Cash & chuyển tiền · (3) Sau đó nhấn xác nhận bên dưới'
+                : '(1) Copy phone number · (2) Open Apple Cash & send tip · (3) Then click confirm below';
+            }
+            if (selectedWalletObj.key === 'paypal') {
+              return isVi
+                ? '(1) Copy email PayPal · (2) Mở PayPal & chuyển tiền · (3) Sau đó nhấn xác nhận bên dưới'
+                : '(1) Copy PayPal email · (2) Open PayPal & send tip · (3) Then click confirm below';
+            }
+            return isVi
+              ? '(1) Copy thông tin · (2) Mở ứng dụng & chuyển tiền · (3) Sau đó nhấn xác nhận bên dưới'
+              : '(1) Copy details · (2) Open app & send tip · (3) Then click confirm below';
+          })()}
         </p>
       </div>
     );
