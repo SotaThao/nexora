@@ -107,7 +107,7 @@ export default function TipAmount({
     return (
       <>
         {/* Quick Tips */}
-        <div className={`grid grid-cols-4 gap-2.5 mb-6`}>
+        <div className={`grid grid-cols-4 gap-2 mb-3`}>
           {(isMulti ? [10, 20, 30, 40] : [5, 10, 15, 20]).map(val => (
             <button
               key={val}
@@ -121,7 +121,7 @@ export default function TipAmount({
                   setCustomTips({ ...customTips, [selectedStaffMembers[0].id]: '' });
                 }
               }}
-              className={`py-3.5 rounded-xl text-base font-extrabold transition-all duration-200 ${
+              className={`py-2 rounded-xl text-[14px] font-extrabold transition-all duration-200 ${
                 activeVal === val
                   ? 'bg-nexoraBrand text-white shadow-[0_4px_12px_rgba(108,77,230,0.25)] border-transparent'
                   : 'bg-white hover:bg-slate-50 text-nexoraText border border-nexoraBorder shadow-sm'
@@ -133,8 +133,8 @@ export default function TipAmount({
         </div>
 
         {/* Custom Input Field */}
-        <div className="relative mb-6">
-          <span className="absolute left-6 top-1/2 -translate-y-1/2 text-[28px] font-extrabold text-nexoraText">$</span>
+        <div className="relative mb-3">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-extrabold text-nexoraText">$</span>
           <input
             type="number"
             inputMode="decimal"
@@ -151,10 +151,10 @@ export default function TipAmount({
                 setCustomTips({ ...customTips, [selectedStaffMembers[0].id]: e.target.value });
               }
             }}
-            className="w-full bg-white border border-nexoraBorder focus:border-nexoraBrand rounded-[16px] pl-[52px] pr-4 py-5 text-[28px] font-extrabold text-nexoraText focus:outline-none transition-all shadow-sm"
+            className="w-full bg-white border border-nexoraBorder focus:border-nexoraBrand rounded-[14px] pl-10 pr-4 py-3 text-xl font-extrabold text-nexoraText focus:outline-none transition-all shadow-sm"
           />
           {isMulti && tipMode === 'combine' && activeTipAmount > 0 && (
-            <div className="absolute -bottom-6 left-0 right-0 text-center text-[11px] font-bold text-nexoraBrand">
+            <div className="absolute -bottom-5 left-0 right-0 text-center text-[10px] font-bold text-nexoraBrand">
               = ${(activeTipAmount / selectedStaffMembers.length).toFixed(2)} / {currentLanguage === 'vi' ? 'người' : 'person'}
             </div>
           )}
@@ -165,7 +165,7 @@ export default function TipAmount({
 
   const renderSplitBody = () => {
     return (
-      <div className="flex flex-col gap-4 bg-white border border-nexoraBorder rounded-[16px] p-4 shadow-sm">
+      <div className="flex flex-col gap-2.5 bg-white border border-nexoraBorder rounded-[16px] p-3 shadow-sm mb-3">
         {selectedStaffMembers.map((member) => {
           const selTip = selectedTips[member.id] !== undefined ? selectedTips[member.id] : 5;
           const custTip = customTips[member.id] || '';
@@ -343,36 +343,36 @@ export default function TipAmount({
     <div className="flex flex-col h-full animate-fadeIn">
       <div className="flex-grow">
         {/* Header - Staff Info */}
-        <div className="mb-6 flex flex-col items-center">
+        <div className="mb-3 flex flex-col items-center">
           {isMulti ? (
             <div className="flex flex-col items-center">
-              <div className="flex -space-x-3 mb-2">
+              <div className="flex -space-x-3 mb-1.5">
                 {selectedStaffMembers.map(m => (
                   m.avatar ? (
-                    <img key={m.id} src={m.avatar} className="w-12 h-12 rounded-full border-2 border-white shadow-sm" />
+                    <img key={m.id} src={m.avatar} className="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover" />
                   ) : (
-                    <div key={m.id} className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-tr from-[#2B59FF] to-[#8E4DF8] text-sm font-extrabold text-white border-2 border-white shadow-sm">
+                    <div key={m.id} className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-[#2B59FF] to-[#8E4DF8] text-xs font-extrabold text-white border-2 border-white shadow-sm">
                       {m.nickname.charAt(0)}
                     </div>
                   )
                 ))}
               </div>
-              <h3 className="font-bold text-nexoraText text-[15px]">
+              <h3 className="font-bold text-nexoraText text-[14px]">
                 {selectedStaffMembers.map(s => s.nickname).join(', ')}
               </h3>
             </div>
           ) : (
-            <div className="flex items-center w-full bg-white border border-nexoraBorder p-4 rounded-[16px] shadow-sm">
+            <div className="flex items-center w-full bg-white border border-nexoraBorder p-3 rounded-[14px] shadow-sm">
               <div className="flex items-center gap-3 flex-1">
                 {selectedStaffMembers[0].avatar ? (
-                  <img src={selectedStaffMembers[0].avatar} className="w-12 h-12 rounded-full object-cover border border-nexoraBorder" />
+                  <img src={selectedStaffMembers[0].avatar} className="w-10 h-10 rounded-full object-cover border border-nexoraBorder" />
                 ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-tr from-[#2B59FF] to-[#8E4DF8] text-sm font-extrabold text-white">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-[#2B59FF] to-[#8E4DF8] text-xs font-extrabold text-white">
                     {selectedStaffMembers[0].nickname.charAt(0)}
                   </div>
                 )}
                 <div>
-                  <h3 className="font-bold text-nexoraText text-base leading-tight mb-0.5">
+                  <h3 className="font-bold text-nexoraText text-[14px] leading-tight mb-0.5">
                     {selectedStaffMembers[0].fullName}
                   </h3>
                   <p className="text-xs text-nexoraSubtle font-medium">{selectedStaffMembers[0].position}</p>
@@ -388,11 +388,11 @@ export default function TipAmount({
 
         {/* Multi-tips Toggle */}
         {isMulti && (
-          <div className="flex p-1 bg-nexoraCanvas border border-nexoraBorder rounded-[12px] mb-6">
+          <div className="flex p-1 bg-nexoraCanvas border border-nexoraBorder rounded-[10px] mb-4">
             <button
               type="button"
               onClick={() => setTipMode('combine')}
-              className={`flex-1 py-2.5 text-[13px] font-extrabold rounded-[8px] transition-all duration-200 ${
+              className={`flex-1 py-1.5 text-[12px] font-extrabold rounded-[6px] transition-all duration-200 ${
                 tipMode === 'combine' ? 'bg-white shadow-sm text-nexoraBrand' : 'text-nexoraSubtle hover:text-nexoraText'
               }`}
             >
@@ -401,7 +401,7 @@ export default function TipAmount({
             <button
               type="button"
               onClick={() => setTipMode('split')}
-              className={`flex-1 py-2.5 text-[13px] font-extrabold rounded-[8px] transition-all duration-200 ${
+              className={`flex-1 py-1.5 text-[12px] font-extrabold rounded-[6px] transition-all duration-200 ${
                 tipMode === 'split' ? 'bg-white shadow-sm text-nexoraBrand' : 'text-nexoraSubtle hover:text-nexoraText'
               }`}
             >
@@ -410,18 +410,18 @@ export default function TipAmount({
           </div>
         )}
 
-        <div className="mb-8">
+        <div className="mb-4">
           {(!isMulti || tipMode === 'combine') ? renderSingleOrCombineBody() : renderSplitBody()}
         </div>
 
         {/* Payment Methods Grid */}
-        <div className="text-left space-y-1 mb-4 opacity-100 transition-opacity" style={{ opacity: isTipValid ? 1 : 0.5 }}>
-          <h3 className="font-extrabold text-[11px] text-nexoraSubtle uppercase tracking-wider">
+        <div className="text-left space-y-1 mb-2 opacity-100 transition-opacity" style={{ opacity: isTipValid ? 1 : 0.5 }}>
+          <h3 className="font-extrabold text-[10px] text-nexoraSubtle uppercase tracking-wider">
             {currentLanguage === 'vi' ? 'PHƯƠNG THỨC THANH TOÁN' : 'PAYMENT METHOD'}
           </h3>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 mb-4" style={{ pointerEvents: isTipValid ? 'auto' : 'none', opacity: isTipValid ? 1 : 0.5 }}>
+        <div className="grid grid-cols-3 gap-2 mb-2" style={{ pointerEvents: isTipValid ? 'auto' : 'none', opacity: isTipValid ? 1 : 0.5 }}>
           {[
             { name: 'Zelle', key: 'zelle', color: '#7414CA', logo: WalletLogos.zelle },
             { name: 'Venmo', key: 'venmo', color: '#008CFF', logo: WalletLogos.venmo },
@@ -449,14 +449,14 @@ export default function TipAmount({
                   setSelectedWallet(wallet.name)
                   setTipRefNumber(Math.floor(1000 + Math.random() * 9000).toString())
                 }}
-                className={`flex flex-col items-center justify-center p-3 rounded-2xl bg-white border transition-all duration-200 group shadow-sm ${
+                className={`flex flex-col items-center justify-center p-2 rounded-xl bg-white border transition-all duration-200 group shadow-sm ${
                   isSelected 
-                    ? 'border-nexoraBrand bg-nexoraBrandSoft/5 shadow-[0_4px_12px_rgba(108,77,230,0.15)] ring-2 ring-nexoraBrand/20' 
+                    ? 'border-nexoraBrand bg-nexoraBrandSoft/5 shadow-[0_4px_12px_rgba(108,77,230,0.15)] ring-1 ring-nexoraBrand/20' 
                     : 'border-nexoraBorder hover:border-nexoraBrand/40 hover:bg-nexoraCanvas'
                 }`}
               >
                 <div 
-                  className="w-10 h-10 rounded-full flex items-center justify-center mb-2 shadow-sm transition-transform group-hover:scale-105"
+                  className="w-8 h-8 rounded-full flex items-center justify-center mb-1.5 shadow-sm transition-transform group-hover:scale-105"
                   style={{ backgroundColor: wallet.iconBg || wallet.color }}
                 >
                   {wallet.logo}
@@ -473,7 +473,7 @@ export default function TipAmount({
       </div>
 
       {/* Bottom Footer */}
-      <div className="mt-8">
+      <div className="mt-4">
         <button
           onClick={() => {
             if (!selectedWalletObj) {
@@ -484,7 +484,7 @@ export default function TipAmount({
             handlePay(selectedWalletObj.name)
           }}
           disabled={!isTipValid}
-          className="w-full min-h-[56px] py-4 bg-gradient-to-r from-[#5B21B6] to-[#6D28D9] hover:opacity-90 disabled:opacity-50 disabled:from-slate-400 disabled:to-slate-400 text-white font-extrabold text-[13px] uppercase tracking-wider rounded-[12px] flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(109,40,217,0.25)] transition-all mb-4"
+          className="w-full min-h-[48px] py-3 bg-gradient-to-r from-[#5B21B6] to-[#6D28D9] hover:opacity-90 disabled:opacity-50 disabled:from-slate-400 disabled:to-slate-400 text-white font-extrabold text-[12px] uppercase tracking-wider rounded-[10px] flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(109,40,217,0.25)] transition-all mb-2"
         >
           {!selectedWalletObj 
             ? (currentLanguage === 'vi' ? 'CHỌN PHƯƠNG THỨC THANH TOÁN' : 'CHOOSE PAYMENT METHOD')
@@ -494,7 +494,7 @@ export default function TipAmount({
 
         <button
           onClick={() => setStep('select_staff')}
-          className="w-full py-3 bg-transparent text-nexoraMuted hover:text-nexoraText font-bold text-xs uppercase tracking-wider rounded-xl transition-colors"
+          className="w-full py-2 bg-transparent text-nexoraMuted hover:text-nexoraText font-bold text-xs uppercase tracking-wider rounded-xl transition-colors"
         >
           {currentLanguage === 'vi' ? 'QUAY LẠI' : 'GO BACK'}
         </button>
