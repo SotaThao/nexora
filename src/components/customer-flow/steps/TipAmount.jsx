@@ -370,7 +370,7 @@ export default function TipAmount({
   const isTipValid = activeTipAmount > 0;
 
   return (
-    <div className="flex flex-col h-full animate-fadeIn pb-[100px]">
+    <div className="flex flex-col min-h-full animate-fadeIn pb-[160px]">
       <div className="flex-grow pb-4">
         {/* Header - Staff Info */}
         <div className="mb-3 flex flex-col items-center">

@@ -12,7 +12,7 @@ export default function SelectStaff({
   setStep,
 }) {
   return (
-    <div className="flex flex-col h-full animate-fadeIn">
+    <div className="flex flex-col min-h-full pb-[100px] animate-fadeIn">
       {/* Header text */}
       <div className="text-center mb-6">
         <h1 className="text-[20px] font-[800] text-slate-900 tracking-[-0.5px] uppercase">

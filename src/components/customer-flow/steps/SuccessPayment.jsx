@@ -73,7 +73,7 @@ export default function SuccessPayment({
   ) || 'cashapp';
 
   return (
-    <div className="flex flex-col h-full animate-fadeIn pb-4">
+    <div className="flex flex-col min-h-full animate-fadeIn pb-[100px]">
       <div className="flex-grow space-y-3 pb-2">
         
         {/* Success Banner */}
