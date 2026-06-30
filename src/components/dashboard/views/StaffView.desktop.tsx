@@ -8,6 +8,7 @@ import { PAYOUT_UI_DISPLAY_ORDER, PAYOUT_UI_LABELS } from '../../../data/payment
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
 import Pagination from '../../ui/Pagination'
+import { SkeletonList } from '../../ui/skeleton'
 
 function isWaitingStaffAcceptance(member) {
   return member?.apiStatus === 'WaitingStaffAcceptance' || member?.status === 'WaitingStaffAcceptance'
@@ -390,12 +391,10 @@ function StaffView({
           </div>
         </div>
 
-        <div className="overflow-x-auto relative">
-          {isFetching && sortedStaff.length > 0 && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60">
-              <Loader2 className="h-6 w-6 animate-spin text-nexoraBrand" />
-            </div>
-          )}
+        <div className="overflow-x-auto">
+          {isFetching ? (
+            <SkeletonList count={pageSize} showAvatar lines={2} />
+          ) : (
           <table className="w-full border-collapse text-left text-sm">
             <thead>
               <tr className="bg-slate-50 text-[10px] font-extrabold uppercase text-nexoraMuted border-b border-nexoraRule">
@@ -630,6 +629,7 @@ function StaffView({
               })}
             </tbody>
           </table>
+          )}
         </div>
 
         {totalCount > 0 && totalPages > 1 ? (

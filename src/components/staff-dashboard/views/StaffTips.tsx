@@ -6,7 +6,7 @@ import { useStaffTips } from '../../../data/hooks/useStaffSelf'
 import { PAYOUT_UI_LABELS, payoutTypeToUiKey } from '../../../data/paymentMethodTypes'
 import { WalletLogos } from '../../dashboard/constants'
 import type { StaffTipItem } from '../../../types/domain'
-import { SkeletonLayout } from '../../ui/skeleton'
+import { SkeletonLayout, SkeletonList } from '../../ui/skeleton'
 import Pagination from '../../ui/Pagination'
 import Tooltip from '../../ui/Tooltip'
 import { STAFF_TIPS_SKELETON } from '../skeletons/staffDashboardSkeletons'
@@ -106,17 +106,13 @@ export default function StaffTips() {
           ) : null}
         </div>
 
-        {isFetching && !isPending ? (
-          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-nexoraSubtle">
-            {t('common.loading')}
-          </p>
-        ) : null}
-
-        {tips.length === 0 ? (
-          <p className="py-4 text-center text-xs text-nexoraSubtle">{t('staff_dashboard.tips.empty')}</p>
-        ) : (
-          <div className="divide-y divide-nexoraBorder">
-            {tips.map((tip) => (
+        {isFetching ? (
+          <SkeletonList count={5} lines={2} showAction />
+        ) : tips.length === 0 ? (
+            <p className="py-4 text-center text-xs text-nexoraSubtle">{t('staff_dashboard.tips.empty')}</p>
+          ) : (
+            <div className="divide-y divide-nexoraBorder">
+              {tips.map((tip) => (
               <div key={tip.id} className="flex items-center justify-between gap-3 py-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline gap-1.5">
