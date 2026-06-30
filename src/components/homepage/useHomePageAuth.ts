@@ -2,6 +2,7 @@
  * Auth header sync for homepage — used by HomePageBridgeProvider.
  * Plan CTA routing for pricing / consulting buttons.
  */
+import { getStoredAppLanguage } from '../../utils/appLanguage'
 import type { AuthSession } from '../../types/auth'
 
 type AuthStatus = 'loading' | 'authenticated' | 'anonymous'

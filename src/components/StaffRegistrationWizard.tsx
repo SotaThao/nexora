@@ -171,6 +171,10 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
             <StepProfile
               fullName={reg.fullName}
               setFullName={reg.setFullName}
+              fullNameError={reg.fullNameError}
+              setFullNameError={reg.setFullNameError}
+              staffDisplayNameMinLength={reg.staffDisplayNameMinLength}
+              staffDisplayNameMaxLength={reg.staffDisplayNameMaxLength}
               nickname={reg.nickname}
               setNickname={reg.setNickname}
               position={reg.position}
@@ -182,6 +186,7 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
               avatar={reg.avatar}
               setAvatar={reg.setAvatar}
               onAvatarFileChange={reg.handleAvatarFileChange}
+              onAvatarRemove={reg.handleAvatarRemove}
               isAvatarUploading={reg.isAvatarUploading}
               bio={reg.bio}
               setBio={reg.setBio}
@@ -212,6 +217,7 @@ export default function StaffRegistrationWizard({ inviteData, onReturnToMerchant
               setStep={reg.setStep}
               isDemoToolsEnabled={isDemoToolsEnabled}
               isSubmitting={reg.isActivating}
+              paymentMethods={reg.staffPaymentMethods}
             />
           )}
 

@@ -63,17 +63,19 @@ export default function TipsOverviewTab({
             <DollarSign className="h-5 w-5" />
           </div>
         </div>
-        <div className="card-elevated flex items-center justify-between">
-          <div>
-            <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
-              {t('dashboard.tips.kpi.crypto_tips')}
-            </small>
-            <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{formatUSD(cryptoTips)}</h3>
+        {cryptoTips > 0 && (
+          <div className="card-elevated flex items-center justify-between">
+            <div>
+              <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
+                {t('dashboard.tips.kpi.crypto_tips')}
+              </small>
+              <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{formatUSD(cryptoTips)}</h3>
+            </div>
+            <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-500/10 text-amber-500">
+              <TrendingUp className="h-5 w-5" />
+            </div>
           </div>
-          <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-500/10 text-amber-500">
-            <TrendingUp className="h-5 w-5" />
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Charts Grid */}

@@ -1,6 +1,5 @@
 // StaffTips — tip activity list from GET /api/v1/staff/tips.
 import { useState } from 'react'
-import { Sparkles } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffTips } from '../../../data/hooks/useStaffSelf'
 import { PAYOUT_UI_LABELS, payoutTypeToUiKey } from '../../../data/paymentMethodTypes'
@@ -193,13 +192,6 @@ export default function StaffTips() {
         />
       </section>
 
-      <section className={panel}>
-        <h3 className="mb-2 flex items-center gap-2 text-base font-extrabold text-nexoraText">
-          <Sparkles className="h-4 w-4 text-nexoraBrand" />
-          {t('staff_dashboard.tips.ai_insight')}
-        </h3>
-        <p className="text-sm leading-relaxed text-nexoraMuted">{t('staff_dashboard.tips.ai_insight_body')}</p>
-      </section>
     </div>
   )
 }

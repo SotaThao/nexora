@@ -36,6 +36,8 @@ export interface BusinessApiDto {
   yelpUrl?: string
   facebookUrl?: string
   feedbackEmail?: string
+  isPublic?: boolean
+  onboardingStep?: number
 }
 
 export interface TipsSummaryApiDto {
@@ -195,8 +197,15 @@ export interface DashboardReviewsQuery {
 export interface StaffPaymentMethodApiDto {
   type?: string
   isActive?: boolean
-  accountInfo?: string
-  imageUrl?: string
+  accountInfo?: string | null
+  imageUrl?: string | null
+}
+
+export interface StaffInviteSummaryApiDto {
+  id?: string
+  invitedAt?: string | null
+  expiresAt?: string | null
+  status?: string | null
 }
 
 export interface StaffListItemApiDto {
@@ -218,6 +227,7 @@ export interface StaffListItemApiDto {
   photoUrl?: string | null
   status?: string
   position?: string | null
+  roleAtBusiness?: string | null
   bio?: string | null
   invitedEmail?: string | null
   invitedPhone?: string | null
@@ -226,6 +236,7 @@ export interface StaffListItemApiDto {
   email?: string | null
   phone?: string | null
   paymentMethods?: StaffPaymentMethodApiDto[]
+  invites?: StaffInviteSummaryApiDto[]
   staffProfile?: { phoneNumber?: string; phone?: string; email?: string }
   user?: { phoneNumber?: string; phone?: string; email?: string }
 }
@@ -233,9 +244,92 @@ export interface StaffListItemApiDto {
 export interface StaffSearchResultApiDto {
   staffProfileId: string
   staffCode?: string | null
-  displayName?: string
+  displayName?: string | null
+  fullName?: string | null
   photoUrl?: string | null
   position?: string | null
+  paymentMethods?: StaffPaymentMethodApiDto[]
+}
+
+/** `GET /merchant/staff/{staffProfileId}/stats` — API DTOs. */
+export interface StaffTipsTrendPointApiDto {
+  date?: string
+  totalAmount?: number
+  tipCount?: number
+}
+
+export interface StaffAllTimeStatsApiDto {
+  tipsCollected?: number
+  tipCount?: number
+  averageRating?: number
+  totalReviews?: number
+  reviewsRouted?: number
+  totalQrScans?: number
+  qrToTipConversionRate?: number
+}
+
+export interface StaffPeriodStatsApiDto extends StaffAllTimeStatsApiDto {
+  tipsChangePercent?: number
+  tipsTrend?: StaffTipsTrendPointApiDto[]
+}
+
+export interface StaffRecentTipApiDto {
+  id?: string
+  amount?: number
+  totalAmount?: number
+  paymentMethod?: string
+  isMultiStaff?: boolean
+  touchPointName?: string
+  createdAt?: string
+}
+
+export interface StaffRecentReviewApiDto {
+  id?: string
+  rating?: number
+  comment?: string | null
+  customerName?: string | null
+  routingType?: string
+  createdAt?: string
+}
+
+export interface MerchantStaffDetailStatsApiDto {
+  allTime?: StaffAllTimeStatsApiDto
+  period?: StaffPeriodStatsApiDto
+  recentTips?: StaffRecentTipApiDto[]
+  recentReviews?: StaffRecentReviewApiDto[]
+}
+
+export interface StaffStatsDateParams {
+  dateFrom?: string
+  dateTo?: string
+}
+
+export interface StaffTipsTrendPoint {
+  date: string
+  totalAmount: number
+  tipCount: number
+}
+
+export interface StaffAllTimeStats {
+  tipsCollected: number
+  tipCount: number
+  averageRating: number
+  totalReviews: number
+  reviewsRouted: number
+  totalQrScans: number
+  qrToTipConversionRate: number
+}
+
+export interface StaffPeriodStats extends StaffAllTimeStats {
+  tipsChangePercent: number
+  tipsTrend: StaffTipsTrendPoint[]
+}
+
+export interface MerchantStaffDetailStats {
+  allTime: StaffAllTimeStats
+  period: StaffPeriodStats
+  recentTips: TransactionRecord[]
+  recentReviews: ReviewRecord[]
 }
 
 /** v3.3 — `GET /merchant/staff/invites` item (StaffInviteListItemDto). */
@@ -328,6 +422,7 @@ export interface StaffLinkRequestDetailApiDto {
   businessRole?: string | null
   requestedAt?: string | null
   status?: string | null
+  roleAtBusiness?: string | null
 }
 
 export interface InviteInfoApiDto {
@@ -464,6 +559,7 @@ export interface StaffInviteResult {
 export interface StaffLinkRequestParams {
   staffProfileId: string
   staffCode?: string | null
+  roleAtBusiness?: string | null
 }
 
 export interface InviteLinkSettingDto {
@@ -499,6 +595,9 @@ export interface UpdateStaffProfileDto {
   position?: string
   bio?: string
   photoUrl?: string
+  firstName?: string
+  lastName?: string
+  phone?: string
 }
 
 export interface AcceptStaffInviteDto {

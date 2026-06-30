@@ -4,6 +4,7 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
 import { serializeBankWireAccount } from '../../payout/bankWireAccount'
 import { captureQrImage } from '../../../utils/qrCode'
+import { getPayoutValidationMessage } from '../../payout/validatePayoutAccount'
 
 const normalizePhone = (raw) => {
   if (!raw) return ''
@@ -22,8 +23,10 @@ import { savePendingRegistration, clearPendingRegistration } from '../../../auth
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { useCompletePersonalOnboarding } from '../../../data/hooks/usePersonalOnboarding'
 import { useCreateStaffProfile } from '../../../data/hooks/useProfileSettings'
+import { buildUpdateStaffProfileDto } from '../../../utils/mapStaffProfileView'
+import { getPhoneFieldError, getRequiredFieldError } from '../../../utils/onboardingFieldValidation'
 
-export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onKybSuccess = () => {}, isRedirectedFromSession, initialStep = 0, initialRole = 'personal', resumeOtpVerification = false, autoSendVerificationOnResume = false, resumeEmail = '', resumePassword = '', resumeRole = null }) {
+export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, onRegisterAndLogin, onKybSuccess = () => {}, isRedirectedFromSession, initialStep = 0, initialRole = 'personal', resumeOtpVerification = false, autoSendVerificationOnResume = false, resumeEmail = '', resumePassword = '', resumeRole = null, initialRefCode = '' }) {
   const { t, currentLanguage, setLanguage, renderLabel } = useTranslation()
   const replaceAllPendingAccountsMutation = useReplaceAllPendingAccounts()
   const pendingAccountsQuery = usePendingAccounts()
@@ -42,9 +45,8 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const [confirmEmail, setConfirmEmail] = useState(resumeEmail || '')
   const [password, setPassword] = useState(resumePassword || '')
   const [showPassword, setShowPassword] = useState(false)
-  const [referralCode, setReferralCode] = useState('')
+  const [referralCode, setReferralCode] = useState(initialRefCode)
   const [fullName, setFullName] = useState('')
-  const [termsAccepted, setTermsAccepted] = useState(true)
   const [showTermsModal, setShowTermsModal] = useState(false)
   const [modalType, setModalType] = useState('terms')
   const [nickname, setNickname] = useState('')
@@ -95,15 +97,22 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const [isSubmitting, setIsSubmitting] = useState(false)
   const resumeVerificationSentRef = useRef(false)
 
-  const handleToggleTerms = () => {
-    setTermsAccepted(!termsAccepted)
-    if (errors.terms) {
-      setErrors({ ...errors, terms: undefined })
-    }
-  }
+  const AVATAR_MAX_SIZE = 5 * 1024 * 1024
+  const AVATAR_ALLOWED_TYPES = ['image/jpeg', 'image/png']
 
   const handleAvatarFileChange = async (file: File) => {
     if (!file) return
+
+    if (!AVATAR_ALLOWED_TYPES.includes(file.type)) {
+      setErrors(prev => ({ ...prev, avatar: 'errors.image_unsupported_file_type' }))
+      return
+    }
+    if (file.size > AVATAR_MAX_SIZE) {
+      setErrors(prev => ({ ...prev, avatar: 'errors.image_file_size_exceeded_5mb' }))
+      return
+    }
+
+    setErrors(prev => ({ ...prev, avatar: undefined }))
     try {
       const uploaded = await uploadImageMutation.mutateAsync(file)
       const uploadedUrl = uploaded.imageUrl || uploaded.fileUrl || ''
@@ -112,7 +121,8 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         return
       }
     } catch (err: unknown) {
-      console.error('Failed to upload staff avatar', err)
+      logger.error('Failed to upload staff avatar', err)
+      setErrors(prev => ({ ...prev, avatar: 'errors.image_upload_failed' }))
     }
   }
 
@@ -123,7 +133,8 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       .then(() => {
         setVerifySuccess(true)
         // Auto-login to get tokens for subsequent protected calls (Step 2, 3, 4)
-        return apiAuthAdapter.login({ email: email.trim().toLowerCase(), password })
+        // using signInForInviteAccept to prevent fetching staff profile prematurely
+        return apiAuthAdapter.signInForInviteAccept({ email: email.trim().toLowerCase(), password })
       })
       .then(async () => {
         // Business creation is handled by Setup Wizard (onboarding), not here.
@@ -238,6 +249,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     setIsSubmitting(true)
 
     try {
+      const trimmedReferralCode = referralCode.trim()
       const signupResponse = await apiAuthAdapter.signup({
         email: email.trim().toLowerCase(),
         confirmEmail: confirmEmail.trim().toLowerCase(),
@@ -246,7 +258,8 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         firstName: email.split('@')[0],
         lastName: 'User',
         // profileType enum per signup API docs is "Merchant" | "User" (not "Personal").
-        profileType: role === 'business' ? 'Merchant' : 'User'
+        profileType: role === 'business' ? 'Merchant' : 'User',
+        ...(trimmedReferralCode ? { referralCode: trimmedReferralCode } : {}),
       })
       const signupOtp = getSignupOtp(signupResponse)
 
@@ -266,6 +279,8 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       const i18nKey = getErrorI18nKey(code)
       if (code === 'AUTH_PASSWORDS_DO_NOT_MATCH') {
         errorsMap.confirmEmail = 'register.errors.email_mismatch'
+      } else if (code === 'USER_INVALID_REFERRAL_CODE') {
+        errorsMap.referralCode = i18nKey || 'errors.unknown_error'
       } else {
         errorsMap.email = i18nKey || 'errors.unknown_error'
       }
@@ -300,7 +315,8 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         }
       }
 
-      await apiAuthAdapter.login({
+      // Use signInForInviteAccept to avoid fetching staff profile prematurely
+      await apiAuthAdapter.signInForInviteAccept({
         email: email.trim().toLowerCase(),
         password
       })
@@ -349,11 +365,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         replaceAllPendingAccountsMutation.mutate(filtered)
 
         setShowOtpInput(false)
-        if (onRegisterAndLogin) {
-          onRegisterAndLogin(email.trim().toLowerCase())
-        } else if (onRegisterSuccess) {
-          onRegisterSuccess()
-        }
+        setCurrentStep(3)
       }
     } catch (err) {
       logger.error('Verify account activation failed', err)
@@ -436,6 +448,13 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
       setModalError(t('components.register.hooks.useRegisterForm.thisFieldIsRequired'))
       return
     }
+
+    const validationMessage = getPayoutValidationMessage(t, editingMethod, editValue)
+    if (validationMessage) {
+      setModalError(validationMessage)
+      return
+    }
+
     setPayouts(prev => ({
       ...prev,
       [editingMethod]: {
@@ -467,20 +486,47 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   }
 
   const handleProfileSetupSubmit = async () => {
+    const fieldErrors: LooseObject = {}
+
+    const fullNameError = getRequiredFieldError(fullName, 'setup.errors.staff_name_required')
+    if (fullNameError) fieldErrors.fullName = fullNameError
+
+    const nicknameError = getRequiredFieldError(nickname, 'setup.errors.staff_nickname_required')
+    if (nicknameError) fieldErrors.nickname = nicknameError
+
+    const phoneError = getPhoneFieldError(phone, { requireValue: true })
+    if (phoneError) fieldErrors.phone = phoneError
+
+    if (Object.keys(fieldErrors).length > 0) {
+      setErrors(fieldErrors)
+      return
+    }
+
     const isApiMode = import.meta.env.VITE_DATA_SOURCE === 'api'
     if (isApiMode) {
       try {
-        await createStaffProfileMutation.mutateAsync({
-          displayName: nickname.trim() || email.split('@')[0],
-          position: position,
-          bio: bio,
-          photoUrl: avatar
+        const dto = buildUpdateStaffProfileDto({}, {
+          fullName: fullName.trim(),
+          defaultDisplayName: nickname.trim() || email.split('@')[0],
+          position,
+          bio,
+          avatar,
+          phone,
         })
+        await createStaffProfileMutation.mutateAsync(dto)
       } catch (err: unknown) {
         logger.error('Failed to create staff profile during onboarding', err)
+        setErrors({ submit: 'register.errors.profile_setup_failed' })
+        return
       }
     }
-    setCurrentStep(4)
+
+    setErrors({})
+    if (onRegisterAndLogin) {
+      onRegisterAndLogin(email.trim().toLowerCase())
+    } else if (onRegisterSuccess) {
+      onRegisterSuccess()
+    }
   }
 
   const handlePersonalRegisterSubmit = async () => {
@@ -649,7 +695,7 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
         case 0: return t('components.register.hooks.useRegisterForm.accountType')
         case 1: return t('components.register.hooks.useRegisterForm.credentials')
         case 2: return t('components.register.hooks.useRegisterForm.activateOtp')
-        case 3: return t('components.register.hooks.useRegisterForm.success')
+        case 3: return t('components.register.hooks.useRegisterForm.profileSetup')
         default: return ''
       }
     }
@@ -677,10 +723,9 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     setShowPassword,
     referralCode,
     setReferralCode,
+    initialRefCode,
     fullName,
     setFullName,
-    termsAccepted,
-    setTermsAccepted,
     showTermsModal,
     setShowTermsModal,
     modalType,

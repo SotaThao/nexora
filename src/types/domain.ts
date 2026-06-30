@@ -173,6 +173,7 @@ export interface StaffSearchResult {
   fullName: string
   avatar: string | null
   position: string | null
+  paymentMethods: PaymentMethodDto[]
 }
 
 export interface StaffBusinessLink {
@@ -184,6 +185,7 @@ export interface StaffBusinessLink {
   logoUrl: string | null
   role: string | null
   roleLabel: string | null
+  roleAtBusiness: string | null
   linkStatus: string | null
   linkStatusLabel: string | null
   linkedAt: string | null
@@ -211,6 +213,7 @@ export interface StaffBusinessTipQr {
   linkStatus: string | null
   linkStatusLabel: string | null
   roleLabel: string | null
+  roleAtBusiness: string | null
   logoUrl: string | null
   /** True when the business has no touchpoint data to build a tipping link. */
   tipLinkIncomplete?: boolean
@@ -299,6 +302,7 @@ export interface StaffLinkRequestDetail {
   businessRole: string | null
   requestedAt: string | null
   status: string | null
+  roleAtBusiness: string | null
 }
 
 export interface StaffAccountView {
@@ -411,8 +415,14 @@ export interface StaffProfile {
   id?: string
   staffCode?: string
   displayName?: string
+  position?: string
   bio?: string
   photo?: string
+  photoUrl?: string
+  firstName?: string
+  lastName?: string
+  phone?: string
+  isProfileComplete?: boolean
   [key: string]: unknown
 }
 

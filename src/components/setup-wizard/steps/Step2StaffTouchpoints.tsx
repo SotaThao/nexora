@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import {
   Plus, Trash2, AlertTriangle, HelpCircle,
   QrCode, Users, Edit2, Search
@@ -6,9 +6,16 @@ import {
 import CustomSelect from '../../CustomSelect'
 import CountryCodeSelect, { parsePhone } from '../../CountryCodeSelect'
 import ToggleSwitch from '../../ui/ToggleSwitch'
-import { WalletLogos, getTouchpointIcon } from '../constants'
+import { WalletLogos, DEFAULT_PAYOUT_CONFIGS, getTouchpointIcon } from '../constants'
 import { renderLabel } from '../../../contexts/LanguageContext'
 import { getCustomerAppBaseUrl } from '../../../utils/webUrlBase'
+import {
+  getPaymentMethodDisplayName,
+  payoutTypeToUiKey,
+  PAYOUT_UI_LABELS,
+} from '../../../data/paymentMethodTypes'
+import type { PaymentMethodDto } from '../../../types/domain'
+import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 
 export default function Step2StaffTouchpoints({
   t,
@@ -24,6 +31,7 @@ export default function Step2StaffTouchpoints({
   setEditingTpId,
   editingTpName,
   setEditingTpName,
+  editingTpNameError,
   editingTpType,
   setEditingTpType,
   errors,
@@ -36,9 +44,26 @@ export default function Step2StaffTouchpoints({
   handleRemoveTouchpoint,
   handleStartEditTouchpoint,
   handleSaveTouchpoint,
-  setPreviewingTp
+  setPreviewingTp,
+  merchantPaymentMethods = [],
 }) {
   const newStaffPhoneParsed = parsePhone(newStaff.phone || '')
+
+  const displayPaymentMethods = useMemo(() => {
+    if (merchantPaymentMethods.length > 0) {
+      return merchantPaymentMethods
+        .map((method: PaymentMethodDto) => ({
+          key: method.uiKey || payoutTypeToUiKey(method.type || ''),
+          name: method.name || getPaymentMethodDisplayName(method.type || ''),
+        }))
+        .filter((m) => m.key !== 'other')
+    }
+
+    return Object.keys(DEFAULT_PAYOUT_CONFIGS).map((key) => ({
+        key,
+        name: PAYOUT_UI_LABELS[key] || key,
+      }))
+  }, [merchantPaymentMethods])
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -66,14 +91,7 @@ export default function Step2StaffTouchpoints({
 
             <div className="mt-4">
               <div className="divide-y divide-slate-100 rounded-xl border border-nexoraBorder bg-white px-4">
-                {[
-                  { name: 'Zelle', key: 'zelle' },
-                  { name: 'Bank Wire', key: 'bankwire' },
-                  { name: 'PayPal', key: 'paypal' },
-                  { name: 'Venmo', key: 'venmo' },
-                  { name: 'Cash App', key: 'cashapp' },
-                  { name: 'Apple Cash', key: 'applecash' }
-                ].filter(wallet => wallet.key !== 'bankwire').map((wallet) => {
+                {displayPaymentMethods.map((wallet) => {
                   const config = (businessInfo.payoutConfigs && businessInfo.payoutConfigs[wallet.key]) || { enabled: false, value: '', qrCode: '' }
 
                   return (
@@ -168,7 +186,7 @@ export default function Step2StaffTouchpoints({
             <div className="space-y-2 overflow-y-auto pr-1 max-h-[220px] lg:max-h-[440px]">
               {touchPoints.map((tp) => {
                 const qrUrl = `${getCustomerAppBaseUrl()}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}&tech=tp/${tp.id}`
-                const qrCodeSrc = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrUrl)}`
+                const qrCodeSrc = buildPublicQrImageUrl(qrUrl, 150)
 
                 if (tp.id === editingTpId) {
                   return (
@@ -183,11 +201,12 @@ export default function Step2StaffTouchpoints({
                           </label>
                           <input
                             type="text"
-                            className="w-full bg-white border border-nexoraBorder rounded-lg px-3 py-1.5 text-xs text-nexoraText focus:outline-none focus:border-nexoraBrand transition-all"
+                            className={`w-full bg-white border ${editingTpNameError ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'} rounded-lg px-3 py-1.5 text-xs text-nexoraText focus:outline-none transition-all`}
                             value={editingTpName}
                             onChange={(e) => setEditingTpName(e.target.value)}
                             placeholder={t('setup.tp_name_placeholder')}
                           />
+                          {editingTpNameError && <span className="text-xs text-red-500 mt-1 block">{t(editingTpNameError)}</span>}
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-1">

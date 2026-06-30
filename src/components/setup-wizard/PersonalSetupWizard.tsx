@@ -89,7 +89,7 @@ export default function PersonalSetupWizard({ wizard }) {
               <div className="px-6 pt-6 sm:px-10 sm:pt-10">
                 <div className="p-4 rounded-flox-cards bg-red-50 border border-red-200 text-red-700 text-sm flex items-center gap-3">
                   <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
-                  <span>{errors.submit}</span>
+                  <span>{t(errors.submit)}</span>
                 </div>
               </div>
             )}

@@ -52,21 +52,41 @@ function getStaffTipAmount(
   return selTip === 'custom' ? Number(customTips[memberId]) || 0 : Number(selTip)
 }
 
-function collectStaffPaymentKeys(staffMembers: Array<{ availablePaymentMethods?: string[] }>): Set<string> {
-  const keys = new Set<string>()
+function collectStaffPaymentKeys(staffMembers: Array<{ availablePaymentMethods?: string[] }>): string[] {
+  const keys: string[] = []
+  const seen = new Set<string>()
   for (const staff of staffMembers) {
     for (const method of staff.availablePaymentMethods || []) {
-      keys.add(payoutTypeToUiKey(method))
+      const key = payoutTypeToUiKey(method)
+      if (seen.has(key)) continue
+      seen.add(key)
+      keys.push(key)
     }
   }
   return keys
 }
 
-function collectBusinessPaymentKeys(methods: PaymentMethodDto[]): Set<string> {
-  const keys = new Set<string>()
+function collectStaffPaymentKeysForMember(staff: { availablePaymentMethods?: string[] }): string[] {
+  const keys: string[] = []
+  const seen = new Set<string>()
+  for (const method of staff.availablePaymentMethods || []) {
+    const key = payoutTypeToUiKey(method)
+    if (seen.has(key)) continue
+    seen.add(key)
+    keys.push(key)
+  }
+  return keys
+}
+
+function collectBusinessPaymentKeys(methods: PaymentMethodDto[]): string[] {
+  const keys: string[] = []
+  const seen = new Set<string>()
   for (const pm of methods) {
     if (!pm.id || pm.isActive === false) continue
-    keys.add(payoutTypeToUiKey(pm.type || pm.name || ''))
+    const key = payoutTypeToUiKey(pm.type || pm.name || '')
+    if (seen.has(key)) continue
+    seen.add(key)
+    keys.push(key)
   }
   return keys
 }
@@ -75,17 +95,17 @@ function buildAvailablePaymentWalletKeys(
   selectedStaffMembers: Array<{ availablePaymentMethods?: string[] }>,
   effectivePaymentMethods: PaymentMethodDto[],
   isMultiStaff: boolean,
-): Set<string> {
+): string[] {
   if (!isMultiStaff && selectedStaffMembers.length === 1) {
-    const staffKeys = collectStaffPaymentKeys(selectedStaffMembers)
-    if (staffKeys.size > 0) return staffKeys
+    const staffKeys = collectStaffPaymentKeysForMember(selectedStaffMembers[0])
+    if (staffKeys.length > 0) return staffKeys
   }
 
   const businessKeys = collectBusinessPaymentKeys(effectivePaymentMethods)
-  if (businessKeys.size > 0) return businessKeys
+  if (businessKeys.length > 0) return businessKeys
 
   if (isMultiStaff) {
-    return new Set<string>()
+    return []
   }
 
   return collectStaffPaymentKeys(selectedStaffMembers)
@@ -257,6 +277,7 @@ export default function useCustomerFlow() {
   const [currentTipId, setCurrentTipId] = useState<any | null>(null)
   const [currentReviewId, setCurrentReviewId] = useState<any | null>(null)
   const [paymentLinkData, setPaymentLinkData] = useState<any | null>(null)
+  const [tipPaymentMethodsData, setTipPaymentMethodsData] = useState<any[] | null>(null)
 
   useEffect(() => {
     if (didApplyStaffPreselect.current || activeStaffList.length === 0) return
@@ -382,6 +403,25 @@ export default function useCustomerFlow() {
     return null
   }, [
     isMultiStaffSelection,
+    businessId,
+    touchBusinessId,
+    merchantSetupQuery.isLoading,
+    merchantBusinessQuery.isLoading,
+    publicMethodsQuery.isLoading,
+    effectivePaymentMethods.length,
+  ])
+
+  const canSelectMultipleStaff = useMemo(() => {
+    const resolvingMerchantProfile =
+      !touchBusinessId &&
+      (merchantSetupQuery.isLoading || merchantBusinessQuery.isLoading)
+    if (resolvingMerchantProfile && !businessId) return true
+    if (!businessId) return false
+    if (!publicMethodsQuery.isLoading && effectivePaymentMethods.length === 0) {
+      return false
+    }
+    return true
+  }, [
     businessId,
     touchBusinessId,
     merchantSetupQuery.isLoading,
@@ -544,8 +584,16 @@ export default function useCustomerFlow() {
           businessPaymentMethodId,
           tipItems,
         })
-        setCurrentTipId(result?.tipId || result?.id)
+        const tipId = result?.tipId || result?.id
+        setCurrentTipId(tipId)
         setPaymentLinkData(null)
+        try {
+          const methods = await publicTouchRepository.getTipPaymentMethods(String(tipId))
+          setTipPaymentMethodsData(Array.isArray(methods) ? methods : null)
+        } catch (methodsErr) {
+          logger.error('Failed to fetch tip payment methods', methodsErr)
+          setTipPaymentMethodsData(null)
+        }
         setStep('wallet_details')
         return
       }
@@ -554,18 +602,16 @@ export default function useCustomerFlow() {
       const amount = getStaffTipAmount(member.id, selectedTips, customTips)
       const result = await createTipMutation.mutateAsync({
         touchPointId: touchPageData?.touchPoint?.id, staffProfileId: member.id,
-        amount, paymentMethod: walletName, sessionId,
+        amount, paymentMethod: resolvedWalletKey, sessionId,
       })
-      setCurrentTipId(result?.id || result?.tipId)
+      const tipId = result?.id || result?.tipId
+      setCurrentTipId(tipId)
       try {
-        const linkData = await publicTouchRepository.getPaymentLink({
-          staffId: member.id,
-          method: walletName,
-          amount,
-        })
-        setPaymentLinkData(linkData)
-      } catch (linkErr) {
-        logger.error('Failed to fetch payment link', linkErr)
+        const methods = await publicTouchRepository.getTipPaymentMethods(String(tipId))
+        setTipPaymentMethodsData(Array.isArray(methods) ? methods : null)
+      } catch (methodsErr) {
+        logger.error('Failed to fetch tip payment methods', methodsErr)
+        setTipPaymentMethodsData(null)
       }
       setStep('wallet_details')
     } catch (err) {
@@ -614,7 +660,8 @@ export default function useCustomerFlow() {
         comment: cleanComment || (rating >= 4 ? 'Good service' : 'Needs improvement'),
       })
       setCurrentReviewId(result?.id || result?.reviewId)
-      setStep(rating >= 4 ? 'google_yelp_review' : 'final_done')
+      const hasReviewLinks = Boolean(reviewLinks.googleReview || reviewLinks.yelpReview)
+      setStep(rating >= 4 && hasReviewLinks ? 'google_yelp_review' : 'final_done')
     } catch (err) {
       logger.error('Failed to submit review', err)
       showToast(t('errors.generic'), 'error')
@@ -652,7 +699,8 @@ export default function useCustomerFlow() {
     tipRefNumber, setTipRefNumber, currentTipId, currentReviewId,
     handleTagToggle, handleRatingChange, handleToggleStaff,
     handlePay, handleConfirmTip, handleSkipTip, handleSubmitFeedback,
-    handleTrackExternalReview, paymentLinkData,
+    handleTrackExternalReview, paymentLinkData, tipPaymentMethodsData,
     scannedTouchpoint: null,
+    canSelectMultipleStaff,
   }
 }

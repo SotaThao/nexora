@@ -31,6 +31,7 @@ interface StaffBusinessApiDto {
   logoUrl?: string | null
   role?: string | null
   roleLabel?: string | null
+  roleAtBusiness?: string | null
   linkStatus?: string | null
   linkStatusLabel?: string | null
   linkedAt?: string | null
@@ -93,6 +94,7 @@ function normalizeStaffBusinessLink(b: StaffBusinessApiDto): StaffBusinessLink {
     logoUrl: b.logoUrl ?? null,
     role: b.role ?? null,
     roleLabel: b.roleLabel ?? null,
+    roleAtBusiness: b.roleAtBusiness ?? null,
     linkStatus: b.linkStatus ?? null,
     linkStatusLabel: b.linkStatusLabel ?? null,
     linkedAt: b.linkedAt ?? null,
@@ -279,6 +281,7 @@ export function normalizeStaffLinkRequestDetail(dto: StaffLinkRequestDetailApiDt
     businessRole: dto.businessRole ?? null,
     requestedAt: dto.requestedAt ?? null,
     status: dto.status ?? null,
+    roleAtBusiness: dto.roleAtBusiness ?? null,
   }
 }
 

@@ -3,6 +3,7 @@
  * Centralises all QR-related fetch/blob operations so components
  * never call fetch() directly.
  */
+export { buildPublicQrImageUrl } from '../data/repositories/publicQr'
 
 import { downloadFromUrl, downloadBlob, type DownloadResult } from './downloadFile'
 import merchantTouchpointsRepository from '../data/repositories/merchantTouchpoints'

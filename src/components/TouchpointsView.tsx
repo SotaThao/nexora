@@ -515,7 +515,7 @@ export default function TouchpointsView({
                               </div>
                             ) : (
                               <span className="text-nexoraSubtle italic text-[9.5px] leading-relaxed">
-                                Only Paper QR / Chỉ dùng QR in giấy
+                                {t('dashboard.touchpoints.paper_qr_only')}
                               </span>
                             )}
                           </div>

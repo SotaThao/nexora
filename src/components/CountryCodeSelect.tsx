@@ -2,6 +2,10 @@ import React, { useState, useRef, useEffect } from 'react'
 import { ChevronDown, Search } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
 import { isValidPhone } from '../utils/validation'
+import { AsYouType, isPossiblePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js'
+
+/** Narrow gap between phone digit groups in inputs (thinner than a normal space). */
+export const PHONE_GROUP_SEP = '\u2009'
 
 export const COUNTRY_CODES = [
   { name: 'United States', code: 'US', dialCode: '+1', flag: '🇺🇸' },
@@ -25,8 +29,6 @@ export const COUNTRY_CODES = [
   { name: 'Philippines', code: 'PH', dialCode: '+63', flag: '🇵🇭' },
   { name: 'Indonesia', code: 'ID', dialCode: '+62', flag: '🇮🇩' },
 ]
-
-import { AsYouType } from 'libphonenumber-js'
 
 export const parsePhone = (phoneStr) => {
   if (!phoneStr) return { countryCode: '+1', nationalNumber: '' }
@@ -68,21 +70,108 @@ export const getDefaultDialCode = (appLanguage) => {
   return '+1'
 }
 
-export const formatNationalNumber = (nationalNumber, dialCode) => {
-  let digits = nationalNumber.replace(/\D/g, '')
-  // E.164 allows up to 15 digits total; don't truncate valid longer numbers.
-  digits = digits.slice(0, 15)
+export const getMaxNationalDigits = (dialCode: string) => {
+  if (dialCode === '+1' || dialCode === '+84') return 10
+  const codeDigits = dialCode.replace(/\D/g, '').length
+  return Math.max(4, Math.min(12, 15 - codeDigits))
+}
 
-  if (dialCode === '+1') {
-    if (digits.length <= 3) return digits
-    if (digits.length <= 6) return `${digits.slice(0, 3)}-${digits.slice(3)}`
-    return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`
-  } else if (dialCode === '+84') {
-    if (digits.length <= 3) return digits
-    if (digits.length <= 6) return `${digits.slice(0, 3)} ${digits.slice(3)}`
-    return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`
+export const getE164MaxNationalDigits = (dialCode: string) => {
+  if (dialCode === '+84') return 9
+  return getMaxNationalDigits(dialCode)
+}
+
+/** Strip domestic trunk prefix (e.g. leading 0 for +84) before E.164 payload. */
+export const stripTrunkPrefixNational = (nationalDigits: string, dialCode: string) => {
+  const digits = nationalDigits.replace(/\D/g, '')
+  if (dialCode === '+84' && digits.startsWith('0')) {
+    return digits.slice(1)
+  }
+  return digits
+}
+
+export const normalizePhoneE164 = (value: string, fallbackDialCode: string) => {
+  const trimmed = value.trim()
+  if (!trimmed) return ''
+
+  const parsed = parsePhone(
+    trimmed.startsWith('+') ? trimmed : `${fallbackDialCode}${trimmed.replace(/\D/g, '')}`,
+  )
+  const digits = stripTrunkPrefixNational(parsed.nationalNumber, parsed.countryCode).slice(
+    0,
+    getE164MaxNationalDigits(parsed.countryCode),
+  )
+
+  if (!digits) return ''
+  return `${parsed.countryCode}${digits}`
+}
+
+/** BE stores VN phones with leading 0; US keeps E.164 (+1...). */
+export const normalizePhoneForApi = (value: string, fallbackDialCode: string) => {
+  const e164 = normalizePhoneE164(value, fallbackDialCode)
+  if (!e164) return ''
+
+  const { countryCode, nationalNumber } = parsePhone(e164)
+  const nationalDigits = stripTrunkPrefixNational(nationalNumber, countryCode)
+
+  if (countryCode === '+84') {
+    return `0${nationalDigits}`
   }
 
+  return e164
+}
+
+export const getDisplayMaxNationalDigits = (dialCode: string, nationalDigits = '') => {
+  if (dialCode === '+84') {
+    return nationalDigits.replace(/\D/g, '').startsWith('0') ? 10 : 9
+  }
+  return getMaxNationalDigits(dialCode)
+}
+
+export const isValidPhoneE164 = (value: string, fallbackDialCode: string) => {
+  const e164 = normalizePhoneE164(value, fallbackDialCode)
+  if (!e164) return false
+
+  const { countryCode, nationalNumber } = parsePhone(e164)
+  const nationalDigits = stripTrunkPrefixNational(nationalNumber, countryCode)
+
+  if (countryCode === '+84' && nationalDigits.length !== 9) return false
+  if (countryCode === '+1' && nationalDigits.length !== 10) return false
+
+  try {
+    return isPossiblePhoneNumber(e164)
+  } catch {
+    return false
+  }
+}
+
+export const formatNationalNumber = (nationalNumber, dialCode) => {
+  let digits = nationalNumber.replace(/\D/g, '')
+
+  if (dialCode === '+1') {
+    digits = digits.slice(0, getMaxNationalDigits(dialCode))
+    if (digits.length <= 3) return digits
+    if (digits.length <= 6) return `${digits.slice(0, 3)}-${digits.slice(3)}`
+    return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6, 10)}`
+  }
+
+  if (dialCode === '+84') {
+    const hasTrunkZero = digits.startsWith('0')
+    const maxDigits = hasTrunkZero ? 10 : 9
+    digits = digits.slice(0, maxDigits)
+
+    if (hasTrunkZero) {
+      if (digits.length <= 4) return digits
+      if (digits.length <= 7) return `${digits.slice(0, 4)}${PHONE_GROUP_SEP}${digits.slice(4)}`
+      return `${digits.slice(0, 4)}${PHONE_GROUP_SEP}${digits.slice(4, 7)}${PHONE_GROUP_SEP}${digits.slice(7, 10)}`
+    }
+
+    if (digits.length <= 3) return digits
+    if (digits.length <= 6) return `${digits.slice(0, 3)}${PHONE_GROUP_SEP}${digits.slice(3)}`
+    return `${digits.slice(0, 3)}${PHONE_GROUP_SEP}${digits.slice(3, 6)}${PHONE_GROUP_SEP}${digits.slice(6, 9)}`
+  }
+
+  digits = digits.slice(0, getMaxNationalDigits(dialCode))
   const country = getCountryByDialCode(dialCode)
   const formatter = new AsYouType(country.code as import('libphonenumber-js').CountryCode)
   return formatter.input(digits)
@@ -132,11 +221,11 @@ export default function CountryCodeSelect({
         type="button"
         disabled={disabled}
         onClick={() => !disabled && setIsOpen(!isOpen)}
-        className={`h-10 flex items-center gap-1.5 px-3 border border-nexoraBorder border-r-0 bg-nexoraCanvas rounded-l-lg text-xs font-bold text-nexoraText hover:bg-slate-100 transition-colors focus:outline-none select-none
-          ${disabled ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : 'cursor-pointer'}`}
+        className={`h-10 flex items-center gap-1.5 px-3 border border-nexoraBorder border-r-0 rounded-l-lg text-xs font-bold text-nexoraText transition-colors focus:outline-none select-none
+          ${disabled ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : 'bg-slate-50 hover:bg-slate-100 cursor-pointer'}`}
       >
-        <span className="text-sm">{selectedCountry.flag}</span>
-        <span className="font-bold font-mono">{selectedCountry.dialCode}</span>
+        <span className="text-xs font-bold leading-none">{selectedCountry.code}</span>
+        <span className="font-bold font-mono leading-none">{selectedCountry.dialCode}</span>
         <ChevronDown 
           className={`w-3.5 h-3.5 text-nexoraMuted shrink-0 transition-transform duration-200
             ${isOpen ? 'rotate-180 text-nexoraBrand' : ''}`} 

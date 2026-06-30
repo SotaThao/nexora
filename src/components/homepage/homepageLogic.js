@@ -2,18 +2,17 @@
  * Homepage interactive logic — simulator, Tax IQ, i18n, modals.
  * Wired from HomePageBridgeContext via getHomePageHandlers().
  */
+import { getStoredAppLanguage, setStoredAppLanguage } from '../../utils/appLanguage.js'
+import {
+  INTRO_VIDEO_ID,
+  openIntroYouTubeVideo,
+  shouldOpenYouTubeExternally,
+} from '../../utils/youtubeIntroVideo.js'
+
 let __homepageClickOutside = null
 
-const HOMEPAGE_LANG_STORAGE_KEY = 'nexora_homepage_lang'
-
 export function getInitialHomePageLanguage() {
-  try {
-    const saved = localStorage.getItem(HOMEPAGE_LANG_STORAGE_KEY)
-    if (saved === 'en' || saved === 'vi') return saved
-  } catch {
-    // localStorage unavailable (SSR/tests)
-  }
-  return 'en'
+  return getStoredAppLanguage()
 }
 
 const translations = {
@@ -147,6 +146,7 @@ const translations = {
     "vt-desc": "Tìm hiểu xem một tiệm nail nghệ thuật hoặc trung tâm thẩm mỹ tăng trưởng 40% doanh thu bồi dưỡng thợ và tích hợp 1000+ review vàng Google chỉ trong một nốt nhạc bằng cách nào.",
     "vt-start": "BẮT ĐẦU XEM VIDEO GIỚI THIỆU (1 PHÚT)",
     "vt-start-sub": "Video trình bày chi tiết cách vận hành quét QR, bồi dưỡng thợ & tích cực Google Reviews",
+    "vt-open-youtube": "Mở trên YouTube",
     "cr-eyebrow": "CỔNG TIỆN ÍCH KHÁCH HÀNG",
     "cr-title": "Tra Cứu Nhanh Điểm Thưởng Thành Viên",
     "cr-desc": "Hệ sinh thái NEXORA tạo dựng một trải nghiệm xuyên suốt. Khách hàng không cần cài đặt ứng dụng cồng kềnh, chỉ cần nhập số điện thoại là có thể tra cứu ngay hạng thẻ thành viên, số điểm tích lũy, các voucher ưu đãi hiện có và tiến độ đổi quà trực quan.",
@@ -530,6 +530,7 @@ const translations = {
     "vt-desc": "Discover how standard retail stores scale technician tips by 40%, lock in thousands of organic Google stars, and drive repeat visits via co-ops.",
     "vt-start": "PLAY INTRODUCTORY BRIEF (1 MIN)",
     "vt-start-sub": "Walk through instant peer QR routing, Google ratings optimization, and B2B workflows.",
+    "vt-open-youtube": "Opens in YouTube",
     "cr-eyebrow": "CLIENT LOYALTY PORTAL",
     "cr-title": "Instant Membership Points Lookup Hub",
     "cr-desc": "Nexora operates cleanly without forcing complex application installs on customer phones. Enter any registered phone below to check active tiers, cross-alliance point totals, and ready vouchers.",
@@ -968,11 +969,7 @@ function toggleMobileMenu() {
 export function changeLanguage(lang) {
   appState.currentLanguage = lang
 
-  try {
-    localStorage.setItem(HOMEPAGE_LANG_STORAGE_KEY, lang)
-  } catch {
-    // ignore
-  }
+  setStoredAppLanguage(lang)
 
   if (typeof document !== 'undefined') {
     document.documentElement.lang = lang === 'vi' ? 'vi' : 'en'
@@ -1683,6 +1680,11 @@ function downloadTaxReport() {
 
 // Trình chiếu video giới thiệu từ YouTube
 function playIntroVideo() {
+  if (shouldOpenYouTubeExternally()) {
+    openIntroYouTubeVideo()
+    return
+  }
+
   const cover = document.getElementById('video-cover');
   const iframe = document.getElementById('intro-video-iframe');
   if (cover) {
@@ -1692,7 +1694,7 @@ function playIntroVideo() {
     }, 500);
   }
   if (iframe) {
-    iframe.src = "https://www.youtube.com/embed/ghegM-w3NAM?autoplay=1&mute=1&playlist=ghegM-w3NAM&loop=1";
+    iframe.src = `https://www.youtube.com/embed/${INTRO_VIDEO_ID}?autoplay=1&mute=1&playlist=${INTRO_VIDEO_ID}&loop=1`;
   }
 }
 

@@ -1,7 +1,9 @@
 import { ShieldAlert, ShieldCheck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useNotification } from "../../../contexts/NotificationContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "../../../contexts/LanguageContext";
+import { resolveEffectiveKybStatus } from "../../../utils/kybStatus";
 import {
   useUpdateBusiness,
   useUpdateBusinessInfo,
@@ -17,6 +19,7 @@ import {
 } from "../../../data/hooks/useProfileSettings";
 import { qk } from "../../../data/queryKeys";
 import { logger } from "../../../utils/logger";
+import { buildPublicQrImageUrl } from "../../../data/repositories/publicQr";
 import { getUserProfileImageUrl } from "../../../utils/userProfileImage";
 import {
   isValidEmail,
@@ -149,6 +152,12 @@ const DEFAULT_PROFILE = {
 
 const KYB_EDITABLE_STATUSES = new Set(['basic', 'kyb_rejected', 'rejected'])
 
+const ENABLED_SETTINGS_TABS = new Set(['profile', 'affiliate'])
+
+function normalizeSettingsTab(tab) {
+  return ENABLED_SETTINGS_TABS.has(tab) ? tab : 'profile'
+}
+
 export default function useSettingsForm({
   setupData,
   hasKyb,
@@ -161,6 +170,7 @@ export default function useSettingsForm({
   openKybPortal,
 }) {
   const { t, currentLanguage } = useTranslation();
+  const { showToast: notify } = useNotification();
   const queryClient = useQueryClient();
   const profileSettingsQuery = useProfileSettings();
   const updateUserProfileMutation = useUpdateUserProfile();
@@ -172,30 +182,39 @@ export default function useSettingsForm({
   const updateReviewLinksMutation = useUpdateReviewLinks();
   const { data: verifiedStatusData } = useVerifiedStatus();
 
+  const [activeTab, setActiveTab] = useState(() => normalizeSettingsTab(initialTab))
+
+  const effectiveVerificationStatus = useMemo(
+    () => resolveEffectiveKybStatus(
+      verificationStatus,
+      verifiedStatusData?.status as string | undefined,
+    ),
+    [verifiedStatusData?.status, verificationStatus],
+  )
+
   // Editing is allowed only when KYB has not been submitted or was rejected.
   // verifiedStatusData.status comes from SSO live: None | Review | Rejected | Verified
   const canEditProfile = useMemo(() => {
-    if (!KYB_EDITABLE_STATUSES.has(verificationStatus)) return false;
+    if (!KYB_EDITABLE_STATUSES.has(effectiveVerificationStatus)) return false;
     if (!verifiedStatusData) return true; // still loading — keep current behavior
     return verifiedStatusData.status === 'None' || verifiedStatusData.status === 'Rejected';
-  }, [verificationStatus, verifiedStatusData]);
-
-  const [activeTab, setActiveTab] = useState(initialTab); // profile | kyb
+  }, [effectiveVerificationStatus, verifiedStatusData]);
 
   useEffect(() => {
     if (initialTab) {
-      setActiveTab(initialTab);
+      setActiveTab(normalizeSettingsTab(initialTab))
     }
-  }, [initialTab]);
+  }, [initialTab])
 
   const handleTabChange = (tab) => {
-    if (tab === 'profile' && activeTab === 'kyb') {
-      queryClient.invalidateQueries({ queryKey: qk.userProfile() });
-      queryClient.invalidateQueries({ queryKey: qk.verifiedStatus() });
+    const nextTab = normalizeSettingsTab(tab)
+    if (nextTab === 'profile' && activeTab === 'kyb') {
+      queryClient.invalidateQueries({ queryKey: qk.userProfile() })
+      queryClient.invalidateQueries({ queryKey: qk.verifiedStatus() })
     }
-    setActiveTab(tab);
-    if (onTabChange) onTabChange(tab);
-  };
+    setActiveTab(nextTab)
+    if (onTabChange) onTabChange(nextTab)
+  }
 
   const openKybPortalFlow = () => {
     if (openKybPortal) openKybPortal();
@@ -248,7 +267,6 @@ export default function useSettingsForm({
     return DEFAULT_PROFILE;
   });
   const [copiedId, setCopiedId] = useState<any | null>(null);
-  const [toastMessage, setToastMessage] = useState("");
 
   // Edit states for different cards
   const [isEditingBasic, setIsEditingBasic] = useState(false);
@@ -345,11 +363,8 @@ export default function useSettingsForm({
     setProfile(updatedProfile);
   };
 
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage("");
-    }, 3000);
+  const showToast = (msg: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+    notify(msg, type);
   };
 
   const handleCopy = (text, id) => {
@@ -573,9 +588,7 @@ export default function useSettingsForm({
   const handleModalTakePhoto = () => {
     setIsCapturing(true);
     setTimeout(() => {
-      const mockQr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-        editValue || "",
-      )}`;
+      const mockQr = buildPublicQrImageUrl(editValue || "", 200);
       setEditQrCode(mockQr);
       setIsCapturing(false);
     }, 800);
@@ -650,7 +663,7 @@ export default function useSettingsForm({
   };
 
   const getStatusCardDetails = () => {
-    switch (verificationStatus) {
+    switch (effectiveVerificationStatus) {
       case "basic":
         return {
           bgClass: "bg-blue-50/70 border-blue-200 text-blue-900",
@@ -808,7 +821,6 @@ export default function useSettingsForm({
     // profile state
     profile,
     copiedId,
-    toastMessage,
     // edit states
     isEditingBasic,
     setIsEditingBasic,
@@ -864,6 +876,7 @@ export default function useSettingsForm({
     handleAvatarChange,
     formatDOB,
     getStatusCardDetails,
+    effectiveVerificationStatus,
     currentLanguage,
     canEditProfile,
   };

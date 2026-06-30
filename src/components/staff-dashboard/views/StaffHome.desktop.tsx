@@ -1,14 +1,18 @@
 // StaffHome — KPI overview, pending tip confirmations, linked businesses.
-import { CheckCircle2 } from 'lucide-react'
+import { CheckCircle2, Star } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useConfirmStaffTipsReceipt } from '../../../data/hooks/useStaffSelf'
 import { useStaffHomeData } from '../hooks/useStaffHomeData'
 import { SkeletonLayout } from '../../ui/skeleton'
 import { STAFF_HOME_SKELETON } from '../skeletons/staffDashboardSkeletons'
+import {
+  getStaffBusinessLinkStatusPresentation,
+  resolveStaffBusinessLinkStatusLabel,
+} from '../../../utils/staffBusinessLinkStatus'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 
-function KpiCard({ label, value, sub = '', subClass = 'text-nexoraMuted' }) {
+function KpiCard({ label, value, sub = null, subClass = 'text-nexoraMuted' }) {
   return (
     <div className={panel}>
       <div className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">{label}</div>
@@ -20,6 +24,20 @@ function KpiCard({ label, value, sub = '', subClass = 'text-nexoraMuted' }) {
 
 function formatTipAmount(amount) {
   return `$${Number(amount || 0).toFixed(2)}`
+}
+
+function renderStars(rating) {
+  const rounded = Math.round(Number(rating) || 0)
+  return (
+    <div className="flex gap-0.5">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Star
+          key={i}
+          className={`h-3.5 w-3.5 ${i <= rounded ? 'fill-amber-400 text-amber-400' : 'text-amber-200'}`}
+        />
+      ))}
+    </div>
+  )
 }
 
 export default function StaffHome() {
@@ -57,9 +75,8 @@ export default function StaffHome() {
         />
         <KpiCard
           label={t('staff_dashboard.home.rating')}
-          value={kpis.rating || '—'}
-          sub={'★★★★★'}
-          subClass="text-amber-500 tracking-widest"
+          value={kpis.rating > 0 ? Number(kpis.rating).toFixed(1) : '—'}
+          sub={kpis.rating > 0 ? renderStars(kpis.rating) : null}
         />
       </section>
 
@@ -111,25 +128,34 @@ export default function StaffHome() {
       {/* Linked businesses */}
       <section className={panel}>
         <h3 className="mb-3 text-base font-extrabold text-nexoraText">{t('staff_dashboard.home.linked_businesses')}</h3>
-        <div className="divide-y divide-nexoraBorder">
-          {linkedBusinesses.map((biz) => (
-            <div key={biz.businessStaffLinkId} className="flex items-center justify-between gap-3 py-3">
-              <div className="min-w-0">
-                <div className="truncate text-sm font-bold text-nexoraText">{biz.businessName}</div>
-                <div className="truncate text-xs text-nexoraMuted">
-                  {t('staff_dashboard.home.display_name')}: {biz.displayName}
+        {linkedBusinesses.length === 0 ? (
+          <p className="py-4 text-center text-xs text-nexoraSubtle">
+            {t('staff_dashboard.qr.no_linked_businesses')}
+          </p>
+        ) : (
+          <div className="divide-y divide-nexoraBorder">
+            {linkedBusinesses.filter((biz) => resolveStaffBusinessLinkStatusLabel(biz).toLowerCase() === 'active').map((biz) => {
+              const statusLabel = resolveStaffBusinessLinkStatusLabel(biz)
+              const statusPresentation = getStaffBusinessLinkStatusPresentation(statusLabel)
+              return (
+              <div key={biz.businessStaffLinkId} className="flex items-center justify-between gap-3 py-3">
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-bold text-nexoraText">{biz.businessName}</div>
+                  <div className="truncate text-xs text-nexoraMuted">
+                    {t('staff_dashboard.home.display_name')}: {biz.displayName}
+                  </div>
                 </div>
+                <span
+                  className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black ${statusPresentation.className}`}
+                >
+                  {statusPresentation.translationKey
+                    ? t(statusPresentation.translationKey)
+                    : statusLabel}
+                </span>
               </div>
-              <span
-                className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black ${
-                  biz.status === 'Active' ? 'bg-emerald-50 text-emerald-600' : 'bg-nexoraCanvas text-nexoraMuted'
-                }`}
-              >
-                {biz.status === 'Active' ? t('staff_dashboard.status.active') : t('staff_dashboard.status.inactive')}
-              </span>
-            </div>
-          ))}
-        </div>
+            )})}
+          </div>
+        )}
       </section>
     </div>
   )

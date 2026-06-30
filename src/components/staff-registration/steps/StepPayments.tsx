@@ -1,6 +1,12 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { Edit2, Loader2 } from 'lucide-react'
 import ToggleSwitch from '../../ui/ToggleSwitch'
+import {
+  getPaymentMethodDisplayName,
+  payoutTypeToUiKey,
+  PAYOUT_UI_LABELS,
+} from '../../../data/paymentMethodTypes'
+import type { PaymentMethodDto } from '../../../types/domain'
 
 const PayoutLogos = {
   zelle: (
@@ -33,7 +39,10 @@ const PayoutLogos = {
     <svg viewBox="0 0 24 24" className="h-4.5 w-4.5 fill-black" xmlns="http://www.w3.org/2000/svg">
       <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83zM15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.22.67-2.94 1.51-.62.73-1.16 1.87-1.02 2.98 1.11.09 2.25-.56 2.97-1.43z" />
     </svg>
-  )
+  ),
+  vlinkpay: (
+    <img src="/assets/vlinkpay-logo.png" alt="VLINKPAY Logo" className="h-4.5 w-4.5 object-contain" />
+  ),
 }
 
 const PAYOUT_KEYS = ['zelle', 'bankwire', 'paypal', 'venmo', 'cashapp', 'applecash'] as const
@@ -48,16 +57,33 @@ export default function StepPayments({
   setStep,
   isDemoToolsEnabled = false,
   isSubmitting = false,
+  paymentMethods = [],
 }) {
   const [consentTax, setConsentTax] = useState(false)
   const [consentConfirm, setConsentConfirm] = useState(false)
   const bothConsentsChecked = consentTax && consentConfirm
 
-  const payoutMethodsList = PAYOUT_KEYS.map(key => ({
-    key,
-    label: t(`components.staff_registration.steps.StepPayments.walletLabel_${key}`),
-    placeholder: t(`components.staff_registration.steps.StepPayments.walletPlaceholder_${key}`),
-  }))
+  const payoutMethodsList = useMemo(() => {
+    if (paymentMethods.length > 0) {
+      return paymentMethods.map((method: PaymentMethodDto) => {
+        const key = method.uiKey || payoutTypeToUiKey(method.type || '')
+        const label = method.name || getPaymentMethodDisplayName(method.type || '')
+        return {
+          key,
+          label,
+          placeholder: PAYOUT_UI_LABELS[key]
+            ? t(`components.staff_registration.steps.StepPayments.walletPlaceholder_${key}`)
+            : `Enter ${label}...`,
+        }
+      })
+    }
+
+    return PAYOUT_KEYS.map(key => ({
+      key,
+      label: t(`components.staff_registration.steps.StepPayments.walletLabel_${key}`),
+      placeholder: t(`components.staff_registration.steps.StepPayments.walletPlaceholder_${key}`),
+    }))
+  }, [paymentMethods, t])
 
   return (
     <div className="space-y-5 py-2 animate-fadeIn">
@@ -73,7 +99,7 @@ export default function StepPayments({
       </p>
 
       <div className="space-y-2 max-h-80 overflow-y-auto pr-1 divide-y divide-nexoraRule">
-        {payoutMethodsList.filter(method => method.key !== 'bankwire').map(method => {
+        {payoutMethodsList.map(method => {
           const cfg = payouts[method.key] || { enabled: false, value: '' }
           return (
             <div key={method.key} className="flex items-center justify-between py-3">

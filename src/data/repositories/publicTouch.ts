@@ -14,6 +14,8 @@ const PAYMENT_METHOD_MAP: Record<string, string> = {
   Zelle: 'Zelle',
   PayPal: 'PayPal',
   AppleCash: 'AppleCash',
+  BankWire: 'BankWire',
+  bankwire: 'BankWire',
 }
 
 function toWireMethod(uiMethod: string): string {
@@ -36,6 +38,13 @@ export function createPublicTouchRepository(client: HttpClient = httpClient) {
         { anonymous: true, params: { sessionId } },
       )
       return normalizeTouchPageData(raw)
+    },
+
+    async getTipPaymentMethods(tipId: string) {
+      return client.get<Array<{ id: string; type: string; accountInfo: string; imageUrl: string }>>(
+        `/api/v1/tips/${encodeURIComponent(tipId)}/payment-methods`,
+        { anonymous: true },
+      )
     },
 
     async getPaymentLink({

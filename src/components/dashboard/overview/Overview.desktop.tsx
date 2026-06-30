@@ -15,6 +15,7 @@ import Skeleton from '../../ui/skeleton/Skeleton'
 import TipsOverTimePanel from './TipsOverTimePanel'
 import StaffLeaderboardPanel from './StaffLeaderboardPanel'
 import SetupGuideBanner from './SetupGuideBanner'
+import PayoutSetupWarningBanner from './PayoutSetupWarningBanner'
 import OverviewEmptyState from './OverviewEmptyState'
 import OverviewSkeleton from './OverviewSkeleton'
 
@@ -329,6 +330,10 @@ function Overview({
         </div>
       )}
 
+      {hasSetup && (
+        <PayoutSetupWarningBanner />
+      )}
+
       {pendingConfirmCount > 0 && (
         <div className="flex items-center justify-between gap-3 rounded-xl border border-violet-100 bg-violet-50/70 px-4 py-3">
           <div className="flex items-center gap-2.5">
@@ -344,7 +349,7 @@ function Overview({
           </div>
           <button
             type="button"
-            onClick={() => navigate('/dashboard/reports')}
+            onClick={() => navigate('/dashboard/reports?status=AwaitingShopConfirmation')}
             className="shrink-0 rounded-lg bg-violet-600 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-white hover:bg-violet-700 transition cursor-pointer whitespace-nowrap"
           >
             {t('merchant_dashboard.tips.pending_view_cta')} →

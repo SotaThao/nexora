@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { visibleMenuItems } from '../constants'
+import { visibleMenuItems, PUBLIC_HOME_MENU_ITEM } from '../constants'
 import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
 import { getSubscriptionSidebarCopy } from '../../../utils/subscriptionDisplay'
@@ -120,18 +120,13 @@ export default function DashboardSidebar({
               <span>{t('dashboard.menu.business_setting')}</span>
             </button>
             <button
-              onClick={() => {
-                setActiveMenu('settings')
-                setSettingsTab('kyb')
-              }}
-              className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
-                activeMenu === 'settings' && settingsTab === 'kyb'
-                  ? 'text-brandCyan font-extrabold'
-                  : 'text-white/75 hover:bg-white/5 hover:text-white'
-              }`}
+              type="button"
+              disabled
+              aria-disabled="true"
+              className="flex h-9 w-full cursor-not-allowed items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold text-white/40 opacity-60"
             >
-              <div className={`h-1.5 w-1.5 rounded-full ${activeMenu === 'settings' && settingsTab === 'kyb' ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
-              <span>{t('dashboard.menu.kyb')}</span>
+              <div className="h-1.5 w-1.5 rounded-full bg-white/20" />
+              <span>{t('dashboard.menu.kyb')} ({t('common.coming_soon')})</span>
             </button>
           </div>
         )}

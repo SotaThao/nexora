@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 
 // 2. Third-party
-import { Filter, Moon, Settings, ShieldAlert, Sun, Check, Link } from 'lucide-react'
+import { Filter, Settings, ShieldAlert, Check, Link } from 'lucide-react'
 
 // 3. Internal — utils → contexts → data/constants → hooks → layout → views → modals → ui
 import { logger } from '../utils/logger'
@@ -18,6 +18,11 @@ import { useKybGate } from '../contexts/KybGateContext'
 import { useStaffManagement } from './dashboard/hooks/useStaffManagement'
 import { useTouchpoints, useCreateTouchpoint, useDeleteTouchpoint, useToggleTouchpoint, useDownloadTouchpointQr } from '../data/hooks/useMerchantTouchpoints'
 import { useMerchantStaff, StatusFilter } from '../data/hooks/useMerchantStaff'
+import { useRefetchMerchantMenuQueries } from '../data/hooks/useRefetchOnMenuChange'
+import {
+  isMerchantConfirmablePending,
+  isPendingStaffMember,
+} from '../utils/merchantStaffPending'
 import { useChartDateRange } from '../hooks/useChartDateRange'
 import { useTransactions } from '../data/hooks/useTransactions'
 import { useDashboardOverview, useDashboardTipsChart, useDashboardOverviewCurrentMonth, useDashboardOverviewCurrentYear } from '../data/hooks/useDashboard'
@@ -42,6 +47,7 @@ import TipsView from './TipsView'
 import TouchpointsView from './TouchpointsView'
 import StaffDetailView from './StaffDetailView'
 import StaffModal from './dashboard/modals/StaffModal'
+import AddStaffModal from './dashboard/modals/AddStaffModal'
 import QrModal from './dashboard/modals/QrModal'
 import InviteShareModal from './dashboard/modals/InviteShareModal'
 import AddTouchpointModal from './dashboard/modals/AddTouchpointModal'
@@ -93,10 +99,12 @@ export default function Dashboard({
   const needsMerchantStaffList =
     hasSearchQuery ||
     isAddTouchpointModalOpen ||
-    ['staff', 'reviews', 'reports', 'tips', 'analytics', 'touchpoints'].includes(activeMenu)
+    ['overview', 'staff', 'reviews', 'reports', 'tips', 'analytics', 'touchpoints'].includes(activeMenu)
+  const needsPendingStaffList = activeMenu === 'overview' || activeMenu === 'staff'
   const needsNotificationsList = isNotiDropdownOpen
   const needsTransactions =
     hasSearchQuery ||
+    activeMenu === 'overview' ||
     ['tips', 'reports', 'analytics'].includes(activeMenu)
   const needsDashboardReviews =
     activeMenu === 'overview' ||
@@ -107,6 +115,7 @@ export default function Dashboard({
   const isStaffTab = activeMenu === 'staff'
   const isReviewsTab = activeMenu === 'reviews'
   const isTouchpointsTab = activeMenu === 'touchpoints'
+  useRefetchMerchantMenuQueries(activeMenu)
   const staffPagination = usePagination({ pageSize: DEFAULT_PAGE_SIZE })
   const reviewsPagination = usePagination({ pageSize: DEFAULT_PAGE_SIZE })
 
@@ -160,9 +169,15 @@ export default function Dashboard({
     pageNumber: isStaffTab ? staffPagination.pageNumber : 1,
     pageSize: isStaffTab ? staffPagination.pageSize : STAFF_FILTER_LIST_PAGE_SIZE,
   })
-  const { data: pendingStaffPage } = useMerchantStaff({
-    enabled: isStaffTab,
+  const { data: pendingStatusPage } = useMerchantStaff({
+    enabled: needsPendingStaffList,
     statusFilter: StatusFilter.Pending,
+    pageNumber: 1,
+    pageSize: 50,
+  })
+  const { data: waitingStaffPage } = useMerchantStaff({
+    enabled: needsPendingStaffList && activeMenu === 'staff',
+    statusFilter: StatusFilter.WaitingStaffAcceptance,
     pageNumber: 1,
     pageSize: 50,
   })
@@ -309,18 +324,22 @@ export default function Dashboard({
     staffForm, setStaffForm,
     errors, setErrors,
     editingStaffId, setEditingStaffId,
+    isStaffViewOnly,
     isStaffModalOpen, setIsStaffModalOpen,
+    isAddStaffModalOpen,
     isApproveModalOpen, setIsApproveModalOpen,
     approvingStaffMember, setApprovingStaffMember,
     isInviteShareOpen, setIsInviteShareOpen,
     inviteShareDefaultName, setInviteShareDefaultName,
     inviteShareDefaultContact, setInviteShareDefaultContact,
-    resetStaffForm, openAddStaff, openApproveStaff, openEditStaff, closeStaffModal,
+    resetStaffForm, openAddStaff, closeAddStaffModal, openApproveStaff, openEditStaff, openViewStaff, closeStaffModal,
     saveStaff, sendSetupLinkFromModal, handleLinkStaff, handleInviteStaff,
     handleResendInvite,
     handleAcceptJoinRequest, handleDeclineJoinRequest, deleteStaff, toggleStaff, toggleStaffTipsFlow,
     handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     inviteStaffMutation,
+    linkRequestMutation,
+    updateStatusMutation,
   } = useStaffManagement({ staffData: merchantStaffData, isStaffLoading, businessName })
 
   // Sync touchpoints removed (now handled by React Query cache)
@@ -367,7 +386,11 @@ export default function Dashboard({
   // Filter lists based on searchQuery
   const filteredStaff = useMemo(() => {
     const isPendingRequest = (member) => 
-      (member.status === 'Pending Acceptance' || member.status === 'Pending') && 
+      (
+        member.status === 'Pending Acceptance' ||
+        member.status === 'Pending' ||
+        member.status === 'WaitingStaffAcceptance'
+      ) && 
       (member.itemType === 'link' || member.itemType === 'invite')
       
     const visibleStaff = staff.filter(member => !isPendingRequest(member))
@@ -381,15 +404,60 @@ export default function Dashboard({
     )
   }, [staff, searchQuery])
 
+  const overviewPendingStaff = useMemo(() => {
+    if (!needsPendingStaffList) return []
+    return (pendingStatusPage?.items ?? []).filter(isMerchantConfirmablePending)
+  }, [needsPendingStaffList, pendingStatusPage])
+
   const pendingStaff = useMemo(() => {
-    const source = isStaffTab ? (pendingStaffPage?.items ?? []) : staff
-    return source.filter((member) =>
-      (member.status === 'Pending Acceptance' || member.status === 'Pending' || member.status === 'Pending Setup') &&
-      (member.itemType === 'link' || member.itemType === 'invite')
-    )
-  }, [isStaffTab, pendingStaffPage, staff])
+    if (!needsPendingStaffList) return []
+
+    const mergedSource =
+      activeMenu === 'overview'
+        ? overviewPendingStaff
+        : [
+            ...(pendingStatusPage?.items ?? []),
+            ...(waitingStaffPage?.items ?? []),
+          ]
+
+    const deduped = mergedSource.filter((member, index, arr) => {
+      const memberId = member.id || member.linkId || member.staffLinkId || member.inviteId
+      if (!memberId) return true
+      return arr.findIndex((item) => {
+        const itemId = item.id || item.linkId || item.staffLinkId || item.inviteId
+        return itemId === memberId
+      }) === index
+    })
+
+    return deduped.filter(isPendingStaffMember)
+  }, [
+    activeMenu,
+    needsPendingStaffList,
+    overviewPendingStaff,
+    pendingStatusPage,
+    waitingStaffPage,
+  ])
 
   const filteredTouchpoints = touchpoints
+
+  const displayStaffTotalCount = searchQuery
+    ? filteredStaff.length
+    : (merchantStaffData?.totalCount ?? filteredStaff.length)
+  const displayStaffTotalPages = searchQuery
+    ? Math.max(1, Math.ceil(displayStaffTotalCount / staffPagination.pageSize))
+    : (merchantStaffData?.totalPages ?? Math.max(1, Math.ceil(displayStaffTotalCount / staffPagination.pageSize)))
+  const displayStaffHasNext = searchQuery
+    ? staffPagination.pageNumber < displayStaffTotalPages
+    : (merchantStaffData?.hasNextPage ?? staffPagination.pageNumber < displayStaffTotalPages)
+  const displayStaffHasPrev = searchQuery
+    ? staffPagination.pageNumber > 1
+    : (merchantStaffData?.hasPreviousPage ?? staffPagination.pageNumber > 1)
+
+  useEffect(() => {
+    const apiTotalPages = merchantStaffData?.totalPages
+    if (!isStaffTab || !apiTotalPages || staffPagination.pageNumber <= apiTotalPages) return
+    staffPagination.setPage(apiTotalPages)
+  }, [isStaffTab, merchantStaffData?.totalPages, staffPagination.pageNumber, staffPagination.setPage])
 
   const filteredReviews = useMemo(() => {
     if (!searchQuery) return reviews
@@ -539,7 +607,7 @@ export default function Dashboard({
       s.nickname === staffKey ||
       s.fullName?.toLowerCase().includes(String(staffKey).toLowerCase().split(' ')[0])
     )
-    navigate(`/dashboard/staff/${member?.id || staffKey}`)
+    navigate(`/dashboard/staff/${member?.staffCode || member?.id || staffKey}`)
   }
 
   // ---------------------------------------------------------------------------
@@ -578,7 +646,7 @@ export default function Dashboard({
     isOverviewLoading, isTransactionsLoading, isTouchpointsLoading,
     reviewsPage, isReviewsPending,
     inviteLinkSetting, isInviteLinkSettingLoading,
-    filteredStaff, pendingStaff, staff, staffLoading, openApproveStaff, openAddStaff, openEditStaff, deleteStaff, toggleStaff, toggleStaffTipsFlow,
+    filteredStaff, pendingStaff, staff, staffLoading, openApproveStaff, openAddStaff, openEditStaff, openViewStaff, deleteStaff, toggleStaff, toggleStaffTipsFlow,
     handleLinkStaff, handleInviteStaff, handleResendInvite, handleAcceptJoinRequest, handleDeclineJoinRequest, handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     setInviteShareDefaultName, setInviteShareDefaultContact, setIsInviteShareOpen,
     filteredTouchpoints, setAddTouchpointPrefill, setIsAddTouchpointModalOpen, deleteTouchpoint, toggleTouchpointStatus, togglingTouchpointId: toggleTouchpointMutation.isPending ? toggleTouchpointMutation.variables : null, linkDevice, devices, handleAddDevice, handleDeleteDevice, handleToggleDeviceStatus,
@@ -598,13 +666,14 @@ export default function Dashboard({
     currentStaffId,
     activeStaffPage: staffPagination.pageNumber,
     activeStaffPageSize: staffPagination.pageSize,
-    activeStaffTotalPages: merchantStaffData?.totalPages ?? 1,
-    activeStaffTotalCount: merchantStaffData?.totalCount ?? 0,
-    activeStaffHasNext: merchantStaffData?.hasNextPage ?? false,
-    activeStaffHasPrev: merchantStaffData?.hasPreviousPage ?? false,
+    activeStaffTotalPages: displayStaffTotalPages,
+    activeStaffTotalCount: displayStaffTotalCount,
+    activeStaffHasNext: displayStaffHasNext,
+    activeStaffHasPrev: displayStaffHasPrev,
     setActiveStaffPage: staffPagination.setPage,
     staffListLoading: isStaffLoading,
     staffListFetching: isStaffFetching,
+    togglingStaffId: updateStatusMutation.isPending ? updateStatusMutation.variables?.staffLinkId ?? null : null,
   }
 
   return (
@@ -673,16 +742,6 @@ export default function Dashboard({
         </main>
       </div>
 
-      <button
-        onClick={() => document.documentElement.classList.toggle('dark')}
-        className="fixed bottom-4 right-4 z-40 hidden lg:flex h-10 w-10 items-center justify-center rounded-full border border-nexoraBorder bg-nexoraSurface text-nexoraMuted shadow-lg"
-        title="Toggle theme hook"
-        aria-label="Toggle theme hook"
-      >
-        <Sun className="h-4 w-4 dark:hidden" />
-        <Moon className="hidden h-4 w-4 dark:block" />
-      </button>
-
       <MobileBottomNav activeMenu={activeMenu} onNavigate={handleNavigateMenu} />
 
       <MobileMenuDrawer
@@ -708,9 +767,22 @@ export default function Dashboard({
         navigateMenu={navigateMenu}
       />
 
+      <AddStaffModal
+        open={isAddStaffModalOpen}
+        onClose={closeAddStaffModal}
+        onLinkStaff={handleLinkStaff}
+        onInviteStaff={handleInviteStaff}
+        isLinking={linkRequestMutation.isPending}
+        isInviting={inviteStaffMutation.isPending}
+      />
+
       <StaffModal
-        open={isStaffModalOpen}
+        open={isStaffModalOpen && Boolean(editingStaffId)}
         editing={Boolean(editingStaffId)}
+        viewOnly={isStaffViewOnly}
+        staffLinkId={editingStaffId}
+        onToggleTipsFlow={toggleStaffTipsFlow}
+        isTogglingTipsFlow={updateStatusMutation.isPending && updateStatusMutation.variables?.staffLinkId === editingStaffId}
         onDecline={closeStaffModal}
         form={staffForm}
         errors={errors}

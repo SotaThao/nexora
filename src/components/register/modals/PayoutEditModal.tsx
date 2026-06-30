@@ -1,9 +1,12 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { X, Camera, FolderOpen, AlertTriangle } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { PayoutLogos } from '../constants'
 import ImageFileInput from '../../ui/ImageFileInput'
 import BankWireAccountForm from '../../payout/BankWireAccountForm'
+import PayoutAccountIdentifierInput from '../../payout/PayoutAccountIdentifierInput'
+import { formatPayoutPhoneDisplay } from '../../payout/payoutPhone'
+import CameraCapture from '../../ui/CameraCapture'
 
 export default function PayoutEditModal({
   editingMethod,
@@ -20,6 +23,7 @@ export default function PayoutEditModal({
   handleModalClearQr,
 }) {
   const { t, renderLabel } = useTranslation()
+  const [isCameraOpen, setIsCameraOpen] = useState(false)
 
   if (!editingMethod) return null
   const isBankWire = editingMethod === 'bankwire'
@@ -53,7 +57,7 @@ export default function PayoutEditModal({
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-      <div className={`bg-white rounded-3xl border border-slate-100 w-full shadow-2xl p-6 relative overflow-hidden animate-scaleUp text-left space-y-4 ${isBankWire ? 'max-w-md' : 'max-w-sm'}`}>
+      <div className={`bg-white rounded-3xl border border-slate-100 w-full shadow-2xl relative overflow-hidden animate-scaleUp text-left ${isCameraOpen ? 'max-w-sm h-[480px]' : `p-6 space-y-4 ${isBankWire ? 'max-w-md' : 'max-w-sm'}`}`}>
 
         {/* Header */}
         <div className="flex items-center gap-3.5 border-b border-slate-100 pb-3">
@@ -93,17 +97,15 @@ export default function PayoutEditModal({
                 field: walletFields[editingMethod]
               }))}
             </label>
-            <input
-              type="text"
+            <PayoutAccountIdentifierInput
+              walletKey={editingMethod}
               value={editValue}
-              onChange={(e) => {
-                setEditValue(e.target.value)
+              hasError={Boolean(modalError)}
+              placeholder={walletPlaceholders[editingMethod]}
+              onChange={(nextValue) => {
+                setEditValue(nextValue)
                 setModalError('')
               }}
-              placeholder={walletPlaceholders[editingMethod]}
-              className={`w-full bg-slate-50 border border-slate-200 focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20 focus:bg-white rounded-xl px-3.5 h-11 text-xs text-slate-800 focus:outline-none transition-all ${
-                modalError ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20' : ''
-              }`}
             />
             {modalError && <p className="mt-1 text-[10px] font-bold text-rose-500">{modalError}</p>}
           </div>
@@ -135,7 +137,9 @@ export default function PayoutEditModal({
                 </button>
                 <div className="text-center">
                   <div className="text-sm font-extrabold text-slate-800">{editAccountName}</div>
-                  <div className="text-[10px] font-semibold text-slate-400 mt-0.5">{editValue}</div>
+                  <div className="text-[10px] font-semibold text-slate-400 mt-0.5">
+                    {formatPayoutPhoneDisplay(editValue) || editValue}
+                  </div>
                 </div>
                 <div className="my-3 flex h-28 w-28 items-center justify-center border border-slate-100 bg-white p-1 rounded-lg">
                   <img src={editQrCode} alt="Payout QR Code" className="h-full w-full object-contain" />
@@ -145,7 +149,7 @@ export default function PayoutEditModal({
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={handleModalTakePhoto}
+                  onClick={() => setIsCameraOpen(true)}
                   className="flex flex-col items-center justify-center py-5 border border-dashed border-slate-200 hover:border-nexoraBrand rounded-xl bg-slate-50 hover:bg-slate-50/50 transition gap-1.5"
                 >
                   <Camera className="w-5 h-5 text-nexoraBrand" />
@@ -193,6 +197,16 @@ export default function PayoutEditModal({
             </button>
           </div>
         </form>
+
+        {isCameraOpen && (
+          <CameraCapture
+            onCapture={(dataUrl) => {
+              handleModalImagePick(dataUrl)
+              setIsCameraOpen(false)
+            }}
+            onCancel={() => setIsCameraOpen(false)}
+          />
+        )}
       </div>
     </div>
   )

@@ -1,6 +1,7 @@
 import React from 'react'
 import { Check } from 'lucide-react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
+import { useAuth } from '../auth/useAuth'
 import { useRegisterForm } from './register/hooks/useRegisterForm'
 import LanguageSwitcher from './ui/LanguageSwitcher'
 import HomepageLink from './ui/HomepageLink'
@@ -17,10 +18,18 @@ import { loadPendingRegistration } from '../auth/pendingRegistration'
 import { useClearMerchantSetup } from '../data/hooks/useMerchantSetup'
 import { useClearProfileSettings } from '../data/hooks/useProfileSettings'
 import { logger } from '../utils/logger'
+import { saveRefCode, getSavedRefCode } from '../utils/affiliateReferral'
 
 export default function RegisterWizard() {
   const navigate = useNavigate()
   const location = useLocation()
+  const [searchParams] = useSearchParams()
+  const urlRef = searchParams.get('ref') || ''
+  // If a new ref code arrives via URL, persist it (overwrite previous).
+  // Fall back to whatever was previously saved in storage.
+  if (urlRef) saveRefCode(urlRef)
+  const refFromUrl = urlRef || getSavedRefCode()
+  const { refreshSession } = useAuth()
   const clearMerchantSetupMutation = useClearMerchantSetup()
   const clearProfileSettingsMutation = useClearProfileSettings()
 
@@ -58,12 +67,16 @@ export default function RegisterWizard() {
     }
 
     try {
-      await apiAuthAdapter.getSession()
+      await refreshSession()
     } catch (e) {
       logger.error('Failed to get session in handleRegisterAndLogin', e)
     }
     
-    navigate('/onboarding', { state: { ssoPrefillData, isNewRegistration: true } })
+    if (form.role === 'personal') {
+      navigate('/staff', { replace: true })
+    } else {
+      navigate('/onboarding', { state: { ssoPrefillData, isNewRegistration: true } })
+    }
   }
 
   const formProps = {
@@ -72,16 +85,13 @@ export default function RegisterWizard() {
     initialStep: showPersonalSuccessPopup ? 3 : 0,
     initialRole: showPersonalSuccessPopup ? 'personal' : 'personal',
     resumeOtpVerification,
+    initialRefCode: refFromUrl,
     autoSendVerificationOnResume,
     resumeEmail,
     resumePassword,
     resumeRole,
     onBackToLogin: () => {
-      if (ssoEmail) {
-        navigate(-1)
-      } else {
-        navigate('/login')
-      }
+      navigate(-1)
     },
     onRegisterSuccess: () => navigate('/login'),
     onRegisterAndLogin: handleRegisterAndLogin,
@@ -91,7 +101,7 @@ export default function RegisterWizard() {
   const form = useRegisterForm(formProps)
   const {
     currentStep, role, currentLanguage, setLanguage, t, getStepName,
-    showTermsModal, setShowTermsModal, setTermsAccepted, setErrors,
+    showTermsModal, setShowTermsModal, setErrors,
     modalType,
     editingMethod, setEditingMethod,
     editValue, setEditValue,
@@ -99,6 +109,7 @@ export default function RegisterWizard() {
     editAccountName, setEditAccountName,
     isCapturing, modalError, setModalError,
     savePayoutAccount, handleModalImagePick, handleModalTakePhoto, handleModalClearQr,
+    initialRefCode,
   } = form
 
 
@@ -117,7 +128,9 @@ export default function RegisterWizard() {
       <div className="max-w-4xl mx-auto px-4 py-8 relative z-10 flex flex-col justify-center min-h-dvh">
         {/* Branding header */}
         <div className="text-center mb-6">
-          <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="h-12 w-auto max-w-[220px] mx-auto object-contain" />
+          <a href="/" className="inline-block">
+            <img src="/assets/logo-nexora.png" alt="Nexora Logo" className="h-12 w-auto max-w-[220px] mx-auto object-contain" />
+          </a>
         </div>
 
         {/* Wizard Steps indicator */}
@@ -168,22 +181,16 @@ export default function RegisterWizard() {
         {/* Main Card container */}
         <div className="bg-white rounded-2xl border border-nexoraBorder shadow-premium overflow-hidden transition-all duration-500">
           {currentStep === 0 && <StepRoleSelect {...form} />}
-          {currentStep === 1 && <StepCredentials {...form} />}
+          {currentStep === 1 && <StepCredentials {...form} refCodeReadOnly={!!initialRefCode} />}
           {currentStep === 2 && <StepOtpVerify {...form} />}
-          {currentStep === 3 && role === 'personal' && <StepSuccess {...form} handleCompleteSetup={undefined} />}
+          {currentStep === 3 && role === 'personal' && <StepProfileSetup {...form} />}
         </div>
       </div>
 
       {/* Terms & Conditions Modal Overlay */}
       <TermsModal
         open={showTermsModal}
-        currentLanguage={currentLanguage}
         onClose={() => setShowTermsModal(false)}
-        onAccept={() => {
-          setTermsAccepted(true)
-          setErrors(prev => ({ ...prev, terms: '' }))
-          setShowTermsModal(false)
-        }}
         modalType={modalType}
       />
 
