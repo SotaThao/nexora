@@ -1,11 +1,12 @@
 // StaffTips — tip activity list from GET /api/v1/staff/tips.
 import { useState } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { TipStatus, isTipStatus } from '../../../constants/tipStatus'
 import { useStaffTips } from '../../../data/hooks/useStaffSelf'
 import { PAYOUT_UI_LABELS, payoutTypeToUiKey } from '../../../data/paymentMethodTypes'
 import { WalletLogos } from '../../dashboard/constants'
 import type { StaffTipItem } from '../../../types/domain'
-import { SkeletonLayout } from '../../ui/skeleton'
+import { SkeletonLayout, SkeletonList } from '../../ui/skeleton'
 import Pagination from '../../ui/Pagination'
 import Tooltip from '../../ui/Tooltip'
 import { STAFF_TIPS_SKELETON } from '../skeletons/staffDashboardSkeletons'
@@ -13,11 +14,10 @@ import { STAFF_TIPS_SKELETON } from '../skeletons/staffDashboardSkeletons'
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 const PAGE_SIZE = 20
 
-const STATUS_STYLE: Record<string, string> = {
-  Initiated: 'bg-amber-50 text-amber-700',
-  Confirmed: 'bg-nexoraBrandSoft/60 text-nexoraBrand',
-  Completed: 'bg-emerald-50 text-emerald-600',
-  Skipped: 'bg-slate-100 text-slate-500',
+const STATUS_STYLE: Partial<Record<TipStatus, string>> = {
+  [TipStatus.Confirmed]: 'bg-nexoraBrandSoft/60 text-nexoraBrand',
+  [TipStatus.Completed]: 'bg-emerald-50 text-emerald-600',
+  [TipStatus.Skipped]: 'bg-slate-100 text-slate-500',
 }
 
 function formatTipAmount(amount: number) {
@@ -88,7 +88,8 @@ export default function StaffTips() {
     return <SkeletonLayout blocks={STAFF_TIPS_SKELETON} />
   }
 
-  const tips = tipsPage?.items ?? []
+  // Initiated = customer started a tip but has not confirmed payment yet — hide from activity.
+  const tips = (tipsPage?.items ?? []).filter((tip) => !isTipStatus(tip.status, TipStatus.Initiated))
   const totalPages = tipsPage?.totalPages ?? 0
   const canGoPrev = tipsPage?.hasPreviousPage ?? pageNumber > 1
   const canGoNext = tipsPage?.hasNextPage ?? (totalPages > 0 && pageNumber < totalPages)
@@ -105,17 +106,13 @@ export default function StaffTips() {
           ) : null}
         </div>
 
-        {isFetching && !isPending ? (
-          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-nexoraSubtle">
-            {t('common.loading')}
-          </p>
-        ) : null}
-
-        {tips.length === 0 ? (
-          <p className="py-4 text-center text-xs text-nexoraSubtle">{t('staff_dashboard.tips.empty')}</p>
-        ) : (
-          <div className="divide-y divide-nexoraBorder">
-            {tips.map((tip) => (
+        {isFetching ? (
+          <SkeletonList count={5} lines={2} showAction />
+        ) : tips.length === 0 ? (
+            <p className="py-4 text-center text-xs text-nexoraSubtle">{t('staff_dashboard.tips.empty')}</p>
+          ) : (
+            <div className="divide-y divide-nexoraBorder">
+              {tips.map((tip) => (
               <div key={tip.id} className="flex items-center justify-between gap-3 py-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline gap-1.5">
@@ -162,7 +159,7 @@ export default function StaffTips() {
                   ) : (
                     <span
                       className={`rounded-full px-2.5 py-1 text-[11px] font-black ${
-                        STATUS_STYLE[tip.status] || 'bg-nexoraCanvas text-nexoraMuted'
+                        STATUS_STYLE[tip.status as TipStatus] || 'bg-nexoraCanvas text-nexoraMuted'
                       }`}
                     >
                       {statusLabel(tip)}

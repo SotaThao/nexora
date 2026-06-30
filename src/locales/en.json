@@ -1675,7 +1675,7 @@
           "shareThisReferralLink": "Share this link or QR code so technicians can create their account and join your salon.",
           "joinLinkCopiedTo": "Join link copied to clipboard!",
           "copy": "Copy",
-          "share": "Invite",
+          "share": "Share",
           "pendingJoinRequests": "Pending Join Requests",
           "rejectedStaff": "Declined Requests",
           "directAddition": "Added by Salon",
@@ -2470,6 +2470,11 @@
       "support_desc": "Describe the issue with this physical device. Our team will follow up using the help code on this card.",
       "support_success": "Support request submitted successfully.",
       "support_success_desc": "Thank you. Our team will review your request and follow up if needed."
+    }
+  },
+  "homepage": {
+    "banner": {
+      "goToSlide": "Go to slide {{index}}"
     }
   },
   "coming_soon": {

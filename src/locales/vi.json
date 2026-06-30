@@ -1675,7 +1675,7 @@
           "shareThisReferralLink": "Chia sẻ liên kết hoặc mã QR này để kỹ thuật viên tạo tài khoản và tham gia tiệm của bạn.",
           "joinLinkCopiedTo": "Đã sao chép liên kết gia nhập!",
           "copy": "Sao chép",
-          "share": "Mời",
+          "share": "Chia sẻ",
           "pendingJoinRequests": "Yêu cầu gia nhập chờ duyệt",
           "rejectedStaff": "Yêu cầu bị từ chối",
           "directAddition": "Được tiệm thêm",
@@ -2469,6 +2469,11 @@
       "support_desc": "Mô tả sự cố với thiết bị vật lý này. Đội ngũ sẽ liên hệ lại dựa trên mã help trên thẻ.",
       "support_success": "Đã gửi yêu cầu hỗ trợ thành công.",
       "support_success_desc": "Cảm ơn bạn. Đội ngũ sẽ xem xét và liên hệ lại nếu cần."
+    }
+  },
+  "homepage": {
+    "banner": {
+      "goToSlide": "Chuyển đến slide {{index}}"
     }
   },
   "coming_soon": {

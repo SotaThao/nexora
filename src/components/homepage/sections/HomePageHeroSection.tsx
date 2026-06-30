@@ -9,7 +9,7 @@ export default function HomePageHeroSection() {
 
   return (
     <>
-      <section className="relative overflow-hidden bg-gradient-to-b from-white via-slate-50 to-slate-100/50 py-12 lg:py-20 border-b border-line ds-section">
+      <section className="relative overflow-hidden bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/50 pt-8 pb-12 lg:pb-20 border-b border-line ds-section">
           
           <div className="absolute top-1/4 right-0 w-[450px] h-[450px] bg-blue/15 rounded-full blur-[100px] pointer-events-none">
           </div>
