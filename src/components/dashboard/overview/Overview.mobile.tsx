@@ -302,7 +302,7 @@ function Overview({
       </div>
 
       {/* ── Quick Actions ────────────────────────────────────────────────── */}
-      <Panel title={k('quick_actions')} action={k('manage')} onAction={() => onNavigateMenu?.('touchpoints')}>
+      <Panel title={k('quick_actions')}>
         <div className="grid grid-cols-4 gap-2">
           <QuickAction
             icon={<QrCode className="h-6 w-6" />}
