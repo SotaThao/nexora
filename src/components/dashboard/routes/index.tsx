@@ -223,6 +223,7 @@ export function ReviewsRoute() {
   return (
     <ReviewsView
       reviews={ctx.reviewsPage?.items ?? []}
+      summary={ctx.reviewsSummary}
       isLoading={ctx.isReviewsPending}
       isFetching={ctx.reviewsListFetching}
       staff={ctx.filteredStaff}
