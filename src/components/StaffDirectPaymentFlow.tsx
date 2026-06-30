@@ -117,7 +117,7 @@ export default function StaffDirectPaymentFlow() {
                   logoUrl={photoUrl}
                   recipientName={displayName}
                   recipientSubtitle={t('staff_direct_payment.pay_to_staff')}
-                  amountRangeHint={t('staff_direct_payment.amount_range_hint')}
+                  amountRangeHint=""
                   reviewTitle={t('staff_direct_payment.review_payment_title')}
                   reviewDesc={t('staff_direct_payment.review_payment_desc')}
                   noMethodsTitle={t('staff_direct_payment.no_methods_title')}

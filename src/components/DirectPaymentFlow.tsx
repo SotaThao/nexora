@@ -112,6 +112,7 @@ export default function DirectPaymentFlow() {
                   t={t}
                   businessName={businessName}
                   logoUrl={logoUrl}
+                  amountRangeHint=""
                   selectedAmount={selectedAmount}
                   setSelectedAmount={setSelectedAmount}
                   customAmount={customAmount}

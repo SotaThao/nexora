@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type MouseEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { AlertCircle, CheckCircle, CreditCard, Eye, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -18,6 +18,7 @@ import type { MerchantPaymentsListQuery } from '../../../data/repositories/merch
 import { PaymentType } from '../../../types/domain'
 import { getApiErrorCode } from '../../../types/domain'
 import MerchantPaymentDetailModal from '../modals/MerchantPaymentDetailModal'
+import MerchantPaymentAckNoticeDialog from '../modals/MerchantPaymentAckNoticeDialog'
 import CustomSelect from '../../CustomSelect'
 import { dismissAckPrompt } from '../../../utils/directPaymentAckDismiss'
 import { resolveDirectPaymentDateRange } from '../../../utils/directPaymentDateRange'
@@ -53,6 +54,8 @@ export default function ReportsDirectPaymentsTab({
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [acknowledgingId, setAcknowledgingId] = useState<string | null>(null)
+  const [ackNoticePayment, setAckNoticePayment] = useState<any | null>(null)
+  const hasHandledInitialPendingAck = useRef(false)
   const acknowledgeMutation = useAcknowledgeMerchantPayment()
 
   const { pageNumber, pageSize, setPage, reset: resetPage } = usePagination({
@@ -96,6 +99,20 @@ export default function ReportsDirectPaymentsTab({
     }
   }, [pageNumber, totalPages, setPage])
 
+  useEffect(() => {
+    if (hasHandledInitialPendingAck.current) return
+    if (!paymentsPage || selectedPaymentId) return
+    if (pendingAckPayments.length === 0) return
+
+    if (pendingAckPayments.length === 1) {
+      setAckNoticePayment(pendingAckPayments[0])
+    } else if (statusFilter === 'all') {
+      setStatusFilter('1')
+    }
+
+    hasHandledInitialPendingAck.current = true
+  }, [paymentsPage, pendingAckPayments, selectedPaymentId, statusFilter])
+
   const selectedPayment =
     selectedPaymentDetail ??
     (selectedPaymentId
@@ -115,6 +132,11 @@ export default function ReportsDirectPaymentsTab({
       dismissAckPrompt(selectedPayment.id)
     }
     onClosePayment?.()
+  }
+
+  const handleReviewPendingAck = () => {
+    if (pendingAckPayments.length === 0) return
+    onOpenPayment?.(pendingAckPayments[0].id)
   }
 
   const statusFilterOptions = useMemo(() => [
@@ -243,7 +265,7 @@ export default function ReportsDirectPaymentsTab({
           </div>
           <button
             type="button"
-            onClick={() => onOpenPayment?.(pendingAckPayments[0].id)}
+            onClick={handleReviewPendingAck}
             className="inline-flex h-10 shrink-0 items-center justify-center rounded-lg bg-violet-700 px-4 text-xs font-bold text-white transition hover:bg-violet-800"
           >
             {t('merchant_payments.pending_ack_banner_action')}
@@ -409,6 +431,19 @@ export default function ReportsDirectPaymentsTab({
           onClose={handleClosePayment}
           onAcknowledge={(paymentId) => handleAcknowledge(paymentId, undefined, { onSuccess: () => onClosePayment?.() })}
           isAcknowledging={acknowledgeMutation.isPending && acknowledgingId === selectedPaymentId}
+        />
+      ) : null}
+
+      {ackNoticePayment ? (
+        <MerchantPaymentAckNoticeDialog
+          payment={ackNoticePayment}
+          pendingCount={pendingAckPayments.length || 1}
+          onClose={() => setAckNoticePayment(null)}
+          onViewDetail={() => {
+            const paymentId = ackNoticePayment?.id
+            setAckNoticePayment(null)
+            if (paymentId) onOpenPayment?.(paymentId)
+          }}
         />
       ) : null}
     </div>

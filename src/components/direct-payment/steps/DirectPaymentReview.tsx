@@ -26,7 +26,7 @@ export default function DirectPaymentReview({
 }) {
   const name = recipientName || businessName || t('direct_payment.default_business')
   const subtitle = recipientSubtitle || t('direct_payment.pay_to_business')
-  const rangeHint = amountRangeHint || t('direct_payment.amount_range_hint')
+  const rangeHint = amountRangeHint ?? t('direct_payment.amount_range_hint')
   const title = reviewTitle || t('direct_payment.review_payment_title')
   const desc = reviewDesc || t('direct_payment.review_payment_desc')
   const emptyMethodsTitle = noMethodsTitle || t('direct_payment.no_methods_title')
@@ -116,9 +116,11 @@ export default function DirectPaymentReview({
             <h4 className="text-[11px] font-extrabold uppercase tracking-wider text-slate-800">
               {t('direct_payment.total_payment')}
             </h4>
-            <p className="mt-0.5 text-[10px] font-semibold text-nexoraMuted">
-              {rangeHint}
-            </p>
+            {rangeHint ? (
+              <p className="mt-0.5 text-[10px] font-semibold text-nexoraMuted">
+                {rangeHint}
+              </p>
+            ) : null}
           </div>
           <div className="text-lg font-black text-nexoraBrand">
             {formatUsdAmount(activeAmount > 0 ? activeAmount : 0)}

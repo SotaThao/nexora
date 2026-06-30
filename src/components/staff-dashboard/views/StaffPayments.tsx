@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type MouseEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { AlertCircle, CheckCircle, CreditCard, Eye, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
@@ -53,6 +53,7 @@ export default function StaffPayments() {
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [acknowledgingId, setAcknowledgingId] = useState<string | null>(null)
+  const hasHandledInitialPendingAck = useRef(false)
   const acknowledgeMutation = useAcknowledgeStaffPayment()
 
   const { pageNumber, pageSize, setPage, reset: resetPage } = usePagination({
@@ -92,6 +93,17 @@ export default function StaffPayments() {
     }
   }, [pageNumber, totalPages, setPage])
 
+  useEffect(() => {
+    if (hasHandledInitialPendingAck.current) return
+    if (!paymentsPage || selectedPaymentId) return
+    if (pendingAckPayments.length <= 1) return
+
+    if (statusFilter === 'all') {
+      setStatusFilter('1')
+    }
+    hasHandledInitialPendingAck.current = true
+  }, [paymentsPage, pendingAckPayments.length, selectedPaymentId, statusFilter])
+
   const selectedPayment =
     selectedPaymentDetail ??
     (selectedPaymentId
@@ -108,6 +120,15 @@ export default function StaffPayments() {
 
   const openPayment = (paymentId: string) => {
     navigate(`/staff/payments/${encodeURIComponent(paymentId)}`)
+  }
+
+  const handleReviewPendingAck = () => {
+    if (pendingAckPayments.length === 0) return
+    if (pendingAckPayments.length > 1) {
+      setStatusFilter('1')
+      return
+    }
+    openPayment(pendingAckPayments[0].id)
   }
 
   const closePayment = () => {
@@ -240,7 +261,7 @@ export default function StaffPayments() {
           </div>
           <button
             type="button"
-            onClick={() => openPayment(pendingAckPayments[0].id)}
+            onClick={handleReviewPendingAck}
             className="inline-flex h-10 shrink-0 items-center justify-center rounded-lg bg-violet-700 px-4 text-xs font-bold text-white transition hover:bg-violet-800"
           >
             {t('staff_payments.pending_ack_banner_action')}
