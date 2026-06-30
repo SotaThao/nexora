@@ -9,6 +9,7 @@ import { PAYOUT_UI_DISPLAY_ORDER, PAYOUT_UI_LABELS } from '../../../data/payment
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
 import Pagination from '../../ui/Pagination'
+import { SkeletonList } from '../../ui/skeleton'
 
 function isPendingMember(member) {
   const status = member?.status
@@ -716,8 +717,9 @@ function StaffView({
                 {t('components.dashboard.views.StaffView.noStaffProfileFound')}
               </p>
             </div>
+          ) : isFetching ? (
+            <SkeletonList count={pageSize} showAvatar lines={2} />
           ) : (
-            <div className={`relative ${isFetching ? 'opacity-60 pointer-events-none' : ''}`}>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
               {sortedStaff.map((member) => {
                 const wallets = getWalletBadges(member)
@@ -752,12 +754,6 @@ function StaffView({
                   />
                 )
               })}
-            </div>
-            {isFetching && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Loader2 className="h-6 w-6 animate-spin text-nexoraBrand" />
-              </div>
-            )}
             </div>
           )}
 

@@ -1,10 +1,11 @@
 import { useState, useMemo } from 'react'
-import { Star, ExternalLink, Lock, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
+import { Star, ExternalLink, Lock, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { renderTextWithGoldStars } from '../utils'
 import Panel from '../../ui/Panel'
 import CustomSelect from '../../CustomSelect'
 import Pagination from '../../ui/Pagination'
+import { SkeletonList } from '../../ui/skeleton'
 
 function ReviewsView({
   reviews,
@@ -266,16 +267,9 @@ function ReviewsView({
         </div>
       </div>
 
-      <div className="relative space-y-3">
-        {isFetching && filtered.length > 0 && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/60">
-            <Loader2 className="h-6 w-6 animate-spin text-nexoraBrand" />
-          </div>
-        )}
-        {isLoading ? (
-          <Panel className="p-8 text-center text-nexoraMuted font-medium text-xs">
-            {t('common.loading')}
-          </Panel>
+      <div className="space-y-3">
+        {isLoading || isFetching ? (
+          <SkeletonList count={pageSize} lines={2} />
         ) : filtered.length === 0 ? (
           <Panel className="p-8 text-center text-nexoraMuted font-medium text-xs">
             {t('staff_detail.no_reviews_matching')}
@@ -361,6 +355,7 @@ function ReviewsView({
             )
           })
         )}
+      </div>
 
         <Pagination
           pageNumber={pageNumber}
@@ -373,7 +368,6 @@ function ReviewsView({
           isLoading={isFetching}
           className="rounded-xl border border-nexoraBorder/60 bg-white shadow-sm"
         />
-      </div>
 
     </div>
   )

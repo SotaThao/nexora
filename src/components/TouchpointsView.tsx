@@ -465,7 +465,7 @@ export default function TouchpointsView({
 
           {/* Touchpoint Cards Grid */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {isLoading ? (
+            {isLoading || isFetching ? (
               <Panel className="md:col-span-2 xl:col-span-3 flex items-center justify-center py-16">
                 <Loader2 className="h-7 w-7 animate-spin text-nexoraBrand" />
               </Panel>
@@ -484,7 +484,7 @@ export default function TouchpointsView({
                 </div>
               </Panel>
             ) : null}
-            {!isLoading && displayedTouchpoints.map((point) => {
+            {!isLoading && !isFetching && displayedTouchpoints.map((point) => {
               const isPointActive = point.isActive !== false
               const isToggling = togglingTouchpointId === point.id
               let qrUrl = ''
