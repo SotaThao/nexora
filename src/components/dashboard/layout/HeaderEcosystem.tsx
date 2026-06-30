@@ -120,14 +120,14 @@ export default function HeaderEcosystem() {
                 {t('dashboard.header.ecosystem_loading')}
               </div>
             ) : (
-              <div className="grid w-full grid-cols-3 gap-3 sm:grid-cols-5 sm:gap-2">
+              <div className="grid w-full grid-cols-[repeat(auto-fill,minmax(88px,1fr))] justify-items-center gap-3 sm:gap-2.5">
                 {catalogItems.map((ecosystem) => {
                   const comingSoon = isComingSoonEcosystem(ecosystem)
                   const processing = selectedName === ecosystem.name
 
                   return (
                     <button
-                      key={ecosystem.brandKey}
+                      key={ecosystem.id ?? ecosystem.brandKey}
                       type="button"
                       disabled={comingSoon}
                       aria-disabled={comingSoon}
@@ -139,16 +139,16 @@ export default function HeaderEcosystem() {
                         cursor: comingSoon ? 'not-allowed' : undefined,
                         pointerEvents: comingSoon ? 'none' : undefined,
                       }}
-                      className={`group relative flex min-w-0 flex-col items-center justify-start border-none bg-transparent p-0 text-center transition-transform duration-150 ${
+                      className={`group relative flex w-full max-w-[96px] shrink-0 flex-col items-center justify-start border-none bg-transparent p-0 text-center transition-transform duration-150 ${
                         processing ? 'pointer-events-none opacity-85' : ''
                       } ${pulseName === ecosystem.name ? 'animate-eco-pulse' : ''}`}
                     >
-                      <span className="relative mx-auto flex aspect-square w-full max-w-[88px] items-center justify-center rounded-xl border border-transparent bg-white p-1 transition group-hover:border-[#bfdbfe] group-hover:bg-[#f8fbff] group-hover:shadow-[0_2px_8px_rgba(59,130,246,0.1)] group-focus-visible:border-[#bfdbfe] group-focus-visible:bg-[#f8fbff] group-focus-visible:shadow-[0_2px_8px_rgba(59,130,246,0.1)] sm:max-w-[80px]">
+                      <span className="relative flex size-[88px] shrink-0 items-center justify-center rounded-xl border border-transparent bg-white p-1.5 transition group-hover:border-[#bfdbfe] group-hover:bg-[#f8fbff] group-hover:shadow-[0_2px_8px_rgba(59,130,246,0.1)] group-focus-visible:border-[#bfdbfe] group-focus-visible:bg-[#f8fbff] group-focus-visible:shadow-[0_2px_8px_rgba(59,130,246,0.1)]">
                         <img
                           src={ecosystem.logoUrl}
                           alt={ecosystem.name}
                           onError={handleLogoError}
-                          className="block h-auto max-h-[72px] w-full object-contain transition group-hover:scale-[1.02] group-focus-visible:scale-[1.02]"
+                          className="block size-[72px] shrink-0 object-contain transition group-hover:scale-[1.02] group-focus-visible:scale-[1.02]"
                         />
                         {processing && (
                           <span className="absolute inset-0 flex items-center justify-center rounded-lg bg-white/85">
