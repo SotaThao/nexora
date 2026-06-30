@@ -120,7 +120,7 @@ export default function HeaderEcosystem() {
                 {t('dashboard.header.ecosystem_loading')}
               </div>
             ) : (
-              <div className="grid w-full grid-cols-[repeat(auto-fill,minmax(88px,1fr))] justify-items-center gap-3 sm:gap-2.5">
+              <div className="grid w-full grid-cols-3 justify-items-center gap-x-2.5 gap-y-3 sm:gap-x-3 sm:gap-y-3.5 md:grid-cols-[repeat(auto-fill,minmax(104px,1fr))] md:gap-3">
                 {catalogItems.map((ecosystem) => {
                   const comingSoon = isComingSoonEcosystem(ecosystem)
                   const processing = selectedName === ecosystem.name
@@ -139,16 +139,16 @@ export default function HeaderEcosystem() {
                         cursor: comingSoon ? 'not-allowed' : undefined,
                         pointerEvents: comingSoon ? 'none' : undefined,
                       }}
-                      className={`group relative flex w-full max-w-[96px] shrink-0 flex-col items-center justify-start border-none bg-transparent p-0 text-center transition-transform duration-150 ${
+                      className={`group relative flex w-full max-w-[96px] shrink-0 flex-col items-center justify-start border-none bg-transparent p-0 text-center transition-transform duration-150 sm:max-w-[104px] md:max-w-[112px] ${
                         processing ? 'pointer-events-none opacity-85' : ''
                       } ${pulseName === ecosystem.name ? 'animate-eco-pulse' : ''}`}
                     >
-                      <span className="relative flex size-[88px] shrink-0 items-center justify-center rounded-xl border border-transparent bg-white p-1.5 transition group-hover:border-[#bfdbfe] group-hover:bg-[#f8fbff] group-hover:shadow-[0_2px_8px_rgba(59,130,246,0.1)] group-focus-visible:border-[#bfdbfe] group-focus-visible:bg-[#f8fbff] group-focus-visible:shadow-[0_2px_8px_rgba(59,130,246,0.1)]">
+                      <span className="relative flex size-[80px] shrink-0 items-center justify-center rounded-lg border border-transparent bg-white p-1 transition group-hover:border-[#bfdbfe] group-hover:bg-[#f8fbff] group-hover:shadow-[0_2px_8px_rgba(59,130,246,0.1)] group-focus-visible:border-[#bfdbfe] group-focus-visible:bg-[#f8fbff] group-focus-visible:shadow-[0_2px_8px_rgba(59,130,246,0.1)] sm:size-[92px] sm:rounded-xl sm:p-1.5 md:size-[104px]">
                         <img
                           src={ecosystem.logoUrl}
                           alt={ecosystem.name}
                           onError={handleLogoError}
-                          className="block size-[72px] shrink-0 object-contain transition group-hover:scale-[1.02] group-focus-visible:scale-[1.02]"
+                          className="block size-[68px] shrink-0 object-contain transition group-hover:scale-[1.02] group-focus-visible:scale-[1.02] sm:size-[80px] md:size-[88px]"
                         />
                         {processing && (
                           <span className="absolute inset-0 flex items-center justify-center rounded-lg bg-white/85">
@@ -157,7 +157,7 @@ export default function HeaderEcosystem() {
                         )}
                       </span>
                       {comingSoon && (
-                        <span className="mt-1 inline-flex max-w-full items-center justify-center rounded-full border border-[#bfdbfe] bg-[#eef5ff] px-2 py-0.5 text-[0.58rem] font-medium leading-tight text-[#2563eb] shadow-[0_1px_3px_rgba(37,99,235,0.12)] sm:px-3 sm:py-1 sm:text-[0.62rem]">
+                        <span className="mt-0.5 inline-flex max-w-full items-center justify-center rounded-full border border-[#bfdbfe] bg-[#eef5ff] px-1.5 py-px text-[0.5rem] font-medium leading-tight text-[#2563eb] shadow-[0_1px_3px_rgba(37,99,235,0.12)] sm:mt-1 sm:px-2 sm:py-0.5 sm:text-[0.58rem] md:px-3 md:py-1 md:text-[0.62rem]">
                           {t('dashboard.header.coming_soon_badge')}
                         </span>
                       )}

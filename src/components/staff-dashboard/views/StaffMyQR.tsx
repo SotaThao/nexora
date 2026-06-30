@@ -190,7 +190,7 @@ export default function StaffMyQR() {
   const { t, currentLanguage } = useTranslation()
   const { staffMember, account } = useStaffAccount()
   const { businessTipQrs, isLoading: isTipQrLoading } = useStaffBusinessTipQrs()
-  const { showToast, showConfirm } = useNotification()
+  const { showToast } = useNotification()
   const joinPublicInviteMutation = useJoinPublicInvite()
   const { data: notifications = [] } = useNotifications()
   const markNotificationRead = useMarkNotificationRead()
@@ -328,18 +328,6 @@ export default function StaffMyQR() {
     setShowScanner(true)
     setScannerCameraState('loading')
     setIsSubmittingScan(false)
-  }
-
-  const handleUnlink = async (biz: StaffBusinessTipQr) => {
-    const confirmed = await showConfirm(
-      t('components.staff_dashboard.views.StaffMyQR.unlinkConfirm', { business: biz.businessName }),
-      t('components.staff_dashboard.views.StaffMyQR.unlinkConfirmTitle'),
-    )
-    if (!confirmed) return
-    // No staff-side unlink endpoint exists yet (only merchant-side DELETE /merchant/staff/{staffLinkId}).
-    // TODO(BE): call the staff unlink / request-unlink endpoint once it is available, then invalidate
-    // qk.staffBusinesses(). For now we surface a clear message instead of guessing the contract.
-    showToast(t('components.staff_dashboard.views.StaffMyQR.unlinkUnavailable'), 'info')
   }
 
   const handleUrlOrTextSubmit = async () => {
@@ -873,15 +861,6 @@ export default function StaffMyQR() {
 
                       <div className="flex shrink-0 items-center gap-2">
                         {renderStatusBadge(biz)}
-                        {isBusinessActive(biz) && (
-                          <button
-                            type="button"
-                            onClick={() => handleUnlink(biz)}
-                            className="rounded-lg border border-nexoraDanger/20 bg-nexoraDanger/10 px-3 py-1.5 text-xs font-extrabold text-nexoraDanger transition hover:bg-nexoraDanger/15"
-                          >
-                            {t('components.staff_dashboard.views.StaffMyQR.unlink')}
-                          </button>
-                        )}
                       </div>
                     </div>
                   ))}
