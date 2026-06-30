@@ -8,7 +8,6 @@ interface ImportMetaEnv {
   readonly VITE_TOUCH_BUSINESS_ID_MAP?: string
   readonly VITE_VLINKPAY_WEB_URL_BASE?: string
   readonly VITE_ONESIGNAL_APP_ID?: string
-  readonly VITE_ONESIGNAL_DEBUG_ALERT?: string
   readonly VITE_PUSH_DEVICE_REGISTER_PATH?: string
   readonly DEV: boolean
   readonly PROD: boolean

@@ -6,27 +6,10 @@ import { pushDevicesRepository } from '../data/repositories/pushDevices'
 import { logger } from '../utils/logger'
 
 const ONESIGNAL_APP_ID = import.meta.env.VITE_ONESIGNAL_APP_ID?.trim() ?? ''
-const SHOW_PUSH_DEBUG_ALERT = import.meta.env.DEV
-  || import.meta.env.VITE_ONESIGNAL_DEBUG_ALERT === 'true'
 
 let initialized = false
 let subscriptionListenerBound = false
 let syncInFlight: Promise<void> | null = null
-let lastAlertedPlayerId: string | null = null
-
-function alertPushDebug(message: string) {
-  if (!SHOW_PUSH_DEBUG_ALERT) return
-  window.alert(message)
-}
-
-function alertPlayerIdForTest(playerId: string, details = '') {
-  if (!SHOW_PUSH_DEBUG_ALERT) return
-  if (lastAlertedPlayerId === playerId && !details) return
-  lastAlertedPlayerId = playerId
-
-  const suffix = details ? `\n\n${details}` : ''
-  window.alert(`OneSignal playerId:\n${playerId}${suffix}`)
-}
 
 export function isOneSignalConfigured(): boolean {
   return Boolean(ONESIGNAL_APP_ID)
@@ -67,7 +50,7 @@ async function waitForPushSubscription(maxAttempts = 12, delayMs = 500): Promise
   return null
 }
 
-async function persistPushSubscriptionFromSdk(options: { alert?: boolean } = {}): Promise<string | null> {
+async function persistPushSubscriptionFromSdk(): Promise<string | null> {
   const platform = getNativePlatform()
   if (!platform) return null
 
@@ -80,18 +63,6 @@ async function persistPushSubscriptionFromSdk(options: { alert?: boolean } = {})
     onesignalUserId,
     platform,
   })
-
-  if (options.alert !== false) {
-    alertPlayerIdForTest(
-      playerId,
-      [
-        `platform: ${platform}`,
-        pushToken ? `pushToken: ${pushToken.slice(0, 12)}...` : 'pushToken: (chưa có)',
-        onesignalUserId ? `onesignalUserId: ${onesignalUserId}` : 'onesignalUserId: (chưa có)',
-        'Đã lưu vào pushDeviceStore',
-      ].join('\n'),
-    )
-  }
 
   return playerId
 }
@@ -113,7 +84,6 @@ async function handlePushSubscriptionChange(event: PushSubscriptionChangedState)
     platform,
   })
 
-  alertPlayerIdForTest(playerId, 'Subscription change event')
   await flushPushDeviceRegistration()
 }
 
@@ -126,7 +96,7 @@ function bindPushSubscriptionListener() {
 
   OneSignal.Notifications.addEventListener('permissionChange', (granted) => {
     if (!granted) {
-      alertPushDebug('OneSignal: người dùng từ chối quyền notification')
+      logger.warn('OneSignal: notification permission denied')
       return
     }
     void persistPushSubscriptionFromSdk()
@@ -141,7 +111,7 @@ async function registerPushOnAppLaunch(): Promise<void> {
 
   const accepted = await OneSignal.Notifications.requestPermission(false)
   if (!accepted) {
-    alertPushDebug('OneSignal: chưa được cấp quyền notification.\nVào Settings → Notifications để bật.')
+    logger.warn('OneSignal: notification permission not granted')
     return
   }
 
@@ -151,10 +121,7 @@ async function registerPushOnAppLaunch(): Promise<void> {
     return
   }
 
-  alertPushDebug(
-    'OneSignal: đã cấp quyền nhưng chưa có playerId.\n'
-    + 'Kiểm tra cấu hình APNs/FCM trên OneSignal dashboard.',
-  )
+  logger.warn('OneSignal: permission granted but playerId not available yet')
 }
 
 export async function flushPushDeviceRegistration(): Promise<void> {
@@ -180,14 +147,12 @@ export async function flushPushDeviceRegistration(): Promise<void> {
 
     if (synced) {
       pushDeviceStore.markSynced(record.playerId)
-      alertPlayerIdForTest(record.playerId, 'API register: thành công')
     } else {
-      alertPlayerIdForTest(record.playerId, 'API register: chưa sync (endpoint chưa sẵn sàng hoặc lỗi)')
+      logger.warn('OneSignal: push device registration not synced', { playerId: record.playerId })
     }
   })()
     .catch((error) => {
       logger.warn('Push device sync failed', error)
-      alertPushDebug(`OneSignal API sync lỗi:\n${error instanceof Error ? error.message : 'unknown'}`)
     })
     .finally(() => {
       syncInFlight = null
@@ -200,14 +165,12 @@ export async function initOneSignal(): Promise<void> {
   if (!Capacitor.isNativePlatform() || initialized) return
 
   if (!ONESIGNAL_APP_ID) {
-    const message = 'OneSignal: thiếu VITE_ONESIGNAL_APP_ID trong file env của build.'
-    logger.warn(message)
-    alertPushDebug(message)
+    logger.warn('OneSignal: missing VITE_ONESIGNAL_APP_ID in build env')
     return
   }
 
   try {
-    if (import.meta.env.DEV || SHOW_PUSH_DEBUG_ALERT) {
+    if (import.meta.env.DEV) {
       OneSignal.Debug.setLogLevel(LogLevel.Verbose)
     }
 
@@ -217,9 +180,6 @@ export async function initOneSignal(): Promise<void> {
     await registerPushOnAppLaunch()
   } catch (error) {
     logger.error('OneSignal initialization failed', error)
-    alertPushDebug(
-      `OneSignal init lỗi:\n${error instanceof Error ? error.message : 'unknown'}`,
-    )
   }
 }
 
@@ -229,12 +189,12 @@ export async function syncOneSignalUser(userId: string | null | undefined): Prom
   try {
     if (userId) {
       await OneSignal.login(String(userId))
-      const playerId = await persistPushSubscriptionFromSdk({ alert: false })
+      const playerId = await persistPushSubscriptionFromSdk()
         || await waitForPushSubscription()
       if (playerId) {
         await persistPushSubscriptionFromSdk()
-      } else if (SHOW_PUSH_DEBUG_ALERT) {
-        alertPushDebug('OneSignal: đã login nhưng chưa có playerId.')
+      } else {
+        logger.warn('OneSignal: logged in but playerId not available yet')
       }
       await flushPushDeviceRegistration()
       return
@@ -244,6 +204,5 @@ export async function syncOneSignalUser(userId: string | null | undefined): Prom
     await OneSignal.logout()
   } catch (error) {
     logger.warn('OneSignal user sync failed', error)
-    alertPushDebug(`OneSignal login/logout lỗi:\n${error instanceof Error ? error.message : 'unknown'}`)
   }
 }
