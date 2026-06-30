@@ -164,7 +164,7 @@ function Overview({
 
   const activeStaff = (staff || []).filter((m) => m.status === 'Active' || m.active === true)
   const pendingCount = (pendingStaff || []).length
-  const rating = Number(metrics.googleRating || 0)
+  const rating = Number(metrics.averageRating || 0)
   const totalReviews = Number(metrics.totalReviews || 0)
 
   // Pending confirmations list (real pending staff/invites)
