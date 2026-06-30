@@ -263,7 +263,9 @@ export interface StaffReviewsPage {
   totalCount: number
 }
 
-export type StaffTipStatus = 'Initiated' | 'Confirmed' | 'Skipped' | 'Completed' | string
+import type { TipStatusValue } from '../constants/tipStatus'
+
+export type StaffTipStatus = TipStatusValue | string
 
 export interface StaffTipItem {
   id: string

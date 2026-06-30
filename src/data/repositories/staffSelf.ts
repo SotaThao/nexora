@@ -3,6 +3,7 @@
  */
 
 import httpClient from '../../lib/httpClient'
+import { normalizeTipStatus } from '../../constants/tipStatus'
 import { isApiError } from '../../types/domain'
 import type {
   StaffBusinessLink,
@@ -249,7 +250,7 @@ function normalizeTipItem(dto: StaffTipItemApiDto): StaffTipItem {
     id: dto.id ?? '',
     amount: Number(dto.amount) || 0,
     totalAmount: Number(dto.totalAmount) || 0,
-    status: dto.status ?? 'Initiated',
+    status: normalizeTipStatus(dto.status),
     statusLabel: dto.statusLabel ?? null,
     paymentMethod: dto.paymentMethod ?? null,
     isMultiStaff: Boolean(dto.isMultiStaff),
