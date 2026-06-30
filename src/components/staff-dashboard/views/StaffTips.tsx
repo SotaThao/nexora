@@ -11,7 +11,7 @@ import Tooltip from '../../ui/Tooltip'
 import { STAFF_TIPS_SKELETON } from '../skeletons/staffDashboardSkeletons'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
-const PAGE_SIZE = 20
+const PAGE_SIZE = 7
 
 const STATUS_STYLE: Record<string, string> = {
   Initiated: 'bg-amber-50 text-amber-700',
