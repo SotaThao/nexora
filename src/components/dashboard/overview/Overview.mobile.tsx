@@ -130,6 +130,7 @@ function Overview({
   onStartSetup,
   profile,
   onNavigateMenu,
+  onOpenAddStaff,
   onApproveClick,
   pendingStaff = [],
   staff = [],
@@ -309,7 +310,7 @@ function Overview({
             label={k('quick_add_qr')}
             onClick={() => previewQr?.({ name: 'Master Welcome QR', subtitle: 'Store Main Portal', slug: 'general', isActive: true })}
           />
-          <QuickAction icon={<UserPlus className="h-6 w-6" />} label={k('quick_add_staff')} onClick={() => onNavigateMenu?.('staff')} />
+          <QuickAction icon={<UserPlus className="h-6 w-6" />} label={k('quick_add_staff')} onClick={() => { onNavigateMenu?.('staff'); onOpenAddStaff?.() }} />
           <QuickAction icon={<DollarSign className="h-6 w-6" />} label={k('quick_tips')} onClick={() => onNavigateMenu?.('tips')} />
           <QuickAction icon={<FileBarChart className="h-6 w-6" />} label={k('quick_reports')} onClick={() => onNavigateMenu?.('reports')} />
         </div>
