@@ -6,7 +6,6 @@ import { StaffAccountProvider } from '../../contexts/StaffAccountContext'
 import StaffSidebar from './layout/StaffSidebar'
 import StaffHeader from './layout/StaffHeader'
 import StaffBottomNav from './layout/StaffBottomNav'
-import StaffDirectPaymentsWatcher from './StaffDirectPaymentsWatcher'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { useStaffPaymentMethods } from '../../data/hooks/useStaffPaymentMethods'
 
@@ -19,7 +18,7 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
   const [showPayoutBanner, setShowPayoutBanner] = useState(false)
   
   const activeScreen = location.pathname.split('/')[2] || 'home'
-  const mainWidthClass = activeScreen === 'payments' ? 'w-[80%]' : 'max-w-3xl'
+  const mainWidthClass = activeScreen === 'payments' ? 'w-full max-w-6xl xl:max-w-7xl' : 'max-w-3xl'
   
   const handleNavigate = (screen, params?: Record<string, string>) => {
     const path = screen === 'home' ? '/staff' : `/staff/${screen}`
@@ -46,7 +45,6 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
 
   return (
     <StaffAccountProvider staffId={staffId}>
-      <StaffDirectPaymentsWatcher />
       <div className="min-h-dvh bg-nexoraCanvas text-nexoraText">
         <StaffSidebar 
           activeScreen={activeScreen} 
