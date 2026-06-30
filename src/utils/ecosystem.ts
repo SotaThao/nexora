@@ -105,7 +105,7 @@ export function buildEcosystemCatalog(
       brandKey,
       name: item.name,
       url,
-      logoUrl: LOGO_MAP[brandKey],
+      logoUrl: getEcosystemLogo(item),
     };
 
     if (isComingSoonEcosystem(entry)) {
@@ -146,9 +146,9 @@ export function sortEcosystems(list: EcosystemItem[]): EcosystemItem[] {
 }
 
 export function getEcosystemLogo(ecosystem: EcosystemItem): string {
+  if (ecosystem.logoUrl?.trim()) return ecosystem.logoUrl.trim();
   const brandKey = resolveEcosystemBrandKey(ecosystem.name);
   if (brandKey && LOGO_MAP[brandKey]) return LOGO_MAP[brandKey];
-  if (ecosystem.logoUrl?.trim()) return ecosystem.logoUrl.trim();
   return "/assets/images/default.png";
 }
 
