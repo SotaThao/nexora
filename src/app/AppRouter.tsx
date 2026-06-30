@@ -1,5 +1,6 @@
-import React, { Suspense } from 'react'
+import React, { Suspense, useEffect } from 'react'
 import { Routes, Route, Navigate, useParams, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { scrollToPageTop } from '../utils/scrollToPageTop'
 import RequireAuth from './RequireAuth'
 import RequireOnboarded from './RequireOnboarded'
 import RequireStaffReady from './RequireStaffReady'
@@ -68,12 +69,21 @@ function InviteRoute() {
   )
 }
 
+function ScrollToTop() {
+  const { pathname, search } = useLocation()
+  useEffect(() => {
+    scrollToPageTop()
+  }, [pathname, search])
+  return null
+}
+
 export default function AppRouter() {
   const { session, logout } = useAuth()
   const location = useLocation()
 
   return (
     <ErrorBoundary resetKey={location.pathname}>
+    <ScrollToTop />
     <Suspense fallback={<LoadingScreen />}>
       <Routes>
         <Route path="/" element={<RootRedirect />} />

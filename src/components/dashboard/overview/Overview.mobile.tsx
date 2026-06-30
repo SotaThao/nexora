@@ -9,7 +9,6 @@ import {
   FileBarChart,
   UserPlus,
   ChevronRight,
-  PiggyBank,
   Hourglass,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -225,14 +224,14 @@ function Overview({
           <div className="mt-4 flex gap-2.5">
             <button
               type="button"
-              onClick={() => onNavigateMenu?.('reports')}
+              onClick={() => navigate('/dashboard/tips?tab=savings')}
               className="rounded-2xl bg-white px-4 py-3 text-sm font-black text-nexoraBrand active:scale-95 transition"
             >
               {k('view_savings')}
             </button>
             <button
               type="button"
-              onClick={() => onNavigateMenu?.('reports')}
+              onClick={() => navigate('/dashboard/tips?tab=savings')}
               className="rounded-2xl border border-white/20 bg-white/15 px-4 py-3 text-sm font-black text-white active:scale-95 transition"
             >
               {k('export_report')}
@@ -382,11 +381,10 @@ function Overview({
       </Panel>
 
       {/* ── Savings Summary ──────────────────────────────────────────────── */}
-      <Panel title={k('savings_summary_title')} action={k('details')} onAction={() => onNavigateMenu?.('reports')}>
+      <Panel title={k('savings_summary_title')} action={k('details')} onAction={() => navigate('/dashboard/tips?tab=savings')}>
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-2xl border border-nexoraBorder bg-nexoraSurfaceMuted p-4">
             <div className="flex items-center gap-2">
-              <PiggyBank className="h-4 w-4 text-nexoraBrand" />
               <small className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">{k('this_month')}</small>
             </div>
             <h3 className="mt-1.5 text-2xl font-black tracking-tight text-nexoraText">{fmtMoney(moneySavedMonth)}</h3>
@@ -400,7 +398,6 @@ function Overview({
           </div>
           <div className="rounded-2xl border border-nexoraBorder bg-nexoraSurfaceMuted p-4">
             <div className="flex items-center gap-2">
-              <PiggyBank className="h-4 w-4 text-nexoraBrand" />
               <small className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">{k('this_year')}</small>
             </div>
             <h3 className="mt-1.5 text-2xl font-black tracking-tight text-nexoraText">{fmtMoney(moneySavedYear)}</h3>
