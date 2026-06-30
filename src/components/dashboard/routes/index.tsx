@@ -49,6 +49,7 @@ export function OverviewRoute() {
       onStartSetup={ctx.onStartSetup}
       profile={ctx.profile}
       onNavigateMenu={ctx.onNavigateMenu}
+      onOpenAddStaff={ctx.openAddStaff}
       onApproveClick={ctx.openApproveStaff}
       pendingStaff={ctx.pendingStaff}
       staff={ctx.staff}
