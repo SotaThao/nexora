@@ -160,6 +160,20 @@ export interface TipsChartDayMetric {
 
 export type DashboardReviewRoutingType = 'Public' | 'Private' | 'Skipped'
 
+/**
+ * Aggregate review stats for the reviews tab KPI/filter counts.
+ * Sourced from GET /api/v1/merchant/dashboard/overview -> reviewsSummary
+ * (all-time, not the current reviews list page).
+ */
+export interface DashboardReviewsSummary {
+  totalReviews: number
+  averageRating: number
+  googleClicks: number
+  yelpClicks: number
+  count4To5Stars: number
+  count1To3Stars: number
+}
+
 export interface DashboardReviewApiDto {
   id?: string
   rating?: number
