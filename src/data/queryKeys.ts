@@ -36,6 +36,9 @@ export const qk = {
 
   // Client ecosystem (header SSO)
   ecosystems:             () => ['ecosystems'],
+
+  // Public homepage banners
+  activeBanners:          () => ['banners', 'active'],
   
   // Profile (Staff/Personal)
   userProfile:              () => ['userProfile'],
