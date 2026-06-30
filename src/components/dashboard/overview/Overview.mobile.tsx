@@ -425,7 +425,7 @@ function Overview({
           </div>
           <button
             type="button"
-            onClick={() => onNavigateMenu?.('support')}
+            onClick={() => onOpenAddStaff?.()}
             className="h-10 shrink-0 rounded-full bg-white px-4 text-[13px] font-black text-nexoraBrand shadow-md transition active:scale-95"
           >
             {t('staff_dashboard.home.invite_now')}
