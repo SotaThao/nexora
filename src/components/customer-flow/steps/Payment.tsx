@@ -29,13 +29,10 @@ export const WalletLogos = {
       <path d="M12 2L1 7v2h22V7L12 2zm0 18H3v-8h3v8h3v-8h3v8h3v-8h3v8h3v-8h3v8h3v-8h3v8h-3zm-11 2h22v2H1v-2z" />
     </svg>
   ),
-  applepay: (
-    <div className="flex items-center gap-[1px] justify-center scale-90 origin-center shrink-0">
-      <svg viewBox="0 0 170 170" className="h-[12px] w-[12px] fill-current text-white shrink-0" xmlns="http://www.w3.org/2000/svg">
-        <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.34.22-9.13-1.78-14.37-6.02-3.43-2.73-7.25-7.28-11.45-13.68-4.73-7.24-8.55-15.53-11.45-24.85-2.9-9.33-4.35-18.21-4.35-26.65 0-14.93 3.94-27.17 11.83-36.73 7.89-9.55 17.58-14.39 29.08-14.5 5.8-.11 11.9 1.67 18.3 5.35 6.4 3.68 11.13 5.52 14.18 5.52 2.34 0 6.81-1.67 13.43-5.02 6.62-3.34 12.52-4.85 17.68-4.52 13.25.67 23.95 5.57 32.09 14.72-11.48 6.91-17.11 16.28-16.89 28.1.22 9.58 3.84 17.6 10.87 24.08 7.02 6.47 15.21 9.94 24.57 10.42-2.12 6.13-4.68 12.26-7.69 18.38zM119.22 35.24c0-7.8-2.79-15.01-8.36-21.62C105.3 7 98 3.32 89.17 3.32c-.11.9-.11 1.78.11 2.68.22 5.58 2.51 11.23 6.85 16.94 4.35 5.71 9.76 9.47 16.23 11.3 1.34-5.36 6.86-9 6.86-9z"/>
-      </svg>
-      <span className="font-black text-[10px] tracking-tighter ml-[1px] leading-none select-none">Pay</span>
-    </div>
+  applecash: (
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] fill-black" xmlns="http://www.w3.org/2000/svg">
+      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83zM15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.22.67-2.94 1.51-.62.73-1.16 1.87-1.02 2.98 1.11.09 2.25-.56 2.97-1.43z" />
+    </svg>
   ),
   vlinkpay: (
     <img src="/assets/vlinkpay-logo.png" alt="VLINKPAY" className="h-[18px] w-[18px] object-contain" />
@@ -51,8 +48,18 @@ const WALLET_CATALOG = {
   paypal: { name: 'PayPal', key: 'paypal', color: 'bg-walletPaypal hover:bg-walletPaypalDark text-white', logo: WalletLogos.paypal },
   venmo: { name: 'Venmo', key: 'venmo', color: 'bg-walletVenmo hover:bg-walletVenmoDark text-white', logo: WalletLogos.venmo },
   cashapp: { name: 'Cash App', key: 'cashapp', color: 'bg-walletCashapp hover:bg-walletCashappDark text-white', logo: WalletLogos.cashapp },
-  applecash: { name: 'Apple Cash', key: 'applecash', color: 'bg-black hover:opacity-90 text-white', logo: WalletLogos.applepay },
-  vlinkpay: { name: 'VLINKPAY Wallet', key: 'vlinkpay', color: 'bg-blue-600 hover:bg-blue-700 text-white', logo: WalletLogos.vlinkpay },
+  applecash: {
+    name: 'Apple Cash',
+    key: 'applecash',
+    color: 'bg-nexoraCanvas border border-nexoraBorder text-nexoraText',
+    logo: WalletLogos.applecash
+  },
+  vlinkpay: {
+    name: 'VLINKPAY Wallet',
+    key: 'vlinkpay',
+    color: 'bg-nexoraCanvas border border-nexoraBorder text-nexoraText',
+    logo: WalletLogos.vlinkpay
+  },
   crypto: { name: 'Crypto Wallet', key: 'crypto', color: 'bg-amber-500 hover:bg-amber-600 text-white', logo: WalletLogos.crypto },
 }
 

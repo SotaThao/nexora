@@ -1,5 +1,6 @@
 import React from 'react'
 import { CheckCircle } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 export default function DirectPaymentSuccess({
   t,
@@ -8,6 +9,7 @@ export default function DirectPaymentSuccess({
   selectedWalletObj,
   successDescKey = 'direct_payment.success_desc',
 }) {
+  const navigate = useNavigate()
   const recipient = businessName || t('direct_payment.default_business')
   const formattedAmount = activeAmount.toLocaleString('en-US', {
     minimumFractionDigits: 2,
@@ -60,9 +62,13 @@ export default function DirectPaymentSuccess({
         ) : null}
       </div>
 
-      <p className="text-[11px] leading-relaxed text-nexoraMuted">
-        {t('direct_payment.success_footer')}
-      </p>
+      <button
+        type="button"
+        onClick={() => navigate('/')}
+        className="w-full rounded-xl bg-gradient-to-r from-nexoraElectric to-nexoraViolet py-3 text-xs font-extrabold uppercase tracking-wider text-white shadow-lg shadow-nexoraElectric/25 transition hover:opacity-90 active:scale-[0.98]"
+      >
+        {t('direct_payment.back_home')}
+      </button>
     </div>
   )
 }

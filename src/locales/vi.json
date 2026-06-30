@@ -1095,6 +1095,7 @@
     "success_title": "Đã gửi thanh toán!",
     "success_desc": "Thanh toán ${amount} cho {business} đã được ghi nhận. Tiệm sẽ xác nhận đã nhận tiền sớm.",
     "success_footer": "Bạn có thể đóng trang này. Cảm ơn bạn!",
+    "back_home": "Về Trang Chủ",
     "wallet_title": "Gửi ${amount} qua {wallet} tới {recipient}",
     "confirm_sent": "Tôi đã thanh toán"
   },
@@ -1552,7 +1553,7 @@
           "bankDetails": "Thông tin ngân hàng",
           "account": "Tài khoản nhận",
           "noteRequired": "Nội dung (Bắt buộc)",
-          "yesISentThe": "Tôi Đã Gửi Tip",
+          "yesISentThe": "Tôi Đã Thanh Toán",
           "multiStaffTitle": "Gửi ${amount} tới {business} qua {wallet}",
           "multiStaffSubtitle": "Mở ứng dụng ngân hàng và gửi một lần tới {business}. Tiền tip sẽ được chia cho các nhân viên đã chọn.",
           "tipBreakdown": "Chi tiết từng nhân viên",
@@ -1579,7 +1580,7 @@
           "stepOpenApp_applecash": "Mở ứng dụng Ví.",
           "stepOpenApp_default": "Mở ứng dụng ví của bạn.",
           "stepSendAmount": "Gửi đúng ${amount} cho {name}.",
-          "stepConfirm": "Quay lại và nhấn Tôi Đã Gửi Tiền Tip."
+          "stepConfirm": "Quay lại và nhấn Tôi Đã Thanh Toán."
         }
       }
     },

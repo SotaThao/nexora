@@ -1095,6 +1095,7 @@
     "success_title": "Payment sent!",
     "success_desc": "Your payment of ${amount} to {business} has been recorded. The business will confirm receipt shortly.",
     "success_footer": "You can close this page. Thank you!",
+    "back_home": "Back Home",
     "wallet_title": "Send ${amount} via {wallet} to {recipient}",
     "confirm_sent": "Yes, I paid"
   },
@@ -1552,7 +1553,7 @@
           "bankDetails": "Bank details",
           "account": "Account",
           "noteRequired": "Note (Required)",
-          "yesISentThe": "I Sent Tip",
+          "yesISentThe": "I Completed Payment",
           "multiStaffTitle": "Send ${amount} to {business} with {wallet}",
           "multiStaffSubtitle": "Open your bank app and send one payment to {business}. Your tip will be split among the selected providers.",
           "tipBreakdown": "Tip breakdown",
@@ -1579,7 +1580,7 @@
           "stepOpenApp_applecash": "Open your Wallet app.",
           "stepOpenApp_default": "Open your wallet app.",
           "stepSendAmount": "Send exactly ${amount} to {name}.",
-          "stepConfirm": "Come back here and tap I Sent Tip."
+          "stepConfirm": "Come back here and tap I Completed Payment."
         }
       }
     },
