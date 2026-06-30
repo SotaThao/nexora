@@ -1,6 +1,8 @@
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
+import { useEffect, useRef } from 'react'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { DEFAULT_PAGE_SIZE } from '../../constants/pagination'
+import { isMobileScrollContext, scrollToPageTop } from '../../utils/scrollToPageTop'
 
 type PaginationProps = {
   pageNumber: number
@@ -28,6 +30,8 @@ export default function Pagination({
   className = '',
 }: PaginationProps) {
   const { t } = useTranslation()
+  const rootRef = useRef<HTMLDivElement>(null)
+  const scrollAfterPageChangeRef = useRef(false)
 
   const effectiveTotalPages = Math.max(1, totalPages || 1)
   const canGoPrev = hasPreviousPage ?? pageNumber > 1
@@ -35,14 +39,23 @@ export default function Pagination({
   const rangeStart = totalCount > 0 ? (pageNumber - 1) * pageSize + 1 : 0
   const rangeEnd = totalCount > 0 ? Math.min(pageNumber * pageSize, totalCount) : 0
 
+  useEffect(() => {
+    if (!scrollAfterPageChangeRef.current) return
+    scrollAfterPageChangeRef.current = false
+    scrollToPageTop(rootRef.current)
+  }, [pageNumber])
+
   const handlePageChange = (page: number) => {
     if (isLoading || page === pageNumber) return
+    if (isMobileScrollContext()) {
+      scrollAfterPageChangeRef.current = true
+    }
     onPageChange(page)
   }
 
   if (variant === 'simple') {
     return (
-      <div className={`flex items-center justify-between gap-3 border-t border-nexoraBorder pt-3 ${className}`}>
+      <div ref={rootRef} className={`flex items-center justify-between gap-3 border-t border-nexoraBorder pt-3 ${className}`}>
         <button
           type="button"
           disabled={!canGoPrev || isLoading}
@@ -76,7 +89,7 @@ export default function Pagination({
   }
 
   return (
-    <div className={`flex items-center justify-between border-t border-slate-100 px-4 py-4 sm:px-6 ${className}`}>
+    <div ref={rootRef} className={`flex items-center justify-between border-t border-slate-100 px-4 py-4 sm:px-6 ${className}`}>
       <div className="flex flex-1 justify-between sm:hidden">
         <button
           type="button"

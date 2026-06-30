@@ -9,6 +9,7 @@ import { PAYOUT_UI_DISPLAY_ORDER, PAYOUT_UI_LABELS } from '../../../data/payment
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
 import Pagination from '../../ui/Pagination'
+import { SkeletonList } from '../../ui/skeleton'
 
 function isPendingMember(member) {
   const status = member?.status
@@ -543,7 +544,21 @@ function StaffView({
               </button>
               <button
                 type="button"
-                onClick={() => publicInviteEnabled && onOpenInviteShare && onOpenInviteShare()}
+                onClick={async () => {
+                  if (!publicInviteEnabled) return
+                  if (navigator.share) {
+                    try {
+                      await navigator.share({
+                        url: publicInviteLink
+                      })
+                    } catch (error) {
+                      // ignore
+                    }
+                  } else {
+                    navigator.clipboard.writeText(publicInviteLink)
+                    showToast(t('components.dashboard.views.StaffView.joinLinkCopiedTo'), 'success')
+                  }
+                }}
                 disabled={!publicInviteEnabled}
                 className={`h-9 px-4 bg-nexoraBrand text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm ${publicInviteEnabled ? 'hover:bg-opacity-95 cursor-pointer' : 'cursor-not-allowed opacity-50'}`}
               >
@@ -702,8 +717,9 @@ function StaffView({
                 {t('components.dashboard.views.StaffView.noStaffProfileFound')}
               </p>
             </div>
+          ) : isFetching ? (
+            <SkeletonList count={pageSize} showAvatar lines={2} />
           ) : (
-            <div className={`relative ${isFetching ? 'opacity-60 pointer-events-none' : ''}`}>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
               {sortedStaff.map((member) => {
                 const wallets = getWalletBadges(member)
@@ -738,12 +754,6 @@ function StaffView({
                   />
                 )
               })}
-            </div>
-            {isFetching && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Loader2 className="h-6 w-6 animate-spin text-nexoraBrand" />
-              </div>
-            )}
             </div>
           )}
 

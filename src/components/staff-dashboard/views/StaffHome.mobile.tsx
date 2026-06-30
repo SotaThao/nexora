@@ -1,6 +1,6 @@
 // StaffHome — personal staff home (mobile-first "Pro" layout):
 // greeting, KPI cards, quick actions, pending tip confirmations, linked
-// businesses, referral banner. All data is real (empty states when missing).
+// businesses. All data is real (empty states when missing).
 import { useOutletContext } from 'react-router-dom'
 import {
   QrCode,
@@ -8,7 +8,6 @@ import {
   Clock,
   DollarSign,
   Calendar,
-  Gift,
   CreditCard,
   MessageSquare,
   ChevronRight,
@@ -150,7 +149,6 @@ export default function StaffHome() {
         <QuickAction icon={<DollarSign className="h-5 w-5" />} label={t('staff_dashboard.home.quick_tips')} bg="bg-emerald-100" iconColor="text-emerald-600" onClick={() => go('tips')} />
         <QuickAction icon={<MessageSquare className="h-5 w-5" />} label={t('staff_dashboard.home.quick_reviews')} bg="bg-blue-100" iconColor="text-blue-600" onClick={() => go('reviews')} />
         <QuickAction icon={<CreditCard className="h-5 w-5" />} label={t('staff_dashboard.home.quick_payments')} bg="bg-indigo-100" iconColor="text-indigo-600" onClick={() => go('pay')} />
-        <QuickAction icon={<Gift className="h-5 w-5" />} label={t('staff_dashboard.home.quick_refer')} bg="bg-pink-100" iconColor="text-pink-600" onClick={() => go('profile')} />
       </div>
 
       {/* ── Pending Confirmations ────────────────────────────────────────── */}
@@ -237,26 +235,6 @@ export default function StaffHome() {
         )}
       </div>
 
-      {/* ── Referral Banner ──────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-[22px] bg-gradient-to-r from-nexoraBrand via-nexoraElectricMid to-nexoraViolet p-5 shadow-nexora-soft">
-        <div className="absolute -top-6 -right-6 h-24 w-24 rounded-full bg-white/10" />
-        <div className="relative flex items-center gap-4">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
-            <Gift className="h-6 w-6 text-white" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-[15px] font-black text-white">{t('staff_dashboard.home.refer_title')}</p>
-            <p className="mt-0.5 text-[12px] text-white/80">{t('staff_dashboard.home.refer_subtitle')}</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => go('profile')}
-            className="h-10 shrink-0 rounded-full bg-white px-4 text-[13px] font-black text-nexoraBrand shadow-md transition active:scale-95"
-          >
-            {t('staff_dashboard.home.invite_now')}
-          </button>
-        </div>
-      </div>
     </div>
   )
 }
