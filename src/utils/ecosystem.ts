@@ -8,15 +8,6 @@ export const BRAND_NAME_ECO = {
   cryptomap360: 'cryptomap360',
 } as const
 
-/** Display order left → right (matches ecosystem dropdown mockup). */
-export const ECOSYSTEM_DISPLAY_ORDER: readonly string[] = [
-  BRAND_NAME_ECO.vmmtoken,
-  BRAND_NAME_ECO.cryptomap360,
-  BRAND_NAME_ECO.nailhub,
-  BRAND_NAME_ECO.moonglemall,
-  BRAND_NAME_ECO.vmmtravel,
-]
-
 const LOGO_MAP: Record<string, string> = {
   [BRAND_NAME_ECO.nailhub]: '/assets/images/ecosystem/nailhub.png',
   [BRAND_NAME_ECO.vmmtravel]: '/assets/images/ecosystem/vmm-travel.png',
@@ -26,9 +17,6 @@ const LOGO_MAP: Record<string, string> = {
   vlinkpay: '/assets/vlinkpay-logo.png',
   merchantportal: '/assets/vlinkpay-logo.png',
 }
-
-/** Brands that stay coming-soon regardless of API url. */
-const COMING_SOON_BRANDS = new Set<string>([BRAND_NAME_ECO.vmmtravel])
 
 /** Fallback URLs when API omits an ecosystem row (BE may lag behind catalog). */
 const FALLBACK_URL_MAP: Partial<Record<string, string>> = {}
@@ -83,19 +71,19 @@ export interface EcosystemCatalogEntry {
   logoUrl: string
 }
 
-/** Fixed 5-brand catalog merged with live VlinkPay API data. */
+/** Catalog built from live VlinkPay API data (order preserved from BE). */
 export function buildEcosystemCatalog(apiItems: EcosystemItem[] = []): EcosystemCatalogEntry[] {
-  return ECOSYSTEM_DISPLAY_ORDER.map((brandKey) => {
-    const fromApi = apiItems.find((item) => resolveEcosystemBrandKey(item.name) === brandKey)
-    const url = COMING_SOON_BRANDS.has(brandKey)
-      ? ''
-      : fromApi?.url?.trim() || FALLBACK_URL_MAP[brandKey] || ''
+  return apiItems.map((item) => {
+    const brandKey =
+      resolveEcosystemBrandKey(item.name) ??
+      (normalizeEcosystemNameKey(item.name) || item.id)
+    const url = item.url?.trim() || FALLBACK_URL_MAP[brandKey] || ''
     return {
-      id: fromApi?.id ?? null,
+      id: item.id,
       brandKey,
-      name: fromApi?.name ?? brandKey,
+      name: item.name,
       url,
-      logoUrl: LOGO_MAP[brandKey],
+      logoUrl: getEcosystemLogo(item),
     }
   })
 }
@@ -103,29 +91,13 @@ export function buildEcosystemCatalog(apiItems: EcosystemItem[] = []): Ecosystem
 export function isComingSoonEcosystem(
   ecosystem: Pick<EcosystemItem, 'url' | 'name'> & { brandKey?: string },
 ): boolean {
-  const brandKey = ecosystem.brandKey ?? resolveEcosystemBrandKey(ecosystem.name)
-  if (brandKey && COMING_SOON_BRANDS.has(brandKey)) return true
   return !ecosystem.url?.trim()
 }
 
-export function sortEcosystems(list: EcosystemItem[]): EcosystemItem[] {
-  const rank = new Map(ECOSYSTEM_DISPLAY_ORDER.map((name, index) => [name.toLowerCase(), index]))
-  return [...list].sort((a, b) => {
-    const soonA = isComingSoonEcosystem(a) ? 1 : 0
-    const soonB = isComingSoonEcosystem(b) ? 1 : 0
-    if (soonA !== soonB) return soonA - soonB
-    const keyA = resolveEcosystemBrandKey(a.name) ?? normalizeEcosystemNameKey(a.name)
-    const keyB = resolveEcosystemBrandKey(b.name) ?? normalizeEcosystemNameKey(b.name)
-    const ra = rank.get(keyA) ?? 999
-    const rb = rank.get(keyB) ?? 999
-    return ra - rb || a.name.localeCompare(b.name)
-  })
-}
-
 export function getEcosystemLogo(ecosystem: EcosystemItem): string {
+  if (ecosystem.logoUrl?.trim()) return ecosystem.logoUrl.trim()
   const brandKey = resolveEcosystemBrandKey(ecosystem.name)
   if (brandKey && LOGO_MAP[brandKey]) return LOGO_MAP[brandKey]
-  if (ecosystem.logoUrl?.trim()) return ecosystem.logoUrl.trim()
   return '/assets/images/default.png'
 }
 
