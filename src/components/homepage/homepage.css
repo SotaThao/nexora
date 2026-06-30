@@ -22,6 +22,23 @@
   box-shadow: 0 0 20px rgba(108, 77, 246, 0.4);
 }
 
+.nx-homepage-banner-dot {
+  min-height: 0 !important;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  box-shadow: none !important;
+  transform: none !important;
+  flex-shrink: 0;
+}
+
+.nx-homepage-banner-dot:hover,
+.nx-homepage-banner-dot:focus-visible,
+.nx-homepage-banner-dot:active {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
 .swal-popup-rounded {
   border-radius: 24px !important;
   font-family: 'Plus Jakarta Sans', sans-serif !important;

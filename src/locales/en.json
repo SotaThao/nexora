@@ -2472,6 +2472,11 @@
       "support_success_desc": "Thank you. Our team will review your request and follow up if needed."
     }
   },
+  "homepage": {
+    "banner": {
+      "goToSlide": "Go to slide {{index}}"
+    }
+  },
   "coming_soon": {
     "analytics_title": "Advanced Analytics",
     "analytics_desc": "Device conversion, return customer cohorts, and AI review summaries are planned for phase 3.",

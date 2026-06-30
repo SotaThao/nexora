@@ -2471,6 +2471,11 @@
       "support_success_desc": "Cảm ơn bạn. Đội ngũ sẽ xem xét và liên hệ lại nếu cần."
     }
   },
+  "homepage": {
+    "banner": {
+      "goToSlide": "Chuyển đến slide {{index}}"
+    }
+  },
   "coming_soon": {
     "analytics_title": "Phân Tích Nâng Cao",
     "analytics_desc": "Chuyển đổi thiết bị, phân tích khách quay lại, và tóm tắt đánh giá bằng AI sẽ ra mắt ở giai đoạn 3.",
