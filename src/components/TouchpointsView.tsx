@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Plus,
   Trash2,
@@ -14,8 +15,10 @@ import {
   ExternalLink,
   Loader2,
   Eye,
+  Coins,
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
+import { useNotification } from '../contexts/NotificationContext'
 import CustomSelect from './CustomSelect'
 import Pagination from './ui/Pagination'
 import { useTouchpoints } from '../data/hooks/useMerchantTouchpoints'
@@ -73,9 +76,14 @@ export default function TouchpointsView({
   onDeleteDevice,
   onToggleDeviceStatus,
   activeSubTab: propActiveSubTab,
-  onTabChange
+  onTabChange,
+  stationsSection = 'tip',
+  onStationsSectionChange,
 }) {
   const { t, currentLanguage } = useTranslation()
+  const { showToast } = useNotification()
+  const navigate = useNavigate()
+  const [copiedId, setCopiedId] = useState(null)
   const [localActiveSubTab, setLocalActiveSubTab] = useState('stations')
   const activeSubTab = propActiveSubTab !== undefined ? propActiveSubTab : localActiveSubTab
   const setActiveSubTab = onTabChange !== undefined ? onTabChange : setLocalActiveSubTab
@@ -285,6 +293,18 @@ export default function TouchpointsView({
     }
   }
 
+  const handleCopy = useCallback(async (text, id) => {
+    if (!text) return
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedId(id)
+      showToast(t('components.settings.tabs.ProfileTab.copied'), 'success')
+      window.setTimeout(() => setCopiedId(null), 2000)
+    } catch {
+      showToast(t('components.dashboard.overview.Overview.copy_failed'), 'error')
+    }
+  }, [showToast, t])
+
   // Calculate dynamic Hardware KPIs
   const kpiTouchpoints = statsTouchpointsWithLinks
   const totalTouchpoints = totalCount ?? kpiTouchpoints.length
@@ -314,34 +334,15 @@ export default function TouchpointsView({
             {t('setup.qr_touchpoints_desc')}
           </p>
         </div>
-        
-        {/* Navigation Tabs */}
-        <div className="flex flex-wrap gap-1 bg-nexoraSurfaceMuted dark:bg-luxuryCoal p-1 rounded-xl border border-nexoraBorder dark:border-luxuryGold/10">
-          {[
-            { id: 'stations', label: t('dashboard.touchpoints.tabs.stations'), disabled: false },
-            { id: 'devices', label: t('dashboard.touchpoints.tabs.devices'), disabled: false }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              type="button"
-              disabled={tab.disabled}
-              onClick={() => !tab.disabled && setActiveSubTab(tab.id)}
-              className={`h-9 rounded-lg px-4 text-xs font-bold transition-all min-w-[44px] ${
-                tab.disabled
-                  ? 'cursor-not-allowed opacity-45 text-nexoraMuted'
-                  : activeSubTab === tab.id
-                    ? 'bg-white dark:bg-luxuryBlack text-luxuryGold shadow-sm font-black'
-                    : 'text-nexoraMuted hover:text-nexoraText dark:text-slate-400 dark:hover:text-white'
-              }`}
-              title={tab.disabled ? t('common.coming_soon') : undefined}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
       </div>
 
       {activeSubTab === 'stations' && (
+        <>
+          <div className="space-y-3">
+            <p className="text-xs leading-relaxed text-nexoraMuted">
+              {t('dashboard.touchpoints.stations_sections.tip_desc')}
+            </p>
+          </div>
         <>
           {/* Hardware KPIs */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -797,6 +798,7 @@ export default function TouchpointsView({
               </div>
             </div>
           )}
+        </>
         </>
       )}
 

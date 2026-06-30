@@ -6,25 +6,9 @@ import { StaffAccountProvider } from '../../contexts/StaffAccountContext'
 import StaffSidebar from './layout/StaffSidebar'
 import StaffHeader from './layout/StaffHeader'
 import StaffBottomNav from './layout/StaffBottomNav'
-import StaffHome from './views/StaffHome'
-import StaffMyQR from './views/StaffMyQR'
-import StaffTips from './views/StaffTips'
-import StaffReviews from './views/StaffReviews'
-import StaffPay from './views/StaffPay'
-import StaffProfile from './views/StaffProfile'
-import StaffNotifications from './views/StaffNotifications'
+import StaffDirectPaymentsWatcher from './StaffDirectPaymentsWatcher'
 import { useTranslation } from '../../contexts/LanguageContext'
-import { useSessionRole } from '../../auth/useSessionRole'
 import { useStaffPaymentMethods } from '../../data/hooks/useStaffPaymentMethods'
-const SCREENS = {
-  home: StaffHome,
-  qr: StaffMyQR,
-  tips: StaffTips,
-  reviews: StaffReviews,
-  pay: StaffPay,
-  profile: StaffProfile,
-  notifications: StaffNotifications
-}
 
 export default function StaffDashboard({ staffId = null, onLogout }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -35,6 +19,7 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
   const [showPayoutBanner, setShowPayoutBanner] = useState(false)
   
   const activeScreen = location.pathname.split('/')[2] || 'home'
+  const mainWidthClass = activeScreen === 'payments' ? 'w-[80%]' : 'max-w-3xl'
   
   const handleNavigate = (screen, params?: Record<string, string>) => {
     const path = screen === 'home' ? '/staff' : `/staff/${screen}`
@@ -61,6 +46,7 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
 
   return (
     <StaffAccountProvider staffId={staffId}>
+      <StaffDirectPaymentsWatcher />
       <div className="min-h-dvh bg-nexoraCanvas text-nexoraText">
         <StaffSidebar 
           activeScreen={activeScreen} 
@@ -77,7 +63,7 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
             onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
             onLogout={onLogout}
           />
-          <main className="mx-auto max-w-3xl px-4 py-5 pb-28 sm:px-6 lg:pb-10">
+          <main className={`mx-auto ${mainWidthClass} px-4 py-5 pb-28 sm:px-6 lg:pb-10`}>
             {activeScreen === 'home' && showPayoutBanner && (
               <div className="mb-6 relative overflow-hidden rounded-2xl bg-gradient-to-br from-nexoraBrand/10 via-white to-nexoraBrandSoft border border-nexoraBrand/20 p-6 md:p-8 shadow-sm animate-fadeIn">
                 <div className="absolute -right-10 -top-10 opacity-10">

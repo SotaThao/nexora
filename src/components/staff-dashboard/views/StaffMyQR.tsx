@@ -1,8 +1,8 @@
 // StaffMyQR — referral QR tab + per-business tipping QR tab.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Share2, Copy, QrCode, X, Loader2, Store, Clock, Link2 } from 'lucide-react'
+import { Share2, Copy, Check, QrCode, X, Loader2, Store, Clock, Link2, CreditCard } from 'lucide-react'
 import jsQR from 'jsqr'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import { useStaffBusinessTipQrs } from '../../../data/hooks/useStaffSelf'
@@ -13,7 +13,9 @@ import StaffLinkRequestCard, { getStaffLinkRequestId } from './StaffLinkRequestC
 import { isApiError } from '../../../types/domain'
 import type { StaffBusinessTipQr } from '../../../types/domain'
 import { shareUrl } from '../../../utils/shareUrl'
-import { buildQrImageUrl } from '../../../utils/staffTipUrl'
+import { buildQrImageUrl, resolveStaffDirectPaymentPageUrl } from '../../../utils/staffTipUrl'
+import { useStaffPaymentQr } from '../../../data/hooks/useStaffPayments'
+import { useStaffPaymentMethods } from '../../../data/hooks/useStaffPaymentMethods'
 import { useQueries } from '@tanstack/react-query'
 import { qk } from '../../../data/queryKeys'
 import staffSelfRepository from '../../../data/repositories/staffSelf'
@@ -23,12 +25,13 @@ type LooseObject = Record<string, any>
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 
-type QrTab = 'referral' | 'tipping'
+type QrTab = 'referral' | 'tipping' | 'payment'
 
 type ZoomedQr = {
   url: string
   title: string
   subtitle?: string
+  kind?: 'tipping' | 'payment'
 }
 
 type ScannerCameraState = 'loading' | 'ready' | 'permission_denied' | 'unavailable'
@@ -103,6 +106,68 @@ function QrPlaceholderBox() {
   return (
     <div className="mx-auto my-4 flex h-44 w-44 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-nexoraBorder bg-nexoraCanvas/80 p-4">
       <QrCode className="h-14 w-14 text-nexoraBorder" strokeWidth={1.25} />
+    </div>
+  )
+}
+
+function QrLinkPanel({
+  label,
+  url,
+  onCopy,
+  copyLabel,
+}: {
+  label: string
+  url: string
+  onCopy: () => boolean | Promise<boolean>
+  copyLabel: string
+}) {
+  const { t } = useTranslation()
+  const [copied, setCopied] = useState(false)
+  const displayUrl = url.replace(/^https?:\/\//, '')
+  const copiedLabel = t('common.copied')
+
+  useEffect(() => {
+    setCopied(false)
+  }, [url])
+
+  const handleCopyClick = async () => {
+    const ok = await onCopy()
+    if (!ok) return
+    setCopied(true)
+    window.setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div className="rounded-xl border border-nexoraBorder bg-nexoraCanvas/60 p-3 text-left">
+      <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-nexoraMuted">{label}</p>
+      <div className="flex items-center gap-2">
+        <p
+          className="min-w-0 flex-1 break-all rounded-lg border border-nexoraBorder bg-white px-3 py-2.5 font-mono text-xs font-semibold leading-relaxed text-nexoraText sm:text-[13px]"
+          title={url}
+        >
+          {displayUrl}
+        </p>
+        <button
+          type="button"
+          onClick={handleCopyClick}
+          aria-label={copied ? copiedLabel : copyLabel}
+          title={copied ? copiedLabel : copyLabel}
+          className={`inline-flex h-10 shrink-0 items-center justify-center rounded-lg border shadow-sm transition ${
+            copied
+              ? 'gap-1.5 border-emerald-200 bg-emerald-50 px-3 text-emerald-600'
+              : 'w-10 border-nexoraBorder bg-white text-nexoraBrand hover:bg-nexoraBrandSoft'
+          }`}
+        >
+          {copied ? (
+            <>
+              <Check className="h-4 w-4 shrink-0" />
+              <span className="text-xs font-bold">{copiedLabel}</span>
+            </>
+          ) : (
+            <Copy className="h-4 w-4" />
+          )}
+        </button>
+      </div>
     </div>
   )
 }
@@ -187,6 +252,7 @@ function getInactiveTipQrCopy(
 
 export default function StaffMyQR() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { t, currentLanguage } = useTranslation()
   const { staffMember, account } = useStaffAccount()
   const { businessTipQrs, isLoading: isTipQrLoading } = useStaffBusinessTipQrs()
@@ -218,6 +284,16 @@ export default function StaffMyQR() {
   }, [linkRequests, linkRequestQueries])
 
   const [activeTab, setActiveTab] = useState<QrTab>('referral')
+  const {
+    data: paymentQr,
+    isLoading: isPaymentQrLoading,
+    isError: isPaymentQrError,
+    refetch: refetchPaymentQr,
+  } = useStaffPaymentQr({ enabled: activeTab === 'payment' })
+  const {
+    data: staffPaymentMethods = [],
+    isLoading: isPaymentMethodsLoading,
+  } = useStaffPaymentMethods({ enabled: activeTab === 'payment' })
   const [showScanner, setShowScanner] = useState(false)
   const [scannerCameraState, setScannerCameraState] = useState<ScannerCameraState>('loading')
   const [isSubmittingScan, setIsSubmittingScan] = useState(false)
@@ -228,6 +304,20 @@ export default function StaffMyQR() {
   const scannerCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const scannerFrameRef = useRef<number | null>(null)
   const lastScanAtRef = useRef(0)
+
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    if (tab === 'referral' || tab === 'tipping' || tab === 'payment') {
+      setActiveTab(tab)
+    }
+  }, [searchParams])
+
+  const handleTabChange = useCallback((tab: QrTab) => {
+    setActiveTab(tab)
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.set('tab', tab)
+    setSearchParams(nextParams, { replace: true })
+  }, [searchParams, setSearchParams])
 
   const staffCode = (account.staffCode || staffMember.id || '').trim()
   const staffLink = useMemo(
@@ -242,6 +332,30 @@ export default function StaffMyQR() {
     [staffCode],
   )
 
+  const readyStaffPaymentMethods = useMemo(
+    () =>
+      staffPaymentMethods.filter(
+        (method) => Boolean(method.isActive && method.isConfigured && method.accountInfo?.trim()),
+      ),
+    [staffPaymentMethods],
+  )
+
+  const staffPaymentPageUrl = useMemo(
+    () =>
+      resolveStaffDirectPaymentPageUrl({
+        staffProfileId: paymentQr?.staffProfileId,
+        paymentUrlFromApi: paymentQr?.paymentUrl,
+      }),
+    [paymentQr?.paymentUrl, paymentQr?.staffProfileId],
+  )
+
+  const staffPaymentQrImageSrc = useMemo(
+    () => (staffPaymentPageUrl ? buildQrImageUrl(staffPaymentPageUrl, 200) : ''),
+    [staffPaymentPageUrl],
+  )
+
+  const isPaymentTabLoading = isPaymentQrLoading || isPaymentMethodsLoading
+
   const activeTipQrs = useMemo(() => businessTipQrs.filter(isBusinessActive), [businessTipQrs])
 
   const selectedBusiness = useMemo(() => {
@@ -251,23 +365,25 @@ export default function StaffMyQR() {
   }, [activeTipQrs, selectedBusinessId])
 
   const copyText = useCallback(
-    async (text: string, successKey: string, failKey: string) => {
+    async (text: string, successKey: string, failKey: string): Promise<boolean> => {
       if (!text) {
         showToast(t('components.staff_dashboard.views.StaffMyQR.staffCodeUnavailable'), 'error')
-        return
+        return false
       }
       try {
         await navigator.clipboard.writeText(text)
         showToast(t(successKey), 'success')
+        return true
       } catch {
         showToast(t(failKey), 'error')
+        return false
       }
     },
     [showToast, t],
   )
 
   const handleCopyReferral = useCallback(() => {
-    copyText(
+    void copyText(
       staffCode,
       'components.staff_dashboard.views.StaffMyQR.linkCopiedToClipboard',
       'components.staff_dashboard.views.StaffMyQR.copyFailed',
@@ -296,13 +412,12 @@ export default function StaffMyQR() {
   }, [staffCode, staffLink, showToast, t])
 
   const handleCopyTipUrl = useCallback(
-    (tipUrl: string) => {
+    (tipUrl: string) =>
       copyText(
         tipUrl,
         'components.staff_dashboard.views.StaffMyQR.tippingLinkCopied',
         'components.staff_dashboard.views.StaffMyQR.copyFailed',
-      )
-    },
+      ),
     [copyText],
   )
 
@@ -324,6 +439,40 @@ export default function StaffMyQR() {
     },
     [showToast, t],
   )
+
+  const handleCopyPaymentUrl = useCallback(
+    () =>
+      copyText(
+        staffPaymentPageUrl,
+        'staff_dashboard.qr.payment_link_copied',
+        'components.staff_dashboard.views.StaffMyQR.copyFailed',
+      ),
+    [copyText, staffPaymentPageUrl],
+  )
+
+  const handleSharePaymentUrl = useCallback(async () => {
+    if (!staffPaymentPageUrl) {
+      showToast(t('staff_dashboard.qr.payment_unavailable_title'), 'error')
+      return
+    }
+
+    try {
+      const result = await shareUrl({
+        url: staffPaymentPageUrl,
+        title: t('staff_dashboard.qr.payment_title'),
+        text: staffMember.nickname || account.defaultDisplayName || '',
+      })
+      if (result === 'copied') {
+        showToast(t('staff_dashboard.qr.payment_link_copied'), 'success')
+      }
+    } catch {
+      showToast(t('components.staff_dashboard.views.StaffMyQR.shareFailed'), 'error')
+    }
+  }, [account.defaultDisplayName, showToast, staffMember.nickname, staffPaymentPageUrl, t])
+
+  const handleSetupPayout = useCallback(() => {
+    navigate('/staff/pay')
+  }, [navigate])
 
   const handleOpenScan = () => {
     setShowScanner(true)
@@ -599,8 +748,8 @@ export default function StaffMyQR() {
       <div className="flex gap-2 pb-1">
         <button
           type="button"
-          onClick={() => setActiveTab('referral')}
-          className={`flex-1 px-3 py-2 rounded-lg text-xs font-extrabold uppercase transition ${
+          onClick={() => handleTabChange('referral')}
+          className={`flex-1 px-2 py-2 rounded-lg text-[10px] sm:text-xs font-extrabold uppercase transition ${
             activeTab === 'referral'
               ? 'bg-nexoraBrand text-white shadow-sm'
               : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
@@ -610,8 +759,19 @@ export default function StaffMyQR() {
         </button>
         <button
           type="button"
-          onClick={() => setActiveTab('tipping')}
-          className={`flex-1 px-3 py-2 rounded-lg text-xs font-extrabold uppercase transition ${
+          onClick={() => handleTabChange('payment')}
+          className={`flex-1 px-2 py-2 rounded-lg text-[10px] sm:text-xs font-extrabold uppercase transition ${
+            activeTab === 'payment'
+              ? 'bg-nexoraBrand text-white shadow-sm'
+              : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
+          }`}
+        >
+          {t('staff_dashboard.qr.tab_payment')}
+        </button>
+        <button
+          type="button"
+          onClick={() => handleTabChange('tipping')}
+          className={`flex-1 px-2 py-2 rounded-lg text-[10px] sm:text-xs font-extrabold uppercase transition ${
             activeTab === 'tipping'
               ? 'bg-nexoraBrand text-white shadow-sm'
               : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
@@ -790,21 +950,14 @@ export default function StaffMyQR() {
                         </div>
                       </button>
 
-                      <div className="flex items-center justify-between gap-2 overflow-hidden rounded-xl border border-nexoraBorder bg-slate-50 p-1.5 shadow-inner">
-                        <span className="min-w-0 flex-1 truncate pl-2 font-mono text-[10px] text-slate-500">
-                          {selectedBusiness.tipUrl.replace(/^https?:\/\//, '')}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleCopyTipUrl(selectedBusiness.tipUrl)}
-                          className="flex h-7 shrink-0 items-center gap-1 rounded-lg bg-slate-800 px-3 text-[10px] font-bold text-white transition hover:bg-slate-700"
-                        >
-                          <Copy className="h-3.5 w-3.5" />
-                          <span>{t('components.staff_dashboard.views.StaffMyQR.copy')}</span>
-                        </button>
-                      </div>
+                      <QrLinkPanel
+                        label={t('staff_dashboard.qr.tip_link_label')}
+                        url={selectedBusiness.tipUrl}
+                        onCopy={() => handleCopyTipUrl(selectedBusiness.tipUrl)}
+                        copyLabel={t('staff_dashboard.qr.copy_tip_link')}
+                      />
 
-                      <div className="mt-3 space-y-2">
+                      <div className="mt-3">
                         <button
                           type="button"
                           onClick={() => handleShareTipUrl(selectedBusiness)}
@@ -812,14 +965,6 @@ export default function StaffMyQR() {
                         >
                           <Share2 className="h-4 w-4" />
                           {t('staff_dashboard.qr.share_tip')}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleCopyTipUrl(selectedBusiness.tipUrl)}
-                          className="flex w-full items-center justify-center gap-2 rounded-xl border border-nexoraBorder bg-nexoraSurface py-3 text-sm font-bold text-nexoraBrand transition hover:bg-nexoraCanvas"
-                        >
-                          <Copy className="h-4 w-4" />
-                          {t('staff_dashboard.qr.copy_tip_link')}
                         </button>
                       </div>
                     </>
@@ -905,6 +1050,97 @@ export default function StaffMyQR() {
         </>
       )}
 
+      {activeTab === 'payment' && (
+        <>
+          {isPaymentTabLoading ? (
+            <SkeletonLayout
+              blocks={[
+                { type: 'panel', rows: 1, titleWidth: '55%' },
+                { type: 'panel', rows: 3, titleWidth: '40%' },
+              ]}
+            />
+          ) : isPaymentQrError ? (
+            <section className={panel}>
+              <QrEmptyState
+                icon={CreditCard}
+                title={t('staff_dashboard.qr.payment_load_error_title')}
+                description={t('staff_dashboard.qr.payment_load_error_body')}
+                actionLabel={t('staff_dashboard.qr.payment_retry')}
+                onAction={() => refetchPaymentQr()}
+              />
+            </section>
+          ) : readyStaffPaymentMethods.length === 0 ? (
+            <section className={panel}>
+              <QrEmptyState
+                icon={CreditCard}
+                title={t('staff_dashboard.qr.payment_setup_title')}
+                description={t('staff_dashboard.qr.payment_setup_body')}
+                actionLabel={t('staff_dashboard.setup_payout_now')}
+                onAction={handleSetupPayout}
+              />
+            </section>
+          ) : !staffPaymentPageUrl ? (
+            <section className={panel}>
+              <QrEmptyState
+                icon={CreditCard}
+                title={t('staff_dashboard.qr.payment_unavailable_title')}
+                description={t('staff_dashboard.qr.payment_unavailable_body')}
+              />
+            </section>
+          ) : (
+            <section className={`${panel} text-center`}>
+              <h3 className="text-base font-extrabold text-nexoraText">
+                {t('staff_dashboard.qr.payment_title')}
+              </h3>
+              <p className="mt-1 text-xs text-nexoraMuted">{t('staff_dashboard.qr.payment_sub')}</p>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setZoomedQr({
+                    url: staffPaymentPageUrl,
+                    title: t('staff_dashboard.qr.payment_title'),
+                    subtitle: staffMember.nickname || account.defaultDisplayName || '',
+                    kind: 'payment',
+                  })
+                }
+                className="group relative mx-auto my-4 flex h-44 w-44 items-center justify-center overflow-hidden rounded-xl border border-nexoraBorder/60 bg-white p-3.5 shadow-sm transition hover:scale-[1.02]"
+                title={t('staff_dashboard.qr.payment_preview')}
+              >
+                <img
+                  src={staffPaymentQrImageSrc}
+                  alt={t('staff_dashboard.qr.payment_title')}
+                  className="h-full w-full object-contain"
+                />
+                <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-nexoraBrand/75 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                  <span className="rounded-lg bg-white/20 px-3 py-1 text-[11px] font-black uppercase tracking-widest text-white backdrop-blur-sm">
+                    PREVIEW
+                  </span>
+                </div>
+              </button>
+
+              <QrLinkPanel
+                label={t('staff_dashboard.qr.payment_link_label')}
+                url={staffPaymentPageUrl}
+                onCopy={handleCopyPaymentUrl}
+                copyLabel={t('staff_dashboard.qr.copy_payment_link')}
+              />
+
+              <div className="mt-3">
+                <button
+                  type="button"
+                  onClick={handleSharePaymentUrl}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-nexoraElectric to-nexoraViolet py-3 text-sm font-extrabold text-white transition hover:opacity-90"
+                >
+                  <Share2 className="h-4 w-4" />
+                  {t('staff_dashboard.qr.share_payment')}
+                </button>
+              </div>
+            </section>
+          )}
+        </>
+      )}
+
       {showScanner && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
           <div className="relative w-full max-w-md animate-scaleUp space-y-5 overflow-hidden rounded-3xl border border-slate-100 bg-white p-6 text-center text-slate-800 shadow-2xl">
@@ -985,15 +1221,19 @@ export default function StaffMyQR() {
 
             <div className="space-y-1 text-center">
               <span className="block text-[9px] font-black uppercase tracking-widest text-nexoraBrand">
-                {t('components.staff_dashboard.views.StaffMyQR.personalTippingQr')}
+                {zoomedQr.kind === 'payment'
+                  ? t('staff_dashboard.qr.payment_title')
+                  : t('components.staff_dashboard.views.StaffMyQR.personalTippingQr')}
               </span>
               <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">
                 {zoomedQr.title}
               </h3>
               <p className="text-center text-[10px] font-medium leading-normal text-slate-500">
-                {currentLanguage === 'vi'
-                  ? `Khách hàng quét mã này để gửi tip trực tiếp cho ${staffMember.nickname || staffMember.fullName}`
-                  : `Customers scan this QR to tip ${staffMember.nickname || staffMember.fullName} directly`}
+                {zoomedQr.kind === 'payment'
+                  ? t('staff_dashboard.qr.payment_sub')
+                  : currentLanguage === 'vi'
+                    ? `Khách hàng quét mã này để gửi tip trực tiếp cho ${staffMember.nickname || staffMember.fullName}`
+                    : `Customers scan this QR to tip ${staffMember.nickname || staffMember.fullName} directly`}
               </p>
             </div>
 
@@ -1006,22 +1246,22 @@ export default function StaffMyQR() {
             </div>
 
             <div className="space-y-2 text-left">
-              <label className="text-[9px] font-black uppercase tracking-wider text-slate-400">
-                {t('components.staff_dashboard.views.StaffMyQR.tippingLink')}
-              </label>
-              <div className="flex items-center justify-between gap-2 rounded-xl border border-slate-100 bg-slate-50 p-1.5">
-                <span className="max-w-[210px] truncate pl-2 font-mono text-[10px] text-slate-500">
-                  {zoomedQr.url}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handleCopyTipUrl(zoomedQr.url)}
-                  className="flex h-7 shrink-0 items-center gap-1 rounded-lg bg-slate-800 px-3 text-[10px] font-bold text-white transition hover:bg-slate-700"
-                >
-                  <Copy className="h-3.5 w-3.5" />
-                  <span>{t('components.staff_dashboard.views.StaffMyQR.copy')}</span>
-                </button>
-              </div>
+              <QrLinkPanel
+                label={
+                  zoomedQr.kind === 'payment'
+                    ? t('staff_dashboard.qr.payment_link_label')
+                    : t('components.staff_dashboard.views.StaffMyQR.tippingLink')
+                }
+                url={zoomedQr.url}
+                onCopy={() =>
+                  zoomedQr.kind === 'payment' ? handleCopyPaymentUrl() : handleCopyTipUrl(zoomedQr.url)
+                }
+                copyLabel={
+                  zoomedQr.kind === 'payment'
+                    ? t('staff_dashboard.qr.copy_payment_link')
+                    : t('staff_dashboard.qr.copy_tip_link')
+                }
+              />
             </div>
 
           </div>

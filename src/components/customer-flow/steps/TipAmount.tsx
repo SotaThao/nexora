@@ -180,7 +180,7 @@ export default function TipAmount({
             type="button"
             disabled={disablePaymentSelection}
             onClick={() => handleSelectWallet(wallet)}
-            className="w-full flex items-center justify-between rounded-xl border border-nexoraBorder bg-white p-3 text-sm font-bold text-nexoraText shadow-sm transition hover:border-nexoraBrand/40 hover:bg-nexoraCanvas disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex w-full items-center justify-between rounded-xl border border-nexoraBorder bg-white p-3 text-sm font-bold text-nexoraText shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
           >
             <div className="flex items-center gap-3">
               <span className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${wallet.color}`}>
