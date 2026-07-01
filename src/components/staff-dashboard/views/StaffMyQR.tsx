@@ -419,7 +419,7 @@ export default function StaffMyQR() {
   }, [copyText, staffCode])
 
   const handleCopyStaffShareLink = useCallback(() => {
-    copyText(
+    void copyText(
       staffShareUrl,
       'components.staff_dashboard.views.StaffMyQR.staffShareLinkCopied',
       'components.staff_dashboard.views.StaffMyQR.copyFailed',
