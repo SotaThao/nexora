@@ -156,8 +156,8 @@
       "tab_referral": "QR Giới thiệu",
       "tab_tipping": "QR Nhận tip",
       "tab_payment": "QR Thanh toán",
-      "payment_title": "QR Thanh toán cá nhân",
-      "payment_sub": "Khách quét mã này để thanh toán trực tiếp cho bạn — không cần qua salon.",
+      "payment_title": "Mã QR thanh toán",
+      "payment_sub": "Quét để thanh toán trực tiếp. Không cần tài khoản.",
       "share_payment": "Chia sẻ QR thanh toán",
       "copy_payment_link": "Sao chép link thanh toán",
       "payment_link_label": "Link thanh toán",
@@ -654,6 +654,7 @@
       "no_staff_assigned": "-- Không gán (Típ chung cho cửa hàng) --",
       "download_print_qr": "Tải Xuống QR In Ấn (PDF)",
       "print_qr": "In Mã QR",
+      "staff_qr_inactive_warning": "QR cá nhân này bị chặn khi nhân viên đang ở trạng thái không hoạt động.",
       "customer_view_test": "Thử Giao Diện Khách Quét ›"
     },
     "settings_panel": {
@@ -675,12 +676,13 @@
       "qr_title": "Mã QR tiệm",
       "qr_desc": "Quầy lễ tân – tất cả kỹ thuật viên",
       "qr_body": "Đặt mã QR này tại quầy đón khách. Khách hàng quét mã này để chọn nhân viên phục vụ và để lại đánh giá.",
-      "payment_title": "QR Thanh toán trực tiếp",
-      "payment_desc": "Quầy lễ tân – thanh toán cho tiệm",
-      "payment_body": "Đặt mã QR này tại quầy đón khách. Khách quét mã để thanh toán trực tiếp cho tiệm qua các phương thức nhận tiền đã bật.",
+      "payment_title": "Mã QR nhận thanh toán",
+      "payment_desc": "",
+      "payment_body": "Đặt tại quầy lễ tân. Khách quét mã để thanh toán.",
       "btn_open": "Xem Mã QR",
       "btn_download": "Tải Mã QR",
-      "btn_copy_link": "Sao chép link"
+      "btn_copy_link": "Sao chép link",
+      "copied_qr_link": "Đã sao chép link vào clipboard!"
     },
     "touchpoint_stats": {
       "scans": "Lượt quét",
@@ -2036,9 +2038,9 @@
         "emptyTitle": "Cần cấu hình phương thức nhận tiền trước",
         "emptyDesc": "Bật ít nhất một phương thức nhận tiền và nhập thông tin tài khoản trước khi chia sẻ QR thanh toán cho khách.",
         "emptyAction": "Thiết lập phương thức nhận tiền",
-        "defaultQrTitle": "QR Thanh toán trực tiếp",
+        "defaultQrTitle": "Mã QR nhận thanh toán",
         "qrAlt": "Mã QR thanh toán trực tiếp cho merchant",
-        "scanCaption": "Quét để thanh toán cho tiệm",
+        "scanCaption": "Khách quét mã để thanh toán",
         "merchantNote": "Chia sẻ mã QR này để nhận tiền trực tiếp bằng phương thức bạn đã setup.",
         "loadErrorTitle": "Không tải được QR thanh toán",
         "loadErrorDesc": "Không lấy được link thanh toán. Kiểm tra kết nối và thử lại.",

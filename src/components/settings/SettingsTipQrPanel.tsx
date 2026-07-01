@@ -186,9 +186,6 @@ export default function SettingsTipQrPanel({
                   <h3 className="text-sm font-extrabold text-nexoraText">
                     {t('dashboard.master_gateway.payment_title')}
                   </h3>
-                  <p className="text-[10px] text-nexoraMuted">
-                    {t('dashboard.master_gateway.payment_desc')}
-                  </p>
                 </div>
               </div>
               <p className="mt-4 text-xs leading-normal text-nexoraMuted">
@@ -472,10 +469,6 @@ export default function SettingsTipQrPanel({
           <ClipboardList className="h-4 w-4 shrink-0" />
           {t('components.settings.SettingsTipQrPanel.viewHistory')}
         </button>
-
-        <p className="text-center text-[10px] leading-relaxed text-nexoraMuted">
-          {t('components.settings.SettingsTipQrPanel.merchantNote')}
-        </p>
       </div>
     </>
   )

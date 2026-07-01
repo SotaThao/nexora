@@ -433,6 +433,18 @@ body:not(.homepage-active) a:focus-visible {
     print-color-adjust: exact !important;
   }
 
+  /* Direct payment card — no title block, center content as one group */
+  .qr-print-card--payment {
+    justify-content: center !important;
+    gap: 0.22in !important;
+  }
+
+  .qr-print-card--payment .qr-print-qr-wrapper {
+    width: 2.35in !important;
+    height: 2.35in !important;
+    margin: 0 !important;
+  }
+
   /* Brand Header inside Card */
   .qr-print-brand-header {
     display: flex !important;

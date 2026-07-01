@@ -563,12 +563,13 @@ export default function Dashboard({
       if (staffTipQr?.tipUrl) {
         setQrTarget({
           name: target.name || `Personal QR - ${staffName}`,
-          subtitle: target.position || 'Staff QR',
+          subtitle: target.subtitle || target.position || 'Staff QR',
           slug: staffTipQr.touchPointSlug,
           url: staffTipQr.tipUrl,
           qrImageUrl: target.qrImageUrl || staffTipQr.qrImageUrl || null,
           isActive: target.isActive !== undefined ? target.isActive : true,
           isStaffQr: true,
+          isGatewayQr: Boolean(target.isGatewayQr),
         })
         return
       }
@@ -581,12 +582,13 @@ export default function Dashboard({
 
     setQrTarget({
       name: target.name || `Personal QR - ${staffName}`,
-      subtitle: target.position || target.type || 'Staff QR',
+      subtitle: target.subtitle || target.position || target.type || 'Staff QR',
       slug: finalSlug,
       url: target.url ? toLocalCustomerTouchUrl(target.url) : null,
       qrImageUrl: target.qrImageUrl || null,
       isActive: target.isActive !== undefined ? target.isActive : true,
       isStaffQr: Boolean(staffName && target.staffProfileId),
+      isGatewayQr: Boolean(target.isGatewayQr),
     })
   }
 

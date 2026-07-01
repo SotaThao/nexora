@@ -1070,10 +1070,7 @@ export default function StaffMyQR() {
             </section>
           ) : (
             <section className={`${panel} text-center`}>
-              <h3 className="text-base font-extrabold text-nexoraText">
-                {t('staff_dashboard.qr.payment_title')}
-              </h3>
-              <p className="mt-1 text-xs text-nexoraMuted">{t('staff_dashboard.qr.payment_sub')}</p>
+              <p className="text-xs text-nexoraMuted">{t('staff_dashboard.qr.payment_sub')}</p>
 
               <button
                 type="button"
@@ -1201,13 +1198,15 @@ export default function StaffMyQR() {
             </button>
 
             <div className="space-y-1 text-center">
-              <span className="block text-[9px] font-black uppercase tracking-widest text-nexoraBrand">
+              {zoomedQr.kind !== 'payment' ? (
+                <span className="block text-[9px] font-black uppercase tracking-widest text-nexoraBrand">
+                  {t('components.staff_dashboard.views.StaffMyQR.personalTippingQr')}
+                </span>
+              ) : null}
+              <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">
                 {zoomedQr.kind === 'payment'
                   ? t('staff_dashboard.qr.payment_title')
-                  : t('components.staff_dashboard.views.StaffMyQR.personalTippingQr')}
-              </span>
-              <h3 className="text-sm font-black uppercase tracking-wider text-slate-800">
-                {zoomedQr.title}
+                  : zoomedQr.title}
               </h3>
               <p className="text-center text-[10px] font-medium leading-normal text-slate-500">
                 {zoomedQr.kind === 'payment'

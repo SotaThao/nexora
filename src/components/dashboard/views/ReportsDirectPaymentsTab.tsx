@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
+import { useEffect, useMemo, useState, type MouseEvent } from 'react'
 import { AlertCircle, CheckCircle, CreditCard, Eye, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -19,7 +19,6 @@ import type { MerchantPaymentsListQuery } from '../../../data/repositories/merch
 import { PaymentType } from '../../../types/domain'
 import { getApiErrorCode } from '../../../types/domain'
 import MerchantPaymentDetailModal from '../modals/MerchantPaymentDetailModal'
-import MerchantPaymentAckNoticeDialog from '../modals/MerchantPaymentAckNoticeDialog'
 import CustomSelect from '../../CustomSelect'
 import { dismissAckPrompt } from '../../../utils/directPaymentAckDismiss'
 import { resolveDirectPaymentDateRange, resolvePaymentStatsDateRange } from '../../../utils/directPaymentDateRange'
@@ -55,8 +54,6 @@ export default function ReportsDirectPaymentsTab({
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [acknowledgingId, setAcknowledgingId] = useState<string | null>(null)
-  const [ackNoticePayment, setAckNoticePayment] = useState<any | null>(null)
-  const hasHandledInitialPendingAck = useRef(false)
   const acknowledgeMutation = useAcknowledgeMerchantPayment()
 
   const { pageNumber, pageSize, setPage, reset: resetPage } = usePagination({
@@ -102,15 +99,6 @@ export default function ReportsDirectPaymentsTab({
       setPage(totalPages)
     }
   }, [pageNumber, totalPages, setPage])
-
-  useEffect(() => {
-    if (hasHandledInitialPendingAck.current) return
-    if (!paymentsPage || selectedPaymentId) return
-    if (pendingAckPayments.length !== 1) return
-
-    setAckNoticePayment(pendingAckPayments[0])
-    hasHandledInitialPendingAck.current = true
-  }, [paymentsPage, pendingAckPayments, selectedPaymentId])
 
   const selectedPayment =
     selectedPaymentDetail ??
@@ -437,19 +425,6 @@ export default function ReportsDirectPaymentsTab({
           onClose={handleClosePayment}
           onAcknowledge={(paymentId) => handleAcknowledge(paymentId, undefined, { onSuccess: () => onClosePayment?.() })}
           isAcknowledging={acknowledgeMutation.isPending && acknowledgingId === selectedPaymentId}
-        />
-      ) : null}
-
-      {ackNoticePayment ? (
-        <MerchantPaymentAckNoticeDialog
-          payment={ackNoticePayment}
-          pendingCount={pendingAckPayments.length || 1}
-          onClose={() => setAckNoticePayment(null)}
-          onViewDetail={() => {
-            const paymentId = ackNoticePayment?.id
-            setAckNoticePayment(null)
-            if (paymentId) onOpenPayment?.(paymentId)
-          }}
         />
       ) : null}
     </div>
