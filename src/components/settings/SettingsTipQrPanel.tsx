@@ -403,7 +403,7 @@ export default function SettingsTipQrPanel({
   return (
     <>
       <div className="space-y-4">
-        <p className="text-xs leading-relaxed text-nexoraMuted">
+        <p className="text-center text-xs leading-relaxed text-nexoraMuted">
           {t('components.settings.SettingsTipQrPanel.description')}
         </p>
 
@@ -473,7 +473,7 @@ export default function SettingsTipQrPanel({
           {t('components.settings.SettingsTipQrPanel.viewHistory')}
         </button>
 
-        <p className="text-[10px] leading-relaxed text-nexoraMuted">
+        <p className="text-center text-[10px] leading-relaxed text-nexoraMuted">
           {t('components.settings.SettingsTipQrPanel.merchantNote')}
         </p>
       </div>

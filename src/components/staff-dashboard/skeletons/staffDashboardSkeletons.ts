@@ -29,7 +29,7 @@ export const STAFF_REVIEWS_SKELETON: SkeletonBlockConfig[] = [
 
 /** `/staff/payments` — direct payment history (QR). */
 export const STAFF_PAYMENTS_SKELETON: SkeletonBlockConfig[] = [
-  { type: 'panel', rows: 1, listProps: { lines: 2 } },
+  { type: 'panel', rows: 3, listProps: { lines: 2 } },
   { type: 'panel', rows: 5, listProps: { lines: 2 } },
 ]
 
