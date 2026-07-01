@@ -100,12 +100,20 @@ export function splitUrlQueryParamDisplay(url: string, paramName: string): UrlDi
 
   try {
     const parsed = new URL(url.includes('://') ? url : `https://${fullDisplay}`)
-    const value = parsed.searchParams.get(paramName)?.trim()
-    if (!value) return { leading: fullDisplay, suffix: '', fullDisplay }
+    if (!parsed.searchParams.get(paramName)?.trim()) {
+      return { leading: fullDisplay, suffix: '', fullDisplay }
+    }
 
-    const needle = `${paramName}=${value}`
-    const paramIndex = fullDisplay.indexOf(needle)
-    if (paramIndex < 0) return { leading: fullDisplay, suffix: '', fullDisplay }
+    // Match against the raw (still percent-encoded) query pair rather than the
+    // decoded value — searchParams.get() decodes escapes, so building the
+    // needle from it and searching the raw string would miss any value
+    // containing characters that get percent-encoded (e.g. spaces, '/').
+    const rawQuery = parsed.search.startsWith('?') ? parsed.search.slice(1) : parsed.search
+    const needle = rawQuery
+      .split('&')
+      .find((pair) => decodeURIComponent(pair.split('=')[0] || '') === paramName)
+    const paramIndex = needle ? fullDisplay.indexOf(needle) : -1
+    if (!needle || paramIndex < 0) return { leading: fullDisplay, suffix: '', fullDisplay }
 
     const separator = paramIndex > 0 ? fullDisplay[paramIndex - 1] : ''
     const suffix =

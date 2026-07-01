@@ -120,7 +120,7 @@ function ShareLinkPill({
   className = '',
 }: {
   url: string
-  onCopy: () => void | Promise<boolean>
+  onCopy: () => void | boolean | Promise<boolean>
   displayParts?: { leading: string; suffix: string; fullDisplay: string }
   className?: string
 }) {
@@ -312,7 +312,7 @@ export default function StaffMyQR() {
 
   useEffect(() => {
     const tab = searchParams.get('tab')
-    if (tab === 'personal' || tab === 'referral' || tab === 'tipping' || tab === 'payment') {
+    if (tab === 'personal' || tab === 'tipping' || tab === 'payment') {
       userSelectedTabRef.current = true
       setActiveTab(tab)
     }
@@ -359,9 +359,9 @@ export default function StaffMyQR() {
 
   const activeTipQrs = useMemo(() => businessTipQrs.filter(isBusinessActive), [businessTipQrs])
 
-  // Tab order: not linked → [Personal, Tips]; linked → [Tips, Personal].
+  // Tab order: not linked → [Personal, Payment, Tips]; linked → [Tips, Payment, Personal].
   const orderedTabs = useMemo<QrTab[]>(
-    () => (businessTipQrs.length > 0 ? ['tipping','payment', 'personal'] : ['personal','payment', 'tipping']),
+    () => (businessTipQrs.length > 0 ? ['tipping', 'payment', 'personal'] : ['personal', 'payment', 'tipping']),
     [businessTipQrs.length],
   )
 
