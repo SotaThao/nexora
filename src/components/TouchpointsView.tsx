@@ -383,7 +383,7 @@ export default function TouchpointsView({
                 </div>
               </Panel>
             ) : null}
-            {!isLoading && !isFetching && displayedTouchpoints.map((point) => {
+            {!isLoading && !isFetching && touchpointsWithLinks.map((point) => {
               const isPointActive = point.isActive !== false
               const isToggling = togglingTouchpointId === point.id
               let qrUrl = ''

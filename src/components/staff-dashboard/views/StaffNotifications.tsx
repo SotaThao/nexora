@@ -20,6 +20,7 @@ const panel =
   "rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm sm:p-5";
 const notificationRowBase =
   "flex w-full items-start gap-3 px-3 py-3 text-left transition";
+const listRowBase = "py-2.5";
 
 function notificationRowClass(read: boolean, hasAction = false) {
   if (read) {
@@ -48,6 +49,7 @@ const PREF_KEYS = ['tipConfirmations', 'reviews', 'businessInvites']
 export default function StaffNotifications() {
   const { t, currentLanguage } = useTranslation();
   const navigate = useNavigate();
+  const { account, setPushPreference } = useStaffAccount();
   const { data: notifications = [], isPending } = useNotifications();
   const { data: unreadCount = 0 } = useUnreadCount();
   const markReadMutation = useMarkNotificationRead();
