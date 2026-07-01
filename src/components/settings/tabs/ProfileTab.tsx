@@ -31,6 +31,7 @@ import CameraCapture from '../../ui/CameraCapture'
 import {
   getPaymentMethodDisplayName,
   payoutTypeToUiKey,
+  isHiddenPayoutConfigType,
 } from '../../../data/paymentMethodTypes'
 import { formatPaymentMethodAccountDisplay } from '../../payout/bankWireAccount'
 import SettingsTipQrPanel from '../SettingsTipQrPanel'
@@ -193,7 +194,7 @@ export default function ProfileTab({
     method.uiKey || payoutTypeToUiKey(method.type || '')
 
   const displayedPaymentMethods = apiPaymentMethods.filter(
-    (m) => getMethodUiKey(m) !== 'bankwire'
+    (m) => getMethodUiKey(m) !== 'bankwire' && !isHiddenPayoutConfigType(m),
   )
 
   const getMethod = (key: string) =>

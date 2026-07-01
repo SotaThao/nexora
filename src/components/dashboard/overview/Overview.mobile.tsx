@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useCallback } from 'react'
 import {
   QrCode,
   Star,
@@ -142,6 +142,16 @@ function Overview({
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const navigate = useNavigate()
+  const [copiedPaymentLinkId, setCopiedPaymentLinkId] = useState(null)
+
+  const handleCopyPaymentLink = useCallback((value, id) => {
+    if (!value) return
+    navigator.clipboard.writeText(value)
+    setCopiedPaymentLinkId(id)
+    showToast(t('dashboard.master_gateway.copied_qr_link'), 'success')
+    window.setTimeout(() => setCopiedPaymentLinkId(null), 2000)
+  }, [showToast, t])
+
   const k = (key: string, vars?: Record<string, string | number>) =>
     t(`dashboard.owner_home.${key}`, vars)
 
@@ -320,18 +330,17 @@ function Overview({
         </div>
       </Panel>
 
-      <Panel title={t('components.settings.SettingsTipQrPanel.defaultQrTitle')}>
+      <Panel title={t('dashboard.master_gateway.title')}>
+        <p className="mb-4 text-xs text-nexoraMuted">
+          {t('dashboard.master_gateway.subtitle')}
+        </p>
         <SettingsTipQrPanel
-          variant="compact"
+          variant="gateway"
           hideUrlCode
           businessName={businessName}
           showToast={showToast}
-          handleCopy={(value) => {
-            if (!value) return
-            navigator.clipboard.writeText(value)
-            showToast(t('components.dashboard.overview.Overview.copiedPaymentLink'), 'success')
-          }}
-          copiedId={null}
+          handleCopy={handleCopyPaymentLink}
+          copiedId={copiedPaymentLinkId}
           t={t}
           onConfigurePayoutMethods={() => navigate('/dashboard/settings?tab=payout')}
         />
