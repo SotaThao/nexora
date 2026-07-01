@@ -1,6 +1,7 @@
 // StaffHeader — top bar: brand (mobile), language switch, notifications bell, profile dropdown.
 import { useState, useRef, useEffect } from 'react'
-import { AlertTriangle, Bell, LogOut, Menu, Settings, ShieldCheck, Star, UserCheck, Wallet } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { AlertTriangle, Bell, LogOut, Menu, Settings, ShieldCheck, Star, UserCheck, Wallet, CreditCard } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import {
@@ -10,12 +11,13 @@ import {
   useUnreadCount,
 } from '../../../data/hooks/useNotifications'
 import { formatNotificationDateTime } from '../../dashboard/utils'
-import { resolveStaffNotificationScreen } from '../constants'
+import { navigateStaffNotification } from '../constants'
 import LanguageSwitcher from '../../ui/LanguageSwitcher'
 import HeaderEcosystem from '../../dashboard/layout/HeaderEcosystem'
 
 export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu, onLogout }) {
   const { t, currentLanguage } = useTranslation()
+  const navigate = useNavigate()
   const { staffMember, account } = useStaffAccount()
   const { data: unreadCount = 0 } = useUnreadCount()
   const displayName = account.defaultDisplayName || staffMember.fullName || 'Staff'
@@ -50,7 +52,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
   const handleNotificationClick = (item) => {
     if (!item.read) markRead(item.id)
     setIsNotiOpen(false)
-    onNavigate(resolveStaffNotificationScreen(item.type))
+    navigateStaffNotification(item, navigate, onNavigate)
   }
 
   return (
@@ -129,6 +131,7 @@ export default function StaffHeader({ activeScreen, onNavigate, onOpenMobileMenu
                       review_good: Star, reviewgood: Star,
                       staff_accepted_invite: UserCheck, staffacceptedinvite: UserCheck,
                       stafflinkrequest: UserCheck, staff_link_request: UserCheck,
+                      directpaymentreceived: CreditCard,
                     } as Record<string, typeof Bell>)[typeLower] ?? Bell
                     const iconColor = ({
                       tip_success: 'bg-emerald-500 text-white', tipsuccess: 'bg-emerald-500 text-white',

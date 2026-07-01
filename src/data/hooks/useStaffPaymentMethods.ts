@@ -44,6 +44,7 @@ export function useUpdateStaffPaymentMethod() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.staffPaymentMethods() })
+      queryClient.invalidateQueries({ queryKey: qk.staffPaymentQr() })
       showToast(t('payment_methods.update_success'), 'success')
     },
     onError: (err) => {
@@ -66,6 +67,7 @@ export function useToggleStaffPaymentMethod() {
       staffPaymentMethodsRepository.toggle(typeof vars === 'string' ? vars : vars.id),
     onSuccess: (method, vars) => {
       queryClient.invalidateQueries({ queryKey: qk.staffPaymentMethods() })
+      queryClient.invalidateQueries({ queryKey: qk.staffPaymentQr() })
       const silentSuccessToast = typeof vars === 'string' ? false : Boolean(vars.silentSuccessToast)
       if (silentSuccessToast) return
       showToast(

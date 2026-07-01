@@ -1,5 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { ChevronDown } from 'lucide-react'
+
+const MENU_GAP = 6
+const VIEWPORT_PAD = 8
 
 export default function CustomSelect({
   value,
@@ -13,13 +17,55 @@ export default function CustomSelect({
   disabled = false
 }) {
   const [isOpen, setIsOpen] = useState(false)
-  const dropdownRef = useRef(null)
+  const [menuCoords, setMenuCoords] = useState(null)
+  const rootRef = useRef(null)
+  const buttonRef = useRef(null)
+  const menuRef = useRef(null)
+
+  const updateMenuPosition = useCallback(() => {
+    const button = buttonRef.current
+    const menu = menuRef.current
+    if (!button || !menu) return
+
+    const rect = button.getBoundingClientRect()
+    const menuHeight = menu.offsetHeight
+    const width = rect.width
+
+    const spaceBelow = window.innerHeight - rect.bottom - VIEWPORT_PAD
+    const spaceAbove = rect.top - VIEWPORT_PAD
+    const openUp = menuHeight > spaceBelow && spaceAbove > spaceBelow
+
+    let top = openUp ? rect.top - MENU_GAP - menuHeight : rect.bottom + MENU_GAP
+    top = Math.max(VIEWPORT_PAD, Math.min(top, window.innerHeight - menuHeight - VIEWPORT_PAD))
+
+    const maxLeft = window.innerWidth - width - VIEWPORT_PAD
+    const left = Math.max(VIEWPORT_PAD, Math.min(rect.left, maxLeft))
+
+    setMenuCoords({ top, left, width })
+  }, [])
+
+  useLayoutEffect(() => {
+    if (!isOpen) {
+      setMenuCoords(null)
+      return undefined
+    }
+
+    updateMenuPosition()
+    window.addEventListener('scroll', updateMenuPosition, true)
+    window.addEventListener('resize', updateMenuPosition)
+    return () => {
+      window.removeEventListener('scroll', updateMenuPosition, true)
+      window.removeEventListener('resize', updateMenuPosition)
+    }
+  }, [isOpen, options, updateMenuPosition])
 
   useEffect(() => {
     function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false)
+      const target = event.target
+      if (rootRef.current?.contains(target) || menuRef.current?.contains(target)) {
+        return
       }
+      setIsOpen(false)
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
@@ -43,32 +89,21 @@ export default function CustomSelect({
   const hasFontWeight = buttonClass.includes('font-')
   const fontWeightClass = hasFontWeight ? '' : (isSmall ? 'font-semibold' : '')
 
-  return (
-    <div className={`relative w-full ${className}`} ref={dropdownRef}>
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => !disabled && setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between border ${borderClassStr} ${textClassStr} ${bgClassStr} focus:outline-none transition-all select-none text-left ${focusBorderClassStr} ${focusRingClassStr}
-          ${isSmall ? 'h-9 px-3 text-xs rounded' : 'min-h-[42px] px-4 py-2.5 text-sm rounded-lg'}
-          ${fontWeightClass}
-          ${disabled ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : 'cursor-pointer'}
-          ${buttonClass}`}
-      >
-        <span className="truncate">
-          {selectedOption ? selectedOption.label : placeholder}
-        </span>
-        <ChevronDown
-          className={`text-nexoraSubtle shrink-0 transition-transform duration-200 ml-2
-            ${isSmall ? 'w-3.5 h-3.5' : 'w-4 h-4'}
-            ${isOpen ? 'rotate-180 text-nexoraBrand' : ''}`}
-        />
-      </button>
+  const optionTextClass = optionsClass || (isSmall ? 'text-xs' : 'text-sm')
 
-      {isOpen && (
-        <div 
-          className={`absolute left-0 right-0 mt-1.5 z-50 bg-white border border-nexoraBorder rounded-lg shadow-premium max-h-60 overflow-y-auto py-1
-            ${optionsClass}`}
+  const menu = isOpen
+    ? createPortal(
+        <div
+          ref={menuRef}
+          style={{
+            position: 'fixed',
+            top: menuCoords?.top ?? -9999,
+            left: menuCoords?.left ?? 0,
+            width: menuCoords?.width ?? buttonRef.current?.offsetWidth,
+            zIndex: 9999,
+            visibility: menuCoords ? 'visible' : 'hidden',
+          }}
+          className={`max-h-60 overflow-y-auto rounded-lg border border-nexoraBorder bg-white py-1 shadow-premium ${optionsClass}`}
         >
           {options.map((opt) => {
             const isSelected = opt.value === value
@@ -77,10 +112,10 @@ export default function CustomSelect({
                 key={opt.value}
                 type="button"
                 onClick={() => handleSelect(opt.value)}
-                className={`w-full text-left px-4 py-2 text-sm transition-colors cursor-pointer select-none flex items-center justify-between
+                className={`flex w-full cursor-pointer select-none items-center justify-between px-4 py-2 text-left transition-colors ${optionTextClass}
                   ${
                     isSelected
-                      ? 'bg-nexoraBrandSoft text-nexoraBrand font-bold'
+                      ? 'bg-nexoraBrandSoft font-bold text-nexoraBrand'
                       : 'text-nexoraText hover:bg-nexoraSurfaceMuted'
                   }`}
               >
@@ -88,8 +123,34 @@ export default function CustomSelect({
               </button>
             )
           })}
-        </div>
-      )}
+        </div>,
+        document.body,
+      )
+    : null
+
+  return (
+    <div className={`relative w-full ${className}`} ref={rootRef}>
+      <button
+        ref={buttonRef}
+        type="button"
+        disabled={disabled}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        className={`flex w-full items-center justify-between border ${borderClassStr} ${textClassStr} ${bgClassStr} text-left transition-all select-none focus:outline-none ${focusBorderClassStr} ${focusRingClassStr}
+          ${isSmall ? 'h-9 rounded px-3 text-xs' : 'min-h-[42px] rounded-lg px-4 py-2.5 text-sm'}
+          ${fontWeightClass}
+          ${disabled ? 'cursor-not-allowed border-slate-200 bg-slate-100 text-nexoraSubtle' : 'cursor-pointer'}
+          ${buttonClass}`}
+      >
+        <span className="truncate">
+          {selectedOption ? selectedOption.label : placeholder}
+        </span>
+        <ChevronDown
+          className={`ml-2 shrink-0 text-nexoraSubtle transition-transform duration-200
+            ${isSmall ? 'h-3.5 w-3.5' : 'h-4 w-4'}
+            ${isOpen ? 'rotate-180 text-nexoraBrand' : ''}`}
+        />
+      </button>
+      {menu}
     </div>
   )
 }

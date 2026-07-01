@@ -19,7 +19,7 @@ import { useTouchpoints, useCreateTouchpoint, useDeleteTouchpoint, useToggleTouc
 import { useMerchantStaff, StatusFilter } from '../data/hooks/useMerchantStaff'
 import { useChartDateRange } from '../hooks/useChartDateRange'
 import { useTransactions } from '../data/hooks/useTransactions'
-import { useDashboardOverview, useDashboardTipsChart, useDashboardOverviewCurrentMonth, useDashboardOverviewCurrentYear } from '../data/hooks/useDashboard'
+import { useDashboardOverview, useDashboardTipsChart, useDashboardOverviewCurrentMonth, useDashboardOverviewCurrentYear, useDashboardReviewsSummary } from '../data/hooks/useDashboard'
 import { useDashboardReviews, DASHBOARD_REVIEWS_LIST_QUERY } from '../data/hooks/useReviews'
 import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead, useUnreadCount } from '../data/hooks/useNotifications'
 import { useProfileSettings, useSaveProfileSettings } from '../data/hooks/useProfileSettings'
@@ -150,6 +150,7 @@ export default function Dashboard({
     isPending: isReviewsPending,
     isFetching: isReviewsFetching,
   } = useDashboardReviews(reviewsListQuery, { enabled: needsDashboardReviews })
+  const { data: reviewsSummary } = useDashboardReviewsSummary({ enabled: isReviewsTab })
   const { data: apiUnreadCount = 0 } = useUnreadCount()
   const { data: notificationsData, isLoading: isNotificationsLoading, isFetching: isNotificationsFetching } = useNotifications({
     enabled: needsNotificationsList,
@@ -562,12 +563,13 @@ export default function Dashboard({
       if (staffTipQr?.tipUrl) {
         setQrTarget({
           name: target.name || `Personal QR - ${staffName}`,
-          subtitle: target.position || 'Staff QR',
+          subtitle: target.subtitle || target.position || 'Staff QR',
           slug: staffTipQr.touchPointSlug,
           url: staffTipQr.tipUrl,
           qrImageUrl: target.qrImageUrl || staffTipQr.qrImageUrl || null,
           isActive: target.isActive !== undefined ? target.isActive : true,
           isStaffQr: true,
+          isGatewayQr: Boolean(target.isGatewayQr),
         })
         return
       }
@@ -580,12 +582,13 @@ export default function Dashboard({
 
     setQrTarget({
       name: target.name || `Personal QR - ${staffName}`,
-      subtitle: target.position || target.type || 'Staff QR',
+      subtitle: target.subtitle || target.position || target.type || 'Staff QR',
       slug: finalSlug,
       url: target.url ? toLocalCustomerTouchUrl(target.url) : null,
       qrImageUrl: target.qrImageUrl || null,
       isActive: target.isActive !== undefined ? target.isActive : true,
       isStaffQr: Boolean(staffName && target.staffProfileId),
+      isGatewayQr: Boolean(target.isGatewayQr),
     })
   }
 
@@ -642,7 +645,7 @@ export default function Dashboard({
     handleLinkStaff, handleInviteStaff, handleResendInvite, handleAcceptJoinRequest, handleDeclineJoinRequest, handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     setInviteShareDefaultName, setInviteShareDefaultContact, setIsInviteShareOpen,
     filteredTouchpoints, setAddTouchpointPrefill, setIsAddTouchpointModalOpen, deleteTouchpoint, toggleTouchpointStatus, togglingTouchpointId: toggleTouchpointMutation.isPending ? toggleTouchpointMutation.variables : null, linkDevice, devices, handleAddDevice, handleDeleteDevice, handleToggleDeviceStatus,
-    reviews, filteredReviews, reviewFilterStaff, setReviewFilterStaff: handleReviewFilterStaffChange, setupData: setupData ?? merchantSetupData,
+    reviews, filteredReviews, reviewsSummary, reviewFilterStaff, setReviewFilterStaff: handleReviewFilterStaffChange, setupData: setupData ?? merchantSetupData,
     activeReviewsPage: reviewsPagination.pageNumber,
     activeReviewsPageSize: reviewsPagination.pageSize,
     activeReviewsTotalPages: reviewsPage?.totalPages ?? 1,
@@ -857,6 +860,7 @@ export default function Dashboard({
           closeStaffModal()
         }}
       />
+
     </div>
   )
 }

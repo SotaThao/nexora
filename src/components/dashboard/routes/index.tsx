@@ -191,6 +191,7 @@ export function TouchpointsRoute() {
   const [sp, setSp] = useSearchParams()
   const tab = sp.get('tab') || 'stations'
   const activeSubTab = tab === 'devices' ? 'devices' : 'stations'
+  const stationsSection = sp.get('section') === 'payment' ? 'payment' : 'tip'
 
   return (
     <TouchpointsView
@@ -210,8 +211,17 @@ export function TouchpointsRoute() {
       onDeleteDevice={ctx.handleDeleteDevice}
       onToggleDeviceStatus={ctx.handleToggleDeviceStatus}
       activeSubTab={activeSubTab}
+      stationsSection={stationsSection}
+      onStationsSectionChange={(nextSection) => {
+        setSp({ tab: 'stations', section: nextSection }, { replace: true })
+      }}
       onTabChange={(nextTab) => {
-        setSp({ tab: nextTab }, { replace: true })
+        if (nextTab === 'stations') {
+          const section = sp.get('section') === 'payment' ? 'payment' : 'tip'
+          setSp({ tab: nextTab, section }, { replace: true })
+        } else {
+          setSp({ tab: nextTab }, { replace: true })
+        }
       }}
     />
   )
@@ -223,6 +233,7 @@ export function ReviewsRoute() {
   return (
     <ReviewsView
       reviews={ctx.reviewsPage?.items ?? []}
+      summary={ctx.reviewsSummary}
       isLoading={ctx.isReviewsPending}
       isFetching={ctx.reviewsListFetching}
       staff={ctx.filteredStaff}

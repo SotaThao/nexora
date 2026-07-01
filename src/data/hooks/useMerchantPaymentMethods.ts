@@ -30,6 +30,7 @@ export function useUpdateMerchantPaymentMethod() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPaymentMethods() })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPaymentQr() })
       showToast(t('payment_methods.update_success'), 'success')
     },
     onError: (err) => {
@@ -83,6 +84,7 @@ export function useSaveMerchantPayoutConfigs() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPaymentMethods() })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPaymentQr() })
     },
   })
 }
@@ -101,6 +103,7 @@ export function useToggleMerchantPaymentMethod() {
       merchantPaymentMethodsRepository.toggle(typeof vars === 'string' ? vars : vars.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPaymentMethods() })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPaymentQr() })
     },
     onError: (err) => {
       showToast(err.message || t('payment_methods.toggle_failed'), 'error')

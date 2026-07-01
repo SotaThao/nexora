@@ -104,6 +104,18 @@ export function isShopConfirmed(tx) {
   return Boolean(tx?.isMultiStaff && tx?.merchantConfirmedAt)
 }
 
+// US-024 — staff confirm receipt for direct-to-staff tips.
+export function isAwaitingStaffConfirmation(tx) {
+  if (tx?.isMultiStaff) return false
+  if (tx?.staffConfirmedAt) return false
+  const status = String(tx.status || '').toLowerCase()
+  return status === 'confirmed'
+}
+
+export function isStaffReceiptConfirmed(tx) {
+  return Boolean(!tx?.isMultiStaff && tx?.staffConfirmedAt)
+}
+
 export function walletLabels(accounts) {
   return Object.entries(accounts)
     .filter(([, value]) => value)
@@ -217,4 +229,21 @@ export function useCountUp(target, duration = 900) {
   }, [duration, numericTarget])
 
   return formatAnimatedValue(target, value)
+}
+
+export function resolveMasterTouchpoint(touchpoints = []) {
+  return touchpoints.find((tp) => tp.type === 'FrontDesk') || touchpoints[0] || null
+}
+
+export function buildMasterQrTarget(touchpoints = []) {
+  const masterTouchpoint = resolveMasterTouchpoint(touchpoints)
+  return {
+    name: 'Master Welcome QR',
+    subtitle: 'Store Main Portal',
+    slug: masterTouchpoint?.slug || 'general',
+    url: masterTouchpoint?.url || null,
+    qrImageUrl: masterTouchpoint?.qrImageUrl || null,
+    isActive: true,
+    isGatewayQr: true,
+  }
 }
