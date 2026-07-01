@@ -16,20 +16,8 @@ import type { StaffSearchResult } from '../../../types/domain'
 
 const DEFAULT_ROLE = 'Nail Technician'
 
-function getSearchInputKind(value: string): 'email' | 'phone' | 'staffId' | 'unknown' {
-  const trimmed = value.trim()
-  if (!trimmed) return 'unknown'
-  if (trimmed.includes('@')) return 'email'
-  if (/^\+?[\d\s\-().]+$/.test(trimmed) && /\d/.test(trimmed)) return 'phone'
-  return 'staffId'
-}
-
-function getSearchQueryPayload(value: string, fallbackDialCode: string) {
-  const trimmed = value.trim()
-  const kind = getSearchInputKind(trimmed)
-  if (kind === 'phone') return normalizePhoneForApi(trimmed, fallbackDialCode)
-  if (kind === 'email') return trimmed.toLowerCase()
-  return trimmed
+function getSearchQueryPayload(value: string) {
+  return value.trim()
 }
 
 function formatInvitePhoneNational(nationalNumber: string, dialCode: string): string {
@@ -75,7 +63,6 @@ function AddStaffModal({
 
   // Link tab
   const [searchInput, setSearchInput] = useState('')
-  const [searchDialCode, setSearchDialCode] = useState(defaultDialCode)
   const [activeSearchQuery, setActiveSearchQuery] = useState('')
   const [selectedRole, setSelectedRole] = useState(DEFAULT_ROLE)
   const [searchResult, setSearchResult] = useState<StaffSearchResult | null>(null)
@@ -104,7 +91,6 @@ function AddStaffModal({
     if (!open) {
       setActiveTab('invite')
       setSearchInput('')
-      setSearchDialCode(defaultDialCode)
       setActiveSearchQuery('')
       setSearchResult(null)
       setSearchError('')
@@ -141,18 +127,7 @@ function AddStaffModal({
       return
     }
 
-    const kind = getSearchInputKind(trimmed)
-    const searchFallbackDialCode = resolveDialCodeFromInput(trimmed, searchDialCode || defaultDialCode)
-    if (kind === 'email' && !isValidEmail(trimmed)) {
-      setSearchError(t('setup.errors.staff_email_invalid'))
-      return
-    }
-    if (kind === 'phone' && !isValidPhoneE164(trimmed, searchFallbackDialCode)) {
-      setSearchError(t('setup.errors.staff_phone_invalid'))
-      return
-    }
-
-    const nextQuery = getSearchQueryPayload(trimmed, searchFallbackDialCode)
+    const nextQuery = getSearchQueryPayload(trimmed)
     setSearchResult(null)
     setSearchError('')
 
@@ -174,18 +149,7 @@ function AddStaffModal({
   }
 
   const handleSearchInputChange = (value: string) => {
-    const kind = getSearchInputKind(value)
-    if (kind === 'phone') {
-      const nextDialCode = resolveDialCodeFromInput(value, searchDialCode || defaultDialCode)
-      const parsed = parsePhone(
-        value.trim().startsWith('+') ? value : `${nextDialCode}${value.replace(/\D/g, '')}`,
-      )
-      const formatted = formatInvitePhoneNational(parsed.nationalNumber, nextDialCode)
-      setSearchDialCode(nextDialCode)
-      setSearchInput(formatted)
-    } else {
-      setSearchInput(value)
-    }
+    setSearchInput(value)
     if (searchError) setSearchError('')
   }
 

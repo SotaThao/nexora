@@ -6,7 +6,7 @@ import { useNotification } from '../../../contexts/NotificationContext'
 import { useDownloadTouchpointQr } from '../../../data/hooks/useMerchantTouchpoints'
 import { downloadQrCode } from '../../../utils/qrUtils'
 import { buildQrImageUrl, toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
-import { formatCurrency, isAwaitingShopConfirmation } from '../utils'
+import { buildMasterQrTarget, formatCurrency, isAwaitingShopConfirmation, resolveMasterTouchpoint } from '../utils'
 import Panel from '../../ui/Panel'
 import KpiCard from '../../ui/KpiCard'
 import { SkeletonKpiCard } from '../../ui/skeleton'
@@ -157,8 +157,7 @@ function Overview({
   // touch point — there is no store-level "general" touch page on the API
   // (every customer touch URL needs a touchPointSlug). Prefer a FrontDesk
   // touch point (the lobby/master created at onboarding), else the first one.
-  const masterTouchpoint =
-    (touchpoints || []).find((tp) => tp.type === 'FrontDesk') || (touchpoints || [])[0] || null
+  const masterTouchpoint = useMemo(() => resolveMasterTouchpoint(touchpoints), [touchpoints])
 
   const masterQrLink = useMemo(() => {
     if (masterTouchpoint?.url) {
@@ -175,14 +174,7 @@ function Overview({
     [masterQrLink, masterTouchpoint?.qrImageUrl],
   )
 
-  const masterQrTarget = {
-    name: 'Master Welcome QR',
-    subtitle: 'Store Main Portal',
-    slug: masterTouchpoint?.slug || 'general',
-    url: masterTouchpoint?.url || null,
-    qrImageUrl: masterTouchpoint?.qrImageUrl || null,
-    isActive: true,
-  }
+  const masterQrTarget = useMemo(() => buildMasterQrTarget(touchpoints), [touchpoints])
 
   const handleDownloadMasterQr = useCallback(async () => {
     setIsMasterQrDownloading(true)

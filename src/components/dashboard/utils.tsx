@@ -218,3 +218,19 @@ export function useCountUp(target, duration = 900) {
 
   return formatAnimatedValue(target, value)
 }
+
+export function resolveMasterTouchpoint(touchpoints = []) {
+  return touchpoints.find((tp) => tp.type === 'FrontDesk') || touchpoints[0] || null
+}
+
+export function buildMasterQrTarget(touchpoints = []) {
+  const masterTouchpoint = resolveMasterTouchpoint(touchpoints)
+  return {
+    name: 'Master Welcome QR',
+    subtitle: 'Store Main Portal',
+    slug: masterTouchpoint?.slug || 'general',
+    url: masterTouchpoint?.url || null,
+    qrImageUrl: masterTouchpoint?.qrImageUrl || null,
+    isActive: true,
+  }
+}
