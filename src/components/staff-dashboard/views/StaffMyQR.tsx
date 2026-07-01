@@ -680,8 +680,8 @@ export default function StaffMyQR() {
                     type="button"
                     onClick={handleCopyReferral}
                     className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-nexoraBorder bg-nexoraSurface text-nexoraBrand transition hover:bg-nexoraCanvas"
-                    aria-label={t('staff_dashboard.qr.copy_link')}
-                    title={t('staff_dashboard.qr.copy_link')}
+                    aria-label={t('staff_dashboard.staff_id')}
+                    title={t('staff_dashboard.staff_id')}
                   >
                     <Copy className="h-3.5 w-3.5" />
                   </button>
