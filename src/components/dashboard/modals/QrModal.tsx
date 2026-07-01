@@ -24,7 +24,7 @@ function QrGatewayPreviewLayout({ target, qrImageSrc, scanCaption, onClose, t, s
         {showInactiveWarning ? (
           <div className="no-print mb-4 flex items-center justify-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-[10px] font-bold text-amber-700">
             <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
-            This personal QR is blocked while the staff member is inactive.
+            {t('dashboard.modals.staff_qr_inactive_warning')}
           </div>
         ) : null}
 
@@ -126,7 +126,7 @@ function QrModal({ target, businessName, onClose }) {
         {!target.isActive && (
           <div className="mt-3 flex items-center justify-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-[10px] font-bold text-amber-700 no-print">
             <ShieldAlert className="h-3.5 w-3.5" />
-            This personal QR is blocked while the staff member is inactive.
+            {t('dashboard.modals.staff_qr_inactive_warning')}
           </div>
         )}
         <div className="mx-auto mt-5 flex aspect-[2/3] w-44 flex-col items-center justify-between rounded-2xl bg-nexoraCanvas border border-nexoraBorder/80 p-4 text-nexoraText shadow-md qr-print-card">

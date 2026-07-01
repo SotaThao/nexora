@@ -654,6 +654,7 @@
       "no_staff_assigned": "-- General QR (Store Pool Tips) --",
       "download_print_qr": "Download Print QR (PDF)",
       "print_qr": "Print QR",
+      "staff_qr_inactive_warning": "This personal QR is blocked while the staff member is inactive.",
       "customer_view_test": "Simulate Customer Scan ›"
     },
     "settings_panel": {
@@ -1115,7 +1116,7 @@
     "success_footer": "You can close this page. Thank you!",
     "back_home": "Back Home",
     "wallet_title": "Send ${amount} via {wallet} to {recipient}",
-    "confirm_sent": "Yes, I've Paid"
+    "confirm_sent": "Yes, I've paid"
   },
   "staff_direct_payment": {
     "review_payment_title": "Review payment & choose method",
@@ -1631,7 +1632,7 @@
           "stepSendAmount": "Send exactly ${amount} to {name}.",
           "stepSendAmountPayment": "Send exactly ${amount} to {name}.",
           "stepConfirm": "Come back here and tap Yes, I sent the tip.",
-          "stepConfirmPayment": "Come back here and tap Yes, I've Paid."
+          "stepConfirmPayment": "Come back here and tap Yes, I've paid."
         }
       }
     },

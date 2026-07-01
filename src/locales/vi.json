@@ -654,6 +654,7 @@
       "no_staff_assigned": "-- Không gán (Típ chung cho cửa hàng) --",
       "download_print_qr": "Tải Xuống QR In Ấn (PDF)",
       "print_qr": "In Mã QR",
+      "staff_qr_inactive_warning": "QR cá nhân này bị chặn khi nhân viên đang ở trạng thái không hoạt động.",
       "customer_view_test": "Thử Giao Diện Khách Quét ›"
     },
     "settings_panel": {
