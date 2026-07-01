@@ -1,7 +1,7 @@
 import React from 'react'
 import { formatUsdAmount } from '../../../utils/currencyInput'
 
-const QUICK_AMOUNTS = [5, 10, 15, 20, 30, 50]
+const QUICK_AMOUNTS = [10, 15, 20, 30, 50]
 
 export default function DirectPaymentReview({
   t,
@@ -73,7 +73,7 @@ export default function DirectPaymentReview({
           <p className="text-[10px] font-bold uppercase tracking-wider text-nexoraSubtle">
             {t('direct_payment.amount_label')}
           </p>
-          <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-6">
+          <div className="grid grid-cols-6 gap-1.5">
             {QUICK_AMOUNTS.map((val) => (
               <button
                 key={val}
