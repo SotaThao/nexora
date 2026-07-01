@@ -79,28 +79,62 @@ export function splitStaffShareUrlDisplay(url: string): {
   staffSuffix: string
   fullDisplay: string
 } {
-  const fullDisplay = url.replace(/^https?:\/\//, '')
-  if (!fullDisplay) return { leading: '', staffSuffix: '', fullDisplay: '' }
+  const { leading, suffix, fullDisplay } = splitUrlQueryParamDisplay(url, 'staff')
+  return { leading, staffSuffix: suffix, fullDisplay }
+}
+
+type UrlDisplayParts = {
+  leading: string
+  suffix: string
+  fullDisplay: string
+}
+
+function stripUrlProtocol(url: string): string {
+  return url.replace(/^https?:\/\//, '')
+}
+
+/** Split URL for display: leading truncates; query param stays fully visible. */
+export function splitUrlQueryParamDisplay(url: string, paramName: string): UrlDisplayParts {
+  const fullDisplay = stripUrlProtocol(url)
+  if (!fullDisplay) return { leading: '', suffix: '', fullDisplay: '' }
 
   try {
     const parsed = new URL(url.includes('://') ? url : `https://${fullDisplay}`)
-    const staff = parsed.searchParams.get('staff')?.trim()
-    if (!staff) return { leading: fullDisplay, staffSuffix: '', fullDisplay }
+    const value = parsed.searchParams.get(paramName)?.trim()
+    if (!value) return { leading: fullDisplay, suffix: '', fullDisplay }
 
-    const staffNeedle = `staff=${staff}`
-    const staffIndex = fullDisplay.indexOf(staffNeedle)
-    if (staffIndex < 0) return { leading: fullDisplay, staffSuffix: '', fullDisplay }
+    const needle = `${paramName}=${value}`
+    const paramIndex = fullDisplay.indexOf(needle)
+    if (paramIndex < 0) return { leading: fullDisplay, suffix: '', fullDisplay }
 
-    const separator = staffIndex > 0 ? fullDisplay[staffIndex - 1] : ''
-    const staffSuffix =
+    const separator = paramIndex > 0 ? fullDisplay[paramIndex - 1] : ''
+    const suffix =
       separator === '&' || separator === '?'
-        ? `${separator}${staffNeedle}`
-        : staffNeedle
-    const leadingEnd = staffIndex - (staffSuffix.length - staffNeedle.length)
+        ? `${separator}${needle}`
+        : needle
+    const leadingEnd = paramIndex - (suffix.length - needle.length)
     const leading = fullDisplay.slice(0, Math.max(0, leadingEnd))
 
-    return { leading, staffSuffix, fullDisplay }
+    return { leading, suffix, fullDisplay }
   } catch {
-    return { leading: fullDisplay, staffSuffix: '', fullDisplay }
+    return { leading: fullDisplay, suffix: '', fullDisplay }
   }
+}
+
+/** Split URL for display: leading truncates; trailing path segment(s) stay fully visible. */
+export function splitUrlPathTailDisplay(url: string, tailSegments = 1): UrlDisplayParts {
+  const fullDisplay = stripUrlProtocol(url)
+  if (!fullDisplay || tailSegments < 1) return { leading: fullDisplay, suffix: '', fullDisplay }
+
+  const pathOnly = fullDisplay.split(/[?#]/, 1)[0] || fullDisplay
+  const queryAndHash = fullDisplay.slice(pathOnly.length)
+  const segments = pathOnly.split('/').filter(Boolean)
+  if (segments.length <= tailSegments) return { leading: fullDisplay, suffix: '', fullDisplay }
+
+  const tail = segments.slice(-tailSegments).join('/')
+  const leadingPath = segments.slice(0, -tailSegments).join('/')
+  const leading = `${leadingPath ? `${leadingPath}/` : '/'}`
+  const suffix = `${tail}${queryAndHash}`
+
+  return { leading, suffix, fullDisplay }
 }
