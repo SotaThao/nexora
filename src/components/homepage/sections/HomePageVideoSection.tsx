@@ -38,7 +38,7 @@ export default function HomePageVideoSection() {
             <div className="max-w-3xl mx-auto space-y-3">
               <span className="text-xs font-extrabold text-purple uppercase tracking-widest" data-i18n="vt-eyebrow">PLAY OVERVIEW WALKTHROUGH</span>
               <h2 className="text-3xl sm:text-4xl font-black text-navy" data-i18n="vt-title">How Nexora Touch Drives Growth</h2>
-              <p className="text-base text-slate-500 leading-relaxed" data-i18n="vt-desc">Discover how standard retail stores scale technician tips by 40%, lock in thousands of organic Google stars, and drive repeat visits via co-ops.</p>
+              <p className="text-sm sm:text-base text-slate-500 leading-relaxed" data-i18n="vt-desc">Discover how standard retail stores scale technician tips by 40%, lock in thousands of organic Google stars, and drive repeat visits via co-ops.</p>
             </div>
 
             <div className="max-w-4xl mx-auto rounded-[32px] overflow-hidden bg-slate-900 aspect-video shadow-2xl border border-white/20 relative group premium-shadow">

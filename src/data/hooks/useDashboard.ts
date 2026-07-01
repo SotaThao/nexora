@@ -1,7 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import { dashboardRepository } from '../repositories/dashboard'
 import { qk } from '../queryKeys'
-import type { DashboardOverviewMetrics, StaffLeaderboardRow, TipsChartDayMetric } from '../../types/repositories'
+import type {
+  DashboardOverviewMetrics,
+  DashboardReviewsSummary,
+  StaffLeaderboardRow,
+  TipsChartDayMetric,
+} from '../../types/repositories'
 
 const EMPTY_PARAMS = {}
 
@@ -15,6 +20,20 @@ export function useDashboardOverview(params: DateRangeParams = EMPTY_PARAMS) {
   return useQuery<DashboardOverviewMetrics | null>({
     queryKey: [...qk.dashboardOverview(), params],
     queryFn: () => dashboardRepository.getOverview(params),
+  })
+}
+
+/**
+ * All-time review summary for the Reviews tab KPI cards / filter counts.
+ * Sourced from the overview endpoint's `reviewsSummary` (no date filter),
+ * separate from the date-scoped overview used by the Overview tab.
+ */
+export function useDashboardReviewsSummary({ enabled = true } = {}) {
+  return useQuery<DashboardReviewsSummary | null>({
+    queryKey: [...qk.dashboardOverview(), 'reviews-summary'],
+    queryFn: () => dashboardRepository.getReviewsSummary(),
+    enabled,
+    staleTime: 30_000,
   })
 }
 

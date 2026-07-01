@@ -9,14 +9,16 @@ import {
   FileBarChart,
   UserPlus,
   ChevronRight,
-  PiggyBank,
   Hourglass,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { useNotification } from '../../../contexts/NotificationContext'
+import { buildMasterQrTarget } from '../utils'
 import { isAwaitingShopConfirmation } from '../utils'
 import SetupGuideBanner from './SetupGuideBanner'
 import PayoutSetupWarningBanner from './PayoutSetupWarningBanner'
+import SettingsTipQrPanel from '../../settings/SettingsTipQrPanel'
 
 function twoInitials(name) {
   const parts = String(name || '').trim().split(/\s+/).filter(Boolean)
@@ -130,6 +132,7 @@ function Overview({
   onStartSetup,
   profile,
   onNavigateMenu,
+  onOpenAddStaff,
   onApproveClick,
   pendingStaff = [],
   staff = [],
@@ -137,6 +140,7 @@ function Overview({
   metricsYear = null,
 }: any) {
   const { t } = useTranslation()
+  const { showToast } = useNotification()
   const navigate = useNavigate()
   const k = (key: string, vars?: Record<string, string | number>) =>
     t(`dashboard.owner_home.${key}`, vars)
@@ -163,8 +167,9 @@ function Overview({
   )
 
   const activeStaff = (staff || []).filter((m) => m.status === 'Active' || m.active === true)
+  const masterQrTarget = useMemo(() => buildMasterQrTarget(touchpoints), [touchpoints])
   const pendingCount = (pendingStaff || []).length
-  const rating = Number(metrics.googleRating || 0)
+  const rating = Number(metrics.averageRating || 0)
   const totalReviews = Number(metrics.totalReviews || 0)
 
   // Pending confirmations list (real pending staff/invites)
@@ -224,14 +229,14 @@ function Overview({
           <div className="mt-4 flex gap-2.5">
             <button
               type="button"
-              onClick={() => onNavigateMenu?.('reports')}
+              onClick={() => navigate('/dashboard/tips?tab=savings')}
               className="rounded-2xl bg-white px-4 py-3 text-sm font-black text-nexoraBrand active:scale-95 transition"
             >
               {k('view_savings')}
             </button>
             <button
               type="button"
-              onClick={() => onNavigateMenu?.('reports')}
+              onClick={() => navigate('/dashboard/tips?tab=savings')}
               className="rounded-2xl border border-white/20 bg-white/15 px-4 py-3 text-sm font-black text-white active:scale-95 transition"
             >
               {k('export_report')}
@@ -302,17 +307,34 @@ function Overview({
       </div>
 
       {/* ── Quick Actions ────────────────────────────────────────────────── */}
-      <Panel title={k('quick_actions')} action={k('manage')} onAction={() => onNavigateMenu?.('touchpoints')}>
+      <Panel title={k('quick_actions')}>
         <div className="grid grid-cols-4 gap-2">
           <QuickAction
             icon={<QrCode className="h-6 w-6" />}
             label={k('quick_add_qr')}
-            onClick={() => previewQr?.({ name: 'Master Welcome QR', subtitle: 'Store Main Portal', slug: 'general', isActive: true })}
+            onClick={() => previewQr?.(masterQrTarget)}
           />
-          <QuickAction icon={<UserPlus className="h-6 w-6" />} label={k('quick_add_staff')} onClick={() => onNavigateMenu?.('staff')} />
+          <QuickAction icon={<UserPlus className="h-6 w-6" />} label={k('quick_add_staff')} onClick={() => { onNavigateMenu?.('staff'); onOpenAddStaff?.() }} />
           <QuickAction icon={<DollarSign className="h-6 w-6" />} label={k('quick_tips')} onClick={() => onNavigateMenu?.('tips')} />
           <QuickAction icon={<FileBarChart className="h-6 w-6" />} label={k('quick_reports')} onClick={() => onNavigateMenu?.('reports')} />
         </div>
+      </Panel>
+
+      <Panel title={t('components.settings.SettingsTipQrPanel.defaultQrTitle')}>
+        <SettingsTipQrPanel
+          variant="compact"
+          hideUrlCode
+          businessName={businessName}
+          showToast={showToast}
+          handleCopy={(value) => {
+            if (!value) return
+            navigator.clipboard.writeText(value)
+            showToast(t('components.dashboard.overview.Overview.copiedPaymentLink'), 'success')
+          }}
+          copiedId={null}
+          t={t}
+          onConfigurePayoutMethods={() => navigate('/dashboard/settings?tab=payout')}
+        />
       </Panel>
 
       {/* ── Pending Confirmations ────────────────────────────────────────── */}
@@ -381,11 +403,10 @@ function Overview({
       </Panel>
 
       {/* ── Savings Summary ──────────────────────────────────────────────── */}
-      <Panel title={k('savings_summary_title')} action={k('details')} onAction={() => onNavigateMenu?.('reports')}>
+      <Panel title={k('savings_summary_title')} action={k('details')} onAction={() => navigate('/dashboard/tips?tab=savings')}>
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-2xl border border-nexoraBorder bg-nexoraSurfaceMuted p-4">
             <div className="flex items-center gap-2">
-              <PiggyBank className="h-4 w-4 text-nexoraBrand" />
               <small className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">{k('this_month')}</small>
             </div>
             <h3 className="mt-1.5 text-2xl font-black tracking-tight text-nexoraText">{fmtMoney(moneySavedMonth)}</h3>
@@ -399,7 +420,6 @@ function Overview({
           </div>
           <div className="rounded-2xl border border-nexoraBorder bg-nexoraSurfaceMuted p-4">
             <div className="flex items-center gap-2">
-              <PiggyBank className="h-4 w-4 text-nexoraBrand" />
               <small className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">{k('this_year')}</small>
             </div>
             <h3 className="mt-1.5 text-2xl font-black tracking-tight text-nexoraText">{fmtMoney(moneySavedYear)}</h3>
@@ -427,7 +447,7 @@ function Overview({
           </div>
           <button
             type="button"
-            onClick={() => onNavigateMenu?.('support')}
+            onClick={() => onOpenAddStaff?.()}
             className="h-10 shrink-0 rounded-full bg-white px-4 text-[13px] font-black text-nexoraBrand shadow-md transition active:scale-95"
           >
             {t('staff_dashboard.home.invite_now')}

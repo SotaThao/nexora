@@ -547,7 +547,7 @@ export default function useStaffRegistration({ inviteData }) {
       .catch((err) => {
         logger.error('Signup failed', err)
         if (isApiError(err) && err.errorCode === 'USER_EMAIL_ALREADY_EXISTS') {
-          setRegErrors({ email: t('components.staff_registration.hooks.useStaffRegistration.emailAlreadyExists') })
+          setRegErrors({ email: t(getErrorI18nKey('USER_EMAIL_ALREADY_EXISTS')) })
         } else {
           showToast(
             currentLanguage === 'vi' ? `Lỗi đăng ký: ${getApiErrorCode(err, 'Vui lòng thử lại')}` : `Registration error: ${getApiErrorCode(err, 'Please try again')}`,
