@@ -24,6 +24,7 @@ const StaffDashboard = lazyWithRetry(() => import('../components/staff-dashboard
 const StaffHome = lazyWithRetry(() => import('../components/staff-dashboard/views/StaffHome'))
 const StaffMyQR = lazyWithRetry(() => import('../components/staff-dashboard/views/StaffMyQR'))
 const StaffTips = lazyWithRetry(() => import('../components/staff-dashboard/views/StaffTips'))
+const StaffTransactions = lazyWithRetry(() => import('../components/staff-dashboard/views/StaffTransactions'))
 const StaffReviews = lazyWithRetry(() => import('../components/staff-dashboard/views/StaffReviews'))
 const StaffPay = lazyWithRetry(() => import('../components/staff-dashboard/views/StaffPay'))
 const StaffProfile = lazyWithRetry(() => import('../components/staff-dashboard/views/StaffProfile'))
@@ -139,6 +140,7 @@ export default function AppRouter() {
           <Route index element={<StaffHome />} />
           <Route path="qr" element={<StaffMyQR />} />
           <Route path="tips" element={<StaffTips />} />
+          <Route path="transactions" element={<StaffTransactions />} />
           <Route path="reviews" element={<StaffReviews />} />
           <Route path="pay" element={<StaffPay />} />
           <Route path="profile" element={<StaffProfile />} />

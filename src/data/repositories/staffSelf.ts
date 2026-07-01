@@ -18,7 +18,9 @@ import type {
   StaffTipsConfirmReceiptResult,
   StaffTipsPage,
   TipCountAmount,
+  TransactionRecord,
 } from '../../types/domain'
+import type { TransactionsListPage, TransactionsListQuery } from './transactions'
 import type { StaffLinkRequestDetailApiDto } from '../../types/repositories'
 
 type HttpClient = typeof httpClient
@@ -243,6 +245,44 @@ export interface StaffTipsListParams {
   dateFrom?: string
   dateTo?: string
   status?: string
+  paymentMethod?: string
+  touchPointId?: string
+  staffSearch?: string
+}
+
+function staffTipToTransactionRecord(
+  tip: StaffTipItem,
+  staffDisplayName = '',
+): TransactionRecord {
+  return {
+    id: tip.id,
+    amount: tip.amount > 0 ? tip.amount : tip.totalAmount,
+    status: tip.status,
+    statusLabel: tip.statusLabel,
+    paymentMethod: tip.paymentMethod ?? '',
+    staffName: staffDisplayName,
+    touchpoint: tip.touchPointName ?? '',
+    dateTime: tip.createdAt ?? '',
+    confirmedAt: tip.confirmedAt,
+    staffConfirmedAt: tip.staffConfirmedAt,
+    merchantConfirmedAt: tip.merchantConfirmedAt,
+    isMultiStaff: tip.isMultiStaff,
+    businessName: tip.businessName ?? '',
+    tipItems: [],
+  }
+}
+
+function buildStaffTipsParams(query: StaffTipsListParams = {}) {
+  const params: Record<string, string | number> = {}
+  if (query.pageNumber != null) params.PageNumber = query.pageNumber
+  if (query.pageSize != null) params.PageSize = query.pageSize
+  if (query.dateFrom) params.DateFrom = query.dateFrom
+  if (query.dateTo) params.DateTo = query.dateTo
+  if (query.status) params.Status = query.status
+  if (query.paymentMethod) params.PaymentMethod = query.paymentMethod
+  if (query.touchPointId) params.TouchPointId = query.touchPointId
+  if (query.staffSearch) params.StaffSearch = query.staffSearch
+  return params
 }
 
 function normalizeTipItem(dto: StaffTipItemApiDto): StaffTipItem {
@@ -318,23 +358,40 @@ export function createStaffSelfRepository(client: HttpClient = httpClient) {
       return normalizeReviewsPage(res)
     },
 
-    async getTips({
-      pageNumber = 1,
-      pageSize = 20,
-      dateFrom,
-      dateTo,
-      status,
-    }: StaffTipsListParams = {}): Promise<StaffTipsPage> {
-      const params: Record<string, string | number> = {
-        PageNumber: pageNumber,
-        PageSize: pageSize,
-      }
-      if (dateFrom) params.DateFrom = dateFrom
-      if (dateTo) params.DateTo = dateTo
-      if (status) params.Status = status
-
-      const res = await client.get<StaffTipsPageApiDto>('/api/v1/staff/tips', { params })
+    async getTips(params: StaffTipsListParams = {}): Promise<StaffTipsPage> {
+      const res = await client.get<StaffTipsPageApiDto>('/api/v1/staff/tips', {
+        params: buildStaffTipsParams({
+          pageNumber: params.pageNumber ?? 1,
+          pageSize: params.pageSize ?? 20,
+          ...params,
+        }),
+      })
       return normalizeTipsPage(res)
+    },
+
+    async listTransactionsPaginated(
+      query: TransactionsListQuery = {},
+      staffDisplayName = '',
+    ): Promise<TransactionsListPage> {
+      const page = await this.getTips({
+        pageNumber: query.pageNumber,
+        pageSize: query.pageSize,
+        dateFrom: query.dateFrom,
+        dateTo: query.dateTo,
+        status: query.status,
+        paymentMethod: query.paymentMethod,
+        touchPointId: query.touchPointId,
+        staffSearch: query.staffSearch,
+      })
+
+      return {
+        items: page.items.map((tip) => staffTipToTransactionRecord(tip, staffDisplayName)),
+        pageNumber: page.pageNumber,
+        totalPages: page.totalPages,
+        totalCount: page.totalCount,
+        hasNextPage: page.hasNextPage,
+        hasPreviousPage: page.hasPreviousPage,
+      }
     },
 
     async confirmTipsReceipt(tipIds: string[]): Promise<StaffTipsConfirmReceiptResult> {

@@ -104,6 +104,18 @@ export function isShopConfirmed(tx) {
   return Boolean(tx?.isMultiStaff && tx?.merchantConfirmedAt)
 }
 
+// US-024 — staff confirm receipt for direct-to-staff tips.
+export function isAwaitingStaffConfirmation(tx) {
+  if (tx?.isMultiStaff) return false
+  if (tx?.staffConfirmedAt) return false
+  const status = String(tx.status || '').toLowerCase()
+  return status === 'confirmed'
+}
+
+export function isStaffReceiptConfirmed(tx) {
+  return Boolean(!tx?.isMultiStaff && tx?.staffConfirmedAt)
+}
+
 export function walletLabels(accounts) {
   return Object.entries(accounts)
     .filter(([, value]) => value)
