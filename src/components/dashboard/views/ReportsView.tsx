@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { CreditCard, Coins, CheckCircle, Clock, XCircle, AlertCircle } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
@@ -15,6 +15,10 @@ import { useMerchantStaff } from '../../../data/hooks/useMerchantStaff'
 import { useTouchpoints } from '../../../data/hooks/useMerchantTouchpoints'
 import type { TransactionsListQuery } from '../../../data/repositories/transactions'
 import ReportsTableSkeleton from './ReportsTableSkeleton'
+import ReportsDirectPaymentsTab from './ReportsDirectPaymentsTab'
+
+const REPORTS_TAB_TIPS = 'tips'
+const REPORTS_TAB_DIRECT_PAYMENTS = 'direct_payments'
 
 function toIsoDate(date: Date) {
   return date.toISOString().split('T')[0]
@@ -102,12 +106,47 @@ function ReportsView({
 }) {
   const { t, currentLanguage } = useTranslation()
   const isStaffAudience = audience === 'staff'
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const activeTab =
+    !isStaffAudience && searchParams.get('tab') === REPORTS_TAB_DIRECT_PAYMENTS
+      ? REPORTS_TAB_DIRECT_PAYMENTS
+      : REPORTS_TAB_TIPS
+  const selectedPaymentId = searchParams.get('paymentId')
+
+  const setActiveTab = useCallback((tab: string) => {
+    const next = new URLSearchParams(searchParams)
+    next.set('tab', tab)
+    if (tab !== REPORTS_TAB_DIRECT_PAYMENTS) {
+      next.delete('paymentId')
+      next.delete('status')
+    }
+    setSearchParams(next, { replace: true })
+  }, [searchParams, setSearchParams])
+
+  const openDirectPayment = useCallback((paymentId: string) => {
+    const next = new URLSearchParams(searchParams)
+    next.set('tab', REPORTS_TAB_DIRECT_PAYMENTS)
+    next.set('paymentId', paymentId)
+    setSearchParams(next, { replace: true })
+  }, [searchParams, setSearchParams])
+
+  const closeDirectPayment = useCallback(() => {
+    const next = new URLSearchParams(searchParams)
+    next.set('tab', REPORTS_TAB_DIRECT_PAYMENTS)
+    next.delete('paymentId')
+    setSearchParams(next, { replace: true })
+  }, [searchParams, setSearchParams])
 
   // Allow deep-linking the awaiting-confirmation filter, e.g. the dashboard
   // overview "View" banner navigates to /dashboard/reports?status=AwaitingShopConfirmation.
-  const [searchParams] = useSearchParams()
   const initialStatus =
     !isStaffAudience && searchParams.get('status') === AWAITING_STATUS ? AWAITING_STATUS : 'all'
+  const directPaymentsStatusFilter = useMemo(() => {
+    const status = searchParams.get('status')
+    if (status === '1' || status === 'confirmed') return '1'
+    return 'all'
+  }, [searchParams])
 
   // Filter States
   const [dateRangePreset, setDateRangePreset] = useState('all')
@@ -400,14 +439,49 @@ function ReportsView({
   return (
     <div className="space-y-5">
       {showPageHeader ? (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 border-b border-nexoraBorder pb-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-xl font-extrabold text-nexoraText">{t('dashboard.menu.transactions')}</h2>
-            <p className="mt-1 text-xs text-nexoraMuted">{t('dashboard.activity_log.title')}</p>
+            <p className="mt-1 max-w-[22rem] text-xs leading-relaxed text-nexoraMuted">
+              {!isStaffAudience && activeTab === REPORTS_TAB_DIRECT_PAYMENTS
+                ? t('merchant_payments.description')
+                : t('dashboard.activity_log.title')}
+            </p>
           </div>
+
+          {!isStaffAudience ? (
+            <div className="flex w-full gap-1 rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted p-1 sm:w-auto">
+              {[
+                { id: REPORTS_TAB_TIPS, label: t('dashboard.reports.tabs.tips') },
+                { id: REPORTS_TAB_DIRECT_PAYMENTS, label: t('dashboard.reports.tabs.direct_payments') },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`h-9 min-w-0 flex-1 rounded-lg px-2 text-[10px] font-bold transition-all sm:flex-none sm:px-4 sm:text-xs ${
+                    activeTab === tab.id
+                      ? 'bg-white text-nexoraBrand shadow-sm font-black'
+                      : 'text-nexoraMuted hover:text-nexoraText'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
       ) : null}
 
+      {!isStaffAudience && activeTab === REPORTS_TAB_DIRECT_PAYMENTS ? (
+        <ReportsDirectPaymentsTab
+          selectedPaymentId={selectedPaymentId}
+          onOpenPayment={openDirectPayment}
+          onClosePayment={closeDirectPayment}
+          initialStatusFilter={directPaymentsStatusFilter}
+        />
+      ) : (
+        <>
       <TransactionFilter
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -530,6 +604,8 @@ function ReportsView({
           audience={audience}
         />
       ) : null}
+        </>
+      )}
     </div>
   )
 }

@@ -70,6 +70,152 @@ export interface PaymentMethodDto {
   name?: string
 }
 
+/** Merchant direct-payment QR — GET /api/v1/merchant/payments/qr */
+export interface MerchantPaymentQr {
+  paymentUrl: string
+  businessId: string
+}
+
+/** Staff direct-payment QR — GET /api/v1/staff/payments/qr */
+export interface StaffPaymentQr {
+  paymentUrl: string
+  staffProfileId: string
+}
+
+/** Public direct-payment page — GET /api/v1/public/merchant/{businessId}/payment */
+export interface PublicDirectPaymentMethod {
+  id: string
+  type: string
+  uiKey?: string
+  accountInfo: string
+  imageUrl?: string | null
+}
+
+export interface PublicDirectPaymentPage {
+  businessId: string
+  businessName: string
+  logoUrl?: string | null
+  paymentUrl: string
+  paymentMethods: PublicDirectPaymentMethod[]
+}
+
+/** Public staff direct-payment page — GET /api/v1/public/staff/{staffProfileId}/payment */
+export interface PublicStaffDirectPaymentPage {
+  staffProfileId: string
+  displayName: string
+  photoUrl?: string | null
+  paymentUrl: string
+  paymentMethods: PublicDirectPaymentMethod[]
+}
+
+export interface CreateDirectPaymentResult {
+  paymentId: string
+  amount: number
+  type: number
+  paymentMethod: PublicDirectPaymentMethod
+}
+
+/** GET /api/v1/public/payments/{paymentId}/status — lightweight status poll */
+export interface DirectPaymentStatusSnapshot {
+  paymentId: string
+  status: PaymentStatusValue
+  type: number
+  amount: number
+  createdAt: string
+  customerConfirmedAt?: string | null
+  merchantConfirmedAt?: string | null
+}
+
+/** PaymentType enum — DirectPayment = 0, StaffDirectPayment = 1 per direct-payment QR specs. */
+export const PaymentType = {
+  DirectPayment: 0,
+  StaffDirectPayment: 1,
+} as const
+
+/** PaymentStatus enum — direct-payment-qr-flow state machine. */
+export const PaymentStatus = {
+  Initiated: 0,
+  Confirmed: 1,
+  Completed: 2,
+} as const
+
+export type PaymentTypeValue = (typeof PaymentType)[keyof typeof PaymentType]
+export type PaymentStatusValue = (typeof PaymentStatus)[keyof typeof PaymentStatus]
+
+/** Merchant payment ledger item — GET /api/v1/merchant/payments */
+export interface MerchantPaymentRecord {
+  id: string
+  type: number
+  amount: number
+  status: PaymentStatusValue
+  paymentMethodType: string
+  createdAt: string
+  customerConfirmedAt?: string | null
+  merchantConfirmedAt?: string | null
+  accountInfo?: string | null
+  imageUrl?: string | null
+}
+
+export interface MerchantPaymentsListPage {
+  items: MerchantPaymentRecord[]
+  pageNumber: number
+  pageSize: number
+  totalPages: number
+  totalCount: number
+  hasNextPage: boolean
+  hasPreviousPage: boolean
+}
+
+export interface MerchantPaymentStatusBucket {
+  count: number
+  totalAmount: number
+}
+
+export interface MerchantPaymentMethodStat {
+  method: string
+  count: number
+  totalAmount: number
+}
+
+/** GET /api/v1/merchant/payments/stats */
+export interface MerchantPaymentStats {
+  totalCount: number
+  totalAmount: number
+  averageAmount: number
+  conversionRate: number
+  mostUsedMethod: string | null
+  byStatus: {
+    initiated: MerchantPaymentStatusBucket
+    confirmed: MerchantPaymentStatusBucket
+    completed: MerchantPaymentStatusBucket
+  }
+  byPaymentMethod: MerchantPaymentMethodStat[]
+}
+
+/** Staff payment ledger item — GET /api/v1/staff/payments */
+export interface StaffPaymentRecord {
+  id: string
+  type: number
+  amount: number
+  status: PaymentStatusValue
+  paymentMethodType: string
+  createdAt: string
+  customerConfirmedAt?: string | null
+  staffConfirmedAt?: string | null
+  accountInfo?: string | null
+  imageUrl?: string | null
+}
+
+export interface StaffPaymentsListPage {
+  items: StaffPaymentRecord[]
+  pageNumber: number
+  pageSize: number
+  totalPages: number
+  totalCount: number
+  hasNextPage: boolean
+  hasPreviousPage: boolean
+}
+
 export interface TouchpointRecord {
   id?: string
   name?: string
@@ -143,6 +289,7 @@ export interface NotificationRecord {
   time: string
   staffId?: string
   linkTab?: string
+  paymentId?: string
   [key: string]: unknown
 }
 
@@ -387,6 +534,8 @@ export interface UserSubscription {
 
 export interface UserProfile {
   id?: string
+  /** Nested business summary from GET /api/v1/userprofile/me (BusinessSummaryDto). */
+  business?: MerchantBusinessInfo | null
   fullName?: string
   firstName?: string
   lastName?: string

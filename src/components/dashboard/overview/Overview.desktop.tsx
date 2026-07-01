@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Calendar, QrCode, Eye, Download, Sparkles, Pointer, Star, Hourglass } from 'lucide-react'
+import { Calendar, QrCode, Eye, Download, Star, Hourglass } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { useDownloadTouchpointQr } from '../../../data/hooks/useMerchantTouchpoints'
@@ -17,6 +17,7 @@ import SetupGuideBanner from './SetupGuideBanner'
 import PayoutSetupWarningBanner from './PayoutSetupWarningBanner'
 import OverviewEmptyState from './OverviewEmptyState'
 import OverviewSkeleton from './OverviewSkeleton'
+import SettingsTipQrPanel from '../../settings/SettingsTipQrPanel'
 
 function renderStars(rating) {
   const stars = []
@@ -535,64 +536,21 @@ function Overview({
             </div>
           </div>
 
-          {/* Master NFC section */}
-          <div className="rounded-xl border border-nexoraBorder bg-nexoraCanvas p-5 flex flex-col md:flex-row justify-between gap-5">
-            <div className="flex-grow flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-nexoraBrandSoft text-nexoraBrand">
-                    <Sparkles className="h-5 w-5" />
-                  </span>
-                  <div>
-                    <h3 className="text-sm font-extrabold text-nexoraText">
-                      {t('dashboard.master_gateway.nfc_title')}
-                    </h3>
-                    <p className="text-[10px] text-nexoraMuted">
-                      {t('dashboard.master_gateway.nfc_desc')}
-                    </p>
-                  </div>
-                </div>
-                <p className="mt-4 text-xs leading-normal text-nexoraMuted">
-                  {t('dashboard.master_gateway.nfc_body')}
-                </p>
-              </div>
-
-              <div className="mt-6 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const nfcUrl = masterQrLink
-                    navigator.clipboard.writeText(nfcUrl)
-                    showToast(t('components.dashboard.overview.Overview.copiedNfcRedirectLink'), 'success')
-                  }}
-                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-white border border-nexoraBorder px-4 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition cursor-pointer"
-                >
-                  <Pointer className="h-4 w-4" />
-                  {t('dashboard.master_gateway.btn_copy_link')}
-                </button>
-                <button
-                  type="button"
-                  disabled
-                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white transition cursor-not-allowed opacity-60"
-                >
-                  <Download className="h-4 w-4" />
-                  {t('dashboard.master_gateway.btn_download_config')}
-                </button>
-              </div>
-            </div>
-
-            {/* Visual NFC puck mockup */}
-            <div className="flex-shrink-0 mx-auto md:mx-0 w-28 h-28 rounded-lg bg-white border border-nexoraBorder/80 p-3 flex flex-col items-center justify-center shadow-sm relative overflow-hidden select-none">
-              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-400/10 to-amber-500/20 border border-dashed border-amber-500/40 flex items-center justify-center animate-pulse">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-500 text-white shadow-md">
-                  <Sparkles className="h-[18px] w-[18px]" />
-                </span>
-              </div>
-              <div className="text-[9px] font-black uppercase text-amber-600 tracking-widest mt-2 animate-pulse">
-                NFC Active
-              </div>
-            </div>
-          </div>
+          {/* Direct Payment QR section */}
+          <SettingsTipQrPanel
+            variant="gateway"
+            hideUrlCode
+            businessName={businessName}
+            showToast={showToast}
+            handleCopy={(value) => {
+              if (!value) return
+              navigator.clipboard.writeText(value)
+              showToast(t('components.dashboard.overview.Overview.copiedPaymentLink'), 'success')
+            }}
+            copiedId={null}
+            t={t}
+            onConfigurePayoutMethods={() => navigate('/dashboard/settings?tab=payout')}
+          />
             </>
           )}
         </div>

@@ -13,10 +13,12 @@ import {
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { useNotification } from '../../../contexts/NotificationContext'
 import { buildMasterQrTarget } from '../utils'
 import { isAwaitingShopConfirmation } from '../utils'
 import SetupGuideBanner from './SetupGuideBanner'
 import PayoutSetupWarningBanner from './PayoutSetupWarningBanner'
+import SettingsTipQrPanel from '../../settings/SettingsTipQrPanel'
 
 function twoInitials(name) {
   const parts = String(name || '').trim().split(/\s+/).filter(Boolean)
@@ -138,6 +140,7 @@ function Overview({
   metricsYear = null,
 }: any) {
   const { t } = useTranslation()
+  const { showToast } = useNotification()
   const navigate = useNavigate()
   const k = (key: string, vars?: Record<string, string | number>) =>
     t(`dashboard.owner_home.${key}`, vars)
@@ -315,6 +318,23 @@ function Overview({
           <QuickAction icon={<DollarSign className="h-6 w-6" />} label={k('quick_tips')} onClick={() => onNavigateMenu?.('tips')} />
           <QuickAction icon={<FileBarChart className="h-6 w-6" />} label={k('quick_reports')} onClick={() => onNavigateMenu?.('reports')} />
         </div>
+      </Panel>
+
+      <Panel title={t('components.settings.SettingsTipQrPanel.defaultQrTitle')}>
+        <SettingsTipQrPanel
+          variant="compact"
+          hideUrlCode
+          businessName={businessName}
+          showToast={showToast}
+          handleCopy={(value) => {
+            if (!value) return
+            navigator.clipboard.writeText(value)
+            showToast(t('components.dashboard.overview.Overview.copiedPaymentLink'), 'success')
+          }}
+          copiedId={null}
+          t={t}
+          onConfigurePayoutMethods={() => navigate('/dashboard/settings?tab=payout')}
+        />
       </Panel>
 
       {/* ── Pending Confirmations ────────────────────────────────────────── */}

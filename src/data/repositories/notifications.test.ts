@@ -32,4 +32,31 @@ describe('notificationsRepository', () => {
       read: false,
     })
   })
+
+  it('maps direct payment notification to payments tab with paymentId', async () => {
+    const client = {
+      get: vi.fn().mockResolvedValue({
+        items: [{
+          id: 'n2',
+          type: 'payment_received',
+          title: 'Nhận được thanh toán',
+          body: 'Tiệm nhận được thanh toán $50.00 qua Zelle',
+          actionUrl: '/merchant/payments/abc-123',
+          isRead: false,
+          createdAt: '2026-06-26T10:05:00.000Z',
+        }],
+        pageNumber: 1,
+        totalPages: 1,
+        totalCount: 1,
+      }),
+    }
+
+    const repo = createNotificationsRepository(client as never)
+    const list = await repo.list()
+
+    expect(list[0]).toMatchObject({
+      linkTab: 'reports',
+      paymentId: 'abc-123',
+    })
+  })
 })

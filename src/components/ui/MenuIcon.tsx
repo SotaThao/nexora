@@ -15,5 +15,12 @@ export default function MenuIcon({ item, active = false }) {
   }
 
   const Icon = item.icon
-  return <Icon className={`h-5 w-5 shrink-0 ${active ? 'text-white' : 'text-white/60'}`} />
+  return (
+    <span className="sidebar-icon-wrap">
+      <Icon
+        className={`sidebar-lucide-icon h-[18px] w-[18px] shrink-0 ${active ? 'sidebar-lucide-icon--active' : ''}`}
+        aria-hidden="true"
+      />
+    </span>
+  )
 }
