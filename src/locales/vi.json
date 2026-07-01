@@ -33,6 +33,7 @@
       "home": "Dashboard",
       "my_qr": "Mã QR",
       "tips": "Tiền tip",
+      "transactions": "Giao dịch",
       "reviews": "Đánh giá",
       "pay": "Cài đặt thanh toán",
       "profile": "Hồ sơ",
@@ -45,6 +46,7 @@
       "home": "Dashboard",
       "qr": "Mã QR của tôi",
       "tips": "Tiền tip",
+      "transactions": "Giao dịch",
       "reviews": "Đánh giá & Xếp hạng",
       "pay": "Phương thức nhận",
       "profile": "Cài đặt",
@@ -124,6 +126,15 @@
       "status_help_aria": "Trạng thái này nghĩa là gì",
       "ai_insight": "Phân tích AI",
       "ai_insight_body": "Tip trung bình cho dịch vụ Pedicure của bạn là 21%, cao hơn 6% so với mức trung bình của tiệm."
+    },
+    "transactions": {
+      "title": "Giao dịch",
+      "subtitle": "Hoạt động tip của bạn tại các tiệm đã liên kết",
+      "tips_subtitle": "Hoạt động tip tại các tiệm đã liên kết.",
+      "empty": "Không có giao dịch nào khớp bộ lọc.",
+      "col_time": "Thời gian",
+      "col_business": "Tiệm",
+      "detail_title": "Chi tiết giao dịch"
     },
     "pay": {
       "title": "Phương thức nhận tiền",

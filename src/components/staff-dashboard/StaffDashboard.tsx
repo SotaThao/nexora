@@ -77,7 +77,11 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
             onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
             onLogout={onLogout}
           />
-          <main className="mx-auto max-w-3xl px-4 py-5 pb-28 sm:px-6 lg:pb-10">
+          <main
+            className={`mx-auto px-4 py-5 pb-28 sm:px-6 lg:pb-10 ${
+              activeScreen === 'transactions' ? 'max-w-7xl' : 'max-w-3xl'
+            }`}
+          >
             {activeScreen === 'home' && showPayoutBanner && (
               <div className="mb-6 relative overflow-hidden rounded-2xl bg-gradient-to-br from-nexoraBrand/10 via-white to-nexoraBrandSoft border border-nexoraBrand/20 p-6 md:p-8 shadow-sm animate-fadeIn">
                 <div className="absolute -right-10 -top-10 opacity-10">

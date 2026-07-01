@@ -29,6 +29,7 @@
       "home": "Dashboard",
       "my_qr": "Link & Tip",
       "tips": "Tips",
+      "transactions": "Transactions",
       "reviews": "Reviews",
       "pay": "Payout Setup",
       "profile": "Profile",
@@ -41,6 +42,7 @@
       "home": "Dashboard",
       "qr": "Salon Link & Tips",
       "tips": "Tips",
+      "transactions": "Transactions",
       "reviews": "Reviews & Ratings",
       "pay": "Payout Methods",
       "profile": "Settings",
@@ -124,6 +126,15 @@
       "status_help_aria": "What this status means",
       "ai_insight": "AI Insight",
       "ai_insight_body": "Your average tip for Pedicure is 21%, which is 6% higher than the salon average."
+    },
+    "transactions": {
+      "title": "Transactions",
+      "subtitle": "Your tip activity across linked salons",
+      "tips_subtitle": "Tip activity across your linked salons.",
+      "empty": "No transactions found for the selected filters.",
+      "col_time": "Time",
+      "col_business": "Business",
+      "detail_title": "Transaction Details"
     },
     "pay": {
       "title": "Payment Methods",
