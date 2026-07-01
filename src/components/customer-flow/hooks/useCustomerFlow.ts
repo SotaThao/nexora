@@ -22,6 +22,11 @@ import {
 } from '../../../data/hooks/usePublicTouch'
 import { PAYOUT_UI_LABELS, payoutTypeToUiKey } from '../../../data/paymentMethodTypes'
 import type { PaymentMethodDto, ReviewLinks } from '../../../types/domain'
+import {
+  isTouchPaymentIntent,
+  resolvePaymentCopyScope,
+  resolveTouchpointRedirectUrl,
+} from '../../../utils/customerFlowKind'
 
 function walletNameToKey(walletName: string): string {
   const match = Object.entries(PAYOUT_UI_LABELS).find(([, label]) => label === walletName)
@@ -195,6 +200,11 @@ export default function useCustomerFlow() {
     return params.get('sessionId') || crypto.randomUUID()
   }, [])
 
+  const touchSearchParams = useMemo(
+    () => new URLSearchParams(window.location.search),
+    [],
+  )
+
   const queryBusinessId = useMemo(() => {
     const params = new URLSearchParams(window.location.search)
     return params.get('businessId')
@@ -214,6 +224,20 @@ export default function useCustomerFlow() {
     sessionId,
   })
   const touchPageData = touchPageQuery.data ?? null
+
+  const isPaymentFlow = useMemo(
+    () => isTouchPaymentIntent(touchSearchParams, touchPageData),
+    [touchSearchParams, touchPageData],
+  )
+
+  useEffect(() => {
+    if (!touchPageQuery.isSuccess || !touchPageData) return
+    const redirectPath = resolveTouchpointRedirectUrl(touchPageData)
+    if (!redirectPath) return
+    const currentPath = `${window.location.pathname}${window.location.search}`
+    if (currentPath === redirectPath) return
+    window.location.replace(redirectPath)
+  }, [touchPageQuery.isSuccess, touchPageData])
 
   // ── API mutations ──
   const createTipMutation = useCreateTip()
@@ -278,6 +302,11 @@ export default function useCustomerFlow() {
   const [currentReviewId, setCurrentReviewId] = useState<any | null>(null)
   const [paymentLinkData, setPaymentLinkData] = useState<any | null>(null)
   const [tipPaymentMethodsData, setTipPaymentMethodsData] = useState<any[] | null>(null)
+
+  const paymentCopyScope = useMemo(
+    () => resolvePaymentCopyScope(isPaymentFlow, selectedStaffMembers.length),
+    [isPaymentFlow, selectedStaffMembers.length],
+  )
 
   useEffect(() => {
     if (didApplyStaffPreselect.current || activeStaffList.length === 0) return
@@ -702,5 +731,7 @@ export default function useCustomerFlow() {
     handleTrackExternalReview, paymentLinkData, tipPaymentMethodsData,
     scannedTouchpoint: null,
     canSelectMultipleStaff,
+    isPaymentFlow,
+    paymentCopyScope,
   }
 }

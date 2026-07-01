@@ -166,6 +166,32 @@ export interface MerchantPaymentsListPage {
   hasPreviousPage: boolean
 }
 
+export interface MerchantPaymentStatusBucket {
+  count: number
+  totalAmount: number
+}
+
+export interface MerchantPaymentMethodStat {
+  method: string
+  count: number
+  totalAmount: number
+}
+
+/** GET /api/v1/merchant/payments/stats */
+export interface MerchantPaymentStats {
+  totalCount: number
+  totalAmount: number
+  averageAmount: number
+  conversionRate: number
+  mostUsedMethod: string | null
+  byStatus: {
+    initiated: MerchantPaymentStatusBucket
+    confirmed: MerchantPaymentStatusBucket
+    completed: MerchantPaymentStatusBucket
+  }
+  byPaymentMethod: MerchantPaymentMethodStat[]
+}
+
 /** Staff payment ledger item — GET /api/v1/staff/payments */
 export interface StaffPaymentRecord {
   id: string

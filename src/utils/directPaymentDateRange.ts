@@ -43,3 +43,14 @@ export function resolveDirectPaymentDateRange(
   }
   return {}
 }
+
+/** Default stats window: from 1 year ago through end of today. */
+export function resolvePaymentStatsDateRange(): { from: string; to: string } {
+  const today = new Date()
+  const from = new Date(today)
+  from.setFullYear(from.getFullYear() - 1)
+  return {
+    from: toApiDateTime(toIsoDate(from))!,
+    to: toApiDateTime(toIsoDate(today), true)!,
+  }
+}

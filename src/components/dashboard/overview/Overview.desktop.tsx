@@ -544,23 +544,21 @@ function Overview({
             </div>
           </div>
 
-          {/* QR Payment section (replaces NFC card UI) */}
-          <div className="rounded-xl border border-nexoraBorder bg-nexoraCanvas p-5">
-            <SettingsTipQrPanel
-              variant="compact"
-              hideUrlCode
-              businessName={businessName}
-              showToast={showToast}
-              handleCopy={(value) => {
-                if (!value) return
-                navigator.clipboard.writeText(value)
-                showToast(t('components.dashboard.overview.Overview.copiedNfcRedirectLink'), 'success')
-              }}
-              copiedId={null}
-              t={t}
-              onConfigurePayoutMethods={() => navigate('/dashboard/settings?tab=payout')}
-            />
-          </div>
+          {/* Direct Payment QR section */}
+          <SettingsTipQrPanel
+            variant="gateway"
+            hideUrlCode
+            businessName={businessName}
+            showToast={showToast}
+            handleCopy={(value) => {
+              if (!value) return
+              navigator.clipboard.writeText(value)
+              showToast(t('components.dashboard.overview.Overview.copiedPaymentLink'), 'success')
+            }}
+            copiedId={null}
+            t={t}
+            onConfigurePayoutMethods={() => navigate('/dashboard/settings?tab=payout')}
+          />
             </>
           )}
         </div>

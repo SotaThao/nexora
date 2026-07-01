@@ -26,6 +26,7 @@ export default function TipAmount({
   setTipRefNumber,
   isApiMode,
   handlePay,
+  paymentMode = false,
 }) {
   const walletOptions = getWalletOptions(availablePaymentWalletKeys)
   const staffTipRows = selectedStaffMembers.map((member) => ({
@@ -57,7 +58,9 @@ export default function TipAmount({
     <div className="space-y-4 animate-fadeIn">
       <div className="text-center space-y-1.5">
         <h2 className="font-sans text-lg font-black tracking-wide text-nexoraText uppercase">
-          {t('customer.tip_review_payment_title')}
+          {paymentMode
+            ? t('direct_payment.review_payment_title')
+            : t('customer.tip_review_payment_title')}
         </h2>
       </div>
 
@@ -154,7 +157,9 @@ export default function TipAmount({
         <div className="flex items-center justify-between border-t border-nexoraBrandSoft bg-nexoraBrandSoft/35 px-3.5 py-3">
           <div>
             <h4 className="text-[11px] font-extrabold text-slate-800 uppercase tracking-wider">
-              {t('components.customer_flow.steps.TipAmount.totalTip')}
+              {paymentMode
+                ? t('direct_payment.total_payment')
+                : t('components.customer_flow.steps.TipAmount.totalTip')}
             </h4>
             <p className="mt-0.5 text-[10px] font-semibold text-nexoraMuted">
               {t('components.customer_flow.steps.TipAmount.provider_count', { count: selectedStaffMembers.length })}

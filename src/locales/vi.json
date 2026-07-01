@@ -650,19 +650,16 @@
       "settings_success": "Đã lưu cấu hình cài đặt hệ thống!"
     },
     "master_gateway": {
-      "title": "Mã QR & NFC của tiệm",
-      "subtitle": "Chia sẻ các mã QR này để nhận típ và đánh giá.",
+      "title": "Mã QR cửa hàng",
+      "subtitle": "Chia sẻ các mã QR để nhận tip, đánh giá và thanh toán trực tiếp.",
       "qr_title": "Mã QR tiệm",
       "qr_desc": "Quầy lễ tân – tất cả kỹ thuật viên",
       "qr_body": "Đặt mã QR này tại quầy đón khách. Khách hàng quét mã này để chọn nhân viên phục vụ và để lại đánh giá.",
-      "nfc_title": "Thẻ NFC chạm",
-      "nfc_desc": "Liên kết Chạm-để-Tip",
-      "nfc_body": "Ghi URL này vào thẻ NFC để bàn. Khách chạm điện thoại để tip hoặc đánh giá ngay.",
+      "payment_title": "QR Thanh toán trực tiếp",
+      "payment_desc": "Quầy lễ tân – thanh toán cho tiệm",
+      "payment_body": "Đặt mã QR này tại quầy đón khách. Khách quét mã để thanh toán trực tiếp cho tiệm qua các phương thức nhận tiền đã bật.",
       "btn_open": "Xem Mã QR",
       "btn_download": "Tải Mã QR",
-      "btn_open_nfc": "Thử NFC Link",
-      "btn_copy": "Sao chép đường dẫn",
-      "btn_download_config": "Tải File Cấu Hình",
       "btn_copy_link": "Sao chép link"
     },
     "touchpoint_stats": {
@@ -1130,6 +1127,15 @@
     "status_completed": "Hoàn tất",
     "status_completed_desc": "Tiệm đã xác nhận nhận tiền (trạng thái cuối).",
     "status_flow_title": "Trạng thái thanh toán",
+    "stats_period_hint": "12 tháng gần nhất",
+    "stats_total_count": "Tổng giao dịch",
+    "stats_total_amount": "Tổng tiền",
+    "stats_average_amount": "Trung bình",
+    "stats_conversion_rate": "Tỷ lệ chuyển đổi",
+    "stats_most_used_method": "Phương thức phổ biến",
+    "stats_count": "Số lượng",
+    "stats_amount": "Số tiền",
+    "stats_by_method_title": "Theo phương thức thanh toán",
     "col_action": "Thao tác",
     "view_detail": "Xem chi tiết",
     "waiting_customer_confirm": "Đang chờ khách xác nhận đã chuyển khoản…",
@@ -1164,6 +1170,15 @@
     "status_completed": "Hoàn tất",
     "status_completed_desc": "Bạn đã xác nhận nhận tiền (trạng thái cuối).",
     "status_flow_title": "Trạng thái thanh toán",
+    "stats_period_hint": "12 tháng gần nhất",
+    "stats_total_count": "Tổng giao dịch",
+    "stats_total_amount": "Tổng tiền",
+    "stats_average_amount": "Trung bình",
+    "stats_conversion_rate": "Tỷ lệ chuyển đổi",
+    "stats_most_used_method": "Phương thức phổ biến",
+    "stats_count": "Số lượng",
+    "stats_amount": "Số tiền",
+    "stats_by_method_title": "Theo phương thức thanh toán",
     "col_action": "Thao tác",
     "view_detail": "Xem chi tiết",
     "waiting_customer_confirm": "Đang chờ khách xác nhận đã chuyển khoản…",
@@ -1553,6 +1568,7 @@
           "bankDetails": "Thông tin ngân hàng",
           "account": "Tài khoản nhận",
           "noteRequired": "Nội dung (Bắt buộc)",
+          "yesISentTheTip": "Đúng, tôi đã gửi tip",
           "yesISentThe": "Tôi Đã Thanh Toán",
           "multiStaffTitle": "Gửi ${amount} tới {business} qua {wallet}",
           "multiStaffSubtitle": "Mở ứng dụng ngân hàng và gửi một lần tới {business}. Tiền tip sẽ được chia cho các nhân viên đã chọn.",
@@ -1580,7 +1596,9 @@
           "stepOpenApp_applecash": "Mở ứng dụng Ví.",
           "stepOpenApp_default": "Mở ứng dụng ví của bạn.",
           "stepSendAmount": "Gửi đúng ${amount} cho {name}.",
-          "stepConfirm": "Quay lại và nhấn Tôi Đã Thanh Toán."
+          "stepSendAmountPayment": "Gửi đúng ${amount} cho {name}.",
+          "stepConfirm": "Quay lại đây và nhấn Đúng, tôi đã gửi tip.",
+          "stepConfirmPayment": "Quay lại đây và nhấn Đúng, tôi đã thanh toán."
         }
       }
     },
@@ -1765,10 +1783,10 @@
       "overview": {
         "Overview": {
           "custom": "Tự chọn",
-          "copiedNfcRedirectLink": "Đã sao chép link chuyển hướng NFC vào clipboard!",
+          "copiedPaymentLink": "Đã sao chép link thanh toán vào clipboard!",
           "qr_download_failed": "Không thể tải mã QR. Vui lòng thử lại.",
           "gateway_empty_title": "Chưa có trạm",
-          "gateway_empty_desc": "Tạo trạm để sinh mã QR và NFC cho cửa hàng.",
+          "gateway_empty_desc": "Tạo trạm để sinh mã QR cho cửa hàng.",
           "gateway_empty_action": "Thêm Trạm",
           "reviews_empty_title": "Chưa có dữ liệu đánh giá",
           "reviews_empty_desc": "Chỉ số đánh giá sẽ hiển thị khi khách hàng bắt đầu để lại phản hồi."
@@ -1973,7 +1991,7 @@
         }
       },
       "SettingsTipQrPanel": {
-        "description": "Mã QR thanh toán mặc định của tiệm. Khách quét để trả tiền trực tiếp cho doanh nghiệp — không cần tài khoản. Tiền vào các phương thức nhận tiền bạn cấu hình ở tab Phương thức nhận tiền.",
+        "description": "Chia sẻ mã QR để nhận thanh toán",
         "stepScan": "Khách quét mã QR này",
         "stepAmount": "Khách nhập số tiền thanh toán",
         "stepMethod": "Khách chọn một phương thức nhận tiền đang bật",
@@ -1989,7 +2007,7 @@
         "defaultQrTitle": "QR Thanh toán trực tiếp",
         "qrAlt": "Mã QR thanh toán trực tiếp cho merchant",
         "scanCaption": "Quét để thanh toán cho tiệm",
-        "merchantNote": "QR này mở trang thanh toán trực tiếp (/pay/{businessId}). Khác với QR tip nhân viên qua touch point.",
+        "merchantNote": "Chia sẻ mã QR này để nhận tiền trực tiếp bằng phương thức bạn đã setup.",
         "loadErrorTitle": "Không tải được QR thanh toán",
         "loadErrorDesc": "Không lấy được link thanh toán. Kiểm tra kết nối và thử lại.",
         "retry": "Thử lại"

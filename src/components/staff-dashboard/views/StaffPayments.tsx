@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
+import { useEffect, useMemo, useState, type MouseEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { AlertCircle, CheckCircle, CreditCard, Eye, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
@@ -12,6 +12,7 @@ import { getErrorI18nKey } from '../../../data/errorCodes'
 import {
   useAcknowledgeStaffPayment,
   useStaffPaymentDetail,
+  useStaffPaymentStats,
   useStaffPaymentsList,
 } from '../../../data/hooks/useStaffPayments'
 import { useDirectPaymentStatusPoll } from '../../../data/hooks/useDirectPaymentStatusPoll'
@@ -23,11 +24,9 @@ import CustomSelect from '../../CustomSelect'
 import { SkeletonLayout } from '../../ui/skeleton'
 import { STAFF_PAYMENTS_SKELETON } from '../skeletons/staffDashboardSkeletons'
 import { dismissAckPrompt } from '../../../utils/directPaymentAckDismiss'
-import { resolveDirectPaymentDateRange } from '../../../utils/directPaymentDateRange'
-import {
-  DirectPaymentStatusBadge,
-  DirectPaymentStatusLegend,
-} from '../../dashboard/direct-payments/DirectPaymentStatusBadge'
+import { resolveDirectPaymentDateRange, resolvePaymentStatsDateRange } from '../../../utils/directPaymentDateRange'
+import DirectPaymentStatusStats from '../../dashboard/direct-payments/DirectPaymentStatusStats'
+import { DirectPaymentStatusBadge } from '../../dashboard/direct-payments/DirectPaymentStatusBadge'
 import {
   DIRECT_PAYMENT_STATUS_ORDER,
   getDirectPaymentStatusDescKey,
@@ -53,7 +52,6 @@ export default function StaffPayments() {
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [acknowledgingId, setAcknowledgingId] = useState<string | null>(null)
-  const hasHandledInitialPendingAck = useRef(false)
   const acknowledgeMutation = useAcknowledgeStaffPayment()
 
   const { pageNumber, pageSize, setPage, reset: resetPage } = usePagination({
@@ -68,7 +66,10 @@ export default function StaffPayments() {
     ...resolveDirectPaymentDateRange(datePreset, startDate, endDate),
   }), [pageNumber, pageSize, statusFilter, datePreset, startDate, endDate])
 
+  const statsQuery = useMemo(() => resolvePaymentStatsDateRange(), [])
+
   const { data: paymentsPage, isPending, isFetching } = useStaffPaymentsList(apiQuery)
+  const { data: paymentStats, isPending: isStatsPending } = useStaffPaymentStats(statsQuery)
   const { data: selectedPaymentDetail, isPending: isDetailLoading } = useStaffPaymentDetail(
     selectedPaymentId,
     { enabled: Boolean(selectedPaymentId) },
@@ -92,17 +93,6 @@ export default function StaffPayments() {
       setPage(totalPages)
     }
   }, [pageNumber, totalPages, setPage])
-
-  useEffect(() => {
-    if (hasHandledInitialPendingAck.current) return
-    if (!paymentsPage || selectedPaymentId) return
-    if (pendingAckPayments.length <= 1) return
-
-    if (statusFilter === 'all') {
-      setStatusFilter('1')
-    }
-    hasHandledInitialPendingAck.current = true
-  }, [paymentsPage, pendingAckPayments.length, selectedPaymentId, statusFilter])
 
   const selectedPayment =
     selectedPaymentDetail ??
@@ -242,7 +232,12 @@ export default function StaffPayments() {
 
   return (
     <div className="space-y-4 sm:space-y-5">
-      <DirectPaymentStatusLegend t={t} variant="staff" />
+      <DirectPaymentStatusStats
+        stats={paymentStats}
+        isLoading={isStatsPending}
+        t={t}
+        variant="staff"
+      />
 
       {pendingAckPayments.length > 0 ? (
         <div className="flex flex-col gap-3 rounded-xl border border-violet-200 bg-violet-50/80 p-3.5 sm:flex-row sm:items-center sm:justify-between sm:p-4">

@@ -11,6 +11,7 @@ import { getErrorI18nKey } from '../../../data/errorCodes'
 import {
   useAcknowledgeMerchantPayment,
   useMerchantPaymentDetail,
+  useMerchantPaymentStats,
   useMerchantPaymentsList,
 } from '../../../data/hooks/useMerchantPayments'
 import { useDirectPaymentStatusPoll } from '../../../data/hooks/useDirectPaymentStatusPoll'
@@ -21,10 +22,10 @@ import MerchantPaymentDetailModal from '../modals/MerchantPaymentDetailModal'
 import MerchantPaymentAckNoticeDialog from '../modals/MerchantPaymentAckNoticeDialog'
 import CustomSelect from '../../CustomSelect'
 import { dismissAckPrompt } from '../../../utils/directPaymentAckDismiss'
-import { resolveDirectPaymentDateRange } from '../../../utils/directPaymentDateRange'
+import { resolveDirectPaymentDateRange, resolvePaymentStatsDateRange } from '../../../utils/directPaymentDateRange'
+import DirectPaymentStatusStats from '../direct-payments/DirectPaymentStatusStats'
 import {
   DirectPaymentStatusBadge,
-  DirectPaymentStatusLegend,
 } from '../direct-payments/DirectPaymentStatusBadge'
 import {
   DIRECT_PAYMENT_STATUS_ORDER,
@@ -70,7 +71,10 @@ export default function ReportsDirectPaymentsTab({
     ...resolveDirectPaymentDateRange(datePreset, startDate, endDate),
   }), [pageNumber, pageSize, statusFilter, datePreset, startDate, endDate])
 
+  const statsQuery = useMemo(() => resolvePaymentStatsDateRange(), [])
+
   const { data: paymentsPage, isPending, isFetching } = useMerchantPaymentsList(apiQuery)
+  const { data: paymentStats, isPending: isStatsPending } = useMerchantPaymentStats(statsQuery)
   const { data: selectedPaymentDetail, isPending: isDetailLoading } = useMerchantPaymentDetail(
     selectedPaymentId,
     { enabled: Boolean(selectedPaymentId) },
@@ -102,16 +106,11 @@ export default function ReportsDirectPaymentsTab({
   useEffect(() => {
     if (hasHandledInitialPendingAck.current) return
     if (!paymentsPage || selectedPaymentId) return
-    if (pendingAckPayments.length === 0) return
+    if (pendingAckPayments.length !== 1) return
 
-    if (pendingAckPayments.length === 1) {
-      setAckNoticePayment(pendingAckPayments[0])
-    } else if (statusFilter === 'all') {
-      setStatusFilter('1')
-    }
-
+    setAckNoticePayment(pendingAckPayments[0])
     hasHandledInitialPendingAck.current = true
-  }, [paymentsPage, pendingAckPayments, selectedPaymentId, statusFilter])
+  }, [paymentsPage, pendingAckPayments, selectedPaymentId])
 
   const selectedPayment =
     selectedPaymentDetail ??
@@ -136,6 +135,10 @@ export default function ReportsDirectPaymentsTab({
 
   const handleReviewPendingAck = () => {
     if (pendingAckPayments.length === 0) return
+    if (pendingAckPayments.length > 1) {
+      setStatusFilter('1')
+      return
+    }
     onOpenPayment?.(pendingAckPayments[0].id)
   }
 
@@ -246,7 +249,11 @@ export default function ReportsDirectPaymentsTab({
 
   return (
     <div className="space-y-4 sm:space-y-5">
-      <DirectPaymentStatusLegend t={t} />
+      <DirectPaymentStatusStats
+        stats={paymentStats}
+        isLoading={isStatsPending}
+        t={t}
+      />
 
       {pendingAckPayments.length > 0 ? (
         <div className="flex flex-col gap-3 rounded-xl border border-violet-200 bg-violet-50/80 p-3.5 sm:flex-row sm:items-center sm:justify-between sm:p-4">

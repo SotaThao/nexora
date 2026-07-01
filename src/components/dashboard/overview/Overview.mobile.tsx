@@ -327,7 +327,7 @@ function Overview({
           handleCopy={(value) => {
             if (!value) return
             navigator.clipboard.writeText(value)
-            showToast(t('components.dashboard.overview.Overview.copiedNfcRedirectLink'), 'success')
+            showToast(t('components.dashboard.overview.Overview.copiedPaymentLink'), 'success')
           }}
           copiedId={null}
           t={t}

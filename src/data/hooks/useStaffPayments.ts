@@ -1,12 +1,13 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient, type Query } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import staffPaymentsRepository from '../repositories/staffPayments'
-import type { StaffPaymentsListQuery } from '../repositories/staffPayments'
+import type { StaffPaymentsListQuery, StaffPaymentStatsQuery } from '../repositories/staffPayments'
 import { useSessionRole } from '../../auth/useSessionRole'
 import type {
   StaffPaymentQr,
   StaffPaymentRecord,
   StaffPaymentsListPage,
+  MerchantPaymentStats,
 } from '../../types/domain'
 import { PaymentStatus } from '../../types/domain'
 
@@ -60,6 +61,20 @@ export function useStaffPaymentDetail(paymentId?: string | null, { enabled = tru
   })
 }
 
+export function useStaffPaymentStats(
+  query: StaffPaymentStatsQuery,
+  { enabled = true } = {},
+) {
+  const canFetch = useIsStaff(enabled)
+
+  return useQuery<MerchantPaymentStats>({
+    queryKey: qk.staffPaymentStats(query),
+    queryFn: () => staffPaymentsRepository.getStats(query),
+    enabled: canFetch && Boolean(query.from && query.to),
+    retry: false,
+  })
+}
+
 export function useAcknowledgeStaffPayment() {
   const queryClient = useQueryClient()
 
@@ -97,6 +112,7 @@ export function useAcknowledgeStaffPayment() {
       )
       queryClient.invalidateQueries({ queryKey: ['staffPayments'] })
       queryClient.invalidateQueries({ queryKey: qk.staffPaymentDetail(paymentId) })
+      queryClient.invalidateQueries({ queryKey: ['staffPayments', 'stats'] })
     },
   })
 }

@@ -650,19 +650,16 @@
       "settings_success": "System configuration updated successfully!"
     },
     "master_gateway": {
-      "title": "Store QR & NFC Codes",
-      "subtitle": "Share these QR codes to receive tips and reviews.",
+      "title": "Store QR Codes",
+      "subtitle": "Share these QR codes to receive tips, reviews, and direct payments.",
       "qr_title": "Salon QR Code",
       "qr_desc": "Front desk – all technicians",
       "qr_body": "Place this QR code at the reception desk. Customers scan to choose their technician and submit reviews.",
-      "nfc_title": "NFC Tap Card",
-      "nfc_desc": "Tap-to-Tip link",
-      "nfc_body": "Write this URL to your NFC desk pucks. Customers tap their phone to tip or leave a review instantly.",
+      "payment_title": "Direct Payment QR",
+      "payment_desc": "Front desk – pay this business",
+      "payment_body": "Place this QR at your reception desk. Customers scan to pay your business directly using your active payout methods.",
       "btn_open": "Open QR",
       "btn_download": "Download QR",
-      "btn_open_nfc": "Test NFC Redirect",
-      "btn_copy": "Copy Payload URL",
-      "btn_download_config": "Download Config",
       "btn_copy_link": "Copy Link"
     },
     "touchpoint_stats": {
@@ -1130,6 +1127,15 @@
     "status_completed": "Completed",
     "status_completed_desc": "You confirmed receipt — final status.",
     "status_flow_title": "Payment status",
+    "stats_period_hint": "Last 12 months",
+    "stats_total_count": "Total payments",
+    "stats_total_amount": "Total amount",
+    "stats_average_amount": "Average amount",
+    "stats_conversion_rate": "Conversion rate",
+    "stats_most_used_method": "Top method",
+    "stats_count": "Count",
+    "stats_amount": "Amount",
+    "stats_by_method_title": "By payment method",
     "col_action": "Action",
     "view_detail": "View details",
     "waiting_customer_confirm": "Waiting for the customer to confirm they sent the payment…",
@@ -1164,6 +1170,15 @@
     "status_completed": "Completed",
     "status_completed_desc": "You confirmed receipt — final status.",
     "status_flow_title": "Payment status",
+    "stats_period_hint": "Last 12 months",
+    "stats_total_count": "Total payments",
+    "stats_total_amount": "Total amount",
+    "stats_average_amount": "Average amount",
+    "stats_conversion_rate": "Conversion rate",
+    "stats_most_used_method": "Top method",
+    "stats_count": "Count",
+    "stats_amount": "Amount",
+    "stats_by_method_title": "By payment method",
     "col_action": "Action",
     "view_detail": "View details",
     "waiting_customer_confirm": "Waiting for the customer to confirm they sent the payment…",
@@ -1553,6 +1568,7 @@
           "bankDetails": "Bank details",
           "account": "Account",
           "noteRequired": "Note (Required)",
+          "yesISentTheTip": "Yes, I sent the tip",
           "yesISentThe": "I Completed Payment",
           "multiStaffTitle": "Send ${amount} to {business} with {wallet}",
           "multiStaffSubtitle": "Open your bank app and send one payment to {business}. Your tip will be split among the selected providers.",
@@ -1580,7 +1596,9 @@
           "stepOpenApp_applecash": "Open your Wallet app.",
           "stepOpenApp_default": "Open your wallet app.",
           "stepSendAmount": "Send exactly ${amount} to {name}.",
-          "stepConfirm": "Come back here and tap I Completed Payment."
+          "stepSendAmountPayment": "Send exactly ${amount} to {name}.",
+          "stepConfirm": "Come back here and tap Yes, I sent the tip.",
+          "stepConfirmPayment": "Come back here and tap Yes, I paid."
         }
       }
     },
@@ -1765,10 +1783,10 @@
       "overview": {
         "Overview": {
           "custom": "Custom",
-          "copiedNfcRedirectLink": "Copied NFC redirect link to clipboard!",
+          "copiedPaymentLink": "Copied payment link to clipboard!",
           "qr_download_failed": "Could not download QR code. Please try again.",
           "gateway_empty_title": "No stations configured",
-          "gateway_empty_desc": "Create a station to generate your store QR and NFC code.",
+          "gateway_empty_desc": "Create a station to generate your store QR code.",
           "gateway_empty_action": "Add Station",
           "reviews_empty_title": "No review data yet",
           "reviews_empty_desc": "Review metrics will appear once customers start leaving feedback."
@@ -1974,7 +1992,7 @@
         }
       },
       "SettingsTipQrPanel": {
-        "description": "Your store's default payment QR. Customers scan it to pay your business directly — no account required. Money goes to the payout methods you configure in the Payout Methods tab.",
+        "description": "Share this QR code to receive payments",
         "stepScan": "Customer scans this QR code",
         "stepAmount": "Customer enters the payment amount",
         "stepMethod": "Customer chooses one of your active payout methods",
@@ -1990,7 +2008,7 @@
         "defaultQrTitle": "Direct Payment QR",
         "qrAlt": "Merchant direct payment QR code",
         "scanCaption": "Scan to pay this business",
-        "merchantNote": "This QR opens your direct payment page (/pay/{businessId}). It is separate from staff tip touch-point QR codes.",
+        "merchantNote": "Share this QR code to receive direct payments using the payout methods you've set up.",
         "loadErrorTitle": "Could not load payment QR",
         "loadErrorDesc": "We couldn't fetch your payment link. Check your connection and try again.",
         "retry": "Try again"

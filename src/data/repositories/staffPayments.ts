@@ -5,7 +5,9 @@ import type {
   StaffPaymentQr,
   StaffPaymentRecord,
   StaffPaymentsListPage,
+  MerchantPaymentStats,
 } from '../../types/domain'
+import { normalizePaymentStats } from './paymentStatsNormalization'
 
 type HttpClient = typeof httpClient
 
@@ -16,6 +18,11 @@ export interface StaffPaymentsListQuery {
   status?: number
   from?: string
   to?: string
+}
+
+export interface StaffPaymentStatsQuery {
+  from: string
+  to: string
 }
 
 function readField<T>(raw: Record<string, unknown>, camel: string, pascal: string): T | undefined {
@@ -128,6 +135,13 @@ export function createStaffPaymentsRepository(client: HttpClient = httpClient) {
         `/api/v1/staff/payments/${encodeURIComponent(paymentId)}/acknowledge`,
         {},
       )
+    },
+
+    async getStats(query: StaffPaymentStatsQuery): Promise<MerchantPaymentStats> {
+      const res = await client.get<Record<string, unknown>>('/api/v1/staff/payments/stats', {
+        params: { from: query.from, to: query.to },
+      })
+      return normalizePaymentStats(res)
     },
   }
 }
