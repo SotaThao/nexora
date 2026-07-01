@@ -410,7 +410,9 @@ export interface StaffReviewsPage {
   totalCount: number
 }
 
-export type StaffTipStatus = 'Initiated' | 'Confirmed' | 'Skipped' | 'Completed' | string
+import type { TipStatusValue } from '../constants/tipStatus'
+
+export type StaffTipStatus = TipStatusValue | string
 
 export interface StaffTipItem {
   id: string
@@ -621,6 +623,35 @@ export interface EcosystemItem {
 
 export interface EcosystemSignInResult {
   redirectUrl: string | null
+}
+
+export type BannerTarget = 'Redirect' | 'OpenNewTab' | 'Open New Tab' | string
+
+export interface BannerTranslation {
+  languageCode: string
+  webUrl?: string | null
+  mobileUrl?: string | null
+  tabletUrl?: string | null
+}
+
+export interface Banner {
+  id: string
+  title: string
+  webActionUrl?: string | null
+  androidActionUrl?: string | null
+  iosActionUrl?: string | null
+  target: BannerTarget
+  ordering: number
+  status: string
+  translations: BannerTranslation[]
+}
+
+export interface HomePageBannerSlide {
+  id: string
+  image: string
+  alt: string
+  link: string
+  target: '_blank' | '_self'
 }
 
 export function getApiErrorCode(err: unknown, fallback = 'HTTP_ERROR'): string {

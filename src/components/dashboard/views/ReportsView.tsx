@@ -10,6 +10,7 @@ import TransactionDetailModal from '../modals/TransactionDetailModal'
 import { usePagination } from '../../../hooks/usePagination'
 import { DEFAULT_PAGE_SIZE, STAFF_FILTER_LIST_PAGE_SIZE } from '../../../constants/pagination'
 import { useTransactionsPaginated } from '../../../data/hooks/useTransactions'
+import { useStaffTransactionsPaginated, useStaffProfile } from '../../../data/hooks/useStaffSelf'
 import { useMerchantStaff } from '../../../data/hooks/useMerchantStaff'
 import { useTouchpoints } from '../../../data/hooks/useMerchantTouchpoints'
 import type { TransactionsListQuery } from '../../../data/repositories/transactions'
@@ -95,12 +96,20 @@ function formatStaffCell(tx) {
   return '—'
 }
 
-function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [], businessName = '', businessSlug = '' }) {
+function ReportsView({
+  audience = 'merchant',
+  staff: staffProp = [],
+  touchpoints: touchpointsProp = [],
+  businessName = '',
+  businessSlug = '',
+  showPageHeader = true,
+}) {
   const { t, currentLanguage } = useTranslation()
+  const isStaffAudience = audience === 'staff'
   const [searchParams, setSearchParams] = useSearchParams()
 
   const activeTab =
-    searchParams.get('tab') === REPORTS_TAB_DIRECT_PAYMENTS
+    !isStaffAudience && searchParams.get('tab') === REPORTS_TAB_DIRECT_PAYMENTS
       ? REPORTS_TAB_DIRECT_PAYMENTS
       : REPORTS_TAB_TIPS
   const selectedPaymentId = searchParams.get('paymentId')
@@ -131,7 +140,8 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
 
   // Allow deep-linking the awaiting-confirmation filter, e.g. the dashboard
   // overview "View" banner navigates to /dashboard/reports?status=AwaitingShopConfirmation.
-  const initialStatus = searchParams.get('status') === AWAITING_STATUS ? AWAITING_STATUS : 'all'
+  const initialStatus =
+    !isStaffAudience && searchParams.get('status') === AWAITING_STATUS ? AWAITING_STATUS : 'all'
   const directPaymentsStatusFilter = useMemo(() => {
     const status = searchParams.get('status')
     if (status === '1' || status === 'confirmed') return '1'
@@ -160,8 +170,13 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
   const { data: staffPage } = useMerchantStaff({
     pageNumber: 1,
     pageSize: STAFF_FILTER_LIST_PAGE_SIZE,
+    enabled: !isStaffAudience,
   })
-  const { data: touchpointsPage } = useTouchpoints({ PageNumber: 1, PageSize: 100 })
+  const { data: touchpointsPage } = useTouchpoints(
+    { PageNumber: 1, PageSize: 100 },
+    { enabled: !isStaffAudience },
+  )
+  const { data: staffProfile } = useStaffProfile({ enabled: isStaffAudience })
 
   const staff = staffPage?.items?.length ? staffPage.items : staffProp
   const touchpoints = touchpointsPage?.items?.length ? touchpointsPage.items : touchpointsProp
@@ -253,15 +268,17 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
     pageNumber,
     pageSize,
     ...resolveDateRange(dateRangePreset, startDate, endDate),
-    ...(selectedStaff !== 'all' ? { staffProfileId: selectedStaff } : {}),
-    ...(selectedTouchpoint !== 'all' ? { touchPointId: selectedTouchpoint } : {}),
+    ...(!isStaffAudience && selectedStaff !== 'all' ? { staffProfileId: selectedStaff } : {}),
+    ...(!isStaffAudience && selectedTouchpoint !== 'all'
+      ? { touchPointId: selectedTouchpoint }
+      : {}),
     ...(selectedPayment !== 'all' ? { paymentMethod: selectedPayment } : {}),
-    ...(isAwaitingFilter
+    ...(!isStaffAudience && isAwaitingFilter
       ? { status: 'Confirmed', isMultiStaff: true }
       : selectedStatus !== 'all'
         ? { status: selectedStatus }
         : {}),
-    ...(debouncedSearch ? { staffSearch: debouncedSearch } : {}),
+    ...(!isStaffAudience && debouncedSearch ? { staffSearch: debouncedSearch } : {}),
   }), [
     pageNumber,
     pageSize,
@@ -274,13 +291,24 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
     selectedStatus,
     isAwaitingFilter,
     debouncedSearch,
+    isStaffAudience,
   ])
 
   const {
-    data: transactionsPage,
-    isPending,
-    isFetching,
-  } = useTransactionsPaginated(apiQuery)
+    data: merchantTransactionsPage,
+    isPending: isMerchantPending,
+    isFetching: isMerchantFetching,
+  } = useTransactionsPaginated(apiQuery, { enabled: !isStaffAudience })
+
+  const {
+    data: staffTransactionsPage,
+    isPending: isStaffPending,
+    isFetching: isStaffFetching,
+  } = useStaffTransactionsPaginated(apiQuery, { enabled: isStaffAudience })
+
+  const transactionsPage = isStaffAudience ? staffTransactionsPage : merchantTransactionsPage
+  const isPending = isStaffAudience ? isStaffPending : isMerchantPending
+  const isFetching = isStaffAudience ? isStaffFetching : isMerchantFetching
 
   const transactions = transactionsPage?.items ?? []
   const totalCount = transactionsPage?.totalCount ?? 0
@@ -294,10 +322,30 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
     return transactions.filter((tx) => {
       if (minAmount && tx.amount < parseFloat(minAmount)) return false
       if (maxAmount && tx.amount > parseFloat(maxAmount)) return false
-      if (isAwaitingFilter && !isAwaitingShopConfirmation(tx)) return false
+      if (!isStaffAudience && isAwaitingFilter && !isAwaitingShopConfirmation(tx)) return false
+      if (isStaffAudience && debouncedSearch) {
+        const q = debouncedSearch.toLowerCase()
+        const haystack = [tx.id, tx.touchpoint, tx.businessName, tx.staffName]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+        if (!haystack.includes(q)) return false
+      }
+      if (isStaffAudience && selectedTouchpoint !== 'all') {
+        const tp = String(tx.touchpoint || '').toLowerCase()
+        if (tp !== selectedTouchpoint.toLowerCase()) return false
+      }
       return true
     })
-  }, [transactions, minAmount, maxAmount, isAwaitingFilter])
+  }, [
+    transactions,
+    minAmount,
+    maxAmount,
+    isAwaitingFilter,
+    isStaffAudience,
+    debouncedSearch,
+    selectedTouchpoint,
+  ])
 
   useEffect(() => {
     resetPage()
@@ -322,6 +370,18 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
   }, [pageNumber, totalPages, setPage])
 
   const staffOptions = useMemo(() => {
+    if (isStaffAudience) {
+      const profileId = staffProfile?.id
+      const label =
+        staffProfile?.displayName?.trim() ||
+        staffProfile?.staffCode?.trim() ||
+        'Staff'
+      return [
+        { value: 'all', label: t('dashboard.activity_log.all_staff') },
+        ...(profileId ? [{ value: profileId, label }] : []),
+      ]
+    }
+
     const eligibleStaff = (staff || []).filter(
       (member) => member.staffProfileId && member.isActive !== false,
     )
@@ -332,62 +392,88 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
         label: getStaffDisplayName(member),
       })),
     ]
-  }, [staff, t])
+  }, [isStaffAudience, staff, staffProfile, t])
 
   const touchpointOptions = useMemo(() => {
+    if (isStaffAudience) {
+      const names = new Set<string>()
+      for (const tx of transactions) {
+        if (tx.touchpoint) names.add(tx.touchpoint)
+      }
+      return [
+        { value: 'all', label: t('dashboard.activity_log.all_touchpoints') },
+        ...Array.from(names)
+          .sort((a, b) => a.localeCompare(b))
+          .map((name) => ({ value: name, label: name })),
+      ]
+    }
+
     return [
       { value: 'all', label: t('dashboard.activity_log.all_touchpoints') },
       ...(touchpoints || [])
         .filter((point) => point.id && point.name)
         .map((point) => ({ value: point.id, label: point.name })),
     ]
-  }, [touchpoints, t])
+  }, [isStaffAudience, touchpoints, transactions, t])
 
-  const statusOptions = useMemo(() => [
-    { value: 'all', label: t('dashboard.activity_log.all_statuses') },
-    { value: 'Initiated', label: t('dashboard.activity_log.status_initiated') },
-    { value: 'Confirmed', label: t('dashboard.activity_log.status_confirmed') },
-    { value: 'Skipped', label: t('dashboard.activity_log.status_skipped') },
-    { value: 'Completed', label: t('dashboard.activity_log.status_completed') },
-    { value: AWAITING_STATUS, label: t('merchant_dashboard.tips.awaiting_shop_confirmation') },
-  ], [t])
+  const statusOptions = useMemo(() => {
+    const options = [
+      { value: 'all', label: t('dashboard.activity_log.all_statuses') },
+      { value: 'Initiated', label: t('dashboard.activity_log.status_initiated') },
+      { value: 'Confirmed', label: t('dashboard.activity_log.status_confirmed') },
+      { value: 'Skipped', label: t('dashboard.activity_log.status_skipped') },
+      { value: 'Completed', label: t('dashboard.activity_log.status_completed') },
+    ]
+    if (!isStaffAudience) {
+      options.push({
+        value: AWAITING_STATUS,
+        label: t('merchant_dashboard.tips.awaiting_shop_confirmation'),
+      })
+    }
+    return options
+  }, [isStaffAudience, t])
 
   const showTableSkeleton = (isPending && !transactionsPage) || isFetching
+  const tableColumnCount = isStaffAudience ? 7 : 8
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-4 border-b border-nexoraBorder pb-5 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-xl font-extrabold text-nexoraText">{t('dashboard.menu.transactions')}</h2>
-          <p className="mt-1 max-w-[22rem] text-xs leading-relaxed text-nexoraMuted">
-            {activeTab === REPORTS_TAB_DIRECT_PAYMENTS
-              ? t('merchant_payments.description')
-              : t('dashboard.activity_log.title')}
-          </p>
-        </div>
+      {showPageHeader ? (
+        <div className="flex flex-col gap-4 border-b border-nexoraBorder pb-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-xl font-extrabold text-nexoraText">{t('dashboard.menu.transactions')}</h2>
+            <p className="mt-1 max-w-[22rem] text-xs leading-relaxed text-nexoraMuted">
+              {!isStaffAudience && activeTab === REPORTS_TAB_DIRECT_PAYMENTS
+                ? t('merchant_payments.description')
+                : t('dashboard.activity_log.title')}
+            </p>
+          </div>
 
-        <div className="flex w-full gap-1 rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted p-1 sm:w-auto">
-          {[
-            { id: REPORTS_TAB_TIPS, label: t('dashboard.reports.tabs.tips') },
-            { id: REPORTS_TAB_DIRECT_PAYMENTS, label: t('dashboard.reports.tabs.direct_payments') },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={`h-9 min-w-0 flex-1 rounded-lg px-2 text-[10px] font-bold transition-all sm:flex-none sm:px-4 sm:text-xs ${
-                activeTab === tab.id
-                  ? 'bg-white text-nexoraBrand shadow-sm font-black'
-                  : 'text-nexoraMuted hover:text-nexoraText'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+          {!isStaffAudience ? (
+            <div className="flex w-full gap-1 rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted p-1 sm:w-auto">
+              {[
+                { id: REPORTS_TAB_TIPS, label: t('dashboard.reports.tabs.tips') },
+                { id: REPORTS_TAB_DIRECT_PAYMENTS, label: t('dashboard.reports.tabs.direct_payments') },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`h-9 min-w-0 flex-1 rounded-lg px-2 text-[10px] font-bold transition-all sm:flex-none sm:px-4 sm:text-xs ${
+                    activeTab === tab.id
+                      ? 'bg-white text-nexoraBrand shadow-sm font-black'
+                      : 'text-nexoraMuted hover:text-nexoraText'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
-      </div>
+      ) : null}
 
-      {activeTab === REPORTS_TAB_DIRECT_PAYMENTS ? (
+      {!isStaffAudience && activeTab === REPORTS_TAB_DIRECT_PAYMENTS ? (
         <ReportsDirectPaymentsTab
           selectedPaymentId={selectedPaymentId}
           onOpenPayment={openDirectPayment}
@@ -421,6 +507,8 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
         staffOptions={staffOptions}
         touchpointOptions={touchpointOptions}
         statusOptions={statusOptions}
+        variant={isStaffAudience ? 'staff' : 'merchant'}
+        defaultCollapsed
       />
 
       <div className="overflow-x-auto rounded-xl border border-nexoraBorder bg-white">
@@ -430,7 +518,9 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
               <th className="px-4 py-3">{t('dashboard.activity_log.col_id')}</th>
               <th className="px-4 py-3">{t('dashboard.activity_log.col_time')}</th>
               <th className="px-4 py-3">{t('dashboard.activity_log.col_amount')}</th>
-              <th className="px-4 py-3">{t('dashboard.activity_log.col_staff')}</th>
+              {!isStaffAudience ? (
+                <th className="px-4 py-3">{t('dashboard.activity_log.col_staff')}</th>
+              ) : null}
               <th className="px-4 py-3">{t('dashboard.activity_log.col_tp')}</th>
               <th className="px-4 py-3">{t('dashboard.activity_log.col_payment')}</th>
               <th className="px-4 py-3">{t('dashboard.activity_log.col_status')}</th>
@@ -439,10 +529,10 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
           </thead>
           <tbody>
             {showTableSkeleton ? (
-              <ReportsTableSkeleton rows={pageSize} />
+              <ReportsTableSkeleton rows={pageSize} columns={tableColumnCount} />
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-nexoraMuted font-medium">
+                <td colSpan={tableColumnCount} className="px-4 py-8 text-center text-nexoraMuted font-medium">
                   {t('dashboard.activity_log.empty_activity')}
                 </td>
               </tr>
@@ -458,7 +548,9 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
                     {formatTransactionDateTime(tx.dateTime, currentLanguage)}
                   </td>
                   <td className="px-4 py-3 font-extrabold text-nexoraText">{formatCurrency(tx.amount)}</td>
-                  <td className="px-4 py-3">{formatStaffCell(tx)}</td>
+                  {!isStaffAudience ? (
+                    <td className="px-4 py-3">{formatStaffCell(tx)}</td>
+                  ) : null}
                   <td className="px-4 py-3">{tx.touchpoint}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
@@ -509,6 +601,7 @@ function ReportsView({ staff: staffProp = [], touchpoints: touchpointsProp = [],
           businessSlug={businessSlug}
           touchpoints={touchpoints}
           staff={staff}
+          audience={audience}
         />
       ) : null}
         </>

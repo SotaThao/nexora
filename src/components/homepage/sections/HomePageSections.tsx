@@ -1,4 +1,5 @@
 import HomePageHeaderSection from './HomePageHeaderSection'
+import HomePageBannerSection from './HomePageBannerSection'
 import HomePageHeroSection from './HomePageHeroSection'
 import HomePageB2BSection from './HomePageB2BSection'
 import HomePageTaxIQSection from './HomePageTaxIQSection'
@@ -17,6 +18,7 @@ export default function HomePageSections() {
   return (
     <>
       <HomePageHeaderSection />
+      <HomePageBannerSection />
       <HomePageHeroSection />
       <HomePageB2BSection />
       <HomePageTaxIQSection />

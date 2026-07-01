@@ -187,10 +187,8 @@ export default function MobileMenuDrawer({
                   type="button"
                   onClick={() => {
                     if (id === 'tips') {
-                      navigateMenu(id)
                       setIsTipsMobileExpanded(!isTipsMobileExpanded)
                     } else if (id === 'touchpoints') {
-                      navigateMenu(id)
                       setIsTouchpointsMobileExpanded(!isTouchpointsMobileExpanded)
                     } else {
                       navigateMenu(id)

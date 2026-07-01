@@ -5,6 +5,7 @@ import jsQR from 'jsqr'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
+import ReferralShare from '../../referral/ReferralShare'
 import { useStaffBusinessTipQrs } from '../../../data/hooks/useStaffSelf'
 import { useNotifications, useMarkNotificationRead } from '../../../data/hooks/useNotifications'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -25,7 +26,7 @@ type LooseObject = Record<string, any>
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 
-type QrTab = 'referral' | 'tipping' | 'payment'
+type QrTab = 'personal' | 'referral' | 'tipping' | 'payment'
 
 type ZoomedQr = {
   url: string
@@ -256,7 +257,7 @@ export default function StaffMyQR() {
   const { t, currentLanguage } = useTranslation()
   const { staffMember, account } = useStaffAccount()
   const { businessTipQrs, isLoading: isTipQrLoading } = useStaffBusinessTipQrs()
-  const { showToast, showConfirm } = useNotification()
+  const { showToast } = useNotification()
   const joinPublicInviteMutation = useJoinPublicInvite()
   const { data: notifications = [] } = useNotifications()
   const markNotificationRead = useMarkNotificationRead()
@@ -283,7 +284,8 @@ export default function StaffMyQR() {
     })
   }, [linkRequests, linkRequestQueries])
 
-  const [activeTab, setActiveTab] = useState<QrTab>('referral')
+  const [activeTab, setActiveTab] = useState<QrTab>('personal')
+  const userSelectedTabRef = useRef(false)
   const {
     data: paymentQr,
     isLoading: isPaymentQrLoading,
@@ -307,17 +309,11 @@ export default function StaffMyQR() {
 
   useEffect(() => {
     const tab = searchParams.get('tab')
-    if (tab === 'referral' || tab === 'tipping' || tab === 'payment') {
+    if (tab === 'personal' || tab === 'referral' || tab === 'tipping' || tab === 'payment') {
+      userSelectedTabRef.current = true
       setActiveTab(tab)
     }
   }, [searchParams])
-
-  const handleTabChange = useCallback((tab: QrTab) => {
-    setActiveTab(tab)
-    const nextParams = new URLSearchParams(searchParams)
-    nextParams.set('tab', tab)
-    setSearchParams(nextParams, { replace: true })
-  }, [searchParams, setSearchParams])
 
   const staffCode = (account.staffCode || staffMember.id || '').trim()
   const staffLink = useMemo(
@@ -358,6 +354,40 @@ export default function StaffMyQR() {
 
   const activeTipQrs = useMemo(() => businessTipQrs.filter(isBusinessActive), [businessTipQrs])
 
+  // Tab order depends on link state: not linked → [Personal, Referral, Tips];
+  // linked to a business → [Tips, Referral, Personal]. Default = first tab
+  // until the user manually picks one.
+  const orderedTabs = useMemo<QrTab[]>(
+    () =>
+      businessTipQrs.length > 0
+        ? ['tipping', 'referral', 'personal', 'payment']
+        : ['personal', 'referral', 'payment', 'tipping'],
+    [businessTipQrs.length],
+  )
+
+  useEffect(() => {
+    if (userSelectedTabRef.current) {
+      if (!orderedTabs.includes(activeTab)) setActiveTab(orderedTabs[0])
+      return
+    }
+    setActiveTab(orderedTabs[0])
+  }, [orderedTabs, activeTab])
+
+  const handleSelectTab = useCallback((tab: QrTab) => {
+    userSelectedTabRef.current = true
+    setActiveTab(tab)
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.set('tab', tab)
+    setSearchParams(nextParams, { replace: true })
+  }, [searchParams, setSearchParams])
+
+  const tabLabelKey: Record<QrTab, string> = {
+    personal: 'staff_dashboard.qr.tab_personal',
+    referral: 'staff_dashboard.qr.tab_referral',
+    tipping: 'staff_dashboard.qr.tab_tipping',
+    payment: 'staff_dashboard.qr.tab_payment',
+  }
+
   const selectedBusiness = useMemo(() => {
     if (!activeTipQrs.length) return null
     const match = activeTipQrs.find((biz) => biz.businessId === selectedBusinessId)
@@ -391,14 +421,13 @@ export default function StaffMyQR() {
   }, [copyText, staffCode])
 
   const handleShareReferral = useCallback(async () => {
-    if (!staffLink) {
+    if (!staffCode) {
       showToast(t('components.staff_dashboard.views.StaffMyQR.staffCodeUnavailable'), 'error')
       return
     }
 
     try {
       const result = await shareUrl({
-        url: staffLink,
         title: t('staff_dashboard.qr.share'),
         text: staffCode,
       })
@@ -409,7 +438,7 @@ export default function StaffMyQR() {
     } catch {
       showToast(t('components.staff_dashboard.views.StaffMyQR.shareFailed'), 'error')
     }
-  }, [staffCode, staffLink, showToast, t])
+  }, [staffCode, showToast, t])
 
   const handleCopyTipUrl = useCallback(
     (tipUrl: string) =>
@@ -478,18 +507,6 @@ export default function StaffMyQR() {
     setShowScanner(true)
     setScannerCameraState('loading')
     setIsSubmittingScan(false)
-  }
-
-  const handleUnlink = async (biz: StaffBusinessTipQr) => {
-    const confirmed = await showConfirm(
-      t('components.staff_dashboard.views.StaffMyQR.unlinkConfirm', { business: biz.businessName }),
-      t('components.staff_dashboard.views.StaffMyQR.unlinkConfirmTitle'),
-    )
-    if (!confirmed) return
-    // No staff-side unlink endpoint exists yet (only merchant-side DELETE /merchant/staff/{staffLinkId}).
-    // TODO(BE): call the staff unlink / request-unlink endpoint once it is available, then invalidate
-    // qk.staffBusinesses(). For now we surface a clear message instead of guessing the contract.
-    showToast(t('components.staff_dashboard.views.StaffMyQR.unlinkUnavailable'), 'info')
   }
 
   const handleUrlOrTextSubmit = async () => {
@@ -746,42 +763,23 @@ export default function StaffMyQR() {
       `}</style>
 
       <div className="flex gap-2 pb-1">
-        <button
-          type="button"
-          onClick={() => handleTabChange('referral')}
-          className={`flex-1 px-2 py-2 rounded-lg text-[10px] sm:text-xs font-extrabold uppercase transition ${
-            activeTab === 'referral'
-              ? 'bg-nexoraBrand text-white shadow-sm'
-              : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
-          }`}
-        >
-          {t('staff_dashboard.qr.tab_referral')}
-        </button>
-        <button
-          type="button"
-          onClick={() => handleTabChange('payment')}
-          className={`flex-1 px-2 py-2 rounded-lg text-[10px] sm:text-xs font-extrabold uppercase transition ${
-            activeTab === 'payment'
-              ? 'bg-nexoraBrand text-white shadow-sm'
-              : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
-          }`}
-        >
-          {t('staff_dashboard.qr.tab_payment')}
-        </button>
-        <button
-          type="button"
-          onClick={() => handleTabChange('tipping')}
-          className={`flex-1 px-2 py-2 rounded-lg text-[10px] sm:text-xs font-extrabold uppercase transition ${
-            activeTab === 'tipping'
-              ? 'bg-nexoraBrand text-white shadow-sm'
-              : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
-          }`}
-        >
-          {t('staff_dashboard.qr.tab_tipping')}
-        </button>
+        {orderedTabs.map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            onClick={() => handleSelectTab(tab)}
+            className={`flex-1 px-2 py-2 rounded-lg text-[10px] sm:text-xs font-extrabold uppercase transition ${
+              activeTab === tab
+                ? 'bg-nexoraBrand text-white shadow-sm'
+                : 'bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200'
+            }`}
+          >
+            {t(tabLabelKey[tab])}
+          </button>
+        ))}
       </div>
 
-      {activeTab === 'referral' && (
+      {activeTab === 'personal' && (
         <div className="space-y-4">
           {pendingLinkRequests.length > 0 && (
             <section className={panel}>
@@ -801,51 +799,43 @@ export default function StaffMyQR() {
           )}
           <section className={`${panel} text-center`}>
             <h3 className="text-base font-extrabold text-nexoraText">
-            {t('staff_dashboard.qr.personal_title')}
-          </h3>
-          <p className="mt-1 text-xs text-nexoraMuted">{t('staff_dashboard.qr.personal_sub')}</p>
-          {staffCode ? (
-            <>
-              <div className="mx-auto my-4 flex h-44 w-44 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-nexoraBorder/60 bg-white p-3.5 shadow-sm select-none">
-                <img src={referralQrImageSrc} alt="Scan QR" className="h-full w-full object-contain" />
+              {t('staff_dashboard.qr.personal_title')}
+            </h3>
+            <p className="mt-1 text-xs text-nexoraMuted">{t('staff_dashboard.qr.personal_sub')}</p>
+            {staffCode ? (
+              <>
+                <div className="mx-auto my-4 flex h-44 w-44 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-nexoraBorder/60 bg-white p-3.5 shadow-sm select-none">
+                  <img src={referralQrImageSrc} alt="Scan QR" className="h-full w-full object-contain" />
+                </div>
+                <div className="flex items-center justify-center gap-2 text-sm font-bold text-nexoraText">
+                  <span>
+                    {t('staff_dashboard.staff_id')}: {staffCode}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleCopyReferral}
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-nexoraBorder bg-nexoraSurface text-nexoraBrand transition hover:bg-nexoraCanvas"
+                    aria-label={t('staff_dashboard.staff_id')}
+                    title={t('staff_dashboard.staff_id')}
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="mt-4">
+                <QrEmptyState
+                  icon={QrCode}
+                  title={t('staff_dashboard.qr.referral_unavailable_title')}
+                  description={t('staff_dashboard.qr.referral_unavailable_body')}
+                />
               </div>
-              <div className="flex items-center justify-center gap-2 text-sm font-bold text-nexoraText">
-                <span>
-                  {t('staff_dashboard.staff_id')}: {staffCode}
-                </span>
-                <button
-                  type="button"
-                  onClick={handleCopyReferral}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-nexoraBorder bg-nexoraSurface text-nexoraBrand transition hover:bg-nexoraCanvas"
-                  aria-label={t('staff_dashboard.qr.copy_link')}
-                  title={t('staff_dashboard.qr.copy_link')}
-                >
-                  <Copy className="h-3.5 w-3.5" />
-                </button>
-              </div>
-              <div className="mt-3 space-y-2">
-                <button
-                  type="button"
-                  onClick={handleShareReferral}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-nexoraElectric to-nexoraViolet py-3 text-sm font-extrabold text-white transition hover:opacity-90"
-                >
-                  <Share2 className="h-4 w-4" />
-                  {t('staff_dashboard.qr.share')}
-                </button>
-              </div>
-            </>
-          ) : (
-            <div className="mt-4">
-              <QrEmptyState
-                icon={QrCode}
-                title={t('staff_dashboard.qr.referral_unavailable_title')}
-                description={t('staff_dashboard.qr.referral_unavailable_body')}
-              />
-            </div>
-          )}
-        </section>
+            )}
+          </section>
         </div>
       )}
+
+      {activeTab === 'referral' && <ReferralShare showExplainer />}
 
       {activeTab === 'tipping' && (
         <>
@@ -1029,15 +1019,6 @@ export default function StaffMyQR() {
 
                       <div className="flex shrink-0 items-center gap-2">
                         {renderStatusBadge(biz)}
-                        {isBusinessActive(biz) && (
-                          <button
-                            type="button"
-                            onClick={() => handleUnlink(biz)}
-                            className="rounded-lg border border-nexoraDanger/20 bg-nexoraDanger/10 px-3 py-1.5 text-xs font-extrabold text-nexoraDanger transition hover:bg-nexoraDanger/15"
-                          >
-                            {t('components.staff_dashboard.views.StaffMyQR.unlink')}
-                          </button>
-                        )}
                       </div>
                     </div>
                   ))}

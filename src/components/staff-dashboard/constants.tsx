@@ -42,8 +42,8 @@ export function resolveStaffNotificationActionUrl(
 // Salon Link & Tips screen ('qr') — that page hosts the Accept/Decline CTAs for
 // pending requests and the linked-business list for everything else.
 const STAFF_NOTIFICATION_SCREEN: Record<string, string> = {
-  tip: 'tips',
-  tipsuccess: 'tips',
+  tip: 'payments',
+  tipsuccess: 'payments',
   review: 'reviews',
   reviewgood: 'reviews',
   feedbackalert: 'reviews',
@@ -82,5 +82,13 @@ export function navigateStaffNotification(
     return
   }
 
-  fallbackNavigate(resolveStaffNotificationScreen(notification.type))
+  const screen = resolveStaffNotificationScreen(notification.type)
+  if (screen === 'payments') {
+    const key = (notification.type || '').toLowerCase().replace(/[\s_-]+/g, '')
+    const isDirectPayment = key === 'directpaymentreceived' || key === 'paymentreceived'
+    navigate(isDirectPayment ? '/staff/payments?tab=direct_payments' : '/staff/payments?tab=tips')
+    return
+  }
+
+  fallbackNavigate(screen)
 }

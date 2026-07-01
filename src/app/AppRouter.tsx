@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import {
   Navigate,
   Route,
@@ -8,6 +8,7 @@ import {
   useParams,
   useSearchParams,
 } from "react-router-dom";
+import { scrollToPageTop } from "../utils/scrollToPageTop";
 import { useAuth } from "../auth/useAuth";
 import {
   AnalyticsRoute,
@@ -73,8 +74,8 @@ const StaffProfile = lazyWithRetry(
 const StaffNotifications = lazyWithRetry(
   () => import("../components/staff-dashboard/views/StaffNotifications"),
 );
-const StaffPayments = lazyWithRetry(
-  () => import("../components/staff-dashboard/views/StaffPayments"),
+const StaffTransactions = lazyWithRetry(
+  () => import("../components/staff-dashboard/views/StaffTransactions"),
 );
 const ForgotPassword = lazyWithRetry(
   () => import("../components/ForgotPassword"),
@@ -138,12 +139,25 @@ function StaffFallbackRoute() {
   return <Navigate to="/staff" replace />;
 }
 
+function StaffTransactionsLegacyRedirect() {
+  return <Navigate to="/staff/payments?tab=tips" replace />;
+}
+
+function ScrollToTop() {
+  const { pathname, search } = useLocation();
+  useEffect(() => {
+    scrollToPageTop();
+  }, [pathname, search]);
+  return null;
+}
+
 export default function AppRouter() {
   const { session, logout } = useAuth();
   const location = useLocation();
 
   return (
     <ErrorBoundary resetKey={location.pathname}>
+      <ScrollToTop />
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
           <Route path="/" element={<RootRedirect />} />
@@ -230,10 +244,11 @@ export default function AppRouter() {
             <Route index element={<StaffHome />} />
             <Route path="qr" element={<StaffMyQR />} />
             <Route path="tips" element={<StaffTips />} />
+            <Route path="transactions" element={<StaffTransactionsLegacyRedirect />} />
             <Route path="reviews" element={<StaffReviews />} />
             <Route path="pay" element={<StaffPay />} />
-            <Route path="payments" element={<StaffPayments />} />
-            <Route path="payments/:paymentId" element={<StaffPayments />} />
+            <Route path="payments" element={<StaffTransactions />} />
+            <Route path="payments/:paymentId" element={<StaffTransactions />} />
             <Route path="profile" element={<StaffProfile />} />
             <Route path="notifications" element={<StaffNotifications />} />
             <Route path="*" element={<StaffFallbackRoute />} />

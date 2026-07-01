@@ -99,6 +99,7 @@ async function buildError(response: Response): Promise<ApiError> {
       if (!body.errorCode && Array.isArray(body.errorDetail) && body.errorDetail.length > 0) {
         const firstDetail = body.errorDetail[0]
         if (firstDetail.errorCode) errorCode = firstDetail.errorCode
+        if (!message && firstDetail.message) message = firstDetail.message
         for (const detail of body.errorDetail) {
           if (detail.errorCode) {
             const field = detail.field || '_general'

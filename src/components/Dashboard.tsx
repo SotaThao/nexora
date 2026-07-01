@@ -19,12 +19,13 @@ import { useTouchpoints, useCreateTouchpoint, useDeleteTouchpoint, useToggleTouc
 import { useMerchantStaff, StatusFilter } from '../data/hooks/useMerchantStaff'
 import { useChartDateRange } from '../hooks/useChartDateRange'
 import { useTransactions } from '../data/hooks/useTransactions'
-import { useDashboardOverview, useDashboardTipsChart, useDashboardOverviewCurrentMonth, useDashboardOverviewCurrentYear } from '../data/hooks/useDashboard'
+import { useDashboardOverview, useDashboardTipsChart, useDashboardOverviewCurrentMonth, useDashboardOverviewCurrentYear, useDashboardReviewsSummary } from '../data/hooks/useDashboard'
 import { useDashboardReviews, DASHBOARD_REVIEWS_LIST_QUERY } from '../data/hooks/useReviews'
 import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead, useUnreadCount } from '../data/hooks/useNotifications'
 import { useProfileSettings, useSaveProfileSettings } from '../data/hooks/useProfileSettings'
 import { useMerchantSetup, useSaveMerchantSetup } from '../data/hooks/useMerchantSetup'
 import { useMerchantInviteLinkSetting } from '../data/hooks/useMerchantSettings'
+import { merchantTouchpointsRepository } from '../data/repositories/merchantTouchpoints'
 import DashboardHeader from './dashboard/layout/DashboardHeader'
 import DashboardSidebar from './dashboard/layout/DashboardSidebar'
 import MobileMenuDrawer from './dashboard/layout/MobileMenuDrawer'
@@ -149,6 +150,7 @@ export default function Dashboard({
     isPending: isReviewsPending,
     isFetching: isReviewsFetching,
   } = useDashboardReviews(reviewsListQuery, { enabled: needsDashboardReviews })
+  const { data: reviewsSummary } = useDashboardReviewsSummary({ enabled: isReviewsTab })
   const { data: apiUnreadCount = 0 } = useUnreadCount()
   const { data: notificationsData, isLoading: isNotificationsLoading, isFetching: isNotificationsFetching } = useNotifications({
     enabled: needsNotificationsList,
@@ -529,29 +531,50 @@ export default function Dashboard({
     deleteTouchpointMutation.mutate(id)
   }
 
-  const previewQr = (target) => {
+  const previewQr = async (target) => {
     const staffName = target.nickname || target.fullName
-    const masterTouchpoint =
-      touchpoints.find((tp) => tp.type === 'FrontDesk') || touchpoints[0] || null
+    let masterTouchpoint = null
 
-    // Staff personal QR → master touch URL + ?staffProfileId=… (skip staff picker).
-    const staffTipQr = resolveMerchantStaffTipQr(target.staffProfileId, {
-      businessName,
-      masterTouchpoint,
-    })
-    if (staffTipQr?.tipUrl) {
-      setQrTarget({
-        name: target.name || `Personal QR - ${staffName}`,
-        subtitle: target.position || 'Staff QR',
-        slug: staffTipQr.touchPointSlug,
-        url: staffTipQr.tipUrl,
-        qrImageUrl: target.qrImageUrl || staffTipQr.qrImageUrl || null,
-        isActive: target.isActive !== undefined ? target.isActive : true,
-        isStaffQr: true,
+    // For staff personal QR, fetch active touchpoints and ensure FrontDesk exists
+    if (target.staffProfileId) {
+      try {
+        let page = await merchantTouchpointsRepository.getTouchpoints()
+        masterTouchpoint = page.items.find((tp) => tp.type === 'FrontDesk' && tp.isActive !== false)
+
+        if (!masterTouchpoint) {
+          await merchantTouchpointsRepository.createTouchpoint({
+            name: 'Front Desk',
+            type: 'FrontDesk'
+          })
+          page = await merchantTouchpointsRepository.getTouchpoints()
+          masterTouchpoint = page.items.find((tp) => tp.type === 'FrontDesk') || page.items[0] || null
+        }
+      } catch (err) {
+        logger.error('Failed to resolve master touchpoint for QR', err)
+        // Fallback to locally loaded touchpoints if API fails
+        masterTouchpoint = touchpoints.find((tp) => tp.type === 'FrontDesk') || touchpoints[0] || null
+      }
+
+      const staffTipQr = resolveMerchantStaffTipQr(target.staffProfileId, {
+        businessName,
+        masterTouchpoint,
       })
-      return
+
+      if (staffTipQr?.tipUrl) {
+        setQrTarget({
+          name: target.name || `Personal QR - ${staffName}`,
+          subtitle: target.position || 'Staff QR',
+          slug: staffTipQr.touchPointSlug,
+          url: staffTipQr.tipUrl,
+          qrImageUrl: target.qrImageUrl || staffTipQr.qrImageUrl || null,
+          isActive: target.isActive !== undefined ? target.isActive : true,
+          isStaffQr: true,
+        })
+        return
+      }
     }
 
+    // fallback for regular touchpoints or if something fails
     const finalSlug = target.slug
       ? target.slug
       : (staffName ? `staff-${slugify(staffName)}` : slugify(target.name || target.id || 'general'))
@@ -620,7 +643,7 @@ export default function Dashboard({
     handleLinkStaff, handleInviteStaff, handleResendInvite, handleAcceptJoinRequest, handleDeclineJoinRequest, handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     setInviteShareDefaultName, setInviteShareDefaultContact, setIsInviteShareOpen,
     filteredTouchpoints, setAddTouchpointPrefill, setIsAddTouchpointModalOpen, deleteTouchpoint, toggleTouchpointStatus, togglingTouchpointId: toggleTouchpointMutation.isPending ? toggleTouchpointMutation.variables : null, linkDevice, devices, handleAddDevice, handleDeleteDevice, handleToggleDeviceStatus,
-    reviews, filteredReviews, reviewFilterStaff, setReviewFilterStaff: handleReviewFilterStaffChange, setupData: setupData ?? merchantSetupData,
+    reviews, filteredReviews, reviewsSummary, reviewFilterStaff, setReviewFilterStaff: handleReviewFilterStaffChange, setupData: setupData ?? merchantSetupData,
     activeReviewsPage: reviewsPagination.pageNumber,
     activeReviewsPageSize: reviewsPagination.pageSize,
     activeReviewsTotalPages: reviewsPage?.totalPages ?? 1,

@@ -29,6 +29,7 @@
       "home": "Dashboard",
       "my_qr": "Link & Tip",
       "tips": "Tips",
+      "transactions": "Transactions",
       "reviews": "Reviews",
       "payments": "Transactions",
       "pay": "Payout Methods",
@@ -42,6 +43,7 @@
       "home": "Dashboard",
       "qr": "Salon Link & Tips",
       "tips": "Tips",
+      "transactions": "Transactions",
       "reviews": "Reviews & Ratings",
       "pay": "Payout Methods",
       "payments": "Transactions",
@@ -127,6 +129,15 @@
       "ai_insight": "AI Insight",
       "ai_insight_body": "Your average tip for Pedicure is 21%, which is 6% higher than the salon average."
     },
+    "transactions": {
+      "title": "Transactions",
+      "subtitle": "Your tip activity across linked salons",
+      "tips_subtitle": "Tip activity across your linked salons.",
+      "empty": "No transactions found for the selected filters.",
+      "col_time": "Time",
+      "col_business": "Business",
+      "detail_title": "Transaction Details"
+    },
     "pay": {
       "title": "Payment Methods",
       "owner_note": "You manage your own receiving methods. The business owner cannot edit this section.",
@@ -137,10 +148,11 @@
       "saved": "Saved ✓"
     },
     "qr": {
-      "personal_title": "My Personal QR",
-      "personal_sub": "Use it to share your Staff ID or let a business link you.",
+      "personal_title": "My Staff QR",
+      "personal_sub": "Show this QR to a business so they can send you a staff link request.",
       "share": "Share Staff QR",
       "copy_link": "Copy Staff Link",
+      "tab_personal": "My Staff QR",
       "tab_referral": "Referral QR",
       "tab_tipping": "Tip QR",
       "tab_payment": "Pay QR",
@@ -181,7 +193,15 @@
       "touchpoint_missing_title": "Tipping link not ready",
       "touchpoint_missing_body": "This salon has not finished setting up its station, so your personal tipping link is not available yet. Please contact {business} to complete setup.",
       "referral_unavailable_title": "Staff ID not ready",
-      "referral_unavailable_body": "Your personal referral QR will appear once your staff profile is fully set up. Please try again in a moment."
+      "referral_unavailable_body": "Your personal referral QR will appear once your staff profile is fully set up. Please try again in a moment.",
+      "affiliate_toggle": "Expand QR to refer (Affiliate)",
+      "affiliate_title": "My Referral QR",
+      "affiliate_sub": "Anyone who signs up by scanning this QR joins under your referral.",
+      "affiliate_explainer": "Share your QR or link — friends who sign up are added to your network automatically.",
+      "referral_code": "Referral Code",
+      "share_referral": "Share Referral QR",
+      "copy_referral_link": "Copy Referral Link",
+      "affiliate_unavailable": "Your referral code isn't ready yet. Complete your profile to enable affiliate sharing."
     },
     "profile": {
       "title": "Personal Account",
@@ -314,7 +334,7 @@
     "forgot_password": "Forgot Password?",
     "email_label": "Email or username",
     "password_label": "Password",
-    "email_placeholder": "owner@yourstore.com",
+    "email_placeholder": "nexora@example.com",
     "password_placeholder": "••••••••",
     "login_btn": "Log in",
     "or_try_demo": "Or Try Demo",
@@ -918,7 +938,7 @@
       "no_reviews_yet": "No reviews yet",
       "quick_actions": "Quick Actions",
       "manage": "Manage",
-      "quick_add_qr": "Add QR",
+      "quick_add_qr": "QR",
       "quick_add_staff": "Add Staff",
       "quick_tips": "Tips",
       "quick_reports": "Reports",
@@ -1458,6 +1478,7 @@
     "return_merchant": "Go to Personal Dashboard"
   },
   "errors": {
+    "TIP_AMOUNT_TOO_HIGH": "Tip amount is too high.",
     "unknown_error": "An unknown error occurred. Please try again.",
     "contact_request_message_min_length": "Your message is too short. Please enter at least {min} characters describing the issue.",
     "contact_request_message_max_length": "Your message is too long. Please keep it under {max} characters.",
@@ -1467,7 +1488,7 @@
     "user_login_invalid_username_or_password": "Invalid username or password.",
     "user_account_inactive": "Your account is currently inactive. Please contact support.",
     "user_account_incomplete": "Your account is incomplete. Please activate your account.",
-    "user_email_already_exists": "This email address is already registered.",
+    "user_email_already_exists": "This email is already registered. Please sign in or use a different email address.",
     "user_invalid_referral_code": "The referral code you entered is not valid. Please check the code and try again.",
     "user_signup_failed": "Registration failed. Please check your information and try again.",
     "auth_passwords_do_not_match": "Passwords do not match.",
@@ -1564,7 +1585,8 @@
         "TipAmount": {
           "totalTip": "Total Tip",
           "provider_count": "For {count} provider(s)",
-          "phAmount": "0.00"
+          "phAmount": "0.00",
+          "minTipErr": "* Minimum tip amount is $1"
         },
         "WalletDetails": {
           "tipAmount": "Tip Amount",
@@ -1842,7 +1864,7 @@
           "shareThisReferralLink": "Share this link or QR code so technicians can create their account and join your salon.",
           "joinLinkCopiedTo": "Join link copied to clipboard!",
           "copy": "Copy",
-          "share": "Invite",
+          "share": "Share",
           "pendingJoinRequests": "Pending Join Requests",
           "rejectedStaff": "Declined Requests",
           "directAddition": "Added by Salon",
@@ -2185,6 +2207,9 @@
           "staffCodeUnavailable": "Staff ID is not available yet. Please try again in a moment.",
           "shareFailed": "Could not share the link. Please copy it instead.",
           "copyFailed": "Could not copy the link.",
+          "referralLinkCopied": "Referral link copied!",
+          "referralCodeCopied": "Referral code copied!",
+          "referralCodeUnavailable": "Your referral code is not available yet.",
           "joinRequestViaQr": "Join Request (via QR)",
           "justNow": "Just now",
           "unlinked": "Unlinked",
@@ -2662,6 +2687,11 @@
       "support_desc": "Describe the issue with this physical device. Our team will follow up using the help code on this card.",
       "support_success": "Support request submitted successfully.",
       "support_success_desc": "Thank you. Our team will review your request and follow up if needed."
+    }
+  },
+  "homepage": {
+    "banner": {
+      "goToSlide": "Go to slide {{index}}"
     }
   },
   "coming_soon": {

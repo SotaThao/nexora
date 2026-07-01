@@ -1,18 +1,19 @@
 /**
  * ecosystemRepository — VlinkPay ecosystem list + SSO sign-in.
  *
- * Mirrors vlinkpay-web-app CustomerService:
- *   GET  /customers/ecosystems/webs
- *   POST /customers/ecosystems/sign-in  { name }
+ * Mirrors Client ecosystem APIs:
+ *   GET  /api/v1/Client/ecosystem
+ *   POST /api/v1/Client/ecosystem/signin  { id }
  */
 
-import vlinkPayHttpClient from '../../lib/vlinkPayHttpClient'
+import httpClient from '../../lib/httpClient'
 import type { EcosystemItem, EcosystemSignInResult } from '../../types/domain'
-import { resolveEcosystemBrandKey } from '../../utils/ecosystem'
 
 interface VlinkPayEcosystemDto {
+  id?: string
   name?: string
   url?: string | null
+  logoUrl?: string | null
 }
 
 interface VlinkPayEcosystemSignInResponseDto {
@@ -20,33 +21,33 @@ interface VlinkPayEcosystemSignInResponseDto {
 }
 
 function normalizeEcosystem(raw: VlinkPayEcosystemDto): EcosystemItem | null {
+  const id = raw.id?.trim()
   const name = raw.name?.trim()
-  if (!name) return null
+  if (!id || !name) return null
 
   return {
-    id: name,
+    id,
     name,
     url: raw.url?.trim() ?? '',
-    logoUrl: null,
+    logoUrl: raw.logoUrl?.trim() ?? null,
   }
 }
 
-export function createEcosystemRepository(client = vlinkPayHttpClient) {
+export function createEcosystemRepository(client = httpClient) {
   return {
     async list(): Promise<EcosystemItem[]> {
-      const response = await client.get<VlinkPayEcosystemDto[]>('/customers/ecosystems/webs')
+      const response = await client.get<VlinkPayEcosystemDto[]>('/api/v1/Client/ecosystem')
       if (!Array.isArray(response)) return []
       return response
         .map(normalizeEcosystem)
         .filter((item): item is EcosystemItem => item !== null)
     },
 
-    async signIn(params: { name: string; path?: string | null }): Promise<EcosystemSignInResult> {
-      const brandKey = resolveEcosystemBrandKey(params.name) ?? params.name.trim().toLowerCase()
+    async signIn(params: { id: string; path?: string | null }): Promise<EcosystemSignInResult> {
       const response = await client.post<VlinkPayEcosystemSignInResponseDto>(
-        '/customers/ecosystems/sign-in',
+        '/api/v1/Client/ecosystem/signin',
         {
-          name: brandKey,
+          id: params.id,
           ...(params.path ? { path: params.path } : {}),
         },
       )

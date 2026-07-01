@@ -3,7 +3,7 @@ import { Star, MessageSquare } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffReviews } from '../../../data/hooks/useStaffSelf'
 import type { StaffReviewItem } from '../../../types/domain'
-import { SkeletonLayout } from '../../ui/skeleton'
+import { SkeletonLayout, SkeletonList } from '../../ui/skeleton'
 import Pagination from '../../ui/Pagination'
 import { STAFF_REVIEWS_SKELETON } from '../skeletons/staffDashboardSkeletons'
 
@@ -153,28 +153,24 @@ export default function StaffReviews() {
           {t('components.staff_dashboard.views.StaffReviews.customerReviews')}
         </h3>
 
-        {isFetching && !isPending ? (
-          <p className="mb-3 text-[10px] font-semibold text-nexoraSubtle uppercase tracking-wider">
-            {t('common.loading')}
-          </p>
-        ) : null}
-
-        {staffReviews.length === 0 ? (
-          <p className="py-6 text-center text-xs text-nexoraSubtle">
-            {t('components.staff_dashboard.views.StaffReviews.noReviewsReceivedYet')}
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {staffReviews.map((review) => (
-              <ReviewCard
-                key={review.id}
-                review={review}
-                anonymousLabel={t('components.staff_dashboard.views.StaffReviews.anonymousCustomer')}
-                ratingOnlyLabel={t('components.staff_dashboard.views.StaffReviews.ratingOnly')}
-              />
-            ))}
-          </div>
-        )}
+        {isFetching ? (
+          <SkeletonList count={4} lines={3} />
+        ) : staffReviews.length === 0 ? (
+            <p className="py-6 text-center text-xs text-nexoraSubtle">
+              {t('components.staff_dashboard.views.StaffReviews.noReviewsReceivedYet')}
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {staffReviews.map((review) => (
+                <ReviewCard
+                  key={review.id}
+                  review={review}
+                  anonymousLabel={t('components.staff_dashboard.views.StaffReviews.anonymousCustomer')}
+                  ratingOnlyLabel={t('components.staff_dashboard.views.StaffReviews.ratingOnly')}
+                />
+              ))}
+            </div>
+          )}
 
         <Pagination
           pageNumber={pageNumber}
