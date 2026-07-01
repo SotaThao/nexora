@@ -36,7 +36,8 @@ export function normalizePaymentStats(raw: Record<string, unknown> | null | unde
     string,
     Record<string, unknown>
   >
-  const methodsRaw = (source.byPaymentMethod ?? source.ByPaymentMethod ?? []) as Record<string, unknown>[]
+  const methodsRawValue = source.byPaymentMethod ?? source.ByPaymentMethod
+  const methodsRaw = (Array.isArray(methodsRawValue) ? methodsRawValue : []) as Record<string, unknown>[]
 
   return {
     totalCount: Number(readField<number>(source, 'totalCount', 'TotalCount') ?? 0),

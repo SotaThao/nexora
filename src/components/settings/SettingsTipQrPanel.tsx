@@ -236,8 +236,10 @@ export default function SettingsTipQrPanel({
             </div>
           </div>
 
-          <div
+          <button
+            type="button"
             onClick={() => paymentPageUrl && setShowPreview(true)}
+            aria-label={t('components.settings.SettingsTipQrPanel.previewQr')}
             className="flex-shrink-0 mx-auto md:mx-0 w-28 h-28 rounded-lg bg-white border border-nexoraBorder/80 p-2 flex items-center justify-center shadow-sm relative overflow-hidden cursor-pointer hover:border-nexoraBrand transition select-none group"
           >
             {qrPreviewUrl ? (
@@ -255,7 +257,7 @@ export default function SettingsTipQrPanel({
                 {t('components.dashboard.views.StaffView.preview')}
               </span>
             </div>
-          </div>
+          </button>
         </div>
 
         <DirectPaymentQrPreviewModal

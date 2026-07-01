@@ -18,7 +18,8 @@ export function isTouchPaymentIntent(
     ?? touchPoint?.QrPurpose
     ?? touchPoint?.category,
   )
-  return purpose === 'payment' || purpose === 'directpayment'
+  const normalizedPurpose = purpose.replace(/[_-]/g, '')
+  return normalizedPurpose === 'payment' || normalizedPurpose === 'directpayment'
 }
 
 export function resolveTouchpointRedirectUrl(
