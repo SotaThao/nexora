@@ -246,11 +246,14 @@ export default function StaffMyQR() {
 
   const activeTipQrs = useMemo(() => businessTipQrs.filter(isBusinessActive), [businessTipQrs])
 
-  // Tab order depends on link state: not linked → [Personal, Referral];
+  // Tab order depends on link state: not linked → [Personal, Referral, Tips];
   // linked to a business → [Tips, Referral, Personal]. Default = first tab
   // until the user manually picks one.
   const orderedTabs = useMemo<QrTab[]>(
-    () => (businessTipQrs.length > 0 ? ['tipping', 'referral', 'personal'] : ['personal', 'referral']),
+    () =>
+      businessTipQrs.length > 0
+        ? ['tipping', 'referral', 'personal']
+        : ['personal', 'referral', 'tipping'],
     [businessTipQrs.length],
   )
 
