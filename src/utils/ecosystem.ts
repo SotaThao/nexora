@@ -146,10 +146,10 @@ export function sortEcosystems(list: EcosystemItem[]): EcosystemItem[] {
 }
 
 export function getEcosystemLogo(ecosystem: EcosystemItem): string {
-  if (ecosystem.logoUrl?.trim()) return ecosystem.logoUrl.trim();
-  const brandKey = resolveEcosystemBrandKey(ecosystem.name);
-  if (brandKey && LOGO_MAP[brandKey]) return LOGO_MAP[brandKey];
-  return "/assets/images/default.png";
+  if (ecosystem.logoUrl?.trim()) return ecosystem.logoUrl.trim()
+  const brandKey = resolveEcosystemBrandKey(ecosystem.name)
+  if (brandKey && LOGO_MAP[brandKey]) return LOGO_MAP[brandKey]
+  return '/assets/images/default.png'
 }
 
 export function getEcosystemAccent(name: string): string {
@@ -216,4 +216,53 @@ export function openWindowOrFallback(url: string): Window | null {
     openUrlInNewTab(url);
     return null;
   }
+}
+
+const ECO_LOGO_FILL = 0.96;
+const ECO_LOGO_MAX_BOOST = 3.2;
+
+function applyEcosystemLogoFit(img: HTMLImageElement): void {
+  if (window.matchMedia("(min-width: 768px)").matches) {
+    img.style.width = "";
+    img.style.height = "";
+    img.style.transform = "";
+    return;
+  }
+
+  const { naturalWidth, naturalHeight } = img;
+  if (naturalWidth <= 0 || naturalHeight <= 0) return;
+
+  const tile = img.parentElement;
+  if (!tile) return;
+
+  img.style.width = "";
+  img.style.height = "";
+  img.style.transform = "";
+  img.style.transformOrigin = "center";
+
+  const maxW = tile.clientWidth;
+  const maxH = tile.clientHeight;
+  if (maxW <= 0 || maxH <= 0) return;
+
+  const scale = Math.min(maxW / naturalWidth, maxH / naturalHeight) * ECO_LOGO_FILL;
+  const width = naturalWidth * scale;
+  const height = naturalHeight * scale;
+
+  img.style.width = `${Math.round(width)}px`;
+  img.style.height = `${Math.round(height)}px`;
+
+  const targetHeight = maxH * ECO_LOGO_FILL;
+  if (height < targetHeight) {
+    const boost = Math.min(targetHeight / height, ECO_LOGO_MAX_BOOST);
+    if (boost > 1.02) {
+      img.style.transform = `scale(${boost.toFixed(3)})`;
+    }
+  }
+}
+
+/** Upscale API banner logos on mobile; iOS WebView may report tile size after first paint. */
+export function fitEcosystemLogo(img: HTMLImageElement): void {
+  applyEcosystemLogoFit(img);
+  requestAnimationFrame(() => applyEcosystemLogoFit(img));
+  window.setTimeout(() => applyEcosystemLogoFit(img), 80);
 }

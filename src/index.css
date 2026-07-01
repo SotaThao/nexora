@@ -728,6 +728,35 @@ body:not(.homepage-active) a:focus-visible {
   animation: eco-image-pulse 0.48s ease-out;
 }
 
+/* Ecosystem dropdown — mobile uses fitEcosystemLogo() + transform boost for wide API logos */
+.eco-logo-tile {
+  min-height: 0;
+  overflow: visible;
+}
+
+.eco-logo-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  -webkit-user-drag: none;
+}
+
+@media (min-width: 768px) {
+  .eco-logo-tile {
+    overflow: visible;
+  }
+
+  .eco-logo-img {
+    width: 88px;
+    height: 88px;
+    max-width: 88px;
+    max-height: 88px;
+    transform: none !important;
+  }
+}
+
 /* "Recommended for salons" ribbon badge on the plan page — a soft glow pulse
    draws attention to the featured tier; hover gives a gentle lift/scale.
    Centering transform lives here so the keyframe can stay box-shadow-only
