@@ -21,7 +21,7 @@ export default function DirectPaymentQrPreviewModal({
   const qrImageSrc = paymentPageUrl ? buildPublicQrImageUrl(paymentPageUrl, 1000) : previewQrUrl
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-nexoraText/70 p-4 py-6 backdrop-blur-sm sm:items-center qr-modal-backdrop">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-nexoraText/70 p-4 backdrop-blur-sm qr-modal-backdrop">
       <div className="relative w-full max-w-sm rounded-xl bg-white px-6 pb-6 pt-12 text-center shadow-2xl animate-scaleUp qr-modal-container">
         <button
           type="button"

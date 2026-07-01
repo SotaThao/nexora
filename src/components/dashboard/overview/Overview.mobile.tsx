@@ -330,9 +330,12 @@ function Overview({
         </div>
       </Panel>
 
-      <Panel title={t('components.settings.SettingsTipQrPanel.defaultQrTitle')}>
+      <Panel title={t('dashboard.master_gateway.title')}>
+        <p className="mb-4 text-xs text-nexoraMuted">
+          {t('dashboard.master_gateway.subtitle')}
+        </p>
         <SettingsTipQrPanel
-          variant="compact"
+          variant="gateway"
           hideUrlCode
           businessName={businessName}
           showToast={showToast}
