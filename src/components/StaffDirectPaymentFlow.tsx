@@ -116,10 +116,11 @@ export default function StaffDirectPaymentFlow() {
                   businessName={displayName}
                   logoUrl={photoUrl}
                   recipientName={displayName}
-                  recipientSubtitle={t('staff_direct_payment.pay_to_staff')}
+                  recipientSubtitle={null}
                   amountRangeHint=""
                   reviewTitle={t('staff_direct_payment.review_payment_title')}
-                  reviewDesc={t('staff_direct_payment.review_payment_desc')}
+                  reviewDesc={t('staff_direct_payment.review_payment_desc', { name: displayName })}
+                  totalPaymentLabel={t('staff_direct_payment.total')}
                   noMethodsTitle={t('staff_direct_payment.no_methods_title')}
                   noMethodsDesc={t('staff_direct_payment.no_methods_desc')}
                   selectedAmount={selectedAmount}
