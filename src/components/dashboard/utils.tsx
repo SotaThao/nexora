@@ -244,5 +244,6 @@ export function buildMasterQrTarget(touchpoints = []) {
     url: masterTouchpoint?.url || null,
     qrImageUrl: masterTouchpoint?.qrImageUrl || null,
     isActive: true,
+    isGatewayQr: true,
   }
 }

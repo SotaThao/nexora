@@ -1,9 +1,74 @@
+import { createPortal } from 'react-dom'
 import { X, ShieldAlert, ShieldCheck, Printer } from 'lucide-react'
 import IconButton from '../../ui/IconButton'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { buildQrImageUrl, toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
 
 const slugify = (str = '') => str.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+
+function QrGatewayPreviewLayout({ target, qrImageSrc, scanCaption, onClose, t, showInactiveWarning = false }) {
+  if (typeof document === 'undefined') return null
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-nexoraText/70 p-4 py-6 backdrop-blur-sm sm:items-center qr-modal-backdrop">
+      <div className="relative w-full max-w-sm rounded-xl bg-white px-6 pb-6 pt-12 text-center shadow-2xl animate-scaleUp qr-modal-container">
+        <button
+          type="button"
+          onClick={onClose}
+          className="no-print absolute right-4 top-4 rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+          title="Close"
+        >
+          <X className="h-5 w-5" />
+        </button>
+
+        {showInactiveWarning ? (
+          <div className="no-print mb-4 flex items-center justify-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-[10px] font-bold text-amber-700">
+            <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
+            This personal QR is blocked while the staff member is inactive.
+          </div>
+        ) : null}
+
+        <div className="mx-auto flex w-48 flex-col items-center gap-3.5 rounded-2xl border border-nexoraBorder/80 bg-nexoraCanvas px-4 py-5 text-nexoraText shadow-md qr-print-card qr-print-card--payment">
+          <div className="flex items-center justify-center gap-1.5 qr-print-brand-header">
+            <img
+              src="/assets/nexora-logo.png"
+              alt="Nexora Logo"
+              className="h-4 w-4 object-contain qr-print-brand-logo"
+            />
+            <span className="text-[9px] font-black tracking-wider text-slate-800 qr-print-brand-text">NEXORA</span>
+          </div>
+
+          <div className="flex h-[7.25rem] w-[7.25rem] shrink-0 items-center justify-center rounded-xl border border-nexoraBorder/60 bg-white p-2.5 shadow-inner qr-print-qr-wrapper">
+            <img
+              src={qrImageSrc}
+              alt={target.name}
+              className="h-full w-full object-contain qr-print-qr-image"
+            />
+          </div>
+
+          <p className="max-w-[9.5rem] text-center text-[9px] font-extrabold uppercase leading-snug tracking-wide text-nexoraMuted qr-print-scan-text">
+            {scanCaption}
+          </p>
+
+          <div className="flex items-center justify-center gap-1 text-[8px] font-bold text-nexoraSubtle qr-print-footer">
+            <ShieldCheck className="h-3 w-3 shrink-0 text-nexoraBrand" />
+            <span>{t('components.SetupWizard.secureRedirect')}</span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => window.print()}
+          className="no-print mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-4 py-2.5 text-xs font-bold text-white transition hover:bg-opacity-90"
+        >
+          <Printer className="h-4 w-4" />
+          {t('dashboard.modals.print_qr')}
+        </button>
+      </div>
+    </div>,
+    document.body,
+  )
+}
 
 function QrModal({ target, businessName, onClose }) {
   const { t } = useTranslation()
@@ -19,6 +84,7 @@ function QrModal({ target, businessName, onClose }) {
   }
 
   const qrImageSrc = buildQrImageUrl(qrUrl, 150, target.qrImageUrl)
+  const qrImageSrcHighRes = buildQrImageUrl(qrUrl, 1000, target.qrImageUrl)
 
   const isStaff = Boolean(
     target.isStaffQr ||
@@ -33,6 +99,19 @@ function QrModal({ target, businessName, onClose }) {
   )
   const displayName = isStaff ? target.name.replace('Personal QR - ', '') : ''
   const displayRole = isStaff ? target.subtitle : ''
+
+  if (target.isGatewayQr || isStaff) {
+    return (
+      <QrGatewayPreviewLayout
+        target={target}
+        qrImageSrc={qrImageSrcHighRes}
+        scanCaption={t('customer.scan_to_tip_review')}
+        onClose={onClose}
+        t={t}
+        showInactiveWarning={isStaff && !target.isActive}
+      />
+    )
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-nexoraText/70 p-4 py-6 backdrop-blur-sm sm:items-center qr-modal-backdrop">

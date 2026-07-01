@@ -156,8 +156,8 @@
       "tab_referral": "Referral QR",
       "tab_tipping": "Tip QR",
       "tab_payment": "Pay QR",
-      "payment_title": "My Payment QR",
-      "payment_sub": "Customers scan this QR to pay you directly — no salon account needed.",
+      "payment_title": "Payment QR Code",
+      "payment_sub": "Scan to pay directly. No account needed.",
       "share_payment": "Share Payment QR",
       "copy_payment_link": "Copy Payment Link",
       "payment_link_label": "Payment link",
@@ -675,12 +675,13 @@
       "qr_title": "Salon QR Code",
       "qr_desc": "Front desk – all technicians",
       "qr_body": "Place this QR code at the reception desk. Customers scan to choose their technician and submit reviews.",
-      "payment_title": "Direct Payment QR",
-      "payment_desc": "Front desk – pay this business",
-      "payment_body": "Place this QR at your reception desk. Customers scan to pay your business directly using your active payout methods.",
+      "payment_title": "Payment QR Code",
+      "payment_desc": "",
+      "payment_body": "Place at reception desk. Customers scan to pay.",
       "btn_open": "Open QR",
       "btn_download": "Download QR",
-      "btn_copy_link": "Copy Link"
+      "btn_copy_link": "Copy Link",
+      "copied_qr_link": "Link copied to clipboard!"
     },
     "touchpoint_stats": {
       "scans": "Scans",
@@ -1114,7 +1115,7 @@
     "success_footer": "You can close this page. Thank you!",
     "back_home": "Back Home",
     "wallet_title": "Send ${amount} via {wallet} to {recipient}",
-    "confirm_sent": "Yes, I paid"
+    "confirm_sent": "Yes, I've Paid"
   },
   "staff_direct_payment": {
     "review_payment_title": "Review payment & choose method",
@@ -1171,7 +1172,7 @@
     "confirm_failed": "Could not confirm payment.",
     "empty": "No direct payments yet. Share your payment QR to start receiving payments.",
     "view_history": "View payment history",
-    "pending_ack_banner_title": "{{count}} payment(s) need your confirmation",
+    "pending_ack_banner_title": "{{count}} payments need your confirmation",
     "pending_ack_banner_desc": "The customer confirmed they sent money. Open each payment and tap “Confirm payment received” once it arrives in your account.",
     "pending_ack_banner_action": "Review now",
     "ack_notice_title": "Payment received notification",
@@ -1180,7 +1181,7 @@
   },
   "staff_payments": {
     "title": "QR Payments",
-    "description": "Payments received through your personal payment QR.",
+    "description": "Payments received via your QR.",
     "detail_title": "Payment details",
     "detail_desc": "Direct payment from a customer via your payment QR.",
     "col_method": "Method",
@@ -1219,7 +1220,7 @@
     "confirm_failed": "Could not confirm payment.",
     "empty": "No direct payments yet. Share your payment QR to start receiving payments.",
     "view_history": "View payment history",
-    "pending_ack_banner_title": "{{count}} payment(s) need your confirmation",
+    "pending_ack_banner_title": "{{count}} payments need your confirmation",
     "pending_ack_banner_desc": "The customer confirmed they sent money. Open each payment and tap “Confirm payment received” once it arrives in your account.",
     "pending_ack_banner_action": "Review now",
     "ack_notice_title": "Payment received notification",
@@ -1630,7 +1631,7 @@
           "stepSendAmount": "Send exactly ${amount} to {name}.",
           "stepSendAmountPayment": "Send exactly ${amount} to {name}.",
           "stepConfirm": "Come back here and tap Yes, I sent the tip.",
-          "stepConfirmPayment": "Come back here and tap Yes, I paid."
+          "stepConfirmPayment": "Come back here and tap Yes, I've Paid."
         }
       }
     },
@@ -2037,9 +2038,9 @@
         "emptyTitle": "Configure payout methods first",
         "emptyDesc": "Turn on at least one payout method with account details before sharing your payment QR with customers.",
         "emptyAction": "Set up payout methods",
-        "defaultQrTitle": "Direct Payment QR",
+        "defaultQrTitle": "Payment QR Code",
         "qrAlt": "Merchant direct payment QR code",
-        "scanCaption": "Scan to pay this business",
+        "scanCaption": "Customers scan to pay",
         "merchantNote": "Share this QR code to receive direct payments using the payout methods you've set up.",
         "loadErrorTitle": "Could not load payment QR",
         "loadErrorDesc": "We couldn't fetch your payment link. Check your connection and try again.",
