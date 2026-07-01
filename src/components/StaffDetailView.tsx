@@ -19,6 +19,7 @@ import CopyableTransactionId from './ui/CopyableTransactionId'
 import { formatTransactionDateTime, formatCurrency } from './dashboard/utils'
 import { buildChartPoints, getBezierPath } from './dashboard/overview/chartUtils'
 import { useMerchantStaffStats } from '../data/hooks/useMerchantStaff'
+import { staffRecordMatchesMember } from '../utils/staffRecordMatch'
 
 const RANGE_DAY_OFFSETS = {
   '7 Days': 6,
@@ -88,20 +89,6 @@ function isWithinLocalDateRange(value, startDate, endDate) {
 function getRangeDates(range) {
   const offset = RANGE_DAY_OFFSETS[range] ?? 6
   return getLocalDateRange(offset)
-}
-
-function staffRecordMatchesMember(member, record) {
-  if (!member || !record) return false
-  const profileId = member.staffProfileId
-  const staffCode = member.staffCode
-  const linkId = member.id || member.linkId
-  const name = member.fullName || member.nickname
-
-  if (profileId && record.staffProfileId === profileId) return true
-  if (staffCode && record.staffCode === staffCode) return true
-  if (linkId && (record.staffId === linkId || record.id === linkId)) return true
-  if (name && record.staffName === name) return true
-  return false
 }
 
 function buildChartFromTipsTrend(tipsTrend, range, startDate, endDate, t, currentLanguage) {

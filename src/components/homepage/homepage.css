@@ -28,6 +28,23 @@
   box-shadow: 0 0 20px rgba(108, 77, 246, 0.4);
 }
 
+.nx-homepage-banner-dot {
+  min-height: 0 !important;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  box-shadow: none !important;
+  transform: none !important;
+  flex-shrink: 0;
+}
+
+.nx-homepage-banner-dot:hover,
+.nx-homepage-banner-dot:focus-visible,
+.nx-homepage-banner-dot:active {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
 .swal-popup-rounded {
   border-radius: 24px !important;
   font-family: 'Plus Jakarta Sans', sans-serif !important;
@@ -890,20 +907,6 @@ nav a:focus-visible {
     min-height: 40px;
   }
 
-  .nx-homepage input,
-  .nx-homepage select,
-  .nx-homepage textarea,
-  .nx-homepage button {
-    font-size: 16px;
-    /* avoids iOS zoom on form focus */
-  }
-
-  .text-\[9px\],
-  .text-\[10px\],
-  .text-\[11px\],
-  .text-xs {
-    /* keep tiny labels readable on mobile without breaking Tailwind utilities too much */
-  }
 
   /* Savings stats labels 80% */
   [data-i18n="calc-stat-1"],

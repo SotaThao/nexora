@@ -19,6 +19,11 @@ export const STAFF_SCREEN_API: Record<StaffScreenId, readonly string[]> = {
   tips: ['GET /api/v1/staff/tips?PageNumber&PageSize&Status&DateFrom&DateTo'],
   reviews: ['GET /api/v1/staff/reviews?PageNumber&PageSize'],
   pay: ['GET /api/v1/staff/payment-methods (Zelle, PayPal, Venmo, CashApp, AppleCash, …)'],
+  payments: [
+    'GET /api/v1/staff/payments?PageNumber&PageSize&Type&Status&DateFrom&DateTo',
+    'GET /api/v1/staff/payments/{paymentId}',
+    'PATCH /api/v1/staff/payments/{paymentId}/acknowledge',
+  ],
   profile: ['GET /api/v1/staff/businesses'],
   notifications: [
     'GET /api/v1/Notifications?PageNumber&PageSize',

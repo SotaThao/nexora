@@ -1,11 +1,12 @@
-import React, { lazy, Suspense, useEffect, useState } from 'react'
+import React, { Suspense, useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 import LoadingScreen from './LoadingScreen'
 import apiAuthAdapter from '../auth/adapters/apiAuthAdapter'
 import { useTranslation } from '../contexts/LanguageContext'
+import lazyWithRetry from './lazyWithRetry'
 
-const HomePage = lazy(() => import('../components/homepage/HomePage'))
+const HomePage = lazyWithRetry(() => import('../components/homepage/HomePage'))
 
 export default function RootRedirect() {
   const { status } = useAuth()

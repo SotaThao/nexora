@@ -7,7 +7,6 @@ import {
   ChevronUp,
   Loader2
 } from 'lucide-react'
-import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 import { useTranslation } from '../contexts/LanguageContext'
 import { useAuth } from '../auth/useAuth'
 import { useProfileSettings } from '../data/hooks/useProfileSettings'
@@ -43,16 +42,11 @@ function fieldInputClass(hasError: boolean) {
   ].join(' ')
 }
 
-type SupportViewProps = {
-  recaptchaEnabled?: boolean
-}
-
-export default function SupportView({ recaptchaEnabled = false }: SupportViewProps) {
+export default function SupportView() {
   const { t } = useTranslation()
   const { session } = useAuth()
   const { data: profile } = useProfileSettings()
   const submitContactRequestMutation = useSubmitContactRequest()
-  const { executeRecaptcha } = useGoogleReCaptcha()
 
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
@@ -150,27 +144,6 @@ export default function SupportView({ recaptchaEnabled = false }: SupportViewPro
 
     setFieldErrors({})
 
-    let captchaToken = ''
-    if (recaptchaEnabled) {
-      if (!executeRecaptcha) {
-        setFormError(t('dashboard.support.form.captcha_not_ready'))
-        return
-      }
-
-      try {
-        captchaToken = (await executeRecaptcha('contact_request')) || ''
-      } catch (err) {
-        logger.error('[SupportView] Failed to execute reCAPTCHA', err)
-        setFormError(t('dashboard.support.form.captcha_error'))
-        return
-      }
-
-      if (!captchaToken) {
-        setFormError(t('dashboard.support.form.captcha_error'))
-        return
-      }
-    }
-
     try {
       await submitContactRequestMutation.mutateAsync({
         fullName: fullName.trim(),
@@ -178,7 +151,7 @@ export default function SupportView({ recaptchaEnabled = false }: SupportViewPro
         phoneNumber: phoneNumber.trim() || null,
         supportType: supportType.trim(),
         message: message.trim(),
-        captchaToken,
+        captchaToken: '',
         sourceFrom: 'merchant_dashboard',
       })
 

@@ -36,6 +36,9 @@ export const qk = {
 
   // Client ecosystem (header SSO)
   ecosystems:             () => ['ecosystems'],
+
+  // Public homepage banners
+  activeBanners:          () => ['banners', 'active'],
   
   // Profile (Staff/Personal)
   userProfile:              () => ['userProfile'],
@@ -76,9 +79,17 @@ export const qk = {
 
   // Merchant Payment Methods
   merchantPaymentMethods: ()   => ['merchantPaymentMethods'],
+  merchantPaymentQr: ()        => ['merchantPaymentQr'],
+  merchantPaymentsList: (filters = EMPTY) => ['merchantPayments', 'list', filters],
+  merchantPaymentDetail: (paymentId: string) => ['merchantPayments', 'detail', paymentId],
+  merchantPaymentStats: (filters = EMPTY) => ['merchantPayments', 'stats', filters],
 
   // Staff Payment Methods
   staffPaymentMethods: ()      => ['staffPaymentMethods'],
+  staffPaymentQr: ()          => ['staffPaymentQr'],
+  staffPaymentsList: (filters = EMPTY) => ['staffPayments', 'list', filters],
+  staffPaymentDetail: (paymentId: string) => ['staffPayments', 'detail', paymentId],
+  staffPaymentStats: (filters = EMPTY) => ['staffPayments', 'stats', filters],
 
   // Staff Self (own staff profile + linked businesses)
   staffProfile:        ()      => ['staffProfile'],
@@ -86,11 +97,15 @@ export const qk = {
   staffDashboardSummary: ()    => ['staffDashboardSummary'],
   staffReviews:          (filters = EMPTY) => ['staffReviews', filters],
   staffTips:             (filters = EMPTY) => ['staffTips', filters],
+  staffTransactionsPaginated: (filters = EMPTY) => ['staffTransactions', 'paginated', filters],
   staffLinkRequest:    (linkId: string | null | undefined) => ['staffLinkRequest', linkId ?? 'unknown'],
 
   // Public Customer Touch
   customerTouch: (businessSlug, touchPointSlug, sessionId) => ['customerTouch', businessSlug, touchPointSlug, sessionId],
   publicBusinessPaymentMethods: (businessId) => ['publicBusinessPaymentMethods', businessId],
+  publicDirectPaymentPage: (businessId) => ['publicDirectPaymentPage', businessId],
+  publicStaffDirectPaymentPage: (staffProfileId: string) => ['publicStaffDirectPaymentPage', staffProfileId],
+  publicPaymentStatus: (paymentId: string) => ['publicPayment', 'status', paymentId],
 }
 
 /** Maps localStorage domain keys → TanStack Query key arrays (storage event bridge). */

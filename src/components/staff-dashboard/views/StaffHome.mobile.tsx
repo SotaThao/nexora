@@ -1,6 +1,6 @@
 // StaffHome — personal staff home (mobile-first "Pro" layout):
 // greeting, KPI cards, quick actions, pending tip confirmations, linked
-// businesses, referral banner. All data is real (empty states when missing).
+// businesses. All data is real (empty states when missing).
 import { useOutletContext } from 'react-router-dom'
 import {
   QrCode,
@@ -8,7 +8,6 @@ import {
   Clock,
   DollarSign,
   Calendar,
-  Gift,
   CreditCard,
   MessageSquare,
   ChevronRight,
@@ -80,6 +79,9 @@ export default function StaffHome() {
   const { account } = useStaffAccount()
   const confirmTipsMutation = useConfirmStaffTipsReceipt()
   const { kpis, isHomeLoading, isPendingTipsFetching, pendingTips, linkedBusinesses } = useStaffHomeData()
+  const activeLinkedBusinesses = (linkedBusinesses || []).filter(
+    (biz) => resolveStaffBusinessLinkStatusLabel(biz).toLowerCase() === 'active',
+  )
 
   const isConfirming = confirmTipsMutation.isPending
 
@@ -97,7 +99,7 @@ export default function StaffHome() {
 
   const pendingAmount = (pendingTips || []).reduce((s, tip) => s + Number(tip.amount || 0), 0)
 
-  const go = (screen) => onNavigate?.(screen)
+  const go = (screen, params?: Record<string, string>) => onNavigate?.(screen, params)
 
   return (
     <div className="space-y-5 pb-4">
@@ -149,8 +151,29 @@ export default function StaffHome() {
         <QuickAction icon={<QrCode className="h-5 w-5" />} label={t('staff_dashboard.home.quick_qr')} bg="bg-purple-100" iconColor="text-purple-600" onClick={() => go('qr')} />
         <QuickAction icon={<DollarSign className="h-5 w-5" />} label={t('staff_dashboard.home.quick_tips')} bg="bg-emerald-100" iconColor="text-emerald-600" onClick={() => go('tips')} />
         <QuickAction icon={<MessageSquare className="h-5 w-5" />} label={t('staff_dashboard.home.quick_reviews')} bg="bg-blue-100" iconColor="text-blue-600" onClick={() => go('reviews')} />
-        <QuickAction icon={<CreditCard className="h-5 w-5" />} label={t('staff_dashboard.home.quick_payments')} bg="bg-indigo-100" iconColor="text-indigo-600" onClick={() => go('pay')} />
+        <QuickAction icon={<CreditCard className="h-5 w-5" />} label={t('staff_dashboard.home.quick_payments')} bg="bg-indigo-100" iconColor="text-indigo-600" onClick={() => go('payments')} />
         <QuickAction icon={<Gift className="h-5 w-5" />} label={t('staff_dashboard.home.quick_refer')} bg="bg-pink-100" iconColor="text-pink-600" onClick={() => go('profile')} />
+      </div>
+
+      {/* Pay QR quick section */}
+      <div className="rounded-3xl border border-nexoraBorder bg-white p-5 shadow-nexora-card">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="text-[17px] font-black tracking-tight text-nexoraText">
+              {t('staff_dashboard.qr.payment_title')}
+            </h2>
+            <p className="mt-1 text-[12px] text-nexoraMuted">
+              {t('staff_dashboard.qr.payment_sub')}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => go('qr', { tab: 'payment' })}
+            className="shrink-0 rounded-xl bg-gradient-to-r from-nexoraElectric to-nexoraViolet px-4 py-2.5 text-[11px] font-extrabold text-white transition hover:opacity-90"
+          >
+            {t('staff_dashboard.qr.tab_payment')}
+          </button>
+        </div>
       </div>
 
       {/* ── Pending Confirmations ────────────────────────────────────────── */}
@@ -206,11 +229,11 @@ export default function StaffHome() {
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-[17px] font-black tracking-tight text-nexoraText">{t('staff_dashboard.home.linked_businesses')}</h2>
         </div>
-        {(linkedBusinesses || []).length === 0 ? (
+        {activeLinkedBusinesses.length === 0 ? (
           <p className="py-4 text-center text-[13px] text-nexoraSubtle">{t('staff_dashboard.qr.no_linked_businesses')}</p>
         ) : (
           <div className="divide-y divide-nexoraBorder">
-            {linkedBusinesses.filter((biz) => resolveStaffBusinessLinkStatusLabel(biz).toLowerCase() === 'active').map((biz) => {
+            {activeLinkedBusinesses.map((biz) => {
               const statusLabel = resolveStaffBusinessLinkStatusLabel(biz)
               const statusPresentation = getStaffBusinessLinkStatusPresentation(statusLabel)
               return (
@@ -237,26 +260,6 @@ export default function StaffHome() {
         )}
       </div>
 
-      {/* ── Referral Banner ──────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-[22px] bg-gradient-to-r from-nexoraBrand via-nexoraElectricMid to-nexoraViolet p-5 shadow-nexora-soft">
-        <div className="absolute -top-6 -right-6 h-24 w-24 rounded-full bg-white/10" />
-        <div className="relative flex items-center gap-4">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
-            <Gift className="h-6 w-6 text-white" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-[15px] font-black text-white">{t('staff_dashboard.home.refer_title')}</p>
-            <p className="mt-0.5 text-[12px] text-white/80">{t('staff_dashboard.home.refer_subtitle')}</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => go('profile')}
-            className="h-10 shrink-0 rounded-full bg-white px-4 text-[13px] font-black text-nexoraBrand shadow-md transition active:scale-95"
-          >
-            {t('staff_dashboard.home.invite_now')}
-          </button>
-        </div>
-      </div>
     </div>
   )
 }

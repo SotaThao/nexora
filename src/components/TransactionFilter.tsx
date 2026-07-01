@@ -1,5 +1,5 @@
-import React from 'react'
-import { SlidersHorizontal, RotateCcw, Search } from 'lucide-react'
+import React, { useState } from 'react'
+import { SlidersHorizontal, RotateCcw, Search, ChevronDown, ChevronUp } from 'lucide-react'
 import CustomSelect from './CustomSelect'
 import { useTranslation } from '../contexts/LanguageContext'
 
@@ -26,9 +26,14 @@ export default function TransactionFilter({
   setEndDate,
   resetFilters,
   staffOptions = [],
-  touchpointOptions = []
+  touchpointOptions = [],
+  variant = 'merchant',
+  defaultCollapsed = false,
 }) {
   const { t } = useTranslation()
+  const isStaffVariant = variant === 'staff'
+  const isCollapsible = defaultCollapsed
+  const [isExpanded, setIsExpanded] = useState(!defaultCollapsed)
 
   const paymentOptions = [
     { value: 'all', label: t('dashboard.activity_log.all_payments') },
@@ -55,25 +60,54 @@ export default function TransactionFilter({
   ]
 
   return (
-    <div className="rounded-xl border border-nexoraBorder bg-white p-4 shadow-sm space-y-4">
-      <div className="flex items-center justify-between border-b border-nexoraRule pb-3">
-        <div className="flex items-center gap-2">
-          <SlidersHorizontal className="h-4 w-4 text-nexoraBrand" />
-          <h3 className="text-xs font-bold uppercase tracking-wider text-nexoraText">
-            {t('dashboard.activity_log.filter_title')}
-          </h3>
-        </div>
-        <button
-          onClick={resetFilters}
-          className="flex items-center gap-1.5 text-xs font-bold text-nexoraMuted hover:text-nexoraBrand transition-colors cursor-pointer select-none"
-        >
-          <RotateCcw className="h-3.5 w-3.5" />
-          {t('dashboard.activity_log.filter_reset')}
-        </button>
+    <div className={`rounded-xl border border-nexoraBorder bg-white p-4 shadow-sm ${isExpanded ? 'space-y-4' : ''}`}>
+      <div
+        className={`flex items-center justify-between ${
+          isExpanded ? 'border-b border-nexoraRule pb-3' : ''
+        }`}
+      >
+        {isCollapsible ? (
+          <button
+            type="button"
+            onClick={() => setIsExpanded((prev) => !prev)}
+            className="flex flex-1 items-center gap-2 text-left cursor-pointer select-none"
+            aria-expanded={isExpanded}
+          >
+            <SlidersHorizontal className="h-4 w-4 text-nexoraBrand" />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-nexoraText">
+              {t('dashboard.activity_log.filter_title')}
+            </h3>
+            {isExpanded ? (
+              <ChevronUp className="h-4 w-4 text-nexoraMuted" />
+            ) : (
+              <ChevronDown className="h-4 w-4 text-nexoraMuted" />
+            )}
+          </button>
+        ) : (
+          <div className="flex items-center gap-2">
+            <SlidersHorizontal className="h-4 w-4 text-nexoraBrand" />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-nexoraText">
+              {t('dashboard.activity_log.filter_title')}
+            </h3>
+          </div>
+        )}
+        {isExpanded ? (
+          <button
+            type="button"
+            onClick={resetFilters}
+            className="flex items-center gap-1.5 text-xs font-bold text-nexoraMuted hover:text-nexoraBrand transition-colors cursor-pointer select-none"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            {t('dashboard.activity_log.filter_reset')}
+          </button>
+        ) : null}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+      {isExpanded ? (
+      <>
+      <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 ${isStaffVariant ? 'xl:grid-cols-5' : 'xl:grid-cols-7'}`}>
         {/* Search Query */}
+        {!isStaffVariant ? (
         <div className="flex flex-col gap-1.5">
           <label className="text-[10px] font-semibold uppercase text-nexoraMuted tracking-wider">
             {t('dashboard.activity_log.filter_search')}
@@ -89,6 +123,7 @@ export default function TransactionFilter({
             />
           </div>
         </div>
+        ) : null}
 
         {/* Date Preset */}
         <div className="flex flex-col gap-1.5">
@@ -136,6 +171,7 @@ export default function TransactionFilter({
         </div>
 
         {/* Staff */}
+        {!isStaffVariant ? (
         <div className="flex flex-col gap-1.5">
           <label className="text-[10px] font-semibold uppercase text-nexoraMuted tracking-wider">
             {t('dashboard.activity_log.filter_staff')}
@@ -147,8 +183,9 @@ export default function TransactionFilter({
             options={staffOptions}
           />
         </div>
+        ) : null}
 
-        {/* Touch Point */}
+        {/* Touch Point / Station */}
         <div className="flex flex-col gap-1.5">
           <label className="text-[10px] font-semibold uppercase text-nexoraMuted tracking-wider">
             {t('dashboard.activity_log.filter_tp')}
@@ -215,6 +252,8 @@ export default function TransactionFilter({
           </div>
         </div>
       )}
+      </>
+      ) : null}
     </div>
   )
 }

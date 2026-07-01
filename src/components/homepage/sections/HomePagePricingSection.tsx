@@ -24,13 +24,13 @@ export default function HomePagePricingSection() {
                 <div className="space-y-6">
                   <div className="flex justify-between items-start">
                     <div className="ds-content-card">
-                      <h3 className="text-lg font-extrabold text-navy" data-i18n="plan-free-title">Lite Pack (Free)</h3>
+                      <h3 className="text-xl font-extrabold text-navy" data-i18n="plan-free-title">Lite Pack (Free)</h3>
                       <p className="text-[11px] text-slate-500 mt-1 leading-normal" data-i18n="plan-free-desc">For salons with 5 staff or fewer. Requires KYB validation.</p>
                     </div>
                     <span className="bg-green/10 text-green text-xs font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">Free</span>
                   </div>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-black text-navy">$0</span>
+                    <span className="text-3xl sm:text-4xl font-black text-navy">$0</span>
                     <span className="text-xs text-slate-500 font-bold">/ <span data-i18n="calc-mo">mo</span></span>
                   </div>
                   <ul className="space-y-3.5 text-xs text-slate-600 font-semibold border-t border-slate-200/80 pt-6">
@@ -50,7 +50,7 @@ export default function HomePagePricingSection() {
                     <p className="text-xs text-slate-500 mt-1" data-i18n="plan-1-desc">Perfect for micro booths &amp; independent practitioners</p>
                   </div>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-black text-navy">$29</span>
+                    <span className="text-3xl sm:text-4xl font-black text-navy">$29</span>
                     <span className="text-xs text-slate-500 font-bold">/ <span data-i18n="calc-mo">mo</span></span>
                   </div>
                   <ul className="space-y-3.5 text-xs text-slate-600 font-semibold border-t border-slate-200/80 pt-6">
@@ -71,7 +71,7 @@ export default function HomePagePricingSection() {
                     <p className="text-xs text-slate-500 mt-1" data-i18n="plan-2-desc">Brilliant choice for growing teams &amp; local boutique hubs</p>
                   </div>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-black text-navy">$79</span>
+                    <span className="text-3xl sm:text-4xl font-black text-navy">$79</span>
                     <span className="text-xs text-slate-500 font-bold">/ <span data-i18n="calc-mo">mo</span></span>
                   </div>
                   <ul className="space-y-3.5 text-xs text-slate-600 font-semibold border-t border-slate-200/80 pt-6">
@@ -92,7 +92,7 @@ export default function HomePagePricingSection() {
                     <p className="text-xs text-slate-500 mt-1" data-i18n="plan-3-desc">Tailored for prominent multi-location boutique franchises</p>
                   </div>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-black text-navy" data-i18n="plan-3-price">Custom Scale</span>
+                    <span className="text-3xl sm:text-4xl font-black text-navy" data-i18n="plan-3-price">Custom Scale</span>
                     <span className="text-xs text-slate-500 font-bold">/ <span data-i18n="plan-3-price-sub">tailored quote</span></span>
                   </div>
                   <ul className="space-y-3.5 text-xs text-slate-600 font-semibold border-t border-slate-200/80 pt-6">

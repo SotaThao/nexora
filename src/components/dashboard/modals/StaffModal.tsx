@@ -10,7 +10,7 @@ import PayoutSetupModal from './PayoutSetupModal'
 import StaffReviewsDetailModal from './StaffReviewsDetailModal'
 import StaffQrScannerModal from './StaffQrScannerModal'
 import ToggleSwitch from '../../ui/ToggleSwitch'
-import { useSearchMerchantStaff } from '../../../data/hooks/useMerchantStaff'
+import { useSearchMerchantStaff, useMerchantStaffStats } from '../../../data/hooks/useMerchantStaff'
 import { buildStaffReviewSummary } from './staffModalReviewUtils'
 
 function StaffModal({
@@ -85,6 +85,11 @@ function StaffModal({
     enabled: open && !editing && !isReviewOnly && searchQuery.trim().length > 0,
   })
 
+  const staffProfileId = typeof form?.staffProfileId === 'string' ? form.staffProfileId : null
+  const { data: staffStats } = useMerchantStaffStats(staffProfileId, {}, {
+    enabled: open && !!staffProfileId,
+  })
+
   useEffect(() => {
     if (!searchQuery) return
 
@@ -140,15 +145,31 @@ function StaffModal({
 
   if (!open) return null
 
+  const staffMemberContext = form
+    ? {
+        ...form,
+        id: staffLinkId ?? form.id,
+        staffCode: form.nexoraStaffId,
+      }
+    : null
+
   const { reviewsList, averageRating, starCounts, filteredReviewsList } = buildStaffReviewSummary(
     reviewsProp ?? [],
-    form?.nexoraStaffId || form?.id,
+    staffMemberContext,
     {
       rating: reviewFilterRating,
       source: reviewFilterSource,
       onlyCommented: reviewFilterOnlyCommented,
     },
   )
+
+  const displayRating = averageRating > 0
+    ? averageRating
+    : Number(staffStats?.allTime?.averageRating ?? 0)
+
+  const displayReviewCount = reviewsList.length > 0
+    ? reviewsList.length
+    : Number(staffStats?.allTime?.totalReviews ?? staffStats?.period?.totalReviews ?? 0)
 
   const phoneParsed = parsePhone(form?.phone || '')
 
@@ -405,12 +426,12 @@ function StaffModal({
                       <div className="flex items-center gap-0.5 text-nexoraWarning">
                         <Star className="h-3.5 w-3.5 fill-current" />
                         <span className="text-xs font-black text-nexoraText">
-                          {averageRating ? averageRating.toFixed(1) : '-.-'}
+                          {displayRating > 0 ? displayRating.toFixed(1) : '-.-'}
                         </span>
                       </div>
                       <div className="h-3.5 w-px bg-nexoraBrandSoft" />
                       <span className="text-[10px] text-nexoraMuted font-bold group-hover:underline">
-                        {t('components.dashboard.modals.StaffModal.review_count', { count: reviewsList.length })}
+                        {t('components.dashboard.modals.StaffModal.review_count', { count: displayReviewCount })}
                       </span>
                     </button>
                   )}
@@ -627,7 +648,7 @@ function StaffModal({
         form={form}
         reviewsList={reviewsList}
         filteredReviewsList={filteredReviewsList}
-        averageRating={averageRating}
+        averageRating={displayRating}
         starCounts={starCounts}
         reviewFilterRating={reviewFilterRating}
         reviewFilterSource={reviewFilterSource}

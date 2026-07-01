@@ -11,7 +11,6 @@ import ReportsView from '../views/ReportsView'
 import SettingsView from '../../SettingsView'
 import AnalyticsView from '../../AnalyticsView'
 import SupportView from '../../SupportView'
-import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3'
 import ComingSoon from '../views/ComingSoon'
 import ManagePlanView from '../views/ManagePlanView'
 import StaffDetailView from '../../StaffDetailView'
@@ -50,6 +49,7 @@ export function OverviewRoute() {
       onStartSetup={ctx.onStartSetup}
       profile={ctx.profile}
       onNavigateMenu={ctx.onNavigateMenu}
+      onOpenAddStaff={ctx.openAddStaff}
       onApproveClick={ctx.openApproveStaff}
       pendingStaff={ctx.pendingStaff}
       staff={ctx.staff}
@@ -191,6 +191,7 @@ export function TouchpointsRoute() {
   const [sp, setSp] = useSearchParams()
   const tab = sp.get('tab') || 'stations'
   const activeSubTab = tab === 'devices' ? 'devices' : 'stations'
+  const stationsSection = sp.get('section') === 'payment' ? 'payment' : 'tip'
 
   return (
     <TouchpointsView
@@ -210,8 +211,17 @@ export function TouchpointsRoute() {
       onDeleteDevice={ctx.handleDeleteDevice}
       onToggleDeviceStatus={ctx.handleToggleDeviceStatus}
       activeSubTab={activeSubTab}
+      stationsSection={stationsSection}
+      onStationsSectionChange={(nextSection) => {
+        setSp({ tab: 'stations', section: nextSection }, { replace: true })
+      }}
       onTabChange={(nextTab) => {
-        setSp({ tab: nextTab }, { replace: true })
+        if (nextTab === 'stations') {
+          const section = sp.get('section') === 'payment' ? 'payment' : 'tip'
+          setSp({ tab: nextTab, section }, { replace: true })
+        } else {
+          setSp({ tab: nextTab }, { replace: true })
+        }
       }}
     />
   )
@@ -223,6 +233,7 @@ export function ReviewsRoute() {
   return (
     <ReviewsView
       reviews={ctx.reviewsPage?.items ?? []}
+      summary={ctx.reviewsSummary}
       isLoading={ctx.isReviewsPending}
       isFetching={ctx.reviewsListFetching}
       staff={ctx.filteredStaff}
@@ -312,18 +323,7 @@ export function SettingsRoute() {
 }
 
 export function SupportRoute() {
-  const { currentLanguage } = useTranslation()
-  const recaptchaKey = import.meta.env.VITE_RECAPTCHA_KEY
-
-  if (!recaptchaKey) {
-    return <SupportView recaptchaEnabled={false} />
-  }
-
-  return (
-    <GoogleReCaptchaProvider reCaptchaKey={recaptchaKey} language={currentLanguage}>
-      <SupportView recaptchaEnabled />
-    </GoogleReCaptchaProvider>
-  )
+  return <SupportView />
 }
 
 export function SubscriptionsRoute() {

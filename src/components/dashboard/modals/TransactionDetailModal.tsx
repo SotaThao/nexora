@@ -7,12 +7,15 @@ import {
   formatTransactionDateTime,
   isAwaitingShopConfirmation,
   isShopConfirmed,
+  isAwaitingStaffConfirmation,
+  isStaffReceiptConfirmed,
 } from '../utils'
 import { WalletLogos } from '../constants'
 import { logger } from '../../../utils/logger'
 import { buildQrImageUrl, slugify, toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
 import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import { useConfirmMerchantTipsReceipt } from '../../../data/hooks/useTransactions'
+import { useConfirmStaffTipsReceipt } from '../../../data/hooks/useStaffSelf'
 import QrModal from './QrModal'
 import CopyableTransactionId from '../../ui/CopyableTransactionId'
 
@@ -161,11 +164,17 @@ export default function TransactionDetailModal({
   businessSlug = '',
   touchpoints = [],
   staff = [],
+  audience = 'merchant',
 }) {
   const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
   const [qrTarget, setQrTarget] = useState(null)
-  const confirmReceiptMutation = useConfirmMerchantTipsReceipt()
+  const merchantConfirmReceiptMutation = useConfirmMerchantTipsReceipt()
+  const staffConfirmReceiptMutation = useConfirmStaffTipsReceipt()
+  const isStaffAudience = audience === 'staff'
+  const confirmReceiptMutation = isStaffAudience
+    ? staffConfirmReceiptMutation
+    : merchantConfirmReceiptMutation
 
   const staffCodeByProfileId = useMemo(() => buildStaffCodeLookup(staff), [staff])
   const tipItems = useMemo(
@@ -257,8 +266,10 @@ export default function TransactionDetailModal({
     selectedTx.staffCode,
   )
 
-  const awaitingShopConfirmation = isAwaitingShopConfirmation(selectedTx)
-  const shopConfirmed = isShopConfirmed(selectedTx)
+  const awaitingShopConfirmation = !isStaffAudience && isAwaitingShopConfirmation(selectedTx)
+  const awaitingStaffConfirmation = isStaffAudience && isAwaitingStaffConfirmation(selectedTx)
+  const shopConfirmed = !isStaffAudience && isShopConfirmed(selectedTx)
+  const staffReceiptConfirmed = isStaffAudience && isStaffReceiptConfirmed(selectedTx)
   const isConfirming = confirmReceiptMutation.isPending
 
   const handleConfirmReceipt = () => {
@@ -348,7 +359,7 @@ export default function TransactionDetailModal({
                 <span className="font-semibold text-nexoraText block mt-0.5">{selectedTx.touchpoint || '—'}</span>
               </div>
               {/* Row 3 (single-staff only): Staff */}
-              {!isMultiStaff ? (
+              {!isMultiStaff && !isStaffAudience ? (
                 <div className="col-span-2">
                   <span className="text-[10px] font-bold text-nexoraMuted block">
                     {t('dashboard.activity_log.col_staff')}
@@ -379,14 +390,42 @@ export default function TransactionDetailModal({
                     className="flex items-center justify-between gap-3 rounded-lg border border-nexoraBorder bg-white px-3 py-2.5"
                   >
                     <div className="min-w-0 flex flex-wrap items-center gap-1.5">
-                      <span className="text-xs font-bold text-nexoraText">{item.staffName || '—'}</span>
-                      {renderStaffCodeBadge(item.staffCode)}
+                      {!isStaffAudience ? (
+                        <>
+                          <span className="text-xs font-bold text-nexoraText">{item.staffName || '—'}</span>
+                          {renderStaffCodeBadge(item.staffCode)}
+                        </>
+                      ) : null}
                     </div>
                     <p className="text-xl font-black text-nexoraBrand shrink-0">
                       {formatCurrency(item.amount)}
                     </p>
                   </div>
                 ))}
+              </div>
+            ) : null}
+
+            {awaitingStaffConfirmation ? (
+              <div className="rounded-xl border border-violet-100 bg-violet-50/60 p-4 space-y-3">
+                <div className="flex items-start gap-2">
+                  <Hourglass className="h-4 w-4 shrink-0 text-violet-500 mt-0.5" />
+                  <p className="text-[11px] leading-normal text-violet-700">
+                    {t('staff_dashboard.tips.status_help.confirmed')}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={isConfirming}
+                  onClick={handleConfirmReceipt}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white transition-colors hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+                >
+                  {isConfirming ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <CheckCircle className="h-4 w-4" />
+                  )}
+                  {t('staff_dashboard.home.confirm')}
+                </button>
               </div>
             ) : null}
 
@@ -411,6 +450,17 @@ export default function TransactionDetailModal({
                   )}
                   {t('merchant_dashboard.tips.confirm_receipt')}
                 </button>
+              </div>
+            ) : null}
+
+            {staffReceiptConfirmed ? (
+              <div className="flex items-start gap-2 rounded-xl border border-emerald-100 bg-emerald-50/60 p-4">
+                <CheckCircle className="h-4 w-4 shrink-0 text-emerald-500 mt-0.5" />
+                <p className="text-[11px] leading-normal text-emerald-700">
+                  {t('merchant_dashboard.tips.confirmed_help', {
+                    time: formatTransactionDateTime(selectedTx.staffConfirmedAt, currentLanguage),
+                  })}
+                </p>
               </div>
             ) : null}
 
