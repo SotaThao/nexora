@@ -1,0 +1,1795 @@
+<title>Nexora · Customer Tip Flow</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+/* ──────────────────────────────────────────────
+   Nexora design tokens (match tailwind config)
+   ────────────────────────────────────────────── */
+:root {
+  --canvas:      #F8FAFC;   /* bg-nexoraCanvas  = slate-50  */
+  --surface:     #F1F5F9;   /* nexoraSurfaceMuted = slate-100 */
+  --paper:       #FFFFFF;
+  --text:        #0F172A;   /* nexoraText       = slate-900 */
+  --subtle:      #64748B;   /* nexoraSubtle     = slate-500 */
+  --muted:       #94A3B8;   /* nexoraMuted      = slate-400 */
+  --border:      #E2E8F0;   /* nexoraBorder     = slate-200 */
+  --brand:       #2563EB;   /* nexoraBrand      = blue-600  */
+  --brand-dk:    #1D4ED8;   /* blue-700 */
+  --brand-soft:  #EFF4FF;   /* nexoraBrandSoft  ≈ blue-50   */
+  --electric:    #818CF8;   /* nexoraElectric   = indigo-400*/
+  --violet:      #7C3AED;   /* nexoraViolet     = violet-600*/
+  --danger:      #EF4444;   /* nexoraDanger     = red-500   */
+  --success:     #16A34A;   /* green-600 */
+  --success-bg:  #DCFCE7;   /* green-100 */
+  --amber:       #F59E0B;   /* amber-500 */
+  --amber-dk:    #D97706;   /* amber-600 */
+  --amber-bg:    #FEF3C7;   /* amber-100 */
+  /* wallet brand colors */
+  --zelle:   #6D1ED4;
+  --venmo:   #008CFF;
+  --cashapp: #00C244;
+  --paypal:  #003087;
+  --ff: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --fmono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--ff);background:#CBD5E1;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0}
+
+/* ── Demo nav (outside the app) ── */
+.demo-nav{width:100%;background:#1E293B;padding:8px 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;position:sticky;top:0;z-index:100;border-bottom:1px solid #334155}
+.demo-nav .brand{color:#818CF8;font-weight:800;font-size:12px;letter-spacing:.05em;flex:none;margin-right:4px}
+.dtab{font-size:11px;font-weight:600;padding:5px 11px;border-radius:999px;border:1px solid #334155;background:transparent;color:#94A3B8;cursor:pointer;transition:all .15s;font-family:var(--ff);white-space:nowrap}
+.dtab:hover{border-color:#818CF8;color:#E2E8F0}
+.dtab.active{background:#818CF8;border-color:#818CF8;color:#fff}
+
+/* ──────────────────────────────────────────────
+   Nexora App shell  (CustomerFlow.tsx layout)
+   min-h-dvh bg-nexoraCanvas text-nexoraText
+   font-sans flex flex-col justify-between
+   ────────────────────────────────────────────── */
+.napp{
+  width:100%;flex:1;background:var(--canvas);color:var(--text);
+  display:flex;flex-direction:column;justify-content:space-between;
+  position:relative;padding-bottom:32px;min-height:calc(100vh - 41px);
+}
+/* absolute top-0 w-full h-[30%] gradient glow */
+.glow{position:absolute;top:0;left:0;width:100%;height:30%;
+  background:linear-gradient(to bottom,rgba(219,234,254,.5),transparent);
+  pointer-events:none;z-index:0}
+/* language switcher absolute top-4 right-4 */
+.lang-sw{position:absolute;top:16px;right:16px;z-index:50;
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.8);backdrop-filter:blur(8px);
+  padding:6px 12px;border-radius:999px;border:1px solid var(--border);
+  box-shadow:0 1px 4px rgba(15,23,42,.08)}
+.lang-sw .lb{font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px;cursor:pointer;
+  border:none;background:transparent;color:var(--subtle);transition:all .15s;font-family:var(--ff)}
+.lang-sw .lb.active{background:var(--brand);color:#fff}
+.lang-sw .sep{color:var(--border);font-size:11px;user-select:none}
+/* main flex-grow flex items-center justify-center p-4 */
+.app-main{flex:1;display:flex;align-items:center;justify-content:center;padding:16px;position:relative;z-index:10}
+/* card: w-full max-w-md bg-white border rounded-2xl p-6 shadow-premium */
+.card{width:100%;max-width:28rem;background:var(--paper);border:1px solid var(--border);
+  border-radius:1rem;padding:24px;
+  box-shadow:0 1px 3px rgba(15,23,42,.05),0 8px 24px -8px rgba(15,23,42,.12),0 0 0 1px rgba(15,23,42,.04)}
+/* footer */
+.app-footer{text-align:center;position:relative;z-index:10;padding-bottom:8px}
+.footer-secure{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:var(--subtle)}
+.footer-copy{font-size:10px;color:rgba(100,116,139,.7);margin-top:4px}
+
+/* ── step sections ── */
+.step{display:none;flex-direction:column;gap:24px;animation:fadeIn .2s ease-out}
+.step.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Typography helpers ── */
+.section-label{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--muted);font-weight:700}
+.page-title{font-size:20px;font-weight:900;letter-spacing:-.02em;line-height:1.2;text-wrap:balance}
+.page-subtitle{font-size:13px;color:var(--subtle);line-height:1.5}
+.back-row{display:flex;align-items:center;gap:10px;margin-bottom:-8px}
+.back-btn{width:32px;height:32px;border-radius:9px;border:1px solid var(--border);background:var(--paper);
+  display:grid;place-items:center;cursor:pointer;flex:none;transition:background .15s,transform .1s;color:var(--text)}
+.back-btn:hover{background:var(--brand-soft)}
+.back-btn:active{transform:scale(.93)}
+.back-btn svg{width:16px;height:16px;stroke:currentColor;fill:none}
+.step-badge{font-size:10px;font-weight:700;color:var(--brand);background:var(--brand-soft);
+  padding:3px 9px;border-radius:999px;margin-left:auto}
+
+/* ── SELECT STAFF ── */
+.search-wrap{display:flex;align-items:center;gap:8px;background:var(--surface);
+  border:1px solid var(--border);border-radius:12px;padding:10px 14px}
+.search-wrap svg{width:14px;height:14px;stroke:var(--muted);fill:none;flex:none}
+.search-wrap input{border:none;background:none;font-size:14px;color:var(--text);
+  flex:1;outline:none;font-family:var(--ff)}
+.search-wrap input::placeholder{color:var(--muted)}
+.staff-list{display:flex;flex-direction:column;gap:8px}
+.staff-row{display:flex;align-items:center;gap:12px;background:var(--paper);
+  border:1.5px solid var(--border);border-radius:14px;padding:12px 14px;
+  cursor:pointer;transition:all .15s;position:relative}
+.staff-row:hover{border-color:var(--brand);box-shadow:0 4px 12px -8px rgba(37,99,235,.35)}
+.staff-row.sel{border-color:var(--brand);background:var(--brand-soft)}
+.ava{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;
+  font-weight:800;font-size:15px;color:#fff;flex:none}
+.staff-info .sn{font-weight:700;font-size:14px}
+.staff-info .sp{font-size:11.5px;color:var(--subtle);margin-top:2px}
+.sel-check{width:24px;height:24px;border-radius:50%;background:var(--brand);
+  display:none;place-items:center;margin-left:auto;flex:none}
+.sel-check svg{width:12px;height:12px;stroke:#fff;fill:none}
+.staff-row.sel .sel-check{display:grid}
+
+/* ── TIP AMOUNT ── */
+.staff-strip{display:flex;align-items:center;gap:12px;background:var(--surface);
+  border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+.strip-info .strip-name{font-weight:700;font-size:14px}
+.strip-info .strip-pos{font-size:11.5px;color:var(--subtle);margin-top:2px}
+.strip-amt{margin-left:auto;font-size:20px;font-weight:900;color:var(--brand);
+  font-variant-numeric:tabular-nums}
+.quick-grid{display:flex;gap:8px;flex-wrap:wrap}
+.qa{border:1.5px solid var(--border);background:var(--paper);border-radius:10px;
+  padding:9px 0;font-size:14px;font-weight:700;color:var(--text);
+  cursor:pointer;transition:all .15s;font-family:var(--ff);flex:1;min-width:44px}
+.qa:hover{border-color:var(--brand);color:var(--brand)}
+.qa.act{background:var(--brand);border-color:var(--brand);color:#fff;
+  box-shadow:0 4px 14px -6px rgba(37,99,235,.55)}
+.custom-input{width:100%;border:1.5px solid var(--brand);border-radius:10px;
+  padding:11px 14px;font-size:16px;font-weight:700;color:var(--text);
+  background:var(--paper);outline:none;font-family:var(--ff);font-variant-numeric:tabular-nums}
+.tip-total{display:flex;justify-content:space-between;align-items:center;
+  background:rgba(239,244,255,.5);border:1px solid var(--border);
+  border-radius:12px;padding:12px 14px}
+.tip-total .tk{font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--subtle)}
+.tip-total .tv{font-size:22px;font-weight:900;color:var(--brand);font-variant-numeric:tabular-nums}
+/* payment method buttons */
+.pay-list{display:flex;flex-direction:column;gap:9px}
+.pm{width:100%;display:flex;align-items:center;gap:12px;border:none;border-radius:14px;
+  padding:13px 16px;cursor:pointer;text-align:left;font-family:var(--ff);
+  color:#fff;transition:transform .1s,box-shadow .12s}
+.pm:hover{box-shadow:0 8px 24px -10px rgba(0,0,0,.45)}
+.pm:active{transform:translateY(1px)}
+.pm .ico{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.2);
+  display:grid;place-items:center;flex:none;font-weight:900;font-size:15px}
+.pm .pname{font-weight:700;font-size:14.5px;flex:1;text-align:left}
+.pm .psub{font-size:11.5px;opacity:.8}
+.pm .parr svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2.5;
+  stroke-linecap:round;stroke-linejoin:round}
+.pm.vp{background:linear-gradient(110deg,#2563EB,#4F46E5 55%,#06B6D4);padding:15px 16px;position:relative;overflow:hidden}
+.pm.vp::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.1) 52%,transparent 70%);pointer-events:none}
+.pm.zelle{background:linear-gradient(110deg,#6D1ED4,#9333EA)}
+.pm.venmo{background:linear-gradient(110deg,#008CFF,#60A5FA)}
+.pm.cashapp{background:linear-gradient(110deg,#00C244,#4ADE80)}
+.pm.paypal{background:linear-gradient(110deg,#003087,#1E40AF)}
+.rec-tag{font-size:10px;font-weight:800;padding:3px 9px;border-radius:999px;
+  background:rgba(255,255,255,.25);letter-spacing:.03em;white-space:nowrap}
+
+/* ── PROCESSING ── */
+.proc-wrap{display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:48px 0;gap:16px}
+.spin{width:48px;height:48px;border:4px solid var(--border);
+  border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.proc-wallet{font-size:13px;color:var(--subtle);font-weight:600}
+.proc-title{font-size:15px;font-weight:700;color:var(--text)}
+
+/* ── WALLET DETAILS (shared) ── */
+.wallet-hdr{display:flex;align-items:center;gap:12px}
+.w-icon{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;flex:none}
+.w-hname{font-weight:800;font-size:17px}
+.w-hsub{font-size:12px;color:var(--subtle);margin-top:2px}
+.copy-field{display:flex;align-items:center;gap:10px;background:var(--surface);
+  border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+.cf-info{flex:1;min-width:0}
+.cf-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:700;margin-bottom:3px}
+.cf-val{font-family:var(--fmono);font-size:12.5px;color:var(--text);word-break:break-all;line-height:1.4}
+.copy-btn{flex:none;border:1px solid var(--brand);color:var(--brand);background:var(--paper);
+  font-weight:700;font-size:12px;padding:7px 12px;border-radius:9px;cursor:pointer;
+  font-family:var(--ff);transition:all .15s;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.copy-btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
+.copy-btn:hover,.copy-btn.done{background:var(--success);border-color:var(--success);color:#fff}
+.instr-list{display:flex;flex-direction:column;gap:0}
+.instr-row{display:flex;gap:13px;align-items:flex-start;padding:10px 0;
+  border-bottom:1px solid var(--surface)}
+.instr-row:last-child{border-bottom:none}
+.instr-n{width:24px;height:24px;border-radius:50%;border:2px solid var(--brand);
+  color:var(--brand);font-weight:800;font-size:12px;display:grid;place-items:center;flex:none}
+.instr-t{font-size:13px;color:var(--text);line-height:1.5;padding-top:2px}
+.instr-t .hi{font-weight:700;color:var(--brand)}
+/* vlinkpay-specific wallet details */
+.qr-card{display:flex;flex-direction:column;align-items:center;gap:12px;
+  background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px}
+.qr-coin-row{display:flex;align-items:center;gap:10px;align-self:stretch;
+  padding-bottom:12px;border-bottom:1px solid var(--border)}
+.qr-cbadge{width:38px;height:38px;border-radius:11px;color:#fff;font-weight:800;font-size:12px;display:grid;place-items:center;flex:none}
+.qr-cname{font-weight:800;font-size:14px}
+.qr-cdesc{font-size:11.5px;color:var(--subtle);margin-top:1px}
+.def-tag{margin-left:auto;font-size:10px;font-weight:700;color:var(--success);
+  background:var(--success-bg);padding:3px 9px;border-radius:999px;
+  display:flex;align-items:center;gap:4px;white-space:nowrap}
+.def-tag svg{width:10px;height:10px;stroke:var(--success);fill:none}
+.qr-frame{padding:10px;background:#fff;border-radius:12px;
+  box-shadow:0 0 0 1px var(--border),0 12px 30px -18px rgba(15,23,42,.5);
+  position:relative}
+.qr-frame canvas{display:block;border-radius:4px}
+.qr-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:42px;height:42px;border-radius:11px;background:#fff;display:grid;
+  place-items:center;box-shadow:0 2px 8px rgba(15,23,42,.2)}
+.qr-logo{width:32px;height:32px;border-radius:9px;
+  background:linear-gradient(135deg,#2563EB,#4F46E5);
+  display:grid;place-items:center;color:#fff;font-weight:900;font-size:16px}
+.meta-grid{align-self:stretch;display:grid;grid-template-columns:1fr 1fr;
+  gap:1px;background:var(--border);border-radius:10px;overflow:hidden}
+.mc{background:var(--paper);padding:10px 12px}
+.mc .mk{font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.mc .mv{font-size:13px;font-weight:700;color:var(--text);margin-top:2px;font-variant-numeric:tabular-nums}
+/* single focal "amount to send" (replaces 4-cell meta grid) */
+.send-amount{display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;
+  background:var(--surface);border-radius:12px;padding:12px 14px}
+.sa-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.sa-value{font-size:22px;font-weight:900;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.sa-sub{font-size:11.5px;color:var(--subtle);font-weight:600;font-variant-numeric:tabular-nums}
+.switch-btn{align-self:stretch;display:flex;align-items:center;justify-content:center;gap:7px;
+  background:var(--paper);border:1.5px dashed var(--border);color:var(--brand);
+  font-weight:700;font-size:13px;padding:11px;border-radius:12px;cursor:pointer;
+  font-family:var(--ff);transition:all .15s}
+.switch-btn:hover{background:var(--brand-soft);border-color:var(--brand)}
+.switch-btn svg{width:14px;height:14px;stroke:currentColor;fill:none}
+/* open-in-app deep-link button (same-device primary action) */
+.openapp-btn{align-self:stretch;display:flex;align-items:center;justify-content:center;gap:9px;
+  background:linear-gradient(135deg,#2563EB,#4F46E5);color:#fff;font-weight:800;font-size:14px;
+  padding:14px;border:none;border-radius:13px;cursor:pointer;font-family:var(--ff);
+  box-shadow:0 10px 22px -10px rgba(37,99,235,.65);transition:transform .12s}
+.openapp-btn:active{transform:scale(.98)}
+.openapp-btn svg{width:19px;height:19px;stroke:#fff;fill:none;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+.openapp-hint{font-size:11.5px;color:var(--subtle);text-align:center;line-height:1.45;align-self:stretch}
+.or-divider{display:flex;align-items:center;gap:10px;align-self:stretch;
+  color:var(--muted);font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.or-divider::before,.or-divider::after{content:"";flex:1;height:1px;background:var(--border)}
+/* PRIMARY: copy address hero */
+.pay-primary{display:flex;flex-direction:column;gap:11px;
+  border:1.5px solid var(--brand);border-radius:15px;padding:15px;
+  background:linear-gradient(160deg,rgba(37,99,235,.05),rgba(99,102,241,.03))}
+.pp-label{font-size:11px;font-weight:700;color:var(--subtle);text-transform:uppercase;letter-spacing:.04em}
+.pp-label #pp-coinnet{color:var(--brand)}
+.pp-addr{font-family:var(--fmono);font-size:14px;font-weight:600;color:var(--text);
+  word-break:break-all;line-height:1.4;background:#fff;border:1px solid var(--border);
+  border-radius:10px;padding:11px 13px;user-select:all}
+.pp-copy{display:flex;align-items:center;justify-content:center;gap:9px;
+  background:linear-gradient(135deg,#2563EB,#4F46E5);color:#fff;font-weight:800;font-size:14.5px;
+  padding:14px;border:none;border-radius:12px;cursor:pointer;font-family:var(--ff);
+  box-shadow:0 10px 22px -10px rgba(37,99,235,.6);transition:transform .12s}
+.pp-copy:active{transform:scale(.98)}
+.pp-copy svg{width:19px;height:19px;stroke:#fff;stroke-width:2}
+.pp-copy.done{background:linear-gradient(135deg,#16A34A,#15803D);box-shadow:0 10px 22px -10px rgba(22,163,74,.6)}
+/* how-to-pay guide */
+.pay-guide{display:flex;flex-direction:column;gap:9px;
+  background:var(--surface);border-radius:12px;padding:13px 14px}
+.pg-title{font-size:12px;font-weight:800;color:var(--text);margin-bottom:1px}
+.pg-step{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted);line-height:1.35}
+.pg-n{width:20px;height:20px;border-radius:50%;background:var(--brand-soft);color:var(--brand);
+  font-weight:800;font-size:11px;display:grid;place-items:center;flex:none}
+/* deep-link roadmap flag */
+.deeplink-soon{align-self:stretch;display:flex;align-items:flex-start;gap:8px;
+  font-size:11.5px;color:var(--subtle);line-height:1.45;padding:2px 2px}
+.ds-badge{flex:none;font-size:9.5px;font-weight:800;color:#fff;background:var(--amber-dk,#B45309);
+  padding:2px 8px;border-radius:999px;letter-spacing:.03em;text-transform:uppercase;margin-top:1px}
+/* collapsible QR (cross-device only) */
+.qr-toggle{align-self:stretch;display:flex;align-items:center;gap:11px;
+  background:var(--paper);border:1px solid var(--border);border-radius:12px;
+  padding:11px 13px;cursor:pointer;font-family:var(--ff);transition:background .12s;text-align:left}
+.qr-toggle:hover{background:var(--surface)}
+.qt-ico{width:32px;height:32px;border-radius:9px;flex:none;display:grid;place-items:center;
+  background:var(--surface)}
+.qt-ico svg{width:18px;height:18px;stroke:var(--brand);fill:none}
+.qt-txt{font-weight:700;font-size:13px;color:var(--text)}
+.qt-sub{font-size:11px;color:var(--subtle);margin-top:1px}
+.qt-chev{margin-left:auto;transition:transform .2s}
+.qt-chev svg{width:16px;height:16px;stroke:var(--muted)}
+.qr-toggle.open .qt-chev{transform:rotate(180deg)}
+.qr-body{display:none;flex-direction:column;align-items:center;gap:10px;align-self:stretch}
+.qr-body.open{display:flex}
+/* coin list */
+.intro-note{font-size:12.5px;color:var(--subtle);line-height:1.5;
+  background:var(--brand-soft);border:1px solid #DCE6FE;border-radius:10px;padding:10px 13px}
+.coin-list-items{display:flex;flex-direction:column;gap:9px}
+.citem{display:flex;align-items:center;gap:11px;background:var(--paper);
+  border:1.5px solid var(--border);border-radius:14px;padding:13px 14px;
+  cursor:pointer;font-family:var(--ff);width:100%;transition:all .15s}
+.citem:hover{border-color:var(--brand);box-shadow:0 4px 12px -8px rgba(37,99,235,.4)}
+.citem.pri{border-color:transparent;background:linear-gradient(var(--paper),var(--paper)) padding-box,
+  linear-gradient(110deg,#2563EB,#6366F1 60%,#06B6D4) border-box}
+.ci-badge{width:38px;height:38px;border-radius:11px;flex:none;color:#fff;font-weight:800;font-size:12px;display:grid;place-items:center}
+.ci-name{font-weight:700;font-size:13.5px;color:var(--text);display:flex;align-items:center;gap:6px;margin-bottom:2px;text-align:left}
+.ci-desc{font-size:11.5px;color:var(--subtle);text-align:left}
+.ci-arr svg{width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2.5}
+.ptag{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:2px 7px;border-radius:999px}
+.ptag-best{color:#fff;background:linear-gradient(110deg,#2563EB,#6366F1)}
+.ptag-pop{color:#A16207;background:#FEF3C7}
+
+/* ── SUCCESS ── */
+.succ-wrap{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px}
+.check-circle{width:64px;height:64px;border-radius:50%;background:var(--success-bg);
+  display:grid;place-items:center;margin-bottom:8px;
+  box-shadow:0 0 0 8px rgba(22,163,74,.1)}
+.check-circle svg{width:32px;height:32px;stroke:var(--success);fill:none;stroke-width:2.8;
+  stroke-linecap:round;stroke-linejoin:round}
+.succ-title{font-size:20px;font-weight:900;letter-spacing:-.02em}
+.succ-amt{font-size:36px;font-weight:900;color:var(--brand);font-variant-numeric:tabular-nums;margin:4px 0}
+.succ-via{font-size:12px;color:var(--subtle);display:flex;align-items:center;gap:5px;justify-content:center}
+.receipt{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;align-self:stretch;margin-top:12px}
+.rrow{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px}
+.rrow:last-child{border-bottom:none}
+.rrow .rk{color:var(--subtle)}
+.rrow .rv{font-weight:700;font-variant-numeric:tabular-nums}
+.stars-disp{display:flex;gap:3px;margin-top:14px;margin-bottom:2px}
+.stars-disp span{font-size:24px}
+.review-hint{font-size:12.5px;color:var(--subtle);text-align:center}
+
+/* ── LEAVE REVIEW ── */
+.stars-int{display:flex;gap:5px;justify-content:center;padding:4px 0}
+.sbtn{font-size:32px;cursor:pointer;transition:transform .12s;line-height:1;
+  border:none;background:none;padding:3px}
+.sbtn:hover{transform:scale(1.18)}
+.rating-lbl{font-size:15px;font-weight:700;color:var(--amber-dk);text-align:center;min-height:22px}
+.tags-row{display:flex;flex-wrap:wrap;gap:8px}
+.tag-btn{border:1.5px solid var(--border);background:var(--paper);border-radius:999px;
+  padding:7px 13px;font-size:12.5px;font-weight:600;color:var(--subtle);
+  cursor:pointer;font-family:var(--ff);transition:all .15s}
+.tag-btn:hover{border-color:var(--brand);color:var(--brand)}
+.tag-btn.on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand)}
+.rv-textarea{width:100%;border:1.5px solid var(--border);border-radius:12px;
+  padding:12px 14px;font-size:14px;font-family:var(--ff);color:var(--text);
+  background:var(--paper);resize:none;outline:none;line-height:1.5}
+.rv-textarea:focus{border-color:var(--brand)}
+
+/* ── REVIEW ROUTING ── */
+.rr-icon{width:64px;height:64px;border-radius:18px;background:var(--brand-soft);
+  display:grid;place-items:center;margin:0 auto 4px}
+.rr-title{font-size:17px;font-weight:800;text-align:center;text-wrap:balance}
+.rr-desc{font-size:13px;color:var(--subtle);text-align:center;line-height:1.5}
+.rlink{display:flex;align-items:center;gap:13px;border:1.5px solid var(--border);
+  border-radius:14px;padding:14px 16px;cursor:pointer;width:100%;font-family:var(--ff);
+  background:var(--paper);transition:all .15s;text-align:left}
+.rlink:hover{border-color:var(--brand);box-shadow:0 4px 12px -8px rgba(37,99,235,.4)}
+.rlink .rl-ico{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none}
+.rlink .rl-name{font-weight:700;font-size:14px}
+.rlink .rl-sub{font-size:11.5px;color:var(--subtle);margin-top:1px}
+.rr-enc{font-size:12px;color:var(--muted);text-align:center;line-height:1.4}
+
+/* ── FINAL DONE ── */
+.fd-wrap{display:flex;flex-direction:column;align-items:center;text-align:center;
+  padding:24px 0;gap:4px}
+.fd-heart{font-size:64px;animation:bounce 1s ease infinite}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.fd-title{font-size:20px;font-weight:900;margin-top:8px}
+.fd-desc{font-size:13px;color:var(--subtle);line-height:1.5;text-wrap:balance;margin-top:4px}
+
+/* ── BUTTONS ── */
+.btn-grad{width:100%;border:none;cursor:pointer;font-family:var(--ff);font-weight:800;
+  font-size:15px;border-radius:14px;padding:15px;
+  background:linear-gradient(to right,var(--electric),var(--violet));color:#fff;
+  box-shadow:0 10px 24px -10px rgba(124,58,237,.45);transition:transform .1s,box-shadow .12s}
+.btn-grad:hover{box-shadow:0 14px 28px -10px rgba(124,58,237,.6)}
+.btn-grad:active{transform:translateY(1px)}
+.btn-out{width:100%;border:1.5px solid var(--border);cursor:pointer;font-family:var(--ff);
+  font-weight:700;font-size:14px;border-radius:14px;padding:13px;
+  background:var(--paper);color:var(--subtle);transition:all .15s}
+.btn-out:hover{border-color:var(--muted);color:var(--text)}
+.skip{display:block;text-align:center;font-size:13px;color:var(--muted);
+  cursor:pointer;padding:10px;text-decoration:underline;background:none;border:none;
+  font-family:var(--ff);width:100%}
+.skip:hover{color:var(--subtle)}
+
+/* ── Toast ── */
+.toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%) translateY(8px);
+  background:var(--text);color:#fff;font-size:12.5px;font-weight:600;
+  padding:9px 16px;border-radius:999px;opacity:0;pointer-events:none;
+  transition:opacity .2s,transform .2s;white-space:nowrap;z-index:999}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ──────────────────────────────────────────────
+   SCENARIO SWITCHER
+   ────────────────────────────────────────────── */
+.scen-sw{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.1);
+  border-radius:8px;padding:3px;margin-right:8px;flex:none}
+.scen-btn{font-size:11px;font-weight:700;padding:5px 12px;border-radius:6px;border:none;
+  background:transparent;color:#94A3B8;cursor:pointer;font-family:var(--ff);transition:all .15s;white-space:nowrap}
+.scen-btn.active{background:#fff;color:#1E293B;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+
+/* ──────────────────────────────────────────────
+   MERCHANT DASHBOARD STYLES
+   ────────────────────────────────────────────── */
+/* Merchant card header */
+.m-hdr{padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:0}
+.m-breadcrumb{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.03em;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.m-breadcrumb svg{width:10px;height:10px;stroke:var(--muted);fill:none;stroke-width:2.5}
+.m-title{font-size:18px;font-weight:900;letter-spacing:-.02em}
+.m-subtitle{font-size:12.5px;color:var(--subtle);margin-top:2px}
+/* Payment method rows in settings */
+.pm-setting-list{display:flex;flex-direction:column;gap:0}
+.pm-setting-row{display:flex;align-items:center;gap:13px;padding:14px 0;
+  border-bottom:1px solid var(--surface);cursor:pointer;transition:background .12s}
+.pm-setting-row:last-child{border-bottom:none}
+.pm-setting-row:hover .pmsr-name{color:var(--brand)}
+.pmsr-ico{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none}
+.pmsr-name{font-weight:700;font-size:14px;transition:color .15s}
+.pmsr-sub{font-size:11.5px;color:var(--subtle);margin-top:1px}
+.pmsr-status{margin-left:auto;font-size:11px;font-weight:700;padding:4px 10px;
+  border-radius:999px;white-space:nowrap}
+.pmsr-status.ok{color:var(--success);background:var(--success-bg)}
+.pmsr-status.warn{color:#D97706;background:#FEF3C7}
+.pmsr-status.missing{color:var(--subtle);background:var(--surface)}
+.pmsr-arr{flex:none;margin-left:4px}
+.pmsr-arr svg{width:14px;height:14px;stroke:var(--muted);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+/* Setup guide steps */
+.guide-steps{display:flex;flex-direction:column;gap:0}
+.guide-step{display:flex;gap:14px;padding:13px 0;border-bottom:1px solid var(--surface)}
+.guide-step:last-child{border-bottom:none}
+.gs-num{width:28px;height:28px;border-radius:50%;background:var(--brand);color:#fff;
+  font-weight:800;font-size:12px;display:grid;place-items:center;flex:none;margin-top:1px}
+.gs-content .gs-title{font-weight:700;font-size:13.5px;margin-bottom:3px}
+.gs-content .gs-desc{font-size:12.5px;color:var(--subtle);line-height:1.5}
+.gs-content .gs-tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;
+  border-radius:6px;margin-top:4px}
+.gs-phone-mock{align-self:stretch;background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.gm-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.gm-tabs{display:flex;gap:4px}
+.gm-tab{font-size:12px;font-weight:700;padding:6px 12px;border-radius:8px;border:none;font-family:var(--ff)}
+.gm-tab.act{background:var(--brand);color:#fff}
+.gm-tab.def{background:var(--surface);color:var(--subtle)}
+.gm-qr{width:72px;height:72px;background:var(--text);border-radius:8px;margin:0 auto;
+  display:grid;place-items:center}
+.gm-addr{font-family:var(--fmono);font-size:10px;color:var(--text);word-break:break-all;
+  text-align:center;line-height:1.4}
+.gm-copy{display:flex;align-items:center;justify-content:center;gap:5px;
+  background:var(--brand);color:#fff;font-weight:700;font-size:12px;
+  padding:8px;border-radius:8px;border:none;font-family:var(--ff);cursor:pointer}
+/* Form inputs for wallet addresses */
+.addr-form{display:flex;flex-direction:column;gap:16px}
+.coin-group{border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.coin-group-hdr{display:flex;align-items:center;gap:10px;padding:12px 14px;
+  background:var(--surface);border-bottom:1px solid var(--border)}
+.cgh-badge{width:36px;height:36px;border-radius:10px;color:#fff;font-weight:800;font-size:12px;display:grid;place-items:center;flex:none}
+.cgh-name{font-weight:800;font-size:14px}
+.cgh-sub{font-size:11.5px;color:var(--subtle)}
+/* network-field: VERTICAL column layout — no more horizontal cramming */
+.network-field{display:flex;flex-direction:column;gap:7px;padding:13px 14px;
+  border-bottom:1px solid var(--surface)}
+.network-field:last-child{border-bottom:none}
+/* top row: chain identity + optional status check */
+.nf-top{display:flex;align-items:center;gap:8px}
+.nf-chain-name{font-size:11.5px;font-weight:800;color:var(--text)}
+.nf-chain-label{font-size:10px;color:var(--subtle);font-weight:600}
+.nf-recommend{font-size:9.5px;font-weight:800;color:#fff;
+  background:linear-gradient(110deg,#2563EB,#6366F1);padding:2px 8px;border-radius:999px;
+  white-space:nowrap;letter-spacing:.02em;margin-left:2px}
+.nf-status{margin-left:auto;width:18px;height:18px;display:grid;place-items:center;flex:none}
+.nf-status svg{width:14px;height:14px}
+/* input: full width, sits on its own line */
+.nf-input{width:100%;border:1.5px solid var(--border);border-radius:9px;padding:9px 12px;
+  font-size:12px;font-family:var(--fmono);color:var(--text);background:var(--paper);
+  outline:none;transition:border-color .15s;box-sizing:border-box}
+.nf-input:focus{border-color:var(--brand)}
+.nf-input::placeholder{color:var(--muted);font-family:var(--ff);font-size:12px}
+.nf-input.filled{border-color:rgba(22,163,74,.4);background:rgba(22,163,74,.03)}
+/* note: sits cleanly below the input */
+.nf-note{font-size:11px;line-height:1.4;color:var(--muted);padding-left:2px}
+.nf-note.amber{color:#B45309}
+/* highlighted VRC20 field */
+.network-field.vrc20{position:relative;
+  background:linear-gradient(rgba(37,99,235,.04),rgba(99,102,241,.03));
+  border-bottom:1px solid var(--surface)}
+.network-field.vrc20::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,#2563EB,#06B6D4);border-radius:0 0 0 0}
+/* enough-to-work badge */
+.enough-badge{align-self:stretch;display:none;align-items:center;gap:7px;
+  background:var(--success-bg);border:1px solid rgba(22,163,74,.3);border-radius:10px;
+  padding:9px 13px;font-size:12.5px;font-weight:700;color:var(--success);margin-top:-6px}
+.enough-badge.show{display:flex}
+.enough-badge svg{width:15px;height:15px;stroke:var(--success);fill:none;stroke-width:2.8;
+  stroke-linecap:round;stroke-linejoin:round;flex:none}
+/* setup intro section */
+.setup-intro{display:flex;align-items:flex-start;gap:11px;
+  background:linear-gradient(110deg,rgba(37,99,235,.06),rgba(99,102,241,.06));
+  border:1px solid #DCE6FE;border-radius:12px;padding:12px 14px}
+.setup-intro .si-ico{width:34px;height:34px;border-radius:10px;flex:none;
+  background:linear-gradient(135deg,#2563EB,#4F46E5);display:grid;place-items:center;
+  color:#fff;font-weight:900;font-size:16px}
+.setup-intro .si-txt{font-size:12.5px;color:var(--text);line-height:1.5}
+.setup-intro .si-txt strong{color:var(--brand)}
+/* ── Recommended VRC20 card (primary zone) ── */
+.rec-card{border:1.5px solid transparent;border-radius:16px;overflow:hidden;
+  background:linear-gradient(#fff,#fff) padding-box,
+    linear-gradient(135deg,#2563EB,#06B6D4) border-box}
+.rec-hdr{display:flex;align-items:center;gap:9px;padding:12px 15px;
+  background:linear-gradient(110deg,rgba(37,99,235,.07),rgba(6,182,212,.05))}
+.rec-hdr .rh-star{width:30px;height:30px;border-radius:9px;flex:none;display:grid;place-items:center;
+  background:linear-gradient(135deg,#2563EB,#06B6D4);color:#fff;font-size:14px}
+.rec-hdr .rh-title{font-weight:800;font-size:13.5px;color:var(--text)}
+.rec-hdr .rh-sub{font-size:11px;color:var(--brand);font-weight:700;margin-top:1px}
+.rec-hdr .rh-pill{margin-left:auto;font-size:9.5px;font-weight:800;color:#fff;
+  background:linear-gradient(110deg,#2563EB,#6366F1);padding:3px 9px;border-radius:999px;letter-spacing:.02em}
+.rec-row{display:flex;align-items:center;gap:11px;padding:11px 15px;border-top:1px solid var(--surface)}
+.rec-badge{width:38px;height:38px;border-radius:11px;flex:none;display:grid;place-items:center;
+  color:#fff;font-weight:800;font-size:11px}
+.rec-field{flex:1;min-width:0}
+.rec-field .rf-label{font-size:11px;font-weight:700;color:var(--text);margin-bottom:4px}
+.rec-field .rf-label span{color:var(--subtle);font-weight:600}
+.rec-input-wrap{display:flex;align-items:center;gap:8px}
+.rec-input{flex:1;min-width:0;border:1.5px solid var(--border);border-radius:9px;padding:9px 12px;
+  font-size:12px;font-family:var(--fmono);color:var(--text);background:var(--paper);
+  outline:none;transition:border-color .15s;box-sizing:border-box}
+.rec-input:focus{border-color:var(--brand)}
+.rec-input::placeholder{color:var(--muted);font-family:var(--ff);font-size:12px}
+.rec-input.filled{border-color:rgba(22,163,74,.45);background:rgba(22,163,74,.03)}
+.rec-check{width:18px;height:18px;flex:none;display:grid;place-items:center}
+.rec-check svg{width:15px;height:15px}
+/* ── Advanced networks (collapsible) ── */
+.adv-toggle{display:flex;align-items:center;gap:9px;width:100%;
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:12px 14px;cursor:pointer;font-family:var(--ff);transition:background .12s;text-align:left}
+.adv-toggle:hover{background:var(--surface-hover,#EEF1F6)}
+.adv-toggle .at-ico{width:30px;height:30px;border-radius:9px;flex:none;display:grid;place-items:center;
+  background:#fff;border:1px solid var(--border);font-size:15px}
+.adv-toggle .at-txt{font-weight:700;font-size:13px;color:var(--text)}
+.adv-toggle .at-sub{font-size:11px;color:var(--subtle);margin-top:1px}
+.adv-toggle .at-chev{margin-left:auto;transition:transform .2s}
+.adv-toggle .at-chev svg{width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.adv-toggle.open .at-chev{transform:rotate(180deg)}
+.adv-body{display:none;flex-direction:column;gap:14px;margin-top:2px}
+.adv-body.open{display:flex}
+.adv-warn{display:flex;gap:9px;align-items:flex-start;background:#FFFBEB;
+  border:1px solid #FDE68A;border-radius:10px;padding:10px 12px;font-size:11.5px;color:#92400E;line-height:1.45}
+.adv-warn svg{width:15px;height:15px;stroke:#D97706;fill:none;stroke-width:2.5;flex:none;margin-top:1px}
+/* Setup done */
+.setup-done-wrap{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:16px 0}
+.done-icon{width:64px;height:64px;border-radius:20px;
+  background:linear-gradient(135deg,var(--brand),var(--violet));
+  display:grid;place-items:center;margin-bottom:4px;box-shadow:0 12px 28px -12px rgba(124,58,237,.5)}
+.done-icon svg{width:32px;height:32px;stroke:#fff;fill:none;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}
+.config-summary{align-self:stretch;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.cs-row{display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px}
+.cs-row:last-child{border-bottom:none}
+.cs-coin{font-weight:700}
+.cs-count{font-size:11.5px;color:var(--success);font-weight:700;
+  display:flex;align-items:center;gap:4px}
+.cs-count svg{width:12px;height:12px;stroke:var(--success);fill:none;stroke-width:2.8}
+</style>
+
+<!-- ─────────────────── DEMO NAV ─────────────────── -->
+<div class="demo-nav">
+  <span class="brand">NEXORA</span>
+  <div class="scen-sw">
+    <button class="scen-btn active" id="scen-customer" onclick="setScenario('customer')">👤 Khách hàng</button>
+    <button class="scen-btn" id="scen-merchant" onclick="setScenario('merchant')">🏪 Merchant</button>
+  </div>
+  <!-- customer tabs -->
+  <div id="customer-tabs" style="display:flex;gap:5px;flex-wrap:wrap">
+    <button class="dtab active" onclick="goStep('select_staff')">1·Chọn NV</button>
+    <button class="dtab" onclick="goStep('tip_amount')">2·Tip</button>
+    <button class="dtab" onclick="goStep('processing')">3·Xử lý</button>
+    <button class="dtab" onclick="goStep('wallet_vlinkpay')">4·QR (VP)</button>
+    <button class="dtab" onclick="goStep('coin_list')">4b·Coin</button>
+    <button class="dtab" onclick="goStep('wallet_venmo')">5·Venmo</button>
+    <button class="dtab" onclick="goStep('success_payment')">6·Success</button>
+    <button class="dtab" onclick="goStep('leave_review')">7·Review</button>
+    <button class="dtab" onclick="goStep('google_yelp_review')">8·Google</button>
+    <button class="dtab" onclick="goStep('final_done')">9·Done</button>
+  </div>
+  <!-- merchant tabs -->
+  <div id="merchant-tabs" style="display:none;gap:5px;flex-wrap:wrap">
+    <button class="dtab active" onclick="goMerchant('merchant_payout_settings')">1·Payout Methods</button>
+    <button class="dtab" onclick="goMerchant('vlinkpay_setup_guide')">2·Hướng dẫn</button>
+    <button class="dtab" onclick="goMerchant('vlinkpay_setup_form')">3·Nhập địa chỉ</button>
+    <button class="dtab" onclick="goMerchant('vlinkpay_setup_done')">4·Hoàn tất</button>
+  </div>
+</div>
+
+<!-- ─────────────────── NEXORA APP (CustomerFlow.tsx layout) ─────────────────── -->
+<div class="napp">
+  <div class="glow"></div>
+
+  <!-- absolute top-4 right-4 language switcher -->
+  <div class="lang-sw">
+    <button class="lb active" id="l-vi" onclick="setLang('vi')">VI</button>
+    <span class="sep">|</span>
+    <button class="lb" id="l-en" onclick="setLang('en')">EN</button>
+  </div>
+
+  <!-- main: flex-grow, centered card -->
+  <main class="app-main">
+    <div class="card">
+
+      <!-- ════════════════════════════════════
+           STEP: select_staff
+           ════════════════════════════════════ -->
+      <section class="step active" id="s-select_staff">
+        <div>
+          <p class="section-label" style="margin-bottom:4px" id="t-who-served">Ai đã phục vụ bạn?</p>
+          <h2 class="page-title" id="t-select-title">Chọn nhân viên</h2>
+        </div>
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input placeholder="Tìm nhân viên..." id="search-input" readonly>
+        </div>
+        <div class="staff-list">
+          <div class="staff-row sel" data-id="1" onclick="toggleStaff(this)">
+            <div class="ava" style="background:linear-gradient(135deg,#2563EB,#4F46E5)">LA</div>
+            <div class="staff-info"><div class="sn">Lan Anh</div><div class="sp">Pha chế</div></div>
+            <div class="sel-check"><svg viewBox="0 0 24 24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
+          </div>
+          <div class="staff-row" data-id="2" onclick="toggleStaff(this)">
+            <div class="ava" style="background:linear-gradient(135deg,#0891B2,#0E7490)">MT</div>
+            <div class="staff-info"><div class="sn">Minh Tú</div><div class="sp">Thu ngân</div></div>
+            <div class="sel-check"><svg viewBox="0 0 24 24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
+          </div>
+          <div class="staff-row" data-id="3" onclick="toggleStaff(this)">
+            <div class="ava" style="background:linear-gradient(135deg,#D97706,#B45309)">HN</div>
+            <div class="staff-info"><div class="sn">Hà Ngọc</div><div class="sp">Phục vụ</div></div>
+            <div class="sel-check"><svg viewBox="0 0 24 24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
+          </div>
+          <div class="staff-row" data-id="4" onclick="toggleStaff(this)">
+            <div class="ava" style="background:linear-gradient(135deg,#7C3AED,#6D28D9)">BK</div>
+            <div class="staff-info"><div class="sn">Bảo Khoa</div><div class="sp">Quản lý ca</div></div>
+            <div class="sel-check"><svg viewBox="0 0 24 24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
+          </div>
+        </div>
+        <button class="btn-grad" onclick="go('tip_amount')" id="btn-continue">Tiếp tục →</button>
+      </section>
+
+      <!-- ════════════════════════════════════
+           STEP: tip_amount
+           ════════════════════════════════════ -->
+      <section class="step" id="s-tip_amount">
+        <div class="back-row">
+          <button class="back-btn" onclick="go('select_staff')">
+            <svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <div>
+            <div class="section-label" id="t-tip-sub">Kiểm tra tip &amp; chọn thanh toán</div>
+          </div>
+          <span class="step-badge">Bước 2/3</span>
+        </div>
+        <!-- staff strip -->
+        <div class="staff-strip">
+          <div class="ava" style="background:linear-gradient(135deg,#2563EB,#4F46E5);width:40px;height:40px;border-radius:11px;font-size:14px">LA</div>
+          <div class="strip-info">
+            <div class="strip-name">Lan Anh</div>
+            <div class="strip-pos">Pha chế · The Coffee House</div>
+          </div>
+          <div class="strip-amt" id="strip-amt">$15.00</div>
+        </div>
+        <!-- quick amounts -->
+        <div>
+          <div class="section-label" style="margin-bottom:10px" id="t-choose-amt">Chọn số tiền tip</div>
+          <div class="quick-grid" id="quick-grid">
+            <button class="qa" onclick="pickAmt(this,5)">$5</button>
+            <button class="qa" onclick="pickAmt(this,10)">$10</button>
+            <button class="qa act" onclick="pickAmt(this,15)">$15</button>
+            <button class="qa" onclick="pickAmt(this,20)">$20</button>
+            <button class="qa" onclick="pickAmt(this,30)">$30</button>
+            <button class="qa" onclick="pickCustom(this)" id="custom-qa">Khác</button>
+          </div>
+          <div id="custom-wrap" style="display:none;margin-top:10px">
+            <input class="custom-input" type="number" placeholder="0.00" id="custom-val" oninput="setCustomAmt(this.value)">
+            <div style="font-size:11.5px;color:var(--danger);margin-top:4px;display:none" id="min-err">* Thấp nhất là $1</div>
+          </div>
+        </div>
+        <!-- total -->
+        <div class="tip-total">
+          <div><div class="tk" id="t-total-lbl">Tổng tiền Tip</div></div>
+          <div class="tv" id="total-amt">$15.00</div>
+        </div>
+        <!-- payment methods -->
+        <div>
+          <div class="section-label" style="margin-bottom:10px" id="t-pay-title">Chọn phương thức thanh toán</div>
+          <div class="pay-list">
+            <button class="pm vp" onclick="payWith('vlinkpay')">
+              <div class="ico" style="color:#fff;font-weight:900;font-size:14px">V</div>
+              <div style="flex:1">
+                <div class="pname">VLINKPAY Wallet</div>
+                <div class="psub" id="vp-sub">USDV · mạng VLINK · phí ~0đ</div>
+              </div>
+              <span class="rec-tag" id="t-rec">Khuyên dùng</span>
+              <span class="parr"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+            </button>
+            <button class="pm zelle" onclick="showToast('Demo: Zelle không có trong flow này')">
+              <div class="ico">Z</div>
+              <span class="pname">Zelle</span>
+              <span class="parr"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+            </button>
+            <button class="pm venmo" onclick="payWith('venmo')">
+              <div class="ico">V</div>
+              <span class="pname">Venmo</span>
+              <span class="parr"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+            </button>
+            <button class="pm cashapp" onclick="showToast('Demo: Cash App không có trong flow này')">
+              <div class="ico">$</div>
+              <span class="pname">Cash App</span>
+              <span class="parr"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════
+           STEP: processing (Processing.tsx)
+           ════════════════════════════════════ -->
+      <section class="step" id="s-processing">
+        <div class="proc-wrap">
+          <div class="spin"></div>
+          <div class="proc-title" id="t-processing">Đang xử lý...</div>
+          <div class="proc-wallet" id="proc-wallet-name">VLINKPAY Wallet</div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════
+           STEP: wallet_vlinkpay  [US-039 NEW]
+           Modified WalletDetails for VLINKPAY
+           ════════════════════════════════════ -->
+      <section class="step" id="s-wallet_vlinkpay">
+        <div class="back-row">
+          <button class="back-btn" onclick="go('tip_amount')">
+            <svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <div>
+            <div class="section-label" id="t-vp-step">Bước 3/3 · Chuyển khoản crypto</div>
+          </div>
+        </div>
+        <!-- wallet header -->
+        <div class="wallet-hdr">
+          <div class="w-icon" style="background:linear-gradient(135deg,#2563EB,#4F46E5)">
+            <span style="color:#fff;font-weight:900;font-size:20px">V</span>
+          </div>
+          <div>
+            <div class="w-hname">VLINKPAY Wallet</div>
+            <div class="w-hsub" id="t-vp-wallet-sub">Mở app ví hoặc quét mã để chuyển khoản</div>
+          </div>
+        </div>
+        <!-- QR card (smart default) -->
+        <div class="qr-card">
+          <div class="qr-coin-row">
+            <div class="qr-cbadge" id="qr-cbadge" style="background:linear-gradient(135deg,#2563EB,#4F46E5)">USDV</div>
+            <div>
+              <div class="qr-cname" id="qr-cname">USDV</div>
+              <div class="qr-cdesc" id="qr-cdesc">mạng VLINK (VRC20) · phí ~0đ</div>
+            </div>
+            <div class="def-tag" id="def-tag">
+              <svg viewBox="0 0 24 24" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              Quán chọn sẵn
+            </div>
+          </div>
+          <!-- PRIMARY same-device action: copy address. -->
+          <div class="pay-primary" style="align-self:stretch">
+            <div class="pp-label"><span id="t-addr-lbl">Địa chỉ ví nhận</span> · <span id="pp-coinnet">USDV (VRC20)</span></div>
+            <div class="pp-addr" id="qr-addr">TWzKZyuhnvu1eJFhNyGc3XzsPMHPbJtrBP</div>
+            <button class="pp-copy" id="copybtn" onclick="copyAddr()">
+              <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+              <span id="t-copy-addr">Copy địa chỉ ví</span>
+            </button>
+          </div>
+          <!-- How to pay on this same phone -->
+          <div class="pay-guide" style="align-self:stretch">
+            <div class="pg-title" id="t-pg-title">Cách gửi trên điện thoại này:</div>
+            <div class="pg-step"><span class="pg-n">1</span><span id="t-pg1">Mở app ví VLINKPAY</span></div>
+            <div class="pg-step"><span class="pg-n">2</span><span id="t-pg2">Dán địa chỉ vừa copy vào ô "Gửi tới"</span></div>
+            <div class="pg-step"><span class="pg-n">3</span><span id="t-pg3">Nhập số tiền &amp; xác nhận gửi</span></div>
+          </div>
+          <!-- Deep-link roadmap flag (feature pending dev) -->
+          <div class="deeplink-soon">
+            <span class="ds-badge" id="t-ds-badge">Sắp có</span>
+            <span id="t-deeplink-soon">Nút mở thẳng app ví (tự điền địa chỉ &amp; số tiền) — đang chờ tích hợp với dev.</span>
+          </div>
+          <!-- Single focal: the amount to type into the wallet -->
+          <div class="send-amount" style="align-self:stretch">
+            <div class="sa-label" id="t-send-amt">Số tiền cần gửi</div>
+            <div class="sa-value" id="qr-qty">15.00 USDV</div>
+            <div class="sa-sub">= <span id="qr-tip">$15.00</span> · <span id="qr-fee">~0đ</span> · <span id="qr-time">Tức thì</span></div>
+          </div>
+          <!-- QR only works with a SECOND device → collapsed by default -->
+          <button class="qr-toggle" id="qr-toggle" onclick="toggleQr()">
+            <div class="qt-ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M20 14v.01M14 20h.01M20 20h.01M17 20v.01"/></svg>
+            </div>
+            <div><div class="qt-txt" id="t-qr-toggle">Quét QR bằng thiết bị khác</div>
+              <div class="qt-sub" id="t-qr-sub">Chỉ dùng khi bạn có máy thứ hai</div></div>
+            <div class="qt-chev"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></div>
+          </button>
+          <div class="qr-body" id="qr-body">
+            <div class="qr-frame">
+              <canvas id="qrc" width="180" height="180"></canvas>
+              <div class="qr-overlay"><div class="qr-logo">V</div></div>
+            </div>
+            <div style="font-size:12px;color:var(--subtle);text-align:center;line-height:1.4" id="t-scan-hint">
+              Mở app ví trên máy thứ hai → Quét mã → Xác nhận gửi
+            </div>
+          </div>
+          <button class="switch-btn" onclick="go('coin_list')">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M7 10l-4 4 4 4"/><path d="M3 14h14a4 4 0 0 0 4-4V8"/></svg>
+            <span id="t-switch-coin">Đổi coin / mạng khác</span>
+          </button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <button class="btn-grad" onclick="go('success_payment')" id="t-sent-vp">Tôi Đã Gửi Tip ✓</button>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════
+           STEP: coin_list (flat switcher)
+           ════════════════════════════════════ -->
+      <section class="step" id="s-coin_list">
+        <div class="back-row">
+          <button class="back-btn" onclick="go('wallet_vlinkpay')">
+            <svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <div>
+            <div class="section-label">VLINKPAY · Tuỳ chọn nâng cao</div>
+            <div style="font-weight:700;font-size:15px" id="t-pick-coin">Chọn coin &amp; mạng</div>
+          </div>
+        </div>
+        <div class="intro-note" id="t-coin-note">Mỗi dòng là <strong>một coin trên một mạng cụ thể</strong>. Không chắc chọn gì? Dùng dòng đầu — quán đã chọn loại phí thấp &amp; nhanh nhất.</div>
+        <div class="coin-list-items" id="coin-list-el"></div>
+        <div style="font-size:11.5px;color:var(--subtle);line-height:1.45;display:flex;gap:7px;align-items:flex-start">
+          <span style="flex:none">⭐</span>
+          <span><strong style="color:var(--brand)">VRC20</strong> là mạng nội bộ của VLINK — phí ~0đ, tức thì, không cần bridge.</span>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════
+           STEP: wallet_venmo (standard WalletDetails.tsx)
+           ════════════════════════════════════ -->
+      <section class="step" id="s-wallet_venmo">
+        <div class="back-row">
+          <button class="back-btn" onclick="go('tip_amount')">
+            <svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <div>
+            <div class="section-label" id="t-venmo-step">Bước 3/3 · Chuyển khoản</div>
+          </div>
+        </div>
+        <div class="wallet-hdr">
+          <div class="w-icon" style="background:#E0F0FF">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><text x="2" y="18" font-size="17" font-weight="900" fill="#008CFF">V</text></svg>
+          </div>
+          <div>
+            <div class="w-hname">Venmo</div>
+            <div class="w-hsub" id="venmo-sub">Chuyển $15.00 cho Lan Anh</div>
+          </div>
+        </div>
+        <div class="copy-field">
+          <div class="cf-info">
+            <div class="cf-lbl" id="t-venmo-lbl">Venmo Username</div>
+            <div class="cf-val">@lananh_coffeehouse</div>
+          </div>
+          <button class="copy-btn" onclick="showToast('Đã copy @lananh_coffeehouse')">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+            Copy
+          </button>
+        </div>
+        <div>
+          <div class="section-label" style="margin-bottom:10px" id="t-instr-lbl">Hướng dẫn thanh toán</div>
+          <div class="instr-list">
+            <div class="instr-row">
+              <div class="instr-n">1</div>
+              <div class="instr-t">Copy username <span class="hi">@lananh_coffeehouse</span> ở trên</div>
+            </div>
+            <div class="instr-row">
+              <div class="instr-n">2</div>
+              <div class="instr-t">Mở app <span class="hi">Venmo</span> trên điện thoại</div>
+            </div>
+            <div class="instr-row">
+              <div class="instr-n">3</div>
+              <div class="instr-t">Tìm <span class="hi">@lananh_coffeehouse</span> và gửi <span class="hi" id="venmo-amt-instr">$15.00</span></div>
+            </div>
+            <div class="instr-row">
+              <div class="instr-n">4</div>
+              <div class="instr-t">Quay lại đây và bấm <span class="hi" id="t-sent-venmo-hint">"Tôi Đã Gửi Tip"</span></div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <button class="btn-grad" onclick="go('success_payment')" id="t-sent-venmo">Tôi Đã Gửi Tip ✓</button>
+          <button class="btn-out" onclick="go('tip_amount')" id="t-goback">Quay lại</button>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════
+           STEP: success_payment (SuccessPayment.tsx)
+           ════════════════════════════════════ -->
+      <section class="step" id="s-success_payment">
+        <div class="succ-wrap">
+          <div class="check-circle">
+            <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <div class="succ-title" id="t-tip-sent">Đã Gửi Tips! 🎉</div>
+          <div class="succ-amt" id="s-total">$15.00</div>
+          <div class="succ-via">
+            <span id="t-via">qua</span>
+            <span style="font-weight:700;color:var(--brand)" id="s-wallet-name">VLINKPAY · USDV</span>
+          </div>
+          <div class="receipt">
+            <div class="rrow"><span class="rk" id="t-s-recipient">Người nhận</span><span class="rv">Lan Anh</span></div>
+            <div class="rrow"><span class="rk" id="t-s-method">Phương thức</span><span class="rv" id="s-method">VLINKPAY · USDV (VRC20)</span></div>
+            <div class="rrow"><span class="rk" id="t-s-ref">Mã giao dịch</span><span class="rv">#TIP-VP-A7F2</span></div>
+          </div>
+          <div class="stars-disp">
+            <span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span>
+          </div>
+          <p class="review-hint" id="t-review-hint">Bạn có muốn để lại đánh giá không?</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:9px;margin-top:8px">
+          <button class="btn-grad" onclick="go('leave_review')" id="t-leave-review">Để lại đánh giá</button>
+          <button class="skip" onclick="go('final_done')" id="t-skip-review">Bỏ qua</button>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════
+           STEP: leave_review (LeaveReview.tsx)
+           ════════════════════════════════════ -->
+      <section class="step" id="s-leave_review">
+        <div class="back-row">
+          <button class="back-btn" onclick="go('success_payment')">
+            <svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <div>
+            <div class="section-label" id="t-rate-label">Trải nghiệm của bạn thế nào?</div>
+            <div style="font-weight:700;font-size:15px">Lan Anh · The Coffee House</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+          <div class="stars-int" id="stars-int">
+            <button class="sbtn" onclick="setStar(1)">⭐</button>
+            <button class="sbtn" onclick="setStar(2)">⭐</button>
+            <button class="sbtn" onclick="setStar(3)">⭐</button>
+            <button class="sbtn" onclick="setStar(4)">⭐</button>
+            <button class="sbtn" onclick="setStar(5)">⭐</button>
+          </div>
+          <div class="rating-lbl" id="rating-lbl">Tuyệt vời! 🎉</div>
+        </div>
+        <div>
+          <div class="section-label" style="margin-bottom:10px" id="t-quick-tags">Chọn tag nhanh</div>
+          <div class="tags-row" id="tags-wrap">
+            <button class="tag-btn on" onclick="toggleTag(this)">Thân thiện &amp; Vui vẻ</button>
+            <button class="tag-btn" onclick="toggleTag(this)">Chuyên nghiệp</button>
+            <button class="tag-btn on" onclick="toggleTag(this)">Phục vụ nhanh</button>
+            <button class="tag-btn" onclick="toggleTag(this)">Tỉ mỉ &amp; Cẩn thận</button>
+            <button class="tag-btn" onclick="toggleTag(this)">Sạch sẽ</button>
+            <button class="tag-btn" onclick="toggleTag(this)">Pha cà phê ngon</button>
+          </div>
+        </div>
+        <div>
+          <div class="section-label" style="margin-bottom:8px" id="t-comment">Bình luận (tùy chọn)</div>
+          <textarea class="rv-textarea" rows="3" placeholder="Mô tả trải nghiệm của bạn..."></textarea>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <button class="btn-grad" onclick="handleSubmitReview()" id="t-submit-review">Gửi đánh giá</button>
+          <button class="skip" onclick="go('final_done')" id="t-skip-rv">Bỏ qua</button>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════
+           STEP: google_yelp_review (ReviewRouting.tsx)
+           ════════════════════════════════════ -->
+      <section class="step" id="s-google_yelp_review">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center">
+          <div class="rr-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="#2563EB"/></svg>
+          </div>
+          <div class="rr-title" id="t-rr-title">Chia sẻ trải nghiệm tuyệt vời!</div>
+          <div class="rr-desc" id="t-rr-desc">Đánh giá của bạn giúp khách hàng khác tìm được nhà hàng và nhân viên tốt.</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button class="rlink" onclick="showToast('Mở Google Review...')">
+            <div class="rl-ico" style="background:#FEF2F2">
+              <svg width="24" height="24" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+            </div>
+            <div>
+              <div class="rl-name" id="t-google">Đánh giá trên Google</div>
+              <div class="rl-sub" id="t-google-sub">The Coffee House · Q.1</div>
+            </div>
+            <svg style="margin-left:auto;flex:none;width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+          <button class="rlink" onclick="showToast('Mở Yelp Review...')">
+            <div class="rl-ico" style="background:#FEF2F2">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="#D32323"><path d="M20.16 12.73l-4.2 1.36c-.83.27-1.58-.5-1.31-1.33l1.45-4.17c.31-.91 1.52-1.01 2-.16l2.74 3.82c.44.63.1 1.51-.68 1.48z"/><path d="M10.75 3.73V8.3c0 .88.92 1.47 1.71 1.08l4-2c.85-.43.87-1.66.03-2.12L12.5 3c-.84-.46-1.75.1-1.75.73z" opacity=".8"/></svg>
+            </div>
+            <div>
+              <div class="rl-name" id="t-yelp">Đánh giá trên Yelp</div>
+              <div class="rl-sub" id="t-yelp-sub">The Coffee House · Q.1</div>
+            </div>
+            <svg style="margin-left:auto;flex:none;width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+        <div class="rr-enc" id="t-rr-enc">Cảm ơn bạn đã ủng hộ nhân viên bằng tip! Đánh giá giúp họ được công nhận thêm.</div>
+        <button class="btn-out" onclick="go('final_done')" id="t-maybe-later">Để sau</button>
+      </section>
+
+      <!-- ════════════════════════════════════
+           STEP: final_done (FinalDone.tsx)
+           ════════════════════════════════════ -->
+      <section class="step" id="s-final_done">
+        <div class="fd-wrap">
+          <div class="fd-heart">💙</div>
+          <div class="fd-title" id="t-fd-title">Cảm ơn bạn!</div>
+          <div class="fd-desc" id="t-fd-desc">Nexora đã ghi nhận tip và đánh giá của bạn. Hẹn gặp lại!</div>
+        </div>
+        <button class="btn-grad" onclick="go('select_staff')" id="t-home">Về trang chủ</button>
+      </section>
+
+
+      <!-- ════════════════════════════════════
+           MERCHANT: payout_settings
+           Settings → Payout Methods list
+           ════════════════════════════════════ -->
+      <section class="step" id="s-merchant_payout_settings">
+        <div class="m-hdr">
+          <div class="m-breadcrumb">
+            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            <span id="t-m-bc-dash">Dashboard</span>
+            <svg viewBox="0 0 24 24" style="width:8px;height:8px"><path d="M9 6l6 6-6 6"/></svg>
+            <span>Cài đặt</span>
+            <svg viewBox="0 0 24 24" style="width:8px;height:8px"><path d="M9 6l6 6-6 6"/></svg>
+            <span style="color:var(--text);font-weight:700">Payout</span>
+          </div>
+          <div class="m-title" id="t-m-payout-title">Phương thức payout</div>
+          <div class="m-subtitle" id="t-m-payout-sub">Cấu hình tài khoản nhận tiền từ khách hàng</div>
+        </div>
+        <div class="pm-setting-list">
+          <!-- VLINKPAY — chưa đủ địa chỉ -->
+          <div class="pm-setting-row" onclick="goMerchant('vlinkpay_setup_guide')">
+            <div class="pmsr-ico" style="background:linear-gradient(135deg,#2563EB,#4F46E5)">
+              <span style="color:#fff;font-weight:900;font-size:18px">V</span>
+            </div>
+            <div>
+              <div class="pmsr-name">VLINKPAY Wallet</div>
+              <div class="pmsr-sub" id="t-vp-status-sub">6 tổ hợp coin · chưa cấu hình</div>
+            </div>
+            <span class="pmsr-status warn" id="m-vp-badge">Chưa cấu hình</span>
+            <div class="pmsr-arr"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></div>
+          </div>
+          <!-- Zelle — đã cấu hình -->
+          <div class="pm-setting-row" onclick="showToast('Demo: click vào VLINKPAY để thấy flow setup')">
+            <div class="pmsr-ico" style="background:#F3E8FF">
+              <span style="color:#6D1ED4;font-weight:900;font-size:18px">Z</span>
+            </div>
+            <div>
+              <div class="pmsr-name">Zelle</div>
+              <div class="pmsr-sub">lananh@coffeehouse.com</div>
+            </div>
+            <span class="pmsr-status ok">Đã cấu hình</span>
+            <div class="pmsr-arr"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></div>
+          </div>
+          <!-- Venmo — đã cấu hình -->
+          <div class="pm-setting-row" onclick="showToast('Demo: click vào VLINKPAY để thấy flow setup')">
+            <div class="pmsr-ico" style="background:#E0F0FF">
+              <span style="color:#008CFF;font-weight:900;font-size:18px">V</span>
+            </div>
+            <div>
+              <div class="pmsr-name">Venmo</div>
+              <div class="pmsr-sub">@lananh_coffeehouse</div>
+            </div>
+            <span class="pmsr-status ok">Đã cấu hình</span>
+            <div class="pmsr-arr"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></div>
+          </div>
+          <!-- CashApp — chưa -->
+          <div class="pm-setting-row" onclick="showToast('Demo: click vào VLINKPAY để thấy flow setup')">
+            <div class="pmsr-ico" style="background:#E6FCF0">
+              <span style="color:#00C244;font-weight:900;font-size:18px">$</span>
+            </div>
+            <div>
+              <div class="pmsr-name">Cash App</div>
+              <div class="pmsr-sub" id="t-cashapp-sub">Chưa thêm $cashtag</div>
+            </div>
+            <span class="pmsr-status missing">Thiếu thông tin</span>
+            <div class="pmsr-arr"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></div>
+          </div>
+        </div>
+        <div style="background:var(--brand-soft);border:1px solid #DCE6FE;border-radius:12px;padding:12px 14px;font-size:12.5px;color:var(--brand);line-height:1.5" id="t-m-tip">
+          💡 <strong>Gợi ý:</strong> Cấu hình VLINKPAY để nhận tip bằng crypto — phí gần 0đ, tức thì.
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════
+           MERCHANT: vlinkpay_setup_guide
+           Step-by-step guide how to get addresses
+           ════════════════════════════════════ -->
+      <section class="step" id="s-vlinkpay_setup_guide">
+        <div class="back-row">
+          <button class="back-btn" onclick="goMerchant('merchant_payout_settings')">
+            <svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <div>
+            <div class="section-label">VLINKPAY · Hướng dẫn</div>
+            <div style="font-weight:800;font-size:15px" id="t-guide-title">Lấy địa chỉ ví từ app</div>
+          </div>
+        </div>
+        <!-- Phone mock UI showing VLINKPAY Receive screen -->
+        <div class="gs-phone-mock">
+          <div class="gm-label">VLINKPAY App · Màn "Receive"</div>
+          <div class="gm-tabs">
+            <button class="gm-tab act">USDV</button>
+            <button class="gm-tab def">USDT</button>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:2px">
+            <button class="gm-tab act" style="font-size:11px;padding:4px 10px">VRC20</button>
+            <button class="gm-tab def" style="font-size:11px;padding:4px 10px">TRC20</button>
+          </div>
+          <div style="background:#fff;border-radius:10px;padding:10px;display:flex;flex-direction:column;align-items:center;gap:8px">
+            <canvas id="guide-qr" width="80" height="80" style="border-radius:4px"></canvas>
+            <div class="gm-addr">TWzKZyuhnvu1eJFhNyGc3XzsPMHPbJtrBP</div>
+          </div>
+          <button class="gm-copy" onclick="showToast('Trong app thật: nhấn Copy để sao chép')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+            Sao chép địa chỉ
+          </button>
+        </div>
+        <!-- Steps -->
+        <div class="guide-steps">
+          <div class="guide-step">
+            <div class="gs-num">1</div>
+            <div class="gs-content">
+              <div class="gs-title" id="t-gs1">Mở app VLINKPAY</div>
+              <div class="gs-desc">Đăng nhập tài khoản merchant VLINKPAY của bạn trên điện thoại.</div>
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="gs-num">2</div>
+            <div class="gs-content">
+              <div class="gs-title" id="t-gs2">Nhấn tab "Nhận" (Receive)</div>
+              <div class="gs-desc">Ở menu dưới cùng của app, chọn tab <strong>Receive / Nhận</strong>.</div>
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="gs-num">3</div>
+            <div class="gs-content">
+              <div class="gs-title" id="t-gs3">Chọn loại coin &amp; mạng</div>
+              <div class="gs-desc">Chọn <strong>USDV</strong> hoặc <strong>USDT</strong>, rồi chọn mạng. Ưu tiên <strong>VRC20</strong> (mạng VLINK) — phí ~0đ, tức thì. Mỗi tổ hợp có địa chỉ khác nhau.</div>
+              <span class="gs-tag" style="background:var(--brand-soft);color:var(--brand)">Làm lần lượt từng tổ hợp</span>
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="gs-num">4</div>
+            <div class="gs-content">
+              <div class="gs-title" id="t-gs4">Copy &amp; dán vào Nexora</div>
+              <div class="gs-desc">Nhấn <strong>Sao chép địa chỉ</strong> trong app, rồi dán vào ô tương ứng ở bước tiếp theo.</div>
+              <span class="gs-tag" style="background:var(--success-bg);color:var(--success)">✓ Chỉ điền những ô bạn có</span>
+            </div>
+          </div>
+        </div>
+        <button class="btn-grad" onclick="goMerchant('vlinkpay_setup_form')">Bắt đầu nhập địa chỉ →</button>
+      </section>
+
+      <!-- ════════════════════════════════════
+           MERCHANT: vlinkpay_setup_form
+           Form to enter wallet addresses per coin+network
+           ════════════════════════════════════ -->
+      <section class="step" id="s-vlinkpay_setup_form">
+        <div class="back-row">
+          <button class="back-btn" onclick="goMerchant('vlinkpay_setup_guide')">
+            <svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <div>
+            <div class="section-label">Bước 2/2</div>
+            <div style="font-weight:800;font-size:15px" id="t-form-title">Nhập địa chỉ ví VLINKPAY</div>
+          </div>
+        </div>
+        <div class="setup-intro">
+          <div class="si-ico">⭐</div>
+          <div class="si-txt">Chỉ cần dán <strong>1 địa chỉ VRC20</strong> là đủ để nhận tip ngay. Ô trống sẽ không hiển thị cho khách.</div>
+        </div>
+        <div class="enough-badge" id="enough-badge">
+          <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+          Đã đủ để hoạt động — khách có thể tip qua VRC20 ngay.
+        </div>
+        <div class="addr-form" id="addr-form-el"></div>
+        <button class="btn-grad" onclick="saveAddresses()" id="t-save-btn">Lưu cài đặt</button>
+        <button class="btn-out" onclick="goMerchant('vlinkpay_setup_guide')">Quay lại hướng dẫn</button>
+      </section>
+
+      <!-- ════════════════════════════════════
+           MERCHANT: vlinkpay_setup_done
+           Success confirmation
+           ════════════════════════════════════ -->
+      <section class="step" id="s-vlinkpay_setup_done">
+        <div class="setup-done-wrap">
+          <div class="done-icon">
+            <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <div style="font-size:20px;font-weight:900;margin-top:4px" id="t-done-title">Đã lưu cài đặt!</div>
+          <div style="font-size:13px;color:var(--subtle);line-height:1.5;text-wrap:balance;margin-top:2px" id="t-done-desc">
+            Khách hàng có thể chọn VLINKPAY để thanh toán tip ngay bây giờ.
+          </div>
+        </div>
+        <div class="config-summary" id="config-summary-el"></div>
+        <div style="background:var(--brand-soft);border:1px solid #DCE6FE;border-radius:12px;padding:12px 14px;font-size:12.5px;color:var(--subtle);line-height:1.5;margin-top:-8px" id="t-done-note">
+          <strong style="color:var(--brand)">Ghi nhớ:</strong> Khi bạn thêm địa chỉ ví mới cho loại coin/mạng khác, quay lại đây để cập nhật.
+        </div>
+        <button class="btn-grad" onclick="goMerchant('merchant_payout_settings')">← Về Payout Settings</button>
+        <button class="skip" onclick="setScenario('customer');goStep('select_staff')">Xem luồng khách hàng →</button>
+      </section>
+
+    </div><!-- /card -->
+  </main>
+
+  <!-- Footer (CustomerFlow.tsx footer) -->
+  <footer class="app-footer">
+    <div class="footer-secure">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke="var(--brand)" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <span id="t-footer-secure">Được bảo mật bởi Nexora</span>
+    </div>
+    <p class="footer-copy" id="t-footer-copy">© 2025 Nexora · Powered by VLink Group</p>
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── COIN DATA ──────────────────────────────────────────────────────
+// USDV & USDT are USD-pegged stablecoins → rate 1:1 with USD ($15 = 15 USDV).
+// If a fiat rate (e.g. VND) or peg-deviation feed is ever needed, fetch from a
+// price oracle / BE endpoint here — TODO(vlinkpay-rate-api).
+var COINS = [
+  {coin:'USDV',net:'VLINK',code:'VRC20',bg:'linear-gradient(135deg,#2563EB,#4F46E5)',
+   addr:'TWzKZyuhnvu1eJFhNyGc3XzsPMHPbJtrBP',rate:1,fee:'~0đ',time:'Tức thì',
+   pri:'best',priTxt:'Khuyến nghị',desc:'mạng VLINK (VRC20) · phí ~0đ · tức thì',isDefault:true,isVrc20:true},
+  {coin:'USDT',net:'VLINK',code:'VRC20',bg:'linear-gradient(135deg,#26A17B,#1A7F5C)',
+   addr:'TWzKZyuhnvu1eJFhNyGc3XzsPMHPbJtrBP',rate:1,fee:'~0đ',time:'Tức thì',
+   pri:'best',priTxt:'Khuyến nghị',desc:'mạng VLINK (VRC20) · phí ~0đ · tức thì',isVrc20:true},
+  {coin:'USDT',net:'Tron',code:'TRC20',bg:'linear-gradient(135deg,#26A17B,#1A7F5C)',
+   addr:'TWzKZyuhnvu1eJFhNyGc3XzsPMHPbJtrBP',rate:1,fee:'~25.000đ',time:'~1 phút',
+   pri:'pop',priTxt:'Phổ biến',desc:'mạng Tron (TRC20) · phí thấp'},
+  {coin:'USDV',net:'Tron',code:'TRC20',bg:'linear-gradient(135deg,#2563EB,#1A7F5C)',
+   addr:'TWzKZyuhnvu1eJFhNyGc3XzsPMHPbJtrBP',rate:1,fee:'~25.000đ',time:'~1 phút',
+   desc:'mạng Tron (TRC20)'},
+  {coin:'USDT',net:'BNB',code:'BEP20',bg:'linear-gradient(135deg,#F0B90B,#B7890A)',
+   addr:'TWzKZyuhnvu1eJFhNyGc3XzsPMHPbJtrBP',rate:1,fee:'~8.000đ',time:'~30 giây',
+   desc:'mạng BNB Smart Chain (BEP20)'},
+  {coin:'USDT',net:'Ethereum',code:'ERC20',bg:'linear-gradient(135deg,#627EEA,#3C4FBE)',
+   addr:'TWzKZyuhnvu1eJFhNyGc3XzsPMHPbJtrBP',rate:1,fee:'~120.000đ',time:'~3 phút',
+   desc:'mạng Ethereum (ERC20) · phí cao'}
+];
+var curCoin = COINS[0];
+var tipAmt = 15;
+var lang = 'vi';
+var payMethod = 'vlinkpay'; // which method was selected
+var procTarget = 'wallet_vlinkpay'; // where processing leads
+var curStar = 5;
+
+// ── I18N ──────────────────────────────────────────────────────────
+var I18N = {
+  vi:{
+    'who-served':'Ai đã phục vụ bạn hôm nay?',
+    'select-title':'Chọn nhân viên',
+    'tip-sub':'Kiểm tra tip & chọn thanh toán',
+    'choose-amt':'Chọn số tiền tip',
+    'total-lbl':'Tổng tiền Tip',
+    'pay-title':'Chọn phương thức thanh toán',
+    'rec':'Khuyên dùng','vp-sub':'USDV · mạng VLINK · phí ~0đ',
+    'processing':'Đang xử lý...','vp-step':'Bước 3/3 · Chuyển khoản crypto',
+    'copy-addr':'Copy địa chỉ ví',
+    'pg-title':'Cách gửi trên điện thoại này:',
+    'pg1':'Mở app ví VLINKPAY','pg2':'Dán địa chỉ vừa copy vào ô "Gửi tới"','pg3':'Nhập số tiền & xác nhận gửi',
+    'ds-badge':'Sắp có',
+    'deeplink-soon':'Nút mở thẳng app ví (tự điền địa chỉ & số tiền) — đang chờ tích hợp với dev.',
+    'qr-toggle':'Quét QR bằng thiết bị khác','qr-sub':'Chỉ dùng khi bạn có máy thứ hai',
+    'scan-hint':'Mở app ví trên máy thứ hai → Quét mã → Xác nhận gửi',
+    'send-amt':'Số tiền cần gửi',
+    'vp-wallet-sub':'Copy địa chỉ để gửi từ app ví',
+    'addr-lbl':'Địa chỉ ví nhận','your-tip':'Tip của bạn',
+    'fee-lbl':'Phí mạng','time-lbl':'Thời gian',
+    'switch-coin':'Đổi coin / mạng khác',
+    'sent-vp':'Tôi Đã Gửi Tip ✓','sent-venmo':'Tôi Đã Gửi Tip ✓',
+    'pick-coin':'Chọn coin & mạng',
+    'coin-note':'Mỗi dòng là <strong>một coin trên một mạng cụ thể</strong>. Không chắc chọn gì? Dùng dòng đầu — quán đã chọn loại phí thấp & nhanh nhất.',
+    'venmo-step':'Bước 3/3 · Chuyển khoản','venmo-lbl':'Venmo Username',
+    'instr-lbl':'Hướng dẫn thanh toán','goback':'Quay lại',
+    'tip-sent':'Đã Gửi Tips! 🎉','via':'qua',
+    's-recipient':'Người nhận','s-method':'Phương thức','s-ref':'Mã giao dịch',
+    'review-hint':'Bạn có muốn để lại đánh giá không?',
+    'leave-review':'Để lại đánh giá','skip-review':'Bỏ qua',
+    'rate-label':'Trải nghiệm của bạn thế nào?',
+    'quick-tags':'Chọn tag nhanh','comment':'Bình luận (tùy chọn)',
+    'submit-review':'Gửi đánh giá','skip-rv':'Bỏ qua',
+    'rr-title':'Chia sẻ trải nghiệm tuyệt vời!',
+    'rr-desc':'Đánh giá của bạn giúp khách hàng khác tìm được nhà hàng và nhân viên tốt.',
+    'google':'Đánh giá trên Google','google-sub':'The Coffee House · Q.1',
+    'yelp':'Đánh giá trên Yelp','yelp-sub':'The Coffee House · Q.1',
+    'rr-enc':'Cảm ơn bạn đã ủng hộ nhân viên bằng tip! Đánh giá giúp họ được công nhận thêm.',
+    'maybe-later':'Để sau',
+    'fd-title':'Cảm ơn bạn!','fd-desc':'Nexora đã ghi nhận tip và đánh giá của bạn. Hẹn gặp lại!',
+    'home':'Về trang chủ',
+    'footer-secure':'Được bảo mật bởi Nexora','footer-copy':'© 2025 Nexora · Powered by VLink Group',
+    'sent-venmo-hint':'"Tôi Đã Gửi Tip"',
+    'rating-labels':['','Thất vọng 😞','Không hài lòng 😐','Bình thường 🙂','Tốt 😊','Tuyệt vời! 🎉']
+  },
+  en:{
+    'who-served':'Who served you today?',
+    'select-title':'Select staff',
+    'tip-sub':'Review tip & choose payment',
+    'choose-amt':'Select tip amount',
+    'total-lbl':'Total Tip',
+    'pay-title':'How would you like to pay?',
+    'rec':'Recommended','vp-sub':'USDV · VLINK network · ~0 fee',
+    'processing':'Processing...','vp-step':'Step 3/3 · Crypto transfer',
+    'copy-addr':'Copy wallet address',
+    'pg-title':'How to send on this phone:',
+    'pg1':'Open the VLINKPAY wallet app','pg2':'Paste the copied address into "Send to"','pg3':'Enter the amount & confirm',
+    'ds-badge':'Soon',
+    'deeplink-soon':'A one-tap "Open wallet app" button (auto-fills address & amount) is pending dev integration.',
+    'qr-toggle':'Scan QR from another device','qr-sub':'Only if you have a second device',
+    'scan-hint':'Open your wallet on a second device → Scan → Confirm send',
+    'send-amt':'Amount to send',
+    'vp-wallet-sub':'Copy the address to send from your wallet app',
+    'addr-lbl':'Wallet address','your-tip':'Your tip',
+    'fee-lbl':'Network fee','time-lbl':'Time',
+    'switch-coin':'Switch coin / network',
+    'sent-vp':'Yes, I Sent the Tip ✓','sent-venmo':'Yes, I Sent the Tip ✓',
+    'pick-coin':'Choose coin & network',
+    'coin-note':'Each row is <strong>one coin on a specific network</strong>. Not sure? Use the first row — the merchant selected the cheapest & fastest option.',
+    'venmo-step':'Step 3/3 · Transfer','venmo-lbl':'Venmo Username',
+    'instr-lbl':'Payment instructions','goback':'Go Back',
+    'tip-sent':'Tip Sent! 🎉','via':'via',
+    's-recipient':'Recipient','s-method':'Method','s-ref':'Transaction ID',
+    'review-hint':'Would you like to leave a review?',
+    'leave-review':'Leave a Review','skip-review':'Skip',
+    'rate-label':'How was your experience?',
+    'quick-tags':'Quick tags','comment':'Comment (optional)',
+    'submit-review':'Submit Review','skip-rv':'Skip',
+    'rr-title':'Share your great experience!',
+    'rr-desc':'Your review helps other customers find great restaurants and staff.',
+    'google':'Review on Google','google-sub':'The Coffee House · Q.1',
+    'yelp':'Review on Yelp','yelp-sub':'The Coffee House · Q.1',
+    'rr-enc':'Thank you for supporting staff with a tip! Reviews help them get recognized.',
+    'maybe-later':'Maybe Later',
+    'fd-title':'Thank you!','fd-desc':'Nexora has recorded your tip and review. See you next time!',
+    'home':'Back to Home',
+    'footer-secure':'Secured by Nexora','footer-copy':'© 2025 Nexora · Powered by VLink Group',
+    'sent-venmo-hint':'"Yes, I Sent the Tip"',
+    'rating-labels':['','Terrible 😞','Poor 😐','Okay 🙂','Good 😊','Amazing! 🎉']
+  }
+};
+
+function t(key){ return (I18N[lang]||I18N['vi'])[key]||key; }
+
+function applyLang(){
+  var ids=['who-served','select-title','tip-sub','choose-amt','total-lbl','pay-title',
+    'rec','vp-sub','processing','vp-step','copy-addr','pg-title','pg1','pg2','pg3',
+    'ds-badge','deeplink-soon','qr-toggle','qr-sub','scan-hint','send-amt',
+    'vp-wallet-sub','addr-lbl','your-tip','fee-lbl',
+    'time-lbl','switch-coin','sent-vp','pick-coin','venmo-step','venmo-lbl','instr-lbl',
+    'goback','tip-sent','via','s-recipient','s-method','s-ref','review-hint','leave-review',
+    'skip-review','rate-label','quick-tags','comment','submit-review','skip-rv','rr-title',
+    'rr-desc','google','google-sub','yelp','yelp-sub','rr-enc','maybe-later','fd-title',
+    'fd-desc','home','footer-secure','footer-copy','vp-wallet-sub','sent-venmo-hint'];
+  ids.forEach(function(k){
+    var el=document.getElementById('t-'+k);
+    if(el){if(k==='coin-note')el.innerHTML=t(k);else el.textContent=t(k);}
+  });
+  document.getElementById('l-vi').classList.toggle('active',lang==='vi');
+  document.getElementById('l-en').classList.toggle('active',lang==='en');
+  // update dynamic text
+  refreshDynamic();
+}
+function setLang(l){lang=l;applyLang();}
+
+// ── STEP NAVIGATION ───────────────────────────────────────────────
+var STEPS=['select_staff','tip_amount','processing','wallet_vlinkpay','coin_list','wallet_venmo','success_payment','leave_review','google_yelp_review','final_done'];
+function go(id){
+  document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active');});
+  var el=document.getElementById('s-'+id);
+  if(el)el.classList.add('active');
+  // sync demo tab
+  STEPS.forEach(function(s,i){
+    var tab=document.querySelectorAll('.dtab')[i+1];
+    if(tab)tab.classList.toggle('active',s===id);
+  });
+  if(id==='processing'){autoAdvanceProcessing();}
+  refreshDynamic();
+}
+function goStep(id){go(id);}
+
+function autoAdvanceProcessing(){
+  setTimeout(function(){
+    if(document.getElementById('s-processing').classList.contains('active')){
+      go(procTarget);
+    }
+  },1600);
+}
+
+// ── STAFF SELECTION ───────────────────────────────────────────────
+function toggleStaff(row){row.classList.toggle('sel');}
+
+// ── TIP AMOUNT ────────────────────────────────────────────────────
+function pickAmt(btn,amt){
+  document.querySelectorAll('.qa').forEach(function(b){b.classList.remove('act');});
+  btn.classList.add('act');
+  document.getElementById('custom-wrap').style.display='none';
+  tipAmt=amt;refreshDynamic();
+}
+function pickCustom(btn){
+  document.querySelectorAll('.qa').forEach(function(b){b.classList.remove('act');});
+  btn.classList.add('act');
+  var w=document.getElementById('custom-wrap');
+  w.style.display='block';
+  document.getElementById('custom-val').focus();
+}
+function setCustomAmt(v){
+  var n=parseFloat(v)||0;
+  var err=document.getElementById('min-err');
+  if(n>0&&n<1){err.style.display='block';}else{err.style.display='none';}
+  if(n>=1){tipAmt=n;refreshDynamic();}
+}
+function payWith(key){
+  payMethod=key;
+  procTarget=(key==='vlinkpay')?'wallet_vlinkpay':'wallet_venmo';
+  document.getElementById('proc-wallet-name').textContent=(key==='vlinkpay')?'VLINKPAY Wallet':'Venmo';
+  go('processing');
+}
+
+// ── DYNAMIC TEXT ──────────────────────────────────────────────────
+function refreshDynamic(){
+  var fmt='$'+tipAmt.toFixed(2);
+  var el;
+  el=document.getElementById('strip-amt');if(el)el.textContent=fmt;
+  el=document.getElementById('total-amt');if(el)el.textContent=fmt;
+  el=document.getElementById('qr-tip');if(el)el.textContent=fmt;
+  el=document.getElementById('s-total');if(el)el.textContent=fmt;
+  el=document.getElementById('venmo-sub');if(el)el.textContent=(lang==='en'?'Transfer ':'Chuyển ')+fmt+(lang==='en'?' to Lan Anh':' cho Lan Anh');
+  el=document.getElementById('venmo-amt-instr');if(el)el.textContent=fmt;
+  // qty
+  var qty=(tipAmt*curCoin.rate).toFixed(2)+' '+curCoin.coin;
+  el=document.getElementById('qr-qty');if(el)el.textContent=qty;
+  el=document.getElementById('s-method');if(el)el.textContent='VLINKPAY · '+curCoin.coin+' ('+curCoin.code+')';
+  el=document.getElementById('s-wallet-name');if(el)el.textContent='VLINKPAY · '+curCoin.coin;
+  el=document.getElementById('qr-fee');if(el)el.textContent=curCoin.fee;
+  el=document.getElementById('qr-time');if(el)el.textContent=curCoin.time;
+}
+
+// ── QR CANVAS ─────────────────────────────────────────────────────
+function applyCoin(co){
+  curCoin=co;
+  var el;
+  el=document.getElementById('qr-cbadge');
+  if(el){el.textContent=co.coin;el.style.background=co.bg;}
+  el=document.getElementById('qr-cname');if(el)el.textContent=co.coin;
+  el=document.getElementById('qr-cdesc');if(el)el.textContent=co.desc;
+  el=document.getElementById('pp-coinnet');if(el)el.textContent=co.coin+' ('+co.code+')';
+  el=document.getElementById('qr-addr');if(el)el.textContent=co.addr;
+  el=document.getElementById('qr-coin-lbl');if(el)el.textContent='≈ '+co.coin;
+  el=document.getElementById('def-tag');if(el)el.style.display=co.isDefault?'flex':'none';
+  drawQR(co.coin+co.code+co.addr);
+  refreshDynamic();
+}
+function drawQR(seed){
+  var c=document.getElementById('qrc');if(!c)return;
+  var ctx=c.getContext('2d'),sz=180,mods=25,cell=sz/mods;
+  ctx.clearRect(0,0,sz,sz);ctx.fillStyle='#fff';ctx.fillRect(0,0,sz,sz);
+  var s=0;for(var i=0;i<seed.length;i++)s=(s*31+seed.charCodeAt(i))>>>0;
+  function rnd(){s=(s*1664525+1013904223)>>>0;return s/4294967296;}
+  function finder(ox,oy){
+    ctx.fillStyle='#0F172A';ctx.fillRect(ox*cell,oy*cell,7*cell,7*cell);
+    ctx.fillStyle='#fff';ctx.fillRect((ox+1)*cell,(oy+1)*cell,5*cell,5*cell);
+    ctx.fillStyle='#0F172A';ctx.fillRect((ox+2)*cell,(oy+2)*cell,3*cell,3*cell);
+  }
+  function skip(x,y){return(x<8&&y<8)||(x>=mods-8&&y<8)||(x<8&&y>=mods-8)||(x>=9&&x<=15&&y>=9&&y<=15);}
+  ctx.fillStyle='#0F172A';
+  for(var y=0;y<mods;y++)for(var x=0;x<mods;x++){
+    if(skip(x,y))continue;
+    if(rnd()>.48)ctx.fillRect(x*cell,y*cell,cell-.4,cell-.4);
+  }
+  finder(0,0);finder(mods-7,0);finder(0,mods-7);
+}
+
+// ── COIN LIST ─────────────────────────────────────────────────────
+function buildCoinList(){
+  var el=document.getElementById('coin-list-el');if(!el)return;
+  el.innerHTML='';
+  COINS.forEach(function(co){
+    var btn=document.createElement('button');
+    btn.className='citem'+(co.isVrc20?' pri':'');
+    var tag=co.pri?'<span class="ptag '+(co.pri==='best'?'ptag-best':'ptag-pop')+'">'+co.priTxt+'</span>':'';
+    btn.innerHTML=
+      '<span class="ci-badge" style="background:'+co.bg+'">'+co.coin+'</span>'+
+      '<span style="flex:1"><span class="ci-name">'+co.coin+' '+tag+'</span>'+
+      '<span class="ci-desc">'+co.desc+'</span></span>'+
+      '<span class="ci-arr"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6" stroke="var(--muted)"/></svg></span>';
+    btn.onclick=function(){applyCoin(co);go('wallet_vlinkpay');};
+    el.appendChild(btn);
+  });
+}
+
+// ── COPY ADDRESS ──────────────────────────────────────────────────
+var cpTimer;
+function toggleQr(){
+  var t=document.getElementById('qr-toggle'),b=document.getElementById('qr-body');
+  if(t)t.classList.toggle('open');
+  if(b)b.classList.toggle('open');
+}
+function copyAddr(){
+  var txt=document.getElementById('qr-addr').textContent;
+  var btn=document.getElementById('copybtn');
+  var copiedTxt=lang==='en'?'Copied!':'Đã copy!';
+  var resetTxt=t('copy-addr');
+  function done(){
+    btn.classList.add('done');
+    btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5" stroke="#fff"/></svg> <span>'+copiedTxt+'</span>';
+    showToast(lang==='en'?'Address copied! Paste it into your wallet app.':'Đã copy địa chỉ — dán vào app ví để gửi.');
+    clearTimeout(cpTimer);
+    cpTimer=setTimeout(function(){
+      btn.classList.remove('done');
+      btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg> <span id="t-copy-addr">'+resetTxt+'</span>';
+    },2000);
+  }
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done,done);
+  else done();
+}
+
+// ── OPEN WALLET APP (same-device deep link) ───────────────────────
+// TODO(vlinkpay-deeplink): confirm the real URL scheme with the VLINK team.
+// Assumed shape: vlinkpay://pay?address=&amount=&asset=&network=
+function buildVlinkpayDeepLink(){
+  var qtyEl=document.getElementById('qr-qty');
+  var qty=qtyEl?qtyEl.textContent.replace(/[^0-9.]/g,''):'';
+  return 'vlinkpay://pay?address='+encodeURIComponent(curCoin.addr)+
+    '&amount='+encodeURIComponent(qty)+
+    '&asset='+encodeURIComponent(curCoin.coin)+
+    '&network='+encodeURIComponent((curCoin.code||'').toLowerCase());
+}
+function openVlinkpayApp(){
+  showToast(lang==='en'?'Opening VLINKPAY wallet…':'Đang mở app ví VLINKPAY…');
+  // Opens the wallet app if installed; in this demo (no app) nothing launches.
+  try{ window.location.href=buildVlinkpayDeepLink(); }catch(e){}
+}
+
+// ── REVIEW ────────────────────────────────────────────────────────
+var LABELS_VI=['','Thất vọng 😞','Không hài lòng 😐','Bình thường 🙂','Tốt 😊','Tuyệt vời! 🎉'];
+var LABELS_EN=['','Terrible 😞','Poor 😐','Okay 🙂','Good 😊','Amazing! 🎉'];
+var TAGS_VI_POS=['Thân thiện & Vui vẻ','Chuyên nghiệp','Phục vụ nhanh','Tỉ mỉ & Cẩn thận','Sạch sẽ','Pha cà phê ngon'];
+var TAGS_VI_NEG=['Phục vụ chậm','Thiếu chuyên nghiệp','Thái độ không tốt','Sản phẩm không đúng'];
+var TAGS_EN_POS=['Friendly & Welcoming','Professional','Fast Service','Meticulous','Clean','Great Coffee'];
+var TAGS_EN_NEG=['Slow Service','Unprofessional','Poor Attitude','Wrong Order'];
+
+function setStar(n){
+  curStar=n;
+  var btns=document.querySelectorAll('.sbtn');
+  btns.forEach(function(b,i){b.textContent=i<n?'⭐':'☆';});
+  var lbl=document.getElementById('rating-lbl');
+  if(lbl)lbl.textContent=(lang==='en'?LABELS_EN:LABELS_VI)[n]||'';
+  rebuildTags();
+}
+function rebuildTags(){
+  var wrap=document.getElementById('tags-wrap');if(!wrap)return;
+  var isPos=curStar>=4;
+  var tags=lang==='en'?(isPos?TAGS_EN_POS:TAGS_EN_NEG):(isPos?TAGS_VI_POS:TAGS_VI_NEG);
+  wrap.innerHTML=tags.map(function(t,i){
+    return '<button class="tag-btn'+(i<2?' on':'')+'" onclick="toggleTag(this)">'+t+'</button>';
+  }).join('');
+}
+function toggleTag(btn){btn.classList.toggle('on');}
+function handleSubmitReview(){
+  if(curStar>=4)go('google_yelp_review');
+  else go('final_done');
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────
+var tTimer;
+function showToast(msg){
+  var el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(tTimer);
+  tTimer=setTimeout(function(){el.classList.remove('show');},2000);
+}
+
+// ── SCENARIO SWITCHER ─────────────────────────────────────────────
+var scenario = 'customer';
+function setScenario(s) {
+  scenario = s;
+  var custTabs = document.getElementById('customer-tabs');
+  var merTabs = document.getElementById('merchant-tabs');
+  document.getElementById('scen-customer').classList.toggle('active', s === 'customer');
+  document.getElementById('scen-merchant').classList.toggle('active', s === 'merchant');
+  if (s === 'customer') {
+    custTabs.style.display = 'flex';
+    merTabs.style.display = 'none';
+    // hide all merchant steps, show customer steps
+    document.querySelectorAll('.step').forEach(function(el) { el.classList.remove('active'); });
+    document.getElementById('s-select_staff').classList.add('active');
+  } else {
+    custTabs.style.display = 'none';
+    merTabs.style.display = 'flex';
+    document.querySelectorAll('.step').forEach(function(el) { el.classList.remove('active'); });
+    document.getElementById('s-merchant_payout_settings').classList.add('active');
+    drawGuideQR();
+    buildAddrForm();
+  }
+}
+
+// ── MERCHANT NAVIGATION ───────────────────────────────────────────
+var MERCHANT_STEPS = ['merchant_payout_settings','vlinkpay_setup_guide','vlinkpay_setup_form','vlinkpay_setup_done'];
+function goMerchant(id) {
+  document.querySelectorAll('.step').forEach(function(s) { s.classList.remove('active'); });
+  var el = document.getElementById('s-' + id);
+  if (el) el.classList.add('active');
+  // sync merchant tabs
+  var tabs = document.querySelectorAll('#merchant-tabs .dtab');
+  MERCHANT_STEPS.forEach(function(s, i) {
+    if (tabs[i]) tabs[i].classList.toggle('active', s === id);
+  });
+  if (id === 'vlinkpay_setup_guide') drawGuideQR();
+  if (id === 'vlinkpay_setup_form') buildAddrForm();
+  if (id === 'vlinkpay_setup_done') buildConfigSummary();
+}
+
+// ── GUIDE QR (mini) ───────────────────────────────────────────────
+function drawGuideQR() {
+  var c = document.getElementById('guide-qr'); if (!c) return;
+  var ctx = c.getContext('2d'), sz = 80, mods = 17, cell = sz / mods;
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, sz, sz);
+  var s = 0x9E3779B9;
+  function rnd() { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }
+  function finder(ox, oy) {
+    ctx.fillStyle = '#0F172A'; ctx.fillRect(ox*cell, oy*cell, 7*cell, 7*cell);
+    ctx.fillStyle = '#fff'; ctx.fillRect((ox+1)*cell, (oy+1)*cell, 5*cell, 5*cell);
+    ctx.fillStyle = '#0F172A'; ctx.fillRect((ox+2)*cell, (oy+2)*cell, 3*cell, 3*cell);
+  }
+  ctx.fillStyle = '#0F172A';
+  for (var y = 0; y < mods; y++) for (var x = 0; x < mods; x++) {
+    if ((x < 8 && y < 8) || (x >= mods-8 && y < 8) || (x < 8 && y >= mods-8)) continue;
+    if (rnd() > .5) ctx.fillRect(x*cell, y*cell, cell-.5, cell-.5);
+  }
+  finder(0, 0); finder(mods-7, 0); finder(0, mods-7);
+}
+
+// ── ADDR FORM ─────────────────────────────────────────────────────
+var ADDR_SCHEME = [
+  { coin:'USDV', label:'USD VLINK', bg:'linear-gradient(135deg,#2563EB,#4F46E5)',
+    nets:[{id:'vrc20',name:'Vlinkpay',chain:'VRC20',vrc20:true,note:'Phí ~0đ · tức thì · không cần bridge'},
+          {id:'trc20',name:'Tron',chain:'TRC20',note:'Cần ví Tron — phí ~25.000đ/lần'}] },
+  { coin:'USDT', label:'USD Tether', bg:'linear-gradient(135deg,#26A17B,#1A7F5C)',
+    nets:[{id:'vrc20',name:'Vlinkpay',chain:'VRC20',vrc20:true,note:'Phí ~0đ · tức thì · không cần bridge'},
+          {id:'trc20',name:'Tron',chain:'TRC20',note:'Cần ví Tron — phí ~25.000đ/lần'},
+          {id:'bep20',name:'BNB Chain',chain:'BEP20',note:'Cần ví BNB Chain — phí biến động'},
+          {id:'erc20',name:'Ethereum',chain:'ERC20',amber:true,note:'Phí gas cao ~$3–15/lần, không khuyến nghị'}] }
+];
+var addrValues = {}; // coin+net → address string
+
+function checkIcon(val) {
+  return val
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>'
+    : '';
+}
+function toggleAdvanced() {
+  var t = document.getElementById('adv-toggle'), b = document.getElementById('adv-body');
+  if (t) t.classList.toggle('open');
+  if (b) b.classList.toggle('open');
+}
+function buildAddrForm() {
+  var el = document.getElementById('addr-form-el'); if (!el) return;
+
+  // ── Primary zone: recommended VRC20, one clean row per coin ──
+  var recRows = ADDR_SCHEME.map(function(g) {
+    var n = g.nets.filter(function(x) { return x.vrc20; })[0];
+    if (!n) return '';
+    var key = g.coin + '_' + n.id, val = addrValues[key] || '';
+    return '<div class="rec-row">' +
+      '<div class="rec-badge" style="background:' + g.bg + '">' + g.coin + '</div>' +
+      '<div class="rec-field">' +
+        '<div class="rf-label">' + g.coin + ' <span>· ' + g.label + '</span></div>' +
+        '<div class="rec-input-wrap">' +
+          '<input class="rec-input' + (val ? ' filled' : '') + '" placeholder="Dán địa chỉ ví VRC20..." value="' + val + '"' +
+          ' data-key="' + key + '" data-vrc20="1" oninput="onAddrInput(this)">' +
+          '<div class="rec-check" id="chk-' + key + '">' + checkIcon(val) + '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  var recCard = '<div class="rec-card">' +
+    '<div class="rec-hdr">' +
+      '<div class="rh-star">⭐</div>' +
+      '<div><div class="rh-title">Mạng VRC20 (VLINK)</div>' +
+        '<div class="rh-sub">Phí ~0đ · tức thì · không cần bridge</div></div>' +
+      '<span class="rh-pill">Khuyến nghị</span>' +
+    '</div>' + recRows + '</div>';
+
+  // ── Advanced zone: other networks, collapsed by default ──
+  var advGroups = ADDR_SCHEME.map(function(g) {
+    var others = g.nets.filter(function(x) { return !x.vrc20; });
+    if (!others.length) return '';
+    var fields = others.map(function(n) {
+      var key = g.coin + '_' + n.id, val = addrValues[key] || '';
+      var note = n.note ? '<div class="nf-note' + (n.amber ? ' amber' : '') + '">' + n.note + '</div>' : '';
+      return '<div class="network-field">' +
+        '<div class="nf-top">' +
+          '<span class="nf-chain-name">' + n.name + '</span>' +
+          '<span class="nf-chain-label">' + n.chain + '</span>' +
+          '<div class="nf-status" id="chk-' + key + '" style="margin-left:auto">' + checkIcon(val) + '</div>' +
+        '</div>' +
+        '<input class="nf-input' + (val ? ' filled' : '') + '" placeholder="Dán địa chỉ ví..." value="' + val + '"' +
+        ' data-key="' + key + '" oninput="onAddrInput(this)">' +
+        note +
+      '</div>';
+    }).join('');
+    return '<div class="coin-group">' +
+      '<div class="coin-group-hdr">' +
+        '<div class="cgh-badge" style="background:' + g.bg + '">' + g.coin + '</div>' +
+        '<div><div class="cgh-name">' + g.coin + '</div><div class="cgh-sub">' + g.label + '</div></div>' +
+      '</div>' + fields + '</div>';
+  }).join('');
+  var advSection = '<button class="adv-toggle" id="adv-toggle" onclick="toggleAdvanced()">' +
+    '<div class="at-ico">⚙️</div>' +
+    '<div><div class="at-txt">Thêm mạng khác</div>' +
+      '<div class="at-sub">Tron, BNB Chain, Ethereum — nâng cao</div></div>' +
+    '<div class="at-chev"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>' +
+  '</button>' +
+  '<div class="adv-body" id="adv-body">' +
+    '<div class="adv-warn">' +
+      '<svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>' +
+      'Các mạng này khó kết nối hơn (phí cao, cần ví riêng). Chỉ thêm nếu bạn thật sự cần.' +
+    '</div>' + advGroups +
+  '</div>';
+
+  el.innerHTML = recCard + advSection;
+  refreshEnoughBadge();
+  // auto-focus first VRC20 field (USDV · VRC20)
+  var firstVrc20 = el.querySelector('input[data-vrc20]');
+  if (firstVrc20) { try { firstVrc20.focus({ preventScroll: true }); } catch (e) { firstVrc20.focus(); } }
+}
+function hasVrc20Filled() {
+  return ADDR_SCHEME.some(function(g) {
+    return g.nets.some(function(n) { return n.vrc20 && addrValues[g.coin + '_' + n.id]; });
+  });
+}
+function refreshEnoughBadge() {
+  var badge = document.getElementById('enough-badge');
+  if (badge) badge.classList.toggle('show', hasVrc20Filled());
+}
+function onAddrInput(inp) {
+  var key = inp.dataset.key;
+  addrValues[key] = inp.value.trim();
+  var chk = document.getElementById('chk-' + key);
+  inp.classList.toggle('filled', !!inp.value.trim());
+  if (chk) chk.innerHTML = checkIcon(inp.value.trim());
+  refreshEnoughBadge();
+}
+function saveAddresses() {
+  var count = Object.values(addrValues).filter(Boolean).length;
+  if (count === 0) { showToast('Hãy nhập ít nhất 1 địa chỉ ví'); return; }
+  goMerchant('vlinkpay_setup_done');
+}
+function buildConfigSummary() {
+  var el = document.getElementById('config-summary-el'); if (!el) return;
+  el.innerHTML = '';
+  ADDR_SCHEME.forEach(function(g) {
+    var filled = g.nets.filter(function(n) { return addrValues[g.coin+'_'+n.id]; }).length;
+    var row = document.createElement('div');
+    row.className = 'cs-row';
+    row.innerHTML = '<span class="cs-coin">' + g.coin + '</span>' +
+      '<span class="cs-count">' +
+      (filled > 0
+        ? '<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>' + filled + '/' + g.nets.length + ' mạng'
+        : '<span style="color:var(--muted)">' + (lang==='en'?'Not configured':'Chưa cấu hình') + '</span>') +
+      '</span>';
+    el.appendChild(row);
+  });
+  // update badge on settings page
+  var totalCombos = ADDR_SCHEME.reduce(function(sum, g) { return sum + g.nets.length; }, 0);
+  var totalFilled = Object.values(addrValues).filter(Boolean).length;
+  var badge = document.getElementById('m-vp-badge');
+  var sub = document.getElementById('t-vp-status-sub');
+  if (badge) { badge.className = 'pmsr-status ' + (totalFilled > 0 ? 'ok' : 'warn'); badge.textContent = totalFilled > 0 ? 'Đã cấu hình' : 'Chưa cấu hình'; }
+  if (sub) sub.textContent = totalFilled + '/' + totalCombos + ' tổ hợp coin · ' + (totalFilled > 0 ? 'đã cấu hình' : 'chưa cấu hình');
+}
+
+// ── INIT ──────────────────────────────────────────────────────────
+buildCoinList();
+applyCoin(COINS[0]);
+drawQR(COINS[0].coin+COINS[0].code+COINS[0].addr);
+refreshDynamic();
+applyLang();
+
+// sync first dtab
+document.querySelectorAll('.dtab')[0].classList.add('active');
+</script>
