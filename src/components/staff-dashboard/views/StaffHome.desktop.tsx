@@ -85,27 +85,6 @@ export default function StaffHome() {
         />
       </section>
 
-      {/* Pay QR quick section */}
-      <section className={panel}>
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <h3 className="text-base font-extrabold text-nexoraText">
-              {t('staff_dashboard.qr.payment_title')}
-            </h3>
-            <p className="mt-1 text-xs text-nexoraMuted">
-              {t('staff_dashboard.qr.payment_sub')}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => onNavigate?.('qr', { tab: 'payment' })}
-            className="shrink-0 rounded-xl bg-gradient-to-r from-nexoraElectric to-nexoraViolet px-4 py-2.5 text-xs font-extrabold text-white transition hover:opacity-90"
-          >
-            {t('staff_dashboard.qr.tab_payment')}
-          </button>
-        </div>
-      </section>
-
       {/* Pending confirmations */}
       <section className={panel}>
         <h3 className="mb-3 text-base font-extrabold text-nexoraText">{t('staff_dashboard.home.pending_confirmations')}</h3>

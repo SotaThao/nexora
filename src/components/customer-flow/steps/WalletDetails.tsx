@@ -220,8 +220,8 @@ export default function WalletDetails({
 
   const subtitle = paymentMode
     ? (paymentCopyScope === 'staff'
-      ? t('staff_direct_payment.review_payment_desc')
-      : t('direct_payment.review_payment_desc'))
+      ? t('staff_direct_payment.review_payment_desc', { name: recipientName })
+      : t('direct_payment.review_payment_desc', { name: recipientName }))
     : isMultiStaff
     ? t('components.customer_flow.steps.WalletDetails.multiStaffSubtitle', { business: bizName || recipientName })
     : (() => {
@@ -268,7 +268,9 @@ export default function WalletDetails({
           </div>
           <p className="text-[10px] text-nexoraSubtle font-semibold tracking-wider uppercase">
             {paymentMode
-              ? t('direct_payment.total_payment')
+              ? (paymentCopyScope === 'staff'
+                ? t('staff_direct_payment.total')
+                : t('direct_payment.total'))
               : isMultiStaff
               ? t('components.customer_flow.steps.WalletDetails.totalCombinedTip')
               : t('components.customer_flow.steps.WalletDetails.tipAmount')}

@@ -156,27 +156,6 @@ export default function StaffHome() {
         <QuickAction icon={<Gift className="h-5 w-5" />} label={t('staff_dashboard.home.quick_refer')} bg="bg-pink-100" iconColor="text-pink-600" onClick={() => go('profile')} />
       </div>
 
-      {/* Pay QR quick section */}
-      <div className="rounded-3xl border border-nexoraBorder bg-white p-5 shadow-nexora-card">
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <h2 className="text-[17px] font-black tracking-tight text-nexoraText">
-              {t('staff_dashboard.qr.payment_title')}
-            </h2>
-            <p className="mt-1 text-[12px] text-nexoraMuted">
-              {t('staff_dashboard.qr.payment_sub')}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => go('qr', { tab: 'payment' })}
-            className="shrink-0 rounded-xl bg-gradient-to-r from-nexoraElectric to-nexoraViolet px-4 py-2.5 text-[11px] font-extrabold text-white transition hover:opacity-90"
-          >
-            {t('staff_dashboard.qr.tab_payment')}
-          </button>
-        </div>
-      </div>
-
       {/* ── Pending Confirmations ────────────────────────────────────────── */}
       <div className="rounded-3xl border border-nexoraBorder bg-white p-5 shadow-nexora-card">
         <div className="mb-2 flex items-center justify-between">

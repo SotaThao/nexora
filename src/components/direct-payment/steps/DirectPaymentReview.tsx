@@ -23,9 +23,12 @@ export default function DirectPaymentReview({
   isLoadingMethods,
   onSelectWallet,
   disablePaymentSelection,
+  totalPaymentLabel,
 }) {
   const name = recipientName || businessName || t('direct_payment.default_business')
-  const subtitle = recipientSubtitle || t('direct_payment.pay_to_business')
+  const subtitle = recipientSubtitle === null
+    ? null
+    : (recipientSubtitle || t('direct_payment.pay_to_business'))
   const rangeHint = amountRangeHint ?? t('direct_payment.amount_range_hint')
   const title = reviewTitle || t('direct_payment.review_payment_title')
   const desc = reviewDesc || t('direct_payment.review_payment_desc')
@@ -58,9 +61,11 @@ export default function DirectPaymentReview({
             <h4 className="truncate text-sm font-extrabold text-nexoraText">
               {name}
             </h4>
-            <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-nexoraSubtle">
-              {subtitle}
-            </p>
+            {subtitle ? (
+              <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-nexoraSubtle">
+                {subtitle}
+              </p>
+            ) : null}
           </div>
         </div>
 
@@ -114,7 +119,7 @@ export default function DirectPaymentReview({
         <div className="flex items-center justify-between border-t border-nexoraBrandSoft bg-nexoraBrandSoft/35 px-3.5 py-3">
           <div>
             <h4 className="text-[11px] font-extrabold uppercase tracking-wider text-slate-800">
-              {t('direct_payment.total_payment')}
+              {totalPaymentLabel || t('direct_payment.total_payment')}
             </h4>
             {rangeHint ? (
               <p className="mt-0.5 text-[10px] font-semibold text-nexoraMuted">
