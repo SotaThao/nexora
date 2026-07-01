@@ -184,7 +184,6 @@ export default function ReportsDirectPaymentsTab({
   const renderPaymentActions = (
     paymentId: string,
     showAcknowledge: boolean,
-    isAcknowledging: boolean,
     layout: 'icons' | 'buttons' = 'icons',
   ) => (
     <div
@@ -208,21 +207,19 @@ export default function ReportsDirectPaymentsTab({
       {showAcknowledge ? (
         <button
           type="button"
-          title={t('merchant_payments.confirm_receipt')}
-          aria-label={t('merchant_payments.confirm_receipt')}
-          onClick={(e) => handleAcknowledge(paymentId, e)}
-          disabled={isAcknowledging}
+          title={t('merchant_payments.view_detail')}
+          aria-label={t('merchant_payments.view_detail')}
+          onClick={(e) => {
+            e.stopPropagation()
+            onOpenPayment?.(paymentId)
+          }}
           className={
             layout === 'buttons'
-              ? 'inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-3 py-2 text-[11px] font-bold text-white transition hover:bg-nexoraBrand/90 disabled:cursor-not-allowed disabled:opacity-60'
-              : 'inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-nexoraBrand text-white transition hover:bg-nexoraBrand/90 disabled:cursor-not-allowed disabled:opacity-60'
+              ? 'inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-3 py-2 text-[11px] font-bold text-white transition hover:bg-nexoraBrand/90'
+              : 'inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-nexoraBrand text-white transition hover:bg-nexoraBrand/90'
           }
         >
-          {isAcknowledging ? (
-            <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
-          ) : (
-            <CheckCircle className="h-4 w-4 shrink-0" />
-          )}
+          <CheckCircle className="h-4 w-4 shrink-0" />
           {layout === 'buttons' ? <span>{t('merchant_payments.confirm_receipt')}</span> : null}
         </button>
       ) : null}
@@ -253,6 +250,10 @@ export default function ReportsDirectPaymentsTab({
         stats={paymentStats}
         isLoading={isStatsPending}
         t={t}
+        variant="merchant"
+        showSummaryCards={false}
+        showByPaymentMethod={false}
+        statusCardMode="volume"
       />
 
       {pendingAckPayments.length > 0 ? (
@@ -342,7 +343,6 @@ export default function ReportsDirectPaymentsTab({
               {payments.map((payment) => {
                 const paymentStatus = normalizePaymentStatusValue(payment.status)
                 const showAcknowledge = needsMerchantAcknowledge(payment)
-                const isAcknowledging = acknowledgingId === payment.id && acknowledgeMutation.isPending
 
                 return (
                   <article key={payment.id} className="space-y-3 p-4">
@@ -361,7 +361,7 @@ export default function ReportsDirectPaymentsTab({
                       {getPaymentMethodLogo(payment.paymentMethodType)}
                       <span className="truncate">{payment.paymentMethodType || '—'}</span>
                     </div>
-                    {renderPaymentActions(payment.id, showAcknowledge, isAcknowledging, 'buttons')}
+                    {renderPaymentActions(payment.id, showAcknowledge, 'buttons')}
                   </article>
                 )
               })}
@@ -382,7 +382,6 @@ export default function ReportsDirectPaymentsTab({
                   {payments.map((payment) => {
                     const paymentStatus = normalizePaymentStatusValue(payment.status)
                     const showAcknowledge = needsMerchantAcknowledge(payment)
-                    const isAcknowledging = acknowledgingId === payment.id && acknowledgeMutation.isPending
 
                     return (
                       <tr
@@ -405,7 +404,7 @@ export default function ReportsDirectPaymentsTab({
                           <DirectPaymentStatusBadge status={paymentStatus} t={t} />
                         </td>
                         <td className="whitespace-nowrap px-2 py-3">
-                          {renderPaymentActions(payment.id, showAcknowledge, isAcknowledging)}
+                          {renderPaymentActions(payment.id, showAcknowledge)}
                         </td>
                       </tr>
                     )

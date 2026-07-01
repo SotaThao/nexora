@@ -21,8 +21,6 @@ import { PaymentType } from '../../../types/domain'
 import { getApiErrorCode } from '../../../types/domain'
 import StaffPaymentDetailModal from '../modals/StaffPaymentDetailModal'
 import CustomSelect from '../../CustomSelect'
-import { SkeletonLayout } from '../../ui/skeleton'
-import { STAFF_PAYMENTS_SKELETON } from '../skeletons/staffDashboardSkeletons'
 import { dismissAckPrompt } from '../../../utils/directPaymentAckDismiss'
 import { resolveDirectPaymentDateRange, resolvePaymentStatsDateRange } from '../../../utils/directPaymentDateRange'
 import DirectPaymentStatusStats from '../../dashboard/direct-payments/DirectPaymentStatusStats'
@@ -170,7 +168,6 @@ export default function StaffPayments() {
   const renderPaymentActions = (
     paymentId: string,
     showAcknowledge: boolean,
-    isAcknowledging: boolean,
     layout: 'icons' | 'buttons' = 'icons',
   ) => (
     <div
@@ -194,21 +191,19 @@ export default function StaffPayments() {
       {showAcknowledge ? (
         <button
           type="button"
-          title={t('staff_payments.confirm_receipt')}
-          aria-label={t('staff_payments.confirm_receipt')}
-          onClick={(e) => handleAcknowledge(paymentId, e)}
-          disabled={isAcknowledging}
+          title={t('staff_payments.view_detail')}
+          aria-label={t('staff_payments.view_detail')}
+          onClick={(e) => {
+            e.stopPropagation()
+            openPayment(paymentId)
+          }}
           className={
             layout === 'buttons'
-              ? 'inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-3 py-2 text-[11px] font-bold text-white transition hover:bg-nexoraBrand/90 disabled:cursor-not-allowed disabled:opacity-60'
-              : 'inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-nexoraBrand text-white transition hover:bg-nexoraBrand/90 disabled:cursor-not-allowed disabled:opacity-60'
+              ? 'inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-3 py-2 text-[11px] font-bold text-white transition hover:bg-nexoraBrand/90'
+              : 'inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-nexoraBrand text-white transition hover:bg-nexoraBrand/90'
           }
         >
-          {isAcknowledging ? (
-            <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
-          ) : (
-            <CheckCircle className="h-4 w-4 shrink-0" />
-          )}
+          <CheckCircle className="h-4 w-4 shrink-0" />
           {layout === 'buttons' ? <span>{t('staff_payments.confirm_receipt')}</span> : null}
         </button>
       ) : null}
@@ -216,7 +211,14 @@ export default function StaffPayments() {
   )
 
   const renderEmptyOrLoading = (className = '') => {
-    if (payments.length === 0 && !isPending && paymentsPage) {
+    if (isPending && !paymentsPage) {
+      return (
+        <div className={`px-4 py-10 text-center text-sm text-nexoraMuted ${className}`}>
+          {t('common.loading')}
+        </div>
+      )
+    }
+    if (payments.length === 0) {
       return (
         <div className={`px-4 py-10 text-center text-sm text-nexoraMuted ${className}`}>
           {t('staff_payments.empty')}
@@ -226,10 +228,6 @@ export default function StaffPayments() {
     return null
   }
 
-  if (isPending && !paymentsPage) {
-    return <SkeletonLayout blocks={STAFF_PAYMENTS_SKELETON} />
-  }
-
   return (
     <div className="space-y-4 sm:space-y-5">
       <DirectPaymentStatusStats
@@ -237,6 +235,9 @@ export default function StaffPayments() {
         isLoading={isStatsPending}
         t={t}
         variant="staff"
+        showSummaryCards={false}
+        showByPaymentMethod={false}
+        statusCardMode="volume"
       />
 
       {pendingAckPayments.length > 0 ? (
@@ -326,7 +327,6 @@ export default function StaffPayments() {
               {payments.map((payment) => {
                 const paymentStatus = normalizePaymentStatusValue(payment.status)
                 const showAcknowledge = needsStaffAcknowledge(payment)
-                const isAcknowledging = acknowledgingId === payment.id && acknowledgeMutation.isPending
 
                 return (
                   <article key={payment.id} className="space-y-3 p-4">
@@ -345,7 +345,7 @@ export default function StaffPayments() {
                       {getPaymentMethodLogo(payment.paymentMethodType)}
                       <span className="truncate">{payment.paymentMethodType || '—'}</span>
                     </div>
-                    {renderPaymentActions(payment.id, showAcknowledge, isAcknowledging, 'buttons')}
+                    {renderPaymentActions(payment.id, showAcknowledge, 'buttons')}
                   </article>
                 )
               })}
@@ -366,7 +366,6 @@ export default function StaffPayments() {
                   {payments.map((payment) => {
                     const paymentStatus = normalizePaymentStatusValue(payment.status)
                     const showAcknowledge = needsStaffAcknowledge(payment)
-                    const isAcknowledging = acknowledgingId === payment.id && acknowledgeMutation.isPending
 
                     return (
                       <tr
@@ -389,7 +388,7 @@ export default function StaffPayments() {
                           <DirectPaymentStatusBadge status={paymentStatus} t={t} variant="staff" />
                         </td>
                         <td className="whitespace-nowrap px-2 py-3">
-                          {renderPaymentActions(payment.id, showAcknowledge, isAcknowledging)}
+                          {renderPaymentActions(payment.id, showAcknowledge)}
                         </td>
                       </tr>
                     )

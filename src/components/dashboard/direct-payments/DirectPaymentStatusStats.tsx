@@ -21,17 +21,23 @@ function statusBucketKey(status: number): keyof MerchantPaymentStats['byStatus']
   return 'initiated'
 }
 
-function StatsSkeleton() {
+function bucketHasData(bucket: { count: number; totalAmount: number }) {
+  return bucket.count > 0 || bucket.totalAmount > 0
+}
+
+function StatsSkeleton({ showSummaryCards = true }: { showSummaryCards?: boolean }) {
   return (
     <div className="space-y-3 sm:space-y-4">
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5 sm:gap-3">
-        {Array.from({ length: 5 }).map((_, index) => (
-          <div key={index} className="h-[88px] animate-pulse rounded-xl bg-nexoraBorder/50" />
-        ))}
-      </div>
+      {showSummaryCards ? (
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5 sm:gap-3">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div key={index} className="h-[88px] animate-pulse rounded-xl bg-nexoraBorder/50" />
+          ))}
+        </div>
+      ) : null}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         {Array.from({ length: 3 }).map((_, index) => (
-          <div key={index} className="h-[104px] animate-pulse rounded-xl bg-nexoraBorder/50" />
+          <div key={index} className="h-[140px] animate-pulse rounded-xl bg-nexoraBorder/50" />
         ))}
       </div>
     </div>
@@ -43,18 +49,24 @@ export default function DirectPaymentStatusStats({
   isLoading = false,
   t,
   variant = 'merchant',
+  showSummaryCards = true,
+  showByPaymentMethod = true,
+  statusCardMode = 'default',
 }: {
   stats?: MerchantPaymentStats
   isLoading?: boolean
   t: (key: string, params?: Record<string, unknown>) => string
   variant?: 'merchant' | 'staff'
+  showSummaryCards?: boolean
+  showByPaymentMethod?: boolean
+  statusCardMode?: 'default' | 'volume'
 }) {
   const prefix = variant === 'staff' ? 'staff_payments' : 'merchant_payments'
 
   if (isLoading && !stats) {
     return (
-      <div className="rounded-xl border border-nexoraBorder bg-nexoraCanvas/50 p-3 sm:p-4">
-        <StatsSkeleton />
+      <div className={showSummaryCards || statusCardMode !== 'volume' ? 'rounded-xl border border-nexoraBorder bg-nexoraCanvas/50 p-3 sm:p-4' : ''}>
+        <StatsSkeleton showSummaryCards={showSummaryCards} />
       </div>
     )
   }
@@ -116,39 +128,98 @@ export default function DirectPaymentStatusStats({
     },
   ]
 
+  const confirmedBucket = data.byStatus.confirmed
+  const completedBucket = data.byStatus.completed
+  const volumeBucket = {
+    count: confirmedBucket.count + completedBucket.count,
+    totalAmount: confirmedBucket.totalAmount + completedBucket.totalAmount,
+  }
+
+  const volumeStatusCards = [
+    {
+      key: 'total_volume',
+      label: t(`${prefix}.stats_total_volume`),
+      bucket: volumeBucket,
+    },
+    {
+      key: 'pending',
+      label: t(`${prefix}.stats_pending`),
+      bucket: confirmedBucket,
+    },
+    {
+      key: 'completed',
+      label: t(`${prefix}.stats_completed_payments`),
+      bucket: completedBucket,
+    },
+  ]
+
   return (
-    <div className="space-y-3 rounded-xl border border-nexoraBorder bg-nexoraCanvas/50 p-3 sm:space-y-4 sm:p-4">
-      <p className="text-right text-xs font-bold text-nexoraMuted sm:text-sm">
-        {t(`${prefix}.stats_period_hint`)}
-      </p>
+    <div className={`space-y-3 sm:space-y-4 ${showSummaryCards || statusCardMode !== 'volume' ? 'rounded-xl border border-nexoraBorder bg-nexoraCanvas/50 p-3 sm:p-4' : ''}`}>
+      {showSummaryCards ? (
+        <>
+          <p className="text-right text-xs font-bold text-nexoraMuted sm:text-sm">
+            {t(`${prefix}.stats_period_hint`)}
+          </p>
 
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5 sm:gap-3">
-        {summaryCards.map((card) => {
-          const Icon = card.icon
-          return (
-            <Panel
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5 sm:gap-3">
+            {summaryCards.map((card) => {
+              const Icon = card.icon
+              return (
+                <Panel
+                  key={card.key}
+                  className={`flex min-h-[88px] items-center justify-between border-l-4 p-3 ${card.borderClass}`}
+                >
+                  <div className="min-w-0 space-y-1">
+                    <p className="text-[9px] font-black uppercase tracking-wider text-nexoraSubtle sm:text-[10px]">
+                      {card.label}
+                    </p>
+                    <p className="truncate text-lg font-black tracking-tight text-nexoraText sm:text-xl">
+                      {card.value}
+                    </p>
+                  </div>
+                  <div className={`hidden shrink-0 rounded-lg p-2 sm:block ${card.iconClass}`}>
+                    <Icon className="h-4 w-4" />
+                  </div>
+                </Panel>
+              )
+            })}
+          </div>
+        </>
+      ) : null}
+
+      <div className={statusCardMode === 'volume' ? 'grid grid-cols-1 gap-5 sm:grid-cols-3' : 'grid grid-cols-1 gap-2 sm:grid-cols-3'}>
+        {statusCardMode === 'volume'
+          ? volumeStatusCards.map((card) => {
+            const hasData = bucketHasData(card.bucket)
+            return (
+            <div
               key={card.key}
-              className={`flex min-h-[88px] items-center justify-between border-l-4 p-3 ${card.borderClass}`}
+              className="nexora-card flex min-h-[140px] flex-col justify-between border border-nexoraBorder bg-nexoraSurface p-5"
             >
-              <div className="min-w-0 space-y-1">
-                <p className="text-[9px] font-black uppercase tracking-wider text-nexoraSubtle sm:text-[10px]">
+              <div>
+                <div className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
                   {card.label}
-                </p>
-                <p className="truncate text-lg font-black tracking-tight text-nexoraText sm:text-xl">
-                  {card.value}
-                </p>
+                </div>
+                <div
+                  className={`mt-2 font-black tracking-tight ${
+                    hasData ? 'text-2xl text-nexoraText' : 'text-lg text-nexoraMuted'
+                  }`}
+                >
+                  {hasData
+                    ? formatCurrency(card.bucket.totalAmount)
+                    : t(`${prefix}.stats_no_data`)}
+                </div>
               </div>
-              <div className={`hidden shrink-0 rounded-lg p-2 sm:block ${card.iconClass}`}>
-                <Icon className="h-4 w-4" />
-              </div>
-            </Panel>
-          )
-        })}
-      </div>
-
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        {DIRECT_PAYMENT_STATUS_ORDER.map((status) => {
+              {hasData ? (
+                <div className="mt-4 text-xs font-semibold text-nexoraSubtle/80">
+                  {t(`${prefix}.stats_transaction_count`, { count: card.bucket.count })}
+                </div>
+              ) : null}
+            </div>
+          )})
+          : DIRECT_PAYMENT_STATUS_ORDER.map((status) => {
           const bucket = data.byStatus[statusBucketKey(status)]
+          const hasData = bucketHasData(bucket)
           return (
             <div
               key={status}
@@ -157,6 +228,7 @@ export default function DirectPaymentStatusStats({
               <p className="text-xs font-bold text-nexoraText">
                 {t(getDirectPaymentStatusLabelKey(status, variant))}
               </p>
+              {hasData ? (
               <div className="mt-2 flex items-end justify-between gap-3">
                 <div>
                   <p className="text-[9px] font-bold uppercase tracking-wide text-nexoraMuted">
@@ -171,12 +243,17 @@ export default function DirectPaymentStatusStats({
                   <p className="text-sm font-black text-nexoraText">{formatCurrency(bucket.totalAmount)}</p>
                 </div>
               </div>
+              ) : (
+                <p className="mt-2 text-sm font-semibold text-nexoraMuted">
+                  {t(`${prefix}.stats_no_data`)}
+                </p>
+              )}
             </div>
           )
         })}
       </div>
 
-      {data.byPaymentMethod.length > 0 ? (
+      {showByPaymentMethod && data.byPaymentMethod.length > 0 ? (
         <div className="rounded-lg border border-nexoraBorder/70 bg-white p-3 sm:p-4">
           <div className="mb-3 flex items-center gap-2">
             <BarChart3 className="h-4 w-4 text-nexoraMuted" />
