@@ -56,7 +56,7 @@ function AddStaffModal({
   isInviting = false,
 }: AddStaffModalProps) {
   const { t } = useTranslation()
-  const [activeTab, setActiveTab] = useState<'link' | 'invite'>('invite')
+  const [activeTab, setActiveTab] = useState<'link' | 'invite'>('link')
   const [inviteErrors, setInviteErrors] = useState<Record<string, string>>({})
   // Default phone country should follow device/browser locale, not UI language.
   const defaultDialCode = useMemo(() => getDefaultDialCode(undefined), [])
@@ -89,7 +89,7 @@ function AddStaffModal({
 
   useEffect(() => {
     if (!open) {
-      setActiveTab('invite')
+      setActiveTab('link')
       setSearchInput('')
       setActiveSearchQuery('')
       setSearchResult(null)
@@ -268,20 +268,6 @@ function AddStaffModal({
           <button
             type="button"
             onClick={() => {
-              setActiveTab('invite')
-              setSearchError('')
-            }}
-            className={`px-3.5 py-3 text-xs font-extrabold border-b-[3px] transition-colors ${
-              activeTab === 'invite'
-                ? 'border-nexoraBrand text-nexoraBrand'
-                : 'border-transparent text-nexoraMuted hover:text-nexoraText'
-            }`}
-          >
-            {t('components.dashboard.modals.AddStaffModal.tab_invite')}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
               setActiveTab('link')
               setInviteErrors({})
             }}
@@ -292,6 +278,20 @@ function AddStaffModal({
             }`}
           >
             {t('components.dashboard.modals.AddStaffModal.tab_link')}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('invite')
+              setSearchError('')
+            }}
+            className={`px-3.5 py-3 text-xs font-extrabold border-b-[3px] transition-colors ${
+              activeTab === 'invite'
+                ? 'border-nexoraBrand text-nexoraBrand'
+                : 'border-transparent text-nexoraMuted hover:text-nexoraText'
+            }`}
+          >
+            {t('components.dashboard.modals.AddStaffModal.tab_invite')}
           </button>
         </div>
 
