@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { buildMasterQrTarget } from '../utils'
 import { isAwaitingShopConfirmation } from '../utils'
 import SetupGuideBanner from './SetupGuideBanner'
 import PayoutSetupWarningBanner from './PayoutSetupWarningBanner'
@@ -163,6 +164,7 @@ function Overview({
   )
 
   const activeStaff = (staff || []).filter((m) => m.status === 'Active' || m.active === true)
+  const masterQrTarget = useMemo(() => buildMasterQrTarget(touchpoints), [touchpoints])
   const pendingCount = (pendingStaff || []).length
   const rating = Number(metrics.averageRating || 0)
   const totalReviews = Number(metrics.totalReviews || 0)
@@ -307,7 +309,7 @@ function Overview({
           <QuickAction
             icon={<QrCode className="h-6 w-6" />}
             label={k('quick_add_qr')}
-            onClick={() => previewQr?.({ name: 'Master Welcome QR', subtitle: 'Store Main Portal', slug: 'general', isActive: true })}
+            onClick={() => previewQr?.(masterQrTarget)}
           />
           <QuickAction icon={<UserPlus className="h-6 w-6" />} label={k('quick_add_staff')} onClick={() => { onNavigateMenu?.('staff'); onOpenAddStaff?.() }} />
           <QuickAction icon={<DollarSign className="h-6 w-6" />} label={k('quick_tips')} onClick={() => onNavigateMenu?.('tips')} />
