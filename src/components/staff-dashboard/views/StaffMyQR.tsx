@@ -1,11 +1,12 @@
-// StaffMyQR — referral QR tab + per-business tipping QR tab.
+// StaffMyQR — personal share QR (ref + staff) + per-business tipping QR tab.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Share2, Copy, QrCode, X, Loader2, Store, Clock, Link2 } from 'lucide-react'
 import jsQR from 'jsqr'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
-import ReferralShare from '../../referral/ReferralShare'
+import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
+import { buildStaffShareUrl, getProfileReferralCode, splitStaffShareUrlDisplay } from '../../../utils/affiliateReferral'
 import { useStaffBusinessTipQrs } from '../../../data/hooks/useStaffSelf'
 import { useNotifications, useMarkNotificationRead } from '../../../data/hooks/useNotifications'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -13,8 +14,8 @@ import { useJoinPublicInvite } from '../../../data/hooks/useStaffInvites'
 import StaffLinkRequestCard, { getStaffLinkRequestId } from './StaffLinkRequestCard'
 import { isApiError } from '../../../types/domain'
 import type { StaffBusinessTipQr } from '../../../types/domain'
-import { shareUrl } from '../../../utils/shareUrl'
 import { buildQrImageUrl } from '../../../utils/staffTipUrl'
+import { shareQrImage } from '../../../utils/qrUtils'
 import { useQueries } from '@tanstack/react-query'
 import { qk } from '../../../data/queryKeys'
 import staffSelfRepository from '../../../data/repositories/staffSelf'
@@ -24,7 +25,7 @@ type LooseObject = Record<string, any>
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 
-type QrTab = 'personal' | 'referral' | 'tipping'
+type QrTab = 'personal' | 'tipping'
 
 type ZoomedQr = {
   url: string
@@ -190,6 +191,7 @@ export default function StaffMyQR() {
   const navigate = useNavigate()
   const { t, currentLanguage } = useTranslation()
   const { staffMember, account } = useStaffAccount()
+  const { data: profile } = useProfileSettings()
   const { businessTipQrs, isLoading: isTipQrLoading } = useStaffBusinessTipQrs()
   const { showToast, showConfirm } = useNotification()
   const joinPublicInviteMutation = useJoinPublicInvite()
@@ -232,28 +234,25 @@ export default function StaffMyQR() {
   const lastScanAtRef = useRef(0)
 
   const staffCode = (account.staffCode || staffMember.id || '').trim()
-  const staffLink = useMemo(
-    () =>
-      staffCode
-        ? `${window.location.origin}/?flow=staff-invite&staff=${encodeURIComponent(staffCode)}`
-        : '',
-    [staffCode],
+  const referralCode = useMemo(() => getProfileReferralCode(profile || {}), [profile])
+  const staffShareUrl = useMemo(
+    () => buildStaffShareUrl({ referralCode, staffCode }),
+    [referralCode, staffCode],
   )
-  const referralQrImageSrc = useMemo(
-    () => (staffCode ? buildQrImageUrl(staffCode, 200) : ''),
-    [staffCode],
+  const staffShareUrlDisplay = useMemo(
+    () => splitStaffShareUrlDisplay(staffShareUrl),
+    [staffShareUrl],
+  )
+  const personalQrImageSrc = useMemo(
+    () => (staffShareUrl ? buildQrImageUrl(staffShareUrl, 200) : ''),
+    [staffShareUrl],
   )
 
   const activeTipQrs = useMemo(() => businessTipQrs.filter(isBusinessActive), [businessTipQrs])
 
-  // Tab order depends on link state: not linked → [Personal, Referral, Tips];
-  // linked to a business → [Tips, Referral, Personal]. Default = first tab
-  // until the user manually picks one.
+  // Tab order: not linked → [Personal, Tips]; linked → [Tips, Personal].
   const orderedTabs = useMemo<QrTab[]>(
-    () =>
-      businessTipQrs.length > 0
-        ? ['tipping', 'referral', 'personal']
-        : ['personal', 'referral', 'tipping'],
+    () => (businessTipQrs.length > 0 ? ['tipping', 'personal'] : ['personal', 'tipping']),
     [businessTipQrs.length],
   )
 
@@ -272,7 +271,6 @@ export default function StaffMyQR() {
 
   const tabLabelKey: Record<QrTab, string> = {
     personal: 'staff_dashboard.qr.tab_personal',
-    referral: 'staff_dashboard.qr.tab_referral',
     tipping: 'staff_dashboard.qr.tab_tipping',
   }
 
@@ -298,33 +296,21 @@ export default function StaffMyQR() {
     [showToast, t],
   )
 
-  const handleCopyReferral = useCallback(() => {
+  const handleCopyStaffId = useCallback(() => {
     copyText(
       staffCode,
-      'components.staff_dashboard.views.StaffMyQR.linkCopiedToClipboard',
+      'components.staff_dashboard.views.StaffMyQR.staffIdCopied',
       'components.staff_dashboard.views.StaffMyQR.copyFailed',
     )
   }, [copyText, staffCode])
 
-  const handleShareReferral = useCallback(async () => {
-    if (!staffCode) {
-      showToast(t('components.staff_dashboard.views.StaffMyQR.staffCodeUnavailable'), 'error')
-      return
-    }
-
-    try {
-      const result = await shareUrl({
-        title: t('staff_dashboard.qr.share'),
-        text: staffCode,
-      })
-
-      if (result === 'copied') {
-        showToast(t('components.staff_dashboard.views.StaffMyQR.linkCopiedToClipboard'), 'success')
-      }
-    } catch {
-      showToast(t('components.staff_dashboard.views.StaffMyQR.shareFailed'), 'error')
-    }
-  }, [staffCode, showToast, t])
+  const handleCopyStaffShareLink = useCallback(() => {
+    copyText(
+      staffShareUrl,
+      'components.staff_dashboard.views.StaffMyQR.staffShareLinkCopied',
+      'components.staff_dashboard.views.StaffMyQR.copyFailed',
+    )
+  }, [copyText, staffShareUrl])
 
   const handleCopyTipUrl = useCallback(
     (tipUrl: string) => {
@@ -337,23 +323,30 @@ export default function StaffMyQR() {
     [copyText],
   )
 
-  const handleShareTipUrl = useCallback(
+  const handleShareTipQr = useCallback(
     async (biz: StaffBusinessTipQr) => {
       if (!biz.tipUrl) return
+      const qrImageUrl = buildQrImageUrl(biz.tipUrl, 512, biz.qrImageUrl)
+      const safeName = (biz.businessName || 'salon').replace(/[^\w.-]+/g, '-').slice(0, 40)
+      const ownerName =
+        biz.displayName || staffMember.nickname || staffMember.fullName || ''
+
       try {
-        const result = await shareUrl({
-          url: biz.tipUrl,
-          title: t('staff_dashboard.qr.business_title'),
+        const result = await shareQrImage(qrImageUrl, {
+          filename: `tip-qr-${safeName || biz.businessId}.png`,
+          title: t('staff_dashboard.qr.share_tip'),
           text: biz.businessName,
+          ownerName,
+          businessName: biz.businessName,
         })
-        if (result === 'copied') {
-          showToast(t('components.staff_dashboard.views.StaffMyQR.tippingLinkCopied'), 'success')
+        if (result === 'downloaded') {
+          showToast(t('components.staff_dashboard.views.StaffMyQR.tipQrDownloaded'), 'success')
         }
       } catch {
         showToast(t('components.staff_dashboard.views.StaffMyQR.shareFailed'), 'error')
       }
     },
-    [showToast, t],
+    [showToast, staffMember.fullName, staffMember.nickname, t],
   )
 
   const handleOpenScan = () => {
@@ -667,10 +660,10 @@ export default function StaffMyQR() {
               {t('staff_dashboard.qr.personal_title')}
             </h3>
             <p className="mt-1 text-xs text-nexoraMuted">{t('staff_dashboard.qr.personal_sub')}</p>
-            {staffCode ? (
+            {staffCode && staffShareUrl ? (
               <>
                 <div className="mx-auto my-4 flex h-44 w-44 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-nexoraBorder/60 bg-white p-3.5 shadow-sm select-none">
-                  <img src={referralQrImageSrc} alt="Scan QR" className="h-full w-full object-contain" />
+                  <img src={personalQrImageSrc} alt="Scan QR" className="h-full w-full object-contain" />
                 </div>
                 <div className="flex items-center justify-center gap-2 text-sm font-bold text-nexoraText">
                   <span>
@@ -678,12 +671,38 @@ export default function StaffMyQR() {
                   </span>
                   <button
                     type="button"
-                    onClick={handleCopyReferral}
+                    onClick={handleCopyStaffId}
                     className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-nexoraBorder bg-nexoraSurface text-nexoraBrand transition hover:bg-nexoraCanvas"
-                    aria-label={t('staff_dashboard.staff_id')}
-                    title={t('staff_dashboard.staff_id')}
+                    aria-label={t('staff_dashboard.qr.copy_staff_id')}
+                    title={t('staff_dashboard.qr.copy_staff_id')}
                   >
                     <Copy className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+
+                <div
+                  className="mx-auto mt-3 flex max-w-xs items-center justify-between gap-2 overflow-hidden rounded-xl border border-nexoraBorder bg-slate-50 p-1.5 shadow-inner"
+                  title={staffShareUrlDisplay.fullDisplay}
+                >
+                  <div className="flex min-w-0 flex-1 items-center overflow-hidden pl-2 text-left font-mono text-[10px] text-slate-500">
+                    {staffShareUrlDisplay.refSuffix ? (
+                      <>
+                        <span className="min-w-0 truncate">{staffShareUrlDisplay.leading}</span>
+                        <span className="shrink-0">{staffShareUrlDisplay.refSuffix}</span>
+                      </>
+                    ) : (
+                      <span className="min-w-0 truncate">{staffShareUrlDisplay.fullDisplay}</span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCopyStaffShareLink}
+                    className="flex h-7 shrink-0 items-center gap-1 rounded-lg bg-slate-800 px-3 text-[10px] font-bold text-white transition hover:bg-slate-700"
+                    aria-label={t('staff_dashboard.qr.copy_staff_link')}
+                    title={t('staff_dashboard.qr.copy_staff_link')}
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                    <span>{t('components.staff_dashboard.views.StaffMyQR.copy')}</span>
                   </button>
                 </div>
               </>
@@ -699,8 +718,6 @@ export default function StaffMyQR() {
           </section>
         </div>
       )}
-
-      {activeTab === 'referral' && <ReferralShare showExplainer />}
 
       {activeTab === 'tipping' && (
         <>
@@ -819,22 +836,14 @@ export default function StaffMyQR() {
                         </button>
                       </div>
 
-                      <div className="mt-3 space-y-2">
+                      <div className="mt-3">
                         <button
                           type="button"
-                          onClick={() => handleShareTipUrl(selectedBusiness)}
+                          onClick={() => handleShareTipQr(selectedBusiness)}
                           className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-nexoraElectric to-nexoraViolet py-3 text-sm font-extrabold text-white transition hover:opacity-90"
                         >
                           <Share2 className="h-4 w-4" />
                           {t('staff_dashboard.qr.share_tip')}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleCopyTipUrl(selectedBusiness.tipUrl)}
-                          className="flex w-full items-center justify-center gap-2 rounded-xl border border-nexoraBorder bg-nexoraSurface py-3 text-sm font-bold text-nexoraBrand transition hover:bg-nexoraCanvas"
-                        >
-                          <Copy className="h-4 w-4" />
-                          {t('staff_dashboard.qr.copy_tip_link')}
                         </button>
                       </div>
                     </>

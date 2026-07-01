@@ -135,11 +135,13 @@
       "saved": "Saved ✓"
     },
     "qr": {
-      "personal_title": "My Staff QR",
+      "personal_title": "My Personal QR",
       "personal_sub": "Show this QR to a business so they can send you a staff link request.",
-      "share": "Share Staff QR",
+      "share": "Share Link",
       "copy_link": "Copy Staff Link",
-      "tab_personal": "My Staff QR",
+      "copy_staff_id": "Copy Staff ID",
+      "copy_staff_link": "Copy share link",
+      "tab_personal": "My Personal QR",
       "tab_referral": "Referral QR",
       "tab_tipping": "Tip QR",
       "link_requests_title": "Link Requests",
@@ -1999,6 +2001,8 @@
       "views": {
         "StaffMyQR": {
           "linkCopiedToClipboard": "Link copied to clipboard!",
+          "staffIdCopied": "Staff ID copied!",
+          "staffShareLinkCopied": "Share link copied!",
           "staffCodeUnavailable": "Staff ID is not available yet. Please try again in a moment.",
           "shareFailed": "Could not share the link. Please copy it instead.",
           "copyFailed": "Could not copy the link.",
@@ -2036,6 +2040,7 @@
           "personalTippingQr": "Personal Tipping QR",
           "tippingLink": "Tipping Link",
           "tippingLinkCopied": "Tipping link copied!",
+          "tipQrDownloaded": "Tip QR image downloaded.",
           "copy": "Copy",
           "openTippingPageSimulate": "Open Tipping Page (Simulate) ›"
         },

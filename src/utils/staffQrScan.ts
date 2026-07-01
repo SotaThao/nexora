@@ -6,8 +6,8 @@ export function extractStaffSearchValueFromQrText(value: string): string {
 
   try {
     const parsed = new URL(text)
-    const queryKeys = ['staffCode', 'staffProfileId', 'staffId', 'code', 'ref', 'id']
-    for (const key of queryKeys) {
+    const staffKeys = ['staff', 'staffCode', 'staffProfileId', 'staffId', 'code', 'id']
+    for (const key of staffKeys) {
       const queryValue = parsed.searchParams.get(key)
       if (queryValue?.trim()) return queryValue.trim()
     }

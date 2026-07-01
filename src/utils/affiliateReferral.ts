@@ -1,6 +1,7 @@
 import { storage } from './storage'
 
 const REF_CODE_KEY = 'referral_ref_code'
+const STAFF_SHARE_CODE_KEY = 'referral_staff_share_code'
 
 export function saveRefCode(code: string) {
   const trimmed = code.trim()
@@ -11,6 +12,18 @@ export function saveRefCode(code: string) {
 
 export function getSavedRefCode(): string {
   return storage.getItem(REF_CODE_KEY) || ''
+}
+
+/** Persist staff ID from a shared personal QR link (/?staff=) for signup attribution. */
+export function saveStaffShareCode(code: string) {
+  const trimmed = code.trim()
+  if (trimmed) {
+    storage.setItem(STAFF_SHARE_CODE_KEY, trimmed)
+  }
+}
+
+export function getSavedStaffShareCode(): string {
+  return storage.getItem(STAFF_SHARE_CODE_KEY) || ''
 }
 
 type ReferralProfile = {
@@ -38,4 +51,55 @@ export function buildAffiliateReferralUrl({
   const params = new URLSearchParams({ ref })
   if (leg) params.set('leg', leg)
   return `${origin}/?${params.toString()}`
+}
+
+/** Combined staff link + affiliate ref: /?ref=CODE&staff=STAFF_ID */
+export function buildStaffShareUrl({
+  origin = typeof window !== 'undefined' ? window.location.origin : '',
+  referralCode,
+  staffCode,
+}: {
+  origin?: string
+  referralCode?: string | null
+  staffCode: string
+}) {
+  const staff = String(staffCode || '').trim()
+  if (!staff || !origin) return ''
+
+  const params = new URLSearchParams({ staff })
+  const ref = String(referralCode || '').trim()
+  if (ref) params.set('ref', ref)
+  return `${origin}/?${params.toString()}`
+}
+
+/** Split share URL for display: leading truncates; ref query stays fully visible. */
+export function splitStaffShareUrlDisplay(url: string): {
+  leading: string
+  refSuffix: string
+  fullDisplay: string
+} {
+  const fullDisplay = url.replace(/^https?:\/\//, '')
+  if (!fullDisplay) return { leading: '', refSuffix: '', fullDisplay: '' }
+
+  try {
+    const parsed = new URL(url.includes('://') ? url : `https://${fullDisplay}`)
+    const ref = parsed.searchParams.get('ref')?.trim()
+    if (!ref) return { leading: fullDisplay, refSuffix: '', fullDisplay }
+
+    const refNeedle = `ref=${ref}`
+    const refIndex = fullDisplay.indexOf(refNeedle)
+    if (refIndex < 0) return { leading: fullDisplay, refSuffix: '', fullDisplay }
+
+    const separator = refIndex > 0 ? fullDisplay[refIndex - 1] : ''
+    const refSuffix =
+      separator === '&' || separator === '?'
+        ? `${separator}${refNeedle}`
+        : refNeedle
+    const leadingEnd = refIndex - (refSuffix.length - refNeedle.length)
+    const leading = fullDisplay.slice(0, Math.max(0, leadingEnd))
+
+    return { leading, refSuffix, fullDisplay }
+  } catch {
+    return { leading: fullDisplay, refSuffix: '', fullDisplay }
+  }
 }

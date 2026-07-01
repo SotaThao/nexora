@@ -135,11 +135,13 @@
       "saved": "Đã lưu ✓"
     },
     "qr": {
-      "personal_title": "QR Nhân viên của tôi",
+      "personal_title": "QR cá nhân của tôi",
       "personal_sub": "Đưa mã QR này cho tiệm để họ gửi yêu cầu liên kết nhân viên cho bạn.",
-      "share": "Chia sẻ QR nhân viên",
+      "share": "Chia sẻ liên kết",
       "copy_link": "Sao chép liên kết",
-      "tab_personal": "QR Nhân viên",
+      "copy_staff_id": "Sao chép Mã nhân viên",
+      "copy_staff_link": "Sao chép liên kết chia sẻ",
+      "tab_personal": "QR cá nhân",
       "tab_referral": "QR Giới thiệu",
       "tab_tipping": "QR Nhận tip",
       "link_requests_title": "Yêu cầu liên kết",
@@ -1998,6 +2000,8 @@
       "views": {
         "StaffMyQR": {
           "linkCopiedToClipboard": "Đã sao chép liên kết!",
+          "staffIdCopied": "Đã sao chép Mã nhân viên!",
+          "staffShareLinkCopied": "Đã sao chép liên kết chia sẻ!",
           "staffCodeUnavailable": "Chưa có Staff ID. Vui lòng thử lại sau giây lát.",
           "shareFailed": "Không thể chia sẻ liên kết. Hãy dùng nút sao chép.",
           "copyFailed": "Không thể sao chép liên kết.",
@@ -2035,6 +2039,7 @@
           "personalTippingQr": "QR Nhận Tip Cá Nhân",
           "tippingLink": "Liên Kết Nhận Tip",
           "tippingLinkCopied": "Đã sao chép liên kết nhận tip!",
+          "tipQrDownloaded": "Đã tải ảnh QR tip.",
           "copy": "Sao chép",
           "openTippingPageSimulate": "Mở trang tip (Giả lập khách) ›"
         },
