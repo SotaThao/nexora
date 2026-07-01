@@ -123,7 +123,7 @@ export default function StaffPayments() {
     if (selectedPayment && needsStaffAcknowledge(selectedPayment)) {
       dismissAckPrompt(selectedPayment.id)
     }
-    navigate('/staff/payments')
+    navigate('/staff/payments?tab=direct_payments')
   }
 
   const statusFilterOptions = useMemo(() => [
