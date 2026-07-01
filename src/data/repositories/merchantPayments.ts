@@ -3,9 +3,11 @@ import { PaymentStatus, PaymentType } from '../../types/domain'
 import type {
   MerchantPaymentQr,
   MerchantPaymentRecord,
+  MerchantPaymentStats,
   MerchantPaymentsListPage,
   PaymentStatusValue,
 } from '../../types/domain'
+import { normalizePaymentStats } from './paymentStatsNormalization'
 
 type HttpClient = typeof httpClient
 
@@ -16,6 +18,11 @@ export interface MerchantPaymentsListQuery {
   status?: number
   from?: string
   to?: string
+}
+
+export interface MerchantPaymentStatsQuery {
+  from: string
+  to: string
 }
 
 function readField<T>(raw: Record<string, unknown>, camel: string, pascal: string): T | undefined {
@@ -138,6 +145,13 @@ export function createMerchantPaymentsRepository(client: HttpClient = httpClient
         `/api/v1/merchant/payments/${encodeURIComponent(paymentId)}/acknowledge`,
         {},
       )
+    },
+
+    async getStats(query: MerchantPaymentStatsQuery): Promise<MerchantPaymentStats> {
+      const res = await client.get<Record<string, unknown>>('/api/v1/merchant/payments/stats', {
+        params: { from: query.from, to: query.to },
+      })
+      return normalizePaymentStats(res)
     },
   }
 }

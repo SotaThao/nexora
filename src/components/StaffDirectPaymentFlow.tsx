@@ -159,6 +159,7 @@ export default function StaffDirectPaymentFlow() {
                   setStep={setStep}
                   backStep="review"
                   paymentMode
+                  paymentCopyScope="staff"
                   paymentLinkData={null}
                   tipPaymentMethodsData={tipPaymentMethodsData}
                 />

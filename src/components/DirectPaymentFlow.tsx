@@ -150,6 +150,7 @@ export default function DirectPaymentFlow() {
                   setStep={setStep}
                   backStep="review"
                   paymentMode
+                  paymentCopyScope="merchant"
                   paymentLinkData={null}
                   tipPaymentMethodsData={tipPaymentMethodsData}
                 />

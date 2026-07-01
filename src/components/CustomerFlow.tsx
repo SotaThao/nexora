@@ -38,6 +38,8 @@ export default function CustomerFlow() {
     handleConfirmTip,
     handleTrackExternalReview,
     canSelectMultipleStaff,
+    isPaymentFlow,
+    paymentCopyScope,
   } = flow
 
   return (
@@ -151,6 +153,7 @@ export default function CustomerFlow() {
                   setTipRefNumber={setTipRefNumber}
                   isApiMode={isApiMode}
                   handlePay={handlePay}
+                  paymentMode={isPaymentFlow}
                 />
               )}
 
@@ -175,6 +178,8 @@ export default function CustomerFlow() {
                   setStep={setStep}
                   paymentLinkData={paymentLinkData}
                   tipPaymentMethodsData={tipPaymentMethodsData}
+                  paymentMode={isPaymentFlow}
+                  paymentCopyScope={paymentCopyScope ?? 'merchant'}
                 />
               )}
 
@@ -189,6 +194,7 @@ export default function CustomerFlow() {
                   activeTipAmount={activeTipAmount}
                   selectedWalletObj={selectedWalletObj}
                   setStep={setStep}
+                  paymentMode={isPaymentFlow}
                 />
               )}
 

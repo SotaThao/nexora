@@ -79,12 +79,14 @@ export const qk = {
   merchantPaymentQr: ()        => ['merchantPaymentQr'],
   merchantPaymentsList: (filters = EMPTY) => ['merchantPayments', 'list', filters],
   merchantPaymentDetail: (paymentId: string) => ['merchantPayments', 'detail', paymentId],
+  merchantPaymentStats: (filters = EMPTY) => ['merchantPayments', 'stats', filters],
 
   // Staff Payment Methods
   staffPaymentMethods: ()      => ['staffPaymentMethods'],
   staffPaymentQr: ()          => ['staffPaymentQr'],
   staffPaymentsList: (filters = EMPTY) => ['staffPayments', 'list', filters],
   staffPaymentDetail: (paymentId: string) => ['staffPayments', 'detail', paymentId],
+  staffPaymentStats: (filters = EMPTY) => ['staffPayments', 'stats', filters],
 
   // Staff Self (own staff profile + linked businesses)
   staffProfile:        ()      => ['staffProfile'],

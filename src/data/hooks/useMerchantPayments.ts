@@ -2,11 +2,12 @@ import { useContext } from 'react'
 import { keepPreviousData, useMutation, useQuery, useQueryClient, type Query } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import merchantPaymentsRepository from '../repositories/merchantPayments'
-import type { MerchantPaymentsListQuery } from '../repositories/merchantPayments'
+import type { MerchantPaymentsListQuery, MerchantPaymentStatsQuery } from '../repositories/merchantPayments'
 import { AuthContext } from '../../auth/AuthContext'
 import type {
   MerchantPaymentQr,
   MerchantPaymentRecord,
+  MerchantPaymentStats,
   MerchantPaymentsListPage,
 } from '../../types/domain'
 import { PaymentStatus } from '../../types/domain'
@@ -61,6 +62,20 @@ export function useMerchantPaymentDetail(paymentId?: string | null, { enabled = 
   })
 }
 
+export function useMerchantPaymentStats(
+  query: MerchantPaymentStatsQuery,
+  { enabled = true } = {},
+) {
+  const canFetch = useIsOwner(enabled)
+
+  return useQuery<MerchantPaymentStats>({
+    queryKey: qk.merchantPaymentStats(query),
+    queryFn: () => merchantPaymentsRepository.getStats(query),
+    enabled: canFetch && Boolean(query.from && query.to),
+    retry: false,
+  })
+}
+
 export function useAcknowledgeMerchantPayment() {
   const queryClient = useQueryClient()
 
@@ -98,6 +113,7 @@ export function useAcknowledgeMerchantPayment() {
       )
       queryClient.invalidateQueries({ queryKey: ['merchantPayments'] })
       queryClient.invalidateQueries({ queryKey: qk.merchantPaymentDetail(paymentId) })
+      queryClient.invalidateQueries({ queryKey: ['merchantPayments', 'stats'] })
     },
   })
 }

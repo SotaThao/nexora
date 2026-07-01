@@ -9,11 +9,10 @@ import {
   Loader2,
   ExternalLink,
   Wallet,
-  X,
-  Printer,
   AlertCircle,
   ClipboardList,
 } from 'lucide-react'
+import DirectPaymentQrPreviewModal from './DirectPaymentQrPreviewModal'
 import { useProfileSettings } from '../../data/hooks/useProfileSettings'
 import { useMerchantPaymentQr } from '../../data/hooks/useMerchantPayments'
 import { useMerchantPaymentMethods } from '../../data/hooks/useMerchantPaymentMethods'
@@ -41,6 +40,7 @@ export default function SettingsTipQrPanel({
 }) {
   const navigate = useNavigate()
   const isCompact = variant === 'compact'
+  const isGateway = variant === 'gateway'
   const {
     data: userProfile,
     isLoading: isProfileLoading,
@@ -80,9 +80,11 @@ export default function SettingsTipQrPanel({
     [businessId, paymentQr?.paymentUrl],
   )
 
+  const qrPreviewSize = isGateway ? 112 : isCompact ? 150 : 200
+
   const qrPreviewUrl = useMemo(
-    () => (paymentPageUrl ? buildPublicQrImageUrl(paymentPageUrl, isCompact ? 150 : 200) : ''),
-    [paymentPageUrl, isCompact],
+    () => (paymentPageUrl ? buildPublicQrImageUrl(paymentPageUrl, qrPreviewSize) : ''),
+    [paymentPageUrl, qrPreviewSize],
   )
 
   const previewQrUrl = useMemo(
@@ -106,17 +108,19 @@ export default function SettingsTipQrPanel({
 
   const isLoading = isProfileLoading || isQrLoading || isMethodsLoading
 
+  const gatewayCardClass = 'rounded-xl border border-nexoraBorder bg-nexoraCanvas p-5'
+
   if (isLoading) {
     return (
-      <div className={`flex items-center justify-center ${isCompact ? 'py-6' : 'py-10'}`}>
-        <Loader2 className={`animate-spin text-nexoraBrand ${isCompact ? 'h-5 w-5' : 'h-6 w-6'}`} />
+      <div className={`flex items-center justify-center ${isGateway ? `${gatewayCardClass} min-h-[196px]` : isCompact ? 'py-6' : 'py-10'}`}>
+        <Loader2 className={`animate-spin text-nexoraBrand ${isGateway || isCompact ? 'h-5 w-5' : 'h-6 w-6'}`} />
       </div>
     )
   }
 
   if (isProfileError || isQrError || (!isProfileLoading && !isQrLoading && !businessId)) {
     return (
-      <div className={`flex flex-col items-center gap-3 px-2 text-center ${isCompact ? 'py-5' : 'gap-4 py-8 px-4'}`}>
+      <div className={`flex flex-col items-center gap-3 px-2 text-center ${isGateway ? `${gatewayCardClass} min-h-[196px] justify-center` : isCompact ? 'py-5' : 'gap-4 py-8 px-4'}`}>
         <div className={`flex items-center justify-center rounded-2xl bg-rose-50 text-rose-600 ${isCompact ? 'h-11 w-11' : 'h-14 w-14'}`}>
           <AlertCircle className={isCompact ? 'h-5 w-5' : 'h-7 w-7'} />
         </div>
@@ -144,7 +148,7 @@ export default function SettingsTipQrPanel({
 
   if (!readyPaymentMethods.length) {
     return (
-      <div className={`flex flex-col items-center gap-3 px-2 text-center ${isCompact ? 'py-5' : 'gap-4 py-8 px-4'}`}>
+      <div className={`flex flex-col items-center gap-3 px-2 text-center ${isGateway ? `${gatewayCardClass} min-h-[196px] justify-center` : isCompact ? 'py-5' : 'gap-4 py-8 px-4'}`}>
         <div className={`flex items-center justify-center rounded-2xl bg-amber-50 text-amber-600 ${isCompact ? 'h-11 w-11' : 'h-14 w-14'}`}>
           <Wallet className={isCompact ? 'h-5 w-5' : 'h-7 w-7'} />
         </div>
@@ -165,6 +169,108 @@ export default function SettingsTipQrPanel({
           {t('components.settings.SettingsTipQrPanel.emptyAction')}
         </button>
       </div>
+    )
+  }
+
+  if (isGateway) {
+    return (
+      <>
+        <div className={`${gatewayCardClass} flex flex-col md:flex-row justify-between gap-5`}>
+          <div className="flex-grow flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                  <Wallet className="h-5 w-5" />
+                </span>
+                <div>
+                  <h3 className="text-sm font-extrabold text-nexoraText">
+                    {t('dashboard.master_gateway.payment_title')}
+                  </h3>
+                  <p className="text-[10px] text-nexoraMuted">
+                    {t('dashboard.master_gateway.payment_desc')}
+                  </p>
+                </div>
+              </div>
+              <p className="mt-4 text-xs leading-normal text-nexoraMuted">
+                {t('dashboard.master_gateway.payment_body')}
+              </p>
+            </div>
+
+            <div className="mt-6 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setShowPreview(true)}
+                disabled={!paymentPageUrl}
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-white border border-nexoraBorder px-4 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Eye className="h-4 w-4" />
+                {t('dashboard.master_gateway.btn_open')}
+              </button>
+              <button
+                type="button"
+                onClick={handleDownloadQr}
+                disabled={!paymentPageUrl || isDownloading}
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white hover:bg-nexoraBrandDark transition cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Download className="h-4 w-4" />
+                {t('dashboard.master_gateway.btn_download')}
+              </button>
+              <button
+                type="button"
+                disabled={!paymentPageUrl}
+                onClick={() => handleCopy(paymentPageUrl, 'direct-payment-url')}
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-white border border-nexoraBorder px-4 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {copiedId === 'direct-payment-url' ? (
+                  <>
+                    <Check className="h-4 w-4 text-emerald-600" />
+                    <span className="text-emerald-600">{t('components.settings.tabs.ProfileTab.copied')}</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-4 w-4" />
+                    {t('dashboard.master_gateway.btn_copy_link')}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => paymentPageUrl && setShowPreview(true)}
+            aria-label={t('components.settings.SettingsTipQrPanel.previewQr')}
+            className="flex-shrink-0 mx-auto md:mx-0 w-28 h-28 rounded-lg bg-white border border-nexoraBorder/80 p-2 flex items-center justify-center shadow-sm relative overflow-hidden cursor-pointer hover:border-nexoraBrand transition select-none group"
+          >
+            {qrPreviewUrl ? (
+              <img
+                src={qrPreviewUrl}
+                alt={t('components.settings.SettingsTipQrPanel.qrAlt')}
+                className="h-full w-full object-contain group-hover:scale-105 transition duration-200"
+              />
+            ) : (
+              <QrCode className="h-12 w-12 text-slate-300" />
+            )}
+            <div className="absolute inset-0 bg-nexoraBrand/80 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-1 text-white select-none">
+              <QrCode className="h-5 w-5" />
+              <span className="text-[9px] font-black uppercase tracking-wider">
+                {t('components.dashboard.views.StaffView.preview')}
+              </span>
+            </div>
+          </button>
+        </div>
+
+        <DirectPaymentQrPreviewModal
+          open={showPreview}
+          onClose={() => setShowPreview(false)}
+          title={t('dashboard.master_gateway.payment_title')}
+          businessName={businessName}
+          previewQrUrl={previewQrUrl}
+          paymentPageUrl={paymentPageUrl}
+          hideUrlCode
+          scanCaption={t('components.settings.SettingsTipQrPanel.scanCaption')}
+        />
+      </>
     )
   }
 
@@ -281,50 +387,15 @@ export default function SettingsTipQrPanel({
           </div>
         </div>
 
-        {showPreview && paymentPageUrl ? (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-            <div className="relative w-full max-w-sm rounded-3xl border border-slate-100 bg-white p-6 text-center shadow-2xl animate-scaleIn">
-              <button
-                type="button"
-                onClick={() => setShowPreview(false)}
-                className="absolute right-4 top-4 rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
-                title="Close"
-              >
-                <X className="h-5 w-5" />
-              </button>
-
-              <h3 className="mt-2 text-sm font-black uppercase tracking-wider text-slate-800">
-                {t('components.settings.SettingsTipQrPanel.defaultQrTitle')}
-              </h3>
-              <p className="mt-1 text-[11px] text-slate-400">{businessName}</p>
-
-              <div className="mx-auto my-4 flex h-[240px] w-[240px] items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <img
-                  src={previewQrUrl}
-                  alt={t('components.settings.SettingsTipQrPanel.qrAlt')}
-                  className="h-full w-full object-contain"
-                />
-              </div>
-
-              <p className="rounded-lg bg-slate-50 px-3 py-2 text-[10px] font-mono text-slate-500 break-all">
-                {paymentPageUrl.replace(/^https?:\/\//, '')}
-              </p>
-
-              <p className="mt-3 text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
-                {t('components.settings.SettingsTipQrPanel.scanCaption')}
-              </p>
-
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-nexoraBrand px-4 py-3 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-nexoraBrandDark"
-              >
-                <Printer className="h-4 w-4" />
-                {t('dashboard.modals.print_qr')}
-              </button>
-            </div>
-          </div>
-        ) : null}
+        <DirectPaymentQrPreviewModal
+          open={showPreview && Boolean(paymentPageUrl)}
+          onClose={() => setShowPreview(false)}
+          title={t('components.settings.SettingsTipQrPanel.defaultQrTitle')}
+          businessName={businessName}
+          previewQrUrl={previewQrUrl}
+          paymentPageUrl={paymentPageUrl}
+          scanCaption={t('components.settings.SettingsTipQrPanel.scanCaption')}
+        />
       </>
     )
   }
@@ -336,48 +407,8 @@ export default function SettingsTipQrPanel({
           {t('components.settings.SettingsTipQrPanel.description')}
         </p>
 
-        <ol className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-3 text-left">
-          {[
-            t('components.settings.SettingsTipQrPanel.stepScan'),
-            t('components.settings.SettingsTipQrPanel.stepAmount'),
-            t('components.settings.SettingsTipQrPanel.stepMethod'),
-            t('components.settings.SettingsTipQrPanel.stepConfirm'),
-          ].map((step, index) => (
-            <li key={step} className="flex items-start gap-2.5 text-[11px] leading-relaxed text-nexoraText">
-              <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-nexoraBrand text-[9px] font-black text-white">
-                {index + 1}
-              </span>
-              <span>{step}</span>
-            </li>
-          ))}
-        </ol>
-
-        <div className="rounded-xl border border-emerald-100 bg-emerald-50/70 px-3 py-2.5">
-          <p className="text-[10px] font-extrabold uppercase tracking-wide text-emerald-700">
-            {t('components.settings.SettingsTipQrPanel.activeMethodsLabel', {
-              count: readyPaymentMethods.length,
-            })}
-          </p>
-          <div className="mt-1.5 flex flex-wrap gap-1.5">
-            {readyPaymentMethods.map((method) => (
-              <span
-                key={method.id || method.type}
-                className="rounded-full border border-emerald-200 bg-white px-2 py-0.5 text-[10px] font-bold text-emerald-800"
-              >
-                {method.name || getPaymentMethodDisplayName(method.type || '')}
-              </span>
-            ))}
-          </div>
-        </div>
-
         <div className="flex flex-col items-center gap-4 rounded-xl border border-slate-100 bg-slate-50/80 p-4">
-          <button
-            type="button"
-            onClick={() => setShowPreview(true)}
-            disabled={!paymentPageUrl}
-            className="group relative flex h-44 w-44 items-center justify-center rounded-2xl border-2 border-nexoraBorder bg-white p-3 shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
-            title={t('components.settings.SettingsTipQrPanel.previewQr')}
-          >
+          <div className="flex h-44 w-44 items-center justify-center rounded-2xl border-2 border-nexoraBorder bg-white p-3 shadow-sm">
             {qrPreviewUrl ? (
               <img
                 src={qrPreviewUrl}
@@ -387,50 +418,24 @@ export default function SettingsTipQrPanel({
             ) : (
               <QrCode className="h-16 w-16 text-slate-300" />
             )}
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-2xl bg-nexoraBrand/90 text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-              <Eye className="h-5 w-5" />
-              <span className="text-[9px] font-black uppercase tracking-wider">
-                {t('components.settings.SettingsTipQrPanel.previewQr')}
-              </span>
-            </div>
-          </button>
+          </div>
 
           <div className="w-full space-y-1 text-center">
             <p className="text-xs font-extrabold text-nexoraText">
               {businessName || t('components.settings.SettingsTipQrPanel.defaultQrTitle')}
             </p>
-            {paymentPageUrl ? (
-              <a
-                href={paymentPageUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex max-w-full items-center justify-center gap-1 text-[10px] font-bold text-blue-500 hover:text-blue-600"
-              >
-                <span className="truncate">{paymentPageUrl.replace(/^https?:\/\//, '')}</span>
-                <ExternalLink className="h-3 w-3 shrink-0" />
-              </a>
-            ) : null}
             <p className="text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
               {t('components.settings.SettingsTipQrPanel.scanCaption')}
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
-          <button
-            type="button"
-            disabled={!paymentPageUrl}
-            onClick={() => setShowPreview(true)}
-            className="flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-nexoraBorder bg-white px-2 py-3.5 text-center text-[11px] font-bold leading-snug text-nexoraText transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <Eye className="h-4 w-4 shrink-0" />
-            <span>{t('components.settings.SettingsTipQrPanel.previewQr')}</span>
-          </button>
+        <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
             disabled={!paymentPageUrl}
             onClick={() => handleCopy(paymentPageUrl, 'direct-payment-url')}
-            className="flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-nexoraBorder bg-white px-2 py-3.5 text-center text-[11px] font-bold leading-snug text-nexoraText transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex w-full cursor-pointer flex-row items-center justify-center gap-2 rounded-lg border border-nexoraBorder bg-white px-3 py-3.5 text-[11px] font-bold leading-snug text-nexoraText transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {copiedId === 'direct-payment-url' ? (
               <>
@@ -448,7 +453,7 @@ export default function SettingsTipQrPanel({
             type="button"
             disabled={!paymentPageUrl || isDownloading}
             onClick={handleDownloadQr}
-            className="flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-lg bg-amber-600 px-2 py-3.5 text-center text-[11px] font-bold leading-snug text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex w-full cursor-pointer flex-row items-center justify-center gap-2 rounded-lg bg-amber-600 px-3 py-3.5 text-[11px] font-bold leading-snug text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isDownloading ? (
               <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
@@ -472,53 +477,6 @@ export default function SettingsTipQrPanel({
           {t('components.settings.SettingsTipQrPanel.merchantNote')}
         </p>
       </div>
-
-      {showPreview && paymentPageUrl ? (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-          <div className="relative w-full max-w-sm rounded-3xl border border-slate-100 bg-white p-6 text-center shadow-2xl animate-scaleIn">
-            <button
-              type="button"
-              onClick={() => setShowPreview(false)}
-              className="absolute right-4 top-4 rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
-              title="Close"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            <h3 className="mt-2 text-sm font-black uppercase tracking-wider text-slate-800">
-              {t('components.settings.SettingsTipQrPanel.defaultQrTitle')}
-            </h3>
-            <p className="mt-1 text-[11px] text-slate-400">{businessName}</p>
-
-            <div className="mx-auto my-4 flex h-[240px] w-[240px] items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <img
-                src={previewQrUrl}
-                alt={t('components.settings.SettingsTipQrPanel.qrAlt')}
-                className="h-full w-full object-contain"
-              />
-            </div>
-
-            {hideUrlCode ? null : (
-              <p className="rounded-lg bg-slate-50 px-3 py-2 text-[10px] font-mono text-slate-500 break-all">
-                {paymentPageUrl.replace(/^https?:\/\//, '')}
-              </p>
-            )}
-
-            <p className="mt-3 text-[10px] font-bold uppercase tracking-wide text-nexoraMuted">
-              {t('components.settings.SettingsTipQrPanel.scanCaption')}
-            </p>
-
-            <button
-              type="button"
-              onClick={() => window.print()}
-              className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-nexoraBrand px-4 py-3 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-nexoraBrandDark"
-            >
-              <Printer className="h-4 w-4" />
-              {t('dashboard.modals.print_qr')}
-            </button>
-          </div>
-        </div>
-      ) : null}
     </>
   )
 }
