@@ -120,11 +120,18 @@ function slugify(value = ''): string {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 }
 
-function getApiErrorMessage(err: unknown, fallback: string): string {
+function getApiErrorMessage(err: unknown, fallback: string, t?: (key: string) => string): string {
   if (err && typeof err === 'object') {
     const apiErr = err as { message?: string; errorCode?: string }
+    if (apiErr.errorCode && apiErr.errorCode !== 'HTTP_ERROR') {
+      if (t) {
+        const key = `errors.${apiErr.errorCode}`
+        const translated = t(key)
+        if (translated && translated !== key) return translated
+      }
+      return apiErr.errorCode
+    }
     if (apiErr.message) return apiErr.message
-    if (apiErr.errorCode && apiErr.errorCode !== 'HTTP_ERROR') return apiErr.errorCode
   }
   return fallback
 }
@@ -395,8 +402,9 @@ export default function useCustomerFlow() {
 
   const touchPagePaymentMethods = touchPageData?.businessPaymentMethods ?? []
   const effectivePaymentMethods = useMemo(() => {
+    if (publicPaymentMethods.length > 0) return publicPaymentMethods
     if (touchPagePaymentMethods.length > 0) return touchPagePaymentMethods
-    return publicPaymentMethods
+    return []
   }, [touchPagePaymentMethods, publicPaymentMethods])
 
   const isMultiStaffSelection = selectedStaffMembers.length > 1
@@ -645,7 +653,7 @@ export default function useCustomerFlow() {
       setStep('wallet_details')
     } catch (err) {
       logger.error('Failed to create tip', err)
-      showToast(getApiErrorMessage(err, t('errors.generic')), 'error')
+      showToast(getApiErrorMessage(err, t('errors.generic'), t), 'error')
       setStep('tip_amount')
     }
   }

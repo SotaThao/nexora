@@ -34,8 +34,8 @@ export default function TipAmount({
     amount: resolveStaffTipAmount(member.id, selectedTips, customTips),
   }))
 
-  const hasInvalidAmount = staffTipRows.some(({ amount }) => Number.isNaN(amount) || amount < 0 || amount > 500)
-  const isTotalInvalid = activeTipAmount <= 0 || activeTipAmount > 500
+  const hasInvalidAmount = staffTipRows.some(({ amount }) => Number.isNaN(amount) || amount < 0)
+  const isTotalInvalid = activeTipAmount < 1
   const disablePaymentSelection = hasInvalidAmount || isTotalInvalid
 
   const handleSelectWallet = (wallet) => {
@@ -136,16 +136,23 @@ export default function TipAmount({
                       </button>
                     </div>
                     {selTip === 'custom' && (
-                      <div className="relative">
-                        <span className="absolute left-3 top-2.5 text-xs font-extrabold text-nexoraSubtle">$</span>
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          placeholder={t('components.customer_flow.steps.TipAmount.phAmount')}
-                          className="w-full bg-white border border-nexoraBorder focus:border-nexoraBrand rounded-lg pl-7 pr-3 py-2 text-xs font-extrabold text-nexoraText focus:outline-none transition-all"
-                          value={custTip}
-                          onChange={(e) => setCustomTips({ ...customTips, [member.id]: e.target.value })}
-                        />
+                      <div>
+                        <div className="relative">
+                          <span className="absolute left-3 top-2.5 text-xs font-extrabold text-nexoraSubtle">$</span>
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            placeholder={t('components.customer_flow.steps.TipAmount.phAmount')}
+                            className={`w-full bg-white border ${amount < 1 && custTip !== '' ? 'border-red-500 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'} rounded-lg pl-7 pr-3 py-2 text-xs font-extrabold text-nexoraText focus:outline-none transition-all`}
+                            value={custTip}
+                            onChange={(e) => setCustomTips({ ...customTips, [member.id]: e.target.value })}
+                          />
+                        </div>
+                        {amount < 1 && custTip !== '' && (
+                          <div className="mt-1.5 text-red-500 text-[10px] font-semibold pl-1">
+                            {t('components.customer_flow.steps.TipAmount.minTipErr')}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

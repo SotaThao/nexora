@@ -1,13 +1,15 @@
 import { useState, useMemo } from 'react'
-import { Star, ExternalLink, Lock, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
+import { Star, ExternalLink, Lock, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { renderTextWithGoldStars } from '../utils'
 import Panel from '../../ui/Panel'
 import CustomSelect from '../../CustomSelect'
 import Pagination from '../../ui/Pagination'
+import { SkeletonList } from '../../ui/skeleton'
 
 function ReviewsView({
   reviews,
+  summary,
   staff,
   filter,
   setFilter,
@@ -57,7 +59,22 @@ function ReviewsView({
     })
   }, [reviews, filter, staff])
 
+  // For the unfiltered ("All staff") view, KPI cards reflect all-time stats
+  // from the BE overview summary. When a specific staff is selected, the
+  // summary (which is global) no longer applies, so fall back to the
+  // current page's reviews.
+  const useSummary = Boolean(summary) && filter === 'all'
+
   const stats = useMemo(() => {
+    if (useSummary && summary) {
+      return {
+        avg: summary.averageRating > 0 ? summary.averageRating.toFixed(1) : '0.0',
+        google: summary.googleClicks,
+        yelp: summary.yelpClicks,
+        internal: summary.totalReviews,
+      }
+    }
+
     if (!reviewsByStaff || reviewsByStaff.length === 0) {
       return { avg: '0.0', google: 0, yelp: 0, internal: 0 }
     }
@@ -68,54 +85,46 @@ function ReviewsView({
     reviewsByStaff.forEach((r) => {
       sum += r.rating || 0
       const cat = r.category?.toLowerCase() || ''
-      if (cat.includes('google')) {
-        google++
-      } else if (cat.includes('yelp')) {
-        yelp++
-      } else {
-        internal++
-      }
+      if (cat.includes('google')) google++
+      else if (cat.includes('yelp')) yelp++
+      else internal++
     })
-    return {
-      avg: (sum / reviewsByStaff.length).toFixed(1),
-      google,
-      yelp,
-      internal
-    }
-  }, [reviewsByStaff])
+    return { avg: (sum / reviewsByStaff.length).toFixed(1), google, yelp, internal }
+  }, [useSummary, summary, reviewsByStaff])
 
   const counts = useMemo(() => {
-    const total = reviewsByStaff.length
-    let google = 0
-    let yelp = 0
-    let lowStars = 0
+    // Per-star counts come from the current page: the overview summary only
+    // exposes 4-5★ / 1-3★ buckets, not an exact per-star breakdown.
     const stars = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
-
+    let pageGoogle = 0
+    let pageYelp = 0
+    let pageLowStars = 0
     reviewsByStaff.forEach((r) => {
       const cat = r.category?.toLowerCase() || ''
-      if (cat.includes('google')) {
-        google++
-      } else if (cat.includes('yelp')) {
-        yelp++
-      }
-      
-      if ((r.rating || 0) <= 3) {
-        lowStars++
-      }
-
-      if (r.rating >= 1 && r.rating <= 5) {
-        stars[r.rating]++
-      }
+      if (cat.includes('google')) pageGoogle++
+      else if (cat.includes('yelp')) pageYelp++
+      if ((r.rating || 0) <= 3) pageLowStars++
+      if (r.rating >= 1 && r.rating <= 5) stars[r.rating]++
     })
 
-    return {
-      all: total,
-      google,
-      yelp,
-      lowStars,
-      stars
+    if (useSummary && summary) {
+      return {
+        all: summary.totalReviews,
+        google: summary.googleClicks,
+        yelp: summary.yelpClicks,
+        lowStars: summary.count1To3Stars,
+        stars,
+      }
     }
-  }, [reviewsByStaff])
+
+    return {
+      all: filter === 'all' ? totalCount : reviewsByStaff.length,
+      google: pageGoogle,
+      yelp: pageYelp,
+      lowStars: pageLowStars,
+      stars,
+    }
+  }, [useSummary, summary, filter, reviewsByStaff, totalCount])
 
   const reviewLinks = useMemo(() => {
     const defaultLinks = {
@@ -266,16 +275,9 @@ function ReviewsView({
         </div>
       </div>
 
-      <div className="relative space-y-3">
-        {isFetching && filtered.length > 0 && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/60">
-            <Loader2 className="h-6 w-6 animate-spin text-nexoraBrand" />
-          </div>
-        )}
-        {isLoading ? (
-          <Panel className="p-8 text-center text-nexoraMuted font-medium text-xs">
-            {t('common.loading')}
-          </Panel>
+      <div className="space-y-3">
+        {isLoading || isFetching ? (
+          <SkeletonList count={pageSize} lines={2} />
         ) : filtered.length === 0 ? (
           <Panel className="p-8 text-center text-nexoraMuted font-medium text-xs">
             {t('staff_detail.no_reviews_matching')}
@@ -361,6 +363,7 @@ function ReviewsView({
             )
           })
         )}
+      </div>
 
         <Pagination
           pageNumber={pageNumber}
@@ -373,7 +376,6 @@ function ReviewsView({
           isLoading={isFetching}
           className="rounded-xl border border-nexoraBorder/60 bg-white shadow-sm"
         />
-      </div>
 
     </div>
   )

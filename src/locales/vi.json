@@ -33,6 +33,7 @@
       "home": "Dashboard",
       "my_qr": "Mã QR",
       "tips": "Tiền tip",
+      "transactions": "Giao dịch",
       "reviews": "Đánh giá",
       "payments": "Giao dịch",
       "pay": "Phương thức nhận tiền",
@@ -46,6 +47,7 @@
       "home": "Dashboard",
       "qr": "Mã QR của tôi",
       "tips": "Tiền tip",
+      "transactions": "Giao dịch",
       "reviews": "Đánh giá & Xếp hạng",
       "pay": "Phương thức nhận tiền",
       "payments": "Giao dịch",
@@ -127,6 +129,15 @@
       "ai_insight": "Phân tích AI",
       "ai_insight_body": "Tip trung bình cho dịch vụ Pedicure của bạn là 21%, cao hơn 6% so với mức trung bình của tiệm."
     },
+    "transactions": {
+      "title": "Giao dịch",
+      "subtitle": "Hoạt động tip của bạn tại các tiệm đã liên kết",
+      "tips_subtitle": "Hoạt động tip tại các tiệm đã liên kết.",
+      "empty": "Không có giao dịch nào khớp bộ lọc.",
+      "col_time": "Thời gian",
+      "col_business": "Tiệm",
+      "detail_title": "Chi tiết giao dịch"
+    },
     "pay": {
       "title": "Phương thức nhận tiền",
       "owner_note": "Bạn tự quản lý phương thức nhận tip. Chủ tiệm không sửa được phần này.",
@@ -137,10 +148,11 @@
       "saved": "Đã lưu ✓"
     },
     "qr": {
-      "personal_title": "Mã QR cá nhân",
-      "personal_sub": "Dùng để chia sẻ Mã nhân viên hoặc cho tiệm liên kết bạn.",
+      "personal_title": "QR Nhân viên của tôi",
+      "personal_sub": "Đưa mã QR này cho tiệm để họ gửi yêu cầu liên kết nhân viên cho bạn.",
       "share": "Chia sẻ QR nhân viên",
       "copy_link": "Sao chép liên kết",
+      "tab_personal": "QR Nhân viên",
       "tab_referral": "QR Giới thiệu",
       "tab_tipping": "QR Nhận tip",
       "tab_payment": "QR Thanh toán",
@@ -181,7 +193,15 @@
       "touchpoint_missing_title": "Chưa có đường link tip",
       "touchpoint_missing_body": "Tiệm chưa cấu hình trạm nên chưa thể tạo link tip cá nhân của bạn. Vui lòng liên hệ {business} để hoàn tất thiết lập.",
       "referral_unavailable_title": "Chưa có Staff ID",
-      "referral_unavailable_body": "Mã QR giới thiệu cá nhân sẽ hiện khi hồ sơ staff được thiết lập xong. Vui lòng thử lại sau giây lát."
+      "referral_unavailable_body": "Mã QR giới thiệu cá nhân sẽ hiện khi hồ sơ staff được thiết lập xong. Vui lòng thử lại sau giây lát.",
+      "affiliate_toggle": "Mở rộng QR để giới thiệu (Affiliate)",
+      "affiliate_title": "QR Giới thiệu của tôi",
+      "affiliate_sub": "Người quét QR này để đăng ký sẽ được gắn vào mã giới thiệu của bạn.",
+      "affiliate_explainer": "Chia sẻ QR hoặc link — người đăng ký sẽ tự động được thêm vào mạng lưới của bạn.",
+      "referral_code": "Mã giới thiệu",
+      "share_referral": "Chia sẻ QR Giới thiệu",
+      "copy_referral_link": "Sao chép liên kết giới thiệu",
+      "affiliate_unavailable": "Mã giới thiệu của bạn chưa sẵn sàng. Hoàn tất hồ sơ để bật chia sẻ affiliate."
     },
     "profile": {
       "title": "Tài khoản cá nhân",
@@ -314,7 +334,7 @@
     "forgot_password": "Quên mật khẩu?",
     "email_label": "Email hoặc tên đăng nhập",
     "password_label": "Mật khẩu",
-    "email_placeholder": "owner@yourstore.com",
+    "email_placeholder": "nexora@example.com",
     "password_placeholder": "••••••••",
     "login_btn": "Đăng nhập",
     "or_try_demo": "Hoặc thử nhanh",
@@ -918,7 +938,7 @@
       "no_reviews_yet": "Chưa có đánh giá",
       "quick_actions": "Thao tác nhanh",
       "manage": "Quản lý",
-      "quick_add_qr": "Thêm QR",
+      "quick_add_qr": "QR",
       "quick_add_staff": "Thêm NV",
       "quick_tips": "Tip",
       "quick_reports": "Báo cáo",
@@ -1458,6 +1478,7 @@
     "return_merchant": "Đi tới Bảng điều khiển Personal"
   },
   "errors": {
+    "TIP_AMOUNT_TOO_HIGH": "Số tiền tip quá lớn.",
     "unknown_error": "Đã xảy ra lỗi không xác định. Vui lòng thử lại.",
     "contact_request_message_min_length": "Nội dung quá ngắn. Vui lòng nhập ít nhất {min} ký tự mô tả sự cố.",
     "contact_request_message_max_length": "Nội dung quá dài. Vui lòng giữ dưới {max} ký tự.",
@@ -1467,7 +1488,7 @@
     "user_login_invalid_username_or_password": "Tên đăng nhập hoặc mật khẩu không chính xác.",
     "user_account_inactive": "Tài khoản của bạn hiện đang bị khóa. Vui lòng liên hệ hỗ trợ.",
     "user_account_incomplete": "Tài khoản chưa hoàn tất. Vui lòng kích hoạt tài khoản của bạn.",
-    "user_email_already_exists": "Địa chỉ email này đã được đăng ký trước đó.",
+    "user_email_already_exists": "Email này đã được đăng ký. Vui lòng đăng nhập hoặc dùng email khác.",
     "user_invalid_referral_code": "Mã giới thiệu không hợp lệ. Vui lòng kiểm tra lại mã và thử lại.",
     "user_signup_failed": "Đăng ký thất bại. Vui lòng kiểm tra thông tin và thử lại.",
     "auth_passwords_do_not_match": "Mật khẩu xác nhận không khớp.",
@@ -1564,7 +1585,8 @@
         "TipAmount": {
           "totalTip": "Tổng tiền Tip",
           "provider_count": "Cho {count} nhân viên",
-          "phAmount": "0.00"
+          "phAmount": "0.00",
+          "minTipErr": "* Thấp nhất là $1"
         },
         "WalletDetails": {
           "tipAmount": "Số tiền chuyển khoản",
@@ -1842,7 +1864,7 @@
           "shareThisReferralLink": "Chia sẻ liên kết hoặc mã QR này để kỹ thuật viên tạo tài khoản và tham gia tiệm của bạn.",
           "joinLinkCopiedTo": "Đã sao chép liên kết gia nhập!",
           "copy": "Sao chép",
-          "share": "Mời",
+          "share": "Chia sẻ",
           "pendingJoinRequests": "Yêu cầu gia nhập chờ duyệt",
           "rejectedStaff": "Yêu cầu bị từ chối",
           "directAddition": "Được tiệm thêm",
@@ -2184,6 +2206,9 @@
           "staffCodeUnavailable": "Chưa có Staff ID. Vui lòng thử lại sau giây lát.",
           "shareFailed": "Không thể chia sẻ liên kết. Hãy dùng nút sao chép.",
           "copyFailed": "Không thể sao chép liên kết.",
+          "referralLinkCopied": "Đã sao chép liên kết giới thiệu!",
+          "referralCodeCopied": "Đã sao chép mã giới thiệu!",
+          "referralCodeUnavailable": "Mã giới thiệu của bạn chưa sẵn sàng.",
           "joinRequestViaQr": "Yêu cầu gia nhập qua QR",
           "justNow": "Vừa xong",
           "unlinked": "Đã hủy liên kết",
@@ -2661,6 +2686,11 @@
       "support_desc": "Mô tả sự cố với thiết bị vật lý này. Đội ngũ sẽ liên hệ lại dựa trên mã help trên thẻ.",
       "support_success": "Đã gửi yêu cầu hỗ trợ thành công.",
       "support_success_desc": "Cảm ơn bạn. Đội ngũ sẽ xem xét và liên hệ lại nếu cần."
+    }
+  },
+  "homepage": {
+    "banner": {
+      "goToSlide": "Chuyển đến slide {{index}}"
     }
   },
   "coming_soon": {

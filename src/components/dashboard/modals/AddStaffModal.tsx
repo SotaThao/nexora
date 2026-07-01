@@ -16,20 +16,8 @@ import type { StaffSearchResult } from '../../../types/domain'
 
 const DEFAULT_ROLE = 'Nail Technician'
 
-function getSearchInputKind(value: string): 'email' | 'phone' | 'staffId' | 'unknown' {
-  const trimmed = value.trim()
-  if (!trimmed) return 'unknown'
-  if (trimmed.includes('@')) return 'email'
-  if (/^\+?[\d\s\-().]+$/.test(trimmed) && /\d/.test(trimmed)) return 'phone'
-  return 'staffId'
-}
-
-function getSearchQueryPayload(value: string, fallbackDialCode: string) {
-  const trimmed = value.trim()
-  const kind = getSearchInputKind(trimmed)
-  if (kind === 'phone') return normalizePhoneForApi(trimmed, fallbackDialCode)
-  if (kind === 'email') return trimmed.toLowerCase()
-  return trimmed
+function getSearchQueryPayload(value: string) {
+  return value.trim()
 }
 
 function formatInvitePhoneNational(nationalNumber: string, dialCode: string): string {
@@ -68,14 +56,13 @@ function AddStaffModal({
   isInviting = false,
 }: AddStaffModalProps) {
   const { t } = useTranslation()
-  const [activeTab, setActiveTab] = useState<'link' | 'invite'>('invite')
+  const [activeTab, setActiveTab] = useState<'link' | 'invite'>('link')
   const [inviteErrors, setInviteErrors] = useState<Record<string, string>>({})
   // Default phone country should follow device/browser locale, not UI language.
   const defaultDialCode = useMemo(() => getDefaultDialCode(undefined), [])
 
   // Link tab
   const [searchInput, setSearchInput] = useState('')
-  const [searchDialCode, setSearchDialCode] = useState(defaultDialCode)
   const [activeSearchQuery, setActiveSearchQuery] = useState('')
   const [selectedRole, setSelectedRole] = useState(DEFAULT_ROLE)
   const [searchResult, setSearchResult] = useState<StaffSearchResult | null>(null)
@@ -102,9 +89,8 @@ function AddStaffModal({
 
   useEffect(() => {
     if (!open) {
-      setActiveTab('invite')
+      setActiveTab('link')
       setSearchInput('')
-      setSearchDialCode(defaultDialCode)
       setActiveSearchQuery('')
       setSearchResult(null)
       setSearchError('')
@@ -141,18 +127,7 @@ function AddStaffModal({
       return
     }
 
-    const kind = getSearchInputKind(trimmed)
-    const searchFallbackDialCode = resolveDialCodeFromInput(trimmed, searchDialCode || defaultDialCode)
-    if (kind === 'email' && !isValidEmail(trimmed)) {
-      setSearchError(t('setup.errors.staff_email_invalid'))
-      return
-    }
-    if (kind === 'phone' && !isValidPhoneE164(trimmed, searchFallbackDialCode)) {
-      setSearchError(t('setup.errors.staff_phone_invalid'))
-      return
-    }
-
-    const nextQuery = getSearchQueryPayload(trimmed, searchFallbackDialCode)
+    const nextQuery = getSearchQueryPayload(trimmed)
     setSearchResult(null)
     setSearchError('')
 
@@ -174,18 +149,7 @@ function AddStaffModal({
   }
 
   const handleSearchInputChange = (value: string) => {
-    const kind = getSearchInputKind(value)
-    if (kind === 'phone') {
-      const nextDialCode = resolveDialCodeFromInput(value, searchDialCode || defaultDialCode)
-      const parsed = parsePhone(
-        value.trim().startsWith('+') ? value : `${nextDialCode}${value.replace(/\D/g, '')}`,
-      )
-      const formatted = formatInvitePhoneNational(parsed.nationalNumber, nextDialCode)
-      setSearchDialCode(nextDialCode)
-      setSearchInput(formatted)
-    } else {
-      setSearchInput(value)
-    }
+    setSearchInput(value)
     if (searchError) setSearchError('')
   }
 
@@ -304,20 +268,6 @@ function AddStaffModal({
           <button
             type="button"
             onClick={() => {
-              setActiveTab('invite')
-              setSearchError('')
-            }}
-            className={`px-3.5 py-3 text-xs font-extrabold border-b-[3px] transition-colors ${
-              activeTab === 'invite'
-                ? 'border-nexoraBrand text-nexoraBrand'
-                : 'border-transparent text-nexoraMuted hover:text-nexoraText'
-            }`}
-          >
-            {t('components.dashboard.modals.AddStaffModal.tab_invite')}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
               setActiveTab('link')
               setInviteErrors({})
             }}
@@ -328,6 +278,20 @@ function AddStaffModal({
             }`}
           >
             {t('components.dashboard.modals.AddStaffModal.tab_link')}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('invite')
+              setSearchError('')
+            }}
+            className={`px-3.5 py-3 text-xs font-extrabold border-b-[3px] transition-colors ${
+              activeTab === 'invite'
+                ? 'border-nexoraBrand text-nexoraBrand'
+                : 'border-transparent text-nexoraMuted hover:text-nexoraText'
+            }`}
+          >
+            {t('components.dashboard.modals.AddStaffModal.tab_invite')}
           </button>
         </div>
 

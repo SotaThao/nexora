@@ -9,7 +9,7 @@ export default function HomePageHeroSection() {
 
   return (
     <>
-      <section className="relative overflow-hidden bg-gradient-to-b from-white via-slate-50 to-slate-100/50 py-12 lg:py-20 border-b border-line ds-section">
+      <section className="relative overflow-hidden bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100/50 pt-8 pb-12 lg:pb-20 border-b border-line ds-section">
           
           <div className="absolute top-1/4 right-0 w-[450px] h-[450px] bg-blue/15 rounded-full blur-[100px] pointer-events-none">
           </div>
@@ -69,16 +69,16 @@ export default function HomePageHeroSection() {
                   
                   <div className="flex items-center bg-slate-950/90 gap-1 backdrop-blur-md p-1 rounded-2xl mb-4 relative z-10 text-[11px] sm:text-xs font-bold border border-slate-800/80 shadow-inner">
                     <button className="flex-1 flex items-center justify-center gap-1.5 py-0 rounded-xl transition-all duration-300 bg-purple text-white shadow-md shadow-purple/20 font-extrabold ds-control ds-button" id="tab-customer" onClick={() => { hp.switchSimulatorMode('customer') }}>
-                      <img src="/homepage/assets/images/icon-customer.png" className="w-[34px] h-[34px] object-contain" alt="" />
-                      <span className="hidden xs:inline" data-i18n="tab-cust">Customer View</span>
+                      <img src="/homepage/assets/images/icon-customer.png" className="hidden sm:block w-[34px] h-[34px] object-contain" alt="" />
+                      <span data-i18n="tab-cust">Customer View</span>
                     </button>
                     <button className="flex-1 flex items-center justify-center gap-1.5 py-0 rounded-xl transition-all duration-300 text-slate-400 hover:text-white font-semibold ds-control ds-button" id="tab-staff" onClick={() => { hp.switchSimulatorMode('staff') }}>
-                      <img src="/homepage/assets/images/icon-staff.png" className="w-[34px] h-[34px] object-contain" alt="" />
-                      <span className="hidden xs:inline" data-i18n="tab-staff">Staff Portal</span>
+                      <img src="/homepage/assets/images/icon-staff.png" className="hidden sm:block w-[34px] h-[34px] object-contain" alt="" />
+                      <span data-i18n="tab-staff">Staff Portal</span>
                     </button>
                     <button className="flex-1 flex items-center justify-center gap-1.5 py-0 rounded-xl transition-all duration-300 text-slate-400 hover:text-white font-semibold ds-control ds-button" id="tab-owner" onClick={() => { hp.switchSimulatorMode('owner') }}>
-                      <img src="/homepage/assets/images/icon-salon.png" className="w-[34px] h-[34px] object-contain" alt="" />
-                      <span className="hidden xs:inline" data-i18n="tab-owner">Salon Admin</span>
+                      <img src="/homepage/assets/images/icon-salon.png" className="hidden sm:block w-[34px] h-[34px] object-contain" alt="" />
+                      <span data-i18n="tab-owner">Salon Admin</span>
                     </button>
                   </div>
                   

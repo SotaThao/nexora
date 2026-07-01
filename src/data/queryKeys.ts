@@ -36,6 +36,9 @@ export const qk = {
 
   // Client ecosystem (header SSO)
   ecosystems:             () => ['ecosystems'],
+
+  // Public homepage banners
+  activeBanners:          () => ['banners', 'active'],
   
   // Profile (Staff/Personal)
   userProfile:              () => ['userProfile'],
@@ -94,6 +97,7 @@ export const qk = {
   staffDashboardSummary: ()    => ['staffDashboardSummary'],
   staffReviews:          (filters = EMPTY) => ['staffReviews', filters],
   staffTips:             (filters = EMPTY) => ['staffTips', filters],
+  staffTransactionsPaginated: (filters = EMPTY) => ['staffTransactions', 'paginated', filters],
   staffLinkRequest:    (linkId: string | null | undefined) => ['staffLinkRequest', linkId ?? 'unknown'],
 
   // Public Customer Touch

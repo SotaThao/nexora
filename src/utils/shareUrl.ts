@@ -3,11 +3,12 @@ function buildShareData({
   title,
   text,
 }: {
-  url: string
+  url?: string
   title?: string
   text?: string
 }): ShareData {
-  const shareData: ShareData = { url }
+  const shareData: ShareData = {}
+  if (url) shareData.url = url
   if (title) shareData.title = title
   if (text) shareData.text = text
   return shareData
@@ -29,7 +30,7 @@ export async function shareUrl({
   title,
   text,
 }: {
-  url: string
+  url?: string
   title?: string
   text?: string
 }): Promise<'shared' | 'copied' | 'cancelled'> {
@@ -47,8 +48,9 @@ export async function shareUrl({
     }
   }
 
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(url)
+  const fallbackText = url || text
+  if (fallbackText && navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(fallbackText)
     return 'copied'
   }
 

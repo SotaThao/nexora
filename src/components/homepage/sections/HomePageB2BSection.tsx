@@ -21,11 +21,11 @@ export default function HomePageB2BSection() {
                 <p className="text-slate-600 text-sm sm:text-base leading-relaxed" data-i18n="b2b-section-desc-2">Customers earn points while tipping technicians but can redeem those points for delicious drinks or boutique gifts next door. This drives organic foot traffic and shares premium localized client pools automatically.</p>
                 <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200">
                   <div className="space-y-1">
-                    <strong className="text-2xl font-extrabold text-navy">+45%</strong>
+                    <strong className="text-xl sm:text-2xl font-extrabold text-navy">+45%</strong>
                     <p className="text-xs text-slate-500 font-bold uppercase" data-i18n="b2b-metric-1">Cross-Referral Traffic Spikes</p>
                   </div>
                   <div className="space-y-1">
-                    <strong className="text-2xl font-extrabold text-navy" data-i18n="b2b-metric-2-title">1 Unified Card Ledger</strong>
+                    <strong className="text-xl sm:text-2xl font-extrabold text-navy" data-i18n="b2b-metric-2-title">1 Unified Card Ledger</strong>
                     <p className="text-xs text-slate-500 font-bold uppercase" data-i18n="b2b-metric-2-sub">Unites Entire Neighborhood</p>
                   </div>
                 </div>
