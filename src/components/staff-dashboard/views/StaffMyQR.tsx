@@ -685,10 +685,10 @@ export default function StaffMyQR() {
                   title={staffShareUrlDisplay.fullDisplay}
                 >
                   <div className="flex min-w-0 flex-1 items-center overflow-hidden pl-2 text-left font-mono text-[10px] text-slate-500">
-                    {staffShareUrlDisplay.refSuffix ? (
+                    {staffShareUrlDisplay.staffSuffix ? (
                       <>
                         <span className="min-w-0 truncate">{staffShareUrlDisplay.leading}</span>
-                        <span className="shrink-0">{staffShareUrlDisplay.refSuffix}</span>
+                        <span className="shrink-0">{staffShareUrlDisplay.staffSuffix}</span>
                       </>
                     ) : (
                       <span className="min-w-0 truncate">{staffShareUrlDisplay.fullDisplay}</span>

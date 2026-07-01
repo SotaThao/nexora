@@ -66,40 +66,41 @@ export function buildStaffShareUrl({
   const staff = String(staffCode || '').trim()
   if (!staff || !origin) return ''
 
-  const params = new URLSearchParams({ staff })
+  const params = new URLSearchParams()
   const ref = String(referralCode || '').trim()
   if (ref) params.set('ref', ref)
+  params.set('staff', staff)
   return `${origin}/?${params.toString()}`
 }
 
-/** Split share URL for display: leading truncates; ref query stays fully visible. */
+/** Split share URL for display: leading truncates; staff query stays fully visible. */
 export function splitStaffShareUrlDisplay(url: string): {
   leading: string
-  refSuffix: string
+  staffSuffix: string
   fullDisplay: string
 } {
   const fullDisplay = url.replace(/^https?:\/\//, '')
-  if (!fullDisplay) return { leading: '', refSuffix: '', fullDisplay: '' }
+  if (!fullDisplay) return { leading: '', staffSuffix: '', fullDisplay: '' }
 
   try {
     const parsed = new URL(url.includes('://') ? url : `https://${fullDisplay}`)
-    const ref = parsed.searchParams.get('ref')?.trim()
-    if (!ref) return { leading: fullDisplay, refSuffix: '', fullDisplay }
+    const staff = parsed.searchParams.get('staff')?.trim()
+    if (!staff) return { leading: fullDisplay, staffSuffix: '', fullDisplay }
 
-    const refNeedle = `ref=${ref}`
-    const refIndex = fullDisplay.indexOf(refNeedle)
-    if (refIndex < 0) return { leading: fullDisplay, refSuffix: '', fullDisplay }
+    const staffNeedle = `staff=${staff}`
+    const staffIndex = fullDisplay.indexOf(staffNeedle)
+    if (staffIndex < 0) return { leading: fullDisplay, staffSuffix: '', fullDisplay }
 
-    const separator = refIndex > 0 ? fullDisplay[refIndex - 1] : ''
-    const refSuffix =
+    const separator = staffIndex > 0 ? fullDisplay[staffIndex - 1] : ''
+    const staffSuffix =
       separator === '&' || separator === '?'
-        ? `${separator}${refNeedle}`
-        : refNeedle
-    const leadingEnd = refIndex - (refSuffix.length - refNeedle.length)
+        ? `${separator}${staffNeedle}`
+        : staffNeedle
+    const leadingEnd = staffIndex - (staffSuffix.length - staffNeedle.length)
     const leading = fullDisplay.slice(0, Math.max(0, leadingEnd))
 
-    return { leading, refSuffix, fullDisplay }
+    return { leading, staffSuffix, fullDisplay }
   } catch {
-    return { leading: fullDisplay, refSuffix: '', fullDisplay }
+    return { leading: fullDisplay, staffSuffix: '', fullDisplay }
   }
 }

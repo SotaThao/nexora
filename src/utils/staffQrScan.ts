@@ -6,6 +6,7 @@ export function extractStaffSearchValueFromQrText(value: string): string {
 
   try {
     const parsed = new URL(text)
+    // Never use `ref` — combined share URLs include affiliate ref; merchant needs staff ID only.
     const staffKeys = ['staff', 'staffCode', 'staffProfileId', 'staffId', 'code', 'id']
     for (const key of staffKeys) {
       const queryValue = parsed.searchParams.get(key)
