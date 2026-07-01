@@ -602,6 +602,8 @@
       "col_tp": "Station",
       "col_payment": "Payment Method",
       "col_status": "Status",
+      "col_action": "Action",
+      "action_complete": "Complete",
       "empty_activity": "No recent tips logged yet.",
       "filter_title": "Filters",
       "filter_reset": "Reset",

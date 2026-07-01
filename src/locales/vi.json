@@ -602,6 +602,8 @@
       "col_tp": "Trạm",
       "col_payment": "Phương thức",
       "col_status": "Trạng thái",
+      "col_action": "Hành động",
+      "action_complete": "Hoàn tất",
       "empty_activity": "Chưa có hoạt động giao dịch nào phát sinh.",
       "filter_title": "Bộ lọc",
       "filter_reset": "Thiết lập lại",

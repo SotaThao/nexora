@@ -30,6 +30,7 @@ import {
   DIRECT_PAYMENT_STATUS_ORDER,
   getDirectPaymentStatusDescKey,
   getDirectPaymentStatusLabelKey,
+  isDirectPaymentCompleted,
   needsMerchantAcknowledge,
   normalizePaymentStatusValue,
 } from '../../../utils/directPaymentStatus'
@@ -330,7 +331,7 @@ export default function ReportsDirectPaymentsTab({
             <div className="divide-y divide-nexoraBorder/60 md:hidden">
               {payments.map((payment) => {
                 const paymentStatus = normalizePaymentStatusValue(payment.status)
-                const showAcknowledge = needsMerchantAcknowledge(payment)
+                const showAcknowledge = !isDirectPaymentCompleted(paymentStatus)
 
                 return (
                   <article key={payment.id} className="space-y-3 p-4">
