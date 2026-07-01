@@ -13,6 +13,7 @@ import {
   ChevronRight,
   CheckCircle2,
   Wallet,
+  Gift,
 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
