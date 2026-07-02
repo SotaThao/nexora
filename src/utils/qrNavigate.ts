@@ -27,6 +27,12 @@ export function resolveQrToAppPath(raw: string): string | null {
   if (/^\/join\/[^/]+/.test(pathname)) return pathname + search
   if (/^\/staff\/invite\/[^/]+/.test(pathname)) return pathname + search
   if (/^\/touch\/[^/]+\/[^/]+/.test(pathname)) return pathname + search
+  // Payment QR codes: staff direct pay + business direct pay
+  if (/^\/pay\/staff\/[^/]+/.test(pathname)) return pathname + search
+  if (/^\/pay\/[^/]+/.test(pathname)) return pathname + search
+  // Short QR redirect links
+  if (/^\/help\/qr\/[^/]+/.test(pathname)) return pathname + search
+  if (/^\/qr\/[^/]+/.test(pathname)) return pathname + search
 
   return null
 }
