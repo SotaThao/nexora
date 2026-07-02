@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import { staffPayoutsRepository } from '../repositories/payouts'
 import type { StaffPayoutsListQuery } from '../repositories/payouts'
@@ -54,4 +54,20 @@ export const staffPayoutInvalidationKeys = {
   list: ['staffPayouts', 'list'] as const,
   stats: qk.staffPayoutStats(),
   unpaidDebt: qk.staffUnpaidDebt(),
+}
+
+function invalidateStaffPayoutCaches(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: staffPayoutInvalidationKeys.all })
+  queryClient.invalidateQueries({ queryKey: staffPayoutInvalidationKeys.list })
+  queryClient.invalidateQueries({ queryKey: staffPayoutInvalidationKeys.stats })
+  queryClient.invalidateQueries({ queryKey: staffPayoutInvalidationKeys.unpaidDebt })
+}
+
+export function useConfirmStaffPayout() {
+  const queryClient = useQueryClient()
+
+  return useMutation<void, Error, string>({
+    mutationFn: (payoutId) => staffPayoutsRepository.confirm(payoutId),
+    onSuccess: () => invalidateStaffPayoutCaches(queryClient),
+  })
 }

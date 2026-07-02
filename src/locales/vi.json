@@ -590,7 +590,8 @@
     "reports": {
       "tabs": {
         "tips": "Tiền tip",
-        "direct_payments": "Thanh toán QR"
+        "direct_payments": "Thanh toán QR",
+        "payouts": "Payout"
       }
     },
     "activity_log": {
@@ -990,7 +991,25 @@
         "export_preview": "{{count}} payout trong file xuất",
         "export_empty": "Không có payout phù hợp bộ lọc.",
         "export_success": "Đã tải báo cáo.",
-        "export_action": "Xuất ngay"
+        "export_action": "Xuất ngay",
+        "unpaid_section_title": "Công nợ tip chưa thanh toán",
+        "unpaid_section_sub": "{{count}} nhân viên đang còn nợ",
+        "unpaid_button": "Tip chưa payout ({{count}})",
+        "unpaid_empty": "Hiện không có công nợ tip chưa thanh toán.",
+        "unpaid_col_balance": "Số dư công nợ",
+        "unpaid_col_updated": "Cập nhật gần nhất",
+        "unpaid_view_history": "Lịch sử công nợ",
+        "unpaid_create_payout": "Tạo payout",
+        "debt_history_title": "Lịch sử giao dịch công nợ",
+        "debt_history_sub": "Sổ giao dịch của {{staff}}",
+        "debt_history_empty": "Không có giao dịch công nợ.",
+        "debt_col_created": "Thời gian",
+        "debt_col_type": "Loại giao dịch",
+        "debt_col_amount": "Số tiền",
+        "debt_col_note": "Mô tả",
+        "debt_tx_tip_debt": "Tăng nợ từ tip",
+        "debt_tx_settlement": "Giảm nợ do payout",
+        "debt_tx_reversal": "Phục hồi nợ do huỷ payout"
       }
     },
     "analytics": {
@@ -1326,6 +1345,21 @@
     "ack_notice_title": "Thông báo nhận tiền",
     "ack_notice_desc": "Khách đã xác nhận đã chuyển khoản. Vui lòng kiểm tra tiền đã vào tài khoản, sau đó xác nhận đã nhận.",
     "ack_notice_desc_many": "Có {{count}} thanh toán đang chờ bạn xác nhận. Hãy xem giao dịch mới nhất trước."
+  },
+  "staff_payouts": {
+    "description": "Theo dõi payout đã gửi cho bạn, xác nhận nhận tiền và xem công nợ theo từng tiệm.",
+    "stat_received_all_time": "Tổng đã nhận",
+    "stat_received_this_month": "Đã nhận tháng này",
+    "stat_pending": "Đang chờ xác nhận",
+    "stat_current_debt": "Số dư công nợ hiện tại",
+    "unpaid_debt_title": "Công nợ chưa trả theo tiệm",
+    "unpaid_debt_empty": "Hiện không có công nợ chưa trả.",
+    "unpaid_debt_total": "Tổng công nợ chưa trả",
+    "list_title": "Lịch sử payout",
+    "detail_sub": "Xem chi tiết payout trước khi xác nhận đã nhận.",
+    "confirm_receipt": "Xác nhận đã nhận",
+    "confirm_success": "Đã xác nhận payout thành công.",
+    "empty": "Không có payout phù hợp với trạng thái đã chọn."
   },
   "register": {
     "create_account": "Tạo tài khoản",

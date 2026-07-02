@@ -590,7 +590,8 @@
     "reports": {
       "tabs": {
         "tips": "Tips",
-        "direct_payments": "Direct Payments"
+        "direct_payments": "Direct Payments",
+        "payouts": "Payouts"
       }
     },
     "activity_log": {
@@ -990,7 +991,25 @@
         "export_preview": "{{count}} payout(s) in export",
         "export_empty": "No payouts match the selected filters.",
         "export_success": "Report downloaded.",
-        "export_action": "Export now"
+        "export_action": "Export now",
+        "unpaid_section_title": "Unpaid tip debts",
+        "unpaid_section_sub": "{{count}} staff with outstanding debt",
+        "unpaid_button": "Unpaid tips ({{count}})",
+        "unpaid_empty": "No unpaid tip debt right now.",
+        "unpaid_col_balance": "Outstanding balance",
+        "unpaid_col_updated": "Last updated",
+        "unpaid_view_history": "Debt history",
+        "unpaid_create_payout": "Create payout",
+        "debt_history_title": "Debt transaction history",
+        "debt_history_sub": "Ledger records for {{staff}}",
+        "debt_history_empty": "No debt transactions found.",
+        "debt_col_created": "Created at",
+        "debt_col_type": "Transaction type",
+        "debt_col_amount": "Amount",
+        "debt_col_note": "Description",
+        "debt_tx_tip_debt": "Tip debt increased",
+        "debt_tx_settlement": "Payout settlement",
+        "debt_tx_reversal": "Payout reversal"
       }
     },
     "analytics": {
@@ -1326,6 +1345,21 @@
     "ack_notice_title": "Payment received notification",
     "ack_notice_desc": "A customer confirmed they sent a payment. Please verify the money arrived, then confirm receipt.",
     "ack_notice_desc_many": "{{count}} payments are waiting for your confirmation. Review the latest one first."
+  },
+  "staff_payouts": {
+    "description": "Track payouts sent to you, confirm receipt, and review unpaid debt by business.",
+    "stat_received_all_time": "Total received",
+    "stat_received_this_month": "Received this month",
+    "stat_pending": "Pending confirmation",
+    "stat_current_debt": "Current debt balance",
+    "unpaid_debt_title": "Unpaid debt by business",
+    "unpaid_debt_empty": "No unpaid debt right now.",
+    "unpaid_debt_total": "Total unpaid debt",
+    "list_title": "Payout history",
+    "detail_sub": "Review payout details before confirming receipt.",
+    "confirm_receipt": "Confirm receipt",
+    "confirm_success": "Payout confirmed successfully.",
+    "empty": "No payouts found for the selected status."
   },
   "register": {
     "create_account": "Create Account",

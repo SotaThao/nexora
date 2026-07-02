@@ -53,6 +53,7 @@ const TYPE_I18N: Record<number, string> = {
   [PayoutType.Bonus]: 'dashboard.tips.payouts_manager.type_bonus',
   [PayoutType.Other]: 'dashboard.tips.payouts_manager.type_other',
 }
+const CREATE_ALLOWED_PAYOUT_TYPES = new Set<number>([PayoutType.Tip])
 
 function defaultPeriodDates() {
   const now = new Date()
@@ -103,12 +104,14 @@ export default function CreatePayoutModal({
   onClose,
   staffList,
   unpaidDebts,
+  initialStaffProfileId,
   editingPayout = null,
 }: {
   isOpen: boolean
   onClose: () => void
   staffList: StaffMember[]
   unpaidDebts: UnpaidTipDebtRecord[]
+  initialStaffProfileId?: string | null
   editingPayout?: PayoutRecord | null
 }) {
   const { t } = useTranslation()
@@ -213,7 +216,12 @@ export default function CreatePayoutModal({
       return
     }
     const defaults = defaultPeriodDates()
-    setStaffProfileId(eligibleStaff[0]?.staffProfileId ?? '')
+    const preferredStaffProfileId =
+      initialStaffProfileId
+      && eligibleStaff.some((staff) => staff.staffProfileId === initialStaffProfileId)
+        ? initialStaffProfileId
+        : eligibleStaff[0]?.staffProfileId ?? ''
+    setStaffProfileId(preferredStaffProfileId)
     setPayoutMethodType(PayoutMethodType.Zelle)
     setAmount('')
     setAmountError(null)
@@ -226,7 +234,7 @@ export default function CreatePayoutModal({
     setEvidencePreviews([])
     setEvidenceError(null)
     setIsDragOver(false)
-  }, [isOpen, editingPayout, staffList])
+  }, [isOpen, editingPayout, staffList, eligibleStaff, initialStaffProfileId])
 
   useEffect(() => {
     if (!isOpen || isEditing || !eligibleStaff.length) return
@@ -250,6 +258,10 @@ export default function CreatePayoutModal({
       return true
     }
     return isStaffPayoutMethodAvailable(selectedStaff, method as PayoutMethodTypeValue)
+  }
+  const isPayoutTypeSelectable = (flag: number) => {
+    if (isEditing) return true
+    return CREATE_ALLOWED_PAYOUT_TYPES.has(flag)
   }
 
   const handleCopyAccount = async () => {
@@ -572,20 +584,26 @@ export default function CreatePayoutModal({
                   {t('dashboard.tips.payouts_manager.field_types')} *
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {ALL_PAYOUT_TYPE_FLAGS.map((flag) => (
-                    <button
-                      key={flag}
-                      type="button"
-                      onClick={() => setPayoutTypesMask((mask) => togglePayoutType(mask, flag))}
-                      className={`rounded-lg border px-3 py-1.5 text-xs font-bold ${
-                        hasPayoutType(payoutTypesMask, flag)
-                          ? 'border-nexoraBrand bg-nexoraBrand/10 text-nexoraBrand'
-                          : 'border-nexoraBorder'
-                      }`}
-                    >
-                      {t(TYPE_I18N[flag])}
-                    </button>
-                  ))}
+                  {ALL_PAYOUT_TYPE_FLAGS.map((flag) => {
+                    const selectable = isPayoutTypeSelectable(flag)
+                    return (
+                      <button
+                        key={flag}
+                        type="button"
+                        disabled={!selectable}
+                        onClick={() => selectable && setPayoutTypesMask((mask) => togglePayoutType(mask, flag))}
+                        className={`rounded-lg border px-3 py-1.5 text-xs font-bold ${
+                          hasPayoutType(payoutTypesMask, flag)
+                            ? 'border-nexoraBrand bg-nexoraBrand/10 text-nexoraBrand'
+                            : selectable
+                              ? 'border-nexoraBorder'
+                              : 'cursor-not-allowed border-nexoraBorder/60 bg-slate-50 text-mutedGrey opacity-60'
+                        }`}
+                      >
+                        {t(TYPE_I18N[flag])}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
 

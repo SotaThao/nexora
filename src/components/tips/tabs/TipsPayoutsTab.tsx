@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Calendar, Download, List, Plus, Search, User } from 'lucide-react'
+import { Calendar, Download, FileClock, List, Plus, Search, User } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { PayoutStatus, PayoutType } from '../../../data/payoutConstants'
 import {
@@ -10,7 +10,7 @@ import {
   useMerchantUnpaidTips,
 } from '../../../data/hooks/useMerchantPayouts'
 import type { MerchantPayoutsListQuery } from '../../../data/repositories/payouts'
-import type { PayoutRecord, StaffMember } from '../../../types/domain'
+import type { PayoutRecord, StaffMember, UnpaidTipDebtRecord } from '../../../types/domain'
 import Pagination from '../../ui/Pagination'
 import PayoutToolbarSelect from '../payouts/PayoutToolbarSelect'
 import PayoutList from '../payouts/PayoutList'
@@ -20,6 +20,8 @@ import PayoutStatsCards from '../payouts/PayoutStatsCards'
 import CreatePayoutModal from '../payouts/CreatePayoutModal'
 import PayoutDetailModal from '../payouts/PayoutDetailModal'
 import PayoutExportModal from '../payouts/PayoutExportModal'
+import UnpaidTipDebtsPanel from '../payouts/UnpaidTipDebtsPanel'
+import PayoutDebtHistoryModal from '../payouts/PayoutDebtHistoryModal'
 
 const STATUS_FILTER_OPTIONS = [
   { value: 'all', labelKey: 'dashboard.tips.payouts_manager.filter_all_status' },
@@ -61,7 +63,10 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
   const [selectedPayoutId, setSelectedPayoutId] = useState<string | null>(null)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isExportOpen, setIsExportOpen] = useState(false)
+  const [isUnpaidDialogOpen, setIsUnpaidDialogOpen] = useState(false)
   const [editingPayout, setEditingPayout] = useState<PayoutRecord | null>(null)
+  const [preferredStaffProfileId, setPreferredStaffProfileId] = useState<string | null>(null)
+  const [historyStaffProfile, setHistoryStaffProfile] = useState<UnpaidTipDebtRecord | null>(null)
 
   const { pageNumber, pageSize, setPage, reset: resetPage } = usePagination({ pageSize: DEFAULT_PAGE_SIZE })
 
@@ -111,7 +116,7 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
 
   const { data: stats, isPending: isStatsPending } = useMerchantPayoutStats()
   const { data: statsByStaff } = useMerchantPayoutStatsByStaff()
-  const { data: unpaidPage } = useMerchantUnpaidTips()
+  const { data: unpaidPage, isPending: isUnpaidTipsPending } = useMerchantUnpaidTips()
   const { data: payoutsPage, isPending, isFetching } = useMerchantPayoutsList(apiQuery)
   const exportListQuery = useMemo(
     () => ({ ...apiQuery, page: 1, pageSize: 500 }),
@@ -167,6 +172,14 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
 
   const openCreate = () => {
     setEditingPayout(null)
+    setPreferredStaffProfileId(null)
+    setIsCreateOpen(true)
+  }
+
+  const openCreateForStaff = (staffProfileId: string) => {
+    setEditingPayout(null)
+    setPreferredStaffProfileId(staffProfileId)
+    setIsUnpaidDialogOpen(false)
     setIsCreateOpen(true)
   }
 
@@ -179,15 +192,16 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
   const closeCreate = () => {
     setIsCreateOpen(false)
     setEditingPayout(null)
+    setPreferredStaffProfileId(null)
   }
 
   return (
     <div className="space-y-6">
       <PayoutStatsCards stats={stats} statsByStaff={statsByStaff} isLoading={isStatsPending} />
 
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+      <div className="flex flex-col gap-3 2xl:flex-row 2xl:items-center 2xl:justify-between">
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-          <div className="relative w-full sm:w-[220px]">
+          <div className="relative w-full sm:w-[280px] lg:w-[340px]">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#687381]" />
             <input
               type="search"
@@ -198,7 +212,7 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
             />
           </div>
 
-          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
+          <div className="grid w-full grid-cols-2 gap-2 lg:grid-cols-4 2xl:flex 2xl:w-auto 2xl:flex-wrap 2xl:items-center">
             <PayoutToolbarSelect
               icon={Calendar}
               label={t('dashboard.tips.payouts_manager.filter_period_label')}
@@ -255,11 +269,19 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
           ) : null}
         </div>
 
-        <div className="grid w-full grid-cols-2 items-center gap-2 sm:flex sm:w-auto sm:flex-wrap">
+        <div className="grid w-full grid-cols-3 items-center gap-2 lg:w-auto lg:grid-cols-3 2xl:flex 2xl:w-auto 2xl:flex-wrap">
+          <button
+            type="button"
+            onClick={() => setIsUnpaidDialogOpen(true)}
+            className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-[#cfd9e8] bg-white px-3.5 text-xs font-bold text-[#0b1220] shadow-sm transition hover:border-[#9fb2d1] hover:bg-[#f3f6fa] sm:w-auto"
+          >
+            <FileClock className="h-3.5 w-3.5" />
+            {t('dashboard.tips.payouts_manager.unpaid_button', { count: unpaidDebts.length })}
+          </button>
           <button
             type="button"
             onClick={() => setIsExportOpen(true)}
-            className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-[#dde5ef] bg-transparent px-3.5 text-xs font-bold text-[#687381] transition hover:bg-[#f3f6fa] hover:text-[#0b1220] sm:w-auto"
+            className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-[#cfd9e8] bg-white px-3.5 text-xs font-bold text-[#0b1220] shadow-sm transition hover:border-[#9fb2d1] hover:bg-[#f3f6fa] sm:w-auto"
           >
             <Download className="h-3.5 w-3.5" />
             {t('dashboard.tips.payouts_manager.export_btn')}
@@ -297,11 +319,26 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
         />
       </div>
 
+      <UnpaidTipDebtsPanel
+        isOpen={isUnpaidDialogOpen}
+        onClose={() => setIsUnpaidDialogOpen(false)}
+        debts={unpaidDebts}
+        isLoading={isUnpaidTipsPending}
+        currentLanguage={currentLanguage}
+        t={t}
+        onCreatePayout={openCreateForStaff}
+        onViewHistory={(staffDebt) => {
+          setIsUnpaidDialogOpen(false)
+          setHistoryStaffProfile(staffDebt)
+        }}
+      />
+
       <CreatePayoutModal
         isOpen={isCreateOpen}
         onClose={closeCreate}
         staffList={staff}
         unpaidDebts={unpaidDebts}
+        initialStaffProfileId={preferredStaffProfileId}
         editingPayout={editingPayout}
       />
 
@@ -317,6 +354,11 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
         onClose={() => setIsExportOpen(false)}
         payouts={exportPayoutsPage?.items ?? payouts}
         staffList={staff}
+      />
+
+      <PayoutDebtHistoryModal
+        staff={historyStaffProfile}
+        onClose={() => setHistoryStaffProfile(null)}
       />
     </div>
   )

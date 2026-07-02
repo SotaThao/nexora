@@ -3,9 +3,11 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import ReportsView from '../../dashboard/views/ReportsView'
 import StaffPayments from './StaffPayments'
+import StaffPayouts from './StaffPayouts'
 
 const TAB_TIPS = 'tips'
 const TAB_DIRECT_PAYMENTS = 'direct_payments'
+const TAB_PAYOUTS = 'payouts'
 
 export default function StaffTransactions() {
   const { t } = useTranslation()
@@ -16,6 +18,8 @@ export default function StaffTransactions() {
   const activeTab =
     paymentId || searchParams.get('tab') === TAB_DIRECT_PAYMENTS
       ? TAB_DIRECT_PAYMENTS
+      : searchParams.get('tab') === TAB_PAYOUTS
+        ? TAB_PAYOUTS
       : TAB_TIPS
 
   const setActiveTab = useCallback(
@@ -24,6 +28,10 @@ export default function StaffTransactions() {
         const next = new URLSearchParams(searchParams)
         next.set('tab', TAB_DIRECT_PAYMENTS)
         navigate(`/staff/payments?${next.toString()}`, { replace: true })
+        return
+      }
+      if (tab === TAB_PAYOUTS) {
+        navigate('/staff/payments?tab=payouts', { replace: true })
         return
       }
       navigate('/staff/payments?tab=tips', { replace: true })
@@ -41,6 +49,8 @@ export default function StaffTransactions() {
           <p className="mt-1 max-w-[22rem] text-xs leading-relaxed text-nexoraMuted">
             {activeTab === TAB_DIRECT_PAYMENTS
               ? t('staff_payments.description')
+              : activeTab === TAB_PAYOUTS
+                ? t('staff_payouts.description')
               : t('staff_dashboard.transactions.tips_subtitle')}
           </p>
         </div>
@@ -49,6 +59,7 @@ export default function StaffTransactions() {
           {[
             { id: TAB_TIPS, label: t('dashboard.reports.tabs.tips') },
             { id: TAB_DIRECT_PAYMENTS, label: t('dashboard.reports.tabs.direct_payments') },
+            { id: TAB_PAYOUTS, label: t('dashboard.reports.tabs.payouts') },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -68,8 +79,10 @@ export default function StaffTransactions() {
 
       {activeTab === TAB_TIPS ? (
         <ReportsView audience="staff" showPageHeader={false} />
-      ) : (
+      ) : activeTab === TAB_DIRECT_PAYMENTS ? (
         <StaffPayments />
+      ) : (
+        <StaffPayouts />
       )}
     </div>
   )

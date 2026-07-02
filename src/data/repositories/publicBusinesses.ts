@@ -42,11 +42,17 @@ export function createPublicBusinessesRepository(client: HttpClient = httpClient
     },
 
     async confirmMultiStaffTip(tipId: string) {
-      return client.patch<LooseObject>(
+      const confirmResult = await client.patch<LooseObject>(
         `/api/v1/tips/${encodeURIComponent(tipId)}/confirm`,
         {},
         { anonymous: true },
       )
+      await client.post<LooseObject>(
+        '/api/v1/tips/confirm-receipt',
+        { tipIds: [tipId] },
+        { anonymous: true },
+      )
+      return confirmResult
     },
   }
 }
