@@ -1,6 +1,6 @@
 // StaffNotifications — notification feed + push preferences.
 import { useNavigate } from 'react-router-dom'
-import { Bell, Star, Users, Wallet } from 'lucide-react'
+import { Bell, CreditCard, Star, Users, Wallet } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import {
@@ -14,11 +14,13 @@ import { SkeletonLayout } from '../../ui/skeleton'
 import ToggleSwitch from '../../ui/ToggleSwitch'
 import { STAFF_NOTIFICATIONS_SKELETON } from '../skeletons/staffDashboardSkeletons'
 import { formatNotificationDateTime } from '../../dashboard/utils'
+import { navigateStaffNotification, resolveStaffNotificationActionUrl } from '../constants'
 
 const panel =
   "rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm sm:p-5";
 const notificationRowBase =
   "flex w-full items-start gap-3 px-3 py-3 text-left transition";
+const listRowBase = "py-2.5";
 
 function notificationRowClass(read: boolean, hasAction = false) {
   if (read) {
@@ -35,37 +37,19 @@ const TYPE_ICON: Record<string, typeof Bell> = {
   StaffLinkRequest: Users,
   StaffLinkApproved: Users,
   StaffInviteAccepted: Users,
+  DirectPaymentReceived: CreditCard,
 };
 
 function notificationIcon(type: string) {
   return TYPE_ICON[type] || Bell;
 }
 
-const STAFF_ACTION_URL_ALIASES: Record<string, string> = {
-  "/staff/businesses": "/staff",
-};
-
-function resolveStaffNotificationActionUrl(
-  actionUrl: string | null | undefined,
-): string | null {
-  if (!actionUrl?.trim()) return null;
-  const trimmed = actionUrl.trim();
-  if (/^https?:\/\//i.test(trimmed)) return trimmed;
-
-  const queryOrHashIndex = trimmed.search(/[?#]/);
-  const pathPart =
-    queryOrHashIndex === -1 ? trimmed : trimmed.slice(0, queryOrHashIndex);
-  const suffix = queryOrHashIndex === -1 ? "" : trimmed.slice(queryOrHashIndex);
-  const resolvedPath = STAFF_ACTION_URL_ALIASES[pathPart] || pathPart;
-  return `${resolvedPath}${suffix}`;
-}
-
-
 const PREF_KEYS = ['tipConfirmations', 'reviews', 'businessInvites']
 
 export default function StaffNotifications() {
   const { t, currentLanguage } = useTranslation();
   const navigate = useNavigate();
+  const { account, setPushPreference } = useStaffAccount();
   const { data: notifications = [], isPending } = useNotifications();
   const { data: unreadCount = 0 } = useUnreadCount();
   const markReadMutation = useMarkNotificationRead();
@@ -83,22 +67,7 @@ export default function StaffNotifications() {
 
   const handleNotificationClick = (notification: NotificationRecord) => {
     if (!notification.read) handleMarkRead(notification.id);
-
-    // Salon link requests are actioned (Accept/Decline) on the Salon Link & Tips page.
-    if (notification.type === 'StaffLinkRequest') {
-      navigate('/staff/qr')
-      return
-    }
-
-    const target = resolveStaffNotificationActionUrl(notification.actionUrl)
-    if (!target) return
-
-    if (/^https?:\/\//i.test(target)) {
-      window.location.assign(target);
-      return;
-    }
-
-    navigate(target);
+    navigateStaffNotification(notification, navigate, (screen) => navigate(`/staff/${screen === 'home' ? '' : screen}`));
   };
 
   if (isPending) {

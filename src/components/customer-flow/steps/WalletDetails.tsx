@@ -45,6 +45,7 @@ function buildInstructionSteps(
   recipientName: string,
   amount: number,
   t: (key: string, params?: Record<string, string | number>) => string,
+  paymentMode = false,
 ): React.ReactNode[] {
   const step1Key = walletKey === WALLET_KEYS.VENMO
     ? 'components.customer_flow.steps.WalletDetails.stepCopyUsername'
@@ -55,9 +56,15 @@ function buildInstructionSteps(
         : 'components.customer_flow.steps.WalletDetails.stepCopyEmail'
 
   const step1Full = t(step1Key, { name: recipientName, wallet: walletName })
-  const step3Full = t('components.customer_flow.steps.WalletDetails.stepSendAmount', { amount: amount.toFixed(2), name: recipientName })
-  const step4Full = t('components.customer_flow.steps.WalletDetails.stepConfirm')
-  const confirmLabel = t('components.customer_flow.steps.WalletDetails.yesISentThe')
+  const step3Full = paymentMode
+    ? t('components.customer_flow.steps.WalletDetails.stepSendAmountPayment', { amount: amount.toFixed(2), name: recipientName })
+    : t('components.customer_flow.steps.WalletDetails.stepSendAmount', { amount: amount.toFixed(2), name: recipientName })
+  const step4Full = paymentMode
+    ? t('components.customer_flow.steps.WalletDetails.stepConfirmPayment')
+    : t('components.customer_flow.steps.WalletDetails.stepConfirm')
+  const confirmLabel = paymentMode
+    ? t('direct_payment.confirm_sent')
+    : t('components.customer_flow.steps.WalletDetails.yesISentTheTip')
 
   const boldParts = (text: string, bolds: string[]): React.ReactNode => {
     const pattern = new RegExp(`(${bolds.map(b => b.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`)
@@ -138,6 +145,9 @@ export default function WalletDetails({
   setStep,
   paymentLinkData,
   tipPaymentMethodsData,
+  backStep = 'tip_amount',
+  paymentMode = false,
+  paymentCopyScope = 'merchant',
 }) {
   const isMultiStaff = selectedStaffMembers.length > 1
   const accentColor = walletAccentColor(selectedWalletObj.key)
@@ -198,11 +208,21 @@ export default function WalletDetails({
     ? bizName
     : selectedStaffMembers[0].fullName
 
-  const title = isMultiStaff
+  const title = paymentMode
+    ? t('direct_payment.wallet_title', {
+      wallet: selectedWalletObj.name,
+      amount: activeTipAmount.toFixed(2),
+      recipient: recipientName,
+    })
+    : isMultiStaff
     ? t('components.customer_flow.steps.WalletDetails.multiStaffTitle', { wallet: selectedWalletObj.name, amount: activeTipAmount.toFixed(2), business: bizName || recipientName })
     : t('components.customer_flow.steps.WalletDetails.singleStaffTitle', { wallet: selectedWalletObj.name, amount: activeTipAmount.toFixed(2), recipient: recipientName })
 
-  const subtitle = isMultiStaff
+  const subtitle = paymentMode
+    ? (paymentCopyScope === 'staff'
+      ? t('staff_direct_payment.review_payment_desc')
+      : t('direct_payment.review_payment_desc'))
+    : isMultiStaff
     ? t('components.customer_flow.steps.WalletDetails.multiStaffSubtitle', { business: bizName || recipientName })
     : (() => {
       const params = { recipient: recipientName }
@@ -247,7 +267,9 @@ export default function WalletDetails({
             ${activeTipAmount.toFixed(2)}
           </div>
           <p className="text-[10px] text-nexoraSubtle font-semibold tracking-wider uppercase">
-            {isMultiStaff
+            {paymentMode
+              ? t('direct_payment.total_payment')
+              : isMultiStaff
               ? t('components.customer_flow.steps.WalletDetails.totalCombinedTip')
               : t('components.customer_flow.steps.WalletDetails.tipAmount')}
           </p>
@@ -332,6 +354,7 @@ export default function WalletDetails({
                 recipientName,
                 activeTipAmount,
                 t,
+                paymentMode,
               ).map((step, i) => (
                 <li key={i} className="flex items-start gap-3">
                   <span className="flex-shrink-0 h-6 w-6 rounded-full bg-nexoraCanvas border border-nexoraBorder text-nexoraSubtle font-black text-[11px] flex items-center justify-center">
@@ -352,12 +375,12 @@ export default function WalletDetails({
           className="w-full py-4 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-95 active:scale-[0.99] transition-all text-white font-extrabold text-sm uppercase tracking-wider rounded-xl shadow-lg shadow-nexoraElectric/25 flex items-center justify-center gap-1.5"
         >
           <CheckCircle className="h-5 w-5" />
-          {t('components.customer_flow.steps.WalletDetails.yesISentThe')}
+          {t(paymentMode ? 'direct_payment.confirm_sent' : 'components.customer_flow.steps.WalletDetails.yesISentTheTip')}
         </button>
 
         <button
           type="button"
-          onClick={() => setStep('tip_amount')}
+          onClick={() => setStep(backStep)}
           className="w-full py-3 bg-nexoraCanvas border border-nexoraBorder hover:bg-nexoraSurfaceMuted transition text-nexoraMuted font-extrabold text-xs uppercase tracking-wider rounded-xl"
         >
           {t('components.customer_flow.steps.WalletDetails.goBack')}

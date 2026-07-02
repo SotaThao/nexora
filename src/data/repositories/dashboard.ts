@@ -7,6 +7,7 @@ import { isApiError } from '../../types/domain'
 import type {
   DashboardOverviewApiDto,
   DashboardOverviewMetrics,
+  DashboardReviewsSummary,
   DashboardStaffMetricApiDto,
   DashboardTipsChartApiDto,
   StaffLeaderboardRow,
@@ -86,6 +87,31 @@ export function createDashboardRepository(client: HttpClient = httpClient) {
         }
       } catch (err: unknown) {
         if (isApiError(err) && err.status === 404) {
+          return null
+        }
+        throw err
+      }
+    },
+
+    async getReviewsSummary(params: DateRangeParams = {}): Promise<DashboardReviewsSummary | null> {
+      try {
+        const response = await client.get<DashboardOverviewApiDto>(
+          '/api/v1/merchant/dashboard/overview',
+          { params: toDashboardDateParams(params) },
+        )
+        const reviews = response.reviewsSummary
+        if (!reviews) return null
+
+        return {
+          totalReviews: reviews.totalCount ?? 0,
+          averageRating: reviews.avgRating ?? 0,
+          googleClicks: reviews.googleClickCount ?? 0,
+          yelpClicks: reviews.yelpClickCount ?? 0,
+          count4To5Stars: reviews.count4To5Stars ?? 0,
+          count1To3Stars: reviews.count1To3Stars ?? 0,
+        }
+      } catch (err: unknown) {
+        if (isApiError(err) && (err.status === 404 || err.status === 403)) {
           return null
         }
         throw err

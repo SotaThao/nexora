@@ -165,6 +165,7 @@ export function useStaffManagement({
       vlinkpay: '',
       nexoraStaffId: member.staffCode || '',
       staffProfileId: member.staffProfileId || '',
+      averageRating: member.averageRating ?? 0,
       showInTipsFlow: member.showInTipsFlow !== false,
       payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member)
     })
@@ -186,6 +187,7 @@ export function useStaffManagement({
       vlinkpay: '',
       nexoraStaffId: member.staffCode || '',
       staffProfileId: member.staffProfileId || '',
+      averageRating: member.averageRating ?? 0,
       showInTipsFlow: member.showInTipsFlow !== false,
       payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member)
     })

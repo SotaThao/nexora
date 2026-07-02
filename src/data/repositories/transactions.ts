@@ -3,6 +3,7 @@
  */
 
 import httpClient from '../../lib/httpClient'
+import { normalizeTipStatus } from '../../constants/tipStatus'
 import { isApiError } from '../../types/domain'
 import type { TipApiDto, TipsPaginatedApiDto } from '../../types/repositories'
 import type { MerchantTipsConfirmReceiptResult, TransactionRecord } from '../../types/domain'
@@ -50,7 +51,7 @@ function normalizeTip(tip: TipApiDto): TransactionRecord {
   return {
     id: tip.id,
     amount: tip.amount ?? 0,
-    status: tip.status ?? 'Initiated',
+    status: normalizeTipStatus(tip.status),
     statusLabel: tip.statusLabel ?? null,
     paymentMethod: tip.paymentMethod ?? '',
     staffName: tip.staffName ?? '',

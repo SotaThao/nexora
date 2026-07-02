@@ -7,6 +7,7 @@ export default function SuccessPayment({
   activeTipAmount,
   selectedWalletObj,
   setStep,
+  paymentMode = false,
 }) {
   return (
     <div className="text-center space-y-6 animate-fadeIn py-4 flex flex-col items-center">
@@ -15,7 +16,7 @@ export default function SuccessPayment({
       </div>
 
       <h3 className="font-extrabold text-2xl text-nexoraText tracking-tight">
-        {t('customer.tips_summary_title')}
+        {paymentMode ? t('direct_payment.success_title') : t('customer.tips_summary_title')}
       </h3>
 
       <div className="w-full bg-nexoraCanvas border border-nexoraBorder rounded-2xl p-5 space-y-4 text-left shadow-sm">
@@ -45,7 +46,9 @@ export default function SuccessPayment({
 
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold text-nexoraSubtle uppercase tracking-wider">
-            {t('components.customer_flow.steps.TipAmount.totalTip')}
+            {paymentMode
+              ? t('direct_payment.total_payment')
+              : t('components.customer_flow.steps.TipAmount.totalTip')}
           </span>
           <span className="text-2xl font-black text-nexoraBrand">
             ${Number(activeTipAmount).toFixed(2)}

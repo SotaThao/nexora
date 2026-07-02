@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Plus,
   Trash2,
@@ -14,8 +15,11 @@ import {
   ExternalLink,
   Loader2,
   Eye,
+  Coins,
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
+import { useNotification } from '../contexts/NotificationContext'
+import CustomSelect from './CustomSelect'
 import Pagination from './ui/Pagination'
 import { useTouchpoints } from '../data/hooks/useMerchantTouchpoints'
 import {
@@ -94,9 +98,14 @@ export default function TouchpointsView({
   onDeleteDevice,
   onToggleDeviceStatus,
   activeSubTab: propActiveSubTab,
-  onTabChange
+  onTabChange,
+  stationsSection = 'tip',
+  onStationsSectionChange,
 }) {
   const { t, currentLanguage } = useTranslation()
+  const { showToast } = useNotification()
+  const navigate = useNavigate()
+  const [copiedId, setCopiedId] = useState(null)
   const [localActiveSubTab, setLocalActiveSubTab] = useState('stations')
   const activeSubTab = propActiveSubTab !== undefined ? propActiveSubTab : localActiveSubTab
   const setActiveSubTab = onTabChange !== undefined ? onTabChange : setLocalActiveSubTab
@@ -232,6 +241,18 @@ export default function TouchpointsView({
     }
   }
 
+  const handleCopy = useCallback(async (text, id) => {
+    if (!text) return
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedId(id)
+      showToast(t('components.settings.tabs.ProfileTab.copied'), 'success')
+      window.setTimeout(() => setCopiedId(null), 2000)
+    } catch {
+      showToast(t('components.dashboard.overview.Overview.copy_failed'), 'error')
+    }
+  }, [showToast, t])
+
   // Calculate dynamic Hardware KPIs
   const kpiTouchpoints = statsTouchpointsWithLinks
   const totalTouchpoints = totalCount ?? kpiTouchpoints.length
@@ -261,7 +282,6 @@ export default function TouchpointsView({
             {t('setup.qr_touchpoints_desc')}
           </p>
         </div>
-
         {/* Navigation Tabs */}
         <div className="flex w-full gap-1 rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted p-1 dark:border-luxuryGold/10 dark:bg-luxuryCoal sm:w-auto">
           {[
@@ -289,6 +309,12 @@ export default function TouchpointsView({
       </div>
 
       {activeSubTab === 'stations' && (
+        <>
+          <div className="space-y-3">
+            <p className="text-xs leading-relaxed text-nexoraMuted">
+              {t('dashboard.touchpoints.stations_sections.tip_desc')}
+            </p>
+          </div>
         <>
           {/* Hardware KPIs */}
           <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
@@ -338,7 +364,7 @@ export default function TouchpointsView({
 
           {/* Touchpoint Cards Grid */}
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-3">
-            {isLoading ? (
+            {isLoading || isFetching ? (
               <Panel className="md:col-span-2 xl:col-span-3 flex items-center justify-center py-16">
                 <Loader2 className="h-7 w-7 animate-spin text-nexoraBrand" />
               </Panel>
@@ -357,7 +383,7 @@ export default function TouchpointsView({
                 </div>
               </Panel>
             ) : null}
-            {!isLoading && touchpointsWithLinks.map((point) => {
+            {!isLoading && !isFetching && touchpointsWithLinks.map((point) => {
               const isPointActive = point.isActive !== false
               const isToggling = togglingTouchpointId === point.id
               let qrUrl = ''
@@ -410,13 +436,15 @@ export default function TouchpointsView({
                         <h3 className="font-extrabold text-sm text-nexoraText leading-snug truncate" title={point.name}>
                           {point.name}
                         </h3>
-                        <IconButton 
-                          label={t('common.delete')} 
-                          onClick={() => setDeleteConfirmId(point.id)} 
-                          className="text-nexoraDanger hover:opacity-85 hover:bg-nexoraDanger/10 p-1 rounded transition shrink-0 h-9 w-9"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </IconButton>
+                        {point.type !== 'FrontDesk' && point.slug !== 'master-store' && (
+                          <IconButton 
+                            label={t('common.delete')} 
+                            onClick={() => setDeleteConfirmId(point.id)} 
+                            className="text-nexoraDanger hover:opacity-85 hover:bg-nexoraDanger/10 p-1 rounded transition shrink-0 h-9 w-9"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </IconButton>
+                        )}
                       </div>
                       <div className="flex items-center gap-1.5 min-w-0">
                         <p className="text-[9.5px] font-mono text-nexoraSubtle select-all truncate flex-grow">
@@ -657,6 +685,7 @@ export default function TouchpointsView({
               </div>
             </div>
           )}
+        </>
         </>
       )}
 
