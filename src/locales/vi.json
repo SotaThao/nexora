@@ -124,7 +124,8 @@
         "skipped": "Khách đã chọn không tip.",
         "completed": "Tip này đã được nhận và hoàn tất.",
         "pending": "Đang chờ xác nhận thanh toán.",
-        "verified": "Tip này đã được xác minh."
+        "verified": "Tip này đã được xác minh.",
+        "initiated_force_warning": "Khách chưa xác nhận thanh toán này. Chỉ xác nhận nếu bạn chắc chắn đã nhận được tiền."
       },
       "status_help_aria": "Trạng thái này nghĩa là gì",
       "ai_insight": "Phân tích AI",

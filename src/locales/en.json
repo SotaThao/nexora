@@ -124,7 +124,8 @@
         "skipped": "The customer chose not to tip.",
         "completed": "This tip has been received and completed.",
         "pending": "Waiting for payment confirmation.",
-        "verified": "This tip has been verified."
+        "verified": "This tip has been verified.",
+        "initiated_force_warning": "The customer hasn't confirmed this payment yet. Only confirm if you're sure the money has arrived."
       },
       "status_help_aria": "What this status means",
       "ai_insight": "AI Insight",
