@@ -11,6 +11,7 @@ import {
   isReceiptConfirmableTip,
 } from '../utils'
 import { WalletLogos } from '../constants'
+import { isInitiatedLikeTipStatus, isTipStatus, TipStatus } from '../../../constants/tipStatus'
 import { logger } from '../../../utils/logger'
 import { buildQrImageUrl, slugify, toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
 import { useConfirmMerchantTipsReceipt } from '../../../data/hooks/useTransactions'
@@ -124,28 +125,28 @@ function renderStatusBadge(tx, t) {
   }
   const status = tx?.status
   const s = (status || '').toLowerCase()
-  if (s === 'completed') {
+  if (isTipStatus(status, TipStatus.Completed)) {
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100/50 mt-2">
         {status}
       </span>
     )
   }
-  if (s === 'success' || s === 'succeeded' || s === 'confirmed') {
+  if (s === 'success' || s === 'succeeded' || isTipStatus(status, TipStatus.Confirmed)) {
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100/50 mt-2">
         {t('components.dashboard.views.ReportsView.success')}
       </span>
     )
   }
-  if (s === 'pending' || s === 'processing' || s === 'initiated') {
+  if (isInitiatedLikeTipStatus(status)) {
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-100/50 mt-2">
         {t('components.dashboard.views.ReportsView.pending')}
       </span>
     )
   }
-  if (s === 'failed' || s === 'skipped') {
+  if (s === 'failed' || isTipStatus(status, TipStatus.Skipped)) {
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-100/50 mt-2">
         {t('components.dashboard.views.ReportsView.failed')}
@@ -268,10 +269,9 @@ export default function TransactionDetailModal({
     selectedTx.staffCode,
   )
 
-  const txStatus = String(selectedTx?.status || '').toLowerCase()
   // API may return 'Initiated', 'Pending', or 'Processing' - all represent a tip
   // where the customer has NOT yet confirmed payment. All need isForce to complete.
-  const isInitiatedTip = txStatus === 'initiated' || txStatus === 'pending' || txStatus === 'processing'
+  const isInitiatedTip = isInitiatedLikeTipStatus(selectedTx?.status)
 
   const awaitingShopConfirmation = !isStaffAudience && isReceiptConfirmableTip(selectedTx, false)
   const awaitingStaffConfirmation = isStaffAudience && isReceiptConfirmableTip(selectedTx, true)
