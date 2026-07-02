@@ -87,6 +87,12 @@ const LoginScreen = lazyWithRetry(() => import("./LoginScreen"));
 const QrRedirectPage = lazyWithRetry(
   () => import("../components/public/QrRedirectPage"),
 );
+const PrivacyPolicyPage = lazyWithRetry(
+  () => import("../components/legal/PrivacyPolicyPage"),
+);
+const TermsOfServicePage = lazyWithRetry(
+  () => import("../components/legal/TermsOfServicePage"),
+);
 const HelpQrPage = lazyWithRetry(
   () => import("../components/public/HelpQrPage"),
 );
@@ -175,6 +181,8 @@ export default function AppRouter() {
           <Route path="/pay/:businessId" element={<DirectPaymentFlow />} />
           <Route path="/qr/:code" element={<QrRedirectPage />} />
           <Route path="/help/qr/:code" element={<HelpQrPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms-of-service" element={<TermsOfServicePage />} />
           <Route path="/invite" element={<InviteRoute />} />
           <Route path="/invite/:token" element={<InviteRoute />} />
           <Route
