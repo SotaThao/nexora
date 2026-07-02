@@ -20,6 +20,7 @@ import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import { useConfirmStaffTipsReceipt } from '../../../data/hooks/useStaffSelf'
 import { useStaffHomeData } from '../hooks/useStaffHomeData'
 import { SkeletonLayout } from '../../ui/skeleton'
+import Tooltip from '../../ui/Tooltip'
 import { STAFF_HOME_SKELETON } from '../skeletons/staffDashboardSkeletons'
 import {
   getStaffBusinessLinkStatusPresentation,
@@ -159,7 +160,13 @@ export default function StaffHome() {
       {/* ── Pending Confirmations ────────────────────────────────────────── */}
       <div className="rounded-3xl border border-nexoraBorder bg-white p-5 shadow-nexora-card">
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-[17px] font-black tracking-tight text-nexoraText">{t('staff_dashboard.home.pending_confirmations')}</h2>
+          <div className="flex items-center gap-1.5">
+            <h2 className="text-[17px] font-black tracking-tight text-nexoraText">{t('staff_dashboard.home.pending_confirmations')}</h2>
+            <Tooltip
+              content={t('staff_dashboard.home.confirm_all_tooltip')}
+              ariaLabel={t('staff_dashboard.home.confirm_all_tooltip')}
+            />
+          </div>
           {isPendingTipsFetching && pendingTips.length > 0 ? (
             <span className="text-[11px] font-bold uppercase tracking-wider text-nexoraSubtle">{t('common.loading')}</span>
           ) : null}
@@ -183,7 +190,7 @@ export default function StaffHome() {
                   <button
                     type="button"
                     disabled={isConfirming}
-                    onClick={() => confirmTipsMutation.mutate([tip.id])}
+                    onClick={() => confirmTipsMutation.mutate({ tipIds: [tip.id] })}
                     className="h-9 shrink-0 rounded-full border border-nexoraBorder bg-white px-4 text-[13px] font-bold text-nexoraBrand transition hover:border-nexoraBrand disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {t('staff_dashboard.home.confirm')}
@@ -194,7 +201,7 @@ export default function StaffHome() {
             <button
               type="button"
               disabled={isConfirming}
-              onClick={() => confirmTipsMutation.mutate(pendingTips.map((tip) => tip.id))}
+              onClick={() => confirmTipsMutation.mutate({ tipIds: pendingTips.map((tip) => tip.id) })}
               className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-400 py-3 text-sm font-extrabold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <CheckCircle2 className="h-4 w-4" />
