@@ -27,7 +27,7 @@ import ReportsDirectPaymentsTab from './ReportsDirectPaymentsTab'
 
 // Confirm-receipt ownership follows US-024/US-025: staff owns direct-to-staff
 // tips, and the owner owns shop-account / multi-staff tips. Force-completing
-// Initiated/Pending tips must still respect that ownership.
+// Initiated/Pending/Processing tips must still respect that ownership.
 const REPORTS_TAB_TIPS = 'tips'
 const REPORTS_TAB_DIRECT_PAYMENTS = 'direct_payments'
 
