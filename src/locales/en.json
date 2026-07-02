@@ -80,6 +80,7 @@
       "no_pending": "No pending confirmations.",
       "confirm": "Confirm",
       "confirm_all": "Confirm All Received",
+      "confirm_all_tooltip": "Only tips with confirmed payment will be included. Initiated tips (payment not yet confirmed) are excluded.",
       "view_all": "View all",
       "manage": "Manage",
       "your_linked_businesses": "Your Linked Businesses",

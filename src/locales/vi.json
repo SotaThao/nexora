@@ -80,6 +80,7 @@
       "no_pending": "Không có tip nào chờ xác nhận.",
       "confirm": "Xác nhận",
       "confirm_all": "Xác nhận đã nhận tất cả",
+      "confirm_all_tooltip": "Chỉ các tip đã xác nhận thanh toán sẽ được bao gồm. Các tip đang chờ (chưa xác nhận thanh toán) sẽ bị bỏ qua.",
       "view_all": "Xem tất cả",
       "manage": "Quản lý",
       "your_linked_businesses": "Tiệm đã liên kết",

@@ -5,6 +5,7 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { useConfirmStaffTipsReceipt } from '../../../data/hooks/useStaffSelf'
 import { useStaffHomeData } from '../hooks/useStaffHomeData'
 import { SkeletonLayout } from '../../ui/skeleton'
+import Tooltip from '../../ui/Tooltip'
 import { STAFF_HOME_SKELETON } from '../skeletons/staffDashboardSkeletons'
 import {
   getStaffBusinessLinkStatusPresentation,
@@ -109,7 +110,7 @@ export default function StaffHome() {
                   <button
                     type="button"
                     disabled={isConfirming}
-                    onClick={() => confirmTipsMutation.mutate([tip.id])}
+                    onClick={() => confirmTipsMutation.mutate({ tipIds: [tip.id] })}
                     className="shrink-0 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-black text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {t('staff_dashboard.home.confirm')}
@@ -117,15 +118,22 @@ export default function StaffHome() {
                 </div>
               ))}
             </div>
-            <button
-              type="button"
-              disabled={isConfirming}
-              onClick={() => confirmTipsMutation.mutate(pendingTips.map((tip) => tip.id))}
-              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-400 py-3 text-sm font-extrabold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <CheckCircle2 className="h-4 w-4" />
-              {t('staff_dashboard.home.confirm_all')}
-            </button>
+            <div className="relative mt-3">
+              <Tooltip
+                content={t('staff_dashboard.home.confirm_all_tooltip')}
+                ariaLabel={t('staff_dashboard.home.confirm_all_tooltip')}
+                className="absolute -top-1 right-0"
+              />
+              <button
+                type="button"
+                disabled={isConfirming}
+                onClick={() => confirmTipsMutation.mutate({ tipIds: pendingTips.map((tip) => tip.id) })}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-400 py-3 text-sm font-extrabold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                {t('staff_dashboard.home.confirm_all')}
+              </button>
+            </div>
           </>
         )}
       </section>

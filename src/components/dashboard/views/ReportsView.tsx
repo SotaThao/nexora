@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { CreditCard, Coins, CheckCircle, Clock, XCircle, AlertCircle, Loader2, Eye } from 'lucide-react'
+import { CreditCard, Coins, CheckCircle, Clock, XCircle, AlertCircle, Eye } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { formatCurrency, formatTransactionDateTime, isAwaitingShopConfirmation } from '../utils'
 import { WalletLogos } from '../constants'
@@ -9,9 +9,8 @@ import Pagination from '../../ui/Pagination'
 import TransactionDetailModal from '../modals/TransactionDetailModal'
 import { usePagination } from '../../../hooks/usePagination'
 import { DEFAULT_PAGE_SIZE, STAFF_FILTER_LIST_PAGE_SIZE } from '../../../constants/pagination'
-import { useConfirmMerchantTipsReceipt, useTransactionsPaginated } from '../../../data/hooks/useTransactions'
+import { useTransactionsPaginated } from '../../../data/hooks/useTransactions'
 import {
-  useConfirmStaffTipsReceipt,
   useStaffTransactionsPaginated,
   useStaffProfile,
 } from '../../../data/hooks/useStaffSelf'
@@ -26,13 +25,22 @@ import ReportsDirectPaymentsTab from './ReportsDirectPaymentsTab'
 // direct-to-staff tips (isMultiStaff false) are only confirmed by the staff
 // member, shop-account / multi-staff tips are only confirmed by the owner —
 // each audience only ever sees the button for the tips it owns.
+//
+// Exception: Initiated tips can be force-completed by the merchant regardless
+// of isMultiStaff, because the payment hasn't been confirmed yet and the
+// merchant dashboard is the owner-facing view for force-completion.
 function isCompletableTip(tx, isStaffAudience) {
   const status = String(tx?.status || '').toLowerCase()
-  if (status !== 'initiated' && status !== 'confirmed') return false
+  // 'pending' / 'processing' are API-variant names for 'initiated'.
+  const isInitiatedStatus = status === 'initiated' || status === 'pending' || status === 'processing'
+  if (!isInitiatedStatus && status !== 'confirmed') return false
   if (isStaffAudience) {
     if (tx?.isMultiStaff) return false
     return !tx?.staffConfirmedAt
   }
+  // Merchant side: Initiated tips can always be force-completed;
+  // Confirmed tips follow the normal multi-staff ownership rule.
+  if (isInitiatedStatus) return true
   if (!tx?.isMultiStaff) return false
   return !tx?.merchantConfirmedAt
 }
@@ -127,19 +135,13 @@ function ReportsView({
   const { t, currentLanguage } = useTranslation()
   const isStaffAudience = audience === 'staff'
   const [searchParams, setSearchParams] = useSearchParams()
-  const [completingId, setCompletingId] = useState<string | null>(null)
-  const merchantCompleteMutation = useConfirmMerchantTipsReceipt()
-  const staffCompleteMutation = useConfirmStaffTipsReceipt()
-  const completeMutation = isStaffAudience ? staffCompleteMutation : merchantCompleteMutation
 
   const handleCompleteTip = useCallback((tx, event) => {
     event.stopPropagation()
-    if (completeMutation.isPending) return
-    setCompletingId(tx.id)
-    completeMutation.mutate([tx.id], {
-      onSettled: () => setCompletingId(null),
-    })
-  }, [completeMutation])
+    // Open TransactionDetailModal for confirmation popup instead of calling API directly.
+    // The modal will show transaction details and a Confirm button.
+    setSelectedTx(tx)
+  }, [])
 
   const activeTab =
     !isStaffAudience && searchParams.get('tab') === REPORTS_TAB_DIRECT_PAYMENTS
@@ -600,15 +602,10 @@ function ReportsView({
                         <button
                           type="button"
                           title={t('dashboard.activity_log.action_complete')}
-                          disabled={completingId === tx.id}
                           onClick={(e) => handleCompleteTip(tx, e)}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-100 bg-emerald-50 px-2.5 py-1.5 text-[11px] font-bold text-emerald-700 transition-colors hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-100 bg-emerald-50 px-2.5 py-1.5 text-[11px] font-bold text-emerald-700 transition-colors hover:bg-emerald-100 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400"
                         >
-                          {completingId === tx.id ? (
-                            <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
-                          ) : (
-                            <CheckCircle className="h-3.5 w-3.5 shrink-0" />
-                          )}
+                          <CheckCircle className="h-3.5 w-3.5 shrink-0" />
                           <span className="hidden sm:inline">{t('dashboard.activity_log.action_complete')}</span>
                         </button>
                       ) : null}
