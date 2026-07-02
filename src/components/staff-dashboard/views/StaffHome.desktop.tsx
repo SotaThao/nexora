@@ -88,7 +88,13 @@ export default function StaffHome() {
 
       {/* Pending confirmations */}
       <section className={panel}>
-        <h3 className="mb-3 text-base font-extrabold text-nexoraText">{t('staff_dashboard.home.pending_confirmations')}</h3>
+        <div className="mb-3 flex items-center gap-1.5">
+          <h3 className="text-base font-extrabold text-nexoraText">{t('staff_dashboard.home.pending_confirmations')}</h3>
+          <Tooltip
+            content={t('staff_dashboard.home.confirm_all_tooltip')}
+            ariaLabel={t('staff_dashboard.home.confirm_all_tooltip')}
+          />
+        </div>
         {isPendingTipsFetching && pendingTips.length > 0 ? (
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-nexoraSubtle">
             {t('common.loading')}
@@ -118,22 +124,15 @@ export default function StaffHome() {
                 </div>
               ))}
             </div>
-            <div className="relative mt-3">
-              <Tooltip
-                content={t('staff_dashboard.home.confirm_all_tooltip')}
-                ariaLabel={t('staff_dashboard.home.confirm_all_tooltip')}
-                className="absolute -top-1 right-0"
-              />
-              <button
-                type="button"
-                disabled={isConfirming}
-                onClick={() => confirmTipsMutation.mutate({ tipIds: pendingTips.map((tip) => tip.id) })}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-400 py-3 text-sm font-extrabold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <CheckCircle2 className="h-4 w-4" />
-                {t('staff_dashboard.home.confirm_all')}
-              </button>
-            </div>
+            <button
+              type="button"
+              disabled={isConfirming}
+              onClick={() => confirmTipsMutation.mutate({ tipIds: pendingTips.map((tip) => tip.id) })}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-400 py-3 text-sm font-extrabold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <CheckCircle2 className="h-4 w-4" />
+              {t('staff_dashboard.home.confirm_all')}
+            </button>
           </>
         )}
       </section>
