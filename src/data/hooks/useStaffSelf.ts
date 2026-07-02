@@ -164,13 +164,19 @@ export function useStaffTransactionsPaginated(
   })
 }
 
+export interface StaffConfirmReceiptVars {
+  tipIds: string[]
+  isForce?: boolean
+}
+
 export function useConfirmStaffTipsReceipt() {
   const queryClient = useQueryClient()
   const { showToast } = useNotification()
   const { t } = useTranslation()
 
-  return useMutation<StaffTipsConfirmReceiptResult, Error, string[]>({
-    mutationFn: (tipIds) => staffSelfRepository.confirmTipsReceipt(tipIds),
+  return useMutation<StaffTipsConfirmReceiptResult, Error, StaffConfirmReceiptVars>({
+    mutationFn: (vars) =>
+      staffSelfRepository.confirmTipsReceipt(vars.tipIds, { isForce: vars.isForce }),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['staffTips'] })
       queryClient.invalidateQueries({ queryKey: ['staffTransactions', 'paginated'] })
