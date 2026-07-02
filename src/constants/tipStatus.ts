@@ -9,10 +9,15 @@ export enum TipStatus {
   Completed = 'Completed',
 }
 
+export const TipStatusVariant = {
+  Pending: 'Pending',
+  Processing: 'Processing',
+} as const
+
 export const TIP_INITIATED_LIKE_STATUSES = [
   TipStatus.Initiated,
-  'Pending',
-  'Processing',
+  TipStatusVariant.Pending,
+  TipStatusVariant.Processing,
 ] as const
 
 /** Numeric TipStatus values from legacy/API enum responses. */
