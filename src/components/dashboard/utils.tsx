@@ -116,6 +116,29 @@ export function isStaffReceiptConfirmed(tx) {
   return Boolean(!tx?.isMultiStaff && tx?.staffConfirmedAt)
 }
 
+function isInitiatedLikeTip(tx) {
+  const status = String(tx?.status || '').toLowerCase()
+  return status === 'initiated' || status === 'pending' || status === 'processing'
+}
+
+// Initiated/Pending tips may be force-confirmed before the customer self-confirm
+// step, but ownership still follows US-024/US-025: staff owns direct-to-staff
+// tips, owner owns shop-account / multi-staff tips.
+export function isForceCompletableTip(tx, isStaffAudience = false) {
+  if (!isInitiatedLikeTip(tx)) return false
+  if (isStaffAudience) {
+    return Boolean(!tx?.isMultiStaff && !tx?.staffConfirmedAt)
+  }
+  return Boolean(tx?.isMultiStaff && !tx?.merchantConfirmedAt)
+}
+
+export function isReceiptConfirmableTip(tx, isStaffAudience = false) {
+  if (isStaffAudience) {
+    return isAwaitingStaffConfirmation(tx) || isForceCompletableTip(tx, true)
+  }
+  return isAwaitingShopConfirmation(tx) || isForceCompletableTip(tx, false)
+}
+
 export function walletLabels(accounts) {
   return Object.entries(accounts)
     .filter(([, value]) => value)

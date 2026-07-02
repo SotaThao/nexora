@@ -7,8 +7,8 @@ import {
   formatTransactionDateTime,
   isAwaitingShopConfirmation,
   isShopConfirmed,
-  isAwaitingStaffConfirmation,
   isStaffReceiptConfirmed,
+  isReceiptConfirmableTip,
 } from '../utils'
 import { WalletLogos } from '../constants'
 import { logger } from '../../../utils/logger'
@@ -269,27 +269,19 @@ export default function TransactionDetailModal({
   )
 
   const txStatus = String(selectedTx?.status || '').toLowerCase()
-  // API may return 'Initiated', 'Pending', or 'Processing' — all represent a tip
+  // API may return 'Initiated', 'Pending', or 'Processing' - all represent a tip
   // where the customer has NOT yet confirmed payment. All need isForce to complete.
   const isInitiatedTip = txStatus === 'initiated' || txStatus === 'pending' || txStatus === 'processing'
 
-  // Initiated tips can also be completed (force-confirm) from the modal.
-  // For Initiated status, the merchant can force-complete ANY tip (not just
-  // multi-staff) because payment hasn't been confirmed yet — isMultiStaff
-  // ownership only applies to the normal Confirmed→Completed flow.
-  // For staff: only direct-to-staff (non-multi-staff) tips.
-  const isCompletableInitiated = isInitiatedTip && (
-    isStaffAudience ? !selectedTx?.isMultiStaff : true
-  )
-
-  const awaitingShopConfirmation = !isStaffAudience && (isAwaitingShopConfirmation(selectedTx) || isCompletableInitiated)
-  const awaitingStaffConfirmation = isStaffAudience && (isAwaitingStaffConfirmation(selectedTx) || isCompletableInitiated)
+  const awaitingShopConfirmation = !isStaffAudience && isReceiptConfirmableTip(selectedTx, false)
+  const awaitingStaffConfirmation = isStaffAudience && isReceiptConfirmableTip(selectedTx, true)
   const shopConfirmed = !isStaffAudience && isShopConfirmed(selectedTx)
   const staffReceiptConfirmed = isStaffAudience && isStaffReceiptConfirmed(selectedTx)
   const isConfirming = confirmReceiptMutation.isPending
 
   const handleConfirmReceipt = () => {
     if (!selectedTx?.id || isConfirming) return
+    if (!isReceiptConfirmableTip(selectedTx, isStaffAudience)) return
     confirmReceiptMutation.mutate(
       { tipIds: [selectedTx.id], isForce: isInitiatedTip || undefined },
       {
