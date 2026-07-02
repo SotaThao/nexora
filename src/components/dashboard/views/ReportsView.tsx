@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { CreditCard, Coins, CheckCircle, Clock, XCircle, AlertCircle } from 'lucide-react'
+import { CreditCard, Coins, CheckCircle, Clock, XCircle, AlertCircle, Eye } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { formatCurrency, formatTransactionDateTime, isAwaitingShopConfirmation } from '../utils'
 import { WalletLogos } from '../constants'
@@ -10,12 +10,40 @@ import TransactionDetailModal from '../modals/TransactionDetailModal'
 import { usePagination } from '../../../hooks/usePagination'
 import { DEFAULT_PAGE_SIZE, STAFF_FILTER_LIST_PAGE_SIZE } from '../../../constants/pagination'
 import { useTransactionsPaginated } from '../../../data/hooks/useTransactions'
-import { useStaffTransactionsPaginated, useStaffProfile } from '../../../data/hooks/useStaffSelf'
+import {
+  useStaffTransactionsPaginated,
+  useStaffProfile,
+} from '../../../data/hooks/useStaffSelf'
 import { useMerchantStaff } from '../../../data/hooks/useMerchantStaff'
 import { useTouchpoints } from '../../../data/hooks/useMerchantTouchpoints'
 import type { TransactionsListQuery } from '../../../data/repositories/transactions'
 import ReportsTableSkeleton from './ReportsTableSkeleton'
 import ReportsDirectPaymentsTab from './ReportsDirectPaymentsTab'
+
+// A tip can be manually marked Completed from the table row while it is
+// still Initiated or Confirmed. Confirm-receipt ownership follows US-024/US-025:
+// direct-to-staff tips (isMultiStaff false) are only confirmed by the staff
+// member, shop-account / multi-staff tips are only confirmed by the owner —
+// each audience only ever sees the button for the tips it owns.
+//
+// Exception: Initiated tips can be force-completed by the merchant regardless
+// of isMultiStaff, because the payment hasn't been confirmed yet and the
+// merchant dashboard is the owner-facing view for force-completion.
+function isCompletableTip(tx, isStaffAudience) {
+  const status = String(tx?.status || '').toLowerCase()
+  // 'pending' / 'processing' are API-variant names for 'initiated'.
+  const isInitiatedStatus = status === 'initiated' || status === 'pending' || status === 'processing'
+  if (!isInitiatedStatus && status !== 'confirmed') return false
+  if (isStaffAudience) {
+    if (tx?.isMultiStaff) return false
+    return !tx?.staffConfirmedAt
+  }
+  // Merchant side: Initiated tips can always be force-completed;
+  // Confirmed tips follow the normal multi-staff ownership rule.
+  if (isInitiatedStatus) return true
+  if (!tx?.isMultiStaff) return false
+  return !tx?.merchantConfirmedAt
+}
 
 const REPORTS_TAB_TIPS = 'tips'
 const REPORTS_TAB_DIRECT_PAYMENTS = 'direct_payments'
@@ -107,6 +135,13 @@ function ReportsView({
   const { t, currentLanguage } = useTranslation()
   const isStaffAudience = audience === 'staff'
   const [searchParams, setSearchParams] = useSearchParams()
+
+  const handleCompleteTip = useCallback((tx, event) => {
+    event.stopPropagation()
+    // Open TransactionDetailModal for confirmation popup instead of calling API directly.
+    // The modal will show transaction details and a Confirm button.
+    setSelectedTx(tx)
+  }, [])
 
   const activeTab =
     !isStaffAudience && searchParams.get('tab') === REPORTS_TAB_DIRECT_PAYMENTS
@@ -524,7 +559,7 @@ function ReportsView({
               <th className="px-4 py-3">{t('dashboard.activity_log.col_tp')}</th>
               <th className="px-4 py-3">{t('dashboard.activity_log.col_payment')}</th>
               <th className="px-4 py-3">{t('dashboard.activity_log.col_status')}</th>
-              <th className="px-4 py-3 text-right">{t('components.dashboard.views.ReportsView.details')}</th>
+              <th className="px-4 py-3 text-right">{t('dashboard.activity_log.col_action')}</th>
             </tr>
           </thead>
           <tbody>
@@ -562,15 +597,31 @@ function ReportsView({
                     {renderStatusBadge(tx)}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setSelectedTx(tx)
-                      }}
-                      className="text-xs font-black text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer uppercase tracking-wider"
-                    >
-                      {t('components.dashboard.views.ReportsView.details')}
-                    </button>
+                    <div className="flex items-center justify-end gap-2">
+                      {isCompletableTip(tx, isStaffAudience) ? (
+                        <button
+                          type="button"
+                          title={t('dashboard.activity_log.action_complete')}
+                          onClick={(e) => handleCompleteTip(tx, e)}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-100 bg-emerald-50 px-2.5 py-1.5 text-[11px] font-bold text-emerald-700 transition-colors hover:bg-emerald-100 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400"
+                        >
+                          <CheckCircle className="h-3.5 w-3.5 shrink-0" />
+                          <span className="hidden sm:inline">{t('dashboard.activity_log.action_complete')}</span>
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        title={t('components.dashboard.views.ReportsView.details')}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setSelectedTx(tx)
+                        }}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-nexoraBorder bg-white px-2.5 py-1.5 text-[11px] font-bold text-nexoraText transition-colors hover:bg-nexoraCanvas"
+                      >
+                        <Eye className="h-3.5 w-3.5 shrink-0" />
+                        <span className="hidden sm:inline">{t('components.dashboard.views.ReportsView.details')}</span>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
