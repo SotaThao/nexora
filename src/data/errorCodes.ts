@@ -33,6 +33,16 @@ export const errorCodeToI18nKey = {
   PAYMENT_AMOUNT_TOO_HIGH: 'errors.payment_amount_too_high',
   PAYMENT_INVALID_PAYMENT_METHOD: 'errors.payment_invalid_payment_method',
 
+  // Payout management (US-55)
+  PAYOUT_AMOUNT_MUST_BE_POSITIVE: 'errors.payout_amount_must_be_positive',
+  PAYOUT_PERIOD_START_BEFORE_END: 'errors.payout_period_start_before_end',
+  PAYOUT_EVIDENCE_URLS_MAX_10: 'errors.payout_evidence_urls_max_10',
+  PAYOUT_TYPES_REQUIRED: 'errors.payout_types_required',
+  PAYOUT_UPDATE_NOT_ALLOWED: 'errors.payout_update_not_allowed',
+  PAYOUT_DELETE_NOT_ALLOWED: 'errors.payout_delete_not_allowed',
+  PAYOUT_CANCEL_NOT_ALLOWED: 'errors.payout_cancel_not_allowed',
+  PAYOUT_CONFIRM_NOT_ALLOWED: 'errors.payout_confirm_not_allowed',
+
   // Image
   IMAGE_FILE_SIZE_EXCEEDED: 'errors.image_file_size_exceeded',
   IMAGE_UNSUPPORTED_FILE_TYPE: 'errors.image_unsupported_file_type',

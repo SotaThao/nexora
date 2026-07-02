@@ -84,6 +84,19 @@ export const qk = {
   merchantPaymentDetail: (paymentId: string) => ['merchantPayments', 'detail', paymentId],
   merchantPaymentStats: (filters = EMPTY) => ['merchantPayments', 'stats', filters],
 
+  // US-55 — Payout Management (merchant)
+  merchantPayoutsList: (filters = EMPTY) => ['merchantPayouts', 'list', filters],
+  merchantPayoutDetail: (payoutId: string) => ['merchantPayouts', 'detail', payoutId],
+  merchantPayoutStats: () => ['merchantPayouts', 'stats'],
+  merchantPayoutStatsByStaff: () => ['merchantPayouts', 'statsByStaff'],
+  merchantUnpaidTips: () => ['merchantPayouts', 'unpaidTips'],
+  merchantDebtHistory: (filters = EMPTY) => ['merchantPayouts', 'debtHistory', filters],
+
+  // US-55 — Payout Management (staff)
+  staffPayoutsList: (filters = EMPTY) => ['staffPayouts', 'list', filters],
+  staffPayoutStats: () => ['staffPayouts', 'stats'],
+  staffUnpaidDebt: () => ['staffPayouts', 'unpaidDebt'],
+
   // Staff Payment Methods
   staffPaymentMethods: ()      => ['staffPaymentMethods'],
   staffPaymentQr: ()          => ['staffPaymentQr'],

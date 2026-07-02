@@ -654,6 +654,125 @@ export interface HomePageBannerSlide {
   target: '_blank' | '_self'
 }
 
+/** US-55 — Payout ledger item (merchant + staff list). */
+export interface PayoutRecord {
+  id: string
+  payoutCode: string
+  staffProfileId: string
+  staffDisplayName: string
+  staffCode: string
+  staffPhotoUrl: string | null
+  amount: number
+  payoutMethodType: string
+  payoutTypes: number
+  periodStart: string
+  periodEnd: string
+  evidenceCount: number
+  evidenceUrls: string[]
+  notes: string | null
+  status: number
+  staffConfirmedAt: string | null
+  createdAt: string
+  lastModified: string | null
+  /** Present on payout detail — snapshot of staff wallet at payout time. */
+  staffPaymentAccountInfo?: string | null
+}
+
+export interface PayoutsListPage {
+  items: PayoutRecord[]
+  pageNumber: number
+  pageSize: number
+  totalPages: number
+  totalCount: number
+  hasNextPage: boolean
+  hasPreviousPage: boolean
+}
+
+export interface PayoutMethodBreakdownStat {
+  method: string
+  amount: number
+  count: number
+}
+
+/** GET /api/v1/merchant/payouts/stats */
+export interface MerchantPayoutStats {
+  totalPaidAllTime: number
+  totalPaidThisMonth: number
+  totalPendingAmount: number
+  totalPendingCount: number
+  totalUnpaidDebt: number
+  staffWithDebt: number
+  cancelledThisMonth: number
+  methodBreakdown: PayoutMethodBreakdownStat[]
+}
+
+/** GET /api/v1/staff/payouts/stats */
+export interface StaffPayoutStats {
+  totalReceivedAllTime: number
+  totalReceivedThisMonth: number
+  totalPendingAmount: number
+  totalPendingCount: number
+  currentDebtBalance: number
+}
+
+export interface UnpaidTipDebtRecord {
+  payoutDebtId: string
+  staffProfileId: string
+  staffDisplayName: string
+  staffCode: string
+  staffPhotoUrl: string | null
+  balance: number
+  lastUpdatedAt: string
+}
+
+export interface UnpaidTipDebtsPage {
+  items: UnpaidTipDebtRecord[]
+  totalCount: number
+}
+
+export interface StaffUnpaidDebtRecord {
+  payoutDebtId: string
+  businessId: string
+  businessName: string
+  balance: number
+  lastUpdatedAt: string
+}
+
+export interface StaffUnpaidDebtsPage {
+  items: StaffUnpaidDebtRecord[]
+  totalCount: number
+}
+
+export interface PayoutDebtHistoryRecord {
+  id: string
+  amount: number
+  transactionType: number
+  referenceId: string
+  description: string | null
+  createdAt: string
+}
+
+export interface PayoutDebtHistoryPage {
+  items: PayoutDebtHistoryRecord[]
+  totalCount: number
+}
+
+export interface MerchantPayoutStaffStatRecord {
+  staffProfileId: string
+  staffDisplayName: string
+  staffCode: string
+  staffPhotoUrl: string | null
+  totalPaid: number
+  totalPending: number
+  currentDebt: number
+  payoutCount: number
+}
+
+export interface MerchantPayoutStatsByStaffPage {
+  items: MerchantPayoutStaffStatRecord[]
+  totalCount: number
+}
+
 export function getApiErrorCode(err: unknown, fallback = 'HTTP_ERROR'): string {
   return isApiError(err) ? err.errorCode : fallback
 }
