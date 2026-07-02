@@ -5,7 +5,6 @@ import { useEcosystemSignIn, useEcosystems } from '../../../data/hooks/useEcosys
 import {
   buildEcosystemCatalog,
   closeWindowIfOpen,
-  fitEcosystemLogo,
   isComingSoonEcosystem,
   isValidEcosystemRedirectUrl,
   openUrlInNewTab,
@@ -20,7 +19,6 @@ export default function HeaderEcosystem() {
   const { status } = useAuth()
   const isAuthenticated = status === 'authenticated'
   const wrapperRef = useRef<HTMLDivElement>(null)
-  const gridRef = useRef<HTMLDivElement>(null)
   const [isOpen, setIsOpen] = useState(false)
   const [selectedName, setSelectedName] = useState<string | null>(null)
   const [pulseName, setPulseName] = useState<string | null>(null)
@@ -51,22 +49,8 @@ export default function HeaderEcosystem() {
     }
   }, [isOpen])
 
-  useEffect(() => {
-    if (!isOpen || isLoading) return undefined
-    const frame = requestAnimationFrame(() => {
-      gridRef.current
-        ?.querySelectorAll<HTMLImageElement>('.eco-logo-img')
-        .forEach((img) => fitEcosystemLogo(img))
-    })
-    return () => cancelAnimationFrame(frame)
-  }, [isOpen, isLoading, catalogItems])
-
   const handleLogoError = (event: SyntheticEvent<HTMLImageElement>) => {
     event.currentTarget.src = '/assets/images/default.png'
-  }
-
-  const handleLogoLoad = (event: SyntheticEvent<HTMLImageElement>) => {
-    fitEcosystemLogo(event.currentTarget)
   }
 
   const handleEcosystemClick = async (ecosystem: EcosystemCatalogEntry) => {
@@ -137,8 +121,7 @@ export default function HeaderEcosystem() {
               </div>
             ) : (
               <div
-                ref={gridRef}
-                className="grid w-full grid-cols-2 gap-3 justify-items-stretch md:grid-cols-3 md:justify-items-center md:gap-3 lg:grid-cols-[repeat(auto-fill,minmax(104px,1fr))]"
+                className="grid w-full grid-cols-3 justify-items-center gap-x-2 gap-y-3 sm:gap-x-2.5 md:grid-cols-[repeat(auto-fill,minmax(104px,1fr))] md:gap-3"
               >
                 {catalogItems.map((ecosystem) => {
                   const comingSoon = isComingSoonEcosystem(ecosystem)
@@ -158,19 +141,18 @@ export default function HeaderEcosystem() {
                         cursor: comingSoon ? 'not-allowed' : undefined,
                         pointerEvents: comingSoon ? 'none' : undefined,
                       }}
-                      className={`group relative flex w-full flex-col items-center justify-start border-none bg-transparent p-0 text-center transition-transform duration-150 md:max-w-[112px] md:justify-self-center ${
+                      className={`group relative flex w-full max-w-[108px] shrink-0 flex-col items-center justify-start border-none bg-transparent p-0 text-center transition-transform duration-150 sm:max-w-[112px] md:max-w-[112px] md:justify-self-center ${
                         processing ? 'pointer-events-none opacity-85' : ''
                       } ${pulseName === ecosystem.name ? 'animate-eco-pulse' : ''}`}
                     >
-                      <span className="eco-logo-tile relative flex h-[156px] w-full items-center justify-center overflow-visible rounded-xl border border-transparent bg-white p-0.5 transition group-hover:border-[#bfdbfe] group-hover:bg-[#f8fbff] group-hover:shadow-[0_2px_8px_rgba(59,130,246,0.1)] group-focus-visible:border-[#bfdbfe] group-focus-visible:bg-[#f8fbff] group-focus-visible:shadow-[0_2px_8px_rgba(59,130,246,0.1)] md:aspect-square md:h-auto md:size-[104px] md:p-1.5">
+                      <span className="eco-logo-tile relative flex size-[96px] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-transparent bg-white p-1 transition group-hover:border-[#bfdbfe] group-hover:bg-[#f8fbff] group-hover:shadow-[0_2px_8px_rgba(59,130,246,0.1)] group-focus-visible:border-[#bfdbfe] group-focus-visible:bg-[#f8fbff] group-focus-visible:shadow-[0_2px_8px_rgba(59,130,246,0.1)] sm:size-[100px] md:size-[104px] md:p-1.5">
                         <img
                           src={ecosystem.logoUrl}
                           alt={ecosystem.name}
                           loading="eager"
                           decoding="async"
-                          onLoad={handleLogoLoad}
                           onError={handleLogoError}
-                          className="eco-logo-img block object-contain object-center transition group-hover:scale-[1.02] group-focus-visible:scale-[1.02]"
+                          className="eco-logo-img"
                         />
                         {processing && (
                           <span className="absolute inset-0 flex items-center justify-center rounded-lg bg-white/85">

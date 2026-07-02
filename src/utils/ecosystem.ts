@@ -222,40 +222,49 @@ const ECO_LOGO_FILL = 0.96;
 const ECO_LOGO_MAX_BOOST = 3.2;
 
 function applyEcosystemLogoFit(img: HTMLImageElement): void {
-  if (window.matchMedia("(min-width: 768px)").matches) {
-    img.style.width = "";
-    img.style.height = "";
-    img.style.transform = "";
-    return;
+  if (window.matchMedia('(min-width: 768px)').matches) {
+    img.style.width = ''
+    img.style.height = ''
+    img.style.transform = ''
+    return
   }
 
-  const { naturalWidth, naturalHeight } = img;
-  if (naturalWidth <= 0 || naturalHeight <= 0) return;
+  const { naturalWidth, naturalHeight } = img
+  if (naturalWidth <= 0 || naturalHeight <= 0) return
 
-  const tile = img.parentElement;
-  if (!tile) return;
+  const tile = img.parentElement
+  if (!tile) return
 
-  img.style.width = "";
-  img.style.height = "";
-  img.style.transform = "";
-  img.style.transformOrigin = "center";
+  const aspect = naturalWidth / naturalHeight
+  // Square catalog assets use fixed Tailwind sizes; only boost wide API banners.
+  if (aspect >= 0.72 && aspect <= 1.4) {
+    img.style.width = ''
+    img.style.height = ''
+    img.style.transform = ''
+    return
+  }
 
-  const maxW = tile.clientWidth;
-  const maxH = tile.clientHeight;
-  if (maxW <= 0 || maxH <= 0) return;
+  img.style.width = ''
+  img.style.height = ''
+  img.style.transform = ''
+  img.style.transformOrigin = 'center'
 
-  const scale = Math.min(maxW / naturalWidth, maxH / naturalHeight) * ECO_LOGO_FILL;
-  const width = naturalWidth * scale;
-  const height = naturalHeight * scale;
+  const maxW = tile.clientWidth
+  const maxH = tile.clientHeight
+  if (maxW <= 0 || maxH <= 0) return
 
-  img.style.width = `${Math.round(width)}px`;
-  img.style.height = `${Math.round(height)}px`;
+  const scale = Math.min(maxW / naturalWidth, maxH / naturalHeight) * ECO_LOGO_FILL
+  const width = naturalWidth * scale
+  const height = naturalHeight * scale
 
-  const targetHeight = maxH * ECO_LOGO_FILL;
+  img.style.width = `${Math.round(width)}px`
+  img.style.height = `${Math.round(height)}px`
+
+  const targetHeight = maxH * ECO_LOGO_FILL
   if (height < targetHeight) {
-    const boost = Math.min(targetHeight / height, ECO_LOGO_MAX_BOOST);
+    const boost = Math.min(targetHeight / height, ECO_LOGO_MAX_BOOST)
     if (boost > 1.02) {
-      img.style.transform = `scale(${boost.toFixed(3)})`;
+      img.style.transform = `scale(${boost.toFixed(3)})`
     }
   }
 }
