@@ -1,8 +1,10 @@
-import { useMemo, useState } from 'react'
-import { Download, X } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Download, Loader2, X } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
-import type { PayoutRecord, StaffMember } from '../../../types/domain'
+import { useMerchantPayoutsList } from '../../../data/hooks/useMerchantPayouts'
+import type { MerchantPayoutsListQuery } from '../../../data/repositories/payouts'
+import type { StaffMember } from '../../../types/domain'
 import { getPayoutStatusI18nKey, getPayoutTypeI18nKeys } from '../../../utils/payoutDisplay'
 import { formatTransactionDateTime } from '../../dashboard/utils'
 import CustomSelect from '../../CustomSelect'
@@ -23,12 +25,10 @@ function defaultMonthRange() {
 export default function PayoutExportModal({
   isOpen,
   onClose,
-  payouts,
   staffList,
 }: {
   isOpen: boolean
   onClose: () => void
-  payouts: PayoutRecord[]
   staffList: StaffMember[]
 }) {
   const { t, currentLanguage } = useTranslation()
@@ -37,6 +37,14 @@ export default function PayoutExportModal({
   const [customFrom, setCustomFrom] = useState('')
   const [customTo, setCustomTo] = useState('')
   const [staffProfileId, setStaffProfileId] = useState('all')
+
+  useEffect(() => {
+    if (!isOpen) return
+    setPeriodKey('year')
+    setCustomFrom('')
+    setCustomTo('')
+    setStaffProfileId('all')
+  }, [isOpen])
 
   const staffExportOptions = useMemo(
     () => [
@@ -53,22 +61,39 @@ export default function PayoutExportModal({
 
   const range = useMemo(() => {
     if (periodKey === 'month') return defaultMonthRange()
-    if (periodKey === 'custom' && customFrom && customTo) return { from: customFrom, to: customTo }
+    if (periodKey === 'custom') {
+      if (!customFrom || !customTo) return null
+      return { from: customFrom, to: customTo }
+    }
     return defaultYearRange()
   }, [periodKey, customFrom, customTo])
 
-  const filtered = useMemo(() => {
-    return payouts.filter((row) => {
-      const inRange = row.periodStart >= range.from && row.periodEnd <= range.to
-      const staffOk = staffProfileId === 'all' || row.staffProfileId === staffProfileId
-      return inRange && staffOk
-    })
-  }, [payouts, range, staffProfileId])
+  const exportQuery = useMemo<MerchantPayoutsListQuery | null>(() => {
+    if (!range || range.from > range.to) return null
+    return {
+      page: 1,
+      pageSize: 500,
+      periodFrom: range.from,
+      periodTo: range.to,
+      ...(staffProfileId !== 'all' ? { staffProfileId } : {}),
+    }
+  }, [range, staffProfileId])
+
+  const { data: exportPage, isPending, isFetching } = useMerchantPayoutsList(exportQuery ?? {}, {
+    enabled: isOpen && Boolean(exportQuery),
+  })
+
+  const exportRows = exportPage?.items ?? []
+  const isLoadingExport = isPending || isFetching
 
   if (!isOpen) return null
 
   const handleExport = () => {
-    if (!filtered.length) {
+    if (!exportQuery) {
+      showToast(t('dashboard.tips.payouts_manager.export_period_required'), 'error')
+      return
+    }
+    if (!exportRows.length) {
       showToast(t('dashboard.tips.payouts_manager.export_empty'), 'error')
       return
     }
@@ -84,7 +109,7 @@ export default function PayoutExportModal({
       'PeriodEnd',
       'Status',
     ]
-    const rows = filtered.map((row) => [
+    const rows = exportRows.map((row) => [
       row.payoutCode,
       formatTransactionDateTime(row.createdAt, currentLanguage),
       row.staffDisplayName,
@@ -103,7 +128,7 @@ export default function PayoutExportModal({
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.download = `payouts-${range.from}-${range.to}.csv`
+    link.download = `payouts-${exportQuery.periodFrom}-${exportQuery.periodTo}.csv`
     link.click()
     URL.revokeObjectURL(url)
     showToast(t('dashboard.tips.payouts_manager.export_success'), 'success')
@@ -153,7 +178,11 @@ export default function PayoutExportModal({
           </div>
 
           <p className="text-xs text-mutedGrey">
-            {t('dashboard.tips.payouts_manager.export_preview', { count: filtered.length })}
+            {isLoadingExport
+              ? t('dashboard.tips.payouts_manager.export_loading')
+              : !exportQuery
+                ? t('dashboard.tips.payouts_manager.export_period_required')
+                : t('dashboard.tips.payouts_manager.export_preview', { count: exportRows.length })}
           </p>
         </div>
 
@@ -161,8 +190,13 @@ export default function PayoutExportModal({
           <button type="button" onClick={onClose} className="rounded-lg border border-nexoraBorder px-4 py-2 text-sm font-bold">
             {t('common.cancel')}
           </button>
-          <button type="button" onClick={handleExport} className="inline-flex items-center gap-2 rounded-lg bg-nexoraBrand px-4 py-2 text-sm font-bold text-white">
-            <Download className="h-4 w-4" />
+          <button
+            type="button"
+            onClick={handleExport}
+            disabled={isLoadingExport || !exportQuery}
+            className="inline-flex items-center gap-2 rounded-lg bg-nexoraBrand px-4 py-2 text-sm font-bold text-white disabled:opacity-60"
+          >
+            {isLoadingExport ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
             {t('dashboard.tips.payouts_manager.export_action')}
           </button>
         </div>

@@ -11,6 +11,7 @@ import { getApiErrorCode } from '../../../types/domain'
 import { formatCurrency, formatTransactionDateTime } from '../../dashboard/utils'
 import {
   formatPayoutPeriodRange,
+  getPayoutStatusDescI18nKey,
   getPayoutTypeI18nKeys,
   isPayoutEditable,
   staffInitials,
@@ -104,8 +105,11 @@ export default function PayoutDetailModal({
                 {t('dashboard.tips.payouts_manager.field_amount')}
               </p>
               <p className="mt-1 text-3xl font-black text-inkBlue">{formatCurrency(payout.amount)}</p>
-              <div className="mt-3 flex justify-center">
+              <div className="mt-3 flex flex-col items-center gap-1.5">
                 <PayoutStatusBadge status={payout.status} />
+                <p className="max-w-xs text-center text-[11px] text-mutedGrey">
+                  {t(getPayoutStatusDescI18nKey(payout.status))}
+                </p>
               </div>
             </div>
 

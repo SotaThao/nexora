@@ -118,13 +118,6 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
   const { data: statsByStaff } = useMerchantPayoutStatsByStaff()
   const { data: unpaidPage, isPending: isUnpaidTipsPending } = useMerchantUnpaidTips()
   const { data: payoutsPage, isPending, isFetching } = useMerchantPayoutsList(apiQuery)
-  const exportListQuery = useMemo(
-    () => ({ ...apiQuery, page: 1, pageSize: 500 }),
-    [apiQuery],
-  )
-  const { data: exportPayoutsPage } = useMerchantPayoutsList(exportListQuery, {
-    enabled: isExportOpen,
-  })
   const { data: payoutDetail, isPending: isDetailLoading } = useMerchantPayoutDetail(selectedPayoutId, {
     enabled: Boolean(selectedPayoutId),
   })
@@ -212,7 +205,7 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
             />
           </div>
 
-          <div className="grid w-full grid-cols-2 gap-2 lg:grid-cols-4 2xl:flex 2xl:w-auto 2xl:flex-wrap 2xl:items-center">
+          <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-2 lg:grid-cols-4 2xl:flex 2xl:w-auto 2xl:flex-wrap 2xl:items-center">
             <PayoutToolbarSelect
               icon={Calendar}
               label={t('dashboard.tips.payouts_manager.filter_period_label')}
@@ -328,7 +321,6 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
         t={t}
         onCreatePayout={openCreateForStaff}
         onViewHistory={(staffDebt) => {
-          setIsUnpaidDialogOpen(false)
           setHistoryStaffProfile(staffDebt)
         }}
       />
@@ -352,7 +344,6 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
       <PayoutExportModal
         isOpen={isExportOpen}
         onClose={() => setIsExportOpen(false)}
-        payouts={exportPayoutsPage?.items ?? payouts}
         staffList={staff}
       />
 

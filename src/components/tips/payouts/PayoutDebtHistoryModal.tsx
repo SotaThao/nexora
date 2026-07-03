@@ -37,7 +37,7 @@ export default function PayoutDebtHistoryModal({
   const rows = data?.items ?? []
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-slate-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-4">
       <div className="max-h-[92dvh] w-full max-w-2xl overflow-y-auto rounded-t-2xl border border-nexoraBorder bg-white shadow-2xl sm:rounded-2xl">
         <div className="flex items-start justify-between border-b border-nexoraBorder px-5 py-4">
           <div>

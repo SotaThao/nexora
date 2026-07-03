@@ -56,6 +56,29 @@ const STATUS_I18N_KEY: Record<PayoutStatusValue, string> = {
   [PayoutStatus.Cancelled]: 'dashboard.tips.payouts_manager.status_cancelled',
 }
 
+const STAFF_STATUS_I18N_KEY: Record<PayoutStatusValue, string> = {
+  [PayoutStatus.Draft]: 'staff_payouts.status_draft',
+  [PayoutStatus.Pending]: 'staff_payouts.status_pending',
+  [PayoutStatus.Confirmed]: 'staff_payouts.status_confirmed',
+  [PayoutStatus.Cancelled]: 'staff_payouts.status_cancelled',
+}
+
+const STATUS_DESC_I18N_KEY: Record<PayoutStatusValue, string> = {
+  [PayoutStatus.Draft]: 'dashboard.tips.payouts_manager.status_draft_desc',
+  [PayoutStatus.Pending]: 'dashboard.tips.payouts_manager.status_pending_desc',
+  [PayoutStatus.Confirmed]: 'dashboard.tips.payouts_manager.status_confirmed_desc',
+  [PayoutStatus.Cancelled]: 'dashboard.tips.payouts_manager.status_cancelled_desc',
+}
+
+const STAFF_STATUS_DESC_I18N_KEY: Record<PayoutStatusValue, string> = {
+  [PayoutStatus.Draft]: 'staff_payouts.status_draft_desc',
+  [PayoutStatus.Pending]: 'staff_payouts.status_pending_desc',
+  [PayoutStatus.Confirmed]: 'staff_payouts.status_confirmed_desc',
+  [PayoutStatus.Cancelled]: 'staff_payouts.status_cancelled_desc',
+}
+
+export type PayoutStatusAudience = 'merchant' | 'staff'
+
 export function payoutMethodToUiKey(method: string): string {
   return METHOD_UI_KEY[method as PayoutMethodTypeValue] ?? method.toLowerCase().replace(/\s+/g, '')
 }
@@ -103,8 +126,14 @@ export function getStaffAvailablePayoutMethods(
   return ALL_PAYOUT_METHOD_TYPES.filter((method) => isStaffPayoutMethodAvailable(staff, method))
 }
 
-export function getPayoutStatusI18nKey(status: number): string {
-  return STATUS_I18N_KEY[status as PayoutStatusValue] ?? STATUS_I18N_KEY[PayoutStatus.Pending]
+export function getPayoutStatusI18nKey(status: number, audience: PayoutStatusAudience = 'merchant'): string {
+  const map = audience === 'staff' ? STAFF_STATUS_I18N_KEY : STATUS_I18N_KEY
+  return map[status as PayoutStatusValue] ?? map[PayoutStatus.Pending]
+}
+
+export function getPayoutStatusDescI18nKey(status: number, audience: PayoutStatusAudience = 'merchant'): string {
+  const map = audience === 'staff' ? STAFF_STATUS_DESC_I18N_KEY : STATUS_DESC_I18N_KEY
+  return map[status as PayoutStatusValue] ?? map[PayoutStatus.Pending]
 }
 
 export function getPayoutTypeI18nKeys(mask: number): string[] {

@@ -19,28 +19,42 @@ import PayoutMethodBadge from '../../tips/payouts/PayoutMethodBadge'
 import PayoutStatusBadge from '../../tips/payouts/PayoutStatusBadge'
 import PayoutToolbarSelect from '../../tips/payouts/PayoutToolbarSelect'
 import Pagination from '../../ui/Pagination'
-import { formatPayoutPeriodRange, getPayoutTypeI18nKeys } from '../../../utils/payoutDisplay'
+import { formatPayoutPeriodRange, getPayoutStatusDescI18nKey, getPayoutTypeI18nKeys } from '../../../utils/payoutDisplay'
 
 const STATUS_FILTER_OPTIONS = [
-  { value: 'all', labelKey: 'dashboard.tips.payouts_manager.filter_all_status' },
-  { value: String(PayoutStatus.Pending), labelKey: 'dashboard.tips.payouts_manager.status_pending' },
-  { value: String(PayoutStatus.Confirmed), labelKey: 'dashboard.tips.payouts_manager.status_confirmed' },
-  { value: String(PayoutStatus.Cancelled), labelKey: 'dashboard.tips.payouts_manager.status_cancelled' },
+  { value: 'all', labelKey: 'staff_payouts.filter_all_status' },
+  { value: String(PayoutStatus.Pending), labelKey: 'staff_payouts.status_pending' },
+  { value: String(PayoutStatus.Confirmed), labelKey: 'staff_payouts.status_confirmed' },
+  { value: String(PayoutStatus.Cancelled), labelKey: 'staff_payouts.status_cancelled' },
 ]
+
+const STAFF_PAYOUT_COL_KEYS = {
+  code: 'staff_payouts.col_code',
+  date: 'staff_payouts.col_date',
+  amount: 'staff_payouts.col_amount',
+  method: 'staff_payouts.col_method',
+  types: 'staff_payouts.col_types',
+  period: 'staff_payouts.col_period',
+  status: 'staff_payouts.col_status',
+  actions: 'staff_payouts.col_actions',
+} as const
 
 function StatCard({
   label,
   value,
+  sub,
   loading,
 }: {
   label: string
   value: string
+  sub?: string
   loading?: boolean
 }) {
   return (
     <div className="rounded-xl border border-nexoraBorder bg-white p-4 shadow-sm">
       <p className="text-[10px] font-extrabold uppercase tracking-wide text-nexoraMuted">{label}</p>
       <p className="mt-2 text-2xl font-black text-nexoraText">{loading ? '—' : value}</p>
+      {sub ? <p className="mt-1 text-[11px] font-semibold text-nexoraMuted">{sub}</p> : null}
     </div>
   )
 }
@@ -88,7 +102,7 @@ function StaffPayoutList({
                     {formatTransactionDateTime(row.createdAt, currentLanguage)}
                   </p>
                 </div>
-                <PayoutStatusBadge status={row.status} />
+                <PayoutStatusBadge status={row.status} audience="staff" />
               </div>
 
               <div className="flex items-center justify-between gap-2">
@@ -135,14 +149,14 @@ function StaffPayoutList({
         <table className="min-w-[940px] w-full text-left text-sm">
           <thead className="bg-slate-50 text-[10px] font-black uppercase tracking-wider text-nexoraMuted">
             <tr>
-              <th className="px-4 py-3">{t('dashboard.tips.payouts_manager.col_code')}</th>
-              <th className="px-4 py-3">{t('dashboard.tips.payouts_manager.col_date')}</th>
-              <th className="px-4 py-3">{t('dashboard.tips.payouts_manager.col_amount')}</th>
-              <th className="px-4 py-3">{t('dashboard.tips.payouts_manager.col_method')}</th>
-              <th className="px-4 py-3">{t('dashboard.tips.payouts_manager.col_types')}</th>
-              <th className="px-4 py-3">{t('dashboard.tips.payouts_manager.col_period')}</th>
-              <th className="px-4 py-3">{t('dashboard.tips.payouts_manager.col_status')}</th>
-              <th className="px-4 py-3">{t('dashboard.tips.payouts_manager.col_actions')}</th>
+              <th className="px-4 py-3">{t(STAFF_PAYOUT_COL_KEYS.code)}</th>
+              <th className="px-4 py-3">{t(STAFF_PAYOUT_COL_KEYS.date)}</th>
+              <th className="px-4 py-3">{t(STAFF_PAYOUT_COL_KEYS.amount)}</th>
+              <th className="px-4 py-3">{t(STAFF_PAYOUT_COL_KEYS.method)}</th>
+              <th className="px-4 py-3">{t(STAFF_PAYOUT_COL_KEYS.types)}</th>
+              <th className="px-4 py-3">{t(STAFF_PAYOUT_COL_KEYS.period)}</th>
+              <th className="px-4 py-3">{t(STAFF_PAYOUT_COL_KEYS.status)}</th>
+              <th className="px-4 py-3">{t(STAFF_PAYOUT_COL_KEYS.actions)}</th>
             </tr>
           </thead>
           <tbody>
@@ -174,7 +188,7 @@ function StaffPayoutList({
                     {formatPayoutPeriodRange(row.periodStart, row.periodEnd, currentLanguage)}
                   </td>
                   <td className="px-4 py-3">
-                    <PayoutStatusBadge status={row.status} />
+                    <PayoutStatusBadge status={row.status} audience="staff" />
                   </td>
                   <td className="px-4 py-3">
                     <button
@@ -223,7 +237,7 @@ function StaffPayoutDetailModal({
       <div className="max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-nexoraBorder bg-white shadow-2xl sm:rounded-2xl">
         <div className="flex items-start justify-between border-b border-nexoraBorder px-5 py-4">
           <div>
-            <h3 className="text-base font-black text-nexoraText">{t('dashboard.tips.payouts_manager.detail_title')}</h3>
+            <h3 className="text-base font-black text-nexoraText">{t('staff_payouts.detail_title')}</h3>
             <p className="mt-1 text-xs text-nexoraMuted">{t('staff_payouts.detail_sub')}</p>
           </div>
           <button type="button" onClick={onClose} className="rounded-lg border border-nexoraBorder p-2 text-nexoraMuted hover:bg-slate-50">
@@ -234,22 +248,25 @@ function StaffPayoutDetailModal({
         <div className="space-y-4 px-5 py-4">
           <div className="rounded-xl bg-nexoraCanvas p-4 text-center">
             <p className="text-[10px] font-extrabold uppercase tracking-wide text-nexoraMuted">
-              {t('dashboard.tips.payouts_manager.field_amount')}
+              {t('staff_payouts.field_amount')}
             </p>
             <p className="mt-1 text-3xl font-black text-nexoraText">{formatCurrency(payout.amount)}</p>
-            <div className="mt-2 flex justify-center">
-              <PayoutStatusBadge status={payout.status} />
+            <div className="mt-2 flex flex-col items-center gap-1.5">
+              <PayoutStatusBadge status={payout.status} audience="staff" />
+              <p className="max-w-xs text-center text-[11px] text-nexoraMuted">
+                {t(getPayoutStatusDescI18nKey(payout.status, 'staff'))}
+              </p>
             </div>
           </div>
 
           <dl className="grid grid-cols-[120px_1fr] gap-x-4 gap-y-2.5 text-sm">
-            <dt className="font-semibold text-nexoraMuted">{t('dashboard.tips.payouts_manager.col_code')}</dt>
+            <dt className="font-semibold text-nexoraMuted">{t(STAFF_PAYOUT_COL_KEYS.code)}</dt>
             <dd className="font-mono text-xs font-bold text-nexoraBrand">{payout.payoutCode}</dd>
-            <dt className="font-semibold text-nexoraMuted">{t('dashboard.tips.payouts_manager.col_date')}</dt>
+            <dt className="font-semibold text-nexoraMuted">{t(STAFF_PAYOUT_COL_KEYS.date)}</dt>
             <dd className="font-semibold text-nexoraText">{formatTransactionDateTime(payout.createdAt, currentLanguage)}</dd>
-            <dt className="font-semibold text-nexoraMuted">{t('dashboard.tips.payouts_manager.field_method')}</dt>
+            <dt className="font-semibold text-nexoraMuted">{t(STAFF_PAYOUT_COL_KEYS.method)}</dt>
             <dd><PayoutMethodBadge method={payout.payoutMethodType} /></dd>
-            <dt className="font-semibold text-nexoraMuted">{t('dashboard.tips.payouts_manager.col_types')}</dt>
+            <dt className="font-semibold text-nexoraMuted">{t(STAFF_PAYOUT_COL_KEYS.types)}</dt>
             <dd className="flex flex-wrap gap-1">
               {getPayoutTypeI18nKeys(payout.payoutTypes).map((key) => (
                 <span key={key} className="rounded-md border border-nexoraBorder bg-slate-50 px-2 py-0.5 text-[10px] font-bold">
@@ -257,13 +274,13 @@ function StaffPayoutDetailModal({
                 </span>
               ))}
             </dd>
-            <dt className="font-semibold text-nexoraMuted">{t('dashboard.tips.payouts_manager.col_period')}</dt>
+            <dt className="font-semibold text-nexoraMuted">{t(STAFF_PAYOUT_COL_KEYS.period)}</dt>
             <dd className="font-semibold text-nexoraText">
               {formatPayoutPeriodRange(payout.periodStart, payout.periodEnd, currentLanguage)}
             </dd>
             {payout.notes ? (
               <>
-                <dt className="font-semibold text-nexoraMuted">{t('dashboard.tips.payouts_manager.field_notes')}</dt>
+                <dt className="font-semibold text-nexoraMuted">{t('staff_payouts.field_notes')}</dt>
                 <dd className="text-nexoraText">{payout.notes}</dd>
               </>
             ) : null}
@@ -361,6 +378,11 @@ export default function StaffPayouts() {
         <StatCard
           label={t('staff_payouts.stat_pending')}
           value={formatCurrency(stats?.totalPendingAmount ?? 0)}
+          sub={
+            stats?.totalPendingCount
+              ? t('staff_payouts.stat_pending_sub', { count: stats.totalPendingCount })
+              : undefined
+          }
           loading={isStatsPending}
         />
         <StatCard
@@ -408,7 +430,7 @@ export default function StaffPayouts() {
           <h3 className="text-sm font-black text-nexoraText">{t('staff_payouts.list_title')}</h3>
           <PayoutToolbarSelect
             icon={List}
-            label={t('dashboard.tips.payouts_manager.filter_status_label')}
+            label={t('staff_payouts.filter_status_label')}
             value={statusFilter}
             onChange={setStatusFilter}
             options={statusOptions}

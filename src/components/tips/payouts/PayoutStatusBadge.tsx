@@ -16,7 +16,15 @@ const STATUS_ICON: Record<number, typeof Clock> = {
   [PayoutStatus.Cancelled]: X,
 }
 
-export default function PayoutStatusBadge({ status, className = '' }: { status: number; className?: string }) {
+export default function PayoutStatusBadge({
+  status,
+  audience = 'merchant',
+  className = '',
+}: {
+  status: number
+  audience?: 'merchant' | 'staff'
+  className?: string
+}) {
   const { t } = useTranslation()
   const Icon = STATUS_ICON[status]
   const style = STATUS_STYLE[status] ?? STATUS_STYLE[PayoutStatus.Pending]
@@ -24,7 +32,7 @@ export default function PayoutStatusBadge({ status, className = '' }: { status: 
   return (
     <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${style} ${className}`.trim()}>
       {Icon ? <Icon className="h-3 w-3" /> : null}
-      {t(getPayoutStatusI18nKey(status))}
+      {t(getPayoutStatusI18nKey(status, audience))}
     </span>
   )
 }
