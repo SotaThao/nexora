@@ -315,10 +315,15 @@ html {
   padding-right: 2rem !important;
 }
 
-/* Tax IQ dark inputs: keep black background on focus */
-#tax-iq input:focus,
-#tax-iq select:focus,
-#tax-iq textarea:focus {
+/* Tax IQ is a dark-theme card inside the light-theme homepage. The global
+   `.nx-homepage input/select/textarea` rule forces navy text on a white
+   background and outranks the card's Tailwind `bg-black text-white` by
+   specificity, so on focus/hover the field kept dark text on a dark background
+   (unreadable). Force the dark theme for these text fields in every state. */
+#tax-iq input:not([type="checkbox"]):not([type="radio"]),
+#tax-iq select,
+#tax-iq textarea {
+  color: #fff !important;
   background-color: #000 !important;
 }
 
