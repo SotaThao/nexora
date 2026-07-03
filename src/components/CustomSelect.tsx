@@ -32,7 +32,18 @@ export default function CustomSelect({
 
     const rect = button.getBoundingClientRect()
     const menuHeight = menu.offsetHeight
-    const width = Math.max(rect.width, menuMinWidth || 0)
+
+    const prevWidth = menu.style.width
+    const prevMinWidth = menu.style.minWidth
+    menu.style.width = 'max-content'
+    menu.style.minWidth = `${Math.max(rect.width, menuMinWidth || 0)}px`
+    const contentWidth = menu.offsetWidth
+    menu.style.width = prevWidth
+    menu.style.minWidth = prevMinWidth
+
+    const viewportMaxWidth = window.innerWidth - VIEWPORT_PAD * 2
+    const naturalWidth = Math.max(rect.width, contentWidth, menuMinWidth || 0)
+    const width = Math.min(naturalWidth, viewportMaxWidth)
 
     const spaceBelow = window.innerHeight - rect.bottom - VIEWPORT_PAD
     const spaceAbove = rect.top - VIEWPORT_PAD
@@ -92,6 +103,8 @@ export default function CustomSelect({
   const hasFontWeight = buttonClass.includes('font-')
   const fontWeightClass = hasFontWeight ? '' : (isSmall ? 'font-semibold' : '')
 
+  const hasWidthClass = /\bw-/.test(buttonClass)
+
   const optionTextClass = optionsClass || (isSmall ? 'text-xs' : 'text-sm')
 
   const buttonText = buttonLabel || (selectedOption ? selectedOption.label : placeholder)
@@ -124,7 +137,7 @@ export default function CustomSelect({
                       : 'text-nexoraText hover:bg-nexoraSurfaceMuted'
                   }`}
               >
-                <span>{opt.label}</span>
+                <span className="break-words text-left">{opt.label}</span>
               </button>
             )
           })}
@@ -143,6 +156,7 @@ export default function CustomSelect({
         className={`flex items-center justify-between border ${borderClassStr} ${textClassStr} ${bgClassStr} text-left transition-all select-none focus:outline-none ${focusBorderClassStr} ${focusRingClassStr}
           ${isSmall ? 'h-9 rounded px-3 text-xs' : 'min-h-[42px] rounded-lg px-4 py-2.5 text-sm'}
           ${fontWeightClass}
+          ${!hasWidthClass ? 'w-full' : ''}
           ${disabled ? 'cursor-not-allowed border-slate-200 bg-slate-100 text-nexoraSubtle' : 'cursor-pointer'}
           ${buttonClass || 'w-full'}`}
       >

@@ -52,6 +52,15 @@ export type PayoutMethodTypeValue = (typeof PayoutMethodType)[keyof typeof Payou
 
 export const ALL_PAYOUT_METHOD_TYPES = Object.values(PayoutMethodType)
 
+/** Merchant create-payout picker order — Cash last; `Other` is not shown (maps to Cash). */
+export const MERCHANT_CREATE_PAYOUT_METHOD_TYPES: PayoutMethodTypeValue[] = [
+  PayoutMethodType.Zelle,
+  PayoutMethodType.BankTransfer,
+  PayoutMethodType.CashApp,
+  PayoutMethodType.Venmo,
+  PayoutMethodType.Cash,
+]
+
 export const PayoutDebtTransactionType = {
   TipDebt: 1,
   PayoutSettlement: 2,
@@ -99,7 +108,7 @@ const PAYOUT_METHOD_API_TO_FE: Record<string, PayoutMethodTypeValue> = {
   BankWire: PayoutMethodType.BankTransfer,
   Venmo: PayoutMethodType.Venmo,
   CashApp: PayoutMethodType.CashApp,
-  Other: PayoutMethodType.Other,
+  Other: PayoutMethodType.Cash,
   Cash: PayoutMethodType.Cash,
   BankTransfer: PayoutMethodType.BankTransfer,
 }
@@ -110,8 +119,8 @@ const PAYOUT_METHOD_FE_TO_API: Record<string, string> = {
   [PayoutMethodType.BankTransfer]: 'BankWire',
   [PayoutMethodType.Venmo]: 'Venmo',
   [PayoutMethodType.CashApp]: 'CashApp',
+  [PayoutMethodType.Cash]: 'Other',
   [PayoutMethodType.Other]: 'Other',
-  [PayoutMethodType.Cash]: 'Cash',
 }
 
 export function normalizePayoutDateOnly(value?: string | null): string {

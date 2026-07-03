@@ -426,15 +426,21 @@ export default function StaffPayouts() {
       </div>
 
       <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm">
-        <div className="flex flex-col gap-3 border-b border-nexoraBorder p-4 sm:flex-row sm:items-center sm:justify-between">
-          <h3 className="text-sm font-black text-nexoraText">{t('staff_payouts.list_title')}</h3>
-          <PayoutToolbarSelect
-            icon={List}
-            label={t('staff_payouts.filter_status_label')}
-            value={statusFilter}
-            onChange={setStatusFilter}
-            options={statusOptions}
-          />
+        <div className="flex w-full min-w-0 items-center gap-3 border-b border-nexoraBorder p-4">
+          <h3 className="min-w-0 flex-1 text-sm font-black text-nexoraText">
+            {t('staff_payouts.list_title')}
+          </h3>
+          <div className="w-[9.5rem] shrink-0 sm:w-[11rem]">
+            <PayoutToolbarSelect
+              icon={List}
+              label={t('staff_payouts.filter_status_label')}
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={statusOptions}
+              fullWidth
+              menuMinWidth={0}
+            />
+          </div>
         </div>
 
         <StaffPayoutList

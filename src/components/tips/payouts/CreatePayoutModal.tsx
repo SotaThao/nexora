@@ -3,9 +3,9 @@ import { Copy, Loader2, Save, Upload, X } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import {
-  ALL_PAYOUT_METHOD_TYPES,
   ALL_PAYOUT_TYPE_FLAGS,
   MAX_PAYOUT_EVIDENCE_URLS,
+  MERCHANT_CREATE_PAYOUT_METHOD_TYPES,
   PayoutMethodType,
   PayoutType,
   hasPayoutType,
@@ -24,7 +24,7 @@ import type { PayoutRecord, UnpaidTipDebtRecord, StaffMember } from '../../../ty
 import { getApiErrorCode } from '../../../types/domain'
 import { formatCurrency } from '../../dashboard/utils'
 import CustomSelect from '../../CustomSelect'
-import { payoutMethodToUiKey, getStaffAvailablePayoutMethods, isStaffPayoutMethodAvailable, resolvePayoutStaffProfileId } from '../../../utils/payoutDisplay'
+import { payoutMethodToUiKey, getStaffAvailablePayoutMethods, isStaffPayoutMethodAvailable, resolvePayoutStaffProfileId, sortPayoutMethodsCashLast } from '../../../utils/payoutDisplay'
 import {
   formatUsdInputAmount,
   parseDirectPaymentAmountInput,
@@ -35,9 +35,6 @@ const PAYOUT_AMOUNT_MAX = 999_999.99
 
 const MAX_EVIDENCE_FILES = 3
 const EVIDENCE_IMAGE_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif', '.bmp', '.svg'])
-const SELECTABLE_PAYOUT_METHOD_TYPES = ALL_PAYOUT_METHOD_TYPES.filter(
-  (method) => method !== PayoutMethodType.Other,
-)
 const METHOD_I18N: Record<string, string> = {
   [PayoutMethodType.Cash]: 'dashboard.tips.payouts_manager.method_cash',
   [PayoutMethodType.BankTransfer]: 'dashboard.tips.payouts_manager.method_bank',
@@ -53,7 +50,8 @@ const TYPE_I18N: Record<number, string> = {
   [PayoutType.Bonus]: 'dashboard.tips.payouts_manager.type_bonus',
   [PayoutType.Other]: 'dashboard.tips.payouts_manager.type_other',
 }
-const CREATE_ALLOWED_PAYOUT_TYPES = new Set<number>([PayoutType.Tip])
+
+const CREATE_PAYOUT_TYPE_FLAGS = [PayoutType.Tip] as const
 
 function defaultPeriodDates() {
   const now = new Date()
@@ -148,14 +146,14 @@ export default function CreatePayoutModal({
   }, [eligibleStaff, editingPayout, staffList])
 
   const payoutMethodOptions = useMemo(() => {
-    const methods = [...SELECTABLE_PAYOUT_METHOD_TYPES]
+    const methods = [...MERCHANT_CREATE_PAYOUT_METHOD_TYPES]
     if (editingPayout) {
       const method = normalizePayoutMethodType(editingPayout.payoutMethodType)
       if (!methods.includes(method)) {
         methods.push(method)
       }
     }
-    return methods
+    return sortPayoutMethodsCashLast(methods)
   }, [editingPayout])
 
   const debtByStaffId = useMemo(() => {
@@ -253,16 +251,16 @@ export default function CreatePayoutModal({
 
   if (!isOpen) return null
 
+  const payoutTypeOptions = isEditing ? ALL_PAYOUT_TYPE_FLAGS : CREATE_PAYOUT_TYPE_FLAGS
+
   const isPayoutMethodSelectable = (method: string) => {
     if (isEditing && normalizePayoutMethodType(editingPayout?.payoutMethodType) === method) {
       return true
     }
     return isStaffPayoutMethodAvailable(selectedStaff, method as PayoutMethodTypeValue)
   }
-  const isPayoutTypeSelectable = (flag: number) => {
-    if (isEditing) return true
-    return CREATE_ALLOWED_PAYOUT_TYPES.has(flag)
-  }
+
+  const resolvedPayoutTypes = isEditing ? payoutTypesMask : PayoutType.Tip
 
   const handleCopyAccount = async () => {
     if (!staffAccount) return
@@ -403,7 +401,7 @@ export default function CreatePayoutModal({
       }
       return
     }
-    if (!isPayoutTypesMaskValid(payoutTypesMask)) {
+    if (!isPayoutTypesMaskValid(resolvedPayoutTypes)) {
       showToast(t(getErrorI18nKey('PAYOUT_TYPES_REQUIRED')), 'error')
       return
     }
@@ -412,7 +410,7 @@ export default function CreatePayoutModal({
       staffProfileId,
       payoutMethodType,
       amount: parsedAmount,
-      payoutTypes: payoutTypesMask,
+      payoutTypes: resolvedPayoutTypes,
       periodStart,
       periodEnd,
       evidenceUrls,
@@ -584,8 +582,9 @@ export default function CreatePayoutModal({
                   {t('dashboard.tips.payouts_manager.field_types')} *
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {ALL_PAYOUT_TYPE_FLAGS.map((flag) => {
-                    const selectable = isPayoutTypeSelectable(flag)
+                  {payoutTypeOptions.map((flag) => {
+                    const selected = hasPayoutType(payoutTypesMask, flag)
+                    const selectable = isEditing
                     return (
                       <button
                         key={flag}
@@ -593,11 +592,11 @@ export default function CreatePayoutModal({
                         disabled={!selectable}
                         onClick={() => selectable && setPayoutTypesMask((mask) => togglePayoutType(mask, flag))}
                         className={`rounded-lg border px-3 py-1.5 text-xs font-bold ${
-                          hasPayoutType(payoutTypesMask, flag)
+                          selected
                             ? 'border-nexoraBrand bg-nexoraBrand/10 text-nexoraBrand'
                             : selectable
                               ? 'border-nexoraBorder'
-                              : 'cursor-not-allowed border-nexoraBorder/60 bg-slate-50 text-mutedGrey opacity-60'
+                              : 'cursor-default border-nexoraBorder'
                         }`}
                       >
                         {t(TYPE_I18N[flag])}

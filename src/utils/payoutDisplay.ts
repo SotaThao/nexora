@@ -123,7 +123,22 @@ export function isStaffPayoutMethodAvailable(
 export function getStaffAvailablePayoutMethods(
   staff: StaffMember | null | undefined,
 ): PayoutMethodTypeValue[] {
-  return ALL_PAYOUT_METHOD_TYPES.filter((method) => isStaffPayoutMethodAvailable(staff, method))
+  const methods = ALL_PAYOUT_METHOD_TYPES.filter((method) => isStaffPayoutMethodAvailable(staff, method))
+  return sortPayoutMethodsCashLast(methods)
+}
+
+const PAYOUT_METHOD_DISPLAY_ORDER: PayoutMethodTypeValue[] = [
+  PayoutMethodType.Zelle,
+  PayoutMethodType.BankTransfer,
+  PayoutMethodType.CashApp,
+  PayoutMethodType.Venmo,
+  PayoutMethodType.Cash,
+  PayoutMethodType.Other,
+]
+
+export function sortPayoutMethodsCashLast(methods: PayoutMethodTypeValue[]): PayoutMethodTypeValue[] {
+  const order = new Map(PAYOUT_METHOD_DISPLAY_ORDER.map((method, index) => [method, index]))
+  return [...methods].sort((a, b) => (order.get(a) ?? 99) - (order.get(b) ?? 99))
 }
 
 export function getPayoutStatusI18nKey(status: number, audience: PayoutStatusAudience = 'merchant'): string {
