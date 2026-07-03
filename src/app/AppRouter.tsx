@@ -11,6 +11,10 @@ import {
 import { scrollToPageTop } from "../utils/scrollToPageTop";
 import { useAuth } from "../auth/useAuth";
 import {
+  registerNotificationNavigateHandler,
+  unregisterNotificationNavigateHandler,
+} from "../native/onesignal";
+import {
   AnalyticsRoute,
   FallbackRoute,
   OverviewRoute,
@@ -157,6 +161,17 @@ function ScrollToTop() {
   return null;
 }
 
+// Bridges OneSignal notification-click targets (Launch URL) to React Router
+// navigation, since onesignal.ts is a plain module with no router access.
+function OneSignalNotificationBridge() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    registerNotificationNavigateHandler(navigate);
+    return () => unregisterNotificationNavigateHandler();
+  }, [navigate]);
+  return null;
+}
+
 export default function AppRouter() {
   const { session, logout } = useAuth();
   const location = useLocation();
@@ -164,6 +179,7 @@ export default function AppRouter() {
   return (
     <ErrorBoundary resetKey={location.pathname}>
       <ScrollToTop />
+      <OneSignalNotificationBridge />
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
           <Route path="/" element={<RootRedirect />} />
@@ -179,6 +195,7 @@ export default function AppRouter() {
           />
           <Route path="/pay/staff/:staffProfileId" element={<StaffDirectPaymentFlow />} />
           <Route path="/pay/:businessId" element={<DirectPaymentFlow />} />
+          <Route path="/merchant/payments/:paymentId" element={<PaymentsRedirect />} />
           <Route path="/qr/:code" element={<QrRedirectPage />} />
           <Route path="/help/qr/:code" element={<HelpQrPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />

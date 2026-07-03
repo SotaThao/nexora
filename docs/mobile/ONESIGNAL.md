@@ -101,3 +101,12 @@ Authorization: Bearer <access_token>
 Override path via `VITE_PUSH_DEVICE_REGISTER_PATH` if BE uses a different route.
 
 If the endpoint returns 404/501, registration is skipped silently and retried on next login.
+
+## 7. Notification click / Launch URL
+
+Set the notification's **Launch URL** to an app-relative path, e.g. `/merchant/payments/<paymentId>` or `/staff/payments/<paymentId>`. On tap, `src/native/onesignal.ts` reads `event.result.url` / `event.notification.launchURL` from the `click` listener and routes it:
+
+- Relative or same-origin path → in-app navigation via React Router (bridged from `OneSignalNotificationBridge` in `src/app/AppRouter.tsx`, since `onesignal.ts` has no router access on its own). Works even if the click fires before the router mounts (cold start) — the target is buffered and replayed once the bridge registers.
+- Cross-origin absolute URL → opened externally via `window.location.assign`.
+
+`/merchant/payments/:paymentId` and `/dashboard/payments/:paymentId` both redirect to `/dashboard/reports?tab=direct_payments&paymentId=<id>` (owner/merchant); `/staff/payments/:paymentId` opens the staff transactions view directly.
