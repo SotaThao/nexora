@@ -22,6 +22,7 @@ import PayoutDetailModal from '../payouts/PayoutDetailModal'
 import PayoutExportModal from '../payouts/PayoutExportModal'
 import UnpaidTipDebtsPanel from '../payouts/UnpaidTipDebtsPanel'
 import PayoutDebtHistoryModal from '../payouts/PayoutDebtHistoryModal'
+import { formatLocalDateIso } from '../../../utils/localDate'
 
 const STATUS_FILTER_OPTIONS = [
   { value: 'all', labelKey: 'dashboard.tips.payouts_manager.filter_all_status' },
@@ -44,8 +45,7 @@ function currentMonthRange() {
   const now = new Date()
   const start = new Date(now.getFullYear(), now.getMonth(), 1)
   const end = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-  const toIso = (d: Date) => d.toISOString().slice(0, 10)
-  return { periodFrom: toIso(start), periodTo: toIso(end) }
+  return { periodFrom: formatLocalDateIso(start), periodTo: formatLocalDateIso(end) }
 }
 
 export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }) {

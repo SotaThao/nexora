@@ -971,7 +971,7 @@
         "evidence_title": "Payment evidence",
         "evidence_drop": "Drag images here or browse",
         "evidence_hint": "Up to {{max}} images",
-        "evidence_image_only": "Invalid file type. Please upload image files only (PNG, JPEG, WebP).",
+        "evidence_image_only": "Invalid file type. Please upload image files only (JPG, PNG, GIF, WebP, HEIC, SVG).",
         "evidence_max": "Maximum {{max}} evidence images",
         "evidence_count": "{{count}} image(s)",
         "evidence_privacy": "Evidence images are visible only to the salon owner for tax and audit review.",

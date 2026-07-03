@@ -971,7 +971,7 @@
         "evidence_title": "Bằng chứng chuyển tiền",
         "evidence_drop": "Kéo thả ảnh vào đây hoặc chọn ảnh",
         "evidence_hint": "Tối đa {{max}} ảnh",
-        "evidence_image_only": "Loại file không hợp lệ. Vui lòng chỉ tải lên file ảnh (PNG, JPEG, WebP).",
+        "evidence_image_only": "Loại file không hợp lệ. Vui lòng chỉ tải lên file ảnh (JPG, PNG, GIF, WebP, HEIC, SVG).",
         "evidence_max": "Tối đa {{max}} ảnh bằng chứng",
         "evidence_count": "{{count}} ảnh",
         "evidence_privacy": "Ảnh bằng chứng chỉ Salon Owner xem được — dùng đối chiếu thuế và kiểm toán.",

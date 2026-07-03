@@ -25,11 +25,7 @@ import { getApiErrorCode } from '../../../types/domain'
 import { formatCurrency } from '../../dashboard/utils'
 import CustomSelect from '../../CustomSelect'
 import { payoutMethodToUiKey, getStaffAvailablePayoutMethods, isStaffPayoutMethodAvailable, resolvePayoutStaffProfileId, sortPayoutMethodsCashLast } from '../../../utils/payoutDisplay'
-import {
-  formatUsdInputAmount,
-  parseDirectPaymentAmountInput,
-  sanitizeDirectPaymentAmountInput,
-} from '../../../utils/currencyInput'
+import { formatLocalDateIso } from '../../../utils/localDate'
 
 const PAYOUT_AMOUNT_MAX = 999_999.99
 
@@ -57,8 +53,7 @@ function defaultPeriodDates() {
   const now = new Date()
   const start = new Date(now.getFullYear(), now.getMonth(), 1)
   const end = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-  const toIso = (d: Date) => d.toISOString().slice(0, 10)
-  return { periodStart: toIso(start), periodEnd: toIso(end) }
+  return { periodStart: formatLocalDateIso(start), periodEnd: formatLocalDateIso(end) }
 }
 
 function resolveStaffAccount(staff: StaffMember | null, method: string): string {
@@ -66,7 +61,7 @@ function resolveStaffAccount(staff: StaffMember | null, method: string): string 
   const uiKey = payoutMethodToUiKey(method)
   const configs = staff.payoutConfigs as Record<string, { enabled?: boolean; value?: string }> | undefined
   const accounts = staff.paymentAccounts as Record<string, string> | undefined
-  return configs?.[uiKey]?.value?.trim() || accounts?.[uiKey]?.trim() || ''
+  return accounts?.[uiKey]?.trim() || configs?.[uiKey]?.value?.trim() || ''
 }
 
 function isEvidenceImageFile(file: File): boolean {
@@ -249,6 +244,16 @@ export default function CreatePayoutModal({
     })
   }, [isOpen, isEditing, selectedStaff, availablePayoutMethods])
 
+  useEffect(() => {
+    if (isOpen) return
+    setEvidencePreviews((prev) => {
+      prev.forEach((url) => {
+        if (url.startsWith('blob:')) URL.revokeObjectURL(url)
+      })
+      return prev
+    })
+  }, [isOpen])
+
   if (!isOpen) return null
 
   const payoutTypeOptions = isEditing ? ALL_PAYOUT_TYPE_FLAGS : CREATE_PAYOUT_TYPE_FLAGS
@@ -380,8 +385,12 @@ export default function CreatePayoutModal({
   }
 
   const removeEvidence = (index: number) => {
+    setEvidencePreviews((prev) => {
+      const url = prev[index]
+      if (url?.startsWith('blob:')) URL.revokeObjectURL(url)
+      return prev.filter((_, i) => i !== index)
+    })
     setEvidenceUrls((prev) => prev.filter((_, i) => i !== index))
-    setEvidencePreviews((prev) => prev.filter((_, i) => i !== index))
   }
 
   const handleSubmit = async () => {

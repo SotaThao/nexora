@@ -47,11 +47,15 @@ export function createPublicBusinessesRepository(client: HttpClient = httpClient
         {},
         { anonymous: true },
       )
-      await client.post<LooseObject>(
-        '/api/v1/tips/confirm-receipt',
-        { tipIds: [tipId] },
-        { anonymous: true },
-      )
+      try {
+        await client.post<LooseObject>(
+          '/api/v1/tips/confirm-receipt',
+          { tipIds: [tipId] },
+          { anonymous: true },
+        )
+      } catch {
+        // Best-effort sync; primary confirm already succeeded.
+      }
       return confirmResult
     },
   }

@@ -8,6 +8,7 @@ import type { StaffMember } from '../../../types/domain'
 import { getPayoutStatusI18nKey, getPayoutTypeI18nKeys } from '../../../utils/payoutDisplay'
 import { formatTransactionDateTime } from '../../dashboard/utils'
 import CustomSelect from '../../CustomSelect'
+import { formatLocalDateIso } from '../../../utils/localDate'
 
 function defaultYearRange() {
   const year = new Date().getFullYear()
@@ -18,8 +19,7 @@ function defaultMonthRange() {
   const now = new Date()
   const start = new Date(now.getFullYear(), now.getMonth(), 1)
   const end = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-  const toIso = (d: Date) => d.toISOString().slice(0, 10)
-  return { from: toIso(start), to: toIso(end) }
+  return { from: formatLocalDateIso(start), to: formatLocalDateIso(end) }
 }
 
 export default function PayoutExportModal({
