@@ -48,10 +48,12 @@ export const qk = {
   kybRegister:              () => ['userProfile', 'kybRegister'],
 
   // Merchant Staff Management
-  merchantStaff:       (statusFilter?: string, pageNumber?: number, pageSize?: number) => {
+  merchantStaff:       (statusFilter?: string, pageNumber?: number, pageSize?: number, keyword?: string) => {
     const key: unknown[] = ['merchantStaff']
     if (statusFilter) key.push(statusFilter)
-    if (pageNumber !== undefined || pageSize !== undefined) key.push({ pageNumber, pageSize })
+    if (pageNumber !== undefined || pageSize !== undefined || keyword) {
+      key.push({ pageNumber, pageSize, keyword: keyword?.trim() || '' })
+    }
     return key
   },
   merchantStaffSearch: (q)     => ['merchantStaff', 'search', q],
@@ -83,6 +85,21 @@ export const qk = {
   merchantPaymentsList: (filters = EMPTY) => ['merchantPayments', 'list', filters],
   merchantPaymentDetail: (paymentId: string) => ['merchantPayments', 'detail', paymentId],
   merchantPaymentStats: (filters = EMPTY) => ['merchantPayments', 'stats', filters],
+
+  // US-55 — Payout Management (merchant)
+  merchantPayoutsList: (filters = EMPTY) => ['merchantPayouts', 'list', filters],
+  merchantPayoutDetail: (payoutId: string) => ['merchantPayouts', 'detail', payoutId],
+  merchantPayoutStats: () => ['merchantPayouts', 'stats'],
+  merchantPayoutStatsByStaff: () => ['merchantPayouts', 'statsByStaff'],
+  merchantUnpaidTips: () => ['merchantPayouts', 'unpaidTips'],
+  merchantDebtHistory: (filters = EMPTY) => ['merchantPayouts', 'debtHistory', filters],
+  merchantStaffDebt: (staffProfileId: string) => ['merchantPayouts', 'staffDebt', staffProfileId],
+
+  // US-55 — Payout Management (staff)
+  staffPayoutsList: (filters = EMPTY) => ['staffPayouts', 'list', filters],
+  staffPayoutDetail: (payoutId: string) => ['staffPayouts', 'detail', payoutId],
+  staffPayoutStats: () => ['staffPayouts', 'stats'],
+  staffUnpaidDebt: () => ['staffPayouts', 'unpaidDebt'],
 
   // Staff Payment Methods
   staffPaymentMethods: ()      => ['staffPaymentMethods'],

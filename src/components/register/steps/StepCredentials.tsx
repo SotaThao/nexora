@@ -18,8 +18,6 @@ export default function StepCredentials(props) {
     otpCode, setOtpCode,
     otpError, setOtpError,
     resendTimer, setResendTimer,
-    // terms modal triggers
-    setModalType, setShowTermsModal,
     // handlers
     handleStep1Next,
     handleVerifyOtp,
@@ -331,27 +329,23 @@ export default function StepCredentials(props) {
             {/* Implicit Consent Terms and Privacy Note */}
             <div className="text-[11px] text-slate-500 leading-normal text-center font-sans max-w-sm mx-auto pt-1 pb-2">
               {t('register.consent.prefix')} <span className="font-bold text-slate-700">{t('register.consent.action')}</span>, {t('register.consent.middle')}{' '}
-              <button
-                type="button"
-                onClick={() => {
-                  setModalType('terms')
-                  setShowTermsModal(true)
-                }}
+              <a
+                href="/terms-of-service"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-nexoraTealAlt hover:underline font-bold"
               >
                 {t('register.consent.terms')}
-              </button>{' '}
+              </a>{' '}
               {t('register.consent.and')}{' '}
-              <button
-                type="button"
-                onClick={() => {
-                  setModalType('privacy')
-                  setShowTermsModal(true)
-                }}
+              <a
+                href="/privacy-policy"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-nexoraTealAlt hover:underline font-bold"
               >
                 {t('register.consent.privacy')}
-              </button>.
+              </a>.
             </div>
 
             <div className="pt-4 flex flex-col sm:flex-row gap-3">
