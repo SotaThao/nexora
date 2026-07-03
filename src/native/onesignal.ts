@@ -1,5 +1,9 @@
 import { Capacitor } from '@capacitor/core'
-import OneSignal, { LogLevel, type PushSubscriptionChangedState } from '@onesignal/capacitor-plugin'
+import OneSignal, {
+  LogLevel,
+  type NotificationClickEvent,
+  type PushSubscriptionChangedState,
+} from '@onesignal/capacitor-plugin'
 import { pushDeviceStore, type PushDevicePlatform } from '../auth/pushDeviceStore'
 import { tokenStore } from '../auth/tokenStore'
 import { pushDevicesRepository } from '../data/repositories/pushDevices'
@@ -10,6 +14,8 @@ const ONESIGNAL_APP_ID = import.meta.env.VITE_ONESIGNAL_APP_ID?.trim() ?? ''
 let initialized = false
 let subscriptionListenerBound = false
 let syncInFlight: Promise<void> | null = null
+let navigateHandler: ((path: string) => void) | null = null
+let pendingNotificationTarget: string | null = null
 
 export function isOneSignalConfigured(): boolean {
   return Boolean(ONESIGNAL_APP_ID)
@@ -87,6 +93,57 @@ async function handlePushSubscriptionChange(event: PushSubscriptionChangedState)
   await flushPushDeviceRegistration()
 }
 
+function resolveNotificationTarget(event: NotificationClickEvent): string | null {
+  const target = event.result?.url || event.notification?.launchURL || ''
+  return target.trim() || null
+}
+
+function routeNotificationTarget(target: string) {
+  let path = target
+
+  if (/^https?:\/\//i.test(target)) {
+    let url: URL
+    try {
+      url = new URL(target)
+    } catch {
+      return
+    }
+
+    if (url.origin !== window.location.origin) {
+      window.location.assign(target)
+      return
+    }
+
+    path = `${url.pathname}${url.search}${url.hash}`
+  }
+
+  if (navigateHandler) {
+    navigateHandler(path)
+  } else {
+    pendingNotificationTarget = path
+  }
+}
+
+function bindNotificationClickListener() {
+  OneSignal.Notifications.addEventListener('click', (event) => {
+    const target = resolveNotificationTarget(event)
+    if (target) routeNotificationTarget(target)
+  })
+}
+
+export function registerNotificationNavigateHandler(handler: (path: string) => void): void {
+  navigateHandler = handler
+  if (pendingNotificationTarget) {
+    const target = pendingNotificationTarget
+    pendingNotificationTarget = null
+    handler(target)
+  }
+}
+
+export function unregisterNotificationNavigateHandler(): void {
+  navigateHandler = null
+}
+
 function bindPushSubscriptionListener() {
   if (subscriptionListenerBound || !initialized) return
 
@@ -101,6 +158,8 @@ function bindPushSubscriptionListener() {
     }
     void persistPushSubscriptionFromSdk()
   })
+
+  bindNotificationClickListener()
 
   subscriptionListenerBound = true
 }
