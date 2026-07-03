@@ -124,7 +124,8 @@
         "skipped": "The customer chose not to tip.",
         "completed": "This tip has been received and completed.",
         "pending": "Waiting for payment confirmation.",
-        "verified": "This tip has been verified."
+        "verified": "This tip has been verified.",
+        "initiated_force_warning": "The customer hasn't confirmed this payment yet. Only confirm if you're sure the money has arrived."
       },
       "status_help_aria": "What this status means",
       "ai_insight": "AI Insight",
@@ -1320,6 +1321,12 @@
       "account_label": "Your {wallet} {field} *"
     },
     "legal": {
+      "effectiveDate": "June 26, 2026",
+      "lastUpdated": "June 26, 2026",
+      "effectiveDateLabel": "Effective Date",
+      "lastUpdatedLabel": "Last Updated",
+      "privacyTagline": "How we collect, use, and protect information",
+      "termsTagline": "Official terms for merchants, staff, and customers",
       "privacy": {
         "sections": [
           {
@@ -1332,7 +1339,15 @@
           },
           {
             "title": "3. How We Use Your Information",
-            "body": "We use collected information to: Operate and improve the Services; Manage accounts and communicate with users; Send transactional notifications (email and push); Detect fraud and enforce our Terms of Service; Analyze platform usage and performance; Comply with legal obligations."
+            "body": "We use collected information to:",
+            "items": [
+              "Operate and improve the Services",
+              "Manage accounts and communicate with users",
+              "Send transactional notifications (email and push)",
+              "Detect fraud and enforce our Terms of Service",
+              "Analyze platform usage and performance",
+              "Comply with legal obligations"
+            ]
           },
           {
             "title": "4. How We Share Your Information",
@@ -1348,7 +1363,12 @@
           },
           {
             "title": "7. Your Rights",
-            "body": "Depending on your location, you may have the right to access, correct, delete, or port your personal data, and to object to or restrict certain processing. EU/EEA users (GDPR): access, rectification, erasure, portability, restriction, and objection. California residents (CCPA): right to know, delete, correct, and opt out of sale (we do not sell data). To exercise your rights, contact support@nexoratouch.com. We will respond within 30 days."
+            "body": "Depending on your location, you may have the right to access, correct, delete, or port your personal data, and to object to or restrict certain processing.",
+            "items": [
+              "EU/EEA users (GDPR): access, rectification, erasure, portability, restriction, and objection",
+              "California residents (CCPA): right to know, delete, correct, and opt out of sale (we do not sell data)"
+            ],
+            "note": "To exercise your rights, contact support@nexoratouch.com. We will respond within 30 days."
           },
           {
             "title": "8. Cookies and Tracking",
@@ -1400,7 +1420,15 @@
           },
           {
             "title": "7. Prohibited Conduct",
-            "body": "You agree not to: Provide false, fraudulent, or misleading information; Impersonate any person or entity; Manipulate tip or review data; Upload malicious code or attempt unauthorized access; Use the platform for any illegal purpose; Create multiple accounts to circumvent platform limits."
+            "body": "You agree not to:",
+            "items": [
+              "Provide false, fraudulent, or misleading information",
+              "Impersonate any person or entity",
+              "Manipulate tip or review data",
+              "Upload malicious code or attempt unauthorized access",
+              "Use the platform for any illegal purpose",
+              "Create multiple accounts to circumvent platform limits"
+            ]
           },
           {
             "title": "8. Intellectual Property",

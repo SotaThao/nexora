@@ -2,7 +2,12 @@ import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { CreditCard, Coins, CheckCircle, Clock, XCircle, AlertCircle, Eye } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { formatCurrency, formatTransactionDateTime, isAwaitingShopConfirmation } from '../utils'
+import {
+  formatCurrency,
+  formatTransactionDateTime,
+  isAwaitingShopConfirmation,
+  isReceiptConfirmableTip,
+} from '../utils'
 import { WalletLogos } from '../constants'
 import TransactionFilter from '../../TransactionFilter'
 import Pagination from '../../ui/Pagination'
@@ -20,31 +25,9 @@ import type { TransactionsListQuery } from '../../../data/repositories/transacti
 import ReportsTableSkeleton from './ReportsTableSkeleton'
 import ReportsDirectPaymentsTab from './ReportsDirectPaymentsTab'
 
-// A tip can be manually marked Completed from the table row while it is
-// still Initiated or Confirmed. Confirm-receipt ownership follows US-024/US-025:
-// direct-to-staff tips (isMultiStaff false) are only confirmed by the staff
-// member, shop-account / multi-staff tips are only confirmed by the owner —
-// each audience only ever sees the button for the tips it owns.
-//
-// Exception: Initiated tips can be force-completed by the merchant regardless
-// of isMultiStaff, because the payment hasn't been confirmed yet and the
-// merchant dashboard is the owner-facing view for force-completion.
-function isCompletableTip(tx, isStaffAudience) {
-  const status = String(tx?.status || '').toLowerCase()
-  // 'pending' / 'processing' are API-variant names for 'initiated'.
-  const isInitiatedStatus = status === 'initiated' || status === 'pending' || status === 'processing'
-  if (!isInitiatedStatus && status !== 'confirmed') return false
-  if (isStaffAudience) {
-    if (tx?.isMultiStaff) return false
-    return !tx?.staffConfirmedAt
-  }
-  // Merchant side: Initiated tips can always be force-completed;
-  // Confirmed tips follow the normal multi-staff ownership rule.
-  if (isInitiatedStatus) return true
-  if (!tx?.isMultiStaff) return false
-  return !tx?.merchantConfirmedAt
-}
-
+// Confirm-receipt ownership follows US-024/US-025: staff owns direct-to-staff
+// tips, and the owner owns shop-account / multi-staff tips. Force-completing
+// Initiated/Pending/Processing tips must still respect that ownership.
 const REPORTS_TAB_TIPS = 'tips'
 const REPORTS_TAB_DIRECT_PAYMENTS = 'direct_payments'
 
@@ -598,7 +581,7 @@ function ReportsView({
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      {isCompletableTip(tx, isStaffAudience) ? (
+                      {isReceiptConfirmableTip(tx, isStaffAudience) ? (
                         <button
                           type="button"
                           title={t('dashboard.activity_log.action_complete')}

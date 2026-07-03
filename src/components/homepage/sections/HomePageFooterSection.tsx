@@ -1,17 +1,13 @@
 /** Homepage section component */
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useHomePageBridge } from '../context/HomePageBridgeContext'
 import LucideIcon from '../ui/LucideIcon'
-import TermsModal from '../../register/modals/TermsModal'
 
 export default function HomePageFooterSection() {
   const navigate = useNavigate()
   const { hp, planCta, onLogout } = useHomePageBridge()
-  const [legalModal, setLegalModal] = useState<{ open: boolean; type: 'terms' | 'privacy' }>({ open: false, type: 'terms' })
 
   return (
-    <>
       <footer className="bg-navy text-white border-t border-white/10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 md:gap-10 pb-4 sm:pb-6 border-b border-white/10">
@@ -41,8 +37,8 @@ export default function HomePageFooterSection() {
             </div>
             <div className="pt-3 sm:pt-6 flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-3 text-center">
               <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 sm:gap-x-5 sm:gap-y-2">
-                <a href="#" className="text-[10px] sm:text-xs text-slate-400 hover:text-white transition-colors ds-control ds-link" onClick={(e) => { e.preventDefault(); setLegalModal({ open: true, type: 'terms' }) }}>Terms of Service</a>
-                <a href="#" className="text-[10px] sm:text-xs text-slate-400 hover:text-white transition-colors ds-control ds-link" data-i18n="footer-link-1" onClick={(e) => { e.preventDefault(); setLegalModal({ open: true, type: 'privacy' }) }}>Privacy Policy</a>
+                <Link to="/terms-of-service" className="text-[10px] sm:text-xs text-slate-400 hover:text-white transition-colors ds-control ds-link">Terms of Service</Link>
+                <Link to="/privacy-policy" className="text-[10px] sm:text-xs text-slate-400 hover:text-white transition-colors ds-control ds-link" data-i18n="footer-link-1">Privacy Policy</Link>
                 <a className="text-[10px] sm:text-xs text-slate-400 hover:text-white transition-colors ds-control ds-link" data-i18n="footer-link-2" href="#">Ecosystem Guidelines</a>
                 <a className="text-[10px] sm:text-xs text-slate-400 hover:text-white transition-colors ds-control ds-link" data-i18n="footer-link-3" href="https://cryptomap360.com/#ecosystem" target="_blank" rel="noopener">VLINKPAY Financial Infrastructure</a>
               </div>
@@ -52,11 +48,5 @@ export default function HomePageFooterSection() {
             </div>
           </div>
         </footer>
-      <TermsModal
-        open={legalModal.open}
-        onClose={() => setLegalModal(prev => ({ ...prev, open: false }))}
-        modalType={legalModal.type}
-      />
-    </>
   )
 }
