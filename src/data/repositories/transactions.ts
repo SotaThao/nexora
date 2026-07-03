@@ -138,10 +138,15 @@ export function createTransactionsRepository(client: HttpClient = httpClient) {
      * 2xx body as a full success for every submitted tipId so the caller never
      * shows a false "failed" toast on a successful no-body response.
      */
-    async confirmReceipt(tipIds: string[]): Promise<MerchantTipsConfirmReceiptResult> {
+    async confirmReceipt(
+      tipIds: string[],
+      options?: { isForce?: boolean },
+    ): Promise<MerchantTipsConfirmReceiptResult> {
+      const body: { tipIds: string[]; isForce?: boolean } = { tipIds }
+      if (options?.isForce) body.isForce = true
       const res = await client.post<MerchantTipsConfirmReceiptResult | null>(
         '/api/v1/merchant/tips/confirm-receipt',
-        { tipIds },
+        body,
       )
       const failedIds = Array.isArray(res?.failedIds) ? res.failedIds : []
       const confirmedCount =

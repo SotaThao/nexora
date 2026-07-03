@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { X, Share2, CreditCard, Coins, CheckCircle, Hourglass, Loader2 } from 'lucide-react'
+import { X, Share2, CreditCard, Coins, CheckCircle, Hourglass, Loader2, AlertTriangle } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import {
@@ -7,10 +7,11 @@ import {
   formatTransactionDateTime,
   isAwaitingShopConfirmation,
   isShopConfirmed,
-  isAwaitingStaffConfirmation,
   isStaffReceiptConfirmed,
+  isReceiptConfirmableTip,
 } from '../utils'
 import { WalletLogos } from '../constants'
+import { isInitiatedLikeTipStatus, isTipStatus, TipStatus } from '../../../constants/tipStatus'
 import { logger } from '../../../utils/logger'
 import { buildQrImageUrl, slugify, toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
 import { useConfirmMerchantTipsReceipt } from '../../../data/hooks/useTransactions'
@@ -124,28 +125,28 @@ function renderStatusBadge(tx, t) {
   }
   const status = tx?.status
   const s = (status || '').toLowerCase()
-  if (s === 'completed') {
+  if (isTipStatus(status, TipStatus.Completed)) {
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100/50 mt-2">
         {status}
       </span>
     )
   }
-  if (s === 'success' || s === 'succeeded' || s === 'confirmed') {
+  if (s === 'success' || s === 'succeeded' || isTipStatus(status, TipStatus.Confirmed)) {
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100/50 mt-2">
         {t('components.dashboard.views.ReportsView.success')}
       </span>
     )
   }
-  if (s === 'pending' || s === 'processing' || s === 'initiated') {
+  if (isInitiatedLikeTipStatus(status)) {
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-100/50 mt-2">
         {t('components.dashboard.views.ReportsView.pending')}
       </span>
     )
   }
-  if (s === 'failed' || s === 'skipped') {
+  if (s === 'failed' || isTipStatus(status, TipStatus.Skipped)) {
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-100/50 mt-2">
         {t('components.dashboard.views.ReportsView.failed')}
@@ -183,7 +184,11 @@ export default function TransactionDetailModal({
     () => normalizeTipItems(selectedTx, staffCodeByProfileId),
     [selectedTx, staffCodeByProfileId],
   )
-  const isMultiStaff = Boolean(selectedTx?.isMultiStaff && tipItems.length > 0)
+  // isMultiStaff reflects the tip's actual routing regardless of whether a staff
+  // breakdown is available (the staff-audience view has no tipItems data — see
+  // StaffTips.tsx adapter). hasStaffBreakdown gates the per-staff amount list.
+  const isMultiStaff = Boolean(selectedTx?.isMultiStaff)
+  const hasStaffBreakdown = tipItems.length > 0
   const touchpoint = useMemo(
     () => findTouchpointForTx(selectedTx, touchpoints),
     [selectedTx, touchpoints],
@@ -268,21 +273,29 @@ export default function TransactionDetailModal({
     selectedTx.staffCode,
   )
 
-  const awaitingShopConfirmation = !isStaffAudience && isAwaitingShopConfirmation(selectedTx)
-  const awaitingStaffConfirmation = isStaffAudience && isAwaitingStaffConfirmation(selectedTx)
+  // API may return 'Initiated', 'Pending', or 'Processing' - all represent a tip
+  // where the customer has NOT yet confirmed payment. All need isForce to complete.
+  const isInitiatedTip = isInitiatedLikeTipStatus(selectedTx?.status)
+
+  const awaitingShopConfirmation = !isStaffAudience && isReceiptConfirmableTip(selectedTx, false)
+  const awaitingStaffConfirmation = isStaffAudience && isReceiptConfirmableTip(selectedTx, true)
   const shopConfirmed = !isStaffAudience && isShopConfirmed(selectedTx)
   const staffReceiptConfirmed = isStaffAudience && isStaffReceiptConfirmed(selectedTx)
   const isConfirming = confirmReceiptMutation.isPending
 
   const handleConfirmReceipt = () => {
     if (!selectedTx?.id || isConfirming) return
-    confirmReceiptMutation.mutate([selectedTx.id], {
-      onSuccess: (result) => {
-        // Close only when the tip was fully confirmed; on partial/full failure
-        // keep the modal open so the owner sees the unchanged pending state.
-        if (result.failedIds.length === 0) onClose()
+    if (!isReceiptConfirmableTip(selectedTx, isStaffAudience)) return
+    confirmReceiptMutation.mutate(
+      { tipIds: [selectedTx.id], isForce: isInitiatedTip || undefined },
+      {
+        onSuccess: (result) => {
+          // Close only when the tip was fully confirmed; on partial/full failure
+          // keep the modal open so the owner sees the unchanged pending state.
+          if (result.failedIds.length === 0) onClose()
+        },
       },
-    })
+    )
   }
 
   return (
@@ -372,7 +385,7 @@ export default function TransactionDetailModal({
               ) : null}
             </div>
 
-            {isMultiStaff ? (
+            {hasStaffBreakdown ? (
               <div className="rounded-xl border border-nexoraBorder bg-nexoraCanvas/40 p-3 space-y-2">
                 <div className="flex items-center justify-between gap-2 pb-1 border-b border-nexoraBorder/60">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-nexoraMuted">
@@ -406,18 +419,32 @@ export default function TransactionDetailModal({
             ) : null}
 
             {awaitingStaffConfirmation ? (
-              <div className="rounded-xl border border-violet-100 bg-violet-50/60 p-4 space-y-3">
+              <div
+                className={`rounded-xl border p-4 space-y-3 ${
+                  isInitiatedTip ? 'border-amber-100 bg-amber-50/60' : 'border-violet-100 bg-violet-50/60'
+                }`}
+              >
                 <div className="flex items-start gap-2">
-                  <Hourglass className="h-4 w-4 shrink-0 text-violet-500 mt-0.5" />
-                  <p className="text-[11px] leading-normal text-violet-700">
-                    {t('staff_dashboard.tips.status_help.confirmed')}
+                  {isInitiatedTip ? (
+                    <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500 mt-0.5" />
+                  ) : (
+                    <Hourglass className="h-4 w-4 shrink-0 text-violet-500 mt-0.5" />
+                  )}
+                  <p className={`text-[11px] leading-normal ${isInitiatedTip ? 'text-amber-700' : 'text-violet-700'}`}>
+                    {t(
+                      isInitiatedTip
+                        ? 'staff_dashboard.tips.status_help.initiated_force_warning'
+                        : 'staff_dashboard.tips.status_help.confirmed',
+                    )}
                   </p>
                 </div>
                 <button
                   type="button"
                   disabled={isConfirming}
                   onClick={handleConfirmReceipt}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white transition-colors hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+                  className={`flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white transition-colors disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer ${
+                    isInitiatedTip ? 'bg-amber-600 hover:bg-amber-700' : 'bg-violet-600 hover:bg-violet-700'
+                  }`}
                 >
                   {isConfirming ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -426,6 +453,19 @@ export default function TransactionDetailModal({
                   )}
                   {t('staff_dashboard.home.confirm')}
                 </button>
+              </div>
+            ) : null}
+
+            {isStaffAudience && isMultiStaff ? (
+              <div className="rounded-xl border border-nexoraBorder bg-nexoraCanvas/40 p-4">
+                <p className="text-[11px] leading-normal text-nexoraMuted">
+                  {t(
+                    selectedTx.merchantConfirmedAt
+                      ? 'staff_dashboard.tips.via_business_confirmed_help'
+                      : 'staff_dashboard.tips.via_business_pending_help',
+                    { business: businessName || '' },
+                  )}
+                </p>
               </div>
             ) : null}
 

@@ -80,6 +80,7 @@
       "no_pending": "Không có tip nào chờ xác nhận.",
       "confirm": "Xác nhận",
       "confirm_all": "Xác nhận đã nhận tất cả",
+      "confirm_all_tooltip": "Chỉ các tip đã xác nhận thanh toán sẽ được bao gồm. Các tip đang chờ (chưa xác nhận thanh toán) sẽ bị bỏ qua.",
       "view_all": "Xem tất cả",
       "manage": "Quản lý",
       "your_linked_businesses": "Tiệm đã liên kết",
@@ -123,7 +124,8 @@
         "skipped": "Khách đã chọn không tip.",
         "completed": "Tip này đã được nhận và hoàn tất.",
         "pending": "Đang chờ xác nhận thanh toán.",
-        "verified": "Tip này đã được xác minh."
+        "verified": "Tip này đã được xác minh.",
+        "initiated_force_warning": "Khách chưa xác nhận thanh toán này. Chỉ xác nhận nếu bạn chắc chắn đã nhận được tiền."
       },
       "status_help_aria": "Trạng thái này nghĩa là gì",
       "ai_insight": "Phân tích AI",
@@ -603,6 +605,8 @@
       "col_tp": "Trạm",
       "col_payment": "Phương thức",
       "col_status": "Trạng thái",
+      "col_action": "Hành động",
+      "action_complete": "Hoàn tất",
       "empty_activity": "Chưa có hoạt động giao dịch nào phát sinh.",
       "filter_title": "Bộ lọc",
       "filter_reset": "Thiết lập lại",
@@ -1502,6 +1506,12 @@
       "account_label": "{wallet} {field} của bạn *"
     },
     "legal": {
+      "effectiveDate": "26 tháng 6, 2026",
+      "lastUpdated": "26 tháng 6, 2026",
+      "effectiveDateLabel": "Ngày có hiệu lực",
+      "lastUpdatedLabel": "Cập nhật lần cuối",
+      "privacyTagline": "Cách chúng tôi thu thập, sử dụng và bảo vệ thông tin",
+      "termsTagline": "Điều khoản chính thức dành cho merchant, nhân viên và khách hàng",
       "privacy": {
         "sections": [
           {
@@ -1514,7 +1524,15 @@
           },
           {
             "title": "3. Cách Chúng Tôi Sử Dụng Thông Tin",
-            "body": "Chúng tôi sử dụng thông tin đã thu thập để: Vận hành và cải thiện Dịch Vụ; Quản lý tài khoản và liên lạc với người dùng; Gửi thông báo giao dịch (email và thông báo đẩy); Phát hiện gian lận và thực thi Điều Khoản Dịch Vụ; Phân tích việc sử dụng và hiệu suất nền tảng; Tuân thủ nghĩa vụ pháp lý."
+            "body": "Chúng tôi sử dụng thông tin đã thu thập để:",
+            "items": [
+              "Vận hành và cải thiện Dịch Vụ",
+              "Quản lý tài khoản và liên lạc với người dùng",
+              "Gửi thông báo giao dịch (email và thông báo đẩy)",
+              "Phát hiện gian lận và thực thi Điều Khoản Dịch Vụ",
+              "Phân tích việc sử dụng và hiệu suất nền tảng",
+              "Tuân thủ nghĩa vụ pháp lý"
+            ]
           },
           {
             "title": "4. Cách Chúng Tôi Chia Sẻ Thông Tin",
@@ -1530,7 +1548,12 @@
           },
           {
             "title": "7. Quyền Của Bạn",
-            "body": "Tùy thuộc vào vị trí của bạn, bạn có thể có quyền truy cập, sửa, xóa hoặc chuyển dữ liệu cá nhân, và phản đối hoặc hạn chế một số hoạt động xử lý nhất định. Người dùng tại EU/EEA (GDPR): truy cập, chỉnh sửa, xóa, chuyển dữ liệu, hạn chế và phản đối. Cư dân California (CCPA): quyền biết, xóa, sửa và từ chối bán (chúng tôi không bán dữ liệu). Để thực hiện các quyền của bạn, liên hệ support@nexoratouch.com. Chúng tôi sẽ phản hồi trong vòng 30 ngày."
+            "body": "Tùy thuộc vào vị trí của bạn, bạn có thể có quyền truy cập, sửa, xóa hoặc chuyển dữ liệu cá nhân, và phản đối hoặc hạn chế một số hoạt động xử lý nhất định.",
+            "items": [
+              "Người dùng tại EU/EEA (GDPR): truy cập, chỉnh sửa, xóa, chuyển dữ liệu, hạn chế và phản đối",
+              "Cư dân California (CCPA): quyền biết, xóa, sửa và từ chối bán (chúng tôi không bán dữ liệu)"
+            ],
+            "note": "Để thực hiện các quyền của bạn, liên hệ support@nexoratouch.com. Chúng tôi sẽ phản hồi trong vòng 30 ngày."
           },
           {
             "title": "8. Cookie và Theo Dõi",
@@ -1582,7 +1605,15 @@
           },
           {
             "title": "7. Hành Vi Bị Cấm",
-            "body": "Bạn đồng ý không: Cung cấp thông tin sai sự thật, gian lận hoặc gây nhầm lẫn; Giả mạo bất kỳ cá nhân hoặc tổ chức nào; Thao túng dữ liệu tip hoặc đánh giá; Tải lên mã độc hại hoặc cố gắng truy cập trái phép; Sử dụng nền tảng cho bất kỳ mục đích bất hợp pháp nào; Tạo nhiều tài khoản để vượt qua giới hạn nền tảng."
+            "body": "Bạn đồng ý không:",
+            "items": [
+              "Cung cấp thông tin sai sự thật, gian lận hoặc gây nhầm lẫn",
+              "Giả mạo bất kỳ cá nhân hoặc tổ chức nào",
+              "Thao túng dữ liệu tip hoặc đánh giá",
+              "Tải lên mã độc hại hoặc cố gắng truy cập trái phép",
+              "Sử dụng nền tảng cho bất kỳ mục đích bất hợp pháp nào",
+              "Tạo nhiều tài khoản để vượt qua giới hạn nền tảng"
+            ]
           },
           {
             "title": "8. Sở Hữu Trí Tuệ",

@@ -9,6 +9,17 @@ export enum TipStatus {
   Completed = 'Completed',
 }
 
+export const TipStatusVariant = {
+  Pending: 'Pending',
+  Processing: 'Processing',
+} as const
+
+export const TIP_INITIATED_LIKE_STATUSES = [
+  TipStatus.Initiated,
+  TipStatusVariant.Pending,
+  TipStatusVariant.Processing,
+] as const
+
 /** Numeric TipStatus values from legacy/API enum responses. */
 export const TipStatusCode = {
   Initiated: 0,
@@ -29,6 +40,13 @@ export function isTipStatus(value: unknown, status: TipStatus): boolean {
     return TIP_STATUS_BY_CODE[value] === status
   }
   return String(value || '').toLowerCase() === status.toLowerCase()
+}
+
+export function isInitiatedLikeTipStatus(value: unknown): boolean {
+  const normalized = String(value ?? '').trim().toLowerCase()
+  return TIP_INITIATED_LIKE_STATUSES.some(
+    (status) => status.toLowerCase() === normalized,
+  )
 }
 
 export function normalizeTipStatus(
