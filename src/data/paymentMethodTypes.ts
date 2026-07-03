@@ -36,6 +36,12 @@ export function payoutTypeToUiKey(type = ''): string {
   return PAYOUT_TYPE_TO_UI_KEY[type] || type.toLowerCase().replace(/\s+/g, '')
 }
 
+/** Hide catch-all "Other" payout type from merchant/staff configuration UIs. */
+export function isHiddenPayoutConfigType(method: { type?: string; uiKey?: string }): boolean {
+  const uiKey = method.uiKey || payoutTypeToUiKey(method.type || '')
+  return uiKey === 'other'
+}
+
 export function sortPaymentMethodsByUiOrder<T extends { uiKey?: string }>(methods: T[]): T[] {
   return [...methods].sort((a, b) => {
     const ai = PAYOUT_UI_DISPLAY_ORDER.indexOf((a.uiKey || '') as typeof PAYOUT_UI_DISPLAY_ORDER[number])

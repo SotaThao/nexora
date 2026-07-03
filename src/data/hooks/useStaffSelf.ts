@@ -168,6 +168,11 @@ export function useStaffTransactionsPaginated(
   })
 }
 
+export interface StaffConfirmReceiptVars {
+  tipIds: string[]
+  isForce?: boolean
+}
+
 export function useConfirmStaffTipsReceipt() {
   const queryClient = useQueryClient()
   const { showToast } = useNotification()
@@ -176,14 +181,15 @@ export function useConfirmStaffTipsReceipt() {
   return useMutation<
     StaffTipsConfirmReceiptResult,
     Error,
-    string[],
+    StaffConfirmReceiptVars,
     { previousTips: ReturnType<QueryClient['getQueriesData']> }
   >({
-    mutationFn: (tipIds) => staffSelfRepository.confirmTipsReceipt(tipIds),
-    onMutate: async (tipIds) => {
+    mutationFn: (vars) =>
+      staffSelfRepository.confirmTipsReceipt(vars.tipIds, { isForce: vars.isForce }),
+    onMutate: async (vars) => {
       await queryClient.cancelQueries({ queryKey: ['staffTips'] })
       const previousTips = queryClient.getQueriesData<StaffTipsPage>({ queryKey: ['staffTips'] })
-      const ids = new Set(tipIds)
+      const ids = new Set(vars.tipIds)
       queryClient.setQueriesData<StaffTipsPage>(
         { queryKey: ['staffTips'] },
         (current) => {
@@ -200,7 +206,7 @@ export function useConfirmStaffTipsReceipt() {
       )
       return { previousTips }
     },
-    onError: (err, _tipIds, context) => {
+    onError: (err, _vars, context) => {
       context?.previousTips?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data)
       })

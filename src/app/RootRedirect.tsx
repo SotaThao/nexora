@@ -1,8 +1,9 @@
 import React, { Suspense, useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
-import LoadingScreen from './LoadingScreen'
 import apiAuthAdapter from '../auth/adapters/apiAuthAdapter'
+import LoadingScreen from './LoadingScreen'
+import { saveRefCode, saveStaffShareCode } from '../utils/affiliateReferral'
 import { useTranslation } from '../contexts/LanguageContext'
 import lazyWithRetry from './lazyWithRetry'
 
@@ -54,13 +55,20 @@ export default function RootRedirect() {
       return
     }
 
-    // Bare ?ref=CODE (no action/flow) → send to /register?ref=CODE
-    const refCode = searchParams.get('ref')
+    // Bare ?ref=CODE (optional ?staff=STAFF_ID) → register with ref; persist staff for attribution
+    const refCode = searchParams.get('ref') || searchParams.get('refCode')
+    const staffShareCode = searchParams.get('staff') || searchParams.get('staffCode')
     if (!action && refCode) {
+      saveRefCode(refCode)
+      if (staffShareCode?.trim()) saveStaffShareCode(staffShareCode.trim())
       const params = new URLSearchParams()
       params.set('ref', refCode)
       navigate(`/register?${params.toString()}`, { replace: true })
       return
+    }
+
+    if (!action && staffShareCode?.trim()) {
+      saveStaffShareCode(staffShareCode.trim())
     }
 
     setIsProcessingDeepLink(false)

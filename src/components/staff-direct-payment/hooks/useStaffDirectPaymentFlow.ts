@@ -81,7 +81,7 @@ export default function useStaffDirectPaymentFlow() {
         id: staffProfileId || 'staff',
         nickname: displayName || t('staff_direct_payment.default_staff'),
         fullName: displayName || t('staff_direct_payment.default_staff'),
-        position: t('staff_direct_payment.pay_to_staff'),
+        position: '',
         paymentAccounts: {},
       },
     ],

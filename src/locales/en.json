@@ -81,6 +81,7 @@
       "no_pending": "No pending confirmations.",
       "confirm": "Confirm",
       "confirm_all": "Confirm All Received",
+      "confirm_all_tooltip": "Only tips with confirmed payment will be included. Initiated tips (payment not yet confirmed) are excluded.",
       "view_all": "View all",
       "manage": "Manage",
       "your_linked_businesses": "Your Linked Businesses",
@@ -158,16 +159,18 @@
       "saved": "Saved ✓"
     },
     "qr": {
-      "personal_title": "My Staff QR",
+      "personal_title": "My Personal QR",
       "personal_sub": "Show this QR to a business so they can send you a staff link request.",
-      "share": "Share Staff QR",
+      "share": "Share Link",
       "copy_link": "Copy Staff Link",
-      "tab_personal": "My Staff QR",
+      "copy_staff_id": "Copy Staff ID",
+      "copy_staff_link": "Copy share link",
+      "tab_personal": "My Personal QR",
       "tab_referral": "Referral QR",
       "tab_tipping": "Tip QR",
       "tab_payment": "Pay QR",
-      "payment_title": "My Payment QR",
-      "payment_sub": "Customers scan this QR to pay you directly — no salon account needed.",
+      "payment_title": "Payment QR Code",
+      "payment_sub": "Scan to pay directly. No account needed.",
       "share_payment": "Share Payment QR",
       "copy_payment_link": "Copy Payment Link",
       "payment_link_label": "Payment link",
@@ -186,7 +189,7 @@
       "link_request_pending": "Pending",
       "share_tip": "Share Tip QR",
       "copy_tip_link": "Copy Tip Link",
-      "business_title": "Staff QR",
+      "business_title": "Tipping QR",
       "business_sub": "Dedicated QR for tips/reviews at this business",
       "note": "Per-business QR is stored by business_staff_link_id so it is never confused when you work at multiple businesses.",
       "no_linked_businesses": "No linked businesses yet. Scan a salon referral QR to join.",
@@ -614,6 +617,8 @@
       "col_tp": "Station",
       "col_payment": "Payment Method",
       "col_status": "Status",
+      "col_action": "Action",
+      "action_complete": "Complete",
       "empty_activity": "No recent tips logged yet.",
       "filter_title": "Filters",
       "filter_reset": "Reset",
@@ -672,6 +677,7 @@
       "download_print_qr": "Download Print QR (PDF)",
       "print_qr_btn": "Print QR",
       "print_qr": "Print QR",
+      "staff_qr_inactive_warning": "This personal QR is blocked while the staff member is inactive.",
       "customer_view_test": "Simulate Customer Scan ›"
     },
     "settings_panel": {
@@ -693,12 +699,13 @@
       "qr_title": "Salon QR Code",
       "qr_desc": "Front desk – all technicians",
       "qr_body": "Place this QR code at the reception desk. Customers scan to choose their technician and submit reviews.",
-      "payment_title": "Direct Payment QR",
-      "payment_desc": "Front desk – pay this business",
-      "payment_body": "Place this QR at your reception desk. Customers scan to pay your business directly using your active payout methods.",
+      "payment_title": "Payment QR Code",
+      "payment_desc": "",
+      "payment_body": "Place at reception desk. Customers scan to pay.",
       "btn_open": "Open QR",
-      "btn_download": "Download QR",
-      "btn_copy_link": "Copy Link"
+    "btn_download": "Download",
+    "btn_copy_link": "Copy",
+      "copied_qr_link": "Link copied to clipboard!"
     },
     "touchpoint_stats": {
       "scans": "Scans",
@@ -1119,10 +1126,11 @@
   },
   "direct_payment": {
     "review_payment_title": "Review payment & choose method",
-    "review_payment_desc": "Pay this business directly. No account required.",
+    "review_payment_desc": "You're paying {name} directly.",
     "amount_label": "Payment amount",
     "custom_amount_placeholder": "Enter amount",
     "total_payment": "Total payment",
+    "total": "total",
     "amount_range_hint": "$1.00 – $10,000.00",
     "pay_to_business": "Pay to business",
     "default_business": "Business",
@@ -1137,13 +1145,14 @@
     "success_footer": "You can close this page. Thank you!",
     "back_home": "Back Home",
     "wallet_title": "Send ${amount} via {wallet} to {recipient}",
-    "confirm_sent": "Yes, I paid"
+    "confirm_sent": "Yes, I've paid"
   },
   "staff_direct_payment": {
     "review_payment_title": "Review payment & choose method",
-    "review_payment_desc": "Pay this staff member directly. No account required.",
+    "review_payment_desc": "You're paying {name} directly.",
     "amount_range_hint": "$1.00 – $10,000.00",
     "pay_to_staff": "Pay to staff",
+    "total": "total",
     "default_staff": "Staff member",
     "no_methods_title": "No payment methods available",
     "no_methods_desc": "This staff member has not set up an active payout method yet. Please contact them.",
@@ -1162,7 +1171,7 @@
     "account_info": "Account",
     "customer_confirmed_at": "Customer confirmed",
     "merchant_confirmed_at": "You confirmed receipt",
-    "status_initiated": "Initiated",
+    "status_initiated": "Awaiting payment",
     "status_initiated_desc": "Payment created — waiting for the customer to mark the transfer as sent.",
     "status_confirmed": "Awaiting confirmation",
     "status_confirmed_desc": "The customer confirmed they sent the payment. Awaiting your confirmation.",
@@ -1194,7 +1203,7 @@
     "confirm_failed": "Could not confirm payment.",
     "empty": "No direct payments yet. Share your payment QR to start receiving payments.",
     "view_history": "View payment history",
-    "pending_ack_banner_title": "{{count}} payment(s) need your confirmation",
+    "pending_ack_banner_title": "{{count}} payments need your confirmation",
     "pending_ack_banner_desc": "The customer confirmed they sent money. Open each payment and tap “Confirm payment received” once it arrives in your account.",
     "pending_ack_banner_action": "Review now",
     "ack_notice_title": "Payment received notification",
@@ -1203,14 +1212,14 @@
   },
   "staff_payments": {
     "title": "QR Payments",
-    "description": "Payments received through your personal payment QR.",
+    "description": "Payments received via your QR.",
     "detail_title": "Payment details",
     "detail_desc": "Direct payment from a customer via your payment QR.",
     "col_method": "Method",
     "account_info": "Account",
     "customer_confirmed_at": "Customer confirmed",
     "staff_confirmed_at": "You confirmed receipt",
-    "status_initiated": "Initiated",
+    "status_initiated": "Awaiting payment",
     "status_initiated_desc": "Payment created — waiting for the customer to mark the transfer as sent.",
     "status_confirmed": "Awaiting confirmation",
     "status_confirmed_desc": "The customer confirmed they sent the payment. Awaiting your confirmation.",
@@ -1242,7 +1251,7 @@
     "confirm_failed": "Could not confirm payment.",
     "empty": "No direct payments yet. Share your payment QR to start receiving payments.",
     "view_history": "View payment history",
-    "pending_ack_banner_title": "{{count}} payment(s) need your confirmation",
+    "pending_ack_banner_title": "{{count}} payments need your confirmation",
     "pending_ack_banner_desc": "The customer confirmed they sent money. Open each payment and tap “Confirm payment received” once it arrives in your account.",
     "pending_ack_banner_action": "Review now",
     "ack_notice_title": "Payment received notification",
@@ -1334,6 +1343,12 @@
       "account_label": "Your {wallet} {field} *"
     },
     "legal": {
+      "effectiveDate": "June 26, 2026",
+      "lastUpdated": "June 26, 2026",
+      "effectiveDateLabel": "Effective Date",
+      "lastUpdatedLabel": "Last Updated",
+      "privacyTagline": "How we collect, use, and protect information",
+      "termsTagline": "Official terms for merchants, staff, and customers",
       "privacy": {
         "sections": [
           {
@@ -1346,7 +1361,15 @@
           },
           {
             "title": "3. How We Use Your Information",
-            "body": "We use collected information to: Operate and improve the Services; Manage accounts and communicate with users; Send transactional notifications (email and push); Detect fraud and enforce our Terms of Service; Analyze platform usage and performance; Comply with legal obligations."
+            "body": "We use collected information to:",
+            "items": [
+              "Operate and improve the Services",
+              "Manage accounts and communicate with users",
+              "Send transactional notifications (email and push)",
+              "Detect fraud and enforce our Terms of Service",
+              "Analyze platform usage and performance",
+              "Comply with legal obligations"
+            ]
           },
           {
             "title": "4. How We Share Your Information",
@@ -1362,7 +1385,12 @@
           },
           {
             "title": "7. Your Rights",
-            "body": "Depending on your location, you may have the right to access, correct, delete, or port your personal data, and to object to or restrict certain processing. EU/EEA users (GDPR): access, rectification, erasure, portability, restriction, and objection. California residents (CCPA): right to know, delete, correct, and opt out of sale (we do not sell data). To exercise your rights, contact support@nexoratouch.com. We will respond within 30 days."
+            "body": "Depending on your location, you may have the right to access, correct, delete, or port your personal data, and to object to or restrict certain processing.",
+            "items": [
+              "EU/EEA users (GDPR): access, rectification, erasure, portability, restriction, and objection",
+              "California residents (CCPA): right to know, delete, correct, and opt out of sale (we do not sell data)"
+            ],
+            "note": "To exercise your rights, contact support@nexoratouch.com. We will respond within 30 days."
           },
           {
             "title": "8. Cookies and Tracking",
@@ -1414,7 +1442,15 @@
           },
           {
             "title": "7. Prohibited Conduct",
-            "body": "You agree not to: Provide false, fraudulent, or misleading information; Impersonate any person or entity; Manipulate tip or review data; Upload malicious code or attempt unauthorized access; Use the platform for any illegal purpose; Create multiple accounts to circumvent platform limits."
+            "body": "You agree not to:",
+            "items": [
+              "Provide false, fraudulent, or misleading information",
+              "Impersonate any person or entity",
+              "Manipulate tip or review data",
+              "Upload malicious code or attempt unauthorized access",
+              "Use the platform for any illegal purpose",
+              "Create multiple accounts to circumvent platform limits"
+            ]
           },
           {
             "title": "8. Intellectual Property",
@@ -1663,7 +1699,7 @@
           "stepSendAmount": "Send exactly ${amount} to {name}.",
           "stepSendAmountPayment": "Send exactly ${amount} to {name}.",
           "stepConfirm": "Come back here and tap Yes, I sent the tip.",
-          "stepConfirmPayment": "Come back here and tap Yes, I paid."
+          "stepConfirmPayment": "Come back here and tap Yes, I've paid."
         }
       }
     },
@@ -2071,9 +2107,9 @@
         "emptyTitle": "Configure payout methods first",
         "emptyDesc": "Turn on at least one payout method with account details before sharing your payment QR with customers.",
         "emptyAction": "Set up payout methods",
-        "defaultQrTitle": "Direct Payment QR",
+        "defaultQrTitle": "Payment QR Code",
         "qrAlt": "Merchant direct payment QR code",
-        "scanCaption": "Scan to pay this business",
+        "scanCaption": "Customers scan to pay",
         "merchantNote": "Share this QR code to receive direct payments using the payout methods you've set up.",
         "loadErrorTitle": "Could not load payment QR",
         "loadErrorDesc": "We couldn't fetch your payment link. Check your connection and try again.",
@@ -2250,6 +2286,8 @@
       "views": {
         "StaffMyQR": {
           "linkCopiedToClipboard": "Link copied to clipboard!",
+          "staffIdCopied": "Staff ID copied!",
+          "staffShareLinkCopied": "Share link copied!",
           "staffCodeUnavailable": "Staff ID is not available yet. Please try again in a moment.",
           "shareFailed": "Could not share the link. Please copy it instead.",
           "copyFailed": "Could not copy the link.",
@@ -2287,6 +2325,7 @@
           "personalTippingQr": "Personal Tipping QR",
           "tippingLink": "Tipping Link",
           "tippingLinkCopied": "Tipping link copied!",
+          "tipQrDownloaded": "Tip QR image downloaded.",
           "copy": "Copy",
           "openTippingPageSimulate": "Open Tipping Page (Simulate) ›"
         },

@@ -202,9 +202,13 @@ export function buildQrImageUrl(
   size = 200,
   qrImageUrl?: string | null,
 ): string {
+  // Always encode tipUrl when available so scanned QR matches copy-link URL
+  // (API qrImageUrl often points at production host, e.g. test-web).
+  if (tipUrl?.trim()) {
+    return buildPublicQrImageUrl(tipUrl.trim(), size)
+  }
   if (qrImageUrl) return qrImageUrl
-  if (!tipUrl) return ''
-  return buildPublicQrImageUrl(tipUrl, size)
+  return ''
 }
 
 /** Customer staff direct-payment URL — {origin}/pay/staff/{staffProfileId}. */
