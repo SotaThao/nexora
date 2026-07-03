@@ -294,7 +294,7 @@ export default function TransactionDetailModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+      <div className="fixed inset-0 z-50 flex items-center justify-center modal-overlay-safe bg-slate-900/60 backdrop-blur-sm">
         <div className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-white rounded-2xl border border-nexoraBorder shadow-2xl p-6 relative">
           <div className="flex items-center justify-between border-b border-nexoraBorder pb-4 mb-4">
             <div>
@@ -310,7 +310,8 @@ export default function TransactionDetailModal({
             <button
               type="button"
               onClick={onClose}
-              className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-nexoraMuted hover:text-nexoraText transition-colors cursor-pointer"
+              aria-label={t('common.close')}
+              className="modal-close-btn rounded-full hover:bg-slate-100 text-nexoraMuted hover:text-nexoraText transition-colors cursor-pointer"
             >
               <X className="h-4 w-4" />
             </button>

@@ -760,7 +760,7 @@ function StaffView({
       {/* Large Join QR Modal */}
       {largeJoinQrOpen && publicInviteEnabled && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 cursor-zoom-out"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm modal-overlay-safe cursor-zoom-out"
           onClick={() => setLargeJoinQrOpen(false)}
         >
           <div

@@ -31,6 +31,24 @@ html.capacitor-native {
     padding-top: calc(1.5rem + var(--app-safe-area-top));
     padding-bottom: calc(1.5rem + var(--app-safe-area-bottom));
   }
+
+  /* Modal overlay padding that keeps the dialog clear of the notch / status bar
+     and home indicator on mobile so the close button is always tappable. */
+  .modal-overlay-safe {
+    padding-top: max(1rem, calc(var(--app-safe-area-top) + 0.75rem));
+    padding-right: max(1rem, var(--app-safe-area-right));
+    padding-bottom: max(1rem, calc(var(--app-safe-area-bottom) + 0.75rem));
+    padding-left: max(1rem, var(--app-safe-area-left));
+  }
+
+  /* Consistent, comfortably-sized close-button hit area (>= 40px). */
+  .modal-close-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 2.5rem;
+    width: 2.5rem;
+  }
 }
 
 /* Prevent iOS WKWebView rubber-band overscroll that reveals white native background */

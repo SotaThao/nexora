@@ -297,7 +297,7 @@ export default function DevicesView({
 
       {/* Mock Add Device Modal Dialog */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 modal-overlay-safe backdrop-blur-sm">
           <form
             onSubmit={handleAddSubmit}
             className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl animate-scaleUp space-y-4"
@@ -396,7 +396,7 @@ export default function DevicesView({
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 modal-overlay-safe backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl animate-scaleUp">
             <h3 className="text-base font-extrabold text-nexoraText">
               {t('dashboard.touchpoint_stats.delete_confirm_title')}

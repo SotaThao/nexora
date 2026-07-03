@@ -319,12 +319,13 @@ export default function SetupWizard() {
 
       {/* Zoom QR Code Preview Modal */}
       {previewingTp && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 modal-overlay-safe backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl animate-scaleUp relative">
             <button
               onClick={() => setPreviewingTp(null)}
-              className="absolute right-4 top-4 rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+              className="modal-close-btn absolute right-2 top-2 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
               title={t('setup.close')}
+              aria-label={t('setup.close')}
             >
               <X className="h-5 w-5" />
             </button>

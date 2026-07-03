@@ -1146,7 +1146,7 @@ export default function StaffMyQR() {
       )}
 
       {showScanner && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/60 modal-overlay-safe backdrop-blur-sm">
           <div className="relative w-full max-w-md animate-scaleUp space-y-5 overflow-hidden rounded-3xl border border-slate-100 bg-white p-6 text-center text-slate-800 shadow-2xl">
             <button
               type="button"
@@ -1155,8 +1155,9 @@ export default function StaffMyQR() {
                 setScannerCameraState('loading')
                 setIsSubmittingScan(false)
               }}
-              className="absolute right-4 top-4 rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+              className="modal-close-btn absolute right-2 top-2 rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
               title="Close Scanner"
+              aria-label="Close Scanner"
             >
               <X className="h-4 w-4" />
             </button>
@@ -1207,7 +1208,7 @@ export default function StaffMyQR() {
 
       {zoomedQr && (
         <div
-          className="fixed inset-0 z-[70] flex cursor-zoom-out items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-[70] flex cursor-zoom-out items-center justify-center bg-slate-900/60 modal-overlay-safe backdrop-blur-sm"
           onClick={() => setZoomedQr(null)}
         >
           <div
@@ -1217,8 +1218,9 @@ export default function StaffMyQR() {
             <button
               type="button"
               onClick={() => setZoomedQr(null)}
-              className="absolute right-4 top-4 rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+              className="modal-close-btn absolute right-2 top-2 rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
               title="Close"
+              aria-label="Close"
             >
               <X className="h-4 w-4" />
             </button>

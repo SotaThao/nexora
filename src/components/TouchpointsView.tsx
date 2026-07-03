@@ -617,7 +617,7 @@ export default function TouchpointsView({
           )}
 
           {unlinkConfirmPoint ? (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 modal-overlay-safe backdrop-blur-sm">
               <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-luxuryCoal border border-nexoraBorder dark:border-luxuryGold/18 p-7 sm:p-8 shadow-2xl animate-scaleUp">
                 <h3 className="text-lg sm:text-xl font-extrabold text-nexoraText">
                   {t('dashboard.touchpoints.unlink_confirm_title')}
@@ -655,7 +655,7 @@ export default function TouchpointsView({
 
           {/* Custom Delete Confirmation Modal */}
           {deleteConfirmId && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 modal-overlay-safe backdrop-blur-sm">
               <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl animate-scaleUp">
                 <h3 className="text-base font-extrabold text-nexoraText">
                   {t('dashboard.touchpoint_stats.delete_confirm_title')}
