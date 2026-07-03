@@ -51,6 +51,8 @@ export interface CreateMerchantPayoutPayload {
   periodEnd: string
   evidenceUrls?: string[]
   notes?: string | null
+  /** API string enum: Pending | Confirmed | Cancelled */
+  status?: string
 }
 
 export interface UpdateMerchantPayoutPayload {
@@ -365,8 +367,10 @@ export function createMerchantPayoutsRepository(client: HttpClient = httpClient)
     },
 
     async create(payload: CreateMerchantPayoutPayload): Promise<{ id: string }> {
+      const { status, ...rest } = payload
       const res = await client.post<Record<string, unknown>>('/api/v1/merchant/payouts', {
-        ...payload,
+        ...rest,
+        ...(status ? { status } : {}),
         payoutMethodType: payoutMethodTypeToApi(payload.payoutMethodType),
         periodStart: normalizePayoutDateOnly(payload.periodStart),
         periodEnd: normalizePayoutDateOnly(payload.periodEnd),

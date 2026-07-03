@@ -5,7 +5,6 @@ import { PayoutStatus, PayoutType } from '../../../data/payoutConstants'
 import {
   useMerchantPayoutDetail,
   useMerchantPayoutStats,
-  useMerchantPayoutStatsByStaff,
   useMerchantPayoutsList,
   useMerchantUnpaidTips,
 } from '../../../data/hooks/useMerchantPayouts'
@@ -115,7 +114,6 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
   ])
 
   const { data: stats, isPending: isStatsPending } = useMerchantPayoutStats()
-  const { data: statsByStaff } = useMerchantPayoutStatsByStaff()
   const { data: unpaidPage, isPending: isUnpaidTipsPending } = useMerchantUnpaidTips()
   const { data: payoutsPage, isPending, isFetching } = useMerchantPayoutsList(apiQuery)
   const { data: payoutDetail, isPending: isDetailLoading } = useMerchantPayoutDetail(selectedPayoutId, {
@@ -190,7 +188,7 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
 
   return (
     <div className="space-y-6">
-      <PayoutStatsCards stats={stats} statsByStaff={statsByStaff} isLoading={isStatsPending} />
+      <PayoutStatsCards stats={stats} isLoading={isStatsPending} />
 
       <div className="flex flex-col gap-3 2xl:flex-row 2xl:items-center 2xl:justify-between">
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
@@ -266,17 +264,17 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
           <button
             type="button"
             onClick={() => setIsUnpaidDialogOpen(true)}
-            className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-[#cfd9e8] bg-white px-3.5 text-xs font-bold text-[#0b1220] shadow-sm transition hover:border-[#9fb2d1] hover:bg-[#f3f6fa] sm:w-auto"
+            className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50/60 px-3.5 text-xs font-bold text-amber-900 shadow-sm transition hover:border-amber-300 hover:bg-amber-50 sm:w-auto"
           >
-            <FileClock className="h-3.5 w-3.5" />
+            <FileClock className="h-3.5 w-3.5 text-amber-600" strokeWidth={2.25} />
             {t('dashboard.tips.payouts_manager.unpaid_button', { count: unpaidDebts.length })}
           </button>
           <button
             type="button"
             onClick={() => setIsExportOpen(true)}
-            className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-[#cfd9e8] bg-white px-3.5 text-xs font-bold text-[#0b1220] shadow-sm transition hover:border-[#9fb2d1] hover:bg-[#f3f6fa] sm:w-auto"
+            className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-sky-200 bg-sky-50/60 px-3.5 text-xs font-bold text-sky-900 shadow-sm transition hover:border-sky-300 hover:bg-sky-50 sm:w-auto"
           >
-            <Download className="h-3.5 w-3.5" />
+            <Download className="h-3.5 w-3.5 text-sky-600" strokeWidth={2.25} />
             {t('dashboard.tips.payouts_manager.export_btn')}
           </button>
           <button

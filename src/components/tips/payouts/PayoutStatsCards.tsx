@@ -1,30 +1,44 @@
 import { useMemo } from 'react'
+import type { LucideIcon } from 'lucide-react'
+import { CalendarDays, CircleDollarSign, Clock3, HandCoins } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { formatCurrency } from '../../dashboard/utils'
-import type { MerchantPayoutStats, MerchantPayoutStatsByStaffPage } from '../../../types/domain'
+import type { MerchantPayoutStats } from '../../../types/domain'
 
-const CARD_ICONS = {
-  all_time: { emoji: '💸', box: 'bg-[#f0fdf4]' },
-  this_month: { emoji: '📅', box: 'bg-[#eff6ff]' },
-  pending: { emoji: '⏳', box: 'bg-[#fffbeb]' },
-  staff_paid: { emoji: '👥', box: 'bg-[#f5f3ff]' },
-} as const
+const CARD_ICONS: Record<
+  'all_time' | 'this_month' | 'pending' | 'unpaid_debt',
+  { Icon: LucideIcon; box: string; iconClass: string }
+> = {
+  all_time: {
+    Icon: CircleDollarSign,
+    box: 'bg-emerald-50 ring-1 ring-emerald-100',
+    iconClass: 'text-emerald-600',
+  },
+  this_month: {
+    Icon: CalendarDays,
+    box: 'bg-sky-50 ring-1 ring-sky-100',
+    iconClass: 'text-sky-600',
+  },
+  pending: {
+    Icon: Clock3,
+    box: 'bg-amber-50 ring-1 ring-amber-100',
+    iconClass: 'text-amber-600',
+  },
+  unpaid_debt: {
+    Icon: HandCoins,
+    box: 'bg-violet-50 ring-1 ring-violet-100',
+    iconClass: 'text-violet-600',
+  },
+}
 
 export default function PayoutStatsCards({
   stats,
-  statsByStaff,
   isLoading,
 }: {
   stats?: MerchantPayoutStats
-  statsByStaff?: MerchantPayoutStatsByStaffPage
   isLoading?: boolean
 }) {
   const { t, currentLanguage } = useTranslation()
-
-  const staffPaidCount = useMemo(
-    () => statsByStaff?.items.filter((item) => item.payoutCount > 0 || item.totalPaid > 0).length ?? 0,
-    [statsByStaff],
-  )
 
   const monthLabel = useMemo(() => {
     const now = new Date()
@@ -56,13 +70,15 @@ export default function PayoutStatsCards({
       sub: t('dashboard.tips.payouts_manager.stat_pending_sub', {
         count: stats?.totalPendingCount ?? 0,
       }),
-      subClass: 'text-[#d97706]',
+      subClass: 'text-amber-600',
     },
     {
-      key: 'staff_paid' as const,
+      key: 'unpaid_debt' as const,
       label: t('dashboard.tips.payouts_manager.stat_staff_paid'),
-      value: String(staffPaidCount),
-      sub: t('dashboard.tips.payouts_manager.stat_staff_paid_sub'),
+      value: formatCurrency(stats?.totalUnpaidDebt ?? 0),
+      sub: t('dashboard.tips.payouts_manager.stat_staff_paid_sub', {
+        count: stats?.staffWithDebt ?? 0,
+      }),
       subClass: 'text-[#687381]',
     },
   ]
@@ -70,7 +86,7 @@ export default function PayoutStatsCards({
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {cards.map((card) => {
-        const icon = CARD_ICONS[card.key]
+        const { Icon, box, iconClass } = CARD_ICONS[card.key]
         return (
           <div
             key={card.key}
@@ -84,10 +100,10 @@ export default function PayoutStatsCards({
                 {isLoading ? '—' : card.value}
               </p>
               <div
-                className={`flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[10px] text-lg ${icon.box}`}
+                className={`flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[10px] ${box}`}
                 aria-hidden
               >
-                {icon.emoji}
+                <Icon className={`h-[18px] w-[18px] ${iconClass}`} strokeWidth={2.25} />
               </div>
             </div>
             {card.sub ? (

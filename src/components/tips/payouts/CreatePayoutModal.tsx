@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
-import { Copy, CheckCircle2, Loader2, Save, Upload, X } from 'lucide-react'
+import { Copy, Loader2, Save, Upload, X } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import {
@@ -7,12 +7,15 @@ import {
   MAX_PAYOUT_EVIDENCE_URLS,
   MERCHANT_CREATE_PAYOUT_METHOD_TYPES,
   PayoutMethodType,
+  PayoutStatus,
+  PayoutStatusLabel,
   PayoutType,
   hasPayoutType,
   isPayoutTypesMaskValid,
-  togglePayoutType,
+  payoutTypesFromMask,
   normalizePayoutMethodType,
   type PayoutMethodTypeValue,
+  type PayoutStatusValue,
 } from '../../../data/payoutConstants'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import {
@@ -23,9 +26,9 @@ import {
 import { imagesRepository } from '../../../data/repositories/images'
 import type { PayoutRecord, UnpaidTipDebtRecord, StaffMember } from '../../../types/domain'
 import { getApiErrorCode } from '../../../types/domain'
-import { formatCurrency, formatTransactionDateTime } from '../../dashboard/utils'
-import CustomSelect from '../../CustomSelect'
-import { payoutMethodToUiKey, getStaffAvailablePayoutMethods, isStaffPayoutMethodAvailable, resolvePayoutStaffProfileId, sortPayoutMethodsCashLast, staffInitials } from '../../../utils/payoutDisplay'
+import { formatCurrency } from '../../dashboard/utils'
+import PayoutStaffSelect from './PayoutStaffSelect'
+import { payoutMethodToUiKey, getStaffAvailablePayoutMethods, isStaffPayoutMethodAvailable, resolvePayoutStaffProfileId, sortPayoutMethodsCashLast } from '../../../utils/payoutDisplay'
 import { formatLocalDateIso } from '../../../utils/localDate'
 import {
   formatUsdInputAmount,
@@ -53,7 +56,18 @@ const TYPE_I18N: Record<number, string> = {
   [PayoutType.Other]: 'dashboard.tips.payouts_manager.type_other',
 }
 
-const CREATE_PAYOUT_TYPE_FLAGS = [PayoutType.Tip] as const
+const TYPE_EMOJI: Record<number, string> = {
+  [PayoutType.Tip]: '💰',
+  [PayoutType.Salary]: '💼',
+  [PayoutType.Bonus]: '🎁',
+  [PayoutType.Other]: '📌',
+}
+
+const CREATE_STATUS_OPTIONS: PayoutStatusValue[] = [
+  PayoutStatus.Pending,
+  PayoutStatus.Confirmed,
+  PayoutStatus.Cancelled,
+]
 
 function defaultPeriodDates() {
   const now = new Date()
@@ -80,8 +94,7 @@ function isEvidenceImageFile(file: File): boolean {
 
 function validatePayoutAmount(
   display: string,
-  t: (key: string, params?: Record<string, unknown>) => string,
-  options?: { tipPayout?: boolean; debtBalance?: number },
+  t: (key: string) => string,
 ): string | null {
   const trimmed = display.trim()
   if (!trimmed) {
@@ -89,15 +102,7 @@ function validatePayoutAmount(
   }
   const parsed = parseDirectPaymentAmountInput(display)
   if (!Number.isFinite(parsed) || parsed <= 0) {
-    return t(getErrorI18nKey('PAYOUT_AMOUNT_MUST_BE_POSITIVE'))
-  }
-  if (options?.tipPayout && options.debtBalance != null && parsed > options.debtBalance) {
-    if (options.debtBalance <= 0) {
-      return t('dashboard.tips.payouts_manager.staff_debt_no_payout_available')
-    }
-    return t(getErrorI18nKey('PAYOUT_AMOUNT_EXCEEDS_DEBT'), {
-      balance: formatCurrency(options.debtBalance),
-    })
+    return t('dashboard.tips.payouts_manager.amount_required')
   }
   return null
 }
@@ -108,6 +113,31 @@ function validatePayoutPeriod(periodStart: string, periodEnd: string, t: (key: s
     return t(getErrorI18nKey('PAYOUT_PERIOD_START_BEFORE_END'))
   }
   return null
+}
+
+function staffMemberFromDebt(debt: UnpaidTipDebtRecord): StaffMember {
+  return {
+    staffProfileId: debt.staffProfileId,
+    staffCode: debt.staffCode,
+    fullName: debt.staffDisplayName,
+    displayName: debt.staffDisplayName,
+    avatar: debt.staffPhotoUrl,
+    isActive: true,
+    status: 'Active',
+    showInTipsFlow: true,
+  }
+}
+
+function staffMemberFromPayout(payout: PayoutRecord, staffProfileId: string): StaffMember {
+  return {
+    staffProfileId,
+    staffCode: payout.staffCode,
+    fullName: payout.staffDisplayName,
+    displayName: payout.staffDisplayName,
+    avatar: payout.staffPhotoUrl,
+    isActive: true,
+    status: 'Active',
+  }
 }
 
 export default function CreatePayoutModal({
@@ -125,38 +155,21 @@ export default function CreatePayoutModal({
   initialStaffProfileId?: string | null
   editingPayout?: PayoutRecord | null
 }) {
-  const { t, currentLanguage } = useTranslation()
+  const { t } = useTranslation()
   const { showToast } = useNotification()
   const createMutation = useCreateMerchantPayout()
   const updateMutation = useUpdateMerchantPayout()
   const isEditing = Boolean(editingPayout)
 
-  const eligibleStaff = useMemo(
-    () => staffList.filter((s) => s.staffProfileId && (s.isActive || s.status === 'Active')),
-    [staffList],
-  )
-
-  const staffSelectOptions = useMemo(() => {
-    const options = eligibleStaff.map((staff) => ({
-      value: staff.staffProfileId as string,
-      label: `${(staff.displayName || staff.fullName || staff.nickname) as string}${staff.staffCode ? ` (${staff.staffCode})` : ''}`,
-    }))
-
-    if (editingPayout) {
-      const resolvedStaffProfileId = resolvePayoutStaffProfileId(editingPayout, staffList)
-      if (
-        resolvedStaffProfileId
-        && !options.some((option) => option.value === resolvedStaffProfileId)
-      ) {
-        options.unshift({
-          value: resolvedStaffProfileId,
-          label: `${editingPayout.staffDisplayName}${editingPayout.staffCode ? ` (${editingPayout.staffCode})` : ''}`,
-        })
-      }
-    }
-
-    return options
-  }, [eligibleStaff, editingPayout, staffList])
+  const editingStaffMember = useMemo(() => {
+    if (!editingPayout) return null
+    const resolvedStaffProfileId = resolvePayoutStaffProfileId(editingPayout, staffList)
+    if (!resolvedStaffProfileId) return null
+    return (
+      staffList.find((staff) => staff.staffProfileId === resolvedStaffProfileId)
+      ?? staffMemberFromPayout(editingPayout, resolvedStaffProfileId)
+    )
+  }, [editingPayout, staffList])
 
   const payoutMethodOptions = useMemo(() => {
     const methods = [...MERCHANT_CREATE_PAYOUT_METHOD_TYPES]
@@ -176,6 +189,8 @@ export default function CreatePayoutModal({
   }, [unpaidDebts])
 
   const [staffProfileId, setStaffProfileId] = useState('')
+  const [selectedStaffMember, setSelectedStaffMember] = useState<StaffMember | null>(null)
+  const [staffProfileError, setStaffProfileError] = useState<string | null>(null)
   const [payoutMethodType, setPayoutMethodType] = useState<string>(PayoutMethodType.Zelle)
   const [amount, setAmount] = useState('')
   const [amountError, setAmountError] = useState<string | null>(null)
@@ -189,12 +204,13 @@ export default function CreatePayoutModal({
   const [isUploading, setIsUploading] = useState(false)
   const [isDragOver, setIsDragOver] = useState(false)
   const [evidenceError, setEvidenceError] = useState<string | null>(null)
+  const [payoutStatus, setPayoutStatus] = useState<PayoutStatusValue>(PayoutStatus.Confirmed)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const amountPrefillKeyRef = useRef('')
 
-  const selectedStaff =
-    staffList.find((s) => s.staffProfileId === staffProfileId)
-    ?? eligibleStaff.find((s) => s.staffProfileId === staffProfileId)
-    ?? null
+  const selectedStaff = isEditing
+    ? editingStaffMember
+    : selectedStaffMember
   const availablePayoutMethods = useMemo(
     () => getStaffAvailablePayoutMethods(selectedStaff),
     [selectedStaff],
@@ -205,8 +221,6 @@ export default function CreatePayoutModal({
   const unpaidDebt = staffProfileId ? debtByStaffId.get(staffProfileId) : null
   const displayedDebtBalance = staffDebt?.balance ?? unpaidDebt?.balance ?? 0
   const isDebtLookupReady = Boolean(staffDebt) || (!isStaffDebtLoading && Boolean(staffProfileId))
-  const debtBalanceForValidation = staffDebt?.balance ?? unpaidDebt?.balance
-  const hasTipDebtAvailable = isDebtLookupReady && displayedDebtBalance > 0
   const hasNoTipDebt = !isEditing && isDebtLookupReady && displayedDebtBalance <= 0
   const staffAccount =
     isEditing && editingPayout?.staffPaymentAccountInfo?.trim()
@@ -219,12 +233,15 @@ export default function CreatePayoutModal({
   useEffect(() => {
     if (!isOpen) return
     if (editingPayout) {
-      setStaffProfileId(resolvePayoutStaffProfileId(editingPayout, staffList))
+      const resolvedStaffProfileId = resolvePayoutStaffProfileId(editingPayout, staffList)
+      setStaffProfileId(resolvedStaffProfileId)
+      setSelectedStaffMember(editingStaffMember)
+      setStaffProfileError(null)
       setPayoutMethodType(normalizePayoutMethodType(editingPayout.payoutMethodType))
       setAmount(formatUsdInputAmount(editingPayout.amount))
       setAmountError(null)
       setPeriodError(null)
-      setPayoutTypesMask(editingPayout.payoutTypes || PayoutType.Tip)
+      setPayoutTypesMask(payoutTypesFromMask(editingPayout.payoutTypes || PayoutType.Tip)[0] ?? PayoutType.Tip)
       setPeriodStart(editingPayout.periodStart)
       setPeriodEnd(editingPayout.periodEnd)
       setNotes(editingPayout.notes ?? '')
@@ -232,15 +249,24 @@ export default function CreatePayoutModal({
       setEvidencePreviews(editingPayout.evidenceUrls ?? [])
       setEvidenceError(null)
       setIsDragOver(false)
+      amountPrefillKeyRef.current = ''
       return
     }
     const defaults = defaultPeriodDates()
-    const preferredStaffProfileId =
-      initialStaffProfileId
-      && eligibleStaff.some((staff) => staff.staffProfileId === initialStaffProfileId)
-        ? initialStaffProfileId
-        : eligibleStaff[0]?.staffProfileId ?? ''
-    setStaffProfileId(preferredStaffProfileId)
+    setStaffProfileId('')
+    setSelectedStaffMember(null)
+    setStaffProfileError(null)
+    if (initialStaffProfileId) {
+      const fromList = staffList.find((staff) => staff.staffProfileId === initialStaffProfileId)
+      const fromDebt = unpaidDebts.find((debt) => debt.staffProfileId === initialStaffProfileId)
+      if (fromList?.staffProfileId) {
+        setStaffProfileId(fromList.staffProfileId)
+        setSelectedStaffMember(fromList)
+      } else if (fromDebt) {
+        setStaffProfileId(fromDebt.staffProfileId)
+        setSelectedStaffMember(staffMemberFromDebt(fromDebt))
+      }
+    }
     setPayoutMethodType(PayoutMethodType.Zelle)
     setAmount('')
     setAmountError(null)
@@ -253,12 +279,9 @@ export default function CreatePayoutModal({
     setEvidencePreviews([])
     setEvidenceError(null)
     setIsDragOver(false)
-  }, [isOpen, editingPayout, staffList, eligibleStaff, initialStaffProfileId])
-
-  useEffect(() => {
-    if (!isOpen || isEditing || !eligibleStaff.length) return
-    setStaffProfileId((current) => current || (eligibleStaff[0]?.staffProfileId ?? ''))
-  }, [isOpen, isEditing, eligibleStaff])
+    setPayoutStatus(PayoutStatus.Confirmed)
+    amountPrefillKeyRef.current = ''
+  }, [isOpen, editingPayout, editingStaffMember, staffList, unpaidDebts, initialStaffProfileId])
 
   useEffect(() => {
     if (!isOpen || isEditing || !selectedStaff) return
@@ -271,10 +294,29 @@ export default function CreatePayoutModal({
   }, [isOpen, isEditing, selectedStaff, availablePayoutMethods])
 
   useEffect(() => {
-    if (!isOpen || isEditing || !hasNoTipDebt) return
-    setAmount('')
-    setAmountError(null)
-  }, [isOpen, isEditing, hasNoTipDebt, staffProfileId])
+    if (!isOpen || isEditing || !staffProfileId || !isDebtLookupReady || isStaffDebtLoading) return
+    if (!hasPayoutType(payoutTypesMask, PayoutType.Tip)) return
+
+    const prefillKey = `${staffProfileId}:${payoutTypesMask}:${displayedDebtBalance}`
+    if (amountPrefillKeyRef.current === prefillKey) return
+    amountPrefillKeyRef.current = prefillKey
+
+    if (displayedDebtBalance > 0) {
+      setAmount(formatUsdInputAmount(displayedDebtBalance))
+      setAmountError(null)
+    } else {
+      setAmount('')
+      setAmountError(null)
+    }
+  }, [
+    isOpen,
+    isEditing,
+    staffProfileId,
+    payoutTypesMask,
+    isDebtLookupReady,
+    isStaffDebtLoading,
+    displayedDebtBalance,
+  ])
 
   useEffect(() => {
     if (isOpen) return
@@ -288,7 +330,7 @@ export default function CreatePayoutModal({
 
   if (!isOpen) return null
 
-  const payoutTypeOptions = isEditing ? ALL_PAYOUT_TYPE_FLAGS : CREATE_PAYOUT_TYPE_FLAGS
+  const includesTipType = hasPayoutType(payoutTypesMask, PayoutType.Tip)
 
   const isPayoutMethodSelectable = (method: string) => {
     if (isEditing && normalizePayoutMethodType(editingPayout?.payoutMethodType) === method) {
@@ -297,14 +339,13 @@ export default function CreatePayoutModal({
     return isStaffPayoutMethodAvailable(selectedStaff, method as PayoutMethodTypeValue)
   }
 
-  const resolvedPayoutTypes = isEditing ? payoutTypesMask : PayoutType.Tip
-  const amountValidationOptions =
-    !isEditing
-    && hasPayoutType(resolvedPayoutTypes, PayoutType.Tip)
-    && isDebtLookupReady
-    && debtBalanceForValidation != null
-      ? { tipPayout: true as const, debtBalance: debtBalanceForValidation }
-      : undefined
+  const handleStaffSelect = (staff: StaffMember) => {
+    if (!staff.staffProfileId) return
+    setStaffProfileId(staff.staffProfileId)
+    setSelectedStaffMember(staff)
+    setStaffProfileError(null)
+    amountPrefillKeyRef.current = ''
+  }
 
   const handleCopyAccount = async () => {
     if (!staffAccount) return
@@ -413,12 +454,6 @@ export default function CreatePayoutModal({
     setAmountError(validatePayoutAmount(amount, t))
   }
 
-  const handleFillMaxDebt = () => {
-    if (displayedDebtBalance <= 0) return
-    setAmount(formatUsdInputAmount(displayedDebtBalance))
-    setAmountError(null)
-  }
-
   const handlePeriodStartChange = (value: string) => {
     setPeriodStart(value)
     setPeriodError(validatePayoutPeriod(value, periodEnd, t))
@@ -439,41 +474,22 @@ export default function CreatePayoutModal({
   }
 
   const handleSubmit = async () => {
-    if (
-      !isEditing
-      && hasPayoutType(resolvedPayoutTypes, PayoutType.Tip)
-      && hasNoTipDebt
-    ) {
-      showToast(t('dashboard.tips.payouts_manager.staff_debt_no_payout_available'), 'error')
-      return
-    }
+    const nextStaffError = !staffProfileId
+      ? t('dashboard.tips.payouts_manager.staff_required')
+      : null
+    const nextAmountError = validatePayoutAmount(amount, t)
+    const nextPeriodError = validatePayoutPeriod(periodStart, periodEnd, t)
 
-    if (
-      !isEditing
-      && hasPayoutType(resolvedPayoutTypes, PayoutType.Tip)
-      && isStaffDebtLoading
-    ) {
-      showToast(t('dashboard.tips.payouts_manager.staff_debt_loading'), 'error')
+    setStaffProfileError(nextStaffError)
+    setAmountError(nextAmountError)
+    setPeriodError(nextPeriodError)
+
+    if (nextStaffError || nextAmountError || nextPeriodError) {
       return
     }
 
     const parsedAmount = parseDirectPaymentAmountInput(amount)
-    const nextAmountError = validatePayoutAmount(amount, t, amountValidationOptions)
-    const nextPeriodError = validatePayoutPeriod(periodStart, periodEnd, t)
-    if (nextAmountError) {
-      setAmountError(nextAmountError)
-    }
-    if (nextPeriodError) {
-      setPeriodError(nextPeriodError)
-    }
-
-    if (!staffProfileId || nextAmountError || nextPeriodError) {
-      if (!staffProfileId) {
-        showToast(t('dashboard.tips.payouts_manager.validation_required'), 'error')
-      }
-      return
-    }
-    if (!isPayoutTypesMaskValid(resolvedPayoutTypes)) {
+    if (!isPayoutTypesMaskValid(payoutTypesMask)) {
       showToast(t(getErrorI18nKey('PAYOUT_TYPES_REQUIRED')), 'error')
       return
     }
@@ -482,11 +498,14 @@ export default function CreatePayoutModal({
       staffProfileId,
       payoutMethodType,
       amount: parsedAmount,
-      payoutTypes: resolvedPayoutTypes,
+      payoutTypes: payoutTypesMask,
       periodStart,
       periodEnd,
       evidenceUrls,
       notes: notes.trim() || null,
+      ...(!isEditing && payoutStatus !== PayoutStatus.Pending
+        ? { status: PayoutStatusLabel[payoutStatus] }
+        : {}),
     }
 
     try {
@@ -510,18 +529,8 @@ export default function CreatePayoutModal({
       onClose()
     } catch (err) {
       const code = getApiErrorCode(err)
-      if (code === 'PAYOUT_AMOUNT_MUST_BE_POSITIVE') {
-        setAmountError(t(getErrorI18nKey(code)))
-        return
-      }
-      if (code === 'PAYOUT_AMOUNT_EXCEEDS_DEBT') {
-        setAmountError(
-          (debtBalanceForValidation ?? displayedDebtBalance) <= 0
-            ? t('dashboard.tips.payouts_manager.staff_debt_no_payout_available')
-            : t(getErrorI18nKey(code), {
-                balance: formatCurrency(debtBalanceForValidation ?? displayedDebtBalance),
-              }),
-        )
+      if (code === 'PAYOUT_AMOUNT_MUST_BE_POSITIVE' || code === 'PAYOUT_AMOUNT_EXCEEDS_DEBT') {
+        setAmountError(t('dashboard.tips.payouts_manager.amount_required'))
         return
       }
       if (code === 'PAYOUT_PERIOD_START_BEFORE_END') {
@@ -556,12 +565,13 @@ export default function CreatePayoutModal({
                 <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-mutedGrey">
                   {t('dashboard.tips.payouts_manager.field_staff')} *
                 </label>
-                <CustomSelect
+                <PayoutStaffSelect
                   value={staffProfileId}
+                  selectedStaff={selectedStaff}
+                  onSelect={handleStaffSelect}
                   disabled={isEditing}
-                  onChange={(e) => setStaffProfileId(e.target.value)}
-                  options={staffSelectOptions}
-                  placeholder={t('dashboard.tips.payouts_manager.staff_placeholder')}
+                  error={staffProfileError}
+                  enabled={isOpen}
                 />
               </div>
 
@@ -577,132 +587,6 @@ export default function CreatePayoutModal({
                     <Copy className="mr-1 inline h-3 w-3" />
                     {t('common.copy')}
                   </button>
-                </div>
-              ) : null}
-
-              {staffProfileId && !isEditing ? (
-                <div
-                  className={`rounded-xl border p-3.5 ${
-                    hasNoTipDebt
-                      ? 'border-emerald-200 bg-gradient-to-br from-emerald-50 to-slate-50'
-                      : 'border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50/40'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p
-                        className={`text-[11px] font-black uppercase tracking-wide ${
-                          hasNoTipDebt ? 'text-emerald-900' : 'text-amber-900'
-                        }`}
-                      >
-                        {t('dashboard.tips.payouts_manager.staff_debt_title')}
-                      </p>
-                      <p className="mt-0.5 text-[11px] text-mutedGrey">
-                        {t('dashboard.tips.payouts_manager.staff_debt_sub')}
-                      </p>
-                    </div>
-                    {isStaffDebtLoading ? (
-                      <Loader2 className="h-4 w-4 shrink-0 animate-spin text-amber-700" aria-hidden />
-                    ) : hasNoTipDebt ? (
-                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-200 bg-white px-2 py-0.5 text-[10px] font-bold text-emerald-800">
-                        <CheckCircle2 className="h-3 w-3" aria-hidden />
-                        {t('dashboard.tips.payouts_manager.staff_debt_zero_badge')}
-                      </span>
-                    ) : null}
-                  </div>
-
-                  {isStaffDebtError ? (
-                    <p className="mt-3 text-xs font-semibold text-red-600">
-                      {t('dashboard.tips.payouts_manager.staff_debt_load_error')}
-                    </p>
-                  ) : isStaffDebtLoading && !staffDebt ? (
-                    <p className="mt-3 text-xs text-mutedGrey">{t('common.loading')}</p>
-                  ) : hasNoTipDebt ? (
-                    <div className="mt-3 flex items-start gap-3">
-                      {staffDebt?.staffPhotoUrl ? (
-                        <img
-                          src={staffDebt.staffPhotoUrl}
-                          alt=""
-                          className="h-10 w-10 shrink-0 rounded-full object-cover ring-2 ring-white"
-                        />
-                      ) : (
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-xs font-black text-white ring-2 ring-white">
-                          {staffInitials(
-                            staffDebt?.staffDisplayName
-                            || selectedStaff?.displayName
-                            || selectedStaff?.fullName
-                            || '?',
-                          )}
-                        </div>
-                      )}
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold text-inkBlue">
-                          {staffDebt?.staffDisplayName
-                            || selectedStaff?.displayName
-                            || selectedStaff?.fullName
-                            || '—'}
-                        </p>
-                        {staffDebt?.staffCode ? (
-                          <p className="text-[11px] font-semibold text-mutedGrey">{staffDebt.staffCode}</p>
-                        ) : null}
-                        <p className="mt-1.5 text-xs leading-relaxed text-emerald-950">
-                          {t('dashboard.tips.payouts_manager.staff_debt_zero_body')}
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="mt-3 flex items-center gap-3">
-                        {staffDebt?.staffPhotoUrl ? (
-                          <img
-                            src={staffDebt.staffPhotoUrl}
-                            alt=""
-                            className="h-10 w-10 shrink-0 rounded-full object-cover ring-2 ring-white"
-                          />
-                        ) : (
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-700 text-xs font-black text-white ring-2 ring-white">
-                            {staffInitials(
-                              staffDebt?.staffDisplayName
-                              || selectedStaff?.displayName
-                              || selectedStaff?.fullName
-                              || '?',
-                            )}
-                          </div>
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-bold text-inkBlue">
-                            {staffDebt?.staffDisplayName
-                              || selectedStaff?.displayName
-                              || selectedStaff?.fullName
-                              || '—'}
-                          </p>
-                          {staffDebt?.staffCode ? (
-                            <p className="text-[11px] font-semibold text-mutedGrey">{staffDebt.staffCode}</p>
-                          ) : null}
-                          {staffDebt?.lastUpdatedAt ? (
-                            <p className="text-[10px] text-mutedGrey">
-                              {t('dashboard.tips.payouts_manager.staff_debt_updated', {
-                                date: formatTransactionDateTime(staffDebt.lastUpdatedAt, currentLanguage),
-                              })}
-                            </p>
-                          ) : null}
-                        </div>
-                        <div className="shrink-0 text-right">
-                          <p className="text-[10px] font-bold uppercase tracking-wide text-mutedGrey">
-                            {t('dashboard.tips.payouts_manager.staff_debt_balance')}
-                          </p>
-                          <p className="text-xl font-black tabular-nums text-amber-800">
-                            {formatCurrency(displayedDebtBalance)}
-                          </p>
-                        </div>
-                      </div>
-                      <p className="mt-2.5 border-t border-amber-200/80 pt-2 text-[11px] leading-relaxed text-amber-950">
-                        {t('dashboard.tips.payouts_manager.staff_debt_max_tip', {
-                          balance: formatCurrency(displayedDebtBalance),
-                        })}
-                      </p>
-                    </>
-                  )}
                 </div>
               ) : null}
 
@@ -744,26 +628,15 @@ export default function CreatePayoutModal({
               </div>
 
               <div>
-                <div className="mb-1.5 flex items-center justify-between gap-2">
-                  <label className="block text-[11px] font-bold uppercase tracking-wide text-mutedGrey">
-                    {t('dashboard.tips.payouts_manager.field_amount')} *
-                  </label>
-                  {!isEditing && hasTipDebtAvailable ? (
-                    <button
-                      type="button"
-                      onClick={handleFillMaxDebt}
-                      className="text-[11px] font-bold text-nexoraBrand hover:underline"
-                    >
-                      {t('dashboard.tips.payouts_manager.fill_max_debt')}
-                    </button>
-                  ) : null}
-                </div>
+                <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-mutedGrey">
+                  {t('dashboard.tips.payouts_manager.field_amount')} *
+                </label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-mutedGrey">$</span>
                   <input
                     type="text"
                     inputMode="decimal"
-                    disabled={isEditing || hasNoTipDebt}
+                    disabled={isEditing || (includesTipType && hasNoTipDebt)}
                     className={`h-10 w-full rounded-lg border bg-white pl-7 pr-3 text-sm font-semibold tabular-nums disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-mutedGrey ${
                       amountError
                         ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-200'
@@ -772,27 +645,20 @@ export default function CreatePayoutModal({
                     value={amount}
                     onChange={(e) => handleAmountChange(e.target.value)}
                     onBlur={handleAmountBlur}
-                    placeholder={hasNoTipDebt ? '—' : '0.00'}
+                    placeholder={includesTipType && hasNoTipDebt ? '—' : '0.00'}
                     aria-invalid={Boolean(amountError)}
-                    aria-describedby={
-                      amountError ? 'payout-amount-error' : hasNoTipDebt ? 'payout-amount-disabled' : 'payout-amount-hint'
-                    }
+                    aria-describedby={amountError ? 'payout-amount-error' : undefined}
                   />
                 </div>
                 {amountError ? (
                   <p id="payout-amount-error" className="mt-1.5 text-xs font-semibold text-red-600">
                     {amountError}
                   </p>
-                ) : hasNoTipDebt ? (
-                  <p id="payout-amount-disabled" className="mt-1.5 text-[11px] leading-relaxed text-emerald-800">
-                    {t('dashboard.tips.payouts_manager.staff_debt_amount_disabled')}
-                  </p>
-                ) : !isEditing && hasTipDebtAvailable ? (
-                  <p id="payout-amount-hint" className="mt-1.5 text-[11px] text-mutedGrey">
-                    {t('dashboard.tips.payouts_manager.amount_max_tip_hint', {
-                      balance: formatCurrency(displayedDebtBalance),
-                    })}
-                  </p>
+                ) : !isEditing && staffProfileId && includesTipType && !isStaffDebtLoading && !isStaffDebtError ? (
+                    <p className="mt-1.5 text-[11px] text-mutedGrey">
+                      {t('dashboard.tips.payouts_manager.unpaid_tip_hint')}{' '}
+                      <span className="font-bold text-nexoraBrand">{formatCurrency(displayedDebtBalance)}</span>
+                    </p>
                 ) : null}
               </div>
 
@@ -801,24 +667,20 @@ export default function CreatePayoutModal({
                   {t('dashboard.tips.payouts_manager.field_types')} *
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {payoutTypeOptions.map((flag) => {
+                  {ALL_PAYOUT_TYPE_FLAGS.map((flag) => {
                     const selected = hasPayoutType(payoutTypesMask, flag)
-                    const selectable = isEditing
                     return (
                       <button
                         key={flag}
                         type="button"
-                        disabled={!selectable}
-                        onClick={() => selectable && setPayoutTypesMask((mask) => togglePayoutType(mask, flag))}
-                        className={`rounded-lg border px-3 py-1.5 text-xs font-bold ${
+                        onClick={() => setPayoutTypesMask(flag)}
+                        className={`rounded-lg border px-3 py-1.5 text-xs font-bold transition ${
                           selected
                             ? 'border-nexoraBrand bg-nexoraBrand/10 text-nexoraBrand'
-                            : selectable
-                              ? 'border-nexoraBorder'
-                              : 'cursor-default border-nexoraBorder'
+                            : 'border-nexoraBorder hover:border-nexoraBrand/40'
                         }`}
                       >
-                        {t(TYPE_I18N[flag])}
+                        {TYPE_EMOJI[flag]} {t(TYPE_I18N[flag])}
                       </button>
                     )
                   })}
@@ -948,8 +810,42 @@ export default function CreatePayoutModal({
               </div>
 
               {!isEditing ? (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-900">
-                  {t('dashboard.tips.payouts_manager.create_pending_note')}
+                <div>
+                  <p className="mb-2 border-b border-nexoraBorder pb-2 text-[11px] font-black uppercase tracking-wide text-mutedGrey">
+                    {t('dashboard.tips.payouts_manager.field_status')} *
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    {CREATE_STATUS_OPTIONS.map((status) => {
+                      const selected = payoutStatus === status
+                      const labelKey = `dashboard.tips.payouts_manager.create_status_${PayoutStatusLabel[status].toLowerCase()}`
+                      const descKey = `${labelKey}_desc`
+                      return (
+                        <button
+                          key={status}
+                          type="button"
+                          onClick={() => setPayoutStatus(status)}
+                          className={`flex items-start gap-2.5 rounded-lg border px-3 py-2.5 text-left transition ${
+                            selected
+                              ? 'border-nexoraBrand bg-nexoraBrand/5'
+                              : 'border-nexoraBorder hover:border-nexoraBrand/40'
+                          }`}
+                        >
+                          <span
+                            className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${
+                              selected ? 'border-nexoraBrand bg-nexoraBrand' : 'border-nexoraBorder'
+                            }`}
+                            aria-hidden
+                          >
+                            {selected ? <span className="h-1.5 w-1.5 rounded-full bg-white" /> : null}
+                          </span>
+                          <span>
+                            <span className="block text-xs font-semibold text-inkBlue">{t(labelKey)}</span>
+                            <span className="mt-0.5 block text-[11px] text-mutedGrey">{t(descKey)}</span>
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
               ) : null}
             </div>
@@ -962,7 +858,7 @@ export default function CreatePayoutModal({
           </button>
           <button
             type="button"
-            disabled={isSaving || hasNoTipDebt}
+            disabled={isSaving}
             onClick={handleSubmit}
             className="inline-flex items-center gap-2 rounded-lg bg-nexoraBrand px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
           >
