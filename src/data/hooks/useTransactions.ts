@@ -59,6 +59,11 @@ export function useUpdateTransaction() {
   })
 }
 
+export interface ConfirmReceiptVars {
+  tipIds: string[]
+  isForce?: boolean
+}
+
 /**
  * Owner confirms shop-account / multi-staff tips have landed in the shop
  * account (US-025). Mirrors useConfirmStaffTipsReceipt: refreshes the tips list
@@ -70,8 +75,9 @@ export function useConfirmMerchantTipsReceipt() {
   const { showToast } = useNotification()
   const { t } = useTranslation()
 
-  return useMutation<MerchantTipsConfirmReceiptResult, Error, string[]>({
-    mutationFn: (tipIds) => transactionsRepository.confirmReceipt(tipIds),
+  return useMutation<MerchantTipsConfirmReceiptResult, Error, ConfirmReceiptVars>({
+    mutationFn: (vars) =>
+      transactionsRepository.confirmReceipt(vars.tipIds, { isForce: vars.isForce }),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: qk.transactions() })
       queryClient.invalidateQueries({ queryKey: ['transactions', 'paginated'] })

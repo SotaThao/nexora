@@ -7,10 +7,11 @@ import {
   formatTransactionDateTime,
   isAwaitingShopConfirmation,
   isShopConfirmed,
-  isAwaitingStaffConfirmation,
   isStaffReceiptConfirmed,
+  isReceiptConfirmableTip,
 } from '../utils'
 import { WalletLogos } from '../constants'
+import { isInitiatedLikeTipStatus, isTipStatus, TipStatus } from '../../../constants/tipStatus'
 import { logger } from '../../../utils/logger'
 import { buildQrImageUrl, slugify, toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
 import { getWebUrlOrigin } from '../../../utils/webUrlBase'
@@ -122,28 +123,28 @@ function renderStatusBadge(tx, t) {
   }
   const status = tx?.status
   const s = (status || '').toLowerCase()
-  if (s === 'completed') {
+  if (isTipStatus(status, TipStatus.Completed)) {
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100/50 mt-2">
         {status}
       </span>
     )
   }
-  if (s === 'success' || s === 'succeeded' || s === 'confirmed') {
+  if (s === 'success' || s === 'succeeded' || isTipStatus(status, TipStatus.Confirmed)) {
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100/50 mt-2">
         {t('components.dashboard.views.ReportsView.success')}
       </span>
     )
   }
-  if (s === 'pending' || s === 'processing' || s === 'initiated') {
+  if (isInitiatedLikeTipStatus(status)) {
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-100/50 mt-2">
         {t('components.dashboard.views.ReportsView.pending')}
       </span>
     )
   }
-  if (s === 'failed' || s === 'skipped') {
+  if (s === 'failed' || isTipStatus(status, TipStatus.Skipped)) {
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-100/50 mt-2">
         {t('components.dashboard.views.ReportsView.failed')}
@@ -266,26 +267,34 @@ export default function TransactionDetailModal({
     selectedTx.staffCode,
   )
 
-  const awaitingShopConfirmation = !isStaffAudience && isAwaitingShopConfirmation(selectedTx)
-  const awaitingStaffConfirmation = isStaffAudience && isAwaitingStaffConfirmation(selectedTx)
+  // API may return 'Initiated', 'Pending', or 'Processing' - all represent a tip
+  // where the customer has NOT yet confirmed payment. All need isForce to complete.
+  const isInitiatedTip = isInitiatedLikeTipStatus(selectedTx?.status)
+
+  const awaitingShopConfirmation = !isStaffAudience && isReceiptConfirmableTip(selectedTx, false)
+  const awaitingStaffConfirmation = isStaffAudience && isReceiptConfirmableTip(selectedTx, true)
   const shopConfirmed = !isStaffAudience && isShopConfirmed(selectedTx)
   const staffReceiptConfirmed = isStaffAudience && isStaffReceiptConfirmed(selectedTx)
   const isConfirming = confirmReceiptMutation.isPending
 
   const handleConfirmReceipt = () => {
     if (!selectedTx?.id || isConfirming) return
-    confirmReceiptMutation.mutate([selectedTx.id], {
-      onSuccess: (result) => {
-        // Close only when the tip was fully confirmed; on partial/full failure
-        // keep the modal open so the owner sees the unchanged pending state.
-        if (result.failedIds.length === 0) onClose()
+    if (!isReceiptConfirmableTip(selectedTx, isStaffAudience)) return
+    confirmReceiptMutation.mutate(
+      { tipIds: [selectedTx.id], isForce: isInitiatedTip || undefined },
+      {
+        onSuccess: (result) => {
+          // Close only when the tip was fully confirmed; on partial/full failure
+          // keep the modal open so the owner sees the unchanged pending state.
+          if (result.failedIds.length === 0) onClose()
+        },
       },
-    })
+    )
   }
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+      <div className="fixed inset-0 z-50 flex items-center justify-center modal-overlay-safe bg-slate-900/60 backdrop-blur-sm">
         <div className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-white rounded-2xl border border-nexoraBorder shadow-2xl p-6 relative">
           <div className="flex items-center justify-between border-b border-nexoraBorder pb-4 mb-4">
             <div>
@@ -301,7 +310,8 @@ export default function TransactionDetailModal({
             <button
               type="button"
               onClick={onClose}
-              className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-nexoraMuted hover:text-nexoraText transition-colors cursor-pointer"
+              aria-label={t('common.close')}
+              className="modal-close-btn rounded-full hover:bg-slate-100 text-nexoraMuted hover:text-nexoraText transition-colors cursor-pointer"
             >
               <X className="h-4 w-4" />
             </button>

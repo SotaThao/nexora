@@ -47,8 +47,6 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
   const [showPassword, setShowPassword] = useState(false)
   const [referralCode, setReferralCode] = useState(initialRefCode)
   const [fullName, setFullName] = useState('')
-  const [showTermsModal, setShowTermsModal] = useState(false)
-  const [modalType, setModalType] = useState('terms')
   const [nickname, setNickname] = useState('')
   const [position, setPosition] = useState('Nail Technician')
   const [phone, setPhone] = useState('')
@@ -726,10 +724,6 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     initialRefCode,
     fullName,
     setFullName,
-    showTermsModal,
-    setShowTermsModal,
-    modalType,
-    setModalType,
     nickname,
     setNickname,
     position,

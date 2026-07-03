@@ -394,10 +394,15 @@ export function createStaffSelfRepository(client: HttpClient = httpClient) {
       }
     },
 
-    async confirmTipsReceipt(tipIds: string[]): Promise<StaffTipsConfirmReceiptResult> {
+    async confirmTipsReceipt(
+      tipIds: string[],
+      options?: { isForce?: boolean },
+    ): Promise<StaffTipsConfirmReceiptResult> {
+      const body: { tipIds: string[]; isForce?: boolean } = { tipIds }
+      if (options?.isForce) body.isForce = true
       const res = await client.post<StaffTipsConfirmReceiptResult>(
         '/api/v1/staff/tips/confirm-receipt',
-        { tipIds },
+        body,
       )
       return {
         confirmedCount: Number(res?.confirmedCount) || 0,

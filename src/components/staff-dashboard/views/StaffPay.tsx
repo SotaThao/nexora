@@ -1,5 +1,5 @@
 // StaffPay — staff self-managed payout methods (owner cannot edit these).
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Bitcoin, Edit2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import {
@@ -12,6 +12,7 @@ import { SkeletonLayout } from '../../ui/skeleton'
 import PayoutSetupModal from '../../dashboard/modals/PayoutSetupModal'
 import ToggleSwitch from '../../ui/ToggleSwitch'
 import { formatPaymentMethodAccountDisplay } from '../../payout/bankWireAccount'
+import { isHiddenPayoutConfigType } from '../../../data/paymentMethodTypes'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 
@@ -66,6 +67,11 @@ export default function StaffPay() {
   const updateMutation = useUpdateStaffPaymentMethod()
 
   const [activeMethod, setActiveMethod] = useState<PaymentMethodDto | null>(null)
+
+  const visiblePaymentMethods = useMemo(
+    () => apiPaymentMethods.filter((method) => !isHiddenPayoutConfigType(method)),
+    [apiPaymentMethods],
+  )
 
   const isLoading = isPending || isFetching
 
@@ -135,13 +141,13 @@ export default function StaffPay() {
       <section className={panel}>
         <p className="text-xs text-nexoraMuted">{t('staff_dashboard.pay.owner_note')}</p>
 
-        {apiPaymentMethods.length === 0 ? (
+        {visiblePaymentMethods.length === 0 ? (
           <p className="mt-4 py-6 text-center text-xs text-nexoraSubtle">
             {t('staff_dashboard.pay.empty')}
           </p>
         ) : (
           <div className="mt-4 divide-y divide-nexoraBorder">
-            {apiPaymentMethods.map((method) => {
+            {visiblePaymentMethods.map((method) => {
               const uiKey = method.uiKey || ''
               const label = method.name || method.type
               return (

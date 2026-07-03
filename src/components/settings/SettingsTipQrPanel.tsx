@@ -109,6 +109,7 @@ export default function SettingsTipQrPanel({
   const isLoading = isProfileLoading || isQrLoading || isMethodsLoading
 
   const gatewayCardClass = 'rounded-xl border border-nexoraBorder bg-nexoraCanvas p-5'
+  const gatewayActionBtnClass = 'flex h-9 w-full min-w-0 items-center justify-center gap-1 rounded-lg px-2 text-xs font-bold transition cursor-pointer'
 
   if (isLoading) {
     return (
@@ -173,10 +174,51 @@ export default function SettingsTipQrPanel({
   }
 
   if (isGateway) {
+    const gatewayActionButtons = (
+      <>
+        <button
+          type="button"
+          onClick={() => setShowPreview(true)}
+          disabled={!paymentPageUrl}
+          className={`${gatewayActionBtnClass} bg-white border border-nexoraBorder text-nexoraText hover:bg-nexoraSurfaceMuted disabled:cursor-not-allowed disabled:opacity-60`}
+        >
+          <Eye className="h-4 w-4 shrink-0" />
+          <span className="truncate">{t('dashboard.master_gateway.btn_open')}</span>
+        </button>
+        <button
+          type="button"
+          onClick={handleDownloadQr}
+          disabled={!paymentPageUrl || isDownloading}
+          className={`${gatewayActionBtnClass} bg-nexoraBrand text-white hover:bg-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-60`}
+        >
+          <Download className="h-4 w-4 shrink-0" />
+          <span className="truncate">{t('dashboard.master_gateway.btn_download')}</span>
+        </button>
+        <button
+          type="button"
+          disabled={!paymentPageUrl}
+          onClick={() => handleCopy(paymentPageUrl, 'direct-payment-url')}
+          className={`${gatewayActionBtnClass} bg-white border border-nexoraBorder text-nexoraText hover:bg-nexoraSurfaceMuted disabled:cursor-not-allowed disabled:opacity-60`}
+        >
+          {copiedId === 'direct-payment-url' ? (
+            <>
+              <Check className="h-4 w-4 shrink-0 text-emerald-600" />
+              <span className="truncate text-emerald-600">{t('components.settings.tabs.ProfileTab.copied')}</span>
+            </>
+          ) : (
+            <>
+              <Copy className="h-4 w-4 shrink-0" />
+              <span className="truncate">{t('dashboard.master_gateway.btn_copy_link')}</span>
+            </>
+          )}
+        </button>
+      </>
+    )
+
     return (
       <>
-        <div className={`${gatewayCardClass} flex flex-col md:flex-row justify-between gap-5`}>
-          <div className="flex-grow flex flex-col justify-between">
+        <div className={`${gatewayCardClass} flex flex-col gap-5 md:flex-row md:justify-between`}>
+          <div className="flex flex-col justify-between md:flex-grow md:min-w-0">
             <div>
               <div className="flex items-center gap-2">
                 <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
@@ -186,9 +228,6 @@ export default function SettingsTipQrPanel({
                   <h3 className="text-sm font-extrabold text-nexoraText">
                     {t('dashboard.master_gateway.payment_title')}
                   </h3>
-                  <p className="text-[10px] text-nexoraMuted">
-                    {t('dashboard.master_gateway.payment_desc')}
-                  </p>
                 </div>
               </div>
               <p className="mt-4 text-xs leading-normal text-nexoraMuted">
@@ -196,43 +235,8 @@ export default function SettingsTipQrPanel({
               </p>
             </div>
 
-            <div className="mt-6 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => setShowPreview(true)}
-                disabled={!paymentPageUrl}
-                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-white border border-nexoraBorder px-4 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <Eye className="h-4 w-4" />
-                {t('dashboard.master_gateway.btn_open')}
-              </button>
-              <button
-                type="button"
-                onClick={handleDownloadQr}
-                disabled={!paymentPageUrl || isDownloading}
-                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white hover:bg-nexoraBrandDark transition cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <Download className="h-4 w-4" />
-                {t('dashboard.master_gateway.btn_download')}
-              </button>
-              <button
-                type="button"
-                disabled={!paymentPageUrl}
-                onClick={() => handleCopy(paymentPageUrl, 'direct-payment-url')}
-                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-white border border-nexoraBorder px-4 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {copiedId === 'direct-payment-url' ? (
-                  <>
-                    <Check className="h-4 w-4 text-emerald-600" />
-                    <span className="text-emerald-600">{t('components.settings.tabs.ProfileTab.copied')}</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-4 w-4" />
-                    {t('dashboard.master_gateway.btn_copy_link')}
-                  </>
-                )}
-              </button>
+            <div className="mt-6 hidden w-full grid-cols-3 gap-2 md:grid">
+              {gatewayActionButtons}
             </div>
           </div>
 
@@ -240,7 +244,7 @@ export default function SettingsTipQrPanel({
             type="button"
             onClick={() => paymentPageUrl && setShowPreview(true)}
             aria-label={t('components.settings.SettingsTipQrPanel.previewQr')}
-            className="flex-shrink-0 mx-auto md:mx-0 w-28 h-28 rounded-lg bg-white border border-nexoraBorder/80 p-2 flex items-center justify-center shadow-sm relative overflow-hidden cursor-pointer hover:border-nexoraBrand transition select-none group"
+            className="mx-auto flex h-28 w-28 shrink-0 items-center justify-center rounded-lg border border-nexoraBorder/80 bg-white p-2 shadow-sm relative overflow-hidden cursor-pointer hover:border-nexoraBrand transition select-none group md:mx-0 md:self-start"
           >
             {qrPreviewUrl ? (
               <img
@@ -258,6 +262,10 @@ export default function SettingsTipQrPanel({
               </span>
             </div>
           </button>
+
+          <div className="grid w-full grid-cols-3 gap-2 md:hidden">
+            {gatewayActionButtons}
+          </div>
         </div>
 
         <DirectPaymentQrPreviewModal
@@ -472,10 +480,6 @@ export default function SettingsTipQrPanel({
           <ClipboardList className="h-4 w-4 shrink-0" />
           {t('components.settings.SettingsTipQrPanel.viewHistory')}
         </button>
-
-        <p className="text-center text-[10px] leading-relaxed text-nexoraMuted">
-          {t('components.settings.SettingsTipQrPanel.merchantNote')}
-        </p>
       </div>
     </>
   )

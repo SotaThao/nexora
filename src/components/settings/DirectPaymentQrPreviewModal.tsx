@@ -7,7 +7,7 @@ export default function DirectPaymentQrPreviewModal({
   open,
   onClose,
   title,
-  businessName = '',
+  businessName: _businessName = '',
   previewQrUrl,
   paymentPageUrl,
   hideUrlCode = false,
@@ -21,46 +21,35 @@ export default function DirectPaymentQrPreviewModal({
   const qrImageSrc = paymentPageUrl ? buildPublicQrImageUrl(paymentPageUrl, 1000) : previewQrUrl
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-nexoraText/70 p-4 py-6 backdrop-blur-sm sm:items-center qr-modal-backdrop">
-      <div className="w-full max-w-sm rounded-xl bg-white p-6 text-center shadow-2xl animate-scaleUp qr-modal-container">
-        <div className="flex justify-end no-print">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
-            title="Close"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+    <div
+      className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-nexoraText/70 modal-overlay-safe backdrop-blur-sm sm:items-center qr-modal-backdrop"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-sm rounded-xl bg-white px-6 pb-6 pt-12 text-center shadow-2xl animate-scaleUp qr-modal-container"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          className="no-print modal-close-btn absolute right-2 top-2 rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+          title="Close"
+          aria-label="Close"
+        >
+          <X className="h-5 w-5" />
+        </button>
 
-        <h2 className="mt-1 text-lg font-extrabold text-nexoraText qr-print-title">{title}</h2>
-        {businessName ? (
-          <p className="text-xs text-nexoraMuted qr-print-subtitle">{businessName}</p>
-        ) : null}
-
-        <div className="mx-auto mt-5 flex aspect-[2/3] w-44 flex-col items-center justify-between rounded-2xl border border-nexoraBorder/80 bg-nexoraCanvas p-4 text-nexoraText shadow-md qr-print-card">
-          <div className="flex items-center justify-center gap-1 qr-print-brand-header">
+        <div className="mx-auto flex w-48 flex-col items-center gap-3.5 rounded-2xl border border-nexoraBorder/80 bg-nexoraCanvas px-4 py-5 text-nexoraText shadow-md qr-print-card qr-print-card--payment">
+          <div className="flex items-center justify-center gap-1.5 qr-print-brand-header">
             <img
               src="/assets/nexora-logo.png"
               alt="Nexora Logo"
-              className="h-3.5 w-3.5 object-contain qr-print-brand-logo"
+              className="h-4 w-4 object-contain qr-print-brand-logo"
             />
-            <span className="text-[8px] font-black tracking-wider text-slate-800 qr-print-brand-text">NEXORA</span>
+            <span className="text-[9px] font-black tracking-wider text-slate-800 qr-print-brand-text">NEXORA</span>
           </div>
 
-          <div className="w-full text-center">
-            <div className="mx-auto text-[10px] font-extrabold uppercase tracking-wide text-nexoraBrand qr-print-biz-name">
-              {title}
-            </div>
-            {businessName ? (
-              <div className="mx-auto text-[7.5px] font-bold text-nexoraMuted qr-print-staff-info">
-                {businessName}
-              </div>
-            ) : null}
-          </div>
-
-          <div className="flex h-28 w-28 items-center justify-center rounded-lg border border-nexoraBorder/60 bg-white p-2 shadow-inner qr-print-qr-wrapper">
+          <div className="flex h-[7.25rem] w-[7.25rem] shrink-0 items-center justify-center rounded-xl border border-nexoraBorder/60 bg-white p-2.5 shadow-inner qr-print-qr-wrapper">
             <img
               src={qrImageSrc}
               alt={title}
@@ -68,12 +57,12 @@ export default function DirectPaymentQrPreviewModal({
             />
           </div>
 
-          <div className="mx-auto text-[8px] font-extrabold uppercase leading-tight tracking-wider text-nexoraMuted qr-print-scan-text">
+          <p className="max-w-[9.5rem] text-center text-[9px] font-extrabold uppercase leading-snug tracking-wide text-nexoraMuted qr-print-scan-text">
             {scanCaption}
-          </div>
+          </p>
 
-          <div className="flex items-center gap-1 text-[7.5px] font-bold text-nexoraSubtle qr-print-footer">
-            <ShieldCheck className="h-2.5 w-2.5 shrink-0 text-nexoraBrand" />
+          <div className="flex items-center justify-center gap-1 text-[8px] font-bold text-nexoraSubtle qr-print-footer">
+            <ShieldCheck className="h-3 w-3 shrink-0 text-nexoraBrand" />
             <span>{t('components.SetupWizard.secureRedirect')}</span>
           </div>
         </div>
@@ -87,7 +76,7 @@ export default function DirectPaymentQrPreviewModal({
         <button
           type="button"
           onClick={() => window.print()}
-          className="no-print mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white transition hover:bg-opacity-90"
+          className="no-print mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-4 py-2.5 text-xs font-bold text-white transition hover:bg-opacity-90"
         >
           <Printer className="h-4 w-4" />
           {t('dashboard.modals.print_qr')}

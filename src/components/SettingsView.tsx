@@ -244,15 +244,16 @@ export default function SettingsView({
 
       {/* Show QR Code Modal Popup */}
       {showQrModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center modal-overlay-safe">
           <div className="bg-white rounded-3xl border border-slate-100 max-w-sm w-full shadow-2xl p-6 relative overflow-hidden animate-scaleIn text-center text-slate-800 space-y-4">
             
             {/* Close Button */}
             <button
               type="button"
               onClick={() => setShowQrModal(false)}
-              className="absolute right-4 top-4 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+              className="modal-close-btn absolute right-2 top-2 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
               title="Close modal"
+              aria-label="Close modal"
             >
               <X className="h-5 w-5" />
             </button>

@@ -81,6 +81,7 @@
       "no_pending": "Không có tip nào chờ xác nhận.",
       "confirm": "Xác nhận",
       "confirm_all": "Xác nhận đã nhận tất cả",
+      "confirm_all_tooltip": "Chỉ các tip đã xác nhận thanh toán sẽ được bao gồm. Các tip đang chờ (chưa xác nhận thanh toán) sẽ bị bỏ qua.",
       "view_all": "Xem tất cả",
       "manage": "Quản lý",
       "your_linked_businesses": "Tiệm đã liên kết",
@@ -158,16 +159,18 @@
       "saved": "Đã lưu ✓"
     },
     "qr": {
-      "personal_title": "QR Nhân viên của tôi",
+      "personal_title": "QR cá nhân của tôi",
       "personal_sub": "Đưa mã QR này cho tiệm để họ gửi yêu cầu liên kết nhân viên cho bạn.",
-      "share": "Chia sẻ QR nhân viên",
+      "share": "Chia sẻ liên kết",
       "copy_link": "Sao chép liên kết",
-      "tab_personal": "QR Nhân viên",
+      "copy_staff_id": "Sao chép Mã nhân viên",
+      "copy_staff_link": "Sao chép liên kết chia sẻ",
+      "tab_personal": "QR cá nhân",
       "tab_referral": "QR Giới thiệu",
       "tab_tipping": "QR Nhận tip",
       "tab_payment": "QR Thanh toán",
-      "payment_title": "QR Thanh toán cá nhân",
-      "payment_sub": "Khách quét mã này để thanh toán trực tiếp cho bạn — không cần qua salon.",
+      "payment_title": "Mã QR thanh toán",
+      "payment_sub": "Quét để thanh toán trực tiếp. Không cần tài khoản.",
       "share_payment": "Chia sẻ QR thanh toán",
       "copy_payment_link": "Sao chép link thanh toán",
       "payment_link_label": "Link thanh toán",
@@ -186,7 +189,7 @@
       "link_request_pending": "Chờ duyệt",
       "share_tip": "Chia sẻ QR tip",
       "copy_tip_link": "Sao chép link tip",
-      "business_title": "Staff QR",
+      "business_title": "QR nhận tip",
       "business_sub": "QR riêng cho tip/đánh giá tại tiệm này",
       "note": "QR theo tiệm được lưu theo business_staff_link_id để không bị lẫn khi bạn làm ở nhiều tiệm.",
       "no_linked_businesses": "Chưa liên kết tiệm nào. Quét QR giới thiệu của tiệm để gửi yêu cầu tham gia.",
@@ -614,6 +617,8 @@
       "col_tp": "Trạm",
       "col_payment": "Phương thức",
       "col_status": "Trạng thái",
+      "col_action": "Hành động",
+      "action_complete": "Hoàn tất",
       "empty_activity": "Chưa có hoạt động giao dịch nào phát sinh.",
       "filter_title": "Bộ lọc",
       "filter_reset": "Thiết lập lại",
@@ -672,6 +677,7 @@
       "download_print_qr": "Tải Xuống QR In Ấn (PDF)",
       "print_qr_btn": "In Mã QR",
       "print_qr": "In Mã QR",
+      "staff_qr_inactive_warning": "QR cá nhân này bị chặn khi nhân viên đang ở trạng thái không hoạt động.",
       "customer_view_test": "Thử Giao Diện Khách Quét ›"
     },
     "settings_panel": {
@@ -693,12 +699,13 @@
       "qr_title": "Mã QR tiệm",
       "qr_desc": "Quầy lễ tân – tất cả kỹ thuật viên",
       "qr_body": "Đặt mã QR này tại quầy đón khách. Khách hàng quét mã này để chọn nhân viên phục vụ và để lại đánh giá.",
-      "payment_title": "QR Thanh toán trực tiếp",
-      "payment_desc": "Quầy lễ tân – thanh toán cho tiệm",
-      "payment_body": "Đặt mã QR này tại quầy đón khách. Khách quét mã để thanh toán trực tiếp cho tiệm qua các phương thức nhận tiền đã bật.",
+      "payment_title": "Mã QR nhận thanh toán",
+      "payment_desc": "",
+      "payment_body": "Đặt tại quầy lễ tân. Khách quét mã để thanh toán.",
       "btn_open": "Xem Mã QR",
-      "btn_download": "Tải Mã QR",
-      "btn_copy_link": "Sao chép link"
+    "btn_download": "Tải",
+    "btn_copy_link": "Sao chép",
+      "copied_qr_link": "Đã sao chép link vào clipboard!"
     },
     "touchpoint_stats": {
       "scans": "Lượt quét",
@@ -1119,10 +1126,11 @@
   },
   "direct_payment": {
     "review_payment_title": "Xem lại & chọn phương thức thanh toán",
-    "review_payment_desc": "Thanh toán trực tiếp cho tiệm. Khách không cần tài khoản.",
+    "review_payment_desc": "Bạn đang thanh toán trực tiếp cho {name}.",
     "amount_label": "Số tiền thanh toán",
     "custom_amount_placeholder": "Nhập số tiền",
     "total_payment": "Tổng thanh toán",
+    "total": "tổng",
     "amount_range_hint": "$1.00 – $10,000.00",
     "pay_to_business": "Thanh toán cho tiệm",
     "default_business": "Doanh nghiệp",
@@ -1141,9 +1149,10 @@
   },
   "staff_direct_payment": {
     "review_payment_title": "Xem lại & chọn phương thức thanh toán",
-    "review_payment_desc": "Thanh toán trực tiếp cho thợ. Khách không cần tài khoản.",
+    "review_payment_desc": "Bạn đang thanh toán trực tiếp cho {name}.",
     "amount_range_hint": "$1.00 – $10,000.00",
     "pay_to_staff": "Thanh toán cho thợ",
+    "total": "tổng",
     "default_staff": "Thợ",
     "no_methods_title": "Chưa có phương thức thanh toán",
     "no_methods_desc": "Thợ này chưa thiết lập phương thức nhận tiền đang bật. Vui lòng liên hệ họ.",
@@ -1162,7 +1171,7 @@
     "account_info": "Tài khoản",
     "customer_confirmed_at": "Khách xác nhận",
     "merchant_confirmed_at": "Tiệm xác nhận nhận tiền",
-    "status_initiated": "Khởi tạo",
+    "status_initiated": "Chờ thanh toán",
     "status_initiated_desc": "Giao dịch vừa tạo, chờ khách xác nhận đã chuyển khoản.",
     "status_confirmed": "Chờ xác nhận",
     "status_confirmed_desc": "Khách đã xác nhận đã chuyển khoản. Đang chờ bạn xác nhận nhận tiền.",
@@ -1210,7 +1219,7 @@
     "account_info": "Tài khoản",
     "customer_confirmed_at": "Khách xác nhận",
     "staff_confirmed_at": "Bạn xác nhận nhận tiền",
-    "status_initiated": "Khởi tạo",
+    "status_initiated": "Chờ thanh toán",
     "status_initiated_desc": "Giao dịch vừa tạo, chờ khách xác nhận đã chuyển khoản.",
     "status_confirmed": "Chờ xác nhận",
     "status_confirmed_desc": "Khách đã xác nhận đã chuyển khoản. Đang chờ bạn xác nhận nhận tiền.",
@@ -1334,6 +1343,12 @@
       "account_label": "{wallet} {field} của bạn *"
     },
     "legal": {
+      "effectiveDate": "26 tháng 6, 2026",
+      "lastUpdated": "26 tháng 6, 2026",
+      "effectiveDateLabel": "Ngày có hiệu lực",
+      "lastUpdatedLabel": "Cập nhật lần cuối",
+      "privacyTagline": "Cách chúng tôi thu thập, sử dụng và bảo vệ thông tin",
+      "termsTagline": "Điều khoản chính thức dành cho merchant, nhân viên và khách hàng",
       "privacy": {
         "sections": [
           {
@@ -1346,7 +1361,15 @@
           },
           {
             "title": "3. Cách Chúng Tôi Sử Dụng Thông Tin",
-            "body": "Chúng tôi sử dụng thông tin đã thu thập để: Vận hành và cải thiện Dịch Vụ; Quản lý tài khoản và liên lạc với người dùng; Gửi thông báo giao dịch (email và thông báo đẩy); Phát hiện gian lận và thực thi Điều Khoản Dịch Vụ; Phân tích việc sử dụng và hiệu suất nền tảng; Tuân thủ nghĩa vụ pháp lý."
+            "body": "Chúng tôi sử dụng thông tin đã thu thập để:",
+            "items": [
+              "Vận hành và cải thiện Dịch Vụ",
+              "Quản lý tài khoản và liên lạc với người dùng",
+              "Gửi thông báo giao dịch (email và thông báo đẩy)",
+              "Phát hiện gian lận và thực thi Điều Khoản Dịch Vụ",
+              "Phân tích việc sử dụng và hiệu suất nền tảng",
+              "Tuân thủ nghĩa vụ pháp lý"
+            ]
           },
           {
             "title": "4. Cách Chúng Tôi Chia Sẻ Thông Tin",
@@ -1362,7 +1385,12 @@
           },
           {
             "title": "7. Quyền Của Bạn",
-            "body": "Tùy thuộc vào vị trí của bạn, bạn có thể có quyền truy cập, sửa, xóa hoặc chuyển dữ liệu cá nhân, và phản đối hoặc hạn chế một số hoạt động xử lý nhất định. Người dùng tại EU/EEA (GDPR): truy cập, chỉnh sửa, xóa, chuyển dữ liệu, hạn chế và phản đối. Cư dân California (CCPA): quyền biết, xóa, sửa và từ chối bán (chúng tôi không bán dữ liệu). Để thực hiện các quyền của bạn, liên hệ support@nexoratouch.com. Chúng tôi sẽ phản hồi trong vòng 30 ngày."
+            "body": "Tùy thuộc vào vị trí của bạn, bạn có thể có quyền truy cập, sửa, xóa hoặc chuyển dữ liệu cá nhân, và phản đối hoặc hạn chế một số hoạt động xử lý nhất định.",
+            "items": [
+              "Người dùng tại EU/EEA (GDPR): truy cập, chỉnh sửa, xóa, chuyển dữ liệu, hạn chế và phản đối",
+              "Cư dân California (CCPA): quyền biết, xóa, sửa và từ chối bán (chúng tôi không bán dữ liệu)"
+            ],
+            "note": "Để thực hiện các quyền của bạn, liên hệ support@nexoratouch.com. Chúng tôi sẽ phản hồi trong vòng 30 ngày."
           },
           {
             "title": "8. Cookie và Theo Dõi",
@@ -1414,7 +1442,15 @@
           },
           {
             "title": "7. Hành Vi Bị Cấm",
-            "body": "Bạn đồng ý không: Cung cấp thông tin sai sự thật, gian lận hoặc gây nhầm lẫn; Giả mạo bất kỳ cá nhân hoặc tổ chức nào; Thao túng dữ liệu tip hoặc đánh giá; Tải lên mã độc hại hoặc cố gắng truy cập trái phép; Sử dụng nền tảng cho bất kỳ mục đích bất hợp pháp nào; Tạo nhiều tài khoản để vượt qua giới hạn nền tảng."
+            "body": "Bạn đồng ý không:",
+            "items": [
+              "Cung cấp thông tin sai sự thật, gian lận hoặc gây nhầm lẫn",
+              "Giả mạo bất kỳ cá nhân hoặc tổ chức nào",
+              "Thao túng dữ liệu tip hoặc đánh giá",
+              "Tải lên mã độc hại hoặc cố gắng truy cập trái phép",
+              "Sử dụng nền tảng cho bất kỳ mục đích bất hợp pháp nào",
+              "Tạo nhiều tài khoản để vượt qua giới hạn nền tảng"
+            ]
           },
           {
             "title": "8. Sở Hữu Trí Tuệ",
@@ -2066,9 +2102,9 @@
         "emptyTitle": "Cần cấu hình phương thức nhận tiền trước",
         "emptyDesc": "Bật ít nhất một phương thức nhận tiền và nhập thông tin tài khoản trước khi chia sẻ QR thanh toán cho khách.",
         "emptyAction": "Thiết lập phương thức nhận tiền",
-        "defaultQrTitle": "QR Thanh toán trực tiếp",
+        "defaultQrTitle": "Mã QR nhận thanh toán",
         "qrAlt": "Mã QR thanh toán trực tiếp cho merchant",
-        "scanCaption": "Quét để thanh toán cho tiệm",
+        "scanCaption": "Khách quét mã để thanh toán",
         "merchantNote": "Chia sẻ mã QR này để nhận tiền trực tiếp bằng phương thức bạn đã setup.",
         "loadErrorTitle": "Không tải được QR thanh toán",
         "loadErrorDesc": "Không lấy được link thanh toán. Kiểm tra kết nối và thử lại.",
@@ -2244,6 +2280,8 @@
       "views": {
         "StaffMyQR": {
           "linkCopiedToClipboard": "Đã sao chép liên kết!",
+          "staffIdCopied": "Đã sao chép Mã nhân viên!",
+          "staffShareLinkCopied": "Đã sao chép liên kết chia sẻ!",
           "staffCodeUnavailable": "Chưa có Staff ID. Vui lòng thử lại sau giây lát.",
           "shareFailed": "Không thể chia sẻ liên kết. Hãy dùng nút sao chép.",
           "copyFailed": "Không thể sao chép liên kết.",
@@ -2281,6 +2319,7 @@
           "personalTippingQr": "QR Nhận Tip Cá Nhân",
           "tippingLink": "Liên Kết Nhận Tip",
           "tippingLinkCopied": "Đã sao chép liên kết nhận tip!",
+          "tipQrDownloaded": "Đã tải ảnh QR tip.",
           "copy": "Sao chép",
           "openTippingPageSimulate": "Mở trang tip (Giả lập khách) ›"
         },

@@ -1,6 +1,7 @@
 // Dashboard helpers — formatting, slugs, payout-config mapping, count-up hook.
 // Extracted from Dashboard.jsx (Group 1 refactor).
 import { useEffect, useMemo, useState } from 'react'
+import { isInitiatedLikeTipStatus, isTipStatus, TipStatus } from '../../constants/tipStatus'
 
 // Render text with styled star rating symbols (★) in luxuryGold with a 4px gap.
 export function renderTextWithGoldStars(text) {
@@ -95,8 +96,7 @@ export function formatNotificationDateTime(value, locale = 'en') {
 export function isAwaitingShopConfirmation(tx) {
   if (!tx?.isMultiStaff) return false
   if (tx.merchantConfirmedAt) return false
-  const status = String(tx.status || '').toLowerCase()
-  return status === 'confirmed'
+  return isTipStatus(tx.status, TipStatus.Confirmed)
 }
 
 // A shop-account tip the owner has already confirmed received.
@@ -108,12 +108,29 @@ export function isShopConfirmed(tx) {
 export function isAwaitingStaffConfirmation(tx) {
   if (tx?.isMultiStaff) return false
   if (tx?.staffConfirmedAt) return false
-  const status = String(tx.status || '').toLowerCase()
-  return status === 'confirmed'
+  return isTipStatus(tx.status, TipStatus.Confirmed)
 }
 
 export function isStaffReceiptConfirmed(tx) {
   return Boolean(!tx?.isMultiStaff && tx?.staffConfirmedAt)
+}
+
+// Initiated/Pending tips may be force-confirmed before the customer self-confirm
+// step, but ownership still follows US-024/US-025: staff owns direct-to-staff
+// tips, owner owns shop-account / multi-staff tips.
+export function isForceCompletableTip(tx, isStaffAudience = false) {
+  if (!isInitiatedLikeTipStatus(tx?.status)) return false
+  if (isStaffAudience) {
+    return Boolean(!tx?.isMultiStaff && !tx?.staffConfirmedAt)
+  }
+  return Boolean(tx?.isMultiStaff && !tx?.merchantConfirmedAt)
+}
+
+export function isReceiptConfirmableTip(tx, isStaffAudience = false) {
+  if (isStaffAudience) {
+    return isAwaitingStaffConfirmation(tx) || isForceCompletableTip(tx, true)
+  }
+  return isAwaitingShopConfirmation(tx) || isForceCompletableTip(tx, false)
 }
 
 export function walletLabels(accounts) {
@@ -244,5 +261,6 @@ export function buildMasterQrTarget(touchpoints = []) {
     url: masterTouchpoint?.url || null,
     qrImageUrl: masterTouchpoint?.qrImageUrl || null,
     isActive: true,
+    isGatewayQr: true,
   }
 }

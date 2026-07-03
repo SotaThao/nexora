@@ -94,7 +94,7 @@ export default function PayoutSetupModal({ open, walletKey, staffName, initialVa
   }[walletKey] || { text: walletKey, color: 'text-slate-800', fontClass: 'font-bold' }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 text-left">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm modal-overlay-safe text-left">
       <div className={`bg-white rounded-3xl border border-slate-100 w-full shadow-2xl p-6 relative overflow-hidden animate-scaleUp space-y-4.5 ${isBankWire ? 'max-w-md' : 'max-w-sm'}`}>
         <div className="flex items-center gap-3.5 border-b border-slate-100 pb-3">
           <span className="h-11 w-11 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 shadow-sm">

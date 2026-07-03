@@ -11,7 +11,6 @@ import StepOtpVerify from './register/steps/StepOtpVerify'
 import StepProfileSetup from './register/steps/StepProfileSetup'
 import StepPayoutSetup from './register/steps/StepPayoutSetup'
 import StepSuccess from './register/steps/StepSuccess'
-import TermsModal from './register/modals/TermsModal'
 import PayoutEditModal from './register/modals/PayoutEditModal'
 import apiAuthAdapter from '../auth/adapters/apiAuthAdapter'
 import { loadPendingRegistration } from '../auth/pendingRegistration'
@@ -101,8 +100,7 @@ export default function RegisterWizard() {
   const form = useRegisterForm(formProps)
   const {
     currentStep, role, currentLanguage, setLanguage, t, getStepName,
-    showTermsModal, setShowTermsModal, setErrors,
-    modalType,
+    setErrors,
     editingMethod, setEditingMethod,
     editValue, setEditValue,
     editQrCode, setEditQrCode,
@@ -186,13 +184,6 @@ export default function RegisterWizard() {
           {currentStep === 3 && role === 'personal' && <StepProfileSetup {...form} />}
         </div>
       </div>
-
-      {/* Terms & Conditions Modal Overlay */}
-      <TermsModal
-        open={showTermsModal}
-        onClose={() => setShowTermsModal(false)}
-        modalType={modalType}
-      />
 
       {/* Payout Configuration Edit Modal Overlay */}
       {React.createElement(PayoutEditModal as any, {

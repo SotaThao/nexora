@@ -112,7 +112,10 @@ export default function DirectPaymentFlow() {
                   t={t}
                   businessName={businessName}
                   logoUrl={logoUrl}
+                  recipientSubtitle={null}
                   amountRangeHint=""
+                  reviewDesc={t('direct_payment.review_payment_desc', { name: businessName })}
+                  totalPaymentLabel={t('direct_payment.total')}
                   selectedAmount={selectedAmount}
                   setSelectedAmount={setSelectedAmount}
                   customAmount={customAmount}

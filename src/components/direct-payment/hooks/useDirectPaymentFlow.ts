@@ -81,7 +81,7 @@ export default function useDirectPaymentFlow() {
         id: 'merchant',
         nickname: businessName || t('direct_payment.default_business'),
         fullName: businessName || t('direct_payment.default_business'),
-        position: t('direct_payment.pay_to_business'),
+        position: '',
         paymentAccounts: {},
       },
     ],

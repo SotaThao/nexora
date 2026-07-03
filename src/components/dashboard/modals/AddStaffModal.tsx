@@ -253,7 +253,7 @@ function AddStaffModal({
   const activeSearchPaymentMethods = (searchResult?.paymentMethods ?? []).filter((method) => method.isActive)
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-nexoraText/70 p-4 py-6 backdrop-blur-sm sm:items-center">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-nexoraText/70 modal-overlay-safe backdrop-blur-sm sm:items-center">
       <div className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-2xl transition-all">
         <div className="flex items-center justify-between border-b border-nexoraRule pb-4">
           <h2 className="text-lg font-extrabold text-nexoraText">
