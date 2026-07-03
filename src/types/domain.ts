@@ -678,6 +678,36 @@ export interface PayoutRecord {
   staffPaymentAccountInfo?: string | null
 }
 
+/** GET /api/v1/staff/payouts/{id} — full detail for staff viewer. */
+export interface StaffPayoutDetailRecord {
+  id: string
+  payoutCode: string
+  createdAt: string
+  businessId: string
+  businessName: string
+  businessLogoUrl: string | null
+  payoutMethodType: string
+  staffPaymentAccountInfo: string | null
+  amount: number
+  payoutTypes: number
+  periodStart: string
+  periodEnd: string
+  notes: string | null
+  evidenceUrls: string[]
+  status: number
+  staffConfirmedAt: string | null
+}
+
+/** GET /api/v1/merchant/payouts/staff/{staffProfileId}/debt */
+export interface StaffDebtRecord {
+  staffProfileId: string
+  staffDisplayName: string
+  staffCode: string
+  staffPhotoUrl: string | null
+  balance: number
+  lastUpdatedAt: string | null
+}
+
 export interface PayoutsListPage {
   items: PayoutRecord[]
   pageNumber: number

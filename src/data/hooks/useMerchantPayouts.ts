@@ -15,6 +15,7 @@ import type {
   PayoutDebtHistoryPage,
   PayoutRecord,
   PayoutsListPage,
+  StaffDebtRecord,
   UnpaidTipDebtsPage,
 } from '../../types/domain'
 
@@ -91,6 +92,17 @@ export function useMerchantPayoutStatsByStaff({ enabled = true } = {}) {
   })
 }
 
+export function useMerchantStaffDebt(staffProfileId?: string | null, { enabled = true } = {}) {
+  const canFetch = useIsOwner(enabled && Boolean(staffProfileId))
+
+  return useQuery<StaffDebtRecord>({
+    queryKey: qk.merchantStaffDebt(staffProfileId ?? ''),
+    queryFn: () => merchantPayoutsRepository.getStaffDebt(staffProfileId!),
+    enabled: canFetch,
+    retry: false,
+  })
+}
+
 /** Query keys to invalidate after merchant payout mutations. */
 export const merchantPayoutInvalidationKeys = {
   all: ['merchantPayouts'] as const,
@@ -99,10 +111,19 @@ export const merchantPayoutInvalidationKeys = {
   unpaidTips: qk.merchantUnpaidTips(),
   debtHistory: ['merchantPayouts', 'debtHistory'] as const,
   statsByStaff: qk.merchantPayoutStatsByStaff(),
+  staffDebt: ['merchantPayouts', 'staffDebt'] as const,
 }
 
-function invalidateMerchantPayoutCaches(queryClient: ReturnType<typeof useQueryClient>) {
+function invalidateMerchantPayoutCaches(
+  queryClient: ReturnType<typeof useQueryClient>,
+  staffProfileId?: string | null,
+) {
   queryClient.invalidateQueries({ queryKey: merchantPayoutInvalidationKeys.all })
+  if (staffProfileId) {
+    queryClient.invalidateQueries({ queryKey: qk.merchantStaffDebt(staffProfileId) })
+  } else {
+    queryClient.invalidateQueries({ queryKey: merchantPayoutInvalidationKeys.staffDebt })
+  }
 }
 
 function invalidateMerchantPayoutListCaches(queryClient: ReturnType<typeof useQueryClient>) {
@@ -117,7 +138,7 @@ export function useCreateMerchantPayout() {
   const queryClient = useQueryClient()
   return useMutation<{ id: string }, Error, CreateMerchantPayoutPayload>({
     mutationFn: (payload) => merchantPayoutsRepository.create(payload),
-    onSuccess: () => invalidateMerchantPayoutCaches(queryClient),
+    onSuccess: (_data, payload) => invalidateMerchantPayoutCaches(queryClient, payload.staffProfileId),
   })
 }
 

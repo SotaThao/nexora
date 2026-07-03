@@ -6,6 +6,7 @@ import { PayoutStatus } from '../../../data/payoutConstants'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import {
   useConfirmStaffPayout,
+  useStaffPayoutDetail,
   useStaffPayoutStats,
   useStaffPayoutsList,
   useStaffUnpaidDebt,
@@ -217,21 +218,25 @@ function StaffPayoutList({
 
 function StaffPayoutDetailModal({
   payout,
+  isLoading,
+  isError,
   currentLanguage,
   t,
   confirmingId,
   onClose,
   onConfirm,
 }: {
-  payout: PayoutRecord | null
+  payout: StaffPayoutDetailRecord | null
+  isLoading?: boolean
+  isError?: boolean
   currentLanguage: string
   t: (key: string, params?: Record<string, unknown>) => string
   confirmingId: string | null
   onClose: () => void
   onConfirm: (payoutId: string) => void
 }) {
-  if (!payout) return null
-  const canConfirm = payout.status === PayoutStatus.Pending
+  if (!payout && !isLoading) return null
+  const canConfirm = payout?.status === PayoutStatus.Pending
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-4">
       <div className="max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-nexoraBorder bg-white shadow-2xl sm:rounded-2xl">
@@ -245,49 +250,104 @@ function StaffPayoutDetailModal({
           </button>
         </div>
 
-        <div className="space-y-4 px-5 py-4">
-          <div className="rounded-xl bg-nexoraCanvas p-4 text-center">
-            <p className="text-[10px] font-extrabold uppercase tracking-wide text-nexoraMuted">
-              {t('staff_payouts.field_amount')}
-            </p>
-            <p className="mt-1 text-3xl font-black text-nexoraText">{formatCurrency(payout.amount)}</p>
-            <div className="mt-2 flex flex-col items-center gap-1.5">
-              <PayoutStatusBadge status={payout.status} audience="staff" />
-              <p className="max-w-xs text-center text-[11px] text-nexoraMuted">
-                {t(getPayoutStatusDescI18nKey(payout.status, 'staff'))}
-              </p>
-            </div>
+        {isLoading ? (
+          <div className="flex justify-center py-16">
+            <Loader2 className="h-8 w-8 animate-spin text-nexoraBrand" />
           </div>
+        ) : isError ? (
+          <p className="px-5 py-10 text-center text-sm text-red-600">{t('staff_payouts.detail_load_error')}</p>
+        ) : payout ? (
+          <div className="space-y-4 px-5 py-4">
+            <div className="flex items-center gap-3 rounded-xl border border-nexoraBorder bg-nexoraCanvas px-4 py-3">
+              {payout.businessLogoUrl ? (
+                <img
+                  src={payout.businessLogoUrl}
+                  alt={payout.businessName}
+                  className="h-10 w-10 shrink-0 rounded-lg object-cover"
+                />
+              ) : (
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-nexoraBrand text-xs font-black text-white">
+                  {(payout.businessName || '?').slice(0, 1).toUpperCase()}
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="text-[10px] font-extrabold uppercase tracking-wide text-nexoraMuted">
+                  {t('staff_payouts.field_business')}
+                </p>
+                <p className="truncate text-sm font-bold text-nexoraText">{payout.businessName}</p>
+              </div>
+            </div>
 
-          <dl className="grid grid-cols-[120px_1fr] gap-x-4 gap-y-2.5 text-sm">
-            <dt className="font-semibold text-nexoraMuted">{t(STAFF_PAYOUT_COL_KEYS.code)}</dt>
-            <dd className="font-mono text-xs font-bold text-nexoraBrand">{payout.payoutCode}</dd>
-            <dt className="font-semibold text-nexoraMuted">{t(STAFF_PAYOUT_COL_KEYS.date)}</dt>
-            <dd className="font-semibold text-nexoraText">{formatTransactionDateTime(payout.createdAt, currentLanguage)}</dd>
-            <dt className="font-semibold text-nexoraMuted">{t(STAFF_PAYOUT_COL_KEYS.method)}</dt>
-            <dd><PayoutMethodBadge method={payout.payoutMethodType} /></dd>
-            <dt className="font-semibold text-nexoraMuted">{t(STAFF_PAYOUT_COL_KEYS.types)}</dt>
-            <dd className="flex flex-wrap gap-1">
-              {getPayoutTypeI18nKeys(payout.payoutTypes).map((key) => (
-                <span key={key} className="rounded-md border border-nexoraBorder bg-slate-50 px-2 py-0.5 text-[10px] font-bold">
-                  {t(key)}
-                </span>
-              ))}
-            </dd>
-            <dt className="font-semibold text-nexoraMuted">{t(STAFF_PAYOUT_COL_KEYS.period)}</dt>
-            <dd className="font-semibold text-nexoraText">
-              {formatPayoutPeriodRange(payout.periodStart, payout.periodEnd, currentLanguage)}
-            </dd>
-            {payout.notes ? (
-              <>
-                <dt className="font-semibold text-nexoraMuted">{t('staff_payouts.field_notes')}</dt>
-                <dd className="text-nexoraText">{payout.notes}</dd>
-              </>
+            <div className="rounded-xl bg-nexoraCanvas p-4 text-center">
+              <p className="text-[10px] font-extrabold uppercase tracking-wide text-nexoraMuted">
+                {t('staff_payouts.field_amount')}
+              </p>
+              <p className="mt-1 text-3xl font-black text-nexoraText">{formatCurrency(payout.amount)}</p>
+              <div className="mt-2 flex flex-col items-center gap-1.5">
+                <PayoutStatusBadge status={payout.status} audience="staff" />
+                <p className="max-w-xs text-center text-[11px] text-nexoraMuted">
+                  {t(getPayoutStatusDescI18nKey(payout.status, 'staff'))}
+                </p>
+              </div>
+            </div>
+
+            <dl className="grid grid-cols-[120px_1fr] gap-x-4 gap-y-2.5 text-sm">
+              <dt className="font-semibold text-nexoraMuted">{t(STAFF_PAYOUT_COL_KEYS.code)}</dt>
+              <dd className="font-mono text-xs font-bold text-nexoraBrand">{payout.payoutCode}</dd>
+              <dt className="font-semibold text-nexoraMuted">{t(STAFF_PAYOUT_COL_KEYS.date)}</dt>
+              <dd className="font-semibold text-nexoraText">{formatTransactionDateTime(payout.createdAt, currentLanguage)}</dd>
+              <dt className="font-semibold text-nexoraMuted">{t(STAFF_PAYOUT_COL_KEYS.method)}</dt>
+              <dd><PayoutMethodBadge method={payout.payoutMethodType} /></dd>
+              {payout.staffPaymentAccountInfo ? (
+                <>
+                  <dt className="font-semibold text-nexoraMuted">{t('staff_payouts.field_account')}</dt>
+                  <dd className="break-all font-semibold text-nexoraText">{payout.staffPaymentAccountInfo}</dd>
+                </>
+              ) : null}
+              <dt className="font-semibold text-nexoraMuted">{t(STAFF_PAYOUT_COL_KEYS.types)}</dt>
+              <dd className="flex flex-wrap gap-1">
+                {getPayoutTypeI18nKeys(payout.payoutTypes).map((key) => (
+                  <span key={key} className="rounded-md border border-nexoraBorder bg-slate-50 px-2 py-0.5 text-[10px] font-bold">
+                    {t(key)}
+                  </span>
+                ))}
+              </dd>
+              <dt className="font-semibold text-nexoraMuted">{t(STAFF_PAYOUT_COL_KEYS.period)}</dt>
+              <dd className="font-semibold text-nexoraText">
+                {formatPayoutPeriodRange(payout.periodStart, payout.periodEnd, currentLanguage)}
+              </dd>
+              {payout.notes ? (
+                <>
+                  <dt className="font-semibold text-nexoraMuted">{t('staff_payouts.field_notes')}</dt>
+                  <dd className="text-nexoraText">{payout.notes}</dd>
+                </>
+              ) : null}
+            </dl>
+
+            {payout.evidenceUrls.length > 0 ? (
+              <div>
+                <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-nexoraMuted">
+                  {t('staff_payouts.evidence_title')} ({payout.evidenceUrls.length})
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {payout.evidenceUrls.map((url) => (
+                    <a
+                      key={url}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block overflow-hidden rounded-lg border border-nexoraBorder"
+                    >
+                      <img src={url} alt="" className="h-20 w-28 object-cover" />
+                    </a>
+                  ))}
+                </div>
+              </div>
             ) : null}
-          </dl>
-        </div>
+          </div>
+        ) : null}
 
-        {canConfirm ? (
+        {payout && canConfirm ? (
           <div className="border-t border-nexoraBorder px-5 py-4">
             <button
               type="button"
@@ -314,7 +374,7 @@ export default function StaffPayouts() {
   const { showToast } = useNotification()
   const [statusFilter, setStatusFilter] = useState('all')
   const [confirmingPayoutId, setConfirmingPayoutId] = useState<string | null>(null)
-  const [selectedPayout, setSelectedPayout] = useState<PayoutRecord | null>(null)
+  const [selectedPayoutId, setSelectedPayoutId] = useState<string | null>(null)
   const confirmMutation = useConfirmStaffPayout()
   const { pageNumber, pageSize, setPage, reset: resetPage } = usePagination({ pageSize: DEFAULT_PAGE_SIZE })
 
@@ -330,6 +390,11 @@ export default function StaffPayouts() {
   const { data: stats, isPending: isStatsPending } = useStaffPayoutStats()
   const { data: unpaidDebtPage, isPending: isUnpaidDebtPending } = useStaffUnpaidDebt()
   const { data: payoutsPage, isPending, isFetching } = useStaffPayoutsList(listQuery)
+  const {
+    data: payoutDetail,
+    isPending: isDetailLoading,
+    isError: isDetailError,
+  } = useStaffPayoutDetail(selectedPayoutId, { enabled: Boolean(selectedPayoutId) })
 
   const payouts = payoutsPage?.items ?? []
   const unpaidDebts = unpaidDebtPage?.items ?? []
@@ -448,7 +513,7 @@ export default function StaffPayouts() {
           isPending={isPending}
           currentLanguage={currentLanguage}
           t={t}
-          onViewDetail={setSelectedPayout}
+          onViewDetail={(payout) => setSelectedPayoutId(payout.id)}
         />
 
         <Pagination
@@ -464,18 +529,22 @@ export default function StaffPayouts() {
         />
       </div>
 
+      {selectedPayoutId ? (
       <StaffPayoutDetailModal
-        payout={selectedPayout}
+        payout={payoutDetail ?? null}
+        isLoading={isDetailLoading}
+        isError={isDetailError}
         currentLanguage={currentLanguage}
         t={t}
         confirmingId={confirmingPayoutId}
-        onClose={() => setSelectedPayout(null)}
+        onClose={() => setSelectedPayoutId(null)}
         onConfirm={(payoutId) => {
           handleConfirmReceipt(payoutId, {
-            onSuccess: () => setSelectedPayout(null),
+            onSuccess: () => setSelectedPayoutId(null),
           })
         }}
       />
+      ) : null}
     </div>
   )
 }

@@ -42,6 +42,7 @@ export const errorCodeToI18nKey = {
   PAYOUT_DELETE_NOT_ALLOWED: 'errors.payout_delete_not_allowed',
   PAYOUT_CANCEL_NOT_ALLOWED: 'errors.payout_cancel_not_allowed',
   PAYOUT_CONFIRM_NOT_ALLOWED: 'errors.payout_confirm_not_allowed',
+  PAYOUT_AMOUNT_EXCEEDS_DEBT: 'errors.payout_amount_exceeds_debt',
 
   // Image
   IMAGE_FILE_SIZE_EXCEEDED: 'errors.image_file_size_exceeded',

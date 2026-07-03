@@ -91,9 +91,11 @@ export const qk = {
   merchantPayoutStatsByStaff: () => ['merchantPayouts', 'statsByStaff'],
   merchantUnpaidTips: () => ['merchantPayouts', 'unpaidTips'],
   merchantDebtHistory: (filters = EMPTY) => ['merchantPayouts', 'debtHistory', filters],
+  merchantStaffDebt: (staffProfileId: string) => ['merchantPayouts', 'staffDebt', staffProfileId],
 
   // US-55 — Payout Management (staff)
   staffPayoutsList: (filters = EMPTY) => ['staffPayouts', 'list', filters],
+  staffPayoutDetail: (payoutId: string) => ['staffPayouts', 'detail', payoutId],
   staffPayoutStats: () => ['staffPayouts', 'stats'],
   staffUnpaidDebt: () => ['staffPayouts', 'unpaidDebt'],
 

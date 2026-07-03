@@ -8,6 +8,8 @@ import type {
   PayoutDebtHistoryRecord,
   PayoutRecord,
   PayoutsListPage,
+  StaffDebtRecord,
+  StaffPayoutDetailRecord,
   StaffPayoutStats,
   StaffUnpaidDebtRecord,
   StaffUnpaidDebtsPage,
@@ -68,6 +70,49 @@ function readStringArray(raw: Record<string, unknown>, camel: string, pascal: st
   const value = readField<unknown>(raw, camel, pascal)
   if (!Array.isArray(value)) return []
   return value.filter((item): item is string => typeof item === 'string')
+}
+
+function normalizeStaffPayoutDetail(
+  raw: Record<string, unknown> | null | undefined,
+): StaffPayoutDetailRecord | null {
+  if (!raw) return null
+  const id = readField<string>(raw, 'id', 'Id') ?? ''
+  if (!id) return null
+  const evidenceUrls = readStringArray(raw, 'evidenceUrls', 'EvidenceUrls')
+
+  return {
+    id,
+    payoutCode: readField<string>(raw, 'payoutCode', 'PayoutCode') ?? '',
+    createdAt: readField<string>(raw, 'createdAt', 'CreatedAt') ?? '',
+    businessId: readField<string>(raw, 'businessId', 'BusinessId') ?? '',
+    businessName: readField<string>(raw, 'businessName', 'BusinessName') ?? '',
+    businessLogoUrl: readField<string | null>(raw, 'businessLogoUrl', 'BusinessLogoUrl') ?? null,
+    payoutMethodType: normalizePayoutMethodType(readField<string>(raw, 'payoutMethodType', 'PayoutMethodType')),
+    staffPaymentAccountInfo:
+      readField<string | null>(raw, 'staffPaymentAccountInfo', 'StaffPaymentAccountInfo') ?? null,
+    amount: Number(readField<number>(raw, 'amount', 'Amount') ?? 0),
+    payoutTypes: Number(readField<number>(raw, 'payoutTypes', 'PayoutTypes') ?? 0),
+    periodStart: normalizePayoutDateOnly(readField<string>(raw, 'periodStart', 'PeriodStart')),
+    periodEnd: normalizePayoutDateOnly(readField<string>(raw, 'periodEnd', 'PeriodEnd')),
+    notes: readField<string | null>(raw, 'notes', 'Notes') ?? null,
+    evidenceUrls,
+    status: normalizePayoutStatus(readField<unknown>(raw, 'status', 'Status')),
+    staffConfirmedAt: readField<string | null>(raw, 'staffConfirmedAt', 'StaffConfirmedAt') ?? null,
+  }
+}
+
+function normalizeStaffDebt(raw: Record<string, unknown> | null | undefined): StaffDebtRecord | null {
+  if (!raw) return null
+  const staffProfileId = readField<string>(raw, 'staffProfileId', 'StaffProfileId') ?? ''
+  if (!staffProfileId) return null
+  return {
+    staffProfileId,
+    staffDisplayName: readField<string>(raw, 'staffDisplayName', 'StaffDisplayName') ?? '',
+    staffCode: readField<string>(raw, 'staffCode', 'StaffCode') ?? '',
+    staffPhotoUrl: readField<string | null>(raw, 'staffPhotoUrl', 'StaffPhotoUrl') ?? null,
+    balance: Number(readField<number>(raw, 'balance', 'Balance') ?? 0),
+    lastUpdatedAt: readField<string | null>(raw, 'lastUpdatedAt', 'LastUpdatedAt') ?? null,
+  }
 }
 
 function normalizePayoutRecord(raw: Record<string, unknown> | null | undefined): PayoutRecord | null {
@@ -377,6 +422,17 @@ export function createMerchantPayoutsRepository(client: HttpClient = httpClient)
       })
       return normalizeDebtHistoryPage(res)
     },
+
+    async getStaffDebt(staffProfileId: string): Promise<StaffDebtRecord> {
+      const res = await client.get<Record<string, unknown>>(
+        `/api/v1/merchant/payouts/staff/${encodeURIComponent(staffProfileId)}/debt`,
+      )
+      const debt = normalizeStaffDebt(res)
+      if (!debt) {
+        throw new Error('STAFF_DEBT_NOT_FOUND')
+      }
+      return debt
+    },
   }
 }
 
@@ -388,6 +444,17 @@ export function createStaffPayoutsRepository(client: HttpClient = httpClient) {
         params: buildStaffListParams(query),
       })
       return normalizePayoutsListPage(res, pageSize)
+    },
+
+    async getById(payoutId: string): Promise<StaffPayoutDetailRecord> {
+      const res = await client.get<Record<string, unknown>>(
+        `/api/v1/staff/payouts/${encodeURIComponent(payoutId)}`,
+      )
+      const payout = normalizeStaffPayoutDetail(res)
+      if (!payout) {
+        throw new Error('PAYOUT_NOT_FOUND')
+      }
+      return payout
     },
 
     async getStats(): Promise<StaffPayoutStats> {
@@ -418,5 +485,7 @@ export const __testables = {
   normalizePayoutRecord,
   normalizePayoutsListPage,
   normalizeMerchantPayoutStats,
+  normalizeStaffPayoutDetail,
+  normalizeStaffDebt,
   EMPTY_PAYOUTS_PAGE,
 }

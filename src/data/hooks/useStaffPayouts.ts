@@ -5,6 +5,7 @@ import type { StaffPayoutsListQuery } from '../repositories/payouts'
 import { useSessionRole } from '../../auth/useSessionRole'
 import type {
   PayoutsListPage,
+  StaffPayoutDetailRecord,
   StaffPayoutStats,
   StaffUnpaidDebtsPage,
 } from '../../types/domain'
@@ -37,6 +38,17 @@ export function useStaffPayoutsList(query: StaffPayoutsListQuery, { enabled = tr
   })
 }
 
+export function useStaffPayoutDetail(payoutId?: string | null, { enabled = true } = {}) {
+  const canFetch = useIsStaff(enabled && Boolean(payoutId))
+
+  return useQuery<StaffPayoutDetailRecord>({
+    queryKey: qk.staffPayoutDetail(payoutId ?? ''),
+    queryFn: () => staffPayoutsRepository.getById(payoutId!),
+    enabled: canFetch,
+    retry: false,
+  })
+}
+
 export function useStaffUnpaidDebt({ enabled = true } = {}) {
   const canFetch = useIsStaff(enabled)
 
@@ -56,11 +68,14 @@ export const staffPayoutInvalidationKeys = {
   unpaidDebt: qk.staffUnpaidDebt(),
 }
 
-function invalidateStaffPayoutCaches(queryClient: ReturnType<typeof useQueryClient>) {
+function invalidateStaffPayoutCaches(queryClient: ReturnType<typeof useQueryClient>, payoutId?: string) {
   queryClient.invalidateQueries({ queryKey: staffPayoutInvalidationKeys.all })
   queryClient.invalidateQueries({ queryKey: staffPayoutInvalidationKeys.list })
   queryClient.invalidateQueries({ queryKey: staffPayoutInvalidationKeys.stats })
   queryClient.invalidateQueries({ queryKey: staffPayoutInvalidationKeys.unpaidDebt })
+  if (payoutId) {
+    queryClient.invalidateQueries({ queryKey: qk.staffPayoutDetail(payoutId) })
+  }
 }
 
 export function useConfirmStaffPayout() {
@@ -68,6 +83,6 @@ export function useConfirmStaffPayout() {
 
   return useMutation<void, Error, string>({
     mutationFn: (payoutId) => staffPayoutsRepository.confirm(payoutId),
-    onSuccess: () => invalidateStaffPayoutCaches(queryClient),
+    onSuccess: (_data, payoutId) => invalidateStaffPayoutCaches(queryClient, payoutId),
   })
 }
