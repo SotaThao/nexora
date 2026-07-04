@@ -1,6 +1,8 @@
 # CLAUDE.md
 
-Guidance for Claude Code when working in this repository. Treat this as an engineering playbook, not a product brief.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+Treat this as an engineering playbook, not a product brief.
 
 ## Operating Principles
 
@@ -16,22 +18,31 @@ Guidance for Claude Code when working in this repository. Treat this as an engin
 ## Repo Profile
 
 - Frontend: React 18 + Vite.
-- Language: JavaScript/JSX, not TypeScript.
-- Styling: Tailwind utility classes plus shared CSS.
-- Server-state cache: TanStack Query.
+- Language: TypeScript/TSX (`strict: true` but `noImplicitAny` and `strictNullChecks` are off — typed-where-helpful, not enforced everywhere).
+- Import alias: `@/*` → `src/*` (configured in `tsconfig.json`).
+- Styling: Tailwind utility classes with custom design tokens (see `tailwind.config.js`). Run `pnpm lint:tokens` to validate token usage.
+- Server-state cache: TanStack Query v5.
 - Current persistence mode: API-backed (REST API at `VITE_API_BASE_URL`).
 - HTTP client: `src/lib/httpClient.js` with JWT Bearer auth, 401 refresh interceptor.
+- Bilingual: EN + VI. All user-visible strings go in `src/locales/en.json` and `src/locales/vi.json`. Use `useTranslation()` from `LanguageContext` in components; supports `{{variable}}` interpolation.
 
 Useful commands:
 
 ```bash
 pnpm install
-pnpm dev
-pnpm build
-pnpm test
-pnpm test:e2e
-pnpm lint:tokens
+pnpm dev                # local dev on port 3000
+pnpm dev:staging        # dev server against staging env
+pnpm build              # production build (alias for build:prod)
+pnpm build:staging      # staging build
+pnpm typecheck          # tsc --noEmit (no test runner, just types)
+pnpm test               # vitest run (unit tests)
+pnpm test:watch         # vitest watch mode
+pnpm test:e2e           # browser e2e via scripts/run-e2e.cjs
+pnpm lint:tokens        # verify design token usage
+pnpm seed:staff-demo    # seed staff demo data locally
 ```
+
+To run a single test file: `pnpm vitest run src/data/repositories/notifications.test.ts`
 
 ## API Integration Workflow (goal-driven, mandatory)
 
@@ -61,6 +72,20 @@ Verification guide:
 - Narrow logic change: run the targeted test file plus `pnpm build`.
 - Shared hook/repository/auth change: run targeted tests, `pnpm build`, and `pnpm test`.
 - User-flow change: add or run browser/e2e smoke for the affected flow.
+
+## Provider Stack
+
+`main.tsx` mounts providers in this order (inner providers depend on outer ones):
+
+```
+QueryClientProvider → LanguageProvider → AuthProvider → NotificationProvider
+  → BrowserRouter → SkeletonProvider → App (KybGateProvider wraps AppRouter)
+```
+
+Key rules:
+- `AuthProvider` requires `QueryClientProvider` above it (auth state is TanStack Query-backed).
+- `LanguageProvider` must wrap everything that uses `useTranslation()`.
+- `KybGateContext` sits inside `App`, so it has access to auth and routing.
 
 ## Architecture Rules
 
@@ -123,19 +148,26 @@ When changing one of these flows:
 
 | Area | Where to look |
 |------|---------------|
-| App shell/routing | `src/App.jsx`, `src/app/AppRouter.jsx` |
-| Auth state | `src/auth/AuthProvider.jsx`, `src/auth/useAuth.js` |
+| App shell/routing | `src/App.tsx`, `src/app/AppRouter.tsx` |
+| Route components | `src/components/dashboard/routes/index.tsx` |
+| Auth state | `src/auth/AuthProvider.tsx`, `src/auth/useAuth.ts` |
 | Auth adapters | `src/auth/adapters/` |
-| Token store | `src/auth/tokenStore.js` |
+| Token store | `src/auth/tokenStore.ts` |
+| Shared contexts | `src/contexts/` (LanguageContext, NotificationContext, KybGateContext, StaffAccountContext) |
+| Locales (i18n) | `src/locales/en.json`, `src/locales/vi.json` |
 | Data hooks | `src/data/hooks/` |
 | Repositories | `src/data/repositories/` |
-| Query keys | `src/data/queryKeys.js` |
-| Query client | `src/lib/queryClient.js` |
+| Query keys | `src/data/queryKeys.ts` |
+| Query client | `src/lib/queryClient.ts` |
 | HTTP client | `src/lib/httpClient.js` |
-| Error codes | `src/data/errorCodes.js` |
-| Storage (token persistence) | `src/utils/storage.js` |
-| Logger | `src/utils/logger.js` |
-| Tests | `tests/`, `src/setupTests.js`, `vitest*.config.*` |
+| Error codes | `src/data/errorCodes.ts` |
+| Storage (token persistence) | `src/utils/storage.ts` |
+| Logger | `src/utils/logger.ts` |
+| Dashboard sidebar menu config | `src/components/dashboard/constants.tsx` |
+| Shared UI primitives | `src/components/ui/` |
+| Type definitions | `src/types/` |
+| Tests (co-located) | `src/data/repositories/*.test.ts`, `src/components/**/*.test.tsx` |
+| Test setup | `src/setupTests.ts`, `vitest.config.ts`, `vitest.e2e.config.ts` |
 | OpenSpec work | `openspec/changes/` |
 | User stories (integration goals) | `user-story/` (template: `_TEMPLATE.md`) |
 | API contract snapshot | `API/update/<latest>/api-integration-guide-v4.md` (truth: live Swagger) |
