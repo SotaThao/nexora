@@ -5,6 +5,7 @@ import { useNotification } from '../../../contexts/NotificationContext'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 import { PAYOUT_UI_DISPLAY_ORDER, PAYOUT_UI_LABELS } from '../../../data/paymentMethodTypes'
+import { formatJoinedDate } from '../../../utils/localDate'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
 import Pagination from '../../ui/Pagination'
@@ -462,11 +463,9 @@ function StaffView({
                     </td>
 
                     <td className="px-5 py-4">
-                      {member.joinedDate ? (
-                        <div className="text-xs text-slate-500 font-semibold leading-normal">{member.joinedDate}</div>
-                      ) : (
-                        <span className="text-[10px] text-slate-400 font-bold italic">—</span>
-                      )}
+                      <div className="text-xs text-nexoraText font-semibold leading-normal">
+                        {member.joinedDate ? formatJoinedDate(member.joinedDate) : '-'}
+                      </div>
                     </td>
 
                     <td className="px-5 py-4">

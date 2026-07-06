@@ -6,6 +6,7 @@ import { StatusFilter } from '../../../data/hooks/useMerchantStaff'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 import { PAYOUT_UI_DISPLAY_ORDER, PAYOUT_UI_LABELS } from '../../../data/paymentMethodTypes'
+import { formatJoinedDate } from '../../../utils/localDate'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
 import Pagination from '../../ui/Pagination'
@@ -147,8 +148,8 @@ function StaffMemberCard({
           <p className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wide">
             {t('components.dashboard.views.StaffView.col_linked_date')}
           </p>
-          <p className="text-xs text-slate-600 font-semibold mt-0.5">
-            {member.joinedDate || '—'}
+          <p className="text-xs text-nexoraText font-semibold mt-0.5">
+            {member.joinedDate ? formatJoinedDate(member.joinedDate) : '-'}
           </p>
         </div>
 
