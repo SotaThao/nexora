@@ -1,6 +1,6 @@
 /**
  * Patches Android OneSignal native config after cap sync:
- * - AndroidManifest.xml: OneSignal_suppress_launch_urls (stop opening Launch URL in browser)
+ * - AndroidManifest.xml: com.onesignal.suppressLaunchURLs (SDK 5.x reads this key)
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -11,6 +11,9 @@ const manifestPath = join(
 )
 
 const SUPPRESS_META =
+  '        <meta-data android:name="com.onesignal.suppressLaunchURLs" android:value="true" />'
+
+const LEGACY_SUPPRESS_META =
   '        <meta-data android:name="OneSignal_suppress_launch_urls" android:value="true" />'
 
 export function ensureAndroidOneSignalManifest() {
@@ -20,20 +23,28 @@ export function ensureAndroidOneSignalManifest() {
   }
 
   let xml = readFileSync(manifestPath, 'utf8')
+  let changed = false
 
-  if (xml.includes('OneSignal_suppress_launch_urls')) {
-    return
+  if (xml.includes(LEGACY_SUPPRESS_META)) {
+    xml = xml.replace(LEGACY_SUPPRESS_META, SUPPRESS_META)
+    changed = true
   }
 
-  const applicationClose = '</application>'
-  if (!xml.includes(applicationClose)) {
-    console.warn('[onesignal] AndroidManifest missing </application> — cannot patch')
-    return
+  if (!xml.includes('com.onesignal.suppressLaunchURLs')) {
+    const applicationClose = '</application>'
+    if (!xml.includes(applicationClose)) {
+      console.warn('[onesignal] AndroidManifest missing </application> — cannot patch')
+      return
+    }
+
+    xml = xml.replace(applicationClose, `${SUPPRESS_META}\n    ${applicationClose}`)
+    changed = true
   }
 
-  xml = xml.replace(applicationClose, `${SUPPRESS_META}\n    ${applicationClose}`)
-  writeFileSync(manifestPath, xml)
-  console.log('[onesignal] Patched AndroidManifest: OneSignal_suppress_launch_urls')
+  if (changed) {
+    writeFileSync(manifestPath, xml)
+    console.log('[onesignal] Patched AndroidManifest: com.onesignal.suppressLaunchURLs')
+  }
 }
 
 if (import.meta.url.endsWith(process.argv[1] ?? '')) {

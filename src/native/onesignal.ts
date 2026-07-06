@@ -17,6 +17,7 @@ let initialized = false
 let initPromise: Promise<void> | null = null
 let pendingAuthUserId: string | null | undefined = undefined
 let subscriptionListenerBound = false
+let notificationClickListenerBound = false
 let tokenListenerBound = false
 let syncInFlight: Promise<void> | null = null
 let navigateHandler: ((path: string) => void) | null = null
@@ -205,8 +206,16 @@ function routeNotificationTarget(target: string) {
 }
 
 function bindNotificationClickListener() {
+  if (notificationClickListenerBound) return
+  notificationClickListenerBound = true
+
   OneSignal.Notifications.addEventListener('click', (event) => {
     const target = resolveNotificationTarget(event)
+    pushDeviceTrace('notification.click', {
+      target: target || null,
+      resultUrl: event.result?.url || null,
+      launchURL: (event.notification as { launchURL?: string }).launchURL || null,
+    })
     if (target) routeNotificationTarget(target)
   })
 }
@@ -240,8 +249,6 @@ function bindPushSubscriptionListener() {
       await persistPushSubscriptionFromSdk()
     })()
   })
-
-  bindNotificationClickListener()
 
   subscriptionListenerBound = true
 }
@@ -357,6 +364,8 @@ async function runOneSignalInit(): Promise<void> {
     }
 
     bindTokenStoreListener()
+    // Register before initialize so cold-start notification taps are not missed.
+    bindNotificationClickListener()
     await OneSignal.initialize(ONESIGNAL_APP_ID)
     initialized = true
     pushDeviceTrace('init.onesignalReady')

@@ -235,12 +235,12 @@ category#android.intent.category.LAUNCHER
 ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:19:17-77
 	android:name
 		ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:19:27-74
-meta-data#OneSignal_suppress_launch_urls
-ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:32:9-89
+meta-data#com.onesignal.suppressLaunchURLs
+ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:32:9-91
 	android:value
-		ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:32:66-86
+		ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:32:68-88
 	android:name
-		ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:32:20-65
+		ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:32:20-67
 uses-permission#android.permission.INTERNET
 ADDED from /Users/macmini/Working/vlink-nexora-fe/android/app/src/main/AndroidManifest.xml:37:5-67
 MERGED from [com.onesignal:core:5.9.5] /Users/macmini/.gradle/caches/8.13/transforms/6bcd360ea7e2850969f391f3eb0b3324/transformed/core-5.9.5/AndroidManifest.xml:11:5-67

@@ -37,10 +37,6 @@
       "scan": "Scan",
       "profile_account": "Setting",
       "profile_kyc": "KYC",
-      "download_ios": "iOS App",
-      "download_ios_sub": "Download on the App Store",
-      "download_android": "Android App",
-      "download_android_sub": "Get it on Google Play",
       "tab_home": "Home",
       "tab_qr": "QR"
     },

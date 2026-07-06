@@ -110,7 +110,7 @@ OneSignal opens Launch URLs in the **system browser** by default on Android (and
 
 | Platform | Config |
 |----------|--------|
-| Android | `OneSignal_suppress_launch_urls` in `android/app/src/main/AndroidManifest.xml` (auto-patched by `ensureAndroidOneSignal.js` on `cap sync`) |
+| Android | `com.onesignal.suppressLaunchURLs` in `android/app/src/main/AndroidManifest.xml` (auto-patched by `ensureAndroidOneSignal.js` on `cap sync`) |
 | iOS | `OneSignal_suppress_launch_urls` in `Info.plist` (auto-patched by `ensureIosOneSignal.js`) |
 
 Rebuild native after changing these: `pnpm cap:build:test` (or staging/production).
