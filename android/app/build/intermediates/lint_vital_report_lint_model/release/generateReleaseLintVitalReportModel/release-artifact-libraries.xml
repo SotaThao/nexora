@@ -70,6 +70,9 @@
       name=":@@:capacitor-share::release"
       project=":capacitor-share"/>
   <library
+      name=":@@:capacitor-splash-screen::release"
+      project=":capacitor-splash-screen"/>
+  <library
       name=":@@:capgo-capacitor-updater::release"
       project=":capgo-capacitor-updater"/>
   <library

@@ -136,6 +136,20 @@
       externalAnnotations="annotations.zip"
       proguardRules="proguard.txt"/>
   <library
+      name=":@@:capacitor-splash-screen::release"
+      jars="/Users/macmini/.gradle/caches/8.13/transforms/d88a996b0411bab264a6815c43e8662e/transformed/out/jars/classes.jar:/Users/macmini/.gradle/caches/8.13/transforms/d88a996b0411bab264a6815c43e8662e/transformed/out/jars/libs/R.jar"
+      resolved="android:capacitor-splash-screen:unspecified"
+      partialResultsDir="/Users/macmini/Working/vlink-nexora-fe/node_modules/.pnpm/@capacitor+splash-screen@8.0.1_@capacitor+core@8.4.1/node_modules/@capacitor/splash-screen/android/build/intermediates/lint_vital_partial_results/release/lintVitalAnalyzeRelease/out"
+      folder="/Users/macmini/.gradle/caches/8.13/transforms/d88a996b0411bab264a6815c43e8662e/transformed/out"
+      manifest="AndroidManifest.xml"
+      resFolder="res"
+      assetsFolder="assets"
+      lintJar="lint.jar"
+      publicResources="public.txt"
+      symbolFile="R.txt"
+      externalAnnotations="annotations.zip"
+      proguardRules="proguard.txt"/>
+  <library
       name=":@@:capgo-capacitor-updater::release"
       jars="/Users/macmini/.gradle/caches/8.13/transforms/2a10089d6ad9ca0d5174db8796c2ee15/transformed/out/jars/classes.jar:/Users/macmini/.gradle/caches/8.13/transforms/2a10089d6ad9ca0d5174db8796c2ee15/transformed/out/jars/libs/R.jar"
       resolved="android:capgo-capacitor-updater:unspecified"
