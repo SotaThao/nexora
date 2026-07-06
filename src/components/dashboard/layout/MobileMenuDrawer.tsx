@@ -198,13 +198,10 @@ export default function MobileMenuDrawer({
                   type="button"
                   onClick={() => {
                     if (id === 'tips') {
-                      navigateMenu(id)
                       setIsTipsMobileExpanded(!isTipsMobileExpanded)
                     } else if (id === 'touchpoints') {
-                      navigateMenu(id)
                       setIsTouchpointsMobileExpanded(!isTouchpointsMobileExpanded)
                     } else if (id === 'taxiq') {
-                      navigateMenu(id)
                       setIsTaxIqMobileExpanded(!isTaxIqMobileExpanded)
                     } else {
                       navigateMenu(id)

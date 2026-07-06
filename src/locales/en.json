@@ -2465,7 +2465,6 @@
       "enabledModulesLabel": "Enabled modules",
       "editModules": "Edit module config",
       "inviteStaffCta": "Invite staff from Staff Management",
-      "readinessPlaceholder": "Tax Readiness Score is coming soon.",
       "editModulesModal": {
         "title": "Edit module config",
         "save": "Save",
@@ -2473,6 +2472,15 @@
         "cancel": "Cancel",
         "lockedNotice": "This tax year is locked and can no longer be edited."
       }
+    },
+    "readinessScore": {
+      "title": "Tax Readiness Score",
+      "ownerCpaLabel": "Owner CPA Package",
+      "staffTaxLabel": "Staff Tax Package",
+      "cpaReviewLabel": "CPA Review Package",
+      "highPriorityCount": "{{count}} High Priority",
+      "allClear": "All caught up",
+      "errorLoading": "Unable to load Tax Readiness Score right now."
     },
     "deductionCenter": {
       "title": "Deduction Center",

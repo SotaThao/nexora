@@ -108,6 +108,10 @@ export const qk = {
   },
   taxiqDeductionCategories: (applicableRole?: string) => ['taxiqDeductionCategories', applicableRole ?? 'all'],
 
+  // Tax IQ — Tax Readiness Score (shared widget, Owner + Staff scope)
+  taxiqReadinessScore: (scope?: string, taxYearId?: string) =>
+    ['taxiqReadinessScore', scope ?? 'unknown', taxYearId ?? 'unknown'],
+
   // Public Customer Touch
   customerTouch: (businessSlug, touchPointSlug, sessionId) => ['customerTouch', businessSlug, touchPointSlug, sessionId],
   publicBusinessPaymentMethods: (businessId) => ['publicBusinessPaymentMethods', businessId],

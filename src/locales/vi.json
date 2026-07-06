@@ -2464,7 +2464,6 @@
       "enabledModulesLabel": "Module đang bật",
       "editModules": "Chỉnh sửa cấu hình module",
       "inviteStaffCta": "Mời thợ từ trang Quản Lý Nhân Viên",
-      "readinessPlaceholder": "Tax Readiness Score sẽ sớm ra mắt.",
       "editModulesModal": {
         "title": "Chỉnh sửa cấu hình module",
         "save": "Lưu",
@@ -2472,6 +2471,15 @@
         "cancel": "Hủy",
         "lockedNotice": "Năm thuế này đã bị khóa và không thể chỉnh sửa."
       }
+    },
+    "readinessScore": {
+      "title": "Điểm Sẵn Sàng Thuế",
+      "ownerCpaLabel": "Gói Owner CPA",
+      "staffTaxLabel": "Gói Thuế Thợ",
+      "cpaReviewLabel": "Gói CPA Review",
+      "highPriorityCount": "{{count}} mục High Priority",
+      "allClear": "Đã xử lý hết",
+      "errorLoading": "Không thể tải Điểm Sẵn Sàng Thuế lúc này."
     },
     "deductionCenter": {
       "title": "Trung Tâm Khấu Trừ",

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Settings2, UserPlus } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import EditModuleConfigModal from './modals/EditModuleConfigModal'
+import TaxReadinessScoreWidget from './shared/TaxReadinessScoreWidget'
 import type { OwnerTaxYear } from '../../../../data/repositories/taxiqOwnerTaxYear'
 
 // Values match backend/src/Domain/Enums/TaxIq/TaxIqModule.cs exactly.
@@ -63,11 +64,7 @@ export default function TaxIqHomeView({ ownerTaxYear }: { ownerTaxYear: OwnerTax
         </div>
       </div>
 
-      {/* TaxReadinessScoreWidget lands in a separate ticket (US-09) — placeholder reserved so
-          this screen doesn't need re-layout when that widget ships. */}
-      <div className="nexora-card flex min-h-[96px] items-center justify-center p-6 text-xs font-semibold text-nexoraMuted">
-        {t('taxiq.home.readinessPlaceholder')}
-      </div>
+      <TaxReadinessScoreWidget scope="owner" taxYearId={ownerTaxYear.id} />
 
       <button
         type="button"
