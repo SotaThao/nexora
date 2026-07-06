@@ -280,8 +280,8 @@ export default function AnalyticsView({
             <div className="flex items-center gap-1">
               <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">{t('dashboard.analytics.kpi.fees_avoided')}</small>
               <Tooltip
-                content={(t('dashboard.analytics.kpi.fees_avoided_tooltip')).replace('3%', `${processingFee}%`)}
-                ariaLabel={t('dashboard.analytics.kpi.fees_avoided_tooltip')}
+                content={t('dashboard.analytics.kpi.fees_avoided_tooltip', { fee: processingFee })}
+                ariaLabel={t('dashboard.analytics.kpi.fees_avoided_tooltip', { fee: processingFee })}
               />
             </div>
             <h3 className="mt-1 text-2xl font-black text-emerald-600 dark:text-emerald-400">{formatUSD(feesAvoided)}</h3>

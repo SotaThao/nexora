@@ -1059,7 +1059,7 @@
         "transactions_unit": "Transactions",
         "avg_tip": "Average Tip",
         "fees_avoided": "Fees Saved",
-        "fees_avoided_tooltip": "Estimated card processing fees saved from direct P2P tips, calculated at 3% of routed volume."
+        "fees_avoided_tooltip": "Estimated card processing fees saved from direct P2P tips, calculated at {{fee}}% of routed volume."
       },
       "charts": {
         "daily_revenue": "Daily Revenue Trend",

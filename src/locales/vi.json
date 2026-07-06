@@ -1059,7 +1059,7 @@
         "transactions_unit": "Giao dịch",
         "avg_tip": "Típ Trung Bình",
         "fees_avoided": "Phí tiết kiệm",
-        "fees_avoided_tooltip": "Ước tính phí xử lý thẻ tiết kiệm được từ tip P2P trực tiếp, tính theo 3% trên tổng lượng được định tuyến."
+        "fees_avoided_tooltip": "Ước tính phí xử lý thẻ tiết kiệm được từ tip P2P trực tiếp, tính theo {{fee}}% trên tổng lượng được định tuyến."
       },
       "charts": {
         "daily_revenue": "Biểu Đồ Doanh Thu Theo Ngày",
