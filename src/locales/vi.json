@@ -40,6 +40,10 @@
       "profile": "Hồ sơ",
       "profile_account": "Cài đặt",
       "profile_kyc": "KYC",
+      "download_ios": "Ứng dụng iOS",
+      "download_ios_sub": "Tải trên App Store",
+      "download_android": "Ứng dụng Android",
+      "download_android_sub": "Tải trên Google Play",
       "tab_home": "Trang chủ",
       "tab_qr": "QR của tôi"
     },

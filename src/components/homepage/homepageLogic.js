@@ -247,6 +247,8 @@ const translations = {
     "cta-desc": "Nâng tầm cuộc sống đội ngũ thợ, xây dựng cộng đồng khách hàng trung thành vững mạnh và đẩy mạnh thứ hạng tiệm trên các nền tảng số ngay hôm nay.",
     "btn-cta-1": "Đăng Ký Tư Vấn & Setup Thử Nghiệm",
     "btn-cta-2": "Dùng Thử Bản Giả Lập",
+    "dl-title": "Tải App & tận hưởng trải nghiệm",
+    "dl-desc": "Đừng bỏ lỡ! Tải ngay để trải nghiệm đầy đủ tính năng cùng vô vàn tiện ích.",
     "footer-copyright": "© 2026 NEXORA TOUCH. Tip Smarter. Review Faster. Grow Stronger.",
     "footer-link-1": "Chính Sách Bảo Mật",
     "footer-link-2": "Điều Khoản Vận Hành",
@@ -663,6 +665,8 @@ const translations = {
     "cta-desc": "Empower your technical workforce, collect valuable validated reviews on major search maps, and expand your community reach today.",
     "btn-cta-1": "Request Custom Consulting",
     "btn-cta-2": "Interact With Live Simulator",
+    "dl-title": "Download and enjoy the experience",
+    "dl-desc": "Don't miss out! Download now for seamless functionalities and endless possibilities.",
     "footer-copyright": "© 2026 NEXORA TOUCH. Tip Smarter. Review Faster. Grow Stronger.",
     "footer-link-1": "Privacy Policy",
     "footer-link-2": "Ecosystem Guidelines",
@@ -1394,14 +1398,15 @@ function executeCustomerSessionLogin(userObj) {
 
   updateCustomerDashboardUI();
 
-  document.getElementById('header-auth-group').classList.add('hidden');
+  document.getElementById('header-auth-group')?.classList.add('hidden');
   const badge = document.getElementById('header-user-badge');
-  badge.classList.remove('hidden');
-  badge.style.removeProperty('display');
-  document.getElementById('header-user-name').textContent = t('txt-greeting').replace('{0}', userObj.name);
+  badge?.classList.remove('hidden');
+  badge?.style.removeProperty('display');
+  const userNameEl = document.getElementById('header-user-name');
+  if (userNameEl) userNameEl.textContent = t('txt-greeting').replace('{0}', userObj.name);
 
-  document.getElementById('cust-register-view').classList.add('hidden');
-  document.getElementById('cust-dashboard-view').classList.remove('hidden');
+  document.getElementById('cust-register-view')?.classList.add('hidden');
+  document.getElementById('cust-dashboard-view')?.classList.remove('hidden');
 }
 
 // Cập nhật giao diện Simulator Dashboard của Khách Hàng
@@ -1428,24 +1433,31 @@ function copyReferralCode() {
 
 // Đăng xuất và khôi phục giao diện ban đầu
 function handleLogout() {
+  const wasCustomerRegistered = appState.customer.isRegistered;
+
   appState.customer.isRegistered = false;
   appState.customer.name = t('header-guest');
   appState.customer.phone = "";
   appState.customer.points = 0;
 
-  document.getElementById('header-auth-group').classList.remove('hidden');
+  document.getElementById('header-auth-group')?.classList.remove('hidden');
   const badge = document.getElementById('header-user-badge');
-  badge.classList.add('hidden');
-  badge.style.removeProperty('display');
+  badge?.classList.add('hidden');
+  badge?.style.removeProperty('display');
 
-  document.getElementById('cust-dashboard-view').classList.add('hidden');
-  document.getElementById('cust-register-view').classList.remove('hidden');
+  document.getElementById('cust-dashboard-view')?.classList.add('hidden');
+  document.getElementById('cust-register-view')?.classList.remove('hidden');
 
-  document.getElementById('cust-reg-name').value = '';
-  document.getElementById('cust-reg-phone').value = '';
-  document.getElementById('cust-reg-ref').value = '';
+  const regName = document.getElementById('cust-reg-name');
+  const regPhone = document.getElementById('cust-reg-phone');
+  const regRef = document.getElementById('cust-reg-ref');
+  if (regName) regName.value = '';
+  if (regPhone) regPhone.value = '';
+  if (regRef) regRef.value = '';
 
-  showToast(t('toast-logged-out'));
+  if (wasCustomerRegistered) {
+    showToast(t('toast-logged-out'));
+  }
 }
 
 // Gửi số điện thoại giới thiệu
