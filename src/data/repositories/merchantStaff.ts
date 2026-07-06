@@ -105,7 +105,9 @@ export function normalizeStaffListItem(dto: StaffListItemApiDto): StaffMember {
     isProfileComplete: dto.isProfileComplete ?? false,
     tipCount: dto.tipCount ?? 0,
     averageRating: dto.averageRating ?? 0,
-    fullName: displayName,
+    fullName: dto.fullName ?? '',
+    nickname: displayName,
+    displayName,
     avatar: dto.photoUrl ?? null,
     status,
     apiStatus: dto.status ?? null,
@@ -132,6 +134,7 @@ export function normalizeStaffListItem(dto: StaffListItemApiDto): StaffMember {
     joinedDate: normalizeDateOnly(dto.joinDate),
     payoutConfigs,
     paymentAccounts,
+    isLocalStaff: dto.isLocalStaff ?? false,
   }
 }
 
