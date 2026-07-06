@@ -54,8 +54,8 @@ export default function TipsView({
         <div className="flex flex-wrap gap-1 bg-nexoraSurfaceMuted dark:bg-luxuryCoal p-1 rounded-xl border border-nexoraBorder dark:border-luxuryGold/10">
           {[
             { id: 'overview', label: t('dashboard.tips.tabs.overview') },
-            { id: 'savings', label: t('dashboard.tips.tabs.savings') }
-            // 'payouts' tab hidden until the Staff Payouts feature is ready
+            { id: 'savings', label: t('dashboard.tips.tabs.savings') },
+            { id: 'payouts', label: t('dashboard.tips.tabs.payouts') },
           ].map(tab => (
             <button
               key={tab.id}
@@ -107,7 +107,7 @@ export default function TipsView({
       )}
 
       {activeTab === 'payouts' && (
-        <TipsPayoutsTab staffPayouts={tipsData.staffPayouts} />
+        <TipsPayoutsTab staff={staff} />
       )}
 
     </div>

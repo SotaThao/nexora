@@ -146,8 +146,10 @@ export default function StaffPayments() {
   const filterFieldClass = 'text-[9px] font-bold uppercase tracking-wide text-nexoraMuted sm:text-[10px] sm:tracking-wider'
   const filterControlClass =
     'h-8 w-full rounded-lg border border-nexoraBorder bg-white px-3.5 text-[11px] font-semibold text-nexoraText sm:h-9 sm:px-4 sm:text-xs'
-  const filterSelectButtonClass = 'px-3.5 text-[11px] sm:px-4 sm:text-xs'
+  const filterSelectButtonClass =
+    'w-full justify-between px-3.5 text-[11px] sm:px-4 sm:text-xs'
   const filterSelectOptionsClass = 'text-[11px] sm:text-xs'
+  const filterSelectMenuMinWidth = 220
 
   const handleAcknowledge = (paymentId: string, event?: MouseEvent, options?: { onSuccess?: () => void }) => {
     event?.stopPropagation()
@@ -277,6 +279,7 @@ export default function StaffPayments() {
             options={statusFilterOptions}
             buttonClass={filterSelectButtonClass}
             optionsClass={filterSelectOptionsClass}
+            menuMinWidth={filterSelectMenuMinWidth}
           />
         </div>
         <div className="min-w-0">
@@ -290,6 +293,7 @@ export default function StaffPayments() {
             options={datePresetOptions}
             buttonClass={filterSelectButtonClass}
             optionsClass={filterSelectOptionsClass}
+            menuMinWidth={filterSelectMenuMinWidth}
           />
         </div>
         {datePreset === 'custom' ? (
