@@ -19,7 +19,6 @@ export default function HomePageSections() {
   return (
     <>
       <HomePageHeaderSection />
-      <HomePageBannerSection />
       <HomePageHeroSection />
       <HomePageB2BSection />
       <HomePageTaxIQSection />
@@ -29,6 +28,7 @@ export default function HomePageSections() {
       <HomePageFeaturesSection />
       <HomePagePricingSection />
       <HomePageDownloadSection />
+      <HomePageBannerSection />
       <HomePageCtaSection />
       <HomePageFooterSection />
       <HomePageDemoModal />
