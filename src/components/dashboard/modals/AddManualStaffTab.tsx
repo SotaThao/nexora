@@ -147,10 +147,13 @@ function AddManualStaffTab({
       setEditingWalletKey(walletKey)
       return
     }
-    setPayoutConfigs((prev) => ({
-      ...prev,
-      [walletKey]: { ...config, enabled: !config.enabled },
-    }))
+    setPayoutConfigs((prev) => {
+      const current = prev[walletKey] || { enabled: false, value: '', qrCode: '', accountName: '' }
+      return {
+        ...prev,
+        [walletKey]: { ...current, enabled: !current.enabled },
+      }
+    })
   }
 
   const handlePayoutSubmit = (value: string, qrCode: string, accountName: string, qrFile?: File | null) => {

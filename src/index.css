@@ -25,7 +25,7 @@ body:not(.homepage-active) select:focus {
 /* Borderless inputs (e.g. country code search inside dropdown) */
 body:not(.homepage-active) input.country-code-search-input:focus {
   border-color: transparent !important;
-  box-shadow: none !important;
+  box-shadow: 0 0 0 2px rgba(70, 72, 216, 0.2) !important; /* nexoraBrand/20 */
 }
 
 /* Prevent iOS Safari from zooming on input focus by ensuring font-size is at least 16px on iOS devices (portrait and landscape) */
