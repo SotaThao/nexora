@@ -161,6 +161,28 @@ export default function Dashboard({
     isPending: isReviewsPending,
     isFetching: isReviewsFetching,
   } = useDashboardReviews(reviewsListQuery, { enabled: needsDashboardReviews })
+
+  const reviewsWeekDateRange = useMemo(() => {
+    const end = new Date()
+    const start = new Date(end)
+    start.setDate(start.getDate() - 6)
+    return {
+      startDate: start.toISOString().split('T')[0],
+      endDate: end.toISOString().split('T')[0],
+    }
+  }, [])
+
+  const { data: reviewsWeekPage } = useDashboardReviews(
+    {
+      pageNumber: 1,
+      pageSize: 1,
+      startDate: reviewsWeekDateRange.startDate,
+      endDate: reviewsWeekDateRange.endDate,
+    },
+    { enabled: activeMenu === 'overview' },
+  )
+
+  const reviewsThisWeekCount = reviewsWeekPage?.totalCount ?? null
   const { data: reviewsSummary } = useDashboardReviewsSummary({ enabled: isReviewsTab })
   const { data: apiUnreadCount = 0 } = useUnreadCount()
   const { data: notificationsData, isLoading: isNotificationsLoading, isFetching: isNotificationsFetching } = useNotifications({
@@ -671,7 +693,7 @@ export default function Dashboard({
     kpiDeltas,
     transactions, selectedLeaderboardStaff, handleSelectLeaderboardStaff, businessName, businessSlug, previewQr, hasKyb, hasSetup, onStartSetup: handleStartSetup,
     isOverviewLoading, isTransactionsLoading, isTouchpointsLoading,
-    reviewsPage, isReviewsPending,
+    reviewsPage, isReviewsPending, reviewsThisWeekCount,
     inviteLinkSetting, isInviteLinkSettingLoading,
     filteredStaff, pendingStaff, staff, staffLoading, openApproveStaff, openAddStaff, openEditStaff, openViewStaff, deleteStaff, toggleStaff, toggleStaffTipsFlow,
     handleLinkStaff, handleInviteStaff, handleResendInvite, handleAcceptJoinRequest, handleDeclineJoinRequest, handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,

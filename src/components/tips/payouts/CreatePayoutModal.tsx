@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
-import { Copy, Loader2, Save, Upload, X } from 'lucide-react'
+import { Copy, Loader2, Save, Upload, X, Coins, Banknote, Gift, Tag, Hourglass, CheckCircle2, XCircle } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import {
@@ -56,11 +56,11 @@ const TYPE_I18N: Record<number, string> = {
   [PayoutType.Other]: 'dashboard.tips.payouts_manager.type_other',
 }
 
-const TYPE_EMOJI: Record<number, string> = {
-  [PayoutType.Tip]: '💰',
-  [PayoutType.Salary]: '💼',
-  [PayoutType.Bonus]: '🎁',
-  [PayoutType.Other]: '📌',
+const TYPE_ICON: Record<number, any> = {
+  [PayoutType.Tip]: Coins,
+  [PayoutType.Salary]: Banknote,
+  [PayoutType.Bonus]: Gift,
+  [PayoutType.Other]: Tag,
 }
 
 const CREATE_STATUS_OPTIONS: PayoutStatusValue[] = [
@@ -674,13 +674,17 @@ export default function CreatePayoutModal({
                         key={flag}
                         type="button"
                         onClick={() => setPayoutTypesMask(flag)}
-                        className={`rounded-lg border px-3 py-1.5 text-xs font-bold transition ${
+                        className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition ${
                           selected
                             ? 'border-nexoraBrand bg-nexoraBrand/10 text-nexoraBrand'
                             : 'border-nexoraBorder hover:border-nexoraBrand/40'
                         }`}
                       >
-                        {TYPE_EMOJI[flag]} {t(TYPE_I18N[flag])}
+                        {(() => {
+                          const Icon = TYPE_ICON[flag]
+                          return Icon ? <Icon className="h-4 w-4" /> : null
+                        })()}
+                        {t(TYPE_I18N[flag])}
                       </button>
                     )
                   })}
@@ -839,7 +843,12 @@ export default function CreatePayoutModal({
                             {selected ? <span className="h-1.5 w-1.5 rounded-full bg-white" /> : null}
                           </span>
                           <span>
-                            <span className="block text-xs font-semibold text-inkBlue">{t(labelKey)}</span>
+                            <span className="flex items-center gap-1.5 text-xs font-semibold text-inkBlue">
+                              {status === PayoutStatus.Pending ? <Hourglass className="h-3.5 w-3.5 text-amber-500" /> : null}
+                              {status === PayoutStatus.Confirmed ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> : null}
+                              {status === PayoutStatus.Cancelled ? <XCircle className="h-3.5 w-3.5 text-red-500" /> : null}
+                              {t(labelKey)}
+                            </span>
                             <span className="mt-0.5 block text-[11px] text-mutedGrey">{t(descKey)}</span>
                           </span>
                         </button>
