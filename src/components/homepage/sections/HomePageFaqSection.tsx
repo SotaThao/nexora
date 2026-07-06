@@ -117,24 +117,6 @@ export default function HomePageFaqSection() {
             </p>
           </div>
 
-          <div className="mx-auto grid max-w-3xl grid-cols-3 gap-2.5">
-            <div className="rounded-xl border border-white/10 bg-white/[0.06] p-3 text-center">
-              <LucideIcon name="qr-code" className="mx-auto mb-2 h-4 w-4 text-cyan-300" />
-              <p className="text-[11px] font-black uppercase tracking-wider text-slate-400" data-i18n="faq-proof-1-label">For customers</p>
-              <p className="mt-1 text-sm font-extrabold text-white" data-i18n="faq-proof-1-value">Scan only</p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-white/[0.06] p-3 text-center">
-              <LucideIcon name="circle-user" className="mx-auto mb-2 h-4 w-4 text-pink-300" />
-              <p className="text-[11px] font-black uppercase tracking-wider text-slate-400" data-i18n="faq-proof-2-label">For staff</p>
-              <p className="mt-1 text-sm font-extrabold text-white" data-i18n="faq-proof-2-value">Own portal</p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-white/[0.06] p-3 text-center">
-              <LucideIcon name="bar-chart-2" className="mx-auto mb-2 h-4 w-4 text-violet-300" />
-              <p className="text-[11px] font-black uppercase tracking-wider text-slate-400" data-i18n="faq-proof-3-label">For owners</p>
-              <p className="mt-1 text-sm font-extrabold text-white" data-i18n="faq-proof-3-value">Full dashboard</p>
-            </div>
-          </div>
-
           <div className="mx-auto max-w-3xl space-y-2.5 text-left">
             {FAQ_ITEMS.map((item, index) => (
               (() => {
