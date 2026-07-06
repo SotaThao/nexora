@@ -27,7 +27,7 @@ function AndroidIcon({ className }) {
   )
 }
 
-export default function StaffSidebar({ activeScreen, onNavigate, onLogout, isOpen, onClose }) {
+export default function StaffSidebar({ activeScreen, isHomeActive = false, mobileOnly = false, onNavigate, onLogout, isOpen, onClose }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { staffMember, account } = useStaffAccount()
@@ -118,9 +118,13 @@ export default function StaffSidebar({ activeScreen, onNavigate, onLogout, isOpe
             navigate('/')
             if (isMobile && onClose) onClose()
           }}
-          className="flex h-12 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-bold text-white/85 transition hover:bg-white/5 hover:text-white"
+          className={`flex h-12 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-bold transition ${
+            isHomeActive
+              ? 'bg-gradient-to-r from-nexoraElectric to-nexoraViolet text-white shadow-lg shadow-nexoraElectric/20'
+              : 'text-white/85 hover:bg-white/5 hover:text-white'
+          }`}
         >
-          <MenuIcon item={PUBLIC_HOME_MENU_ITEM} active={false} />
+          <MenuIcon item={PUBLIC_HOME_MENU_ITEM} active={isHomeActive} />
           <span className="truncate">{t('dashboard.menu.home')}</span>
         </button>
 
@@ -203,14 +207,15 @@ export default function StaffSidebar({ activeScreen, onNavigate, onLogout, isOpe
 
   return (
     <>
-      {/* Desktop Sidebar */}
+      {!mobileOnly && (
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col bg-nexoraSidebar px-5 py-7 text-white lg:flex">
         {renderContent(false)}
       </aside>
+      )}
 
       {/* Mobile Drawer */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
+        <div className="fixed inset-0 z-[100] lg:hidden" id="dashboard-mobile-menu">
           <button
             type="button"
             className="absolute inset-0 bg-nexoraText/60"

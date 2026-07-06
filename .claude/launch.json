@@ -10,6 +10,12 @@
       "env": {
         "VITE_ENABLE_DEMO_TOOLS": "true"
       }
+    },
+    {
+      "name": "dev-staging",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev:staging"],
+      "port": 3000
     }
   ]
 }

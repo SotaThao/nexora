@@ -19,41 +19,38 @@ export default function HomePageHeroSection() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
               
               <div className="lg:col-span-6 space-y-6 text-center lg:text-left">
-                <div className="inline-flex items-center gap-2 bg-indigo-50 border border-indigo-100 rounded-full py-1.5 px-4 text-xs font-extrabold text-purple tracking-wide" data-i18n="hero-eyebrow">✨ CLIENT &amp; STAFF SYNERGY ENGAGEMENT HUB</div>
+                <div className="inline-flex items-center gap-2 bg-indigo-50 border border-indigo-100 rounded-full py-1.5 px-4 text-xs font-extrabold text-purple tracking-wide" data-i18n="hero-eyebrow">✨ Built for Nail Salons &amp; Boutique Spas</div>
                 <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-navy leading-[1.1] lg:leading-[1.05]">
                   <span data-i18n="hero-title-1">Tip Smarter.</span><br />
                   <span data-i18n="hero-title-2">Review Faster.</span><br />
                   <span className="text-grad" data-i18n="hero-title-grad">Grow Stronger.</span>
                 </h2>
-                <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl mx-auto lg:mx-0" data-i18n="hero-desc">NEXORA TOUCH bridges connections between customers, specialists, and salon owners through unified QR nodes. Empower technicians with zero interchange fee direct tip margins, scale verified Google 5-star cards organically, and build reliable neighborhood co-op rewards.</p>
+                <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl mx-auto lg:mx-0" data-i18n="hero-desc">One QR code for your whole salon. Guests tip their nail tech, leave a Google review in one tap, and earn rewards that bring them back. Staff keep every dollar of their tips. You stay in control from one simple dashboard.</p>
                 <div className="flex flex-row gap-4 justify-center lg:justify-start flex-wrap">
                   <a className="inline-flex items-center justify-center gap-2 rounded-full bg-navy text-white px-7 py-4 text-base font-bold shadow-lg hover:bg-slate-800 transition-all hover:scale-[1.02] ds-control ds-button nx-hero-btn" href="#simulator">
-                    <span data-i18n="hero-btn-primary">Test Live Simulator</span>
-                    <svg className="h-5 w-5 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M19 13l-7 7-7-7" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5"></path>
-                    </svg>
+                    <span data-i18n="hero-btn-primary">Try the Live Demo</span>
                   </a>
                   <a className="inline-flex items-center justify-center gap-2 rounded-full bg-white border border-slate-200 px-7 py-4 text-base font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-all ds-control ds-button nx-hero-btn btn-light" data-i18n="hero-btn-secondary" href="#calculator">Calculate Net Savings</a>
                 </div>
                 
                 <div className="pt-6 border-t border-slate-200/80">
-                  <p className="text-xs font-semibold text-slate-400 tracking-wider uppercase mb-3 text-center lg:text-left" data-i18n="hero-badge-title">CORE ARCHITECTURE NODES</p>
+                  <p className="text-xs font-semibold text-slate-400 tracking-wider uppercase mb-3 text-center lg:text-left" data-i18n="hero-badge-title">WHAT YOU GET</p>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div className="bg-white border border-slate-200/60 shadow-sm rounded-xl p-3 flex items-center gap-2 ds-surface ds-elevate">
                       <LucideIcon name="check" className="w-4 h-4 text-green flex-shrink-0" />
-                      <span className="text-xs font-bold text-slate-700" data-i18n="badge-1">Direct Tip P2P</span>
+                      <span className="text-xs font-bold text-slate-700" data-i18n="badge-1">Direct Staff Tips</span>
                     </div>
                     <div className="bg-white border border-slate-200/60 shadow-sm rounded-xl p-3 flex items-center gap-2 ds-surface ds-elevate">
                       <LucideIcon name="check" className="w-4 h-4 text-green flex-shrink-0" />
-                      <span className="text-xs font-bold text-slate-700" data-i18n="badge-2">Google 5★ Push</span>
+                      <span className="text-xs font-bold text-slate-700" data-i18n="badge-2">Google Reviews</span>
                     </div>
                     <div className="bg-white border border-slate-200/60 shadow-sm rounded-xl p-3 flex items-center gap-2 ds-surface ds-elevate">
                       <LucideIcon name="check" className="w-4 h-4 text-green flex-shrink-0" />
-                      <span className="text-xs font-bold text-slate-700" data-i18n="badge-3">Smart Unified QR</span>
+                      <span className="text-xs font-bold text-slate-700" data-i18n="badge-3">One QR Code</span>
                     </div>
                     <div className="bg-white border border-slate-200/60 shadow-sm rounded-xl p-3 flex items-center gap-2 ds-surface ds-elevate">
                       <LucideIcon name="check" className="w-4 h-4 text-green flex-shrink-0" />
-                      <span className="text-xs font-bold text-slate-700" data-i18n="badge-4">Loyalty Point XP</span>
+                      <span className="text-xs font-bold text-slate-700" data-i18n="badge-4">Customer Rewards</span>
                     </div>
                   </div>
                 </div>
