@@ -181,12 +181,12 @@ function StaffMemberCard({
         {!isPending && (
           <div className="flex items-center justify-between gap-3 pt-1 border-t border-nexoraRule">
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 group relative">
+              <div className="flex items-center gap-1 group relative" tabIndex={0}>
                 <span className="text-[10px] font-extrabold uppercase text-slate-400">
                   {t('dashboard.activity_log.col_status')}
                 </span>
-                <HelpCircle className="h-3 w-3 text-slate-400 cursor-help shrink-0" />
-                <div className="absolute bottom-full left-0 mb-1.5 hidden group-hover:block w-56 bg-slate-800 text-white text-[9px] font-bold p-2 rounded-lg shadow-lg pointer-events-none text-left normal-case leading-normal z-50 font-sans">
+                <HelpCircle aria-hidden="true" className="h-3 w-3 text-slate-400 cursor-help shrink-0" />
+                <div className="absolute bottom-full left-0 mb-1.5 hidden group-hover:block group-focus-within:block w-56 bg-slate-800 text-white text-[9px] font-bold p-2 rounded-lg shadow-lg pointer-events-none text-left normal-case leading-normal z-50 font-sans">
                   {t('components.dashboard.views.StaffView.statusTooltip')}
                 </div>
               </div>
@@ -198,12 +198,12 @@ function StaffMemberCard({
               />
             </div>
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 group relative">
+              <div className="flex items-center gap-1 group relative" tabIndex={0}>
                 <span className="text-[10px] font-extrabold uppercase text-slate-400">
                   {t('components.dashboard.views.StaffView.tipsFlow')}
                 </span>
-                <HelpCircle className="h-3 w-3 text-slate-400 cursor-help shrink-0" />
-                <div className="absolute bottom-full right-0 mb-1.5 hidden group-hover:block w-56 bg-slate-800 text-white text-[9px] font-bold p-2 rounded-lg shadow-lg pointer-events-none text-left normal-case leading-normal z-50 font-sans">
+                <HelpCircle aria-hidden="true" className="h-3 w-3 text-slate-400 cursor-help shrink-0" />
+                <div className="absolute bottom-full right-0 mb-1.5 hidden group-hover:block group-focus-within:block w-56 bg-slate-800 text-white text-[9px] font-bold p-2 rounded-lg shadow-lg pointer-events-none text-left normal-case leading-normal z-50 font-sans">
                   {t('components.dashboard.views.StaffView.tipsFlowTooltip')}
                 </div>
               </div>

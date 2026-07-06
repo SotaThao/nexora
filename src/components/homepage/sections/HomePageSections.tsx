@@ -29,7 +29,6 @@ export default function HomePageSections() {
       <HomePageFeaturesSection />
       <HomePagePricingSection />
       <HomePageDownloadSection />
-      <HomePageBannerSection />
       <HomePageCtaSection />
       <HomePageFooterSection />
       <HomePageDemoModal />
