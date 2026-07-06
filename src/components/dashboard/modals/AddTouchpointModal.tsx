@@ -6,22 +6,17 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { isApiError } from '../../../types/domain'
 import { getErrorI18nKey } from '../../../data/errorCodes'
-
-const STATION_TYPE_OPTIONS = [
-  { value: 'Master Store', label: 'Master Store' },
-  { value: 'Table QR', label: 'Table QR' },
-  { value: 'Front Desk', label: 'Front Desk' },
-  { value: 'Receipt QR', label: 'Receipt QR' },
-  { value: 'Business Main', label: 'Business Main' },
-  { value: 'Staff QR', label: 'Staff QR' }
-]
+import {
+  DEFAULT_TOUCHPOINT_TYPE,
+  TOUCHPOINT_TYPE_OPTIONS,
+} from '../../../constants/touchpoints'
 
 export default function AddTouchpointModal({ open, onClose, onAdd, initialValues = null }) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
 
   const [name, setName] = useState('')
-  const [type, setType] = useState('Master Store')
+  const [type, setType] = useState(DEFAULT_TOUCHPOINT_TYPE)
   const [deviceId, setDeviceId] = useState('')
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -31,7 +26,7 @@ export default function AddTouchpointModal({ open, onClose, onAdd, initialValues
   useEffect(() => {
     if (open) {
       setName(initialValues?.name || '')
-      setType(initialValues?.type || 'Master Store')
+      setType(initialValues?.type || DEFAULT_TOUCHPOINT_TYPE)
       setDeviceId(initialValues?.deviceId || '')
       setError('')
       setIsSubmitting(false)
@@ -112,7 +107,7 @@ export default function AddTouchpointModal({ open, onClose, onAdd, initialValues
                 setType(event.target.value)
                 if (error) setError('')
               }}
-              options={STATION_TYPE_OPTIONS}
+              options={TOUCHPOINT_TYPE_OPTIONS}
             />
             {error && <p className="mt-1 text-[10px] font-bold text-nexoraDanger">{error}</p>}
           </div>
