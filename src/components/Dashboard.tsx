@@ -10,6 +10,13 @@ import { resolveMerchantStaffTipQr, toLocalCustomerTouchUrl } from '../utils/sta
 import { useTranslation } from '../contexts/LanguageContext'
 import { useNotification } from '../contexts/NotificationContext'
 import { DEFAULT_PAYOUT_CONFIGS, MENU_ITEMS } from './dashboard/constants'
+import {
+  DEFAULT_TOUCHPOINT_TYPE,
+  MASTER_TOUCHPOINT_API_TYPE,
+  MASTER_TOUCHPOINT_NAME,
+  getTouchpointApiType,
+  isMasterTouchpoint,
+} from '../constants/touchpoints'
 import { slugify, getPayoutConfigsFromMember } from './dashboard/utils'
 import { useDashboardNavigation } from './dashboard/hooks/useDashboardNavigation'
 import { useDevices } from './dashboard/hooks/useDevices'
@@ -150,6 +157,28 @@ export default function Dashboard({
     isPending: isReviewsPending,
     isFetching: isReviewsFetching,
   } = useDashboardReviews(reviewsListQuery, { enabled: needsDashboardReviews })
+
+  const reviewsWeekDateRange = useMemo(() => {
+    const end = new Date()
+    const start = new Date(end)
+    start.setDate(start.getDate() - 6)
+    return {
+      startDate: start.toISOString().split('T')[0],
+      endDate: end.toISOString().split('T')[0],
+    }
+  }, [])
+
+  const { data: reviewsWeekPage } = useDashboardReviews(
+    {
+      pageNumber: 1,
+      pageSize: 1,
+      startDate: reviewsWeekDateRange.startDate,
+      endDate: reviewsWeekDateRange.endDate,
+    },
+    { enabled: activeMenu === 'overview' },
+  )
+
+  const reviewsThisWeekCount = reviewsWeekPage?.totalCount ?? null
   const { data: reviewsSummary } = useDashboardReviewsSummary({ enabled: isReviewsTab })
   const { data: apiUnreadCount = 0 } = useUnreadCount()
   const { data: notificationsData, isLoading: isNotificationsLoading, isFetching: isNotificationsFetching } = useNotifications({
@@ -277,7 +306,7 @@ export default function Dashboard({
     setReviewFilterStaff(value)
     reviewsPagination.setPage(1)
   }, [reviewsPagination.setPage])
-  const [newTouchpoint, setNewTouchpoint] = useState({ name: '', type: 'Table QR' })
+  const [newTouchpoint, setNewTouchpoint] = useState({ name: '', type: DEFAULT_TOUCHPOINT_TYPE })
   const [isAddTouchpointModalOpen, setIsAddTouchpointModalOpen] = useState(false)
   const [addTouchpointPrefill, setAddTouchpointPrefill] = useState<any | null>(null)
   const [activeKpi, setActiveKpi] = useState('tips')
@@ -503,19 +532,19 @@ export default function Dashboard({
 
 
   const addTouchpoint = async (name, type, deviceId) => {
-    const finalName = typeof name === 'string' ? name.trim() : (newTouchpoint.name || '').trim()
-    const finalType = typeof type === 'string' ? type : (newTouchpoint.type || 'Table QR')
+    const finalType = typeof type === 'string' ? type : (newTouchpoint.type || DEFAULT_TOUCHPOINT_TYPE)
+    const finalName = (typeof name === 'string' ? name.trim() : (newTouchpoint.name || '').trim()) || finalType
     const finalDeviceId = typeof deviceId === 'string' ? deviceId.trim() : ''
 
-    if (!finalName) return
+    if (!finalType) return
 
     await createTouchpointMutation.mutateAsync({
       name: finalName,
-      type: finalType === 'Table QR' ? 'Table' : finalType === 'Front Desk' ? 'FrontDesk' : finalType === 'Receipt QR' ? 'Receipt' : finalType === 'Staff QR' ? 'StaffCard' : 'Table',
+      type: getTouchpointApiType(finalType),
       // If we supported hardware linkage, we would map finalDeviceId here.
     })
-    
-    setNewTouchpoint({ name: '', type: 'Table QR' })
+
+    setNewTouchpoint({ name: '', type: DEFAULT_TOUCHPOINT_TYPE })
   }
 
   const linkDevice = (id, deviceId) => {
@@ -539,20 +568,27 @@ export default function Dashboard({
     if (target.staffProfileId) {
       try {
         let page = await merchantTouchpointsRepository.getTouchpoints()
-        masterTouchpoint = page.items.find((tp) => tp.type === 'FrontDesk' && tp.isActive !== false)
+        masterTouchpoint =
+          page.items.find((tp) => isMasterTouchpoint(tp) && tp.isActive !== false)
 
         if (!masterTouchpoint) {
           await merchantTouchpointsRepository.createTouchpoint({
-            name: 'Front Desk',
-            type: 'FrontDesk'
+            name: MASTER_TOUCHPOINT_NAME,
+            type: MASTER_TOUCHPOINT_API_TYPE
           })
           page = await merchantTouchpointsRepository.getTouchpoints()
-          masterTouchpoint = page.items.find((tp) => tp.type === 'FrontDesk') || page.items[0] || null
+          masterTouchpoint =
+            page.items.find(isMasterTouchpoint) ||
+            page.items[0] ||
+            null
         }
       } catch (err) {
         logger.error('Failed to resolve master touchpoint for QR', err)
         // Fallback to locally loaded touchpoints if API fails
-        masterTouchpoint = touchpoints.find((tp) => tp.type === 'FrontDesk') || touchpoints[0] || null
+        masterTouchpoint =
+          touchpoints.find(isMasterTouchpoint) ||
+          touchpoints[0] ||
+          null
       }
 
       const staffTipQr = resolveMerchantStaffTipQr(target.staffProfileId, {
@@ -639,7 +675,7 @@ export default function Dashboard({
     kpiDeltas,
     transactions, selectedLeaderboardStaff, handleSelectLeaderboardStaff, businessName, businessSlug, previewQr, hasKyb, hasSetup, onStartSetup: handleStartSetup,
     isOverviewLoading, isTransactionsLoading, isTouchpointsLoading,
-    reviewsPage, isReviewsPending,
+    reviewsPage, isReviewsPending, reviewsThisWeekCount,
     inviteLinkSetting, isInviteLinkSettingLoading,
     filteredStaff, pendingStaff, staff, staffLoading, openApproveStaff, openAddStaff, openEditStaff, openViewStaff, deleteStaff, toggleStaff, toggleStaffTipsFlow,
     handleLinkStaff, handleInviteStaff, handleResendInvite, handleAcceptJoinRequest, handleDeclineJoinRequest, handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,

@@ -29,6 +29,7 @@ function AndroidIcon({ className }) {
 
 export default function DashboardSidebar({
   activeMenu,
+  isHomeActive = false,
   setActiveMenu,
   businessName,
   profile,
@@ -168,9 +169,13 @@ export default function DashboardSidebar({
         <button
           type="button"
           onClick={() => navigate('/')}
-          className="flex h-12 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-bold text-white/85 transition hover:bg-white/5 hover:text-white"
+          className={`flex h-12 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-bold transition ${
+            isHomeActive
+              ? 'bg-gradient-to-r from-nexoraElectric to-nexoraViolet text-white shadow-lg shadow-nexoraElectric/20'
+              : 'text-white/85 hover:bg-white/5 hover:text-white'
+          }`}
         >
-          <MenuIcon item={PUBLIC_HOME_MENU_ITEM} active={false} />
+          <MenuIcon item={PUBLIC_HOME_MENU_ITEM} active={isHomeActive} />
           <span className="truncate">{t('dashboard.menu.home')}</span>
         </button>
 

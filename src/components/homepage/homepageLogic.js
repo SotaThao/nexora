@@ -23,18 +23,18 @@ const translations = {
     "btn-logout": "Thoát",
     "header-dashboard": "Tổng quan",
     "header-staff": "Cổng thợ",
-    "hero-eyebrow": "✨ NỀN TẢNG KẾT NỐI KHÁCH HÀNG & THỢ THÔNG MINH",
+    "hero-eyebrow": "✨ Dành cho Tiệm Nail & Spa Cao Cấp",
     "hero-title-1": "Tip Thông Minh Hơn.",
     "hero-title-2": "Đánh Giá Nhanh Hơn.",
     "hero-title-grad": "Tăng Trưởng Mạnh Mẽ.",
-    "hero-desc": "NEXORA TOUCH kết nối trực tiếp khách hàng, thợ phục vụ và chủ salon qua hệ thống Smart QR đa năng. Giúp nhân viên nhận 100% tiền tip không mất phí, tự động thu thập đánh giá 5 sao Google, và giữ chân khách bằng cổng loyalty tối tân.",
-    "hero-btn-primary": "Trải Nghiệm Simulator",
+    "hero-desc": "Một mã QR cho cả tiệm. Khách tip thợ ngay, để đánh giá Google chỉ với một chạm, và tích điểm để quay lại. Nhân viên giữ trọn tiền tip. Chủ tiệm theo dõi mọi thứ trên một bảng điều khiển đơn giản.",
+    "hero-btn-primary": "Dùng Thử Demo Ngay",
     "hero-btn-secondary": "Ước Tính Số Tiền Tiết Kiệm",
-    "hero-badge-title": "CÁC TRỤ CỘT NỀN TẢNG",
-    "badge-1": "Tip Trực Tiếp",
-    "badge-2": "Đánh Giá 5★",
-    "badge-3": "Quét Smart QR",
-    "badge-4": "Nhận Thưởng XP",
+    "hero-badge-title": "BẠN NHẬN ĐƯỢC GÌ",
+    "badge-1": "Tip Thẳng Cho Thợ",
+    "badge-2": "Đánh Giá Google",
+    "badge-3": "Một Mã QR",
+    "badge-4": "Thưởng Khách Hàng",
     "tab-cust": "Khách Hàng",
     "tab-staff": "Thợ Phục Vụ",
     "tab-owner": "Admin Tiệm",
@@ -122,7 +122,7 @@ const translations = {
     "sim-taxiq-compliance": "🛡️ NEXORA TAX IQ TUÂN THỦ",
     "sim-taxiq-irs": "Tuân Thủ IRS",
     "b2b-section-eyebrow": "B2B ALLIANCE NETWORK",
-    "b2b-section-title": "Liên Minh Điểm Thưởng Địa Phương.<br>Cùng Nhau Phát Triển.",
+    "b2b-section-title": "Hợp Tác Cùng Hàng Xóm.<br>Mọi Người Đều Thắng.",
     "b2b-section-desc-1": "Thay vì cạnh tranh độc lập, Nexora Touch giúp bạn kết nối chặt chẽ với các doanh nghiệp không cạnh tranh trực tiếp xung quanh chi nhánh của mình (Ví dụ: Tiệm nail liên kết với tiệm coffee, shop hoa lân cận).",
     "b2b-section-desc-2": "Khách hàng thích thú khi nhận điểm thưởng bồi dưỡng thợ nail nhưng có thể đổi trực tiếp lấy cốc latte ngon miệng bên cạnh, hoặc mua hoa tươi giảm giá. Trải nghiệm liên kết chéo này giữ chân khách ở lại khu phố của bạn và liên tục tạo ra lượng khách hàng quen mới chất lượng cao được giới thiệu chéo từ các đối tác.",
     "b2b-metric-1": "Lượt Khách Chéo Trao Đổi",
@@ -136,11 +136,13 @@ const translations = {
     "b2b-feat-3-desc": "Đảm bảo mỗi nhóm liên kết B2B chỉ có duy nhất 1 đại diện cho mỗi ngành hàng để tránh xung đột lợi ích nội bộ.",
     "b2b-feat-4-title": "Sáng Tạo Chiến Dịch Group",
     "b2b-feat-4-desc": "Lên kế hoạch khuyến mãi nhóm cho cả khu phố dịp cuối tuần hoặc lễ hội để thu hút toàn bộ dân cư xung quanh.",
-    "vt-eyebrow": "XEM CÁCH HOẠT ĐỘNG THỰC TẾ",
-    "vt-title": "Video Trực Quan Trải Nghiệm Khách Hàng",
-    "vt-desc": "Tìm hiểu xem một tiệm nail nghệ thuật hoặc trung tâm thẩm mỹ tăng trưởng 40% doanh thu bồi dưỡng thợ và tích hợp 1000+ review vàng Google chỉ trong một nốt nhạc bằng cách nào.",
-    "vt-start": "BẮT ĐẦU XEM VIDEO GIỚI THIỆU (1 PHÚT)",
-    "vt-start-sub": "Video trình bày chi tiết cách vận hành quét QR, bồi dưỡng thợ & tích cực Google Reviews",
+    "vt-eyebrow": "XEM CÁCH HOẠT ĐỘNG",
+    "vt-title": "Xem Nexora Touch Hoạt Động Thực Tế",
+    "vt-desc": "Xem cách tiệm nail giúp khách tip thợ, để đánh giá Google và tích điểm thưởng — tất cả chỉ với một mã QR.",
+    "vt-thumb-alt": "Video giới thiệu Nexora Touch bằng tiếng Việt",
+    "vt-thumb-duration": "1 phút",
+    "vt-start": "Xem Ngay",
+    "vt-start-sub": "Tip, đánh giá Google và thưởng khách — trong một quy trình đơn giản",
     "cr-eyebrow": "CỔNG TIỆN ÍCH KHÁCH HÀNG",
     "cr-title": "Tra Cứu Nhanh Điểm Thưởng Thành Viên",
     "cr-desc": "Hệ sinh thái NEXORA tạo dựng một trải nghiệm xuyên suốt. Khách hàng không cần cài đặt ứng dụng cồng kềnh, chỉ cần nhập số điện thoại là có thể tra cứu ngay hạng thẻ thành viên, số điểm tích lũy, các voucher ưu đãi hiện có và tiến độ đổi quà trực quan.",
@@ -175,16 +177,47 @@ const translations = {
     "feat-5-desc": "Thiết kế không gian quản lý thông số riêng cho từng thợ phục vụ: thông báo tức thì khi nhận tip, theo dõi lịch sử số sao đánh giá, và kết nối nhanh các tài khoản ví thụ hưởng.",
     "feat-6-title": "Admin Dashboard Thống Kê Tổng",
     "feat-6-desc": "Cho phép chủ salon kiểm soát tổng quát toàn bộ hiệu suất hoạt động kinh doanh: ước lượng số tiền phí tiết kiệm, quản lý đội ngũ thợ thực tế và tối ưu hóa luật chơi tích lũy loyalty cho khách.",
-    "pr-eyebrow": "BẢNG GIÁ TRONG SÁNG",
-    "pr-title": "Kế Hoạch Linh Hoạt Cho Mọi Quy Mô",
-    "pr-desc": "Tải và đăng ký bắt đầu sử dụng hoàn toàn miễn phí các tính năng quét Smart QR, sau đó nâng cấp hệ thống tích điểm nâng cao khi tiệm mở rộng.",
+    "pr-eyebrow": "GÓI GIÁ",
+    "pr-title": "Giá Đơn Giản. Không Phí Ẩn.",
+    "pr-desc": "Chọn gói phù hợp với tiệm của bạn. Nâng cấp bất cứ lúc nào.",
+    "pr-table-title": "So Sánh Các Gói",
+    "pr-cmp-feature": "Tính năng",
+    "pr-cmp-col-lite": "Lite",
+    "pr-cmp-col-starter": "Starter",
+    "pr-cmp-col-pro": "Pro",
+    "pr-cmp-col-enterprise": "Enterprise",
+    "pr-cmp-monthly": "Giá hàng tháng",
+    "pr-cmp-staff": "Số thợ",
+    "pr-cmp-kyb": "Xác minh danh tính doanh nghiệp nhanh",
+    "pr-cmp-qr": "Mã QR tip",
+    "pr-cmp-tips": "Tip thẳng cho thợ",
+    "pr-cmp-reviews": "Đánh giá Google",
+    "pr-cmp-staff-accts": "Tài khoản thợ",
+    "pr-cmp-rewards": "Thưởng khách hàng",
+    "pr-cmp-coop": "Hợp tác hàng xóm",
+    "pr-cmp-multiloc": "Nhiều chi nhánh",
+    "pr-cmp-pos": "Đồng bộ POS",
+    "pr-cmp-support": "Hỗ trợ",
+    "pr-cmp-free-price": "$0",
+    "pr-cmp-starter-price": "$29",
+    "pr-cmp-pro-price": "$79",
+    "pr-cmp-custom": "Thỏa thuận",
+    "pr-cmp-staff-free": "Tối đa 5",
+    "pr-cmp-unlimited": "Không giới hạn",
+    "pr-cmp-required": "Bắt buộc",
+    "pr-cmp-qr-basic": "Cơ bản",
+    "pr-cmp-qr-branded": "Theo thương hiệu",
+    "pr-cmp-qr-premium": "NFC cao cấp",
+    "pr-cmp-support-email": "Email",
+    "pr-cmp-support-priority": "Ưu tiên",
+    "pr-cmp-support-247": "24/7 chuyên trách",
     "plan-free-title": "Lite Pack",
-    "plan-free-desc": "Dành cho tiệm từ 5 thợ trở xuống. Yêu cầu xác minh doanh nghiệp (KYB).",
+    "plan-free-desc": "Dành cho tiệm từ 5 thợ trở xuống. Yêu cầu xác minh danh tính doanh nghiệp nhanh.",
     "plan-free-feat-1": "Tối đa 5 thợ hoạt động",
-    "plan-free-feat-2": "Bắt buộc xác minh KYB",
+    "plan-free-feat-2": "Xác minh danh tính doanh nghiệp nhanh",
     "plan-free-feat-3": "Thiết lập Smart QR cơ bản",
     "plan-free-feat-4": "Định tuyến nhận tiền tip trực tiếp",
-    "btn-plan-free": "Đăng Ký Miễn Phí (Cần KYB)",
+    "btn-plan-free": "Đăng Ký Miễn Phí (Cần Xác Minh)",
     "plan-1-title": "Starter Pack",
     "plan-1-desc": "Phù hợp cho thợ làm việc tự do hoặc tiệm quy mô nhỏ",
     "plan-1-feat-1": "Thiết lập Smart QR theo bàn",
@@ -248,7 +281,7 @@ const translations = {
     "faq-a-9": "Không. App còn hỗ trợ QR thanh toán cho business, review routing, loyalty điểm thưởng, staff portal và dashboard vận hành cho chủ tiệm.",
     "faq-q-10": "Sau khi đăng ký, tiệm bắt đầu dùng Nexora Touch như thế nào?",
     "faq-a-10": "Tiệm thiết lập hồ sơ, thêm staff, cấu hình phương thức nhận tiền, tạo QR cho các trạm cần dùng và bắt đầu chia sẻ QR cho khách.",
-    "cta-title": "Khởi Động Tăng Trưởng Quy Mô Salon Của Bạn",
+    "cta-title": "Sẵn Sàng Ngừng Trả Phí Xử Lý Tip?",
     "cta-desc": "Nâng tầm cuộc sống đội ngũ thợ, xây dựng cộng đồng khách hàng trung thành vững mạnh và đẩy mạnh thứ hạng tiệm trên các nền tảng số ngay hôm nay.",
     "btn-cta-1": "Đăng Ký Tư Vấn & Setup Thử Nghiệm",
     "btn-cta-2": "Dùng Thử Bản Giả Lập",
@@ -261,7 +294,7 @@ const translations = {
     "footer-nav-title": "Liên kết",
     "footer-social": "Kết nối với chúng tôi",
     "footer-rights": "Bảo lưu mọi quyền.",
-    "footer-subtext": "Kiến tạo bằng tất cả tình cảm cho những tiệm phục vụ xuất sắc.",
+    "footer-subtext": "Dành cho những người làm đẹp cộng đồng xung quanh mình.",
     "modal-demo-title": "Đặt Lịch Nhận Setup Demo Miễn Phí",
     "modal-demo-desc": "Chúng tôi sẽ liên hệ để tư vấn giải pháp thiết kế in ấn Smart QR riêng biệt cho tiệm của bạn.",
     "modal-field-name": "Họ Và Tên Của Bạn",
@@ -446,18 +479,18 @@ const translations = {
     "btn-logout": "Logout",
     "header-dashboard": "Dashboard",
     "header-staff": "Staff",
-    "hero-eyebrow": "✨ CLIENT & STAFF SYNERGY ENGAGEMENT HUB",
+    "hero-eyebrow": "✨ Built for Nail Salons & Boutique Spas",
     "hero-title-1": "Tip Smarter.",
     "hero-title-2": "Review Faster.",
     "hero-title-grad": "Grow Stronger.",
-    "hero-desc": "NEXORA TOUCH bridges connections between customers, specialists, and salon owners through unified QR nodes. Empower technicians with zero interchange fee direct tip margins, scale verified Google 5-star cards organically, and build reliable neighborhood co-op rewards.",
-    "hero-btn-primary": "Test Live Simulator",
+    "hero-desc": "One QR code for your whole salon. Guests tip their nail tech, leave a Google review in one tap, and earn rewards that bring them back. Staff keep every dollar of their tips. You stay in control from one simple dashboard.",
+    "hero-btn-primary": "Try the Live Demo",
     "hero-btn-secondary": "Calculate Net Savings",
-    "hero-badge-title": "CORE ARCHITECTURE NODES",
-    "badge-1": "Direct Tip P2P",
-    "badge-2": "Google 5★ Push",
-    "badge-3": "Smart Unified QR",
-    "badge-4": "Loyalty Point XP",
+    "hero-badge-title": "WHAT YOU GET",
+    "badge-1": "Direct Staff Tips",
+    "badge-2": "Google Reviews",
+    "badge-3": "One QR Code",
+    "badge-4": "Customer Rewards",
     "tab-cust": "Customer View",
     "tab-staff": "Staff Portal",
     "tab-owner": "Salon Admin",
@@ -545,7 +578,7 @@ const translations = {
     "sim-taxiq-compliance": "🛡️ NEXORA TAX IQ COMPLIANCE",
     "sim-taxiq-irs": "IRS Compliant",
     "b2b-section-eyebrow": "B2B LOCAL CO-OP NETWORKS",
-    "b2b-section-title": "Cross-promote with adjacent brands.<br>Scale business volumes together.",
+    "b2b-section-title": "Team Up with Neighbors.<br>Everyone Wins.",
     "b2b-section-desc-1": "Stop marketing your storefront alone. Nexora Touch allows non-competing merchants (e.g., nail salons, neighboring cafes, flower studios) to connect operations under one cooperative alliance.",
     "b2b-section-desc-2": "Customers earn points while tipping technicians but can redeem those points for delicious drinks or boutique gifts next door. This drives organic foot traffic and shares premium localized client pools automatically.",
     "b2b-metric-1": "Cross-Referral Traffic Spikes",
@@ -559,11 +592,13 @@ const translations = {
     "b2b-feat-3-desc": "Only one merchant per retail vertical is allowed in each local alliance node to safeguard sales.",
     "b2b-feat-4-title": "Co-op Weekend Block Promos",
     "b2b-feat-4-desc": "Coordinate block-wide joint marketing drives dynamically to captivate the local demographic.",
-    "vt-eyebrow": "PLAY OVERVIEW WALKTHROUGH",
-    "vt-title": "How Nexora Touch Drives Growth",
-    "vt-desc": "Discover how standard retail stores scale technician tips by 40%, lock in thousands of organic Google stars, and drive repeat visits via co-ops.",
-    "vt-start": "PLAY INTRODUCTORY BRIEF (1 MIN)",
-    "vt-start-sub": "Walk through instant peer QR routing, Google ratings optimization, and B2B workflows.",
+    "vt-eyebrow": "WATCH IT IN ACTION",
+    "vt-title": "See Nexora Touch in Action",
+    "vt-desc": "Watch how nail salons help guests tip staff, leave Google reviews, and earn rewards — all from one QR code.",
+    "vt-thumb-alt": "Nexora Touch product overview video in English",
+    "vt-thumb-duration": "1 min",
+    "vt-start": "Watch Now",
+    "vt-start-sub": "Tips, Google reviews, and customer rewards — in one simple flow",
     "cr-eyebrow": "CLIENT LOYALTY PORTAL",
     "cr-title": "Instant Membership Points Lookup Hub",
     "cr-desc": "Nexora operates cleanly without forcing complex application installs on customer phones. Enter any registered phone below to check active tiers, cross-alliance point totals, and ready vouchers.",
@@ -598,16 +633,47 @@ const translations = {
     "feat-5-desc": "Each technician gets a private performance dashboard with instant tip notifications, star-rating history tracking, and fast links to their connected payout wallets.",
     "feat-6-title": "Owner Analytics Dashboard",
     "feat-6-desc": "Gives salon owners a full operational overview: estimated processing fee savings, staff performance management, and loyalty multiplier controls to maximize customer retention.",
-    "pr-eyebrow": "TRANSPARENT VALUE LAYOUTS",
-    "pr-title": "Find the Perfect Alignment for Your Team",
-    "pr-desc": "Launch immediately with zero-cost Smart QR checkout cards and automated reviews, then scale to full co-op channels.",
+    "pr-eyebrow": "PRICING PLANS",
+    "pr-title": "Simple Pricing. No Hidden Fees.",
+    "pr-desc": "Pick the plan that fits your salon. Upgrade anytime.",
+    "pr-table-title": "Compare Plans",
+    "pr-cmp-feature": "Feature",
+    "pr-cmp-col-lite": "Lite",
+    "pr-cmp-col-starter": "Starter",
+    "pr-cmp-col-pro": "Pro",
+    "pr-cmp-col-enterprise": "Enterprise",
+    "pr-cmp-monthly": "Monthly price",
+    "pr-cmp-staff": "Active staff",
+    "pr-cmp-kyb": "Quick business identity check",
+    "pr-cmp-qr": "QR code tipping",
+    "pr-cmp-tips": "Direct staff tips",
+    "pr-cmp-reviews": "Google reviews",
+    "pr-cmp-staff-accts": "Staff accounts",
+    "pr-cmp-rewards": "Customer rewards",
+    "pr-cmp-coop": "Neighbor co-op",
+    "pr-cmp-multiloc": "Multi-location",
+    "pr-cmp-pos": "POS sync",
+    "pr-cmp-support": "Support",
+    "pr-cmp-free-price": "$0",
+    "pr-cmp-starter-price": "$29",
+    "pr-cmp-pro-price": "$79",
+    "pr-cmp-custom": "Custom",
+    "pr-cmp-staff-free": "Up to 5",
+    "pr-cmp-unlimited": "Unlimited",
+    "pr-cmp-required": "Required",
+    "pr-cmp-qr-basic": "Basic",
+    "pr-cmp-qr-branded": "Branded",
+    "pr-cmp-qr-premium": "Premium NFC",
+    "pr-cmp-support-email": "Email",
+    "pr-cmp-support-priority": "Priority",
+    "pr-cmp-support-247": "24/7 dedicated",
     "plan-free-title": "Lite Pack (Free)",
-    "plan-free-desc": "For salons with 5 staff or fewer. Requires KYB validation.",
+    "plan-free-desc": "For salons with 5 staff or fewer. Requires a quick business identity check.",
     "plan-free-feat-1": "Up to 5 active specialists",
-    "plan-free-feat-2": "Mandatory KYB Verification",
+    "plan-free-feat-2": "Quick business identity check",
     "plan-free-feat-3": "Basic tabletop Smart QR",
     "plan-free-feat-4": "Direct peer-to-peer tip routing",
-    "btn-plan-free": "Sign Up Free (KYB Required)",
+    "btn-plan-free": "Sign Up Free (Identity Check Required)",
     "plan-1-title": "Starter Pack",
     "plan-1-desc": "Perfect for micro booths & independent practitioners",
     "plan-1-feat-1": "Branded tabletop QR placements",
@@ -671,7 +737,7 @@ const translations = {
     "faq-a-9": "No. The app also supports business payment QR, review routing, loyalty rewards, staff portals, and owner dashboards.",
     "faq-q-10": "How does a business start using Nexora Touch after signing up?",
     "faq-a-10": "The business sets up its profile, adds staff, configures receiving methods, creates QR stations, and starts sharing QR codes with customers.",
-    "cta-title": "Unlock Beautiful Localized Retentive Networks",
+    "cta-title": "Ready to Stop Paying Tip Processing Fees?",
     "cta-desc": "Empower your technical workforce, collect valuable validated reviews on major search maps, and expand your community reach today.",
     "btn-cta-1": "Request Custom Consulting",
     "btn-cta-2": "Interact With Live Simulator",
@@ -684,7 +750,7 @@ const translations = {
     "footer-nav-title": "Links",
     "footer-social": "Connect with us",
     "footer-rights": "All rights reserved.",
-    "footer-subtext": "Assembled with profound devotion for local retail heroes.",
+    "footer-subtext": "Built for the people who make their community beautiful.",
     "modal-demo-title": "Book Customized On-Site Demonstration",
     "modal-demo-desc": "Let's construct tailored high-fidelity QR stand placemats matching your brand parameters.",
     "modal-field-name": "Your Full Name",
@@ -1408,14 +1474,15 @@ function executeCustomerSessionLogin(userObj) {
 
   updateCustomerDashboardUI();
 
-  document.getElementById('header-auth-group').classList.add('hidden');
+  document.getElementById('header-auth-group')?.classList.add('hidden');
   const badge = document.getElementById('header-user-badge');
-  badge.classList.remove('hidden');
-  badge.style.removeProperty('display');
-  document.getElementById('header-user-name').textContent = t('txt-greeting').replace('{0}', userObj.name);
+  badge?.classList.remove('hidden');
+  badge?.style.removeProperty('display');
+  const userNameEl = document.getElementById('header-user-name');
+  if (userNameEl) userNameEl.textContent = t('txt-greeting').replace('{0}', userObj.name);
 
-  document.getElementById('cust-register-view').classList.add('hidden');
-  document.getElementById('cust-dashboard-view').classList.remove('hidden');
+  document.getElementById('cust-register-view')?.classList.add('hidden');
+  document.getElementById('cust-dashboard-view')?.classList.remove('hidden');
 }
 
 // Cập nhật giao diện Simulator Dashboard của Khách Hàng
@@ -1442,24 +1509,31 @@ function copyReferralCode() {
 
 // Đăng xuất và khôi phục giao diện ban đầu
 function handleLogout() {
+  const wasCustomerRegistered = appState.customer.isRegistered;
+
   appState.customer.isRegistered = false;
   appState.customer.name = t('header-guest');
   appState.customer.phone = "";
   appState.customer.points = 0;
 
-  document.getElementById('header-auth-group').classList.remove('hidden');
+  document.getElementById('header-auth-group')?.classList.remove('hidden');
   const badge = document.getElementById('header-user-badge');
-  badge.classList.add('hidden');
-  badge.style.removeProperty('display');
+  badge?.classList.add('hidden');
+  badge?.style.removeProperty('display');
 
-  document.getElementById('cust-dashboard-view').classList.add('hidden');
-  document.getElementById('cust-register-view').classList.remove('hidden');
+  document.getElementById('cust-dashboard-view')?.classList.add('hidden');
+  document.getElementById('cust-register-view')?.classList.remove('hidden');
 
-  document.getElementById('cust-reg-name').value = '';
-  document.getElementById('cust-reg-phone').value = '';
-  document.getElementById('cust-reg-ref').value = '';
+  const regName = document.getElementById('cust-reg-name');
+  const regPhone = document.getElementById('cust-reg-phone');
+  const regRef = document.getElementById('cust-reg-ref');
+  if (regName) regName.value = '';
+  if (regPhone) regPhone.value = '';
+  if (regRef) regRef.value = '';
 
-  showToast(t('toast-logged-out'));
+  if (wasCustomerRegistered) {
+    showToast(t('toast-logged-out'));
+  }
 }
 
 // Gửi số điện thoại giới thiệu

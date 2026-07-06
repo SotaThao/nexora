@@ -16,7 +16,7 @@ export default function OverviewSkeleton() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(340px,1fr)]">
+      <div className="grid grid-cols-1 gap-6 2xl:grid-cols-[minmax(0,2fr)_minmax(360px,1fr)]">
         <Panel className="p-7">
           <div className="flex items-center justify-between gap-4">
             <Skeleton width="38%" height={16} borderRadius={6} />
