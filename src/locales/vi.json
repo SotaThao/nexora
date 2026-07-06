@@ -460,6 +460,15 @@
       "transactions": "Giao Dịch",
       "touchpoints": "Trạm & Mã QR",
       "qr_nfc": "Thiết bị QR / NFC",
+      "tax_iq": "Tax IQ",
+      "taxiq_onboarding": "Onboarding",
+      "taxiq_deductions": "Trung Tâm Khấu Trừ",
+      "taxiq_receipts": "Kho Chứng Từ",
+      "taxiq_equipment": "Theo Dõi Thiết Bị",
+      "taxiq_payroll": "Lương & Payout",
+      "taxiq_reminders": "Nhắc Nộp Thuế",
+      "taxiq_cpa_access": "Truy Cập CPA",
+      "taxiq_export": "Xuất Hồ Sơ Cuối Năm",
       "analytics": "Phân Tích",
       "settings": "Cài Đặt",
       "business_setting": "Cài đặt",
@@ -2391,7 +2400,214 @@
     "subscriptions_desc": "Quản lý đơn hàng giá NFC, gói gia hạn, và phần cứng bổ sung từ không gian này.",
     "settings_title": "Cài Đặt",
     "settings_desc": "Tuỳ chọn cửa hàng, khoá webhook và điểm đến review sẽ được cấu hình tại đây.",
+    "taxiq_title": "Tax IQ",
+    "taxiq_desc": "Trợ lý chuẩn bị thuế bằng AI — Deduction Center, Receipt Vault, Payroll và xuất hồ sơ CPA cuối năm sẽ sớm có mặt trên dashboard.",
+    "taxiq_deductions_title": "Trung Tâm Khấu Trừ",
+    "taxiq_deductions_desc": "Theo dõi và phân loại chi phí kinh doanh được khấu trừ với sự hỗ trợ của AI — sắp ra mắt.",
+    "taxiq_receipts_title": "Kho Chứng Từ",
+    "taxiq_receipts_desc": "Lưu trữ và tự động đọc receipt, hoá đơn, biên lai thanh toán tại một nơi — sắp ra mắt.",
+    "taxiq_equipment_title": "Theo Dõi Thiết Bị",
+    "taxiq_equipment_desc": "Theo dõi thiết bị mua sắm và điều kiện khấu hao / Section 179 — sắp ra mắt.",
+    "taxiq_payroll_title": "Lương & Payout",
+    "taxiq_payroll_desc": "Ghi nhận payout dịch vụ, tiền tip và thưởng cho thợ để báo cáo thuế cuối năm chính xác — sắp ra mắt.",
+    "taxiq_reminders_title": "Nhắc Nộp Thuế",
+    "taxiq_reminders_desc": "Nhận nhắc nhở trước hạn nộp thuế tạm tính hàng quý — sắp ra mắt.",
+    "taxiq_cpa_access_title": "Truy Cập CPA",
+    "taxiq_cpa_access_desc": "Cấp quyền truy cập chỉ xem cho CPA để kiểm tra hồ sơ thuế của bạn — sắp ra mắt.",
+    "taxiq_export_title": "Xuất Hồ Sơ Cuối Năm",
+    "taxiq_export_desc": "Khóa năm thuế và xuất bộ hồ sơ CPA-ready dạng PDF, CSV và Excel — sắp ra mắt.",
     "default_title": "Tính Năng Đang Phát Triển",
     "default_desc": "Module này đang được chuẩn bị cho bảng điều khiển Nexora Touch."
+  },
+  "taxiq": {
+    "onboarding": {
+      "title": "Thiết Lập Tax IQ",
+      "back": "Quay lại",
+      "next": "Tiếp tục",
+      "submit": "Hoàn tất thiết lập",
+      "submitting": "Đang lưu...",
+      "step1": {
+        "title": "Thông tin kinh doanh",
+        "salonNameLabel": "Tên tiệm",
+        "taxYearLabel": "Năm thuế",
+        "taxYearRequiredForCpaExport": "Năm thuế là bắt buộc khi bật Xuất Hồ Sơ Cuối Năm."
+      },
+      "step2": {
+        "title": "Loại nhân viên",
+        "w2Label": "Nhân viên W2",
+        "contractor1099Label": "Thợ hợp đồng 1099",
+        "boothRenterLabel": "Thợ thuê ghế"
+      },
+      "step3": {
+        "title": "Chọn module muốn bật",
+        "deductionCenter": "Theo Dõi Khấu Trừ",
+        "receiptManagement": "Quản Lý Chứng Từ",
+        "staffPayout": "Theo Dõi Payout",
+        "mileageLog": "Nhật Ký Mileage",
+        "taxPaymentReminder": "Nhắc Nộp Thuế",
+        "cpaExport": "Xuất Hồ Sơ CPA"
+      },
+      "step4": {
+        "title": "Xem lại",
+        "reviewSalonName": "Tên tiệm",
+        "reviewTaxYear": "Năm thuế",
+        "reviewModules": "Module"
+      },
+      "errors": {
+        "duplicateTaxYear": "Đã tồn tại thiết lập Tax IQ cho tiệm và năm thuế này.",
+        "generic": "Đã có lỗi xảy ra. Vui lòng thử lại."
+      }
+    },
+    "home": {
+      "title": "Tax IQ",
+      "taxYearLabel": "Năm thuế",
+      "enabledModulesLabel": "Module đang bật",
+      "editModules": "Chỉnh sửa cấu hình module",
+      "inviteStaffCta": "Mời thợ từ trang Quản Lý Nhân Viên",
+      "readinessPlaceholder": "Tax Readiness Score sẽ sớm ra mắt.",
+      "editModulesModal": {
+        "title": "Chỉnh sửa cấu hình module",
+        "save": "Lưu",
+        "saved": "Đã cập nhật cấu hình module.",
+        "cancel": "Hủy",
+        "lockedNotice": "Năm thuế này đã bị khóa và không thể chỉnh sửa."
+      }
+    },
+    "deductionCenter": {
+      "title": "Trung Tâm Khấu Trừ",
+      "subtitle": "Theo dõi chi phí kinh doanh và xem khoản nào được khấu trừ.",
+      "addButton": "Thêm Khoản Chi",
+      "addFromReceiptButton": "Thêm Từ Hóa Đơn",
+      "totalLabel": "Tổng khấu trừ",
+      "emptyState": "Chưa có khoản khấu trừ nào. Thêm chi phí kinh doanh đầu tiên để bắt đầu.",
+      "noOwnerTaxYear": "Hoàn tất thiết lập Tax IQ trước khi thêm khoản khấu trừ.",
+      "goToSetup": "Đến thiết lập Tax IQ",
+      "filters": {
+        "statusLabel": "Trạng thái",
+        "categoryLabel": "Danh mục",
+        "allStatuses": "Tất cả trạng thái",
+        "allCategories": "Tất cả danh mục"
+      },
+      "columns": {
+        "category": "Danh mục",
+        "description": "Mô tả",
+        "amount": "Số tiền",
+        "deductibleAmount": "Được khấu trừ",
+        "date": "Ngày",
+        "status": "Trạng thái",
+        "actions": "Hành động"
+      },
+      "status": {
+        "draft": "Nháp",
+        "ready": "Sẵn sàng",
+        "missingReceipt": "Thiếu Hóa Đơn",
+        "missingInfo": "Thiếu Thông Tin",
+        "cpaReview": "Cần CPA Duyệt",
+        "locked": "Đã Khóa"
+      },
+      "aiStatus": {
+        "deductible": "Được Khấu Trừ",
+        "partiallyDeductible": "Khấu Trừ Một Phần",
+        "needsCpaReview": "Cần CPA Xem Xét",
+        "notDeductible": "Không Được Khấu Trừ"
+      },
+      "cpaReviewExplanation": "Danh mục rủi ro cao được nộp mà không có hóa đơn — cần CPA xem xét trước khi tính vào tổng.",
+      "notDeductibleNotice": "Không được khấu trừ — không tính vào tổng và không xuất trong Year-End Export.",
+      "actions": {
+        "edit": "Sửa",
+        "submit": "Nộp",
+        "reanalyze": "Phân tích lại với AI",
+        "approve": "Duyệt"
+      },
+      "aiDisclaimerFallback": "Tax IQ chỉ hỗ trợ chuẩn bị, không thay thế CPA.",
+      "errors": {
+        "generic": "Đã xảy ra lỗi. Vui lòng thử lại.",
+        "categoriesUnavailable": "Danh mục khấu trừ hiện không khả dụng — vui lòng liên hệ hỗ trợ.",
+        "lockedTitle": "Năm thuế đã khóa",
+        "lockedMessage": "Năm thuế đã khóa — vào Year-End Export để tạo Adjustment.",
+        "lockedAction": "Đến Year-End Export"
+      },
+      "wizard": {
+        "title": "Thêm Khoản Chi",
+        "back": "Quay lại",
+        "next": "Tiếp theo",
+        "saveAsDraft": "Lưu Nháp",
+        "submit": "Nộp",
+        "submitting": "Đang nộp...",
+        "done": "Xong",
+        "step1": {
+          "title": "Chi tiết khoản chi",
+          "categoryLabel": "Danh mục",
+          "categoryPlaceholder": "Chọn danh mục",
+          "descriptionLabel": "Mô tả",
+          "amountLabel": "Số tiền",
+          "dateLabel": "Ngày",
+          "vendorLabel": "Nhà cung cấp (tùy chọn)",
+          "categoryRequired": "Danh mục là bắt buộc.",
+          "descriptionRequired": "Mô tả là bắt buộc.",
+          "amountRequired": "Số tiền phải lớn hơn 0.",
+          "dateRequired": "Ngày là bắt buộc."
+        },
+        "step2": {
+          "title": "Sử dụng cho kinh doanh",
+          "businessUsePercentLabel": "Tỷ lệ sử dụng cho kinh doanh (%)",
+          "computedDeductibleLabel": "Số tiền được khấu trừ"
+        },
+        "step3": {
+          "title": "Hóa đơn",
+          "description": "Đính kèm hóa đơn cho khoản chi này, hoặc bỏ qua và thêm sau.",
+          "chooseFile": "Chọn tệp",
+          "uploading": "Đang tải lên...",
+          "uploadSuccess": "Đã đính kèm hóa đơn.",
+          "uploadError": "Không thể tải hóa đơn lên. Vui lòng thử lại.",
+          "receiptAttached": "Đã đính kèm {{count}} hóa đơn",
+          "skipNotice": "Bạn có thể bỏ qua bước này và thêm hóa đơn sau."
+        },
+        "step4": {
+          "title": "Xem Lại & Lưu",
+          "reviewCategory": "Danh mục",
+          "reviewDescription": "Mô tả",
+          "reviewAmount": "Số tiền",
+          "reviewDate": "Ngày",
+          "reviewVendor": "Nhà cung cấp",
+          "reviewBusinessUsePercent": "Tỷ lệ sử dụng cho kinh doanh",
+          "reviewReceipt": "Hóa đơn",
+          "receiptYes": "Đã đính kèm",
+          "receiptNo": "Không có",
+          "disclaimer": "Tax IQ chỉ hỗ trợ chuẩn bị, không thay thế CPA."
+        },
+        "step5": {
+          "title": "Đánh Giá AI",
+          "analyzing": "Đang đánh giá khoản khấu trừ..."
+        }
+      },
+      "receiptWizard": {
+        "title": "Thêm Từ Hóa Đơn",
+        "upload": {
+          "title": "Tải hóa đơn lên",
+          "description": "Tải ảnh hóa đơn lên — AI sẽ tìm từng khoản mục để bạn xem lại.",
+          "chooseFile": "Chọn tệp",
+          "analyzing": "Đang phân tích hóa đơn...",
+          "error": "Không thể phân tích hóa đơn này. Vui lòng thử lại."
+        },
+        "review": {
+          "title": "Xem lại khoản mục",
+          "vendorLabel": "Nhà cung cấp",
+          "dateLabel": "Ngày",
+          "truncatedNotice": "Chỉ 10 khoản mục đầu tiên được trích xuất từ hóa đơn này.",
+          "categoryPlaceholder": "Chọn danh mục",
+          "aiGuessHint": "AI gợi ý: \"{{category}}\" (không khớp — vui lòng chọn)",
+          "categoryRequired": "Danh mục là bắt buộc.",
+          "amountRequired": "Số tiền phải lớn hơn 0.",
+          "businessUsePercentRequired": "Tỷ lệ sử dụng cho kinh doanh là bắt buộc với danh mục này.",
+          "confirmButton": "Xác nhận",
+          "confirming": "Đang xác nhận...",
+          "noItemsKept": "Chọn ít nhất một khoản mục để tiếp tục."
+        },
+        "result": {
+          "title": "Kết Quả"
+        }
+      }
+    }
   }
 }

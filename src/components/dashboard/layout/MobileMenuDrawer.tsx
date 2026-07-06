@@ -1,10 +1,12 @@
 import React from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import MenuIcon from '../../ui/MenuIcon'
-import { PUBLIC_HOME_MENU_ITEM } from '../constants'
+import { PUBLIC_HOME_MENU_ITEM, TAXIQ_MENU_CHILD_MODULE } from '../constants'
 import { getSubscriptionSidebarCopy } from '../../../utils/subscriptionDisplay'
+import { useMerchantSetup } from '../../../data/hooks/useMerchantSetup'
+import { useOwnerTaxYearByBusiness } from '../../../data/hooks/useTaxiqOwnerTaxYear'
 
 export default function MobileMenuDrawer({
   isOpen,
@@ -26,6 +28,8 @@ export default function MobileMenuDrawer({
   setIsTipsMobileExpanded,
   isTouchpointsMobileExpanded,
   setIsTouchpointsMobileExpanded,
+  isTaxIqMobileExpanded,
+  setIsTaxIqMobileExpanded,
   hasKyb,
   userRole,
   onLogout,
@@ -34,6 +38,12 @@ export default function MobileMenuDrawer({
 }) {
   const { t, currentLanguage } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
+  const activeTaxIqSubTab = location.pathname.split('/')[3] || null
+  const { data: merchantSetupData } = useMerchantSetup({ enabled: userRole !== 'staff' })
+  const taxiqBusinessId = merchantSetupData?.businessInfo?.businessId
+  const { data: ownerTaxYearPage } = useOwnerTaxYearByBusiness(taxiqBusinessId, new Date().getFullYear())
+  const enabledTaxiqModules = ownerTaxYearPage?.items?.[0]?.enabledModules
   const subscriptionCopy = getSubscriptionSidebarCopy(
     subscription ?? profile?.subscription,
     t,
@@ -177,6 +187,7 @@ export default function MobileMenuDrawer({
               reports: t('dashboard.menu.transactions'),
               touchpoints: t('dashboard.menu.touchpoints'),
               devices: t('dashboard.menu.qr_nfc'),
+              taxiq: t('dashboard.menu.tax_iq'),
               analytics: t('dashboard.menu.analytics'),
               support: t('dashboard.menu.support')
             }[id] || label
@@ -192,6 +203,9 @@ export default function MobileMenuDrawer({
                     } else if (id === 'touchpoints') {
                       navigateMenu(id)
                       setIsTouchpointsMobileExpanded(!isTouchpointsMobileExpanded)
+                    } else if (id === 'taxiq') {
+                      navigateMenu(id)
+                      setIsTaxIqMobileExpanded(!isTaxIqMobileExpanded)
                     } else {
                       navigateMenu(id)
                     }
@@ -206,11 +220,13 @@ export default function MobileMenuDrawer({
                     <MenuIcon item={item} active={isActive} />
                     <span>{localizedLabel}</span>
                   </div>
-                  {(id === 'tips' || id === 'touchpoints') && (
+                  {(id === 'tips' || id === 'touchpoints' || id === 'taxiq') && (
                     <div className="text-white/65 shrink-0">
                       {id === 'tips'
                         ? (isTipsMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)
-                        : (isTouchpointsMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)
+                        : id === 'touchpoints'
+                          ? (isTouchpointsMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)
+                          : (isTaxIqMobileExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)
                       }
                     </div>
                   )}
@@ -260,6 +276,46 @@ export default function MobileMenuDrawer({
                           onClick={() => {
                             setTouchpointsTab(sub.id)
                             navigate(`/dashboard/touchpoints?tab=${sub.id}`)
+                            onClose()
+                          }}
+                          className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
+                            isSubActive
+                              ? 'text-brandCyan font-extrabold'
+                              : 'text-white/75 hover:bg-white/5 hover:text-white'
+                          }`}
+                        >
+                          <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+                          <span>{sub.label}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {id === 'taxiq' && isTaxIqMobileExpanded && (
+                  <div className="ml-9 mt-1 space-y-1 border-l border-white/15 pl-3 animate-fadeIn">
+                    {[
+                      { id: 'onboarding', label: t('dashboard.menu.taxiq_onboarding') },
+                      { id: 'deductions', label: t('dashboard.menu.taxiq_deductions') },
+                      { id: 'receipts', label: t('dashboard.menu.taxiq_receipts') },
+                      { id: 'equipment', label: t('dashboard.menu.taxiq_equipment') },
+                      { id: 'payroll', label: t('dashboard.menu.taxiq_payroll') },
+                      { id: 'reminders', label: t('dashboard.menu.taxiq_reminders') },
+                      { id: 'cpa-access', label: t('dashboard.menu.taxiq_cpa_access') },
+                      { id: 'export', label: t('dashboard.menu.taxiq_export') }
+                    ].filter(sub => {
+                      const requiredModule = TAXIQ_MENU_CHILD_MODULE[sub.id]
+                      if (!requiredModule || !enabledTaxiqModules) return true
+                      return enabledTaxiqModules.includes(requiredModule)
+                    }).map(sub => {
+                      const isSubActive = activeMenu === 'taxiq' &&
+                        (sub.id === 'onboarding' ? !activeTaxIqSubTab : activeTaxIqSubTab === sub.id)
+                      return (
+                        <button
+                          key={sub.id}
+                          type="button"
+                          onClick={() => {
+                            navigate(sub.id === 'onboarding' ? '/dashboard/taxiq' : `/dashboard/taxiq/${sub.id}`)
                             onClose()
                           }}
                           className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${

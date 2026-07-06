@@ -88,6 +88,26 @@ export const qk = {
   staffTips:             (filters = EMPTY) => ['staffTips', filters],
   staffLinkRequest:    (linkId: string | null | undefined) => ['staffLinkRequest', linkId ?? 'unknown'],
 
+  // Tax IQ — Owner Tax Year (prefixed with 'taxiqOwnerTaxYear' so invalidating
+  // qk.taxiqOwnerTaxYear() also clears the byId cache below).
+  taxiqOwnerTaxYear:     (businessId?: string, taxYear?: number) => {
+    const key: unknown[] = ['taxiqOwnerTaxYear']
+    if (businessId) key.push(businessId)
+    if (taxYear !== undefined) key.push(taxYear)
+    return key
+  },
+  taxiqOwnerTaxYearById: (id?: string) => ['taxiqOwnerTaxYear', 'byId', id ?? 'unknown'],
+
+  // Tax IQ — Owner Deduction Center
+  taxiqOwnerDeductions: (ownerTaxYearId?: string, recordStatus?: string, categoryId?: string) => {
+    const key: unknown[] = ['taxiqOwnerDeductions']
+    if (ownerTaxYearId) key.push(ownerTaxYearId)
+    if (recordStatus) key.push(recordStatus)
+    if (categoryId) key.push(categoryId)
+    return key
+  },
+  taxiqDeductionCategories: (applicableRole?: string) => ['taxiqDeductionCategories', applicableRole ?? 'all'],
+
   // Public Customer Touch
   customerTouch: (businessSlug, touchPointSlug, sessionId) => ['customerTouch', businessSlug, touchPointSlug, sessionId],
   publicBusinessPaymentMethods: (businessId) => ['publicBusinessPaymentMethods', businessId],

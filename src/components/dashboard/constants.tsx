@@ -7,6 +7,7 @@ import {
   Star,
   ClipboardList,
   Pointer,
+  Calculator,
   BarChart3,
   Settings,
   HelpCircle
@@ -65,12 +66,42 @@ export const MENU_ITEMS = [
   { id: 'reviews', label: 'Reviews', icon: Star, image: '/assets/menu/reviews.png' },
   { id: 'reports', label: 'Transactions', icon: ClipboardList, image: '/assets/menu/transaction.png' },
   { id: 'touchpoints', label: 'Touch Points', icon: Pointer, image: '/assets/menu/touchpoint.png' },
+  {
+    id: 'taxiq',
+    label: 'Tax IQ',
+    icon: Calculator,
+    image: '/assets/menu/tax-iq.svg',
+    children: [
+      { id: 'onboarding', label: 'Onboarding' },
+      { id: 'deductions', label: 'Deduction Center' },
+      { id: 'receipts', label: 'Receipt Vault' },
+      { id: 'equipment', label: 'Equipment Tracker' },
+      { id: 'payroll', label: 'Payroll & Payout' },
+      { id: 'reminders', label: 'Tax Payment Reminders' },
+      { id: 'cpa-access', label: 'CPA Access' },
+      { id: 'export', label: 'Year-End Export' }
+    ]
+  },
   { id: 'analytics', label: 'Analytics', icon: BarChart3, image: '/assets/menu/analytics.png' },
   { id: 'settings', label: 'Settings', icon: Settings, image: '/assets/menu/setting.png' },
   { id: 'support', label: 'Support', icon: HelpCircle, image: '/assets/menu/support.png' }
 ]
 
 export const visibleMenuItems = MENU_ITEMS
+
+// Maps a Tax IQ sidebar sub-item id -> the OwnerTaxYear.enabledModules entry that must be
+// present for it to show. Sub-items absent from this table (equipment, cpa-access) are always
+// visible — there's no corresponding module toggle for them in the real backend enum.
+// Values confirmed against backend/src/Domain/Enums/TaxIq/TaxIqModule.cs (verified live via a
+// 400 TAXIQ_INVALID_MODULE response during manual testing — the module names guessed from the
+// business spec prose, e.g. "GiftCardLiability"/"StaffPayout"/"DeductionCenter", do not exist).
+export const TAXIQ_MENU_CHILD_MODULE: Record<string, string> = {
+  deductions: 'DeductionTracking',
+  receipts: 'ReceiptManagement',
+  payroll: 'PayoutTracking',
+  reminders: 'TaxReminders',
+  export: 'CPAExport'
+}
 
 export const PUBLIC_HOME_MENU_ITEM = {
   id: 'public-home',

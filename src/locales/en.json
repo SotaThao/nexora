@@ -460,6 +460,15 @@
       "transactions": "Transactions",
       "touchpoints": "Stations & QR Codes",
       "qr_nfc": "QR / NFC Devices",
+      "tax_iq": "Tax IQ",
+      "taxiq_onboarding": "Onboarding",
+      "taxiq_deductions": "Deduction Center",
+      "taxiq_receipts": "Receipt Vault",
+      "taxiq_equipment": "Equipment Tracker",
+      "taxiq_payroll": "Payroll & Payout",
+      "taxiq_reminders": "Tax Payment Reminders",
+      "taxiq_cpa_access": "CPA Access",
+      "taxiq_export": "Year-End Export",
       "analytics": "Analytics",
       "settings": "Settings",
       "business_setting": "Setting",
@@ -2392,7 +2401,214 @@
     "subscriptions_desc": "Manage NFC stand orders, renewal plans, and hardware add-ons from this workspace soon.",
     "settings_title": "Settings",
     "settings_desc": "Shop preferences, webhook keys, and review destinations will be configured here.",
+    "taxiq_title": "Tax IQ",
+    "taxiq_desc": "Your AI-powered tax prep assistant — deductions, receipts, payroll, and year-end CPA exports are coming to this dashboard soon.",
+    "taxiq_deductions_title": "Deduction Center",
+    "taxiq_deductions_desc": "Track and categorize deductible business expenses with AI-assisted review — coming soon.",
+    "taxiq_receipts_title": "Receipt Vault",
+    "taxiq_receipts_desc": "Store and auto-read receipts, invoices, and payment proofs in one place — coming soon.",
+    "taxiq_equipment_title": "Equipment Tracker",
+    "taxiq_equipment_desc": "Track equipment purchases and depreciation / Section 179 eligibility — coming soon.",
+    "taxiq_payroll_title": "Payroll & Payout",
+    "taxiq_payroll_desc": "Record staff service payouts, tips, and bonuses for accurate year-end tax reporting — coming soon.",
+    "taxiq_reminders_title": "Tax Payment Reminders",
+    "taxiq_reminders_desc": "Get reminders before quarterly estimated tax deadlines — coming soon.",
+    "taxiq_cpa_access_title": "CPA Access",
+    "taxiq_cpa_access_desc": "Grant your CPA read-only access to review your tax records — coming soon.",
+    "taxiq_export_title": "Year-End Export",
+    "taxiq_export_desc": "Lock your tax year and export a CPA-ready package in PDF, CSV, and Excel — coming soon.",
     "default_title": "Feature In Progress",
     "default_desc": "This module is being prepared for the Nexora Touch merchant dashboard."
+  },
+  "taxiq": {
+    "onboarding": {
+      "title": "Set up Tax IQ",
+      "back": "Back",
+      "next": "Next",
+      "submit": "Finish setup",
+      "submitting": "Saving...",
+      "step1": {
+        "title": "Business info",
+        "salonNameLabel": "Salon name",
+        "taxYearLabel": "Tax year",
+        "taxYearRequiredForCpaExport": "Tax year is required when Year-End Export is enabled."
+      },
+      "step2": {
+        "title": "Employee types",
+        "w2Label": "W2 employees",
+        "contractor1099Label": "1099 contractors",
+        "boothRenterLabel": "Booth renters"
+      },
+      "step3": {
+        "title": "Modules to enable",
+        "deductionCenter": "Deduction Tracking",
+        "receiptManagement": "Receipt Management",
+        "staffPayout": "Payout Tracking",
+        "mileageLog": "Mileage Log",
+        "taxPaymentReminder": "Tax Reminders",
+        "cpaExport": "CPA Export"
+      },
+      "step4": {
+        "title": "Review",
+        "reviewSalonName": "Salon name",
+        "reviewTaxYear": "Tax year",
+        "reviewModules": "Modules"
+      },
+      "errors": {
+        "duplicateTaxYear": "A Tax IQ setup already exists for this business and tax year.",
+        "generic": "Something went wrong. Please try again."
+      }
+    },
+    "home": {
+      "title": "Tax IQ",
+      "taxYearLabel": "Tax year",
+      "enabledModulesLabel": "Enabled modules",
+      "editModules": "Edit module config",
+      "inviteStaffCta": "Invite staff from Staff Management",
+      "readinessPlaceholder": "Tax Readiness Score is coming soon.",
+      "editModulesModal": {
+        "title": "Edit module config",
+        "save": "Save",
+        "saved": "Module config updated.",
+        "cancel": "Cancel",
+        "lockedNotice": "This tax year is locked and can no longer be edited."
+      }
+    },
+    "deductionCenter": {
+      "title": "Deduction Center",
+      "subtitle": "Track business expenses and see what's deductible.",
+      "addButton": "Add Deduction",
+      "addFromReceiptButton": "Add from Receipt",
+      "totalLabel": "Total deductible",
+      "emptyState": "No deductions yet. Add your first business expense to get started.",
+      "noOwnerTaxYear": "Complete Tax IQ setup before adding deductions.",
+      "goToSetup": "Go to Tax IQ setup",
+      "filters": {
+        "statusLabel": "Status",
+        "categoryLabel": "Category",
+        "allStatuses": "All statuses",
+        "allCategories": "All categories"
+      },
+      "columns": {
+        "category": "Category",
+        "description": "Description",
+        "amount": "Amount",
+        "deductibleAmount": "Deductible",
+        "date": "Date",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "status": {
+        "draft": "Draft",
+        "ready": "Ready",
+        "missingReceipt": "Missing Receipt",
+        "missingInfo": "Missing Info",
+        "cpaReview": "CPA Review",
+        "locked": "Locked"
+      },
+      "aiStatus": {
+        "deductible": "Deductible",
+        "partiallyDeductible": "Partially Deductible",
+        "needsCpaReview": "Needs CPA Review",
+        "notDeductible": "Not Deductible"
+      },
+      "cpaReviewExplanation": "High-risk category submitted without a receipt — requires CPA review before it counts toward your total.",
+      "notDeductibleNotice": "Not deductible — excluded from your total and Year-End Export.",
+      "actions": {
+        "edit": "Edit",
+        "submit": "Submit",
+        "reanalyze": "Re-analyze with AI",
+        "approve": "Approve"
+      },
+      "aiDisclaimerFallback": "Tax IQ only assists with preparation — it does not replace a CPA.",
+      "errors": {
+        "generic": "Something went wrong. Please try again.",
+        "categoriesUnavailable": "Deduction categories are unavailable right now — please contact support.",
+        "lockedTitle": "Tax year is locked",
+        "lockedMessage": "This tax year is locked. Go to Year-End Export to submit changes as an adjustment.",
+        "lockedAction": "Go to Year-End Export"
+      },
+      "wizard": {
+        "title": "Add Deduction",
+        "back": "Back",
+        "next": "Next",
+        "saveAsDraft": "Save as Draft",
+        "submit": "Submit",
+        "submitting": "Submitting...",
+        "done": "Done",
+        "step1": {
+          "title": "Expense details",
+          "categoryLabel": "Category",
+          "categoryPlaceholder": "Select a category",
+          "descriptionLabel": "Description",
+          "amountLabel": "Amount",
+          "dateLabel": "Date",
+          "vendorLabel": "Vendor (optional)",
+          "categoryRequired": "Category is required.",
+          "descriptionRequired": "Description is required.",
+          "amountRequired": "Amount must be greater than zero.",
+          "dateRequired": "Date is required."
+        },
+        "step2": {
+          "title": "Business use",
+          "businessUsePercentLabel": "Business-use %",
+          "computedDeductibleLabel": "Deductible amount"
+        },
+        "step3": {
+          "title": "Receipt",
+          "description": "Attach a receipt for this expense, or skip and add one later.",
+          "chooseFile": "Choose file",
+          "uploading": "Uploading...",
+          "uploadSuccess": "Receipt attached.",
+          "uploadError": "Could not upload receipt. Please try again.",
+          "receiptAttached": "{{count}} receipt(s) attached",
+          "skipNotice": "You can skip this step and add a receipt later."
+        },
+        "step4": {
+          "title": "Review & Save",
+          "reviewCategory": "Category",
+          "reviewDescription": "Description",
+          "reviewAmount": "Amount",
+          "reviewDate": "Date",
+          "reviewVendor": "Vendor",
+          "reviewBusinessUsePercent": "Business-use %",
+          "reviewReceipt": "Receipt",
+          "receiptYes": "Attached",
+          "receiptNo": "None",
+          "disclaimer": "Tax IQ only assists with preparation — it does not replace a CPA."
+        },
+        "step5": {
+          "title": "AI Review",
+          "analyzing": "Evaluating your deduction..."
+        }
+      },
+      "receiptWizard": {
+        "title": "Add from Receipt",
+        "upload": {
+          "title": "Upload receipt",
+          "description": "Upload a photo of your receipt — AI will find every line item for you to review.",
+          "chooseFile": "Choose file",
+          "analyzing": "Analyzing receipt...",
+          "error": "Could not analyze this receipt. Please try again."
+        },
+        "review": {
+          "title": "Review items",
+          "vendorLabel": "Vendor",
+          "dateLabel": "Date",
+          "truncatedNotice": "Only the first 10 items were extracted from this receipt.",
+          "categoryPlaceholder": "Select a category",
+          "aiGuessHint": "AI guess: \"{{category}}\" (no match — please choose)",
+          "categoryRequired": "Category is required.",
+          "amountRequired": "Amount must be greater than zero.",
+          "businessUsePercentRequired": "Business-use % is required for this category.",
+          "confirmButton": "Confirm",
+          "confirming": "Confirming...",
+          "noItemsKept": "Select at least one item to continue."
+        },
+        "result": {
+          "title": "Results"
+        }
+      }
+    }
   }
 }

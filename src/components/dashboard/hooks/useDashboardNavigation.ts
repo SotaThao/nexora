@@ -12,6 +12,7 @@ export function useDashboardNavigation() {
   const [isTipsMobileExpanded, setIsTipsMobileExpanded] = useState(activeMenu === 'tips')
   const [touchpointsTab, setTouchpointsTab] = useState('stations')
   const [isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded] = useState(activeMenu === 'touchpoints')
+  const [isTaxIqMobileExpanded, setIsTaxIqMobileExpanded] = useState(activeMenu === 'taxiq')
   const [settingsTab, setSettingsTab] = useState('profile')
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
 
@@ -19,13 +20,19 @@ export function useDashboardNavigation() {
     if (activeMenu === 'tips') {
       setIsTipsMobileExpanded(true)
       setIsTouchpointsMobileExpanded(false)
+      setIsTaxIqMobileExpanded(false)
     } else if (activeMenu === 'touchpoints') {
       setIsTouchpointsMobileExpanded(true)
       setIsTipsMobileExpanded(false)
+      setIsTaxIqMobileExpanded(false)
       const tab = new URLSearchParams(location.search).get('tab')
       if (tab === 'stations' || tab === 'devices') {
         setTouchpointsTab(tab)
       }
+    } else if (activeMenu === 'taxiq') {
+      setIsTaxIqMobileExpanded(true)
+      setIsTipsMobileExpanded(false)
+      setIsTouchpointsMobileExpanded(false)
     }
   }, [activeMenu, location.search])
 
@@ -47,6 +54,7 @@ export function useDashboardNavigation() {
     isTipsMobileExpanded, setIsTipsMobileExpanded,
     touchpointsTab, setTouchpointsTab,
     isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded,
+    isTaxIqMobileExpanded, setIsTaxIqMobileExpanded,
     settingsTab, setSettingsTab,
     isProfileExpanded, setIsProfileExpanded,
     handleNavigateMenu, navigateMenu

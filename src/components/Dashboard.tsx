@@ -72,6 +72,7 @@ export default function Dashboard({
     isTipsMobileExpanded, setIsTipsMobileExpanded,
     touchpointsTab, setTouchpointsTab,
     isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded,
+    isTaxIqMobileExpanded, setIsTaxIqMobileExpanded,
     settingsTab, setSettingsTab,
     isProfileExpanded, setIsProfileExpanded,
     handleNavigateMenu, navigateMenu
@@ -733,6 +734,8 @@ export default function Dashboard({
         setIsTipsMobileExpanded={setIsTipsMobileExpanded}
         isTouchpointsMobileExpanded={isTouchpointsMobileExpanded}
         setIsTouchpointsMobileExpanded={setIsTouchpointsMobileExpanded}
+        isTaxIqMobileExpanded={isTaxIqMobileExpanded}
+        setIsTaxIqMobileExpanded={setIsTaxIqMobileExpanded}
         hasKyb={hasKyb}
         userRole={userRole}
         onLogout={onLogout}

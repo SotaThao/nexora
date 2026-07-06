@@ -1,12 +1,14 @@
 // DashboardSidebar — left nav: brand, profile card, plan card, menu w/ tips & touchpoints sub-tabs.
 // Extracted from Dashboard.jsx (Group 2 refactor).
 import React, { useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { visibleMenuItems, PUBLIC_HOME_MENU_ITEM } from '../constants'
+import { visibleMenuItems, PUBLIC_HOME_MENU_ITEM, TAXIQ_MENU_CHILD_MODULE } from '../constants'
 import MenuIcon from '../../ui/MenuIcon'
 import { getSubscriptionSidebarCopy } from '../../../utils/subscriptionDisplay'
+import { useMerchantSetup } from '../../../data/hooks/useMerchantSetup'
+import { useOwnerTaxYearByBusiness } from '../../../data/hooks/useTaxiqOwnerTaxYear'
 
 export default function DashboardSidebar({
   activeMenu,
@@ -30,12 +32,22 @@ export default function DashboardSidebar({
 }) {
   const { currentLanguage, setLanguage, t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
   const [searchParams] = useSearchParams()
   // Sub-tabs are URL-driven (?tab=) so the sidebar highlight stays in sync with
   // the rendered route content (TipsRoute / TouchpointsRoute read the same param).
   const activeSubTab = searchParams.get('tab')
+  // Tax IQ sub-items are real routes (/dashboard/taxiq/<id>), not a ?tab= param.
+  const activeTaxIqSubTab = location.pathname.split('/')[3] || null
   const [isTipsExpanded, setIsTipsExpanded] = useState(activeMenu === 'tips')
   const [isTouchpointsExpanded, setIsTouchpointsExpanded] = useState(activeMenu === 'touchpoints')
+  const [isTaxIqExpanded, setIsTaxIqExpanded] = useState(activeMenu === 'taxiq')
+  // Module-gated Tax IQ sub-items: shares the TanStack Query cache with the
+  // /dashboard/taxiq route itself, so this fires no extra network request.
+  const { data: merchantSetupData } = useMerchantSetup({ enabled: userRole !== 'staff' })
+  const taxiqBusinessId = merchantSetupData?.businessInfo?.businessId
+  const { data: ownerTaxYearPage } = useOwnerTaxYearByBusiness(taxiqBusinessId, new Date().getFullYear())
+  const enabledTaxiqModules = ownerTaxYearPage?.items?.[0]?.enabledModules
   const subscriptionCopy = getSubscriptionSidebarCopy(
     subscription ?? profile?.subscription,
     t,
@@ -46,9 +58,15 @@ export default function DashboardSidebar({
     if (activeMenu === 'tips') {
       setIsTipsExpanded(true)
       setIsTouchpointsExpanded(false)
+      setIsTaxIqExpanded(false)
     } else if (activeMenu === 'touchpoints') {
       setIsTouchpointsExpanded(true)
       setIsTipsExpanded(false)
+      setIsTaxIqExpanded(false)
+    } else if (activeMenu === 'taxiq') {
+      setIsTaxIqExpanded(true)
+      setIsTipsExpanded(false)
+      setIsTouchpointsExpanded(false)
     }
   }, [activeMenu])
 
@@ -176,6 +194,7 @@ export default function DashboardSidebar({
             reports: t('dashboard.menu.transactions'),
             touchpoints: t('dashboard.menu.touchpoints'),
             devices: t('dashboard.menu.qr_nfc'),
+            taxiq: t('dashboard.menu.tax_iq'),
             analytics: t('dashboard.menu.analytics'),
             support: t('dashboard.menu.support')
           }[id] || label
@@ -191,6 +210,9 @@ export default function DashboardSidebar({
                   if (id === 'touchpoints') {
                     setIsTouchpointsExpanded(!isTouchpointsExpanded)
                   }
+                  if (id === 'taxiq') {
+                    setIsTaxIqExpanded(!isTaxIqExpanded)
+                  }
                 }}
                 className={`flex h-12 w-full items-center justify-between rounded-lg px-4 text-left text-sm font-bold transition ${
                   isActive
@@ -202,11 +224,13 @@ export default function DashboardSidebar({
                   <MenuIcon item={item} active={isActive} />
                   <span className="truncate">{localizedLabel}</span>
                 </div>
-                {(id === 'tips' || id === 'touchpoints') && (
+                {(id === 'tips' || id === 'touchpoints' || id === 'taxiq') && (
                   <div className="text-white/50 shrink-0">
                     {id === 'tips'
                       ? (isTipsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)
-                      : (isTouchpointsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)
+                      : id === 'touchpoints'
+                        ? (isTouchpointsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)
+                        : (isTaxIqExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)
                     }
                   </div>
                 )}
@@ -254,6 +278,49 @@ export default function DashboardSidebar({
                         type="button"
                         onClick={() => {
                           navigate(`/dashboard/touchpoints?tab=${sub.id}`, { replace: true })
+                        }}
+                        className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
+                          isSubActive
+                            ? 'text-brandCyan font-extrabold'
+                            : 'text-white/75 hover:bg-white/5 hover:text-white'
+                        }`}
+                      >
+                        <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+                        <span>{sub.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+
+              {id === 'taxiq' && isTaxIqExpanded && (
+                <div className="ml-9 mt-1 space-y-1 border-l border-white/15 pl-3 animate-fadeIn">
+                  {[
+                    { id: 'onboarding', label: t('dashboard.menu.taxiq_onboarding') },
+                    { id: 'deductions', label: t('dashboard.menu.taxiq_deductions') },
+                    { id: 'receipts', label: t('dashboard.menu.taxiq_receipts') },
+                    { id: 'equipment', label: t('dashboard.menu.taxiq_equipment') },
+                    { id: 'payroll', label: t('dashboard.menu.taxiq_payroll') },
+                    { id: 'reminders', label: t('dashboard.menu.taxiq_reminders') },
+                    { id: 'cpa-access', label: t('dashboard.menu.taxiq_cpa_access') },
+                    { id: 'export', label: t('dashboard.menu.taxiq_export') }
+                  ].filter(sub => {
+                    // Fail-open (show all) before onboarding completes or while loading —
+                    // only hide once we positively know a module is disabled.
+                    const requiredModule = TAXIQ_MENU_CHILD_MODULE[sub.id]
+                    if (!requiredModule || !enabledTaxiqModules) return true
+                    return enabledTaxiqModules.includes(requiredModule)
+                  }).map(sub => {
+                    // 'onboarding' lives at /dashboard/taxiq itself (no extra segment),
+                    // so it's active whenever there's no deeper sub-route in the URL.
+                    const isSubActive = activeMenu === 'taxiq' &&
+                      (sub.id === 'onboarding' ? !activeTaxIqSubTab : activeTaxIqSubTab === sub.id)
+                    return (
+                      <button
+                        key={sub.id}
+                        type="button"
+                        onClick={() => {
+                          navigate(sub.id === 'onboarding' ? '/dashboard/taxiq' : `/dashboard/taxiq/${sub.id}`)
                         }}
                         className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
                           isSubActive

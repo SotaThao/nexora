@@ -11,7 +11,9 @@ import { useAuth } from '../auth/useAuth'
 import {
   OverviewRoute, StaffRoute, StaffDetailRoute, TouchpointsRoute,
   ReviewsRoute, TipsRoute, ReportsRoute, AnalyticsRoute,
-  SettingsRoute, SupportRoute, SubscriptionsRoute, FallbackRoute
+  SettingsRoute, SupportRoute, SubscriptionsRoute, FallbackRoute,
+  TaxIqOverviewRoute, TaxIqDeductionsRoute, TaxIqReceiptsRoute, TaxIqEquipmentRoute,
+  TaxIqPayrollRoute, TaxIqRemindersRoute, TaxIqCpaAccessRoute, TaxIqExportRoute
 } from '../components/dashboard/routes'
 
 const SetupWizard = lazy(() => import('../components/SetupWizard'))
@@ -117,6 +119,14 @@ export default function AppRouter() {
           <Route path="reviews" element={<ReviewsRoute />} />
           <Route path="reports" element={<ReportsRoute />} />
           <Route path="touchpoints" element={<TouchpointsRoute />} />
+          <Route path="taxiq" element={<TaxIqOverviewRoute />} />
+          <Route path="taxiq/deductions" element={<TaxIqDeductionsRoute />} />
+          <Route path="taxiq/receipts" element={<TaxIqReceiptsRoute />} />
+          <Route path="taxiq/equipment" element={<TaxIqEquipmentRoute />} />
+          <Route path="taxiq/payroll" element={<TaxIqPayrollRoute />} />
+          <Route path="taxiq/reminders" element={<TaxIqRemindersRoute />} />
+          <Route path="taxiq/cpa-access" element={<TaxIqCpaAccessRoute />} />
+          <Route path="taxiq/export" element={<TaxIqExportRoute />} />
           <Route path="analytics" element={<AnalyticsRoute />} />
           <Route path="settings" element={<SettingsRoute />} />
           <Route path="settings/:tab" element={<SettingsRoute />} />

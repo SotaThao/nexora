@@ -182,6 +182,15 @@ When changing one of these flows:
 - Use repository APIs for non-React contexts that cannot call hooks.
 - Hooks must only be called at the top level of React components or custom hooks.
 
+## Mobile-Responsive Modals & Dialogs
+
+Any new modal, dialog, drawer, or wizard component must handle these two mobile failure modes from the first implementation pass — do not wait for a bug report:
+
+- **Height overflow with variable-length content** (e.g. a list that can grow to N items). A `fixed inset-0 flex items-center justify-center` overlay with an unbounded-height card pushes content off-screen with no way to scroll. Fix: the card gets `flex max-h-[90vh] flex-col`; the scrollable body gets `flex-1 overflow-y-auto`; header/footer stay outside that scrollable div so they stay pinned. Prefer `dvh` over `vh` for the max-height, declared as a fallback pair in the *same* CSS rule (`max-height: 90vh; max-height: 90dvh;`, e.g. in a `.nexora-modal-card` component class in `index.css`) rather than as two competing Tailwind utility classes on one element — class order in the generated stylesheet is not reliable. Real mobile Safari/Chrome compute `100vh` against the address-bar-collapsed viewport, so `vh`-only sizing can clip content on initial load in a way that desktop-browser viewport-resize testing will never reproduce.
+- **Width truncation from fixed multi-column grids.** A `grid grid-cols-2` (or more) used to lay out form fields side-by-side (e.g. vendor/date, amount/category) truncates content at ~375px phone widths. Fix: default to `grid-cols-1` and only widen at `sm:` and up (`grid-cols-1 sm:grid-cols-2`).
+
+When testing such components, resize the browser (or Playwright viewport) to a phone width (e.g. 375×667) and take a screenshot as part of self-verification — `tsc`/`build` passing does not catch layout overflow.
+
 ## Security And Reliability
 
 - Never commit secrets, tokens, or environment-specific credentials.
