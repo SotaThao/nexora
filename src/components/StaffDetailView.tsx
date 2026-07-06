@@ -319,7 +319,7 @@ export default function StaffDetailView({
     return chartPoints
   }, [stats, usesApiStats, t, range, startDate, endDate, currentLanguage])
 
-  const { points: chartPoints, max: chartMax, width: chartWidth, height: chartHeight } = useMemo(
+  const { points: chartPoints, max: chartMax, ticks: chartYTicks, width: chartWidth, height: chartHeight } = useMemo(
     () => buildChartPoints(chartData),
     [chartData],
   )
@@ -328,10 +328,6 @@ export default function StaffDetailView({
     if (chartPoints.length === 0) return ''
     return `${chartLinePath} L ${chartPoints[chartPoints.length - 1].x} ${chartHeight} L ${chartPoints[0].x} ${chartHeight} Z`
   }, [chartLinePath, chartPoints, chartHeight])
-  const chartYTicks = useMemo(
-    () => [chartMax, Math.round(chartMax * 0.75), Math.round(chartMax * 0.5), Math.round(chartMax * 0.25), 0],
-    [chartMax],
-  )
 
   if (!staffMember) {
     return (

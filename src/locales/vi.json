@@ -545,6 +545,8 @@
       "total_reviews": "Tổng Đánh Giá",
       "vs_last_week": "so với tuần trước",
       "no_comparison": "Chưa có dữ liệu",
+      "based_on_period": "Theo kỳ đã chọn",
+      "this_week": "tuần này",
       "scans": "Lượt Quét QR/NFC",
       "reviews": "Lượt Đánh Giá",
       "avg_rating": "Đánh Giá Trung Bình",
@@ -2112,10 +2114,13 @@
           "dateNewest": "Ngày: Mới nhất",
           "dateOldest": "Ngày: Cũ nhất",
           "statusActive": "Trạng thái hoạt động",
+          "statusTooltip": "Nhân viên đang hoạt động sẽ hiển thị trên trang QR của tiệm. Nhân viên không hoạt động sẽ bị ẩn khỏi khách hàng.",
           "clickPillToToggle": "Nhấp vào chip để đổi trạng thái hoạt động",
           "tipsFlow": "Cho phép Tip",
+          "tipsFlowTooltip": "Khi tắt, nhân viên này sẽ không xuất hiện trong luồng tip của khách hàng.",
           "clickPillToShow": "Nhấp vào chip để ẩn/hiển thị thợ trên QR tiệm",
           "linkedDate": "Ngày liên kết: ",
+          "col_linked_date": "Ngày liên kết",
           "noWallets": "Không có ví",
           "pendingSetup": "Chờ setup",
           "pendingAcceptance": "Chờ chấp nhận",
@@ -2130,7 +2135,11 @@
           "inviteLinkLoading": "Đang tải link mời...",
           "inviteLinkDisabled": "Public invite link chưa bật trong Merchant Settings.",
           "scanToJoinAlt": "Quét để gia nhập",
-          "preview": "Xem trước"
+          "preview": "Xem trước",
+          "manage_edit_profile": "Sửa hồ sơ",
+          "manage_view_qr": "Xem mã QR",
+          "manage_preview_customer": "Xem trước góc nhìn khách hàng",
+          "manage_remove_staff": "Xóa nhân viên"
         }
       }
     },

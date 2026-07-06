@@ -545,6 +545,8 @@
       "total_reviews": "Total Reviews",
       "vs_last_week": "vs last week",
       "no_comparison": "No data yet",
+      "based_on_period": "Based on this period",
+      "this_week": "this week",
       "scans": "QR/NFC Scans",
       "reviews": "Reviews",
       "avg_rating": "Average Star Rating",
@@ -2112,10 +2114,13 @@
           "dateNewest": "Date: Newest",
           "dateOldest": "Date: Oldest",
           "statusActive": "Status: Active",
+          "statusTooltip": "Active staff appear on the salon QR page. Inactive staff are hidden from customers.",
           "clickPillToToggle": "Click pill to toggle active status",
           "tipsFlow": "Tips Enabled",
+          "tipsFlowTooltip": "When disabled, this staff member won't appear in the customer tipping flow.",
           "clickPillToShow": "Click pill to show/hide tech on general QR",
           "linkedDate": "Linked Date: ",
+          "col_linked_date": "Linked Date",
           "noWallets": "No wallets",
           "pendingSetup": "Pending Setup",
           "pendingAcceptance": "Pending Acceptance",
@@ -2130,7 +2135,11 @@
           "inviteLinkLoading": "Loading invite link...",
           "inviteLinkDisabled": "Public invite link is disabled in Merchant Settings.",
           "scanToJoinAlt": "Scan to Join",
-          "preview": "Preview"
+          "preview": "Preview",
+          "manage_edit_profile": "Edit Profile",
+          "manage_view_qr": "View QR Code",
+          "manage_preview_customer": "Preview Customer View",
+          "manage_remove_staff": "Remove Staff"
         }
       }
     },

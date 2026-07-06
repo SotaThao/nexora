@@ -8,7 +8,7 @@ import { downloadQrCode } from '../../../utils/qrUtils'
 import { buildQrImageUrl, toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
 import { buildMasterQrTarget, formatCurrency, isAwaitingShopConfirmation, resolveMasterTouchpoint } from '../utils'
 import Panel from '../../ui/Panel'
-import KpiCard from '../../ui/KpiCard'
+import KpiCard, { NO_DELTA_FALLBACK } from '../../ui/KpiCard'
 import { SkeletonKpiCard } from '../../ui/skeleton'
 import Skeleton from '../../ui/skeleton/Skeleton'
 import TipsOverTimePanel from './TipsOverTimePanel'
@@ -135,6 +135,7 @@ function Overview({
   isTouchpointsLoading = false,
   reviewsPage = null,
   isReviewsPending = false,
+  reviewsThisWeekCount = null,
 }) {
   const { currentLanguage, t } = useTranslation()
   const { showToast } = useNotification()
@@ -418,6 +419,7 @@ function Overview({
               label={t('dashboard.kpi.total_transactions')}
               value={metrics.totalTransactions.toString()}
               deltaPercent={kpiDeltas?.totalTransactions ?? null}
+              noDeltaFallback={NO_DELTA_FALLBACK.ZERO_VS_LAST_WEEK}
               active={activeKpi === 'transactions'}
               onClick={() => setActiveKpi('transactions')}
             />
@@ -425,6 +427,7 @@ function Overview({
               label={t('dashboard.kpi.avg_tip')}
               value={formatCurrency(metrics.averageTip)}
               deltaPercent={kpiDeltas?.averageTip ?? null}
+              noDeltaFallback={NO_DELTA_FALLBACK.PERIOD_NOTE}
               active={activeKpi === 'avg_tip'}
               onClick={() => setActiveKpi('avg_tip')}
             />
@@ -432,6 +435,8 @@ function Overview({
               label={t('dashboard.kpi.total_reviews')}
               value={reviewsSummary.totalCount.toString()}
               deltaPercent={kpiDeltas?.totalReviews ?? null}
+              noDeltaFallback={NO_DELTA_FALLBACK.WEEKLY_COUNT}
+              weeklyCount={reviewsThisWeekCount ?? 0}
               active={activeKpi === 'reviews'}
               onClick={() => setActiveKpi('reviews')}
             />
@@ -440,7 +445,7 @@ function Overview({
       </div>
 
       {/* Panels Grid */}
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(340px,1fr)]">
+      <div className="grid grid-cols-1 gap-6 2xl:grid-cols-[minmax(0,2fr)_minmax(360px,1fr)]">
         <TipsOverTimePanel
           range={chartRange}
           setRange={setChartRange}
