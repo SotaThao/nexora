@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { X, Upload, Eye, AlertTriangle, QrCode, Loader2, CheckCircle2, XCircle, Star, HelpCircle, Plus } from 'lucide-react'
+import { X, Upload, Eye, AlertTriangle, QrCode, Loader2, CheckCircle2, XCircle, Star, HelpCircle } from 'lucide-react'
 import IconButton from '../../ui/IconButton'
 import ImageFileInput from '../../ui/ImageFileInput'
 import CountryCodeSelect, { parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
@@ -15,20 +15,19 @@ import {
   useToggleLocalStaffPaymentMethod,
   useUpdateLocalStaffPaymentMethod,
 } from '../../../data/hooks/useLocalStaff'
-import { PAYOUT_UI_LABELS, payoutTypeToUiKey } from '../../../data/paymentMethodTypes'
+import { payoutTypeToUiKey } from '../../../data/paymentMethodTypes'
 import { getApiErrorCode } from '../../../types/domain'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { buildStaffReviewSummary } from './staffModalReviewUtils'
 
-const LOCAL_STAFF_WALLET_KEYS = [
-  'zelle',
-  'cashapp',
-  'venmo',
-  'vlinkpay',
-  'applecash',
-  'paypal',
-  'bankwire',
-] as const
+const STAFF_MODAL_WALLETS = [
+  { name: 'Zelle', key: 'zelle' },
+  { name: 'Bank Wire', key: 'bankwire' },
+  { name: 'PayPal', key: 'paypal' },
+  { name: 'Venmo', key: 'venmo' },
+  { name: 'Cash App', key: 'cashapp' },
+  { name: 'Apple Cash', key: 'applecash' },
+].filter((wallet) => wallet.key !== 'bankwire')
 
 function StaffModal({
   open,
@@ -66,6 +65,7 @@ function StaffModal({
 
   const isLocalStaff = Boolean(form?.isLocalStaff)
   const isReviewOnly = (isApproveMode || viewOnly) && !isLocalStaff
+  const isIdReadOnly = isReviewOnly || isLocalStaff
 
   const [idInput, setIdInput] = useState(() =>
     isReviewOnly ? (form.nexoraStaffId || form.vlinkpay || '') : (form.vlinkpay || form.nexoraStaffId || ''),
@@ -213,7 +213,6 @@ function StaffModal({
     : Number(staffStats?.allTime?.totalReviews ?? staffStats?.period?.totalReviews ?? form?.tipCount ?? 0)
 
   const phoneParsed = parsePhone(form?.phone || '')
-  const canEditLocalContact = isLocalStaff && !isReviewOnly
 
   const handleAvatarPick = (dataUrl: string) => {
     if (!dataUrl) return
@@ -222,22 +221,6 @@ function StaffModal({
 
   const handleAvatarFilePick = (file: File) => {
     setForm((prev) => ({ ...prev, avatarFile: file }))
-  }
-
-  const handleToggleWallet = (walletKey: string) => {
-    if (!isLocalStaff) return
-    const method = localPaymentMethodsByKey.get(walletKey)
-    if (!method?.id || !staffProfileId) return
-
-    if (!method.isActive && !method.accountInfo?.trim()) {
-      openPayoutSetup(walletKey)
-      return
-    }
-
-    toggleLocalPaymentMutation.mutate(
-      { staffProfileId, paymentMethodId: method.id },
-      { onError: showLocalPaymentError },
-    )
   }
 
   const openPayoutSetup = (walletKey: string) => {
@@ -383,9 +366,7 @@ function StaffModal({
           <h2 className="text-lg font-extrabold text-nexoraText">
             {isApproveMode
               ? (t('components.dashboard.modals.StaffModal.reviewJoinRequest'))
-              : isLocalStaff
-                ? t('components.dashboard.modals.StaffModal.editLocalStaff')
-                : (viewOnly ? t('common.view_detail') : (editing ? t('common.edit') : t('setup.add_staff_title')))}
+              : (viewOnly ? t('common.view_detail') : (editing ? t('common.edit') : t('setup.add_staff_title')))}
           </h2>
           <IconButton label={t('common.close')} onClick={onClose}>
             <X className="h-4 w-4" />
@@ -395,7 +376,6 @@ function StaffModal({
           {/* Left Column: Basic Info & ID Verification */}
           <div className="space-y-4">
             {/* Staff ID / VLINKPAY ID Section */}
-            {!isLocalStaff && (
             <div>
               <label className="text-[10px] font-extrabold uppercase text-nexoraMuted block">
                 {t('components.dashboard.modals.StaffModal.nexoraIdVlinkpayId')}
@@ -409,14 +389,14 @@ function StaffModal({
                   </span>
                   <input
                     className={`h-10 w-full rounded-lg border pl-[76px] pr-10 text-sm outline-none font-semibold font-mono transition-all ${
-                      isReviewOnly ? 'border-nexoraBorder bg-nexoraCanvas cursor-default' :
+                      isIdReadOnly ? 'border-nexoraBorder bg-nexoraCanvas cursor-default' :
                       (vlinkpayStatus === 'success' || nexoraStatus === 'success') ? 'border-nexoraSuccess focus:border-nexoraSuccess focus:ring-1 focus:ring-nexoraSuccess/20' :
                       (vlinkpayStatus === 'error' && nexoraStatus === 'error') ? 'border-nexoraDanger focus:border-nexoraDanger focus:ring-1 focus:ring-nexoraDanger/20 animate-shake' :
                       (vlinkpayStatus === 'checking' || nexoraStatus === 'checking') ? 'border-nexoraWarning focus:border-nexoraWarning' :
                       'border-nexoraBorder focus:border-nexoraBrand'
                     }`}
                     value={idInput}
-                    readOnly={isReviewOnly}
+                    readOnly={isIdReadOnly}
                     onChange={(event) => handleCombinedIdChange(event.target.value)}
                     placeholder={t('components.dashboard.modals.StaffModal.phExampleVlp1')}
                   />
@@ -435,7 +415,7 @@ function StaffModal({
                     value={form.nexoraStaffId || ''}
                     readOnly
                   />
-                  {!isReviewOnly && (
+                  {!isReviewOnly && !isLocalStaff && (
                     <>
                       <div className="absolute right-9 top-1/2 -translate-y-1/2 flex items-center gap-1">
                         {(vlinkpayStatus === 'checking' || nexoraStatus === 'checking') && (
@@ -473,7 +453,7 @@ function StaffModal({
                   )}
                 </div>
 
-                {!isReviewOnly && (
+                {!isReviewOnly && !isLocalStaff && (
                   <button
                     type="button"
                     onClick={() => onOpenInviteShare && onOpenInviteShare(form)}
@@ -491,13 +471,6 @@ function StaffModal({
                 </p>
               )}
             </div>
-            )}
-
-            {isLocalStaff && form.staffCode && (
-              <div className="rounded-lg border border-indigo-100 bg-indigo-50/60 px-3 py-2 text-xs font-semibold text-indigo-700">
-                {t('components.dashboard.modals.StaffModal.localStaffBadge')} · {t('components.dashboard.modals.AddStaffModal.staff_id_label', { code: form.staffCode })}
-              </div>
-            )}
 
             {/* Avatar */}
             <div>
@@ -601,26 +574,26 @@ function StaffModal({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="min-w-0">
                 <label className="flex h-4 items-center text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_phone')}</label>
-                <div className={`mt-1 flex h-10 w-full overflow-hidden rounded-lg shadow-sm ${canEditLocalContact ? '' : 'opacity-70 pointer-events-none'}`}>
+                <div className={`mt-1 flex h-10 w-full overflow-hidden rounded-lg shadow-sm ${isReviewOnly ? 'opacity-70 pointer-events-none' : ''}`}>
                   <CountryCodeSelect
                     value={phoneParsed.countryCode}
-                    disabled={!canEditLocalContact}
+                    disabled={isReviewOnly}
                     onChange={(nextCode) => {
-                      if (!canEditLocalContact) return
+                      if (isReviewOnly) return
                       const digits = phoneParsed.nationalNumber.replace(/\D/g, '')
                       setForm((prev) => ({ ...prev, phone: digits ? `${nextCode}${digits}` : '' }))
                     }}
                   />
                   <input
                     className={`h-10 w-full min-w-0 rounded-r-lg border border-l-0 px-3 text-sm font-semibold text-nexoraText outline-none transition ${
-                      canEditLocalContact
-                        ? 'border-nexoraBorder bg-white focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20'
-                        : 'border-nexoraBorder bg-nexoraCanvas'
+                      isReviewOnly
+                        ? 'border-nexoraBorder bg-nexoraCanvas'
+                        : 'border-nexoraBorder bg-white focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20'
                     }`}
                     value={formatNationalNumber(phoneParsed.nationalNumber, phoneParsed.countryCode)}
-                    readOnly={!canEditLocalContact}
+                    readOnly={isReviewOnly}
                     onChange={(event) => {
-                      if (!canEditLocalContact) return
+                      if (isReviewOnly) return
                       const formatted = formatNationalNumber(event.target.value, phoneParsed.countryCode)
                       const digits = formatted.replace(/\D/g, '')
                       setForm((prev) => ({
@@ -637,14 +610,14 @@ function StaffModal({
                 <label className="flex h-4 items-center text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_email')}</label>
                 <input
                   className={`mt-1 h-10 w-full rounded-lg border px-3 text-sm font-semibold text-nexoraText outline-none transition ${
-                    canEditLocalContact
-                      ? 'border-nexoraBorder bg-white focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20'
-                      : 'border-nexoraBorder bg-nexoraCanvas cursor-not-allowed'
+                    isReviewOnly
+                      ? 'border-nexoraBorder bg-nexoraCanvas cursor-not-allowed'
+                      : 'border-nexoraBorder bg-white focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20'
                   }`}
                   value={form.email || ''}
-                  readOnly={!canEditLocalContact}
+                  readOnly={isReviewOnly}
                   onChange={(event) => {
-                    if (!canEditLocalContact) return
+                    if (isReviewOnly) return
                     setForm((prev) => ({ ...prev, email: event.target.value }))
                   }}
                   placeholder={t('setup.staff_email_placeholder')}
@@ -660,17 +633,7 @@ function StaffModal({
               <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.payout_methods')}</label>
               <div className="mt-2 space-y-4">
                 <div className="divide-y divide-nexoraRule rounded-xl border border-nexoraBorder bg-white px-4">
-                  {(isLocalStaff
-                    ? LOCAL_STAFF_WALLET_KEYS.map((key) => ({ key, name: PAYOUT_UI_LABELS[key] || key }))
-                    : [
-                        { name: 'Zelle', key: 'zelle' },
-                        { name: 'Bank Wire', key: 'bankwire' },
-                        { name: 'PayPal', key: 'paypal' },
-                        { name: 'Venmo', key: 'venmo' },
-                        { name: 'Cash App', key: 'cashapp' },
-                        { name: 'Apple Cash', key: 'applecash' },
-                      ].filter((wallet) => wallet.key !== 'bankwire')
-                  ).map((wallet) => {
+                  {STAFF_MODAL_WALLETS.map((wallet) => {
                     const localMethod = isLocalStaff ? localPaymentMethodsByKey.get(wallet.key) : null
                     const config = isLocalStaff
                       ? {
@@ -685,11 +648,10 @@ function StaffModal({
                         <div className="flex items-center gap-3 min-w-0">
                           <button
                             type="button"
-                            disabled={!isLocalStaff || isLocalPaymentSaving}
-                            onClick={() => isLocalStaff && handleToggleWallet(wallet.key)}
+                            disabled
                             className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                               config.enabled ? 'bg-nexoraBrand' : 'bg-nexoraBorder'
-                            } ${isLocalStaff ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                            } cursor-not-allowed`}
                           >
                             <span
                               className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
@@ -715,23 +677,10 @@ function StaffModal({
                           type="button"
                           onClick={() => openPayoutSetup(wallet.key)}
                           disabled={isLocalStaff && isLocalPaymentSaving}
-                          className={`flex items-center gap-1.5 text-[11px] font-bold transition ${
-                            isLocalStaff
-                              ? 'text-nexoraBrand hover:text-nexoraBrandDark'
-                              : 'text-nexoraMuted hover:text-nexoraText'
-                          }`}
+                          className="flex items-center gap-1.5 text-[11px] font-bold text-nexoraMuted transition hover:text-nexoraText"
                         >
-                          {isLocalStaff ? (
-                            <>
-                              <Plus className="h-3 w-3 stroke-[2.5]" />
-                              <span>{t('components.dashboard.modals.AddStaffModal.manual_add_account')}</span>
-                            </>
-                          ) : (
-                            <>
-                              <Eye className="h-3.5 w-3.5" />
-                              <span>{t('components.dashboard.modals.StaffModal.viewAccount')}</span>
-                            </>
-                          )}
+                          <Eye className="h-3.5 w-3.5" />
+                          <span>{t('components.dashboard.modals.StaffModal.viewAccount')}</span>
                         </button>
                       </div>
                     )
@@ -763,11 +712,6 @@ function StaffModal({
                   />
                 </button>
               </div>
-              {isLocalStaff && !form.isProfileComplete && (
-                <p className="text-[10px] text-amber-700 font-semibold mt-2 leading-relaxed">
-                  {t('components.dashboard.modals.StaffModal.localStaffTipsHint')}
-                </p>
-              )}
             </div>
             )}
           </div>

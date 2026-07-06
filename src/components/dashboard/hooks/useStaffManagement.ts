@@ -34,15 +34,54 @@ function resolveStaffDetailCode(member: { staffCode?: string | null }) {
   return code || null
 }
 
+function pickNonEmptyString(...values: unknown[]): string {
+  for (const value of values) {
+    const trimmed = String(value ?? '').trim()
+    if (trimmed) return trimmed
+  }
+  return ''
+}
+
+function resolveStaffFormNames(member) {
+  const fullName = pickNonEmptyString(member?.fullName)
+  const nickname = pickNonEmptyString(member?.nickname, member?.displayName)
+  return { fullName, nickname }
+}
+
+/** Prefer detail API fields; fall back to staff list row for phone/email and other profile gaps. */
+function mergeStaffModalMember(detail, listMember) {
+  const list = listMember ? normaliseMember(listMember) : null
+  if (!detail) return list ?? {}
+
+  return {
+    ...detail,
+    ...resolveStaffFormNames({ ...list, ...detail }),
+    position: pickNonEmptyString(detail.position, list?.position),
+    avatar: pickNonEmptyString(detail.avatar, list?.avatar),
+    phone: pickNonEmptyString(detail.phone, list?.phone),
+    email: pickNonEmptyString(detail.email, list?.email),
+    bio: pickNonEmptyString(detail.bio, list?.bio),
+    staffCode: detail.staffCode ?? list?.staffCode ?? '',
+    staffProfileId: detail.staffProfileId ?? list?.staffProfileId ?? '',
+    averageRating: detail.averageRating ?? list?.averageRating ?? 0,
+    showInTipsFlow: detail.showInTipsFlow ?? list?.showInTipsFlow ?? true,
+    isLocalStaff: detail.isLocalStaff ?? list?.isLocalStaff ?? false,
+    isProfileComplete: detail.isProfileComplete ?? list?.isProfileComplete ?? false,
+    payoutConfigs: detail.payoutConfigs || list?.payoutConfigs || getPayoutConfigsFromMember(detail),
+    paymentAccounts: detail.paymentAccounts || list?.paymentAccounts,
+  }
+}
+
 /**
  * Normalise a raw staff-list member into the shape the dashboard uses.
  * Shared by the useState initialiser and the Dashboard seeding effects.
  */
 export function normaliseMember(member) {
+  const { fullName, nickname } = resolveStaffFormNames(member)
   return {
     id: member.id,
-    fullName: member.fullName,
-    nickname: member.nickname,
+    fullName,
+    nickname,
     position: member.position,
     avatar: member.avatar || '',
     phone: member.phone || member.invitedPhone || '',
@@ -184,14 +223,15 @@ export function useStaffManagement({
     setApprovingStaffMember(member)
     setFetchStaffStatsInModal(true)
     setViewingStaffCode(resolveStaffDetailCode(member))
+    const { fullName, nickname } = resolveStaffFormNames(member)
     setStaffForm({
-      fullName: member.fullName,
-      nickname: member.nickname || member.fullName?.split(' ')[0] || '',
+      fullName,
+      nickname,
       position: member.position,
       avatar: member.avatar || '',
       avatarFile: null,
-      phone: member.phone || '',
-      email: member.email || '',
+      phone: member.phone || member.invitedPhone || '',
+      email: member.email || member.invitedEmail || '',
       venmo: member.paymentAccounts?.venmo || '',
       cashapp: member.paymentAccounts?.cashapp || '',
       zelle: member.paymentAccounts?.zelle || '',
@@ -207,14 +247,15 @@ export function useStaffManagement({
   }
 
   const populateStaffForm = (member) => {
+    const { fullName, nickname } = resolveStaffFormNames(member)
     setStaffForm({
-      fullName: member.fullName,
-      nickname: member.nickname || member.fullName?.split(' ')[0] || '',
+      fullName,
+      nickname,
       position: member.position,
       avatar: member.avatar || '',
       avatarFile: null,
-      phone: member.phone || '',
-      email: member.email || '',
+      phone: member.phone || member.invitedPhone || '',
+      email: member.email || member.invitedEmail || '',
       bio: member.bio || '',
       venmo: member.paymentAccounts?.venmo || '',
       cashapp: member.paymentAccounts?.cashapp || '',
@@ -675,8 +716,9 @@ export function useStaffManagement({
 
   useEffect(() => {
     if ((!isStaffModalOpen && !isApproveModalOpen) || !staffDetail) return
-    populateStaffForm(staffDetail)
-  }, [isStaffModalOpen, isApproveModalOpen, staffDetail])
+    const member = staff.find((item) => item.id === editingStaffId)
+    populateStaffForm(mergeStaffModalMember(staffDetail, member))
+  }, [isStaffModalOpen, isApproveModalOpen, staffDetail, staff, editingStaffId])
 
   useEffect(() => {
     if ((!isStaffModalOpen && !isApproveModalOpen) || !isStaffDetailError || !viewingStaffCode) return
@@ -690,6 +732,10 @@ export function useStaffManagement({
     setStaffForm((prev) => ({
       ...prev,
       showInTipsFlow: member.showInTipsFlow !== false,
+      isLocalStaff: prev.isLocalStaff || member.isLocalStaff || false,
+      isProfileComplete: prev.isProfileComplete ?? member.isProfileComplete ?? false,
+      phone: pickNonEmptyString(prev.phone, member.phone, member.invitedPhone),
+      email: pickNonEmptyString(prev.email, member.email, member.invitedEmail),
     }))
   }, [staff, editingStaffId, isStaffModalOpen])
 

@@ -122,7 +122,7 @@ function StaffMemberCard({
             )}
             <div className="min-w-0">
               <p className="font-extrabold text-nexoraText truncate group-hover:text-nexoraBrand transition">
-                {member.fullName}
+                {member.nickname || member.fullName}
               </p>
               <p className="text-xs text-nexoraMuted truncate">{member.position}</p>
             </div>
@@ -608,7 +608,7 @@ function StaffView({
                             </div>
                           )}
                           <div>
-                            <div className="font-extrabold text-nexoraText">{member.fullName}</div>
+                            <div className="font-extrabold text-nexoraText">{member.nickname || member.fullName}</div>
                             <div className="text-xs text-nexoraMuted">{member.position}</div>
                           </div>
                         </div>

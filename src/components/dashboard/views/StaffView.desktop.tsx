@@ -301,7 +301,7 @@ function StaffView({
                             </div>
                           )}
                           <div>
-                            <div className="font-extrabold text-nexoraText">{member.fullName}</div>
+                            <div className="font-extrabold text-nexoraText">{member.nickname || member.fullName}</div>
                             <div className="text-xs text-nexoraMuted">{member.position}</div>
                           </div>
                         </div>
@@ -462,7 +462,7 @@ function StaffView({
                           </div>
                         )}
                         <div>
-                          <div className="font-extrabold text-nexoraText group-hover:text-nexoraBrand transition">{member.fullName}</div>
+                          <div className="font-extrabold text-nexoraText group-hover:text-nexoraBrand transition">{member.nickname || member.fullName}</div>
                           <div className="text-xs text-nexoraMuted">{member.position}</div>
                         </div>
                       </div>
