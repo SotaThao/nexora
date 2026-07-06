@@ -2,18 +2,9 @@
  * Auth header sync for homepage — used by HomePageBridgeProvider.
  * Plan CTA routing for pricing / consulting buttons.
  */
-import { getStoredAppLanguage } from '../../utils/appLanguage'
 import type { AuthSession } from '../../types/auth'
 
 type AuthStatus = 'loading' | 'authenticated' | 'anonymous'
-
-export function dashboardPathForSession(session: AuthSession): string {
-  const isStaffSession =
-    session.flag === '!personal' ||
-    session.role === 'personal' ||
-    session.role === 'staff'
-  return isStaffSession ? '/staff' : '/dashboard'
-}
 
 /** @deprecated Header auth UI is React-driven in HomePageHeaderSection. */
 export function syncHomePageAuthHeader(

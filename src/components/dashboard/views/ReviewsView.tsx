@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Star, ExternalLink, Lock, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { renderTextWithGoldStars } from '../utils'
+import { renderTextWithGoldStars, formatTransactionDateTime } from '../utils'
 import Panel from '../../ui/Panel'
 import CustomSelect from '../../CustomSelect'
 import Pagination from '../../ui/Pagination'
@@ -24,7 +24,7 @@ function ReviewsView({
   hasPreviousPage = false,
   onPageChange = () => {},
 }) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const [sourceFilter, setSourceFilter] = useState('all')
   const [starFilter, setStarFilter] = useState('all')
 
@@ -308,7 +308,7 @@ function ReviewsView({
                       <span className="text-xs font-extrabold text-nexoraWarning">{review.rating}.0★</span>
                     </div>
                     <p className="text-sm text-nexoraText">{review.comment}</p>
-                    <p className="text-xs text-nexoraMuted">{review.staffName} - {review.date}</p>
+                    <p className="text-xs text-nexoraMuted">{review.staffName} - {formatTransactionDateTime(review.createdAt || review.date, currentLanguage)}</p>
                   </div>
 
                   {/* Redirecting Logo Badges / Internal tag */}

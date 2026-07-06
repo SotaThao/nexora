@@ -16,7 +16,7 @@ export default function HomePageFooterSection() {
                 <a className="flex items-center group ds-control ds-link w-fit" href="#" aria-label="NEXORA TOUCH">
                   <img alt="NEXORA TOUCH" className="h-10 sm:h-11 w-auto group-hover:scale-105 transition-transform" src="/homepage/assets/images/logo-dark-mode.png" />
                 </a>
-                <p className="text-xs text-slate-400 leading-snug max-w-sm" data-i18n="footer-subtext">Assembled with profound devotion for local retail heroes.</p>
+                <p className="text-xs text-slate-400 leading-snug max-w-sm" data-i18n="footer-subtext">Built for the people who make their community beautiful.</p>
               </div>
               
               <div className="flex flex-row items-center justify-center gap-x-3 sm:gap-x-4">

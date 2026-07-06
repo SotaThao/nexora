@@ -69,16 +69,19 @@ export function useMerchantStaff({
   statusFilter,
   pageNumber = 1,
   pageSize = 10,
+  keyword,
   enabled = true,
 }: {
   statusFilter?: string
   pageNumber?: number
   pageSize?: number
+  keyword?: string
   enabled?: boolean
 } = {}) {
-  return useQuery({
-    queryKey: qk.merchantStaff(statusFilter, pageNumber, pageSize),
-    queryFn: () => merchantStaffRepository.list(statusFilter, pageNumber, pageSize),
+  const trimmedKeyword = keyword?.trim() || undefined
+  return useQuery<StaffListPage>({
+    queryKey: qk.merchantStaff(statusFilter, pageNumber, pageSize, trimmedKeyword),
+    queryFn: () => merchantStaffRepository.list(statusFilter, pageNumber, pageSize, trimmedKeyword),
     enabled,
     placeholderData: keepPreviousData,
     refetchOnMount: true,

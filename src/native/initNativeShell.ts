@@ -1,4 +1,5 @@
 import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core'
+import { SplashScreen } from '@capacitor/splash-screen'
 import { CapacitorUpdater } from '@capgo/capacitor-updater'
 import { initOneSignal } from './onesignal'
 
@@ -55,4 +56,10 @@ export async function initNativeShell() {
   }
 
   syncSafeAreaInsets()
+
+  try {
+    await SplashScreen.hide()
+  } catch {
+    // SplashScreen may be unavailable during early boot on some builds.
+  }
 }

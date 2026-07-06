@@ -17,6 +17,7 @@
             <option value="$PROJECT_DIR$/../node_modules/.pnpm/@capacitor+filesystem@8.1.2_@capacitor+core@8.4.1/node_modules/@capacitor/filesystem/android" />
             <option value="$PROJECT_DIR$/../node_modules/.pnpm/@capacitor+keyboard@8.0.5_@capacitor+core@8.4.1/node_modules/@capacitor/keyboard/android" />
             <option value="$PROJECT_DIR$/../node_modules/.pnpm/@capacitor+share@8.0.1_@capacitor+core@8.4.1/node_modules/@capacitor/share/android" />
+            <option value="$PROJECT_DIR$/../node_modules/.pnpm/@capacitor+splash-screen@8.0.1_@capacitor+core@8.4.1/node_modules/@capacitor/splash-screen/android" />
             <option value="$PROJECT_DIR$/../node_modules/.pnpm/@capgo+capacitor-updater@8.49.7_@capacitor+core@8.4.1/node_modules/@capgo/capacitor-updater/android" />
             <option value="$PROJECT_DIR$/../node_modules/.pnpm/@onesignal+capacitor-plugin@1.1.3_@capacitor+core@8.4.1/node_modules/@onesignal/capacitor-plugin/android" />
           </set>

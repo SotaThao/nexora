@@ -1,1 +1,0 @@
-import{j as r}from"./index-C0dkTL8D.js";import{L as t}from"./LegalPage-D6WCjy5r.js";import"./icons-DXtLwewL.js";import"./react-BFuU8kUw.js";import"./LanguageSwitcher-PYBJITJ1.js";function m(){return r.jsx(t,{type:"privacy"})}export{m as default};

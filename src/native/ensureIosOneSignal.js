@@ -71,6 +71,13 @@ export function ensureIosOneSignalPlist() {
 	<string>${APP_GROUP}</string>`,
   )
 
+  xml = ensurePlistKey(
+    xml,
+    'OneSignal_suppress_launch_urls',
+    `	<key>OneSignal_suppress_launch_urls</key>
+	<true/>`,
+  )
+
   writeFileSync(plistPath, xml)
   ensureEntitlementsFile(debugEntitlementsPath, 'development')
   ensureEntitlementsFile(releaseEntitlementsPath, 'production')

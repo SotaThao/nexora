@@ -9,12 +9,14 @@ type HomepageLinkProps = {
   variant?: 'auth' | 'menu'
   className?: string
   onNavigate?: () => void
+  active?: boolean
 }
 
 export default function HomepageLink({
   variant = 'auth',
   className = '',
   onNavigate,
+  active = false,
 }: HomepageLinkProps) {
   const { t } = useTranslation()
 
@@ -23,9 +25,13 @@ export default function HomepageLink({
       <Link
         to="/"
         onClick={onNavigate}
-        className={`flex h-12 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-bold text-white/85 transition hover:bg-white/5 hover:text-white ${className}`}
+        className={`flex h-12 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-bold transition ${
+          active
+            ? 'bg-gradient-to-r from-nexoraElectric to-nexoraViolet text-white shadow-lg shadow-nexoraElectric/20'
+            : 'text-white/85 hover:bg-white/5 hover:text-white'
+        } ${className}`}
       >
-        <MenuIcon item={HOMEPAGE_MENU_ITEM} active={false} />
+        <MenuIcon item={HOMEPAGE_MENU_ITEM} active={active} />
         <span className="truncate">{t('dashboard.menu.home')}</span>
       </Link>
     )

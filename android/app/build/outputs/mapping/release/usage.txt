@@ -7735,41 +7735,58 @@ androidx.core.service.quicksettings.TileServiceCompat$Api24Impl
 androidx.core.service.quicksettings.TileServiceCompat$Api34Impl
 androidx.core.service.quicksettings.TileServiceCompat$TileServiceWrapper
 androidx.core.service.quicksettings.TileServiceCompat
-androidx.core.splashscreen.MaskedDrawable
-androidx.core.splashscreen.R$attr
-androidx.core.splashscreen.R$dimen
-androidx.core.splashscreen.R$drawable
-androidx.core.splashscreen.R$id
+androidx.core.splashscreen.R$attr:
+    public static int windowSplashScreenAnimationDuration
+    public static int windowSplashScreenIconBackgroundColor
+    private void <init>()
+androidx.core.splashscreen.R$dimen:
+    public static int splashscreen_icon_mask_size_no_background
+    public static int splashscreen_icon_mask_size_with_background
+    public static int splashscreen_icon_mask_stroke_no_background
+    public static int splashscreen_icon_mask_stroke_with_background
+    public static int splashscreen_icon_size
+    private void <init>()
+androidx.core.splashscreen.R$drawable:
+    public static int compat_splash_screen
+    public static int compat_splash_screen_no_icon_background
+    private void <init>()
+androidx.core.splashscreen.R$id:
+    private void <init>()
 androidx.core.splashscreen.R$integer
-androidx.core.splashscreen.R$layout
+androidx.core.splashscreen.R$layout:
+    private void <init>()
 androidx.core.splashscreen.R$style
 androidx.core.splashscreen.R
-androidx.core.splashscreen.SplashScreen$Companion
-androidx.core.splashscreen.SplashScreen$Impl$setKeepOnScreenCondition$1
-androidx.core.splashscreen.SplashScreen$Impl$setOnExitAnimationListener$2
-androidx.core.splashscreen.SplashScreen$Impl31$hierarchyListener$1
-androidx.core.splashscreen.SplashScreen$Impl31$setKeepOnScreenCondition$1
-androidx.core.splashscreen.SplashScreen$Impl31
-androidx.core.splashscreen.SplashScreen$Impl
-androidx.core.splashscreen.SplashScreen$KeepOnScreenCondition:
-    public abstract boolean shouldKeepOnScreen()
-androidx.core.splashscreen.SplashScreen$OnExitAnimationListener:
-    public abstract void onSplashScreenExit(androidx.core.splashscreen.SplashScreenViewProvider)
+androidx.core.splashscreen.SplashScreen$Impl31:
+    public final android.view.ViewGroup$OnHierarchyChangeListener getHierarchyListener()
+    public final boolean getMDecorFitWindowInsets()
+    public final android.view.ViewTreeObserver$OnPreDrawListener getPreDrawListener()
+    public final void setPreDrawListener(android.view.ViewTreeObserver$OnPreDrawListener)
+androidx.core.splashscreen.SplashScreen$Impl:
+    public final java.lang.Integer getBackgroundColor()
+    public final java.lang.Integer getBackgroundResId()
+    public final int getFinalThemeId()
+    public final boolean getHasBackground()
+    public final android.graphics.drawable.Drawable getIcon()
+    public final void setBackgroundColor(java.lang.Integer)
+    public final void setBackgroundResId(java.lang.Integer)
+    public final void setFinalThemeId(int)
+    public final void setHasBackground(boolean)
+    public final void setIcon(android.graphics.drawable.Drawable)
 androidx.core.splashscreen.SplashScreen:
-    public static final androidx.core.splashscreen.SplashScreen$Companion Companion
     private static final float MASK_FACTOR
-    private final androidx.core.splashscreen.SplashScreen$Impl impl
-    static void <clinit>()
-    private void <init>(android.app.Activity)
-    public synthetic void <init>(android.app.Activity,kotlin.jvm.internal.DefaultConstructorMarker)
-    public static final synthetic void access$install(androidx.core.splashscreen.SplashScreen)
-    private final void install()
-    public static final androidx.core.splashscreen.SplashScreen installSplashScreen(android.app.Activity)
-androidx.core.splashscreen.SplashScreenViewProvider$ViewImpl$_splashScreenView$2
-androidx.core.splashscreen.SplashScreenViewProvider$ViewImpl31
-androidx.core.splashscreen.SplashScreenViewProvider$ViewImpl
-androidx.core.splashscreen.SplashScreenViewProvider
-androidx.core.splashscreen.ThemeUtils$Api31
+androidx.core.splashscreen.SplashScreenViewProvider$ViewImpl31:
+    public long getIconAnimationDurationMillis()
+    public long getIconAnimationStartMillis()
+    public android.view.View getIconView()
+androidx.core.splashscreen.SplashScreenViewProvider$ViewImpl:
+    public long getIconAnimationDurationMillis()
+    public long getIconAnimationStartMillis()
+    public android.view.View getIconView()
+androidx.core.splashscreen.SplashScreenViewProvider:
+    public final long getIconAnimationDurationMillis()
+    public final long getIconAnimationStartMillis()
+    public final android.view.View getIconView()
 androidx.core.splashscreen.ThemeUtils
 androidx.core.telephony.SubscriptionManagerCompat$Api29Impl
 androidx.core.telephony.SubscriptionManagerCompat
@@ -14347,6 +14364,13 @@ com.capacitorjs.plugins.keyboard.Keyboard:
     static final java.lang.String EVENT_KB_WILL_SHOW
 com.capacitorjs.plugins.keyboard.R
 com.capacitorjs.plugins.share.R
+com.capacitorjs.plugins.splashscreen.R$style:
+    private void <init>()
+com.capacitorjs.plugins.splashscreen.R
+com.capacitorjs.plugins.splashscreen.SplashListener:
+    public abstract void error()
+com.capacitorjs.plugins.splashscreen.SplashScreenPlugin$1:
+    public void error()
 com.google.android.datatransport.BuildConfig
 com.google.android.datatransport.Event:
     public static com.google.android.datatransport.Event ofData(int,java.lang.Object)
@@ -40128,19 +40152,12 @@ org.apache.cordova.PluginResult:
     public java.lang.String toErrorCallbackString(java.lang.String)
     public java.lang.String toSuccessCallbackString(java.lang.String)
 org.apache.cordova.R
-org.apache.cordova.SplashScreenPlugin$$InternalSyntheticLambda$1$7e9bc58a3040da720ef5b5f3f5c513084ca3f6642ede0b33d15331bc678d8f68$0:
-    public final boolean shouldKeepOnScreen()
-org.apache.cordova.SplashScreenPlugin$1$1
-org.apache.cordova.SplashScreenPlugin$1:
-    public void onSplashScreenExit(androidx.core.splashscreen.SplashScreenViewProvider)
 org.apache.cordova.SplashScreenPlugin:
     private static final boolean DEFAULT_AUTO_HIDE
     private static final int DEFAULT_DELAY_TIME
     private static final boolean DEFAULT_FADE
     private static final int DEFAULT_FADE_TIME
     static final java.lang.String PLUGIN_NAME
-    public static synthetic boolean $r8$lambda$DtnEmKnxFMmmZmu7ouqyPUq8JvQ(org.apache.cordova.SplashScreenPlugin)
-    private synthetic boolean lambda$setupSplashScreen$0()
 org.apache.cordova.engine.SystemCookieManager:
     public void clearCookies()
     public void flush()
@@ -43908,9 +43925,47 @@ androidx.core.provider.RequestExecutor$DefaultThreadFactory:
 androidx.core.provider.RequestExecutor$ReplyRunnable$1:
     public final synthetic androidx.core.provider.RequestExecutor$ReplyRunnable this$0
 androidx.core.provider.RequestExecutor
-androidx.core.splashscreen.SplashScreen$KeepOnScreenCondition
-androidx.core.splashscreen.SplashScreen$OnExitAnimationListener
-androidx.core.splashscreen.SplashScreen
+androidx.core.splashscreen.MaskedDrawable:
+    public final float maskDiameter
+androidx.core.splashscreen.R$attr
+androidx.core.splashscreen.R$dimen
+androidx.core.splashscreen.R$drawable
+androidx.core.splashscreen.R$id
+androidx.core.splashscreen.R$layout
+androidx.core.splashscreen.SplashScreen$Companion
+androidx.core.splashscreen.SplashScreen$Impl31:
+    public static boolean computeDecorFitsWindow()
+    public static void setMDecorFitWindowInsets()
+androidx.core.splashscreen.SplashScreen$Impl:
+    public int finalThemeId
+    public static synthetic boolean $r8$lambda$kKfeCoJXk552lTF8ql1mm-IlINg()
+    public final void dispatchOnExitAnimation(androidx.core.splashscreen.SplashScreenViewProvider)
+    public static android.app.Activity getActivity()
+    public static androidx.core.splashscreen.SplashScreen$KeepOnScreenCondition getSplashScreenWaitPredicate()
+    public static void setSplashScreenWaitPredicate()
+    public static final boolean splashScreenWaitPredicate$lambda-0()
+androidx.core.splashscreen.SplashScreen:
+    public static final androidx.core.splashscreen.SplashScreen$Companion Companion
+    public final androidx.core.splashscreen.SplashScreen$Impl impl
+    static void <clinit>()
+    public final void setKeepOnScreenCondition(org.apache.cordova.SplashScreenPlugin$$InternalSyntheticLambda$1$7e9bc58a3040da720ef5b5f3f5c513084ca3f6642ede0b33d15331bc678d8f68$0)
+    public final void setOnExitAnimationListener(org.apache.cordova.SplashScreenPlugin$1)
+androidx.core.splashscreen.SplashScreenViewProvider$ViewImpl$_splashScreenView$2:
+    public static android.view.ViewGroup invoke()
+androidx.core.splashscreen.SplashScreenViewProvider$ViewImpl31:
+    public final android.window.SplashScreenView getPlatformView()
+    public static android.window.SplashScreenView getSplashScreenView()
+    public static void setPlatformView()
+androidx.core.splashscreen.SplashScreenViewProvider$ViewImpl:
+    public static android.app.Activity getActivity()
+    public final android.view.ViewGroup get_splashScreenView()
+androidx.core.splashscreen.SplashScreenViewProvider:
+    public static android.view.View getView()
+    public final void remove()
+androidx.core.splashscreen.ThemeUtils$Api31:
+    public static final androidx.core.splashscreen.ThemeUtils$Api31 INSTANCE
+    static void <clinit>()
+    public static synthetic void applyThemesSystemBarAppearance$default(android.content.res.Resources$Theme,android.view.View)
 androidx.core.text.BidiFormatter$Builder
 androidx.core.text.BidiFormatter$DirectionalityEstimator:
     public final boolean isHtml
@@ -47906,6 +47961,54 @@ com.capacitorjs.plugins.keyboard.Keyboard:
     public static void show()
 com.capacitorjs.plugins.keyboard.KeyboardPlugin$$InternalSyntheticLambda$1$4cf718370379982e48e2f5ff0e7d51d97b631bb3ef8377cf282a498eb7163d76$0:
     public final void onKeyboardEvent(java.lang.String,int)
+com.capacitorjs.plugins.splashscreen.R$style
+com.capacitorjs.plugins.splashscreen.SplashListener
+com.capacitorjs.plugins.splashscreen.SplashScreen:
+    public static void hide()
+    public static void hideDialog()
+    public static void onDestroy()
+    public static void onPause()
+    public static void show()
+    public final void showDialog(androidx.appcompat.app.AppCompatActivity,com.capacitorjs.plugins.splashscreen.SplashScreenSettings,com.capacitorjs.plugins.splashscreen.SplashScreenPlugin$1,boolean)
+    public static void showOnLaunch()
+com.capacitorjs.plugins.splashscreen.SplashScreenConfig:
+    public java.lang.Integer launchFadeInDuration
+    public static java.lang.Integer getBackgroundColor()
+    public static java.lang.Integer getLaunchFadeInDuration()
+    public static java.lang.Integer getLaunchFadeOutDuration()
+    public static java.lang.Integer getLaunchShowDuration()
+    public static java.lang.String getLayoutName()
+    public static java.lang.String getResourceName()
+    public static android.widget.ImageView$ScaleType getScaleType()
+    public static java.lang.Integer getSpinnerColor()
+    public static java.lang.Integer getSpinnerStyle()
+    public static boolean isFullScreen()
+    public static boolean isImmersive()
+    public static boolean isLaunchAutoHide()
+    public static boolean isShowSpinner()
+    public static boolean isUsingDialog()
+    public static void setBackgroundColor()
+    public static void setFullScreen()
+    public static void setImmersive()
+    public static void setLaunchAutoHide()
+    public static void setLaunchFadeOutDuration()
+    public static void setLaunchShowDuration()
+    public static void setLayoutName()
+    public static void setResourceName()
+    public static void setScaleType()
+    public static void setShowSpinner()
+    public static void setSpinnerColor()
+    public static void setSpinnerStyle()
+    public static void setUsingDialog()
+com.capacitorjs.plugins.splashscreen.SplashScreenSettings:
+    public static java.lang.Integer getFadeInDuration()
+    public static java.lang.Integer getFadeOutDuration()
+    public static java.lang.Integer getShowDuration()
+    public static boolean isAutoHide()
+    public static void setAutoHide()
+    public static void setFadeInDuration()
+    public static void setFadeOutDuration()
+    public static void setShowDuration()
 com.getcapacitor.AndroidProtocolHandler:
     static void <clinit>()
 com.getcapacitor.Bridge-IA
@@ -57506,15 +57609,12 @@ org.apache.cordova.ResumeCallback:
     public final java.lang.String TAG
 org.apache.cordova.SplashScreenPlugin$$InternalSyntheticLambda$1$7e9bc58a3040da720ef5b5f3f5c513084ca3f6642ede0b33d15331bc678d8f68$0
 org.apache.cordova.SplashScreenPlugin$$InternalSyntheticLambda$1$7e9bc58a3040da720ef5b5f3f5c513084ca3f6642ede0b33d15331bc678d8f68$1
-org.apache.cordova.SplashScreenPlugin$$InternalSyntheticThrowCCEIfNotNull$21$da163a8409b55b87b9bb9a2a5261b70c91160d439b11920aadcfbabd0b962c27$0
+org.apache.cordova.SplashScreenPlugin$1$1
 org.apache.cordova.SplashScreenPlugin$1
 org.apache.cordova.SplashScreenPlugin:
-    public int delayTime
     public int fadeDuration
     public boolean isFadeEnabled
     public boolean keepOnScreen
-    public static void attemptCloseOnPageFinished()
-    public static synthetic void lambda$setupSplashScreen$1()
 org.apache.cordova.engine.SystemCookieManager:
     public final android.webkit.CookieManager cookieManager
     public final android.webkit.WebView webView

@@ -16,7 +16,18 @@ function resolveTouchpointDownloadId(target) {
   return target?.touchpointId || target?.id || null
 }
 
-function QrGatewayPreviewLayout({ target, qrImageSrc, scanCaption, onClose, t, showInactiveWarning = false }) {
+function QrGatewayPreviewLayout({
+  target,
+  qrImageSrc,
+  scanCaption,
+  onClose,
+  t,
+  showInactiveWarning = false,
+  useMobileDownload = false,
+  isSaving = false,
+  onDownload,
+  onPrint,
+}) {
   if (typeof document === 'undefined') return null
 
   return createPortal(
@@ -75,11 +86,18 @@ function QrGatewayPreviewLayout({ target, qrImageSrc, scanCaption, onClose, t, s
 
         <button
           type="button"
-          onClick={() => window.print()}
-          className="no-print mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-4 py-2.5 text-xs font-bold text-white transition hover:bg-opacity-90"
+          onClick={() => void (useMobileDownload ? onDownload?.() : onPrint?.())}
+          disabled={useMobileDownload && isSaving}
+          className="no-print mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-4 py-2.5 text-xs font-bold text-white transition hover:bg-opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <Printer className="h-4 w-4" />
-          {t('dashboard.modals.print_qr')}
+          {useMobileDownload ? (
+            isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />
+          ) : (
+            <Printer className="h-4 w-4" />
+          )}
+          {useMobileDownload
+            ? t('dashboard.master_gateway.btn_download')
+            : t('dashboard.modals.print_qr')}
         </button>
       </div>
     </div>,
@@ -166,6 +184,10 @@ function QrModal({ target, businessName, onClose }) {
         onClose={onClose}
         t={t}
         showInactiveWarning={isStaff && !target.isActive}
+        useMobileDownload={useMobileDownload}
+        isSaving={isSaving}
+        onDownload={handleSaveQr}
+        onPrint={handlePrint}
       />
     )
   }

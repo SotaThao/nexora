@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="net.vlinkgroup.nexora"
-    android:versionCode="1"
-    android:versionName="1.0" >
+    android:versionCode="2"
+    android:versionName="1.2" >
 
     <uses-sdk
         android:minSdkVersion="24"
@@ -110,6 +110,11 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- Prevent OneSignal from opening Launch URL in the system browser; JS click handler routes in-app -->
+        <meta-data
+            android:name="com.onesignal.suppressLaunchURLs"
+            android:value="true" />
 
         <activity
             android:name="io.ionic.libs.ioncameralib.view.IONCAMRLoadingActivity"

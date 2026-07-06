@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
+import { ensureAndroidOneSignalManifest } from './ensureAndroidOneSignal.js'
 import { ensureIosOneSignalPlist } from './ensureIosOneSignal.js'
 
 const capAppRoot = join(process.cwd(), 'ios/App/CapApp-SPM')
@@ -46,3 +47,4 @@ for (const file of files) {
 }
 
 ensureIosOneSignalPlist()
+ensureAndroidOneSignalManifest()

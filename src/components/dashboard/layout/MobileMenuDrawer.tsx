@@ -1,5 +1,5 @@
 import React from 'react'
-import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { ChevronLeft, ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import MenuIcon from '../../ui/MenuIcon'
@@ -13,6 +13,7 @@ export default function MobileMenuDrawer({
   subscription = null,
   businessName,
   activeMenu,
+  isHomeActive = false,
   setActiveMenu,
   settingsTab,
   setSettingsTab,
@@ -66,7 +67,7 @@ export default function MobileMenuDrawer({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 lg:hidden">
+    <div className="fixed inset-0 z-[100] lg:hidden" id="dashboard-mobile-menu">
       <button
         type="button"
         className="absolute inset-0 bg-nexoraText/60"
@@ -174,7 +175,8 @@ export default function MobileMenuDrawer({
         )}
 
         <nav className="flex-1 space-y-1.5 overflow-y-auto pr-1">
-          <HomepageLink variant="menu" onNavigate={onClose} />
+          <HomepageLink variant="menu" active={isHomeActive} onNavigate={onClose} />
+          <div className="my-1 border-t border-white/10" />
           {menuItemsToDisplay.filter((item) => item.id !== 'settings').map((item) => {
             const { id, label } = item
             const isActive = activeMenu === id
@@ -270,6 +272,7 @@ export default function MobileMenuDrawer({
               </React.Fragment>
             )
           })}
+
         </nav>
 
         <div className="mt-auto pt-4 border-t border-white/15 shrink-0">

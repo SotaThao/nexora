@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useAuth } from '../auth/useAuth'
-import { tokenStore } from '../auth/tokenStore'
-import { flushPushDeviceRegistration, syncOneSignalUser } from './onesignal'
+import { syncOneSignalUser } from './onesignal'
 
 /**
  * Keeps OneSignal external user id in sync with the authenticated session.
@@ -20,35 +19,15 @@ export default function OneSignalAuthBridge() {
 
     if (previousUserId === undefined) {
       resolvedUserIdRef.current = nextUserId
-      if (nextUserId) {
-        void (async () => {
-          await syncOneSignalUser(nextUserId)
-          await flushPushDeviceRegistration()
-        })()
-      }
+      if (nextUserId) void syncOneSignalUser(nextUserId)
       return
     }
 
     if (previousUserId === nextUserId) return
 
     resolvedUserIdRef.current = nextUserId
-    if (nextUserId) {
-      void (async () => {
-        await syncOneSignalUser(nextUserId)
-        await flushPushDeviceRegistration()
-      })()
-      return
-    }
-
-    void syncOneSignalUser(null)
+    void syncOneSignalUser(nextUserId)
   }, [session?.id, status])
-
-  useEffect(() => {
-    return tokenStore.subscribe((tokens) => {
-      if (!tokens?.accessToken) return
-      void flushPushDeviceRegistration()
-    })
-  }, [])
 
   return null
 }
