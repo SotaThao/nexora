@@ -5,6 +5,26 @@ export const INTRO_VIDEO_WATCH_URL = `https://www.youtube.com/watch?v=${INTRO_VI
 export const INTRO_VIDEO_EMBED_URL =
   `https://www.youtube.com/embed/${INTRO_VIDEO_ID}?autoplay=0&loop=1&playlist=${INTRO_VIDEO_ID}`
 
+export const INTRO_VIDEO_YOUTUBE_THUMB_URL =
+  `https://img.youtube.com/vi/${INTRO_VIDEO_ID}/hqdefault.jpg`
+
+/** Local homepage poster art (language-specific SVG). */
+export function getIntroVideoThumbnailPath(lang = 'en', options = {}) {
+  const { preferYouTube = false } = options
+  if (preferYouTube) {
+    return INTRO_VIDEO_YOUTUBE_THUMB_URL
+  }
+
+  const suffix = lang === 'vi' ? 'vi' : 'en'
+  const base = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '')
+  return `${base}/homepage/assets/images/video-thumb-${suffix}.svg`
+}
+
+/** WKWebView on iOS/native shells often fails to render large SVG posters via <img>. */
+export function shouldUseYouTubeVideoThumbnail() {
+  return isIOSDevice()
+}
+
 /** iPhone, iPad, and iPadOS (desktop UA with touch). */
 export function isIOSDevice() {
   if (typeof navigator === 'undefined') return false

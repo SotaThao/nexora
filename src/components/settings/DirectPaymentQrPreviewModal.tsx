@@ -1,7 +1,14 @@
+import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Printer, ShieldCheck, X } from 'lucide-react'
+import { Download, Loader2, Printer, ShieldCheck, X } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
+import { useNotification } from '../../contexts/NotificationContext'
 import { buildPublicQrImageUrl } from '../../data/repositories/publicQr'
+import { downloadQrCode } from '../../utils/qrUtils'
+import { shouldUseMobileDownloadFlow } from '../../utils/downloadFile'
+
+const slugify = (value = '') =>
+  value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'qr'
 
 export default function DirectPaymentQrPreviewModal({
   open,
@@ -14,11 +21,36 @@ export default function DirectPaymentQrPreviewModal({
   scanCaption,
 }) {
   const { t } = useTranslation()
+  const { showToast } = useNotification()
+  const [isSaving, setIsSaving] = useState(false)
+  const useMobileDownload = shouldUseMobileDownloadFlow()
 
   if (!open || !previewQrUrl || typeof document === 'undefined') return null
 
   const displayUrl = paymentPageUrl?.replace(/^https?:\/\//, '') ?? ''
   const qrImageSrc = paymentPageUrl ? buildPublicQrImageUrl(paymentPageUrl, 1000) : previewQrUrl
+
+  const handlePrimaryAction = async () => {
+    if (!useMobileDownload) {
+      window.print()
+      return
+    }
+
+    if (isSaving) return
+
+    setIsSaving(true)
+    try {
+      const safeName = slugify(title || 'payment-qr')
+      const result = await downloadQrCode(qrImageSrc, `${safeName}.png`)
+      if (result !== 'cancelled') {
+        showToast(t('components.SettingsView.qrCodeDownloaded'), 'success')
+      }
+    } catch {
+      showToast(t('common.error'), 'error')
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   return createPortal(
     <div
@@ -75,11 +107,18 @@ export default function DirectPaymentQrPreviewModal({
 
         <button
           type="button"
-          onClick={() => window.print()}
-          className="no-print mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-4 py-2.5 text-xs font-bold text-white transition hover:bg-opacity-90"
+          onClick={() => void handlePrimaryAction()}
+          disabled={useMobileDownload && isSaving}
+          className="no-print mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-4 py-2.5 text-xs font-bold text-white transition hover:bg-opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <Printer className="h-4 w-4" />
-          {t('dashboard.modals.print_qr')}
+          {useMobileDownload ? (
+            isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />
+          ) : (
+            <Printer className="h-4 w-4" />
+          )}
+          {useMobileDownload
+            ? t('dashboard.master_gateway.btn_download')
+            : t('dashboard.modals.print_qr')}
         </button>
       </div>
     </div>,

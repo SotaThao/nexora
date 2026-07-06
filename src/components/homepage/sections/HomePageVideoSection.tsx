@@ -1,15 +1,28 @@
 /** Homepage section component */
+import { useEffect, useState, useSyncExternalStore } from 'react'
+import { Capacitor } from '@capacitor/core'
 import { useHomePageBridge } from '../context/HomePageBridgeContext'
+import { getInitialHomePageLanguage } from '../homepageLogic.js'
 import {
+  getIntroVideoThumbnailPath,
   INTRO_VIDEO_EMBED_URL,
   INTRO_VIDEO_WATCH_URL,
+  INTRO_VIDEO_YOUTUBE_THUMB_URL,
   openIntroYouTubeVideo,
   shouldOpenYouTubeExternally,
+  shouldUseYouTubeVideoThumbnail,
 } from '../../../utils/youtubeIntroVideo.js'
 
-const VIDEO_POSTER_STYLE = {
-  backgroundImage:
-    "linear-gradient(rgba(15, 22, 56, 0.8), rgba(15, 22, 56, 0.5)), url('https://images.unsplash.com/photo-1604654894610-df4906b1716f?auto=format&fit=crop&w=1200&q=80')",
+function getHomePageLang() {
+  if (typeof document === 'undefined') return getInitialHomePageLanguage()
+  return document.documentElement.lang === 'vi' ? 'vi' : 'en'
+}
+
+function subscribeHomePageLang(onStoreChange: () => void) {
+  if (typeof document === 'undefined') return () => {}
+  const observer = new MutationObserver(onStoreChange)
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] })
+  return () => observer.disconnect()
 }
 
 function PlayButtonIcon() {
@@ -22,7 +35,29 @@ function PlayButtonIcon() {
 
 export default function HomePageVideoSection() {
   const { hp } = useHomePageBridge()
+  const homepageLang = useSyncExternalStore(
+    subscribeHomePageLang,
+    getHomePageLang,
+    getInitialHomePageLanguage,
+  )
   const useExternalYouTube = shouldOpenYouTubeExternally()
+  const preferYouTubeThumbnail =
+    useExternalYouTube || shouldUseYouTubeVideoThumbnail() || Capacitor.isNativePlatform()
+  const [videoThumbnailSrc, setVideoThumbnailSrc] = useState(() =>
+    getIntroVideoThumbnailPath(homepageLang, { preferYouTube: preferYouTubeThumbnail }),
+  )
+
+  useEffect(() => {
+    setVideoThumbnailSrc(
+      getIntroVideoThumbnailPath(homepageLang, { preferYouTube: preferYouTubeThumbnail }),
+    )
+  }, [homepageLang, preferYouTubeThumbnail])
+
+  const handleThumbnailError = () => {
+    setVideoThumbnailSrc((current) =>
+      current === INTRO_VIDEO_YOUTUBE_THUMB_URL ? current : INTRO_VIDEO_YOUTUBE_THUMB_URL,
+    )
+  }
 
   const handlePlayClick = () => {
     if (useExternalYouTube) {
@@ -49,10 +84,16 @@ export default function HomePageVideoSection() {
         </div>
 
         <div className="premium-shadow group relative mx-auto aspect-video max-w-4xl overflow-hidden rounded-[32px] border border-white/20 bg-slate-900 shadow-2xl">
+          <img
+            src={videoThumbnailSrc}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full object-cover"
+            onError={handleThumbnailError}
+          />
           <div
-            className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-cover bg-center p-6 text-white transition-all duration-500"
+            className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gradient-to-b from-slate-900/55 via-slate-900/35 to-slate-900/65 p-6 text-white transition-all duration-500"
             id="video-cover"
-            style={VIDEO_POSTER_STYLE}
           >
             {useExternalYouTube ? (
               <a
