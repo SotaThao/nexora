@@ -54,6 +54,7 @@ import InviteShareModal from './dashboard/modals/InviteShareModal'
 import AddTouchpointModal from './dashboard/modals/AddTouchpointModal'
 import { usePagination } from '../hooks/usePagination'
 import { DEFAULT_PAGE_SIZE, STAFF_FILTER_LIST_PAGE_SIZE } from '../constants/pagination'
+import { useRegisterPushDeviceOnVisit } from '../data/hooks/useRegisterPushDevice'
 
 
 export default function Dashboard({
@@ -82,6 +83,7 @@ export default function Dashboard({
     handleNavigateMenu, navigateMenu
   } = useDashboardNavigation()
   const navigate = useNavigate()
+  useRegisterPushDeviceOnVisit()
   const handleStartSetup = useCallback(() => {
     if (typeof onStartSetup === 'function') {
       onStartSetup()

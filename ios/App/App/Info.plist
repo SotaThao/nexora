@@ -67,5 +67,7 @@
 	</array>
 	<key>OneSignal_app_groups_key</key>
 	<string>group.net.vlinkgroup.nexora.onesignal</string>
+	<key>OneSignal_suppress_launch_urls</key>
+	<true/>
 </dict>
 </plist>

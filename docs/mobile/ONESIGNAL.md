@@ -104,9 +104,21 @@ If the endpoint returns 404/501, registration is skipped silently and retried on
 
 ## 7. Notification click / Launch URL
 
-Set the notification's **Launch URL** to an app-relative path, e.g. `/merchant/payments/<paymentId>` or `/staff/payments/<paymentId>`. On tap, `src/native/onesignal.ts` reads `event.result.url` / `event.notification.launchURL` from the `click` listener and routes it:
+### Native: suppress default browser open
 
-- Relative or same-origin path → in-app navigation via React Router (bridged from `OneSignalNotificationBridge` in `src/app/AppRouter.tsx`, since `onesignal.ts` has no router access on its own). Works even if the click fires before the router mounts (cold start) — the target is buffered and replayed once the bridge registers.
-- Cross-origin absolute URL → opened externally via `window.location.assign`.
+OneSignal opens Launch URLs in the **system browser** by default on Android (and can bounce through Safari on iOS). The app disables that so only the JS click handler navigates in-app:
 
-`/merchant/payments/:paymentId` and `/dashboard/payments/:paymentId` both redirect to `/dashboard/reports?tab=direct_payments&paymentId=<id>` (owner/merchant); `/staff/payments/:paymentId` opens the staff transactions view directly.
+| Platform | Config |
+|----------|--------|
+| Android | `OneSignal_suppress_launch_urls` in `android/app/src/main/AndroidManifest.xml` (auto-patched by `ensureAndroidOneSignal.js` on `cap sync`) |
+| iOS | `OneSignal_suppress_launch_urls` in `Info.plist` (auto-patched by `ensureIosOneSignal.js`) |
+
+Rebuild native after changing these: `pnpm cap:build:test` (or staging/production).
+
+### Payload & routing
+
+Set the notification **Launch URL** (or `additionalData.url` / `path`) to an app-relative path, e.g. `/merchant/payments/<paymentId>` or `/staff/payments/<paymentId>`. Full `https://*.nexoratouch.com/...` URLs are also mapped to in-app paths.
+
+On tap, `src/native/onesignal.ts` reads `event.result.url` / `event.notification.launchURL` / additional data from the `click` listener and routes via React Router (`OneSignalNotificationBridge` in `src/app/AppRouter.tsx`). Cold start is supported — the target is buffered until the bridge mounts.
+
+`/merchant/payments/:paymentId` and `/dashboard/payments/:paymentId` redirect to `/dashboard/reports?tab=direct_payments&paymentId=<id>`; `/staff/payments/:paymentId` opens the staff transactions view directly.
