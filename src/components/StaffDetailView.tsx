@@ -19,6 +19,7 @@ import { formatTransactionDateTime, formatCurrency } from './dashboard/utils'
 import { buildChartPoints, getBezierPath } from './dashboard/overview/chartUtils'
 import { useMerchantStaffStats } from '../data/hooks/useMerchantStaff'
 import { staffRecordMatchesMember } from '../utils/staffRecordMatch'
+import { formatJoinedDate } from '../utils/localDate'
 
 const RANGE_DAY_OFFSETS = {
   '7 Days': 6,
@@ -459,7 +460,7 @@ export default function StaffDetailView({
                 <div className="flex items-center gap-1">
                   <Calendar className="h-3.5 w-3.5 text-brandCyan" />
                   {staffMember.joinedDate
-                    ? `${t('staff_detail.joined_gateway')}: ${staffMember.joinedDate}`
+                    ? `${t('staff_detail.joined_gateway')}: ${formatJoinedDate(staffMember.joinedDate)}`
                     : t('staff_detail.joined_gateway')}
                 </div>
                 {staffMember.phone && (

@@ -5,6 +5,7 @@ import { useNotification } from '../../../contexts/NotificationContext'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 import { PAYOUT_UI_DISPLAY_ORDER, PAYOUT_UI_LABELS } from '../../../data/paymentMethodTypes'
+import { formatJoinedDate } from '../../../utils/localDate'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
 import Pagination from '../../ui/Pagination'
@@ -474,7 +475,7 @@ function StaffView({
                       {member.joinedDate && (
                         <div className="text-[10px] text-slate-400 font-bold mt-0.5 leading-normal">
                           {t('components.dashboard.views.StaffView.linkedDate')}
-                          {member.joinedDate}
+                          {formatJoinedDate(member.joinedDate)}
                         </div>
                       )}
                     </td>

@@ -36,9 +36,9 @@ const PAYOUT_TYPE_TO_KEY: Record<string, string> = {
   VlinkPay: 'vlinkpay',
 }
 
-const normalizeDateOnly = (value?: string | null) => {
+const normalizeDateTime = (value?: string | null) => {
   if (!value) return null
-  return value.split('T')[0]
+  return value
 }
 
 export function normalizePaymentMethods(
@@ -129,7 +129,7 @@ export function normalizeStaffListItem(dto: StaffListItemApiDto): StaffMember {
       null,
     email:
       dto.email ?? dto.staffProfile?.email ?? dto.user?.email ?? dto.invitedEmail ?? null,
-    joinedDate: normalizeDateOnly(dto.joinDate),
+    joinedDate: normalizeDateTime(dto.joinDate),
     payoutConfigs,
     paymentAccounts,
   }
