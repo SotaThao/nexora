@@ -251,9 +251,34 @@ export interface StaffListItemApiDto {
   phone?: string | null
   paymentMethods?: StaffPaymentMethodApiDto[]
   invites?: StaffInviteSummaryApiDto[]
+  isLocalStaff?: boolean
   staffProfile?: { phoneNumber?: string; phone?: string; email?: string }
   user?: { phoneNumber?: string; phone?: string; email?: string }
 }
+
+export interface LocalStaffApiDto {
+  id: string
+  staffCode?: string | null
+  displayName: string
+  position?: string | null
+  bio?: string | null
+  photoUrl?: string | null
+  phoneNumber?: string | null
+  email?: string | null
+  isProfileComplete?: boolean
+  isLocalStaff?: boolean
+}
+
+export interface LocalStaffCreateParams {
+  displayName: string
+  position?: string | null
+  bio?: string | null
+  photoUrl?: string | null
+  phoneNumber?: string | null
+  email?: string | null
+}
+
+export interface LocalStaffUpdateParams extends LocalStaffCreateParams {}
 
 export interface StaffSearchResultApiDto {
   staffProfileId: string

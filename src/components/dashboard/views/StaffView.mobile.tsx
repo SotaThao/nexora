@@ -87,6 +87,7 @@ function StaffMemberCard({
   onViewStaff
 }) {
   const waitingStaffResponse = isWaitingStaffAcceptance(member)
+  const isLocalStaffMember = Boolean(member.isLocalStaff)
   const stripClass = isPendingInvite
     ? 'bg-amber-400'
     : isPendingLink
@@ -148,7 +149,9 @@ function StaffMemberCard({
             {t('staff_invite.col_flow')}
           </p>
           <p className="text-xs text-slate-600 font-semibold mt-0.5">
-            {member.flowType || t('components.dashboard.views.StaffView.directAddition')}
+            {isLocalStaffMember
+              ? t('components.dashboard.views.StaffView.manualStaffFlow')
+              : (member.flowType || t('components.dashboard.views.StaffView.directAddition'))}
           </p>
           <p className="text-[10px] text-slate-400 font-bold mt-1">
             {t('components.dashboard.views.StaffView.linkedDate')}

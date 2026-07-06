@@ -132,6 +132,7 @@ export function normalizeStaffListItem(dto: StaffListItemApiDto): StaffMember {
     joinedDate: normalizeDateOnly(dto.joinDate),
     payoutConfigs,
     paymentAccounts,
+    isLocalStaff: dto.isLocalStaff ?? false,
   }
 }
 

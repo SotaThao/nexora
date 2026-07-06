@@ -442,6 +442,7 @@ function StaffView({
                 </tr>
               ) : sortedStaff.map((member, index) => {
                 const wallets = getWalletBadges(member)
+                const isLocalStaffMember = Boolean(member.isLocalStaff)
                 const isPendingSetup = member.status === 'Pending Setup'
                 const isPendingAcceptance = member.status === 'Pending Acceptance'
                 const waitingStaffResponse = isWaitingStaffAcceptance(member)
@@ -469,7 +470,9 @@ function StaffView({
 
                     <td className="px-5 py-4">
                       <div className="text-xs text-slate-500 font-semibold leading-normal">
-                        {member.flowType || (t('components.dashboard.views.StaffView.directAddition'))}
+                        {isLocalStaffMember
+                          ? t('components.dashboard.views.StaffView.manualStaffFlow')
+                          : (member.flowType || t('components.dashboard.views.StaffView.directAddition'))}
                       </div>
                       {member.joinedDate && (
                         <div className="text-[10px] text-slate-400 font-bold mt-0.5 leading-normal">
