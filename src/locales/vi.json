@@ -526,9 +526,6 @@
       "coming_soon_badge": "Sắp ra mắt"
     },
     "back_to_dashboard": "Quay lại Bảng Điều Khiển",
-    "breadcrumb": {
-      "aria_label": "Điều hướng Dashboard"
-    },
     "notifications": {
       "title": "Thông báo",
       "mark_all_read": "Đọc tất cả",

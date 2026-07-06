@@ -526,9 +526,6 @@
       "coming_soon_badge": "Coming Soon"
     },
     "back_to_dashboard": "Back to Dashboard",
-    "breadcrumb": {
-      "aria_label": "Dashboard navigation"
-    },
     "notifications": {
       "title": "Notifications",
       "mark_all_read": "Mark all read",

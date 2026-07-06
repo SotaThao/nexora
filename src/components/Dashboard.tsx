@@ -28,7 +28,6 @@ import { useMerchantInviteLinkSetting } from '../data/hooks/useMerchantSettings'
 import { merchantTouchpointsRepository } from '../data/repositories/merchantTouchpoints'
 import DashboardHeader from './dashboard/layout/DashboardHeader'
 import DashboardSidebar from './dashboard/layout/DashboardSidebar'
-import DashboardBreadcrumb from './dashboard/layout/DashboardBreadcrumb'
 import MobileMenuDrawer from './dashboard/layout/MobileMenuDrawer'
 import MobileBottomNav from './dashboard/layout/MobileBottomNav'
 import Overview from './dashboard/overview/Overview'
@@ -751,7 +750,14 @@ export default function Dashboard({
         />
 
         <main className="min-h-dvh p-4 pb-24 sm:p-6 sm:pb-24 lg:p-7 lg:pb-7">
-          <DashboardBreadcrumb />
+          {activeMenu !== 'overview' && (
+            <button
+              onClick={() => handleNavigateMenu('overview')}
+              className="mb-5 inline-flex h-9 items-center rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-extrabold text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"
+            >
+              {t('dashboard.back_to_dashboard')}
+            </button>
+          )}
           <Outlet context={dashboardCtx} />
         </main>
       </div>
