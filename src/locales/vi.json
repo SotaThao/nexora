@@ -526,6 +526,9 @@
       "coming_soon_badge": "Sắp ra mắt"
     },
     "back_to_dashboard": "Quay lại Bảng Điều Khiển",
+    "breadcrumb": {
+      "aria_label": "Điều hướng Dashboard"
+    },
     "notifications": {
       "title": "Thông báo",
       "mark_all_read": "Đọc tất cả",
@@ -541,6 +544,8 @@
       "total_reviews": "Tổng Đánh Giá",
       "vs_last_week": "so với tuần trước",
       "no_comparison": "Chưa có dữ liệu",
+      "based_on_period": "Theo kỳ đã chọn",
+      "this_week": "tuần này",
       "scans": "Lượt Quét QR/NFC",
       "reviews": "Lượt Đánh Giá",
       "avg_rating": "Đánh Giá Trung Bình",

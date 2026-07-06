@@ -526,6 +526,9 @@
       "coming_soon_badge": "Coming Soon"
     },
     "back_to_dashboard": "Back to Dashboard",
+    "breadcrumb": {
+      "aria_label": "Dashboard navigation"
+    },
     "notifications": {
       "title": "Notifications",
       "mark_all_read": "Mark all read",
@@ -541,6 +544,8 @@
       "total_reviews": "Total Reviews",
       "vs_last_week": "vs last week",
       "no_comparison": "No data yet",
+      "based_on_period": "Based on this period",
+      "this_week": "this week",
       "scans": "QR/NFC Scans",
       "reviews": "Reviews",
       "avg_rating": "Average Star Rating",

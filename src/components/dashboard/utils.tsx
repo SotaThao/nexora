@@ -264,3 +264,18 @@ export function buildMasterQrTarget(touchpoints = []) {
     isGatewayQr: true,
   }
 }
+
+/** Leaderboard row label: full first name, or "First L." when surname exists. */
+export function formatLeaderboardStaffName(fullName) {
+  const full = String(fullName || '').trim()
+  if (!full) return { display: '—', full: '' }
+
+  const parts = full.split(/\s+/).filter(Boolean)
+  if (parts.length === 1) {
+    return { display: parts[0], full }
+  }
+
+  const firstName = parts[0]
+  const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase()
+  return { display: `${firstName} ${lastInitial}.`, full }
+}
