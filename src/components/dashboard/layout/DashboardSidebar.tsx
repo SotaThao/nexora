@@ -4,13 +4,14 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { visibleMenuItems, PUBLIC_HOME_MENU_ITEM } from '../constants'
+import { visibleMenuItems } from '../constants'
 import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
 import { getSubscriptionSidebarCopy } from '../../../utils/subscriptionDisplay'
 
 export default function DashboardSidebar({
   activeMenu,
+  isHomeActive = false,
   setActiveMenu,
   businessName,
   profile,
@@ -166,7 +167,8 @@ export default function DashboardSidebar({
 
       {/* Navigation Menu */}
       <nav className="mt-6 flex-1 space-y-1.5 overflow-y-auto pr-1">
-        <HomepageLink variant="menu" />
+        <HomepageLink variant="menu" active={isHomeActive} />
+        <div className="my-1 border-t border-white/10" />
         {(() => {
           const menuItemsToDisplay = userRole === 'staff'
             ? [
@@ -275,6 +277,7 @@ export default function DashboardSidebar({
           )
         })
       })()}
+
       </nav>
 
       {/* Bottom Sign Out */}

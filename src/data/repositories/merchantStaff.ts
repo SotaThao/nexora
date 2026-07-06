@@ -304,9 +304,18 @@ export const StatusFilter = {
 
 export function createMerchantStaffRepository(client: HttpClient = httpClient) {
   return {
-    async list(statusFilter?: string, pageNumber = 1, pageSize = 10): Promise<StaffListPage> {
+    async list(
+      statusFilter?: string,
+      pageNumber = 1,
+      pageSize = 10,
+      keyword?: string,
+    ): Promise<StaffListPage> {
       let url = '/api/v1/merchant/staff'
       const queryParams: string[] = []
+      const trimmedKeyword = keyword?.trim()
+      if (trimmedKeyword) {
+        queryParams.push(`Keyword=${encodeURIComponent(trimmedKeyword)}`)
+      }
       if (statusFilter) {
         queryParams.push(`StatusFilter=${encodeURIComponent(statusFilter)}`)
       }

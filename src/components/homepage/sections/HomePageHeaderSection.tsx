@@ -1,16 +1,18 @@
 /** Homepage section component */
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Globe, ChevronDown, LayoutDashboard } from 'lucide-react'
+import { Globe, ChevronDown, LayoutDashboard, LogOut } from 'lucide-react'
 import { useHomePageBridge } from '../context/HomePageBridgeContext'
+import { useHomePageLayout } from '../context/HomePageLayoutContext'
 import useAuth from '../../../auth/useAuth'
-import { dashboardPathForSession } from '../useHomePageAuth'
+import { dashboardPathForSession } from '../utils/sessionRouting'
 import { getInitialHomePageLanguage } from '../homepageLogic.js'
 import { homepageTranslations, type HomePageLang } from '../i18n/homepageTranslations'
 
 export default function HomePageHeaderSection() {
   const navigate = useNavigate()
-  const { hp } = useHomePageBridge()
+  const { hp, onLogout } = useHomePageBridge()
+  const { hasMobileMenu, openSidebarMenu } = useHomePageLayout()
   const { session, status } = useAuth()
   const [homepageLang, setHomepageLang] = useState<HomePageLang>(getInitialHomePageLanguage)
 
@@ -29,18 +31,26 @@ export default function HomePageHeaderSection() {
     setHomepageLang(lang)
   }
 
+  const handleMobileMenuToggle = () => {
+    if (hasMobileMenu) {
+      openSidebarMenu()
+      return
+    }
+    hp.toggleMobileMenu()
+  }
+
   return (
     <>
       <header className="safe-area-top fixed top-0 inset-x-0 z-50 bg-white/90 backdrop-blur-md border-b border-line">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-2 sm:gap-4">
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             <button
-              className="mobile-menu-toggle lg:hidden focus:outline-none focus:ring-2 focus:ring-purple/35 ds-control ds-button"
-              aria-controls="mobile-navigation-menu"
-              aria-label="Open mobile menu"
+              className={`mobile-menu-toggle ${hasMobileMenu ? 'lg:hidden' : 'md:hidden'} focus:outline-none focus:ring-2 focus:ring-purple/35 ds-control ds-button`}
+              aria-controls={hasMobileMenu ? 'dashboard-mobile-menu' : 'mobile-navigation-menu'}
+              aria-label={hasMobileMenu ? 'Open navigation menu' : 'Open mobile menu'}
               aria-expanded="false"
               id="mobile-menu-toggle"
-              onClick={() => { hp.toggleMobileMenu() }}
+              onClick={handleMobileMenuToggle}
               type="button"
             >
               <svg className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300" fill="none" id="mobile-menu-icon" stroke="currentColor" viewBox="0 0 24 24">
@@ -102,7 +112,29 @@ export default function HomePageHeaderSection() {
               </div>
             </div>
 
-            {isAuthenticated ? (
+            {hasMobileMenu && isAuthenticated ? (
+              <div className="homepage-header-session" id="header-user-badge">
+                <span className="homepage-header-session__status" title="Signed in" aria-hidden="true">
+                  <span className="homepage-header-session__dot" />
+                </span>
+                <button
+                  type="button"
+                  className="homepage-header-action homepage-header-action--primary"
+                  onClick={() => navigate(dashboardPath)}
+                >
+                  <LayoutDashboard className="homepage-header-action__icon" aria-hidden="true" />
+                  <span>{dashboardLabel}</span>
+                </button>
+                <button
+                  type="button"
+                  className="homepage-header-action homepage-header-action--ghost"
+                  onClick={onLogout}
+                >
+                  <LogOut className="homepage-header-action__icon" aria-hidden="true" />
+                  <span data-i18n="btn-logout">{copy['btn-logout']}</span>
+                </button>
+              </div>
+            ) : !hasMobileMenu && isAuthenticated ? (
               <div className="homepage-header-session" id="header-user-badge">
                 <span className="homepage-header-session__status" title="Signed in" aria-hidden="true">
                   <span className="homepage-header-session__dot" />
@@ -116,7 +148,7 @@ export default function HomePageHeaderSection() {
                   <span>{dashboardLabel}</span>
                 </button>
               </div>
-            ) : (
+            ) : !hasMobileMenu ? (
               <div className="homepage-header-actions" id="header-auth-group">
                 <button
                   type="button"
@@ -133,18 +165,20 @@ export default function HomePageHeaderSection() {
                   <span data-i18n="btn-register">{copy['btn-register']}</span>
                 </button>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
 
-        <div className="mobile-menu-panel hidden lg:hidden animate-fadeIn p-2 space-y-1 font-extrabold text-xs sm:text-sm text-slate-600" id="mobile-navigation-menu">
-          <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-features" href="#features" onClick={() => { hp.toggleMobileMenu() }}>Features</a>
-          <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-simulator" href="#simulator" onClick={() => { hp.toggleMobileMenu() }}>Live Demo</a>
-          <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-tax-iq" href="#tax-iq" onClick={() => { hp.toggleMobileMenu() }}>Tax IQ Assistant</a>
-          <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-rewards" href="#customer-rewards" onClick={() => { hp.toggleMobileMenu() }}>Customer Portal</a>
-          <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-calculator" href="#calculator" onClick={() => { hp.toggleMobileMenu() }}>Calculator</a>
-          <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-pricing" href="#pricing" onClick={() => { hp.toggleMobileMenu() }}>Pricing</a>
-        </div>
+        {!hasMobileMenu && (
+          <div className="mobile-menu-panel hidden md:hidden animate-fadeIn p-2 space-y-1 font-extrabold text-xs sm:text-sm text-slate-600" id="mobile-navigation-menu">
+            <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-features" href="#features" onClick={() => { hp.toggleMobileMenu() }}>Features</a>
+            <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-simulator" href="#simulator" onClick={() => { hp.toggleMobileMenu() }}>Live Demo</a>
+            <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-tax-iq" href="#tax-iq" onClick={() => { hp.toggleMobileMenu() }}>Tax IQ Assistant</a>
+            <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-rewards" href="#customer-rewards" onClick={() => { hp.toggleMobileMenu() }}>Customer Portal</a>
+            <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-calculator" href="#calculator" onClick={() => { hp.toggleMobileMenu() }}>Calculator</a>
+            <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-pricing" href="#pricing" onClick={() => { hp.toggleMobileMenu() }}>Pricing</a>
+          </div>
+        )}
       </header>
       <div className="homepage-header-spacer" aria-hidden="true" />
     </>

@@ -1,17 +1,14 @@
 // StaffSidebar — desktop (≥1024px) left nav and mobile drawer for the staff dashboard.
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { LogOut, ChevronLeft, ChevronDown, ChevronUp } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { STAFF_MENU_ITEMS } from '../constants'
-import { PUBLIC_HOME_MENU_ITEM } from '../../dashboard/constants'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
 
-export default function StaffSidebar({ activeScreen, onNavigate, onLogout, isOpen, onClose }) {
+export default function StaffSidebar({ activeScreen, isHomeActive = false, mobileOnly = false, onNavigate, onLogout, isOpen, onClose }) {
   const { t } = useTranslation()
-  const navigate = useNavigate()
   const { staffMember, account } = useStaffAccount()
   const displayName = account.defaultDisplayName || staffMember.fullName || 'Staff'
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
@@ -96,8 +93,10 @@ export default function StaffSidebar({ activeScreen, onNavigate, onLogout, isOpe
       <nav className="mt-6 flex-1 space-y-1.5 overflow-y-auto pr-1">
         <HomepageLink
           variant="menu"
+          active={isHomeActive}
           onNavigate={isMobile && onClose ? onClose : undefined}
         />
+        <div className="my-1 border-t border-white/10" />
         {STAFF_MENU_ITEMS.map((item) => {
           const isActive = activeScreen === item.id
           return (
@@ -119,6 +118,7 @@ export default function StaffSidebar({ activeScreen, onNavigate, onLogout, isOpe
             </button>
           )
         })}
+
       </nav>
 
       {/* Sign out */}
@@ -137,14 +137,15 @@ export default function StaffSidebar({ activeScreen, onNavigate, onLogout, isOpe
 
   return (
     <>
-      {/* Desktop Sidebar */}
+      {!mobileOnly && (
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col bg-nexoraSidebar px-5 py-7 text-white lg:flex">
         {renderContent(false)}
       </aside>
+      )}
 
       {/* Mobile Drawer */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
+        <div className="fixed inset-0 z-[100] lg:hidden" id="dashboard-mobile-menu">
           <button
             type="button"
             className="absolute inset-0 bg-nexoraText/60"
