@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { getStoredAppLanguage } from '../../utils/appLanguage'
 import HomePageView from './HomePageView'
 
-const PAGE_TITLE = 'NEXORA TOUCH — Smarter Tips. Faster Reviews. Stronger Growth.'
+const PAGE_TITLE = 'NEXORA TOUCH | Smart QR Tips, Reviews & Loyalty for Salons'
 
 export default function HomePage() {
   useEffect(() => {
