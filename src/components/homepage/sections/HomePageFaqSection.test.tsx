@@ -17,10 +17,14 @@ describe('HomePageFaqSection', () => {
     expect(screen.getByText('Does Nexora Touch only handle tips?')).toBeInTheDocument()
   })
 
-  it('keeps the FAQ heading compact without the pill badge', () => {
+  it('uses a compact FAQ eyebrow above the heading', () => {
     const { container } = render(<HomePageFaqSection />)
+    const eyebrow = container.querySelector('[data-i18n="faq-eyebrow"]')
 
-    expect(container.querySelector('[data-i18n="faq-eyebrow"]')).not.toBeInTheDocument()
+    expect(eyebrow).toBeInTheDocument()
+    expect(eyebrow).toHaveTextContent('FAQ')
+    expect(eyebrow).toHaveClass('text-[11px]')
+    expect(eyebrow).not.toHaveTextContent(/Nexora Touch FAQ/i)
     expect(container.querySelector('.lucide-shield-check')).not.toBeInTheDocument()
   })
 

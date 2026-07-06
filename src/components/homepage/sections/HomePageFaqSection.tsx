@@ -106,6 +106,9 @@ export default function HomePageFaqSection() {
       <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto space-y-5 text-center">
           <div className="mx-auto max-w-3xl space-y-2.5">
+            <span className="inline-flex items-center rounded-full border border-cyan-300/25 bg-white/10 px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-widest text-cyan-300" data-i18n="faq-eyebrow">
+              FAQ
+            </span>
             <h2 className="font-black tracking-tight text-white text-3xl sm:text-4xl leading-tight" data-i18n="faq-title">
               Nexora Touch FAQ
             </h2>
