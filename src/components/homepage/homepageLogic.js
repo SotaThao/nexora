@@ -1332,14 +1332,15 @@ function executeCustomerSessionLogin(userObj) {
 
   updateCustomerDashboardUI();
 
-  document.getElementById('header-auth-group').classList.add('hidden');
+  document.getElementById('header-auth-group')?.classList.add('hidden');
   const badge = document.getElementById('header-user-badge');
-  badge.classList.remove('hidden');
-  badge.style.removeProperty('display');
-  document.getElementById('header-user-name').textContent = t('txt-greeting').replace('{0}', userObj.name);
+  badge?.classList.remove('hidden');
+  badge?.style.removeProperty('display');
+  const userNameEl = document.getElementById('header-user-name');
+  if (userNameEl) userNameEl.textContent = t('txt-greeting').replace('{0}', userObj.name);
 
-  document.getElementById('cust-register-view').classList.add('hidden');
-  document.getElementById('cust-dashboard-view').classList.remove('hidden');
+  document.getElementById('cust-register-view')?.classList.add('hidden');
+  document.getElementById('cust-dashboard-view')?.classList.remove('hidden');
 }
 
 // Cập nhật giao diện Simulator Dashboard của Khách Hàng
@@ -1366,24 +1367,31 @@ function copyReferralCode() {
 
 // Đăng xuất và khôi phục giao diện ban đầu
 function handleLogout() {
+  const wasCustomerRegistered = appState.customer.isRegistered;
+
   appState.customer.isRegistered = false;
   appState.customer.name = t('header-guest');
   appState.customer.phone = "";
   appState.customer.points = 0;
 
-  document.getElementById('header-auth-group').classList.remove('hidden');
+  document.getElementById('header-auth-group')?.classList.remove('hidden');
   const badge = document.getElementById('header-user-badge');
-  badge.classList.add('hidden');
-  badge.style.removeProperty('display');
+  badge?.classList.add('hidden');
+  badge?.style.removeProperty('display');
 
-  document.getElementById('cust-dashboard-view').classList.add('hidden');
-  document.getElementById('cust-register-view').classList.remove('hidden');
+  document.getElementById('cust-dashboard-view')?.classList.add('hidden');
+  document.getElementById('cust-register-view')?.classList.remove('hidden');
 
-  document.getElementById('cust-reg-name').value = '';
-  document.getElementById('cust-reg-phone').value = '';
-  document.getElementById('cust-reg-ref').value = '';
+  const regName = document.getElementById('cust-reg-name');
+  const regPhone = document.getElementById('cust-reg-phone');
+  const regRef = document.getElementById('cust-reg-ref');
+  if (regName) regName.value = '';
+  if (regPhone) regPhone.value = '';
+  if (regRef) regRef.value = '';
 
-  showToast(t('toast-logged-out'));
+  if (wasCustomerRegistered) {
+    showToast(t('toast-logged-out'));
+  }
 }
 
 // Gửi số điện thoại giới thiệu

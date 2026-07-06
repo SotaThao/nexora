@@ -32,6 +32,7 @@ export default function MobileMenuDrawer({
   subscription = null,
   businessName,
   activeMenu,
+  isHomeActive = false,
   setActiveMenu,
   settingsTab,
   setSettingsTab,
@@ -62,7 +63,7 @@ export default function MobileMenuDrawer({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 lg:hidden">
+    <div className="fixed inset-0 z-[100] lg:hidden" id="dashboard-mobile-menu">
       <button
         type="button"
         className="absolute inset-0 bg-nexoraText/60"
@@ -177,9 +178,13 @@ export default function MobileMenuDrawer({
               navigate('/')
               onClose()
             }}
-            className="flex min-h-11 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-bold text-white/85 transition hover:bg-white/5 hover:text-white"
+            className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-bold transition ${
+              isHomeActive
+                ? 'bg-gradient-to-r from-nexoraElectric to-nexoraViolet text-white shadow-lg shadow-nexoraElectric/20'
+                : 'text-white/85 hover:bg-white/5 hover:text-white'
+            }`}
           >
-            <MenuIcon item={PUBLIC_HOME_MENU_ITEM} active={false} />
+            <MenuIcon item={PUBLIC_HOME_MENU_ITEM} active={isHomeActive} />
             <span>{t('dashboard.menu.home')}</span>
           </button>
 
