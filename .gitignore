@@ -63,3 +63,4 @@ pnpm-workspace.yaml
 # Local prototypes (not for source control)
 docs/prototypes/
 
+.gstack/
