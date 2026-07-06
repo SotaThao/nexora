@@ -69,7 +69,7 @@ function mapReviewDto(item: DashboardReviewApiDto): ReviewRecord {
     touchPointName: item.touchPointName ?? '',
     routingType: item.routingType,
     category: deriveReviewCategory(item),
-    date: createdAt ? formatJoinedDate(createdAt) : '',
+    date: formatJoinedDate(createdAt),
     createdAt,
     isResolved: item.isResolved ?? false,
     customerEmail: item.customerEmail ?? '',

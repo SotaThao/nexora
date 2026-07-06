@@ -239,7 +239,7 @@ function normalizeRecentReview(dto: StaffRecentReviewApiDto): ReviewRecord {
     customerName: dto.customerName ?? '',
     routingType,
     category: deriveStaffReviewCategory(routingType),
-    date: createdAt ? formatJoinedDate(createdAt) : '',
+    date: formatJoinedDate(createdAt),
     createdAt,
   }
 }
