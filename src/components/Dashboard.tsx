@@ -299,7 +299,7 @@ export default function Dashboard({
     setReviewFilterStaff(value)
     reviewsPagination.setPage(1)
   }, [reviewsPagination.setPage])
-  const [newTouchpoint, setNewTouchpoint] = useState({ name: '', type: 'Table QR' })
+  const [newTouchpoint, setNewTouchpoint] = useState({ name: '', type: 'Master Store' })
   const [isAddTouchpointModalOpen, setIsAddTouchpointModalOpen] = useState(false)
   const [addTouchpointPrefill, setAddTouchpointPrefill] = useState<any | null>(null)
   const [activeKpi, setActiveKpi] = useState('tips')
@@ -525,19 +525,19 @@ export default function Dashboard({
 
 
   const addTouchpoint = async (name, type, deviceId) => {
-    const finalName = typeof name === 'string' ? name.trim() : (newTouchpoint.name || '').trim()
-    const finalType = typeof type === 'string' ? type : (newTouchpoint.type || 'Table QR')
+    const finalType = typeof type === 'string' ? type : (newTouchpoint.type || 'Master Store')
+    const finalName = (typeof name === 'string' ? name.trim() : (newTouchpoint.name || '').trim()) || finalType
     const finalDeviceId = typeof deviceId === 'string' ? deviceId.trim() : ''
 
-    if (!finalName) return
+    if (!finalType) return
 
     await createTouchpointMutation.mutateAsync({
       name: finalName,
-      type: finalType === 'Table QR' ? 'Table' : finalType === 'Front Desk' ? 'FrontDesk' : finalType === 'Receipt QR' ? 'Receipt' : finalType === 'Staff QR' ? 'StaffCard' : 'Table',
+      type: finalType === 'Master Store' ? 'FrontDesk' : finalType === 'Front Desk' ? 'FrontDesk' : finalType === 'Table QR' ? 'Table' : finalType === 'Receipt QR' ? 'Receipt' : finalType === 'Staff QR' ? 'StaffCard' : 'Table',
       // If we supported hardware linkage, we would map finalDeviceId here.
     })
-    
-    setNewTouchpoint({ name: '', type: 'Table QR' })
+
+    setNewTouchpoint({ name: '', type: 'Master Store' })
   }
 
   const linkDevice = (id, deviceId) => {
@@ -561,20 +561,30 @@ export default function Dashboard({
     if (target.staffProfileId) {
       try {
         let page = await merchantTouchpointsRepository.getTouchpoints()
-        masterTouchpoint = page.items.find((tp) => tp.type === 'FrontDesk' && tp.isActive !== false)
+        masterTouchpoint =
+          page.items.find((tp) => tp.slug === 'master-store' && tp.isActive !== false) ||
+          page.items.find((tp) => tp.type === 'FrontDesk' && tp.isActive !== false)
 
         if (!masterTouchpoint) {
           await merchantTouchpointsRepository.createTouchpoint({
-            name: 'Front Desk',
+            name: 'Master Store',
             type: 'FrontDesk'
           })
           page = await merchantTouchpointsRepository.getTouchpoints()
-          masterTouchpoint = page.items.find((tp) => tp.type === 'FrontDesk') || page.items[0] || null
+          masterTouchpoint =
+            page.items.find((tp) => tp.slug === 'master-store') ||
+            page.items.find((tp) => tp.type === 'FrontDesk') ||
+            page.items[0] ||
+            null
         }
       } catch (err) {
         logger.error('Failed to resolve master touchpoint for QR', err)
         // Fallback to locally loaded touchpoints if API fails
-        masterTouchpoint = touchpoints.find((tp) => tp.type === 'FrontDesk') || touchpoints[0] || null
+        masterTouchpoint =
+          touchpoints.find((tp) => tp.slug === 'master-store') ||
+          touchpoints.find((tp) => tp.type === 'FrontDesk') ||
+          touchpoints[0] ||
+          null
       }
 
       const staffTipQr = resolveMerchantStaffTipQr(target.staffProfileId, {

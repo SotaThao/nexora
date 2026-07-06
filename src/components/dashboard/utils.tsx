@@ -249,7 +249,12 @@ export function useCountUp(target, duration = 900) {
 }
 
 export function resolveMasterTouchpoint(touchpoints = []) {
-  return touchpoints.find((tp) => tp.type === 'FrontDesk') || touchpoints[0] || null
+  return (
+    touchpoints.find((tp) => tp.slug === 'master-store') ||
+    touchpoints.find((tp) => tp.type === 'FrontDesk') ||
+    touchpoints[0] ||
+    null
+  )
 }
 
 export function buildMasterQrTarget(touchpoints = []) {

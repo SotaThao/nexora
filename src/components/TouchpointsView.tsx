@@ -93,7 +93,7 @@ export default function TouchpointsView({
 
   // Local state for the Add Touchpoint form (name also drives list filter via API)
   const [name, setName] = useState('')
-  const [type, setType] = useState('Table QR')
+  const [type, setType] = useState('Master Store')
   const [deviceId, setDeviceId] = useState('')
   const [debouncedNameFilter, setDebouncedNameFilter] = useState('')
   const [debouncedDeviceIdFilter, setDebouncedDeviceIdFilter] = useState('')
@@ -445,6 +445,7 @@ export default function TouchpointsView({
                   value={type}
                   onChange={(event) => setType(event.target.value)}
                   options={[
+                    { value: 'Master Store', label: 'Master Store' },
                     { value: 'Table QR', label: 'Table QR' },
                     { value: 'Front Desk', label: 'Front Desk' },
                     { value: 'Receipt QR', label: 'Receipt QR' },
@@ -538,7 +539,7 @@ export default function TouchpointsView({
                         <h3 className="font-extrabold text-sm text-nexoraText leading-snug truncate" title={point.name}>
                           {point.name}
                         </h3>
-                        {point.type !== 'FrontDesk' && point.slug !== 'master-store' && (
+                        {point.slug !== 'master-store' && point.name !== 'Master Store' && (
                           <IconButton 
                             label={t('common.delete')} 
                             onClick={() => setDeleteConfirmId(point.id)} 

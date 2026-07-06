@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, Plus, MapPin } from 'lucide-react'
+import { X, Plus, QrCode } from 'lucide-react'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
 import { useTranslation } from '../../../contexts/LanguageContext'
@@ -8,6 +8,7 @@ import { isApiError } from '../../../types/domain'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 
 const STATION_TYPE_OPTIONS = [
+  { value: 'Master Store', label: 'Master Store' },
   { value: 'Table QR', label: 'Table QR' },
   { value: 'Front Desk', label: 'Front Desk' },
   { value: 'Receipt QR', label: 'Receipt QR' },
@@ -20,7 +21,7 @@ export default function AddTouchpointModal({ open, onClose, onAdd, initialValues
   const { showToast } = useNotification()
 
   const [name, setName] = useState('')
-  const [type, setType] = useState('Table QR')
+  const [type, setType] = useState('Master Store')
   const [deviceId, setDeviceId] = useState('')
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -30,7 +31,7 @@ export default function AddTouchpointModal({ open, onClose, onAdd, initialValues
   useEffect(() => {
     if (open) {
       setName(initialValues?.name || '')
-      setType(initialValues?.type || 'Table QR')
+      setType(initialValues?.type || 'Master Store')
       setDeviceId(initialValues?.deviceId || '')
       setError('')
       setIsSubmitting(false)
@@ -44,8 +45,8 @@ export default function AddTouchpointModal({ open, onClose, onAdd, initialValues
     if (isSubmitting) return
 
     const trimmedName = name.trim()
-    if (!trimmedName) {
-      setError(t('dashboard.modals.tp_name_required'))
+    if (!type) {
+      setError(t('dashboard.modals.tp_type_required'))
       return
     }
     if (!onAdd) return
@@ -53,7 +54,7 @@ export default function AddTouchpointModal({ open, onClose, onAdd, initialValues
     try {
       setIsSubmitting(true)
       await onAdd(trimmedName, type, deviceId.trim())
-      showToast(t('dashboard.modals.tp_added_success', { name: trimmedName }), 'success')
+      showToast(t('dashboard.modals.tp_added_success', { name: trimmedName || type }), 'success')
       onClose()
     } catch (err) {
       const fallbackMessage = t('dashboard.modals.tp_add_failed')
@@ -85,7 +86,7 @@ export default function AddTouchpointModal({ open, onClose, onAdd, initialValues
         <div className="flex items-center justify-between border-b border-nexoraRule pb-4">
           <div className="flex items-center gap-2.5">
             <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-nexoraBrandSoft text-nexoraBrand shrink-0">
-              <MapPin className="h-4.5 w-4.5" />
+              <QrCode className="h-4.5 w-4.5" />
             </span>
             <h2 className="text-lg font-extrabold text-nexoraText">
               {t('dashboard.modals.add_tp_title')}
@@ -97,41 +98,38 @@ export default function AddTouchpointModal({ open, onClose, onAdd, initialValues
         </div>
 
         <div className="mt-5 space-y-4">
-          {/* Touch Point Name */}
-          <div>
-            <label className="text-[10px] font-extrabold uppercase tracking-wider text-nexoraMuted block">
-              {t('dashboard.modals.tp_name_label')}
-            </label>
-            <input
-              autoFocus
-              value={name}
-              onChange={(event) => {
-                setName(event.target.value)
-                if (error) setError('')
-              }}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') void handleSubmit()
-              }}
-              placeholder={t('dashboard.modals.tp_name_placeholder')}
-              className={`mt-1 h-11 w-full rounded-lg border px-3 text-sm text-nexoraText outline-none transition-colors ${
-                error
-                  ? 'border-nexoraDanger focus:border-nexoraDanger'
-                  : 'border-nexoraBorder focus:border-nexoraBrand'
-              }`}
-            />
-            {error && <p className="mt-1 text-[10px] font-bold text-nexoraDanger">{error}</p>}
-          </div>
-
-          {/* Station Type */}
+          {/* Station Type (required) */}
           <div>
             <label className="text-[10px] font-extrabold uppercase tracking-wider text-nexoraMuted block mb-1">
               {t('dashboard.modals.tp_type_label')}
             </label>
             <CustomSelect
-              buttonClass="h-11 text-sm focus:border-nexoraBrand"
+              buttonClass={`h-11 text-sm focus:border-nexoraBrand ${
+                error ? 'border-nexoraDanger focus:border-nexoraDanger' : ''
+              }`}
               value={type}
-              onChange={(event) => setType(event.target.value)}
+              onChange={(event) => {
+                setType(event.target.value)
+                if (error) setError('')
+              }}
               options={STATION_TYPE_OPTIONS}
+            />
+            {error && <p className="mt-1 text-[10px] font-bold text-nexoraDanger">{error}</p>}
+          </div>
+
+          {/* Touch Point Name (optional) */}
+          <div>
+            <label className="text-[10px] font-extrabold uppercase tracking-wider text-nexoraMuted block">
+              {t('dashboard.modals.tp_name_label')}
+            </label>
+            <input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') void handleSubmit()
+              }}
+              placeholder={t('dashboard.modals.tp_name_placeholder')}
+              className="mt-1 h-11 w-full rounded-lg border border-nexoraBorder px-3 text-sm text-nexoraText outline-none transition-colors focus:border-nexoraBrand"
             />
           </div>
 
