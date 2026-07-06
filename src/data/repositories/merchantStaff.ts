@@ -3,6 +3,7 @@
  */
 import httpClient from '../../lib/httpClient'
 import type { PaymentMethodDto, StaffMember, StaffSearchResult } from '../../types/domain'
+import { formatJoinedDate } from '../../utils/localDate'
 import type {
   MerchantStaffInvite,
   MerchantStaffDetailStats,
@@ -238,7 +239,7 @@ function normalizeRecentReview(dto: StaffRecentReviewApiDto): ReviewRecord {
     customerName: dto.customerName ?? '',
     routingType,
     category: deriveStaffReviewCategory(routingType),
-    date: createdAt ? new Date(createdAt).toLocaleString() : '',
+    date: createdAt ? formatJoinedDate(createdAt) : '',
     createdAt,
   }
 }
