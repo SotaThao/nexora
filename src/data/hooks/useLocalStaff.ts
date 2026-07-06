@@ -55,7 +55,7 @@ async function configureLocalStaffPaymentMethods(
       imageUrl,
     })
 
-    if (config.enabled) {
+    if (config.enabled && !method.isActive) {
       await localStaffRepository.togglePaymentMethod(staffProfileId, method.id)
     }
   }

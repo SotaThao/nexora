@@ -210,7 +210,7 @@ function StaffModal({
 
   const displayReviewCount = reviewsList.length > 0
     ? reviewsList.length
-    : Number(staffStats?.allTime?.totalReviews ?? staffStats?.period?.totalReviews ?? form?.tipCount ?? 0)
+    : Number(staffStats?.allTime?.totalReviews ?? staffStats?.period?.totalReviews ?? 0)
 
   const phoneParsed = parsePhone(form?.phone || '')
 
