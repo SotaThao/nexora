@@ -15,7 +15,11 @@ import {
   CONTACT_REQUEST_MESSAGE_MAX_LENGTH,
   CONTACT_REQUEST_MESSAGE_MIN_LENGTH,
 } from '../data/repositories/support'
-import { SUPPORT_TYPE_I18N_KEYS, SUPPORT_TYPE_OPTIONS, SupportType } from '../constants/supportType'
+import {
+  DEFAULT_SUPPORT_TYPE,
+  SUPPORT_TYPE_I18N_KEYS,
+  SUPPORT_TYPE_OPTIONS,
+} from '../constants/supportType'
 import CustomSelect from './CustomSelect'
 import {
   getSupportFieldErrorParams,
@@ -51,7 +55,7 @@ export default function SupportView() {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
-  const [supportType, setSupportType] = useState<string>(SupportType.Other)
+  const [supportType, setSupportType] = useState<string>(DEFAULT_SUPPORT_TYPE)
   const [message, setMessage] = useState('')
   const [fieldErrors, setFieldErrors] = useState<SupportFormFieldErrors>({})
   const [formError, setFormError] = useState('')
@@ -116,7 +120,7 @@ export default function SupportView() {
   }
 
   const resetForm = () => {
-    setSupportType(SupportType.Other)
+    setSupportType(DEFAULT_SUPPORT_TYPE)
     setMessage('')
     setFieldErrors({})
     setFormError('')
@@ -185,7 +189,31 @@ export default function SupportView() {
     {
       question: t('dashboard.support.faq.q4'),
       answer: t('dashboard.support.faq.a4')
-    }
+    },
+    {
+      question: t('dashboard.support.faq.q5'),
+      answer: t('dashboard.support.faq.a5')
+    },
+    {
+      question: t('dashboard.support.faq.q6'),
+      answer: t('dashboard.support.faq.a6')
+    },
+    {
+      question: t('dashboard.support.faq.q7'),
+      answer: t('dashboard.support.faq.a7')
+    },
+    {
+      question: t('dashboard.support.faq.q8'),
+      answer: t('dashboard.support.faq.a8')
+    },
+    {
+      question: t('dashboard.support.faq.q9'),
+      answer: t('dashboard.support.faq.a9')
+    },
+    {
+      question: t('dashboard.support.faq.q10'),
+      answer: t('dashboard.support.faq.a10')
+    },
   ]
 
   const toggleFaq = (index) => {
@@ -358,6 +386,10 @@ export default function SupportView() {
                     : t('dashboard.support.form.submit_btn')}
                 </span>
               </button>
+
+              <p className="text-[11px] text-nexoraMuted leading-relaxed pt-1">
+                {t('dashboard.support.form.response_time')}
+              </p>
             </form>
           </div>
         </Panel>
