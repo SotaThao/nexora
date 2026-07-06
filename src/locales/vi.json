@@ -1058,7 +1058,8 @@
         "transactions_count": "Số Giao Dịch",
         "transactions_unit": "Giao dịch",
         "avg_tip": "Típ Trung Bình",
-        "fees_avoided": "Phí tiết kiệm"
+        "fees_avoided": "Phí tiết kiệm",
+        "fees_avoided_tooltip": "Ước tính phí xử lý thẻ tiết kiệm được từ tip P2P trực tiếp, tính theo 3% trên tổng lượng được định tuyến."
       },
       "charts": {
         "daily_revenue": "Biểu Đồ Doanh Thu Theo Ngày",
@@ -1068,7 +1069,11 @@
         "staff": "Bảng Xếp Hạng Nhân Viên",
         "touchpoints": "Hiệu suất trạm",
         "tips_count_label": "lượt nhận típ",
-        "scans_count_label": "lượt quét"
+        "scans_count_label": "lượt quét",
+        "unassigned": "Tip chưa gán",
+        "unassigned_tooltip": "Tip này được nhận qua mã QR chung của salon và chưa được gán cho thợ cụ thể.",
+        "station_stats": "{scans} lượt quét · {tips} tip = {pct}% chuyển đổi",
+        "station_stats_no_conversion": "{scans} lượt quét · {tips} tip"
       }
     },
     "empty_states": {
