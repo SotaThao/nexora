@@ -1,1 +1,0 @@
-import{j as r}from"./index-uqwj-GOK.js";import{L as t}from"./LegalPage-BUuwVd9s.js";import"./icons-Bsu5MMdI.js";import"./react-BI6KFZwY.js";import"./LanguageSwitcher-D5Y29-iB.js";function s(){return r.jsx(t,{type:"terms"})}export{s as default};

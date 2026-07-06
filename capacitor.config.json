@@ -18,7 +18,12 @@
       "enabled": true
     },
     "SplashScreen": {
-      "launchShowDuration": 0
+      "launchAutoHide": false,
+      "launchFadeOutDuration": 300,
+      "backgroundColor": "#000000",
+      "androidSplashResourceName": "splash_screen",
+      "androidScaleType": "FIT_XY",
+      "showSpinner": false
     },
     "Keyboard": {
       "resize": "native",
