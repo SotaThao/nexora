@@ -29,6 +29,11 @@ import {
 } from '../data/hooks/useMerchantPhysicalCards'
 import { usePagination } from '../hooks/usePagination'
 import { DEFAULT_PAGE_SIZE, STAFF_FILTER_LIST_PAGE_SIZE } from '../constants/pagination'
+import {
+  DEFAULT_TOUCHPOINT_TYPE,
+  TOUCHPOINT_TYPE_OPTIONS,
+  isMasterTouchpoint,
+} from '../constants/touchpoints'
 import { buildQrImageUrl, toLocalCustomerTouchUrl } from '../utils/staffTipUrl'
 import { formatCurrency, formatTransactionDateTime } from './dashboard/utils'
 import PhysicalCardDetailModal from './dashboard/modals/PhysicalCardDetailModal'
@@ -93,7 +98,7 @@ export default function TouchpointsView({
 
   // Local state for the Add Touchpoint form (name also drives list filter via API)
   const [name, setName] = useState('')
-  const [type, setType] = useState('Table QR')
+  const [type, setType] = useState(DEFAULT_TOUCHPOINT_TYPE)
   const [deviceId, setDeviceId] = useState('')
   const [debouncedNameFilter, setDebouncedNameFilter] = useState('')
   const [debouncedDeviceIdFilter, setDebouncedDeviceIdFilter] = useState('')
@@ -444,13 +449,7 @@ export default function TouchpointsView({
                   buttonClass="h-11 text-sm focus:border-nexoraBrand dark:focus:border-luxuryGold"
                   value={type}
                   onChange={(event) => setType(event.target.value)}
-                  options={[
-                    { value: 'Table QR', label: 'Table QR' },
-                    { value: 'Front Desk', label: 'Front Desk' },
-                    { value: 'Receipt QR', label: 'Receipt QR' },
-                    { value: 'Business Main', label: 'Business Main' },
-                    { value: 'Staff QR', label: 'Staff QR' }
-                  ]}
+                  options={TOUCHPOINT_TYPE_OPTIONS}
                 />
               </div>
 
@@ -538,7 +537,7 @@ export default function TouchpointsView({
                         <h3 className="font-extrabold text-sm text-nexoraText leading-snug truncate" title={point.name}>
                           {point.name}
                         </h3>
-                        {point.type !== 'FrontDesk' && point.slug !== 'master-store' && (
+                        {!isMasterTouchpoint(point) && (
                           <IconButton 
                             label={t('common.delete')} 
                             onClick={() => setDeleteConfirmId(point.id)} 
