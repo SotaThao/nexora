@@ -947,6 +947,7 @@
         "status_pending_desc": "Payout recorded. Waiting for the staff member to confirm they received the payment.",
         "status_confirmed_desc": "The staff member confirmed they received this payout.",
         "status_cancelled_desc": "This payout was cancelled and is no longer active.",
+        "type_unpaid_tips": "Unpaid tip",
         "type_tip": "Tip",
         "type_salary": "Salary",
         "type_bonus": "Bonus",

@@ -35,6 +35,7 @@ const TYPE_FILTER_OPTIONS = [
   { value: String(PayoutType.Tip), labelKey: 'dashboard.tips.payouts_manager.type_tip' },
   { value: String(PayoutType.Salary), labelKey: 'dashboard.tips.payouts_manager.type_salary' },
   { value: String(PayoutType.Bonus), labelKey: 'dashboard.tips.payouts_manager.type_bonus' },
+  { value: String(PayoutType.TipDebt), labelKey: 'dashboard.tips.payouts_manager.type_unpaid_tips' },
   { value: String(PayoutType.Other), labelKey: 'dashboard.tips.payouts_manager.type_other' },
 ]
 
