@@ -5,6 +5,7 @@ import { imagesRepository } from '../repositories/images'
 import { payoutTypeToUiKey } from '../paymentMethodTypes'
 import { resolvePaymentMethodImageUrl } from '../../utils/resolvePaymentMethodImageUrl'
 import { dataUrlToFile } from '../../utils/imageFile'
+import { splitFullName } from '../../utils/staffName'
 import type { ManualStaffFormPayload } from '../../components/dashboard/modals/AddManualStaffTab'
 import type { LocalStaffUpdateParams } from '../../types/repositories'
 import type { PaymentMethodDto } from '../../types/domain'
@@ -21,15 +22,6 @@ export async function resolveStaffAvatarUrl(avatar: string, avatarFile?: File | 
     return null
   }
   return avatar
-}
-
-function splitFullName(fullName: string): { firstName: string; lastName: string } {
-  const trimmed = fullName.trim()
-  const parts = trimmed.split(/\s+/)
-  return {
-    firstName: parts[0] || '',
-    lastName: parts.slice(1).join(' ') || '',
-  }
 }
 
 async function resolvePhotoUrl(payload: ManualStaffFormPayload): Promise<string | null> {
