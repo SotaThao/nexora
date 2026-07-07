@@ -28,6 +28,7 @@ import { EMPTY_STAFF_FORM, type StaffFormState } from '../../../types/forms'
 import { getApiErrorCode } from '../../../types/domain'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { isValidEmail, isValidPhone } from '../../../utils/validation'
+import { resolveStaffDisplayNames, splitFullName } from '../../../utils/staffName'
 
 function resolveStaffDetailCode(member: { staffCode?: string | null }) {
   const code = String(member?.staffCode ?? '').trim()
@@ -42,25 +43,23 @@ function pickNonEmptyString(...values: unknown[]): string {
   return ''
 }
 
-function resolveStaffFormNames(member) {
-  const fullName = pickNonEmptyString(member?.fullName)
-  const nickname = pickNonEmptyString(member?.nickname, member?.displayName)
-  return { fullName, nickname }
-}
-
 /** Prefer detail API fields; fall back to staff list row for phone/email and other profile gaps. */
 function mergeStaffModalMember(detail, listMember) {
   const list = listMember ? normaliseMember(listMember) : null
   if (!detail) return list ?? {}
 
+  const merged = { ...list, ...detail }
+  const names = resolveStaffDisplayNames(merged)
+
   return {
     ...detail,
-    ...resolveStaffFormNames({ ...list, ...detail }),
+    fullName: names.fullName,
+    nickname: names.nickname,
     position: pickNonEmptyString(detail.position, list?.position),
     avatar: pickNonEmptyString(detail.avatar, list?.avatar),
     phone: pickNonEmptyString(detail.phone, list?.phone),
     email: pickNonEmptyString(detail.email, list?.email),
-    bio: pickNonEmptyString(detail.bio, list?.bio),
+    bio: names.formBio,
     staffCode: detail.staffCode ?? list?.staffCode ?? '',
     staffProfileId: detail.staffProfileId ?? list?.staffProfileId ?? '',
     averageRating: detail.averageRating ?? list?.averageRating ?? 0,
@@ -77,7 +76,7 @@ function mergeStaffModalMember(detail, listMember) {
  * Shared by the useState initialiser and the Dashboard seeding effects.
  */
 export function normaliseMember(member) {
-  const { fullName, nickname } = resolveStaffFormNames(member)
+  const { fullName, nickname } = resolveStaffDisplayNames(member)
   return {
     id: member.id,
     fullName,
@@ -223,7 +222,7 @@ export function useStaffManagement({
     setApprovingStaffMember(member)
     setFetchStaffStatsInModal(true)
     setViewingStaffCode(resolveStaffDetailCode(member))
-    const { fullName, nickname } = resolveStaffFormNames(member)
+    const { fullName, nickname } = resolveStaffDisplayNames(member)
     setStaffForm({
       fullName,
       nickname,
@@ -247,7 +246,7 @@ export function useStaffManagement({
   }
 
   const populateStaffForm = (member) => {
-    const { fullName, nickname } = resolveStaffFormNames(member)
+    const { fullName, nickname, formBio } = resolveStaffDisplayNames(member)
     setStaffForm({
       fullName,
       nickname,
@@ -256,7 +255,7 @@ export function useStaffManagement({
       avatarFile: null,
       phone: member.phone || member.invitedPhone || '',
       email: member.email || member.invitedEmail || '',
-      bio: member.bio || '',
+      bio: formBio,
       venmo: member.paymentAccounts?.venmo || '',
       cashapp: member.paymentAccounts?.cashapp || '',
       zelle: member.paymentAccounts?.zelle || '',
@@ -325,15 +324,19 @@ export function useStaffManagement({
           String(staffForm.avatar || ''),
           staffForm.avatarFile as File | null | undefined,
         )
+        const fullName = staffForm.fullName.trim()
+        const { firstName, lastName } = splitFullName(fullName)
         updateLocalStaffMutation.mutate({
           staffProfileId: member.staffProfileId,
           params: {
             displayName: (staffForm.nickname || staffForm.fullName).trim(),
             position: staffForm.position?.trim() || null,
-            bio: staffForm.bio?.trim() || staffForm.fullName.trim() || null,
+            bio: staffForm.bio?.trim() || null,
             photoUrl,
             phoneNumber: staffForm.phone?.trim() || null,
             email: staffForm.email?.trim() || null,
+            firstName,
+            lastName,
           },
         }, {
           onSuccess: () => {

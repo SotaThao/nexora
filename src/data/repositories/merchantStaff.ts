@@ -24,6 +24,8 @@ import type {
 } from '../../types/repositories'
 import type { ReviewRecord, TransactionRecord } from '../../types/domain'
 
+import { resolveStaffFullNameFromApi } from '../../utils/staffName'
+
 type HttpClient = typeof httpClient
 
 const PAYOUT_TYPE_TO_KEY: Record<string, string> = {
@@ -105,7 +107,7 @@ export function normalizeStaffListItem(dto: StaffListItemApiDto): StaffMember {
     isProfileComplete: dto.isProfileComplete ?? false,
     tipCount: dto.tipCount ?? 0,
     averageRating: dto.averageRating ?? 0,
-    fullName: dto.fullName ?? '',
+    fullName: resolveStaffFullNameFromApi(dto),
     nickname: displayName,
     displayName,
     avatar: dto.photoUrl ?? null,

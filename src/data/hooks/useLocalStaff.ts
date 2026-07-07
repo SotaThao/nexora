@@ -5,6 +5,7 @@ import { imagesRepository } from '../repositories/images'
 import { payoutTypeToUiKey } from '../paymentMethodTypes'
 import { resolvePaymentMethodImageUrl } from '../../utils/resolvePaymentMethodImageUrl'
 import { dataUrlToFile } from '../../utils/imageFile'
+import { splitFullName } from '../../utils/staffName'
 import type { ManualStaffFormPayload } from '../../components/dashboard/modals/AddManualStaffTab'
 import type { LocalStaffUpdateParams } from '../../types/repositories'
 import type { PaymentMethodDto } from '../../types/domain'
@@ -67,15 +68,16 @@ export function useCreateLocalStaff() {
   return useMutation({
     mutationFn: async (payload: ManualStaffFormPayload) => {
       const photoUrl = await resolvePhotoUrl(payload)
+      const { firstName, lastName } = splitFullName(payload.fullName)
       const created = await localStaffRepository.create({
         displayName: payload.displayNickname.trim(),
         position: payload.position.trim() || null,
-        bio: payload.fullName.trim() !== payload.displayNickname.trim()
-          ? payload.fullName.trim()
-          : null,
+        bio: null,
         photoUrl,
         phoneNumber: payload.phoneNumber?.trim() || null,
         email: payload.email?.trim() || null,
+        firstName,
+        lastName,
       })
 
       if (created.id) {

@@ -14,6 +14,19 @@ interface LocalStaffPaymentMethodApiDto {
   isConfigured?: boolean
 }
 
+function toLocalStaffRequestBody(params: LocalStaffCreateParams) {
+  return {
+    displayName: params.displayName,
+    position: params.position ?? null,
+    bio: params.bio ?? null,
+    photoUrl: params.photoUrl ?? null,
+    phoneNumber: params.phoneNumber ?? null,
+    email: params.email ?? null,
+    firstName: params.firstName,
+    lastName: params.lastName,
+  }
+}
+
 function normalizeLocalStaffPaymentMethod(dto: LocalStaffPaymentMethodApiDto): PaymentMethodDto {
   const type = dto.type || ''
   const uiKey = payoutTypeToUiKey(type)
@@ -32,25 +45,14 @@ function normalizeLocalStaffPaymentMethod(dto: LocalStaffPaymentMethodApiDto): P
 export function createLocalStaffRepository(client: HttpClient = httpClient) {
   return {
     async create(params: LocalStaffCreateParams): Promise<LocalStaffApiDto> {
-      return client.post<LocalStaffApiDto>('/api/v1/merchant/local-staff', {
-        displayName: params.displayName,
-        position: params.position ?? null,
-        bio: params.bio ?? null,
-        photoUrl: params.photoUrl ?? null,
-        phoneNumber: params.phoneNumber ?? null,
-        email: params.email ?? null,
-      })
+      return client.post<LocalStaffApiDto>('/api/v1/merchant/local-staff', toLocalStaffRequestBody(params))
     },
 
     async update(staffProfileId: string, params: LocalStaffUpdateParams): Promise<void> {
-      await client.put(`/api/v1/merchant/local-staff/${encodeURIComponent(staffProfileId)}`, {
-        displayName: params.displayName,
-        position: params.position ?? null,
-        bio: params.bio ?? null,
-        photoUrl: params.photoUrl ?? null,
-        phoneNumber: params.phoneNumber ?? null,
-        email: params.email ?? null,
-      })
+      await client.put(
+        `/api/v1/merchant/local-staff/${encodeURIComponent(staffProfileId)}`,
+        toLocalStaffRequestBody(params),
+      )
     },
 
     async remove(staffProfileId: string): Promise<void> {
