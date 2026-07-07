@@ -3,6 +3,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { isInitiatedLikeTipStatus, isTipStatus, TipStatus } from '../../constants/tipStatus'
 
+// This Master Store QR is already printed/distributed — never allow deleting its touchpoint.
+export const BITCOIN_NAIL_BAR_MASTER_QR_PATH = '/touch/bitcoin-nail-bar-1b8cb587-9d36bc13/master-qr'
+
+export function isBitcoinNailBarMasterQrTouchpoint(point) {
+  return String(point?.url || '').toLowerCase().includes(BITCOIN_NAIL_BAR_MASTER_QR_PATH)
+}
+
 // Render text with styled star rating symbols (★) in luxuryGold with a 4px gap.
 export function renderTextWithGoldStars(text) {
   if (!text) return null

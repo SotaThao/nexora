@@ -30,7 +30,7 @@ import {
 import { usePagination } from '../hooks/usePagination'
 import { DEFAULT_PAGE_SIZE, STAFF_FILTER_LIST_PAGE_SIZE } from '../constants/pagination'
 import { buildQrImageUrl, toLocalCustomerTouchUrl } from '../utils/staffTipUrl'
-import { formatCurrency, formatTransactionDateTime } from './dashboard/utils'
+import { formatCurrency, formatTransactionDateTime, isBitcoinNailBarMasterQrTouchpoint } from './dashboard/utils'
 import PhysicalCardDetailModal from './dashboard/modals/PhysicalCardDetailModal'
 
 function isLinkedTouchPointId(value: unknown): boolean {
@@ -499,6 +499,10 @@ export default function TouchpointsView({
               const scans = point.scans ?? 0
               const revenue = point.revenue ?? 0
               const qrImageSrc = buildQrImageUrl(qrUrl, 150, point.qrImageUrl)
+              const canDeletePoint =
+                point.type !== 'FrontDesk' &&
+                point.slug !== 'master-store' &&
+                !isBitcoinNailBarMasterQrTouchpoint(point)
 
               return (
                 <Panel key={point.id} className="p-3.5 flex flex-col sm:flex-row gap-3 sm:gap-4 hover:shadow-premium transition-all duration-300 group border border-nexoraBorder relative overflow-visible min-h-0 sm:min-h-[160px]">
@@ -538,7 +542,7 @@ export default function TouchpointsView({
                         <h3 className="font-extrabold text-sm text-nexoraText leading-snug truncate" title={point.name}>
                           {point.name}
                         </h3>
-                        {point.type !== 'FrontDesk' && point.slug !== 'master-store' && (
+                        {canDeletePoint && (
                           <IconButton 
                             label={t('common.delete')} 
                             onClick={() => setDeleteConfirmId(point.id)} 
