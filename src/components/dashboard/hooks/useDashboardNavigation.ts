@@ -21,11 +21,7 @@ export function useDashboardNavigation() {
       setIsTipsMobileExpanded(true)
       setIsTouchpointsMobileExpanded(false)
       const tab = new URLSearchParams(location.search).get('tab')
-      if (TIPS_TAB_IDS.includes(tab)) {
-        setTipsTab(tab)
-      } else {
-        setTipsTab(TIPS_TAB_IDS[0])
-      }
+      setTipsTab(TIPS_TAB_IDS.includes(tab) ? tab : TIPS_TAB_IDS[0])
     } else if (activeMenu === 'touchpoints') {
       setIsTouchpointsMobileExpanded(true)
       setIsTipsMobileExpanded(false)
