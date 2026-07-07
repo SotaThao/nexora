@@ -7,10 +7,10 @@ import AppQrScanner from '../../common/AppQrScanner'
 import { resolveQrToAppPath } from '../../../utils/qrNavigate'
 
 const NAV_ITEMS = [
-  { id: 'overview',    labelKey: 'nav_home',    Icon: Home,             image: '/assets/menu/dashboard.png' },
-  { id: 'staff',       labelKey: 'nav_staff',   Icon: Users,            image: '/assets/menu/staff.png' },
-  { id: 'tips',        labelKey: 'nav_tips',    Icon: CircleDollarSign, image: '/assets/menu/tips.png' },
-  { id: 'touchpoints', labelKey: 'nav_qr',      Icon: QrCode,           image: '/assets/menu/touchpoint.png' },
+  { id: 'overview',    labelKey: 'nav_home',    Icon: Home },
+  { id: 'staff',       labelKey: 'nav_staff',   Icon: Users },
+  { id: 'tips',        labelKey: 'nav_tips',    Icon: CircleDollarSign },
+  { id: 'touchpoints', labelKey: 'nav_qr',      Icon: QrCode },
 ]
 
 export default function MobileBottomNav({ activeMenu, onNavigate }) {
@@ -32,7 +32,7 @@ export default function MobileBottomNav({ activeMenu, onNavigate }) {
   const before = NAV_ITEMS.slice(0, 2)
   const after = NAV_ITEMS.slice(2)
 
-  function renderItem({ id, labelKey, Icon, image }) {
+  function renderItem({ id, labelKey, Icon }) {
     const isActive = activeMenu === id
     return (
       <button
@@ -41,24 +41,12 @@ export default function MobileBottomNav({ activeMenu, onNavigate }) {
         onClick={() => onNavigate(id)}
         className="flex flex-1 min-w-0 flex-col items-center justify-center gap-1 h-full focus:outline-none active:scale-95 transition-transform"
       >
-        {image ? (
-          <img
-            src={image}
-            alt=""
-            className={`h-[22px] w-[22px] object-contain transition-opacity duration-200 ${
-              isActive ? 'opacity-100' : 'opacity-70'
-            }`}
-            aria-hidden="true"
-          />
-        ) : (
-          <Icon
-            className={`h-[22px] w-[22px] transition-colors duration-200 ${
-              isActive ? 'text-nexoraBrand' : 'text-nexoraSubtle'
-            }`}
-            strokeWidth={isActive ? 2.5 : 1.9}
-            fill={isActive && id === 'overview' ? 'currentColor' : 'none'}
-          />
-        )}
+        <Icon
+          className={`h-5 w-5 transition-colors duration-200 ${
+            isActive ? 'text-nexoraBrandDark' : 'text-nexoraSubtle'
+          }`}
+          strokeWidth={isActive ? 2.4 : 2}
+        />
         <span
           className={`text-[11px] font-bold transition-colors duration-200 ${
             isActive ? 'text-nexoraBrand' : 'text-nexoraSubtle'
