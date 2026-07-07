@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { isInitiatedLikeTipStatus, isTipStatus, TipStatus } from '../../constants/tipStatus'
 
-// This Master Store QR is already printed/distributed — never allow deleting its touchpoint.
+// This "Master QR" for Bitcoin Nail Bar is already printed/distributed — hide the delete action for its touchpoint in the UI.
 export const BITCOIN_NAIL_BAR_MASTER_QR_PATH = '/touch/bitcoin-nail-bar-1b8cb587-9d36bc13/master-qr'
 
 export function isBitcoinNailBarMasterQrTouchpoint(point) {
