@@ -3,6 +3,8 @@ import { HelpCircle, Loader2, Plus, Upload } from 'lucide-react'
 import CountryCodeSelect, {
   formatNationalNumber,
   getDefaultDialCode,
+  isValidPhoneE164,
+  normalizePhoneForApi,
   parsePhone,
 } from '../../CountryCodeSelect'
 import { useTranslation, renderLabel } from '../../../contexts/LanguageContext'
@@ -10,7 +12,7 @@ import { WalletLogos } from '../constants'
 import { PAYOUT_UI_LABELS } from '../../../data/paymentMethodTypes'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { getStaffDisplayNameErrorCode } from '../../../utils/staffDisplayName'
-import { isValidEmail, isValidPhone } from '../../../utils/validation'
+import { isValidEmail } from '../../../utils/validation'
 import PayoutSetupModal from './PayoutSetupModal'
 
 const MANUAL_STAFF_PAYOUT_KEYS = [
@@ -181,9 +183,8 @@ function AddManualStaffTab({
     const nicknameError = resolveDisplayNameError(displayNickname)
     if (nicknameError) nextErrors.displayNickname = nicknameError
 
-    const nationalDigits = phone.replace(/\D/g, '')
-    const phoneNumber = nationalDigits ? `${dialCode}${nationalDigits}` : ''
-    if (phoneNumber && !isValidPhone(phoneNumber)) {
+    const phoneNumber = normalizePhoneForApi(phone, dialCode)
+    if (phoneNumber && !isValidPhoneE164(phoneNumber, dialCode)) {
       nextErrors.phone = t('setup.errors.staff_phone_invalid')
     }
     if (email.trim() && !isValidEmail(email.trim())) {
@@ -311,19 +312,22 @@ function AddManualStaffTab({
                     const formatted = formatNationalNumber(phoneParsed.nationalNumber, nextCode)
                     setDialCode(nextCode)
                     setPhone(formatted)
+                    clearError('phone')
                   }}
                 />
                 <input
                   type="tel"
-                  className={`rounded-r-lg px-3 ${inputClass(false, 'border-l-0')}`}
+                  className={`rounded-r-lg px-3 ${inputClass(Boolean(errors.phone), 'border-l-0')}`}
                   value={formatNationalNumber(phoneParsed.nationalNumber, dialCode)}
                   onChange={(event) => {
                     setPhone(formatNationalNumber(event.target.value, dialCode))
+                    clearError('phone')
                   }}
                   placeholder={t('components.dashboard.modals.AddStaffModal.manual_phone_placeholder')}
                   autoComplete="off"
                 />
               </div>
+              {errors.phone && <p className={fieldErrorClass}>{errors.phone}</p>}
             </div>
 
             <div>
@@ -334,11 +338,15 @@ function AddManualStaffTab({
                 type="email"
                 inputMode="email"
                 autoComplete="email"
-                className={`rounded-lg px-3 ${inputClass(false)}`}
+                className={`rounded-lg px-3 ${inputClass(Boolean(errors.email))}`}
                 value={email}
-                onChange={(event) => setEmail(event.target.value)}
+                onChange={(event) => {
+                  setEmail(event.target.value)
+                  clearError('email')
+                }}
                 placeholder={t('components.dashboard.modals.AddStaffModal.manual_email_placeholder')}
               />
+              {errors.email && <p className={fieldErrorClass}>{errors.email}</p>}
             </div>
           </div>
 
