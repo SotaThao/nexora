@@ -868,7 +868,8 @@
       "kpi": {
         "total_revenue": "Total Tip Revenue",
         "direct_p2p": "Direct Tips",
-        "card_tips": "Card Tips",
+        "card_tips": "Traditional Card Tips",
+        "card_tips_sub": "Bypassed — customers pay staff directly via Zelle/Venmo",
         "crypto_tips": "Crypto Tips",
         "total_tips_circle": "Total Tips"
       },
