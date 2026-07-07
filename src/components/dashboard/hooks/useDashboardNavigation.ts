@@ -19,6 +19,12 @@ export function useDashboardNavigation() {
     if (activeMenu === 'tips') {
       setIsTipsMobileExpanded(true)
       setIsTouchpointsMobileExpanded(false)
+      const tab = new URLSearchParams(location.search).get('tab')
+      if (tab === 'overview' || tab === 'savings' || tab === 'payouts') {
+        setTipsTab(tab)
+      } else {
+        setTipsTab('overview')
+      }
     } else if (activeMenu === 'touchpoints') {
       setIsTouchpointsMobileExpanded(true)
       setIsTipsMobileExpanded(false)
