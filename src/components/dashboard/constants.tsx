@@ -3,10 +3,10 @@
 import {
   LayoutDashboard,
   Users,
-  Wallet,
+  CircleDollarSign,
   Star,
-  ClipboardList,
-  Pointer,
+  ReceiptText,
+  QrCode,
   BarChart3,
   Settings,
   HelpCircle
@@ -59,15 +59,15 @@ export const DEFAULT_PAYOUT_CONFIGS = {
 }
 
 export const MENU_ITEMS = [
-  { id: 'overview', label: 'Dashboard', icon: LayoutDashboard, image: '/assets/menu/dashboard.png' },
-  { id: 'staff', label: 'Staff', icon: Users, image: '/assets/menu/staff.png' },
-  { id: 'tips', label: 'Tips', icon: Wallet, image: '/assets/menu/tips.png' },
-  { id: 'reviews', label: 'Reviews', icon: Star, image: '/assets/menu/reviews.png' },
-  { id: 'reports', label: 'Transactions', icon: ClipboardList, image: '/assets/menu/transaction.png' },
-  { id: 'touchpoints', label: 'Touch Points', icon: Pointer, image: '/assets/menu/touchpoint.png' },
-  { id: 'analytics', label: 'Analytics', icon: BarChart3, image: '/assets/menu/analytics.png' },
-  { id: 'settings', label: 'Settings', icon: Settings, image: '/assets/menu/setting.png' },
-  { id: 'support', label: 'Support', icon: HelpCircle, image: '/assets/menu/support.png' }
+  { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'staff', label: 'Staff', icon: Users },
+  { id: 'tips', label: 'Tips', icon: CircleDollarSign },
+  { id: 'reviews', label: 'Reviews', icon: Star },
+  { id: 'reports', label: 'Transactions', icon: ReceiptText },
+  { id: 'touchpoints', label: 'Touch Points', icon: QrCode },
+  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+  { id: 'settings', label: 'Settings', icon: Settings },
+  { id: 'support', label: 'Support', icon: HelpCircle }
 ]
 
 export const visibleMenuItems = MENU_ITEMS

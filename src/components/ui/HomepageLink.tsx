@@ -3,7 +3,7 @@ import { Home } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
 import MenuIcon from './MenuIcon'
 
-const HOMEPAGE_MENU_ITEM = { image: '/assets/menu/home.png' }
+const HOMEPAGE_MENU_ITEM = { icon: Home }
 
 type HomepageLinkProps = {
   variant?: 'auth' | 'menu'
