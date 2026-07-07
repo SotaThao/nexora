@@ -30,8 +30,18 @@ import {
 import { usePagination } from '../hooks/usePagination'
 import { DEFAULT_PAGE_SIZE, STAFF_FILTER_LIST_PAGE_SIZE } from '../constants/pagination'
 import { buildQrImageUrl, toLocalCustomerTouchUrl } from '../utils/staffTipUrl'
-import { formatCurrency, formatTransactionDateTime, isBitcoinNailBarMasterQrTouchpoint } from './dashboard/utils'
+import { formatCurrency, formatTransactionDateTime } from './dashboard/utils'
 import PhysicalCardDetailModal from './dashboard/modals/PhysicalCardDetailModal'
+
+const MASTER_TOUCHPOINT_API_TYPE = 'FrontDesk'
+const MASTER_TOUCHPOINT_SLUG = 'master-store'
+
+// This "Master QR" for Bitcoin Nail Bar is already printed/distributed — hide the delete action for its touchpoint in the UI.
+const BITCOIN_NAIL_BAR_MASTER_QR_PATH = '/touch/bitcoin-nail-bar-1b8cb587-9d36bc13/master-qr'
+
+function isBitcoinNailBarMasterQrTouchpoint(point): boolean {
+  return String(point?.url || '').toLowerCase().includes(BITCOIN_NAIL_BAR_MASTER_QR_PATH)
+}
 
 function isLinkedTouchPointId(value: unknown): boolean {
   if (value == null || value === '') return false
@@ -500,8 +510,8 @@ export default function TouchpointsView({
               const revenue = point.revenue ?? 0
               const qrImageSrc = buildQrImageUrl(qrUrl, 150, point.qrImageUrl)
               const canDeletePoint =
-                point.type !== 'FrontDesk' &&
-                point.slug !== 'master-store' &&
+                point.type !== MASTER_TOUCHPOINT_API_TYPE &&
+                point.slug !== MASTER_TOUCHPOINT_SLUG &&
                 !isBitcoinNailBarMasterQrTouchpoint(point)
 
               return (
