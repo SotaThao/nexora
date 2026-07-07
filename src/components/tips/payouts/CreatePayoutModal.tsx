@@ -593,7 +593,7 @@ export default function CreatePayoutModal({
                   value={staffProfileId}
                   selectedStaff={selectedStaff}
                   onSelect={handleStaffSelect}
-                  allowedStaffProfileIds={debtStaffProfileIds}
+                  allowedStaffProfileIds={includesUnpaidTipsType ? debtStaffProfileIds : undefined}
                   disabled={isEditing}
                   error={staffProfileError}
                   enabled={isOpen}
