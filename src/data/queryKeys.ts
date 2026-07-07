@@ -98,6 +98,16 @@ export const qk = {
   },
   taxiqOwnerTaxYearById: (id?: string) => ['taxiqOwnerTaxYear', 'byId', id ?? 'unknown'],
 
+  // Tax IQ — Staff Tax Year (prefixed with 'taxiqStaffTaxYear' so invalidating
+  // qk.taxiqStaffTaxYear() also clears the byId cache below). No businessId —
+  // StaffTaxYear is scoped by the caller's JWT userId only.
+  taxiqStaffTaxYear: (taxYear?: number) => {
+    const key: unknown[] = ['taxiqStaffTaxYear']
+    if (taxYear !== undefined) key.push(taxYear)
+    return key
+  },
+  taxiqStaffTaxYearById: (id?: string) => ['taxiqStaffTaxYear', 'byId', id ?? 'unknown'],
+
   // Tax IQ — Owner Deduction Center
   taxiqOwnerDeductions: (ownerTaxYearId?: string, recordStatus?: string, categoryId?: string) => {
     const key: unknown[] = ['taxiqOwnerDeductions']
@@ -108,9 +118,78 @@ export const qk = {
   },
   taxiqDeductionCategories: (applicableRole?: string) => ['taxiqDeductionCategories', applicableRole ?? 'all'],
 
+  // Tax IQ — Staff Deduction Center (US-11)
+  taxiqStaffDeductions: (staffTaxYearId?: string, recordStatus?: string, categoryId?: string) => {
+    const key: unknown[] = ['taxiqStaffDeductions']
+    if (staffTaxYearId) key.push(staffTaxYearId)
+    if (recordStatus) key.push(recordStatus)
+    if (categoryId) key.push(categoryId)
+    return key
+  },
+
+  // Tax IQ — Receipt Vault (US-05). No status/link-type filters in the key — BE has no
+  // server-side filter params for GET /receipts, filtering happens client-side. Calling
+  // with no args yields ['taxiqReceipts'] (broad invalidation target), same convention
+  // as taxiqOwnerDeductions/taxiqStaffDeductions above.
+  taxiqReceipts: (ownerTaxYearId?: string, staffTaxYearId?: string) => {
+    const key: unknown[] = ['taxiqReceipts']
+    if (ownerTaxYearId) key.push(ownerTaxYearId)
+    if (staffTaxYearId) key.push(staffTaxYearId)
+    return key
+  },
+
+  // Tax IQ — Staff Mileage & Cash Tip Logs (US-12) — separate keys per DoD (mutation
+  // must not invalidate the other log type's list).
+  taxiqStaffMileageLogs: (staffTaxYearId?: string) => ['taxiqStaffMileageLogs', staffTaxYearId ?? 'unknown'],
+  taxiqStaffCashTipLogs: (staffTaxYearId?: string) => ['taxiqStaffCashTipLogs', staffTaxYearId ?? 'unknown'],
+
+  // Tax IQ — Staff Self-Reported Income (US-13)
+  taxiqSelfReportedIncome: (staffTaxYearId?: string) => ['taxiqSelfReportedIncome', staffTaxYearId ?? 'unknown'],
+  taxiqSelfReportedIncomeDetail: (id?: string) => ['taxiqSelfReportedIncome', 'detail', id ?? 'unknown'],
+
+  // Tax IQ — Owner Assets Tracker (US-07): Equipment, Gift Card Liability, Membership Credit
+  taxiqOwnerEquipment: (ownerTaxYearId?: string) => ['taxiqOwnerEquipment', ownerTaxYearId ?? 'unknown'],
+  taxiqOwnerGiftCardLiabilities: (ownerTaxYearId?: string) =>
+    ['taxiqOwnerGiftCardLiabilities', ownerTaxYearId ?? 'unknown'],
+  taxiqOwnerMembershipCredits: (ownerTaxYearId?: string) =>
+    ['taxiqOwnerMembershipCredits', ownerTaxYearId ?? 'unknown'],
+
   // Tax IQ — Tax Readiness Score (shared widget, Owner + Staff scope)
   taxiqReadinessScore: (scope?: string, taxYearId?: string) =>
     ['taxiqReadinessScore', scope ?? 'unknown', taxYearId ?? 'unknown'],
+
+  // Tax IQ — Owner Year-End Export (US-06). Cache also stores the last known
+  // ExportPackageDto via setQueryData so the "no new changes" idempotent-final-export
+  // message can be derived client-side by comparing `version` (BE has no explicit flag).
+  taxiqOwnerExport: (ownerTaxYearId?: string) => ['taxiqOwnerExport', ownerTaxYearId ?? 'unknown'],
+
+  // Tax IQ — Staff Year-End Export (US-15). Same idempotent-reexport cache pattern as Owner.
+  taxiqStaffExport: (staffTaxYearId?: string) => ['taxiqStaffExport', staffTaxYearId ?? 'unknown'],
+
+  // Tax IQ — Owner Adjustment History (US-06, post-Lock only)
+  taxiqOwnerAdjustments: (ownerTaxYearId?: string) => ['taxiqOwnerAdjustments', ownerTaxYearId ?? 'unknown'],
+
+  // Tax IQ — Owner Tax Payment Reminders (US-08)
+  taxiqTaxReminders: (ownerTaxYearId?: string) => ['taxiqTaxReminders', ownerTaxYearId ?? 'unknown'],
+
+  // Tax IQ — Owner Payout & Dispute Center (US-09)
+  taxiqOwnerStaffList: (ownerTaxYearId?: string) => ['taxiqOwnerStaffList', ownerTaxYearId ?? 'unknown'],
+  taxiqOwnerPayouts: (ownerTaxYearId?: string, staffUserId?: string, status?: string) => {
+    const key: unknown[] = ['taxiqOwnerPayouts', ownerTaxYearId ?? 'unknown']
+    if (staffUserId) key.push(staffUserId)
+    if (status) key.push(status)
+    return key
+  },
+  taxiqOwnerPayoutsDisputed: (ownerTaxYearId?: string) => ['taxiqOwnerPayoutsDisputed', ownerTaxYearId ?? 'unknown'],
+
+  // Tax IQ — Staff Payout Confirmation & Dispute (US-14). No staffTaxYearId param —
+  // GetPendingPayoutsQuery scopes by JWT userId only, same as taxiqStaffTaxYear above.
+  taxiqStaffPayoutsPending: () => ['taxiqStaffPayoutsPending'],
+
+  // Tax IQ — CPA Access Grant (US-10)
+  taxiqCpaAccessGrants: (ownerTaxYearId?: string, staffTaxYearId?: string) =>
+    ['taxiqCpaAccessGrants', ownerTaxYearId ?? 'none', staffTaxYearId ?? 'none'],
+  taxiqCpaViewerPackage: (token?: string) => ['taxiqCpaViewerPackage', token ?? 'unknown'],
 
   // Public Customer Touch
   customerTouch: (businessSlug, touchPointSlug, sessionId) => ['customerTouch', businessSlug, touchPointSlug, sessionId],

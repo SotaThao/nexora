@@ -1,19 +1,33 @@
 // StaffSidebar — desktop (≥1024px) left nav and mobile drawer for the staff dashboard.
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { LogOut, ChevronLeft, ChevronDown, ChevronUp } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { STAFF_MENU_ITEMS } from '../constants'
+import { STAFF_MENU_ITEMS, STAFF_TAXIQ_MENU_CHILD_MODULE } from '../constants'
 import { PUBLIC_HOME_MENU_ITEM } from '../../dashboard/constants'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
+import { useStaffTaxYearByYear } from '../../../data/hooks/useTaxiqStaffTaxYear'
 import MenuIcon from '../../ui/MenuIcon'
 
 export default function StaffSidebar({ activeScreen, onNavigate, onLogout, isOpen, onClose }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
   const { staffMember, account } = useStaffAccount()
   const displayName = account.defaultDisplayName || staffMember.fullName || 'Staff'
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
+  const [isTaxIqExpanded, setIsTaxIqExpanded] = useState(activeScreen === 'taxiq')
+  // Tax IQ sub-items are real routes (/staff/taxiq/<id>), not a param — same
+  // path-segment approach as DashboardSidebar.tsx's activeTaxIqSubTab.
+  const activeTaxIqSubTab = location.pathname.split('/')[3] || null
+  // Module-gated Tax IQ sub-items: shares the TanStack Query cache with the
+  // /staff/taxiq route itself, so this fires no extra network request.
+  const { data: staffTaxYearPage } = useStaffTaxYearByYear(new Date().getFullYear())
+  const enabledTaxiqModules = staffTaxYearPage?.items?.[0]?.enabledModules
+
+  useEffect(() => {
+    setIsTaxIqExpanded(activeScreen === 'taxiq')
+  }, [activeScreen])
 
   const renderContent = (isMobile = false) => (
     <>
@@ -109,23 +123,74 @@ export default function StaffSidebar({ activeScreen, onNavigate, onLogout, isOpe
 
         {STAFF_MENU_ITEMS.map((item) => {
           const isActive = activeScreen === item.id
+          const hasChildren = item.id === 'taxiq'
+
           return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => {
-                onNavigate(item.id)
-                if (isMobile && onClose) onClose()
-              }}
-              className={`flex h-12 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-bold transition ${
-                isActive
-                  ? 'bg-gradient-to-r from-nexoraElectric to-nexoraViolet text-white shadow-lg shadow-nexoraElectric/20'
-                  : 'text-white/85 hover:bg-white/5 hover:text-white'
-              }`}
-            >
-              <MenuIcon item={item} active={isActive} />
-              <span className="truncate">{t(item.labelKey)}</span>
-            </button>
+            <div key={item.id}>
+              <button
+                type="button"
+                onClick={() => {
+                  if (hasChildren) {
+                    // Navigate to the group's home screen but keep the drawer open —
+                    // the point of expanding is to reveal children to tap next.
+                    onNavigate(item.id)
+                    setIsTaxIqExpanded((v) => !v)
+                    return
+                  }
+                  onNavigate(item.id)
+                  if (isMobile && onClose) onClose()
+                }}
+                className={`flex h-12 w-full items-center justify-between gap-3 rounded-lg px-4 text-left text-sm font-bold transition ${
+                  isActive
+                    ? 'bg-gradient-to-r from-nexoraElectric to-nexoraViolet text-white shadow-lg shadow-nexoraElectric/20'
+                    : 'text-white/85 hover:bg-white/5 hover:text-white'
+                }`}
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <MenuIcon item={item} active={isActive} />
+                  <span className="truncate">{t(item.labelKey)}</span>
+                </div>
+                {hasChildren && (
+                  <div className="shrink-0 text-white/50">
+                    {isTaxIqExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </div>
+                )}
+              </button>
+
+              {hasChildren && isTaxIqExpanded && (
+                <div className="ml-9 mt-1 space-y-1 border-l border-white/15 pl-3 animate-fadeIn">
+                  {item.children
+                    .filter((sub) => {
+                      // Fail-open (show all) before onboarding completes or while loading —
+                      // only hide once we positively know a module is disabled.
+                      const requiredModule = STAFF_TAXIQ_MENU_CHILD_MODULE[sub.id]
+                      if (!requiredModule || !enabledTaxiqModules) return true
+                      return enabledTaxiqModules.includes(requiredModule)
+                    })
+                    .map((sub) => {
+                      const isSubActive = activeScreen === 'taxiq' && activeTaxIqSubTab === sub.id
+                      return (
+                        <button
+                          key={sub.id}
+                          type="button"
+                          onClick={() => {
+                            onNavigate(`taxiq/${sub.id}`)
+                            if (isMobile && onClose) onClose()
+                          }}
+                          className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
+                            isSubActive
+                              ? 'text-brandCyan font-extrabold'
+                              : 'text-white/75 hover:bg-white/5 hover:text-white'
+                          }`}
+                        >
+                          <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
+                          <span>{t(sub.labelKey)}</span>
+                        </button>
+                      )
+                    })}
+                </div>
+              )}
+            </div>
           )
         })}
       </nav>

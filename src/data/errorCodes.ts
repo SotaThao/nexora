@@ -59,6 +59,43 @@ export const errorCodeToI18nKey = {
   CONTACT_REQUEST_MESSAGE_MAX_LENGTH: 'errors.contact_request_message_max_length',
   CONTACT_REQUEST_MESSAGE_REQUIRED: 'errors.contact_request_message_required',
 
+  // Tax IQ — Owner Year-End Export & Lock Tax Year (US-06)
+  TAXIQ_EXPORT_CONSENT_REQUIRED: 'errors.taxiq_export_consent_required',
+  TAXIQ_EXPORT_BLOCKED_BY_HIGH_PRIORITY_ITEMS: 'errors.taxiq_export_blocked_by_high_priority_items',
+  TAXIQ_EXPORT_REQUIRES_LOCKED_TAX_YEAR: 'errors.taxiq_export_requires_locked_tax_year',
+  TAXIQ_EXPORT_PACKAGE_NOT_FOUND: 'errors.taxiq_export_package_not_found',
+  TAXIQ_EXPORT_UPLOAD_FAILED: 'errors.taxiq_export_upload_failed',
+  TAXIQ_LOCK_BLOCKED_BY_HIGH_PRIORITY_ITEMS: 'errors.taxiq_lock_blocked_by_high_priority_items',
+  TAXIQ_OWNER_TAX_YEAR_LOCKED: 'errors.taxiq_owner_tax_year_locked',
+  TAXIQ_STAFF_TAX_YEAR_LOCKED: 'errors.taxiq_staff_tax_year_locked',
+  TAXIQ_OWNER_TAX_YEAR_NOT_LOCKED: 'errors.taxiq_owner_tax_year_not_locked',
+  TAXIQ_UNSUPPORTED_ADJUSTMENT_FIELD: 'errors.taxiq_unsupported_adjustment_field',
+  TAXIQ_ADJUSTMENT_ENTITY_NOT_FOUND: 'errors.taxiq_adjustment_entity_not_found',
+
+  // Tax IQ — Tax Payment Reminders (US-08)
+  TAXIQ_TAX_PAYMENT_REMINDER_NOT_FOUND: 'errors.taxiq_tax_payment_reminder_not_found',
+  TAXIQ_TAX_REMINDER_SNOOZE_LIMIT_REACHED: 'errors.taxiq_tax_reminder_snooze_limit_reached',
+
+  // Tax IQ — Owner Payout & Dispute Center (US-09)
+  TAXIQ_PAYOUT_RECORD_NOT_FOUND: 'errors.taxiq_payout_record_not_found',
+  TAXIQ_PAYOUT_RECORD_NOT_EDITABLE: 'errors.taxiq_payout_record_not_editable',
+  TAXIQ_PAYOUT_ACCESS_DENIED: 'errors.taxiq_payout_access_denied',
+  TAXIQ_STAFF_TAX_YEAR_REQUIRED_FOR_PAYOUT: 'errors.taxiq_staff_tax_year_required_for_payout',
+  TAXIQ_STAFF_TAX_YEAR_ALREADY_EXISTS: 'errors.taxiq_staff_tax_year_already_exists',
+  STAFF_LINK_NOT_FOUND: 'errors.staff_link_not_found',
+
+  // Tax IQ — Staff Self-Reported Income (US-13)
+  TAXIQ_SELF_REPORTED_INCOME_NOT_FOUND: 'errors.taxiq_self_reported_income_not_found',
+
+  // Tax IQ — CPA Access Grant (US-10)
+  TAXIQ_CPA_ACCESS_GRANT_NOT_FOUND: 'errors.taxiq_cpa_access_grant_not_found',
+  TAXIQ_CPA_ACCESS_TOKEN_INVALID: 'errors.taxiq_cpa_access_token_invalid',
+  TAXIQ_CPA_ACCESS_GRANT_EXPIRED: 'errors.taxiq_cpa_access_grant_expired',
+  TAXIQ_CPA_ACCESS_GRANT_REVOKED: 'errors.taxiq_cpa_access_grant_revoked',
+  TAXIQ_CPA_ACCESS_UNAUTHORIZED: 'errors.taxiq_cpa_access_unauthorized',
+  TAXIQ_CPA_CONSENT_REQUIRED: 'errors.taxiq_cpa_consent_required',
+  TAXIQ_DEDUCTION_NOT_IN_GRANT_SCOPE: 'errors.taxiq_deduction_not_in_grant_scope',
+
   // Common
   COMMON_VALIDATION_ERROR: 'errors.common_validation_error',
   COMMON_NOT_FOUND: 'errors.common_not_found',

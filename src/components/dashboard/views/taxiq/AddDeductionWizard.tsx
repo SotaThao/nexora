@@ -10,11 +10,18 @@ import {
   useTaxiqOwnerDeductions,
   useUpdateOwnerDeduction,
 } from '../../../../data/hooks/useTaxiqOwnerDeductions'
+import {
+  useCreateStaffDeduction,
+  useSubmitStaffDeduction,
+  useTaxiqStaffDeductions,
+  useUpdateStaffDeduction,
+} from '../../../../data/hooks/useTaxiqStaffDeductions'
 import { formatCurrency } from '../../utils'
 import ReceiptUploadStep from './shared/ReceiptUploadStep'
 import DeductionStatusBadge from './shared/DeductionStatusBadge'
 import AiDeductionStatusBadge from './shared/AiDeductionStatusBadge'
 import type { DeductionRecord } from '../../../../data/repositories/taxiqOwnerDeductions'
+import type { StaffDeductionRecord } from '../../../../data/repositories/taxiqStaffDeductions'
 
 // D6/D8 (openspec/changes/integrate-taxiq-owner-deductions/design.md): the backend only
 // evaluates AI status inside POST /submit, so "AI Review" can only be shown AFTER Submit —
@@ -22,6 +29,7 @@ import type { DeductionRecord } from '../../../../data/repositories/taxiqOwnerDe
 // the real API. Steps are reordered here: Review & Save (4) triggers Submit, then the AI
 // result renders at step 5.
 type StepId = 'details' | 'businessUse' | 'receipt' | 'review' | 'result'
+type WizardScope = 'owner' | 'staff'
 
 interface Step1Errors {
   categoryId?: string
@@ -30,26 +38,45 @@ interface Step1Errors {
   date?: string
 }
 
-const LOCKED_ERROR_CODE = 'TAXIQ_OWNER_TAX_YEAR_LOCKED'
-
+// US-11: this wizard is shared verbatim between Owner (US-02) and Staff (US-11) Deduction
+// Centers via `scope` — only the underlying data hooks/endpoint differ, per ticket AC
+// ("tái sử dụng nguyên component thay vì viết bản Staff riêng"). Both Owner and Staff data
+// hooks are called unconditionally (Rules of Hooks) and selected by `scope` below; the
+// unused side's list query stays disabled (`enabled: !!params?.xxxTaxYearId`) so it never
+// fetches.
 export default function AddDeductionWizard({
+  scope = 'owner',
   ownerTaxYearId,
+  staffTaxYearId,
   initialDeduction = null,
   onClose,
 }: {
-  ownerTaxYearId: string
-  initialDeduction?: DeductionRecord | null
+  scope?: WizardScope
+  ownerTaxYearId?: string
+  staffTaxYearId?: string
+  initialDeduction?: DeductionRecord | StaffDeductionRecord | null
   onClose: () => void
 }) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const navigate = useNavigate()
 
-  const categoriesQuery = useTaxiqDeductionCategories('Owner')
-  const createDeduction = useCreateOwnerDeduction()
-  const updateDeduction = useUpdateOwnerDeduction()
-  const submitDeduction = useSubmitOwnerDeduction()
-  const deductionsQuery = useTaxiqOwnerDeductions({ ownerTaxYearId })
+  const isStaff = scope === 'staff'
+  const LOCKED_ERROR_CODE = isStaff ? 'TAXIQ_STAFF_TAX_YEAR_LOCKED' : 'TAXIQ_OWNER_TAX_YEAR_LOCKED'
+
+  const categoriesQuery = useTaxiqDeductionCategories(isStaff ? 'Staff' : 'Owner')
+
+  const createOwnerDeduction = useCreateOwnerDeduction()
+  const updateOwnerDeduction = useUpdateOwnerDeduction()
+  const submitOwnerDeduction = useSubmitOwnerDeduction()
+  const ownerDeductionsQuery = useTaxiqOwnerDeductions(!isStaff ? { ownerTaxYearId: ownerTaxYearId as string } : undefined)
+
+  const createStaffDeduction = useCreateStaffDeduction()
+  const updateStaffDeduction = useUpdateStaffDeduction()
+  const submitStaffDeduction = useSubmitStaffDeduction()
+  const staffDeductionsQuery = useTaxiqStaffDeductions(isStaff ? { staffTaxYearId: staffTaxYearId as string } : undefined)
+
+  const deductionsQuery = isStaff ? staffDeductionsQuery : ownerDeductionsQuery
 
   const [stepIndex, setStepIndex] = useState(0)
   const [deductionId, setDeductionId] = useState<string | null>(initialDeduction?.id ?? null)
@@ -81,6 +108,28 @@ export default function AddDeductionWizard({
 
   const goBack = () => setStepIndex((i) => Math.max(0, i - 1))
 
+  interface DeductionFieldsInput {
+    categoryId: string
+    description: string
+    amount: number
+    date: string
+    vendorName: string | null
+    businessUsePercent: number | null
+  }
+
+  const createDeductionRecord = (fields: DeductionFieldsInput) =>
+    isStaff
+      ? createStaffDeduction.mutateAsync({ staffTaxYearId: staffTaxYearId as string, ...fields })
+      : createOwnerDeduction.mutateAsync({ ownerTaxYearId: ownerTaxYearId as string, ...fields })
+
+  const updateDeductionRecord = (id: string, fields: DeductionFieldsInput) =>
+    isStaff
+      ? updateStaffDeduction.mutateAsync({ id, ...fields })
+      : updateOwnerDeduction.mutateAsync({ id, ...fields })
+
+  const submitDeductionRecord = (id: string) =>
+    isStaff ? submitStaffDeduction.mutateAsync(id) : submitOwnerDeduction.mutateAsync(id)
+
   const handleLockedError = (err: unknown) => {
     const errorCode = (err as { errorCode?: string })?.errorCode
     if (errorCode === LOCKED_ERROR_CODE) {
@@ -107,26 +156,18 @@ export default function AddDeductionWizard({
     setIsSubmittingStep(true)
     try {
       const parsedBusinessUse = businessUsePercent ? Number(businessUsePercent) : null
+      const fields: DeductionFieldsInput = {
+        categoryId,
+        description,
+        amount: Number(amount),
+        date,
+        vendorName: vendorName || null,
+        businessUsePercent: parsedBusinessUse,
+      }
       if (deductionId) {
-        await updateDeduction.mutateAsync({
-          id: deductionId,
-          categoryId,
-          description,
-          amount: Number(amount),
-          date,
-          vendorName: vendorName || null,
-          businessUsePercent: parsedBusinessUse,
-        })
+        await updateDeductionRecord(deductionId, fields)
       } else {
-        const id = await createDeduction.mutateAsync({
-          ownerTaxYearId,
-          categoryId,
-          description,
-          amount: Number(amount),
-          date,
-          vendorName: vendorName || null,
-          businessUsePercent: parsedBusinessUse,
-        })
+        const id = await createDeductionRecord(fields)
         setDeductionId(id)
       }
       setStepIndex((i) => i + 1)
@@ -141,8 +182,7 @@ export default function AddDeductionWizard({
     if (!deductionId) return
     setIsSubmittingStep(true)
     try {
-      await updateDeduction.mutateAsync({
-        id: deductionId,
+      await updateDeductionRecord(deductionId, {
         categoryId,
         description,
         amount: Number(amount),
@@ -166,7 +206,7 @@ export default function AddDeductionWizard({
     if (!deductionId) return
     setIsSubmittingStep(true)
     try {
-      await submitDeduction.mutateAsync(deductionId)
+      await submitDeductionRecord(deductionId)
       await deductionsQuery.refetch()
       setStepIndex((i) => i + 1)
     } catch (err) {
@@ -202,14 +242,16 @@ export default function AddDeductionWizard({
 
         {lockedNotice && (
           <div className="mb-4 flex flex-col gap-2 rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-700">
-            <span>{t('taxiq.deductionCenter.errors.lockedMessage')}</span>
-            <button
-              type="button"
-              onClick={() => navigate('/dashboard/taxiq/export')}
-              className="self-start rounded-lg bg-rose-600 px-3 py-1.5 text-[11px] font-bold text-white"
-            >
-              {t('taxiq.deductionCenter.errors.lockedAction')}
-            </button>
+            <span>{t(isStaff ? 'taxiq.deductionCenter.errors.lockedMessageStaff' : 'taxiq.deductionCenter.errors.lockedMessage')}</span>
+            {!isStaff && (
+              <button
+                type="button"
+                onClick={() => navigate('/dashboard/taxiq/export')}
+                className="self-start rounded-lg bg-rose-600 px-3 py-1.5 text-[11px] font-bold text-white"
+              >
+                {t('taxiq.deductionCenter.errors.lockedAction')}
+              </button>
+            )}
           </div>
         )}
 
@@ -312,7 +354,8 @@ export default function AddDeductionWizard({
           <div>
             <h3 className="mb-3 text-sm font-bold text-nexoraText">{t('taxiq.deductionCenter.wizard.step3.title')}</h3>
             <ReceiptUploadStep
-              ownerTaxYearId={ownerTaxYearId}
+              ownerTaxYearId={isStaff ? undefined : ownerTaxYearId}
+              staffTaxYearId={isStaff ? staffTaxYearId : undefined}
               deductionRecordId={deductionId}
               receiptCount={submittedDeduction?.receiptCount ?? 0}
               onLinked={() => deductionsQuery.refetch()}

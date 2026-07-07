@@ -15,6 +15,12 @@ function ComingSoon({ activeMenu, onBack }) {
     'taxiq-reminders': [t('coming_soon.taxiq_reminders_title'), t('coming_soon.taxiq_reminders_desc')],
     'taxiq-cpa-access': [t('coming_soon.taxiq_cpa_access_title'), t('coming_soon.taxiq_cpa_access_desc')],
     'taxiq-export': [t('coming_soon.taxiq_export_title'), t('coming_soon.taxiq_export_desc')],
+    'staff-taxiq-deductions': [t('coming_soon.staff_taxiq_deductions_title'), t('coming_soon.staff_taxiq_deductions_desc')],
+    'staff-taxiq-receipts': [t('coming_soon.staff_taxiq_receipts_title'), t('coming_soon.staff_taxiq_receipts_desc')],
+    'staff-taxiq-logs': [t('coming_soon.staff_taxiq_logs_title'), t('coming_soon.staff_taxiq_logs_desc')],
+    'staff-taxiq-income': [t('coming_soon.staff_taxiq_income_title'), t('coming_soon.staff_taxiq_income_desc')],
+    'staff-taxiq-export': [t('coming_soon.staff_taxiq_export_title'), t('coming_soon.staff_taxiq_export_desc')],
+    'staff-taxiq-cpa-access': [t('coming_soon.staff_taxiq_cpa_access_title'), t('coming_soon.staff_taxiq_cpa_access_desc')],
   }
   const copy = copyMap[activeMenu] || [t('coming_soon.default_title'), t('coming_soon.default_desc')]
 

@@ -23,6 +23,12 @@ import { useOwnerTaxYearByBusiness } from '../../../data/hooks/useTaxiqOwnerTaxY
 import TaxIqOnboardingWizard from '../views/taxiq/TaxIqOnboardingWizard'
 import TaxIqHomeView from '../views/taxiq/TaxIqHomeView'
 import DeductionCenterView from '../views/taxiq/DeductionCenterView'
+import ReceiptVaultView from '../views/taxiq/ReceiptVaultView'
+import AssetsTrackerView from '../views/taxiq/AssetsTrackerView'
+import YearEndExportView from '../views/taxiq/YearEndExportView'
+import TaxRemindersView from '../views/taxiq/TaxRemindersView'
+import PayoutDisputeCenterView from '../views/taxiq/PayoutDisputeCenterView'
+import CpaAccessSettingsView from '../views/taxiq/CpaAccessSettingsView'
 
 export function OverviewRoute() {
   const ctx = useOutletContext<LooseObject>()
@@ -308,13 +314,6 @@ export function SettingsRoute() {
   )
 }
 
-function makeTaxIqRoute(copyKey) {
-  return function TaxIqRoute() {
-    const navigate = useNavigate()
-    return <ComingSoon activeMenu={copyKey} onBack={() => navigate('/dashboard')} />
-  }
-}
-
 export function TaxIqOverviewRoute() {
   const { data: merchantSetupData, isLoading: isMerchantLoading } = useMerchantSetup()
   const businessId = merchantSetupData?.businessInfo?.businessId
@@ -378,12 +377,235 @@ export function TaxIqDeductionsRoute() {
 
   return <DeductionCenterView ownerTaxYearId={ownerTaxYear.id} />
 }
-export const TaxIqReceiptsRoute = makeTaxIqRoute('taxiq-receipts')
-export const TaxIqEquipmentRoute = makeTaxIqRoute('taxiq-equipment')
-export const TaxIqPayrollRoute = makeTaxIqRoute('taxiq-payroll')
-export const TaxIqRemindersRoute = makeTaxIqRoute('taxiq-reminders')
-export const TaxIqCpaAccessRoute = makeTaxIqRoute('taxiq-cpa-access')
-export const TaxIqExportRoute = makeTaxIqRoute('taxiq-export')
+export function TaxIqReceiptsRoute() {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const { data: merchantSetupData, isLoading: isMerchantLoading } = useMerchantSetup()
+  const businessId = merchantSetupData?.businessInfo?.businessId
+  const currentTaxYear = new Date().getFullYear()
+  const { data: ownerTaxYearPage, isLoading: isTaxYearLoading } = useOwnerTaxYearByBusiness(
+    businessId,
+    currentTaxYear,
+  )
+
+  if (isMerchantLoading || (!!businessId && isTaxYearLoading)) {
+    return (
+      <div className="nexora-card p-6">
+        <SkeletonList count={3} lines={2} />
+      </div>
+    )
+  }
+
+  const ownerTaxYear = ownerTaxYearPage?.items?.[0] ?? null
+
+  if (!ownerTaxYear) {
+    return (
+      <div className="nexora-card flex flex-col items-start gap-3 p-6">
+        <p className="text-sm font-semibold text-nexoraMuted">{t('taxiq.receiptVault.noOwnerTaxYear')}</p>
+        <button
+          type="button"
+          onClick={() => navigate('/dashboard/taxiq')}
+          className="rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white"
+        >
+          {t('taxiq.receiptVault.goToSetup')}
+        </button>
+      </div>
+    )
+  }
+
+  return <ReceiptVaultView scope="owner" ownerTaxYearId={ownerTaxYear.id} />
+}
+export function TaxIqEquipmentRoute() {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const { data: merchantSetupData, isLoading: isMerchantLoading } = useMerchantSetup()
+  const businessId = merchantSetupData?.businessInfo?.businessId
+  const currentTaxYear = new Date().getFullYear()
+  const { data: ownerTaxYearPage, isLoading: isTaxYearLoading } = useOwnerTaxYearByBusiness(
+    businessId,
+    currentTaxYear,
+  )
+
+  if (isMerchantLoading || (!!businessId && isTaxYearLoading)) {
+    return (
+      <div className="nexora-card p-6">
+        <SkeletonList count={3} lines={2} />
+      </div>
+    )
+  }
+
+  const ownerTaxYear = ownerTaxYearPage?.items?.[0] ?? null
+
+  if (!ownerTaxYear) {
+    return (
+      <div className="nexora-card flex flex-col items-start gap-3 p-6">
+        <p className="text-sm font-semibold text-nexoraMuted">{t('taxiq.assetsTracker.noOwnerTaxYear')}</p>
+        <button
+          type="button"
+          onClick={() => navigate('/dashboard/taxiq')}
+          className="rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white"
+        >
+          {t('taxiq.deductionCenter.goToSetup')}
+        </button>
+      </div>
+    )
+  }
+
+  return <AssetsTrackerView ownerTaxYearId={ownerTaxYear.id} ownerTaxYearStatus={ownerTaxYear.status} />
+}
+export function TaxIqPayrollRoute() {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const { data: merchantSetupData, isLoading: isMerchantLoading } = useMerchantSetup()
+  const businessId = merchantSetupData?.businessInfo?.businessId
+  const currentTaxYear = new Date().getFullYear()
+  const { data: ownerTaxYearPage, isLoading: isTaxYearLoading } = useOwnerTaxYearByBusiness(
+    businessId,
+    currentTaxYear,
+  )
+
+  if (isMerchantLoading || (!!businessId && isTaxYearLoading)) {
+    return (
+      <div className="nexora-card p-6">
+        <SkeletonList count={3} lines={2} />
+      </div>
+    )
+  }
+
+  const ownerTaxYear = ownerTaxYearPage?.items?.[0] ?? null
+
+  if (!ownerTaxYear) {
+    return (
+      <div className="nexora-card flex flex-col items-start gap-3 p-6">
+        <p className="text-sm font-semibold text-nexoraMuted">{t('taxiq.payoutCenter.noOwnerTaxYear')}</p>
+        <button
+          type="button"
+          onClick={() => navigate('/dashboard/taxiq')}
+          className="rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white"
+        >
+          {t('taxiq.deductionCenter.goToSetup')}
+        </button>
+      </div>
+    )
+  }
+
+  return <PayoutDisputeCenterView ownerTaxYearId={ownerTaxYear.id} ownerTaxYearStatus={ownerTaxYear.status} />
+}
+export function TaxIqRemindersRoute() {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const { data: merchantSetupData, isLoading: isMerchantLoading } = useMerchantSetup()
+  const businessId = merchantSetupData?.businessInfo?.businessId
+  const currentTaxYear = new Date().getFullYear()
+  const { data: ownerTaxYearPage, isLoading: isTaxYearLoading } = useOwnerTaxYearByBusiness(
+    businessId,
+    currentTaxYear,
+  )
+
+  if (isMerchantLoading || (!!businessId && isTaxYearLoading)) {
+    return (
+      <div className="nexora-card p-6">
+        <SkeletonList count={3} lines={2} />
+      </div>
+    )
+  }
+
+  const ownerTaxYear = ownerTaxYearPage?.items?.[0] ?? null
+
+  if (!ownerTaxYear) {
+    return (
+      <div className="nexora-card flex flex-col items-start gap-3 p-6">
+        <p className="text-sm font-semibold text-nexoraMuted">{t('taxiq.reminders.noOwnerTaxYear')}</p>
+        <button
+          type="button"
+          onClick={() => navigate('/dashboard/taxiq')}
+          className="rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white"
+        >
+          {t('taxiq.deductionCenter.goToSetup')}
+        </button>
+      </div>
+    )
+  }
+
+  return <TaxRemindersView ownerTaxYearId={ownerTaxYear.id} ownerTaxYearStatus={ownerTaxYear.status} />
+}
+export function TaxIqCpaAccessRoute() {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const { data: merchantSetupData, isLoading: isMerchantLoading } = useMerchantSetup()
+  const businessId = merchantSetupData?.businessInfo?.businessId
+  const currentTaxYear = new Date().getFullYear()
+  const { data: ownerTaxYearPage, isLoading: isTaxYearLoading } = useOwnerTaxYearByBusiness(
+    businessId,
+    currentTaxYear,
+  )
+
+  if (isMerchantLoading || (!!businessId && isTaxYearLoading)) {
+    return (
+      <div className="nexora-card p-6">
+        <SkeletonList count={3} lines={2} />
+      </div>
+    )
+  }
+
+  const ownerTaxYear = ownerTaxYearPage?.items?.[0] ?? null
+
+  if (!ownerTaxYear) {
+    return (
+      <div className="nexora-card flex flex-col items-start gap-3 p-6">
+        <p className="text-sm font-semibold text-nexoraMuted">{t('taxiq.cpaAccess.noOwnerTaxYear')}</p>
+        <button
+          type="button"
+          onClick={() => navigate('/dashboard/taxiq')}
+          className="rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white"
+        >
+          {t('taxiq.deductionCenter.goToSetup')}
+        </button>
+      </div>
+    )
+  }
+
+  return <CpaAccessSettingsView scope="owner" ownerTaxYearId={ownerTaxYear.id} />
+}
+
+export function TaxIqExportRoute() {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const { data: merchantSetupData, isLoading: isMerchantLoading } = useMerchantSetup()
+  const businessId = merchantSetupData?.businessInfo?.businessId
+  const currentTaxYear = new Date().getFullYear()
+  const { data: ownerTaxYearPage, isLoading: isTaxYearLoading } = useOwnerTaxYearByBusiness(
+    businessId,
+    currentTaxYear,
+  )
+
+  if (isMerchantLoading || (!!businessId && isTaxYearLoading)) {
+    return (
+      <div className="nexora-card p-6">
+        <SkeletonList count={3} lines={2} />
+      </div>
+    )
+  }
+
+  const ownerTaxYear = ownerTaxYearPage?.items?.[0] ?? null
+
+  if (!ownerTaxYear) {
+    return (
+      <div className="nexora-card flex flex-col items-start gap-3 p-6">
+        <p className="text-sm font-semibold text-nexoraMuted">{t('taxiq.yearEndExport.noOwnerTaxYear')}</p>
+        <button
+          type="button"
+          onClick={() => navigate('/dashboard/taxiq')}
+          className="rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white"
+        >
+          {t('taxiq.deductionCenter.goToSetup')}
+        </button>
+      </div>
+    )
+  }
+
+  return <YearEndExportView ownerTaxYear={ownerTaxYear} />
+}
 
 export function SupportRoute() {
   const { currentLanguage } = useTranslation()

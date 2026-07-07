@@ -3,26 +3,35 @@ import { CheckCircle2, Loader2, Upload } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
 import { useUploadTaxiqReceipt, useLinkTaxiqReceiptToDeduction } from '../../../../../data/hooks/useTaxiqReceipts'
+import { useLinkReceiptToSelfReportedIncome } from '../../../../../data/hooks/useTaxiqSelfReportedIncome'
 
+// US-13: generalized to also link to a Self-Reported Income record — mirrors the
+// ownerTaxYearId/staffTaxYearId generalization from US-11 (see US-11-assumptions.md A4).
+// Exactly one of `deductionRecordId` / `selfReportedIncomeId` must be passed by the caller.
 export default function ReceiptUploadStep({
   ownerTaxYearId,
+  staffTaxYearId,
   deductionRecordId,
+  selfReportedIncomeId,
   receiptCount,
   onLinked,
 }: {
-  ownerTaxYearId: string
-  deductionRecordId: string
+  ownerTaxYearId?: string
+  staffTaxYearId?: string
+  deductionRecordId?: string
+  selfReportedIncomeId?: string
   receiptCount: number
   onLinked?: () => void
 }) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const uploadReceipt = useUploadTaxiqReceipt()
-  const linkReceipt = useLinkTaxiqReceiptToDeduction()
+  const linkToDeduction = useLinkTaxiqReceiptToDeduction()
+  const linkToSelfReportedIncome = useLinkReceiptToSelfReportedIncome()
   const inputRef = useRef<HTMLInputElement>(null)
   const [fileName, setFileName] = useState('')
 
-  const isBusy = uploadReceipt.isPending || linkReceipt.isPending
+  const isBusy = uploadReceipt.isPending || linkToDeduction.isPending || linkToSelfReportedIncome.isPending
   const hasReceipt = receiptCount > 0
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,8 +41,16 @@ export default function ReceiptUploadStep({
 
     setFileName(file.name)
     try {
-      const receiptId = await uploadReceipt.mutateAsync({ ownerTaxYearId, file })
-      await linkReceipt.mutateAsync({ receiptId, deductionRecordId })
+      const receiptId = await uploadReceipt.mutateAsync({ ownerTaxYearId, staffTaxYearId, file })
+      if (selfReportedIncomeId) {
+        await linkToSelfReportedIncome.mutateAsync({
+          id: selfReportedIncomeId,
+          staffTaxYearId: staffTaxYearId as string,
+          receiptId,
+        })
+      } else {
+        await linkToDeduction.mutateAsync({ receiptId, deductionRecordId: deductionRecordId as string })
+      }
       showToast(t('taxiq.deductionCenter.wizard.step3.uploadSuccess'), 'success')
       onLinked?.()
     } catch {

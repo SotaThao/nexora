@@ -19,6 +19,12 @@ export const STAFF_SCREEN_API: Record<StaffScreenId, readonly string[]> = {
   tips: ['GET /api/v1/staff/tips?PageNumber&PageSize&Status&DateFrom&DateTo'],
   reviews: ['GET /api/v1/staff/reviews?PageNumber&PageSize'],
   pay: ['GET /api/v1/staff/payment-methods (Zelle, PayPal, Venmo, CashApp, AppleCash, …)'],
+  taxiq: [
+    'GET /api/v1/taxiq/staff/tax-years?TaxYear=',
+    'POST /api/v1/taxiq/staff/tax-years',
+    'GET /api/v1/taxiq/staff/tax-years/{id}/dashboard',
+    'PUT /api/v1/taxiq/staff/tax-years/{id}/modules',
+  ],
   profile: ['GET /api/v1/staff/businesses'],
   notifications: [
     'GET /api/v1/Notifications?PageNumber&PageSize',

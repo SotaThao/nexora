@@ -35,6 +35,13 @@
       "tips": "Tiền tip",
       "reviews": "Đánh giá",
       "pay": "Cài đặt thanh toán",
+      "taxiq": "Tax IQ",
+      "taxiq_deductions": "Khấu Trừ Thuế",
+      "taxiq_receipts": "Kho Hóa Đơn",
+      "taxiq_logs": "Nhật Ký Dặm & Tiền Mặt",
+      "taxiq_income": "Tổng Hợp Thu Nhập",
+      "taxiq_export": "Xuất Báo Cáo Cuối Năm",
+      "taxiq_cpa_access": "Quyền Truy Cập CPA",
       "profile": "Hồ sơ",
       "profile_account": "Cài đặt",
       "profile_kyc": "KYC",
@@ -47,6 +54,7 @@
       "tips": "Tiền tip",
       "reviews": "Đánh giá & Xếp hạng",
       "pay": "Phương thức nhận",
+      "taxiq": "Tax IQ",
       "profile": "Cài đặt",
       "notifications": "Thông báo"
     },
@@ -1279,7 +1287,34 @@
     "common_internal_server_error": "Đã xảy ra lỗi hệ thống bên trong.",
     "generic": "Đã xảy ra lỗi",
     "touchpoint_not_found": "Không tìm thấy trang",
-    "touchpoint_not_found_desc": "Không thể tải trạm này."
+    "touchpoint_not_found_desc": "Không thể tải trạm này.",
+    "taxiq_export_consent_required": "Vui lòng tick xác nhận consent trước khi gửi Final Export.",
+    "taxiq_export_blocked_by_high_priority_items": "Final Export đang bị chặn bởi các mục High Priority chưa xử lý. Hãy xử lý các mục này trước.",
+    "taxiq_export_requires_locked_tax_year": "Năm thuế phải được khóa trước khi tạo Final Export.",
+    "taxiq_export_package_not_found": "Không tìm thấy gói xuất báo cáo này.",
+    "taxiq_export_upload_failed": "Tạo gói xuất báo cáo thất bại. Vui lòng thử lại.",
+    "taxiq_lock_blocked_by_high_priority_items": "Chưa thể khóa năm thuế — hãy xử lý các mục đang chặn bên dưới, hoặc nhập ghi chú override nếu chỉ còn tranh chấp payout.",
+    "taxiq_owner_tax_year_locked": "Năm thuế này đã được khóa.",
+    "taxiq_staff_tax_year_locked": "Năm thuế của bạn đã bị khóa — không thể sửa bản ghi này nữa.",
+    "taxiq_owner_tax_year_not_locked": "Chỉ có thể tạo Adjustment sau khi năm thuế đã được khóa.",
+    "taxiq_unsupported_adjustment_field": "Trường này không được hỗ trợ để tạo Adjustment cho loại đối tượng đã chọn.",
+    "taxiq_adjustment_entity_not_found": "Không tìm thấy bản ghi bạn đang muốn điều chỉnh.",
+    "taxiq_tax_payment_reminder_not_found": "Không tìm thấy reminder này.",
+    "taxiq_tax_reminder_snooze_limit_reached": "Đã đạt giới hạn nhắc lại (tối đa 3 lần).",
+    "taxiq_payout_record_not_found": "Không tìm thấy payout này.",
+    "taxiq_payout_record_not_editable": "Chỉ có thể sửa payout khi còn ở trạng thái Pending Confirmation.",
+    "taxiq_payout_access_denied": "Bạn không có quyền truy cập payout này.",
+    "taxiq_staff_tax_year_required_for_payout": "Thợ này chưa thiết lập hồ sơ Tax IQ cho năm thuế này.",
+    "taxiq_staff_tax_year_already_exists": "Thợ này đã có hồ sơ Tax IQ cho năm thuế này.",
+    "staff_link_not_found": "Thợ này không phải thành viên đang hoạt động của tiệm bạn.",
+    "taxiq_cpa_access_grant_not_found": "Không tìm thấy quyền truy cập CPA này.",
+    "taxiq_cpa_access_token_invalid": "Link này không hợp lệ.",
+    "taxiq_cpa_access_grant_expired": "Link này đã hết hạn hoặc bị thu hồi.",
+    "taxiq_cpa_access_grant_revoked": "Link này đã hết hạn hoặc bị thu hồi.",
+    "taxiq_cpa_access_unauthorized": "Bạn không có quyền quản lý quyền truy cập CPA này.",
+    "taxiq_cpa_consent_required": "Cần có sự đồng ý của Thợ trước khi chia sẻ dữ liệu Full hoặc CPA Review.",
+    "taxiq_deduction_not_in_grant_scope": "Bản ghi này nằm ngoài phạm vi quyền truy cập CPA của bạn.",
+    "taxiq_self_reported_income_not_found": "Không tìm thấy bản ghi thu nhập tự khai này."
   },
   "components": {
     "payout": {
@@ -2416,6 +2451,18 @@
     "taxiq_cpa_access_desc": "Cấp quyền truy cập chỉ xem cho CPA để kiểm tra hồ sơ thuế của bạn — sắp ra mắt.",
     "taxiq_export_title": "Xuất Hồ Sơ Cuối Năm",
     "taxiq_export_desc": "Khóa năm thuế và xuất bộ hồ sơ CPA-ready dạng PDF, CSV và Excel — sắp ra mắt.",
+    "staff_taxiq_deductions_title": "Trung Tâm Khấu Trừ",
+    "staff_taxiq_deductions_desc": "Theo dõi và phân loại chi phí kinh doanh được khấu trừ của bạn — sắp ra mắt.",
+    "staff_taxiq_receipts_title": "Kho Chứng Từ",
+    "staff_taxiq_receipts_desc": "Lưu trữ và tự động đọc hóa đơn, biên lai thanh toán của bạn tại một nơi — sắp ra mắt.",
+    "staff_taxiq_logs_title": "Nhật Ký Dặm & Tiền Mặt",
+    "staff_taxiq_logs_desc": "Ghi chép số dặm di chuyển và tiền tip mặt hàng ngày một cách riêng tư — sắp ra mắt.",
+    "staff_taxiq_income_title": "Tổng Hợp Thu Nhập",
+    "staff_taxiq_income_desc": "Xem thu nhập do tiệm khai báo cùng với thu nhập bạn tự khai — sắp ra mắt.",
+    "staff_taxiq_export_title": "Xuất Báo Cáo Cuối Năm",
+    "staff_taxiq_export_desc": "Xuất bộ hồ sơ thuế CPA-ready của riêng bạn — sắp ra mắt.",
+    "staff_taxiq_cpa_access_title": "Quyền Truy Cập CPA",
+    "staff_taxiq_cpa_access_desc": "Cấp quyền truy cập chỉ xem cho CPA để kiểm tra hồ sơ thuế của bạn — sắp ra mắt.",
     "default_title": "Tính Năng Đang Phát Triển",
     "default_desc": "Module này đang được chuẩn bị cho bảng điều khiển Nexora Touch."
   },
@@ -2458,6 +2505,98 @@
         "generic": "Đã có lỗi xảy ra. Vui lòng thử lại."
       }
     },
+    "staffOnboarding": {
+      "title": "Thiết Lập Hồ Sơ Tax IQ",
+      "privacyBanner": "Deduction cá nhân và ước tính thuế của bạn là thông tin riêng tư theo mặc định. Chủ tiệm chỉ thấy thông tin bạn chủ động chia sẻ.",
+      "back": "Quay lại",
+      "next": "Tiếp tục",
+      "submit": "Hoàn tất thiết lập",
+      "submitting": "Đang lưu...",
+      "step1": {
+        "title": "Thông tin công việc",
+        "contractTypeLabel": "Loại hợp đồng",
+        "contractTypeW2": "W-2",
+        "contractType1099": "Hợp đồng 1099",
+        "contractTypeBoothRenter": "Thuê ghế",
+        "w9StatusLabel": "Trạng thái W-9",
+        "w9NotRequired": "Không yêu cầu",
+        "w9Pending": "Đang chờ",
+        "w9Received": "Đã nhận"
+      },
+      "step2": {
+        "title": "Chọn module muốn bật"
+      },
+      "step3": {
+        "title": "Xem lại",
+        "reviewContractType": "Loại hợp đồng",
+        "reviewW9Status": "Trạng thái W-9",
+        "reviewModules": "Module"
+      },
+      "errors": {
+        "duplicateTaxYear": "Bạn đã có thiết lập Tax IQ cho năm thuế này.",
+        "generic": "Đã có lỗi xảy ra. Vui lòng thử lại."
+      }
+    },
+    "staffHome": {
+      "title": "Tax IQ",
+      "taxYearLabel": "Năm thuế",
+      "enabledModulesLabel": "Module đang bật",
+      "editModules": "Chỉnh sửa cấu hình",
+      "ownerReportedIncomeLabel": "Do tiệm khai báo",
+      "selfReportedIncomeLabel": "Tự khai báo",
+      "grossIncomeLabel": "Tổng thu nhập",
+      "totalDeductionsLabel": "Tổng khấu trừ",
+      "estimatedNetIncomeLabel": "Ước tính thu nhập ròng",
+      "pendingPayoutsBadge": "{{count}} payout đang chờ bạn xác nhận",
+      "editModulesModal": {
+        "title": "Chỉnh sửa cấu hình",
+        "save": "Lưu",
+        "saved": "Đã cập nhật cấu hình.",
+        "cancel": "Hủy",
+        "lockedNotice": "Năm thuế này đã bị khóa và không thể chỉnh sửa."
+      }
+    },
+    "staffPayoutConfirmation": {
+      "title": "Xác Nhận Payout",
+      "subtitle": "Xem lại payout do tiệm nhập và xác nhận hoặc báo cáo sai lệch.",
+      "noStaffTaxYear": "Hoàn tất thiết lập Tax IQ trước khi xem payout.",
+      "goToSetup": "Đến thiết lập Tax IQ",
+      "lockedNotice": "Năm thuế này đã bị khóa. Không thể thao tác payout.",
+      "lockedBadge": "Đã khóa",
+      "emptyState": "Không có payout nào đang chờ bạn xác nhận.",
+      "confirmAction": "Xác nhận",
+      "disputeAction": "Báo Cáo Sai Lệch",
+      "disputeReportedBadge": "Đã Báo Sai Lệch — đang chờ tiệm xử lý",
+      "confirmSuccess": "Đã xác nhận payout.",
+      "columns": {
+        "payPeriod": "Kỳ trả",
+        "period": "Thời gian",
+        "servicePayout": "Service Payout",
+        "tip": "Tip",
+        "bonus": "Bonus",
+        "reimbursement": "Hoàn tiền",
+        "paymentMethod": "Phương thức thanh toán",
+        "actions": "Thao tác"
+      },
+      "confirmDialog": {
+        "title": "Xác Nhận Payout",
+        "message": "Xác nhận payout này khớp với số tiền bạn thực nhận? Hành động này không thể hoàn tác.",
+        "confirmLabel": "Xác nhận"
+      },
+      "dispute": {
+        "modalTitle": "Báo Cáo Sai Lệch",
+        "ownerEnteredLabel": "Số tiền tiệm đã nhập",
+        "amountLabel": "Số tiền bạn thực nhận",
+        "amountPlaceholder": "0.00",
+        "noteLabel": "Ghi chú",
+        "notePlaceholder": "Giải thích sai lệch",
+        "submitButton": "Gửi",
+        "success": "Đã báo cáo sai lệch. Tiệm đã được thông báo."
+      },
+      "errors": {
+        "generic": "Đã có lỗi xảy ra. Vui lòng thử lại."
+      }
+    },
     "home": {
       "title": "Tax IQ",
       "taxYearLabel": "Năm thuế",
@@ -2489,7 +2628,9 @@
       "totalLabel": "Tổng khấu trừ",
       "emptyState": "Chưa có khoản khấu trừ nào. Thêm chi phí kinh doanh đầu tiên để bắt đầu.",
       "noOwnerTaxYear": "Hoàn tất thiết lập Tax IQ trước khi thêm khoản khấu trừ.",
+      "noStaffTaxYear": "Hoàn tất thiết lập Tax IQ trước khi thêm khoản khấu trừ.",
       "goToSetup": "Đến thiết lập Tax IQ",
+      "staffPrivacyBanner": "Deduction cá nhân của bạn hoàn toàn riêng tư — Chủ tiệm không thể xem.",
       "filters": {
         "statusLabel": "Trạng thái",
         "categoryLabel": "Danh mục",
@@ -2525,7 +2666,8 @@
         "edit": "Sửa",
         "submit": "Nộp",
         "reanalyze": "Phân tích lại với AI",
-        "approve": "Duyệt"
+        "approve": "Duyệt",
+        "attachReceipt": "Đính kèm hóa đơn có sẵn"
       },
       "aiDisclaimerFallback": "Tax IQ chỉ hỗ trợ chuẩn bị, không thay thế CPA.",
       "errors": {
@@ -2533,7 +2675,8 @@
         "categoriesUnavailable": "Danh mục khấu trừ hiện không khả dụng — vui lòng liên hệ hỗ trợ.",
         "lockedTitle": "Năm thuế đã khóa",
         "lockedMessage": "Năm thuế đã khóa — vào Year-End Export để tạo Adjustment.",
-        "lockedAction": "Đến Year-End Export"
+        "lockedAction": "Đến Year-End Export",
+        "lockedMessageStaff": "Năm thuế của bạn đã bị khóa — không thể tạo hoặc sửa deduction này nữa."
       },
       "wizard": {
         "title": "Thêm Khoản Chi",
@@ -2614,6 +2757,725 @@
         },
         "result": {
           "title": "Kết Quả"
+        }
+      }
+    },
+    "receiptVault": {
+      "title": "Kho Hóa Đơn",
+      "subtitle": "Tất cả hóa đơn đã tải lên ở một nơi — dùng lại cho khấu trừ, chi trả và thu nhập tự khai.",
+      "uploadButton": "Tải hóa đơn lên",
+      "uploading": "Đang tải lên...",
+      "uploadSuccess": "Đã tải hóa đơn lên.",
+      "uploadError": "Không thể tải hóa đơn lên. Vui lòng thử lại.",
+      "noOwnerTaxYear": "Hoàn tất thiết lập Tax IQ trước khi tải hóa đơn lên.",
+      "noStaffTaxYear": "Hoàn tất thiết lập Tax IQ trước khi tải hóa đơn lên.",
+      "goToSetup": "Đến thiết lập Tax IQ",
+      "staffPrivacyBanner": "Hóa đơn cá nhân của bạn hoàn toàn riêng tư — Chủ tiệm không thể xem.",
+      "emptyState": "Chưa có hóa đơn nào. Tải hóa đơn đầu tiên lên để bắt đầu.",
+      "needsMoreInfoNote": "Thiếu nhà cung cấp, ngày hoặc số tiền — tải lại ảnh rõ hơn để khắc phục.",
+      "filters": {
+        "allQuality": "Tất cả trạng thái chất lượng",
+        "allLinkTypes": "Tất cả loại liên kết"
+      },
+      "columns": {
+        "fileName": "Tệp",
+        "vendor": "Nhà cung cấp",
+        "date": "Ngày",
+        "amount": "Số tiền",
+        "quality": "Chất lượng",
+        "linkType": "Liên kết với",
+        "createdAt": "Ngày tải lên",
+        "actions": "Hành động"
+      },
+      "quality": {
+        "pending": "Đang xử lý",
+        "valid": "Hợp lệ",
+        "needsMoreInfo": "Thiếu Thông Tin"
+      },
+      "linkType": {
+        "standalone": "Độc lập",
+        "deduction": "Khấu trừ",
+        "payout": "Chi trả",
+        "selfReportedIncome": "Thu Nhập Tự Khai"
+      },
+      "actions": {
+        "resolveDuplicate": "Xử lý trùng lặp"
+      },
+      "duplicateModal": {
+        "title": "Xử lý trùng lặp",
+        "keepBoth": "Giữ Cả Hai",
+        "merge": "Gộp",
+        "delete": "Xóa Bản Trùng",
+        "mergeTargetLabel": "Gộp vào",
+        "confirm": "Xác nhận",
+        "success": "Đã xử lý trùng lặp.",
+        "errors": {
+          "generic": "Đã xảy ra lỗi. Vui lòng thử lại."
+        }
+      },
+      "attachExistingModal": {
+        "title": "Đính kèm hóa đơn có sẵn",
+        "emptyState": "Không có hóa đơn độc lập nào để đính kèm.",
+        "confirm": "Đính kèm",
+        "success": "Đã đính kèm hóa đơn.",
+        "errors": {
+          "generic": "Đã xảy ra lỗi. Vui lòng thử lại."
+        }
+      }
+    },
+    "assetsTracker": {
+      "title": "Theo Dõi Thiết Bị, Gift Card & Membership",
+      "subtitle": "Theo dõi tài sản thiết bị, nợ gift card và credit membership để hồ sơ thuế cuối năm chính xác.",
+      "noOwnerTaxYear": "Hoàn tất thiết lập Tax IQ trước khi thêm tài sản.",
+      "totalItems": "{{count}} mục",
+      "highPriorityCount": "{{count}} ưu tiên cao",
+      "cpaReviewCount": "{{count}} cần CPA duyệt",
+      "tabs": {
+        "equipment": "Thiết Bị",
+        "giftCard": "Nợ Gift Card",
+        "membership": "Credit Membership"
+      },
+      "status": {
+        "pending": "Chờ Xử Lý",
+        "ready": "Sẵn Sàng",
+        "highPriority": "Ưu Tiên Cao",
+        "cpaReview": "Cần CPA Duyệt"
+      },
+      "errors": {
+        "generic": "Đã xảy ra lỗi. Vui lòng thử lại.",
+        "receiptUploadFailed": "Không thể tải hóa đơn lên. Vui lòng thử lại.",
+        "lockedMessage": "Năm thuế đã khóa — vào Year-End Export để tạo Adjustment.",
+        "lockedAction": "Đến Year-End Export"
+      },
+      "equipment": {
+        "addButton": "Thêm Thiết Bị",
+        "addSuccess": "Đã thêm tài sản thiết bị.",
+        "emptyState": "Chưa có thiết bị nào. Thêm tài sản đầu tiên để bắt đầu.",
+        "missingInServiceDateTooltip": "Thiếu ngày đưa vào sử dụng khiến AI không thể đề xuất chính xác Depreciate / Section 179.",
+        "columns": {
+          "assetName": "Tài Sản",
+          "purchaseDate": "Ngày Mua",
+          "inServiceDate": "Ngày Đưa Vào Sử Dụng",
+          "amount": "Số Tiền",
+          "businessUsePercent": "Tỷ Lệ Kinh Doanh %",
+          "aiSuggestion": "Gợi Ý AI"
+        },
+        "form": {
+          "assetNameLabel": "Tên tài sản",
+          "assetNameRequired": "Tên tài sản là bắt buộc.",
+          "purchaseDateLabel": "Ngày mua",
+          "purchaseDateRequired": "Ngày mua là bắt buộc.",
+          "inServiceDateLabel": "Ngày đưa vào sử dụng (tùy chọn)",
+          "inServiceDateWarning": "Thiếu ngày này sẽ đánh dấu tài sản là Ưu Tiên Cao.",
+          "amountLabel": "Số tiền",
+          "amountRequired": "Số tiền phải lớn hơn 0.",
+          "businessUsePercentLabel": "Tỷ lệ sử dụng cho kinh doanh (%)",
+          "businessUsePercentRequired": "Tỷ lệ sử dụng cho kinh doanh phải từ 0 đến 100.",
+          "isRenovationLabel": "Đây là cải tạo/nâng cấp",
+          "isRenovationNotice": "Cải tạo luôn cần CPA xem xét.",
+          "receiptLabel": "Hóa đơn (tùy chọn)",
+          "receiptChooseFile": "Chọn tệp",
+          "submit": "Thêm Thiết Bị"
+        },
+        "aiSuggestion": {
+          "deductNow": "Khấu Trừ Ngay",
+          "deductNowExplanation": "Thiết bị này đủ điều kiện khấu trừ toàn bộ trong năm nay.",
+          "depreciate": "Khấu Hao",
+          "depreciateExplanation": "Trải đều chi phí thiết bị theo vòng đời sử dụng.",
+          "section179Candidate": "Ứng Viên Section 179",
+          "section179CandidateExplanation": "Có thể đủ điều kiện khấu trừ toàn bộ theo Section 179 — CPA cần xác nhận.",
+          "cpaReview": "Cần CPA Duyệt",
+          "cpaReviewExplanation": "Cải tạo luôn cần CPA xem xét trước khi tính vào tổng."
+        }
+      },
+      "giftCard": {
+        "addButton": "Thêm Kỳ",
+        "addSuccess": "Đã thêm kỳ nợ gift card.",
+        "emptyState": "Chưa có kỳ nợ gift card nào. Thêm kỳ đầu tiên để bắt đầu.",
+        "columns": {
+          "period": "Kỳ",
+          "totalSold": "Tổng Đã Bán",
+          "totalRedeemed": "Tổng Đã Đổi",
+          "outstandingBalance": "Số Dư Chưa Dùng",
+          "dataSource": "Nguồn Dữ Liệu",
+          "status": "Trạng Thái"
+        },
+        "form": {
+          "periodLabel": "Kỳ",
+          "periodRequired": "Kỳ là bắt buộc.",
+          "totalSoldLabel": "Tổng đã bán",
+          "totalSoldRequired": "Tổng đã bán là bắt buộc.",
+          "totalRedeemedLabel": "Tổng đã đổi",
+          "totalRedeemedRequired": "Tổng đã đổi là bắt buộc.",
+          "balanceInvalid": "Tổng đã bán không được nhỏ hơn tổng đã đổi.",
+          "outstandingPreviewLabel": "Số dư chưa dùng",
+          "dataSourceLabel": "Nguồn dữ liệu",
+          "dataSourcePlaceholder": "vd: xuất từ POS, bảng tính",
+          "dataSourceWarning": "Thiếu nguồn dữ liệu sẽ đánh dấu kỳ này là Ưu Tiên Cao.",
+          "submit": "Thêm Kỳ"
+        }
+      },
+      "membership": {
+        "addButton": "Thêm Kỳ",
+        "addSuccess": "Đã thêm kỳ credit membership.",
+        "emptyState": "Chưa có kỳ credit membership nào. Thêm kỳ đầu tiên để bắt đầu.",
+        "columns": {
+          "period": "Kỳ",
+          "creditsIssued": "Credit Đã Phát",
+          "creditsUsed": "Credit Đã Dùng",
+          "creditsExpired": "Credit Đã Hết Hạn",
+          "expiryPolicy": "Chính Sách Hết Hạn",
+          "status": "Trạng Thái"
+        },
+        "form": {
+          "periodLabel": "Kỳ",
+          "periodRequired": "Kỳ là bắt buộc.",
+          "creditsIssuedLabel": "Credit đã phát",
+          "creditsIssuedRequired": "Credit đã phát là bắt buộc.",
+          "creditsUsedLabel": "Credit đã dùng",
+          "creditsUsedRequired": "Credit đã dùng là bắt buộc.",
+          "creditsExpiredLabel": "Credit đã hết hạn",
+          "creditsExpiredRequired": "Credit đã hết hạn là bắt buộc.",
+          "expiryPolicyLabel": "Chính sách hết hạn (tùy chọn)",
+          "expiryPolicyPlaceholder": "Mô tả cách xử lý credit hết hạn",
+          "expiryPolicyWarning": "Credit hết hạn mà không có chính sách sẽ được đánh dấu để CPA xem xét.",
+          "submit": "Thêm Kỳ"
+        }
+      }
+    },
+    "staffLogs": {
+      "title": "Nhật Ký Dặm Xe & Tiền Tip Mặt",
+      "subtitle": "Ghi chép mileage và cash tip hàng ngày một cách riêng tư — chủ tiệm không thể xem các mục này.",
+      "noStaffTaxYear": "Hoàn tất thiết lập Tax IQ trước khi ghi mileage hoặc cash tip.",
+      "goToSetup": "Đến thiết lập Tax IQ",
+      "tabs": {
+        "mileage": "Nhật Ký Mileage",
+        "cashTip": "Nhật Ký Cash Tip"
+      },
+      "errors": {
+        "generic": "Đã có lỗi xảy ra. Vui lòng thử lại.",
+        "lockedMessage": "Năm thuế của bạn đã bị khóa — không thể tạo hoặc sửa nhật ký mileage và cash tip nữa."
+      },
+      "mileage": {
+        "addButton": "Thêm Mileage",
+        "editButton": "Sửa",
+        "addSuccess": "Đã thêm nhật ký mileage.",
+        "updateSuccess": "Đã cập nhật nhật ký mileage.",
+        "emptyState": "Chưa có nhật ký mileage nào. Thêm chuyến đi đầu tiên để bắt đầu.",
+        "totalItems": "{{count}} chuyến đi",
+        "cpaReviewCount": "{{count}} cần CPA xem xét",
+        "cpaReviewExplanation": "Thiếu mục đích, điểm đi hoặc điểm đến — cần CPA xem xét.",
+        "columns": {
+          "date": "Ngày",
+          "purpose": "Mục Đích",
+          "route": "Tuyến Đường",
+          "miles": "Số Dặm",
+          "status": "Trạng Thái",
+          "actions": "Hành Động"
+        },
+        "status": {
+          "draft": "Nháp",
+          "ready": "Sẵn Sàng",
+          "cpaReview": "CPA Xem Xét"
+        },
+        "form": {
+          "dateLabel": "Ngày",
+          "dateRequired": "Ngày là bắt buộc.",
+          "purposeLabel": "Mục đích (tùy chọn)",
+          "startLocationLabel": "Điểm đi (tùy chọn)",
+          "endLocationLabel": "Điểm đến (tùy chọn)",
+          "milesLabel": "Số dặm",
+          "milesRequired": "Số dặm phải từ 0 trở lên.",
+          "missingFieldsHint": "Bỏ trống mục đích hoặc điểm đi/đến sẽ đánh dấu chuyến đi này để CPA xem xét — vẫn có thể lưu được.",
+          "submit": "Lưu"
+        }
+      },
+      "cashTip": {
+        "addButton": "Ghi Cash Tip",
+        "addSuccess": "Đã ghi cash tip.",
+        "emptyState": "Chưa có cash tip nào được ghi.",
+        "totalLabel": "tổng cash tip đã ghi",
+        "columns": {
+          "date": "Ngày",
+          "amount": "Số Tiền",
+          "note": "Ghi Chú"
+        },
+        "form": {
+          "dateLabel": "Ngày",
+          "dateRequired": "Ngày là bắt buộc.",
+          "amountLabel": "Số tiền",
+          "amountRequired": "Số tiền phải lớn hơn 0.",
+          "noteLabel": "Ghi chú (tùy chọn)",
+          "submit": "Lưu"
+        }
+      }
+    },
+    "selfReportedIncome": {
+      "title": "Thu Nhập Tự Khai",
+      "subtitle": "Thu nhập chủ tiệm không khai báo — hoàn toàn riêng tư.",
+      "add": "Thêm Thu Nhập Tự Khai",
+      "edit": "Sửa",
+      "delete": "Xóa",
+      "deleteConfirm": "Xóa khoản thu nhập tự khai này? Hành động này không thể hoàn tác.",
+      "deleteSuccess": "Đã xóa khoản thu nhập tự khai.",
+      "emptyState": "Chưa có thu nhập tự khai nào. Thêm khoản đầu tiên để bắt đầu.",
+      "noStaffTaxYear": "Hoàn tất thiết lập Tax IQ trước khi thêm thu nhập tự khai.",
+      "goToSetup": "Đến thiết lập Tax IQ",
+      "loading": "Đang tải...",
+      "receiptOptional": "Đính kèm chứng từ cho khoản thu nhập này, hoặc bỏ qua và thêm sau.",
+      "lockedNotice": "Năm thuế của bạn đã bị khóa — không thể tạo hoặc sửa thu nhập tự khai nữa.",
+      "periodType": {
+        "day": "Ngày",
+        "week": "Tuần",
+        "month": "Tháng",
+        "quarter": "Quý",
+        "year": "Năm"
+      },
+      "incomeType": {
+        "cashFromClient": "Tiền Mặt Từ Khách",
+        "otherSalonIncome": "Thu Nhập Tiệm Khác",
+        "boothRentFromSubRenter": "Booth Rent Từ Sub-renter",
+        "other": "Khác"
+      },
+      "status": {
+        "ready": "Sẵn Sàng",
+        "missingReceipt": "Thiếu Chứng Từ",
+        "missingInfo": "Thiếu Thông Tin",
+        "cpaReview": "CPA Xem Xét",
+        "locked": "Đã Khóa"
+      },
+      "dashboard": {
+        "ownerReportedIncome": "Thu Nhập Chủ Tiệm Khai",
+        "selfReportedIncome": "Thu Nhập Tự Khai",
+        "grossIncome": "Tổng Thu Nhập",
+        "viewDetails": "Xem Chi Tiết"
+      },
+      "columns": {
+        "date": "Ngày",
+        "amount": "Số Tiền",
+        "source": "Nguồn",
+        "incomeType": "Loại Thu Nhập",
+        "status": "Trạng Thái",
+        "actions": "Hành Động"
+      },
+      "errors": {
+        "generic": "Đã có lỗi xảy ra. Vui lòng thử lại."
+      },
+      "periodPicker": {
+        "weekLabel": "Tuần {{index}} — {{start}}–{{end}}",
+        "quarterLabel": "Q{{quarter}}",
+        "yearRangeLabel": "1/1 – 31/12, {{taxYear}}"
+      },
+      "form": {
+        "step1Title": "Thông Tin Cơ Bản",
+        "step2Title": "Chi Tiết",
+        "step3Title": "Chứng Từ & Lưu",
+        "periodTypeLabel": "Chế độ nhập",
+        "periodLabel": "Kỳ",
+        "dateLabel": "Ngày",
+        "dateRequired": "Ngày là bắt buộc.",
+        "amount": "Số tiền",
+        "amountRequired": "Số tiền phải lớn hơn 0.",
+        "source": "Nguồn",
+        "sourceRequired": "Nguồn là bắt buộc.",
+        "incomeTypeLabel": "Loại thu nhập (tùy chọn)",
+        "incomeTypePlaceholder": "Chọn loại thu nhập",
+        "incomeTypeNote": "Ghi chú loại thu nhập",
+        "notes": "Ghi chú (tùy chọn)",
+        "back": "Quay lại",
+        "next": "Tiếp theo",
+        "save": "Lưu"
+      }
+    },
+    "yearEndExport": {
+      "title": "Trung Tâm Xuất Hồ Sơ Cuối Năm",
+      "subtitle": "Khóa năm thuế và xuất bộ hồ sơ CPA mà kế toán thuế của bạn cần.",
+      "noOwnerTaxYear": "Hoàn tất thiết lập Tax IQ trước khi xuất hồ sơ.",
+      "draftTitle": "Draft Report",
+      "draftDescription": "Có thể tạo Draft bất kỳ lúc nào — không cần readiness score hoàn chỉnh.",
+      "generateDraftButton": "Tạo Draft Report",
+      "draftResultLabel": "Draft report",
+      "draftSuccess": "Đã tạo Draft report.",
+      "downloadLink": "Tải xuống",
+      "linkExpiryWarning": "Link này sẽ hết hạn sau 1 giờ kể từ khi tạo.",
+      "lockTitle": "Khóa & Xuất Hồ Sơ Cuối Cùng",
+      "lockedBanner": "Năm thuế đã khóa — {{date}}",
+      "lockButton": "Khóa Năm Thuế",
+      "resolveLink": "Xử lý",
+      "finalTitle": "Final Export",
+      "finalDescription": "Yêu cầu năm thuế đã khóa và không còn mục High Priority nào.",
+      "consentLabel": "Tôi xác nhận bộ hồ sơ CPA này đã sẵn sàng để gửi.",
+      "finalDisabledNotLocked": "Hãy khóa năm thuế trước khi tạo Final Export.",
+      "finalDisabledHighPriority": "Hãy xử lý hết các mục High Priority trước khi tạo Final Export.",
+      "finalDisabledConsent": "Vui lòng tick xác nhận consent ở trên.",
+      "finalButton": "Tạo Final Export",
+      "finalResultLabel": "Final export",
+      "finalSuccess": "Đã tạo Final Export.",
+      "finalNoChanges": "Không có thay đổi mới — đây là link export gần nhất.",
+      "errors": {
+        "generic": "Đã xảy ra lỗi. Vui lòng thử lại."
+      }
+    },
+    "staffExport": {
+      "title": "Xuất Hồ Sơ Thuế",
+      "subtitle": "Xuất hồ sơ thuế riêng của bạn và chia sẻ với CPA khi sẵn sàng — Chủ tiệm không thể xem dữ liệu này.",
+      "noStaffTaxYear": "Hoàn tất thiết lập Tax IQ trước khi xuất hồ sơ.",
+      "goToSetup": "Đến thiết lập Tax IQ",
+      "draftTitle": "Draft Report",
+      "draftDescription": "Có thể tạo Draft bất kỳ lúc nào — có watermark \"NOT FINAL\", không cần readiness score hoàn chỉnh.",
+      "generateDraftButton": "Tạo Draft Report",
+      "draftResultLabel": "Draft report",
+      "draftSuccess": "Đã tạo Draft report.",
+      "downloadLink": "Tải xuống",
+      "linkExpiryWarning": "Link này sẽ hết hạn sau 1 giờ kể từ khi tạo.",
+      "autoLockNotice": "Khi tạo Final Export, năm thuế của bạn sẽ tự động bị khóa — mileage log và self-reported income sẽ chuyển sang chỉ đọc ngay sau đó.",
+      "package": {
+        "basic": {
+          "title": "Basic",
+          "description": "Chỉ tổng self-reported income — không có chi tiết từng dòng."
+        },
+        "full": {
+          "title": "Full",
+          "description": "Đầy đủ chi tiết từng khoản self-reported income (ngày/kỳ, số tiền, nguồn, loại thu nhập)."
+        },
+        "cpaReview": {
+          "title": "CPA Review",
+          "description": "Giống Full, và mọi khoản thiếu biên lai hoặc cần CPA review đều được đánh dấu \"Unverified — CPA should verify\"."
+        }
+      },
+      "resolveLink": "Xử lý",
+      "openNotesTitle": "Ghi chú mở (không chặn export)",
+      "finalTitle": "Final Export",
+      "finalDescription": "Chọn gói và xác nhận consent để tạo bộ hồ sơ thuế cuối cùng.",
+      "consentLabel": "Tôi đồng ý chia sẻ dữ liệu riêng tư này.",
+      "finalDisabledNoPackage": "Hãy chọn một gói để tiếp tục.",
+      "finalDisabledConsent": "Vui lòng tick xác nhận consent ở trên.",
+      "finalButton": "Tạo Final Export",
+      "finalResultLabel": "Final export",
+      "finalSuccess": "Đã tạo Final Export. Năm thuế của bạn đã được khóa.",
+      "finalNoChanges": "Không có thay đổi mới — đây là link export gần nhất.",
+      "lockedBanner": "Năm thuế của bạn đã bị khóa. Final export đã được tạo trước đó.",
+      "errors": {
+        "generic": "Đã xảy ra lỗi. Vui lòng thử lại."
+      }
+    },
+    "lockTaxYear": {
+      "modalTitle": "Khóa Năm Thuế",
+      "modalDescription": "Sau khi khóa, các khoản deduction, payout và bản ghi khác chỉ có thể thay đổi thông qua Adjustment.",
+      "overrideWarning": "Tranh chấp payout chưa giải quyết sẽ được đánh dấu bỏ qua và ghi vào audit log.",
+      "overrideNotePlaceholder": "Giải thích lý do khóa dù còn tranh chấp chưa xử lý...",
+      "confirmButton": "Xác nhận Khóa",
+      "success": "Đã khóa năm thuế.",
+      "errors": {
+        "generic": "Không thể khóa năm thuế này. Vui lòng thử lại."
+      }
+    },
+    "createAdjustment": {
+      "modalTitle": "Tạo Adjustment",
+      "historyTitle": "Lịch Sử Adjustment",
+      "historySubtitle": "Tất cả thay đổi được tạo sau khi khóa năm thuế này.",
+      "addButton": "Tạo Adjustment",
+      "disabledNotLocked": "Chỉ có thể tạo Adjustment khi năm thuế đang ở trạng thái đã khóa.",
+      "entityTypeLabel": "Loại đối tượng",
+      "fieldNameLabel": "Trường dữ liệu",
+      "entityIdLabel": "ID đối tượng",
+      "entityIdPlaceholder": "ID của bản ghi cần điều chỉnh",
+      "oldValueLabel": "Giá trị cũ",
+      "newValueLabel": "Giá trị mới",
+      "reasonLabel": "Lý do",
+      "cpaNotesLabel": "Ghi chú CPA (tùy chọn)",
+      "receiptIdLabel": "Receipt ID (tùy chọn)",
+      "receiptIdPlaceholder": "ID chứng từ đã có sẵn, nếu có",
+      "submitButton": "Gửi Adjustment",
+      "success": "Đã tạo Adjustment.",
+      "emptyState": "Chưa có Adjustment nào.",
+      "entityTypes": {
+        "deductionRecord": "Deduction",
+        "payoutRecord": "Payout",
+        "equipmentAsset": "Equipment / Asset",
+        "giftCardLiability": "Gift Card Liability",
+        "membershipCredit": "Membership Credit"
+      },
+      "columns": {
+        "entity": "Đối tượng",
+        "change": "Thay đổi",
+        "reason": "Lý do",
+        "createdBy": "Người tạo",
+        "createdAt": "Thời gian tạo"
+      },
+      "errors": {
+        "generic": "Không thể tạo Adjustment này. Vui lòng thử lại."
+      }
+    },
+    "reminders": {
+      "title": "Nhắc Nhở Thanh Toán Thuế",
+      "subtitle": "Theo dõi ngày đến hạn sales tax, franchise tax, estimated tax và payroll tax để không bỏ lỡ và bị phạt.",
+      "noOwnerTaxYear": "Hoàn tất cài đặt Tax IQ trước khi thêm reminder.",
+      "addButton": "Thêm Reminder",
+      "form": {
+        "modalTitle": "Thêm Reminder",
+        "taxTypeLabel": "Loại thuế",
+        "dueDateLabel": "Ngày đến hạn",
+        "submitButton": "Thêm Reminder",
+        "success": "Đã tạo reminder."
+      },
+      "taxTypes": {
+        "SalesTax": "Sales Tax",
+        "FranchiseTax": "Franchise Tax",
+        "EstimatedTax": "Estimated Tax",
+        "PayrollTax": "Payroll Tax"
+      },
+      "status": {
+        "Pending": "Chưa thanh toán",
+        "Paid": "Đã thanh toán",
+        "Overdue": "Quá hạn"
+      },
+      "columns": {
+        "taxType": "Loại thuế",
+        "dueDate": "Ngày đến hạn",
+        "status": "Trạng thái",
+        "snoozeCount": "Số lần hoãn",
+        "actions": "Hành động"
+      },
+      "emptyState": "Chưa có reminder nào.",
+      "emptyStateCta": "Thêm reminder đầu tiên",
+      "actions": {
+        "markPaid": "Đã thanh toán",
+        "snooze": "Hoãn nhắc",
+        "snoozeLimitTooltip": "Đã đạt giới hạn nhắc lại (tối đa 3 lần)."
+      },
+      "markPaidModal": {
+        "modalTitle": "Đánh dấu đã thanh toán",
+        "description": "Có thể tải lên chứng từ thanh toán (không bắt buộc).",
+        "chooseFile": "Chọn file",
+        "uploading": "Đang tải lên...",
+        "receiptAttached": "Đã đính kèm chứng từ",
+        "skipNotice": "Bạn có thể đánh dấu đã thanh toán mà không cần chứng từ.",
+        "confirmButton": "Đã thanh toán",
+        "success": "Đã đánh dấu reminder là đã thanh toán.",
+        "errors": {
+          "generic": "Không thể đánh dấu reminder này đã thanh toán. Vui lòng thử lại.",
+          "uploadFailed": "Tải chứng từ thất bại. Vui lòng thử lại."
+        }
+      },
+      "snoozeModal": {
+        "modalTitle": "Hoãn Nhắc Reminder",
+        "description": "Đã hoãn {{count}}/3 lần.",
+        "daysLabel": "Hoãn nhắc trong",
+        "days": {
+          "3": "3 ngày",
+          "7": "7 ngày",
+          "14": "14 ngày",
+          "30": "30 ngày"
+        },
+        "confirmButton": "Hoãn Nhắc",
+        "success": "Đã hoãn nhắc reminder.",
+        "errors": {
+          "generic": "Không thể hoãn nhắc reminder này. Vui lòng thử lại."
+        }
+      },
+      "errors": {
+        "lockedMessage": "Năm thuế đã bị khóa — không thể tạo hoặc sửa reminder.",
+        "lockedAction": "Xem Year-End Export",
+        "generic": "Đã xảy ra lỗi. Vui lòng thử lại."
+      }
+    },
+    "payoutCenter": {
+      "title": "Trung Tâm Payout & Tranh Chấp",
+      "subtitle": "Nhập service payout, tip và bonus cho từng thợ, và giải quyết tranh chấp do thợ báo cáo.",
+      "noOwnerTaxYear": "Hoàn tất cài đặt Tax IQ trước khi nhập payout.",
+      "addButton": "Thêm Payout",
+      "emptyState": "Chưa có payout nào.",
+      "tabs": {
+        "payouts": "Payouts",
+        "disputes": "Tranh chấp"
+      },
+      "filters": {
+        "allStaff": "Tất cả thợ",
+        "allStatuses": "Tất cả trạng thái"
+      },
+      "columns": {
+        "staff": "Thợ",
+        "period": "Kỳ trả",
+        "status": "Trạng thái",
+        "actions": "Hành động"
+      },
+      "status": {
+        "PendingConfirmation": "Chờ Thợ xác nhận",
+        "Confirmed": "Đã xác nhận",
+        "DisputeReported": "Đang tranh chấp",
+        "CPAReviewRequired": "Cần CPA xem xét"
+      },
+      "actions": {
+        "edit": "Sửa"
+      },
+      "payPeriods": {
+        "Weekly": "Hàng tuần",
+        "BiWeekly": "2 tuần/lần",
+        "Monthly": "Hàng tháng",
+        "AdHoc": "Không định kỳ"
+      },
+      "contractTypes": {
+        "W2": "W-2",
+        "C1099": "1099",
+        "BoothRenter": "Booth Renter"
+      },
+      "w9Statuses": {
+        "NotRequired": "Không yêu cầu",
+        "Pending": "Đang chờ",
+        "Received": "Đã nhận"
+      },
+      "createStaffTaxYear": {
+        "notice": "{{name}} chưa thiết lập hồ sơ Tax IQ cho năm thuế này. Thiết lập ngay để tiếp tục nhập payout.",
+        "contractTypeLabel": "Loại hợp đồng",
+        "w9StatusLabel": "Trạng thái W-9",
+        "submitButton": "Tạo & Tiếp tục",
+        "errors": {
+          "generic": "Không thể thiết lập hồ sơ Tax IQ cho thợ này. Vui lòng thử lại."
+        }
+      },
+      "form": {
+        "addModalTitle": "Thêm Payout",
+        "editModalTitle": "Sửa Payout",
+        "staffLabel": "Thợ",
+        "staffPlaceholder": "Chọn một thợ",
+        "staffNeedsTaxYear": "Thợ này chưa thiết lập hồ sơ Tax IQ — bạn sẽ được tạo hồ sơ ở bước tiếp theo.",
+        "payPeriodLabel": "Kỳ trả",
+        "periodStartLabel": "Ngày bắt đầu kỳ",
+        "periodEndLabel": "Ngày kết thúc kỳ",
+        "servicePayoutLabel": "Service payout",
+        "tipLabel": "Tip",
+        "bonusLabel": "Bonus",
+        "reimbursementLabel": "Reimbursement",
+        "paymentMethodLabel": "Phương thức thanh toán",
+        "paymentMethodPlaceholder": "vd: Zelle, Tiền mặt, Check, Chuyển khoản trực tiếp",
+        "grossPayoutLabel": "Gross Payout",
+        "netPaidLabel": "Net Paid",
+        "w9Warning": "Thợ này được phân loại 1099 và chưa nhận được W-9.",
+        "submitButton": "Thêm Payout",
+        "updateButton": "Lưu thay đổi",
+        "createSuccess": "Đã tạo payout.",
+        "updateSuccess": "Đã cập nhật payout.",
+        "errors": {
+          "generic": "Không thể lưu payout này. Vui lòng thử lại.",
+          "taxYearLocked": "Năm thuế đã bị khóa. Hãy dùng Adjustment thay thế (xem Year-End Export)."
+        }
+      },
+      "disputes": {
+        "emptyState": "Chưa có tranh chấp nào.",
+        "resolveButton": "Giải quyết"
+      },
+      "resolveDispute": {
+        "modalTitle": "Giải Quyết Tranh Chấp",
+        "ownerEnteredLabel": "Bạn đã nhập",
+        "staffReportedLabel": "Thợ báo cáo",
+        "resolutionLabel": "Cách giải quyết",
+        "resolutions": {
+          "Approve": "Chấp thuận",
+          "Adjust": "Điều chỉnh",
+          "Reject": "Từ chối"
+        },
+        "adjustAtLeastOneField": "Nhập ít nhất một khoản điều chỉnh.",
+        "rejectWarning": "Từ chối không giải quyết cờ High Priority trên Tax Readiness Score — payout này sẽ được chuyển sang CPA Review.",
+        "noteLabel": "Ghi chú giải quyết",
+        "notePlaceholder": "Giải thích quyết định của bạn — thợ sẽ thấy ghi chú này.",
+        "submitButton": "Gửi Giải Quyết",
+        "success": "Đã giải quyết tranh chấp.",
+        "errors": {
+          "generic": "Không thể giải quyết tranh chấp này. Vui lòng thử lại."
+        }
+      },
+      "errors": {
+        "lockedMessage": "Năm thuế đã bị khóa — không thể tạo hoặc sửa payout.",
+        "lockedAction": "Xem Year-End Export"
+      }
+    },
+    "cpaAccess": {
+      "title": "Quyền Truy Cập CPA",
+      "subtitle": "Mời CPA xem hồ sơ Tax IQ với quyền read-only, có thời hạn — có thể thu hồi bất kỳ lúc nào.",
+      "noOwnerTaxYear": "Hoàn tất cài đặt Tax IQ trước khi mời CPA.",
+      "noStaffTaxYear": "Hoàn tất cài đặt Tax IQ trước khi mời CPA.",
+      "goToSetup": "Đi Tới Cài Đặt",
+      "addButton": "Mời CPA",
+      "emptyState": "Chưa mời CPA nào.",
+      "columns": {
+        "cpaEmail": "Email CPA",
+        "packageType": "Package",
+        "dataMode": "Data mode",
+        "expiresAt": "Hết hạn",
+        "status": "Trạng thái",
+        "actions": "Hành động"
+      },
+      "status": {
+        "Active": "Đang hoạt động",
+        "Expired": "Đã hết hạn",
+        "Revoked": "Đã thu hồi"
+      },
+      "packageTypes": {
+        "Basic": "Basic",
+        "Full": "Full",
+        "CPAReview": "CPA Review"
+      },
+      "dataModes": {
+        "Masked": "Masked",
+        "FullSensitive": "Full Sensitive"
+      },
+      "actions": {
+        "revoke": "Thu hồi"
+      },
+      "form": {
+        "modalTitle": "Mời CPA",
+        "cpaEmailLabel": "Email CPA",
+        "cpaEmailPlaceholder": "cpa@firm.com",
+        "packageTypeLabel": "Loại package",
+        "dataModeLabel": "Data mode",
+        "expiryDaysLabel": "Hết hạn sau",
+        "expiryDaysOption": "{{count}} ngày",
+        "staffConsentLabel": "Tôi đồng ý chia sẻ dữ liệu riêng tư của tôi với CPA này.",
+        "submitButton": "Gửi Lời Mời",
+        "success": "Đã cấp quyền CPA — email mời đã được gửi.",
+        "fullSensitiveConfirmTitle": "Chia sẻ Full Sensitive Data?",
+        "fullSensitiveConfirmMessage": "Hành động này sẽ để CPA xem được các trường dữ liệu nhạy cảm (vd thông tin tài khoản đầy đủ) và sẽ được ghi vào audit log. Không thể hoàn tác sau khi gửi lời mời.",
+        "fullSensitiveConfirmButton": "Đồng ý, Chia Sẻ Full Sensitive Data",
+        "errors": {
+          "generic": "Không thể tạo quyền truy cập CPA này. Vui lòng thử lại."
+        }
+      },
+      "revoke": {
+        "modalTitle": "Thu Hồi Quyền Truy Cập CPA?",
+        "modalMessage": "{{email}} sẽ ngay lập tức mất quyền truy cập vào package này. Không thể hoàn tác.",
+        "confirmButton": "Thu Hồi",
+        "success": "Đã thu hồi quyền truy cập CPA.",
+        "errors": {
+          "generic": "Không thể thu hồi quyền truy cập này. Vui lòng thử lại."
+        }
+      },
+      "downloadHistory": {
+        "title": "Lịch Sử Tải Xuống",
+        "phase2Notice": "Sẽ có trong phase sau — backend chưa theo dõi lịch sử tải xuống."
+      }
+    },
+    "cpaViewer": {
+      "title": "Tax IQ Package",
+      "errorTitle": "Link Không Khả Dụng",
+      "linkInvalid": "Link này không hợp lệ.",
+      "linkExpiredOrRevoked": "Link này đã hết hạn hoặc bị thu hồi.",
+      "readOnlyBanner": "Bạn đang xem với quyền CPA read-only, hết hạn vào {{date}}.",
+      "emptyState": "Không có deduction record nào trong package này.",
+      "columns": {
+        "category": "Danh mục",
+        "description": "Mô tả",
+        "vendor": "Vendor",
+        "date": "Ngày",
+        "amount": "Số tiền",
+        "deductibleAmount": "Được khấu trừ",
+        "receipts": "Chứng từ",
+        "cpaNotes": "CPA Notes"
+      },
+      "notes": {
+        "editButton": "Sửa",
+        "errors": {
+          "generic": "Không thể lưu ghi chú này. Vui lòng thử lại."
         }
       }
     }

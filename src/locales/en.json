@@ -31,6 +31,13 @@
       "tips": "Tips",
       "reviews": "Reviews",
       "pay": "Payout Setup",
+      "taxiq": "Tax IQ",
+      "taxiq_deductions": "Deduction Center",
+      "taxiq_receipts": "Receipt Vault",
+      "taxiq_logs": "Mileage & Cash Tip Log",
+      "taxiq_income": "Income Summary",
+      "taxiq_export": "Year-End Export",
+      "taxiq_cpa_access": "CPA Access",
       "profile": "Profile",
       "profile_account": "Setting",
       "profile_kyc": "KYC",
@@ -43,6 +50,7 @@
       "tips": "Tips",
       "reviews": "Reviews & Ratings",
       "pay": "Payout Methods",
+      "taxiq": "Tax IQ",
       "profile": "Settings",
       "notifications": "Notifications"
     },
@@ -1279,7 +1287,34 @@
     "common_internal_server_error": "An internal server error occurred.",
     "generic": "Something went wrong",
     "touchpoint_not_found": "Page Not Found",
-    "touchpoint_not_found_desc": "This station could not be loaded."
+    "touchpoint_not_found_desc": "This station could not be loaded.",
+    "taxiq_export_consent_required": "Please confirm the consent checkbox before submitting the final export.",
+    "taxiq_export_blocked_by_high_priority_items": "Final export is blocked by unresolved High Priority items. Resolve them first.",
+    "taxiq_export_requires_locked_tax_year": "The tax year must be locked before generating the final export.",
+    "taxiq_export_package_not_found": "This export package was not found.",
+    "taxiq_export_upload_failed": "Failed to generate the export package. Please try again.",
+    "taxiq_lock_blocked_by_high_priority_items": "This tax year cannot be locked yet — resolve the blocking items below, or add an override note if only a payout dispute remains.",
+    "taxiq_owner_tax_year_locked": "This tax year is already locked.",
+    "taxiq_staff_tax_year_locked": "Your tax year is locked — this record can no longer be edited.",
+    "taxiq_owner_tax_year_not_locked": "Adjustments can only be created after the tax year is locked.",
+    "taxiq_unsupported_adjustment_field": "This field is not supported for adjustments on the selected entity type.",
+    "taxiq_adjustment_entity_not_found": "The record you're trying to adjust could not be found.",
+    "taxiq_tax_payment_reminder_not_found": "This reminder could not be found.",
+    "taxiq_tax_reminder_snooze_limit_reached": "Snooze limit reached (max 3).",
+    "taxiq_payout_record_not_found": "This payout record could not be found.",
+    "taxiq_payout_record_not_editable": "This payout can only be edited while it is still Pending Confirmation.",
+    "taxiq_payout_access_denied": "You don't have access to this payout record.",
+    "taxiq_staff_tax_year_required_for_payout": "This staff member hasn't set up a Tax IQ profile for this tax year yet.",
+    "taxiq_staff_tax_year_already_exists": "This staff member already has a Tax IQ profile for this tax year.",
+    "staff_link_not_found": "This staff member is not an active member of your business.",
+    "taxiq_cpa_access_grant_not_found": "This CPA access grant could not be found.",
+    "taxiq_cpa_access_token_invalid": "This link is invalid.",
+    "taxiq_cpa_access_grant_expired": "This link has expired or been revoked.",
+    "taxiq_cpa_access_grant_revoked": "This link has expired or been revoked.",
+    "taxiq_cpa_access_unauthorized": "You don't have permission to manage this CPA access grant.",
+    "taxiq_cpa_consent_required": "Staff consent is required before sharing Full or CPA Review data.",
+    "taxiq_deduction_not_in_grant_scope": "This record is outside the scope of your CPA access.",
+    "taxiq_self_reported_income_not_found": "This self-reported income record could not be found."
   },
   "components": {
     "payout": {
@@ -2417,6 +2452,18 @@
     "taxiq_cpa_access_desc": "Grant your CPA read-only access to review your tax records — coming soon.",
     "taxiq_export_title": "Year-End Export",
     "taxiq_export_desc": "Lock your tax year and export a CPA-ready package in PDF, CSV, and Excel — coming soon.",
+    "staff_taxiq_deductions_title": "Deduction Center",
+    "staff_taxiq_deductions_desc": "Track and categorize your deductible business expenses — coming soon.",
+    "staff_taxiq_receipts_title": "Receipt Vault",
+    "staff_taxiq_receipts_desc": "Store and auto-read your receipts and payment proofs in one place — coming soon.",
+    "staff_taxiq_logs_title": "Mileage & Cash Tip Log",
+    "staff_taxiq_logs_desc": "Log daily mileage and cash tips privately — coming soon.",
+    "staff_taxiq_income_title": "Income Summary",
+    "staff_taxiq_income_desc": "See income reported by your salon alongside what you self-report — coming soon.",
+    "staff_taxiq_export_title": "Year-End Export",
+    "staff_taxiq_export_desc": "Export your own CPA-ready tax package — coming soon.",
+    "staff_taxiq_cpa_access_title": "CPA Access",
+    "staff_taxiq_cpa_access_desc": "Grant your CPA read-only access to review your tax records — coming soon.",
     "default_title": "Feature In Progress",
     "default_desc": "This module is being prepared for the Nexora Touch merchant dashboard."
   },
@@ -2459,6 +2506,98 @@
         "generic": "Something went wrong. Please try again."
       }
     },
+    "staffOnboarding": {
+      "title": "Set up your Tax IQ profile",
+      "privacyBanner": "Your personal deductions and tax estimates are private by default. Your salon owner only sees information you actively choose to share.",
+      "back": "Back",
+      "next": "Next",
+      "submit": "Finish setup",
+      "submitting": "Saving...",
+      "step1": {
+        "title": "Your work details",
+        "contractTypeLabel": "Contract type",
+        "contractTypeW2": "W-2",
+        "contractType1099": "1099 Contractor",
+        "contractTypeBoothRenter": "Booth Renter",
+        "w9StatusLabel": "W-9 status",
+        "w9NotRequired": "Not required",
+        "w9Pending": "Pending",
+        "w9Received": "Received"
+      },
+      "step2": {
+        "title": "Modules to enable"
+      },
+      "step3": {
+        "title": "Review",
+        "reviewContractType": "Contract type",
+        "reviewW9Status": "W-9 status",
+        "reviewModules": "Modules"
+      },
+      "errors": {
+        "duplicateTaxYear": "A Tax IQ setup already exists for you for this tax year.",
+        "generic": "Something went wrong. Please try again."
+      }
+    },
+    "staffHome": {
+      "title": "Tax IQ",
+      "taxYearLabel": "Tax year",
+      "enabledModulesLabel": "Enabled modules",
+      "editModules": "Edit configuration",
+      "ownerReportedIncomeLabel": "Reported by salon",
+      "selfReportedIncomeLabel": "Self-reported",
+      "grossIncomeLabel": "Gross income",
+      "totalDeductionsLabel": "Total deductions",
+      "estimatedNetIncomeLabel": "Estimated net income",
+      "pendingPayoutsBadge": "{{count}} payout(s) awaiting your confirmation",
+      "editModulesModal": {
+        "title": "Edit configuration",
+        "save": "Save",
+        "saved": "Configuration updated.",
+        "cancel": "Cancel",
+        "lockedNotice": "This tax year is locked and can no longer be edited."
+      }
+    },
+    "staffPayoutConfirmation": {
+      "title": "Payout Confirmation",
+      "subtitle": "Review payouts your salon entered and confirm or report a discrepancy.",
+      "noStaffTaxYear": "Complete Tax IQ setup before reviewing payouts.",
+      "goToSetup": "Go to Tax IQ setup",
+      "lockedNotice": "This tax year is locked. Payout actions are disabled.",
+      "lockedBadge": "Locked",
+      "emptyState": "No payouts awaiting your confirmation.",
+      "confirmAction": "Confirm",
+      "disputeAction": "Report Discrepancy",
+      "disputeReportedBadge": "Dispute Reported — waiting for salon",
+      "confirmSuccess": "Payout confirmed.",
+      "columns": {
+        "payPeriod": "Pay Period",
+        "period": "Period",
+        "servicePayout": "Service Payout",
+        "tip": "Tip",
+        "bonus": "Bonus",
+        "reimbursement": "Reimbursement",
+        "paymentMethod": "Payment Method",
+        "actions": "Actions"
+      },
+      "confirmDialog": {
+        "title": "Confirm Payout",
+        "message": "Confirm this payout matches what you actually received? This cannot be undone.",
+        "confirmLabel": "Confirm"
+      },
+      "dispute": {
+        "modalTitle": "Report Discrepancy",
+        "ownerEnteredLabel": "Amounts entered by your salon",
+        "amountLabel": "Amount you actually received",
+        "amountPlaceholder": "0.00",
+        "noteLabel": "Note",
+        "notePlaceholder": "Explain the discrepancy",
+        "submitButton": "Submit",
+        "success": "Discrepancy reported. Your salon has been notified."
+      },
+      "errors": {
+        "generic": "Something went wrong. Please try again."
+      }
+    },
     "home": {
       "title": "Tax IQ",
       "taxYearLabel": "Tax year",
@@ -2490,7 +2629,9 @@
       "totalLabel": "Total deductible",
       "emptyState": "No deductions yet. Add your first business expense to get started.",
       "noOwnerTaxYear": "Complete Tax IQ setup before adding deductions.",
+      "noStaffTaxYear": "Complete Tax IQ setup before adding deductions.",
       "goToSetup": "Go to Tax IQ setup",
+      "staffPrivacyBanner": "Your personal deductions are completely private — your employer cannot see them.",
       "filters": {
         "statusLabel": "Status",
         "categoryLabel": "Category",
@@ -2526,7 +2667,8 @@
         "edit": "Edit",
         "submit": "Submit",
         "reanalyze": "Re-analyze with AI",
-        "approve": "Approve"
+        "approve": "Approve",
+        "attachReceipt": "Attach existing receipt"
       },
       "aiDisclaimerFallback": "Tax IQ only assists with preparation — it does not replace a CPA.",
       "errors": {
@@ -2534,7 +2676,8 @@
         "categoriesUnavailable": "Deduction categories are unavailable right now — please contact support.",
         "lockedTitle": "Tax year is locked",
         "lockedMessage": "This tax year is locked. Go to Year-End Export to submit changes as an adjustment.",
-        "lockedAction": "Go to Year-End Export"
+        "lockedAction": "Go to Year-End Export",
+        "lockedMessageStaff": "Your tax year is locked — this deduction can no longer be created or edited."
       },
       "wizard": {
         "title": "Add Deduction",
@@ -2615,6 +2758,725 @@
         },
         "result": {
           "title": "Results"
+        }
+      }
+    },
+    "receiptVault": {
+      "title": "Receipt Vault",
+      "subtitle": "All your uploaded receipts in one place — reusable across deductions, payouts, and income.",
+      "uploadButton": "Upload receipt",
+      "uploading": "Uploading...",
+      "uploadSuccess": "Receipt uploaded.",
+      "uploadError": "Could not upload receipt. Please try again.",
+      "noOwnerTaxYear": "Complete Tax IQ setup before uploading receipts.",
+      "noStaffTaxYear": "Complete Tax IQ setup before uploading receipts.",
+      "goToSetup": "Go to Tax IQ setup",
+      "staffPrivacyBanner": "Your personal receipts are completely private — your employer cannot see them.",
+      "emptyState": "No receipts yet. Upload your first receipt to get started.",
+      "needsMoreInfoNote": "Missing vendor, date, or amount — re-upload a clearer photo to fix this.",
+      "filters": {
+        "allQuality": "All quality statuses",
+        "allLinkTypes": "All link types"
+      },
+      "columns": {
+        "fileName": "File",
+        "vendor": "Vendor",
+        "date": "Date",
+        "amount": "Amount",
+        "quality": "Quality",
+        "linkType": "Linked to",
+        "createdAt": "Uploaded",
+        "actions": "Actions"
+      },
+      "quality": {
+        "pending": "Pending",
+        "valid": "Valid",
+        "needsMoreInfo": "Needs More Info"
+      },
+      "linkType": {
+        "standalone": "Standalone",
+        "deduction": "Deduction",
+        "payout": "Payout",
+        "selfReportedIncome": "Self-Reported Income"
+      },
+      "actions": {
+        "resolveDuplicate": "Resolve duplicate"
+      },
+      "duplicateModal": {
+        "title": "Resolve duplicate",
+        "keepBoth": "Keep Both",
+        "merge": "Merge",
+        "delete": "Delete Duplicate",
+        "mergeTargetLabel": "Merge into",
+        "confirm": "Confirm",
+        "success": "Duplicate resolved.",
+        "errors": {
+          "generic": "Something went wrong. Please try again."
+        }
+      },
+      "attachExistingModal": {
+        "title": "Attach existing receipt",
+        "emptyState": "No standalone receipts available to attach.",
+        "confirm": "Attach",
+        "success": "Receipt attached.",
+        "errors": {
+          "generic": "Something went wrong. Please try again."
+        }
+      }
+    },
+    "assetsTracker": {
+      "title": "Equipment, Gift Card & Membership Tracker",
+      "subtitle": "Track equipment assets, gift card liability and membership credits for accurate year-end filing.",
+      "noOwnerTaxYear": "Complete Tax IQ setup before adding assets.",
+      "totalItems": "{{count}} item(s)",
+      "highPriorityCount": "{{count}} high priority",
+      "cpaReviewCount": "{{count}} needs CPA review",
+      "tabs": {
+        "equipment": "Equipment",
+        "giftCard": "Gift Card Liability",
+        "membership": "Membership Credit"
+      },
+      "status": {
+        "pending": "Pending",
+        "ready": "Ready",
+        "highPriority": "High Priority",
+        "cpaReview": "CPA Review"
+      },
+      "errors": {
+        "generic": "Something went wrong. Please try again.",
+        "receiptUploadFailed": "Could not upload receipt. Please try again.",
+        "lockedMessage": "This tax year is locked. Go to Year-End Export to submit changes as an adjustment.",
+        "lockedAction": "Go to Year-End Export"
+      },
+      "equipment": {
+        "addButton": "Add Equipment",
+        "addSuccess": "Equipment asset added.",
+        "emptyState": "No equipment tracked yet. Add your first asset to get started.",
+        "missingInServiceDateTooltip": "Missing in-service date blocks accurate Depreciate / Section 179 suggestions.",
+        "columns": {
+          "assetName": "Asset",
+          "purchaseDate": "Purchase Date",
+          "inServiceDate": "In-Service Date",
+          "amount": "Amount",
+          "businessUsePercent": "Business-Use %",
+          "aiSuggestion": "AI Suggestion"
+        },
+        "form": {
+          "assetNameLabel": "Asset name",
+          "assetNameRequired": "Asset name is required.",
+          "purchaseDateLabel": "Purchase date",
+          "purchaseDateRequired": "Purchase date is required.",
+          "inServiceDateLabel": "In-service date (optional)",
+          "inServiceDateWarning": "Missing this date will flag the asset as High Priority.",
+          "amountLabel": "Amount",
+          "amountRequired": "Amount must be greater than zero.",
+          "businessUsePercentLabel": "Business-use %",
+          "businessUsePercentRequired": "Business-use % must be between 0 and 100.",
+          "isRenovationLabel": "This is a renovation / upgrade",
+          "isRenovationNotice": "Renovation always requires CPA review.",
+          "receiptLabel": "Receipt (optional)",
+          "receiptChooseFile": "Choose file",
+          "submit": "Add Equipment"
+        },
+        "aiSuggestion": {
+          "deductNow": "Deduct Now",
+          "deductNowExplanation": "This equipment qualifies for a full deduction this year.",
+          "depreciate": "Depreciate",
+          "depreciateExplanation": "Spread this expense across the asset's useful life.",
+          "section179Candidate": "Section 179 Candidate",
+          "section179CandidateExplanation": "May qualify for full-year Section 179 deduction — CPA to confirm.",
+          "cpaReview": "CPA Review",
+          "cpaReviewExplanation": "Renovation always needs CPA review before it counts toward your total."
+        }
+      },
+      "giftCard": {
+        "addButton": "Add Period",
+        "addSuccess": "Gift card liability period added.",
+        "emptyState": "No gift card liability periods yet. Add your first period to get started.",
+        "columns": {
+          "period": "Period",
+          "totalSold": "Total Sold",
+          "totalRedeemed": "Total Redeemed",
+          "outstandingBalance": "Outstanding Balance",
+          "dataSource": "Data Source",
+          "status": "Status"
+        },
+        "form": {
+          "periodLabel": "Period",
+          "periodRequired": "Period is required.",
+          "totalSoldLabel": "Total sold",
+          "totalSoldRequired": "Total sold is required.",
+          "totalRedeemedLabel": "Total redeemed",
+          "totalRedeemedRequired": "Total redeemed is required.",
+          "balanceInvalid": "Total sold cannot be less than total redeemed.",
+          "outstandingPreviewLabel": "Outstanding balance",
+          "dataSourceLabel": "Data source",
+          "dataSourcePlaceholder": "e.g. POS export, spreadsheet",
+          "dataSourceWarning": "Missing data source will flag this period as High Priority.",
+          "submit": "Add Period"
+        }
+      },
+      "membership": {
+        "addButton": "Add Period",
+        "addSuccess": "Membership credit period added.",
+        "emptyState": "No membership credit periods yet. Add your first period to get started.",
+        "columns": {
+          "period": "Period",
+          "creditsIssued": "Credits Issued",
+          "creditsUsed": "Credits Used",
+          "creditsExpired": "Credits Expired",
+          "expiryPolicy": "Expiry Policy",
+          "status": "Status"
+        },
+        "form": {
+          "periodLabel": "Period",
+          "periodRequired": "Period is required.",
+          "creditsIssuedLabel": "Credits issued",
+          "creditsIssuedRequired": "Credits issued is required.",
+          "creditsUsedLabel": "Credits used",
+          "creditsUsedRequired": "Credits used is required.",
+          "creditsExpiredLabel": "Credits expired",
+          "creditsExpiredRequired": "Credits expired is required.",
+          "expiryPolicyLabel": "Expiry policy (optional)",
+          "expiryPolicyPlaceholder": "Describe how expired credits are handled",
+          "expiryPolicyWarning": "Expired credits without a policy will be flagged for CPA review.",
+          "submit": "Add Period"
+        }
+      }
+    },
+    "staffLogs": {
+      "title": "Mileage & Cash Tip Log",
+      "subtitle": "Log daily mileage and cash tips privately — your employer cannot see these entries.",
+      "noStaffTaxYear": "Complete Tax IQ setup before logging mileage or cash tips.",
+      "goToSetup": "Go to Tax IQ setup",
+      "tabs": {
+        "mileage": "Mileage Log",
+        "cashTip": "Cash Tip Log"
+      },
+      "errors": {
+        "generic": "Something went wrong. Please try again.",
+        "lockedMessage": "Your tax year is locked — mileage and cash tip logs can no longer be created or edited."
+      },
+      "mileage": {
+        "addButton": "Add Mileage",
+        "editButton": "Edit",
+        "addSuccess": "Mileage log added.",
+        "updateSuccess": "Mileage log updated.",
+        "emptyState": "No mileage logged yet. Add your first trip to get started.",
+        "totalItems": "{{count}} trip(s)",
+        "cpaReviewCount": "{{count}} needs CPA review",
+        "cpaReviewExplanation": "Missing purpose, start or end location — requires CPA review.",
+        "columns": {
+          "date": "Date",
+          "purpose": "Purpose",
+          "route": "Route",
+          "miles": "Miles",
+          "status": "Status",
+          "actions": "Actions"
+        },
+        "status": {
+          "draft": "Draft",
+          "ready": "Ready",
+          "cpaReview": "CPA Review"
+        },
+        "form": {
+          "dateLabel": "Date",
+          "dateRequired": "Date is required.",
+          "purposeLabel": "Purpose (optional)",
+          "startLocationLabel": "Start location (optional)",
+          "endLocationLabel": "End location (optional)",
+          "milesLabel": "Miles",
+          "milesRequired": "Miles must be zero or greater.",
+          "missingFieldsHint": "Leaving purpose or a location blank flags this trip for CPA review — it can still be saved.",
+          "submit": "Save"
+        }
+      },
+      "cashTip": {
+        "addButton": "Log Cash Tip",
+        "addSuccess": "Cash tip logged.",
+        "emptyState": "No cash tips logged yet.",
+        "totalLabel": "total cash tips logged",
+        "columns": {
+          "date": "Date",
+          "amount": "Amount",
+          "note": "Note"
+        },
+        "form": {
+          "dateLabel": "Date",
+          "dateRequired": "Date is required.",
+          "amountLabel": "Amount",
+          "amountRequired": "Amount must be greater than zero.",
+          "noteLabel": "Note (optional)",
+          "submit": "Save"
+        }
+      }
+    },
+    "selfReportedIncome": {
+      "title": "Self-Reported Income",
+      "subtitle": "Income your employer doesn't report — completely private.",
+      "add": "Add Self-Reported Income",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteConfirm": "Delete this self-reported income record? This cannot be undone.",
+      "deleteSuccess": "Self-reported income deleted.",
+      "emptyState": "No self-reported income yet. Add your first entry to get started.",
+      "noStaffTaxYear": "Complete Tax IQ setup before adding self-reported income.",
+      "goToSetup": "Go to Tax IQ setup",
+      "loading": "Loading...",
+      "receiptOptional": "Attach a receipt for this income, or skip and add one later.",
+      "lockedNotice": "Your tax year is locked — self-reported income can no longer be created or edited.",
+      "periodType": {
+        "day": "Day",
+        "week": "Week",
+        "month": "Month",
+        "quarter": "Quarter",
+        "year": "Year"
+      },
+      "incomeType": {
+        "cashFromClient": "Cash from Client",
+        "otherSalonIncome": "Other Salon Income",
+        "boothRentFromSubRenter": "Booth Rent from Sub-renter",
+        "other": "Other"
+      },
+      "status": {
+        "ready": "Ready",
+        "missingReceipt": "Missing Receipt",
+        "missingInfo": "Missing Info",
+        "cpaReview": "CPA Review",
+        "locked": "Locked"
+      },
+      "dashboard": {
+        "ownerReportedIncome": "Owner-Reported Income",
+        "selfReportedIncome": "Self-Reported Income",
+        "grossIncome": "Gross Income",
+        "viewDetails": "View Details"
+      },
+      "columns": {
+        "date": "Date",
+        "amount": "Amount",
+        "source": "Source",
+        "incomeType": "Income Type",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "errors": {
+        "generic": "Something went wrong. Please try again."
+      },
+      "periodPicker": {
+        "weekLabel": "Week {{index}} — {{start}}–{{end}}",
+        "quarterLabel": "Q{{quarter}}",
+        "yearRangeLabel": "Jan 1 – Dec 31, {{taxYear}}"
+      },
+      "form": {
+        "step1Title": "Basic Info",
+        "step2Title": "Details",
+        "step3Title": "Receipt & Save",
+        "periodTypeLabel": "Period type",
+        "periodLabel": "Period",
+        "dateLabel": "Date",
+        "dateRequired": "Date is required.",
+        "amount": "Amount",
+        "amountRequired": "Amount must be greater than zero.",
+        "source": "Source",
+        "sourceRequired": "Source is required.",
+        "incomeTypeLabel": "Income type (optional)",
+        "incomeTypePlaceholder": "Select an income type",
+        "incomeTypeNote": "Income type note",
+        "notes": "Notes (optional)",
+        "back": "Back",
+        "next": "Next",
+        "save": "Save"
+      }
+    },
+    "yearEndExport": {
+      "title": "Year-End Export Center",
+      "subtitle": "Lock your tax year and export the CPA package your accountant needs.",
+      "noOwnerTaxYear": "Complete Tax IQ setup before exporting.",
+      "draftTitle": "Draft Report",
+      "draftDescription": "Generate a draft anytime — it doesn't need to be readiness-complete.",
+      "generateDraftButton": "Generate Draft Report",
+      "draftResultLabel": "Draft report",
+      "draftSuccess": "Draft report generated.",
+      "downloadLink": "Download",
+      "linkExpiryWarning": "This link expires 1 hour after it was generated.",
+      "lockTitle": "Lock & Final Export",
+      "lockedBanner": "Tax year locked — {{date}}",
+      "lockButton": "Lock Tax Year",
+      "resolveLink": "Resolve",
+      "finalTitle": "Final Export",
+      "finalDescription": "Requires the tax year to be locked and all High Priority items resolved.",
+      "consentLabel": "I confirm this CPA package is ready to submit.",
+      "finalDisabledNotLocked": "Lock the tax year before generating the final export.",
+      "finalDisabledHighPriority": "Resolve all High Priority items before generating the final export.",
+      "finalDisabledConsent": "Please confirm the consent checkbox above.",
+      "finalButton": "Generate Final Export",
+      "finalResultLabel": "Final export",
+      "finalSuccess": "Final export generated.",
+      "finalNoChanges": "No new changes — this is the most recent export link.",
+      "errors": {
+        "generic": "Something went wrong. Please try again."
+      }
+    },
+    "staffExport": {
+      "title": "Tax Package Export",
+      "subtitle": "Export your own tax records and share them with your CPA when ready — your employer can't see this data.",
+      "noStaffTaxYear": "Complete Tax IQ setup before exporting.",
+      "goToSetup": "Go to Tax IQ setup",
+      "draftTitle": "Draft Report",
+      "draftDescription": "Generate a draft anytime — it's watermarked \"NOT FINAL\" and doesn't need to be readiness-complete.",
+      "generateDraftButton": "Generate Draft Report",
+      "draftResultLabel": "Draft report",
+      "draftSuccess": "Draft report generated.",
+      "downloadLink": "Download",
+      "linkExpiryWarning": "This link expires 1 hour after it was generated.",
+      "autoLockNotice": "Generating a Final Export automatically locks your tax year — mileage logs and self-reported income will become read-only right after.",
+      "package": {
+        "basic": {
+          "title": "Basic",
+          "description": "Only the total self-reported income — no line-by-line detail."
+        },
+        "full": {
+          "title": "Full",
+          "description": "Full detail for every self-reported income entry (date/period, amount, source, income type)."
+        },
+        "cpaReview": {
+          "title": "CPA Review",
+          "description": "Same as Full, plus every missing-receipt or CPA-review item is annotated \"Unverified — CPA should verify\"."
+        }
+      },
+      "resolveLink": "Resolve",
+      "openNotesTitle": "Open notes (won't block export)",
+      "finalTitle": "Final Export",
+      "finalDescription": "Choose a package and confirm consent to generate your final tax package.",
+      "consentLabel": "I agree to share this private data.",
+      "finalDisabledNoPackage": "Select a package to continue.",
+      "finalDisabledConsent": "Please confirm the consent checkbox above.",
+      "finalButton": "Generate Final Export",
+      "finalResultLabel": "Final export",
+      "finalSuccess": "Final export generated. Your tax year is now locked.",
+      "finalNoChanges": "No new changes — this is the most recent export link.",
+      "lockedBanner": "Your tax year is locked. Final export was already generated.",
+      "errors": {
+        "generic": "Something went wrong. Please try again."
+      }
+    },
+    "lockTaxYear": {
+      "modalTitle": "Lock Tax Year",
+      "modalDescription": "Once locked, deductions, payouts, and other records can only be changed via an Adjustment.",
+      "overrideWarning": "Unresolved payout disputes will be marked as skipped and recorded in the audit log.",
+      "overrideNotePlaceholder": "Explain why you're locking with an unresolved dispute...",
+      "confirmButton": "Confirm Lock",
+      "success": "Tax year locked.",
+      "errors": {
+        "generic": "Unable to lock this tax year. Please try again."
+      }
+    },
+    "createAdjustment": {
+      "modalTitle": "Create Adjustment",
+      "historyTitle": "Adjustment History",
+      "historySubtitle": "All changes submitted after locking this tax year.",
+      "addButton": "Create Adjustment",
+      "disabledNotLocked": "Adjustments can only be created while the tax year is locked.",
+      "entityTypeLabel": "Entity type",
+      "fieldNameLabel": "Field",
+      "entityIdLabel": "Entity ID",
+      "entityIdPlaceholder": "ID of the record being adjusted",
+      "oldValueLabel": "Old value",
+      "newValueLabel": "New value",
+      "reasonLabel": "Reason",
+      "cpaNotesLabel": "CPA notes (optional)",
+      "receiptIdLabel": "Receipt ID (optional)",
+      "receiptIdPlaceholder": "Existing receipt ID, if any",
+      "submitButton": "Submit Adjustment",
+      "success": "Adjustment created.",
+      "emptyState": "No adjustments yet.",
+      "entityTypes": {
+        "deductionRecord": "Deduction",
+        "payoutRecord": "Payout",
+        "equipmentAsset": "Equipment / Asset",
+        "giftCardLiability": "Gift Card Liability",
+        "membershipCredit": "Membership Credit"
+      },
+      "columns": {
+        "entity": "Entity",
+        "change": "Change",
+        "reason": "Reason",
+        "createdBy": "Created by",
+        "createdAt": "Created at"
+      },
+      "errors": {
+        "generic": "Unable to create this adjustment. Please try again."
+      }
+    },
+    "reminders": {
+      "title": "Tax Payment Reminders",
+      "subtitle": "Track due dates for sales tax, franchise tax, estimated tax, and payroll tax so you don't miss a deadline.",
+      "noOwnerTaxYear": "Complete Tax IQ setup before adding reminders.",
+      "addButton": "Add Reminder",
+      "form": {
+        "modalTitle": "Add Reminder",
+        "taxTypeLabel": "Tax type",
+        "dueDateLabel": "Due date",
+        "submitButton": "Add Reminder",
+        "success": "Reminder created."
+      },
+      "taxTypes": {
+        "SalesTax": "Sales Tax",
+        "FranchiseTax": "Franchise Tax",
+        "EstimatedTax": "Estimated Tax",
+        "PayrollTax": "Payroll Tax"
+      },
+      "status": {
+        "Pending": "Pending",
+        "Paid": "Paid",
+        "Overdue": "Overdue"
+      },
+      "columns": {
+        "taxType": "Tax type",
+        "dueDate": "Due date",
+        "status": "Status",
+        "snoozeCount": "Snoozed",
+        "actions": "Actions"
+      },
+      "emptyState": "No reminders yet.",
+      "emptyStateCta": "Add your first reminder",
+      "actions": {
+        "markPaid": "Mark Paid",
+        "snooze": "Snooze",
+        "snoozeLimitTooltip": "Snooze limit reached (max 3)."
+      },
+      "markPaidModal": {
+        "modalTitle": "Mark as Paid",
+        "description": "Optionally attach a proof of payment receipt.",
+        "chooseFile": "Choose file",
+        "uploading": "Uploading...",
+        "receiptAttached": "Receipt attached",
+        "skipNotice": "You can mark this as paid without a receipt.",
+        "confirmButton": "Mark Paid",
+        "success": "Reminder marked as paid.",
+        "errors": {
+          "generic": "Unable to mark this reminder as paid. Please try again.",
+          "uploadFailed": "Failed to upload the receipt. Please try again."
+        }
+      },
+      "snoozeModal": {
+        "modalTitle": "Snooze Reminder",
+        "description": "Snoozed {{count}}/3 times.",
+        "daysLabel": "Snooze for",
+        "days": {
+          "3": "3 days",
+          "7": "7 days",
+          "14": "14 days",
+          "30": "30 days"
+        },
+        "confirmButton": "Snooze",
+        "success": "Reminder snoozed.",
+        "errors": {
+          "generic": "Unable to snooze this reminder. Please try again."
+        }
+      },
+      "errors": {
+        "lockedMessage": "This tax year is locked — reminders can no longer be created or edited.",
+        "lockedAction": "View Year-End Export",
+        "generic": "Something went wrong. Please try again."
+      }
+    },
+    "payoutCenter": {
+      "title": "Payout & Dispute Center",
+      "subtitle": "Enter service payout, tip, and bonus for each staff member, and resolve any disputes they report.",
+      "noOwnerTaxYear": "Complete Tax IQ setup before entering payouts.",
+      "addButton": "Add Payout",
+      "emptyState": "No payouts yet.",
+      "tabs": {
+        "payouts": "Payouts",
+        "disputes": "Disputes"
+      },
+      "filters": {
+        "allStaff": "All staff",
+        "allStatuses": "All statuses"
+      },
+      "columns": {
+        "staff": "Staff",
+        "period": "Period",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "status": {
+        "PendingConfirmation": "Pending Confirmation",
+        "Confirmed": "Confirmed",
+        "DisputeReported": "Dispute Reported",
+        "CPAReviewRequired": "CPA Review Required"
+      },
+      "actions": {
+        "edit": "Edit"
+      },
+      "payPeriods": {
+        "Weekly": "Weekly",
+        "BiWeekly": "Bi-Weekly",
+        "Monthly": "Monthly",
+        "AdHoc": "Ad Hoc"
+      },
+      "contractTypes": {
+        "W2": "W-2",
+        "C1099": "1099",
+        "BoothRenter": "Booth Renter"
+      },
+      "w9Statuses": {
+        "NotRequired": "Not Required",
+        "Pending": "Pending",
+        "Received": "Received"
+      },
+      "createStaffTaxYear": {
+        "notice": "{{name}} hasn't set up a Tax IQ profile for this tax year yet. Set one up now to continue entering their payout.",
+        "contractTypeLabel": "Contract type",
+        "w9StatusLabel": "W-9 status",
+        "submitButton": "Create & Continue",
+        "errors": {
+          "generic": "Unable to set up this staff member's Tax IQ profile. Please try again."
+        }
+      },
+      "form": {
+        "addModalTitle": "Add Payout",
+        "editModalTitle": "Edit Payout",
+        "staffLabel": "Staff",
+        "staffPlaceholder": "Select a staff member",
+        "staffNeedsTaxYear": "This staff member hasn't set up a Tax IQ profile yet — you'll be able to create one on the next step.",
+        "payPeriodLabel": "Pay period",
+        "periodStartLabel": "Period start",
+        "periodEndLabel": "Period end",
+        "servicePayoutLabel": "Service payout",
+        "tipLabel": "Tip",
+        "bonusLabel": "Bonus",
+        "reimbursementLabel": "Reimbursement",
+        "paymentMethodLabel": "Payment method",
+        "paymentMethodPlaceholder": "e.g. Zelle, Cash, Check, Direct Deposit",
+        "grossPayoutLabel": "Gross payout",
+        "netPaidLabel": "Net paid",
+        "w9Warning": "This staff member is classified as 1099 and their W-9 has not been received yet.",
+        "submitButton": "Add Payout",
+        "updateButton": "Save Changes",
+        "createSuccess": "Payout created.",
+        "updateSuccess": "Payout updated.",
+        "errors": {
+          "generic": "Unable to save this payout. Please try again.",
+          "taxYearLocked": "This tax year is locked. Use an Adjustment instead (see Year-End Export)."
+        }
+      },
+      "disputes": {
+        "emptyState": "No disputes reported.",
+        "resolveButton": "Resolve"
+      },
+      "resolveDispute": {
+        "modalTitle": "Resolve Dispute",
+        "ownerEnteredLabel": "You entered",
+        "staffReportedLabel": "Staff reported",
+        "resolutionLabel": "Resolution",
+        "resolutions": {
+          "Approve": "Approve",
+          "Adjust": "Adjust",
+          "Reject": "Reject"
+        },
+        "adjustAtLeastOneField": "Enter at least one adjusted amount.",
+        "rejectWarning": "Rejecting does not resolve the High Priority flag on the Tax Readiness Score — it sends this payout to CPA Review instead.",
+        "noteLabel": "Resolution note",
+        "notePlaceholder": "Explain your decision — the staff member will see this note.",
+        "submitButton": "Submit Resolution",
+        "success": "Dispute resolved.",
+        "errors": {
+          "generic": "Unable to resolve this dispute. Please try again."
+        }
+      },
+      "errors": {
+        "lockedMessage": "This tax year is locked — payouts can no longer be created or edited.",
+        "lockedAction": "View Year-End Export"
+      }
+    },
+    "cpaAccess": {
+      "title": "CPA Access",
+      "subtitle": "Invite a CPA to view your Tax IQ package with read-only, time-limited access — revoke it any time.",
+      "noOwnerTaxYear": "Complete Tax IQ setup before inviting a CPA.",
+      "noStaffTaxYear": "Complete Tax IQ setup before inviting a CPA.",
+      "goToSetup": "Go to Setup",
+      "addButton": "Invite CPA",
+      "emptyState": "No CPA has been invited yet.",
+      "columns": {
+        "cpaEmail": "CPA email",
+        "packageType": "Package",
+        "dataMode": "Data mode",
+        "expiresAt": "Expires",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "status": {
+        "Active": "Active",
+        "Expired": "Expired",
+        "Revoked": "Revoked"
+      },
+      "packageTypes": {
+        "Basic": "Basic",
+        "Full": "Full",
+        "CPAReview": "CPA Review"
+      },
+      "dataModes": {
+        "Masked": "Masked",
+        "FullSensitive": "Full Sensitive"
+      },
+      "actions": {
+        "revoke": "Revoke"
+      },
+      "form": {
+        "modalTitle": "Invite CPA",
+        "cpaEmailLabel": "CPA email",
+        "cpaEmailPlaceholder": "cpa@firm.com",
+        "packageTypeLabel": "Package type",
+        "dataModeLabel": "Data mode",
+        "expiryDaysLabel": "Expires in",
+        "expiryDaysOption": "{{count}} days",
+        "staffConsentLabel": "I consent to sharing my private data with this CPA.",
+        "submitButton": "Send Invite",
+        "success": "CPA access granted — an invite email has been sent.",
+        "fullSensitiveConfirmTitle": "Share Full Sensitive Data?",
+        "fullSensitiveConfirmMessage": "This will expose sensitive fields (e.g. full account details) to the CPA and will be recorded in the audit log. This action cannot be undone once the invite is sent.",
+        "fullSensitiveConfirmButton": "Yes, Share Full Sensitive Data",
+        "errors": {
+          "generic": "Unable to create this CPA access grant. Please try again."
+        }
+      },
+      "revoke": {
+        "modalTitle": "Revoke CPA Access?",
+        "modalMessage": "{{email}} will immediately lose access to this package. This cannot be undone.",
+        "confirmButton": "Revoke Access",
+        "success": "CPA access revoked.",
+        "errors": {
+          "generic": "Unable to revoke this access grant. Please try again."
+        }
+      },
+      "downloadHistory": {
+        "title": "Download History",
+        "phase2Notice": "Coming in a future phase — the backend does not yet track download history."
+      }
+    },
+    "cpaViewer": {
+      "title": "Tax IQ Package",
+      "errorTitle": "Link Unavailable",
+      "linkInvalid": "This link is invalid.",
+      "linkExpiredOrRevoked": "This link has expired or been revoked.",
+      "readOnlyBanner": "You are viewing with CPA read-only access, expires on {{date}}.",
+      "emptyState": "No deduction records in this package.",
+      "columns": {
+        "category": "Category",
+        "description": "Description",
+        "vendor": "Vendor",
+        "date": "Date",
+        "amount": "Amount",
+        "deductibleAmount": "Deductible",
+        "receipts": "Receipts",
+        "cpaNotes": "CPA notes"
+      },
+      "notes": {
+        "editButton": "Edit",
+        "errors": {
+          "generic": "Unable to save this note. Please try again."
         }
       }
     }
