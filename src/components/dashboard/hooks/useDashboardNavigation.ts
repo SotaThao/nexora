@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-
-const TIPS_TAB_IDS = ['overview', 'savings', 'payouts']
+import { TIPS_TAB_IDS } from '../constants'
 
 export function useDashboardNavigation() {
   const location = useLocation()
