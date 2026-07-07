@@ -46,7 +46,7 @@ function notificationIcon(type: string) {
 
 const PREF_KEYS = ['tipConfirmations', 'reviews', 'businessInvites']
 
-export default function StaffNotifications() {
+export default function StaffNotifications({ showPushPreferences = true } = {}) {
   const { t, currentLanguage } = useTranslation();
   const navigate = useNavigate();
   const { account, setPushPreference } = useStaffAccount();
@@ -149,6 +149,7 @@ export default function StaffNotifications() {
         )}
       </section>
 
+      {showPushPreferences ? (
       <section className={panel}>
         <h3 className="mb-3 text-base font-extrabold text-nexoraText">{t('staff_dashboard.notifications.push_prefs')}</h3>
         <div className="space-y-1">
@@ -166,6 +167,7 @@ export default function StaffNotifications() {
           ))}
         </div>
       </section>
+      ) : null}
     </div>
   );
 }

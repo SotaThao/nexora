@@ -298,7 +298,7 @@ export default function StaffHome() {
           <QuickAction icon={<CircleDollarSign className="h-4 w-4" />} label={t('staff_dashboard.home.quick_tips')} bg="border-emerald-200 bg-emerald-50" iconColor="text-nexoraSuccess" onClick={() => go('tips')} />
           <QuickAction icon={<Star className="h-4 w-4" />} label={t('staff_dashboard.home.quick_reviews')} bg="border-orange-200 bg-orange-50" iconColor="text-orange-500" onClick={() => go('reviews')} />
           <QuickAction icon={<CreditCard className="h-4 w-4" />} label={t('staff_dashboard.home.quick_payments')} bg="border-indigo-200 bg-indigo-50" iconColor="text-indigo-600" onClick={() => go('qr', { tab: 'payment' })} />
-          <QuickAction icon={<Gift className="h-4 w-4" />} label={t('staff_dashboard.home.quick_refer')} bg="border-rose-200 bg-rose-50" iconColor="text-rose-500" onClick={() => go('profile')} />
+          <QuickAction icon={<Gift className="h-4 w-4" />} label={t('staff_dashboard.home.quick_refer')} bg="border-rose-200 bg-rose-50" iconColor="text-rose-500" onClick={() => go('qr', { tab: 'personal' })} />
         </div>
       </section>
 
@@ -462,7 +462,7 @@ export default function StaffHome() {
           </div>
           <button
             type="button"
-            onClick={() => go('profile')}
+            onClick={() => go('qr', { tab: 'personal' })}
             className="inline-flex h-9 min-w-[57px] shrink-0 items-center justify-center rounded-full bg-white px-4 text-[12px] font-black text-nexoraBrandDark shadow-sm transition active:scale-95"
           >
             {t('staff_dashboard.home.invite_now')}

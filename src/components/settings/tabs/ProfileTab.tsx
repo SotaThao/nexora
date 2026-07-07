@@ -125,6 +125,9 @@ export default function ProfileTab({
   handleAvatarChange,
   formatDOB,
   onShowQr,
+  hideDangerZone = false,
+  focusPayoutMethods = false,
+  hidePayoutMethods = false,
 }) {
   const canEditKybFields = canEditProfile
   const { t } = useTranslation()
@@ -317,13 +320,13 @@ export default function ProfileTab({
 
   return (
     <>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
+      <div className={`grid grid-cols-1 gap-6 animate-fadeIn ${focusPayoutMethods ? '' : 'lg:grid-cols-3'}`}>
 
         {/* Left Column (Owner Profile + Payout Methods) */}
-        <div className="lg:col-span-1 space-y-6">
+        <div className={`${focusPayoutMethods ? '' : 'lg:col-span-1'} space-y-6`}>
 
           {/* Owner Profile Card */}
-          <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 flex flex-col items-center text-center relative">
+          <div className={`rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 flex flex-col items-center text-center relative ${focusPayoutMethods ? 'hidden' : ''}`}>
             {/* Avatar Section */}
             <div className="relative group">
               {profile.avatar && !profile.avatar.includes('unsplash.com') ? (
@@ -402,6 +405,7 @@ export default function ProfileTab({
           </div>
 
           {/* Payout Methods & Direct Payment QR */}
+          {!hidePayoutMethods ? (
           <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 relative">
             <div className="border-b border-slate-100 pb-3 mb-4 space-y-3">
               <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
@@ -510,11 +514,12 @@ export default function ProfileTab({
             )}
 
           </div>
+          ) : null}
 
         </div>
 
         {/* Right Column (Basic Info + Address Details + Business Info + Map/Sponsor Grid) */}
-        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 content-start">
+        <div className={`lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 content-start ${focusPayoutMethods ? 'hidden' : ''}`}>
 
           {/* Basic Information */}
           <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 relative">
@@ -1106,6 +1111,7 @@ export default function ProfileTab({
 
       </div>
 
+      {!hideDangerZone ? (
       <div className="rounded-xl border border-rose-200 bg-white shadow-sm p-6 animate-fadeIn">
         <h3 className="mb-3 text-base font-extrabold text-nexoraDangerDark">
           {t('components.settings.tabs.ProfileTab.deleteAccountTitle')}
@@ -1125,6 +1131,7 @@ export default function ProfileTab({
             : t('components.settings.tabs.ProfileTab.deleteAccount')}
         </button>
       </div>
+      ) : null}
 
       {/* Payout Account Edit Custom Modal Popup */}
       {editingMethod && (() => {

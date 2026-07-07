@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../contexts/LanguageContext'
 import BackToHomeButton from '../ui/BackToHomeButton'
 import LanguageSwitcher from '../ui/LanguageSwitcher'
@@ -16,6 +17,7 @@ const TAGLINE_KEYS: Record<LegalDocType, string> = {
 
 export default function LegalPage({ type }: { type: LegalDocType }) {
   const { t, currentLanguage } = useTranslation()
+  const [searchParams] = useSearchParams()
   const sections = getLegalSections(type, currentLanguage)
   const title = t(TITLE_KEYS[type])
   const tagline = t(TAGLINE_KEYS[type])
@@ -23,6 +25,8 @@ export default function LegalPage({ type }: { type: LegalDocType }) {
   const lastUpdatedLabel = t('register.legal.lastUpdatedLabel')
   const effectiveDate = t('register.legal.effectiveDate')
   const lastUpdated = t('register.legal.lastUpdated')
+  const returnTo = searchParams.get('returnTo') || ''
+  const safeReturnTo = returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : ''
 
   // Router-level scrollToPageTop can fire before this lazy page commits, and the
   // global `scroll-behavior: smooth` lets that scroll get canceled mid-flight —
@@ -49,7 +53,10 @@ export default function LegalPage({ type }: { type: LegalDocType }) {
         <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-flox-gradient-b opacity-20 blur-3xl" />
 
         <div className="absolute left-[max(1rem,env(safe-area-inset-left,0px))] top-[max(1rem,env(safe-area-inset-top,0px))] z-50">
-          <BackToHomeButton />
+          <BackToHomeButton
+            to={safeReturnTo || '/'}
+            labelKey={safeReturnTo ? 'common.back' : 'common.back_to_home'}
+          />
         </div>
         <div className="absolute right-[max(1rem,env(safe-area-inset-right,0px))] top-[max(1rem,env(safe-area-inset-top,0px))] z-50">
           <LanguageSwitcher />
@@ -88,7 +95,10 @@ export default function LegalPage({ type }: { type: LegalDocType }) {
         </div>
 
         <div className="mt-12 flex justify-center border-t border-nexoraBorder pt-6">
-          <BackToHomeButton />
+          <BackToHomeButton
+            to={safeReturnTo || '/'}
+            labelKey={safeReturnTo ? 'common.back' : 'common.back_to_home'}
+          />
         </div>
       </div>
     </main>
