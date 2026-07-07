@@ -359,11 +359,8 @@ export default function StaffMyQR() {
 
   const activeTipQrs = useMemo(() => businessTipQrs.filter(isBusinessActive), [businessTipQrs])
 
-  // Tab order: not linked → [Personal, Payment, Tips]; linked → [Tips, Payment, Personal].
-  const orderedTabs = useMemo<QrTab[]>(
-    () => (businessTipQrs.length > 0 ? ['tipping', 'payment', 'personal'] : ['personal', 'payment', 'tipping']),
-    [businessTipQrs.length],
-  )
+  // Fixed tab order: Receive Tips, Invite & Refer, Accept Payments.
+  const orderedTabs = useMemo<QrTab[]>(() => ['tipping', 'personal', 'payment'], [])
 
   useEffect(() => {
     if (userSelectedTabRef.current) {
