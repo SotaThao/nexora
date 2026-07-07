@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
-import { Copy, Loader2, Save, Upload, X, Coins, Banknote, Gift, Tag, Hourglass, CheckCircle2, XCircle } from 'lucide-react'
+import { Copy, Loader2, Save, Upload, X, Coins, Banknote, Gift, Tag, HandCoins, Hourglass, CheckCircle2, XCircle } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import {
@@ -50,6 +50,7 @@ const METHOD_I18N: Record<string, string> = {
 }
 
 const TYPE_I18N: Record<number, string> = {
+  [PayoutType.TipDebt]: 'dashboard.tips.payouts_manager.type_unpaid_tips',
   [PayoutType.Tip]: 'dashboard.tips.payouts_manager.type_tip',
   [PayoutType.Salary]: 'dashboard.tips.payouts_manager.type_salary',
   [PayoutType.Bonus]: 'dashboard.tips.payouts_manager.type_bonus',
@@ -57,6 +58,7 @@ const TYPE_I18N: Record<number, string> = {
 }
 
 const TYPE_ICON: Record<number, any> = {
+  [PayoutType.TipDebt]: HandCoins,
   [PayoutType.Tip]: Coins,
   [PayoutType.Salary]: Banknote,
   [PayoutType.Bonus]: Gift,
@@ -241,7 +243,9 @@ export default function CreatePayoutModal({
       setAmount(formatUsdInputAmount(editingPayout.amount))
       setAmountError(null)
       setPeriodError(null)
-      setPayoutTypesMask(payoutTypesFromMask(editingPayout.payoutTypes || PayoutType.Tip)[0] ?? PayoutType.Tip)
+      setPayoutTypesMask(
+        payoutTypesFromMask(editingPayout.payoutTypes || PayoutType.Tip)[0] ?? PayoutType.Tip,
+      )
       setPeriodStart(editingPayout.periodStart)
       setPeriodEnd(editingPayout.periodEnd)
       setNotes(editingPayout.notes ?? '')
@@ -295,7 +299,7 @@ export default function CreatePayoutModal({
 
   useEffect(() => {
     if (!isOpen || isEditing || !staffProfileId || !isDebtLookupReady || isStaffDebtLoading) return
-    if (!hasPayoutType(payoutTypesMask, PayoutType.Tip)) return
+    if (!hasPayoutType(payoutTypesMask, PayoutType.TipDebt)) return
 
     const prefillKey = `${staffProfileId}:${payoutTypesMask}:${displayedDebtBalance}`
     if (amountPrefillKeyRef.current === prefillKey) return
@@ -319,6 +323,14 @@ export default function CreatePayoutModal({
   ])
 
   useEffect(() => {
+    if (!isOpen || isEditing) return
+    if (hasPayoutType(payoutTypesMask, PayoutType.TipDebt)) return
+    setAmount('0.00')
+    setAmountError(null)
+    amountPrefillKeyRef.current = ''
+  }, [isOpen, isEditing, payoutTypesMask])
+
+  useEffect(() => {
     if (isOpen) return
     setEvidencePreviews((prev) => {
       prev.forEach((url) => {
@@ -328,9 +340,21 @@ export default function CreatePayoutModal({
     })
   }, [isOpen])
 
-  if (!isOpen) return null
+  const includesUnpaidTipsType = hasPayoutType(payoutTypesMask, PayoutType.TipDebt)
+  const debtStaffProfileIds = useMemo(
+    () => new Set(unpaidDebts.filter((debt) => debt.balance > 0).map((debt) => debt.staffProfileId)),
+    [unpaidDebts],
+  )
+  const isUnpaidTipsTypeDisabled = !isEditing && isDebtLookupReady && displayedDebtBalance <= 0
 
-  const includesTipType = hasPayoutType(payoutTypesMask, PayoutType.Tip)
+  useEffect(() => {
+    if (isEditing || !isUnpaidTipsTypeDisabled) return
+    if (hasPayoutType(payoutTypesMask, PayoutType.TipDebt)) {
+      setPayoutTypesMask(PayoutType.Salary)
+    }
+  }, [isEditing, isUnpaidTipsTypeDisabled, payoutTypesMask])
+
+  if (!isOpen) return null
 
   const isPayoutMethodSelectable = (method: string) => {
     if (isEditing && normalizePayoutMethodType(editingPayout?.payoutMethodType) === method) {
@@ -543,7 +567,7 @@ export default function CreatePayoutModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-4">
-      <div className="flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-t-2xl border border-nexoraBorder bg-white shadow-2xl sm:rounded-2xl">
+      <div className="flex max-h-[92dvh] w-full max-w-5xl flex-col overflow-hidden rounded-t-2xl border border-nexoraBorder bg-white shadow-2xl sm:rounded-2xl">
         <div className="flex items-start justify-between border-b border-nexoraBorder px-5 py-4">
           <div>
             <h3 className="text-base font-black text-inkBlue">
@@ -569,6 +593,7 @@ export default function CreatePayoutModal({
                   value={staffProfileId}
                   selectedStaff={selectedStaff}
                   onSelect={handleStaffSelect}
+                  allowedStaffProfileIds={debtStaffProfileIds}
                   disabled={isEditing}
                   error={staffProfileError}
                   enabled={isOpen}
@@ -636,7 +661,7 @@ export default function CreatePayoutModal({
                   <input
                     type="text"
                     inputMode="decimal"
-                    disabled={isEditing || (includesTipType && hasNoTipDebt)}
+                    disabled={isEditing || (includesUnpaidTipsType && hasNoTipDebt)}
                     className={`h-10 w-full rounded-lg border bg-white pl-7 pr-3 text-sm font-semibold tabular-nums disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-mutedGrey ${
                       amountError
                         ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-200'
@@ -645,7 +670,7 @@ export default function CreatePayoutModal({
                     value={amount}
                     onChange={(e) => handleAmountChange(e.target.value)}
                     onBlur={handleAmountBlur}
-                    placeholder={includesTipType && hasNoTipDebt ? '—' : '0.00'}
+                    placeholder={includesUnpaidTipsType && hasNoTipDebt ? '—' : '0.00'}
                     aria-invalid={Boolean(amountError)}
                     aria-describedby={amountError ? 'payout-amount-error' : undefined}
                   />
@@ -654,7 +679,7 @@ export default function CreatePayoutModal({
                   <p id="payout-amount-error" className="mt-1.5 text-xs font-semibold text-red-600">
                     {amountError}
                   </p>
-                ) : !isEditing && staffProfileId && includesTipType && !isStaffDebtLoading && !isStaffDebtError ? (
+                ) : !isEditing && staffProfileId && includesUnpaidTipsType && !isStaffDebtLoading && !isStaffDebtError ? (
                     <p className="mt-1.5 text-[11px] text-mutedGrey">
                       {t('dashboard.tips.payouts_manager.unpaid_tip_hint')}{' '}
                       <span className="font-bold text-nexoraBrand">{formatCurrency(displayedDebtBalance)}</span>
@@ -666,18 +691,22 @@ export default function CreatePayoutModal({
                 <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-mutedGrey">
                   {t('dashboard.tips.payouts_manager.field_types')} *
                 </label>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 xl:flex-nowrap">
                   {ALL_PAYOUT_TYPE_FLAGS.map((flag) => {
                     const selected = hasPayoutType(payoutTypesMask, flag)
+                    const disabled = flag === PayoutType.TipDebt && isUnpaidTipsTypeDisabled
                     return (
                       <button
                         key={flag}
                         type="button"
-                        onClick={() => setPayoutTypesMask(flag)}
-                        className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition ${
+                        disabled={disabled}
+                        onClick={() => !disabled && setPayoutTypesMask(flag)}
+                        className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold whitespace-nowrap xl:flex-1 xl:justify-center transition ${
                           selected
                             ? 'border-nexoraBrand bg-nexoraBrand/10 text-nexoraBrand'
-                            : 'border-nexoraBorder hover:border-nexoraBrand/40'
+                            : disabled
+                              ? 'cursor-not-allowed border-nexoraBorder/60 bg-slate-50 text-mutedGrey opacity-60'
+                              : 'border-nexoraBorder hover:border-nexoraBrand/40'
                         }`}
                       >
                         {(() => {
