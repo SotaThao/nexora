@@ -814,7 +814,7 @@ export default function StaffMyQR() {
                 </div>
 
                 <div
-                  className="mx-auto mt-3 max-w-xs"
+                  className="mt-3"
                   title={staffShareUrlDisplay.fullDisplay}
                 >
                   <ShareLinkPill
