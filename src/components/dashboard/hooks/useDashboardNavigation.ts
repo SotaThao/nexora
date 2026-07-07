@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
+const TIPS_TAB_IDS = ['overview', 'savings', 'payouts']
+
 export function useDashboardNavigation() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -8,7 +10,7 @@ export function useDashboardNavigation() {
   const activeMenu = location.pathname.split('/')[2] || 'overview'
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [tipsTab, setTipsTab] = useState('overview')
+  const [tipsTab, setTipsTab] = useState(TIPS_TAB_IDS[0])
   const [isTipsMobileExpanded, setIsTipsMobileExpanded] = useState(activeMenu === 'tips')
   const [touchpointsTab, setTouchpointsTab] = useState('stations')
   const [isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded] = useState(activeMenu === 'touchpoints')
@@ -20,10 +22,10 @@ export function useDashboardNavigation() {
       setIsTipsMobileExpanded(true)
       setIsTouchpointsMobileExpanded(false)
       const tab = new URLSearchParams(location.search).get('tab')
-      if (tab === 'overview' || tab === 'savings' || tab === 'payouts') {
+      if (TIPS_TAB_IDS.includes(tab)) {
         setTipsTab(tab)
       } else {
-        setTipsTab('overview')
+        setTipsTab(TIPS_TAB_IDS[0])
       }
     } else if (activeMenu === 'touchpoints') {
       setIsTouchpointsMobileExpanded(true)
