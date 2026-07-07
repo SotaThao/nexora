@@ -868,7 +868,8 @@
       "kpi": {
         "total_revenue": "Tổng Doanh Thu Típ",
         "direct_p2p": "Tip trực tiếp",
-        "card_tips": "Típ Qua Thẻ",
+        "card_tips": "Típ Qua Thẻ Truyền Thống",
+        "card_tips_sub": "Không dùng — khách trả trực tiếp cho thợ qua Zelle/Venmo",
         "crypto_tips": "Típ Crypto",
         "total_tips_circle": "Tổng Típ"
       },
