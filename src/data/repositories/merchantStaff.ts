@@ -41,6 +41,30 @@ const normalizeDateOnly = (value?: string | null) => {
   return value.split('T')[0]
 }
 
+function resolveStaffFullName(dto: {
+  fullName?: string | null
+  firstName?: string | null
+  lastName?: string | null
+  bio?: string | null
+  displayName?: string | null
+  isLocalStaff?: boolean
+}): string {
+  const explicit = String(dto.fullName ?? '').trim()
+  if (explicit) return explicit
+
+  const fromParts = `${dto.firstName ?? ''} ${dto.lastName ?? ''}`.trim()
+  if (fromParts) return fromParts
+
+  // Legacy local-staff rows may have full name stored in bio when firstName/lastName are null.
+  if (dto.isLocalStaff) {
+    const bio = String(dto.bio ?? '').trim()
+    const displayName = String(dto.displayName ?? '').trim()
+    if (bio && bio !== displayName) return bio
+  }
+
+  return ''
+}
+
 export function normalizePaymentMethods(
   paymentMethods: StaffPaymentMethodApiDto[] | undefined,
   displayName = '',
@@ -105,7 +129,7 @@ export function normalizeStaffListItem(dto: StaffListItemApiDto): StaffMember {
     isProfileComplete: dto.isProfileComplete ?? false,
     tipCount: dto.tipCount ?? 0,
     averageRating: dto.averageRating ?? 0,
-    fullName: dto.fullName ?? '',
+    fullName: resolveStaffFullName(dto),
     nickname: displayName,
     displayName,
     avatar: dto.photoUrl ?? null,

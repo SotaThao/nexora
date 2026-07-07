@@ -23,6 +23,15 @@ export async function resolveStaffAvatarUrl(avatar: string, avatarFile?: File | 
   return avatar
 }
 
+function splitFullName(fullName: string): { firstName: string; lastName: string } {
+  const trimmed = fullName.trim()
+  const parts = trimmed.split(/\s+/)
+  return {
+    firstName: parts[0] || '',
+    lastName: parts.slice(1).join(' ') || '',
+  }
+}
+
 async function resolvePhotoUrl(payload: ManualStaffFormPayload): Promise<string | null> {
   if (payload.avatarFile) {
     return imagesRepository.uploadAndGetUrl(payload.avatarFile)
@@ -67,15 +76,16 @@ export function useCreateLocalStaff() {
   return useMutation({
     mutationFn: async (payload: ManualStaffFormPayload) => {
       const photoUrl = await resolvePhotoUrl(payload)
+      const { firstName, lastName } = splitFullName(payload.fullName)
       const created = await localStaffRepository.create({
         displayName: payload.displayNickname.trim(),
         position: payload.position.trim() || null,
-        bio: payload.fullName.trim() !== payload.displayNickname.trim()
-          ? payload.fullName.trim()
-          : null,
+        bio: null,
         photoUrl,
         phoneNumber: payload.phoneNumber?.trim() || null,
         email: payload.email?.trim() || null,
+        firstName,
+        lastName,
       })
 
       if (created.id) {

@@ -43,7 +43,13 @@ function pickNonEmptyString(...values: unknown[]): string {
 }
 
 function resolveStaffFormNames(member) {
-  const fullName = pickNonEmptyString(member?.fullName)
+  const fromParts = `${member?.firstName ?? ''} ${member?.lastName ?? ''}`.trim()
+  let fullName = pickNonEmptyString(member?.fullName, fromParts)
+  if (!fullName && member?.isLocalStaff) {
+    const bio = String(member?.bio ?? '').trim()
+    const displayName = pickNonEmptyString(member?.nickname, member?.displayName)
+    if (bio && bio !== displayName) fullName = bio
+  }
   const nickname = pickNonEmptyString(member?.nickname, member?.displayName)
   return { fullName, nickname }
 }
@@ -325,15 +331,21 @@ export function useStaffManagement({
           String(staffForm.avatar || ''),
           staffForm.avatarFile as File | null | undefined,
         )
+        const fullName = staffForm.fullName.trim()
+        const nameParts = fullName.split(/\s+/)
+        const firstName = nameParts[0] || ''
+        const lastName = nameParts.slice(1).join(' ') || ''
         updateLocalStaffMutation.mutate({
           staffProfileId: member.staffProfileId,
           params: {
             displayName: (staffForm.nickname || staffForm.fullName).trim(),
             position: staffForm.position?.trim() || null,
-            bio: staffForm.bio?.trim() || staffForm.fullName.trim() || null,
+            bio: staffForm.bio?.trim() || null,
             photoUrl,
             phoneNumber: staffForm.phone?.trim() || null,
             email: staffForm.email?.trim() || null,
+            firstName,
+            lastName,
           },
         }, {
           onSuccess: () => {

@@ -249,6 +249,9 @@ export interface StaffListItemApiDto {
   joinDate?: string | null
   email?: string | null
   phone?: string | null
+  firstName?: string | null
+  lastName?: string | null
+  fullName?: string | null
   paymentMethods?: StaffPaymentMethodApiDto[]
   invites?: StaffInviteSummaryApiDto[]
   isLocalStaff?: boolean
@@ -276,6 +279,8 @@ export interface LocalStaffCreateParams {
   photoUrl?: string | null
   phoneNumber?: string | null
   email?: string | null
+  firstName: string
+  lastName: string
 }
 
 export interface LocalStaffUpdateParams extends LocalStaffCreateParams {}
