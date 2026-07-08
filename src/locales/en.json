@@ -2594,16 +2594,18 @@
           "statusRejectedDescription": "Your previous verification was rejected. Please complete the KYC process again using the portal below."
         },
         "StaffReviews": {
-          "reviewsAndRatings": "Reviews & Ratings",
-          "customerReviews": "Customer Reviews",
-          "averageRating": "Average Rating",
-          "totalReviews": "Total Reviews",
+          "reviewsAndRatings": "My Reviews",
+          "overallRating": "Overall Rating",
+          "reviewCount": "({{count}} reviews)",
           "identitySecured": "IDENTITY SECURED",
           "noReviewsReceivedYet": "No reviews received yet.",
           "anonymousCustomer": "Anonymous Customer",
           "ratingOnly": "Rating only — no comment.",
           "pageOf": "Page {{page}} of {{total}}",
-          "internal": "Customer identities are protected. You see ratings and feedback only."
+          "internal": "Customer identities are protected. You see ratings and feedback only.",
+          "allReviews": "All Reviews",
+          "needsReply": "Needs Reply",
+          "needsReplyUnavailable": "Coming soon"
         }
       }
     },

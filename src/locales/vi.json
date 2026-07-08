@@ -2593,16 +2593,18 @@
           "statusRejectedDescription": "Xác minh trước đó của bạn đã bị từ chối. Vui lòng hoàn tất lại quy trình KYC qua cổng bên dưới."
         },
         "StaffReviews": {
-          "reviewsAndRatings": "Đánh Giá & Xếp Hạng",
-          "customerReviews": "Ý Kiến Khách Hàng",
-          "averageRating": "Điểm trung bình",
-          "totalReviews": "Tổng đánh giá",
+          "reviewsAndRatings": "Đánh giá của tôi",
+          "overallRating": "Đánh giá tổng quan",
+          "reviewCount": "({{count}} đánh giá)",
           "identitySecured": "BẢO MẬT DANH TÍNH",
           "noReviewsReceivedYet": "Bạn chưa có đánh giá nào.",
           "anonymousCustomer": "Khách hàng ẩn danh",
           "ratingOnly": "Chỉ có điểm — không có bình luận.",
           "pageOf": "Trang {{page}} / {{total}}",
-          "internal": "Danh tính khách hàng được bảo vệ. Bạn chỉ thấy điểm và phản hồi."
+          "internal": "Danh tính khách hàng được bảo vệ. Bạn chỉ thấy điểm và phản hồi.",
+          "allReviews": "Tất cả đánh giá",
+          "needsReply": "Cần phản hồi",
+          "needsReplyUnavailable": "Sắp ra mắt"
         }
       }
     },
