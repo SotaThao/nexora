@@ -1,21 +1,24 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Calendar, QrCode, Eye, Download, Sparkles, Pointer, Star, Hourglass } from 'lucide-react'
+import { Calendar, QrCode, Star, Hourglass } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { useDownloadTouchpointQr } from '../../../data/hooks/useMerchantTouchpoints'
 import { downloadQrCode } from '../../../utils/qrUtils'
 import { buildQrImageUrl, toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
-import { formatCurrency, isAwaitingShopConfirmation } from '../utils'
+import { buildMasterQrTarget, formatCurrency, isAwaitingShopConfirmation, resolveMasterTouchpoint } from '../utils'
 import Panel from '../../ui/Panel'
-import KpiCard from '../../ui/KpiCard'
+import KpiCard, { NO_DELTA_FALLBACK } from '../../ui/KpiCard'
 import { SkeletonKpiCard } from '../../ui/skeleton'
 import Skeleton from '../../ui/skeleton/Skeleton'
 import TipsOverTimePanel from './TipsOverTimePanel'
 import StaffLeaderboardPanel from './StaffLeaderboardPanel'
 import SetupGuideBanner from './SetupGuideBanner'
+import PayoutSetupWarningBanner from './PayoutSetupWarningBanner'
 import OverviewEmptyState from './OverviewEmptyState'
 import OverviewSkeleton from './OverviewSkeleton'
+import SettingsTipQrPanel from '../../settings/SettingsTipQrPanel'
+import MasterWelcomeQrPanel from './MasterWelcomeQrPanel'
 
 function renderStars(rating) {
   const stars = []
@@ -132,6 +135,7 @@ function Overview({
   isTouchpointsLoading = false,
   reviewsPage = null,
   isReviewsPending = false,
+  reviewsThisWeekCount = null,
 }) {
   const { currentLanguage, t } = useTranslation()
   const { showToast } = useNotification()
@@ -144,6 +148,7 @@ function Overview({
   )
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isMasterQrDownloading, setIsMasterQrDownloading] = useState(false)
+  const [copiedPaymentLinkId, setCopiedPaymentLinkId] = useState(null)
   const dropdownRef = useRef(null)
 
   const reviewsSummary = useMemo(() => {
@@ -156,8 +161,7 @@ function Overview({
   // touch point — there is no store-level "general" touch page on the API
   // (every customer touch URL needs a touchPointSlug). Prefer a FrontDesk
   // touch point (the lobby/master created at onboarding), else the first one.
-  const masterTouchpoint =
-    (touchpoints || []).find((tp) => tp.type === 'FrontDesk') || (touchpoints || [])[0] || null
+  const masterTouchpoint = useMemo(() => resolveMasterTouchpoint(touchpoints), [touchpoints])
 
   const masterQrLink = useMemo(() => {
     if (masterTouchpoint?.url) {
@@ -174,14 +178,7 @@ function Overview({
     [masterQrLink, masterTouchpoint?.qrImageUrl],
   )
 
-  const masterQrTarget = {
-    name: 'Master Welcome QR',
-    subtitle: 'Store Main Portal',
-    slug: masterTouchpoint?.slug || 'general',
-    url: masterTouchpoint?.url || null,
-    qrImageUrl: masterTouchpoint?.qrImageUrl || null,
-    isActive: true,
-  }
+  const masterQrTarget = useMemo(() => buildMasterQrTarget(touchpoints), [touchpoints])
 
   const handleDownloadMasterQr = useCallback(async () => {
     setIsMasterQrDownloading(true)
@@ -207,6 +204,14 @@ function Overview({
     showToast,
     t,
   ])
+
+  const handleCopyPaymentLink = useCallback((value, id) => {
+    if (!value) return
+    navigator.clipboard.writeText(value)
+    setCopiedPaymentLinkId(id)
+    showToast(t('dashboard.master_gateway.copied_qr_link'), 'success')
+    window.setTimeout(() => setCopiedPaymentLinkId(null), 2000)
+  }, [showToast, t])
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -327,6 +332,10 @@ function Overview({
         </div>
       )}
 
+      {hasSetup && (
+        <PayoutSetupWarningBanner />
+      )}
+
       {pendingConfirmCount > 0 && (
         <div className="flex items-center justify-between gap-3 rounded-xl border border-violet-100 bg-violet-50/70 px-4 py-3">
           <div className="flex items-center gap-2.5">
@@ -410,6 +419,7 @@ function Overview({
               label={t('dashboard.kpi.total_transactions')}
               value={metrics.totalTransactions.toString()}
               deltaPercent={kpiDeltas?.totalTransactions ?? null}
+              noDeltaFallback={NO_DELTA_FALLBACK.ZERO_VS_LAST_WEEK}
               active={activeKpi === 'transactions'}
               onClick={() => setActiveKpi('transactions')}
             />
@@ -417,6 +427,7 @@ function Overview({
               label={t('dashboard.kpi.avg_tip')}
               value={formatCurrency(metrics.averageTip)}
               deltaPercent={kpiDeltas?.averageTip ?? null}
+              noDeltaFallback={NO_DELTA_FALLBACK.PERIOD_NOTE}
               active={activeKpi === 'avg_tip'}
               onClick={() => setActiveKpi('avg_tip')}
             />
@@ -424,6 +435,8 @@ function Overview({
               label={t('dashboard.kpi.total_reviews')}
               value={reviewsSummary.totalCount.toString()}
               deltaPercent={kpiDeltas?.totalReviews ?? null}
+              noDeltaFallback={NO_DELTA_FALLBACK.WEEKLY_COUNT}
+              weeklyCount={reviewsThisWeekCount ?? 0}
               active={activeKpi === 'reviews'}
               onClick={() => setActiveKpi('reviews')}
             />
@@ -432,7 +445,7 @@ function Overview({
       </div>
 
       {/* Panels Grid */}
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(340px,1fr)]">
+      <div className="grid grid-cols-1 gap-6 2xl:grid-cols-[minmax(0,2fr)_minmax(360px,1fr)]">
         <TipsOverTimePanel
           range={chartRange}
           setRange={setChartRange}
@@ -479,123 +492,27 @@ function Overview({
           ) : (
             <>
           {/* Master QR section */}
-          <div className="rounded-xl border border-nexoraBorder bg-nexoraCanvas p-5 flex flex-col md:flex-row justify-between gap-5">
-            <div className="flex-grow flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-nexoraBrandSoft text-nexoraBrand">
-                    <QrCode className="h-5 w-5" />
-                  </span>
-                  <div>
-                    <h3 className="text-sm font-extrabold text-nexoraText">
-                      {t('dashboard.master_gateway.qr_title')}
-                    </h3>
-                    <p className="text-[10px] text-nexoraMuted">
-                      {t('dashboard.master_gateway.qr_desc')}
-                    </p>
-                  </div>
-                </div>
-                <p className="mt-4 text-xs leading-normal text-nexoraMuted">
-                  {t('dashboard.master_gateway.qr_body')}
-                </p>
-              </div>
+          <MasterWelcomeQrPanel
+            t={t}
+            qrPreviewUrl={masterQrPreviewUrl}
+            qrLink={masterQrLink}
+            onPreview={() => previewQr(masterQrTarget)}
+            onDownload={handleDownloadMasterQr}
+            isDownloading={isMasterQrDownloading || downloadTouchpointQrMutation.isPending}
+            showToast={showToast}
+          />
 
-              <div className="mt-6 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => previewQr(masterQrTarget)}
-                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-white border border-nexoraBorder px-4 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition cursor-pointer"
-                >
-                  <Eye className="h-4 w-4" />
-                  {t('dashboard.master_gateway.btn_open')}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDownloadMasterQr}
-                  disabled={isMasterQrDownloading || downloadTouchpointQrMutation.isPending}
-                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white hover:bg-nexoraBrandDark transition cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  <Download className="h-4 w-4" />
-                  {t('dashboard.master_gateway.btn_download')}
-                </button>
-              </div>
-            </div>
-
-            {/* Visual QR mockup thumbnail */}
-            <div
-              onClick={() => previewQr(masterQrTarget)}
-              className="flex-shrink-0 mx-auto md:mx-0 w-28 h-28 rounded-lg bg-white border border-nexoraBorder/80 p-2 flex items-center justify-center shadow-sm relative overflow-hidden cursor-pointer hover:border-nexoraBrand transition select-none group"
-            >
-              <img
-                src={masterQrPreviewUrl}
-                alt="Master QR Code Preview"
-                className="h-full w-full object-contain group-hover:scale-105 transition duration-200"
-              />
-              <div className="absolute inset-0 bg-nexoraBrand/80 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-1 text-white select-none">
-                <QrCode className="h-5 w-5" />
-                <span className="text-[9px] font-black uppercase tracking-wider">{t('components.dashboard.views.StaffView.preview')}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Master NFC section */}
-          <div className="rounded-xl border border-nexoraBorder bg-nexoraCanvas p-5 flex flex-col md:flex-row justify-between gap-5">
-            <div className="flex-grow flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-nexoraBrandSoft text-nexoraBrand">
-                    <Sparkles className="h-5 w-5" />
-                  </span>
-                  <div>
-                    <h3 className="text-sm font-extrabold text-nexoraText">
-                      {t('dashboard.master_gateway.nfc_title')}
-                    </h3>
-                    <p className="text-[10px] text-nexoraMuted">
-                      {t('dashboard.master_gateway.nfc_desc')}
-                    </p>
-                  </div>
-                </div>
-                <p className="mt-4 text-xs leading-normal text-nexoraMuted">
-                  {t('dashboard.master_gateway.nfc_body')}
-                </p>
-              </div>
-
-              <div className="mt-6 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const nfcUrl = masterQrLink
-                    navigator.clipboard.writeText(nfcUrl)
-                    showToast(t('components.dashboard.overview.Overview.copiedNfcRedirectLink'), 'success')
-                  }}
-                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-white border border-nexoraBorder px-4 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition cursor-pointer"
-                >
-                  <Pointer className="h-4 w-4" />
-                  {t('dashboard.master_gateway.btn_copy_link')}
-                </button>
-                <button
-                  type="button"
-                  disabled
-                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-nexoraBrand px-4 text-xs font-bold text-white transition cursor-not-allowed opacity-60"
-                >
-                  <Download className="h-4 w-4" />
-                  {t('dashboard.master_gateway.btn_download_config')}
-                </button>
-              </div>
-            </div>
-
-            {/* Visual NFC puck mockup */}
-            <div className="flex-shrink-0 mx-auto md:mx-0 w-28 h-28 rounded-lg bg-white border border-nexoraBorder/80 p-3 flex flex-col items-center justify-center shadow-sm relative overflow-hidden select-none">
-              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-400/10 to-amber-500/20 border border-dashed border-amber-500/40 flex items-center justify-center animate-pulse">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-500 text-white shadow-md">
-                  <Sparkles className="h-[18px] w-[18px]" />
-                </span>
-              </div>
-              <div className="text-[9px] font-black uppercase text-amber-600 tracking-widest mt-2 animate-pulse">
-                NFC Active
-              </div>
-            </div>
-          </div>
+          {/* Direct Payment QR section */}
+          <SettingsTipQrPanel
+            variant="gateway"
+            hideUrlCode
+            businessName={businessName}
+            showToast={showToast}
+            handleCopy={handleCopyPaymentLink}
+            copiedId={copiedPaymentLinkId}
+            t={t}
+            onConfigurePayoutMethods={() => navigate('/dashboard/settings?tab=payout')}
+          />
             </>
           )}
         </div>

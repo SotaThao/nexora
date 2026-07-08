@@ -4,6 +4,7 @@ import { useNotification } from '../../../contexts/NotificationContext'
 import { parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
 import { serializeBankWireAccount } from '../../payout/bankWireAccount'
 import { captureQrImage } from '../../../utils/qrCode'
+import { getPayoutValidationMessage } from '../../payout/validatePayoutAccount'
 
 const normalizePhone = (raw) => {
   if (!raw) return ''
@@ -533,7 +534,8 @@ export default function useStaffRegistration({ inviteData }) {
         confirmPassword: regPassword,
         firstName,
         lastName,
-        type: 'User'
+        type: 'User',
+        ...(inviteRefCode?.trim() ? { referralCode: inviteRefCode.trim() } : {}),
       })
       .then((signupResponse) => {
         const signupOtp = getSignupOtp(signupResponse)
@@ -545,7 +547,7 @@ export default function useStaffRegistration({ inviteData }) {
       .catch((err) => {
         logger.error('Signup failed', err)
         if (isApiError(err) && err.errorCode === 'USER_EMAIL_ALREADY_EXISTS') {
-          setRegErrors({ email: t('components.staff_registration.hooks.useStaffRegistration.emailAlreadyExists') })
+          setRegErrors({ email: t(getErrorI18nKey('USER_EMAIL_ALREADY_EXISTS')) })
         } else {
           showToast(
             currentLanguage === 'vi' ? `Lỗi đăng ký: ${getApiErrorCode(err, 'Vui lòng thử lại')}` : `Registration error: ${getApiErrorCode(err, 'Please try again')}`,
@@ -656,6 +658,13 @@ export default function useStaffRegistration({ inviteData }) {
       setModalError(t('components.staff_registration.hooks.useStaffRegistration.thisFieldIsRequired'))
       return
     }
+
+    const validationMessage = getPayoutValidationMessage(t, editingMethod, editValue)
+    if (validationMessage) {
+      setModalError(validationMessage)
+      return
+    }
+
     setPayouts(prev => ({
       ...prev,
       [editingMethod]: {

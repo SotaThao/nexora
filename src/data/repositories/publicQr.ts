@@ -59,12 +59,23 @@ export function createPublicQrRepository(client: HttpClient = httpClient) {
   }
 }
 
-const apiBaseUrl = (import.meta.env?.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
-
-/** Public QR image URL for use in `<img src>` (anonymous GET). */
+/*
+ * Backend QR image source kept for quick rollback:
+ *
+ * const apiBaseUrl = (import.meta.env?.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
+ *
+ * export function buildPublicQrImageUrl(content: string, size = 300): string {
+ *   const params = new URLSearchParams({ content, size: String(size) })
+ *   return `${apiBaseUrl}/api/v1/public/qr?${params.toString()}`
+ * }
+ */
+/** Public QR image URL for use in `<img src>`. */
 export function buildPublicQrImageUrl(content: string, size = 300): string {
-  const params = new URLSearchParams({ content, size: String(size) })
-  return `${apiBaseUrl}/api/v1/public/qr?${params.toString()}`
+  const params = new URLSearchParams({
+    size: `${size}x${size}`,
+    data: content,
+  })
+  return `https://api.qrserver.com/v1/create-qr-code/?${params.toString()}`
 }
 
 export const publicQrRepository = createPublicQrRepository()

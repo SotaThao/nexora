@@ -1,6 +1,7 @@
 // DashboardHeader — top bar: search w/ suggestions, language switch, notifications, profile menu.
 // Extracted from Dashboard.jsx (Group 2 refactor).
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   AlertTriangle,
   Bell,
@@ -48,6 +49,7 @@ export default function DashboardHeader({
   onOpenMobileMenu
 }) {
   const { t, currentLanguage } = useTranslation()
+  const navigate = useNavigate()
   const dropdownRef = useRef(null)
   const mobileDropdownRef = useRef(null)
   const searchRef = useRef(null)
@@ -94,6 +96,12 @@ export default function DashboardHeader({
       if (member && typeof onApproveStaff === 'function') {
         onApproveStaff(member)
       }
+    } else if (item.paymentId) {
+      const params = new URLSearchParams({
+        tab: 'direct_payments',
+        paymentId: String(item.paymentId),
+      })
+      navigate(`/dashboard/reports?${params.toString()}`)
     } else if (item.linkTab) {
       onNavigateMenu(item.linkTab)
     }
@@ -284,13 +292,6 @@ export default function DashboardHeader({
             className="flex w-full items-center px-4 py-2 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition text-left"
           >
             {t('dashboard.menu.business_setting')}
-          </button>
-          <button
-            type="button"
-            onClick={() => { onNavigateSettingsTab('kyb'); setIsHeaderDropdownOpen(false) }}
-            className="flex w-full items-center px-4 py-2 text-xs font-bold text-nexoraText hover:bg-nexoraSurfaceMuted transition text-left"
-          >
-            {t('dashboard.menu.kyb')}
           </button>
         </div>
       )}

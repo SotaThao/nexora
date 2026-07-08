@@ -1,6 +1,6 @@
 // StaffHome — personal staff home (mobile-first "Pro" layout):
 // greeting, KPI cards, quick actions, pending tip confirmations, linked
-// businesses, referral banner. All data is real (empty states when missing).
+// businesses. All data is real (empty states when missing).
 import { useOutletContext } from 'react-router-dom'
 import {
   QrCode,
@@ -8,19 +8,24 @@ import {
   Clock,
   DollarSign,
   Calendar,
-  Gift,
   CreditCard,
   MessageSquare,
   ChevronRight,
   CheckCircle2,
   Wallet,
+  Gift,
 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
 import { useConfirmStaffTipsReceipt } from '../../../data/hooks/useStaffSelf'
 import { useStaffHomeData } from '../hooks/useStaffHomeData'
 import { SkeletonLayout } from '../../ui/skeleton'
+import Tooltip from '../../ui/Tooltip'
 import { STAFF_HOME_SKELETON } from '../skeletons/staffDashboardSkeletons'
+import {
+  getStaffBusinessLinkStatusPresentation,
+  resolveStaffBusinessLinkStatusLabel,
+} from '../../../utils/staffBusinessLinkStatus'
 
 function formatTipAmount(amount) {
   return `$${Number(amount || 0).toFixed(amount % 1 === 0 ? 0 : 2)}`
@@ -76,6 +81,9 @@ export default function StaffHome() {
   const { account } = useStaffAccount()
   const confirmTipsMutation = useConfirmStaffTipsReceipt()
   const { kpis, isHomeLoading, isPendingTipsFetching, pendingTips, linkedBusinesses } = useStaffHomeData()
+  const activeLinkedBusinesses = (linkedBusinesses || []).filter(
+    (biz) => resolveStaffBusinessLinkStatusLabel(biz).toLowerCase() === 'active',
+  )
 
   const isConfirming = confirmTipsMutation.isPending
 
@@ -93,7 +101,7 @@ export default function StaffHome() {
 
   const pendingAmount = (pendingTips || []).reduce((s, tip) => s + Number(tip.amount || 0), 0)
 
-  const go = (screen) => onNavigate?.(screen)
+  const go = (screen, params?: Record<string, string>) => onNavigate?.(screen, params)
 
   return (
     <div className="space-y-5 pb-4">
@@ -145,14 +153,20 @@ export default function StaffHome() {
         <QuickAction icon={<QrCode className="h-5 w-5" />} label={t('staff_dashboard.home.quick_qr')} bg="bg-purple-100" iconColor="text-purple-600" onClick={() => go('qr')} />
         <QuickAction icon={<DollarSign className="h-5 w-5" />} label={t('staff_dashboard.home.quick_tips')} bg="bg-emerald-100" iconColor="text-emerald-600" onClick={() => go('tips')} />
         <QuickAction icon={<MessageSquare className="h-5 w-5" />} label={t('staff_dashboard.home.quick_reviews')} bg="bg-blue-100" iconColor="text-blue-600" onClick={() => go('reviews')} />
-        <QuickAction icon={<CreditCard className="h-5 w-5" />} label={t('staff_dashboard.home.quick_payments')} bg="bg-indigo-100" iconColor="text-indigo-600" onClick={() => go('pay')} />
+        <QuickAction icon={<CreditCard className="h-5 w-5" />} label={t('staff_dashboard.home.quick_payments')} bg="bg-indigo-100" iconColor="text-indigo-600" onClick={() => go('payments')} />
         <QuickAction icon={<Gift className="h-5 w-5" />} label={t('staff_dashboard.home.quick_refer')} bg="bg-pink-100" iconColor="text-pink-600" onClick={() => go('profile')} />
       </div>
 
       {/* ── Pending Confirmations ────────────────────────────────────────── */}
       <div className="rounded-3xl border border-nexoraBorder bg-white p-5 shadow-nexora-card">
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-[17px] font-black tracking-tight text-nexoraText">{t('staff_dashboard.home.pending_confirmations')}</h2>
+          <div className="flex items-center gap-1.5">
+            <h2 className="text-[17px] font-black tracking-tight text-nexoraText">{t('staff_dashboard.home.pending_confirmations')}</h2>
+            <Tooltip
+              content={t('staff_dashboard.home.confirm_all_tooltip')}
+              ariaLabel={t('staff_dashboard.home.confirm_all_tooltip')}
+            />
+          </div>
           {isPendingTipsFetching && pendingTips.length > 0 ? (
             <span className="text-[11px] font-bold uppercase tracking-wider text-nexoraSubtle">{t('common.loading')}</span>
           ) : null}
@@ -176,7 +190,7 @@ export default function StaffHome() {
                   <button
                     type="button"
                     disabled={isConfirming}
-                    onClick={() => confirmTipsMutation.mutate([tip.id])}
+                    onClick={() => confirmTipsMutation.mutate({ tipIds: [tip.id] })}
                     className="h-9 shrink-0 rounded-full border border-nexoraBorder bg-white px-4 text-[13px] font-bold text-nexoraBrand transition hover:border-nexoraBrand disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {t('staff_dashboard.home.confirm')}
@@ -187,7 +201,7 @@ export default function StaffHome() {
             <button
               type="button"
               disabled={isConfirming}
-              onClick={() => confirmTipsMutation.mutate(pendingTips.map((tip) => tip.id))}
+              onClick={() => confirmTipsMutation.mutate({ tipIds: pendingTips.map((tip) => tip.id) })}
               className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-400 py-3 text-sm font-extrabold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <CheckCircle2 className="h-4 w-4" />
@@ -202,11 +216,14 @@ export default function StaffHome() {
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-[17px] font-black tracking-tight text-nexoraText">{t('staff_dashboard.home.linked_businesses')}</h2>
         </div>
-        {(linkedBusinesses || []).length === 0 ? (
+        {activeLinkedBusinesses.length === 0 ? (
           <p className="py-4 text-center text-[13px] text-nexoraSubtle">{t('staff_dashboard.qr.no_linked_businesses')}</p>
         ) : (
           <div className="divide-y divide-nexoraBorder">
-            {linkedBusinesses.map((biz) => (
+            {activeLinkedBusinesses.map((biz) => {
+              const statusLabel = resolveStaffBusinessLinkStatusLabel(biz)
+              const statusPresentation = getStaffBusinessLinkStatusPresentation(statusLabel)
+              return (
               <div key={biz.businessStaffLinkId} className="flex items-center gap-3 py-3">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-nexoraSidebar to-nexoraBrand text-sm font-black text-white">
                   {(biz.businessName || '?').slice(0, 2).toUpperCase()}
@@ -218,38 +235,18 @@ export default function StaffHome() {
                   </p>
                 </div>
                 <span
-                  className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-black ${
-                    biz.status === 'Active' ? 'bg-emerald-50 text-emerald-600' : 'bg-nexoraCanvas text-nexoraMuted'
-                  }`}
+                  className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-black ${statusPresentation.className}`}
                 >
-                  {biz.status === 'Active' ? t('staff_dashboard.status.active') : t('staff_dashboard.status.inactive')}
+                  {statusPresentation.translationKey
+                    ? t(statusPresentation.translationKey)
+                    : statusLabel}
                 </span>
               </div>
-            ))}
+            )})}
           </div>
         )}
       </div>
 
-      {/* ── Referral Banner ──────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-[22px] bg-gradient-to-r from-nexoraBrand via-nexoraElectricMid to-nexoraViolet p-5 shadow-nexora-soft">
-        <div className="absolute -top-6 -right-6 h-24 w-24 rounded-full bg-white/10" />
-        <div className="relative flex items-center gap-4">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
-            <Gift className="h-6 w-6 text-white" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-[15px] font-black text-white">{t('staff_dashboard.home.refer_title')}</p>
-            <p className="mt-0.5 text-[12px] text-white/80">{t('staff_dashboard.home.refer_subtitle')}</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => go('profile')}
-            className="h-10 shrink-0 rounded-full bg-white px-4 text-[13px] font-black text-nexoraBrand shadow-md transition active:scale-95"
-          >
-            {t('staff_dashboard.home.invite_now')}
-          </button>
-        </div>
-      </div>
     </div>
   )
 }

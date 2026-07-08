@@ -1,14 +1,16 @@
 import { useState, useMemo } from 'react'
-import { AlertCircle, Plus, Trash2, User, QrCode, Eye, Link, Copy, X, Share2, Loader2 } from 'lucide-react'
+import { AlertCircle, Plus, HelpCircle, Trash2, User, QrCode, Eye, Link, Copy, X, Share2, Loader2 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { StatusFilter } from '../../../data/hooks/useMerchantStaff'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 import { PAYOUT_UI_DISPLAY_ORDER, PAYOUT_UI_LABELS } from '../../../data/paymentMethodTypes'
+import { formatJoinedDate } from '../../../utils/localDate'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
 import Pagination from '../../ui/Pagination'
+import { SkeletonList } from '../../ui/skeleton'
 
 function isPendingMember(member) {
   const status = member?.status
@@ -144,14 +146,10 @@ function StaffMemberCard({
 
         <div className="rounded-lg bg-slate-50/80 border border-nexoraRule px-3 py-2">
           <p className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wide">
-            {t('staff_invite.col_flow')}
+            {t('components.dashboard.views.StaffView.col_linked_date')}
           </p>
-          <p className="text-xs text-slate-600 font-semibold mt-0.5">
-            {member.flowType || t('components.dashboard.views.StaffView.directAddition')}
-          </p>
-          <p className="text-[10px] text-slate-400 font-bold mt-1">
-            {t('components.dashboard.views.StaffView.linkedDate')}
-            {member.joinedDate || '2026-05-15'}
+          <p className="text-xs text-nexoraText font-semibold mt-0.5">
+            {member.joinedDate ? formatJoinedDate(member.joinedDate) : '-'}
           </p>
         </div>
 
@@ -184,9 +182,15 @@ function StaffMemberCard({
         {!isPending && (
           <div className="flex items-center justify-between gap-3 pt-1 border-t border-nexoraRule">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-extrabold uppercase text-slate-400">
-                {t('dashboard.activity_log.col_status')}
-              </span>
+              <div className="flex items-center gap-1 group relative" tabIndex={0}>
+                <span className="text-[10px] font-extrabold uppercase text-slate-400">
+                  {t('dashboard.activity_log.col_status')}
+                </span>
+                <HelpCircle aria-hidden="true" className="h-3 w-3 text-slate-400 cursor-help shrink-0" />
+                <div className="absolute bottom-full left-0 mb-1.5 hidden group-hover:block group-focus-within:block w-56 bg-slate-800 text-white text-[9px] font-bold p-2 rounded-lg shadow-lg pointer-events-none text-left normal-case leading-normal z-50 font-sans">
+                  {t('components.dashboard.views.StaffView.statusTooltip')}
+                </div>
+              </div>
               <ToggleSwitch
                 checked={member.isActive}
                 onChange={() => onToggle(member.id)}
@@ -195,9 +199,15 @@ function StaffMemberCard({
               />
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-extrabold uppercase text-slate-400">
-                {t('components.dashboard.views.StaffView.tipsFlow')}
-              </span>
+              <div className="flex items-center gap-1 group relative" tabIndex={0}>
+                <span className="text-[10px] font-extrabold uppercase text-slate-400">
+                  {t('components.dashboard.views.StaffView.tipsFlow')}
+                </span>
+                <HelpCircle aria-hidden="true" className="h-3 w-3 text-slate-400 cursor-help shrink-0" />
+                <div className="absolute bottom-full right-0 mb-1.5 hidden group-hover:block group-focus-within:block w-56 bg-slate-800 text-white text-[9px] font-bold p-2 rounded-lg shadow-lg pointer-events-none text-left normal-case leading-normal z-50 font-sans">
+                  {t('components.dashboard.views.StaffView.tipsFlowTooltip')}
+                </div>
+              </div>
               <ToggleSwitch
                 checked={member.showInTipsFlow !== false}
                 onChange={() => onToggleTipsFlow(member.id)}
@@ -290,16 +300,16 @@ function StaffMemberCard({
           )}
           {!isPending && (
             <>
-              <IconButton label={t('staff_detail.joined_gateway')} onClick={() => onViewDetail(member)} className="hover:text-nexoraBrand">
+              <IconButton label={t('components.dashboard.views.StaffView.manage_edit_profile')} onClick={() => onViewDetail(member)} className="hover:text-nexoraBrand">
                 <User className="h-4 w-4" />
               </IconButton>
-              <IconButton label={t('staff_detail.personal_qr')} onClick={() => onQr(member)}>
+              <IconButton label={t('components.dashboard.views.StaffView.manage_view_qr')} onClick={() => onQr(member)}>
                 <QrCode className="h-4 w-4" />
               </IconButton>
-              <IconButton label={t('common.view_detail')} onClick={() => onViewStaff(member)}>
+              <IconButton label={t('components.dashboard.views.StaffView.manage_preview_customer')} onClick={() => onViewStaff(member)}>
                 <Eye className="h-4 w-4" />
               </IconButton>
-              <IconButton label={t('common.delete')} onClick={() => onDelete(member.id)} className="hover:text-rose-600">
+              <IconButton label={t('components.dashboard.views.StaffView.manage_remove_staff')} onClick={() => onDelete(member.id)} className="hover:text-rose-600">
                 <Trash2 className="h-4 w-4" />
               </IconButton>
             </>
@@ -372,11 +382,6 @@ function StaffView({
   const publicInviteUnavailableText = isInviteLinkSettingLoading
     ? t('components.dashboard.views.StaffView.inviteLinkLoading')
     : t('components.dashboard.views.StaffView.inviteLinkDisabled')
-
-  const rejectedStaff = useMemo(
-    () => (staff || []).filter((member) => isRejectedStaff(member)),
-    [staff],
-  )
 
   const sortedStaff = useMemo(() => {
     return [...(staff ?? []).filter((member) => !isRejectedStaff(member))].sort((a, b) => {
@@ -548,7 +553,21 @@ function StaffView({
               </button>
               <button
                 type="button"
-                onClick={() => publicInviteEnabled && onOpenInviteShare && onOpenInviteShare()}
+                onClick={async () => {
+                  if (!publicInviteEnabled) return
+                  if (navigator.share) {
+                    try {
+                      await navigator.share({
+                        url: publicInviteLink
+                      })
+                    } catch (error) {
+                      // ignore
+                    }
+                  } else {
+                    navigator.clipboard.writeText(publicInviteLink)
+                    showToast(t('components.dashboard.views.StaffView.joinLinkCopiedTo'), 'success')
+                  }
+                }}
                 disabled={!publicInviteEnabled}
                 className={`h-9 px-4 bg-nexoraBrand text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm ${publicInviteEnabled ? 'hover:bg-opacity-95 cursor-pointer' : 'cursor-not-allowed opacity-50'}`}
               >
@@ -574,7 +593,6 @@ function StaffView({
               <thead>
                 <tr className="bg-slate-50 text-[10px] font-extrabold uppercase text-nexoraMuted border-b border-nexoraRule">
                   <th className="px-5 py-3">{t('setup.col_staff')}</th>
-                  <th className="px-5 py-3">{t('staff_invite.col_flow')}</th>
                   <th className="px-5 py-3">{t('setup.linked_wallets')}</th>
                   <th className="px-5 py-3 text-right">{t('dashboard.top_touchpoints.manage')}</th>
                 </tr>
@@ -599,11 +617,6 @@ function StaffView({
                             <div className="text-xs text-nexoraMuted">{member.position}</div>
                           </div>
                         </div>
-                      </td>
-                      <td className="px-5 py-4">
-                        <span className="text-xs text-slate-500 font-semibold">
-                          {member.flowType || (t('components.dashboard.views.StaffView.directAddition'))}
-                        </span>
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex flex-wrap gap-1.5">
@@ -645,42 +658,6 @@ function StaffView({
                 })}
               </tbody>
             </table>
-          </div>
-        </div>
-      )}
-
-      {/* Rejected Staff Section */}
-      {rejectedStaff.length > 0 && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50/40 overflow-hidden shadow-sm">
-          <div className="px-5 py-4 border-b border-rose-200 bg-rose-50 flex items-center justify-between">
-            <h3 className="text-xs font-black uppercase text-rose-800 tracking-wider flex items-center gap-1.5">
-              <AlertCircle className="h-4 w-4 text-rose-700" />
-              {t('components.dashboard.views.StaffView.rejectedStaff')} ({rejectedStaff.length})
-            </h3>
-          </div>
-          <div className="p-4 space-y-3">
-            {rejectedStaff.map((member) => (
-              <div key={member.id} className="rounded-xl border border-rose-100 bg-white p-3.5 shadow-sm">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="min-w-0 flex items-center gap-3">
-                    {member.avatar ? (
-                      <img src={member.avatar} alt="" className="h-10 w-10 rounded-full border border-nexoraBorder object-cover" />
-                    ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 text-sm font-extrabold text-rose-700">
-                        {member.nickname?.charAt(0) || member.fullName?.charAt(0) || 'N'}
-                      </div>
-                    )}
-                    <div className="min-w-0">
-                      <p className="truncate font-extrabold text-nexoraText">{member.fullName}</p>
-                      <p className="truncate text-xs text-nexoraMuted">{member.position}</p>
-                    </div>
-                  </div>
-                  <span className="inline-flex shrink-0 rounded-full bg-rose-50 text-rose-700 px-2.5 py-0.5 text-[10px] font-extrabold uppercase border border-rose-100">
-                    {t('components.dashboard.views.StaffView.rejected')}
-                  </span>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       )}
@@ -743,8 +720,9 @@ function StaffView({
                 {t('components.dashboard.views.StaffView.noStaffProfileFound')}
               </p>
             </div>
+          ) : isFetching ? (
+            <SkeletonList count={pageSize} showAvatar lines={2} />
           ) : (
-            <div className={`relative ${isFetching ? 'opacity-60 pointer-events-none' : ''}`}>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
               {sortedStaff.map((member) => {
                 const wallets = getWalletBadges(member)
@@ -780,20 +758,14 @@ function StaffView({
                 )
               })}
             </div>
-            {isFetching && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Loader2 className="h-6 w-6 animate-spin text-nexoraBrand" />
-              </div>
-            )}
-            </div>
           )}
 
-          {activeStaffCount > 0 ? (
+          {totalCount > 0 && totalPages > 1 ? (
             <Pagination
               pageNumber={pageNumber}
               pageSize={pageSize}
               totalPages={totalPages}
-              totalCount={activeStaffCount}
+              totalCount={totalCount}
               hasNextPage={hasNextPage}
               hasPreviousPage={hasPreviousPage}
               onPageChange={onPageChange}

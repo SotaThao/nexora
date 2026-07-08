@@ -9,6 +9,7 @@ export default function StepCredentials(props) {
     password, setPassword,
     showPassword, setShowPassword,
     referralCode, setReferralCode,
+    refCodeReadOnly,
     errors, setErrors,
     isSubmitting,
     ssoEmail,
@@ -17,8 +18,6 @@ export default function StepCredentials(props) {
     otpCode, setOtpCode,
     otpError, setOtpError,
     resendTimer, setResendTimer,
-    // terms modal triggers
-    setModalType, setShowTermsModal,
     // handlers
     handleStep1Next,
     handleVerifyOtp,
@@ -305,36 +304,48 @@ export default function StepCredentials(props) {
               <input
                 type="text"
                 placeholder={t('register.referral_code_placeholder')}
-                className="w-full bg-nexoraCanvas border border-nexoraBorder focus:border-nexoraBrand focus:bg-white rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none transition-all"
+                readOnly={refCodeReadOnly}
+                disabled={refCodeReadOnly}
+                className={`w-full border rounded-lg px-4 py-2.5 text-sm focus:outline-none transition-all ${
+                  errors.referralCode
+                    ? 'border-red-300 focus:border-red-500'
+                    : refCodeReadOnly
+                      ? 'bg-blue-50/50 border-nexoraBorder text-nexoraSubtle cursor-not-allowed'
+                      : 'bg-nexoraCanvas border-nexoraBorder focus:border-nexoraBrand focus:bg-white text-nexoraText'
+                }`}
                 value={referralCode}
-                onChange={(e) => setReferralCode(e.target.value)}
+                onChange={(e) => {
+                  if (!refCodeReadOnly) {
+                    setReferralCode(e.target.value)
+                    if (errors.referralCode) setErrors(prev => ({ ...prev, referralCode: '' }))
+                  }
+                }}
               />
+              {errors.referralCode && (
+                <span className="text-xs text-red-500 mt-1 block">{t(errors.referralCode)}</span>
+              )}
             </div>
 
             {/* Implicit Consent Terms and Privacy Note */}
             <div className="text-[11px] text-slate-500 leading-normal text-center font-sans max-w-sm mx-auto pt-1 pb-2">
               {t('register.consent.prefix')} <span className="font-bold text-slate-700">{t('register.consent.action')}</span>, {t('register.consent.middle')}{' '}
-              <button
-                type="button"
-                onClick={() => {
-                  setModalType('terms')
-                  setShowTermsModal(true)
-                }}
+              <a
+                href="/terms-of-service"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-nexoraTealAlt hover:underline font-bold"
               >
                 {t('register.consent.terms')}
-              </button>{' '}
+              </a>{' '}
               {t('register.consent.and')}{' '}
-              <button
-                type="button"
-                onClick={() => {
-                  setModalType('privacy')
-                  setShowTermsModal(true)
-                }}
+              <a
+                href="/privacy-policy"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-nexoraTealAlt hover:underline font-bold"
               >
                 {t('register.consent.privacy')}
-              </button>.
+              </a>.
             </div>
 
             <div className="pt-4 flex flex-col sm:flex-row gap-3">

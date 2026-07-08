@@ -1,5 +1,6 @@
 import { X, Star } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { formatTransactionDateTime } from '../utils'
 
 function StaffReviewsDetailModal({
   open,
@@ -183,7 +184,7 @@ function StaffReviewsDetailModal({
                     }`}>
                       {isGoogle ? 'Google' : isYelp ? 'Yelp' : (t('components.dashboard.modals.StaffReviewsDetailModal.internal'))}
                     </span>
-                    <span className="text-[9px] text-slate-400 font-bold">{rev.date}</span>
+                    <span className="text-[9px] text-slate-400 font-bold">{formatTransactionDateTime(rev.createdAt || rev.date, currentLanguage)}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <div className="flex text-amber-500">

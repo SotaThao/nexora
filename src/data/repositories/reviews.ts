@@ -4,6 +4,7 @@
 
 import httpClient from '../../lib/httpClient'
 import { isApiError } from '../../types/domain'
+import { formatJoinedDate } from '../../utils/localDate'
 import type { ReviewRecord } from '../../types/domain'
 import type {
   DashboardReviewApiDto,
@@ -68,7 +69,7 @@ function mapReviewDto(item: DashboardReviewApiDto): ReviewRecord {
     touchPointName: item.touchPointName ?? '',
     routingType: item.routingType,
     category: deriveReviewCategory(item),
-    date: createdAt ? new Date(createdAt).toLocaleString() : '',
+    date: formatJoinedDate(createdAt),
     createdAt,
     isResolved: item.isResolved ?? false,
     customerEmail: item.customerEmail ?? '',

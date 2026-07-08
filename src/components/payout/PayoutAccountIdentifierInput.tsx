@@ -8,7 +8,6 @@ import {
   composePayoutPhone,
   isPhoneOnlyPayoutMethod,
   parsePayoutPhoneState,
-  shouldUsePayoutPhoneInput,
 } from './payoutPhone'
 
 interface PayoutAccountIdentifierInputProps {
@@ -30,8 +29,7 @@ export default function PayoutAccountIdentifierInput({
 }: PayoutAccountIdentifierInputProps) {
   const { currentLanguage } = useTranslation()
   const fallbackDialCode = getDefaultDialCode(currentLanguage)
-  const phoneMode =
-    isPhoneOnlyPayoutMethod(walletKey) || shouldUsePayoutPhoneInput(walletKey, value)
+  const phoneMode = isPhoneOnlyPayoutMethod(walletKey)
 
   const [dialCode, setDialCode] = useState(fallbackDialCode)
   const [nationalPhone, setNationalPhone] = useState('')
@@ -86,13 +84,7 @@ export default function PayoutAccountIdentifierInput({
         placeholder={placeholder}
         className={phoneInputClass}
         onChange={(e) => {
-          const raw = e.target.value
-          if (walletKey === 'zelle' && (raw.includes('@') || /[a-zA-Z]/.test(raw))) {
-            onChange(raw)
-            return
-          }
-
-          const formatted = formatNationalNumber(raw, dialCode)
+          const formatted = formatNationalNumber(e.target.value, dialCode)
           setNationalPhone(formatted)
           onChange(composePayoutPhone(dialCode, formatted))
         }}

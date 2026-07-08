@@ -4,6 +4,7 @@ export const errorCodeToI18nKey = {
   USER_ACCOUNT_INACTIVE: 'errors.user_account_inactive',
   USER_ACCOUNT_INCOMPLETE: 'errors.user_account_incomplete',
   USER_EMAIL_ALREADY_EXISTS: 'errors.user_email_already_exists',
+  USER_INVALID_REFERRAL_CODE: 'errors.user_invalid_referral_code',
   USER_SIGNUP_FAILED: 'errors.user_signup_failed',
   AUTH_PASSWORDS_DO_NOT_MATCH: 'errors.auth_passwords_do_not_match',
   USER_FEATURE_SIGNUP_DISABLED: 'errors.user_feature_signup_disabled',
@@ -19,10 +20,29 @@ export const errorCodeToI18nKey = {
 
   // Business
   BUSINESS_ALREADY_EXISTS: 'errors.business_already_exists',
+  BUSINESS_NOT_FOUND: 'errors.business_not_found',
   BUSINESS_NAME_REQUIRED: 'errors.business_name_required',
   BUSINESS_INVALID_SLUG_FORMAT: 'errors.business_invalid_slug_format',
   USER_NOT_MERCHANT: 'errors.user_not_merchant',
   TOUCHPOINT_STARTER_LIMIT_REACHED: 'errors.touchpoint_starter_limit_reached',
+
+  // Direct payment (US-60 / direct-payment-qr-flow)
+  PAYMENT_NOT_FOUND: 'errors.payment_not_found',
+  PAYMENT_INVALID_STATUS: 'errors.payment_invalid_status',
+  PAYMENT_AMOUNT_TOO_LOW: 'errors.payment_amount_too_low',
+  PAYMENT_AMOUNT_TOO_HIGH: 'errors.payment_amount_too_high',
+  PAYMENT_INVALID_PAYMENT_METHOD: 'errors.payment_invalid_payment_method',
+
+  // Payout management (US-55)
+  PAYOUT_AMOUNT_MUST_BE_POSITIVE: 'errors.payout_amount_must_be_positive',
+  PAYOUT_PERIOD_START_BEFORE_END: 'errors.payout_period_start_before_end',
+  PAYOUT_EVIDENCE_URLS_MAX_10: 'errors.payout_evidence_urls_max_10',
+  PAYOUT_TYPES_REQUIRED: 'errors.payout_types_required',
+  PAYOUT_UPDATE_NOT_ALLOWED: 'errors.payout_update_not_allowed',
+  PAYOUT_DELETE_NOT_ALLOWED: 'errors.payout_delete_not_allowed',
+  PAYOUT_CANCEL_NOT_ALLOWED: 'errors.payout_cancel_not_allowed',
+  PAYOUT_CONFIRM_NOT_ALLOWED: 'errors.payout_confirm_not_allowed',
+  PAYOUT_AMOUNT_EXCEEDS_DEBT: 'errors.payout_amount_exceeds_debt',
 
   // Image
   IMAGE_FILE_SIZE_EXCEEDED: 'errors.image_file_size_exceeded',

@@ -1,6 +1,8 @@
 import React, { useMemo, useState, useRef } from 'react';
 import { useTranslation } from '../contexts/LanguageContext';
 import type { TransactionRecord } from '../types/domain';
+import { computeChartYScale } from './dashboard/overview/chartUtils';
+import Tooltip from './ui/Tooltip';
 import { 
   BarChart3, 
   TrendingUp, 
@@ -11,11 +13,16 @@ import {
   Zap
 } from 'lucide-react';
 
+const UNASSIGNED_ENTRY = '__unassigned__';
+
 interface LeaderboardEntry {
   name: string
+  displayName: string
   amount: number
   count: number
   percentage?: number
+  scans?: number
+  conversionRate?: number | null
 }
 
 interface AnalyticsViewProps {
@@ -32,8 +39,24 @@ export default function AnalyticsView({
   processingFee = 3.0
 }: AnalyticsViewProps) {
   const { t } = useTranslation();
-  const [hoverIndex, setHoverIndex] = useState<any | null>(null);
-  const chartRef = useRef(null);
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const chartRef = useRef<HTMLDivElement>(null);
+
+  const unassignedLabel = t('dashboard.analytics.leaderboards.unassigned');
+  const resolveDisplayName = (name: string) => (
+    name === UNASSIGNED_ENTRY ? unassignedLabel : name
+  );
+
+  const touchpointScanMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    touchpoints.forEach((tp) => {
+      const name = String(tp.name || '').trim();
+      if (name) {
+        map[name] = Number(tp.scans) || 0;
+      }
+    });
+    return map;
+  }, [touchpoints]);
 
   // 1. Core metric calculations
   const totalVolume = useMemo(() => {
@@ -61,9 +84,14 @@ export default function AnalyticsView({
   const staffLeaderboard = useMemo(() => {
     const map: Record<string, LeaderboardEntry> = {};
     transactions.forEach(tx => {
-      const staffName = tx.staffName || 'Unknown';
+      const staffName = tx.staffName?.trim() || UNASSIGNED_ENTRY;
       if (!map[staffName]) {
-        map[staffName] = { name: staffName, amount: 0, count: 0 };
+        map[staffName] = {
+          name: staffName,
+          displayName: staffName === UNASSIGNED_ENTRY ? unassignedLabel : staffName,
+          amount: 0,
+          count: 0,
+        };
       }
       map[staffName].amount += tx.amount || 0;
       map[staffName].count += 1;
@@ -73,17 +101,23 @@ export default function AnalyticsView({
     const maxAmount = list[0]?.amount || 1;
     return list.map(item => ({
       ...item,
+      displayName: resolveDisplayName(item.name),
       percentage: (item.amount / maxAmount) * 100
     }));
-  }, [transactions]);
+  }, [transactions, unassignedLabel]);
 
   // 3. Touchpoint performance leaderboard
   const touchpointLeaderboard = useMemo(() => {
     const map: Record<string, LeaderboardEntry> = {};
     transactions.forEach(tx => {
-      const tp = (tx.touchpoint as string | undefined) || 'Unknown';
+      const tp = (tx.touchpoint as string | undefined)?.trim() || UNASSIGNED_ENTRY;
       if (!map[tp]) {
-        map[tp] = { name: tp, amount: 0, count: 0 };
+        map[tp] = {
+          name: tp,
+          displayName: tp === UNASSIGNED_ENTRY ? unassignedLabel : tp,
+          amount: 0,
+          count: 0,
+        };
       }
       map[tp].amount += tx.amount || 0;
       map[tp].count += 1;
@@ -91,11 +125,21 @@ export default function AnalyticsView({
 
     const list = Object.values(map).sort((a, b) => b.amount - a.amount);
     const maxAmount = list[0]?.amount || 1;
-    return list.map(item => ({
-      ...item,
-      percentage: (item.amount / maxAmount) * 100
-    }));
-  }, [transactions]);
+    return list.map(item => {
+      const scans = item.name === UNASSIGNED_ENTRY ? 0 : (touchpointScanMap[item.name] ?? 0);
+      const conversionRate = scans > 0
+        ? Math.round((item.count / scans) * 1000) / 10
+        : null;
+
+      return {
+        ...item,
+        displayName: resolveDisplayName(item.name),
+        percentage: (item.amount / maxAmount) * 100,
+        scans,
+        conversionRate,
+      };
+    });
+  }, [transactions, touchpointScanMap, unassignedLabel]);
 
   // 4. Group by Day for Weekly volume trend
   const dailyTrend = useMemo(() => {
@@ -117,8 +161,8 @@ export default function AnalyticsView({
     const width = 500;
     const height = 160;
     const values = dailyTrend.map((d) => d.amount);
-    const maxVal = Math.max(...values, 10);
-    const roundedMax = Math.ceil(maxVal / 400) * 400; // e.g. 1600
+    const maxVal = Math.max(...values, 0);
+    const { max: roundedMax, ticks } = computeChartYScale(maxVal);
 
     const points = dailyTrend.map((d, i) => ({
       x: (i / (dailyTrend.length - 1)) * width,
@@ -141,10 +185,10 @@ export default function AnalyticsView({
 
     const areaPath = `${path} L ${points[points.length - 1].x} ${height} L ${points[0].x} ${height} Z`;
 
-    return { points, max: roundedMax, width, height, path, areaPath };
+    return { points, max: roundedMax, ticks, width, height, path, areaPath };
   }, [dailyTrend]);
 
-  const yTicks = svgMetrics ? [svgMetrics.max, svgMetrics.max * 0.75, svgMetrics.max * 0.5, svgMetrics.max * 0.25, 0] : [];
+  const yTicks = svgMetrics?.ticks ?? [];
 
   const handlePointerMove = (event) => {
     const rect = chartRef.current?.getBoundingClientRect();
@@ -233,7 +277,13 @@ export default function AnalyticsView({
         </div>
         <div className="card-elevated flex items-center justify-between">
           <div>
-            <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">{t('dashboard.analytics.kpi.fees_avoided')}</small>
+            <div className="flex items-center gap-1">
+              <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">{t('dashboard.analytics.kpi.fees_avoided')}</small>
+              <Tooltip
+                content={t('dashboard.analytics.kpi.fees_avoided_tooltip', { fee: processingFee })}
+                ariaLabel={t('dashboard.analytics.kpi.fees_avoided_tooltip', { fee: processingFee })}
+              />
+            </div>
             <h3 className="mt-1 text-2xl font-black text-emerald-600 dark:text-emerald-400">{formatUSD(feesAvoided)}</h3>
             <span className="mt-1 block text-[10px] text-mutedGrey dark:text-slate-400">
               {(t('dashboard.tips.savings.fees_avoided_sub')).replace('3%', `${processingFee}%`)}
@@ -429,7 +479,15 @@ export default function AnalyticsView({
                     {idx + 1}
                   </div>
                   <div className="min-w-0">
-                    <span className="block text-xs font-black text-inkBlue dark:text-white truncate">{item.name}</span>
+                    <div className="flex items-center gap-1">
+                      <span className="block text-xs font-black text-inkBlue dark:text-white truncate">{item.displayName}</span>
+                      {item.name === UNASSIGNED_ENTRY && (
+                        <Tooltip
+                          content={t('dashboard.analytics.leaderboards.unassigned_tooltip')}
+                          ariaLabel={t('dashboard.analytics.leaderboards.unassigned_tooltip')}
+                        />
+                      )}
+                    </div>
                     <span className="block text-[10px] text-mutedGrey dark:text-slate-400">{item.count} {t('dashboard.analytics.leaderboards.tips_count_label')}</span>
                   </div>
                 </div>
@@ -463,8 +521,19 @@ export default function AnalyticsView({
                     {idx + 1}
                   </div>
                   <div className="min-w-0">
-                    <span className="block text-xs font-black text-inkBlue dark:text-white truncate">{item.name}</span>
-                    <span className="block text-[10px] text-mutedGrey dark:text-slate-400">{item.count} {t('dashboard.analytics.leaderboards.scans_count_label')}</span>
+                    <span className="block text-xs font-black text-inkBlue dark:text-white truncate">{item.displayName}</span>
+                    <span className="block text-[10px] text-mutedGrey dark:text-slate-400">
+                      {item.conversionRate != null
+                        ? t('dashboard.analytics.leaderboards.station_stats', {
+                            scans: item.scans ?? 0,
+                            tips: item.count,
+                            pct: item.conversionRate,
+                          })
+                        : t('dashboard.analytics.leaderboards.station_stats_no_conversion', {
+                            scans: item.scans ?? 0,
+                            tips: item.count,
+                          })}
+                    </span>
                   </div>
                 </div>
                 

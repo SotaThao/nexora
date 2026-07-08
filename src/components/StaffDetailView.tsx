@@ -18,48 +18,77 @@ import { logger } from '../utils/logger'
 import { formatTransactionDateTime, formatCurrency } from './dashboard/utils'
 import { buildChartPoints, getBezierPath } from './dashboard/overview/chartUtils'
 import { useMerchantStaffStats } from '../data/hooks/useMerchantStaff'
+import { staffRecordMatchesMember } from '../utils/staffRecordMatch'
+import { formatJoinedDate } from '../utils/localDate'
 
+const RANGE_DAY_OFFSETS = {
+  '7 Days': 6,
+  '30 Days': 29,
+  '90 Days': 89,
+  '180 Days': 179,
+  '365 Days': 364,
+}
 
-function formatIsoDate(date) {
-  return date.toISOString().split('T')[0]
+function toLocalIsoDate(date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function getLocalDateRange(dayOffset) {
+  const end = new Date()
+  const start = new Date()
+  start.setDate(end.getDate() - dayOffset)
+  return {
+    startDate: toLocalIsoDate(start),
+    endDate: toLocalIsoDate(end),
+  }
+}
+
+function localDateBoundsToApiRange(startDate, endDate) {
+  const [startYear, startMonth, startDay] = startDate.split('-').map(Number)
+  const [endYear, endMonth, endDay] = endDate.split('-').map(Number)
+
+  return {
+    dateFrom: new Date(startYear, startMonth - 1, startDay, 0, 0, 0, 0).toISOString(),
+    dateTo: new Date(endYear, endMonth - 1, endDay, 23, 59, 59, 999).toISOString(),
+  }
+}
+
+function parseReviewDateTime(value) {
+  const raw = String(value ?? '').trim()
+  if (!raw) return null
+
+  if (/[zZ]$/.test(raw) || /[+-]\d{2}:\d{2}$/.test(raw)) {
+    const date = new Date(raw)
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+
+  if (raw.includes(' ') && !raw.includes('T')) {
+    const date = new Date(`${raw.replace(' ', 'T')}Z`)
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}T/.test(raw)) {
+    const date = new Date(`${raw}Z`)
+    if (!Number.isNaN(date.getTime())) return date
+  }
+
+  const date = new Date(raw)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+function isWithinLocalDateRange(value, startDate, endDate) {
+  const date = parseReviewDateTime(value)
+  if (!date) return false
+  const localDate = toLocalIsoDate(date)
+  return localDate >= startDate && localDate <= endDate
 }
 
 function getRangeDates(range) {
-  const end = new Date()
-  const start = new Date()
-
-  if (range === '7 Days') {
-    start.setDate(end.getDate() - 6)
-  } else if (range === '30 Days') {
-    start.setDate(end.getDate() - 29)
-  } else if (range === '90 Days') {
-    start.setDate(end.getDate() - 89)
-  } else if (range === '180 Days') {
-    start.setDate(end.getDate() - 179)
-  } else if (range === '365 Days') {
-    start.setDate(end.getDate() - 364)
-  } else {
-    start.setDate(end.getDate() - 6)
-  }
-
-  return {
-    startDate: formatIsoDate(start),
-    endDate: formatIsoDate(end),
-  }
-}
-
-function staffRecordMatchesMember(member, record) {
-  if (!member || !record) return false
-  const profileId = member.staffProfileId
-  const staffCode = member.staffCode
-  const linkId = member.id || member.linkId
-  const name = member.fullName || member.nickname
-
-  if (profileId && record.staffProfileId === profileId) return true
-  if (staffCode && record.staffCode === staffCode) return true
-  if (linkId && (record.staffId === linkId || record.id === linkId)) return true
-  if (name && record.staffName === name) return true
-  return false
+  const offset = RANGE_DAY_OFFSETS[range] ?? 6
+  return getLocalDateRange(offset)
 }
 
 function buildChartFromTipsTrend(tipsTrend, range, startDate, endDate, t, currentLanguage) {
@@ -147,10 +176,10 @@ export default function StaffDetailView({
   const [startDate, setStartDate] = useState(initialRange.startDate)
   const [endDate, setEndDate] = useState(initialRange.endDate)
 
-  const statsDateRange = useMemo(() => ({
-    dateFrom: `${startDate}T00:00:00.000Z`,
-    dateTo: `${endDate}T23:59:59.999Z`,
-  }), [startDate, endDate])
+  const statsDateRange = useMemo(
+    () => localDateBoundsToApiRange(startDate, endDate),
+    [startDate, endDate],
+  )
 
   const {
     data: staffStats,
@@ -179,7 +208,7 @@ export default function StaffDetailView({
       return {
         totalTips: period.tipsCollected,
         averageRating: Number(allTime.averageRating ?? 0).toFixed(2),
-        totalReviews: allTime.reviewsRouted,
+        totalReviews: period.totalReviews ?? allTime.totalReviews ?? 0,
         specialty: staffMember.roleAtBusiness || staffMember.position || '',
         recentTransactions: staffStats.recentTips,
         filteredReviews: staffStats.recentReviews,
@@ -190,15 +219,13 @@ export default function StaffDetailView({
     const staffTx = transactions.filter((tx) => staffRecordMatchesMember(staffMember, tx))
     const staffReviews = reviews.filter((rev) => staffRecordMatchesMember(staffMember, rev))
 
-    const staffTxFiltered = staffTx.filter((tx) => {
-      const rawDate = tx.dateTime?.split('T')[0] || tx.dateTime?.split(' ')[0] || ''
-      return rawDate >= startDate && rawDate <= endDate
-    })
+    const staffTxFiltered = staffTx.filter((tx) =>
+      isWithinLocalDateRange(tx.dateTime, startDate, endDate),
+    )
 
-    const staffReviewsFiltered = staffReviews.filter((rev) => {
-      const rawDate = rev.createdAt?.split('T')[0] || rev.date?.split(',')[0] || rev.date || ''
-      return rawDate >= startDate && rawDate <= endDate
-    })
+    const staffReviewsFiltered = staffReviews.filter((rev) =>
+      isWithinLocalDateRange(rev.createdAt || rev.date, startDate, endDate),
+    )
 
     const totalTips = staffTxFiltered.reduce(
       (sum, tx) => (tx.status === 'Success' || tx.status === 'Confirmed' ? sum + tx.amount : sum),
@@ -292,7 +319,7 @@ export default function StaffDetailView({
     return chartPoints
   }, [stats, usesApiStats, t, range, startDate, endDate, currentLanguage])
 
-  const { points: chartPoints, max: chartMax, width: chartWidth, height: chartHeight } = useMemo(
+  const { points: chartPoints, max: chartMax, ticks: chartYTicks, width: chartWidth, height: chartHeight } = useMemo(
     () => buildChartPoints(chartData),
     [chartData],
   )
@@ -301,10 +328,6 @@ export default function StaffDetailView({
     if (chartPoints.length === 0) return ''
     return `${chartLinePath} L ${chartPoints[chartPoints.length - 1].x} ${chartHeight} L ${chartPoints[0].x} ${chartHeight} Z`
   }, [chartLinePath, chartPoints, chartHeight])
-  const chartYTicks = useMemo(
-    () => [chartMax, Math.round(chartMax * 0.75), Math.round(chartMax * 0.5), Math.round(chartMax * 0.25), 0],
-    [chartMax],
-  )
 
   if (!staffMember) {
     return (
@@ -433,7 +456,7 @@ export default function StaffDetailView({
                 <div className="flex items-center gap-1">
                   <Calendar className="h-3.5 w-3.5 text-brandCyan" />
                   {staffMember.joinedDate
-                    ? `${t('staff_detail.joined_gateway')}: ${staffMember.joinedDate}`
+                    ? `${t('staff_detail.joined_gateway')}: ${formatJoinedDate(staffMember.joinedDate)}`
                     : t('staff_detail.joined_gateway')}
                 </div>
                 {staffMember.phone && (
@@ -514,8 +537,10 @@ export default function StaffDetailView({
               <ClipboardList className="h-5 w-5" />
             </div>
           </div>
-          <p className="mt-4 text-[10px] font-bold uppercase tracking-wider text-nexoraMuted">{t('staff_detail.reviews_routed')}</p>
-          <p className="mt-1 text-2xl font-black text-nexoraText">{t('staff_detail.reviews_count', { count: stats.totalReviews })}</p>
+          <p className="mt-4 text-[10px] font-bold uppercase tracking-wider text-nexoraMuted">{t('staff_detail.total_reviews')}</p>
+          <p className="mt-1 text-2xl font-black text-nexoraText">
+            {isMetricsLoading ? '—' : stats.totalReviews}
+          </p>
         </div>
       </div>
 
@@ -894,7 +919,7 @@ export default function StaffDetailView({
                     {rev.comment}
                   </p>
                   <p className="text-[10px] text-nexoraSubtle font-medium">
-                    Logged: {rev.date}
+                    Logged: {formatTransactionDateTime(rev.createdAt || rev.date, currentLanguage)}
                   </p>
                 </div>
 

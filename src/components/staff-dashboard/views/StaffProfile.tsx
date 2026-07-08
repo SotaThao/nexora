@@ -2,21 +2,15 @@
 // per-business display names. Identity basics come from the merchant record.
 import {
   Camera,
-  Clock,
   Loader2,
   LogOut,
-  ShieldAlert,
-  ShieldCheck,
-  ShieldX,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useOutletContext, useSearchParams } from "react-router-dom";
-import { UserVerifyStatus } from "../../../constants/userVerifyStatus";
+import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import { useTranslation } from "../../../contexts/LanguageContext";
 import { useNotification } from "../../../contexts/NotificationContext";
 import { useStaffAccount } from "../../../contexts/StaffAccountContext";
 import { useUploadImage } from "../../../data/hooks/useMerchantSetup";
-import { useVerifiedStatus } from "../../../data/hooks/useProfileSettings";
 import { useStaffProfileView } from "../../../data/hooks/useStaffProfileView";
 import { logger } from "../../../utils/logger";
 import CountryCodeSelect, {
@@ -27,7 +21,6 @@ import CountryCodeSelect, {
 } from "../../CountryCodeSelect";
 import Tooltip from "../../ui/Tooltip";
 import { useStaffLinkedBusinesses } from "../hooks/useStaffLinkedBusinesses";
-import StaffKycOverview from "./StaffKycOverview";
 
 const panel =
   "rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm";
@@ -46,17 +39,17 @@ export default function StaffProfile() {
   const { data: profileView, isLoading: isProfileLoading } =
     useStaffProfileView();
   const { onLogout } = useOutletContext<LooseObject>() || {};
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   const tabFromUrl = searchParams.get("tab");
-  const [activeTab, setActiveTab] = useState(
-    tabFromUrl === "kyc" ? "kyc" : "profile",
-  ); // profile | kyc
 
   useEffect(() => {
-    if (tabFromUrl === "kyc") setActiveTab("kyc");
-    else if (tabFromUrl === "account" || !tabFromUrl) setActiveTab("profile");
-  }, [tabFromUrl]);
+    if (tabFromUrl === "kyc") {
+      navigate("/staff/profile", { replace: true });
+    }
+  }, [tabFromUrl, navigate]);
+
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [fullName, setFullName] = useState("");
@@ -71,11 +64,6 @@ export default function StaffProfile() {
   const avatarObjectUrlRef = useRef<string | null>(null);
   const uploadImageMutation = useUploadImage();
   const displayAvatar = avatarPreview || profileView.avatar;
-
-  const { data: verifyStatusData } = useVerifiedStatus({
-    enabled: activeTab === "kyc",
-  });
-  const verifyStatus = verifyStatusData?.status;
 
   useEffect(() => {
     setDisplayName(profileView.displayName || "");
@@ -201,101 +189,26 @@ export default function StaffProfile() {
     }
   };
 
-  // Determine status card details for KYC
-  const getKycCardDetails = () => {
-    switch (verifyStatus) {
-      case UserVerifyStatus.Verified:
-        return {
-          bgClass:
-            "bg-emerald-50/70 border-emerald-200 text-emerald-900 dark:bg-emerald-950/20 dark:border-emerald-900 dark:text-emerald-200",
-          icon: ShieldCheck,
-          iconBg: "bg-emerald-500",
-          title: t(
-            "components.staff_dashboard.views.StaffProfile.personalProfileVerifiedKyc",
-          ),
-          description: t(
-            "components.staff_dashboard.views.StaffProfile.congratulationsYourPersonalIdentity",
-          ),
-          subText: t(
-            "components.staff_dashboard.views.StaffProfile.verifiedToday",
-          ),
-        };
-      case UserVerifyStatus.Review:
-        return {
-          bgClass:
-            "bg-amber-50/70 border-amber-200 text-amber-900 dark:bg-amber-950/20 dark:border-amber-900 dark:text-amber-200",
-          icon: Clock,
-          iconBg: "bg-amber-500",
-          title: t(
-            "components.staff_dashboard.views.StaffKycOverview.statusReviewTitle",
-          ),
-          description: t(
-            "components.staff_dashboard.views.StaffKycOverview.statusReviewDescription",
-          ),
-        };
-      case UserVerifyStatus.Rejected:
-        return {
-          bgClass:
-            "bg-red-50/70 border-red-200 text-red-900 dark:bg-red-950/20 dark:border-red-900 dark:text-red-200",
-          icon: ShieldX,
-          iconBg: "bg-red-500",
-          title: t(
-            "components.staff_dashboard.views.StaffKycOverview.statusRejectedTitle",
-          ),
-          description: t(
-            "components.staff_dashboard.views.StaffKycOverview.statusRejectedDescription",
-          ),
-        };
-      case UserVerifyStatus.None:
-      default:
-        return {
-          bgClass:
-            "bg-blue-50/70 border-blue-200 text-blue-900 dark:bg-blue-950/20 dark:border-blue-900 dark:text-blue-200",
-          icon: ShieldAlert,
-          iconBg: "bg-blue-500",
-          title: t(
-            "components.staff_dashboard.views.StaffProfile.basicAccountStatus",
-          ),
-          description: t(
-            "components.staff_dashboard.views.StaffProfile.yourProfileIsActive",
-          ),
-        };
-    }
-  };
-
-  const kycCard = getKycCardDetails();
-
   return (
     <div className="space-y-4">
-      {/* Tab Navigation */}
       <div className="flex gap-2 pb-2">
         <button
           type="button"
-          onClick={() => setActiveTab("profile")}
-          className={`px-4 py-2 rounded-lg text-xs font-extrabold uppercase transition cursor-pointer ${
-            activeTab === "profile"
-              ? "bg-nexoraBrand text-white shadow-sm"
-              : "bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200"
-          }`}
+          className="px-4 py-2 rounded-lg text-xs font-extrabold uppercase transition cursor-pointer bg-nexoraBrand text-white shadow-sm"
         >
           {t("components.staff_dashboard.views.StaffProfile.account")}
         </button>
         <button
           type="button"
-          onClick={() => setActiveTab("kyc")}
-          className={`px-4 py-2 rounded-lg text-xs font-extrabold uppercase transition cursor-pointer ${
-            activeTab === "kyc"
-              ? "bg-nexoraBrand text-white shadow-sm"
-              : "bg-nexoraSurfaceMuted text-nexoraMuted hover:bg-slate-200"
-          }`}
+          disabled
+          aria-disabled="true"
+          className="px-4 py-2 rounded-lg text-xs font-extrabold uppercase cursor-not-allowed bg-nexoraSurfaceMuted text-nexoraMuted opacity-60"
         >
           {t("components.staff_dashboard.views.StaffProfile.kyc")}
         </button>
       </div>
 
-      {activeTab === "profile" && (
-        <>
-          {isProfileLoading ? (
+      {isProfileLoading ? (
             <section className={panel}>
               <div className="animate-pulse space-y-4">
                 <div className="mx-auto h-24 w-24 rounded-full bg-nexoraSurfaceMuted" />
@@ -580,88 +493,6 @@ export default function StaffProfile() {
               </section>
             </>
           )}
-        </>
-      )}
-
-      {activeTab === "kyc" && (
-        <div className="space-y-4 animate-fadeIn">
-          {/* Status Banner */}
-          <div
-            className={`rounded-xl border p-5 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4 shadow-sm ${kycCard.bgClass}`}
-          >
-            <div className="flex gap-4 items-start text-center sm:text-left flex-col sm:flex-row">
-              <span
-                className={`flex h-12 w-12 items-center justify-center rounded-2xl shrink-0 text-white ${kycCard.iconBg}`}
-              >
-                <kycCard.icon className="h-6 w-6" />
-              </span>
-
-              <div className="space-y-1">
-                <h3 className="text-sm font-black uppercase tracking-wider">
-                  {kycCard.title}
-                </h3>
-                <p className="text-xs font-semibold opacity-85 leading-relaxed max-w-2xl">
-                  {kycCard.description}
-                </p>
-                {kycCard.subText && (
-                  <div className="text-[10px] font-bold bg-white/50 border border-emerald-200/50 dark:bg-slate-900/40 dark:border-slate-800 inline-block px-2.5 py-0.5 rounded mt-2">
-                    {kycCard.subText}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <StaffKycOverview />
-
-          {/* Legal Disclosures */}
-          <div className="rounded-xl border border-nexoraBorder bg-slate-50 dark:bg-slate-900/10 p-6 space-y-4 text-xs mt-6 text-nexoraMuted select-text text-left">
-            <h5 className="font-bold text-nexoraText uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 pb-2">
-              {t(
-                "components.staff_dashboard.views.StaffProfile.legalDisclosuresAndKyc",
-              )}
-            </h5>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-1">
-                <h6 className="font-extrabold text-slate-700 dark:text-slate-350">
-                  {t(
-                    "components.staff_dashboard.views.StaffProfile.label1PersonalDataEncryption",
-                  )}
-                </h6>
-                <p className="leading-relaxed text-[11px]">
-                  {t(
-                    "components.staff_dashboard.views.StaffProfile.yourIdentityInputsAnd",
-                  )}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <h6 className="font-extrabold text-slate-700 dark:text-slate-350">
-                  {t(
-                    "components.staff_dashboard.views.StaffProfile.label2TipIncomeAnd",
-                  )}
-                </h6>
-                <p className="leading-relaxed text-[11px]">
-                  {t(
-                    "components.staff_dashboard.views.StaffProfile.completingKycSecuresYour",
-                  )}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <h6 className="font-extrabold text-slate-700 dark:text-slate-350">
-                  {t(
-                    "components.staff_dashboard.views.StaffProfile.label3ComplianceTerms",
-                  )}
-                </h6>
-                <p className="leading-relaxed text-[11px]">
-                  {t(
-                    "components.staff_dashboard.views.StaffProfile.providingInaccurateOrFalsified",
-                  )}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

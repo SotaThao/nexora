@@ -108,3 +108,5 @@ export const PUBLIC_HOME_MENU_ITEM = {
   label: 'Home',
   image: '/assets/menu/home.png',
 }
+
+export const TIPS_TAB_IDS = ['overview', 'savings', 'payouts']

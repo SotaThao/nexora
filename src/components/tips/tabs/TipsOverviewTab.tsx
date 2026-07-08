@@ -58,6 +58,9 @@ export default function TipsOverviewTab({
               {t('dashboard.tips.kpi.card_tips')}
             </small>
             <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{formatUSD(cardTips)}</h3>
+            <p className="mt-0.5 text-[11px] font-semibold text-mutedGrey dark:text-slate-400">
+              {t('dashboard.tips.kpi.card_tips_sub')}
+            </p>
           </div>
           <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-white/5 text-mutedGrey">
             <DollarSign className="h-5 w-5" />
@@ -205,7 +208,7 @@ export default function TipsOverviewTab({
             {donutSegments.map(seg => (
               <div key={seg.name} className="flex items-center gap-1.5 text-mutedGrey dark:text-slate-400">
                 <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: seg.color }} />
-                <span>{seg.name}: {seg.percentage.toFixed(0)}%</span>
+                <span>{seg.name}: {seg.percentage.toFixed(0)}% ({formatUSD(seg.value)})</span>
               </div>
             ))}
           </div>

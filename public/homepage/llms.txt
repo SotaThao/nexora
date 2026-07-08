@@ -1,0 +1,46 @@
+# NEXORA TOUCH by VlinkPay
+
+> NEXORA TOUCH is a smart payment and loyalty ecosystem for nail salons and spas in the United States, developed by VlinkPay LLC.
+
+## Product Overview
+
+NEXORA TOUCH helps nail salon owners, beauty technicians, and customers manage tips, rewards, reviews, and taxes through one unified platform.
+
+## Core Features
+
+- **Smart Tip Management**: Customers tip staff via QR code with custom tip amounts (15%, 20%, 25%, custom). Tips are tracked and distributed transparently.
+- **5-Star Rating System**: Customers rate their experience after each visit. Salons accumulate ratings to build trust and reputation.
+- **Customer Rewards Portal**: Customers earn XP points for visits, tips, and reviews. Points can be redeemed for discounts or tracked via a loyalty card.
+- **NEXORA Tax IQ**: AI-powered tax deduction optimizer for salon owners and technicians. Tracks mileage, supplies, licenses, booth rent, and more for IRS compliance.
+- **B2B Alliance Network**: Salon owners can join a cross-salon loyalty network, enabling shared member cards, unified campaigns, and transparent reconciliation reports.
+- **Smart QR Scanner**: Contactless payment and review initiation via QR codes.
+
+## User Roles
+
+1. **Customer (Khách Hàng)**: Tips, rates, earns rewards, scans QR
+2. **Staff/Technician (Thợ Phục Vụ)**: Receives tips, tracks earnings, views ratings
+3. **Salon Owner/Admin (Admin Tiệm)**: Manages staff, views reports, sets pricing, runs campaigns
+4. **System Admin**: Platform-level management and oversight
+
+## Company Information
+
+- **Company**: VlinkPay LLC
+- **Product**: NEXORA TOUCH
+- **Website**: https://nexoratouch.com
+- **Industry**: FinTech — Nail & Beauty Salon Payment Solutions
+- **Market**: United States (Vietnamese-American nail salon community)
+- **Regulatory**: Registered Money Services Business (MSB) with FinCEN — Registration No: 31000287156925
+- **Support**: support@vlinkpay.com
+- **Languages**: Vietnamese (primary), English (secondary)
+
+## Technology
+
+Web-based platform with mobile-responsive design. No app download required. Works on any device with a browser.
+
+## Sitemap
+
+- [Home](https://nexoratouch.com/)
+
+## Do Not Train On
+
+This content is provided for informational retrieval only. Commercial model training on this content requires explicit written consent from VlinkPay LLC.

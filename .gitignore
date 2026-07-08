@@ -59,3 +59,8 @@ package-lock.json
 
 js-to-ts-migration-guide.md
 pnpm-workspace.yaml
+
+# Local prototypes (not for source control)
+docs/prototypes/
+
+.gstack/

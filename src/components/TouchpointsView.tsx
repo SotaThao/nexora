@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Plus,
   Trash2,
@@ -14,8 +15,10 @@ import {
   ExternalLink,
   Loader2,
   Eye,
+  Coins,
 } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
+import { useNotification } from '../contexts/NotificationContext'
 import CustomSelect from './CustomSelect'
 import Pagination from './ui/Pagination'
 import { useTouchpoints } from '../data/hooks/useMerchantTouchpoints'
@@ -26,9 +29,24 @@ import {
 } from '../data/hooks/useMerchantPhysicalCards'
 import { usePagination } from '../hooks/usePagination'
 import { DEFAULT_PAGE_SIZE, STAFF_FILTER_LIST_PAGE_SIZE } from '../constants/pagination'
+import {
+  DEFAULT_TOUCHPOINT_TYPE,
+  TOUCHPOINT_TYPE_OPTIONS,
+  isMasterTouchpoint,
+} from '../constants/touchpoints'
 import { buildQrImageUrl, toLocalCustomerTouchUrl } from '../utils/staffTipUrl'
 import { formatCurrency, formatTransactionDateTime } from './dashboard/utils'
 import PhysicalCardDetailModal from './dashboard/modals/PhysicalCardDetailModal'
+
+const MASTER_TOUCHPOINT_API_TYPE = 'FrontDesk'
+const MASTER_TOUCHPOINT_SLUG = 'master-store'
+
+// This "Master QR" for Bitcoin Nail Bar is already printed/distributed — hide the delete action for its touchpoint in the UI.
+const BITCOIN_NAIL_BAR_MASTER_QR_PATH = '/touch/bitcoin-nail-bar-1b8cb587-9d36bc13/master-qr'
+
+function isBitcoinNailBarMasterQrTouchpoint(point): boolean {
+  return String(point?.url || '').toLowerCase().includes(BITCOIN_NAIL_BAR_MASTER_QR_PATH)
+}
 
 function isLinkedTouchPointId(value: unknown): boolean {
   if (value == null || value === '') return false
@@ -73,9 +91,14 @@ export default function TouchpointsView({
   onDeleteDevice,
   onToggleDeviceStatus,
   activeSubTab: propActiveSubTab,
-  onTabChange
+  onTabChange,
+  stationsSection = 'tip',
+  onStationsSectionChange,
 }) {
   const { t, currentLanguage } = useTranslation()
+  const { showToast } = useNotification()
+  const navigate = useNavigate()
+  const [copiedId, setCopiedId] = useState(null)
   const [localActiveSubTab, setLocalActiveSubTab] = useState('stations')
   const activeSubTab = propActiveSubTab !== undefined ? propActiveSubTab : localActiveSubTab
   const setActiveSubTab = onTabChange !== undefined ? onTabChange : setLocalActiveSubTab
@@ -85,7 +108,7 @@ export default function TouchpointsView({
 
   // Local state for the Add Touchpoint form (name also drives list filter via API)
   const [name, setName] = useState('')
-  const [type, setType] = useState('Table QR')
+  const [type, setType] = useState(DEFAULT_TOUCHPOINT_TYPE)
   const [deviceId, setDeviceId] = useState('')
   const [debouncedNameFilter, setDebouncedNameFilter] = useState('')
   const [debouncedDeviceIdFilter, setDebouncedDeviceIdFilter] = useState('')
@@ -285,6 +308,18 @@ export default function TouchpointsView({
     }
   }
 
+  const handleCopy = useCallback(async (text, id) => {
+    if (!text) return
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedId(id)
+      showToast(t('components.settings.tabs.ProfileTab.copied'), 'success')
+      window.setTimeout(() => setCopiedId(null), 2000)
+    } catch {
+      showToast(t('components.dashboard.overview.Overview.copy_failed'), 'error')
+    }
+  }, [showToast, t])
+
   // Calculate dynamic Hardware KPIs
   const kpiTouchpoints = statsTouchpointsWithLinks
   const totalTouchpoints = totalCount ?? kpiTouchpoints.length
@@ -314,34 +349,15 @@ export default function TouchpointsView({
             {t('setup.qr_touchpoints_desc')}
           </p>
         </div>
-        
-        {/* Navigation Tabs */}
-        <div className="flex flex-wrap gap-1 bg-nexoraSurfaceMuted dark:bg-luxuryCoal p-1 rounded-xl border border-nexoraBorder dark:border-luxuryGold/10">
-          {[
-            { id: 'stations', label: t('dashboard.touchpoints.tabs.stations'), disabled: false },
-            { id: 'devices', label: t('dashboard.touchpoints.tabs.devices'), disabled: false }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              type="button"
-              disabled={tab.disabled}
-              onClick={() => !tab.disabled && setActiveSubTab(tab.id)}
-              className={`h-9 rounded-lg px-4 text-xs font-bold transition-all min-w-[44px] ${
-                tab.disabled
-                  ? 'cursor-not-allowed opacity-45 text-nexoraMuted'
-                  : activeSubTab === tab.id
-                    ? 'bg-white dark:bg-luxuryBlack text-luxuryGold shadow-sm font-black'
-                    : 'text-nexoraMuted hover:text-nexoraText dark:text-slate-400 dark:hover:text-white'
-              }`}
-              title={tab.disabled ? t('common.coming_soon') : undefined}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
       </div>
 
       {activeSubTab === 'stations' && (
+        <>
+          <div className="space-y-3">
+            <p className="text-xs leading-relaxed text-nexoraMuted">
+              {t('dashboard.touchpoints.stations_sections.tip_desc')}
+            </p>
+          </div>
         <>
           {/* Hardware KPIs */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -443,13 +459,7 @@ export default function TouchpointsView({
                   buttonClass="h-11 text-sm focus:border-nexoraBrand dark:focus:border-luxuryGold"
                   value={type}
                   onChange={(event) => setType(event.target.value)}
-                  options={[
-                    { value: 'Table QR', label: 'Table QR' },
-                    { value: 'Front Desk', label: 'Front Desk' },
-                    { value: 'Receipt QR', label: 'Receipt QR' },
-                    { value: 'Business Main', label: 'Business Main' },
-                    { value: 'Staff QR', label: 'Staff QR' }
-                  ]}
+                  options={TOUCHPOINT_TYPE_OPTIONS}
                 />
               </div>
 
@@ -465,7 +475,7 @@ export default function TouchpointsView({
 
           {/* Touchpoint Cards Grid */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {isLoading ? (
+            {isLoading || isFetching ? (
               <Panel className="md:col-span-2 xl:col-span-3 flex items-center justify-center py-16">
                 <Loader2 className="h-7 w-7 animate-spin text-nexoraBrand" />
               </Panel>
@@ -484,7 +494,7 @@ export default function TouchpointsView({
                 </div>
               </Panel>
             ) : null}
-            {!isLoading && displayedTouchpoints.map((point) => {
+            {!isLoading && !isFetching && displayedTouchpoints.map((point) => {
               const isPointActive = point.isActive !== false
               const isToggling = togglingTouchpointId === point.id
               let qrUrl = ''
@@ -498,6 +508,10 @@ export default function TouchpointsView({
               const scans = point.scans ?? 0
               const revenue = point.revenue ?? 0
               const qrImageSrc = buildQrImageUrl(qrUrl, 150, point.qrImageUrl)
+              const canDeletePoint =
+                point.type !== MASTER_TOUCHPOINT_API_TYPE &&
+                point.slug !== MASTER_TOUCHPOINT_SLUG &&
+                !isBitcoinNailBarMasterQrTouchpoint(point)
 
               return (
                 <Panel key={point.id} className="p-3.5 flex flex-col sm:flex-row gap-3 sm:gap-4 hover:shadow-premium transition-all duration-300 group border border-nexoraBorder relative overflow-visible min-h-0 sm:min-h-[160px]">
@@ -537,13 +551,15 @@ export default function TouchpointsView({
                         <h3 className="font-extrabold text-sm text-nexoraText leading-snug truncate" title={point.name}>
                           {point.name}
                         </h3>
-                        <IconButton 
-                          label={t('common.delete')} 
-                          onClick={() => setDeleteConfirmId(point.id)} 
-                          className="text-nexoraDanger hover:opacity-85 hover:bg-nexoraDanger/10 p-1 rounded transition shrink-0 h-9 w-9"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </IconButton>
+                        {canDeletePoint && (
+                          <IconButton 
+                            label={t('common.delete')} 
+                            onClick={() => setDeleteConfirmId(point.id)} 
+                            className="text-nexoraDanger hover:opacity-85 hover:bg-nexoraDanger/10 p-1 rounded transition shrink-0 h-9 w-9"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </IconButton>
+                        )}
                       </div>
                       <div className="flex items-center gap-1.5 min-w-0">
                         <p className="text-[9.5px] font-mono text-nexoraSubtle select-all truncate flex-grow">
@@ -797,6 +813,7 @@ export default function TouchpointsView({
               </div>
             </div>
           )}
+        </>
         </>
       )}
 

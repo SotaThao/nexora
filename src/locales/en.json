@@ -29,8 +29,10 @@
       "home": "Dashboard",
       "my_qr": "Link & Tip",
       "tips": "Tips",
+      "transactions": "Transactions",
       "reviews": "Reviews",
-      "pay": "Payout Setup",
+      "payments": "Transactions",
+      "pay": "Payout Methods",
       "taxiq": "Tax IQ",
       "taxiq_deductions": "Deduction Center",
       "taxiq_receipts": "Receipt Vault",
@@ -41,6 +43,10 @@
       "profile": "Profile",
       "profile_account": "Setting",
       "profile_kyc": "KYC",
+      "download_ios": "iOS App",
+      "download_ios_sub": "Download on the App Store",
+      "download_android": "Android App",
+      "download_android_sub": "Get it on Google Play",
       "tab_home": "Home",
       "tab_qr": "My QR"
     },
@@ -48,8 +54,10 @@
       "home": "Dashboard",
       "qr": "Salon Link & Tips",
       "tips": "Tips",
+      "transactions": "Transactions",
       "reviews": "Reviews & Ratings",
       "pay": "Payout Methods",
+      "payments": "Transactions",
       "taxiq": "Tax IQ",
       "profile": "Settings",
       "notifications": "Notifications"
@@ -60,7 +68,11 @@
     "setup_payout_now": "Set Up Payout Methods",
     "status": {
       "active": "Active",
-      "inactive": "Inactive"
+      "inactive": "Inactive",
+      "pending": "Pending",
+      "rejected": "Rejected",
+      "pending_approval": "Pending Approval",
+      "pending_unlink": "Pending Unlink"
     },
     "home": {
       "greeting_morning": "Good morning, {name} 👋",
@@ -80,6 +92,7 @@
       "no_pending": "No pending confirmations.",
       "confirm": "Confirm",
       "confirm_all": "Confirm All Received",
+      "confirm_all_tooltip": "Only tips with confirmed payment will be included. Initiated tips (payment not yet confirmed) are excluded.",
       "view_all": "View all",
       "manage": "Manage",
       "your_linked_businesses": "Your Linked Businesses",
@@ -93,7 +106,7 @@
       "quick_qr": "My QR",
       "quick_tips": "Tips",
       "quick_reviews": "Reviews",
-      "quick_payments": "Payments",
+      "quick_payments": "QR Payments",
       "quick_refer": "Refer & Earn",
       "refer_title": "Invite fellow nail techs",
       "refer_subtitle": "Earn $10 for each friend who joins!",
@@ -123,11 +136,21 @@
         "skipped": "The customer chose not to tip.",
         "completed": "This tip has been received and completed.",
         "pending": "Waiting for payment confirmation.",
-        "verified": "This tip has been verified."
+        "verified": "This tip has been verified.",
+        "initiated_force_warning": "The customer hasn't confirmed this payment yet. Only confirm if you're sure the money has arrived."
       },
       "status_help_aria": "What this status means",
       "ai_insight": "AI Insight",
       "ai_insight_body": "Your average tip for Pedicure is 21%, which is 6% higher than the salon average."
+    },
+    "transactions": {
+      "title": "Transactions",
+      "subtitle": "Your tip activity across linked salons",
+      "tips_subtitle": "Tip activity across your linked salons.",
+      "empty": "No transactions found for the selected filters.",
+      "col_time": "Time",
+      "col_business": "Business",
+      "detail_title": "Transaction Details"
     },
     "pay": {
       "title": "Payment Methods",
@@ -139,18 +162,37 @@
       "saved": "Saved ✓"
     },
     "qr": {
-      "personal_title": "My Personal QR",
-      "personal_sub": "Use it to share your Staff ID or let a business link you.",
-      "share": "Share Staff QR",
+      "personal_title": "Share Referral Link",
+      "personal_sub": "Invite a business to link you as staff — share this QR or link to get started.",
+      "share": "Share Link",
       "copy_link": "Copy Staff Link",
+      "copy_staff_id": "Copy Staff ID",
+      "copy_staff_link": "Copy share link",
+      "tab_personal": "Invite & Refer",
       "tab_referral": "Referral QR",
-      "tab_tipping": "Tip QR",
+      "tab_tipping": "Receive Tips",
+      "tab_payment": "Accept Payments",
+      "payment_title": "Payment & Tip QR",
+      "payment_sub": "Scan to pay directly. No account needed.",
+      "share_payment": "Share Payment QR",
+      "copy_payment_link": "Copy Payment Link",
+      "payment_link_label": "Payment link",
+      "tip_link_label": "Tipping link",
+      "payment_link_copied": "Payment link copied.",
+      "payment_preview": "Tap to enlarge payment QR",
+      "payment_setup_title": "Set up payout methods first",
+      "payment_setup_body": "Turn on at least one payout method with account details before sharing your payment QR.",
+      "payment_unavailable_title": "Payment QR not ready",
+      "payment_unavailable_body": "Your personal payment QR could not be loaded. Please try again in a moment.",
+      "payment_load_error_title": "Could not load payment QR",
+      "payment_load_error_body": "We could not reach the server. Check your connection and try again.",
+      "payment_retry": "Try again",
       "link_requests_title": "Link Requests",
       "no_link_requests": "No pending link requests.",
       "link_request_pending": "Pending",
       "share_tip": "Share Tip QR",
       "copy_tip_link": "Copy Tip Link",
-      "business_title": "Staff QR",
+      "business_title": "Get Customer Tips",
       "business_sub": "Dedicated QR for tips/reviews at this business",
       "note": "Per-business QR is stored by business_staff_link_id so it is never confused when you work at multiple businesses.",
       "no_linked_businesses": "No linked businesses yet. Scan a salon referral QR to join.",
@@ -167,7 +209,15 @@
       "touchpoint_missing_title": "Tipping link not ready",
       "touchpoint_missing_body": "This salon has not finished setting up its station, so your personal tipping link is not available yet. Please contact {business} to complete setup.",
       "referral_unavailable_title": "Staff ID not ready",
-      "referral_unavailable_body": "Your personal referral QR will appear once your staff profile is fully set up. Please try again in a moment."
+      "referral_unavailable_body": "Your personal referral QR will appear once your staff profile is fully set up. Please try again in a moment.",
+      "affiliate_toggle": "Expand QR to refer (Affiliate)",
+      "affiliate_title": "My Referral QR",
+      "affiliate_sub": "Anyone who signs up by scanning this QR joins under your referral.",
+      "affiliate_explainer": "Share your QR or link — friends who sign up are added to your network automatically.",
+      "referral_code": "Referral Code",
+      "share_referral": "Share Referral QR",
+      "copy_referral_link": "Copy Referral Link",
+      "affiliate_unavailable": "Your referral code isn't ready yet. Complete your profile to enable affiliate sharing."
     },
     "profile": {
       "title": "Personal Account",
@@ -300,7 +350,7 @@
     "forgot_password": "Forgot Password?",
     "email_label": "Email or username",
     "password_label": "Password",
-    "email_placeholder": "owner@yourstore.com",
+    "email_placeholder": "nexora@example.com",
     "password_placeholder": "••••••••",
     "login_btn": "Log in",
     "or_try_demo": "Or Try Demo",
@@ -440,6 +490,10 @@
     "taking_photo": "Taking photo..."
   },
   "dashboard": {
+    "action_required": "ACTION REQUIRED",
+    "setup_payout_method_title": "Set Up Your Payout Method",
+    "setup_payout_method_desc": "Set up your payout method to unlock multi-staff tipping.",
+    "setup_payout_btn": "SET UP PAYOUT METHODS",
     "activity": {
       "station_scanned": "Station {station} scanned",
       "vip_nfc_tapped": "VIP NFC tapped",
@@ -464,6 +518,7 @@
       "dashboard": "Dashboard",
       "staff": "Staff",
       "tips": "Tips",
+      "payments": "Direct Payments",
       "reviews": "Reviews",
       "transactions": "Transactions",
       "touchpoints": "Stations & QR Codes",
@@ -484,7 +539,7 @@
       "support": "Support"
     },
     "header": {
-      "search_placeholder": "Search tech, station, review...",
+      "search_placeholder": "Search staff, reviews, or tips...",
       "add_tp": "Add New Station",
       "ecosystem": "Ecosystem",
       "ecosystem_loading": "Loading ecosystem...",
@@ -507,6 +562,8 @@
       "total_reviews": "Total Reviews",
       "vs_last_week": "vs last week",
       "no_comparison": "No data yet",
+      "based_on_period": "Based on this period",
+      "this_week": "this week",
       "scans": "QR/NFC Scans",
       "reviews": "Reviews",
       "avg_rating": "Average Star Rating",
@@ -555,6 +612,13 @@
       "scans": "{count} scans",
       "conversion": "{pct}% conversion"
     },
+    "reports": {
+      "tabs": {
+        "tips": "Tips",
+        "direct_payments": "Direct Payments",
+        "payouts": "Payouts"
+      }
+    },
     "activity_log": {
       "title": "Recent Tip Transactions",
       "col_id": "ID",
@@ -564,6 +628,8 @@
       "col_tp": "Station",
       "col_payment": "Payment Method",
       "col_status": "Status",
+      "col_action": "Action",
+      "action_complete": "Complete",
       "empty_activity": "No recent tips logged yet.",
       "filter_title": "Filters",
       "filter_reset": "Reset",
@@ -603,13 +669,14 @@
     },
     "modals": {
       "add_tp_title": "Add New Station",
-      "tp_name_label": "Station Name (e.g. Manicure Chair 05)",
+      "tp_name_label": "Station Name (Optional)",
       "tp_name_placeholder": "e.g. Manicure Chair 05",
       "device_id_label": "Hardware Serial / NFC ID",
       "device_id_placeholder": "e.g. NFC-105, QR-Table-01",
       "tp_type_label": "Station Type",
       "add_btn": "Add Station",
       "tp_name_required": "Please enter a station name.",
+      "tp_type_required": "Please select a station type.",
       "tp_added_success": "Station \"{name}\" added successfully!",
       "tp_add_failed": "Failed to add station. Please try again.",
       "view_qr_title": "QR Code for {name}",
@@ -618,9 +685,8 @@
       "no_staff_assigned": "-- General QR (Store Pool Tips) --",
       "download_print_qr": "Download Print QR (PDF)",
       "print_qr": "Print QR",
-      "customer_view_test": "Simulate Customer Scan ›",
-      "tp_name_placeholder": "e.g. Manicure Chair 05",
-      "device_id_label": "Hardware Serial / NFC ID"
+      "staff_qr_inactive_warning": "This personal QR is blocked while the staff member is inactive.",
+      "customer_view_test": "Simulate Customer Scan ›"
     },
     "settings_panel": {
       "title": "Nexora Configuration",
@@ -636,20 +702,18 @@
       "settings_success": "System configuration updated successfully!"
     },
     "master_gateway": {
-      "title": "Store QR & NFC Codes",
-      "subtitle": "Share these QR codes to receive tips and reviews.",
+      "title": "Store QR Codes",
+      "subtitle": "Share these QR codes to receive tips, reviews, and direct payments.",
       "qr_title": "Salon QR Code",
       "qr_desc": "Front desk – all technicians",
       "qr_body": "Place this QR code at the reception desk. Customers scan to choose their technician and submit reviews.",
-      "nfc_title": "NFC Tap Card",
-      "nfc_desc": "Tap-to-Tip link",
-      "nfc_body": "Write this URL to your NFC desk pucks. Customers tap their phone to tip or leave a review instantly.",
+      "payment_title": "Payment QR Code",
+      "payment_desc": "",
+      "payment_body": "Place at reception desk. Customers scan to pay.",
       "btn_open": "Open QR",
-      "btn_download": "Download QR",
-      "btn_open_nfc": "Test NFC Redirect",
-      "btn_copy": "Copy Payload URL",
-      "btn_download_config": "Download Config",
-      "btn_copy_link": "Copy Link"
+    "btn_download": "Download",
+    "btn_copy_link": "Copy",
+      "copied_qr_link": "Link copied to clipboard!"
     },
     "touchpoint_stats": {
       "scans": "Scans",
@@ -670,6 +734,12 @@
       "tabs": {
         "stations": "QR Stations",
         "devices": "Hardware Devices"
+      },
+      "stations_sections": {
+        "tip": "Tip QR",
+        "payment": "Payment QR",
+        "tip_desc": "Create and manage tip stations. Customers scan to tip your staff.",
+        "payment_desc": "Your store's direct payment QR. Customers pay your business directly — separate from tip stations."
       },
       "open_link": "Test station flow",
       "empty_title": "No QR stations yet",
@@ -753,10 +823,12 @@
         "support_type_required": "Please select a support type.",
         "support_type_min_length": "Support type is required.",
         "support_options": {
-          "payment": "Payment Processing",
-          "pos": "Free POS System Info",
-          "website": "Business Website",
-          "marketing": "Marketing",
+          "tip_payment": "Tip Payment Issue",
+          "qr_code": "QR Code Setup",
+          "staff_account": "Staff Account",
+          "billing_plan": "Billing & Plan",
+          "review_routing": "Review Routing",
+          "technical_bug": "Technical Bug",
           "other": "Other"
         },
         "message_label": "Message",
@@ -773,7 +845,10 @@
         "submitting_btn": "Submitting...",
         "success_msg": "Ticket submitted successfully! Our team will contact you shortly.",
         "error_msg": "Please fix the highlighted fields and try again.",
-        "submit_error_msg": "Could not submit your ticket. Please try again."
+        "submit_error_msg": "Could not submit your ticket. Please try again.",
+        "response_time": "Average response time: within 24 hours on business days.",
+        "urgent_help_prefix": "Need urgent help?",
+        "urgent_help_email": "support@nexoratouch.com"
       },
       "faq": {
         "title": "Frequently Asked Questions",
@@ -784,7 +859,19 @@
         "q3": "How to set up VLINKPAY Wallet?",
         "a3": "Navigate to Settings -> Profile tab, scroll down to Payout Methods, and enter your VLINKPAY Wallet identifier. Once verified, customers will see VLINKPAY as a direct tipping option.",
         "q4": "How to order NFC stands?",
-        "a4": "You can order custom laser-engraved NFC wooden stands or tabletop cards directly from the Manage Plan / Subscriptions tab, or by contacting our support team with your salon station count."
+        "a4": "You can order custom laser-engraved NFC wooden stands or tabletop cards directly from the Manage Plan / Subscriptions tab, or by contacting our support team with your salon station count.",
+        "q5": "How do my customers tip without an app?",
+        "a5": "Customers scan the station QR code with their phone camera — no app download required. They choose a tip amount, select their preferred payment method (Venmo, Zelle, Cash App, or VLINKPAY), and complete the payment in their existing wallet app.",
+        "q6": "When do tips arrive in my technician's account?",
+        "a6": "Tips go directly from the customer to the technician's connected payout account. There is no hold or batching by Nexora — funds appear as soon as the customer's payment app confirms the transfer, typically within minutes.",
+        "q7": "Can I use Nexora Touch with my existing POS system?",
+        "a7": "Yes. Nexora Touch runs alongside your existing POS — it handles tipping and reviews at each station without replacing your checkout system. Your POS continues to process service payments; Nexora captures tips and feedback via QR codes at each workstation.",
+        "q8": "What happens if a customer leaves a 1-star review?",
+        "a8": "Low ratings are routed to you privately first so you can respond before they appear publicly. You receive a notification with the review details and can address the concern directly with the customer or your team.",
+        "q9": "How do I add or remove a technician from my roster?",
+        "a9": "Go to Staff in your dashboard. To add a technician, click Invite Staff and share the join link or QR code. To remove someone, open their profile and deactivate or remove them from your roster — their tip history remains in your records.",
+        "q10": "Is there a contract or can I cancel anytime?",
+        "a10": "Nexora Touch has no long-term contract. You can cancel your subscription at any time from Manage Plan. Your account stays active through the end of your current billing period."
       }
     },
     "tips": {
@@ -798,7 +885,8 @@
       "kpi": {
         "total_revenue": "Total Tip Revenue",
         "direct_p2p": "Direct Tips",
-        "card_tips": "Card Tips",
+        "card_tips": "Traditional Card Tips",
+        "card_tips_sub": "Bypassed — customers pay staff directly via Zelle/Venmo",
         "crypto_tips": "Crypto Tips",
         "total_tips_circle": "Total Tips"
       },
@@ -830,7 +918,8 @@
         "col_amount": "Amount",
         "col_method": "Wallet",
         "col_status": "Status",
-        "status_success": "Success"
+        "status_success": "Success",
+        "status_completed": "Completed"
       },
       "ledger": {
         "title": "Tip Transactions",
@@ -854,6 +943,149 @@
         "col_status": "Payout Channel",
         "col_activity": "Last Activity",
         "status_direct": "Paid Direct"
+      },
+      "payouts_manager": {
+        "stat_all_time": "Total paid (all time)",
+        "stat_this_month": "Paid this month",
+        "stat_pending": "Awaiting confirmation",
+        "stat_pending_sub": "{{count}} pending payout(s)",
+        "stat_staff_paid": "Unpaid tip balance",
+        "stat_staff_paid_sub": "{{count}} staff with unpaid tip balance",
+        "search_placeholder": "Search staff name...",
+        "filter_all_period": "All periods",
+        "filter_period_label": "Pay period",
+        "filter_staff_label": "All staff",
+        "filter_type_label": "Payout type",
+        "filter_status_label": "All statuses",
+        "filter_this_month": "This month",
+        "filter_custom_period": "Custom period",
+        "filter_all_staff": "All staff",
+        "filter_all_types": "All types",
+        "filter_all_status": "All statuses",
+        "export_btn": "Export report",
+        "create_btn": "Create payout",
+        "col_code": "Payout code",
+        "col_date": "Paid on",
+        "col_staff": "Staff",
+        "col_amount": "Amount",
+        "col_method": "Method",
+        "col_types": "Type",
+        "col_period": "Pay period",
+        "col_evidence": "Evidence",
+        "col_status": "Status",
+        "col_actions": "Details",
+        "empty": "No payouts found for the current filters.",
+        "status_draft": "Draft",
+        "status_pending": "Awaiting confirmation",
+        "status_confirmed": "Completed",
+        "status_cancelled": "Cancelled",
+        "status_draft_desc": "This payout is still a draft and has not been submitted.",
+        "status_pending_desc": "Payout recorded. Waiting for the staff member to confirm they received the payment.",
+        "status_confirmed_desc": "The staff member confirmed they received this payout.",
+        "status_cancelled_desc": "This payout was cancelled and is no longer active.",
+        "type_unpaid_tips": "Unpaid tip",
+        "type_tip": "Tip",
+        "type_salary": "Salary",
+        "type_bonus": "Bonus",
+        "type_other": "Other",
+        "method_cash": "Cash",
+        "method_bank": "Bank transfer",
+        "method_zelle": "Zelle",
+        "method_cashapp": "Cash App",
+        "method_venmo": "Venmo",
+        "method_other": "Other",
+        "create_title": "Create payout",
+        "edit_title": "Edit payout",
+        "create_sub": "Record a salary or tip payment to staff",
+        "detail_title": "Payout details",
+        "detail_sub": "Staff payout transaction",
+        "copy_payout_code": "Copy payout code",
+        "field_staff": "Staff",
+        "field_method": "Payment method",
+        "method_select_staff_first": "Select a staff member to see their available payout methods.",
+        "method_staff_none": "This staff member has no payout wallets configured. Please set up payout methods for them first.",
+        "field_amount": "Amount paid",
+        "amount_required": "Tip amount is required.",
+        "field_types": "Payout type",
+        "field_period": "Pay period",
+        "field_notes": "Notes",
+        "staff_placeholder": "Select staff member",
+        "staff_required": "Please select a staff member.",
+        "staff_search_placeholder": "Search by name or staff code...",
+        "staff_search_loading": "Loading staff list...",
+        "staff_search_empty": "No matching staff found.",
+        "staff_account": "{{method}} account",
+        "staff_code": "Staff code",
+        "unpaid_tip_hint": "Unpaid tip balance:",
+        "staff_debt_title": "Staff unpaid tip balance",
+        "staff_debt_sub": "Unpaid tip balance for the selected staff (live lookup).",
+        "staff_debt_balance": "Unpaid",
+        "staff_debt_max_tip": "Tip payout cannot exceed {{balance}}.",
+        "staff_debt_zero_badge": "No unpaid tip balance",
+        "staff_debt_zero_body": "This staff member has nothing awaiting payout yet. Balance appears after customer tips are confirmed.",
+        "staff_debt_no_payout_available": "Tip payout is not available — this staff has no unpaid tip balance.",
+        "staff_debt_amount_disabled": "Enter an amount when this staff has unpaid tip balance.",
+        "staff_debt_updated": "Last updated {{date}}",
+        "staff_debt_load_error": "Could not load unpaid tip balance for this staff.",
+        "staff_debt_loading": "Please wait — unpaid tip balance is still loading.",
+        "amount_max_tip_hint": "Tip payout limit for this staff: {{balance}} (validated on save).",
+        "fill_max_debt": "Use full unpaid tip balance",
+        "account_copied": "Account copied",
+        "notes_placeholder": "e.g. Week 25 salary + June tips",
+        "evidence_title": "Payment evidence",
+        "evidence_drop": "Drag images here or browse",
+        "evidence_hint": "Up to {{max}} images",
+        "evidence_image_only": "Invalid file type. Please upload image files only (JPG, PNG, GIF, WebP, HEIC, SVG).",
+        "evidence_max": "Maximum {{max}} evidence images",
+        "evidence_count": "{{count}} image(s)",
+        "evidence_privacy": "Evidence images are visible only to the salon owner for tax and audit review.",
+        "field_status": "Confirmation status",
+        "create_status_pending": "Transferred — awaiting staff confirmation",
+        "create_status_pending_desc": "Staff has not reported receipt yet",
+        "create_status_confirmed": "Payment receipt confirmed",
+        "create_status_confirmed_desc": "Staff has confirmed they received the payment",
+        "create_status_cancelled": "Cancel transaction",
+        "create_status_cancelled_desc": "The transaction was cancelled",
+        "save_payout": "Save payout",
+        "validation_required": "Please select staff and enter a valid amount.",
+        "create_success": "Payout created successfully.",
+        "update_success": "Payout updated successfully.",
+        "delete_success": "Payout deleted.",
+        "cancel_success": "Payout cancelled.",
+        "delete_confirm_title": "Delete payout",
+        "delete_confirm": "Delete this pending payout?",
+        "cancel_confirm_title": "Cancel payout",
+        "cancel_confirm": "Cancel this pending payout?",
+        "action_cancel": "Cancel payout",
+        "export_title": "Export payout report",
+        "export_sub": "For tax reconciliation (e.g. 1099-NEC)",
+        "export_year": "This year",
+        "export_month": "This month",
+        "export_custom": "Custom range",
+        "export_preview": "{{count}} payout(s) in export",
+        "export_loading": "Loading payouts for export...",
+        "export_period_required": "Select a valid date range to preview export.",
+        "export_empty": "No payouts match the selected filters.",
+        "export_success": "Report downloaded.",
+        "export_action": "Export now",
+        "unpaid_section_title": "Unpaid tip balance by staff",
+        "unpaid_section_sub": "{{count}} staff with unpaid tip balance",
+        "unpaid_button": "Unpaid tip balance ({{count}})",
+        "unpaid_empty": "No unpaid tip balance right now.",
+        "unpaid_col_balance": "Unpaid tip balance",
+        "unpaid_col_updated": "Last updated",
+        "unpaid_view_history": "Transaction history",
+        "unpaid_create_payout": "Create payout",
+        "debt_history_title": "Transaction history",
+        "debt_history_sub": "Ledger records for {{staff}}",
+        "debt_history_empty": "No transactions found.",
+        "debt_col_created": "Created at",
+        "debt_col_type": "Transaction type",
+        "debt_col_amount": "Amount",
+        "debt_col_note": "Description",
+        "debt_tx_tip_debt": "Unpaid tip balance increased",
+        "debt_tx_settlement": "Payout settlement",
+        "debt_tx_reversal": "Payout reversal"
       }
     },
     "analytics": {
@@ -863,7 +1095,8 @@
         "transactions_count": "Transactions",
         "transactions_unit": "Transactions",
         "avg_tip": "Average Tip",
-        "fees_avoided": "Fees Saved"
+        "fees_avoided": "Fees Saved",
+        "fees_avoided_tooltip": "Estimated card processing fees saved from direct P2P tips, calculated at {{fee}}% of routed volume."
       },
       "charts": {
         "daily_revenue": "Daily Revenue Trend",
@@ -873,7 +1106,11 @@
         "staff": "Leaderboard",
         "touchpoints": "Station Performance",
         "tips_count_label": "tips received",
-        "scans_count_label": "scans logged"
+        "scans_count_label": "scans logged",
+        "unassigned": "Unassigned Tip",
+        "unassigned_tooltip": "This tip was received through the general salon QR code and was not assigned to a specific technician.",
+        "station_stats": "{scans} scans · {tips} tips = {pct}% conversion",
+        "station_stats_no_conversion": "{scans} scans · {tips} tips"
       }
     },
     "empty_states": {
@@ -900,7 +1137,7 @@
       "no_reviews_yet": "No reviews yet",
       "quick_actions": "Quick Actions",
       "manage": "Manage",
-      "quick_add_qr": "Add QR",
+      "quick_add_qr": "QR",
       "quick_add_staff": "Add Staff",
       "quick_tips": "Tips",
       "quick_reports": "Reports",
@@ -962,6 +1199,7 @@
     "delete_tech": "Delete Tech",
     "tips_collected": "Tips Collected",
     "avg_rating": "Average Star Rating",
+    "total_reviews": "Total Reviews",
     "reviews_routed": "Reviews Sent",
     "conversion_rate": "QR-to-Tip Conversion",
     "scans": "{count} scans",
@@ -1055,6 +1293,182 @@
     "tip_max_error": "Tip cannot exceed {amount}.",
     "tip_total_max_error": "Total tips cannot exceed {amount}."
   },
+  "direct_payment": {
+    "review_payment_title": "Review payment & choose method",
+    "review_payment_desc": "You're paying {name} directly.",
+    "amount_label": "Payment amount",
+    "custom_amount_placeholder": "Enter amount",
+    "total_payment": "Total payment",
+    "total": "total",
+    "amount_range_hint": "$1.00 – $10,000.00",
+    "pay_to_business": "Pay to business",
+    "default_business": "Business",
+    "no_methods_title": "No payment methods available",
+    "no_methods_desc": "This business has not configured an active payout method yet. Please contact the store.",
+    "amount_too_low": "Minimum payment is {{min}}.",
+    "amount_too_high": "Maximum payment is {{max}}.",
+    "page_not_found_title": "Payment page unavailable",
+    "page_not_found_desc": "This business could not be found or direct payments are not enabled.",
+    "success_title": "Payment sent!",
+    "success_desc": "Your payment of ${amount} to {business} has been recorded. The business will confirm receipt shortly.",
+    "success_footer": "You can close this page. Thank you!",
+    "back_home": "Back Home",
+    "wallet_title": "Send ${amount} via {wallet} to {recipient}",
+    "confirm_sent": "Yes, I've paid"
+  },
+  "staff_direct_payment": {
+    "review_payment_title": "Review payment & choose method",
+    "review_payment_desc": "You're paying {name} directly.",
+    "amount_range_hint": "$1.00 – $10,000.00",
+    "pay_to_staff": "Pay to staff",
+    "total": "total",
+    "default_staff": "Staff member",
+    "no_methods_title": "No payment methods available",
+    "no_methods_desc": "This staff member has not set up an active payout method yet. Please contact them.",
+    "amount_too_low": "Minimum payment is {{min}}.",
+    "amount_too_high": "Maximum payment is {{max}}.",
+    "page_not_found_title": "Payment page unavailable",
+    "page_not_found_desc": "This staff member could not be found or direct payments are not available.",
+    "success_desc": "Your payment of ${amount} to {name} has been recorded. They will confirm receipt shortly."
+  },
+  "merchant_payments": {
+    "title": "Direct Payments",
+    "description": "Payments received through your store payment QR.",
+    "detail_title": "Payment details",
+    "detail_desc": "Direct payment from a customer via your payment QR.",
+    "col_method": "Method",
+    "account_info": "Account",
+    "customer_confirmed_at": "Customer confirmed",
+    "merchant_confirmed_at": "You confirmed receipt",
+    "status_initiated": "Awaiting payment",
+    "status_initiated_desc": "Payment created — waiting for the customer to mark the transfer as sent.",
+    "status_confirmed": "Awaiting confirmation",
+    "status_confirmed_desc": "The customer confirmed they sent the payment. Awaiting your confirmation.",
+    "status_confirmed_merchant_action": "After the money arrives, tap “Confirm payment received” — status moves to Completed.",
+    "status_completed": "Completed",
+    "status_completed_desc": "You confirmed receipt — final status.",
+    "status_flow_title": "Payment status",
+    "stats_period_hint": "Last 12 months",
+    "stats_total_count": "Total payments",
+    "stats_total_amount": "Total amount",
+    "stats_average_amount": "Average amount",
+    "stats_conversion_rate": "Conversion rate",
+    "stats_most_used_method": "Top method",
+    "stats_count": "Count",
+    "stats_transaction_count": "{{count}} transactions",
+    "stats_no_data": "No data",
+    "stats_amount": "Amount",
+    "stats_total_volume": "Total volume",
+    "stats_pending": "Awaiting confirmation",
+    "stats_completed_payments": "Completed payments",
+    "stats_by_method_title": "By payment method",
+    "col_action": "Action",
+    "view_detail": "View details",
+    "waiting_customer_confirm": "Waiting for the customer to confirm they sent the payment…",
+    "confirm_receipt": "Confirm payment received",
+    "confirm_receipt_help": "The customer confirmed they sent this payment. Confirm once the money is in your account.",
+    "confirmed_help": "You confirmed receipt on {{time}}.",
+    "confirm_success": "Payment marked as received.",
+    "confirm_failed": "Could not confirm payment.",
+    "empty": "No direct payments yet. Share your payment QR to start receiving payments.",
+    "view_history": "View payment history",
+    "pending_ack_banner_title": "{{count}} payments need your confirmation",
+    "pending_ack_banner_desc": "The customer confirmed they sent money. Open each payment and tap “Confirm payment received” once it arrives in your account.",
+    "pending_ack_banner_action": "Review now",
+    "ack_notice_title": "Payment received notification",
+    "ack_notice_desc": "A customer confirmed they sent a payment. Please verify the money arrived, then confirm receipt.",
+    "ack_notice_desc_many": "{{count}} payments are waiting for your confirmation. Review the latest one first."
+  },
+  "staff_payments": {
+    "title": "QR Payments",
+    "description": "Payments received via your QR.",
+    "detail_title": "Payment details",
+    "detail_desc": "Direct payment from a customer via your payment QR.",
+    "col_method": "Method",
+    "account_info": "Account",
+    "customer_confirmed_at": "Customer confirmed",
+    "staff_confirmed_at": "You confirmed receipt",
+    "status_initiated": "Awaiting payment",
+    "status_initiated_desc": "Payment created — waiting for the customer to mark the transfer as sent.",
+    "status_confirmed": "Awaiting confirmation",
+    "status_confirmed_desc": "The customer confirmed they sent the payment. Awaiting your confirmation.",
+    "status_confirmed_staff_action": "After the money arrives, tap “Confirm payment received” — status moves to Completed.",
+    "status_completed": "Completed",
+    "status_completed_desc": "You confirmed receipt — final status.",
+    "status_flow_title": "Payment status",
+    "stats_period_hint": "Last 12 months",
+    "stats_total_count": "Total payments",
+    "stats_total_amount": "Total amount",
+    "stats_average_amount": "Average amount",
+    "stats_conversion_rate": "Conversion rate",
+    "stats_most_used_method": "Top method",
+    "stats_count": "Count",
+    "stats_transaction_count": "{{count}} transactions",
+    "stats_no_data": "No data",
+    "stats_amount": "Amount",
+    "stats_total_volume": "Total volume",
+    "stats_pending": "Awaiting confirmation",
+    "stats_completed_payments": "Completed payments",
+    "stats_by_method_title": "By payment method",
+    "col_action": "Action",
+    "view_detail": "View details",
+    "waiting_customer_confirm": "Waiting for the customer to confirm they sent the payment…",
+    "confirm_receipt": "Confirm payment received",
+    "confirm_receipt_help": "The customer confirmed they sent this payment. Confirm once the money is in your account.",
+    "confirmed_help": "You confirmed receipt on {{time}}.",
+    "confirm_success": "Payment marked as received.",
+    "confirm_failed": "Could not confirm payment.",
+    "empty": "No direct payments yet. Share your payment QR to start receiving payments.",
+    "view_history": "View payment history",
+    "pending_ack_banner_title": "{{count}} payments need your confirmation",
+    "pending_ack_banner_desc": "The customer confirmed they sent money. Open each payment and tap “Confirm payment received” once it arrives in your account.",
+    "pending_ack_banner_action": "Review now",
+    "ack_notice_title": "Payment received notification",
+    "ack_notice_desc": "A customer confirmed they sent a payment. Please verify the money arrived, then confirm receipt.",
+    "ack_notice_desc_many": "{{count}} payments are waiting for your confirmation. Review the latest one first."
+  },
+  "staff_payouts": {
+    "description": "Track payouts sent to you, confirm receipt, and review unpaid tip balance by business.",
+    "stat_received_all_time": "Total received",
+    "stat_received_this_month": "Received this month",
+    "stat_pending": "Pending amount",
+    "stat_pending_sub": "{{count}} payout(s) need your confirmation",
+    "stat_current_debt": "Unpaid tip balance",
+    "filter_status_label": "Status",
+    "filter_all_status": "All statuses",
+    "detail_title": "Your payout details",
+    "col_code": "Payout code",
+    "col_date": "Paid on",
+    "col_amount": "Amount",
+    "col_method": "Method",
+    "col_types": "Type",
+    "col_period": "Pay period",
+    "col_status": "Status",
+    "col_actions": "Details",
+    "field_amount": "Amount received",
+    "field_method": "Payment method",
+    "field_notes": "Notes",
+    "field_business": "Business",
+    "field_account": "Receiving account",
+    "evidence_title": "Payment evidence",
+    "detail_load_error": "Could not load payout details.",
+    "status_draft": "Draft",
+    "status_pending": "Confirm receipt",
+    "status_confirmed": "Received",
+    "status_cancelled": "Cancelled",
+    "status_draft_desc": "This payout is still a draft.",
+    "status_pending_desc": "Please confirm after you receive this payout.",
+    "status_confirmed_desc": "You confirmed receipt of this payout.",
+    "status_cancelled_desc": "This payout was cancelled.",
+    "unpaid_debt_title": "Unpaid tip balance by business",
+    "unpaid_debt_empty": "No unpaid tip balance right now.",
+    "unpaid_debt_total": "Total unpaid tip balance",
+    "list_title": "Payout history",
+    "detail_sub": "Review payout details before confirming receipt.",
+    "confirm_receipt": "Confirm receipt",
+    "confirm_success": "Payout confirmed successfully.",
+    "empty": "No payouts found for the selected status."
+  },
   "register": {
     "create_account": "Create Account",
     "role_select_title": "Choose Account Type",
@@ -1140,43 +1554,146 @@
       "account_label": "Your {wallet} {field} *"
     },
     "legal": {
+      "effectiveDate": "June 26, 2026",
+      "lastUpdated": "June 26, 2026",
+      "effectiveDateLabel": "Effective Date",
+      "lastUpdatedLabel": "Last Updated",
+      "privacyTagline": "How we collect, use, and protect information",
+      "termsTagline": "Official terms for merchants, staff, and customers",
       "privacy": {
         "sections": [
           {
-            "title": "1. Information Collection",
-            "body": "We collect personal details such as full name, email, phone number, and linked payment methods to power customer tip routing."
+            "title": "1. Introduction",
+            "body": "NEXORA TOUCH LLC (\"Nexora\", \"we\", \"us\", or \"our\") operates the NEXORA TOUCH platform — a digital tipping and review service for service businesses. This Privacy Policy describes how we collect, use, and share information when you use our Services. By using our Services, you agree to the practices described in this Policy."
           },
           {
-            "title": "2. Data Privacy & Protection",
-            "body": "Your personal data and payout details are protected and used only for transaction routing and account operations."
+            "title": "2. Information We Collect",
+            "body": "Information you provide: account details (name, email, phone number), business information (for merchants), and content you upload (profile photos, business logos). Information collected automatically: usage data, IP address, device and browser information, and session activity collected through our platform and Google Analytics. Customer interactions: when a customer uses the tip flow as a guest, we record anonymous session data (touch point accessed, tip amount, rating). We do not collect the customer's name, phone number, or payment information."
           },
           {
-            "title": "3. Your Rights",
-            "body": "You may review, update, or request deletion of your account information from the dashboard."
+            "title": "3. How We Use Your Information",
+            "body": "We use collected information to:",
+            "items": [
+              "Operate and improve the Services",
+              "Manage accounts and communicate with users",
+              "Send transactional notifications (email and push)",
+              "Detect fraud and enforce our Terms of Service",
+              "Analyze platform usage and performance",
+              "Comply with legal obligations"
+            ]
+          },
+          {
+            "title": "4. How We Share Your Information",
+            "body": "We do not sell your personal information. We share information only with trusted third-party service providers that assist us in operating the platform, including analytics, email delivery, push notifications, and cloud infrastructure. These providers are contractually bound to use your information only as necessary to perform services on our behalf. We may also disclose information to comply with legal obligations or to protect the rights and safety of our users."
+          },
+          {
+            "title": "5. Payment Information",
+            "body": "Nexora does not collect, store, or process payment information of any kind. Tips are sent directly between customers and staff through third-party payment applications. We have no access to financial credentials, bank account numbers, or card details."
+          },
+          {
+            "title": "6. Data Retention",
+            "body": "We retain your personal information only as long as necessary to provide the Services or as required by law. You may request deletion of your account and data at any time by contacting support@nexoratouch.com."
+          },
+          {
+            "title": "7. Your Rights",
+            "body": "Depending on your location, you may have the right to access, correct, delete, or port your personal data, and to object to or restrict certain processing.",
+            "items": [
+              "EU/EEA users (GDPR): access, rectification, erasure, portability, restriction, and objection",
+              "California residents (CCPA): right to know, delete, correct, and opt out of sale (we do not sell data)"
+            ],
+            "note": "To exercise your rights, contact support@nexoratouch.com. We will respond within 30 days."
+          },
+          {
+            "title": "8. Cookies and Tracking",
+            "body": "We use essential cookies (required for authentication and session management) and analytics cookies (Google Analytics). You may opt out of Google Analytics tracking by installing the Google Analytics Opt-out Browser Add-on or adjusting your browser settings."
+          },
+          {
+            "title": "9. Children's Privacy",
+            "body": "Our Services are not directed to children under 13. We do not knowingly collect personal information from children under 13. If you believe a child has provided us with personal information, contact us at support@nexoratouch.com and we will delete it promptly."
+          },
+          {
+            "title": "10. Security",
+            "body": "We implement reasonable technical and administrative safeguards to protect your information, including encrypted data transmission and secure cloud infrastructure. No method of transmission is completely secure, and we cannot guarantee absolute security."
+          },
+          {
+            "title": "11. Changes to This Policy",
+            "body": "We may update this Policy from time to time. Material changes will be communicated via email or in-app notification. Continued use of the Services constitutes acceptance of the updated Policy."
+          },
+          {
+            "title": "12. Contact Us",
+            "body": "NEXORA TOUCH LLC\nEmail: support@nexoratouch.com\nAddress: 9793 Westheimer Rd Suite A Houston TX 77042"
           }
         ]
       },
       "terms": {
         "sections": [
           {
-            "title": "1. Introduction & Acceptance",
-            "body": "By using Nexora Touch, you agree to follow these service terms."
+            "title": "1. Acceptance of Terms",
+            "body": "By accessing or using the NEXORA TOUCH platform, website, or applications (collectively, the \"Services\"), you agree to be bound by these Terms of Service. If you do not agree, please discontinue use of the Services. We reserve the right to modify these Terms at any time. Continued use after changes take effect constitutes acceptance of the updated Terms."
           },
           {
-            "title": "2. Personal Account",
-            "body": "You are responsible for protecting your login credentials and keeping payout information accurate."
+            "title": "2. Description of Services",
+            "body": "NEXORA TOUCH is a digital tipping and review platform for service businesses, enabling customers to send tips to staff and leave reviews via QR code or NFC. The platform connects merchants, service staff, and customers without acting as a payment intermediary."
           },
           {
-            "title": "3. Tips & Payouts",
-            "body": "Tips are sent to your configured payout methods. Completed transactions are final."
+            "title": "3. Eligibility",
+            "body": "To use the Services, you must be at least 13 years of age and, if registering as a merchant, legally authorized to operate a business in your jurisdiction. By using the Services, you represent that you meet these requirements."
           },
           {
-            "title": "4. Privacy & Data Security",
-            "body": "Your data is used to run the tipping workflow, show options to customers, and record transaction history."
+            "title": "4. User Accounts",
+            "body": "You are responsible for maintaining the confidentiality of your account credentials and for all activity that occurs under your account. Notify us immediately of any unauthorized use at support@nexoratouch.com. Merchants may manage their business profile, staff, and touch points. Staff members own and control their own payment information — merchants cannot view or modify staff payment handles."
           },
           {
-            "title": "5. Terms Updates",
-            "body": "We may update these terms and publish changes in the portal."
+            "title": "5. Payments and Tipping",
+            "body": "Nexora is a platform only. We do not process, hold, transfer, or guarantee any payments. Tips are sent directly by customers to service staff through third-party payment applications (such as Cash App, Venmo, Zelle, or PayPal). Nexora has no involvement in these transactions. Nexora is not liable for any payment failures, disputes, or financial loss arising from tip transactions between users. Users are responsible for resolving payment disputes directly with the other party or their chosen payment application. Staff are responsible for ensuring their payment information is accurate and for complying with any applicable tax obligations on tips received."
+          },
+          {
+            "title": "6. Subscription Plans",
+            "body": "Merchant access to platform features is governed by the subscription plan in effect at the time of use. Plan details, pricing, and feature limits are available at the point of purchase. We reserve the right to update pricing with prior notice."
+          },
+          {
+            "title": "7. Prohibited Conduct",
+            "body": "You agree not to:",
+            "items": [
+              "Provide false, fraudulent, or misleading information",
+              "Impersonate any person or entity",
+              "Manipulate tip or review data",
+              "Upload malicious code or attempt unauthorized access",
+              "Use the platform for any illegal purpose",
+              "Create multiple accounts to circumvent platform limits"
+            ]
+          },
+          {
+            "title": "8. Intellectual Property",
+            "body": "All content, software, and trademarks belonging to Nexora remain our property. By uploading content to the platform, you grant us a limited, non-exclusive license to display that content solely for the purpose of providing the Services."
+          },
+          {
+            "title": "9. Disclaimer of Warranties",
+            "body": "THE SERVICES ARE PROVIDED \"AS IS\" WITHOUT WARRANTY OF ANY KIND. WE DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. WE DO NOT WARRANT THAT THE SERVICES WILL BE UNINTERRUPTED, ERROR-FREE, OR THAT ANY THIRD-PARTY PAYMENT APPLICATION WILL FUNCTION AS EXPECTED."
+          },
+          {
+            "title": "10. Limitation of Liability",
+            "body": "TO THE MAXIMUM EXTENT PERMITTED BY LAW, NEXORA SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOSS OF TIPS OR REVENUE, OR ANY FINANCIAL DISPUTES BETWEEN USERS. OUR TOTAL LIABILITY SHALL NOT EXCEED THE AMOUNTS PAID BY YOU IN THE 12 MONTHS PRIOR TO THE CLAIM, OR USD $100, WHICHEVER IS GREATER."
+          },
+          {
+            "title": "11. Indemnification",
+            "body": "You agree to indemnify and hold harmless NEXORA TOUCH LLC and its officers, employees, and agents from any claims, damages, or expenses arising from your use of the Services or your violation of these Terms."
+          },
+          {
+            "title": "12. Termination",
+            "body": "We may suspend or terminate your account for violations of these Terms or conduct harmful to other users. You may close your account at any time by contacting support@nexoratouch.com."
+          },
+          {
+            "title": "13. Governing Law",
+            "body": "These Terms are governed by the laws of the United States. Where applicable, local consumer protection laws may also apply. Disputes that cannot be resolved informally will be submitted to binding individual arbitration."
+          },
+          {
+            "title": "14. Changes to Terms",
+            "body": "We may update these Terms at any time. Material changes will be communicated via email or in-app notification."
+          },
+          {
+            "title": "15. Contact Us",
+            "body": "NEXORA TOUCH LLC\nEmail: support@nexoratouch.com\nAddress: 9793 Westheimer Rd Suite A Houston TX 77042"
           }
         ]
       }
@@ -1231,6 +1748,7 @@
     "return_merchant": "Go to Personal Dashboard"
   },
   "errors": {
+    "TIP_AMOUNT_TOO_HIGH": "Tip amount is too high.",
     "unknown_error": "An unknown error occurred. Please try again.",
     "contact_request_message_min_length": "Your message is too short. Please enter at least {min} characters describing the issue.",
     "contact_request_message_max_length": "Your message is too long. Please keep it under {max} characters.",
@@ -1240,7 +1758,8 @@
     "user_login_invalid_username_or_password": "Invalid username or password.",
     "user_account_inactive": "Your account is currently inactive. Please contact support.",
     "user_account_incomplete": "Your account is incomplete. Please activate your account.",
-    "user_email_already_exists": "This email address is already registered.",
+    "user_email_already_exists": "This email is already registered. Please sign in or use a different email address.",
+    "user_invalid_referral_code": "The referral code you entered is not valid. Please check the code and try again.",
     "user_signup_failed": "Registration failed. Please check your information and try again.",
     "auth_passwords_do_not_match": "Passwords do not match.",
     "user_feature_signup_disabled": "Registration is currently disabled.",
@@ -1254,6 +1773,7 @@
     "user_invalid_refresh_token": "Session expired. Please sign in again.",
     "auth_user_not_authenticated": "You must be logged in to access this resource.",
     "business_already_exists": "A business setup already exists for this account.",
+    "business_not_found": "This business could not be found or has been removed.",
     "business_name_required": "Business name is required.",
     "business_invalid_slug_format": "The URL slug format is invalid.",
     "user_not_merchant": "Your account is not registered as a merchant.",
@@ -1285,6 +1805,20 @@
     "common_forbidden": "Access denied.",
     "common_rate_limit_exceeded": "Too many requests. Please try again later.",
     "common_internal_server_error": "An internal server error occurred.",
+    "payment_not_found": "This payment could not be found.",
+    "payment_invalid_status": "This payment is not in the correct status for this action.",
+    "payment_amount_too_low": "Minimum payment is $1.00.",
+    "payment_amount_too_high": "Maximum payment is $10,000.00.",
+    "payment_invalid_payment_method": "The selected payment method is not available. Please choose another method.",
+    "payout_amount_must_be_positive": "Payout amount must be greater than zero.",
+    "payout_period_start_before_end": "Period start date must be on or before the end date.",
+    "payout_evidence_urls_max_10": "You can attach up to 10 evidence URLs.",
+    "payout_types_required": "Select at least one payout type.",
+    "payout_update_not_allowed": "Only pending payouts can be updated.",
+    "payout_delete_not_allowed": "Only pending payouts can be deleted.",
+    "payout_cancel_not_allowed": "Only pending payouts can be cancelled.",
+    "payout_confirm_not_allowed": "Only pending payouts can be confirmed.",
+    "payout_amount_exceeds_debt": "Tip payout cannot exceed this staff's unpaid tip balance of {{balance}}.",
     "generic": "Something went wrong",
     "touchpoint_not_found": "Page Not Found",
     "touchpoint_not_found_desc": "This station could not be loaded.",
@@ -1357,7 +1891,8 @@
         "TipAmount": {
           "totalTip": "Total Tip",
           "provider_count": "For {count} provider(s)",
-          "phAmount": "0.00"
+          "phAmount": "0.00",
+          "minTipErr": "* Minimum tip amount is $1"
         },
         "WalletDetails": {
           "tipAmount": "Tip Amount",
@@ -1371,7 +1906,8 @@
           "bankDetails": "Bank details",
           "account": "Account",
           "noteRequired": "Note (Required)",
-          "yesISentThe": "I Sent Tip",
+          "yesISentTheTip": "Yes, I sent the tip",
+          "yesISentThe": "I Completed Payment",
           "multiStaffTitle": "Send ${amount} to {business} with {wallet}",
           "multiStaffSubtitle": "Open your bank app and send one payment to {business}. Your tip will be split among the selected providers.",
           "tipBreakdown": "Tip breakdown",
@@ -1398,7 +1934,9 @@
           "stepOpenApp_applecash": "Open your Wallet app.",
           "stepOpenApp_default": "Open your wallet app.",
           "stepSendAmount": "Send exactly ${amount} to {name}.",
-          "stepConfirm": "Come back here and tap I Sent Tip."
+          "stepSendAmountPayment": "Send exactly ${amount} to {name}.",
+          "stepConfirm": "Come back here and tap Yes, I sent the tip.",
+          "stepConfirmPayment": "Come back here and tap Yes, I've paid."
         }
       }
     },
@@ -1583,10 +2121,10 @@
       "overview": {
         "Overview": {
           "custom": "Custom",
-          "copiedNfcRedirectLink": "Copied NFC redirect link to clipboard!",
+          "copiedPaymentLink": "Copied payment link to clipboard!",
           "qr_download_failed": "Could not download QR code. Please try again.",
           "gateway_empty_title": "No stations configured",
-          "gateway_empty_desc": "Create a station to generate your store QR and NFC code.",
+          "gateway_empty_desc": "Create a station to generate your store QR code.",
           "gateway_empty_action": "Add Station",
           "reviews_empty_title": "No review data yet",
           "reviews_empty_desc": "Review metrics will appear once customers start leaving feedback."
@@ -1632,7 +2170,7 @@
           "shareThisReferralLink": "Share this link or QR code so technicians can create their account and join your salon.",
           "joinLinkCopiedTo": "Join link copied to clipboard!",
           "copy": "Copy",
-          "share": "Invite",
+          "share": "Share",
           "pendingJoinRequests": "Pending Join Requests",
           "rejectedStaff": "Declined Requests",
           "directAddition": "Added by Salon",
@@ -1645,10 +2183,13 @@
           "dateNewest": "Date: Newest",
           "dateOldest": "Date: Oldest",
           "statusActive": "Status: Active",
+          "statusTooltip": "Active staff appear on the salon QR page. Inactive staff are hidden from customers.",
           "clickPillToToggle": "Click pill to toggle active status",
           "tipsFlow": "Tips Enabled",
+          "tipsFlowTooltip": "When disabled, this staff member won't appear in the customer tipping flow.",
           "clickPillToShow": "Click pill to show/hide tech on general QR",
           "linkedDate": "Linked Date: ",
+          "col_linked_date": "Linked Date",
           "noWallets": "No wallets",
           "pendingSetup": "Pending Setup",
           "pendingAcceptance": "Pending Acceptance",
@@ -1663,7 +2204,11 @@
           "inviteLinkLoading": "Loading invite link...",
           "inviteLinkDisabled": "Public invite link is disabled in Merchant Settings.",
           "scanToJoinAlt": "Scan to Join",
-          "preview": "Preview"
+          "preview": "Preview",
+          "manage_edit_profile": "Edit Profile",
+          "manage_view_qr": "View QR Code",
+          "manage_preview_customer": "Preview Customer View",
+          "manage_remove_staff": "Remove Staff"
         }
       }
     },
@@ -1791,6 +2336,28 @@
           "uploadAdditionalDocuments": "Upload Additional Documents"
         }
       },
+      "SettingsTipQrPanel": {
+        "description": "Share this QR code to receive payments",
+        "stepScan": "Customer scans this QR code",
+        "stepAmount": "Customer enters the payment amount",
+        "stepMethod": "Customer chooses one of your active payout methods",
+        "stepConfirm": "Customer confirms they sent the payment; you acknowledge receipt in your payment history",
+        "activeMethodsLabel": "{{count}} active payout method(s) shown to customers",
+        "previewQr": "Preview QR",
+        "copyLink": "Copy payment link",
+        "downloadQr": "Download QR",
+        "viewHistory": "View payment history",
+        "emptyTitle": "Configure payout methods first",
+        "emptyDesc": "Turn on at least one payout method with account details before sharing your payment QR with customers.",
+        "emptyAction": "Set up payout methods",
+        "defaultQrTitle": "Payment QR Code",
+        "qrAlt": "Merchant direct payment QR code",
+        "scanCaption": "Customers scan to pay",
+        "merchantNote": "Share this QR code to receive direct payments using the payout methods you've set up.",
+        "loadErrorTitle": "Could not load payment QR",
+        "loadErrorDesc": "We couldn't fetch your payment link. Check your connection and try again.",
+        "retry": "Try again"
+      },
       "tabs": {
         "ProfileTab": {
           "edit": "Edit",
@@ -1812,6 +2379,9 @@
           "googleReviewLink": "Google Review Link",
           "yelpReviewLink": "Yelp Review Link",
           "payoutMethods": "Payout Methods",
+          "payoutMethodsTab": "Payout Methods",
+          "paymentQrTab": "Payment QR",
+          "tipQrTab": "Payment QR",
           "payoutAccount": "Payout account",
           "methodNotConfigured": "Method is not configured.",
           "pleaseEnterAccountDetails": "Please enter account details.",
@@ -1858,7 +2428,7 @@
             "adultDob": "You must be at least 18 years old.",
             "phone": "Please enter a valid phone number.",
             "email": "Please enter a valid email address.",
-            "emailOrPhone": "Please enter a valid email address or phone number.",
+            "emailOrPhone": "Enter a valid email or US mobile number (10 digits, e.g. john@gmail.com or 4085551234).",
             "url": "Enter a complete URL starting with http:// or https://.",
             "postalCode": "Please enter a valid ZIP or postal code.",
             "venmo": "Enter a valid Venmo username starting with @.",
@@ -1947,9 +2517,14 @@
       "views": {
         "StaffMyQR": {
           "linkCopiedToClipboard": "Link copied to clipboard!",
+          "staffIdCopied": "Staff ID copied!",
+          "staffShareLinkCopied": "Share link copied!",
           "staffCodeUnavailable": "Staff ID is not available yet. Please try again in a moment.",
           "shareFailed": "Could not share the link. Please copy it instead.",
           "copyFailed": "Could not copy the link.",
+          "referralLinkCopied": "Referral link copied!",
+          "referralCodeCopied": "Referral code copied!",
+          "referralCodeUnavailable": "Your referral code is not available yet.",
           "joinRequestViaQr": "Join Request (via QR)",
           "justNow": "Just now",
           "unlinked": "Unlinked",
@@ -1981,6 +2556,7 @@
           "personalTippingQr": "Personal Tipping QR",
           "tippingLink": "Tipping Link",
           "tippingLinkCopied": "Tipping link copied!",
+          "tipQrDownloaded": "Tip QR image downloaded.",
           "copy": "Copy",
           "openTippingPageSimulate": "Open Tipping Page (Simulate) ›"
         },
@@ -2062,16 +2638,18 @@
           "statusRejectedDescription": "Your previous verification was rejected. Please complete the KYC process again using the portal below."
         },
         "StaffReviews": {
-          "reviewsAndRatings": "Reviews & Ratings",
-          "customerReviews": "Customer Reviews",
-          "averageRating": "Average Rating",
-          "totalReviews": "Total Reviews",
+          "reviewsAndRatings": "My Reviews",
+          "overallRating": "Overall Rating",
+          "reviewCount": "({{count}} reviews)",
           "identitySecured": "IDENTITY SECURED",
           "noReviewsReceivedYet": "No reviews received yet.",
           "anonymousCustomer": "Anonymous Customer",
           "ratingOnly": "Rating only — no comment.",
           "pageOf": "Page {{page}} of {{total}}",
-          "internal": "Customer identities are protected. You see ratings and feedback only."
+          "internal": "Customer identities are protected. You see ratings and feedback only.",
+          "allReviews": "All Reviews",
+          "needsReply": "Needs Reply",
+          "needsReplyUnavailable": "Coming soon"
         }
       }
     },
@@ -2427,6 +3005,11 @@
       "support_desc": "Describe the issue with this physical device. Our team will follow up using the help code on this card.",
       "support_success": "Support request submitted successfully.",
       "support_success_desc": "Thank you. Our team will review your request and follow up if needed."
+    }
+  },
+  "homepage": {
+    "banner": {
+      "goToSlide": "Go to slide {{index}}"
     }
   },
   "coming_soon": {

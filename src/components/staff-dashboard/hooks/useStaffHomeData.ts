@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { TipStatus } from '../../../constants/tipStatus'
 import { useStaffDashboardSummary, useStaffTips } from '../../../data/hooks/useStaffSelf'
 import { PAYOUT_UI_LABELS, payoutTypeToUiKey } from '../../../data/paymentMethodTypes'
 import { useStaffLinkedBusinesses } from './useStaffLinkedBusinesses'
@@ -10,7 +11,7 @@ const PENDING_TIPS_PAGE_SIZE = 50
 // "Pending Confirmations" = tips the customer has paid (Confirmed) that are still
 // awaiting the staff's receipt confirmation. Filtering by Initiated is wrong: staff
 // cannot confirm receipt of money not yet sent, so confirm-receipt rejects those ids.
-const PENDING_CONFIRMATION_STATUS = 'Confirmed'
+const PENDING_CONFIRMATION_STATUS = TipStatus.Confirmed
 
 function paymentMethodLabel(method: string | null | undefined) {
   if (!method) return '—'

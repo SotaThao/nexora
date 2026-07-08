@@ -1,6 +1,6 @@
 import React from 'react'
 import { Check } from 'lucide-react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 import { useRegisterForm } from './register/hooks/useRegisterForm'
 import LanguageSwitcher from './ui/LanguageSwitcher'
@@ -11,17 +11,23 @@ import StepOtpVerify from './register/steps/StepOtpVerify'
 import StepProfileSetup from './register/steps/StepProfileSetup'
 import StepPayoutSetup from './register/steps/StepPayoutSetup'
 import StepSuccess from './register/steps/StepSuccess'
-import TermsModal from './register/modals/TermsModal'
 import PayoutEditModal from './register/modals/PayoutEditModal'
 import apiAuthAdapter from '../auth/adapters/apiAuthAdapter'
 import { loadPendingRegistration } from '../auth/pendingRegistration'
 import { useClearMerchantSetup } from '../data/hooks/useMerchantSetup'
 import { useClearProfileSettings } from '../data/hooks/useProfileSettings'
 import { logger } from '../utils/logger'
+import { saveRefCode, getSavedRefCode } from '../utils/affiliateReferral'
 
 export default function RegisterWizard() {
   const navigate = useNavigate()
   const location = useLocation()
+  const [searchParams] = useSearchParams()
+  const urlRef = searchParams.get('ref') || ''
+  // If a new ref code arrives via URL, persist it (overwrite previous).
+  // Fall back to whatever was previously saved in storage.
+  if (urlRef) saveRefCode(urlRef)
+  const refFromUrl = urlRef || getSavedRefCode()
   const { refreshSession } = useAuth()
   const clearMerchantSetupMutation = useClearMerchantSetup()
   const clearProfileSettingsMutation = useClearProfileSettings()
@@ -78,6 +84,7 @@ export default function RegisterWizard() {
     initialStep: showPersonalSuccessPopup ? 3 : 0,
     initialRole: showPersonalSuccessPopup ? 'personal' : 'personal',
     resumeOtpVerification,
+    initialRefCode: refFromUrl,
     autoSendVerificationOnResume,
     resumeEmail,
     resumePassword,
@@ -93,14 +100,14 @@ export default function RegisterWizard() {
   const form = useRegisterForm(formProps)
   const {
     currentStep, role, currentLanguage, setLanguage, t, getStepName,
-    showTermsModal, setShowTermsModal, setTermsAccepted, setErrors,
-    modalType,
+    setErrors,
     editingMethod, setEditingMethod,
     editValue, setEditValue,
     editQrCode, setEditQrCode,
     editAccountName, setEditAccountName,
     isCapturing, modalError, setModalError,
     savePayoutAccount, handleModalImagePick, handleModalTakePhoto, handleModalClearQr,
+    initialRefCode,
   } = form
 
 
@@ -175,24 +182,11 @@ export default function RegisterWizard() {
         {/* Main Card container */}
         <div className="bg-white rounded-2xl border border-nexoraBorder shadow-premium overflow-hidden transition-all duration-500">
           {currentStep === 0 && <StepRoleSelect {...form} />}
-          {currentStep === 1 && <StepCredentials {...form} />}
+          {currentStep === 1 && <StepCredentials {...form} refCodeReadOnly={!!initialRefCode} />}
           {currentStep === 2 && <StepOtpVerify {...form} />}
           {currentStep === 3 && role === 'personal' && <StepProfileSetup {...form} />}
         </div>
       </div>
-
-      {/* Terms & Conditions Modal Overlay */}
-      <TermsModal
-        open={showTermsModal}
-        currentLanguage={currentLanguage}
-        onClose={() => setShowTermsModal(false)}
-        onAccept={() => {
-          setTermsAccepted(true)
-          setErrors(prev => ({ ...prev, terms: '' }))
-          setShowTermsModal(false)
-        }}
-        modalType={modalType}
-      />
 
       {/* Payout Configuration Edit Modal Overlay */}
       {React.createElement(PayoutEditModal as any, {

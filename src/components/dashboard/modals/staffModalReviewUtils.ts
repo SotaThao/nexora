@@ -1,8 +1,24 @@
-export function buildStaffReviewSummary(reviews, staffId, filters) {
-  const reviewsList = staffId ? reviews.filter((review) => review.staffId === staffId) : []
-  const averageRating = reviewsList.length
-    ? Math.round((reviewsList.reduce((sum, review) => sum + (Number(review.rating) || 0), 0) / reviewsList.length) * 10) / 10
-    : 0
+import { staffRecordMatchesMember } from '../../../utils/staffRecordMatch'
+
+export function buildStaffReviewSummary(
+  reviews: LooseObject[],
+  staffMember: LooseObject | null | undefined,
+  filters: LooseObject,
+) {
+  const reviewsList = staffMember
+    ? reviews.filter((review) => staffRecordMatchesMember(staffMember, review))
+    : []
+
+  let averageRating = 0
+  if (reviewsList.length > 0) {
+    averageRating =
+      Math.round(
+        (reviewsList.reduce((sum, review) => sum + (Number(review.rating) || 0), 0) / reviewsList.length) * 10,
+      ) / 10
+  } else {
+    const rosterRating = Number(staffMember?.averageRating ?? 0)
+    if (rosterRating > 0) averageRating = rosterRating
+  }
 
   const starCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
   reviewsList.forEach((review) => {

@@ -1,6 +1,8 @@
 // Dashboard helpers — formatting, slugs, payout-config mapping, count-up hook.
 // Extracted from Dashboard.jsx (Group 1 refactor).
 import { useEffect, useMemo, useState } from 'react'
+import { isInitiatedLikeTipStatus, isTipStatus, TipStatus } from '../../constants/tipStatus'
+import { isMasterTouchpoint } from '../../constants/touchpoints'
 
 // Render text with styled star rating symbols (★) in luxuryGold with a 4px gap.
 export function renderTextWithGoldStars(text) {
@@ -95,13 +97,41 @@ export function formatNotificationDateTime(value, locale = 'en') {
 export function isAwaitingShopConfirmation(tx) {
   if (!tx?.isMultiStaff) return false
   if (tx.merchantConfirmedAt) return false
-  const status = String(tx.status || '').toLowerCase()
-  return status === 'confirmed'
+  return isTipStatus(tx.status, TipStatus.Confirmed)
 }
 
 // A shop-account tip the owner has already confirmed received.
 export function isShopConfirmed(tx) {
   return Boolean(tx?.isMultiStaff && tx?.merchantConfirmedAt)
+}
+
+// US-024 — staff confirm receipt for direct-to-staff tips.
+export function isAwaitingStaffConfirmation(tx) {
+  if (tx?.isMultiStaff) return false
+  if (tx?.staffConfirmedAt) return false
+  return isTipStatus(tx.status, TipStatus.Confirmed)
+}
+
+export function isStaffReceiptConfirmed(tx) {
+  return Boolean(!tx?.isMultiStaff && tx?.staffConfirmedAt)
+}
+
+// Initiated/Pending tips may be force-confirmed before the customer self-confirm
+// step, but ownership still follows US-024/US-025: staff owns direct-to-staff
+// tips, owner owns shop-account / multi-staff tips.
+export function isForceCompletableTip(tx, isStaffAudience = false) {
+  if (!isInitiatedLikeTipStatus(tx?.status)) return false
+  if (isStaffAudience) {
+    return Boolean(!tx?.isMultiStaff && !tx?.staffConfirmedAt)
+  }
+  return Boolean(tx?.isMultiStaff && !tx?.merchantConfirmedAt)
+}
+
+export function isReceiptConfirmableTip(tx, isStaffAudience = false) {
+  if (isStaffAudience) {
+    return isAwaitingStaffConfirmation(tx) || isForceCompletableTip(tx, true)
+  }
+  return isAwaitingShopConfirmation(tx) || isForceCompletableTip(tx, false)
 }
 
 export function walletLabels(accounts) {
@@ -217,4 +247,40 @@ export function useCountUp(target, duration = 900) {
   }, [duration, numericTarget])
 
   return formatAnimatedValue(target, value)
+}
+
+export function resolveMasterTouchpoint(touchpoints = []) {
+  return (
+    touchpoints.find(isMasterTouchpoint) ||
+    touchpoints[0] ||
+    null
+  )
+}
+
+export function buildMasterQrTarget(touchpoints = []) {
+  const masterTouchpoint = resolveMasterTouchpoint(touchpoints)
+  return {
+    name: 'Master Welcome QR',
+    subtitle: 'Store Main Portal',
+    slug: masterTouchpoint?.slug || 'general',
+    url: masterTouchpoint?.url || null,
+    qrImageUrl: masterTouchpoint?.qrImageUrl || null,
+    isActive: true,
+    isGatewayQr: true,
+  }
+}
+
+/** Leaderboard row label: full first name, or "First L." when surname exists. */
+export function formatLeaderboardStaffName(fullName) {
+  const full = String(fullName || '').trim()
+  if (!full) return { display: '—', full: '' }
+
+  const parts = full.split(/\s+/).filter(Boolean)
+  if (parts.length === 1) {
+    return { display: parts[0], full }
+  }
+
+  const firstName = parts[0]
+  const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase()
+  return { display: `${firstName} ${lastInitial}.`, full }
 }

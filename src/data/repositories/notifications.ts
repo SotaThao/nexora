@@ -54,6 +54,11 @@ const TYPE_TO_LINK_TAB: Record<string, string> = {
   review_good: 'reviews',
   review: 'reviews',
   feedback_alert: 'reviews',
+  payment_received: 'reports',
+  paymentreceived: 'reports',
+  direct_payment: 'reports',
+  directpayment: 'reports',
+  payment: 'reports',
 }
 
 /**
@@ -66,6 +71,12 @@ function extractStaffIdFromUrl(url: string | null | undefined): string | null {
   const requestMatch = url.match(/\/merchant\/staff\/requests\/([^/?#]+)/i)
   if (requestMatch?.[1]) return requestMatch[1]
   const match = url.match(/\/(?:merchant\/)?staff(?:\/links)?\/([^/?#]+)/i)
+  return match?.[1] || null
+}
+
+function extractPaymentIdFromUrl(url: string | null | undefined): string | null {
+  if (!url) return null
+  const match = url.match(/\/(?:merchant\/)?payments\/([^/?#]+)/i)
   return match?.[1] || null
 }
 
@@ -83,17 +94,27 @@ function normalizeNotification(item: NotificationApiDto): NotificationRecord {
   // Derive linkTab and staffId for navigation on click
   let linkTab: string | undefined
   let staffId: string | undefined
+  let paymentId: string | undefined
+
+  const paymentIdFromUrl = extractPaymentIdFromUrl(item.actionUrl)
 
   if (STAFF_NOTIFICATION_TYPES.has(typeLower)) {
     linkTab = 'staff'
     staffId = item.referenceId || extractStaffIdFromUrl(item.actionUrl) || undefined
   } else if (TYPE_TO_LINK_TAB[typeLower]) {
     linkTab = TYPE_TO_LINK_TAB[typeLower]
+  } else if (paymentIdFromUrl) {
+    linkTab = 'reports'
   } else if (item.actionUrl) {
     // Fallback: try to derive linkTab from actionUrl path
     const urlMatch = item.actionUrl.match(/\/dashboard\/([^/?#]+)/i)
     if (urlMatch) linkTab = urlMatch[1]
     if (item.actionUrl.includes('/merchant/staff')) linkTab = 'staff'
+  }
+
+  if (paymentIdFromUrl) {
+    paymentId = paymentIdFromUrl
+    linkTab = linkTab || 'reports'
   }
 
   return {
@@ -109,6 +130,7 @@ function normalizeNotification(item: NotificationApiDto): NotificationRecord {
     time: createdAt,
     ...(linkTab ? { linkTab } : {}),
     ...(staffId ? { staffId } : {}),
+    ...(paymentId ? { paymentId } : {}),
   }
 }
 

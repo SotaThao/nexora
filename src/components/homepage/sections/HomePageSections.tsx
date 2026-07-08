@@ -1,4 +1,5 @@
 import HomePageHeaderSection from './HomePageHeaderSection'
+import HomePageBannerSection from './HomePageBannerSection'
 import HomePageHeroSection from './HomePageHeroSection'
 import HomePageB2BSection from './HomePageB2BSection'
 import HomePageTaxIQSection from './HomePageTaxIQSection'
@@ -7,6 +8,8 @@ import HomePageRewardsSection from './HomePageRewardsSection'
 import HomePageCalculatorSection from './HomePageCalculatorSection'
 import HomePageFeaturesSection from './HomePageFeaturesSection'
 import HomePagePricingSection from './HomePagePricingSection'
+import HomePageFaqSection from './HomePageFaqSection'
+import HomePageDownloadSection from './HomePageDownloadSection'
 import HomePageCtaSection from './HomePageCtaSection'
 import HomePageFooterSection from './HomePageFooterSection'
 import HomePageDemoModal from './HomePageDemoModal'
@@ -17,6 +20,7 @@ export default function HomePageSections() {
   return (
     <>
       <HomePageHeaderSection />
+      <HomePageBannerSection />
       <HomePageHeroSection />
       <HomePageB2BSection />
       <HomePageTaxIQSection />
@@ -25,6 +29,8 @@ export default function HomePageSections() {
       <HomePageCalculatorSection />
       <HomePageFeaturesSection />
       <HomePagePricingSection />
+      <HomePageFaqSection />
+      <HomePageDownloadSection />
       <HomePageCtaSection />
       <HomePageFooterSection />
       <HomePageDemoModal />

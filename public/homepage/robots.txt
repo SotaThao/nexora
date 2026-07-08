@@ -1,0 +1,32 @@
+User-agent: *
+Allow: /
+
+# AI Crawlers — explicitly allowed for AIO
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Block access to sensitive areas
+Disallow: /admin/
+Disallow: /private/
+
+# Allow important assets
+Allow: /assets/images/
+Allow: /llms.txt
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1
+
+# Sitemap
+Sitemap: https://nexoratouch.com/sitemap.xml

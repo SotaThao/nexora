@@ -4,8 +4,8 @@ import {
 } from '../CountryCodeSelect'
 import { isValidEmail } from '../../utils/validation'
 
-export function isPhoneOnlyPayoutMethod(walletKey: string): boolean {
-  return walletKey === 'applecash'
+export function isPhoneOnlyPayoutMethod(_walletKey: string): boolean {
+  return false
 }
 
 /** Whether the payout identifier should use CountryCodeSelect + formatted national input. */

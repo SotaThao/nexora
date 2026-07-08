@@ -28,7 +28,7 @@ export default function HomePageRewardsSection() {
               
               <div className="lg:col-span-6 bg-slate-50 border border-slate-200 rounded-[32px] p-6 sm:p-8 shadow-xl ds-surface">
                 <div className="space-y-4">
-                  <h3 className="font-extrabold text-navy text-lg text-center" data-i18n="cr-card-title">Enter Customer Phone Number to Query</h3>
+                  <h3 className="font-extrabold text-navy text-base sm:text-lg text-center" data-i18n="cr-card-title">Enter Customer Phone Number to Query</h3>
                   <div className="flex gap-2">
                     <input className="flex-1 text-sm p-3 border border-slate-200 bg-white rounded-xl focus:outline-none focus:border-purple font-medium shadow-sm ds-field" data-i18n="ph-cr-lookup" id="external-lookup-phone" placeholder="(714) 555-0199" type="tel" maxLength={14} onInput={(e) => hp.maskUSPhone(e.currentTarget)} />
                     <button className="bg-purple text-white hover:bg-indigo-700 px-5 rounded-xl text-xs font-extrabold transition-all ds-control ds-button" data-i18n="btn-cr-lookup" onClick={() => { hp.lookupExternalLoyalty() }}>Check Profile</button>

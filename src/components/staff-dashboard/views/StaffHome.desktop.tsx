@@ -1,14 +1,20 @@
 // StaffHome — KPI overview, pending tip confirmations, linked businesses.
-import { CheckCircle2 } from 'lucide-react'
+import { CheckCircle2, Star } from 'lucide-react'
+import { useOutletContext } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useConfirmStaffTipsReceipt } from '../../../data/hooks/useStaffSelf'
 import { useStaffHomeData } from '../hooks/useStaffHomeData'
 import { SkeletonLayout } from '../../ui/skeleton'
+import Tooltip from '../../ui/Tooltip'
 import { STAFF_HOME_SKELETON } from '../skeletons/staffDashboardSkeletons'
+import {
+  getStaffBusinessLinkStatusPresentation,
+  resolveStaffBusinessLinkStatusLabel,
+} from '../../../utils/staffBusinessLinkStatus'
 
 const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
 
-function KpiCard({ label, value, sub = '', subClass = 'text-nexoraMuted' }) {
+function KpiCard({ label, value, sub = null, subClass = 'text-nexoraMuted' }) {
   return (
     <div className={panel}>
       <div className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">{label}</div>
@@ -22,11 +28,29 @@ function formatTipAmount(amount) {
   return `$${Number(amount || 0).toFixed(2)}`
 }
 
+function renderStars(rating) {
+  const rounded = Math.round(Number(rating) || 0)
+  return (
+    <div className="flex gap-0.5">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Star
+          key={i}
+          className={`h-3.5 w-3.5 ${i <= rounded ? 'fill-amber-400 text-amber-400' : 'text-amber-200'}`}
+        />
+      ))}
+    </div>
+  )
+}
+
 export default function StaffHome() {
   const { t } = useTranslation()
+  const { onNavigate } = useOutletContext<any>() || {}
   const confirmTipsMutation = useConfirmStaffTipsReceipt()
   const { kpis, isHomeLoading, isPendingTipsFetching, pendingTips, linkedBusinesses } =
     useStaffHomeData()
+  const activeLinkedBusinesses = linkedBusinesses.filter(
+    (biz) => resolveStaffBusinessLinkStatusLabel(biz).toLowerCase() === 'active',
+  )
 
   const isConfirming = confirmTipsMutation.isPending
 
@@ -57,15 +81,20 @@ export default function StaffHome() {
         />
         <KpiCard
           label={t('staff_dashboard.home.rating')}
-          value={kpis.rating || '—'}
-          sub={'★★★★★'}
-          subClass="text-amber-500 tracking-widest"
+          value={kpis.rating > 0 ? Number(kpis.rating).toFixed(1) : '—'}
+          sub={kpis.rating > 0 ? renderStars(kpis.rating) : null}
         />
       </section>
 
       {/* Pending confirmations */}
       <section className={panel}>
-        <h3 className="mb-3 text-base font-extrabold text-nexoraText">{t('staff_dashboard.home.pending_confirmations')}</h3>
+        <div className="mb-3 flex items-center gap-1.5">
+          <h3 className="text-base font-extrabold text-nexoraText">{t('staff_dashboard.home.pending_confirmations')}</h3>
+          <Tooltip
+            content={t('staff_dashboard.home.confirm_all_tooltip')}
+            ariaLabel={t('staff_dashboard.home.confirm_all_tooltip')}
+          />
+        </div>
         {isPendingTipsFetching && pendingTips.length > 0 ? (
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-nexoraSubtle">
             {t('common.loading')}
@@ -87,7 +116,7 @@ export default function StaffHome() {
                   <button
                     type="button"
                     disabled={isConfirming}
-                    onClick={() => confirmTipsMutation.mutate([tip.id])}
+                    onClick={() => confirmTipsMutation.mutate({ tipIds: [tip.id] })}
                     className="shrink-0 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-black text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {t('staff_dashboard.home.confirm')}
@@ -98,7 +127,7 @@ export default function StaffHome() {
             <button
               type="button"
               disabled={isConfirming}
-              onClick={() => confirmTipsMutation.mutate(pendingTips.map((tip) => tip.id))}
+              onClick={() => confirmTipsMutation.mutate({ tipIds: pendingTips.map((tip) => tip.id) })}
               className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-400 py-3 text-sm font-extrabold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <CheckCircle2 className="h-4 w-4" />
@@ -111,13 +140,16 @@ export default function StaffHome() {
       {/* Linked businesses */}
       <section className={panel}>
         <h3 className="mb-3 text-base font-extrabold text-nexoraText">{t('staff_dashboard.home.linked_businesses')}</h3>
-        {linkedBusinesses.length === 0 ? (
+        {activeLinkedBusinesses.length === 0 ? (
           <p className="py-4 text-center text-xs text-nexoraSubtle">
             {t('staff_dashboard.qr.no_linked_businesses')}
           </p>
         ) : (
           <div className="divide-y divide-nexoraBorder">
-            {linkedBusinesses.map((biz) => (
+            {activeLinkedBusinesses.map((biz) => {
+              const statusLabel = resolveStaffBusinessLinkStatusLabel(biz)
+              const statusPresentation = getStaffBusinessLinkStatusPresentation(statusLabel)
+              return (
               <div key={biz.businessStaffLinkId} className="flex items-center justify-between gap-3 py-3">
                 <div className="min-w-0">
                   <div className="truncate text-sm font-bold text-nexoraText">{biz.businessName}</div>
@@ -126,14 +158,14 @@ export default function StaffHome() {
                   </div>
                 </div>
                 <span
-                  className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black ${
-                    biz.status === 'Active' ? 'bg-emerald-50 text-emerald-600' : 'bg-nexoraCanvas text-nexoraMuted'
-                  }`}
+                  className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black ${statusPresentation.className}`}
                 >
-                  {biz.status === 'Active' ? t('staff_dashboard.status.active') : t('staff_dashboard.status.inactive')}
+                  {statusPresentation.translationKey
+                    ? t(statusPresentation.translationKey)
+                    : statusLabel}
                 </span>
               </div>
-            ))}
+            )})}
           </div>
         )}
       </section>

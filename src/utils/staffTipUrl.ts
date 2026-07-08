@@ -9,9 +9,10 @@
  * touchPointSlug is the business touch point (e.g. master-store / FrontDesk), not staff-{code}.
  */
 import { buildPublicQrImageUrl } from '../data/repositories/publicQr'
+import { MASTER_TOUCHPOINT_SLUG } from '../constants/touchpoints'
 
 /** Fallback when BE has not yet returned a touch-point slug on /staff/businesses. */
-export const DEFAULT_MASTER_TOUCH_POINT_SLUG = 'master-store'
+export const DEFAULT_MASTER_TOUCH_POINT_SLUG = MASTER_TOUCHPOINT_SLUG
 
 export function slugify(str = ''): string {
   return str
@@ -200,7 +201,48 @@ export function buildQrImageUrl(
   size = 200,
   qrImageUrl?: string | null,
 ): string {
+  // Always encode tipUrl when available so scanned QR matches copy-link URL
+  // (API qrImageUrl often points at production host, e.g. test-web).
+  if (tipUrl?.trim()) {
+    return buildPublicQrImageUrl(tipUrl.trim(), size)
+  }
   if (qrImageUrl) return qrImageUrl
-  if (!tipUrl) return ''
-  return buildPublicQrImageUrl(tipUrl, size)
+  return ''
+}
+
+/** Customer staff direct-payment URL — {origin}/pay/staff/{staffProfileId}. */
+export function buildStaffDirectPaymentPageUrl(
+  staffProfileId: string,
+  origin = typeof window !== 'undefined' ? window.location.origin : '',
+): string {
+  const id = String(staffProfileId || '').trim()
+  if (!id || !origin) return ''
+  return `${origin}/pay/staff/${encodeURIComponent(id)}`
+}
+
+/** Resolve staff payment QR customer URL from API payload or staff profile id. */
+export function resolveStaffDirectPaymentPageUrl({
+  staffProfileId,
+  paymentUrlFromApi,
+  origin = typeof window !== 'undefined' ? window.location.origin : '',
+}: {
+  staffProfileId?: string | null
+  paymentUrlFromApi?: string | null
+  origin?: string
+}): string {
+  const id = String(staffProfileId || '').trim()
+  if (!id) return ''
+
+  if (paymentUrlFromApi?.trim()) {
+    try {
+      const parsed = new URL(
+        paymentUrlFromApi.startsWith('http') ? paymentUrlFromApi : `${origin}${paymentUrlFromApi}`,
+      )
+      return `${origin}${parsed.pathname}`
+    } catch {
+      if (paymentUrlFromApi.startsWith('/')) return `${origin}${paymentUrlFromApi}`
+    }
+  }
+
+  return buildStaffDirectPaymentPageUrl(id, origin)
 }

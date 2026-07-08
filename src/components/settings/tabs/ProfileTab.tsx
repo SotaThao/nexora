@@ -25,14 +25,16 @@ import {
   X,
   QrCode
 } from 'lucide-react'
-import { isValidEmail, isValidPhone } from '../../../utils/validation'
+import { validatePayoutAccount } from '../../payout/validatePayoutAccount'
 import CountryCodeSelect, { formatNationalNumber, parsePhone } from '../../CountryCodeSelect'
 import CameraCapture from '../../ui/CameraCapture'
 import {
   getPaymentMethodDisplayName,
   payoutTypeToUiKey,
+  isHiddenPayoutConfigType,
 } from '../../../data/paymentMethodTypes'
 import { formatPaymentMethodAccountDisplay } from '../../payout/bankWireAccount'
+import SettingsTipQrPanel from '../SettingsTipQrPanel'
 import type { PaymentMethodDto } from '../../../types/domain'
 
 const PayoutLogos = {
@@ -71,20 +73,6 @@ const PayoutLogos = {
     <img src="/assets/vlinkpay-logo.png" alt="VLINKPAY Logo" className="h-[18px] w-[18px] object-contain" />
   ),
 }
-
-const validatePayoutAccount = (method, input) => {
-  const account = String(input || '').trim()
-  if (!account) return 'required'
-
-  if (method === 'zelle') return isValidEmail(account) || isValidPhone(account) ? '' : 'emailOrPhone'
-  if (method === 'paypal') return isValidEmail(account) ? '' : 'email'
-  if (method === 'venmo') return /^@[A-Za-z0-9_]{2,30}$/.test(account) ? '' : 'venmo'
-  if (method === 'cashapp') return /^\$[A-Za-z][A-Za-z0-9_]{1,19}$/.test(account) ? '' : 'cashapp'
-  if (method === 'applecash') return isValidPhone(account) ? '' : 'phone'
-  return account.length >= 3 ? '' : 'invalid'
-}
-
-const KYB_EDITABLE_STATUSES = new Set(['basic', 'kyb_rejected', 'rejected'])
 
 export default function ProfileTab({
   profile,
@@ -200,12 +188,13 @@ export default function ProfileTab({
   const [isCapturing, setIsCapturing] = useState(false)
   const [isCameraOpen, setIsCameraOpen] = useState(false)
   const [modalError, setModalError] = useState('')
+  const [payoutCardTab, setPayoutCardTab] = useState<'methods' | 'paymentQr'>('methods')
 
   const getMethodUiKey = (method: PaymentMethodDto) =>
     method.uiKey || payoutTypeToUiKey(method.type || '')
 
   const displayedPaymentMethods = apiPaymentMethods.filter(
-    (m) => getMethodUiKey(m) !== 'bankwire'
+    (m) => getMethodUiKey(m) !== 'bankwire' && !isHiddenPayoutConfigType(m),
   )
 
   const getMethod = (key: string) =>
@@ -383,24 +372,70 @@ export default function ProfileTab({
             </div>
           </div>
 
-          {/* Payout Methods Configuration */}
+          {/* Payout Methods & Direct Payment QR */}
           <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 relative">
-            <div className="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+            <div className="border-b border-slate-100 pb-3 mb-4 space-y-3">
               <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
                 <Wallet className="h-4 w-4 text-nexoraBrand" />
                 {t('components.settings.tabs.ProfileTab.payoutMethods')}
               </h4>
               {/* Keep Payment Wallets text for unit tests matching */}
               <span className="sr-only">Payment Wallets</span>
+
+              <div
+                className="flex gap-2 rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted p-1.5"
+                role="tablist"
+                aria-label={t('components.settings.tabs.ProfileTab.payoutMethods')}
+              >
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={payoutCardTab === 'methods'}
+                  onClick={() => setPayoutCardTab('methods')}
+                  className={`flex-1 rounded-lg px-3 py-2 text-[10px] font-extrabold uppercase tracking-wide transition ${
+                    payoutCardTab === 'methods'
+                      ? 'bg-nexoraBrand text-white shadow-md shadow-nexoraBrand/25 ring-2 ring-nexoraBrand/20'
+                      : 'bg-transparent text-nexoraMuted hover:bg-white/70 hover:text-nexoraText'
+                  }`}
+                >
+                  {t('components.settings.tabs.ProfileTab.payoutMethodsTab')}
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={payoutCardTab === 'paymentQr'}
+                  onClick={() => setPayoutCardTab('paymentQr')}
+                  className={`flex-1 rounded-lg px-3 py-2 text-[10px] font-extrabold uppercase tracking-wide transition ${
+                    payoutCardTab === 'paymentQr'
+                      ? 'bg-nexoraBrand text-white shadow-md shadow-nexoraBrand/25 ring-2 ring-nexoraBrand/20'
+                      : 'bg-transparent text-nexoraMuted hover:bg-white/70 hover:text-nexoraText'
+                  }`}
+                >
+                  {t('components.settings.tabs.ProfileTab.paymentQrTab')}
+                </button>
+              </div>
             </div>
 
-            <div className="divide-y divide-slate-100">
+            {payoutCardTab === 'paymentQr' ? (
+              <SettingsTipQrPanel
+                businessName={profile.businessName}
+                showToast={showToast}
+                handleCopy={handleCopy}
+                copiedId={copiedId}
+                t={t}
+                onConfigurePayoutMethods={() => setPayoutCardTab('methods')}
+              />
+            ) : (
+            <div className="space-y-2">
               {displayedPaymentMethods.map((method) => {
                 const uiKey = getMethodUiKey(method)
                 const label = method.name || getPaymentMethodDisplayName(method.type || '')
                 const accountDisplay = formatPaymentMethodAccountDisplay(uiKey, method.accountInfo)
                 return (
-                <div key={method.id || uiKey} className="flex items-center justify-between py-3">
+                <div
+                  key={method.id || uiKey}
+                  className="flex items-center justify-between rounded-xl border border-nexoraBorder bg-white px-3 py-2.5 shadow-sm"
+                >
                   <div className="flex items-center gap-3 min-w-0">
                     {/* Toggle Switch */}
                     <button
@@ -420,17 +455,17 @@ export default function ProfileTab({
 
                     {/* Logo and Label */}
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <span className="h-7 w-7 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-nexoraBorder bg-nexoraCanvas">
                         {PayoutLogos[uiKey]}
                       </span>
                       <div className="min-w-0">
-                        <div className="text-xs font-bold text-slate-800">{label}</div>
+                        <div className="text-xs font-bold text-nexoraText">{label}</div>
                         {method.isConfigured ? (
-                          <div className="text-[10px] text-slate-500 font-mono mt-0.5 truncate max-w-[110px] sm:max-w-[150px]">
+                          <div className="mt-0.5 max-w-[110px] truncate font-mono text-[10px] text-nexoraMuted sm:max-w-[150px]">
                             {accountDisplay}
                           </div>
                         ) : (
-                          <div className="text-[10px] text-slate-300 italic font-medium mt-0.5">
+                          <div className="mt-0.5 text-[10px] font-medium italic text-nexoraSubtle">
                             {t('components.settings.tabs.ProfileTab.notConfigured')}
                           </div>
                         )}
@@ -443,7 +478,7 @@ export default function ProfileTab({
                     type="button"
                     onClick={() => handleEditPayoutAccount(uiKey)}
                     aria-label={`Edit ${label} Payout Account`}
-                    className="flex items-center gap-1 text-[10px] font-bold text-amber-600 hover:text-amber-700 transition shrink-0 ml-2"
+                    className="ml-2 flex shrink-0 items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5 text-[10px] font-bold text-amber-700"
                   >
                     <Edit2 className="h-3 w-3" />
                     <span>{t('components.settings.tabs.ProfileTab.payoutAccount')}</span>
@@ -451,6 +486,7 @@ export default function ProfileTab({
                 </div>
               )})}
             </div>
+            )}
 
           </div>
 

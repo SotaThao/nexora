@@ -57,6 +57,10 @@ export function normalizeTouchPageData(raw: LooseObject | null | undefined): Loo
     readBusinessIdFromObject(business) ||
     readBusinessIdFromObject(raw.businessProfile) ||
     readBusinessIdFromObject(raw.profile) ||
+    raw.touchPoint?.businessId ||
+    raw.touchPoint?.BusinessId ||
+    raw.touchpoint?.businessId ||
+    raw.touchpoint?.BusinessId ||
     raw.businessId ||
     raw.BusinessId ||
     null

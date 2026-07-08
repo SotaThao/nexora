@@ -1,11 +1,25 @@
 /** Homepage section component */
 import { useNavigate } from 'react-router-dom'
+import useAuth from '../../../auth/useAuth'
 import { useHomePageBridge } from '../context/HomePageBridgeContext'
-import LucideIcon from '../ui/LucideIcon'
+import { useHomePageLayout } from '../context/HomePageLayoutContext'
+import { dashboardPathForSession } from '../utils/sessionRouting'
 
 export default function HomePageHeaderSection() {
   const navigate = useNavigate()
-  const { hp, planCta, onLogout } = useHomePageBridge()
+  const { session } = useAuth()
+  const { hp, onLogout } = useHomePageBridge()
+  const { hasMobileMenu, openSidebarMenu } = useHomePageLayout()
+  const dashboardPath = session ? dashboardPathForSession(session) : '/dashboard'
+  const dashboardLabelKey = dashboardPath === '/staff' ? 'header-staff' : 'header-dashboard'
+
+  const handleMobileMenuToggle = () => {
+    if (hasMobileMenu) {
+      openSidebarMenu()
+      return
+    }
+    hp.toggleMobileMenu()
+  }
 
   return (
     <>
@@ -13,7 +27,7 @@ export default function HomePageHeaderSection() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-2 sm:gap-4">
             <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
               
-              <button className="mobile-menu-toggle md:hidden focus:outline-none focus:ring-2 focus:ring-purple/35 ds-control ds-button" aria-controls="mobile-navigation-menu" aria-label="Open mobile menu" aria-expanded="false" id="mobile-menu-toggle" onClick={() => { hp.toggleMobileMenu() }}>
+              <button className={`mobile-menu-toggle ${hasMobileMenu ? 'lg:hidden' : 'md:hidden'} focus:outline-none focus:ring-2 focus:ring-purple/35 ds-control ds-button`} aria-controls={hasMobileMenu ? 'dashboard-mobile-menu' : 'mobile-navigation-menu'} aria-label={hasMobileMenu ? 'Open navigation menu' : 'Open mobile menu'} aria-expanded="false" id="mobile-menu-toggle" onClick={handleMobileMenuToggle}>
                 <svg className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300" fill="none" id="mobile-menu-icon" stroke="currentColor" viewBox="0 0 24 24">
                   <path d="M4 6h16M4 12h16M4 18h16" id="hamburger-path" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5"></path>
                 </svg>
@@ -61,6 +75,7 @@ export default function HomePageHeaderSection() {
                 </div>
               </div>
               
+              {!hasMobileMenu && (
               <div className="flex items-center gap-1 sm:gap-2" id="header-auth-group">
                 
                 <button className="text-[10px] sm:text-xs font-extrabold text-slate-700 bg-slate-100 hover:bg-slate-200 hover:text-purple px-2.5 sm:px-4 py-2 rounded-full transition-all duration-300 transform hover:scale-[1.04] active:scale-95 flex items-center gap-1 shadow-sm border border-slate-200/80 ds-control ds-button" onClick={() => navigate('/login')}>
@@ -71,17 +86,34 @@ export default function HomePageHeaderSection() {
                   <span data-i18n="btn-register">Sign Up</span>
                 </button>
               </div>
-              
-              <div className="hidden items-center gap-2 bg-purple/10 px-2.5 sm:px-3 py-1 rounded-full border border-purple/20 shrink-0 min-w-0" id="header-user-badge">
-                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-green animate-pulse shrink-0" aria-hidden="true"></span>
-                <span className="hidden text-[10px] sm:text-xs font-bold text-purple min-w-0 truncate" data-i18n="header-guest" id="header-user-name" aria-hidden="true">Hello, Guest</span>
+              )}
+
+              {hasMobileMenu && (
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 min-w-0" id="header-user-badge">
                 <div className="header-user-actions shrink-0" id="header-user-actions">
-                  <button className="header-user-chip header-user-chip--muted" type="button" data-i18n="btn-logout" onClick={onLogout}>Logout</button>
+                  <button
+                    className="header-user-chip header-user-chip--primary"
+                    type="button"
+                    data-i18n={dashboardLabelKey}
+                    onClick={() => navigate(dashboardPath)}
+                  >
+                    Dashboard
+                  </button>
+                  <button
+                    className="header-user-chip header-user-chip--muted"
+                    type="button"
+                    data-i18n="btn-logout"
+                    onClick={onLogout}
+                  >
+                    Logout
+                  </button>
                 </div>
               </div>
+              )}
             </div>
           </div>
           
+          {!hasMobileMenu && (
           <div className="mobile-menu-panel hidden md:hidden animate-fadeIn p-2 space-y-1 font-extrabold text-xs sm:text-sm text-slate-600" id="mobile-navigation-menu">
             <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-features" href="#features" onClick={() => { hp.toggleMobileMenu() }}>Features</a>
             <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-simulator" href="#simulator" onClick={() => { hp.toggleMobileMenu() }}>Live Demo</a>
@@ -90,6 +122,7 @@ export default function HomePageHeaderSection() {
             <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-calculator" href="#calculator" onClick={() => { hp.toggleMobileMenu() }}>Calculator</a>
             <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-pricing" href="#pricing" onClick={() => { hp.toggleMobileMenu() }}>Pricing</a>
           </div>
+          )}
         </header>
     </>
   )

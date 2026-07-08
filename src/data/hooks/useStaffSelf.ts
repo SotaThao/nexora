@@ -2,7 +2,7 @@
  * useStaffSelf — TanStack Query hooks for the staff self-service domain.
  */
 import { useMemo } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { qk } from '../queryKeys'
 import staffSelfRepository from '../repositories/staffSelf'
 import { useSessionRole } from '../../auth/useSessionRole'
@@ -19,6 +19,8 @@ import type {
   StaffTipsPage,
 } from '../../types/domain'
 import type { StaffTipsListParams } from '../repositories/staffSelf'
+import type { TransactionsListQuery } from '../repositories/transactions'
+import type { TransactionsListPage } from '../repositories/transactions'
 import { useStaffAccount } from '../../contexts/StaffAccountContext'
 import { resolveStaffTipQr } from '../../utils/staffTipUrl'
 
@@ -82,6 +84,7 @@ export function useStaffBusinessTipQrs({ enabled: callerEnabled = true } = {}) {
         linkStatus: biz.linkStatus,
         linkStatusLabel: biz.linkStatusLabel,
         roleLabel: biz.roleLabel,
+        roleAtBusiness: biz.roleAtBusiness,
         logoUrl: biz.logoUrl,
         tipLinkIncomplete: Boolean(biz.touchPointsMissing),
       } satisfies StaffBusinessTipQr
@@ -140,15 +143,43 @@ export function useStaffTips({
   })
 }
 
+export function useStaffTransactionsPaginated(
+  query: TransactionsListQuery,
+  { enabled: callerEnabled = true } = {},
+) {
+  const { isStaff } = useSessionRole()
+  const { data: profile } = useStaffProfile({ enabled: isStaff && callerEnabled })
+  const staffDisplayName =
+    profile?.displayName?.trim() ||
+    profile?.fullName?.trim() ||
+    profile?.staffCode?.trim() ||
+    'Staff'
+
+  return useQuery<TransactionsListPage>({
+    queryKey: qk.staffTransactionsPaginated(query),
+    queryFn: () => staffSelfRepository.listTransactionsPaginated(query, staffDisplayName),
+    enabled: isStaff && callerEnabled,
+    placeholderData: keepPreviousData,
+    retry: false,
+  })
+}
+
+export interface StaffConfirmReceiptVars {
+  tipIds: string[]
+  isForce?: boolean
+}
+
 export function useConfirmStaffTipsReceipt() {
   const queryClient = useQueryClient()
   const { showToast } = useNotification()
   const { t } = useTranslation()
 
-  return useMutation<StaffTipsConfirmReceiptResult, Error, string[]>({
-    mutationFn: (tipIds) => staffSelfRepository.confirmTipsReceipt(tipIds),
+  return useMutation<StaffTipsConfirmReceiptResult, Error, StaffConfirmReceiptVars>({
+    mutationFn: (vars) =>
+      staffSelfRepository.confirmTipsReceipt(vars.tipIds, { isForce: vars.isForce }),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['staffTips'] })
+      queryClient.invalidateQueries({ queryKey: ['staffTransactions', 'paginated'] })
       queryClient.invalidateQueries({ queryKey: qk.staffDashboardSummary() })
 
       if (result.failedIds.length > 0) {

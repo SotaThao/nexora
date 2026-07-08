@@ -152,6 +152,12 @@ const DEFAULT_PROFILE = {
 
 const KYB_EDITABLE_STATUSES = new Set(['basic', 'kyb_rejected', 'rejected'])
 
+const ENABLED_SETTINGS_TABS = new Set(['profile', 'affiliate'])
+
+function normalizeSettingsTab(tab) {
+  return ENABLED_SETTINGS_TABS.has(tab) ? tab : 'profile'
+}
+
 export default function useSettingsForm({
   setupData,
   hasKyb,
@@ -176,7 +182,7 @@ export default function useSettingsForm({
   const updateReviewLinksMutation = useUpdateReviewLinks();
   const { data: verifiedStatusData } = useVerifiedStatus();
 
-  const [activeTab, setActiveTab] = useState(initialTab); // profile | kyb
+  const [activeTab, setActiveTab] = useState(() => normalizeSettingsTab(initialTab))
 
   const effectiveVerificationStatus = useMemo(
     () => resolveEffectiveKybStatus(
@@ -196,24 +202,19 @@ export default function useSettingsForm({
 
   useEffect(() => {
     if (initialTab) {
-      setActiveTab(initialTab);
+      setActiveTab(normalizeSettingsTab(initialTab))
     }
-  }, [initialTab]);
-
-  useEffect(() => {
-    if (activeTab === 'kyb') {
-      queryClient.invalidateQueries({ queryKey: qk.verifiedStatus() });
-    }
-  }, [activeTab, queryClient]);
+  }, [initialTab])
 
   const handleTabChange = (tab) => {
-    if (tab === 'profile' && activeTab === 'kyb') {
-      queryClient.invalidateQueries({ queryKey: qk.userProfile() });
-      queryClient.invalidateQueries({ queryKey: qk.verifiedStatus() });
+    const nextTab = normalizeSettingsTab(tab)
+    if (nextTab === 'profile' && activeTab === 'kyb') {
+      queryClient.invalidateQueries({ queryKey: qk.userProfile() })
+      queryClient.invalidateQueries({ queryKey: qk.verifiedStatus() })
     }
-    setActiveTab(tab);
-    if (onTabChange) onTabChange(tab);
-  };
+    setActiveTab(nextTab)
+    if (onTabChange) onTabChange(nextTab)
+  }
 
   const openKybPortalFlow = () => {
     if (openKybPortal) openKybPortal();

@@ -30,6 +30,7 @@ export function useUpdateMerchantPaymentMethod() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPaymentMethods() })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPaymentQr() })
       showToast(t('payment_methods.update_success'), 'success')
     },
     onError: (err) => {
@@ -83,6 +84,7 @@ export function useSaveMerchantPayoutConfigs() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPaymentMethods() })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPaymentQr() })
     },
   })
 }
@@ -92,10 +94,16 @@ export function useToggleMerchantPaymentMethod() {
   const { showToast } = useNotification()
   const { t } = useTranslation()
 
-  return useMutation<PaymentMethodDto, Error, string>({
-    mutationFn: (id) => merchantPaymentMethodsRepository.toggle(id),
+  return useMutation<
+    PaymentMethodDto,
+    Error,
+    string | { id: string; silentSuccessToast?: boolean }
+  >({
+    mutationFn: (vars) =>
+      merchantPaymentMethodsRepository.toggle(typeof vars === 'string' ? vars : vars.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.merchantPaymentMethods() })
+      queryClient.invalidateQueries({ queryKey: qk.merchantPaymentQr() })
     },
     onError: (err) => {
       showToast(err.message || t('payment_methods.toggle_failed'), 'error')

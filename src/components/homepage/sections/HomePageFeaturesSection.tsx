@@ -14,7 +14,7 @@ export default function HomePageFeaturesSection() {
             <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
               <span className="text-xs font-extrabold text-purple uppercase tracking-widest" data-i18n="feat-eyebrow">COMPREHENSIVE CORE SUITE</span>
               <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-navy" data-i18n="feat-title">Engineered Specifically for High-Growth Brands</h2>
-              <p className="text-base text-slate-500 leading-relaxed" data-i18n="feat-desc">Tackle every client transaction. Automate feedback pipelines, save processing costs, and engage customers seamlessly.</p>
+              <p className="text-sm sm:text-base text-slate-500 leading-relaxed" data-i18n="feat-desc">Tackle every client transaction. Automate feedback pipelines, save processing costs, and engage customers seamlessly.</p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
               

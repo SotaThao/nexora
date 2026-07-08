@@ -1,6 +1,6 @@
 import { Star, Trophy } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { formatCurrency } from '../utils'
+import { formatCurrency, formatLeaderboardStaffName } from '../utils'
 import { useDashboardStaff } from '../../../data/hooks/useDashboard'
 import Panel from '../../ui/Panel'
 import { SkeletonList } from '../../ui/skeleton'
@@ -46,27 +46,36 @@ function StaffLeaderboardPanel({
         </div>
       ) : (
         <div className="mt-5 space-y-4 sm:mt-7 sm:space-y-7">
-          {rows.map((member, index) => (
+          {rows.map((member, index) => {
+            const { display, full } = formatLeaderboardStaffName(member.name)
+
+            return (
             <button
               key={member.id || index}
               onClick={() => setSelectedStaff(member.id)}
-              className={`dashboard-list-row grid w-full grid-cols-[40px_minmax(0,1fr)_auto] items-start gap-x-3 rounded-lg p-2 text-left transition hover:bg-nexoraSurfaceMuted sm:grid-cols-[48px_minmax(0,1fr)_88px_72px] sm:items-center sm:gap-4 ${selectedStaff === member.id ? 'bg-nexoraBrandSoft' : ''}`}
+              className={`dashboard-list-row grid w-full grid-cols-[40px_minmax(0,1fr)_auto] items-start gap-x-3 rounded-lg p-2 text-left transition hover:bg-nexoraSurfaceMuted sm:grid-cols-[48px_minmax(0,1fr)_minmax(72px,auto)_minmax(56px,auto)] sm:items-start sm:gap-x-3 sm:gap-y-1 ${selectedStaff === member.id ? 'bg-nexoraBrandSoft' : ''}`}
               style={{ animationDelay: `${index * 80}ms` }}
             >
-              <span className={`mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold sm:mt-0 sm:h-11 sm:w-11 ${avatarClasses[index]}`}>
+              <span className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold sm:h-11 sm:w-11 ${avatarClasses[index]}`}>
                 {(member.name || 'A').split(' ').map((part) => part[0]).join('')}
               </span>
-              <div className="min-w-0">
-                <div className="truncate text-base font-semibold text-nexoraText sm:text-lg">{member.name}</div>
+              <div className="min-w-0 self-center sm:self-start">
+                <div
+                  className="break-words text-base font-semibold leading-snug text-nexoraText sm:text-lg"
+                  title={full || undefined}
+                >
+                  {display}
+                </div>
                 <div className="mt-0.5 text-sm font-bold text-nexoraText sm:hidden">{formatCurrency(member.tips)}</div>
               </div>
-              <span className="hidden text-lg font-bold text-nexoraText sm:block">{formatCurrency(member.tips)}</span>
-              <span className="mt-1 flex shrink-0 items-center justify-end gap-1 text-sm font-bold text-nexoraWarning sm:mt-0 sm:justify-start">
+              <span className="hidden shrink-0 self-center text-right text-lg font-bold text-nexoraText sm:block">{formatCurrency(member.tips)}</span>
+              <span className="mt-0.5 flex shrink-0 items-center justify-end gap-1 self-center text-sm font-bold text-nexoraWarning sm:mt-0 sm:justify-end">
                 <Star className="h-4 w-4 fill-current" />
                 {member.rating}
               </span>
             </button>
-          ))}
+            )
+          })}
         </div>
       )}
     </Panel>

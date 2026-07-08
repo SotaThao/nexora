@@ -26,6 +26,7 @@ export default function TipAmount({
   setTipRefNumber,
   isApiMode,
   handlePay,
+  paymentMode = false,
 }) {
   const walletOptions = getWalletOptions(availablePaymentWalletKeys)
   const staffTipRows = selectedStaffMembers.map((member) => ({
@@ -33,8 +34,8 @@ export default function TipAmount({
     amount: resolveStaffTipAmount(member.id, selectedTips, customTips),
   }))
 
-  const hasInvalidAmount = staffTipRows.some(({ amount }) => Number.isNaN(amount) || amount < 0 || amount > 500)
-  const isTotalInvalid = activeTipAmount <= 0 || activeTipAmount > 500
+  const hasInvalidAmount = staffTipRows.some(({ amount }) => Number.isNaN(amount) || amount < 0)
+  const isTotalInvalid = activeTipAmount < 1
   const disablePaymentSelection = hasInvalidAmount || isTotalInvalid
 
   const handleSelectWallet = (wallet) => {
@@ -57,7 +58,9 @@ export default function TipAmount({
     <div className="space-y-4 animate-fadeIn">
       <div className="text-center space-y-1.5">
         <h2 className="font-sans text-lg font-black tracking-wide text-nexoraText uppercase">
-          {t('customer.tip_review_payment_title')}
+          {paymentMode
+            ? t('direct_payment.review_payment_title')
+            : t('customer.tip_review_payment_title')}
         </h2>
       </div>
 
@@ -133,16 +136,23 @@ export default function TipAmount({
                       </button>
                     </div>
                     {selTip === 'custom' && (
-                      <div className="relative">
-                        <span className="absolute left-3 top-2.5 text-xs font-extrabold text-nexoraSubtle">$</span>
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          placeholder={t('components.customer_flow.steps.TipAmount.phAmount')}
-                          className="w-full bg-white border border-nexoraBorder focus:border-nexoraBrand rounded-lg pl-7 pr-3 py-2 text-xs font-extrabold text-nexoraText focus:outline-none transition-all"
-                          value={custTip}
-                          onChange={(e) => setCustomTips({ ...customTips, [member.id]: e.target.value })}
-                        />
+                      <div>
+                        <div className="relative">
+                          <span className="absolute left-3 top-2.5 text-xs font-extrabold text-nexoraSubtle">$</span>
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            placeholder={t('components.customer_flow.steps.TipAmount.phAmount')}
+                            className={`w-full bg-white border ${amount < 1 && custTip !== '' ? 'border-red-500 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'} rounded-lg pl-7 pr-3 py-2 text-xs font-extrabold text-nexoraText focus:outline-none transition-all`}
+                            value={custTip}
+                            onChange={(e) => setCustomTips({ ...customTips, [member.id]: e.target.value })}
+                          />
+                        </div>
+                        {amount < 1 && custTip !== '' && (
+                          <div className="mt-1.5 text-red-500 text-[10px] font-semibold pl-1">
+                            {t('components.customer_flow.steps.TipAmount.minTipErr')}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -154,7 +164,9 @@ export default function TipAmount({
         <div className="flex items-center justify-between border-t border-nexoraBrandSoft bg-nexoraBrandSoft/35 px-3.5 py-3">
           <div>
             <h4 className="text-[11px] font-extrabold text-slate-800 uppercase tracking-wider">
-              {t('components.customer_flow.steps.TipAmount.totalTip')}
+              {paymentMode
+                ? t('direct_payment.total_payment')
+                : t('components.customer_flow.steps.TipAmount.totalTip')}
             </h4>
             <p className="mt-0.5 text-[10px] font-semibold text-nexoraMuted">
               {t('components.customer_flow.steps.TipAmount.provider_count', { count: selectedStaffMembers.length })}
@@ -180,7 +192,7 @@ export default function TipAmount({
             type="button"
             disabled={disablePaymentSelection}
             onClick={() => handleSelectWallet(wallet)}
-            className="w-full flex items-center justify-between rounded-xl border border-nexoraBorder bg-white p-3 text-sm font-bold text-nexoraText shadow-sm transition hover:border-nexoraBrand/40 hover:bg-nexoraCanvas disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex w-full items-center justify-between rounded-xl border border-nexoraBorder bg-white p-3 text-sm font-bold text-nexoraText shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
           >
             <div className="flex items-center gap-3">
               <span className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${wallet.color}`}>

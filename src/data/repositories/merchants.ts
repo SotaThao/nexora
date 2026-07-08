@@ -9,40 +9,43 @@ import { imagesRepository } from './images'
 
 type HttpClient = typeof httpClient
 
+export function mapBusinessApiDtoToSetup(res: BusinessApiDto): MerchantSetup {
+  return {
+    businessInfo: {
+      id: res.id || res.businessId || '',
+      businessId: res.businessId || res.id || '',
+      name: res.name || '',
+      slug: res.slug || res.businessSlug || '',
+      industry: res.businessType || 'Nail Salon',
+      address: res.address || '',
+      phone: res.phone || '',
+      website: res.website || '',
+      logo: res.logoUrl || null,
+      paymentAccounts: {
+        venmo: '',
+        cashapp: '',
+        zelle: '',
+        vlinkpay: '',
+      },
+    },
+    reviewLinks: {
+      googleReview: res.googleReviewUrl || '',
+      yelpReview: res.yelpUrl || '',
+      facebookReview: res.facebookUrl || '',
+      feedbackEmail: res.feedbackEmail || '',
+    },
+    staffList: [],
+    touchPoints: [],
+  }
+}
+
 export function createMerchantsRepository(client: HttpClient = httpClient) {
   return {
     async getSetup(): Promise<MerchantSetup | null> {
       try {
         const res = await client.get<BusinessApiDto>('/api/v1/merchant/business')
         if (!res) return null
-
-        return {
-          businessInfo: {
-            id: res.id || res.businessId || '',
-            businessId: res.businessId || res.id || '',
-            name: res.name || '',
-            slug: res.slug || res.businessSlug || '',
-            industry: res.businessType || 'Nail Salon',
-            address: res.address || '',
-            phone: res.phone || '',
-            website: res.website || '',
-            logo: res.logoUrl || null,
-            paymentAccounts: {
-              venmo: '',
-              cashapp: '',
-              zelle: '',
-              vlinkpay: '',
-            },
-          },
-          reviewLinks: {
-            googleReview: res.googleReviewUrl || '',
-            yelpReview: res.yelpUrl || '',
-            facebookReview: res.facebookUrl || '',
-            feedbackEmail: res.feedbackEmail || '',
-          },
-          staffList: [],
-          touchPoints: [],
-        }
+        return mapBusinessApiDtoToSetup(res)
       } catch (err: unknown) {
         if (
           isApiError(err) &&

@@ -22,6 +22,36 @@
   box-shadow: 0 0 20px rgba(108, 77, 246, 0.4);
 }
 
+.nx-homepage-banner-dot {
+  min-height: 0 !important;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  box-shadow: none !important;
+  transform: none !important;
+  flex-shrink: 0;
+}
+
+.nx-homepage-banner-dot:hover,
+.nx-homepage-banner-dot:focus-visible,
+.nx-homepage-banner-dot:active {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.nx-pricing-compare {
+  -webkit-overflow-scrolling: touch;
+}
+
+.nx-pricing-compare table th,
+.nx-pricing-compare table td {
+  vertical-align: middle;
+}
+
+.nx-pricing-compare tbody tr:hover {
+  background-color: rgba(248, 250, 252, 0.9);
+}
+
 .swal-popup-rounded {
   border-radius: 24px !important;
   font-family: 'Plus Jakarta Sans', sans-serif !important;
@@ -315,10 +345,15 @@ html {
   padding-right: 2rem !important;
 }
 
-/* Tax IQ dark inputs: keep black background on focus */
-#tax-iq input:focus,
-#tax-iq select:focus,
-#tax-iq textarea:focus {
+/* Tax IQ is a dark-theme card inside the light-theme homepage. The global
+   `.nx-homepage input/select/textarea` rule forces navy text on a white
+   background and outranks the card's Tailwind `bg-black text-white` by
+   specificity, so on focus/hover the field kept dark text on a dark background
+   (unreadable). Force the dark theme for these text fields in every state. */
+#tax-iq input:not([type="checkbox"]):not([type="radio"]),
+#tax-iq select,
+#tax-iq textarea {
+  color: #fff !important;
   background-color: #000 !important;
 }
 
@@ -875,20 +910,6 @@ nav a:focus-visible {
     min-height: 40px;
   }
 
-  .nx-homepage input,
-  .nx-homepage select,
-  .nx-homepage textarea,
-  .nx-homepage button {
-    font-size: 16px;
-    /* avoids iOS zoom on form focus */
-  }
-
-  .text-\[9px\],
-  .text-\[10px\],
-  .text-\[11px\],
-  .text-xs {
-    /* keep tiny labels readable on mobile without breaking Tailwind utilities too much */
-  }
 
   /* Savings stats labels 80% */
   [data-i18n="calc-stat-1"],

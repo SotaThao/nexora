@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import { Eye, EyeOff, X, Loader2 } from 'lucide-react'
+import React from 'react'
+import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { renderLabel } from '../../../contexts/LanguageContext'
 
 export default function StepOtpVerify({
@@ -13,7 +13,7 @@ export default function StepOtpVerify({
   otpCode, setOtpCode,
   otpError,
   resendTimer, setResendTimer,
-  currentLanguage, t,
+  t,
   isSelfServe,
   inviteData,
   termsAccepted, setTermsAccepted,
@@ -26,10 +26,6 @@ export default function StepOtpVerify({
   isDemoToolsEnabled = false,
   isSubmitting,
 }) {
-  const [showTermsModal, setShowTermsModal] = useState(false)
-  const [modalType, setModalType] = useState('terms')
-
-
   return (
     <>
       {/* STEP 1: Register Account & Activate */}
@@ -149,27 +145,23 @@ export default function StepOtpVerify({
             {/* Implicit Consent Terms and Privacy Note */}
             <div className="text-[11px] text-nexoraMuted leading-normal text-center font-sans max-w-sm mx-auto pt-1 pb-2">
               {t('register.consent.prefix')} <span className="font-bold text-nexoraText">{t('register.consent.action')}</span>, {t('register.consent.middle')}{' '}
-              <button
-                type="button"
-                onClick={() => {
-                  setModalType('terms')
-                  setShowTermsModal(true)
-                }}
+              <a
+                href="/terms-of-service"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-nexoraTealAlt hover:underline font-bold"
               >
                 {t('register.consent.terms')}
-              </button>{' '}
+              </a>{' '}
               {t('register.consent.and')}{' '}
-              <button
-                type="button"
-                onClick={() => {
-                  setModalType('privacy')
-                  setShowTermsModal(true)
-                }}
+              <a
+                href="/privacy-policy"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-nexoraTealAlt hover:underline font-bold"
               >
                 {t('register.consent.privacy')}
-              </button>.
+              </a>.
             </div>
           </div>
 
@@ -285,76 +277,6 @@ export default function StepOtpVerify({
           </div>
         </form>
       )}
-      <TermsModal
-        open={showTermsModal}
-        currentLanguage={currentLanguage}
-        onClose={() => setShowTermsModal(false)}
-        onAccept={() => {
-          setTermsAccepted(true)
-          setRegErrors(prev => ({ ...prev, terms: '' }))
-          setShowTermsModal(false)
-        }}
-        modalType={modalType}
-        t={t}
-      />
     </>
-  )
-}
-
-// Terms & Conditions Modal Overlay
-function TermsModal({ open, currentLanguage, onClose, onAccept, modalType, t }) {
-  const legalSections = t(`register.legal.${modalType}.sections`)
-
-  if (!open) return null
-  return (
-    <div className="fixed inset-0 bg-nexoraText/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
-      <div className="bg-white border border-nexoraRule rounded-3xl max-w-xl w-full p-6 flex flex-col max-h-[85vh] text-left text-nexoraText shadow-2xl animate-scaleUp">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-nexoraRule pb-4">
-          <h3 className="text-sm font-black uppercase tracking-wider text-nexoraText">
-            {modalType === 'privacy'
-              ? (t('components.staff_registration.steps.StepOtpVerify.privacyPolicy'))
-              : (t('components.staff_registration.steps.StepOtpVerify.termsOfService'))
-            }
-          </h3>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-nexoraSubtle hover:text-nexoraText transition p-1.5 rounded-full hover:bg-nexoraSurfaceMuted"
-            title="Close modal"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
-        {/* Content body */}
-        <div className="flex-grow overflow-y-auto pr-2 py-4 space-y-4 text-xs text-nexoraMuted leading-relaxed max-h-[50vh] scrollbar-thin">
-          {Array.isArray(legalSections) && legalSections.map((section) => (
-            <React.Fragment key={section.title}>
-              <h4 className="font-extrabold text-nexoraText">{section.title}</h4>
-              <p>{section.body}</p>
-            </React.Fragment>
-          ))}
-        </div>
-
-        {/* Footer action buttons */}
-        <div className="flex justify-end gap-3 border-t border-nexoraRule pt-4 mt-auto">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 border border-nexoraBorder text-nexoraMuted rounded-xl font-bold hover:bg-nexoraSurfaceMuted transition"
-          >
-            {t('components.staff_registration.steps.StepOtpVerify.close')}
-          </button>
-          <button
-            type="button"
-            onClick={onAccept}
-          className="px-5 py-2 bg-nexoraText hover:bg-nexoraText/90 text-white rounded-xl font-bold transition shadow-sm"
-          >
-            {t('components.staff_registration.steps.StepOtpVerify.iAccept')}
-          </button>
-        </div>
-      </div>
-    </div>
   )
 }

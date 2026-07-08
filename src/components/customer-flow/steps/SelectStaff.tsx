@@ -15,6 +15,7 @@ export default function SelectStaff({
   setSelectedTips,
   customTips,
   setCustomTips,
+  canSelectMultipleStaff,
 }) {
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -44,19 +45,23 @@ export default function SelectStaff({
         {filteredStaff.length > 0 ? (
           filteredStaff.map((member) => {
             const isSelected = selectedStaffMembers.some(s => s.id === member.id)
+            const isSelectionDisabled = !canSelectMultipleStaff && selectedStaffMembers.length >= 1 && !isSelected
             const selTip = selectedTips[member.id] !== undefined ? selectedTips[member.id] : 15
             const custTip = customTips[member.id] || ''
             return (
               <div key={member.id} className="space-y-2">
                 <button
                   type="button"
+                  disabled={isSelectionDisabled}
                   onClick={() => {
                     handleToggleStaff(member)
                   }}
-                  className={`w-full flex items-center justify-between p-4 bg-white border rounded-xl text-left transition-all duration-200 shadow-sm hover:shadow group ${
+                  className={`w-full flex items-center justify-between p-4 bg-white border rounded-xl text-left transition-all duration-200 shadow-sm group ${
                     isSelected
                       ? 'border-nexoraBrand bg-nexoraBrandSoft/10'
-                      : 'border-nexoraBorder hover:border-nexoraBrand/40 hover:bg-nexoraCanvas'
+                      : isSelectionDisabled
+                        ? 'border-slate-100 bg-slate-50 opacity-50 cursor-not-allowed'
+                        : 'border-nexoraBorder hover:border-nexoraBrand/40 hover:bg-nexoraCanvas hover:shadow'
                   }`}
                 >
                   <div className="flex items-center gap-3.5 min-w-0">
@@ -81,17 +86,19 @@ export default function SelectStaff({
                     </div>
                   </div>
 
-                  <div className="flex items-center shrink-0">
-                    <div className={`h-5 w-5 rounded-full flex items-center justify-center border transition-all ${
-                      isSelected
-                        ? 'bg-nexoraBrand border-nexoraBrand text-white scale-110'
-                        : 'border-nexoraBorder group-hover:border-nexoraBrand/60 bg-white'
-                    }`}>
-                      {isSelected && (
-                        <Check className="w-3.5 h-3.5 stroke-[3px]" />
-                      )}
+                  {!isSelectionDisabled && (
+                    <div className="flex items-center shrink-0">
+                      <div className={`h-5 w-5 rounded-full flex items-center justify-center border transition-all ${
+                        isSelected
+                          ? 'bg-nexoraBrand border-nexoraBrand text-white scale-110'
+                          : 'border-nexoraBorder group-hover:border-nexoraBrand/60 bg-white'
+                      }`}>
+                        {isSelected && (
+                          <Check className="w-3.5 h-3.5 stroke-[3px]" />
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </button>
 
                 {isSelected && (

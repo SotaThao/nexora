@@ -5,9 +5,11 @@ import { useNotification } from '../../../contexts/NotificationContext'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 import { PAYOUT_UI_DISPLAY_ORDER, PAYOUT_UI_LABELS } from '../../../data/paymentMethodTypes'
+import { formatJoinedDate } from '../../../utils/localDate'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
 import Pagination from '../../ui/Pagination'
+import { SkeletonList } from '../../ui/skeleton'
 
 function isWaitingStaffAcceptance(member) {
   return member?.apiStatus === 'WaitingStaffAcceptance' || member?.status === 'WaitingStaffAcceptance'
@@ -83,11 +85,6 @@ function StaffView({
   const publicInviteUnavailableText = isInviteLinkSettingLoading
     ? t('components.dashboard.views.StaffView.inviteLinkLoading')
     : t('components.dashboard.views.StaffView.inviteLinkDisabled')
-
-  const rejectedStaff = useMemo(
-    () => (staff || []).filter((member) => isRejectedStaff(member)),
-    [staff],
-  )
 
   const sortedStaff = useMemo(() => {
     return [...(staff || []).filter((member) => !isRejectedStaff(member))].sort((a, b) => {
@@ -244,7 +241,21 @@ function StaffView({
                 <span>{t('components.dashboard.views.StaffView.copy')}</span>
               </button>
               <button
-                onClick={() => publicInviteEnabled && onOpenInviteShare && onOpenInviteShare()}
+                onClick={async () => {
+                  if (!publicInviteEnabled) return
+                  if (navigator.share) {
+                    try {
+                      await navigator.share({
+                        url: publicInviteLink
+                      })
+                    } catch (error) {
+                      // ignore
+                    }
+                  } else {
+                    navigator.clipboard.writeText(publicInviteLink)
+                    showToast(t('components.dashboard.views.StaffView.joinLinkCopiedTo'), 'success')
+                  }
+                }}
                 disabled={!publicInviteEnabled}
                 className={`h-9 px-3.5 bg-nexoraBrand text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-sm ${publicInviteEnabled ? 'hover:bg-opacity-95 cursor-pointer' : 'cursor-not-allowed opacity-50'}`}
               >
@@ -270,7 +281,6 @@ function StaffView({
               <thead>
                 <tr className="bg-slate-50 text-[10px] font-extrabold uppercase text-nexoraMuted border-b border-nexoraRule">
                   <th className="px-5 py-3">{t('setup.col_staff')}</th>
-                  <th className="px-5 py-3">{t('staff_invite.col_flow')}</th>
                   <th className="px-5 py-3">{t('setup.linked_wallets')}</th>
                   <th className="px-5 py-3 text-right">{t('dashboard.top_touchpoints.manage')}</th>
                 </tr>
@@ -295,11 +305,6 @@ function StaffView({
                             <div className="text-xs text-nexoraMuted">{member.position}</div>
                           </div>
                         </div>
-                      </td>
-                      <td className="px-5 py-4">
-                        <span className="text-xs text-slate-500 font-semibold">
-                          {member.flowType || (t('components.dashboard.views.StaffView.directAddition'))}
-                        </span>
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex flex-wrap gap-1.5">
@@ -335,75 +340,6 @@ function StaffView({
                             </button>
                           </div>
                         )}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Rejected Staff Section */}
-      {rejectedStaff.length > 0 && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50/40 overflow-hidden shadow-sm">
-          <div className="px-5 py-4 border-b border-rose-200 bg-rose-50 flex items-center justify-between">
-            <h3 className="text-xs font-black uppercase text-rose-800 tracking-wider flex items-center gap-1.5">
-              <AlertCircle className="h-4 w-4 text-rose-700" />
-              {t('components.dashboard.views.StaffView.rejectedStaff')} ({rejectedStaff.length})
-            </h3>
-          </div>
-          <div className="overflow-x-auto bg-white">
-            <table className="w-full border-collapse text-left text-sm">
-              <thead>
-                <tr className="bg-slate-50 text-[10px] font-extrabold uppercase text-nexoraMuted border-b border-nexoraRule">
-                  <th className="px-5 py-3">{t('setup.col_staff')}</th>
-                  <th className="px-5 py-3">{t('staff_invite.col_flow')}</th>
-                  <th className="px-5 py-3">{t('setup.linked_wallets')}</th>
-                  <th className="px-5 py-3 text-right">{t('dashboard.top_touchpoints.manage')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rejectedStaff.map((member, index) => {
-                  const wallets = getWalletBadges(member)
-                  return (
-                    <tr key={member.id || index} className="border-b border-nexoraRule last:border-0 hover:bg-slate-50/40 transition">
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-3">
-                          {member.avatar ? (
-                            <img src={member.avatar} alt="" className="h-10 w-10 rounded-full border border-nexoraBorder object-cover" />
-                          ) : (
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 text-sm font-extrabold text-rose-700">
-                              {member.nickname?.charAt(0) || member.fullName?.charAt(0) || 'N'}
-                            </div>
-                          )}
-                          <div>
-                            <div className="font-extrabold text-nexoraText">{member.fullName}</div>
-                            <div className="text-xs text-nexoraMuted">{member.position}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-5 py-4">
-                        <span className="text-xs text-slate-500 font-semibold">
-                          {member.flowType || (t('components.dashboard.views.StaffView.directAddition'))}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="flex flex-wrap gap-1.5">
-                          {wallets.length > 0 ? (
-                            wallets.map((wallet) => (
-                              <span key={wallet} className="rounded px-2 py-0.5 text-[10px] font-bold bg-nexoraCanvas text-nexoraBrand border border-nexoraBrand/10">{wallet}</span>
-                            ))
-                          ) : (
-                            <span className="text-[10px] text-slate-400 font-bold italic">{t('components.dashboard.views.StaffView.noWallets')}</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-5 py-4 text-right">
-                        <span className="inline-flex rounded-full bg-rose-50 text-rose-700 px-2.5 py-0.5 text-[10px] font-extrabold uppercase border border-rose-100">
-                          {t('components.dashboard.views.StaffView.rejected')}
-                        </span>
                       </td>
                     </tr>
                   )
@@ -450,33 +386,31 @@ function StaffView({
           </div>
         </div>
 
-        <div className="overflow-x-auto relative">
-          {isFetching && sortedStaff.length > 0 && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60">
-              <Loader2 className="h-6 w-6 animate-spin text-nexoraBrand" />
-            </div>
-          )}
+        <div className="overflow-x-auto">
+          {isFetching ? (
+            <SkeletonList count={pageSize} showAvatar lines={2} />
+          ) : (
           <table className="w-full border-collapse text-left text-sm">
             <thead>
               <tr className="bg-slate-50 text-[10px] font-extrabold uppercase text-nexoraMuted border-b border-nexoraRule">
                 <th className="px-5 py-3">{t('setup.col_staff')}</th>
-                <th className="px-5 py-3">{t('staff_invite.col_flow')}</th>
+                <th className="px-5 py-3">{t('components.dashboard.views.StaffView.col_linked_date')}</th>
                 <th className="px-5 py-3">{t('setup.linked_wallets')}</th>
                 <th className="px-5 py-3">
-                  <div className="flex items-center gap-1 group relative">
+                  <div className="flex items-center gap-1 group relative" tabIndex={0}>
                     <span>{t('dashboard.activity_log.col_status')}</span>
-                    <HelpCircle className="h-3 w-3 text-slate-400 cursor-help shrink-0" />
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1.5 hidden group-hover:block w-44 bg-slate-800 text-white text-[9px] font-bold p-2 rounded-lg shadow-lg pointer-events-none text-center normal-case leading-normal z-50">
-                      {t('components.dashboard.views.StaffView.clickPillToToggle')}
+                    <HelpCircle aria-hidden="true" className="h-3 w-3 text-slate-400 cursor-help shrink-0" />
+                    <div className="absolute top-full left-0 mt-1.5 hidden group-hover:block group-focus-within:block w-56 bg-slate-800 text-white text-[9px] font-bold p-2 rounded-lg shadow-lg pointer-events-none text-left normal-case leading-normal z-50 font-sans">
+                      {t('components.dashboard.views.StaffView.statusTooltip')}
                     </div>
                   </div>
                 </th>
                 <th className="px-5 py-3">
-                  <div className="flex items-center gap-1 group relative">
+                  <div className="flex items-center gap-1 group relative" tabIndex={0}>
                     <span>{t('components.dashboard.views.StaffView.tipsFlow')}</span>
-                    <HelpCircle className="h-3 w-3 text-slate-400 cursor-help shrink-0" />
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1.5 hidden group-hover:block w-44 bg-slate-800 text-white text-[9px] font-bold p-2 rounded-lg shadow-lg pointer-events-none text-center normal-case leading-normal z-50 font-sans">
-                      {t('components.dashboard.views.StaffView.clickPillToShow')}
+                    <HelpCircle aria-hidden="true" className="h-3 w-3 text-slate-400 cursor-help shrink-0" />
+                    <div className="absolute top-full left-0 mt-1.5 hidden group-hover:block group-focus-within:block w-56 bg-slate-800 text-white text-[9px] font-bold p-2 rounded-lg shadow-lg pointer-events-none text-left normal-case leading-normal z-50 font-sans">
+                      {t('components.dashboard.views.StaffView.tipsFlowTooltip')}
                     </div>
                   </div>
                 </th>
@@ -529,15 +463,9 @@ function StaffView({
                     </td>
 
                     <td className="px-5 py-4">
-                      <div className="text-xs text-slate-500 font-semibold leading-normal">
-                        {member.flowType || (t('components.dashboard.views.StaffView.directAddition'))}
+                      <div className="text-xs text-nexoraText font-semibold leading-normal">
+                        {member.joinedDate ? formatJoinedDate(member.joinedDate) : '-'}
                       </div>
-                      {member.joinedDate && (
-                        <div className="text-[10px] text-slate-400 font-bold mt-0.5 leading-normal">
-                          {t('components.dashboard.views.StaffView.linkedDate')}
-                          {member.joinedDate}
-                        </div>
-                      )}
                     </td>
 
                     <td className="px-5 py-4">
@@ -623,7 +551,7 @@ function StaffView({
                           >
                             {t('staff_invite.action_resend')}
                           </button>
-                          <IconButton label={t('common.delete')} onClick={() => onDelete(member.id)} className="hover:text-rose-600">
+                          <IconButton label={t('components.dashboard.views.StaffView.manage_remove_staff')} onClick={() => onDelete(member.id)} className="hover:text-rose-600">
                             <Trash2 className="h-4 w-4" />
                           </IconButton>
                         </div>
@@ -670,16 +598,16 @@ function StaffView({
 
                       {!isPending && (
                         <div className="flex justify-end gap-1.5">
-                          <IconButton label={t('staff_detail.joined_gateway')} onClick={() => onViewDetail(member)} className="hover:text-nexoraBrand">
+                          <IconButton label={t('components.dashboard.views.StaffView.manage_edit_profile')} onClick={() => onViewDetail(member)} className="hover:text-nexoraBrand">
                             <User className="h-4 w-4" />
                           </IconButton>
-                          <IconButton label={t('staff_detail.personal_qr')} onClick={() => onQr(member)}>
+                          <IconButton label={t('components.dashboard.views.StaffView.manage_view_qr')} onClick={() => onQr(member)}>
                             <QrCode className="h-4 w-4" />
                           </IconButton>
-                          <IconButton label={t('common.view_detail')} onClick={() => onViewStaff(member)}>
+                          <IconButton label={t('components.dashboard.views.StaffView.manage_preview_customer')} onClick={() => onViewStaff(member)}>
                             <Eye className="h-4 w-4" />
                           </IconButton>
-                          <IconButton label={t('common.delete')} onClick={() => onDelete(member.id)} className="hover:text-rose-600">
+                          <IconButton label={t('components.dashboard.views.StaffView.manage_remove_staff')} onClick={() => onDelete(member.id)} className="hover:text-rose-600">
                             <Trash2 className="h-4 w-4" />
                           </IconButton>
                         </div>
@@ -690,14 +618,15 @@ function StaffView({
               })}
             </tbody>
           </table>
+          )}
         </div>
 
-        {activeStaffCount > 0 ? (
+        {totalCount > 0 && totalPages > 1 ? (
           <Pagination
             pageNumber={pageNumber}
             pageSize={pageSize}
             totalPages={totalPages}
-            totalCount={activeStaffCount}
+            totalCount={totalCount}
             hasNextPage={hasNextPage}
             hasPreviousPage={hasPreviousPage}
             onPageChange={onPageChange}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, useLayoutEffect } from 'react'
 import { LineChart } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { formatCurrency } from '../utils'
@@ -19,7 +19,9 @@ function TipsOverTimePanel({
 }) {
   const { t, currentLanguage } = useTranslation()
   const chartRef = useRef(null)
+  const linePathRef = useRef(null)
   const [reveal, setReveal] = useState(0)
+  const [linePathLength, setLinePathLength] = useState(850)
   const [hoverIndex, setHoverIndex] = useState<any | null>(null)
   const [isCompactChart, setIsCompactChart] = useState(false)
 
@@ -48,7 +50,7 @@ function TipsOverTimePanel({
 
   const isChartLoading = isLoading || isFetching
 
-  const { points: chartPoints, max, width, height } = useMemo(() => buildChartPoints(series), [series])
+  const { points: chartPoints, max, ticks: yTicks, width, height } = useMemo(() => buildChartPoints(series), [series])
 
   const transitionedPoints = useTransitionedPoints(chartPoints, range, 600)
   const trailPoints = useTransitionedPoints(chartPoints, range, 900)
@@ -59,8 +61,15 @@ function TipsOverTimePanel({
     ? `${linePath} L ${transitionedPoints[transitionedPoints.length - 1].x} ${height} L ${transitionedPoints[0].x} ${height} Z`
     : ''
 
-  const yTicks = [max, Math.round(max * 0.75), Math.round(max * 0.5), Math.round(max * 0.25), 0]
-  const revealX = width * reveal
+  useLayoutEffect(() => {
+    const length = linePathRef.current?.getTotalLength?.()
+    if (length && length > 0) {
+      setLinePathLength(length)
+    }
+  }, [linePath, reveal])
+
+  const revealX = reveal >= 1 ? width + 8 : width * reveal
+  const isRevealComplete = reveal >= 1
   const showTooltip = hoverIndex !== null
   const activePoint = hoverIndex !== null
     ? transitionedPoints[hoverIndex]
@@ -231,6 +240,7 @@ function TipsOverTimePanel({
                     />
                   )}
                   <path
+                    ref={linePathRef}
                     d={linePath}
                     fill="none"
                     stroke="url(#tips-chart-line-grad)"
@@ -238,10 +248,14 @@ function TipsOverTimePanel({
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     filter="url(#tips-chart-glow)"
-                    style={{
-                      strokeDasharray: 850,
-                      strokeDashoffset: 850 * (1 - reveal),
-                    }}
+                    style={
+                      isRevealComplete
+                        ? undefined
+                        : {
+                            strokeDasharray: linePathLength + 4,
+                            strokeDashoffset: (linePathLength + 4) * (1 - reveal),
+                          }
+                    }
                   />
                 </g>
                 {showTooltip && (
