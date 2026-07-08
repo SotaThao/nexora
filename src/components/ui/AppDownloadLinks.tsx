@@ -25,12 +25,14 @@ function AppStoreLogo() {
 const items = [
   {
     id: 'android',
+    href: 'https://play.google.com/store/apps/details?id=net.vlinkgroup.nexora',
     eyebrowKey: 'dashboard.sidebar.google_play_badge_eyebrow',
     titleKey: 'dashboard.sidebar.google_play_badge_title',
     Logo: GooglePlayLogo,
   },
   {
     id: 'ios',
+    href: 'https://apps.apple.com/us/app/nexora-touch/id6775340468',
     eyebrowKey: 'dashboard.sidebar.app_store_badge_eyebrow',
     titleKey: 'dashboard.sidebar.app_store_badge_title',
     Logo: AppStoreLogo,
@@ -42,11 +44,14 @@ export default function AppDownloadLinks() {
 
   return (
     <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-end">
-      {items.map(({ id, eyebrowKey, titleKey, Logo }) => (
-        <div
+      {items.map(({ id, href, eyebrowKey, titleKey, Logo }) => (
+        <a
           key={id}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
           aria-label={`${t(eyebrowKey)} ${t(titleKey)}`}
-          className="flex h-10 w-36 items-center gap-2 rounded-md bg-black px-3 text-white shadow-sm ring-1 ring-black/10"
+          className="flex h-11 w-40 items-center gap-2 rounded-md bg-black px-3 text-white shadow-sm ring-1 ring-black/10 transition hover:bg-slate-900 sm:h-10 sm:w-36"
         >
           <Logo />
           <span className="min-w-0 leading-none">
@@ -57,7 +62,7 @@ export default function AppDownloadLinks() {
               {t(titleKey)}
             </span>
           </span>
-        </div>
+        </a>
       ))}
     </div>
   )
