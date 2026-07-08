@@ -289,7 +289,7 @@ function Overview({
 
   return (
     <>
-    <div className="-m-4 min-h-dvh space-y-3 bg-[linear-gradient(180deg,#FFFFFF_0%,#FFFFFF_34%,#F8F7FF_68%,#F1EFFF_100%)] p-4 pb-28 text-nexoraText sm:-m-6 sm:p-6 sm:pb-28">
+    <div className="-m-4 space-y-3 bg-[linear-gradient(180deg,#FFFFFF_0%,#FFFFFF_34%,#F8F7FF_68%,#F1EFFF_100%)] p-4 pb-4 text-nexoraText sm:-m-6 sm:p-6 sm:pb-6">
       {!hasSetup && (
         <div className="mb-1">
           <SetupGuideBanner onStartSetup={onStartSetup} />

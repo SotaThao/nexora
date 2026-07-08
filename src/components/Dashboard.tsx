@@ -796,7 +796,7 @@ export default function Dashboard({
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
         />
 
-        <main className="min-h-dvh p-4 pb-24 sm:p-6 sm:pb-24 lg:p-7 lg:pb-7">
+        <main className="p-4 pb-6 sm:p-6 sm:pb-8 lg:min-h-dvh lg:p-7 lg:pb-7">
           {activeMenu !== 'overview' && (
             <button
               onClick={() => handleNavigateMenu('overview')}
@@ -807,9 +807,9 @@ export default function Dashboard({
           )}
           <Outlet context={dashboardCtx} />
         </main>
-        <footer className="border-t border-nexoraBorder bg-white px-4 py-4 sm:px-6 lg:px-7">
-          <div className="flex flex-col items-center justify-between gap-3 text-center sm:flex-row sm:text-left">
-            <p className="text-sm font-medium text-slate-700">{t('dashboard.footer.copyright')}</p>
+        <footer className="mb-20 border-t border-nexoraBorder bg-white px-3 py-3 sm:px-6 lg:mb-0 lg:px-7 lg:py-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-left">
+            <p className="shrink-0 text-xs font-medium text-slate-700 sm:text-sm">{t('dashboard.footer.copyright')}</p>
             <AppDownloadLinks />
           </div>
         </footer>
