@@ -32,17 +32,17 @@ export default function DirectPaymentQrPreviewModal({
           <X className="h-5 w-5" />
         </button>
 
-        <div className="mx-auto flex w-48 flex-col items-center gap-3.5 rounded-2xl border border-nexoraBorder/80 bg-nexoraCanvas px-4 py-5 text-nexoraText shadow-md qr-print-card qr-print-card--payment">
-          <div className="flex items-center justify-center gap-1.5 qr-print-brand-header">
+        <div className="mx-auto flex w-72 flex-col items-center gap-5 rounded-2xl border border-nexoraBorder/80 bg-nexoraCanvas px-6 py-7 text-nexoraText shadow-md qr-print-card qr-print-card--payment">
+          <div className="flex items-center justify-center gap-2 qr-print-brand-header">
             <img
               src="/assets/nexora-logo.png"
               alt="Nexora Logo"
-              className="h-4 w-4 object-contain qr-print-brand-logo"
+              className="h-6 w-6 object-contain qr-print-brand-logo"
             />
-            <span className="text-[9px] font-black tracking-wider text-slate-800 qr-print-brand-text">NEXORA</span>
+            <span className="text-sm font-black tracking-wider text-slate-800 qr-print-brand-text">NEXORA</span>
           </div>
 
-          <div className="flex h-[7.25rem] w-[7.25rem] shrink-0 items-center justify-center rounded-xl border border-nexoraBorder/60 bg-white p-2.5 shadow-inner qr-print-qr-wrapper">
+          <div className="flex h-64 w-64 shrink-0 items-center justify-center rounded-xl border border-nexoraBorder/60 bg-white p-4 shadow-inner qr-print-qr-wrapper">
             <img
               src={qrImageSrc}
               alt={title}
@@ -50,12 +50,12 @@ export default function DirectPaymentQrPreviewModal({
             />
           </div>
 
-          <p className="max-w-[9.5rem] text-center text-[9px] font-extrabold uppercase leading-snug tracking-wide text-nexoraMuted qr-print-scan-text">
+          <p className="max-w-[14rem] text-center text-xs font-extrabold uppercase leading-snug tracking-wide text-nexoraMuted qr-print-scan-text">
             {scanCaption}
           </p>
 
-          <div className="flex items-center justify-center gap-1 text-[8px] font-bold text-nexoraSubtle qr-print-footer">
-            <ShieldCheck className="h-3 w-3 shrink-0 text-nexoraBrand" />
+          <div className="flex items-center justify-center gap-1 text-[11px] font-bold text-nexoraSubtle qr-print-footer">
+            <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-nexoraBrand" />
             <span>{t('components.SetupWizard.secureRedirect')}</span>
           </div>
         </div>
