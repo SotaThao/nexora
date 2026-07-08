@@ -116,6 +116,13 @@ export default function StaffReviews() {
     { id: 'needsReply', labelKey: 'needsReply' },
   ]
 
+  // "Needs Reply" is disabled while REVIEW_REPLY_FIELD_AVAILABLE is false (see
+  // that flag's definition), so this branch can't be reached from the UI yet.
+  // If the flag is ever flipped on before real filtering is wired up, show an
+  // empty list rather than silently rendering every review as "unanswered".
+  const visibleReviews =
+    activeFilter === 'needsReply' && !REVIEW_REPLY_FIELD_AVAILABLE ? [] : staffReviews
+
   return (
     <div className="space-y-3">
       <section className={panel}>
@@ -188,11 +195,11 @@ export default function StaffReviews() {
 
         {isFetching ? (
           <SkeletonList count={4} lines={3} />
-        ) : staffReviews.length === 0 ? (
+        ) : visibleReviews.length === 0 ? (
           <p className="py-6 text-center text-xs text-nexoraSubtle">{t(tk('noReviewsReceivedYet'))}</p>
         ) : (
           <div className="space-y-3">
-            {staffReviews.map((review) => (
+            {visibleReviews.map((review) => (
               <ReviewCard
                 key={review.id}
                 review={review}
