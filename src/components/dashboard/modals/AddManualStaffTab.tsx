@@ -9,20 +9,15 @@ import CountryCodeSelect, {
 } from '../../CountryCodeSelect'
 import { useTranslation, renderLabel } from '../../../contexts/LanguageContext'
 import { WalletLogos } from '../constants'
-import { PAYOUT_UI_LABELS } from '../../../data/paymentMethodTypes'
+import { PAYOUT_UI_DISPLAY_ORDER, PAYOUT_UI_LABELS } from '../../../data/paymentMethodTypes'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { getStaffDisplayNameErrorCode } from '../../../utils/staffDisplayName'
 import { isValidEmail } from '../../../utils/validation'
 import PayoutSetupModal from './PayoutSetupModal'
 
-const MANUAL_STAFF_PAYOUT_KEYS = [
-  'zelle',
-  'cashapp',
-  'venmo',
-  'vlinkpay',
-  'applecash',
-  'paypal',
-] as const
+const MANUAL_STAFF_PAYOUT_KEYS = PAYOUT_UI_DISPLAY_ORDER.filter((key) =>
+  ['zelle', 'paypal', 'venmo', 'cashapp', 'applecash', 'vlinkpay'].includes(key),
+)
 
 type PayoutConfig = {
   enabled: boolean

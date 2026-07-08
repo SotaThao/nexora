@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { ChevronDown, Search } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
 import { isValidPhone } from '../utils/validation'
-import { AsYouType, isPossiblePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js'
+import { AsYouType, isPossiblePhoneNumber } from 'libphonenumber-js'
 
 /** Narrow gap between phone digit groups in inputs (thinner than a normal space). */
 export const PHONE_GROUP_SEP = '\u2009'
@@ -80,9 +80,50 @@ export const getDefaultDialCode = (appLanguage) => {
 }
 
 export const getMaxNationalDigits = (dialCode: string) => {
-  if (dialCode === '+1' || dialCode === '+84') return 10
-  const codeDigits = dialCode.replace(/\D/g, '').length
-  return Math.max(4, Math.min(12, 15 - codeDigits))
+  switch (dialCode) {
+    case '+1': // US/CA
+      return 10
+    case '+84': // VN (includes legacy trunk-0 display mode)
+      return 10
+    case '+44': // GB
+      return 10
+    case '+61': // AU
+      return 9
+    case '+65': // SG
+      return 8
+    case '+81': // JP
+      return 10
+    case '+82': // KR
+      return 10
+    case '+49': // DE
+      return 11
+    case '+33': // FR
+      return 9
+    case '+91': // IN
+      return 10
+    case '+86': // CN
+      return 11
+    case '+55': // BR
+      return 11
+    case '+52': // MX
+      return 10
+    case '+852': // HK
+      return 8
+    case '+886': // TW
+      return 9
+    case '+60': // MY
+      return 10
+    case '+66': // TH
+      return 9
+    case '+63': // PH
+      return 10
+    case '+62': // ID
+      return 11
+    default: {
+      const codeDigits = dialCode.replace(/\D/g, '').length
+      return Math.max(4, Math.min(12, 15 - codeDigits))
+    }
+  }
 }
 
 export const getE164MaxNationalDigits = (dialCode: string) => {
@@ -144,13 +185,13 @@ export const isValidPhoneE164 = (value: string, fallbackDialCode: string) => {
   const { countryCode, nationalNumber } = parsePhone(e164)
   const nationalDigits = stripTrunkPrefixNational(nationalNumber, countryCode)
 
-  if (countryCode === '+84' && nationalDigits.length !== 9) return false
-  if (countryCode === '+1' && nationalDigits.length !== 10) return false
+  const maxDigits = getE164MaxNationalDigits(countryCode)
+  if (nationalDigits.length !== maxDigits) return false
 
   try {
     return isPossiblePhoneNumber(e164)
   } catch {
-    return false
+    return nationalDigits.length === maxDigits
   }
 }
 
@@ -192,10 +233,12 @@ export default function CountryCodeSelect({
   value,
   onChange = (_code: string) => {},
   disabled = false,
+  showSearch = true,
 }: {
   value: string
   onChange?: (code: string) => void
   disabled?: boolean
+  showSearch?: boolean
 }) {
   const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
@@ -216,13 +259,21 @@ export default function CountryCodeSelect({
     }
   }, [isOpen])
 
+  useEffect(() => {
+    if (!showSearch) {
+      setSearch('')
+    }
+  }, [showSearch, isOpen])
+
   const selectedCountry = COUNTRY_CODES.find(c => c.dialCode === value) || COUNTRY_CODES[0]
 
-  const filteredCountries = COUNTRY_CODES.filter(c => 
-    c.name.toLowerCase().includes(search.toLowerCase()) || 
-    c.dialCode.includes(search) || 
-    c.code.toLowerCase().includes(search.toLowerCase())
-  )
+  const filteredCountries = showSearch
+    ? COUNTRY_CODES.filter(c =>
+        c.name.toLowerCase().includes(search.toLowerCase()) ||
+        c.dialCode.includes(search) ||
+        c.code.toLowerCase().includes(search.toLowerCase())
+      )
+    : COUNTRY_CODES
 
   return (
     <div className="relative shrink-0 flex" ref={dropdownRef}>
@@ -243,17 +294,19 @@ export default function CountryCodeSelect({
 
       {isOpen && (
         <div className="absolute left-0 mt-11 z-50 w-64 bg-white border border-nexoraBorder rounded-lg shadow-premium flex flex-col overflow-hidden animate-fadeIn">
-          <div className="p-2 bg-slate-50 flex items-center gap-1.5">
-            <Search className="w-3.5 h-3.5 text-nexoraSubtle shrink-0" />
-            <input
-              type="text"
-              autoFocus
-              placeholder={t('components.CountryCodeSelect.phSearch')}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="country-code-search-input w-full text-xs bg-transparent border-0 outline-none p-0 shadow-none focus:ring-0 focus:outline-none text-nexoraText placeholder-nexoraSubtle"
-            />
-          </div>
+          {showSearch ? (
+            <div className="p-2 bg-slate-50 flex items-center gap-1.5">
+              <Search className="w-3.5 h-3.5 text-nexoraSubtle shrink-0" />
+              <input
+                type="text"
+                autoFocus
+                placeholder={t('components.CountryCodeSelect.phSearch')}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="country-code-search-input w-full text-xs bg-transparent border-0 outline-none p-0 shadow-none focus:ring-0 focus:outline-none text-nexoraText placeholder-nexoraSubtle"
+              />
+            </div>
+          ) : null}
           <div className="max-h-48 overflow-y-auto divide-y divide-slate-100 py-1">
             {filteredCountries.length === 0 ? (
               <div className="p-3 text-[10px] text-nexoraSubtle text-center font-medium">No countries found</div>

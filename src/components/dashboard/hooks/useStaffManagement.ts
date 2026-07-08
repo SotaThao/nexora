@@ -27,8 +27,9 @@ import type { ManualStaffFormPayload } from '../modals/AddManualStaffTab'
 import { EMPTY_STAFF_FORM, type StaffFormState } from '../../../types/forms'
 import { getApiErrorCode } from '../../../types/domain'
 import { getErrorI18nKey } from '../../../data/errorCodes'
-import { isValidEmail, isValidPhone } from '../../../utils/validation'
+import { isValidEmail } from '../../../utils/validation'
 import { resolveStaffDisplayNames, splitFullName } from '../../../utils/staffName'
+import { getDefaultDialCode, isValidPhoneE164, normalizePhoneE164 } from '../../CountryCodeSelect'
 
 function resolveStaffDetailCode(member: { staffCode?: string | null }) {
   const code = String(member?.staffCode ?? '').trim()
@@ -134,8 +135,9 @@ export function useStaffManagement({
   viewingStaffDetailId = null,
   setViewingStaffDetailId = (_id: string | null) => {},
 }) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
   const { showToast, showConfirm } = useNotification()
+  const fallbackDialCode = getDefaultDialCode(currentLanguage)
 
   // API mutation hooks — all invalidate qk.merchantStaff() on success
   const inviteStaffMutation = useInviteStaff()
@@ -305,11 +307,14 @@ export function useStaffManagement({
    */
   const saveStaff = async () => {
     const nextErrors: LooseObject = {}
+    const normalizedPhone = staffForm.phone?.trim()
+      ? normalizePhoneE164(staffForm.phone, fallbackDialCode)
+      : ''
     if (!staffForm.fullName.trim()) nextErrors.fullName = t('components.dashboard.hooks.useStaffManagement.fullNameRequired')
     if (staffForm.email?.trim() && !isValidEmail(staffForm.email)) {
       nextErrors.email = t('setup.errors.staff_email_invalid')
     }
-    if (staffForm.phone?.trim() && !isValidPhone(staffForm.phone)) {
+    if (staffForm.phone?.trim() && !isValidPhoneE164(staffForm.phone, fallbackDialCode)) {
       nextErrors.phone = t('setup.errors.staff_phone_invalid')
     }
     if (Object.keys(nextErrors).length) {
@@ -333,7 +338,7 @@ export function useStaffManagement({
             position: staffForm.position?.trim() || null,
             bio: staffForm.bio?.trim() || null,
             photoUrl,
-            phoneNumber: staffForm.phone?.trim() || null,
+            phoneNumber: normalizedPhone || null,
             email: staffForm.email?.trim() || null,
             firstName,
             lastName,
@@ -366,6 +371,9 @@ export function useStaffManagement({
    */
   const sendSetupLinkFromModal = (formDetails) => {
     const nextErrors: LooseObject = {}
+    const normalizedPhone = formDetails.phone?.trim()
+      ? normalizePhoneE164(formDetails.phone, fallbackDialCode)
+      : ''
     if (!formDetails.fullName.trim()) nextErrors.fullName = t('components.dashboard.hooks.useStaffManagement.fullNameRequiredToInvite')
     if (!formDetails.email.trim() && !formDetails.phone.trim()) {
       nextErrors.email = t('components.dashboard.hooks.useStaffManagement.phoneOrEmailRequired')
@@ -373,7 +381,7 @@ export function useStaffManagement({
       if (formDetails.email?.trim() && !isValidEmail(formDetails.email)) {
         nextErrors.email = t('setup.errors.staff_email_invalid')
       }
-      if (formDetails.phone?.trim() && !isValidPhone(formDetails.phone)) {
+      if (formDetails.phone?.trim() && !isValidPhoneE164(formDetails.phone, fallbackDialCode)) {
         nextErrors.phone = t('setup.errors.staff_phone_invalid')
       }
     }
@@ -388,7 +396,7 @@ export function useStaffManagement({
     inviteStaffMutation.mutate({
       name: formDetails.fullName.trim(),
       email: isEmail || null,
-      phone: formDetails.phone?.trim() || null,
+      phone: normalizedPhone || null,
       position: formDetails.position?.trim() || 'Nail Technician',
     }, {
       onSuccess: () => {
