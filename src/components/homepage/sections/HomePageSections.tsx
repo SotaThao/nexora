@@ -8,6 +8,7 @@ import HomePageRewardsSection from './HomePageRewardsSection'
 import HomePageCalculatorSection from './HomePageCalculatorSection'
 import HomePageFeaturesSection from './HomePageFeaturesSection'
 import HomePagePricingSection from './HomePagePricingSection'
+import HomePageDownloadAppSection from './HomePageDownloadAppSection'
 import HomePageCtaSection from './HomePageCtaSection'
 import HomePageFooterSection from './HomePageFooterSection'
 import HomePageDemoModal from './HomePageDemoModal'
@@ -27,6 +28,7 @@ export default function HomePageSections() {
       <HomePageCalculatorSection />
       <HomePageFeaturesSection />
       <HomePagePricingSection />
+      <HomePageDownloadAppSection />
       <HomePageCtaSection />
       <HomePageFooterSection />
       <HomePageDemoModal />

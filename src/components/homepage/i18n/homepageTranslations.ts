@@ -1,6 +1,12 @@
 /** Extracted from homepageLogic.js translations */
 export const homepageTranslations = {
   vi: {
+    "download-app-title": "Tải app và tận hưởng trải nghiệm",
+    "download-app-desc": "Đừng bỏ lỡ! Tải ngay để dùng các tính năng mượt mà và nhiều tiện ích không giới hạn.",
+    "download-app-ios-qr-alt": "Mã QR tải Nexora Touch trên App Store",
+    "download-app-ios-qr-label": "Mở Nexora Touch trên App Store",
+    "download-app-android-qr-alt": "Mã QR tải Nexora Touch trên Google Play",
+    "download-app-android-qr-label": "Mở Nexora Touch trên Google Play",
     "nav-features": "Tính Năng",
     "nav-simulator": "Chạy Simulator",
     "nav-tax-iq": "Trợ Lý Thuế Tax IQ",
@@ -448,6 +454,12 @@ export const homepageTranslations = {
     "err-email-invalid": "Email không hợp lệ"
   },
   en: {
+    "download-app-title": "Download and enjoy the experience",
+    "download-app-desc": "Don't miss out! Download now for seamless functionalities and endless possibilities.",
+    "download-app-ios-qr-alt": "QR code to download Nexora Touch on the App Store",
+    "download-app-ios-qr-label": "Open Nexora Touch on the App Store",
+    "download-app-android-qr-alt": "QR code to download Nexora Touch on Google Play",
+    "download-app-android-qr-label": "Open Nexora Touch on Google Play",
     "nav-features": "Features",
     "nav-simulator": "Live Demo",
     "nav-tax-iq": "Tax IQ Assistant",
