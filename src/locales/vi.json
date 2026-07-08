@@ -40,6 +40,10 @@
       "profile": "Hồ sơ",
       "profile_account": "Cài đặt",
       "profile_kyc": "KYC",
+      "download_ios": "Ứng dụng iOS",
+      "download_ios_sub": "Tải trên App Store",
+      "download_android": "Ứng dụng Android",
+      "download_android_sub": "Tải trên Google Play",
       "tab_home": "Trang chủ",
       "tab_qr": "QR của tôi"
     },
@@ -150,17 +154,17 @@
       "saved": "Đã lưu ✓"
     },
     "qr": {
-      "personal_title": "QR cá nhân của tôi",
-      "personal_sub": "Đưa mã QR này cho tiệm để họ gửi yêu cầu liên kết nhân viên cho bạn.",
+      "personal_title": "Chia sẻ link giới thiệu",
+      "personal_sub": "Mời tiệm liên kết bạn làm nhân viên — chia sẻ mã QR hoặc link này để bắt đầu.",
       "share": "Chia sẻ liên kết",
       "copy_link": "Sao chép liên kết",
       "copy_staff_id": "Sao chép Mã nhân viên",
       "copy_staff_link": "Sao chép liên kết chia sẻ",
-      "tab_personal": "QR cá nhân",
+      "tab_personal": "Mời & Giới thiệu",
       "tab_referral": "QR Giới thiệu",
-      "tab_tipping": "QR Nhận tip",
-      "tab_payment": "QR Thanh toán",
-      "payment_title": "Mã QR thanh toán",
+      "tab_tipping": "Nhận tip",
+      "tab_payment": "Chấp nhận thanh toán",
+      "payment_title": "QR Thanh toán & Tip",
       "payment_sub": "Quét để thanh toán trực tiếp. Không cần tài khoản.",
       "share_payment": "Chia sẻ QR thanh toán",
       "copy_payment_link": "Sao chép link thanh toán",
@@ -180,7 +184,7 @@
       "link_request_pending": "Chờ duyệt",
       "share_tip": "Chia sẻ QR tip",
       "copy_tip_link": "Sao chép link tip",
-      "business_title": "QR nhận tip",
+      "business_title": "Nhận tip từ khách",
       "business_sub": "QR riêng cho tip/đánh giá tại tiệm này",
       "note": "QR theo tiệm được lưu theo business_staff_link_id để không bị lẫn khi bạn làm ở nhiều tiệm.",
       "no_linked_businesses": "Chưa liên kết tiệm nào. Quét QR giới thiệu của tiệm để gửi yêu cầu tham gia.",
@@ -518,7 +522,7 @@
       "support": "Hỗ Trợ"
     },
     "header": {
-      "search_placeholder": "Tìm thợ, bàn ghế, đánh giá...",
+      "search_placeholder": "Tìm nhân viên, đánh giá hoặc tiền tip...",
       "add_tp": "Thêm trạm mới",
       "ecosystem": "Hệ sinh thái",
       "ecosystem_loading": "Đang tải hệ sinh thái...",
@@ -541,6 +545,8 @@
       "total_reviews": "Tổng Đánh Giá",
       "vs_last_week": "so với tuần trước",
       "no_comparison": "Chưa có dữ liệu",
+      "based_on_period": "Theo kỳ đã chọn",
+      "this_week": "tuần này",
       "scans": "Lượt Quét QR/NFC",
       "reviews": "Lượt Đánh Giá",
       "avg_rating": "Đánh Giá Trung Bình",
@@ -646,13 +652,14 @@
     },
     "modals": {
       "add_tp_title": "Thêm trạm mới",
-      "tp_name_label": "Tên trạm (vd. Ghế Manicure 05)",
+      "tp_name_label": "Tên trạm (Không bắt buộc)",
       "tp_name_placeholder": "Ví dụ: Ghế Manicure 05",
       "device_id_label": "Serial thiết bị / Mã NFC",
       "device_id_placeholder": "Ví dụ: NFC-105, QR-Table-01",
       "tp_type_label": "Loại vị trí",
       "add_btn": "Thêm trạm",
       "tp_name_required": "Vui lòng nhập tên trạm.",
+      "tp_type_required": "Vui lòng chọn loại vị trí.",
       "tp_added_success": "Đã thêm trạm \"{name}\" thành công!",
       "tp_add_failed": "Không thể thêm trạm. Vui lòng thử lại.",
       "view_qr_title": "Mã QR cho {name}",
@@ -799,10 +806,12 @@
         "support_type_required": "Vui lòng chọn loại hỗ trợ.",
         "support_type_min_length": "Vui lòng chọn loại hỗ trợ.",
         "support_options": {
-          "payment": "Cổng thanh toán trực tiếp",
-          "pos": "Hệ thống POS bán hàng",
-          "website": "Website doanh nghiệp",
-          "marketing": "Giải pháp marketing",
+          "tip_payment": "Sự cố thanh toán tip",
+          "qr_code": "Thiết lập mã QR",
+          "staff_account": "Tài khoản nhân viên",
+          "billing_plan": "Thanh toán & Gói dịch vụ",
+          "review_routing": "Định tuyến đánh giá",
+          "technical_bug": "Lỗi kỹ thuật",
           "other": "Vấn đề khác"
         },
         "message_label": "Nội dung",
@@ -819,7 +828,10 @@
         "submitting_btn": "Đang gửi...",
         "success_msg": "Yêu cầu đã được gửi thành công! Đội ngũ của chúng tôi sẽ liên hệ với bạn sớm nhất có thể.",
         "error_msg": "Vui lòng sửa các trường được đánh dấu và thử lại.",
-        "submit_error_msg": "Không thể gửi yêu cầu. Vui lòng thử lại."
+        "submit_error_msg": "Không thể gửi yêu cầu. Vui lòng thử lại.",
+        "response_time": "Thời gian phản hồi trung bình: trong vòng 24 giờ vào các ngày làm việc.",
+        "urgent_help_prefix": "Cần hỗ trợ khẩn cấp?",
+        "urgent_help_email": "support@nexoratouch.com"
       },
       "faq": {
         "title": "Câu Hỏi Thường Gặp",
@@ -830,7 +842,19 @@
         "q3": "Làm thế nào để thiết lập Ví VLINKPAY?",
         "a3": "Điều hướng đến Cài đặt -> tab Hồ sơ, cuộn xuống Phương thức nhận tiền và nhập định danh Ví VLINKPAY của bạn. Sau khi được xác minh, khách hàng sẽ thấy VLINKPAY dưới dạng tùy chọn típ trực tiếp.",
         "q4": "Làm thế nào để đặt mua đế dựng NFC?",
-        "a4": "Bạn có thể đặt mua đế dựng bằng gỗ NFC khắc laser tùy chỉnh hoặc thẻ đặt bàn trực tiếp từ tab Quản lý Gói / Đăng ký, hoặc liên hệ với đội ngũ hỗ trợ của chúng tôi cùng với số lượng trạm salon của bạn."
+        "a4": "Bạn có thể đặt mua đế dựng bằng gỗ NFC khắc laser tùy chỉnh hoặc thẻ đặt bàn trực tiếp từ tab Quản lý Gói / Đăng ký, hoặc liên hệ với đội ngũ hỗ trợ của chúng tôi cùng với số lượng trạm salon của bạn.",
+        "q5": "Khách hàng của tôi tip mà không cần tải app thì làm thế nào?",
+        "a5": "Khách hàng quét mã QR tại trạm bằng camera điện thoại — không cần tải ứng dụng. Họ chọn số tiền tip, chọn phương thức thanh toán (Venmo, Zelle, Cash App hoặc VLINKPAY) và hoàn tất thanh toán trong ứng dụng ví hiện có của họ.",
+        "q6": "Tip đến tài khoản của thợ khi nào?",
+        "a6": "Tip chuyển trực tiếp từ khách hàng đến tài khoản nhận tiền đã liên kết của thợ. Nexora không giữ hoặc gom lô — tiền xuất hiện ngay khi ứng dụng thanh toán của khách xác nhận, thường trong vài phút.",
+        "q7": "Tôi có thể dùng Nexora Touch với hệ thống POS hiện tại không?",
+        "a7": "Có. Nexora Touch hoạt động song song với POS hiện tại — xử lý tip và đánh giá tại mỗi trạm mà không thay thế hệ thống thanh toán dịch vụ. POS của bạn vẫn xử lý thanh toán dịch vụ; Nexora thu tip và phản hồi qua mã QR tại từng trạm làm việc.",
+        "q8": "Điều gì xảy ra nếu khách để lại đánh giá 1 sao?",
+        "a8": "Đánh giá thấp được chuyển đến bạn ở chế độ riêng tư trước để bạn có thể phản hồi trước khi hiển thị công khai. Bạn nhận thông báo kèm chi tiết đánh giá và có thể xử lý trực tiếp với khách hoặc đội ngũ.",
+        "q9": "Làm thế nào để thêm hoặc xóa thợ khỏi danh sách?",
+        "a9": "Vào mục Nhân viên trong bảng điều khiển. Để thêm thợ, nhấp Mời nhân viên và chia sẻ liên kết tham gia hoặc mã QR. Để xóa, mở hồ sơ của họ và vô hiệu hóa hoặc gỡ khỏi danh sách — lịch sử tip vẫn được lưu trong hồ sơ của bạn.",
+        "q10": "Có hợp đồng dài hạn không hay tôi có thể hủy bất cứ lúc nào?",
+        "a10": "Nexora Touch không có hợp đồng dài hạn. Bạn có thể hủy đăng ký bất cứ lúc nào từ Quản lý Gói. Tài khoản vẫn hoạt động đến hết chu kỳ thanh toán hiện tại."
       }
     },
     "tips": {
@@ -844,7 +868,8 @@
       "kpi": {
         "total_revenue": "Tổng Doanh Thu Típ",
         "direct_p2p": "Tip trực tiếp",
-        "card_tips": "Típ Qua Thẻ",
+        "card_tips": "Típ Qua Thẻ Truyền Thống",
+        "card_tips_sub": "Không dùng — khách trả trực tiếp cho thợ qua Zelle/Venmo",
         "crypto_tips": "Típ Crypto",
         "total_tips_circle": "Tổng Típ"
       },
@@ -941,7 +966,8 @@
         "status_pending_desc": "Đã ghi nhận chi trả. Đang chờ thợ xác nhận đã nhận tiền.",
         "status_confirmed_desc": "Thợ đã xác nhận đã nhận payout này.",
         "status_cancelled_desc": "Payout này đã bị huỷ và không còn hiệu lực.",
-        "type_tip": "Tiền tip",
+        "type_unpaid_tips": "Tip chưa trả",
+        "type_tip": "Tip",
         "type_salary": "Lương",
         "type_bonus": "Thưởng",
         "type_other": "Khác",
@@ -997,11 +1023,11 @@
         "evidence_count": "{{count}} ảnh",
         "evidence_privacy": "Ảnh bằng chứng chỉ chủ tiệm xem được — dùng đối chiếu thuế và kiểm toán.",
         "field_status": "Trạng thái xác nhận",
-        "create_status_pending": "⏳ Đã chuyển – chờ thợ xác nhận",
+        "create_status_pending": "Đã chuyển – chờ thợ xác nhận",
         "create_status_pending_desc": "Thợ chưa xác nhận đã nhận tiền",
-        "create_status_confirmed": "✅ Đã xác nhận nhận tiền",
+        "create_status_confirmed": "Đã xác nhận nhận tiền",
         "create_status_confirmed_desc": "Thợ đã xác nhận đã nhận tiền",
-        "create_status_cancelled": "❌ Huỷ giao dịch",
+        "create_status_cancelled": "Huỷ giao dịch",
         "create_status_cancelled_desc": "Giao dịch đã bị huỷ",
         "save_payout": "Lưu payout",
         "validation_required": "Vui lòng chọn thợ và nhập số tiền hợp lệ.",
@@ -1052,7 +1078,8 @@
         "transactions_count": "Số Giao Dịch",
         "transactions_unit": "Giao dịch",
         "avg_tip": "Típ Trung Bình",
-        "fees_avoided": "Phí tiết kiệm"
+        "fees_avoided": "Phí tiết kiệm",
+        "fees_avoided_tooltip": "Ước tính phí xử lý thẻ tiết kiệm được từ tip P2P trực tiếp, tính theo {{fee}}% trên tổng lượng được định tuyến."
       },
       "charts": {
         "daily_revenue": "Biểu Đồ Doanh Thu Theo Ngày",
@@ -1062,7 +1089,11 @@
         "staff": "Bảng Xếp Hạng Nhân Viên",
         "touchpoints": "Hiệu suất trạm",
         "tips_count_label": "lượt nhận típ",
-        "scans_count_label": "lượt quét"
+        "scans_count_label": "lượt quét",
+        "unassigned": "Tip chưa gán",
+        "unassigned_tooltip": "Tip này được nhận qua mã QR chung của salon và chưa được gán cho thợ cụ thể.",
+        "station_stats": "{scans} lượt quét · {tips} tip = {pct}% chuyển đổi",
+        "station_stats_no_conversion": "{scans} lượt quét · {tips} tip"
       }
     },
     "empty_states": {
@@ -2137,10 +2168,13 @@
           "dateNewest": "Ngày: Mới nhất",
           "dateOldest": "Ngày: Cũ nhất",
           "statusActive": "Trạng thái hoạt động",
+          "statusTooltip": "Nhân viên đang hoạt động sẽ hiển thị trên trang QR của tiệm. Nhân viên không hoạt động sẽ bị ẩn khỏi khách hàng.",
           "clickPillToToggle": "Nhấp vào chip để đổi trạng thái hoạt động",
           "tipsFlow": "Cho phép Tip",
+          "tipsFlowTooltip": "Khi tắt, nhân viên này sẽ không xuất hiện trong luồng tip của khách hàng.",
           "clickPillToShow": "Nhấp vào chip để ẩn/hiển thị thợ trên QR tiệm",
           "linkedDate": "Ngày liên kết: ",
+          "col_linked_date": "Ngày liên kết",
           "noWallets": "Không có ví",
           "pendingSetup": "Chờ setup",
           "pendingAcceptance": "Chờ chấp nhận",
@@ -2159,7 +2193,11 @@
           "inviteLinkLoading": "Đang tải link mời...",
           "inviteLinkDisabled": "Public invite link chưa bật trong Merchant Settings.",
           "scanToJoinAlt": "Quét để gia nhập",
-          "preview": "Xem trước"
+          "preview": "Xem trước",
+          "manage_edit_profile": "Sửa hồ sơ",
+          "manage_view_qr": "Xem mã QR",
+          "manage_preview_customer": "Xem trước góc nhìn khách hàng",
+          "manage_remove_staff": "Xóa nhân viên"
         }
       }
     },

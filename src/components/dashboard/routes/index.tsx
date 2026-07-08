@@ -58,6 +58,7 @@ export function OverviewRoute() {
       isTouchpointsLoading={ctx.isTouchpointsLoading}
       reviewsPage={ctx.reviewsPage}
       isReviewsPending={ctx.isReviewsPending}
+      reviewsThisWeekCount={ctx.reviewsThisWeekCount}
       metricsMonth={ctx.metricsMonth}
       metricsYear={ctx.metricsYear}
     />

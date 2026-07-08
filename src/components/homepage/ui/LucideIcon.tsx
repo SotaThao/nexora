@@ -1,6 +1,7 @@
 import {
   BarChart2,
   Check,
+  ChevronDown,
   CircleUser,
   Gift,
   LayoutDashboard,
@@ -14,6 +15,7 @@ import {
 
 const ICONS: Record<string, LucideIconType> = {
   check: Check,
+  'chevron-down': ChevronDown,
   gift: Gift,
   'qr-code': QrCode,
   'circle-user': CircleUser,

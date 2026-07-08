@@ -19,6 +19,7 @@ import { formatTransactionDateTime, formatCurrency } from './dashboard/utils'
 import { buildChartPoints, getBezierPath } from './dashboard/overview/chartUtils'
 import { useMerchantStaffStats } from '../data/hooks/useMerchantStaff'
 import { staffRecordMatchesMember } from '../utils/staffRecordMatch'
+import { formatJoinedDate } from '../utils/localDate'
 
 const RANGE_DAY_OFFSETS = {
   '7 Days': 6,
@@ -318,7 +319,7 @@ export default function StaffDetailView({
     return chartPoints
   }, [stats, usesApiStats, t, range, startDate, endDate, currentLanguage])
 
-  const { points: chartPoints, max: chartMax, width: chartWidth, height: chartHeight } = useMemo(
+  const { points: chartPoints, max: chartMax, ticks: chartYTicks, width: chartWidth, height: chartHeight } = useMemo(
     () => buildChartPoints(chartData),
     [chartData],
   )
@@ -327,10 +328,6 @@ export default function StaffDetailView({
     if (chartPoints.length === 0) return ''
     return `${chartLinePath} L ${chartPoints[chartPoints.length - 1].x} ${chartHeight} L ${chartPoints[0].x} ${chartHeight} Z`
   }, [chartLinePath, chartPoints, chartHeight])
-  const chartYTicks = useMemo(
-    () => [chartMax, Math.round(chartMax * 0.75), Math.round(chartMax * 0.5), Math.round(chartMax * 0.25), 0],
-    [chartMax],
-  )
 
   if (!staffMember) {
     return (
@@ -459,7 +456,7 @@ export default function StaffDetailView({
                 <div className="flex items-center gap-1">
                   <Calendar className="h-3.5 w-3.5 text-brandCyan" />
                   {staffMember.joinedDate
-                    ? `${t('staff_detail.joined_gateway')}: ${staffMember.joinedDate}`
+                    ? `${t('staff_detail.joined_gateway')}: ${formatJoinedDate(staffMember.joinedDate)}`
                     : t('staff_detail.joined_gateway')}
                 </div>
                 {staffMember.phone && (

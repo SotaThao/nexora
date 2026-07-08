@@ -39,6 +39,19 @@
   box-shadow: none !important;
 }
 
+.nx-pricing-compare {
+  -webkit-overflow-scrolling: touch;
+}
+
+.nx-pricing-compare table th,
+.nx-pricing-compare table td {
+  vertical-align: middle;
+}
+
+.nx-pricing-compare tbody tr:hover {
+  background-color: rgba(248, 250, 252, 0.9);
+}
+
 .swal-popup-rounded {
   border-radius: 24px !important;
   font-family: 'Plus Jakarta Sans', sans-serif !important;

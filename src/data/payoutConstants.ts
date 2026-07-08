@@ -17,15 +17,17 @@ export const PayoutStatusLabel: Record<PayoutStatusValue, string> = {
 }
 
 export const PayoutType = {
-  Tip: 1,
+  TipDebt: 1,
   Salary: 2,
   Bonus: 4,
   Other: 8,
+  Tip: 16,
 } as const
 
 export type PayoutTypeFlag = (typeof PayoutType)[keyof typeof PayoutType]
 
 export const PayoutTypeLabel: Record<PayoutTypeFlag, string> = {
+  [PayoutType.TipDebt]: 'TipDebt',
   [PayoutType.Tip]: 'Tip',
   [PayoutType.Salary]: 'Salary',
   [PayoutType.Bonus]: 'Bonus',
@@ -36,6 +38,7 @@ export const ALL_PAYOUT_TYPE_FLAGS = [
   PayoutType.Tip,
   PayoutType.Salary,
   PayoutType.Bonus,
+  PayoutType.TipDebt,
   PayoutType.Other,
 ] as const
 

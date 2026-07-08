@@ -36,6 +36,10 @@
       "profile": "Profile",
       "profile_account": "Setting",
       "profile_kyc": "KYC",
+      "download_ios": "iOS App",
+      "download_ios_sub": "Download on the App Store",
+      "download_android": "Android App",
+      "download_android_sub": "Get it on Google Play",
       "tab_home": "Home",
       "tab_qr": "My QR"
     },
@@ -150,17 +154,17 @@
       "saved": "Saved ✓"
     },
     "qr": {
-      "personal_title": "My Personal QR",
-      "personal_sub": "Show this QR to a business so they can send you a staff link request.",
+      "personal_title": "Share Referral Link",
+      "personal_sub": "Invite a business to link you as staff — share this QR or link to get started.",
       "share": "Share Link",
       "copy_link": "Copy Staff Link",
       "copy_staff_id": "Copy Staff ID",
       "copy_staff_link": "Copy share link",
-      "tab_personal": "My Personal QR",
+      "tab_personal": "Invite & Refer",
       "tab_referral": "Referral QR",
-      "tab_tipping": "Tip QR",
-      "tab_payment": "Pay QR",
-      "payment_title": "Payment QR Code",
+      "tab_tipping": "Receive Tips",
+      "tab_payment": "Accept Payments",
+      "payment_title": "Payment & Tip QR",
       "payment_sub": "Scan to pay directly. No account needed.",
       "share_payment": "Share Payment QR",
       "copy_payment_link": "Copy Payment Link",
@@ -180,7 +184,7 @@
       "link_request_pending": "Pending",
       "share_tip": "Share Tip QR",
       "copy_tip_link": "Copy Tip Link",
-      "business_title": "Tipping QR",
+      "business_title": "Get Customer Tips",
       "business_sub": "Dedicated QR for tips/reviews at this business",
       "note": "Per-business QR is stored by business_staff_link_id so it is never confused when you work at multiple businesses.",
       "no_linked_businesses": "No linked businesses yet. Scan a salon referral QR to join.",
@@ -518,7 +522,7 @@
       "support": "Support"
     },
     "header": {
-      "search_placeholder": "Search tech, station, review...",
+      "search_placeholder": "Search staff, reviews, or tips...",
       "add_tp": "Add New Station",
       "ecosystem": "Ecosystem",
       "ecosystem_loading": "Loading ecosystem...",
@@ -541,6 +545,8 @@
       "total_reviews": "Total Reviews",
       "vs_last_week": "vs last week",
       "no_comparison": "No data yet",
+      "based_on_period": "Based on this period",
+      "this_week": "this week",
       "scans": "QR/NFC Scans",
       "reviews": "Reviews",
       "avg_rating": "Average Star Rating",
@@ -646,13 +652,14 @@
     },
     "modals": {
       "add_tp_title": "Add New Station",
-      "tp_name_label": "Station Name (e.g. Manicure Chair 05)",
+      "tp_name_label": "Station Name (Optional)",
       "tp_name_placeholder": "e.g. Manicure Chair 05",
       "device_id_label": "Hardware Serial / NFC ID",
       "device_id_placeholder": "e.g. NFC-105, QR-Table-01",
       "tp_type_label": "Station Type",
       "add_btn": "Add Station",
       "tp_name_required": "Please enter a station name.",
+      "tp_type_required": "Please select a station type.",
       "tp_added_success": "Station \"{name}\" added successfully!",
       "tp_add_failed": "Failed to add station. Please try again.",
       "view_qr_title": "QR Code for {name}",
@@ -799,10 +806,12 @@
         "support_type_required": "Please select a support type.",
         "support_type_min_length": "Support type is required.",
         "support_options": {
-          "payment": "Payment Processing",
-          "pos": "Free POS System Info",
-          "website": "Business Website",
-          "marketing": "Marketing",
+          "tip_payment": "Tip Payment Issue",
+          "qr_code": "QR Code Setup",
+          "staff_account": "Staff Account",
+          "billing_plan": "Billing & Plan",
+          "review_routing": "Review Routing",
+          "technical_bug": "Technical Bug",
           "other": "Other"
         },
         "message_label": "Message",
@@ -819,7 +828,10 @@
         "submitting_btn": "Submitting...",
         "success_msg": "Ticket submitted successfully! Our team will contact you shortly.",
         "error_msg": "Please fix the highlighted fields and try again.",
-        "submit_error_msg": "Could not submit your ticket. Please try again."
+        "submit_error_msg": "Could not submit your ticket. Please try again.",
+        "response_time": "Average response time: within 24 hours on business days.",
+        "urgent_help_prefix": "Need urgent help?",
+        "urgent_help_email": "support@nexoratouch.com"
       },
       "faq": {
         "title": "Frequently Asked Questions",
@@ -830,7 +842,19 @@
         "q3": "How to set up VLINKPAY Wallet?",
         "a3": "Navigate to Settings -> Profile tab, scroll down to Payout Methods, and enter your VLINKPAY Wallet identifier. Once verified, customers will see VLINKPAY as a direct tipping option.",
         "q4": "How to order NFC stands?",
-        "a4": "You can order custom laser-engraved NFC wooden stands or tabletop cards directly from the Manage Plan / Subscriptions tab, or by contacting our support team with your salon station count."
+        "a4": "You can order custom laser-engraved NFC wooden stands or tabletop cards directly from the Manage Plan / Subscriptions tab, or by contacting our support team with your salon station count.",
+        "q5": "How do my customers tip without an app?",
+        "a5": "Customers scan the station QR code with their phone camera — no app download required. They choose a tip amount, select their preferred payment method (Venmo, Zelle, Cash App, or VLINKPAY), and complete the payment in their existing wallet app.",
+        "q6": "When do tips arrive in my technician's account?",
+        "a6": "Tips go directly from the customer to the technician's connected payout account. There is no hold or batching by Nexora — funds appear as soon as the customer's payment app confirms the transfer, typically within minutes.",
+        "q7": "Can I use Nexora Touch with my existing POS system?",
+        "a7": "Yes. Nexora Touch runs alongside your existing POS — it handles tipping and reviews at each station without replacing your checkout system. Your POS continues to process service payments; Nexora captures tips and feedback via QR codes at each workstation.",
+        "q8": "What happens if a customer leaves a 1-star review?",
+        "a8": "Low ratings are routed to you privately first so you can respond before they appear publicly. You receive a notification with the review details and can address the concern directly with the customer or your team.",
+        "q9": "How do I add or remove a technician from my roster?",
+        "a9": "Go to Staff in your dashboard. To add a technician, click Invite Staff and share the join link or QR code. To remove someone, open their profile and deactivate or remove them from your roster — their tip history remains in your records.",
+        "q10": "Is there a contract or can I cancel anytime?",
+        "a10": "Nexora Touch has no long-term contract. You can cancel your subscription at any time from Manage Plan. Your account stays active through the end of your current billing period."
       }
     },
     "tips": {
@@ -844,7 +868,8 @@
       "kpi": {
         "total_revenue": "Total Tip Revenue",
         "direct_p2p": "Direct Tips",
-        "card_tips": "Card Tips",
+        "card_tips": "Traditional Card Tips",
+        "card_tips_sub": "Bypassed — customers pay staff directly via Zelle/Venmo",
         "crypto_tips": "Crypto Tips",
         "total_tips_circle": "Total Tips"
       },
@@ -941,6 +966,7 @@
         "status_pending_desc": "Payout recorded. Waiting for the staff member to confirm they received the payment.",
         "status_confirmed_desc": "The staff member confirmed they received this payout.",
         "status_cancelled_desc": "This payout was cancelled and is no longer active.",
+        "type_unpaid_tips": "Unpaid tip",
         "type_tip": "Tip",
         "type_salary": "Salary",
         "type_bonus": "Bonus",
@@ -997,11 +1023,11 @@
         "evidence_count": "{{count}} image(s)",
         "evidence_privacy": "Evidence images are visible only to the salon owner for tax and audit review.",
         "field_status": "Confirmation status",
-        "create_status_pending": "⏳ Transferred — awaiting staff confirmation",
+        "create_status_pending": "Transferred — awaiting staff confirmation",
         "create_status_pending_desc": "Staff has not reported receipt yet",
-        "create_status_confirmed": "✅ Payment receipt confirmed",
+        "create_status_confirmed": "Payment receipt confirmed",
         "create_status_confirmed_desc": "Staff has confirmed they received the payment",
-        "create_status_cancelled": "❌ Cancel transaction",
+        "create_status_cancelled": "Cancel transaction",
         "create_status_cancelled_desc": "The transaction was cancelled",
         "save_payout": "Save payout",
         "validation_required": "Please select staff and enter a valid amount.",
@@ -1052,7 +1078,8 @@
         "transactions_count": "Transactions",
         "transactions_unit": "Transactions",
         "avg_tip": "Average Tip",
-        "fees_avoided": "Fees Saved"
+        "fees_avoided": "Fees Saved",
+        "fees_avoided_tooltip": "Estimated card processing fees saved from direct P2P tips, calculated at {{fee}}% of routed volume."
       },
       "charts": {
         "daily_revenue": "Daily Revenue Trend",
@@ -1062,7 +1089,11 @@
         "staff": "Leaderboard",
         "touchpoints": "Station Performance",
         "tips_count_label": "tips received",
-        "scans_count_label": "scans logged"
+        "scans_count_label": "scans logged",
+        "unassigned": "Unassigned Tip",
+        "unassigned_tooltip": "This tip was received through the general salon QR code and was not assigned to a specific technician.",
+        "station_stats": "{scans} scans · {tips} tips = {pct}% conversion",
+        "station_stats_no_conversion": "{scans} scans · {tips} tips"
       }
     },
     "empty_states": {
@@ -2137,10 +2168,13 @@
           "dateNewest": "Date: Newest",
           "dateOldest": "Date: Oldest",
           "statusActive": "Status: Active",
+          "statusTooltip": "Active staff appear on the salon QR page. Inactive staff are hidden from customers.",
           "clickPillToToggle": "Click pill to toggle active status",
           "tipsFlow": "Tips Enabled",
+          "tipsFlowTooltip": "When disabled, this staff member won't appear in the customer tipping flow.",
           "clickPillToShow": "Click pill to show/hide tech on general QR",
           "linkedDate": "Linked Date: ",
+          "col_linked_date": "Linked Date",
           "noWallets": "No wallets",
           "pendingSetup": "Pending Setup",
           "pendingAcceptance": "Pending Acceptance",
@@ -2159,7 +2193,11 @@
           "inviteLinkLoading": "Loading invite link...",
           "inviteLinkDisabled": "Public invite link is disabled in Merchant Settings.",
           "scanToJoinAlt": "Scan to Join",
-          "preview": "Preview"
+          "preview": "Preview",
+          "manage_edit_profile": "Edit Profile",
+          "manage_view_qr": "View QR Code",
+          "manage_preview_customer": "Preview Customer View",
+          "manage_remove_staff": "Remove Staff"
         }
       }
     },

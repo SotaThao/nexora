@@ -41,20 +41,50 @@ export const TIP_SERIES_BY_RANGE = {
   ]
 }
 
+function niceStep(roughStep) {
+  if (roughStep <= 0) return 10
+  const magnitude = 10 ** Math.floor(Math.log10(roughStep))
+  const normalized = roughStep / magnitude
+  let niceUnit
+  if (normalized <= 1) niceUnit = 1
+  else if (normalized <= 2) niceUnit = 2
+  else if (normalized <= 5) niceUnit = 5
+  else niceUnit = 10
+  return niceUnit * magnitude
+}
+
+/** Auto-scale Y-axis: padded max with round tick steps (e.g. 0, 200, 400, 600, 800). */
+export function computeChartYScale(maxValue, paddingRatio = 1.2, divisions = 4) {
+  if (maxValue <= 0) {
+    return { max: 100, ticks: [100, 75, 50, 25, 0] }
+  }
+
+  const padded = maxValue * paddingRatio
+  const step = niceStep(padded / divisions)
+  let max = step * divisions
+  while (max < padded) {
+    max += step
+  }
+
+  const tickCount = Math.round(max / step)
+  const ticks = Array.from({ length: tickCount + 1 }, (_, index) => max - index * step)
+  return { max, ticks }
+}
+
 export function buildChartPoints(series) {
   const width = 680
   const height = 265
   if (!series || series.length === 0) {
-    return { points: [], max: 0, width, height }
+    return { points: [], max: 0, ticks: [], width, height }
   }
   const maxValue = Math.max(...series.map((item) => item.value))
-  const max = maxValue === 0 ? 1000 : Math.ceil(maxValue / 1000) * 1000
+  const { max, ticks } = computeChartYScale(maxValue)
   const points = series.map((item, index) => ({
     ...item,
     x: series.length === 1 ? width / 2 : (index / (series.length - 1)) * width,
       y: height - (item.value / max) * height
   }))
-  return { points, max, width, height }
+  return { points, max, ticks, width, height }
 }
 
 export function getBezierPath(points) {

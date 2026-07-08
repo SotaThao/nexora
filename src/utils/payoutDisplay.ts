@@ -43,6 +43,7 @@ const METHOD_UI_KEY: Record<PayoutMethodTypeValue, string> = {
 }
 
 const PAYOUT_TYPE_I18N_KEY: Record<PayoutTypeFlag, string> = {
+  [PayoutType.TipDebt]: 'dashboard.tips.payouts_manager.type_unpaid_tips',
   [PayoutType.Tip]: 'dashboard.tips.payouts_manager.type_tip',
   [PayoutType.Salary]: 'dashboard.tips.payouts_manager.type_salary',
   [PayoutType.Bonus]: 'dashboard.tips.payouts_manager.type_bonus',

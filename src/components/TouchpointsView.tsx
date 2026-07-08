@@ -29,9 +29,24 @@ import {
 } from '../data/hooks/useMerchantPhysicalCards'
 import { usePagination } from '../hooks/usePagination'
 import { DEFAULT_PAGE_SIZE, STAFF_FILTER_LIST_PAGE_SIZE } from '../constants/pagination'
+import {
+  DEFAULT_TOUCHPOINT_TYPE,
+  TOUCHPOINT_TYPE_OPTIONS,
+  isMasterTouchpoint,
+} from '../constants/touchpoints'
 import { buildQrImageUrl, toLocalCustomerTouchUrl } from '../utils/staffTipUrl'
 import { formatCurrency, formatTransactionDateTime } from './dashboard/utils'
 import PhysicalCardDetailModal from './dashboard/modals/PhysicalCardDetailModal'
+
+const MASTER_TOUCHPOINT_API_TYPE = 'FrontDesk'
+const MASTER_TOUCHPOINT_SLUG = 'master-store'
+
+// This "Master QR" for Bitcoin Nail Bar is already printed/distributed — hide the delete action for its touchpoint in the UI.
+const BITCOIN_NAIL_BAR_MASTER_QR_PATH = '/touch/bitcoin-nail-bar-1b8cb587-9d36bc13/master-qr'
+
+function isBitcoinNailBarMasterQrTouchpoint(point): boolean {
+  return String(point?.url || '').toLowerCase().includes(BITCOIN_NAIL_BAR_MASTER_QR_PATH)
+}
 
 function isLinkedTouchPointId(value: unknown): boolean {
   if (value == null || value === '') return false
@@ -93,7 +108,7 @@ export default function TouchpointsView({
 
   // Local state for the Add Touchpoint form (name also drives list filter via API)
   const [name, setName] = useState('')
-  const [type, setType] = useState('Table QR')
+  const [type, setType] = useState(DEFAULT_TOUCHPOINT_TYPE)
   const [deviceId, setDeviceId] = useState('')
   const [debouncedNameFilter, setDebouncedNameFilter] = useState('')
   const [debouncedDeviceIdFilter, setDebouncedDeviceIdFilter] = useState('')
@@ -444,13 +459,7 @@ export default function TouchpointsView({
                   buttonClass="h-11 text-sm focus:border-nexoraBrand dark:focus:border-luxuryGold"
                   value={type}
                   onChange={(event) => setType(event.target.value)}
-                  options={[
-                    { value: 'Table QR', label: 'Table QR' },
-                    { value: 'Front Desk', label: 'Front Desk' },
-                    { value: 'Receipt QR', label: 'Receipt QR' },
-                    { value: 'Business Main', label: 'Business Main' },
-                    { value: 'Staff QR', label: 'Staff QR' }
-                  ]}
+                  options={TOUCHPOINT_TYPE_OPTIONS}
                 />
               </div>
 
@@ -499,6 +508,10 @@ export default function TouchpointsView({
               const scans = point.scans ?? 0
               const revenue = point.revenue ?? 0
               const qrImageSrc = buildQrImageUrl(qrUrl, 150, point.qrImageUrl)
+              const canDeletePoint =
+                point.type !== MASTER_TOUCHPOINT_API_TYPE &&
+                point.slug !== MASTER_TOUCHPOINT_SLUG &&
+                !isBitcoinNailBarMasterQrTouchpoint(point)
 
               return (
                 <Panel key={point.id} className="p-3.5 flex flex-col sm:flex-row gap-3 sm:gap-4 hover:shadow-premium transition-all duration-300 group border border-nexoraBorder relative overflow-visible min-h-0 sm:min-h-[160px]">
@@ -538,7 +551,7 @@ export default function TouchpointsView({
                         <h3 className="font-extrabold text-sm text-nexoraText leading-snug truncate" title={point.name}>
                           {point.name}
                         </h3>
-                        {point.type !== 'FrontDesk' && point.slug !== 'master-store' && (
+                        {canDeletePoint && (
                           <IconButton 
                             label={t('common.delete')} 
                             onClick={() => setDeleteConfirmId(point.id)} 

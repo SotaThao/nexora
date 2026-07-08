@@ -23,6 +23,7 @@ export default function PayoutStaffSelect({
   value,
   selectedStaff,
   onSelect,
+  allowedStaffProfileIds,
   disabled = false,
   error = null,
   enabled = true,
@@ -30,6 +31,7 @@ export default function PayoutStaffSelect({
   value: string
   selectedStaff: StaffMember | null
   onSelect: (staff: StaffMember) => void
+  allowedStaffProfileIds?: Set<string>
   disabled?: boolean
   error?: string | null
   enabled?: boolean
@@ -58,8 +60,12 @@ export default function PayoutStaffSelect({
   })
 
   const staffOptions = useMemo(
-    () => (data?.items ?? []).filter(isPayoutEligibleStaff),
-    [data?.items],
+    () => (data?.items ?? []).filter((staff) => {
+      if (!isPayoutEligibleStaff(staff)) return false
+      if (!allowedStaffProfileIds) return true
+      return Boolean(staff.staffProfileId && allowedStaffProfileIds.has(staff.staffProfileId))
+    }),
+    [data?.items, allowedStaffProfileIds],
   )
 
   const updateMenuPosition = useCallback(() => {

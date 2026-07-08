@@ -2,6 +2,7 @@
 // Extracted from Dashboard.jsx (Group 1 refactor).
 import { useEffect, useMemo, useState } from 'react'
 import { isInitiatedLikeTipStatus, isTipStatus, TipStatus } from '../../constants/tipStatus'
+import { isMasterTouchpoint } from '../../constants/touchpoints'
 
 // Render text with styled star rating symbols (★) in luxuryGold with a 4px gap.
 export function renderTextWithGoldStars(text) {
@@ -249,7 +250,11 @@ export function useCountUp(target, duration = 900) {
 }
 
 export function resolveMasterTouchpoint(touchpoints = []) {
-  return touchpoints.find((tp) => tp.type === 'FrontDesk') || touchpoints[0] || null
+  return (
+    touchpoints.find(isMasterTouchpoint) ||
+    touchpoints[0] ||
+    null
+  )
 }
 
 export function buildMasterQrTarget(touchpoints = []) {
@@ -263,4 +268,19 @@ export function buildMasterQrTarget(touchpoints = []) {
     isActive: true,
     isGatewayQr: true,
   }
+}
+
+/** Leaderboard row label: full first name, or "First L." when surname exists. */
+export function formatLeaderboardStaffName(fullName) {
+  const full = String(fullName || '').trim()
+  if (!full) return { display: '—', full: '' }
+
+  const parts = full.split(/\s+/).filter(Boolean)
+  if (parts.length === 1) {
+    return { display: parts[0], full }
+  }
+
+  const firstName = parts[0]
+  const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase()
+  return { display: `${firstName} ${lastInitial}.`, full }
 }
