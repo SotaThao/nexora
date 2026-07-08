@@ -1,16 +1,18 @@
 // StaffBottomNav — fixed bottom navigation for mobile (<1024px).
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ScanLine } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
-import { STAFF_BOTTOM_NAV_ITEMS } from '../constants'
+import { STAFF_BOTTOM_NAV_ITEMS, isStaffTopLevelMenuItemActive } from '../constants'
 import AppQrScanner from '../../common/AppQrScanner'
 import { resolveQrToAppPath } from '../../../utils/qrNavigate'
 
 export default function StaffBottomNav({ activeScreen, onNavigate }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const tabParam = searchParams.get('tab')
   const { showToast } = useNotification()
   const [scannerOpen, setScannerOpen] = useState(false)
 
@@ -29,7 +31,7 @@ export default function StaffBottomNav({ activeScreen, onNavigate }) {
 
   function renderItem(item) {
     const Icon = item.icon
-    const isActive = activeScreen === item.id
+    const isActive = isStaffTopLevelMenuItemActive(activeScreen, tabParam, item.id)
     return (
       <button
         key={item.id}

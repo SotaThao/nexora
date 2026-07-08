@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Home } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
 import MenuIcon from './MenuIcon'
+import { sidebarMenuItemClass } from './sidebarMenuStyles'
 
 const HOMEPAGE_MENU_ITEM = { icon: Home }
 
@@ -25,11 +26,7 @@ export default function HomepageLink({
       <Link
         to="/"
         onClick={onNavigate}
-        className={`flex h-12 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-bold transition ${
-          active
-            ? 'bg-gradient-to-r from-nexoraElectric to-nexoraViolet text-white shadow-lg shadow-nexoraElectric/20'
-            : 'text-white/85 hover:bg-white/5 hover:text-white'
-        } ${className}`}
+        className={`${sidebarMenuItemClass(active)} border-0 ${className}`}
       >
         <MenuIcon item={HOMEPAGE_MENU_ITEM} active={active} />
         <span className="truncate">{t('dashboard.menu.home')}</span>

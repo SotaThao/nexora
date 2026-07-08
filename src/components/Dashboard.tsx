@@ -10,7 +10,7 @@ import { resolveMerchantStaffTipQr, toLocalCustomerTouchUrl } from '../utils/sta
 import { mapTouchpointTypeToApi, resolveAssignedStaffProfileId } from '../utils/touchpointTypes'
 import { useTranslation } from '../contexts/LanguageContext'
 import { useNotification } from '../contexts/NotificationContext'
-import { DEFAULT_PAYOUT_CONFIGS, MENU_ITEMS } from './dashboard/constants'
+import { DEFAULT_PAYOUT_CONFIGS, MENU_ITEMS, MERCHANT_SIDEBAR_MENU_ITEMS } from './dashboard/constants'
 import { slugify, getPayoutConfigsFromMember } from './dashboard/utils'
 import { useDashboardNavigation } from './dashboard/hooks/useDashboardNavigation'
 import { useDevices } from './dashboard/hooks/useDevices'
@@ -76,7 +76,7 @@ export default function Dashboard({
   const {
     activeMenu,
     isMobileMenuOpen, setIsMobileMenuOpen,
-    isTipsMobileExpanded, setIsTipsMobileExpanded,
+    isPaymentsPayoutsMobileExpanded, setIsPaymentsPayoutsMobileExpanded,
     isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded,
     settingsTab, setSettingsTab,
     isProfileExpanded, setIsProfileExpanded,
@@ -407,7 +407,7 @@ export default function Dashboard({
         { id: 'overview', label: t('components.dashboardRoot.myDashboard'), icon: MENU_ITEMS.find(i => i.id === 'overview')?.icon, image: MENU_ITEMS.find(i => i.id === 'overview')?.image },
         { id: 'support', label: t('dashboard.menu.support'), icon: MENU_ITEMS.find(i => i.id === 'support')?.icon, image: MENU_ITEMS.find(i => i.id === 'support')?.image }
       ]
-    : MENU_ITEMS
+    : MERCHANT_SIDEBAR_MENU_ITEMS
 
   // Filter lists based on searchQuery
   const filteredStaff = useMemo(() => {
@@ -805,8 +805,8 @@ export default function Dashboard({
         setSettingsTab={setSettingsTab}
         isProfileExpanded={isProfileExpanded}
         setIsProfileExpanded={setIsProfileExpanded}
-        isTipsMobileExpanded={isTipsMobileExpanded}
-        setIsTipsMobileExpanded={setIsTipsMobileExpanded}
+        isPaymentsPayoutsMobileExpanded={isPaymentsPayoutsMobileExpanded}
+        setIsPaymentsPayoutsMobileExpanded={setIsPaymentsPayoutsMobileExpanded}
         isTouchpointsMobileExpanded={isTouchpointsMobileExpanded}
         setIsTouchpointsMobileExpanded={setIsTouchpointsMobileExpanded}
         hasKyb={hasKyb}

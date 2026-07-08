@@ -11,9 +11,10 @@ export function useDashboardNavigation() {
   const navigate = useNavigate()
 
   const activeMenu = location.pathname.split('/')[2] || 'overview'
+  const isPaymentsPayoutsActive = activeMenu === 'tips' || activeMenu === 'reports'
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isTipsMobileExpanded, setIsTipsMobileExpanded] = useState(activeMenu === 'tips')
+  const [isPaymentsPayoutsMobileExpanded, setIsPaymentsPayoutsMobileExpanded] = useState(isPaymentsPayoutsActive)
   const [isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded] = useState(activeMenu === 'touchpoints')
   const [settingsTab, setSettingsTab] = useState('profile')
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
@@ -21,15 +22,15 @@ export function useDashboardNavigation() {
   // When the drawer opens, reflect the current route's expandable section.
   useEffect(() => {
     if (!isMobileMenuOpen) return
-    setIsTipsMobileExpanded(activeMenu === 'tips')
+    setIsPaymentsPayoutsMobileExpanded(isPaymentsPayoutsActive)
     setIsTouchpointsMobileExpanded(activeMenu === 'touchpoints')
-  }, [isMobileMenuOpen, activeMenu])
+  }, [isMobileMenuOpen, activeMenu, isPaymentsPayoutsActive])
   useEffect(() => {
-    if (activeMenu === 'tips') {
-      setIsTipsMobileExpanded(true)
+    if (isPaymentsPayoutsActive) {
+      setIsPaymentsPayoutsMobileExpanded(true)
       setIsTouchpointsMobileExpanded(false)
     }
-  }, [activeMenu])
+  }, [activeMenu, isPaymentsPayoutsActive])
 
   const buildMenuRoute = (menuId: string, tab?: string) => {
     const base = menuId === 'overview' ? '/dashboard' : `/dashboard/${menuId}`
@@ -51,8 +52,8 @@ export function useDashboardNavigation() {
     activeMenu,
     isMobileMenuOpen,
     setIsMobileMenuOpen,
-    isTipsMobileExpanded,
-    setIsTipsMobileExpanded,
+    isPaymentsPayoutsMobileExpanded,
+    setIsPaymentsPayoutsMobileExpanded,
     isTouchpointsMobileExpanded,
     setIsTouchpointsMobileExpanded,
     settingsTab,

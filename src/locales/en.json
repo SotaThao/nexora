@@ -38,7 +38,12 @@
       "profile_account": "Setting",
       "profile_kyc": "KYC",
       "tab_home": "Home",
-      "tab_qr": "QR"
+      "tab_qr": "QR",
+      "my_workspace": "My Workspace",
+      "my_qr_menu": "My QR",
+      "my_earnings": "My Earnings",
+      "my_reviews": "My Reviews",
+      "my_salons": "My Salons"
     },
     "titles": {
       "home": "Dashboard",
@@ -590,11 +595,12 @@
       "plan_info": "Owner - Pro Plan",
       "sign_out": "Sign out",
       "role_owner": "Owner",
-      "current_plan_header": "CURRENT PLAN",
+      "current_plan_header": "Current plan",
       "plan_name": "Pro Plan",
       "no_plan": "No Plan yet",
       "renews_text": "Renews on Jun 20, 2024",
-      "renews_on": "Renews on {{date}}",
+      "renews_on": "Renews: {{date}}",
+      "expires_on": "Expires: {{date}}",
       "trial_ends": "Trial ends {{date}}",
       "manage_plan": "Manage Plan"
     },
@@ -603,6 +609,9 @@
       "dashboard": "Dashboard",
       "staff": "Staff",
       "tips": "Tips",
+      "payments_payouts": "Payments & Payouts",
+      "payments_payouts_customer_payments": "Customer Payments",
+      "payments_payouts_payroll": "Payroll",
       "payments": "Direct Payments",
       "reviews": "Reviews",
       "transactions": "Transactions",

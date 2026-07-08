@@ -9,7 +9,8 @@ import {
   QrCode,
   BarChart3,
   Settings,
-  HelpCircle
+  HelpCircle,
+  Wallet,
 } from 'lucide-react'
 
 export const WalletLogos = {
@@ -69,6 +70,82 @@ export const MENU_ITEMS = [
   { id: 'settings', label: 'Settings', icon: Settings },
   { id: 'support', label: 'Support', icon: HelpCircle }
 ]
+
+export const MERCHANT_SIDEBAR_HIDDEN_MENU_IDS = ['tips', 'reports']
+
+export const MERCHANT_SIDEBAR_MENU_ITEMS = MENU_ITEMS.filter(
+  (item) => !MERCHANT_SIDEBAR_HIDDEN_MENU_IDS.includes(item.id),
+)
+
+export const PAYMENTS_PAYOUTS_MENU_ITEM = {
+  id: 'payments_payouts',
+  icon: Wallet,
+  labelKey: 'dashboard.menu.payments_payouts',
+}
+
+export const PAYMENTS_PAYOUTS_SUBMENU = [
+  {
+    id: 'overview',
+    screen: 'tips',
+    labelKey: 'dashboard.tips.tabs.overview',
+    params: { tab: 'overview' },
+  },
+  {
+    id: 'customer_payments',
+    screen: 'reports',
+    labelKey: 'dashboard.menu.payments_payouts_customer_payments',
+    params: { tab: 'direct_payments' },
+  },
+  {
+    id: 'tips',
+    screen: 'reports',
+    labelKey: 'dashboard.reports.tabs.tips',
+    params: { tab: 'tips' },
+  },
+  {
+    id: 'payroll',
+    screen: 'tips',
+    labelKey: 'dashboard.menu.payments_payouts_payroll',
+    params: { tab: 'payouts' },
+  },
+  {
+    id: 'direct_savings',
+    screen: 'tips',
+    labelKey: 'dashboard.tips.tabs.savings',
+    params: { tab: 'savings' },
+  },
+]
+
+export function isPaymentsPayoutsSubActive(
+  activeMenu: string,
+  tabParam: string | null,
+  item: (typeof PAYMENTS_PAYOUTS_SUBMENU)[number],
+): boolean {
+  if (activeMenu !== item.screen) return false
+
+  const tab = item.params?.tab
+  if (!tab) return true
+
+  if (item.screen === 'tips' && item.id === 'overview') {
+    return !tabParam || tabParam === 'overview'
+  }
+
+  if (item.screen === 'reports' && item.id === 'tips') {
+    return !tabParam || tabParam === 'tips'
+  }
+
+  return tabParam === tab
+}
+
+export function isPaymentsPayoutsRouteActive(
+  activeMenu: string,
+  tabParam: string | null,
+): boolean {
+  if (activeMenu !== 'tips' && activeMenu !== 'reports') return false
+  return PAYMENTS_PAYOUTS_SUBMENU.some((item) =>
+    isPaymentsPayoutsSubActive(activeMenu, tabParam, item),
+  )
+}
 
 export const visibleMenuItems = MENU_ITEMS
 

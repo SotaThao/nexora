@@ -42,7 +42,12 @@
       "profile_account": "Cài đặt",
       "profile_kyc": "KYC",
       "tab_home": "Trang chủ",
-      "tab_qr": "QR của tôi"
+      "tab_qr": "QR của tôi",
+      "my_workspace": "Không gian của tôi",
+      "my_qr_menu": "QR của tôi",
+      "my_earnings": "Thu nhập",
+      "my_reviews": "Đánh giá của tôi",
+      "my_salons": "Salon của tôi"
     },
     "titles": {
       "home": "Dashboard",
@@ -590,11 +595,12 @@
       "plan_info": "Chủ sở hữu - Gói Pro",
       "sign_out": "Đăng xuất",
       "role_owner": "Chủ sở hữu",
-      "current_plan_header": "GÓI HIỆN TẠI",
+      "current_plan_header": "Gói hiện tại",
       "plan_name": "Gói Pro",
       "no_plan": "Chưa có gói",
       "renews_text": "Gia hạn vào 20/06/2024",
-      "renews_on": "Gia hạn vào {{date}}",
+      "renews_on": "Gia hạn: {{date}}",
+      "expires_on": "Hết hạn: {{date}}",
       "trial_ends": "Dùng thử đến {{date}}",
       "manage_plan": "Quản lý gói"
     },
@@ -603,6 +609,9 @@
       "dashboard": "Bảng Điều Khiển",
       "staff": "Nhân Viên",
       "tips": "Tiền Típ",
+      "payments_payouts": "Thanh toán & Chi trả",
+      "payments_payouts_customer_payments": "Thanh toán khách hàng",
+      "payments_payouts_payroll": "Lương",
       "payments": "Thanh toán QR",
       "reviews": "Đánh Giá",
       "transactions": "Giao Dịch",

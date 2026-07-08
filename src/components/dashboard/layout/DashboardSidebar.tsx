@@ -4,10 +4,23 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { visibleMenuItems } from '../constants'
+import { visibleMenuItems, MERCHANT_SIDEBAR_MENU_ITEMS, isPaymentsPayoutsRouteActive } from '../constants'
 import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
+import SidebarPlanCard from '../../ui/SidebarPlanCard'
+import PaymentsPayoutsMenuSection from './PaymentsPayoutsMenuSection'
 import { getSubscriptionSidebarCopy } from '../../../utils/subscriptionDisplay'
+import {
+  SIDEBAR_SHELL_CLASS,
+  SIDEBAR_NAV_CLASS,
+  SIDEBAR_PROFILE_CARD_CLASS,
+  SIDEBAR_AVATAR_IMAGE_CLASS,
+  SIDEBAR_AVATAR_FALLBACK_CLASS,
+  SIDEBAR_SIGN_OUT_WRAP_CLASS,
+  SIDEBAR_SUBMENU_WRAP_CLASS,
+  sidebarMenuItemBetweenClass,
+  sidebarSubmenuItemClass,
+} from '../../ui/sidebarMenuStyles'
 
 export default function DashboardSidebar({
   activeMenu,
@@ -32,58 +45,63 @@ export default function DashboardSidebar({
   // Sub-tabs are URL-driven (?tab=) so the sidebar highlight stays in sync with
   // the rendered route content (TipsRoute / TouchpointsRoute read the same param).
   const activeSubTab = searchParams.get('tab')
-  const [isTipsExpanded, setIsTipsExpanded] = useState(activeMenu === 'tips')
+  const isPaymentsPayoutsActive = isPaymentsPayoutsRouteActive(activeMenu, activeSubTab)
+  const [isPaymentsPayoutsExpanded, setIsPaymentsPayoutsExpanded] = useState(isPaymentsPayoutsActive)
   const [isTouchpointsExpanded, setIsTouchpointsExpanded] = useState(activeMenu === 'touchpoints')
 
   useEffect(() => {
-    setIsTipsExpanded(activeMenu === 'tips')
+    if (isPaymentsPayoutsActive) {
+      setIsPaymentsPayoutsExpanded(true)
+    }
     setIsTouchpointsExpanded(activeMenu === 'touchpoints')
-  }, [activeMenu])
-  const subscriptionCopy = getSubscriptionSidebarCopy(
-    subscription ?? profile?.subscription,
-    t,
-    currentLanguage,
-  )
+  }, [activeMenu, isPaymentsPayoutsActive])
+
+  const handlePaymentsPayoutsToggle = () => {
+    setIsPaymentsPayoutsExpanded((prev) => !prev)
+  }
+
+  const handlePaymentsPayoutsNavigate = (screen: string, tab?: string) => {
+    const route = `/dashboard/${screen}${tab ? `?tab=${encodeURIComponent(tab)}` : ''}`
+    navigate(route, { replace: true })
+    setActiveMenu(screen)
+    setIsPaymentsPayoutsExpanded(true)
+    setIsTouchpointsExpanded(false)
+  }
 
   const handleMenuClick = (id: string) => {
-    if (id === 'tips') {
-      if (activeMenu === 'tips') {
-        setIsTipsExpanded((prev) => !prev)
-      } else {
-        setActiveMenu('tips')
-        setIsTipsExpanded(true)
-        setIsTouchpointsExpanded(false)
-      }
-      return
-    }
-
     if (id === 'touchpoints') {
       if (activeMenu === 'touchpoints') {
         setIsTouchpointsExpanded((prev) => !prev)
       } else {
         setActiveMenu('touchpoints')
         setIsTouchpointsExpanded(true)
-        setIsTipsExpanded(false)
+        setIsPaymentsPayoutsExpanded(false)
       }
       return
     }
 
     setActiveMenu(id)
-    setIsTipsExpanded(false)
+    setIsPaymentsPayoutsExpanded(false)
     setIsTouchpointsExpanded(false)
   }
 
+  const subscriptionCopy = getSubscriptionSidebarCopy(
+    subscription ?? profile?.subscription,
+    t,
+    currentLanguage,
+  )
+
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col bg-nexoraSidebar px-5 py-7 text-white lg:flex">
+    <aside className={SIDEBAR_SHELL_CLASS}>
       {/* Expandable Profile Card */}
-      <div className="rounded-xl border border-white/15 bg-white/5 p-4 shrink-0">
+      <div className={SIDEBAR_PROFILE_CARD_CLASS}>
         <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsProfileExpanded(!isProfileExpanded)}>
           <div className="flex items-center gap-3 min-w-0">
             {profile.avatar && !profile.avatar.includes('unsplash.com') ? (
-              <img src={profile.avatar} alt="" className="h-10 w-10 shrink-0 rounded-full border border-white/15 object-cover" />
+              <img src={profile.avatar} alt="" className={`${SIDEBAR_AVATAR_IMAGE_CLASS} shrink-0`} />
             ) : (
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-nexoraElectric to-nexoraViolet text-sm font-extrabold uppercase">
-                {(businessName || profile.email || '').slice(0, 2).toUpperCase() || '?'}
+              <div className={`${SIDEBAR_AVATAR_FALLBACK_CLASS} shrink-0`}>
+                {(businessName || profile.fullName || profile.email || '?').charAt(0).toUpperCase()}
               </div>
             )}
             <div className="min-w-0">
@@ -133,49 +151,16 @@ export default function DashboardSidebar({
         )}
       </div>
 
-      {/* Card 2: Current Plan & Manage Plan */}
-      {userRole !== 'staff' && (
-        <div className="mt-3 rounded-xl border border-white/15 bg-white/5 p-4 shrink-0">
-        <div className="text-[10px] font-extrabold uppercase tracking-wider text-white/45">
-          {t('dashboard.sidebar.current_plan_header')}
-        </div>
-        {subscriptionCopy.planLabel ? (
-          <>
-            <div className="mt-1 text-sm font-black text-white">
-              {subscriptionCopy.planLabel}
-            </div>
-            {subscriptionCopy.detailLabel ? (
-              <div className="mt-1 text-xs text-white/55">
-                {subscriptionCopy.detailLabel}
-              </div>
-            ) : null}
-          </>
-        ) : (
-          <div className="mt-1 text-xs font-semibold text-rose-400">
-            {t('dashboard.sidebar.no_plan')}
-          </div>
-        )}
-        <button
-          type="button"
-          onClick={() => setActiveMenu('subscriptions')}
-          className="mt-3.5 w-full rounded-lg border border-white/15 py-1.5 text-center text-xs font-bold text-luxuryGold hover:bg-white/5 hover:border-white/25 transition-all"
-        >
-          {t('dashboard.sidebar.manage_plan')}
-        </button>
-      </div>
-      )}
-
       {/* Navigation Menu */}
-      <nav className="mt-6 flex-1 space-y-1.5 overflow-y-auto pr-1">
+      <nav className={SIDEBAR_NAV_CLASS}>
         <HomepageLink variant="menu" active={isHomeActive} />
-        <div className="my-1 border-t border-white/10" />
         {(() => {
           const menuItemsToDisplay = userRole === 'staff'
             ? [
-                { id: 'overview', label: t('components.dashboard.layout.DashboardSidebar.myDashboard'), icon: visibleMenuItems.find(i => i.id === 'overview')?.icon, image: visibleMenuItems.find(i => i.id === 'overview')?.image },
-                { id: 'support', label: t('dashboard.menu.support'), icon: visibleMenuItems.find(i => i.id === 'support')?.icon, image: visibleMenuItems.find(i => i.id === 'support')?.image }
+                { id: 'overview', label: t('components.dashboard.layout.DashboardSidebar.myDashboard'), icon: visibleMenuItems.find(i => i.id === 'overview')?.icon },
+                { id: 'support', label: t('dashboard.menu.support'), icon: visibleMenuItems.find(i => i.id === 'support')?.icon }
               ]
-            : visibleMenuItems
+            : MERCHANT_SIDEBAR_MENU_ITEMS
 
           return menuItemsToDisplay.map((item) => {
           const { id, label } = item
@@ -183,9 +168,7 @@ export default function DashboardSidebar({
           const localizedLabel = {
             overview: t('dashboard.menu.dashboard'),
             staff: t('dashboard.menu.staff'),
-            tips: t('dashboard.menu.tips'),
             reviews: t('dashboard.menu.reviews'),
-            reports: t('dashboard.menu.transactions'),
             touchpoints: t('dashboard.menu.touchpoints'),
             devices: t('dashboard.menu.qr_nfc'),
             analytics: t('dashboard.menu.analytics'),
@@ -197,57 +180,31 @@ export default function DashboardSidebar({
               <button
                 type="button"
                 onClick={() => handleMenuClick(id)}
-                className={`flex h-12 w-full items-center justify-between rounded-lg px-4 text-left text-sm font-bold transition ${
-                  isActive
-                    ? 'bg-gradient-to-r from-nexoraElectric to-nexoraViolet text-white shadow-lg shadow-nexoraElectric/20'
-                    : 'text-white/85 hover:bg-white/5 hover:text-white'
-                }`}
+                className={sidebarMenuItemBetweenClass(isActive)}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <MenuIcon item={item} active={isActive} />
                   <span className="truncate">{localizedLabel}</span>
                 </div>
-                {(id === 'tips' || id === 'touchpoints') && (
+                {id === 'touchpoints' && (
                   <div className="text-white/50 shrink-0">
-                    {id === 'tips'
-                      ? (isTipsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)
-                      : (isTouchpointsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />)
-                    }
+                    {isTouchpointsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </div>
                 )}
               </button>
 
-              {id === 'tips' && isTipsExpanded && (
-                <div className="ml-9 mt-1 space-y-1 border-l border-white/15 pl-3 animate-fadeIn">
-                  {[
-                    { id: 'overview', label: t('dashboard.tips.tabs.overview') },
-                    { id: 'savings', label: t('dashboard.tips.tabs.savings') },
-                    { id: 'payouts', label: t('dashboard.tips.tabs.payouts') }
-                  ].map(sub => {
-                    const isSubActive = activeMenu === 'tips' && (activeSubTab || 'overview') === sub.id
-                    return (
-                      <button
-                        key={sub.id}
-                        type="button"
-                        onClick={() => {
-                          navigate(`/dashboard/tips?tab=${sub.id}`, { replace: true })
-                        }}
-                        className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
-                          isSubActive
-                            ? 'text-brandCyan font-extrabold'
-                            : 'text-white/75 hover:bg-white/5 hover:text-white'
-                        }`}
-                      >
-                        <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
-                        <span>{sub.label}</span>
-                      </button>
-                    )
-                  })}
-                </div>
+              {userRole !== 'staff' && id === 'staff' && (
+                <PaymentsPayoutsMenuSection
+                  activeMenu={activeMenu}
+                  tabParam={activeSubTab}
+                  isExpanded={isPaymentsPayoutsExpanded}
+                  onToggle={handlePaymentsPayoutsToggle}
+                  onNavigate={handlePaymentsPayoutsNavigate}
+                />
               )}
 
               {id === 'touchpoints' && isTouchpointsExpanded && (
-                <div className="ml-9 mt-1 space-y-1 border-l border-white/15 pl-3 animate-fadeIn">
+                <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
                   {[
                     { id: 'stations', label: t('dashboard.touchpoints.tabs.stations') },
                     { id: 'devices', label: t('dashboard.touchpoints.tabs.devices') },
@@ -260,11 +217,7 @@ export default function DashboardSidebar({
                         onClick={() => {
                           navigate(`/dashboard/touchpoints?tab=${sub.id}`, { replace: true })
                         }}
-                        className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-xs font-bold transition ${
-                          isSubActive
-                            ? 'text-brandCyan font-extrabold'
-                            : 'text-white/75 hover:bg-white/5 hover:text-white'
-                        }`}
+                        className={sidebarSubmenuItemClass(isSubActive)}
                       >
                         <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
                         <span>{sub.label}</span>
@@ -280,12 +233,21 @@ export default function DashboardSidebar({
 
       </nav>
 
-      {/* Bottom Sign Out */}
-      <div className="mt-auto pt-4 border-t border-white/15 shrink-0">
-        <button onClick={onLogout} className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-white/65 transition hover:text-white w-full">
-          <LogOut className="h-4 w-4" />
-          {t('dashboard.sidebar.sign_out')}
-        </button>
+      <div className="mt-auto shrink-0 space-y-3 pt-3">
+        {userRole !== 'staff' && (
+          <SidebarPlanCard
+            subscriptionCopy={subscriptionCopy}
+            onManagePlan={() => setActiveMenu('subscriptions')}
+            t={t}
+          />
+        )}
+
+        <div className={`${SIDEBAR_SIGN_OUT_WRAP_CLASS} border-t-0 pt-0`}>
+          <button onClick={onLogout} className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-white/65 transition hover:text-white w-full">
+            <LogOut className="h-4 w-4" />
+            {t('dashboard.sidebar.sign_out')}
+          </button>
+        </div>
       </div>
     </aside>
   )
