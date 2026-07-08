@@ -22,7 +22,7 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
   const activeScreen = location.pathname.split('/')[2] || 'home'
   useRegisterPushDeviceOnVisit()
   useRefetchStaffMenuQueries(activeScreen)
-  const mainWidthClass = activeScreen === 'payments'
+  const mainWidthClass = activeScreen === 'payments' || activeScreen === 'earnings'
     ? 'w-full max-w-6xl xl:max-w-7xl'
     : 'max-w-3xl'
   

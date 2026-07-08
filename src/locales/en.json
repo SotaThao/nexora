@@ -54,6 +54,8 @@
       "reviews": "Reviews & Ratings",
       "pay": "Payout Methods",
       "payments": "Transactions",
+      "earnings": "My Earnings",
+      "salons": "My Salons",
       "profile": "Settings",
       "notifications": "Notifications"
     },
@@ -1516,6 +1518,34 @@
     "ack_notice_title": "Payment received notification",
     "ack_notice_desc": "A customer confirmed they sent a payment. Please verify the money arrived, then confirm receipt.",
     "ack_notice_desc_many": "{{count}} payments are waiting for your confirmation. Review the latest one first."
+  },
+  "staff_earnings": {
+    "available_balance": "Available Balance",
+    "withdraw": "Withdraw",
+    "pending": "Pending",
+    "lifetime_earnings": "Lifetime Earnings",
+    "tab_overview": "Overview",
+    "tab_transactions": "Transactions",
+    "tab_payouts": "Payouts",
+    "breakdown_tips": "Tips",
+    "breakdown_payments": "Payments",
+    "breakdown_referral": "Referral Rewards",
+    "breakdown_bonuses": "Bonuses",
+    "this_week": "This Week",
+    "vs_last_week_up": "+{{pct}}% vs last week",
+    "vs_last_week_down": "-{{pct}}% vs last week",
+    "vs_last_week_flat": "Same as last week",
+    "chart_empty": "No earnings data for this week yet."
+  },
+  "staff_salons": {
+    "title": "My Salons",
+    "subtitle": "Salons linked to your staff profile.",
+    "empty_title": "No salons linked yet",
+    "link_salon_cta": "Link a salon",
+    "status_previous": "Previous",
+    "since": "Since {{date}}",
+    "invited": "Invited {{date}}",
+    "worked_from": "Worked from {{date}}"
   },
   "staff_payouts": {
     "description": "Track payouts sent to you, confirm receipt, and review unpaid tip balance by business.",

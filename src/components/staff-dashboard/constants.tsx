@@ -34,9 +34,8 @@ export const STAFF_WORKSPACE_SUBMENU = [
   },
   {
     id: 'my_earnings',
-    screen: 'payments',
+    screen: 'earnings',
     labelKey: 'staff_dashboard.nav.my_earnings',
-    params: { tab: 'tips' },
   },
   {
     id: 'my_reviews',
@@ -45,13 +44,12 @@ export const STAFF_WORKSPACE_SUBMENU = [
   },
   {
     id: 'my_salons',
-    screen: 'qr',
+    screen: 'salons',
     labelKey: 'staff_dashboard.nav.my_salons',
-    params: { tab: 'tipping' },
   },
 ]
 
-export const STAFF_WORKSPACE_SCREEN_IDS = ['qr', 'payments', 'reviews', 'tips']
+export const STAFF_WORKSPACE_SCREEN_IDS = ['qr', 'payments', 'reviews', 'tips', 'earnings', 'salons']
 
 export function isStaffWorkspaceSubActive(
   activeScreen: string,
@@ -62,6 +60,15 @@ export function isStaffWorkspaceSubActive(
 
   if (item.id === 'my_qr') {
     return !tabParam || tabParam === 'personal'
+  }
+
+  if (item.id === 'my_earnings') {
+    if (activeScreen !== 'earnings') return false
+    return !tabParam || tabParam === 'overview'
+  }
+
+  if (item.id === 'my_salons') {
+    return activeScreen === 'salons'
   }
 
   if (!item.params?.tab) return true
@@ -77,6 +84,7 @@ export function isStaffWorkspaceRouteActive(
   activeScreen: string,
   tabParam: string | null,
 ): boolean {
+  if (activeScreen === 'earnings' || activeScreen === 'salons') return true
   return STAFF_WORKSPACE_SUBMENU.some((item) =>
     isStaffWorkspaceSubActive(activeScreen, tabParam, item),
   )
@@ -135,7 +143,7 @@ export function isStaffBottomNavItemActive(
   return true
 }
 
-export const STAFF_SCREENS = ['home', 'qr', 'tips', 'reviews', 'pay', 'payments', 'profile', 'notifications']
+export const STAFF_SCREENS = ['home', 'qr', 'tips', 'reviews', 'pay', 'payments', 'earnings', 'salons', 'profile', 'notifications']
 
 const STAFF_ACTION_URL_ALIASES: Record<string, string> = {
   '/staff/businesses': '/staff',

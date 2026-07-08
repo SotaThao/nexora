@@ -57,6 +57,8 @@
       "reviews": "Đánh giá & Xếp hạng",
       "pay": "Phương thức nhận tiền",
       "payments": "Giao dịch",
+      "earnings": "Thu nhập của tôi",
+      "salons": "Salon của tôi",
       "profile": "Cài đặt",
       "notifications": "Thông báo"
     },
@@ -1515,6 +1517,34 @@
     "ack_notice_title": "Thông báo nhận tiền",
     "ack_notice_desc": "Khách đã xác nhận đã chuyển khoản. Vui lòng kiểm tra tiền đã vào tài khoản, sau đó xác nhận đã nhận.",
     "ack_notice_desc_many": "Có {{count}} thanh toán đang chờ bạn xác nhận. Hãy xem giao dịch mới nhất trước."
+  },
+  "staff_earnings": {
+    "available_balance": "Số dư khả dụng",
+    "withdraw": "Rút tiền",
+    "pending": "Đang chờ",
+    "lifetime_earnings": "Tổng thu nhập",
+    "tab_overview": "Tổng quan",
+    "tab_transactions": "Giao dịch",
+    "tab_payouts": "Chi trả",
+    "breakdown_tips": "Tiền tip",
+    "breakdown_payments": "Thanh toán",
+    "breakdown_referral": "Thưởng giới thiệu",
+    "breakdown_bonuses": "Thưởng",
+    "this_week": "Tuần này",
+    "vs_last_week_up": "+{{pct}}% so với tuần trước",
+    "vs_last_week_down": "-{{pct}}% so với tuần trước",
+    "vs_last_week_flat": "Bằng tuần trước",
+    "chart_empty": "Chưa có dữ liệu thu nhập trong tuần này."
+  },
+  "staff_salons": {
+    "title": "Salon của tôi",
+    "subtitle": "Các salon đã liên kết với hồ sơ nhân viên của bạn.",
+    "empty_title": "Chưa liên kết salon nào",
+    "link_salon_cta": "Liên kết salon",
+    "status_previous": "Trước đây",
+    "since": "Từ {{date}}",
+    "invited": "Mời {{date}}",
+    "worked_from": "Làm từ {{date}}"
   },
   "staff_payouts": {
     "description": "Theo dõi khoản chi trả tiệm gửi cho bạn, xác nhận đã nhận tiền và xem số dư tip chưa nhận theo từng tiệm.",

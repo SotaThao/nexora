@@ -53,6 +53,14 @@ const STAFF_MENU_QUERIES: Record<string, QueryKeyPrefix[]> = {
   tips: [['staffTips']],
   reviews: [qk.staffReviews()],
   pay: [qk.staffPaymentMethods()],
+  earnings: [
+    qk.staffDashboardSummary(),
+    qk.staffPayoutStats(),
+    ['staffPayouts'],
+    ['staffPayments', 'stats'],
+    ['staffTips'],
+  ],
+  salons: [qk.staffBusinesses()],
   profile: [qk.userProfile(), qk.staffProfile(), qk.staffBusinesses()],
   notifications: [
     qk.notifications(),

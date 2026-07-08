@@ -81,6 +81,12 @@ const StaffNotifications = lazyWithRetry(
 const StaffTransactions = lazyWithRetry(
   () => import("../components/staff-dashboard/views/StaffTransactions"),
 );
+const StaffMyEarnings = lazyWithRetry(
+  () => import("../components/staff-dashboard/views/StaffMyEarnings"),
+);
+const StaffMySalons = lazyWithRetry(
+  () => import("../components/staff-dashboard/views/StaffMySalons"),
+);
 const ForgotPassword = lazyWithRetry(
   () => import("../components/ForgotPassword"),
 );
@@ -274,6 +280,8 @@ export default function AppRouter() {
             <Route path="pay" element={<StaffPay />} />
             <Route path="payments" element={<StaffTransactions />} />
             <Route path="payments/:paymentId" element={<StaffTransactions />} />
+            <Route path="earnings" element={<StaffMyEarnings />} />
+            <Route path="salons" element={<StaffMySalons />} />
             <Route path="profile" element={<StaffProfile />} />
             <Route path="notifications" element={<StaffNotifications />} />
             <Route path="*" element={<StaffFallbackRoute />} />

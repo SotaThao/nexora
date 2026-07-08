@@ -248,7 +248,7 @@ export default function StaffHome() {
           value={formatTipAmount(kpis.monthTips)}
           trend={t('staff_dashboard.home.track_payout')}
           trendColor="text-nexoraBrandDark"
-          onClick={() => go('tips')}
+          onClick={() => go('earnings')}
         />
         <KpiCard
           icon={<Clock3 className="h-3.5 w-3.5" />}
@@ -439,7 +439,7 @@ export default function StaffHome() {
             )})}
           </div>
           )}
-          <button type="button" onClick={() => go('qr')} className="mt-2 inline-flex h-6 w-full items-center justify-center rounded-lg text-[10px] font-semibold text-nexoraBrandDark">
+          <button type="button" onClick={() => go('salons')} className="mt-2 inline-flex h-6 w-full items-center justify-center rounded-lg text-[10px] font-semibold text-nexoraBrandDark">
             {t('staff_dashboard.home.view_all_salons')}
           </button>
         </div>

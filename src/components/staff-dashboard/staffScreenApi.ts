@@ -24,6 +24,14 @@ export const STAFF_SCREEN_API: Record<StaffScreenId, readonly string[]> = {
     'GET /api/v1/staff/payments/{paymentId}',
     'PATCH /api/v1/staff/payments/{paymentId}/acknowledge',
   ],
+  earnings: [
+    'GET /api/v1/staff/dashboard/summary',
+    'GET /api/v1/staff/payouts/stats',
+    'GET /api/v1/staff/payouts?Page&PageSize&Status',
+    'GET /api/v1/staff/payments/stats?from&to',
+    'GET /api/v1/staff/tips?PageNumber&PageSize&DateFrom&DateTo',
+  ],
+  salons: ['GET /api/v1/staff/businesses'],
   profile: ['GET /api/v1/staff/businesses'],
   notifications: [
     'GET /api/v1/Notifications?PageNumber&PageSize',
