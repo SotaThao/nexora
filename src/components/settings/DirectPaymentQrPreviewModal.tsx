@@ -68,9 +68,9 @@ export default function DirectPaymentQrPreviewModal({
             <img
               src="/assets/nexora-logo.png"
               alt="Nexora Logo"
-              className="h-4 w-4 object-contain qr-print-brand-logo"
+              className="h-6 w-6 object-contain qr-print-brand-logo"
             />
-            <span className="text-[9px] font-black tracking-wider text-slate-800 qr-print-brand-text">NEXORA</span>
+            <span className="text-sm font-black tracking-wider text-slate-800 qr-print-brand-text">NEXORA</span>
           </div>
 
           <div className="flex aspect-square w-full max-w-[14.5rem] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-nexoraBorder/60 bg-white p-2.5 shadow-inner qr-print-qr-wrapper">
@@ -85,8 +85,8 @@ export default function DirectPaymentQrPreviewModal({
             {scanCaption}
           </p>
 
-          <div className="flex items-center justify-center gap-1 text-[8px] font-bold text-nexoraSubtle qr-print-footer">
-            <ShieldCheck className="h-3 w-3 shrink-0 text-nexoraBrand" />
+          <div className="flex items-center justify-center gap-1 text-[11px] font-bold text-nexoraSubtle qr-print-footer">
+            <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-nexoraBrand" />
             <span>{t('components.SetupWizard.secureRedirect')}</span>
           </div>
         </div>
