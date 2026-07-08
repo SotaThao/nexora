@@ -356,6 +356,8 @@ export default function Dashboard({
     errors, setErrors,
     editingStaffId, setEditingStaffId,
     isStaffViewOnly,
+    isStaffDetailLoading,
+    fetchStaffStatsInModal,
     isStaffModalOpen, setIsStaffModalOpen,
     isAddStaffModalOpen,
     isApproveModalOpen, setIsApproveModalOpen,
@@ -364,13 +366,15 @@ export default function Dashboard({
     inviteShareDefaultName, setInviteShareDefaultName,
     inviteShareDefaultContact, setInviteShareDefaultContact,
     resetStaffForm, openAddStaff, closeAddStaffModal, openApproveStaff, openEditStaff, openViewStaff, closeStaffModal,
-    saveStaff, sendSetupLinkFromModal, handleLinkStaff, handleInviteStaff,
+    saveStaff, sendSetupLinkFromModal, handleLinkStaff, handleInviteStaff, handleSaveManualStaff,
     handleResendInvite,
     handleAcceptJoinRequest, handleDeclineJoinRequest, deleteStaff, toggleStaff, toggleStaffTipsFlow,
     handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
     inviteStaffMutation,
     linkRequestMutation,
     updateStatusMutation,
+    createLocalStaffMutation,
+    updateLocalStaffMutation,
   } = useStaffManagement({ staffData: merchantStaffData, isStaffLoading, businessName })
 
   // Sync touchpoints removed (now handled by React Query cache)
@@ -416,22 +420,22 @@ export default function Dashboard({
 
   // Filter lists based on searchQuery
   const filteredStaff = useMemo(() => {
-    const isPendingRequest = (member) => 
+    const isPendingRequest = (member) =>
       (
         member.status === 'Pending Acceptance' ||
         member.status === 'Pending' ||
         member.status === 'WaitingStaffAcceptance'
-      ) && 
+      ) &&
       (member.itemType === 'link' || member.itemType === 'invite')
-      
-    const visibleStaff = staff.filter(member => !isPendingRequest(member))
-    
+
+    const visibleStaff = staff.filter((member) => !isPendingRequest(member))
+
     if (!searchQuery) return visibleStaff
     const query = searchQuery.toLowerCase().trim()
-    return visibleStaff.filter(member =>
+    return visibleStaff.filter((member) =>
       member.fullName?.toLowerCase().includes(query) ||
       (member.nickname && member.nickname.toLowerCase().includes(query)) ||
-      member.position?.toLowerCase().includes(query)
+      member.position?.toLowerCase().includes(query),
     )
   }, [staff, searchQuery])
 
@@ -834,8 +838,10 @@ export default function Dashboard({
         onClose={closeAddStaffModal}
         onLinkStaff={handleLinkStaff}
         onInviteStaff={handleInviteStaff}
+        onSaveManualStaff={handleSaveManualStaff}
         isLinking={linkRequestMutation.isPending}
         isInviting={inviteStaffMutation.isPending}
+        isSavingManual={createLocalStaffMutation.isPending}
       />
 
       <StaffModal
@@ -859,6 +865,9 @@ export default function Dashboard({
           setInviteShareDefaultContact(formDetails.email || formDetails.phone || '')
           setIsInviteShareOpen(true)
         }}
+        isSavingLocal={updateLocalStaffMutation.isPending}
+        isLoadingDetail={isStaffDetailLoading}
+        fetchStaffStats={fetchStaffStatsInModal}
         reviews={reviews}
         merchantSetupData={merchantSetupData}
       />
@@ -889,6 +898,7 @@ export default function Dashboard({
           setIsApproveModalOpen(false)
         }}
         onOpenInviteShare={() => {}}
+        isLoadingDetail={isStaffDetailLoading}
         reviews={reviews}
         merchantSetupData={merchantSetupData}
       />

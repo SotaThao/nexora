@@ -68,6 +68,12 @@ export const errorCodeToI18nKey = {
   STAFF_DISPLAY_NAME_REQUIRED: 'errors.staff_display_name_required',
   STAFF_DISPLAY_NAME_TOO_SHORT: 'errors.staff_display_name_too_short',
   STAFF_DISPLAY_NAME_TOO_LONG: 'errors.staff_display_name_too_long',
+  STAFF_LIMIT_REACHED: 'errors.staff_limit_reached',
+  LOCAL_STAFF_NOT_FOUND: 'errors.local_staff_not_found',
+  LOCAL_STAFF_NOT_OWNED: 'errors.local_staff_not_owned',
+  STAFF_LINK_HAS_OUTSTANDING_DEBT: 'errors.staff_link_has_outstanding_debt',
+  STAFF_PAYMENT_METHOD_NOT_FOUND: 'errors.staff_payment_method_not_found',
+  STAFF_PAYMENT_METHOD_ACCESS_DENIED: 'errors.staff_payment_method_access_denied',
 
   // Physical cards (QR/NFC hardware)
   PHYSICAL_CARD_NOT_FOUND: 'errors.physical_card_not_found',

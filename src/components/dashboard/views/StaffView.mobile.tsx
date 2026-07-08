@@ -73,6 +73,7 @@ function StaffMemberCard({
   onViewStaff
 }) {
   const waitingStaffResponse = isWaitingStaffAcceptance(member)
+  const isLocalStaffMember = Boolean(member.isLocalStaff)
   const stripClass = isPendingInvite
     ? 'bg-amber-400'
     : isPendingLink
@@ -107,7 +108,7 @@ function StaffMemberCard({
             )}
             <div className="min-w-0">
               <p className="font-extrabold text-nexoraText truncate group-hover:text-nexoraBrand transition">
-                {member.fullName}
+                {member.nickname || member.fullName}
               </p>
               <p className="text-xs text-nexoraMuted truncate">{member.position}</p>
             </div>
@@ -133,8 +134,14 @@ function StaffMemberCard({
           <p className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wide">
             {t('components.dashboard.views.StaffView.col_linked_date')}
           </p>
-          <p className="text-xs text-nexoraText font-semibold mt-0.5">
-            {member.joinedDate ? formatJoinedDate(member.joinedDate) : '-'}
+          <p className="text-xs text-slate-600 font-semibold mt-0.5">
+            {isLocalStaffMember
+              ? t('components.dashboard.views.StaffView.manualStaffFlow')
+              : (member.flowType || t('components.dashboard.views.StaffView.directAddition'))}
+          </p>
+          <p className="text-[10px] text-slate-400 font-bold mt-1">
+            {t('components.dashboard.views.StaffView.linkedDate')}
+           {member.joinedDate ? formatJoinedDate(member.joinedDate) : '-'}
           </p>
         </div>
 
@@ -598,7 +605,7 @@ function StaffView({
                             </div>
                           )}
                           <div>
-                            <div className="font-extrabold text-nexoraText">{member.fullName}</div>
+                            <div className="font-extrabold text-nexoraText">{member.nickname || member.fullName}</div>
                             <div className="text-xs text-nexoraMuted">{member.position}</div>
                           </div>
                         </div>
