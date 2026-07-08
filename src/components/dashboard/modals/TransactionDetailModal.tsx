@@ -19,6 +19,7 @@ import { useConfirmMerchantTipsReceipt } from '../../../data/hooks/useTransactio
 import { useConfirmStaffTipsReceipt } from '../../../data/hooks/useStaffSelf'
 import QrModal from './QrModal'
 import CopyableTransactionId from '../../ui/CopyableTransactionId'
+import QrImage from '../../ui/QrImage'
 
 function buildStaffCodeLookup(staff = []) {
   const map = new Map()
@@ -249,10 +250,10 @@ export default function TransactionDetailModal({
         className="group relative shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white p-1.5 shadow-sm transition hover:border-nexoraBrand hover:shadow-md cursor-pointer"
         title={t('components.dashboard.views.StaffView.clickToEnlarge')}
       >
-        <img
+        <QrImage
           src={qrImageSrc}
           alt={`QR for ${touchPointName}`}
-          className="h-20 w-20 object-contain"
+          className="h-20 w-20"
         />
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-lg bg-nexoraBrand/80 opacity-0 transition-opacity group-hover:opacity-100">
           <span className="text-[9px] font-black uppercase tracking-widest text-white">

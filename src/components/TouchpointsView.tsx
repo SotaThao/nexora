@@ -34,6 +34,7 @@ import { getWebUrlOrigin } from '../utils/webUrlBase'
 import ToggleSwitch from './ui/ToggleSwitch'
 import { formatCurrency, formatTransactionDateTime } from './dashboard/utils'
 import PhysicalCardDetailModal from './dashboard/modals/PhysicalCardDetailModal'
+import QrImage from './ui/QrImage'
 
 function isLinkedTouchPointId(value: unknown): boolean {
   if (value == null || value === '') return false
@@ -411,10 +412,10 @@ export default function TouchpointsView({
                     className="relative w-[115px] h-[115px] rounded-xl bg-white border border-nexoraBorder/60 p-2 flex items-center justify-center shadow-sm cursor-pointer hover:border-nexoraBrand transition-all hover:scale-[1.03] active:scale-95 group/qr select-none overflow-hidden shrink-0 self-center mx-auto sm:mx-0"
                     title={t('dashboard.modals.download_print_qr')}
                   >
-                    <img
+                    <QrImage
                       src={qrImageSrc}
                       alt="Scan QR"
-                      className={`h-full w-full object-contain transition-opacity duration-200 ${isPointActive ? 'opacity-100' : 'opacity-30 filter grayscale'}`}
+                      className={`h-full w-full transition-opacity duration-200 ${isPointActive ? 'opacity-100' : 'opacity-30 filter grayscale'}`}
                     />
                     {!isPointActive && (
                       <div className="absolute inset-0 bg-luxuryBlack/60 flex flex-col items-center justify-center text-white text-[9px] font-black uppercase tracking-wider p-1 text-center">

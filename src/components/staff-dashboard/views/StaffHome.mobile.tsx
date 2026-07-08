@@ -7,7 +7,6 @@ import {
   QrCode,
   Star,
   Clock3,
-  CircleDollarSign,
   CalendarDays,
   CreditCard,
   ChevronRight,
@@ -27,6 +26,7 @@ import { buildStaffShareUrl, getProfileReferralCode } from '../../../utils/affil
 import { buildQrImageUrl } from '../../../utils/staffTipUrl'
 import { SkeletonLayout } from '../../ui/skeleton'
 import Tooltip from '../../ui/Tooltip'
+import QrImage from '../../ui/QrImage'
 import { STAFF_HOME_SKELETON } from '../skeletons/staffDashboardSkeletons'
 import ActiveBannersCarousel from '../../dashboard/overview/ActiveBannersCarousel'
 import {
@@ -119,7 +119,7 @@ function StaffQrShortcutCard({ icon, title, subtitle, onClick, qrImageSrc = '', 
       <div className="flex items-start gap-2">
         <span className="grid h-[48px] w-[48px] shrink-0 place-items-center rounded-lg border-4 border-white bg-white shadow-[0_8px_18px_rgba(70,72,212,0.08)]">
           {qrImageSrc ? (
-            <img src={qrImageSrc} alt={title} className="h-full w-full object-contain" />
+            <QrImage src={qrImageSrc} alt={title} className="h-full w-full" />
           ) : (
             icon
           )}
@@ -278,7 +278,7 @@ export default function StaffHome() {
           title={t('staff_dashboard.home.personal_qr')}
           subtitle={t('staff_dashboard.home.personal_qr_subtitle')}
           qrImageSrc={tipQrImageSrc}
-          onClick={() => go('qr', { tab: 'tipping' })}
+          onClick={() => go('qr', { tab: 'tipping', preview: 'firstTip' })}
         />
         <StaffQrShortcutCard
           icon={<Gift className="h-5 w-5 text-rose-500" />}
@@ -293,9 +293,8 @@ export default function StaffHome() {
       {/* ── Quick Actions ────────────────────────────────────────────────── */}
       <section className="space-y-1.5 px-0.5">
         <SectionHeader title={t('staff_dashboard.home.quick_actions')} action={t('staff_dashboard.home.manage')} onAction={() => go('qr')} />
-        <div className="grid grid-cols-5 gap-2">
+        <div className="grid grid-cols-4 gap-2">
           <QuickAction icon={<QrCode className="h-4 w-4" />} label={t('staff_dashboard.home.quick_qr')} bg="border-[#DDD8FF] bg-[#F4F2FF]" iconColor="text-nexoraBrandDark" onClick={() => go('qr')} />
-          <QuickAction icon={<CircleDollarSign className="h-4 w-4" />} label={t('staff_dashboard.home.quick_tips')} bg="border-emerald-200 bg-emerald-50" iconColor="text-nexoraSuccess" onClick={() => go('tips')} />
           <QuickAction icon={<Star className="h-4 w-4" />} label={t('staff_dashboard.home.quick_reviews')} bg="border-orange-200 bg-orange-50" iconColor="text-orange-500" onClick={() => go('reviews')} />
           <QuickAction icon={<CreditCard className="h-4 w-4" />} label={t('staff_dashboard.home.quick_payments')} bg="border-indigo-200 bg-indigo-50" iconColor="text-indigo-600" onClick={() => go('qr', { tab: 'payment' })} />
           <QuickAction icon={<Gift className="h-4 w-4" />} label={t('staff_dashboard.home.quick_refer')} bg="border-rose-200 bg-rose-50" iconColor="text-rose-500" onClick={() => go('qr', { tab: 'personal' })} />

@@ -6,6 +6,7 @@ import { useNotification } from '../../contexts/NotificationContext'
 import { buildPublicQrImageUrl } from '../../data/repositories/publicQr'
 import { downloadQrCode } from '../../utils/qrUtils'
 import { shouldUseMobileDownloadFlow } from '../../utils/downloadFile'
+import QrImage from '../ui/QrImage'
 
 const slugify = (value = '') =>
   value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'qr'
@@ -82,10 +83,10 @@ export default function DirectPaymentQrPreviewModal({
           </div>
 
           <div className="flex aspect-square w-full max-w-[14.5rem] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-nexoraBorder/60 bg-white p-2.5 shadow-inner qr-print-qr-wrapper">
-            <img
+            <QrImage
               src={qrImageSrc}
               alt={title}
-              className="h-full w-full max-h-full max-w-full object-contain qr-print-qr-image"
+              className="h-full w-full max-h-full max-w-full qr-print-qr-image"
             />
           </div>
 

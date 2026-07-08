@@ -12,6 +12,7 @@ import CustomSelect from '../../CustomSelect'
 import Pagination from '../../ui/Pagination'
 import ToggleSwitch from '../../ui/ToggleSwitch'
 import { SkeletonList } from '../../ui/skeleton'
+import QrImage from '../../ui/QrImage'
 
 function isWaitingStaffAcceptance(member) {
   return member?.apiStatus === 'WaitingStaffAcceptance' || member?.status === 'WaitingStaffAcceptance'
@@ -191,10 +192,10 @@ function StaffView({
               title={t('components.dashboard.views.StaffView.clickToEnlarge')}
             >
               {publicInviteEnabled ? (
-                <img
+                <QrImage
                   src={publicInviteQrSrc}
                   alt={t('components.dashboard.views.StaffView.scanToJoinAlt')}
-                  className="h-full w-full object-contain"
+                  className="h-full w-full"
                 />
               ) : (
                 <QrCode className="h-8 w-8 text-slate-300" />
@@ -645,10 +646,10 @@ function StaffView({
 
             <div className="mb-4 w-full">
               <div className="aspect-square w-full max-w-full min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-inner sm:p-4">
-              <img
+              <QrImage
                 src={publicInviteQrLargeSrc}
                 alt={t('components.dashboard.views.StaffView.scanToJoinAlt')}
-                className="h-full w-full max-h-full max-w-full object-contain"
+                className="h-full w-full max-h-full max-w-full"
               />
               </div>
             </div>

@@ -4,6 +4,7 @@ import { getCustomerAppBaseUrl } from '../../../utils/webUrlBase'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 import { downloadQrCode } from '../../../utils/qrUtils'
 import { shouldUseMobileDownloadFlow } from '../../../utils/downloadFile'
+import QrImage from '../../ui/QrImage'
 
 export default function Step3Download({
   t,
@@ -66,13 +67,13 @@ export default function Step3Download({
 
             {/* Real generated QR code scan preview */}
             <div className="h-28 w-28 rounded-lg bg-white border border-nexoraBorder/60 p-2 flex items-center justify-center shadow-inner qr-print-qr-wrapper">
-              <img
+              <QrImage
                 src={buildPublicQrImageUrl(
                   `${getCustomerAppBaseUrl()}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}`,
                   150,
                 )}
                 alt="QR Preview"
-                className="h-full w-full object-contain qr-print-qr-image"
+                className="h-full w-full qr-print-qr-image"
               />
             </div>
 

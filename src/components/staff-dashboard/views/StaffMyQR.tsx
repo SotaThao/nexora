@@ -23,6 +23,7 @@ import { useQueries } from '@tanstack/react-query'
 import { qk } from '../../../data/queryKeys'
 import staffSelfRepository from '../../../data/repositories/staffSelf'
 import { SkeletonLayout } from '../../ui/skeleton'
+import QrImage from '../../ui/QrImage'
 
 type LooseObject = Record<string, any>
 
@@ -321,6 +322,7 @@ export default function StaffMyQR() {
   const scannerCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const scannerFrameRef = useRef<number | null>(null)
   const lastScanAtRef = useRef(0)
+  const handledFirstTipPreviewRef = useRef(false)
 
   useEffect(() => {
     const tab = searchParams.get('tab')
@@ -408,6 +410,31 @@ export default function StaffMyQR() {
     const match = activeTipQrs.find((biz) => biz.businessId === selectedBusinessId)
     return match || activeTipQrs[0]
   }, [activeTipQrs, selectedBusinessId])
+
+  useEffect(() => {
+    const shouldPreviewFirstTip = searchParams.get('preview') === 'firstTip'
+    if (!shouldPreviewFirstTip) {
+      handledFirstTipPreviewRef.current = false
+      return
+    }
+    if (handledFirstTipPreviewRef.current) return
+
+    const firstTipQr = activeTipQrs.find((biz) => Boolean(biz.tipUrl))
+    if (!firstTipQr?.tipUrl) return
+
+    handledFirstTipPreviewRef.current = true
+    setSelectedBusinessId(firstTipQr.businessId)
+    setZoomedQr({
+      url: firstTipQr.tipUrl,
+      title: firstTipQr.businessName,
+      subtitle: firstTipQr.touchPointSlug,
+      kind: 'tipping',
+    })
+
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.delete('preview')
+    setSearchParams(nextParams, { replace: true })
+  }, [activeTipQrs, searchParams, setSearchParams])
 
   const copyText = useCallback(
     async (text: string, successKey: string, failKey: string): Promise<boolean> => {
@@ -851,7 +878,7 @@ export default function StaffMyQR() {
             {staffCode && staffShareUrl ? (
               <>
                 <div className="mx-auto my-3 flex h-40 w-40 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#EEE9FF] bg-white p-3 shadow-sm select-none">
-                  <img src={personalQrImageSrc} alt={t('staff_dashboard.qr.scan_qr_alt')} className="h-full w-full object-contain" />
+                  <QrImage src={personalQrImageSrc} alt={t('staff_dashboard.qr.scan_qr_alt')} className="h-full w-full" />
                 </div>
                 <div className="flex items-center justify-center gap-2 text-[12px] font-semibold text-nexoraText">
                   <span>
@@ -946,10 +973,10 @@ export default function StaffMyQR() {
                         className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-xl border border-[#EEE9FF] bg-white p-1.5 shadow-sm"
                       >
                         {biz.tipUrl ? (
-                          <img
+                          <QrImage
                             src={buildQrImageUrl(biz.tipUrl, 96, biz.qrImageUrl)}
                             alt={`${biz.businessName} QR`}
-                            className="h-full w-full object-contain"
+                            className="h-full w-full"
                           />
                         ) : (
                           <QrCode className="h-8 w-8 text-nexoraBrandDark" />
@@ -1073,10 +1100,10 @@ export default function StaffMyQR() {
                 className="group relative mx-auto my-3 flex h-40 w-40 items-center justify-center overflow-hidden rounded-xl border border-[#EEE9FF] bg-white p-3 shadow-sm transition hover:scale-[1.02]"
                 title={t('staff_dashboard.qr.payment_preview')}
               >
-                <img
+                <QrImage
                   src={staffPaymentQrImageSrc}
                   alt={t('staff_dashboard.qr.payment_title')}
-                  className="h-full w-full object-contain"
+                  className="h-full w-full"
                 />
                 <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-nexoraBrand/75 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                   <span className="rounded-lg bg-white/20 px-3 py-1 text-[11px] font-black uppercase tracking-widest text-white backdrop-blur-sm">
@@ -1256,7 +1283,7 @@ export default function StaffMyQR() {
                   <p className="mt-2 text-[9px] font-bold text-white/55">{t('staff_dashboard.qr.poster_tagline')}</p>
 
                   <div className="mx-auto mt-5 w-[224px] rounded-[24px] border border-cyan-300/80 bg-white p-3 shadow-[0_0_28px_rgba(34,211,238,0.55)]">
-                    <img src={buildQrImageUrl(zoomedQr.url, 420)} alt={t('staff_dashboard.qr.tipping_qr_alt')} className="h-full w-full rounded-xl object-contain" />
+                    <QrImage src={buildQrImageUrl(zoomedQr.url, 420)} alt={t('staff_dashboard.qr.tipping_qr_alt')} className="h-full w-full rounded-xl" />
                   </div>
 
                   <div className="mt-5 grid grid-cols-[1fr_auto_1fr_auto_1fr] items-start gap-2 text-center">
@@ -1339,7 +1366,7 @@ export default function StaffMyQR() {
                 </div>
 
                 <div className="relative mx-auto flex h-56 w-56 items-center justify-center rounded-2xl border-2 border-slate-100 bg-white p-4 shadow-md">
-                  <img src={buildQrImageUrl(zoomedQr.url, 300)} alt={t('staff_dashboard.qr.payment_qr_alt')} className="h-full w-full object-contain" />
+                  <QrImage src={buildQrImageUrl(zoomedQr.url, 300)} alt={t('staff_dashboard.qr.payment_qr_alt')} className="h-full w-full" />
                 </div>
 
                 <div className="space-y-2 text-left">

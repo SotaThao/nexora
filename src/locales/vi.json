@@ -386,6 +386,8 @@
     "processing": "Đang xử lý...",
     "saving": "Đang lưu...",
     "error": "Lỗi",
+    "qr_load_failed": "Không tải được mã QR",
+    "qr_reload": "Tải lại",
     "success": "Thành công",
     "active_status": "Hoạt động",
     "export": "Xuất Excel",

@@ -8,6 +8,7 @@ import { toLocalCustomerTouchUrl, buildQrImageUrl } from '../../../utils/staffTi
 import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import { downloadQrCode, downloadTouchpointQrFile } from '../../../utils/qrUtils'
 import { shouldUseMobileDownloadFlow } from '../../../utils/downloadFile'
+import QrImage from '../../ui/QrImage'
 
 const slugify = (str = '') => str.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 
@@ -67,10 +68,10 @@ function QrGatewayPreviewLayout({
           </div>
 
           <div className="flex aspect-square w-full max-w-[14.5rem] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-nexoraBorder/60 bg-white p-2.5 shadow-inner qr-print-qr-wrapper">
-            <img
+            <QrImage
               src={qrImageSrc}
               alt={target.name}
-              className="h-full w-full max-h-full max-w-full object-contain qr-print-qr-image"
+              className="h-full w-full max-h-full max-w-full qr-print-qr-image"
             />
           </div>
 
@@ -243,10 +244,10 @@ function QrModal({ target, businessName, onClose }) {
             </div>
 
             <div className="flex aspect-square w-full max-w-full min-w-0 items-center justify-center overflow-hidden rounded-lg border border-nexoraBorder/60 bg-white p-2 shadow-inner qr-print-qr-wrapper">
-              <img
+              <QrImage
                 src={buildQrImageUrl(qrUrl, 300, target.qrImageUrl)}
                 alt="Scan QR code to tip and review"
-                className="h-full w-full max-h-full max-w-full object-contain qr-print-qr-image"
+                className="h-full w-full max-h-full max-w-full qr-print-qr-image"
               />
             </div>
 

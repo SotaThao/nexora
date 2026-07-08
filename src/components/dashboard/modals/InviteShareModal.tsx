@@ -6,6 +6,7 @@ import { useNotification } from '../../../contexts/NotificationContext'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
 import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
+import QrImage from '../../ui/QrImage'
 
 function InviteShareModal({
   open,
@@ -110,10 +111,10 @@ function InviteShareModal({
               title={t('components.dashboard.modals.InviteShareModal.clickToEnlarge')}
             >
               {publicInviteEnabled ? (
-                <img
+                <QrImage
                   src={publicJoinQrSmallUrl}
                   alt={t('components.dashboard.modals.InviteShareModal.joinQrAlt')}
-                  className="h-full w-full object-contain"
+                  className="h-full w-full"
                 />
               ) : (
                 <QrCode className="h-10 w-10 text-slate-300" />
@@ -285,10 +286,10 @@ function InviteShareModal({
 
             <div className="mb-4 w-full">
               <div className="aspect-square w-full max-w-full min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-inner sm:p-4">
-              <img
+              <QrImage
                 src={publicJoinQrLargeUrl}
                 alt={t('components.dashboard.modals.InviteShareModal.scanToJoinAlt')}
-                className="h-full w-full max-h-full max-w-full object-contain"
+                className="h-full w-full max-h-full max-w-full"
               />
               </div>
             </div>

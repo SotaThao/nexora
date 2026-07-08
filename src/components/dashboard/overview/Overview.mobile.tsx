@@ -29,6 +29,7 @@ import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 import { resolveDirectPaymentPageUrl, resolveMerchantBusinessIdFromProfile } from '../../../utils/merchantBusinessId'
 import { buildQrImageUrl, toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
 import { getWebUrlOrigin } from '../../../utils/webUrlBase'
+import QrImage from '../../ui/QrImage'
 
 function fmtMoneyCompact(value) {
   const n = Number(value || 0)
@@ -162,7 +163,7 @@ function MerchantQrCard({ icon, title, subtitle, actionLabel, onAction, qrImageS
       <div className="flex h-full items-start gap-2">
         <span className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-lg border-4 border-white bg-white shadow-[0_8px_18px_rgba(70,72,212,0.08)]">
           {qrImageSrc ? (
-            <img src={qrImageSrc} alt={title} className="h-full w-full object-contain" />
+            <QrImage src={qrImageSrc} alt={title} className="h-full w-full" />
           ) : (
             icon
           )}

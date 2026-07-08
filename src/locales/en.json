@@ -386,6 +386,8 @@
     "processing": "Processing...",
     "saving": "Saving...",
     "error": "Error",
+    "qr_load_failed": "Could not load QR code",
+    "qr_reload": "Reload",
     "success": "Success",
     "active_status": "Active",
     "export": "Export",

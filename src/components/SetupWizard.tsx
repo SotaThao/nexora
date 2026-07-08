@@ -16,6 +16,7 @@ import PersonalSetupWizard from './setup-wizard/PersonalSetupWizard'
 import usePersonalSetupWizard from './setup-wizard/hooks/usePersonalSetupWizard'
 import { buildPublicQrImageUrl } from '../data/repositories/publicQr'
 import LanguageSwitcher from './ui/LanguageSwitcher'
+import QrImage from './ui/QrImage'
 
 export { renderTextWithGoldStars, getTouchpointIcon } from './setup-wizard/constants'
 
@@ -351,13 +352,13 @@ export default function SetupWizard() {
                 </div>
 
                 <div className="flex aspect-square w-full max-w-full min-w-0 items-center justify-center overflow-hidden rounded-lg border border-nexoraBorder/60 bg-white p-2 shadow-inner qr-print-qr-wrapper">
-                  <img
+                  <QrImage
                     src={buildPublicQrImageUrl(
                       `${getCustomerAppBaseUrl()}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}&tech=tp/${previewingTp.id}`,
                       300,
                     )}
                     alt="QR Preview"
-                    className="h-full w-full max-h-full max-w-full object-contain qr-print-qr-image"
+                    className="h-full w-full max-h-full max-w-full qr-print-qr-image"
                   />
                 </div>
 
@@ -408,7 +409,7 @@ export default function SetupWizard() {
             </div>
 
             <div className="qr-print-qr-wrapper">
-              <img
+              <QrImage
                 src={buildPublicQrImageUrl(
                   `${getCustomerAppBaseUrl()}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}`,
                   150,

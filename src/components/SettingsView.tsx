@@ -36,6 +36,7 @@ import {
   useUnreadCount,
 } from '../data/hooks/useNotifications'
 import { formatNotificationDateTime } from './dashboard/utils'
+import QrImage from './ui/QrImage'
 
 const compactPanel =
   'rounded-lg border border-[#EEE9FF] bg-white p-2.5 shadow-[0_8px_18px_rgba(70,72,212,0.08)]'
@@ -605,10 +606,10 @@ export default function SettingsView({
               <div className="flex justify-center mb-2">
                 <div className="bg-slate-50 p-4 border border-slate-200 rounded-2xl flex items-center justify-center h-[240px] w-[240px] shadow-sm hover:shadow-md transition">
                   {baseReferralUrl ? (
-                    <img
+                    <QrImage
                       src={buildPublicQrImageUrl(baseReferralUrl, 220)}
                       alt="Referral Link QR Code"
-                      className="h-full w-full object-contain rounded-lg"
+                      className="h-full w-full rounded-lg"
                     />
                   ) : (
                     <span className="text-xs font-bold text-nexoraMuted text-center px-4">
@@ -755,10 +756,10 @@ export default function SettingsView({
             <div className="w-full">
               <div className="aspect-square w-full max-w-full min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-inner sm:p-4">
                 {referralUrl ? (
-                  <img
+                  <QrImage
                     src={buildPublicQrImageUrl(referralUrl, 440)}
                     alt="Referral Link QR Code"
-                    className="h-full w-full max-h-full max-w-full object-contain rounded"
+                    className="h-full w-full max-h-full max-w-full rounded"
                   />
                 ) : (
                   <span className="text-xs font-bold text-nexoraMuted text-center px-4">

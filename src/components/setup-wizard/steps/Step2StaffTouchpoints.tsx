@@ -16,6 +16,7 @@ import {
 } from '../../../data/paymentMethodTypes'
 import type { PaymentMethodDto } from '../../../types/domain'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
+import QrImage from '../../ui/QrImage'
 
 export default function Step2StaffTouchpoints({
   t,
@@ -256,10 +257,10 @@ export default function Step2StaffTouchpoints({
                         className="relative w-12 h-12 rounded-lg bg-white border border-nexoraBorder/60 p-1 flex items-center justify-center shadow-sm cursor-pointer hover:border-nexoraBrand transition-all hover:scale-105 group/qr select-none overflow-hidden shrink-0"
                         title="Click to zoom / Nhấp để phóng to"
                       >
-                        <img
+                        <QrImage
                           src={qrCodeSrc}
                           alt="Scan QR"
-                          className="h-full w-full object-contain"
+                          className="h-full w-full"
                         />
                         <div className="absolute inset-0 bg-nexoraBrand/75 opacity-0 group-hover/qr:opacity-100 flex items-center justify-center text-white transition-opacity select-none">
                           <Search className="h-3.5 w-3.5" />
