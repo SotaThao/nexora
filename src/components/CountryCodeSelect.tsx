@@ -234,7 +234,7 @@ export default function CountryCodeSelect({
 
       {isOpen && (
         <div className="absolute left-0 mt-11 z-50 w-64 bg-white border border-nexoraBorder rounded-lg shadow-premium flex flex-col overflow-hidden animate-fadeIn">
-          <div className="p-2 border-b border-nexoraRule bg-slate-50 flex items-center gap-1.5">
+          <div className="p-2 bg-slate-50 flex items-center gap-1.5">
             <Search className="w-3.5 h-3.5 text-nexoraSubtle shrink-0" />
             <input
               type="text"
@@ -242,7 +242,7 @@ export default function CountryCodeSelect({
               placeholder={t('components.CountryCodeSelect.phSearch')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full text-xs bg-transparent border-0 outline-none p-0 focus:ring-0 text-nexoraText placeholder-nexoraSubtle"
+              className="country-code-search-input w-full text-xs bg-transparent border-0 outline-none p-0 shadow-none focus:ring-0 focus:outline-none text-nexoraText placeholder-nexoraSubtle"
             />
           </div>
           <div className="max-h-48 overflow-y-auto divide-y divide-slate-100 py-1">
@@ -263,7 +263,6 @@ export default function CountryCodeSelect({
                       ${isSelected ? 'bg-nexoraBrandSoft text-nexoraBrand font-bold' : 'text-nexoraText'}`}
                   >
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-sm shrink-0">{country.flag}</span>
                       <span className="truncate font-medium">{country.name}</span>
                     </div>
                     <span className="text-nexoraMuted shrink-0 font-mono font-bold">{country.dialCode}</span>

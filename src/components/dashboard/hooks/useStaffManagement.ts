@@ -15,21 +15,72 @@ import {
   useRejectMerchantStaffLink,
   useRemoveMerchantStaff,
   useCancelStaffInvite,
+  useMerchantStaffByCode,
 } from '../../../data/hooks/useMerchantStaff'
+import {
+  useCreateLocalStaff,
+  useDeleteLocalStaff,
+  useUpdateLocalStaff,
+  resolveStaffAvatarUrl,
+} from '../../../data/hooks/useLocalStaff'
+import type { ManualStaffFormPayload } from '../modals/AddManualStaffTab'
 import { EMPTY_STAFF_FORM, type StaffFormState } from '../../../types/forms'
 import { getApiErrorCode } from '../../../types/domain'
 import { getErrorI18nKey } from '../../../data/errorCodes'
 import { isValidEmail, isValidPhone } from '../../../utils/validation'
+import { resolveStaffDisplayNames, splitFullName } from '../../../utils/staffName'
+
+function resolveStaffDetailCode(member: { staffCode?: string | null }) {
+  const code = String(member?.staffCode ?? '').trim()
+  return code || null
+}
+
+function pickNonEmptyString(...values: unknown[]): string {
+  for (const value of values) {
+    const trimmed = String(value ?? '').trim()
+    if (trimmed) return trimmed
+  }
+  return ''
+}
+
+/** Prefer detail API fields; fall back to staff list row for phone/email and other profile gaps. */
+function mergeStaffModalMember(detail, listMember) {
+  const list = listMember ? normaliseMember(listMember) : null
+  if (!detail) return list ?? {}
+
+  const merged = { ...list, ...detail }
+  const names = resolveStaffDisplayNames(merged)
+
+  return {
+    ...detail,
+    fullName: names.fullName,
+    nickname: names.nickname,
+    position: pickNonEmptyString(detail.position, list?.position),
+    avatar: pickNonEmptyString(detail.avatar, list?.avatar),
+    phone: pickNonEmptyString(detail.phone, list?.phone),
+    email: pickNonEmptyString(detail.email, list?.email),
+    bio: names.formBio,
+    staffCode: detail.staffCode ?? list?.staffCode ?? '',
+    staffProfileId: detail.staffProfileId ?? list?.staffProfileId ?? '',
+    averageRating: detail.averageRating ?? list?.averageRating ?? 0,
+    showInTipsFlow: detail.showInTipsFlow ?? list?.showInTipsFlow ?? true,
+    isLocalStaff: detail.isLocalStaff ?? list?.isLocalStaff ?? false,
+    isProfileComplete: detail.isProfileComplete ?? list?.isProfileComplete ?? false,
+    payoutConfigs: detail.payoutConfigs || list?.payoutConfigs || getPayoutConfigsFromMember(detail),
+    paymentAccounts: detail.paymentAccounts || list?.paymentAccounts,
+  }
+}
 
 /**
  * Normalise a raw staff-list member into the shape the dashboard uses.
  * Shared by the useState initialiser and the Dashboard seeding effects.
  */
 export function normaliseMember(member) {
+  const { fullName, nickname } = resolveStaffDisplayNames(member)
   return {
     id: member.id,
-    fullName: member.fullName,
-    nickname: member.nickname,
+    fullName,
+    nickname,
     position: member.position,
     avatar: member.avatar || '',
     phone: member.phone || member.invitedPhone || '',
@@ -63,6 +114,8 @@ export function normaliseMember(member) {
     averageRating: member.averageRating ?? 0,
     joinedDate: member.joinedDate ?? null,
     roleAtBusiness: member.roleAtBusiness ?? null,
+    isLocalStaff: member.isLocalStaff ?? false,
+    isProfileComplete: member.isProfileComplete ?? false,
   }
 }
 
@@ -93,6 +146,9 @@ export function useStaffManagement({
   const rejectLinkMutation = useRejectMerchantStaffLink()
   const removeStaffMutation = useRemoveMerchantStaff()
   const cancelInviteMutation = useCancelStaffInvite()
+  const createLocalStaffMutation = useCreateLocalStaff()
+  const updateLocalStaffMutation = useUpdateLocalStaff()
+  const deleteLocalStaffMutation = useDeleteLocalStaff()
 
   // Map an API error to a localized, human-readable message (US-014 AC #11/#12).
   // Falls back to errors.unknown_error for unmapped server codes.
@@ -131,6 +187,16 @@ export function useStaffManagement({
   const [isInviteShareOpen, setIsInviteShareOpen] = useState(false)
   const [inviteShareDefaultName, setInviteShareDefaultName] = useState('')
   const [inviteShareDefaultContact, setInviteShareDefaultContact] = useState('')
+  const [viewingStaffCode, setViewingStaffCode] = useState<string | null>(null)
+  const [fetchStaffStatsInModal, setFetchStaffStatsInModal] = useState(true)
+
+  const {
+    data: staffDetail,
+    isLoading: isStaffDetailLoading,
+    isError: isStaffDetailError,
+  } = useMerchantStaffByCode(viewingStaffCode, {
+    enabled: (isStaffModalOpen || isApproveModalOpen) && Boolean(viewingStaffCode),
+  })
 
   const resetStaffForm = () => {
     setStaffForm({
@@ -139,6 +205,8 @@ export function useStaffManagement({
     })
     setEditingStaffId(null)
     setIsStaffViewOnly(false)
+    setViewingStaffCode(null)
+    setFetchStaffStatsInModal(true)
     setErrors({})
   }
 
@@ -152,13 +220,17 @@ export function useStaffManagement({
 
   const openApproveStaff = (member) => {
     setApprovingStaffMember(member)
+    setFetchStaffStatsInModal(true)
+    setViewingStaffCode(resolveStaffDetailCode(member))
+    const { fullName, nickname } = resolveStaffDisplayNames(member)
     setStaffForm({
-      fullName: member.fullName,
-      nickname: member.nickname || member.fullName?.split(' ')[0] || '',
+      fullName,
+      nickname,
       position: member.position,
       avatar: member.avatar || '',
-      phone: member.phone || '',
-      email: member.email || '',
+      avatarFile: null,
+      phone: member.phone || member.invitedPhone || '',
+      email: member.email || member.invitedEmail || '',
       venmo: member.paymentAccounts?.venmo || '',
       cashapp: member.paymentAccounts?.cashapp || '',
       zelle: member.paymentAccounts?.zelle || '',
@@ -174,38 +246,51 @@ export function useStaffManagement({
   }
 
   const populateStaffForm = (member) => {
+    const { fullName, nickname, formBio } = resolveStaffDisplayNames(member)
     setStaffForm({
-      fullName: member.fullName,
-      nickname: member.nickname || member.fullName?.split(' ')[0] || '',
+      fullName,
+      nickname,
       position: member.position,
       avatar: member.avatar || '',
-      phone: member.phone || '',
-      email: member.email || '',
+      avatarFile: null,
+      phone: member.phone || member.invitedPhone || '',
+      email: member.email || member.invitedEmail || '',
+      bio: formBio,
       venmo: member.paymentAccounts?.venmo || '',
       cashapp: member.paymentAccounts?.cashapp || '',
       zelle: member.paymentAccounts?.zelle || '',
-      vlinkpay: '',
+      vlinkpay: member.paymentAccounts?.vlinkpay || '',
       nexoraStaffId: member.staffCode || '',
+      staffCode: member.staffCode || '',
       staffProfileId: member.staffProfileId || '',
       averageRating: member.averageRating ?? 0,
       showInTipsFlow: member.showInTipsFlow !== false,
-      payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member)
+      isLocalStaff: member.isLocalStaff ?? false,
+      isProfileComplete: member.isProfileComplete ?? false,
+      payoutConfigs: member.payoutConfigs || getPayoutConfigsFromMember(member),
     })
     setErrors({})
   }
 
-  const openEditStaff = (member) => {
-    setIsStaffViewOnly(false)
+  const openStaffModal = (member, { viewOnly = false, fetchStats = true } = {}) => {
+    setIsStaffViewOnly(viewOnly)
+    setFetchStaffStatsInModal(fetchStats)
     setEditingStaffId(member.id)
     populateStaffForm(member)
+    setViewingStaffCode(resolveStaffDetailCode(member))
     setIsStaffModalOpen(true)
   }
 
+  const openEditStaff = (member) => {
+    openStaffModal(member, { viewOnly: false, fetchStats: true })
+  }
+
   const openViewStaff = (member) => {
-    setIsStaffViewOnly(true)
-    setEditingStaffId(member.id)
-    populateStaffForm(member)
-    setIsStaffModalOpen(true)
+    if (member?.isLocalStaff) {
+      openStaffModal(member, { viewOnly: false, fetchStats: false })
+      return
+    }
+    openStaffModal(member, { viewOnly: true, fetchStats: false })
   }
 
   const closeStaffModal = () => {
@@ -218,7 +303,7 @@ export function useStaffManagement({
    * since Swagger does not expose a merchant endpoint to edit staff profiles.
    * For adding new staff, the merchant should use invite or link request instead.
    */
-  const saveStaff = () => {
+  const saveStaff = async () => {
     const nextErrors: LooseObject = {}
     if (!staffForm.fullName.trim()) nextErrors.fullName = t('components.dashboard.hooks.useStaffManagement.fullNameRequired')
     if (staffForm.email?.trim() && !isValidEmail(staffForm.email)) {
@@ -232,8 +317,46 @@ export function useStaffManagement({
       return
     }
 
-    // Editing is view-only in API mode since merchant cannot mutate staff profiles.
-    // New staff creation should go through invite or link request flows.
+    const member = staff.find((item) => item.id === editingStaffId)
+    if (member?.isLocalStaff && member.staffProfileId) {
+      try {
+        const photoUrl = await resolveStaffAvatarUrl(
+          String(staffForm.avatar || ''),
+          staffForm.avatarFile as File | null | undefined,
+        )
+        const fullName = staffForm.fullName.trim()
+        const { firstName, lastName } = splitFullName(fullName)
+        updateLocalStaffMutation.mutate({
+          staffProfileId: member.staffProfileId,
+          params: {
+            displayName: (staffForm.nickname || staffForm.fullName).trim(),
+            position: staffForm.position?.trim() || null,
+            bio: staffForm.bio?.trim() || null,
+            photoUrl,
+            phoneNumber: staffForm.phone?.trim() || null,
+            email: staffForm.email?.trim() || null,
+            firstName,
+            lastName,
+          },
+        }, {
+          onSuccess: () => {
+            showToast(t('components.dashboard.hooks.useStaffManagement.localStaffUpdated', {
+              name: staffForm.fullName.trim(),
+            }), 'success')
+            closeStaffModal()
+          },
+          onError: (err) => {
+            showToast(t('components.dashboard.hooks.useStaffManagement.localStaffUpdateFailed', {
+              error: errMsg(err),
+            }), 'error')
+          },
+        })
+      } catch {
+        showToast(t('errors.image_upload_failed'), 'error')
+      }
+      return
+    }
+
     closeStaffModal()
   }
 
@@ -266,7 +389,7 @@ export function useStaffManagement({
       name: formDetails.fullName.trim(),
       email: isEmail || null,
       phone: formDetails.phone?.trim() || null,
-      position: formDetails.position?.trim() || 'Nail Tech',
+      position: formDetails.position?.trim() || 'Nail Technician',
     }, {
       onSuccess: () => {
         showToast(t('components.dashboard.hooks.useStaffManagement.inviteSent', { name: formDetails.fullName.trim() }), 'success')
@@ -316,7 +439,7 @@ export function useStaffManagement({
       name: name.trim(),
       email: isEmail ? contact.trim() : null,
       phone: isEmail ? null : contact.trim(),
-      position: role || 'Nail Tech',
+      position: role || 'Nail Technician',
     }, {
       onSuccess: () => {
         showToast(t('components.dashboard.hooks.useStaffManagement.inviteSent', { name: name.trim() }), 'success')
@@ -325,6 +448,22 @@ export function useStaffManagement({
       onError: (err) => {
         showToast(t('components.dashboard.hooks.useStaffManagement.inviteFailed', { error: errMsg(err) }), 'error')
       }
+    })
+  }
+
+  const handleSaveManualStaff = (payload: ManualStaffFormPayload, { onSuccess } = {}) => {
+    createLocalStaffMutation.mutate(payload, {
+      onSuccess: () => {
+        showToast(t('components.dashboard.hooks.useStaffManagement.localStaffCreated', {
+          name: payload.displayNickname.trim(),
+        }), 'success')
+        onSuccess?.()
+      },
+      onError: (err) => {
+        showToast(t('components.dashboard.hooks.useStaffManagement.localStaffCreateFailed', {
+          error: errMsg(err),
+        }), 'error')
+      },
     })
   }
 
@@ -492,6 +631,25 @@ export function useStaffManagement({
     const ok = await showConfirm(t('components.dashboard.hooks.useStaffManagement.deleteThisStaffMember'))
     if (!ok) return
 
+    if (member.isLocalStaff && member.staffProfileId) {
+      deleteLocalStaffMutation.mutate(member.staffProfileId, {
+        onSuccess: () => {
+          if (viewingStaffDetailId === id) {
+            setViewingStaffDetailId(null)
+          }
+          showToast(t('components.dashboard.hooks.useStaffManagement.localStaffDeleted', {
+            name: member.fullName || member.nickname,
+          }), 'success')
+        },
+        onError: (err) => {
+          showToast(t('components.dashboard.hooks.useStaffManagement.localStaffDeleteFailed', {
+            error: errMsg(err),
+          }), 'error')
+        },
+      })
+      return
+    }
+
     const linkId = member.id
     if (linkId) {
       removeStaffMutation.mutate(linkId, {
@@ -513,13 +671,14 @@ export function useStaffManagement({
    */
   const toggleStaff = (id) => {
     const member = staff.find(s => s.id === id)
-    if (!member?.id) return
-    if (updateStatusMutation.isPending && updateStatusMutation.variables?.staffLinkId === member.id) {
+    const staffLinkId = member ? getStaffLinkId(member) : null
+    if (!staffLinkId) return
+    if (updateStatusMutation.isPending && updateStatusMutation.variables?.staffLinkId === staffLinkId) {
       return
     }
 
     const newStatus = member.isActive ? 'Inactive' : 'Active'
-    updateStatusMutation.mutate({ staffLinkId: member.id, status: newStatus }, {
+    updateStatusMutation.mutate({ staffLinkId, status: newStatus }, {
       onError: (err) => {
         showToast(t('components.dashboard.hooks.useStaffManagement.statusUpdateFailed', { error: errMsg(err) }), 'error')
       }
@@ -533,8 +692,9 @@ export function useStaffManagement({
    */
   const toggleStaffTipsFlow = (id) => {
     const member = staff.find(s => s.id === id)
-    if (!member?.id) return
-    if (updateStatusMutation.isPending && updateStatusMutation.variables?.staffLinkId === member.id) {
+    const staffLinkId = member ? getStaffLinkId(member) : null
+    if (!staffLinkId) return
+    if (updateStatusMutation.isPending && updateStatusMutation.variables?.staffLinkId === staffLinkId) {
       return
     }
 
@@ -542,7 +702,7 @@ export function useStaffManagement({
     const newStatus = member.showInTipsFlow !== false ? 'Inactive' : 'Active'
     const displayName = member.fullName || member.nickname || t('components.dashboard.hooks.useStaffManagement.thisPerson')
 
-    updateStatusMutation.mutate({ staffLinkId: member.id, status: newStatus }, {
+    updateStatusMutation.mutate({ staffLinkId, status: newStatus }, {
       onSuccess: () => {
         showToast(
           willShowInTipsFlow
@@ -558,12 +718,27 @@ export function useStaffManagement({
   }
 
   useEffect(() => {
+    if ((!isStaffModalOpen && !isApproveModalOpen) || !staffDetail) return
+    const member = staff.find((item) => item.id === editingStaffId)
+    populateStaffForm(mergeStaffModalMember(staffDetail, member))
+  }, [isStaffModalOpen, isApproveModalOpen, staffDetail, staff, editingStaffId])
+
+  useEffect(() => {
+    if ((!isStaffModalOpen && !isApproveModalOpen) || !isStaffDetailError || !viewingStaffCode) return
+    showToast(t('components.dashboard.hooks.useStaffManagement.staffDetailLoadFailed'), 'error')
+  }, [isStaffModalOpen, isApproveModalOpen, isStaffDetailError, viewingStaffCode, showToast, t])
+
+  useEffect(() => {
     if (!isStaffModalOpen || !editingStaffId) return
     const member = staff.find((item) => item.id === editingStaffId)
     if (!member) return
     setStaffForm((prev) => ({
       ...prev,
       showInTipsFlow: member.showInTipsFlow !== false,
+      isLocalStaff: prev.isLocalStaff || member.isLocalStaff || false,
+      isProfileComplete: prev.isProfileComplete ?? member.isProfileComplete ?? false,
+      phone: pickNonEmptyString(prev.phone, member.phone, member.invitedPhone),
+      email: pickNonEmptyString(prev.email, member.email, member.invitedEmail),
     }))
   }, [staff, editingStaffId, isStaffModalOpen])
 
@@ -574,6 +749,8 @@ export function useStaffManagement({
     errors, setErrors,
     editingStaffId, setEditingStaffId,
     isStaffViewOnly,
+    isStaffDetailLoading,
+    fetchStaffStatsInModal,
     isStaffModalOpen, setIsStaffModalOpen,
     isAddStaffModalOpen, setIsAddStaffModalOpen,
     isApproveModalOpen, setIsApproveModalOpen,
@@ -582,7 +759,7 @@ export function useStaffManagement({
     inviteShareDefaultName, setInviteShareDefaultName,
     inviteShareDefaultContact, setInviteShareDefaultContact,
     resetStaffForm, openAddStaff, closeAddStaffModal, openApproveStaff, openEditStaff, openViewStaff, closeStaffModal,
-    saveStaff, sendSetupLinkFromModal, handleLinkStaff, handleInviteStaff,
+    saveStaff, sendSetupLinkFromModal, handleLinkStaff, handleInviteStaff, handleSaveManualStaff,
     handleResendInvite, handleCancelInvite,
     handleAcceptJoinRequest, handleDeclineJoinRequest, deleteStaff, toggleStaff, toggleStaffTipsFlow,
     handleAcceptUnlinkRequest, handleDeclineUnlinkRequest,
@@ -594,5 +771,8 @@ export function useStaffManagement({
     updateStatusMutation,
     removeStaffMutation,
     cancelInviteMutation,
+    createLocalStaffMutation,
+    updateLocalStaffMutation,
+    deleteLocalStaffMutation,
   }
 }
