@@ -185,6 +185,25 @@ function StaffModal({
     }
   }, [lastHandledSearchQuery, searchQuery, searchResultsQuery.data, searchResultsQuery.isError, searchResultsQuery.isFetching, setForm, showToast, t])
 
+  const phoneParsed = useMemo(() => {
+    const rawPhone = String(form?.phone || '').trim()
+    const parsedPhone = parsePhone(rawPhone)
+
+    // Preserve VN trunk zero for legacy/local values (e.g. 0385...) so edit mode
+    // displays the same phone grouping users see while adding staff.
+    if (!rawPhone.startsWith('+')) {
+      const digits = rawPhone.replace(/\D/g, '')
+      if (digits.startsWith('0') && digits.length >= 9 && digits.length <= 11) {
+        return {
+          countryCode: '+84',
+          nationalNumber: digits,
+        }
+      }
+    }
+
+    return parsedPhone
+  }, [form?.phone])
+
   if (!open) return null
 
   const staffMemberContext = form
@@ -212,8 +231,6 @@ function StaffModal({
   const displayReviewCount = reviewsList.length > 0
     ? reviewsList.length
     : Number(staffStats?.allTime?.totalReviews ?? staffStats?.period?.totalReviews ?? 0)
-
-  const phoneParsed = parsePhone(form?.phone || '')
 
   const handleAvatarPick = (dataUrl: string) => {
     if (!dataUrl) return

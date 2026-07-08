@@ -4,7 +4,7 @@ import CountryCodeSelect, {
   formatNationalNumber,
   getDefaultDialCode,
   isValidPhoneE164,
-  normalizePhoneForApi,
+  normalizePhoneE164,
   parsePhone,
 } from '../../CountryCodeSelect'
 import { useTranslation, renderLabel } from '../../../contexts/LanguageContext'
@@ -183,7 +183,7 @@ function AddManualStaffTab({
     const nicknameError = resolveDisplayNameError(displayNickname)
     if (nicknameError) nextErrors.displayNickname = nicknameError
 
-    const phoneNumber = normalizePhoneForApi(phone, dialCode)
+    const phoneNumber = normalizePhoneE164(phone, dialCode)
     if (phoneNumber && !isValidPhoneE164(phoneNumber, dialCode)) {
       nextErrors.phone = t('setup.errors.staff_phone_invalid')
     }

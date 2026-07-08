@@ -32,23 +32,32 @@ export const COUNTRY_CODES = [
 
 export const parsePhone = (phoneStr) => {
   if (!phoneStr) return { countryCode: '+1', nationalNumber: '' }
+  const normalized = String(phoneStr).trim()
   
   // Sort country codes by dialCode length descending to match longest prefix first
   const sortedList = [...COUNTRY_CODES].sort((a, b) => b.dialCode.length - a.dialCode.length)
   for (const item of sortedList) {
-    if (phoneStr.startsWith(item.dialCode)) {
-      return { countryCode: item.dialCode, nationalNumber: phoneStr.slice(item.dialCode.length).trim() }
+    if (normalized.startsWith(item.dialCode)) {
+      return { countryCode: item.dialCode, nationalNumber: normalized.slice(item.dialCode.length).trim() }
     }
   }
   
   // Fallback: if it starts with +, try to parse it
-  if (phoneStr.startsWith('+')) {
-    const match = phoneStr.match(/^(\+\d+)\s*(.*)$/)
+  if (normalized.startsWith('+')) {
+    const match = normalized.match(/^(\+\d+)\s*(.*)$/)
     if (match) {
       return { countryCode: match[1], nationalNumber: match[2] }
     }
   }
-  return { countryCode: '+1', nationalNumber: phoneStr }
+
+  const digits = normalized.replace(/\D/g, '')
+  // API can return VN local numbers (e.g. 0385478857) without +84.
+  // For +84 UI, show national number without trunk '0' to avoid duplication.
+  if (digits.startsWith('0') && digits.length >= 9 && digits.length <= 11) {
+    return { countryCode: '+84', nationalNumber: digits.slice(1) }
+  }
+
+  return { countryCode: '+1', nationalNumber: normalized }
 }
 
 export const getCountryByDialCode = (dialCode) => {
