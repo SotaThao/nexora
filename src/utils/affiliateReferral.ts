@@ -56,7 +56,7 @@ export function buildAffiliateReferralUrl({
 
 /** Combined staff link + affiliate ref: /?ref=CODE&staff=STAFF_ID */
 export function buildStaffShareUrl({
-  origin = typeof window !== 'undefined' ? window.location.origin : '',
+  origin = getWebUrlOrigin(),
   referralCode,
   staffCode,
 }: {

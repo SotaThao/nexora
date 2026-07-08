@@ -2,6 +2,7 @@ import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core'
 import { SplashScreen } from '@capacitor/splash-screen'
 import { CapacitorUpdater } from '@capgo/capacitor-updater'
 import { initOneSignal } from './onesignal'
+import { initCapgoUpdateListeners } from './capgoUpdateEvents'
 
 function syncSafeAreaInsets() {
   if (typeof document === 'undefined' || !document.body) return
@@ -41,6 +42,7 @@ export async function initNativeShell() {
   window.addEventListener('orientationchange', syncSafeAreaInsets)
 
   try {
+    await initCapgoUpdateListeners()
     await CapacitorUpdater.notifyAppReady()
   } catch {
     // Updater may be unavailable during early boot on some builds.

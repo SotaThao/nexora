@@ -245,7 +245,7 @@ export default function SettingsView({
       {/* Show QR Code Modal Popup */}
       {showQrModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center modal-overlay-safe">
-          <div className="bg-white rounded-3xl border border-slate-100 max-w-sm w-full shadow-2xl p-6 relative overflow-hidden animate-scaleIn text-center text-slate-800 space-y-4">
+          <div className="bg-white rounded-3xl border border-slate-100 max-w-lg w-full shadow-2xl p-6 relative overflow-hidden animate-scaleIn text-center text-slate-800 space-y-4">
             
             {/* Close Button */}
             <button
@@ -321,13 +321,13 @@ export default function SettingsView({
             </div>
 
             {/* QR Code Display */}
-            <div className="flex justify-center my-3">
-              <div className="bg-slate-50 p-4 border border-slate-200 rounded-xl flex items-center justify-center h-[240px] w-[240px]">
+            <div className="w-full">
+              <div className="aspect-square w-full max-w-full min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-inner sm:p-4">
                 {referralUrl ? (
                   <img
-                    src={buildPublicQrImageUrl(referralUrl, 220)}
+                    src={buildPublicQrImageUrl(referralUrl, 440)}
                     alt="Referral Link QR Code"
-                    className="h-full w-full object-contain rounded"
+                    className="h-full w-full max-h-full max-w-full object-contain rounded"
                   />
                 ) : (
                   <span className="text-xs font-bold text-nexoraMuted text-center px-4">

@@ -29,7 +29,7 @@ import {
 } from '../data/hooks/useMerchantPhysicalCards'
 import { usePagination } from '../hooks/usePagination'
 import { DEFAULT_PAGE_SIZE, STAFF_FILTER_LIST_PAGE_SIZE } from '../constants/pagination'
-import { buildQrImageUrl, toLocalCustomerTouchUrl } from '../utils/staffTipUrl'
+import { buildQrImageUrl, slugify, toLocalCustomerTouchUrl } from '../utils/staffTipUrl'
 import { getWebUrlOrigin } from '../utils/webUrlBase'
 import ToggleSwitch from './ui/ToggleSwitch'
 import { formatCurrency, formatTransactionDateTime } from './dashboard/utils'
@@ -128,6 +128,8 @@ export default function TouchpointsView({
   const { data: touchpointsStatsPage } = useTouchpoints(
     { PageNumber: 1, PageSize: STAFF_FILTER_LIST_PAGE_SIZE },
   )
+
+  const businessSlug = useMemo(() => slugify(businessName || ''), [businessName])
 
   const touchpoints = touchpointsPage?.items ?? []
   const statsTouchpoints = touchpointsStatsPage?.items ?? touchpoints
@@ -390,8 +392,8 @@ export default function TouchpointsView({
               if (point.url) {
                 qrUrl = toLocalCustomerTouchUrl(String(point.url))
               }
-              if (!qrUrl && point.slug) {
-                qrUrl = `${getWebUrlOrigin()}/touch/${point.slug}`
+              if (!qrUrl && point.slug && businessSlug) {
+                qrUrl = `${getWebUrlOrigin()}/touch/${businessSlug}/${point.slug}`
               }
 
               const scans = point.scans ?? 0

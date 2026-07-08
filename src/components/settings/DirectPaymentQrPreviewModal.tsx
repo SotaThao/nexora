@@ -58,7 +58,7 @@ export default function DirectPaymentQrPreviewModal({
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-sm rounded-xl bg-white px-6 pb-6 pt-12 text-center shadow-2xl animate-scaleUp qr-modal-container"
+        className="relative w-full max-w-md rounded-xl bg-white px-6 pb-6 pt-12 text-center shadow-2xl animate-scaleUp qr-modal-container"
         onClick={(event) => event.stopPropagation()}
       >
         <button
@@ -71,7 +71,7 @@ export default function DirectPaymentQrPreviewModal({
           <X className="h-5 w-5" />
         </button>
 
-        <div className="mx-auto flex w-48 flex-col items-center gap-3.5 rounded-2xl border border-nexoraBorder/80 bg-nexoraCanvas px-4 py-5 text-nexoraText shadow-md qr-print-card qr-print-card--payment">
+        <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-3.5 rounded-2xl border border-nexoraBorder/80 bg-nexoraCanvas px-4 py-5 text-nexoraText shadow-md qr-print-card qr-print-card--payment">
           <div className="flex items-center justify-center gap-1.5 qr-print-brand-header">
             <img
               src="/assets/nexora-logo.png"
@@ -81,15 +81,15 @@ export default function DirectPaymentQrPreviewModal({
             <span className="text-[9px] font-black tracking-wider text-slate-800 qr-print-brand-text">NEXORA</span>
           </div>
 
-          <div className="flex h-[7.25rem] w-[7.25rem] shrink-0 items-center justify-center rounded-xl border border-nexoraBorder/60 bg-white p-2.5 shadow-inner qr-print-qr-wrapper">
+          <div className="flex aspect-square w-full max-w-[14.5rem] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-nexoraBorder/60 bg-white p-2.5 shadow-inner qr-print-qr-wrapper">
             <img
               src={qrImageSrc}
               alt={title}
-              className="h-full w-full object-contain qr-print-qr-image"
+              className="h-full w-full max-h-full max-w-full object-contain qr-print-qr-image"
             />
           </div>
 
-          <p className="max-w-[9.5rem] text-center text-[9px] font-extrabold uppercase leading-snug tracking-wide text-nexoraMuted qr-print-scan-text">
+          <p className="max-w-[19rem] text-center text-[9px] font-extrabold uppercase leading-snug tracking-wide text-nexoraMuted qr-print-scan-text">
             {scanCaption}
           </p>
 
