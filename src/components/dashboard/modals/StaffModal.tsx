@@ -664,9 +664,12 @@ function StaffModal({
                         <div className="flex items-center gap-3 min-w-0">
                           <button
                             type="button"
+                            role="switch"
+                            aria-checked={config.enabled}
+                            aria-label={`${wallet.name} — ${t('setup.payout_methods')}`}
                             disabled={!canManageLocalPayouts || isLocalPaymentSaving}
                             onClick={canManageLocalPayouts ? () => handleToggleLocalPayment(wallet.key) : undefined}
-                            className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                            className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand/40 focus-visible:ring-offset-1 ${
                               config.enabled ? 'bg-nexoraBrand' : 'bg-nexoraBorder'
                             } ${
                               !canManageLocalPayouts
