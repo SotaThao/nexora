@@ -1,7 +1,15 @@
-export function formatSubscriptionDate(iso, locale = 'en') {
+export function formatSubscriptionDate(iso, locale = 'en', { sidebar = false } = {}) {
   if (!iso) return null
   const date = new Date(iso)
   if (Number.isNaN(date.getTime())) return null
+
+  if (sidebar && locale === 'vi') {
+    return date.toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    })
+  }
 
   return date.toLocaleDateString(locale === 'vi' ? 'vi-VN' : 'en-US', {
     month: 'short',
@@ -16,13 +24,13 @@ export function getSubscriptionSidebarCopy(subscription, t, locale = 'en') {
   }
 
   const planLabel = subscription.plan
-  const trialEnd = formatSubscriptionDate(subscription.trialEndsAt, locale)
-  const periodEnd = formatSubscriptionDate(subscription.currentPeriodEnd, locale)
+  const trialEnd = formatSubscriptionDate(subscription.trialEndsAt, locale, { sidebar: true })
+  const periodEnd = formatSubscriptionDate(subscription.currentPeriodEnd, locale, { sidebar: true })
 
   if (subscription.status === 'Trialing' && trialEnd) {
     return {
       planLabel,
-      detailLabel: t('dashboard.sidebar.trial_ends', { date: trialEnd }),
+      detailLabel: t('dashboard.sidebar.expires_on', { date: trialEnd }),
     }
   }
 

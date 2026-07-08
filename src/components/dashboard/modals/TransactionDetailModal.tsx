@@ -14,9 +14,12 @@ import { WalletLogos } from '../constants'
 import { isInitiatedLikeTipStatus, isTipStatus, TipStatus } from '../../../constants/tipStatus'
 import { logger } from '../../../utils/logger'
 import { buildQrImageUrl, slugify, toLocalCustomerTouchUrl } from '../../../utils/staffTipUrl'
+import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import { useConfirmMerchantTipsReceipt } from '../../../data/hooks/useTransactions'
 import { useConfirmStaffTipsReceipt } from '../../../data/hooks/useStaffSelf'
 import QrModal from './QrModal'
+import CopyableTransactionId from '../../ui/CopyableTransactionId'
+import QrImage from '../../ui/QrImage'
 
 function buildStaffCodeLookup(staff = []) {
   const map = new Map()
@@ -70,7 +73,7 @@ function resolveTouchPointQrUrl({
   businessName = '',
   businessSlug = '',
 }) {
-  const origin = typeof window !== 'undefined' ? window.location.origin : ''
+  const origin = getWebUrlOrigin()
 
   if (touchpoint?.url) {
     return toLocalCustomerTouchUrl(String(touchpoint.url), origin)
@@ -109,10 +112,6 @@ function getPaymentMethodLogo(method) {
   return <CreditCard className="h-[18px] w-[18px] text-slate-500" />
 }
 
-function truncateMid(str: string, head = 8, tail = 6): string {
-  if (!str || str.length <= head + tail + 3) return str
-  return `${str.slice(0, head)}…${str.slice(-tail)}`
-}
 
 function renderStatusBadge(tx, t) {
   if (isAwaitingShopConfirmation(tx)) {
@@ -251,10 +250,10 @@ export default function TransactionDetailModal({
         className="group relative shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white p-1.5 shadow-sm transition hover:border-nexoraBrand hover:shadow-md cursor-pointer"
         title={t('components.dashboard.views.StaffView.clickToEnlarge')}
       >
-        <img
+        <QrImage
           src={qrImageSrc}
           alt={`QR for ${touchPointName}`}
-          className="h-20 w-20 object-contain"
+          className="h-20 w-20"
         />
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-lg bg-nexoraBrand/80 opacity-0 transition-opacity group-hover:opacity-100">
           <span className="text-[9px] font-black uppercase tracking-widest text-white">
@@ -300,7 +299,7 @@ export default function TransactionDetailModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+      <div className="fixed inset-0 z-50 flex items-center justify-center modal-overlay-safe bg-slate-900/60 backdrop-blur-sm">
         <div className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-white rounded-2xl border border-nexoraBorder shadow-2xl p-6 relative">
           <div className="flex items-center justify-between border-b border-nexoraBorder pb-4 mb-4">
             <div>
@@ -316,7 +315,8 @@ export default function TransactionDetailModal({
             <button
               type="button"
               onClick={onClose}
-              className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-nexoraMuted hover:text-nexoraText transition-colors cursor-pointer"
+              aria-label={t('common.close')}
+              className="modal-close-btn rounded-full hover:bg-slate-100 text-nexoraMuted hover:text-nexoraText transition-colors cursor-pointer"
             >
               <X className="h-4 w-4" />
             </button>
@@ -340,12 +340,14 @@ export default function TransactionDetailModal({
                 <span className="text-[10px] font-bold text-nexoraMuted block">
                   {t('dashboard.activity_log.col_id')}
                 </span>
-                <span
-                  className="font-mono text-[11px] font-semibold text-nexoraText block mt-0.5"
-                  title={selectedTx.id}
-                >
-                  {truncateMid(selectedTx.id)}
-                </span>
+                <CopyableTransactionId
+                  id={selectedTx.id}
+                  className="mt-0.5"
+                  head={12}
+                  tail={6}
+                  copyLabel={t('common.copy')}
+                  copiedLabel={t('common.copied')}
+                />
               </div>
               <div>
                 <span className="text-[10px] font-bold text-nexoraMuted block">

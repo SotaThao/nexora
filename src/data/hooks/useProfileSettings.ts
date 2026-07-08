@@ -151,6 +151,15 @@ export function useUpdateStaffProfile() {
   })
 }
 
+export function useDeleteAccount() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, void>({
+    mutationFn: () => profileSettingsRepository.deleteAccount(),
+    onSuccess: () => {
+      queryClient.clear()
+    },
+  })
+}
 export function useCreateStaffProfile() {
   const queryClient = useQueryClient()
   return useMutation<LooseObject, Error, UpdateStaffProfileDto>({

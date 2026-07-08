@@ -3,6 +3,11 @@
  * Wired from HomePageBridgeContext via getHomePageHandlers().
  */
 import { getStoredAppLanguage, setStoredAppLanguage } from '../../utils/appLanguage.js'
+import {
+  INTRO_VIDEO_ID,
+  openIntroYouTubeVideo,
+  shouldOpenYouTubeExternally,
+} from '../../utils/youtubeIntroVideo.js'
 
 let __homepageClickOutside = null
 
@@ -136,13 +141,12 @@ const translations = {
     "b2b-feat-3-desc": "Đảm bảo mỗi nhóm liên kết B2B chỉ có duy nhất 1 đại diện cho mỗi ngành hàng để tránh xung đột lợi ích nội bộ.",
     "b2b-feat-4-title": "Sáng Tạo Chiến Dịch Group",
     "b2b-feat-4-desc": "Lên kế hoạch khuyến mãi nhóm cho cả khu phố dịp cuối tuần hoặc lễ hội để thu hút toàn bộ dân cư xung quanh.",
-    "vt-eyebrow": "XEM CÁCH HOẠT ĐỘNG",
-    "vt-title": "Xem Nexora Touch Hoạt Động Thực Tế",
-    "vt-desc": "Xem cách tiệm nail giúp khách tip thợ, để đánh giá Google và tích điểm thưởng — tất cả chỉ với một mã QR.",
-    "vt-thumb-alt": "Video giới thiệu Nexora Touch bằng tiếng Việt",
-    "vt-thumb-duration": "1 phút",
-    "vt-start": "Xem Ngay",
-    "vt-start-sub": "Tip, đánh giá Google và thưởng khách — trong một quy trình đơn giản",
+    "vt-eyebrow": "XEM CÁCH HOẠT ĐỘNG THỰC TẾ",
+    "vt-title": "Video Trực Quan Trải Nghiệm Khách Hàng",
+    "vt-desc": "Tìm hiểu xem một tiệm nail nghệ thuật hoặc trung tâm thẩm mỹ tăng trưởng 40% doanh thu bồi dưỡng thợ và tích hợp 1000+ review vàng Google chỉ trong một nốt nhạc bằng cách nào.",
+    "vt-start": "BẮT ĐẦU XEM VIDEO GIỚI THIỆU (1 PHÚT)",
+    "vt-start-sub": "Video trình bày chi tiết cách vận hành quét QR, bồi dưỡng thợ & tích cực Google Reviews",
+    "vt-open-youtube": "Mở trên YouTube",
     "cr-eyebrow": "CỔNG TIỆN ÍCH KHÁCH HÀNG",
     "cr-title": "Tra Cứu Nhanh Điểm Thưởng Thành Viên",
     "cr-desc": "Hệ sinh thái NEXORA tạo dựng một trải nghiệm xuyên suốt. Khách hàng không cần cài đặt ứng dụng cồng kềnh, chỉ cần nhập số điện thoại là có thể tra cứu ngay hạng thẻ thành viên, số điểm tích lũy, các voucher ưu đãi hiện có và tiến độ đổi quà trực quan.",
@@ -279,8 +283,6 @@ const translations = {
     "cta-desc": "Nâng tầm cuộc sống đội ngũ thợ, xây dựng cộng đồng khách hàng trung thành vững mạnh và đẩy mạnh thứ hạng tiệm trên các nền tảng số ngay hôm nay.",
     "btn-cta-1": "Đăng Ký Tư Vấn & Setup Thử Nghiệm",
     "btn-cta-2": "Dùng Thử Bản Giả Lập",
-    "dl-title": "Tải App & tận hưởng trải nghiệm",
-    "dl-desc": "Đừng bỏ lỡ! Tải ngay để trải nghiệm đầy đủ tính năng cùng vô vàn tiện ích.",
     "footer-copyright": "© 2026 NEXORA TOUCH. Tip Smarter. Review Faster. Grow Stronger.",
     "footer-link-1": "Chính Sách Bảo Mật",
     "footer-link-2": "Điều Khoản Vận Hành",
@@ -586,13 +588,12 @@ const translations = {
     "b2b-feat-3-desc": "Only one merchant per retail vertical is allowed in each local alliance node to safeguard sales.",
     "b2b-feat-4-title": "Co-op Weekend Block Promos",
     "b2b-feat-4-desc": "Coordinate block-wide joint marketing drives dynamically to captivate the local demographic.",
-    "vt-eyebrow": "WATCH IT IN ACTION",
-    "vt-title": "See Nexora Touch in Action",
-    "vt-desc": "Watch how nail salons help guests tip staff, leave Google reviews, and earn rewards — all from one QR code.",
-    "vt-thumb-alt": "Nexora Touch product overview video in English",
-    "vt-thumb-duration": "1 min",
-    "vt-start": "Watch Now",
-    "vt-start-sub": "Tips, Google reviews, and customer rewards — in one simple flow",
+    "vt-eyebrow": "PLAY OVERVIEW WALKTHROUGH",
+    "vt-title": "How Nexora Touch Drives Growth",
+    "vt-desc": "Discover how standard retail stores scale technician tips by 40%, lock in thousands of organic Google stars, and drive repeat visits via co-ops.",
+    "vt-start": "PLAY INTRODUCTORY BRIEF (1 MIN)",
+    "vt-start-sub": "Walk through instant peer QR routing, Google ratings optimization, and B2B workflows.",
+    "vt-open-youtube": "Opens in YouTube",
     "cr-eyebrow": "CLIENT LOYALTY PORTAL",
     "cr-title": "Instant Membership Points Lookup Hub",
     "cr-desc": "Nexora operates cleanly without forcing complex application installs on customer phones. Enter any registered phone below to check active tiers, cross-alliance point totals, and ready vouchers.",
@@ -729,8 +730,6 @@ const translations = {
     "cta-desc": "Empower your technical workforce, collect valuable validated reviews on major search maps, and expand your community reach today.",
     "btn-cta-1": "Request Custom Consulting",
     "btn-cta-2": "Interact With Live Simulator",
-    "dl-title": "Download and enjoy the experience",
-    "dl-desc": "Don't miss out! Download now for seamless functionalities and endless possibilities.",
     "footer-copyright": "© 2026 NEXORA TOUCH. Tip Smarter. Review Faster. Grow Stronger.",
     "footer-link-1": "Privacy Policy",
     "footer-link-2": "Ecosystem Guidelines",
@@ -1815,6 +1814,11 @@ function downloadTaxReport() {
 
 // Trình chiếu video giới thiệu từ YouTube
 function playIntroVideo() {
+  if (shouldOpenYouTubeExternally()) {
+    openIntroYouTubeVideo()
+    return
+  }
+
   const cover = document.getElementById('video-cover');
   const iframe = document.getElementById('intro-video-iframe');
   if (cover) {
@@ -1824,7 +1828,7 @@ function playIntroVideo() {
     }, 500);
   }
   if (iframe) {
-    iframe.src = "https://www.youtube.com/embed/ghegM-w3NAM?autoplay=1&mute=1&playlist=ghegM-w3NAM&loop=1";
+    iframe.src = `https://www.youtube.com/embed/${INTRO_VIDEO_ID}?autoplay=1&mute=1&playlist=${INTRO_VIDEO_ID}&loop=1`;
   }
 }
 

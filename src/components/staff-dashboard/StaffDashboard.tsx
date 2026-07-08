@@ -8,6 +8,7 @@ import StaffHeader from './layout/StaffHeader'
 import StaffBottomNav from './layout/StaffBottomNav'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { useStaffPaymentMethods } from '../../data/hooks/useStaffPaymentMethods'
+import { useRefetchStaffMenuQueries } from '../../data/hooks/useRefetchOnMenuChange'
 
 export default function StaffDashboard({ staffId = null, onLogout }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -18,7 +19,8 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
   const [showPayoutBanner, setShowPayoutBanner] = useState(false)
   
   const activeScreen = location.pathname.split('/')[2] || 'home'
-  const mainWidthClass = activeScreen === 'payments'
+  useRefetchStaffMenuQueries(activeScreen)
+  const mainWidthClass = activeScreen === 'payments' || activeScreen === 'earnings'
     ? 'w-full max-w-6xl xl:max-w-7xl'
     : 'max-w-3xl'
   

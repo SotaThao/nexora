@@ -1,6 +1,10 @@
 import React, { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import useAuth from '../../../auth/useAuth'
+import { useNotification } from '../../../contexts/NotificationContext'
+import { useDeleteAccount } from '../../../data/hooks/useProfileSettings'
 import { buildAffiliateReferralUrl, getProfileReferralCode } from '../../../utils/affiliateReferral'
 import { buildGoogleMapsEmbedUrl, formatAddressForMap } from '../../../utils/mapUrl'
 import {
@@ -23,8 +27,11 @@ import {
   FolderOpen,
   AlertTriangle,
   X,
-  QrCode
+  QrCode,
+  Trash2,
 } from 'lucide-react'
+import ToggleSwitch from '../../ui/ToggleSwitch'
+import { isValidEmail, isValidPhone } from '../../../utils/validation'
 import { validatePayoutAccount } from '../../payout/validatePayoutAccount'
 import CountryCodeSelect, { formatNationalNumber, parsePhone } from '../../CountryCodeSelect'
 import CameraCapture from '../../ui/CameraCapture'
@@ -118,9 +125,16 @@ export default function ProfileTab({
   handleAvatarChange,
   formatDOB,
   onShowQr,
+  hideDangerZone = false,
+  focusPayoutMethods = false,
+  hidePayoutMethods = false,
 }) {
   const canEditKybFields = canEditProfile
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const { logout } = useAuth()
+  const { showConfirm } = useNotification()
+  const deleteAccountMutation = useDeleteAccount()
   const referralCode = useMemo(() => getProfileReferralCode(profile), [profile])
   const referralUrl = useMemo(
     () => buildAffiliateReferralUrl({ referralCode }),
@@ -286,15 +300,33 @@ export default function ProfileTab({
     setEditQrCode(null)
   }
 
+  const handleDeleteAccount = async () => {
+    if (deleteAccountMutation.isPending) return
+
+    const confirmed = await showConfirm(
+      t('components.settings.tabs.ProfileTab.deleteAccountConfirmMessage'),
+      t('components.settings.tabs.ProfileTab.deleteAccountConfirmTitle'),
+    )
+    if (!confirmed) return
+
+    try {
+      await deleteAccountMutation.mutateAsync()
+      await logout()
+      navigate('/login', { replace: true })
+    } catch {
+      showToast(t('components.settings.tabs.ProfileTab.deleteAccountFailed'), 'error')
+    }
+  }
+
   return (
     <>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
+      <div className={`grid grid-cols-1 gap-6 animate-fadeIn ${focusPayoutMethods ? '' : 'lg:grid-cols-3'}`}>
 
         {/* Left Column (Owner Profile + Payout Methods) */}
-        <div className="lg:col-span-1 space-y-6">
+        <div className={`${focusPayoutMethods ? '' : 'lg:col-span-1'} space-y-6`}>
 
           {/* Owner Profile Card */}
-          <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 flex flex-col items-center text-center relative">
+          <div className={`rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 flex flex-col items-center text-center relative ${focusPayoutMethods ? 'hidden' : ''}`}>
             {/* Avatar Section */}
             <div className="relative group">
               {profile.avatar && !profile.avatar.includes('unsplash.com') ? (
@@ -373,6 +405,7 @@ export default function ProfileTab({
           </div>
 
           {/* Payout Methods & Direct Payment QR */}
+          {!hidePayoutMethods ? (
           <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 relative">
             <div className="border-b border-slate-100 pb-3 mb-4 space-y-3">
               <h4 className="text-xs font-black uppercase text-nexoraText tracking-wider flex items-center gap-2">
@@ -437,21 +470,13 @@ export default function ProfileTab({
                   className="flex items-center justify-between rounded-xl border border-nexoraBorder bg-white px-3 py-2.5 shadow-sm"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    {/* Toggle Switch */}
-                    <button
-                      type="button"
-                      onClick={() => handleToggleMethod(uiKey, method.isActive)}
-                      aria-label={`Toggle ${label}`}
-                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                        method.isActive ? 'bg-amber-600' : 'bg-slate-200'
-                      }`}
-                    >
-                      <span
-                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                          method.isActive ? 'translate-x-4' : 'translate-x-0'
-                        }`}
-                      />
-                    </button>
+                    <ToggleSwitch
+                      checked={!!method.isActive}
+                      onChange={() => handleToggleMethod(uiKey, !!method.isActive)}
+                      ariaLabel={`Toggle ${label}`}
+                      activeColor="bg-amber-600"
+                      inactiveColor="bg-slate-200"
+                    />
 
                     {/* Logo and Label */}
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -489,11 +514,12 @@ export default function ProfileTab({
             )}
 
           </div>
+          ) : null}
 
         </div>
 
         {/* Right Column (Basic Info + Address Details + Business Info + Map/Sponsor Grid) */}
-        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 content-start">
+        <div className={`lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 content-start ${focusPayoutMethods ? 'hidden' : ''}`}>
 
           {/* Basic Information */}
           <div className="rounded-xl border border-nexoraBorder bg-white shadow-sm p-6 relative">
@@ -1084,6 +1110,28 @@ export default function ProfileTab({
         </div>
 
       </div>
+
+      {!hideDangerZone ? (
+      <div className="rounded-xl border border-rose-200 bg-white shadow-sm p-6 animate-fadeIn">
+        <h3 className="mb-3 text-base font-extrabold text-nexoraDangerDark">
+          {t('components.settings.tabs.ProfileTab.deleteAccountTitle')}
+        </h3>
+        <p className="mb-4 text-xs text-nexoraSubtle">
+          {t('components.settings.tabs.ProfileTab.deleteAccountConfirmMessage')}
+        </p>
+        <button
+          type="button"
+          onClick={() => void handleDeleteAccount()}
+          disabled={deleteAccountMutation.isPending}
+          className="flex w-full max-w-md items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 py-3 text-sm font-extrabold text-rose-700 transition hover:bg-rose-100 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          <Trash2 className="h-4.5 w-4.5" />
+          {deleteAccountMutation.isPending
+            ? t('common.processing')
+            : t('components.settings.tabs.ProfileTab.deleteAccount')}
+        </button>
+      </div>
+      ) : null}
 
       {/* Payout Account Edit Custom Modal Popup */}
       {editingMethod && (() => {

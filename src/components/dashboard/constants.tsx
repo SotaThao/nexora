@@ -3,13 +3,14 @@
 import {
   LayoutDashboard,
   Users,
-  Wallet,
+  CircleDollarSign,
   Star,
-  ClipboardList,
-  Pointer,
+  ReceiptText,
+  QrCode,
   BarChart3,
   Settings,
-  HelpCircle
+  HelpCircle,
+  Wallet,
 } from 'lucide-react'
 
 export const WalletLogos = {
@@ -59,16 +60,92 @@ export const DEFAULT_PAYOUT_CONFIGS = {
 }
 
 export const MENU_ITEMS = [
-  { id: 'overview', label: 'Dashboard', icon: LayoutDashboard, image: '/assets/menu/dashboard.png' },
-  { id: 'staff', label: 'Staff', icon: Users, image: '/assets/menu/staff.png' },
-  { id: 'tips', label: 'Tips', icon: Wallet, image: '/assets/menu/tips.png' },
-  { id: 'reviews', label: 'Reviews', icon: Star, image: '/assets/menu/reviews.png' },
-  { id: 'reports', label: 'Transactions', icon: ClipboardList, image: '/assets/menu/transaction.png' },
-  { id: 'touchpoints', label: 'Touch Points', icon: Pointer, image: '/assets/menu/touchpoint.png' },
-  { id: 'analytics', label: 'Analytics', icon: BarChart3, image: '/assets/menu/analytics.png' },
-  { id: 'settings', label: 'Settings', icon: Settings, image: '/assets/menu/setting.png' },
-  { id: 'support', label: 'Support', icon: HelpCircle, image: '/assets/menu/support.png' }
+  { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'staff', label: 'Staff', icon: Users },
+  { id: 'tips', label: 'Tips', icon: CircleDollarSign },
+  { id: 'reviews', label: 'Reviews', icon: Star },
+  { id: 'reports', label: 'Transactions', icon: ReceiptText },
+  { id: 'touchpoints', label: 'Touch Points', icon: QrCode },
+  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+  { id: 'settings', label: 'Settings', icon: Settings },
+  { id: 'support', label: 'Support', icon: HelpCircle }
 ]
+
+export const MERCHANT_SIDEBAR_HIDDEN_MENU_IDS = ['tips', 'reports']
+
+export const MERCHANT_SIDEBAR_MENU_ITEMS = MENU_ITEMS.filter(
+  (item) => !MERCHANT_SIDEBAR_HIDDEN_MENU_IDS.includes(item.id),
+)
+
+export const PAYMENTS_PAYOUTS_MENU_ITEM = {
+  id: 'payments_payouts',
+  icon: Wallet,
+  labelKey: 'dashboard.menu.payments_payouts',
+}
+
+export const PAYMENTS_PAYOUTS_SUBMENU = [
+  {
+    id: 'overview',
+    screen: 'tips',
+    labelKey: 'dashboard.tips.tabs.overview',
+    params: { tab: 'overview' },
+  },
+  {
+    id: 'customer_payments',
+    screen: 'reports',
+    labelKey: 'dashboard.menu.payments_payouts_customer_payments',
+    params: { tab: 'direct_payments' },
+  },
+  {
+    id: 'tips',
+    screen: 'reports',
+    labelKey: 'dashboard.reports.tabs.tips',
+    params: { tab: 'tips' },
+  },
+  {
+    id: 'payroll',
+    screen: 'tips',
+    labelKey: 'dashboard.menu.payments_payouts_payroll',
+    params: { tab: 'payouts' },
+  },
+  {
+    id: 'direct_savings',
+    screen: 'tips',
+    labelKey: 'dashboard.tips.tabs.savings',
+    params: { tab: 'savings' },
+  },
+]
+
+export function isPaymentsPayoutsSubActive(
+  activeMenu: string,
+  tabParam: string | null,
+  item: (typeof PAYMENTS_PAYOUTS_SUBMENU)[number],
+): boolean {
+  if (activeMenu !== item.screen) return false
+
+  const tab = item.params?.tab
+  if (!tab) return true
+
+  if (item.screen === 'tips' && item.id === 'overview') {
+    return !tabParam || tabParam === 'overview'
+  }
+
+  if (item.screen === 'reports' && item.id === 'tips') {
+    return !tabParam || tabParam === 'tips'
+  }
+
+  return tabParam === tab
+}
+
+export function isPaymentsPayoutsRouteActive(
+  activeMenu: string,
+  tabParam: string | null,
+): boolean {
+  if (activeMenu !== 'tips' && activeMenu !== 'reports') return false
+  return PAYMENTS_PAYOUTS_SUBMENU.some((item) =>
+    isPaymentsPayoutsSubActive(activeMenu, tabParam, item),
+  )
+}
 
 export const visibleMenuItems = MENU_ITEMS
 

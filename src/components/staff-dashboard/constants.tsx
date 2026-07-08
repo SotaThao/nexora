@@ -1,22 +1,149 @@
 // Staff dashboard navigation constants.
-import { LayoutDashboard, QrCode, Wallet, CreditCard, ClipboardList, Settings, Star } from 'lucide-react'
+import {
+  LayoutDashboard,
+  QrCode,
+  CircleDollarSign,
+  Star,
+  ReceiptText,
+  BarChart3,
+  Settings,
+  Briefcase,
+} from 'lucide-react'
 
-// Bottom-nav / sidebar items. Notifications is reached via the header bell.
+// Bottom-nav / sidebar items. Icons align with merchant dashboard MENU_ITEMS.
 export const STAFF_MENU_ITEMS = [
-  { id: 'home', icon: LayoutDashboard, image: '/assets/menu/dashboard.png', labelKey: 'staff_dashboard.nav.home' },
-  { id: 'qr', icon: QrCode, image: '/assets/menu/touchpoint.png', labelKey: 'staff_dashboard.nav.my_qr' },
-  { id: 'tips', icon: Wallet, image: '/assets/menu/tips.png', labelKey: 'staff_dashboard.nav.tips' },
-  { id: 'payments', icon: ClipboardList, image: '/assets/menu/transaction.png', labelKey: 'staff_dashboard.nav.payments' },
-  { id: 'reviews', icon: Star, image: '/assets/menu/reviews.png', labelKey: 'staff_dashboard.nav.reviews' },
-  { id: 'pay', icon: CreditCard, image: '/assets/menu/analytics.png', labelKey: 'staff_dashboard.nav.pay' },
-  { id: 'profile', icon: Settings, image: '/assets/menu/setting.png', labelKey: 'staff_dashboard.nav.profile' },
+  { id: 'home', icon: LayoutDashboard, labelKey: 'staff_dashboard.nav.home' },
+  { id: 'tips', icon: CircleDollarSign, labelKey: 'staff_dashboard.nav.tips' },
+  { id: 'payments', icon: ReceiptText, labelKey: 'staff_dashboard.nav.payments' },
+  { id: 'pay', icon: BarChart3, labelKey: 'staff_dashboard.nav.pay' },
+  { id: 'profile', icon: Settings, labelKey: 'staff_dashboard.nav.profile' },
 ]
 
-export const STAFF_BOTTOM_NAV_ITEMS = STAFF_MENU_ITEMS.filter(
-  (item) => item.id !== 'pay' && item.id !== 'payments',
-)
+export const STAFF_WORKSPACE_MENU_ITEM = {
+  id: 'workspace',
+  icon: Briefcase,
+  labelKey: 'staff_dashboard.nav.my_workspace',
+}
 
-export const STAFF_SCREENS = ['home', 'qr', 'tips', 'reviews', 'pay', 'payments', 'profile', 'notifications']
+export const STAFF_WORKSPACE_SUBMENU = [
+  {
+    id: 'my_qr',
+    screen: 'qr',
+    labelKey: 'staff_dashboard.nav.my_qr_menu',
+    params: { tab: 'personal' },
+  },
+  {
+    id: 'my_earnings',
+    screen: 'earnings',
+    labelKey: 'staff_dashboard.nav.my_earnings',
+  },
+  {
+    id: 'my_reviews',
+    screen: 'reviews',
+    labelKey: 'staff_dashboard.nav.my_reviews',
+  },
+  {
+    id: 'my_salons',
+    screen: 'salons',
+    labelKey: 'staff_dashboard.nav.my_salons',
+  },
+]
+
+export const STAFF_WORKSPACE_SCREEN_IDS = ['qr', 'payments', 'reviews', 'tips', 'earnings', 'salons']
+
+export function isStaffWorkspaceSubActive(
+  activeScreen: string,
+  tabParam: string | null,
+  item: (typeof STAFF_WORKSPACE_SUBMENU)[number],
+): boolean {
+  if (activeScreen !== item.screen) return false
+
+  if (item.id === 'my_qr') {
+    return !tabParam || tabParam === 'personal'
+  }
+
+  if (item.id === 'my_earnings') {
+    if (activeScreen !== 'earnings') return false
+    return !tabParam || tabParam === 'overview'
+  }
+
+  if (item.id === 'my_salons') {
+    return activeScreen === 'salons'
+  }
+
+  if (!item.params?.tab) return true
+
+  if (item.screen === 'payments') {
+    return !tabParam || tabParam === item.params.tab
+  }
+
+  return tabParam === item.params.tab
+}
+
+export function isStaffWorkspaceRouteActive(
+  activeScreen: string,
+  tabParam: string | null,
+): boolean {
+  if (activeScreen === 'earnings' || activeScreen === 'salons') return true
+  return STAFF_WORKSPACE_SUBMENU.some((item) =>
+    isStaffWorkspaceSubActive(activeScreen, tabParam, item),
+  )
+}
+
+/** Top-level sidebar item is active only when its screen matches and no workspace sub-route owns it. */
+export function isStaffTopLevelMenuItemActive(
+  activeScreen: string,
+  tabParam: string | null,
+  itemId: string,
+): boolean {
+  if (activeScreen !== itemId) return false
+  return !isStaffWorkspaceRouteActive(activeScreen, tabParam)
+}
+
+/** Bottom nav: 2 items each side of center Scan FAB. */
+export const STAFF_BOTTOM_NAV_ITEMS = [
+  {
+    id: 'home',
+    screen: 'home',
+    icon: LayoutDashboard,
+    labelKey: 'staff_dashboard.nav.home',
+  },
+  {
+    id: 'payments',
+    screen: 'payments',
+    icon: ReceiptText,
+    labelKey: 'staff_dashboard.nav.transactions',
+  },
+  {
+    id: 'my_qr',
+    screen: 'qr',
+    icon: QrCode,
+    labelKey: 'staff_dashboard.nav.my_qr_code',
+    params: { tab: 'personal' },
+  },
+  {
+    id: 'reviews',
+    screen: 'reviews',
+    icon: Star,
+    labelKey: 'staff_dashboard.nav.reviews',
+  },
+] as const
+
+export function isStaffBottomNavItemActive(
+  activeScreen: string,
+  tabParam: string | null,
+  item: (typeof STAFF_BOTTOM_NAV_ITEMS)[number],
+): boolean {
+  if (activeScreen !== item.screen) return false
+
+  if (item.screen === 'qr') {
+    return !tabParam || tabParam === 'personal'
+  }
+
+  return true
+}
+
+export const STAFF_SCREENS = ['home', 'qr', 'tips', 'reviews', 'pay', 'payments', 'earnings', 'salons', 'profile', 'notifications']
 
 const STAFF_ACTION_URL_ALIASES: Record<string, string> = {
   '/staff/businesses': '/staff',
