@@ -604,7 +604,11 @@
       "renews_on": "Gia hạn: {{date}}",
       "expires_on": "Hết hạn: {{date}}",
       "trial_ends": "Dùng thử đến {{date}}",
-      "manage_plan": "Quản lý gói"
+      "manage_plan": "Quản lý gói",
+      "google_play_badge_eyebrow": "Get it on",
+      "google_play_badge_title": "Google Play",
+      "app_store_badge_eyebrow": "Download on the",
+      "app_store_badge_title": "App Store"
     },
     "menu": {
       "home": "Trang chủ",
@@ -635,6 +639,9 @@
       "coming_soon_badge": "Sắp ra mắt"
     },
     "back_to_dashboard": "Quay lại Bảng Điều Khiển",
+    "footer": {
+      "copyright": "© 2026 NEXORA Touch."
+    },
     "notifications": {
       "title": "Thông báo",
       "mark_all_read": "Đọc tất cả",

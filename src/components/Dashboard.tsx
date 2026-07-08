@@ -43,6 +43,7 @@ import DashboardHeader from './dashboard/layout/DashboardHeader'
 import DashboardSidebar from './dashboard/layout/DashboardSidebar'
 import MobileMenuDrawer from './dashboard/layout/MobileMenuDrawer'
 import MobileBottomNav from './dashboard/layout/MobileBottomNav'
+import AppDownloadLinks from './ui/AppDownloadLinks'
 import Overview from './dashboard/overview/Overview'
 import StaffView from './dashboard/views/StaffView'
 import ReviewsView from './dashboard/views/ReviewsView'
@@ -802,6 +803,12 @@ export default function Dashboard({
           )}
           <Outlet context={dashboardCtx} />
         </main>
+        <footer className="border-t border-nexoraBorder bg-white px-4 py-4 sm:px-6 lg:px-7">
+          <div className="flex flex-col items-center justify-between gap-3 text-center sm:flex-row sm:text-left">
+            <p className="text-sm font-medium text-slate-700">{t('dashboard.footer.copyright')}</p>
+            <AppDownloadLinks />
+          </div>
+        </footer>
       </div>
 
       <MobileBottomNav activeMenu={activeMenu} onNavigate={handleNavigateMenu} />

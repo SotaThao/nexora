@@ -605,7 +605,11 @@
       "renews_on": "Renews: {{date}}",
       "expires_on": "Expires: {{date}}",
       "trial_ends": "Trial ends {{date}}",
-      "manage_plan": "Manage Plan"
+      "manage_plan": "Manage Plan",
+      "google_play_badge_eyebrow": "Get it on",
+      "google_play_badge_title": "Google Play",
+      "app_store_badge_eyebrow": "Download on the",
+      "app_store_badge_title": "App Store"
     },
     "menu": {
       "home": "Home",
@@ -636,6 +640,9 @@
       "coming_soon_badge": "Coming Soon"
     },
     "back_to_dashboard": "Back to Dashboard",
+    "footer": {
+      "copyright": "© 2026 NEXORA Touch."
+    },
     "notifications": {
       "title": "Notifications",
       "mark_all_read": "Mark all read",
