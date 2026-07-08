@@ -3,7 +3,13 @@ import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 import LoadingScreen from './LoadingScreen'
 
-export default function RequireAuth({ role, children }) {
+export default function RequireAuth({
+  role,
+  children,
+}: {
+  role?: string
+  children?: React.ReactNode
+}) {
   const { session, status } = useAuth()
 
   if (status === 'loading') {

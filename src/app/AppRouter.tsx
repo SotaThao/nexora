@@ -79,15 +79,15 @@ const StaffNotifications = lazyWithRetry(
 const StaffTransactions = lazyWithRetry(
   () => import("../components/staff-dashboard/views/StaffTransactions"),
 );
-const StaffTaxIqOverviewRoute = lazy(() => import('../components/staff-dashboard/views/taxiq/StaffTaxIqOverviewRoute'))
-const StaffTaxIqCpaAccessRoute = lazy(() => import('../components/staff-dashboard/views/taxiq/StaffTaxIqCpaAccessRoute'))
-const StaffTaxIqDeductionsRoute = lazy(() => import('../components/staff-dashboard/views/taxiq/StaffTaxIqDeductionsRoute'))
-const StaffTaxIqReceiptsRoute = lazy(() => import('../components/staff-dashboard/views/taxiq/StaffTaxIqReceiptsRoute'))
-const StaffTaxIqLogsRoute = lazy(() => import('../components/staff-dashboard/views/taxiq/StaffTaxIqLogsRoute'))
-const StaffTaxIqIncomeRoute = lazy(() => import('../components/staff-dashboard/views/taxiq/StaffTaxIqIncomeRoute'))
-const StaffTaxIqPayoutsRoute = lazy(() => import('../components/staff-dashboard/views/taxiq/StaffTaxIqPayoutsRoute'))
-const StaffTaxIqExportRoute = lazy(() => import('../components/staff-dashboard/views/taxiq/StaffTaxIqExportRoute'))
-const CpaViewerPage = lazy(() => import('../components/taxiq/CpaViewer/CpaViewerPage'))
+const StaffTaxIqOverviewRoute = lazyWithRetry(() => import('../components/staff-dashboard/views/taxiq/StaffTaxIqOverviewRoute'))
+const StaffTaxIqCpaAccessRoute = lazyWithRetry(() => import('../components/staff-dashboard/views/taxiq/StaffTaxIqCpaAccessRoute'))
+const StaffTaxIqDeductionsRoute = lazyWithRetry(() => import('../components/staff-dashboard/views/taxiq/StaffTaxIqDeductionsRoute'))
+const StaffTaxIqReceiptsRoute = lazyWithRetry(() => import('../components/staff-dashboard/views/taxiq/StaffTaxIqReceiptsRoute'))
+const StaffTaxIqLogsRoute = lazyWithRetry(() => import('../components/staff-dashboard/views/taxiq/StaffTaxIqLogsRoute'))
+const StaffTaxIqIncomeRoute = lazyWithRetry(() => import('../components/staff-dashboard/views/taxiq/StaffTaxIqIncomeRoute'))
+const StaffTaxIqPayoutsRoute = lazyWithRetry(() => import('../components/staff-dashboard/views/taxiq/StaffTaxIqPayoutsRoute'))
+const StaffTaxIqExportRoute = lazyWithRetry(() => import('../components/staff-dashboard/views/taxiq/StaffTaxIqExportRoute'))
+const CpaViewerPage = lazyWithRetry(() => import('../components/taxiq/CpaViewer/CpaViewerPage'))
 const ForgotPassword = lazyWithRetry(
   () => import("../components/ForgotPassword"),
 );
