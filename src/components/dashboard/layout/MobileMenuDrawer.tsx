@@ -6,6 +6,7 @@ import MenuIcon from '../../ui/MenuIcon'
 import { PUBLIC_HOME_MENU_ITEM, TAXIQ_MENU_CHILD_MODULE } from '../constants'
 import { getSubscriptionSidebarCopy } from '../../../utils/subscriptionDisplay'
 import { useMerchantSetup } from '../../../data/hooks/useMerchantSetup'
+import { useOwnerTaxYearByBusiness } from '../../../data/hooks/useTaxiqOwnerTaxYear'
 
 const APP_STORE_URL = 'https://apps.apple.com/us/app/nexora-touch/id6775340468'
 const GOOGLE_PLAY_URL = 'https://play.google.com/store/apps/details?id=net.vlinkgroup.nexora'
