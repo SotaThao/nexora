@@ -12,7 +12,9 @@ export const STAFF_MENU_ITEMS = [
   { id: 'profile', icon: Settings, image: '/assets/menu/setting.png', labelKey: 'staff_dashboard.nav.profile' },
 ]
 
-export const STAFF_BOTTOM_NAV_ITEMS = STAFF_MENU_ITEMS.filter((item) => !['pay', 'profile'].includes(item.id))
+export const STAFF_BOTTOM_NAV_ITEMS = STAFF_MENU_ITEMS.filter(
+  (item) => !['pay', 'profile', 'tips'].includes(item.id),
+)
 
 export const STAFF_SCREENS = ['home', 'qr', 'tips', 'reviews', 'pay', 'payments', 'profile', 'notifications']
 

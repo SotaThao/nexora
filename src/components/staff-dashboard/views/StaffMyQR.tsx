@@ -1212,7 +1212,7 @@ export default function StaffMyQR() {
           onClick={() => setZoomedQr(null)}
         >
           <div
-            className="relative w-full max-w-sm animate-scaleUp cursor-default space-y-5 overflow-hidden rounded-3xl border border-slate-100 bg-white p-6 text-center text-slate-800 shadow-2xl"
+            className="relative w-full max-w-md animate-scaleUp cursor-default space-y-5 overflow-x-hidden overflow-y-auto rounded-3xl border border-slate-100 bg-white p-6 text-center text-slate-800 shadow-2xl max-h-[min(92dvh,calc(100dvh-var(--app-safe-area-top)-var(--app-safe-area-bottom)-1.5rem))]"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -1245,11 +1245,11 @@ export default function StaffMyQR() {
               </p>
             </div>
 
-            <div className="relative mx-auto flex h-56 w-56 items-center justify-center rounded-2xl border-2 border-slate-100 bg-white p-4 shadow-md">
+            <div className="relative mx-auto flex aspect-square w-full max-w-full min-w-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-slate-100 bg-white p-3 shadow-md sm:p-4">
               <img
-                src={buildQrImageUrl(zoomedQr.url, 300)}
+                src={buildQrImageUrl(zoomedQr.url, 600)}
                 alt="Personal Tipping QR"
-                className="h-full w-full object-contain"
+                className="h-full w-full max-h-full max-w-full object-contain"
               />
             </div>
 
@@ -1281,17 +1281,6 @@ export default function StaffMyQR() {
               {isSavingQr ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
               {t('dashboard.master_gateway.btn_download')}
             </button>
-
-            <div className="border-t border-slate-100 pt-2">
-              <a
-                href={zoomedQr.url}
-                target="_blank"
-                rel="opener"
-                className="inline-flex w-full items-center justify-center gap-1 rounded-xl bg-nexoraBrandSoft py-2 text-[11px] font-black tracking-wide text-nexoraBrand transition hover:underline"
-              >
-                <span>{t('components.staff_dashboard.views.StaffMyQR.openTippingPageSimulate')}</span>
-              </a>
-            </div>
           </div>
         </div>
       )}

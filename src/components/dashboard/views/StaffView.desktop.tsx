@@ -81,7 +81,7 @@ function StaffView({
     [publicInviteEnabled, publicInviteLink],
   )
   const publicInviteQrLargeSrc = useMemo(
-    () => (publicInviteEnabled && publicInviteLink ? buildPublicQrImageUrl(publicInviteLink, 300) : ''),
+    () => (publicInviteEnabled && publicInviteLink ? buildPublicQrImageUrl(publicInviteLink, 600) : ''),
     [publicInviteEnabled, publicInviteLink],
   )
   const publicInviteUnavailableText = isInviteLinkSettingLoading
@@ -628,7 +628,7 @@ function StaffView({
           onClick={() => setLargeJoinQrOpen(false)}
         >
           <div
-            className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl border border-slate-100 flex flex-col items-center cursor-default animate-scaleUp"
+            className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl border border-slate-100 flex flex-col items-center cursor-default animate-scaleUp"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-full flex justify-between items-center mb-4">
@@ -643,12 +643,14 @@ function StaffView({
               </button>
             </div>
 
-            <div className="h-64 w-64 rounded-2xl bg-slate-50 border border-slate-200 p-4 flex items-center justify-center shadow-inner bg-white mb-4">
+            <div className="mb-4 w-full">
+              <div className="aspect-square w-full max-w-full min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-inner sm:p-4">
               <img
                 src={publicInviteQrLargeSrc}
                 alt={t('components.dashboard.views.StaffView.scanToJoinAlt')}
-                className="h-full w-full object-contain"
+                className="h-full w-full max-h-full max-w-full object-contain"
               />
+              </div>
             </div>
 
             <p className="text-[11px] text-slate-500 font-medium text-center leading-relaxed max-w-xs mb-4">

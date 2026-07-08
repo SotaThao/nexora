@@ -36,7 +36,7 @@ function QrGatewayPreviewLayout({
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-sm rounded-xl bg-white px-6 pb-6 pt-12 text-center shadow-2xl animate-scaleUp qr-modal-container"
+        className="relative w-full max-w-md rounded-xl bg-white px-6 pb-6 pt-12 text-center shadow-2xl animate-scaleUp qr-modal-container"
         onClick={(event) => event.stopPropagation()}
       >
         <button
@@ -56,7 +56,7 @@ function QrGatewayPreviewLayout({
           </div>
         ) : null}
 
-        <div className="mx-auto flex w-48 flex-col items-center gap-3.5 rounded-2xl border border-nexoraBorder/80 bg-nexoraCanvas px-4 py-5 text-nexoraText shadow-md qr-print-card qr-print-card--payment">
+        <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-3.5 rounded-2xl border border-nexoraBorder/80 bg-nexoraCanvas px-4 py-5 text-nexoraText shadow-md qr-print-card qr-print-card--payment">
           <div className="flex items-center justify-center gap-1.5 qr-print-brand-header">
             <img
               src="/assets/nexora-logo.png"
@@ -66,15 +66,15 @@ function QrGatewayPreviewLayout({
             <span className="text-[9px] font-black tracking-wider text-slate-800 qr-print-brand-text">NEXORA</span>
           </div>
 
-          <div className="flex h-[7.25rem] w-[7.25rem] shrink-0 items-center justify-center rounded-xl border border-nexoraBorder/60 bg-white p-2.5 shadow-inner qr-print-qr-wrapper">
+          <div className="flex aspect-square w-full max-w-[14.5rem] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-nexoraBorder/60 bg-white p-2.5 shadow-inner qr-print-qr-wrapper">
             <img
               src={qrImageSrc}
               alt={target.name}
-              className="h-full w-full object-contain qr-print-qr-image"
+              className="h-full w-full max-h-full max-w-full object-contain qr-print-qr-image"
             />
           </div>
 
-          <p className="max-w-[9.5rem] text-center text-[9px] font-extrabold uppercase leading-snug tracking-wide text-nexoraMuted qr-print-scan-text">
+          <p className="max-w-[19rem] text-center text-[9px] font-extrabold uppercase leading-snug tracking-wide text-nexoraMuted qr-print-scan-text">
             {scanCaption}
           </p>
 
@@ -204,7 +204,7 @@ function QrModal({ target, businessName, onClose }) {
       onClick={onClose}
     >
       <div
-        className="qr-modal-container flex w-full max-w-sm max-h-[min(92dvh,calc(100dvh-var(--app-safe-area-top)-var(--app-safe-area-bottom)-1.5rem))] flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl animate-scaleUp sm:rounded-xl"
+        className="qr-modal-container flex w-full max-w-md max-h-[min(92dvh,calc(100dvh-var(--app-safe-area-top)-var(--app-safe-area-bottom)-1.5rem))] flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl animate-scaleUp sm:rounded-xl"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex shrink-0 items-start justify-between gap-3 border-b border-nexoraBorder/60 px-4 py-3 no-print sm:px-6 sm:py-4">
@@ -227,7 +227,7 @@ function QrModal({ target, businessName, onClose }) {
             </div>
           )}
 
-          <div className="mx-auto flex aspect-[2/3] w-36 flex-col items-center justify-between rounded-2xl bg-nexoraCanvas border border-nexoraBorder/80 p-3 text-nexoraText shadow-md qr-print-card sm:w-44 sm:p-4">
+          <div className="mx-auto flex aspect-[2/3] w-full max-w-[22rem] min-w-0 flex-col items-center justify-between rounded-2xl bg-nexoraCanvas border border-nexoraBorder/80 p-3 text-nexoraText shadow-md qr-print-card sm:p-4">
             <div className="flex items-center gap-1 justify-center qr-print-brand-header">
               <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-3.5 w-3.5 object-contain qr-print-brand-logo" />
               <span className="text-[8px] font-black tracking-wider text-slate-800 qr-print-brand-text">NEXORA</span>
@@ -242,11 +242,11 @@ function QrModal({ target, businessName, onClose }) {
               </div>
             </div>
 
-            <div className="h-24 w-24 rounded-lg bg-white border border-nexoraBorder/60 p-2 flex items-center justify-center shadow-inner qr-print-qr-wrapper sm:h-28 sm:w-28">
+            <div className="flex aspect-square w-full max-w-full min-w-0 items-center justify-center overflow-hidden rounded-lg border border-nexoraBorder/60 bg-white p-2 shadow-inner qr-print-qr-wrapper">
               <img
-                src={buildQrImageUrl(qrUrl, 150, target.qrImageUrl)}
+                src={buildQrImageUrl(qrUrl, 300, target.qrImageUrl)}
                 alt="Scan QR code to tip and review"
-                className="h-full w-full object-contain qr-print-qr-image"
+                className="h-full w-full max-h-full max-w-full object-contain qr-print-qr-image"
               />
             </div>
 

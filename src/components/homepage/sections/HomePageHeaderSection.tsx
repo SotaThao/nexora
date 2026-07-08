@@ -45,7 +45,7 @@ export default function HomePageHeaderSection() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-2 sm:gap-4">
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             <button
-              className={`mobile-menu-toggle ${hasMobileMenu ? 'lg:hidden' : 'md:hidden'} focus:outline-none focus:ring-2 focus:ring-purple/35 ds-control ds-button`}
+              className="mobile-menu-toggle lg:hidden focus:outline-none focus:ring-2 focus:ring-purple/35 ds-control ds-button"
               aria-controls={hasMobileMenu ? 'dashboard-mobile-menu' : 'mobile-navigation-menu'}
               aria-label={hasMobileMenu ? 'Open navigation menu' : 'Open mobile menu'}
               aria-expanded="false"
@@ -170,7 +170,7 @@ export default function HomePageHeaderSection() {
         </div>
 
         {!hasMobileMenu && (
-          <div className="mobile-menu-panel hidden md:hidden animate-fadeIn p-2 space-y-1 font-extrabold text-xs sm:text-sm text-slate-600" id="mobile-navigation-menu">
+          <div className="mobile-menu-panel hidden lg:hidden animate-fadeIn p-2 space-y-1 font-extrabold text-xs sm:text-sm text-slate-600" id="mobile-navigation-menu">
             <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-features" href="#features" onClick={() => { hp.toggleMobileMenu() }}>Features</a>
             <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-simulator" href="#simulator" onClick={() => { hp.toggleMobileMenu() }}>Live Demo</a>
             <a className="flex px-3 py-2 hover:text-purple transition-colors ds-control ds-link" data-i18n="nav-tax-iq" href="#tax-iq" onClick={() => { hp.toggleMobileMenu() }}>Tax IQ Assistant</a>

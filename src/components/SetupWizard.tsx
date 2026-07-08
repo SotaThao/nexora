@@ -320,7 +320,7 @@ export default function SetupWizard() {
       {/* Zoom QR Code Preview Modal */}
       {previewingTp && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 modal-overlay-safe backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl animate-scaleUp relative">
+          <div className="w-full max-w-md overflow-x-hidden overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl animate-scaleUp relative max-h-[min(92dvh,calc(100dvh-var(--app-safe-area-top)-var(--app-safe-area-bottom)-1.5rem))]">
             <button
               onClick={() => setPreviewingTp(null)}
               className="modal-close-btn absolute right-2 top-2 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
@@ -334,8 +334,8 @@ export default function SetupWizard() {
               {t('dashboard.touchpoints.tabs.stations')} - {previewingTp.name}
             </h3>
 
-            <div className="flex flex-col items-center">
-              <div className="mx-auto flex aspect-[2/3] w-48 flex-col items-center justify-between rounded-2xl bg-nexoraCanvas border border-nexoraBorder/80 p-4 text-nexoraText shadow-md qr-print-card">
+            <div className="flex w-full flex-col items-center">
+              <div className="mx-auto flex aspect-[2/3] w-full max-w-sm min-w-0 flex-col items-center justify-between rounded-2xl bg-nexoraCanvas border border-nexoraBorder/80 p-4 text-nexoraText shadow-md qr-print-card">
                 <div className="flex items-center gap-1 justify-center qr-print-brand-header">
                   <img src="/assets/nexora-logo.png" alt="Nexora Logo" className="h-3.5 w-3.5 object-contain qr-print-brand-logo" />
                   <span className="text-[8px] font-black tracking-wider text-slate-800 qr-print-brand-text">NEXORA</span>
@@ -350,14 +350,14 @@ export default function SetupWizard() {
                   </div>
                 </div>
 
-                <div className="h-28 w-28 rounded-lg bg-white border border-nexoraBorder/60 p-2 flex items-center justify-center shadow-inner qr-print-qr-wrapper">
+                <div className="flex aspect-square w-full max-w-full min-w-0 items-center justify-center overflow-hidden rounded-lg border border-nexoraBorder/60 bg-white p-2 shadow-inner qr-print-qr-wrapper">
                   <img
                     src={buildPublicQrImageUrl(
                       `${getCustomerAppBaseUrl()}?flow=customer&merchant=${encodeURIComponent(businessInfo.name || 'Your Business')}&tech=tp/${previewingTp.id}`,
-                      150,
+                      300,
                     )}
                     alt="QR Preview"
-                    className="h-full w-full object-contain qr-print-qr-image"
+                    className="h-full w-full max-h-full max-w-full object-contain qr-print-qr-image"
                   />
                 </div>
 

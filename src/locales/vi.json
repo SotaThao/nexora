@@ -2985,6 +2985,22 @@
       "goToSlide": "Chuyển đến slide {{index}}"
     }
   },
+  "capgo_update": {
+    "title_downloading": "Đang tải bản cập nhật",
+    "title_ready": "Đã tải xong bản cập nhật",
+    "title_failed": "Tải bản cập nhật thất bại",
+    "subtitle_downloading": "Đang tải phiên bản {{version}}.",
+    "subtitle_ready": "Đã tải xong phiên bản {{version}}.",
+    "progress_label": "Tiến trình tải",
+    "percent_value": "{{percent}}%",
+    "keep_open": "Vui lòng giữ ứng dụng mở cho đến khi tải xong.",
+    "restart_title": "Cần khởi động lại ứng dụng",
+    "restart_ios": "Để hoàn tất cập nhật, hãy tắt hoàn toàn Nexora Touch trong trình chuyển ứng dụng, sau đó mở lại ứng dụng.",
+    "restart_android": "Để hoàn tất cập nhật, hãy đóng Nexora Touch trong mục ứng dụng gần đây, sau đó mở lại ứng dụng.",
+    "got_it": "Đã hiểu",
+    "retry_hint": "Không thể tải bản cập nhật. Ứng dụng sẽ tự thử lại sau.",
+    "close": "Đóng"
+  },
   "coming_soon": {
     "analytics_title": "Phân Tích Nâng Cao",
     "analytics_desc": "Chuyển đổi thiết bị, phân tích khách quay lại, và tóm tắt đánh giá bằng AI sẽ ra mắt ở giai đoạn 3.",

@@ -2991,6 +2991,22 @@
       "goToSlide": "Go to slide {{index}}"
     }
   },
+  "capgo_update": {
+    "title_downloading": "Downloading update",
+    "title_ready": "Update ready",
+    "title_failed": "Update failed",
+    "subtitle_downloading": "Version {{version}} is downloading.",
+    "subtitle_ready": "Version {{version}} has been downloaded.",
+    "progress_label": "Download progress",
+    "percent_value": "{{percent}}%",
+    "keep_open": "Please keep the app open until the download finishes.",
+    "restart_title": "Restart required",
+    "restart_ios": "To finish updating, close Nexora Touch completely from the app switcher, then open the app again.",
+    "restart_android": "To finish updating, close Nexora Touch from Recent Apps, then open the app again.",
+    "got_it": "Got it",
+    "retry_hint": "The update could not be downloaded. The app will try again automatically later.",
+    "close": "Close"
+  },
   "coming_soon": {
     "analytics_title": "Advanced Analytics",
     "analytics_desc": "Device conversion, return customer cohorts, and AI review summaries are planned for phase 3.",
