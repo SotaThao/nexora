@@ -9,9 +9,10 @@
  * touchPointSlug is the business touch point (e.g. master-store / FrontDesk), not staff-{code}.
  */
 import { buildPublicQrImageUrl } from '../data/repositories/publicQr'
+import { MASTER_TOUCHPOINT_SLUG } from '../constants/touchpoints'
 
 /** Fallback when BE has not yet returned a touch-point slug on /staff/businesses. */
-export const DEFAULT_MASTER_TOUCH_POINT_SLUG = 'master-store'
+export const DEFAULT_MASTER_TOUCH_POINT_SLUG = MASTER_TOUCHPOINT_SLUG
 
 export function slugify(str = ''): string {
   return str
