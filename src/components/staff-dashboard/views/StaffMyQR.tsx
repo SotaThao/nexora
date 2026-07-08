@@ -1215,10 +1215,10 @@ export default function StaffMyQR() {
           onClick={() => setZoomedQr(null)}
         >
           <div
-            className={`relative w-full max-w-sm animate-scaleUp cursor-default overflow-hidden text-center shadow-2xl ${
+            className={`relative w-full animate-scaleUp cursor-default text-center shadow-2xl ${
               zoomedQr.kind === 'payment'
-                ? 'space-y-5 rounded-3xl border border-slate-100 bg-white p-6 text-slate-800'
-                : 'max-h-[92dvh] overflow-y-auto rounded-[28px] border-4 border-white bg-[#050817] text-white'
+                ? 'max-w-md space-y-5 overflow-x-hidden overflow-y-auto rounded-3xl border border-slate-100 bg-white p-6 text-slate-800 max-h-[min(92dvh,calc(100dvh-var(--app-safe-area-top)-var(--app-safe-area-bottom)-1.5rem))]'
+                : 'max-w-sm overflow-hidden overflow-y-auto rounded-[28px] border-4 border-white bg-[#050817] text-white max-h-[min(92dvh,calc(100dvh-var(--app-safe-area-top)-var(--app-safe-area-bottom)-1.5rem))]'
             }`}
             onClick={(e) => e.stopPropagation()}
           >

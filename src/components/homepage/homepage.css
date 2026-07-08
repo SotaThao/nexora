@@ -134,6 +134,10 @@
   .mobile-menu-toggle {
     display: none !important;
   }
+
+  #mobile-navigation-menu {
+    display: none !important;
+  }
 }
 
 @keyframes fadeIn {

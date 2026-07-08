@@ -207,14 +207,37 @@ export function buildQrImageUrl(
   if (tipUrl?.trim()) {
     return buildPublicQrImageUrl(tipUrl.trim(), size)
   }
-  if (qrImageUrl) return qrImageUrl
+  if (qrImageUrl) {
+    return rewritePublicQrImageUrlForEnv(qrImageUrl, getWebUrlOrigin(), size)
+  }
   return ''
+}
+
+/** Re-encode API QR image URLs so embedded `content` uses the configured web origin. */
+function rewritePublicQrImageUrlForEnv(
+  qrImageUrl: string,
+  origin: string,
+  fallbackSize = 200,
+): string {
+  if (!origin) return qrImageUrl
+  try {
+    const parsed = new URL(qrImageUrl)
+    const content = parsed.searchParams.get('content')
+    if (content?.trim()) {
+      const rewritten = toLocalCustomerTouchUrl(content, origin)
+      const resolvedSize = Number(parsed.searchParams.get('size')) || fallbackSize
+      return buildPublicQrImageUrl(rewritten, resolvedSize)
+    }
+  } catch {
+    // fall through to raw image URL
+  }
+  return qrImageUrl
 }
 
 /** Customer staff direct-payment URL — {origin}/pay/staff/{staffProfileId}. */
 export function buildStaffDirectPaymentPageUrl(
   staffProfileId: string,
-  origin = typeof window !== 'undefined' ? window.location.origin : '',
+  origin = getWebUrlOrigin(),
 ): string {
   const id = String(staffProfileId || '').trim()
   if (!id || !origin) return ''
@@ -225,7 +248,7 @@ export function buildStaffDirectPaymentPageUrl(
 export function resolveStaffDirectPaymentPageUrl({
   staffProfileId,
   paymentUrlFromApi,
-  origin = typeof window !== 'undefined' ? window.location.origin : '',
+  origin = getWebUrlOrigin(),
 }: {
   staffProfileId?: string | null
   paymentUrlFromApi?: string | null
