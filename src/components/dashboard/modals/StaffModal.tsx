@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { X, Upload, Eye, AlertTriangle, QrCode, Loader2, CheckCircle2, XCircle, Star, HelpCircle } from 'lucide-react'
+import { X, Upload, Eye, AlertTriangle, QrCode, Loader2, CheckCircle2, XCircle, Star, HelpCircle, Plus, Pencil } from 'lucide-react'
 import IconButton from '../../ui/IconButton'
 import ImageFileInput from '../../ui/ImageFileInput'
 import CountryCodeSelect, { parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
@@ -66,6 +66,7 @@ function StaffModal({
   const isLocalStaff = Boolean(form?.isLocalStaff)
   const isReviewOnly = (isApproveMode || viewOnly) && !isLocalStaff
   const isIdReadOnly = isReviewOnly || isLocalStaff
+  const canManageLocalPayouts = isLocalStaff && !viewOnly && !isApproveMode
 
   const [idInput, setIdInput] = useState(() =>
     isReviewOnly ? (form.nexoraStaffId || form.vlinkpay || '') : (form.vlinkpay || form.nexoraStaffId || ''),
@@ -287,6 +288,21 @@ function StaffModal({
       },
     })
     setPayoutSetupOpen(false)
+  }
+
+  const handleToggleLocalPayment = (walletKey: string) => {
+    if (!canManageLocalPayouts || !staffProfileId || isLocalPaymentSaving) return
+    const method = localPaymentMethodsByKey.get(walletKey)
+    if (!method?.id) return
+    // Enabling a method without account info is meaningless — send them to setup first.
+    if (!method.isActive && !method.accountInfo) {
+      openPayoutSetup(walletKey)
+      return
+    }
+    toggleLocalPaymentMutation.mutate(
+      { staffProfileId, paymentMethodId: method.id },
+      { onError: showLocalPaymentError },
+    )
   }
 
   const handleCombinedIdChange = (val) => {
@@ -648,10 +664,17 @@ function StaffModal({
                         <div className="flex items-center gap-3 min-w-0">
                           <button
                             type="button"
-                            disabled
+                            disabled={!canManageLocalPayouts || isLocalPaymentSaving}
+                            onClick={canManageLocalPayouts ? () => handleToggleLocalPayment(wallet.key) : undefined}
                             className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                               config.enabled ? 'bg-nexoraBrand' : 'bg-nexoraBorder'
-                            } cursor-not-allowed`}
+                            } ${
+                              !canManageLocalPayouts
+                                ? 'cursor-not-allowed'
+                                : isLocalPaymentSaving
+                                  ? 'cursor-not-allowed opacity-70'
+                                  : 'cursor-pointer'
+                            }`}
                           >
                             <span
                               className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
@@ -673,15 +696,34 @@ function StaffModal({
                             </div>
                           </div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => openPayoutSetup(wallet.key)}
-                          disabled={isLocalStaff && isLocalPaymentSaving}
-                          className="flex items-center gap-1.5 text-[11px] font-bold text-nexoraMuted transition hover:text-nexoraText"
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                          <span>{t('components.dashboard.modals.StaffModal.viewAccount')}</span>
-                        </button>
+                        {canManageLocalPayouts ? (
+                          <button
+                            type="button"
+                            onClick={() => openPayoutSetup(wallet.key)}
+                            disabled={isLocalPaymentSaving}
+                            className="inline-flex shrink-0 items-center gap-1 text-[11px] font-bold text-nexoraBrand transition hover:text-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {config.value ? (
+                              <Pencil className="h-3 w-3 stroke-[2.5]" />
+                            ) : (
+                              <Plus className="h-3 w-3 stroke-[2.5]" />
+                            )}
+                            <span>
+                              {config.value
+                                ? t('components.dashboard.modals.StaffModal.editAccount')
+                                : t('components.dashboard.modals.AddStaffModal.manual_add_account')}
+                            </span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => openPayoutSetup(wallet.key)}
+                            className="flex items-center gap-1.5 text-[11px] font-bold text-nexoraMuted transition hover:text-nexoraText"
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                            <span>{t('components.dashboard.modals.StaffModal.viewAccount')}</span>
+                          </button>
+                        )}
                       </div>
                     )
                   })}
