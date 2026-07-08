@@ -118,11 +118,11 @@ export function useStaffEarningsData(currentLanguage: string) {
     [tipsAmount, paymentsAmount, bonusesAmount, referralAmount, breakdownTotal],
   )
 
-  const availableBalance = payoutStats?.totalReceivedAllTime ?? 0
+  const availableBalance = payoutStats?.currentDebtBalance ?? 0
   const pendingAmount =
     (payoutStats?.totalPendingAmount ?? 0) + (summary?.pendingTips.totalAmount ?? 0)
   const lifetimeEarnings =
-    availableBalance
+    (payoutStats?.totalReceivedAllTime ?? 0)
     + paymentsAmount
     + tipsAmount
 
