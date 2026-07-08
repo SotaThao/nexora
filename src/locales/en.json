@@ -41,6 +41,7 @@
       "tab_qr": "QR",
       "my_workspace": "My Workspace",
       "my_qr_menu": "My QR",
+      "my_qr_code": "My QR",
       "my_earnings": "My Earnings",
       "my_reviews": "My Reviews",
       "my_salons": "My Salons"
@@ -1037,6 +1038,8 @@
         "filter_all_staff": "All staff",
         "filter_all_types": "All types",
         "filter_all_status": "All statuses",
+        "show_filters": "Show filters",
+        "hide_filters": "Hide filters",
         "export_btn": "Export report",
         "create_btn": "Create payout",
         "col_code": "Payout code",

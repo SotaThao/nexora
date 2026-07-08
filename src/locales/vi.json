@@ -45,7 +45,7 @@
       "tab_qr": "QR của tôi",
       "my_workspace": "Không gian của tôi",
       "my_qr_menu": "QR của tôi",
-      "my_earnings": "Thu nhập",
+      "my_qr_code": "Mã QR",
       "my_reviews": "Đánh giá của tôi",
       "my_salons": "Salon của tôi"
     },
@@ -1037,6 +1037,8 @@
         "filter_all_staff": "Tất cả thợ",
         "filter_all_types": "Tất cả loại",
         "filter_all_status": "Tất cả trạng thái",
+        "show_filters": "Hiện bộ lọc",
+        "hide_filters": "Ẩn bộ lọc",
         "export_btn": "Xuất báo cáo",
         "create_btn": "Tạo payout mới",
         "col_code": "Mã payout",

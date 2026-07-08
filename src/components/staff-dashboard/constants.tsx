@@ -92,9 +92,48 @@ export function isStaffTopLevelMenuItemActive(
   return !isStaffWorkspaceRouteActive(activeScreen, tabParam)
 }
 
-export const STAFF_BOTTOM_NAV_ITEMS = STAFF_MENU_ITEMS.filter(
-  (item) => !['pay', 'profile', 'tips'].includes(item.id),
-)
+/** Bottom nav: 2 items each side of center Scan FAB. */
+export const STAFF_BOTTOM_NAV_ITEMS = [
+  {
+    id: 'home',
+    screen: 'home',
+    icon: LayoutDashboard,
+    labelKey: 'staff_dashboard.nav.home',
+  },
+  {
+    id: 'payments',
+    screen: 'payments',
+    icon: ReceiptText,
+    labelKey: 'staff_dashboard.nav.transactions',
+  },
+  {
+    id: 'my_qr',
+    screen: 'qr',
+    icon: QrCode,
+    labelKey: 'staff_dashboard.nav.my_qr_code',
+    params: { tab: 'personal' },
+  },
+  {
+    id: 'reviews',
+    screen: 'reviews',
+    icon: Star,
+    labelKey: 'staff_dashboard.nav.reviews',
+  },
+] as const
+
+export function isStaffBottomNavItemActive(
+  activeScreen: string,
+  tabParam: string | null,
+  item: (typeof STAFF_BOTTOM_NAV_ITEMS)[number],
+): boolean {
+  if (activeScreen !== item.screen) return false
+
+  if (item.screen === 'qr') {
+    return !tabParam || tabParam === 'personal'
+  }
+
+  return true
+}
 
 export const STAFF_SCREENS = ['home', 'qr', 'tips', 'reviews', 'pay', 'payments', 'profile', 'notifications']
 
