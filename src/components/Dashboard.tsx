@@ -767,8 +767,14 @@ export default function Dashboard({
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
         />
 
-        <main className="min-h-dvh p-4 pb-24 sm:p-6 sm:pb-24 lg:p-7 lg:pb-7">
-          {activeMenu !== 'overview' && (
+        <main
+          className={`min-h-dvh pb-24 sm:pb-24 lg:pb-7 ${
+            activeMenu === 'booking-hub'
+              ? 'p-0 lg:p-4'
+              : 'p-4 sm:p-6 lg:p-7'
+          }`}
+        >
+          {activeMenu !== 'overview' && activeMenu !== 'booking-hub' && (
             <button
               onClick={() => handleNavigateMenu('overview')}
               className="mb-5 inline-flex h-9 items-center rounded-lg border border-nexoraBorder bg-white px-4 text-xs font-extrabold text-nexoraText shadow-nexora-soft transition hover:bg-nexoraSurfaceMuted"

@@ -13,6 +13,7 @@ import AnalyticsView from '../../AnalyticsView'
 import SupportView from '../../SupportView'
 import ComingSoon from '../views/ComingSoon'
 import ManagePlanView from '../views/ManagePlanView'
+import BookingHubView from '../views/BookingHubView'
 import StaffDetailView from '../../StaffDetailView'
 import { useMerchantStaffByCode } from '../../../data/hooks/useMerchantStaff'
 import { normaliseMember } from '../hooks/useStaffManagement'
@@ -281,6 +282,10 @@ export function TipsRoute() {
 export function ReportsRoute() {
   const ctx = useOutletContext<LooseObject>()
   return <ReportsView staff={ctx.staff} touchpoints={ctx.touchpoints} businessName={ctx.businessName} businessSlug={ctx.businessSlug} />
+}
+
+export function BookingHubRoute() {
+  return <BookingHubView />
 }
 
 export function AnalyticsRoute() {

@@ -513,6 +513,7 @@
       "payments": "Direct Payments",
       "reviews": "Reviews",
       "transactions": "Transactions",
+      "booking_hub": "Booking Hub",
       "touchpoints": "Stations & QR Codes",
       "qr_nfc": "QR / NFC Devices",
       "analytics": "Analytics",
