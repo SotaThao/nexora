@@ -112,7 +112,7 @@ export default function ProfileTab({
   verificationStatus = 'basic',
   canEditProfile = true,
   currentLanguage,
-  showToast,
+  showToast: providedShowToast,
   handleCopy,
   startEditBasic,
   saveBasic,
@@ -133,7 +133,8 @@ export default function ProfileTab({
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { logout } = useAuth()
-  const { showConfirm } = useNotification()
+  const { showConfirm, showToast: notifyToast } = useNotification()
+  const showToast = providedShowToast ?? notifyToast
   const deleteAccountMutation = useDeleteAccount()
   const referralCode = useMemo(() => getProfileReferralCode(profile), [profile])
   const referralUrl = useMemo(

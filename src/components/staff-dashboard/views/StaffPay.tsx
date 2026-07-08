@@ -155,7 +155,7 @@ export default function StaffPay() {
                   <div className="flex items-center gap-3 min-w-0">
                     <ToggleSwitch
                       checked={!!method.isActive}
-                      onChange={() => handleToggleMethod(method)}
+                      onChange={() => handleToggleMethod(method, !method.isActive)}
                       ariaLabel={`Toggle ${label}`}
                       activeColor="bg-emerald-500"
                       inactiveColor="bg-nexoraBorder"

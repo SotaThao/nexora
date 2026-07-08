@@ -149,7 +149,7 @@ function renderTextWithGoldStars(text) {
     return (
       <span key={index}>
         {part}
-        <span className="text-luxuryGold ml-flox-4 inline font-normal">★</span>
+        <span className="text-luxuryGold ml-1 inline font-normal">★</span>
       </span>
     )
   })

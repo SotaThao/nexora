@@ -38,7 +38,7 @@ export default function TransactionFilter({
   const paymentOptions = [
     { value: 'all', label: t('dashboard.activity_log.all_payments') },
     { value: 'Venmo', label: 'Venmo' },
-    { value: 'Cash App', label: 'Cash App' },
+    { value: 'CashApp', label: 'Cash App' },
     { value: 'Zelle', label: 'Zelle' },
     { value: 'VLINKPAY', label: 'VLINKPAY' }
   ]

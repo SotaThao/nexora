@@ -11,6 +11,7 @@ import {
   computeWeekOverWeekChange,
   sumBucketValues,
 } from '../utils/staffEarningsChart'
+import type { EarningsChartPoint } from '../utils/staffEarningsChart'
 
 function getMonthToDateRange() {
   const now = new Date()
@@ -60,7 +61,7 @@ export function useStaffEarningsData(currentLanguage: string) {
   )
   const lastWeekBuckets = useMemo(() => {
     const locale = currentLanguage === 'vi' ? 'vi-VN' : 'en-US'
-    const buckets = []
+    const buckets: EarningsChartPoint[] = []
     const now = new Date()
     for (let offset = 13; offset >= 7; offset -= 1) {
       const day = new Date(now)
