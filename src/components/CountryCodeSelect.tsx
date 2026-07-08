@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { ChevronDown, Search } from 'lucide-react'
 import { useTranslation } from '../contexts/LanguageContext'
 import { isValidPhone } from '../utils/validation'
-import { AsYouType, isPossiblePhoneNumber } from 'libphonenumber-js'
+import { AsYouType, isPossiblePhoneNumber, validatePhoneNumberLength } from 'libphonenumber-js'
 
 /** Narrow gap between phone digit groups in inputs (thinner than a normal space). */
 export const PHONE_GROUP_SEP = '\u2009'
@@ -80,50 +80,31 @@ export const getDefaultDialCode = (appLanguage) => {
 }
 
 export const getMaxNationalDigits = (dialCode: string) => {
-  switch (dialCode) {
-    case '+1': // US/CA
-      return 10
-    case '+84': // VN (includes legacy trunk-0 display mode)
-      return 10
-    case '+44': // GB
-      return 10
-    case '+61': // AU
-      return 9
-    case '+65': // SG
-      return 8
-    case '+81': // JP
-      return 10
-    case '+82': // KR
-      return 10
-    case '+49': // DE
-      return 11
-    case '+33': // FR
-      return 9
-    case '+91': // IN
-      return 10
-    case '+86': // CN
-      return 11
-    case '+55': // BR
-      return 11
-    case '+52': // MX
-      return 10
-    case '+852': // HK
-      return 8
-    case '+886': // TW
-      return 9
-    case '+60': // MY
-      return 10
-    case '+66': // TH
-      return 9
-    case '+63': // PH
-      return 10
-    case '+62': // ID
-      return 11
-    default: {
-      const codeDigits = dialCode.replace(/\D/g, '').length
-      return Math.max(4, Math.min(12, 15 - codeDigits))
+  const fallback = () => {
+    const codeDigits = dialCode.replace(/\D/g, '').length
+    return Math.max(4, Math.min(12, 15 - codeDigits))
+  }
+
+  const country = getCountryByDialCode(dialCode)
+  if (!country?.code) return fallback()
+
+  // Derive the maximum possible national digits from libphonenumber metadata
+  // instead of maintaining a hardcoded per-country switch.
+  let maxDigits = 0
+  for (let length = 4; length <= 15; length += 1) {
+    const probe = `${dialCode}${'9'.repeat(length)}`
+    const result = validatePhoneNumberLength(
+      probe,
+      country.code as import('libphonenumber-js').CountryCode,
+    )
+
+    if (result === 'TOO_LONG') break
+    if (result !== 'INVALID_COUNTRY') {
+      maxDigits = length
     }
   }
+
+  return maxDigits > 0 ? maxDigits : fallback()
 }
 
 export const getE164MaxNationalDigits = (dialCode: string) => {

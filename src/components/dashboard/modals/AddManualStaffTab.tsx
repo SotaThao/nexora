@@ -265,83 +265,87 @@ function AddManualStaffTab({
               {errors.fullName && <p className={fieldErrorClass}>{errors.fullName}</p>}
             </div>
 
-            <div>
-              <label className={`${fieldLabelClass} flex items-center gap-1.5`}>
-                {renderLabel(t('components.dashboard.modals.AddStaffModal.manual_display_nickname'))}
-                <span className="inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-indigo-50 text-[10px] font-black text-indigo-600">
-                  <HelpCircle className="h-3 w-3" />
-                </span>
-              </label>
-              <input
-                className={`rounded-lg px-3 ${inputClass(Boolean(errors.displayNickname))}`}
-                value={displayNickname}
-                onChange={(event) => {
-                  setDisplayNickname(event.target.value)
-                  clearError('displayNickname')
-                }}
-                placeholder={t('components.dashboard.modals.AddStaffModal.manual_display_nickname_placeholder')}
-              />
-              {errors.displayNickname && <p className={fieldErrorClass}>{errors.displayNickname}</p>}
-            </div>
-
-            <div>
-              <label className={fieldLabelClass}>
-                {t('components.dashboard.modals.AddStaffModal.role')}
-              </label>
-              <input
-                className={`rounded-lg px-3 ${inputClass(false)}`}
-                value={position}
-                onChange={(event) => setPosition(event.target.value)}
-                placeholder={t('components.dashboard.modals.AddStaffModal.manual_position_placeholder')}
-              />
-            </div>
-
-            <div>
-              <label className={fieldLabelClass}>
-                {t('components.dashboard.modals.AddStaffModal.manual_phone')}
-              </label>
-              <div className="flex h-10 w-full rounded-lg">
-                <CountryCodeSelect
-                  value={dialCode}
-                  onChange={(nextCode) => {
-                    const formatted = formatNationalNumber(phoneParsed.nationalNumber, nextCode)
-                    setDialCode(nextCode)
-                    setPhone(formatted)
-                    clearError('phone')
-                  }}
-                />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="min-w-0">
+                <label className={`${fieldLabelClass} flex items-center gap-1.5`}>
+                  {renderLabel(t('components.dashboard.modals.AddStaffModal.manual_display_nickname'))}
+                  <span className="inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-indigo-50 text-[10px] font-black text-indigo-600">
+                    <HelpCircle className="h-3 w-3" />
+                  </span>
+                </label>
                 <input
-                  type="tel"
-                  className={`rounded-r-lg px-3 ${inputClass(Boolean(errors.phone), 'border-l-0')}`}
-                  value={formatNationalNumber(phoneParsed.nationalNumber, dialCode)}
+                  className={`rounded-lg px-3 ${inputClass(Boolean(errors.displayNickname))}`}
+                  value={displayNickname}
                   onChange={(event) => {
-                    setPhone(formatNationalNumber(event.target.value, dialCode))
-                    clearError('phone')
+                    setDisplayNickname(event.target.value)
+                    clearError('displayNickname')
                   }}
-                  placeholder={t('components.dashboard.modals.AddStaffModal.manual_phone_placeholder')}
-                  autoComplete="off"
+                  placeholder={t('components.dashboard.modals.AddStaffModal.manual_display_nickname_placeholder')}
+                />
+                {errors.displayNickname && <p className={fieldErrorClass}>{errors.displayNickname}</p>}
+              </div>
+
+              <div className="min-w-0">
+                <label className={fieldLabelClass}>
+                  {t('components.dashboard.modals.AddStaffModal.role')}
+                </label>
+                <input
+                  className={`rounded-lg px-3 ${inputClass(false)}`}
+                  value={position}
+                  onChange={(event) => setPosition(event.target.value)}
+                  placeholder={t('components.dashboard.modals.AddStaffModal.manual_position_placeholder')}
                 />
               </div>
-              {errors.phone && <p className={fieldErrorClass}>{errors.phone}</p>}
             </div>
 
-            <div>
-              <label className={fieldLabelClass}>
-                {t('components.dashboard.modals.AddStaffModal.staff_email')}
-              </label>
-              <input
-                type="email"
-                inputMode="email"
-                autoComplete="email"
-                className={`rounded-lg px-3 ${inputClass(Boolean(errors.email))}`}
-                value={email}
-                onChange={(event) => {
-                  setEmail(event.target.value)
-                  clearError('email')
-                }}
-                placeholder={t('components.dashboard.modals.AddStaffModal.manual_email_placeholder')}
-              />
-              {errors.email && <p className={fieldErrorClass}>{errors.email}</p>}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="min-w-0">
+                <label className={fieldLabelClass}>
+                  {t('components.dashboard.modals.AddStaffModal.manual_phone')}
+                </label>
+                <div className="flex h-10 w-full rounded-lg">
+                  <CountryCodeSelect
+                    value={dialCode}
+                    onChange={(nextCode) => {
+                      const formatted = formatNationalNumber(phoneParsed.nationalNumber, nextCode)
+                      setDialCode(nextCode)
+                      setPhone(formatted)
+                      clearError('phone')
+                    }}
+                  />
+                  <input
+                    type="tel"
+                    className={`rounded-r-lg px-3 ${inputClass(Boolean(errors.phone), 'border-l-0')}`}
+                    value={formatNationalNumber(phoneParsed.nationalNumber, dialCode)}
+                    onChange={(event) => {
+                      setPhone(formatNationalNumber(event.target.value, dialCode))
+                      clearError('phone')
+                    }}
+                    placeholder={t('components.dashboard.modals.AddStaffModal.manual_phone_placeholder')}
+                    autoComplete="off"
+                  />
+                </div>
+                {errors.phone && <p className={fieldErrorClass}>{errors.phone}</p>}
+              </div>
+
+              <div className="min-w-0">
+                <label className={fieldLabelClass}>
+                  {t('components.dashboard.modals.AddStaffModal.staff_email')}
+                </label>
+                <input
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  className={`rounded-lg px-3 ${inputClass(Boolean(errors.email))}`}
+                  value={email}
+                  onChange={(event) => {
+                    setEmail(event.target.value)
+                    clearError('email')
+                  }}
+                  placeholder={t('components.dashboard.modals.AddStaffModal.manual_email_placeholder')}
+                />
+                {errors.email && <p className={fieldErrorClass}>{errors.email}</p>}
+              </div>
             </div>
           </div>
 
