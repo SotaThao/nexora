@@ -18,6 +18,7 @@ export function useTransactions({ enabled: callerEnabled = true } = {}) {
     queryFn: () => transactionsRepository.list(),
     enabled: isOwner && callerEnabled,
     retry: false,
+    refetchOnMount: true,
   })
 }
 
@@ -32,6 +33,7 @@ export function useTransactionsPaginated(
     enabled: isOwner && callerEnabled,
     placeholderData: keepPreviousData,
     retry: false,
+    refetchOnMount: true,
   })
 }
 

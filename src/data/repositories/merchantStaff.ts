@@ -159,6 +159,29 @@ export function normalizeStaffInvite(
   }
 }
 
+/** Map invite list DTO to StaffMember shape for roster/pending UI. */
+export function normalizeInviteToStaffMember(invite: MerchantStaffInvite): StaffMember {
+  const { payoutConfigs, paymentAccounts } = normalizePaymentMethods([], invite.invitedName)
+  return {
+    id: invite.inviteId ?? undefined,
+    inviteId: invite.inviteId,
+    itemType: 'invite',
+    fullName: invite.invitedName,
+    invitedEmail: invite.invitedEmail,
+    invitedPhone: invite.invitedPhone,
+    position: invite.invitedPosition,
+    email: invite.invitedEmail,
+    phone: invite.invitedPhone,
+    status: invite.status === 'Pending' ? 'Pending Setup' : (invite.status ?? 'Pending Setup'),
+    isActive: false,
+    showInTipsFlow: false,
+    flowType: 'Invite',
+    joinedDate: normalizeDateOnly(invite.invitedAt),
+    paymentAccounts,
+    payoutConfigs,
+  }
+}
+
 export function normalizeStaffSearchResult(dto: StaffSearchResultApiDto): StaffSearchResult {
   const paymentMethods: PaymentMethodDto[] = (dto.paymentMethods ?? []).map((method) => {
     const type = method?.type ?? ''

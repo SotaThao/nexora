@@ -27,8 +27,7 @@ export function useDashboardReviews(
     queryFn: () => reviewsRepository.listPaged(query),
     enabled: isOwner && callerEnabled,
     retry: false,
-    staleTime: 30_000,
-    refetchOnMount: false,
+    refetchOnMount: true,
     placeholderData: keepPreviousData,
   })
 }

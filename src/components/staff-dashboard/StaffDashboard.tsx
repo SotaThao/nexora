@@ -6,8 +6,10 @@ import { StaffAccountProvider } from '../../contexts/StaffAccountContext'
 import StaffSidebar from './layout/StaffSidebar'
 import StaffHeader from './layout/StaffHeader'
 import StaffBottomNav from './layout/StaffBottomNav'
+import AppDownloadLinks from '../ui/AppDownloadLinks'
 import { useTranslation } from '../../contexts/LanguageContext'
 import { useStaffPaymentMethods } from '../../data/hooks/useStaffPaymentMethods'
+import { useRefetchStaffMenuQueries } from '../../data/hooks/useRefetchOnMenuChange'
 
 export default function StaffDashboard({ staffId = null, onLogout }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -18,7 +20,8 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
   const [showPayoutBanner, setShowPayoutBanner] = useState(false)
   
   const activeScreen = location.pathname.split('/')[2] || 'home'
-  const mainWidthClass = activeScreen === 'payments'
+  useRefetchStaffMenuQueries(activeScreen)
+  const mainWidthClass = activeScreen === 'payments' || activeScreen === 'earnings'
     ? 'w-full max-w-6xl xl:max-w-7xl'
     : 'max-w-3xl'
   
@@ -63,7 +66,7 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
             onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
             onLogout={onLogout}
           />
-          <main className={`mx-auto ${mainWidthClass} px-4 py-5 pb-28 sm:px-6 lg:pb-10`}>
+          <main className={`mx-auto ${mainWidthClass} px-4 py-5 sm:px-6`}>
             {activeScreen === 'home' && showPayoutBanner && (
               <div className="mb-6 relative overflow-hidden rounded-2xl bg-gradient-to-br from-nexoraBrand/10 via-white to-nexoraBrandSoft border border-nexoraBrand/20 p-6 md:p-8 shadow-sm animate-fadeIn">
                 <div className="absolute -right-10 -top-10 opacity-10">
@@ -102,6 +105,14 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
             )}
             <Outlet context={{ onNavigate: handleNavigate, onLogout }} />
           </main>
+          <footer className="mb-20 border-t border-nexoraBorder bg-white px-3 py-3 sm:px-6 lg:mb-0 lg:px-7 lg:py-4">
+            <div className="flex flex-nowrap items-center justify-between gap-2 text-left">
+              <p className="min-w-0 flex-1 truncate text-xs font-medium text-slate-700 sm:text-sm">{t('dashboard.footer.copyright')}</p>
+              <div className="shrink-0">
+                <AppDownloadLinks />
+              </div>
+            </div>
+          </footer>
         </div>
 
         <StaffBottomNav activeScreen={activeScreen} onNavigate={handleNavigate} />

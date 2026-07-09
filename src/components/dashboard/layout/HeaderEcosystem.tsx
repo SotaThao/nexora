@@ -120,7 +120,9 @@ export default function HeaderEcosystem() {
                 {t('dashboard.header.ecosystem_loading')}
               </div>
             ) : (
-              <div className="grid w-full grid-cols-3 justify-items-center gap-x-2.5 gap-y-3 sm:gap-x-3 sm:gap-y-3.5 md:grid-cols-[repeat(auto-fill,minmax(104px,1fr))] md:gap-3">
+              <div
+                className="grid w-full grid-cols-3 justify-items-center gap-x-2 gap-y-3 sm:gap-x-2.5 md:grid-cols-[repeat(auto-fill,minmax(104px,1fr))] md:gap-3"
+              >
                 {catalogItems.map((ecosystem) => {
                   const comingSoon = isComingSoonEcosystem(ecosystem)
                   const processing = selectedName === ecosystem.name
@@ -139,16 +141,18 @@ export default function HeaderEcosystem() {
                         cursor: comingSoon ? 'not-allowed' : undefined,
                         pointerEvents: comingSoon ? 'none' : undefined,
                       }}
-                      className={`group relative flex w-full max-w-[96px] shrink-0 flex-col items-center justify-start border-none bg-transparent p-0 text-center transition-transform duration-150 sm:max-w-[104px] md:max-w-[112px] ${
+                      className={`group relative flex w-full max-w-[108px] shrink-0 flex-col items-center justify-start border-none bg-transparent p-0 text-center transition-transform duration-150 sm:max-w-[112px] md:max-w-[112px] md:justify-self-center ${
                         processing ? 'pointer-events-none opacity-85' : ''
                       } ${pulseName === ecosystem.name ? 'animate-eco-pulse' : ''}`}
                     >
-                      <span className="relative flex size-[80px] shrink-0 items-center justify-center rounded-lg border border-transparent bg-white p-1 transition group-hover:border-[#bfdbfe] group-hover:bg-[#f8fbff] group-hover:shadow-[0_2px_8px_rgba(59,130,246,0.1)] group-focus-visible:border-[#bfdbfe] group-focus-visible:bg-[#f8fbff] group-focus-visible:shadow-[0_2px_8px_rgba(59,130,246,0.1)] sm:size-[92px] sm:rounded-xl sm:p-1.5 md:size-[104px]">
+                      <span className="eco-logo-tile relative flex size-[96px] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-transparent bg-white p-1 transition group-hover:border-[#bfdbfe] group-hover:bg-[#f8fbff] group-hover:shadow-[0_2px_8px_rgba(59,130,246,0.1)] group-focus-visible:border-[#bfdbfe] group-focus-visible:bg-[#f8fbff] group-focus-visible:shadow-[0_2px_8px_rgba(59,130,246,0.1)] sm:size-[100px] md:size-[104px] md:p-1.5">
                         <img
                           src={ecosystem.logoUrl}
                           alt={ecosystem.name}
+                          loading="eager"
+                          decoding="async"
                           onError={handleLogoError}
-                          className="block size-[68px] shrink-0 object-contain transition group-hover:scale-[1.02] group-focus-visible:scale-[1.02] sm:size-[80px] md:size-[88px]"
+                          className="eco-logo-img"
                         />
                         {processing && (
                           <span className="absolute inset-0 flex items-center justify-center rounded-lg bg-white/85">

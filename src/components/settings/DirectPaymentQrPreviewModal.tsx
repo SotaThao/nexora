@@ -1,7 +1,14 @@
+import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Printer, ShieldCheck, X } from 'lucide-react'
+import { Download, Loader2, Printer, ShieldCheck, X } from 'lucide-react'
 import { useTranslation } from '../../contexts/LanguageContext'
+import { useNotification } from '../../contexts/NotificationContext'
 import { buildPublicQrImageUrl } from '../../data/repositories/publicQr'
+import { downloadQrCode } from '../../utils/qrUtils'
+import QrImage from '../ui/QrImage'
+
+const slugify = (value = '') =>
+  value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'qr'
 
 export default function DirectPaymentQrPreviewModal({
   open,
@@ -14,26 +21,50 @@ export default function DirectPaymentQrPreviewModal({
   scanCaption,
 }) {
   const { t } = useTranslation()
+  const { showToast } = useNotification()
+  const [isSaving, setIsSaving] = useState(false)
 
   if (!open || !previewQrUrl || typeof document === 'undefined') return null
 
   const displayUrl = paymentPageUrl?.replace(/^https?:\/\//, '') ?? ''
   const qrImageSrc = paymentPageUrl ? buildPublicQrImageUrl(paymentPageUrl, 1000) : previewQrUrl
 
+  const handleDownload = async () => {
+    if (isSaving) return
+
+    setIsSaving(true)
+    try {
+      const safeName = slugify(title || 'payment-qr')
+      await downloadQrCode(qrImageSrc, `${safeName}.png`)
+      showToast(t('components.SettingsView.qrCodeDownloaded'), 'success')
+    } catch {
+      showToast(t('common.error'), 'error')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-nexoraText/70 p-4 backdrop-blur-sm qr-modal-backdrop">
-      <div className="relative w-full max-w-sm rounded-xl bg-white px-6 pb-6 pt-12 text-center shadow-2xl animate-scaleUp qr-modal-container">
+    <div
+      className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-nexoraText/70 modal-overlay-safe backdrop-blur-sm sm:items-center qr-modal-backdrop"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-md rounded-xl bg-white px-6 pb-6 pt-12 text-center shadow-2xl animate-scaleUp qr-modal-container"
+        onClick={(event) => event.stopPropagation()}
+      >
         <button
           type="button"
           onClick={onClose}
-          className="no-print absolute right-4 top-4 rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+          className="no-print modal-close-btn absolute right-2 top-2 rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
           title="Close"
+          aria-label="Close"
         >
           <X className="h-5 w-5" />
         </button>
 
-        <div className="mx-auto flex w-72 flex-col items-center gap-5 rounded-2xl border border-nexoraBorder/80 bg-nexoraCanvas px-6 py-7 text-nexoraText shadow-md qr-print-card qr-print-card--payment">
-          <div className="flex items-center justify-center gap-2 qr-print-brand-header">
+        <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-3.5 rounded-2xl border border-nexoraBorder/80 bg-nexoraCanvas px-4 py-5 text-nexoraText shadow-md qr-print-card qr-print-card--payment">
+          <div className="flex items-center justify-center gap-1.5 qr-print-brand-header">
             <img
               src="/assets/nexora-logo.png"
               alt="Nexora Logo"
@@ -42,15 +73,15 @@ export default function DirectPaymentQrPreviewModal({
             <span className="text-sm font-black tracking-wider text-slate-800 qr-print-brand-text">NEXORA</span>
           </div>
 
-          <div className="flex h-64 w-64 shrink-0 items-center justify-center rounded-xl border border-nexoraBorder/60 bg-white p-4 shadow-inner qr-print-qr-wrapper">
-            <img
+          <div className="flex aspect-square w-full max-w-[14.5rem] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-nexoraBorder/60 bg-white p-2.5 shadow-inner qr-print-qr-wrapper">
+            <QrImage
               src={qrImageSrc}
               alt={title}
-              className="h-full w-full object-contain qr-print-qr-image"
+              className="h-full w-full max-h-full max-w-full qr-print-qr-image"
             />
           </div>
 
-          <p className="max-w-[14rem] text-center text-xs font-extrabold uppercase leading-snug tracking-wide text-nexoraMuted qr-print-scan-text">
+          <p className="max-w-[19rem] text-center text-[9px] font-extrabold uppercase leading-snug tracking-wide text-nexoraMuted qr-print-scan-text">
             {scanCaption}
           </p>
 
@@ -66,14 +97,25 @@ export default function DirectPaymentQrPreviewModal({
           </p>
         ) : null}
 
-        <button
-          type="button"
-          onClick={() => window.print()}
-          className="no-print mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-4 py-2.5 text-xs font-bold text-white transition hover:bg-opacity-90"
-        >
-          <Printer className="h-4 w-4" />
-          {t('dashboard.modals.print_qr')}
-        </button>
+        <div className="no-print mt-5 space-y-2">
+          <button
+            type="button"
+            onClick={() => void handleDownload()}
+            disabled={isSaving}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-nexoraBrand px-4 py-2.5 text-xs font-bold text-white transition hover:bg-opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            {t('dashboard.master_gateway.btn_download')}
+          </button>
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-nexoraBorder bg-nexoraCanvas px-4 py-2.5 text-xs font-bold text-nexoraText transition hover:bg-nexoraSurfaceMuted"
+          >
+            <Printer className="h-4 w-4" />
+            {t('dashboard.modals.print_qr')}
+          </button>
+        </div>
       </div>
     </div>,
     document.body,

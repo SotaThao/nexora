@@ -25,11 +25,16 @@ export default function TipsOverviewTab({
   donutSegments,
 }) {
   const { t, currentLanguage } = useTranslation();
+  const hasCrypto = cryptoTips > 0;
 
   return (
     <div className="space-y-6">
       {/* Overview Cards Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div
+        className={`grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 ${
+          hasCrypto ? 'xl:grid-cols-4' : ''
+        }`}
+      >
         <div className="card-elevated flex items-center justify-between">
           <div>
             <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
@@ -58,15 +63,12 @@ export default function TipsOverviewTab({
               {t('dashboard.tips.kpi.card_tips')}
             </small>
             <h3 className="mt-1 text-2xl font-black text-inkBlue dark:text-white">{formatUSD(cardTips)}</h3>
-            <p className="mt-0.5 text-[11px] font-semibold text-mutedGrey dark:text-slate-400">
-              {t('dashboard.tips.kpi.card_tips_sub')}
-            </p>
           </div>
           <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-white/5 text-mutedGrey">
             <DollarSign className="h-5 w-5" />
           </div>
         </div>
-        {cryptoTips > 0 && (
+        {hasCrypto && (
           <div className="card-elevated flex items-center justify-between">
             <div>
               <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
