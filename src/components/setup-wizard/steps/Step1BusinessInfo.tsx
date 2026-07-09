@@ -261,10 +261,14 @@ export default function Step1BusinessInfo({
               <input
                 type="url"
                 placeholder={t('components.setup_wizard.steps.Step1BusinessInfo.phFacebookUrl')}
-                className="w-full bg-white border border-nexoraBorder focus:border-nexoraBrand rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all"
+                className={`w-full bg-white border ${errors.facebookReview ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'} rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
                 value={reviewLinks.facebookReview}
-                onChange={(e) => setReviewLinks({ ...reviewLinks, facebookReview: e.target.value })}
+                onChange={(e) => {
+                  setReviewLinks({ ...reviewLinks, facebookReview: e.target.value })
+                  if (errors.facebookReview) setErrors({ ...errors, facebookReview: '' })
+                }}
               />
+              {errors.facebookReview && <span className="text-xs text-red-500 mt-1 block">{t(errors.facebookReview)}</span>}
             </div>
 
             <div>

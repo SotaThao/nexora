@@ -9,6 +9,17 @@ import Pagination from '../../ui/Pagination'
 import { STAFF_REVIEWS_SKELETON } from '../skeletons/staffDashboardSkeletons'
 
 const PAGE_SIZE = 20
+const STAR_VALUES = [1, 2, 3, 4, 5] as const
+const RATING_LEVELS = [5, 4, 3, 2, 1] as const
+const LOW_RATING_THRESHOLD = 2
+
+const panel = 'rounded-2xl border border-nexoraBorder bg-nexoraSurface p-4 shadow-sm'
+
+const REVIEW_REPLY_FIELD_AVAILABLE = false
+
+type ReviewFilter = 'all' | 'needsReply'
+type RatingLevel = (typeof RATING_LEVELS)[number]
+type StarCounts = Record<RatingLevel, number>
 
 function formatRelativeReviewDate(
   iso: string | null | undefined,
@@ -76,6 +87,7 @@ function ReviewCard({
   t: (key: string, variables?: TranslationVariables) => string
 }) {
   const customerLabel = review.customerName?.trim() || anonymousLabel
+  const avatarInitial = customerLabel.charAt(0).toUpperCase()
 
   return (
     <article className="rounded-2xl border border-[#E8EBF5] bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
@@ -131,6 +143,7 @@ function RatingDistributionRow({
 export default function StaffReviews() {
   const { t } = useTranslation()
   const [pageNumber, setPageNumber] = useState(1)
+  const [activeFilter, setActiveFilter] = useState<ReviewFilter>('all')
   const {
     data: reviewsPage = null,
     isPending,
@@ -143,7 +156,7 @@ export default function StaffReviews() {
   const totalReviews = summary?.totalReviews ?? 0
   const distribution = summary?.distribution
 
-  const starCounts = {
+  const starCounts: StarCounts = {
     5: distribution?.star5 ?? 0,
     4: distribution?.star4 ?? 0,
     3: distribution?.star3 ?? 0,
@@ -159,6 +172,18 @@ export default function StaffReviews() {
   if (isPending && !reviewsPage) {
     return <SkeletonLayout blocks={STAFF_REVIEWS_SKELETON} />
   }
+
+  const filterTabs: { id: ReviewFilter; labelKey: string }[] = [
+    { id: 'all', labelKey: 'allReviews' },
+    { id: 'needsReply', labelKey: 'needsReply' },
+  ]
+
+  // "Needs Reply" is disabled while REVIEW_REPLY_FIELD_AVAILABLE is false (see
+  // that flag's definition), so this branch can't be reached from the UI yet.
+  // If the flag is ever flipped on before real filtering is wired up, show an
+  // empty list rather than silently rendering every review as "unanswered".
+  const visibleReviews =
+    activeFilter === 'needsReply' && !REVIEW_REPLY_FIELD_AVAILABLE ? [] : staffReviews
 
   return (
     <div className="space-y-5">

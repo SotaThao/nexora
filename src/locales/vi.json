@@ -2806,7 +2806,10 @@
           "anonymousCustomer": "Khách hàng ẩn danh",
           "ratingOnly": "Chỉ có điểm — không có bình luận.",
           "pageOf": "Trang {{page}} / {{total}}",
-          "internal": "Danh tính khách hàng được bảo vệ. Bạn chỉ thấy điểm và phản hồi."
+          "internal": "Danh tính khách hàng được bảo vệ. Bạn chỉ thấy điểm và phản hồi.",
+          "allReviews": "Tất cả đánh giá",
+          "needsReply": "Cần phản hồi",
+          "needsReplyUnavailable": "Sắp ra mắt"
         }
       }
     },

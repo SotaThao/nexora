@@ -2814,7 +2814,10 @@
           "anonymousCustomer": "Anonymous Customer",
           "ratingOnly": "Rating only — no comment.",
           "pageOf": "Page {{page}} of {{total}}",
-          "internal": "Customer identities are protected. You see ratings and feedback only."
+          "internal": "Customer identities are protected. You see ratings and feedback only.",
+          "allReviews": "All Reviews",
+          "needsReply": "Needs Reply",
+          "needsReplyUnavailable": "Coming soon"
         }
       }
     },
