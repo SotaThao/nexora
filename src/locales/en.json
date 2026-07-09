@@ -3252,6 +3252,7 @@
     "readinessItems": {
       "missingW9": "Missing W-9 for 1099 contractor: {{name}} — collect before issuing Form 1099-NEC",
       "payoutDispute": "Unresolved payout dispute with {{name}}",
+      "payoutCpaReview": "Payout awaiting CPA review for {{name}}",
       "giftCardLiability": "Gift Card figures don't match — needs review before Final Export",
       "membershipCredit": "Membership Credit figures don't match — needs review before Final Export",
       "overdueTax": "{{taxType}} tax payment is overdue — proof of payment required",
@@ -3516,7 +3517,8 @@
           "inServiceDate": "In-Service Date",
           "amount": "Amount",
           "businessUsePercent": "Business-Use %",
-          "aiSuggestion": "AI Suggestion"
+          "aiSuggestion": "AI Suggestion",
+          "actions": "Actions"
         },
         "tooltips": {
           "inServiceDate": "The date the equipment actually started being used at the salon (not the purchase date). Required for Depreciate / Section 179 suggestions.",
@@ -3560,7 +3562,8 @@
           "totalRedeemed": "Total Redeemed",
           "outstandingBalance": "Outstanding Balance",
           "dataSource": "Data Source",
-          "status": "Status"
+          "status": "Status",
+          "actions": "Actions"
         },
         "tooltips": {
           "outstandingBalance": "Gift cards sold but not yet redeemed (Total Sold − Total Redeemed). This is money you still owe customers — a liability, not revenue.",
@@ -3591,7 +3594,8 @@
           "creditsUsed": "Credits Used",
           "creditsExpired": "Credits Expired",
           "expiryPolicy": "Expiry Policy",
-          "status": "Status"
+          "status": "Status",
+          "actions": "Actions"
         },
         "tooltips": {
           "credits": "Membership credits added, spent, and lapsed in the period. Unused credits are deferred revenue — not income until used.",
@@ -3862,6 +3866,8 @@
       "historySubtitle": "All changes submitted after locking this tax year.",
       "addButton": "Create Adjustment",
       "disabledNotLocked": "Adjustments can only be created while the tax year is locked.",
+      "rowActionLabel": "Adjust",
+      "rowActionTooltip": "Create an adjustment for this record (post-lock correction)",
       "entityTypeLabel": "Entity type",
       "fieldNameLabel": "Field",
       "entityIdLabel": "Entity ID",
@@ -3870,8 +3876,9 @@
       "newValueLabel": "New value",
       "reasonLabel": "Reason",
       "cpaNotesLabel": "CPA notes (optional)",
-      "receiptIdLabel": "Receipt ID (optional)",
-      "receiptIdPlaceholder": "Existing receipt ID, if any",
+      "receiptIdLabel": "Receipt (optional)",
+      "receiptNoneOption": "No receipt",
+      "receiptEmptyOption": "No receipts uploaded for this tax year",
       "submitButton": "Submit Adjustment",
       "success": "Adjustment created.",
       "emptyState": "No adjustments yet.",

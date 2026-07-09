@@ -3251,6 +3251,7 @@
     "readinessItems": {
       "missingW9": "Thiếu W-9 cho thợ 1099: {{name}} — cần thu thập trước khi phát hành Form 1099-NEC",
       "payoutDispute": "Tranh chấp payout chưa giải quyết với {{name}}",
+      "payoutCpaReview": "Payout chờ CPA xem xét cho {{name}}",
       "giftCardLiability": "Số liệu Gift Card có sai lệch — cần xem xét trước Final Export",
       "membershipCredit": "Số liệu Membership Credit có sai lệch — cần xem xét trước Final Export",
       "overdueTax": "Khoản thuế {{taxType}} đã quá hạn — cần bằng chứng thanh toán",
@@ -3515,7 +3516,8 @@
           "inServiceDate": "Ngày Đưa Vào Sử Dụng",
           "amount": "Số Tiền",
           "businessUsePercent": "Tỷ Lệ Kinh Doanh %",
-          "aiSuggestion": "Gợi Ý AI"
+          "aiSuggestion": "Gợi Ý AI",
+          "actions": "Hành Động"
         },
         "tooltips": {
           "inServiceDate": "Ngày thiết bị thực sự đưa vào sử dụng tại tiệm (khác ngày mua). Bắt buộc để AI gợi ý Khấu Hao / Section 179 chính xác.",
@@ -3559,7 +3561,8 @@
           "totalRedeemed": "Tổng Đã Đổi",
           "outstandingBalance": "Số Dư Chưa Dùng",
           "dataSource": "Nguồn Dữ Liệu",
-          "status": "Trạng Thái"
+          "status": "Trạng Thái",
+          "actions": "Hành Động"
         },
         "tooltips": {
           "outstandingBalance": "Gift card đã bán nhưng khách chưa dùng (Tổng bán − Tổng đã đổi). Đây là khoản tiệm còn nợ khách — là nợ phải trả, không phải doanh thu.",
@@ -3590,7 +3593,8 @@
           "creditsUsed": "Credit Đã Dùng",
           "creditsExpired": "Credit Đã Hết Hạn",
           "expiryPolicy": "Chính Sách Hết Hạn",
-          "status": "Trạng Thái"
+          "status": "Trạng Thái",
+          "actions": "Hành Động"
         },
         "tooltips": {
           "credits": "Số credit membership đã cấp, đã dùng và đã hết hạn trong kỳ. Credit chưa dùng là doanh thu chưa thực hiện — chưa tính là thu nhập.",
@@ -3861,6 +3865,8 @@
       "historySubtitle": "Tất cả thay đổi được tạo sau khi khóa năm thuế này.",
       "addButton": "Tạo Adjustment",
       "disabledNotLocked": "Chỉ có thể tạo Adjustment khi năm thuế đang ở trạng thái đã khóa.",
+      "rowActionLabel": "Điều chỉnh",
+      "rowActionTooltip": "Tạo adjustment cho bản ghi này (chỉnh sửa sau khi khóa)",
       "entityTypeLabel": "Loại đối tượng",
       "fieldNameLabel": "Trường dữ liệu",
       "entityIdLabel": "ID đối tượng",
@@ -3869,8 +3875,9 @@
       "newValueLabel": "Giá trị mới",
       "reasonLabel": "Lý do",
       "cpaNotesLabel": "Ghi chú CPA (tùy chọn)",
-      "receiptIdLabel": "Receipt ID (tùy chọn)",
-      "receiptIdPlaceholder": "ID chứng từ đã có sẵn, nếu có",
+      "receiptIdLabel": "Chứng từ (tùy chọn)",
+      "receiptNoneOption": "Không có chứng từ",
+      "receiptEmptyOption": "Chưa có chứng từ nào được tải lên cho năm thuế này",
       "submitButton": "Gửi Adjustment",
       "success": "Đã tạo Adjustment.",
       "emptyState": "Chưa có Adjustment nào.",

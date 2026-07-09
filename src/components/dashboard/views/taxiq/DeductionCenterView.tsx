@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Camera, CheckCircle2, Loader2, Lock, Paperclip, Pencil, Plus, RefreshCw } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Camera, CheckCircle2, Loader2, Lock, Paperclip, Pencil, Plus, RefreshCw, Wrench } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { useTaxiqDeductionCategories } from '../../../../data/hooks/useTaxiqDeductionCategories'
@@ -30,16 +31,20 @@ const EDITABLE_STATUSES = new Set(['Draft', 'MissingReceipt', 'MissingInfo'])
 export default function DeductionCenterView({
   scope = 'owner',
   ownerTaxYearId,
+  ownerTaxYearStatus,
   staffTaxYearId,
 }: {
   scope?: 'owner' | 'staff'
   ownerTaxYearId?: string
+  ownerTaxYearStatus?: string
   staffTaxYearId?: string
 }) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
+  const navigate = useNavigate()
 
   const isStaff = scope === 'staff'
+  const canAdjust = !isStaff && (ownerTaxYearStatus === 'Locked' || ownerTaxYearStatus === 'Exported')
 
   const [statusFilter, setStatusFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
@@ -277,6 +282,19 @@ export default function DeductionCenterView({
                           >
                             {isBusy ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />}
                             {t('taxiq.deductionCenter.actions.approve')}
+                          </button>
+                        )}
+                        {canAdjust && (
+                          <button
+                            type="button"
+                            onClick={() => navigate('/dashboard/taxiq/export', {
+                              state: { prefillAdjustment: { entityType: 'DeductionRecord', entityId: record.id } },
+                            })}
+                            title={t('taxiq.createAdjustment.rowActionTooltip')}
+                            className="inline-flex items-center gap-1 text-[11px] font-bold text-nexoraBrand hover:underline"
+                          >
+                            <Wrench className="h-3 w-3" />
+                            {t('taxiq.createAdjustment.rowActionLabel')}
                           </button>
                         )}
                       </div>

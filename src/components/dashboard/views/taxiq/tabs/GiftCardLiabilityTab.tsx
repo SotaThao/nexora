@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Loader2, Plus, X } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Loader2, Plus, Wrench, X } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
 import { useCreateGiftCardLiability, useTaxiqOwnerGiftCardLiabilities } from '../../../../../data/hooks/useTaxiqOwnerAssets'
@@ -27,14 +28,17 @@ interface FormErrors {
 export default function GiftCardLiabilityTab({
   ownerTaxYearId,
   isLocked,
+  canAdjust,
   onLockedError,
 }: {
   ownerTaxYearId: string
   isLocked: boolean
+  canAdjust: boolean
   onLockedError: () => void
 }) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
+  const navigate = useNavigate()
   const listQuery = useTaxiqOwnerGiftCardLiabilities(ownerTaxYearId)
   const createLiability = useCreateGiftCardLiability()
 
@@ -146,18 +150,19 @@ export default function GiftCardLiabilityTab({
                 </span>
               </th>
               <th className="px-4 py-3">{t('taxiq.assetsTracker.giftCard.columns.status')}</th>
+              {canAdjust && <th className="px-4 py-3 text-right">{t('taxiq.assetsTracker.giftCard.columns.actions')}</th>}
             </tr>
           </thead>
           <tbody>
             {listQuery.isPending ? (
               <tr>
-                <td colSpan={6} className="p-4">
+                <td colSpan={canAdjust ? 7 : 6} className="p-4">
                   <SkeletonList count={4} lines={1} />
                 </td>
               </tr>
             ) : items.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center font-medium text-nexoraMuted">
+                <td colSpan={canAdjust ? 7 : 6} className="px-4 py-8 text-center font-medium text-nexoraMuted">
                   {t('taxiq.assetsTracker.giftCard.emptyState')}
                 </td>
               </tr>
@@ -170,6 +175,21 @@ export default function GiftCardLiabilityTab({
                   <td className="px-4 py-3 font-extrabold text-nexoraText">{formatCurrency(item.outstandingBalance)}</td>
                   <td className="px-4 py-3 text-nexoraMuted">{item.dataSource || '—'}</td>
                   <td className="px-4 py-3"><AssetStatusBadge status={item.status} /></td>
+                  {canAdjust && (
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        type="button"
+                        onClick={() => navigate('/dashboard/taxiq/export', {
+                          state: { prefillAdjustment: { entityType: 'GiftCardLiability', entityId: item.id } },
+                        })}
+                        title={t('taxiq.createAdjustment.rowActionTooltip')}
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-nexoraBrand hover:underline"
+                      >
+                        <Wrench className="h-3 w-3" />
+                        {t('taxiq.createAdjustment.rowActionLabel')}
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))
             )}

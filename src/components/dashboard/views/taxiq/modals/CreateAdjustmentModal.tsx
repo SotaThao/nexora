@@ -5,6 +5,7 @@ import Tooltip from '../../../../ui/Tooltip'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
 import { useCreateOwnerAdjustment } from '../../../../../data/hooks/useTaxiqOwnerTaxYearLock'
+import { useTaxiqReceipts } from '../../../../../data/hooks/useTaxiqReceipts'
 import { ADJUSTMENT_ENTITY_FIELD_MAP } from '../../../../../data/repositories/taxiqOwnerAdjustments'
 import { isApiError } from '../../../../../types/domain'
 import { getErrorI18nKey } from '../../../../../data/errorCodes'
@@ -46,6 +47,8 @@ export default function CreateAdjustmentModal({
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const createAdjustment = useCreateOwnerAdjustment()
+  const receiptsQuery = useTaxiqReceipts(open ? { ownerTaxYearId } : undefined)
+  const receipts = receiptsQuery.data ?? []
 
   const [entityType, setEntityType] = useState(ENTITY_TYPES[0])
   const [entityId, setEntityId] = useState('')
@@ -232,13 +235,22 @@ export default function CreateAdjustmentModal({
             <label className="mb-1 block text-xs font-bold text-nexoraMuted">
               {t('taxiq.createAdjustment.receiptIdLabel')}
             </label>
-            <input
-              type="text"
+            <select
               value={receiptId}
               onChange={(e) => setReceiptId(e.target.value)}
-              placeholder={t('taxiq.createAdjustment.receiptIdPlaceholder')}
-              className="w-full rounded-lg border border-nexoraBorder px-3 py-2 text-sm"
-            />
+              disabled={receiptsQuery.isLoading}
+              className="w-full rounded-lg border border-nexoraBorder px-3 py-2 text-xs font-semibold disabled:opacity-60"
+            >
+              <option value="">{t('taxiq.createAdjustment.receiptNoneOption')}</option>
+              {receipts.length === 0 && !receiptsQuery.isLoading && (
+                <option value="" disabled>{t('taxiq.createAdjustment.receiptEmptyOption')}</option>
+              )}
+              {receipts.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.fileName}{r.aiExtractedVendor ? ` — ${r.aiExtractedVendor}` : ''}
+                </option>
+              ))}
+            </select>
           </div>
 
           {error && <p className="text-xs font-semibold text-rose-600">{error}</p>}

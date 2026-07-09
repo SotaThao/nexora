@@ -23,6 +23,7 @@ const RING_COLOR_BAD = '#f43f5e' // rose-500
 export const READINESS_ITEM_ROUTES: Record<string, string> = {
   MissingW9: '/dashboard/taxiq/payroll',
   PayoutDispute: '/dashboard/taxiq/payroll',
+  PayoutCpaReview: '/dashboard/taxiq/payroll',
   GiftCardLiability: '/dashboard/taxiq/equipment',
   MembershipCredit: '/dashboard/taxiq/equipment',
   OverdueTax: '/dashboard/taxiq/reminders',
@@ -41,6 +42,7 @@ export const READINESS_ITEM_ROUTES: Record<string, string> = {
 const READINESS_ITEM_I18N_KEYS: Record<string, string> = {
   MissingW9: 'taxiq.readinessItems.missingW9',
   PayoutDispute: 'taxiq.readinessItems.payoutDispute',
+  PayoutCpaReview: 'taxiq.readinessItems.payoutCpaReview',
   GiftCardLiability: 'taxiq.readinessItems.giftCardLiability',
   MembershipCredit: 'taxiq.readinessItems.membershipCredit',
   OverdueTax: 'taxiq.readinessItems.overdueTax',

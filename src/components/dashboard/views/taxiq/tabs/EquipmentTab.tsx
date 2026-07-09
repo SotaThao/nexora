@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { AlertTriangle, Loader2, Paperclip, Plus, X } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { AlertTriangle, Loader2, Paperclip, Plus, Wrench, X } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
 import { useUploadTaxiqReceipt } from '../../../../../data/hooks/useTaxiqReceipts'
@@ -24,14 +25,17 @@ interface FormErrors {
 export default function EquipmentTab({
   ownerTaxYearId,
   isLocked,
+  canAdjust,
   onLockedError,
 }: {
   ownerTaxYearId: string
   isLocked: boolean
+  canAdjust: boolean
   onLockedError: () => void
 }) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
+  const navigate = useNavigate()
   const listQuery = useTaxiqOwnerEquipment(ownerTaxYearId)
   const createEquipment = useCreateEquipmentAsset()
   const uploadReceipt = useUploadTaxiqReceipt()
@@ -167,18 +171,19 @@ export default function EquipmentTab({
                   <Tooltip content={t('taxiq.assetsTracker.equipment.tooltips.aiSuggestion')} />
                 </span>
               </th>
+              {canAdjust && <th className="px-4 py-3 text-right">{t('taxiq.assetsTracker.equipment.columns.actions')}</th>}
             </tr>
           </thead>
           <tbody>
             {listQuery.isPending ? (
               <tr>
-                <td colSpan={6} className="p-4">
+                <td colSpan={canAdjust ? 7 : 6} className="p-4">
                   <SkeletonList count={4} lines={1} />
                 </td>
               </tr>
             ) : items.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center font-medium text-nexoraMuted">
+                <td colSpan={canAdjust ? 7 : 6} className="px-4 py-8 text-center font-medium text-nexoraMuted">
                   {t('taxiq.assetsTracker.equipment.emptyState')}
                 </td>
               </tr>
@@ -206,6 +211,21 @@ export default function EquipmentTab({
                       <span className="text-[10px] text-nexoraMuted">{t(equipmentAiSuggestionExplanationKey(item.aiSuggestion))}</span>
                     </div>
                   </td>
+                  {canAdjust && (
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        type="button"
+                        onClick={() => navigate('/dashboard/taxiq/export', {
+                          state: { prefillAdjustment: { entityType: 'EquipmentAsset', entityId: item.id } },
+                        })}
+                        title={t('taxiq.createAdjustment.rowActionTooltip')}
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-nexoraBrand hover:underline"
+                      >
+                        <Wrench className="h-3 w-3" />
+                        {t('taxiq.createAdjustment.rowActionLabel')}
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))
             )}

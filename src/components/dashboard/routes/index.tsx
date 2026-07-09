@@ -395,7 +395,7 @@ export function TaxIqDeductionsRoute() {
     )
   }
 
-  return <DeductionCenterView ownerTaxYearId={ownerTaxYear.id} />
+  return <DeductionCenterView ownerTaxYearId={ownerTaxYear.id} ownerTaxYearStatus={ownerTaxYear.status} />
 }
 export function TaxIqReceiptsRoute() {
   const { t } = useTranslation()

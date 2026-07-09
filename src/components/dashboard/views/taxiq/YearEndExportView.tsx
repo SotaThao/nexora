@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Download, FilePlus2, Loader2, Lock, PlusCircle } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
@@ -16,7 +16,14 @@ import Tooltip from '../../../ui/Tooltip'
 import { formatTransactionDateTime } from '../../utils'
 import TaxReadinessScoreWidget, { getReadinessItemLabel, READINESS_ITEM_ROUTES } from './shared/TaxReadinessScoreWidget'
 import LockTaxYearModal from './modals/LockTaxYearModal'
-import CreateAdjustmentModal from './modals/CreateAdjustmentModal'
+import CreateAdjustmentModal, { type CreateAdjustmentPrefill } from './modals/CreateAdjustmentModal'
+
+// Source screens (Deduction Center, Payout Center, Assets Tracker) navigate here with this
+// router state to deep-link straight into Create Adjustment for a specific record, instead of
+// making the Owner retype the entity ID by hand.
+export interface AdjustmentNavigationState {
+  prefillAdjustment?: CreateAdjustmentPrefill
+}
 
 function ExportResultCard({ pkg, label }: { pkg: ExportPackage; label: string }) {
   const { t } = useTranslation()
@@ -50,6 +57,7 @@ export default function YearEndExportView({
   const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const readinessQuery = useTaxiqReadinessScore('owner', ownerTaxYear.id)
   const highPriorityItems = readinessQuery.data?.highPriorityItems ?? []
@@ -58,16 +66,28 @@ export default function YearEndExportView({
   const canLock = highPriorityItems.length === 0 || onlyDisputeRemaining
 
   const isLockedOrExported = ownerTaxYear.status === 'Locked' || ownerTaxYear.status === 'Exported'
-  // Backend only allows adjustments while Status is exactly Locked — once the
-  // first Final Export flips status to Exported, creating adjustments always
-  // fails (TAXIQ_OWNER_TAX_YEAR_NOT_LOCKED). See US-06 assumptions doc (A5).
-  const canCreateAdjustment = ownerTaxYear.status === 'Locked'
+  const canCreateAdjustment = isLockedOrExported
 
   const [isLockModalOpen, setIsLockModalOpen] = useState(false)
   const [isAdjustmentModalOpen, setIsAdjustmentModalOpen] = useState(false)
+  const [adjustmentPrefill, setAdjustmentPrefill] = useState<CreateAdjustmentPrefill | null>(null)
   const [draftResult, setDraftResult] = useState<ExportPackage | null>(null)
   const [finalResult, setFinalResult] = useState<FinalExportResult | null>(null)
   const [consentConfirmed, setConsentConfirmed] = useState(false)
+
+  useEffect(() => {
+    const prefill = (location.state as AdjustmentNavigationState | null)?.prefillAdjustment
+    if (!prefill || !canCreateAdjustment) return
+    setAdjustmentPrefill(prefill)
+    setIsAdjustmentModalOpen(true)
+    // Clear the router state so navigating back to this page later doesn't reopen the modal.
+    navigate(location.pathname, { replace: true, state: null })
+  }, [location, navigate, canCreateAdjustment])
+
+  const closeAdjustmentModal = () => {
+    setIsAdjustmentModalOpen(false)
+    setAdjustmentPrefill(null)
+  }
 
   const generateDraft = useGenerateDraftExport()
   const generateFinal = useGenerateFinalExport()
@@ -303,8 +323,9 @@ export default function YearEndExportView({
 
       <CreateAdjustmentModal
         open={isAdjustmentModalOpen}
-        onClose={() => setIsAdjustmentModalOpen(false)}
+        onClose={closeAdjustmentModal}
         ownerTaxYearId={ownerTaxYear.id}
+        prefill={adjustmentPrefill}
       />
     </div>
   )

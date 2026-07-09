@@ -18,6 +18,7 @@ export default function PayoutDisputeCenterView({
   const [activeTab, setActiveTab] = useState<TabId>('payouts')
 
   const isLocked = ownerTaxYearStatus === 'Locked'
+  const canAdjust = ownerTaxYearStatus === 'Locked' || ownerTaxYearStatus === 'Exported'
 
   const tabs: { id: TabId; labelKey: string }[] = [
     { id: 'payouts', labelKey: 'taxiq.payoutCenter.tabs.payouts' },
@@ -61,7 +62,7 @@ export default function PayoutDisputeCenterView({
         ))}
       </div>
 
-      {activeTab === 'payouts' && <PayoutsTab ownerTaxYearId={ownerTaxYearId} isLocked={isLocked} />}
+      {activeTab === 'payouts' && <PayoutsTab ownerTaxYearId={ownerTaxYearId} isLocked={isLocked} canAdjust={canAdjust} />}
       {activeTab === 'disputes' && <DisputesTab ownerTaxYearId={ownerTaxYearId} />}
     </div>
   )

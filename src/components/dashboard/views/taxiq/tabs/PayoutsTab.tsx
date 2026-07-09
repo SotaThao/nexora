@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Pencil, Plus } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Pencil, Plus, Wrench } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useTaxiqOwnerPayouts, useTaxiqOwnerStaffList } from '../../../../../data/hooks/useTaxiqOwnerPayouts'
 import { PAYOUT_STATUSES, type PayoutRecord, type PayoutStatus } from '../../../../../data/repositories/taxiqOwnerPayouts'
@@ -13,11 +14,14 @@ const EDITABLE_STATUS: PayoutStatus = 'PendingConfirmation'
 export default function PayoutsTab({
   ownerTaxYearId,
   isLocked,
+  canAdjust,
 }: {
   ownerTaxYearId: string
   isLocked: boolean
+  canAdjust: boolean
 }) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
 
   const [staffFilter, setStaffFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -133,6 +137,19 @@ export default function PayoutsTab({
                         >
                           <Pencil className="h-3 w-3" />
                           {t('taxiq.payoutCenter.actions.edit')}
+                        </button>
+                      )}
+                      {canAdjust && (
+                        <button
+                          type="button"
+                          onClick={() => navigate('/dashboard/taxiq/export', {
+                            state: { prefillAdjustment: { entityType: 'PayoutRecord', entityId: record.id } },
+                          })}
+                          title={t('taxiq.createAdjustment.rowActionTooltip')}
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-nexoraBrand hover:underline"
+                        >
+                          <Wrench className="h-3 w-3" />
+                          {t('taxiq.createAdjustment.rowActionLabel')}
                         </button>
                       )}
                     </div>
