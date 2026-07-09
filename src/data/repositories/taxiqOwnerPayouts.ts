@@ -71,6 +71,12 @@ export interface CreateStaffTaxYearByOwnerParams {
   w9Status?: W9Status
 }
 
+export interface UpdateStaffW9StatusParams {
+  ownerTaxYearId: string
+  staffTaxYearId: string
+  w9Status: W9Status
+}
+
 export interface PayoutRecordApiDto {
   id: string
   ownerTaxYearId: string
@@ -246,6 +252,16 @@ export function createTaxiqOwnerPayoutsRepository(client: HttpClient = httpClien
         contractType: params.contractType,
         w9Status: params.w9Status ?? 'NotRequired',
       })
+    },
+
+    async updateStaffW9Status(params: UpdateStaffW9StatusParams): Promise<void> {
+      await client.put<void>(
+        `/api/v1/taxiq/owner/staff-tax-years/${encodeURIComponent(params.staffTaxYearId)}/w9-status`,
+        {
+          ownerTaxYearId: params.ownerTaxYearId,
+          w9Status: params.w9Status,
+        },
+      )
     },
 
     async list(params: ListPayoutRecordsParams): Promise<PayoutRecord[]> {

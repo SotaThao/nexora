@@ -3508,6 +3508,11 @@
       "equipment": {
         "addButton": "Thêm Thiết Bị",
         "addSuccess": "Đã thêm tài sản thiết bị.",
+        "updateSuccess": "Đã cập nhật tài sản thiết bị.",
+        "deleteSuccess": "Đã xóa tài sản thiết bị.",
+        "edit": "Sửa",
+        "delete": "Xóa",
+        "deleteConfirm": "Xóa tài sản thiết bị này? Hành động này không thể hoàn tác.",
         "emptyState": "Chưa có thiết bị nào. Thêm tài sản đầu tiên để bắt đầu.",
         "missingInServiceDateTooltip": "Thiếu ngày đưa vào sử dụng khiến AI không thể đề xuất chính xác Depreciate / Section 179.",
         "columns": {
@@ -3538,7 +3543,9 @@
           "isRenovationNotice": "Cải tạo luôn cần CPA xem xét.",
           "receiptLabel": "Hóa đơn (tùy chọn)",
           "receiptChooseFile": "Chọn tệp",
-          "submit": "Thêm Thiết Bị"
+          "receiptExisting": "Đã đính kèm hóa đơn",
+          "submit": "Thêm Thiết Bị",
+          "saveChanges": "Lưu Thay Đổi"
         },
         "aiSuggestion": {
           "deductNow": "Khấu Trừ Ngay",
@@ -3554,6 +3561,11 @@
       "giftCard": {
         "addButton": "Thêm Kỳ",
         "addSuccess": "Đã thêm kỳ nợ gift card.",
+        "updateSuccess": "Đã cập nhật kỳ nợ gift card.",
+        "deleteSuccess": "Đã xóa kỳ nợ gift card.",
+        "edit": "Sửa",
+        "delete": "Xóa",
+        "deleteConfirm": "Xóa kỳ nợ gift card này? Hành động này không thể hoàn tác.",
         "emptyState": "Chưa có kỳ nợ gift card nào. Thêm kỳ đầu tiên để bắt đầu.",
         "columns": {
           "period": "Kỳ",
@@ -3580,12 +3592,18 @@
           "dataSourceLabel": "Nguồn dữ liệu",
           "dataSourcePlaceholder": "vd: xuất từ POS, bảng tính",
           "dataSourceWarning": "Thiếu nguồn dữ liệu sẽ đánh dấu kỳ này là Ưu Tiên Cao.",
-          "submit": "Thêm Kỳ"
+          "submit": "Thêm Kỳ",
+          "saveChanges": "Lưu Thay Đổi"
         }
       },
       "membership": {
         "addButton": "Thêm Kỳ",
         "addSuccess": "Đã thêm kỳ credit membership.",
+        "updateSuccess": "Đã cập nhật kỳ credit membership.",
+        "deleteSuccess": "Đã xóa kỳ credit membership.",
+        "edit": "Sửa",
+        "delete": "Xóa",
+        "deleteConfirm": "Xóa kỳ credit membership này? Hành động này không thể hoàn tác.",
         "emptyState": "Chưa có kỳ credit membership nào. Thêm kỳ đầu tiên để bắt đầu.",
         "columns": {
           "period": "Kỳ",
@@ -3612,7 +3630,8 @@
           "expiryPolicyLabel": "Chính sách hết hạn (tùy chọn)",
           "expiryPolicyPlaceholder": "Mô tả cách xử lý credit hết hạn",
           "expiryPolicyWarning": "Credit hết hạn mà không có chính sách sẽ được đánh dấu để CPA xem xét.",
-          "submit": "Thêm Kỳ"
+          "submit": "Thêm Kỳ",
+          "saveChanges": "Lưu Thay Đổi"
         }
       }
     },
@@ -3989,7 +4008,8 @@
       "emptyState": "Chưa có payout nào.",
       "tabs": {
         "payouts": "Payouts",
-        "disputes": "Tranh chấp"
+        "disputes": "Tranh chấp",
+        "staffTaxProfile": "Hồ Sơ Thuế Thợ"
       },
       "filters": {
         "allStaff": "Tất cả thợ",
@@ -4038,6 +4058,20 @@
         "NotRequired": "Không yêu cầu",
         "Pending": "Đang chờ",
         "Received": "Đã nhận"
+      },
+      "staffTaxProfile": {
+        "notActiveNotice": "Chỉ có thể sửa trạng thái W-9 khi năm thuế đang Active. Sau khi Locked hoặc Exported, trạng thái sẽ chỉ xem được.",
+        "noTaxYearYet": "Chưa có hồ sơ Tax IQ",
+        "updateSuccess": "Đã cập nhật trạng thái W-9.",
+        "columns": {
+          "staff": "Thợ",
+          "contractType": "Loại Hợp Đồng",
+          "w9Status": "Trạng Thái W-9"
+        },
+        "emptyState": "Chưa có thợ nào liên kết với business này.",
+        "errors": {
+          "generic": "Không thể cập nhật trạng thái W-9. Vui lòng thử lại."
+        }
       },
       "createStaffTaxYear": {
         "notice": "{{name}} chưa thiết lập hồ sơ Tax IQ cho năm thuế này. Thiết lập ngay để tiếp tục nhập payout.",

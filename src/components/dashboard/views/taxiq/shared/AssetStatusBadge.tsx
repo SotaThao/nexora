@@ -28,6 +28,10 @@ const STATUS_TOOLTIP_KEYS: Record<string, string> = {
   CPAReview: 'taxiq.tooltips.cpaReview',
 }
 
+export function assetStatusLabelKey(status: string): string {
+  return STATUS_LABEL_KEYS[status] ?? status
+}
+
 export default function AssetStatusBadge({ status }: { status: string }) {
   const { t } = useTranslation()
   const Icon = STATUS_ICONS[status] ?? Circle

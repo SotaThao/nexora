@@ -3509,6 +3509,11 @@
       "equipment": {
         "addButton": "Add Equipment",
         "addSuccess": "Equipment asset added.",
+        "updateSuccess": "Equipment asset updated.",
+        "deleteSuccess": "Equipment asset deleted.",
+        "edit": "Edit",
+        "delete": "Delete",
+        "deleteConfirm": "Delete this equipment asset? This cannot be undone.",
         "emptyState": "No equipment tracked yet. Add your first asset to get started.",
         "missingInServiceDateTooltip": "Missing in-service date blocks accurate Depreciate / Section 179 suggestions.",
         "columns": {
@@ -3539,7 +3544,9 @@
           "isRenovationNotice": "Renovation always requires CPA review.",
           "receiptLabel": "Receipt (optional)",
           "receiptChooseFile": "Choose file",
-          "submit": "Add Equipment"
+          "receiptExisting": "Receipt attached",
+          "submit": "Add Equipment",
+          "saveChanges": "Save Changes"
         },
         "aiSuggestion": {
           "deductNow": "Deduct Now",
@@ -3555,6 +3562,11 @@
       "giftCard": {
         "addButton": "Add Period",
         "addSuccess": "Gift card liability period added.",
+        "updateSuccess": "Gift card liability period updated.",
+        "deleteSuccess": "Gift card liability period deleted.",
+        "edit": "Edit",
+        "delete": "Delete",
+        "deleteConfirm": "Delete this gift card liability period? This cannot be undone.",
         "emptyState": "No gift card liability periods yet. Add your first period to get started.",
         "columns": {
           "period": "Period",
@@ -3581,12 +3593,18 @@
           "dataSourceLabel": "Data source",
           "dataSourcePlaceholder": "e.g. POS export, spreadsheet",
           "dataSourceWarning": "Missing data source will flag this period as High Priority.",
-          "submit": "Add Period"
+          "submit": "Add Period",
+          "saveChanges": "Save Changes"
         }
       },
       "membership": {
         "addButton": "Add Period",
         "addSuccess": "Membership credit period added.",
+        "updateSuccess": "Membership credit period updated.",
+        "deleteSuccess": "Membership credit period deleted.",
+        "edit": "Edit",
+        "delete": "Delete",
+        "deleteConfirm": "Delete this membership credit period? This cannot be undone.",
         "emptyState": "No membership credit periods yet. Add your first period to get started.",
         "columns": {
           "period": "Period",
@@ -3613,7 +3631,8 @@
           "expiryPolicyLabel": "Expiry policy (optional)",
           "expiryPolicyPlaceholder": "Describe how expired credits are handled",
           "expiryPolicyWarning": "Expired credits without a policy will be flagged for CPA review.",
-          "submit": "Add Period"
+          "submit": "Add Period",
+          "saveChanges": "Save Changes"
         }
       }
     },
@@ -3990,7 +4009,8 @@
       "emptyState": "No payouts yet.",
       "tabs": {
         "payouts": "Payouts",
-        "disputes": "Disputes"
+        "disputes": "Disputes",
+        "staffTaxProfile": "Staff Tax Profile"
       },
       "filters": {
         "allStaff": "All staff",
@@ -4039,6 +4059,20 @@
         "NotRequired": "Not Required",
         "Pending": "Pending",
         "Received": "Received"
+      },
+      "staffTaxProfile": {
+        "notActiveNotice": "W-9 status can only be edited while the tax year is Active. Once locked or exported, it becomes read-only.",
+        "noTaxYearYet": "No Tax IQ profile yet",
+        "updateSuccess": "W-9 status updated.",
+        "columns": {
+          "staff": "Staff",
+          "contractType": "Contract Type",
+          "w9Status": "W-9 Status"
+        },
+        "emptyState": "No staff linked to this business yet.",
+        "errors": {
+          "generic": "Unable to update W-9 status. Please try again."
+        }
       },
       "createStaffTaxYear": {
         "notice": "{{name}} hasn't set up a Tax IQ profile for this tax year yet. Set one up now to continue entering their payout.",

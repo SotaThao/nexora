@@ -1,21 +1,32 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Loader2, Plus, Wrench, X } from 'lucide-react'
+import { Loader2, Pencil, Plus, Trash2, Wrench, X } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
-import { useCreateGiftCardLiability, useTaxiqOwnerGiftCardLiabilities } from '../../../../../data/hooks/useTaxiqOwnerAssets'
+import {
+  useCreateGiftCardLiability,
+  useDeleteGiftCardLiability,
+  useTaxiqOwnerGiftCardLiabilities,
+  useUpdateGiftCardLiability,
+} from '../../../../../data/hooks/useTaxiqOwnerAssets'
+import type { GiftCardLiability } from '../../../../../data/repositories/taxiqOwnerAssets'
 import { isApiError } from '../../../../../types/domain'
 import { getErrorI18nKey } from '../../../../../data/errorCodes'
 import { SkeletonList } from '../../../../ui/skeleton'
 import IconButton from '../../../../ui/IconButton'
 import Tooltip from '../../../../ui/Tooltip'
 import { formatCurrency } from '../../../utils'
-import AssetStatusBadge from '../shared/AssetStatusBadge'
+import AssetStatusBadge, { assetStatusLabelKey } from '../shared/AssetStatusBadge'
+import ConfirmModal from '../modals/ConfirmModal'
 
 const LOCKED_ERROR_CODE = 'TAXIQ_OWNER_TAX_YEAR_LOCKED'
 
 function monthToPeriodDate(month: string): string {
   return month ? `${month}-01` : ''
+}
+
+function periodDateToMonth(period: string): string {
+  return period ? period.slice(0, 7) : ''
 }
 
 interface FormErrors {
@@ -29,11 +40,13 @@ export default function GiftCardLiabilityTab({
   ownerTaxYearId,
   isLocked,
   canAdjust,
+  canEdit,
   onLockedError,
 }: {
   ownerTaxYearId: string
   isLocked: boolean
   canAdjust: boolean
+  canEdit: boolean
   onLockedError: () => void
 }) {
   const { t } = useTranslation()
@@ -41,8 +54,12 @@ export default function GiftCardLiabilityTab({
   const navigate = useNavigate()
   const listQuery = useTaxiqOwnerGiftCardLiabilities(ownerTaxYearId)
   const createLiability = useCreateGiftCardLiability()
+  const updateLiability = useUpdateGiftCardLiability()
+  const deleteLiability = useDeleteGiftCardLiability()
 
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [deletingItem, setDeletingItem] = useState<GiftCardLiability | null>(null)
   const [period, setPeriod] = useState('')
   const [totalSold, setTotalSold] = useState('')
   const [totalRedeemed, setTotalRedeemed] = useState('')
@@ -67,9 +84,43 @@ export default function GiftCardLiabilityTab({
     setErrors({})
   }
 
+  const openAddModal = () => {
+    setEditingId(null)
+    resetForm()
+    setIsModalOpen(true)
+  }
+
+  const openEditModal = (item: GiftCardLiability) => {
+    setEditingId(item.id)
+    setPeriod(periodDateToMonth(item.period))
+    setTotalSold(String(item.totalSold))
+    setTotalRedeemed(String(item.totalRedeemed))
+    setDataSource(item.dataSource)
+    setErrors({})
+    setIsModalOpen(true)
+  }
+
   const closeModal = () => {
     setIsModalOpen(false)
+    setEditingId(null)
     resetForm()
+  }
+
+  const handleDelete = async () => {
+    if (!deletingItem) return
+    try {
+      await deleteLiability.mutateAsync({ id: deletingItem.id, ownerTaxYearId })
+      showToast(t('taxiq.assetsTracker.giftCard.deleteSuccess'), 'success')
+      setDeletingItem(null)
+    } catch (err) {
+      if (isApiError(err) && err.errorCode === LOCKED_ERROR_CODE) {
+        onLockedError()
+        setDeletingItem(null)
+        return
+      }
+      const i18nKey = isApiError(err) ? getErrorI18nKey(err.errorCode) : 'taxiq.assetsTracker.errors.generic'
+      showToast(t(i18nKey), 'error')
+    }
   }
 
   const validate = (): boolean => {
@@ -88,14 +139,26 @@ export default function GiftCardLiabilityTab({
     if (!validate()) return
     setIsSubmitting(true)
     try {
-      await createLiability.mutateAsync({
-        ownerTaxYearId,
-        period: monthToPeriodDate(period),
-        totalSold: Number(totalSold),
-        totalRedeemed: Number(totalRedeemed),
-        dataSource: dataSource.trim() || null,
-      })
-      showToast(t('taxiq.assetsTracker.giftCard.addSuccess'), 'success')
+      if (editingId) {
+        await updateLiability.mutateAsync({
+          id: editingId,
+          ownerTaxYearId,
+          period: monthToPeriodDate(period),
+          totalSold: Number(totalSold),
+          totalRedeemed: Number(totalRedeemed),
+          dataSource: dataSource.trim() || null,
+        })
+        showToast(t('taxiq.assetsTracker.giftCard.updateSuccess'), 'success')
+      } else {
+        await createLiability.mutateAsync({
+          ownerTaxYearId,
+          period: monthToPeriodDate(period),
+          totalSold: Number(totalSold),
+          totalRedeemed: Number(totalRedeemed),
+          dataSource: dataSource.trim() || null,
+        })
+        showToast(t('taxiq.assetsTracker.giftCard.addSuccess'), 'success')
+      }
       closeModal()
     } catch (err) {
       if (isApiError(err) && err.errorCode === LOCKED_ERROR_CODE) {
@@ -116,12 +179,12 @@ export default function GiftCardLiabilityTab({
         <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-nexoraMuted">
           <span>{t('taxiq.assetsTracker.totalItems', { count: items.length })}</span>
           {Object.entries(statusCounts).map(([status, count]) => (
-            <span key={status}>{status}: {count}</span>
+            <span key={status}>{t(assetStatusLabelKey(status))}: {count}</span>
           ))}
         </div>
         <button
           type="button"
-          onClick={() => setIsModalOpen(true)}
+          onClick={openAddModal}
           disabled={isLocked}
           className="inline-flex items-center gap-1.5 self-start rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white disabled:opacity-60 sm:self-auto"
         >
@@ -150,19 +213,19 @@ export default function GiftCardLiabilityTab({
                 </span>
               </th>
               <th className="px-4 py-3">{t('taxiq.assetsTracker.giftCard.columns.status')}</th>
-              {canAdjust && <th className="px-4 py-3 text-right">{t('taxiq.assetsTracker.giftCard.columns.actions')}</th>}
+              {(canEdit || canAdjust) && <th className="px-4 py-3 text-right">{t('taxiq.assetsTracker.giftCard.columns.actions')}</th>}
             </tr>
           </thead>
           <tbody>
             {listQuery.isPending ? (
               <tr>
-                <td colSpan={canAdjust ? 7 : 6} className="p-4">
+                <td colSpan={canEdit || canAdjust ? 7 : 6} className="p-4">
                   <SkeletonList count={4} lines={1} />
                 </td>
               </tr>
             ) : items.length === 0 ? (
               <tr>
-                <td colSpan={canAdjust ? 7 : 6} className="px-4 py-8 text-center font-medium text-nexoraMuted">
+                <td colSpan={canEdit || canAdjust ? 7 : 6} className="px-4 py-8 text-center font-medium text-nexoraMuted">
                   {t('taxiq.assetsTracker.giftCard.emptyState')}
                 </td>
               </tr>
@@ -175,19 +238,42 @@ export default function GiftCardLiabilityTab({
                   <td className="px-4 py-3 font-extrabold text-nexoraText">{formatCurrency(item.outstandingBalance)}</td>
                   <td className="px-4 py-3 text-nexoraMuted">{item.dataSource || '—'}</td>
                   <td className="px-4 py-3"><AssetStatusBadge status={item.status} /></td>
-                  {canAdjust && (
+                  {(canEdit || canAdjust) && (
                     <td className="px-4 py-3 text-right">
-                      <button
-                        type="button"
-                        onClick={() => navigate('/dashboard/taxiq/export', {
-                          state: { prefillAdjustment: { entityType: 'GiftCardLiability', entityId: item.id } },
-                        })}
-                        title={t('taxiq.createAdjustment.rowActionTooltip')}
-                        className="inline-flex items-center gap-1 text-[11px] font-bold text-nexoraBrand hover:underline"
-                      >
-                        <Wrench className="h-3 w-3" />
-                        {t('taxiq.createAdjustment.rowActionLabel')}
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        {canEdit ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => openEditModal(item)}
+                              className="inline-flex items-center gap-1 text-[11px] font-bold text-nexoraBrand hover:underline"
+                            >
+                              <Pencil className="h-3 w-3" />
+                              {t('taxiq.assetsTracker.giftCard.edit')}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeletingItem(item)}
+                              className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-600 hover:underline"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                              {t('taxiq.assetsTracker.giftCard.delete')}
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => navigate('/dashboard/taxiq/export', {
+                              state: { prefillAdjustment: { entityType: 'GiftCardLiability', entityId: item.id } },
+                            })}
+                            title={t('taxiq.createAdjustment.rowActionTooltip')}
+                            className="inline-flex items-center gap-1 text-[11px] font-bold text-nexoraBrand hover:underline"
+                          >
+                            <Wrench className="h-3 w-3" />
+                            {t('taxiq.createAdjustment.rowActionLabel')}
+                          </button>
+                        )}
+                      </div>
                     </td>
                   )}
                 </tr>
@@ -201,7 +287,9 @@ export default function GiftCardLiabilityTab({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-nexoraText/70 p-4 backdrop-blur-sm">
           <div className="nexora-modal-card max-w-lg">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-extrabold text-nexoraText">{t('taxiq.assetsTracker.giftCard.addButton')}</h2>
+              <h2 className="text-sm font-extrabold text-nexoraText">
+                {editingId ? t('taxiq.assetsTracker.giftCard.edit') : t('taxiq.assetsTracker.giftCard.addButton')}
+              </h2>
               <IconButton label={t('common.cancel')} onClick={closeModal}>
                 <X className="h-4 w-4" />
               </IconButton>
@@ -289,12 +377,23 @@ export default function GiftCardLiabilityTab({
                 className="inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white disabled:opacity-60"
               >
                 {isSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                {t('taxiq.assetsTracker.giftCard.form.submit')}
+                {editingId ? t('taxiq.assetsTracker.giftCard.form.saveChanges') : t('taxiq.assetsTracker.giftCard.form.submit')}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={!!deletingItem}
+        onClose={() => setDeletingItem(null)}
+        onConfirm={handleDelete}
+        title={t('taxiq.assetsTracker.giftCard.delete')}
+        message={t('taxiq.assetsTracker.giftCard.deleteConfirm')}
+        confirmLabel={t('taxiq.assetsTracker.giftCard.delete')}
+        isDangerous
+        isPending={deleteLiability.isPending}
+      />
     </div>
   )
 }

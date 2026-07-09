@@ -21,6 +21,7 @@ export default function AssetsTrackerView({
 
   const isLocked = ownerTaxYearStatus === 'Locked' || lockedNoticeVisible
   const canAdjust = ownerTaxYearStatus === 'Locked' || ownerTaxYearStatus === 'Exported'
+  const canEdit = ownerTaxYearStatus === 'Active' && !lockedNoticeVisible
 
   const tabs: { id: TabId; labelKey: string }[] = [
     { id: 'equipment', labelKey: 'taxiq.assetsTracker.tabs.equipment' },
@@ -66,13 +67,31 @@ export default function AssetsTrackerView({
       </div>
 
       {activeTab === 'equipment' && (
-        <EquipmentTab ownerTaxYearId={ownerTaxYearId} isLocked={isLocked} canAdjust={canAdjust} onLockedError={() => setLockedNoticeVisible(true)} />
+        <EquipmentTab
+          ownerTaxYearId={ownerTaxYearId}
+          isLocked={isLocked}
+          canAdjust={canAdjust}
+          canEdit={canEdit}
+          onLockedError={() => setLockedNoticeVisible(true)}
+        />
       )}
       {activeTab === 'giftCard' && (
-        <GiftCardLiabilityTab ownerTaxYearId={ownerTaxYearId} isLocked={isLocked} canAdjust={canAdjust} onLockedError={() => setLockedNoticeVisible(true)} />
+        <GiftCardLiabilityTab
+          ownerTaxYearId={ownerTaxYearId}
+          isLocked={isLocked}
+          canAdjust={canAdjust}
+          canEdit={canEdit}
+          onLockedError={() => setLockedNoticeVisible(true)}
+        />
       )}
       {activeTab === 'membership' && (
-        <MembershipCreditTab ownerTaxYearId={ownerTaxYearId} isLocked={isLocked} canAdjust={canAdjust} onLockedError={() => setLockedNoticeVisible(true)} />
+        <MembershipCreditTab
+          ownerTaxYearId={ownerTaxYearId}
+          isLocked={isLocked}
+          canAdjust={canAdjust}
+          canEdit={canEdit}
+          onLockedError={() => setLockedNoticeVisible(true)}
+        />
       )}
     </div>
   )

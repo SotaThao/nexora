@@ -14,7 +14,7 @@ import { getErrorI18nKey } from '../../../../data/errorCodes'
 import { SkeletonList } from '../../../ui/skeleton'
 import Tooltip from '../../../ui/Tooltip'
 import { formatTransactionDateTime } from '../../utils'
-import TaxReadinessScoreWidget, { getReadinessItemLabel, READINESS_ITEM_ROUTES } from './shared/TaxReadinessScoreWidget'
+import TaxReadinessScoreWidget, { getReadinessItemLabel, navigateToReadinessItem, READINESS_ITEM_ROUTES } from './shared/TaxReadinessScoreWidget'
 import LockTaxYearModal from './modals/LockTaxYearModal'
 import CreateAdjustmentModal, { type CreateAdjustmentPrefill } from './modals/CreateAdjustmentModal'
 
@@ -196,7 +196,7 @@ export default function YearEndExportView({
                       {route && (
                         <button
                           type="button"
-                          onClick={() => navigate(route)}
+                          onClick={() => navigateToReadinessItem(navigate, item.type)}
                           className="shrink-0 underline"
                         >
                           {t('taxiq.yearEndExport.resolveLink')}

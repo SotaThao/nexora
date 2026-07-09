@@ -1,20 +1,31 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AlertTriangle, Loader2, Plus, Wrench, X } from 'lucide-react'
+import { AlertTriangle, Loader2, Pencil, Plus, Trash2, Wrench, X } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
-import { useCreateMembershipCredit, useTaxiqOwnerMembershipCredits } from '../../../../../data/hooks/useTaxiqOwnerAssets'
+import {
+  useCreateMembershipCredit,
+  useDeleteMembershipCredit,
+  useTaxiqOwnerMembershipCredits,
+  useUpdateMembershipCredit,
+} from '../../../../../data/hooks/useTaxiqOwnerAssets'
+import type { MembershipCredit } from '../../../../../data/repositories/taxiqOwnerAssets'
 import { isApiError } from '../../../../../types/domain'
 import { getErrorI18nKey } from '../../../../../data/errorCodes'
 import { SkeletonList } from '../../../../ui/skeleton'
 import IconButton from '../../../../ui/IconButton'
 import Tooltip from '../../../../ui/Tooltip'
-import AssetStatusBadge from '../shared/AssetStatusBadge'
+import AssetStatusBadge, { assetStatusLabelKey } from '../shared/AssetStatusBadge'
+import ConfirmModal from '../modals/ConfirmModal'
 
 const LOCKED_ERROR_CODE = 'TAXIQ_OWNER_TAX_YEAR_LOCKED'
 
 function monthToPeriodDate(month: string): string {
   return month ? `${month}-01` : ''
+}
+
+function periodDateToMonth(period: string): string {
+  return period ? period.slice(0, 7) : ''
 }
 
 interface FormErrors {
@@ -28,11 +39,13 @@ export default function MembershipCreditTab({
   ownerTaxYearId,
   isLocked,
   canAdjust,
+  canEdit,
   onLockedError,
 }: {
   ownerTaxYearId: string
   isLocked: boolean
   canAdjust: boolean
+  canEdit: boolean
   onLockedError: () => void
 }) {
   const { t } = useTranslation()
@@ -40,8 +53,12 @@ export default function MembershipCreditTab({
   const navigate = useNavigate()
   const listQuery = useTaxiqOwnerMembershipCredits(ownerTaxYearId)
   const createCredit = useCreateMembershipCredit()
+  const updateCredit = useUpdateMembershipCredit()
+  const deleteCredit = useDeleteMembershipCredit()
 
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [deletingItem, setDeletingItem] = useState<MembershipCredit | null>(null)
   const [period, setPeriod] = useState('')
   const [creditsIssued, setCreditsIssued] = useState('')
   const [creditsUsed, setCreditsUsed] = useState('')
@@ -68,9 +85,44 @@ export default function MembershipCreditTab({
     setErrors({})
   }
 
+  const openAddModal = () => {
+    setEditingId(null)
+    resetForm()
+    setIsModalOpen(true)
+  }
+
+  const openEditModal = (item: MembershipCredit) => {
+    setEditingId(item.id)
+    setPeriod(periodDateToMonth(item.period))
+    setCreditsIssued(String(item.creditsIssued))
+    setCreditsUsed(String(item.creditsUsed))
+    setCreditsExpired(String(item.creditsExpired))
+    setExpiryPolicy(item.expiryPolicy ?? '')
+    setErrors({})
+    setIsModalOpen(true)
+  }
+
   const closeModal = () => {
     setIsModalOpen(false)
+    setEditingId(null)
     resetForm()
+  }
+
+  const handleDelete = async () => {
+    if (!deletingItem) return
+    try {
+      await deleteCredit.mutateAsync({ id: deletingItem.id, ownerTaxYearId })
+      showToast(t('taxiq.assetsTracker.membership.deleteSuccess'), 'success')
+      setDeletingItem(null)
+    } catch (err) {
+      if (isApiError(err) && err.errorCode === LOCKED_ERROR_CODE) {
+        onLockedError()
+        setDeletingItem(null)
+        return
+      }
+      const i18nKey = isApiError(err) ? getErrorI18nKey(err.errorCode) : 'taxiq.assetsTracker.errors.generic'
+      showToast(t(i18nKey), 'error')
+    }
   }
 
   const validate = (): boolean => {
@@ -87,15 +139,28 @@ export default function MembershipCreditTab({
     if (!validate()) return
     setIsSubmitting(true)
     try {
-      await createCredit.mutateAsync({
-        ownerTaxYearId,
-        period: monthToPeriodDate(period),
-        creditsIssued: Number(creditsIssued),
-        creditsUsed: Number(creditsUsed),
-        creditsExpired: Number(creditsExpired),
-        expiryPolicy: expiryPolicy.trim() || null,
-      })
-      showToast(t('taxiq.assetsTracker.membership.addSuccess'), 'success')
+      if (editingId) {
+        await updateCredit.mutateAsync({
+          id: editingId,
+          ownerTaxYearId,
+          period: monthToPeriodDate(period),
+          creditsIssued: Number(creditsIssued),
+          creditsUsed: Number(creditsUsed),
+          creditsExpired: Number(creditsExpired),
+          expiryPolicy: expiryPolicy.trim() || null,
+        })
+        showToast(t('taxiq.assetsTracker.membership.updateSuccess'), 'success')
+      } else {
+        await createCredit.mutateAsync({
+          ownerTaxYearId,
+          period: monthToPeriodDate(period),
+          creditsIssued: Number(creditsIssued),
+          creditsUsed: Number(creditsUsed),
+          creditsExpired: Number(creditsExpired),
+          expiryPolicy: expiryPolicy.trim() || null,
+        })
+        showToast(t('taxiq.assetsTracker.membership.addSuccess'), 'success')
+      }
       closeModal()
     } catch (err) {
       if (isApiError(err) && err.errorCode === LOCKED_ERROR_CODE) {
@@ -116,12 +181,12 @@ export default function MembershipCreditTab({
         <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-nexoraMuted">
           <span>{t('taxiq.assetsTracker.totalItems', { count: items.length })}</span>
           {Object.entries(statusCounts).map(([status, count]) => (
-            <span key={status}>{status}: {count}</span>
+            <span key={status}>{t(assetStatusLabelKey(status))}: {count}</span>
           ))}
         </div>
         <button
           type="button"
-          onClick={() => setIsModalOpen(true)}
+          onClick={openAddModal}
           disabled={isLocked}
           className="inline-flex items-center gap-1.5 self-start rounded-lg bg-nexoraBrand px-4 py-2 text-xs font-bold text-white disabled:opacity-60 sm:self-auto"
         >
@@ -150,19 +215,19 @@ export default function MembershipCreditTab({
                 </span>
               </th>
               <th className="px-4 py-3">{t('taxiq.assetsTracker.membership.columns.status')}</th>
-              {canAdjust && <th className="px-4 py-3 text-right">{t('taxiq.assetsTracker.membership.columns.actions')}</th>}
+              {(canEdit || canAdjust) && <th className="px-4 py-3 text-right">{t('taxiq.assetsTracker.membership.columns.actions')}</th>}
             </tr>
           </thead>
           <tbody>
             {listQuery.isPending ? (
               <tr>
-                <td colSpan={canAdjust ? 7 : 6} className="p-4">
+                <td colSpan={canEdit || canAdjust ? 7 : 6} className="p-4">
                   <SkeletonList count={4} lines={1} />
                 </td>
               </tr>
             ) : items.length === 0 ? (
               <tr>
-                <td colSpan={canAdjust ? 7 : 6} className="px-4 py-8 text-center font-medium text-nexoraMuted">
+                <td colSpan={canEdit || canAdjust ? 7 : 6} className="px-4 py-8 text-center font-medium text-nexoraMuted">
                   {t('taxiq.assetsTracker.membership.emptyState')}
                 </td>
               </tr>
@@ -175,19 +240,42 @@ export default function MembershipCreditTab({
                   <td className="px-4 py-3 text-nexoraText">{item.creditsExpired}</td>
                   <td className="px-4 py-3 text-nexoraMuted">{item.expiryPolicy || '—'}</td>
                   <td className="px-4 py-3"><AssetStatusBadge status={item.status} /></td>
-                  {canAdjust && (
+                  {(canEdit || canAdjust) && (
                     <td className="px-4 py-3 text-right">
-                      <button
-                        type="button"
-                        onClick={() => navigate('/dashboard/taxiq/export', {
-                          state: { prefillAdjustment: { entityType: 'MembershipCredit', entityId: item.id } },
-                        })}
-                        title={t('taxiq.createAdjustment.rowActionTooltip')}
-                        className="inline-flex items-center gap-1 text-[11px] font-bold text-nexoraBrand hover:underline"
-                      >
-                        <Wrench className="h-3 w-3" />
-                        {t('taxiq.createAdjustment.rowActionLabel')}
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        {canEdit ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => openEditModal(item)}
+                              className="inline-flex items-center gap-1 text-[11px] font-bold text-nexoraBrand hover:underline"
+                            >
+                              <Pencil className="h-3 w-3" />
+                              {t('taxiq.assetsTracker.membership.edit')}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeletingItem(item)}
+                              className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-600 hover:underline"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                              {t('taxiq.assetsTracker.membership.delete')}
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => navigate('/dashboard/taxiq/export', {
+                              state: { prefillAdjustment: { entityType: 'MembershipCredit', entityId: item.id } },
+                            })}
+                            title={t('taxiq.createAdjustment.rowActionTooltip')}
+                            className="inline-flex items-center gap-1 text-[11px] font-bold text-nexoraBrand hover:underline"
+                          >
+                            <Wrench className="h-3 w-3" />
+                            {t('taxiq.createAdjustment.rowActionLabel')}
+                          </button>
+                        )}
+                      </div>
                     </td>
                   )}
                 </tr>
@@ -201,7 +289,9 @@ export default function MembershipCreditTab({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-nexoraText/70 p-4 backdrop-blur-sm">
           <div className="nexora-modal-card max-w-lg">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-extrabold text-nexoraText">{t('taxiq.assetsTracker.membership.addButton')}</h2>
+              <h2 className="text-sm font-extrabold text-nexoraText">
+                {editingId ? t('taxiq.assetsTracker.membership.edit') : t('taxiq.assetsTracker.membership.addButton')}
+              </h2>
               <IconButton label={t('common.cancel')} onClick={closeModal}>
                 <X className="h-4 w-4" />
               </IconButton>
@@ -292,12 +382,23 @@ export default function MembershipCreditTab({
                 className="inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white disabled:opacity-60"
               >
                 {isSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                {t('taxiq.assetsTracker.membership.form.submit')}
+                {editingId ? t('taxiq.assetsTracker.membership.form.saveChanges') : t('taxiq.assetsTracker.membership.form.submit')}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={!!deletingItem}
+        onClose={() => setDeletingItem(null)}
+        onConfirm={handleDelete}
+        title={t('taxiq.assetsTracker.membership.delete')}
+        message={t('taxiq.assetsTracker.membership.deleteConfirm')}
+        confirmLabel={t('taxiq.assetsTracker.membership.delete')}
+        isDangerous
+        isPending={deleteCredit.isPending}
+      />
     </div>
   )
 }

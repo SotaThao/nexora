@@ -1,10 +1,13 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import PayoutsTab from './tabs/PayoutsTab'
 import DisputesTab from './tabs/DisputesTab'
+import StaffTaxProfileTab from './tabs/StaffTaxProfileTab'
 
-type TabId = 'payouts' | 'disputes'
+type TabId = 'payouts' | 'disputes' | 'staffTaxProfile'
+
+const TAB_IDS: TabId[] = ['payouts', 'disputes', 'staffTaxProfile']
 
 export default function PayoutDisputeCenterView({
   ownerTaxYearId,
@@ -15,14 +18,25 @@ export default function PayoutDisputeCenterView({
 }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
   const [activeTab, setActiveTab] = useState<TabId>('payouts')
+
+  useEffect(() => {
+    const tabHint = (location.state as { taxiqTab?: string } | null)?.taxiqTab
+    if (!tabHint || !TAB_IDS.includes(tabHint as TabId)) return
+    setActiveTab(tabHint as TabId)
+    // Clear the router state so navigating back to this page later doesn't force the tab again.
+    navigate(location.pathname, { replace: true, state: null })
+  }, [location, navigate])
 
   const isLocked = ownerTaxYearStatus === 'Locked'
   const canAdjust = ownerTaxYearStatus === 'Locked' || ownerTaxYearStatus === 'Exported'
+  const canEditW9Status = ownerTaxYearStatus === 'Active'
 
   const tabs: { id: TabId; labelKey: string }[] = [
     { id: 'payouts', labelKey: 'taxiq.payoutCenter.tabs.payouts' },
     { id: 'disputes', labelKey: 'taxiq.payoutCenter.tabs.disputes' },
+    { id: 'staffTaxProfile', labelKey: 'taxiq.payoutCenter.tabs.staffTaxProfile' },
   ]
 
   return (
@@ -64,6 +78,7 @@ export default function PayoutDisputeCenterView({
 
       {activeTab === 'payouts' && <PayoutsTab ownerTaxYearId={ownerTaxYearId} isLocked={isLocked} canAdjust={canAdjust} />}
       {activeTab === 'disputes' && <DisputesTab ownerTaxYearId={ownerTaxYearId} />}
+      {activeTab === 'staffTaxProfile' && <StaffTaxProfileTab ownerTaxYearId={ownerTaxYearId} canEdit={canEditW9Status} />}
     </div>
   )
 }

@@ -1,8 +1,9 @@
 /**
  * taxiqOwnerAssetsRepository — API implementation for US-07 (Equipment, Gift Card
- * Liability, Membership Credit trackers). Mirrors taxiqOwnerDeductions.ts. Backend
- * (US-14, OwnerAssetsController) only exposes Create + List for all three modules —
- * no Update/Delete endpoints exist yet.
+ * Liability, Membership Credit trackers). Mirrors taxiqOwnerDeductions.ts.
+ * OwnerAssetsController exposes Create/List/Update/Delete for all three modules;
+ * Update/Delete are only accepted while the owner tax year is Active (not yet
+ * Locked/Exported) — corrections after locking go through the Adjustment Record flow.
  */
 import httpClient from '../../lib/httpClient'
 
@@ -17,6 +18,8 @@ export interface EquipmentAssetApiDto {
   amount: number
   businessUsePercent: number
   aiSuggestion: string
+  aiExplanation?: string | null
+  isHighPriority: boolean
   receiptId?: string | null
   createdAt: string
   lastModified?: string | null
@@ -31,6 +34,8 @@ export interface EquipmentAsset {
   amount: number
   businessUsePercent: number
   aiSuggestion: string
+  aiExplanation: string | null
+  isHighPriority: boolean
   receiptId: string | null
   createdAt: string
   lastModified: string | null
@@ -38,6 +43,17 @@ export interface EquipmentAsset {
 
 export interface CreateEquipmentAssetParams {
   ownerTaxYearId: string
+  assetName: string
+  purchaseDate: string
+  inServiceDate?: string | null
+  amount: number
+  businessUsePercent: number
+  isRenovation: boolean
+  receiptId?: string | null
+}
+
+export interface UpdateEquipmentAssetParams {
+  id: string
   assetName: string
   purchaseDate: string
   inServiceDate?: string | null
@@ -57,6 +73,8 @@ function normalizeEquipmentAsset(dto: EquipmentAssetApiDto): EquipmentAsset {
     amount: dto.amount,
     businessUsePercent: dto.businessUsePercent,
     aiSuggestion: dto.aiSuggestion,
+    aiExplanation: dto.aiExplanation ?? null,
+    isHighPriority: dto.isHighPriority,
     receiptId: dto.receiptId ?? null,
     createdAt: dto.createdAt,
     lastModified: dto.lastModified ?? null,
@@ -91,6 +109,14 @@ export interface GiftCardLiability {
 
 export interface CreateGiftCardLiabilityParams {
   ownerTaxYearId: string
+  period: string
+  totalSold: number
+  totalRedeemed: number
+  dataSource?: string | null
+}
+
+export interface UpdateGiftCardLiabilityParams {
+  id: string
   period: string
   totalSold: number
   totalRedeemed: number
@@ -147,6 +173,15 @@ export interface CreateMembershipCreditParams {
   expiryPolicy?: string | null
 }
 
+export interface UpdateMembershipCreditParams {
+  id: string
+  period: string
+  creditsIssued: number
+  creditsUsed: number
+  creditsExpired: number
+  expiryPolicy?: string | null
+}
+
 function normalizeMembershipCredit(dto: MembershipCreditApiDto): MembershipCredit {
   return {
     id: dto.id,
@@ -184,6 +219,22 @@ export function createTaxiqOwnerAssetsRepository(client: HttpClient = httpClient
       })
     },
 
+    async updateEquipment(params: UpdateEquipmentAssetParams): Promise<void> {
+      await client.put(`/api/v1/taxiq/owner/equipment/${encodeURIComponent(params.id)}`, {
+        assetName: params.assetName,
+        purchaseDate: params.purchaseDate,
+        inServiceDate: params.inServiceDate ?? null,
+        amount: params.amount,
+        businessUsePercent: params.businessUsePercent,
+        isRenovation: params.isRenovation,
+        receiptId: params.receiptId ?? null,
+      })
+    },
+
+    async deleteEquipment(id: string): Promise<void> {
+      await client.del(`/api/v1/taxiq/owner/equipment/${encodeURIComponent(id)}`)
+    },
+
     async listGiftCardLiabilities(ownerTaxYearId: string): Promise<GiftCardLiability[]> {
       const data = await client.get<GiftCardLiabilityApiDto[]>(
         `/api/v1/taxiq/owner/gift-card-liabilities?ownerTaxYearId=${encodeURIComponent(ownerTaxYearId)}`,
@@ -199,6 +250,19 @@ export function createTaxiqOwnerAssetsRepository(client: HttpClient = httpClient
         totalRedeemed: params.totalRedeemed,
         dataSource: params.dataSource ?? null,
       })
+    },
+
+    async updateGiftCardLiability(params: UpdateGiftCardLiabilityParams): Promise<void> {
+      await client.put(`/api/v1/taxiq/owner/gift-card-liabilities/${encodeURIComponent(params.id)}`, {
+        period: params.period,
+        totalSold: params.totalSold,
+        totalRedeemed: params.totalRedeemed,
+        dataSource: params.dataSource ?? null,
+      })
+    },
+
+    async deleteGiftCardLiability(id: string): Promise<void> {
+      await client.del(`/api/v1/taxiq/owner/gift-card-liabilities/${encodeURIComponent(id)}`)
     },
 
     async listMembershipCredits(ownerTaxYearId: string): Promise<MembershipCredit[]> {
@@ -217,6 +281,20 @@ export function createTaxiqOwnerAssetsRepository(client: HttpClient = httpClient
         creditsExpired: params.creditsExpired,
         expiryPolicy: params.expiryPolicy ?? null,
       })
+    },
+
+    async updateMembershipCredit(params: UpdateMembershipCreditParams): Promise<void> {
+      await client.put(`/api/v1/taxiq/owner/membership-credits/${encodeURIComponent(params.id)}`, {
+        period: params.period,
+        creditsIssued: params.creditsIssued,
+        creditsUsed: params.creditsUsed,
+        creditsExpired: params.creditsExpired,
+        expiryPolicy: params.expiryPolicy ?? null,
+      })
+    },
+
+    async deleteMembershipCredit(id: string): Promise<void> {
+      await client.del(`/api/v1/taxiq/owner/membership-credits/${encodeURIComponent(id)}`)
     },
   }
 }

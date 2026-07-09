@@ -34,6 +34,22 @@ export const READINESS_ITEM_ROUTES: Record<string, string> = {
 }
 
 /**
+ * High Priority item `type` -> which tab to preselect at the destination route, for
+ * destinations with more than one tab. Read by PayoutDisputeCenterView via router state
+ * (`{ state: { taxiqTab } }`) — see navigateToReadinessItem below.
+ */
+export const READINESS_ITEM_TAB_HINTS: Record<string, string> = {
+  MissingW9: 'staffTaxProfile',
+}
+
+export function navigateToReadinessItem(navigate: (path: string, options?: { state?: unknown }) => void, type: string) {
+  const route = READINESS_ITEM_ROUTES[type]
+  if (!route) return
+  const tab = READINESS_ITEM_TAB_HINTS[type]
+  navigate(route, tab ? { state: { taxiqTab: tab } } : undefined)
+}
+
+/**
  * High Priority item `type` -> i18n key. The BE only sends an English `description`
  * (plus `descriptionParams` for interpolation) — it does not localize, so the FE
  * always renders through this map and falls back to the raw description if a type
@@ -182,7 +198,7 @@ export default function TaxReadinessScoreWidget({
                 <button
                   type="button"
                   disabled={!route}
-                  onClick={() => route && navigate(route)}
+                  onClick={() => navigateToReadinessItem(navigate, item.type)}
                   className="flex w-full items-center justify-between gap-2 rounded-lg border border-nexoraBorder px-3 py-2 text-left text-xs font-semibold text-nexoraText enabled:hover:bg-nexoraBrandSoft disabled:cursor-default disabled:opacity-70"
                 >
                   <span>{getReadinessItemLabel(item, t)}</span>

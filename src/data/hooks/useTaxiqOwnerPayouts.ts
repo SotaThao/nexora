@@ -13,6 +13,7 @@ import type {
   ResolveDisputeParams,
   StaffTaxIqItem,
   UpdatePayoutRecordParams,
+  UpdateStaffW9StatusParams,
 } from '../repositories/taxiqOwnerPayouts'
 
 export function useTaxiqOwnerStaffList(ownerTaxYearId: string | undefined) {
@@ -29,6 +30,17 @@ export function useCreateStaffTaxYearByOwner() {
     mutationFn: (params) => taxiqOwnerPayoutsRepository.createStaffTaxYear(params),
     onSuccess: (_, params) =>
       queryClient.invalidateQueries({ queryKey: qk.taxiqOwnerStaffList(params.ownerTaxYearId) }),
+  })
+}
+
+export function useUpdateStaffW9Status() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, UpdateStaffW9StatusParams>({
+    mutationFn: (params) => taxiqOwnerPayoutsRepository.updateStaffW9Status(params),
+    onSuccess: (_, params) => {
+      queryClient.invalidateQueries({ queryKey: qk.taxiqOwnerStaffList(params.ownerTaxYearId) })
+      queryClient.invalidateQueries({ queryKey: qk.taxiqReadinessScore('owner', params.ownerTaxYearId) })
+    },
   })
 }
 
