@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronUp, ChevronDown, LogOut } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { visibleMenuItems, MERCHANT_SIDEBAR_MENU_ITEMS, isPaymentsPayoutsRouteActive } from '../constants'
+import { visibleMenuItems, MERCHANT_SIDEBAR_MENU_ITEMS, isPaymentsPayoutsRouteActive, VISIBLE_TOUCHPOINTS_SUBMENU } from '../constants'
 import MenuIcon from '../../ui/MenuIcon'
 import HomepageLink from '../../ui/HomepageLink'
 import SidebarPlanCard from '../../ui/SidebarPlanCard'
@@ -204,10 +204,7 @@ export default function DashboardSidebar({
 
               {id === 'touchpoints' && isTouchpointsExpanded && (
                 <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
-                  {[
-                    { id: 'stations', label: t('dashboard.touchpoints.tabs.stations') },
-                    { id: 'devices', label: t('dashboard.touchpoints.tabs.devices') },
-                  ].map(sub => {
+                  {VISIBLE_TOUCHPOINTS_SUBMENU.map((sub) => {
                     const isSubActive = activeMenu === 'touchpoints' && (activeSubTab || 'stations') === sub.id
                     return (
                       <button
@@ -219,7 +216,7 @@ export default function DashboardSidebar({
                         className={sidebarSubmenuItemClass(isSubActive)}
                       >
                         <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
-                        <span>{sub.label}</span>
+                        <span>{t(sub.labelKey)}</span>
                       </button>
                     )
                   })}

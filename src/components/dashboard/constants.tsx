@@ -73,6 +73,18 @@ export const MENU_ITEMS = [
 
 export const MERCHANT_SIDEBAR_HIDDEN_MENU_IDS = ['tips', 'reports']
 
+/** Temporarily hide Hardware Devices submenu/tab until the feature is ready. */
+export const SHOW_HARDWARE_DEVICES = false
+
+export const TOUCHPOINTS_SUBMENU = [
+  { id: 'stations', labelKey: 'dashboard.touchpoints.tabs.stations' },
+  { id: 'devices', labelKey: 'dashboard.touchpoints.tabs.devices' },
+] as const
+
+export const VISIBLE_TOUCHPOINTS_SUBMENU = SHOW_HARDWARE_DEVICES
+  ? TOUCHPOINTS_SUBMENU
+  : TOUCHPOINTS_SUBMENU.filter((item) => item.id !== 'devices')
+
 export const MERCHANT_SIDEBAR_MENU_ITEMS = MENU_ITEMS.filter(
   (item) => !MERCHANT_SIDEBAR_HIDDEN_MENU_IDS.includes(item.id),
 )
