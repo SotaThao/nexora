@@ -123,3 +123,129 @@ export function StarsIcon({ className }: IconProps) {
     </svg>
   )
 }
+
+export function EyeIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <circle cx="12" cy="12" r="2.5" stroke="currentColor" strokeWidth="2" />
+    </HubIcon>
+  )
+}
+
+export function CheckLgIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="M20 6 9 17l-5-5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    </HubIcon>
+  )
+}
+
+export function XLgIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="M18 6 6 18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="m6 6 12 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    </HubIcon>
+  )
+}
+
+export function SendIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="m22 2-7 20-4-9-9-4Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M22 2 11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </HubIcon>
+  )
+}
+
+export function TableIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="2" />
+      <path d="M3 10h18" stroke="currentColor" strokeWidth="2" />
+      <path d="M10 4v16" stroke="currentColor" strokeWidth="2" />
+    </HubIcon>
+  )
+}
+
+export function GridIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <rect x="3" y="3" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="2" />
+      <rect x="13" y="3" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="2" />
+      <rect x="3" y="13" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="2" />
+      <rect x="13" y="13" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="2" />
+    </HubIcon>
+  )
+}
+
+export function CalendarKpiIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="M8 2v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M16 2v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <rect width="18" height="18" x="3" y="4" rx="2" stroke="currentColor" strokeWidth="2" />
+      <path d="M3 10h18" stroke="currentColor" strokeWidth="2" />
+    </HubIcon>
+  )
+}
+
+export function CheckKpiIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="M20 6 9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </HubIcon>
+  )
+}
+
+export function XKpiIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="m6 6 12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </HubIcon>
+  )
+}
+
+export function JournalIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="M6 4h9a2 2 0 0 1 2 2v14H8a2 2 0 0 1-2-2V4Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M6 18h11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M10 8h6M10 12h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </HubIcon>
+  )
+}
+
+export function BroadcastIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="12" cy="12" r="2" stroke="currentColor" strokeWidth="2" />
+      <path d="M16.2 16.2c2.3-2.3 6.1-2.3 8.5 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M19.1 19.1C23 15.2 23 8.8 19.1 4.9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </HubIcon>
+  )
+}
+
+export function PersonWorkspaceIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="9" cy="7" r="3" stroke="currentColor" strokeWidth="2" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </HubIcon>
+  )
+}
+
+export function ClockIcon({ className }: IconProps) {
+  return (
+    <HubIcon className={className}>
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+      <path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </HubIcon>
+  )
+}

@@ -1,9 +1,22 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { EyeIcon } from './BookingHubIcons'
 
 const TK = 'components.dashboard.views.BookingHubView.team'
 
 const ALL_SERVICES = ['Gel', 'Full Set', 'Dip', 'Pedicure', 'Nail Art', 'Acrylic', 'Waxing', 'Eyelash']
+const DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const
+
+type DayKey = typeof DAY_KEYS[number]
+type ModalMode = 'create' | 'edit' | 'detail'
+
+interface DaySchedule {
+  dayOff: boolean
+  start: string
+  end: string
+}
+
+type WeeklySchedule = Record<DayKey, DaySchedule>
 
 interface TeamMember {
   id: string
@@ -11,6 +24,7 @@ interface TeamMember {
   phone: string
   email: string
   services: string[]
+  schedule: string
   customers: number
   avatar: string
   avatarStyle?: React.CSSProperties
@@ -24,6 +38,7 @@ const INITIAL_TEAM_MEMBERS: TeamMember[] = [
     phone: '832-555-0161',
     email: 'kim@nexoratouch.com',
     services: ['Gel', 'Full Set', 'Dip'],
+    schedule: 'mon=09:00-18:00;tue=09:00-18:00;wed=09:00-18:00;thu=10:00-19:00;fri=09:00-18:00',
     customers: 3,
     avatar: 'K',
     smsEnabled: true,
@@ -34,6 +49,7 @@ const INITIAL_TEAM_MEMBERS: TeamMember[] = [
     phone: '713-555-0192',
     email: 'lan.tran@nexoratouch.com',
     services: ['Pedicure', 'Gel', 'Nail Art'],
+    schedule: 'tue=10:00-19:00;wed=10:00-19:00;thu=10:00-19:00;fri=10:00-19:00;sat=09:00-16:00',
     customers: 2,
     avatar: 'L',
     avatarStyle: { background: 'linear-gradient(135deg, var(--brand-cyan), var(--nexora-electric))' },
@@ -45,12 +61,54 @@ const INITIAL_TEAM_MEMBERS: TeamMember[] = [
     phone: '281-555-0138',
     email: 'mai.pham@nexoratouch.com',
     services: ['Acrylic', 'Dip', 'Pedicure'],
+    schedule: 'mon=11:00-20:00;wed=11:00-20:00;fri=11:00-20:00;sat=10:00-17:00;sun=10:00-15:00',
     customers: 2,
     avatar: 'M',
     avatarStyle: { background: 'linear-gradient(135deg, #f472b6, var(--nexora-violet))' },
     smsEnabled: true,
   },
 ]
+
+function emptySchedule(): WeeklySchedule {
+  return DAY_KEYS.reduce((acc, key) => {
+    acc[key] = { dayOff: false, start: '', end: '' }
+    return acc
+  }, {} as WeeklySchedule)
+}
+
+function parseSchedule(raw?: string): WeeklySchedule {
+  const schedule = emptySchedule()
+  if (!raw) {
+    return DAY_KEYS.reduce((acc, key) => {
+      acc[key] = { dayOff: true, start: '', end: '' }
+      return acc
+    }, {} as WeeklySchedule)
+  }
+
+  DAY_KEYS.forEach((key) => {
+    schedule[key] = { dayOff: true, start: '', end: '' }
+  })
+
+  raw.split(';').forEach((part) => {
+    const [dayPart, times] = part.split('=')
+    if (!dayPart || !times || !DAY_KEYS.includes(dayPart as DayKey)) return
+    const [start, end] = times.split('-')
+    schedule[dayPart as DayKey] = {
+      dayOff: false,
+      start: start || '',
+      end: end || '',
+    }
+  })
+
+  return schedule
+}
+
+function serializeSchedule(schedule: WeeklySchedule) {
+  return DAY_KEYS
+    .filter((key) => !schedule[key].dayOff && schedule[key].start && schedule[key].end)
+    .map((key) => `${key}=${schedule[key].start}-${schedule[key].end}`)
+    .join(';')
+}
 
 function PlusIcon() {
   return (
@@ -108,6 +166,16 @@ function PersonCardIcon() {
   )
 }
 
+function CalendarWeekIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" width="13" height="13">
+      <rect x="2" y="3" width="12" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M2 6.5h12M5 1.5v2.5M11 1.5v2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      <path d="M5 9h1.5M7.75 9H9.25M10.75 9h1.5M5 11.5h1.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 function CloseIcon() {
   return (
     <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" width="14" height="14">
@@ -126,10 +194,9 @@ function CheckIcon() {
 
 export default function BookingTeamPanel() {
   const { t } = useTranslation()
-  const defaultSmsNote = t(`${TK}.defaultSmsNote`)
   const [members, setMembers] = useState<TeamMember[]>(INITIAL_TEAM_MEMBERS)
   const [modalOpen, setModalOpen] = useState(false)
-  const [modalMode, setModalMode] = useState<'edit' | 'create'>('edit')
+  const [modalMode, setModalMode] = useState<ModalMode>('edit')
   const [selectedId, setSelectedId] = useState(INITIAL_TEAM_MEMBERS[0].id)
   const [comboboxOpen, setComboboxOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -137,7 +204,7 @@ export default function BookingTeamPanel() {
   const [draftPhone, setDraftPhone] = useState('')
   const [draftEmail, setDraftEmail] = useState('')
   const [draftServices, setDraftServices] = useState<string[]>([])
-  const [draftNote, setDraftNote] = useState(defaultSmsNote)
+  const [draftSchedule, setDraftSchedule] = useState<WeeklySchedule>(emptySchedule())
   const comboboxRef = useRef<HTMLDivElement>(null)
 
   const filteredMembers = useMemo(() => {
@@ -150,29 +217,39 @@ export default function BookingTeamPanel() {
     ))
   }, [members, searchQuery])
 
-  const fillDraftFromMember = (member: TeamMember | undefined, mode: 'edit' | 'create') => {
+  const fillDraftFromMember = (member: TeamMember | undefined, mode: ModalMode) => {
     if (mode === 'create' || !member) {
       setDraftName('')
       setDraftPhone('')
       setDraftEmail('')
       setDraftServices([])
-      setDraftNote(defaultSmsNote)
+      setDraftSchedule(emptySchedule())
       return
     }
     setDraftName(member.name)
     setDraftPhone(member.phone)
     setDraftEmail(member.email)
     setDraftServices([...member.services])
-    setDraftNote(defaultSmsNote)
+    setDraftSchedule(parseSchedule(member.schedule))
   }
 
-  const openModal = () => {
-    const first = members[0]
-    setModalMode('edit')
-    setSelectedId(first?.id ?? '')
-    setSearchQuery('')
+  const openModal = (memberId?: string, mode: ModalMode = 'create') => {
+    if (!memberId) {
+      setModalMode('create')
+      setSelectedId('')
+      setSearchQuery('')
+      setComboboxOpen(false)
+      fillDraftFromMember(undefined, 'create')
+      setModalOpen(true)
+      return
+    }
+
+    const target = members.find((member) => member.id === memberId)
+    setModalMode(mode)
+    setSelectedId(memberId)
+    setSearchQuery(mode === 'detail' ? '' : (target?.name ?? ''))
     setComboboxOpen(false)
-    fillDraftFromMember(first, 'edit')
+    fillDraftFromMember(target, mode === 'create' ? 'create' : 'edit')
     setModalOpen(true)
   }
 
@@ -187,7 +264,7 @@ export default function BookingTeamPanel() {
     setSelectedId(member.id)
     fillDraftFromMember(member, 'edit')
     setComboboxOpen(false)
-    setSearchQuery('')
+    setSearchQuery(member.name)
   }
 
   const startCreate = () => {
@@ -204,6 +281,25 @@ export default function BookingTeamPanel() {
     ))
   }
 
+  const toggleDayOff = (day: DayKey, dayOff: boolean) => {
+    setDraftSchedule((prev) => ({
+      ...prev,
+      [day]: {
+        ...prev[day],
+        dayOff,
+        start: dayOff ? '' : prev[day].start,
+        end: dayOff ? '' : prev[day].end,
+      },
+    }))
+  }
+
+  const updateScheduleTime = (day: DayKey, field: 'start' | 'end', value: string) => {
+    setDraftSchedule((prev) => ({
+      ...prev,
+      [day]: { ...prev[day], [field]: value },
+    }))
+  }
+
   const toggleSms = (id: string) => {
     setMembers((prev) => prev.map((member) => (
       member.id === id ? { ...member, smsEnabled: !member.smsEnabled } : member
@@ -216,6 +312,7 @@ export default function BookingTeamPanel() {
       phone: draftPhone.trim() || t(`${TK}.noPhone`),
       email: draftEmail.trim(),
       services: draftServices.length ? draftServices : ['Gel'],
+      schedule: serializeSchedule(draftSchedule),
     }
 
     if (modalMode === 'create') {
@@ -238,6 +335,7 @@ export default function BookingTeamPanel() {
             phone: payload.phone,
             email: payload.email,
             services: payload.services,
+            schedule: payload.schedule,
             avatar: payload.name.charAt(0).toUpperCase() || member.avatar,
           }
           : member
@@ -246,6 +344,14 @@ export default function BookingTeamPanel() {
 
     closeModal()
   }
+
+  const modalTitle = modalMode === 'create'
+    ? t(`${TK}.modalTitleCreate`)
+    : t(`${TK}.modalTitleEdit`)
+
+  const modalSub = modalMode === 'create'
+    ? t(`${TK}.modalSubCreate`)
+    : t(`${TK}.modalSubEdit`, { name: draftName || t(`${TK}.selectedTech`) })
 
   useEffect(() => {
     if (!modalOpen) {
@@ -275,7 +381,7 @@ export default function BookingTeamPanel() {
     <div className="booking-sub-panel is-active">
       <div className="tech-intro">
         <div className="tech-intro-text">{t(`${TK}.intro`)}</div>
-        <button className="booking-primary-button" type="button" onClick={openModal}>
+        <button className="booking-primary-button" type="button" onClick={() => openModal()}>
           <PlusIcon />
           <span>{t(`${TK}.addTech`)}</span>
         </button>
@@ -286,7 +392,7 @@ export default function BookingTeamPanel() {
           <article className="tech-card" key={member.id} data-tech-id={member.id}>
             <div className="tech-top">
               <div className="tech-avatar" style={member.avatarStyle}>{member.avatar}</div>
-              <div className="tech-copy">
+              <div className="tech-profile">
                 <div className="tech-name">{member.name}</div>
                 <div className="tech-phone">{member.phone}</div>
               </div>
@@ -303,10 +409,24 @@ export default function BookingTeamPanel() {
                 <span className="badge badge-plan" key={service}>{service}</span>
               ))}
             </div>
-            <div className="tech-stats">
-              <div className="tech-stat">
-                <strong>{member.customers}</strong>
-                <span>{t(`${TK}.clientsToday`)}</span>
+            <div className="tech-card-footer">
+              <div className="tech-stats">
+                <div className="tech-stat">
+                  <strong>{member.customers}</strong>
+                  <span>{t(`${TK}.clientsToday`)}</span>
+                </div>
+              </div>
+              <div className="tech-card-actions">
+                <button
+                  className="booking-secondary-button icon-only"
+                  type="button"
+                  aria-label={t(`${TK}.viewDetails`)}
+                  title={t(`${TK}.viewDetails`)}
+                  onClick={() => openModal(member.id, 'detail')}
+                >
+                  <EyeIcon />
+                  <span className="sr-only">{t(`${TK}.viewDetails`)}</span>
+                </button>
               </div>
             </div>
           </article>
@@ -314,7 +434,12 @@ export default function BookingTeamPanel() {
       </div>
 
       {modalOpen ? (
-        <div className="tech-modal" role="presentation" onClick={closeModal}>
+        <div
+          className="tech-modal"
+          data-tech-mode={modalMode}
+          role="presentation"
+          onClick={closeModal}
+        >
           <div
             className="tech-dialog"
             role="dialog"
@@ -327,9 +452,9 @@ export default function BookingTeamPanel() {
                 <span className="tech-title-mark"><PersonPlusIcon /></span>
                 <div>
                   <div className="tech-modal-title" id="tech-modal-title">
-                    {t(`${TK}.modalTitle`)}
+                    {modalTitle}
                   </div>
-                  <div className="tech-modal-sub">{t(`${TK}.modalSub`)}</div>
+                  <div className="tech-modal-sub">{modalSub}</div>
                 </div>
               </div>
               <button className="tech-modal-close" type="button" aria-label={t(`${TK}.close`)} onClick={closeModal}>
@@ -338,7 +463,7 @@ export default function BookingTeamPanel() {
             </div>
 
             <div className="tech-modal-body">
-              <div className="tech-modal-section">
+              <div className="tech-modal-section" data-tech-picker-section>
                 <div className="tech-modal-section-title">
                   <PeopleIcon />
                   <span>{t(`${TK}.selectFromList`)}</span>
@@ -369,10 +494,10 @@ export default function BookingTeamPanel() {
                           {filteredMembers.map((member) => (
                             <button
                               key={member.id}
-                              className={`tech-choice-card ${modalMode === 'edit' && selectedId === member.id ? 'is-active' : ''}`}
+                              className={`tech-choice-card ${modalMode !== 'create' && selectedId === member.id ? 'is-active' : ''}`}
                               type="button"
                               role="option"
-                              aria-selected={modalMode === 'edit' && selectedId === member.id}
+                              aria-selected={modalMode !== 'create' && selectedId === member.id}
                               onClick={() => selectMember(member)}
                             >
                               <span className="tech-avatar" style={member.avatarStyle}>{member.avatar}</span>
@@ -391,7 +516,11 @@ export default function BookingTeamPanel() {
                       </div>
                     ) : null}
                   </div>
-                  <button className="booking-secondary-button tech-create-button" type="button" onClick={startCreate}>
+                  <button
+                    className={`booking-secondary-button tech-create-button ${modalMode === 'create' ? 'is-active' : ''}`}
+                    type="button"
+                    onClick={startCreate}
+                  >
                     <PlusIcon />
                     <span>{t(`${TK}.createNew`)}</span>
                   </button>
@@ -416,13 +545,20 @@ export default function BookingTeamPanel() {
                   </label>
                   <label className="settings-field">
                     <span className="settings-label">{t(`${TK}.phone`)}</span>
-                    <input
-                      className="settings-input"
-                      type="tel"
-                      value={draftPhone}
-                      placeholder={t(`${TK}.placeholderPhone`)}
-                      onChange={(event) => setDraftPhone(event.target.value)}
-                    />
+                    <span className="phone-input-shell">
+                      <select className="phone-country-select" aria-label={t(`${TK}.countryCode`)}>
+                        <option value="+1">+1</option>
+                      </select>
+                      <input
+                        className="settings-input phone-mask-input"
+                        type="tel"
+                        value={draftPhone}
+                        placeholder={t(`${TK}.placeholderPhoneMask`)}
+                        inputMode="numeric"
+                        autoComplete="tel-national"
+                        onChange={(event) => setDraftPhone(event.target.value)}
+                      />
+                    </span>
                   </label>
                   <label className="settings-field">
                     <span className="settings-label">{t(`${TK}.email`)}</span>
@@ -449,15 +585,47 @@ export default function BookingTeamPanel() {
                       ))}
                     </div>
                   </div>
-                  <label className="settings-field">
-                    <span className="settings-label">{t(`${TK}.smsNote`)}</span>
-                    <textarea
-                      className="settings-textarea"
-                      value={draftNote}
-                      placeholder={t(`${TK}.placeholderSmsNote`)}
-                      onChange={(event) => setDraftNote(event.target.value)}
-                    />
-                  </label>
+                </div>
+              </div>
+
+              <div className="tech-modal-section" data-tech-schedule-section>
+                <div className="tech-modal-section-title">
+                  <CalendarWeekIcon />
+                  <span>{t(`${TK}.weeklySchedule`)}</span>
+                </div>
+                <div className="tech-schedule">
+                  {DAY_KEYS.map((day) => (
+                    <div
+                      key={day}
+                      className={`tech-schedule-row ${draftSchedule[day].dayOff ? 'is-day-off' : ''}`}
+                    >
+                      <span className="tech-schedule-day">{t(`${TK}.days.${day}`)}</span>
+                      <label className="tech-schedule-off">
+                        <input
+                          className="tech-schedule-toggle"
+                          type="checkbox"
+                          checked={draftSchedule[day].dayOff}
+                          onChange={(event) => toggleDayOff(day, event.target.checked)}
+                        />
+                        {t(`${TK}.dayOff`)}
+                      </label>
+                      <span className="tech-schedule-time">
+                        <input
+                          type="time"
+                          value={draftSchedule[day].start}
+                          disabled={draftSchedule[day].dayOff}
+                          onChange={(event) => updateScheduleTime(day, 'start', event.target.value)}
+                        />
+                        <span>{t(`${TK}.scheduleTo`)}</span>
+                        <input
+                          type="time"
+                          value={draftSchedule[day].end}
+                          disabled={draftSchedule[day].dayOff}
+                          onChange={(event) => updateScheduleTime(day, 'end', event.target.value)}
+                        />
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
