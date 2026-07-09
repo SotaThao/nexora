@@ -929,10 +929,12 @@
         "support_type_required": "Please select a support type.",
         "support_type_min_length": "Support type is required.",
         "support_options": {
-          "payment": "Payment Processing",
-          "pos": "Free POS System Info",
-          "website": "Business Website",
-          "marketing": "Marketing",
+          "tip_payment": "Tip Payment Issue",
+          "qr_code": "QR Code Setup",
+          "staff_account": "Staff Account",
+          "billing_plan": "Billing & Plan",
+          "review_routing": "Review Routing",
+          "technical_bug": "Technical Bug",
           "other": "Other"
         },
         "message_label": "Message",
@@ -946,7 +948,10 @@
         "captcha_not_ready": "Security verification is loading. Please try again in a moment.",
         "captcha_error": "Security verification failed. Please refresh the page and try again.",
         "submitting_btn": "Submitting...",
-        "submit_error_msg": "Could not submit your ticket. Please try again."
+        "submit_error_msg": "Could not submit your ticket. Please try again.",
+        "response_time": "Average response time: within 24 hours on business days.",
+        "urgent_help_prefix": "Need urgent help?",
+        "urgent_help_email": "support@nexoratouch.com"
       },
       "faq": {
         "title": "Frequently Asked Questions",
@@ -957,7 +962,19 @@
         "q3": "How to set up VLINKPAY Wallet?",
         "a3": "Navigate to Settings -> Profile tab, scroll down to Payout Methods, and enter your VLINKPAY Wallet identifier. Once verified, customers will see VLINKPAY as a direct tipping option.",
         "q4": "How to order NFC stands?",
-        "a4": "You can order custom laser-engraved NFC wooden stands or tabletop cards directly from the Manage Plan / Subscriptions tab, or by contacting our support team with your salon station count."
+        "a4": "You can order custom laser-engraved NFC wooden stands or tabletop cards directly from the Manage Plan / Subscriptions tab, or by contacting our support team with your salon station count.",
+        "q5": "How do my customers tip without an app?",
+        "a5": "Customers scan the station QR code with their phone camera — no app download required. They choose a tip amount, select their preferred payment method (Venmo, Zelle, Cash App, or VLINKPAY), and complete the payment in their existing wallet app.",
+        "q6": "When do tips arrive in my technician's account?",
+        "a6": "Tips go directly from the customer to the technician's connected payout account. There is no hold or batching by Nexora — funds appear as soon as the customer's payment app confirms the transfer, typically within minutes.",
+        "q7": "Can I use Nexora Touch with my existing POS system?",
+        "a7": "Yes. Nexora Touch runs alongside your existing POS — it handles tipping and reviews at each station without replacing your checkout system. Your POS continues to process service payments; Nexora captures tips and feedback via QR codes at each workstation.",
+        "q8": "What happens if a customer leaves a 1-star review?",
+        "a8": "Low ratings are routed to you privately first so you can respond before they appear publicly. You receive a notification with the review details and can address the concern directly with the customer or your team.",
+        "q9": "How do I add or remove a technician from my roster?",
+        "a9": "Go to Staff in your dashboard. To add a technician, click Invite Staff and share the join link or QR code. To remove someone, open their profile and deactivate or remove them from your roster — their tip history remains in your records.",
+        "q10": "Is there a contract or can I cancel anytime?",
+        "a10": "Nexora Touch has no long-term contract. You can cancel your subscription at any time from Manage Plan. Your account stays active through the end of your current billing period."
       }
     },
     "tips": {
