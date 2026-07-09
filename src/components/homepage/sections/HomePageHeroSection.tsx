@@ -25,7 +25,7 @@ export default function HomePageHeroSection() {
                   <span data-i18n="hero-title-2">Review Faster.</span><br />
                   <span className="text-grad" data-i18n="hero-title-grad">Grow Stronger.</span>
                 </h2>
-                <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl mx-auto lg:mx-0" data-i18n="hero-desc">One QR code for your whole salon. Guests tip their nail tech, leave a Google review in one tap, and earn rewards that bring them back. Staff keep every dollar of their tips. You stay in control from one simple dashboard.</p>
+                <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl mx-auto lg:mx-0" data-i18n="hero-desc">One smart QR code. Your customers tip your staff directly — no card fees. They leave Google reviews automatically. And they earn rewards to come back.</p>
                 <div className="flex flex-row gap-4 justify-center lg:justify-start flex-wrap">
                   <a className="inline-flex items-center justify-center gap-2 rounded-full bg-navy text-white px-7 py-4 text-base font-bold shadow-lg hover:bg-slate-800 transition-all hover:scale-[1.02] ds-control ds-button nx-hero-btn" href="#simulator">
                     <span data-i18n="hero-btn-primary">Try the Live Demo</span>
@@ -38,15 +38,15 @@ export default function HomePageHeroSection() {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div className="bg-white border border-slate-200/60 shadow-sm rounded-xl p-3 flex items-center gap-2 ds-surface ds-elevate">
                       <LucideIcon name="check" className="w-4 h-4 text-green flex-shrink-0" />
-                      <span className="text-xs font-bold text-slate-700" data-i18n="badge-1">Direct Staff Tips</span>
+                      <span className="text-xs font-bold text-slate-700" data-i18n="badge-1">Zero-Fee Tips</span>
                     </div>
                     <div className="bg-white border border-slate-200/60 shadow-sm rounded-xl p-3 flex items-center gap-2 ds-surface ds-elevate">
                       <LucideIcon name="check" className="w-4 h-4 text-green flex-shrink-0" />
-                      <span className="text-xs font-bold text-slate-700" data-i18n="badge-2">Google Reviews</span>
+                      <span className="text-xs font-bold text-slate-700" data-i18n="badge-2">Auto Google Reviews</span>
                     </div>
                     <div className="bg-white border border-slate-200/60 shadow-sm rounded-xl p-3 flex items-center gap-2 ds-surface ds-elevate">
                       <LucideIcon name="check" className="w-4 h-4 text-green flex-shrink-0" />
-                      <span className="text-xs font-bold text-slate-700" data-i18n="badge-3">One QR Code</span>
+                      <span className="text-xs font-bold text-slate-700" data-i18n="badge-3">One QR for Everything</span>
                     </div>
                     <div className="bg-white border border-slate-200/60 shadow-sm rounded-xl p-3 flex items-center gap-2 ds-surface ds-elevate">
                       <LucideIcon name="check" className="w-4 h-4 text-green flex-shrink-0" />
