@@ -767,13 +767,7 @@ export default function Dashboard({
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
         />
 
-        <main
-          className={`min-h-dvh pb-24 sm:pb-24 lg:pb-7 ${
-            activeMenu === 'booking-hub'
-              ? 'p-0 lg:p-4'
-              : 'p-4 sm:p-6 lg:p-7'
-          }`}
-        >
+        <main className="min-h-dvh p-4 pb-24 sm:p-6 sm:pb-24 lg:p-7 lg:pb-7">
           {activeMenu !== 'overview' && activeMenu !== 'booking-hub' && (
             <button
               onClick={() => handleNavigateMenu('overview')}
