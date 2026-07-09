@@ -1,5 +1,6 @@
 import React from 'react'
-import { Mail, Lock, Eye, EyeOff, ArrowLeft, ArrowRight, Copy, Loader2 } from 'lucide-react'
+import { createPortal } from 'react-dom'
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, ArrowRight, Copy, Loader2, AlertTriangle } from 'lucide-react'
 
 export default function StepCredentials(props) {
   const {
@@ -13,6 +14,9 @@ export default function StepCredentials(props) {
     errors, setErrors,
     isSubmitting,
     ssoEmail,
+    showEmailExistsModal,
+    handleCloseEmailExistsModal,
+    handleGoToLoginFromEmailExists,
     // otp inline state
     showOtpInput, setShowOtpInput,
     otpCode, setOtpCode,
@@ -375,6 +379,39 @@ export default function StepCredentials(props) {
             </div>
           </form>
         </>
+      )}
+
+      {showEmailExistsModal && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl border border-slate-100 w-full max-w-sm shadow-2xl relative overflow-hidden animate-scaleUp text-center p-6 space-y-4">
+            <div className="mx-auto w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center">
+              <AlertTriangle className="w-7 h-7 text-amber-500" />
+            </div>
+            <h3 className="text-base font-bold text-nexoraText">
+              {t('components.register.steps.StepCredentials.emailExistsTitle')}
+            </h3>
+            <p className="text-xs text-nexoraSubtle leading-relaxed">
+              {t('components.register.steps.StepCredentials.emailExistsMessage')}
+            </p>
+            <div className="pt-2 flex flex-row gap-2.5">
+              <button
+                type="button"
+                onClick={handleCloseEmailExistsModal}
+                className="w-full min-h-11 py-2.5 border border-nexoraBorder hover:bg-nexoraCanvas text-nexoraSubtle hover:text-nexoraText font-semibold text-xs uppercase tracking-wider rounded-lg transition-all"
+              >
+                {t('common.close')}
+              </button>
+              <button
+                type="button"
+                onClick={handleGoToLoginFromEmailExists}
+                className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg transition-all"
+              >
+                {t('components.register.steps.StepCredentials.goToLogin')}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   )

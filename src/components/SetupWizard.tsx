@@ -62,7 +62,9 @@ export default function SetupWizard() {
 
   const {
     currentLanguage, setLanguage, t,
-    currentStep, setCurrentStep, isSsoLocked, isStepSaving,
+    currentStep, setCurrentStep, isSsoLocked,
+    isNameLocked, isAddressLocked, isPhoneLocked, isWebsiteLocked, isFeedbackEmailLocked,
+    isStepSaving,
     businessInfo, setBusinessInfo,
     merchantPaymentMethods,
     reviewLinks, setReviewLinks,
@@ -200,6 +202,11 @@ export default function SetupWizard() {
                 t={t}
                 currentLanguage={currentLanguage}
                 isSsoLocked={isSsoLocked}
+                isNameLocked={isNameLocked}
+                isAddressLocked={isAddressLocked}
+                isPhoneLocked={isPhoneLocked}
+                isWebsiteLocked={isWebsiteLocked}
+                isFeedbackEmailLocked={isFeedbackEmailLocked}
                 businessInfo={businessInfo}
                 setBusinessInfo={setBusinessInfo}
                 reviewLinks={reviewLinks}

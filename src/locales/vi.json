@@ -2399,7 +2399,10 @@
           "processing": "Đang xử lý...",
           "register": "Đăng ký",
           "phExampleOtp": "vd: 1234",
-          "otpSentToEmail": "OTP đã gửi tới email"
+          "otpSentToEmail": "OTP đã gửi tới email",
+          "emailExistsTitle": "Tài khoản đã tồn tại",
+          "emailExistsMessage": "Email này đã được đăng ký. Vui lòng đăng nhập để tiếp tục.",
+          "goToLogin": "Đăng nhập"
         },
         "StepOtpVerify": {
           "activateAccountEnterOtp": "Kích hoạt tài khoản",

@@ -2404,7 +2404,10 @@
           "processing": "Processing...",
           "register": "Register",
           "phExampleOtp": "e.g. 1234",
-          "otpSentToEmail": "OTP sent to email"
+          "otpSentToEmail": "OTP sent to email",
+          "emailExistsTitle": "Account already exists",
+          "emailExistsMessage": "This email is already registered. Please sign in instead.",
+          "goToLogin": "Go to Login"
         },
         "StepOtpVerify": {
           "activateAccountEnterOtp": "Activate Account",
