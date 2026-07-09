@@ -3748,9 +3748,6 @@
         "locked": "Locked"
       },
       "dashboard": {
-        "ownerReportedIncome": "Owner-Reported Income",
-        "selfReportedIncome": "Self-Reported Income",
-        "grossIncome": "Gross Income",
         "viewDetails": "View Details"
       },
       "columns": {

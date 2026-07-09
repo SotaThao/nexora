@@ -32,6 +32,9 @@ interface BasicErrors {
   date?: string
 }
 
+// BE added a `Day` enum member (2026-07-09) so new records carry an explicit
+// periodType: 'Day'. Records created before that change still have periodType: null
+// for the same "Per Transaction" case — both fall through to 'Day' here.
 function periodTypeToMode(periodType: string | null): PeriodMode {
   if (periodType === 'Week' || periodType === 'Month' || periodType === 'Quarter' || periodType === 'Year') {
     return periodType
@@ -126,7 +129,7 @@ export default function SelfReportedIncomeWizard({
     amount: Number(amount),
     transactionDate,
     periodEndDate: periodMode === 'Day' ? null : periodEndDate,
-    periodType: periodMode === 'Day' ? null : periodMode,
+    periodType: periodMode,
     source: source.trim(),
     incomeType: incomeType || null,
     incomeTypeNote: incomeType === 'Other' ? incomeTypeNote.trim() || null : null,

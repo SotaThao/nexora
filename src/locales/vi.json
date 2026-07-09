@@ -3747,9 +3747,6 @@
         "locked": "Đã Khóa"
       },
       "dashboard": {
-        "ownerReportedIncome": "Thu Nhập Chủ Tiệm Khai",
-        "selfReportedIncome": "Thu Nhập Tự Khai",
-        "grossIncome": "Tổng Thu Nhập",
         "viewDetails": "Xem Chi Tiết"
       },
       "columns": {

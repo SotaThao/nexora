@@ -2,11 +2,11 @@ import { useMemo } from 'react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import Tooltip from '../../../../ui/Tooltip'
 
-// US-13 Step 1 period picker. `PeriodType` on the wire has no "Day" member (BE:
-// Week|Month|Quarter|Year) — "Day" is a FE-only concept for Per Transaction entry,
-// represented as `periodType: null`. Week/Quarter/Month ranges are FE-only display
-// logic (BE stores only TransactionDate/PeriodEndDate, no week-number field), computed
-// with plain UTC-based Date math to avoid local-timezone drift on date-only values.
+// US-13 Step 1 period picker. `PeriodType` on the wire is Week|Month|Quarter|Year|Day —
+// "Day" (Per Transaction) always has `periodEndDate: null`. Week/Quarter/Month ranges
+// are FE-only display logic (BE stores only TransactionDate/PeriodEndDate, no
+// week-number field), computed with plain UTC-based Date math to avoid
+// local-timezone drift on date-only values.
 export type PeriodMode = 'Day' | 'Week' | 'Month' | 'Quarter' | 'Year'
 
 export interface PeriodRange {

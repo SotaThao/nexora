@@ -35,6 +35,7 @@ function statusBadgeClass(status: string) {
 }
 
 function statusLabelKey(status: string) {
+  if (status === 'CPAReview') return 'taxiq.selfReportedIncome.status.cpaReview'
   const key = status.charAt(0).toLowerCase() + status.slice(1)
   return `taxiq.selfReportedIncome.status.${key}`
 }
