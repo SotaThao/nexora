@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { Copy, Plus } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { useRevokeCpaAccessGrant, useTaxiqCpaAccessGrants } from '../../../../data/hooks/useTaxiqCpaAccess'
@@ -51,6 +51,16 @@ export default function CpaAccessSettingsView({
           })()
         : fallback
       showToast(message, 'error')
+    }
+  }
+
+  const handleCopyLink = async (grant: CpaAccessGrantListItem) => {
+    const link = `${window.location.origin}/cpa/access?token=${encodeURIComponent(grant.accessToken)}`
+    try {
+      await navigator.clipboard.writeText(link)
+      showToast(t('common.copied'), 'success')
+    } catch {
+      showToast(t('taxiq.cpaAccess.copyLink.errors.generic'), 'error')
     }
   }
 
@@ -119,15 +129,25 @@ export default function CpaAccessSettingsView({
                     <CpaGrantStatusBadge status={grant.status} />
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center justify-end">
+                    <div className="flex items-center justify-end gap-3">
                       {grant.status === 'Active' && (
-                        <button
-                          type="button"
-                          onClick={() => setRevokingGrant(grant)}
-                          className="text-[11px] font-bold text-rose-600 hover:underline"
-                        >
-                          {t('taxiq.cpaAccess.actions.revoke')}
-                        </button>
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyLink(grant)}
+                            className="inline-flex items-center gap-1 text-[11px] font-bold text-nexoraBrand hover:underline"
+                          >
+                            <Copy className="h-3 w-3" />
+                            {t('taxiq.cpaAccess.actions.copyLink')}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setRevokingGrant(grant)}
+                            className="text-[11px] font-bold text-rose-600 hover:underline"
+                          >
+                            {t('taxiq.cpaAccess.actions.revoke')}
+                          </button>
+                        </>
                       )}
                     </div>
                   </td>
@@ -136,11 +156,6 @@ export default function CpaAccessSettingsView({
             )}
           </tbody>
         </table>
-      </div>
-
-      <div className="nexora-card p-4">
-        <h3 className="text-sm font-extrabold text-nexoraText">{t('taxiq.cpaAccess.downloadHistory.title')}</h3>
-        <p className="mt-1 text-xs text-nexoraMuted">{t('taxiq.cpaAccess.downloadHistory.phase2Notice')}</p>
       </div>
 
       {isCreateModalOpen && (

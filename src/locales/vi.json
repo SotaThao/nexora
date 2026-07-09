@@ -4190,7 +4190,13 @@
         "packageColumn": "Mức chi tiết CPA được xem: Basic (số tổng), Full (toàn bộ + hóa đơn), CPA Review (chỉ mục gắn cờ)."
       },
       "actions": {
-        "revoke": "Thu hồi"
+        "revoke": "Thu hồi",
+        "copyLink": "Sao chép link"
+      },
+      "copyLink": {
+        "errors": {
+          "generic": "Không thể sao chép link này. Vui lòng thử lại."
+        }
       },
       "form": {
         "modalTitle": "Mời CPA",
@@ -4218,10 +4224,6 @@
         "errors": {
           "generic": "Không thể thu hồi quyền truy cập này. Vui lòng thử lại."
         }
-      },
-      "downloadHistory": {
-        "title": "Lịch Sử Tải Xuống",
-        "phase2Notice": "Sẽ có trong phase sau — backend chưa theo dõi lịch sử tải xuống."
       }
     },
     "cpaViewer": {
@@ -4230,7 +4232,12 @@
       "linkInvalid": "Link này không hợp lệ.",
       "linkExpiredOrRevoked": "Link này đã hết hạn hoặc bị thu hồi.",
       "readOnlyBanner": "Bạn đang xem với quyền CPA read-only, hết hạn vào {{date}}.",
+      "sections": {
+        "deductions": "Deductions",
+        "payouts": "Payouts"
+      },
       "emptyState": "Không có deduction record nào trong package này.",
+      "emptyPayoutState": "Không có payout record nào trong package này.",
       "columns": {
         "category": "Danh mục",
         "description": "Mô tả",
@@ -4239,7 +4246,13 @@
         "amount": "Số tiền",
         "deductibleAmount": "Được khấu trừ",
         "receipts": "Chứng từ",
-        "cpaNotes": "CPA Notes"
+        "cpaNotes": "CPA Notes",
+        "staffName": "Thợ",
+        "payPeriod": "Kỳ trả",
+        "grossPayout": "Gross",
+        "netPaid": "Net paid",
+        "paymentMethod": "Phương thức thanh toán",
+        "status": "Trạng thái"
       },
       "notes": {
         "editButton": "Sửa",

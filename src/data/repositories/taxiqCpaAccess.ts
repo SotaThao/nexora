@@ -19,6 +19,7 @@ export type CpaExpiryDays = (typeof CPA_EXPIRY_DAYS)[number]
 
 export interface CpaAccessGrantListItemApiDto {
   id: string
+  accessToken: string
   cpaEmail: string
   packageType: string
   dataMode: string
@@ -30,6 +31,7 @@ export interface CpaAccessGrantListItemApiDto {
 
 export interface CpaAccessGrantListItem {
   id: string
+  accessToken: string
   cpaEmail: string
   packageType: string
   dataMode: string
@@ -42,6 +44,7 @@ export interface CpaAccessGrantListItem {
 function normalizeGrantListItem(dto: CpaAccessGrantListItemApiDto): CpaAccessGrantListItem {
   return {
     id: dto.id,
+    accessToken: dto.accessToken,
     cpaEmail: dto.cpaEmail,
     packageType: dto.packageType,
     dataMode: dto.dataMode,

@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { AlertCircle, Loader2, Lock, Pencil } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useAddCpaNote, useCpaPackage } from '../../../data/hooks/useTaxiqCpaViewer'
-import type { CpaDeduction } from '../../../data/repositories/taxiqCpaViewer'
+import type { CpaDeduction, CpaPayout } from '../../../data/repositories/taxiqCpaViewer'
 import LoadingScreen from '../../../app/LoadingScreen'
 import Tooltip from '../../ui/Tooltip'
 import { formatTransactionDateTime } from '../../dashboard/utils'
@@ -68,6 +68,9 @@ export default function CpaViewerPage() {
           </div>
         </div>
 
+        <h2 className="px-1 text-xs font-extrabold uppercase text-nexoraMuted">
+          {t('taxiq.cpaViewer.sections.deductions')}
+        </h2>
         <div className="overflow-x-auto rounded-2xl border border-nexoraBorder bg-white dark:bg-luxuryCoal">
           <table className="w-full min-w-[860px] text-left text-xs">
             <thead className="bg-nexoraCanvas text-[10px] font-extrabold uppercase text-nexoraMuted">
@@ -98,6 +101,35 @@ export default function CpaViewerPage() {
                 pkg.deductions.map((deduction) => (
                   <CpaDeductionRow key={deduction.id} deduction={deduction} accessToken={token} />
                 ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <h2 className="px-1 text-xs font-extrabold uppercase text-nexoraMuted">
+          {t('taxiq.cpaViewer.sections.payouts')}
+        </h2>
+        <div className="overflow-x-auto rounded-2xl border border-nexoraBorder bg-white dark:bg-luxuryCoal">
+          <table className="w-full min-w-[860px] text-left text-xs">
+            <thead className="bg-nexoraCanvas text-[10px] font-extrabold uppercase text-nexoraMuted">
+              <tr>
+                <th className="px-4 py-3">{t('taxiq.cpaViewer.columns.staffName')}</th>
+                <th className="px-4 py-3">{t('taxiq.cpaViewer.columns.payPeriod')}</th>
+                <th className="px-4 py-3">{t('taxiq.cpaViewer.columns.grossPayout')}</th>
+                <th className="px-4 py-3">{t('taxiq.cpaViewer.columns.netPaid')}</th>
+                <th className="px-4 py-3">{t('taxiq.cpaViewer.columns.paymentMethod')}</th>
+                <th className="px-4 py-3">{t('taxiq.cpaViewer.columns.status')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pkg.payouts.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center font-medium text-nexoraMuted">
+                    {t('taxiq.cpaViewer.emptyPayoutState')}
+                  </td>
+                </tr>
+              ) : (
+                pkg.payouts.map((payout) => <CpaPayoutRow key={payout.id} payout={payout} />)
               )}
             </tbody>
           </table>
@@ -181,6 +213,21 @@ function CpaDeductionRow({ deduction, accessToken }: { deduction: CpaDeduction; 
           </div>
         )}
       </td>
+    </tr>
+  )
+}
+
+function CpaPayoutRow({ payout }: { payout: CpaPayout }) {
+  return (
+    <tr className="border-t border-nexoraRule align-top">
+      <td className="px-4 py-3 font-bold text-nexoraText">{payout.staffName ?? '—'}</td>
+      <td className="px-4 py-3 text-nexoraMuted">
+        {payout.periodStart} – {payout.periodEnd}
+      </td>
+      <td className="px-4 py-3 text-nexoraText">{formatUsd(payout.grossPayout)}</td>
+      <td className="px-4 py-3 font-extrabold text-nexoraText">{formatUsd(payout.netPaid)}</td>
+      <td className="px-4 py-3 text-nexoraMuted">{payout.paymentMethod}</td>
+      <td className="px-4 py-3 text-nexoraMuted">{payout.status}</td>
     </tr>
   )
 }

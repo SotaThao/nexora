@@ -4191,7 +4191,13 @@
         "packageColumn": "How much detail this CPA can see: Basic (totals), Full (everything + receipts), or CPA Review (flagged items only)."
       },
       "actions": {
-        "revoke": "Revoke"
+        "revoke": "Revoke",
+        "copyLink": "Copy link"
+      },
+      "copyLink": {
+        "errors": {
+          "generic": "Unable to copy this link. Please try again."
+        }
       },
       "form": {
         "modalTitle": "Invite CPA",
@@ -4219,10 +4225,6 @@
         "errors": {
           "generic": "Unable to revoke this access grant. Please try again."
         }
-      },
-      "downloadHistory": {
-        "title": "Download History",
-        "phase2Notice": "Coming in a future phase — the backend does not yet track download history."
       }
     },
     "cpaViewer": {
@@ -4231,7 +4233,12 @@
       "linkInvalid": "This link is invalid.",
       "linkExpiredOrRevoked": "This link has expired or been revoked.",
       "readOnlyBanner": "You are viewing with CPA read-only access, expires on {{date}}.",
+      "sections": {
+        "deductions": "Deductions",
+        "payouts": "Payouts"
+      },
       "emptyState": "No deduction records in this package.",
+      "emptyPayoutState": "No payout records in this package.",
       "columns": {
         "category": "Category",
         "description": "Description",
@@ -4240,7 +4247,13 @@
         "amount": "Amount",
         "deductibleAmount": "Deductible",
         "receipts": "Receipts",
-        "cpaNotes": "CPA notes"
+        "cpaNotes": "CPA notes",
+        "staffName": "Staff",
+        "payPeriod": "Period",
+        "grossPayout": "Gross",
+        "netPaid": "Net paid",
+        "paymentMethod": "Payment method",
+        "status": "Status"
       },
       "notes": {
         "editButton": "Edit",

@@ -61,6 +61,7 @@ export default function AddPayoutModal({
       setSelectedStaffUserId(editingRecord.staffUserId)
       setContractType(null)
       setW9Status(null)
+      staffListQuery.refetch()
       setForm({
         payPeriod: editingRecord.payPeriod as PayPeriod,
         periodStart: editingRecord.periodStart,
@@ -108,7 +109,9 @@ export default function AddPayoutModal({
   const grossPayout = useMemo(() => servicePayout + tip + bonus, [servicePayout, tip, bonus])
   const netPaid = useMemo(() => grossPayout - reimbursement, [grossPayout, reimbursement])
 
-  const showW9Warning = contractType === 'C1099' && w9Status !== 'Received'
+  const effectiveContractType = contractType ?? (selectedStaff?.contractType as ContractType | null) ?? null
+  const effectiveW9Status = w9Status ?? (selectedStaff?.w9Status as W9Status | null) ?? null
+  const showW9Warning = effectiveContractType === 'C1099' && effectiveW9Status !== 'Received'
 
   const canSubmit =
     form.periodStart.trim().length > 0 &&

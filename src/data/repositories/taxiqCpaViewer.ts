@@ -64,12 +64,63 @@ function normalizeCpaDeduction(dto: CpaDeductionApiDto): CpaDeduction {
   }
 }
 
+export interface CpaPayoutApiDto {
+  id: string
+  staffName?: string | null
+  payPeriod: string
+  periodStart: string
+  periodEnd: string
+  servicePayout: number
+  tip: number
+  bonus: number
+  reimbursement: number
+  paymentMethod: string
+  status: string
+  grossPayout: number
+  netPaid: number
+}
+
+export interface CpaPayout {
+  id: string
+  staffName: string | null
+  payPeriod: string
+  periodStart: string
+  periodEnd: string
+  servicePayout: number
+  tip: number
+  bonus: number
+  reimbursement: number
+  paymentMethod: string
+  status: string
+  grossPayout: number
+  netPaid: number
+}
+
+function normalizeCpaPayout(dto: CpaPayoutApiDto): CpaPayout {
+  return {
+    id: dto.id,
+    staffName: dto.staffName ?? null,
+    payPeriod: dto.payPeriod,
+    periodStart: dto.periodStart,
+    periodEnd: dto.periodEnd,
+    servicePayout: dto.servicePayout,
+    tip: dto.tip,
+    bonus: dto.bonus,
+    reimbursement: dto.reimbursement,
+    paymentMethod: dto.paymentMethod,
+    status: dto.status,
+    grossPayout: dto.grossPayout,
+    netPaid: dto.netPaid,
+  }
+}
+
 export interface CpaPackageApiDto {
   grantId: string
   packageType: string
   dataMode: string
   expiresAt: string
   deductions: CpaDeductionApiDto[]
+  payouts: CpaPayoutApiDto[]
 }
 
 export interface CpaPackage {
@@ -78,6 +129,7 @@ export interface CpaPackage {
   dataMode: string
   expiresAt: string
   deductions: CpaDeduction[]
+  payouts: CpaPayout[]
 }
 
 function normalizeCpaPackage(dto: CpaPackageApiDto): CpaPackage {
@@ -87,6 +139,7 @@ function normalizeCpaPackage(dto: CpaPackageApiDto): CpaPackage {
     dataMode: dto.dataMode,
     expiresAt: dto.expiresAt,
     deductions: (dto.deductions ?? []).map(normalizeCpaDeduction),
+    payouts: (dto.payouts ?? []).map(normalizeCpaPayout),
   }
 }
 
