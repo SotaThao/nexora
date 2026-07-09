@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
-import { X, Upload, Eye, AlertTriangle, QrCode, Loader2, CheckCircle2, XCircle, Star, HelpCircle } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { X, Upload, Eye, AlertTriangle, QrCode, Loader2, CheckCircle2, XCircle, Star, HelpCircle, Plus, Pencil } from 'lucide-react'
 import IconButton from '../../ui/IconButton'
 import ImageFileInput from '../../ui/ImageFileInput'
-import CountryCodeSelect, { parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
+import CountryCodeSelect, { getDefaultDialCode, normalizePhoneE164, parsePhone, formatNationalNumber } from '../../CountryCodeSelect'
 import { WalletLogos, DEFAULT_PAYOUT_CONFIGS } from '../constants'
 import { useTranslation, renderLabel } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
@@ -10,7 +10,19 @@ import PayoutSetupModal from './PayoutSetupModal'
 import StaffReviewsDetailModal from './StaffReviewsDetailModal'
 import StaffQrScannerModal from './StaffQrScannerModal'
 import { useSearchMerchantStaff, useMerchantStaffStats } from '../../../data/hooks/useMerchantStaff'
+import {
+  useLocalStaffPaymentMethods,
+  useToggleLocalStaffPaymentMethod,
+  useUpdateLocalStaffPaymentMethod,
+} from '../../../data/hooks/useLocalStaff'
+import { PAYOUT_UI_DISPLAY_ORDER, PAYOUT_UI_LABELS, payoutTypeToUiKey } from '../../../data/paymentMethodTypes'
+import { getApiErrorCode } from '../../../types/domain'
+import { getErrorI18nKey } from '../../../data/errorCodes'
 import { buildStaffReviewSummary } from './staffModalReviewUtils'
+
+const STAFF_MODAL_PAYOUT_KEYS = PAYOUT_UI_DISPLAY_ORDER.filter((key) =>
+  ['zelle', 'paypal', 'venmo', 'cashapp', 'applecash', 'vlinkpay'].includes(key),
+)
 
 function StaffModal({
   open,
@@ -31,7 +43,10 @@ function StaffModal({
   isTogglingTipsFlow = false,
   staffLinkId = null,
   reviews: reviewsProp = null,
-  merchantSetupData = null
+  merchantSetupData = null,
+  isSavingLocal = false,
+  isLoadingDetail = false,
+  fetchStaffStats = true,
 }) {
   const { t, currentLanguage } = useTranslation()
   const { showToast } = useNotification()
@@ -43,7 +58,10 @@ function StaffModal({
   const [showScanner, setShowScanner] = useState(false)
   const [scanTarget, setScanTarget] = useState<any | null>(null) // 'staff' | 'vlinkpay' | 'combined'
 
-  const isReviewOnly = isApproveMode || viewOnly
+  const isLocalStaff = Boolean(form?.isLocalStaff)
+  const isReviewOnly = (isApproveMode || viewOnly) && !isLocalStaff
+  const isIdReadOnly = isReviewOnly || isLocalStaff
+  const canManageLocalPayouts = isLocalStaff && !viewOnly && !isApproveMode
 
   const [idInput, setIdInput] = useState(() =>
     isReviewOnly ? (form.nexoraStaffId || form.vlinkpay || '') : (form.vlinkpay || form.nexoraStaffId || ''),
@@ -79,6 +97,7 @@ function StaffModal({
   const [reviewFilterRating, setReviewFilterRating] = useState('all')
   const [reviewFilterSource, setReviewFilterSource] = useState('all')
   const [reviewFilterOnlyCommented, setReviewFilterOnlyCommented] = useState(false)
+  const fallbackDialCode = useMemo(() => getDefaultDialCode(currentLanguage), [currentLanguage])
 
   const searchResultsQuery = useSearchMerchantStaff(searchQuery, {
     enabled: open && !editing && !isReviewOnly && searchQuery.trim().length > 0,
@@ -86,8 +105,28 @@ function StaffModal({
 
   const staffProfileId = typeof form?.staffProfileId === 'string' ? form.staffProfileId : null
   const { data: staffStats } = useMerchantStaffStats(staffProfileId, {}, {
-    enabled: open && !!staffProfileId,
+    enabled: open && !!staffProfileId && fetchStaffStats,
   })
+  const { data: localPaymentMethods = [] } = useLocalStaffPaymentMethods(staffProfileId, {
+    enabled: open && isLocalStaff && !!staffProfileId,
+  })
+  const updateLocalPaymentMutation = useUpdateLocalStaffPaymentMethod()
+  const toggleLocalPaymentMutation = useToggleLocalStaffPaymentMethod()
+  const isLocalPaymentSaving =
+    updateLocalPaymentMutation.isPending || toggleLocalPaymentMutation.isPending
+
+  const localPaymentMethodsByKey = useMemo(() => {
+    const map = new Map<string, (typeof localPaymentMethods)[number]>()
+    for (const method of localPaymentMethods) {
+      const key = method.uiKey || payoutTypeToUiKey(method.type || '')
+      if (key) map.set(key, method)
+    }
+    return map
+  }, [localPaymentMethods])
+
+  const showLocalPaymentError = (err: unknown) => {
+    showToast(t(getErrorI18nKey(getApiErrorCode(err))), 'error')
+  }
 
   useEffect(() => {
     if (!searchQuery) return
@@ -142,6 +181,25 @@ function StaffModal({
     }
   }, [lastHandledSearchQuery, searchQuery, searchResultsQuery.data, searchResultsQuery.isError, searchResultsQuery.isFetching, setForm, showToast, t])
 
+  const phoneParsed = useMemo(() => {
+    const rawPhone = String(form?.phone || '').trim()
+    const parsedPhone = parsePhone(rawPhone)
+
+    // Preserve legacy local trunk-zero values (e.g. 0385...) so edit mode
+    // keeps the same grouping users saw previously, without hardcoding dial code.
+    if (!rawPhone.startsWith('+')) {
+      const digits = rawPhone.replace(/\D/g, '')
+      if (digits.startsWith('0') && digits.length >= 9 && digits.length <= 11) {
+        return {
+          countryCode: fallbackDialCode,
+          nationalNumber: digits,
+        }
+      }
+    }
+
+    return parsedPhone
+  }, [form?.phone, fallbackDialCode])
+
   if (!open) return null
 
   const staffMemberContext = form
@@ -164,37 +222,71 @@ function StaffModal({
 
   const displayRating = averageRating > 0
     ? averageRating
-    : Number(staffStats?.allTime?.averageRating ?? 0)
+    : Number(staffStats?.allTime?.averageRating ?? form?.averageRating ?? 0)
 
   const displayReviewCount = reviewsList.length > 0
     ? reviewsList.length
     : Number(staffStats?.allTime?.totalReviews ?? staffStats?.period?.totalReviews ?? 0)
 
-  const phoneParsed = parsePhone(form?.phone || '')
-
-  const handleAvatarPick = (dataUrl) => {
+  const handleAvatarPick = (dataUrl: string) => {
     if (!dataUrl) return
-    setForm({ ...form, avatar: dataUrl })
+    setForm((prev) => ({ ...prev, avatar: dataUrl }))
   }
 
-  const handleToggleWallet = (walletKey) => {
-    // Read-only for Salon Owner
-    return
+  const handleAvatarFilePick = (file: File) => {
+    setForm((prev) => ({ ...prev, avatarFile: file }))
   }
 
-  const openPayoutSetup = (walletKey) => {
-    const configs = form.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
-    const config = configs[walletKey] || { enabled: false, value: '', qrCode: '' }
-    setTempPayoutValues({
-      value: config.value || '',
-      qrCode: config.qrCode || '',
-      accountName: config.accountName || form.fullName || ''
-    })
+  const openPayoutSetup = (walletKey: string) => {
+    if (isLocalStaff) {
+      const method = localPaymentMethodsByKey.get(walletKey)
+      setTempPayoutValues({
+        value: method?.accountInfo || '',
+        qrCode: method?.imageUrl || '',
+        accountName: form.fullName || '',
+      })
+    } else {
+      const configs = form.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
+      const config = configs[walletKey] || { enabled: false, value: '', qrCode: '' }
+      setTempPayoutValues({
+        value: config.value || '',
+        qrCode: config.qrCode || '',
+        accountName: config.accountName || form.fullName || '',
+      })
+    }
     setPayoutSetupWallet(walletKey)
     setPayoutSetupOpen(true)
   }
 
-  const handlePayoutSubmit = (value, qrCode, accountName) => {
+  const handlePayoutSubmit = (value: string, qrCode: string, accountName: string, qrFile?: File | null) => {
+    if (isLocalStaff) {
+      const method = localPaymentMethodsByKey.get(payoutSetupWallet)
+      if (!method?.id || !staffProfileId) return
+
+      updateLocalPaymentMutation.mutate(
+        {
+          staffProfileId,
+          paymentMethodId: method.id,
+          accountInfo: value.trim(),
+          imageUrl: qrCode || null,
+          imageFile: qrFile,
+        },
+        {
+          onSuccess: (updated) => {
+            setPayoutSetupOpen(false)
+            if (!updated.isActive && value.trim()) {
+              toggleLocalPaymentMutation.mutate(
+                { staffProfileId, paymentMethodId: method.id },
+                { onError: showLocalPaymentError },
+              )
+            }
+          },
+          onError: showLocalPaymentError,
+        },
+      )
+      return
+    }
+
     const configs = form.payoutConfigs || DEFAULT_PAYOUT_CONFIGS
     setForm({
       ...form,
@@ -204,11 +296,26 @@ function StaffModal({
           enabled: true,
           value: value.trim(),
           qrCode: qrCode,
-          accountName: accountName.trim()
-        }
-      }
+          accountName: accountName.trim(),
+        },
+      },
     })
     setPayoutSetupOpen(false)
+  }
+
+  const handleToggleLocalPayment = (walletKey: string) => {
+    if (!canManageLocalPayouts || !staffProfileId || isLocalPaymentSaving) return
+    const method = localPaymentMethodsByKey.get(walletKey)
+    if (!method?.id) return
+    // Enabling a method without account info is meaningless — send them to setup first.
+    if (!method.isActive && !method.accountInfo) {
+      openPayoutSetup(walletKey)
+      return
+    }
+    toggleLocalPaymentMutation.mutate(
+      { staffProfileId, paymentMethodId: method.id },
+      { onError: showLocalPaymentError },
+    )
   }
 
   const handleCombinedIdChange = (val) => {
@@ -278,7 +385,12 @@ function StaffModal({
           animation: scaleUp 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
       `}</style>
-      <div className="w-full max-w-lg md:max-w-3xl lg:max-w-4xl rounded-xl bg-white p-6 shadow-2xl transition-all">
+      <div className="w-full max-w-lg md:max-w-3xl lg:max-w-4xl rounded-xl bg-white p-6 shadow-2xl transition-all relative">
+        {isLoadingDetail && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/70 backdrop-blur-[1px]">
+            <Loader2 className="h-8 w-8 animate-spin text-nexoraBrand" />
+          </div>
+        )}
         <div className="flex items-center justify-between border-b border-nexoraRule pb-4">
           <h2 className="text-lg font-extrabold text-nexoraText">
             {isApproveMode
@@ -306,14 +418,14 @@ function StaffModal({
                   </span>
                   <input
                     className={`h-10 w-full rounded-lg border pl-[76px] pr-10 text-sm outline-none font-semibold font-mono transition-all ${
-                      isReviewOnly ? 'border-nexoraBorder bg-nexoraCanvas cursor-default' :
+                      isIdReadOnly ? 'border-nexoraBorder bg-nexoraCanvas cursor-default' :
                       (vlinkpayStatus === 'success' || nexoraStatus === 'success') ? 'border-nexoraSuccess focus:border-nexoraSuccess focus:ring-1 focus:ring-nexoraSuccess/20' :
                       (vlinkpayStatus === 'error' && nexoraStatus === 'error') ? 'border-nexoraDanger focus:border-nexoraDanger focus:ring-1 focus:ring-nexoraDanger/20 animate-shake' :
                       (vlinkpayStatus === 'checking' || nexoraStatus === 'checking') ? 'border-nexoraWarning focus:border-nexoraWarning' :
                       'border-nexoraBorder focus:border-nexoraBrand'
                     }`}
                     value={idInput}
-                    readOnly={isReviewOnly}
+                    readOnly={isIdReadOnly}
                     onChange={(event) => handleCombinedIdChange(event.target.value)}
                     placeholder={t('components.dashboard.modals.StaffModal.phExampleVlp1')}
                   />
@@ -332,7 +444,7 @@ function StaffModal({
                     value={form.nexoraStaffId || ''}
                     readOnly
                   />
-                  {!isReviewOnly && (
+                  {!isReviewOnly && !isLocalStaff && (
                     <>
                       <div className="absolute right-9 top-1/2 -translate-y-1/2 flex items-center gap-1">
                         {(vlinkpayStatus === 'checking' || nexoraStatus === 'checking') && (
@@ -370,7 +482,7 @@ function StaffModal({
                   )}
                 </div>
 
-                {!isReviewOnly && (
+                {!isReviewOnly && !isLocalStaff && (
                   <button
                     type="button"
                     onClick={() => onOpenInviteShare && onOpenInviteShare(form)}
@@ -410,6 +522,7 @@ function StaffModal({
                       as="label"
                       className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-nexoraBorder px-3 text-xs font-bold text-nexoraText transition hover:bg-nexoraCanvas"
                       onPick={handleAvatarPick}
+                      onPickFile={handleAvatarFilePick}
                     >
                       <Upload className="h-4 w-4 text-nexoraBrand" />
                       {t('common.upload_photo')}
@@ -490,12 +603,34 @@ function StaffModal({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="min-w-0">
                 <label className="flex h-4 items-center text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_phone')}</label>
-                <div className="mt-1 flex h-10 w-full overflow-hidden rounded-lg shadow-sm opacity-70 pointer-events-none">
-                  <CountryCodeSelect value={phoneParsed.countryCode} onChange={() => {}} disabled />
+                <div className={`mt-1 flex h-10 w-full overflow-hidden rounded-lg shadow-sm ${isReviewOnly ? 'opacity-70 pointer-events-none' : ''}`}>
+                  <CountryCodeSelect
+                    value={phoneParsed.countryCode}
+                    disabled={isReviewOnly}
+                    showSearch={false}
+                    onChange={(nextCode) => {
+                      if (isReviewOnly) return
+                      const normalizedPhone = normalizePhoneE164(phoneParsed.nationalNumber, nextCode)
+                      setForm((prev) => ({ ...prev, phone: normalizedPhone || '' }))
+                    }}
+                  />
                   <input
-                    className="h-10 w-full min-w-0 rounded-r-lg border border-l-0 border-nexoraBorder bg-nexoraCanvas px-3 text-sm font-semibold text-nexoraText outline-none"
+                    className={`h-10 w-full min-w-0 rounded-r-lg border border-l-0 px-3 text-sm font-semibold text-nexoraText outline-none transition ${
+                      isReviewOnly
+                        ? 'border-nexoraBorder bg-nexoraCanvas'
+                        : 'border-nexoraBorder bg-white focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20'
+                    }`}
                     value={formatNationalNumber(phoneParsed.nationalNumber, phoneParsed.countryCode)}
-                    readOnly
+                    readOnly={isReviewOnly}
+                    onChange={(event) => {
+                      if (isReviewOnly) return
+                      const formatted = formatNationalNumber(event.target.value, phoneParsed.countryCode)
+                      const normalizedPhone = normalizePhoneE164(formatted, phoneParsed.countryCode)
+                      setForm((prev) => ({
+                        ...prev,
+                        phone: normalizedPhone || '',
+                      }))
+                    }}
                     placeholder={t('setup.staff_phone_placeholder')}
                   />
                 </div>
@@ -503,7 +638,20 @@ function StaffModal({
               </div>
               <div className="min-w-0">
                 <label className="flex h-4 items-center text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.staff_email')}</label>
-                <input className="mt-1 h-10 w-full rounded-lg border border-nexoraBorder bg-nexoraCanvas px-3 text-sm font-semibold text-nexoraText outline-none cursor-not-allowed" value={form.email || ''} readOnly placeholder={t('setup.staff_email_placeholder')} />
+                <input
+                  className={`mt-1 h-10 w-full rounded-lg border px-3 text-sm font-semibold text-nexoraText outline-none transition ${
+                    isReviewOnly
+                      ? 'border-nexoraBorder bg-nexoraCanvas cursor-not-allowed'
+                      : 'border-nexoraBorder bg-white focus:border-nexoraBrand focus:ring-2 focus:ring-nexoraBrand/20'
+                  }`}
+                  value={form.email || ''}
+                  readOnly={isReviewOnly}
+                  onChange={(event) => {
+                    if (isReviewOnly) return
+                    setForm((prev) => ({ ...prev, email: event.target.value }))
+                  }}
+                  placeholder={t('setup.staff_email_placeholder')}
+                />
                 {errors.email && <p className="mt-1 text-[10px] font-bold text-nexoraDanger">{errors.email}</p>}
               </div>
             </div>
@@ -515,24 +663,35 @@ function StaffModal({
               <label className="text-[10px] font-extrabold uppercase text-nexoraMuted">{t('setup.payout_methods')}</label>
               <div className="mt-2 space-y-4">
                 <div className="divide-y divide-nexoraRule rounded-xl border border-nexoraBorder bg-white px-4">
-                  {[
-                    { name: 'Zelle', key: 'zelle' },
-                    { name: 'Bank Wire', key: 'bankwire' },
-                    { name: 'PayPal', key: 'paypal' },
-                    { name: 'Venmo', key: 'venmo' },
-                    { name: 'Cash App', key: 'cashapp' },
-                    { name: 'Apple Cash', key: 'applecash' }
-                  ].filter(wallet => wallet.key !== 'bankwire').map((wallet) => {
-                    const config = (form.payoutConfigs && form.payoutConfigs[wallet.key]) || { enabled: false, value: '', qrCode: '' }
+                  {STAFF_MODAL_PAYOUT_KEYS.map((walletKey) => {
+                    const walletName = PAYOUT_UI_LABELS[walletKey] || walletKey
+                    const localMethod = isLocalStaff ? localPaymentMethodsByKey.get(walletKey) : null
+                    const config = isLocalStaff
+                      ? {
+                          enabled: Boolean(localMethod?.isActive),
+                          value: localMethod?.accountInfo || '',
+                          qrCode: localMethod?.imageUrl || '',
+                        }
+                      : ((form.payoutConfigs && form.payoutConfigs[walletKey]) || { enabled: false, value: '', qrCode: '' })
 
                     return (
-                      <div key={wallet.key} className="flex items-center justify-between py-3">
-                        <div className="flex items-center gap-3">
+                      <div key={walletKey} className="flex items-center justify-between py-3">
+                        <div className="flex items-center gap-3 min-w-0">
                           <button
                             type="button"
-                            disabled={true}
-                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-not-allowed rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                              config.enabled ? 'bg-nexoraWarning' : 'bg-nexoraBorder'
+                            role="switch"
+                            aria-checked={config.enabled}
+                            aria-label={`${walletName} — ${t('setup.payout_methods')}`}
+                            disabled={!canManageLocalPayouts || isLocalPaymentSaving}
+                            onClick={canManageLocalPayouts ? () => handleToggleLocalPayment(walletKey) : undefined}
+                            className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-nexoraBrand/40 focus-visible:ring-offset-1 ${
+                              config.enabled ? 'bg-nexoraBrand' : 'bg-nexoraBorder'
+                            } ${
+                              !canManageLocalPayouts
+                                ? 'cursor-not-allowed'
+                                : isLocalPaymentSaving
+                                  ? 'cursor-not-allowed opacity-70'
+                                  : 'cursor-pointer'
                             }`}
                           >
                             <span
@@ -541,21 +700,48 @@ function StaffModal({
                               }`}
                             />
                           </button>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
                             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-nexoraCanvas shrink-0">
-                              {WalletLogos[wallet.key]}
+                              {WalletLogos[walletKey]}
                             </span>
-                            <span className="text-xs font-bold text-nexoraText">{wallet.name}</span>
+                            <div className="min-w-0">
+                              <span className="text-xs font-bold text-nexoraText">{walletName}</span>
+                              {config.value ? (
+                                <div className="mt-0.5 truncate text-[10px] font-mono text-nexoraMuted">
+                                  {config.value}
+                                </div>
+                              ) : null}
+                            </div>
                           </div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => openPayoutSetup(wallet.key)}
-                          className="flex items-center gap-1.5 text-[11px] font-bold text-nexoraMuted hover:text-nexoraText transition"
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                          <span>{t('components.dashboard.modals.StaffModal.viewAccount')}</span>
-                        </button>
+                        {canManageLocalPayouts ? (
+                          <button
+                            type="button"
+                            onClick={() => openPayoutSetup(walletKey)}
+                            disabled={isLocalPaymentSaving}
+                            className="inline-flex shrink-0 items-center gap-1 text-[11px] font-bold text-nexoraBrand transition hover:text-nexoraBrandDark disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {config.value ? (
+                              <Pencil className="h-3 w-3 stroke-[2.5]" />
+                            ) : (
+                              <Plus className="h-3 w-3 stroke-[2.5]" />
+                            )}
+                            <span>
+                              {config.value
+                                ? t('components.dashboard.modals.StaffModal.editAccount')
+                                : t('components.dashboard.modals.AddStaffModal.manual_add_account')}
+                            </span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => openPayoutSetup(walletKey)}
+                            className="flex items-center gap-1.5 text-[11px] font-bold text-nexoraMuted transition hover:text-nexoraText"
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                            <span>{t('components.dashboard.modals.StaffModal.viewAccount')}</span>
+                          </button>
+                        )}
                       </div>
                     )
                   })}
@@ -565,25 +751,27 @@ function StaffModal({
             </div>
 
             {!isApproveMode && (
-            <div className="flex items-center justify-between rounded-lg border border-nexoraBorder bg-nexoraCanvas p-3.5 mt-2">
-              <div>
-                <label className="text-xs font-extrabold text-nexoraText block">{t('setup.show_in_tips_flow')}</label>
-                <p className="text-[10px] text-nexoraMuted leading-relaxed mt-0.5">{t('setup.show_in_tips_flow_desc')}</p>
+            <div className="rounded-lg border border-nexoraBorder bg-nexoraCanvas p-3.5 mt-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="text-xs font-extrabold text-nexoraText block">{t('components.dashboard.views.StaffView.tipsFlow')}</label>
+                  <p className="text-[10px] text-nexoraMuted leading-relaxed mt-0.5">{t('components.dashboard.views.StaffView.clickPillToShow')}</p>
+                </div>
+                <button
+                  type="button"
+                  disabled={isTogglingTipsFlow}
+                  onClick={handleShowInTipsFlowToggle}
+                  className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    form.showInTipsFlow ? 'bg-nexoraBrand' : 'bg-nexoraBorder'
+                  } ${isTogglingTipsFlow ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                      form.showInTipsFlow ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
               </div>
-              <button
-                type="button"
-                disabled={isTogglingTipsFlow}
-                onClick={handleShowInTipsFlowToggle}
-                className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                  form.showInTipsFlow ? 'bg-nexoraBrand' : 'bg-nexoraBorder'
-                } ${isTogglingTipsFlow ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
-              >
-                <span
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                    form.showInTipsFlow ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
-              </button>
             </div>
             )}
           </div>
@@ -628,7 +816,14 @@ function StaffModal({
                   {t('components.dashboard.modals.StaffModal.linkRequestBtn')}
                 </button>
               ) : (
-                <button onClick={onSave} className="rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white">{t('common.save')}</button>
+                <button
+                  onClick={onSave}
+                  disabled={isSavingLocal || isLocalPaymentSaving}
+                  className="inline-flex items-center gap-2 rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {(isSavingLocal || isLocalPaymentSaving) && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                  {t('common.save')}
+                </button>
               )}
             </>
           )}
@@ -643,7 +838,8 @@ function StaffModal({
         initialQrCode={tempPayoutValues.qrCode}
         onClose={() => setPayoutSetupOpen(false)}
         onSubmit={handlePayoutSubmit}
-        readOnly={true}
+        readOnly={!isLocalStaff}
+        isSaving={isLocalPaymentSaving}
       />
 
       <StaffReviewsDetailModal

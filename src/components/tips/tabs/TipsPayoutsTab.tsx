@@ -261,7 +261,7 @@ export default function TipsPayoutsTab({ staff = [] }: { staff?: StaffMember[] }
           ) : null}
         </div>
 
-        <div className="grid w-full grid-cols-3 items-center gap-2 lg:w-auto lg:grid-cols-3 2xl:flex 2xl:w-auto 2xl:flex-wrap">
+        <div className="grid w-full grid-cols-1 items-center gap-2 sm:grid-cols-2 xl:w-auto xl:grid-cols-3 2xl:flex 2xl:w-auto 2xl:flex-wrap">
           <button
             type="button"
             onClick={() => setIsUnpaidDialogOpen(true)}

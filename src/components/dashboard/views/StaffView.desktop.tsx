@@ -301,7 +301,7 @@ function StaffView({
                             </div>
                           )}
                           <div>
-                            <div className="font-extrabold text-nexoraText">{member.fullName}</div>
+                            <div className="font-extrabold text-nexoraText">{member.nickname || member.fullName}</div>
                             <div className="text-xs text-nexoraMuted">{member.position}</div>
                           </div>
                         </div>
@@ -437,6 +437,7 @@ function StaffView({
                 </tr>
               ) : sortedStaff.map((member, index) => {
                 const wallets = getWalletBadges(member)
+                const isLocalStaffMember = Boolean(member.isLocalStaff)
                 const isPendingSetup = member.status === 'Pending Setup'
                 const isPendingAcceptance = member.status === 'Pending Acceptance'
                 const waitingStaffResponse = isWaitingStaffAcceptance(member)
@@ -456,7 +457,7 @@ function StaffView({
                           </div>
                         )}
                         <div>
-                          <div className="font-extrabold text-nexoraText group-hover:text-nexoraBrand transition">{member.fullName}</div>
+                          <div className="font-extrabold text-nexoraText group-hover:text-nexoraBrand transition">{member.nickname || member.fullName}</div>
                           <div className="text-xs text-nexoraMuted">{member.position}</div>
                         </div>
                       </div>
