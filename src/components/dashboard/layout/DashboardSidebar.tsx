@@ -63,7 +63,6 @@ export default function DashboardSidebar({
   const handlePaymentsPayoutsNavigate = (screen: string, tab?: string) => {
     const route = `/dashboard/${screen}${tab ? `?tab=${encodeURIComponent(tab)}` : ''}`
     navigate(route, { replace: true })
-    setActiveMenu(screen)
     setIsPaymentsPayoutsExpanded(true)
     setIsTouchpointsExpanded(false)
   }
