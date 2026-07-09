@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, Loader2, X } from 'lucide-react'
 import IconButton from '../../../../ui/IconButton'
+import Tooltip from '../../../../ui/Tooltip'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
 import { useCreatePayoutRecord, useTaxiqOwnerStaffList, useUpdatePayoutRecord } from '../../../../../data/hooks/useTaxiqOwnerPayouts'
@@ -243,7 +244,10 @@ export default function AddPayoutModal({
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-xs font-bold text-nexoraMuted">
-                    {t('taxiq.payoutCenter.form.payPeriodLabel')}
+                    <span className="inline-flex items-center gap-1">
+                      {t('taxiq.payoutCenter.form.payPeriodLabel')}
+                      <Tooltip content={t('taxiq.payoutCenter.tooltips.payPeriod')} />
+                    </span>
                   </label>
                   <select
                     value={form.payPeriod}
@@ -297,7 +301,10 @@ export default function AddPayoutModal({
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-xs font-bold text-nexoraMuted">
-                    {t('taxiq.payoutCenter.form.servicePayoutLabel')}
+                    <span className="inline-flex items-center gap-1">
+                      {t('taxiq.payoutCenter.form.servicePayoutLabel')}
+                      <Tooltip content={t('taxiq.payoutCenter.tooltips.servicePayout')} />
+                    </span>
                   </label>
                   <input
                     type="number"
@@ -336,7 +343,10 @@ export default function AddPayoutModal({
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-bold text-nexoraMuted">
-                    {t('taxiq.payoutCenter.form.reimbursementLabel')}
+                    <span className="inline-flex items-center gap-1">
+                      {t('taxiq.payoutCenter.form.reimbursementLabel')}
+                      <Tooltip content={t('taxiq.payoutCenter.tooltips.reimbursement')} />
+                    </span>
                   </label>
                   <input
                     type="number"
@@ -351,13 +361,19 @@ export default function AddPayoutModal({
               <div className="nexora-card flex items-center justify-between gap-4 p-3">
                 <div>
                   <div className="text-[10px] font-extrabold uppercase tracking-wider text-nexoraMuted">
-                    {t('taxiq.payoutCenter.form.grossPayoutLabel')}
+                    <span className="inline-flex items-center gap-1">
+                      {t('taxiq.payoutCenter.form.grossPayoutLabel')}
+                      <Tooltip content={t('taxiq.payoutCenter.tooltips.grossPayout')} />
+                    </span>
                   </div>
                   <div className="text-sm font-extrabold text-nexoraText">{formatCurrency(grossPayout)}</div>
                 </div>
                 <div className="text-right">
                   <div className="text-[10px] font-extrabold uppercase tracking-wider text-nexoraMuted">
-                    {t('taxiq.payoutCenter.form.netPaidLabel')}
+                    <span className="inline-flex items-center gap-1">
+                      {t('taxiq.payoutCenter.form.netPaidLabel')}
+                      <Tooltip content={t('taxiq.payoutCenter.tooltips.netPaid')} />
+                    </span>
                   </div>
                   <div className="text-sm font-extrabold text-nexoraText">{formatCurrency(netPaid)}</div>
                 </div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { X, Loader2 } from 'lucide-react'
 import IconButton from '../../../../ui/IconButton'
+import Tooltip from '../../../../ui/Tooltip'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
 import { useUpdateStaffTaxYearModules } from '../../../../../data/hooks/useTaxiqStaffTaxYear'
@@ -8,10 +9,10 @@ import type { StaffTaxYear } from '../../../../../data/repositories/taxiqStaffTa
 
 // Values match backend/src/Domain/Enums/TaxIq/TaxIqModule.cs exactly.
 const MODULE_OPTIONS = [
-  { key: 'DeductionTracking', labelKey: 'taxiq.onboarding.step3.deductionCenter' },
-  { key: 'ReceiptManagement', labelKey: 'taxiq.onboarding.step3.receiptManagement' },
-  { key: 'MileageLog', labelKey: 'taxiq.onboarding.step3.mileageLog' },
-  { key: 'CPAExport', labelKey: 'taxiq.onboarding.step3.cpaExport' },
+  { key: 'DeductionTracking', labelKey: 'taxiq.onboarding.step3.deductionCenter', tooltipKey: 'taxiq.onboarding.step3.tooltips.deductionCenter' },
+  { key: 'ReceiptManagement', labelKey: 'taxiq.onboarding.step3.receiptManagement', tooltipKey: 'taxiq.onboarding.step3.tooltips.receiptManagement' },
+  { key: 'MileageLog', labelKey: 'taxiq.onboarding.step3.mileageLog', tooltipKey: 'taxiq.onboarding.step3.tooltips.mileageLog' },
+  { key: 'CPAExport', labelKey: 'taxiq.onboarding.step3.cpaExport', tooltipKey: 'taxiq.onboarding.step3.tooltips.cpaExport' },
 ]
 
 export default function EditStaffModuleConfigModal({
@@ -75,7 +76,10 @@ export default function EditStaffModuleConfigModal({
                 onChange={() => toggleModule(mod.key)}
                 className="h-4 w-4 rounded border-nexoraBorder"
               />
-              {t(mod.labelKey)}
+              <span className="inline-flex items-center gap-1">
+                {t(mod.labelKey)}
+                <Tooltip content={t(mod.tooltipKey)} />
+              </span>
             </label>
           ))}
         </div>

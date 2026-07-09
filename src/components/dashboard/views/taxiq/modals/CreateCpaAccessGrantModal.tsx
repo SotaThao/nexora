@@ -18,6 +18,8 @@ import ConfirmModal from './ConfirmModal'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const CONSENT_REQUIRED_PACKAGES = new Set<CpaPackageType>(['Full', 'CPAReview'])
+const KNOWN_PACKAGE_TYPES = new Set(['Basic', 'Full', 'CPAReview'])
+const KNOWN_DATA_MODES = new Set(['Masked', 'FullSensitive'])
 
 export default function CreateCpaAccessGrantModal({
   open,
@@ -136,6 +138,9 @@ export default function CreateCpaAccessGrantModal({
                 <option key={type} value={type}>{t(`taxiq.cpaAccess.packageTypes.${type}`)}</option>
               ))}
             </select>
+            {KNOWN_PACKAGE_TYPES.has(packageType) && (
+              <p className="mt-1 text-[11px] font-medium text-nexoraMuted">{t(`taxiq.cpaAccess.packageTypeTooltips.${packageType}`)}</p>
+            )}
           </div>
 
           <div>
@@ -158,6 +163,9 @@ export default function CreateCpaAccessGrantModal({
                 </button>
               ))}
             </div>
+            {KNOWN_DATA_MODES.has(dataMode) && (
+              <p className="mt-1 text-[11px] font-medium text-nexoraMuted">{t(`taxiq.cpaAccess.dataModeTooltips.${dataMode}`)}</p>
+            )}
           </div>
 
           <div>

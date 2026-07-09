@@ -7,6 +7,7 @@ import { isApiError } from '../../../../../types/domain'
 import { getErrorI18nKey } from '../../../../../data/errorCodes'
 import { SkeletonList } from '../../../../ui/skeleton'
 import IconButton from '../../../../ui/IconButton'
+import Tooltip from '../../../../ui/Tooltip'
 import AssetStatusBadge from '../shared/AssetStatusBadge'
 
 const LOCKED_ERROR_CODE = 'TAXIQ_OWNER_TAX_YEAR_LOCKED'
@@ -130,10 +131,20 @@ export default function MembershipCreditTab({
           <thead className="bg-nexoraCanvas text-[10px] font-extrabold uppercase text-nexoraMuted">
             <tr>
               <th className="px-4 py-3">{t('taxiq.assetsTracker.membership.columns.period')}</th>
-              <th className="px-4 py-3">{t('taxiq.assetsTracker.membership.columns.creditsIssued')}</th>
+              <th className="px-4 py-3">
+                <span className="inline-flex items-center gap-1">
+                  {t('taxiq.assetsTracker.membership.columns.creditsIssued')}
+                  <Tooltip content={t('taxiq.assetsTracker.membership.tooltips.credits')} />
+                </span>
+              </th>
               <th className="px-4 py-3">{t('taxiq.assetsTracker.membership.columns.creditsUsed')}</th>
               <th className="px-4 py-3">{t('taxiq.assetsTracker.membership.columns.creditsExpired')}</th>
-              <th className="px-4 py-3">{t('taxiq.assetsTracker.membership.columns.expiryPolicy')}</th>
+              <th className="px-4 py-3">
+                <span className="inline-flex items-center gap-1">
+                  {t('taxiq.assetsTracker.membership.columns.expiryPolicy')}
+                  <Tooltip content={t('taxiq.assetsTracker.membership.tooltips.expiryPolicy')} />
+                </span>
+              </th>
               <th className="px-4 py-3">{t('taxiq.assetsTracker.membership.columns.status')}</th>
             </tr>
           </thead>
@@ -228,7 +239,12 @@ export default function MembershipCreditTab({
               </div>
 
               <div>
-                <label className="text-xs font-bold text-nexoraMuted">{t('taxiq.assetsTracker.membership.form.expiryPolicyLabel')}</label>
+                <label className="text-xs font-bold text-nexoraMuted">
+                  <span className="inline-flex items-center gap-1">
+                    {t('taxiq.assetsTracker.membership.form.expiryPolicyLabel')}
+                    <Tooltip content={t('taxiq.assetsTracker.membership.tooltips.expiryPolicy')} />
+                  </span>
+                </label>
                 <textarea
                   value={expiryPolicy}
                   onChange={(e) => setExpiryPolicy(e.target.value)}

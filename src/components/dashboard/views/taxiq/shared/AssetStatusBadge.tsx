@@ -1,5 +1,6 @@
 import { AlertTriangle, CheckCircle2, Circle, ShieldAlert } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
+import Tooltip from '../../../../ui/Tooltip'
 
 const STATUS_STYLES: Record<string, string> = {
   Pending: 'bg-slate-50 text-slate-600 border-slate-100/50 dark:bg-white/5 dark:text-slate-400 dark:border-white/10',
@@ -22,10 +23,16 @@ const STATUS_LABEL_KEYS: Record<string, string> = {
   CPAReview: 'taxiq.assetsTracker.status.cpaReview',
 }
 
+const STATUS_TOOLTIP_KEYS: Record<string, string> = {
+  HighPriority: 'taxiq.tooltips.highPriority',
+  CPAReview: 'taxiq.tooltips.cpaReview',
+}
+
 export default function AssetStatusBadge({ status }: { status: string }) {
   const { t } = useTranslation()
   const Icon = STATUS_ICONS[status] ?? Circle
   const style = STATUS_STYLES[status] ?? STATUS_STYLES.Pending
+  const tooltipKey = STATUS_TOOLTIP_KEYS[status]
 
   return (
     <span
@@ -33,6 +40,7 @@ export default function AssetStatusBadge({ status }: { status: string }) {
     >
       <Icon className="h-3 w-3" />
       {t(STATUS_LABEL_KEYS[status] ?? status)}
+      {tooltipKey && <Tooltip content={t(tooltipKey)} />}
     </span>
   )
 }

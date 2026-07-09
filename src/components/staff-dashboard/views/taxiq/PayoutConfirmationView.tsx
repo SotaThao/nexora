@@ -7,6 +7,7 @@ import type { StaffPendingPayout } from '../../../../data/repositories/taxiqStaf
 import { isApiError } from '../../../../types/domain'
 import { getErrorI18nKey } from '../../../../data/errorCodes'
 import { SkeletonList } from '../../../ui/skeleton'
+import Tooltip from '../../../ui/Tooltip'
 import ConfirmModal from '../../../dashboard/views/taxiq/modals/ConfirmModal'
 import DisputePayoutModal from './modals/DisputePayoutModal'
 
@@ -65,12 +66,27 @@ export default function PayoutConfirmationView({ staffTaxYearStatus }: { staffTa
         <table className="w-full min-w-[860px] text-left text-xs">
           <thead className="bg-nexoraCanvas text-[10px] font-extrabold uppercase text-nexoraMuted">
             <tr>
-              <th className="px-4 py-3">{t('taxiq.staffPayoutConfirmation.columns.payPeriod')}</th>
+              <th className="px-4 py-3">
+                <span className="inline-flex items-center gap-1">
+                  {t('taxiq.staffPayoutConfirmation.columns.payPeriod')}
+                  <Tooltip content={t('taxiq.payoutCenter.tooltips.payPeriod')} />
+                </span>
+              </th>
               <th className="px-4 py-3">{t('taxiq.staffPayoutConfirmation.columns.period')}</th>
-              <th className="px-4 py-3">{t('taxiq.staffPayoutConfirmation.columns.servicePayout')}</th>
+              <th className="px-4 py-3">
+                <span className="inline-flex items-center gap-1">
+                  {t('taxiq.staffPayoutConfirmation.columns.servicePayout')}
+                  <Tooltip content={t('taxiq.payoutCenter.tooltips.servicePayout')} />
+                </span>
+              </th>
               <th className="px-4 py-3">{t('taxiq.staffPayoutConfirmation.columns.tip')}</th>
               <th className="px-4 py-3">{t('taxiq.staffPayoutConfirmation.columns.bonus')}</th>
-              <th className="px-4 py-3">{t('taxiq.staffPayoutConfirmation.columns.reimbursement')}</th>
+              <th className="px-4 py-3">
+                <span className="inline-flex items-center gap-1">
+                  {t('taxiq.staffPayoutConfirmation.columns.reimbursement')}
+                  <Tooltip content={t('taxiq.payoutCenter.tooltips.reimbursement')} />
+                </span>
+              </th>
               <th className="px-4 py-3">{t('taxiq.staffPayoutConfirmation.columns.paymentMethod')}</th>
               <th className="px-4 py-3 text-right">{t('taxiq.staffPayoutConfirmation.columns.actions')}</th>
             </tr>

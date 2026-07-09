@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { X, Loader2 } from 'lucide-react'
 import IconButton from '../../../../ui/IconButton'
+import Tooltip from '../../../../ui/Tooltip'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
 import { useUpdateOwnerTaxYearModules } from '../../../../../data/hooks/useTaxiqOwnerTaxYear'
@@ -8,11 +9,11 @@ import type { OwnerTaxYear, OwnerTaxYearEmployeeTypeConfig } from '../../../../.
 
 // Values match backend/src/Domain/Enums/TaxIq/TaxIqModule.cs exactly.
 const MODULE_OPTIONS = [
-  { key: 'DeductionTracking', labelKey: 'taxiq.onboarding.step3.deductionCenter' },
-  { key: 'ReceiptManagement', labelKey: 'taxiq.onboarding.step3.receiptManagement' },
-  { key: 'PayoutTracking', labelKey: 'taxiq.onboarding.step3.staffPayout' },
-  { key: 'TaxReminders', labelKey: 'taxiq.onboarding.step3.taxPaymentReminder' },
-  { key: 'CPAExport', labelKey: 'taxiq.onboarding.step3.cpaExport' },
+  { key: 'DeductionTracking', labelKey: 'taxiq.onboarding.step3.deductionCenter', tooltipKey: 'taxiq.onboarding.step3.tooltips.deductionCenter' },
+  { key: 'ReceiptManagement', labelKey: 'taxiq.onboarding.step3.receiptManagement', tooltipKey: 'taxiq.onboarding.step3.tooltips.receiptManagement' },
+  { key: 'PayoutTracking', labelKey: 'taxiq.onboarding.step3.staffPayout', tooltipKey: 'taxiq.onboarding.step3.tooltips.staffPayout' },
+  { key: 'TaxReminders', labelKey: 'taxiq.onboarding.step3.taxPaymentReminder', tooltipKey: 'taxiq.onboarding.step3.tooltips.taxPaymentReminder' },
+  { key: 'CPAExport', labelKey: 'taxiq.onboarding.step3.cpaExport', tooltipKey: 'taxiq.onboarding.step3.tooltips.cpaExport' },
 ]
 
 export default function EditModuleConfigModal({
@@ -96,6 +97,7 @@ export default function EditModuleConfigModal({
                   className="h-4 w-4 rounded border-nexoraBorder"
                 />
                 {t(mod.labelKey)}
+                <Tooltip content={t(mod.tooltipKey)} />
               </label>
             ))}
           </div>

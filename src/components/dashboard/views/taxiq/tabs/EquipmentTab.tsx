@@ -8,6 +8,7 @@ import { isApiError } from '../../../../../types/domain'
 import { getErrorI18nKey } from '../../../../../data/errorCodes'
 import { SkeletonList } from '../../../../ui/skeleton'
 import IconButton from '../../../../ui/IconButton'
+import Tooltip from '../../../../ui/Tooltip'
 import { formatCurrency } from '../../../utils'
 import { EquipmentAiSuggestionBadge, equipmentAiSuggestionExplanationKey } from '../shared/EquipmentAiSuggestionBadge'
 
@@ -37,7 +38,7 @@ export default function EquipmentTab({
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [assetName, setAssetName] = useState('')
-  const [purchaseDate, setPurchaseDate] = useState('')
+  const [purchaseDate, setPurchaseDate] = useState(() => new Date().toISOString().split('T')[0])
   const [inServiceDate, setInServiceDate] = useState('')
   const [amount, setAmount] = useState('')
   const [businessUsePercent, setBusinessUsePercent] = useState('')
@@ -53,7 +54,7 @@ export default function EquipmentTab({
 
   const resetForm = () => {
     setAssetName('')
-    setPurchaseDate('')
+    setPurchaseDate(new Date().toISOString().split('T')[0])
     setInServiceDate('')
     setAmount('')
     setBusinessUsePercent('')
@@ -152,10 +153,20 @@ export default function EquipmentTab({
             <tr>
               <th className="px-4 py-3">{t('taxiq.assetsTracker.equipment.columns.assetName')}</th>
               <th className="px-4 py-3">{t('taxiq.assetsTracker.equipment.columns.purchaseDate')}</th>
-              <th className="px-4 py-3">{t('taxiq.assetsTracker.equipment.columns.inServiceDate')}</th>
+              <th className="px-4 py-3">
+                <span className="inline-flex items-center gap-1">
+                  {t('taxiq.assetsTracker.equipment.columns.inServiceDate')}
+                  <Tooltip content={t('taxiq.assetsTracker.equipment.tooltips.inServiceDate')} />
+                </span>
+              </th>
               <th className="px-4 py-3">{t('taxiq.assetsTracker.equipment.columns.amount')}</th>
               <th className="px-4 py-3">{t('taxiq.assetsTracker.equipment.columns.businessUsePercent')}</th>
-              <th className="px-4 py-3">{t('taxiq.assetsTracker.equipment.columns.aiSuggestion')}</th>
+              <th className="px-4 py-3">
+                <span className="inline-flex items-center gap-1">
+                  {t('taxiq.assetsTracker.equipment.columns.aiSuggestion')}
+                  <Tooltip content={t('taxiq.assetsTracker.equipment.tooltips.aiSuggestion')} />
+                </span>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -180,12 +191,10 @@ export default function EquipmentTab({
                     {item.inServiceDate ? (
                       <span className="text-nexoraText">{item.inServiceDate}</span>
                     ) : (
-                      <span
-                        title={t('taxiq.assetsTracker.equipment.missingInServiceDateTooltip')}
-                        className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-600 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-400"
-                      >
+                      <span className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-600 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-400">
                         <AlertTriangle className="h-3 w-3" />
                         {t('taxiq.assetsTracker.status.highPriority')}
+                        <Tooltip content={t('taxiq.assetsTracker.equipment.missingInServiceDateTooltip')} />
                       </span>
                     )}
                   </td>
@@ -238,7 +247,12 @@ export default function EquipmentTab({
                   {errors.purchaseDate && <p className="mt-1 text-xs font-semibold text-rose-500">{errors.purchaseDate}</p>}
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-nexoraMuted">{t('taxiq.assetsTracker.equipment.form.inServiceDateLabel')}</label>
+                  <label className="text-xs font-bold text-nexoraMuted">
+                    <span className="inline-flex items-center gap-1">
+                      {t('taxiq.assetsTracker.equipment.form.inServiceDateLabel')}
+                      <Tooltip content={t('taxiq.assetsTracker.equipment.tooltips.inServiceDate')} />
+                    </span>
+                  </label>
                   <input
                     type="date"
                     value={inServiceDate}
@@ -268,7 +282,12 @@ export default function EquipmentTab({
                   {errors.amount && <p className="mt-1 text-xs font-semibold text-rose-500">{errors.amount}</p>}
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-nexoraMuted">{t('taxiq.assetsTracker.equipment.form.businessUsePercentLabel')}</label>
+                  <label className="text-xs font-bold text-nexoraMuted">
+                    <span className="inline-flex items-center gap-1">
+                      {t('taxiq.assetsTracker.equipment.form.businessUsePercentLabel')}
+                      <Tooltip content={t('taxiq.tooltips.businessUsePercent')} />
+                    </span>
+                  </label>
                   <input
                     type="number"
                     min={0}

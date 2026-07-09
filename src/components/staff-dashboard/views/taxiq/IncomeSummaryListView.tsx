@@ -7,8 +7,15 @@ import type { SelfReportedIncomeRecord } from '../../../../data/repositories/tax
 import { isApiError } from '../../../../types/domain'
 import { getErrorI18nKey } from '../../../../data/errorCodes'
 import { SkeletonList } from '../../../ui/skeleton'
+import Tooltip from '../../../ui/Tooltip'
 import ConfirmModal from '../../../dashboard/views/taxiq/modals/ConfirmModal'
 import SelfReportedIncomeWizard from './SelfReportedIncomeWizard'
+
+const INCOME_TYPE_TOOLTIP_KEYS: Record<string, string> = {
+  CashFromClient: 'taxiq.selfReportedIncome.incomeTypeTooltips.cashFromClient',
+  OtherSalonIncome: 'taxiq.selfReportedIncome.incomeTypeTooltips.otherSalonIncome',
+  BoothRentFromSubRenter: 'taxiq.selfReportedIncome.incomeTypeTooltips.boothRentFromSubRenter',
+}
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
@@ -149,7 +156,18 @@ export default function IncomeSummaryListView({
                     <td className="px-4 py-3 font-bold text-nexoraText">{periodLabel(record)}</td>
                     <td className="px-4 py-3 text-nexoraText">{formatCurrency(record.amount)}</td>
                     <td className="px-4 py-3 text-nexoraMuted">{record.source}</td>
-                    <td className="px-4 py-3 text-nexoraMuted">{incomeTypeKey ? t(incomeTypeKey) : '—'}</td>
+                    <td className="px-4 py-3 text-nexoraMuted">
+                      {incomeTypeKey ? (
+                        <span className="inline-flex items-center gap-1">
+                          {t(incomeTypeKey)}
+                          {record.incomeType && INCOME_TYPE_TOOLTIP_KEYS[record.incomeType] && (
+                            <Tooltip content={t(INCOME_TYPE_TOOLTIP_KEYS[record.incomeType])} />
+                          )}
+                        </span>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold ${statusBadgeClass(record.status)}`}>
                         {t(statusLabelKey(record.status))}

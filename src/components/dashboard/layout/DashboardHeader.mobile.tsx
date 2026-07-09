@@ -396,7 +396,7 @@ export default function DashboardHeader({
             <div className="absolute left-0 right-0 mt-2 max-h-[380px] overflow-y-auto rounded-xl border border-nexoraBorder bg-white shadow-2xl z-50 py-2 divide-y divide-nexoraBorder animate-fadeIn">
               {suggestions?.staff?.length > 0 && (
                 <div className="py-2">
-                  <div className="px-4 py-1 text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">Staff / Kỹ thuật viên</div>
+                  <div className="px-4 py-1 text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">{t('dashboard.header.search.staffGroup')}</div>
                   {suggestions.staff.map(member => (
                     <button key={member.id} type="button"
                       onClick={() => { onViewStaffDetail(member.id); onNavigateMenu('staff'); setIsSearchFocused(false); setSearchQuery('') }}
@@ -407,14 +407,14 @@ export default function DashboardHeader({
                         <span className="font-bold text-nexoraText">{member.fullName}</span>
                         <span className="text-[10px] text-nexoraMuted">({member.position})</span>
                       </div>
-                      <span className="text-[10px] font-bold text-nexoraBrand uppercase tracking-wider">Xem Chi Tiết ›</span>
+                      <span className="text-[10px] font-bold text-nexoraBrand uppercase tracking-wider">{t('dashboard.header.search.viewDetails')}</span>
                     </button>
                   ))}
                 </div>
               )}
               {suggestions?.transactions?.length > 0 && (
                 <div className="py-2">
-                  <div className="px-4 py-1 text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">Transactions / Giao dịch</div>
+                  <div className="px-4 py-1 text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">{t('dashboard.header.search.transactionsGroup')}</div>
                   {suggestions.transactions.map(tx => (
                     <button key={tx.id} type="button"
                       onClick={() => { onNavigateMenu('reports'); setIsSearchFocused(false); setSearchQuery('') }}
@@ -425,14 +425,14 @@ export default function DashboardHeader({
                         <span className="font-bold text-nexoraText">{tx.id}</span>
                         <span className="text-[10px] text-nexoraMuted">({tx.staffName} - ${tx.amount})</span>
                       </div>
-                      <span className="text-[10px] font-bold text-nexoraBrand uppercase tracking-wider">Xem GD ›</span>
+                      <span className="text-[10px] font-bold text-nexoraBrand uppercase tracking-wider">{t('dashboard.header.search.viewTransaction')}</span>
                     </button>
                   ))}
                 </div>
               )}
               {suggestions?.reviews?.length > 0 && (
                 <div className="py-2">
-                  <div className="px-4 py-1 text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">Reviews / Đánh giá</div>
+                  <div className="px-4 py-1 text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">{t('dashboard.header.search.reviewsGroup')}</div>
                   {suggestions.reviews.map(rev => (
                     <button key={rev.id} type="button"
                       onClick={() => { onNavigateMenu('reviews'); setIsSearchFocused(false); setSearchQuery('') }}
@@ -443,14 +443,14 @@ export default function DashboardHeader({
                         <span className="font-bold text-nexoraText">{rev.rating}★</span>
                         <span className="text-[10px] text-nexoraMuted truncate">"{rev.comment}"</span>
                       </div>
-                      <span className="text-[10px] font-bold text-nexoraBrand uppercase tracking-wider shrink-0 ml-2">Xem ›</span>
+                      <span className="text-[10px] font-bold text-nexoraBrand uppercase tracking-wider shrink-0 ml-2">{t('dashboard.header.search.view')}</span>
                     </button>
                   ))}
                 </div>
               )}
               {suggestions?.touchpoints?.length > 0 && (
                 <div className="py-2">
-                  <div className="px-4 py-1 text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">Touchpoints / Điểm chạm</div>
+                  <div className="px-4 py-1 text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">{t('dashboard.header.search.touchpointsGroup')}</div>
                   {suggestions.touchpoints.map(tp => (
                     <button key={tp.id} type="button"
                       onClick={() => { onNavigateMenu('touchpoints'); setIsSearchFocused(false); setSearchQuery('') }}
@@ -461,14 +461,14 @@ export default function DashboardHeader({
                         <span className="font-bold text-nexoraText">{tp.name}</span>
                         <span className="text-[10px] text-nexoraMuted">({tp.type})</span>
                       </div>
-                      <span className="text-[10px] font-bold text-nexoraBrand uppercase tracking-wider">Xem ›</span>
+                      <span className="text-[10px] font-bold text-nexoraBrand uppercase tracking-wider">{t('dashboard.header.search.view')}</span>
                     </button>
                   ))}
                 </div>
               )}
               {suggestions?.totalCount === 0 && (
                 <div className="py-6 text-center text-xs text-nexoraSubtle">
-                  Không tìm thấy kết quả nào trùng khớp.
+                  {t('dashboard.header.search.noResults')}
                 </div>
               )}
             </div>

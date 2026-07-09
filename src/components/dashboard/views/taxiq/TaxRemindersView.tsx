@@ -5,12 +5,15 @@ import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useTaxiqTaxReminders } from '../../../../data/hooks/useTaxiqTaxReminders'
 import type { TaxPaymentReminder } from '../../../../data/repositories/taxiqTaxReminders'
 import { SkeletonList } from '../../../ui/skeleton'
+import Tooltip from '../../../ui/Tooltip'
 import TaxReminderStatusBadge from './shared/TaxReminderStatusBadge'
 import AddTaxReminderModal from './modals/AddTaxReminderModal'
 import MarkTaxReminderPaidModal from './modals/MarkTaxReminderPaidModal'
 import SnoozeTaxReminderModal from './modals/SnoozeTaxReminderModal'
 
 const MAX_SNOOZE_COUNT = 3
+
+const KNOWN_TAX_TYPES = new Set(['SalesTax', 'FranchiseTax', 'EstimatedTax', 'PayrollTax'])
 
 export default function TaxRemindersView({
   ownerTaxYearId,
@@ -70,7 +73,12 @@ export default function TaxRemindersView({
               <th className="px-4 py-3">{t('taxiq.reminders.columns.taxType')}</th>
               <th className="px-4 py-3">{t('taxiq.reminders.columns.dueDate')}</th>
               <th className="px-4 py-3">{t('taxiq.reminders.columns.status')}</th>
-              <th className="px-4 py-3">{t('taxiq.reminders.columns.snoozeCount')}</th>
+              <th className="px-4 py-3">
+                <span className="inline-flex items-center gap-1">
+                  {t('taxiq.reminders.columns.snoozeCount')}
+                  <Tooltip content={t('taxiq.reminders.tooltips.snoozeCount')} />
+                </span>
+              </th>
               <th className="px-4 py-3 text-right">{t('taxiq.reminders.columns.actions')}</th>
             </tr>
           </thead>
@@ -105,7 +113,12 @@ export default function TaxRemindersView({
                 return (
                   <tr key={reminder.id} className="border-t border-nexoraRule">
                     <td className="px-4 py-3 font-bold text-nexoraText">
-                      {t(`taxiq.reminders.taxTypes.${reminder.taxType}`)}
+                      <span className="inline-flex items-center gap-1">
+                        {t(`taxiq.reminders.taxTypes.${reminder.taxType}`)}
+                        {KNOWN_TAX_TYPES.has(reminder.taxType) && (
+                          <Tooltip content={t(`taxiq.reminders.taxTypeTooltips.${reminder.taxType}`)} />
+                        )}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-nexoraMuted">{reminder.dueDate}</td>
                     <td className="px-4 py-3">

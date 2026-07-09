@@ -3,17 +3,18 @@ import { ArrowLeft, ArrowRight, Loader2, ShieldCheck } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { useCreateStaffTaxYear } from '../../../../data/hooks/useTaxiqStaffTaxYear'
+import Tooltip from '../../../ui/Tooltip'
 
 const CONTRACT_TYPE_OPTIONS = [
-  { key: 'W2', labelKey: 'taxiq.staffOnboarding.step1.contractTypeW2' },
-  { key: 'C1099', labelKey: 'taxiq.staffOnboarding.step1.contractType1099' },
-  { key: 'BoothRenter', labelKey: 'taxiq.staffOnboarding.step1.contractTypeBoothRenter' },
+  { key: 'W2', labelKey: 'taxiq.staffOnboarding.step1.contractTypeW2', tooltipKey: 'taxiq.tooltips.w2' },
+  { key: 'C1099', labelKey: 'taxiq.staffOnboarding.step1.contractType1099', tooltipKey: 'taxiq.tooltips.contractor1099' },
+  { key: 'BoothRenter', labelKey: 'taxiq.staffOnboarding.step1.contractTypeBoothRenter', tooltipKey: 'taxiq.tooltips.boothRenter' },
 ]
 
 const W9_STATUS_OPTIONS = [
-  { key: 'NotRequired', labelKey: 'taxiq.staffOnboarding.step1.w9NotRequired' },
-  { key: 'Pending', labelKey: 'taxiq.staffOnboarding.step1.w9Pending' },
-  { key: 'Received', labelKey: 'taxiq.staffOnboarding.step1.w9Received' },
+  { key: 'NotRequired', labelKey: 'taxiq.staffOnboarding.step1.w9NotRequired', tooltipKey: 'taxiq.staffOnboarding.step1.w9NotRequiredTooltip' },
+  { key: 'Pending', labelKey: 'taxiq.staffOnboarding.step1.w9Pending', tooltipKey: 'taxiq.staffOnboarding.step1.w9PendingTooltip' },
+  { key: 'Received', labelKey: 'taxiq.staffOnboarding.step1.w9Received', tooltipKey: 'taxiq.staffOnboarding.step1.w9ReceivedTooltip' },
 ]
 
 // Values match backend/src/Domain/Enums/TaxIq/TaxIqModule.cs exactly — same 4
@@ -22,10 +23,10 @@ const W9_STATUS_OPTIONS = [
 // "Year-End Package" wording doesn't map to a real enum value; those areas stay
 // always-visible instead of gated. See design.md D3.
 const MODULE_OPTIONS = [
-  { key: 'DeductionTracking', labelKey: 'taxiq.onboarding.step3.deductionCenter' },
-  { key: 'ReceiptManagement', labelKey: 'taxiq.onboarding.step3.receiptManagement' },
-  { key: 'MileageLog', labelKey: 'taxiq.onboarding.step3.mileageLog' },
-  { key: 'CPAExport', labelKey: 'taxiq.onboarding.step3.cpaExport' },
+  { key: 'DeductionTracking', labelKey: 'taxiq.onboarding.step3.deductionCenter', tooltipKey: 'taxiq.onboarding.step3.tooltips.deductionCenter' },
+  { key: 'ReceiptManagement', labelKey: 'taxiq.onboarding.step3.receiptManagement', tooltipKey: 'taxiq.onboarding.step3.tooltips.receiptManagement' },
+  { key: 'MileageLog', labelKey: 'taxiq.onboarding.step3.mileageLog', tooltipKey: 'taxiq.onboarding.step3.tooltips.mileageLog' },
+  { key: 'CPAExport', labelKey: 'taxiq.onboarding.step3.cpaExport', tooltipKey: 'taxiq.onboarding.step3.tooltips.cpaExport' },
 ]
 
 const TOTAL_STEPS = 3
@@ -106,9 +107,17 @@ export default function StaffTaxIqOnboardingWizard({ taxYear }: { taxYear: numbe
                   </button>
                 ))}
               </div>
+              <p className="mt-1 text-[11px] font-medium text-nexoraMuted">
+                {t(CONTRACT_TYPE_OPTIONS.find((o) => o.key === contractType)?.tooltipKey ?? '')}
+              </p>
             </div>
             <div>
-              <label className="text-xs font-bold text-nexoraMuted">{t('taxiq.staffOnboarding.step1.w9StatusLabel')}</label>
+              <label className="text-xs font-bold text-nexoraMuted">
+                <span className="inline-flex items-center gap-1">
+                  {t('taxiq.staffOnboarding.step1.w9StatusLabel')}
+                  <Tooltip content={t('taxiq.tooltips.w9')} />
+                </span>
+              </label>
               <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
                 {W9_STATUS_OPTIONS.map((opt) => (
                   <button
@@ -125,6 +134,9 @@ export default function StaffTaxIqOnboardingWizard({ taxYear }: { taxYear: numbe
                   </button>
                 ))}
               </div>
+              <p className="mt-1 text-[11px] font-medium text-nexoraMuted">
+                {t(W9_STATUS_OPTIONS.find((o) => o.key === w9Status)?.tooltipKey ?? '')}
+              </p>
             </div>
             {duplicateError && <p className="text-xs font-semibold text-rose-500">{duplicateError}</p>}
           </div>
@@ -141,7 +153,10 @@ export default function StaffTaxIqOnboardingWizard({ taxYear }: { taxYear: numbe
                   onChange={() => toggleModule(mod.key)}
                   className="h-4 w-4 rounded border-nexoraBorder"
                 />
-                {t(mod.labelKey)}
+                <span className="inline-flex items-center gap-1">
+                  {t(mod.labelKey)}
+                  <Tooltip content={t(mod.tooltipKey)} />
+                </span>
               </label>
             ))}
           </div>

@@ -7,10 +7,13 @@ import type { CpaAccessGrantListItem } from '../../../../data/repositories/taxiq
 import { isApiError } from '../../../../types/domain'
 import { getErrorI18nKey } from '../../../../data/errorCodes'
 import { SkeletonList } from '../../../ui/skeleton'
+import Tooltip from '../../../ui/Tooltip'
 import { formatTransactionDateTime } from '../../utils'
 import CpaGrantStatusBadge from './shared/CpaGrantStatusBadge'
 import CreateCpaAccessGrantModal from './modals/CreateCpaAccessGrantModal'
 import ConfirmModal from './modals/ConfirmModal'
+
+const KNOWN_DATA_MODES = new Set(['Masked', 'FullSensitive'])
 
 export default function CpaAccessSettingsView({
   scope,
@@ -73,7 +76,12 @@ export default function CpaAccessSettingsView({
           <thead className="bg-nexoraCanvas text-[10px] font-extrabold uppercase text-nexoraMuted">
             <tr>
               <th className="px-4 py-3">{t('taxiq.cpaAccess.columns.cpaEmail')}</th>
-              <th className="px-4 py-3">{t('taxiq.cpaAccess.columns.packageType')}</th>
+              <th className="px-4 py-3">
+                <span className="inline-flex items-center gap-1">
+                  {t('taxiq.cpaAccess.columns.packageType')}
+                  <Tooltip content={t('taxiq.cpaAccess.tooltips.packageColumn')} />
+                </span>
+              </th>
               <th className="px-4 py-3">{t('taxiq.cpaAccess.columns.dataMode')}</th>
               <th className="px-4 py-3">{t('taxiq.cpaAccess.columns.expiresAt')}</th>
               <th className="px-4 py-3">{t('taxiq.cpaAccess.columns.status')}</th>
@@ -98,7 +106,14 @@ export default function CpaAccessSettingsView({
                 <tr key={grant.id} className="border-t border-nexoraRule">
                   <td className="px-4 py-3 font-bold text-nexoraText">{grant.cpaEmail}</td>
                   <td className="px-4 py-3 text-nexoraText">{t(`taxiq.cpaAccess.packageTypes.${grant.packageType}`)}</td>
-                  <td className="px-4 py-3 text-nexoraText">{t(`taxiq.cpaAccess.dataModes.${grant.dataMode}`)}</td>
+                  <td className="px-4 py-3 text-nexoraText">
+                    <span className="inline-flex items-center gap-1">
+                      {t(`taxiq.cpaAccess.dataModes.${grant.dataMode}`)}
+                      {KNOWN_DATA_MODES.has(grant.dataMode) && (
+                        <Tooltip content={t(`taxiq.cpaAccess.dataModeTooltips.${grant.dataMode}`)} />
+                      )}
+                    </span>
+                  </td>
                   <td className="px-4 py-3 text-nexoraMuted">{formatTransactionDateTime(grant.expiresAt, currentLanguage)}</td>
                   <td className="px-4 py-3">
                     <CpaGrantStatusBadge status={grant.status} />

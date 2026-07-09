@@ -12,6 +12,7 @@ import { useTaxiqStaffDeductions } from '../../../../data/hooks/useTaxiqStaffDed
 import type { DeductionRecord } from '../../../../data/repositories/taxiqOwnerDeductions'
 import type { StaffDeductionRecord } from '../../../../data/repositories/taxiqStaffDeductions'
 import { SkeletonList } from '../../../ui/skeleton'
+import Tooltip from '../../../ui/Tooltip'
 import { formatCurrency } from '../../utils'
 import AddDeductionWizard from './AddDeductionWizard'
 import AddDeductionFromReceiptWizard from './AddDeductionFromReceiptWizard'
@@ -185,7 +186,12 @@ export default function DeductionCenterView({
               <th className="px-4 py-3">{t('taxiq.deductionCenter.columns.category')}</th>
               <th className="px-4 py-3">{t('taxiq.deductionCenter.columns.description')}</th>
               <th className="px-4 py-3">{t('taxiq.deductionCenter.columns.amount')}</th>
-              <th className="px-4 py-3">{t('taxiq.deductionCenter.columns.deductibleAmount')}</th>
+              <th className="px-4 py-3">
+                <span className="inline-flex items-center gap-1">
+                  {t('taxiq.deductionCenter.columns.deductibleAmount')}
+                  <Tooltip content={t('taxiq.tooltips.deductible')} />
+                </span>
+              </th>
               <th className="px-4 py-3">{t('taxiq.deductionCenter.columns.date')}</th>
               <th className="px-4 py-3">{t('taxiq.deductionCenter.columns.status')}</th>
               <th className="px-4 py-3 text-right">{t('taxiq.deductionCenter.columns.actions')}</th>

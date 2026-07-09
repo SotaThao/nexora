@@ -7,6 +7,7 @@ import { isApiError } from '../../../../../types/domain'
 import { getErrorI18nKey } from '../../../../../data/errorCodes'
 import { SkeletonList } from '../../../../ui/skeleton'
 import IconButton from '../../../../ui/IconButton'
+import Tooltip from '../../../../ui/Tooltip'
 import { formatCurrency } from '../../../utils'
 import AssetStatusBadge from '../shared/AssetStatusBadge'
 
@@ -132,8 +133,18 @@ export default function GiftCardLiabilityTab({
               <th className="px-4 py-3">{t('taxiq.assetsTracker.giftCard.columns.period')}</th>
               <th className="px-4 py-3">{t('taxiq.assetsTracker.giftCard.columns.totalSold')}</th>
               <th className="px-4 py-3">{t('taxiq.assetsTracker.giftCard.columns.totalRedeemed')}</th>
-              <th className="px-4 py-3">{t('taxiq.assetsTracker.giftCard.columns.outstandingBalance')}</th>
-              <th className="px-4 py-3">{t('taxiq.assetsTracker.giftCard.columns.dataSource')}</th>
+              <th className="px-4 py-3">
+                <span className="inline-flex items-center gap-1">
+                  {t('taxiq.assetsTracker.giftCard.columns.outstandingBalance')}
+                  <Tooltip content={t('taxiq.assetsTracker.giftCard.tooltips.outstandingBalance')} />
+                </span>
+              </th>
+              <th className="px-4 py-3">
+                <span className="inline-flex items-center gap-1">
+                  {t('taxiq.assetsTracker.giftCard.columns.dataSource')}
+                  <Tooltip content={t('taxiq.assetsTracker.giftCard.tooltips.dataSource')} />
+                </span>
+              </th>
               <th className="px-4 py-3">{t('taxiq.assetsTracker.giftCard.columns.status')}</th>
             </tr>
           </thead>
@@ -219,13 +230,21 @@ export default function GiftCardLiabilityTab({
 
               {outstandingPreview !== null && (
                 <div className="flex items-center justify-between rounded-lg bg-nexoraCanvas px-3 py-2 text-sm">
-                  <span className="text-nexoraMuted">{t('taxiq.assetsTracker.giftCard.form.outstandingPreviewLabel')}</span>
+                  <span className="inline-flex items-center gap-1 text-nexoraMuted">
+                    {t('taxiq.assetsTracker.giftCard.form.outstandingPreviewLabel')}
+                    <Tooltip content={t('taxiq.assetsTracker.giftCard.tooltips.outstandingBalance')} />
+                  </span>
                   <span className="font-extrabold text-nexoraText">{formatCurrency(outstandingPreview)}</span>
                 </div>
               )}
 
               <div>
-                <label className="text-xs font-bold text-nexoraMuted">{t('taxiq.assetsTracker.giftCard.form.dataSourceLabel')}</label>
+                <label className="text-xs font-bold text-nexoraMuted">
+                  <span className="inline-flex items-center gap-1">
+                    {t('taxiq.assetsTracker.giftCard.form.dataSourceLabel')}
+                    <Tooltip content={t('taxiq.assetsTracker.giftCard.tooltips.dataSource')} />
+                  </span>
+                </label>
                 <input
                   type="text"
                   value={dataSource}

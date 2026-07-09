@@ -1,5 +1,6 @@
 import { AlertCircle, CheckCircle2, Clock } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
+import Tooltip from '../../../../ui/Tooltip'
 import type { ReceiptQualityStatus } from '../../../../../data/repositories/taxiqReceipts'
 
 const STATUS_STYLES: Record<ReceiptQualityStatus, string> = {
@@ -31,6 +32,7 @@ export default function ReceiptQualityStatusBadge({ status }: { status: ReceiptQ
     >
       <Icon className="h-3 w-3" />
       {t(STATUS_LABEL_KEYS[status] ?? status)}
+      {status === 'NeedsMoreInfo' && <Tooltip content={t('taxiq.receiptVault.needsMoreInfoNote')} />}
     </span>
   )
 }

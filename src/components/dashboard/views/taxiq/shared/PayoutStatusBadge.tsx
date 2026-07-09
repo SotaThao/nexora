@@ -1,5 +1,6 @@
 import { AlertCircle, CheckCircle2, Clock, ShieldAlert } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
+import Tooltip from '../../../../ui/Tooltip'
 
 const STATUS_STYLES: Record<string, string> = {
   PendingConfirmation: 'bg-slate-50 text-slate-600 border-slate-100/50 dark:bg-white/5 dark:text-slate-400 dark:border-white/10',
@@ -19,6 +20,7 @@ export default function PayoutStatusBadge({ status }: { status: string }) {
   const { t } = useTranslation()
   const Icon = STATUS_ICONS[status] ?? Clock
   const style = STATUS_STYLES[status] ?? STATUS_STYLES.PendingConfirmation
+  const hasTooltip = status in STATUS_STYLES
 
   return (
     <span
@@ -26,6 +28,7 @@ export default function PayoutStatusBadge({ status }: { status: string }) {
     >
       <Icon className="h-3 w-3" />
       {t(`taxiq.payoutCenter.status.${status}`) || status}
+      {hasTooltip && <Tooltip content={t(`taxiq.payoutCenter.statusTooltips.${status}`)} />}
     </span>
   )
 }

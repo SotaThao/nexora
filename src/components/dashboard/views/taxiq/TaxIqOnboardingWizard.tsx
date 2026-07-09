@@ -4,20 +4,22 @@ import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { useCreateOwnerTaxYear } from '../../../../data/hooks/useTaxiqOwnerTaxYear'
 import type { OwnerTaxYearEmployeeTypeConfig } from '../../../../data/repositories/taxiqOwnerTaxYear'
+import Tooltip from '../../../ui/Tooltip'
 
 interface ModuleOption {
   key: string
   labelKey: string
+  tooltipKey: string
 }
 
 // Values match backend/src/Domain/Enums/TaxIq/TaxIqModule.cs exactly — confirmed live via a
 // 400 TAXIQ_INVALID_MODULE response when testing against guessed enum names.
 const MODULE_OPTIONS: ModuleOption[] = [
-  { key: 'DeductionTracking', labelKey: 'taxiq.onboarding.step3.deductionCenter' },
-  { key: 'ReceiptManagement', labelKey: 'taxiq.onboarding.step3.receiptManagement' },
-  { key: 'PayoutTracking', labelKey: 'taxiq.onboarding.step3.staffPayout' },
-  { key: 'TaxReminders', labelKey: 'taxiq.onboarding.step3.taxPaymentReminder' },
-  { key: 'CPAExport', labelKey: 'taxiq.onboarding.step3.cpaExport' },
+  { key: 'DeductionTracking', labelKey: 'taxiq.onboarding.step3.deductionCenter', tooltipKey: 'taxiq.onboarding.step3.tooltips.deductionCenter' },
+  { key: 'ReceiptManagement', labelKey: 'taxiq.onboarding.step3.receiptManagement', tooltipKey: 'taxiq.onboarding.step3.tooltips.receiptManagement' },
+  { key: 'PayoutTracking', labelKey: 'taxiq.onboarding.step3.staffPayout', tooltipKey: 'taxiq.onboarding.step3.tooltips.staffPayout' },
+  { key: 'TaxReminders', labelKey: 'taxiq.onboarding.step3.taxPaymentReminder', tooltipKey: 'taxiq.onboarding.step3.tooltips.taxPaymentReminder' },
+  { key: 'CPAExport', labelKey: 'taxiq.onboarding.step3.cpaExport', tooltipKey: 'taxiq.onboarding.step3.tooltips.cpaExport' },
 ]
 
 const TOTAL_STEPS = 4
@@ -110,7 +112,12 @@ export default function TaxIqOnboardingWizard({
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-nexoraMuted">{t('taxiq.onboarding.step1.taxYearLabel')}</label>
+              <label className="text-xs font-bold text-nexoraMuted">
+                <span className="inline-flex items-center gap-1">
+                  {t('taxiq.onboarding.step1.taxYearLabel')}
+                  <Tooltip content={t('taxiq.onboarding.step1.taxYearTooltip')} />
+                </span>
+              </label>
               <input
                 type="number"
                 value={taxYear}
@@ -127,14 +134,24 @@ export default function TaxIqOnboardingWizard({
 
         {step === 2 && (
           <div className="mt-5 space-y-4">
-            <h3 className="text-sm font-bold text-nexoraText">{t('taxiq.onboarding.step2.title')}</h3>
+            <h3 className="text-sm font-bold text-nexoraText">
+              <span className="inline-flex items-center gap-1">
+                {t('taxiq.onboarding.step2.title')}
+                <Tooltip content={t('taxiq.onboarding.step2.titleTooltip')} />
+              </span>
+            </h3>
             {([
-              ['w2Count', 'taxiq.onboarding.step2.w2Label'],
-              ['contractor1099Count', 'taxiq.onboarding.step2.contractor1099Label'],
-              ['boothRenterCount', 'taxiq.onboarding.step2.boothRenterLabel'],
-            ] as const).map(([field, labelKey]) => (
+              ['w2Count', 'taxiq.onboarding.step2.w2Label', 'taxiq.tooltips.w2'],
+              ['contractor1099Count', 'taxiq.onboarding.step2.contractor1099Label', 'taxiq.tooltips.contractor1099'],
+              ['boothRenterCount', 'taxiq.onboarding.step2.boothRenterLabel', 'taxiq.tooltips.boothRenter'],
+            ] as const).map(([field, labelKey, tooltipKey]) => (
               <div key={field} className="flex items-center justify-between">
-                <label className="text-xs font-bold text-nexoraMuted">{t(labelKey)}</label>
+                <label className="text-xs font-bold text-nexoraMuted">
+                  <span className="inline-flex items-center gap-1">
+                    {t(labelKey)}
+                    <Tooltip content={t(tooltipKey)} />
+                  </span>
+                </label>
                 <input
                   type="number"
                   min={0}
@@ -161,6 +178,7 @@ export default function TaxIqOnboardingWizard({
                   className="h-4 w-4 rounded border-nexoraBorder"
                 />
                 {t(mod.labelKey)}
+                <Tooltip content={t(mod.tooltipKey)} />
               </label>
             ))}
           </div>

@@ -1,5 +1,6 @@
 import { AlertCircle, CheckCircle2, Circle, FileWarning, Lock, ShieldAlert } from 'lucide-react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
+import Tooltip from '../../../../ui/Tooltip'
 
 const STATUS_STYLES: Record<string, string> = {
   Draft: 'bg-slate-50 text-slate-600 border-slate-100/50 dark:bg-white/5 dark:text-slate-400 dark:border-white/10',
@@ -28,10 +29,20 @@ const STATUS_LABEL_KEYS: Record<string, string> = {
   Locked: 'taxiq.deductionCenter.status.locked',
 }
 
+const STATUS_TOOLTIP_KEYS: Record<string, string> = {
+  Draft: 'taxiq.deductionCenter.statusTooltips.draft',
+  Ready: 'taxiq.deductionCenter.statusTooltips.ready',
+  MissingReceipt: 'taxiq.deductionCenter.statusTooltips.missingReceipt',
+  MissingInfo: 'taxiq.deductionCenter.statusTooltips.missingInfo',
+  CPAReview: 'taxiq.deductionCenter.statusTooltips.cpaReview',
+  Locked: 'taxiq.deductionCenter.statusTooltips.locked',
+}
+
 export default function DeductionStatusBadge({ status }: { status: string }) {
   const { t } = useTranslation()
   const Icon = STATUS_ICONS[status] ?? Circle
   const style = STATUS_STYLES[status] ?? STATUS_STYLES.Draft
+  const tooltipKey = STATUS_TOOLTIP_KEYS[status]
 
   return (
     <span
@@ -39,6 +50,7 @@ export default function DeductionStatusBadge({ status }: { status: string }) {
     >
       <Icon className="h-3 w-3" />
       {t(STATUS_LABEL_KEYS[status] ?? status)}
+      {tooltipKey && <Tooltip content={t(tooltipKey)} />}
     </span>
   )
 }

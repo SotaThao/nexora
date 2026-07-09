@@ -12,6 +12,7 @@ import { isApiError } from '../../../../../types/domain'
 import { getErrorI18nKey } from '../../../../../data/errorCodes'
 import { SkeletonList } from '../../../../ui/skeleton'
 import IconButton from '../../../../ui/IconButton'
+import Tooltip from '../../../../ui/Tooltip'
 
 const LOCKED_ERROR_CODE = 'TAXIQ_STAFF_TAX_YEAR_LOCKED'
 
@@ -72,7 +73,7 @@ export default function MileageLogTab({
 
   const openCreateModal = () => {
     setEditingId(null)
-    setForm(EMPTY_FORM)
+    setForm({ ...EMPTY_FORM, date: new Date().toISOString().split('T')[0] })
     setErrors({})
     setIsModalOpen(true)
   }
@@ -141,7 +142,10 @@ export default function MileageLogTab({
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-nexoraMuted">
-          <span>{t('taxiq.staffLogs.mileage.totalItems', { count: items.length })}</span>
+          <span className="inline-flex items-center gap-1">
+            {t('taxiq.staffLogs.mileage.totalItems', { count: items.length })}
+            <Tooltip content={t('taxiq.staffLogs.tooltips.mileage')} />
+          </span>
           {cpaReviewCount > 0 && (
             <span className="text-violet-600">{t('taxiq.staffLogs.mileage.cpaReviewCount', { count: cpaReviewCount })}</span>
           )}

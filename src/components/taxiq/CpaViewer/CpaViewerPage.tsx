@@ -5,6 +5,7 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { useAddCpaNote, useCpaPackage } from '../../../data/hooks/useTaxiqCpaViewer'
 import type { CpaDeduction } from '../../../data/repositories/taxiqCpaViewer'
 import LoadingScreen from '../../../app/LoadingScreen'
+import Tooltip from '../../ui/Tooltip'
 import { formatTransactionDateTime } from '../../dashboard/utils'
 
 /**
@@ -76,7 +77,12 @@ export default function CpaViewerPage() {
                 <th className="px-4 py-3">{t('taxiq.cpaViewer.columns.vendor')}</th>
                 <th className="px-4 py-3">{t('taxiq.cpaViewer.columns.date')}</th>
                 <th className="px-4 py-3">{t('taxiq.cpaViewer.columns.amount')}</th>
-                <th className="px-4 py-3">{t('taxiq.cpaViewer.columns.deductibleAmount')}</th>
+                <th className="px-4 py-3">
+                  <span className="inline-flex items-center gap-1">
+                    {t('taxiq.cpaViewer.columns.deductibleAmount')}
+                    <Tooltip content={t('taxiq.tooltips.deductible')} />
+                  </span>
+                </th>
                 <th className="px-4 py-3">{t('taxiq.cpaViewer.columns.receipts')}</th>
                 <th className="px-4 py-3">{t('taxiq.cpaViewer.columns.cpaNotes')}</th>
               </tr>

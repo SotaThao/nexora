@@ -7,6 +7,7 @@ import { isApiError } from '../../../../../types/domain'
 import { getErrorI18nKey } from '../../../../../data/errorCodes'
 import { SkeletonList } from '../../../../ui/skeleton'
 import IconButton from '../../../../ui/IconButton'
+import Tooltip from '../../../../ui/Tooltip'
 
 const LOCKED_ERROR_CODE = 'TAXIQ_STAFF_TAX_YEAR_LOCKED'
 
@@ -34,7 +35,7 @@ export default function CashTipLogTab({
   const logCashTip = useLogCashTip()
 
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [date, setDate] = useState('')
+  const [date, setDate] = useState(() => new Date().toISOString().split('T')[0])
   const [amount, setAmount] = useState('')
   const [note, setNote] = useState('')
   const [errors, setErrors] = useState<FormErrors>({})
@@ -44,7 +45,7 @@ export default function CashTipLogTab({
   const total = items.reduce((sum, item) => sum + item.amount, 0)
 
   const resetForm = () => {
-    setDate('')
+    setDate(new Date().toISOString().split('T')[0])
     setAmount('')
     setNote('')
     setErrors({})
@@ -91,9 +92,10 @@ export default function CashTipLogTab({
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="text-xs font-semibold text-nexoraMuted">
+        <div className="inline-flex items-center gap-1 text-xs font-semibold text-nexoraMuted">
           <span className="text-sm font-extrabold text-nexoraText">{formatCurrency(total)}</span>{' '}
           {t('taxiq.staffLogs.cashTip.totalLabel')}
+          <Tooltip content={t('taxiq.staffLogs.tooltips.cashTip')} />
         </div>
         <button
           type="button"

@@ -5,6 +5,13 @@ import { useCreateStaffTaxYearByOwner } from '../../../../../data/hooks/useTaxiq
 import { CONTRACT_TYPES, W9_STATUSES, type ContractType, type W9Status } from '../../../../../data/repositories/taxiqOwnerPayouts'
 import { isApiError } from '../../../../../types/domain'
 import { getErrorI18nKey } from '../../../../../data/errorCodes'
+import Tooltip from '../../../../ui/Tooltip'
+
+const CONTRACT_TYPE_TOOLTIP_KEYS: Partial<Record<ContractType, string>> = {
+  W2: 'taxiq.tooltips.w2',
+  C1099: 'taxiq.tooltips.contractor1099',
+  BoothRenter: 'taxiq.tooltips.boothRenter',
+}
 
 /**
  * Precondition step embedded inside AddPayoutModal (US-09 AC "QT-04 bước 0"): a Staff
@@ -69,12 +76,18 @@ export default function CreateStaffTaxYearForModal({
             <option key={type} value={type}>{t(`taxiq.payoutCenter.contractTypes.${type}`)}</option>
           ))}
         </select>
+        {CONTRACT_TYPE_TOOLTIP_KEYS[contractType] && (
+          <p className="mt-1 text-[11px] font-medium text-nexoraMuted">{t(CONTRACT_TYPE_TOOLTIP_KEYS[contractType] as string)}</p>
+        )}
       </div>
 
       {contractType === 'C1099' && (
         <div>
           <label className="mb-1 block text-xs font-bold text-nexoraMuted">
-            {t('taxiq.payoutCenter.createStaffTaxYear.w9StatusLabel')}
+            <span className="inline-flex items-center gap-1">
+              {t('taxiq.payoutCenter.createStaffTaxYear.w9StatusLabel')}
+              <Tooltip content={t('taxiq.tooltips.w9')} />
+            </span>
           </label>
           <select
             value={w9Status}

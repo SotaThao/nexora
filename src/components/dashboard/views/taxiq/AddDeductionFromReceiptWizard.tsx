@@ -45,7 +45,7 @@ export default function AddDeductionFromReceiptWizard({
 
   const [step, setStep] = useState<StepId>('upload')
   const [vendor, setVendor] = useState('')
-  const [date, setDate] = useState('')
+  const [date, setDate] = useState(() => new Date().toISOString().split('T')[0])
   const [s3Key, setS3Key] = useState('')
   const [fileName, setFileName] = useState('')
   const [truncated, setTruncated] = useState(false)
@@ -64,7 +64,7 @@ export default function AddDeductionFromReceiptWizard({
     try {
       const result = await analyzeReceipt.mutateAsync({ ownerTaxYearId, file })
       setVendor(result.vendor ?? '')
-      setDate(result.date ?? '')
+      setDate(result.date ?? new Date().toISOString().split('T')[0])
       setS3Key(result.s3Key)
       setFileName(result.fileName)
       setTruncated(result.truncated)

@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
+import Tooltip from '../../../../ui/Tooltip'
 
 // US-13 Step 1 period picker. `PeriodType` on the wire has no "Day" member (BE:
 // Week|Month|Quarter|Year) — "Day" is a FE-only concept for Per Transaction entry,
@@ -159,7 +160,12 @@ export default function PeriodPicker({
   return (
     <div className="space-y-3">
       <div>
-        <label className="text-xs font-bold text-nexoraMuted">{t('taxiq.selfReportedIncome.form.periodTypeLabel')}</label>
+        <label className="text-xs font-bold text-nexoraMuted">
+          <span className="inline-flex items-center gap-1">
+            {t('taxiq.selfReportedIncome.form.periodTypeLabel')}
+            <Tooltip content={t('taxiq.selfReportedIncome.form.periodTypeTooltip')} />
+          </span>
+        </label>
         <select
           value={periodMode}
           onChange={(e) => handleModeChange(e.target.value as PeriodMode)}

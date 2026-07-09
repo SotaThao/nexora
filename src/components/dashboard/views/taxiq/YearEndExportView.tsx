@@ -12,8 +12,9 @@ import type { OwnerTaxYear } from '../../../../data/repositories/taxiqOwnerTaxYe
 import { isApiError } from '../../../../types/domain'
 import { getErrorI18nKey } from '../../../../data/errorCodes'
 import { SkeletonList } from '../../../ui/skeleton'
+import Tooltip from '../../../ui/Tooltip'
 import { formatTransactionDateTime } from '../../utils'
-import TaxReadinessScoreWidget, { READINESS_ITEM_ROUTES } from './shared/TaxReadinessScoreWidget'
+import TaxReadinessScoreWidget, { getReadinessItemLabel, READINESS_ITEM_ROUTES } from './shared/TaxReadinessScoreWidget'
 import LockTaxYearModal from './modals/LockTaxYearModal'
 import CreateAdjustmentModal from './modals/CreateAdjustmentModal'
 
@@ -127,7 +128,12 @@ export default function YearEndExportView({
       <div className="nexora-card p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 className="text-sm font-extrabold text-nexoraText">{t('taxiq.yearEndExport.draftTitle')}</h3>
+            <h3 className="text-sm font-extrabold text-nexoraText">
+              <span className="inline-flex items-center gap-1">
+                {t('taxiq.yearEndExport.draftTitle')}
+                <Tooltip content={t('taxiq.yearEndExport.tooltips.draftReport')} />
+              </span>
+            </h3>
             <p className="mt-1 text-xs text-nexoraMuted">{t('taxiq.yearEndExport.draftDescription')}</p>
           </div>
           <button
@@ -144,7 +150,12 @@ export default function YearEndExportView({
       </div>
 
       <div className="nexora-card p-6">
-        <h3 className="text-sm font-extrabold text-nexoraText">{t('taxiq.yearEndExport.lockTitle')}</h3>
+        <h3 className="text-sm font-extrabold text-nexoraText">
+          <span className="inline-flex items-center gap-1">
+            {t('taxiq.yearEndExport.lockTitle')}
+            <Tooltip content={t('taxiq.yearEndExport.tooltips.lockTaxYear')} />
+          </span>
+        </h3>
 
         {isLockedOrExported ? (
           <div className="mt-3 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400">
@@ -161,7 +172,7 @@ export default function YearEndExportView({
                   const route = READINESS_ITEM_ROUTES[item.type]
                   return (
                     <li key={`${item.type}-${index}`} className="flex items-center justify-between gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-400">
-                      <span>{item.description}</span>
+                      <span>{getReadinessItemLabel(item, t)}</span>
                       {route && (
                         <button
                           type="button"
@@ -190,7 +201,12 @@ export default function YearEndExportView({
       </div>
 
       <div className="nexora-card p-6">
-        <h3 className="text-sm font-extrabold text-nexoraText">{t('taxiq.yearEndExport.finalTitle')}</h3>
+        <h3 className="text-sm font-extrabold text-nexoraText">
+          <span className="inline-flex items-center gap-1">
+            {t('taxiq.yearEndExport.finalTitle')}
+            <Tooltip content={t('taxiq.yearEndExport.tooltips.finalExport')} />
+          </span>
+        </h3>
         <p className="mt-1 text-xs text-nexoraMuted">{t('taxiq.yearEndExport.finalDescription')}</p>
 
         <label className="mt-3 flex items-center gap-2 text-xs font-semibold text-nexoraText">

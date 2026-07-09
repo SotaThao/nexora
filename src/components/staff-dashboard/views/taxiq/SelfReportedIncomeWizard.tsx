@@ -20,6 +20,12 @@ type StepId = 'basic' | 'details' | 'receipt'
 
 const INCOME_TYPE_OPTIONS = ['CashFromClient', 'OtherSalonIncome', 'BoothRentFromSubRenter', 'Other'] as const
 
+const INCOME_TYPE_TOOLTIP_KEYS: Record<string, string> = {
+  CashFromClient: 'taxiq.selfReportedIncome.incomeTypeTooltips.cashFromClient',
+  OtherSalonIncome: 'taxiq.selfReportedIncome.incomeTypeTooltips.otherSalonIncome',
+  BoothRentFromSubRenter: 'taxiq.selfReportedIncome.incomeTypeTooltips.boothRentFromSubRenter',
+}
+
 interface BasicErrors {
   amount?: string
   source?: string
@@ -261,6 +267,9 @@ export default function SelfReportedIncomeWizard({
                     </option>
                   ))}
                 </select>
+                {INCOME_TYPE_TOOLTIP_KEYS[incomeType] && (
+                  <p className="mt-1 text-[11px] font-medium text-nexoraMuted">{t(INCOME_TYPE_TOOLTIP_KEYS[incomeType])}</p>
+                )}
               </div>
 
               {incomeType === 'Other' && (

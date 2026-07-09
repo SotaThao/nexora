@@ -17,6 +17,7 @@ import {
   useUpdateStaffDeduction,
 } from '../../../../data/hooks/useTaxiqStaffDeductions'
 import { formatCurrency } from '../../utils'
+import Tooltip from '../../../ui/Tooltip'
 import ReceiptUploadStep from './shared/ReceiptUploadStep'
 import DeductionStatusBadge from './shared/DeductionStatusBadge'
 import AiDeductionStatusBadge from './shared/AiDeductionStatusBadge'
@@ -83,7 +84,7 @@ export default function AddDeductionWizard({
   const [categoryId, setCategoryId] = useState(initialDeduction?.categoryId ?? '')
   const [description, setDescription] = useState(initialDeduction?.description ?? '')
   const [amount, setAmount] = useState(initialDeduction ? String(initialDeduction.amount) : '')
-  const [date, setDate] = useState(initialDeduction?.date ?? '')
+  const [date, setDate] = useState(initialDeduction?.date ?? new Date().toISOString().split('T')[0])
   const [vendorName, setVendorName] = useState(initialDeduction?.vendorName ?? '')
   const [businessUsePercent, setBusinessUsePercent] = useState(
     initialDeduction?.businessUsePercent != null ? String(initialDeduction.businessUsePercent) : '',
@@ -333,7 +334,12 @@ export default function AddDeductionWizard({
           <div className="space-y-4">
             <h3 className="text-sm font-bold text-nexoraText">{t('taxiq.deductionCenter.wizard.step2.title')}</h3>
             <div>
-              <label className="text-xs font-bold text-nexoraMuted">{t('taxiq.deductionCenter.wizard.step2.businessUsePercentLabel')}</label>
+              <label className="text-xs font-bold text-nexoraMuted">
+                <span className="inline-flex items-center gap-1">
+                  {t('taxiq.deductionCenter.wizard.step2.businessUsePercentLabel')}
+                  <Tooltip content={t('taxiq.tooltips.businessUsePercent')} />
+                </span>
+              </label>
               <input
                 type="number"
                 min={0}
@@ -344,7 +350,10 @@ export default function AddDeductionWizard({
               />
             </div>
             <div className="flex items-center justify-between rounded-lg bg-nexoraCanvas px-3 py-2 text-sm">
-              <span className="text-nexoraMuted">{t('taxiq.deductionCenter.wizard.step2.computedDeductibleLabel')}</span>
+              <span className="inline-flex items-center gap-1 text-nexoraMuted">
+                {t('taxiq.deductionCenter.wizard.step2.computedDeductibleLabel')}
+                <Tooltip content={t('taxiq.tooltips.deductible')} />
+              </span>
               <span className="font-extrabold text-nexoraText">{formatCurrency(computedDeductibleAmount)}</span>
             </div>
           </div>

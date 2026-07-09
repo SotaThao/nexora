@@ -4,7 +4,9 @@ import { RadialBar, RadialBarChart, PolarAngleAxis } from 'recharts'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useTaxiqReadinessScore } from '../../../../../data/hooks/useTaxiqReadinessScore'
 import { Skeleton } from '../../../../ui/skeleton'
-import type { TaxReadinessScope } from '../../../../../data/repositories/taxiqReadinessScore'
+import Tooltip from '../../../../ui/Tooltip'
+import type { ReadinessPriorityItem, TaxReadinessScope } from '../../../../../data/repositories/taxiqReadinessScore'
+import type { TFunction } from '../../../../../types/contexts'
 
 // Hex mirrors of the nexora* Tailwind tokens — Recharts fills need literal colors, not class names.
 const RING_TRACK_COLOR = '#DDE5EF' // nexoraBorder
@@ -30,7 +32,30 @@ export const READINESS_ITEM_ROUTES: Record<string, string> = {
   Contractor1099NoIncome: '/staff/taxiq/income',
 }
 
-function ScoreRing({ value, label }: { value: number; label: string }) {
+/**
+ * High Priority item `type` -> i18n key. The BE only sends an English `description`
+ * (plus `descriptionParams` for interpolation) — it does not localize, so the FE
+ * always renders through this map and falls back to the raw description if a type
+ * isn't recognized yet.
+ */
+const READINESS_ITEM_I18N_KEYS: Record<string, string> = {
+  MissingW9: 'taxiq.readinessItems.missingW9',
+  PayoutDispute: 'taxiq.readinessItems.payoutDispute',
+  GiftCardLiability: 'taxiq.readinessItems.giftCardLiability',
+  MembershipCredit: 'taxiq.readinessItems.membershipCredit',
+  OverdueTax: 'taxiq.readinessItems.overdueTax',
+  SelfReportedMissingReceipt: 'taxiq.readinessItems.selfReportedMissingReceipt',
+  SelfReportedCpaReview: 'taxiq.readinessItems.selfReportedCpaReview',
+  BoothRenterNoIncome: 'taxiq.readinessItems.boothRenterNoIncome',
+  Contractor1099NoIncome: 'taxiq.readinessItems.contractor1099NoIncome',
+}
+
+export function getReadinessItemLabel(item: ReadinessPriorityItem, t: TFunction): string {
+  const key = READINESS_ITEM_I18N_KEYS[item.type]
+  return key ? t(key, item.descriptionParams) : item.description
+}
+
+function ScoreRing({ value, label, tooltip }: { value: number; label: string; tooltip?: string }) {
   const clamped = Math.max(0, Math.min(100, Math.round(value)))
   const ringColor = clamped >= 80 ? RING_COLOR_GOOD : clamped >= 50 ? RING_COLOR_WARN : RING_COLOR_BAD
   const chartData = [{ value: clamped, fill: ringColor }]
@@ -62,7 +87,12 @@ function ScoreRing({ value, label }: { value: number; label: string }) {
           {clamped}%
         </div>
       </div>
-      <div className="max-w-[92px] text-center text-[11px] font-semibold text-nexoraMuted">{label}</div>
+      <div className="max-w-[92px] text-center text-[11px] font-semibold text-nexoraMuted">
+        <span className="inline-flex items-center gap-1">
+          {label}
+          {tooltip && <Tooltip content={tooltip} />}
+        </span>
+      </div>
     </div>
   )
 }
@@ -106,11 +136,19 @@ export default function TaxReadinessScoreWidget({
   const primaryLabel = t(
     scope === 'owner' ? 'taxiq.readinessScore.ownerCpaLabel' : 'taxiq.readinessScore.staffTaxLabel',
   )
+  const primaryTooltip = t(
+    scope === 'owner' ? 'taxiq.readinessScore.tooltips.ownerCpa' : 'taxiq.readinessScore.tooltips.staffTax',
+  )
 
   return (
     <div className="nexora-card p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-sm font-extrabold text-nexoraText">{t('taxiq.readinessScore.title')}</h2>
+        <h2 className="text-sm font-extrabold text-nexoraText">
+          <span className="inline-flex items-center gap-1">
+            {t('taxiq.readinessScore.title')}
+            <Tooltip content={t('taxiq.readinessScore.tooltips.title')} />
+          </span>
+        </h2>
         {data.highPriorityCount > 0 ? (
           <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-100/50 bg-rose-50 px-2.5 py-0.5 text-[10px] font-bold text-rose-600 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-400">
             <AlertTriangle className="h-3 w-3" />
@@ -125,8 +163,12 @@ export default function TaxReadinessScoreWidget({
       </div>
 
       <div className="mt-5 flex justify-center gap-10">
-        <ScoreRing value={primaryScore} label={primaryLabel} />
-        <ScoreRing value={data.cpaReviewScore} label={t('taxiq.readinessScore.cpaReviewLabel')} />
+        <ScoreRing value={primaryScore} label={primaryLabel} tooltip={primaryTooltip} />
+        <ScoreRing
+          value={data.cpaReviewScore}
+          label={t('taxiq.readinessScore.cpaReviewLabel')}
+          tooltip={t('taxiq.readinessScore.tooltips.cpaReview')}
+        />
       </div>
 
       {data.highPriorityItems.length > 0 && (
@@ -141,7 +183,7 @@ export default function TaxReadinessScoreWidget({
                   onClick={() => route && navigate(route)}
                   className="flex w-full items-center justify-between gap-2 rounded-lg border border-nexoraBorder px-3 py-2 text-left text-xs font-semibold text-nexoraText enabled:hover:bg-nexoraBrandSoft disabled:cursor-default disabled:opacity-70"
                 >
-                  <span>{item.description}</span>
+                  <span>{getReadinessItemLabel(item, t)}</span>
                   {route && <ChevronRight className="h-3.5 w-3.5 shrink-0 text-nexoraMuted" />}
                 </button>
               </li>

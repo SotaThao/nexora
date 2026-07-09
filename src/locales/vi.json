@@ -544,7 +544,17 @@
       "ecosystem": "Hệ sinh thái",
       "ecosystem_loading": "Đang tải hệ sinh thái...",
       "no_ecosystem": "Không có hệ sinh thái nào",
-      "coming_soon_badge": "Sắp ra mắt"
+      "coming_soon_badge": "Sắp ra mắt",
+      "search": {
+        "staffGroup": "Nhân viên",
+        "transactionsGroup": "Giao dịch",
+        "reviewsGroup": "Đánh giá",
+        "touchpointsGroup": "Điểm chạm",
+        "viewDetails": "Xem Chi Tiết ›",
+        "viewTransaction": "Xem GD ›",
+        "view": "Xem ›",
+        "noResults": "Không tìm thấy kết quả nào trùng khớp."
+      }
     },
     "back_to_dashboard": "Quay lại Bảng Điều Khiển",
     "notifications": {
@@ -3050,6 +3060,16 @@
     "default_desc": "Module này đang được chuẩn bị cho bảng điều khiển Nexora Touch."
   },
   "taxiq": {
+    "tooltips": {
+      "w2": "Nhân viên chính thức. Tiệm khấu trừ thuế trực tiếp trên mỗi kỳ lương và phát Form W-2 trước ngày 31/1.",
+      "contractor1099": "Thợ hợp đồng độc lập. Không bị khấu trừ thuế tại nguồn — tự đóng thuế tự kinh doanh (~15.3%) và nhận Form 1099-NEC nếu được trả từ $600/năm trở lên.",
+      "boothRenter": "Thợ thuê ghế: trả tiền thuê chỗ cho tiệm, tự định giá và giữ toàn bộ doanh thu dịch vụ của mình. Không nhận 1099 từ chủ tiệm.",
+      "w9": "Mẫu IRS mà thợ 1099 điền để cung cấp mã số thuế (SSN hoặc EIN). Cần thu trước lần trả tiền đầu tiên — thiếu W-9 sẽ chặn Final Export.",
+      "cpaReview": "Cần CPA (kế toán thuế) xác nhận. Mục này không được tính vào tổng và sẽ chặn Final Export cho đến khi CPA xử lý.",
+      "highPriority": "Vấn đề chưa xử lý sẽ chặn Final Export — ví dụ: thiếu W-9, tranh chấp payout, hoặc chi phí rủi ro cao không có hóa đơn.",
+      "businessUsePercent": "Với chi phí dùng chung cá nhân + kinh doanh (điện thoại, xe, internet): tỷ lệ phần dùng cho kinh doanh. Chỉ phần này được khấu trừ thuế.",
+      "deductible": "Phần chi phí được trừ vào thu nhập chịu thuế (số tiền × % sử dụng cho kinh doanh)."
+    },
     "onboarding": {
       "title": "Thiết Lập Tax IQ",
       "back": "Quay lại",
@@ -3060,10 +3080,12 @@
         "title": "Thông tin kinh doanh",
         "salonNameLabel": "Tên tiệm",
         "taxYearLabel": "Năm thuế",
+        "taxYearTooltip": "Năm dương lịch mà hồ sơ này theo dõi (1/1 – 31/12). Mỗi năm thuế được thiết lập, theo dõi và xuất hồ sơ riêng.",
         "taxYearRequiredForCpaExport": "Năm thuế là bắt buộc khi bật Xuất Hồ Sơ Cuối Năm."
       },
       "step2": {
         "title": "Loại nhân viên",
+        "titleTooltip": "Cách bạn trả tiền cho mỗi người quyết định loại giấy tờ thuế áp dụng (W-2, 1099-NEC hoặc không có). Nhập số lượng từng loại đang làm tại tiệm.",
         "w2Label": "Nhân viên W2",
         "contractor1099Label": "Thợ hợp đồng 1099",
         "boothRenterLabel": "Thợ thuê ghế"
@@ -3075,7 +3097,15 @@
         "staffPayout": "Theo Dõi Payout",
         "mileageLog": "Nhật Ký Mileage",
         "taxPaymentReminder": "Nhắc Nộp Thuế",
-        "cpaExport": "Xuất Hồ Sơ CPA"
+        "cpaExport": "Xuất Hồ Sơ CPA",
+        "tooltips": {
+          "deductionCenter": "Theo dõi chi phí kinh doanh và để AI đánh giá khoản nào được khấu trừ — phần cốt lõi giúp giảm thuế.",
+          "receiptManagement": "Nơi lưu mọi hóa đơn — AI tự đọc nhà cung cấp, ngày và số tiền từ ảnh.",
+          "staffPayout": "Ghi nhận từng khoản chi trả cho thợ (tiền công, tip, thưởng) và để thợ xác nhận hoặc báo sai lệch.",
+          "mileageLog": "Ghi lại chuyến đi vì công việc (mua vật tư, đi học…) để khấu trừ theo dặm.",
+          "taxPaymentReminder": "Nhắc hạn nộp sales tax, franchise tax, estimated tax và payroll tax — kèm lưu chứng từ đã nộp.",
+          "cpaExport": "Xuất trọn bộ hồ sơ cuối năm để gửi CPA. Bắt buộc phải nhập năm thuế."
+        }
       },
       "step4": {
         "title": "Xem lại",
@@ -3103,8 +3133,11 @@
         "contractTypeBoothRenter": "Thuê ghế",
         "w9StatusLabel": "Trạng thái W-9",
         "w9NotRequired": "Không yêu cầu",
+        "w9NotRequiredTooltip": "Nhân viên W-2 và thợ thuê ghế không cần nộp W-9 cho tiệm.",
         "w9Pending": "Đang chờ",
-        "w9Received": "Đã nhận"
+        "w9PendingTooltip": "Tiệm đã yêu cầu W-9 nhưng chưa nhận được — phía chủ tiệm sẽ hiện cảnh báo High Priority.",
+        "w9Received": "Đã nhận",
+        "w9ReceivedTooltip": "Tiệm đã nhận đủ W-9 của bạn."
       },
       "step2": {
         "title": "Chọn module muốn bật"
@@ -3130,6 +3163,12 @@
       "grossIncomeLabel": "Tổng thu nhập",
       "totalDeductionsLabel": "Tổng khấu trừ",
       "estimatedNetIncomeLabel": "Ước tính thu nhập ròng",
+      "tooltips": {
+        "ownerReportedIncome": "Các khoản payout, tip do tiệm nhập và bạn đã xác nhận.",
+        "selfReportedIncome": "Thu nhập bạn tự khai thêm mà tiệm không báo cáo — mặc định riêng tư.",
+        "grossIncome": "Thu nhập tiệm khai + tự khai + tip tiền mặt, trước khi trừ chi phí.",
+        "estimatedNetIncome": "Tổng thu nhập trừ tổng khấu trừ. Chỉ là ước tính tham khảo — không phải số liệu khai thuế chính thức."
+      },
       "pendingPayoutsBadge": "{{count}} payout đang chờ bạn xác nhận",
       "editModulesModal": {
         "title": "Chỉnh sửa cấu hình",
@@ -3199,9 +3238,26 @@
       "ownerCpaLabel": "Gói Owner CPA",
       "staffTaxLabel": "Gói Thuế Thợ",
       "cpaReviewLabel": "Gói CPA Review",
+      "tooltips": {
+        "title": "Mức độ sẵn sàng hồ sơ thuế (0–100%), tính từ khấu trừ, payout, W-9 và các vấn đề còn tồn. Xử lý hết mục High Priority để mở khóa Final Export.",
+        "ownerCpa": "Mức sẵn sàng hồ sơ kinh doanh của tiệm — khấu trừ, payout, W-9, gift card, nhắc thuế — để bàn giao cho CPA.",
+        "staffTax": "Mức sẵn sàng hồ sơ thuế cá nhân của thợ — khấu trừ, mileage, thu nhập tự khai.",
+        "cpaReview": "Tỷ lệ hồ sơ không còn mục chờ CPA xem xét. Mỗi mục CPA còn mở cũng đồng thời chặn Final Export."
+      },
       "highPriorityCount": "{{count}} mục High Priority",
       "allClear": "Đã xử lý hết",
       "errorLoading": "Không thể tải Điểm Sẵn Sàng Thuế lúc này."
+    },
+    "readinessItems": {
+      "missingW9": "Thiếu W-9 cho thợ 1099: {{name}} — cần thu thập trước khi phát hành Form 1099-NEC",
+      "payoutDispute": "Tranh chấp payout chưa giải quyết với {{name}}",
+      "giftCardLiability": "Số liệu Gift Card có sai lệch — cần xem xét trước Final Export",
+      "membershipCredit": "Số liệu Membership Credit có sai lệch — cần xem xét trước Final Export",
+      "overdueTax": "Khoản thuế {{taxType}} đã quá hạn — cần bằng chứng thanh toán",
+      "selfReportedMissingReceipt": "Khoản thu nhập tự khai thiếu chứng từ",
+      "selfReportedCpaReview": "Khoản thu nhập tự khai cần CPA xem xét",
+      "boothRenterNoIncome": "Booth Renter chưa nhập thu nhập tự khai — doanh thu từ khách thường cần khai báo",
+      "contractor1099NoIncome": "Bạn chưa nhập thu nhập tự khai nào cho năm này"
     },
     "deductionCenter": {
       "title": "Trung Tâm Khấu Trừ",
@@ -3237,11 +3293,25 @@
         "cpaReview": "Cần CPA Duyệt",
         "locked": "Đã Khóa"
       },
+      "statusTooltips": {
+        "draft": "Chưa nộp — bản nháp không được tính vào tổng, ước tính thuế hay hồ sơ xuất.",
+        "ready": "Đã đầy đủ và được tính vào tổng khấu trừ.",
+        "missingReceipt": "Đã lưu nhưng thiếu hóa đơn. Đa số danh mục vẫn được tính, riêng danh mục rủi ro cao cần chứng từ trước Final Export.",
+        "missingInfo": "Thiếu thông tin bắt buộc (vd: % sử dụng cho kinh doanh). Bổ sung để khoản này được tính.",
+        "cpaReview": "Cần CPA (kế toán thuế) xác nhận. Mục này không được tính vào tổng và sẽ chặn Final Export cho đến khi CPA xử lý.",
+        "locked": "Năm thuế đã khóa — muốn sửa phải tạo bản ghi Adjustment."
+      },
       "aiStatus": {
         "deductible": "Được Khấu Trừ",
         "partiallyDeductible": "Khấu Trừ Một Phần",
         "needsCpaReview": "Cần CPA Xem Xét",
         "notDeductible": "Không Được Khấu Trừ"
+      },
+      "aiStatusTooltips": {
+        "deductible": "AI đánh giá toàn bộ khoản này đủ điều kiện khấu trừ. Chỉ là gợi ý — CPA quyết định cuối cùng.",
+        "partiallyDeductible": "Chỉ phần dùng cho kinh doanh được khấu trừ — nhập % sử dụng để hệ thống tính số tiền.",
+        "needsCpaReview": "Rủi ro cao hoặc chưa rõ ràng — không tính vào tổng cho đến khi CPA duyệt.",
+        "notDeductible": "AI đánh giá đây là chi phí cá nhân — không tính vào tổng và không đưa vào hồ sơ cuối năm."
       },
       "cpaReviewExplanation": "Danh mục rủi ro cao được nộp mà không có hóa đơn — cần CPA xem xét trước khi tính vào tổng.",
       "notDeductibleNotice": "Không được khấu trừ — không tính vào tổng và không xuất trong Year-End Export.",
@@ -3381,6 +3451,10 @@
         "payout": "Chi trả",
         "selfReportedIncome": "Thu Nhập Tự Khai"
       },
+      "tooltips": {
+        "quality": "Kết quả AI đọc ảnh hóa đơn. \"Thiếu Thông Tin\" nghĩa là không đọc được nhà cung cấp, ngày hoặc số tiền — hãy tải ảnh rõ hơn.",
+        "linkType": "Hóa đơn này đang gắn với bản ghi nào. \"Độc lập\" = đã tải lên nhưng chưa gắn vào khấu trừ, payout hay thu nhập nào."
+      },
       "actions": {
         "resolveDuplicate": "Xử lý trùng lặp"
       },
@@ -3443,6 +3517,10 @@
           "businessUsePercent": "Tỷ Lệ Kinh Doanh %",
           "aiSuggestion": "Gợi Ý AI"
         },
+        "tooltips": {
+          "inServiceDate": "Ngày thiết bị thực sự đưa vào sử dụng tại tiệm (khác ngày mua). Bắt buộc để AI gợi ý Khấu Hao / Section 179 chính xác.",
+          "aiSuggestion": "Cách AI gợi ý xử lý thuế cho khoản mua này: khấu trừ hết trong năm, khấu hao nhiều năm, hoặc Section 179. CPA xác nhận lựa chọn cuối."
+        },
         "form": {
           "assetNameLabel": "Tên tài sản",
           "assetNameRequired": "Tên tài sản là bắt buộc.",
@@ -3462,11 +3540,11 @@
         },
         "aiSuggestion": {
           "deductNow": "Khấu Trừ Ngay",
-          "deductNowExplanation": "Thiết bị này đủ điều kiện khấu trừ toàn bộ trong năm nay.",
+          "deductNowExplanation": "Khấu trừ toàn bộ chi phí ngay trong năm nay.",
           "depreciate": "Khấu Hao",
-          "depreciateExplanation": "Trải đều chi phí thiết bị theo vòng đời sử dụng.",
+          "depreciateExplanation": "Chia chi phí ra nhiều năm theo thời gian sử dụng IRS quy định — thiết bị tiệm nail thường 5–7 năm.",
           "section179Candidate": "Ứng Viên Section 179",
-          "section179CandidateExplanation": "Có thể đủ điều kiện khấu trừ toàn bộ theo Section 179 — CPA cần xác nhận.",
+          "section179CandidateExplanation": "Điều khoản IRS Section 179 có thể cho khấu trừ TOÀN BỘ chi phí ngay năm mua thay vì khấu hao dần. CPA xác nhận điều kiện áp dụng.",
           "cpaReview": "Cần CPA Duyệt",
           "cpaReviewExplanation": "Cải tạo luôn cần CPA xem xét trước khi tính vào tổng."
         }
@@ -3482,6 +3560,10 @@
           "outstandingBalance": "Số Dư Chưa Dùng",
           "dataSource": "Nguồn Dữ Liệu",
           "status": "Trạng Thái"
+        },
+        "tooltips": {
+          "outstandingBalance": "Gift card đã bán nhưng khách chưa dùng (Tổng bán − Tổng đã đổi). Đây là khoản tiệm còn nợ khách — là nợ phải trả, không phải doanh thu.",
+          "dataSource": "Nguồn số liệu gift card (báo cáo POS, đếm thủ công…). Thiếu nguồn sẽ đánh dấu kỳ này là Ưu Tiên Cao."
         },
         "form": {
           "periodLabel": "Kỳ",
@@ -3510,6 +3592,10 @@
           "expiryPolicy": "Chính Sách Hết Hạn",
           "status": "Trạng Thái"
         },
+        "tooltips": {
+          "credits": "Số credit membership đã cấp, đã dùng và đã hết hạn trong kỳ. Credit chưa dùng là doanh thu chưa thực hiện — chưa tính là thu nhập.",
+          "expiryPolicy": "Chính sách quy định thời hạn credit chưa dùng. Credit hết hạn mà không có chính sách sẽ bị gắn cờ CPA xem xét."
+        },
         "form": {
           "periodLabel": "Kỳ",
           "periodRequired": "Kỳ là bắt buộc.",
@@ -3534,6 +3620,10 @@
       "tabs": {
         "mileage": "Nhật Ký Mileage",
         "cashTip": "Nhật Ký Cash Tip"
+      },
+      "tooltips": {
+        "mileage": "Chuyến đi vì công việc (mua vật tư, đi học…) được khấu trừ theo dặm. IRS yêu cầu ghi ngày, mục đích, số dặm và điểm đi/đến.",
+        "cashTip": "Tip tiền mặt vẫn là thu nhập chịu thuế dù không có chứng từ — hãy ghi lại để ước tính thuế chính xác."
       },
       "errors": {
         "generic": "Đã có lỗi xảy ra. Vui lòng thử lại.",
@@ -3620,6 +3710,11 @@
         "boothRentFromSubRenter": "Booth Rent Từ Sub-renter",
         "other": "Khác"
       },
+      "incomeTypeTooltips": {
+        "cashFromClient": "Tiền mặt khách trả trực tiếp cho bạn, không qua tiệm.",
+        "otherSalonIncome": "Thu nhập từ tiệm khác chưa kết nối Tax IQ.",
+        "boothRentFromSubRenter": "Tiền thuê ghế bạn thu từ thợ khác thuê lại chỗ của bạn — tính là thu nhập của bạn."
+      },
       "status": {
         "ready": "Sẵn Sàng",
         "missingReceipt": "Thiếu Chứng Từ",
@@ -3654,6 +3749,7 @@
         "step2Title": "Chi Tiết",
         "step3Title": "Chứng Từ & Lưu",
         "periodTypeLabel": "Chế độ nhập",
+        "periodTypeTooltip": "Nhập từng giao dịch riêng lẻ, hoặc nhập một số tổng cho cả ngày/tuần/tháng/quý/năm.",
         "periodLabel": "Kỳ",
         "dateLabel": "Ngày",
         "dateRequired": "Ngày là bắt buộc.",
@@ -3674,6 +3770,12 @@
       "title": "Trung Tâm Xuất Hồ Sơ Cuối Năm",
       "subtitle": "Khóa năm thuế và xuất bộ hồ sơ CPA mà kế toán thuế của bạn cần.",
       "noOwnerTaxYear": "Hoàn tất thiết lập Tax IQ trước khi xuất hồ sơ.",
+      "tooltips": {
+        "draftReport": "Bản xuất xem trước, tạo lúc nào cũng được, đóng dấu \"NOT FINAL\" kèm danh sách mục còn thiếu.",
+        "finalExport": "Bộ hồ sơ chính thức gửi CPA, không watermark. Yêu cầu xử lý hết High Priority và khóa năm thuế.",
+        "lockTaxYear": "Đóng băng toàn bộ dữ liệu (chỉ đọc). Muốn sửa sau đó phải tạo Adjustment và xuất bản Amended — bản xuất gốc luôn được giữ nguyên.",
+        "adjustment": "Bản ghi sửa đổi sau khi khóa năm thuế: giá trị cũ, giá trị mới, lý do và chứng từ. Xuất hiện trong Amended Export v2/v3."
+      },
       "draftTitle": "Draft Report",
       "draftDescription": "Có thể tạo Draft bất kỳ lúc nào — không cần readiness score hoàn chỉnh.",
       "generateDraftButton": "Tạo Draft Report",
@@ -3808,6 +3910,15 @@
         "EstimatedTax": "Estimated Tax",
         "PayrollTax": "Payroll Tax"
       },
+      "taxTypeTooltips": {
+        "SalesTax": "Thuế thu từ khách trên dịch vụ/sản phẩm, nộp lại cho tiểu bang.",
+        "FranchiseTax": "Thuế thường niên tiểu bang thu trên quyền kinh doanh — mỗi bang mỗi khác, không liên quan việc mua nhượng quyền.",
+        "EstimatedTax": "Thuế tạm nộp theo quý cho thuế thu nhập + thuế tự kinh doanh (hạn 15/4, 16/6, 15/9, 15/1). Bắt buộc nếu dự kiến nợ thuế từ $1,000/năm.",
+        "PayrollTax": "Thuế khấu trừ từ lương nhân viên W-2 cộng phần chủ tiệm phải đóng, nộp cho IRS và tiểu bang."
+      },
+      "tooltips": {
+        "snoozeCount": "Số lần đã hoãn nhắc nhở. Tối đa 3 lần."
+      },
       "status": {
         "Pending": "Chưa thanh toán",
         "Paid": "Đã thanh toán",
@@ -3889,6 +4000,19 @@
         "DisputeReported": "Đang tranh chấp",
         "CPAReviewRequired": "Cần CPA xem xét"
       },
+      "statusTooltips": {
+        "PendingConfirmation": "Đang chờ thợ xác nhận đã nhận đúng số tiền này.",
+        "Confirmed": "Thợ đã xác nhận nhận đúng số tiền — được tính vào thu nhập và không còn High Priority.",
+        "DisputeReported": "Thợ báo số tiền không khớp với thực nhận. Chặn Final Export cho đến khi xử lý xong.",
+        "CPAReviewRequired": "Tranh chấp bị từ chối — chuyển vào CPA notes, cần CPA xử lý; cờ cảnh báo không tự mất."
+      },
+      "tooltips": {
+        "servicePayout": "Tiền công dịch vụ — chưa gồm tip, thưởng và hoàn phí.",
+        "reimbursement": "Tiền hoàn lại cho vật tư thợ tự bỏ tiền mua — không tính là thu nhập chịu thuế.",
+        "grossPayout": "Tổng chi trả trước mọi khoản trừ: tiền công + tip + thưởng + hoàn phí.",
+        "netPaid": "Số tiền thực tế đã chuyển cho thợ.",
+        "payPeriod": "Tần suất trả tiền cho thợ. \"Không định kỳ\" = khoản trả một lần, ngoài lịch trả cố định tuần/tháng."
+      },
       "actions": {
         "edit": "Sửa"
       },
@@ -3958,6 +4082,7 @@
           "Adjust": "Điều chỉnh",
           "Reject": "Từ chối"
         },
+        "adjustTooltip": "Điều chỉnh payout về số tiền đã thống nhất với thợ — bản ghi trở lại trạng thái Đã xác nhận.",
         "adjustAtLeastOneField": "Nhập ít nhất một khoản điều chỉnh.",
         "rejectWarning": "Từ chối không giải quyết cờ High Priority trên Tax Readiness Score — payout này sẽ được chuyển sang CPA Review.",
         "noteLabel": "Ghi chú giải quyết",
@@ -3999,9 +4124,21 @@
         "Full": "Full",
         "CPAReview": "CPA Review"
       },
+      "packageTypeTooltips": {
+        "Basic": "Chỉ gồm số tổng — không có chi tiết từng dòng.",
+        "Full": "Toàn bộ bản ghi kèm hóa đơn đính kèm.",
+        "CPAReview": "Chỉ gồm các mục được gắn cờ chờ CPA, để CPA rà soát tập trung."
+      },
       "dataModes": {
         "Masked": "Masked",
         "FullSensitive": "Full Sensitive"
+      },
+      "dataModeTooltips": {
+        "Masked": "Ẩn số nhạy cảm — SSN/EIN và số tài khoản chỉ hiện 4 số cuối. Khuyến nghị dùng cho hầu hết CPA.",
+        "FullSensitive": "Hiển thị đầy đủ SSN/EIN và thông tin tài khoản. Cần bạn đồng ý rõ ràng và mọi truy cập đều ghi vào audit log."
+      },
+      "tooltips": {
+        "packageColumn": "Mức chi tiết CPA được xem: Basic (số tổng), Full (toàn bộ + hóa đơn), CPA Review (chỉ mục gắn cờ)."
       },
       "actions": {
         "revoke": "Thu hồi"

@@ -6,6 +6,7 @@ import EditStaffModuleConfigModal from './modals/EditStaffModuleConfigModal'
 import TaxReadinessScoreWidget from '../../../dashboard/views/taxiq/shared/TaxReadinessScoreWidget'
 import { useStaffTaxYearDashboard } from '../../../../data/hooks/useTaxiqStaffTaxYear'
 import { SkeletonList } from '../../../ui/skeleton'
+import Tooltip from '../../../ui/Tooltip'
 import type { StaffTaxYear } from '../../../../data/repositories/taxiqStaffTaxYear'
 
 // Values match backend/src/Domain/Enums/TaxIq/TaxIqModule.cs exactly.
@@ -79,7 +80,10 @@ export default function StaffTaxIqHomeView({ staffTaxYear }: { staffTaxYear: Sta
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <div className="text-xs font-bold uppercase tracking-wider text-nexoraMuted">
-                {t('taxiq.staffHome.ownerReportedIncomeLabel')}
+                <span className="inline-flex items-center gap-1">
+                  {t('taxiq.staffHome.ownerReportedIncomeLabel')}
+                  <Tooltip content={t('taxiq.staffHome.tooltips.ownerReportedIncome')} />
+                </span>
               </div>
               <div className="mt-1 text-lg font-extrabold text-nexoraText">
                 {formatCurrency(dashboard.ownerReportedIncome)}
@@ -87,7 +91,10 @@ export default function StaffTaxIqHomeView({ staffTaxYear }: { staffTaxYear: Sta
             </div>
             <div>
               <div className="text-xs font-bold uppercase tracking-wider text-nexoraMuted">
-                {t('taxiq.staffHome.selfReportedIncomeLabel')}
+                <span className="inline-flex items-center gap-1">
+                  {t('taxiq.staffHome.selfReportedIncomeLabel')}
+                  <Tooltip content={t('taxiq.staffHome.tooltips.selfReportedIncome')} />
+                </span>
               </div>
               <div className="mt-1 text-lg font-extrabold text-nexoraText">
                 {formatCurrency(dashboard.selfReportedIncome)}
@@ -102,7 +109,10 @@ export default function StaffTaxIqHomeView({ staffTaxYear }: { staffTaxYear: Sta
             </div>
             <div>
               <div className="text-xs font-bold uppercase tracking-wider text-nexoraMuted">
-                {t('taxiq.staffHome.grossIncomeLabel')}
+                <span className="inline-flex items-center gap-1">
+                  {t('taxiq.staffHome.grossIncomeLabel')}
+                  <Tooltip content={t('taxiq.staffHome.tooltips.grossIncome')} />
+                </span>
               </div>
               <div className="mt-1 text-lg font-extrabold text-nexoraText">
                 {formatCurrency(dashboard.grossIncome)}
@@ -118,7 +128,10 @@ export default function StaffTaxIqHomeView({ staffTaxYear }: { staffTaxYear: Sta
             </div>
             <div>
               <div className="text-xs font-bold uppercase tracking-wider text-nexoraMuted">
-                {t('taxiq.staffHome.estimatedNetIncomeLabel')}
+                <span className="inline-flex items-center gap-1">
+                  {t('taxiq.staffHome.estimatedNetIncomeLabel')}
+                  <Tooltip content={t('taxiq.staffHome.tooltips.estimatedNetIncome')} />
+                </span>
               </div>
               <div className="mt-1 text-lg font-extrabold text-nexoraText">
                 {formatCurrency(dashboard.estimatedNetIncome)}

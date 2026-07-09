@@ -14,6 +14,7 @@ export interface ReadinessPriorityItemApiDto {
   type: string
   priority: string
   description: string
+  descriptionParams?: Record<string, string>
 }
 
 interface OwnerReadinessScoreApiDto {
@@ -34,6 +35,7 @@ export interface ReadinessPriorityItem {
   type: string
   priority: string
   description: string
+  descriptionParams?: Record<string, string>
 }
 
 export interface TaxReadinessScore {
@@ -49,6 +51,7 @@ function normalizePriorityItem(dto: ReadinessPriorityItemApiDto): ReadinessPrior
     type: dto.type,
     priority: dto.priority,
     description: dto.description,
+    descriptionParams: dto.descriptionParams,
   }
 }
 

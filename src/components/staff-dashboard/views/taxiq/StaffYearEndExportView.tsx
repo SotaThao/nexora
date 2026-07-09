@@ -10,7 +10,8 @@ import type { CpaPackageType, ExportPackage } from '../../../../data/repositorie
 import type { StaffTaxYear } from '../../../../data/repositories/taxiqStaffTaxYear'
 import { isApiError } from '../../../../types/domain'
 import { getErrorI18nKey } from '../../../../data/errorCodes'
-import TaxReadinessScoreWidget, { READINESS_ITEM_ROUTES } from '../../../dashboard/views/taxiq/shared/TaxReadinessScoreWidget'
+import TaxReadinessScoreWidget, { getReadinessItemLabel, READINESS_ITEM_ROUTES } from '../../../dashboard/views/taxiq/shared/TaxReadinessScoreWidget'
+import Tooltip from '../../../ui/Tooltip'
 
 // Draft is watermarked "NOT FINAL" regardless of tier — ticket only specifies a
 // package picker for Final Export, so Draft always requests Full (most detail)
@@ -162,7 +163,12 @@ export default function StaffYearEndExportView({
       <div className="nexora-card p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 className="text-sm font-extrabold text-nexoraText">{t('taxiq.staffExport.draftTitle')}</h3>
+            <h3 className="text-sm font-extrabold text-nexoraText">
+              <span className="inline-flex items-center gap-1">
+                {t('taxiq.staffExport.draftTitle')}
+                <Tooltip content={t('taxiq.yearEndExport.tooltips.draftReport')} />
+              </span>
+            </h3>
             <p className="mt-1 text-xs text-nexoraMuted">{t('taxiq.staffExport.draftDescription')}</p>
           </div>
           <button
@@ -180,7 +186,12 @@ export default function StaffYearEndExportView({
 
       {isLocked ? (
         <div className="nexora-card p-6">
-          <h3 className="text-sm font-extrabold text-nexoraText">{t('taxiq.staffExport.finalTitle')}</h3>
+          <h3 className="text-sm font-extrabold text-nexoraText">
+            <span className="inline-flex items-center gap-1">
+              {t('taxiq.staffExport.finalTitle')}
+              <Tooltip content={t('taxiq.yearEndExport.tooltips.finalExport')} />
+            </span>
+          </h3>
           <div className="mt-3 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400">
             <Lock className="h-3.5 w-3.5" />
             {t('taxiq.staffExport.lockedBanner')}
@@ -191,7 +202,12 @@ export default function StaffYearEndExportView({
         </div>
       ) : (
         <div className="nexora-card p-6">
-          <h3 className="text-sm font-extrabold text-nexoraText">{t('taxiq.staffExport.finalTitle')}</h3>
+          <h3 className="text-sm font-extrabold text-nexoraText">
+            <span className="inline-flex items-center gap-1">
+              {t('taxiq.staffExport.finalTitle')}
+              <Tooltip content={t('taxiq.yearEndExport.tooltips.finalExport')} />
+            </span>
+          </h3>
           <p className="mt-1 text-xs text-nexoraMuted">{t('taxiq.staffExport.finalDescription')}</p>
 
           <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-400">
@@ -223,7 +239,7 @@ export default function StaffYearEndExportView({
                     >
                       <span className="inline-flex items-center gap-1.5">
                         <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                        {item.description}
+                        {getReadinessItemLabel(item, t)}
                       </span>
                       {route && (
                         <button type="button" onClick={() => navigate(route)} className="shrink-0 underline">

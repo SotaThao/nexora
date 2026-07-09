@@ -5,6 +5,7 @@ import { useNotification } from '../../../../contexts/NotificationContext'
 import { useTaxiqReceipts, useUploadTaxiqReceipt } from '../../../../data/hooks/useTaxiqReceipts'
 import type { ReceiptLinkedEntityType, ReceiptQualityStatus, ReceiptVaultItem } from '../../../../data/repositories/taxiqReceipts'
 import { SkeletonList } from '../../../ui/skeleton'
+import Tooltip from '../../../ui/Tooltip'
 import { formatCurrency } from '../../utils'
 import ReceiptQualityStatusBadge from './shared/ReceiptQualityStatusBadge'
 import DuplicateResolveModal from './modals/DuplicateResolveModal'
@@ -127,8 +128,18 @@ export default function ReceiptVaultView({
               <th className="px-4 py-3">{t('taxiq.receiptVault.columns.vendor')}</th>
               <th className="px-4 py-3">{t('taxiq.receiptVault.columns.date')}</th>
               <th className="px-4 py-3">{t('taxiq.receiptVault.columns.amount')}</th>
-              <th className="px-4 py-3">{t('taxiq.receiptVault.columns.quality')}</th>
-              <th className="px-4 py-3">{t('taxiq.receiptVault.columns.linkType')}</th>
+              <th className="px-4 py-3">
+                <span className="inline-flex items-center gap-1">
+                  {t('taxiq.receiptVault.columns.quality')}
+                  <Tooltip content={t('taxiq.receiptVault.tooltips.quality')} />
+                </span>
+              </th>
+              <th className="px-4 py-3">
+                <span className="inline-flex items-center gap-1">
+                  {t('taxiq.receiptVault.columns.linkType')}
+                  <Tooltip content={t('taxiq.receiptVault.tooltips.linkType')} />
+                </span>
+              </th>
               <th className="px-4 py-3">{t('taxiq.receiptVault.columns.createdAt')}</th>
               <th className="px-4 py-3 text-right">{t('taxiq.receiptVault.columns.actions')}</th>
             </tr>

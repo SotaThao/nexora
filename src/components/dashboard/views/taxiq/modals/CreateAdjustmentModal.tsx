@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { X, Loader2 } from 'lucide-react'
 import IconButton from '../../../../ui/IconButton'
+import Tooltip from '../../../../ui/Tooltip'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
 import { useCreateOwnerAdjustment } from '../../../../../data/hooks/useTaxiqOwnerTaxYearLock'
@@ -122,7 +123,12 @@ export default function CreateAdjustmentModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-nexoraText/70 p-4 backdrop-blur-sm">
       <div className="nexora-modal-card max-w-lg">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-extrabold text-nexoraText">{t('taxiq.createAdjustment.modalTitle')}</h2>
+          <h2 className="text-sm font-extrabold text-nexoraText">
+            <span className="inline-flex items-center gap-1">
+              {t('taxiq.createAdjustment.modalTitle')}
+              <Tooltip content={t('taxiq.yearEndExport.tooltips.adjustment')} />
+            </span>
+          </h2>
           <IconButton label={t('common.cancel')} onClick={onClose}>
             <X className="h-4 w-4" />
           </IconButton>

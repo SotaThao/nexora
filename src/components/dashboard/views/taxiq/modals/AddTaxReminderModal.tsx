@@ -8,6 +8,8 @@ import { TAX_RELATED_TAX_TYPES, type TaxReminderTaxType } from '../../../../../d
 import { isApiError } from '../../../../../types/domain'
 import { getErrorI18nKey } from '../../../../../data/errorCodes'
 
+const KNOWN_TAX_TYPES = new Set(['SalesTax', 'FranchiseTax', 'EstimatedTax', 'PayrollTax'])
+
 export default function AddTaxReminderModal({
   open,
   onClose,
@@ -79,6 +81,9 @@ export default function AddTaxReminderModal({
                 <option key={type} value={type}>{t(`taxiq.reminders.taxTypes.${type}`)}</option>
               ))}
             </select>
+            {KNOWN_TAX_TYPES.has(taxType) && (
+              <p className="mt-1 text-[11px] font-medium text-nexoraMuted">{t(`taxiq.reminders.taxTypeTooltips.${taxType}`)}</p>
+            )}
           </div>
 
           <div>

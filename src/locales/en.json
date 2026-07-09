@@ -544,7 +544,17 @@
       "ecosystem": "Ecosystem",
       "ecosystem_loading": "Loading ecosystem...",
       "no_ecosystem": "No ecosystem available",
-      "coming_soon_badge": "Coming Soon"
+      "coming_soon_badge": "Coming Soon",
+      "search": {
+        "staffGroup": "Staff",
+        "transactionsGroup": "Transactions",
+        "reviewsGroup": "Reviews",
+        "touchpointsGroup": "Touchpoints",
+        "viewDetails": "View Details ›",
+        "viewTransaction": "View Tx ›",
+        "view": "View ›",
+        "noResults": "No matching results found."
+      }
     },
     "back_to_dashboard": "Back to Dashboard",
     "notifications": {
@@ -3051,6 +3061,16 @@
     "default_desc": "This module is being prepared for the Nexora Touch merchant dashboard."
   },
   "taxiq": {
+    "tooltips": {
+      "w2": "Formal employee. The salon withholds taxes from every paycheck and issues Form W-2 by Jan 31.",
+      "contractor1099": "Independent contractor. No tax is withheld — they pay self-employment tax (~15.3%) themselves and receive Form 1099-NEC if paid $600 or more in a year.",
+      "boothRenter": "Rents a chair/booth from the salon, sets their own prices, and keeps their own service income. Pays rent to the owner and does NOT receive a 1099.",
+      "w9": "IRS form a 1099 contractor fills in to provide their tax ID (SSN or EIN). Collect it before the first payment — a missing W-9 blocks Final Export.",
+      "cpaReview": "Needs a tax professional's confirmation. This item is excluded from your totals and blocks Final Export until a CPA resolves it.",
+      "highPriority": "An unresolved issue that blocks Final Export — e.g. missing W-9, payout dispute, or a high-risk expense without a receipt.",
+      "businessUsePercent": "For expenses used both personally and for business (phone, car, internet): the share used for business. Only that share is deductible.",
+      "deductible": "The portion of this expense that reduces taxable income (amount × business-use %)."
+    },
     "onboarding": {
       "title": "Set up Tax IQ",
       "back": "Back",
@@ -3061,10 +3081,12 @@
         "title": "Business info",
         "salonNameLabel": "Salon name",
         "taxYearLabel": "Tax year",
+        "taxYearTooltip": "The calendar year these records cover (Jan 1 – Dec 31). Each tax year is set up, tracked, and exported separately.",
         "taxYearRequiredForCpaExport": "Tax year is required when Year-End Export is enabled."
       },
       "step2": {
         "title": "Employee types",
+        "titleTooltip": "How you pay each person decides which tax forms apply (W-2, 1099-NEC, or none). Enter how many of each type work at your salon.",
         "w2Label": "W2 employees",
         "contractor1099Label": "1099 contractors",
         "boothRenterLabel": "Booth renters"
@@ -3076,7 +3098,15 @@
         "staffPayout": "Payout Tracking",
         "mileageLog": "Mileage Log",
         "taxPaymentReminder": "Tax Reminders",
-        "cpaExport": "CPA Export"
+        "cpaExport": "CPA Export",
+        "tooltips": {
+          "deductionCenter": "Track business expenses and let AI assess what's deductible — the core of your tax savings.",
+          "receiptManagement": "One place to upload every receipt — AI reads the vendor, date, and amount automatically.",
+          "staffPayout": "Record each staff payout (service, tip, bonus) and let staff confirm or dispute the amounts.",
+          "mileageLog": "Log business trips (supply runs, training…) to deduct them per mile.",
+          "taxPaymentReminder": "Due-date reminders for sales, franchise, estimated, and payroll tax — with proof-of-payment tracking.",
+          "cpaExport": "Year-end export of the full package for your CPA. Requires a tax year to be set."
+        }
       },
       "step4": {
         "title": "Review",
@@ -3104,8 +3134,11 @@
         "contractTypeBoothRenter": "Booth Renter",
         "w9StatusLabel": "W-9 status",
         "w9NotRequired": "Not required",
+        "w9NotRequiredTooltip": "W-2 employees and booth renters don't file a W-9 with the salon.",
         "w9Pending": "Pending",
-        "w9Received": "Received"
+        "w9PendingTooltip": "The salon has requested your W-9 but hasn't received it yet — this shows as a High Priority item on the owner's side.",
+        "w9Received": "Received",
+        "w9ReceivedTooltip": "The salon already has your completed W-9 on file."
       },
       "step2": {
         "title": "Modules to enable"
@@ -3131,6 +3164,12 @@
       "grossIncomeLabel": "Gross income",
       "totalDeductionsLabel": "Total deductions",
       "estimatedNetIncomeLabel": "Estimated net income",
+      "tooltips": {
+        "ownerReportedIncome": "Payouts and tips your salon entered and you confirmed.",
+        "selfReportedIncome": "Income you added yourself that the salon doesn't report — private by default.",
+        "grossIncome": "Salon-reported + self-reported + cash tips, before deductions.",
+        "estimatedNetIncome": "Gross income minus total deductions. A rough planning estimate — not a tax filing figure."
+      },
       "pendingPayoutsBadge": "{{count}} payout(s) awaiting your confirmation",
       "editModulesModal": {
         "title": "Edit configuration",
@@ -3200,9 +3239,26 @@
       "ownerCpaLabel": "Owner CPA Package",
       "staffTaxLabel": "Staff Tax Package",
       "cpaReviewLabel": "CPA Review Package",
+      "tooltips": {
+        "title": "How ready your records are for tax season (0–100%), based on deductions, payouts, W-9s, and open issues. Resolve all High Priority items to unlock Final Export.",
+        "ownerCpa": "Readiness of the salon's business records — deductions, payouts, W-9s, gift cards, tax reminders — for handing to your CPA.",
+        "staffTax": "Readiness of each technician's personal tax records — deductions, mileage, self-reported income.",
+        "cpaReview": "Share of records with no open CPA-review flag. Every open CPA item also blocks Final Export."
+      },
       "highPriorityCount": "{{count}} High Priority",
       "allClear": "All caught up",
       "errorLoading": "Unable to load Tax Readiness Score right now."
+    },
+    "readinessItems": {
+      "missingW9": "Missing W-9 for 1099 contractor: {{name}} — collect before issuing Form 1099-NEC",
+      "payoutDispute": "Unresolved payout dispute with {{name}}",
+      "giftCardLiability": "Gift Card figures don't match — needs review before Final Export",
+      "membershipCredit": "Membership Credit figures don't match — needs review before Final Export",
+      "overdueTax": "{{taxType}} tax payment is overdue — proof of payment required",
+      "selfReportedMissingReceipt": "Self-reported income entry is missing a receipt",
+      "selfReportedCpaReview": "Self-reported income entry needs CPA review",
+      "boothRenterNoIncome": "Booth Renter hasn't entered any self-reported income yet — client revenue usually needs to be reported",
+      "contractor1099NoIncome": "You haven't entered any self-reported income for this year"
     },
     "deductionCenter": {
       "title": "Deduction Center",
@@ -3238,11 +3294,25 @@
         "cpaReview": "CPA Review",
         "locked": "Locked"
       },
+      "statusTooltips": {
+        "draft": "Not submitted yet — drafts don't count toward totals, estimates, or exports.",
+        "ready": "Complete and counted toward your deductible total.",
+        "missingReceipt": "Saved without a receipt. Still counted for most categories, but high-risk ones need proof before Final Export.",
+        "missingInfo": "A required detail is missing (e.g. business-use %). Fill it in to count this expense.",
+        "cpaReview": "Needs a tax professional's confirmation. This item is excluded from your totals and blocks Final Export until a CPA resolves it.",
+        "locked": "The tax year is locked — changes now require an Adjustment record."
+      },
       "aiStatus": {
         "deductible": "Deductible",
         "partiallyDeductible": "Partially Deductible",
         "needsCpaReview": "Needs CPA Review",
         "notDeductible": "Not Deductible"
+      },
+      "aiStatusTooltips": {
+        "deductible": "AI suggests the full amount qualifies as a business deduction. Suggestion only — your CPA has the final say.",
+        "partiallyDeductible": "Only the business-use portion is deductible — set the business-use % to compute the amount.",
+        "needsCpaReview": "High-risk or unclear — excluded from totals until a CPA approves it.",
+        "notDeductible": "AI suggests this is a personal expense — excluded from totals and Year-End Export."
       },
       "cpaReviewExplanation": "High-risk category submitted without a receipt — requires CPA review before it counts toward your total.",
       "notDeductibleNotice": "Not deductible — excluded from your total and Year-End Export.",
@@ -3382,6 +3452,10 @@
         "payout": "Payout",
         "selfReportedIncome": "Self-Reported Income"
       },
+      "tooltips": {
+        "quality": "AI's read of the receipt photo. \"Needs More Info\" means vendor, date, or amount couldn't be read — upload a clearer photo.",
+        "linkType": "What this receipt is attached to. Standalone = uploaded but not attached to any deduction, payout, or income record yet."
+      },
       "actions": {
         "resolveDuplicate": "Resolve duplicate"
       },
@@ -3444,6 +3518,10 @@
           "businessUsePercent": "Business-Use %",
           "aiSuggestion": "AI Suggestion"
         },
+        "tooltips": {
+          "inServiceDate": "The date the equipment actually started being used at the salon (not the purchase date). Required for Depreciate / Section 179 suggestions.",
+          "aiSuggestion": "How AI suggests handling this purchase for taxes: deduct fully this year, depreciate over several years, or Section 179. CPA confirms the final choice."
+        },
         "form": {
           "assetNameLabel": "Asset name",
           "assetNameRequired": "Asset name is required.",
@@ -3463,11 +3541,11 @@
         },
         "aiSuggestion": {
           "deductNow": "Deduct Now",
-          "deductNowExplanation": "This equipment qualifies for a full deduction this year.",
+          "deductNowExplanation": "Deduct the full cost on this year's taxes.",
           "depreciate": "Depreciate",
-          "depreciateExplanation": "Spread this expense across the asset's useful life.",
+          "depreciateExplanation": "Spread the cost over the asset's IRS useful life — typically 5–7 years for salon equipment.",
           "section179Candidate": "Section 179 Candidate",
-          "section179CandidateExplanation": "May qualify for full-year Section 179 deduction — CPA to confirm.",
+          "section179CandidateExplanation": "IRS Section 179 may allow deducting the FULL cost in the purchase year instead of depreciating. Your CPA confirms eligibility.",
           "cpaReview": "CPA Review",
           "cpaReviewExplanation": "Renovation always needs CPA review before it counts toward your total."
         }
@@ -3483,6 +3561,10 @@
           "outstandingBalance": "Outstanding Balance",
           "dataSource": "Data Source",
           "status": "Status"
+        },
+        "tooltips": {
+          "outstandingBalance": "Gift cards sold but not yet redeemed (Total Sold − Total Redeemed). This is money you still owe customers — a liability, not revenue.",
+          "dataSource": "Where these gift card figures come from (POS report, manual count…). A missing source flags the period as High Priority."
         },
         "form": {
           "periodLabel": "Period",
@@ -3511,6 +3593,10 @@
           "expiryPolicy": "Expiry Policy",
           "status": "Status"
         },
+        "tooltips": {
+          "credits": "Membership credits added, spent, and lapsed in the period. Unused credits are deferred revenue — not income until used.",
+          "expiryPolicy": "Your written policy on when unused credits expire. Expired credits without a policy are flagged for CPA review."
+        },
         "form": {
           "periodLabel": "Period",
           "periodRequired": "Period is required.",
@@ -3535,6 +3621,10 @@
       "tabs": {
         "mileage": "Mileage Log",
         "cashTip": "Cash Tip Log"
+      },
+      "tooltips": {
+        "mileage": "Business trips (supply runs, training…) are deductible per mile. The IRS requires date, purpose, miles, and start/end locations.",
+        "cashTip": "Cash tips are taxable income even without a paper trail — log them so your tax estimate stays accurate."
       },
       "errors": {
         "generic": "Something went wrong. Please try again.",
@@ -3621,6 +3711,11 @@
         "boothRentFromSubRenter": "Booth Rent from Sub-renter",
         "other": "Other"
       },
+      "incomeTypeTooltips": {
+        "cashFromClient": "Cash a client paid you directly that doesn't go through the salon.",
+        "otherSalonIncome": "Income from another salon not connected to Tax IQ.",
+        "boothRentFromSubRenter": "Rent you collect from another technician subleasing your booth — counts as your income."
+      },
       "status": {
         "ready": "Ready",
         "missingReceipt": "Missing Receipt",
@@ -3655,6 +3750,7 @@
         "step2Title": "Details",
         "step3Title": "Receipt & Save",
         "periodTypeLabel": "Period type",
+        "periodTypeTooltip": "Log each transaction one by one, or enter one summary total for a whole day/week/month/quarter/year.",
         "periodLabel": "Period",
         "dateLabel": "Date",
         "dateRequired": "Date is required.",
@@ -3675,6 +3771,12 @@
       "title": "Year-End Export Center",
       "subtitle": "Lock your tax year and export the CPA package your accountant needs.",
       "noOwnerTaxYear": "Complete Tax IQ setup before exporting.",
+      "tooltips": {
+        "draftReport": "Preview export, available anytime, watermarked \"NOT FINAL\" and listing everything still missing.",
+        "finalExport": "The official CPA-ready package, no watermark. Requires every High Priority item resolved and the tax year locked.",
+        "lockTaxYear": "Freezes all records as read-only. Later changes must go through an Adjustment and produce an Amended export — the original export is always preserved.",
+        "adjustment": "A tracked change made after locking: old value, new value, reason, and proof. Appears in Amended Export v2/v3."
+      },
       "draftTitle": "Draft Report",
       "draftDescription": "Generate a draft anytime — it doesn't need to be readiness-complete.",
       "generateDraftButton": "Generate Draft Report",
@@ -3809,6 +3911,15 @@
         "EstimatedTax": "Estimated Tax",
         "PayrollTax": "Payroll Tax"
       },
+      "taxTypeTooltips": {
+        "SalesTax": "Tax collected from customers on services/products and remitted to the state.",
+        "FranchiseTax": "Annual state tax for the privilege of doing business — varies by state, unrelated to owning a franchise.",
+        "EstimatedTax": "Quarterly prepayment of income + self-employment tax (due Apr 15, Jun 16, Sep 15, Jan 15). Required if you expect to owe $1,000+ for the year.",
+        "PayrollTax": "Taxes withheld from W-2 employee wages plus the employer's share, deposited with the IRS and state."
+      },
+      "tooltips": {
+        "snoozeCount": "How many times this reminder was postponed. Maximum 3 snoozes."
+      },
       "status": {
         "Pending": "Pending",
         "Paid": "Paid",
@@ -3890,6 +4001,19 @@
         "DisputeReported": "Dispute Reported",
         "CPAReviewRequired": "CPA Review Required"
       },
+      "statusTooltips": {
+        "PendingConfirmation": "Waiting for the staff member to confirm they received this amount.",
+        "Confirmed": "The staff member confirmed receiving this amount — it counts toward their income and clears High Priority.",
+        "DisputeReported": "The staff member says this doesn't match what they received. Blocks Final Export until resolved.",
+        "CPAReviewRequired": "The dispute was rejected — it now goes to CPA notes and must be resolved by a CPA; the flag doesn't clear automatically."
+      },
+      "tooltips": {
+        "servicePayout": "Base pay for services performed — excludes tip, bonus, and reimbursement.",
+        "reimbursement": "Money paid back for supplies the staff bought out of pocket — not taxable income.",
+        "grossPayout": "Total before anything is taken out: service + tip + bonus + reimbursement.",
+        "netPaid": "The amount actually transferred to the staff member.",
+        "payPeriod": "How often this staff member is paid. Ad Hoc = a one-off payment outside the regular weekly/monthly schedule."
+      },
       "actions": {
         "edit": "Edit"
       },
@@ -3959,6 +4083,7 @@
           "Adjust": "Adjust",
           "Reject": "Reject"
         },
+        "adjustTooltip": "Correct the payout to the amount agreed with the staff member — the record returns to Confirmed.",
         "adjustAtLeastOneField": "Enter at least one adjusted amount.",
         "rejectWarning": "Rejecting does not resolve the High Priority flag on the Tax Readiness Score — it sends this payout to CPA Review instead.",
         "noteLabel": "Resolution note",
@@ -4000,9 +4125,21 @@
         "Full": "Full",
         "CPAReview": "CPA Review"
       },
+      "packageTypeTooltips": {
+        "Basic": "Summary totals only — no line-by-line detail.",
+        "Full": "Every record plus attached receipts.",
+        "CPAReview": "Only the items flagged for CPA review, for a focused check."
+      },
       "dataModes": {
         "Masked": "Masked",
         "FullSensitive": "Full Sensitive"
+      },
+      "dataModeTooltips": {
+        "Masked": "Hides sensitive numbers — SSN/EIN and accounts show only the last 4 digits. Recommended for most CPAs.",
+        "FullSensitive": "Shows full SSN/EIN and account details. Requires your explicit consent and every access is written to the audit log."
+      },
+      "tooltips": {
+        "packageColumn": "How much detail this CPA can see: Basic (totals), Full (everything + receipts), or CPA Review (flagged items only)."
       },
       "actions": {
         "revoke": "Revoke"

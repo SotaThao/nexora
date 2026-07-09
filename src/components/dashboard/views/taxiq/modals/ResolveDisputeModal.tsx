@@ -132,6 +132,11 @@ export default function ResolveDisputeModal({
                 </button>
               ))}
             </div>
+            {resolution === 'Adjust' && (
+              <p className="mt-1 text-[11px] font-medium text-nexoraMuted">
+                {t('taxiq.payoutCenter.resolveDispute.adjustTooltip')}
+              </p>
+            )}
           </div>
 
           {resolution === 'Adjust' && (
