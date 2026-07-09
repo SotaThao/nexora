@@ -15,7 +15,6 @@ import {
   QrCode,
   ShieldCheck,
   Star,
-  Trash2,
   UserCircle,
   Users,
   Wallet,
@@ -27,8 +26,6 @@ import useAuth from '../auth/useAuth'
 import { downloadQrCode, buildPublicQrImageUrl } from '../utils/qrUtils'
 import { buildAffiliateReferralUrl, getProfileReferralCode } from '../utils/affiliateReferral'
 import { useTranslation } from '../contexts/LanguageContext'
-import { useNotification } from '../contexts/NotificationContext'
-import { useDeleteAccount } from '../data/hooks/useProfileSettings'
 import {
   useMarkAllNotificationsRead,
   useMarkNotificationRead,
@@ -236,8 +233,6 @@ export default function SettingsView({
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { logout } = useAuth()
-  const { showConfirm } = useNotification()
-  const deleteAccountMutation = useDeleteAccount()
   const form = useSettingsForm({
     setupData,
     hasKyb,
@@ -296,22 +291,6 @@ export default function SettingsView({
 
   const closeProfileSection = () => {
     navigate('/dashboard/settings/profile')
-  }
-
-  const handleDeleteAccount = async () => {
-    if (deleteAccountMutation.isPending) return
-    const confirmed = await showConfirm(
-      t('components.settings.tabs.ProfileTab.deleteAccountConfirmMessage'),
-      t('components.settings.tabs.ProfileTab.deleteAccountConfirmTitle'),
-    )
-    if (!confirmed) return
-    try {
-      await deleteAccountMutation.mutateAsync()
-      await logout()
-      navigate('/login', { replace: true })
-    } catch {
-      form.showToast(t('components.settings.tabs.ProfileTab.deleteAccountFailed'), 'error')
-    }
   }
 
   return (
@@ -386,29 +365,14 @@ export default function SettingsView({
               />
             </section>
 
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={logout}
-                className="flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-2 text-xs font-extrabold text-amber-700 transition hover:bg-amber-100 cursor-pointer"
-              >
-                <LogOut className="h-4.5 w-4.5 shrink-0" />
-                <span className="truncate">{t('dashboard.sidebar.sign_out')}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleDeleteAccount()}
-                disabled={deleteAccountMutation.isPending}
-                className="flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-2 text-xs font-extrabold text-rose-700 transition hover:bg-rose-100 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <Trash2 className="h-4.5 w-4.5 shrink-0" />
-                <span className="truncate">
-                  {deleteAccountMutation.isPending
-                    ? t('common.processing')
-                    : t('components.settings.tabs.ProfileTab.deleteAccount')}
-                </span>
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={logout}
+              className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-2 text-xs font-extrabold text-amber-700 transition hover:bg-amber-100 cursor-pointer"
+            >
+              <LogOut className="h-4.5 w-4.5 shrink-0" />
+              <span className="truncate">{t('dashboard.sidebar.sign_out')}</span>
+            </button>
           </>
         )}
 
@@ -462,7 +426,6 @@ export default function SettingsView({
             handleAvatarChange={form.handleAvatarChange}
             formatDOB={form.formatDOB}
             onShowQr={() => setShowQrModal(true)}
-            hideDangerZone
             hidePayoutMethods
           />
           </>
@@ -518,7 +481,6 @@ export default function SettingsView({
               handleAvatarChange={form.handleAvatarChange}
               formatDOB={form.formatDOB}
               onShowQr={() => setShowQrModal(true)}
-              hideDangerZone
               focusPayoutMethods
             />
           </>

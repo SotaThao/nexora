@@ -1,10 +1,7 @@
 import React, { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import useAuth from '../../../auth/useAuth'
 import { useNotification } from '../../../contexts/NotificationContext'
-import { useDeleteAccount } from '../../../data/hooks/useProfileSettings'
 import { buildAffiliateReferralUrl, getProfileReferralCode } from '../../../utils/affiliateReferral'
 import { buildGoogleMapsEmbedUrl, formatAddressForMap } from '../../../utils/mapUrl'
 import {
@@ -28,7 +25,6 @@ import {
   AlertTriangle,
   X,
   QrCode,
-  Trash2,
 } from 'lucide-react'
 import ToggleSwitch from '../../ui/ToggleSwitch'
 import { isValidEmail, isValidPhone } from '../../../utils/validation'
@@ -125,17 +121,13 @@ export default function ProfileTab({
   handleAvatarChange,
   formatDOB,
   onShowQr,
-  hideDangerZone = false,
   focusPayoutMethods = false,
   hidePayoutMethods = false,
 }) {
   const canEditKybFields = canEditProfile
   const { t } = useTranslation()
-  const navigate = useNavigate()
-  const { logout } = useAuth()
-  const { showConfirm, showToast: notifyToast } = useNotification()
+  const { showToast: notifyToast } = useNotification()
   const showToast = providedShowToast ?? notifyToast
-  const deleteAccountMutation = useDeleteAccount()
   const referralCode = useMemo(() => getProfileReferralCode(profile), [profile])
   const referralUrl = useMemo(
     () => buildAffiliateReferralUrl({ referralCode }),
@@ -300,24 +292,7 @@ export default function ProfileTab({
     setEditQrFile(null)
     setEditQrCode(null)
   }
-
-  const handleDeleteAccount = async () => {
-    if (deleteAccountMutation.isPending) return
-
-    const confirmed = await showConfirm(
-      t('components.settings.tabs.ProfileTab.deleteAccountConfirmMessage'),
-      t('components.settings.tabs.ProfileTab.deleteAccountConfirmTitle'),
-    )
-    if (!confirmed) return
-
-    try {
-      await deleteAccountMutation.mutateAsync()
-      await logout()
-      navigate('/login', { replace: true })
-    } catch {
-      showToast(t('components.settings.tabs.ProfileTab.deleteAccountFailed'), 'error')
-    }
-  }
+ 
 
   return (
     <>
@@ -1111,28 +1086,6 @@ export default function ProfileTab({
         </div>
 
       </div>
-
-      {!hideDangerZone ? (
-      <div className="rounded-xl border border-rose-200 bg-white shadow-sm p-6 animate-fadeIn">
-        <h3 className="mb-3 text-base font-extrabold text-nexoraDangerDark">
-          {t('components.settings.tabs.ProfileTab.deleteAccountTitle')}
-        </h3>
-        <p className="mb-4 text-xs text-nexoraSubtle">
-          {t('components.settings.tabs.ProfileTab.deleteAccountConfirmMessage')}
-        </p>
-        <button
-          type="button"
-          onClick={() => void handleDeleteAccount()}
-          disabled={deleteAccountMutation.isPending}
-          className="flex w-full max-w-md items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 py-3 text-sm font-extrabold text-rose-700 transition hover:bg-rose-100 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          <Trash2 className="h-4.5 w-4.5" />
-          {deleteAccountMutation.isPending
-            ? t('common.processing')
-            : t('components.settings.tabs.ProfileTab.deleteAccount')}
-        </button>
-      </div>
-      ) : null}
 
       {/* Payout Account Edit Custom Modal Popup */}
       {editingMethod && (() => {
