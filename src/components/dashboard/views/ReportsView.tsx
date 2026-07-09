@@ -85,8 +85,8 @@ function resolveDateRange(
 
 // Sentinel status-filter value for tips the customer paid into the shop
 // account that still need the owner to confirm receipt. Not a real API
-// status — it maps to { status: 'Confirmed', isMultiStaff: true } plus the
-// client-side isAwaitingShopConfirmation predicate.
+// status — it maps to { status: 'Confirmed' } plus the client-side
+// isAwaitingShopConfirmation predicate so local-staff tips are included too.
 const AWAITING_STATUS = 'AwaitingShopConfirmation'
 
 function getStaffDisplayName(member) {
@@ -105,6 +105,15 @@ function formatStaffCell(tx) {
     return tx.tipItems.map((item) => item.staffName).filter(Boolean).join(', ')
   }
   return '—'
+}
+
+function resolveLocalStaffSet(staff = []) {
+  const localStaffIds = new Set<string>()
+  for (const member of staff) {
+    if (!member?.staffProfileId) continue
+    if (member.isLocalStaff) localStaffIds.add(member.staffProfileId)
+  }
+  return localStaffIds
 }
 
 function ReportsView({
@@ -292,7 +301,7 @@ function ReportsView({
       : {}),
     ...(selectedPayment !== 'all' ? { paymentMethod: selectedPayment } : {}),
     ...(!isStaffAudience && isAwaitingFilter
-      ? { status: 'Confirmed', isMultiStaff: true }
+      ? { status: 'Confirmed' }
       : selectedStatus !== 'all'
         ? { status: selectedStatus }
         : {}),
@@ -337,10 +346,17 @@ function ReportsView({
   // Amount filter only — not supported by tips API
   // For the awaiting-confirmation filter, also refine client-side to the exact eligibility predicate
   const filtered = useMemo(() => {
+    const localStaffIds = resolveLocalStaffSet(staff)
     return transactions.filter((tx) => {
+      const isLocalStaffResolved =
+        tx?.isLocalStaff === true ||
+        (tx?.staffProfileId ? localStaffIds.has(String(tx.staffProfileId)) : false)
+      const txWithResolvedLocalFlag =
+        tx?.isLocalStaff === true ? tx : { ...tx, isLocalStaff: isLocalStaffResolved }
+
       if (minAmount && tx.amount < parseFloat(minAmount)) return false
       if (maxAmount && tx.amount > parseFloat(maxAmount)) return false
-      if (!isStaffAudience && isAwaitingFilter && !isAwaitingShopConfirmation(tx)) return false
+      if (!isStaffAudience && isAwaitingFilter && !isAwaitingShopConfirmation(txWithResolvedLocalFlag)) return false
       if (isStaffAudience && debouncedSearch) {
         const q = debouncedSearch.toLowerCase()
         const haystack = [tx.id, tx.touchpoint, tx.businessName, tx.staffName]
@@ -354,9 +370,15 @@ function ReportsView({
         if (tp !== selectedTouchpoint.toLowerCase()) return false
       }
       return true
+    }).map((tx) => {
+      if (tx?.isLocalStaff === true) return tx
+      const isLocalStaffResolved =
+        tx?.staffProfileId ? localStaffIds.has(String(tx.staffProfileId)) : false
+      return isLocalStaffResolved ? { ...tx, isLocalStaff: true } : tx
     })
   }, [
     transactions,
+    staff,
     minAmount,
     maxAmount,
     isAwaitingFilter,

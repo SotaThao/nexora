@@ -432,6 +432,7 @@ export interface TipApiDto {
   staffConfirmedAt?: string | null
   merchantConfirmedAt?: string | null
   isMultiStaff?: boolean
+  isLocalStaff?: boolean
   tipItems?: unknown[]
 }
 

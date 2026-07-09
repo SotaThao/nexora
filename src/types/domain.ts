@@ -509,6 +509,7 @@ export interface TransactionRecord extends DomainEntity {
   staffConfirmedAt?: string | null
   merchantConfirmedAt?: string | null
   isMultiStaff?: boolean
+  isLocalStaff?: boolean
   tipItems?: unknown[]
   [key: string]: unknown
 }

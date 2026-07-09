@@ -95,25 +95,25 @@ export function formatNotificationDateTime(value, locale = 'en') {
 // the owner has not yet confirmed receipt. Single-staff direct-to-staff tips are
 // confirmed by the staff member (US-024) and never appear in the owner queue.
 export function isAwaitingShopConfirmation(tx) {
-  if (!tx?.isMultiStaff) return false
+  if (!tx?.isMultiStaff && !tx?.isLocalStaff) return false
   if (tx.merchantConfirmedAt) return false
   return isTipStatus(tx.status, TipStatus.Confirmed)
 }
 
 // A shop-account tip the owner has already confirmed received.
 export function isShopConfirmed(tx) {
-  return Boolean(tx?.isMultiStaff && tx?.merchantConfirmedAt)
+  return Boolean((tx?.isMultiStaff || tx?.isLocalStaff) && tx?.merchantConfirmedAt)
 }
 
 // US-024 — staff confirm receipt for direct-to-staff tips.
 export function isAwaitingStaffConfirmation(tx) {
-  if (tx?.isMultiStaff) return false
+  if (tx?.isMultiStaff || tx?.isLocalStaff) return false
   if (tx?.staffConfirmedAt) return false
   return isTipStatus(tx.status, TipStatus.Confirmed)
 }
 
 export function isStaffReceiptConfirmed(tx) {
-  return Boolean(!tx?.isMultiStaff && tx?.staffConfirmedAt)
+  return Boolean(!tx?.isMultiStaff && !tx?.isLocalStaff && tx?.staffConfirmedAt)
 }
 
 // Initiated/Pending tips may be force-confirmed before the customer self-confirm
@@ -122,9 +122,9 @@ export function isStaffReceiptConfirmed(tx) {
 export function isForceCompletableTip(tx, isStaffAudience = false) {
   if (!isInitiatedLikeTipStatus(tx?.status)) return false
   if (isStaffAudience) {
-    return Boolean(!tx?.isMultiStaff && !tx?.staffConfirmedAt)
+    return Boolean(!tx?.isMultiStaff && !tx?.isLocalStaff && !tx?.staffConfirmedAt)
   }
-  return Boolean(tx?.isMultiStaff && !tx?.merchantConfirmedAt)
+  return Boolean((tx?.isMultiStaff || tx?.isLocalStaff) && !tx?.merchantConfirmedAt)
 }
 
 export function isReceiptConfirmableTip(tx, isStaffAudience = false) {
