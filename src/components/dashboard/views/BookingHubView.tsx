@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import BookingTeamPanel from './BookingTeamPanel'
 import BookingTodayPanel from './BookingTodayPanel'
@@ -40,8 +41,40 @@ function TeamIcon() {
 
 export default function BookingHubView() {
   const { t } = useTranslation()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [activeMainTab, setActiveMainTab] = useState<'booking' | 'plans' | 'settings'>('booking')
-  const [activeSubtab, setActiveSubtab] = useState('today')
+  const [activeSubtab, setActiveSubtab] = useState<'today' | 'team'>('today')
+
+  useEffect(() => {
+    const mainTab = searchParams.get('tab')
+    const subTab = searchParams.get('view')
+
+    if (mainTab === 'booking' || mainTab === 'plans' || mainTab === 'settings') {
+      setActiveMainTab(mainTab)
+    } else {
+      setActiveMainTab('booking')
+    }
+
+    if (subTab === 'today' || subTab === 'team') {
+      setActiveSubtab(subTab)
+    } else {
+      setActiveSubtab('today')
+    }
+  }, [searchParams])
+
+  const updateQueryTabs = (
+    mainTab: 'booking' | 'plans' | 'settings',
+    subTab: 'today' | 'team' = activeSubtab,
+  ) => {
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.set('tab', mainTab)
+    if (mainTab === 'booking') {
+      nextParams.set('view', subTab)
+    } else {
+      nextParams.delete('view')
+    }
+    setSearchParams(nextParams, { replace: true })
+  }
 
   return (
     <section className="booking-hub-view">
@@ -54,7 +87,7 @@ export default function BookingHubView() {
             type="button"
             role="tab"
             aria-selected={activeMainTab === 'booking'}
-            onClick={() => setActiveMainTab('booking')}
+            onClick={() => updateQueryTabs('booking')}
           >
             <span className="page-tab-icon"><CalendarTabIcon /></span>
             <span>{t(`${TK}.tabs.booking`)}</span>
@@ -64,7 +97,7 @@ export default function BookingHubView() {
             type="button"
             role="tab"
             aria-selected={activeMainTab === 'plans'}
-            onClick={() => setActiveMainTab('plans')}
+            onClick={() => updateQueryTabs('plans')}
           >
             <span className="page-tab-icon"><TagsTabIcon /></span>
             <span>{t(`${TK}.tabs.plans`)}</span>
@@ -74,7 +107,7 @@ export default function BookingHubView() {
             type="button"
             role="tab"
             aria-selected={activeMainTab === 'settings'}
-            onClick={() => setActiveMainTab('settings')}
+            onClick={() => updateQueryTabs('settings')}
           >
             <span className="page-tab-icon"><SlidersTabIcon /></span>
             <span>{t(`${TK}.tabs.settings`)}</span>
@@ -91,7 +124,7 @@ export default function BookingHubView() {
               type="button"
               role="tab"
               aria-selected={activeSubtab === 'today'}
-              onClick={() => setActiveSubtab('today')}
+              onClick={() => updateQueryTabs('booking', 'today')}
             >
               <span className="booking-subtab-icon"><CalendarIcon /></span>
               <span>{t(`${TK}.schedule.today`)}</span>
@@ -101,7 +134,7 @@ export default function BookingHubView() {
               type="button"
               role="tab"
               aria-selected={activeSubtab === 'team'}
-              onClick={() => setActiveSubtab('team')}
+              onClick={() => updateQueryTabs('booking', 'team')}
             >
               <span className="booking-subtab-icon"><TeamIcon /></span>
               <span>{t(`${TK}.schedule.team`)}</span>

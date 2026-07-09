@@ -1,10 +1,22 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import CountryCodeSelect, { formatNationalNumber, parsePhone } from '../../CountryCodeSelect'
 import { useTranslation } from '../../../contexts/LanguageContext'
-import { EyeIcon } from './BookingHubIcons'
+import { useNotification } from '../../../contexts/NotificationContext'
+import { getErrorI18nKey } from '../../../data/errorCodes'
+import { getApiErrorCode } from '../../../types/domain'
+import {
+  useCreateMerchantVoiceStaff,
+  useMerchantVoiceBusinessStaff,
+  useMerchantVoiceConfig,
+  useMerchantVoiceStaffById,
+  useMerchantVoiceStaff,
+  useToggleMerchantVoiceStaffStatus,
+} from '../../../data/hooks/useMerchantVoiceBookings'
+import { MerchantVoiceStaffStatus, type MerchantVoiceStaffDto } from '../../../data/repositories/merchantVoice'
+import { EyeIcon, SpinnerIcon } from './BookingHubIcons'
 
 const TK = 'components.dashboard.views.BookingHubView.team'
 
-const ALL_SERVICES = ['Gel', 'Full Set', 'Dip', 'Pedicure', 'Nail Art', 'Acrylic', 'Waxing', 'Eyelash']
 const DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const
 
 type DayKey = typeof DAY_KEYS[number]
@@ -31,43 +43,36 @@ interface TeamMember {
   smsEnabled: boolean
 }
 
-const INITIAL_TEAM_MEMBERS: TeamMember[] = [
-  {
-    id: 'kim',
-    name: 'Kim Nguyễn',
-    phone: '832-555-0161',
-    email: 'kim@nexoratouch.com',
-    services: ['Gel', 'Full Set', 'Dip'],
-    schedule: 'mon=09:00-18:00;tue=09:00-18:00;wed=09:00-18:00;thu=10:00-19:00;fri=09:00-18:00',
-    customers: 3,
-    avatar: 'K',
-    smsEnabled: true,
-  },
-  {
-    id: 'lan',
-    name: 'Lan Trần',
-    phone: '713-555-0192',
-    email: 'lan.tran@nexoratouch.com',
-    services: ['Pedicure', 'Gel', 'Nail Art'],
-    schedule: 'tue=10:00-19:00;wed=10:00-19:00;thu=10:00-19:00;fri=10:00-19:00;sat=09:00-16:00',
-    customers: 2,
-    avatar: 'L',
-    avatarStyle: { background: 'linear-gradient(135deg, var(--brand-cyan), var(--nexora-electric))' },
-    smsEnabled: true,
-  },
-  {
-    id: 'mai',
-    name: 'Mai Phạm',
-    phone: '281-555-0138',
-    email: 'mai.pham@nexoratouch.com',
-    services: ['Acrylic', 'Dip', 'Pedicure'],
-    schedule: 'mon=11:00-20:00;wed=11:00-20:00;fri=11:00-20:00;sat=10:00-17:00;sun=10:00-15:00',
-    customers: 2,
-    avatar: 'M',
-    avatarStyle: { background: 'linear-gradient(135deg, #f472b6, var(--nexora-violet))' },
-    smsEnabled: true,
-  },
-]
+interface BusinessStaffOption {
+  id: string
+  name: string
+  phone: string
+  email: string
+  position: string
+  isAlreadyAdded: boolean
+  avatar: string
+  avatarStyle?: React.CSSProperties
+}
+
+const INITIAL_TEAM_MEMBERS: TeamMember[] = []
+const DAY_NUMBER_TO_KEY: Record<number, DayKey> = {
+  0: 'sun',
+  1: 'mon',
+  2: 'tue',
+  3: 'wed',
+  4: 'thu',
+  5: 'fri',
+  6: 'sat',
+}
+const DAY_KEY_TO_NUMBER: Record<DayKey, number> = {
+  sun: 0,
+  mon: 1,
+  tue: 2,
+  wed: 3,
+  thu: 4,
+  fri: 5,
+  sat: 6,
+}
 
 function emptySchedule(): WeeklySchedule {
   return DAY_KEYS.reduce((acc, key) => {
@@ -108,6 +113,93 @@ function serializeSchedule(schedule: WeeklySchedule) {
     .filter((key) => !schedule[key].dayOff && schedule[key].start && schedule[key].end)
     .map((key) => `${key}=${schedule[key].start}-${schedule[key].end}`)
     .join(';')
+}
+
+function formatSkills(skills: string | null | undefined): string[] {
+  if (!skills) return []
+  const parsed = skills.split(',').map((item) => item.trim()).filter(Boolean)
+  return parsed
+}
+
+function scheduleToString(staff: MerchantVoiceStaffDto) {
+  return (staff.schedules || [])
+    .filter((item) => !item.isDayOff && item.startTime && item.endTime)
+    .map((item) => {
+      const day = DAY_NUMBER_TO_KEY[item.dayOfWeek]
+      if (!day) return null
+      const start = item.startTime?.slice(0, 5)
+      const end = item.endTime?.slice(0, 5)
+      if (!start || !end) return null
+      return `${day}=${start}-${end}`
+    })
+    .filter(Boolean)
+    .join(';')
+}
+
+function toTeamMember(staff: MerchantVoiceStaffDto): TeamMember {
+  const first = staff.fullName?.trim()?.charAt(0)?.toUpperCase() || 'T'
+  return {
+    id: staff.id,
+    name: staff.fullName || 'Unnamed staff',
+    phone: staff.phoneNumber || '',
+    email: staff.email || '',
+    services: formatSkills(staff.skills),
+    schedule: scheduleToString(staff),
+    customers: 0,
+    avatar: first,
+    smsEnabled: toSmsEnabled(staff.status),
+  }
+}
+
+function toSmsEnabled(status: unknown): boolean {
+  return (
+    status === MerchantVoiceStaffStatus.Active ||
+    status === '0' ||
+    status === 'active' ||
+    status === 'Active' ||
+    status === true
+  )
+}
+
+function formatPhoneDisplay(phone: string | null | undefined): string {
+  const raw = phone?.trim()
+  if (!raw) return '—'
+  const parsed = parsePhone(raw)
+  const national = formatNationalNumber(parsed.nationalNumber, parsed.countryCode)
+  if (!national) return raw
+  return `${parsed.countryCode} ${national}`.trim()
+}
+
+
+function isScheduleRowMissingTime(row: DaySchedule): boolean {
+  if (row.dayOff) return false
+  return !row.start || !row.end
+}
+
+function getScheduleRowError(
+  row: DaySchedule,
+  requiredMessage: string,
+  invalidMessage: string,
+): string | null {
+  if (row.dayOff) return null
+  if (!row.start || !row.end) return requiredMessage
+  if (row.end <= row.start) return invalidMessage
+  return null
+}
+
+function hasScheduleValidationError(
+  schedule: WeeklySchedule,
+  requiredMessage: string,
+  invalidMessage: string,
+): boolean {
+  return DAY_KEYS.some((day) => (
+    getScheduleRowError(schedule[day], requiredMessage, invalidMessage) !== null
+  ))
+}
+
+function isScheduleRowInvalid(row: DaySchedule): boolean {
+  if (row.dayOff || !row.start || !row.end) return false
+  return row.end <= row.start
 }
 
 function PlusIcon() {
@@ -194,28 +286,76 @@ function CheckIcon() {
 
 export default function BookingTeamPanel() {
   const { t } = useTranslation()
-  const [members, setMembers] = useState<TeamMember[]>(INITIAL_TEAM_MEMBERS)
+  const { showToast } = useNotification()
   const [modalOpen, setModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<ModalMode>('edit')
-  const [selectedId, setSelectedId] = useState(INITIAL_TEAM_MEMBERS[0].id)
+  const [selectedId, setSelectedId] = useState('')
   const [comboboxOpen, setComboboxOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
   const [draftName, setDraftName] = useState('')
   const [draftPhone, setDraftPhone] = useState('')
   const [draftEmail, setDraftEmail] = useState('')
   const [draftServices, setDraftServices] = useState<string[]>([])
   const [draftSchedule, setDraftSchedule] = useState<WeeklySchedule>(emptySchedule())
+  const [formErrors, setFormErrors] = useState<{
+    name?: string
+    phone?: string
+    email?: string
+    services?: string
+  }>({})
+  const [showScheduleValidation, setShowScheduleValidation] = useState(false)
   const comboboxRef = useRef<HTMLDivElement>(null)
+  const { data: staffResponse } = useMerchantVoiceStaff({
+    pageNumber: 1,
+    pageSize: 200,
+  })
+  const { data: businessStaffResponse } = useMerchantVoiceBusinessStaff(
+    { searchTerm: debouncedSearchQuery },
+    { enabled: modalOpen },
+  )
+  const { data: configResponse } = useMerchantVoiceConfig({
+    enabled: modalOpen,
+  })
+  const [members, setMembers] = useState<TeamMember[]>(INITIAL_TEAM_MEMBERS)
+  const createStaffMutation = useCreateMerchantVoiceStaff()
+  const toggleStaffStatusMutation = useToggleMerchantVoiceStaffStatus()
+  const [pendingToggleIds, setPendingToggleIds] = useState<Record<string, boolean>>({})
+  const { data: staffDetail } = useMerchantVoiceStaffById(selectedId, {
+    enabled: modalOpen && modalMode === 'detail' && !!selectedId,
+  })
 
-  const filteredMembers = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase()
-    if (!q) return members
-    return members.filter((member) => (
-      member.name.toLowerCase().includes(q)
-      || member.email.toLowerCase().includes(q)
-      || member.phone.includes(q)
-    ))
-  }, [members, searchQuery])
+  const businessStaffOptions = useMemo<BusinessStaffOption[]>(() => (
+    (businessStaffResponse ?? []).map((staff) => ({
+      id: staff.id,
+      name: staff.fullName || '',
+      phone: staff.phoneNumber || '',
+      email: staff.email || '',
+      position: staff.position || '',
+      isAlreadyAdded: staff.isAlreadyAdded,
+      avatar: (staff.fullName?.trim()?.charAt(0)?.toUpperCase()) || 'T',
+    }))
+  ), [businessStaffResponse])
+
+  const filteredBusinessStaff = businessStaffOptions
+
+  const serviceOptions = useMemo(() => {
+    const apiServices = configResponse?.services ?? []
+    const activeSorted = [...apiServices]
+      .filter((service) => service.isActive)
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map((service) => service.name.trim())
+      .filter(Boolean)
+    return Array.from(new Set(activeSorted))
+  }, [configResponse?.services])
+
+  const draftPhoneParsed = useMemo(
+    () => parsePhone(draftPhone),
+    [draftPhone],
+  )
+
+  const scheduleRequiredMessage = t(`${TK}.scheduleRequiredTime`)
+  const scheduleInvalidMessage = t(`${TK}.scheduleInvalidTime`)
 
   const fillDraftFromMember = (member: TeamMember | undefined, mode: ModalMode) => {
     if (mode === 'create' || !member) {
@@ -224,6 +364,8 @@ export default function BookingTeamPanel() {
       setDraftEmail('')
       setDraftServices([])
       setDraftSchedule(emptySchedule())
+      setFormErrors({})
+      setShowScheduleValidation(false)
       return
     }
     setDraftName(member.name)
@@ -231,6 +373,8 @@ export default function BookingTeamPanel() {
     setDraftEmail(member.email)
     setDraftServices([...member.services])
     setDraftSchedule(parseSchedule(member.schedule))
+    setFormErrors({})
+    setShowScheduleValidation(false)
   }
 
   const openModal = (memberId?: string, mode: ModalMode = 'create') => {
@@ -257,14 +401,33 @@ export default function BookingTeamPanel() {
     setModalOpen(false)
     setComboboxOpen(false)
     setSearchQuery('')
+    setShowScheduleValidation(false)
   }
 
-  const selectMember = (member: TeamMember) => {
-    setModalMode('edit')
-    setSelectedId(member.id)
-    fillDraftFromMember(member, 'edit')
+  const selectBusinessStaff = (staff: BusinessStaffOption) => {
+    const matchedMember = members.find((member) => (
+      member.id === staff.id
+      || (staff.phone && member.phone === staff.phone)
+      || (staff.name && member.name === staff.name)
+    ))
+    if (matchedMember) {
+      setModalMode('edit')
+      setSelectedId(matchedMember.id)
+      fillDraftFromMember(matchedMember, 'edit')
+      setComboboxOpen(false)
+      setSearchQuery(matchedMember.name)
+      return
+    }
+
+    setModalMode('create')
+    setSelectedId(staff.id)
+    setDraftName(staff.name)
+    setDraftPhone(staff.phone)
+    setDraftEmail(staff.email)
+    setDraftServices([])
+    setDraftSchedule(emptySchedule())
     setComboboxOpen(false)
-    setSearchQuery(member.name)
+    setSearchQuery(staff.name)
   }
 
   const startCreate = () => {
@@ -291,6 +454,7 @@ export default function BookingTeamPanel() {
         end: dayOff ? '' : prev[day].end,
       },
     }))
+    setShowScheduleValidation(false)
   }
 
   const updateScheduleTime = (day: DayKey, field: 'start' | 'end', value: string) => {
@@ -298,34 +462,118 @@ export default function BookingTeamPanel() {
       ...prev,
       [day]: { ...prev[day], [field]: value },
     }))
+    setShowScheduleValidation(false)
   }
 
-  const toggleSms = (id: string) => {
+  const toggleSms = async (id: string) => {
+    const previous = members.find((member) => member.id === id)
+    if (!previous || pendingToggleIds[id]) return
+
     setMembers((prev) => prev.map((member) => (
       member.id === id ? { ...member, smsEnabled: !member.smsEnabled } : member
     )))
+    setPendingToggleIds((prev) => ({ ...prev, [id]: true }))
+
+    try {
+      const nextStatus = await toggleStaffStatusMutation.mutateAsync(id)
+      const isEnabled = toSmsEnabled(nextStatus)
+      setMembers((prev) => prev.map((member) => (
+        member.id === id ? { ...member, smsEnabled: isEnabled } : member
+      )))
+    } catch {
+      setMembers((prev) => prev.map((member) => (
+        member.id === id ? { ...member, smsEnabled: previous.smsEnabled } : member
+      )))
+    } finally {
+      setPendingToggleIds((prev) => ({ ...prev, [id]: false }))
+    }
   }
 
   const saveModal = () => {
+    const nextErrors: {
+      name?: string
+      phone?: string
+      email?: string
+      services?: string
+    } = {}
+    const trimmedName = draftName.trim()
+    const normalizedPhone = `${draftPhoneParsed.countryCode} ${formatNationalNumber(draftPhoneParsed.nationalNumber, draftPhoneParsed.countryCode)}`.trim()
+    const trimmedEmail = draftEmail.trim()
+
+    if (!trimmedName) nextErrors.name = t(`${TK}.requiredField`)
+    if (!draftPhoneParsed.nationalNumber.trim()) {
+      nextErrors.phone = t(`${TK}.requiredField`)
+    }
+    if (!trimmedEmail) {
+      nextErrors.email = t(`${TK}.requiredField`)
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      nextErrors.email = t(`${TK}.invalidEmail`)
+    }
+    if (!draftServices.length) nextErrors.services = t(`${TK}.requiredField`)
+
+    if (Object.keys(nextErrors).length > 0) {
+      setFormErrors(nextErrors)
+      showToast(t(`${TK}.saveValidationError`), 'error')
+      return
+    }
+
+    const scheduleInvalid = hasScheduleValidationError(
+      draftSchedule,
+      scheduleRequiredMessage,
+      scheduleInvalidMessage,
+    )
+    if (scheduleInvalid) {
+      setShowScheduleValidation(true)
+      showToast(t(`${TK}.saveValidationError`), 'error')
+      return
+    }
+    setFormErrors({})
+    setShowScheduleValidation(false)
+
     const payload = {
-      name: draftName.trim() || t(`${TK}.newTech`),
-      phone: draftPhone.trim() || t(`${TK}.noPhone`),
-      email: draftEmail.trim(),
-      services: draftServices.length ? draftServices : ['Gel'],
+      name: trimmedName,
+      phone: normalizedPhone,
+      email: trimmedEmail,
+      services: draftServices,
       schedule: serializeSchedule(draftSchedule),
     }
 
     if (modalMode === 'create') {
-      const id = `tech-${Date.now()}`
-      const avatar = payload.name.charAt(0).toUpperCase() || 'T'
-      setMembers((prev) => [...prev, {
-        id,
-        ...payload,
-        avatar,
-        customers: 0,
-        smsEnabled: true,
-      }])
-      setSelectedId(id)
+      const schedules = DAY_KEYS.map((day) => {
+        const row = draftSchedule[day]
+        if (row.dayOff) {
+          return {
+            dayOfWeek: DAY_KEY_TO_NUMBER[day],
+            isDayOff: true,
+            startTime: null,
+            endTime: null,
+          }
+        }
+        return {
+          dayOfWeek: DAY_KEY_TO_NUMBER[day],
+          isDayOff: false,
+          startTime: row.start ? `${row.start}:00` : null,
+          endTime: row.end ? `${row.end}:00` : null,
+        }
+      })
+
+      createStaffMutation.mutate({
+        fullName: payload.name,
+        phoneNumber: payload.phone,
+        email: payload.email || null,
+        skills: payload.services.join(', '),
+        schedules,
+      }, {
+        onSuccess: (created) => {
+          setSelectedId(created.id)
+          showToast(t(`${TK}.saveSuccess`), 'success')
+          closeModal()
+        },
+        onError: (error) => {
+          showToast(t(getErrorI18nKey(getApiErrorCode(error))), 'error')
+        },
+      })
+      return
     } else {
       setMembers((prev) => prev.map((member) => (
         member.id === selectedId
@@ -340,6 +588,7 @@ export default function BookingTeamPanel() {
           }
           : member
       )))
+      showToast(t(`${TK}.saveSuccess`), 'success')
     }
 
     closeModal()
@@ -352,6 +601,24 @@ export default function BookingTeamPanel() {
   const modalSub = modalMode === 'create'
     ? t(`${TK}.modalSubCreate`)
     : t(`${TK}.modalSubEdit`, { name: draftName || t(`${TK}.selectedTech`) })
+
+  const hasScheduleError = useMemo(
+    () => hasScheduleValidationError(draftSchedule, scheduleRequiredMessage, scheduleInvalidMessage),
+    [draftSchedule, scheduleInvalidMessage, scheduleRequiredMessage],
+  )
+
+  useEffect(() => {
+    const mapped = (staffResponse?.items ?? []).map(toTeamMember)
+    if (mapped.length) {
+      setMembers(mapped)
+      setSelectedId((prev) => prev || mapped[0]?.id || '')
+    }
+  }, [staffResponse?.items])
+
+  useEffect(() => {
+    if (!staffDetail || modalMode !== 'detail') return
+    fillDraftFromMember(toTeamMember(staffDetail), 'edit')
+  }, [staffDetail, modalMode])
 
   useEffect(() => {
     if (!modalOpen) {
@@ -377,6 +644,13 @@ export default function BookingTeamPanel() {
     return () => document.removeEventListener('mousedown', handlePointerDown)
   }, [comboboxOpen])
 
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery.trim())
+    }, 350)
+    return () => window.clearTimeout(timeoutId)
+  }, [searchQuery])
+
   return (
     <div className="booking-sub-panel is-active">
       <div className="tech-intro">
@@ -394,13 +668,14 @@ export default function BookingTeamPanel() {
               <div className="tech-avatar" style={member.avatarStyle}>{member.avatar}</div>
               <div className="tech-profile">
                 <div className="tech-name">{member.name}</div>
-                <div className="tech-phone">{member.phone}</div>
+                <div className="tech-phone">{formatPhoneDisplay(member.phone)}</div>
               </div>
               <button
                 className={`toggle-pill ${member.smsEnabled ? 'is-on' : ''}`}
                 type="button"
                 aria-label={t(`${TK}.toggleSms`, { name: member.name })}
                 aria-pressed={member.smsEnabled}
+                disabled={pendingToggleIds[member.id]}
                 onClick={() => toggleSms(member.id)}
               />
             </div>
@@ -491,24 +766,26 @@ export default function BookingTeamPanel() {
                     {comboboxOpen ? (
                       <div className="tech-select-menu" id="tech-select-menu">
                         <div className="tech-choice-grid" role="listbox" aria-label={t(`${TK}.techList`)}>
-                          {filteredMembers.map((member) => (
+                          {filteredBusinessStaff.map((member) => (
                             <button
                               key={member.id}
-                              className={`tech-choice-card ${modalMode !== 'create' && selectedId === member.id ? 'is-active' : ''}`}
+                              className={`tech-choice-card ${selectedId === member.id ? 'is-active' : ''}`}
                               type="button"
                               role="option"
-                              aria-selected={modalMode !== 'create' && selectedId === member.id}
-                              onClick={() => selectMember(member)}
+                              aria-selected={selectedId === member.id}
+                              onClick={() => selectBusinessStaff(member)}
                             >
                               <span className="tech-avatar" style={member.avatarStyle}>{member.avatar}</span>
                               <span>
                                 <span className="tech-choice-name">{member.name}</span>
-                                <span className="tech-choice-meta">{member.email} · {member.phone}</span>
+                                <span className="tech-choice-meta">
+                                  {member.position || member.email || '—'} · {formatPhoneDisplay(member.phone)}
+                                </span>
                               </span>
                             </button>
                           ))}
                         </div>
-                        {filteredMembers.length === 0 ? (
+                        {filteredBusinessStaff.length === 0 ? (
                           <div className="tech-empty is-visible">
                             {t(`${TK}.noMatch`)}
                           </div>
@@ -533,57 +810,93 @@ export default function BookingTeamPanel() {
                   <span>{t(`${TK}.profileDetails`)}</span>
                 </div>
                 <div className="tech-modal-grid">
-                  <label className="settings-field">
+                  <div className="settings-field">
                     <span className="settings-label">{t(`${TK}.techName`)}</span>
                     <input
                       className="settings-input"
                       type="text"
                       value={draftName}
+                      aria-invalid={Boolean(formErrors.name)}
                       placeholder={t(`${TK}.placeholderTechName`)}
-                      onChange={(event) => setDraftName(event.target.value)}
+                      onChange={(event) => {
+                        setDraftName(event.target.value)
+                        setFormErrors((prev) => ({ ...prev, name: '' }))
+                      }}
                     />
-                  </label>
-                  <label className="settings-field">
+                    <span className="field-error-slot" aria-live="polite">
+                      {formErrors.name ? <span className="field-error">{formErrors.name}</span> : null}
+                    </span>
+                  </div>
+                  <div className="settings-field">
                     <span className="settings-label">{t(`${TK}.phone`)}</span>
                     <span className="phone-input-shell">
-                      <select className="phone-country-select" aria-label={t(`${TK}.countryCode`)}>
-                        <option value="+1">+1</option>
-                      </select>
+                      <CountryCodeSelect
+                        value={draftPhoneParsed.countryCode}
+                        onChange={(nextCode) => {
+                          const formatted = formatNationalNumber(draftPhoneParsed.nationalNumber, nextCode)
+                          setDraftPhone(`${nextCode} ${formatted}`.trim())
+                          setFormErrors((prev) => ({ ...prev, phone: '' }))
+                        }}
+                        disabled={modalMode === 'detail'}
+                      />
                       <input
                         className="settings-input phone-mask-input"
                         type="tel"
-                        value={draftPhone}
+                        value={formatNationalNumber(draftPhoneParsed.nationalNumber, draftPhoneParsed.countryCode)}
+                        aria-invalid={Boolean(formErrors.phone)}
                         placeholder={t(`${TK}.placeholderPhoneMask`)}
                         inputMode="numeric"
                         autoComplete="tel-national"
-                        onChange={(event) => setDraftPhone(event.target.value)}
+                        disabled={modalMode === 'detail'}
+                        onChange={(event) => {
+                          const formatted = formatNationalNumber(event.target.value, draftPhoneParsed.countryCode)
+                          setDraftPhone(`${draftPhoneParsed.countryCode} ${formatted}`.trim())
+                          setFormErrors((prev) => ({ ...prev, phone: '' }))
+                        }}
                       />
                     </span>
-                  </label>
-                  <label className="settings-field">
+                    <span className="field-error-slot" aria-live="polite">
+                      {formErrors.phone ? <span className="field-error">{formErrors.phone}</span> : null}
+                    </span>
+                  </div>
+                  <div className="settings-field">
                     <span className="settings-label">{t(`${TK}.email`)}</span>
                     <input
                       className="settings-input"
                       type="email"
                       value={draftEmail}
+                      aria-invalid={Boolean(formErrors.email)}
                       placeholder={t(`${TK}.placeholderEmail`)}
-                      onChange={(event) => setDraftEmail(event.target.value)}
+                      onChange={(event) => {
+                        setDraftEmail(event.target.value)
+                        setFormErrors((prev) => ({ ...prev, email: '' }))
+                      }}
                     />
-                  </label>
+                    <span className="field-error-slot" aria-live="polite">
+                      {formErrors.email ? <span className="field-error">{formErrors.email}</span> : null}
+                    </span>
+                  </div>
                   <div className="settings-field">
                     <span className="settings-label">{t(`${TK}.services`)}</span>
-                    <div className="tech-service-checks">
-                      {ALL_SERVICES.map((service) => (
-                        <label className="tech-service-check" key={service}>
-                          <input
-                            type="checkbox"
-                            checked={draftServices.includes(service)}
-                            onChange={() => toggleService(service)}
-                          />
-                          {service}
-                        </label>
-                      ))}
-                    </div>
+                    {serviceOptions.length > 0 ? (
+                      <div className="tech-service-checks">
+                        {serviceOptions.map((service) => (
+                          <label className="tech-service-check" key={service}>
+                            <input
+                              type="checkbox"
+                              checked={draftServices.includes(service)}
+                              onChange={() => toggleService(service)}
+                            />
+                            {service}
+                          </label>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="tech-service-empty">{t(`${TK}.servicesEmpty`)}</div>
+                    )}
+                    <span className="field-error-slot" aria-live="polite">
+                      {formErrors.services ? <span className="field-error">{formErrors.services}</span> : null}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -594,17 +907,32 @@ export default function BookingTeamPanel() {
                   <span>{t(`${TK}.weeklySchedule`)}</span>
                 </div>
                 <div className="tech-schedule">
-                  {DAY_KEYS.map((day) => (
+                  {DAY_KEYS.map((day) => {
+                    const row = draftSchedule[day]
+                    const rowError = getScheduleRowError(row, scheduleRequiredMessage, scheduleInvalidMessage)
+                    const showRowError = showScheduleValidation && !!rowError
+                    const rowMissingTime = isScheduleRowMissingTime(row)
+                    return (
                     <div
                       key={day}
-                      className={`tech-schedule-row ${draftSchedule[day].dayOff ? 'is-day-off' : ''}`}
+                      className={`tech-schedule-row ${row.dayOff ? 'is-day-off' : ''}`}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => toggleDayOff(day, !row.dayOff)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault()
+                          toggleDayOff(day, !row.dayOff)
+                        }
+                      }}
                     >
                       <span className="tech-schedule-day">{t(`${TK}.days.${day}`)}</span>
                       <label className="tech-schedule-off">
                         <input
                           className="tech-schedule-toggle"
                           type="checkbox"
-                          checked={draftSchedule[day].dayOff}
+                          checked={row.dayOff}
+                          onClick={(event) => event.stopPropagation()}
                           onChange={(event) => toggleDayOff(day, event.target.checked)}
                         />
                         {t(`${TK}.dayOff`)}
@@ -612,21 +940,38 @@ export default function BookingTeamPanel() {
                       <span className="tech-schedule-time">
                         <input
                           type="time"
-                          value={draftSchedule[day].start}
-                          disabled={draftSchedule[day].dayOff}
+                          value={row.start}
+                          lang="en-US-u-hc-h12"
+                          step={60}
+                          disabled={row.dayOff}
+                          aria-invalid={showRowError && (rowMissingTime || isScheduleRowInvalid(row))}
+                          onClick={(event) => event.stopPropagation()}
                           onChange={(event) => updateScheduleTime(day, 'start', event.target.value)}
                         />
                         <span>{t(`${TK}.scheduleTo`)}</span>
                         <input
                           type="time"
-                          value={draftSchedule[day].end}
-                          disabled={draftSchedule[day].dayOff}
+                          value={row.end}
+                          lang="en-US-u-hc-h12"
+                          step={60}
+                          disabled={row.dayOff}
+                          aria-invalid={showRowError && (rowMissingTime || isScheduleRowInvalid(row))}
+                          onClick={(event) => event.stopPropagation()}
                           onChange={(event) => updateScheduleTime(day, 'end', event.target.value)}
                         />
                       </span>
+                      {showRowError ? (
+                        <span className="tech-schedule-row-error">
+                          {rowError}
+                        </span>
+                      ) : null}
                     </div>
-                  ))}
+                    )
+                  })}
                 </div>
+                {showScheduleValidation && hasScheduleError ? (
+                  <div className="tech-schedule-error">{t(`${TK}.scheduleValidationSummary`)}</div>
+                ) : null}
               </div>
             </div>
 
@@ -634,8 +979,13 @@ export default function BookingTeamPanel() {
               <button className="booking-secondary-button" type="button" onClick={closeModal}>
                 {t(`${TK}.close`)}
               </button>
-              <button className="booking-primary-button" type="button" onClick={saveModal}>
-                <CheckIcon />
+              <button
+                className="booking-primary-button"
+                type="button"
+                disabled={createStaffMutation.isPending}
+                onClick={saveModal}
+              >
+                {createStaffMutation.isPending ? <SpinnerIcon className="booking-inline-spinner" /> : <CheckIcon />}
                 <span>{t(`${TK}.saveTech`)}</span>
               </button>
             </div>

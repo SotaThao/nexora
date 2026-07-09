@@ -1,6 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import {
+  useMerchantVoiceBookings,
+  useMerchantVoiceBookingStatistics,
+  useUpdateMerchantVoiceBookingStatus,
+} from '../../../data/hooks/useMerchantVoiceBookings'
+import {
+  MerchantVoiceLeadStatus,
+  type MerchantVoiceBookingDto,
+} from '../../../data/repositories/merchantVoice'
+import {
   BroadcastIcon,
   CalendarKpiIcon,
   CheckKpiIcon,
@@ -11,6 +20,7 @@ import {
   JournalIcon,
   PersonWorkspaceIcon,
   SendIcon,
+  SpinnerIcon,
   StarsIcon,
   TableIcon,
   XLgIcon,
@@ -18,7 +28,7 @@ import {
 } from './BookingHubIcons'
 
 const TK = 'components.dashboard.views.BookingHubView'
-const TODAY_ISO = '2026-07-09'
+const TODAY_ISO = new Date().toISOString().slice(0, 10)
 
 const KPI_ACCENT_ELECTRIC = { '--kpi-accent': 'var(--nexora-electric)' } as React.CSSProperties
 const KPI_ACCENT_SUCCESS = { '--kpi-accent': 'var(--nexora-success)' } as React.CSSProperties
@@ -54,106 +64,84 @@ interface BookingItem {
   note: string
 }
 
-const INITIAL_BOOKINGS: BookingItem[] = [
-  {
-    id: 'booking-kim-phan',
-    name: 'Kim Phan',
-    phone: '7135550148',
-    phoneDisplay: '(713) 555-0148',
-    email: 'kim.phan@example.com',
-    services: ['Pedicure', 'Gel Polish'],
-    tech: 'Lan T.',
-    date: '2026-07-09',
-    timeMain: 'Today 9:00 AM',
-    timeDate: 'July 9, 2026',
-    source: 'Voice',
-    sourceClass: 'booking-source-voice',
-    status: 'done',
-    note: 'Prefers warm water and extra heel care. Customer confirmed arrival by phone and asked to keep the same chair as last visit.',
-  },
-  {
-    id: 'booking-sophie-tran',
-    name: 'Sophie Tran',
-    phone: '2815550196',
-    phoneDisplay: '(281) 555-0196',
-    email: 'sophie.tran@example.com',
-    services: ['Gel Manicure', 'Nail Art'],
-    tech: 'Kim N.',
-    date: '2026-07-09',
-    timeMain: 'Today 10:30 AM',
-    timeDate: 'July 9, 2026',
-    source: 'Landing Page',
-    sourceClass: 'booking-source-lp',
-    status: 'sms-sent',
-    note: 'Booked from landing page after seeing the gel manicure promo. Customer wants a neutral pink base with one simple accent nail.',
-  },
-  {
-    id: 'booking-mai-nguyen',
-    name: 'Mai Nguyen',
-    phone: '8325550164',
-    phoneDisplay: '(832) 555-0164',
-    email: 'mai.nguyen@example.com',
-    services: ['Gel Full Set', 'Removal'],
-    tech: 'Linda',
-    date: '2026-07-09',
-    timeMain: 'Today 1:00 PM',
-    timeDate: 'July 9, 2026',
-    source: 'Voice',
-    sourceClass: 'booking-source-voice',
-    request: true,
-    status: 'new',
-    note: 'Customer initially requested Elio but he was unavailable; booked with Linda instead. Phone: 14182188221. Please confirm almond shape and light pink finish before start time.',
-  },
-  {
-    id: 'booking-jennifer-s',
-    name: 'Jennifer S.',
-    phone: '7135550127',
-    phoneDisplay: '(713) 555-0127',
-    email: 'jennifer.s@example.com',
-    services: ['Full Set Acrylic', 'French Tip'],
-    tech: 'Mai P.',
-    date: '2026-07-09',
-    timeMain: 'Today 2:00 PM',
-    timeDate: 'July 9, 2026',
-    source: 'SMS',
-    sourceClass: 'booking-source-sms',
-    status: 'new',
-    note: 'Customer asked for a quiet corner and extra time for acrylic removal. She may bring a reference photo for the French tip shape.',
-  },
-  {
-    id: 'booking-tina-vo',
-    name: 'Tina Vo',
-    phone: '3465550188',
-    phoneDisplay: '(346) 555-0188',
-    email: 'tina.vo@example.com',
-    services: ['Dip Powder', 'Chrome Design'],
-    tech: 'Lan T.',
-    date: '2026-07-17',
-    timeMain: 'Next Friday 4:00 PM',
-    timeDate: 'July 17, 2026',
-    source: 'Landing Page',
-    sourceClass: 'booking-source-lp',
-    status: 'new',
-    note: 'Requested chrome design but has not picked a color yet. Send reminder SMS the morning of the appointment.',
-  },
-  {
-    id: 'booking-anna-le',
-    name: 'Anna Le',
-    phone: '2815550119',
-    phoneDisplay: '(281) 555-0119',
-    email: 'anna.le@example.com',
-    services: ['Pedicure', 'Gel Polish'],
-    tech: 'Mai P.',
-    date: '2026-07-17',
-    timeMain: 'Next Friday 5:30 PM',
-    timeDate: 'July 17, 2026',
-    source: 'QR',
-    sourceClass: 'booking-source-qr',
-    request: true,
-    status: 'new',
-    note: 'QR booking request came in after hours. Customer prefers an evening slot and asked to be notified if an earlier opening appears.',
-  },
-]
+function mapSource(source: number): BookingSource {
+  if (source === 1) return 'Landing Page'
+  if (source === 2) return 'SMS'
+  return 'Voice'
+}
+
+function sourceClass(source: BookingSource) {
+  if (source === 'Landing Page') return 'booking-source-lp'
+  if (source === 'SMS') return 'booking-source-sms'
+  if (source === 'QR') return 'booking-source-qr'
+  return 'booking-source-voice'
+}
+
+function mapStatus(status: number | string): BookingStatus {
+  if (status === 'Done') return 'done'
+  if (status === 'Confirmed') return 'sms-sent'
+  if (status === 'NoShow') return 'noshow'
+  if (status === 'New') return 'new'
+  if (status === 1) return 'done'
+  if (status === 2) return 'sms-sent'
+  if (status === 3) return 'noshow'
+  return 'new'
+}
+
+function formatPhone(phone: string | null | undefined) {
+  const digits = (phone || '').replace(/\D/g, '')
+  if (digits.length === 10) {
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
+  }
+  return phone || '—'
+}
+
+function serviceList(service: string | null | undefined) {
+  if (!service) return ['General Service']
+  return service.split(/[,/]/).map((item) => item.trim()).filter(Boolean)
+}
+
+function formatTimeBlock(startAt: string | null, fallback: string | null) {
+  if (!startAt) {
+    return {
+      timeMain: fallback || 'Pending schedule',
+      timeDate: fallback || 'Pending date',
+      dateIso: TODAY_ISO,
+    }
+  }
+  const date = new Date(startAt)
+  const dateIso = date.toISOString().slice(0, 10)
+  const today = new Date().toISOString().slice(0, 10)
+  const time = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(date)
+  const dateText = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).format(date)
+  return {
+    timeMain: `${dateIso === today ? 'Today' : dateText} ${time}`,
+    timeDate: dateText,
+    dateIso,
+  }
+}
+
+function toBookingItem(item: MerchantVoiceBookingDto, statusOverride?: BookingStatus): BookingItem {
+  const source = mapSource(item.source)
+  const time = formatTimeBlock(item.requestedStartAtUtc, item.preferredTime)
+  return {
+    id: item.id,
+    name: item.customerName || 'Unknown customer',
+    phone: (item.customerPhone || '').replace(/\D/g, ''),
+    phoneDisplay: formatPhone(item.customerPhone),
+    email: item.assignedStaffEmail || 'N/A',
+    services: serviceList(item.service),
+    tech: item.assignedStaffName || 'Unassigned',
+    date: time.dateIso,
+    timeMain: time.timeMain,
+    timeDate: time.timeDate,
+    source,
+    sourceClass: sourceClass(source),
+    request: mapStatus(item.status) === 'new',
+    status: statusOverride ?? mapStatus(item.status),
+    note: item.notes || 'No internal notes.',
+  }
+}
 
 function rowClassForStatus(status: BookingStatus) {
   if (status === 'done') return 'is-done'
@@ -192,10 +180,12 @@ function CalendarIcon() {
 function BookingActions({
   booking,
   onAction,
+  isPending,
   t,
 }: {
   booking: BookingItem
   onAction: (id: string, action: 'send-sms' | 'done' | 'noshow' | 'detail') => void
+  isPending: boolean
   t: (key: string) => string
 }) {
   const viewBtn = (
@@ -204,9 +194,10 @@ function BookingActions({
       type="button"
       aria-label={t(`${TK}.today.view`)}
       title={t(`${TK}.today.view`)}
+      disabled={isPending}
       onClick={() => onAction(booking.id, 'detail')}
     >
-      <EyeIcon />
+      {isPending ? <SpinnerIcon className="booking-inline-spinner" /> : <EyeIcon />}
       <span className="sr-only">{t(`${TK}.today.view`)}</span>
     </button>
   )
@@ -223,9 +214,10 @@ function BookingActions({
           type="button"
           aria-label={t(`${TK}.today.done`)}
           title={t(`${TK}.today.done`)}
+          disabled={isPending}
           onClick={() => onAction(booking.id, 'done')}
         >
-          <CheckLgIcon />
+          {isPending ? <SpinnerIcon className="booking-inline-spinner" /> : <CheckLgIcon />}
           <span className="sr-only">{t(`${TK}.today.done`)}</span>
         </button>
         <button
@@ -233,9 +225,10 @@ function BookingActions({
           type="button"
           aria-label={t(`${TK}.today.noShow`)}
           title={t(`${TK}.today.noShow`)}
+          disabled={isPending}
           onClick={() => onAction(booking.id, 'noshow')}
         >
-          <XLgIcon />
+          {isPending ? <SpinnerIcon className="booking-inline-spinner" /> : <XLgIcon />}
           <span className="sr-only">{t(`${TK}.today.noShow`)}</span>
         </button>
         {viewBtn}
@@ -250,9 +243,10 @@ function BookingActions({
         type="button"
         aria-label={t(`${TK}.today.sendSms`)}
         title={t(`${TK}.today.sendSms`)}
+        disabled={isPending}
         onClick={() => onAction(booking.id, 'send-sms')}
       >
-        <SendIcon />
+        {isPending ? <SpinnerIcon className="booking-inline-spinner" /> : <SendIcon />}
         <span className="sr-only">{t(`${TK}.today.sendSms`)}</span>
       </button>
       <button
@@ -260,9 +254,10 @@ function BookingActions({
         type="button"
         aria-label={t(`${TK}.today.noShow`)}
         title={t(`${TK}.today.noShow`)}
+        disabled={isPending}
         onClick={() => onAction(booking.id, 'noshow')}
       >
-        <XLgIcon />
+        {isPending ? <SpinnerIcon className="booking-inline-spinner" /> : <XLgIcon />}
         <span className="sr-only">{t(`${TK}.today.noShow`)}</span>
       </button>
       {viewBtn}
@@ -272,51 +267,96 @@ function BookingActions({
 
 export default function BookingTodayPanel() {
   const { t } = useTranslation()
-  const [bookings, setBookings] = useState<BookingItem[]>(INITIAL_BOOKINGS)
-  const [viewMode, setViewMode] = useState<ViewMode>('table')
+  const [viewMode, setViewMode] = useState<ViewMode>(() => (
+    typeof window !== 'undefined' && window.innerWidth < 768 ? 'card' : 'table'
+  ))
   const [searchField, setSearchField] = useState<SearchField>('name')
   const [searchKeyword, setSearchKeyword] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
+  const [debouncedFilters, setDebouncedFilters] = useState({
+    searchField: 'name' as SearchField,
+    searchKeyword: '',
+    dateFrom: '',
+    dateTo: '',
+  })
+  const [statusOverrides, setStatusOverrides] = useState<Record<string, BookingStatus>>({})
+  const [pendingStatusUpdates, setPendingStatusUpdates] = useState<Record<string, boolean>>({})
   const [detailBooking, setDetailBooking] = useState<BookingItem | null>(null)
 
-  const filteredBookings = useMemo(() => {
-    const keyword = searchKeyword.trim().toLowerCase()
-    return bookings.filter((booking) => {
-      if (dateFrom && booking.date < dateFrom) return false
-      if (dateTo && booking.date > dateTo) return false
-      if (!keyword) return true
+  const apiSearchField = debouncedFilters.searchField === 'name'
+    ? 0
+    : debouncedFilters.searchField === 'phone'
+      ? 1
+      : debouncedFilters.searchField === 'email'
+        ? 2
+        : 3
 
-      if (searchField === 'name') return booking.name.toLowerCase().includes(keyword)
-      if (searchField === 'phone') return booking.phone.includes(keyword.replace(/\D/g, ''))
-      if (searchField === 'email') return booking.email.toLowerCase().includes(keyword)
-      return booking.services.some((service) => service.toLowerCase().includes(keyword))
-    })
-  }, [bookings, dateFrom, dateTo, searchField, searchKeyword])
+  const dateFromApi = debouncedFilters.dateFrom ? `${debouncedFilters.dateFrom}T00:00:00.000Z` : undefined
+  const dateToApi = debouncedFilters.dateTo ? `${debouncedFilters.dateTo}T23:59:59.999Z` : undefined
+
+  const { data: statistics } = useMerchantVoiceBookingStatistics()
+  const { data: bookingResponse, isLoading: isBookingsLoading } = useMerchantVoiceBookings({
+    pageNumber: 1,
+    pageSize: 200,
+    searchBy: apiSearchField,
+    keyword: debouncedFilters.searchKeyword.trim() || undefined,
+    dateFrom: dateFromApi,
+    dateTo: dateToApi,
+  })
+  const updateBookingStatusMutation = useUpdateMerchantVoiceBookingStatus()
+
+  const filteredBookings = useMemo(() => (
+    (bookingResponse?.items ?? []).map((item) => toBookingItem(item, statusOverrides[item.id]))
+  ), [bookingResponse?.items, statusOverrides])
 
   const stats = useMemo(() => {
-    const todayCount = bookings.filter((item) => item.date === TODAY_ISO).length
-    const done = bookings.filter((item) => item.status === 'done').length
-    const noShow = bookings.filter((item) => item.status === 'noshow').length
+    const todayCount = statistics?.allBookings ?? filteredBookings.filter((item) => item.date === TODAY_ISO).length
+    const done = statistics?.doneBookings ?? filteredBookings.filter((item) => item.status === 'done').length
+    const noShow = statistics?.noShowBookings ?? filteredBookings.filter((item) => item.status === 'noshow').length
     return { todayCount, done, noShow }
-  }, [bookings])
+  }, [filteredBookings, statistics])
 
-  const handleAction = (id: string, action: 'send-sms' | 'done' | 'noshow' | 'detail') => {
+  const handleAction = async (id: string, action: 'send-sms' | 'done' | 'noshow' | 'detail') => {
     if (action === 'detail') {
-      const booking = bookings.find((item) => item.id === id)
+      const booking = filteredBookings.find((item) => item.id === id)
       if (booking) setDetailBooking(booking)
       return
     }
 
-    setBookings((prev) => prev.map((item) => {
-      if (item.id !== id) return item
-      if (action === 'send-sms' && item.status === 'new') return { ...item, status: 'sms-sent' as const }
-      if (action === 'done' && item.status === 'sms-sent') return { ...item, status: 'done' as const }
-      if (action === 'noshow' && (item.status === 'new' || item.status === 'sms-sent')) {
-        return { ...item, status: 'noshow' as const }
+    const previousStatus = statusOverrides[id] ?? filteredBookings.find((item) => item.id === id)?.status
+    if (!previousStatus) return
+
+    const getNextStatus = (currentStatus: BookingStatus): BookingStatus | null => {
+      if (action === 'send-sms' && currentStatus === 'new') return 'sms-sent'
+      if (action === 'done' && currentStatus === 'sms-sent') return 'done'
+      if (action === 'noshow' && (currentStatus === 'new' || currentStatus === 'sms-sent')) return 'noshow'
+      return null
+    }
+
+    const nextStatus = getNextStatus(previousStatus)
+    if (!nextStatus) return
+
+    setStatusOverrides((prev) => {
+      const currentStatus = prev[id] ?? filteredBookings.find((item) => item.id === id)?.status
+      if (!currentStatus) return prev
+
+      const computedNext = getNextStatus(currentStatus)
+      if (computedNext) return { ...prev, [id]: computedNext }
+      return prev
+    })
+
+    if (action === 'done' || action === 'noshow') {
+      const apiStatus = action === 'done' ? MerchantVoiceLeadStatus.Done : MerchantVoiceLeadStatus.NoShow
+      setPendingStatusUpdates((prev) => ({ ...prev, [id]: true }))
+      try {
+        await updateBookingStatusMutation.mutateAsync({ id, status: apiStatus })
+      } catch {
+        setStatusOverrides((prev) => ({ ...prev, [id]: previousStatus }))
+      } finally {
+        setPendingStatusUpdates((prev) => ({ ...prev, [id]: false }))
       }
-      return item
-    }))
+    }
 
     if (detailBooking?.id === id) {
       setDetailBooking((prev) => {
@@ -353,6 +393,33 @@ export default function BookingTodayPanel() {
       document.body.style.overflow = ''
     }
   }, [detailBooking])
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedFilters({
+        searchField,
+        searchKeyword,
+        dateFrom,
+        dateTo,
+      })
+    }, 350)
+
+    return () => window.clearTimeout(timer)
+  }, [searchField, searchKeyword, dateFrom, dateTo])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+
+    const syncViewModeByViewport = () => {
+      if (window.innerWidth < 768) {
+        setViewMode('card')
+      }
+    }
+
+    syncViewModeByViewport()
+    window.addEventListener('resize', syncViewModeByViewport)
+    return () => window.removeEventListener('resize', syncViewModeByViewport)
+  }, [])
 
   return (
     <div className="booking-sub-panel is-active">
@@ -525,7 +592,12 @@ export default function BookingTodayPanel() {
                         </span>
                       </td>
                       <td>
-                        <BookingActions booking={booking} onAction={handleAction} t={t} />
+                        <BookingActions
+                          booking={booking}
+                          onAction={pendingStatusUpdates[booking.id] ? () => undefined : handleAction}
+                          isPending={Boolean(pendingStatusUpdates[booking.id])}
+                          t={t}
+                        />
                       </td>
                     </tr>
                   ))}
@@ -577,7 +649,12 @@ export default function BookingTodayPanel() {
                       </div>
                     </div>
                     <div className="booking-card-actions">
-                      <BookingActions booking={booking} onAction={handleAction} t={t} />
+                      <BookingActions
+                        booking={booking}
+                        onAction={pendingStatusUpdates[booking.id] ? () => undefined : handleAction}
+                        isPending={Boolean(pendingStatusUpdates[booking.id])}
+                        t={t}
+                      />
                     </div>
                   </article>
                 ))}
@@ -585,7 +662,7 @@ export default function BookingTodayPanel() {
             </div>
           )}
 
-          {filteredBookings.length === 0 ? (
+          {!isBookingsLoading && filteredBookings.length === 0 ? (
             <div className="booking-empty">{t(`${TK}.today.empty`)}</div>
           ) : null}
         </article>

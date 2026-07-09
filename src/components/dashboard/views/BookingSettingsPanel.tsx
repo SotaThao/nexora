@@ -1,13 +1,21 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
+import CountryCodeSelect, { formatNationalNumber, normalizePhoneForApi, parsePhone } from '../../CountryCodeSelect'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { useNotification } from '../../../contexts/NotificationContext'
+import { getErrorI18nKey } from '../../../data/errorCodes'
+import {
+  useMerchantVoiceConfig,
+  useUpdateMerchantVoiceConfig,
+} from '../../../data/hooks/useMerchantVoiceBookings'
+import { getApiErrorCode } from '../../../types/domain'
 import { loadSpeechVoices, speakBookingPreview, stopBookingPreview } from '../../../utils/bookingVoicePreview'
 import {
-  CameraIcon,
   ClockHistoryIcon,
   CurrencyDollarIcon,
   LightningIcon,
   PlusIcon,
   ShopIcon,
+  SpinnerIcon,
   StarsIcon,
 } from './BookingHubIcons'
 
@@ -15,8 +23,35 @@ const TK = 'components.dashboard.views.BookingHubView.settings'
 
 const DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const
 type DayKey = (typeof DAY_KEYS)[number]
-type Language = 'auto' | 'vi' | 'en'
+type Language = 'vi' | 'en'
 type Tone = 'tone-violet' | 'tone-cyan' | 'tone-rose' | 'tone-sky' | 'tone-amber' | 'tone-emerald'
+
+const DAY_KEY_TO_API: Record<DayKey, number> = {
+  mon: 1,
+  tue: 2,
+  wed: 3,
+  thu: 4,
+  fri: 5,
+  sat: 6,
+  sun: 0,
+}
+
+const API_DAY_TO_DAY_KEY: Record<string, DayKey> = {
+  Monday: 'mon',
+  Tuesday: 'tue',
+  Wednesday: 'wed',
+  Thursday: 'thu',
+  Friday: 'fri',
+  Saturday: 'sat',
+  Sunday: 'sun',
+  '0': 'sun',
+  '1': 'mon',
+  '2': 'tue',
+  '3': 'wed',
+  '4': 'thu',
+  '5': 'fri',
+  '6': 'sat',
+}
 
 interface HourRow {
   open: boolean
@@ -66,8 +101,6 @@ const SUGGEST_SERVICES = [
   { name: 'Eyebrow Wax', price: 12, duration: 15 },
   { name: 'Lash Fill', price: 45, duration: 60 },
 ]
-
-const SCAN_PROGRESS_LINES = ['scanProgress1', 'scanProgress2', 'scanProgress3', 'scanProgress4'] as const
 
 function openTimePicker(input: HTMLInputElement | null) {
   if (!input || input.disabled) return
@@ -160,23 +193,46 @@ function SettingsCard({
 
 export default function BookingSettingsPanel() {
   const { t } = useTranslation()
+  const { showToast } = useNotification()
+  const { data: configData } = useMerchantVoiceConfig()
+  const updateConfigMutation = useUpdateMerchantVoiceConfig()
   const [collapsedCards, setCollapsedCards] = useState<Record<string, boolean>>({})
   const [hours, setHours] = useState(INITIAL_HOURS)
   const [services, setServices] = useState(INITIAL_SERVICES)
-  const [scanOpen, setScanOpen] = useState(false)
   const [suggestOpen, setSuggestOpen] = useState(false)
-  const [scanProgressStep, setScanProgressStep] = useState(0)
   const [usedSuggests, setUsedSuggests] = useState<Set<string>>(() => new Set())
   const [pressingSuggest, setPressingSuggest] = useState<string | null>(null)
   const [highlightServiceId, setHighlightServiceId] = useState<string | null>(null)
   const [isPreviewPlaying, setIsPreviewPlaying] = useState(false)
-  const [language, setLanguage] = useState<Language>('auto')
-  const [greeting, setGreeting] = useState(() => t(`${TK}.greetingAuto`))
+  const [language, setLanguage] = useState<Language>('en')
+  const [greeting, setGreeting] = useState(() => t(`${TK}.greetingEn`))
+  const [salonName, setSalonName] = useState('')
+  const [salonPhone, setSalonPhone] = useState('')
+  const [aiPhone, setAiPhone] = useState('')
+  const [bookingNotifyPhone, setBookingNotifyPhone] = useState('')
+  const [address, setAddress] = useState('')
+  const [googleReviewUrl, setGoogleReviewUrl] = useState('')
   const [statusMessage, setStatusMessage] = useState('')
-  const menuFileInputRef = useRef<HTMLInputElement>(null)
-  const scanTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [formErrors, setFormErrors] = useState<{
+    salonName?: string
+    salonPhone?: string
+    bookingNotifyPhone?: string
+    address?: string
+    greeting?: string
+  }>({})
+  const [hoursErrorByDay, setHoursErrorByDay] = useState<Record<DayKey, string>>({
+    mon: '',
+    tue: '',
+    wed: '',
+    thu: '',
+    fri: '',
+    sat: '',
+    sun: '',
+  })
 
   const isCollapsed = (cardId: string) => collapsedCards[cardId] === true
+  const salonPhoneParsed = useMemo(() => parsePhone(salonPhone), [salonPhone])
+  const bookingNotifyPhoneParsed = useMemo(() => parsePhone(bookingNotifyPhone), [bookingNotifyPhone])
 
   const toggleCard = (cardId: string) => {
     setCollapsedCards((prev) => ({ ...prev, [cardId]: !prev[cardId] }))
@@ -184,50 +240,133 @@ export default function BookingSettingsPanel() {
 
   const setStatus = (message: string) => setStatusMessage(message)
 
+  const formatVietnamDisplay = (rawNational: string) => {
+    const digits = rawNational.replace(/\D/g, '')
+    const hasTrunkZero = digits.startsWith('0')
+    const clipped = digits.slice(0, hasTrunkZero ? 10 : 9)
+
+    if (hasTrunkZero) {
+      if (clipped.length <= 4) return clipped
+      if (clipped.length <= 7) return `${clipped.slice(0, 4)}-${clipped.slice(4)}`
+      return `${clipped.slice(0, 4)}-${clipped.slice(4, 7)}-${clipped.slice(7, 10)}`
+    }
+
+    if (clipped.length <= 3) return clipped
+    if (clipped.length <= 6) return `${clipped.slice(0, 3)}-${clipped.slice(3)}`
+    return `${clipped.slice(0, 3)}-${clipped.slice(3, 6)}-${clipped.slice(6, 9)}`
+  }
+
+  const formatPhoneInput = (raw: string, fallbackRaw?: string) => {
+    const input = raw.trim()
+    if (!input) return ''
+
+    const hasExplicitCountryCode = input.startsWith('+')
+    const digitsOnly = input.replace(/\D/g, '')
+    const isVnLocalWithTrunk = /^0\d{8,10}$/.test(digitsOnly)
+    const parsed = parsePhone(input)
+    const fallbackParsed = fallbackRaw?.trim() ? parsePhone(fallbackRaw.trim()) : null
+    const inferredCountryCode = hasExplicitCountryCode
+      ? parsed.countryCode
+      : (
+        fallbackParsed?.countryCode
+        || (isVnLocalWithTrunk ? '+84' : '+1')
+      )
+
+    // Keep local VN trunk prefix "0" in UI formatting (e.g. 0385... -> 0385 478 857).
+    const nationalSource = (!hasExplicitCountryCode && isVnLocalWithTrunk)
+      ? digitsOnly
+      : parsed.nationalNumber
+    const national = inferredCountryCode === '+84'
+      ? formatVietnamDisplay(nationalSource)
+      : formatNationalNumber(nationalSource, inferredCountryCode)
+    if (!national) return input
+    return hasExplicitCountryCode ? `${inferredCountryCode} ${national}`.trim() : national
+  }
+
+  const validateHours = (hoursState: Record<DayKey, HourRow>) => {
+    const nextErrors: Record<DayKey, string> = {
+      mon: '',
+      tue: '',
+      wed: '',
+      thu: '',
+      fri: '',
+      sat: '',
+      sun: '',
+    }
+
+    DAY_KEYS.forEach((day) => {
+      const row = hoursState[day]
+      if (!row.open) return
+      if (!row.openTime || !row.closeTime) {
+        nextErrors[day] = t(`${TK}.hourRequired`)
+        return
+      }
+      if (row.openTime >= row.closeTime) {
+        nextErrors[day] = t(`${TK}.hourInvalid`)
+      }
+    })
+
+    setHoursErrorByDay(nextErrors)
+    return DAY_KEYS.every((day) => !nextErrors[day])
+  }
+
   const toggleHour = (day: DayKey) => {
     setHours((prev) => {
       const nextOpen = !prev[day].open
       setStatus(t(`${TK}.hourUpdated`, { day: t(`${TK}.days.${day}`) }))
       return { ...prev, [day]: { ...prev[day], open: nextOpen } }
     })
+    setHoursErrorByDay((prev) => ({ ...prev, [day]: '' }))
   }
 
   const updateHourTime = (day: DayKey, field: 'openTime' | 'closeTime', value: string) => {
     setHours((prev) => ({ ...prev, [day]: { ...prev[day], [field]: value } }))
     setStatus(t(`${TK}.hourTimeUpdated`, { day: t(`${TK}.days.${day}`) }))
+    setHoursErrorByDay((prev) => ({ ...prev, [day]: '' }))
   }
 
   useEffect(() => {
     loadSpeechVoices()
   }, [])
 
+  useEffect(() => {
+    if (!configData) return
+
+    setSalonName(configData.name || '')
+    setSalonPhone(formatPhoneInput(configData.forwardPhoneNumber || ''))
+    setAiPhone(formatPhoneInput(configData.aiPhoneNumber || ''))
+    setBookingNotifyPhone(formatPhoneInput(configData.bookingNotifyPhone || ''))
+    setAddress(configData.address || '')
+    setGoogleReviewUrl(configData.googleReviewUrl || '')
+    setGreeting(configData.welcomeGreeting || t(`${TK}.greetingEn`))
+    setLanguage(configData.language === 'vi-VN' ? 'vi' : 'en')
+
+    const nextHours = { ...INITIAL_HOURS }
+    configData.operatingHours.forEach((item) => {
+      const key = API_DAY_TO_DAY_KEY[String(item.dayOfWeek)]
+      if (!key) return
+      nextHours[key] = {
+        open: Boolean(item.isOpen),
+        openTime: item.openTime?.slice(0, 5) || '',
+        closeTime: item.closeTime?.slice(0, 5) || '',
+      }
+    })
+    setHours(nextHours)
+
+    const nextServices = (configData.services || []).map((service, index) => ({
+      id: service.id || `service-${index}`,
+      icon: service.icon || '✨',
+      tone: INITIAL_SERVICES[index % INITIAL_SERVICES.length]?.tone || 'tone-violet',
+      name: service.name || '',
+      price: Number(service.price ?? 0),
+      duration: Number(service.durationMinutes ?? 0),
+    }))
+    setServices(nextServices)
+  }, [configData, t])
+
   useEffect(() => () => {
-    if (scanTimerRef.current) clearInterval(scanTimerRef.current)
     stopBookingPreview()
   }, [])
-
-  const startScanProgress = () => {
-    if (scanTimerRef.current) clearInterval(scanTimerRef.current)
-    setScanProgressStep(1)
-    scanTimerRef.current = setInterval(() => {
-      setScanProgressStep((prev) => {
-        if (prev >= SCAN_PROGRESS_LINES.length) {
-          if (scanTimerRef.current) clearInterval(scanTimerRef.current)
-          return prev
-        }
-        return prev + 1
-      })
-    }, 450)
-  }
-
-  const handleMenuFileSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    event.target.value = ''
-    if (!file) return
-    setScanProgressStep(SCAN_PROGRESS_LINES.length)
-    setStatus(t(`${TK}.scanFileSelected`, { name: file.name }))
-    addService(t(`${TK}.scannedServiceName`), 35, 60)
-  }
 
   const addService = (
     name: string,
@@ -282,17 +421,7 @@ export default function BookingSettingsPanel() {
     }))
   }
 
-  const handlePhotoScan = () => {
-    setSuggestOpen(false)
-    setScanOpen(true)
-    setStatus(t(`${TK}.scanReady`))
-    startScanProgress()
-    menuFileInputRef.current?.click()
-  }
-
   const handleSuggestToggle = () => {
-    setScanOpen(false)
-    if (scanTimerRef.current) clearInterval(scanTimerRef.current)
     setSuggestOpen((prev) => {
       const next = !prev
       setStatus(next ? t(`${TK}.suggestOpened`) : t(`${TK}.suggestHidden`))
@@ -306,7 +435,7 @@ export default function BookingSettingsPanel() {
 
   const handleLanguageSelect = (next: Language) => {
     setLanguage(next)
-    setGreeting(t(`${TK}.greeting${next === 'auto' ? 'Auto' : next === 'vi' ? 'Vi' : 'En'}`))
+    setGreeting(t(`${TK}.greeting${next === 'vi' ? 'Vi' : 'En'}`))
     setStatus(t(`${TK}.languageSelected`, { language: t(`${TK}.languageLabels.${next}`) }))
   }
 
@@ -318,7 +447,7 @@ export default function BookingSettingsPanel() {
       return
     }
 
-    const text = greeting.trim() || t(`${TK}.greetingAuto`)
+    const text = greeting.trim() || t(`${TK}.greetingEn`)
 
     try {
       await speakBookingPreview({
@@ -346,7 +475,82 @@ export default function BookingSettingsPanel() {
       setStatus(t(`${TK}.previewFailed`))
     }
   }
-  const handleSave = () => setStatus(t(`${TK}.saveSuccess`))
+  const handleSave = async () => {
+    const requiredMessage = t('components.dashboard.views.BookingHubView.team.requiredField')
+    const nextErrors: {
+      salonName?: string
+      salonPhone?: string
+      bookingNotifyPhone?: string
+      address?: string
+      greeting?: string
+    } = {}
+    if (!salonName.trim()) nextErrors.salonName = requiredMessage
+    if (!salonPhone.trim()) nextErrors.salonPhone = requiredMessage
+    if (!bookingNotifyPhone.trim()) nextErrors.bookingNotifyPhone = requiredMessage
+    if (!address.trim()) nextErrors.address = requiredMessage
+    if (!greeting.trim()) nextErrors.greeting = requiredMessage
+
+    if (Object.keys(nextErrors).length > 0) {
+      setFormErrors(nextErrors)
+      showToast(t(`${TK}.saveValidationError`), 'error')
+      return
+    }
+
+    const validHours = validateHours(hours)
+    if (!validHours) {
+      showToast(t(`${TK}.hourValidationSummary`), 'error')
+      return
+    }
+
+    try {
+      const salonPhonePayload = normalizePhoneForApi(salonPhone, parsePhone(salonPhone).countryCode)
+      const bookingNotifyPhonePayload = normalizePhoneForApi(
+        bookingNotifyPhone,
+        parsePhone(bookingNotifyPhone).countryCode,
+      )
+
+      await updateConfigMutation.mutateAsync({
+        name: salonName.trim(),
+        forwardPhoneNumber: salonPhonePayload,
+        bookingNotifyPhone: bookingNotifyPhonePayload,
+        address: address.trim(),
+        googleReviewUrl: googleReviewUrl.trim(),
+        language: language === 'vi' ? 'vi-VN' : 'en-US',
+        welcomeGreeting: greeting.trim(),
+        operatingHours: DAY_KEYS.map((day) => {
+          const row = hours[day]
+          if (!row.open) {
+            return {
+              dayOfWeek: DAY_KEY_TO_API[day],
+              isOpen: false,
+            }
+          }
+          return {
+            dayOfWeek: DAY_KEY_TO_API[day],
+            isOpen: true,
+            openTime: `${row.openTime}:00`,
+            closeTime: `${row.closeTime}:00`,
+          }
+        }),
+        services: services.map((service) => ({
+          ...(service.id && !service.id.startsWith('service-') ? { id: service.id } : {}),
+          name: service.name.trim(),
+          price: Number.isFinite(service.price) ? service.price : 0,
+          durationMinutes: Number.isFinite(service.duration) ? service.duration : 0,
+          note: null,
+          icon: service.icon?.trim() || null,
+          isActive: true,
+        })),
+      })
+      setStatus(t(`${TK}.saveSuccess`))
+      setFormErrors({})
+      showToast(t(`${TK}.saveSuccess`), 'success')
+    } catch (error) {
+      const message = t(getErrorI18nKey(getApiErrorCode(error)))
+      setStatus(message)
+      showToast(message, 'error')
+    }
+  }
 
   return (
     <div className="settings-shell">
@@ -374,30 +578,96 @@ export default function BookingSettingsPanel() {
           <div className="settings-field-grid settings-business-grid">
             <label className="settings-field">
               <span className="settings-label">{t(`${TK}.salonName`)}</span>
-              <input className="settings-input" type="text" defaultValue="Bitcoin Nail Bar" />
+              <input
+                className="settings-input"
+                type="text"
+                value={salonName}
+                aria-invalid={Boolean(formErrors.salonName)}
+                onChange={(event) => {
+                  setSalonName(event.target.value)
+                  if (formErrors.salonName) setFormErrors((prev) => ({ ...prev, salonName: undefined }))
+                }}
+              />
+              <span className="settings-field-error-slot">{formErrors.salonName ? <span className="settings-field-error">{formErrors.salonName}</span> : null}</span>
             </label>
             <label className="settings-field">
               <span className="settings-label">{t(`${TK}.salonPhone`)}</span>
-              <input className="settings-input" type="text" defaultValue="346-802-4906" />
+              <span className="phone-input-shell">
+                <CountryCodeSelect
+                  value={salonPhoneParsed.countryCode}
+                  onChange={(nextCode) => {
+                    const formatted = formatNationalNumber(salonPhoneParsed.nationalNumber, nextCode)
+                    setSalonPhone(`${nextCode} ${formatted}`.trim())
+                    if (formErrors.salonPhone) setFormErrors((prev) => ({ ...prev, salonPhone: undefined }))
+                  }}
+                />
+                <input
+                  className="settings-input phone-mask-input"
+                  type="tel"
+                  value={formatNationalNumber(salonPhoneParsed.nationalNumber, salonPhoneParsed.countryCode)}
+                  aria-invalid={Boolean(formErrors.salonPhone)}
+                  inputMode="numeric"
+                  autoComplete="tel-national"
+                  onChange={(event) => {
+                    const formatted = formatNationalNumber(event.target.value, salonPhoneParsed.countryCode)
+                    setSalonPhone(`${salonPhoneParsed.countryCode} ${formatted}`.trim())
+                    if (formErrors.salonPhone) setFormErrors((prev) => ({ ...prev, salonPhone: undefined }))
+                  }}
+                />
+              </span>
+              <span className="settings-field-error-slot">{formErrors.salonPhone ? <span className="settings-field-error">{formErrors.salonPhone}</span> : null}</span>
               <span className="settings-help">{t(`${TK}.salonPhoneHelp`)}</span>
             </label>
             <label className="settings-field">
               <span className="settings-label">{t(`${TK}.aiLine`)}</span>
-              <input className="settings-input settings-input-ai" type="text" defaultValue="832-786-5576" readOnly />
+              <input className="settings-input settings-input-ai" type="text" value={aiPhone} readOnly />
               <span className="settings-help">{t(`${TK}.aiLineHelp`)}</span>
             </label>
             <label className="settings-field">
               <span className="settings-label">{t(`${TK}.bookingNotifyPhone`)}</span>
-              <input className="settings-input" type="text" defaultValue="832-xxx-xxxx" />
+              <span className="phone-input-shell">
+                <CountryCodeSelect
+                  value={bookingNotifyPhoneParsed.countryCode}
+                  onChange={(nextCode) => {
+                    const formatted = formatNationalNumber(bookingNotifyPhoneParsed.nationalNumber, nextCode)
+                    setBookingNotifyPhone(`${nextCode} ${formatted}`.trim())
+                    if (formErrors.bookingNotifyPhone) setFormErrors((prev) => ({ ...prev, bookingNotifyPhone: undefined }))
+                  }}
+                />
+                <input
+                  className="settings-input phone-mask-input"
+                  type="tel"
+                  value={formatNationalNumber(bookingNotifyPhoneParsed.nationalNumber, bookingNotifyPhoneParsed.countryCode)}
+                  aria-invalid={Boolean(formErrors.bookingNotifyPhone)}
+                  inputMode="numeric"
+                  autoComplete="tel-national"
+                  onChange={(event) => {
+                    const formatted = formatNationalNumber(event.target.value, bookingNotifyPhoneParsed.countryCode)
+                    setBookingNotifyPhone(`${bookingNotifyPhoneParsed.countryCode} ${formatted}`.trim())
+                    if (formErrors.bookingNotifyPhone) setFormErrors((prev) => ({ ...prev, bookingNotifyPhone: undefined }))
+                  }}
+                />
+              </span>
+              <span className="settings-field-error-slot">{formErrors.bookingNotifyPhone ? <span className="settings-field-error">{formErrors.bookingNotifyPhone}</span> : null}</span>
               <span className="settings-help">{t(`${TK}.bookingNotifyHelp`)}</span>
             </label>
             <label className="settings-field settings-span-full">
               <span className="settings-label">{t(`${TK}.address`)}</span>
-              <input className="settings-input" type="text" defaultValue="9793 Westheimer Rd, Suite A, Houston, TX 77042" />
+              <input
+                className="settings-input"
+                type="text"
+                value={address}
+                aria-invalid={Boolean(formErrors.address)}
+                onChange={(event) => {
+                  setAddress(event.target.value)
+                  if (formErrors.address) setFormErrors((prev) => ({ ...prev, address: undefined }))
+                }}
+              />
+              <span className="settings-field-error-slot">{formErrors.address ? <span className="settings-field-error">{formErrors.address}</span> : null}</span>
             </label>
             <label className="settings-field settings-span-full">
               <span className="settings-label">{t(`${TK}.googleReviewLink`)}</span>
-              <input className="settings-input" type="text" defaultValue="g.page/bitcoinnailbar" />
+              <input className="settings-input" type="text" value={googleReviewUrl} onChange={(event) => setGoogleReviewUrl(event.target.value)} />
             </label>
           </div>
         </SettingsCard>
@@ -412,6 +682,7 @@ export default function BookingSettingsPanel() {
           <div className="settings-hours">
             {DAY_KEYS.map((day) => {
               const row = hours[day]
+              const rowError = hoursErrorByDay[day]
               return (
                 <div className={`settings-hour-row ${row.open ? '' : 'is-closed'}`} key={day}>
                   <label className="settings-hour-toggle">
@@ -439,6 +710,7 @@ export default function BookingSettingsPanel() {
                       type="time"
                       value={row.openTime}
                       disabled={!row.open}
+                      aria-invalid={Boolean(rowError)}
                       aria-label={t(`${TK}.openTimeAria`, { day: t(`${TK}.days.${day}`) })}
                       onChange={(event) => updateHourTime(day, 'openTime', event.target.value)}
                       onClick={(event) => event.stopPropagation()}
@@ -467,12 +739,14 @@ export default function BookingSettingsPanel() {
                       type="time"
                       value={row.closeTime}
                       disabled={!row.open}
+                      aria-invalid={Boolean(rowError)}
                       aria-label={t(`${TK}.closeTimeAria`, { day: t(`${TK}.days.${day}`) })}
                       onChange={(event) => updateHourTime(day, 'closeTime', event.target.value)}
                       onClick={(event) => event.stopPropagation()}
                     />
                     <ClockIcon />
                   </div>
+                  {rowError ? <span className="settings-hour-error">{rowError}</span> : null}
                 </div>
               )
             })}
@@ -489,21 +763,6 @@ export default function BookingSettingsPanel() {
           subtitle={t(`${TK}.servicesSub`)}
         >
           <div className="settings-actions">
-            <input
-              ref={menuFileInputRef}
-              className="settings-hidden-file-input"
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handleMenuFileSelected}
-            />
-            <button
-              className={`booking-secondary-button settings-action-button ${scanOpen ? 'is-active' : ''}`}
-              type="button"
-              onClick={handlePhotoScan}
-            >
-              <CameraIcon className="settings-action-icon" /> {t(`${TK}.scanMenu`)}
-            </button>
             <button
               className={`booking-secondary-button settings-action-button ${suggestOpen ? 'is-active' : ''}`}
               type="button"
@@ -515,22 +774,6 @@ export default function BookingSettingsPanel() {
               <PlusIcon className="settings-action-icon" /> {t(`${TK}.addManually`)}
             </button>
           </div>
-
-          {scanOpen && (
-            <div className="settings-service-panel is-visible">
-              <div className="settings-service-panel-title">{t(`${TK}.scanPanelTitle`)}</div>
-              <div className="settings-service-progress">
-                {SCAN_PROGRESS_LINES.map((line, index) => (
-                  <div
-                    key={line}
-                    className={`settings-service-progress-line ${index < scanProgressStep ? 'is-done' : ''} ${index === scanProgressStep - 1 ? 'is-latest' : ''}`}
-                  >
-                    {index < scanProgressStep ? '✓' : '○'} {t(`${TK}.${line}`)}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {suggestOpen && (
             <div className="settings-service-panel is-visible">
@@ -573,6 +816,14 @@ export default function BookingSettingsPanel() {
               <span>{t(`${TK}.durationColumn`)}</span>
               <span />
             </div>
+            {services.length === 0 ? (
+              <div className="settings-service-empty">
+                <p>{t(`${TK}.servicesEmpty`)}</p>
+                <button className="booking-primary-button settings-action-button" type="button" onClick={handleAddManual}>
+                  <PlusIcon className="settings-action-icon" /> {t(`${TK}.servicesEmptyCta`)}
+                </button>
+              </div>
+            ) : null}
             {services.map((service) => (
               <div
                 className={`settings-service-row ${highlightServiceId === service.id ? 'is-highlight' : ''}`}
@@ -652,7 +903,7 @@ export default function BookingSettingsPanel() {
             <div className="settings-field settings-span-full">
               <span className="settings-label">{t(`${TK}.aiLanguage`)}</span>
               <div className="settings-language-grid" role="group" aria-label={t(`${TK}.aiLanguage`)}>
-                {(['auto', 'vi', 'en'] as const).map((lang) => (
+                {(['vi', 'en'] as const).map((lang) => (
                   <button
                     key={lang}
                     className={`settings-language-card ${language === lang ? 'is-active' : ''}`}
@@ -660,7 +911,7 @@ export default function BookingSettingsPanel() {
                     aria-pressed={language === lang}
                     onClick={() => handleLanguageSelect(lang)}
                   >
-                    {lang === 'auto' ? '🇻🇳 + 🇺🇸 Auto' : lang === 'vi' ? '🇻🇳 VI' : '🇺🇸 EN'}
+                    {lang === 'vi' ? '🇻🇳 VI' : '🇺🇸 EN'}
                   </button>
                 ))}
               </div>
@@ -671,8 +922,13 @@ export default function BookingSettingsPanel() {
               <textarea
                 className="settings-textarea"
                 value={greeting}
-                onChange={(event) => setGreeting(event.target.value)}
+                aria-invalid={Boolean(formErrors.greeting)}
+                onChange={(event) => {
+                  setGreeting(event.target.value)
+                  if (formErrors.greeting) setFormErrors((prev) => ({ ...prev, greeting: undefined }))
+                }}
               />
+              <span className="settings-field-error-slot">{formErrors.greeting ? <span className="settings-field-error">{formErrors.greeting}</span> : null}</span>
             </label>
           </div>
           <button
@@ -691,7 +947,13 @@ export default function BookingSettingsPanel() {
           <div className="settings-save-copy">{t(`${TK}.saveCopy`)}</div>
           {statusMessage ? <div className="settings-status">{statusMessage}</div> : null}
         </div>
-        <button className="booking-primary-button" type="button" onClick={handleSave}>
+        <button
+          className="booking-primary-button"
+          type="button"
+          disabled={updateConfigMutation.isPending}
+          onClick={handleSave}
+        >
+          {updateConfigMutation.isPending ? <SpinnerIcon className="booking-inline-spinner" /> : null}
           {t(`${TK}.saveButton`)}
         </button>
       </div>
