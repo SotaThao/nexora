@@ -33,6 +33,7 @@ import { buildQrImageUrl, slugify, toLocalCustomerTouchUrl } from '../utils/staf
 import { getWebUrlOrigin } from '../utils/webUrlBase'
 import ToggleSwitch from './ui/ToggleSwitch'
 import { formatCurrency, formatTransactionDateTime } from './dashboard/utils'
+import { SHOW_HARDWARE_DEVICES } from './dashboard/constants'
 import PhysicalCardDetailModal from './dashboard/modals/PhysicalCardDetailModal'
 import QrImage from './ui/QrImage'
 
@@ -273,6 +274,16 @@ export default function TouchpointsView({
     (point) => point.deviceId && point.isActive === false
   ).length
 
+  const touchpointTabs = useMemo(
+    () => [
+      { id: 'stations', label: t('dashboard.touchpoints.tabs.stations'), disabled: false },
+      ...(SHOW_HARDWARE_DEVICES
+        ? [{ id: 'devices', label: t('dashboard.touchpoints.tabs.devices'), disabled: false }]
+        : []),
+    ],
+    [t],
+  )
+
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Tab Header & Title */}
@@ -286,11 +297,9 @@ export default function TouchpointsView({
           </p>
         </div>
         {/* Navigation Tabs */}
+        {touchpointTabs.length > 1 ? (
         <div className="flex w-full gap-1 rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted p-1 dark:border-luxuryGold/10 dark:bg-luxuryCoal sm:w-auto">
-          {[
-            { id: 'stations', label: t('dashboard.touchpoints.tabs.stations'), disabled: false },
-            { id: 'devices', label: t('dashboard.touchpoints.tabs.devices'), disabled: false }
-          ].map(tab => (
+          {touchpointTabs.map(tab => (
             <button
               key={tab.id}
               type="button"
@@ -309,6 +318,7 @@ export default function TouchpointsView({
             </button>
           ))}
         </div>
+        ) : null}
       </div>
 
       {activeSubTab === 'stations' && (

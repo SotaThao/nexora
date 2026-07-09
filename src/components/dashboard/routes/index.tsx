@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo } from 'react'
 import { useOutletContext, useNavigate, useParams, Navigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { SHOW_HARDWARE_DEVICES } from '../constants'
 
 import Overview from '../overview/Overview'
 import StaffView from '../views/StaffView'
@@ -191,8 +192,14 @@ export function TouchpointsRoute() {
   const ctx = useOutletContext<LooseObject>()
   const [sp, setSp] = useSearchParams()
   const tab = sp.get('tab') || 'stations'
-  const activeSubTab = tab === 'devices' ? 'devices' : 'stations'
+  const activeSubTab = SHOW_HARDWARE_DEVICES && tab === 'devices' ? 'devices' : 'stations'
   const stationsSection = sp.get('section') === 'payment' ? 'payment' : 'tip'
+
+  useEffect(() => {
+    if (!SHOW_HARDWARE_DEVICES && tab === 'devices') {
+      setSp({ tab: 'stations', section: stationsSection }, { replace: true })
+    }
+  }, [tab, stationsSection, setSp])
 
   return (
     <TouchpointsView
@@ -217,11 +224,12 @@ export function TouchpointsRoute() {
         setSp({ tab: 'stations', section: nextSection }, { replace: true })
       }}
       onTabChange={(nextTab) => {
-        if (nextTab === 'stations') {
+        const resolvedTab = nextTab === 'devices' && !SHOW_HARDWARE_DEVICES ? 'stations' : nextTab
+        if (resolvedTab === 'stations') {
           const section = sp.get('section') === 'payment' ? 'payment' : 'tip'
-          setSp({ tab: nextTab, section }, { replace: true })
+          setSp({ tab: resolvedTab, section }, { replace: true })
         } else {
-          setSp({ tab: nextTab }, { replace: true })
+          setSp({ tab: resolvedTab }, { replace: true })
         }
       }}
     />

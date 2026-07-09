@@ -18,7 +18,7 @@ import {
   sidebarSubmenuItemClass,
 } from '../../ui/sidebarMenuStyles'
 import PaymentsPayoutsMenuSection from './PaymentsPayoutsMenuSection'
-import { isPaymentsPayoutsRouteActive } from '../constants'
+import { isPaymentsPayoutsRouteActive, VISIBLE_TOUCHPOINTS_SUBMENU } from '../constants'
 
 export default function MobileMenuDrawer({
   isOpen,
@@ -201,10 +201,7 @@ export default function MobileMenuDrawer({
 
                 {id === 'touchpoints' && isTouchpointsMobileExpanded && (
                   <div className={SIDEBAR_SUBMENU_WRAP_CLASS}>
-                    {[
-                      { id: 'stations', label: t('dashboard.touchpoints.tabs.stations') },
-                      { id: 'devices', label: t('dashboard.touchpoints.tabs.devices') },
-                    ].map(sub => {
+                    {VISIBLE_TOUCHPOINTS_SUBMENU.map((sub) => {
                       const isSubActive = activeMenu === 'touchpoints' && (activeSubTab || 'stations') === sub.id
                       return (
                         <button
@@ -214,7 +211,7 @@ export default function MobileMenuDrawer({
                           className={sidebarSubmenuItemClass(isSubActive)}
                         >
                           <div className={`h-1.5 w-1.5 rounded-full ${isSubActive ? 'bg-brandCyan shadow-sm' : 'bg-white/30'}`} />
-                          <span>{sub.label}</span>
+                          <span>{t(sub.labelKey)}</span>
                         </button>
                       )
                     })}
