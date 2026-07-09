@@ -762,7 +762,7 @@ export default function Dashboard({
         userRole={userRole}
       />
 
-      <div className="lg:pl-72">
+      <div className="flex min-h-dvh flex-col lg:pl-72">
         <DashboardHeader
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -796,7 +796,7 @@ export default function Dashboard({
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
         />
 
-        <main className="p-4 pb-6 sm:p-6 sm:pb-8 lg:min-h-dvh lg:p-7 lg:pb-7">
+        <main className="flex-1 p-4 pb-6 sm:p-6 sm:pb-8 lg:p-7 lg:pb-7">
           {activeMenu !== 'overview' && (
             <button
               onClick={() => handleNavigateMenu('overview')}
