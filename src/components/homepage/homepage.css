@@ -16,6 +16,7 @@
 
 .text-grad {
   background: linear-gradient(90deg, #6c4df6, #16b7ff);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -220,25 +221,25 @@
   --nx-focus-ring: 0 0 0 4px rgba(108, 77, 246, 0.16);
 }
 
-html {
+html.homepage-active {
   scroll-behavior: smooth;
 }
 
-.ds-page {
+.nx-homepage.ds-page {
   background: var(--nx-color-bg);
 }
 
-.ds-section {
+.nx-homepage .ds-section {
   scroll-margin-top: calc(5rem + var(--app-safe-area-top, env(safe-area-inset-top, 0px)));
 }
 
 /* Unified interactive behavior */
-.ds-control,
-.ds-surface,
-.ds-content-card,
-.ds-pricing-card,
-.tip-btn,
-[onclick],
+.nx-homepage .ds-control,
+.nx-homepage .ds-surface,
+.nx-homepage .ds-content-card,
+.nx-homepage .ds-pricing-card,
+.nx-homepage .tip-btn,
+.nx-homepage [onclick],
 .nx-homepage input,
 .nx-homepage select,
 .nx-homepage textarea {
@@ -248,41 +249,41 @@ html {
   transition-timing-function: var(--nx-ease-standard);
 }
 
-.ds-control:not(:disabled),
-.ds-link[href],
+.nx-homepage .ds-control:not(:disabled),
+.nx-homepage .ds-link[href],
 .nx-homepage button:not(:disabled),
-[role="button"]:not(:disabled) {
+.nx-homepage [role="button"]:not(:disabled) {
   cursor: pointer;
 }
 
-.ds-button:hover:not(:disabled),
+.nx-homepage .ds-button:hover:not(:disabled),
 .nx-homepage button:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: var(--nx-shadow-sm);
 }
 
-.ds-button:active:not(:disabled),
+.nx-homepage .ds-button:active:not(:disabled),
 .nx-homepage button:active:not(:disabled),
-.ds-link:active {
+.nx-homepage .ds-link:active {
   transform: translateY(0) scale(0.98);
   transition-duration: var(--nx-duration-fast);
 }
 
-.ds-button:disabled,
+.nx-homepage .ds-button:disabled,
 .nx-homepage button:disabled,
-.ds-field:disabled {
+.nx-homepage .ds-field:disabled {
   opacity: 0.55;
   cursor: not-allowed;
   transform: none !important;
   box-shadow: none !important;
 }
 
-.ds-link,
-.ds-nav-link {
+.nx-homepage .ds-link,
+.nx-homepage .ds-nav-link {
   position: relative;
 }
 
-.ds-nav-link::after {
+.nx-homepage .ds-nav-link::after {
   content: '';
   position: absolute;
   left: 0;
@@ -296,18 +297,18 @@ html {
   transition: transform var(--nx-duration-base) var(--nx-ease-standard);
 }
 
-.ds-nav-link:hover::after,
-.ds-nav-link:focus-visible::after {
+.nx-homepage .ds-nav-link:hover::after,
+.nx-homepage .ds-nav-link:focus-visible::after {
   transform: scaleX(1);
 }
 
-.ds-link:hover,
-.ds-nav-link:hover {
+.nx-homepage .ds-link:hover,
+.nx-homepage .ds-nav-link:hover {
   color: var(--nx-color-purple);
 }
 
-.ds-control:focus-visible,
-.ds-field:focus-visible,
+.nx-homepage .ds-control:focus-visible,
+.nx-homepage .ds-field:focus-visible,
 .nx-homepage button:focus-visible,
 .nx-homepage a:focus-visible,
 .nx-homepage input:focus-visible,
@@ -319,14 +320,14 @@ html {
 }
 
 /* Fields */
-.ds-field,
+.nx-homepage .ds-field,
 .nx-homepage input,
 .nx-homepage select,
 .nx-homepage textarea {
   caret-color: var(--nx-color-purple);
 }
 
-.ds-field:hover:not(:disabled) {
+.nx-homepage .ds-field:hover:not(:disabled) {
   border-color: rgba(108, 77, 246, 0.45) !important;
   background-color: #ffffff;
   box-shadow: 0 0 0 3px rgba(108, 77, 246, 0.06);
@@ -341,11 +342,11 @@ html {
 }
 
 /* Dark-theme inputs in Tax IQ keep their background on hover */
-#tax-iq .ds-field:hover:not(:disabled) {
+.nx-homepage #tax-iq .ds-field:hover:not(:disabled) {
   background-color: transparent !important;
 }
 
-.ds-select,
+.nx-homepage .ds-select,
 .nx-homepage select {
   appearance: none;
   background-image: linear-gradient(45deg, transparent 50%, #667085 50%), linear-gradient(135deg, #667085 50%, transparent 50%);
@@ -360,34 +361,34 @@ html {
    background and outranks the card's Tailwind `bg-black text-white` by
    specificity, so on focus/hover the field kept dark text on a dark background
    (unreadable). Force the dark theme for these text fields in every state. */
-#tax-iq input:not([type="checkbox"]):not([type="radio"]),
-#tax-iq select,
-#tax-iq textarea {
+.nx-homepage #tax-iq input:not([type="checkbox"]):not([type="radio"]),
+.nx-homepage #tax-iq select,
+.nx-homepage #tax-iq textarea {
   color: #fff !important;
   background-color: #000 !important;
 }
 
 /* Cards and surfaces */
-.ds-surface,
-.ds-content-card,
-.ds-pricing-card {
+.nx-homepage .ds-surface,
+.nx-homepage .ds-content-card,
+.nx-homepage .ds-pricing-card {
   backface-visibility: hidden;
   will-change: transform, box-shadow, border-color;
 }
 
-.ds-surface:hover,
-.ds-content-card:hover,
-.ds-pricing-card:hover {
+.nx-homepage .ds-surface:hover,
+.nx-homepage .ds-content-card:hover,
+.nx-homepage .ds-pricing-card:hover {
   transform: translateY(-4px);
   border-color: rgba(108, 77, 246, 0.28) !important;
   box-shadow: var(--nx-shadow-md);
 }
 
-.ds-elevate:hover {
+.nx-homepage .ds-elevate:hover {
   box-shadow: var(--nx-shadow-md);
 }
 
-.ds-pricing-card:hover {
+.nx-homepage .ds-pricing-card:hover {
   transform: translateY(-6px) scale(1.01);
   box-shadow: var(--nx-shadow-lg);
 }
@@ -405,28 +406,28 @@ html {
 }
 
 /* Simulator tabs and choice chips */
-[id^="tab-"]:hover:not(.bg-purple) {
+.nx-homepage [id^="tab-"]:hover:not(.bg-purple) {
   background: rgba(255, 255, 255, 0.06);
   color: #fff !important;
 }
 
-[id^="staff-"]:hover,
-.tip-btn:hover,
-#rating-stars-container button:hover {
+.nx-homepage [id^="staff-"]:hover,
+.nx-homepage .tip-btn:hover,
+.nx-homepage #rating-stars-container button:hover {
   transform: translateY(-2px) scale(1.03);
 }
 
-#rating-stars-container button:hover,
-#rating-stars-container button:focus-visible {
+.nx-homepage #rating-stars-container button:hover,
+.nx-homepage #rating-stars-container button:focus-visible {
   color: var(--nx-color-gold) !important;
 }
 
 /* Dropdowns and modals */
-#language-dropdown-menu button:hover {
+.nx-homepage #language-dropdown-menu button:hover {
   padding-left: 1.125rem;
 }
 
-#mobile-navigation-menu a:hover {
+.nx-homepage #mobile-navigation-menu a:hover {
   background: rgba(108, 77, 246, 0.06);
   padding-left: 0.75rem;
   border-radius: var(--nx-radius-sm);
@@ -587,7 +588,7 @@ html {
 }
 
 /* Card/surface feedback: visible, premium, not jumpy */
-:where(.bg-white, .bg-slate-50)[class*="border"][class*="rounded"] {
+.nx-homepage :where(.bg-white, .bg-slate-50)[class*="border"][class*="rounded"] {
   transition:
     transform 280ms var(--nx-ease-standard),
     border-color 260ms var(--nx-ease-standard),
@@ -595,7 +596,7 @@ html {
     background-color 260ms var(--nx-ease-standard);
 }
 
-:where(.bg-white, .bg-slate-50)[class*="border"][class*="rounded"]:hover {
+.nx-homepage :where(.bg-white, .bg-slate-50)[class*="border"][class*="rounded"]:hover {
   border-color: rgba(108, 77, 246, 0.30) !important;
   box-shadow: 0 16px 36px rgba(16, 19, 34, 0.11);
 }
@@ -608,26 +609,26 @@ html {
 }
 
 /* Navigation: stronger contrast and clearer active hover */
-nav a,
-#mobile-navigation-menu a {
+.nx-homepage nav a,
+.nx-homepage #mobile-navigation-menu a {
   color: #4b5565;
   border-radius: 12px;
   display: inline-flex;
   align-items: center;
 }
 
-nav a:hover,
-nav a:focus-visible {
+.nx-homepage nav a:hover,
+.nx-homepage nav a:focus-visible {
   color: var(--nx-purple-700) !important;
 }
 
-#mobile-navigation-menu a {
+.nx-homepage #mobile-navigation-menu a {
   padding-left: 0.75rem;
   padding-right: 0.75rem;
 }
 
-#mobile-navigation-menu a:hover,
-#mobile-navigation-menu a:focus-visible {
+.nx-homepage #mobile-navigation-menu a:hover,
+.nx-homepage #mobile-navigation-menu a:focus-visible {
   color: var(--nx-purple-700) !important;
   background: rgba(108, 77, 246, 0.08);
   border-color: transparent !important;
@@ -670,31 +671,31 @@ nav a:focus-visible {
 }
 
 /* Simulator tabs: make inactive hover obvious */
-[id^="tab-"] {
+.nx-homepage [id^="tab-"] {
   min-height: 40px;
 }
 
-[id^="tab-"]:hover:not(.bg-purple),
-[id^="tab-"]:focus-visible:not(.bg-purple) {
+.nx-homepage [id^="tab-"]:hover:not(.bg-purple),
+.nx-homepage [id^="tab-"]:focus-visible:not(.bg-purple) {
   background: rgba(255, 255, 255, 0.10) !important;
   color: #ffffff !important;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
-#staff-earnings-label {
+.nx-homepage #staff-earnings-label {
   min-height: unset !important;
 }
 
-#staff-earnings-label:hover,
-#staff-earnings-label:focus-visible {
+.nx-homepage #staff-earnings-label:hover,
+.nx-homepage #staff-earnings-label:focus-visible {
   transform: none !important;
   border-color: initial !important;
   background: initial !important;
   box-shadow: none !important;
 }
 
-.tip-btn:hover,
-.tip-btn:focus-visible {
+.nx-homepage .tip-btn:hover,
+.nx-homepage .tip-btn:focus-visible {
   background-color: var(--nx-color-purple) !important;
   color: #fff !important;
   box-shadow: 0 8px 18px rgba(108, 77, 246, 0.22) !important;
@@ -718,19 +719,19 @@ nav a:focus-visible {
   box-shadow: 0 18px 42px rgba(16, 19, 34, 0.16);
 }
 
-#language-dropdown-menu a:hover,
-#language-dropdown-menu a:focus-visible {
+.nx-homepage #language-dropdown-menu a:hover,
+.nx-homepage #language-dropdown-menu a:focus-visible {
   background: var(--nx-hover-soft) !important;
   color: var(--nx-purple-700) !important;
 }
 
-#toast-banner {
+.nx-homepage #toast-banner {
   box-shadow: 0 20px 40px rgba(15, 22, 56, 0.24);
 }
 
 /* Tablet responsive improvements */
 @media (max-width: 1024px) {
-  header .h-20 {
+  .nx-homepage header .h-20 {
     height: 72px;
   }
 
@@ -738,7 +739,7 @@ nav a:focus-visible {
     height: calc(4.5rem + var(--app-safe-area-top, env(safe-area-inset-top, 0px)));
   }
 
-  section {
+  .nx-homepage section {
     scroll-margin-top: calc(72px + var(--app-safe-area-top, env(safe-area-inset-top, 0px)));
   }
 
@@ -787,7 +788,7 @@ nav a:focus-visible {
     height: 0.75rem !important;
   }
 
-  header .h-20 {
+  .nx-homepage header .h-20 {
     height: 64px;
   }
 
@@ -795,31 +796,31 @@ nav a:focus-visible {
     height: calc(4rem + var(--app-safe-area-top, env(safe-area-inset-top, 0px)));
   }
 
-  section {
+  .nx-homepage section {
     scroll-margin-top: calc(64px + var(--app-safe-area-top, env(safe-area-inset-top, 0px)));
   }
 
-  header img {
+  .nx-homepage header img {
     width: 29px !important;
     height: 29px !important;
   }
 
-  header h1 {
+  .nx-homepage header h1 {
     font-size: 0.82rem !important;
   }
 
-  header .px-4 {
+  .nx-homepage header .px-4 {
     padding-left: 1rem;
     padding-right: 1rem;
   }
 
-  #header-auth-group button {
+  .nx-homepage #header-auth-group button {
     min-height: 34px;
     padding-left: 0.7rem !important;
     padding-right: 0.7rem !important;
   }
 
-  section {
+  .nx-homepage section {
     padding-top: 3rem !important;
     padding-bottom: 3rem !important;
   }
@@ -1005,10 +1006,10 @@ nav a:focus-visible {
   --nx-btn-sweep-soft: rgba(108, 77, 246, 0.26);
 }
 
-:where(.btn-action, .btn-action-secondary, .btn-action-outline,
+.nx-homepage :where(.btn-action, .btn-action-secondary, .btn-action-outline,
   .ds-button,
   .nx-homepage button,
-  .nx-homepage a[class*="rounded-full"], a[class*="rounded-xl"]) {
+  .nx-homepage a[class*="rounded-full"], .nx-homepage a[class*="rounded-xl"]) {
   position: relative;
   overflow: hidden;
   isolation: isolate;
@@ -1024,14 +1025,14 @@ nav a:focus-visible {
 }
 
 /* Keep button content above the base layer, while the sweep still passes visibly over it. */
-:where(.btn-action, .btn-action-secondary, .btn-action-outline,
+.nx-homepage :where(.btn-action, .btn-action-secondary, .btn-action-outline,
   .ds-button,
   .nx-homepage button)>* {
   position: relative;
   z-index: 3;
 }
 
-:where(.btn-action, .btn-action-secondary, .btn-action-outline,
+.nx-homepage :where(.btn-action, .btn-action-secondary, .btn-action-outline,
   .ds-button,
   .nx-homepage button)::after {
   content: "";
@@ -1056,37 +1057,37 @@ nav a:focus-visible {
   transition: left 1.05s cubic-bezier(0.19, 1, 0.22, 1);
 }
 
-:where(.btn-action, .btn-action-secondary, .btn-action-outline,
+.nx-homepage :where(.btn-action, .btn-action-secondary, .btn-action-outline,
   .ds-button,
   .nx-homepage button,
-  .nx-homepage a[class*="rounded-full"], a[class*="rounded-xl"]):hover::after,
-:where(.btn-action, .btn-action-secondary, .btn-action-outline,
+  .nx-homepage a[class*="rounded-full"], .nx-homepage a[class*="rounded-xl"]):hover::after,
+.nx-homepage :where(.btn-action, .btn-action-secondary, .btn-action-outline,
   .ds-button,
   .nx-homepage button,
-  .nx-homepage a[class*="rounded-full"], a[class*="rounded-xl"]):focus-visible::after {
+  .nx-homepage a[class*="rounded-full"], .nx-homepage a[class*="rounded-xl"]):focus-visible::after {
   left: 155%;
 }
 
-:where(.btn-action, .btn-action-secondary, .btn-action-outline,
+.nx-homepage :where(.btn-action, .btn-action-secondary, .btn-action-outline,
   .ds-button,
   .nx-homepage button,
-  .nx-homepage a[class*="rounded-full"], a[class*="rounded-xl"]):hover:not(:disabled) {
+  .nx-homepage a[class*="rounded-full"], .nx-homepage a[class*="rounded-xl"]):hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow:
     0 16px 34px rgba(16, 19, 34, 0.18),
     0 8px 18px rgba(108, 77, 246, 0.16);
 }
 
-:where(.btn-action, .btn-action-secondary, .btn-action-outline,
+.nx-homepage :where(.btn-action, .btn-action-secondary, .btn-action-outline,
   .ds-button,
   .nx-homepage button,
-  .nx-homepage a[class*="rounded-full"], a[class*="rounded-xl"]):active:not(:disabled) {
+  .nx-homepage a[class*="rounded-full"], .nx-homepage a[class*="rounded-xl"]):active:not(:disabled) {
   transform: translateY(0) scale(0.98);
   box-shadow: 0 8px 18px rgba(16, 19, 34, 0.13);
 }
 
 /* Monochrome button presets. */
-.btn-action,
+.nx-homepage .btn-action,
 .nx-homepage button.bg-purple,
 .nx-homepage button.bg-gradient-to-r,
 .nx-homepage a.bg-gradient-to-r {
@@ -1096,8 +1097,8 @@ nav a:focus-visible {
   box-shadow: 0 10px 24px rgba(108, 77, 246, 0.28) !important;
 }
 
-.btn-action:hover,
-.btn-action:focus-visible,
+.nx-homepage .btn-action:hover,
+.nx-homepage .btn-action:focus-visible,
 .nx-homepage button.bg-purple:hover,
 .nx-homepage button.bg-purple:focus-visible,
 .nx-homepage button.bg-gradient-to-r:hover,
@@ -1109,7 +1110,7 @@ nav a:focus-visible {
   border-color: var(--nx-btn-primary-hover) !important;
 }
 
-.btn-action-secondary,
+.nx-homepage .btn-action-secondary,
 .nx-homepage button.bg-navy,
 .nx-homepage button.bg-slate-900,
 .nx-homepage a.bg-navy,
@@ -1120,8 +1121,8 @@ nav a:focus-visible {
   box-shadow: 0 10px 24px rgba(15, 22, 56, 0.22) !important;
 }
 
-.btn-action-secondary:hover,
-.btn-action-secondary:focus-visible,
+.nx-homepage .btn-action-secondary:hover,
+.nx-homepage .btn-action-secondary:focus-visible,
 .nx-homepage button.bg-navy:hover,
 .nx-homepage button.bg-navy:focus-visible,
 .nx-homepage button.bg-slate-900:hover,
@@ -1135,21 +1136,21 @@ nav a:focus-visible {
   border-color: var(--nx-btn-secondary-hover) !important;
 }
 
-.btn-action-accent {
+.nx-homepage .btn-action-accent {
   color: #ffffff !important;
   background: var(--nx-btn-accent) !important;
   border: 1px solid var(--nx-btn-accent) !important;
   box-shadow: 0 10px 24px rgba(223, 129, 11, 0.28) !important;
 }
 
-.btn-action-accent:hover,
-.btn-action-accent:focus-visible {
+.nx-homepage .btn-action-accent:hover,
+.nx-homepage .btn-action-accent:focus-visible {
   color: #ffffff !important;
   background: var(--nx-btn-accent-hover) !important;
   border-color: var(--nx-btn-accent-hover) !important;
 }
 
-.btn-action-outline,
+.nx-homepage .btn-action-outline,
 .nx-homepage button.bg-white,
 .nx-homepage button.bg-slate-100,
 .nx-homepage button.bg-slate-200,
@@ -1162,7 +1163,7 @@ nav a:focus-visible {
   box-shadow: 0 8px 20px rgba(16, 19, 34, 0.07) !important;
 }
 
-.btn-action-outline::after,
+.nx-homepage .btn-action-outline::after,
 .nx-homepage button.bg-white::after,
 .nx-homepage button.bg-slate-100::after,
 .nx-homepage button.bg-slate-200::after,
@@ -1181,8 +1182,8 @@ nav a:focus-visible {
     0 0 32px rgba(22, 183, 255, 0.12);
 }
 
-.btn-action-outline:hover,
-.btn-action-outline:focus-visible,
+.nx-homepage .btn-action-outline:hover,
+.nx-homepage .btn-action-outline:focus-visible,
 .nx-homepage button.bg-white:hover,
 .nx-homepage button.bg-white:focus-visible,
 .nx-homepage button.bg-slate-100:hover,
@@ -1200,14 +1201,14 @@ nav a:focus-visible {
   border-color: rgba(108, 77, 246, 0.42) !important;
 }
 
-:where(.btn-action, .btn-action-secondary, .btn-action-outline,
+.nx-homepage :where(.btn-action, .btn-action-secondary, .btn-action-outline,
   .ds-button,
   .nx-homepage button,
-  .nx-homepage a[class*="rounded-full"], a[class*="rounded-xl"]):disabled,
-:where(.btn-action, .btn-action-secondary, .btn-action-outline,
+  .nx-homepage a[class*="rounded-full"], .nx-homepage a[class*="rounded-xl"]):disabled,
+.nx-homepage :where(.btn-action, .btn-action-secondary, .btn-action-outline,
   .ds-button,
   .nx-homepage button,
-  .nx-homepage a[class*="rounded-full"], a[class*="rounded-xl"])[aria-disabled="true"] {
+  .nx-homepage a[class*="rounded-full"], .nx-homepage a[class*="rounded-xl"])[aria-disabled="true"] {
   cursor: not-allowed;
   opacity: 0.56;
   transform: none !important;
@@ -1217,10 +1218,10 @@ nav a:focus-visible {
 @media (hover: none),
 (prefers-reduced-motion: reduce) {
 
-  :where(.btn-action, .btn-action-secondary, .btn-action-outline,
+  .nx-homepage :where(.btn-action, .btn-action-secondary, .btn-action-outline,
     .ds-button,
     .nx-homepage button,
-    .nx-homepage a[class*="rounded-full"], a[class*="rounded-xl"])::after {
+    .nx-homepage a[class*="rounded-full"], .nx-homepage a[class*="rounded-xl"])::after {
     display: none !important;
   }
 }
