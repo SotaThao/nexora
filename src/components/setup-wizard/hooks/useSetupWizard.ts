@@ -22,7 +22,7 @@ import {
 } from '../constants'
 import { getApiErrorCode } from '../../../types/domain'
 import { getErrorI18nKey } from '../../../data/errorCodes'
-import { getDefaultDialCode } from '../../CountryCodeSelect'
+import { getDefaultDialCode, parsePhone } from '../../CountryCodeSelect'
 import { isValidEmail, isValidHttpUrl } from '../../../utils/validation'
 
 export default function useSetupWizard({
@@ -117,15 +117,18 @@ export default function useSetupWizard({
   useEffect(() => {
     const existing = merchantSetupQuery.data?.businessInfo
     if (!existing?.businessId) return
-    setBusinessInfo((prev) => ({
-      ...prev,
-      businessId: prev.businessId || existing.businessId,
-      customSlug: existing.slug || prev.customSlug,
-      name: prev.name || existing.name || prev.name,
-      address: prev.address || existing.address || prev.address,
-      phone: prev.phone || existing.phone || prev.phone,
-      website: prev.website || existing.website || prev.website,
-    }))
+    setBusinessInfo((prev) => {
+      const hasRealPhone = Boolean(parsePhone(prev.phone).nationalNumber)
+      return {
+        ...prev,
+        businessId: prev.businessId || existing.businessId,
+        customSlug: existing.slug || prev.customSlug,
+        name: prev.name || existing.name || prev.name,
+        address: prev.address || existing.address || prev.address,
+        phone: hasRealPhone ? prev.phone : (existing.phone || prev.phone),
+        website: prev.website || existing.website || prev.website,
+      }
+    })
   }, [merchantSetupQuery.data])
 
   useEffect(() => {
