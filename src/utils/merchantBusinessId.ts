@@ -1,4 +1,5 @@
 import type { UserProfile } from '../types/domain'
+import { getWebUrlOrigin } from './webUrlBase'
 
 /** Resolve merchant business UUID from GET /api/v1/userprofile/me (business.id). */
 export function resolveMerchantBusinessIdFromProfile(
@@ -21,7 +22,7 @@ export function resolveMerchantBusinessIdFromProfile(
 /** Customer direct-payment URL — {origin}/pay/{businessId} per direct-payment QR spec. */
 export function buildDirectPaymentPageUrl(
   businessId: string,
-  origin = typeof window !== 'undefined' ? window.location.origin : '',
+  origin = getWebUrlOrigin(),
 ): string {
   const id = String(businessId || '').trim()
   if (!id || !origin) return ''
@@ -35,7 +36,7 @@ export function buildDirectPaymentPageUrl(
 export function resolveDirectPaymentPageUrl({
   businessId,
   paymentUrlFromApi,
-  origin = typeof window !== 'undefined' ? window.location.origin : '',
+  origin = getWebUrlOrigin(),
 }: {
   businessId: string
   paymentUrlFromApi?: string | null

@@ -25,6 +25,8 @@ import type {
 } from '../../types/repositories'
 import type { ReviewRecord, TransactionRecord } from '../../types/domain'
 
+import { resolveStaffFullNameFromApi } from '../../utils/staffName'
+
 type HttpClient = typeof httpClient
 
 const PAYOUT_TYPE_TO_KEY: Record<string, string> = {
@@ -106,7 +108,9 @@ export function normalizeStaffListItem(dto: StaffListItemApiDto): StaffMember {
     isProfileComplete: dto.isProfileComplete ?? false,
     tipCount: dto.tipCount ?? 0,
     averageRating: dto.averageRating ?? 0,
-    fullName: displayName,
+    fullName: resolveStaffFullNameFromApi(dto),
+    nickname: displayName,
+    displayName,
     avatar: dto.photoUrl ?? null,
     status,
     apiStatus: dto.status ?? null,
@@ -133,6 +137,7 @@ export function normalizeStaffListItem(dto: StaffListItemApiDto): StaffMember {
     joinedDate: normalizeDateTime(dto.joinDate),
     payoutConfigs,
     paymentAccounts,
+    isLocalStaff: dto.isLocalStaff ?? false,
   }
 }
 
@@ -151,6 +156,29 @@ export function normalizeStaffInvite(
     acceptedAt: dto.acceptedAt ?? null,
     acceptedByUserProfileId:
       (dto as StaffInviteDetailApiDto).acceptedByUserProfileId ?? null,
+  }
+}
+
+/** Map invite list DTO to StaffMember shape for roster/pending UI. */
+export function normalizeInviteToStaffMember(invite: MerchantStaffInvite): StaffMember {
+  const { payoutConfigs, paymentAccounts } = normalizePaymentMethods([], invite.invitedName)
+  return {
+    id: invite.inviteId ?? undefined,
+    inviteId: invite.inviteId,
+    itemType: 'invite',
+    fullName: invite.invitedName,
+    invitedEmail: invite.invitedEmail,
+    invitedPhone: invite.invitedPhone,
+    position: invite.invitedPosition,
+    email: invite.invitedEmail,
+    phone: invite.invitedPhone,
+    status: invite.status === 'Pending' ? 'Pending Setup' : (invite.status ?? 'Pending Setup'),
+    isActive: false,
+    showInTipsFlow: false,
+    flowType: 'Invite',
+    joinedDate: normalizeDateOnly(invite.invitedAt),
+    paymentAccounts,
+    payoutConfigs,
   }
 }
 

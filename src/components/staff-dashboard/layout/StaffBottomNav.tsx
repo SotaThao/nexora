@@ -1,55 +1,51 @@
 // StaffBottomNav — fixed bottom navigation for mobile (<1024px).
-// Mirrors the reference app tabs: Home, My QR, Tips, Reviews, Profile.
-import { Home, QrCode, CircleDollarSign, Star, User } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../../contexts/LanguageContext'
-
-const NAV_ITEMS = [
-  { id: 'home',    icon: Home,             image: '/assets/menu/dashboard.png',  labelKey: 'staff_dashboard.nav.tab_home' },
-  { id: 'qr',      icon: QrCode,           image: '/assets/menu/touchpoint.png', labelKey: 'staff_dashboard.nav.tab_qr' },
-  { id: 'tips',    icon: CircleDollarSign, image: '/assets/menu/tips.png',       labelKey: 'staff_dashboard.nav.tips' },
-  { id: 'reviews', icon: Star,             image: '/assets/menu/reviews.png',    labelKey: 'staff_dashboard.nav.reviews' },
-  { id: 'profile', icon: User,             image: '/assets/menu/setting.png',    labelKey: 'staff_dashboard.nav.profile' },
-]
+import { STAFF_BOTTOM_NAV_ITEMS, isStaffBottomNavItemActive } from '../constants'
 
 export default function StaffBottomNav({ activeScreen, onNavigate }) {
   const { t } = useTranslation()
+  const [searchParams] = useSearchParams()
+  const tabParam = searchParams.get('tab')
+
+  function renderItem(item) {
+    const Icon = item.icon
+    const isActive = isStaffBottomNavItemActive(activeScreen, tabParam, item)
+    return (
+      <button
+        key={item.id}
+        type="button"
+        onClick={() => onNavigate(item.screen, item.params)}
+        className="relative flex flex-1 min-w-0 flex-col items-center justify-center gap-1 h-full focus:outline-none active:scale-95 transition-transform"
+        aria-current={isActive ? 'page' : undefined}
+      >
+        <Icon
+          className={`h-5 w-5 transition-colors duration-200 ${
+            isActive ? 'text-nexoraBrandDark' : 'text-nexoraSubtle'
+          }`}
+          strokeWidth={isActive ? 2.4 : 2}
+        />
+        <span
+          className={`max-w-full truncate px-0.5 text-[11px] font-bold transition-colors duration-200 ${
+            isActive ? 'text-nexoraBrand' : 'text-nexoraSubtle'
+          }`}
+        >
+          {t(item.labelKey)}
+        </span>
+      </button>
+    )
+  }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-nexoraBorder bg-white/95 backdrop-blur-md shadow-[0_-8px_28px_rgba(11,18,32,0.08)] pb-[env(safe-area-inset-bottom)] lg:hidden">
-      <div className="mx-auto grid max-w-lg grid-cols-5">
-        {NAV_ITEMS.map((item) => {
-          const Icon = item.icon
-          const isActive = activeScreen === item.id
-          return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => onNavigate(item.id)}
-              className={`flex flex-col items-center justify-center gap-1 py-2.5 text-[11px] font-bold transition ${
-                isActive ? 'text-nexoraBrand' : 'text-nexoraSubtle hover:text-nexoraText'
-              }`}
-              aria-current={isActive ? 'page' : undefined}
-            >
-              {item.image ? (
-                <img
-                  src={item.image}
-                  alt=""
-                  className={`h-[22px] w-[22px] object-contain transition-opacity ${
-                    isActive ? 'opacity-100' : 'opacity-70'
-                  }`}
-                  aria-hidden="true"
-                />
-              ) : (
-                <Icon
-                  className="h-[22px] w-[22px]"
-                  strokeWidth={isActive ? 2.5 : 1.9}
-                  fill={isActive && item.id === 'home' ? 'currentColor' : 'none'}
-                />
-              )}
-              <span className="truncate px-0.5">{t(item.labelKey)}</span>
-            </button>
-          )
-        })}
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-30 border-t border-nexoraBorder bg-white/95 backdrop-blur-md lg:hidden"
+      style={{
+        paddingBottom: 'var(--app-safe-area-bottom, env(safe-area-inset-bottom, 0px))',
+        boxShadow: '0 -8px 28px rgba(15,23,42,0.08)',
+      }}
+    >
+      <div className="mx-auto flex h-[68px] max-w-lg items-center px-2">
+        {STAFF_BOTTOM_NAV_ITEMS.map(renderItem)}
       </div>
     </nav>
   )

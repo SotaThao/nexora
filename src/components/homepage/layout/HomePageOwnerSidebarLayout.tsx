@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import MobileMenuDrawer from '../../dashboard/layout/MobileMenuDrawer'
-import { MENU_ITEMS } from '../../dashboard/constants'
+import { MERCHANT_SIDEBAR_MENU_ITEMS } from '../../dashboard/constants'
 import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
 import { useMerchantSetup } from '../../../data/hooks/useMerchantSetup'
 import { HomePageLayoutProvider } from '../context/HomePageLayoutContext'
@@ -24,7 +24,7 @@ export default function HomePageOwnerSidebarLayout({
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
   const [tipsTab, setTipsTab] = useState('overview')
   const [touchpointsTab, setTouchpointsTab] = useState('stations')
-  const [isTipsMobileExpanded, setIsTipsMobileExpanded] = useState(false)
+  const [isPaymentsPayoutsMobileExpanded, setIsPaymentsPayoutsMobileExpanded] = useState(false)
   const [isTouchpointsMobileExpanded, setIsTouchpointsMobileExpanded] = useState(false)
 
   const { data: profileSettingsData } = useProfileSettings()
@@ -73,11 +73,14 @@ export default function HomePageOwnerSidebarLayout({
   )
 
   const navigateMenu = useCallback(
-    (menuId: string) => {
-      handleNavigateMenu(menuId)
-      setIsMobileMenuOpen(false)
+    (menuId: string, options: { tab?: string; closeDrawer?: boolean } = {}) => {
+      const { tab, closeDrawer = true } = options
+      const base = menuId === 'overview' ? '/dashboard' : `/dashboard/${menuId}`
+      const route = tab ? `${base}?tab=${encodeURIComponent(tab)}` : base
+      navigate(route)
+      if (closeDrawer) setIsMobileMenuOpen(false)
     },
-    [handleNavigateMenu],
+    [navigate],
   )
 
   const layoutValue = useMemo(
@@ -108,14 +111,14 @@ export default function HomePageOwnerSidebarLayout({
           setTipsTab={setTipsTab}
           touchpointsTab={touchpointsTab}
           setTouchpointsTab={setTouchpointsTab}
-          isTipsMobileExpanded={isTipsMobileExpanded}
-          setIsTipsMobileExpanded={setIsTipsMobileExpanded}
+          isPaymentsPayoutsMobileExpanded={isPaymentsPayoutsMobileExpanded}
+          setIsPaymentsPayoutsMobileExpanded={setIsPaymentsPayoutsMobileExpanded}
           isTouchpointsMobileExpanded={isTouchpointsMobileExpanded}
           setIsTouchpointsMobileExpanded={setIsTouchpointsMobileExpanded}
           hasKyb={hasKyb}
           userRole="owner"
           onLogout={onLogout}
-          menuItemsToDisplay={MENU_ITEMS}
+          menuItemsToDisplay={MERCHANT_SIDEBAR_MENU_ITEMS}
           navigateMenu={navigateMenu}
         />
 

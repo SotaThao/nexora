@@ -4,13 +4,16 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { StatusFilter } from '../../../data/hooks/useMerchantStaff'
 import { buildPublicInviteLink } from '../../../utils/inviteRef'
+import { getWebUrlOrigin } from '../../../utils/webUrlBase'
 import { buildPublicQrImageUrl } from '../../../data/repositories/publicQr'
 import { PAYOUT_UI_DISPLAY_ORDER, PAYOUT_UI_LABELS } from '../../../data/paymentMethodTypes'
 import { formatJoinedDate } from '../../../utils/localDate'
 import IconButton from '../../ui/IconButton'
 import CustomSelect from '../../CustomSelect'
 import Pagination from '../../ui/Pagination'
+import ToggleSwitch from '../../ui/ToggleSwitch'
 import { SkeletonList } from '../../ui/skeleton'
+import QrImage from '../../ui/QrImage'
 
 function isPendingMember(member) {
   const status = member?.status
@@ -47,24 +50,6 @@ const PAYMENT_ACCOUNT_LABELS = {
   vlinkpay: 'VLINKPAY',
 }
 
-function ToggleSwitch({ checked, onChange, activeColor = 'bg-emerald-500', title, disabled = false }) {
-  return (
-    <button
-      type="button"
-      onClick={onChange}
-      disabled={disabled}
-      className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${checked ? activeColor : 'bg-slate-300'} ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
-      title={title}
-    >
-      <span
-        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-          checked ? 'translate-x-4' : 'translate-x-0'
-        }`}
-      />
-    </button>
-  )
-}
-
 function StaffMemberCard({
   member,
   wallets,
@@ -88,6 +73,7 @@ function StaffMemberCard({
   onViewStaff
 }) {
   const waitingStaffResponse = isWaitingStaffAcceptance(member)
+  const isLocalStaffMember = Boolean(member.isLocalStaff)
   const stripClass = isPendingInvite
     ? 'bg-amber-400'
     : isPendingLink
@@ -122,7 +108,7 @@ function StaffMemberCard({
             )}
             <div className="min-w-0">
               <p className="font-extrabold text-nexoraText truncate group-hover:text-nexoraBrand transition">
-                {member.fullName}
+                {member.nickname || member.fullName}
               </p>
               <p className="text-xs text-nexoraMuted truncate">{member.position}</p>
             </div>
@@ -148,8 +134,14 @@ function StaffMemberCard({
           <p className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wide">
             {t('components.dashboard.views.StaffView.col_linked_date')}
           </p>
-          <p className="text-xs text-nexoraText font-semibold mt-0.5">
-            {member.joinedDate ? formatJoinedDate(member.joinedDate) : '-'}
+          <p className="text-xs text-slate-600 font-semibold mt-0.5">
+            {isLocalStaffMember
+              ? t('components.dashboard.views.StaffView.manualStaffFlow')
+              : (member.flowType || t('components.dashboard.views.StaffView.directAddition'))}
+          </p>
+          <p className="text-[10px] text-slate-400 font-bold mt-1">
+            {t('components.dashboard.views.StaffView.linkedDate')}
+           {member.joinedDate ? formatJoinedDate(member.joinedDate) : '-'}
           </p>
         </div>
 
@@ -363,7 +355,7 @@ function StaffView({
   const publicInviteLink = useMemo(
     () => publicInviteEnabled
       ? buildPublicInviteLink({
-        origin: window.location.origin,
+        origin: getWebUrlOrigin(),
         businessName,
         businessSlug,
         referralCode: inviteLinkSetting?.referralCode ?? '',
@@ -376,7 +368,7 @@ function StaffView({
     [publicInviteEnabled, publicInviteLink],
   )
   const publicInviteQrLargeSrc = useMemo(
-    () => (publicInviteEnabled && publicInviteLink ? buildPublicQrImageUrl(publicInviteLink, 300) : ''),
+    () => (publicInviteEnabled && publicInviteLink ? buildPublicQrImageUrl(publicInviteLink, 600) : ''),
     [publicInviteEnabled, publicInviteLink],
   )
   const publicInviteUnavailableText = isInviteLinkSettingLoading
@@ -499,10 +491,10 @@ function StaffView({
             title={t('components.dashboard.views.StaffView.clickToEnlarge')}
           >
             {publicInviteEnabled ? (
-              <img
+              <QrImage
                 src={publicInviteQrSrc}
                 alt={t('components.dashboard.views.StaffView.scanToJoinAlt')}
-                className="h-full w-full object-contain"
+                className="h-full w-full"
               />
             ) : (
               <QrCode className="h-8 w-8 text-slate-300" />
@@ -613,7 +605,7 @@ function StaffView({
                             </div>
                           )}
                           <div>
-                            <div className="font-extrabold text-nexoraText">{member.fullName}</div>
+                            <div className="font-extrabold text-nexoraText">{member.nickname || member.fullName}</div>
                             <div className="text-xs text-nexoraMuted">{member.position}</div>
                           </div>
                         </div>
@@ -779,11 +771,11 @@ function StaffView({
       {/* Large Join QR Modal */}
       {largeJoinQrOpen && publicInviteEnabled && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 cursor-zoom-out"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm modal-overlay-safe cursor-zoom-out"
           onClick={() => setLargeJoinQrOpen(false)}
         >
           <div
-            className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl border border-slate-100 flex flex-col items-center cursor-default animate-scaleUp"
+            className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl border border-slate-100 flex flex-col items-center cursor-default animate-scaleUp"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-full flex justify-between items-center mb-4">
@@ -798,12 +790,14 @@ function StaffView({
               </button>
             </div>
 
-            <div className="h-64 w-64 rounded-2xl bg-slate-50 border border-slate-200 p-4 flex items-center justify-center shadow-inner bg-white mb-4">
-              <img
+            <div className="mb-4 w-full">
+              <div className="aspect-square w-full max-w-full min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-inner sm:p-4">
+              <QrImage
                 src={publicInviteQrLargeSrc}
                 alt={t('components.dashboard.views.StaffView.scanToJoinAlt')}
-                className="h-full w-full object-contain"
+                className="h-full w-full max-h-full max-w-full"
               />
+              </div>
             </div>
 
             <p className="text-[11px] text-slate-500 font-medium text-center leading-relaxed max-w-xs mb-4">

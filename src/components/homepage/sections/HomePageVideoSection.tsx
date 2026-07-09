@@ -1,135 +1,144 @@
 /** Homepage section component */
-import { useEffect, useState } from 'react'
-import { useTranslation } from '../../../contexts/LanguageContext'
-import { homepageTranslations } from '../i18n/homepageTranslations'
-import type { HomePageTranslationKey } from '../i18n/homepageTranslations'
+import { useEffect, useState, useSyncExternalStore } from 'react'
+import { useHomePageBridge } from '../context/HomePageBridgeContext'
+import { getInitialHomePageLanguage } from '../homepageLogic.js'
+import {
+  getIntroVideoThumbnailPath,
+  INTRO_VIDEO_EMBED_URL,
+  INTRO_VIDEO_WATCH_URL,
+  INTRO_VIDEO_YOUTUBE_THUMB_URL,
+  openIntroYouTubeVideo,
+  shouldOpenYouTubeExternally,
+  shouldUseYouTubeVideoThumbnail,
+} from '../../../utils/youtubeIntroVideo.js'
 
-const VIDEO_IDS: Record<string, string> = {
-  en: 'ghegM-w3NAM',
-  vi: 'SCMEBiQHIsk',
+function getHomePageLang() {
+  if (typeof document === 'undefined') return getInitialHomePageLanguage()
+  return document.documentElement.lang === 'vi' ? 'vi' : 'en'
 }
 
-const VIDEO_THUMBNAILS: Record<string, string> = {
-  en: '/homepage/assets/images/video-thumb-en.svg',
-  vi: '/homepage/assets/images/video-thumb-vi.svg',
+function subscribeHomePageLang(onStoreChange: () => void) {
+  if (typeof document === 'undefined') return () => {}
+  const observer = new MutationObserver(onStoreChange)
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] })
+  return () => observer.disconnect()
 }
 
-function buildEmbedUrl(videoId: string, autoplay: 0 | 1) {
-  return `https://www.youtube.com/embed/${videoId}?autoplay=${autoplay}&mute=1&loop=1&playlist=${videoId}`
-}
-
-function getYoutubeThumbnailFallback(videoId: string) {
-  return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+function PlayButtonIcon() {
+  return (
+    <svg className="ml-1 h-8 w-8" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M8 5v14l11-7z" />
+    </svg>
+  )
 }
 
 export default function HomePageVideoSection() {
-  const { currentLanguage } = useTranslation()
-  const lang = currentLanguage === 'vi' ? 'vi' : 'en'
-  const videoId = VIDEO_IDS[lang] ?? VIDEO_IDS.en
-  const thumbnailSrc = VIDEO_THUMBNAILS[lang] ?? VIDEO_THUMBNAILS.en
-
-  const t = (key: HomePageTranslationKey) =>
-    homepageTranslations[lang][key] ?? homepageTranslations.en[key]
-
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [iframeSrc, setIframeSrc] = useState(() => buildEmbedUrl(videoId, 0))
-  const [thumbSrc, setThumbSrc] = useState(thumbnailSrc)
-
-  useEffect(() => {
-    setThumbSrc(thumbnailSrc)
-  }, [thumbnailSrc])
+  const { hp } = useHomePageBridge()
+  const homepageLang = useSyncExternalStore(
+    subscribeHomePageLang,
+    getHomePageLang,
+    getInitialHomePageLanguage,
+  )
+  const useExternalYouTube = shouldOpenYouTubeExternally()
+  const preferYouTubeThumbnail = useExternalYouTube || shouldUseYouTubeVideoThumbnail()
+  const [videoThumbnailSrc, setVideoThumbnailSrc] = useState(() =>
+    getIntroVideoThumbnailPath(homepageLang, { preferYouTube: preferYouTubeThumbnail }),
+  )
 
   useEffect(() => {
-    setIframeSrc((prev) => {
-      const autoplay = prev.includes('autoplay=1') ? 1 : 0
-      return buildEmbedUrl(videoId, autoplay)
-    })
-  }, [videoId])
+    setVideoThumbnailSrc(
+      getIntroVideoThumbnailPath(homepageLang, { preferYouTube: preferYouTubeThumbnail }),
+    )
+  }, [homepageLang, preferYouTubeThumbnail])
 
-  function handlePlay() {
-    setIsPlaying(true)
-    setIframeSrc(buildEmbedUrl(videoId, 1))
+  const handleThumbnailError = () => {
+    setVideoThumbnailSrc((current) =>
+      current === INTRO_VIDEO_YOUTUBE_THUMB_URL ? current : INTRO_VIDEO_YOUTUBE_THUMB_URL,
+    )
   }
 
-  function handleThumbError() {
-    setThumbSrc(getYoutubeThumbnailFallback(videoId))
+  const handlePlayClick = () => {
+    if (useExternalYouTube) {
+      openIntroYouTubeVideo()
+      return
+    }
+    hp.playIntroVideo()
   }
 
   return (
-    <>
-      <section className="py-16 sm:py-20 bg-slate-100 border-b border-line ds-section" id="video-tour">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <div className="max-w-3xl mx-auto space-y-3">
-            <span className="text-xs font-extrabold text-purple uppercase tracking-widest" data-i18n="vt-eyebrow">
-              {t('vt-eyebrow')}
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-navy" data-i18n="vt-title">
-              {t('vt-title')}
-            </h2>
-            <p className="text-sm sm:text-base text-slate-500 leading-relaxed" data-i18n="vt-desc">
-              {t('vt-desc')}
+    <section className="ds-section border-b border-line bg-slate-100 py-16 sm:py-20" id="video-tour">
+      <div className="mx-auto max-w-7xl space-y-6 px-4 text-center sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl space-y-3">
+          <span className="text-xs font-extrabold uppercase tracking-widest text-purple" data-i18n="vt-eyebrow">
+            PLAY OVERVIEW WALKTHROUGH
+          </span>
+          <h2 className="text-3xl font-black text-navy sm:text-4xl" data-i18n="vt-title">
+            How Nexora Touch Drives Growth
+          </h2>
+          <p className="text-base leading-relaxed text-slate-500" data-i18n="vt-desc">
+            Discover how standard retail stores scale technician tips by 40%, lock in thousands of organic Google
+            stars, and drive repeat visits via co-ops.
+          </p>
+        </div>
+
+        <div className="premium-shadow group relative mx-auto aspect-video max-w-4xl overflow-hidden rounded-[32px] border border-white/20 bg-slate-900 shadow-2xl">
+          <img
+            src={videoThumbnailSrc}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full object-cover"
+            onError={handleThumbnailError}
+          />
+          <div
+            className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gradient-to-b from-slate-900/55 via-slate-900/35 to-slate-900/65 p-6 text-white transition-all duration-500"
+            id="video-cover"
+          >
+            {useExternalYouTube ? (
+              <a
+                href={INTRO_VIDEO_WATCH_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative z-20 flex w-20 h-20 items-center justify-center rounded-full bg-white text-purple shadow-2xl transition-all glow-purple animate-bounce hover:scale-110 active:scale-95 ds-control ds-button"
+                aria-label="Watch on YouTube"
+              >
+                <PlayButtonIcon />
+              </a>
+            ) : (
+              <button
+                type="button"
+                className="relative z-20 flex w-20 h-20 items-center justify-center rounded-full bg-white text-purple shadow-2xl transition-all glow-purple animate-bounce hover:scale-110 active:scale-95 ds-control ds-button"
+                onClick={handlePlayClick}
+                aria-label="Play introductory video"
+              >
+                <PlayButtonIcon />
+              </button>
+            )}
+            <p className="mt-4 text-sm font-extrabold uppercase tracking-wide text-white sm:text-base" data-i18n="vt-start">
+              PLAY INTRODUCTORY BRIEF (1 MIN)
             </p>
+            <span className="mt-1 max-w-sm text-center text-xs" data-i18n="vt-start-sub">
+              Walk through instant peer QR routing, Google ratings optimization, and B2B workflows.
+            </span>
+            {useExternalYouTube ? (
+              <span className="mt-3 text-[11px] font-bold uppercase tracking-wide text-white/80" data-i18n="vt-open-youtube">
+                Opens in YouTube
+              </span>
+            ) : null}
           </div>
 
-          <div className="max-w-4xl mx-auto rounded-[32px] overflow-hidden bg-slate-900 aspect-video shadow-2xl border border-white/20 relative group premium-shadow">
-            <div
-              className="absolute inset-0 z-10 transition-all duration-500"
-              id="video-cover"
-              style={{
-                opacity: isPlaying ? 0 : 1,
-                pointerEvents: isPlaying ? 'none' : 'auto',
-              }}
-            >
-              <img
-                src={thumbSrc}
-                alt={t('vt-thumb-alt')}
-                className="absolute inset-0 w-full h-full object-cover"
-                onError={handleThumbError}
-              />
-
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0f1638]/85 via-[#0f1638]/35 to-[#0f1638]/15" />
-
-              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-white">
-                <button
-                  type="button"
-                  className="w-20 h-20 rounded-full bg-white text-purple flex items-center justify-center shadow-2xl transform hover:scale-110 active:scale-95 transition-all glow-purple relative z-20 ds-control ds-button"
-                  onClick={handlePlay}
-                  aria-label={t('vt-start')}
-                >
-                  <svg className="w-8 h-8 ml-1" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                </button>
-                <p className="mt-4 font-extrabold tracking-wide text-sm sm:text-base uppercase" data-i18n="vt-start">
-                  {t('vt-start')}
-                </p>
-                <span className="text-xs mt-1 max-w-sm text-center text-indigo-100" data-i18n="vt-start-sub">
-                  {t('vt-start-sub')}
-                </span>
-              </div>
-
-              <div className="absolute top-4 left-4 sm:top-5 sm:left-5">
-                <span
-                  className="inline-flex items-center rounded-full bg-white/15 border border-white/25 px-3 py-1 text-[11px] sm:text-xs font-bold uppercase tracking-wider backdrop-blur-sm"
-                  data-i18n="vt-thumb-duration"
-                >
-                  {t('vt-thumb-duration')}
-                </span>
-              </div>
-            </div>
-
+          {!useExternalYouTube ? (
             <iframe
               allow="autoplay; encrypted-media; picture-in-picture"
               allowFullScreen
-              className="w-full h-full absolute inset-0"
-              frameBorder="0"
+              className="absolute inset-0 h-full w-full"
+              frameBorder={0}
               id="intro-video-iframe"
-              src={iframeSrc}
-              title={t('vt-thumb-alt')}
+              src={INTRO_VIDEO_EMBED_URL}
+              title="Nexora Touch overview video"
             />
-          </div>
+          ) : null}
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   )
 }

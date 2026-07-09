@@ -64,6 +64,7 @@ function normalizeTip(tip: TipApiDto): TransactionRecord {
     staffConfirmedAt: tip.staffConfirmedAt ?? null,
     merchantConfirmedAt: tip.merchantConfirmedAt ?? null,
     isMultiStaff: tip.isMultiStaff ?? false,
+    isLocalStaff: tip.isLocalStaff ?? false,
     tipItems: tip.tipItems ?? [],
   }
 }

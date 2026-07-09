@@ -13,6 +13,7 @@ import { useTranslation } from '../../../contexts/LanguageContext'
 import { useSearchMerchantStaff } from '../../../data/hooks/useMerchantStaff'
 import { isValidEmail } from '../../../utils/validation'
 import type { StaffSearchResult } from '../../../types/domain'
+import AddManualStaffTab, { type ManualStaffFormPayload } from './AddManualStaffTab'
 
 const DEFAULT_ROLE = 'Nail Technician'
 
@@ -43,8 +44,10 @@ type AddStaffModalProps = {
   onClose: () => void
   onLinkStaff: (result: StaffSearchResult, role: string, options?: { onSuccess?: () => void }) => void
   onInviteStaff: (name: string, contact: string, role: string, method: string, options?: { onSuccess?: () => void }) => void
+  onSaveManualStaff?: (payload: ManualStaffFormPayload, options?: { onSuccess?: () => void }) => void
   isLinking?: boolean
   isInviting?: boolean
+  isSavingManual?: boolean
 }
 
 function AddStaffModal({
@@ -52,11 +55,13 @@ function AddStaffModal({
   onClose,
   onLinkStaff,
   onInviteStaff,
+  onSaveManualStaff,
   isLinking = false,
   isInviting = false,
+  isSavingManual = false,
 }: AddStaffModalProps) {
   const { t } = useTranslation()
-  const [activeTab, setActiveTab] = useState<'link' | 'invite'>('link')
+  const [activeTab, setActiveTab] = useState<'link' | 'invite' | 'manual'>('link')
   const [inviteErrors, setInviteErrors] = useState<Record<string, string>>({})
   // Default phone country should follow device/browser locale, not UI language.
   const defaultDialCode = useMemo(() => getDefaultDialCode(undefined), [])
@@ -253,7 +258,7 @@ function AddStaffModal({
   const activeSearchPaymentMethods = (searchResult?.paymentMethods ?? []).filter((method) => method.isActive)
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-nexoraText/70 p-4 py-6 backdrop-blur-sm sm:items-center">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-nexoraText/70 modal-overlay-safe backdrop-blur-sm sm:items-center">
       <div className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-2xl transition-all">
         <div className="flex items-center justify-between border-b border-nexoraRule pb-4">
           <h2 className="text-lg font-extrabold text-nexoraText">
@@ -293,9 +298,31 @@ function AddStaffModal({
           >
             {t('components.dashboard.modals.AddStaffModal.tab_invite')}
           </button>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('manual')
+              setSearchError('')
+              setInviteErrors({})
+            }}
+            className={`px-3.5 py-3 text-xs font-extrabold border-b-[3px] transition-colors ${
+              activeTab === 'manual'
+                ? 'border-nexoraBrand text-nexoraBrand'
+                : 'border-transparent text-nexoraMuted hover:text-nexoraText'
+            }`}
+          >
+            {t('components.dashboard.modals.AddStaffModal.tab_manual')}
+          </button>
         </div>
 
-        {activeTab === 'invite' ? (
+        {activeTab === 'manual' ? (
+          <AddManualStaffTab
+            open={open}
+            onCancel={onClose}
+            onSave={onSaveManualStaff}
+            isSaving={isSavingManual}
+          />
+        ) : activeTab === 'invite' ? (
           <form className="mt-5 space-y-4" onSubmit={handleInviteSubmit}>
             <p className="text-sm text-nexoraMuted leading-snug">
               {t('staff_invite.option_b_desc')}

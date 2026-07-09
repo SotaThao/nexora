@@ -9,6 +9,8 @@ import SuccessPayment from './customer-flow/steps/SuccessPayment'
 import LeaveReview from './customer-flow/steps/LeaveReview'
 import ReviewRouting from './customer-flow/steps/ReviewRouting'
 import FinalDone from './customer-flow/steps/FinalDone'
+import BackToDashboardButton, { BackToDashboardHeaderButton } from './customer-flow/BackToDashboardButton'
+import { useBackToDashboard } from './customer-flow/useBackToDashboard'
 
 /**
  * CustomerFlow — renders the full customer tipping & review experience.
@@ -42,10 +44,14 @@ export default function CustomerFlow() {
     paymentCopyScope,
   } = flow
 
+  const { canBackToDashboard } = useBackToDashboard()
+
   return (
     <div className="min-h-dvh bg-nexoraCanvas text-nexoraText font-sans flex flex-col justify-between selection:bg-nexoraBrandSoft selection:text-nexoraBrand pb-8 relative">
       {/* Glow effects */}
       <div className="absolute top-0 left-0 w-full h-[30%] bg-gradient-to-b from-blue-50/50 to-transparent pointer-events-none" />
+
+      {step !== 'google_yelp_review' && <BackToDashboardHeaderButton />}
 
       {/* Language Switcher */}
       <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-nexoraBorder shadow-sm">
@@ -86,6 +92,11 @@ export default function CustomerFlow() {
               <p className="text-xs text-nexoraMuted">
                 {t('errors.touchpoint_not_found_desc')}
               </p>
+              {canBackToDashboard && (
+                <div className="pt-2">
+                  <BackToDashboardButton />
+                </div>
+              )}
             </div>
           )}
 

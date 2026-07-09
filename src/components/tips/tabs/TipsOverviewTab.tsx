@@ -25,11 +25,16 @@ export default function TipsOverviewTab({
   donutSegments,
 }) {
   const { t, currentLanguage } = useTranslation();
+  const hasCrypto = cryptoTips > 0;
 
   return (
     <div className="space-y-6">
       {/* Overview Cards Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div
+        className={`grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 ${
+          hasCrypto ? 'xl:grid-cols-4' : ''
+        }`}
+      >
         <div className="card-elevated flex items-center justify-between">
           <div>
             <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
@@ -63,7 +68,7 @@ export default function TipsOverviewTab({
             <DollarSign className="h-5 w-5" />
           </div>
         </div>
-        {cryptoTips > 0 && (
+        {hasCrypto && (
           <div className="card-elevated flex items-center justify-between">
             <div>
               <small className="text-[10px] font-black text-mutedGrey dark:text-slate-400 uppercase tracking-widest">
@@ -205,7 +210,7 @@ export default function TipsOverviewTab({
             {donutSegments.map(seg => (
               <div key={seg.name} className="flex items-center gap-1.5 text-mutedGrey dark:text-slate-400">
                 <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: seg.color }} />
-                <span>{seg.name}: {seg.percentage.toFixed(0)}%</span>
+                <span>{seg.name}: {seg.percentage.toFixed(0)}% ({formatUSD(seg.value)})</span>
               </div>
             ))}
           </div>

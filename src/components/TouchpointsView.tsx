@@ -29,19 +29,13 @@ import {
 } from '../data/hooks/useMerchantPhysicalCards'
 import { usePagination } from '../hooks/usePagination'
 import { DEFAULT_PAGE_SIZE, STAFF_FILTER_LIST_PAGE_SIZE } from '../constants/pagination'
-import { buildQrImageUrl, toLocalCustomerTouchUrl } from '../utils/staffTipUrl'
+import { buildQrImageUrl, slugify, toLocalCustomerTouchUrl } from '../utils/staffTipUrl'
+import { getWebUrlOrigin } from '../utils/webUrlBase'
+import ToggleSwitch from './ui/ToggleSwitch'
 import { formatCurrency, formatTransactionDateTime } from './dashboard/utils'
+import { SHOW_HARDWARE_DEVICES } from './dashboard/constants'
 import PhysicalCardDetailModal from './dashboard/modals/PhysicalCardDetailModal'
-
-const MASTER_TOUCHPOINT_API_TYPE = 'FrontDesk'
-const MASTER_TOUCHPOINT_SLUG = 'master-store'
-
-// This "Master QR" for Bitcoin Nail Bar is already printed/distributed — hide the delete action for its touchpoint in the UI.
-const BITCOIN_NAIL_BAR_MASTER_QR_PATH = '/touch/bitcoin-nail-bar-1b8cb587-9d36bc13/master-qr'
-
-function isBitcoinNailBarMasterQrTouchpoint(point): boolean {
-  return String(point?.url || '').toLowerCase().includes(BITCOIN_NAIL_BAR_MASTER_QR_PATH)
-}
+import QrImage from './ui/QrImage'
 
 function isLinkedTouchPointId(value: unknown): boolean {
   if (value == null || value === '') return false
@@ -69,6 +63,26 @@ function IconButton({ label, children, className = '', ...props }) {
     >
       {children}
     </button>
+  )
+}
+
+function TouchpointStatCard({ label, value, icon: Icon, borderAccent, iconBg, iconColor }) {
+  return (
+    <Panel className={`p-3 sm:p-4 border-l-[3px] sm:border-l-4 ${borderAccent} overflow-hidden`}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-wide text-nexoraSubtle leading-snug line-clamp-2">
+            {label}
+          </p>
+          <p className="mt-1 text-xl sm:text-2xl font-black text-nexoraText font-mono tracking-tight tabular-nums">
+            {value}
+          </p>
+        </div>
+        <div className={`shrink-0 rounded-xl p-2 sm:rounded-flox-buttons sm:p-2.5 ${iconBg} ${iconColor}`}>
+          <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+        </div>
+      </div>
+    </Panel>
   )
 }
 
@@ -101,35 +115,12 @@ export default function TouchpointsView({
   const [unlinkConfirmPoint, setUnlinkConfirmPoint] = useState<any | null>(null)
   const [detailHelpCode, setDetailHelpCode] = useState<string | null>(null)
 
-  // Local state for the Add Touchpoint form (name also drives list filter via API)
-  const [name, setName] = useState('')
-  const [type, setType] = useState('Table QR')
-  const [deviceId, setDeviceId] = useState('')
-  const [debouncedNameFilter, setDebouncedNameFilter] = useState('')
-  const [debouncedDeviceIdFilter, setDebouncedDeviceIdFilter] = useState('')
-  const { pageNumber, pageSize, setPage, reset: resetPage } = usePagination({ pageSize: DEFAULT_PAGE_SIZE })
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => setDebouncedNameFilter(name.trim()), 400)
-    return () => window.clearTimeout(timer)
-  }, [name])
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => setDebouncedDeviceIdFilter(deviceId.trim()), 400)
-    return () => window.clearTimeout(timer)
-  }, [deviceId])
-
-  useEffect(() => {
-    resetPage()
-  }, [debouncedNameFilter, debouncedDeviceIdFilter, resetPage])
-
-  const hasDeviceFilter = Boolean(debouncedDeviceIdFilter)
+  const { pageNumber, pageSize, setPage } = usePagination({ pageSize: DEFAULT_PAGE_SIZE })
 
   const listQuery = useMemo(() => ({
-    PageNumber: hasDeviceFilter ? 1 : pageNumber,
-    PageSize: hasDeviceFilter ? STAFF_FILTER_LIST_PAGE_SIZE : pageSize,
-    ...(debouncedNameFilter ? { Name: debouncedNameFilter } : {}),
-  }), [pageNumber, pageSize, debouncedNameFilter, hasDeviceFilter])
+    PageNumber: pageNumber,
+    PageSize: pageSize,
+  }), [pageNumber, pageSize])
 
   const {
     data: touchpointsPage,
@@ -139,6 +130,8 @@ export default function TouchpointsView({
   const { data: touchpointsStatsPage } = useTouchpoints(
     { PageNumber: 1, PageSize: STAFF_FILTER_LIST_PAGE_SIZE },
   )
+
+  const businessSlug = useMemo(() => slugify(businessName || ''), [businessName])
 
   const touchpoints = touchpointsPage?.items ?? []
   const statsTouchpoints = touchpointsStatsPage?.items ?? touchpoints
@@ -202,62 +195,11 @@ export default function TouchpointsView({
     [statsTouchpoints, touchpoints, cardCodeByTouchPointId],
   )
 
-  const linkedTouchPointIdsMatchingDevice = useMemo(() => {
-    if (!debouncedDeviceIdFilter) return null
-    const query = debouncedDeviceIdFilter.toLowerCase()
-    const ids = new Set<string>()
-    for (const card of physicalCards) {
-      const cardCode = String(card.cardCode ?? '').toLowerCase()
-      const helpCode = String(card.helpCode ?? '').toLowerCase()
-      if ((cardCode.includes(query) || helpCode.includes(query)) && card.linkedTouchPointId) {
-        ids.add(card.linkedTouchPointId)
-      }
-    }
-    return ids
-  }, [physicalCards, debouncedDeviceIdFilter])
-
-  const filteredTouchpointsWithLinks = useMemo(() => {
-    if (!debouncedDeviceIdFilter) return touchpointsWithLinks
-
-    const query = debouncedDeviceIdFilter.toLowerCase()
-    return touchpointsWithLinks.filter((point) => {
-      if (linkedTouchPointIdsMatchingDevice?.has(point.id)) return true
-
-      const device = String(point.deviceId ?? '').toLowerCase()
-      const helpCode = String(helpCodeByTouchPointId.get(point.id) ?? '').toLowerCase()
-      const pointName = String(point.name ?? '').toLowerCase()
-      return device.includes(query) || helpCode.includes(query) || pointName.includes(query)
-    })
-  }, [
-    touchpointsWithLinks,
-    debouncedDeviceIdFilter,
-    helpCodeByTouchPointId,
-    linkedTouchPointIdsMatchingDevice,
-  ])
-
-  const displayedTouchpoints = useMemo(() => {
-    if (!hasDeviceFilter) return filteredTouchpointsWithLinks
-    const start = (pageNumber - 1) * pageSize
-    return filteredTouchpointsWithLinks.slice(start, start + pageSize)
-  }, [filteredTouchpointsWithLinks, hasDeviceFilter, pageNumber, pageSize])
-
-  const displayTotalCount = hasDeviceFilter ? filteredTouchpointsWithLinks.length : totalCount
-  const displayTotalPages = hasDeviceFilter
-    ? Math.max(1, Math.ceil(filteredTouchpointsWithLinks.length / pageSize))
-    : totalPages
-  const displayHasNextPage = hasDeviceFilter ? pageNumber < displayTotalPages : hasNextPage
-  const displayHasPreviousPage = hasDeviceFilter ? pageNumber > 1 : hasPreviousPage
-
   // Highlighting selected device
   const [highlightedDeviceId, setHighlightedDeviceId] = useState<any | null>(null)
 
   const handleAdd = () => {
-    // Hand off to the Add Touch Point modal, prefilled with anything typed here.
-    if (onOpenAddModal) {
-      onOpenAddModal({ name: name.trim(), type, deviceId: deviceId.trim() })
-    }
-    setName('')
-    setDeviceId('')
+    onOpenAddModal?.()
   }
 
   const handleStartLink = (point) => {
@@ -332,18 +274,51 @@ export default function TouchpointsView({
     (point) => point.deviceId && point.isActive === false
   ).length
 
+  const touchpointTabs = useMemo(
+    () => [
+      { id: 'stations', label: t('dashboard.touchpoints.tabs.stations'), disabled: false },
+      ...(SHOW_HARDWARE_DEVICES
+        ? [{ id: 'devices', label: t('dashboard.touchpoints.tabs.devices'), disabled: false }]
+        : []),
+    ],
+    [t],
+  )
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Tab Header & Title */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-nexoraBorder pb-5">
-        <div>
-          <h2 className="text-xl font-extrabold text-nexoraText">
+      <div className="flex flex-col gap-3 border-b border-nexoraBorder pb-4 sm:gap-4 sm:flex-row sm:items-center sm:justify-between sm:pb-5">
+        <div className="min-w-0">
+          <h2 className="text-lg font-extrabold text-nexoraText sm:text-xl">
             {t('dashboard.menu.touchpoints')}
           </h2>
-          <p className="mt-1 text-xs text-nexoraMuted">
+          <p className="mt-0.5 line-clamp-2 text-[11px] text-nexoraMuted sm:mt-1 sm:text-xs">
             {t('setup.qr_touchpoints_desc')}
           </p>
         </div>
+        {/* Navigation Tabs */}
+        {touchpointTabs.length > 1 ? (
+        <div className="flex w-full gap-1 rounded-xl border border-nexoraBorder bg-nexoraSurfaceMuted p-1 dark:border-luxuryGold/10 dark:bg-luxuryCoal sm:w-auto">
+          {touchpointTabs.map(tab => (
+            <button
+              key={tab.id}
+              type="button"
+              disabled={tab.disabled}
+              onClick={() => !tab.disabled && setActiveSubTab(tab.id)}
+              className={`h-8 min-w-0 flex-1 rounded-lg px-2 text-[11px] font-bold transition-all sm:h-9 sm:flex-none sm:px-4 sm:text-xs ${
+                tab.disabled
+                  ? 'cursor-not-allowed opacity-45 text-nexoraMuted'
+                  : activeSubTab === tab.id
+                    ? 'bg-white font-black text-luxuryGold shadow-sm dark:bg-luxuryBlack'
+                    : 'text-nexoraMuted hover:text-nexoraText dark:text-slate-400 dark:hover:text-white'
+              }`}
+              title={tab.disabled ? t('common.coming_soon') : undefined}
+            >
+              <span className="block truncate">{tab.label}</span>
+            </button>
+          ))}
+        </div>
+        ) : null}
       </div>
 
       {activeSubTab === 'stations' && (
@@ -355,132 +330,58 @@ export default function TouchpointsView({
           </div>
         <>
           {/* Hardware KPIs */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {/* KPI 1: Total Touchpoints */}
-            <Panel className="p-4 flex items-center justify-between border-l-4 border-l-nexoraBrand relative overflow-hidden">
-              <div className="space-y-1">
-                <p className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
-                  {t('dashboard.touchpoint_stats.total_touchpoints')}
-                </p>
-                <p className="text-2xl font-black text-nexoraText font-mono tracking-tight">{totalTouchpoints}</p>
-              </div>
-              <div className="p-2.5 bg-nexoraBrandSoft dark:bg-nexoraBrand/10 text-nexoraBrand rounded-flox-buttons">
-                <Layers className="h-5 w-5" />
-              </div>
-            </Panel>
-
-            {/* KPI 2: Active physical NFC Stands */}
-            <Panel className="p-4 flex items-center justify-between border-l-4 border-l-luxuryGold relative overflow-hidden">
-              <div className="space-y-1">
-                <p className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
-                  {t('dashboard.touchpoint_stats.active_nfc')}
-                </p>
-                <p className="text-2xl font-black text-nexoraText font-mono tracking-tight">{activeNfcStands}</p>
-              </div>
-              <div className="p-2.5 bg-amber-50 dark:bg-luxuryGold/10 text-luxuryGold rounded-flox-buttons">
-                <Smartphone className="h-5 w-5" />
-              </div>
-            </Panel>
-
-            {/* KPI 3: Total Scans */}
-            <Panel className="p-4 flex items-center justify-between border-l-4 border-l-emerald-500 relative overflow-hidden">
-              <div className="space-y-1">
-                <p className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
-                  {t('dashboard.touchpoint_stats.total_scans')}
-                </p>
-                <p className="text-2xl font-black text-nexoraText font-mono tracking-tight">{totalScans}</p>
-              </div>
-              <div className="p-2.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 rounded-flox-buttons">
-                <Activity className="h-5 w-5" />
-              </div>
-            </Panel>
-
-            {/* KPI 4: Device Issues */}
-            <Panel className="p-4 flex items-center justify-between border-l-4 border-l-red-500 relative overflow-hidden">
-              <div className="space-y-1">
-                <p className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
-                  {t('dashboard.touchpoint_stats.device_issues')}
-                </p>
-                <p className="text-2xl font-black text-nexoraText font-mono tracking-tight">{deviceIssues}</p>
-              </div>
-              <div className="p-2.5 bg-rose-50 dark:bg-rose-500/10 text-red-500 rounded-flox-buttons">
-                <AlertOctagon className="h-5 w-5" />
-              </div>
-            </Panel>
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+            <TouchpointStatCard
+              label={t('dashboard.touchpoint_stats.total_touchpoints')}
+              value={totalTouchpoints}
+              icon={Layers}
+              borderAccent="border-l-nexoraBrand"
+              iconBg="bg-nexoraBrandSoft dark:bg-nexoraBrand/10"
+              iconColor="text-nexoraBrand"
+            />
+            <TouchpointStatCard
+              label={t('dashboard.touchpoint_stats.active_nfc')}
+              value={activeNfcStands}
+              icon={Smartphone}
+              borderAccent="border-l-luxuryGold"
+              iconBg="bg-amber-50 dark:bg-luxuryGold/10"
+              iconColor="text-luxuryGold"
+            />
+            <TouchpointStatCard
+              label={t('dashboard.touchpoint_stats.total_scans')}
+              value={totalScans}
+              icon={Activity}
+              borderAccent="border-l-emerald-500"
+              iconBg="bg-emerald-50 dark:bg-emerald-500/10"
+              iconColor="text-emerald-500"
+            />
+            <TouchpointStatCard
+              label={t('dashboard.touchpoint_stats.device_issues')}
+              value={deviceIssues}
+              icon={AlertOctagon}
+              borderAccent="border-l-red-500"
+              iconBg="bg-rose-50 dark:bg-rose-500/10"
+              iconColor="text-red-500"
+            />
           </div>
 
-          {/* Add Touchpoint Form Panel */}
-          <Panel className="p-4">
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1fr_180px_auto] items-end">
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
-                  {t('dashboard.modals.tp_name_label')}
-                </label>
-                <div className="relative">
-                  <input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder={t('dashboard.modals.tp_name_placeholder')}
-                    className="h-11 w-full rounded-flox-inputs border border-nexoraBorder dark:border-luxuryGold/18 bg-white dark:bg-luxuryCoal px-3 pr-10 text-base text-nexoraText outline-none focus:border-nexoraBrand dark:focus:border-luxuryGold"
-                  />
-                  {isFetching && !isLoading ? (
-                    <Loader2 className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-nexoraBrand" />
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
-                  {t('dashboard.modals.device_id_label')}
-                </label>
-                <div className="relative">
-                  <input
-                    value={deviceId}
-                    onChange={(e) => setDeviceId(e.target.value)}
-                    placeholder={t('components.TouchpointsView.phExampleDeviceIds')}
-                    className="h-11 w-full rounded-flox-inputs border border-nexoraBorder dark:border-luxuryGold/18 bg-white dark:bg-luxuryCoal px-3 pr-10 text-base text-nexoraText outline-none focus:border-nexoraBrand dark:focus:border-luxuryGold"
-                  />
-                  {isFetching && !isLoading && debouncedDeviceIdFilter ? (
-                    <Loader2 className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-nexoraBrand" />
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-black uppercase tracking-wider text-nexoraSubtle">
-                  {t('dashboard.modals.tp_type_label')}
-                </label>
-                <CustomSelect
-                  buttonClass="h-11 text-sm focus:border-nexoraBrand dark:focus:border-luxuryGold"
-                  value={type}
-                  onChange={(event) => setType(event.target.value)}
-                  options={[
-                    { value: 'Table QR', label: 'Table QR' },
-                    { value: 'Front Desk', label: 'Front Desk' },
-                    { value: 'Receipt QR', label: 'Receipt QR' },
-                    { value: 'Business Main', label: 'Business Main' },
-                    { value: 'Staff QR', label: 'Staff QR' }
-                  ]}
-                />
-              </div>
-
-              <button
-                onClick={handleAdd}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-flox-buttons bg-nexoraBrand dark:bg-luxuryGold hover:bg-nexoraBrandDark dark:hover:bg-luxuryGoldLight text-white dark:text-luxuryBlack px-5 text-sm font-bold transition-all w-full lg:w-auto"
-              >
-                <Plus className="h-4 w-4" />
-                <span>{t('setup.add_tp_btn')}</span>
-              </button>
-            </div>
-          </Panel>
+          {/* Add Touchpoint */}
+          <button
+            type="button"
+            onClick={handleAdd}
+            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-flox-buttons bg-nexoraBrand px-5 text-sm font-bold text-white transition-all hover:bg-nexoraBrandDark dark:bg-luxuryGold dark:text-luxuryBlack dark:hover:bg-luxuryGoldLight"
+          >
+            <Plus className="h-4 w-4" />
+            <span>{t('setup.add_tp_btn')}</span>
+          </button>
 
           {/* Touchpoint Cards Grid */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-3">
             {isLoading || isFetching ? (
               <Panel className="md:col-span-2 xl:col-span-3 flex items-center justify-center py-16">
                 <Loader2 className="h-7 w-7 animate-spin text-nexoraBrand" />
               </Panel>
-            ) : displayedTouchpoints.length === 0 ? (
+            ) : touchpointsWithLinks.length === 0 ? (
               <Panel className="md:col-span-2 xl:col-span-3 border-dashed border-nexoraBorder/80">
                 <div className="mx-auto flex max-w-xl flex-col items-center gap-4 px-6 py-12 text-center sm:gap-5 sm:py-14">
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-nexoraBrandSoft to-brandCyan/20 dark:from-nexoraBrand/20 dark:to-brandCyan/20 text-nexoraBrand shadow-sm ring-1 ring-nexoraBrand/10">
@@ -495,24 +396,20 @@ export default function TouchpointsView({
                 </div>
               </Panel>
             ) : null}
-            {!isLoading && !isFetching && displayedTouchpoints.map((point) => {
+            {!isLoading && !isFetching && touchpointsWithLinks.map((point) => {
               const isPointActive = point.isActive !== false
               const isToggling = togglingTouchpointId === point.id
               let qrUrl = ''
               if (point.url) {
                 qrUrl = toLocalCustomerTouchUrl(String(point.url))
               }
-              if (!qrUrl && point.slug) {
-                qrUrl = `${window.location.origin}/touch/${point.slug}`
+              if (!qrUrl && point.slug && businessSlug) {
+                qrUrl = `${getWebUrlOrigin()}/touch/${businessSlug}/${point.slug}`
               }
 
               const scans = point.scans ?? 0
               const revenue = point.revenue ?? 0
               const qrImageSrc = buildQrImageUrl(qrUrl, 150, point.qrImageUrl)
-              const canDeletePoint =
-                point.type !== MASTER_TOUCHPOINT_API_TYPE &&
-                point.slug !== MASTER_TOUCHPOINT_SLUG &&
-                !isBitcoinNailBarMasterQrTouchpoint(point)
 
               return (
                 <Panel key={point.id} className="p-3.5 flex flex-col sm:flex-row gap-3 sm:gap-4 hover:shadow-premium transition-all duration-300 group border border-nexoraBorder relative overflow-visible min-h-0 sm:min-h-[160px]">
@@ -525,10 +422,10 @@ export default function TouchpointsView({
                     className="relative w-[115px] h-[115px] rounded-xl bg-white border border-nexoraBorder/60 p-2 flex items-center justify-center shadow-sm cursor-pointer hover:border-nexoraBrand transition-all hover:scale-[1.03] active:scale-95 group/qr select-none overflow-hidden shrink-0 self-center mx-auto sm:mx-0"
                     title={t('dashboard.modals.download_print_qr')}
                   >
-                    <img
+                    <QrImage
                       src={qrImageSrc}
                       alt="Scan QR"
-                      className={`h-full w-full object-contain transition-opacity duration-200 ${isPointActive ? 'opacity-100' : 'opacity-30 filter grayscale'}`}
+                      className={`h-full w-full transition-opacity duration-200 ${isPointActive ? 'opacity-100' : 'opacity-30 filter grayscale'}`}
                     />
                     {!isPointActive && (
                       <div className="absolute inset-0 bg-luxuryBlack/60 flex flex-col items-center justify-center text-white text-[9px] font-black uppercase tracking-wider p-1 text-center">
@@ -552,7 +449,7 @@ export default function TouchpointsView({
                         <h3 className="font-extrabold text-sm text-nexoraText leading-snug truncate" title={point.name}>
                           {point.name}
                         </h3>
-                        {canDeletePoint && (
+                        {point.type !== 'FrontDesk' && point.slug !== 'master-store' && (
                           <IconButton 
                             label={t('common.delete')} 
                             onClick={() => setDeleteConfirmId(point.id)} 
@@ -582,26 +479,13 @@ export default function TouchpointsView({
      
                     {/* Middle Section: Active / Inactive Toggle */}
                     <div className="flex items-center gap-2 mt-1">
-                      <button
-                        type="button"
-                        disabled={isToggling}
-                        onClick={() => onToggleStatus && onToggleStatus(point.id)}
-                        className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:cursor-wait ${
-                          isToggling ? 'opacity-70' : 'cursor-pointer'
-                        } ${isPointActive ? 'bg-nexoraBrand' : 'bg-nexoraBorder'}`}
-                      >
-                        {isToggling ? (
-                          <span className="absolute inset-0 flex items-center justify-center">
-                            <Loader2 className="h-3 w-3 animate-spin text-white" />
-                          </span>
-                        ) : (
-                          <span
-                            className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                              isPointActive ? 'translate-x-4' : 'translate-x-0'
-                            }`}
-                          />
-                        )}
-                      </button>
+                      <ToggleSwitch
+                        checked={isPointActive}
+                        loading={isToggling}
+                        onChange={() => onToggleStatus && onToggleStatus(point.id)}
+                        activeColor="bg-nexoraBrand"
+                        inactiveColor="bg-nexoraBorder"
+                      />
                       <span className={`text-[10px] font-extrabold uppercase tracking-wider ${isPointActive ? 'text-nexoraSuccess' : 'text-nexoraSubtle'}`}>
                         {isPointActive ? t('dashboard.touchpoint_stats.active') : t('dashboard.touchpoint_stats.inactive')}
                       </span>
@@ -731,14 +615,14 @@ export default function TouchpointsView({
             })}
           </div>
 
-          {!isLoading && displayTotalPages > 1 && (
+          {!isLoading && totalPages > 1 && (
             <Pagination
               pageNumber={pageNumber}
               pageSize={pageSize}
-              totalPages={displayTotalPages}
-              totalCount={displayTotalCount ?? displayedTouchpoints.length}
-              hasNextPage={displayHasNextPage}
-              hasPreviousPage={displayHasPreviousPage}
+              totalPages={totalPages}
+              totalCount={totalCount ?? touchpointsWithLinks.length}
+              hasNextPage={hasNextPage}
+              hasPreviousPage={hasPreviousPage}
               onPageChange={setPage}
               isLoading={isFetching}
               className="pt-2"
@@ -746,7 +630,7 @@ export default function TouchpointsView({
           )}
 
           {unlinkConfirmPoint ? (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 modal-overlay-safe backdrop-blur-sm">
               <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-luxuryCoal border border-nexoraBorder dark:border-luxuryGold/18 p-7 sm:p-8 shadow-2xl animate-scaleUp">
                 <h3 className="text-lg sm:text-xl font-extrabold text-nexoraText">
                   {t('dashboard.touchpoints.unlink_confirm_title')}
@@ -784,7 +668,7 @@ export default function TouchpointsView({
 
           {/* Custom Delete Confirmation Modal */}
           {deleteConfirmId && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 modal-overlay-safe backdrop-blur-sm">
               <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl animate-scaleUp">
                 <h3 className="text-base font-extrabold text-nexoraText">
                   {t('dashboard.touchpoint_stats.delete_confirm_title')}
@@ -819,45 +703,32 @@ export default function TouchpointsView({
       )}
 
       {activeSubTab === 'devices' && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <Panel className="p-4 flex items-center justify-between border-l-4 border-l-nexoraBrand">
-              <div className="space-y-1">
-                <p className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
-                  {t('dashboard.devices.kpi.qr_devices')}
-                </p>
-                <p className="text-2xl font-black text-nexoraText font-mono tracking-tight">{physicalCards.length}</p>
-              </div>
-              <div className="p-2.5 bg-nexoraBrandSoft dark:bg-nexoraBrand/10 text-nexoraBrand rounded-flox-buttons">
-                <Smartphone className="h-5 w-5" />
-              </div>
-            </Panel>
-            <Panel className="p-4 flex items-center justify-between border-l-4 border-l-nexoraSuccess">
-              <div className="space-y-1">
-                <p className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
-                  {t('dashboard.touchpoints.hardware.linked_devices')}
-                </p>
-                <p className="text-2xl font-black text-nexoraText font-mono tracking-tight">
-                  {physicalCards.filter((card) => isLinkedTouchPointId(card.linkedTouchPointId)).length}
-                </p>
-              </div>
-              <div className="p-2.5 bg-nexoraSuccess/10 text-nexoraSuccess rounded-flox-buttons">
-                <Check className="h-5 w-5" />
-              </div>
-            </Panel>
-            <Panel className="p-4 flex items-center justify-between border-l-4 border-l-amber-500">
-              <div className="space-y-1">
-                <p className="text-[10px] font-black uppercase tracking-wider text-nexoraSubtle">
-                  {t('dashboard.touchpoints.hardware.unlinked_devices')}
-                </p>
-                <p className="text-2xl font-black text-nexoraText font-mono tracking-tight">
-                  {physicalCards.filter((card) => !isLinkedTouchPointId(card.linkedTouchPointId)).length}
-                </p>
-              </div>
-              <div className="p-2.5 bg-amber-500/10 text-amber-600 rounded-flox-buttons">
-                <AlertOctagon className="h-5 w-5" />
-              </div>
-            </Panel>
+        <div className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            <TouchpointStatCard
+              label={t('dashboard.devices.kpi.qr_devices')}
+              value={physicalCards.length}
+              icon={Smartphone}
+              borderAccent="border-l-nexoraBrand"
+              iconBg="bg-nexoraBrandSoft dark:bg-nexoraBrand/10"
+              iconColor="text-nexoraBrand"
+            />
+            <TouchpointStatCard
+              label={t('dashboard.touchpoints.hardware.linked_devices')}
+              value={physicalCards.filter((card) => isLinkedTouchPointId(card.linkedTouchPointId)).length}
+              icon={Check}
+              borderAccent="border-l-nexoraSuccess"
+              iconBg="bg-nexoraSuccess/10"
+              iconColor="text-nexoraSuccess"
+            />
+            <TouchpointStatCard
+              label={t('dashboard.touchpoints.hardware.unlinked_devices')}
+              value={physicalCards.filter((card) => !isLinkedTouchPointId(card.linkedTouchPointId)).length}
+              icon={AlertOctagon}
+              borderAccent="border-l-amber-500"
+              iconBg="bg-amber-500/10"
+              iconColor="text-amber-600"
+            />
           </div>
 
           {isPhysicalCardsLoading ? (
@@ -879,7 +750,7 @@ export default function TouchpointsView({
               </div>
             </Panel>
           ) : (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-3">
               {physicalCards.map((card) => {
                 const isLinked = isLinkedTouchPointId(card.linkedTouchPointId)
                 const linkedAtLabel = card.linkedAt

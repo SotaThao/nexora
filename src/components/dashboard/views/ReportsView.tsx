@@ -23,6 +23,7 @@ import { useMerchantStaff } from '../../../data/hooks/useMerchantStaff'
 import { useTouchpoints } from '../../../data/hooks/useMerchantTouchpoints'
 import type { TransactionsListQuery } from '../../../data/repositories/transactions'
 import ReportsTableSkeleton from './ReportsTableSkeleton'
+import CopyableTransactionId from '../../ui/CopyableTransactionId'
 import ReportsDirectPaymentsTab from './ReportsDirectPaymentsTab'
 
 // Confirm-receipt ownership follows US-024/US-025: staff owns direct-to-staff
@@ -85,8 +86,8 @@ function resolveDateRange(
 
 // Sentinel status-filter value for tips the customer paid into the shop
 // account that still need the owner to confirm receipt. Not a real API
-// status — it maps to { status: 'Confirmed', isMultiStaff: true } plus the
-// client-side isAwaitingShopConfirmation predicate.
+// status — it maps to { status: 'Confirmed' } plus the client-side
+// isAwaitingShopConfirmation predicate so local-staff tips are included too.
 const AWAITING_STATUS = 'AwaitingShopConfirmation'
 
 function getStaffDisplayName(member) {
@@ -105,6 +106,15 @@ function formatStaffCell(tx) {
     return tx.tipItems.map((item) => item.staffName).filter(Boolean).join(', ')
   }
   return '—'
+}
+
+function resolveLocalStaffSet(staff = []) {
+  const localStaffIds = new Set<string>()
+  for (const member of staff) {
+    if (!member?.staffProfileId) continue
+    if (member.isLocalStaff) localStaffIds.add(member.staffProfileId)
+  }
+  return localStaffIds
 }
 
 function ReportsView({
@@ -292,7 +302,7 @@ function ReportsView({
       : {}),
     ...(selectedPayment !== 'all' ? { paymentMethod: selectedPayment } : {}),
     ...(!isStaffAudience && isAwaitingFilter
-      ? { status: 'Confirmed', isMultiStaff: true }
+      ? { status: 'Confirmed' }
       : selectedStatus !== 'all'
         ? { status: selectedStatus }
         : {}),
@@ -337,10 +347,17 @@ function ReportsView({
   // Amount filter only — not supported by tips API
   // For the awaiting-confirmation filter, also refine client-side to the exact eligibility predicate
   const filtered = useMemo(() => {
+    const localStaffIds = resolveLocalStaffSet(staff)
     return transactions.filter((tx) => {
+      const isLocalStaffResolved =
+        tx?.isLocalStaff === true ||
+        (tx?.staffProfileId ? localStaffIds.has(String(tx.staffProfileId)) : false)
+      const txWithResolvedLocalFlag =
+        tx?.isLocalStaff === true ? tx : { ...tx, isLocalStaff: isLocalStaffResolved }
+
       if (minAmount && tx.amount < parseFloat(minAmount)) return false
       if (maxAmount && tx.amount > parseFloat(maxAmount)) return false
-      if (!isStaffAudience && isAwaitingFilter && !isAwaitingShopConfirmation(tx)) return false
+      if (!isStaffAudience && isAwaitingFilter && !isAwaitingShopConfirmation(txWithResolvedLocalFlag)) return false
       if (isStaffAudience && debouncedSearch) {
         const q = debouncedSearch.toLowerCase()
         const haystack = [tx.id, tx.touchpoint, tx.businessName, tx.staffName]
@@ -354,9 +371,15 @@ function ReportsView({
         if (tp !== selectedTouchpoint.toLowerCase()) return false
       }
       return true
+    }).map((tx) => {
+      if (tx?.isLocalStaff === true) return tx
+      const isLocalStaffResolved =
+        tx?.staffProfileId ? localStaffIds.has(String(tx.staffProfileId)) : false
+      return isLocalStaffResolved ? { ...tx, isLocalStaff: true } : tx
     })
   }, [
     transactions,
+    staff,
     minAmount,
     maxAmount,
     isAwaitingFilter,
@@ -533,7 +556,7 @@ function ReportsView({
         <table className="w-full min-w-[780px] text-left text-xs">
           <thead className="bg-nexoraCanvas text-[10px] font-extrabold uppercase text-nexoraMuted">
             <tr>
-              <th className="px-4 py-3">{t('dashboard.activity_log.col_id')}</th>
+              <th className="px-4 py-3 w-[9.5rem]">{t('dashboard.activity_log.col_id')}</th>
               <th className="px-4 py-3">{t('dashboard.activity_log.col_time')}</th>
               <th className="px-4 py-3">{t('dashboard.activity_log.col_amount')}</th>
               {!isStaffAudience ? (
@@ -561,7 +584,13 @@ function ReportsView({
                   onClick={() => setSelectedTx(tx)}
                   className="border-t border-nexoraRule hover:bg-slate-50 transition-colors cursor-pointer select-none"
                 >
-                  <td className="px-4 py-3 font-bold text-nexoraText">{tx.id}</td>
+                  <td className="px-4 py-3 w-[9.5rem] max-w-[9.5rem]">
+                    <CopyableTransactionId
+                      id={tx.id}
+                      copyLabel={t('common.copy')}
+                      copiedLabel={t('common.copied')}
+                    />
+                  </td>
                   <td className="px-4 py-3 text-nexoraMuted">
                     {formatTransactionDateTime(tx.dateTime, currentLanguage)}
                   </td>
