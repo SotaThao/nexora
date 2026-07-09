@@ -59,14 +59,14 @@ export default function StaffDashboard({ staffId = null, onLogout }) {
           onClose={() => setIsMobileMenuOpen(false)}
         />
 
-        <div className="lg:pl-72">
+        <div className="flex min-h-dvh flex-col lg:pl-72">
           <StaffHeader
             activeScreen={activeScreen}
             onNavigate={handleNavigate}
             onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
             onLogout={onLogout}
           />
-          <main className={`mx-auto ${mainWidthClass} px-4 py-5 sm:px-6`}>
+          <main className={`mx-auto w-full flex-1 ${mainWidthClass} px-4 py-5 sm:px-6`}>
             {activeScreen === 'home' && showPayoutBanner && (
               <div className="mb-6 relative overflow-hidden rounded-2xl bg-gradient-to-br from-nexoraBrand/10 via-white to-nexoraBrandSoft border border-nexoraBrand/20 p-6 md:p-8 shadow-sm animate-fadeIn">
                 <div className="absolute -right-10 -top-10 opacity-10">

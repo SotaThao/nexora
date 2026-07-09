@@ -2407,9 +2407,9 @@
           "otpSentToEmail": "OTP sent to email"
         },
         "StepOtpVerify": {
-          "activateAccountEnterOtp": "Activate Account (Enter OTP)",
-          "enterTheOtpCode": "Enter the OTP code sent to your email to activate your account.",
-          "enterOtpCode": "Enter OTP Code *",
+          "activateAccountEnterOtp": "Activate Account",
+          "enterTheOtpCode": "Verification code sent to {{email}}",
+          "enterOtpCode": "Enter verification code",
           "resendVerificationCode": "Resend Verification Code",
           "verifyAndActivate": "Verify & Activate",
           "otpSentToEmail": "OTP sent to email",
