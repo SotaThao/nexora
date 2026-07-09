@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { AlertCircle, Settings2 } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import EditStaffModuleConfigModal from './modals/EditStaffModuleConfigModal'
+import StaffTaxProfileCard from './StaffTaxProfileCard'
 import TaxReadinessScoreWidget from '../../../dashboard/views/taxiq/shared/TaxReadinessScoreWidget'
 import { useStaffTaxYearDashboard } from '../../../../data/hooks/useTaxiqStaffTaxYear'
 import { SkeletonList } from '../../../ui/skeleton'
@@ -151,6 +152,8 @@ export default function StaffTaxIqHomeView({ staffTaxYear }: { staffTaxYear: Sta
           )}
         </div>
       )}
+
+      <StaffTaxProfileCard />
 
       <TaxReadinessScoreWidget scope="staff" taxYearId={staffTaxYear.id} />
 

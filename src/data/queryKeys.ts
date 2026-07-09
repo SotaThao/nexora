@@ -137,6 +137,10 @@ export const qk = {
   },
   taxiqStaffTaxYearById: (id?: string) => ['taxiqStaffTaxYear', 'byId', id ?? 'unknown'],
 
+  // Tax IQ — Staff self-entered SSN/EIN (US-012). Scoped by JWT userId only, one
+  // profile per Staff (not per tax year) — no id/year param needed.
+  taxiqStaffTaxProfile: () => ['taxiqStaffTaxProfile'],
+
   // Tax IQ — Owner Deduction Center
   taxiqOwnerDeductions: (ownerTaxYearId?: string, recordStatus?: string, categoryId?: string) => {
     const key: unknown[] = ['taxiqOwnerDeductions']
@@ -203,6 +207,10 @@ export const qk = {
 
   // Tax IQ — Owner Payout & Dispute Center (US-09)
   taxiqOwnerStaffList: (ownerTaxYearId?: string) => ['taxiqOwnerStaffList', ownerTaxYearId ?? 'unknown'],
+
+  // Tax IQ — Owner view of a Staff's masked/plaintext TIN (US-012)
+  taxiqOwnerStaffTin: (ownerTaxYearId?: string, staffUserId?: string, reveal?: boolean) =>
+    ['taxiqOwnerStaffTin', ownerTaxYearId ?? 'unknown', staffUserId ?? 'unknown', reveal ?? false],
   taxiqOwnerPayouts: (ownerTaxYearId?: string, staffUserId?: string, status?: string) => {
     const key: unknown[] = ['taxiqOwnerPayouts', ownerTaxYearId ?? 'unknown']
     if (staffUserId) key.push(staffUserId)

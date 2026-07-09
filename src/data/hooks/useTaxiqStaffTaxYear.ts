@@ -8,8 +8,10 @@ import taxiqStaffTaxYearRepository from '../repositories/taxiqStaffTaxYear'
 import type {
   CreateStaffTaxYearParams,
   StaffDashboard,
+  StaffTaxProfile,
   StaffTaxYearListPage,
   UpdateStaffTaxYearModulesParams,
+  UpsertStaffTaxProfileParams,
 } from '../repositories/taxiqStaffTaxYear'
 
 // Single source of truth for "does the current Staff user already have a
@@ -47,6 +49,23 @@ export function useUpdateStaffTaxYearModules() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: qk.taxiqStaffTaxYear() })
       queryClient.invalidateQueries({ queryKey: qk.taxiqStaffTaxYearById(variables.id) })
+    },
+  })
+}
+
+export function useMyStaffTaxProfile() {
+  return useQuery<StaffTaxProfile>({
+    queryKey: qk.taxiqStaffTaxProfile(),
+    queryFn: () => taxiqStaffTaxYearRepository.getMyTaxProfile(),
+  })
+}
+
+export function useUpsertStaffTaxProfile() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, UpsertStaffTaxProfileParams>({
+    mutationFn: (params) => taxiqStaffTaxYearRepository.upsertMyTaxProfile(params),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk.taxiqStaffTaxProfile() })
     },
   })
 }

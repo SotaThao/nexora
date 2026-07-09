@@ -131,6 +131,13 @@ export function createTaxiqOwnerTaxYearRepository(client: HttpClient = httpClien
         enabledModules: params.enabledModules,
       })
     },
+
+    async updateBusinessEin(businessId: string, ein: string): Promise<void> {
+      await client.put(`/api/v1/taxiq/owner/business/${encodeURIComponent(businessId)}/ein`, {
+        businessId,
+        ein,
+      })
+    },
   }
 }
 

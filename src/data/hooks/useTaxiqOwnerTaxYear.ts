@@ -50,3 +50,13 @@ export function useUpdateOwnerTaxYearModules() {
     },
   })
 }
+
+export function useUpdateBusinessEin() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, { businessId: string; ein: string; ownerTaxYearId: string }>({
+    mutationFn: ({ businessId, ein }) => taxiqOwnerTaxYearRepository.updateBusinessEin(businessId, ein),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: qk.taxiqOwnerTaxYearById(variables.ownerTaxYearId) })
+    },
+  })
+}

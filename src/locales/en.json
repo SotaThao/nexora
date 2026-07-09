@@ -3062,6 +3062,25 @@
     "default_desc": "This module is being prepared for the Nexora Touch merchant dashboard."
   },
   "taxiq": {
+    "taxProfile": {
+      "title": "Tax ID (SSN/EIN)",
+      "description": "Needed for your W-9 so the salon can issue your 1099-NEC. Hidden from the salon owner by default — only shown as the last 4 digits unless you use Reveal.",
+      "ssnLabel": "SSN",
+      "einLabel": "EIN",
+      "ssnPlaceholder": "123-45-6789",
+      "einPlaceholder": "12-3456789",
+      "saveButton": "Save",
+      "savedNotice": "Saved",
+      "notProvided": "Not provided",
+      "revealButton": "Reveal",
+      "revealedNotice": "This view was logged for security.",
+      "errors": {
+        "required": "Enter SSN or EIN",
+        "ssnFormat": "SSN must be 9 digits (e.g. 123-45-6789)",
+        "einFormat": "EIN must be 9 digits (e.g. 12-3456789)",
+        "generic": "Something went wrong. Please try again."
+      }
+    },
     "tooltips": {
       "w2": "Formal employee. The salon withholds taxes from every paycheck and issues Form W-2 by Jan 31.",
       "contractor1099": "Independent contractor. No tax is withheld — they pay self-employment tax (~15.3%) themselves and receive Form 1099-NEC if paid $600 or more in a year.",

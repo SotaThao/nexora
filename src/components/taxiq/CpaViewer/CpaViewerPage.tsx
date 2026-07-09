@@ -66,6 +66,23 @@ export default function CpaViewerPage() {
               {t(`taxiq.cpaAccess.dataModes.${pkg.dataMode}`)}
             </span>
           </div>
+
+          {(pkg.businessTin || pkg.staffTin) && (
+            <div className="mt-3 flex flex-wrap gap-4 border-t border-nexoraRule pt-3 text-xs">
+              {pkg.businessTin && (
+                <div>
+                  <span className="font-bold text-nexoraMuted">{t('taxiq.taxProfile.einLabel')}: </span>
+                  <span className="font-mono text-nexoraText">{pkg.businessTin}</span>
+                </div>
+              )}
+              {pkg.staffTin && (
+                <div>
+                  <span className="font-bold text-nexoraMuted">{t('taxiq.taxProfile.title')}: </span>
+                  <span className="font-mono text-nexoraText">{pkg.staffTin}</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <h2 className="px-1 text-xs font-extrabold uppercase text-nexoraMuted">
@@ -114,6 +131,7 @@ export default function CpaViewerPage() {
             <thead className="bg-nexoraCanvas text-[10px] font-extrabold uppercase text-nexoraMuted">
               <tr>
                 <th className="px-4 py-3">{t('taxiq.cpaViewer.columns.staffName')}</th>
+                <th className="px-4 py-3">{t('taxiq.taxProfile.title')}</th>
                 <th className="px-4 py-3">{t('taxiq.cpaViewer.columns.payPeriod')}</th>
                 <th className="px-4 py-3">{t('taxiq.cpaViewer.columns.grossPayout')}</th>
                 <th className="px-4 py-3">{t('taxiq.cpaViewer.columns.netPaid')}</th>
@@ -124,7 +142,7 @@ export default function CpaViewerPage() {
             <tbody>
               {pkg.payouts.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center font-medium text-nexoraMuted">
+                  <td colSpan={7} className="px-4 py-8 text-center font-medium text-nexoraMuted">
                     {t('taxiq.cpaViewer.emptyPayoutState')}
                   </td>
                 </tr>
@@ -221,6 +239,7 @@ function CpaPayoutRow({ payout }: { payout: CpaPayout }) {
   return (
     <tr className="border-t border-nexoraRule align-top">
       <td className="px-4 py-3 font-bold text-nexoraText">{payout.staffName ?? '—'}</td>
+      <td className="px-4 py-3 font-mono text-nexoraMuted">{payout.staffTin ?? '—'}</td>
       <td className="px-4 py-3 text-nexoraMuted">
         {payout.periodStart} – {payout.periodEnd}
       </td>

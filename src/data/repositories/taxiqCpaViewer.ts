@@ -67,6 +67,7 @@ function normalizeCpaDeduction(dto: CpaDeductionApiDto): CpaDeduction {
 export interface CpaPayoutApiDto {
   id: string
   staffName?: string | null
+  staffTin?: string | null
   payPeriod: string
   periodStart: string
   periodEnd: string
@@ -83,6 +84,7 @@ export interface CpaPayoutApiDto {
 export interface CpaPayout {
   id: string
   staffName: string | null
+  staffTin: string | null
   payPeriod: string
   periodStart: string
   periodEnd: string
@@ -100,6 +102,7 @@ function normalizeCpaPayout(dto: CpaPayoutApiDto): CpaPayout {
   return {
     id: dto.id,
     staffName: dto.staffName ?? null,
+    staffTin: dto.staffTin ?? null,
     payPeriod: dto.payPeriod,
     periodStart: dto.periodStart,
     periodEnd: dto.periodEnd,
@@ -119,6 +122,8 @@ export interface CpaPackageApiDto {
   packageType: string
   dataMode: string
   expiresAt: string
+  businessTin?: string | null
+  staffTin?: string | null
   deductions: CpaDeductionApiDto[]
   payouts: CpaPayoutApiDto[]
 }
@@ -128,6 +133,8 @@ export interface CpaPackage {
   packageType: string
   dataMode: string
   expiresAt: string
+  businessTin: string | null
+  staffTin: string | null
   deductions: CpaDeduction[]
   payouts: CpaPayout[]
 }
@@ -138,6 +145,8 @@ function normalizeCpaPackage(dto: CpaPackageApiDto): CpaPackage {
     packageType: dto.packageType,
     dataMode: dto.dataMode,
     expiresAt: dto.expiresAt,
+    businessTin: dto.businessTin ?? null,
+    staffTin: dto.staffTin ?? null,
     deductions: (dto.deductions ?? []).map(normalizeCpaDeduction),
     payouts: (dto.payouts ?? []).map(normalizeCpaPayout),
   }

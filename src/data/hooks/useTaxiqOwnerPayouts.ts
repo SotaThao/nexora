@@ -12,6 +12,7 @@ import type {
   PayoutRecord,
   ResolveDisputeParams,
   StaffTaxIqItem,
+  StaffTin,
   UpdatePayoutRecordParams,
   UpdateStaffW9StatusParams,
 } from '../repositories/taxiqOwnerPayouts'
@@ -41,6 +42,25 @@ export function useUpdateStaffW9Status() {
       queryClient.invalidateQueries({ queryKey: qk.taxiqOwnerStaffList(params.ownerTaxYearId) })
       queryClient.invalidateQueries({ queryKey: qk.taxiqReadinessScore('owner', params.ownerTaxYearId) })
     },
+  })
+}
+
+// Masked-by-default view of a Staff's TIN, shown inline in StaffTaxProfileTab.
+export function useStaffTinMasked(ownerTaxYearId: string | undefined, staffUserId: string | undefined) {
+  return useQuery<StaffTin>({
+    queryKey: qk.taxiqOwnerStaffTin(ownerTaxYearId, staffUserId, false),
+    queryFn: () => taxiqOwnerPayoutsRepository.getStaffTin(ownerTaxYearId as string, staffUserId as string, false),
+    enabled: !!ownerTaxYearId && !!staffUserId,
+  })
+}
+
+// Plaintext reveal — deliberately a mutation (not cached by react-query) so the
+// plaintext value isn't kept around after the component that requested it unmounts.
+// Every call is audited server-side (GetStaffTinQuery, reveal=true).
+export function useRevealStaffTin() {
+  return useMutation<StaffTin, Error, { ownerTaxYearId: string; staffUserId: string }>({
+    mutationFn: ({ ownerTaxYearId, staffUserId }) =>
+      taxiqOwnerPayoutsRepository.getStaffTin(ownerTaxYearId, staffUserId, true),
   })
 }
 

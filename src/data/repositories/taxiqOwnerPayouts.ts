@@ -23,6 +23,23 @@ export type PayoutStatus = (typeof PAYOUT_STATUSES)[number]
 export const DISPUTE_RESOLUTIONS = ['Approve', 'Adjust', 'Reject'] as const
 export type DisputeResolution = (typeof DISPUTE_RESOLUTIONS)[number]
 
+export interface StaffTinApiDto {
+  ssn?: string | null
+  ein?: string | null
+}
+
+export interface StaffTin {
+  ssn: string | null
+  ein: string | null
+}
+
+function normalizeStaffTin(dto: StaffTinApiDto): StaffTin {
+  return {
+    ssn: dto.ssn ?? null,
+    ein: dto.ein ?? null,
+  }
+}
+
 export interface StaffTaxIqItemApiDto {
   userProfileId: string
   staffProfileId: string
@@ -262,6 +279,12 @@ export function createTaxiqOwnerPayoutsRepository(client: HttpClient = httpClien
           w9Status: params.w9Status,
         },
       )
+    },
+
+    async getStaffTin(ownerTaxYearId: string, staffUserId: string, reveal: boolean): Promise<StaffTin> {
+      const query = new URLSearchParams({ ownerTaxYearId, staffUserId, reveal: String(reveal) })
+      const dto = await client.get<StaffTinApiDto>(`/api/v1/taxiq/owner/staff-tin?${query.toString()}`)
+      return normalizeStaffTin(dto)
     },
 
     async list(params: ListPayoutRecordsParams): Promise<PayoutRecord[]> {

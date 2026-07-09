@@ -3061,6 +3061,25 @@
     "default_desc": "Module này đang được chuẩn bị cho bảng điều khiển Nexora Touch."
   },
   "taxiq": {
+    "taxProfile": {
+      "title": "Mã số thuế (SSN/EIN)",
+      "description": "Cần cho mẫu W-9 để tiệm phát hành 1099-NEC cho bạn. Mặc định ẩn với chủ tiệm — chỉ hiện 4 số cuối trừ khi chủ tiệm bấm Reveal.",
+      "ssnLabel": "SSN",
+      "einLabel": "EIN",
+      "ssnPlaceholder": "123-45-6789",
+      "einPlaceholder": "12-3456789",
+      "saveButton": "Lưu",
+      "savedNotice": "Đã lưu",
+      "notProvided": "Chưa nhập",
+      "revealButton": "Xem đầy đủ",
+      "revealedNotice": "Lượt xem này đã được ghi lại để bảo mật.",
+      "errors": {
+        "required": "Nhập SSN hoặc EIN",
+        "ssnFormat": "SSN phải có 9 số (VD: 123-45-6789)",
+        "einFormat": "EIN phải có 9 số (VD: 12-3456789)",
+        "generic": "Đã có lỗi xảy ra. Vui lòng thử lại."
+      }
+    },
     "tooltips": {
       "w2": "Nhân viên chính thức. Tiệm khấu trừ thuế trực tiếp trên mỗi kỳ lương và phát Form W-2 trước ngày 31/1.",
       "contractor1099": "Thợ hợp đồng độc lập. Không bị khấu trừ thuế tại nguồn — tự đóng thuế tự kinh doanh (~15.3%) và nhận Form 1099-NEC nếu được trả từ $600/năm trở lên.",

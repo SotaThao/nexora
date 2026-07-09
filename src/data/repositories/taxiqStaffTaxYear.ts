@@ -51,6 +51,28 @@ export interface UpdateStaffTaxYearModulesParams {
   w9Status?: string
 }
 
+export interface StaffTaxProfileApiDto {
+  ssn?: string | null
+  ein?: string | null
+}
+
+export interface StaffTaxProfile {
+  ssn: string | null
+  ein: string | null
+}
+
+export interface UpsertStaffTaxProfileParams {
+  ssn?: string | null
+  ein?: string | null
+}
+
+function normalizeStaffTaxProfile(dto: StaffTaxProfileApiDto): StaffTaxProfile {
+  return {
+    ssn: dto.ssn ?? null,
+    ein: dto.ein ?? null,
+  }
+}
+
 export interface StaffDashboardApiDto {
   staffTaxYearId: string
   taxYear: number
@@ -155,6 +177,18 @@ export function createTaxiqStaffTaxYearRepository(client: HttpClient = httpClien
         enabledModules: params.enabledModules,
         contractType: params.contractType ?? null,
         w9Status: params.w9Status ?? null,
+      })
+    },
+
+    async getMyTaxProfile(): Promise<StaffTaxProfile> {
+      const dto = await client.get<StaffTaxProfileApiDto>('/api/v1/taxiq/staff/tax-profile')
+      return normalizeStaffTaxProfile(dto)
+    },
+
+    async upsertMyTaxProfile(params: UpsertStaffTaxProfileParams): Promise<void> {
+      await client.put('/api/v1/taxiq/staff/tax-profile', {
+        ssn: params.ssn ?? null,
+        ein: params.ein ?? null,
       })
     },
   }
