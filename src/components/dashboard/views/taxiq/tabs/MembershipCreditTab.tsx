@@ -266,7 +266,15 @@ export default function MembershipCreditTab({
                           <button
                             type="button"
                             onClick={() => navigate('/dashboard/taxiq/export', {
-                              state: { prefillAdjustment: { entityType: 'MembershipCredit', entityId: item.id } },
+                              state: { prefillAdjustment: {
+                                entityType: 'MembershipCredit',
+                                entityId: item.id,
+                                currentValues: {
+                                  CreditsIssued: item.creditsIssued,
+                                  CreditsUsed: item.creditsUsed,
+                                  CreditsExpired: item.creditsExpired,
+                                },
+                              } },
                             })}
                             title={t('taxiq.createAdjustment.rowActionTooltip')}
                             className="inline-flex items-center gap-1 text-[11px] font-bold text-nexoraBrand hover:underline"

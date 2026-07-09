@@ -305,7 +305,15 @@ export default function EquipmentTab({
                           <button
                             type="button"
                             onClick={() => navigate('/dashboard/taxiq/export', {
-                              state: { prefillAdjustment: { entityType: 'EquipmentAsset', entityId: item.id } },
+                              state: { prefillAdjustment: {
+                                entityType: 'EquipmentAsset',
+                                entityId: item.id,
+                                currentValues: {
+                                  Amount: item.amount,
+                                  BusinessUsePercent: item.businessUsePercent,
+                                  AssetName: item.assetName,
+                                },
+                              } },
                             })}
                             title={t('taxiq.createAdjustment.rowActionTooltip')}
                             className="inline-flex items-center gap-1 text-[11px] font-bold text-nexoraBrand hover:underline"

@@ -288,7 +288,16 @@ export default function DeductionCenterView({
                           <button
                             type="button"
                             onClick={() => navigate('/dashboard/taxiq/export', {
-                              state: { prefillAdjustment: { entityType: 'DeductionRecord', entityId: record.id } },
+                              state: { prefillAdjustment: {
+                                entityType: 'DeductionRecord',
+                                entityId: record.id,
+                                currentValues: {
+                                  Amount: record.amount,
+                                  Description: record.description,
+                                  VendorName: record.vendorName,
+                                  BusinessUsePercent: record.businessUsePercent ?? '',
+                                },
+                              } },
                             })}
                             title={t('taxiq.createAdjustment.rowActionTooltip')}
                             className="inline-flex items-center gap-1 text-[11px] font-bold text-nexoraBrand hover:underline"

@@ -31,6 +31,10 @@ const ENTITY_TYPES = Object.keys(ADJUSTMENT_ENTITY_FIELD_MAP)
 export interface CreateAdjustmentPrefill {
   entityType?: string
   entityId?: string
+  // Snapshot of the record's current field values, captured at the moment the Owner clicked
+  // "Adjust" on the source screen — keyed by fieldName (e.g. "Amount", "VendorName"). Lets Old
+  // Value auto-fill instead of making the Owner retype what's already on screen.
+  currentValues?: Record<string, string | number>
 }
 
 export default function CreateAdjustmentModal({
@@ -53,6 +57,7 @@ export default function CreateAdjustmentModal({
   const [entityType, setEntityType] = useState(ENTITY_TYPES[0])
   const [entityId, setEntityId] = useState('')
   const [fieldName, setFieldName] = useState(ADJUSTMENT_ENTITY_FIELD_MAP[ENTITY_TYPES[0]][0])
+  const [currentValues, setCurrentValues] = useState<Record<string, string | number>>({})
   const [oldValue, setOldValue] = useState('')
   const [newValue, setNewValue] = useState('')
   const [reason, setReason] = useState('')
@@ -60,15 +65,21 @@ export default function CreateAdjustmentModal({
   const [receiptId, setReceiptId] = useState('')
   const [error, setError] = useState('')
 
+  const oldValueFor = (values: Record<string, string | number>, field: string) =>
+    values[field] !== undefined ? String(values[field]) : ''
+
   useEffect(() => {
     if (!open) return
     const initialEntityType = prefill?.entityType && ADJUSTMENT_ENTITY_FIELD_MAP[prefill.entityType]
       ? prefill.entityType
       : ENTITY_TYPES[0]
+    const initialFieldName = ADJUSTMENT_ENTITY_FIELD_MAP[initialEntityType][0]
+    const values = prefill?.currentValues ?? {}
     setEntityType(initialEntityType)
     setEntityId(prefill?.entityId ?? '')
-    setFieldName(ADJUSTMENT_ENTITY_FIELD_MAP[initialEntityType][0])
-    setOldValue('')
+    setFieldName(initialFieldName)
+    setCurrentValues(values)
+    setOldValue(oldValueFor(values, initialFieldName))
     setNewValue('')
     setReason('')
     setCpaNotes('')
@@ -83,7 +94,15 @@ export default function CreateAdjustmentModal({
 
   const handleEntityTypeChange = (value: string) => {
     setEntityType(value)
-    setFieldName(ADJUSTMENT_ENTITY_FIELD_MAP[value][0])
+    const nextFieldName = ADJUSTMENT_ENTITY_FIELD_MAP[value][0]
+    setFieldName(nextFieldName)
+    setCurrentValues({})
+    setOldValue('')
+  }
+
+  const handleFieldNameChange = (value: string) => {
+    setFieldName(value)
+    setOldValue(oldValueFor(currentValues, value))
   }
 
   const canSubmit =
@@ -159,7 +178,7 @@ export default function CreateAdjustmentModal({
               </label>
               <select
                 value={fieldName}
-                onChange={(e) => setFieldName(e.target.value)}
+                onChange={(e) => handleFieldNameChange(e.target.value)}
                 className="w-full rounded-lg border border-nexoraBorder px-3 py-2 text-xs font-semibold"
               >
                 {fieldOptions.map((f) => (
