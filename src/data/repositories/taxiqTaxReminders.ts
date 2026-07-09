@@ -1,7 +1,7 @@
 /**
  * taxiqTaxRemindersRepository — API implementation for US-08 (Tax Payment Reminders).
  * Mirrors taxiqOwnerAssets.ts. Backend (US-15, TaxPaymentReminderController) exposes
- * Create + List + MarkPaid + Snooze — no Update/Delete endpoints.
+ * Create + List + Update + Delete + MarkPaid + Snooze.
  */
 import httpClient from '../../lib/httpClient'
 
@@ -39,6 +39,13 @@ export interface TaxPaymentReminder {
 }
 
 export interface CreateTaxReminderParams {
+  ownerTaxYearId: string
+  taxType: TaxReminderTaxType
+  dueDate: string
+}
+
+export interface UpdateTaxReminderParams {
+  id: string
   ownerTaxYearId: string
   taxType: TaxReminderTaxType
   dueDate: string
@@ -85,6 +92,17 @@ export function createTaxiqTaxRemindersRepository(client: HttpClient = httpClien
         taxType: params.taxType,
         dueDate: params.dueDate,
       })
+    },
+
+    async update(params: UpdateTaxReminderParams): Promise<void> {
+      await client.put(`/api/v1/taxiq/owner/tax-reminders/${encodeURIComponent(params.id)}`, {
+        taxType: params.taxType,
+        dueDate: params.dueDate,
+      })
+    },
+
+    async delete(id: string): Promise<void> {
+      await client.del(`/api/v1/taxiq/owner/tax-reminders/${encodeURIComponent(id)}`)
     },
 
     async markPaid(params: MarkTaxReminderPaidParams): Promise<void> {

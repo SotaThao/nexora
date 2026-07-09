@@ -1845,6 +1845,7 @@
     "taxiq_adjustment_entity_not_found": "The record you're trying to adjust could not be found.",
     "taxiq_tax_payment_reminder_not_found": "This reminder could not be found.",
     "taxiq_tax_reminder_snooze_limit_reached": "Snooze limit reached (max 3).",
+    "taxiq_tax_reminder_not_editable": "This reminder is already marked as paid and can no longer be edited or deleted.",
     "taxiq_payout_record_not_found": "This payout record could not be found.",
     "taxiq_payout_record_not_editable": "This payout can only be edited while it is still Pending Confirmation.",
     "taxiq_payout_access_denied": "You don't have access to this payout record.",
@@ -3926,10 +3927,13 @@
       "addButton": "Add Reminder",
       "form": {
         "modalTitle": "Add Reminder",
+        "editModalTitle": "Edit Reminder",
         "taxTypeLabel": "Tax type",
         "dueDateLabel": "Due date",
         "submitButton": "Add Reminder",
-        "success": "Reminder created."
+        "saveChanges": "Save Changes",
+        "success": "Reminder created.",
+        "updateSuccess": "Reminder updated."
       },
       "taxTypes": {
         "SalesTax": "Sales Tax",
@@ -3963,8 +3967,12 @@
       "actions": {
         "markPaid": "Mark Paid",
         "snooze": "Snooze",
-        "snoozeLimitTooltip": "Snooze limit reached (max 3)."
+        "snoozeLimitTooltip": "Snooze limit reached (max 3).",
+        "edit": "Edit",
+        "delete": "Delete"
       },
+      "deleteConfirm": "Delete this reminder? This cannot be undone.",
+      "deleteSuccess": "Reminder deleted.",
       "markPaidModal": {
         "modalTitle": "Mark as Paid",
         "description": "Optionally attach a proof of payment receipt.",

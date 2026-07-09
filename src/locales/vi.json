@@ -1845,6 +1845,7 @@
     "taxiq_adjustment_entity_not_found": "Không tìm thấy bản ghi bạn đang muốn điều chỉnh.",
     "taxiq_tax_payment_reminder_not_found": "Không tìm thấy reminder này.",
     "taxiq_tax_reminder_snooze_limit_reached": "Đã đạt giới hạn nhắc lại (tối đa 3 lần).",
+    "taxiq_tax_reminder_not_editable": "Reminder này đã được đánh dấu đã thanh toán, không thể sửa hoặc xóa.",
     "taxiq_payout_record_not_found": "Không tìm thấy payout này.",
     "taxiq_payout_record_not_editable": "Chỉ có thể sửa payout khi còn ở trạng thái Pending Confirmation.",
     "taxiq_payout_access_denied": "Bạn không có quyền truy cập payout này.",
@@ -3925,10 +3926,13 @@
       "addButton": "Thêm Reminder",
       "form": {
         "modalTitle": "Thêm Reminder",
+        "editModalTitle": "Sửa Reminder",
         "taxTypeLabel": "Loại thuế",
         "dueDateLabel": "Ngày đến hạn",
         "submitButton": "Thêm Reminder",
-        "success": "Đã tạo reminder."
+        "saveChanges": "Lưu Thay Đổi",
+        "success": "Đã tạo reminder.",
+        "updateSuccess": "Đã cập nhật reminder."
       },
       "taxTypes": {
         "SalesTax": "Sales Tax",
@@ -3962,8 +3966,12 @@
       "actions": {
         "markPaid": "Đã thanh toán",
         "snooze": "Hoãn nhắc",
-        "snoozeLimitTooltip": "Đã đạt giới hạn nhắc lại (tối đa 3 lần)."
+        "snoozeLimitTooltip": "Đã đạt giới hạn nhắc lại (tối đa 3 lần).",
+        "edit": "Sửa",
+        "delete": "Xóa"
       },
+      "deleteConfirm": "Xóa reminder này? Không thể hoàn tác.",
+      "deleteSuccess": "Đã xóa reminder.",
       "markPaidModal": {
         "modalTitle": "Đánh dấu đã thanh toán",
         "description": "Có thể tải lên chứng từ thanh toán (không bắt buộc).",

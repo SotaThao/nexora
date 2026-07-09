@@ -3,8 +3,12 @@ import { Loader2, X } from 'lucide-react'
 import IconButton from '../../../../ui/IconButton'
 import { useTranslation } from '../../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../../contexts/NotificationContext'
-import { useCreateTaxReminder } from '../../../../../data/hooks/useTaxiqTaxReminders'
-import { TAX_RELATED_TAX_TYPES, type TaxReminderTaxType } from '../../../../../data/repositories/taxiqTaxReminders'
+import { useCreateTaxReminder, useUpdateTaxReminder } from '../../../../../data/hooks/useTaxiqTaxReminders'
+import {
+  TAX_RELATED_TAX_TYPES,
+  type TaxPaymentReminder,
+  type TaxReminderTaxType,
+} from '../../../../../data/repositories/taxiqTaxReminders'
 import { isApiError } from '../../../../../types/domain'
 import { getErrorI18nKey } from '../../../../../data/errorCodes'
 
@@ -14,21 +18,28 @@ export default function AddTaxReminderModal({
   open,
   onClose,
   ownerTaxYearId,
+  editingReminder,
 }: {
   open: boolean
   onClose: () => void
   ownerTaxYearId: string
+  editingReminder?: TaxPaymentReminder | null
 }) {
   const { t } = useTranslation()
   const { showToast } = useNotification()
   const createReminder = useCreateTaxReminder()
+  const updateReminder = useUpdateTaxReminder()
 
-  const [taxType, setTaxType] = useState<TaxReminderTaxType>(TAX_RELATED_TAX_TYPES[0])
-  const [dueDate, setDueDate] = useState('')
+  const [taxType, setTaxType] = useState<TaxReminderTaxType>(
+    (editingReminder?.taxType as TaxReminderTaxType) ?? TAX_RELATED_TAX_TYPES[0],
+  )
+  const [dueDate, setDueDate] = useState(editingReminder?.dueDate ?? '')
   const [error, setError] = useState('')
 
   if (!open) return null
 
+  const isEditing = !!editingReminder
+  const isPending = createReminder.isPending || updateReminder.isPending
   const canSubmit = dueDate.trim().length > 0
 
   const handleClose = () => {
@@ -39,11 +50,16 @@ export default function AddTaxReminderModal({
   }
 
   const handleSubmit = async () => {
-    if (!canSubmit || createReminder.isPending) return
+    if (!canSubmit || isPending) return
     setError('')
     try {
-      await createReminder.mutateAsync({ ownerTaxYearId, taxType, dueDate })
-      showToast(t('taxiq.reminders.form.success'), 'success')
+      if (isEditing && editingReminder) {
+        await updateReminder.mutateAsync({ id: editingReminder.id, ownerTaxYearId, taxType, dueDate })
+        showToast(t('taxiq.reminders.form.updateSuccess'), 'success')
+      } else {
+        await createReminder.mutateAsync({ ownerTaxYearId, taxType, dueDate })
+        showToast(t('taxiq.reminders.form.success'), 'success')
+      }
       handleClose()
     } catch (err) {
       const fallback = t('taxiq.reminders.errors.generic')
@@ -61,7 +77,9 @@ export default function AddTaxReminderModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-nexoraText/70 p-4 backdrop-blur-sm">
       <div className="nexora-modal-card max-w-sm">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-extrabold text-nexoraText">{t('taxiq.reminders.form.modalTitle')}</h2>
+          <h2 className="text-sm font-extrabold text-nexoraText">
+            {isEditing ? t('taxiq.reminders.form.editModalTitle') : t('taxiq.reminders.form.modalTitle')}
+          </h2>
           <IconButton label={t('common.cancel')} onClick={handleClose}>
             <X className="h-4 w-4" />
           </IconButton>
@@ -112,11 +130,11 @@ export default function AddTaxReminderModal({
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={!canSubmit || createReminder.isPending}
+            disabled={!canSubmit || isPending}
             className="inline-flex items-center gap-1.5 rounded-lg bg-nexoraBrand px-5 py-2 text-xs font-bold text-white disabled:opacity-60"
           >
-            {createReminder.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-            {t('taxiq.reminders.form.submitButton')}
+            {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+            {isEditing ? t('taxiq.reminders.form.saveChanges') : t('taxiq.reminders.form.submitButton')}
           </button>
         </div>
       </div>

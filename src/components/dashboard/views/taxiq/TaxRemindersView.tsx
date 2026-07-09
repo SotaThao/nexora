@@ -1,15 +1,19 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus } from 'lucide-react'
+import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
-import { useTaxiqTaxReminders } from '../../../../data/hooks/useTaxiqTaxReminders'
+import { useNotification } from '../../../../contexts/NotificationContext'
+import { useDeleteTaxReminder, useTaxiqTaxReminders } from '../../../../data/hooks/useTaxiqTaxReminders'
 import type { TaxPaymentReminder } from '../../../../data/repositories/taxiqTaxReminders'
+import { isApiError } from '../../../../types/domain'
+import { getErrorI18nKey } from '../../../../data/errorCodes'
 import { SkeletonList } from '../../../ui/skeleton'
 import Tooltip from '../../../ui/Tooltip'
 import TaxReminderStatusBadge from './shared/TaxReminderStatusBadge'
 import AddTaxReminderModal from './modals/AddTaxReminderModal'
 import MarkTaxReminderPaidModal from './modals/MarkTaxReminderPaidModal'
 import SnoozeTaxReminderModal from './modals/SnoozeTaxReminderModal'
+import ConfirmModal from './modals/ConfirmModal'
 
 const MAX_SNOOZE_COUNT = 3
 
@@ -23,16 +27,32 @@ export default function TaxRemindersView({
   ownerTaxYearStatus: string
 }) {
   const { t } = useTranslation()
+  const { showToast } = useNotification()
   const navigate = useNavigate()
 
   const isLocked = ownerTaxYearStatus === 'Locked'
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [editingReminder, setEditingReminder] = useState<TaxPaymentReminder | null>(null)
+  const [deletingReminder, setDeletingReminder] = useState<TaxPaymentReminder | null>(null)
   const [markPaidReminder, setMarkPaidReminder] = useState<TaxPaymentReminder | null>(null)
   const [snoozeReminder, setSnoozeReminder] = useState<TaxPaymentReminder | null>(null)
 
   const listQuery = useTaxiqTaxReminders(ownerTaxYearId)
+  const deleteReminder = useDeleteTaxReminder()
   const items = listQuery.data ?? []
+
+  const handleDelete = async () => {
+    if (!deletingReminder) return
+    try {
+      await deleteReminder.mutateAsync({ id: deletingReminder.id, ownerTaxYearId })
+      showToast(t('taxiq.reminders.deleteSuccess'), 'success')
+      setDeletingReminder(null)
+    } catch (err) {
+      const i18nKey = isApiError(err) ? getErrorI18nKey(err.errorCode) : 'taxiq.reminders.errors.generic'
+      showToast(t(i18nKey), 'error')
+    }
+  }
 
   return (
     <div className="space-y-5">
@@ -147,6 +167,26 @@ export default function TaxRemindersView({
                             {t('taxiq.reminders.actions.snooze')}
                           </button>
                         )}
+                        {!isPaid && !isLocked && (
+                          <button
+                            type="button"
+                            onClick={() => setEditingReminder(reminder)}
+                            className="inline-flex items-center gap-1 text-[11px] font-bold text-nexoraBrand hover:underline"
+                          >
+                            <Pencil className="h-3 w-3" />
+                            {t('taxiq.reminders.actions.edit')}
+                          </button>
+                        )}
+                        {!isPaid && !isLocked && (
+                          <button
+                            type="button"
+                            onClick={() => setDeletingReminder(reminder)}
+                            className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-600 hover:underline"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            {t('taxiq.reminders.actions.delete')}
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -164,6 +204,26 @@ export default function TaxRemindersView({
           ownerTaxYearId={ownerTaxYearId}
         />
       )}
+
+      {editingReminder && (
+        <AddTaxReminderModal
+          open={!!editingReminder}
+          onClose={() => setEditingReminder(null)}
+          ownerTaxYearId={ownerTaxYearId}
+          editingReminder={editingReminder}
+        />
+      )}
+
+      <ConfirmModal
+        open={!!deletingReminder}
+        onClose={() => setDeletingReminder(null)}
+        onConfirm={handleDelete}
+        title={t('taxiq.reminders.actions.delete')}
+        message={t('taxiq.reminders.deleteConfirm')}
+        confirmLabel={t('taxiq.reminders.actions.delete')}
+        isDangerous
+        isPending={deleteReminder.isPending}
+      />
 
       {markPaidReminder && (
         <MarkTaxReminderPaidModal

@@ -9,6 +9,7 @@ import type {
   MarkTaxReminderPaidParams,
   SnoozeTaxReminderParams,
   TaxPaymentReminder,
+  UpdateTaxReminderParams,
 } from '../repositories/taxiqTaxReminders'
 
 export function useTaxiqTaxReminders(ownerTaxYearId: string | undefined) {
@@ -23,6 +24,24 @@ export function useCreateTaxReminder() {
   const queryClient = useQueryClient()
   return useMutation<string, Error, CreateTaxReminderParams>({
     mutationFn: (params) => taxiqTaxRemindersRepository.create(params),
+    onSuccess: (_, params) =>
+      queryClient.invalidateQueries({ queryKey: qk.taxiqTaxReminders(params.ownerTaxYearId) }),
+  })
+}
+
+export function useUpdateTaxReminder() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, UpdateTaxReminderParams>({
+    mutationFn: (params) => taxiqTaxRemindersRepository.update(params),
+    onSuccess: (_, params) =>
+      queryClient.invalidateQueries({ queryKey: qk.taxiqTaxReminders(params.ownerTaxYearId) }),
+  })
+}
+
+export function useDeleteTaxReminder() {
+  const queryClient = useQueryClient()
+  return useMutation<void, Error, { id: string; ownerTaxYearId: string }>({
+    mutationFn: (params) => taxiqTaxRemindersRepository.delete(params.id),
     onSuccess: (_, params) =>
       queryClient.invalidateQueries({ queryKey: qk.taxiqTaxReminders(params.ownerTaxYearId) }),
   })

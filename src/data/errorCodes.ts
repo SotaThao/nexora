@@ -95,6 +95,7 @@ export const errorCodeToI18nKey = {
   // Tax IQ — Tax Payment Reminders (US-08)
   TAXIQ_TAX_PAYMENT_REMINDER_NOT_FOUND: 'errors.taxiq_tax_payment_reminder_not_found',
   TAXIQ_TAX_REMINDER_SNOOZE_LIMIT_REACHED: 'errors.taxiq_tax_reminder_snooze_limit_reached',
+  TAXIQ_TAX_REMINDER_NOT_EDITABLE: 'errors.taxiq_tax_reminder_not_editable',
 
   // Tax IQ — Owner Payout & Dispute Center (US-09)
   TAXIQ_PAYOUT_RECORD_NOT_FOUND: 'errors.taxiq_payout_record_not_found',
