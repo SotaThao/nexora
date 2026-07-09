@@ -928,10 +928,12 @@
         "support_type_required": "Vui lòng chọn loại hỗ trợ.",
         "support_type_min_length": "Vui lòng chọn loại hỗ trợ.",
         "support_options": {
-          "payment": "Cổng thanh toán trực tiếp",
-          "pos": "Hệ thống POS bán hàng",
-          "website": "Website doanh nghiệp",
-          "marketing": "Giải pháp marketing",
+          "tip_payment": "Sự cố thanh toán tip",
+          "qr_code": "Thiết lập mã QR",
+          "staff_account": "Tài khoản nhân viên",
+          "billing_plan": "Thanh toán & Gói dịch vụ",
+          "review_routing": "Định tuyến đánh giá",
+          "technical_bug": "Lỗi kỹ thuật",
           "other": "Vấn đề khác"
         },
         "message_label": "Nội dung",
@@ -945,7 +947,10 @@
         "captcha_not_ready": "Đang tải xác minh bảo mật. Vui lòng thử lại sau giây lát.",
         "captcha_error": "Xác minh bảo mật thất bại. Vui lòng tải lại trang và thử lại.",
         "submitting_btn": "Đang gửi...",
-        "submit_error_msg": "Không thể gửi yêu cầu. Vui lòng thử lại."
+        "submit_error_msg": "Không thể gửi yêu cầu. Vui lòng thử lại.",
+        "response_time": "Thời gian phản hồi trung bình: trong vòng 24 giờ vào các ngày làm việc.",
+        "urgent_help_prefix": "Cần hỗ trợ khẩn cấp?",
+        "urgent_help_email": "support@nexoratouch.com"
       },
       "faq": {
         "title": "Câu Hỏi Thường Gặp",
@@ -956,7 +961,19 @@
         "q3": "Làm thế nào để thiết lập Ví VLINKPAY?",
         "a3": "Điều hướng đến Cài đặt -> tab Hồ sơ, cuộn xuống Phương thức nhận tiền và nhập định danh Ví VLINKPAY của bạn. Sau khi được xác minh, khách hàng sẽ thấy VLINKPAY dưới dạng tùy chọn típ trực tiếp.",
         "q4": "Làm thế nào để đặt mua đế dựng NFC?",
-        "a4": "Bạn có thể đặt mua đế dựng bằng gỗ NFC khắc laser tùy chỉnh hoặc thẻ đặt bàn trực tiếp từ tab Quản lý Gói / Đăng ký, hoặc liên hệ với đội ngũ hỗ trợ của chúng tôi cùng với số lượng trạm salon của bạn."
+        "a4": "Bạn có thể đặt mua đế dựng bằng gỗ NFC khắc laser tùy chỉnh hoặc thẻ đặt bàn trực tiếp từ tab Quản lý Gói / Đăng ký, hoặc liên hệ với đội ngũ hỗ trợ của chúng tôi cùng với số lượng trạm salon của bạn.",
+        "q5": "Khách hàng của tôi tip mà không cần tải app thì làm thế nào?",
+        "a5": "Khách hàng quét mã QR tại trạm bằng camera điện thoại — không cần tải ứng dụng. Họ chọn số tiền tip, chọn phương thức thanh toán (Venmo, Zelle, Cash App hoặc VLINKPAY) và hoàn tất thanh toán trong ứng dụng ví hiện có của họ.",
+        "q6": "Tip đến tài khoản của thợ khi nào?",
+        "a6": "Tip chuyển trực tiếp từ khách hàng đến tài khoản nhận tiền đã liên kết của thợ. Nexora không giữ hoặc gom lô — tiền xuất hiện ngay khi ứng dụng thanh toán của khách xác nhận, thường trong vài phút.",
+        "q7": "Tôi có thể dùng Nexora Touch với hệ thống POS hiện tại không?",
+        "a7": "Có. Nexora Touch hoạt động song song với POS hiện tại — xử lý tip và đánh giá tại mỗi trạm mà không thay thế hệ thống thanh toán dịch vụ. POS của bạn vẫn xử lý thanh toán dịch vụ; Nexora thu tip và phản hồi qua mã QR tại từng trạm làm việc.",
+        "q8": "Điều gì xảy ra nếu khách để lại đánh giá 1 sao?",
+        "a8": "Đánh giá thấp được chuyển đến bạn ở chế độ riêng tư trước để bạn có thể phản hồi trước khi hiển thị công khai. Bạn nhận thông báo kèm chi tiết đánh giá và có thể xử lý trực tiếp với khách hoặc đội ngũ.",
+        "q9": "Làm thế nào để thêm hoặc xóa thợ khỏi danh sách?",
+        "a9": "Vào mục Nhân viên trong bảng điều khiển. Để thêm thợ, nhấp Mời nhân viên và chia sẻ liên kết tham gia hoặc mã QR. Để xóa, mở hồ sơ của họ và vô hiệu hóa hoặc gỡ khỏi danh sách — lịch sử tip vẫn được lưu trong hồ sơ của bạn.",
+        "q10": "Có hợp đồng dài hạn không hay tôi có thể hủy bất cứ lúc nào?",
+        "a10": "Nexora Touch không có hợp đồng dài hạn. Bạn có thể hủy đăng ký bất cứ lúc nào từ Quản lý Gói. Tài khoản vẫn hoạt động đến hết chu kỳ thanh toán hiện tại."
       }
     },
     "tips": {
@@ -1069,7 +1086,8 @@
         "status_pending_desc": "Đã ghi nhận chi trả. Đang chờ thợ xác nhận đã nhận tiền.",
         "status_confirmed_desc": "Thợ đã xác nhận đã nhận payout này.",
         "status_cancelled_desc": "Payout này đã bị huỷ và không còn hiệu lực.",
-        "type_tip": "Tiền tip",
+        "type_unpaid_tips": "Tip chưa trả",
+        "type_tip": "Tip",
         "type_salary": "Lương",
         "type_bonus": "Thưởng",
         "type_other": "Khác",
@@ -1180,7 +1198,8 @@
         "transactions_count": "Số Giao Dịch",
         "transactions_unit": "Giao dịch",
         "avg_tip": "Típ Trung Bình",
-        "fees_avoided": "Phí tiết kiệm"
+        "fees_avoided": "Phí tiết kiệm",
+        "fees_avoided_tooltip": "Ước tính phí xử lý thẻ tiết kiệm được từ tip P2P trực tiếp, tính theo 3% trên tổng lượng được định tuyến."
       },
       "charts": {
         "daily_revenue": "Biểu Đồ Doanh Thu Theo Ngày",
@@ -1190,7 +1209,11 @@
         "staff": "Bảng Xếp Hạng Nhân Viên",
         "touchpoints": "Hiệu suất trạm",
         "tips_count_label": "lượt nhận típ",
-        "scans_count_label": "lượt quét"
+        "scans_count_label": "lượt quét",
+        "unassigned": "Tip chưa gán",
+        "unassigned_tooltip": "Tip này được nhận qua mã QR chung của salon và chưa được gán cho thợ cụ thể.",
+        "station_stats": "{scans} lượt quét · {tips} tip = {pct}% chuyển đổi",
+        "station_stats_no_conversion": "{scans} lượt quét · {tips} tip"
       }
     },
     "empty_states": {
