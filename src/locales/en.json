@@ -1087,6 +1087,7 @@
         "status_pending_desc": "Payout recorded. Waiting for the staff member to confirm they received the payment.",
         "status_confirmed_desc": "The staff member confirmed they received this payout.",
         "status_cancelled_desc": "This payout was cancelled and is no longer active.",
+        "type_unpaid_tips": "Unpaid tip",
         "type_tip": "Tip",
         "type_salary": "Salary",
         "type_bonus": "Bonus",
@@ -1198,7 +1199,8 @@
         "transactions_count": "Transactions",
         "transactions_unit": "Transactions",
         "avg_tip": "Average Tip",
-        "fees_avoided": "Fees Saved"
+        "fees_avoided": "Fees Saved",
+        "fees_avoided_tooltip": "Estimated card processing fees saved from direct P2P tips, calculated at 3% of routed volume."
       },
       "charts": {
         "daily_revenue": "Daily Revenue Trend",
@@ -1208,7 +1210,11 @@
         "staff": "Leaderboard",
         "touchpoints": "Station Performance",
         "tips_count_label": "tips received",
-        "scans_count_label": "scans logged"
+        "scans_count_label": "scans logged",
+        "unassigned": "Unassigned Tip",
+        "unassigned_tooltip": "This tip was received through the general salon QR code and was not assigned to a specific technician.",
+        "station_stats": "{scans} scans · {tips} tips = {pct}% conversion",
+        "station_stats_no_conversion": "{scans} scans · {tips} tips"
       }
     },
     "empty_states": {
