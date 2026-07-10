@@ -20,7 +20,7 @@ export function getIntroVideoThumbnailPath(lang = 'en', options = {}) {
   return `${base}/homepage/assets/images/video-thumb-${suffix}.png`
 }
 
-/** WKWebView on iOS/native shells often fails to render large SVG posters via <img>. */
+/** WKWebView on iOS/native shells often fails to render large posters via <img>. */
 export function shouldUseYouTubeVideoThumbnail() {
   return isIOSDevice()
 }
