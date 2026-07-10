@@ -133,10 +133,7 @@ export default function StaffYearEndExportView({
     try {
       const result = await generateFinal.mutateAsync({
         staffTaxYearId: staffTaxYear.id,
-        // BE requires ConsentConfirmed=true unconditionally for Final Export on every
-        // tier (see GenerateFinalExportCommandHandler) — Basic has no consent checkbox
-        // in the UI per AC, so it is implicitly confirmed here.
-        consentConfirmed: requiresConsent ? consentConfirmed : true,
+        consentConfirmed,
         packageType: selectedPackageType,
       })
       setFinalResult(result)
