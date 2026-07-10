@@ -13,7 +13,15 @@ import {
   useToggleMerchantVoiceStaffStatus,
   useUpdateMerchantVoiceStaff,
 } from '../../../data/hooks/useMerchantVoiceBookings'
-import { MerchantVoiceStaffStatus, type MerchantVoiceStaffDto } from '../../../data/repositories/merchantVoice'
+import {
+  isStaffStatusActive,
+  mapDayOfWeekToApiName,
+  mapStaffStatusToActivityApi,
+  MerchantVoiceDayOfWeek,
+  MerchantVoiceStaffStatus,
+  normalizeMerchantVoiceDayOfWeek,
+  type MerchantVoiceStaffDto,
+} from '../../../data/repositories/merchantVoice'
 import { EyeIcon, SpinnerIcon } from './BookingHubIcons'
 import {
   BookingTeamGridSkeleton,
@@ -63,64 +71,31 @@ interface BusinessStaffOption {
 }
 
 const INITIAL_TEAM_MEMBERS: TeamMember[] = []
-const DAY_NUMBER_TO_KEY: Record<number, DayKey> = {
-  0: 'sun',
-  1: 'mon',
-  2: 'tue',
-  3: 'wed',
-  4: 'thu',
-  5: 'fri',
-  6: 'sat',
-}
-const DAY_KEY_TO_NUMBER: Record<DayKey, number> = {
-  sun: 0,
-  mon: 1,
-  tue: 2,
-  wed: 3,
-  thu: 4,
-  fri: 5,
-  sat: 6,
+
+const DAY_KEY_TO_API_DAY: Record<DayKey, MerchantVoiceDayOfWeek> = {
+  sun: MerchantVoiceDayOfWeek.Sunday,
+  mon: MerchantVoiceDayOfWeek.Monday,
+  tue: MerchantVoiceDayOfWeek.Tuesday,
+  wed: MerchantVoiceDayOfWeek.Wednesday,
+  thu: MerchantVoiceDayOfWeek.Thursday,
+  fri: MerchantVoiceDayOfWeek.Friday,
+  sat: MerchantVoiceDayOfWeek.Saturday,
 }
 
-const DAY_KEY_TO_API_DAY_NAME: Record<DayKey, string> = {
-  sun: 'Sunday',
-  mon: 'Monday',
-  tue: 'Tuesday',
-  wed: 'Wednesday',
-  thu: 'Thursday',
-  fri: 'Friday',
-  sat: 'Saturday',
-}
-
-const DAY_NAME_TO_KEY: Record<string, DayKey> = {
-  Sunday: 'sun',
-  Monday: 'mon',
-  Tuesday: 'tue',
-  Wednesday: 'wed',
-  Thursday: 'thu',
-  Friday: 'fri',
-  Saturday: 'sat',
+const API_DAY_TO_DAY_KEY: Record<MerchantVoiceDayOfWeek, DayKey> = {
+  [MerchantVoiceDayOfWeek.Sunday]: 'sun',
+  [MerchantVoiceDayOfWeek.Monday]: 'mon',
+  [MerchantVoiceDayOfWeek.Tuesday]: 'tue',
+  [MerchantVoiceDayOfWeek.Wednesday]: 'wed',
+  [MerchantVoiceDayOfWeek.Thursday]: 'thu',
+  [MerchantVoiceDayOfWeek.Friday]: 'fri',
+  [MerchantVoiceDayOfWeek.Saturday]: 'sat',
 }
 
 function normalizeDayKey(dayOfWeek: number | string | undefined | null): DayKey | null {
-  if (dayOfWeek === null || dayOfWeek === undefined || dayOfWeek === '') return null
-
-  if (typeof dayOfWeek === 'number') {
-    return DAY_NUMBER_TO_KEY[dayOfWeek] ?? null
-  }
-
-  const trimmed = String(dayOfWeek).trim()
-  if (DAY_NAME_TO_KEY[trimmed]) return DAY_NAME_TO_KEY[trimmed]
-
-  const normalizedName = trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase()
-  if (DAY_NAME_TO_KEY[normalizedName]) return DAY_NAME_TO_KEY[normalizedName]
-
-  const asNumber = Number(trimmed)
-  if (!Number.isNaN(asNumber)) {
-    return DAY_NUMBER_TO_KEY[asNumber] ?? null
-  }
-
-  return null
+  const day = normalizeMerchantVoiceDayOfWeek(dayOfWeek)
+  if (day === null) return null
+  return API_DAY_TO_DAY_KEY[day] ?? null
 }
 
 function normalizeScheduleTime(value: string | null | undefined): string {
@@ -234,18 +209,8 @@ function toTeamMember(staff: MerchantVoiceStaffDto): TeamMember {
     schedule: scheduleToString(staff),
     customers: 0,
     avatar: first,
-    smsEnabled: toSmsEnabled(staff.status),
+    smsEnabled: isStaffStatusActive(staff.status),
   }
-}
-
-function toSmsEnabled(status: unknown): boolean {
-  return (
-    status === MerchantVoiceStaffStatus.Active ||
-    status === '0' ||
-    status === 'active' ||
-    status === 'Active' ||
-    status === true
-  )
 }
 
 function formatPhoneDisplay(phone: string | null | undefined): string {
@@ -570,14 +535,16 @@ export default function BookingTeamPanel() {
 
     try {
       const nextStatus = await toggleStaffStatusMutation.mutateAsync(id)
-      const isEnabled = toSmsEnabled(nextStatus)
+      const isEnabled = isStaffStatusActive(nextStatus)
       setMembers((prev) => prev.map((member) => (
         member.id === id ? { ...member, smsEnabled: isEnabled } : member
       )))
-    } catch {
+      showToast(t(`${TK}.toggleStaffSuccess`), 'success')
+    } catch (error) {
       setMembers((prev) => prev.map((member) => (
         member.id === id ? { ...member, smsEnabled: previous.smsEnabled } : member
       )))
+      showToast(t(getErrorI18nKey(getApiErrorCode(error))), 'error')
     } finally {
       setPendingToggleIds((prev) => ({ ...prev, [id]: false }))
     }
@@ -639,14 +606,14 @@ export default function BookingTeamPanel() {
         const row = draftSchedule[day]
         if (row.dayOff) {
           return {
-            dayOfWeek: DAY_KEY_TO_NUMBER[day],
+            dayOfWeek: DAY_KEY_TO_API_DAY[day],
             isDayOff: true,
             startTime: null,
             endTime: null,
           }
         }
         return {
-          dayOfWeek: DAY_KEY_TO_NUMBER[day],
+          dayOfWeek: DAY_KEY_TO_API_DAY[day],
           isDayOff: false,
           startTime: row.start ? `${row.start}:00` : null,
           endTime: row.end ? `${row.end}:00` : null,
@@ -679,14 +646,14 @@ export default function BookingTeamPanel() {
       const row = draftSchedule[day]
       if (row.dayOff) {
         return {
-          dayOfWeek: DAY_KEY_TO_API_DAY_NAME[day],
+          dayOfWeek: mapDayOfWeekToApiName(DAY_KEY_TO_API_DAY[day]),
           isDayOff: true,
           startTime: null,
           endTime: null,
         }
       }
       return {
-        dayOfWeek: DAY_KEY_TO_API_DAY_NAME[day],
+        dayOfWeek: mapDayOfWeekToApiName(DAY_KEY_TO_API_DAY[day]),
         isDayOff: false,
         startTime: row.start ? `${row.start}:00` : null,
         endTime: row.end ? `${row.end}:00` : null,
@@ -699,7 +666,9 @@ export default function BookingTeamPanel() {
       phoneNumber: payload.phone,
       email: payload.email,
       skills: payload.services.join(', '),
-      status: editingMember?.smsEnabled ? 'Active' : 'Inactive',
+      status: mapStaffStatusToActivityApi(
+        editingMember?.smsEnabled ? MerchantVoiceStaffStatus.Active : MerchantVoiceStaffStatus.Inactive,
+      ),
       schedules,
     }, {
       onSuccess: () => {

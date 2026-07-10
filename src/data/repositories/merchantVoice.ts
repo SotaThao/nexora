@@ -1,4 +1,63 @@
 import httpClient from '../../lib/httpClient'
+import {
+  mapStaffStatusToActivityApi,
+  MerchantVoiceBookingSearchField,
+  MerchantVoiceConfigLanguage,
+  MerchantVoiceDayOfWeek,
+  MerchantVoiceDayOfWeekApiValue,
+  MerchantVoiceLeadSource,
+  MerchantVoiceLeadStatus,
+  MerchantVoiceStaffActivityStatusApiValue,
+  MerchantVoiceStaffStatus,
+  normalizeMerchantVoiceLeadSource,
+  normalizeMerchantVoiceLeadStatus,
+  normalizeMerchantVoiceStaffStatus,
+} from '../merchantVoice/domain'
+
+export {
+  BookingHubMainTab,
+  BookingHubSubTab,
+  BookingUiSearchField,
+  BookingUiSource,
+  BookingUiStatus,
+  BOOKING_UI_SEARCH_FIELD_TO_API,
+  BOOKING_UI_SOURCE_I18N_KEY,
+  MerchantVoiceBookingSearchField,
+  MerchantVoiceConfigLanguage,
+  MerchantVoiceDayOfWeek,
+  MerchantVoiceDayOfWeekApi,
+  MerchantVoiceErrorCode,
+  MerchantVoiceLeadSource,
+  MerchantVoiceLeadSourceApi,
+  MerchantVoiceLeadStatus,
+  MerchantVoiceLeadStatusApi,
+  MerchantVoiceStaffActivityStatusApi,
+  MerchantVoiceStaffStatus,
+  MerchantVoiceUiLanguage,
+  mapConfigLanguageToUiLanguage,
+  mapDayOfWeekToApiName,
+  mapLeadSourceToUiSource,
+  mapLeadStatusToUiStatus,
+  mapStaffStatusToActivityApi,
+  mapUiLanguageToConfigLanguage,
+  mapUiSourceToSourceClass,
+  isStaffStatusActive,
+  normalizeMerchantVoiceDayOfWeek,
+  normalizeMerchantVoiceLeadSource,
+  normalizeMerchantVoiceLeadStatus,
+  normalizeMerchantVoiceStaffStatus,
+  parseBookingHubMainTab,
+  parseBookingHubSubTab,
+} from '../merchantVoice/domain'
+
+export type {
+  MerchantVoiceBookingSearchFieldApiValue,
+  MerchantVoiceDayOfWeek,
+  MerchantVoiceDayOfWeekApiValue,
+  MerchantVoiceLeadSourceApiValue,
+  MerchantVoiceLeadStatusApiValue,
+  MerchantVoiceStaffActivityStatusApiValue,
+} from '../merchantVoice/domain'
 
 type HttpClient = typeof httpClient
 
@@ -19,13 +78,13 @@ export interface MerchantVoiceBookingStatisticsDto {
 export interface MerchantVoiceBookingDto {
   id: string
   tenantId: string
-  source: number
+  source: MerchantVoiceLeadSource
   customerPhone: string | null
   customerName: string | null
   service: string | null
   preferredTime: string | null
   notes: string | null
-  status: number | string
+  status: MerchantVoiceLeadStatus
   confirmationSmsSentAt: string | null
   assignedStaffId: string | null
   assignedStaffName: string | null
@@ -95,7 +154,7 @@ interface MerchantVoiceStaffApiResponse {
 export interface MerchantVoiceBookingsFilter {
   pageNumber?: number
   pageSize?: number
-  searchBy?: number
+  searchBy?: MerchantVoiceBookingSearchField
   keyword?: string
   dateFrom?: string
   dateTo?: string
@@ -160,7 +219,7 @@ export interface UpdateMerchantVoiceConfigRequest {
   bookingNotifyPhone: string
   address: string
   googleReviewUrl: string
-  language: 'vi-VN' | 'en-US'
+  language: MerchantVoiceConfigLanguage
   welcomeGreeting: string
   operatingHours: Array<{
     dayOfWeek: number
@@ -180,7 +239,7 @@ export interface UpdateMerchantVoiceConfigRequest {
 }
 
 export interface MerchantVoiceStaffScheduleEntry {
-  dayOfWeek: number
+  dayOfWeek: MerchantVoiceDayOfWeek
   isDayOff: boolean
   startTime?: string | null
   endTime?: string | null
@@ -195,7 +254,7 @@ export interface CreateMerchantVoiceStaffRequest {
 }
 
 export interface UpdateMerchantVoiceStaffScheduleEntry {
-  dayOfWeek: string
+  dayOfWeek: MerchantVoiceDayOfWeekApiValue
   isDayOff: boolean
   startTime?: string | null
   endTime?: string | null
@@ -207,20 +266,8 @@ export interface UpdateMerchantVoiceStaffRequest {
   phoneNumber: string
   email: string
   skills: string
-  status: 'Active' | 'Inactive'
+  status: MerchantVoiceStaffActivityStatusApiValue
   schedules: UpdateMerchantVoiceStaffScheduleEntry[]
-}
-
-export enum MerchantVoiceStaffStatus {
-  Active = 0,
-  Inactive = 1,
-}
-
-export enum MerchantVoiceLeadStatus {
-  New = 0,
-  Done = 1,
-  Confirmed = 2,
-  NoShow = 3,
 }
 
 function normalizeBusinessStaffItem(item: unknown): MerchantVoiceBusinessStaffDto | null {
@@ -326,22 +373,31 @@ function normalizeConfigResponse(response: unknown): MerchantVoiceConfigDto {
   }
 }
 
+function normalizeBookingDto(item: MerchantVoiceBookingDto): MerchantVoiceBookingDto {
+  return {
+    ...item,
+    source: normalizeMerchantVoiceLeadSource(item.source),
+    status: normalizeMerchantVoiceLeadStatus(item.status),
+  }
+}
+
 function normalizeBookingsResponse(
   response: MerchantVoiceBookingsApiResponse | MerchantVoiceBookingDto[],
   pageNumber = 1,
 ): MerchantVoiceBookingsResponse {
   if (Array.isArray(response)) {
+    const items = response.map(normalizeBookingDto)
     return {
-      items: response,
+      items,
       pageNumber,
       totalPages: 1,
-      totalCount: response.length,
+      totalCount: items.length,
       hasPreviousPage: false,
       hasNextPage: false,
     }
   }
 
-  const items = response?.items ?? []
+  const items = (response?.items ?? []).map(normalizeBookingDto)
   return {
     items,
     pageNumber: response?.pageNumber ?? pageNumber,
@@ -379,13 +435,7 @@ function normalizeStaffResponse(
 }
 
 function normalizeStaffStatus(status: unknown): MerchantVoiceStaffStatus {
-  if (status === MerchantVoiceStaffStatus.Active || status === '0' || status === 'active' || status === 'Active' || status === true) {
-    return MerchantVoiceStaffStatus.Active
-  }
-  if (status === MerchantVoiceStaffStatus.Inactive || status === '1' || status === 'inactive' || status === 'Inactive' || status === false) {
-    return MerchantVoiceStaffStatus.Inactive
-  }
-  return MerchantVoiceStaffStatus.Active
+  return normalizeMerchantVoiceStaffStatus(status)
 }
 
 export function createMerchantVoiceRepository(client: HttpClient = httpClient) {

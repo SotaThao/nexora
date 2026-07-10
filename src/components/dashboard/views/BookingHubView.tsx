@@ -10,6 +10,12 @@ import {
   SlidersTabIcon,
   TagsTabIcon,
 } from './BookingHubIcons'
+import {
+  BookingHubMainTab,
+  BookingHubSubTab,
+  parseBookingHubMainTab,
+  parseBookingHubSubTab,
+} from '../../../data/repositories/merchantVoice'
 import './booking-hub.css'
 
 const TK = 'components.dashboard.views.BookingHubView'
@@ -42,33 +48,24 @@ function TeamIcon() {
 export default function BookingHubView() {
   const { t } = useTranslation()
   const [searchParams, setSearchParams] = useSearchParams()
-  const [activeMainTab, setActiveMainTab] = useState<'booking' | 'plans' | 'settings'>('booking')
-  const [activeSubtab, setActiveSubtab] = useState<'today' | 'team'>('today')
+  const [activeMainTab, setActiveMainTab] = useState<BookingHubMainTab>(BookingHubMainTab.Booking)
+  const [activeSubtab, setActiveSubtab] = useState<BookingHubSubTab>(BookingHubSubTab.Today)
 
   useEffect(() => {
     const mainTab = searchParams.get('tab')
     const subTab = searchParams.get('view')
 
-    if (mainTab === 'booking' || mainTab === 'plans' || mainTab === 'settings') {
-      setActiveMainTab(mainTab)
-    } else {
-      setActiveMainTab('booking')
-    }
-
-    if (subTab === 'today' || subTab === 'team') {
-      setActiveSubtab(subTab)
-    } else {
-      setActiveSubtab('today')
-    }
+    setActiveMainTab(parseBookingHubMainTab(mainTab))
+    setActiveSubtab(parseBookingHubSubTab(subTab))
   }, [searchParams])
 
   const updateQueryTabs = (
-    mainTab: 'booking' | 'plans' | 'settings',
-    subTab: 'today' | 'team' = activeSubtab,
+    mainTab: BookingHubMainTab,
+    subTab: BookingHubSubTab = activeSubtab,
   ) => {
     const nextParams = new URLSearchParams(searchParams)
     nextParams.set('tab', mainTab)
-    if (mainTab === 'booking') {
+    if (mainTab === BookingHubMainTab.Booking) {
       nextParams.set('view', subTab)
     } else {
       nextParams.delete('view')
@@ -83,31 +80,31 @@ export default function BookingHubView() {
         <p className="page-description">{t(`${TK}.description`)}</p>
         <div className="page-tabs" role="tablist" aria-label={t(`${TK}.ariaSections`)}>
           <button
-            className={`page-tab ${activeMainTab === 'booking' ? 'is-active' : ''}`}
+            className={`page-tab ${activeMainTab === BookingHubMainTab.Booking ? 'is-active' : ''}`}
             type="button"
             role="tab"
-            aria-selected={activeMainTab === 'booking'}
-            onClick={() => updateQueryTabs('booking')}
+            aria-selected={activeMainTab === BookingHubMainTab.Booking}
+            onClick={() => updateQueryTabs(BookingHubMainTab.Booking)}
           >
             <span className="page-tab-icon"><CalendarTabIcon /></span>
             <span>{t(`${TK}.tabs.booking`)}</span>
           </button>
           <button
-            className={`page-tab ${activeMainTab === 'plans' ? 'is-active' : ''}`}
+            className={`page-tab ${activeMainTab === BookingHubMainTab.Plans ? 'is-active' : ''}`}
             type="button"
             role="tab"
-            aria-selected={activeMainTab === 'plans'}
-            onClick={() => updateQueryTabs('plans')}
+            aria-selected={activeMainTab === BookingHubMainTab.Plans}
+            onClick={() => updateQueryTabs(BookingHubMainTab.Plans)}
           >
             <span className="page-tab-icon"><TagsTabIcon /></span>
             <span>{t(`${TK}.tabs.plans`)}</span>
           </button>
           <button
-            className={`page-tab ${activeMainTab === 'settings' ? 'is-active' : ''}`}
+            className={`page-tab ${activeMainTab === BookingHubMainTab.Settings ? 'is-active' : ''}`}
             type="button"
             role="tab"
-            aria-selected={activeMainTab === 'settings'}
-            onClick={() => updateQueryTabs('settings')}
+            aria-selected={activeMainTab === BookingHubMainTab.Settings}
+            onClick={() => updateQueryTabs(BookingHubMainTab.Settings)}
           >
             <span className="page-tab-icon"><SlidersTabIcon /></span>
             <span>{t(`${TK}.tabs.settings`)}</span>
@@ -115,26 +112,26 @@ export default function BookingHubView() {
         </div>
       </div>
 
-      {activeMainTab === 'booking' && (
+      {activeMainTab === BookingHubMainTab.Booking && (
       <section className="tab-panel is-active" aria-label={t(`${TK}.ariaPanel`)}>
         <div className="booking-toolbar">
           <div className="booking-subtabs" role="tablist" aria-label={t(`${TK}.ariaViews`)}>
             <button
-              className={`booking-subtab ${activeSubtab === 'today' ? 'is-active' : ''}`}
+              className={`booking-subtab ${activeSubtab === BookingHubSubTab.Today ? 'is-active' : ''}`}
               type="button"
               role="tab"
-              aria-selected={activeSubtab === 'today'}
-              onClick={() => updateQueryTabs('booking', 'today')}
+              aria-selected={activeSubtab === BookingHubSubTab.Today}
+              onClick={() => updateQueryTabs(BookingHubMainTab.Booking, BookingHubSubTab.Today)}
             >
               <span className="booking-subtab-icon"><CalendarIcon /></span>
               <span>{t(`${TK}.schedule.today`)}</span>
             </button>
             <button
-              className={`booking-subtab ${activeSubtab === 'team' ? 'is-active' : ''}`}
+              className={`booking-subtab ${activeSubtab === BookingHubSubTab.Team ? 'is-active' : ''}`}
               type="button"
               role="tab"
-              aria-selected={activeSubtab === 'team'}
-              onClick={() => updateQueryTabs('booking', 'team')}
+              aria-selected={activeSubtab === BookingHubSubTab.Team}
+              onClick={() => updateQueryTabs(BookingHubMainTab.Booking, BookingHubSubTab.Team)}
             >
               <span className="booking-subtab-icon"><TeamIcon /></span>
               <span>{t(`${TK}.schedule.team`)}</span>
@@ -143,17 +140,17 @@ export default function BookingHubView() {
           <div className="sync-note">{t(`${TK}.schedule.syncNote`)}</div>
         </div>
 
-        {activeSubtab === 'today' ? <BookingTodayPanel /> : <BookingTeamPanel />}
+        {activeSubtab === BookingHubSubTab.Today ? <BookingTodayPanel /> : <BookingTeamPanel />}
       </section>
       )}
 
-      {activeMainTab === 'plans' && (
+      {activeMainTab === BookingHubMainTab.Plans && (
         <section className="tab-panel is-active" aria-label={t(`${TK}.ariaPlansPanel`)}>
           <BookingPlansPanel />
         </section>
       )}
 
-      {activeMainTab === 'settings' && (
+      {activeMainTab === BookingHubMainTab.Settings && (
         <section className="tab-panel is-active" aria-label={t(`${TK}.ariaSettingsPanel`)}>
           <BookingSettingsPanel />
         </section>

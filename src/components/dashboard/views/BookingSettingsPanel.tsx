@@ -7,6 +7,14 @@ import {
   useMerchantVoiceConfig,
   useUpdateMerchantVoiceConfig,
 } from '../../../data/hooks/useMerchantVoiceBookings'
+import {
+  mapConfigLanguageToUiLanguage,
+  mapUiLanguageToConfigLanguage,
+  MerchantVoiceConfigLanguage,
+  MerchantVoiceDayOfWeek,
+  MerchantVoiceUiLanguage,
+  normalizeMerchantVoiceDayOfWeek,
+} from '../../../data/repositories/merchantVoice'
 import { getApiErrorCode } from '../../../types/domain'
 import { loadSpeechVoices, speakBookingPreview, stopBookingPreview } from '../../../utils/bookingVoicePreview'
 import {
@@ -24,34 +32,27 @@ const TK = 'components.dashboard.views.BookingHubView.settings'
 
 const DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const
 type DayKey = (typeof DAY_KEYS)[number]
-type Language = 'vi' | 'en'
+type Language = MerchantVoiceUiLanguage
 type Tone = 'tone-violet' | 'tone-cyan' | 'tone-rose' | 'tone-sky' | 'tone-amber' | 'tone-emerald'
 
-const DAY_KEY_TO_API: Record<DayKey, number> = {
-  mon: 1,
-  tue: 2,
-  wed: 3,
-  thu: 4,
-  fri: 5,
-  sat: 6,
-  sun: 0,
+const DAY_KEY_TO_API: Record<DayKey, MerchantVoiceDayOfWeek> = {
+  mon: MerchantVoiceDayOfWeek.Monday,
+  tue: MerchantVoiceDayOfWeek.Tuesday,
+  wed: MerchantVoiceDayOfWeek.Wednesday,
+  thu: MerchantVoiceDayOfWeek.Thursday,
+  fri: MerchantVoiceDayOfWeek.Friday,
+  sat: MerchantVoiceDayOfWeek.Saturday,
+  sun: MerchantVoiceDayOfWeek.Sunday,
 }
 
-const API_DAY_TO_DAY_KEY: Record<string, DayKey> = {
-  Monday: 'mon',
-  Tuesday: 'tue',
-  Wednesday: 'wed',
-  Thursday: 'thu',
-  Friday: 'fri',
-  Saturday: 'sat',
-  Sunday: 'sun',
-  '0': 'sun',
-  '1': 'mon',
-  '2': 'tue',
-  '3': 'wed',
-  '4': 'thu',
-  '5': 'fri',
-  '6': 'sat',
+const API_DAY_TO_DAY_KEY: Partial<Record<MerchantVoiceDayOfWeek, DayKey>> = {
+  [MerchantVoiceDayOfWeek.Monday]: 'mon',
+  [MerchantVoiceDayOfWeek.Tuesday]: 'tue',
+  [MerchantVoiceDayOfWeek.Wednesday]: 'wed',
+  [MerchantVoiceDayOfWeek.Thursday]: 'thu',
+  [MerchantVoiceDayOfWeek.Friday]: 'fri',
+  [MerchantVoiceDayOfWeek.Saturday]: 'sat',
+  [MerchantVoiceDayOfWeek.Sunday]: 'sun',
 }
 
 interface HourRow {
@@ -205,7 +206,7 @@ export default function BookingSettingsPanel() {
   const [pressingSuggest, setPressingSuggest] = useState<string | null>(null)
   const [highlightServiceId, setHighlightServiceId] = useState<string | null>(null)
   const [isPreviewPlaying, setIsPreviewPlaying] = useState(false)
-  const [language, setLanguage] = useState<Language>('en')
+  const [language, setLanguage] = useState<Language>(MerchantVoiceUiLanguage.En)
   const [greeting, setGreeting] = useState(() => t(`${TK}.greetingEn`))
   const [salonName, setSalonName] = useState('')
   const [salonPhone, setSalonPhone] = useState('')
@@ -339,13 +340,15 @@ export default function BookingSettingsPanel() {
     setBookingNotifyPhone(formatPhoneInput(configData.bookingNotifyPhone || ''))
     setAddress(configData.address || '')
     setGoogleReviewUrl(configData.googleReviewUrl || '')
-    const resolvedLang: Language = configData.language === 'vi-VN' ? 'vi' : 'en'
+    const resolvedLang = mapConfigLanguageToUiLanguage(configData.language)
     setLanguage(resolvedLang)
-    setGreeting(configData.welcomeGreeting || t(`${TK}.greeting${resolvedLang === 'vi' ? 'Vi' : 'En'}`))
+    setGreeting(configData.welcomeGreeting || t(`${TK}.greeting${resolvedLang === MerchantVoiceUiLanguage.Vi ? 'Vi' : 'En'}`))
 
     const nextHours = { ...INITIAL_HOURS }
     configData.operatingHours.forEach((item) => {
-      const key = API_DAY_TO_DAY_KEY[String(item.dayOfWeek)]
+      const apiDay = normalizeMerchantVoiceDayOfWeek(item.dayOfWeek)
+      if (apiDay === null) return
+      const key = API_DAY_TO_DAY_KEY[apiDay]
       if (!key) return
       nextHours[key] = {
         open: Boolean(item.isOpen),
@@ -437,7 +440,7 @@ export default function BookingSettingsPanel() {
 
   const handleLanguageSelect = (next: Language) => {
     setLanguage(next)
-    setGreeting(t(`${TK}.greeting${next === 'vi' ? 'Vi' : 'En'}`))
+    setGreeting(t(`${TK}.greeting${next === MerchantVoiceUiLanguage.Vi ? 'Vi' : 'En'}`))
     setStatus(t(`${TK}.languageSelected`, { language: t(`${TK}.languageLabels.${next}`) }))
   }
 
@@ -517,7 +520,7 @@ export default function BookingSettingsPanel() {
         bookingNotifyPhone: bookingNotifyPhonePayload,
         address: address.trim(),
         googleReviewUrl: googleReviewUrl.trim(),
-        language: language === 'vi' ? 'vi-VN' : 'en-US',
+        language: mapUiLanguageToConfigLanguage(language),
         welcomeGreeting: greeting.trim(),
         operatingHours: DAY_KEYS.map((day) => {
           const row = hours[day]
@@ -911,7 +914,7 @@ export default function BookingSettingsPanel() {
             <div className="settings-field settings-span-full">
               <span className="settings-label">{t(`${TK}.aiLanguage`)}</span>
               <div className="settings-language-grid" role="group" aria-label={t(`${TK}.aiLanguage`)}>
-                {(['vi', 'en'] as const).map((lang) => (
+                {([MerchantVoiceUiLanguage.Vi, MerchantVoiceUiLanguage.En] as const).map((lang) => (
                   <button
                     key={lang}
                     className={`settings-language-card ${language === lang ? 'is-active' : ''}`}
@@ -919,7 +922,7 @@ export default function BookingSettingsPanel() {
                     aria-pressed={language === lang}
                     onClick={() => handleLanguageSelect(lang)}
                   >
-                    {lang === 'vi' ? '🇻🇳 VI' : '🇺🇸 EN'}
+                    {lang === MerchantVoiceUiLanguage.Vi ? '🇻🇳 VI' : '🇺🇸 EN'}
                   </button>
                 ))}
               </div>

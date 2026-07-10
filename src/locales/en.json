@@ -2499,6 +2499,7 @@
             "addTech": "Add tech",
             "clientsToday": "Clients today",
             "toggleSms": "Toggle SMS alerts for {name}",
+            "toggleStaffSuccess": "Updated successfully.",
             "modalTitleCreate": "Tech profile",
             "modalTitleEdit": "Edit tech profile",
             "modalSubCreate": "Enter a new tech profile, services, and weekly schedule.",

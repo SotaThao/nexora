@@ -93,7 +93,6 @@ export const errorCodeToI18nKey = {
   COMMON_RATE_LIMIT_EXCEEDED: 'errors.common_rate_limit_exceeded',
   COMMON_INTERNAL_SERVER_ERROR: 'errors.common_internal_server_error',
 
-  // Nexora Voice / booking leads
   VOICE_LEAD_CONFIRMATION_SMS_ALREADY_SENT: 'errors.voice_lead_confirmation_sms_already_sent',
 }
 

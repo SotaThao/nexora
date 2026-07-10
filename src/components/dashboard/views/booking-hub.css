@@ -1286,16 +1286,19 @@
 }
 
 .booking-hub-view .tech-service-checks {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(86px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 6px;
 }
 
 .booking-hub-view .tech-service-check {
   display: flex;
   min-height: 34px;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
+  flex: 1 1 140px;
+  min-width: min(100%, 140px);
+  max-width: 100%;
   border: 1px solid var(--nexora-border);
   border-radius: 9px;
   background: #fff;
@@ -1303,6 +1306,9 @@
   color: var(--nexora-muted);
   font-size: 11px;
   font-weight: 700;
+  line-height: 1.35;
+  white-space: normal;
+  word-break: break-word;
   cursor: pointer;
 }
 
@@ -1310,6 +1316,7 @@
   width: 14px;
   height: 14px;
   flex: 0 0 auto;
+  margin-top: 1px;
   accent-color: var(--nexora-brand);
 }
 
@@ -1393,8 +1400,8 @@
     grid-template-columns: 1fr;
   }
 
-  .booking-hub-view .tech-service-checks {
-    grid-template-columns: repeat(auto-fit, minmax(76px, 1fr));
+  .booking-hub-view .tech-service-check {
+    flex-basis: 100%;
   }
 
   .booking-hub-view .tech-schedule-row {

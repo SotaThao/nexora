@@ -9,6 +9,15 @@ import {
   useUpdateMerchantVoiceBookingStatus,
 } from '../../../data/hooks/useMerchantVoiceBookings'
 import {
+  BOOKING_UI_SEARCH_FIELD_TO_API,
+  BOOKING_UI_SOURCE_I18N_KEY,
+  BookingUiSearchField,
+  BookingUiSource,
+  BookingUiStatus,
+  mapLeadSourceToUiSource,
+  mapLeadStatusToUiStatus,
+  mapUiSourceToSourceClass,
+  MerchantVoiceErrorCode,
   MerchantVoiceLeadStatus,
   type MerchantVoiceBookingDto,
 } from '../../../data/repositories/merchantVoice'
@@ -42,16 +51,11 @@ const KPI_ACCENT_ELECTRIC = { '--kpi-accent': 'var(--nexora-electric)' } as Reac
 const KPI_ACCENT_SUCCESS = { '--kpi-accent': 'var(--nexora-success)' } as React.CSSProperties
 const KPI_ACCENT_RED = { '--kpi-accent': '#ef4444' } as React.CSSProperties
 
-const SOURCE_KEY_MAP: Record<string, string> = {
-  Voice: 'sources.voice',
-  'Landing Page': 'sources.landingPage',
-  SMS: 'sources.sms',
-  QR: 'sources.qr',
-}
+const SOURCE_KEY_MAP = BOOKING_UI_SOURCE_I18N_KEY
 
-type BookingStatus = 'done' | 'sms-sent' | 'new' | 'noshow'
-type BookingSource = 'Voice' | 'Landing Page' | 'SMS' | 'QR'
-type SearchField = 'all' | 'name' | 'phone' | 'email' | 'service'
+type BookingStatus = BookingUiStatus
+type BookingSource = BookingUiSource
+type SearchField = BookingUiSearchField
 type ViewMode = 'table' | 'card'
 
 interface BookingItem {
@@ -73,29 +77,16 @@ interface BookingItem {
   note: string
 }
 
-function mapSource(source: number): BookingSource {
-  if (source === 1) return 'Landing Page'
-  if (source === 2) return 'SMS'
-  if (source === 3) return 'QR'
-  return 'Voice'
+function mapSource(source: MerchantVoiceBookingDto['source']): BookingSource {
+  return mapLeadSourceToUiSource(source)
 }
 
 function sourceClass(source: BookingSource) {
-  if (source === 'Landing Page') return 'booking-source-lp'
-  if (source === 'SMS') return 'booking-source-sms'
-  if (source === 'QR') return 'booking-source-qr'
-  return 'booking-source-voice'
+  return mapUiSourceToSourceClass(source)
 }
 
-function mapStatus(status: number | string): BookingStatus {
-  if (status === 'Done') return 'done'
-  if (status === 'Confirmed') return 'sms-sent'
-  if (status === 'NoShow') return 'noshow'
-  if (status === 'New') return 'new'
-  if (status === 1) return 'done'
-  if (status === 2) return 'sms-sent'
-  if (status === 3) return 'noshow'
-  return 'new'
+function mapStatus(status: MerchantVoiceBookingDto['status']): BookingStatus {
+  return mapLeadStatusToUiStatus(status)
 }
 
 function formatPhone(phone: string | null | undefined) {
@@ -146,7 +137,7 @@ function formatTimeBlock(startAt: string | null, fallback: string | null) {
 function resolveBookingStatus(item: MerchantVoiceBookingDto, statusOverride?: BookingStatus): BookingStatus {
   if (statusOverride) return statusOverride
   const mapped = mapStatus(item.status)
-  if (item.confirmationSmsSentAt && mapped === 'new') return 'sms-sent'
+  if (item.confirmationSmsSentAt && mapped === BookingUiStatus.New) return BookingUiStatus.SmsSent
   return mapped
 }
 
@@ -167,7 +158,7 @@ function toBookingItem(item: MerchantVoiceBookingDto, statusOverride?: BookingSt
     timeDate: time.timeDate,
     source,
     sourceClass: sourceClass(source),
-    request: status === 'new',
+    request: status === BookingUiStatus.New,
     status,
     confirmationSmsSentAt: item.confirmationSmsSentAt,
     note: item.notes || 'No internal notes.',
@@ -175,16 +166,16 @@ function toBookingItem(item: MerchantVoiceBookingDto, statusOverride?: BookingSt
 }
 
 function rowClassForStatus(status: BookingStatus) {
-  if (status === 'done') return 'is-done'
-  if (status === 'sms-sent') return 'is-sms-sent'
-  if (status === 'noshow') return 'is-noshow'
+  if (status === BookingUiStatus.Done) return 'is-done'
+  if (status === BookingUiStatus.SmsSent) return 'is-sms-sent'
+  if (status === BookingUiStatus.NoShow) return 'is-noshow'
   return 'is-new'
 }
 
 function statusBadgeClass(status: BookingStatus) {
-  if (status === 'done') return 'booking-status-done'
-  if (status === 'sms-sent') return 'booking-status-sms'
-  if (status === 'noshow') return 'booking-status-noshow'
+  if (status === BookingUiStatus.Done) return 'booking-status-done'
+  if (status === BookingUiStatus.SmsSent) return 'booking-status-sms'
+  if (status === BookingUiStatus.NoShow) return 'booking-status-noshow'
   return 'booking-status-new'
 }
 
@@ -233,11 +224,11 @@ function BookingActions({
     </button>
   )
 
-  if (booking.status === 'done' || booking.status === 'noshow') {
+  if (booking.status === BookingUiStatus.Done || booking.status === BookingUiStatus.NoShow) {
     return <div className="booking-actions">{viewBtn}</div>
   }
 
-  const canSendSms = booking.confirmationSmsSentAt == null && booking.status === 'new'
+  const canSendSms = booking.confirmationSmsSentAt == null && booking.status === BookingUiStatus.New
 
   if (!canSendSms) {
     return (
@@ -304,12 +295,12 @@ export default function BookingTodayPanel() {
   const [viewMode, setViewMode] = useState<ViewMode>(() => (
     typeof window !== 'undefined' && window.innerWidth < 768 ? 'card' : 'table'
   ))
-  const [searchField, setSearchField] = useState<SearchField>('all')
+  const [searchField, setSearchField] = useState<SearchField>(BookingUiSearchField.All)
   const [searchKeyword, setSearchKeyword] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [debouncedFilters, setDebouncedFilters] = useState({
-    searchField: 'all' as SearchField,
+    searchField: BookingUiSearchField.All as SearchField,
     searchKeyword: '',
     dateFrom: '',
     dateTo: '',
@@ -318,15 +309,7 @@ export default function BookingTodayPanel() {
   const [pendingStatusUpdates, setPendingStatusUpdates] = useState<Record<string, boolean>>({})
   const [detailBooking, setDetailBooking] = useState<BookingItem | null>(null)
 
-  const apiSearchField = debouncedFilters.searchField === 'all'
-    ? undefined
-    : debouncedFilters.searchField === 'name'
-      ? 0
-      : debouncedFilters.searchField === 'phone'
-        ? 1
-        : debouncedFilters.searchField === 'email'
-          ? 2
-          : 3
+  const apiSearchField = BOOKING_UI_SEARCH_FIELD_TO_API[debouncedFilters.searchField]
 
   const apiKeyword = debouncedFilters.searchKeyword.trim() || undefined
 
@@ -334,19 +317,19 @@ export default function BookingTodayPanel() {
   const dateToApi = debouncedFilters.dateTo ? `${debouncedFilters.dateTo}T23:59:59.999Z` : undefined
 
   const hasActiveFilters = useMemo(() => (
-    debouncedFilters.searchField !== 'all'
+    debouncedFilters.searchField !== BookingUiSearchField.All
     || Boolean(debouncedFilters.searchKeyword.trim())
     || Boolean(debouncedFilters.dateFrom)
     || Boolean(debouncedFilters.dateTo)
   ), [debouncedFilters])
 
-  const keywordPlaceholder = searchField === 'name'
+  const keywordPlaceholder = searchField === BookingUiSearchField.Name
     ? t(`${TK}.today.keywordPlaceholderName`)
-    : searchField === 'phone'
+    : searchField === BookingUiSearchField.Phone
       ? t(`${TK}.today.keywordPlaceholderPhone`)
-      : searchField === 'email'
+      : searchField === BookingUiSearchField.Email
         ? t(`${TK}.today.keywordPlaceholderEmail`)
-        : searchField === 'service'
+        : searchField === BookingUiSearchField.Service
           ? t(`${TK}.today.keywordPlaceholderService`)
           : t(`${TK}.today.keywordPlaceholderAll`)
 
@@ -370,8 +353,8 @@ export default function BookingTodayPanel() {
 
   const stats = useMemo(() => {
     const todayCount = statistics?.allBookings ?? filteredBookings.filter((item) => item.date === TODAY_ISO).length
-    const done = statistics?.doneBookings ?? filteredBookings.filter((item) => item.status === 'done').length
-    const noShow = statistics?.noShowBookings ?? filteredBookings.filter((item) => item.status === 'noshow').length
+    const done = statistics?.doneBookings ?? filteredBookings.filter((item) => item.status === BookingUiStatus.Done).length
+    const noShow = statistics?.noShowBookings ?? filteredBookings.filter((item) => item.status === BookingUiStatus.NoShow).length
     return { todayCount, done, noShow }
   }, [filteredBookings, statistics])
 
@@ -387,9 +370,13 @@ export default function BookingTodayPanel() {
     const previousStatus = statusOverrides[id] ?? booking.status
 
     const getNextStatus = (currentStatus: BookingStatus): BookingStatus | null => {
-      if (action === 'send-sms' && booking.confirmationSmsSentAt == null && currentStatus === 'new') return 'sms-sent'
-      if (action === 'done' && currentStatus === 'sms-sent') return 'done'
-      if (action === 'noshow' && (currentStatus === 'new' || currentStatus === 'sms-sent')) return 'noshow'
+      if (action === 'send-sms' && booking.confirmationSmsSentAt == null && currentStatus === BookingUiStatus.New) {
+        return BookingUiStatus.SmsSent
+      }
+      if (action === 'done' && currentStatus === BookingUiStatus.SmsSent) return BookingUiStatus.Done
+      if (action === 'noshow' && (currentStatus === BookingUiStatus.New || currentStatus === BookingUiStatus.SmsSent)) {
+        return BookingUiStatus.NoShow
+      }
       return null
     }
 
@@ -413,8 +400,8 @@ export default function BookingTodayPanel() {
       } catch (error) {
         const errorCode = getApiErrorCode(error)
         showToast(t(getErrorI18nKey(errorCode)), 'error')
-        if (errorCode === 'VOICE_LEAD_CONFIRMATION_SMS_ALREADY_SENT') {
-          setStatusOverrides((prev) => ({ ...prev, [id]: 'sms-sent' }))
+        if (errorCode === MerchantVoiceErrorCode.ConfirmationSmsAlreadySent) {
+          setStatusOverrides((prev) => ({ ...prev, [id]: BookingUiStatus.SmsSent }))
         } else {
           setStatusOverrides((prev) => ({ ...prev, [id]: previousStatus }))
         }
@@ -443,16 +430,16 @@ export default function BookingTodayPanel() {
     if (detailBooking?.id === id) {
       setDetailBooking((prev) => {
         if (!prev || prev.id !== id) return prev
-        if (action === 'send-sms') return { ...prev, status: 'sms-sent' }
-        if (action === 'done') return { ...prev, status: 'done' }
-        if (action === 'noshow') return { ...prev, status: 'noshow' }
+        if (action === 'send-sms') return { ...prev, status: BookingUiStatus.SmsSent }
+        if (action === 'done') return { ...prev, status: BookingUiStatus.Done }
+        if (action === 'noshow') return { ...prev, status: BookingUiStatus.NoShow }
         return prev
       })
     }
   }
 
   const clearFilters = () => {
-    setSearchField('all')
+    setSearchField(BookingUiSearchField.All)
     setSearchKeyword('')
     setDateFrom('')
     setDateTo('')
@@ -463,9 +450,9 @@ export default function BookingTodayPanel() {
   }
 
   const statusLabel = (status: BookingStatus) => {
-    if (status === 'done') return t(`${TK}.today.statusDone`)
-    if (status === 'sms-sent') return t(`${TK}.today.statusSms`)
-    if (status === 'noshow') return t(`${TK}.today.statusNoShow`)
+    if (status === BookingUiStatus.Done) return t(`${TK}.today.statusDone`)
+    if (status === BookingUiStatus.SmsSent) return t(`${TK}.today.statusSms`)
+    if (status === BookingUiStatus.NoShow) return t(`${TK}.today.statusNoShow`)
     return t(`${TK}.today.statusNew`)
   }
 
@@ -582,11 +569,11 @@ export default function BookingTodayPanel() {
                 value={searchField}
                 onChange={(event) => handleSearchFieldChange(event.target.value as SearchField)}
               >
-                <option value="all">{t(`${TK}.today.searchAll`)}</option>
-                <option value="name">{t(`${TK}.today.searchName`)}</option>
-                <option value="phone">{t(`${TK}.today.searchPhone`)}</option>
-                <option value="email">{t(`${TK}.today.searchEmail`)}</option>
-                <option value="service">{t(`${TK}.today.searchService`)}</option>
+                <option value={BookingUiSearchField.All}>{t(`${TK}.today.searchAll`)}</option>
+                <option value={BookingUiSearchField.Name}>{t(`${TK}.today.searchName`)}</option>
+                <option value={BookingUiSearchField.Phone}>{t(`${TK}.today.searchPhone`)}</option>
+                <option value={BookingUiSearchField.Email}>{t(`${TK}.today.searchEmail`)}</option>
+                <option value={BookingUiSearchField.Service}>{t(`${TK}.today.searchService`)}</option>
               </select>
             </label>
             <label className="booking-control-field">

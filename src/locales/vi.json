@@ -2499,6 +2499,7 @@
             "addTech": "Thêm Thợ",
             "clientsToday": "Khách hôm nay",
             "toggleSms": "Bật/tắt SMS cho {name}",
+            "toggleStaffSuccess": "Đã cập nhật thành công.",
             "modalTitleCreate": "Thông Tin Thợ",
             "modalTitleEdit": "Chỉnh Thông Tin Thợ",
             "modalSubCreate": "Tự nhập thông tin thợ mới, dịch vụ và lịch làm việc hằng tuần.",
