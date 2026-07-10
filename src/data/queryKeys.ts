@@ -119,6 +119,17 @@ export const qk = {
   staffTransactionsPaginated: (filters = EMPTY) => ['staffTransactions', 'paginated', filters],
   staffLinkRequest:    (linkId: string | null | undefined) => ['staffLinkRequest', linkId ?? 'unknown'],
 
+  // Merchant Nexora Voice
+  merchantVoiceBookings: (filters = EMPTY) => ['merchantVoice', 'bookings', filters],
+  merchantVoiceBookingStatistics: () => ['merchantVoice', 'bookings', 'statistics'],
+  merchantVoiceStaff: (filters = EMPTY) => ['merchantVoice', 'staff', filters],
+  merchantVoiceStaffById: (id?: string | null) => ['merchantVoice', 'staff', 'detail', id ?? ''],
+  merchantVoiceBusinessStaff: (filters = EMPTY) => ['merchantVoice', 'staff', 'businessStaff', filters],
+  merchantVoiceConfig: () => ['merchantVoice', 'config'],
+
+  // Nexora Voice trial (merchant)
+  voiceTrialRequestMe: () => ['nexora-voice', 'trial-request', 'me'],
+
   // Public Customer Touch
   customerTouch: (businessSlug, touchPointSlug, sessionId) => ['customerTouch', businessSlug, touchPointSlug, sessionId],
   publicBusinessPaymentMethods: (businessId) => ['publicBusinessPaymentMethods', businessId],

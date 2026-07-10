@@ -65,6 +65,7 @@ export const MENU_ITEMS = [
   { id: 'reviews', label: 'Reviews', icon: Star, image: '/assets/menu/reviews.png' },
   { id: 'reports', label: 'Transactions', icon: ClipboardList, image: '/assets/menu/transaction.png' },
   { id: 'touchpoints', label: 'Touch Points', icon: Pointer, image: '/assets/menu/touchpoint.png' },
+  { id: 'booking-hub', label: 'Booking Hub', icon: ClipboardList, image: '/assets/menu/transaction.png' },
   { id: 'analytics', label: 'Analytics', icon: BarChart3, image: '/assets/menu/analytics.png' },
   { id: 'settings', label: 'Settings', icon: Settings, image: '/assets/menu/setting.png' },
   { id: 'support', label: 'Support', icon: HelpCircle, image: '/assets/menu/support.png' }

@@ -199,6 +199,7 @@ export default function MobileMenuDrawer({
               tips: t('dashboard.menu.tips'),
               reviews: t('dashboard.menu.reviews'),
               reports: t('dashboard.menu.transactions'),
+              'booking-hub': t('dashboard.menu.booking_hub'),
               touchpoints: t('dashboard.menu.touchpoints'),
               devices: t('dashboard.menu.qr_nfc'),
               analytics: t('dashboard.menu.analytics'),

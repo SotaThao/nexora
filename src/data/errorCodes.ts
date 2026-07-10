@@ -92,6 +92,22 @@ export const errorCodeToI18nKey = {
   COMMON_FORBIDDEN: 'errors.common_forbidden',
   COMMON_RATE_LIMIT_EXCEEDED: 'errors.common_rate_limit_exceeded',
   COMMON_INTERNAL_SERVER_ERROR: 'errors.common_internal_server_error',
+
+  VOICE_LEAD_CONFIRMATION_SMS_ALREADY_SENT: 'errors.voice_lead_confirmation_sms_already_sent',
+
+  // Nexora Voice trial requests
+  VOICE_TRIAL_SHOP_NAME_REQUIRED: 'errors.voice_trial_shop_name_required',
+  VOICE_TRIAL_OWNER_NAME_REQUIRED: 'errors.voice_trial_owner_name_required',
+  VOICE_TRIAL_PHONE_NUMBER_REQUIRED: 'errors.voice_trial_phone_number_required',
+  VOICE_TRIAL_PHONE_NUMBER_ALREADY_EXISTS: 'errors.voice_trial_phone_number_already_exists',
+  VOICE_TRIAL_REQUEST_ALREADY_EXISTS: 'errors.voice_trial_phone_number_already_exists',
+  VOICE_TRIAL_EMAIL_REQUIRED: 'errors.voice_trial_email_required',
+  VOICE_TRIAL_EMAIL_INVALID_FORMAT: 'errors.voice_trial_email_invalid_format',
+  VOICE_TRIAL_SERVICES_REQUIRED: 'errors.voice_trial_services_required',
+  VOICE_TRIAL_OPENING_DAYS_REQUIRED: 'errors.voice_trial_opening_days_required',
+  VOICE_TRIAL_SERVICE_HOURS_FROM_REQUIRED: 'errors.voice_trial_service_hours_from_required',
+  VOICE_TRIAL_SERVICE_HOURS_TO_REQUIRED: 'errors.voice_trial_service_hours_to_required',
+  VOICE_TRIAL_BIGGEST_PROBLEM_REQUIRED: 'errors.voice_trial_biggest_problem_required',
 }
 
 /**
