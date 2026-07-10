@@ -13,6 +13,11 @@ export default function Step1BusinessInfo({
   t,
   currentLanguage,
   isSsoLocked,
+  isNameLocked,
+  isAddressLocked,
+  isPhoneLocked,
+  isWebsiteLocked,
+  isFeedbackEmailLocked,
   businessInfo,
   setBusinessInfo,
   reviewLinks,
@@ -92,12 +97,12 @@ export default function Step1BusinessInfo({
               </label>
               <input
                 type="text"
-                disabled={isSsoLocked}
+                disabled={isNameLocked}
                 placeholder={t('setup.store_name_placeholder')}
-                className={`w-full border ${errors.name ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'} ${isSsoLocked ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : 'bg-white'} rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
+                className={`w-full border ${errors.name ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'} ${isNameLocked ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : 'bg-white'} rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
                 value={businessInfo.name}
                 onChange={(e) => {
-                  if (isSsoLocked) return
+                  if (isNameLocked) return
                   setBusinessInfo({ ...businessInfo, name: e.target.value })
                   if (errors.name) setErrors({ ...errors, name: '' })
                 }}
@@ -143,12 +148,12 @@ export default function Step1BusinessInfo({
               <MapPin className="absolute left-3.5 top-3.5 w-4 h-4 text-nexoraSubtle z-10 pointer-events-none" />
               <input
                 type="text"
-                disabled={isSsoLocked}
+                disabled={isAddressLocked}
                 placeholder={t('setup.store_address_placeholder')}
-                className={`w-full border ${errors.address ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'} ${isSsoLocked ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : 'bg-white'} rounded-lg pl-11 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
+                className={`w-full border ${errors.address ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'} ${isAddressLocked ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : 'bg-white'} rounded-lg pl-11 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
                 value={businessInfo.address}
                 onChange={(e) => {
-                  if (isSsoLocked) return
+                  if (isAddressLocked) return
                   setBusinessInfo({ ...businessInfo, address: e.target.value })
                   if (errors.address) setErrors({ ...errors, address: '' })
                 }}
@@ -164,21 +169,21 @@ export default function Step1BusinessInfo({
                 <CountryCodeSelect
                   value={phoneParsed.countryCode}
                   onChange={(newCode) => {
-                    if (isSsoLocked) return
+                    if (isPhoneLocked) return
                     const reFormatted = formatNationalNumber(phoneParsed.nationalNumber, newCode)
                     setBusinessInfo({ ...businessInfo, phone: `${newCode} ${reFormatted}`.trim() })
                     if (errors.phone) setErrors({ ...errors, phone: '' })
                   }}
-                  disabled={isSsoLocked}
+                  disabled={isPhoneLocked}
                 />
                 <input
                   type="text"
-                  disabled={isSsoLocked}
+                  disabled={isPhoneLocked}
                   placeholder={t('components.setup_wizard.steps.Step1BusinessInfo.phPhone')}
-                  className={`w-full h-10 border border-l-0 ${errors.phone ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'} ${isSsoLocked ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : 'bg-white'} rounded-r-lg px-4 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all min-w-0`}
+                  className={`w-full h-10 border border-l-0 ${errors.phone ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'} ${isPhoneLocked ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : 'bg-white'} rounded-r-lg px-4 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all min-w-0`}
                   value={formatNationalNumber(phoneParsed.nationalNumber, phoneParsed.countryCode)}
                   onChange={(e) => {
-                    if (isSsoLocked) return
+                    if (isPhoneLocked) return
                     const formatted = formatNationalNumber(e.target.value, phoneParsed.countryCode)
                     setBusinessInfo({ ...businessInfo, phone: `${phoneParsed.countryCode} ${formatted}`.trim() })
                     if (errors.phone) setErrors({ ...errors, phone: '' })
@@ -194,12 +199,12 @@ export default function Step1BusinessInfo({
                 <Globe className="absolute left-3.5 top-3.5 w-4 h-4 text-nexoraSubtle z-10 pointer-events-none" />
                 <input
                   type="url"
-                  disabled={isSsoLocked}
+                  disabled={isWebsiteLocked}
                   placeholder={t('components.setup_wizard.steps.Step1BusinessInfo.phWebsite')}
-                  className={`w-full border ${errors.website ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'} ${isSsoLocked ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : 'bg-white'} rounded-lg pl-11 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
+                  className={`w-full border ${errors.website ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'} ${isWebsiteLocked ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : 'bg-white'} rounded-lg pl-11 pr-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
                   value={businessInfo.website}
                   onChange={(e) => {
-                    if (isSsoLocked) return
+                    if (isWebsiteLocked) return
                     setBusinessInfo({ ...businessInfo, website: e.target.value })
                     if (errors.website) setErrors({ ...errors, website: '' })
                   }}
@@ -275,10 +280,12 @@ export default function Step1BusinessInfo({
               <label className="block text-[10px] font-bold text-nexoraText uppercase tracking-wider mb-2">{renderTextWithGoldStars(t('setup.feedback_email'))}</label>
               <input
                 type="email"
+                disabled={isFeedbackEmailLocked}
                 placeholder={t('components.setup_wizard.steps.Step1BusinessInfo.phManagerEmail')}
-                className={`w-full bg-white border ${errors.feedbackEmail ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'} rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
+                className={`w-full border ${errors.feedbackEmail ? 'border-red-300 focus:border-red-500' : 'border-nexoraBorder focus:border-nexoraBrand'} ${isFeedbackEmailLocked ? 'bg-slate-100 text-nexoraSubtle cursor-not-allowed border-slate-200' : 'bg-white'} rounded-lg px-4 py-2.5 text-sm text-nexoraText focus:outline-none placeholder-nexoraSubtle focus:ring-0 transition-all`}
                 value={reviewLinks.feedbackEmail}
                 onChange={(e) => {
+                  if (isFeedbackEmailLocked) return
                   setReviewLinks({ ...reviewLinks, feedbackEmail: e.target.value })
                   if (errors.feedbackEmail) setErrors({ ...errors, feedbackEmail: '' })
                 }}
