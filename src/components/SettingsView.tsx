@@ -294,7 +294,7 @@ export default function SettingsView({
   }
 
   return (
-    <div className="w-full space-y-6 animate-fadeIn pb-24 select-none">
+    <div className="w-full space-y-6 animate-fadeIn pb-24 lg:pb-0 select-none">
       {/* Content Area */}
       <div className="space-y-6">
 
