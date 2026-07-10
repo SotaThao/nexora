@@ -438,7 +438,7 @@ function AddStaffModal({
               <button
                 type="submit"
                 disabled={isInviting}
-                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-2.5 text-xs font-bold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-lg bg-nexoraBrand px-4 py-2.5 text-xs font-bold text-white transition hover:bg-opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isInviting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                 {t('components.dashboard.modals.AddStaffModal.send_setup_link')}
