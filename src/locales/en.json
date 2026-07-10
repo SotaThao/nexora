@@ -637,7 +637,15 @@
       "ecosystem": "Ecosystem",
       "ecosystem_loading": "Loading ecosystem...",
       "no_ecosystem": "No ecosystem available",
-      "coming_soon_badge": "Coming Soon"
+      "coming_soon_badge": "Coming Soon",
+      "search_group_staff": "Staff",
+      "search_group_transactions": "Transactions",
+      "search_group_reviews": "Reviews",
+      "search_group_touchpoints": "Touchpoints",
+      "search_view_detail": "View Detail ›",
+      "search_view_transaction": "View ›",
+      "search_view": "View ›",
+      "search_no_results": "No matching results found."
     },
     "back_to_dashboard": "Back to Dashboard",
     "footer": {
