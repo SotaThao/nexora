@@ -17,7 +17,7 @@ export function getIntroVideoThumbnailPath(lang = 'en', options = {}) {
 
   const suffix = lang === 'vi' ? 'vi' : 'en'
   const base = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '')
-  return `${base}/homepage/assets/images/video-thumb-${suffix}.svg`
+  return `${base}/homepage/assets/images/video-thumb-${suffix}.png`
 }
 
 /** WKWebView on iOS/native shells often fails to render large SVG posters via <img>. */
