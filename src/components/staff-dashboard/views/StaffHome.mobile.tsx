@@ -5,6 +5,7 @@ import { useMemo } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import {
   QrCode,
+  HandCoins,
   Star,
   Clock3,
   CalendarDays,
@@ -294,7 +295,7 @@ export default function StaffHome() {
       <section className="space-y-1.5 px-0.5">
         <SectionHeader title={t('staff_dashboard.home.quick_actions')} action={t('staff_dashboard.home.manage')} onAction={() => go('qr')} />
         <div className="grid grid-cols-4 gap-2">
-          <QuickAction icon={<QrCode className="h-4 w-4" />} label={t('staff_dashboard.home.quick_qr')} bg="border-[#DDD8FF] bg-[#F4F2FF]" iconColor="text-nexoraBrandDark" onClick={() => go('qr')} />
+          <QuickAction icon={<HandCoins className="h-4 w-4" />} label={t('staff_dashboard.home.quick_qr')} bg="border-[#DDD8FF] bg-[#F4F2FF]" iconColor="text-nexoraBrandDark" onClick={() => go('qr')} />
           <QuickAction icon={<Star className="h-4 w-4" />} label={t('staff_dashboard.home.quick_reviews')} bg="border-orange-200 bg-orange-50" iconColor="text-orange-500" onClick={() => go('reviews')} />
           <QuickAction icon={<CreditCard className="h-4 w-4" />} label={t('staff_dashboard.home.quick_payments')} bg="border-indigo-200 bg-indigo-50" iconColor="text-indigo-600" onClick={() => go('qr', { tab: 'payment' })} />
           <QuickAction icon={<Gift className="h-4 w-4" />} label={t('staff_dashboard.home.quick_refer')} bg="border-rose-200 bg-rose-50" iconColor="text-rose-500" onClick={() => go('qr', { tab: 'personal' })} />
