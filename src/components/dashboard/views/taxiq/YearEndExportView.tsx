@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Download, FilePlus2, Loader2, Lock, PlusCircle } from 'lucide-react'
+import { CheckCircle2, Download, FilePlus2, Loader2, Lock, PlusCircle } from 'lucide-react'
 import { useTranslation } from '../../../../contexts/LanguageContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { useTaxiqReadinessScore } from '../../../../data/hooks/useTaxiqReadinessScore'
 import { useGenerateDraftExport, useGenerateFinalExport } from '../../../../data/hooks/useTaxiqOwnerExport'
 import type { FinalExportResult } from '../../../../data/hooks/useTaxiqOwnerExport'
 import { useOwnerAdjustments } from '../../../../data/hooks/useTaxiqOwnerTaxYearLock'
-import type { ExportPackage } from '../../../../data/repositories/taxiqOwnerExport'
+import type { CpaPackageType, ExportPackage } from '../../../../data/repositories/taxiqOwnerExport'
 import type { OwnerTaxYear } from '../../../../data/repositories/taxiqOwnerTaxYear'
 import { isApiError } from '../../../../types/domain'
 import { getErrorI18nKey } from '../../../../data/errorCodes'
@@ -23,6 +23,38 @@ import CreateAdjustmentModal, { type CreateAdjustmentPrefill } from './modals/Cr
 // making the Owner retype the entity ID by hand.
 export interface AdjustmentNavigationState {
   prefillAdjustment?: CreateAdjustmentPrefill
+}
+
+const PACKAGE_TYPES: CpaPackageType[] = ['Basic', 'Full', 'CPAReview']
+
+function PackageOption({
+  packageType,
+  selected,
+  onSelect,
+}: {
+  packageType: CpaPackageType
+  selected: boolean
+  onSelect: () => void
+}) {
+  const { t } = useTranslation()
+  const key = packageType === 'CPAReview' ? 'cpaReview' : packageType.toLowerCase()
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={`flex flex-col gap-1.5 rounded-lg border p-4 text-left transition-colors ${
+        selected
+          ? 'border-nexoraBrand bg-nexoraBrandSoft'
+          : 'border-nexoraBorder bg-white hover:border-nexoraBrand/50'
+      }`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-extrabold text-nexoraText">{t(`taxiq.yearEndExport.package.${key}.title`)}</span>
+        {selected && <CheckCircle2 className="h-4 w-4 shrink-0 text-nexoraBrand" />}
+      </div>
+      <p className="text-[11px] text-nexoraMuted">{t(`taxiq.yearEndExport.package.${key}.description`)}</p>
+    </button>
+  )
 }
 
 function ExportResultCard({ pkg, label }: { pkg: ExportPackage; label: string }) {
@@ -74,6 +106,9 @@ export default function YearEndExportView({
   const [draftResult, setDraftResult] = useState<ExportPackage | null>(null)
   const [finalResult, setFinalResult] = useState<FinalExportResult | null>(null)
   const [consentConfirmed, setConsentConfirmed] = useState(false)
+  const [selectedPackageType, setSelectedPackageType] = useState<CpaPackageType | null>(null)
+
+  const requiresConsent = selectedPackageType === 'Full' || selectedPackageType === 'CPAReview'
 
   useEffect(() => {
     const prefill = (location.state as AdjustmentNavigationState | null)?.prefillAdjustment
@@ -105,8 +140,9 @@ export default function YearEndExportView({
   }
 
   const handleGenerateDraft = async () => {
+    if (!selectedPackageType) return
     try {
-      const result = await generateDraft.mutateAsync({ ownerTaxYearId: ownerTaxYear.id })
+      const result = await generateDraft.mutateAsync({ ownerTaxYearId: ownerTaxYear.id, packageType: selectedPackageType })
       setDraftResult(result)
       showToast(t('taxiq.yearEndExport.draftSuccess'), 'success')
     } catch (err) {
@@ -115,8 +151,13 @@ export default function YearEndExportView({
   }
 
   const handleGenerateFinal = async () => {
+    if (!selectedPackageType) return
     try {
-      const result = await generateFinal.mutateAsync({ ownerTaxYearId: ownerTaxYear.id, consentConfirmed: true })
+      const result = await generateFinal.mutateAsync({
+        ownerTaxYearId: ownerTaxYear.id,
+        consentConfirmed,
+        packageType: selectedPackageType,
+      })
       setFinalResult(result)
       if (result.isNoChangeReexport) {
         showToast(t('taxiq.yearEndExport.finalNoChanges'), 'info')
@@ -132,9 +173,11 @@ export default function YearEndExportView({
     ? t('taxiq.yearEndExport.finalDisabledNotLocked')
     : highPriorityItems.length > 0
       ? t('taxiq.yearEndExport.finalDisabledHighPriority')
-      : !consentConfirmed
-        ? t('taxiq.yearEndExport.finalDisabledConsent')
-        : null
+      : !selectedPackageType
+        ? t('taxiq.yearEndExport.finalDisabledNoPackage')
+        : requiresConsent && !consentConfirmed
+          ? t('taxiq.yearEndExport.finalDisabledConsent')
+          : null
 
   return (
     <div className="space-y-5">
@@ -144,6 +187,26 @@ export default function YearEndExportView({
       </div>
 
       <TaxReadinessScoreWidget scope="owner" taxYearId={ownerTaxYear.id} />
+
+      <div className="nexora-card p-6">
+        <h3 className="text-sm font-extrabold text-nexoraText">{t('taxiq.yearEndExport.packageTitle')}</h3>
+        <p className="mt-1 text-xs text-nexoraMuted">{t('taxiq.yearEndExport.packageDescription')}</p>
+
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {PACKAGE_TYPES.map((packageType) => (
+            <PackageOption
+              key={packageType}
+              packageType={packageType}
+              selected={selectedPackageType === packageType}
+              onSelect={() => setSelectedPackageType(packageType)}
+            />
+          ))}
+        </div>
+
+        {!selectedPackageType && (
+          <p className="mt-2 text-[11px] font-semibold text-nexoraMuted">{t('taxiq.yearEndExport.finalDisabledNoPackage')}</p>
+        )}
+      </div>
 
       <div className="nexora-card p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -159,8 +222,8 @@ export default function YearEndExportView({
           <button
             type="button"
             onClick={handleGenerateDraft}
-            disabled={generateDraft.isPending}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-nexoraBorder px-4 py-2 text-xs font-bold text-nexoraText disabled:opacity-60"
+            disabled={!selectedPackageType || generateDraft.isPending}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-nexoraBorder px-4 py-2 text-xs font-bold text-nexoraText disabled:cursor-not-allowed disabled:opacity-60"
           >
             {generateDraft.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FilePlus2 className="h-3.5 w-3.5" />}
             {t('taxiq.yearEndExport.generateDraftButton')}
@@ -229,16 +292,18 @@ export default function YearEndExportView({
         </h3>
         <p className="mt-1 text-xs text-nexoraMuted">{t('taxiq.yearEndExport.finalDescription')}</p>
 
-        <label className="mt-3 flex items-center gap-2 text-xs font-semibold text-nexoraText">
-          <input
-            type="checkbox"
-            checked={consentConfirmed}
-            onChange={(e) => setConsentConfirmed(e.target.checked)}
-            disabled={!isLockedOrExported}
-            className="h-4 w-4 rounded border-nexoraBorder"
-          />
-          {t('taxiq.yearEndExport.consentLabel')}
-        </label>
+        {requiresConsent && (
+          <label className="mt-3 flex items-center gap-2 text-xs font-semibold text-nexoraText">
+            <input
+              type="checkbox"
+              checked={consentConfirmed}
+              onChange={(e) => setConsentConfirmed(e.target.checked)}
+              disabled={!isLockedOrExported}
+              className="h-4 w-4 rounded border-nexoraBorder"
+            />
+            {t('taxiq.yearEndExport.consentLabel')}
+          </label>
+        )}
 
         {finalExportDisabledReason && (
           <p className="mt-2 text-[11px] font-semibold text-nexoraMuted">{finalExportDisabledReason}</p>

@@ -3810,6 +3810,22 @@
       "title": "Trung Tâm Xuất Hồ Sơ Cuối Năm",
       "subtitle": "Khóa năm thuế và xuất bộ hồ sơ CPA mà kế toán thuế của bạn cần.",
       "noOwnerTaxYear": "Hoàn tất thiết lập Tax IQ trước khi xuất hồ sơ.",
+      "packageTitle": "Loại Gói",
+      "packageDescription": "Chọn gói sẽ dùng khi xuất Draft hoặc Final.",
+      "package": {
+        "basic": {
+          "title": "Basic",
+          "description": "Chỉ tổng hợp — không có chi tiết từng dòng."
+        },
+        "full": {
+          "title": "Full",
+          "description": "Đầy đủ từng bản ghi kèm receipt đính kèm."
+        },
+        "cpaReview": {
+          "title": "CPA Review",
+          "description": "Đầy đủ như Full, cộng thêm mỗi mục cần CPA xem xét được đánh dấu để xác minh."
+        }
+      },
       "tooltips": {
         "draftReport": "Bản xuất xem trước, tạo lúc nào cũng được, đóng dấu \"NOT FINAL\" kèm danh sách mục còn thiếu.",
         "finalExport": "Bộ hồ sơ chính thức gửi CPA, không watermark. Yêu cầu xử lý hết High Priority và khóa năm thuế.",
@@ -3832,6 +3848,7 @@
       "consentLabel": "Tôi xác nhận bộ hồ sơ CPA này đã sẵn sàng để gửi.",
       "finalDisabledNotLocked": "Hãy khóa năm thuế trước khi tạo Final Export.",
       "finalDisabledHighPriority": "Hãy xử lý hết các mục High Priority trước khi tạo Final Export.",
+      "finalDisabledNoPackage": "Chọn 1 loại gói ở trên để tiếp tục.",
       "finalDisabledConsent": "Vui lòng tick xác nhận consent ở trên.",
       "finalButton": "Tạo Final Export",
       "finalResultLabel": "Final export",
