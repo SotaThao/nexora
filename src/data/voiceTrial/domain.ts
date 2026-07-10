@@ -1,11 +1,11 @@
 export const VOICE_TRIAL_DAY_KEY_TO_API = {
-  sun: 'CN',
-  mon: 'T2',
-  tue: 'T3',
-  wed: 'T4',
-  thu: 'T5',
-  fri: 'T6',
-  sat: 'T7',
+  sun: 'Sunday',
+  mon: 'Monday',
+  tue: 'Tuesday',
+  wed: 'Wednesday',
+  thu: 'Thursday',
+  fri: 'Friday',
+  sat: 'Saturday',
 } as const
 
 export type VoiceTrialDayKey = keyof typeof VOICE_TRIAL_DAY_KEY_TO_API

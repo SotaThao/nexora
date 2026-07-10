@@ -20,7 +20,6 @@ export function createVoiceTrialRepository(client: HttpClient = httpClient) {
         '/api/v1/nexora-voice/trial-requests',
         body,
         {
-          anonymous: true,
           headers: VOICE_TRIAL_HEADERS,
         },
       )
