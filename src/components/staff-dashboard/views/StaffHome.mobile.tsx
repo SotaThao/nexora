@@ -125,7 +125,7 @@ function StaffQrShortcutCard({ icon, title, subtitle, onClick, qrImageSrc = '', 
           )}
         </span>
         <div className="min-w-0">
-          <p className="truncate text-[9px] font-semibold uppercase text-current">{title}</p>
+          <p className="line-clamp-2 text-[9px] font-semibold uppercase leading-[11px] text-current">{title}</p>
           <p className="mt-0.5 line-clamp-2 text-[9px] font-medium leading-[13px] text-nexoraMuted">{subtitle}</p>
         </div>
       </div>
