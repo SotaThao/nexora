@@ -1,7 +1,6 @@
 // StaffHome — personal staff home (mobile-first "Pro" layout):
 // greeting, KPI cards, quick actions, pending tip confirmations, linked
 // businesses. All data is real (empty states when missing).
-import { useMemo } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import {
   QrCode,
@@ -13,20 +12,15 @@ import {
   CheckCircle2,
   Wallet,
   Gift,
-  BadgeCheck,
   Sparkles,
   CalendarCheck,
 } from 'lucide-react'
 import { useTranslation } from '../../../contexts/LanguageContext'
 import { useStaffAccount } from '../../../contexts/StaffAccountContext'
-import { useProfileSettings } from '../../../data/hooks/useProfileSettings'
-import { useConfirmStaffTipsReceipt, useStaffBusinessTipQrs } from '../../../data/hooks/useStaffSelf'
+import { useConfirmStaffTipsReceipt } from '../../../data/hooks/useStaffSelf'
 import { useStaffHomeData } from '../hooks/useStaffHomeData'
-import { buildStaffShareUrl, getProfileReferralCode } from '../../../utils/affiliateReferral'
-import { buildQrImageUrl } from '../../../utils/staffTipUrl'
 import { SkeletonLayout } from '../../ui/skeleton'
 import Tooltip from '../../ui/Tooltip'
-import QrImage from '../../ui/QrImage'
 import { STAFF_HOME_SKELETON } from '../skeletons/staffDashboardSkeletons'
 import ActiveBannersCarousel from '../../dashboard/overview/ActiveBannersCarousel'
 import {
@@ -109,38 +103,12 @@ function SectionHeader({ title, action = null, onAction = null }: any) {
   )
 }
 
-function StaffQrShortcutCard({ icon, title, subtitle, onClick, qrImageSrc = '', accent = 'border-[#DDD8FF] bg-[#F4F2FF] text-nexoraBrandDark' }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-xl border p-2 text-left transition active:scale-[0.98] ${accent}`}
-    >
-      <div className="flex items-start gap-2">
-        <span className="grid h-[48px] w-[48px] shrink-0 place-items-center rounded-lg border-4 border-white bg-white shadow-[0_8px_18px_rgba(70,72,212,0.08)]">
-          {qrImageSrc ? (
-            <QrImage src={qrImageSrc} alt={title} className="h-full w-full" />
-          ) : (
-            icon
-          )}
-        </span>
-        <div className="min-w-0">
-          <p className="line-clamp-2 text-[9px] font-semibold uppercase leading-[11px] text-current">{title}</p>
-          <p className="mt-0.5 line-clamp-2 text-[9px] font-medium leading-[13px] text-nexoraMuted">{subtitle}</p>
-        </div>
-      </div>
-    </button>
-  )
-}
-
 export default function StaffHome() {
   const { t } = useTranslation()
   const { onNavigate } = useOutletContext<any>() || {}
-  const { staffMember, account } = useStaffAccount()
+  const { account } = useStaffAccount()
   const confirmTipsMutation = useConfirmStaffTipsReceipt()
   const { kpis, isHomeLoading, isPendingTipsFetching, pendingTips, linkedBusinesses } = useStaffHomeData()
-  const { data: profile } = useProfileSettings()
-  const { businessTipQrs } = useStaffBusinessTipQrs()
   const activeLinkedBusinesses = (linkedBusinesses || []).filter(
     (biz) => resolveStaffBusinessLinkStatusLabel(biz).toLowerCase() === 'active',
   )
@@ -152,29 +120,6 @@ export default function StaffHome() {
   const pendingAmount = (pendingTips || []).reduce((s, tip) => s + Number(tip.amount || 0), 0)
 
   const go = (screen, params?: Record<string, string>) => onNavigate?.(screen, params)
-
-  const activeTipQr = useMemo(
-    () =>
-      (businessTipQrs || []).find((biz) => {
-        const status = String(biz.linkStatusLabel || biz.linkStatus || '').toLowerCase()
-        return status === 'active' && Boolean(biz.tipUrl) && !biz.tipLinkIncomplete
-      }),
-    [businessTipQrs],
-  )
-  const tipQrImageSrc = useMemo(
-    () => (activeTipQr?.tipUrl ? buildQrImageUrl(activeTipQr.tipUrl, 150, activeTipQr.qrImageUrl) : ''),
-    [activeTipQr?.qrImageUrl, activeTipQr?.tipUrl],
-  )
-  const referralCode = useMemo(() => getProfileReferralCode(profile || {}), [profile])
-  const staffCode = (account?.staffCode || staffMember?.id || '').trim()
-  const staffShareUrl = useMemo(
-    () => buildStaffShareUrl({ referralCode, staffCode }),
-    [referralCode, staffCode],
-  )
-  const referralQrImageSrc = useMemo(
-    () => (staffShareUrl ? buildQrImageUrl(staffShareUrl, 150) : ''),
-    [staffShareUrl],
-  )
 
   if (isHomeLoading || kpis.isLoading) {
     return <SkeletonLayout blocks={STAFF_HOME_SKELETON} />
@@ -271,25 +216,6 @@ export default function StaffHome() {
       </div>
       </section>
 
-      {/* ── Personal / Referral QR Cards ─────────────────────────────────── */}
-      <section className="grid grid-cols-2 gap-2">
-        <StaffQrShortcutCard
-          icon={<QrCode className="h-5 w-5 text-nexoraBrandDark" />}
-          title={t('staff_dashboard.home.personal_qr')}
-          subtitle={t('staff_dashboard.home.personal_qr_subtitle')}
-          qrImageSrc={tipQrImageSrc}
-          onClick={() => go('qr', { tab: 'tipping', preview: 'firstTip' })}
-        />
-        <StaffQrShortcutCard
-          icon={<Gift className="h-5 w-5 text-rose-500" />}
-          title={t('staff_dashboard.home.referral_qr')}
-          subtitle={t('staff_dashboard.home.referral_qr_subtitle')}
-          qrImageSrc={referralQrImageSrc}
-          onClick={() => go('qr', { tab: 'personal' })}
-          accent="border-rose-200 bg-rose-50 text-rose-500"
-        />
-      </section>
-
       {/* ── Quick Actions ────────────────────────────────────────────────── */}
       <section className="space-y-1.5 px-0.5">
         <SectionHeader title={t('staff_dashboard.home.quick_actions')} action={t('staff_dashboard.home.manage')} onAction={() => go('qr')} />
@@ -298,23 +224,6 @@ export default function StaffHome() {
           <QuickAction icon={<Star className="h-4 w-4" />} label={t('staff_dashboard.home.quick_reviews')} bg="border-orange-200 bg-orange-50" iconColor="text-orange-500" onClick={() => go('reviews')} />
           <QuickAction icon={<CreditCard className="h-4 w-4" />} label={t('staff_dashboard.home.quick_payments')} bg="border-indigo-200 bg-indigo-50" iconColor="text-indigo-600" onClick={() => go('qr', { tab: 'payment' })} />
           <QuickAction icon={<Gift className="h-4 w-4" />} label={t('staff_dashboard.home.quick_refer')} bg="border-rose-200 bg-rose-50" iconColor="text-rose-500" onClick={() => go('qr', { tab: 'personal' })} />
-        </div>
-      </section>
-
-      {/* ── Payout Readiness ─────────────────────────────────────────────── */}
-      <section className="rounded-lg border border-emerald-200 bg-emerald-50 p-2.5 shadow-[0_8px_18px_rgba(70,72,212,0.08)]">
-        <div className="mb-1.5 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-nexoraText">{t('staff_dashboard.home.payout_readiness')}</h2>
-          <span className="rounded-full bg-nexoraSuccess/10 px-2.5 py-1 text-[10px] font-semibold text-nexoraSuccess">{t('staff_dashboard.home.ready')}</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="grid h-9 w-9 place-items-center rounded-lg bg-nexoraSuccess/10 text-nexoraSuccess">
-            <BadgeCheck className="h-4 w-4" />
-          </span>
-          <div>
-            <p className="text-[13px] font-semibold">{t('staff_dashboard.home.payout_ready_title')}</p>
-            <p className="text-[11px] font-medium text-nexoraMuted">{t('staff_dashboard.home.payout_ready_subtitle')}</p>
-          </div>
         </div>
       </section>
 
