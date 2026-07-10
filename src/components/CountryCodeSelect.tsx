@@ -280,11 +280,11 @@ export default function CountryCodeSelect({
       </button>
 
       {isOpen && (
-        <div className={`absolute left-0 z-[200] w-64 bg-white border border-nexoraBorder rounded-lg shadow-premium flex flex-col overflow-hidden animate-fadeIn ${
+        <div className={`country-code-dropdown absolute left-0 z-[200] w-64 bg-white rounded-lg shadow-premium flex flex-col overflow-hidden animate-fadeIn ${
           embedded ? 'top-full mt-1' : 'mt-11'
         }`}>
           {showSearch ? (
-            <div className="p-2 bg-slate-50 flex items-center gap-1.5">
+            <div className="country-code-search-wrap p-2 bg-slate-50 flex items-center gap-1.5">
               <Search className="w-3.5 h-3.5 text-nexoraSubtle shrink-0" />
               <input
                 type="text"
@@ -296,7 +296,7 @@ export default function CountryCodeSelect({
               />
             </div>
           ) : null}
-          <div className="max-h-48 overflow-y-auto divide-y divide-slate-100 py-1">
+          <div className="country-code-list max-h-48 overflow-y-auto py-1">
             {filteredCountries.length === 0 ? (
               <div className="p-3 text-[10px] text-nexoraSubtle text-center font-medium">No countries found</div>
             ) : (

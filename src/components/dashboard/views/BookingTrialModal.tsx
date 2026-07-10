@@ -1,5 +1,21 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
+import CountryCodeSelect, {
+  formatNationalNumber,
+  getDefaultDialCode,
+  isValidPhoneE164,
+  normalizePhoneE164,
+  parsePhone,
+} from '../../CountryCodeSelect'
 import { useTranslation } from '../../../contexts/LanguageContext'
+import { useNotification } from '../../../contexts/NotificationContext'
+import { useSubmitVoiceTrialRequest } from '../../../data/hooks/useSubmitVoiceTrialRequest'
+import { getErrorI18nKey } from '../../../data/errorCodes'
+import {
+  formatTrialTimeLabelToApi,
+  mapDayKeysToApiOpeningDays,
+  type SubmitVoiceTrialRequest,
+} from '../../../data/voiceTrial/domain'
+import { getApiErrorCode } from '../../../types/domain'
 
 const TK = 'components.dashboard.views.BookingHubView.plans.trial'
 
@@ -20,8 +36,85 @@ const DEFAULT_ACTIVE_SERVICES = new Set(['Gel Manicure', 'Acrylic Full Set', 'Pe
 const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const
 const DEFAULT_ACTIVE_DAYS = new Set(['mon', 'tue', 'wed', 'thu', 'fri', 'sat'])
 
-const OPEN_TIMES = ['8:00 AM', '9:00 AM', '9:30 AM', '10:00 AM']
-const CLOSE_TIMES = ['6:00 PM', '7:00 PM', '8:00 PM', '9:00 PM']
+function buildTwentyFourHourOptions(stepMinutes = 30): string[] {
+  const options: string[] = []
+  for (let total = 0; total < 24 * 60; total += stepMinutes) {
+    const hours = Math.floor(total / 60)
+    const minutes = total % 60
+    options.push(`${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`)
+  }
+  return options
+}
+
+const SERVICE_HOUR_OPTIONS = buildTwentyFourHourOptions()
+const DEFAULT_OPEN_TIME = '09:00'
+const DEFAULT_CLOSE_TIME = '19:00'
+
+function compareTime24h(left: string, right: string): number {
+  const [leftHours, leftMinutes] = left.split(':').map((part) => Number.parseInt(part, 10))
+  const [rightHours, rightMinutes] = right.split(':').map((part) => Number.parseInt(part, 10))
+  return (leftHours * 60 + leftMinutes) - (rightHours * 60 + rightMinutes)
+}
+
+const PAIN_POINT_KEYS = {
+  missed: `${TK}.painMissed`,
+  retention: `${TK}.painRetention`,
+  reviews: `${TK}.painReviews`,
+  manual: `${TK}.painManual`,
+  sms: `${TK}.painSms`,
+} as const
+
+type PainPointValue = keyof typeof PAIN_POINT_KEYS
+
+type TrialFieldKey = 'salon' | 'owner' | 'phone' | 'email' | 'services' | 'openingDays' | 'serviceHours' | 'painPoint'
+
+type TrialFormErrors = Partial<Record<TrialFieldKey, string>>
+
+interface TrialFormState {
+  salon: string
+  owner: string
+  phone: string
+  email: string
+  city: string
+  referral: string
+  openTime: string
+  closeTime: string
+  painPoint: string
+  activeServices: Set<string>
+  activeDays: Set<string>
+  customServices: string[]
+  customServiceInput: string
+  showCustomServiceInput: boolean
+}
+
+function createInitialTrialForm(): TrialFormState {
+  return {
+    salon: '',
+    owner: '',
+    phone: '',
+    email: '',
+    city: '',
+    referral: '',
+    openTime: DEFAULT_OPEN_TIME,
+    closeTime: DEFAULT_CLOSE_TIME,
+    painPoint: '',
+    activeServices: new Set(DEFAULT_ACTIVE_SERVICES),
+    activeDays: new Set(DEFAULT_ACTIVE_DAYS),
+    customServices: [],
+    customServiceInput: '',
+    showCustomServiceInput: false,
+  }
+}
+
+function TrialFieldError({ message }: { message?: string }) {
+  if (!message) return null
+
+  return (
+    <span className="trial-field-error-slot" aria-live="polite">
+      <span className="trial-field-error">{message}</span>
+    </span>
+  )
+}
 
 function CloseIcon() {
   return (
@@ -63,54 +156,72 @@ interface BookingTrialModalProps {
 }
 
 export default function BookingTrialModal({ open, onClose }: BookingTrialModalProps) {
-  const { t } = useTranslation()
+  const { t, currentLanguage } = useTranslation()
+  const { showToast } = useNotification()
+  const submitTrial = useSubmitVoiceTrialRequest()
+  const defaultDialCode = getDefaultDialCode(currentLanguage)
   const [step, setStep] = useState<'form' | 'email'>('form')
-  const [salon, setSalon] = useState('Bitcoin Nail Bar')
-  const [owner, setOwner] = useState('Brian Nguyen')
-  const [phone, setPhone] = useState('346-802-4906')
-  const [email, setEmail] = useState('chi.mai@gmail.com')
-  const [city, setCity] = useState('Houston, TX')
-  const [referral, setReferral] = useState('')
-  const [openTime, setOpenTime] = useState('9:30 AM')
-  const [closeTime, setCloseTime] = useState('7:00 PM')
-  const [painPoint, setPainPoint] = useState('')
-  const [activeServices, setActiveServices] = useState<Set<string>>(() => new Set(DEFAULT_ACTIVE_SERVICES))
-  const [customServices, setCustomServices] = useState<string[]>([])
-  const [showCustomServiceInput, setShowCustomServiceInput] = useState(false)
-  const [customServiceInput, setCustomServiceInput] = useState('')
-  const [activeDays, setActiveDays] = useState<Set<string>>(() => new Set(DEFAULT_ACTIVE_DAYS))
+  const [form, setForm] = useState<TrialFormState>(createInitialTrialForm)
   const [emailStatus, setEmailStatus] = useState<'default' | 'activated'>('default')
+  const [errors, setErrors] = useState<TrialFormErrors>({})
+
+  const phoneParsed = useMemo(() => parsePhone(form.phone), [form.phone])
+
+  const clearFieldError = (field: TrialFieldKey) => {
+    setErrors((prev) => {
+      if (!prev[field]) return prev
+      const next = { ...prev }
+      delete next[field]
+      return next
+    })
+  }
+
+  const patchForm = <K extends keyof TrialFormState>(key: K, value: TrialFormState[K]) => {
+    setForm((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const patchFormField = (
+    key: keyof Pick<TrialFormState, 'salon' | 'owner' | 'phone' | 'email' | 'city' | 'referral' | 'openTime' | 'closeTime' | 'painPoint' | 'customServiceInput'>,
+    value: string,
+    errorField?: TrialFieldKey,
+  ) => {
+    patchForm(key, value)
+    if (errorField) clearFieldError(errorField)
+  }
 
   const resetForm = () => {
     setStep('form')
     setEmailStatus('default')
-    setCustomServices([])
-    setShowCustomServiceInput(false)
-    setCustomServiceInput('')
+    setForm(createInitialTrialForm())
+    setErrors({})
   }
 
-  const serviceChips = [...SERVICE_CHIPS, ...customServices]
+  const serviceChips = [...SERVICE_CHIPS, ...form.customServices]
 
   const addCustomService = () => {
-    const value = customServiceInput.trim()
+    const value = form.customServiceInput.trim()
     if (!value) {
-      setShowCustomServiceInput(false)
+      patchForm('showCustomServiceInput', false)
       return
     }
 
     const exists = serviceChips.some((chip) => chip.toLowerCase() === value.toLowerCase())
-    if (!exists) {
-      setCustomServices((prev) => [...prev, value])
-    }
+    const nextCustomServices = exists
+      ? form.customServices
+      : [...form.customServices, value]
 
-    setActiveServices((prev) => {
-      const next = new Set(prev)
-      const matched = serviceChips.find((chip) => chip.toLowerCase() === value.toLowerCase())
-      next.add(matched ?? value)
-      return next
-    })
-    setCustomServiceInput('')
-    setShowCustomServiceInput(false)
+    const matched = serviceChips.find((chip) => chip.toLowerCase() === value.toLowerCase())
+    const nextActiveServices = new Set(form.activeServices)
+    nextActiveServices.add(matched ?? value)
+
+    setForm((prev) => ({
+      ...prev,
+      customServices: nextCustomServices,
+      activeServices: nextActiveServices,
+      customServiceInput: '',
+      showCustomServiceInput: false,
+    }))
+    clearFieldError('services')
   }
 
   const handleClose = () => {
@@ -118,17 +229,93 @@ export default function BookingTrialModal({ open, onClose }: BookingTrialModalPr
     onClose()
   }
 
-  const toggleChip = (set: Set<string>, value: string, setter: (next: Set<string>) => void) => {
-    const next = new Set(set)
-    if (next.has(value)) next.delete(value)
-    else next.add(value)
-    setter(next)
+  const toggleChip = (
+    field: 'activeServices' | 'activeDays',
+    value: string,
+    errorField?: TrialFieldKey,
+  ) => {
+    setForm((prev) => {
+      const next = new Set(prev[field])
+      if (next.has(value)) next.delete(value)
+      else next.add(value)
+      return { ...prev, [field]: next }
+    })
+    if (errorField) clearFieldError(errorField)
   }
 
-  const handleSubmit = () => {
-    const emailValue = email.trim()
-    if (!emailValue || !emailValue.includes('@')) return
-    setStep('email')
+  const validateForm = (): TrialFormErrors => {
+    const shopName = form.salon.trim()
+    const ownerName = form.owner.trim()
+    const emailValue = form.email.trim()
+    const services = [...form.activeServices]
+    const openingDays = mapDayKeysToApiOpeningDays(form.activeDays)
+    const painKey = PAIN_POINT_KEYS[form.painPoint as PainPointValue]
+    const nextErrors: TrialFormErrors = {}
+
+    if (!shopName) nextErrors.salon = t(`${TK}.validationSalonRequired`)
+    if (!ownerName) nextErrors.owner = t(`${TK}.validationOwnerRequired`)
+    if (!phoneParsed.nationalNumber.trim()) {
+      nextErrors.phone = t(`${TK}.validationPhoneRequired`)
+    } else if (!isValidPhoneE164(form.phone, defaultDialCode)) {
+      nextErrors.phone = t(`${TK}.validationPhoneInvalid`)
+    }
+    if (!emailValue) nextErrors.email = t(`${TK}.validationEmailRequired`)
+    else if (!emailValue.includes('@')) nextErrors.email = t(`${TK}.validationEmailInvalid`)
+    if (services.length === 0) nextErrors.services = t(`${TK}.validationServicesRequired`)
+    if (openingDays.length === 0) nextErrors.openingDays = t(`${TK}.validationDaysRequired`)
+    if (compareTime24h(form.closeTime, form.openTime) <= 0) {
+      nextErrors.serviceHours = t(`${TK}.validationHoursInvalid`)
+    }
+    if (!painKey) nextErrors.painPoint = t(`${TK}.validationPainRequired`)
+
+    return nextErrors
+  }
+
+  const buildPayload = (): SubmitVoiceTrialRequest | null => {
+    const formErrors = validateForm()
+    if (Object.keys(formErrors).length > 0) {
+      setErrors(formErrors)
+      return null
+    }
+
+    setErrors({})
+
+    const shopName = form.salon.trim()
+    const ownerName = form.owner.trim()
+    const phoneNumber = normalizePhoneE164(form.phone, defaultDialCode)
+    const emailValue = form.email.trim()
+    const services = [...form.activeServices]
+    const openingDays = mapDayKeysToApiOpeningDays(form.activeDays)
+    const painKey = PAIN_POINT_KEYS[form.painPoint as PainPointValue]!
+    const cityArea = form.city.trim()
+    const referralCode = form.referral.trim()
+
+    return {
+      shopName,
+      ownerName,
+      phoneNumber,
+      email: emailValue,
+      cityArea: cityArea || null,
+      services,
+      openingDays,
+      serviceHoursFrom: formatTrialTimeLabelToApi(form.openTime),
+      serviceHoursTo: formatTrialTimeLabelToApi(form.closeTime),
+      biggestProblem: t(painKey),
+      referralCode: referralCode || null,
+    }
+  }
+
+  const handleSubmit = async () => {
+    const payload = buildPayload()
+    if (!payload) return
+
+    try {
+      await submitTrial.mutateAsync(payload)
+      showToast(t(`${TK}.submitSuccess`), 'success')
+      setStep('email')
+    } catch (error) {
+      showToast(t(getErrorI18nKey(getApiErrorCode(error))), 'error')
+    }
   }
 
   const handleActivate = () => {
@@ -185,30 +372,78 @@ export default function BookingTrialModal({ open, onClose }: BookingTrialModalPr
 
             <div className="trial-body">
               <div className="trial-grid">
-                <div className="trial-field trial-span-2">
+                <div className={`trial-field trial-span-2 ${errors.salon ? 'has-error' : ''}`}>
                   <label className="trial-label" htmlFor="trial-salon">{t(`${TK}.salonLabel`)} <span>*</span></label>
-                  <input className="trial-input" id="trial-salon" type="text" value={salon} placeholder={t(`${TK}.salonPlaceholder`)} onChange={(e) => setSalon(e.target.value)} />
+                  <input
+                    className={`trial-input ${errors.salon ? 'has-error' : ''}`}
+                    id="trial-salon"
+                    type="text"
+                    value={form.salon}
+                    placeholder={t(`${TK}.salonPlaceholder`)}
+                    onChange={(e) => patchFormField('salon', e.target.value, 'salon')}
+                  />
+                  <TrialFieldError message={errors.salon} />
                 </div>
-                <div className="trial-field">
+                <div className={`trial-field ${errors.owner ? 'has-error' : ''}`}>
                   <label className="trial-label" htmlFor="trial-owner">{t(`${TK}.ownerLabel`)} <span>*</span></label>
-                  <input className="trial-input" id="trial-owner" type="text" value={owner} placeholder={t(`${TK}.ownerPlaceholder`)} onChange={(e) => setOwner(e.target.value)} />
+                  <input
+                    className={`trial-input ${errors.owner ? 'has-error' : ''}`}
+                    id="trial-owner"
+                    type="text"
+                    value={form.owner}
+                    placeholder={t(`${TK}.ownerPlaceholder`)}
+                    onChange={(e) => patchFormField('owner', e.target.value, 'owner')}
+                  />
+                  <TrialFieldError message={errors.owner} />
                 </div>
-                <div className="trial-field">
+                <div className={`trial-field ${errors.phone ? 'has-error' : ''}`}>
                   <label className="trial-label" htmlFor="trial-phone">{t(`${TK}.phoneLabel`)} <span>*</span></label>
-                  <input className="trial-input" id="trial-phone" type="tel" value={phone} placeholder={t(`${TK}.phonePlaceholder`)} onChange={(e) => setPhone(e.target.value)} />
+                  <span className="phone-input-shell trial-phone-input-shell">
+                    <CountryCodeSelect
+                      value={phoneParsed.countryCode}
+                      embedded
+                      onChange={(nextCode) => {
+                        const formatted = formatNationalNumber(phoneParsed.nationalNumber, nextCode)
+                        patchFormField('phone', `${nextCode} ${formatted}`.trim(), 'phone')
+                      }}
+                    />
+                    <input
+                      className="trial-input phone-mask-input"
+                      id="trial-phone"
+                      type="tel"
+                      value={formatNationalNumber(phoneParsed.nationalNumber, phoneParsed.countryCode)}
+                      aria-invalid={Boolean(errors.phone)}
+                      placeholder={t(`${TK}.phonePlaceholder`)}
+                      inputMode="numeric"
+                      autoComplete="tel-national"
+                      onChange={(event) => {
+                        const formatted = formatNationalNumber(event.target.value, phoneParsed.countryCode)
+                        patchFormField('phone', `${phoneParsed.countryCode} ${formatted}`.trim(), 'phone')
+                      }}
+                    />
+                  </span>
+                  <TrialFieldError message={errors.phone} />
                 </div>
-                <div className="trial-field trial-span-2">
+                <div className={`trial-field trial-span-2 ${errors.email ? 'has-error' : ''}`}>
                   <label className="trial-label" htmlFor="trial-email">{t(`${TK}.emailLabel`)} <span>*</span></label>
-                  <input className="trial-input" id="trial-email" type="email" value={email} placeholder={t(`${TK}.emailPlaceholder`)} onChange={(e) => setEmail(e.target.value)} />
-                  <div className="trial-note">{t(`${TK}.emailNote`)}</div>
+                  <input
+                    className={`trial-input ${errors.email ? 'has-error' : ''}`}
+                    id="trial-email"
+                    type="email"
+                    value={form.email}
+                    placeholder={t(`${TK}.emailPlaceholder`)}
+                    onChange={(e) => patchFormField('email', e.target.value, 'email')}
+                  />
+                  {!errors.email ? <div className="trial-note">{t(`${TK}.emailNote`)}</div> : null}
+                  <TrialFieldError message={errors.email} />
                 </div>
                 <div className="trial-field trial-span-2">
                   <label className="trial-label" htmlFor="trial-city">
                     {t(`${TK}.cityLabel`)} <span className="trial-optional">{t(`${TK}.optional`)}</span>
                   </label>
-                  <input className="trial-input" id="trial-city" type="text" value={city} placeholder={t(`${TK}.cityPlaceholder`)} onChange={(e) => setCity(e.target.value)} />
+                  <input className="trial-input" id="trial-city" type="text" value={form.city} placeholder={t(`${TK}.cityPlaceholder`)} onChange={(e) => patchFormField('city', e.target.value)} />
                 </div>
-                <div className="trial-field trial-span-2">
+                <div className={`trial-field trial-span-2 ${errors.services ? 'has-error' : ''}`}>
                   <div className="trial-label">
                     {t(`${TK}.servicesLabel`)} <span>*</span>{' '}
                     <span className="trial-optional">{t(`${TK}.tapToSelect`)}</span>
@@ -217,9 +452,9 @@ export default function BookingTrialModal({ open, onClose }: BookingTrialModalPr
                     {serviceChips.map((chip) => (
                       <button
                         key={chip}
-                        className={`trial-chip ${activeServices.has(chip) ? 'is-active' : ''}`}
+                        className={`trial-chip ${form.activeServices.has(chip) ? 'is-active' : ''}`}
                         type="button"
-                        onClick={() => toggleChip(activeServices, chip, setActiveServices)}
+                        onClick={() => toggleChip('activeServices', chip, 'services')}
                       >
                         {chip}
                       </button>
@@ -229,28 +464,28 @@ export default function BookingTrialModal({ open, onClose }: BookingTrialModalPr
                       type="button"
                       aria-label={t(`${TK}.addService`)}
                       title={t(`${TK}.addService`)}
-                      onClick={() => setShowCustomServiceInput(true)}
+                      onClick={() => patchForm('showCustomServiceInput', true)}
                     >
                       +
                     </button>
                   </div>
-                  {showCustomServiceInput ? (
+                  {form.showCustomServiceInput ? (
                     <div className="trial-custom-service-row">
                       <input
                         className="trial-input trial-custom-service-input"
                         type="text"
-                        value={customServiceInput}
+                        value={form.customServiceInput}
                         placeholder={t(`${TK}.customServicePlaceholder`)}
                         autoFocus
-                        onChange={(event) => setCustomServiceInput(event.target.value)}
+                        onChange={(event) => patchFormField('customServiceInput', event.target.value)}
                         onKeyDown={(event) => {
                           if (event.key === 'Enter') {
                             event.preventDefault()
                             addCustomService()
                           }
                           if (event.key === 'Escape') {
-                            setCustomServiceInput('')
-                            setShowCustomServiceInput(false)
+                            patchForm('customServiceInput', '')
+                            patchForm('showCustomServiceInput', false)
                           }
                         }}
                       />
@@ -259,40 +494,58 @@ export default function BookingTrialModal({ open, onClose }: BookingTrialModalPr
                       </button>
                     </div>
                   ) : null}
+                  <TrialFieldError message={errors.services} />
                 </div>
-                <div className="trial-field trial-span-2">
+                <div className={`trial-field trial-span-2 ${errors.openingDays ? 'has-error' : ''}`}>
                   <div className="trial-label">{t(`${TK}.openDaysLabel`)}</div>
                   <div className="trial-day-list">
                     {DAY_KEYS.map((day) => (
                       <button
                         key={day}
-                        className={`trial-day ${activeDays.has(day) ? 'is-active' : ''}`}
+                        className={`trial-day ${form.activeDays.has(day) ? 'is-active' : ''}`}
                         type="button"
-                        onClick={() => toggleChip(activeDays, day, setActiveDays)}
+                        onClick={() => toggleChip('activeDays', day, 'openingDays')}
                       >
                         {t(`${TK}.days.${day}`)}
                       </button>
                     ))}
                   </div>
+                  <TrialFieldError message={errors.openingDays} />
                 </div>
-                <div className="trial-field trial-span-2">
+                <div className={`trial-field trial-span-2 ${errors.serviceHours ? 'has-error' : ''}`}>
                   <div className="trial-label">{t(`${TK}.hoursLabel`)}</div>
                   <div className="trial-time-row">
-                    <select className="trial-select" aria-label={t(`${TK}.openTimeLabel`)} value={openTime} onChange={(e) => setOpenTime(e.target.value)}>
-                      {OPEN_TIMES.map((time) => <option key={time} value={time}>{time}</option>)}
+                    <select
+                      className={`trial-select ${errors.serviceHours ? 'has-error' : ''}`}
+                      aria-label={t(`${TK}.openTimeLabel`)}
+                      value={form.openTime}
+                      onChange={(e) => patchFormField('openTime', e.target.value, 'serviceHours')}
+                    >
+                      {SERVICE_HOUR_OPTIONS.map((time) => <option key={`open-${time}`} value={time}>{time}</option>)}
                     </select>
                     <span className="trial-time-separator">→</span>
-                    <select className="trial-select" aria-label={t(`${TK}.closeTimeLabel`)} value={closeTime} onChange={(e) => setCloseTime(e.target.value)}>
-                      {CLOSE_TIMES.map((time) => <option key={time} value={time}>{time}</option>)}
+                    <select
+                      className={`trial-select ${errors.serviceHours ? 'has-error' : ''}`}
+                      aria-label={t(`${TK}.closeTimeLabel`)}
+                      value={form.closeTime}
+                      onChange={(e) => patchFormField('closeTime', e.target.value, 'serviceHours')}
+                    >
+                      {SERVICE_HOUR_OPTIONS.map((time) => <option key={`close-${time}`} value={time}>{time}</option>)}
                     </select>
                   </div>
+                  <TrialFieldError message={errors.serviceHours} />
                 </div>
-                <div className="trial-field trial-span-2">
+                <div className={`trial-field trial-span-2 ${errors.painPoint ? 'has-error' : ''}`}>
                   <label className="trial-label" htmlFor="trial-pain">
                     {t(`${TK}.painLabel`)}{' '}
                     <span className="trial-optional">{t(`${TK}.painHint`)}</span>
                   </label>
-                  <select className="trial-select" id="trial-pain" value={painPoint} onChange={(e) => setPainPoint(e.target.value)}>
+                  <select
+                    className={`trial-select ${errors.painPoint ? 'has-error' : ''}`}
+                    id="trial-pain"
+                    value={form.painPoint}
+                    onChange={(e) => patchFormField('painPoint', e.target.value, 'painPoint')}
+                  >
                     <option value="">{t(`${TK}.painDefault`)}</option>
                     <option value="missed">{t(`${TK}.painMissed`)}</option>
                     <option value="retention">{t(`${TK}.painRetention`)}</option>
@@ -300,6 +553,7 @@ export default function BookingTrialModal({ open, onClose }: BookingTrialModalPr
                     <option value="manual">{t(`${TK}.painManual`)}</option>
                     <option value="sms">{t(`${TK}.painSms`)}</option>
                   </select>
+                  <TrialFieldError message={errors.painPoint} />
                 </div>
                 <div className="trial-field trial-span-2">
                   <label className="trial-label" htmlFor="trial-ref">
@@ -309,17 +563,22 @@ export default function BookingTrialModal({ open, onClose }: BookingTrialModalPr
                     className="trial-input trial-input-uppercase"
                     id="trial-ref"
                     type="text"
-                    value={referral}
+                    value={form.referral}
                     placeholder={t(`${TK}.referralPlaceholder`)}
-                    onChange={(e) => setReferral(e.target.value.toUpperCase())}
+                    onChange={(e) => patchFormField('referral', e.target.value.toUpperCase())}
                   />
                   <div className="trial-credit"><GiftIcon /> {t(`${TK}.referralCredit`)}</div>
                 </div>
               </div>
 
-              <button className="trial-submit" type="button" onClick={handleSubmit}>
+              <button
+                className="trial-submit"
+                type="button"
+                disabled={submitTrial.isPending}
+                onClick={handleSubmit}
+              >
                 <RocketIcon />
-                {t(`${TK}.submit`)}
+                {submitTrial.isPending ? t(`${TK}.submitting`) : t(`${TK}.submit`)}
               </button>
               <div className="trial-footer">{t(`${TK}.footer`)}</div>
             </div>
@@ -338,7 +597,7 @@ export default function BookingTrialModal({ open, onClose }: BookingTrialModalPr
               <h2 className="trial-title">{t(`${TK}.emailTitle`)}</h2>
               <p className="trial-subtitle">
                 {t(`${TK}.emailSubtitlePrefix`)}{' '}
-                <strong className="trial-email-highlight">{email}</strong>.{' '}
+                <strong className="trial-email-highlight">{form.email}</strong>.{' '}
                 {t(`${TK}.emailSubtitleSuffix`)}
               </p>
             </div>

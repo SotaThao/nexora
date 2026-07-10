@@ -1142,7 +1142,8 @@
 }
 
 .booking-hub-view .phone-mask-input,
-.booking-hub-view .phone-input-shell .settings-input {
+.booking-hub-view .phone-input-shell .settings-input,
+.booking-hub-view .phone-input-shell .trial-input {
   flex: 1;
   min-width: 0;
   height: 100%;
@@ -1153,6 +1154,27 @@
   box-shadow: none !important;
   padding: 0 14px;
   box-sizing: border-box;
+}
+
+.booking-hub-view .trial-phone-input-shell.phone-input-shell:has(input[aria-invalid="true"]) {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.booking-hub-view .phone-input-shell .country-code-dropdown,
+.booking-hub-view .phone-input-shell .country-code-search-wrap,
+.booking-hub-view .phone-input-shell .country-code-search-input,
+.booking-hub-view .phone-input-shell .country-code-search-input:focus,
+.booking-hub-view .phone-input-shell .country-code-search-input:focus-visible {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.booking-hub-view .phone-input-shell .trial-input:focus {
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: none;
 }
 
 .booking-hub-view .tech-modal-grid .phone-input-shell .settings-input {
@@ -2830,7 +2852,7 @@
 .booking-hub-view .trial-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 12px;
+  gap: 8px;
 }
 
 .booking-hub-view .trial-span-2 {
@@ -2839,7 +2861,7 @@
 
 .booking-hub-view .trial-field {
   display: grid;
-  gap: 6px;
+  gap: 4px;
 }
 
 .booking-hub-view .trial-label {
@@ -2885,6 +2907,39 @@
 .booking-hub-view .trial-select:focus {
   border-color: rgba(70, 72, 216, 0.42);
   box-shadow: 0 0 0 3px rgba(70, 72, 216, 0.1);
+}
+
+.booking-hub-view .trial-input.has-error,
+.booking-hub-view .trial-select.has-error {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.booking-hub-view .trial-field.has-error .trial-chip-list,
+.booking-hub-view .trial-field.has-error .trial-day-list {
+  padding: 8px;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 10px;
+  background: rgba(254, 242, 242, 0.45);
+}
+
+.booking-hub-view .trial-field-error-slot {
+  display: block;
+  margin-top: 2px;
+  line-height: 14px;
+}
+
+.booking-hub-view .trial-field-error-slot:empty {
+  display: none;
+}
+
+.booking-hub-view .trial-field-error {
+  display: block;
+  margin: 0;
+  color: #dc2626;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 14px;
 }
 
 .booking-hub-view .trial-note {
