@@ -4,7 +4,6 @@ import { useHomePageBridge } from '../context/HomePageBridgeContext'
 import { getInitialHomePageLanguage } from '../homepageLogic.js'
 import {
   getIntroVideoThumbnailPath,
-  INTRO_VIDEO_EMBED_URL,
   INTRO_VIDEO_WATCH_URL,
   INTRO_VIDEO_YOUTUBE_THUMB_URL,
   openIntroYouTubeVideo,
@@ -133,7 +132,6 @@ export default function HomePageVideoSection() {
               className="absolute inset-0 h-full w-full"
               frameBorder={0}
               id="intro-video-iframe"
-              src={INTRO_VIDEO_EMBED_URL}
               title="Nexora Touch overview video"
             />
           ) : null}
