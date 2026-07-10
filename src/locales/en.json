@@ -294,8 +294,8 @@
       "menu_notification_preferences": "Notification",
       "menu_language": "Language",
       "menu_privacy_security": "Terms & Privacy",
-      "verification_body": "Your staff profile is verified and ready to use Nexora Touch services.",
-      "verification_unverified_body": "Your staff identity has not been verified yet. Complete KYC verification to unlock verified profile benefits.",
+      "verification_body": "Your account is verified and ready to use Nexora Touch services.",
+      "verification_unverified_body": "Your account identity has not been verified yet. Complete KYC verification to unlock verified profile benefits.",
       "tax_title": "Tax documents",
       "tax_body": "Manage tax information and documents for payouts and annual records.",
       "notifications_title": "Notification settings",
@@ -633,7 +633,7 @@
       "support": "Support"
     },
     "header": {
-      "search_placeholder": "Search tech, station, review...",
+      "search_placeholder": "Search staff, reviews, or tips...",
       "add_tp": "Add New Station",
       "ecosystem": "Ecosystem",
       "ecosystem_loading": "Loading ecosystem...",
@@ -2428,7 +2428,10 @@
           "processing": "Processing...",
           "register": "Register",
           "phExampleOtp": "e.g. 1234",
-          "otpSentToEmail": "OTP sent to email"
+          "otpSentToEmail": "OTP sent to email",
+          "emailExistsTitle": "Account already exists",
+          "emailExistsMessage": "This email is already registered. Please sign in instead.",
+          "goToLogin": "Go to Login"
         },
         "StepOtpVerify": {
           "activateAccountEnterOtp": "Activate Account",

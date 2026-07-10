@@ -94,6 +94,7 @@ export default function RegisterWizard() {
     },
     onRegisterSuccess: () => navigate('/login'),
     onRegisterAndLogin: handleRegisterAndLogin,
+    onGoToLogin: () => navigate('/login'),
     onKybSuccess: () => {}
   }
 

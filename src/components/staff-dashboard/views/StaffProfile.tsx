@@ -24,7 +24,6 @@ import { logger } from "../../../utils/logger";
 import CountryCodeSelect, {
   formatNationalNumber,
   getDefaultDialCode,
-  isValidPhoneE164,
   parsePhone,
 } from "../../CountryCodeSelect";
 import Tooltip from "../../ui/Tooltip";
@@ -237,10 +236,11 @@ export default function StaffProfile() {
       errs.displayName = t(
         "staff_dashboard.profile.error_display_name_required",
       );
+    // Phone only needs a value here, not format validation — same as
+    // onboarding: a phone prefilled and locked from the profile must never
+    // fail submission just because it doesn't match E.164 formatting.
     if (!phone.trim())
       errs.phone = t("staff_dashboard.profile.error_phone_required");
-    else if (!isValidPhoneE164(fullPhone, dialCode))
-      errs.phone = t("staff_dashboard.profile.error_phone_invalid");
     if (bio.length > 300)
       errs.bio = t("staff_dashboard.profile.error_bio_too_long");
     return errs;
@@ -462,10 +462,16 @@ export default function StaffProfile() {
                     </label>
                     <input
                       type="text"
-                      className={`${inputCls} ${errors.fullName ? "border-rose-500 focus:border-rose-500" : ""}`}
+                      disabled={isKYCVerified}
+                      className={`${
+                        isKYCVerified
+                          ? "w-full rounded-xl border border-nexoraBorder bg-nexoraCanvas px-3 py-2.5 text-sm text-nexoraMuted cursor-not-allowed"
+                          : `${inputCls} ${errors.fullName ? "border-rose-500 focus:border-rose-500" : ""}`
+                      }`}
                       value={fullName}
                       placeholder={t("staff_dashboard.profile.ph_full_name")}
                       onChange={(e) => {
+                        if (isKYCVerified) return;
                         setFullName(e.target.value);
                         setSaved(false);
                         setErrors((p) => {
@@ -516,7 +522,9 @@ export default function StaffProfile() {
                       <div className="flex rounded-lg shadow-sm">
                         <CountryCodeSelect
                           value={dialCode}
+                          disabled={isKYCVerified}
                           onChange={(newCode) => {
+                            if (isKYCVerified) return;
                             const digits = phone.replace(/\D/g, "");
                             setDialCode(newCode);
                             setPhone(formatNationalNumber(digits, newCode));
@@ -529,10 +537,16 @@ export default function StaffProfile() {
                         />
                         <input
                           type="text"
-                          className={`h-10 w-full min-w-0 rounded-r-lg border border-l-0 bg-nexoraSurface px-3.5 text-sm text-nexoraText outline-none focus:border-nexoraBrand transition-all ${errors.phone ? "border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/15" : "border-nexoraBorder"}`}
+                          disabled={isKYCVerified}
+                          className={`h-10 w-full min-w-0 rounded-r-lg border border-l-0 px-3.5 text-sm outline-none transition-all ${
+                            isKYCVerified
+                              ? "bg-nexoraCanvas text-nexoraMuted cursor-not-allowed border-nexoraBorder"
+                              : `bg-nexoraSurface text-nexoraText focus:border-nexoraBrand ${errors.phone ? "border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/15" : "border-nexoraBorder"}`
+                          }`}
                           value={phone}
                           placeholder={t("staff_dashboard.profile.ph_phone")}
                           onChange={(e) => {
+                            if (isKYCVerified) return;
                             const formatted = formatNationalNumber(
                               e.target.value,
                               dialCode,

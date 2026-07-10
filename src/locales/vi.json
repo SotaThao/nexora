@@ -293,8 +293,8 @@
       "menu_notification_preferences": "Thông báo",
       "menu_language": "Ngôn ngữ",
       "menu_privacy_security": "Điều khoản & Quyền riêng tư",
-      "verification_body": "Hồ sơ nhân viên của bạn đã được xác minh và sẵn sàng sử dụng dịch vụ Nexora Touch.",
-      "verification_unverified_body": "Danh tính nhân viên của bạn chưa được xác minh. Hoàn tất KYC để mở các quyền lợi hồ sơ đã xác minh.",
+      "verification_body": "Tài khoản của bạn đã được xác minh và sẵn sàng sử dụng dịch vụ Nexora Touch.",
+      "verification_unverified_body": "Danh tính tài khoản của bạn chưa được xác minh. Hoàn tất KYC để mở các quyền lợi hồ sơ đã xác minh.",
       "tax_title": "Tài liệu thuế",
       "tax_body": "Quản lý thông tin và tài liệu thuế cho payout và hồ sơ cuối năm.",
       "notifications_title": "Cài đặt thông báo",
@@ -632,7 +632,7 @@
       "support": "Hỗ Trợ"
     },
     "header": {
-      "search_placeholder": "Tìm thợ, bàn ghế, đánh giá...",
+      "search_placeholder": "Tìm nhân viên, đánh giá hoặc tip...",
       "add_tp": "Thêm trạm mới",
       "ecosystem": "Hệ sinh thái",
       "ecosystem_loading": "Đang tải hệ sinh thái...",
@@ -2423,7 +2423,10 @@
           "processing": "Đang xử lý...",
           "register": "Đăng ký",
           "phExampleOtp": "vd: 1234",
-          "otpSentToEmail": "OTP đã gửi tới email"
+          "otpSentToEmail": "OTP đã gửi tới email",
+          "emailExistsTitle": "Tài khoản đã tồn tại",
+          "emailExistsMessage": "Email này đã được đăng ký. Vui lòng đăng nhập để tiếp tục.",
+          "goToLogin": "Đăng nhập"
         },
         "StepOtpVerify": {
           "activateAccountEnterOtp": "Kích hoạt tài khoản",
