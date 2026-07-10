@@ -339,8 +339,9 @@ export default function BookingSettingsPanel() {
     setBookingNotifyPhone(formatPhoneInput(configData.bookingNotifyPhone || ''))
     setAddress(configData.address || '')
     setGoogleReviewUrl(configData.googleReviewUrl || '')
-    setGreeting(configData.welcomeGreeting || t(`${TK}.greetingEn`))
-    setLanguage(configData.language === 'vi-VN' ? 'vi' : 'en')
+    const resolvedLang: Language = configData.language === 'vi-VN' ? 'vi' : 'en'
+    setLanguage(resolvedLang)
+    setGreeting(configData.welcomeGreeting || t(`${TK}.greeting${resolvedLang === 'vi' ? 'Vi' : 'En'}`))
 
     const nextHours = { ...INITIAL_HOURS }
     configData.operatingHours.forEach((item) => {

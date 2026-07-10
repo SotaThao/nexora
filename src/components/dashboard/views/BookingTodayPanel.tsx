@@ -76,6 +76,7 @@ interface BookingItem {
 function mapSource(source: number): BookingSource {
   if (source === 1) return 'Landing Page'
   if (source === 2) return 'SMS'
+  if (source === 3) return 'QR'
   return 'Voice'
 }
 
