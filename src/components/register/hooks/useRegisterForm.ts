@@ -526,7 +526,11 @@ export function useRegisterForm({ ssoEmail, onBackToLogin, onRegisterSuccess, on
     if (nicknameError) fieldErrors.nickname = nicknameError
 
     const phoneError = getRequiredFieldError(phone, 'setup.errors.phone_required')
-    if (phoneError) fieldErrors.phone = phoneError
+    if (phoneError) {
+      fieldErrors.phone = phoneError
+    } else if (!phoneLocked && phoneParsed?.nationalNumber?.replace(/\D/g, '').length < 7) {
+      fieldErrors.phone = 'setup.errors.staff_phone_invalid'
+    }
 
     if (Object.keys(fieldErrors).length > 0) {
       setErrors(fieldErrors)

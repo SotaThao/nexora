@@ -383,7 +383,7 @@ export default function StepCredentials(props) {
 
       {showEmailExistsModal && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl border border-slate-100 w-full max-w-sm shadow-2xl relative overflow-hidden animate-scaleUp text-center p-6 space-y-4">
+          <div role="dialog" aria-modal="true" aria-label={t('components.register.steps.StepCredentials.emailExistsTitle')} className="bg-white rounded-3xl border border-slate-100 w-full max-w-sm shadow-2xl relative overflow-hidden animate-scaleUp text-center p-6 space-y-4">
             <div className="mx-auto w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center">
               <AlertTriangle className="w-7 h-7 text-amber-500" />
             </div>

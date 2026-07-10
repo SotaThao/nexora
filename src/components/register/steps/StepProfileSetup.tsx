@@ -215,7 +215,12 @@ export default function StepProfileSetup({
           </button>
           <button
             type="submit"
-            disabled={!fullName.trim() || !nickname.trim() || !phone.trim()}
+            disabled={
+              !fullName.trim() ||
+              !nickname.trim() ||
+              !phone.trim() ||
+              (!phoneLocked && phoneParsed?.nationalNumber?.replace(/\D/g, '').length < 7)
+            }
             className="w-full min-h-11 py-2.5 bg-gradient-to-r from-nexoraElectric to-nexoraViolet hover:opacity-90 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(43,89,255,0.25)] transition-all disabled:opacity-50"
           >
             {t('common.next')} <ArrowRight className="w-4 h-4" />

@@ -142,7 +142,7 @@ export default function useSetupWizard({
 
   const existingBusiness = merchantSetupQuery.data?.businessInfo
   const existingFeedbackEmail = merchantSetupQuery.data?.reviewLinks?.feedbackEmail
-  const isNameLocked = isSsoLocked || Boolean(existingBusiness?.name)
+  const isNameLocked = isSsoLocked || Boolean(initialBusinessInfo?.name) || Boolean(existingBusiness?.name)
   const isAddressLocked = isSsoLocked || Boolean(initialBusinessInfo?.address) || Boolean(existingBusiness?.address)
   const isPhoneLocked = isSsoLocked || Boolean(initialBusinessInfo?.phone) || Boolean(existingBusiness?.phone)
   const isWebsiteLocked = isSsoLocked || Boolean(existingBusiness?.website)
