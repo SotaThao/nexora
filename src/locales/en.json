@@ -3238,6 +3238,19 @@
       },
       "errors": {
         "generic": "Something went wrong. Please try again."
+      },
+      "tabs": {
+        "pending": "Pending",
+        "history": "History"
+      },
+      "history": {
+        "emptyState": "No payout history yet.",
+        "filters": {
+          "allStatuses": "All statuses"
+        },
+        "columns": {
+          "status": "Status"
+        }
       }
     },
     "home": {

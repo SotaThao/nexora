@@ -225,6 +225,9 @@ export const qk = {
   // Tax IQ — Staff Payout Confirmation & Dispute (US-14). No staffTaxYearId param —
   // GetPendingPayoutsQuery scopes by JWT userId only, same as taxiqStaffTaxYear above.
   taxiqStaffPayoutsPending: () => ['taxiqStaffPayoutsPending'],
+  // BUG-03 — Staff Payout History. Filters embedded in key so different status/page
+  // combos cache independently, same convention as staffPayoutsList above.
+  taxiqStaffPayoutsHistory: (filters = EMPTY) => ['taxiqStaffPayoutsHistory', filters],
 
   // Tax IQ — CPA Access Grant (US-10)
   taxiqCpaAccessGrants: (ownerTaxYearId?: string, staffTaxYearId?: string) =>

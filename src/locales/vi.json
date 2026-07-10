@@ -3237,6 +3237,19 @@
       },
       "errors": {
         "generic": "Đã có lỗi xảy ra. Vui lòng thử lại."
+      },
+      "tabs": {
+        "pending": "Đang chờ",
+        "history": "Lịch sử"
+      },
+      "history": {
+        "emptyState": "Chưa có lịch sử payout.",
+        "filters": {
+          "allStatuses": "Tất cả trạng thái"
+        },
+        "columns": {
+          "status": "Trạng thái"
+        }
       }
     },
     "home": {
