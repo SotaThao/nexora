@@ -632,7 +632,7 @@
       "support": "Support"
     },
     "header": {
-      "search_placeholder": "Search tech, station, review...",
+      "search_placeholder": "Search staff, reviews, or tips...",
       "add_tp": "Add New Station",
       "ecosystem": "Ecosystem",
       "ecosystem_loading": "Loading ecosystem...",
