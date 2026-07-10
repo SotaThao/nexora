@@ -55,7 +55,7 @@ interface MerchantVoiceBookingsApiResponse {
 }
 
 export interface MerchantVoiceStaffScheduleDto {
-  dayOfWeek: number
+  dayOfWeek: number | string
   isDayOff: boolean
   startTime: string | null
   endTime: string | null
@@ -192,6 +192,23 @@ export interface CreateMerchantVoiceStaffRequest {
   email?: string | null
   skills?: string | null
   schedules: MerchantVoiceStaffScheduleEntry[]
+}
+
+export interface UpdateMerchantVoiceStaffScheduleEntry {
+  dayOfWeek: string
+  isDayOff: boolean
+  startTime?: string | null
+  endTime?: string | null
+}
+
+export interface UpdateMerchantVoiceStaffRequest {
+  id: string
+  fullName: string
+  phoneNumber: string
+  email: string
+  skills: string
+  status: 'Active' | 'Inactive'
+  schedules: UpdateMerchantVoiceStaffScheduleEntry[]
 }
 
 export enum MerchantVoiceStaffStatus {
@@ -414,6 +431,14 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
       )
     },
 
+    async sendBookingConfirmationSms(id: string): Promise<void> {
+      await client.post<void>(
+        `${MERCHANT_VOICE_BASE}/bookings/${encodeURIComponent(id)}/send-confirmation-sms`,
+        undefined,
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+    },
+
     async getStaff(filters: MerchantVoiceStaffFilter = {}): Promise<MerchantVoiceStaffResponse> {
       const response = await client.get<MerchantVoiceStaffApiResponse | MerchantVoiceStaffDto[]>(
         `${MERCHANT_VOICE_BASE}/staff`,
@@ -433,6 +458,14 @@ export function createMerchantVoiceRepository(client: HttpClient = httpClient) {
     async createStaff(body: CreateMerchantVoiceStaffRequest): Promise<MerchantVoiceStaffDto> {
       return await client.post<MerchantVoiceStaffDto>(
         `${MERCHANT_VOICE_BASE}/staff`,
+        body,
+        { headers: MERCHANT_VOICE_HEADERS },
+      )
+    },
+
+    async updateStaff(body: UpdateMerchantVoiceStaffRequest): Promise<MerchantVoiceStaffDto> {
+      return await client.put<MerchantVoiceStaffDto>(
+        `${MERCHANT_VOICE_BASE}/staff/${encodeURIComponent(body.id)}`,
         body,
         { headers: MERCHANT_VOICE_HEADERS },
       )

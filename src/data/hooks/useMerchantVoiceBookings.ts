@@ -3,6 +3,7 @@ import { qk } from '../queryKeys'
 import {
   type MerchantVoiceBusinessStaffFilter,
   type CreateMerchantVoiceStaffRequest,
+  type UpdateMerchantVoiceStaffRequest,
   merchantVoiceRepository,
   type MerchantVoiceBusinessStaffDto,
   type MerchantVoiceConfigDto,
@@ -48,6 +49,17 @@ export function useUpdateMerchantVoiceBookingStatus() {
   })
 }
 
+export function useSendMerchantVoiceBookingConfirmationSms() {
+  const queryClient = useQueryClient()
+
+  return useMutation<void, Error, { id: string }>({
+    mutationFn: ({ id }) => merchantVoiceRepository.sendBookingConfirmationSms(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['merchantVoice', 'bookings'] })
+    },
+  })
+}
+
 const EMPTY_STAFF_FILTERS: MerchantVoiceStaffFilter = {}
 
 export function useMerchantVoiceStaff(
@@ -67,6 +79,17 @@ export function useCreateMerchantVoiceStaff() {
     mutationFn: (body: CreateMerchantVoiceStaffRequest) => merchantVoiceRepository.createStaff(body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['merchantVoice', 'staff'] })
+    },
+  })
+}
+
+export function useUpdateMerchantVoiceStaff() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (body: UpdateMerchantVoiceStaffRequest) => merchantVoiceRepository.updateStaff(body),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['merchantVoice', 'staff'] })
+      queryClient.invalidateQueries({ queryKey: qk.merchantVoiceStaffById(variables.id) })
     },
   })
 }

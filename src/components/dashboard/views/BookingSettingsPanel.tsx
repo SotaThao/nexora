@@ -18,6 +18,7 @@ import {
   SpinnerIcon,
   StarsIcon,
 } from './BookingHubIcons'
+import { BookingSettingsSkeleton } from './BookingHubSkeletons'
 
 const TK = 'components.dashboard.views.BookingHubView.settings'
 
@@ -194,7 +195,7 @@ function SettingsCard({
 export default function BookingSettingsPanel() {
   const { t } = useTranslation()
   const { showToast } = useNotification()
-  const { data: configData } = useMerchantVoiceConfig()
+  const { data: configData, isLoading: isConfigLoading } = useMerchantVoiceConfig()
   const updateConfigMutation = useUpdateMerchantVoiceConfig()
   const [collapsedCards, setCollapsedCards] = useState<Record<string, boolean>>({})
   const [hours, setHours] = useState(INITIAL_HOURS)
@@ -552,6 +553,10 @@ export default function BookingSettingsPanel() {
     }
   }
 
+  if (isConfigLoading) {
+    return <BookingSettingsSkeleton />
+  }
+
   return (
     <div className="settings-shell">
       <div className="settings-hero is-compact">
@@ -595,6 +600,7 @@ export default function BookingSettingsPanel() {
               <span className="phone-input-shell">
                 <CountryCodeSelect
                   value={salonPhoneParsed.countryCode}
+                  embedded
                   onChange={(nextCode) => {
                     const formatted = formatNationalNumber(salonPhoneParsed.nationalNumber, nextCode)
                     setSalonPhone(`${nextCode} ${formatted}`.trim())
@@ -628,6 +634,7 @@ export default function BookingSettingsPanel() {
               <span className="phone-input-shell">
                 <CountryCodeSelect
                   value={bookingNotifyPhoneParsed.countryCode}
+                  embedded
                   onChange={(nextCode) => {
                     const formatted = formatNationalNumber(bookingNotifyPhoneParsed.nationalNumber, nextCode)
                     setBookingNotifyPhone(`${nextCode} ${formatted}`.trim())

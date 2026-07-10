@@ -11,9 +11,17 @@ import {
   useMerchantVoiceStaffById,
   useMerchantVoiceStaff,
   useToggleMerchantVoiceStaffStatus,
+  useUpdateMerchantVoiceStaff,
 } from '../../../data/hooks/useMerchantVoiceBookings'
 import { MerchantVoiceStaffStatus, type MerchantVoiceStaffDto } from '../../../data/repositories/merchantVoice'
 import { EyeIcon, SpinnerIcon } from './BookingHubIcons'
+import {
+  BookingTeamGridSkeleton,
+  BookingTechModalProfileSkeleton,
+  BookingTechScheduleSkeleton,
+  BookingTechServicesSkeleton,
+  BookingTechStaffListSkeleton,
+} from './BookingHubSkeletons'
 
 const TK = 'components.dashboard.views.BookingHubView.team'
 
@@ -74,6 +82,85 @@ const DAY_KEY_TO_NUMBER: Record<DayKey, number> = {
   sat: 6,
 }
 
+const DAY_KEY_TO_API_DAY_NAME: Record<DayKey, string> = {
+  sun: 'Sunday',
+  mon: 'Monday',
+  tue: 'Tuesday',
+  wed: 'Wednesday',
+  thu: 'Thursday',
+  fri: 'Friday',
+  sat: 'Saturday',
+}
+
+const DAY_NAME_TO_KEY: Record<string, DayKey> = {
+  Sunday: 'sun',
+  Monday: 'mon',
+  Tuesday: 'tue',
+  Wednesday: 'wed',
+  Thursday: 'thu',
+  Friday: 'fri',
+  Saturday: 'sat',
+}
+
+function normalizeDayKey(dayOfWeek: number | string | undefined | null): DayKey | null {
+  if (dayOfWeek === null || dayOfWeek === undefined || dayOfWeek === '') return null
+
+  if (typeof dayOfWeek === 'number') {
+    return DAY_NUMBER_TO_KEY[dayOfWeek] ?? null
+  }
+
+  const trimmed = String(dayOfWeek).trim()
+  if (DAY_NAME_TO_KEY[trimmed]) return DAY_NAME_TO_KEY[trimmed]
+
+  const normalizedName = trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase()
+  if (DAY_NAME_TO_KEY[normalizedName]) return DAY_NAME_TO_KEY[normalizedName]
+
+  const asNumber = Number(trimmed)
+  if (!Number.isNaN(asNumber)) {
+    return DAY_NUMBER_TO_KEY[asNumber] ?? null
+  }
+
+  return null
+}
+
+function normalizeScheduleTime(value: string | null | undefined): string {
+  if (!value) return ''
+  const trimmed = value.trim()
+  const match = trimmed.match(/^(\d{1,2}):(\d{2})/)
+  if (!match) return trimmed.slice(0, 5)
+
+  const hour = Number(match[1])
+  const minute = match[2]
+  if (hour < 0 || hour > 23) return trimmed.slice(0, 5)
+  return `${String(hour).padStart(2, '0')}:${minute}`
+}
+
+function schedulesToWeeklySchedule(schedules: MerchantVoiceStaffDto['schedules'] | undefined): WeeklySchedule {
+  const schedule = emptySchedule()
+
+  DAY_KEYS.forEach((key) => {
+    schedule[key] = { dayOff: true, start: '', end: '' }
+  })
+
+  for (const item of schedules ?? []) {
+    const day = normalizeDayKey(item.dayOfWeek)
+    if (!day) continue
+
+    if (item.isDayOff) {
+      schedule[day] = { dayOff: true, start: '', end: '' }
+      continue
+    }
+
+    schedule[day] = {
+      dayOff: false,
+      start: normalizeScheduleTime(item.startTime),
+      end: normalizeScheduleTime(item.endTime),
+    }
+  }
+
+  return schedule
+}
+
 function emptySchedule(): WeeklySchedule {
   return DAY_KEYS.reduce((acc, key) => {
     acc[key] = { dayOff: false, start: '', end: '' }
@@ -125,10 +212,10 @@ function scheduleToString(staff: MerchantVoiceStaffDto) {
   return (staff.schedules || [])
     .filter((item) => !item.isDayOff && item.startTime && item.endTime)
     .map((item) => {
-      const day = DAY_NUMBER_TO_KEY[item.dayOfWeek]
+      const day = normalizeDayKey(item.dayOfWeek)
       if (!day) return null
-      const start = item.startTime?.slice(0, 5)
-      const end = item.endTime?.slice(0, 5)
+      const start = normalizeScheduleTime(item.startTime)
+      const end = normalizeScheduleTime(item.endTime)
       if (!start || !end) return null
       return `${day}=${start}-${end}`
     })
@@ -306,23 +393,24 @@ export default function BookingTeamPanel() {
   }>({})
   const [showScheduleValidation, setShowScheduleValidation] = useState(false)
   const comboboxRef = useRef<HTMLDivElement>(null)
-  const { data: staffResponse } = useMerchantVoiceStaff({
+  const { data: staffResponse, isLoading: isStaffLoading } = useMerchantVoiceStaff({
     pageNumber: 1,
     pageSize: 200,
   })
-  const { data: businessStaffResponse } = useMerchantVoiceBusinessStaff(
+  const { data: businessStaffResponse, isLoading: isBusinessStaffLoading } = useMerchantVoiceBusinessStaff(
     { searchTerm: debouncedSearchQuery },
     { enabled: modalOpen },
   )
-  const { data: configResponse } = useMerchantVoiceConfig({
+  const { data: configResponse, isLoading: isConfigLoading } = useMerchantVoiceConfig({
     enabled: modalOpen,
   })
   const [members, setMembers] = useState<TeamMember[]>(INITIAL_TEAM_MEMBERS)
   const createStaffMutation = useCreateMerchantVoiceStaff()
+  const updateStaffMutation = useUpdateMerchantVoiceStaff()
   const toggleStaffStatusMutation = useToggleMerchantVoiceStaffStatus()
   const [pendingToggleIds, setPendingToggleIds] = useState<Record<string, boolean>>({})
-  const { data: staffDetail } = useMerchantVoiceStaffById(selectedId, {
-    enabled: modalOpen && modalMode === 'detail' && !!selectedId,
+  const { data: staffDetail, isLoading: isStaffDetailLoading } = useMerchantVoiceStaffById(selectedId, {
+    enabled: modalOpen && !!selectedId && modalMode !== 'create',
   })
 
   const businessStaffOptions = useMemo<BusinessStaffOption[]>(() => (
@@ -357,7 +445,11 @@ export default function BookingTeamPanel() {
   const scheduleRequiredMessage = t(`${TK}.scheduleRequiredTime`)
   const scheduleInvalidMessage = t(`${TK}.scheduleInvalidTime`)
 
-  const fillDraftFromMember = (member: TeamMember | undefined, mode: ModalMode) => {
+  const fillDraftFromMember = (
+    member: TeamMember | undefined,
+    mode: ModalMode,
+    scheduleOverride?: WeeklySchedule,
+  ) => {
     if (mode === 'create' || !member) {
       setDraftName('')
       setDraftPhone('')
@@ -372,7 +464,7 @@ export default function BookingTeamPanel() {
     setDraftPhone(member.phone)
     setDraftEmail(member.email)
     setDraftServices([...member.services])
-    setDraftSchedule(parseSchedule(member.schedule))
+    setDraftSchedule(scheduleOverride ?? parseSchedule(member.schedule))
     setFormErrors({})
     setShowScheduleValidation(false)
   }
@@ -405,6 +497,8 @@ export default function BookingTeamPanel() {
   }
 
   const selectBusinessStaff = (staff: BusinessStaffOption) => {
+    if (staff.isAlreadyAdded) return
+
     const matchedMember = members.find((member) => (
       member.id === staff.id
       || (staff.phone && member.phone === staff.phone)
@@ -511,24 +605,26 @@ export default function BookingTeamPanel() {
     }
     if (!draftServices.length) nextErrors.services = t(`${TK}.requiredField`)
 
-    if (Object.keys(nextErrors).length > 0) {
-      setFormErrors(nextErrors)
-      showToast(t(`${TK}.saveValidationError`), 'error')
-      return
-    }
-
     const scheduleInvalid = hasScheduleValidationError(
       draftSchedule,
       scheduleRequiredMessage,
       scheduleInvalidMessage,
     )
-    if (scheduleInvalid) {
-      setShowScheduleValidation(true)
-      showToast(t(`${TK}.saveValidationError`), 'error')
+
+    setFormErrors(nextErrors)
+    setShowScheduleValidation(scheduleInvalid)
+
+    if (Object.keys(nextErrors).length > 0 || scheduleInvalid) {
+      if (scheduleInvalid) {
+        window.requestAnimationFrame(() => {
+          document.querySelector('[data-tech-schedule-section]')?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+          })
+        })
+      }
       return
     }
-    setFormErrors({})
-    setShowScheduleValidation(false)
 
     const payload = {
       name: trimmedName,
@@ -574,24 +670,46 @@ export default function BookingTeamPanel() {
         },
       })
       return
-    } else {
-      setMembers((prev) => prev.map((member) => (
-        member.id === selectedId
-          ? {
-            ...member,
-            name: payload.name,
-            phone: payload.phone,
-            email: payload.email,
-            services: payload.services,
-            schedule: payload.schedule,
-            avatar: payload.name.charAt(0).toUpperCase() || member.avatar,
-          }
-          : member
-      )))
-      showToast(t(`${TK}.saveSuccess`), 'success')
     }
 
-    closeModal()
+    if (!selectedId) return
+
+    const editingMember = members.find((member) => member.id === selectedId)
+    const schedules = DAY_KEYS.map((day) => {
+      const row = draftSchedule[day]
+      if (row.dayOff) {
+        return {
+          dayOfWeek: DAY_KEY_TO_API_DAY_NAME[day],
+          isDayOff: true,
+          startTime: null,
+          endTime: null,
+        }
+      }
+      return {
+        dayOfWeek: DAY_KEY_TO_API_DAY_NAME[day],
+        isDayOff: false,
+        startTime: row.start ? `${row.start}:00` : null,
+        endTime: row.end ? `${row.end}:00` : null,
+      }
+    })
+
+    updateStaffMutation.mutate({
+      id: selectedId,
+      fullName: payload.name,
+      phoneNumber: payload.phone,
+      email: payload.email,
+      skills: payload.services.join(', '),
+      status: editingMember?.smsEnabled ? 'Active' : 'Inactive',
+      schedules,
+    }, {
+      onSuccess: () => {
+        showToast(t(`${TK}.saveSuccess`), 'success')
+        closeModal()
+      },
+      onError: (error) => {
+        showToast(t(getErrorI18nKey(getApiErrorCode(error))), 'error')
+      },
+    })
   }
 
   const modalTitle = modalMode === 'create'
@@ -616,8 +734,12 @@ export default function BookingTeamPanel() {
   }, [staffResponse?.items])
 
   useEffect(() => {
-    if (!staffDetail || modalMode !== 'detail') return
-    fillDraftFromMember(toTeamMember(staffDetail), 'edit')
+    if (!staffDetail || modalMode === 'create') return
+    fillDraftFromMember(
+      toTeamMember(staffDetail),
+      'edit',
+      schedulesToWeeklySchedule(staffDetail.schedules),
+    )
   }, [staffDetail, modalMode])
 
   useEffect(() => {
@@ -652,7 +774,7 @@ export default function BookingTeamPanel() {
   }, [searchQuery])
 
   return (
-    <div className="booking-sub-panel is-active">
+    <div className="booking-sub-panel is-active" aria-busy={isStaffLoading}>
       <div className="tech-intro">
         <div className="tech-intro-text">{t(`${TK}.intro`)}</div>
         <button className="booking-primary-button" type="button" onClick={() => openModal()}>
@@ -662,7 +784,23 @@ export default function BookingTeamPanel() {
       </div>
 
       <div className="tech-grid">
-        {members.map((member) => (
+        {isStaffLoading ? (
+          <BookingTeamGridSkeleton count={3} />
+        ) : null}
+        {!isStaffLoading && members.length === 0 ? (
+          <div className="tech-grid-empty">
+            <div className="tech-grid-empty-icon" aria-hidden="true">
+              <PeopleIcon />
+            </div>
+            <div className="tech-grid-empty-title">{t(`${TK}.emptyTitle`)}</div>
+            <p className="tech-grid-empty-description">{t(`${TK}.emptyDescription`)}</p>
+            <button className="booking-primary-button" type="button" onClick={() => openModal()}>
+              <PlusIcon />
+              <span>{t(`${TK}.emptyCta`)}</span>
+            </button>
+          </div>
+        ) : null}
+        {!isStaffLoading ? members.map((member) => (
           <article className="tech-card" key={member.id} data-tech-id={member.id}>
             <div className="tech-top">
               <div className="tech-avatar" style={member.avatarStyle}>{member.avatar}</div>
@@ -697,7 +835,7 @@ export default function BookingTeamPanel() {
                   type="button"
                   aria-label={t(`${TK}.viewDetails`)}
                   title={t(`${TK}.viewDetails`)}
-                  onClick={() => openModal(member.id, 'detail')}
+                  onClick={() => openModal(member.id, 'edit')}
                 >
                   <EyeIcon />
                   <span className="sr-only">{t(`${TK}.viewDetails`)}</span>
@@ -705,7 +843,7 @@ export default function BookingTeamPanel() {
               </div>
             </div>
           </article>
-        ))}
+        )) : null}
       </div>
 
       {modalOpen ? (
@@ -765,19 +903,29 @@ export default function BookingTeamPanel() {
                     </label>
                     {comboboxOpen ? (
                       <div className="tech-select-menu" id="tech-select-menu">
+                        {isBusinessStaffLoading ? (
+                          <BookingTechStaffListSkeleton count={3} />
+                        ) : (
                         <div className="tech-choice-grid" role="listbox" aria-label={t(`${TK}.techList`)}>
                           {filteredBusinessStaff.map((member) => (
                             <button
                               key={member.id}
-                              className={`tech-choice-card ${selectedId === member.id ? 'is-active' : ''}`}
+                              className={`tech-choice-card ${selectedId === member.id ? 'is-active' : ''} ${member.isAlreadyAdded ? 'is-disabled' : ''}`}
                               type="button"
                               role="option"
                               aria-selected={selectedId === member.id}
+                              aria-disabled={member.isAlreadyAdded}
+                              disabled={member.isAlreadyAdded}
                               onClick={() => selectBusinessStaff(member)}
                             >
                               <span className="tech-avatar" style={member.avatarStyle}>{member.avatar}</span>
                               <span>
-                                <span className="tech-choice-name">{member.name}</span>
+                                <span className="tech-choice-name">
+                                  {member.name}
+                                  {member.isAlreadyAdded ? (
+                                    <span className="tech-choice-badge">{t(`${TK}.alreadyAdded`)}</span>
+                                  ) : null}
+                                </span>
                                 <span className="tech-choice-meta">
                                   {member.position || member.email || '—'} · {formatPhoneDisplay(member.phone)}
                                 </span>
@@ -785,7 +933,8 @@ export default function BookingTeamPanel() {
                             </button>
                           ))}
                         </div>
-                        {filteredBusinessStaff.length === 0 ? (
+                        )}
+                        {!isBusinessStaffLoading && filteredBusinessStaff.length === 0 ? (
                           <div className="tech-empty is-visible">
                             {t(`${TK}.noMatch`)}
                           </div>
@@ -809,6 +958,9 @@ export default function BookingTeamPanel() {
                   <PersonCardIcon />
                   <span>{t(`${TK}.profileDetails`)}</span>
                 </div>
+                {modalMode !== 'create' && isStaffDetailLoading ? (
+                  <BookingTechModalProfileSkeleton />
+                ) : (
                 <div className="tech-modal-grid">
                   <div className="settings-field">
                     <span className="settings-label">{t(`${TK}.techName`)}</span>
@@ -832,12 +984,12 @@ export default function BookingTeamPanel() {
                     <span className="phone-input-shell">
                       <CountryCodeSelect
                         value={draftPhoneParsed.countryCode}
+                        embedded
                         onChange={(nextCode) => {
                           const formatted = formatNationalNumber(draftPhoneParsed.nationalNumber, nextCode)
                           setDraftPhone(`${nextCode} ${formatted}`.trim())
                           setFormErrors((prev) => ({ ...prev, phone: '' }))
                         }}
-                        disabled={modalMode === 'detail'}
                       />
                       <input
                         className="settings-input phone-mask-input"
@@ -847,7 +999,6 @@ export default function BookingTeamPanel() {
                         placeholder={t(`${TK}.placeholderPhoneMask`)}
                         inputMode="numeric"
                         autoComplete="tel-national"
-                        disabled={modalMode === 'detail'}
                         onChange={(event) => {
                           const formatted = formatNationalNumber(event.target.value, draftPhoneParsed.countryCode)
                           setDraftPhone(`${draftPhoneParsed.countryCode} ${formatted}`.trim())
@@ -878,7 +1029,9 @@ export default function BookingTeamPanel() {
                   </div>
                   <div className="settings-field">
                     <span className="settings-label">{t(`${TK}.services`)}</span>
-                    {serviceOptions.length > 0 ? (
+                    {isConfigLoading ? (
+                      <BookingTechServicesSkeleton count={4} />
+                    ) : serviceOptions.length > 0 ? (
                       <div className="tech-service-checks">
                         {serviceOptions.map((service) => (
                           <label className="tech-service-check" key={service}>
@@ -899,6 +1052,7 @@ export default function BookingTeamPanel() {
                     </span>
                   </div>
                 </div>
+                )}
               </div>
 
               <div className="tech-modal-section" data-tech-schedule-section>
@@ -906,6 +1060,10 @@ export default function BookingTeamPanel() {
                   <CalendarWeekIcon />
                   <span>{t(`${TK}.weeklySchedule`)}</span>
                 </div>
+                {modalMode !== 'create' && isStaffDetailLoading ? (
+                  <BookingTechScheduleSkeleton />
+                ) : (
+                <>
                 <div className="tech-schedule">
                   {DAY_KEYS.map((day) => {
                     const row = draftSchedule[day]
@@ -915,7 +1073,7 @@ export default function BookingTeamPanel() {
                     return (
                     <div
                       key={day}
-                      className={`tech-schedule-row ${row.dayOff ? 'is-day-off' : ''}`}
+                      className={`tech-schedule-row ${row.dayOff ? 'is-day-off' : ''} ${showRowError ? 'has-error' : ''}`}
                       role="button"
                       tabIndex={0}
                       onClick={() => toggleDayOff(day, !row.dayOff)}
@@ -937,7 +1095,7 @@ export default function BookingTeamPanel() {
                         />
                         {t(`${TK}.dayOff`)}
                       </label>
-                      <span className="tech-schedule-time">
+                      <span className="tech-schedule-time" lang="en-US-u-hc-h12">
                         <input
                           type="time"
                           value={row.start}
@@ -972,6 +1130,8 @@ export default function BookingTeamPanel() {
                 {showScheduleValidation && hasScheduleError ? (
                   <div className="tech-schedule-error">{t(`${TK}.scheduleValidationSummary`)}</div>
                 ) : null}
+                </>
+                )}
               </div>
             </div>
 
@@ -982,10 +1142,12 @@ export default function BookingTeamPanel() {
               <button
                 className="booking-primary-button"
                 type="button"
-                disabled={createStaffMutation.isPending}
+                disabled={createStaffMutation.isPending || updateStaffMutation.isPending}
                 onClick={saveModal}
               >
-                {createStaffMutation.isPending ? <SpinnerIcon className="booking-inline-spinner" /> : <CheckIcon />}
+                {(createStaffMutation.isPending || updateStaffMutation.isPending)
+                  ? <SpinnerIcon className="booking-inline-spinner" />
+                  : <CheckIcon />}
                 <span>{t(`${TK}.saveTech`)}</span>
               </button>
             </div>

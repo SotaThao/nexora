@@ -75,12 +75,42 @@ export default function BookingTrialModal({ open, onClose }: BookingTrialModalPr
   const [closeTime, setCloseTime] = useState('7:00 PM')
   const [painPoint, setPainPoint] = useState('')
   const [activeServices, setActiveServices] = useState<Set<string>>(() => new Set(DEFAULT_ACTIVE_SERVICES))
+  const [customServices, setCustomServices] = useState<string[]>([])
+  const [showCustomServiceInput, setShowCustomServiceInput] = useState(false)
+  const [customServiceInput, setCustomServiceInput] = useState('')
   const [activeDays, setActiveDays] = useState<Set<string>>(() => new Set(DEFAULT_ACTIVE_DAYS))
   const [emailStatus, setEmailStatus] = useState<'default' | 'activated'>('default')
 
   const resetForm = () => {
     setStep('form')
     setEmailStatus('default')
+    setCustomServices([])
+    setShowCustomServiceInput(false)
+    setCustomServiceInput('')
+  }
+
+  const serviceChips = [...SERVICE_CHIPS, ...customServices]
+
+  const addCustomService = () => {
+    const value = customServiceInput.trim()
+    if (!value) {
+      setShowCustomServiceInput(false)
+      return
+    }
+
+    const exists = serviceChips.some((chip) => chip.toLowerCase() === value.toLowerCase())
+    if (!exists) {
+      setCustomServices((prev) => [...prev, value])
+    }
+
+    setActiveServices((prev) => {
+      const next = new Set(prev)
+      const matched = serviceChips.find((chip) => chip.toLowerCase() === value.toLowerCase())
+      next.add(matched ?? value)
+      return next
+    })
+    setCustomServiceInput('')
+    setShowCustomServiceInput(false)
   }
 
   const handleClose = () => {
@@ -184,7 +214,7 @@ export default function BookingTrialModal({ open, onClose }: BookingTrialModalPr
                     <span className="trial-optional">{t(`${TK}.tapToSelect`)}</span>
                   </div>
                   <div className="trial-chip-list">
-                    {SERVICE_CHIPS.map((chip) => (
+                    {serviceChips.map((chip) => (
                       <button
                         key={chip}
                         className={`trial-chip ${activeServices.has(chip) ? 'is-active' : ''}`}
@@ -194,7 +224,41 @@ export default function BookingTrialModal({ open, onClose }: BookingTrialModalPr
                         {chip}
                       </button>
                     ))}
+                    <button
+                      className="trial-chip trial-chip-add"
+                      type="button"
+                      aria-label={t(`${TK}.addService`)}
+                      title={t(`${TK}.addService`)}
+                      onClick={() => setShowCustomServiceInput(true)}
+                    >
+                      +
+                    </button>
                   </div>
+                  {showCustomServiceInput ? (
+                    <div className="trial-custom-service-row">
+                      <input
+                        className="trial-input trial-custom-service-input"
+                        type="text"
+                        value={customServiceInput}
+                        placeholder={t(`${TK}.customServicePlaceholder`)}
+                        autoFocus
+                        onChange={(event) => setCustomServiceInput(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') {
+                            event.preventDefault()
+                            addCustomService()
+                          }
+                          if (event.key === 'Escape') {
+                            setCustomServiceInput('')
+                            setShowCustomServiceInput(false)
+                          }
+                        }}
+                      />
+                      <button className="trial-custom-service-add" type="button" onClick={addCustomService}>
+                        {t(`${TK}.addService`)}
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
                 <div className="trial-field trial-span-2">
                   <div className="trial-label">{t(`${TK}.openDaysLabel`)}</div>
